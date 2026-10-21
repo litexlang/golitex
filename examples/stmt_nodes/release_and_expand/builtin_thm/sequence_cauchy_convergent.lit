@@ -1,0 +1,7 @@
+# Explicit analysis theorem with checked premises.
+claim:
+    ? forall a seq(R):
+        $is_seq_cauchy(a)
+        =>:
+            $is_seq_convergent(a)
+    release thm sequence_cauchy_convergent(a)

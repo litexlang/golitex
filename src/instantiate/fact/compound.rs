@@ -171,6 +171,20 @@ fn collect_free_plain_ids_in_atomic(
 
 fn atomic_fact_obj_args(atomic: &AtomicFact) -> Vec<&Obj> {
     match atomic {
+        AtomicFact::RealSetBoundFact(f) => vec![&f.set, &f.bound],
+        AtomicFact::NotRealSetBoundFact(f) => vec![&f.set, &f.bound],
+        AtomicFact::RealSetBoundedFact(f) => vec![&f.set],
+        AtomicFact::NotRealSetBoundedFact(f) => vec![&f.set],
+        AtomicFact::SequenceAnalysisFact(f) => vec![&f.sequence],
+        AtomicFact::NotSequenceAnalysisFact(f) => vec![&f.sequence],
+        AtomicFact::RealAccumulationFact(f) => vec![&f.domain, &f.point],
+        AtomicFact::NotRealAccumulationFact(f) => vec![&f.domain, &f.point],
+        AtomicFact::FunctionContinuousAtFact(f) => vec![&f.function, &f.point],
+        AtomicFact::NotFunctionContinuousAtFact(f) => vec![&f.function, &f.point],
+        AtomicFact::FunctionContinuousFact(f) => vec![&f.function],
+        AtomicFact::NotFunctionContinuousFact(f) => vec![&f.function],
+        AtomicFact::FunctionLipschitzFact(f) => vec![&f.function, &f.constant],
+        AtomicFact::NotFunctionLipschitzFact(f) => vec![&f.function, &f.constant],
         AtomicFact::NormalAtomicFact(f) => f.body.iter().collect(),
         AtomicFact::NotNormalAtomicFact(f) => f.body.iter().collect(),
         AtomicFact::EqualFact(f) => vec![&f.left, &f.right],

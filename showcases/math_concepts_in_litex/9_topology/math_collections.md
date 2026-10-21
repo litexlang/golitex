@@ -56,9 +56,9 @@ only universal theorem contexts.
 - **Semantic role:** Relation on two candidate topologies and a function.
 - **Ideal Litex form:** `TopologicalMapSetting` composes two renamed topology
   bundles and a function; `ContinuousMapSetting` adds the open-preimage law;
-  `prop is_continuous(X set, open_sets_X power_set(power_set(X)), Y set, open_sets_Y power_set(power_set(Y)), f fn(x X) Y)` exposes the ordinary flat ABI.
+  `prop is_topologically_continuous(X set, open_sets_X power_set(power_set(X)), Y set, open_sets_Y power_set(power_set(Y)), f fn(x X) Y)` exposes the ordinary flat ABI.
 - **Interface sketch:**
-  `prop is_continuous(X set, open_sets_X power_set(power_set(X)), Y set, open_sets_Y power_set(power_set(Y)), f fn(x X) Y)`
+  `prop is_topologically_continuous(X set, open_sets_X power_set(power_set(X)), Y set, open_sets_Y power_set(power_set(Y)), f fn(x X) Y)`
   followed only by the open-preimage law.
 - **Nearest wrong alternative:** A continuous-map struct is premature before
   callers pass or project packaged maps.
@@ -104,7 +104,7 @@ native set objects and operations
 two TopologicalSpaceSetting bundles + a function
   -> TopologicalMapSetting                [composed context]
   -> ContinuousMapSetting                 [open-preimage law]
-  -> is_continuous                        [bundle-derived definition]
+  -> is_topologically_continuous                        [bundle-derived definition]
   -> closed-preimage characterization     [two proofs]
 three TopologicalSpaceSetting bundles + two open-preimage laws
   -> ContinuousCompositionSetting         [composed universal context]

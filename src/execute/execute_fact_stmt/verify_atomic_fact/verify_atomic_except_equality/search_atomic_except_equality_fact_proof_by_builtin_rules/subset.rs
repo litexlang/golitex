@@ -14,6 +14,7 @@ use crate::runtime::{Runtime, RuntimeResult};
 
 // Builtin proofs for `$subset`. One rule ↔ one dedicated proof struct.
 pub enum SubsetFactSearchProofByBuiltinRule {
+    FunctionRangeInCodomain(FunctionRangeInCodomainProof),
     // Fixed inclusion among standard number sets.
     // Example: prove `N $subset R`.
     CompositionRangeSubset(CompositionRangeSubsetProof),
@@ -84,6 +85,14 @@ pub enum SubsetFactSearchProofByBuiltinRule {
 
 pub struct CompositionRangeSubsetProof {
     pub callable: Box<CompositionCallableProof>,
+}
+pub struct FunctionRangeInCodomainProof {
+    pub source: crate::execute::execute_fact_stmt::function_domain::CompleteFunctionDomainProof,
+    pub containment: FunctionRangeCodomainContainment,
+}
+pub enum FunctionRangeCodomainContainment {
+    Exact(Box<EqualFactSearchedProof>),
+    Subset(Box<VerifyFactResult>),
 }
 
 pub struct StandardSetSubsetBuiltinRuleProof {
@@ -172,6 +181,50 @@ impl Runtime {
             return Ok(Some(SubsetFactSearchProofByBuiltinRule::SubsetReflexivity(
                 SubsetReflexivityBuiltinRuleProof {},
             )));
+        }
+
+        // A complete callable's image lies in every certified return carrier.
+        if let Obj::FunctionSpace(FunctionSpace::FnRange(range)) = &fact.left {
+            for source in self.complete_function_domains(&range.function, verify_state)? {
+                let comparison = EqualFact {
+                    fact_id: self.global_ids.allocate_fact_id(),
+                    left: *source.signature.ret_set.clone(),
+                    right: fact.right.clone(),
+                    line_file: None,
+                };
+                if let Some(equal) = self.search_equal_fact_proof_directly(&comparison) {
+                    return Ok(Some(
+                        SubsetFactSearchProofByBuiltinRule::FunctionRangeInCodomain(
+                            FunctionRangeInCodomainProof {
+                                source,
+                                containment: FunctionRangeCodomainContainment::Exact(Box::new(
+                                    equal,
+                                )),
+                            },
+                        ),
+                    ));
+                }
+                let requirement = Fact::from(SubsetFact {
+                    fact_id: self.global_ids.allocate_fact_id(),
+                    left: *source.signature.ret_set.clone(),
+                    right: fact.right.clone(),
+                    line_file: None,
+                });
+                let codomain_subset =
+                    self.verify_builtin_rule_premise(&requirement, verify_state)?;
+                if !codomain_subset.is_failed() {
+                    return Ok(Some(
+                        SubsetFactSearchProofByBuiltinRule::FunctionRangeInCodomain(
+                            FunctionRangeInCodomainProof {
+                                source,
+                                containment: FunctionRangeCodomainContainment::Subset(Box::new(
+                                    codomain_subset,
+                                )),
+                            },
+                        ),
+                    ));
+                }
+            }
         }
 
         // range(f ∘ g) ⊆ range(f); equality is not implied without surjectivity.

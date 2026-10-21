@@ -1,5 +1,81 @@
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule;
 use crate::prelude::*;
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::greater_equal::{GreaterEqualFactSearchProofByBuiltinRule, NonnegativeSumTree};
+
+const SUM_TREE: &str =
+    "forall x, y, z R:\n    x >= 0\n    y >= 0\n    z >= 0\n    =>:\n        (x + y) + z >= 0\n";
+
+fn sum_tree(result: &mut RunLitexCodeResult) -> &mut NonnegativeSumTree {
+    let AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterEqualFact(
+            GreaterEqualFactSearchProofByBuiltinRule::SumOfNonnegatives(proof),
+        ),
+    ) = &mut selected(result).searched_proof
+    else {
+        panic!("original >= sum tree")
+    };
+    &mut proof.constructor_tree
+}
+
+#[test]
+fn nonnegative_sum_tree_replays_nested_original_leaves() {
+    let (mut result, compiler) = super::execute(SUM_TREE);
+    assert!(matches!(
+        sum_tree(&mut result),
+        NonnegativeSumTree::Add { .. }
+    ));
+    let output = compiler.compile_run(&result, "nested_sum_tree").unwrap();
+    assert!(output.contains("Litex.addNonnegative _litex_sum.val.left.val.left"));
+}
+
+#[test]
+fn nonnegative_sum_tree_rejects_changed_shape_and_leaf_order() {
+    for shape in [false, true] {
+        let (mut result, compiler) = super::execute(SUM_TREE);
+        let NonnegativeSumTree::Add { left, right } = sum_tree(&mut result) else {
+            unreachable!()
+        };
+        if shape {
+            std::mem::swap(left, right);
+        } else {
+            let NonnegativeSumTree::Add { left, right } = left.as_mut() else {
+                unreachable!()
+            };
+            std::mem::swap(left, right);
+        }
+        let err = compiler.compile_run(&result, "bad_sum_tree").unwrap_err();
+        assert_eq!(
+            err.route,
+            if shape {
+                "NonnegativeSum/Shape"
+            } else {
+                "NonnegativeSum/Leaf"
+            }
+        );
+    }
+}
+
+#[test]
+fn nonnegative_sum_tree_rejects_changed_leaf_bound() {
+    let (mut result, compiler) = super::execute(SUM_TREE);
+    let NonnegativeSumTree::Add { right, .. } = sum_tree(&mut result) else {
+        unreachable!()
+    };
+    let NonnegativeSumTree::Leaf(child) = right.as_mut() else {
+        unreachable!()
+    };
+    let AtomicFact::GreaterEqualFact(fact) = &mut super::atomic_proof_mut(child).fact else {
+        unreachable!()
+    };
+    fact.right = super::number_object("1");
+    assert_eq!(
+        compiler
+            .compile_run(&result, "bad_sum_bound")
+            .unwrap_err()
+            .route,
+        "NonnegativeSum/Leaf"
+    );
+}
 
 const SUM: &str = include_str!(
     "../../../../examples/proof_nodes/atomic/by_builtin_rule/less_equal_sum_of_nonnegatives.lit"

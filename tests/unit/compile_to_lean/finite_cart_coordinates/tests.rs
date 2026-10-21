@@ -8,6 +8,51 @@ use crate::prelude::*;
 const SOURCE: &str =
     "forall coordinate_point cart(R, R):\n    coordinate_point(1) = coordinate_point(1)\n";
 
+const VALUE_SOURCE: &str = "have p cart(R, R) = (1, 2)\np(1) = 1\n";
+
+fn value_shape(
+    result: &mut RunLitexCodeResult,
+) -> &mut crate::execute::execute_fact_stmt::known_tuple::KnownTupleValueProof {
+    let ExecStmtResult::Fact(ExecFactStmtResult::Success(fact)) = &mut result.statement_results[1]
+    else {
+        panic!("coordinate fact")
+    };
+    let equality = super::equality_proof_mut(&mut fact.verify_result);
+    let ObjWellDefinedProof::ByDef {
+        proof: ObjWellDefinedProofByDef::FnObj(proof),
+        ..
+    } = &mut equality.well_defined_proof.left
+    else {
+        panic!("coordinate call WD")
+    };
+    let Some(FnObjDomainFnSetEvidence::FiniteFunction(finite)) = &mut proof.domain_fn_set else {
+        panic!("finite call")
+    };
+    let KnownTupleShapeProof::TupleEquality(shape) = &mut finite.source else {
+        panic!("retained tuple value")
+    };
+    shape
+}
+
+#[test]
+fn finite_tuple_value_uses_its_singleton_contract_and_original_equality() {
+    let (mut result, compiler) = super::execute(VALUE_SOURCE);
+    assert_eq!(value_shape(&mut result).value.args.len(), 2);
+    assert!(compiler
+        .compile_run(&result, "tuple_value_call")
+        .unwrap()
+        .contains("Litex.tupleInSingletonCart"));
+}
+
+#[test]
+fn finite_tuple_value_rejects_a_changed_equality_citation() {
+    let (mut result, compiler) = super::execute(VALUE_SOURCE);
+    value_shape(&mut result).tuple_equal.path[0].2 = FactId::new(u64::MAX);
+    compiler
+        .compile_run(&result, "forged_tuple_value")
+        .expect_err("the singleton contract must use the original tuple equality");
+}
+
 fn finite(statement: &mut ExecStmtResult) -> &mut FiniteFunctionSignatureProof {
     let fact = super::forall_proof_mut(statement);
     let equality = super::equality_proof_mut(&mut fact.proved_then_facts[0].verify_result);
@@ -41,10 +86,9 @@ fn finite_coordinate_uses_its_exact_citation_for_empty_equality_paths() {
     let output = compiler
         .compile_run(&result, "coordinate_citation")
         .unwrap();
-    assert!(output.contains(&format!(
-        ")) h_{} (Litex.indexSetMemberOfClosedRange",
-        id.value()
-    )));
+    assert!(output.contains(&format!(")) h_{} (by change M.mem", id.value())));
+    assert!(output.contains("Litex.Same _object_w") && output.contains(" _object_h"));
+    assert!(!output.contains("Litex.indexSetMemberOfClosedRange"));
 }
 
 #[test]

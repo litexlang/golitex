@@ -1,0 +1,3 @@
+# Explicit relative continuity law; all complete domains and point values are checked.
+have fn identity(x R) R=x
+release thm fn_continuous_right_identity(identity,0)

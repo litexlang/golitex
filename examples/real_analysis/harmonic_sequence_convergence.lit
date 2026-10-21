@@ -1,0 +1,38 @@
+# Monotone and lower bounded implies finite real convergence. No value is guessed by WD.
+have fn harmonic(k N+) R=1/k
+
+claim:
+    ? forall m,n N+:
+        m<=n
+        =>:
+            harmonic(n)<=harmonic(m)
+    0<m
+    0<n
+    0<m*n
+    harmonic(n)=1/n=m/(m*n)<=n/(m*n)=1/m=harmonic(m)
+
+by def $is_seq_nonincreasing(harmonic)
+
+claim:
+    ? forall y fn_range(harmonic):
+        0<=y
+    have by fn_preimage: n from y $in fn_range(harmonic)
+    y=harmonic(n)=1/n>0
+
+by def $is_real_lower_bound(fn_range(harmonic),0)
+
+witness exist lower R st {$is_real_lower_bound(fn_range(harmonic),lower)} from 0
+
+by def $is_real_bounded_below(fn_range(harmonic))
+
+by def $is_seq_bounded_below(harmonic)
+
+release thm sequence_monotone_bounded_below(harmonic)
+
+by def $is_seq_convergent(harmonic)
+
+lim(harmonic) $in R
+
+obtain harmonic_limit from exist L R st {$has_seq_limit(harmonic,L)}
+release thm sequence_limit_cauchy(harmonic,harmonic_limit)
+$is_seq_cauchy(harmonic)

@@ -1,0 +1,20 @@
+# Continuity is relative to the complete domain; the centre need not be an accumulation point.
+have fn isolated(x {0}) R=7
+
+release thm fn_continuous_at_constant(isolated,0,7)
+
+by contra:
+    ? not $is_real_accumulation_at({0},0)
+    obtain x from exist x {0} st {0<abs(x-0) and abs(x-0)<1}
+    x=0
+    abs(x-0)=0
+    impossible 0<abs(x-0)
+
+claim:
+    ? forall L R:
+        not $has_limit_at(isolated,0,L)
+    by contra:
+        ? not $has_limit_at(isolated,0,L)
+        release thm fn_limit_at_accumulation(isolated,0,L)
+        by def $is_real_accumulation_at({0},0)
+        impossible $is_real_accumulation_at({0},0)

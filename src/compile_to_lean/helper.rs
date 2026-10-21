@@ -5,6 +5,19 @@ use crate::execute::execute_fact_stmt::verify_exist_shaped_fact::VerifyNotExistF
 use crate::prelude::*;
 use std::collections::HashMap;
 
+/// Cartesian inference can only have produced a one-based literal projection.
+/// This only filters impossible lookups; its original store is still validated.
+pub(super) fn is_literal_coordinate_call(object: &Obj) -> bool {
+    let Obj::FnObj(call) = object else {
+        return false;
+    };
+    call.body.last().is_some_and(|args| {
+        args.len() == 1
+            && crate::execute::execute_fact_stmt::known_tuple::literal_positive_usize(&args[0])
+                .is_some()
+    })
+}
+
 pub(super) fn finite_vector_proof(proofs: &[String]) -> String {
     let tail = "(fun i => Fin.elim0 i)".to_string();
     if proofs.is_empty() {
@@ -381,8 +394,8 @@ pub(super) fn standard_term(set: &StandardSet) -> Result<String, LeanCompileErro
         StandardSet::R => "R",
         StandardSet::C => "C",
         StandardSet::RPos => "RPos",
-        StandardSet::NPos
-        | StandardSet::QPos
+        StandardSet::NPos => "NPos",
+        StandardSet::QPos
         | StandardSet::QNeg
         | StandardSet::ZNeg
         | StandardSet::RNeg
@@ -398,6 +411,9 @@ pub(super) fn standard_term(set: &StandardSet) -> Result<String, LeanCompileErro
 
 pub(super) fn unsupported_wd_definition(proof: &ObjWellDefinedProofByDef) -> LeanCompileError {
     match proof {
+        ObjWellDefinedProofByDef::BoundOperator(_) => {
+            LeanCompileError::unsupported("WD/BoundOperator")
+        }
         ObjWellDefinedProofByDef::LimitOperator(_) => {
             LeanCompileError::unsupported("WD/LimitOperator")
         }
@@ -603,6 +619,16 @@ pub(super) fn validate_statement_capture(
     result: &ExecStmtResult,
 ) -> Result<(), LeanCompileError> {
     let matches = match (source, result) {
+        (
+            Stmt::Witness(WitnessStmt::WitnessAtomicFact(source)),
+            ExecStmtResult::Witness(
+                crate::execute::execute_witness_stmt::ExecWitnessStmtResult::WitnessAtomicFact(
+                    crate::execute::execute_witness_stmt::ExecWitnessAtomicFactStmtResult::Success(
+                        proof,
+                    ),
+                ),
+            ),
+        ) => source == &proof.statement,
         (
             Stmt::Witness(WitnessStmt::WitnessExistFact(source)),
             ExecStmtResult::Witness(

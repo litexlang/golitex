@@ -1,0 +1,39 @@
+# A proved mathematical counterexample: x^2 is continuous on R, but not uniformly continuous.
+have fn identity(x R) R=x
+have fn square(x R) R=x^2
+claim:
+    ? forall x R:
+        $is_continuous_at(square,x)
+    release thm fn_continuous_at_identity(identity,x)
+    release thm fn_continuous_at_power(identity,square,x,2)
+
+release thm fn_continuous_from_pointwise(square)
+
+by contra:
+    ? not $is_uniformly_continuous(square)
+    release thm fn_uniform_control(square,1)
+    obtain delta from exist delta R+ st {{p cart(R,R):abs(p(1)-p(2))<delta} $subset {p cart(R,R):abs(square(p(1))-square(p(2)))<1}}
+    have left R=2/delta
+    have right R=left+delta/2
+    0<delta/2
+    left-right=left-(left+delta/2)=-(delta/2)
+    abs(left-right)=abs(-(delta/2))=abs(delta/2)=delta/2<delta/2+delta/2=delta
+    (left,right)(1)=left
+    (left,right)(2)=right
+    abs((left,right)(1)-(left,right)(2))=abs(left-right)<delta
+    (left,right) $in {p cart(R,R):abs(p(1)-p(2))<delta}
+    (left,right) $in {p cart(R,R):abs(square(p(1))-square(p(2)))<1}
+    square((left,right)(1))=square(left)
+    square((left,right)(2))=square(right)
+    abs(square((left,right)(1))-square((left,right)(2)))<1
+    abs(square(left)-square(right))=abs(square((left,right)(1))-square((left,right)(2)))<1
+    square(left)=left^2
+    square(right)=right^2
+    right^2-left^2=(left+delta/2)^2-left^2
+    (left+delta/2)^2-left^2=(2/delta+delta/2)^2-(2/delta)^2=2+delta^2/4
+    0<=delta^2/4
+    2<=2+delta^2/4=right^2-left^2
+    0<right^2-left^2
+    square(left)-square(right)=-(right^2-left^2)
+    abs(square(left)-square(right))=abs(-(right^2-left^2))=abs(right^2-left^2)=right^2-left^2>=2>1
+    impossible abs(square(left)-square(right))<1

@@ -1,0 +1,2 @@
+# Explicit continuity on the complete domain declared in the function.
+release thm fn_continuous_csch(fn(x R:x!=0) R{csch(x)})

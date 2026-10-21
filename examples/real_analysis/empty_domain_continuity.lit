@@ -1,0 +1,20 @@
+# Global properties are vacuous on an empty domain. Lipschitz still checks its nonnegative real constant.
+{} $subset R
+
+have empty_fn fn(x {}) R
+
+claim:
+    ? forall p cart({},{}):
+        abs(empty_fn(p(1))-empty_fn(p(2)))<=0*abs(p(1)-p(2))
+    by contra:
+        ? abs(empty_fn(p(1))-empty_fn(p(2)))<=0*abs(p(1)-p(2))
+        p(1) $in {}
+        impossible p(1) $in {}
+
+by def $is_lipschitz(empty_fn,0)
+
+release thm fn_lipschitz_uniform(empty_fn,0)
+
+release thm fn_uniform_continuous(empty_fn)
+
+$is_continuous(empty_fn)

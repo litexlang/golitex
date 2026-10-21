@@ -218,6 +218,48 @@ impl LitexToLeanCompiler {
             ));
         };
         let family_matches = match infer {
+            InferAtomicFactResult::RealSetBoundFact(_) => {
+                matches!(atomic, AtomicFact::RealSetBoundFact(_))
+            }
+            InferAtomicFactResult::NotRealSetBoundFact(_) => {
+                matches!(atomic, AtomicFact::NotRealSetBoundFact(_))
+            }
+            InferAtomicFactResult::RealSetBoundedFact(_) => {
+                matches!(atomic, AtomicFact::RealSetBoundedFact(_))
+            }
+            InferAtomicFactResult::NotRealSetBoundedFact(_) => {
+                matches!(atomic, AtomicFact::NotRealSetBoundedFact(_))
+            }
+            InferAtomicFactResult::SequenceAnalysisFact(_) => {
+                matches!(atomic, AtomicFact::SequenceAnalysisFact(_))
+            }
+            InferAtomicFactResult::NotSequenceAnalysisFact(_) => {
+                matches!(atomic, AtomicFact::NotSequenceAnalysisFact(_))
+            }
+            InferAtomicFactResult::RealAccumulationFact(_) => {
+                matches!(atomic, AtomicFact::RealAccumulationFact(_))
+            }
+            InferAtomicFactResult::NotRealAccumulationFact(_) => {
+                matches!(atomic, AtomicFact::NotRealAccumulationFact(_))
+            }
+            InferAtomicFactResult::FunctionContinuousAtFact(_) => {
+                matches!(atomic, AtomicFact::FunctionContinuousAtFact(_))
+            }
+            InferAtomicFactResult::NotFunctionContinuousAtFact(_) => {
+                matches!(atomic, AtomicFact::NotFunctionContinuousAtFact(_))
+            }
+            InferAtomicFactResult::FunctionContinuousFact(_) => {
+                matches!(atomic, AtomicFact::FunctionContinuousFact(_))
+            }
+            InferAtomicFactResult::NotFunctionContinuousFact(_) => {
+                matches!(atomic, AtomicFact::NotFunctionContinuousFact(_))
+            }
+            InferAtomicFactResult::FunctionLipschitzFact(_) => {
+                matches!(atomic, AtomicFact::FunctionLipschitzFact(_))
+            }
+            InferAtomicFactResult::NotFunctionLipschitzFact(_) => {
+                matches!(atomic, AtomicFact::NotFunctionLipschitzFact(_))
+            }
             InferAtomicFactResult::HasFunctionLimitFact(_) => {
                 matches!(atomic, AtomicFact::HasFunctionLimitFact(_))
             }
@@ -343,6 +385,48 @@ impl LitexToLeanCompiler {
             ));
         }
         match infer {
+            InferAtomicFactResult::RealSetBoundFact(_) => {
+                Err(LeanCompileError::unsupported("Inference/RealAnalysis"))
+            }
+            InferAtomicFactResult::NotRealSetBoundFact(_) => {
+                Err(LeanCompileError::unsupported("Inference/RealAnalysis"))
+            }
+            InferAtomicFactResult::RealSetBoundedFact(_) => {
+                Err(LeanCompileError::unsupported("Inference/RealAnalysis"))
+            }
+            InferAtomicFactResult::NotRealSetBoundedFact(_) => {
+                Err(LeanCompileError::unsupported("Inference/RealAnalysis"))
+            }
+            InferAtomicFactResult::SequenceAnalysisFact(_) => {
+                Err(LeanCompileError::unsupported("Inference/RealAnalysis"))
+            }
+            InferAtomicFactResult::NotSequenceAnalysisFact(_) => {
+                Err(LeanCompileError::unsupported("Inference/RealAnalysis"))
+            }
+            InferAtomicFactResult::RealAccumulationFact(_) => {
+                Err(LeanCompileError::unsupported("Inference/RealAnalysis"))
+            }
+            InferAtomicFactResult::NotRealAccumulationFact(_) => {
+                Err(LeanCompileError::unsupported("Inference/RealAnalysis"))
+            }
+            InferAtomicFactResult::FunctionContinuousAtFact(_) => {
+                Err(LeanCompileError::unsupported("Inference/RealAnalysis"))
+            }
+            InferAtomicFactResult::NotFunctionContinuousAtFact(_) => {
+                Err(LeanCompileError::unsupported("Inference/RealAnalysis"))
+            }
+            InferAtomicFactResult::FunctionContinuousFact(_) => {
+                Err(LeanCompileError::unsupported("Inference/RealAnalysis"))
+            }
+            InferAtomicFactResult::NotFunctionContinuousFact(_) => {
+                Err(LeanCompileError::unsupported("Inference/RealAnalysis"))
+            }
+            InferAtomicFactResult::FunctionLipschitzFact(_) => {
+                Err(LeanCompileError::unsupported("Inference/RealAnalysis"))
+            }
+            InferAtomicFactResult::NotFunctionLipschitzFact(_) => {
+                Err(LeanCompileError::unsupported("Inference/RealAnalysis"))
+            }
             InferAtomicFactResult::HasFunctionLimitFact(_)
             | InferAtomicFactResult::NotHasFunctionLimitFact(_) => {
                 Err(LeanCompileError::unsupported("Inference/FunctionLimit"))

@@ -201,6 +201,14 @@ fn objs_alpha_equal(left: &Obj, right: &Obj, map: &HashMap<IdentifierId, Identif
                 }
         }
         (
+            Obj::BoundOperator(crate::ast::obj::BoundOperator::Supremum(l)),
+            Obj::BoundOperator(crate::ast::obj::BoundOperator::Supremum(r)),
+        ) => objs_alpha_equal(&l.set, &r.set, map),
+        (
+            Obj::BoundOperator(crate::ast::obj::BoundOperator::Infimum(l)),
+            Obj::BoundOperator(crate::ast::obj::BoundOperator::Infimum(r)),
+        ) => objs_alpha_equal(&l.set, &r.set, map),
+        (
             Obj::LimitOperator(crate::ast::obj::LimitOperator::Sequence(l)),
             Obj::LimitOperator(crate::ast::obj::LimitOperator::Sequence(r)),
         ) => objs_alpha_equal(&l.sequence, &r.sequence, map),
@@ -821,6 +829,69 @@ fn atomic_facts_alpha_equal(
         return false;
     }
     match (left, right) {
+        (AtomicFact::RealSetBoundFact(l), AtomicFact::RealSetBoundFact(r)) => {
+            if l.direction != r.direction {
+                return false;
+            }
+        }
+        (AtomicFact::NotRealSetBoundFact(l), AtomicFact::NotRealSetBoundFact(r)) => {
+            if l.direction != r.direction {
+                return false;
+            }
+        }
+        (AtomicFact::RealSetBoundedFact(l), AtomicFact::RealSetBoundedFact(r)) => {
+            if l.boundedness != r.boundedness {
+                return false;
+            }
+        }
+        (AtomicFact::NotRealSetBoundedFact(l), AtomicFact::NotRealSetBoundedFact(r)) => {
+            if l.boundedness != r.boundedness {
+                return false;
+            }
+        }
+        (AtomicFact::SequenceAnalysisFact(l), AtomicFact::SequenceAnalysisFact(r)) => {
+            if l.property != r.property {
+                return false;
+            }
+        }
+        (AtomicFact::NotSequenceAnalysisFact(l), AtomicFact::NotSequenceAnalysisFact(r)) => {
+            if l.property != r.property {
+                return false;
+            }
+        }
+        (AtomicFact::RealAccumulationFact(l), AtomicFact::RealAccumulationFact(r)) => {
+            if l.side != r.side {
+                return false;
+            }
+        }
+        (AtomicFact::NotRealAccumulationFact(l), AtomicFact::NotRealAccumulationFact(r)) => {
+            if l.side != r.side {
+                return false;
+            }
+        }
+        (AtomicFact::FunctionContinuousAtFact(l), AtomicFact::FunctionContinuousAtFact(r)) => {
+            if l.side != r.side {
+                return false;
+            }
+        }
+        (
+            AtomicFact::NotFunctionContinuousAtFact(l),
+            AtomicFact::NotFunctionContinuousAtFact(r),
+        ) => {
+            if l.side != r.side {
+                return false;
+            }
+        }
+        (AtomicFact::FunctionContinuousFact(l), AtomicFact::FunctionContinuousFact(r)) => {
+            if l.property != r.property {
+                return false;
+            }
+        }
+        (AtomicFact::NotFunctionContinuousFact(l), AtomicFact::NotFunctionContinuousFact(r)) => {
+            if l.property != r.property {
+                return false;
+            }
+        }
         (AtomicFact::HasFunctionLimitFact(l), AtomicFact::HasFunctionLimitFact(r)) => {
             if !l.approach.same_direction(&r.approach) {
                 return false;

@@ -807,6 +807,20 @@ fn try_parse_keyword_primary(
                 crate::ast::obj::FunctionLimit::with_approach(args.pop().unwrap(), approach).into(),
             ))
         }
+        crate::parse::keywords::SUP | crate::parse::keywords::INF => {
+            let upper = token == crate::parse::keywords::SUP;
+            tb.advance()?;
+            let mut args = parse_obj_list_paren(rt, tb)?;
+            if args.len() != 1 {
+                return Err(tb.parse_error("sup/inf expect 1 real set argument"));
+            }
+            let set = args.pop().unwrap();
+            Ok(Some(if upper {
+                crate::ast::obj::Supremum::new(set).into()
+            } else {
+                crate::ast::obj::Infimum::new(set).into()
+            }))
+        }
         crate::parse::keywords::LIMSUP | crate::parse::keywords::LIMINF => {
             let upper = token == crate::parse::keywords::LIMSUP;
             tb.advance()?;

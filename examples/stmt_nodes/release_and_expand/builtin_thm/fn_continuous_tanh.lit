@@ -1,0 +1,2 @@
+# Explicit continuity on the complete domain declared in the function.
+release thm fn_continuous_tanh(fn(x R) R{tanh(x)})

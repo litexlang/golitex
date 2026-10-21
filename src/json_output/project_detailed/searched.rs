@@ -875,6 +875,41 @@ fn project_user_prop_def(proof: &UserDefinedPropDefinitionProof, runtime: &Runti
 
 fn project_builtin_prop_def(proof: &BuiltinPropDefinitionProof, runtime: &Runtime) -> JsonValue {
     let (kind, requirements, proofs) = match proof {
+        BuiltinPropDefinitionProof::RealSetBound(p) => (
+            "RealSetBound",
+            &p.requirement_facts,
+            &p.proof_of_requirement_facts,
+        ),
+        BuiltinPropDefinitionProof::RealSetBounded(p) => (
+            "RealSetBounded",
+            &p.requirement_facts,
+            &p.proof_of_requirement_facts,
+        ),
+        BuiltinPropDefinitionProof::SequenceAnalysis(p) => (
+            "SequenceAnalysis",
+            &p.requirement_facts,
+            &p.proof_of_requirement_facts,
+        ),
+        BuiltinPropDefinitionProof::RealAccumulation(p) => (
+            "RealAccumulation",
+            &p.requirement_facts,
+            &p.proof_of_requirement_facts,
+        ),
+        BuiltinPropDefinitionProof::FunctionContinuousAt(p) => (
+            "FunctionContinuousAt",
+            &p.requirement_facts,
+            &p.proof_of_requirement_facts,
+        ),
+        BuiltinPropDefinitionProof::FunctionContinuous(p) => (
+            "FunctionContinuous",
+            &p.requirement_facts,
+            &p.proof_of_requirement_facts,
+        ),
+        BuiltinPropDefinitionProof::FunctionLipschitz(p) => (
+            "FunctionLipschitz",
+            &p.requirement_facts,
+            &p.proof_of_requirement_facts,
+        ),
         BuiltinPropDefinitionProof::FunctionLimit(p) => (
             "FunctionLimit",
             &p.requirement_facts,

@@ -1,0 +1,4 @@
+# Explicit analysis theorem with checked premises.
+have fn identity(x R) R=x
+release thm fn_continuous_identity(identity)
+release thm fn_continuous_at(identity,0)

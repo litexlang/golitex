@@ -1,0 +1,7 @@
+# Expected rejection: missing or false analysis premise; the last statement must fail.
+claim:
+    ? forall f fn(x R) R:
+        $is_continuous(f)
+        =>:
+            $is_uniformly_continuous(f)
+    $is_uniformly_continuous(f)

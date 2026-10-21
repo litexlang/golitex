@@ -745,6 +745,11 @@ impl ExecReleaseZornLemmaStmtResult {
 
 /// Existing schemas remain primitive; bounded extremal existence has a checked derivation.
 pub enum TheoremDerivationProof {
+    SequenceMonotoneBoundedAbove(SequenceMonotoneBoundedAboveProof),
+    SequenceMonotoneBoundedBelow(SequenceMonotoneBoundedBelowProof),
+    SequenceCauchyBounded(SequenceCauchyBoundedProof),
+    SequenceCauchyConvergent(SequenceCauchyConvergentProof),
+    SequenceConvergentBounded(SequenceConvergentBoundedProof),
     UserTheorem,
     NativeSchema,
     SequenceLimsupBounded(SequenceLimsupBoundedProof),
@@ -760,4 +765,24 @@ pub struct SequenceExtremaCompletenessProof {
     pub derivation_steps: Vec<ExecStmtResult>,
     pub application: Box<ExecStmtResult>,
     pub conclusion: Box<VerifyFactResult>,
+}
+pub struct RealSequenceCompletenessProof {
+    pub derivation_steps: Vec<ExecStmtResult>,
+    pub application: Box<ExecStmtResult>,
+    pub conclusion: Box<VerifyFactResult>,
+}
+pub struct SequenceMonotoneBoundedAboveProof {
+    pub completeness: RealSequenceCompletenessProof,
+}
+pub struct SequenceMonotoneBoundedBelowProof {
+    pub completeness: RealSequenceCompletenessProof,
+}
+pub struct SequenceCauchyBoundedProof {
+    pub completeness: RealSequenceCompletenessProof,
+}
+pub struct SequenceCauchyConvergentProof {
+    pub completeness: RealSequenceCompletenessProof,
+}
+pub struct SequenceConvergentBoundedProof {
+    pub completeness: RealSequenceCompletenessProof,
 }

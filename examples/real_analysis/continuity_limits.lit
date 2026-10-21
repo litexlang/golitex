@@ -1,0 +1,17 @@
+# Before: continuity predicates and their explicit bridges were unavailable.
+# have fn square(x R) R=x^2
+# $is_continuous_at(square,3)
+# Now: first establish continuity, then accumulation, then the limit candidate.
+# Boundary: a point value alone does not prove continuity or a limit.
+# Evidence: target/release/litex -lang en -strict -f examples/real_analysis/continuity_limits.lit
+have fn square(x R) R=x^2
+have fn identity(x R) R=x
+release thm fn_continuous_at_identity(identity,3)
+release thm fn_continuous_at_power(identity,square,3,2)
+$is_continuous_at(square,3)
+release thm fn_limit_at_real_accumulation(3)
+by def $is_real_accumulation_at(R,3)
+release thm fn_continuous_at_to_limit(square,3)
+square(3)=9
+lim(square,3)=9
+lim(square,3)+2=11

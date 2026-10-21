@@ -1,0 +1,3 @@
+# Expected: normal rejection; no facts from the failed theorem escape.
+release thm real_greatest_lower_bound_from_definition({},0)
+

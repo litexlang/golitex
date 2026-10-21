@@ -1,0 +1,12 @@
+# Before: this explicit builtin theorem name was unavailable.
+# release thm real_least_upper_bound_from_definition({0},0)
+# Run: target/release/litex -strict -lang en -f examples/stmt_nodes/release_and_expand/builtin_thm/real_least_upper_bound_from_definition.lit
+forall u R:
+    forall x {0}:
+        x<=u
+    =>:
+        0<=u
+release thm real_least_upper_bound_from_definition({0},0)
+$is_real_least_upper_bound({0},0)
+# Boundary: missing certificates, false extremal candidates, and non-strict crossings are rejected.
+

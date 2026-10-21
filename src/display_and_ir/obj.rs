@@ -38,6 +38,8 @@ impl Obj {
                 s.push_str(LEFT_PAREN);
             }
             match o {
+                Obj::BoundOperator(BoundOperator::Supremum(x)) => s.push_str(x.ir().as_str()),
+                Obj::BoundOperator(BoundOperator::Infimum(x)) => s.push_str(x.ir().as_str()),
                 Obj::ArithmeticOperator(ArithmeticOperator::Add(a)) => {
                     s.push_str(&fmt_obj(a.left.as_ref()));
                     s.push_str(&format!(" {} ", ADD));
@@ -1073,6 +1075,8 @@ impl_obj_kw_unary!(Csch, CSCH, arg);
 impl_obj_kw_call!(SymmetricDifference, SET_DIFF, left, right);
 
 impl_obj_kw_call!(SequenceLimit, LIM, sequence);
+impl_obj_kw_call!(Supremum, "sup", set);
+impl_obj_kw_call!(Infimum, "inf", set);
 impl_obj_kw_call!(SequenceLimsup, LIMSUP, sequence);
 impl_obj_kw_call!(SequenceLiminf, LIMINF, sequence);
 

@@ -772,6 +772,8 @@ fn geo_scope_cursor_atomic_success_views_share_exact_search_stage_boundaries() {
     let pending = direct.atomic_search_prior(1).unwrap();
     assert!(visit_visible(
         &pending,
+        target.obj(),
+        true,
         &mut |evidence, _| {
             match evidence {
                 SourceConstructor::Checked(candidate) if std::ptr::eq(candidate, target) => {
@@ -788,6 +790,8 @@ fn geo_scope_cursor_atomic_success_views_share_exact_search_stage_boundaries() {
     let mut exact = false;
     visit_visible(
         &complete,
+        target.obj(),
+        true,
         &mut |evidence, site| {
             if let SourceConstructor::Checked(candidate) = evidence {
                 if std::ptr::eq(candidate, target) {
@@ -800,6 +804,8 @@ fn geo_scope_cursor_atomic_success_views_share_exact_search_stage_boundaries() {
                     let replay = SourcePosition::new(Some(site), SourceOwner::WD(target), 1);
                     let nested = visit_visible(
                         &replay,
+                        child.obj(),
+                        true,
                         &mut |nested, _| match nested {
                             SourceConstructor::Checked(candidate)
                                 if std::ptr::eq(candidate, child) =>

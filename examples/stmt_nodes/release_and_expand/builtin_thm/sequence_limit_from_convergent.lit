@@ -1,0 +1,4 @@
+# Explicit analysis theorem with checked premises.
+have fn sample(k N+) R=2
+release thm sequence_constant_properties(sample,2)
+release thm sequence_limit_from_convergent(sample)

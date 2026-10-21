@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use crate::store_fact_and_infer::InferAtomicFactResult;
+use crate::store_fact_and_infer::*;
 
 impl Runtime {
     pub(crate) fn infer_atomic_fact(
@@ -8,6 +8,93 @@ impl Runtime {
         state: VerifyState,
     ) -> RuntimeResult<InferAtomicFactResult> {
         match fact {
+            AtomicFact::RealSetBoundFact(f) => Ok(InferAtomicFactResult::RealSetBoundFact(vec![
+                InferRealSetBoundFactResult::Definition(InferRealSetBoundDefinitionResult {
+                    source_fact_id: f.fact_id,
+                    derived: self.store_real_analysis_definition(fact, state)?,
+                }),
+            ])),
+            AtomicFact::NotRealSetBoundFact(_) => {
+                Ok(InferAtomicFactResult::NotRealSetBoundFact(Vec::new()))
+            }
+            AtomicFact::RealSetBoundedFact(f) => {
+                Ok(InferAtomicFactResult::RealSetBoundedFact(vec![
+                    InferRealSetBoundedFactResult::Definition(
+                        InferRealSetBoundedDefinitionResult {
+                            source_fact_id: f.fact_id,
+                            derived: self.store_real_analysis_definition(fact, state)?,
+                        },
+                    ),
+                ]))
+            }
+            AtomicFact::NotRealSetBoundedFact(_) => {
+                Ok(InferAtomicFactResult::NotRealSetBoundedFact(Vec::new()))
+            }
+            AtomicFact::SequenceAnalysisFact(f) => {
+                Ok(InferAtomicFactResult::SequenceAnalysisFact(vec![
+                    InferSequenceAnalysisFactResult::Definition(
+                        InferSequenceAnalysisDefinitionResult {
+                            source_fact_id: f.fact_id,
+                            derived: self.store_real_analysis_definition(fact, state)?,
+                        },
+                    ),
+                ]))
+            }
+            AtomicFact::NotSequenceAnalysisFact(_) => {
+                Ok(InferAtomicFactResult::NotSequenceAnalysisFact(Vec::new()))
+            }
+            AtomicFact::RealAccumulationFact(f) => {
+                Ok(InferAtomicFactResult::RealAccumulationFact(vec![
+                    InferRealAccumulationFactResult::Definition(
+                        InferRealAccumulationDefinitionResult {
+                            source_fact_id: f.fact_id,
+                            derived: self.store_real_analysis_definition(fact, state)?,
+                        },
+                    ),
+                ]))
+            }
+            AtomicFact::NotRealAccumulationFact(_) => {
+                Ok(InferAtomicFactResult::NotRealAccumulationFact(Vec::new()))
+            }
+            AtomicFact::FunctionContinuousAtFact(f) => {
+                Ok(InferAtomicFactResult::FunctionContinuousAtFact(vec![
+                    InferFunctionContinuousAtFactResult::Definition(
+                        InferFunctionContinuousAtDefinitionResult {
+                            source_fact_id: f.fact_id,
+                            derived: self.store_real_analysis_definition(fact, state)?,
+                        },
+                    ),
+                ]))
+            }
+            AtomicFact::NotFunctionContinuousAtFact(_) => Ok(
+                InferAtomicFactResult::NotFunctionContinuousAtFact(Vec::new()),
+            ),
+            AtomicFact::FunctionContinuousFact(f) => {
+                Ok(InferAtomicFactResult::FunctionContinuousFact(vec![
+                    InferFunctionContinuousFactResult::Definition(
+                        InferFunctionContinuousDefinitionResult {
+                            source_fact_id: f.fact_id,
+                            derived: self.store_real_analysis_definition(fact, state)?,
+                        },
+                    ),
+                ]))
+            }
+            AtomicFact::NotFunctionContinuousFact(_) => {
+                Ok(InferAtomicFactResult::NotFunctionContinuousFact(Vec::new()))
+            }
+            AtomicFact::FunctionLipschitzFact(f) => {
+                Ok(InferAtomicFactResult::FunctionLipschitzFact(vec![
+                    InferFunctionLipschitzFactResult::Definition(
+                        InferFunctionLipschitzDefinitionResult {
+                            source_fact_id: f.fact_id,
+                            derived: self.store_real_analysis_definition(fact, state)?,
+                        },
+                    ),
+                ]))
+            }
+            AtomicFact::NotFunctionLipschitzFact(_) => {
+                Ok(InferAtomicFactResult::NotFunctionLipschitzFact(Vec::new()))
+            }
             AtomicFact::HasFunctionLimitFact(_) => {
                 Ok(InferAtomicFactResult::HasFunctionLimitFact(Vec::new()))
             }

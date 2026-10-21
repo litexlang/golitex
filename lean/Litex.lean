@@ -483,6 +483,15 @@ def powIntInC {M : Semantics.{u}} {α : Type v} {β : Type w}
     (heValue : Same e (number (z : ℂ))) : In (powInt a e z haC heZ ha0 heValue) C :=
   pow_int_closed a e z haC ha0 heValue
 
+/-- An already constructed power retains the domain proof used to build it. -/
+theorem powObjInC {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (p : Obj (M := M) (PowObj (M := M) α β)) : In p C := by
+  rcases p.wd with ⟨haR, n, _heN, he⟩ | ⟨haC, n, _heN, he⟩ | ⟨haC, z, _heZ, ha0, he⟩
+  · exact pow_nat_closed _ _ n (realToComplex _ haR) he
+  · exact pow_nat_closed _ _ n haC he
+  · exact pow_int_closed _ _ z haC ha0 he
+
 /-- Replay the structural C-membership rule using its actual two children.
 The parent's certified domain still determines whether zero bases are legal;
 the structural integer representative is checked against that domain's exact
@@ -1082,6 +1091,30 @@ end Litex.NativeBridge
 
 namespace Litex
 
+/-- The selected division/product conversion observes only its three operands. -/
+theorem sameDivIffSameMul {M : Semantics.{u}}
+    {α : Type v} {β : Type w} {γ : Type x}
+    [Representation M α] [Representation M β] [Representation M γ]
+    (a : Obj (M := M) α) (b : Obj (M := M) β) (c : Obj (M := M) γ)
+    (ha : In a C) (hb : In b C) (hc : In c C) (hb0 : ¬ Same b (number 0)) :
+    Same (div a b ha hb hb0) c ↔ Same a (mul c b hc hb) := by
+  have hb0' := NativeBridge.nativeNonzeroOfDenote b (NativeBridge.asComplex b hb)
+    (NativeBridge.asComplex_spec b hb) hb0
+  change M.divValue (denote a) (denote b) = denote c ↔
+    denote a = M.mulValue (denote c) (denote b)
+  rw [NativeBridge.asComplex_spec a ha, NativeBridge.asComplex_spec b hb,
+    NativeBridge.asComplex_spec c hc, M.div_numbers _ _ hb0', M.mul_numbers,
+    M.number_injective.eq_iff, M.number_injective.eq_iff]
+  exact div_eq_iff hb0'
+
+theorem sameMulComm {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (a : Obj (M := M) α) (b : Obj (M := M) β) (ha : In a C) (hb : In b C) :
+    Same (mul a b ha hb) (mul b a hb ha) := by
+  change M.mulValue (denote a) (denote b) = M.mulValue (denote b) (denote a)
+  rw [NativeBridge.asComplex_spec a ha, NativeBridge.asComplex_spec b hb,
+    M.mul_numbers, M.mul_numbers, mul_comm]
+
 /-- A total raw interpretation is used only through an owned absolute-value
 object whose original argument is certified real. -/
 noncomputable def absValue {M : Semantics.{u}} (x : M.Value) : M.Value := by
@@ -1449,6 +1482,53 @@ theorem leRefl {M : Semantics.{u}} {α : Type v} [Representation M α]
   obtain ⟨r, hr⟩ := (M.real_members (denote a)).mp haR
   exact ⟨r, r, hr, hr, le_refl r⟩
 
+theorem sameOfLeAntisymm {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (a : Obj (M := M) α) (b : Obj (M := M) β)
+    (hab : Le a b) (hba : Le b a) : Same a b := by
+  obtain ⟨r, s, hr, hs, hrs⟩ := hab
+  obtain ⟨s', r', hs', hr', hsr⟩ := hba
+  have er : r = r' := Complex.ofReal_injective (M.number_injective (hr.symm.trans hr'))
+  have es : s = s' := Complex.ofReal_injective (M.number_injective (hs.symm.trans hs'))
+  have h : r = s := le_antisymm hrs (by simpa only [← er, ← es] using hsr)
+  exact hr.trans ((congrArg (fun x : ℝ => M.number (x : ℂ)) h).trans hs.symm)
+
+theorem leSelfAddRight {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (p : Obj (M := M) (AddObj (M := M) α β))
+    (haR : In p.val.left R) (hb : Le (number 0) p.val.right) : Le p.val.left p := by
+  obtain ⟨a, ha⟩ := (M.real_members _).mp haR
+  obtain ⟨z, b, hz, hb, hzb⟩ := hb
+  have hz0 : z = 0 := Complex.ofReal_injective (M.number_injective hz).symm
+  refine ⟨a, a + b, ha, ?_, le_add_of_nonneg_right (by simpa only [hz0] using hzb)⟩
+  change M.addValue (denote p.val.left) (denote p.val.right) = _
+  rw [ha, hb, M.add_numbers, Complex.ofReal_add]
+
+theorem leSelfAddLeft {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (p : Obj (M := M) (AddObj (M := M) α β))
+    (hbR : In p.val.right R) (ha : Le (number 0) p.val.left) : Le p.val.right p := by
+  obtain ⟨b, hb⟩ := (M.real_members _).mp hbR
+  obtain ⟨z, a, hz, ha, hza⟩ := ha
+  have hz0 : z = 0 := Complex.ofReal_injective (M.number_injective hz).symm
+  refine ⟨b, a + b, hb, ?_, le_add_of_nonneg_left (by simpa only [hz0] using hza)⟩
+  change M.addValue (denote p.val.left) (denote p.val.right) = _
+  rw [ha, hb, M.add_numbers, Complex.ofReal_add]
+
+theorem ltAddOfLeOfPos {M : Semantics.{u}}
+    {α : Type v} {β : Type w} {γ : Type x}
+    [Representation M α] [Representation M β] [Representation M γ]
+    (a : Obj (M := M) α) (p : Obj (M := M) (AddObj (M := M) β γ))
+    (ha : Le a p.val.left) (hb : Lt (number 0) p.val.right) : Lt a p := by
+  obtain ⟨a', x', ha', hx', hax⟩ := ha
+  obtain ⟨z', y', hz', hy', hzy⟩ := hb
+  have hz0 : z' = 0 := Complex.ofReal_injective (M.number_injective hz').symm
+  refine ⟨a', x' + y', ha', ?_, ?_⟩
+  · change M.addValue (denote p.val.left) (denote p.val.right) = _
+    rw [hx', hy', M.add_numbers, Complex.ofReal_add]
+  · have hpos : (0 : ℝ) < y' := hz0 ▸ hzy
+    exact lt_of_le_of_lt hax (lt_add_of_pos_right x' hpos)
+
 theorem naturalNonnegative {M : Semantics.{u}} {α : Type v} [Representation M α]
     (a : Obj (M := M) α) (haN : In a N) : Le (number 0) a := by
   obtain ⟨n, hn⟩ := (M.natural_members (denote a)).mp haN
@@ -1588,6 +1668,27 @@ theorem powStructuralPositiveOfEven {M : Semantics.{u}} {α : Type v} {β : Type
   change M.powValue (denote p.val.base) (denote p.val.exponent) = _
   change denote p.val.exponent = M.number (n : ℂ) at heValue
   rw [hr, heValue, M.pow_numbers_nat, Complex.ofReal_pow]
+
+/-- Monotonicity consumes the captured nonnegative lower base and ordered bases. -/
+theorem powStructuralLe {M : Semantics.{u}} {α β γ δ : Type*}
+    [Representation M α] [Representation M β] [Representation M γ] [Representation M δ]
+    (left : Obj (M := M) (PowObj (M := M) α β))
+    (right : Obj (M := M) (PowObj (M := M) γ δ)) (n : ℕ)
+    (heL : Same left.val.exponent (number (n : ℂ)))
+    (heR : Same right.val.exponent (number (n : ℂ)))
+    (h0 : Le (number 0) left.val.base)
+    (hle : Le left.val.base right.val.base) : Le left right := by
+  obtain ⟨r, s, hr, hs, hrs⟩ := hle
+  have hr0 : 0 ≤ r :=
+    (NativeBridge.le_iff_ofDenoteReal (number 0) left.val.base 0 r rfl hr).mp h0
+  refine NativeBridge.leOfDenoteReal left right (r ^ n) (s ^ n) ?_ ?_
+    (pow_le_pow_left₀ hr0 hrs n)
+  · change M.powValue (denote left.val.base) (denote left.val.exponent) = _
+    change denote left.val.exponent = M.number (n : ℂ) at heL
+    rw [hr, heL, M.pow_numbers_nat, Complex.ofReal_pow]
+  · change M.powValue (denote right.val.base) (denote right.val.exponent) = _
+    change denote right.val.exponent = M.number (n : ℂ) at heR
+    rw [hs, heR, M.pow_numbers_nat, Complex.ofReal_pow]
 
 theorem absPowStructuralSame {M : Semantics.{u}} {α : Type v} {β : Type w} {γ : Type x}
     [Representation M α] [Representation M β] [Representation M γ]
@@ -2110,6 +2211,35 @@ theorem positiveReal_isSet {M : Semantics.{u}} [S : SetSemantics M] :
 
 def RPos {M : Semantics.{u}} [SetSemantics M] : Obj (M := M) M.Value :=
   semanticObject positiveReal positiveReal_isSet
+
+/-- Positive naturals retain both natural membership and strict positivity. -/
+def NPos {M : Semantics.{u}} [S : SetSemantics M] : Obj (M := M) M.Value :=
+  semanticObject (S.sepValue (M.standard .natural) positiveRealPredicate)
+    (S.sep_isSet _ _ (M.standard_isSet .natural))
+
+theorem inNPos_natural {M : Semantics.{u}} [S : SetSemantics M]
+    {α : Type v} [Representation M α] (a : Obj (M := M) α) (ha : In a NPos) : In a N :=
+  ((S.sep_members _ _ _).mp ha).1
+
+theorem numberInNPosOfEq {M : Semantics.{u}} [S : SetSemantics M]
+    (z : ℂ) (n : ℕ) (hz : z = (n : ℂ)) (hn : 0 < n) : In (number z) (NPos (M := M)) := by
+  apply (S.sep_members _ _ _).mpr
+  refine ⟨(M.natural_members _).mpr ⟨n, congrArg M.number hz⟩, (n : ℝ), ?_, ?_⟩
+  · change M.number z = M.number ((n : ℝ) : ℂ)
+    simpa only [Complex.ofReal_natCast] using congrArg M.number hz
+  · exact_mod_cast hn
+
+theorem sameBaseZeroOfPositivePowerZero {M : Semantics.{u}} [SetSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β]
+    (p : Obj (M := M) (PowObj (M := M) α β))
+    (ha : In p.val.base C) (he : In p.val.exponent NPos)
+    (hz : Same p (number 0)) : Same p.val.base (number 0) := by
+  obtain ⟨a, ha⟩ := (M.complex_members _).mp ha
+  obtain ⟨n, hn⟩ := (M.natural_members _).mp (inNPos_natural _ he)
+  change M.powValue (denote p.val.base) (denote p.val.exponent) = M.number 0 at hz
+  rw [ha, hn, M.pow_numbers_nat] at hz
+  have ha0 : a = 0 := eq_zero_of_pow_eq_zero (M.number_injective hz)
+  exact ha.trans (congrArg M.number ha0)
 
 theorem positiveReal_members {M : Semantics.{u}} [S : SetSemantics M] (x : M.Value) :
     M.mem x positiveReal ↔ M.mem x (M.standard .real) ∧ positiveRealPredicate x :=
@@ -2827,6 +2957,22 @@ theorem tupleInCart {M : Semantics.{u}} [FunctionSemantics M] {n : ℕ}
     (t : Obj (M := M) (TupleObj M n)) (c : Obj (M := M) (CartObj M n))
     (h : ∀ i, M.mem (t.val.values i) (c.val.factors i)) : In t c :=
   FiniteFunction.tuple_inCart _ _ h
+
+/-- A tuple's own values provide the singleton factors of its finite contract. -/
+def tupleSingletonCart {M : Semantics.{u}} [FunctionSemantics M] {n : ℕ}
+    (t : Obj (M := M) (TupleObj M n)) : Obj (M := M) (CartObj M n) :=
+  cart (fun i => FiniteFunction.finiteSetValue [t.val.values i]) (by
+    intro i
+    apply FiniteFunction.finiteSet_isSet
+    intro x hx
+    have hx' : x = t.val.values i := List.mem_singleton.mp hx
+    subst x
+    exact t.wd i)
+
+theorem tupleInSingletonCart {M : Semantics.{u}} [FunctionSemantics M] {n : ℕ}
+    (t : Obj (M := M) (TupleObj M n)) : In t (tupleSingletonCart t) :=
+  FiniteFunction.tuple_inCart _ _ (fun _ =>
+    (FiniteFunction.finiteSet_members _ _).mpr (List.mem_singleton.mpr rfl))
 
 theorem tuple_coordinate {M : Semantics.{u}} [F : FunctionSemantics M] {n : ℕ}
     (t : Obj (M := M) (TupleObj M n)) (i : Fin n) :
@@ -3664,6 +3810,17 @@ theorem addNonnegative {M : Semantics.{u}} {α : Type v} {β : Type w}
   obtain ⟨s, hs, hposS⟩ := NativeBridge.realWitnessOfNonnegative b hb
   refine NativeBridge.leOfDenoteReal (number 0) (add a b haC hbC) 0 (r + s)
     rfl ?_ (add_nonneg hposR hposS)
+  change M.addValue (denote a) (denote b) = _
+  rw [hr, hs, M.add_numbers, Complex.ofReal_add]
+
+theorem addPositiveLeft {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (a : Obj (M := M) α) (b : Obj (M := M) β) (haC : In a C) (hbC : In b C)
+    (ha : Lt (number 0) a) (hb : Le (number 0) b) : Lt (number 0) (add a b haC hbC) := by
+  obtain ⟨r, hr, hposR⟩ := NativeBridge.realWitnessOfPositive a ha
+  obtain ⟨s, hs, hposS⟩ := NativeBridge.realWitnessOfNonnegative b hb
+  refine NativeBridge.ltOfDenoteReal (number 0) (add a b haC hbC) 0 (r + s)
+    rfl ?_ (add_pos_of_pos_of_nonneg hposR hposS)
   change M.addValue (denote a) (denote b) = _
   rw [hr, hs, M.add_numbers, Complex.ofReal_add]
 

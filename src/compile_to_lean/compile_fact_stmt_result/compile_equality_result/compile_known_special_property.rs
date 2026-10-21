@@ -9,7 +9,7 @@ use crate::execute::execute_fact_stmt::known_tuple::{
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_they_are_the_same::SameFreeParamShapeProof;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::search_equal_fact_proof_by_known_special_property::{
     EqualFactSearchProofByKnownSpecialProperty, FnTupleProjectionKnownProof, FnTupleValueKnownProof,
-    TupleReconstructionKnownProof,
+    TupleReconstructionKnownProof, TupleProjectionKnownProof,
 };
 use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnObjDomainFnSetEvidence;
 use crate::prelude::*;
@@ -29,13 +29,54 @@ impl LitexToLeanCompiler {
             EqualFactSearchProofByKnownSpecialProperty::FnTupleProjection(proof) => {
                 self.compile_known_function_tuple_projection(fact, proof, position)
             }
-            EqualFactSearchProofByKnownSpecialProperty::TupleProjection(_) => {
-                Err(LeanCompileError::unsupported("Equality/TupleProjection"))
+            EqualFactSearchProofByKnownSpecialProperty::TupleProjection(proof) => {
+                self.compile_known_tuple_projection(fact, proof, position)
             }
             EqualFactSearchProofByKnownSpecialProperty::TupleReconstruction(proof) => {
                 self.compile_known_tuple_reconstruction(fact, proof, position)
             }
         }
+    }
+
+    fn compile_known_tuple_projection(
+        &self,
+        fact: &EqualFact,
+        proof: &TupleProjectionKnownProof,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        let (subject, target) = if proof.reversed {
+            (&fact.right, &fact.left)
+        } else {
+            (&fact.left, &fact.right)
+        };
+        let Obj::FnObj(application) = subject else {
+            return Err(LeanCompileError::unsupported("TupleProjection/Application"));
+        };
+        let (receiver, argument) = finite_call_parts(application)?;
+        let n = proof.tuple.value.args.len();
+        if proof.index == 0
+            || proof.index > n
+            || literal_positive_usize(argument) != Some(proof.index)
+        {
+            return Err(LeanCompileError::unsupported("TupleProjection/Index"));
+        }
+        let value = Obj::ProductShape(ProductShape::Tuple(proof.tuple.value.clone()));
+        let component = &proof.tuple.value.args[proof.index - 1];
+        let receiver_equal =
+            self.compile_equality_path(&receiver, &value, &proof.tuple.tuple_equal, position)?;
+        let component_equal =
+            self.compile_known_tuple_match(component, target, &proof.component_equal, position)?;
+        let tuple = self.compile_object_reference(&value, position)?;
+        let receiver = self.compile_object_reference(&receiver, position)?;
+        let target = self.compile_object_reference(target, position)?;
+        let index = proof.index;
+        let fin_index = index - 1;
+        let equality = format!("(by\n  let _tuple := {tuple}\n  have _receiver_eq : Litex.Same {receiver} _tuple := {receiver_equal}\n  have _coordinate_eq := congrArg (fun value => Litex.FunctionSemantics.callValue (M := M) value (M.number ({index} : ℂ))) _receiver_eq\n  have _tuple_coordinate : Litex.FunctionSemantics.callValue (M := M) (Litex.denote _tuple) (M.number ({index} : ℂ)) = _tuple.val.values ({fin_index} : Fin {n}) := by\n    simpa [Litex.FiniteFunction.index] using (Litex.tuple_coordinate _tuple ({fin_index} : Fin {n}))\n  have _target_eq : _tuple.val.values ({fin_index} : Fin {n}) = Litex.denote {target} := {component_equal}\n  exact _coordinate_eq.trans (_tuple_coordinate.trans _target_eq)\n)");
+        Ok(if proof.reversed {
+            format!("({equality}).symm")
+        } else {
+            equality
+        })
     }
 
     fn compile_known_tuple_reconstruction(

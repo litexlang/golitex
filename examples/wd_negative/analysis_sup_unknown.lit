@@ -1,0 +1,2 @@
+# Expected rejection: missing or false analysis premise; the last statement must fail.
+let candidate=sup({0})

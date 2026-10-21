@@ -1,0 +1,10 @@
+# Before: this explicit builtin theorem name was unavailable.
+# release thm real_least_upper_bound_upper_bound({0},L)
+# Run: target/release/litex -strict -lang en -f examples/stmt_nodes/release_and_expand/builtin_thm/real_least_upper_bound_upper_bound.lit
+release thm real_least_upper_bound_exists({0},1)
+obtain L from exist L R st {$is_real_least_upper_bound({0},L)}
+release thm real_least_upper_bound_upper_bound({0},L)
+forall x {0}:
+    x<=L
+# Boundary: missing certificates, false extremal candidates, and non-strict crossings are rejected.
+

@@ -11,6 +11,9 @@ impl Runtime {
         fact: &EqualFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<EqualitySearchProofByBuiltinRule>> {
+        if let Some(proof) = self.search_real_bound_equality(fact) {
+            return Ok(Some(EqualitySearchProofByBuiltinRule::RealBounds(proof)));
+        }
         if let Some(proof) = self.search_function_limit_equality(fact) {
             return Ok(Some(EqualitySearchProofByBuiltinRule::FunctionLimit(proof)));
         }

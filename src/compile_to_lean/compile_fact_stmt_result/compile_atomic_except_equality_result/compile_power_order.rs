@@ -4,6 +4,74 @@ use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
 use crate::prelude::*;
 
 impl LitexToLeanCompiler {
+    pub(in crate::compile_to_lean) fn compile_power_weak_order_strategy(
+        &self,
+        goal: &AtomicFact,
+        requirements: &[Fact],
+        proofs: &[VerifyFactResult],
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        let (left_obj, right_obj, strict) = source_order_oriented(goal)?;
+        let (
+            Obj::ArithmeticOperator(ArithmeticOperator::Pow(left)),
+            Obj::ArithmeticOperator(ArithmeticOperator::Pow(right)),
+        ) = (left_obj, right_obj)
+        else {
+            return Err(LeanCompileError::unsupported("PowerOrder/Constructor"));
+        };
+        if strict
+            || left.exponent.ir() != right.exponent.ir()
+            || requirements.len() != 3
+            || proofs.len() != 3
+        {
+            return Err(LeanCompileError::unsupported("PowerOrder/Requirements"));
+        }
+        let n = closed_integer(&left.exponent)
+            .filter(|n| *n > 0)
+            .ok_or_else(|| LeanCompileError::unsupported("PowerOrder/PositiveLiteralExponent"))?;
+        if membership_subject(&requirements[0], &left.exponent)? != StandardSet::NPos {
+            return Err(LeanCompileError::unsupported("PowerOrder/ExponentSubject"));
+        }
+        for (requirement, expected_left, expected_right) in [
+            (&requirements[1], None, left.base.as_ref()),
+            (
+                &requirements[2],
+                Some(left.base.as_ref()),
+                right.base.as_ref(),
+            ),
+        ] {
+            let Fact::AtomicFact(atomic) = requirement else {
+                return Err(LeanCompileError::unsupported("PowerOrder/Premise"));
+            };
+            let (a, b, strict) = source_order_oriented(atomic)?;
+            if strict
+                || b.ir() != expected_right.ir()
+                || match expected_left {
+                    Some(expected) => a.ir() != expected.ir(),
+                    None => !is_exact_zero(a),
+                }
+            {
+                return Err(LeanCompileError::unsupported("PowerOrder/Premise"));
+            }
+        }
+        let mut children = Vec::new();
+        for (index, (requirement, proof)) in requirements.iter().zip(proofs).enumerate() {
+            if *requirement != source_subject(proof)? {
+                return Err(LeanCompileError::unsupported("PowerOrder/ChildSubject"));
+            }
+            children.push(
+                self.compile_verify(proof, &position.atomic_search_prior(index)?)?
+                    .1,
+            );
+        }
+        let complete = position.atomic_search_prior(3)?;
+        let left_term = self.compile_object_reference(left_obj, &complete)?;
+        let right_term = self.compile_object_reference(right_obj, &complete)?;
+        let he_left = self.compile_literal_natural_identity(&left.exponent, n, &complete)?;
+        let he_right = self.compile_literal_natural_identity(&right.exponent, n, &complete)?;
+        Ok(format!("(by\n  let _left := {left_term}\n  let _right := {right_term}\n  have _positiveExponent : Litex.In _left.val.exponent Litex.NPos := {}\n  exact Litex.powStructuralLe _left _right ({n} : ℕ) {he_left} {he_right} {} {}\n)", children[0], children[1], children[2]))
+    }
+
     pub(in crate::compile_to_lean) fn compile_power_positive(
         &self,
         goal: &AtomicFact,

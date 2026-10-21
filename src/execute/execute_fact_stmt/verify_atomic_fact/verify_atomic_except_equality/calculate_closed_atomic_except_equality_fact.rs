@@ -11,6 +11,20 @@ pub fn calculate_closed_atomic_except_equality_fact(
     use NumberCompareResult::{Equal, Greater, Less};
 
     let proof = match fact {
+        RealSetBoundFact(_)
+        | NotRealSetBoundFact(_)
+        | RealSetBoundedFact(_)
+        | NotRealSetBoundedFact(_)
+        | SequenceAnalysisFact(_)
+        | NotSequenceAnalysisFact(_)
+        | RealAccumulationFact(_)
+        | NotRealAccumulationFact(_)
+        | FunctionContinuousAtFact(_)
+        | NotFunctionContinuousAtFact(_)
+        | FunctionContinuousFact(_)
+        | NotFunctionContinuousFact(_)
+        | FunctionLipschitzFact(_)
+        | NotFunctionLipschitzFact(_) => return None,
         HasSequenceLimsupFact(_)
         | HasSequenceLiminfFact(_)
         | HasSequenceLimitFact(_)

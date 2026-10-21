@@ -28,6 +28,12 @@ impl Runtime {
         param_to_arg_map: &HashMap<IdentifierId, Obj>,
     ) -> Result<Obj, InstError> {
         match obj {
+            Obj::BoundOperator(crate::ast::obj::BoundOperator::Supremum(a)) => Ok(
+                crate::ast::obj::Supremum::new(self.inst_obj_rec(&a.set, param_to_arg_map)?).into(),
+            ),
+            Obj::BoundOperator(crate::ast::obj::BoundOperator::Infimum(a)) => Ok(
+                crate::ast::obj::Infimum::new(self.inst_obj_rec(&a.set, param_to_arg_map)?).into(),
+            ),
             Obj::LimitOperator(crate::ast::obj::LimitOperator::Function(a)) => {
                 Ok(crate::ast::obj::FunctionLimit::with_approach(
                     self.inst_obj_rec(&a.function, param_to_arg_map)?,

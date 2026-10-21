@@ -1,0 +1,4 @@
+# Expected rejection: missing or false analysis premise; the last statement must fail.
+have fn isolated(x {0}) R=7
+release thm fn_continuous_at_constant(isolated,0,7)
+release thm fn_continuous_at_to_limit(isolated,0)

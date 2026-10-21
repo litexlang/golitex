@@ -2,7 +2,127 @@ use super::*;
 use crate::runtime::FactId;
 use crate::store_fact_and_infer::StoreInferredFactResult;
 
+pub enum InferRealSetBoundFactResult {
+    Definition(InferRealSetBoundDefinitionResult),
+}
+pub struct InferRealSetBoundDefinitionResult {
+    pub source_fact_id: FactId,
+    pub derived: Vec<StoreInferredFactResult>,
+}
+impl InferRealSetBoundFactResult {
+    pub fn stored_conclusions(&self) -> Vec<&StoreInferredFactResult> {
+        match self {
+            Self::Definition(p) => p.derived.iter().collect(),
+        }
+    }
+}
+pub enum InferNotRealSetBoundFactResult {}
+pub enum InferRealSetBoundedFactResult {
+    Definition(InferRealSetBoundedDefinitionResult),
+}
+pub struct InferRealSetBoundedDefinitionResult {
+    pub source_fact_id: FactId,
+    pub derived: Vec<StoreInferredFactResult>,
+}
+impl InferRealSetBoundedFactResult {
+    pub fn stored_conclusions(&self) -> Vec<&StoreInferredFactResult> {
+        match self {
+            Self::Definition(p) => p.derived.iter().collect(),
+        }
+    }
+}
+pub enum InferNotRealSetBoundedFactResult {}
+pub enum InferSequenceAnalysisFactResult {
+    Definition(InferSequenceAnalysisDefinitionResult),
+}
+pub struct InferSequenceAnalysisDefinitionResult {
+    pub source_fact_id: FactId,
+    pub derived: Vec<StoreInferredFactResult>,
+}
+impl InferSequenceAnalysisFactResult {
+    pub fn stored_conclusions(&self) -> Vec<&StoreInferredFactResult> {
+        match self {
+            Self::Definition(p) => p.derived.iter().collect(),
+        }
+    }
+}
+pub enum InferNotSequenceAnalysisFactResult {}
+pub enum InferRealAccumulationFactResult {
+    Definition(InferRealAccumulationDefinitionResult),
+}
+pub struct InferRealAccumulationDefinitionResult {
+    pub source_fact_id: FactId,
+    pub derived: Vec<StoreInferredFactResult>,
+}
+impl InferRealAccumulationFactResult {
+    pub fn stored_conclusions(&self) -> Vec<&StoreInferredFactResult> {
+        match self {
+            Self::Definition(p) => p.derived.iter().collect(),
+        }
+    }
+}
+pub enum InferNotRealAccumulationFactResult {}
+pub enum InferFunctionContinuousAtFactResult {
+    Definition(InferFunctionContinuousAtDefinitionResult),
+}
+pub struct InferFunctionContinuousAtDefinitionResult {
+    pub source_fact_id: FactId,
+    pub derived: Vec<StoreInferredFactResult>,
+}
+impl InferFunctionContinuousAtFactResult {
+    pub fn stored_conclusions(&self) -> Vec<&StoreInferredFactResult> {
+        match self {
+            Self::Definition(p) => p.derived.iter().collect(),
+        }
+    }
+}
+pub enum InferNotFunctionContinuousAtFactResult {}
+pub enum InferFunctionContinuousFactResult {
+    Definition(InferFunctionContinuousDefinitionResult),
+}
+pub struct InferFunctionContinuousDefinitionResult {
+    pub source_fact_id: FactId,
+    pub derived: Vec<StoreInferredFactResult>,
+}
+impl InferFunctionContinuousFactResult {
+    pub fn stored_conclusions(&self) -> Vec<&StoreInferredFactResult> {
+        match self {
+            Self::Definition(p) => p.derived.iter().collect(),
+        }
+    }
+}
+pub enum InferNotFunctionContinuousFactResult {}
+pub enum InferFunctionLipschitzFactResult {
+    Definition(InferFunctionLipschitzDefinitionResult),
+}
+pub struct InferFunctionLipschitzDefinitionResult {
+    pub source_fact_id: FactId,
+    pub derived: Vec<StoreInferredFactResult>,
+}
+impl InferFunctionLipschitzFactResult {
+    pub fn stored_conclusions(&self) -> Vec<&StoreInferredFactResult> {
+        match self {
+            Self::Definition(p) => p.derived.iter().collect(),
+        }
+    }
+}
+pub enum InferNotFunctionLipschitzFactResult {}
+
 pub enum InferAtomicFactResult {
+    RealSetBoundFact(Vec<InferRealSetBoundFactResult>),
+    NotRealSetBoundFact(Vec<InferNotRealSetBoundFactResult>),
+    RealSetBoundedFact(Vec<InferRealSetBoundedFactResult>),
+    NotRealSetBoundedFact(Vec<InferNotRealSetBoundedFactResult>),
+    SequenceAnalysisFact(Vec<InferSequenceAnalysisFactResult>),
+    NotSequenceAnalysisFact(Vec<InferNotSequenceAnalysisFactResult>),
+    RealAccumulationFact(Vec<InferRealAccumulationFactResult>),
+    NotRealAccumulationFact(Vec<InferNotRealAccumulationFactResult>),
+    FunctionContinuousAtFact(Vec<InferFunctionContinuousAtFactResult>),
+    NotFunctionContinuousAtFact(Vec<InferNotFunctionContinuousAtFactResult>),
+    FunctionContinuousFact(Vec<InferFunctionContinuousFactResult>),
+    NotFunctionContinuousFact(Vec<InferNotFunctionContinuousFactResult>),
+    FunctionLipschitzFact(Vec<InferFunctionLipschitzFactResult>),
+    NotFunctionLipschitzFact(Vec<InferNotFunctionLipschitzFactResult>),
     HasFunctionLimitFact(Vec<InferHasFunctionLimitFactResult>),
     HasSequenceLimitFact(Vec<InferHasSequenceLimitFactResult>),
     HasSequenceLimsupFact(Vec<InferHasSequenceLimsupFactResult>),
@@ -58,6 +178,34 @@ pub enum InferAtomicFactResult {
 impl InferAtomicFactResult {
     pub fn stored_conclusions(&self) -> Vec<&StoreInferredFactResult> {
         match self {
+            Self::RealSetBoundFact(rules) => {
+                rules.iter().flat_map(|r| r.stored_conclusions()).collect()
+            }
+            Self::NotRealSetBoundFact(_) => Vec::new(),
+            Self::RealSetBoundedFact(rules) => {
+                rules.iter().flat_map(|r| r.stored_conclusions()).collect()
+            }
+            Self::NotRealSetBoundedFact(_) => Vec::new(),
+            Self::SequenceAnalysisFact(rules) => {
+                rules.iter().flat_map(|r| r.stored_conclusions()).collect()
+            }
+            Self::NotSequenceAnalysisFact(_) => Vec::new(),
+            Self::RealAccumulationFact(rules) => {
+                rules.iter().flat_map(|r| r.stored_conclusions()).collect()
+            }
+            Self::NotRealAccumulationFact(_) => Vec::new(),
+            Self::FunctionContinuousAtFact(rules) => {
+                rules.iter().flat_map(|r| r.stored_conclusions()).collect()
+            }
+            Self::NotFunctionContinuousAtFact(_) => Vec::new(),
+            Self::FunctionContinuousFact(rules) => {
+                rules.iter().flat_map(|r| r.stored_conclusions()).collect()
+            }
+            Self::NotFunctionContinuousFact(_) => Vec::new(),
+            Self::FunctionLipschitzFact(rules) => {
+                rules.iter().flat_map(|r| r.stored_conclusions()).collect()
+            }
+            Self::NotFunctionLipschitzFact(_) => Vec::new(),
             Self::NormalAtomicFact(rules) => {
                 rules.iter().flat_map(|r| r.stored_conclusions()).collect()
             }

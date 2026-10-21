@@ -1,0 +1,7 @@
+# Expected rejection: missing or false analysis premise; the last statement must fail.
+have fn identity(x R) R=x
+have fn one(x R) R=1
+have fn reciprocal(x R*) R=1/x
+release thm fn_continuous_at_identity(identity,0)
+release thm fn_continuous_at_constant(one,0,1)
+release thm fn_continuous_at_divide(one,identity,reciprocal,0)

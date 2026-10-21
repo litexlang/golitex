@@ -46,8 +46,8 @@ from the notes:
 
 <!-- litex:skip-test -->
 ```litex
-$is_continuous(points, points, discrete, indiscrete, identity)
-not $is_continuous(points, points, indiscrete, discrete, identity)
+$is_topologically_continuous(points, points, discrete, indiscrete, identity)
+not $is_topologically_continuous(points, points, indiscrete, discrete, identity)
 ```
 
 In the forward direction every possible preimage is open in the discrete

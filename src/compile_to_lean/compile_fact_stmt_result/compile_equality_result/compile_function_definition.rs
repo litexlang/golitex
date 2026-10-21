@@ -433,21 +433,36 @@ impl LitexToLeanCompiler {
                 before: index,
                 ..normalization
             };
-            let FunctionBodyExpansionProof::Anonymous(expansion) = expansion else {
-                return Err(LeanCompileError::unsupported(
-                    "FunctionDefinition/FiniteCoordinate",
-                ));
+            let (application, continued, beta, owner, before) = match expansion {
+                FunctionBodyExpansionProof::Anonymous(step) => (
+                    &step.application,
+                    &step.continued_body,
+                    self.compile_anonymous_function_expansion(step, &prior)?,
+                    SourceOwner::FunctionExpansion(step),
+                    3,
+                ),
+                FunctionBodyExpansionProof::FiniteCoordinate(step) => (
+                    &step.application,
+                    &step.continued_body,
+                    self.compile_finite_coordinate_expansion(step, &prior)?,
+                    SourceOwner::FiniteExpansion(step),
+                    1,
+                ),
+                FunctionBodyExpansionProof::Composition(_) => {
+                    return Err(LeanCompileError::unsupported(
+                        "FunctionDefinition/CompositionExpansion",
+                    ))
+                }
             };
-            let beta = self.compile_anonymous_function_expansion(expansion, &prior)?;
             let completed = SourcePosition {
                 parent: Some(&prior),
-                owner: SourceOwner::FunctionExpansion(expansion),
-                before: 3,
+                owner,
+                before,
             };
             let Some((next, embedded)) = self.embed_recorded_function_expansion(
                 &current,
-                &expansion.application,
-                &expansion.continued_body,
+                application,
+                continued,
                 &beta,
                 &completed,
             )?

@@ -1,0 +1,4 @@
+# Explicit analysis theorem with checked premises.
+have fn sample(k N+) R=2
+release thm seq_limit_constant(sample,2)
+release thm sequence_limit_cauchy(sample,2)

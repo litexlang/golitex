@@ -1,0 +1,26 @@
+# Original geometry declarations required for midpoint_equidistant.
+
+have fn vec(A, B cart(R, R)) cart(R, R) = (B(1) - A(1), B(2) - A(2))
+
+have fn dot(u, v cart(R, R)) R = u(1) * v(1) + u(2) * v(2)
+
+have fn distance_sq(a, b cart(R, R)) R = dot(vec(a, b), vec(a, b))
+
+prop is_midpoint(m, a, b cart(R, R)):
+    m(1) = (a(1) + b(1)) / 2
+    m(2) = (a(2) + b(2)) / 2
+
+thm midpoint_equidistant:
+    ? forall a, b, m cart(R, R):
+        a != b
+        $is_midpoint(m, a, b)
+        =>:
+            distance_sq(a, m) = distance_sq(b, m)
+    m(1) = (a(1) + b(1)) / 2
+    m(2) = (a(2) + b(2)) / 2
+    distance_sq(a, m) = (m(1) - a(1))^2 + (m(2) - a(2))^2
+    distance_sq(b, m) = (m(1) - b(1))^2 + (m(2) - b(2))^2
+    (m(1) - a(1))^2 + (m(2) - a(2))^2 = ((a(1) + b(1)) / 2 - a(1))^2 + ((a(2) + b(2)) / 2 - a(2))^2
+    (m(1) - b(1))^2 + (m(2) - b(2))^2 = ((a(1) + b(1)) / 2 - b(1))^2 + ((a(2) + b(2)) / 2 - b(2))^2
+    ((a(1) + b(1)) / 2 - a(1))^2 + ((a(2) + b(2)) / 2 - a(2))^2 = ((a(1) + b(1)) / 2 - b(1))^2 + ((a(2) + b(2)) / 2 - b(2))^2
+    distance_sq(a, m) = distance_sq(b, m)

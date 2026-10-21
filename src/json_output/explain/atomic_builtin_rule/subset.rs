@@ -31,6 +31,10 @@ use crate::json_output::explain::text::text;
 impl SubsetFactSearchProofByBuiltinRule {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
         match self {
+            Self::FunctionRangeInCodomain(_) => BuiltinRuleText {
+                rule_name: "FunctionRangeInCodomain".into(),
+                message: "The image lies in the certified return carrier.".into(),
+            },
             Self::StandardSetSubset(p) => p.rule_name_and_message_en(),
             Self::IntersectSubsetLeft(p) => p.rule_name_and_message_en(),
             Self::IntersectSubsetRight(p) => p.rule_name_and_message_en(),
@@ -60,6 +64,10 @@ impl SubsetFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         match self {
+            Self::FunctionRangeInCodomain(_) => BuiltinRuleText {
+                rule_name: "FunctionRangeInCodomain".into(),
+                message: "函数的像包含于已证明的返回集合。".into(),
+            },
             Self::StandardSetSubset(p) => p.rule_name_and_message_zh(),
             Self::IntersectSubsetLeft(p) => p.rule_name_and_message_zh(),
             Self::IntersectSubsetRight(p) => p.rule_name_and_message_zh(),
@@ -89,6 +97,10 @@ impl SubsetFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
         match self {
+            Self::FunctionRangeInCodomain(_) => BuiltinRuleText {
+                rule_name: "FunctionRangeInCodomain".into(),
+                message: "函數的像包含於已證明的回傳集合。".into(),
+            },
             Self::StandardSetSubset(p) => p.rule_name_and_message_zh_hant(),
             Self::IntersectSubsetLeft(p) => p.rule_name_and_message_zh_hant(),
             Self::IntersectSubsetRight(p) => p.rule_name_and_message_zh_hant(),
@@ -118,6 +130,11 @@ impl SubsetFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
         match self {
+            Self::FunctionRangeInCodomain(_) => BuiltinRuleText {
+                rule_name: "FunctionRangeInCodomain".into(),
+                message: "L’image de la fonction est incluse dans l’ensemble de retour certifié."
+                    .into(),
+            },
             Self::StandardSetSubset(p) => p.rule_name_and_message_fr(),
             Self::IntersectSubsetLeft(p) => p.rule_name_and_message_fr(),
             Self::IntersectSubsetRight(p) => p.rule_name_and_message_fr(),
@@ -147,6 +164,12 @@ impl SubsetFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
         match self {
+            Self::FunctionRangeInCodomain(_) => BuiltinRuleText {
+                rule_name: "FunctionRangeInCodomain".into(),
+                message:
+                    "Образ функции содержится в подтверждённом множестве возвращаемых значений."
+                        .into(),
+            },
             Self::StandardSetSubset(p) => p.rule_name_and_message_ru(),
             Self::IntersectSubsetLeft(p) => p.rule_name_and_message_ru(),
             Self::IntersectSubsetRight(p) => p.rule_name_and_message_ru(),
@@ -176,6 +199,12 @@ impl SubsetFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
         match self {
+            Self::FunctionRangeInCodomain(_) => BuiltinRuleText {
+                rule_name: "FunctionRangeInCodomain".into(),
+                message:
+                    "La imagen de la función está incluida en el conjunto de retorno verificado."
+                        .into(),
+            },
             Self::StandardSetSubset(p) => p.rule_name_and_message_es(),
             Self::IntersectSubsetLeft(p) => p.rule_name_and_message_es(),
             Self::IntersectSubsetRight(p) => p.rule_name_and_message_es(),
@@ -205,6 +234,10 @@ impl SubsetFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
         match self {
+            Self::FunctionRangeInCodomain(_) => BuiltinRuleText {
+                rule_name: "FunctionRangeInCodomain".into(),
+                message: "صورة الدالة محتواة في مجموعة القيم المثبتة.".into(),
+            },
             Self::StandardSetSubset(p) => p.rule_name_and_message_ar(),
             Self::IntersectSubsetLeft(p) => p.rule_name_and_message_ar(),
             Self::IntersectSubsetRight(p) => p.rule_name_and_message_ar(),
@@ -234,6 +267,10 @@ impl SubsetFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
         match self {
+            Self::FunctionRangeInCodomain(_) => BuiltinRuleText {
+                rule_name: "FunctionRangeInCodomain".into(),
+                message: "関数の像は検証済みの戻り値集合に含まれます。".into(),
+            },
             Self::StandardSetSubset(p) => p.rule_name_and_message_ja(),
             Self::IntersectSubsetLeft(p) => p.rule_name_and_message_ja(),
             Self::IntersectSubsetRight(p) => p.rule_name_and_message_ja(),
@@ -263,6 +300,10 @@ impl SubsetFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
         match self {
+            Self::FunctionRangeInCodomain(_) => BuiltinRuleText {
+                rule_name: "FunctionRangeInCodomain".into(),
+                message: "함수의 상은 검증된 반환값 집합에 포함됩니다.".into(),
+            },
             Self::StandardSetSubset(p) => p.rule_name_and_message_ko(),
             Self::IntersectSubsetLeft(p) => p.rule_name_and_message_ko(),
             Self::IntersectSubsetRight(p) => p.rule_name_and_message_ko(),
@@ -292,6 +333,10 @@ impl SubsetFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
         match self {
+            Self::FunctionRangeInCodomain(_) => BuiltinRuleText {
+                rule_name: "FunctionRangeInCodomain".into(),
+                message: "Ảnh của hàm nằm trong tập giá trị trả về đã được chứng minh.".into(),
+            },
             Self::StandardSetSubset(p) => p.rule_name_and_message_vi(),
             Self::IntersectSubsetLeft(p) => p.rule_name_and_message_vi(),
             Self::IntersectSubsetRight(p) => p.rule_name_and_message_vi(),
@@ -336,6 +381,7 @@ impl SubsetFactSearchProofByBuiltinRule {
 
     pub fn cite_fact_id(&self) -> Option<FactId> {
         match self {
+            Self::FunctionRangeInCodomain(_) => None,
             Self::StandardSetSubset(_) => None,
             Self::IntersectSubsetLeft(_) => None,
             Self::IntersectSubsetRight(_) => None,

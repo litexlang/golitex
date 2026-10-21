@@ -1,0 +1,247 @@
+# Checked source: monotone bounds, finite prefixes, Cauchy, and completeness via limsup.
+thm analysis_nondecreasing_converges:
+    ? forall a seq(R),L R:
+        $is_seq_nondecreasing(a)
+        $is_real_least_upper_bound(fn_range(a),L)
+        =>:
+            $has_seq_limit(a,L)
+    claim:
+        ? forall epsilon R+:
+            exist cutoff N+ st {{n N+:n>=cutoff} $subset preimage_set(a,{v R:abs(v-L)<epsilon})}
+        L-epsilon<L-epsilon+epsilon=L
+        release thm real_least_upper_bound_crosses(fn_range(a),L,L-epsilon)
+        obtain x from exist x fn_range(a) st {L-epsilon<x}
+        have by fn_preimage: n1 from x $in fn_range(a)
+        x=a(n1)
+        witness exist cutoff N+ st {{n N+:n>=cutoff} $subset preimage_set(a,{v R:abs(v-L)<epsilon})} from n1:
+            claim:
+                ? forall n {k N+:k>=n1}:
+                    n $in preimage_set(a,{v R:abs(v-L)<epsilon})
+                n1<=n
+                a(n1)<=a(n)
+                a(n) $in fn_range(a)
+                release thm real_member_le_least_upper_bound(fn_range(a),L,a(n))
+                L-epsilon<a(n1)<=a(n)<=L
+                0<=L-a(n)
+                L-a(n)<L-(L-epsilon)=epsilon
+                a(n)-L<=0
+                abs(a(n)-L)=-(a(n)-L)=L-a(n)<epsilon
+                a(n) $in {v R:abs(v-L)<epsilon}
+            by def {n N+:n>=n1} $subset preimage_set(a,{v R:abs(v-L)<epsilon})
+    by def $has_seq_limit(a,L)
+
+thm analysis_nonincreasing_converges:
+    ? forall a seq(R),L R:
+        $is_seq_nonincreasing(a)
+        $is_real_greatest_lower_bound(fn_range(a),L)
+        =>:
+            $has_seq_limit(a,L)
+    claim:
+        ? forall epsilon R+:
+            exist cutoff N+ st {{n N+:n>=cutoff} $subset preimage_set(a,{v R:abs(v-L)<epsilon})}
+        L<L+epsilon
+        release thm real_greatest_lower_bound_crosses(fn_range(a),L,L+epsilon)
+        obtain x from exist x fn_range(a) st {x<L+epsilon}
+        have by fn_preimage: n1 from x $in fn_range(a)
+        x=a(n1)
+        witness exist cutoff N+ st {{n N+:n>=cutoff} $subset preimage_set(a,{v R:abs(v-L)<epsilon})} from n1:
+            claim:
+                ? forall n {k N+:k>=n1}:
+                    n $in preimage_set(a,{v R:abs(v-L)<epsilon})
+                n1<=n
+                a(n)<=a(n1)
+                a(n) $in fn_range(a)
+                release thm real_greatest_lower_bound_le_member(fn_range(a),L,a(n))
+                L<=a(n)<=a(n1)<L+epsilon
+                0<=a(n)-L
+                a(n)-L<L+epsilon-L=epsilon
+                abs(a(n)-L)=a(n)-L<epsilon
+                a(n) $in {v R:abs(v-L)<epsilon}
+            by def {n N+:n>=n1} $subset preimage_set(a,{v R:abs(v-L)<epsilon})
+    by def $has_seq_limit(a,L)
+
+thm analysis_cauchy_bounded:
+    ? forall a seq(R):
+        $is_seq_cauchy(a)
+        =>:
+            $is_seq_bounded(a)
+    release thm sequence_cauchy_tail(a,1)
+    obtain N0 from exist cutoff N+ st {cart({n N+:n>=cutoff},{n N+:n>=cutoff}) $subset {p cart(N+,N+):abs(a(p(1))-a(p(2)))<1}}
+    have fn prefix(k closed_range(1,N0)) R=abs(a(k))
+    $is_finite_set(closed_range(1,N0))
+    $is_finite_set(fn_range(prefix))
+    prefix(1) $in fn_range(prefix)
+    witness $is_nonempty_set(fn_range(prefix)) from prefix(1)
+    fn_range(prefix) $subset R
+    have prefix_max R=finite_set_max(fn_range(prefix))
+    prefix(1)=abs(a(1))
+    0<=abs(a(1))=prefix(1)<=prefix_max
+    have M R=prefix_max+abs(a(N0))+2
+    0<=prefix_max
+    0<=abs(a(N0))
+    0<=prefix_max+abs(a(N0))<prefix_max+abs(a(N0))+2=M
+    prefix_max<=prefix_max+abs(a(N0))<M
+    1+abs(a(N0))<2+abs(a(N0))<=2+abs(a(N0))+prefix_max=M
+    0<M
+    claim:
+        ? forall n N+:
+            -M<=a(n)
+            a(n)<=M
+        claim:
+            ? abs(a(n))<=M
+            by cases:
+                ? abs(a(n))<=M
+                case n<=N0:
+                    n $in closed_range(1,N0)
+                    prefix(n)=abs(a(n))
+                    prefix(n) $in fn_range(prefix)
+                    abs(a(n))=prefix(n)<=prefix_max<=M
+                case n>N0:
+                    n $in {k N+:k>=N0}
+                    N0 $in {k N+:k>=N0}
+                    (n,N0) $in cart({k N+:k>=N0},{k N+:k>=N0})
+                    (n,N0) $in {p cart(N+,N+):abs(a(p(1))-a(p(2)))<1}
+                    (n,N0)(1)=n
+                    (n,N0)(2)=N0
+                    abs(a((n,N0)(1))-a((n,N0)(2)))<1
+                    a((n,N0)(1))=a(n)
+                    a((n,N0)(2))=a(N0)
+                    abs(a(n)-a(N0))=abs(a((n,N0)(1))-a((n,N0)(2)))<1
+                    a(n)=a(n)-a(N0)+a(N0)
+                    abs(a(n))=abs(a(n)-a(N0)+a(N0))<=abs(a(n)-a(N0))+abs(a(N0))<1+abs(a(N0))<=M
+        -a(n)<=abs(-a(n))=abs(a(n))<=M
+        -M<=-(-a(n))=a(n)
+        a(n)<=abs(a(n))<=M
+    release thm sequence_bounded_from_bounds(a,-M,M)
+
+thm analysis_cauchy_limsup_limit:
+    ? forall a seq(R),L R:
+        $is_seq_cauchy(a)
+        $has_seq_limsup(a,L)
+        =>:
+            $has_seq_limit(a,L)
+    claim:
+        ? forall epsilon R+:
+            exist cutoff N+ st {{n N+:n>=cutoff} $subset preimage_set(a,{v R:abs(v-L)<epsilon})}
+        epsilon/2 $in R+
+        release thm sequence_cauchy_tail(a,epsilon/2)
+        obtain N0 from exist cutoff N+ st {cart({n N+:n>=cutoff},{n N+:n>=cutoff}) $subset {p cart(N+,N+):abs(a(p(1))-a(p(2)))<epsilon/2}}
+        release thm seq_limsup_bound(a,L,epsilon)
+        obtain U0 from exist cutoff N+ st {{n N+:n>=cutoff} $subset preimage_set(a,{v R:v<L+epsilon})}
+        release thm seq_limsup_hit(a,L,epsilon/2,N0)
+        obtain m from exist m N+ st {m>=N0 and L-epsilon/2<a(m)}
+        witness exist cutoff N+ st {{n N+:n>=cutoff} $subset preimage_set(a,{v R:abs(v-L)<epsilon})} from (N0+U0):
+            claim:
+                ? forall n {k N+:k>=(N0+U0)}:
+                    n $in preimage_set(a,{v R:abs(v-L)<epsilon})
+                N0<=(N0+U0)<=n
+                U0<=(N0+U0)<=n
+                n $in {k N+:k>=U0}
+                n $in preimage_set(a,{v R:v<L+epsilon})
+                a(n) $in {v R:v<L+epsilon}
+                a(n)<L+epsilon
+                n $in {k N+:k>=N0}
+                m $in {k N+:k>=N0}
+                (n,m) $in cart({k N+:k>=N0},{k N+:k>=N0})
+                (n,m) $in {p cart(N+,N+):abs(a(p(1))-a(p(2)))<epsilon/2}
+                (n,m)(1)=n
+                (n,m)(2)=m
+                a((n,m)(1))=a(n)
+                a((n,m)(2))=a(m)
+                abs(a((n,m)(1))-a((n,m)(2)))<epsilon/2
+                abs(a(n)-a(m))=abs(a((n,m)(1))-a((n,m)(2)))<epsilon/2
+                a(m)-a(n)=-(a(n)-a(m))
+                a(m)-a(n)<=abs(a(m)-a(n))=abs(a(n)-a(m))<epsilon/2
+                a(m)-epsilon/2<a(m)-(a(m)-a(n))=a(n)
+                L-epsilon=L-epsilon/2-epsilon/2<a(m)-epsilon/2<a(n)
+                a(n)-L<L+epsilon-L=epsilon
+                L-a(n)<L-(L-epsilon)=epsilon
+                claim:
+                    ? abs(a(n)-L)<epsilon
+                    by cases:
+                        ? abs(a(n)-L)<epsilon
+                        case a(n)-L>=0:
+                            abs(a(n)-L)=a(n)-L<epsilon
+                        case a(n)-L<0:
+                            abs(a(n)-L)=-(a(n)-L)=L-a(n)<epsilon
+                a(n) $in {v R:abs(v-L)<epsilon}
+            by def {n N+:n>=(N0+U0)} $subset preimage_set(a,{v R:abs(v-L)<epsilon})
+    by def $has_seq_limit(a,L)
+
+thm analysis_cauchy_complete:
+    ? forall a seq(R):
+        $is_seq_cauchy(a)
+        =>:
+            exist L R st {$has_seq_limit(a,L)}
+    release thm analysis_cauchy_bounded(a)
+    $is_real_bounded(fn_range(a))
+    obtain lower from exist lower R st {$is_real_lower_bound(fn_range(a),lower)}
+    obtain upper from exist upper R st {$is_real_upper_bound(fn_range(a),upper)}
+    0<=abs(lower)
+    0<=abs(upper)
+    0<=abs(lower)+abs(upper)<abs(lower)+abs(upper)+1
+    have M R+=abs(lower)+abs(upper)+1
+    abs(lower)<=abs(lower)+abs(upper)<M
+    abs(upper)<=abs(upper)+abs(lower)=abs(lower)+abs(upper)<M
+    claim:
+        ? forall n N+:
+            abs(a(n))<=M
+        a(n) $in fn_range(a)
+        lower<=a(n)<=upper
+        by cases:
+            ? abs(a(n))<=M
+            case a(n)>=0:
+                abs(a(n))=a(n)<=upper<=abs(upper)<M
+            case a(n)<0:
+                abs(a(n))=-a(n)<=-lower<=abs(-lower)=abs(lower)<M
+    release thm seq_limsup_bounded_exists(a,M)
+    obtain L from exist L R st {$has_seq_limsup(a,L)}
+    release thm analysis_cauchy_limsup_limit(a,L)
+    witness exist value R st {$has_seq_limit(a,value)} from L
+
+thm analysis_monotone_bounded_above:
+    ? forall a seq(R):
+        $is_seq_nondecreasing(a)
+        $is_seq_bounded_above(a)
+        =>:
+            exist L R st {$has_seq_limit(a,L)}
+    $is_real_bounded_above(fn_range(a))
+    obtain B from exist B R st {$is_real_upper_bound(fn_range(a),B)}
+    a(1) $in fn_range(a)
+    witness $is_nonempty_set(fn_range(a)) from a(1)
+    release thm real_least_upper_bound_exists(fn_range(a),B)
+    obtain L from exist L R st {$is_real_least_upper_bound(fn_range(a),L)}
+    release thm analysis_nondecreasing_converges(a,L)
+    witness exist value R st {$has_seq_limit(a,value)} from L
+
+thm analysis_monotone_bounded_below:
+    ? forall a seq(R):
+        $is_seq_nonincreasing(a)
+        $is_seq_bounded_below(a)
+        =>:
+            exist L R st {$has_seq_limit(a,L)}
+    $is_real_bounded_below(fn_range(a))
+    obtain B from exist B R st {$is_real_lower_bound(fn_range(a),B)}
+    a(1) $in fn_range(a)
+    witness $is_nonempty_set(fn_range(a)) from a(1)
+    release thm real_greatest_lower_bound_exists(fn_range(a),B)
+    obtain L from exist L R st {$is_real_greatest_lower_bound(fn_range(a),L)}
+    release thm analysis_nonincreasing_converges(a,L)
+    witness exist value R st {$has_seq_limit(a,value)} from L
+
+thm analysis_convergent_bounded:
+    ? forall a seq(R):
+        $is_seq_convergent(a)
+        =>:
+            $is_seq_bounded(a)
+    obtain L from exist L R st {$has_seq_limit(a,L)}
+    release thm sequence_limit_cauchy(a,L)
+    release thm analysis_cauchy_bounded(a)
+
+thm analysis_cauchy_convergent:
+    ? forall a seq(R):
+        $is_seq_cauchy(a)
+        =>:
+            $is_seq_convergent(a)
+    release thm analysis_cauchy_complete(a)
+    by def $is_seq_convergent(a)

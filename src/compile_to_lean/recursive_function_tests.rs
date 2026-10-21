@@ -78,7 +78,7 @@ fn recursive_call_congruence_replays_ordered_argument_and_head_proofs() {
     let lean = compiler
         .compile_run(&result, "recursive_call_congruence")
         .expect("captured call congruence compiles");
-    assert!(lean.contains("Litex.callCongr"));
+    assert!(lean.contains("congrArg₂ (Litex.FunctionSemantics.callValue (M := M))"));
 }
 
 #[test]

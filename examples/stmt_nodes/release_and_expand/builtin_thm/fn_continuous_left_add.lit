@@ -1,0 +1,7 @@
+# Explicit relative continuity law; all complete domains and point values are checked.
+have fn identity(x R) R=x
+have fn cont_one(x R) R=1
+have fn cont_sum(x R) R=x+1
+release thm fn_continuous_left_identity(identity,0)
+release thm fn_continuous_left_constant(cont_one,0,1)
+release thm fn_continuous_left_add(identity,cont_one,cont_sum,0)

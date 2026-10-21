@@ -11,6 +11,7 @@ use crate::execute::execute_fact_stmt::well_defined_results::well_defined_result
 use crate::prelude::*;
 
 pub enum FailToVerifyObjWellDefinedResult {
+    BoundOperator(FailToVerifyBoundOperatorObjWellDefinedResult),
     LimitOperator(FailToVerifyLimitOperatorObjWellDefinedResult),
     Identifier(FailToVerifyIdentifierObjWellDefined),
     FnObj(FailToVerifyFnObjObjWellDefined),
@@ -30,6 +31,19 @@ pub enum FailToVerifyObjWellDefinedResult {
     FiniteSetStat(FailToVerifyFiniteSetStatObjWellDefinedResult),
     Structish(FailToVerifyStructishObjWellDefinedResult),
     InstantiatedTemplateObj(FailToVerifyInstantiatedTemplateObjObjWellDefined),
+}
+
+pub enum FailToVerifyBoundOperatorObjWellDefinedResult {
+    Supremum(FailToVerifySupremumObjWellDefined),
+    Infimum(FailToVerifyInfimumObjWellDefined),
+}
+pub struct FailToVerifySupremumObjWellDefined {
+    pub obj: Obj,
+    pub result: Box<VerifyFactResult>,
+}
+pub struct FailToVerifyInfimumObjWellDefined {
+    pub obj: Obj,
+    pub result: Box<VerifyFactResult>,
 }
 
 pub enum FailToVerifyLiteralObjWellDefinedResult {

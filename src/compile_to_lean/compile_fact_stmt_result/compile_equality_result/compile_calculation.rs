@@ -70,7 +70,7 @@ impl LitexToLeanCompiler {
                 ))
             }
         };
-        let (_numerator, denominator, factor, quotient, reversed, commuted) =
+        let (_numerator, _denominator, _factor, quotient, reversed, commuted) =
             if product_from_division {
                 let quotient = match &equation.left {
                     Obj::ArithmeticOperator(ArithmeticOperator::Div(x)) => x,
@@ -149,63 +149,42 @@ impl LitexToLeanCompiler {
         let checked_child =
             SourcePosition::new(Some(position), SourceOwner::Verify(child), usize::MAX);
         let position = &checked_child;
-        let b = self.compile_numeric_observation(denominator, position)?;
-        let c = self.compile_numeric_observation(factor, position)?;
-        let x = self.compile_numeric_observation(&equation.left, position)?;
-        let y = self.compile_numeric_observation(&equation.right, position)?;
-        let source_eq = format!(
-            "(Litex.NativeBridge.nativeEqOfDenoteNumber {} {} {} {} {} {} {})",
-            self.compile_object_reference(&equation.left, position)?,
-            self.compile_object_reference(&equation.right, position)?,
-            x.0,
-            y.0,
-            x.1,
-            y.1,
-            compiled.1
-        );
-        let guard = format!(
-            "(Litex.NativeBridge.nativeNonzeroOfDenote {} {} {} ({}).wd.2.2)",
-            self.compile_object_reference(denominator, position)?,
-            b.0,
-            b.1,
-            self.compile_object_reference(quotient, position)?
-        );
-        let native_proof = if product_from_division {
-            let product = format!("((div_eq_iff {guard}).mp {source_eq})");
-            let oriented = if commuted {
-                format!("({product}.trans (mul_comm {} {}))", c.0, b.0)
-            } else {
-                product
-            };
+        let product = if product_from_division {
             if reversed {
-                format!("({oriented}.symm)")
+                &fact.left
             } else {
-                oriented
+                &fact.right
             }
         } else {
-            let product = if commuted {
-                format!("({source_eq}.trans (mul_comm {} {}))", b.0, c.0)
-            } else {
-                source_eq
-            };
-            let quotient = format!("((div_eq_iff {guard}).mpr {product})");
-            if reversed {
-                format!("({quotient}.symm)")
-            } else {
-                quotient
-            }
+            &equation.right
         };
-        let left = self.compile_numeric_observation(&fact.left, position)?;
-        let right = self.compile_numeric_observation(&fact.right, position)?;
-        Ok(format!(
-            "(Litex.NativeBridge.sameOfDenoteNumber {} {} {} {} {} {} {native_proof})",
-            self.compile_object_reference(&fact.left, position)?,
-            self.compile_object_reference(&fact.right, position)?,
-            left.0,
-            right.0,
-            left.1,
-            right.1
-        ))
+        let quotient = self.compile_object_reference(quotient, position)?;
+        let product = self.compile_object_reference(product, position)?;
+        let factor_field = if commuted { "right" } else { "left" };
+        let member_field = if commuted { "2" } else { "1" };
+        let commute = if commuted {
+            "(Litex.sameMulComm _product.val.left _product.val.right _product.wd.1 _product.wd.2)"
+        } else {
+            ""
+        };
+        let converted = if product_from_division {
+            if commuted {
+                format!("((_conversion.mp _child).trans {commute}.symm)")
+            } else {
+                "(_conversion.mp _child)".to_string()
+            }
+        } else if commuted {
+            format!("(_conversion.mpr (_child.trans {commute}))")
+        } else {
+            "(_conversion.mpr _child)".to_string()
+        };
+        let converted = if reversed {
+            format!("({converted}.symm)")
+        } else {
+            converted
+        };
+        Ok(format!("(by\n  let _quotient := {}\n  let _product := {}\n  have _child : {} := {}\n  have _conversion := Litex.sameDivIffSameMul _quotient.val.left _quotient.val.right _product.val.{factor_field} _quotient.wd.1 _quotient.wd.2.1 _product.wd.{member_field} _quotient.wd.2.2\n  exact {converted})",
+            quotient.replace('\n', "\n  "), product.replace('\n', "\n  "), compiled.0.replace('\n', "\n  "), compiled.1.replace('\n', "\n  ")))
     }
 
     pub(in crate::compile_to_lean) fn compile_rational(
@@ -258,7 +237,9 @@ impl LitexToLeanCompiler {
                 .join(" | ");
             format!("(by\n  {}\n  litex_normalize_rational (disch := repeat' first | {exact_guards} | apply mul_ne_zero | apply div_ne_zero | apply pow_ne_zero | apply zpow_ne_zero)\n)", native_guards.join("\n  "))
         } else {
-            "(by ring)".to_string()
+            // The same source atom can occur through different projections of
+            // certified objects. Compare those definitions at default transparency.
+            "(by ring!)".to_string()
         };
         Ok(format!(
             // Endpoint WD was checked by the equality dispatcher. The exact

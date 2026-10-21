@@ -5,6 +5,52 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_
 use crate::prelude::*;
 
 impl LitexToLeanCompiler {
+    pub(super) fn compile_add_strict_shift(
+        &self,
+        goal: &AtomicFact,
+        requirements: &[Fact],
+        results: &[VerifyFactResult],
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        let (low, high, strict) = source_order_oriented(goal)?;
+        let Obj::ArithmeticOperator(ArithmeticOperator::Add(sum)) = high else {
+            return Err(LeanCompileError::unsupported("StrictAddShift/Sum"));
+        };
+        if !strict || requirements.len() != 2 || results.len() != 2 {
+            return Err(LeanCompileError::unsupported("StrictAddShift/Requirements"));
+        }
+        let mut children = Vec::new();
+        for (i, (requirement, result)) in requirements.iter().zip(results).enumerate() {
+            let Fact::AtomicFact(atomic) = requirement else {
+                return Err(LeanCompileError::unsupported("StrictAddShift/Child"));
+            };
+            let (left, right, strict) = source_order_oriented(atomic)?;
+            let matches = if i == 0 {
+                !strict && left.ir() == low.ir() && right.ir() == sum.left.ir()
+            } else {
+                strict && is_exact_zero(left) && right.ir() == sum.right.ir()
+            };
+            if !matches || source_subject(result)? != *requirement {
+                return Err(LeanCompileError::new(
+                    "StrictAddShift/ChildSubject",
+                    "The selected rule needs the original weak bound, then the positive addend.",
+                ));
+            }
+            children.push(
+                self.compile_verify(result, &position.atomic_search_prior(i)?)?
+                    .1,
+            );
+        }
+        let complete = position.atomic_search_prior(2)?;
+        Ok(format!(
+            "(Litex.ltAddOfLeOfPos {} {} {} {})",
+            self.compile_object_reference(low, &complete)?,
+            self.compile_object_reference(high, &complete)?,
+            children[0],
+            children[1]
+        ))
+    }
+
     pub(in crate::compile_to_lean) fn compile_selected_zero_bound_strategy(
         &self,
         goal: &AtomicFact,
@@ -18,6 +64,13 @@ impl LitexToLeanCompiler {
                 "addNonnegative",
                 false,
                 [false, false],
+                &p.requirement_facts,
+                &p.proof_of_requirement_facts,
+            ),
+            AtomicExceptEqualityFactSearchProofByBuiltinStrategy::StrictAdditiveLeftStrict(p) => (
+                "addPositiveLeft",
+                true,
+                [true, false],
                 &p.requirement_facts,
                 &p.proof_of_requirement_facts,
             ),

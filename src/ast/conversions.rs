@@ -1,6 +1,157 @@
 //! Enum wrapping conversions for facts.
 //! Prefer `leaf.into()` / `atomic.into()` over `AtomicFact::Variant(leaf)`.
 
+impl From<crate::ast::fact::RealSetBoundFact> for AtomicFact {
+    fn from(f: crate::ast::fact::RealSetBoundFact) -> Self {
+        Self::RealSetBoundFact(f)
+    }
+}
+impl From<crate::ast::fact::RealSetBoundFact> for Fact {
+    fn from(f: crate::ast::fact::RealSetBoundFact) -> Self {
+        Fact::AtomicFact(f.into())
+    }
+}
+impl From<crate::ast::fact::NotRealSetBoundFact> for AtomicFact {
+    fn from(f: crate::ast::fact::NotRealSetBoundFact) -> Self {
+        Self::NotRealSetBoundFact(f)
+    }
+}
+impl From<crate::ast::fact::NotRealSetBoundFact> for Fact {
+    fn from(f: crate::ast::fact::NotRealSetBoundFact) -> Self {
+        Fact::AtomicFact(f.into())
+    }
+}
+impl From<crate::ast::fact::RealSetBoundedFact> for AtomicFact {
+    fn from(f: crate::ast::fact::RealSetBoundedFact) -> Self {
+        Self::RealSetBoundedFact(f)
+    }
+}
+impl From<crate::ast::fact::RealSetBoundedFact> for Fact {
+    fn from(f: crate::ast::fact::RealSetBoundedFact) -> Self {
+        Fact::AtomicFact(f.into())
+    }
+}
+impl From<crate::ast::fact::NotRealSetBoundedFact> for AtomicFact {
+    fn from(f: crate::ast::fact::NotRealSetBoundedFact) -> Self {
+        Self::NotRealSetBoundedFact(f)
+    }
+}
+impl From<crate::ast::fact::NotRealSetBoundedFact> for Fact {
+    fn from(f: crate::ast::fact::NotRealSetBoundedFact) -> Self {
+        Fact::AtomicFact(f.into())
+    }
+}
+impl From<crate::ast::fact::SequenceAnalysisFact> for AtomicFact {
+    fn from(f: crate::ast::fact::SequenceAnalysisFact) -> Self {
+        Self::SequenceAnalysisFact(f)
+    }
+}
+impl From<crate::ast::fact::SequenceAnalysisFact> for Fact {
+    fn from(f: crate::ast::fact::SequenceAnalysisFact) -> Self {
+        Fact::AtomicFact(f.into())
+    }
+}
+impl From<crate::ast::fact::NotSequenceAnalysisFact> for AtomicFact {
+    fn from(f: crate::ast::fact::NotSequenceAnalysisFact) -> Self {
+        Self::NotSequenceAnalysisFact(f)
+    }
+}
+impl From<crate::ast::fact::NotSequenceAnalysisFact> for Fact {
+    fn from(f: crate::ast::fact::NotSequenceAnalysisFact) -> Self {
+        Fact::AtomicFact(f.into())
+    }
+}
+impl From<crate::ast::fact::RealAccumulationFact> for AtomicFact {
+    fn from(f: crate::ast::fact::RealAccumulationFact) -> Self {
+        Self::RealAccumulationFact(f)
+    }
+}
+impl From<crate::ast::fact::RealAccumulationFact> for Fact {
+    fn from(f: crate::ast::fact::RealAccumulationFact) -> Self {
+        Fact::AtomicFact(f.into())
+    }
+}
+impl From<crate::ast::fact::NotRealAccumulationFact> for AtomicFact {
+    fn from(f: crate::ast::fact::NotRealAccumulationFact) -> Self {
+        Self::NotRealAccumulationFact(f)
+    }
+}
+impl From<crate::ast::fact::NotRealAccumulationFact> for Fact {
+    fn from(f: crate::ast::fact::NotRealAccumulationFact) -> Self {
+        Fact::AtomicFact(f.into())
+    }
+}
+impl From<crate::ast::fact::FunctionContinuousAtFact> for AtomicFact {
+    fn from(f: crate::ast::fact::FunctionContinuousAtFact) -> Self {
+        Self::FunctionContinuousAtFact(f)
+    }
+}
+impl From<crate::ast::fact::FunctionContinuousAtFact> for Fact {
+    fn from(f: crate::ast::fact::FunctionContinuousAtFact) -> Self {
+        Fact::AtomicFact(f.into())
+    }
+}
+impl From<crate::ast::fact::NotFunctionContinuousAtFact> for AtomicFact {
+    fn from(f: crate::ast::fact::NotFunctionContinuousAtFact) -> Self {
+        Self::NotFunctionContinuousAtFact(f)
+    }
+}
+impl From<crate::ast::fact::NotFunctionContinuousAtFact> for Fact {
+    fn from(f: crate::ast::fact::NotFunctionContinuousAtFact) -> Self {
+        Fact::AtomicFact(f.into())
+    }
+}
+impl From<crate::ast::fact::FunctionContinuousFact> for AtomicFact {
+    fn from(f: crate::ast::fact::FunctionContinuousFact) -> Self {
+        Self::FunctionContinuousFact(f)
+    }
+}
+impl From<crate::ast::fact::FunctionContinuousFact> for Fact {
+    fn from(f: crate::ast::fact::FunctionContinuousFact) -> Self {
+        Fact::AtomicFact(f.into())
+    }
+}
+impl From<crate::ast::fact::NotFunctionContinuousFact> for AtomicFact {
+    fn from(f: crate::ast::fact::NotFunctionContinuousFact) -> Self {
+        Self::NotFunctionContinuousFact(f)
+    }
+}
+impl From<crate::ast::fact::NotFunctionContinuousFact> for Fact {
+    fn from(f: crate::ast::fact::NotFunctionContinuousFact) -> Self {
+        Fact::AtomicFact(f.into())
+    }
+}
+impl From<crate::ast::fact::FunctionLipschitzFact> for AtomicFact {
+    fn from(f: crate::ast::fact::FunctionLipschitzFact) -> Self {
+        Self::FunctionLipschitzFact(f)
+    }
+}
+impl From<crate::ast::fact::FunctionLipschitzFact> for Fact {
+    fn from(f: crate::ast::fact::FunctionLipschitzFact) -> Self {
+        Fact::AtomicFact(f.into())
+    }
+}
+impl From<crate::ast::fact::NotFunctionLipschitzFact> for AtomicFact {
+    fn from(f: crate::ast::fact::NotFunctionLipschitzFact) -> Self {
+        Self::NotFunctionLipschitzFact(f)
+    }
+}
+impl From<crate::ast::fact::NotFunctionLipschitzFact> for Fact {
+    fn from(f: crate::ast::fact::NotFunctionLipschitzFact) -> Self {
+        Fact::AtomicFact(f.into())
+    }
+}
+impl From<crate::ast::obj::Supremum> for crate::ast::obj::Obj {
+    fn from(value: crate::ast::obj::Supremum) -> Self {
+        Self::BoundOperator(crate::ast::obj::BoundOperator::Supremum(value))
+    }
+}
+impl From<crate::ast::obj::Infimum> for crate::ast::obj::Obj {
+    fn from(value: crate::ast::obj::Infimum) -> Self {
+        Self::BoundOperator(crate::ast::obj::BoundOperator::Infimum(value))
+    }
+}
+
 impl From<crate::ast::obj::Composition> for crate::ast::obj::Obj {
     fn from(value: crate::ast::obj::Composition) -> Self {
         Self::FunctionSpace(crate::ast::obj::FunctionSpace::Composition(value))

@@ -1,0 +1,47 @@
+# The left formula -x and right formula x have the matching point value zero.
+have fn identity(x R) R=x
+
+have fn cont_negative(x R) R=-x
+
+have fn cont_absolute(x R) R=abs(x)
+
+release thm fn_limit_left_real_accumulation(0)
+
+release thm fn_limit_left_identity(identity,0)
+
+release thm fn_limit_left_neg(identity,cont_negative,0,0)
+
+-0=0
+
+claim:
+    ? forall x {t R:0<0-t and 0-t<1}:
+        cont_negative(x)=cont_absolute(x)
+    0-x=-x
+    0<-x
+    x<0
+    cont_absolute(x)=abs(x)=-x=cont_negative(x)
+
+release thm fn_limit_left_local_equal(cont_negative,cont_absolute,0,0,1)
+
+release thm fn_limit_right_real_accumulation(0)
+
+release thm fn_limit_right_identity(identity,0)
+
+claim:
+    ? forall x {t R:0<t-0 and t-0<1}:
+        identity(x)=cont_absolute(x)
+    x-0=x
+    0<x
+    cont_absolute(x)=abs(x)=x=identity(x)
+
+release thm fn_limit_right_local_equal(identity,cont_absolute,0,0,1)
+
+cont_absolute(0)=0
+
+release thm fn_continuous_left_from_limit(cont_absolute,0)
+
+release thm fn_continuous_right_from_limit(cont_absolute,0)
+
+release thm fn_continuous_from_sides(cont_absolute,0)
+
+$is_continuous_at(cont_absolute,0)

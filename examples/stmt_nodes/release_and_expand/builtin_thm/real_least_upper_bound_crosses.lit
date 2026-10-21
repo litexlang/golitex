@@ -1,0 +1,13 @@
+# Before: this explicit builtin theorem name was unavailable.
+# release thm real_least_upper_bound_crosses({0},0,-1)
+# Run: target/release/litex -strict -lang en -f examples/stmt_nodes/release_and_expand/builtin_thm/real_least_upper_bound_crosses.lit
+forall u R:
+    forall x {0}:
+        x<=u
+    =>:
+        0<=u
+release thm real_least_upper_bound_from_definition({0},0)
+release thm real_least_upper_bound_crosses({0},0,-1)
+exist x {0} st {-1<x}
+# Boundary: missing certificates, false extremal candidates, and non-strict crossings are rejected.
+

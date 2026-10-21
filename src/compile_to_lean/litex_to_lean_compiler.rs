@@ -9,7 +9,9 @@ use crate::execute::execute_by_stmt::{
 use crate::execute::execute_fact_stmt::verify_and_fact::VerifyAndFactResult;
 use crate::execute::execute_fact_stmt::verify_chain_fact::VerifyChainFactResult;
 use crate::execute::execute_proof_block_stmt::{ExecClaimStmtResult, ExecProofBlockStmtResult};
-use crate::execute::execute_witness_stmt::{ExecWitnessExistFactStmtResult, ExecWitnessStmtResult};
+use crate::execute::execute_witness_stmt::{
+    ExecWitnessAtomicFactStmtResult, ExecWitnessExistFactStmtResult, ExecWitnessStmtResult,
+};
 use crate::execute::ExecDefPropStmtResult;
 use crate::execute::ExecReleaseAndExpandStmtResult;
 use crate::prelude::*;
@@ -200,6 +202,11 @@ fn statement_uses_functions(statement: &ExecStmtResult) -> bool {
         ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
             ExecDefineObjStmtResult::ObtainObjFromExistFact(crate::execute::ExecObtainObjFromExistFactStmtResult::Success(proof)),
         )) => fact_uses_functions(&crate::ast::fact::exist_shaped_fact_to_fact(&proof.statement.fact)),
+        ExecStmtResult::Witness(ExecWitnessStmtResult::WitnessAtomicFact(ExecWitnessAtomicFactStmtResult::Success(proof))) => {
+            fact_uses_functions(&crate::ast::fact::exist_shaped_fact_to_fact(&proof.projected_exist))
+                || proof.statement.witnesses.iter().any(object_uses_functions)
+                || proof.proof_steps.iter().any(statement_uses_functions)
+        }
         ExecStmtResult::Witness(ExecWitnessStmtResult::WitnessExistFact(ExecWitnessExistFactStmtResult::Success(proof))) => {
             fact_uses_functions(&crate::ast::fact::exist_shaped_fact_to_fact(&proof.statement.exist_shaped_fact_in_witness))
                 || proof.statement.equal_tos.iter().any(object_uses_functions)
@@ -263,7 +270,7 @@ fn statement_uses_functions(statement: &ExecStmtResult) -> bool {
 
 fn object_uses_sets(object: &Obj) -> bool {
     match object {
-        Obj::StandardSet(StandardSet::RPos) => true,
+        Obj::StandardSet(StandardSet::RPos | StandardSet::NPos) => true,
         Obj::SetFormer(
             SetFormer::ListSet(_) | SetFormer::SetBuilder(_) | SetFormer::ClosedRange(_),
         ) => true,
@@ -363,6 +370,14 @@ fn statement_uses_sets(statement: &ExecStmtResult) -> bool {
                 .iter()
                 .any(|store| store_has_set_inference(store))
         }
+        ExecStmtResult::Witness(ExecWitnessStmtResult::WitnessAtomicFact(
+            ExecWitnessAtomicFactStmtResult::Success(proof),
+        )) => {
+            fact_uses_sets(&crate::ast::fact::exist_shaped_fact_to_fact(
+                &proof.projected_exist,
+            )) || proof.statement.witnesses.iter().any(object_uses_sets)
+                || proof.proof_steps.iter().any(statement_uses_sets)
+        }
         ExecStmtResult::Witness(ExecWitnessStmtResult::WitnessExistFact(
             ExecWitnessExistFactStmtResult::Success(proof),
         )) => {
@@ -438,6 +453,16 @@ fn domains_have_set_inference(domains: &[AssumeDomFactResult]) -> bool {
 
 fn verify_has_set_inference(proof: &VerifyFactResult) -> bool {
     match proof {
+        VerifyFactResult::AtomicExceptEquality(proof) => matches!(proof.as_ref(),
+            VerifyAtomicExceptEqualityFactResult::Success(proof) if matches!(&proof.searched_proof,
+                AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::PowSharedExponentLessEqual(_)))),
+        VerifyFactResult::Equality(proof) => matches!(proof.as_ref(),
+            VerifyEqualityResult::Success(proof) if matches!(&proof.searched_proof,
+                EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::ElementaryArithmetic(
+                    crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_elementary_arithmetic::ElementaryArithmeticProof::PositivePowerZero { .. },
+                ))
+            )
+        ),
         VerifyFactResult::ForallFact(proof) => match proof.as_ref() {
             VerifyForallFactResult::Success(VerifyForallFactProof::ByLocalIntroduction(proof)) => {
                 domains_have_set_inference(&proof.assumed_dom_facts)
@@ -466,6 +491,27 @@ fn verify_has_set_inference(proof: &VerifyFactResult) -> bool {
 
 fn statement_has_set_inference(statement: &ExecStmtResult) -> bool {
     match statement {
+        ExecStmtResult::Witness(ExecWitnessStmtResult::WitnessAtomicFact(
+            ExecWitnessAtomicFactStmtResult::Success(proof),
+        )) => {
+            proof
+                .prop_argument_type_checks
+                .iter()
+                .any(verify_has_set_inference)
+                || proof
+                    .introduced_params
+                    .defined_params
+                    .store_and_infer_results
+                    .iter()
+                    .any(|store| store_has_set_inference(store))
+                || proof.witness_equalities.iter().any(store_has_set_inference)
+                || proof
+                    .obligations
+                    .body_checks
+                    .iter()
+                    .any(verify_has_set_inference)
+                || store_has_set_inference(&proof.store_and_infer_result)
+        }
         ExecStmtResult::Witness(ExecWitnessStmtResult::WitnessExistFact(
             ExecWitnessExistFactStmtResult::Success(proof),
         )) => {

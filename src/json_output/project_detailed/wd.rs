@@ -86,6 +86,46 @@ pub(super) fn project_atomic_wd_proof(
     };
     use crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainProof;
     let domain = match &proof.predicate_domain {
+        PredicateDomainProof::SequenceAnalysis(p) => object_for(
+            runtime,
+            vec![
+                ("type", string("checked_real_sequence_analysis")),
+                (
+                    "sequence_source",
+                    super::function_domain::project_source(&p.sequence_source, runtime),
+                ),
+            ],
+        ),
+        PredicateDomainProof::FunctionAnalysis(p) => object_for(
+            runtime,
+            vec![
+                ("type", string("checked_real_function_analysis")),
+                (
+                    "function_domain",
+                    super::function_limit::domain(&p.function_domain, runtime),
+                ),
+                (
+                    "requirements",
+                    JsonValue::Array(
+                        p.requirements
+                            .iter()
+                            .map(|r| {
+                                object_for(
+                                    runtime,
+                                    vec![
+                                        ("requirement", string(r.requirement.readable_string())),
+                                        (
+                                            "verify",
+                                            super::verify::project_verify_fact(&r.result, runtime),
+                                        ),
+                                    ],
+                                )
+                            })
+                            .collect(),
+                    ),
+                ),
+            ],
+        ),
         PredicateDomainProof::FunctionLimit(p) => {
             super::function_limit::predicate_domain(p, runtime)
         }
