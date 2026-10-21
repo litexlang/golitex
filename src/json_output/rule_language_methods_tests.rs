@@ -52,6 +52,15 @@ fn every_rule_impl_owns_ten_methods_and_a_selection_only_dispatcher() {
                     );
                 }
                 let body_start = dispatch + implementation[dispatch..].find('{').unwrap();
+                let signature = without_whitespace(&implementation[dispatch..body_start]);
+                let selector = signature
+                    .split(":OutputLanguage")
+                    .next()
+                    .unwrap()
+                    .rsplit(',')
+                    .next()
+                    .unwrap();
+                let expected = expected.replace("match lang", &format!("match {selector}"));
                 let mut depth = 0;
                 let body_end = implementation[body_start..]
                     .char_indices()

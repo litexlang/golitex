@@ -47,6 +47,15 @@ fn run_launch() {
             })
         })
         .collect::<Vec<_>>();
+    match litex::reading::parse_reading_command(&args) {
+        Ok(Some(command)) => match litex::run::run_reading::run_reading(command) {
+            Ok(true) => return,
+            Ok(false) => process::exit(1),
+            Err(error) => report_error(None, &error),
+        },
+        Ok(None) => {}
+        Err(error) => report_error(None, &error),
+    }
     let command = match parse_launch_command(&args) {
         Ok(command) => command,
         Err(error) => report_error(None, &error),

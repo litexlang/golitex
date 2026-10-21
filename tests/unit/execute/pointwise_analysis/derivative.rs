@@ -3,8 +3,9 @@ use std::collections::{HashMap, HashSet};
 #[test]
 fn pointwise_derivative_tests_capture_avoidance_and_alpha_equivalence() {
     let mut rt = runtime();
+    check(&mut rt, "have a R=2", true);
     let AtomicFact::HasDerivativeAtFact(candidate) =
-        parse_atomic(&mut rt, "$has_derivative_at(fn(x R) R {x},0,1)")
+        parse_atomic(&mut rt, "$has_derivative_at(fn(x R) R {x+a},a,1)")
     else {
         panic!("candidate")
     };
@@ -12,12 +13,24 @@ fn pointwise_derivative_tests_capture_avoidance_and_alpha_equivalence() {
         panic!("literal")
     };
     let binder = body.body.set_bound_parameters.groups[0].params[0].clone();
-    let p = rt.fresh_internal_param();
-    let point = Obj::Identifier(IdentifierObj::from_bound_name(&p));
-    let replacement = Obj::Identifier(IdentifierObj::from_bound_name(&binder));
-    let original: Obj = DerivativeAt::new(candidate.function, point).into();
+    // Same spelling, distinct scope/identity. The insertion must remain free
+    // inside the function and in the derivative's separate point argument.
+    check(&mut rt, "have x R=7", true);
+    let a_id = rt.resolve_plain_atom("a").unwrap();
+    let x_id = rt.resolve_plain_atom("x").unwrap();
+    assert_ne!(x_id, binder.id);
+    let replacement = Obj::Identifier(IdentifierObj::plain(x_id, "x".into()));
+    let zero = Obj::Literal(Literal::Number(Number::new("0".into())));
+    let original: Obj = DerivativeAt::new(candidate.function, candidate.point).into();
     let inst = rt
-        .inst_obj(&original, &HashMap::from([(p.id, replacement.clone())]))
+        .inst_obj(
+            &original,
+            &HashMap::from([
+                (a_id, replacement.clone()),
+                (x_id, zero.clone()),
+                (binder.id, zero),
+            ]),
+        )
         .unwrap();
     let Obj::DerivativeOperator(DerivativeOperator::AtPoint(inst)) = inst else {
         panic!("derivative")
@@ -27,14 +40,22 @@ fn pointwise_derivative_tests_capture_avoidance_and_alpha_equivalence() {
         panic!("literal")
     };
     let new_binder = &body.body.set_bound_parameters.groups[0].params[0];
-    assert_ne!(
-        new_binder.id, binder.id,
-        "free point must not capture the function's parameter"
-    );
+    assert_eq!(new_binder.id, binder.id);
+    let Obj::ArithmeticOperator(ArithmeticOperator::Add(sum)) = body.equal_to.as_ref() else {
+        panic!("sum")
+    };
     assert_eq!(
-        *body.equal_to,
+        *sum.left,
         Obj::Identifier(IdentifierObj::from_bound_name(new_binder))
     );
+    assert_eq!(*sum.right, replacement);
+    let mut free = HashSet::new();
+    crate::instantiate::collect_free_plain_ids(
+        &Obj::DerivativeOperator(DerivativeOperator::AtPoint(inst.clone())),
+        &HashSet::new(),
+        &mut free,
+    );
+    assert_eq!(free, HashSet::from([x_id]));
     let AtomicFact::HasDerivativeAtFact(a) =
         parse_atomic(&mut rt, "$has_derivative_at(fn(y R) R {y},0,1)")
     else {
@@ -131,6 +152,7 @@ fn pointwise_derivative_tests_selection_requires_proof_and_is_not_an_evaluator()
     check(&mut rt, "0*derivative(square,3)=0", false);
     check(&mut rt, "$has_derivative_at(square,3,6)", true);
     check(&mut rt, "$is_differentiable_at(square,3)", true);
+    check(&mut rt, "derivative(square,3)=6", true);
     check(&mut rt, "derivative(square,3)+2=8", true);
     check(&mut rt, "derivative(square,3)=5", false);
     check(&mut rt, "derivative(square,4)=8", false);

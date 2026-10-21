@@ -14,7 +14,7 @@ pub(super) fn project_statement_source(stmt: &Stmt, runtime: &Runtime) -> JsonVa
     )
 }
 
-fn statement_source_line(stmt: &Stmt) -> Option<&crate::ast::line_file::SourceLine> {
+pub(crate) fn statement_source_line(stmt: &Stmt) -> Option<&crate::ast::line_file::SourceLine> {
     match stmt {
         Stmt::Fact(fact) => super::helper::fact_source_line(fact),
         Stmt::Trust(value) => match value {

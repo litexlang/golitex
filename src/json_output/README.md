@@ -12,7 +12,7 @@ the result-type migration does not introduce a second serialized proof tree.
 Normal, Compact and Detailed run projections preserve the complete parsed statement
 text retained by the runner. Names, arguments and selected theorem conclusions
 stay in `statement`; published facts remain in `stores`. A failed expression
-such as `1 / 0 = 0` keeps that source text, with `why_failed.phase: well_defined`
+such as `1 / 0 = 0` keeps that source text, with an `errors` entry for `well_defined`
 and an explicit localized message that well-definedness could not be proved.
 Standalone statement projections without source context use
 `<well_defined_not_proven>` when the result tree lacks the original goal.
@@ -23,9 +23,34 @@ Extraction artifacts use the same command metadata on success and failure:
 failure; `error` is null on success. Artifact field names follow `-lang` just
 like run envelopes; the English schema applies with `-lang en`.
 
+## Concise run feedback
+
+Default Normal **run** output puts one concise entry per rejected statement in
+`errors`. Rejected `statement_results` entries retain only `statement_result`
+and `statement`; accepted entries retain their usual proof/stores/infers fields.
+Each error contains a zero-based `statement_index`, source `statement`, `phase`
+and the retained diagnostic's category/message/expression/obligation when known.
+Execution-stage context such as arity, cause and failed requirement indexes is
+flattened alongside the summary. Nested proof failures retain their innermost
+`failed_statement` and `source_location`. No full verification tree is included.
+An empty `errors` array means no ordinary input was rejected; hard session
+failures are still reported separately by `session_terminated` and `termination`.
+
+Malformed input retains its original source and one-based location (including
+`column` when known). It is rejected without an executable AST. It ends the
+current submission, while an interactive Session accepts the next submission.
+Tokenization precedes all execution, so a tokenizer rejection executes none
+of the current input. Neither kind of failure publishes a partial declaration.
+
+The existing standalone `project_stmt_normal` / `project_stmt_detailed` and
+Detailed run APIs preserve full evidence for tooling. The Normal statement
+shapes described below refer to those standalone APIs; their `why_failed` trees
+are summarized only when building default run feedback. Compact run output
+also includes `errors`; its standalone statement API remains unchanged.
+
 ## Failed-stage diagnostics
 
-Normal `why_failed.diagnostic` and the Detailed failed statement's `diagnostic`
+Standalone Normal `why_failed.diagnostic` and the Detailed failed statement's `diagnostic`
 share a summary derived from the actual typed failure branch. `category` is a
 stable enum value; `message` and field names follow `-lang`. `expression` and
 `obligation` are included only when the retained result supplies them.
@@ -504,7 +529,7 @@ Fact success sketch:
 Chinese (`-lang zh`): field keys remapped (`验证` / `存储与推理` / …); IR
 variant tags such as `kind` values may stay English.
 
-## Run envelope
+## Default Normal run envelope
 
 ```json
 {
@@ -514,7 +539,8 @@ variant tags such as `kind` values may stay English.
   "path": null,
   "detail": "normal",
   "language": "en",
-  "statement_results": [ /* Normal or Detailed stmt objects */ ],
+  "statement_results": [],
+  "errors": [],
   "session_terminated": false,
   "termination": null
 }
@@ -536,8 +562,9 @@ Locked by `cargo test --lib json_output::` (`acceptance_tests` +
 
 1. **Normal success shape / field order**: `statement_result` → `statement` →
    `proof_method` → `stores` → `infers`
-2. **Normal failure shape**: `statement_result: "rejected"` → `statement` → `why_failed` →
-   empty `stores`/`infers`
+2. **Normal run failure**: rejected entries keep `statement_result` and `statement`;
+   `errors` contains concise explanations. Standalone Normal statement projections
+   retain `why_failed` and empty `stores`/`infers` for existing tooling.
 3. **Compact success**: only `statement_result` + `statement` (no proof_method/stores/infers)
 4. **Compact failure**: `statement_result` → `statement` → `fail_reason` (`phase` +
    optional `goal`)

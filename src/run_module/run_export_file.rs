@@ -2,9 +2,9 @@
 
 use crate::module_manager::ExportFileAndItsExecEnv;
 use crate::run::run_command_outcome::RunFileResult;
+use crate::run::source_observer::SourceObserver;
 use crate::runtime::{CodeSource, Runtime, RuntimeError, RuntimeResult};
 use std::fs;
-use crate::run::source_observer::SourceObserver;
 
 /// Run one export / standalone file under the given module context.
 ///

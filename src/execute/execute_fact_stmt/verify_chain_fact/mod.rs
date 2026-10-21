@@ -8,3 +8,5 @@ pub use well_defined_result::{
     ChainFactWellDefinedProof, FailToVerifyChainFactWellDefinedResult,
     VerifyChainFactWellDefinedResult,
 };
+
+pub(crate) use result::VerifyChainFactSuccess;

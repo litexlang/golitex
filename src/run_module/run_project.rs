@@ -3,11 +3,10 @@
 use super::load_config::{load_config, resolve_std_root};
 use super::run_export_file::run_export_file_observed;
 use super::run_import_module::{run_import_module_observed, RunImportModuleOutcome};
-use crate::run::source_observer::SourceObserver;
 use crate::launch_command::LaunchCommand;
-use crate::prelude::*;
 use crate::run::run_command_outcome::{RunFileResult, RunRepoResult, RunSessionError};
 use crate::run::run_repl::run_repl_loop;
+use crate::run::source_observer::SourceObserver;
 use crate::runtime::{Runtime, RuntimeError, RuntimeResult};
 use std::collections::HashSet;
 use std::path::PathBuf;
@@ -96,9 +95,7 @@ pub fn run_project_observed(
         ) {
             Ok(file_result) => {
                 let failed = !file_result.run.success;
-                let session_error = file_result.run.session_error.clone().unwrap_or_else(|| {
-                    RunSessionError::FailToImport(ImportFailure::rejected_export(&file_result))
-                });
+                let session_error = file_result.mount_error();
                 file_results.push(file_result);
                 if failed {
                     return Ok(finish_repo(
@@ -110,12 +107,7 @@ pub fn run_project_observed(
                 }
                 if keep_env_open {
                     match run_repl_loop(&mut runtime) {
-                        Ok(true) => {}
-                        Ok(false) => {
-                            if let Some(file) = file_results.last_mut() {
-                                file.run.attach_session_rejection(&runtime);
-                            }
-                        }
+                        Ok(()) => {}
                         Err(error) => {
                             return Ok(finish_repo(
                                 &runtime,

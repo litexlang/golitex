@@ -30,7 +30,7 @@ pub fn project_run_detailed(
     target: &str,
     path: Option<&Path>,
 ) -> JsonValue {
-    let statement_results: Vec<JsonValue> = run
+    let mut statement_results: Vec<JsonValue> = run
         .statement_results
         .iter()
         .enumerate()
@@ -42,6 +42,12 @@ pub fn project_run_detailed(
             )
         })
         .collect();
+    if let Some(input) = &run.input_error {
+        statement_results.push(crate::json_output::feedback::input_failure(
+            input,
+            runtime.launch_command.output_language(),
+        ));
+    }
     let path_value = match path {
         Some(p) => string(p.display().to_string()),
         None => JsonValue::Null,

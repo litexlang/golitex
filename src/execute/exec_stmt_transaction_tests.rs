@@ -1591,7 +1591,7 @@ fn fn_set_obj_carriers_are_fixed_and_conditions_can_use_parameters() {
         let run = runtime.run_litex_code(code).unwrap();
         assert!(!run.success, "{code}");
         assert!(
-            run.session_error.is_some(),
+            run.input_error.is_some(),
             "dependent carrier must fail during parse: {code}"
         );
     }

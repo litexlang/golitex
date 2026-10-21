@@ -1,0 +1,383 @@
+use litex::knowledge_base::JsonValue;
+use litex::launch_command::OutputLanguage;
+use litex::reading::{build_reading, parse_reading_command, ReadingAction, ReadingInput};
+use std::collections::BTreeSet;
+
+#[test]
+fn real_rule_children_and_prior_fact_citations_are_exported() {
+    let source = "have x R\n0 <= x ^ 2\n1 <= x ^ 2 + 1\n";
+    let result = build_reading(
+        &ReadingInput::Source(source.into()),
+        true,
+        OutputLanguage::English,
+    );
+    assert!(result.success);
+    let statements = (&result.document).field("statements").as_array().unwrap();
+    assert_eq!(statements.len(), 3);
+    let evidence = (&statements[1]).field("evidence").stringify();
+    assert!(evidence.contains("EvenPowNonnegative"), "{evidence}");
+    assert!(evidence.contains("base_in_real_proof"));
+    let prior = ids((&statements[1]).field("produced_fact_ids"));
+    let cited = ids((&statements[2]).field("cited_fact_ids"));
+    assert!(
+        !prior.is_disjoint(&cited),
+        "prior={prior:?}, cited={cited:?}"
+    );
+    assert_eq!(
+        ((&statements[2]).field("coverage"))
+            .field("evidence")
+            .as_str()
+            .unwrap(),
+        "complete"
+    );
+    let catalogue = (&result.document).field("rules").as_array().unwrap();
+    assert!(catalogue.len() > 500);
+    assert!(catalogue.iter().any(|rule| (rule)
+        .field("id")
+        .as_str()
+        .unwrap()
+        .contains("EvenPowNonnegative")));
+}
+
+#[test]
+fn original_unicode_and_comment_offsets_select_only_real_occurrences() {
+    let source = "# 中文注释中的 x 不应高亮\nhave x R\n0 <= x ^ 2 # x in a comment\n";
+    let result = build_reading(
+        &ReadingInput::Source(source.into()),
+        true,
+        OutputLanguage::Chinese,
+    );
+    assert!(result.success);
+    assert_eq!(
+        (&result.document).field("schema_version").as_str().unwrap(),
+        "1"
+    );
+    let occurrences = (&result.document)
+        .field("occurrences")
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|occurrence| {
+            let start = (occurrence).field("start_byte").as_u64().unwrap() as usize;
+            let end = (occurrence).field("end_byte").as_u64().unwrap() as usize;
+            &source[start..end] == "x"
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(occurrences.len(), 2, "{}", result.document.stringify());
+    for occurrence in &occurrences {
+        let start = (occurrence).field("start_byte").as_u64().unwrap() as usize;
+        let end = (occurrence).field("end_byte").as_u64().unwrap() as usize;
+        assert_eq!(&source[start..end], "x");
+    }
+    assert_eq!(
+        (&occurrences[0]).field("symbol_id"),
+        (&occurrences[1]).field("symbol_id")
+    );
+}
+
+#[test]
+fn sibling_binders_keep_distinct_semantic_identities() {
+    let source = "forall t R:\n    t = t\nforall t R:\n    t + 0 = t\n";
+    let result = build_reading(
+        &ReadingInput::Source(source.into()),
+        true,
+        OutputLanguage::English,
+    );
+    assert!(result.success, "{}", result.document.stringify());
+    let occurrences = (&result.document).field("occurrences").as_array().unwrap();
+    let mut by_statement = std::collections::BTreeMap::<String, BTreeSet<String>>::new();
+    for occurrence in occurrences.iter().filter(|occurrence| {
+        let start = (occurrence).field("start_byte").as_u64().unwrap() as usize;
+        let end = (occurrence).field("end_byte").as_u64().unwrap() as usize;
+        &source[start..end] == "t"
+    }) {
+        by_statement
+            .entry((occurrence).field("statement_id").as_str().unwrap().into())
+            .or_default()
+            .insert((occurrence).field("symbol_id").as_str().unwrap().into());
+    }
+    assert_eq!(by_statement.len(), 2);
+    let values = by_statement.values().collect::<Vec<_>>();
+    assert!(values[0].is_disjoint(values[1]));
+}
+
+#[test]
+fn failed_statement_publishes_no_facts_and_later_statement_keeps_context() {
+    let result = build_reading(
+        &ReadingInput::Source("have z R\nz = 1\nz = z\n".into()),
+        false,
+        OutputLanguage::English,
+    );
+    assert!(!result.success);
+    let statements = (&result.document).field("statements").as_array().unwrap();
+    assert_eq!(statements.len(), 3);
+    assert_eq!(
+        (&statements[1]).field("status").as_str().unwrap(),
+        "rejected"
+    );
+    assert!((&statements[1])
+        .field("produced_fact_ids")
+        .as_array()
+        .unwrap()
+        .is_empty());
+    assert_eq!(
+        (&statements[2]).field("status").as_str().unwrap(),
+        "accepted"
+    );
+    assert_eq!(
+        (&result.document).field("run_result").as_str().unwrap(),
+        "failure"
+    );
+}
+
+#[test]
+fn reading_parser_respects_operands_and_rejects_incompatible_actions() {
+    let args = |values: &[&str]| {
+        values
+            .iter()
+            .map(|value| (*value).into())
+            .collect::<Vec<String>>()
+    };
+    assert!(parse_reading_command(&args(&["-e", "-reading"]))
+        .unwrap()
+        .is_none());
+    let command =
+        parse_reading_command(&args(&["-reading", "-json", "-e", "-2 < 0", "-lang", "zh"]))
+            .unwrap()
+            .unwrap();
+    assert_eq!(command.action, ReadingAction::Json);
+    assert_eq!(command.input, ReadingInput::Source("-2 < 0".into()));
+    for input in [
+        vec!["-reading", "-json"],
+        vec!["-reading", "-e", "1=1", "-json", "-export", "out"],
+        vec!["-reading", "-e", "1=1", "-json", "-no-browser"],
+        vec!["-reading", "-session"],
+    ] {
+        assert!(parse_reading_command(&args(&input)).is_err(), "{input:?}");
+    }
+}
+
+#[test]
+fn nested_claim_steps_keep_local_producers_and_publish_only_the_goal() {
+    let source =
+        "claim:\n    ? forall t R:\n        1 <= t ^ 2 + 1\n    0 <= t ^ 2\n    1 <= t ^ 2 + 1\n";
+    let result = build_reading(
+        &ReadingInput::Source(source.into()),
+        true,
+        OutputLanguage::English,
+    );
+    assert!(result.success, "{}", result.document.stringify());
+    let statements = result.document.field("statements").as_array().unwrap();
+    assert_eq!(statements.len(), 3);
+    let outer = &statements[0];
+    let square = &statements[1];
+    let addition = &statements[2];
+    assert_eq!(square.field("line").as_u64().unwrap(), 4);
+    assert_eq!(addition.field("line").as_u64().unwrap(), 5);
+    assert_eq!(square.field("parent_statement_id"), outer.field("id"));
+    assert_eq!(addition.field("parent_statement_id"), outer.field("id"));
+    assert_ne!(square.field("scope_id"), outer.field("scope_id"));
+    let square_facts = ids(square.field("produced_fact_ids"));
+    assert!(!square_facts.is_empty());
+    assert!(!square_facts.is_disjoint(&ids(addition.field("cited_fact_ids"))));
+    assert!(square_facts.is_disjoint(&ids(outer.field("produced_fact_ids"))));
+    let facts = result.document.field("facts").as_array().unwrap();
+    for id in square_facts {
+        let fact = facts
+            .iter()
+            .find(|fact| fact.field("id").as_str().unwrap() == id)
+            .unwrap();
+        assert_eq!(fact.field("producer_statement_id"), square.field("id"));
+        assert_eq!(fact.field("scope_id"), square.field("scope_id"));
+    }
+    assert!(!ids(outer.field("produced_fact_ids")).is_empty());
+    assert!(outer
+        .field("evidence")
+        .stringify()
+        .contains("statement_reference"));
+    assert_eq!(
+        outer
+            .field("coverage")
+            .field("source_mapping")
+            .as_str()
+            .unwrap(),
+        "complete"
+    );
+}
+
+#[test]
+fn inference_catalogue_contains_struct_payload_leaves() {
+    let result = build_reading(&ReadingInput::Empty, false, OutputLanguage::English);
+    let rules = result.document.field("rules").as_array().unwrap();
+    assert!(
+        rules
+            .iter()
+            .filter(|rule| rule.field("category").as_str().unwrap() == "infer")
+            .count()
+            > 50
+    );
+}
+
+#[test]
+fn sibling_local_predicate_definitions_do_not_share_highlights() {
+    let source = "claim:\n    ? 0 = 0\n    prop mark(a R):\n        a = a\n    $mark(0)\nclaim:\n    ? 0 = 0\n    prop mark(a R):\n        a = 0\n    $mark(0)\n";
+    let result = build_reading(
+        &ReadingInput::Source(source.into()),
+        true,
+        OutputLanguage::English,
+    );
+    assert!(result.success);
+    let symbols = result
+        .document
+        .field("symbols")
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|symbol| symbol.field("name").as_str().unwrap() == "mark")
+        .collect::<Vec<_>>();
+    assert_eq!(symbols.len(), 2);
+    assert_ne!(symbols[0].field("id"), symbols[1].field("id"));
+    let mentions = result.document.field("occurrences").as_array().unwrap();
+    for symbol in symbols {
+        let occurrences = mentions
+            .iter()
+            .filter(|occurrence| occurrence.field("symbol_id") == symbol.field("id"))
+            .collect::<Vec<_>>();
+        assert_eq!(occurrences.len(), 2, "{}", result.document.stringify());
+        assert_eq!(
+            occurrences
+                .iter()
+                .filter(|occurrence| occurrence.field("definition").as_bool().unwrap())
+                .count(),
+            1
+        );
+    }
+}
+
+#[test]
+fn repeated_induction_body_keeps_distinct_execution_contexts() {
+    let source = include_str!("../examples/stmt_nodes/by/by_induc.lit");
+    let result = build_reading(
+        &ReadingInput::Source(source.into()),
+        true,
+        OutputLanguage::English,
+    );
+    assert!(result.success);
+    let statements = result.document.field("statements").as_array().unwrap();
+    assert_eq!(statements.len(), 3);
+    assert_eq!(
+        statements[1].field("source_statement_id"),
+        statements[2].field("source_statement_id")
+    );
+    assert_ne!(statements[1].field("id"), statements[2].field("id"));
+    assert_ne!(
+        statements[1].field("scope_id"),
+        statements[2].field("scope_id")
+    );
+    assert_eq!(
+        statements[0]
+            .field("coverage")
+            .field("source_mapping")
+            .as_str()
+            .unwrap(),
+        "complete"
+    );
+}
+
+#[test]
+fn explicit_user_assumptions_remain_visible_through_real_citations() {
+    // Deliberately assumed input tests the trust boundary, not a proof route.
+    let source = "have r R\ntrust r = 2\nr = 2\n";
+    let result = build_reading(
+        &ReadingInput::Source(source.into()),
+        false,
+        OutputLanguage::English,
+    );
+    assert!(result.success);
+    let statements = result.document.field("statements").as_array().unwrap();
+    assert_eq!(
+        statements[1].field("origin").as_str().unwrap(),
+        "user_trust"
+    );
+    assert!(ids(statements[2].field("trust_dependencies"))
+        .contains(statements[1].field("id").as_str().unwrap()));
+    assert_eq!(
+        result
+            .document
+            .field("trust_summary")
+            .field("user_assumptions")
+            .as_array()
+            .unwrap()
+            .len(),
+        1
+    );
+    let strict = build_reading(
+        &ReadingInput::Source(source.into()),
+        true,
+        OutputLanguage::English,
+    );
+    assert!(!strict.success);
+    assert!(strict
+        .document
+        .field("trust_summary")
+        .field("user_assumptions")
+        .as_array()
+        .unwrap()
+        .is_empty());
+}
+
+#[test]
+fn source_and_engine_fingerprints_are_bound_to_the_bundle() {
+    let result = build_reading(
+        &ReadingInput::Source("0 = 0".into()),
+        true,
+        OutputLanguage::English,
+    );
+    assert!(result.success);
+    for name in ["catalogue_id", "input_digest"] {
+        assert!(result
+            .document
+            .field(name)
+            .as_str()
+            .unwrap()
+            .starts_with("fnv1a64:"));
+    }
+    assert!(result
+        .document
+        .field("engine")
+        .field("executable_id")
+        .as_str()
+        .unwrap()
+        .starts_with("fnv1a64:"));
+    assert_eq!(
+        result
+            .document
+            .field("execution_policy")
+            .field("strict")
+            .as_bool()
+            .unwrap(),
+        true
+    );
+}
+
+trait ReadingFields {
+    fn field(&self, key: &str) -> &JsonValue;
+}
+
+impl ReadingFields for JsonValue {
+    fn field(&self, key: &str) -> &JsonValue {
+        self.as_object()
+            .unwrap()
+            .get(key)
+            .unwrap_or_else(|| panic!("missing {key}"))
+    }
+}
+
+fn ids(value: &JsonValue) -> BTreeSet<String> {
+    value
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|id| id.as_str().unwrap().into())
+        .collect()
+}

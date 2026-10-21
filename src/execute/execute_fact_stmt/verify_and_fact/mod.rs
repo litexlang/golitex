@@ -7,3 +7,5 @@ pub use result::{VerifyAndFactFailed, VerifyAndFactResult};
 pub use well_defined_result::{
     AndFactWellDefinedProof, FailToVerifyAndFactWellDefinedResult, VerifyAndFactWellDefinedResult,
 };
+
+pub(crate) use result::VerifyAndFactSuccess;

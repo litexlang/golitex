@@ -181,10 +181,7 @@ fn retired_dimension_interfaces_reject_and_current_coordinate_carriers_remain_us
         let mut rt = runtime();
         assert!(rt.run_litex_code("have A set=cart(R,R)").unwrap().success);
         let result = rt.run_litex_code(source).unwrap();
-        assert!(
-            !result.success && result.session_error.is_some(),
-            "{source}"
-        );
+        assert!(!result.success && result.input_error.is_some(), "{source}");
         assert!(result.statement_results.is_empty());
     }
     let mut rt = runtime();

@@ -1,0 +1,17 @@
+# Tracer: malformed input can be corrected in the same live Session.
+#
+# Before (the malformed declaration stopped the REPL):
+# have a R
+# have fn incomplete_function(x R) R = x +
+# Former outcome: session_terminated: true; later input could not be submitted.
+#
+# Now: the CLI regression submits that rejected declaration, verifies a $in R,
+# then submits this corrected declaration under the same name in one process.
+have a R
+have fn incomplete_function(x R) R = x + 1
+incomplete_function(2) = 3
+#
+# Boundary: malformed input remains rejected and publishes no declaration.
+# Parsing stops the current submission; the next REPL submission can continue.
+# Evidence: target/release/litex -strict -lang en -f examples/stmt_nodes/definition/session_input_recovery.lit
+# Recovery gate: cargo test --release --test cli_feedback session_recovers_incomplete_functions_tokenizer_errors_and_proof_misses

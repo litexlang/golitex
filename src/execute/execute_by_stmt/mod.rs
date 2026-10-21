@@ -67,3 +67,15 @@ mod showcase_regressions;
 #[cfg(test)]
 #[path = "../../../tests/unit/execute/lean_result_capture/tests.rs"]
 mod lean_result_capture_tests;
+
+pub(crate) use result::ExecByEnumerateFiniteSetStmtSuccess;
+pub(crate) use result::ExecByExtensionStmtSuccess;
+pub(crate) use result::ExecByFnExtensionStmtSuccess;
+pub(crate) use result::ExecByForStmtSuccess;
+pub(crate) use result::ExecByStrongInducStmtSuccess;
+pub(crate) use result::FnExtensionDomainCandidateFailure;
+pub(crate) use result::SequenceCauchyBoundedProof;
+pub(crate) use result::SequenceCauchyConvergentProof;
+pub(crate) use result::SequenceConvergentBoundedProof;
+pub(crate) use result::SequenceMonotoneBoundedAboveProof;
+pub(crate) use result::SequenceMonotoneBoundedBelowProof;

@@ -52,6 +52,7 @@ command/       Eval (exact evaluation, checked algorithm equations, result equal
 | [definition/let_template_struct_aliases.lit](definition/let_template_struct_aliases.lit) | Template and nested callable-field aliases | Open the inner carrier with `release struct def space.scalars` before invoking its `let` alias; struct fixtures use at least two fields |
 | `definition/have_obj_*.lit` | Introduce typed objs | `have x R` / `= expr` / `:` body |
 | `definition/parse_scope_transaction.lit` | Correct a previously failed declaration in the same Runtime | failed `have k N = -1`, then active `have k N = 1`; negative boundary in `tests/unit/run/binding_lifecycle/tests.rs` |
+| [definition/session_input_recovery.lit](definition/session_input_recovery.lit) | Correct malformed input in the same live Session | rejected `x +` keeps prior context and permits the corrected function name; CLI regressions also check tokenizer and proof failures |
 | `definition/obtain_*.lit` | Name exist witnesses | `obtain a from exist …` / `$P` |
 | `definition/have_by_*.lit` | Preimage / Replacement | `have by fn_preimage:` / `replacement_axiom:` |
 | [definition/field_function_preimage.lit](definition/field_function_preimage.lit) | Preimage of a checked callable field | Retain `ops.op` as the application head and preserve source, arity and guard checks |

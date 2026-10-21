@@ -36,7 +36,7 @@ fn induction_nested_case_overlap_and_holes_reject_before_publication() {
         assert!(rt
             .run_litex_code("hole(0) = 0")
             .unwrap()
-            .session_error
+            .input_error
             .is_some());
         let rt = check(&format!("{keyword} hole(n N) N by induc n from 0:\n    case n = 0:\n        case n != 0: 0\n    case n >= 1: 1\n"), &[false]);
         assert!(!rt
@@ -89,7 +89,7 @@ fn induction_ordinary_proof_statements_are_scoped_and_checked() {
         );
         assert!(!rt.top_exec_env().definitions.identifiers.contains_key("a"));
         assert!(!rt.top_exec_env().definitions.identifiers.contains_key("b"));
-        assert!(rt.run_litex_code("b = 0").unwrap().session_error.is_some());
+        assert!(rt.run_litex_code("b = 0").unwrap().input_error.is_some());
         check(&format!("prop same(x Z):\n    x = x\nby {keyword} n from 0:\n    ? $same(n)\n    ? from n = 0:\n        by def $same(0)\n    ? {step}:\n        by def $same(n + 1)\n"), &[true, true]);
         check(
             &format!("by {keyword} n from 0:\n    ? n = n\n    have a {{1}} = 0\n"),
@@ -409,7 +409,7 @@ fn induction_lower_bound_cannot_descend_with_recursive_arguments() {
             assert!(rt
                 .run_litex_code("empty_value(0) $in {}")
                 .unwrap()
-                .session_error
+                .input_error
                 .is_some());
             assert!(
                 rt.run_litex_code("have fn empty_value(n Z) Z = n")

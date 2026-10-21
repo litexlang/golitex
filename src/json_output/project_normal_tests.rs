@@ -41,6 +41,35 @@ fn output_detail_normal_is_default_label() {
 }
 
 #[test]
+fn concise_run_feedback_keeps_full_verification_available_in_detailed() {
+    let mut runtime = runtime_with_file_env();
+    let run = runtime
+        .run_litex_code("forall x R => 1 / x = 1 / x")
+        .unwrap();
+    assert!(!run.success);
+    let normal = super::project_run_normal(&run, &runtime, "eval", None);
+    let errors = object_field(&normal, "errors").as_array().unwrap();
+    assert_eq!(errors.len(), 1);
+    assert_eq!(
+        object_field(&errors[0], "obligation").as_str(),
+        Ok("x != 0")
+    );
+    assert!(!normal.stringify().contains("\"verification\""));
+    let detailed = super::project_run_detailed(&run, &runtime, "eval", None);
+    let statements = object_field(&detailed, "statement_results")
+        .as_array()
+        .unwrap();
+    let verification = object_field(&statements[0], "verify");
+    assert_eq!(
+        object_field(verification, "failed_then_index"),
+        &JsonValue::Number(0.0)
+    );
+    assert!(object_field(verification, "failed_then")
+        .as_object()
+        .is_ok());
+}
+
+#[test]
 fn run_json_preserves_named_declarations_and_complete_theorem_calls() {
     for declaration in ["thm", "axiom"] {
         let mut runtime = runtime_with_file_env();
@@ -101,7 +130,8 @@ fn run_json_keeps_source_aligned_through_failures_and_locales() {
         });
         let run = runtime.run_litex_code("(1 / 0) = 0\n1 = 1\nhave").unwrap();
         assert!(!run.success);
-        assert!(run.session_error.is_some());
+        assert!(run.session_error.is_none());
+        assert!(run.input_error.is_some());
         assert_eq!(run.statement_results.len(), 2);
         assert_eq!(run.statement_texts.len(), 2);
         assert_eq!(run.failed_statement_results, Some(vec![0]));
@@ -122,7 +152,10 @@ fn run_json_keeps_source_aligned_through_failures_and_locales() {
                 .unwrap(),
             "1 = 1"
         );
-        let why = object_field(&statements[0], &key("why_failed"));
+        let errors = object_field(&json, &key("errors")).as_array().unwrap();
+        assert_eq!(errors.len(), 2);
+        assert_eq!(statements.len(), 3);
+        let why = &errors[0];
         assert_eq!(
             object_field(why, &key("phase")).as_str().unwrap(),
             super::helper::phase_value_well_defined(language)
@@ -131,15 +164,15 @@ fn run_json_keeps_source_aligned_through_failures_and_locales() {
             object_field(why, &key("message")).as_str().unwrap(),
             super::explain::well_defined_not_proven_message(language)
         );
-        assert!(object_field(&statements[0], &key("stores"))
-            .as_array()
+        assert!(statements[0]
+            .as_object()
             .unwrap()
-            .is_empty());
-        assert!(
-            !object_field(object_field(&json, &key("termination")), &key("message"))
-                .as_str()
-                .unwrap()
-                .contains("Runtime(")
+            .get(&key("why_failed"))
+            .is_none());
+        assert_eq!(object_field(&json, &key("termination")), &JsonValue::Null);
+        assert_eq!(
+            object_field(&errors[1], &key("phase")).as_str(),
+            Ok("parse")
         );
         let without_source = project_stmt_normal(&run.statement_results[0], &runtime);
         assert_eq!(

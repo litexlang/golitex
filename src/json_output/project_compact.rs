@@ -30,7 +30,9 @@ pub fn project_run_compact(
     path: Option<&Path>,
 ) -> JsonValue {
     let lang = output_language(runtime);
-    let statement_results = project_run_statements_normal(run, runtime)
+    let normal = project_run_statements_normal(run, runtime);
+    let (_, errors) = super::feedback::summarize_statements(normal.clone(), lang);
+    let statement_results = normal
         .iter()
         .map(|stmt| thin_to_compact(lang, stmt))
         .collect();
@@ -55,6 +57,7 @@ pub fn project_run_compact(
                 string(runtime.launch_command.output_language().as_str()),
             ),
             ("statement_results", JsonValue::Array(statement_results)),
+            ("errors", JsonValue::Array(errors)),
             (
                 "session_terminated",
                 JsonValue::Bool(run.session_error.is_some()),

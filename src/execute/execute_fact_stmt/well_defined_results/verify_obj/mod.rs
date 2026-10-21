@@ -36,3 +36,5 @@ pub use obj_well_defined_proof_by_def::*;
 pub use fn_obj_domain_check_result::{
     FnObjArgumentScope, FnObjDomainCheckResult, FormedFunctionArgument,
 };
+
+pub(crate) use obj_well_defined_by_def_common::ObjWellDefinedByDefCommonStages;

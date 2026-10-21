@@ -7,6 +7,7 @@ pub mod run_compile_to_lean;
 pub mod run_eval;
 pub mod run_extract_executable_code;
 pub mod run_litex_code;
+pub mod run_reading;
 pub mod run_repl;
 pub mod source_observer;
 

@@ -60,6 +60,10 @@ pub fn emit_command_error(
                     crate::knowledge_base::JsonValue::Array(Vec::new()),
                 ),
                 (
+                    "errors",
+                    crate::knowledge_base::JsonValue::Array(Vec::new()),
+                ),
+                (
                     "session_terminated",
                     crate::knowledge_base::JsonValue::Bool(true),
                 ),

@@ -1,0 +1,15 @@
+# Tracer: inspect the evidence connecting a declaration and two inequalities.
+#
+# Before: the same source verified, but there was no reading export or browser.
+# have x R
+# 0 <= x ^ 2
+# 1 <= x ^ 2 + 1
+#
+# Now: source for the reading JSON, browser and static-export acceptance gates.
+have x R
+0 <= x ^ 2
+1 <= x ^ 2 + 1
+#
+# Boundary: the reader shows the selected evidence, not every possible proof.
+# Verification: target/release/litex -strict -f examples/reading/linked_facts.lit
+# Reading acceptance: target/release/litex -reading -json -f examples/reading/linked_facts.lit

@@ -40,3 +40,5 @@ pub mod known_literal_tuple_numeric_coordinate;
 #[cfg(test)]
 #[path = "../../../../../tests/unit/execute/known_search/tests.rs"]
 mod known_search_tests;
+
+pub(crate) use search_in_fact_proof::TemplateMembershipProof;

@@ -8,6 +8,7 @@
 pub mod emit;
 pub mod explain;
 mod failure_kind;
+mod feedback;
 pub mod helper;
 pub mod json_keys;
 pub mod project_compact;
@@ -45,6 +46,9 @@ pub use project_normal::{project_run_normal, project_stmt_normal, OutputDetail};
 use crate::knowledge_base::JsonValue;
 
 pub type OutputJson = JsonValue;
+
+pub(crate) use helper::fact_source_line as reading_fact_source_line;
+pub(crate) use source::statement_source_line as reading_statement_source_line;
 
 #[cfg(test)]
 #[path = "../../tests/unit/json_output/wd_failure_diagnostics/tests.rs"]

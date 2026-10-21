@@ -317,7 +317,7 @@ fn forall_iff_goal_parses_and_closes_with_classified_counterexample() {
         .run_litex_code("by contra:\n    ? 0 = 0:\n        0 = 0\n    impossible 0 != 0")
         .unwrap();
     assert!(!run.success);
-    assert!(run.session_error.is_some());
+    assert!(run.input_error.is_some());
     assert!(run.statement_results.is_empty());
 }
 

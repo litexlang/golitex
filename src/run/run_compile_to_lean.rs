@@ -64,6 +64,10 @@ fn compile_source(command: LaunchCommand) -> Result<String, CompileLeanError> {
                     .session_error
                     .as_ref()
                     .map(ToString::to_string)
+                    .or_else(|| result
+                        .input_error
+                        .as_ref()
+                        .map(|input| { RuntimeError::ParseError(input.error.clone()).to_string() }))
                     .unwrap_or_else(|| "source run failed".into())
             )),
         });

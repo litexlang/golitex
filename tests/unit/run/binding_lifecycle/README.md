@@ -45,6 +45,11 @@ since failed ASTs/results may already contain them.
 `Runtime::parse` uses the same helper and remains a parse-only batch API, with
 whole-batch rollback on a parse error and explicit commit on success. The
 source runner owns the longer parse-and-execution transaction.
+Tokenizer/parser rejections now return `input_error` and leave the REPL open.
+The current submission stops at a parse rejection; tokenization failure runs
+none of that submission. Existing accepted context survives either case.
+The incomplete-function, tokenizer, malformed-proof and CLI regressions check
+same-process correction without publishing names from the rejected input.
 A later parse/execution error preserves successful earlier blocks and their
 reported results. Tokenization still happens for the entire source first;
 tokenizer errors prevent all execution. Complete claim/thm/sketch proof bodies
