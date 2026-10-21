@@ -319,6 +319,7 @@ pub(super) fn project_source(proof: &CompleteFunctionDomainProof, rt: &Runtime) 
             signature_source,
             application_children,
             application_requirements,
+            argument_scope,
             return_space,
             carrier_equal,
         } => object_for(
@@ -349,6 +350,13 @@ pub(super) fn project_source(proof: &CompleteFunctionDomainProof, rt: &Runtime) 
                 (
                     "requirement_fact_verified",
                     super::store::project_verify_facts(application_requirements, rt),
+                ),
+                (
+                    "argument_scope",
+                    argument_scope
+                        .as_ref()
+                        .map(|scope| super::wd_by_def::project_fn_argument_scope(scope, rt))
+                        .unwrap_or(JsonValue::Null),
                 ),
                 ("return_space", string(return_space.readable_string())),
                 (

@@ -36,10 +36,7 @@ pub(super) fn predicate_domain(p: &FunctionLimitPredicateDomainProof, rt: &Runti
         vec![
             ("type", string("checked_real_function_limit_arguments")),
             ("function_domain", domain(&p.function_domain, rt)),
-            (
-                "point_real",
-                super::verify::project_verify_fact(&p.point_real, rt),
-            ),
+            ("point_real", approach_real(&p.approach_real, rt)),
             (
                 "value_real",
                 super::verify::project_verify_fact(&p.value_real, rt),
@@ -65,12 +62,9 @@ pub(super) fn object_wd(p: &FunctionLimitObjWellDefinedProof, rt: &Runtime) -> J
                 "function_wd",
                 super::wd::project_obj_wd_proof(&p.function_wd, rt),
             ),
-            ("point_wd", super::wd::project_obj_wd_proof(&p.point_wd, rt)),
+            ("approach_wd", approach_wd(&p.approach_wd, rt)),
             ("function_domain", domain(&p.function_domain, rt)),
-            (
-                "point_real",
-                super::verify::project_verify_fact(&p.point_real, rt),
-            ),
+            ("point_real", approach_real(&p.approach_real, rt)),
             ("convergence", convergence),
         ],
     )
@@ -99,4 +93,30 @@ pub(super) fn object_failure(
             ("reason", reason),
         ],
     )
+}
+
+fn approach_real(
+    p:&crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::FunctionLimitApproachRealProof,
+    rt: &Runtime,
+) -> JsonValue {
+    use crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::FunctionLimitApproachRealProof::*;
+    match p {
+        Finite(p) => super::verify::project_verify_fact(p, rt),
+        AtPositiveInfinity => string("positive_infinity"),
+        AtNegativeInfinity => string("negative_infinity"),
+    }
+}
+fn approach_wd(
+    p:&crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FunctionLimitApproachWellDefinedProof,
+    rt: &Runtime,
+) -> JsonValue {
+    use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FunctionLimitApproachWellDefinedProof::*;
+    match p {
+        Finite { point_wd } => object_for(
+            rt,
+            vec![("point_wd", super::wd::project_obj_wd_proof(point_wd, rt))],
+        ),
+        AtPositiveInfinity => string("positive_infinity"),
+        AtNegativeInfinity => string("negative_infinity"),
+    }
 }

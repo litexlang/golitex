@@ -4,6 +4,7 @@ use super::entry::{ObjWellDefinedProof, VerifyObjWellDefinedResult};
 use super::fail_to_verify_obj_well_defined::*;
 use super::obj_well_defined_by_def_common::ObjWellDefinedByDefCommonStages;
 use super::wrap_obj_well_defined_by_def::{finish_by_def, wrap_common_fail};
+use super::{ObjWellDefinedProofByDef, StructishObjWellDefinedProofByDef};
 use crate::ast::fact::{
     AtomicFact, ExistShapedFact, Fact, InFact, IsFiniteSetFact, IsNonemptySetFact, IsSetFact,
 };
@@ -203,6 +204,7 @@ impl Runtime {
         };
 
         let mut stages = ObjWellDefinedByDefCommonStages::from_children(vec![receiver_wd]);
+        let mut argument_scope = None;
         if let Obj::FnObj(application) = value.obj.as_ref() {
             let head = super::helper::fn_obj_head_as_obj(&application.head);
             if let Some(Obj::FunctionSpace(FunctionSpace::FnSet(signature))) =
@@ -219,12 +221,20 @@ impl Runtime {
                             .to_string(),
                     ));
                 };
+                let super::FnObjDomainCheckResult {
+                    stages: call_stages,
+                    mut scope,
+                } = declared_call;
+                for formed in &mut scope.formed_children {
+                    formed.child_index += stages.child_obj_well_defined.len();
+                }
                 stages
                     .child_obj_well_defined
-                    .extend(declared_call.child_obj_well_defined);
+                    .extend(call_stages.child_obj_well_defined);
                 stages
                     .requirement_fact_verified
-                    .extend(declared_call.requirement_fact_verified);
+                    .extend(call_stages.requirement_fact_verified);
+                argument_scope = Some(scope);
             }
         }
 
@@ -274,12 +284,20 @@ impl Runtime {
         }
 
         match finish_by_def(&root, stages) {
-            Ok(by_def) => Ok(VerifyObjWellDefinedResult::Success(
-                ObjWellDefinedProof::ByDef {
-                    obj: root,
-                    proof: by_def,
-                },
-            )),
+            Ok(mut by_def) => {
+                if let ObjWellDefinedProofByDef::Structish(
+                    StructishObjWellDefinedProofByDef::FieldAccess(proof),
+                ) = &mut by_def
+                {
+                    proof.argument_scope = argument_scope;
+                }
+                Ok(VerifyObjWellDefinedResult::Success(
+                    ObjWellDefinedProof::ByDef {
+                        obj: root,
+                        proof: by_def,
+                    },
+                ))
+            }
             Err(fail) => Ok(VerifyObjWellDefinedResult::Failed {
                 obj: root,
                 reason: fail,

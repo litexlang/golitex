@@ -1,0 +1,11 @@
+# Finite real function limit at infinity; all premises are checked.
+# Run: target/release/litex -strict -lang en -f examples/stmt_nodes/release_and_expand/builtin_thm/fn_limit_neg_inf_power.lit
+
+thm fn_limit_neg_inf_power_example:
+    ? forall fa,ha fn(x R) R,A R,m N:
+        $has_limit_neg_inf(fa,A)
+        forall x R:
+            ha(x)=fa(x)^m
+        =>:
+            $has_limit_neg_inf(ha,A^m)
+    release thm fn_limit_neg_inf_power(fa,ha,A,m)

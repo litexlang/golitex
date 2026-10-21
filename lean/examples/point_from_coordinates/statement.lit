@@ -1,0 +1,3 @@
+# A point in the real plane is determined by its two ordered coordinates.
+forall p cart(R, R):
+    p = (p(1), p(2))

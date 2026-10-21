@@ -3,7 +3,7 @@
 
 # Litex
 
-### A formal language which lets machines and humans say the same mathematical language
+### Write math, get formalized code: because the math already is.
 
 **Pronunciation:** /ˈliːtɛk/ (“LEE-tek”, Chinese “里泰克”), not “LYE-tek” (“赖泰克”).
 
@@ -23,6 +23,22 @@ _— George Boole, The Laws of Thought (1854), Chapter II (excerpt)_
 <a id="familiar-mathematics"></a>
 
 ## Familiar expressions, familiar mathematics
+
+**The mathematics you write is the formal source.** In Litex, `1 + 1 = 2`
+is both a mathematical statement and the source the checker reads. Litex
+explores how familiar mathematical objects, definitions and facts can become
+a language people can write and machines can check.
+
+Authors supply the mathematical ideas and meaningful proof steps. The executor
+keeps the context, checks conditions, finds local grounds and records what has
+been established. Its storage and lookup follow mathematical structure,
+scope and conditions of use.
+
+Familiar writing is meant to reduce what users must learn and do by hand.
+The work needed to support that writing belongs in the executor. How far this
+division of work can go remains an open question; Litex's syntax and supported
+checks are still being developed. Supported Lean compilation is a further
+output of the source and its verification evidence.
 
 **A familiar mathematical expression can mean something different in Lean.**
 In ordinary real arithmetic, `1 / 0` is undefined; Lean/Mathlib's real division
@@ -96,8 +112,8 @@ feedback, and carry supported proofs into independent checking.
 
 ## Write a fact and see what it leaves behind
 
-**Writing mathematics should mean writing mathematics.** To state that one plus
-one equals two, the Litex source is the fact itself:
+**The mathematical statement is already the source to check.** To state that
+one plus one equals two, write the fact itself:
 
 ```litex
 1 + 1 = 2

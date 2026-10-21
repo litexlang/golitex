@@ -174,6 +174,7 @@ pub enum FailToVerifyFnObjObjWellDefined {
     // No InFunctionSet (or equality-neighbor) candidate for the applied head.
     NotInFunctionSet,
     Domain(FailToVerifyObjWellDefinedByDefCommon),
+    Candidate(Box<super::FnObjDomainCheckResult>),
 }
 
 pub enum FailToVerifyNumberObjWellDefined {
@@ -467,6 +468,8 @@ pub struct FailToVerifySymmetricDifferenceObjWellDefined(pub FailToVerifyObjWell
 pub enum FailToVerifyLimitOperatorObjWellDefinedResult {
     Function(FailToVerifyFunctionLimitObjWellDefined),
     Sequence(FailToVerifySequenceLimitObjWellDefined),
+    SequenceLimsup(FailToVerifySequenceLimsupObjWellDefined),
+    SequenceLiminf(FailToVerifySequenceLiminfObjWellDefined),
 }
 pub struct FailToVerifySequenceLimitObjWellDefined {
     pub obj: crate::ast::obj::Obj,
@@ -476,4 +479,13 @@ pub struct FailToVerifySequenceLimitObjWellDefined {
 pub struct FailToVerifyFunctionLimitObjWellDefined {
     pub obj: Obj,
     pub reason: crate::execute::execute_fact_stmt::function_limit::FunctionLimitWDFailure,
+}
+
+pub struct FailToVerifySequenceLimsupObjWellDefined {
+    pub obj: crate::ast::obj::Obj,
+    pub result: Box<crate::execute::execute_fact_stmt::VerifyFactResult>,
+}
+pub struct FailToVerifySequenceLiminfObjWellDefined {
+    pub obj: crate::ast::obj::Obj,
+    pub result: Box<crate::execute::execute_fact_stmt::VerifyFactResult>,
 }

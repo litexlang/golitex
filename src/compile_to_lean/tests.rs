@@ -20,6 +20,8 @@ mod composed_formula_predicate_guards_tests;
 mod compound_theorem_returns_tests;
 #[path = "../../tests/unit/compile_to_lean/concrete_predicate_transport/tests.rs"]
 mod concrete_predicate_transport_tests;
+#[path = "../../tests/unit/compile_to_lean/difference_zero/tests.rs"]
+mod difference_zero_tests;
 #[path = "../../tests/unit/compile_to_lean/finite_cart_coordinates/tests.rs"]
 mod finite_cart_coordinates_tests;
 #[path = "../../tests/unit/compile_to_lean/fn_application_unfold_substitution/tests.rs"]
@@ -46,6 +48,8 @@ mod nonnegative_builtin_tests;
 mod nonzero_difference_tests;
 #[path = "../../tests/unit/compile_to_lean/numeric_carrier_closure/tests.rs"]
 mod numeric_carrier_closure_tests;
+#[path = "../../tests/unit/compile_to_lean/prop_object_sharing/tests.rs"]
+mod prop_object_sharing_tests;
 #[path = "../../tests/unit/compile_to_lean/returned_cart_call/tests.rs"]
 mod returned_cart_call_tests;
 #[path = "../../tests/unit/compile_to_lean/set_builder_function_bodies/tests.rs"]
@@ -54,6 +58,8 @@ mod set_builder_function_bodies_tests;
 mod sqrt_tests;
 #[path = "../../tests/unit/compile_to_lean/subset_numeric_membership/tests.rs"]
 mod subset_numeric_membership_tests;
+#[path = "../../tests/unit/compile_to_lean/tuple_reconstruction/tests.rs"]
+mod tuple_reconstruction_tests;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::AtomicExceptEqualityFactSearchProofByBuiltinRewrite;
 use crate::prelude::*;
 
@@ -2164,7 +2170,7 @@ fn phase2_hierarchy_and_rational_closure_preserve_structural_carriers() {
     assert_eq!((&child.set, &real.set), (&StandardSet::R, &StandardSet::C));
     let output = compile_run(&result, &compiler, "phase2_original_hierarchy")
         .expect("the selected hierarchy certificates compile");
-    assert!(output.contains("exact M.real_subset_complex _ _litex_real_member"));
+    assert!(output.contains("(M.real_subset_complex _ "));
     for bridge in ["naturalToInteger", "integerToRational", "rationalToReal"] {
         assert!(output.contains(&format!("Litex.{bridge}")));
     }
@@ -2386,6 +2392,47 @@ fn phase2_natural_parameter_cannot_lose_a_captured_inference_identity() {
         "phase2_deleted_natural_inference_id",
         &["Parameters/StoreCapture", "Forall/"],
     );
+}
+
+#[test]
+fn closed_literal_membership_keeps_compact_certificates_and_composite_denotations() {
+    let (result, compiler) =
+        execute("1 $in N\n1.5 $in Q\n1 $in closed_range(1, 2)\n(1 + 0) $in closed_range(0, 2)\n");
+    let lean = compile_run(&result, &compiler, "closed_literal_membership").unwrap();
+    assert!(lean.contains("Litex.NativeBridge.numberInNOfEq (M := M)"));
+    assert!(lean.contains("Litex.NativeBridge.numberInQOfEq (M := M)"));
+    assert!(lean.contains("Litex.numberInClosedRangeOfEq (M := M)"));
+    assert!(lean.contains("Litex.inClosedRangeOfDenote"));
+    assert!(lean.contains("variable [_setSemantics : Litex.SetSemantics M]"));
+}
+
+#[test]
+fn closed_literal_range_rejects_changed_recorded_values() {
+    for field in ["value", "start", "end"] {
+        let (mut result, compiler) = execute("1 $in closed_range(1, 2)\n");
+        let atomic = atomic_proof_mut(
+            &mut fact_statement_mut(&mut result.statement_results[0]).verify_result,
+        );
+        let AtomicExceptEqualityFactSearchedProof::ByClosedCalculation(
+            ClosedAtomicExceptEqualityCalculationProof::In(
+                ClosedMembershipCalculationProof::IntegerRange {
+                    value, start, end, ..
+                },
+            ),
+        ) = &mut atomic.searched_proof
+        else {
+            panic!("original closed integer range certificate")
+        };
+        let target = match field {
+            "value" => value,
+            "start" => start,
+            "end" => end,
+            _ => unreachable!(),
+        };
+        *target = ClosedScalarValue::Decimal("7".into());
+        let error = compile_run(&result, &compiler, "wrong_closed_range").unwrap_err();
+        assert_eq!(error.route, "ClosedMembership/RangeValue", "{field}");
+    }
 }
 
 #[test]
@@ -3168,3 +3215,6 @@ fn ordinary_have(statement: &ExecStmtResult) -> &ExecHaveObjInNonemptySetStmtSuc
         _ => panic!("actual arbitrary-have result"),
     }
 }
+
+#[path = "../../tests/unit/compile_to_lean/function_argument_wd_sharing/tests.rs"]
+mod function_argument_wd_sharing_tests;

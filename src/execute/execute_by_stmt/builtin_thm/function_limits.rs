@@ -19,12 +19,19 @@ pub(super) fn prepare_function_limits(
     ) {
         return prepare_function_limit_bridges(rt, id, args);
     }
-    let (id, make_approach) = function_limit_schema(id);
+    let infinite = infinity_limit_schema(id);
+    let (id, make_approach) =
+        function_limit_schema(infinite.as_ref().map(|(base, _)| *base).unwrap_or(id));
     if id == FnLimitAtRealAccumulation {
-        let approach = make_approach(args[0].clone());
-        let requirement = atomic_in(rt, approach.point().clone(), real()).into();
+        let approach = infinite
+            .map(|(_, a)| a)
+            .unwrap_or_else(|| make_approach(args[0].clone()));
+        let requirements = match approach.point() {
+            Some(p) => vec![atomic_in(rt, p.clone(), real()).into()],
+            None => vec![],
+        };
         let accumulation = rt.function_limit_accumulation(real(), approach);
-        return Ok(Ok((vec![requirement], vec![accumulation])));
+        return Ok(Ok((requirements, vec![accumulation])));
     }
     let f = args[0].clone();
     let Some((mut requirements, domain)) = context(rt, &f)? else {
@@ -39,11 +46,25 @@ pub(super) fn prepare_function_limits(
         | FnLimitAtSqueeze => 3,
         _ => 1,
     };
-    let approach = make_approach(args[point_index].clone());
-    requirements.push(atomic_in(rt, approach.point().clone(), real()).into());
+    let is_infinite = infinite.is_some();
+    let approach = infinite
+        .map(|(_, a)| a)
+        .unwrap_or_else(|| make_approach(args[point_index].clone()));
+    let threshold_set = approach.threshold_set();
+    if let Some(point) = approach.point() {
+        requirements.push(atomic_in(rt, point.clone(), real()).into());
+    }
+    // Stable finite-call roles; infinity calls omit only the point role.
+    let arg = |index: usize| {
+        &args[if is_infinite && index > point_index {
+            index - 1
+        } else {
+            index
+        }]
+    };
     let conclusions = match id {
         FnLimitAtFromEpsilon => {
-            let value = args[2].clone();
+            let value = arg(2).clone();
             requirements.push(atomic_in(rt, value.clone(), real()).into());
             requirements.push(rt.function_limit_accumulation(domain.clone(), approach.clone()));
             requirements.push(rt.function_limit_epsilon(
@@ -55,11 +76,11 @@ pub(super) fn prepare_function_limits(
             vec![candidate(rt, f, approach, value)]
         }
         FnLimitAtAccumulation => {
-            requirements.push(candidate(rt, f.clone(), approach.clone(), args[2].clone()));
+            requirements.push(candidate(rt, f.clone(), approach.clone(), arg(2).clone()));
             vec![rt.function_limit_accumulation(domain, approach)]
         }
         FnLimitAtControl => {
-            let (value, epsilon) = (args[2].clone(), args[3].clone());
+            let (value, epsilon) = (arg(2).clone(), arg(3).clone());
             requirements.push(candidate(rt, f.clone(), approach.clone(), value.clone()));
             requirements.push(atomic_in(rt, epsilon.clone(), positive_real()).into());
             let delta = rt.fresh_internal_param();
@@ -68,15 +89,18 @@ pub(super) fn prepare_function_limits(
             vec![function_limit_exists(
                 rt,
                 delta,
-                positive_real(),
+                threshold_set.clone(),
                 vec![inclusion],
             )]
         }
         FnLimitAtConstant | FnLimitAtIdentity => {
             let value = if id == FnLimitAtIdentity {
-                approach.point().clone()
+                approach
+                    .point()
+                    .expect("identity has a finite approach point")
+                    .clone()
             } else {
-                args[2].clone()
+                arg(2).clone()
             };
             requirements.push(atomic_in(rt, value.clone(), real()).into());
             requirements.push(rt.function_limit_accumulation(domain.clone(), approach.clone()));
@@ -91,13 +115,13 @@ pub(super) fn prepare_function_limits(
             vec![candidate(rt, f, approach, value)]
         }
         FnLimitAtUnique => {
-            let (a, b) = (args[2].clone(), args[3].clone());
+            let (a, b) = (arg(2).clone(), arg(3).clone());
             requirements.push(candidate(rt, f.clone(), approach.clone(), a.clone()));
             requirements.push(candidate(rt, f, approach, b.clone()));
             vec![equal(rt, a, b).into()]
         }
         FnLimitAtExists => {
-            requirements.push(candidate(rt, f.clone(), approach.clone(), args[2].clone()));
+            requirements.push(candidate(rt, f.clone(), approach.clone(), arg(2).clone()));
             vec![rt.function_limit_existence(f, approach)]
         }
         FnLimitAtSelected => {
@@ -106,7 +130,7 @@ pub(super) fn prepare_function_limits(
             vec![candidate(rt, f, approach, value)]
         }
         FnLimitAtNeg | FnLimitAtAbs | FnLimitAtScale | FnLimitAtPower => {
-            let (output, value) = (args[1].clone(), args[3].clone());
+            let (output, value) = (arg(1).clone(), arg(3).clone());
             let Some((output_requirements, output_domain)) = context(rt, &output)? else {
                 return Ok(Err("result must be a complete unary real function".into()));
             };
@@ -114,7 +138,7 @@ pub(super) fn prepare_function_limits(
             requirements.push(equal(rt, output_domain, domain.clone()).into());
             requirements.push(candidate(rt, f.clone(), approach.clone(), value.clone()));
             let parameter = if matches!(id, FnLimitAtScale | FnLimitAtPower) {
-                args[4].clone()
+                arg(4).clone()
             } else {
                 number("0")
             };
@@ -144,10 +168,10 @@ pub(super) fn prepare_function_limits(
         }
         FnLimitAtAdd | FnLimitAtSubtract | FnLimitAtMultiply | FnLimitAtDivide => {
             let (g, output, a, b) = (
-                args[1].clone(),
-                args[2].clone(),
-                args[4].clone(),
-                args[5].clone(),
+                arg(1).clone(),
+                arg(2).clone(),
+                arg(4).clone(),
+                arg(5).clone(),
             );
             for function in [&g, &output] {
                 let Some((extra, other_domain)) = context(rt, function)? else {
@@ -183,13 +207,13 @@ pub(super) fn prepare_function_limits(
             vec![candidate(rt, output, approach, operation(a, b))]
         }
         FnLimitAtLocalEqual => {
-            let (output, value, radius) = (args[1].clone(), args[3].clone(), args[4].clone());
+            let (output, value, radius) = (arg(1).clone(), arg(3).clone(), arg(4).clone());
             let Some((extra, output_domain)) = context(rt, &output)? else {
                 return Ok(Err("target must be a complete unary real function".into()));
             };
             requirements.extend(extra);
             requirements.push(candidate(rt, f.clone(), approach.clone(), value.clone()));
-            requirements.push(atomic_in(rt, radius.clone(), positive_real()).into());
+            requirements.push(atomic_in(rt, radius.clone(), threshold_set.clone()).into());
             requirements
                 .push(rt.function_limit_accumulation(output_domain.clone(), approach.clone()));
             let neighborhood =
@@ -202,10 +226,10 @@ pub(super) fn prepare_function_limits(
         }
         FnLimitAtCompare => {
             let (g, a, b, radius) = (
-                args[1].clone(),
-                args[3].clone(),
-                args[4].clone(),
-                args[5].clone(),
+                arg(1).clone(),
+                arg(3).clone(),
+                arg(4).clone(),
+                arg(5).clone(),
             );
             let Some((extra, other_domain)) = context(rt, &g)? else {
                 return Ok(Err(
@@ -216,7 +240,7 @@ pub(super) fn prepare_function_limits(
             requirements.push(equal(rt, other_domain, domain.clone()).into());
             requirements.push(candidate(rt, f.clone(), approach.clone(), a.clone()));
             requirements.push(candidate(rt, g.clone(), approach.clone(), b.clone()));
-            requirements.push(atomic_in(rt, radius.clone(), positive_real()).into());
+            requirements.push(atomic_in(rt, radius.clone(), threshold_set.clone()).into());
             let neighborhood = rt.function_limit_neighborhood(domain, approach, radius);
             let x = rt.fresh_internal_param();
             let bound = le(rt, call(&f, identifier(&x)), call(&g, identifier(&x)));
@@ -225,10 +249,10 @@ pub(super) fn prepare_function_limits(
         }
         FnLimitAtSqueeze => {
             let (middle, upper, value, radius) = (
-                args[1].clone(),
-                args[2].clone(),
-                args[4].clone(),
-                args[5].clone(),
+                arg(1).clone(),
+                arg(2).clone(),
+                arg(4).clone(),
+                arg(5).clone(),
             );
             for function in [&middle, &upper] {
                 let Some((extra, other_domain)) = context(rt, function)? else {
@@ -244,7 +268,7 @@ pub(super) fn prepare_function_limits(
                 approach.clone(),
                 value.clone(),
             ));
-            requirements.push(atomic_in(rt, radius.clone(), positive_real()).into());
+            requirements.push(atomic_in(rt, radius.clone(), threshold_set.clone()).into());
             let neighborhood = rt.function_limit_neighborhood(domain, approach.clone(), radius);
             let x = rt.fresh_internal_param();
             let chain = ChainFact {
@@ -274,7 +298,7 @@ pub(super) fn prepare_function_limits(
             vec![candidate(rt, middle, approach, value)]
         }
         FnLimitAtEventuallyPositive | FnLimitAtEventuallyNonzero => {
-            let value = args[2].clone();
+            let value = arg(2).clone();
             requirements.push(candidate(rt, f.clone(), approach.clone(), value.clone()));
             let (condition, target) = if id == FnLimitAtEventuallyPositive {
                 (less(rt, number("0"), value), positive_real())
@@ -291,7 +315,7 @@ pub(super) fn prepare_function_limits(
             vec![function_limit_exists(
                 rt,
                 delta,
-                positive_real(),
+                threshold_set.clone(),
                 vec![inclusion],
             )]
         }
@@ -500,4 +524,73 @@ fn prepare_function_limit_bridges(
         _ => unreachable!("explicit bridge dispatcher"),
     };
     Ok(Ok((requirements, conclusions)))
+}
+
+fn infinity_limit_schema(id: BuiltinTheoremId) -> Option<(BuiltinTheoremId, LimitApproach)> {
+    use BuiltinTheoremId::*;
+    match id {
+        FnLimitPosInfRealAccumulation => {
+            Some((FnLimitAtRealAccumulation, LimitApproach::AtPositiveInfinity))
+        }
+        FnLimitPosInfFromEpsilon => Some((FnLimitAtFromEpsilon, LimitApproach::AtPositiveInfinity)),
+        FnLimitPosInfControl => Some((FnLimitAtControl, LimitApproach::AtPositiveInfinity)),
+        FnLimitPosInfAccumulation => {
+            Some((FnLimitAtAccumulation, LimitApproach::AtPositiveInfinity))
+        }
+        FnLimitPosInfConstant => Some((FnLimitAtConstant, LimitApproach::AtPositiveInfinity)),
+        FnLimitPosInfUnique => Some((FnLimitAtUnique, LimitApproach::AtPositiveInfinity)),
+        FnLimitPosInfExists => Some((FnLimitAtExists, LimitApproach::AtPositiveInfinity)),
+        FnLimitPosInfSelected => Some((FnLimitAtSelected, LimitApproach::AtPositiveInfinity)),
+        FnLimitPosInfNeg => Some((FnLimitAtNeg, LimitApproach::AtPositiveInfinity)),
+        FnLimitPosInfAbs => Some((FnLimitAtAbs, LimitApproach::AtPositiveInfinity)),
+        FnLimitPosInfScale => Some((FnLimitAtScale, LimitApproach::AtPositiveInfinity)),
+        FnLimitPosInfPower => Some((FnLimitAtPower, LimitApproach::AtPositiveInfinity)),
+        FnLimitPosInfAdd => Some((FnLimitAtAdd, LimitApproach::AtPositiveInfinity)),
+        FnLimitPosInfSubtract => Some((FnLimitAtSubtract, LimitApproach::AtPositiveInfinity)),
+        FnLimitPosInfMultiply => Some((FnLimitAtMultiply, LimitApproach::AtPositiveInfinity)),
+        FnLimitPosInfDivide => Some((FnLimitAtDivide, LimitApproach::AtPositiveInfinity)),
+        FnLimitPosInfLocalEqual => Some((FnLimitAtLocalEqual, LimitApproach::AtPositiveInfinity)),
+        FnLimitPosInfCompare => Some((FnLimitAtCompare, LimitApproach::AtPositiveInfinity)),
+        FnLimitPosInfSqueeze => Some((FnLimitAtSqueeze, LimitApproach::AtPositiveInfinity)),
+        FnLimitPosInfEventuallyPositive => Some((
+            FnLimitAtEventuallyPositive,
+            LimitApproach::AtPositiveInfinity,
+        )),
+        FnLimitPosInfEventuallyNonzero => Some((
+            FnLimitAtEventuallyNonzero,
+            LimitApproach::AtPositiveInfinity,
+        )),
+        FnLimitNegInfRealAccumulation => {
+            Some((FnLimitAtRealAccumulation, LimitApproach::AtNegativeInfinity))
+        }
+        FnLimitNegInfFromEpsilon => Some((FnLimitAtFromEpsilon, LimitApproach::AtNegativeInfinity)),
+        FnLimitNegInfControl => Some((FnLimitAtControl, LimitApproach::AtNegativeInfinity)),
+        FnLimitNegInfAccumulation => {
+            Some((FnLimitAtAccumulation, LimitApproach::AtNegativeInfinity))
+        }
+        FnLimitNegInfConstant => Some((FnLimitAtConstant, LimitApproach::AtNegativeInfinity)),
+        FnLimitNegInfUnique => Some((FnLimitAtUnique, LimitApproach::AtNegativeInfinity)),
+        FnLimitNegInfExists => Some((FnLimitAtExists, LimitApproach::AtNegativeInfinity)),
+        FnLimitNegInfSelected => Some((FnLimitAtSelected, LimitApproach::AtNegativeInfinity)),
+        FnLimitNegInfNeg => Some((FnLimitAtNeg, LimitApproach::AtNegativeInfinity)),
+        FnLimitNegInfAbs => Some((FnLimitAtAbs, LimitApproach::AtNegativeInfinity)),
+        FnLimitNegInfScale => Some((FnLimitAtScale, LimitApproach::AtNegativeInfinity)),
+        FnLimitNegInfPower => Some((FnLimitAtPower, LimitApproach::AtNegativeInfinity)),
+        FnLimitNegInfAdd => Some((FnLimitAtAdd, LimitApproach::AtNegativeInfinity)),
+        FnLimitNegInfSubtract => Some((FnLimitAtSubtract, LimitApproach::AtNegativeInfinity)),
+        FnLimitNegInfMultiply => Some((FnLimitAtMultiply, LimitApproach::AtNegativeInfinity)),
+        FnLimitNegInfDivide => Some((FnLimitAtDivide, LimitApproach::AtNegativeInfinity)),
+        FnLimitNegInfLocalEqual => Some((FnLimitAtLocalEqual, LimitApproach::AtNegativeInfinity)),
+        FnLimitNegInfCompare => Some((FnLimitAtCompare, LimitApproach::AtNegativeInfinity)),
+        FnLimitNegInfSqueeze => Some((FnLimitAtSqueeze, LimitApproach::AtNegativeInfinity)),
+        FnLimitNegInfEventuallyPositive => Some((
+            FnLimitAtEventuallyPositive,
+            LimitApproach::AtNegativeInfinity,
+        )),
+        FnLimitNegInfEventuallyNonzero => Some((
+            FnLimitAtEventuallyNonzero,
+            LimitApproach::AtNegativeInfinity,
+        )),
+        _ => None,
+    }
 }

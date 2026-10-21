@@ -34,6 +34,8 @@ pub fn atomic_fact_has_positive_polarity(fact: &AtomicFact) -> bool {
             | AtomicFact::NotProperSupersetFact(_)
             | AtomicFact::NotPrimeFact(_)
             | AtomicFact::NotCoprimeFact(_)
+            | AtomicFact::NotHasSequenceLimsupFact(_)
+            | AtomicFact::NotHasSequenceLiminfFact(_)
             | AtomicFact::NotHasSequenceLimitFact(_)
             | AtomicFact::NotHasFunctionLimitFact(_)
             | AtomicFact::NotDvdFact(_)
@@ -79,9 +81,13 @@ pub fn atomic_fact_args_ref(fact: &AtomicFact) -> Vec<&Obj> {
         AtomicFact::CoprimeFact(f) => vec![&f.left, &f.right],
         AtomicFact::NotCoprimeFact(f) => vec![&f.left, &f.right],
         AtomicFact::HasSequenceLimitFact(f) => vec![&f.sequence, &f.value],
-        AtomicFact::HasFunctionLimitFact(f) => vec![&f.function, f.approach.point(), &f.value],
+        AtomicFact::HasSequenceLimsupFact(f) => vec![&f.sequence, &f.value],
+        AtomicFact::HasSequenceLiminfFact(f) => vec![&f.sequence, &f.value],
+        AtomicFact::HasFunctionLimitFact(f) => f.approach.operand_refs(&f.function, &f.value),
         AtomicFact::NotHasSequenceLimitFact(f) => vec![&f.sequence, &f.value],
-        AtomicFact::NotHasFunctionLimitFact(f) => vec![&f.function, f.approach.point(), &f.value],
+        AtomicFact::NotHasSequenceLimsupFact(f) => vec![&f.sequence, &f.value],
+        AtomicFact::NotHasSequenceLiminfFact(f) => vec![&f.sequence, &f.value],
+        AtomicFact::NotHasFunctionLimitFact(f) => f.approach.operand_refs(&f.function, &f.value),
         AtomicFact::DvdFact(f) => vec![&f.left, &f.right],
         AtomicFact::NotDvdFact(f) => vec![&f.left, &f.right],
         AtomicFact::InjectiveFact(f) => vec![&f.domain, &f.codomain, &f.function],
@@ -439,6 +445,20 @@ pub fn negate_atomic_fact(fact: &AtomicFact, new_fact_id: FactId) -> Option<Atom
             line_file: f.line_file.clone(),
         }
         .into(),
+        AtomicFact::HasSequenceLimsupFact(f) => crate::ast::fact::NotHasSequenceLimsupFact {
+            fact_id: new_fact_id,
+            sequence: f.sequence.clone(),
+            value: f.value.clone(),
+            line_file: f.line_file.clone(),
+        }
+        .into(),
+        AtomicFact::HasSequenceLiminfFact(f) => crate::ast::fact::NotHasSequenceLiminfFact {
+            fact_id: new_fact_id,
+            sequence: f.sequence.clone(),
+            value: f.value.clone(),
+            line_file: f.line_file.clone(),
+        }
+        .into(),
         AtomicFact::HasFunctionLimitFact(f) => crate::ast::fact::NotHasFunctionLimitFact {
             fact_id: new_fact_id,
             function: f.function.clone(),
@@ -448,6 +468,20 @@ pub fn negate_atomic_fact(fact: &AtomicFact, new_fact_id: FactId) -> Option<Atom
         }
         .into(),
         AtomicFact::NotHasSequenceLimitFact(f) => crate::ast::fact::HasSequenceLimitFact {
+            fact_id: new_fact_id,
+            sequence: f.sequence.clone(),
+            value: f.value.clone(),
+            line_file: f.line_file.clone(),
+        }
+        .into(),
+        AtomicFact::NotHasSequenceLimsupFact(f) => crate::ast::fact::HasSequenceLimsupFact {
+            fact_id: new_fact_id,
+            sequence: f.sequence.clone(),
+            value: f.value.clone(),
+            line_file: f.line_file.clone(),
+        }
+        .into(),
+        AtomicFact::NotHasSequenceLiminfFact(f) => crate::ast::fact::HasSequenceLiminfFact {
             fact_id: new_fact_id,
             sequence: f.sequence.clone(),
             value: f.value.clone(),

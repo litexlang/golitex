@@ -4,11 +4,15 @@ Website: https://litexlang.com/doc/Motivation_and_Construction_Thinking_Behind_L
 
 Chinese version: https://litexlang.com/doc/Litex的缘起与构建思路
 
-I want to rethink the relationship between mathematics and code from first principles—and, through that, rethink what mathematics is and what constitutes a proof. Litex grew out of that curiosity.
+Litex is built around an idea: **Write math, get formalized code: because the math already is.** From an early age, we learn that mathematics is a rigorous language: each statement needs grounds to justify its correctness. If mathematics is already a rigorous language, why couldn't mathematics itself be a formal language? Could we design one whose writing closely resembles everyday mathematics, adding just enough constraints to keep it precise?
 
-The first question was how to find a balance between the freedom of natural language and the rigor of formal mathematics. Natural language leaves room for intuition and implicit connections. A formal language must make those connections precise enough for a machine to check. I wanted a language that could preserve the experience of reading mathematics while taking responsibility for checking it.
+This is an attempt to rethink the relationship between mathematics, natural language, and code from first principles—and, through that, to rethink what mathematics is and what proof means. Litex grew out of that curiosity. It aims to make mathematics itself a formal language, so that anyone who uses mathematics, from school students to AI engineers, can also use formal tools directly, without specialized training.
 
-My answer began with choosing the right foundations and just enough built-in mathematical objects and statements. A small, familiar vocabulary gives people less to learn at first sight. It also means fewer distinct concepts whose interactions the language must explain and implement. The challenge was to find a vocabulary small enough to grasp, but expressive enough to build on.
+What follows is the thinking behind Litex's design. Its design choices build on one another, with the aim of drawing out the structures and dependencies behind everyday mathematical expression.
+
+The first question was therefore how to find a balance between the freedom of natural language and the rigor of formal mathematics. Natural language leaves room for intuition and implicit connections. A formal language must make those connections precise enough for a machine to check.
+
+My answer began with choosing the right mathematical foundations and just enough built-in mathematical objects and statements. A small, familiar vocabulary gives people less to learn at first sight. It also means fewer distinct concepts whose interactions the language must explain and implement. The challenge was to find a vocabulary small enough to grasp, but expressive enough to build on.
 
 Set theory felt like a natural foundation. Sets, elements, functions, and relations already belong to the way many people understand mathematics. From there, I wanted to bring familiar mathematical notation—the symbols people routinely write in LaTeX—into the language, together with the mathematical relationships behind it. Recognizing an intersection symbol is only the beginning; the system also needs to understand how intersection relates to membership, inclusion, and equality.
 

@@ -372,7 +372,7 @@ impl LitexToLeanCompiler {
                 "rfl".to_string(),
             )
         };
-        if !self.function_uses_numeric_interface(&function.body) {
+        if !Self::function_uses_numeric_interface(&function.body) {
             let endpoint = self.compile_normalization_value(expanded, position)?;
             let application_value = self.compile_normalization_value(application, position)?;
             let body_equality = self.compile_packed_function_body_equality(
@@ -549,7 +549,7 @@ impl LitexToLeanCompiler {
         let literal_position = SourcePosition { before: 2, ..step };
         let selected = self.compile_wd(&proof.body_application_well_defined, &literal_position)?;
         let completed = SourcePosition { before: 3, ..step };
-        if !self.function_uses_numeric_interface(&function.body) {
+        if !Self::function_uses_numeric_interface(&function.body) {
             let application_value = self.compile_normalization_value(&proof.application, &step)?;
             let expanded = self.compile_normalization_value(&proof.expanded_body, &completed)?;
             let body_equality = self.compile_packed_function_body_equality(

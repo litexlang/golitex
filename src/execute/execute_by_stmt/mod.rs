@@ -49,7 +49,8 @@ pub use result::{
     ExecReleaseRegularityAxiomStmtFailed, ExecReleaseRegularityAxiomStmtResult,
     ExecReleaseRegularityAxiomStmtSuccess, ExecReleaseThmStmtFailed, ExecReleaseThmStmtResult,
     ExecReleaseThmStmtSuccess, ExecReleaseZornLemmaStmtFailed, ExecReleaseZornLemmaStmtResult,
-    ExecReleaseZornLemmaStmtSuccess, ResolvedTheoremCallee,
+    ExecReleaseZornLemmaStmtSuccess, ResolvedTheoremCallee, SequenceExtremaCompletenessProof,
+    SequenceLiminfBoundedProof, SequenceLimsupBoundedProof, TheoremDerivationProof,
 };
 pub(crate) use result::{ByContradictionClosingFailed, ExecByContraStmtFailed};
 // Existing failure IR consumed by the crate's Normal/Detailed JSON projection.

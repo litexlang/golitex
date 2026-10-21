@@ -31,6 +31,12 @@ impl EqualitySearchProofByBuiltinRule {
             Self::SequenceLimit(p) => {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::English)
             }
+            Self::SequenceLimsup(p) => {
+                native_operations::text(p.rule_id(), p.law(), OutputLanguage::English)
+            }
+            Self::SequenceLiminf(p) => {
+                native_operations::text(p.rule_id(), p.law(), OutputLanguage::English)
+            }
             Self::FunctionLimit(p) => {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::English)
             }
@@ -303,6 +309,12 @@ impl EqualitySearchProofByBuiltinRule {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::Chinese)
             }
             Self::SequenceLimit(p) => {
+                native_operations::text(p.rule_id(), p.law(), OutputLanguage::Chinese)
+            }
+            Self::SequenceLimsup(p) => {
+                native_operations::text(p.rule_id(), p.law(), OutputLanguage::Chinese)
+            }
+            Self::SequenceLiminf(p) => {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::Chinese)
             }
             Self::FunctionLimit(p) => {
@@ -579,6 +591,12 @@ impl EqualitySearchProofByBuiltinRule {
             Self::SequenceLimit(p) => {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::ChineseTraditional)
             }
+            Self::SequenceLimsup(p) => {
+                native_operations::text(p.rule_id(), p.law(), OutputLanguage::ChineseTraditional)
+            }
+            Self::SequenceLiminf(p) => {
+                native_operations::text(p.rule_id(), p.law(), OutputLanguage::ChineseTraditional)
+            }
             Self::FunctionLimit(p) => {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::ChineseTraditional)
             }
@@ -851,6 +869,12 @@ impl EqualitySearchProofByBuiltinRule {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::French)
             }
             Self::SequenceLimit(p) => {
+                native_operations::text(p.rule_id(), p.law(), OutputLanguage::French)
+            }
+            Self::SequenceLimsup(p) => {
+                native_operations::text(p.rule_id(), p.law(), OutputLanguage::French)
+            }
+            Self::SequenceLiminf(p) => {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::French)
             }
             Self::FunctionLimit(p) => {
@@ -1129,6 +1153,12 @@ impl EqualitySearchProofByBuiltinRule {
             Self::SequenceLimit(p) => {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::Russian)
             }
+            Self::SequenceLimsup(p) => {
+                native_operations::text(p.rule_id(), p.law(), OutputLanguage::Russian)
+            }
+            Self::SequenceLiminf(p) => {
+                native_operations::text(p.rule_id(), p.law(), OutputLanguage::Russian)
+            }
             Self::FunctionLimit(p) => {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::Russian)
             }
@@ -1402,6 +1432,12 @@ impl EqualitySearchProofByBuiltinRule {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::Spanish)
             }
             Self::SequenceLimit(p) => {
+                native_operations::text(p.rule_id(), p.law(), OutputLanguage::Spanish)
+            }
+            Self::SequenceLimsup(p) => {
+                native_operations::text(p.rule_id(), p.law(), OutputLanguage::Spanish)
+            }
+            Self::SequenceLiminf(p) => {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::Spanish)
             }
             Self::FunctionLimit(p) => {
@@ -1680,6 +1716,12 @@ impl EqualitySearchProofByBuiltinRule {
             Self::SequenceLimit(p) => {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::Arabic)
             }
+            Self::SequenceLimsup(p) => {
+                native_operations::text(p.rule_id(), p.law(), OutputLanguage::Arabic)
+            }
+            Self::SequenceLiminf(p) => {
+                native_operations::text(p.rule_id(), p.law(), OutputLanguage::Arabic)
+            }
             Self::FunctionLimit(p) => {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::Arabic)
             }
@@ -1952,6 +1994,12 @@ impl EqualitySearchProofByBuiltinRule {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::Japanese)
             }
             Self::SequenceLimit(p) => {
+                native_operations::text(p.rule_id(), p.law(), OutputLanguage::Japanese)
+            }
+            Self::SequenceLimsup(p) => {
+                native_operations::text(p.rule_id(), p.law(), OutputLanguage::Japanese)
+            }
+            Self::SequenceLiminf(p) => {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::Japanese)
             }
             Self::FunctionLimit(p) => {
@@ -2228,6 +2276,12 @@ impl EqualitySearchProofByBuiltinRule {
             Self::SequenceLimit(p) => {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::Korean)
             }
+            Self::SequenceLimsup(p) => {
+                native_operations::text(p.rule_id(), p.law(), OutputLanguage::Korean)
+            }
+            Self::SequenceLiminf(p) => {
+                native_operations::text(p.rule_id(), p.law(), OutputLanguage::Korean)
+            }
             Self::FunctionLimit(p) => {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::Korean)
             }
@@ -2500,6 +2554,12 @@ impl EqualitySearchProofByBuiltinRule {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::Vietnamese)
             }
             Self::SequenceLimit(p) => {
+                native_operations::text(p.rule_id(), p.law(), OutputLanguage::Vietnamese)
+            }
+            Self::SequenceLimsup(p) => {
+                native_operations::text(p.rule_id(), p.law(), OutputLanguage::Vietnamese)
+            }
+            Self::SequenceLiminf(p) => {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::Vietnamese)
             }
             Self::FunctionLimit(p) => {

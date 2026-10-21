@@ -330,6 +330,7 @@ pub struct ExecReleaseThmStmtSuccess {
     pub function_domain: Option<BuiltinFunctionDomainProof>,
     pub dom_proofs: Vec<VerifyFactResult>,
     pub dom_stores: Vec<StoreFactAndInferResult>,
+    pub theorem_derivation: TheoremDerivationProof,
     pub conclusions_wd: Vec<crate::execute::execute_fact_stmt::FactWellDefinedProof>,
     pub local_env: Box<ExecEnv>,
     pub stored_wd: Vec<crate::execute::execute_fact_stmt::FactWellDefinedProof>,
@@ -404,6 +405,7 @@ pub struct ExecByThmStmtSuccess {
     pub function_domain: Option<BuiltinFunctionDomainProof>,
     pub dom_proofs: Vec<VerifyFactResult>,
     pub dom_stores: Vec<StoreFactAndInferResult>,
+    pub theorem_derivation: TheoremDerivationProof,
     pub conclusions_wd: Vec<crate::execute::execute_fact_stmt::FactWellDefinedProof>,
     pub returned_conclusions: Vec<StoreFactAndInferResult>,
     pub selected_proof: VerifyFactResult,
@@ -739,4 +741,23 @@ impl ExecReleaseZornLemmaStmtResult {
     pub fn is_failed(&self) -> bool {
         matches!(self, Self::Failed(_))
     }
+}
+
+/// Existing schemas remain primitive; bounded extremal existence has a checked derivation.
+pub enum TheoremDerivationProof {
+    UserTheorem,
+    NativeSchema,
+    SequenceLimsupBounded(SequenceLimsupBoundedProof),
+    SequenceLiminfBounded(SequenceLiminfBoundedProof),
+}
+pub struct SequenceLimsupBoundedProof {
+    pub completeness: SequenceExtremaCompletenessProof,
+}
+pub struct SequenceLiminfBoundedProof {
+    pub completeness: SequenceExtremaCompletenessProof,
+}
+pub struct SequenceExtremaCompletenessProof {
+    pub derivation_steps: Vec<ExecStmtResult>,
+    pub application: Box<ExecStmtResult>,
+    pub conclusion: Box<VerifyFactResult>,
 }

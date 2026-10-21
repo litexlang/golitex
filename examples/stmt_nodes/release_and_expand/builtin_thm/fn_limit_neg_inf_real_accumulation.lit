@@ -1,0 +1,4 @@
+# Finite real function limit at infinity; all premises are checked.
+# Run: target/release/litex -strict -lang en -f examples/stmt_nodes/release_and_expand/builtin_thm/fn_limit_neg_inf_real_accumulation.lit
+
+release thm fn_limit_neg_inf_real_accumulation()

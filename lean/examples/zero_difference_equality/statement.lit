@@ -1,0 +1,10 @@
+# A zero difference forces two complex numbers to be equal, in either orientation.
+forall a, b C:
+    a - b = 0
+    =>:
+        a = b
+
+forall a, b C:
+    0 = b - a
+    =>:
+        a = b

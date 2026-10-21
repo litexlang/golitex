@@ -1281,6 +1281,15 @@ theorem subNonzeroOfNotSame {M : Semantics.{u}} {α : Type v} {β : Type w}
   exact (NativeBridge.same_iff_asComplex a b ha hb).mpr
     (sub_eq_zero.mp (M.number_injective h))
 
+/-- Replay a cited zero difference using the original operands' certificates. -/
+theorem sameOfSubZero {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (a : Obj (M := M) α) (b : Obj (M := M) β)
+    (ha : In a C) (hb : In b C)
+    (hsub : Same (sub a b ha hb) (number 0)) : Same a b := by
+  by_contra h
+  exact (subNonzeroOfNotSame a b ha hb h) hsub
+
 /-- Replay a known nonzero difference without searching for another inequality. -/
 theorem notSameOfSubNonzero {M : Semantics.{u}} {α : Type v} {β : Type w}
     [Representation M α] [Representation M β]
@@ -2680,6 +2689,13 @@ theorem coordinate_mem {n : ℕ} {A : Fin n → M.Value} {p : M.Value}
     (hp : M.mem p (cartValue A)) (i : Fin n) : M.mem (F.callValue p (index i)) (A i) :=
   ((cart_members A p).mp hp).2 i
 
+theorem coordinate_mem_number {n : ℕ} {A : Fin n → M.Value} {p : M.Value}
+    (hp : M.mem p (cartValue A)) (i : Fin n) (z : ℂ)
+    (hz : z = ((i.val + 1 : ℕ) : ℂ)) :
+    M.mem (F.callValue p (M.number z)) (A i) := by
+  rw [hz]
+  exact coordinate_mem hp i
+
 theorem graph_pair_value {D B f x y : M.Value}
     (hf : IsFunctionGraph F.pairValue D B f) (hxy : M.mem (F.pairValue x y) f) :
     M.mem x D ∧ y = F.callValue f x := by
@@ -2763,6 +2779,37 @@ def tuple {M : Semantics.{u}} [FunctionSemantics M] {n : ℕ}
     (values : Fin n → M.Value) (hSets : ∀ i, M.isSet (values i)) :
     Obj (M := M) (TupleObj M n) := ⟨⟨values⟩, hSets⟩
 
+/-- Internal call packing preserves both certified source argument objects. -/
+structure CallArguments2 {M : Semantics.{u}} (α : Type v) (β : Type w)
+    [Representation M α] [Representation M β] where
+  first : Obj (M := M) α
+  second : Obj (M := M) β
+
+instance callArguments2Representation {M : Semantics.{u}} [FunctionSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β] :
+    Representation M (CallArguments2 (M := M) α β) where
+  wd _ := True
+  denote args := FiniteFunction.tupleValue ![denote args.first, denote args.second]
+  wd_isSet {args} _ := FiniteFunction.tuple_isSet ![denote args.first, denote args.second]
+
+def callArguments2 {M : Semantics.{u}} [FunctionSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β]
+    (a : Obj (M := M) α) (b : Obj (M := M) β) :
+    Obj (M := M) (CallArguments2 (M := M) α β) := ⟨⟨a, b⟩, True.intro⟩
+
+theorem callArguments2_denote {M : Semantics.{u}} [FunctionSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β]
+    (a : Obj (M := M) α) (b : Obj (M := M) β) :
+    denote (callArguments2 a b) = FiniteFunction.tupleValue ![denote a, denote b] := rfl
+
+theorem callArguments2_mem_cart {M : Semantics.{u}} [FunctionSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β]
+    (a : Obj (M := M) α) (b : Obj (M := M) β) {A B : M.Value}
+    (ha : M.mem (denote a) A) (hb : M.mem (denote b) B) :
+    M.mem (denote (callArguments2 a b)) (FiniteFunction.cartValue ![A, B]) :=
+  FiniteFunction.tuple_inCart ![denote a, denote b] ![A, B]
+    (Fin.cases ha (Fin.cases hb (fun i => Fin.elim0 i)))
+
 structure CartObj (M : Semantics.{u}) (n : ℕ) where
   factors : Fin n → M.Value
 
@@ -2844,6 +2891,16 @@ theorem numberInClosedRange {M : Semantics.{u}} [SetSemantics M]
         (NativeBridge.numberInZ lower) (NativeBridge.numberInZ upper)) :=
   inClosedRangeOfDenote _ _ _ _ _ lower upper k rfl rfl rfl hlo hhi
 
+theorem numberInClosedRangeOfEq {M : Semantics.{u}} [SetSemantics M]
+    (a b p : ℂ) (lower upper k : ℤ)
+    (ha : a = (lower : ℂ)) (hb : b = (upper : ℂ)) (hp : p = (k : ℂ))
+    (hlo : lower ≤ k) (hhi : k ≤ upper) :
+    In (number (M := M) p)
+      (closedRange (number a) (number b)
+        (NativeBridge.numberInZOfEq a lower ha) (NativeBridge.numberInZOfEq b upper hb)) :=
+  inClosedRangeOfDenote _ _ _ _ _ lower upper k
+    (congrArg M.number ha) (congrArg M.number hb) (congrArg M.number hp) hlo hhi
+
 theorem closedRange_indexSet {M : Semantics.{u}} [F : FunctionSemantics M] (n : ℕ)
     (ha : In (number (M := M) 1) Z) (hb : In (number (M := M) (n : ℂ)) Z) :
     denote (closedRange (number (M := M) 1) (number (n : ℂ)) ha hb) =
@@ -2889,6 +2946,14 @@ theorem closedRange_indexSet {M : Semantics.{u}} [F : FunctionSemantics M] (n : 
     · exact_mod_cast (Nat.succ_le_succ (Nat.zero_le i.val))
     · exact_mod_cast (Nat.succ_le_of_lt i.isLt)
 
+
+theorem indexSetMemberOfClosedRange {M : Semantics.{u}} [FunctionSemantics M]
+    {α : Type v} [Representation M α] {p : Obj (M := M) α} {n : ℕ}
+    {ha : In (number (M := M) 1) Z} {hb : In (number (M := M) (n : ℂ)) Z}
+    (h : In p (closedRange (number (M := M) 1) (number (n : ℂ)) ha hb)) :
+    M.mem (denote p) (FiniteFunction.indexSet n) := by
+  change M.mem (denote p) (denote (closedRange _ _ ha hb)) at h
+  rwa [closedRange_indexSet] at h
 
 structure UnionObj {M : Semantics.{u}} (α : Type v) (β : Type w)
     [Representation M α] [Representation M β] where

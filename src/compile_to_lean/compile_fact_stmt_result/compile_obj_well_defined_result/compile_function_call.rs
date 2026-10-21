@@ -38,7 +38,7 @@ impl LitexToLeanCompiler {
         Ok((output, member))
     }
 
-    fn compile_call_output_proof(
+    pub(in crate::compile_to_lean) fn compile_call_output_proof(
         &self,
         application: &FnObj,
         proof: &FnObjObjWellDefinedProof,
@@ -58,7 +58,7 @@ impl LitexToLeanCompiler {
             ) => fn_set,
             _ => return Err(LeanCompileError::unsupported("Function/OutputSignature")),
         };
-        let law = if !self.function_uses_numeric_interface(signature) {
+        let law = if !Self::function_uses_numeric_interface(signature) {
             "callOnInOutput"
         } else if application.body[0].len() == 1 {
             "callInOutput"
@@ -74,14 +74,29 @@ impl LitexToLeanCompiler {
         proof: &FnObjObjWellDefinedProof,
         position: &SourcePosition<'_>,
     ) -> Result<(String, StandardSet), LeanCompileError> {
+        self.compile_fn_call_with_output(application, proof, position)
+            .map(|(call, output, _)| (call, output))
+    }
+
+    /// Compile the ordered call stages once and keep their output certificate.
+    pub(super) fn compile_fn_call_with_output(
+        &self,
+        application: &FnObj,
+        proof: &FnObjObjWellDefinedProof,
+        position: &SourcePosition<'_>,
+    ) -> Result<(String, StandardSet, String), LeanCompileError> {
         if let Some(FnObjDomainFnSetEvidence::FiniteFunction(finite)) = &proof.domain_fn_set {
             let call = self.compile_finite_fn_call(application, proof, finite, position)?;
-            let (output, _) =
-                self.compile_finite_numeric_output(application, proof, finite, position)?;
-            return Ok((call, output));
+            let (output, member) =
+                self.compile_finite_output_after_call(application, finite, position)?;
+            return Ok((call, output, member));
         }
-        let (call, output, _) = self.compile_fn_call(application, proof, position)?;
-        Ok((call, self.compile_numeric_carrier(&output, position)?))
+        let (call, output, member) = self.compile_fn_call(application, proof, position)?;
+        Ok((
+            call,
+            self.compile_numeric_carrier(&output, position)?,
+            member,
+        ))
     }
 
     fn compile_fn_call(
@@ -100,7 +115,6 @@ impl LitexToLeanCompiler {
             proof,
             &call,
             &output,
-            &member,
             proof.child_obj_well_defined.len() - 1,
             proof.requirement_fact_verified.len() - 1,
             position,
@@ -127,14 +141,6 @@ impl LitexToLeanCompiler {
             | FnObjDomainFnSetEvidence::AnonymousLiteral { fn_set } => fn_set,
             _ => return Err(LeanCompileError::unsupported("WD/FnObj/DomainEvidence")),
         };
-        if application.body.len() == 1 {
-            if let Some(call) = position.bound_fn_call(application, proof) {
-                // This exact original WD node was already checked and emitted.
-                // Its output theorem projects the same call's stored WD.
-                let member = self.compile_call_output_proof(application, proof, &call)?;
-                return Ok((call, signature.ret_set.as_ref().clone(), member));
-            }
-        }
         let parameter_count: usize = signature
             .set_bound_parameters
             .groups
@@ -194,6 +200,21 @@ impl LitexToLeanCompiler {
                 "WD/FnObj/StageArity",
                 "The call does not own all ordered argument WD, memberships, and guard stages.",
             ));
+        }
+
+        if let Some(complete) = position.bound_fn_call(application, proof) {
+            // This exact original WD node was already checked and emitted.
+            // A returned Cartesian coordinate stores the first call itself as
+            // its function field; no new one-group WD result is needed.
+            let (call, member) = if returned_coordinate {
+                let call = format!("({complete}).val.function");
+                let member = format!("(Litex.callOnInOutput {call})");
+                (call, member)
+            } else {
+                let member = self.compile_call_output_proof(application, proof, &complete)?;
+                (complete, member)
+            };
+            return Ok((call, output, member));
         }
 
         let head_term = if head_offset == 1 {
@@ -393,7 +414,7 @@ impl LitexToLeanCompiler {
             &requirement_terms,
             &formed,
         )?;
-        if !self.function_uses_numeric_interface(signature) {
+        if !Self::function_uses_numeric_interface(signature) {
             // The packed argument, its sethood and its domain all use the
             // same checked children. Bind each source argument separately;
             // nested calls must not be expanded at every use of the tuple.
@@ -484,17 +505,33 @@ impl LitexToLeanCompiler {
                 .iter()
                 .map(|set| format!("Litex.isSet {set}"))
                 .collect::<Vec<_>>();
-            let wd = arguments
-                .iter()
-                .map(|argument| format!("Litex.isSet {argument}"))
-                .collect::<Vec<_>>();
             let set_wd = finite_vector_proof(&set_wd);
-            let wd = finite_vector_proof(&wd);
-            let membership = finite_vector_proof(members);
+            let (packed, membership) = if arguments.len() == 2 {
+                // Same tuple denotation, with the original host objects and
+                // their WD retained for later projections from the call.
+                (
+                    format!("(Litex.callArguments2 {} {})", arguments[0], arguments[1]),
+                    format!(
+                        "(Litex.callArguments2_mem_cart {} {} {} {})",
+                        arguments[0], arguments[1], members[0], members[1]
+                    ),
+                )
+            } else {
+                let wd = arguments
+                    .iter()
+                    .map(|argument| format!("Litex.isSet {argument}"))
+                    .collect::<Vec<_>>();
+                let wd = finite_vector_proof(&wd);
+                let membership = finite_vector_proof(members);
+                (
+                    format!("(Litex.tuple (M := M) ![{values}] {wd})"),
+                    format!("(Litex.FiniteFunction.tuple_inCart (M := M) ![{values}] ![{set_values}] {membership})"),
+                )
+            };
             (
                 format!("(Litex.cart (M := M) ![{set_values}] {set_wd})"),
-                format!("(Litex.tuple (M := M) ![{values}] {wd})"),
-                format!("(Litex.FiniteFunction.tuple_inCart (M := M) ![{values}] ![{set_values}] {membership})"),
+                packed,
+                membership,
             )
         };
         let guard_proof = if signature.dom_facts.is_empty() {
@@ -933,7 +970,7 @@ impl LitexToLeanCompiler {
         let guard = self.compile_function_guard_template(signature, position)?;
         let (members, guard_proof) =
             self.compile_function_domain_certificates(signature, &terms, &proofs, position)?;
-        if !self.function_uses_numeric_interface(signature) {
+        if !Self::function_uses_numeric_interface(signature) {
             let (domain, packed, base_member, packed_guard_proof) = self
                 .compile_packed_call_arguments(
                     signature,

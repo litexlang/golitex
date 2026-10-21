@@ -41,16 +41,9 @@ impl LitexToLeanCompiler {
                 before: index,
                 ..*position
             };
-            checked.push(self.compile_verify(child, &prior)?.1);
+            checked.push(self.compile_verify(child, &prior)?);
         }
-        let complete = SourcePosition {
-            before: checked.len(),
-            ..*position
-        };
-        Ok((
-            self.fact_proposition(&Fact::ChainFact(proof.fact.clone()), &complete)?,
-            compound_proof(checked)?,
-        ))
+        compile_checked_components(checked)
     }
 
     pub(in crate::compile_to_lean) fn compile_verify_and_result(
@@ -89,16 +82,9 @@ impl LitexToLeanCompiler {
                 before: index,
                 ..*position
             };
-            checked.push(self.compile_verify(child, &prior)?.1);
+            checked.push(self.compile_verify(child, &prior)?);
         }
-        let complete = SourcePosition {
-            before: checked.len(),
-            ..*position
-        };
-        Ok((
-            self.fact_proposition(&Fact::AndFact(proof.fact.clone()), &complete)?,
-            compound_proof(checked)?,
-        ))
+        compile_checked_components(checked)
     }
 }
 
@@ -166,12 +152,16 @@ pub(super) fn chain_edge(
     })
 }
 
-fn compound_proof(mut proofs: Vec<String>) -> Result<String, LeanCompileError> {
-    let Some(mut proof) = proofs.pop() else {
+/// Keep the proposition compiled alongside each proof instead of rebuilding it.
+fn compile_checked_components(
+    mut components: Vec<(String, String)>,
+) -> Result<(String, String), LeanCompileError> {
+    let Some((mut proposition, mut proof)) = components.pop() else {
         return Err(LeanCompileError::unsupported("Compound/Empty"));
     };
-    while let Some(previous) = proofs.pop() {
-        proof = format!("(And.intro {previous} {proof})");
+    while let Some((prior_proposition, prior_proof)) = components.pop() {
+        proposition = format!("({prior_proposition}) ∧ ({proposition})");
+        proof = format!("(And.intro {prior_proof} {proof})");
     }
-    Ok(proof)
+    Ok((proposition, proof))
 }

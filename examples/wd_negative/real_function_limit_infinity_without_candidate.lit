@@ -1,0 +1,3 @@
+# Expected normal rejection; no candidate may be invented.
+have fn c(x R) R=3
+lim_pos_inf(c)=3

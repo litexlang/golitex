@@ -225,7 +225,7 @@ pub enum SequenceConvergenceProof {
     },
 }
 
-fn limit_wd_failure(obj: Obj, result: VerifyFactResult) -> VerifyObjWellDefinedResult {
+pub(super) fn limit_wd_failure(obj: Obj, result: VerifyFactResult) -> VerifyObjWellDefinedResult {
     VerifyObjWellDefinedResult::Failed {
         obj: obj.clone(),
         reason: FailToVerifyObjWellDefinedResult::LimitOperator(
@@ -251,16 +251,16 @@ pub(crate) fn sequence_membership(rt: &mut Runtime, sequence: Obj) -> Fact {
     }
     .into()
 }
-fn real() -> Obj {
+pub(super) fn real() -> Obj {
     Obj::StandardSet(StandardSet::R)
 }
 fn pos_nat() -> Obj {
     Obj::StandardSet(StandardSet::NPos)
 }
-fn identifier(p: &BoundName) -> Obj {
+pub(super) fn identifier(p: &BoundName) -> Obj {
     Obj::Identifier(IdentifierObj::from_bound_name(p))
 }
-fn typed(p: BoundName, set: Obj) -> TypedParameterList {
+pub(super) fn typed(p: BoundName, set: Obj) -> TypedParameterList {
     TypedParameterList {
         groups: vec![TypedParameterGroup {
             params: vec![p],

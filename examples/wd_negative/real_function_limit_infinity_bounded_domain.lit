@@ -1,0 +1,3 @@
+# Expected normal rejection; no candidate may be invented.
+have fn c(x R:0<x,x<1) R=3
+release thm fn_limit_pos_inf_constant(c,3)

@@ -62,7 +62,9 @@ impl VerifyObjWellDefinedResult {
 
 impl Runtime {
     // Known-memory lookup across the env stack, then prove by definition.
-    // Search returns evidence only; checked atomic subjects are cached at commit.
+    // This entry returns evidence without registering its own result. Function
+    // candidates may register completed children in their retained local scope;
+    // checked direct atomic subjects are registered at statement commit.
     pub fn verify_obj_well_definedness(
         &mut self,
         obj: &Obj,
@@ -94,6 +96,12 @@ impl Runtime {
             return self.verify_function_limit_well_definedness(value, verify_state);
         }
 
+        if let Obj::LimitOperator(crate::ast::obj::LimitOperator::SequenceLimsup(value)) = obj {
+            return self.verify_sequence_limsup_well_definedness(value, verify_state);
+        }
+        if let Obj::LimitOperator(crate::ast::obj::LimitOperator::SequenceLiminf(value)) = obj {
+            return self.verify_sequence_liminf_well_definedness(value, verify_state);
+        }
         if let Obj::LimitOperator(crate::ast::obj::LimitOperator::Sequence(value)) = obj {
             return self.verify_sequence_limit_well_definedness(value, verify_state);
         }

@@ -1,0 +1,9 @@
+# Finite real function limit at infinity; all premises are checked.
+# Run: target/release/litex -strict -lang en -f examples/stmt_nodes/release_and_expand/builtin_thm/fn_limit_neg_inf_control.lit
+
+thm fn_limit_neg_inf_control_example:
+    ? forall fa fn(x R) R,L R,epsilon R+:
+        $has_limit_neg_inf(fa,L)
+        =>:
+            exist delta R st {{x R:x<delta} $subset preimage_set(fa,{v R:abs(v-L)<epsilon})}
+    release thm fn_limit_neg_inf_control(fa,L,epsilon)

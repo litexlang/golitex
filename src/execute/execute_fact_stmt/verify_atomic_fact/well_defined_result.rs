@@ -114,6 +114,12 @@ pub struct SequenceLimitPredicateDomainProof {
 pub struct FunctionLimitPredicateDomainProof {
     pub function_domain:
         crate::execute::execute_fact_stmt::function_limit::RealFunctionLimitDomainProof,
-    pub point_real: Box<VerifyFactResult>,
+    pub approach_real: FunctionLimitApproachRealProof,
     pub value_real: Box<VerifyFactResult>,
+}
+
+pub enum FunctionLimitApproachRealProof {
+    Finite(Box<VerifyFactResult>),
+    AtPositiveInfinity,
+    AtNegativeInfinity,
 }

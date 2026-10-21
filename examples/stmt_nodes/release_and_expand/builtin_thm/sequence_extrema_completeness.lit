@@ -1,0 +1,346 @@
+# Checked completeness derivation used by the bounded limsup/liminf BTs.
+# No trust or user axioms. Actual native LUB/GLB certificates are consumed below.
+
+prop extrema_bounded(a seq(R),M R+):
+    forall n N+:
+        abs(a(n))<=M
+
+prop extrema_tail_value(a seq(R),m N+,x R):
+    exist n N+ st {n>=m and x=a(n)}
+
+prop extrema_tail_upper(a seq(R),m N+,u R):
+    forall n N+:
+        n>=m
+        =>:
+            a(n)<=u
+
+prop extrema_tail_lub(a seq(R),m N+,u R):
+    $extrema_tail_upper(a,m,u)
+    forall v R:
+        $extrema_tail_upper(a,m,v)
+        =>:
+            u<=v
+
+thm extrema_tail_lub_unique:
+    ? forall a seq(R),m N+,u,v R:
+        $extrema_tail_lub(a,m,u)
+        $extrema_tail_lub(a,m,v)
+        =>:
+            u=v
+    $extrema_tail_upper(a,m,u)
+    $extrema_tail_upper(a,m,v)
+    u<=v
+    v<=u
+
+thm extrema_bounded_tail_lub:
+    ? forall a seq(R),m N+,M R+:
+        $extrema_bounded(a,M)
+        =>:
+            exist L R st {$extrema_tail_lub(a,m,L)}
+    have tail_range power_set(R)={x R:$extrema_tail_value(a,m,x)}
+    witness $extrema_tail_value(a,m,a(m)) from m
+    a(m) $in tail_range
+    claim:
+        ? $is_nonempty_set(tail_range)
+        witness $is_nonempty_set(tail_range) from a(m)
+    claim:
+        ? forall x tail_range:
+            x<=M
+        obtain n from $extrema_tail_value(a,m,x)
+        x=a(n)<=abs(a(n))<=M
+    release thm real_least_upper_bound_exists(tail_range,M)
+    obtain L from exist L R st {$is_real_least_upper_bound(tail_range,L)}
+    claim:
+        ? forall n N+:
+            n>=m
+            =>:
+                a(n)<=L
+        witness $extrema_tail_value(a,m,a(n)) from n
+        a(n) $in tail_range
+        release thm real_member_le_least_upper_bound(tail_range,L,a(n))
+    by def $extrema_tail_upper(a,m,L)
+    claim:
+        ? forall u R:
+            $extrema_tail_upper(a,m,u)
+            =>:
+                L<=u
+        claim:
+            ? forall x tail_range:
+                x<=u
+            obtain n from $extrema_tail_value(a,m,x)
+            x=a(n)<=u
+        release thm real_least_upper_bound_le_upper_bound(tail_range,L,u)
+    by def $extrema_tail_lub(a,m,L)
+    witness exist answer R st {$extrema_tail_lub(a,m,answer)} from L
+
+thm extrema_tail_lub_crosses:
+    ? forall a seq(R),m N+,L,y R:
+        $extrema_tail_lub(a,m,L)
+        y<L
+        =>:
+            exist n N+ st {n>=m and y<a(n)}
+    by contra:
+        ? exist n N+ st {n>=m and y<a(n)}
+        not exist n N+ st {n>=m and y<a(n)}
+        claim:
+            ? forall n N+:
+                n>=m
+                =>:
+                    a(n)<=y
+            not n>=m or not y<a(n)
+            by cases:
+                ? a(n)<=y
+                case not n>=m:
+                    impossible n>=m
+                case not y<a(n):
+                    a(n)<=y
+        by def $extrema_tail_upper(a,m,y)
+        L<=y<L
+        impossible L=L
+
+claim:
+    ? forall a seq(R),m N+,M R+:
+        $extrema_bounded(a,M)
+        =>:
+            exist! L R st {$extrema_tail_lub(a,m,L)}
+    release thm extrema_bounded_tail_lub(a,m,M)
+    obtain L from exist u R st {$extrema_tail_lub(a,m,u)}
+    witness exist! chosen R st {$extrema_tail_lub(a,m,chosen)} from L
+
+have fn extrema_tail_sup by exist!:
+    ? forall a seq(R),m N+,M R+:
+        $extrema_bounded(a,M)
+        =>:
+            exist! L R st {$extrema_tail_lub(a,m,L)}
+
+prop extrema_sup_sequence(a,s seq(R)):
+    forall m N+:
+        $extrema_tail_lub(a,m,s(m))
+
+thm extrema_sup_sequence_decreases:
+    ? forall a,s seq(R),j,k N+:
+        $extrema_sup_sequence(a,s)
+        k>=j
+        =>:
+            s(k)<=s(j)
+    $extrema_tail_lub(a,j,s(j))
+    $extrema_tail_lub(a,k,s(k))
+    $extrema_tail_upper(a,j,s(j))
+    claim:
+        ? forall n N+:
+            n>=k
+            =>:
+                a(n)<=s(j)
+        j<=k<=n
+    by def $extrema_tail_upper(a,k,s(j))
+    s(k)<=s(j)
+
+thm extrema_sup_sequence_lower_bound:
+    ? forall a,s seq(R),M R+,k N+:
+        $extrema_bounded(a,M)
+        $extrema_sup_sequence(a,s)
+        =>:
+            -M<=s(k)
+    -a(k)<=abs(-a(k))=abs(a(k))<=M
+    M*(-1)<=(-a(k))*(-1)
+    M*(-1)=-M
+    (-a(k))*(-1)=a(k)
+    -M<=a(k)
+    $extrema_tail_lub(a,k,s(k))
+    $extrema_tail_upper(a,k,s(k))
+    a(k)<=s(k)
+    -M<=a(k)<=s(k)
+
+prop extrema_tail_lower(a seq(R),m N+,u R):
+    forall n N+:
+        n>=m
+        =>:
+            u<=a(n)
+
+prop extrema_tail_glb(a seq(R),m N+,u R):
+    $extrema_tail_lower(a,m,u)
+    forall v R:
+        $extrema_tail_lower(a,m,v)
+        =>:
+            v<=u
+
+thm extrema_lower_bounded_tail_glb:
+    ? forall a seq(R),m N+,B R:
+        $extrema_tail_lower(a,m,B)
+        =>:
+            exist L R st {$extrema_tail_glb(a,m,L)}
+    have tail_range power_set(R)={x R:$extrema_tail_value(a,m,x)}
+    witness $extrema_tail_value(a,m,a(m)) from m
+    a(m) $in tail_range
+    claim:
+        ? $is_nonempty_set(tail_range)
+        witness $is_nonempty_set(tail_range) from a(m)
+    claim:
+        ? forall x tail_range:
+            B<=x
+        obtain n from $extrema_tail_value(a,m,x)
+        B<=a(n)=x
+    release thm real_greatest_lower_bound_exists(tail_range,B)
+    obtain L from exist L R st {$is_real_greatest_lower_bound(tail_range,L)}
+    claim:
+        ? forall n N+:
+            n>=m
+            =>:
+                L<=a(n)
+        witness $extrema_tail_value(a,m,a(n)) from n
+        a(n) $in tail_range
+        release thm real_greatest_lower_bound_le_member(tail_range,L,a(n))
+    by def $extrema_tail_lower(a,m,L)
+    claim:
+        ? forall u R:
+            $extrema_tail_lower(a,m,u)
+            =>:
+                u<=L
+        claim:
+            ? forall x tail_range:
+                u<=x
+            obtain n from $extrema_tail_value(a,m,x)
+            u<=a(n)=x
+        release thm real_lower_bound_le_greatest_lower_bound(tail_range,L,u)
+    by def $extrema_tail_glb(a,m,L)
+    witness exist answer R st {$extrema_tail_glb(a,m,answer)} from L
+
+thm extrema_tail_glb_crosses:
+    ? forall a seq(R),m N+,L,y R:
+        $extrema_tail_glb(a,m,L)
+        L<y
+        =>:
+            exist n N+ st {n>=m and a(n)<y}
+    by contra:
+        ? exist n N+ st {n>=m and a(n)<y}
+        not exist n N+ st {n>=m and a(n)<y}
+        claim:
+            ? forall n N+:
+                n>=m
+                =>:
+                    y<=a(n)
+            not n>=m or not a(n)<y
+            by cases:
+                ? y<=a(n)
+                case not n>=m:
+                    impossible n>=m
+                case not a(n)<y:
+                    y<=a(n)
+        by def $extrema_tail_lower(a,m,y)
+        y<=L<y
+        impossible y=y
+
+prop extrema_decreasing(s seq(R)):
+    forall j,k N+:
+        k>=j
+        =>:
+            s(k)<=s(j)
+
+thm extrema_decreasing_converges:
+    ? forall s seq(R),L R:
+        $extrema_decreasing(s)
+        $extrema_tail_glb(s,1,L)
+        =>:
+            $has_seq_limit(s,L)
+    claim:
+        ? forall epsilon R+:
+            exist cutoff N+ st {{n N+:n>=cutoff} $subset preimage_set(s,{v R:abs(v-L)<epsilon})}
+        L<L+epsilon
+        release thm extrema_tail_glb_crosses(s,1,L,L+epsilon)
+        obtain n1 from exist n N+ st {n>=1 and s(n)<L+epsilon}
+        $extrema_tail_lower(s,1,L)
+        witness exist cutoff N+ st {{n N+:n>=cutoff} $subset preimage_set(s,{v R:abs(v-L)<epsilon})} from n1:
+            claim:
+                ? forall n {k N+:k>=n1}:
+                    n $in preimage_set(s,{v R:abs(v-L)<epsilon})
+                1<=n1<=n
+                L<=s(n)<=s(n1)<L+epsilon
+                0<=s(n)-L
+                s(n)-L<L+epsilon-L=epsilon
+                abs(s(n)-L)=s(n)-L<epsilon
+                s(n) $in {v R:abs(v-L)<epsilon}
+            by def {n N+:n>=n1} $subset preimage_set(s,{v R:abs(v-L)<epsilon})
+    by def $has_seq_limit(s,L)
+
+thm extrema_bounded_has_limsup:
+    ? forall a seq(R),M R+:
+        $extrema_bounded(a,M)
+        =>:
+            exist L R st {$has_seq_limsup(a,L)}
+    have fn s(k N+) R=extrema_tail_sup(a,k,M)
+    claim:
+        ? forall m N+:
+            $extrema_tail_lub(a,m,s(m))
+        s(m)=extrema_tail_sup(a,m,M)
+        $extrema_tail_lub(a,m,extrema_tail_sup(a,m,M))
+    by def $extrema_sup_sequence(a,s)
+    claim:
+        ? forall j,k N+:
+            k>=j
+            =>:
+                s(k)<=s(j)
+        release thm extrema_sup_sequence_decreases(a,s,j,k)
+    by def $extrema_decreasing(s)
+    claim:
+        ? forall n N+:
+            n>=1
+            =>:
+                -M<=s(n)
+        release thm extrema_sup_sequence_lower_bound(a,s,M,n)
+    by def $extrema_tail_lower(s,1,-M)
+    release thm extrema_lower_bounded_tail_glb(s,1,-M)
+    obtain L from exist u R st {$extrema_tail_glb(s,1,u)}
+    release thm extrema_decreasing_converges(s,L)
+    claim:
+        ? forall epsilon R+:
+            exist cutoff N+ st {{n N+:n>=cutoff} $subset preimage_set(a,{v R:v<L+epsilon})}
+        release thm seq_limit_tail(s,L,epsilon)
+        obtain n0 from exist cutoff N+ st {{n N+:n>=cutoff} $subset preimage_set(s,{v R:abs(v-L)<epsilon})}
+        witness exist cutoff N+ st {{n N+:n>=cutoff} $subset preimage_set(a,{v R:v<L+epsilon})} from n0:
+            claim:
+                ? forall n {k N+:k>=n0}:
+                    n $in preimage_set(a,{v R:v<L+epsilon})
+                n $in preimage_set(s,{v R:abs(v-L)<epsilon})
+                s(n) $in {v R:abs(v-L)<epsilon}
+                abs(s(n)-L)<epsilon
+                s(n)-L<=abs(s(n)-L)<epsilon
+                (s(n)-L)+L<epsilon+L
+                (s(n)-L)+L=s(n)
+                epsilon+L=L+epsilon
+                s(n)<L+epsilon
+                $extrema_tail_lub(a,n,s(n))
+                $extrema_tail_upper(a,n,s(n))
+                a(n)<=s(n)<L+epsilon
+                a(n) $in {v R:v<L+epsilon}
+            by def {n N+:n>=n0} $subset preimage_set(a,{v R:v<L+epsilon})
+    claim:
+        ? forall epsilon R+,n0 N+:
+            exist n N+ st {n>=n0 and L-epsilon<a(n)}
+        $extrema_tail_lower(s,1,L)
+        L<=s(n0)
+        L-epsilon=(L-epsilon)+0<(L-epsilon)+epsilon=L
+        L-epsilon<L<=s(n0)
+        $extrema_tail_lub(a,n0,s(n0))
+        release thm extrema_tail_lub_crosses(a,n0,s(n0),L-epsilon)
+    by def $has_seq_limsup(a,L)
+    witness exist answer R st {$has_seq_limsup(a,answer)} from L
+
+thm extrema_bounded_has_liminf:
+    ? forall a seq(R),M R+:
+        $extrema_bounded(a,M)
+        =>:
+            exist L R st {$has_seq_liminf(a,L)}
+    have fn b(k N+) R=-a(k)
+    claim:
+        ? forall n N+:
+            abs(b(n))<=M
+        abs(b(n))=abs(-a(n))=abs(a(n))<=M
+    by def $extrema_bounded(b,M)
+    release thm extrema_bounded_has_limsup(b,M)
+    obtain L from exist u R st {$has_seq_limsup(b,u)}
+    claim:
+        ? forall n N+:
+            a(n)=-b(n)
+        -b(n)=-(-a(n))=a(n)
+    release thm seq_limsup_neg(b,a,L)
+    witness exist answer R st {$has_seq_liminf(a,answer)} from -L

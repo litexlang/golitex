@@ -227,8 +227,20 @@ impl LitexToLeanCompiler {
             InferAtomicFactResult::HasSequenceLimitFact(_) => {
                 matches!(atomic, AtomicFact::HasSequenceLimitFact(_))
             }
+            InferAtomicFactResult::HasSequenceLimsupFact(_) => {
+                matches!(atomic, AtomicFact::HasSequenceLimsupFact(_))
+            }
+            InferAtomicFactResult::HasSequenceLiminfFact(_) => {
+                matches!(atomic, AtomicFact::HasSequenceLiminfFact(_))
+            }
             InferAtomicFactResult::NotHasSequenceLimitFact(_) => {
                 matches!(atomic, AtomicFact::NotHasSequenceLimitFact(_))
+            }
+            InferAtomicFactResult::NotHasSequenceLimsupFact(_) => {
+                matches!(atomic, AtomicFact::NotHasSequenceLimsupFact(_))
+            }
+            InferAtomicFactResult::NotHasSequenceLiminfFact(_) => {
+                matches!(atomic, AtomicFact::NotHasSequenceLiminfFact(_))
             }
             InferAtomicFactResult::NormalAtomicFact(_) => {
                 matches!(atomic, AtomicFact::NormalAtomicFact(_))
@@ -338,6 +350,14 @@ impl LitexToLeanCompiler {
             InferAtomicFactResult::HasSequenceLimitFact(_)
             | InferAtomicFactResult::NotHasSequenceLimitFact(_) => {
                 Err(LeanCompileError::unsupported("Inference/SequenceLimit"))
+            }
+            InferAtomicFactResult::HasSequenceLimsupFact(_)
+            | InferAtomicFactResult::NotHasSequenceLimsupFact(_) => {
+                Err(LeanCompileError::unsupported("Inference/SequenceLimsup"))
+            }
+            InferAtomicFactResult::HasSequenceLiminfFact(_)
+            | InferAtomicFactResult::NotHasSequenceLiminfFact(_) => {
+                Err(LeanCompileError::unsupported("Inference/SequenceLiminf"))
             }
             InferAtomicFactResult::EqualFact(rules) => {
                 let AtomicFact::EqualFact(source) = atomic else {

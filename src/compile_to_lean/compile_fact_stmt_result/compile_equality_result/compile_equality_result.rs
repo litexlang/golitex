@@ -127,6 +127,9 @@ impl LitexToLeanCompiler {
             EqualFactSearchedProof::ByBuiltinRule(
                 EqualitySearchProofByBuiltinRule::ScalarDivisionRelation(proof),
             ) => self.compile_scalar_division_relation(fact, proof, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(
+                EqualitySearchProofByBuiltinRule::EqualFromKnownDifferenceZero(proof),
+            ) => self.compile_equal_from_known_difference_zero(fact, proof, position)?,
             EqualFactSearchedProof::ByBuiltinRule(_) => {
                 return Err(LeanCompileError::unsupported("Equality/BuiltinRule"))
             }

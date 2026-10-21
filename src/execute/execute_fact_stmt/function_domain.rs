@@ -578,6 +578,9 @@ pub enum CompleteFunctionDomainSourceProof {
         signature_source: FnObjDomainFnSetEvidence,
         application_children: Vec<Box<ObjWellDefinedProof>>,
         application_requirements: Vec<VerifyFactResult>,
+        argument_scope: Option<
+            crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnObjArgumentScope,
+        >,
         return_space: Obj,
         carrier_equal: KnownEqualityPathProof,
     },
@@ -900,8 +903,13 @@ impl Runtime {
             else {
                 continue;
             };
-            let (application_children, application_requirements) =
+            let (application_children, application_requirements, mut argument_scope) =
                 applicability.into_success_child_proofs();
+            if let Some(scope) = &mut argument_scope {
+                for formed in &mut scope.formed_children {
+                    formed.child_index += head_children.len();
+                }
+            }
             head_children.extend(application_children);
             domains.push(CompleteFunctionDomainProof {
                 signature: return_signature,
@@ -911,6 +919,7 @@ impl Runtime {
                     signature_source,
                     application_children: head_children,
                     application_requirements,
+                    argument_scope,
                     return_space,
                     carrier_equal: KnownEqualityPathProof::new(carrier_path),
                 },

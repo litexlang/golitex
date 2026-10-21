@@ -1,0 +1,9 @@
+# Expected normal rejection; no false extremal candidate or WD evidence may be invented.
+forall a,b,h seq(R):
+    $has_seq_limsup(a,1)
+    $has_seq_limsup(b,1)
+    $has_seq_limsup(h,0)
+    forall n N+:
+        h(n)=a(n)+b(n)
+    =>:
+        limsup(h)=limsup(a)+limsup(b)

@@ -75,7 +75,8 @@ impl crate::runtime::Runtime {
         let mut formed = Vec::new();
         // Formation is established by user-fact verification or the named infer rule.
         // Cache only its direct atomic subjects in this scope, never the bound
-        // internals of a quantified fact. Exploratory verify does not record WD.
+        // internals of a quantified fact. Function-candidate WD registrations
+        // remain in their own retained scopes and do not merge into this store.
         if let crate::ast::fact::Fact::AtomicFact(atomic) = fact {
             for (argument_index, obj) in crate::ast::fact::atomic_fact_args_ref(atomic)
                 .into_iter()

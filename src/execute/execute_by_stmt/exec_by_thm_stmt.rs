@@ -54,6 +54,10 @@ pub fn exec_release_thm_stmt(
             dom_proofs.push(proof);
             dom_stores.push(stored);
         }
+        let theorem_derivation = match super::builtin_thm::derive_sequence_extrema_bounded::derive_sequence_extrema_bounded(rt,&prepared.builtin,&stmt.line_file)? {
+            Ok(proof)=>proof,
+            Err(failed)=>return Ok(Err(failed)),
+        };
         let conclusions_wd =
             match verify_prepared_conclusions_wd(rt, &thm_name, &prepared.conclusions)? {
                 Ok(proofs) => proofs,
@@ -65,15 +69,23 @@ pub fn exec_release_thm_stmt(
             function_domain,
             dom_proofs,
             dom_stores,
+            theorem_derivation,
             conclusions_wd,
         )))
     })?;
 
-    let (type_proofs, type_stores, function_domain, dom_proofs, dom_stores, conclusions_wd) =
-        match dom_outcome {
-            Ok(p) => p,
-            Err(failed) => return Ok(ExecReleaseThmStmtResult::Failed(failed)),
-        };
+    let (
+        type_proofs,
+        type_stores,
+        function_domain,
+        dom_proofs,
+        dom_stores,
+        theorem_derivation,
+        conclusions_wd,
+    ) = match dom_outcome {
+        Ok(p) => p,
+        Err(failed) => return Ok(ExecReleaseThmStmtResult::Failed(failed)),
+    };
 
     let mut stored = Vec::with_capacity(prepared.conclusions.len());
     let mut stored_wd = Vec::with_capacity(prepared.conclusions.len());
@@ -105,6 +117,7 @@ pub fn exec_release_thm_stmt(
             function_domain,
             dom_proofs,
             dom_stores,
+            theorem_derivation,
             conclusions_wd,
             local_env,
             stored_wd,
@@ -160,6 +173,10 @@ pub fn exec_by_thm_stmt(
             dom_proofs.push(proof);
             dom_stores.push(stored);
         }
+        let theorem_derivation = match super::builtin_thm::derive_sequence_extrema_bounded::derive_sequence_extrema_bounded(rt,&prepared.builtin,&stmt.line_file)? {
+            Ok(proof)=>proof,
+            Err(failed)=>return Ok(Err(ExecByThmStmtFailed::Release(failed))),
+        };
         let conclusions_wd =
             match verify_prepared_conclusions_wd(rt, &thm_name, &prepared.conclusions)? {
                 Ok(proofs) => proofs,
@@ -201,6 +218,7 @@ pub fn exec_by_thm_stmt(
             function_domain,
             dom_proofs,
             dom_stores,
+            theorem_derivation,
             conclusions_wd,
             returned_conclusions,
             selected_proof,
@@ -213,6 +231,7 @@ pub fn exec_by_thm_stmt(
         function_domain,
         dom_proofs,
         dom_stores,
+        theorem_derivation,
         conclusions_wd,
         returned_conclusions,
         selected_proof,
@@ -253,6 +272,7 @@ pub fn exec_by_thm_stmt(
             function_domain,
             dom_proofs,
             dom_stores,
+            theorem_derivation,
             conclusions_wd,
             returned_conclusions,
             selected_proof,

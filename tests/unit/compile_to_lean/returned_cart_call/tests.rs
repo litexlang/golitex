@@ -21,7 +21,7 @@ fn returned_cart_call_replays_both_original_coordinate_domains() {
     let output = compiler
         .compile_run(&result, "returned_cart_coordinates")
         .expect("both one-based coordinates replay from the original call's ordered evidence");
-    assert!(output.contains("exact M.real_subset_complex _ _litex_real_member"));
+    assert!(output.contains("(M.real_subset_complex _ "));
     assert!(output.contains("Litex.subInR"));
     assert!(output.contains(".val.signature"));
 }
@@ -95,7 +95,7 @@ fn returned_cart_call_wd_lets_only_reuse_emitted_original_children() {
 #[test]
 fn returned_cart_call_output_reuse_requires_the_original_application_and_wd() {
     use crate::compile_to_lean::source_position::{SourceOwner, SourcePosition};
-    let (mut result, _) = super::execute(SOURCE);
+    let (mut result, compiler) = super::execute(SOURCE);
     let fact = super::forall_proof_mut(&mut result.statement_results[1]);
     let conclusion = &fact.proved_then_facts[0];
     let VerifyFactResult::Equality(equality) = &conclusion.verify_result else {
@@ -116,7 +116,14 @@ fn returned_cart_call_output_reuse_requires_the_original_application_and_wd() {
         SourceOwner::FormedSubjects(&conclusion.verify_result, &conclusion.store_and_infer),
         0,
     );
-    assert!(emitted.bound_fn_call(application, call).is_some());
+    let complete = emitted
+        .bound_fn_call(application, call)
+        .expect("completed call");
+    let (first, _, member) = compiler
+        .compile_fn_first_call_with_member(application, call, &emitted)
+        .expect("the completed call retains its first stage and original WD");
+    assert_eq!(first, format!("({complete}).val.function"));
+    assert_eq!(member, format!("(Litex.callOnInOutput {first})"));
     let mut different = application.clone();
     different.body[0].swap(0, 1);
     assert!(emitted.bound_fn_call(&different, call).is_none());

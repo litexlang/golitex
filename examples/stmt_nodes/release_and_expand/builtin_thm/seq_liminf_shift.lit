@@ -1,0 +1,11 @@
+# Finite real sequence extremal limit; all premises are checked.
+# Run: target/release/litex -strict -lang en -f examples/stmt_nodes/release_and_expand/builtin_thm/seq_liminf_shift.lit
+
+thm seq_liminf_shift_example:
+    ? forall a,b seq(R),L R,m N:
+        $has_seq_liminf(a,L)
+        forall n N+:
+            b(n)=a(n+m)
+        =>:
+            $has_seq_liminf(b,L)
+    release thm seq_liminf_shift(a,b,L,m)

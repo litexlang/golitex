@@ -70,6 +70,52 @@ pub(super) fn project_obj_wd_by_def(
                 ],
             )
         }
+        ObjWellDefinedProofByDef::LimitOperator(
+            LimitOperatorObjWellDefinedProofByDef::SequenceLiminf(p),
+        ) => {
+            let convergence = match &p.convergence {
+                crate::execute::execute_fact_stmt::sequence_limit::SequenceConvergenceProof::Candidate(c) => super::searched::project_known_premise(c, runtime),
+                crate::execute::execute_fact_stmt::sequence_limit::SequenceConvergenceProof::Existence { proof, .. } => super::verify::project_verify_fact(proof, runtime),
+            };
+            let domain=match &p.sequence_domain {
+                crate::execute::execute_fact_stmt::sequence_limit::RealSequenceDomainProof::CompleteSignature(source)=>super::function_domain::project_source(source,runtime),
+                crate::execute::execute_fact_stmt::sequence_limit::RealSequenceDomainProof::Membership(proof)=>super::verify::project_verify_fact(proof,runtime),
+            };
+            object_for(
+                runtime,
+                vec![
+                    ("type", string("by_def")),
+                    ("family", string("LimitOperator")),
+                    ("kind", string("SequenceLiminf")),
+                    ("sequence_wd", project_obj_wd_proof(&p.sequence_wd, runtime)),
+                    ("sequence_domain", domain),
+                    ("convergence", convergence),
+                ],
+            )
+        }
+        ObjWellDefinedProofByDef::LimitOperator(
+            LimitOperatorObjWellDefinedProofByDef::SequenceLimsup(p),
+        ) => {
+            let convergence = match &p.convergence {
+                crate::execute::execute_fact_stmt::sequence_limit::SequenceConvergenceProof::Candidate(c) => super::searched::project_known_premise(c, runtime),
+                crate::execute::execute_fact_stmt::sequence_limit::SequenceConvergenceProof::Existence { proof, .. } => super::verify::project_verify_fact(proof, runtime),
+            };
+            let domain=match &p.sequence_domain {
+                crate::execute::execute_fact_stmt::sequence_limit::RealSequenceDomainProof::CompleteSignature(source)=>super::function_domain::project_source(source,runtime),
+                crate::execute::execute_fact_stmt::sequence_limit::RealSequenceDomainProof::Membership(proof)=>super::verify::project_verify_fact(proof,runtime),
+            };
+            object_for(
+                runtime,
+                vec![
+                    ("type", string("by_def")),
+                    ("family", string("LimitOperator")),
+                    ("kind", string("SequenceLimsup")),
+                    ("sequence_wd", project_obj_wd_proof(&p.sequence_wd, runtime)),
+                    ("sequence_domain", domain),
+                    ("convergence", convergence),
+                ],
+            )
+        }
         ObjWellDefinedProofByDef::ArithmeticOperator(
             ArithmeticOperatorObjWellDefinedProofByDef::Abs(p),
         ) => project_common_by_def(
@@ -307,6 +353,9 @@ pub(super) fn project_obj_wd_by_def(
                     project_verify_facts(&p.requirement_fact_verified, runtime),
                 ),
             ];
+            if let Some(scope) = &p.argument_scope {
+                entries.push(("argument_scope", project_fn_argument_scope(scope, runtime)));
+            }
             if let Some(domain) = &p.domain_fn_set {
                 let d = match domain {
                     FnObjDomainFnSetEvidence::Composition(p) => {
@@ -953,14 +1002,21 @@ pub(super) fn project_obj_wd_by_def(
             )
         }
         ObjWellDefinedProofByDef::Structish(StructishObjWellDefinedProofByDef::FieldAccess(p)) => {
-            project_common_by_def(
+            let mut projected = project_common_by_def(
                 obj,
                 "Structish",
                 "FieldAccess",
                 &p.child_obj_well_defined,
                 &p.requirement_fact_verified,
                 runtime,
-            )
+            );
+            if let (JsonValue::Object(fields), Some(scope)) = (&mut projected, &p.argument_scope) {
+                fields.insert(
+                    "argument_scope".to_string(),
+                    project_fn_argument_scope(scope, runtime),
+                );
+            }
+            projected
         }
         ObjWellDefinedProofByDef::Structish(StructishObjWellDefinedProofByDef::StructObj(p)) => {
             project_common_by_def(
@@ -1216,5 +1272,44 @@ fn project_preimage_wd(
                 project_preimage_construction(construction, runtime),
             ),
         ],
+    )
+}
+
+// Exact registrations only; the presentation does not serialize a second proof log.
+pub(super) fn project_fn_argument_scope(
+    scope: &FnObjArgumentScope,
+    runtime: &Runtime,
+) -> JsonValue {
+    object_for(
+        runtime,
+        vec![(
+            "formed_children",
+            JsonValue::Array(
+                scope
+                    .formed_children
+                    .iter()
+                    .map(|formed| {
+                        let subject = scope
+                            .local_env
+                            .well_defined_objects
+                            .wd_id_to_object
+                            .get(&formed.wd_id);
+                        object_for(
+                            runtime,
+                            vec![
+                                ("child_index", JsonValue::Number(formed.child_index as f64)),
+                                ("wd_id", string(formed.wd_id.to_string())),
+                                (
+                                    "obj",
+                                    subject
+                                        .map(|obj| string(obj.readable_string()))
+                                        .unwrap_or(JsonValue::Null),
+                                ),
+                            ],
+                        )
+                    })
+                    .collect(),
+            ),
+        )],
     )
 }

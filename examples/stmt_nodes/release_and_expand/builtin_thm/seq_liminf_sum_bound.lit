@@ -1,0 +1,17 @@
+# Finite real sequence extremal limit; all premises are checked.
+# Run: target/release/litex -strict -lang en -f examples/stmt_nodes/release_and_expand/builtin_thm/seq_liminf_sum_bound.lit
+
+thm seq_liminf_sum_bound_example:
+    ? forall a,b,h seq(R),A,B,S R,M1,M2 R+:
+        $has_seq_liminf(a,A)
+        $has_seq_liminf(b,B)
+        $has_seq_liminf(h,S)
+        forall n N+:
+            h(n)=a(n)+b(n)
+        forall n N+:
+            abs(a(n))<=M1
+        forall n N+:
+            abs(b(n))<=M2
+        =>:
+            A+B<=S
+    release thm seq_liminf_sum_bound(a,b,h,A,B,S,M1,M2)

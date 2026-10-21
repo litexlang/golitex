@@ -278,6 +278,13 @@ impl Runtime {
                     }))
                 }
             }
+            crate::parse::keywords::HAS_LIMIT_POS_INF | crate::parse::keywords::HAS_LIMIT_NEG_INF => {
+                two_args(name,&args,&line_file)?;
+                let fact_id = self.global_ids.allocate_fact_id();
+                let approach = if name == crate::parse::keywords::HAS_LIMIT_POS_INF { crate::ast::obj::LimitApproach::AtPositiveInfinity } else { crate::ast::obj::LimitApproach::AtNegativeInfinity };
+                if positive { Ok(crate::ast::fact::HasFunctionLimitFact { fact_id, function:args[0].clone(), approach, value:args[1].clone(), line_file:Some(line_file) }.into()) }
+                else { Ok(crate::ast::fact::NotHasFunctionLimitFact { fact_id, function:args[0].clone(), approach, value:args[1].clone(), line_file:Some(line_file) }.into()) }
+            }
             crate::parse::keywords::HAS_LIMIT_AT | crate::parse::keywords::HAS_LIMIT_LEFT | crate::parse::keywords::HAS_LIMIT_RIGHT => {
                 n_args(name,&args,3,&line_file)?;
                 let fact_id = self.global_ids.allocate_fact_id();
@@ -292,6 +299,17 @@ impl Runtime {
                 } else {
                     Ok(crate::ast::fact::NotHasFunctionLimitFact {fact_id,function:args[0].clone(),approach,value:args[2].clone(),line_file:Some(line_file)}.into())
                 }
+            }
+            crate::parse::keywords::HAS_SEQ_LIMSUP | crate::parse::keywords::HAS_SEQ_LIMINF => {
+                two_args(name,&args,&line_file)?;
+                let fact_id=self.global_ids.allocate_fact_id();
+                let sequence=args[0].clone();let value=args[1].clone();let line_file=Some(line_file);
+                Ok(match (name==crate::parse::keywords::HAS_SEQ_LIMSUP,positive) {
+                    (true,true)=>crate::ast::fact::HasSequenceLimsupFact {fact_id,sequence,value,line_file}.into(),
+                    (true,false)=>crate::ast::fact::NotHasSequenceLimsupFact {fact_id,sequence,value,line_file}.into(),
+                    (false,true)=>crate::ast::fact::HasSequenceLiminfFact {fact_id,sequence,value,line_file}.into(),
+                    (false,false)=>crate::ast::fact::NotHasSequenceLiminfFact {fact_id,sequence,value,line_file}.into(),
+                })
             }
             crate::parse::keywords::HAS_SEQ_LIMIT => {
                 two_args(name, &args, &line_file)?;

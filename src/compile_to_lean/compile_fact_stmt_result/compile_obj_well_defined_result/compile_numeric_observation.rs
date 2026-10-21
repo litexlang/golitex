@@ -369,19 +369,63 @@ impl LitexToLeanCompiler {
                     ),
             } => {
                 let term = self.compile_wd(wd, position)?;
-                let setup = format!("let _litex_sqrt := {term}\n  have _litex_sqrt_member : Litex.In _litex_sqrt Litex.C := Litex.sqrtInC _litex_sqrt.val.arg _litex_sqrt.wd.1 _litex_sqrt.wd.2");
+                let setup = format!("let _litex_sqrt := {term};\nlet _litex_sqrt_member : Litex.In _litex_sqrt Litex.C := Litex.sqrtInC _litex_sqrt.val.arg _litex_sqrt.wd.1 _litex_sqrt.wd.2;");
                 Ok((
-                    format!("(by\n  {setup}\n  exact Litex.NativeBridge.asComplex _litex_sqrt _litex_sqrt_member)"),
-                    format!("(by\n  {setup}\n  exact Litex.NativeBridge.asComplex_spec _litex_sqrt _litex_sqrt_member)"),
-                    format!("(by\n  {setup}\n  exact _litex_sqrt_member)"),
+                    format!("({setup}\nLitex.NativeBridge.asComplex _litex_sqrt _litex_sqrt_member)"),
+                    format!("({setup}\nLitex.NativeBridge.asComplex_spec _litex_sqrt _litex_sqrt_member)"),
+                    format!("({setup}\n_litex_sqrt_member)"),
                     None,
                 ))
             }
             ObjWellDefinedProof::ByDef {
-                obj: Obj::FnObj(_),
+                obj: object @ Obj::FnObj(_),
                 proof: ObjWellDefinedProofByDef::FnObj(_),
             } => {
-                let (call, output, member) = self.numeric_function_output_wd(wd, position)?;
+                // Cartesian parameter inference already publishes the coordinate
+                // object and its membership. Numeric observation consumes that
+                // exact completed producer; endpoint WD is checked separately.
+                if let Some(Some(observation)) =
+                    position.with_visible_inferred_subject(object, &mut |store, producer| {
+                        let Some(term) =
+                            self.compile_cart_inferred_subject(object, store, producer)?
+                        else {
+                            return Ok(None);
+                        };
+                        let StoreFactResult::AtomicFact(stored) = store else {
+                            return Ok(None);
+                        };
+                        let AtomicFact::InFact(member) = &stored.fact else {
+                            return Ok(None);
+                        };
+                        let (actual, reference) =
+                            producer.visible_fact(stored.fact_id, &self.runtime)?;
+                        if actual != &Fact::AtomicFact(stored.fact.clone()) {
+                            return Err(LeanCompileError::new(
+                                "CartInference/ObservationSubject",
+                                "The coordinate observation cites another stored membership.",
+                            ));
+                        }
+                        let Some(complex) = self.parameter_complex_membership(
+                            object,
+                            &member.set,
+                            &reference,
+                            producer,
+                        )?
+                        else {
+                            return Ok(None);
+                        };
+                        Ok(Some((
+                            format!("(Litex.NativeBridge.asComplex {term} {complex})"),
+                            format!("(Litex.NativeBridge.asComplex_spec {term} {complex})"),
+                            complex,
+                            None,
+                        )))
+                    })?
+                {
+                    return Ok(observation);
+                }
+                let (call, output, member) =
+                    self.numeric_function_output_wd(wd, position, Some("_litex_numeric_call"))?;
                 let (carrier, bridge) = match output {
                     StandardSet::N => ("N", Some("naturalToComplex")),
                     StandardSet::Z => ("Z", Some("integerToComplex")),
@@ -406,12 +450,12 @@ impl LitexToLeanCompiler {
                 // Keep the original constructor and return law, sharing the
                 // constructor locally instead of repeating its full WD term.
                 let setup = format!(
-                    "let _litex_numeric_call := {call}\n  have _litex_numeric_member : Litex.In _litex_numeric_call Litex.C := {complex}"
+                    "let _litex_numeric_call := {call};\nlet _litex_numeric_member : Litex.In _litex_numeric_call Litex.C := {complex};"
                 );
                 Ok((
-                    format!("(by\n  {setup}\n  exact Litex.NativeBridge.asComplex _litex_numeric_call _litex_numeric_member)"),
-                    format!("(by\n  {setup}\n  exact Litex.NativeBridge.asComplex_spec _litex_numeric_call _litex_numeric_member)"),
-                    format!("(by\n  {setup}\n  exact _litex_numeric_member)"),
+                    format!("({setup}\nLitex.NativeBridge.asComplex _litex_numeric_call _litex_numeric_member)"),
+                    format!("({setup}\nLitex.NativeBridge.asComplex_spec _litex_numeric_call _litex_numeric_member)"),
+                    format!("({setup}\n_litex_numeric_member)"),
                     None,
                 ))
             }
@@ -485,6 +529,7 @@ impl LitexToLeanCompiler {
         &self,
         wd: &ObjWellDefinedProof,
         position: &SourcePosition<'_>,
+        output_reference: Option<&str>,
     ) -> Result<(String, StandardSet, String), LeanCompileError> {
         let ObjWellDefinedProof::ByDef {
             obj: Obj::FnObj(application),
@@ -501,10 +546,26 @@ impl LitexToLeanCompiler {
             owner: SourceOwner::WD(wd),
             before: 0,
         };
-        let call = self.compile_fn_obj_wd(application, proof, &constructor)?;
-        let (output, member) =
-            self.compile_fn_output_membership(application, proof, &constructor)?;
-        Ok((call, output, member))
+        use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnObjDomainFnSetEvidence;
+        if application.body.len() == 1 {
+            if let Some(
+                FnObjDomainFnSetEvidence::InFunctionSet { fn_set, .. }
+                | FnObjDomainFnSetEvidence::AnonymousLiteral { fn_set },
+            ) = &proof.domain_fn_set
+            {
+                let call = self.compile_fn_obj_wd(application, proof, &constructor)?;
+                // The constructor above replayed all original WD stages.
+                // Its output law can refer to the local constructor binding.
+                let output = self.compile_numeric_carrier(&fn_set.ret_set, &constructor)?;
+                let member = self.compile_call_output_proof(
+                    application,
+                    proof,
+                    output_reference.unwrap_or(&call),
+                )?;
+                return Ok((call, output, member));
+            }
+        }
+        self.compile_fn_call_with_output(application, proof, &constructor)
     }
 
     fn numeric_function_real_wd(
@@ -535,7 +596,7 @@ impl LitexToLeanCompiler {
                 obj: Obj::FnObj(_),
                 proof: ObjWellDefinedProofByDef::FnObj(_),
             } => {
-                let (call, output, member) = self.numeric_function_output_wd(wd, position)?;
+                let (call, output, member) = self.numeric_function_output_wd(wd, position, None)?;
                 Ok(match output {
                     StandardSet::N => Some(format!("(Litex.naturalToReal {call} {member})")),
                     StandardSet::Z => Some(format!("(Litex.integerToReal {call} {member})")),

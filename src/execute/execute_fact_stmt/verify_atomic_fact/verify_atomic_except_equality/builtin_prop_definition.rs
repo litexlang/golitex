@@ -82,6 +82,48 @@ impl Runtime {
                     Err(failure) => Ok(Err(failure)),
                 }
             }
+            AtomicFact::HasSequenceLiminfFact(f) => {
+                let clauses = self.sequence_extrema_clauses(
+                    f.sequence.clone(),
+                    f.value.clone(),
+                    crate::execute::execute_fact_stmt::sequence_extrema::SequenceExtremum::Lower,
+                );
+                match self.verify_definition_requirements(
+                    vec![clauses.eventual_bound, clauses.tail_hits],
+                    verify_state,
+                )? {
+                    Ok((requirement_facts, proof_of_requirement_facts)) => {
+                        Ok(Ok(BuiltinPropDefinitionProof::SequenceLiminf(
+                            super::result::BuiltinSequenceLiminfDefinitionProof {
+                                requirement_facts,
+                                proof_of_requirement_facts,
+                            },
+                        )))
+                    }
+                    Err(failure) => Ok(Err(failure)),
+                }
+            }
+            AtomicFact::HasSequenceLimsupFact(f) => {
+                let clauses = self.sequence_extrema_clauses(
+                    f.sequence.clone(),
+                    f.value.clone(),
+                    crate::execute::execute_fact_stmt::sequence_extrema::SequenceExtremum::Upper,
+                );
+                match self.verify_definition_requirements(
+                    vec![clauses.eventual_bound, clauses.tail_hits],
+                    verify_state,
+                )? {
+                    Ok((requirement_facts, proof_of_requirement_facts)) => {
+                        Ok(Ok(BuiltinPropDefinitionProof::SequenceLimsup(
+                            super::result::BuiltinSequenceLimsupDefinitionProof {
+                                requirement_facts,
+                                proof_of_requirement_facts,
+                            },
+                        )))
+                    }
+                    Err(failure) => Ok(Err(failure)),
+                }
+            }
             AtomicFact::SubsetFact(f) => self.prove_subset_by_definition(f, verify_state),
             AtomicFact::SupersetFact(f) => self.prove_superset_by_definition(f, verify_state),
             AtomicFact::ProperSubsetFact(f) => {

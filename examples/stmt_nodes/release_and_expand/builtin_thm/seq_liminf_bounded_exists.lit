@@ -1,0 +1,10 @@
+# Bounded existence is established by a checked completeness derivation.
+# WD consumes its result only after this explicit call.
+
+thm seq_liminf_bounded_exists_example:
+    ? forall a seq(R),M R+:
+        forall n N+:
+            abs(a(n))<=M
+        =>:
+            exist L R st {$has_seq_liminf(a,L)}
+    release thm seq_liminf_bounded_exists(a,M)

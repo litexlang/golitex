@@ -727,6 +727,62 @@ impl From<crate::ast::fact::NotHasFunctionLimitFact> for Fact {
     }
 }
 
+impl From<crate::ast::fact::HasSequenceLimsupFact> for AtomicFact {
+    fn from(f: crate::ast::fact::HasSequenceLimsupFact) -> Self {
+        AtomicFact::HasSequenceLimsupFact(f)
+    }
+}
+impl From<crate::ast::fact::HasSequenceLimsupFact> for Fact {
+    fn from(f: crate::ast::fact::HasSequenceLimsupFact) -> Self {
+        Fact::AtomicFact(f.into())
+    }
+}
+
+impl From<crate::ast::fact::NotHasSequenceLimsupFact> for AtomicFact {
+    fn from(f: crate::ast::fact::NotHasSequenceLimsupFact) -> Self {
+        AtomicFact::NotHasSequenceLimsupFact(f)
+    }
+}
+impl From<crate::ast::fact::NotHasSequenceLimsupFact> for Fact {
+    fn from(f: crate::ast::fact::NotHasSequenceLimsupFact) -> Self {
+        Fact::AtomicFact(f.into())
+    }
+}
+
+impl From<crate::ast::obj::SequenceLimsup> for crate::ast::obj::Obj {
+    fn from(value: crate::ast::obj::SequenceLimsup) -> Self {
+        crate::ast::obj::Obj::LimitOperator(crate::ast::obj::LimitOperator::SequenceLimsup(value))
+    }
+}
+
+impl From<crate::ast::fact::HasSequenceLiminfFact> for AtomicFact {
+    fn from(f: crate::ast::fact::HasSequenceLiminfFact) -> Self {
+        AtomicFact::HasSequenceLiminfFact(f)
+    }
+}
+impl From<crate::ast::fact::HasSequenceLiminfFact> for Fact {
+    fn from(f: crate::ast::fact::HasSequenceLiminfFact) -> Self {
+        Fact::AtomicFact(f.into())
+    }
+}
+
+impl From<crate::ast::fact::NotHasSequenceLiminfFact> for AtomicFact {
+    fn from(f: crate::ast::fact::NotHasSequenceLiminfFact) -> Self {
+        AtomicFact::NotHasSequenceLiminfFact(f)
+    }
+}
+impl From<crate::ast::fact::NotHasSequenceLiminfFact> for Fact {
+    fn from(f: crate::ast::fact::NotHasSequenceLiminfFact) -> Self {
+        Fact::AtomicFact(f.into())
+    }
+}
+
+impl From<crate::ast::obj::SequenceLiminf> for crate::ast::obj::Obj {
+    fn from(value: crate::ast::obj::SequenceLiminf) -> Self {
+        crate::ast::obj::Obj::LimitOperator(crate::ast::obj::LimitOperator::SequenceLiminf(value))
+    }
+}
+
 impl From<crate::ast::obj::FunctionLimit> for crate::ast::obj::Obj {
     fn from(value: crate::ast::obj::FunctionLimit) -> Self {
         Self::LimitOperator(crate::ast::obj::LimitOperator::Function(value))

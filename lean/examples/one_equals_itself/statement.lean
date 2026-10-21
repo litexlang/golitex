@@ -8,5 +8,5 @@ universe u
 variable {M : Litex.Semantics.{u}}
 
 theorem h_1 : Litex.Same (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (1 : ℂ)) :=
-  (Litex.sameRefl (Litex.number (M := M) (1 : ℂ)))
+  (show @Eq M.Value _ _ from Eq.refl _)
 end LitexCompiled.file_lean_x2f_examples_x2f_one_x5f_equals_x5f_itself_x2f_statement_x2e_lit

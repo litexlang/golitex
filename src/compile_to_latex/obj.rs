@@ -95,7 +95,10 @@ fn expression(
             let source = format!(
                 "{} {}",
                 x.function.readable_string(),
-                x.approach.point().readable_string()
+                x.approach
+                    .point()
+                    .map(|p| p.readable_string())
+                    .unwrap_or_default()
             );
             let mut bound = "x".to_string();
             while source.contains(&bound) {
@@ -108,12 +111,17 @@ fn expression(
                 LimitApproach::AtPoint(_) => "",
                 LimitApproach::FromLeft(_) => "^{-}",
                 LimitApproach::FromRight(_) => "^{+}",
+                LimitApproach::AtPositiveInfinity | LimitApproach::AtNegativeInfinity => "",
             };
             (
                 format!(
                     r"\lim_{{\substack{{{}\to {{{}}}{}\\{}\in\operatorname{{dom}}({})}}}} {}",
                     bound,
-                    o(x.approach.point())?,
+                    match &x.approach {
+                        LimitApproach::AtPositiveInfinity => r"+\infty".into(),
+                        LimitApproach::AtNegativeInfinity => r"-\infty".into(),
+                        _ => o(x.approach.point().expect("finite point"))?,
+                    },
                     direction,
                     bound,
                     function,
@@ -131,6 +139,32 @@ fn expression(
             let bound = ident(&bound);
             let application = format!("{}{}", parens(&o(&x.sequence)?), call_parens(&bound));
             (format!(r"\lim_{{{}\to\infty}} {}", bound, application), 50)
+        }
+        Obj::LimitOperator(LimitOperator::SequenceLiminf(x)) => {
+            let source = x.sequence.readable_string();
+            let mut bound = "n".to_string();
+            while source.contains(&bound) {
+                bound.push('n');
+            }
+            let bound = ident(&bound);
+            let application = format!("{}{}", parens(&o(&x.sequence)?), call_parens(&bound));
+            (
+                format!(r"\liminf_{{{}\to\infty}} {}", bound, application),
+                50,
+            )
+        }
+        Obj::LimitOperator(LimitOperator::SequenceLimsup(x)) => {
+            let source = x.sequence.readable_string();
+            let mut bound = "n".to_string();
+            while source.contains(&bound) {
+                bound.push('n');
+            }
+            let bound = ident(&bound);
+            let application = format!("{}{}", parens(&o(&x.sequence)?), call_parens(&bound));
+            (
+                format!(r"\limsup_{{{}\to\infty}} {}", bound, application),
+                50,
+            )
         }
         Obj::HyperbolicOperator(x) => (
             match x {

@@ -126,6 +126,8 @@ use super::by_power_laws::{
 // Definitional unfolds are EqualitySearchProofByObjectDefinition, not here.
 pub enum EqualitySearchProofByBuiltinRule {
     SequenceLimit(super::by_sequence_limit::SequenceLimitEqualityProof),
+    SequenceLiminf(super::by_sequence_liminf::SequenceLiminfEqualityProof),
+    SequenceLimsup(super::by_sequence_limsup::SequenceLimsupEqualityProof),
     FunctionLimit(super::by_function_limit::FunctionLimitEqualityProof),
     DvdZeroRemainder(super::by_dvd_zero_remainder::DvdZeroRemainderProof),
     SymmetricDifference(super::by_symmetric_difference::SymmetricDifferenceEqualityProof),

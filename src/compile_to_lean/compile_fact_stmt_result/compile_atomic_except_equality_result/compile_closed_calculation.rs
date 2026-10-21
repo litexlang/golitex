@@ -131,7 +131,12 @@ impl LitexToLeanCompiler {
                 }
                 _ => return Err(LeanCompileError::unsupported("ClosedMembership/Carrier")),
             };
-            return Ok(format!("(Litex.NativeBridge.inOfDenoteNumber {} {} {} {} (Litex.NativeBridge.{bridge} {} {representative} (by norm_num)))", self.compile_object_reference(element, position)?, native.0, standard_term(target)?, native.1, native.0));
+            // Literal objects already have this exact native payload. Their
+            // closed certificate needs no round trip through denotation.
+            return Ok(format!(
+                "(Litex.NativeBridge.{bridge} (M := M) {} {representative} (by norm_num))",
+                native.0
+            ));
         }
         let calculated = self
             .compile_numeric_observation(element, position)?
@@ -255,6 +260,23 @@ impl LitexToLeanCompiler {
             return Err(LeanCompileError::new(
                 "ClosedMembership/RangeBounds",
                 "The recorded integer is outside the closed source bounds.",
+            ));
+        }
+        if [&range.start, &range.end, element]
+            .into_iter()
+            .all(|obj| matches!(obj, Obj::Literal(Literal::Number(_))))
+        {
+            // Keep the exact native payloads: an integer cast need not be
+            // definitionally equal to the source's complex numeral.
+            let literal = |obj: &Obj| match obj {
+                Obj::Literal(Literal::Number(number)) => number_literal(number, "ℂ"),
+                _ => unreachable!("checked literal endpoints and element"),
+            };
+            let a = literal(&range.start)?;
+            let b = literal(&range.end)?;
+            let p = literal(element)?;
+            return Ok(format!(
+                "(Litex.numberInClosedRangeOfEq (M := M) {a} {b} {p} ({lower} : ℤ) ({upper} : ℤ) ({value} : ℤ) (by norm_num) (by norm_num) (by norm_num) (by norm_num) (by norm_num))"
             ));
         }
         let term = self.compile_object_reference(set, position)?;

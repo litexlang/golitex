@@ -1,0 +1,72 @@
+# The identity function has no finite real limit at either input end.
+# Explicit epsilon/threshold contradictions, not a failed-search claim.
+
+thm infinity_threshold_above:
+    ? forall T,L R:
+        exist x R st {T<x and L+1<x}
+    T<=max(T,L+1)
+    L+1<=max(T,L+1)
+    max(T,L+1)<max(T,L+1)+1
+    T<=max(T,L+1)<max(T,L+1)+1
+    L+1<=max(T,L+1)<max(T,L+1)+1
+    witness exist x R st {T<x and L+1<x} from max(T,L+1)+1
+
+have fn identity(x R) R=x
+
+claim:
+    ? forall L R:
+        not $has_limit_pos_inf(identity,L)
+    by contra:
+        ? not $has_limit_pos_inf(identity,L)
+        $has_limit_pos_inf(identity,L)
+        release thm fn_limit_pos_inf_control(identity,L,1)
+        obtain T from exist cutoff R st {{x R:cutoff<x} $subset preimage_set(identity,{v R:abs(v-L)<1})}
+        release thm infinity_threshold_above(T,L)
+        obtain input from exist t R st {T<t and L+1<t}
+        input $in {t R:T<t}
+        input $in preimage_set(identity,{v R:abs(v-L)<1})
+        identity(input) $in {v R:abs(v-L)<1}
+        abs(identity(input)-L)<1
+        identity(input)=input
+        identity(input)-L=input-L
+        (L+1)-L<input-L
+        (L+1)-L=1
+        1<input-L
+        0<input-L
+        abs(input-L)=input-L
+        abs(identity(input)-L)=abs(input-L)
+        abs(identity(input)-L)=input-L
+        input-L<1
+        1<input-L<1
+        impossible 1=1
+
+claim:
+    ? forall L R:
+        not $has_limit_neg_inf(identity,L)
+    by contra:
+        ? not $has_limit_neg_inf(identity,L)
+        $has_limit_neg_inf(identity,L)
+        release thm fn_limit_neg_inf_control(identity,L,1)
+        obtain T from exist cutoff R st {{x R:x<cutoff} $subset preimage_set(identity,{v R:abs(v-L)<1})}
+        release thm infinity_threshold_above(-T,-L)
+        obtain u from exist t R st {-T<t and -L+1<t}
+        u*(-1)<(-T)*(-1)
+        u*(-1)=-u
+        (-T)*(-1)=T
+        -u<T
+        -u $in {t R:t<T}
+        -u $in preimage_set(identity,{v R:abs(v-L)<1})
+        identity(-u) $in {v R:abs(v-L)<1}
+        abs(identity(-u)-L)<1
+        identity(-u)=-u
+        identity(-u)-L=(-u)-L=-(u+L)
+        ((-L)+1)+L<u+L
+        ((-L)+1)+L=1
+        1<u+L
+        0<u+L
+        abs(-(u+L))=abs(u+L)=u+L
+        abs(identity(-u)-L)=abs(-(u+L))
+        abs(identity(-u)-L)=u+L
+        u+L<1
+        1<u+L<1
+        impossible 1=1

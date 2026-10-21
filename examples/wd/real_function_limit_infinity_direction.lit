@@ -1,0 +1,28 @@
+# The actual domain is unbounded only at one input end.
+# Positive-end constant limit, and explicit exclusion of every negative-end candidate.
+
+have fn positive_only(x R+) R=3
+
+claim:
+    ? forall M R:
+        exist x R+ st {M<x}
+    M<=abs(M)
+    0<=abs(M)
+    0<abs(M)+1
+    M<abs(M)+1
+    witness exist x R+ st {M<x} from abs(M)+1
+
+release thm fn_limit_pos_inf_constant(positive_only,3)
+
+lim_pos_inf(positive_only)=3
+
+claim:
+    ? forall L R:
+        not $has_limit_neg_inf(positive_only,L)
+    by contra:
+        ? not $has_limit_neg_inf(positive_only,L)
+        $has_limit_neg_inf(positive_only,L)
+        release thm fn_limit_neg_inf_accumulation(positive_only,L)
+        obtain x from exist x R+ st {x<0}
+        0<x<0
+        impossible 0=0

@@ -184,7 +184,7 @@ impl LitexToLeanCompiler {
     }
 
     /// Local producer names used inside constructor WD must also be in scope
-    /// when the public proposition is formed. These let values are the actual
+    /// when the public proposition is formed. These values are the actual
     /// checked producer proofs, not extra mathematical premises or a proof cache.
     pub(in crate::compile_to_lean) fn scope_proposition(
         &self,
@@ -254,18 +254,16 @@ impl LitexToLeanCompiler {
             return proposition;
         }
         selected.reverse();
-        let declarations = selected
-            .into_iter()
-            .map(|chunk| {
-                if let Some(body) = chunk.strip_prefix("have ") {
-                    format!("let {body}")
-                } else {
-                    chunk.to_string()
-                }
-            })
-            .collect::<Vec<_>>()
-            .join(";\n");
-        format!("({declarations};\n{proposition})")
+        // Finish each producer before introducing the next one. Turning these
+        // into nested term-level lets leaves their tactic proofs as synthetic
+        // metavariables. Lean then repeatedly abstracts their growing local
+        // contexts while forming the proposition, before running the proofs.
+        // Tactic let/have retain the same values and original proof terms.
+        format!(
+            "(by\n  {}\n  exact {}\n)",
+            selected.join("\n").replace('\n', "\n  "),
+            proposition.replace('\n', "\n  "),
+        )
     }
 
     pub(in crate::compile_to_lean) fn emit_internal_fact(
@@ -506,7 +504,11 @@ impl LitexToLeanCompiler {
             | AtomicFact::CoprimeFact(_)
             | AtomicFact::HasFunctionLimitFact(_)
             | AtomicFact::NotHasFunctionLimitFact(_)
+            | AtomicFact::HasSequenceLimsupFact(_)
+            | AtomicFact::HasSequenceLiminfFact(_)
             | AtomicFact::HasSequenceLimitFact(_)
+            | AtomicFact::NotHasSequenceLimsupFact(_)
+            | AtomicFact::NotHasSequenceLiminfFact(_)
             | AtomicFact::NotHasSequenceLimitFact(_)
             | AtomicFact::DvdFact(_)
             | AtomicFact::InjectiveFact(_)

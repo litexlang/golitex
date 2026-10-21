@@ -1,0 +1,3 @@
+# Expected normal rejection; no false extremal candidate or WD evidence may be invented.
+have fn a(k N+) R=k
+limsup(a) $in R

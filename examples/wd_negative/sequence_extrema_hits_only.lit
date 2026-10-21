@@ -1,0 +1,8 @@
+# Expected normal rejection; no false extremal candidate or WD evidence may be invented.
+thm hits_only:
+    ? forall a seq(R),L R:
+        forall epsilon R+,n0 N+:
+            exist n N+ st {n>=n0 and L-epsilon<a(n)}
+        =>:
+            $has_seq_limsup(a,L)
+    by def $has_seq_limsup(a,L)

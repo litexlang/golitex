@@ -27,6 +27,360 @@ fn witness(statement: &ExecStmtResult) -> &ExecWitnessExistFactStmtSuccessResult
 }
 
 #[test]
+fn geo_scope_cursor_completed_call_retains_original_argument_objects() {
+    for (source, fields) in [
+        (
+            "have fn f(x R) R = x\n$is_set(f(1 + 2))\n",
+            vec!["argument"],
+        ),
+        (
+            "have fn f(x R, y R) R = x + y\n$is_set(f(1 + 2, 3 + 4))\n",
+            vec!["first", "second"],
+        ),
+        (
+            "have fn f(x cart(R, R)) cart(R, R) = x\n$is_set(f((1 + 2, 3 + 4)))\n",
+            vec!["argument"],
+        ),
+        (
+            "have fn f(x, y cart(R, R)) cart(R, R) = x\n$is_set(f((1, 2), (3, 4)))\n",
+            vec!["argument.val.first", "argument.val.second"],
+        ),
+        (
+            "$is_set(fn(x R: x != 0) R {x}(1 + 2))\n",
+            vec!["function", "argument"],
+        ),
+    ] {
+        let (run, _) = checked(source);
+        let ExecStmtResult::Fact(ExecFactStmtResult::Success(statement)) =
+            run.statement_results.last().unwrap()
+        else {
+            panic!("completed function call")
+        };
+        let proof =
+            super::super::compile_fact_stmt_result::compile_formed_subjects::formed_subject_proof(
+                &statement.verify_result,
+                0,
+            )
+            .unwrap()
+            .unwrap();
+        let (children, _) = arithmetic_stages(proof).unwrap();
+        assert_eq!(children.len(), fields.len());
+        let pending = SourcePosition::new(
+            None,
+            SourceOwner::Run(&run),
+            run.statement_results.len() - 1,
+        );
+        let completed = SourcePosition::new(
+            Some(&pending),
+            SourceOwner::FormedSubjects(
+                &statement.verify_result,
+                &statement.store_and_infer_result,
+            ),
+            0,
+        );
+        for (child, field) in children.iter().zip(fields) {
+            assert!(pending.bound_wd_child(child).is_none());
+            let reference = completed
+                .bound_wd_child(child)
+                .expect("original call stores its argument");
+            assert!(
+                reference.ends_with(&format!(".val.{field}")),
+                "{source}: {reference}"
+            );
+        }
+    }
+}
+
+#[test]
+fn geo_scope_cursor_call_projection_does_not_invent_erased_tuple_hosts() {
+    for source in [
+        "have fn f(x, y, z cart(R, R)) cart(R, R) = x\n$is_set(f((1, 2), (3, 4), (5, 6)))\n",
+        "$is_set((1 + 2, 3 + 4))\n",
+    ] {
+        let (run, _) = checked(source);
+        let ExecStmtResult::Fact(ExecFactStmtResult::Success(statement)) =
+            run.statement_results.last().unwrap()
+        else {
+            panic!("completed packed object")
+        };
+        let proof =
+            super::super::compile_fact_stmt_result::compile_formed_subjects::formed_subject_proof(
+                &statement.verify_result,
+                0,
+            )
+            .unwrap()
+            .unwrap();
+        let completed = SourcePosition::new(
+            None,
+            SourceOwner::FormedSubjects(
+                &statement.verify_result,
+                &statement.store_and_infer_result,
+            ),
+            0,
+        );
+        for child in arithmetic_stages(proof).unwrap().0 {
+            assert!(completed.bound_wd_child(child).is_none(), "{source}");
+        }
+    }
+}
+
+#[test]
+fn geo_scope_cursor_completed_wd_replay_retains_constructor_but_not_later_facts() {
+    let (run, runtime) = checked("$is_set(1 + 2)\n3 = 3\n");
+    let ExecStmtResult::Fact(ExecFactStmtResult::Success(first)) = &run.statement_results[0] else {
+        panic!("original constructor")
+    };
+    let ExecStmtResult::Fact(ExecFactStmtResult::Success(later)) = &run.statement_results[1] else {
+        panic!("later fact")
+    };
+    let proof =
+        super::super::compile_fact_stmt_result::compile_formed_subjects::formed_subject_proof(
+            &first.verify_result,
+            0,
+        )
+        .unwrap()
+        .unwrap();
+    let active = SourcePosition::new(None, SourceOwner::Run(&run), 2);
+    let found = active
+        .with_visible_wd(proof.obj(), &mut |original, producer| {
+            assert!(std::ptr::eq(original, proof));
+            // Reusing a completed object does not widen the fact prefix of its
+            // original construction proof, even though the caller sees both facts.
+            assert!(producer
+                .visible_fact(first.store_and_infer_result.primary_fact_id(), &runtime)
+                .is_err());
+            assert!(producer
+                .visible_fact(later.store_and_infer_result.primary_fact_id(), &runtime)
+                .is_err());
+            Ok(producer.bound_wd_child(original))
+        })
+        .unwrap()
+        .flatten();
+    assert!(
+        found.is_some(),
+        "the original constructor was already emitted"
+    );
+    let pending = SourcePosition::new(Some(&active), SourceOwner::Run(&run), 0);
+    assert!(pending
+        .with_visible_wd(proof.obj(), &mut |_, _| Ok(()))
+        .unwrap()
+        .is_none());
+}
+
+#[test]
+fn geo_scope_cursor_completed_forall_constructor_keeps_its_fact_prefix() {
+    let (run, runtime) = checked("forall a R:\n    $is_set(a + 1)\n    $is_set(a + 2)\n");
+    let ExecStmtResult::Fact(ExecFactStmtResult::Success(statement)) = &run.statement_results[0]
+    else {
+        panic!("forall statement")
+    };
+    let VerifyFactResult::ForallFact(result) = &statement.verify_result else {
+        panic!("forall")
+    };
+    let VerifyForallFactResult::Success(VerifyForallFactProof::ByLocalIntroduction(proof)) =
+        result.as_ref()
+    else {
+        panic!("local introduction")
+    };
+    let first = &proof.proved_then_facts[0];
+    let wd = super::super::compile_fact_stmt_result::compile_formed_subjects::formed_subject_proof(
+        &first.verify_result,
+        0,
+    )
+    .unwrap()
+    .unwrap();
+    let root = SourcePosition::new(None, SourceOwner::Run(&run), 0);
+    let head = parameter_count(&proof.fact.typed_parameters.groups) + proof.assumed_dom_facts.len();
+    let active = SourcePosition::new(Some(&root), SourceOwner::Forall(proof), head + 2);
+    let found = active
+        .with_visible_wd(wd.obj(), &mut |original, producer| {
+            assert!(producer
+                .visible_fact(first.store_and_infer.primary_fact_id(), &runtime)
+                .is_err());
+            assert!(producer
+                .visible_fact(
+                    proof.proved_then_facts[1].store_and_infer.primary_fact_id(),
+                    &runtime
+                )
+                .is_err());
+            Ok(producer.bound_wd_child(original))
+        })
+        .unwrap()
+        .flatten();
+    assert!(found.is_some());
+    let pending = SourcePosition::new(Some(&active), SourceOwner::Forall(proof), head);
+    assert!(pending
+        .with_visible_wd(wd.obj(), &mut |_, _| Ok(()))
+        .unwrap()
+        .is_none());
+}
+
+#[test]
+fn geo_scope_cursor_projects_only_original_completed_wd_requirements() {
+    let source = "$is_set((1 + 2) / 3)\n";
+    let (run, _) = checked(source);
+    let ExecStmtResult::Fact(ExecFactStmtResult::Success(statement)) = &run.statement_results[0]
+    else {
+        panic!("atomic formation")
+    };
+    let proof =
+        super::super::compile_fact_stmt_result::compile_formed_subjects::formed_subject_proof(
+            &statement.verify_result,
+            0,
+        )
+        .unwrap()
+        .unwrap();
+    let (children, requirements) = arithmetic_stages(proof).unwrap();
+    let root = SourcePosition::new(None, SourceOwner::Run(&run), 0);
+    let formed = SourcePosition::new(
+        Some(&root),
+        SourceOwner::FormedSubjects(&statement.verify_result, &statement.store_and_infer_result),
+        0,
+    );
+    for (requirement, suffix) in requirements.iter().zip([".wd.2.2", ".wd.1", ".wd.2.1"]) {
+        assert!(formed
+            .bound_wd_requirement(requirement)
+            .unwrap()
+            .ends_with(suffix));
+        assert!(root.bound_wd_requirement(requirement).is_none());
+    }
+    let (_, child_requirements) = arithmetic_stages(&children[0]).unwrap();
+    assert!(formed
+        .bound_wd_requirement(&child_requirements[0])
+        .unwrap()
+        .contains(".val.left).wd.1"));
+
+    let pending = SourcePosition::new(Some(&root), SourceOwner::WDLocals(proof, 0), 0);
+    let completed = SourcePosition::new(Some(&root), SourceOwner::WDLocals(proof, 1), 1);
+    assert!(pending
+        .bound_wd_requirement(&child_requirements[0])
+        .is_none());
+    assert!(completed
+        .bound_wd_requirement(&child_requirements[0])
+        .is_some());
+    // Emitting one child cannot publish the enclosing division's proofs.
+    assert!(completed.bound_wd_requirement(&requirements[0]).is_none());
+
+    let (other, _) = checked(source);
+    let ExecStmtResult::Fact(ExecFactStmtResult::Success(other)) = &other.statement_results[0]
+    else {
+        panic!("independent equal source")
+    };
+    let other =
+        super::super::compile_fact_stmt_result::compile_formed_subjects::formed_subject_proof(
+            &other.verify_result,
+            0,
+        )
+        .unwrap()
+        .unwrap();
+    for requirement in arithmetic_stages(other).unwrap().1 {
+        assert!(
+            formed.bound_wd_requirement(requirement).is_none(),
+            "equal subjects and IDs from another result do not identify the emitted proof"
+        );
+    }
+}
+
+#[test]
+fn geo_scope_cursor_local_blocks_reuse_only_completed_wd_registrations() {
+    for source in [
+        "witness exist m R st {m = 0} from 0:\n    $is_set(m + 1)\n    $is_set(m + 1)\n",
+        "by contra:\n    ? 1 = 1\n    $is_set(1 + 1)\n    $is_set(1 + 1)\n    impossible 1 = 1\n",
+        "by cases:\n    ? 1 = 1\n    case 0 = 0:\n        $is_set(1 + 1)\n        $is_set(1 + 1)\n    case 0 != 0:\n        impossible 0 = 0\n",
+    ] {
+        let (run, _) = checked(source);
+        let statement = &run.statement_results[0];
+        let owner = match statement {
+            ExecStmtResult::Witness(_) => SourceOwner::WitnessExist(witness(statement)),
+            ExecStmtResult::By(ExecByStmtResult::Contra(ExecByContraStmtResult::Success(p))) => {
+                SourceOwner::Contra(p)
+            }
+            ExecStmtResult::By(ExecByStmtResult::Cases(ExecByCasesStmtResult::Success(p))) => {
+                SourceOwner::CasesBranch(&p.branches[0])
+            }
+            _ => panic!("local proof block"),
+        };
+        let (steps, head) = local_steps(owner).unwrap();
+        let ExecStmtResult::Fact(ExecFactStmtResult::Success(first)) = &steps[0] else {
+            panic!("first formation")
+        };
+        let captured = &first.store_and_infer_result.formed_subjects[0];
+        let object = super::super::compile_fact_stmt_result::compile_formed_subjects::formed_subject_proof(
+            &first.verify_result, captured.argument_index,
+        ).unwrap().unwrap().obj();
+        let root = SourcePosition::new(None, SourceOwner::Run(&run), 0);
+        let before = SourcePosition::new(Some(&root), owner, head);
+        let after = SourcePosition { before: head + 1, ..before };
+        assert_eq!(
+            after.registered_wd_reference(object, Some(captured.wd_id)).unwrap(),
+            Some(format!("_object_w{}", captured.wd_id.value())),
+            "{source}"
+        );
+        assert!(before.registered_wd_reference(object, Some(captured.wd_id)).unwrap().is_none());
+        let pending = SourcePosition::new(Some(&after), owner, head);
+        assert!(pending.registered_wd_reference(object, None).unwrap().is_none());
+        let outside = SourcePosition::new(None, SourceOwner::Run(&run), 1);
+        assert!(outside.registered_wd_reference(object, None).unwrap().is_none());
+    }
+}
+
+#[test]
+fn geo_scope_cursor_local_chain_publishes_edges_before_nested_inference() {
+    let (run, runtime) =
+        checked("witness exist m R st {m = 0} from 0:\n    1 = 1 + 0 = 1\n    2 = 2\n");
+    let proof = witness(&run.statement_results[0]);
+    let ExecStmtResult::Fact(ExecFactStmtResult::Success(chain)) = &proof.proof_steps[0] else {
+        panic!("chain statement")
+    };
+    let store = &chain.store_and_infer_result;
+    let StoreFactResult::ChainFact(stored) = &store.store else {
+        panic!("stored chain")
+    };
+    let Some(InferResult::ChainFact(inferred)) = &store.infer else {
+        panic!("chain inference")
+    };
+    assert!(!inferred.transitive_closures.is_empty());
+    let ExecStmtResult::Fact(ExecFactStmtResult::Success(later)) = &proof.proof_steps[1] else {
+        panic!("later statement")
+    };
+    let root = SourcePosition::new(None, SourceOwner::Run(&run), 0);
+    let local = SourcePosition::new(Some(&root), SourceOwner::WitnessExist(proof), 2);
+    let group = SourcePosition::new(Some(&local), SourceOwner::CompoundInference(store), 0);
+    for edge in &stored.adjacent {
+        assert_eq!(
+            local
+                .visible_fact(edge.fact_id, &runtime)
+                .unwrap_err()
+                .route,
+            "Scope/FutureProducer"
+        );
+        assert_eq!(
+            group.visible_fact(edge.fact_id, &runtime).unwrap().1,
+            format!("h_{}", edge.fact_id.value())
+        );
+    }
+    for closure in &inferred.transitive_closures {
+        assert_eq!(
+            group
+                .visible_fact(closure.derived.primary_fact_id(), &runtime)
+                .unwrap_err()
+                .route,
+            "Inference/FutureProducer"
+        );
+    }
+    assert_eq!(
+        group
+            .visible_fact(later.store_and_infer_result.primary_fact_id(), &runtime)
+            .unwrap_err()
+            .route,
+        "Scope/FutureProducer"
+    );
+    assert!(SourcePosition::new(None, SourceOwner::Run(&run), 1)
+        .visible_fact(stored.adjacent[0].fact_id, &runtime)
+        .is_err());
+}
+
+#[test]
 fn geo_scope_cursor_witness_preserves_original_ids_and_blocks_future_and_closed_locals() {
     let (run, runtime) = checked("witness exist m, n R st {m = 0, n = 1} from 0, 1:\n    have hidden R\n    hidden + 1 = hidden + 1\n");
     let statement = &run.statement_results[0];

@@ -14,6 +14,16 @@ impl Runtime {
         if let Some(proof) = self.search_function_limit_equality(fact) {
             return Ok(Some(EqualitySearchProofByBuiltinRule::FunctionLimit(proof)));
         }
+        if let Some(proof) = self.search_sequence_limsup_equality(fact) {
+            return Ok(Some(EqualitySearchProofByBuiltinRule::SequenceLimsup(
+                proof,
+            )));
+        }
+        if let Some(proof) = self.search_sequence_liminf_equality(fact) {
+            return Ok(Some(EqualitySearchProofByBuiltinRule::SequenceLiminf(
+                proof,
+            )));
+        }
         if let Some(proof) = self.search_sequence_limit_equality(fact) {
             return Ok(Some(EqualitySearchProofByBuiltinRule::SequenceLimit(proof)));
         }

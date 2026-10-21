@@ -109,10 +109,7 @@ impl LitexToLeanCompiler {
                 // can be inferred from the recorded membership proof.
                 let object = self.compile_object_reference(&proof.element, position)?;
                 if real_to_complex {
-                    Ok(format!(
-                        "(by\n  have _litex_real_member := {}\n  exact M.real_subset_complex _ _litex_real_member\n)",
-                        child.replace('\n', "\n  ")
-                    ))
+                    Ok(format!("(M.real_subset_complex _ {child})"))
                 } else {
                     Ok(format!("(Litex.{bridge} {object} {child})"))
                 }
