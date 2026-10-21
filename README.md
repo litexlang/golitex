@@ -12,6 +12,7 @@ Created and maintained by Jiachen Shen.
 [中文 README](docs/中文README.md) ·
 [Official Website (官网)](https://litexlang.com) ·
 [Why I built Litex](docs/Motivation_and_Construction_Thinking_Behind_Litex.md)
+[Github](https://github.com/litexlang/golitex)
 </div>
 
 <a id="the-goal-of-litex"></a>
