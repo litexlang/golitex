@@ -10,6 +10,8 @@ mod bounded_set_combinations_tests;
 mod by_definition_in_theorem_tests;
 #[path = "../../tests/unit/compile_to_lean/cached_formula_head/tests.rs"]
 mod cached_formula_head_tests;
+#[path = "../../tests/unit/compile_to_lean/call_wd_reuse/tests.rs"]
+mod call_wd_reuse_tests;
 #[path = "../../tests/unit/compile_to_lean/cancellation_inference/tests.rs"]
 mod cancellation_inference_tests;
 #[path = "../../tests/unit/compile_to_lean/chain_and/tests.rs"]

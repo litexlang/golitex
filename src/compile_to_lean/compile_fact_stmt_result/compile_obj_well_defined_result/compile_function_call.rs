@@ -738,6 +738,9 @@ impl LitexToLeanCompiler {
             };
             let source_set = self.compile_object_reference(source_set, position)?;
             let target_set = self.compile_object_reference(&goal.set, position)?;
+            // All original constructor and selected-return evidence was checked
+            // above. Only the emitted term is shared; no obligation is skipped.
+            let call = position.bound_compatible_fn_call(application, evidence).unwrap_or(call);
             // The exact checked call supplies all three equality endpoints
             // and the output law. Elaborate its constructor once locally.
             Ok(format!("(by\n  let _litex_return_call := {call}\n  exact Litex.inOfSame _litex_return_call _litex_return_call {source_set} {target_set} (Litex.sameRefl _litex_return_call) {equality} {member})"))

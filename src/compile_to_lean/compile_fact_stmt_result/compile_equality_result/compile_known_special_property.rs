@@ -85,7 +85,7 @@ impl LitexToLeanCompiler {
             let matched = self.compile_known_tuple_match(&receiver, subject, equality, position)?;
             let value = self.compile_normalization_value(item, position)?;
             let number = i + 1;
-            coordinates.push(format!("(show Litex.FunctionSemantics.callValue (M := M) (Litex.denote _litex_point) (Litex.FiniteFunction.index ({i} : Fin {n})) = {value} from by\n  have _receiver_equal : {source} = Litex.denote _litex_point := {matched}\n  simpa only [Litex.FiniteFunction.index] using (congrArg (fun receiver => Litex.FunctionSemantics.callValue (M := M) receiver (M.number ({number} : ℂ))) _receiver_equal).symm\n)"));
+            coordinates.push(format!("(show Litex.FunctionSemantics.callValue (M := M) (Litex.denote _litex_point) (Litex.FiniteFunction.index ({i} : Fin {n})) = {value} from by\n  have _receiver_equal : {source} = Litex.denote _litex_point := {matched}\n  have _index : Litex.FiniteFunction.index (M := M) ({i} : Fin {n}) = M.number ({number} : ℂ) := by norm_num [Litex.FiniteFunction.index]\n  simpa only [_index] using (congrArg (fun receiver => Litex.FunctionSemantics.callValue (M := M) receiver (M.number ({number} : ℂ))) _receiver_equal).symm\n)"));
             values.push(value);
         }
         let components = finite_vector_proof(&coordinates);
