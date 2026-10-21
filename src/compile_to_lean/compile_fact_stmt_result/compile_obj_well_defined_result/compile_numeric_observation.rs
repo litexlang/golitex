@@ -233,7 +233,17 @@ impl LitexToLeanCompiler {
         )? {
             return Ok(observation);
         }
-        Err(LeanCompileError::new("Arithmetic/NumericEvidence", "No preceding original constructor or checked C-membership certificate supplies this observation."))
+        if let Some(observation) =
+            self.compile_obtain_expression_reference(object, position, true)?
+        {
+            return Ok((
+                format!("({observation}).val"),
+                format!("({observation}).property.1"),
+                format!("({observation}).property.2"),
+                None,
+            ));
+        }
+        Err(LeanCompileError::new("Arithmetic/NumericEvidence", &format!("No preceding original constructor or checked C-membership certificate supplies the observation of {}.", object.ir())))
     }
 
     pub(in crate::compile_to_lean) fn numeric_member(

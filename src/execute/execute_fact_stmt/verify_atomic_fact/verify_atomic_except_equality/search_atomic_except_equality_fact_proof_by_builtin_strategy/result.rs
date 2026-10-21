@@ -8,6 +8,12 @@ use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::runtime::FactId;
 
 pub enum AtomicExceptEqualityFactSearchProofByBuiltinStrategy {
+    PointwiseDerivative(
+        crate::execute::execute_fact_stmt::pointwise_derivative::PointwiseDerivativeProof,
+    ),
+    PointwiseContinuity(
+        crate::execute::execute_fact_stmt::pointwise_continuity::PointwiseContinuityProof,
+    ),
     SymDiffMembershipLeft(SymDiffMembershipLeftStrategySingleStep),
     SymDiffMembershipRight(SymDiffMembershipRightStrategySingleStep),
     SymDiffNonmembershipBoth(SymDiffNonmembershipBothStrategySingleStep),

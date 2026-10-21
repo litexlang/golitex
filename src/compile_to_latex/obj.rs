@@ -22,6 +22,14 @@ fn expression(
     let o = |x: &Obj| obj(x, modules, lang);
     let e = |x: &Obj, p| expression(x, modules, lang, p);
     let (text, precedence) = match value {
+        Obj::DerivativeOperator(DerivativeOperator::AtPoint(x)) => (
+            format!(
+                "{}^{{\\prime}}{}",
+                parens(&o(&x.function)?),
+                parens(&o(&x.point)?)
+            ),
+            50,
+        ),
         Obj::BoundOperator(BoundOperator::Supremum(x)) => {
             (format!(r"\sup {}", parens(&o(&x.set)?)), 50)
         }

@@ -282,3 +282,34 @@ fn geo_atomic_obtain_local_objects_do_not_escape_claim() {
         .unwrap();
     assert!(output.contains("rcases "));
 }
+
+#[test]
+fn local_obtain_from_a_multiclause_prop_retains_an_explicit_existential_type() {
+    let source = "prop has_nonnegative_representative(x R):\n    x >= 0\n    exist t R st {x = t}\nthm extract_representative:\n    ? forall x R:\n        $has_nonnegative_representative(x)\n        =>:\n            x = x\n    by def $has_nonnegative_representative(x)\n    obtain t from exist t0 R st {x = t0}\n    x = t\n";
+    let (run, runtime) = checked(source);
+    let lean = LitexToLeanCompiler::new(runtime)
+        .compile_run(&run, "multiclause_obtain")
+        .unwrap();
+    assert!(lean.contains("rcases (show"));
+}
+
+#[test]
+fn obtained_affine_expression_reuses_original_numeric_formation() {
+    let source = r#"prop affine_point(p,a,b cart(R,R)):
+    exist t R st {0<=t,t<=1,p(1)=(1-t)*a(1)+t*b(1),p(2)=(1-t)*a(2)+t*b(2)}
+thm affine_coordinate:
+    ? forall p,a,b cart(R,R):
+        $affine_point(p,a,b)
+        =>:
+            p=p
+    by def $affine_point(p,a,b)
+    obtain t from exist t0 R st {0<=t0,t0<=1,p(1)=(1-t0)*a(1)+t0*b(1),p(2)=(1-t0)*a(2)+t0*b(2)}
+    p(1)=(1-t)*a(1)+t*b(1)=a(1)+t*(b(1)-a(1))
+    p=p
+"#;
+    let (run, runtime) = checked(source);
+    let output = LitexToLeanCompiler::new(runtime)
+        .compile_run(&run, "obtained_affine")
+        .unwrap();
+    assert!(output.contains("_obtained_object"));
+}

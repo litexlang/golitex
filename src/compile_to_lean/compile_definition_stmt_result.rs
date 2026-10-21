@@ -14,20 +14,15 @@ impl LitexToLeanCompiler {
             ExecDefinitionStmtResult::DefineObj(result) => {
                 self.compile_define_obj_statement(result, position, local)
             }
-            ExecDefinitionStmtResult::DefThm(result) => {
-                if local {
-                    return Err(LeanCompileError::unsupported("Definition"));
+            ExecDefinitionStmtResult::DefThm(result) => match result {
+                ExecDefThmStmtResult::Success(proof) => {
+                    self.compile_named_theorem(proof, position, index, local)
                 }
-                match result {
-                    ExecDefThmStmtResult::Success(proof) => {
-                        self.compile_named_theorem(proof, position, index)
-                    }
-                    ExecDefThmStmtResult::Failed(_) => Err(LeanCompileError::new(
-                        "Theorem/Failed",
-                        "Failed theorem is not proof evidence.",
-                    )),
-                }
-            }
+                ExecDefThmStmtResult::Failed(_) => Err(LeanCompileError::new(
+                    "Theorem/Failed",
+                    "Failed theorem is not proof evidence.",
+                )),
+            },
             ExecDefinitionStmtResult::DefProp(result) => {
                 self.compile_def_prop_statement(result, position, index, local)
             }

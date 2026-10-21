@@ -2,6 +2,7 @@ mod builtin_thm;
 mod continuity;
 pub(crate) mod derive_real_sequence;
 mod folds;
+mod function_derivatives;
 mod helper;
 mod intersection;
 mod membership;

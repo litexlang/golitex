@@ -1,0 +1,4 @@
+claim:
+    ? forall n N:
+        max(n,0)-1 $in N
+    max(n,0)-1 $in N

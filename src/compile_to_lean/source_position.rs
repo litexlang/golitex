@@ -96,6 +96,7 @@ pub(super) enum SourceOwner<'a> {
     AtomicWD(&'a AtomicFactWellDefinedProof),
     /// Already emitted argument constructors of this exact atomic WD result.
     AtomicWDLocals(&'a AtomicFactWellDefinedProof, usize),
+    EqualWDLocals(&'a crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::well_defined_result::EqualFactWellDefinedProof, usize),
     FactWD(&'a FactWellDefinedProof),
     InferredStore(&'a StoreFactResult),
     HaveGroup(&'a ParamTypeWellDefinedProof, &'a ParamTypeFactCheckResult),
@@ -139,6 +140,35 @@ enum SourceConstructor<'a> {
 }
 
 impl<'a> SourcePosition<'a> {
+    /// Local quantified proofs are Lean terms, whose carrier levels are
+    /// inferred at their uses. Only declarations introduce level parameters.
+    pub fn parameter_universe(&self, id: IdentifierId) -> String {
+        let mut cursor = Some(self);
+        while let Some(position) = cursor {
+            if parameter_in_owner(position, id).is_some() {
+                return if position.parent.is_some_and(|parent| parent.is_local()) {
+                    "_".to_string()
+                } else {
+                    format!("v{}", id.value())
+                };
+            }
+            cursor = position.parent;
+        }
+        format!("v{}", id.value())
+    }
+
+    pub fn equal_wd_child_name(&self, index: usize) -> String {
+        let mut depth = 0;
+        let mut cursor = Some(self);
+        while let Some(position) = cursor {
+            if matches!(position.owner, SourceOwner::EqualWDLocals(..)) {
+                depth += 1;
+            }
+            cursor = position.parent;
+        }
+        format!("_equal_wd_{depth}_{index}")
+    }
+
     pub fn atomic_wd_child_name(&self, index: usize) -> String {
         let mut depth = 0;
         let mut cursor = Some(self);
@@ -285,6 +315,26 @@ impl<'a> SourcePosition<'a> {
                     }
                 }
             }
+            if let SourceOwner::EqualWDLocals(proof, emitted) = position.owner {
+                for (index, child) in [&proof.left, &proof.right]
+                    .into_iter()
+                    .take(emitted)
+                    .enumerate()
+                    .rev()
+                {
+                    if matches!(
+                        child.obj(),
+                        Obj::Identifier(_) | Obj::Literal(_) | Obj::StandardSet(_)
+                    ) {
+                        continue;
+                    }
+                    if let Some(term) =
+                        projected_wd_child(child, position.equal_wd_child_name(index), &matches)
+                    {
+                        return Some(term);
+                    }
+                }
+            }
             if let SourceOwner::AtomicWDLocals(proof, emitted) = position.owner {
                 for (index, child) in proof
                     .well_defined_of_each_parameter
@@ -293,12 +343,10 @@ impl<'a> SourcePosition<'a> {
                     .enumerate()
                     .rev()
                 {
-                    if matches!(child, ObjWellDefinedProof::ByKnown { .. })
-                        || matches!(
-                            child.obj(),
-                            Obj::Identifier(_) | Obj::Literal(_) | Obj::StandardSet(_)
-                        )
-                    {
+                    if matches!(
+                        child.obj(),
+                        Obj::Identifier(_) | Obj::Literal(_) | Obj::StandardSet(_)
+                    ) {
                         continue;
                     }
                     if let Some(term) =
@@ -475,22 +523,36 @@ impl<'a> SourcePosition<'a> {
     ) -> Result<(&'a DefThmStmt, Self, usize), LeanCompileError> {
         let mut position = Some(self);
         while let Some(current) = position {
-            if let SourceOwner::Run(run) = current.owner {
-                for (index, statement) in run
-                    .statement_results
+            let steps = match current.owner {
+                SourceOwner::Run(run) => Some((run.statement_results.as_slice(), 0)),
+                SourceOwner::Named(proof) => Some(named_steps(proof)),
+                SourceOwner::Claim(proof) => Some(claim_steps(proof)),
+                owner => local_steps(owner),
+            };
+            if let Some((steps, head)) = steps {
+                for (index, statement) in steps
                     .iter()
-                    .take(current.before)
+                    .take(current.before.saturating_sub(head))
                     .enumerate()
                     .rev()
                 {
                     if let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefThm(
-                        ExecDefThmStmtResult::Success(p),
+                        ExecDefThmStmtResult::Success(proof),
                     )) = statement
                     {
-                        if p.statement.name == name {
+                        let completed = Self {
+                            before: head + index + 1,
+                            ..*current
+                        };
+                        if proof.statement.name == name
+                            && obeys_active_stage_ceilings(self, &completed)
+                        {
                             return Ok((
-                                &p.statement,
-                                Self::new(None, SourceOwner::Run(run), index),
+                                &proof.statement,
+                                Self {
+                                    before: head + index,
+                                    ..*current
+                                },
                                 index,
                             ));
                         }
@@ -2785,6 +2847,14 @@ fn atomic_inference_stages(infer: &InferAtomicFactResult) -> Vec<&StoreInferredF
             rules.iter().flat_map(|r| r.stored_conclusions()).collect()
         }
         InferAtomicFactResult::NotRealAccumulationFact(_) => Vec::new(),
+        InferAtomicFactResult::HasDerivativeAtFact(rules) => {
+            rules.iter().flat_map(|r| r.stored_conclusions()).collect()
+        }
+        InferAtomicFactResult::NotHasDerivativeAtFact(_) => Vec::new(),
+        InferAtomicFactResult::FunctionDifferentiableAtFact(rules) => {
+            rules.iter().flat_map(|r| r.stored_conclusions()).collect()
+        }
+        InferAtomicFactResult::NotFunctionDifferentiableAtFact(_) => Vec::new(),
         InferAtomicFactResult::FunctionContinuousAtFact(rules) => {
             rules.iter().flat_map(|r| r.stored_conclusions()).collect()
         }
@@ -3851,6 +3921,7 @@ fn fact_reference_in_owner(
         | SourceOwner::AtomicVerify(_)
         | SourceOwner::AtomicWD(_)
         | SourceOwner::AtomicWDLocals(..)
+        | SourceOwner::EqualWDLocals(..)
         | SourceOwner::FactWD(_)
         | SourceOwner::HaveEqualType(_)
         | SourceOwner::HaveGroup(_, _)
@@ -4016,15 +4087,39 @@ fn visit_visible<T>(
         &SourcePosition<'_>,
     ) -> Result<Option<T>, LeanCompileError>,
 ) -> Result<Option<T>, LeanCompileError> {
+    // Only matching subjects need the full ancestry check. Keep that check in
+    // this shared visitor so every caller retains the same scope boundary.
+    let object_ir = object.ir();
     let mut bounded_wd = |proof: SourceConstructor<'_>, producer: &SourcePosition<'_>| {
-        if obeys_active_stage_ceilings(start, producer) {
+        let relevant = match proof {
+            SourceConstructor::Checked(proof) => proof.obj().ir() == object_ir,
+            SourceConstructor::Inferred(store) => {
+                store.atomic_components().iter().any(|(_, fact)| {
+                    atomic_fact_args_ref(fact)
+                        .iter()
+                        .any(|arg| arg.ir() == object_ir)
+                })
+            }
+        };
+        if relevant && obeys_active_stage_ceilings(start, producer) {
             wd(proof, producer)
         } else {
             Ok(None)
         }
     };
     let mut bounded_verify = |proof: &VerifyFactResult, producer: &SourcePosition<'_>| {
-        if obeys_active_stage_ceilings(start, producer) {
+        let relevant = match proof {
+            VerifyFactResult::AtomicExceptEquality(result) => match result.as_ref() {
+                VerifyAtomicExceptEqualityFactResult::Success(result) => match &result.fact {
+                    AtomicFact::InFact(fact) => fact.element.ir() == object_ir,
+                    AtomicFact::NotEqualFact(fact) => fact.left.ir() == object_ir,
+                    _ => false,
+                },
+                _ => false,
+            },
+            _ => false,
+        };
+        if relevant && obeys_active_stage_ceilings(start, producer) {
             verify(proof, producer)
         } else {
             Ok(None)
@@ -4173,6 +4268,7 @@ fn same_source_owner(left: SourceOwner<'_>, right: SourceOwner<'_>) -> bool {
             SourceOwner::AtomicWD(b) | SourceOwner::AtomicWDLocals(b, _),
         ) => std::ptr::eq(a, b),
         (SourceOwner::ChainObjects(a, _), SourceOwner::ChainObjects(b, _)) => std::ptr::eq(a, b),
+        (SourceOwner::EqualWDLocals(a, _), SourceOwner::EqualWDLocals(b, _)) => std::ptr::eq(a, b),
         (SourceOwner::FactWD(a), SourceOwner::FactWD(b)) => std::ptr::eq(a, b),
         (SourceOwner::InferredStore(a), SourceOwner::InferredStore(b)) => std::ptr::eq(a, b),
         (SourceOwner::HaveGroup(a, pa), SourceOwner::HaveGroup(b, pb)) => {
@@ -5216,6 +5312,22 @@ fn visit_owner<T>(
         }
         SourceOwner::AtomicWD(proof) | SourceOwner::AtomicWDLocals(proof, _) => {
             return visit_atomic_formation(proof, position.before, position, wd, verify)
+        }
+        SourceOwner::EqualWDLocals(proof, _) => {
+            for (index, child) in [&proof.left, &proof.right]
+                .into_iter()
+                .take(position.before)
+                .enumerate()
+                .rev()
+            {
+                let prior = SourcePosition {
+                    before: index + 1,
+                    ..*position
+                };
+                if let Some(value) = visit_complete_wd(child, &prior, wd, verify)? {
+                    return Ok(Some(value));
+                }
+            }
         }
         SourceOwner::FactWD(proof) => {
             return visit_fact_formation(proof, position.before, position, wd, verify)
@@ -7062,8 +7174,29 @@ fn atomic_search_stages(
     };
     let mut stages = Vec::new();
     match &proof.searched_proof {
+        AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(LessFactSearchProofByBuiltinRule::AddLeftCongruenceStrict(p))) => {
+            stages.push(AtomicSearchStage::Verify(&p.premise_proof));
+        }
+        AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(LessFactSearchProofByBuiltinRule::AddRightCongruenceStrict(p))) => {
+            stages.push(AtomicSearchStage::Verify(&p.premise_proof));
+        }
+
+        AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(LessFactSearchProofByBuiltinRule::MulLeftPositiveMonotoneStrict(p))) => {
+            stages.push(AtomicSearchStage::Verify(&p.positive_factor_proof));
+            stages.push(AtomicSearchStage::Verify(&p.order_premise_proof));
+        }
+        AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(LessFactSearchProofByBuiltinRule::MulRightPositiveMonotoneStrict(p))) => {
+            stages.push(AtomicSearchStage::Verify(&p.positive_factor_proof));
+            stages.push(AtomicSearchStage::Verify(&p.order_premise_proof));
+        }
+        AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::CommonPositiveFactorLess(p)) => {
+            stages.extend(p.proof_of_requirement_facts.iter().map(AtomicSearchStage::Verify));
+        }
+
         AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(
-            AtomicExceptEqualityFactSearchProofByBuiltinRule::NotGreaterFact(NotGreaterFactSearchProofByBuiltinRule::FromKnownOrderComplement(p))
+            AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(LessFactSearchProofByBuiltinRule::FromKnownOrderComplement(p))
+            | AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterFact(crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::greater::GreaterFactSearchProofByBuiltinRule::FromKnownOrderComplement(p))
+            | AtomicExceptEqualityFactSearchProofByBuiltinRule::NotGreaterFact(NotGreaterFactSearchProofByBuiltinRule::FromKnownOrderComplement(p))
             | AtomicExceptEqualityFactSearchProofByBuiltinRule::NotLessFact(NotLessFactSearchProofByBuiltinRule::FromKnownOrderComplement(p))
             | AtomicExceptEqualityFactSearchProofByBuiltinRule::NotGreaterEqualFact(NotGreaterEqualFactSearchProofByBuiltinRule::FromKnownOrderComplement(p))
             | AtomicExceptEqualityFactSearchProofByBuiltinRule::NotLessEqualFact(NotLessEqualFactSearchProofByBuiltinRule::FromKnownOrderComplement(p))

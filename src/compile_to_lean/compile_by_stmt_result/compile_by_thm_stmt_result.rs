@@ -336,20 +336,16 @@ impl LitexToLeanCompiler {
             definitions
                 .extend(self.compile_stored_inferences(stored, &subject, &reference, &published)?);
         }
-        let application = if application_arguments.is_empty() {
-            self.context_application(
-                &format!("h_{}", registered.fact.fact_id().value()),
-                declaration_position,
-            )
+        let name = format!("h_{}", registered.fact.fact_id().value());
+        let reference = if declaration_position.is_local() {
+            name
         } else {
-            format!(
-                "({} {})",
-                self.context_application(
-                    &format!("h_{}", registered.fact.fact_id().value()),
-                    declaration_position
-                ),
-                application_arguments.join(" ")
-            )
+            self.context_application(&name, declaration_position)
+        };
+        let application = if application_arguments.is_empty() {
+            reference
+        } else {
+            format!("({} {})", reference, application_arguments.join(" "))
         };
         let mut returned_facts = Vec::new();
         // The runtime forms every conclusion before publishing any returned

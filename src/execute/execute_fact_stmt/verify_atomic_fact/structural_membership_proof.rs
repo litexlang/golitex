@@ -24,6 +24,21 @@ pub enum StructuralMembershipReason {
         left: Box<StructuralMembershipProof>,
         right: Box<StructuralMembershipProof>,
     },
+    Min {
+        left: Box<StructuralMembershipProof>,
+        right: Box<StructuralMembershipProof>,
+    },
+    Max {
+        left: Box<StructuralMembershipProof>,
+        right: Box<StructuralMembershipProof>,
+    },
+    // max(a,b)-a and max(a,b)-b are natural for natural a,b.
+    // The selected operand is syntactically the actual subtrahend.
+    NaturalMaxDifference {
+        maximum: Box<StructuralMembershipProof>,
+        subtrahend: Box<StructuralMembershipProof>,
+        right_operand: bool,
+    },
     Mul {
         left: Box<StructuralMembershipProof>,
         right: Box<StructuralMembershipProof>,
@@ -53,6 +68,7 @@ pub enum StructuralMembershipReason {
 // Fixed output types only, after object WD. These do not evaluate the value,
 // select user-function signatures, or prove any missing input-domain condition.
 pub enum IntrinsicCodomain {
+    DerivativeAt,
     SequenceLimit,
     SequenceLimsup,
     Supremum,

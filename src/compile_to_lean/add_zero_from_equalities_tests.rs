@@ -120,17 +120,17 @@ fn add_zero_right_rejects_a_missing_successful_zero_certificate() {
 }
 
 #[test]
-fn add_zero_left_remains_a_nearest_rejected_rule() {
-    let source = SOURCE.replace(
-        "positive_anonymous(1) + 0 = 1",
-        "0 + positive_anonymous(1) = 1",
-    );
-    let (result, compiler) = checked(&source);
-    assert_eq!(
-        compiler
-            .compile_run(&result, "add_zero_left_boundary")
-            .unwrap_err()
-            .route,
-        "Equality/BuiltinRule"
-    );
+fn add_zero_left_replays_original_equalities_in_both_directions() {
+    for (left, right) in [
+        ("0 + positive_anonymous(1)", "1"),
+        ("1", "0 + positive_anonymous(1)"),
+    ] {
+        let source = SOURCE.replace(
+            "positive_anonymous(1) + 0 = 1",
+            &format!("{left} = {right}"),
+        );
+        let (result, compiler) = checked(&source);
+        let lean = compiler.compile_run(&result, "add_zero_left").unwrap();
+        assert!(lean.contains("Litex.zeroAdd"));
+    }
 }

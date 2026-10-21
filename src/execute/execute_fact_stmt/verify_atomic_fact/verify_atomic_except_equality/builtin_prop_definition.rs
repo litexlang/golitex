@@ -38,6 +38,38 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<Result<BuiltinPropDefinitionProof, DefinitionProofFailed>> {
         match fact {
+            AtomicFact::HasDerivativeAtFact(_) => {
+                let Some(clauses) = self.derivative_defining_clauses(fact, verify_state)? else {
+                    return Ok(Err(DefinitionProofFailed::Unavailable));
+                };
+                match self.verify_definition_requirements(clauses, verify_state)? {
+                    Ok((requirement_facts, proof_of_requirement_facts)) => {
+                        Ok(Ok(BuiltinPropDefinitionProof::HasDerivativeAt(
+                            super::result::BuiltinHasDerivativeAtDefinitionProof {
+                                requirement_facts,
+                                proof_of_requirement_facts,
+                            },
+                        )))
+                    }
+                    Err(failure) => Ok(Err(failure)),
+                }
+            }
+            AtomicFact::FunctionDifferentiableAtFact(_) => {
+                let Some(clauses) = self.derivative_defining_clauses(fact, verify_state)? else {
+                    return Ok(Err(DefinitionProofFailed::Unavailable));
+                };
+                match self.verify_definition_requirements(clauses, verify_state)? {
+                    Ok((requirement_facts, proof_of_requirement_facts)) => {
+                        Ok(Ok(BuiltinPropDefinitionProof::FunctionDifferentiableAt(
+                            super::result::BuiltinFunctionDifferentiableAtDefinitionProof {
+                                requirement_facts,
+                                proof_of_requirement_facts,
+                            },
+                        )))
+                    }
+                    Err(failure) => Ok(Err(failure)),
+                }
+            }
             AtomicFact::RealSetBoundFact(_) => {
                 let Some(clauses) = self.real_analysis_defining_clauses(fact, verify_state)? else {
                     return Ok(Err(DefinitionProofFailed::Unavailable));

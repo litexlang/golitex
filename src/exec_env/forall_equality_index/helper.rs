@@ -21,6 +21,7 @@ pub(super) enum Constructor {
     StandardSet(Discriminant<StandardSet>),
     Arithmetic(Discriminant<ArithmeticOperator>),
     Bound(Discriminant<BoundOperator>),
+    Derivative(Discriminant<DerivativeOperator>),
     Integer(Discriminant<IntegerOperator>),
     Trig(Discriminant<TrigOperator>),
     Limit(std::mem::Discriminant<crate::ast::obj::LimitOperator>),
@@ -142,6 +143,7 @@ pub(super) fn structural_view(object: &Obj) -> (Token, Vec<Obj>) {
         return (Token::Number(number.normalized_value.clone()), Vec::new());
     }
     let constructor = match object {
+        Obj::DerivativeOperator(value) => Constructor::Derivative(discriminant(value)),
         Obj::BoundOperator(value) => Constructor::Bound(discriminant(value)),
         Obj::Identifier(_) => unreachable!("identifier handled above"),
         Obj::FnObj(value) => Constructor::Application(value.body.last().map_or(0, Vec::len)),

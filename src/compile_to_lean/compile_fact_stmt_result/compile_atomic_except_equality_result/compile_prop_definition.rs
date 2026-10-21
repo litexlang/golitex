@@ -360,7 +360,7 @@ impl LitexToLeanCompiler {
                     ));
                 }
                 self.validate_store(&derived.store, &fact)?;
-                if position.is_local() && matches!(fact, Fact::AtomicFact(_)) {
+                if position.is_local() && matches!(fact, Fact::AtomicFact(_) | Fact::ExistFact(_)) {
                     // The checked predicate already determines this projection's
                     // type, including constructors certified in its declaration.
                     // Do not demand a second, instantiated WD run just to print it.

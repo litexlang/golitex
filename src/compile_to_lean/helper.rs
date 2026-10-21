@@ -1,5 +1,5 @@
 use super::LeanCompileError;
-use crate::ast::stmt::{ReleaseAndExpandStmt, WitnessStmt};
+use crate::ast::stmt::{ProofBlockStmt, ReleaseAndExpandStmt, WitnessStmt};
 use crate::execute::execute_by_stmt::ExecByDefStmtResult;
 use crate::execute::execute_fact_stmt::verify_exist_shaped_fact::VerifyNotExistFactResult;
 use crate::prelude::*;
@@ -97,7 +97,7 @@ pub(super) fn validate_arithmetic_expression(object: &Obj) -> Result<(), LeanCom
         Obj::Identifier(IdentifierObj::Plain { .. }) => Ok(()),
         Obj::Literal(Literal::Number(n)) => number_literal(n, "ℂ").map(|_| ()),
         Obj::FnObj(call)
-            if call.body.len() == 1 && (1..=2).contains(&call.body[0].len()) =>
+            if call.body.len() == 1 && !call.body[0].is_empty() =>
         {
             // This original call is an opaque scalar leaf. Its constructor
             // WD and numeric return evidence are consumed by the observer;
@@ -309,7 +309,10 @@ pub(super) fn source_order_parts(
         AtomicFact::GreaterFact(f) => Ok((SourceOrderKind::Greater, &f.left, &f.right)),
         AtomicFact::LessEqualFact(f) => Ok((SourceOrderKind::LessEqual, &f.left, &f.right)),
         AtomicFact::GreaterEqualFact(f) => Ok((SourceOrderKind::GreaterEqual, &f.left, &f.right)),
-        _ => Err(LeanCompileError::unsupported("Order/PredicateFamily")),
+        _ => Err(LeanCompileError::new(
+            "Order/PredicateFamily",
+            &format!("Expected an ordered comparison, got {}.", fact.ir()),
+        )),
     }
 }
 
@@ -411,6 +414,9 @@ pub(super) fn standard_term(set: &StandardSet) -> Result<String, LeanCompileErro
 
 pub(super) fn unsupported_wd_definition(proof: &ObjWellDefinedProofByDef) -> LeanCompileError {
     match proof {
+        ObjWellDefinedProofByDef::DerivativeOperator(_) => {
+            LeanCompileError::unsupported("WD/DerivativeAt")
+        }
         ObjWellDefinedProofByDef::BoundOperator(_) => {
             LeanCompileError::unsupported("WD/BoundOperator")
         }
@@ -619,6 +625,21 @@ pub(super) fn validate_statement_capture(
     result: &ExecStmtResult,
 ) -> Result<(), LeanCompileError> {
     let matches = match (source, result) {
+        (
+            Stmt::ProofBlock(ProofBlockStmt::ClaimStmt(source)),
+            ExecStmtResult::ProofBlock(
+                crate::execute::execute_proof_block_stmt::ExecProofBlockStmtResult::Claim(
+                    crate::execute::execute_proof_block_stmt::ExecClaimStmtResult::Success(proof),
+                ),
+            ),
+        ) => source == &proof.statement,
+
+        (
+            Stmt::Definition(DefinitionStmt::DefThmStmt(source)),
+            ExecStmtResult::Definition(ExecDefinitionStmtResult::DefThm(
+                ExecDefThmStmtResult::Success(proof),
+            )),
+        ) => source == &proof.statement,
         (
             Stmt::Witness(WitnessStmt::WitnessAtomicFact(source)),
             ExecStmtResult::Witness(

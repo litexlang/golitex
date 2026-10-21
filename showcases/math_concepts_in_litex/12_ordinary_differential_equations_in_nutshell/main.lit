@@ -12,7 +12,7 @@ prop derivative_delta_controlled(f fn(x R) R, x0, slope R, epsilon, delta R+):
         =>:
             |(f(x) - f(x0)) / (x - x0) - slope| < epsilon
 
-prop has_derivative_at(f fn(x R) R, x0, slope R):
+prop ode_has_derivative_at(f fn(x R) R, x0, slope R):
     forall epsilon R+:
         exist delta R+ st {$derivative_delta_controlled(f, x0, slope, epsilon, delta)}
 
@@ -21,7 +21,7 @@ have fn quadratic_solution(c, x R) R = x^2 + c
 have fn ode_solution(x R) R = x^2 + 1
 
 prop solves_ode_at(f fn(t R) R, rhs fn(t, y R) R, x R):
-    exist slope R st {$has_derivative_at(f, x, slope), slope = rhs(x, f(x))}
+    exist slope R st {$ode_has_derivative_at(f, x, slope), slope = rhs(x, f(x))}
 
 # Evaluating the quadratic family at zero identifies its integration constant.
 thm quadratic_initial_value_selects_parameter:
@@ -35,7 +35,7 @@ thm quadratic_initial_value_selects_parameter:
 # that x^2 + 1 has derivative 2*x0.
 thm ode_solution_has_derivative:
     ? forall x0 R:
-        $has_derivative_at(ode_solution, x0, 2 * x0)
+        $ode_has_derivative_at(ode_solution, x0, 2 * x0)
     claim:
         ? forall epsilon R+:
             exist delta R+ st {$derivative_delta_controlled(ode_solution, x0, 2 * x0, epsilon, delta)}
@@ -54,7 +54,7 @@ thm ode_solution_has_derivative:
                 (ode_solution(x) - ode_solution(x0)) / (x - x0) - 2 * x0 = (x + x0) - 2 * x0 = x - x0
                 |(ode_solution(x) - ode_solution(x0)) / (x - x0) - 2 * x0| = |x - x0| < epsilon
             by def $derivative_delta_controlled(ode_solution, x0, 2 * x0, epsilon, delta)
-    by def $has_derivative_at(ode_solution, x0, 2 * x0)
+    by def $ode_has_derivative_at(ode_solution, x0, 2 * x0)
 
 # Use the derivative witness 2*x to show the chosen quadratic solves y' = 2x.
 thm ode_solution_solves_equation:
@@ -62,23 +62,23 @@ thm ode_solution_solves_equation:
         $solves_ode_at(ode_solution, ode_rhs, x)
     witness $solves_ode_at(ode_solution, ode_rhs, x) from 2 * x:
         release thm ode_solution_has_derivative(x)
-        $has_derivative_at(ode_solution, x, 2 * x)
+        $ode_has_derivative_at(ode_solution, x, 2 * x)
         ode_rhs(x, ode_solution(x)) = 2 * x
 
 ode_solution(0) = 1
 quadratic_solution(1, 0) = 1
 
-# `has_derivative_at` remains the epsilon-delta relation used in proofs.
+# `ode_has_derivative_at` remains the epsilon-delta relation used in proofs.
 # Differentiability supplies existence; uniqueness then exposes its value.
-prop is_differentiable_at(f fn(x R) R, x0 R):
-    exist slope R st {$has_derivative_at(f, x0, slope)}
+prop ode_is_differentiable_at(f fn(x R) R, x0 R):
+    exist slope R st {$ode_has_derivative_at(f, x0, slope)}
 
 # Two derivative candidates are forced together by evaluating both estimates
 # at one carefully chosen nearby point.
 thm derivative_value_unique:
     ? forall f fn(t R) R, x0, slope1, slope2 R:
-        $has_derivative_at(f, x0, slope1)
-        $has_derivative_at(f, x0, slope2)
+        $ode_has_derivative_at(f, x0, slope1)
+        $ode_has_derivative_at(f, x0, slope2)
         =>:
             slope1 = slope2
     by contra:
@@ -141,59 +141,59 @@ thm derivative_value_unique:
 # derivative value on differentiable function-point pairs.
 claim:
     ? forall f fn(t R) R, x0 R:
-        $is_differentiable_at(f, x0)
+        $ode_is_differentiable_at(f, x0)
         =>:
-            exist! slope R st {$has_derivative_at(f, x0, slope)}
-    obtain chosen_slope from $is_differentiable_at(f, x0)
+            exist! slope R st {$ode_has_derivative_at(f, x0, slope)}
+    obtain chosen_slope from $ode_is_differentiable_at(f, x0)
     claim:
         ? forall slope1, slope2 R:
-            $has_derivative_at(f, x0, slope1)
-            $has_derivative_at(f, x0, slope2)
+            $ode_has_derivative_at(f, x0, slope1)
+            $ode_has_derivative_at(f, x0, slope2)
             =>:
                 slope1 = slope2
         release thm derivative_value_unique(f, x0, slope1, slope2)
-    witness exist! slope R st {$has_derivative_at(f, x0, slope)} from chosen_slope
+    witness exist! slope R st {$ode_has_derivative_at(f, x0, slope)} from chosen_slope
 
 have fn derivative_at by exist!:
     ? forall f fn(t R) R, x0 R:
-        $is_differentiable_at(f, x0)
+        $ode_is_differentiable_at(f, x0)
         =>:
-            exist! slope R st {$has_derivative_at(f, x0, slope)}
+            exist! slope R st {$ode_has_derivative_at(f, x0, slope)}
 
 claim:
     ? forall f fn(t R) R, x0, slope R:
-        $has_derivative_at(f, x0, slope)
+        $ode_has_derivative_at(f, x0, slope)
         =>:
-            $is_differentiable_at(f, x0)
-    witness $is_differentiable_at(f, x0) from slope
+            $ode_is_differentiable_at(f, x0)
+    witness $ode_is_differentiable_at(f, x0) from slope
 
 # Bridge the relational derivative predicate to the uniquely selected value.
 thm has_derivative_at_to_derivative_value:
     ? forall f fn(t R) R, x0, slope R:
-        $has_derivative_at(f, x0, slope)
+        $ode_has_derivative_at(f, x0, slope)
         =>:
-            $is_differentiable_at(f, x0)
+            $ode_is_differentiable_at(f, x0)
             derivative_at(f, x0) = slope
-    witness $is_differentiable_at(f, x0) from slope:
-        $has_derivative_at(f, x0, slope)
+    witness $ode_is_differentiable_at(f, x0) from slope:
+        $ode_has_derivative_at(f, x0, slope)
     slope = derivative_at(f, x0)
 
 prop solves_ode_at_by_derivative(f fn(t R) R, rhs fn(t, y R) R, x R):
-    $is_differentiable_at(f, x)
+    $ode_is_differentiable_at(f, x)
     derivative_at(f, x) = rhs(x, f(x))
 
 claim:
     ? forall x R:
-        $is_differentiable_at(ode_solution, x)
+        $ode_is_differentiable_at(ode_solution, x)
     release thm ode_solution_has_derivative(x)
-    witness $is_differentiable_at(ode_solution, x) from 2 * x
+    witness $ode_is_differentiable_at(ode_solution, x) from 2 * x
 
 thm ode_solution_derivative_value:
     ? forall x R:
-        $is_differentiable_at(ode_solution, x)
+        $ode_is_differentiable_at(ode_solution, x)
         derivative_at(ode_solution, x) = 2 * x
     release thm ode_solution_has_derivative(x)
-    $has_derivative_at(ode_solution, x, 2 * x)
+    $ode_has_derivative_at(ode_solution, x, 2 * x)
     release thm has_derivative_at_to_derivative_value(ode_solution, x, 2 * x)
 
 # Restate the ODE using the callable derivative interface rather than an

@@ -21,6 +21,8 @@ pub(crate) fn real_analysis_fact_arity(name: &str) -> Option<usize> {
         }
         "is_continuous_at" | "is_continuous_left" | "is_continuous_right" => Some(2),
         "is_continuous" | "is_uniformly_continuous" => Some(1),
+        "has_derivative_at" => Some(3),
+        "is_differentiable_at" => Some(2),
         "is_lipschitz" => Some(2),
         _ => None,
     }
@@ -213,6 +215,46 @@ impl Runtime {
                         fact_id,
                         function: args[0].clone(),
                         property,
+                        line_file,
+                    }
+                    .into()
+                }
+            }
+            "has_derivative_at" => {
+                if positive {
+                    HasDerivativeAtFact {
+                        fact_id,
+                        function: args[0].clone(),
+                        point: args[1].clone(),
+                        value: args[2].clone(),
+                        line_file,
+                    }
+                    .into()
+                } else {
+                    NotHasDerivativeAtFact {
+                        fact_id,
+                        function: args[0].clone(),
+                        point: args[1].clone(),
+                        value: args[2].clone(),
+                        line_file,
+                    }
+                    .into()
+                }
+            }
+            "is_differentiable_at" => {
+                if positive {
+                    FunctionDifferentiableAtFact {
+                        fact_id,
+                        function: args[0].clone(),
+                        point: args[1].clone(),
+                        line_file,
+                    }
+                    .into()
+                } else {
+                    NotFunctionDifferentiableAtFact {
+                        fact_id,
+                        function: args[0].clone(),
+                        point: args[1].clone(),
                         line_file,
                     }
                     .into()

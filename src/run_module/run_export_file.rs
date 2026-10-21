@@ -4,6 +4,7 @@ use crate::module_manager::ExportFileAndItsExecEnv;
 use crate::run::run_command_outcome::RunFileResult;
 use crate::runtime::{CodeSource, Runtime, RuntimeError, RuntimeResult};
 use std::fs;
+use crate::run::source_observer::SourceObserver;
 
 /// Run one export / standalone file under the given module context.
 ///
@@ -18,6 +19,16 @@ pub fn run_export_file(
     export_name: &str,
     code_source: CodeSource,
     keep_env_open: bool,
+) -> RuntimeResult<RunFileResult> {
+    run_export_file_observed(runtime, export_name, code_source, keep_env_open, &mut ())
+}
+
+pub fn run_export_file_observed(
+    runtime: &mut Runtime,
+    export_name: &str,
+    code_source: CodeSource,
+    keep_env_open: bool,
+    observer: &mut dyn SourceObserver,
 ) -> RuntimeResult<RunFileResult> {
     let current_mod_id = match &code_source {
         CodeSource::ImportedExport { global_mod_id, .. } => Some(*global_mod_id),
@@ -47,7 +58,7 @@ pub fn run_export_file(
         .map_err(RuntimeError::InternalBug)?;
     runtime.begin_source(code_source);
 
-    let mut code_result = match runtime.run_litex_code(&source) {
+    let mut code_result = match runtime.run_litex_code_observed(&source, observer) {
         Ok(result) => result,
         Err(error) => {
             runtime.abort_source();

@@ -9,24 +9,10 @@ impl LitexToLeanCompiler {
         proof: &ExecDefThmStmtSuccess,
         position: &SourcePosition<'_>,
         _index: usize,
+        local: bool,
     ) -> Result<String, LeanCompileError> {
-        let goal_wd = match &proof.goal_wd {
-            VerifyFactWellDefinedResult::Success(wd) => wd,
-            VerifyFactWellDefinedResult::Failed(_) => {
-                return Err(LeanCompileError::new(
-                    "Theorem/GoalWD",
-                    "A successful theorem has failed goal-formation evidence.",
-                ))
-            }
-        };
-        // The forall goal renderer consumes this exact header and every then-WD
-        // stage. Do not replay that same formation once more and discard it.
-        if !matches!(
-            (&proof.statement.fact, goal_wd),
-            (Fact::ForallFact(_), FactWellDefinedProof::ForallFact(_))
-        ) {
-            self.compile_fact_wd(goal_wd, &proof.statement.fact, position)?;
-        }
+        // The goal renderer consumes every original formation stage and retains
+        // its constructor bindings in the exported proposition.
         let source_position = SourcePosition {
             parent: Some(position),
             owner: SourceOwner::Named(proof),
@@ -37,8 +23,13 @@ impl LitexToLeanCompiler {
         self.validate_store(&proof.stored.store, &proof.statement.fact)?;
         let name = format!("h_{}", proof.statement.fact.fact_id().value());
         let declaration = format!(
-            "theorem {name}{} : {} :=\n  {}",
-            self.context_header(position)?,
+            "{} {name}{} : {} :=\n  {}",
+            if local { "have" } else { "theorem" },
+            if local {
+                String::new()
+            } else {
+                self.context_header(position)?
+            },
             compiled.0,
             compiled.1.replace('\n', "\n  ")
         );
@@ -202,13 +193,8 @@ impl LitexToLeanCompiler {
                 let mut propositions = Vec::new();
                 for (source, formation) in fact.then_facts.iter().zip(&wd.then) {
                     let source = named_goal_component(source)?;
-                    self.compile_fact_wd(formation, &source, &complete)?;
-                    let formed = SourcePosition::new(
-                        Some(&complete),
-                        SourceOwner::FactWD(formation),
-                        usize::MAX,
-                    );
-                    propositions.push(self.fact_proposition(&source, &formed)?);
+                    propositions
+                        .push(self.compile_formed_fact_proposition(formation, &source, &complete)?);
                 }
                 let meaning =
                     self.scope_proposition(conjunction_proposition(propositions)?, &definitions);
@@ -218,15 +204,11 @@ impl LitexToLeanCompiler {
                     definitions,
                 ))
             }
-            (Fact::AtomicFact(_) | Fact::AndFact(_) | Fact::ChainFact(_), _) => {
-                let formed =
-                    SourcePosition::new(Some(position), SourceOwner::FactWD(goal_wd), usize::MAX);
-                Ok((
-                    self.fact_proposition(&proof.statement.fact, &formed)?,
-                    Vec::new(),
-                    Vec::new(),
-                ))
-            }
+            (Fact::AtomicFact(_) | Fact::AndFact(_) | Fact::ChainFact(_), _) => Ok((
+                self.compile_formed_fact_proposition(goal_wd, &proof.statement.fact, position)?,
+                Vec::new(),
+                Vec::new(),
+            )),
             _ => Err(LeanCompileError::unsupported("Theorem/GoalBodyShape")),
         }
     }

@@ -1,0 +1,4 @@
+claim:
+    ? forall n N:
+        max(n,1/2) $in Z
+    max(n,1/2) $in Z

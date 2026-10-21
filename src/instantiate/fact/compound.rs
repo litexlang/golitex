@@ -171,6 +171,10 @@ fn collect_free_plain_ids_in_atomic(
 
 fn atomic_fact_obj_args(atomic: &AtomicFact) -> Vec<&Obj> {
     match atomic {
+        AtomicFact::HasDerivativeAtFact(f) => vec![&f.function, &f.point, &f.value],
+        AtomicFact::NotHasDerivativeAtFact(f) => vec![&f.function, &f.point, &f.value],
+        AtomicFact::FunctionDifferentiableAtFact(f) => vec![&f.function, &f.point],
+        AtomicFact::NotFunctionDifferentiableAtFact(f) => vec![&f.function, &f.point],
         AtomicFact::RealSetBoundFact(f) => vec![&f.set, &f.bound],
         AtomicFact::NotRealSetBoundFact(f) => vec![&f.set, &f.bound],
         AtomicFact::RealSetBoundedFact(f) => vec![&f.set],

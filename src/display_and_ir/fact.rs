@@ -39,6 +39,10 @@ impl Fact {
 impl AtomicFact {
     pub fn ir(&self) -> FactIR {
         match self {
+            AtomicFact::HasDerivativeAtFact(x) => x.ir(),
+            AtomicFact::NotHasDerivativeAtFact(x) => x.ir(),
+            AtomicFact::FunctionDifferentiableAtFact(x) => x.ir(),
+            AtomicFact::NotFunctionDifferentiableAtFact(x) => x.ir(),
             AtomicFact::RealSetBoundFact(x) => x.ir(),
             AtomicFact::NotRealSetBoundFact(x) => x.ir(),
             AtomicFact::RealSetBoundedFact(x) => x.ir(),
@@ -109,6 +113,10 @@ impl AtomicFact {
     pub fn display_string(&self) -> String {
         match self {
             AtomicFact::NormalAtomicFact(x) => x.display_string(),
+            AtomicFact::HasDerivativeAtFact(x) => x.display_string(),
+            AtomicFact::NotHasDerivativeAtFact(x) => x.display_string(),
+            AtomicFact::FunctionDifferentiableAtFact(x) => x.display_string(),
+            AtomicFact::NotFunctionDifferentiableAtFact(x) => x.display_string(),
             AtomicFact::RealSetBoundFact(x) => x.display_string(),
             AtomicFact::NotRealSetBoundFact(x) => x.display_string(),
             AtomicFact::RealSetBoundedFact(x) => x.display_string(),
@@ -1273,6 +1281,48 @@ impl NotHasFunctionLimitFact {
                 self.value.ir()
             ),
         })
+    }
+    impl_display_pair!();
+}
+
+impl HasDerivativeAtFact {
+    pub fn ir(&self) -> FactIR {
+        let args = vec![
+            self.function.ir().to_string(),
+            self.point.ir().to_string(),
+            self.value.ir().to_string(),
+        ]
+        .join(", ");
+        FactIR(format!("$has_derivative_at({})", args))
+    }
+    impl_display_pair!();
+}
+
+impl NotHasDerivativeAtFact {
+    pub fn ir(&self) -> FactIR {
+        let args = vec![
+            self.function.ir().to_string(),
+            self.point.ir().to_string(),
+            self.value.ir().to_string(),
+        ]
+        .join(", ");
+        FactIR(format!("not $has_derivative_at({})", args))
+    }
+    impl_display_pair!();
+}
+
+impl FunctionDifferentiableAtFact {
+    pub fn ir(&self) -> FactIR {
+        let args = vec![self.function.ir().to_string(), self.point.ir().to_string()].join(", ");
+        FactIR(format!("$is_differentiable_at({})", args))
+    }
+    impl_display_pair!();
+}
+
+impl NotFunctionDifferentiableAtFact {
+    pub fn ir(&self) -> FactIR {
+        let args = vec![self.function.ir().to_string(), self.point.ir().to_string()].join(", ");
+        FactIR(format!("not $is_differentiable_at({})", args))
     }
     impl_display_pair!();
 }

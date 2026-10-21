@@ -9,8 +9,8 @@ that the initial value selects `c` uniquely.
 target/release/litex -strict -r showcases/math_concepts_in_litex/12_ordinary_differential_equations_in_nutshell
 ```
 
-`has_derivative_at(f, x, slope)` remains the epsilon-delta relation used to
-prove candidate slopes. `is_differentiable_at(f, x)` records existence, and
+`ode_has_derivative_at(f, x, slope)` remains the epsilon-delta relation used to
+prove candidate slopes. `ode_is_differentiable_at(f, x)` records existence, and
 `derivative_at(f, x)` selects the unique slope on that domain. Consequently the
 ODE may also be read directly as
 `derivative_at(f, x) = rhs(x, f(x))`, together with differentiability.

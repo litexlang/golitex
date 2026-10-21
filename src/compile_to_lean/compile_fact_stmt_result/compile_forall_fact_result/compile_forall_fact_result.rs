@@ -396,14 +396,9 @@ impl LitexToLeanCompiler {
                 ..*position
             };
             let position = &domain_position;
-            self.compile_fact_wd(&assumed.well_defined, fact, position)?;
+            let proposition =
+                self.compile_formed_fact_proposition(&assumed.well_defined, fact, position)?;
             self.validate_store(&assumed.store_and_infer.store, fact)?;
-            let formation = SourcePosition {
-                parent: Some(position),
-                owner: SourceOwner::FactWD(&assumed.well_defined),
-                before: usize::MAX,
-            };
-            let proposition = self.fact_proposition(fact, &formation)?;
             let hypothesis = format!("h_{}", fact.fact_id().value());
             // A premise's construction can use parameter/earlier-premise
             // inferences. Close its type before adding this premise's own

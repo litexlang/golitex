@@ -327,3 +327,19 @@ fn rational_sqrt_leaf_rejects_a_different_radicand_in_its_child_wd() {
         .expect_err("an opaque leaf cannot change the original square-root argument");
     assert_eq!(error.route, "WD/Subject");
 }
+
+#[test]
+fn rational_normalization_accepts_original_three_argument_scalar_calls() {
+    let source = "have fn triple(x R, y R, z R) R = x + y + z\nforall x, y, z R:\n    triple(x,y,z)^2 - 1 = (triple(x,y,z)-1)*(triple(x,y,z)+1)\n";
+    let (mut result, compiler) = checked(source);
+    assert!(matches!(
+        equality(&mut result, 1).searched_proof,
+        EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::Calculation(
+            EqualitySearchProofByCalculation::Rational {}
+        ))
+    ));
+    let lean = compiler
+        .compile_run(&result, "three_argument_rational_leaf")
+        .unwrap();
+    assert!(lean.contains("Litex.NativeBridge.asComplex"));
+}

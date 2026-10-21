@@ -220,7 +220,9 @@ pub fn is_comparison_str(atom_name: &str) -> bool {
 pub(super) fn is_reserved_object_name(name: &str) -> bool {
     matches!(
         name,
-        I | E
+        "derivative"
+            | I
+            | E
             | PI
             | N
             | Z

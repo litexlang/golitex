@@ -1,0 +1,6 @@
+claim:
+    ? forall f,g fn(x R) R:
+        $is_differentiable_at(f,0)
+        =>:
+            $is_differentiable_at(fn(t R) R {f(t)+g(t)},0)
+    $is_differentiable_at(fn(t R) R {f(t)+g(t)},0)

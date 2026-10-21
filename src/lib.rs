@@ -21,6 +21,7 @@ pub mod module_manager;
 pub mod parse;
 pub(crate) mod prelude;
 pub mod rational_expression;
+pub mod reading;
 pub mod run;
 pub mod run_module;
 pub mod runtime;

@@ -35,6 +35,48 @@ pub(super) fn atomic_fact_with_args(
         }};
     }
     Some(match fact {
+        AtomicFact::HasDerivativeAtFact(f) => {
+            let mut args = args.into_iter();
+            crate::ast::fact::HasDerivativeAtFact {
+                fact_id,
+                function: args.next()?,
+                point: args.next()?,
+                value: args.next()?,
+                line_file: f.line_file.clone(),
+            }
+            .into()
+        }
+        AtomicFact::NotHasDerivativeAtFact(f) => {
+            let mut args = args.into_iter();
+            crate::ast::fact::NotHasDerivativeAtFact {
+                fact_id,
+                function: args.next()?,
+                point: args.next()?,
+                value: args.next()?,
+                line_file: f.line_file.clone(),
+            }
+            .into()
+        }
+        AtomicFact::FunctionDifferentiableAtFact(f) => {
+            let mut args = args.into_iter();
+            crate::ast::fact::FunctionDifferentiableAtFact {
+                fact_id,
+                function: args.next()?,
+                point: args.next()?,
+                line_file: f.line_file.clone(),
+            }
+            .into()
+        }
+        AtomicFact::NotFunctionDifferentiableAtFact(f) => {
+            let mut args = args.into_iter();
+            crate::ast::fact::NotFunctionDifferentiableAtFact {
+                fact_id,
+                function: args.next()?,
+                point: args.next()?,
+                line_file: f.line_file.clone(),
+            }
+            .into()
+        }
         AtomicFact::RealSetBoundFact(f) => {
             let mut args = args.into_iter();
             crate::ast::fact::RealSetBoundFact {

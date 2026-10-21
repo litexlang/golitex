@@ -185,7 +185,7 @@ impl LitexToLeanCompiler {
                 AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(rule),
             ) => match rule {
                 LessEqualFactSearchProofByBuiltinRule::FromKnownOrderComplement(p) => {
-                    self.compile_weak_order_complement(goal, p, position)
+                    self.compile_order_complement(goal, p, position)
                 }
                 LessEqualFactSearchProofByBuiltinRule::AddRightNonnegative(p) => self
                     .compile_add_nonnegative_bound(
@@ -323,7 +323,7 @@ impl LitexToLeanCompiler {
                 AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterEqualFact(rule),
             ) => match rule {
                 GreaterEqualFactSearchProofByBuiltinRule::FromKnownOrderComplement(p) => {
-                    self.compile_weak_order_complement(goal, p, position)
+                    self.compile_order_complement(goal, p, position)
                 }
                 GreaterEqualFactSearchProofByBuiltinRule::SumOfNonnegatives(p) => {
                     self.compile_nonnegative_sum_tree(goal, &p.constructor_tree, position)
@@ -362,6 +362,66 @@ impl LitexToLeanCompiler {
                     ),
                 )),
             },
+            (
+                AtomicFact::LessFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(
+                    LessFactSearchProofByBuiltinRule::MulLeftPositiveMonotoneStrict(p),
+                ),
+            ) => self.compile_selected_mul_monotone(
+                goal,
+                &p.positive_factor_proof,
+                &p.order_premise_proof,
+                true,
+                position,
+            ),
+            (
+                AtomicFact::LessFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(
+                    LessFactSearchProofByBuiltinRule::MulRightPositiveMonotoneStrict(p),
+                ),
+            ) => self.compile_selected_mul_monotone(
+                goal,
+                &p.positive_factor_proof,
+                &p.order_premise_proof,
+                false,
+                position,
+            ),
+            (
+                AtomicFact::LessFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(
+                    LessFactSearchProofByBuiltinRule::AddLeftCongruenceStrict(p),
+                ),
+            ) => self.compile_strict_add_congruence(goal, &p.premise_proof, true, position),
+            (
+                AtomicFact::LessFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(
+                    LessFactSearchProofByBuiltinRule::AddRightCongruenceStrict(p),
+                ),
+            ) => self.compile_strict_add_congruence(goal, &p.premise_proof, false, position),
+            (
+                AtomicFact::LessFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(
+                    LessFactSearchProofByBuiltinRule::OrderFlipMulMinusOne(p),
+                ),
+            ) => self.compile_mul_minus_one_negative(goal, &p.premise_proof, position),
+            (
+                AtomicFact::LessFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(
+                    LessFactSearchProofByBuiltinRule::SumStrictOperands(p),
+                ),
+            ) => self.compile_strict_sum_orders(goal, &p.first_order, &p.second_order, position),
+            (
+                AtomicFact::LessFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(
+                    LessFactSearchProofByBuiltinRule::FromKnownOrderComplement(p),
+                ),
+            )
+            | (
+                AtomicFact::GreaterFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterFact(
+                    GreaterFactSearchProofByBuiltinRule::FromKnownOrderComplement(p),
+                ),
+            ) => self.compile_order_complement(goal, p, position),
             (
                 AtomicFact::LessFact(_),
                 AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(
@@ -442,6 +502,30 @@ impl LitexToLeanCompiler {
                 position,
             ),
             (
+                AtomicFact::NotEqualFact(fact),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(
+                    NotEqualFactSearchProofByBuiltinRule::NotEqualSymmetry(p),
+                ),
+            ) => {
+                let AtomicFact::NotEqualFact(original) = &p.premise_proof.fact else {
+                    return Err(LeanCompileError::unsupported(
+                        "NotEqualSymmetry/PremiseFamily",
+                    ));
+                };
+                if original.left.ir() != fact.right.ir() || original.right.ir() != fact.left.ir() {
+                    return Err(LeanCompileError::unsupported("NotEqualSymmetry/Endpoints"));
+                }
+                let AtomicExceptEqualityFactSearchedProof::ByKnownAtomicFact(known) =
+                    p.premise_proof.searched_proof.as_ref()
+                else {
+                    return Err(LeanCompileError::unsupported(
+                        "NotEqualSymmetry/KnownPremise",
+                    ));
+                };
+                let child = self.compile_known_atomic(known, &p.premise_proof.fact, position)?;
+                Ok(format!("(fun _litex_same => {child} _litex_same.symm)"))
+            }
+            (
                 AtomicFact::NotEqualFact(_),
                 AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(
                     NotEqualFactSearchProofByBuiltinRule::FromKnownStrictOrder(p),
@@ -465,7 +549,13 @@ impl LitexToLeanCompiler {
                     NotEqualFactSearchProofByBuiltinRule::InequalityFromDifferenceNonzero(p),
                 ),
             ) => self.compile_inequality_from_difference_nonzero(goal, &p.premise_proof, position),
-            _ => Err(LeanCompileError::unsupported("Order/BuiltinFamilyOrRule")),
+            _ => Err(LeanCompileError::new(
+                "Order/BuiltinFamilyOrRule",
+                &format!(
+                    "Unsupported selected order builtin for `{}`.",
+                    goal.readable_string()
+                ),
+            )),
         }
     }
 
@@ -769,7 +859,24 @@ impl LitexToLeanCompiler {
         proof: &AtomicExceptEqualityFactSearchProofByBuiltinOrderDual,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
-        let (kind, left, right) = source_order_parts(goal)?;
+        fn parts(
+            fact: &AtomicFact,
+        ) -> Result<(SourceOrderKind, &Obj, &Obj, bool), LeanCompileError> {
+            match fact {
+                AtomicFact::NotLessFact(f) => Ok((SourceOrderKind::Less, &f.left, &f.right, true)),
+                AtomicFact::NotGreaterFact(f) => {
+                    Ok((SourceOrderKind::Greater, &f.left, &f.right, true))
+                }
+                AtomicFact::NotLessEqualFact(f) => {
+                    Ok((SourceOrderKind::LessEqual, &f.left, &f.right, true))
+                }
+                AtomicFact::NotGreaterEqualFact(f) => {
+                    Ok((SourceOrderKind::GreaterEqual, &f.left, &f.right, true))
+                }
+                _ => source_order_parts(fact).map(|(kind, left, right)| (kind, left, right, false)),
+            }
+        }
+        let (kind, left, right, negative) = parts(goal)?;
         let alternate = match &proof.alternate_fact {
             Fact::AtomicFact(f) => f,
             _ => {
@@ -779,14 +886,16 @@ impl LitexToLeanCompiler {
                 ))
             }
         };
-        let (alternate_kind, alternate_left, alternate_right) = source_order_parts(alternate)?;
+        let (alternate_kind, alternate_left, alternate_right, alternate_negative) =
+            parts(alternate)?;
         let expected = match kind {
             SourceOrderKind::Less => SourceOrderKind::Greater,
             SourceOrderKind::Greater => SourceOrderKind::Less,
             SourceOrderKind::LessEqual => SourceOrderKind::GreaterEqual,
             SourceOrderKind::GreaterEqual => SourceOrderKind::LessEqual,
         };
-        if alternate_kind != expected
+        if negative != alternate_negative
+            || alternate_kind != expected
             || left.ir() != alternate_right.ir()
             || right.ir() != alternate_left.ir()
         {

@@ -5,6 +5,128 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_
 use crate::prelude::*;
 
 impl LitexToLeanCompiler {
+    pub(super) fn compile_strict_sum_orders(
+        &self,
+        goal: &AtomicFact,
+        first: &AtomicExceptEqualityFactKnownProof,
+        second: &AtomicExceptEqualityFactKnownProof,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        let (low, high, strict) = source_order_oriented(goal)?;
+        let (
+            Obj::ArithmeticOperator(ArithmeticOperator::Add(left)),
+            Obj::ArithmeticOperator(ArithmeticOperator::Add(right)),
+        ) = (low, high)
+        else {
+            return Err(LeanCompileError::unsupported("StrictSum/Sums"));
+        };
+        let (a, b, first_strict) = source_order_oriented(&first.fact)?;
+        let (c, d, second_strict) = source_order_oriented(&second.fact)?;
+        if !strict
+            || !first_strict
+            || !second_strict
+            || a.ir() != left.left.ir()
+            || c.ir() != left.right.ir()
+        {
+            return Err(LeanCompileError::unsupported("StrictSum/LeftSubjects"));
+        }
+        let law = if b.ir() == right.left.ir() && d.ir() == right.right.ir() {
+            "addLtAdd"
+        } else if b.ir() == right.right.ir() && d.ir() == right.left.ir() {
+            "addLtAddSwap"
+        } else {
+            return Err(LeanCompileError::unsupported("StrictSum/RightSubjects"));
+        };
+        let first = self.compile_order_known_premise(first, position)?.1;
+        let second = self.compile_order_known_premise(second, position)?.1;
+        Ok(format!(
+            "(Litex.{law} {} {} {first} {second})",
+            self.compile_object_reference(low, position)?,
+            self.compile_object_reference(high, position)?
+        ))
+    }
+
+    pub(super) fn compile_strict_add_congruence(
+        &self,
+        goal: &AtomicFact,
+        premise: &VerifyFactResult,
+        common_left: bool,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        let (low, high, strict) = source_order_oriented(goal)?;
+        let (
+            Obj::ArithmeticOperator(ArithmeticOperator::Add(lhs)),
+            Obj::ArithmeticOperator(ArithmeticOperator::Add(rhs)),
+        ) = (low, high)
+        else {
+            return Err(LeanCompileError::unsupported("StrictAddCongruence/Sums"));
+        };
+        let (common, other_common, a, b, field, law) = if common_left {
+            (
+                &lhs.left,
+                &rhs.left,
+                &lhs.right,
+                &rhs.right,
+                "left",
+                "addStructuralLtLeft",
+            )
+        } else {
+            (
+                &lhs.right,
+                &rhs.right,
+                &lhs.left,
+                &rhs.left,
+                "right",
+                "addStructuralLtRight",
+            )
+        };
+        if !strict || common.ir() != other_common.ir() {
+            return Err(LeanCompileError::unsupported(
+                "StrictAddCongruence/CommonOperand",
+            ));
+        }
+        ensure_recorded_order(premise, Some(a), b, true)?;
+        let order = self
+            .compile_verify(premise, &position.atomic_search_prior(0)?)?
+            .1;
+        let complete = position.atomic_search_prior(1)?;
+        let carrier = self.compile_real_membership_certificate(low, &complete)?;
+        Ok(format!("(by\n  let _litex_add_left := {}\n  let _litex_add_right := {}\n  exact Litex.{law} _litex_add_left _litex_add_right {carrier} {order} (Litex.sameRefl _litex_add_left.val.{field})\n)", self.compile_object_reference(low, &complete)?, self.compile_object_reference(high, &complete)?))
+    }
+
+    pub(super) fn compile_mul_minus_one_negative(
+        &self,
+        goal: &AtomicFact,
+        premise: &AtomicExceptEqualityFactKnownProof,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        let (low, high, strict) = source_order_oriented(goal)?;
+        let Obj::ArithmeticOperator(ArithmeticOperator::Mul(product)) = low else {
+            return Err(LeanCompileError::unsupported("MinusOneOrder/Product"));
+        };
+        let (factor, operand, law) = if closed_integer(&product.left) == Some(-1) {
+            (&product.left, &product.right, "mulMinusOneNegativeLeft")
+        } else if closed_integer(&product.right) == Some(-1) {
+            (&product.right, &product.left, "mulMinusOneNegativeRight")
+        } else {
+            return Err(LeanCompileError::unsupported("MinusOneOrder/Factor"));
+        };
+        let (zero, value, positive) = source_order_oriented(&premise.fact)?;
+        if !strict
+            || !is_exact_zero(high)
+            || !positive
+            || !is_exact_zero(zero)
+            || value.ir() != operand.ir()
+        {
+            return Err(LeanCompileError::unsupported(
+                "MinusOneOrder/PremiseSubject",
+            ));
+        }
+        let (_, factor_denotation, _, _) = self.compile_numeric_observation(factor, position)?;
+        let positive = self.compile_order_known_premise(premise, position)?.1;
+        Ok(format!("(Litex.{law} {} (({factor_denotation}).trans (congrArg M.number (by norm_num))) {positive})", self.compile_object_reference(low, position)?))
+    }
+
     pub(super) fn compile_add_strict_shift(
         &self,
         goal: &AtomicFact,
@@ -164,21 +286,94 @@ impl LitexToLeanCompiler {
         } else {
             (&lhs.right, &rhs.right, &lhs.left, &rhs.left)
         };
-        if strict || left_factor.ir() != right_factor.ir() {
+        if left_factor.ir() != right_factor.ir() {
             return Err(LeanCompileError::new(
                 "MulMonotone/Factor",
-                "The original weak products must retain their common factor on the selected side.",
+                "The original products must retain their common factor on the selected side.",
             ));
         }
-        ensure_recorded_order(factor, None, left_factor, false)?;
-        ensure_recorded_order(order, Some(left_operand), right_operand, false)?;
-        let law = if common_left {
-            "mulStructuralLeLeft"
-        } else {
-            "mulStructuralLeRight"
+        ensure_recorded_order(factor, None, left_factor, strict)?;
+        ensure_recorded_order(order, Some(left_operand), right_operand, strict)?;
+        let law = match (strict, common_left) {
+            (true, true) => "mulStructuralLtLeft",
+            (true, false) => "mulStructuralLtRight",
+            (false, true) => "mulStructuralLeLeft",
+            (false, false) => "mulStructuralLeRight",
         };
         let side = if common_left { "left" } else { "right" };
         Ok(format!("(by\n  let _litex_monotone_left := {}\n  let _litex_monotone_right := {}\n  exact Litex.{law} _litex_monotone_left _litex_monotone_right {} {} (Litex.sameRefl _litex_monotone_left.val.{side})\n)", self.compile_object_reference(low, position)?, self.compile_object_reference(high, position)?, self.compile_verify(factor, position)?.1, self.compile_verify(order, position)?.1))
+    }
+
+    pub(in crate::compile_to_lean) fn compile_strict_mul_strategy(
+        &self,
+        goal: &AtomicFact,
+        requirements: &[Fact],
+        results: &[VerifyFactResult],
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        if requirements.len() != 2 || results.len() != 2 {
+            return Err(LeanCompileError::new("MulMonotone/Requirements", "The selected strategy needs its positive-factor proof followed by its operand order."));
+        }
+        for (subject, result) in requirements.iter().zip(results) {
+            if source_subject(result)? != *subject {
+                return Err(LeanCompileError::new(
+                    "MulMonotone/RequirementCapture",
+                    "A child differs from its ordered original requirement.",
+                ));
+            }
+        }
+        let (low, high, strict) = source_order_oriented(goal)?;
+        let (
+            Obj::ArithmeticOperator(ArithmeticOperator::Mul(lhs)),
+            Obj::ArithmeticOperator(ArithmeticOperator::Mul(rhs)),
+        ) = (low, high)
+        else {
+            return Err(LeanCompileError::unsupported("MulMonotone/Constructor"));
+        };
+        let Fact::AtomicFact(positive) = &requirements[0] else {
+            return Err(LeanCompileError::unsupported("MulMonotone/PositiveFactor"));
+        };
+        let (_, factor, _) = source_order_oriented(positive)?;
+        ensure_recorded_order(&results[0], None, factor, true)?;
+        if !strict {
+            return Err(LeanCompileError::unsupported("MulMonotone/StrictGoal"));
+        }
+        let factor_on_left = |left: &Obj, right: &Obj| {
+            if left.ir() == factor.ir() {
+                Ok(true)
+            } else if right.ir() == factor.ir() {
+                Ok(false)
+            } else {
+                Err(LeanCompileError::unsupported("MulMonotone/SelectedFactor"))
+            }
+        };
+        let lhs_left = factor_on_left(&lhs.left, &lhs.right)?;
+        let rhs_left = factor_on_left(&rhs.left, &rhs.right)?;
+        ensure_recorded_order(
+            &results[1],
+            Some(if lhs_left { &lhs.right } else { &lhs.left }),
+            if rhs_left { &rhs.right } else { &rhs.left },
+            true,
+        )?;
+        if lhs_left == rhs_left {
+            return self.compile_selected_mul_monotone(
+                goal,
+                &results[0],
+                &results[1],
+                lhs_left,
+                position,
+            );
+        }
+        let normalize = |name: &str, on_left: bool| {
+            if on_left {
+                (name.to_string(), format!("(Litex.sameRefl {name})"))
+            } else {
+                (format!("(Litex.mul {name}.val.right {name}.val.left {name}.wd.2 {name}.wd.1)"), format!("(Litex.sameMulComm {name}.val.right {name}.val.left {name}.wd.2 {name}.wd.1)"))
+            }
+        };
+        let (left, left_same) = normalize("_litex_product_left", lhs_left);
+        let (right, right_same) = normalize("_litex_product_right", rhs_left);
+        Ok(format!("(by\n  let _litex_product_left := {}\n  let _litex_product_right := {}\n  let _litex_factor_left := {left}\n  let _litex_factor_right := {right}\n  exact Litex.ltOfSame _litex_factor_left _litex_product_left _litex_factor_right _litex_product_right {left_same} {right_same} (Litex.mulStructuralLtLeft _litex_factor_left _litex_factor_right {} {} (Litex.sameRefl _litex_factor_left.val.left))\n)", self.compile_object_reference(low, position)?, self.compile_object_reference(high, position)?, self.compile_verify(&results[0], position)?.1, self.compile_verify(&results[1], position)?.1))
     }
 
     pub(in crate::compile_to_lean) fn compile_selected_div_monotone(

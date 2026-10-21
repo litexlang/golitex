@@ -151,6 +151,8 @@ pub struct BuiltinFunctionLipschitzDefinitionProof {
 }
 
 pub enum BuiltinPropDefinitionProof {
+    HasDerivativeAt(BuiltinHasDerivativeAtDefinitionProof),
+    FunctionDifferentiableAt(BuiltinFunctionDifferentiableAtDefinitionProof),
     RealSetBound(BuiltinRealSetBoundDefinitionProof),
     RealSetBounded(BuiltinRealSetBoundedDefinitionProof),
     SequenceAnalysis(BuiltinSequenceAnalysisDefinitionProof),
@@ -278,6 +280,16 @@ pub struct BuiltinSequenceLimsupDefinitionProof {
 }
 
 pub struct BuiltinFunctionLimitDefinitionProof {
+    pub requirement_facts: Vec<Fact>,
+    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
+}
+
+pub struct BuiltinHasDerivativeAtDefinitionProof {
+    pub requirement_facts: Vec<Fact>,
+    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
+}
+
+pub struct BuiltinFunctionDifferentiableAtDefinitionProof {
     pub requirement_facts: Vec<Fact>,
     pub proof_of_requirement_facts: Vec<VerifyFactResult>,
 }

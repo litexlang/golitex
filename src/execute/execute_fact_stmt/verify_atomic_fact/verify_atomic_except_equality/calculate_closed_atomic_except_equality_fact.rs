@@ -11,7 +11,11 @@ pub fn calculate_closed_atomic_except_equality_fact(
     use NumberCompareResult::{Equal, Greater, Less};
 
     let proof = match fact {
-        RealSetBoundFact(_)
+        HasDerivativeAtFact(_)
+        | NotHasDerivativeAtFact(_)
+        | FunctionDifferentiableAtFact(_)
+        | NotFunctionDifferentiableAtFact(_)
+        | RealSetBoundFact(_)
         | NotRealSetBoundFact(_)
         | RealSetBoundedFact(_)
         | NotRealSetBoundedFact(_)

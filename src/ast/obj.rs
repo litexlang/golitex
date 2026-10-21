@@ -24,6 +24,7 @@ use crate::runtime::runtime_ids::IdentifierId;
 pub enum Obj {
     // Finite real supremum/infimum selected only from proved candidate/existence.
     BoundOperator(BoundOperator),
+    DerivativeOperator(DerivativeOperator),
     // Free or qualified name used as a value. Example: `a`, `m1::f0::Point`.
     Identifier(IdentifierObj),
 
@@ -1327,6 +1328,25 @@ impl FunctionLimit {
         Self {
             function: Box::new(function),
             approach: LimitApproach::AtPoint(Box::new(point)),
+        }
+    }
+}
+
+/// Finite real derivative selected only from proved candidate/existence.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum DerivativeOperator {
+    AtPoint(DerivativeAt),
+}
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct DerivativeAt {
+    pub function: Box<Obj>,
+    pub point: Box<Obj>,
+}
+impl DerivativeAt {
+    pub fn new(function: Obj, point: Obj) -> Self {
+        Self {
+            function: Box::new(function),
+            point: Box::new(point),
         }
     }
 }

@@ -65,6 +65,33 @@ fn prepare_contract(
     use BuiltinTheoremId::*;
     if matches!(
         id,
+        FnDerivativeAtRealInterior
+            | FnDerivativeAtNonzeroInterior
+            | FnDerivativeAtPositiveInterior
+            | FnDerivativeAtNegativeInterior
+            | FnDerivativeAtFromLimit
+            | FnDerivativeAtToLimit
+            | FnDerivativeAtExists
+            | FnDerivativeAtSelected
+            | FnDerivativeAtUnique
+            | FnDerivativeAtConstant
+            | FnDerivativeAtIdentity
+            | FnDerivativeAtNeg
+            | FnDerivativeAtScale
+            | FnDerivativeAtPower
+            | FnDerivativeAtAdd
+            | FnDerivativeAtSubtract
+            | FnDerivativeAtMultiply
+            | FnDerivativeAtDivide
+            | FnDerivativeAtCompose
+            | FnDifferentiableAtFromDerivative
+            | FnDerivativeAtContinuous
+            | FnDifferentiableAtContinuous
+    ) {
+        return super::function_derivatives::prepare(rt, id, args);
+    }
+    if matches!(
+        id,
         SequenceMonotoneBoundedAbove
             | SequenceMonotoneBoundedBelow
             | SequenceCauchyBounded

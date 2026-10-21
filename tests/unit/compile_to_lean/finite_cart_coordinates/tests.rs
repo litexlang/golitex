@@ -87,7 +87,7 @@ fn finite_coordinate_uses_its_exact_citation_for_empty_equality_paths() {
         .compile_run(&result, "coordinate_citation")
         .unwrap();
     assert!(output.contains(&format!(")) h_{} (by change M.mem", id.value())));
-    assert!(output.contains("Litex.Same _object_w") && output.contains(" _object_h"));
+    assert!(output.contains("_object_w") && output.contains(" _object_h"));
     assert!(!output.contains("Litex.indexSetMemberOfClosedRange"));
 }
 

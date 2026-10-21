@@ -1,0 +1,87 @@
+# Before this candidate is proved, derivative(square,3)=6 is rejected by WD.
+# Check: target/release/litex -strict -lang en -f examples/proof_nodes/atomic/by_builtin_strategy/pointwise_derivative.lit
+have fn square(x R) R=x^2
+$has_derivative_at(square,3,6)
+derivative(square,3)=6
+derivative(square,3)+2=8
+
+# Natural powers include n=0; reciprocals require the actual nonzero domain.
+claim:
+    ? forall f fn(x R) R,x0,L R:
+        $has_limit_at(fn(x R:x-x0!=0) R {(f(x)-f(x0))/(x-x0)},x0,L)
+        =>:
+            $has_derivative_at(f,x0,L)
+    release thm fn_derivative_at_real_interior(x0)
+    $has_derivative_at(f,x0,L)
+
+claim:
+    ? forall f,g,h fn(x R) R,x0 R:
+        $is_differentiable_at(f,x0)
+        $is_differentiable_at(g,x0)
+        $is_differentiable_at(h,x0)
+        =>:
+            $is_differentiable_at(fn(t R) R {f(t)+g(t)+h(t)},x0)
+    $is_differentiable_at(fn(t R) R {f(t)+g(t)+h(t)},x0)
+
+claim:
+    ? forall f,g fn(x R) R,x0,A,B R:
+        $has_derivative_at(f,x0,A)
+        $has_derivative_at(g,x0,B)
+        =>:
+            $has_derivative_at(fn(t R) R {f(t)+g(t)},x0,A+B)
+    $has_derivative_at(fn(t R) R {f(t)+g(t)},x0,A+B)
+
+claim:
+    ? forall f fn(x R) R,x0,L R:
+        $has_limit_at(fn(x R:x-x0!=0) R {(f(x)-f(x0))/(x-x0)},x0,L)
+        =>:
+            $has_derivative_at(f,x0,L)
+    release thm fn_derivative_at_real_interior(x0)
+    release thm fn_derivative_at_from_limit(f,x0,L)
+
+$has_derivative_at(fn(x R) R {x^0},0,0)
+$has_derivative_at(fn(x R) R {x^1},0,1)
+$has_derivative_at(fn(x R*) R {1/x},2,-1/4)
+
+claim:
+    ? forall f fn(x R) R,n N:
+        $is_differentiable_at(f,0)
+        =>:
+            $is_differentiable_at(fn(t R) R {f(t)^n},0)
+    $is_differentiable_at(fn(t R) R {f(t)^n},0)
+
+claim:
+    ? forall f,g,h fn(x R) R:
+        $is_differentiable_at(f,0)
+        $is_differentiable_at(g,0)
+        $is_differentiable_at(h,0)
+        =>:
+            $is_differentiable_at(fn(t R) R {f(t)+g(t)+h(t)},0)
+    $is_differentiable_at(fn(t R) R {f(t)+g(t)+h(t)},0)
+
+claim:
+    ? forall f,g,h fn(x R) R:
+        $is_differentiable_at(f,0)
+        $is_differentiable_at(g,0)
+        $is_differentiable_at(h,0)
+        =>:
+            $is_differentiable_at(fn(t R) R {f(t)*g(t)*h(t)},0)
+    $is_differentiable_at(fn(t R) R {f(t)*g(t)*h(t)},0)
+
+claim:
+    ? forall f,g fn(x R) R:
+        $is_differentiable_at(f,0)
+        $is_differentiable_at(g,0)
+        g(0)!=0
+        =>:
+            $is_differentiable_at(fn(t R:g(t)!=0) R {f(t)/g(t)},0)
+    $is_differentiable_at(fn(t R:g(t)!=0) R {f(t)/g(t)},0)
+
+claim:
+    ? forall f,g,h fn(x R) R:
+        $is_differentiable_at(h,0)
+        $is_differentiable_at(g,h(0))
+        $is_differentiable_at(f,g(h(0)))
+        =>:
+            $is_differentiable_at(fn(t R) R {f(g(h(t)))},0)
+    $is_differentiable_at(fn(t R) R {f(g(h(t)))},0)

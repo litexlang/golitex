@@ -8,6 +8,7 @@ pub mod run_eval;
 pub mod run_extract_executable_code;
 pub mod run_litex_code;
 pub mod run_repl;
+pub mod source_observer;
 
 #[cfg(test)]
 #[path = "../../tests/unit/run/binding_lifecycle/tests.rs"]

@@ -1,0 +1,1 @@
+$has_derivative_at(fn(x R) R {x*x},3,9)

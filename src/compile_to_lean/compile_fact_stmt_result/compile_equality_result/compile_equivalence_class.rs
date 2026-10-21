@@ -1,5 +1,4 @@
-use crate::compile_to_lean::helper::*;
-use crate::compile_to_lean::source_position::SourcePosition;
+use crate::compile_to_lean::source_position::{SourceOwner, SourcePosition};
 use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
 use crate::prelude::*;
 
@@ -57,16 +56,17 @@ impl LitexToLeanCompiler {
                 ))
             }
             EqualFactSearchedProofByEquivalenceClass::ViaPeers(proof) => {
-                ensure_object(
-                    &proof.bridge.fact.left,
-                    &proof.bridge.well_defined_proof.left,
+                let bindings = self.compile_equal_wd_locals(
+                    &proof.bridge.fact,
+                    &proof.bridge.well_defined_proof,
+                    position,
                 )?;
-                ensure_object(
-                    &proof.bridge.fact.right,
-                    &proof.bridge.well_defined_proof.right,
-                )?;
-                self.compile_wd(&proof.bridge.well_defined_proof.left, position)?;
-                self.compile_wd(&proof.bridge.well_defined_proof.right, position)?;
+                let locals = SourcePosition::new(
+                    Some(position),
+                    SourceOwner::EqualWDLocals(&proof.bridge.well_defined_proof, 2),
+                    2,
+                );
+                let position = &locals;
                 let left_path = self.compile_equality_path(
                     &fact.left,
                     &proof.bridge.fact.left,
@@ -85,8 +85,15 @@ impl LitexToLeanCompiler {
                     &proof.right_path,
                     position,
                 )?;
-                Ok(format!(
-                    "(Eq.trans {left_path} (Eq.trans {bridge} {right_path}))"
+                let proposition = format!(
+                    "Litex.Same {} {}",
+                    self.compile_object_reference(&fact.left, position)?,
+                    self.compile_object_reference(&fact.right, position)?
+                );
+                Ok(Self::scope_equal_wd_proof(
+                    proposition,
+                    format!("(Eq.trans {left_path} (Eq.trans {bridge} {right_path}))"),
+                    &bindings,
                 ))
             }
         }

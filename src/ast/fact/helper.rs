@@ -18,7 +18,9 @@ use std::collections::HashSet;
 pub fn atomic_fact_has_positive_polarity(fact: &AtomicFact) -> bool {
     !matches!(
         fact,
-        AtomicFact::NotNormalAtomicFact(_)
+        AtomicFact::NotHasDerivativeAtFact(_)
+            | AtomicFact::NotFunctionDifferentiableAtFact(_)
+            | AtomicFact::NotNormalAtomicFact(_)
             | AtomicFact::NotRealSetBoundFact(_)
             | AtomicFact::NotRealSetBoundedFact(_)
             | AtomicFact::NotSequenceAnalysisFact(_)
@@ -55,6 +57,10 @@ pub fn atomic_fact_has_positive_polarity(fact: &AtomicFact) -> bool {
 
 pub fn atomic_fact_args_ref(fact: &AtomicFact) -> Vec<&Obj> {
     match fact {
+        AtomicFact::HasDerivativeAtFact(f) => vec![&f.function, &f.point, &f.value],
+        AtomicFact::NotHasDerivativeAtFact(f) => vec![&f.function, &f.point, &f.value],
+        AtomicFact::FunctionDifferentiableAtFact(f) => vec![&f.function, &f.point],
+        AtomicFact::NotFunctionDifferentiableAtFact(f) => vec![&f.function, &f.point],
         AtomicFact::RealSetBoundFact(f) => vec![&f.set, &f.bound],
         AtomicFact::NotRealSetBoundFact(f) => vec![&f.set, &f.bound],
         AtomicFact::RealSetBoundedFact(f) => vec![&f.set],
@@ -243,6 +249,36 @@ pub fn and_chain_as_fact(branch: &AndChainAtomicFact) -> Fact {
 // Flip atomic polarity with a fresh FactId.
 pub fn negate_atomic_fact(fact: &AtomicFact, new_fact_id: FactId) -> Option<AtomicFact> {
     Some(match fact {
+        AtomicFact::HasDerivativeAtFact(f) => super::NotHasDerivativeAtFact {
+            fact_id: new_fact_id,
+            function: f.function.clone(),
+            point: f.point.clone(),
+            value: f.value.clone(),
+            line_file: f.line_file.clone(),
+        }
+        .into(),
+        AtomicFact::NotHasDerivativeAtFact(f) => super::HasDerivativeAtFact {
+            fact_id: new_fact_id,
+            function: f.function.clone(),
+            point: f.point.clone(),
+            value: f.value.clone(),
+            line_file: f.line_file.clone(),
+        }
+        .into(),
+        AtomicFact::FunctionDifferentiableAtFact(f) => super::NotFunctionDifferentiableAtFact {
+            fact_id: new_fact_id,
+            function: f.function.clone(),
+            point: f.point.clone(),
+            line_file: f.line_file.clone(),
+        }
+        .into(),
+        AtomicFact::NotFunctionDifferentiableAtFact(f) => super::FunctionDifferentiableAtFact {
+            fact_id: new_fact_id,
+            function: f.function.clone(),
+            point: f.point.clone(),
+            line_file: f.line_file.clone(),
+        }
+        .into(),
         AtomicFact::RealSetBoundFact(f) => super::NotRealSetBoundFact {
             fact_id: new_fact_id,
             set: f.set.clone(),

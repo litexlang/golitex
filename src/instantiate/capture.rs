@@ -55,6 +55,10 @@ pub fn collect_free_plain_ids(
     out: &mut HashSet<IdentifierId>,
 ) {
     match obj {
+        Obj::DerivativeOperator(crate::ast::obj::DerivativeOperator::AtPoint(a)) => {
+            collect_free_plain_ids(&a.function, bound, out);
+            collect_free_plain_ids(&a.point, bound, out);
+        }
         Obj::BoundOperator(crate::ast::obj::BoundOperator::Supremum(a)) => {
             collect_free_plain_ids(&a.set, bound, out)
         }

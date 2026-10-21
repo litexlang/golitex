@@ -189,6 +189,13 @@ pub fn compound_objs_alpha_equal(left: &Obj, right: &Obj) -> bool {
 fn objs_alpha_equal(left: &Obj, right: &Obj, map: &HashMap<IdentifierId, IdentifierId>) -> bool {
     match (left, right) {
         (
+            Obj::DerivativeOperator(crate::ast::obj::DerivativeOperator::AtPoint(l)),
+            Obj::DerivativeOperator(crate::ast::obj::DerivativeOperator::AtPoint(r)),
+        ) => {
+            objs_alpha_equal(&l.function, &r.function, map)
+                && objs_alpha_equal(&l.point, &r.point, map)
+        }
+        (
             Obj::LimitOperator(crate::ast::obj::LimitOperator::Function(l)),
             Obj::LimitOperator(crate::ast::obj::LimitOperator::Function(r)),
         ) => {

@@ -31,7 +31,9 @@ impl LitexToLeanCompiler {
             before: 0,
             ..*position
         };
-        let (_, tail) = self.compile_verify_plain_exist_success(verified, &verified_position)?;
+        let (proposition, tail) =
+            self.compile_verify_plain_exist_success(verified, &verified_position)?;
+        let tail = format!("(show {proposition} from {tail})");
         self.compile_obtain_elimination(
             source,
             &verified.well_defined_proof,

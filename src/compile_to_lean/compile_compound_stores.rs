@@ -242,6 +242,18 @@ impl LitexToLeanCompiler {
             InferAtomicFactResult::NotRealAccumulationFact(_) => {
                 matches!(atomic, AtomicFact::NotRealAccumulationFact(_))
             }
+            InferAtomicFactResult::HasDerivativeAtFact(_) => {
+                matches!(atomic, AtomicFact::HasDerivativeAtFact(_))
+            }
+            InferAtomicFactResult::NotHasDerivativeAtFact(_) => {
+                matches!(atomic, AtomicFact::NotHasDerivativeAtFact(_))
+            }
+            InferAtomicFactResult::FunctionDifferentiableAtFact(_) => {
+                matches!(atomic, AtomicFact::FunctionDifferentiableAtFact(_))
+            }
+            InferAtomicFactResult::NotFunctionDifferentiableAtFact(_) => {
+                matches!(atomic, AtomicFact::NotFunctionDifferentiableAtFact(_))
+            }
             InferAtomicFactResult::FunctionContinuousAtFact(_) => {
                 matches!(atomic, AtomicFact::FunctionContinuousAtFact(_))
             }
@@ -408,6 +420,14 @@ impl LitexToLeanCompiler {
             }
             InferAtomicFactResult::NotRealAccumulationFact(_) => {
                 Err(LeanCompileError::unsupported("Inference/RealAnalysis"))
+            }
+            InferAtomicFactResult::HasDerivativeAtFact(_)
+            | InferAtomicFactResult::NotHasDerivativeAtFact(_) => {
+                Err(LeanCompileError::unsupported("Inference/DerivativeAt"))
+            }
+            InferAtomicFactResult::FunctionDifferentiableAtFact(_)
+            | InferAtomicFactResult::NotFunctionDifferentiableAtFact(_) => {
+                Err(LeanCompileError::unsupported("Inference/DerivativeAt"))
             }
             InferAtomicFactResult::FunctionContinuousAtFact(_) => {
                 Err(LeanCompileError::unsupported("Inference/RealAnalysis"))

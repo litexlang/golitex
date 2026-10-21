@@ -54,6 +54,11 @@ impl LitexToLeanCompiler {
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
         let compiled = match &proof.reason {
+            StructuralMembershipReason::Min { .. }
+            | StructuralMembershipReason::Max { .. }
+            | StructuralMembershipReason::NaturalMaxDifference { .. } => Err(
+                LeanCompileError::unsupported("StructuralMembership/OrderedSelection"),
+            ),
             StructuralMembershipReason::Known(known) => {
                 let mut fact = match self.resolve_fact(known.cite_fact_id, position)? {
                     Fact::AtomicFact(AtomicFact::InFact(fact)) => fact,
