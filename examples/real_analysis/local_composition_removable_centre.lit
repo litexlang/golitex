@@ -1,0 +1,71 @@
+# Inner calls are required only in a punctured neighbourhood. The output has a defined centre.
+have fn identity(x R) R=x
+
+have fn punctured_inner(x R*) R=x
+
+have fn continued(x R) R=x
+
+have fn continued_punctured(x R) R=x
+
+release thm fn_limit_at_real_accumulation(0)
+
+by def $is_real_accumulation_at(R,0)
+
+claim:
+    ? forall radius R+:
+        exist x R* st {0<abs(x-0) and abs(x-0)<radius}
+    witness exist x R* st {0<abs(x-0) and abs(x-0)<radius} from radius/2:
+        0<radius/2
+        radius/2-0=radius/2
+        abs(radius/2-0)=abs(radius/2)=radius/2<radius/2+radius/2=radius
+
+release thm fn_limit_at_identity(punctured_inner,0)
+
+release thm fn_continuous_at_identity(identity,0)
+
+claim:
+    ? exist radius R+ st {{x R:0<abs(x-0) and abs(x-0)<radius} $subset {x R:x $in R*,punctured_inner(x) $in R,continued(x)=identity(punctured_inner(x))}}
+    witness exist radius R+ st {{x R:0<abs(x-0) and abs(x-0)<radius} $subset {x R:x $in R*,punctured_inner(x) $in R,continued(x)=identity(punctured_inner(x))}} from 1:
+        claim:
+            ? forall x {z R:0<abs(z-0) and abs(z-0)<1}:
+                x $in {t R:t $in R*,punctured_inner(t) $in R,continued(t)=identity(punctured_inner(t))}
+            by contra:
+                ? x!=0
+                x=0
+                abs(x-0)=0
+                impossible 0<abs(x-0)
+            x $in R*
+            punctured_inner(x)=x
+            continued(x)=x
+            identity(punctured_inner(x))=identity(x)=x=continued(x)
+        by def {x R:0<abs(x-0) and abs(x-0)<1} $subset {x R:x $in R*,punctured_inner(x) $in R,continued(x)=identity(punctured_inner(x))}
+
+release thm fn_limit_at_continuous_compose(punctured_inner,identity,continued,0,0)
+
+identity(0)=0
+
+lim(continued,0)=0
+
+release thm fn_limit_at_identity(identity,0)
+
+claim:
+    ? exist radius R+ st {{x R:0<abs(x-0) and abs(x-0)<radius} $subset {x R:x $in R*,punctured_inner(x) $in R,punctured_inner(x)!=0,continued_punctured(x)=identity(punctured_inner(x))}}
+    witness exist radius R+ st {{x R:0<abs(x-0) and abs(x-0)<radius} $subset {x R:x $in R*,punctured_inner(x) $in R,punctured_inner(x)!=0,continued_punctured(x)=identity(punctured_inner(x))}} from 1:
+        claim:
+            ? forall x {z R:0<abs(z-0) and abs(z-0)<1}:
+                x $in {t R:t $in R*,punctured_inner(t) $in R,punctured_inner(t)!=0,continued_punctured(t)=identity(punctured_inner(t))}
+            by contra:
+                ? x!=0
+                x=0
+                abs(x-0)=0
+                impossible 0<abs(x-0)
+            x $in R*
+            punctured_inner(x)=x
+            punctured_inner(x)!=0
+            continued_punctured(x)=x
+            identity(punctured_inner(x))=identity(x)=x=continued_punctured(x)
+        by def {x R:0<abs(x-0) and abs(x-0)<1} $subset {x R:x $in R*,punctured_inner(x) $in R,punctured_inner(x)!=0,continued_punctured(x)=identity(punctured_inner(x))}
+
+release thm fn_limit_at_punctured_compose(punctured_inner,identity,continued_punctured,0,0,0)
+
+lim(continued_punctured,0)=0

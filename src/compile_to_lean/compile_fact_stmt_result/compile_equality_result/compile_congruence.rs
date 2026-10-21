@@ -4,12 +4,79 @@ use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
 use crate::prelude::*;
 
 impl LitexToLeanCompiler {
+    pub(super) fn compile_tuple_component_strategy(
+        &self,
+        fact: &EqualFact,
+        requirements: &[Fact],
+        children: &[VerifyFactResult],
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        if !matches!(
+            (&fact.left, &fact.right),
+            (
+                Obj::ProductShape(ProductShape::Tuple(_)),
+                Obj::ProductShape(ProductShape::Tuple(_))
+            )
+        ) || requirements.len() != children.len()
+        {
+            return Err(LeanCompileError::unsupported("TupleStrategy/Requirements"));
+        }
+        for (requirement, child) in requirements.iter().zip(children) {
+            if source_subject(child)? != *requirement {
+                return Err(LeanCompileError::unsupported(
+                    "TupleStrategy/RequirementSubject",
+                ));
+            }
+        }
+        self.compile_matching_one_arg_by_one(fact, children, position)
+    }
+
     pub(in crate::compile_to_lean) fn compile_matching_one_arg_by_one(
         &self,
         fact: &EqualFact,
         children: &[VerifyFactResult],
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
+        if let (
+            Obj::ProductShape(ProductShape::Tuple(left)),
+            Obj::ProductShape(ProductShape::Tuple(right)),
+        ) = (&fact.left, &fact.right)
+        {
+            if left.args.is_empty()
+                || left.args.len() != right.args.len()
+                || children.len() != left.args.len()
+            {
+                return Err(LeanCompileError::new(
+                    "TupleCongruence/Children",
+                    "Tuple congruence needs one original equality per ordered component.",
+                ));
+            }
+            let mut components = Vec::with_capacity(children.len());
+            for (index, ((left, right), child)) in
+                left.args.iter().zip(&right.args).zip(children).enumerate()
+            {
+                match source_subject(child)? {
+                    Fact::AtomicFact(AtomicFact::EqualFact(eq))
+                        if eq.left.ir() == left.ir() && eq.right.ir() == right.ir() => {}
+                    _ => {
+                        return Err(LeanCompileError::new(
+                            "TupleCongruence/ChildSubject",
+                            "The child is not this exact ordered component equality.",
+                        ))
+                    }
+                }
+                let child_position = SourcePosition::new(
+                    Some(position),
+                    SourceOwner::EqualityRequirements(children),
+                    index,
+                );
+                components.push(self.compile_verify(child, &child_position)?.1);
+            }
+            return Ok(format!(
+                "(congrArg (Litex.FiniteFunction.tupleValue (M := M)) (funext {}))",
+                finite_vector_proof(&components),
+            ));
+        }
         let (Obj::FnObj(left), Obj::FnObj(right)) = (&fact.left, &fact.right) else {
             return self.compile_arithmetic_congruence(fact, children, position);
         };
@@ -59,16 +126,16 @@ impl LitexToLeanCompiler {
             );
             compiled.push(self.compile_verify(result, &child_position)?.1);
         }
-        let left = self.compile_object_reference(&fact.left, position)?;
-        let right = self.compile_object_reference(&fact.right, position)?;
+        self.compile_object_reference(&fact.left, position)?;
+        self.compile_object_reference(&fact.right, position)?;
         if compiled.len() == 2 {
             Ok(format!(
-                "(Litex.callCongr {left} {right} {} {})",
+                "(congrArg₂ (Litex.FunctionSemantics.callValue (M := M)) {} {})",
                 compiled[1], compiled[0]
             ))
         } else {
             Ok(format!(
-                "(Litex.call2Congr {left} {right} {} {} {})",
+                "(congrArg₂ (Litex.FunctionSemantics.callValue (M := M)) {} (congrArg₂ (Litex.FiniteFunction.pack2 (M := M)) {} {}))",
                 compiled[2], compiled[0], compiled[1]
             ))
         }

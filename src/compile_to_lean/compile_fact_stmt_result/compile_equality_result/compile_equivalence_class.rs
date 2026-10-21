@@ -86,7 +86,7 @@ impl LitexToLeanCompiler {
                     position,
                 )?;
                 Ok(format!(
-                    "(({left_path}).trans (({bridge}).trans {right_path}))"
+                    "(Eq.trans {left_path} (Eq.trans {bridge} {right_path}))"
                 ))
             }
         }

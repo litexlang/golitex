@@ -128,6 +128,7 @@ pub enum EqualitySearchProofByBuiltinRule {
     SequenceLimit(super::by_sequence_limit::SequenceLimitEqualityProof),
     SequenceLiminf(super::by_sequence_liminf::SequenceLiminfEqualityProof),
     SequenceLimsup(super::by_sequence_limsup::SequenceLimsupEqualityProof),
+    RealBounds(super::by_real_bounds::RealBoundEqualityProof),
     FunctionLimit(super::by_function_limit::FunctionLimitEqualityProof),
     DvdZeroRemainder(super::by_dvd_zero_remainder::DvdZeroRemainderProof),
     SymmetricDifference(super::by_symmetric_difference::SymmetricDifferenceEqualityProof),

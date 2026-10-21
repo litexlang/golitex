@@ -15,8 +15,12 @@ noncomputable def _object_i1 := (Litex.formulaFn (M := M) Litex.StandardSetValue
   have h_14 : Litex.In _value_i2 (Litex.N (M := M)) := h_14
   have h_15 : Litex.Le (Litex.number (M := M) (0 : ℂ)) _value_i2 :=
     (Litex.naturalNonnegative _value_i2 h_14)
-  change Litex.In (Litex.add _value_i2 (Litex.number (M := M) (1 : ℂ)) (Litex.naturalToComplex _value_i2 h_14) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.N (M := M))
-  exact (Litex.addInN _value_i2 (Litex.number (M := M) (1 : ℂ)) h_14 (Litex.NativeBridge.numberInNOfEq (M := M) (1 : ℂ) (1 : ℕ) (by norm_num)))))
+  change (by
+    let _atomic_wd_1_0 := (Litex.add _value_i2 (Litex.number (M := M) (1 : ℂ)) (Litex.naturalToComplex _value_i2 h_14) (Litex.numberInC (M := M) (1 : ℂ)))
+    exact Litex.In _atomic_wd_1_0 (Litex.N (M := M)))
+  exact (by
+    let _atomic_wd_1_0 := (Litex.add _value_i2 (Litex.number (M := M) (1 : ℂ)) (Litex.naturalToComplex _value_i2 h_14) (Litex.numberInC (M := M) (1 : ℂ)))
+    exact (Litex.addInN _value_i2 (Litex.number (M := M) (1 : ℂ)) h_14 (Litex.NativeBridge.numberInNOfEq (M := M) (1 : ℂ) (1 : ℕ) (by norm_num))))))
 theorem h_61 : Litex.In (_object_i1 (M := M)) (Litex.fnSet ((_object_i1 (M := M))).val.signature) :=
   (Litex.formulaFnInFnSet (_object_i1 (M := M)))
 theorem h_62 : Litex.Same (_object_i1 (M := M)) (_object_i1 (M := M)) :=
@@ -25,10 +29,14 @@ theorem h_62 : Litex.Same (_object_i1 (M := M)) (_object_i1 (M := M)) :=
 theorem h_64 : ∀ {_Host_i3 : Type v3} [_rep_i3 : Litex.Representation M _Host_i3] (_value_i3 : Litex.Obj (M := M) _Host_i3) (h_77 : Litex.In _value_i3 (Litex.N (M := M))), (by
   let _object_w6 := (let _wd_1_0 := (Litex.number (M := M) (2 : ℂ));
   let _wd_1_1 := (Litex.call Litex.StandardSetValue.natural Litex.StandardSetValue.natural (fun (_raw_i2 : M.Value) => True) (_object_i1 (M := M)) _value_i3 (h_61 (M := M)) h_77 True.intro);
-  (Litex.mul _wd_1_0 _wd_1_1 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.naturalToComplex (Litex.call Litex.StandardSetValue.natural Litex.StandardSetValue.natural (fun (_raw_i2 : M.Value) => True) (_object_i1 (M := M)) _value_i3 (h_61 (M := M)) h_77 True.intro) (Litex.callInOutput (Litex.call Litex.StandardSetValue.natural Litex.StandardSetValue.natural (fun (_raw_i2 : M.Value) => True) (_object_i1 (M := M)) _value_i3 (h_61 (M := M)) h_77 True.intro)))))
+  (Litex.mul _wd_1_0 _wd_1_1 (Litex.numberInC (M := M) (2 : ℂ)) (by
+    let _atomic_wd_1_0 := _wd_1_1
+    exact (Litex.naturalToComplex _atomic_wd_1_0 (Litex.callInOutput _atomic_wd_1_0)))))
   let _object_w7 := (let _wd_1_0 := (Litex.number (M := M) (2 : ℂ));
   let _wd_1_1 := (Litex.mul (Litex.number (M := M) (2 : ℂ)) _value_i3 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.naturalToComplex _value_i3 h_77));
-  (Litex.add _wd_1_0 _wd_1_1 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.mulInC _wd_1_0 _value_i3 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.naturalToComplex _value_i3 h_77))))
+  (Litex.add _wd_1_0 _wd_1_1 (Litex.numberInC (M := M) (2 : ℂ)) (by
+    let _atomic_wd_1_0 := (Litex.mul (Litex.number (M := M) (2 : ℂ)) _value_i3 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.naturalToComplex _value_i3 h_77))
+    exact (Litex.mulInC _wd_1_0 _value_i3 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.naturalToComplex _value_i3 h_77)))))
   exact Litex.Same _object_w6 _object_w7
 ) :=
   (by
@@ -37,10 +45,14 @@ theorem h_64 : ∀ {_Host_i3 : Type v3} [_rep_i3 : Litex.Representation M _Host_
       (Litex.naturalNonnegative _value_i3 h_77)
     let _object_w6 := (let _wd_1_0 := (Litex.number (M := M) (2 : ℂ));
     let _wd_1_1 := (Litex.call Litex.StandardSetValue.natural Litex.StandardSetValue.natural (fun (_raw_i2 : M.Value) => True) (_object_i1 (M := M)) _value_i3 (h_61 (M := M)) h_77 True.intro);
-    (Litex.mul _wd_1_0 _wd_1_1 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.naturalToComplex (Litex.call Litex.StandardSetValue.natural Litex.StandardSetValue.natural (fun (_raw_i2 : M.Value) => True) (_object_i1 (M := M)) _value_i3 (h_61 (M := M)) h_77 True.intro) (Litex.callInOutput (Litex.call Litex.StandardSetValue.natural Litex.StandardSetValue.natural (fun (_raw_i2 : M.Value) => True) (_object_i1 (M := M)) _value_i3 (h_61 (M := M)) h_77 True.intro)))))
+    (Litex.mul _wd_1_0 _wd_1_1 (Litex.numberInC (M := M) (2 : ℂ)) (by
+      let _atomic_wd_1_0 := _wd_1_1
+      exact (Litex.naturalToComplex _atomic_wd_1_0 (Litex.callInOutput _atomic_wd_1_0)))))
     let _object_w7 := (let _wd_1_0 := (Litex.number (M := M) (2 : ℂ));
     let _wd_1_1 := (Litex.mul (Litex.number (M := M) (2 : ℂ)) _value_i3 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.naturalToComplex _value_i3 h_77));
-    (Litex.add _wd_1_0 _wd_1_1 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.mulInC _wd_1_0 _value_i3 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.naturalToComplex _value_i3 h_77))))
+    (Litex.add _wd_1_0 _wd_1_1 (Litex.numberInC (M := M) (2 : ℂ)) (by
+      let _atomic_wd_1_0 := (Litex.mul (Litex.number (M := M) (2 : ℂ)) _value_i3 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.naturalToComplex _value_i3 h_77))
+      exact (Litex.mulInC _wd_1_0 _value_i3 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.naturalToComplex _value_i3 h_77)))))
     have h_63 : Litex.Same _object_w6 _object_w7 :=
       (((congrArg₂ M.mulValue (Eq.refl (M.number (2 : ℂ))) (by
         let _litex_original := (Litex.call Litex.StandardSetValue.natural Litex.StandardSetValue.natural (fun (_raw_i2 : M.Value) => True) (_object_i1 (M := M)) _value_i3 (h_61 (M := M)) h_77 True.intro)
@@ -50,7 +62,11 @@ theorem h_64 : ∀ {_Host_i3 : Type v3} [_rep_i3 : Litex.Representation M _Host_
         have _litex_call_eq := Litex.callCongr _litex_original _litex_literal (h_62 (M := M)) (Litex.sameRefl _litex_original.val.argument)
         have _litex_beta := Litex.callFormula_denote Litex.StandardSetValue.natural Litex.StandardSetValue.natural (fun (_raw_i2 : M.Value) => True) (fun (_raw_i2 : M.Value) => (M.addValue _raw_i2 (M.number (1 : ℂ)))) (by intro _x _hx _hg; exact _litex_literal.val.function.wd _x ((Litex.FunctionSignature.one_domain Litex.StandardSetValue.natural Litex.StandardSetValue.natural (fun (_raw_i2 : M.Value) => True) _x).mpr ⟨_hx, _hg⟩)) _litex_literal.val.argument _litex_literal.wd.2.1 _litex_literal.wd.2.2
         exact _litex_call_eq.trans (_litex_beta.trans (show (fun (_raw_i2 : M.Value) => (M.addValue _raw_i2 (M.number (1 : ℂ)))) (Litex.denote _litex_literal.val.argument) = (M.addValue (Litex.denote _value_i3) (M.number (1 : ℂ))) from rfl))
-      ))).trans (((Litex.NativeBridge.sameOfDenoteNumber _ _ ((2 : ℂ) * ((Litex.NativeBridge.asComplex _value_i3 (Litex.naturalToComplex _value_i3 h_77)) + (1 : ℂ))) ((2 : ℂ) + ((2 : ℂ) * (Litex.NativeBridge.asComplex _value_i3 (Litex.naturalToComplex _value_i3 h_77)))) (Litex.NativeBridge.denoteMul (Litex.number (M := M) (2 : ℂ)) (Litex.add _value_i3 (Litex.number (M := M) (1 : ℂ)) (Litex.naturalToComplex _value_i3 h_77) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.numberInC (M := M) (2 : ℂ)) (Litex.addInC _value_i3 (Litex.number (M := M) (1 : ℂ)) (Litex.naturalToComplex _value_i3 h_77) (Litex.numberInC (M := M) (1 : ℂ))) _ _ (Litex.NativeBridge.denoteNumber (M := M) (2 : ℂ)) (Litex.NativeBridge.denoteAdd _value_i3 (Litex.number (M := M) (1 : ℂ)) (Litex.naturalToComplex _value_i3 h_77) (Litex.numberInC (M := M) (1 : ℂ)) _ _ (Litex.NativeBridge.asComplex_spec _value_i3 (Litex.naturalToComplex _value_i3 h_77)) (Litex.NativeBridge.denoteNumber (M := M) (1 : ℂ)))) (Litex.NativeBridge.denoteAdd (Litex.number (M := M) (2 : ℂ)) (Litex.mul (Litex.number (M := M) (2 : ℂ)) _value_i3 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.naturalToComplex _value_i3 h_77)) (Litex.numberInC (M := M) (2 : ℂ)) (Litex.mulInC (Litex.number (M := M) (2 : ℂ)) _value_i3 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.naturalToComplex _value_i3 h_77)) _ _ (Litex.NativeBridge.denoteNumber (M := M) (2 : ℂ)) (Litex.NativeBridge.denoteMul (Litex.number (M := M) (2 : ℂ)) _value_i3 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.naturalToComplex _value_i3 h_77) _ _ (Litex.NativeBridge.denoteNumber (M := M) (2 : ℂ)) (Litex.NativeBridge.asComplex_spec _value_i3 (Litex.naturalToComplex _value_i3 h_77)))) (by ring))).trans ((Eq.refl (M.addValue (M.number (2 : ℂ)) (M.mulValue (M.number (2 : ℂ)) (Litex.denote _value_i3))))).symm))
+      ))).trans (((Litex.NativeBridge.sameOfDenoteNumber _ _ ((2 : ℂ) * ((Litex.NativeBridge.asComplex _value_i3 (Litex.naturalToComplex _value_i3 h_77)) + (1 : ℂ))) ((2 : ℂ) + ((2 : ℂ) * (Litex.NativeBridge.asComplex _value_i3 (Litex.naturalToComplex _value_i3 h_77)))) (Litex.NativeBridge.denoteMul (Litex.number (M := M) (2 : ℂ)) (Litex.add _value_i3 (Litex.number (M := M) (1 : ℂ)) (Litex.naturalToComplex _value_i3 h_77) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.numberInC (M := M) (2 : ℂ)) (by
+        let _atomic_wd_1_0 := (Litex.add _value_i3 (Litex.number (M := M) (1 : ℂ)) (Litex.naturalToComplex _value_i3 h_77) (Litex.numberInC (M := M) (1 : ℂ)))
+        exact (Litex.addInC _value_i3 (Litex.number (M := M) (1 : ℂ)) (Litex.naturalToComplex _value_i3 h_77) (Litex.numberInC (M := M) (1 : ℂ)))) _ _ (Litex.NativeBridge.denoteNumber (M := M) (2 : ℂ)) (Litex.NativeBridge.denoteAdd _value_i3 (Litex.number (M := M) (1 : ℂ)) (Litex.naturalToComplex _value_i3 h_77) (Litex.numberInC (M := M) (1 : ℂ)) _ _ (Litex.NativeBridge.asComplex_spec _value_i3 (Litex.naturalToComplex _value_i3 h_77)) (Litex.NativeBridge.denoteNumber (M := M) (1 : ℂ)))) (Litex.NativeBridge.denoteAdd (Litex.number (M := M) (2 : ℂ)) (Litex.mul (Litex.number (M := M) (2 : ℂ)) _value_i3 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.naturalToComplex _value_i3 h_77)) (Litex.numberInC (M := M) (2 : ℂ)) (by
+        let _atomic_wd_1_0 := (Litex.mul (Litex.number (M := M) (2 : ℂ)) _value_i3 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.naturalToComplex _value_i3 h_77))
+        exact (Litex.mulInC (Litex.number (M := M) (2 : ℂ)) _value_i3 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.naturalToComplex _value_i3 h_77))) _ _ (Litex.NativeBridge.denoteNumber (M := M) (2 : ℂ)) (Litex.NativeBridge.denoteMul (Litex.number (M := M) (2 : ℂ)) _value_i3 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.naturalToComplex _value_i3 h_77) _ _ (Litex.NativeBridge.denoteNumber (M := M) (2 : ℂ)) (Litex.NativeBridge.asComplex_spec _value_i3 (Litex.naturalToComplex _value_i3 h_77)))) (by ring!))).trans ((Eq.refl (M.addValue (M.number (2 : ℂ)) (M.mulValue (M.number (2 : ℂ)) (Litex.denote _value_i3))))).symm))
     exact h_63
   )
 

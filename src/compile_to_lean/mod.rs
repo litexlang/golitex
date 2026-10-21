@@ -1,4 +1,5 @@
 mod compile_additive_inference;
+mod compile_builtin_tuple_theorem;
 mod compile_by_stmt_result;
 mod compile_callee_constructor;
 mod compile_cart_coordinate_inferences;

@@ -2214,6 +2214,14 @@ pub(super) fn project_atomic_builtin_rule(
             entries.push(("right_in_n_proof", project_verify_fact(&p.right_in_n_proof, runtime)));
             object_for(runtime, entries)
         },
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::SubsetFact(br::subset::SubsetFactSearchProofByBuiltinRule::FunctionRangeInCodomain(p)) => object_for(runtime,vec![
+            ("type",string("builtin_rule")),("rule_name",string("FunctionRangeInCodomain")),
+            ("source",super::function_domain::project_source(&p.source,runtime)),
+            ("containment",match &p.containment {
+                br::subset::FunctionRangeCodomainContainment::Exact(equal)=>super::searched::project_equal_searched(equal,runtime),
+                br::subset::FunctionRangeCodomainContainment::Subset(proof)=>super::verify::project_verify_fact(proof,runtime),
+            }),
+        ]),
         AtomicExceptEqualityFactSearchProofByBuiltinRule::SubsetFact(br::subset::SubsetFactSearchProofByBuiltinRule::StandardSetSubset(p)) => {
             let mut entries = vec![
                 ("type", string("builtin_rule")),

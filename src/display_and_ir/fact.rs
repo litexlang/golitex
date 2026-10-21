@@ -39,6 +39,20 @@ impl Fact {
 impl AtomicFact {
     pub fn ir(&self) -> FactIR {
         match self {
+            AtomicFact::RealSetBoundFact(x) => x.ir(),
+            AtomicFact::NotRealSetBoundFact(x) => x.ir(),
+            AtomicFact::RealSetBoundedFact(x) => x.ir(),
+            AtomicFact::NotRealSetBoundedFact(x) => x.ir(),
+            AtomicFact::SequenceAnalysisFact(x) => x.ir(),
+            AtomicFact::NotSequenceAnalysisFact(x) => x.ir(),
+            AtomicFact::RealAccumulationFact(x) => x.ir(),
+            AtomicFact::NotRealAccumulationFact(x) => x.ir(),
+            AtomicFact::FunctionContinuousAtFact(x) => x.ir(),
+            AtomicFact::NotFunctionContinuousAtFact(x) => x.ir(),
+            AtomicFact::FunctionContinuousFact(x) => x.ir(),
+            AtomicFact::NotFunctionContinuousFact(x) => x.ir(),
+            AtomicFact::FunctionLipschitzFact(x) => x.ir(),
+            AtomicFact::NotFunctionLipschitzFact(x) => x.ir(),
             AtomicFact::NormalAtomicFact(x) => x.ir(),
             AtomicFact::EqualFact(x) => x.ir(),
             AtomicFact::LessFact(x) => x.ir(),
@@ -95,6 +109,20 @@ impl AtomicFact {
     pub fn display_string(&self) -> String {
         match self {
             AtomicFact::NormalAtomicFact(x) => x.display_string(),
+            AtomicFact::RealSetBoundFact(x) => x.display_string(),
+            AtomicFact::NotRealSetBoundFact(x) => x.display_string(),
+            AtomicFact::RealSetBoundedFact(x) => x.display_string(),
+            AtomicFact::NotRealSetBoundedFact(x) => x.display_string(),
+            AtomicFact::SequenceAnalysisFact(x) => x.display_string(),
+            AtomicFact::NotSequenceAnalysisFact(x) => x.display_string(),
+            AtomicFact::RealAccumulationFact(x) => x.display_string(),
+            AtomicFact::NotRealAccumulationFact(x) => x.display_string(),
+            AtomicFact::FunctionContinuousAtFact(x) => x.display_string(),
+            AtomicFact::NotFunctionContinuousAtFact(x) => x.display_string(),
+            AtomicFact::FunctionContinuousFact(x) => x.display_string(),
+            AtomicFact::NotFunctionContinuousFact(x) => x.display_string(),
+            AtomicFact::FunctionLipschitzFact(x) => x.display_string(),
+            AtomicFact::NotFunctionLipschitzFact(x) => x.display_string(),
             AtomicFact::EqualFact(x) => x.display_string(),
             AtomicFact::LessFact(x) => x.display_string(),
             AtomicFact::GreaterFact(x) => x.display_string(),
@@ -1095,6 +1123,112 @@ impl NotForallFact {
 }
 
 impl_dollar_prefix_args!(HasSequenceLimitFact, HAS_SEQ_LIMIT, sequence, value);
+impl RealSetBoundFact {
+    pub fn ir(&self) -> FactIR {
+        let args = vec![self.set.ir().to_string(), self.bound.ir().to_string()].join(", ");
+        FactIR(format!("${}({})", self.predicate_name(), args))
+    }
+    impl_display_pair!();
+}
+impl NotRealSetBoundFact {
+    pub fn ir(&self) -> FactIR {
+        let args = vec![self.set.ir().to_string(), self.bound.ir().to_string()].join(", ");
+        FactIR(format!("not ${}({})", self.predicate_name(), args))
+    }
+    impl_display_pair!();
+}
+impl RealSetBoundedFact {
+    pub fn ir(&self) -> FactIR {
+        let args = vec![self.set.ir().to_string()].join(", ");
+        FactIR(format!("${}({})", self.predicate_name(), args))
+    }
+    impl_display_pair!();
+}
+impl NotRealSetBoundedFact {
+    pub fn ir(&self) -> FactIR {
+        let args = vec![self.set.ir().to_string()].join(", ");
+        FactIR(format!("not ${}({})", self.predicate_name(), args))
+    }
+    impl_display_pair!();
+}
+impl SequenceAnalysisFact {
+    pub fn ir(&self) -> FactIR {
+        let args = vec![self.sequence.ir().to_string()].join(", ");
+        FactIR(format!("${}({})", self.predicate_name(), args))
+    }
+    impl_display_pair!();
+}
+impl NotSequenceAnalysisFact {
+    pub fn ir(&self) -> FactIR {
+        let args = vec![self.sequence.ir().to_string()].join(", ");
+        FactIR(format!("not ${}({})", self.predicate_name(), args))
+    }
+    impl_display_pair!();
+}
+impl RealAccumulationFact {
+    pub fn ir(&self) -> FactIR {
+        let args = vec![self.domain.ir().to_string(), self.point.ir().to_string()].join(", ");
+        FactIR(format!("${}({})", self.predicate_name(), args))
+    }
+    impl_display_pair!();
+}
+impl NotRealAccumulationFact {
+    pub fn ir(&self) -> FactIR {
+        let args = vec![self.domain.ir().to_string(), self.point.ir().to_string()].join(", ");
+        FactIR(format!("not ${}({})", self.predicate_name(), args))
+    }
+    impl_display_pair!();
+}
+impl FunctionContinuousAtFact {
+    pub fn ir(&self) -> FactIR {
+        let args = vec![self.function.ir().to_string(), self.point.ir().to_string()].join(", ");
+        FactIR(format!("${}({})", self.predicate_name(), args))
+    }
+    impl_display_pair!();
+}
+impl NotFunctionContinuousAtFact {
+    pub fn ir(&self) -> FactIR {
+        let args = vec![self.function.ir().to_string(), self.point.ir().to_string()].join(", ");
+        FactIR(format!("not ${}({})", self.predicate_name(), args))
+    }
+    impl_display_pair!();
+}
+impl FunctionContinuousFact {
+    pub fn ir(&self) -> FactIR {
+        let args = vec![self.function.ir().to_string()].join(", ");
+        FactIR(format!("${}({})", self.predicate_name(), args))
+    }
+    impl_display_pair!();
+}
+impl NotFunctionContinuousFact {
+    pub fn ir(&self) -> FactIR {
+        let args = vec![self.function.ir().to_string()].join(", ");
+        FactIR(format!("not ${}({})", self.predicate_name(), args))
+    }
+    impl_display_pair!();
+}
+impl FunctionLipschitzFact {
+    pub fn ir(&self) -> FactIR {
+        let args = vec![
+            self.function.ir().to_string(),
+            self.constant.ir().to_string(),
+        ]
+        .join(", ");
+        FactIR(format!("${}({})", self.predicate_name(), args))
+    }
+    impl_display_pair!();
+}
+impl NotFunctionLipschitzFact {
+    pub fn ir(&self) -> FactIR {
+        let args = vec![
+            self.function.ir().to_string(),
+            self.constant.ir().to_string(),
+        ]
+        .join(", ");
+        FactIR(format!("not ${}({})", self.predicate_name(), args))
+    }
+    impl_display_pair!();
+}
 impl_dollar_prefix_args!(HasSequenceLimsupFact, HAS_SEQ_LIMSUP, sequence, value);
 impl_dollar_prefix_args!(HasSequenceLiminfFact, HAS_SEQ_LIMINF, sequence, value);
 impl_not_dollar_prefix_args!(NotHasSequenceLimitFact, HAS_SEQ_LIMIT, sequence, value);

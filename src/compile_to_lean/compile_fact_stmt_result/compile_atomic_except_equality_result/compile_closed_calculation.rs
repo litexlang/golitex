@@ -107,6 +107,15 @@ impl LitexToLeanCompiler {
                 ));
             }
             let native = self.compile_numeric_observation(element, position)?;
+            if *target == StandardSet::NPos {
+                let value = &number.normalized_value;
+                if !value.bytes().all(|b| b.is_ascii_digit()) || value.bytes().all(|b| b == b'0') {
+                    return Err(LeanCompileError::unsupported(
+                        "ClosedMembership/PositiveNaturalLiteral",
+                    ));
+                }
+                return Ok(format!("(Litex.numberInNPosOfEq (M := M) {} ({value} : ℕ) (by norm_num) (by norm_num))", native.0));
+            }
             if *target == StandardSet::C {
                 return Ok(format!("(Litex.numberInC (M := M) {})", native.0));
             }

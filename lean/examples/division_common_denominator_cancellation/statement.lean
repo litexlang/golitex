@@ -29,9 +29,13 @@ theorem h_160 : ∀ {_Host_i4 : Type v4} [_rep_i4 : Litex.Representation M _Host
 
 theorem h_249 : ∀ {_Host_i7 : Type v7} [_rep_i7 : Litex.Representation M _Host_i7] (_value_i7 : Litex.Obj (M := M) _Host_i7) (h_262 : Litex.In _value_i7 (Litex.Q (M := M))) {_Host_i8 : Type v8} [_rep_i8 : Litex.Representation M _Host_i8] (_value_i8 : Litex.Obj (M := M) _Host_i8) (h_263 : Litex.In _value_i8 (Litex.Q (M := M))) {_Host_i9 : Type v9} [_rep_i9 : Litex.Representation M _Host_i9] (_value_i9 : Litex.Obj (M := M) _Host_i9) (h_264 : Litex.In _value_i9 (Litex.Q (M := M))) {_Host_i10 : Type v10} [_rep_i10 : Litex.Representation M _Host_i10] (_value_i10 : Litex.Obj (M := M) _Host_i10) (h_265 : Litex.In _value_i10 (Litex.Q (M := M))) (h_244 : ¬ Litex.Same _value_i9 (Litex.number (M := M) (0 : ℂ))) (h_245 : ¬ Litex.Same _value_i10 (Litex.number (M := M) (0 : ℂ))) (h_246 : Litex.Same (let _wd_1_0 := (Litex.div _value_i7 _value_i9 (Litex.rationalToComplex _value_i7 h_262) (Litex.rationalToComplex _value_i9 h_264) h_244);
 let _wd_1_1 := _value_i10;
-(Litex.div _wd_1_0 _wd_1_1 (Litex.divInC _value_i7 _value_i9 (Litex.rationalToComplex _value_i7 h_262) (Litex.rationalToComplex _value_i9 h_264) (_wd_1_0).wd.2.2) (Litex.rationalToComplex _wd_1_1 h_265) h_245)) (let _wd_1_0 := (Litex.div _value_i8 _value_i9 (Litex.rationalToComplex _value_i8 h_263) (Litex.rationalToComplex _value_i9 h_264) h_244);
+(Litex.div _wd_1_0 _wd_1_1 (by
+  let _atomic_wd_1_0 := (Litex.div _value_i7 _value_i9 (Litex.rationalToComplex _value_i7 h_262) (Litex.rationalToComplex _value_i9 h_264) h_244)
+  exact (Litex.divInC _value_i7 _value_i9 (Litex.rationalToComplex _value_i7 h_262) (Litex.rationalToComplex _value_i9 h_264) (_atomic_wd_1_0).wd.2.2)) (Litex.rationalToComplex _wd_1_1 h_265) h_245)) (let _wd_1_0 := (Litex.div _value_i8 _value_i9 (Litex.rationalToComplex _value_i8 h_263) (Litex.rationalToComplex _value_i9 h_264) h_244);
 let _wd_1_1 := _value_i10;
-(Litex.div _wd_1_0 _wd_1_1 (Litex.divInC _value_i8 _value_i9 (Litex.rationalToComplex _value_i8 h_263) (Litex.rationalToComplex _value_i9 h_264) (_wd_1_0).wd.2.2) (Litex.rationalToComplex _wd_1_1 h_265) h_245))), (by
+(Litex.div _wd_1_0 _wd_1_1 (by
+  let _atomic_wd_1_0 := (Litex.div _value_i8 _value_i9 (Litex.rationalToComplex _value_i8 h_263) (Litex.rationalToComplex _value_i9 h_264) h_244)
+  exact (Litex.divInC _value_i8 _value_i9 (Litex.rationalToComplex _value_i8 h_263) (Litex.rationalToComplex _value_i9 h_264) (_atomic_wd_1_0).wd.2.2)) (Litex.rationalToComplex _wd_1_1 h_265) h_245))), (by
   let _object_w13 := (Litex.div _value_i7 _value_i9 (Litex.rationalToComplex _value_i7 h_262) (Litex.rationalToComplex _value_i9 h_264) h_244)
   let _object_w14 := (Litex.div _value_i8 _value_i9 (Litex.rationalToComplex _value_i8 h_263) (Litex.rationalToComplex _value_i9 h_264) h_244)
   exact ((Litex.Same _object_w13 _object_w14) ∧ (Litex.Same _value_i7 _value_i8))
@@ -39,7 +43,11 @@ let _wd_1_1 := _value_i10;
   (by
     intro _Host_i7 _rep_i7 _value_i7 h_262 _Host_i8 _rep_i8 _value_i8 h_263 _Host_i9 _rep_i9 _value_i9 h_264 _Host_i10 _rep_i10 _value_i10 h_265 h_244 h_245 h_246
     have h_831 : Litex.Same (Litex.div _value_i7 _value_i9 (Litex.rationalToComplex _value_i7 h_262) (Litex.rationalToComplex _value_i9 h_264) h_244) (Litex.div _value_i8 _value_i9 (Litex.rationalToComplex _value_i8 h_263) (Litex.rationalToComplex _value_i9 h_264) h_244) :=
-      (Litex.divCancelCommonDenominator (Litex.div _value_i7 _value_i9 (Litex.rationalToComplex _value_i7 h_262) (Litex.rationalToComplex _value_i9 h_264) h_244) (Litex.div _value_i8 _value_i9 (Litex.rationalToComplex _value_i8 h_263) (Litex.rationalToComplex _value_i9 h_264) h_244) _value_i10 (Litex.divInC _value_i7 _value_i9 (Litex.rationalToComplex _value_i7 h_262) (Litex.rationalToComplex _value_i9 h_264) ((Litex.div _value_i7 _value_i9 (Litex.rationalToComplex _value_i7 h_262) (Litex.rationalToComplex _value_i9 h_264) h_244)).wd.2.2) (Litex.divInC _value_i8 _value_i9 (Litex.rationalToComplex _value_i8 h_263) (Litex.rationalToComplex _value_i9 h_264) ((Litex.div _value_i8 _value_i9 (Litex.rationalToComplex _value_i8 h_263) (Litex.rationalToComplex _value_i9 h_264) h_244)).wd.2.2) (Litex.rationalToComplex _value_i10 h_265) h_245 h_246)
+      (Litex.divCancelCommonDenominator (Litex.div _value_i7 _value_i9 (Litex.rationalToComplex _value_i7 h_262) (Litex.rationalToComplex _value_i9 h_264) h_244) (Litex.div _value_i8 _value_i9 (Litex.rationalToComplex _value_i8 h_263) (Litex.rationalToComplex _value_i9 h_264) h_244) _value_i10 (by
+        let _atomic_wd_1_0 := (Litex.div _value_i7 _value_i9 (Litex.rationalToComplex _value_i7 h_262) (Litex.rationalToComplex _value_i9 h_264) h_244)
+        exact (Litex.divInC _value_i7 _value_i9 (Litex.rationalToComplex _value_i7 h_262) (Litex.rationalToComplex _value_i9 h_264) (_atomic_wd_1_0).wd.2.2)) (by
+        let _atomic_wd_1_0 := (Litex.div _value_i8 _value_i9 (Litex.rationalToComplex _value_i8 h_263) (Litex.rationalToComplex _value_i9 h_264) h_244)
+        exact (Litex.divInC _value_i8 _value_i9 (Litex.rationalToComplex _value_i8 h_263) (Litex.rationalToComplex _value_i9 h_264) (_atomic_wd_1_0).wd.2.2)) (Litex.rationalToComplex _value_i10 h_265) h_245 h_246)
     let _object_w13 := (Litex.div _value_i7 _value_i9 (Litex.rationalToComplex _value_i7 h_262) (Litex.rationalToComplex _value_i9 h_264) h_244)
     let _object_w14 := (Litex.div _value_i8 _value_i9 (Litex.rationalToComplex _value_i8 h_263) (Litex.rationalToComplex _value_i9 h_264) h_244)
     have h_247 : Litex.Same _object_w13 _object_w14 :=

@@ -20,6 +20,8 @@
 
 mod fact;
 mod fact_prop;
+mod real_analysis_fact;
+pub(crate) use real_analysis_fact::real_analysis_fact_arity;
 pub mod keywords;
 mod let_stmt;
 mod object;

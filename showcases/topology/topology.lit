@@ -264,28 +264,28 @@ thm composition_preimage:
 # Continuity means every open target set has an open preimage.
 # The ambient parameters contain the carriers; all map domains are the
 # actual carriers stored in the two spaces.
-prop is_continuous(A, B set, source &TopologicalSpace<A>, target &TopologicalSpace<B>, f fn(x source.carrier) target.carrier):
+prop is_topologically_continuous(A, B set, source &TopologicalSpace<A>, target &TopologicalSpace<B>, f fn(x source.carrier) target.carrier):
     forall U target.opens:
         preimage_set(f, U) $in source.opens
 
 # 2.2 Identity maps and compositions
 thm identity_is_continuous:
     ? forall A set, space &TopologicalSpace<A>:
-        $is_continuous(A, A, space, space, \identity_map<space.carrier>)
+        $is_topologically_continuous(A, A, space, space, \identity_map<space.carrier>)
     claim:
         ? forall U space.opens:
             preimage_set(\identity_map<space.carrier>, U) $in space.opens
         U $in power_set(space.carrier)
         by thm identity_preimage(space.carrier, U) => preimage_set(\identity_map<space.carrier>, U) = U
-    by def $is_continuous(A, A, space, space, \identity_map<space.carrier>)
+    by def $is_topologically_continuous(A, A, space, space, \identity_map<space.carrier>)
 
 # Pull an open set back twice. Each continuity hypothesis supplies one step.
 thm continuous_composition:
     ? forall A, B, D set, source &TopologicalSpace<A>, middle &TopologicalSpace<B>, target &TopologicalSpace<D>, f fn(x source.carrier) middle.carrier, g fn(y middle.carrier) target.carrier:
-        $is_continuous(A, B, source, middle, f)
-        $is_continuous(B, D, middle, target, g)
+        $is_topologically_continuous(A, B, source, middle, f)
+        $is_topologically_continuous(B, D, middle, target, g)
         =>:
-            $is_continuous(A, D, source, target, \composition<source.carrier, middle.carrier, target.carrier, f, g>)
+            $is_topologically_continuous(A, D, source, target, \composition<source.carrier, middle.carrier, target.carrier, f, g>)
     claim:
         ? forall U target.opens:
             preimage_set(\composition<source.carrier, middle.carrier, target.carrier, f, g>, U) $in source.opens
@@ -293,7 +293,7 @@ thm continuous_composition:
         preimage_set(g, U) $in middle.opens
         preimage_set(f, preimage_set(g, U)) $in source.opens
         by thm composition_preimage(source.carrier, middle.carrier, target.carrier, f, g, U) => preimage_set(\composition<source.carrier, middle.carrier, target.carrier, f, g>, U) = preimage_set(f, preimage_set(g, U))
-    by def $is_continuous(A, D, source, target, \composition<source.carrier, middle.carrier, target.carrier, f, g>)
+    by def $is_topologically_continuous(A, D, source, target, \composition<source.carrier, middle.carrier, target.carrier, f, g>)
 
 # 2.3 Closed preimages give the same test for continuity.
 # Preimages commute with complements taken in the source and target carriers.
@@ -328,7 +328,7 @@ prop has_closed_preimages(A, B set, source &TopologicalSpace<A>, target &Topolog
 
 thm continuous_maps_have_closed_preimages:
     ? forall A, B set, source &TopologicalSpace<A>, target &TopologicalSpace<B>, f fn(x source.carrier) target.carrier:
-        $is_continuous(A, B, source, target, f)
+        $is_topologically_continuous(A, B, source, target, f)
         =>:
             $has_closed_preimages(A, B, source, target, f)
     claim:
@@ -345,7 +345,7 @@ thm closed_preimages_imply_continuity:
     ? forall A, B set, source &TopologicalSpace<A>, target &TopologicalSpace<B>, f fn(x source.carrier) target.carrier:
         $has_closed_preimages(A, B, source, target, f)
         =>:
-            $is_continuous(A, B, source, target, f)
+            $is_topologically_continuous(A, B, source, target, f)
     claim:
         ? forall U target.opens:
             preimage_set(f, U) $in source.opens
@@ -357,7 +357,7 @@ thm closed_preimages_imply_continuity:
         set_minus(source.carrier, preimage_set(f, set_minus(target.carrier, U))) $in source.opens
         preimage_set(f, U) $subset source.carrier
         set_minus(source.carrier, preimage_set(f, set_minus(target.carrier, U))) = set_minus(source.carrier, set_minus(source.carrier, preimage_set(f, U))) = preimage_set(f, U)
-    by def $is_continuous(A, B, source, target, f)
+    by def $is_topologically_continuous(A, B, source, target, f)
 
 # 2.4 A continuous bijection need not be a homeomorphism.
 # Every map out of a discrete space is continuous: any preimage is a subset.
@@ -365,12 +365,12 @@ thm maps_from_discrete_are_continuous:
     ? forall A, B set, source &TopologicalSpace<A>, target &TopologicalSpace<B>, f fn(x source.carrier) target.carrier:
         source.opens = power_set(source.carrier)
         =>:
-            $is_continuous(A, B, source, target, f)
+            $is_topologically_continuous(A, B, source, target, f)
     claim:
         ? forall U target.opens:
             preimage_set(f, U) $in source.opens
         preimage_set(f, U) $in power_set(source.carrier)
-    by def $is_continuous(A, B, source, target, f)
+    by def $is_topologically_continuous(A, B, source, target, f)
 
 have fn identity(x points) points = x
 
@@ -378,7 +378,7 @@ release thm fn_set_member(identity, fn(x discrete.carrier) indiscrete.carrier)
 
 power_set(discrete.carrier) = power_set(points) = discrete.opens
 
-by thm maps_from_discrete_are_continuous(points, points, discrete, indiscrete, identity) => $is_continuous(points, points, discrete, indiscrete, identity)
+by thm maps_from_discrete_are_continuous(points, points, discrete, indiscrete, identity) => $is_topologically_continuous(points, points, discrete, indiscrete, identity)
 
 claim:
     ? $injective(points, points, identity)
@@ -418,17 +418,17 @@ by extension:
         identity(x) = x
 
 claim:
-    ? not $is_continuous(points, points, indiscrete, discrete, identity)
+    ? not $is_topologically_continuous(points, points, indiscrete, discrete, identity)
     by contra:
-        ? not $is_continuous(points, points, indiscrete, discrete, identity)
+        ? not $is_topologically_continuous(points, points, indiscrete, discrete, identity)
         preimage_set(identity, {0}) $in indiscrete.opens
         impossible {0} $in indiscrete.opens
 
 # A homeomorphism requires continuity in both directions, as well as
 # two inverse equations. These equations make the chosen maps bijections.
 prop is_homeomorphism(A, B set, source &TopologicalSpace<A>, target &TopologicalSpace<B>, f fn(x source.carrier) target.carrier, g fn(y target.carrier) source.carrier):
-    $is_continuous(A, B, source, target, f)
-    $is_continuous(B, A, target, source, g)
+    $is_topologically_continuous(A, B, source, target, f)
+    $is_topologically_continuous(B, A, target, source, g)
     forall x source.carrier:
         g(f(x)) = x
     forall y target.carrier:
@@ -438,7 +438,7 @@ claim:
     ? not $is_homeomorphism(points, points, discrete, indiscrete, identity, identity)
     by contra:
         ? not $is_homeomorphism(points, points, discrete, indiscrete, identity, identity)
-        impossible $is_continuous(points, points, indiscrete, discrete, identity)
+        impossible $is_topologically_continuous(points, points, indiscrete, discrete, identity)
 
 thm homeomorphism_inverse:
     ? forall A, B set, source &TopologicalSpace<A>, target &TopologicalSpace<B>, f fn(x source.carrier) target.carrier, g fn(y target.carrier) source.carrier:
@@ -472,7 +472,7 @@ swap(1) = 0
 
 release thm fn_set_member(swap, fn(x discrete.carrier) discrete.carrier)
 
-by thm maps_from_discrete_are_continuous(points, points, discrete, discrete, swap) => $is_continuous(points, points, discrete, discrete, swap)
+by thm maps_from_discrete_are_continuous(points, points, discrete, discrete, swap) => $is_topologically_continuous(points, points, discrete, discrete, swap)
 
 claim:
     ? $is_homeomorphism(points, points, discrete, discrete, swap, swap)
@@ -709,7 +709,7 @@ thm surjective_empty_preimage:
 thm continuous_surjection_preserves_connectedness:
     ? forall A, B set, source &TopologicalSpace<A>, target &TopologicalSpace<B>, f fn(x source.carrier) target.carrier:
         $is_connected(A, source)
-        $is_continuous(A, B, source, target, f)
+        $is_topologically_continuous(A, B, source, target, f)
         $surjective(source.carrier, target.carrier, f)
         =>:
             $is_connected(B, target)
@@ -765,7 +765,7 @@ thm continuous_surjection_preserves_connectedness:
 
 # The identity map on the indiscrete space is a continuous surjection, so the
 # connectedness conclusion is available from the preservation theorem as well.
-by thm identity_is_continuous(points, indiscrete) => $is_continuous(points, points, indiscrete, indiscrete, \identity_map<indiscrete.carrier>)
+by thm identity_is_continuous(points, indiscrete) => $is_topologically_continuous(points, points, indiscrete, indiscrete, \identity_map<indiscrete.carrier>)
 
 claim:
     ? $surjective(indiscrete.carrier, indiscrete.carrier, \identity_map<indiscrete.carrier>)
@@ -1254,7 +1254,7 @@ claim:
 # 5.3 Continuous images of compact sets are compact
 thm continuous_image_of_compact_is_compact:
     ? forall A, B set, source &TopologicalSpace<A>, target &TopologicalSpace<B>, f fn(x source.carrier) target.carrier, K power_set(source.carrier):
-        $is_continuous(A, B, source, target, f)
+        $is_topologically_continuous(A, B, source, target, f)
         $is_compact_subset(A, source, K)
         =>:
             $is_compact_subset(B, target, fn_range(\restricted<source.carrier, target.carrier, f, K>))
@@ -1335,7 +1335,7 @@ thm continuous_image_of_compact_is_compact:
 # The continuous image of the compact singleton {0} under the identity is again compact.
 release thm fn_set_member(identity, fn(x discrete.carrier) discrete.carrier)
 
-by thm maps_from_discrete_are_continuous(points, points, discrete, discrete, identity) => $is_continuous(points, points, discrete, discrete, identity)
+by thm maps_from_discrete_are_continuous(points, points, discrete, discrete, identity) => $is_topologically_continuous(points, points, discrete, discrete, identity)
 
 release thm continuous_image_of_compact_is_compact(points, points, discrete, discrete, identity, {0})
 # Chapter 6. Product topology
@@ -1561,8 +1561,8 @@ thm two_point_subset_of_Hausdorff_is_closed:
 # 7.3 Continuous bijections with continuous inverses are homeomorphisms
 thm continuous_bijection_with_continuous_inverse_is_homeomorphism:
     ? forall A, B set, source &TopologicalSpace<A>, target &TopologicalSpace<B>, f fn(x source.carrier) target.carrier, g fn(y target.carrier) source.carrier:
-        $is_continuous(A, B, source, target, f)
-        $is_continuous(B, A, target, source, g)
+        $is_topologically_continuous(A, B, source, target, f)
+        $is_topologically_continuous(B, A, target, source, g)
         forall x source.carrier:
             g(f(x)) = x
         forall y target.carrier:

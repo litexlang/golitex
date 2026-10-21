@@ -15,8 +15,12 @@ noncomputable def _object_i1 := (Litex.formulaFn (M := M) Litex.StandardSetValue
   have h_14 : Litex.In _value_i2 (Litex.N (M := M)) := h_14
   have h_15 : Litex.Le (Litex.number (M := M) (0 : ℂ)) _value_i2 :=
     (Litex.naturalNonnegative _value_i2 h_14)
-  change Litex.In (Litex.mul (Litex.number (M := M) (2 : ℂ)) _value_i2 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.naturalToComplex _value_i2 h_14)) (Litex.N (M := M))
-  exact (Litex.mulInN (Litex.number (M := M) (2 : ℂ)) _value_i2 (Litex.NativeBridge.numberInNOfEq (M := M) (2 : ℂ) (2 : ℕ) (by norm_num)) h_14)))
+  change (by
+    let _atomic_wd_1_0 := (Litex.mul (Litex.number (M := M) (2 : ℂ)) _value_i2 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.naturalToComplex _value_i2 h_14))
+    exact Litex.In _atomic_wd_1_0 (Litex.N (M := M)))
+  exact (by
+    let _atomic_wd_1_0 := (Litex.mul (Litex.number (M := M) (2 : ℂ)) _value_i2 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.naturalToComplex _value_i2 h_14))
+    exact (Litex.mulInN (Litex.number (M := M) (2 : ℂ)) _value_i2 (Litex.NativeBridge.numberInNOfEq (M := M) (2 : ℂ) (2 : ℕ) (by norm_num)) h_14))))
 theorem h_61 : Litex.In (_object_i1 (M := M)) (Litex.fnSet ((_object_i1 (M := M))).val.signature) :=
   (Litex.formulaFnInFnSet (_object_i1 (M := M)))
 theorem h_62 : Litex.Same (_object_i1 (M := M)) (_object_i1 (M := M)) :=
@@ -28,15 +32,19 @@ noncomputable def _object_i3 := (Litex.formulaFn (M := M) Litex.StandardSetValue
   have h_76 : Litex.In _value_i4 (Litex.N (M := M)) := h_76
   have h_77 : Litex.Le (Litex.number (M := M) (0 : ℂ)) _value_i4 :=
     (Litex.naturalNonnegative _value_i4 h_76)
-  change Litex.In (Litex.powNatReal _value_i4 (Litex.number (M := M) (2 : ℂ)) (2 : ℕ) (Litex.naturalToReal _value_i4 h_76) (Litex.NativeBridge.numberInNOfEq (M := M) (2 : ℂ) (2 : ℕ) (by norm_num)) (Litex.NativeBridge.sameOfDenoteNumber (Litex.number (M := M) (2 : ℂ)) (Litex.number (M := M) ((2 : ℕ) : ℂ)) (2 : ℂ) ((2 : ℕ) : ℂ) (Litex.NativeBridge.denoteNumber (M := M) (2 : ℂ)) (Litex.NativeBridge.denoteNumber (M := M) ((2 : ℕ) : ℂ)) (by norm_num))) (Litex.N (M := M))
+  change (by
+    let _atomic_wd_1_0 := (Litex.powNatReal _value_i4 (Litex.number (M := M) (2 : ℂ)) (2 : ℕ) (Litex.naturalToReal _value_i4 h_76) (Litex.NativeBridge.numberInNOfEq (M := M) (2 : ℂ) (2 : ℕ) (by norm_num)) (Litex.NativeBridge.sameOfDenoteNumber (Litex.number (M := M) (2 : ℂ)) (Litex.number (M := M) ((2 : ℕ) : ℂ)) (2 : ℂ) ((2 : ℕ) : ℂ) (Litex.NativeBridge.denoteNumber (M := M) (2 : ℂ)) (Litex.NativeBridge.denoteNumber (M := M) ((2 : ℕ) : ℂ)) (by norm_num)))
+    exact Litex.In _atomic_wd_1_0 (Litex.N (M := M)))
   exact (by
-    let _litex_power := (Litex.powNatReal _value_i4 (Litex.number (M := M) (2 : ℂ)) (2 : ℕ) (Litex.naturalToReal _value_i4 h_76) (Litex.NativeBridge.numberInNOfEq (M := M) (2 : ℂ) (2 : ℕ) (by norm_num)) (Litex.NativeBridge.sameOfDenoteNumber (Litex.number (M := M) (2 : ℂ)) (Litex.number (M := M) ((2 : ℕ) : ℂ)) (2 : ℂ) ((2 : ℕ) : ℂ) (Litex.NativeBridge.denoteNumber (M := M) (2 : ℂ)) (Litex.NativeBridge.denoteNumber (M := M) ((2 : ℕ) : ℂ)) (by norm_num)))
-    have _elaborated_power_base := h_76
-    have _elaborated_power_exponent := (Litex.NativeBridge.numberInNOfEq (M := M) (2 : ℂ) (2 : ℕ) (by norm_num))
-    have _recorded_power_base : Litex.In _litex_power.val.base (Litex.N (M := M)) := _elaborated_power_base
-    have _recorded_power_exponent : Litex.In _litex_power.val.exponent (Litex.N (M := M)) := _elaborated_power_exponent
-    exact Litex.powStructuralInN _litex_power _recorded_power_base _recorded_power_exponent
-  )))
+    let _atomic_wd_1_0 := (Litex.powNatReal _value_i4 (Litex.number (M := M) (2 : ℂ)) (2 : ℕ) (Litex.naturalToReal _value_i4 h_76) (Litex.NativeBridge.numberInNOfEq (M := M) (2 : ℂ) (2 : ℕ) (by norm_num)) (Litex.NativeBridge.sameOfDenoteNumber (Litex.number (M := M) (2 : ℂ)) (Litex.number (M := M) ((2 : ℕ) : ℂ)) (2 : ℂ) ((2 : ℕ) : ℂ) (Litex.NativeBridge.denoteNumber (M := M) (2 : ℂ)) (Litex.NativeBridge.denoteNumber (M := M) ((2 : ℕ) : ℂ)) (by norm_num)))
+    exact (by
+      let _litex_power := _atomic_wd_1_0
+      have _elaborated_power_base := h_76
+      have _elaborated_power_exponent := (Litex.NativeBridge.numberInNOfEq (M := M) (2 : ℂ) (2 : ℕ) (by norm_num))
+      have _recorded_power_base : Litex.In _litex_power.val.base (Litex.N (M := M)) := _elaborated_power_base
+      have _recorded_power_exponent : Litex.In _litex_power.val.exponent (Litex.N (M := M)) := _elaborated_power_exponent
+      exact Litex.powStructuralInN _litex_power _recorded_power_base _recorded_power_exponent
+    ))))
 theorem h_138 : Litex.In (_object_i3 (M := M)) (Litex.fnSet ((_object_i3 (M := M))).val.signature) :=
   (Litex.formulaFnInFnSet (_object_i3 (M := M)))
 theorem h_139 : Litex.Same (_object_i3 (M := M)) (_object_i3 (M := M)) :=

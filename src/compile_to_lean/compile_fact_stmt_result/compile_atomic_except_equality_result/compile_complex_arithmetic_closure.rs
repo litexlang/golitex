@@ -12,23 +12,23 @@ impl crate::compile_to_lean::LitexToLeanCompiler {
                 "Complex closure proves only membership in C.",
             ));
         }
-        match &goal.element {
-            Obj::ArithmeticOperator(
-                ArithmeticOperator::Add(_)
-                | ArithmeticOperator::Sub(_)
-                | ArithmeticOperator::Mul(_)
-                | ArithmeticOperator::Div(_)
-                | ArithmeticOperator::Neg(_)
-                | ArithmeticOperator::Pow(_),
-            ) => {
-                // The selected leaf relies on this original constructor's WD.
-                // Numeric observation replays those exact checked children and
-                // guards and returns its construction-derived C-membership.
-                Ok(self.compile_numeric_observation(&goal.element, position)?.2)
-            }
-            _ => Err(crate::compile_to_lean::LeanCompileError::unsupported(
+        let (law, fields) = match &goal.element {
+            Obj::ArithmeticOperator(ArithmeticOperator::Add(_)) => ("addInC", "_arithmetic.val.left _arithmetic.val.right _arithmetic.wd.1 _arithmetic.wd.2"),
+            Obj::ArithmeticOperator(ArithmeticOperator::Sub(_)) => ("subInC", "_arithmetic.val.left _arithmetic.val.right _arithmetic.wd.1 _arithmetic.wd.2"),
+            Obj::ArithmeticOperator(ArithmeticOperator::Mul(_)) => ("mulInC", "_arithmetic.val.left _arithmetic.val.right _arithmetic.wd.1 _arithmetic.wd.2"),
+            Obj::ArithmeticOperator(ArithmeticOperator::Div(_)) => ("divInC", "_arithmetic.val.left _arithmetic.val.right _arithmetic.wd.1 _arithmetic.wd.2.1 _arithmetic.wd.2.2"),
+            Obj::ArithmeticOperator(ArithmeticOperator::Neg(_)) => ("negInC", "_arithmetic.val.arg _arithmetic.wd"),
+            Obj::ArithmeticOperator(ArithmeticOperator::Pow(_)) => ("powObjInC", "_arithmetic"),
+            _ => return Err(crate::compile_to_lean::LeanCompileError::unsupported(
                 "ArithmeticClosure/Constructor",
             )),
-        }
+        };
+        // This selected builtin uses the already checked constructor domain.
+        // Observing every operand as a native number would replay its entire
+        // arithmetic subtree even though this rule only needs C-membership.
+        let term = self.compile_object_reference(&goal.element, position)?;
+        Ok(format!(
+            "(by\n  let _arithmetic := {term}\n  exact Litex.{law} {fields})"
+        ))
     }
 }

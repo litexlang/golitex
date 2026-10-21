@@ -1,0 +1,36 @@
+# Both component limits and eventual avoidance hold. Negative nearby inputs still leave the outer R+ domain.
+have fn identity(x R) R=x
+
+have fn positive_outer(x R+) R=x
+
+release thm fn_limit_at_real_accumulation(0)
+
+by def $is_real_accumulation_at(R,0)
+
+release thm fn_limit_at_identity(identity,0)
+
+claim:
+    ? forall radius R+:
+        exist x R+ st {0<abs(x-0) and abs(x-0)<radius}
+    witness exist x R+ st {0<abs(x-0) and abs(x-0)<radius} from radius/2:
+        0<radius/2
+        radius/2-0=radius/2
+        abs(radius/2-0)=abs(radius/2)=radius/2<radius/2+radius/2=radius
+
+release thm fn_limit_at_identity(positive_outer,0)
+
+claim:
+    ? exist radius R+ st {{x R:0<abs(x-0) and abs(x-0)<radius} $subset {x R:identity(x)!=0}}
+    witness exist radius R+ st {{x R:0<abs(x-0) and abs(x-0)<radius} $subset {x R:identity(x)!=0}} from 1:
+        claim:
+            ? forall x {z R:0<abs(z-0) and abs(z-0)<1}:
+                x $in {t R:identity(t)!=0}
+            identity(x)=x
+            by contra:
+                ? identity(x)!=0
+                identity(x)=0
+                x=0
+                abs(x-0)=0
+                impossible 0<abs(x-0)
+        by def {x R:0<abs(x-0) and abs(x-0)<1} $subset {x R:identity(x)!=0}
+release thm fn_limit_at_punctured_compose(identity,positive_outer,identity,0,0,0)

@@ -104,6 +104,8 @@ fn intrinsic_name(rule: &IntrinsicCodomain) -> &'static str {
     match rule {
         SequenceLimit => "lim",
         SequenceLimsup => "limsup",
+        Supremum => "sup",
+        Infimum => "inf",
         SequenceLiminf => "liminf",
         FunctionLimit => "lim_at",
         Floor => "floor",

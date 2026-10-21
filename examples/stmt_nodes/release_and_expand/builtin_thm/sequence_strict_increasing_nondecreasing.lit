@@ -1,0 +1,13 @@
+# Explicit analysis theorem with checked premises.
+have fn seq_index(k N+) R=k
+
+claim:
+    ? forall m,n N+:
+        m<n
+        =>:
+            seq_index(m)<seq_index(n)
+    seq_index(m)=m<n=seq_index(n)
+
+by def $is_seq_strictly_increasing(seq_index)
+
+release thm sequence_strict_increasing_nondecreasing(seq_index)

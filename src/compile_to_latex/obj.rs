@@ -22,6 +22,12 @@ fn expression(
     let o = |x: &Obj| obj(x, modules, lang);
     let e = |x: &Obj, p| expression(x, modules, lang, p);
     let (text, precedence) = match value {
+        Obj::BoundOperator(BoundOperator::Supremum(x)) => {
+            (format!(r"\sup {}", parens(&o(&x.set)?)), 50)
+        }
+        Obj::BoundOperator(BoundOperator::Infimum(x)) => {
+            (format!(r"\inf {}", parens(&o(&x.set)?)), 50)
+        }
         Obj::Identifier(x) => (identifier(x, modules)?, 50),
         Obj::Literal(x) => (
             match x {

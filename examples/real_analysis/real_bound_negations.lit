@@ -1,0 +1,36 @@
+# Negated native properties consume their positive definitions in contradiction proofs.
+by contra:
+    ? not $is_real_upper_bound({0},-1)
+    0 $in {0}
+    0<=-1
+    impossible 0<=-1
+
+by contra:
+    ? not $is_real_lower_bound({0},1)
+    0 $in {0}
+    1<=0
+    impossible 1<=0
+
+by contra:
+    ? not $is_real_bounded_above(R)
+    obtain upper from exist upper R st {$is_real_upper_bound(R,upper)}
+    release thm real_archimedean_natural_upper_bound(upper)
+    obtain n from exist n N+ st {upper<n}
+    n $in R
+    n<=upper<n
+    impossible n=n
+
+by contra:
+    ? not $is_real_bounded_below(R)
+    obtain lower from exist lower R st {$is_real_lower_bound(R,lower)}
+    release thm real_archimedean_natural_upper_bound(-lower)
+    obtain n from exist n N+ st {-lower<n}
+    -n $in R
+    -n<-(-lower)=lower
+    lower<=-n<lower
+    impossible lower=lower
+
+by contra:
+    ? not $is_real_bounded(R)
+    by def $is_real_bounded_above(R)
+    impossible $is_real_bounded_above(R)

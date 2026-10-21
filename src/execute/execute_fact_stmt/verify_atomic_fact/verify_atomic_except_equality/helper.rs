@@ -35,6 +35,152 @@ pub(super) fn atomic_fact_with_args(
         }};
     }
     Some(match fact {
+        AtomicFact::RealSetBoundFact(f) => {
+            let mut args = args.into_iter();
+            crate::ast::fact::RealSetBoundFact {
+                fact_id,
+                set: args.next()?,
+                bound: args.next()?,
+                direction: f.direction,
+                line_file: f.line_file.clone(),
+            }
+            .into()
+        }
+        AtomicFact::NotRealSetBoundFact(f) => {
+            let mut args = args.into_iter();
+            crate::ast::fact::NotRealSetBoundFact {
+                fact_id,
+                set: args.next()?,
+                bound: args.next()?,
+                direction: f.direction,
+                line_file: f.line_file.clone(),
+            }
+            .into()
+        }
+        AtomicFact::RealSetBoundedFact(f) => {
+            let mut args = args.into_iter();
+            crate::ast::fact::RealSetBoundedFact {
+                fact_id,
+                set: args.next()?,
+                boundedness: f.boundedness,
+                line_file: f.line_file.clone(),
+            }
+            .into()
+        }
+        AtomicFact::NotRealSetBoundedFact(f) => {
+            let mut args = args.into_iter();
+            crate::ast::fact::NotRealSetBoundedFact {
+                fact_id,
+                set: args.next()?,
+                boundedness: f.boundedness,
+                line_file: f.line_file.clone(),
+            }
+            .into()
+        }
+        AtomicFact::SequenceAnalysisFact(f) => {
+            let mut args = args.into_iter();
+            crate::ast::fact::SequenceAnalysisFact {
+                fact_id,
+                sequence: args.next()?,
+                property: f.property,
+                line_file: f.line_file.clone(),
+            }
+            .into()
+        }
+        AtomicFact::NotSequenceAnalysisFact(f) => {
+            let mut args = args.into_iter();
+            crate::ast::fact::NotSequenceAnalysisFact {
+                fact_id,
+                sequence: args.next()?,
+                property: f.property,
+                line_file: f.line_file.clone(),
+            }
+            .into()
+        }
+        AtomicFact::RealAccumulationFact(f) => {
+            let mut args = args.into_iter();
+            crate::ast::fact::RealAccumulationFact {
+                fact_id,
+                domain: args.next()?,
+                point: args.next()?,
+                side: f.side,
+                line_file: f.line_file.clone(),
+            }
+            .into()
+        }
+        AtomicFact::NotRealAccumulationFact(f) => {
+            let mut args = args.into_iter();
+            crate::ast::fact::NotRealAccumulationFact {
+                fact_id,
+                domain: args.next()?,
+                point: args.next()?,
+                side: f.side,
+                line_file: f.line_file.clone(),
+            }
+            .into()
+        }
+        AtomicFact::FunctionContinuousAtFact(f) => {
+            let mut args = args.into_iter();
+            crate::ast::fact::FunctionContinuousAtFact {
+                fact_id,
+                function: args.next()?,
+                point: args.next()?,
+                side: f.side,
+                line_file: f.line_file.clone(),
+            }
+            .into()
+        }
+        AtomicFact::NotFunctionContinuousAtFact(f) => {
+            let mut args = args.into_iter();
+            crate::ast::fact::NotFunctionContinuousAtFact {
+                fact_id,
+                function: args.next()?,
+                point: args.next()?,
+                side: f.side,
+                line_file: f.line_file.clone(),
+            }
+            .into()
+        }
+        AtomicFact::FunctionContinuousFact(f) => {
+            let mut args = args.into_iter();
+            crate::ast::fact::FunctionContinuousFact {
+                fact_id,
+                function: args.next()?,
+                property: f.property,
+                line_file: f.line_file.clone(),
+            }
+            .into()
+        }
+        AtomicFact::NotFunctionContinuousFact(f) => {
+            let mut args = args.into_iter();
+            crate::ast::fact::NotFunctionContinuousFact {
+                fact_id,
+                function: args.next()?,
+                property: f.property,
+                line_file: f.line_file.clone(),
+            }
+            .into()
+        }
+        AtomicFact::FunctionLipschitzFact(f) => {
+            let mut args = args.into_iter();
+            crate::ast::fact::FunctionLipschitzFact {
+                fact_id,
+                function: args.next()?,
+                constant: args.next()?,
+                line_file: f.line_file.clone(),
+            }
+            .into()
+        }
+        AtomicFact::NotFunctionLipschitzFact(f) => {
+            let mut args = args.into_iter();
+            crate::ast::fact::NotFunctionLipschitzFact {
+                fact_id,
+                function: args.next()?,
+                constant: args.next()?,
+                line_file: f.line_file.clone(),
+            }
+            .into()
+        }
         AtomicFact::HasFunctionLimitFact(f) => {
             let mut args = args.into_iter();
             let function = args.next()?;

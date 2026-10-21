@@ -1,12 +1,24 @@
-have Builder power_set(R) = {x R: x > 0}
-have Alias power_set(R) = Builder
-have a R = 1
-# force membership via set_builder_member style
-1 > 0
-a $in Builder
-a $in Alias
-# now from Alias membership get R - already have
-# what about from a typed as Alias after equality?
-have b Alias = a
-b $in Alias
-b $in R
+# Scratch: a != b implies intersect({a},{b}) = {} (used for MIL C10 two-element folds).
+claim:
+    ? forall a, b R:
+        a != b
+        =>:
+            not $is_nonempty_set(intersect({a}, {b}))
+    by contra:
+        ? not $is_nonempty_set(intersect({a}, {b}))
+        $is_nonempty_set(intersect({a}, {b}))
+        have x intersect({a}, {b})
+        x $in {a}
+        x $in {b}
+        x = a
+        x = b
+        a = b
+        impossible a = b
+
+claim:
+    ? forall a, b R:
+        a != b
+        =>:
+            intersect({a}, {b}) = {}
+    not $is_nonempty_set(intersect({a}, {b}))
+    intersect({a}, {b}) = {}

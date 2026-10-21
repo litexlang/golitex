@@ -18,7 +18,9 @@ theorem h_4 : ∀ {_Host_i1 : Type v1} [_rep_i1 : Litex.Representation M _Host_i
     let _setFresh_0 : ¬ Litex.In _setElement_0 _setTail_1 := (Litex.notInInsert _setElement_0 _setElement_1 _setTail_2 _setFresh_1 h_1 (Litex.notInEmpty _setElement_0));
     let _setTail_0 := Litex.insert _setElement_0 _setTail_1 _setFresh_0;
     _setTail_0)
-  exact ((Litex.In _value_i1 _object_w2) ∧ (Litex.Subset _object_w2 (Litex.R (M := M))))
+  exact (((by
+    let _atomic_wd_1_1 := _object_w2
+    exact Litex.In _value_i1 _atomic_wd_1_1)) ∧ (Litex.Subset _object_w2 (Litex.R (M := M))))
 ) :=
   (by
     intro _Host_i1 _rep_i1 _value_i1 h_17 _Host_i2 _rep_i2 _value_i2 h_18 h_1
@@ -30,10 +32,14 @@ theorem h_4 : ∀ {_Host_i1 : Type v1} [_rep_i1 : Litex.Representation M _Host_i
       let _setFresh_0 : ¬ Litex.In _setElement_0 _setTail_1 := (Litex.notInInsert _setElement_0 _setElement_1 _setTail_2 _setFresh_1 h_1 (Litex.notInEmpty _setElement_0));
       let _setTail_0 := Litex.insert _setElement_0 _setTail_1 _setFresh_0;
       _setTail_0)
-    have h_2 : Litex.In _value_i1 _object_w2 :=
+    have h_2 : (by
+      let _atomic_wd_1_1 := _object_w2
+      exact Litex.In _value_i1 _atomic_wd_1_1) :=
       (by
-        let _set := _object_w2
-        exact ((Litex.inInsert_iff _value_i1 _set.val.element _set.val.tail _set.wd).mpr (Or.inl (show @Eq M.Value _ _ from Eq.refl _))))
+        let _atomic_wd_1_1 := _object_w2
+        exact (by
+          let _set := _atomic_wd_1_1
+          exact ((Litex.inInsert_iff _value_i1 _set.val.element _set.val.tail _set.wd).mpr (Or.inl (show @Eq M.Value _ _ from Eq.refl _)))))
     have h_3 : Litex.Subset _object_w2 (Litex.R (M := M)) :=
       (by
         let _set := _object_w2

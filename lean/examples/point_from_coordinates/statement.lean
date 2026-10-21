@@ -10,8 +10,10 @@ set_option linter.unusedSectionVars false
 variable [_functionSemantics : Litex.FunctionSemantics M]
 
 theorem h_2 : ∀ {_Host_i1 : Type v1} [_rep_i1 : Litex.Representation M _Host_i1] (_value_i1 : Litex.Obj (M := M) _Host_i1) (h_15 : Litex.In _value_i1 (Litex.cart (M := M) ![Litex.denote (Litex.R (M := M)), Litex.denote (Litex.R (M := M))] (Fin.cases (Litex.isSet (Litex.R (M := M))) (Fin.cases (Litex.isSet (Litex.R (M := M))) (fun i => Fin.elim0 i))))), (by
-  let _object_w2 := (let _wd_1_0 := (Litex.cartCall _value_i1 _ (Litex.number (M := M) (1 : ℂ)) h_15 (Litex.indexSetMemberOfClosedRange (n := 2) (Litex.numberInClosedRangeOfEq (M := M) (1 : ℂ) (2 : ℂ) (1 : ℂ) (1 : ℤ) (2 : ℤ) (1 : ℤ) (by norm_num) (by norm_num) (by norm_num) (by norm_num) (by norm_num))));
-  let _wd_1_1 := (Litex.cartCall _value_i1 _ (Litex.number (M := M) (2 : ℂ)) h_15 (Litex.indexSetMemberOfClosedRange (n := 2) (Litex.numberInClosedRangeOfEq (M := M) (1 : ℂ) (2 : ℂ) (2 : ℂ) (1 : ℤ) (2 : ℤ) (2 : ℤ) (by norm_num) (by norm_num) (by norm_num) (by norm_num) (by norm_num))));
+  let _object_h16 := (Litex.cartCall _value_i1 _ (Litex.number (M := M) (1 : ℂ)) h_15 (by change M.mem (M.number (1 : ℂ)) (Litex.FiniteFunction.indexSet 2); simpa [Litex.FiniteFunction.index] using (Litex.FiniteFunction.index_mem (M := M) (0 : Fin 2))))
+  let _object_h17 := (Litex.cartCall _value_i1 _ (Litex.number (M := M) (2 : ℂ)) h_15 (by change M.mem (M.number (2 : ℂ)) (Litex.FiniteFunction.indexSet 2); simpa [Litex.FiniteFunction.index] using (Litex.FiniteFunction.index_mem (M := M) (1 : Fin 2))))
+  let _object_w2 := (let _wd_1_0 := _object_h16;
+  let _wd_1_1 := _object_h17;
   (let _productChild_0 := _wd_1_0;
   let _productChild_1 := _wd_1_1;
   Litex.tuple (M := M) ![Litex.denote _productChild_0, Litex.denote _productChild_1] (by
@@ -25,12 +27,12 @@ theorem h_2 : ∀ {_Host_i1 : Type v1} [_rep_i1 : Litex.Representation M _Host_i
     intro _Host_i1 _rep_i1 _value_i1 h_15
     let _object_h16 := (Litex.cartCall _value_i1 _ (Litex.number (M := M) (1 : ℂ)) h_15 (by change M.mem (M.number (1 : ℂ)) (Litex.FiniteFunction.indexSet 2); simpa [Litex.FiniteFunction.index] using (Litex.FiniteFunction.index_mem (M := M) (0 : Fin 2))))
     have h_16 : Litex.In _object_h16 (Litex.R (M := M)) :=
-      (Litex.FiniteFunction.coordinate_mem_number h_15 (0 : Fin 2) (1 : ℂ) (by norm_num))
+      (Litex.FiniteFunction.coordinate_mem_number (M := M) h_15 (0 : Fin 2) (1 : ℂ) (by norm_num))
     let _object_h17 := (Litex.cartCall _value_i1 _ (Litex.number (M := M) (2 : ℂ)) h_15 (by change M.mem (M.number (2 : ℂ)) (Litex.FiniteFunction.indexSet 2); simpa [Litex.FiniteFunction.index] using (Litex.FiniteFunction.index_mem (M := M) (1 : Fin 2))))
     have h_17 : Litex.In _object_h17 (Litex.R (M := M)) :=
-      (Litex.FiniteFunction.coordinate_mem_number h_15 (1 : Fin 2) (2 : ℂ) (by norm_num))
-    let _object_w2 := (let _wd_1_0 := (Litex.cartCall _value_i1 _ (Litex.number (M := M) (1 : ℂ)) h_15 (Litex.indexSetMemberOfClosedRange (n := 2) (Litex.numberInClosedRangeOfEq (M := M) (1 : ℂ) (2 : ℂ) (1 : ℂ) (1 : ℤ) (2 : ℤ) (1 : ℤ) (by norm_num) (by norm_num) (by norm_num) (by norm_num) (by norm_num))));
-    let _wd_1_1 := (Litex.cartCall _value_i1 _ (Litex.number (M := M) (2 : ℂ)) h_15 (Litex.indexSetMemberOfClosedRange (n := 2) (Litex.numberInClosedRangeOfEq (M := M) (1 : ℂ) (2 : ℂ) (2 : ℂ) (1 : ℤ) (2 : ℤ) (2 : ℤ) (by norm_num) (by norm_num) (by norm_num) (by norm_num) (by norm_num))));
+      (Litex.FiniteFunction.coordinate_mem_number (M := M) h_15 (1 : Fin 2) (2 : ℂ) (by norm_num))
+    let _object_w2 := (let _wd_1_0 := _object_h16;
+    let _wd_1_1 := _object_h17;
     (let _productChild_0 := _wd_1_0;
     let _productChild_1 := _wd_1_1;
     Litex.tuple (M := M) ![Litex.denote _productChild_0, Litex.denote _productChild_1] (by

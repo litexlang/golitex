@@ -150,7 +150,7 @@ prop ContinuousMapSetting(X set, open_sets_X power_set(power_set(X)), Y set, ope
     forall open_Y open_sets_Y:
         \inverse_image<X,Y,f,open_Y> $in open_sets_X
 
-prop is_continuous(X set, open_sets_X power_set(power_set(X)), Y set, open_sets_Y power_set(power_set(Y)), f fn(x X) Y):
+prop is_topologically_continuous(X set, open_sets_X power_set(power_set(X)), Y set, open_sets_Y power_set(power_set(Y)), f fn(x X) Y):
     $ContinuousMapSetting(X, open_sets_X, Y, open_sets_Y, f)
 
 prop ContinuousCompositionSetting(A set, open_sets_A power_set(power_set(A)), B set, open_sets_B power_set(power_set(B)), CarrierC set, open_sets_C power_set(power_set(CarrierC)), f fn(x A) B, g fn(y B) CarrierC):
@@ -168,7 +168,7 @@ thm continuous_composition:
     ? forall A set, open_sets_A power_set(power_set(A)), B set, open_sets_B power_set(power_set(B)), CarrierC set, open_sets_C power_set(power_set(CarrierC)), f fn(x A) B, g fn(y B) CarrierC:
         $ContinuousCompositionSetting(A, open_sets_A, B, open_sets_B, CarrierC, open_sets_C, f, g)
         =>:
-            $is_continuous(A, open_sets_A, CarrierC, open_sets_C, \composition<A,B,CarrierC,f,g>)
+            $is_topologically_continuous(A, open_sets_A, CarrierC, open_sets_C, \composition<A,B,CarrierC,f,g>)
     claim:
         ? forall target_open open_sets_C:
             \inverse_image<A,CarrierC,\composition<A,B,CarrierC,f,g>,target_open> $in open_sets_A
@@ -208,7 +208,7 @@ thm continuous_composition:
         direct_preimage $in open_sets_A
     by def $TopologicalMapSetting(A, open_sets_A, CarrierC, open_sets_C, \composition<A,B,CarrierC,f,g>)
     by def $ContinuousMapSetting(A, open_sets_A, CarrierC, open_sets_C, \composition<A,B,CarrierC,f,g>)
-    by def $is_continuous(A, open_sets_A, CarrierC, open_sets_C, \composition<A,B,CarrierC,f,g>)
+    by def $is_topologically_continuous(A, open_sets_A, CarrierC, open_sets_C, \composition<A,B,CarrierC,f,g>)
 
 prop is_closed(X set, open_sets power_set(power_set(X)), F power_set(X)):
     $TopologicalSpaceSetting(X, open_sets)
@@ -289,7 +289,7 @@ thm closed_preimages_imply_continuous:
         $TopologicalMapSetting(X, open_sets_X, Y, open_sets_Y, f)
         $has_closed_preimages(X, open_sets_X, Y, open_sets_Y, f)
         =>:
-            $is_continuous(X, open_sets_X, Y, open_sets_Y, f)
+            $is_topologically_continuous(X, open_sets_X, Y, open_sets_Y, f)
     claim:
         ? forall U open_sets_Y:
             \inverse_image<X,Y,f,U> $in open_sets_X
@@ -337,7 +337,7 @@ thm closed_preimages_imply_continuous:
                     point $in \inverse_image<X,Y,f,U>
         \inverse_image<X,Y,f,U> $in open_sets_X
     by def $ContinuousMapSetting(X, open_sets_X, Y, open_sets_Y, f)
-    by def $is_continuous(X, open_sets_X, Y, open_sets_Y, f)
+    by def $is_topologically_continuous(X, open_sets_X, Y, open_sets_Y, f)
 
 prop is_compact_subset(X set, open_sets power_set(power_set(X)), K power_set(X)):
     $TopologicalSpaceSetting(X, open_sets)

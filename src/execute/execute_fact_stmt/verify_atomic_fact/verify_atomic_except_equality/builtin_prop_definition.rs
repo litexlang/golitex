@@ -38,6 +38,118 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<Result<BuiltinPropDefinitionProof, DefinitionProofFailed>> {
         match fact {
+            AtomicFact::RealSetBoundFact(_) => {
+                let Some(clauses) = self.real_analysis_defining_clauses(fact, verify_state)? else {
+                    return Ok(Err(DefinitionProofFailed::Unavailable));
+                };
+                match self.verify_definition_requirements(clauses, verify_state)? {
+                    Ok((requirement_facts, proof_of_requirement_facts)) => {
+                        Ok(Ok(BuiltinPropDefinitionProof::RealSetBound(
+                            super::result::BuiltinRealSetBoundDefinitionProof {
+                                requirement_facts,
+                                proof_of_requirement_facts,
+                            },
+                        )))
+                    }
+                    Err(failure) => Ok(Err(failure)),
+                }
+            }
+            AtomicFact::RealSetBoundedFact(_) => {
+                let Some(clauses) = self.real_analysis_defining_clauses(fact, verify_state)? else {
+                    return Ok(Err(DefinitionProofFailed::Unavailable));
+                };
+                match self.verify_definition_requirements(clauses, verify_state)? {
+                    Ok((requirement_facts, proof_of_requirement_facts)) => {
+                        Ok(Ok(BuiltinPropDefinitionProof::RealSetBounded(
+                            super::result::BuiltinRealSetBoundedDefinitionProof {
+                                requirement_facts,
+                                proof_of_requirement_facts,
+                            },
+                        )))
+                    }
+                    Err(failure) => Ok(Err(failure)),
+                }
+            }
+            AtomicFact::SequenceAnalysisFact(_) => {
+                let Some(clauses) = self.real_analysis_defining_clauses(fact, verify_state)? else {
+                    return Ok(Err(DefinitionProofFailed::Unavailable));
+                };
+                match self.verify_definition_requirements(clauses, verify_state)? {
+                    Ok((requirement_facts, proof_of_requirement_facts)) => {
+                        Ok(Ok(BuiltinPropDefinitionProof::SequenceAnalysis(
+                            super::result::BuiltinSequenceAnalysisDefinitionProof {
+                                requirement_facts,
+                                proof_of_requirement_facts,
+                            },
+                        )))
+                    }
+                    Err(failure) => Ok(Err(failure)),
+                }
+            }
+            AtomicFact::RealAccumulationFact(_) => {
+                let Some(clauses) = self.real_analysis_defining_clauses(fact, verify_state)? else {
+                    return Ok(Err(DefinitionProofFailed::Unavailable));
+                };
+                match self.verify_definition_requirements(clauses, verify_state)? {
+                    Ok((requirement_facts, proof_of_requirement_facts)) => {
+                        Ok(Ok(BuiltinPropDefinitionProof::RealAccumulation(
+                            super::result::BuiltinRealAccumulationDefinitionProof {
+                                requirement_facts,
+                                proof_of_requirement_facts,
+                            },
+                        )))
+                    }
+                    Err(failure) => Ok(Err(failure)),
+                }
+            }
+            AtomicFact::FunctionContinuousAtFact(_) => {
+                let Some(clauses) = self.real_analysis_defining_clauses(fact, verify_state)? else {
+                    return Ok(Err(DefinitionProofFailed::Unavailable));
+                };
+                match self.verify_definition_requirements(clauses, verify_state)? {
+                    Ok((requirement_facts, proof_of_requirement_facts)) => {
+                        Ok(Ok(BuiltinPropDefinitionProof::FunctionContinuousAt(
+                            super::result::BuiltinFunctionContinuousAtDefinitionProof {
+                                requirement_facts,
+                                proof_of_requirement_facts,
+                            },
+                        )))
+                    }
+                    Err(failure) => Ok(Err(failure)),
+                }
+            }
+            AtomicFact::FunctionContinuousFact(_) => {
+                let Some(clauses) = self.real_analysis_defining_clauses(fact, verify_state)? else {
+                    return Ok(Err(DefinitionProofFailed::Unavailable));
+                };
+                match self.verify_definition_requirements(clauses, verify_state)? {
+                    Ok((requirement_facts, proof_of_requirement_facts)) => {
+                        Ok(Ok(BuiltinPropDefinitionProof::FunctionContinuous(
+                            super::result::BuiltinFunctionContinuousDefinitionProof {
+                                requirement_facts,
+                                proof_of_requirement_facts,
+                            },
+                        )))
+                    }
+                    Err(failure) => Ok(Err(failure)),
+                }
+            }
+            AtomicFact::FunctionLipschitzFact(_) => {
+                let Some(clauses) = self.real_analysis_defining_clauses(fact, verify_state)? else {
+                    return Ok(Err(DefinitionProofFailed::Unavailable));
+                };
+                match self.verify_definition_requirements(clauses, verify_state)? {
+                    Ok((requirement_facts, proof_of_requirement_facts)) => {
+                        Ok(Ok(BuiltinPropDefinitionProof::FunctionLipschitz(
+                            super::result::BuiltinFunctionLipschitzDefinitionProof {
+                                requirement_facts,
+                                proof_of_requirement_facts,
+                            },
+                        )))
+                    }
+                    Err(failure) => Ok(Err(failure)),
+                }
+            }
             AtomicFact::HasFunctionLimitFact(f) => {
                 let Some(domain) =
                     self.checked_real_function_limit_domain(&f.function, verify_state)?

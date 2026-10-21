@@ -1,0 +1,5 @@
+# Explicit relative continuity law; all complete domains and point values are checked.
+have fn identity(x R) R=x
+have fn cont_absolute(x R) R=abs(x)
+release thm fn_continuous_at_identity(identity,0)
+release thm fn_continuous_at_abs(identity,cont_absolute,0)

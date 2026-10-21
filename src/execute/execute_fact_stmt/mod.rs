@@ -11,6 +11,8 @@ pub(crate) mod function_preimage;
 mod helper;
 pub(crate) mod known_tuple;
 mod negate_quantifier_free_conjunction;
+pub(crate) mod real_analysis;
+pub(crate) mod real_bounds;
 mod result;
 pub(crate) mod sequence_extrema;
 mod sequence_liminf;

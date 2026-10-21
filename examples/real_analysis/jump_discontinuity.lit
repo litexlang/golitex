@@ -1,0 +1,19 @@
+# The sign step function fails the epsilon definition of continuity at zero.
+have fn jump(x R) R=sign(x)
+
+jump(0)=0
+
+by contra:
+    ? not $is_continuous_at(jump,0)
+    release thm fn_continuous_at_control(jump,0,1)
+    obtain delta from exist delta R+ st {{x R:abs(x-0)<delta} $subset preimage_set(jump,{v R:abs(v-jump(0))<1})}
+    have input R=delta/2
+    0<delta/2=input
+    abs(input-0)=abs(input)=input=delta/2<delta/2+delta/2=delta
+    input $in {x R:abs(x-0)<delta}
+    input $in preimage_set(jump,{v R:abs(v-jump(0))<1})
+    jump(input) $in {v R:abs(v-jump(0))<1}
+    abs(jump(input)-jump(0))<1
+    jump(input)=sign(input)=1
+    abs(jump(input)-jump(0))=abs(1-0)=1
+    impossible abs(jump(input)-jump(0))<1

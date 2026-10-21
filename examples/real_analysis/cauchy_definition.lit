@@ -1,0 +1,18 @@
+# Direct epsilon definition, without assuming convergence or asking WD to find a limit.
+have fn sample(k N+) R = 2
+
+claim:
+    ? forall epsilon R+:
+        exist cutoff N+ st {cart({n N+: n>=cutoff},{n N+: n>=cutoff}) $subset {p cart(N+,N+): abs(sample(p(1))-sample(p(2)))<epsilon}}
+    witness exist cutoff N+ st {cart({n N+: n>=cutoff},{n N+: n>=cutoff}) $subset {p cart(N+,N+): abs(sample(p(1))-sample(p(2)))<epsilon}} from 1:
+        claim:
+            ? forall p cart({n N+:n>=1},{n N+:n>=1}):
+                p $in {q cart(N+,N+):abs(sample(q(1))-sample(q(2)))<epsilon}
+            p(1) $in N+
+            p(2) $in N+
+            sample(p(1))=2
+            sample(p(2))=2
+            abs(sample(p(1))-sample(p(2)))=0<epsilon
+        by def cart({n N+:n>=1},{n N+:n>=1}) $subset {q cart(N+,N+):abs(sample(q(1))-sample(q(2)))<epsilon}
+
+by def $is_seq_cauchy(sample)

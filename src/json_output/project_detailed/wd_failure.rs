@@ -118,6 +118,12 @@ pub(super) fn project_atomic_wd_failure(
         FailToVerifyAtomicFactWellDefinedResult, PredicateSignatureWellDefinedFailure,
     };
     let projected = match failure {
+        FailToVerifyAtomicFactWellDefinedResult::RealAnalysisDomain { fact, well_defined_of_each_parameter } => object_for(rt, vec![
+            ("phase", string("real_analysis_domain")),
+            ("fact", string(fact.readable_string())),
+            ("well_defined_of_each_parameter", JsonValue::Array(well_defined_of_each_parameter.iter().map(|p| super::wd::project_obj_wd_proof(p, rt)).collect())),
+            ("message", string("Requires a complete real sequence or an unambiguous complete unary real function domain, including guards.")),
+        ]),
         FailToVerifyAtomicFactWellDefinedResult::FunctionLimitDomain { function, .. } => {
             object_for(
                 rt,
@@ -264,6 +270,10 @@ pub(super) fn project_obj_wd_failure(
     rt: &Runtime,
 ) -> JsonValue {
     let projected = match f {
+        FailToVerifyObjWellDefinedResult::BoundOperator(FailToVerifyBoundOperatorObjWellDefinedResult::Supremum(p)) => node(rt,"Supremum",None,
+            object_for(rt,vec![("obj",string(p.obj.readable_string())),("requirement",project_verify_fact(&p.result,rt))])),
+        FailToVerifyObjWellDefinedResult::BoundOperator(FailToVerifyBoundOperatorObjWellDefinedResult::Infimum(p)) => node(rt,"Infimum",None,
+            object_for(rt,vec![("obj",string(p.obj.readable_string())),("requirement",project_verify_fact(&p.result,rt))])),
         FailToVerifyObjWellDefinedResult::LimitOperator(FailToVerifyLimitOperatorObjWellDefinedResult::Function(p)) => super::function_limit::object_failure(p,rt),
         FailToVerifyObjWellDefinedResult::LimitOperator(FailToVerifyLimitOperatorObjWellDefinedResult::Sequence(p)) => node(rt,"SequenceLimit",None,
             object_for(rt,vec![("obj",string(p.obj.readable_string())),("message",string("Sequence limit requires proved finite convergence; no limit is guessed from the body.")),("requirement",project_verify_fact(&p.result,rt))])),

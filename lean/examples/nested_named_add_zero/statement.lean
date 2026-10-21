@@ -12,7 +12,7 @@ theorem h_2 : ∀ {_Host_i1 : Type v1} [_rep_i1 : Litex.Representation M _Host_i
     intro _Host_i1 _rep_i1 _value_i1 h_3
     have h_17 : Litex.In _value_i1 (Litex.R (M := M)) :=
       h_3
-    exact (Litex.NativeBridge.sameOfDenoteNumber _ _ ((Litex.NativeBridge.asComplex _value_i1 (Litex.realToComplex _value_i1 h_17)) + (0 : ℂ)) (Litex.NativeBridge.asComplex _value_i1 (Litex.realToComplex _value_i1 h_17)) (Litex.NativeBridge.denoteAdd _value_i1 (Litex.number (M := M) (0 : ℂ)) (M.real_subset_complex _ h_17) (Litex.numberInC (M := M) (0 : ℂ)) _ _ (Litex.NativeBridge.asComplex_spec _value_i1 (Litex.realToComplex _value_i1 h_17)) (Litex.NativeBridge.denoteNumber (M := M) (0 : ℂ))) (Litex.NativeBridge.asComplex_spec _value_i1 (Litex.realToComplex _value_i1 h_17)) (by ring))
+    exact (Litex.NativeBridge.sameOfDenoteNumber _ _ ((Litex.NativeBridge.asComplex _value_i1 (Litex.realToComplex _value_i1 h_17)) + (0 : ℂ)) (Litex.NativeBridge.asComplex _value_i1 (Litex.realToComplex _value_i1 h_17)) (Litex.NativeBridge.denoteAdd _value_i1 (Litex.number (M := M) (0 : ℂ)) (M.real_subset_complex _ h_17) (Litex.numberInC (M := M) (0 : ℂ)) _ _ (Litex.NativeBridge.asComplex_spec _value_i1 (Litex.realToComplex _value_i1 h_17)) (Litex.NativeBridge.denoteNumber (M := M) (0 : ℂ))) (Litex.NativeBridge.asComplex_spec _value_i1 (Litex.realToComplex _value_i1 h_17)) (by ring!))
   )
 
 theorem h_48 : ∀ {_Host_i3 : Type v3} [_rep_i3 : Litex.Representation M _Host_i3] (_value_i3 : Litex.Obj (M := M) _Host_i3) (h_50 : Litex.In _value_i3 (Litex.R (M := M))), Litex.Same (Litex.add _value_i3 (Litex.number (M := M) (0 : ℂ)) (M.real_subset_complex _ h_50) (Litex.numberInC (M := M) (0 : ℂ))) _value_i3 :=

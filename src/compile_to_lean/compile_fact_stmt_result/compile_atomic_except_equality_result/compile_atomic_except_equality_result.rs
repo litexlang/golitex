@@ -37,8 +37,21 @@ impl LitexToLeanCompiler {
         success: &VerifyAtomicExceptEqualityFactSuccess,
         position: &SourcePosition<'_>,
     ) -> Result<(String, String), LeanCompileError> {
-        self.compile_atomic_wd(&success.well_defined_proof, &success.fact, position)?;
+        let bindings =
+            self.compile_atomic_wd_locals(&success.well_defined_proof, &success.fact, position)?;
+        let locals = SourcePosition::new(
+            position.parent,
+            SourceOwner::AtomicWDLocals(
+                &success.well_defined_proof,
+                success
+                    .well_defined_proof
+                    .well_defined_of_each_parameter
+                    .len(),
+            ),
+            usize::MAX,
+        );
         let formed = SourcePosition {
+            parent: Some(&locals),
             before: usize::MAX,
             ..*position
         };
@@ -147,7 +160,7 @@ impl LitexToLeanCompiler {
                     self.compile_nonzero_product(&success.fact, &proof.requirement_facts, &proof.proof_of_requirement_facts, position)?,
                 AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::SubNonnegativeFromZero(proof)) =>
                     self.compile_sub_nonnegative_strategy(&success.fact, &proof.requirement_facts, &proof.proof_of_requirement_facts, position)?,
-                AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(strategy @ (AtomicExceptEqualityFactSearchProofByBuiltinStrategy::NonnegativeSumIsNonnegative(_) | AtomicExceptEqualityFactSearchProofByBuiltinStrategy::StrictAdditiveRightStrict(_) | AtomicExceptEqualityFactSearchProofByBuiltinStrategy::ProductNonnegativeBothNonneg(_))) =>
+                AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(strategy @ (AtomicExceptEqualityFactSearchProofByBuiltinStrategy::NonnegativeSumIsNonnegative(_) | AtomicExceptEqualityFactSearchProofByBuiltinStrategy::StrictAdditiveLeftStrict(_) | AtomicExceptEqualityFactSearchProofByBuiltinStrategy::StrictAdditiveRightStrict(_) | AtomicExceptEqualityFactSearchProofByBuiltinStrategy::ProductNonnegativeBothNonneg(_))) =>
                     self.compile_selected_zero_bound_strategy(&success.fact, strategy, position)?,
                 AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::DivSharedPositiveDenomLessEqual(proof)) =>
                     self.compile_div_monotone_strategy(&success.fact, &proof.requirement_facts, &proof.proof_of_requirement_facts, position)?,
@@ -165,8 +178,12 @@ impl LitexToLeanCompiler {
                     AtomicFact::InFact(fact) => self.compile_power_set_membership_strategy(fact, proof, position)?,
                     _ => return Err(LeanCompileError::new("PowerSet/Family", "Power-set membership evidence has another source fact family.")),
                 },
+                AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::PowSharedExponentLessEqual(proof)) =>
+                    self.compile_power_weak_order_strategy(&success.fact, &proof.requirement_facts, &proof.proof_of_requirement_facts, position)?,
+                AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::AddRightStrictShiftLeftWeak(proof)) =>
+                    self.compile_add_strict_shift(&success.fact, &proof.requirement_facts, &proof.proof_of_requirement_facts, position)?,
                 AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(_) => {
-                    return Err(LeanCompileError::unsupported("Atomic/BuiltinStrategy"))
+                    return Err(LeanCompileError::new("Atomic/BuiltinStrategy", &format!("Unsupported selected strategy for `{}`.", success.fact.readable_string())))
                 }
                 AtomicExceptEqualityFactSearchedProof::ByKnownStrategy(_) => {
                     return Err(LeanCompileError::unsupported("Atomic/KnownStrategy"))
@@ -182,6 +199,20 @@ impl LitexToLeanCompiler {
                 }
             };
 
-        Ok((proposition, proof))
+        if bindings.is_empty() {
+            Ok((proposition, proof))
+        } else {
+            let bindings = bindings.join("\n").replace('\n', "\n  ");
+            Ok((
+                format!(
+                    "(by\n  {bindings}\n  exact {})",
+                    proposition.replace('\n', "\n  ")
+                ),
+                format!(
+                    "(by\n  {bindings}\n  exact {})",
+                    proof.replace('\n', "\n  ")
+                ),
+            ))
+        }
     }
 }

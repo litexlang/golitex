@@ -130,8 +130,44 @@ impl LitexToLeanCompiler {
             EqualFactSearchedProof::ByBuiltinRule(
                 EqualitySearchProofByBuiltinRule::EqualFromKnownDifferenceZero(proof),
             ) => self.compile_equal_from_known_difference_zero(fact, proof, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(
+                EqualitySearchProofByBuiltinRule::EqualityFromTwoSidedWeakOrder(proof),
+            ) => self.compile_order_antisymmetry(fact, proof, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(
+                EqualitySearchProofByBuiltinRule::ElementaryArithmetic(
+                    ElementaryArithmeticProof::PositivePowerZero {
+                        premise,
+                        requirements,
+                    },
+                ),
+            ) => self.compile_positive_power_zero(fact, premise, requirements, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(
+                EqualitySearchProofByBuiltinRule::ZeroProductCancel(proof),
+            ) => {
+                self.compile_zero_product_cancel(fact, &proof.proof_of_requirement_facts, position)?
+            }
+            EqualFactSearchedProof::ByBuiltinRule(
+                EqualitySearchProofByBuiltinRule::DiffZeroFromEqualOperands(proof),
+            ) => self.compile_difference_zero_from_equal(
+                fact,
+                &proof.proof_of_requirement_facts,
+                position,
+            )?,
+            EqualFactSearchedProof::ByBuiltinRule(
+                EqualitySearchProofByBuiltinRule::SubtractionFromKnownAddition(proof),
+            ) => self.compile_subtraction_from_addition(
+                fact,
+                &proof.proof_of_requirement_facts,
+                position,
+            )?,
             EqualFactSearchedProof::ByBuiltinRule(_) => {
-                return Err(LeanCompileError::unsupported("Equality/BuiltinRule"))
+                return Err(LeanCompileError::new(
+                    "Equality/BuiltinRule",
+                    &format!(
+                        "Unsupported selected builtin for `{}`.",
+                        AtomicFact::EqualFact(fact.clone()).readable_string()
+                    ),
+                ))
             }
             EqualFactSearchedProof::ByEquivalenceClass(proof) => {
                 self.compile_equivalence_class(fact, proof, position)?
@@ -154,6 +190,14 @@ impl LitexToLeanCompiler {
                 &proof.requirement_facts,
                 &proof.proof_of_requirement_facts,
                 true,
+                position,
+            )?,
+            EqualFactSearchedProof::ByBuiltinStrategy(
+                EqualitySearchProofByBuiltinStrategy::TupleComponentEquality(proof),
+            ) => self.compile_tuple_component_strategy(
+                fact,
+                &proof.requirement_facts,
+                &proof.proof_of_requirement_facts,
                 position,
             )?,
             EqualFactSearchedProof::ByBuiltinStrategy(_) => {

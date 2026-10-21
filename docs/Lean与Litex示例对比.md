@@ -1,71 +1,129 @@
-<a id="representative-leanlitex-example-comparisons"></a>
-
-# Lean–Litex 代表性示例对比
+# Litex 与 Lean：构造、理解和使用数学知识
 
 由沈嘉辰创建和维护。
 
-在浏览器中尝试示例：
-https://litexlang.com/doc/Representative_Lean_Litex_Example_Comparisons
+[在浏览器中尝试示例](https://litexlang.com/doc/Representative_Lean_Litex_Example_Comparisons) ·
+[英文 Markdown 源码](https://github.com/litexlang/golitex/blob/main/docs/Representative_Lean_Litex_Example_Comparisons.md) ·
+[English](Representative_Lean_Litex_Example_Comparisons.md)
 
-Markdown 源码：
-https://github.com/litexlang/golitex/blob/main/docs/Representative_Lean_Litex_Example_Comparisons.md
+数学语言影响作者写下什么、检查器重建什么，以及其他读者能理解和使用什么。本页围绕一个问题比较 Litex 与 Lean：
 
-> **Litex 是一个仍处于 beta 阶段的实验性业余项目，使用中可能遇到不完善之处。**
+> **把一个数学想法变成可检查、可理解、可修复、可继续使用的知识，需要付出多少劳动？Litex 的设计改变了其中哪些工作？**
 
-本页提供少量代表性示例，而不是完整的语言比较。Lean 与 Litex 都使数学可以由机器检查，但默认接口有所不同：
+Litex 探索以事实为中心的数学语言：作者引入对象、定义概念、陈述事实，并给出有意义的证明步骤；检查器从已接受的上下文中建立受支持的连接。下面的例子让这种分工变得可见，并提出关于数学工作成本的可检验假设。目前的示例尚未证明跨任务的书写或阅读成本优势。
 
-- Lean 提供依赖类型论、证明项、tactic、Mathlib、成熟工具和庞大社区。
-- Litex 提供以事实为导向、以集合论为基础的表层接口；用户通常写下下一条数学事实，由检查器搜索支持它的依据。
+<a id="3-calculation-chains"></a>
+<a id="3-计算链"></a>
+<a id="direct-local-consequences"></a>
+<a id="the-central-inversion-state-the-next-fact-reconstruct-its-grounds"></a>
+<a id="核心倒置陈述下一条事实重建其依据"></a>
+<a id="直接的局部推论"></a>
+<a id="语法先写想要成立的事实"></a>
+<a id="constructing-knowledge"></a>
 
-这些是侧重点差异，不是绝对能力边界。Lean 能支持简洁自动化与前向推理；Litex 也有显式目标、命名定理、分情形、归纳和其他结构化证明形式。以下 Lean 证明有意保留足够的显式步骤，以便展示比较，不是在声称它们是最短的 Lean 证明。
+## 1. 构造：源码多直接地表达数学路线？
 
-未跳过的 Litex 块都是自足的，由仓库文档测试检查。明确标为迁移示例的块保留当前内核尚未解决的边界，不是通过的示例。Lean 块直接使用 Mathlib，不依赖 *Mathematics in Lean* 教材包。两边的语法与自动化都可能继续演进。
-
-更完整的设计论证见 [Litex 蓝图](https://litexlang.com/doc/Litex中文蓝图)。语言细节见[手册](Litex手册.md)和 [CLI 参考](Litex命令行参考.md)。当前预览模式 `-lean -f` 重放有限的带类型结果集合。[语义接口](../lean/Litex.lean)与[生成示例对](../lean/examples/)展示已支持的路线。维护中的源码与生成结果讲解见[编译器指南](Litex到Lean编译器指南.md)。下文语义讨论中的历史输出器与设计目标不代表当前编译器覆盖范围。
-
-完整的 `Group` 对比放在蓝图中，不在此重复。本页集中展示能增加独立证据的示例。示例之后，[第 8 节](#8-a-design-perspective-what-the-author-states-what-the-checker-reconstructs)将它们连接到一个形式化语言设计提案：哪些决定属于数学源码，哪些工作应由检查器重建。
-
-<a id="syntax-semantics-and-foundations"></a>
-
-## 从语法、语义、对象与数学基础开始
-
-Litex 的目标，是成为形式化语言里的 Python，让学生、工程师与研究者能把形式化数学用进自己的工作。减少输入符号是其中一部分；另一部分，是让熟悉的数学想法、定义域条件与论证顺序直接对应源码。
-
-| 角度 | Lean / Mathlib | Litex 的源码接口 |
-| --- | --- | --- |
-| 语法 | 定理具有带类型的陈述与证明项；tactic 和自动化可以构造证明项。 | 直接写下一条事实，由验证器在已接受的上下文中寻找依据。 |
-| 运算语义 | 一些熟悉的运算被扩展到了教科书通常不使用的定义域。 | 接受使用某个表达式的事实之前，先建立表达式有定义。 |
-| 对象与性质 | 通过类型、转换、子类型与证明参数组织接口。 | 成员关系与条件是对象的事实；带条件的调用直接检查上下文中的这些事实。 |
-| 数学基础 | 以依赖类型论组织数学对象、命题与证明。 | 以集合论源码模型，从集合、函数、关系与显式事实出发。 |
-
-### 语法：先写想要成立的事实
-
-Lean 可以简洁地证明一个小算式：
-
-```lean
-example : (1 : Nat) + 1 = 2 := by
-  rfl
-```
-
-对应的 Litex 输入就是事实本身：
+解方程组 `2*x + 3*y = 10`、`4*x + 5*y = 14`。数学上的选择是：第一个方程乘二，再减去第二个方程，消去 `x`。
 
 ```litex
-1 + 1 = 2
+forall x, y R:
+    2 * x + 3 * y = 10
+    4 * x + 5 * y = 14
+    =>:
+        y = 2 * (2 * x + 3 * y) - (4 * x + 5 * y) = 6
+        x = ((2 * x + 3 * y) - 3 * y) / 2 = (-4)
 ```
 
-区别在于书写证明的接口，并非这个算式对 Lean 很难。更大的证明仍需要作者选择有意义的中间步骤。[第 1 节](#1-direct-facts-short-estimates-and-typed-domains)用实际证明比较这种工作流。
+源码保留消元步骤和求 `x` 的代入。Litex 用前提和代数规则检查每个连接：作者选择有用的计算，检查器提供常规步骤的依据。更长的证明仍需要作者选择中间事实、见证、估计或分情况。
 
+Lean 可以通过 `calc` 保留同一条数学路线：
+
+```lean
+import Mathlib
+
+example (x y : ℝ)
+    (h1 : 2 * x + 3 * y = 10)
+    (h2 : 4 * x + 5 * y = 14) :
+    y = 6 ∧ x = -4 := by
+  have hy : y = 6 := by
+    calc
+      y = 2 * (2 * x + 3 * y) - (4 * x + 5 * y) := by linarith
+      _ = 2 * 10 - 14 := by rw [h1, h2]
+      _ = 6 := by norm_num
+  have hx : x = -4 := by
+    calc
+      x = ((2 * x + 3 * y) - 3 * y) / 2 := by ring
+      _ = (10 - 3 * 6) / 2 := by rw [h1, hy]
+      _ = -4 := by norm_num
+  exact ⟨hy, hx⟩
+```
+
+若任务只要求完成定理，Lean 也可以使用更短的自动化证明：
+
+```lean
+import Mathlib
+
+example (x y : ℝ)
+    (h1 : 2 * x + 3 * y = 10)
+    (h2 : 4 * x + 5 * y = 14) :
+    y = 6 ∧ x = -4 := by
+  constructor <;> linarith
+```
+
+这几种形式支持不同的比较。完成时间应使用各系统有效的惯用工具；阅读任务则可以询问读者能否从源码恢复消元论证。单独统计代码行数不能回答这两个问题：短自动化调用可以隐藏较长推导，较长计算也可能有意把推导留给读者。
+
+Litex 在这里的特点，是下一条数学事实本身就构成检查请求。Lean 也支持前向 `have` 证明和自动化；其 [elaborator 构造证明项，再由内核检查](https://lean-lang.org/doc/reference/latest/Elaboration-and-Compilation/)。比较应落在作者接口及其成本上，也包括作者希望对常规证明重建保留多少控制。
+
+<a id="8-a-design-perspective-what-the-author-states-what-the-checker-reconstructs"></a>
+<a id="8-设计视角作者陈述什么检查器重建什么"></a>
+<a id="9-本地运行时对照非正式测量"></a>
+<a id="leanlitex-代表性示例对比"></a>
+<a id="representative-leanlitex-example-comparisons"></a>
+<a id="six-related-changes-of-starting-point"></a>
+<a id="why-the-combination-matters"></a>
+<a id="为什么组合值得研究"></a>
+<a id="六个相关的起点变化"></a>
+<a id="comparison-dimensions"></a>
+
+### 贯穿示例的六个问题
+
+| 数学活动 | 比较问题 | 现有材料 |
+| --- | --- | --- |
+| [构造](#constructing-knowledge) | 从数学路线到被接受的源码，还需要做多少工作？ | 方程与估计链、见证。 |
+| [保留含义](#meanings-and-domains) | 怎样让运算含义和使用条件与原问题保持一致？ | 除法、平方根、带条件函数。 |
+| [积累知识](#objects-and-membership) | 一个对象怎样获得更多性质，并进入后续上下文？ | 数系成员关系、子集、交集。 |
+| [修复](#interaction-and-repair) | 失败反馈揭示什么，之前接受的工作还能否使用？ | Session 交互、结构化反馈。 |
+| [理解与复用](#understanding-and-reuse) | 别人能否识别路线、遵守条件，并继续做数学？ | 收敛证明、保持定义域的有理映射、主题模块。 |
+| [反复检查](#checking-performance) | 工作流能负担多少次检查，依赖增长时成本怎样变化？ | 注明日期的本地计时、见证检查。 |
+
+这些章节首先说明具体设计行为。[评价部分](#evaluating-the-comparison)区分已有证据和仍需开展的测量。数学基础、支持范围与信任则作为明确的[比较条件](#trust-and-scope)。
+
+<a id="domains-carried-by-mathematical-objects"></a>
 <a id="ordinary-mathematics"></a>
+<a id="对象知道一个性质与打包一个子类型"></a>
+<a id="数学对象携带的定义域"></a>
+<a id="自然数减法"></a>
+<a id="语义litex-走正常数学的路线"></a>
+<a id="负数输入的实数平方根函数"></a>
+<a id="除以零"></a>
+<a id="meanings-and-domains"></a>
 
-### 语义：Litex 走“正常数学”的路线
+## 2. 含义：数学表达的使用条件在哪里检查？
 
-**Litex 希望保留通常教科书中的数学含义与定义域条件。** 除法要求分母非零，实数平方根要求输入非负。接受使用这些表达式的事实之前，验证器必须先建立相应条件。这里的“正常数学”落实为一个具体目标：作者沿用自己想表达的数学含义，由语言检查其使用条件。
+给出有效证明与表达原本的数学，是两项分别需要保证的事情。Litex 希望让熟悉的运算含义和定义域直接出现在源码中。值得比较的是：这种设计是否帮助作者保留原问题，并发现遗漏条件。
 
-下面三个例子涉及运算定义。Mathlib 的扩展是库的主动约定，并非依赖类型论必然要求如此；Lean 也能表达受限的定义域。
+### 除法与带条件调用
 
-#### 除以零
+对于倒数，Litex 将非零条件写进定义域：
 
-Mathlib 的标准实数除法满足：
+```litex
+have fn reciprocal(x R: x != 0) R = 1 / x
+reciprocal(2) = 1 / 2
+```
+
+`reciprocal(0)` 不在该定义域中。接受使用 `1 / x` 的事实之前，检查器必须从当前上下文建立 `x != 0`；连 `1 / 0 = 1 / 0` 也会在良定义性检查处失败。
+
+Mathlib 有意把标准实数除法扩展到零分母处：
 
 ```lean
 import Mathlib
@@ -74,69 +132,9 @@ example : (1 : ℝ) / 0 = 0 := by
   simp
 ```
 
-Litex 将非零条件放在函数定义域中：
+其 [`div_zero`](https://leanprover-community.github.io/mathlib4_docs/Mathlib/Algebra/GroupWithZero/Basic.html#div_zero) 不允许非法约分：`x / x = 1` 等规律仍要求非零前提。Lean 也能编码受限定义域。比较应考察条件在哪里表达、建立和使用，以及作者为保持原来的数学含义需要做多少工作。
 
-```litex
-have fn reciprocal(x R: x != 0) R = 1 / x
-reciprocal(2) = 1 / 2
-```
-
-Litex 在良定义性检查处拒绝 `1 / 0 = 0`：所需条件 `0 != 0` 无法成立，不会给它一个默认值。Mathlib 的对应约定见 [`div_zero`](https://leanprover-community.github.io/mathlib4_docs/Mathlib/Algebra/GroupWithZero/Basic.html#div_zero)。
-
-区别在于非零条件在哪里被检查。Mathlib 在 `x / x = 1` 等定理中要求这个前提；Litex 在接受含有该除法的事实之前就检查它，连 `1 / 0 = 1 / 0` 也会被拒绝。[Lean 的除零 FAQ](https://xenaproject.wordpress.com/2020/07/05/division-by-zero-in-type-theory-a-faq/)解释了 Mathlib 的选择，以及为何这种扩展不允许在零分母处错误地约分。
-
-#### 自然数减法
-
-Lean 的自然数减法在零处截断：
-
-```lean
-example : (1 : Nat) - 2 = 0 := by
-  decide
-```
-
-Litex 不会因为两个输入都是自然数，就把减法改成截断减法：
-
-```litex
-1 - 2 = -1
-1 - 2 $in Z
-```
-
-结果是整数。Lean 也提供通常的整数减法；这里的区别是类型选择了哪种运算。参见 [`Nat.sub`](https://lean-lang.org/doc/reference/latest/Basic-Types/Natural-Numbers/#Nat.sub)。
-
-#### 负数输入的实数平方根函数
-
-Mathlib 将 `Real.sqrt` 扩展为对负数返回零：
-
-```lean
-import Mathlib
-
-example : Real.sqrt (-1) = 0 := by
-  exact Real.sqrt_eq_zero_of_nonpos (by norm_num)
-```
-
-Litex 的实数平方根运算要求输入非负：
-
-```litex
-have fn real_root(x R: x >= 0) R = sqrt(x)
-real_root(4) = 2
-```
-
-`sqrt(-1) = 0` 在良定义性检查处被拒绝，那里要求 `0 <= -1`。这体现的是运算定义域约定的区别。Mathlib 的值并不表示零的平方等于负一；通常的平方根恒等式仍保留定义域前提。参见 [`Real.sqrt_eq_zero_of_nonpos`](https://leanprover-community.github.io/mathlib4_docs/Mathlib/Analysis/Real/Sqrt.html#Real.sqrt_eq_zero_of_nonpos)。
-
-### 对象：知道一个性质，与打包一个子类型
-
-假设已有实数 `x`，也已证明 `0 <= x`。接受非负实数子类型的 Lean 接口，把值与证明打包在一起：
-
-```lean
-import Mathlib
-
-def nonnegativeInput (x : {y : ℝ // 0 ≤ y}) : ℝ := x.val
-
-example (x : ℝ) (h : 0 ≤ x) : nonnegativeInput ⟨x, h⟩ = x := by
-  rfl
-```
-
-对应的 Litex 接口将条件保留为参数的事实：
+用户自定义的条件也有同样的问题：
 
 ```litex
 have fn nonnegative_input(x R: x >= 0) R = x
@@ -147,18 +145,64 @@ forall x R:
         nonnegative_input(x) = x
 ```
 
-Litex 使用同一个 `x` 作为参数时检查已知条件，源码不需要为这个条件把值与证明打包。条件义务仍在：`nonnegative_input(-1) = -1` 会在良定义性检查处被拒绝。Lean 也能改用独立的证明参数，自动化还可以补全部分打包工作；这里比较的是接口，而非声称 Lean 不能表达带条件的函数。参见 [Lean 子类型](https://lean-lang.org/doc/reference/latest/Basic-Types/Subtypes/)。
-
-数值表示也体现了类似区别。实数 `1` 与复数 `1` 属于不同的 Lean 类型，但通过标准嵌入后相等：
+一种 Lean 接口用子类型打包值与证据：
 
 ```lean
 import Mathlib
 
-example : ((1 : ℝ) : ℂ) = (1 : ℂ) := by
-  simp
+def nonnegativeInput (x : {y : ℝ // 0 ≤ y}) : ℝ := x.val
+
+example (x : ℝ) (h : 0 ≤ x) : nonnegativeInput ⟨x, h⟩ = x := by
+  rfl
 ```
 
-在 Litex 中，同一个源码对象可以逐步积累成员事实：
+Litex 在调用时检查已有的关于 `x` 的条件；子类型接口传入值和证明。Lean 也可以采用独立证明参数，自动化还能协助处理。实际任务可以测合法调用的构造成本、非法调用的诊断，以及修改定义域时能否保留原来的规格。
+
+### 减法与实数平方根
+
+Lean 的自然数减法在零处截断：
+
+```lean
+example : (1 : Nat) - 2 = 0 := by
+  decide
+```
+
+Litex 对这个表达式保留通常的整数值减法：
+
+```litex
+1 - 2 = -1
+1 - 2 $in Z
+```
+
+Lean 的 `Int` 也满足 `1 - 2 = -1`；这里的问题是选中了哪一种运算。参见 [`Nat.sub`](https://lean-lang.org/doc/reference/latest/Basic-Types/Natural-Numbers/#Nat.sub)。
+
+Mathlib 的实数平方根在负数输入处返回零：
+
+```lean
+import Mathlib
+
+example : Real.sqrt (-1) = 0 := by
+  exact Real.sqrt_eq_zero_of_nonpos (by norm_num)
+```
+
+Litex 的实数平方根要求输入非负：
+
+```litex
+have fn real_root(x R: x >= 0) R = sqrt(x)
+real_root(4) = 2
+```
+
+因此 `sqrt(-1) = 0` 在 Litex 中无法通过良定义性检查。Mathlib 的 [`Real.sqrt_eq_zero_of_nonpos`](https://leanprover-community.github.io/mathlib4_docs/Mathlib/Analysis/Real/Sqrt.html#Real.sqrt_eq_zero_of_nonpos) 记录了一项主动扩展；其平方根恒等式仍保留相应定义域前提。这些例子确立了具体语义选择。要判断哪种接口更能减少规格错误，还需要独立固定原意的任务，并用合法对照测量不必要的拒绝。
+
+<a id="5-set-theoretic-objects-at-the-surface"></a>
+<a id="5-表层的集合论对象"></a>
+<a id="intersections-preserve-inclusion"></a>
+<a id="交集保持包含关系"></a>
+<a id="objects-and-membership"></a>
+
+## 3. 对象：数学知识怎样逐步积累？
+
+在 Litex 中，同一个源码对象可以获得更多事实：
 
 ```litex
 have a N = 1
@@ -167,195 +211,328 @@ a $in R
 a $in C
 ```
 
-这不是说 Lean 中的实数一与复数一在数学上不相等，也不是说生成的 Lean 没有类型，而是展示身份、成员关系与表示的源码接口有所不同。后面的 `Eq`/`Same` 章节进一步讨论桥接；Mathlib 的数值嵌入见 [`Complex.ofReal_one`](https://leanprover-community.github.io/mathlib4_docs/Mathlib/Basic/Complex/Basic.html#Complex.ofReal_one)。
+每行并没有替换这个数。关于它属于不同数集的知识进入上下文，供后续检查使用。对象身份与知识积累因而直接进入源码模型。
 
-### 数学基础：起点的差异，也影响表达
-
-不同的基础体系可以各自在内部保持一致，同时采用不同方式组织对象、相等与证明。Lean 使用[依赖类型论](https://lean-lang.org/theorem_proving_in_lean4/Dependent-Type-Theory/)，数学论述则常以集合为出发点。这些描述不构成任何体系绝对一致性的证明，日常数学也没有唯一的形式化表述。上面的除零和平方根扩展属于库定义，并非 Lean 公理强制的结果。
-
-Litex 探索的是：熟悉的源码对象、定义域条件与事实导向证明写法，能否降低构造与理解可检查数学的成本。这是需要跨任务检验的设计目标；这些示例证明的是各自具体行为，不代表普遍覆盖、更高正确性或完整的 Lean 编译能力。
-
----
-
-
-<a id="a-semantic-difference-behind-the-syntax-eq-and-same"></a>
-
-## 语法背后的语义差异：`Eq` 与 `Same`
-
-一项关键区别不能从表层证明长度看出来。Lean 的命题相等是同类型的：
+Lean 通过类型与嵌入组织表示。例如：
 
 ```lean
-Eq : {α : Sort u} → α → α → Prop
+import Mathlib
+
+example : ((1 : ℝ) : ℂ) = (1 : ℂ) := by
+  simp
 ```
 
-因此 `x = y` 要求两项属于同一个 Lean 类型，表示它们是该载体中的同一个值，并支持代换、改写与依赖传递。
+经过嵌入，实数值与复数值相等。比较可以跟踪同一个数学值经过多个接口的过程，记录两边需要的转换、辅助证据与修复工作，也评估这些表示提供的保证与通用性。
 
-保留的 Lean ABI 使用 `Litex.Same` 表示 Litex 源码相等：这是跨表示的异质语义相等。例如：
+集合提供了另一组具体例子：
+
+```litex
+{1, 2} $in {{}, {1, 2}}
+
+{1, 2} $subset {1, 2, 3}
+{1, 2} $in power_set({1, 2, 3})
+
+forall A, B set, x A:
+    A $subset B
+    =>:
+        x $in B
+```
 
 ```lean
-n       : ℕ
-(n : ℤ) : ℤ
-(n : ℂ) : ℂ
+import Mathlib
+
+example : ({1, 2} : Set ℕ) ∈ ({∅, {1, 2}} : Set (Set ℕ)) := by
+  simp
+
+example : ({1, 2} : Set ℕ) ⊆ ({1, 2, 3} : Set ℕ) := by
+  simp
+
+example {α : Type} {A B : Set α}
+    (hAB : A ⊆ B) {x : α} (hx : x ∈ A) :
+    x ∈ B := by
+  exact hAB hx
 ```
 
-它们不能成为同一个 Lean `Eq` 的端点，因为载体不同。但借助经过审查的数值表示桥接，可以证明它们表示同一个 Litex 数学值。`Same` 也不只是 Lean 的 `HEq`：`HEq` 属于依赖类型论对项身份的描述，而 `Same` 有意记录经过认可的表示之间的数学同一性。
+Litex 源码直接使用集合与成员关系；Lean 源码用 `Set ℕ`、`Set (Set ℕ)` 和类型参数 `α` 标明环境载体。Litex 的 `forall x S` 引入属于 `S` 的对象；`forall A set` 引入集合参数，不是某个包含所有对象的全集的元素。
 
-准确的设计描述是**以成员关系为导向、独立于表示的语义**。这不表示生成的 Lean 没有类型，而是 Litex 不将一个对象的完整数学分类永久编码在唯一的源码类型中。`x $in N`、`x $in Z` 和 `x $in R` 等事实可以不断积累，无需重新指定类型或替换 `x`。`Litex.In x S` 记录：`x` 所表示的语义值，在 `S` 的精确载体中有一个 `Same` 代表元。
+### 按数学内容使用已知事实
 
-一个有用的概念图景是：
+若 `s` 包含于 `t`，两边与 `u` 取交后仍保持包含：
+
+```litex
+forall s, t, u set:
+    s $subset t
+    =>:
+        intersect(s, u) $subset intersect(t, u)
+```
+
+Lean 可以给出简短的逐元素证明：
+
+```lean
+import Mathlib.Data.Set.Lattice
+
+example {α : Type*} (s t u : Set α) (h : s ⊆ t) :
+    s ∩ u ⊆ t ∩ u := by
+  intro x hx
+  exact ⟨h hx.1, hx.2⟩
+```
+
+Litex 检查器完成常规的成员拆解与传递；Lean 证明通过 `hx` 和构造的配对显式给出这个论证。两边都可以在合适时使用命名定理。比较问题是作者怎样取得相关知识：陈述需要的事实、选择定理名称、使用自动化，或给出显式路线；以及上下文增长之后，这些方式能否可靠地继续工作。
+
+这里比较的是源码接口。生成的 Lean 仍有类型，也需要认证后的表示桥接；详见[语义表示边界](#semantic-representation)。
+
+<a id="interaction-and-repair"></a>
+
+## 4. 修复：候选步骤失败之后发生什么？
+
+[Agent 指南](Litex智能体指南.md)给出一个小型 Session 示例。在没有项目配置的目录启动，下面省略了部分失败输出：
 
 ```text
-(α, x)      (β, y)      (γ, z)
-    \          |          /
-          Litex.Same
-               |
-    one Litex mathematical value
+$ litex -lang en -strict -session -e 'have a R = 2'
+litex> a = 3
+{"run_result": "failure", ..., "session_terminated": false, "termination": null}
+litex> a + 1 = 3
+success
 ```
 
-这类似于取宿主表示的等价类。实际 Lean 包装不构造商，而是保留具体代表元与证明证据，让内核可以检查每个桥接。
+失败的等式不会删除声明或 `a = 2`。下一条语句仍能使用已接受的上下文；换一个进程则需要加载或重放这些上下文。事务单位是一条语句，多条粘贴的语句可以分别提交。硬错误或替换已提交声明可能需要重启。
 
-全局关系有意保持不对称：
+检查还会返回该步骤的数学效果。对于 `1 + 1 = 2`，普通语句结果包含：
 
-```text
-Lean Eq ⊆ Litex.Same
+```json
+{
+  "statement_result": "accepted",
+  "statement": "(1 + 1) = 2",
+  "proof_method": {
+    "type": "by_closed_calculation",
+    "rule_name": "Closed calculation",
+    "message": "Exact evaluation of closed expressions without proof search"
+  },
+  "stores": ["(1 + 1) = 2"],
+  "infers": []
+}
 ```
 
-Lean 相等始终能通过 `Same.ofEq` 导出 `Same`。一般而言这是严格包含：即使两个端点具有相同 Lean 类型，`Same` 也不自动导出 `Eq`。例如两个 `Litex.Set` 值可以表示相同外延，却打包不同的精确载体。因此恢复原生 Lean 相等，要求两个端点都经由经过审查的忠实/单射观察映射到规范载体。`Same.complexNativeEq` 因而可以把 `x y : ℂ` 上的 `Same x y` 转为 `x = y`，但不存在从异质 `Same` 到 Lean `Eq` 的全局转换。
+`proof_method` 标明检查路线，`stores` 和 `infers` 描述发布的事实。失败反馈区分阶段，并在证据保留时给出相关义务：`1 / x` 可能因为尚未建立 `x != 0` 而失败。没有找到证明，不等于已经证明该事实为假。[CLI 参考](Litex命令行参考.md#json-output-contract)规定具体输出。
 
-这是默认语义接口的差异，不是在声称 Lean 不能表达集合导向数学或异质关系。Litex 包装本身就在 Lean 中定义并检查。设计选择是让成员关系与跨表示身份成为显式源码语义义务，只在经审计的特化边界恢复原生 Lean 相等。
+这为人和智能体提供了具体的“提出—检查—修正”循环。[Python Session 示例](../examples/agent_session_demo/README.md)演示了一次拒绝后继续进行依赖推理；它是确定性的交互示例，还不是 AI 证明成功率实验。
 
----
+Lean 也支持[增量 elaboration](https://lean-lang.org/doc/reference/latest/releases/v4.9.0/)、证明状态查看和 [`grind`](https://lean-lang.org/doc/reference/latest/The--grind--tactic) 等自动化。实际比较应让两边使用正常交互工具，记录诊断准确性、重复处理的已接受工作、修复轮数、总耗时与 token，以及修复后的结果是否仍回答原问题。只统计通过率，可能掩盖目标被改动或前提被添加。
 
 <a id="1-direct-facts-short-estimates-and-typed-domains"></a>
+<a id="1-直接事实短估计与带类型定义域"></a>
+<a id="2-scalar-multiplication-preserves-convergence"></a>
+<a id="2-标量乘法保持收敛"></a>
+<a id="ai-lowers-generation-cost-not-automatically-understanding-cost"></a>
+<a id="keep-the-mathematical-estimate-visible"></a>
+<a id="保持数学估计可见"></a>
+<a id="understanding-and-reuse"></a>
 
-## 1. 直接事实、短估计与带类型定义域
+## 5. 理解与复用：下一位读者能拿成果做什么？
 
-<a id="direct-local-consequences"></a>
+当另一个人能够理解条件，并把结果用于下一段论证时，检查成果才成为可用的知识。Litex 源码保留数学选择，检查记录提供另一层依据说明；这种组织是否帮助新读者，需要实际测量。
 
-### 直接的局部推论
+### 使用条件跟随数学构造
 
-假设已知一个实数等于 `2`。Litex 把该事实放进局部上下文，直接陈述所需推论：
+考虑 `x != 1` 上的 `f(x) = (x+1)/(x-1)`。要证明 `f(f(x)) = x`，必须先建立 `f(x) != 1`，使第二次调用合法。维护中的 [Litex 源码](../lean/examples/real_mobius_involution/statement.lit)如下：
 
 ```litex
 forall x R:
-    x = 2
+    x!=1
     =>:
-        x + 1 = 3
-        x^2 = 4
+        x-1!=0
+
+have fn mobius(x R:x!=1) R=(x+1)/(x-1)
+
+forall x R:
+    x!=0
+    =>:
+        2/x!=0
+
+thm mobius_preserves_domain:
+    ? forall x R:
+        x!=1
+        =>:
+            mobius(x)!=1
+    mobius(x)=(x+1)/(x-1)
+    mobius(x)-1=2/(x-1)
+    2/(x-1)!=0
+
+thm mobius_involution:
+    ? forall x R:
+        x!=1
+        =>:
+            mobius(mobius(x))=x
+    mobius(x)!=1
+    mobius(x)-1!=0
+    mobius(x)=(x+1)/(x-1)
+    ((x+1)/(x-1))-1!=0
+    mobius(mobius(x))=(mobius(x)+1)/(mobius(x)-1)=((x+1)/(x-1)+1)/((x+1)/(x-1)-1)=x
 ```
 
-显式 Lean 证明可以命名假设，并指示两次改写：
+可复用结果 `mobius_preserves_domain` 提供 `mobius_involution` 随后消费的条件。定义、保持定义域与继续使用连接成一段数学发展。可以让读者指出被排除的点、解释第二次调用，或继续应用这个映射。
+
+维护中的[原生 Lean 对照](../showcases/litex_to_lean_adapter/DirectLean.lean)也能简洁地证明两项性质：
 
 ```lean
-import Mathlib.Tactic
+import Mathlib
 
-example (x : ℝ) (h : x = 2) : x + 1 = 3 ∧ x ^ 2 = 4 := by
-  have h_add : x + 1 = 3 := by
-    rw [h]
-    norm_num
-  have h_square : x ^ 2 = 4 := by
-    rw [h]
-    norm_num
-  exact ⟨h_add, h_square⟩
+noncomputable def mobius (x : ℝ) : ℝ := (x + 1) / (x - 1)
+
+theorem mobiusInvolution (x : ℝ) (hx : x ≠ 1) :
+    mobius x ≠ 1 ∧ mobius (mobius x) = x := by
+  unfold mobius
+  constructor
+  · intro h
+    field_simp [sub_ne_zero.mpr hx] at h
+    linarith
+  · field_simp [sub_ne_zero.mpr hx]
+    ring
 ```
 
-数学内容相同。Litex 源码突出两个结果，由检查器提供代换与算术支持。Lean 源码突出构造合取的路线，最终由内核检查得到的证明项。
+[互操作 showcase](../showcases/litex_to_lean_adapter/README.md)继续展示受支持的 Litex 输出怎样经过 Adapter 变成普通 Lean 定理。这条交接路线有实际的表示转换与维护成本；它展示互操作能力，尚不能据此得出证明更短或编译覆盖完整的结论。
 
-<a id="ai-lowers-generation-cost-not-automatically-understanding-cost"></a>
+### 分析学中可见的数学选择
 
-<a id="keep-the-mathematical-estimate-visible"></a>
+数列收敛在数乘下保持时，关键选择是一个更小的容差。[完整例子](#convergence-example)中，Litex 选取 `epsilon / (|c| + 1)`，取得截断点，再写出估计。分母始终为正，包含 `c = 0` 的情形。保留的 Lean 证明选择 `epsilon / |c|` 并单独处理零；Lean 同样能采用统一论证，不能把证明路线的差异归因于语言。
 
-### 保持数学估计可见
+阅读比较可以要求他人恢复这个选择、解释分母为什么合法，并修改估计。生成证明与理解证明是两个任务；模型能生成源码，不代表已经测量了另一位读者的理解。
 
-假设 `0 < epsilon <= 1`、`|x| < epsilon`、`|y| < epsilon`。`|x * y| < epsilon` 成立的原因是简短估计：
+### 从单条结果到一段数学发展
+
+[数学主题集合](../showcases/math_concepts_in_litex/README.md)提供了有边界的连续发展，包括[平方函数的导数](../showcases/math_concepts_in_litex/7_calculus/README.md)和[坐标几何库](../showcases/math_concepts_in_litex/15_coordinate_geometry_case_study/README.md)。可以据此比较定义概念、建立引理、使用构造、修改条件和向另一位作者交接的全过程。各模块注明日期的 Litex 检查，不同时确立所有 Lean 对照文件或整个数学学科的覆盖。
+
+分别测量知识建设与知识消费：先建立一个接口需要多少投入，再由新使用者调用它需要多少投入。库的建设、检查器改动和 Adapter 工作均应记录，不能作为免费前提。这有助于区分可普遍使用的语言机制，以及依赖逐题实现支持的示例集合。
+
+<a id="4-witnesses-contradiction-and-counterexamples"></a>
+<a id="4-见证反证与反例"></a>
+<a id="a-concrete-witness"></a>
+<a id="具体见证"></a>
+<a id="checking-performance"></a>
+
+## 6. 性能：工作流能负担多少次检查？
+
+每个候选数学步骤都能收到反馈时，检查延迟会直接影响工作方式。数量级的速度差异可能改变交互试探、智能体搜索或交互教材逐步检查的成本。这些工作流效果仍需检验；检查器更快本身尚不能确立最终数学任务的完成收益。
+
+<a id="9-local-runtime-spot-checks"></a>
+
+### 2026-10-21 的本地运行时观察
+
+已有的 Apple Silicon 本地抽查记录如下。Litex 使用已构建的 `target/release/litex -f`；Lean 在 `showcases/litex_to_lean_adapter` 中使用 `lake env lean`，已有 Mathlib olean 缓存。Litex 列是多次运行的中位数，Lean 列是第二次较暖运行。本表保留当时的观察，本文新增的证明写法没有重新计时。
+
+| 场景 | Litex（中位） | Lean（第 2 次较暖） | 约计比值 |
+| --- | --- | --- | --- |
+| 短算术 / `x = 2` ⇒ `x + 1 = 3`，`x^2 = 4` | ~6 ms | ~7 s | ~1000× |
+| 二元一次方程计算链 | ~16 ms | ~30 s | ~2000× |
+| 集合：交保持包含 | ~4 ms | ~3.4 s | ~800× |
+| 大数见证 `a^4 + b^4 + c^4 = d^4`（95800…） | ~5 ms | ~16–21 s（`norm_num` / `native_decide`） | ~3000×+ |
+| 对照：Lean 无 Mathlib 的 `1 + 1 = 2` | — | ~2.3 s（`lake env lean` 启动） | 无配对比值 |
+
+这些命令行运行中的数量级差距，是值得突出的一项观察。Lean 时间包含启动和加载，对短证明可能占主导；这组观察没有分离纯证明搜索，也没有覆盖编辑器中已经加载依赖的增量检查。Litex 直接进行精确闭式计算和上下文检查；Lean 的 `norm_num` 等 tactic 构造证明项，再由内核检查。两者采用不同的检查架构和信任边界。
+
+### 给定见证：检查成本与发现成本分别计量
+
+下面这组数是欧拉幂和猜想在四次幂上的反例：三个正四次幂等于另一个正四次幂，
 
 \[
-|xy| = |x||y| < \varepsilon^2 \leq \varepsilon.
+95800^4 + 217519^4 + 414560^4 = 422481^4.
 \]
 
-显式 Lean 计算如下：
+Litex 陈述给定的见证，检查其成员关系与方程：
+
+```litex
+witness exist a, b, c, d N+ st {a ^ 4 + b ^ 4 + c ^ 4 = d ^ 4} from 95800, 217519, 414560, 422481
+```
+
+Lean 证明提供同样的数：
 
 ```lean
 import Mathlib
 
-example (x y epsilon : ℝ)
-    (epsilon_pos : 0 < epsilon)
-    (epsilon_le_one : epsilon ≤ 1)
-    (hx : |x| < epsilon)
-    (hy : |y| < epsilon) :
-    |x * y| < epsilon := by
-  rw [abs_mul]
-  calc
-    |x| * |y| < epsilon * epsilon := by
-      nlinarith [abs_nonneg x, abs_nonneg y]
-    _ ≤ epsilon * 1 := by
-      exact mul_le_mul_of_nonneg_left epsilon_le_one (le_of_lt epsilon_pos)
-    _ = epsilon := mul_one epsilon
+example : ∃ a b c d : ℕ,
+    a > 0 ∧ b > 0 ∧ c > 0 ∧ d > 0 ∧
+    a ^ 4 + b ^ 4 + c ^ 4 = d ^ 4 := by
+  refine ⟨95800, 217519, 414560, 422481, ?_⟩
+  norm_num
 ```
 
-对应的 Litex 示例在上下文中保留一个一般的乘积单调性前提，将持久的论证写成容易辨认的估计：
+计时行衡量给定见证后的验证，不衡量怎样发现这些数，也不重建历史反证过程。
 
-```litex
-claim:
-    ? forall x, y, epsilon R:
-        forall a, b, c, d R:
-            0 <= a < c
-            0 <= b < d
-            =>:
-                a * b < c * d
-        0 < epsilon
-        epsilon <= 1
-        |x| < epsilon
-        |y| < epsilon
-        =>:
-            |x * y| < epsilon
-    0 <= |x| < epsilon
-    0 <= |y| < epsilon
-    |x * y| = |x| * |y| < epsilon * epsilon <= epsilon * 1 = epsilon
-```
+### 怎样测出速度对工作流的影响
 
-AI 可以低成本生成任一种证明。接口问题在于，之后哪些内容仍便于数学家查看和编辑。Litex 希望把数学主线留在源码中，同时通过输出记录每步来自已知事实、全称实例、定义、内置规则、命名定理还是显式假设。
+| 测量 | 回答什么问题 |
+| --- | --- |
+| 新进程，包含依赖 | 检查独立候选或文件的成本。 |
+| 常驻交互进程中的新语句 | 反复“提出—检查—修正”的延迟。 |
+| 增长的上下文和依赖深度 | 查找、加载和重新检查能否持续负担。 |
+| 固定预算下的完整任务 | 检查时间怎样与生成、搜索、修复和完成结合。 |
+| 要求独立检查的任务 | 源码检查、证明生成、Adapter 和后端复核的总成本。 |
 
-<a id="domains-carried-by-mathematical-objects"></a>
+现有表格只覆盖第一行的一小组本地样本，不能推出 AI 成功率或吞吐量也提高一千倍。正式计时应冻结源码与工具，保留原始命令和输入，统一重复方式，报告波动与内存，并保留失败案例。
 
-### 数学对象携带的定义域
+<a id="a-research-hypothesis-that-can-be-tested"></a>
+<a id="reading-the-comparison-fairly"></a>
+<a id="公平阅读对比"></a>
+<a id="可检验的研究假设"></a>
+<a id="evaluating-the-comparison"></a>
 
-Litex 能将条件直接放进对象的定义域，再在对象作为函数参数时使用该条件：
+## 7. 评价：把设计差异连接到数学工作
 
-```litex
-forall x {y R: y > 0}:
-    x > 0
+这些接口差异提出一项假设：以事实为中心的源码、显式条件、局部反馈和低检查延迟，可能降低构造和使用可检查数学知识的成本。示例与本地计时尚未确立这个组合效果；本页没有报告受控的作者效率、模型成功率或人类阅读实验结果。
 
-have fn positive_successor(x R: x > 0) R = x + 1
+| 维度 | 建议测量的结果 |
+| --- | --- |
+| 构造 | 共同预算下的正确完成率；作者时间、定理查找、辅助源码、模型与工具调用。 |
+| 原意保持 | 定义域、量词、前提和结论是否符合独立固定的数学任务。 |
+| 知识积累 | 同一对象或结果进入不同上下文所需的工作，包含转换和辅助证据。 |
+| 修复 | 保持原陈述的修复时间与轮数；对正确源码造成的不必要改动。 |
+| 理解与复用 | 新读者识别条件、解释路线、发现错误和完成后续任务的准确率与耗时。 |
+| 检查容量 | 多种依赖规模下的延迟、总时间、内存，以及每单位总预算的正确完成数。 |
 
-positive_successor(1) = 2
-```
+采用两种分别报告的库条件：对齐数学背景知识，用于研究接口；使用各系统现成生态，用于衡量当前实际成本。[素数例子](#prime-example)说明了区别：Litex 证明把背景事实列作前提，Lean 证明调用 Mathlib 中已经证明的库结果。不能把库条件的差异直接归因于语言设计。
 
-一种自然的 Lean 表示用子类型打包实数值与证明：
+第一轮可以集中在三个案例：方程计算链测构造与延迟，Möbius 变换测条件与修复，平方函数导数测“定义—引理—应用”的连续发展。测试前固定等价的数学要求，允许 Lean 使用正常自动化和增量工具。失败与不支持的任务保留在结果中，环境准备和库建设成本与反复使用成本分别报告。
 
-```lean
-import Mathlib
+小内核、证明项、依赖类型、库规模和社区经验，分别回答可信性、表达能力与生态成熟度的重要问题。应说明这些性质影响哪项任务；同样，让 Litex 的直接事实和快速检查接受数学活动的检验。这样，比较始终围绕实际结果展开，而不会停留在功能清单或最短代码竞赛。
 
-example (x : {y : ℝ // y > 0}) : (x : ℝ) > 0 := by
-  exact x.property
+<a id="7-a-technical-boundary-facts-are-not-first-class-objects"></a>
+<a id="7-技术边界事实不是一等对象"></a>
+<a id="a-semantic-difference-behind-the-syntax-eq-and-same"></a>
+<a id="syntax-semantics-and-foundations"></a>
+<a id="从语法语义对象与数学基础开始"></a>
+<a id="数学基础起点的差异也影响表达"></a>
+<a id="语法背后的语义差异eq-与-same"></a>
+<a id="trust-and-scope"></a>
 
-def positiveSuccessor (x : {y : ℝ // y > 0}) : ℝ := x.val + 1
+## 8. 数学基础、支持范围与信任
 
-example : positiveSuccessor ⟨1, by norm_num⟩ = 2 := by
-  norm_num [positiveSuccessor]
-```
+Litex 仍是 beta 阶段的实验项目。它的集合导向源码模型与 Lean 的依赖类型论，以不同方式组织对象、命题与证明。上文 Mathlib 的运算约定属于库选择，并非依赖类型论强迫的结果。Litex 区分对象与事实；Lean 还支持一般的命题和证明编程。比较应覆盖任务实际需要的数学与接口，也列出不支持的形式及扩展所需工作。
 
-Litex 将条件保留在数学家通常书写定义域的位置。Lean 子类型在类型论对象语言内部精确表达该依赖。两者都不消除参数满足条件的义务；义务呈现在不同表层。
+仅用 Litex 检查时，Rust verifier 及 builtin、infer rules 仍属于需要信任的实现。`-strict` 排除源码中的 `trust` 和用户公理，不独立证明验证器正确。源码例子、规则审计和独立检查提供不同层次的证据，应分别报告。
 
----
+当前 `-lean -f` 编译器重放受支持的带类型执行证据。[编译器指南](Litex到Lean编译器指南.md)说明其覆盖、显式语义参数、模型和表示桥接。经过审查的 Adapter 所提供的普通 Lean 定理，比尚未实例化语义假设的生成定理，提供更完整的集成证据；这些均不确立全部 Litex 的完整 Lean 解释。
 
-<a id="2-scalar-multiplication-preserves-convergence"></a>
+<a id="semantic-representation"></a>
 
-## 2. 标量乘法保持收敛
+### 源码身份与后端表示
 
-假设实数序列 `s` 收敛到 `a`。每项乘以实常数 `c`，所得序列应收敛到 `c * a`。
+成员关系例子保留同一个源码对象，让关于它的事实增加。受支持的 Lean 重放中，`Litex.Same` 记录认证表示之间的语义相等，`Litex.In` 记录成员关系。生成的 Lean 仍有类型；恢复原生 Lean 相等需要对应的忠实表示桥接，异质语义相等不是到 Lean `Eq` 的全局转换。[语义接口](../lean/Litex.lean)与编译指南维护这些具体契约。
 
-以下 Lean 证明使用通常的 epsilon 定义。它按 `c = 0` 分情况；非零时在 `epsilon / |c|` 处应用收敛性，并使用绝对值乘积规律。
+两种语言都需要分别检查证明有效性与原意对应。[Lean 证明验证指南](https://lean-lang.org/doc/reference/latest/ValidatingProofs/)也区分这两个问题。性能或使用成本的结论，应说明任务要求的检查保证与数学假设。
+
+<a id="contraposition-by-contradiction"></a>
+<a id="通过反证证明逆否"></a>
+<a id="supporting-examples"></a>
+
+## 更多完整例子
+
+下面保留的例子把比较扩展到开头的计算之外。每个例子承担一个具体任务：可见的容差选择、不同的背景库条件，或显式反例。
+
+<a id="convergence-example"></a>
+
+### 数乘保持收敛
+
+两份证明都在更小的正容差处取得尾部界，再复用截断点。Lean 证明采用 `epsilon / |c|`，单独处理 `c = 0`：
 
 ```lean
 import Mathlib
@@ -395,7 +572,7 @@ theorem convergesTo_mul_const {s : ℕ → ℝ} {a : ℝ} (c : ℝ)
     _ = ε := mul_div_cancel₀ _ (ne_of_lt acpos).symm
 ```
 
-Litex 证明选择 `epsilon / (|c| + 1)`。由于分母始终为正，一条估计同时覆盖 `c = 0` 和 `c != 0`。
+Litex 证明采用 `epsilon / (|c| + 1)`：
 
 ```litex
 prop is_eventually_close(s fn(n N) R, a R, epsilon R+, N0 N):
@@ -443,255 +620,15 @@ thm converges_to_mul_const:
     by def $converges_to(scaled, c * a)
 ```
 
-两份证明使用同一核心思路：对更小的正容差取得尾部界，复用同一个截断点，并估计缩放后的绝对差。Lean 证明暴露分情况、命名假设、改写和库引理。Litex 证明暴露嵌套收敛事实、见证与不等式链，由检查器提供常规算术与定义折叠。
-
-这不声称 Lean 必须采用这种证明形状，也不声称它不能使用统一的 `|c| + 1` 论证。比较的是组织同一个初等分析证明的两种自然方式。
-
----
-
-<a id="3-calculation-chains"></a>
-
-## 3. 计算链
-
-Litex 将链视为一条事实语句。二元方程组的中间表达式可以按手写计算的顺序书写：
-
-```litex
-forall x, y R:
-    2 * x + 3 * y = 10
-    4 * x + 5 * y = 14
-    =>:
-        y = 2 * (2 * x + 3 * y) - (4 * x + 5 * y) = 6
-        x = ((2 * x + 3 * y) - 3 * y) / 2 = (-4)
-```
-
-显式 Lean 证明可以在两个命名子证明中展示相同计算：
-
-```lean
-import Mathlib
-
-example (x y : ℝ)
-    (h1 : 2 * x + 3 * y = 10)
-    (h2 : 4 * x + 5 * y = 14) :
-    y = 6 ∧ x = -4 := by
-  have hy : y = 6 := by
-    calc
-      y = 2 * (2 * x + 3 * y) - (4 * x + 5 * y) := by linarith
-      _ = 2 * 10 - 14 := by rw [h1, h2]
-      _ = 6 := by norm_num
-  have hx : x = -4 := by
-    calc
-      x = ((2 * x + 3 * y) - 3 * y) / 2 := by ring
-      _ = (10 - 3 * 6) / 2 := by rw [h1, hy]
-      _ = -4 := by norm_num
-  exact ⟨hy, hx⟩
-```
-
-可见差异不在于能否表达计算链，而在于用户通常指示哪些部分：Litex 要求有意义的中间等式，再搜索支持；这份 Lean 证明命名子结果，并指定构建它们的 tactic 与改写。
-
----
-
-<a id="4-witnesses-contradiction-and-counterexamples"></a>
-
-## 4. 见证、反证与反例
-
-<a id="a-concrete-witness"></a>
-
-### 具体见证
-
-Litex 将见证值直接放在存在陈述旁边：
-
-```litex
-witness exist a, b, c, d N+ st {a ^ 4 + b ^ 4 + c ^ 4 = d ^ 4} from 95800, 217519, 414560, 422481
-```
-
-Lean 通过存在量词构造器打包同样的值与剩余义务：
-
-```lean
-import Mathlib
-
-example : ∃ a b c d : ℕ,
-    a > 0 ∧ b > 0 ∧ c > 0 ∧ d > 0 ∧
-    a ^ 4 + b ^ 4 + c ^ 4 = d ^ 4 := by
-  refine ⟨95800, 217519, 414560, 422481, ?_⟩
-  norm_num
-```
-
-证明义务没有消失：Litex 仍检查给定对象属于 `N+`，并满足代入后的方程。
-
-<a id="contraposition-by-contradiction"></a>
-
-### 通过反证证明逆否
-
-下例使用抽象谓词，因此只讨论逻辑形状：
-
-```litex
-abstract_prop p0(x, y)
-abstract_prop q0(x, y)
-
-claim:
-    ? forall:
-        forall a, b R:
-            $p0(a, b)
-            =>:
-                $q0(a, b)
-        not $q0(1, 2)
-        =>:
-            not $p0(1, 2)
-    by contra:
-        ? not $p0(1, 2)
-        impossible $q0(1, 2)
-```
-
-```lean
-import Mathlib
-
-example (p q : ℝ → ℝ → Prop)
-    (h : ∀ a b, p a b → q a b)
-    (hnq : ¬ q 1 2) :
-    ¬ p 1 2 := by
-  intro hp
-  exact hnq (h 1 2 hp)
-```
-
-Litex 暴露熟悉的动作：“假设否定目标不成立，导出不可能事实。”Lean 把证明表达为从临时假设到矛盾的函数。二者都严谨地表示同一逻辑论证。
-
-<a id="a-set-counterexample"></a>
-
-### 集合反例
-
-证明 `4` 的倍数不是偶自然数时，`2` 是决定性的反例：
-
-```litex
-have multiples_of_four power_set(N) = {a N: a % 4 = 0}
-have multiples_of_two power_set(N) = {a N: a % 2 = 0}
-by contra:
-    ? multiples_of_four != multiples_of_two
-    2 $in multiples_of_two
-    2 $in multiples_of_four
-    impossible 2 % 4 = 0
-```
-
-```lean
-import Mathlib
-
-example : ({a : ℕ | a % 4 = 0} : Set ℕ) ≠
-    {a : ℕ | a % 2 = 0} := by
-  intro h
-  have h2 : (2 : ℕ) ∈ ({a : ℕ | a % 2 = 0} : Set ℕ) := by
-    norm_num
-  have h4 : (2 : ℕ) ∈ ({a : ℕ | a % 4 = 0} : Set ℕ) := by
-    rw [h]
-    exact h2
-  norm_num at h4
-```
-
-Litex 证明陈述反例与所得矛盾。Lean 证明命名集合相等与成员关系，用假设的相等改写，再消解错误的模事实。
-
----
-
-<a id="5-set-theoretic-objects-at-the-surface"></a>
-
-## 5. 表层的集合论对象
-
-比较表层证明之前，必须理解 Litex 的一个区别：
-
-```text
-forall x S    means  x $in S
-forall A set  means  $is_set(A)
-```
-
-这里 `set` 是参数种类，不是全集对象。第二种形式不引入包含全部对象的源码集合。当前语义接口保留一般载体，用 `Litex.Obj` 将值与 WD 证据包装起来。一般集合绑定变量的示意接口如下：
-
-```lean
-∀ {αA : Type v} [Litex.Representation M αA]
-  (A : Litex.Obj (M := M) αA) (hA : Litex.IsSet A), ...
-```
-
-`Litex.In x A` 是关于两个已认证对象的普通命题，不改变 `x` 的宿主类型。一般集合绑定变量与集合构造器仍在首批编译器切片之外。当前实际生成示例覆盖数值事实、R/C 绑定变量和已认证算术对象；早期的精确载体输出器属于历史实现。
-
-嵌套集合、幂集成员关系和子集传递，在 Litex 中都可写成普通数学事实：
-
-```litex
-{1, 2} $in {{}, {1, 2}}
-
-{1, 2} $subset {1, 2, 3}
-{1, 2} $in power_set({1, 2, 3})
-
-forall A, B set, x A:
-    A $subset B
-    =>:
-        x $in B
-```
-
-Lean 表达相同数学，同时显式写出有关的环境类型和集合表示：
-
-```lean
-import Mathlib
-
-example : ({1, 2} : Set ℕ) ∈ ({∅, {1, 2}} : Set (Set ℕ)) := by
-  simp
-
-example : ({1, 2} : Set ℕ) ⊆ ({1, 2, 3} : Set ℕ) := by
-  simp
-
-example {α : Type} {A B : Set α}
-    (hAB : A ⊆ B) {x : α} (hx : x ∈ A) :
-    x ∈ B := by
-  exact hAB hx
-```
-
-Litex 表层从集合、对象、成员关系和定义域之间的函数开始。Lean 表层从带类型的项开始，因此示例写 `Set ℕ`、`Set (Set ℕ)` 和一般环境类型 `α`。Lean 的表示更一般，并深度融入依赖类型论；Litex 希望优先呈现集合论读法。
-
-<a id="intersections-preserve-inclusion"></a>
-
-### 交集保持包含关系
-
-以下是 *Mathematics in Lean* 集合章节的显式展开证明。若 `s` 是 `t` 的子集，两者都与同一个 `u` 取交，仍保持包含：
-
-```lean
-import Mathlib.Data.Set.Lattice
-
-open Set
-
-example {alpha : Type*} (s t u : Set alpha) (h : s ⊆ t) :
-    s ∩ u ⊆ t ∩ u := by
-  rw [subset_def, inter_def, inter_def]
-  rw [subset_def] at h
-  simp only [mem_setOf]
-  rintro x ⟨xs, xu⟩
-  exact ⟨h _ xs, xu⟩
-```
-
-对应的 Litex 事实就是数学陈述本身：
-
-```litex
-forall s, t, u set:
-    s $subset t
-    =>:
-        intersect(s, u) $subset intersect(t, u)
-```
-
-数学论证只是：`intersect(s, u)` 的成员同时属于 `s` 和 `u`；子集传递使其属于 `t`，所以属于 `intersect(t, u)`。在 Litex 默认接口中，学习者无需仅为暴露该论证而记住 `subset_def`、`inter_def`、`rw` 或 `simp only [mem_setOf]` 等展开名称和证明命令。这降低初始学习负担，让常规证明留在集合与成员关系层面。
-
-这不声称 Lean 必须使用上述显式脚本；Lean 也支持更短的逐元素证明和更强自动化。这里展示的是默认分工差异。Litex 检查器执行常规展开与成员关系传递，这也把这些规则纳入 Litex 实现与审计范围；Lean 允许作者通过项与 tactic 暴露或控制这些步骤。
-
-载体集合上的结构见 [Litex 蓝图](https://litexlang.com/doc/Litex中文蓝图#group-comparison)中完整的群单位元示例。
-
----
+见证、正性事实与不等式链，让读者能检查论证中的数学选择，常规连接由上下文支持。这可用于阅读与修改任务；若要分离接口效果，应在两边提供同一条数学路线。
 
 <a id="6-case-study-infinitely-many-primes"></a>
+<a id="6-案例无穷多个素数"></a>
+<a id="prime-example"></a>
 
-## 6. 案例：无穷多个素数
+### 无穷多个素数：让背景知识保持可见
 
-两套系统都能以如下形式表达欧几里得论证：
-
-1. 从正界 `a` 开始。
-2. 构造 `1 * 2 * ... * a + 1`。
-3. 选择该数的素因子 `k`。
-4. 若 `k <= a`，则 `k` 整除乘积，而乘积加一模 `k` 的余数为 `1`，矛盾。
-5. 因此 `k > a`。
-
-Litex claim 将背景引理放在前提中，以直接的证明主线保留核心论证：
+欧几里得论证构造阶乘加一，取得一个素因子，再证明它大于原来的界。Litex 例子把三项一般背景结果列作前提：乘积的整除性质、素因子的存在性，以及乘积下界。
 
 ```litex
 have fn factorial_factor(x N+) N+ = x
@@ -736,7 +673,7 @@ claim:
     witness exist prime_larger N+ st {prime_larger > a, $prime(prime_larger)} from k
 ```
 
-Lean 证明可以使用 Mathlib 的阶乘与素因子接口：
+Lean 例子调用 Mathlib 的阶乘与素因子定理：
 
 ```lean
 import Mathlib
@@ -761,118 +698,48 @@ example (N : ℕ) : ∃ p ≥ N, Nat.Prime p := by
   · exact hp
 ```
 
-Litex 示例在 claim 中列出背景假设，再使用 `obtain`、分情况、模运算和见证。Lean 示例引用 Mathlib 的整除定理。两者依赖的背景知识不同。
+Litex claim 检查列明前提下的条件论证，没有在此建立这些背景结果。两份例子展示了同一欧几里得思想的两条路线，但其假设没有对齐，不能直接作为语言效率 benchmark。完整比较需要计入建立等价背景知识的工作。
 
----
+<a id="a-set-counterexample"></a>
+<a id="集合反例"></a>
+<a id="set-counterexample"></a>
 
-<a id="7-a-technical-boundary-facts-are-not-first-class-objects"></a>
+### 别人可以恢复的反例
 
-## 7. 技术边界：事实不是一等对象
-
-Lean 命题与证明属于其类型论项语言。Lean 可以对 `P : Prop` 量化，将定理证明作为参数，并递归组合命题。Litex 有意区分数学对象与事实：`prop` 定义创建事实接口，谓词调用是事实，而不是普通对象。
-
-例如，Lean 可以把全称命题直接放进析取：
-
-```lean
-example (α : Type) (P : α → Prop) (Q R : Prop) (h : ∀ x, P x) :
-    (∀ x, P x) ∨ (Q ∧ R) :=
-  Or.inl h
-```
-
-Litex 使用更小的规范表层语法。平坦 `and` 包含原子事实；外围 `or` 接受原子、链或完整平坦 `and` 分支；`forall` 不能直接作为这些分支。因此下面的匿名递归形式不是 Litex 语法：
-
-```text
-(forall x R: x = x) or (1 = 1 and 2 = 2)
-```
-
-闭合的复合事实可以改为取得谓词名称。调用是原子的，可放在外围分支位置。
-
-当前解析器要求 `prop` 参数列表非空。以下闭合零参数谓词保留为预期接口，不是可用语法。当前代码应使用带真实数学参数的谓词。
+自然数 `2` 区分偶数集合与 `4` 的倍数集合：
 
 ```litex
-prop all_reals_reflexive():
-    forall x R:
-        x = x
-
-by def $all_reals_reflexive()
-
-$all_reals_reflexive() or 1 = 1 and 2 = 2
+have multiples_of_four power_set(N) = {a N: a % 4 = 0}
+have multiples_of_two power_set(N) = {a N: a % 2 = 0}
+by contra:
+    ? multiples_of_four != multiples_of_two
+    2 $in multiples_of_two
+    2 $in multiples_of_four
+    impossible 2 % 4 = 0
 ```
 
-在该预期接口中，`prop` 定义会使 `$all_reals_reflexive()` 与定义体定义等价；仅定义本身不断言调用。`by def` 行验证定义体并存储原子事实。如果复合子命题有自由数学对象，应把这些对象设为命名谓词的参数。
+```lean
+import Mathlib
 
-同样，以下高阶证明编程形式不是 Litex：
-
-```text
-forall P Prop:
-    # proof body omitted
-
-have h = (x = 2)
-some_statement(h)
+example : ({a : ℕ | a % 4 = 0} : Set ℕ) ≠
+    {a : ℕ | a % 2 = 0} := by
+  intro h
+  have h2 : (2 : ℕ) ∈ ({a : ℕ | a % 2 = 0} : Set ℕ) := by
+    norm_num
+  have h4 : (2 : ℕ) ∈ ({a : ℕ | a % 4 = 0} : Set ℕ) := by
+    rw [h]
+    exact h2
+  norm_num at h4
 ```
 
-Lean 支持一般的命题与证明项。Litex 区分对象和事实；超出直接可解析形状的复合子命题，需要先定义为命名谓词。
+两份源码都展示关键元素与矛盾的成员关系。审阅任务可以要求读者识别并复用这个反例；token 数量不能代替读者是否成功。
 
----
-
-<a id="8-a-design-perspective-what-the-author-states-what-the-checker-reconstructs"></a>
-
-## 8. 设计视角：作者陈述什么，检查器重建什么
-
-在这些示例中，作者陈述数学对象和事实，Litex 用局部规则寻找依据。下面说明哪些步骤由作者写出，哪些由检查器完成。
-
-<a id="the-central-inversion-state-the-next-fact-reconstruct-its-grounds"></a>
-
-### 核心倒置：陈述下一条事实，重建其依据
-
-回到第 1 节 `x = 2` 的示例。Litex 作者写下推论 `x + 1 = 3` 与 `x^2 = 4`，验证器寻找代换与算术依据。显式 Lean 证明则写 `rw [h]`、`norm_num` 和 `exact ⟨h_add, h_square⟩` 来构造同样推论的证明。这提出一项设计原则：**写下要验证什么，让验证器确定常规步骤如何得到论证**。
-
-该原则描述源码接口上的分工。Lean 源码也陈述要证明什么。其 tactic 执行和 elaboration 构造核心项，内核按类型论规则检查这些项；内核不会从 tactic 脚本中发现作者预期的定理。[Lean 语言参考](https://lean-lang.org/doc/reference/latest/Elaboration-and-Compilation/)明确区分这些阶段。同样，Litex 验证器只在受支持的局部规则内搜索依据，不会发现任意数学论证。作者仍需选择有用的中间事实、见证、估计、情况与归纳论证。
-
-<a id="six-related-changes-of-starting-point"></a>
-
-### 六个相关的起点变化
-
-| 设计问题 | 另一种起点 | Litex 的选择与具体证据 | 后果与边界 |
-|---|---|---|---|
-| 什么决定对象的数学分类？ | 从宿主类型出发，用强制转换或显式桥接表达表示间移动。 | 从数学对象出发，积累 `x $in N`、`x $in Z`、`x $in R` 等成员事实。开头的 `Eq`/`Same` 讨论解释表示区别。 | 对象知识可以增长而不改变源码身份。生成 Lean 仍有类型；跨表示身份需要已认证语义桥接。 |
-| 表达式的使用条件在哪里？ | 将值和条件打包为子类型，或将条件作为证明参数传入。 | 保持数学定义域可见：`have fn positive_successor(x R: x > 0) R = x + 1`，然后 `positive_successor(1) = 2`。第 1 节比较子类型写法。 | 调用要求检查器从上下文建立定义域条件。条件仍是义务；看似合理的方程不能让无定义表达式合法。 |
-| 语言的基本类别是什么？ | 像 Lean 一样，用一个依赖项/类型框架表达值、命题与证明。 | 区分对象、事实以及定义或证明它们的语句。第 7 节被拒绝的 `have h = (x = 2)` 说明事实不是普通对象。 | 能形成具有专门事实形状的数学表层，代价是一般证明编程和任意命题嵌套。这是源码语言限制，而不只是记号。 |
-| 常规事实如何复用？ | 选择命名引理或证明方法，指示应用。 | 陈述所需事实，按数学内容匹配已有知识。第 5 节在 `s $subset t` 下直接陈述 `intersect(s, u) $subset intersect(t, u)`。 | 名称不必中介每一步。当前检查器按形状和关系索引事实；命名调用仍有价值，匹配受作用域和支持路线限制。 |
-| 交互进展的单位是什么？ | 通过把当前目标变换为剩余子目标来推进证明。 | 逐条语句扩展已接受的数学上下文。[Agent 指南](Litex智能体指南.md)中 `a = 3` 失败，已接受的 `a = 2` 仍能在同一个 `-session` 中支持 `a + 1 = 3`。 | 普通失败语句可修复，无需重放已接受工作。边界是语句级的：多语句输入不是一个事务，硬错误可能要求重启。 |
-| 检查应留下什么？ | 以已检查定理为主要产物，证明项和工具元数据提供支持。 | 保留带类型的执行结果，描述良定义性、验证依据、引用事实与存储后果。Detailed 输出与当前 Lean 编译器消费这些证据。 | 检查还能产生解释、修复与受支持证明重放的记录。当前结果不是完整可移植证书；编译覆盖和独立检查仍是分开的验收条件。 |
-
-最后四行的实现锚点是[事实类别](../src/ast/fact/fact.rs)、[事实索引与推导](../src/store_fact_and_infer/README.md)、[语句提交边界](../src/execute/exec_stmt.rs)、[输出投影](../src/json_output/README.md)和[结果驱动的 Lean 编译](../src/compile_to_lean/README.md)。当前 [Lean 语义接口](../lean/Litex.lean)在显式语义参数下，通过被表示的含义定义 `Same` 与 `In`；它不确立全部 Litex 对象和规则的完整模型。
-
-<a id="why-the-combination-matters"></a>
-
-### 为什么组合值得研究
-
-成员事实可以支持后续表达式的定义域检查，已接受的等式可以用于代换。同一个 Session 保留这些事实，带类型的结果记录检查依据，用于解释和已支持的 Lean 证明重放。
-
-在 `x = 2` 示例中，作者写出两个推论，检查器执行代换。在收敛示例中，作者给出 `epsilon / (|c| + 1)` 及相应估计。这些是仍需写在源码中的数学选择。
-
-单项思路已有大量先例。[Mizar 手册](https://mizar.uwb.edu.pl/project/mizman.pdf)描述空论证语句、基于引用的 `by` 论证和结构化子证明。[Isabelle/Isar](https://isabelle.in.tum.de/Isar/)提供可读结构化证明与证明方法。[Rocq 的 `auto`](https://rocq-prover.org/doc/master/refman/proofs/automatic-tactics/auto.html)使用有界证明搜索和提示数据库。Lean 也支持前向 `have` 证明、自动化、增量 elaboration 和丰富查看元数据。
-
-<a id="a-research-hypothesis-that-can-be-tested"></a>
-
-### 可检验的研究假设
-
-这种分工能否降低书写、审阅和修复成本，仍待实验回答。实验需要使用等价数学任务、相当的假设与库支持，并记录耗时、修复次数及审阅漏掉的错误。本页提供的是写法示例，尚无这些测量结果。
-
----
-
-<a id="reading-the-comparison-fairly"></a>
-
-<a id="公平阅读对比"></a>
+<a id="further-reading"></a>
 
 ## 延伸阅读
 
-[手册的 trust 章节](Litex手册.md#trust-and-strict-mode)说明 Litex 结果依赖的检查器、内置规则、导入假设及显式 `trust` 或 `axiom`。
-
-语法、实现与更多示例见：
-
-- [Litex 蓝图](https://litexlang.com/doc/Litex中文蓝图)：设计目标与完整 `Group` 对比；
-- [手册](https://litexlang.com/doc/Manual)：语法与证明形式；
-- [CLI 参考](Litex命令行参考.md)：当前入口、输出、会话与模块；
-- [Lean 语义接口](../lean/Litex.lean)：维护中的重放接口；见[编译器指南](Litex到Lean编译器指南.md)与 [CLI 边界](Litex命令行参考.md#lean-compiler-boundary)。
+- [Litex 蓝图](https://litexlang.com/doc/Litex中文蓝图)：完整语言设计论证与群单位元例子。
+- [手册](Litex手册.md)和 [CLI 参考](Litex命令行参考.md)：支持的语言、信任与交互契约。
+- [Agent 指南](Litex智能体指南.md)：持续 Session 与重启边界。
+- [数学主题模块](../showcases/math_concepts_in_litex/README.md)：定义、构造与后续使用。
+- [Litex 到 Lean 编译器指南](Litex到Lean编译器指南.md)和[互操作 showcase](../showcases/litex_to_lean_adapter/README.md)：受支持的重放与普通 Lean 接口。

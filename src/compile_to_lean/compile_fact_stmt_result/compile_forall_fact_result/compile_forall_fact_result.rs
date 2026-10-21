@@ -405,7 +405,11 @@ impl LitexToLeanCompiler {
             };
             let proposition = self.fact_proposition(fact, &formation)?;
             let hypothesis = format!("h_{}", fact.fact_id().value());
-            binders.push(format!("({hypothesis} : {proposition})"));
+            // A premise's construction can use parameter/earlier-premise
+            // inferences. Close its type before adding this premise's own
+            // producers; declarations in the conclusion scope are too late.
+            let closed = self.scope_proposition(proposition.clone(), &definitions);
+            binders.push(format!("({hypothesis} : {closed})"));
             introductions.push(hypothesis.clone());
             let complete = SourcePosition {
                 before: expected_count + index + 1,

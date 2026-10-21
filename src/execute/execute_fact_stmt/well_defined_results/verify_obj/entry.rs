@@ -92,6 +92,9 @@ impl Runtime {
             return self.verify_identifier_obj_well_definedness(value, verify_state);
         }
 
+        if let Obj::BoundOperator(value) = obj {
+            return self.verify_bound_operator_well_definedness(value, verify_state);
+        }
         if let Obj::LimitOperator(crate::ast::obj::LimitOperator::Function(value)) = obj {
             return self.verify_function_limit_well_definedness(value, verify_state);
         }
@@ -216,6 +219,7 @@ impl Runtime {
     ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
         match obj {
             Obj::LimitOperator(_) => unreachable!("limit has dedicated WD stages"),
+            Obj::BoundOperator(_) => unreachable!("supremum/infimum have dedicated WD stages"),
             Obj::Identifier(_) => {
                 unreachable!("Identifier WD uses verify_identifier_obj_well_definedness")
             }

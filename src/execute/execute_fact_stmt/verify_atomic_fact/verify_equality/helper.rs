@@ -85,6 +85,14 @@ pub(crate) fn corresponding_arg_pairs(left: &Obj, right: &Obj) -> Option<Vec<(Ob
             Obj::LimitOperator(crate::ast::obj::LimitOperator::SequenceLiminf(l)),
             Obj::LimitOperator(crate::ast::obj::LimitOperator::SequenceLiminf(r)),
         ) => Some(vec![(*l.sequence.clone(), *r.sequence.clone())]),
+        (
+            Obj::BoundOperator(crate::ast::obj::BoundOperator::Supremum(l)),
+            Obj::BoundOperator(crate::ast::obj::BoundOperator::Supremum(r)),
+        ) => Some(vec![(*l.set.clone(), *r.set.clone())]),
+        (
+            Obj::BoundOperator(crate::ast::obj::BoundOperator::Infimum(l)),
+            Obj::BoundOperator(crate::ast::obj::BoundOperator::Infimum(r)),
+        ) => Some(vec![(*l.set.clone(), *r.set.clone())]),
         (Obj::FnObj(l), Obj::FnObj(r)) => fn_obj_corresponding_arg_pairs(l, r),
 
         (

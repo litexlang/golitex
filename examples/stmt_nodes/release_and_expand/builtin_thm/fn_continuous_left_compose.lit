@@ -1,0 +1,8 @@
+# Explicit relative continuity law; all complete domains and point values are checked.
+have fn identity(x R) R=x
+have fn square(x R) R=x^2
+release thm fn_continuous_left_identity(identity,0)
+identity(0)=0
+release thm fn_continuous_at_identity(identity,0)
+release thm fn_continuous_at_power(identity,square,0,2)
+release thm fn_continuous_left_compose(identity,square,square,0)

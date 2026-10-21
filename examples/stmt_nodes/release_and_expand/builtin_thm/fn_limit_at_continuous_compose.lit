@@ -1,0 +1,19 @@
+# Explicit analysis theorem with checked premises.
+have fn identity(x R) R=x
+have fn square(x R) R=x^2
+release thm fn_limit_at_real_accumulation(0)
+by def $is_real_accumulation_at(R,0)
+release thm fn_limit_at_identity(identity,0)
+identity(0)=0
+release thm fn_continuous_at_identity(identity,0)
+release thm fn_continuous_at_power(identity,square,0,2)
+claim:
+    ? exist radius R+ st {{x R:0<abs(x-0) and abs(x-0)<radius} $subset {x R:x $in R,identity(x) $in R,square(x)=square(identity(x))}}
+    witness exist radius R+ st {{x R:0<abs(x-0) and abs(x-0)<radius} $subset {x R:x $in R,identity(x) $in R,square(x)=square(identity(x))}} from 1:
+        claim:
+            ? forall x {z R:0<abs(z-0) and abs(z-0)<1}:
+                x $in {t R:t $in R,identity(t) $in R,square(t)=square(identity(t))}
+            identity(x)=x
+            square(identity(x))=square(x)
+        by def {x R:0<abs(x-0) and abs(x-0)<1} $subset {x R:x $in R,identity(x) $in R,square(x)=square(identity(x))}
+release thm fn_limit_at_continuous_compose(identity,square,square,0,0)

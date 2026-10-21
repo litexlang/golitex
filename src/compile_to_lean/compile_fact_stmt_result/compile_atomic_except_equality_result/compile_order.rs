@@ -184,6 +184,23 @@ impl LitexToLeanCompiler {
                 AtomicFact::LessEqualFact(_),
                 AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(rule),
             ) => match rule {
+                LessEqualFactSearchProofByBuiltinRule::FromKnownOrderComplement(p) => {
+                    self.compile_weak_order_complement(goal, p, position)
+                }
+                LessEqualFactSearchProofByBuiltinRule::AddRightNonnegative(p) => self
+                    .compile_add_nonnegative_bound(
+                        goal,
+                        &p.nonnegative_addend_proof,
+                        true,
+                        position,
+                    ),
+                LessEqualFactSearchProofByBuiltinRule::AddLeftNonnegative(p) => self
+                    .compile_add_nonnegative_bound(
+                        goal,
+                        &p.nonnegative_addend_proof,
+                        false,
+                        position,
+                    ),
                 LessEqualFactSearchProofByBuiltinRule::OrderReflexivity(p) => {
                     self.compile_order_reflexivity(goal, &p.repeated_object, position)
                 }
@@ -305,6 +322,12 @@ impl LitexToLeanCompiler {
                 AtomicFact::GreaterEqualFact(_),
                 AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterEqualFact(rule),
             ) => match rule {
+                GreaterEqualFactSearchProofByBuiltinRule::FromKnownOrderComplement(p) => {
+                    self.compile_weak_order_complement(goal, p, position)
+                }
+                GreaterEqualFactSearchProofByBuiltinRule::SumOfNonnegatives(p) => {
+                    self.compile_nonnegative_sum_tree(goal, &p.constructor_tree, position)
+                }
                 GreaterEqualFactSearchProofByBuiltinRule::OrderReflexivity(p) => {
                     self.compile_order_reflexivity(goal, &p.repeated_object, position)
                 }
@@ -331,7 +354,13 @@ impl LitexToLeanCompiler {
                         position,
                     )
                 }
-                _ => Err(LeanCompileError::unsupported("Order/GreaterEqualBuiltin")),
+                _ => Err(LeanCompileError::new(
+                    "Order/GreaterEqualBuiltin",
+                    &format!(
+                        "Unsupported selected builtin for `{}`.",
+                        goal.readable_string()
+                    ),
+                )),
             },
             (
                 AtomicFact::LessFact(_),

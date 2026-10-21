@@ -6,6 +6,8 @@ mod additive_inference_tests;
 mod arithmetic_congruence_tests;
 #[path = "../../tests/unit/compile_to_lean/bounded_set_combinations/tests.rs"]
 mod bounded_set_combinations_tests;
+#[path = "../../tests/unit/compile_to_lean/builtin_tuple_release/tests.rs"]
+mod builtin_tuple_release_tests;
 #[path = "../../tests/unit/compile_to_lean/by_definition_in_theorem/tests.rs"]
 mod by_definition_in_theorem_tests;
 #[path = "../../tests/unit/compile_to_lean/cached_formula_head/tests.rs"]
@@ -28,10 +30,16 @@ mod difference_zero_tests;
 mod finite_cart_coordinates_tests;
 #[path = "../../tests/unit/compile_to_lean/fn_application_unfold_substitution/tests.rs"]
 mod fn_application_unfold_substitution_tests;
+#[path = "../../tests/unit/compile_to_lean/forall_premise_scope/tests.rs"]
+mod forall_premise_scope_tests;
 #[path = "../../tests/unit/compile_to_lean/formed_subjects/tests.rs"]
 mod formed_subjects_tests;
 #[path = "../../tests/unit/compile_to_lean/function_codomain_coordinates/tests.rs"]
 mod function_codomain_coordinates_tests;
+#[path = "../../tests/unit/compile_to_lean/geo_arithmetic/tests.rs"]
+mod geo_arithmetic_tests;
+#[path = "../../tests/unit/compile_to_lean/geo_expansion/tests.rs"]
+mod geo_expansion_tests;
 #[path = "../../tests/unit/compile_to_lean/inference_context_citations/tests.rs"]
 mod inference_context_citations_tests;
 #[path = "../../tests/unit/compile_to_lean/inference_publication_once/tests.rs"]
@@ -50,6 +58,8 @@ mod nonnegative_builtin_tests;
 mod nonzero_difference_tests;
 #[path = "../../tests/unit/compile_to_lean/numeric_carrier_closure/tests.rs"]
 mod numeric_carrier_closure_tests;
+#[path = "../../tests/unit/compile_to_lean/order_complement/tests.rs"]
+mod order_complement_tests;
 #[path = "../../tests/unit/compile_to_lean/prop_object_sharing/tests.rs"]
 mod prop_object_sharing_tests;
 #[path = "../../tests/unit/compile_to_lean/returned_cart_call/tests.rs"]
@@ -60,6 +70,8 @@ mod set_builder_function_bodies_tests;
 mod sqrt_tests;
 #[path = "../../tests/unit/compile_to_lean/subset_numeric_membership/tests.rs"]
 mod subset_numeric_membership_tests;
+#[path = "../../tests/unit/compile_to_lean/tuple_congruence/tests.rs"]
+mod tuple_congruence_tests;
 #[path = "../../tests/unit/compile_to_lean/tuple_reconstruction/tests.rs"]
 mod tuple_reconstruction_tests;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::AtomicExceptEqualityFactSearchProofByBuiltinRewrite;
@@ -265,7 +277,7 @@ fn selected_rational_route_uses_normalization_adapter() {
     ));
     let output = compile_run(&result, &compiler, "add_zero").expect("selected Rational adapter");
     assert!(output.contains("NativeBridge.sameOfDenoteNumber"));
-    assert!(output.contains("(by ring)"));
+    assert!(output.contains("(by ring!)"));
     assert!(!output.contains("Litex.addZero"));
 }
 
@@ -689,7 +701,7 @@ fn numeric_child_congruence_replays_children_and_closed_value_pair() {
         .expect("owned arithmetic congruence");
     assert!(output.contains("congrArg₂ M.addValue"));
     assert!(output.contains("(by norm_num)"));
-    assert!(!output.contains("(by ring)"));
+    assert!(!output.contains("(by ring!)"));
 }
 
 #[test]
@@ -756,8 +768,7 @@ fn scalar_division_relations_replay_their_actual_child_equations() {
             _ => panic!("actual scalar division relation"),
         }
         let output = compile_run(&result, &compiler, "scalar_division_relation").expect(source);
-        assert!(output.contains("NativeBridge.nativeEqOfDenoteNumber"));
-        assert!(output.contains("div_eq_iff"));
+        assert!(output.contains("Litex.sameDivIffSameMul"));
         assert!(!output.contains("field_simp"));
         assert!(!output.contains("litex_normalize_rational"));
     }
@@ -858,7 +869,7 @@ fn forged_false_rational_claim_requires_kernel_validation() {
     let output = compile_run(&result, &compiler, "forged_false_rational")
         .expect("Rational's empty tag is not a Rust mathematical certificate");
     assert!(output.contains("NativeBridge.sameOfDenoteNumber"));
-    assert!(output.contains("(by ring)"));
+    assert!(output.contains("(by ring!)"));
     assert!(!output.contains("sorry"));
     // A caller can ask the real Lean gate to reject this compiler-generated
     // counterfeit. Default unit runs have no filesystem side effect.
@@ -1332,7 +1343,7 @@ fn phase1_known_forall_reuses_the_exact_producer_with_all_binders_including_unus
         .expect("whole-proposition alpha reuse");
     assert!(output.contains(&format!("h_{} (M := M)", source.fact.fact_id.value())));
     assert!(output.contains(&format!("theorem h_{}", target.fact.fact_id.value())));
-    assert!(!output.contains("(by ring)"));
+    assert!(!output.contains("(by ring!)"));
 }
 
 #[test]
@@ -3103,7 +3114,7 @@ fn simplification_known_forall_reuses_a_global_alias_with_the_current_goal_wd() 
         .expect("the reused whole-forall result is exported")
         .1;
     assert!(later.contains(&format!("h_{} (M := M)", producer_id.value())));
-    assert!(!later.contains("(by ring)"));
+    assert!(!later.contains("(by ring!)"));
 }
 
 #[test]

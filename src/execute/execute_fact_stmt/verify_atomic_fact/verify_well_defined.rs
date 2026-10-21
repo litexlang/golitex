@@ -115,6 +115,132 @@ impl Runtime {
                 },
             ));
         }
+        let analysis_sequence = match fact {
+            AtomicFact::SequenceAnalysisFact(f) => Some(&f.sequence),
+            AtomicFact::NotSequenceAnalysisFact(f) => Some(&f.sequence),
+            _ => None,
+        };
+        if let Some(sequence) = analysis_sequence {
+            let Some(sequence_source) =
+                self.checked_real_sequence_domain(sequence, verify_state)?
+            else {
+                return Ok(VerifyAtomicFactWellDefinedResult::Failed(
+                    FailToVerifyAtomicFactWellDefinedResult::RealAnalysisDomain {
+                        fact: fact.clone(),
+                        well_defined_of_each_parameter: succeeded_args,
+                    },
+                ));
+            };
+            return Ok(VerifyAtomicFactWellDefinedResult::Success(
+                AtomicFactWellDefinedProof {
+                    well_defined_of_each_parameter: succeeded_args,
+                    predicate_signature,
+                    predicate_domain: PredicateDomainProof::SequenceAnalysis(
+                        super::well_defined_result::SequenceAnalysisPredicateDomainProof {
+                            sequence_source: Box::new(sequence_source),
+                        },
+                    ),
+                },
+            ));
+        }
+        let analysis_function = match fact {
+            AtomicFact::FunctionContinuousAtFact(f) => Some(&f.function),
+            AtomicFact::NotFunctionContinuousAtFact(f) => Some(&f.function),
+            AtomicFact::FunctionContinuousFact(f) => Some(&f.function),
+            AtomicFact::NotFunctionContinuousFact(f) => Some(&f.function),
+            AtomicFact::FunctionLipschitzFact(f) => Some(&f.function),
+            AtomicFact::NotFunctionLipschitzFact(f) => Some(&f.function),
+            _ => None,
+        };
+        if let Some(function) = analysis_function {
+            let Some(function_domain) =
+                self.checked_real_function_limit_domain(function, verify_state)?
+            else {
+                return Ok(VerifyAtomicFactWellDefinedResult::Failed(
+                    FailToVerifyAtomicFactWellDefinedResult::RealAnalysisDomain {
+                        fact: fact.clone(),
+                        well_defined_of_each_parameter: succeeded_args,
+                    },
+                ));
+            };
+            let mut requirements = Vec::new();
+            let point = match fact {
+                AtomicFact::FunctionContinuousAtFact(f) => Some(&f.point),
+                AtomicFact::NotFunctionContinuousAtFact(f) => Some(&f.point),
+                _ => None,
+            };
+            if let Some(point) = point {
+                requirements.push(crate::ast::fact::Fact::from(crate::ast::fact::InFact {
+                    fact_id: self.global_ids.allocate_fact_id(),
+                    element: point.clone(),
+                    set: function_domain.domain.clone(),
+                    line_file: None,
+                }));
+            }
+            let constant = match fact {
+                AtomicFact::FunctionLipschitzFact(f) => Some(&f.constant),
+                AtomicFact::NotFunctionLipschitzFact(f) => Some(&f.constant),
+                _ => None,
+            };
+            if let Some(constant) = constant {
+                requirements.push(crate::ast::fact::Fact::from(crate::ast::fact::InFact {
+                    fact_id: self.global_ids.allocate_fact_id(),
+                    element: constant.clone(),
+                    set: Obj::StandardSet(crate::ast::obj::StandardSet::R),
+                    line_file: None,
+                }));
+                requirements.push(crate::ast::fact::Fact::from(
+                    crate::ast::fact::GreaterEqualFact {
+                        fact_id: self.global_ids.allocate_fact_id(),
+                        left: constant.clone(),
+                        right: Obj::Literal(crate::ast::obj::Literal::Number(
+                            crate::ast::obj::Number {
+                                normalized_value: "0".into(),
+                            },
+                        )),
+                        line_file: None,
+                    },
+                ));
+            }
+            let mut completed = Vec::new();
+            for requirement in requirements {
+                let result = self.verify_fact(
+                    &requirement,
+                    verify_state.capped_at(
+                        crate::execute::execute_fact_stmt::VerifyStateLevel::BuiltinRule,
+                    ),
+                )?;
+                if result.is_failed() {
+                    return Ok(VerifyAtomicFactWellDefinedResult::Failed(
+                        FailToVerifyAtomicFactWellDefinedResult::Domain {
+                            well_defined_of_each_parameter: succeeded_args,
+                            predicate_signature,
+                            completed,
+                            requirement,
+                            result: Box::new(result),
+                        },
+                    ));
+                }
+                completed.push(
+                    super::well_defined_result::PredicateDomainWellDefinedProof {
+                        requirement,
+                        result: Box::new(result),
+                    },
+                );
+            }
+            return Ok(VerifyAtomicFactWellDefinedResult::Success(
+                AtomicFactWellDefinedProof {
+                    well_defined_of_each_parameter: succeeded_args,
+                    predicate_signature,
+                    predicate_domain: PredicateDomainProof::FunctionAnalysis(
+                        super::well_defined_result::FunctionAnalysisPredicateDomainProof {
+                            function_domain,
+                            requirements: completed,
+                        },
+                    ),
+                },
+            ));
+        }
         let function_limit = match fact {
             AtomicFact::HasFunctionLimitFact(f) => Some((&f.function, &f.approach, &f.value)),
             AtomicFact::NotHasFunctionLimitFact(f) => Some((&f.function, &f.approach, &f.value)),
@@ -509,6 +635,84 @@ impl Runtime {
         use crate::ast::obj::StandardSet;
         use crate::ast::obj::{FamilyUnion, SetOperator};
         use StandardSet::{ZStar, N, R, Z};
+        let analysis = match fact {
+            AtomicFact::RealSetBoundFact(f) => Some(vec![
+                crate::ast::fact::Fact::from(crate::ast::fact::SubsetFact {
+                    fact_id: self.global_ids.allocate_fact_id(),
+                    left: f.set.clone(),
+                    right: Obj::StandardSet(R),
+                    line_file: None,
+                }),
+                crate::ast::fact::Fact::from(InFact {
+                    fact_id: self.global_ids.allocate_fact_id(),
+                    element: f.bound.clone(),
+                    set: Obj::StandardSet(R),
+                    line_file: None,
+                }),
+            ]),
+            AtomicFact::NotRealSetBoundFact(f) => Some(vec![
+                crate::ast::fact::Fact::from(crate::ast::fact::SubsetFact {
+                    fact_id: self.global_ids.allocate_fact_id(),
+                    left: f.set.clone(),
+                    right: Obj::StandardSet(R),
+                    line_file: None,
+                }),
+                crate::ast::fact::Fact::from(InFact {
+                    fact_id: self.global_ids.allocate_fact_id(),
+                    element: f.bound.clone(),
+                    set: Obj::StandardSet(R),
+                    line_file: None,
+                }),
+            ]),
+            AtomicFact::RealSetBoundedFact(f) => Some(vec![crate::ast::fact::Fact::from(
+                crate::ast::fact::SubsetFact {
+                    fact_id: self.global_ids.allocate_fact_id(),
+                    left: f.set.clone(),
+                    right: Obj::StandardSet(R),
+                    line_file: None,
+                },
+            )]),
+            AtomicFact::NotRealSetBoundedFact(f) => Some(vec![crate::ast::fact::Fact::from(
+                crate::ast::fact::SubsetFact {
+                    fact_id: self.global_ids.allocate_fact_id(),
+                    left: f.set.clone(),
+                    right: Obj::StandardSet(R),
+                    line_file: None,
+                },
+            )]),
+            AtomicFact::RealAccumulationFact(f) => Some(vec![
+                crate::ast::fact::Fact::from(crate::ast::fact::SubsetFact {
+                    fact_id: self.global_ids.allocate_fact_id(),
+                    left: f.domain.clone(),
+                    right: Obj::StandardSet(R),
+                    line_file: None,
+                }),
+                crate::ast::fact::Fact::from(InFact {
+                    fact_id: self.global_ids.allocate_fact_id(),
+                    element: f.point.clone(),
+                    set: Obj::StandardSet(R),
+                    line_file: None,
+                }),
+            ]),
+            AtomicFact::NotRealAccumulationFact(f) => Some(vec![
+                crate::ast::fact::Fact::from(crate::ast::fact::SubsetFact {
+                    fact_id: self.global_ids.allocate_fact_id(),
+                    left: f.domain.clone(),
+                    right: Obj::StandardSet(R),
+                    line_file: None,
+                }),
+                crate::ast::fact::Fact::from(InFact {
+                    fact_id: self.global_ids.allocate_fact_id(),
+                    element: f.point.clone(),
+                    set: Obj::StandardSet(R),
+                    line_file: None,
+                }),
+            ]),
+            _ => None,
+        };
+        if let Some(requirements) = analysis {
+            return requirements;
+        }
         let sequence_limit = match fact {
             AtomicFact::HasSequenceLimitFact(f) => Some((&f.sequence, &f.value)),
             AtomicFact::HasSequenceLimsupFact(f) => Some((&f.sequence, &f.value)),
@@ -642,6 +846,20 @@ impl Runtime {
 
 fn atomic_except_equality_fact_arg_objs(fact: &AtomicFact) -> Vec<&Obj> {
     match fact {
+        AtomicFact::RealSetBoundFact(f) => vec![&f.set, &f.bound],
+        AtomicFact::NotRealSetBoundFact(f) => vec![&f.set, &f.bound],
+        AtomicFact::RealSetBoundedFact(f) => vec![&f.set],
+        AtomicFact::NotRealSetBoundedFact(f) => vec![&f.set],
+        AtomicFact::SequenceAnalysisFact(f) => vec![&f.sequence],
+        AtomicFact::NotSequenceAnalysisFact(f) => vec![&f.sequence],
+        AtomicFact::RealAccumulationFact(f) => vec![&f.domain, &f.point],
+        AtomicFact::NotRealAccumulationFact(f) => vec![&f.domain, &f.point],
+        AtomicFact::FunctionContinuousAtFact(f) => vec![&f.function, &f.point],
+        AtomicFact::NotFunctionContinuousAtFact(f) => vec![&f.function, &f.point],
+        AtomicFact::FunctionContinuousFact(f) => vec![&f.function],
+        AtomicFact::NotFunctionContinuousFact(f) => vec![&f.function],
+        AtomicFact::FunctionLipschitzFact(f) => vec![&f.function, &f.constant],
+        AtomicFact::NotFunctionLipschitzFact(f) => vec![&f.function, &f.constant],
         AtomicFact::EqualFact(_) => unreachable!("EqualFact rejected above"),
         AtomicFact::NotEqualFact(f) => vec![&f.left, &f.right],
         AtomicFact::InFact(f) => vec![&f.element, &f.set],

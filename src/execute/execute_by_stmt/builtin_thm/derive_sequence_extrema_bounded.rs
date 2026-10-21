@@ -11,6 +11,9 @@ pub(crate) fn derive_sequence_extrema_bounded(
     let Some(application) = builtin else {
         return Ok(Ok(TheoremDerivationProof::UserTheorem));
     };
+    if let Some(result) = super::derive_real_sequence::derive(rt, application, line)? {
+        return Ok(result);
+    }
     let upper = match application.theorem {
         BuiltinTheoremId::SequenceLimsupBoundedExists => true,
         BuiltinTheoremId::SequenceLiminfBoundedExists => false,

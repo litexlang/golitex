@@ -48,7 +48,13 @@ pub(super) fn prepare_real_analysis(
     }
     let upper = matches!(
         id,
-        RealLeastUpperBoundExists | RealMemberLeLeastUpperBound | RealLeastUpperBoundLeUpperBound
+        RealLeastUpperBoundExists
+            | RealMemberLeLeastUpperBound
+            | RealLeastUpperBoundLeUpperBound
+            | RealLeastUpperBoundFromDefinition
+            | RealLeastUpperBoundUpperBound
+            | RealLeastUpperBoundUnique
+            | RealLeastUpperBoundCrosses
     );
     let name = if upper {
         "is_real_least_upper_bound"
@@ -59,6 +65,24 @@ pub(super) fn prepare_real_analysis(
         subset(rt, a.clone(), real.clone()).into(),
         atomic_in(rt, b.clone(), real.clone()).into(),
     ];
+    // A nonempty real set, an actual bound, and leastness/greatestness certify
+    // that exact candidate. Example: singleton {2} has supremum 2, not 3.
+    if matches!(
+        id,
+        RealLeastUpperBoundFromDefinition | RealGreatestLowerBoundFromDefinition
+    ) {
+        requirements.push(nonempty(rt, a.clone()).into());
+        requirements.push(bound_requirement(rt, a.clone(), b.clone(), upper));
+        let u = rt.fresh_internal_param();
+        let bound = bound_requirement(rt, a.clone(), identifier(&u), upper);
+        let extremal = if upper {
+            le(rt, b.clone(), identifier(&u))
+        } else {
+            le(rt, identifier(&u), b.clone())
+        };
+        requirements.push(forall(rt, u, real, vec![bound], vec![extremal]));
+        return Ok((requirements, vec![certificate(rt, name, a, b).into()]));
+    }
     if matches!(id, RealLeastUpperBoundExists | RealGreatestLowerBoundExists) {
         requirements.push(nonempty(rt, a.clone()).into());
         requirements.push(bound_requirement(rt, a.clone(), b, upper));
@@ -70,7 +94,44 @@ pub(super) fn prepare_real_analysis(
         ));
     }
     requirements.push(certificate(rt, name, a.clone(), b.clone()).into());
+    // Projection returns the full quantified bound, retaining its certificate.
+    if matches!(
+        id,
+        RealLeastUpperBoundUpperBound | RealGreatestLowerBoundLowerBound
+    ) {
+        return Ok((requirements, vec![bound_requirement(rt, a, b, upper)]));
+    }
     let c = args[2].clone();
+    // Mutual extremal bounds force equality; no second candidate is guessed.
+    if matches!(id, RealLeastUpperBoundUnique | RealGreatestLowerBoundUnique) {
+        requirements.push(atomic_in(rt, c.clone(), real).into());
+        requirements.push(certificate(rt, name, a, c.clone()).into());
+        return Ok((requirements, vec![equal(rt, b, c).into()]));
+    }
+    // Every value strictly below a supremum (above an infimum) is crossed by
+    // an actual member. Otherwise it would itself be a better bound.
+    if matches!(
+        id,
+        RealLeastUpperBoundCrosses | RealGreatestLowerBoundCrosses
+    ) {
+        requirements.push(atomic_in(rt, c.clone(), real).into());
+        let comparison = if upper {
+            less(rt, c.clone(), b)
+        } else {
+            less(rt, b, c.clone())
+        };
+        requirements.push(comparison.into());
+        let x = rt.fresh_internal_param();
+        let crossed = if upper {
+            less(rt, c, identifier(&x))
+        } else {
+            less(rt, identifier(&x), c)
+        };
+        return Ok((
+            requirements,
+            vec![exist(rt, typed(x, a), vec![crossed], false)],
+        ));
+    }
     let conclusion = if matches!(
         id,
         RealMemberLeLeastUpperBound | RealGreatestLowerBoundLeMember
@@ -102,3 +163,7 @@ fn bound_requirement(rt: &mut Runtime, set: Obj, value: Obj, upper: bool) -> Fac
     };
     forall(rt, x, set, vec![], vec![body])
 }
+
+#[cfg(test)]
+#[path = "../../../../tests/unit/execute/real_analysis_continuity/real_bounds.rs"]
+mod real_bound_contract_tests;

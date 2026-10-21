@@ -1,0 +1,51 @@
+# Every earlier statement succeeds. The final call lacks eventual avoidance and must be rejected.
+release thm fn_limit_at_real_accumulation(0)
+
+by def $is_real_accumulation_at(R,0)
+
+have fn spike(x R) R=sign(abs(x))
+
+have fn zero_inner(x R) R=0
+
+claim:
+    ? forall epsilon R+:
+        exist radius R+ st {{x R:0<abs(x-0) and abs(x-0)<radius} $subset preimage_set(spike,{v R:abs(v-1)<epsilon})}
+    witness exist radius R+ st {{x R:0<abs(x-0) and abs(x-0)<radius} $subset preimage_set(spike,{v R:abs(v-1)<epsilon})} from 1:
+        claim:
+            ? forall x {z R:0<abs(z-0) and abs(z-0)<1}:
+                x $in preimage_set(spike,{v R:abs(v-1)<epsilon})
+            abs(x)=abs(x-0)>0
+            spike(x)=sign(abs(x))=1
+            abs(spike(x)-1)=abs(1-1)=0<epsilon
+            spike(x) $in {v R:abs(v-1)<epsilon}
+        by def {x R:0<abs(x-0) and abs(x-0)<1} $subset preimage_set(spike,{v R:abs(v-1)<epsilon})
+
+release thm fn_limit_at_from_epsilon(spike,0,1)
+
+release thm fn_limit_at_constant(zero_inner,0,0)
+
+spike(0)=0
+
+zero_inner(0)=0
+
+claim:
+    ? exist radius R+ st {{x R:0<abs(x-0) and abs(x-0)<radius} $subset {x R:x $in R,zero_inner(x) $in R,zero_inner(x)=spike(zero_inner(x))}}
+    witness exist radius R+ st {{x R:0<abs(x-0) and abs(x-0)<radius} $subset {x R:x $in R,zero_inner(x) $in R,zero_inner(x)=spike(zero_inner(x))}} from 1:
+        claim:
+            ? forall x {z R:0<abs(z-0) and abs(z-0)<1}:
+                x $in {t R:t $in R,zero_inner(t) $in R,zero_inner(t)=spike(zero_inner(t))}
+            zero_inner(x)=0
+            spike(zero_inner(x))=spike(0)=0
+        by def {x R:0<abs(x-0) and abs(x-0)<1} $subset {x R:x $in R,zero_inner(x) $in R,zero_inner(x)=spike(zero_inner(x))}
+
+by contra:
+    ? not $has_limit_at(zero_inner,0,1)
+    release thm fn_limit_at_unique(zero_inner,0,0,1)
+    impossible 0=1
+
+by contra:
+    ? not $is_continuous_at(spike,0)
+    release thm fn_continuous_at_to_limit(spike,0)
+    release thm fn_limit_at_unique(spike,0,1,0)
+    impossible 1=0
+release thm fn_limit_at_punctured_compose(zero_inner,spike,zero_inner,0,0,1)

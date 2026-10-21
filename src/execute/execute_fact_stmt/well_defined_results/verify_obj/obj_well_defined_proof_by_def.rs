@@ -13,6 +13,7 @@ use crate::prelude::*;
 use crate::runtime::FactId;
 
 pub enum ObjWellDefinedProofByDef {
+    BoundOperator(BoundOperatorObjWellDefinedProofByDef),
     LimitOperator(LimitOperatorObjWellDefinedProofByDef),
     Identifier(IdentifierObjWellDefinedProof),
     FnObj(FnObjObjWellDefinedProof),
@@ -32,6 +33,21 @@ pub enum ObjWellDefinedProofByDef {
     FiniteSetStat(FiniteSetStatObjWellDefinedProofByDef),
     Structish(StructishObjWellDefinedProofByDef),
     InstantiatedTemplateObj(InstantiatedTemplateObjObjWellDefinedProof),
+}
+
+pub enum BoundOperatorObjWellDefinedProofByDef {
+    Supremum(SupremumObjWellDefinedProof),
+    Infimum(InfimumObjWellDefinedProof),
+}
+pub struct SupremumObjWellDefinedProof {
+    pub set_wd: Box<ObjWellDefinedProof>,
+    pub real_set: Box<VerifyFactResult>,
+    pub selection: Box<VerifyFactResult>,
+}
+pub struct InfimumObjWellDefinedProof {
+    pub set_wd: Box<ObjWellDefinedProof>,
+    pub real_set: Box<VerifyFactResult>,
+    pub selection: Box<VerifyFactResult>,
 }
 
 pub enum LiteralObjWellDefinedProofByDef {

@@ -55,6 +55,8 @@ pub enum StructuralMembershipReason {
 pub enum IntrinsicCodomain {
     SequenceLimit,
     SequenceLimsup,
+    Supremum,
+    Infimum,
     SequenceLiminf,
     FunctionLimit,
     Floor,

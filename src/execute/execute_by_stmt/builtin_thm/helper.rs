@@ -91,7 +91,7 @@ pub(super) fn nonempty(rt: &mut Runtime, set: Obj) -> AtomicFact {
 }
 pub(super) fn certificate(rt: &mut Runtime, name: &str, set: Obj, value: Obj) -> AtomicFact {
     // Legacy completeness certificates are opaque named predicates. Only the
-    // reserved completeness theorem introduces them; projection theorems consume them.
+    // reserved completeness/definition theorems introduce them; projections consume them.
     NormalAtomicFact {
         fact_id: rt.global_ids.allocate_fact_id(),
         predicate: AtomicName::plain(name.to_string()),

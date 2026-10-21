@@ -1,0 +1,10 @@
+# Before: this explicit builtin theorem name was unavailable.
+# release thm real_greatest_lower_bound_lower_bound({0},L)
+# Run: target/release/litex -strict -lang en -f examples/stmt_nodes/release_and_expand/builtin_thm/real_greatest_lower_bound_lower_bound.lit
+release thm real_greatest_lower_bound_exists({0},-1)
+obtain L from exist L R st {$is_real_greatest_lower_bound({0},L)}
+release thm real_greatest_lower_bound_lower_bound({0},L)
+forall x {0}:
+    L<=x
+# Boundary: missing certificates, false extremal candidates, and non-strict crossings are rejected.
+

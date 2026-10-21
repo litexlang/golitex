@@ -384,7 +384,7 @@ impl LitexToLeanCompiler {
                 // Cartesian parameter inference already publishes the coordinate
                 // object and its membership. Numeric observation consumes that
                 // exact completed producer; endpoint WD is checked separately.
-                if let Some(Some(observation)) =
+                let inferred = if is_literal_coordinate_call(object) {
                     position.with_visible_inferred_subject(object, &mut |store, producer| {
                         let Some(term) =
                             self.compile_cart_inferred_subject(object, store, producer)?
@@ -421,7 +421,10 @@ impl LitexToLeanCompiler {
                             None,
                         )))
                     })?
-                {
+                } else {
+                    None
+                };
+                if let Some(Some(observation)) = inferred {
                     return Ok(observation);
                 }
                 let (call, output, member) =

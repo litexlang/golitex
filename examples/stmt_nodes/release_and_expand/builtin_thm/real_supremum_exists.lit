@@ -1,0 +1,5 @@
+# Explicit analysis theorem with checked premises.
+by def $is_real_upper_bound({0},0)
+witness exist value R st {$is_real_upper_bound({0},value)} from 0
+by def $is_real_bounded_above({0})
+release thm real_supremum_exists({0})

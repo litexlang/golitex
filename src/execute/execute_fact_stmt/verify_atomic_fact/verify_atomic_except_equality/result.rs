@@ -121,7 +121,43 @@ pub struct UserDefinedPropDefinitionProof {
 }
 
 // One builtin predicate definition ↔ one dedicated evidence struct.
+pub struct BuiltinRealSetBoundDefinitionProof {
+    pub requirement_facts: Vec<Fact>,
+    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
+}
+pub struct BuiltinRealSetBoundedDefinitionProof {
+    pub requirement_facts: Vec<Fact>,
+    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
+}
+pub struct BuiltinSequenceAnalysisDefinitionProof {
+    pub requirement_facts: Vec<Fact>,
+    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
+}
+pub struct BuiltinRealAccumulationDefinitionProof {
+    pub requirement_facts: Vec<Fact>,
+    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
+}
+pub struct BuiltinFunctionContinuousAtDefinitionProof {
+    pub requirement_facts: Vec<Fact>,
+    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
+}
+pub struct BuiltinFunctionContinuousDefinitionProof {
+    pub requirement_facts: Vec<Fact>,
+    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
+}
+pub struct BuiltinFunctionLipschitzDefinitionProof {
+    pub requirement_facts: Vec<Fact>,
+    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
+}
+
 pub enum BuiltinPropDefinitionProof {
+    RealSetBound(BuiltinRealSetBoundDefinitionProof),
+    RealSetBounded(BuiltinRealSetBoundedDefinitionProof),
+    SequenceAnalysis(BuiltinSequenceAnalysisDefinitionProof),
+    RealAccumulation(BuiltinRealAccumulationDefinitionProof),
+    FunctionContinuousAt(BuiltinFunctionContinuousAtDefinitionProof),
+    FunctionContinuous(BuiltinFunctionContinuousDefinitionProof),
+    FunctionLipschitz(BuiltinFunctionLipschitzDefinitionProof),
     FunctionLimit(BuiltinFunctionLimitDefinitionProof),
     SequenceLimit(BuiltinSequenceLimitDefinitionProof),
     SequenceLiminf(BuiltinSequenceLiminfDefinitionProof),

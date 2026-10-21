@@ -29,9 +29,13 @@ theorem h_143 : ∀ {_Host_i4 : Type v4} [_rep_i4 : Litex.Representation M _Host
 
 theorem h_215 : ∀ {_Host_i7 : Type v7} [_rep_i7 : Litex.Representation M _Host_i7] (_value_i7 : Litex.Obj (M := M) _Host_i7) (h_228 : Litex.In _value_i7 (Litex.Q (M := M))) {_Host_i8 : Type v8} [_rep_i8 : Litex.Representation M _Host_i8] (_value_i8 : Litex.Obj (M := M) _Host_i8) (h_229 : Litex.In _value_i8 (Litex.Q (M := M))) {_Host_i9 : Type v9} [_rep_i9 : Litex.Representation M _Host_i9] (_value_i9 : Litex.Obj (M := M) _Host_i9) (h_230 : Litex.In _value_i9 (Litex.Q (M := M))) {_Host_i10 : Type v10} [_rep_i10 : Litex.Representation M _Host_i10] (_value_i10 : Litex.Obj (M := M) _Host_i10) (h_231 : Litex.In _value_i10 (Litex.Q (M := M))) (h_212 : Litex.Same (let _wd_1_0 := (Litex.add _value_i7 _value_i9 (Litex.rationalToComplex _value_i7 h_228) (Litex.rationalToComplex _value_i9 h_230));
 let _wd_1_1 := _value_i10;
-(Litex.add _wd_1_0 _wd_1_1 (Litex.addInC _value_i7 _value_i9 (Litex.rationalToComplex _value_i7 h_228) (Litex.rationalToComplex _value_i9 h_230)) (Litex.rationalToComplex _wd_1_1 h_231))) (let _wd_1_0 := (Litex.add _value_i8 _value_i9 (Litex.rationalToComplex _value_i8 h_229) (Litex.rationalToComplex _value_i9 h_230));
+(Litex.add _wd_1_0 _wd_1_1 (by
+  let _atomic_wd_1_0 := (Litex.add _value_i7 _value_i9 (Litex.rationalToComplex _value_i7 h_228) (Litex.rationalToComplex _value_i9 h_230))
+  exact (Litex.addInC _value_i7 _value_i9 (Litex.rationalToComplex _value_i7 h_228) (Litex.rationalToComplex _value_i9 h_230))) (Litex.rationalToComplex _wd_1_1 h_231))) (let _wd_1_0 := (Litex.add _value_i8 _value_i9 (Litex.rationalToComplex _value_i8 h_229) (Litex.rationalToComplex _value_i9 h_230));
 let _wd_1_1 := _value_i10;
-(Litex.add _wd_1_0 _wd_1_1 (Litex.addInC _value_i8 _value_i9 (Litex.rationalToComplex _value_i8 h_229) (Litex.rationalToComplex _value_i9 h_230)) (Litex.rationalToComplex _wd_1_1 h_231)))), (by
+(Litex.add _wd_1_0 _wd_1_1 (by
+  let _atomic_wd_1_0 := (Litex.add _value_i8 _value_i9 (Litex.rationalToComplex _value_i8 h_229) (Litex.rationalToComplex _value_i9 h_230))
+  exact (Litex.addInC _value_i8 _value_i9 (Litex.rationalToComplex _value_i8 h_229) (Litex.rationalToComplex _value_i9 h_230))) (Litex.rationalToComplex _wd_1_1 h_231)))), (by
   let _object_w10 := (Litex.add _value_i7 _value_i9 (Litex.rationalToComplex _value_i7 h_228) (Litex.rationalToComplex _value_i9 h_230))
   let _object_w11 := (Litex.add _value_i8 _value_i9 (Litex.rationalToComplex _value_i8 h_229) (Litex.rationalToComplex _value_i9 h_230))
   exact ((Litex.Same _object_w10 _object_w11) ∧ (Litex.Same _value_i7 _value_i8))
@@ -39,7 +43,11 @@ let _wd_1_1 := _value_i10;
   (by
     intro _Host_i7 _rep_i7 _value_i7 h_228 _Host_i8 _rep_i8 _value_i8 h_229 _Host_i9 _rep_i9 _value_i9 h_230 _Host_i10 _rep_i10 _value_i10 h_231 h_212
     have h_745 : Litex.Same (Litex.add _value_i7 _value_i9 (Litex.rationalToComplex _value_i7 h_228) (Litex.rationalToComplex _value_i9 h_230)) (Litex.add _value_i8 _value_i9 (Litex.rationalToComplex _value_i8 h_229) (Litex.rationalToComplex _value_i9 h_230)) :=
-      (Litex.addCancelRightRight (Litex.add _value_i7 _value_i9 (Litex.rationalToComplex _value_i7 h_228) (Litex.rationalToComplex _value_i9 h_230)) (Litex.add _value_i8 _value_i9 (Litex.rationalToComplex _value_i8 h_229) (Litex.rationalToComplex _value_i9 h_230)) _value_i10 (Litex.addInC _value_i7 _value_i9 (Litex.rationalToComplex _value_i7 h_228) (Litex.rationalToComplex _value_i9 h_230)) (Litex.addInC _value_i8 _value_i9 (Litex.rationalToComplex _value_i8 h_229) (Litex.rationalToComplex _value_i9 h_230)) (Litex.rationalToComplex _value_i10 h_231) h_212)
+      (Litex.addCancelRightRight (Litex.add _value_i7 _value_i9 (Litex.rationalToComplex _value_i7 h_228) (Litex.rationalToComplex _value_i9 h_230)) (Litex.add _value_i8 _value_i9 (Litex.rationalToComplex _value_i8 h_229) (Litex.rationalToComplex _value_i9 h_230)) _value_i10 (by
+        let _atomic_wd_1_0 := (Litex.add _value_i7 _value_i9 (Litex.rationalToComplex _value_i7 h_228) (Litex.rationalToComplex _value_i9 h_230))
+        exact (Litex.addInC _value_i7 _value_i9 (Litex.rationalToComplex _value_i7 h_228) (Litex.rationalToComplex _value_i9 h_230))) (by
+        let _atomic_wd_1_0 := (Litex.add _value_i8 _value_i9 (Litex.rationalToComplex _value_i8 h_229) (Litex.rationalToComplex _value_i9 h_230))
+        exact (Litex.addInC _value_i8 _value_i9 (Litex.rationalToComplex _value_i8 h_229) (Litex.rationalToComplex _value_i9 h_230))) (Litex.rationalToComplex _value_i10 h_231) h_212)
     let _object_w10 := (Litex.add _value_i7 _value_i9 (Litex.rationalToComplex _value_i7 h_228) (Litex.rationalToComplex _value_i9 h_230))
     let _object_w11 := (Litex.add _value_i8 _value_i9 (Litex.rationalToComplex _value_i8 h_229) (Litex.rationalToComplex _value_i9 h_230))
     have h_213 : Litex.Same _object_w10 _object_w11 :=

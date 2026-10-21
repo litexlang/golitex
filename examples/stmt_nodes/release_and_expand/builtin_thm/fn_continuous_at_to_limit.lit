@@ -1,0 +1,6 @@
+# Explicit relative continuity law; all complete domains and point values are checked.
+have fn identity(x R) R=x
+release thm fn_continuous_at_identity(identity,0)
+release thm fn_limit_at_real_accumulation(0)
+by def $is_real_accumulation_at(R,0)
+release thm fn_continuous_at_to_limit(identity,0)

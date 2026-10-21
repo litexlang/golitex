@@ -1,0 +1,7 @@
+# Empty real sets have both real bounds, while finite sup/inf additionally need nonemptiness.
+{} $subset R
+by def $is_real_upper_bound({},0)
+by def $is_real_lower_bound({},0)
+witness exist upper R st {$is_real_upper_bound({},upper)} from 0
+witness exist lower R st {$is_real_lower_bound({},lower)} from 0
+by def $is_real_bounded({})

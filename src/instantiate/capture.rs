@@ -55,6 +55,12 @@ pub fn collect_free_plain_ids(
     out: &mut HashSet<IdentifierId>,
 ) {
     match obj {
+        Obj::BoundOperator(crate::ast::obj::BoundOperator::Supremum(a)) => {
+            collect_free_plain_ids(&a.set, bound, out)
+        }
+        Obj::BoundOperator(crate::ast::obj::BoundOperator::Infimum(a)) => {
+            collect_free_plain_ids(&a.set, bound, out)
+        }
         Obj::LimitOperator(crate::ast::obj::LimitOperator::Function(a)) => {
             collect_free_plain_ids(&a.function, bound, out);
             if let Some(point) = a.approach.point() {

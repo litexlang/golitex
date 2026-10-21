@@ -224,6 +224,20 @@ impl Runtime {
         fact: &AtomicFact,
     ) -> Option<AtomicExceptEqualityFactSearchProofByKnownSpecialProperty> {
         match fact {
+            AtomicFact::RealSetBoundFact(_)
+            | AtomicFact::NotRealSetBoundFact(_)
+            | AtomicFact::RealSetBoundedFact(_)
+            | AtomicFact::NotRealSetBoundedFact(_)
+            | AtomicFact::SequenceAnalysisFact(_)
+            | AtomicFact::NotSequenceAnalysisFact(_)
+            | AtomicFact::RealAccumulationFact(_)
+            | AtomicFact::NotRealAccumulationFact(_)
+            | AtomicFact::FunctionContinuousAtFact(_)
+            | AtomicFact::NotFunctionContinuousAtFact(_)
+            | AtomicFact::FunctionContinuousFact(_)
+            | AtomicFact::NotFunctionContinuousFact(_)
+            | AtomicFact::FunctionLipschitzFact(_)
+            | AtomicFact::NotFunctionLipschitzFact(_) => None,
             AtomicFact::HasSequenceLimsupFact(_)
             | AtomicFact::HasSequenceLiminfFact(_)
             | AtomicFact::HasSequenceLimitFact(_)

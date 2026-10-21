@@ -1,0 +1,3 @@
+# Expected rejection: missing or false analysis premise; the last statement must fail.
+have empty_fn fn(x {}) R
+$is_lipschitz(empty_fn,-1)

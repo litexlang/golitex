@@ -1,0 +1,23 @@
+# Negative convergence information does not provide the positive existence needed by lim.
+have fn seq_index(k N+) R=k
+
+by contra:
+    ? not $is_seq_bounded(seq_index)
+    obtain upper from exist upper R st {$is_real_upper_bound(fn_range(seq_index),upper)}
+    release thm real_archimedean_natural_upper_bound(upper)
+    obtain n from exist n N+ st {upper<n}
+    seq_index(n)=n
+    seq_index(n) $in fn_range(seq_index)
+    seq_index(n)<=upper<n=seq_index(n)
+    impossible seq_index(n)=seq_index(n)
+
+by contra:
+    ? not $is_seq_cauchy(seq_index)
+    release thm sequence_cauchy_bounded(seq_index)
+    impossible $is_seq_bounded(seq_index)
+
+by contra:
+    ? not $is_seq_convergent(seq_index)
+    release thm sequence_convergent_bounded(seq_index)
+    impossible $is_seq_bounded(seq_index)
+let candidate=lim(seq_index)

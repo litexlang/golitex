@@ -1,0 +1,2 @@
+# Expected rejection: missing or false analysis premise; the last statement must fail.
+release thm fn_continuous_at_identity(fn(x R+) R{x},0)

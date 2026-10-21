@@ -69,6 +69,9 @@ impl Runtime {
             }
         };
 
+        if let Some(fact) = self.parse_real_analysis_fact(name, &args, positive, &line_file)? {
+            return Ok(fact);
+        }
         match name {
             EQUAL | NOT_EQUAL | LESS | GREATER | LESS_EQUAL | GREATER_EQUAL => {
                 two_args(name, &args, &line_file)?;

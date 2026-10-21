@@ -24,42 +24,58 @@ impl LitexToLeanCompiler {
                 "A failed release is not theorem evidence.",
             ));
         };
-        let ResolvedTheoremCallee::UserTheorem(declaration) = &proof.callee else {
-            return Err(LeanCompileError::unsupported("ReleaseThm/Callee"));
-        };
-        let AtomicName::Plain { name } = &proof.call.name else {
-            return Err(LeanCompileError::unsupported("ReleaseThm/QualifiedCallee"));
-        };
-        let (registered, declaration_position, _) = position.visible_theorem(name)?;
-        if registered != declaration
-            || name != &declaration.name
-            || proof.builtin.is_some()
-            || proof.function_domain.is_some()
-        {
-            return Err(LeanCompileError::new(
-                "ReleaseThm/CalleeCapture",
-                "The captured callee must be the exact preceding compiled user theorem.",
-            ));
-        }
-        if proof.stored_wd.len() != proof.stored.len() {
-            return Err(LeanCompileError::new(
+        let invocation = SourcePosition::new(Some(position), SourceOwner::ThmRelease(proof), 0);
+        let (definitions, application, facts, retained_fact_id) =
+            if matches!(proof.callee, ResolvedTheoremCallee::Builtin) {
+                let (definitions, application, facts) =
+                    self.compile_builtin_tuple_theorem(proof, &invocation)?;
+                (definitions, application, facts, None)
+            } else {
+                let ResolvedTheoremCallee::UserTheorem(declaration) = &proof.callee else {
+                    return Err(LeanCompileError::unsupported("ReleaseThm/Callee"));
+                };
+                let AtomicName::Plain { name } = &proof.call.name else {
+                    return Err(LeanCompileError::unsupported("ReleaseThm/QualifiedCallee"));
+                };
+                let (registered, declaration_position, _) = position.visible_theorem(name)?;
+                if registered != declaration
+                    || name != &declaration.name
+                    || proof.builtin.is_some()
+                    || proof.function_domain.is_some()
+                {
+                    return Err(LeanCompileError::new(
+                        "ReleaseThm/CalleeCapture",
+                        "The captured callee must be the exact preceding compiled user theorem.",
+                    ));
+                }
+                if proof.stored_wd.len() != proof.stored.len() {
+                    return Err(LeanCompileError::new(
                 "ReleaseThm/CallerStages",
                 "Every returned package needs its original caller WD stage before its store.",
             ));
+                }
+                let (definitions, application, facts) = self.compile_user_theorem_instance(
+                    &proof.call,
+                    &proof.type_proofs,
+                    &proof.type_stores,
+                    &proof.dom_proofs,
+                    &proof.dom_stores,
+                    &proof.conclusions_wd,
+                    &proof.stored,
+                    registered,
+                    &declaration_position,
+                    &invocation,
+                )?;
+                (
+                    definitions,
+                    application,
+                    facts,
+                    Some(registered.fact.fact_id()),
+                )
+            };
+        if proof.stored_wd.len() != facts.len() || proof.stored.len() != facts.len() {
+            return Err(LeanCompileError::unsupported("ReleaseThm/CallerStages"));
         }
-        let invocation = SourcePosition::new(Some(position), SourceOwner::ThmRelease(proof), 0);
-        let (definitions, application, facts) = self.compile_user_theorem_instance(
-            &proof.call,
-            &proof.type_proofs,
-            &proof.type_stores,
-            &proof.dom_proofs,
-            &proof.dom_stores,
-            &proof.conclusions_wd,
-            &proof.stored,
-            registered,
-            &declaration_position,
-            &invocation,
-        )?;
         let mut emitted = Vec::new();
         for (returned_index, ((fact, wd), store)) in facts
             .iter()
@@ -67,6 +83,7 @@ impl LitexToLeanCompiler {
             .zip(&proof.stored)
             .enumerate()
         {
+            self.validate_store(&store.store, fact)?;
             // The executor closed the invocation scope before these original
             // caller WD/store pairs. Formation and export use only that cursor.
             let formation = SourcePosition {
@@ -85,7 +102,7 @@ impl LitexToLeanCompiler {
                 definitions.join("\n").replace('\n', "\n  ")
             );
             let retained_primary = matches!(proof.call.arguments, TheoremCallArguments::Bare)
-                && fact.fact_id() == registered.fact.fact_id();
+                && Some(fact.fact_id()) == retained_fact_id;
             if !retained_primary {
                 emitted.push(self.emit_fact(
                     fact,

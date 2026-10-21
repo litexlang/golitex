@@ -19,6 +19,13 @@ pub fn atomic_fact_has_positive_polarity(fact: &AtomicFact) -> bool {
     !matches!(
         fact,
         AtomicFact::NotNormalAtomicFact(_)
+            | AtomicFact::NotRealSetBoundFact(_)
+            | AtomicFact::NotRealSetBoundedFact(_)
+            | AtomicFact::NotSequenceAnalysisFact(_)
+            | AtomicFact::NotRealAccumulationFact(_)
+            | AtomicFact::NotFunctionContinuousAtFact(_)
+            | AtomicFact::NotFunctionContinuousFact(_)
+            | AtomicFact::NotFunctionLipschitzFact(_)
             | AtomicFact::NotEqualFact(_)
             | AtomicFact::NotLessFact(_)
             | AtomicFact::NotGreaterFact(_)
@@ -48,6 +55,20 @@ pub fn atomic_fact_has_positive_polarity(fact: &AtomicFact) -> bool {
 
 pub fn atomic_fact_args_ref(fact: &AtomicFact) -> Vec<&Obj> {
     match fact {
+        AtomicFact::RealSetBoundFact(f) => vec![&f.set, &f.bound],
+        AtomicFact::NotRealSetBoundFact(f) => vec![&f.set, &f.bound],
+        AtomicFact::RealSetBoundedFact(f) => vec![&f.set],
+        AtomicFact::NotRealSetBoundedFact(f) => vec![&f.set],
+        AtomicFact::SequenceAnalysisFact(f) => vec![&f.sequence],
+        AtomicFact::NotSequenceAnalysisFact(f) => vec![&f.sequence],
+        AtomicFact::RealAccumulationFact(f) => vec![&f.domain, &f.point],
+        AtomicFact::NotRealAccumulationFact(f) => vec![&f.domain, &f.point],
+        AtomicFact::FunctionContinuousAtFact(f) => vec![&f.function, &f.point],
+        AtomicFact::NotFunctionContinuousAtFact(f) => vec![&f.function, &f.point],
+        AtomicFact::FunctionContinuousFact(f) => vec![&f.function],
+        AtomicFact::NotFunctionContinuousFact(f) => vec![&f.function],
+        AtomicFact::FunctionLipschitzFact(f) => vec![&f.function, &f.constant],
+        AtomicFact::NotFunctionLipschitzFact(f) => vec![&f.function, &f.constant],
         AtomicFact::NormalAtomicFact(f) => f.body.iter().collect(),
         AtomicFact::NotNormalAtomicFact(f) => f.body.iter().collect(),
         AtomicFact::EqualFact(f) => vec![&f.left, &f.right],
@@ -222,6 +243,110 @@ pub fn and_chain_as_fact(branch: &AndChainAtomicFact) -> Fact {
 // Flip atomic polarity with a fresh FactId.
 pub fn negate_atomic_fact(fact: &AtomicFact, new_fact_id: FactId) -> Option<AtomicFact> {
     Some(match fact {
+        AtomicFact::RealSetBoundFact(f) => super::NotRealSetBoundFact {
+            fact_id: new_fact_id,
+            set: f.set.clone(),
+            bound: f.bound.clone(),
+            direction: f.direction,
+            line_file: f.line_file.clone(),
+        }
+        .into(),
+        AtomicFact::NotRealSetBoundFact(f) => super::RealSetBoundFact {
+            fact_id: new_fact_id,
+            set: f.set.clone(),
+            bound: f.bound.clone(),
+            direction: f.direction,
+            line_file: f.line_file.clone(),
+        }
+        .into(),
+        AtomicFact::RealSetBoundedFact(f) => super::NotRealSetBoundedFact {
+            fact_id: new_fact_id,
+            set: f.set.clone(),
+            boundedness: f.boundedness,
+            line_file: f.line_file.clone(),
+        }
+        .into(),
+        AtomicFact::NotRealSetBoundedFact(f) => super::RealSetBoundedFact {
+            fact_id: new_fact_id,
+            set: f.set.clone(),
+            boundedness: f.boundedness,
+            line_file: f.line_file.clone(),
+        }
+        .into(),
+        AtomicFact::SequenceAnalysisFact(f) => super::NotSequenceAnalysisFact {
+            fact_id: new_fact_id,
+            sequence: f.sequence.clone(),
+            property: f.property,
+            line_file: f.line_file.clone(),
+        }
+        .into(),
+        AtomicFact::NotSequenceAnalysisFact(f) => super::SequenceAnalysisFact {
+            fact_id: new_fact_id,
+            sequence: f.sequence.clone(),
+            property: f.property,
+            line_file: f.line_file.clone(),
+        }
+        .into(),
+        AtomicFact::RealAccumulationFact(f) => super::NotRealAccumulationFact {
+            fact_id: new_fact_id,
+            domain: f.domain.clone(),
+            point: f.point.clone(),
+            side: f.side,
+            line_file: f.line_file.clone(),
+        }
+        .into(),
+        AtomicFact::NotRealAccumulationFact(f) => super::RealAccumulationFact {
+            fact_id: new_fact_id,
+            domain: f.domain.clone(),
+            point: f.point.clone(),
+            side: f.side,
+            line_file: f.line_file.clone(),
+        }
+        .into(),
+        AtomicFact::FunctionContinuousAtFact(f) => super::NotFunctionContinuousAtFact {
+            fact_id: new_fact_id,
+            function: f.function.clone(),
+            point: f.point.clone(),
+            side: f.side,
+            line_file: f.line_file.clone(),
+        }
+        .into(),
+        AtomicFact::NotFunctionContinuousAtFact(f) => super::FunctionContinuousAtFact {
+            fact_id: new_fact_id,
+            function: f.function.clone(),
+            point: f.point.clone(),
+            side: f.side,
+            line_file: f.line_file.clone(),
+        }
+        .into(),
+        AtomicFact::FunctionContinuousFact(f) => super::NotFunctionContinuousFact {
+            fact_id: new_fact_id,
+            function: f.function.clone(),
+            property: f.property,
+            line_file: f.line_file.clone(),
+        }
+        .into(),
+        AtomicFact::NotFunctionContinuousFact(f) => super::FunctionContinuousFact {
+            fact_id: new_fact_id,
+            function: f.function.clone(),
+            property: f.property,
+            line_file: f.line_file.clone(),
+        }
+        .into(),
+        AtomicFact::FunctionLipschitzFact(f) => super::NotFunctionLipschitzFact {
+            fact_id: new_fact_id,
+            function: f.function.clone(),
+            constant: f.constant.clone(),
+            line_file: f.line_file.clone(),
+        }
+        .into(),
+        AtomicFact::NotFunctionLipschitzFact(f) => super::FunctionLipschitzFact {
+            fact_id: new_fact_id,
+            function: f.function.clone(),
+            constant: f.constant.clone(),
+            line_file: f.line_file.clone(),
+        }
+        .into(),
         AtomicFact::NormalAtomicFact(f) => NotNormalAtomicFact {
             fact_id: new_fact_id,
             predicate: f.predicate.clone(),

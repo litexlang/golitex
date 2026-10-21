@@ -1,0 +1,18 @@
+# Global continuity on the exact nonzero real domain, obtained point by point.
+have fn identity(x R) R=x
+
+have fn cont_one(x R) R=1
+
+have fn reciprocal(x R*) R=1/x
+
+claim:
+    ? forall x R*:
+        $is_continuous_at(reciprocal,x)
+    release thm fn_continuous_at_identity(identity,x)
+    release thm fn_continuous_at_constant(cont_one,x,1)
+    identity(x)=x
+    release thm fn_continuous_at_divide(cont_one,identity,reciprocal,x)
+
+release thm fn_continuous_from_pointwise(reciprocal)
+
+release thm fn_continuous_at(reciprocal,2)

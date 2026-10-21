@@ -33,7 +33,7 @@ open and closed descriptions.
 
 ## Maps and preimages
 
-`is_continuous(A, B, source, target, f)` requires every target open set to
+`is_topologically_continuous(A, B, source, target, f)` requires every target open set to
 have an open preimage. Here `A` and `B` are the spaces' ambient sets.
 The existing function is typed `fn(x source.carrier) target.carrier`;
 continuity does not define a replacement function or assume injectivity. Native

@@ -17,8 +17,12 @@ noncomputable def _object_i1 := (Litex.formulaFn (M := M) Litex.StandardSetValue
     (by
       change (¬ (_raw_i2 = (M.number (0 : ℂ))))
       exact h_1)
-  change Litex.In (Litex.div (Litex.number (M := M) (1 : ℂ)) _value_i2 (Litex.numberInC (M := M) (1 : ℂ)) (M.real_subset_complex _ h_43) h_1) (Litex.R (M := M))
-  exact (Litex.divInR (Litex.number (M := M) (1 : ℂ)) _value_i2 (Litex.NativeBridge.numberInROfEq (M := M) (1 : ℂ) (1 : ℝ) (by norm_num)) h_43 ((Litex.div (Litex.number (M := M) (1 : ℂ)) _value_i2 (Litex.numberInC (M := M) (1 : ℂ)) (M.real_subset_complex _ h_43) h_1)).wd.2.2)))
+  change (by
+    let _atomic_wd_1_0 := (Litex.div (Litex.number (M := M) (1 : ℂ)) _value_i2 (Litex.numberInC (M := M) (1 : ℂ)) (M.real_subset_complex _ h_43) h_1)
+    exact Litex.In _atomic_wd_1_0 (Litex.R (M := M)))
+  exact (by
+    let _atomic_wd_1_0 := (Litex.div (Litex.number (M := M) (1 : ℂ)) _value_i2 (Litex.numberInC (M := M) (1 : ℂ)) (M.real_subset_complex _ h_43) h_1)
+    exact (Litex.divInR (Litex.number (M := M) (1 : ℂ)) _value_i2 (Litex.NativeBridge.numberInROfEq (M := M) (1 : ℂ) (1 : ℝ) (by norm_num)) h_43 (_atomic_wd_1_0).wd.2.2))))
 theorem h_92 : Litex.In (_object_i1 (M := M)) (Litex.fnSet ((_object_i1 (M := M))).val.signature) :=
   (Litex.formulaFnInFnSet (_object_i1 (M := M)))
 theorem h_93 : Litex.Same (_object_i1 (M := M)) (_object_i1 (M := M)) :=

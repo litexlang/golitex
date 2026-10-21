@@ -1,4 +1,6 @@
 mod builtin_thm;
+mod continuity;
+pub(crate) mod derive_real_sequence;
 mod folds;
 mod helper;
 mod intersection;

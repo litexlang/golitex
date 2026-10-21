@@ -58,6 +58,16 @@ impl LitexToLeanCompiler {
         store: &StoreFactResult,
         position: &SourcePosition<'_>,
     ) -> Result<Option<String>, LeanCompileError> {
+        self.compile_cart_inferred_subject_from(object, store, position, None)
+    }
+
+    fn compile_cart_inferred_subject_from(
+        &self,
+        object: &Obj,
+        store: &StoreFactResult,
+        position: &SourcePosition<'_>,
+        source_membership: Option<&InFact>,
+    ) -> Result<Option<String>, LeanCompileError> {
         let mut current = Some(position);
         while let Some(cursor) = current {
             let inference = match cursor.owner {
@@ -80,6 +90,10 @@ impl LitexToLeanCompiler {
                 _ => None,
             };
             if let Some((source, rules)) = inference {
+                if source_membership.is_some_and(|expected| expected != source) {
+                    current = cursor.parent;
+                    continue;
+                }
                 for rule in rules {
                     let crate::store_fact_and_infer::InferInFactResult::CartCoordinates(
                         projections,
@@ -250,6 +264,27 @@ impl LitexToLeanCompiler {
         if matches!(&finite.source, KnownTupleShapeProof::CartesianMembership(source)
             if source.subject_equal.path.is_empty() && source.carrier_equal.path.is_empty())
         {
+            // The original coordinate inference already emitted this exact
+            // cartCall. Reuse it only after validating this occurrence's WD,
+            // and only for the same original Cartesian membership producer.
+            if literal_positive_usize(argument).is_some() {
+                let KnownTupleShapeProof::CartesianMembership(source) = &finite.source else {
+                    unreachable!()
+                };
+                let object = Obj::FnObj(application.clone());
+                if let Some(Some(reference)) =
+                    position.with_visible_inferred_subject(&object, &mut |store, producer| {
+                        self.compile_cart_inferred_subject_from(
+                            &object,
+                            store,
+                            producer,
+                            Some(&source.membership),
+                        )
+                    })?
+                {
+                    return Ok(reference);
+                }
+            }
             // The original membership names this exact Cartesian wrapper;
             // Lean can infer it from that citation. Validation above still
             // checks its source constructor and complete finite signature.
@@ -273,6 +308,16 @@ impl LitexToLeanCompiler {
         shape: &KnownTupleShapeProof,
         position: &SourcePosition<'_>,
     ) -> Result<(String, String), LeanCompileError> {
+        if let KnownTupleShapeProof::TupleEquality(proof) = shape {
+            let tuple_object = Obj::ProductShape(ProductShape::Tuple(proof.value.clone()));
+            let tuple = self.compile_object_reference(&tuple_object, position)?;
+            let subject = self.compile_object_reference(receiver, position)?;
+            let same =
+                self.compile_equality_path(receiver, &tuple_object, &proof.tuple_equal, position)?;
+            let cart = format!("(Litex.tupleSingletonCart {tuple})");
+            let member = format!("(by\n  let _tuple := {tuple}\n  let _receiver := {subject}\n  have _same : Litex.Same _receiver _tuple := {same}\n  exact Litex.inOfSame _tuple _receiver (Litex.tupleSingletonCart _tuple) (Litex.tupleSingletonCart _tuple) _same.symm (Litex.sameRefl _) (Litex.tupleInSingletonCart _tuple))");
+            return Ok((cart, member));
+        }
         let (membership, factors, subject_path, carrier_path, citation) = match shape {
             KnownTupleShapeProof::CartesianMembership(proof) => {
                 let (cited, citation) =
@@ -336,6 +381,11 @@ impl LitexToLeanCompiler {
             }
             // Both endpoints were just compiled. Identity transport needs the
             // original citation, not four more reconstructions of those objects.
+            let citation = if matches!(shape, KnownTupleShapeProof::FunctionCodomain(_)) {
+                format!("(show Litex.In {subject} {cart} from {citation})")
+            } else {
+                citation
+            };
             return Ok((cart, citation));
         }
         let original = self.compile_object_reference(&membership.element, position)?;
@@ -397,7 +447,7 @@ impl LitexToLeanCompiler {
 /// one-based complex numeral. The Core bridge checks their exact equality.
 pub(super) fn coordinate_membership(member: &str, index: usize, arity: usize) -> String {
     format!(
-        "(Litex.FiniteFunction.coordinate_mem_number {member} ({index} : Fin {arity}) ({} : ℂ) (by norm_num))",
+        "(Litex.FiniteFunction.coordinate_mem_number (M := M) {member} ({index} : Fin {arity}) ({} : ℂ) (by norm_num))",
         index + 1,
     )
 }

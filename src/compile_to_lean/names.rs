@@ -30,6 +30,9 @@ impl LitexToLeanCompiler {
         }
         fn statement(result: &ExecStmtResult, out: &mut Vec<IdentifierId>) {
             match result {
+                ExecStmtResult::Witness(crate::execute::execute_witness_stmt::ExecWitnessStmtResult::WitnessAtomicFact(crate::execute::execute_witness_stmt::ExecWitnessAtomicFactStmtResult::Success(proof))) => {
+                    for step in &proof.proof_steps { statement(step, out); }
+                }
                 ExecStmtResult::Witness(crate::execute::execute_witness_stmt::ExecWitnessStmtResult::WitnessExistFact(crate::execute::execute_witness_stmt::ExecWitnessExistFactStmtResult::Success(proof))) => {
                     for step in &proof.proof_steps { statement(step, out); }
                 }
@@ -497,6 +500,20 @@ impl LitexToLeanCompiler {
                 ))
             }
             AtomicFact::IsFiniteSetFact(_)
+            | AtomicFact::RealSetBoundFact(_)
+            | AtomicFact::NotRealSetBoundFact(_)
+            | AtomicFact::RealSetBoundedFact(_)
+            | AtomicFact::NotRealSetBoundedFact(_)
+            | AtomicFact::SequenceAnalysisFact(_)
+            | AtomicFact::NotSequenceAnalysisFact(_)
+            | AtomicFact::RealAccumulationFact(_)
+            | AtomicFact::NotRealAccumulationFact(_)
+            | AtomicFact::FunctionContinuousAtFact(_)
+            | AtomicFact::NotFunctionContinuousAtFact(_)
+            | AtomicFact::FunctionContinuousFact(_)
+            | AtomicFact::NotFunctionContinuousFact(_)
+            | AtomicFact::FunctionLipschitzFact(_)
+            | AtomicFact::NotFunctionLipschitzFact(_)
             | AtomicFact::SupersetFact(_)
             | AtomicFact::ProperSubsetFact(_)
             | AtomicFact::ProperSupersetFact(_)
@@ -581,7 +598,7 @@ impl LitexToLeanCompiler {
         if let Some(term) = self.compile_recursive_signature_reference(object, position)? {
             return Ok(term);
         }
-        if matches!(object, Obj::FnObj(_)) {
+        if is_literal_coordinate_call(object) {
             if let Some(Some(term)) = position
                 .with_visible_inferred_subject(object, &mut |store, producer| {
                     self.compile_cart_inferred_subject(object, store, producer)

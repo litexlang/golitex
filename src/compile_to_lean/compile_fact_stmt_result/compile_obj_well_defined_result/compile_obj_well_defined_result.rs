@@ -253,9 +253,21 @@ impl LitexToLeanCompiler {
         fact: &AtomicFact,
         position: &SourcePosition<'_>,
     ) -> Result<(), LeanCompileError> {
+        self.compile_atomic_wd_locals(wd, fact, position)
+            .map(|_| ())
+    }
+
+    /// Consume every original WD stage once, retaining its constructor term
+    /// for the proposition and selected proof that follow this formation.
+    pub(in crate::compile_to_lean) fn compile_atomic_wd_locals(
+        &self,
+        wd: &AtomicFactWellDefinedProof,
+        fact: &AtomicFact,
+        position: &SourcePosition<'_>,
+    ) -> Result<Vec<String>, LeanCompileError> {
         let source_position = SourcePosition {
             parent: Some(position),
-            owner: SourceOwner::AtomicWD(wd),
+            owner: SourceOwner::AtomicWDLocals(wd, 0),
             before: 0,
         };
         let position = &source_position;
@@ -266,22 +278,60 @@ impl LitexToLeanCompiler {
                 "Object WD evidence has the wrong argument arity.",
             ));
         }
+        let mut bindings = Vec::new();
         for (index, (arg, proof)) in args
             .iter()
             .zip(&wd.well_defined_of_each_parameter)
             .enumerate()
         {
             ensure_object(arg, proof)?;
-            self.compile_wd(
-                proof,
-                &SourcePosition {
-                    before: index,
-                    ..*position
-                },
-            )?;
+            let prior = SourcePosition {
+                owner: SourceOwner::AtomicWDLocals(wd, index),
+                before: index,
+                ..*position
+            };
+            let mut term = self.compile_wd(proof, &prior)?;
+            // Keep a compatible earlier call's host representation after this
+            // occurrence's complete signature/domain evidence was consumed.
+            if let ObjWellDefinedProof::ByDef {
+                obj: Obj::FnObj(application),
+                proof: ObjWellDefinedProofByDef::FnObj(call),
+            } = proof
+            {
+                if let Some(alias) = prior.bound_compatible_fn_call(application, call) {
+                    term = alias;
+                }
+            }
+            if matches!(proof, ObjWellDefinedProof::ByDef { .. })
+                && !matches!(
+                    arg,
+                    Obj::Identifier(_) | Obj::Literal(_) | Obj::StandardSet(_)
+                )
+            {
+                bindings.push(format!(
+                    "let {} := {term}",
+                    prior.atomic_wd_child_name(index)
+                ));
+            }
         }
+        let formed = SourcePosition {
+            owner: SourceOwner::AtomicWDLocals(wd, args.len()),
+            before: args.len(),
+            ..*position
+        };
+        let position = &formed;
         match &wd.predicate_signature {
             PredicateSignatureWellDefinedProof::Builtin => {
+                let certificate = match fact {
+                    AtomicFact::NormalAtomicFact(f) => Some(&f.predicate),
+                    AtomicFact::NotNormalAtomicFact(f) => Some(&f.predicate),
+                    _ => None,
+                };
+                if certificate.is_some_and(|name| {
+                    crate::builtin_theorem::builtin_certificate_arity(name.local_name()).is_some()
+                }) {
+                    return Err(LeanCompileError::unsupported("Prop/RealBoundCertificate"));
+                }
                 if matches!(
                     fact,
                     AtomicFact::NormalAtomicFact(_) | AtomicFact::NotNormalAtomicFact(_)
@@ -300,6 +350,10 @@ impl LitexToLeanCompiler {
             }
         }
         match &wd.predicate_domain {
+            PredicateDomainProof::SequenceAnalysis(_)
+            | PredicateDomainProof::FunctionAnalysis(_) => {
+                return Err(LeanCompileError::unsupported("WD/RealAnalysisPredicate"))
+            }
             PredicateDomainProof::FunctionLimit(_) => {
                 return Err(LeanCompileError::unsupported("WD/FunctionLimitPredicate"))
             }
@@ -402,7 +456,7 @@ impl LitexToLeanCompiler {
                 let _ = known;
             }
         }
-        Ok(())
+        Ok(bindings)
     }
 
     pub(in crate::compile_to_lean) fn compile_fact_wd(

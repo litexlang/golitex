@@ -530,6 +530,50 @@ impl LitexToLeanCompiler {
                         position,
                     );
                 }
+                if let (
+                    Obj::ProductShape(ProductShape::Tuple(pattern)),
+                    Obj::ProductShape(ProductShape::Tuple(goal)),
+                ) = (pattern, goal)
+                {
+                    if pattern.args.len() != goal.args.len()
+                        || child_matches.len() != goal.args.len()
+                    {
+                        return Err(LeanCompileError::unsupported("CompoundKnown/TupleArity"));
+                    }
+                    let mut values = Vec::new();
+                    let mut proofs = Vec::new();
+                    for ((pattern, goal), captured) in
+                        pattern.args.iter().zip(&goal.args).zip(child_matches)
+                    {
+                        let (value, equality) = self.compile_forall_argument_match(
+                            pattern,
+                            goal,
+                            captured,
+                            substitution,
+                            bound,
+                            position,
+                        )?;
+                        if let Some(position) = position {
+                            proofs.push(format!(
+                                "(show @Eq M.Value {} {} from {equality})",
+                                self.compile_normalization_value(&value, position)?,
+                                self.compile_normalization_value(goal, position)?
+                            ));
+                        }
+                        values.push(Box::new(value));
+                    }
+                    let old = Obj::ProductShape(ProductShape::Tuple(Tuple { args: values }));
+                    let Some(_) = position else {
+                        return Ok((old, String::new()));
+                    };
+                    return Ok((
+                        old,
+                        format!(
+                            "(congrArg (Litex.FiniteFunction.tupleValue (M := M)) (funext {}))",
+                            finite_vector_proof(&proofs)
+                        ),
+                    ));
+                }
                 let (operation, pairs) =
                     arithmetic_constructor_pairs(pattern, goal).ok_or_else(|| {
                         LeanCompileError::unsupported("CompoundKnown/StructureConstructor")

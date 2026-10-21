@@ -170,10 +170,16 @@ impl LitexToLeanCompiler {
             );
 
             declarations.push(self.emit_internal_fact(&member_fact, &member, position)?);
+            let name = format!("h_{}", member_fact.fact_id().value());
+            let member_reference = if local {
+                name
+            } else {
+                self.context_application(&name, position)
+            };
             declarations.extend(self.compile_parameter_inferences(
                 &stores[index],
                 &member_fact,
-                &member,
+                &(member.0, member_reference),
                 position,
             )?);
             let equal_proof = (

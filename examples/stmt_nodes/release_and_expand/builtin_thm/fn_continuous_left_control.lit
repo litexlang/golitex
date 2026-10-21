@@ -1,0 +1,4 @@
+# Explicit relative continuity law; all complete domains and point values are checked.
+have fn identity(x R) R=x
+release thm fn_continuous_left_identity(identity,0)
+release thm fn_continuous_left_control(identity,0,1)

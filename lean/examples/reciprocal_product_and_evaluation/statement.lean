@@ -20,8 +20,12 @@ noncomputable def _object_i3 := (Litex.formulaFn (M := M) Litex.StandardSetValue
     (by
       change (¬ (_raw_i4 = (M.number (0 : ℂ))))
       exact h_3)
-  change Litex.In (Litex.div (Litex.number (M := M) (1 : ℂ)) _value_i4 (Litex.numberInC (M := M) (1 : ℂ)) (M.real_subset_complex _ h_45) h_3) (Litex.R (M := M))
-  exact (Litex.divInR (Litex.number (M := M) (1 : ℂ)) _value_i4 (Litex.NativeBridge.numberInROfEq (M := M) (1 : ℂ) (1 : ℝ) (by norm_num)) h_45 ((Litex.div (Litex.number (M := M) (1 : ℂ)) _value_i4 (Litex.numberInC (M := M) (1 : ℂ)) (M.real_subset_complex _ h_45) h_3)).wd.2.2)))
+  change (by
+    let _atomic_wd_1_0 := (Litex.div (Litex.number (M := M) (1 : ℂ)) _value_i4 (Litex.numberInC (M := M) (1 : ℂ)) (M.real_subset_complex _ h_45) h_3)
+    exact Litex.In _atomic_wd_1_0 (Litex.R (M := M)))
+  exact (by
+    let _atomic_wd_1_0 := (Litex.div (Litex.number (M := M) (1 : ℂ)) _value_i4 (Litex.numberInC (M := M) (1 : ℂ)) (M.real_subset_complex _ h_45) h_3)
+    exact (Litex.divInR (Litex.number (M := M) (1 : ℂ)) _value_i4 (Litex.NativeBridge.numberInROfEq (M := M) (1 : ℂ) (1 : ℝ) (by norm_num)) h_45 (_atomic_wd_1_0).wd.2.2))))
 theorem h_94 : Litex.In (_object_i3 (M := M)) (Litex.fnSet ((_object_i3 (M := M))).val.signature) :=
   (Litex.formulaFnInFnSet (_object_i3 (M := M)))
 theorem h_95 : Litex.Same (_object_i3 (M := M)) (_object_i3 (M := M)) :=
@@ -32,7 +36,9 @@ theorem h_98 : ∀ {_Host_i6 : Type v6} [_rep_i6 : Litex.Representation M _Host_
     (Classical.choose_spec (show ((prop_1 (M := M)) _value_i6) from h_96))
   exact Litex.Same (let _wd_1_0 := (Litex.call Litex.StandardSetValue.real Litex.StandardSetValue.real (fun (_raw_i4 : M.Value) => (¬ (_raw_i4 = (M.number (0 : ℂ))))) (_object_i3 (M := M)) _value_i6 (h_94 (M := M)) h_102 h_104);
   let _wd_1_1 := _value_i6;
-  (Litex.mul _wd_1_0 _wd_1_1 (Litex.realToComplex (Litex.call Litex.StandardSetValue.real Litex.StandardSetValue.real (fun (_raw_i4 : M.Value) => (¬ (_raw_i4 = (M.number (0 : ℂ))))) (_object_i3 (M := M)) _wd_1_1 (h_94 (M := M)) h_102 h_104) (Litex.callInOutput (Litex.call Litex.StandardSetValue.real Litex.StandardSetValue.real (fun (_raw_i4 : M.Value) => (¬ (_raw_i4 = (M.number (0 : ℂ))))) (_object_i3 (M := M)) _wd_1_1 (h_94 (M := M)) h_102 h_104))) (M.real_subset_complex _ h_102))) (Litex.number (M := M) (1 : ℂ))
+  (Litex.mul _wd_1_0 _wd_1_1 (by
+    let _atomic_wd_1_0 := _wd_1_0
+    exact (Litex.realToComplex _atomic_wd_1_0 (Litex.callInOutput _atomic_wd_1_0))) (M.real_subset_complex _ h_102))) (Litex.number (M := M) (1 : ℂ))
 ) :=
   (by
     intro _Host_i6 _rep_i6 _value_i6 h_102 h_96
@@ -73,7 +79,12 @@ theorem h_98 : ∀ {_Host_i6 : Type v6} [_rep_i6 : Litex.Representation M _Host_
     have h_100 : Litex.Same _object_w14 _object_w15 :=
       (congrArg₂ M.mulValue h_99 (show @Eq M.Value _ _ from Eq.refl _))
     have h_101 : Litex.Same _object_w15 (Litex.number (M := M) (1 : ℂ)) :=
-      (Litex.NativeBridge.sameOfDenoteNumber _object_w15 (Litex.number (M := M) (1 : ℂ)) (((1 : ℂ) / (Litex.NativeBridge.asComplex _value_i6 (Litex.realToComplex _value_i6 h_220))) * (Litex.NativeBridge.asComplex _value_i6 (Litex.realToComplex _value_i6 h_220))) (1 : ℂ) (Litex.NativeBridge.denoteMul (_object_w15).val.left _value_i6 (_object_w15).wd.1 (_object_w15).wd.2 _ _ (Litex.NativeBridge.denoteDiv (Litex.number (M := M) (1 : ℂ)) _value_i6 (_object_w13).wd.1 (_object_w13).wd.2.1 (_object_w13).wd.2.2 _ _ (Litex.NativeBridge.denoteNumber (M := M) (1 : ℂ)) (Litex.NativeBridge.asComplex_spec _value_i6 (Litex.realToComplex _value_i6 h_220))) (Litex.NativeBridge.asComplex_spec _value_i6 (Litex.realToComplex _value_i6 h_220))) (Litex.NativeBridge.denoteNumber (M := M) (1 : ℂ)) (((div_eq_iff (Litex.NativeBridge.nativeNonzeroOfDenote _value_i6 (Litex.NativeBridge.asComplex _value_i6 (Litex.realToComplex _value_i6 h_220)) (Litex.NativeBridge.asComplex_spec _value_i6 (Litex.realToComplex _value_i6 h_220)) ((_object_w15).val.left).wd.2.2)).mp (Litex.NativeBridge.nativeEqOfDenoteNumber (_object_w15).val.left (_object_w15).val.left ((1 : ℂ) / (Litex.NativeBridge.asComplex _value_i6 (Litex.realToComplex _value_i6 h_220))) ((1 : ℂ) / (Litex.NativeBridge.asComplex _value_i6 (Litex.realToComplex _value_i6 h_220))) (Litex.NativeBridge.denoteDiv (Litex.number (M := M) (1 : ℂ)) _value_i6 (_object_w13).wd.1 (_object_w13).wd.2.1 (_object_w13).wd.2.2 _ _ (Litex.NativeBridge.denoteNumber (M := M) (1 : ℂ)) (Litex.NativeBridge.asComplex_spec _value_i6 (Litex.realToComplex _value_i6 h_220))) (Litex.NativeBridge.denoteDiv (Litex.number (M := M) (1 : ℂ)) _value_i6 (_object_w13).wd.1 (_object_w13).wd.2.1 (_object_w13).wd.2.2 _ _ (Litex.NativeBridge.denoteNumber (M := M) (1 : ℂ)) (Litex.NativeBridge.asComplex_spec _value_i6 (Litex.realToComplex _value_i6 h_220))) (show @Eq M.Value _ _ from Eq.refl _))).symm))
+      (by
+        let _quotient := (_object_w15).val.left
+        let _product := _object_w15
+        have _child : Litex.Same _object_w13 _object_w13 := (show @Eq M.Value _ _ from Eq.refl _)
+        have _conversion := Litex.sameDivIffSameMul _quotient.val.left _quotient.val.right _product.val.left _quotient.wd.1 _quotient.wd.2.1 _product.wd.1 _quotient.wd.2.2
+        exact ((_conversion.mp _child).symm))
     exact ((h_100).trans h_101)
   )
 

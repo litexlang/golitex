@@ -1,0 +1,8 @@
+# Explicit analysis theorem with checked premises.
+claim:
+    ? forall a seq(R):
+        $is_seq_nondecreasing(a)
+        $is_seq_bounded_above(a)
+        =>:
+            exist L R st {$has_seq_limit(a,L)}
+    release thm sequence_monotone_bounded_above(a)

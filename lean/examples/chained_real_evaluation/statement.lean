@@ -15,7 +15,9 @@ theorem h_4 : Litex.Same (_object_i1 (M := M)) (Litex.number (M := M) (2 : ℂ))
 
 noncomputable def _object_i2 := (Litex.add (_object_i1 (M := M)) (Litex.number (M := M) (1 : ℂ)) (M.real_subset_complex _ (h_3 (M := M))) (Litex.numberInC (M := M) (1 : ℂ)))
 theorem h_43 : Litex.In (_object_i2 (M := M)) (Litex.R (M := M)) :=
-  (Litex.addInR (_object_i1 (M := M)) (Litex.number (M := M) (1 : ℂ)) (h_3 (M := M)) (Litex.NativeBridge.numberInROfEq (M := M) (1 : ℂ) (1 : ℝ) (by norm_num)))
+  (by
+    let _atomic_wd_1_0 := (Litex.add (_object_i1 (M := M)) (Litex.number (M := M) (1 : ℂ)) (M.real_subset_complex _ (h_3 (M := M))) (Litex.numberInC (M := M) (1 : ℂ)))
+    exact (Litex.addInR (_object_i1 (M := M)) (Litex.number (M := M) (1 : ℂ)) (h_3 (M := M)) (Litex.NativeBridge.numberInROfEq (M := M) (1 : ℂ) (1 : ℝ) (by norm_num))))
 theorem h_44 : Litex.Same (_object_i2 (M := M)) (Litex.add (_object_i1 (M := M)) (Litex.number (M := M) (1 : ℂ)) (M.real_subset_complex _ (h_3 (M := M))) (Litex.numberInC (M := M) (1 : ℂ))) :=
   (Litex.sameRefl (Litex.add (_object_i1 (M := M)) (Litex.number (M := M) (1 : ℂ)) (M.real_subset_complex _ (h_3 (M := M))) (Litex.numberInC (M := M) (1 : ℂ))))
 

@@ -22,6 +22,8 @@ use crate::runtime::runtime_ids::IdentifierId;
 // Shape cut: one nesting level of family enums; leaf payloads unchanged.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Obj {
+    // Finite real supremum/infimum selected only from proved candidate/existence.
+    BoundOperator(BoundOperator),
     // Free or qualified name used as a value. Example: `a`, `m1::f0::Point`.
     Identifier(IdentifierObj),
 
@@ -1169,6 +1171,30 @@ pub struct Csch {
 pub struct SymmetricDifference {
     pub left: Box<Obj>,
     pub right: Box<Obj>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum BoundOperator {
+    Supremum(Supremum),
+    Infimum(Infimum),
+}
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Supremum {
+    pub set: Box<Obj>,
+}
+impl Supremum {
+    pub fn new(set: Obj) -> Self {
+        Self { set: Box::new(set) }
+    }
+}
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Infimum {
+    pub set: Box<Obj>,
+}
+impl Infimum {
+    pub fn new(set: Obj) -> Self {
+        Self { set: Box::new(set) }
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]

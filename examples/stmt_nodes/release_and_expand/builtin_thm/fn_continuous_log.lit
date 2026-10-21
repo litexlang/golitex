@@ -1,0 +1,2 @@
+# Explicit continuity on the complete domain declared in the function.
+release thm fn_continuous_log(fn(x R+) R{log(2,x)},2)

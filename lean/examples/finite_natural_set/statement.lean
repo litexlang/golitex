@@ -18,14 +18,16 @@ noncomputable def _object_i1 := (let _setElement_0 := (Litex.number (M := M) (1 
   let _setTail_0 := Litex.insert _setElement_0 _setTail_1 _setFresh_0;
   _setTail_0)
 theorem h_5 : Litex.IsSet (_object_i1 (M := M)) :=
-  (Litex.isSet (let _setElement_0 := (Litex.number (M := M) (1 : ℂ));
-    let _setElement_1 := (Litex.number (M := M) (2 : ℂ));
-    let _setTail_2 := Litex.emptySet (M := M);
-    let _setFresh_1 : ¬ Litex.In _setElement_1 _setTail_2 := (Litex.notInEmpty _setElement_1);
-    let _setTail_1 := Litex.insert _setElement_1 _setTail_2 _setFresh_1;
-    let _setFresh_0 : ¬ Litex.In _setElement_0 _setTail_1 := (Litex.notInInsert _setElement_0 _setElement_1 _setTail_2 _setFresh_1 (Litex.NativeBridge.notSameOfDenoteNumber (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (2 : ℂ)) (1 : ℂ) (2 : ℂ) (Litex.NativeBridge.denoteNumber (M := M) (1 : ℂ)) (Litex.NativeBridge.denoteNumber (M := M) (2 : ℂ)) (by norm_num)) (Litex.notInEmpty _setElement_0));
-    let _setTail_0 := Litex.insert _setElement_0 _setTail_1 _setFresh_0;
-    _setTail_0))
+  (by
+    let _atomic_wd_1_0 := (let _setElement_0 := (Litex.number (M := M) (1 : ℂ));
+      let _setElement_1 := (Litex.number (M := M) (2 : ℂ));
+      let _setTail_2 := Litex.emptySet (M := M);
+      let _setFresh_1 : ¬ Litex.In _setElement_1 _setTail_2 := (Litex.notInEmpty _setElement_1);
+      let _setTail_1 := Litex.insert _setElement_1 _setTail_2 _setFresh_1;
+      let _setFresh_0 : ¬ Litex.In _setElement_0 _setTail_1 := (Litex.notInInsert _setElement_0 _setElement_1 _setTail_2 _setFresh_1 (Litex.NativeBridge.notSameOfDenoteNumber (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (2 : ℂ)) (1 : ℂ) (2 : ℂ) (Litex.NativeBridge.denoteNumber (M := M) (1 : ℂ)) (Litex.NativeBridge.denoteNumber (M := M) (2 : ℂ)) (by norm_num)) (Litex.notInEmpty _setElement_0));
+      let _setTail_0 := Litex.insert _setElement_0 _setTail_1 _setFresh_0;
+      _setTail_0)
+    exact (Litex.isSet _atomic_wd_1_0))
 theorem h_6 : Litex.Same (_object_i1 (M := M)) (let _setElement_0 := (Litex.number (M := M) (1 : ℂ));
   let _setElement_1 := (Litex.number (M := M) (2 : ℂ));
   let _setTail_2 := Litex.emptySet (M := M);

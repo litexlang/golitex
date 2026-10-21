@@ -12,7 +12,7 @@ theorem h_3 : Litex.Same (_object_i1 (M := M)) (Litex.add (Litex.number (M := M)
   (Litex.sameRefl (Litex.add (Litex.number (M := M) (2 : ℂ)) (Litex.number (M := M) (3 : ℂ)) (Litex.numberInC (M := M) (2 : ℂ)) (Litex.numberInC (M := M) (3 : ℂ))))
 
 theorem h_4 : Litex.Same (_object_i1 (M := M)) (Litex.number (M := M) (5 : ℂ)) :=
-  (((h_3 (M := M))).trans (((Litex.NativeBridge.sameOfDenoteNumber (Litex.add (Litex.number (M := M) (2 : ℂ)) (Litex.number (M := M) (3 : ℂ)) (Litex.numberInC (M := M) (2 : ℂ)) (Litex.numberInC (M := M) (3 : ℂ))) (Litex.number (M := M) (5 : ℂ)) ((2 : ℂ) + (3 : ℂ)) (5 : ℂ) (Litex.NativeBridge.denoteAdd (Litex.number (M := M) (2 : ℂ)) (Litex.number (M := M) (3 : ℂ)) (Litex.numberInC (M := M) (2 : ℂ)) (Litex.numberInC (M := M) (3 : ℂ)) _ _ (Litex.NativeBridge.denoteNumber (M := M) (2 : ℂ)) (Litex.NativeBridge.denoteNumber (M := M) (3 : ℂ))) (Litex.NativeBridge.denoteNumber (M := M) (5 : ℂ)) (by norm_num))).trans (show @Eq M.Value _ _ from Eq.refl _)))
+  (Eq.trans (h_3 (M := M)) (Eq.trans (Litex.NativeBridge.sameOfDenoteNumber (Litex.add (Litex.number (M := M) (2 : ℂ)) (Litex.number (M := M) (3 : ℂ)) (Litex.numberInC (M := M) (2 : ℂ)) (Litex.numberInC (M := M) (3 : ℂ))) (Litex.number (M := M) (5 : ℂ)) ((2 : ℂ) + (3 : ℂ)) (5 : ℂ) (Litex.NativeBridge.denoteAdd (Litex.number (M := M) (2 : ℂ)) (Litex.number (M := M) (3 : ℂ)) (Litex.numberInC (M := M) (2 : ℂ)) (Litex.numberInC (M := M) (3 : ℂ)) _ _ (Litex.NativeBridge.denoteNumber (M := M) (2 : ℂ)) (Litex.NativeBridge.denoteNumber (M := M) (3 : ℂ))) (Litex.NativeBridge.denoteNumber (M := M) (5 : ℂ)) (by norm_num)) (show @Eq M.Value _ _ from Eq.refl _)))
 
 theorem h_15 : Litex.Same (Litex.number (M := M) (5 : ℂ)) (_object_i1 (M := M)) :=
   ((h_4 (M := M))).symm

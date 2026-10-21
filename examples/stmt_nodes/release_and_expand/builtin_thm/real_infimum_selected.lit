@@ -1,0 +1,7 @@
+# Explicit analysis theorem with checked premises.
+by def $is_real_lower_bound({0},0)
+witness exist value R st {$is_real_lower_bound({0},value)} from 0
+by def $is_real_bounded_below({0})
+release thm real_infimum_exists({0})
+release thm real_infimum_selected({0})
+inf({0}) $in R

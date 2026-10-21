@@ -1,0 +1,3 @@
+# Explicit analysis theorem with checked premises.
+have fn cont_one(x R) R=1
+release thm fn_continuous_constant(cont_one,1)

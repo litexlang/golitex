@@ -19,8 +19,12 @@ noncomputable def _object_i1 := (Litex.formulaFn2 (M := M) Litex.StandardSetValu
     (by
       change (¬ (_raw_i3 = (M.number (0 : ℂ))))
       exact h_1)
-  change Litex.In (Litex.div _value_i2 _value_i3 (M.real_subset_complex _ h_44) (M.real_subset_complex _ h_45) h_1) (Litex.R (M := M))
-  exact (Litex.divInR _value_i2 _value_i3 h_44 h_45 ((Litex.div _value_i2 _value_i3 (M.real_subset_complex _ h_44) (M.real_subset_complex _ h_45) h_1)).wd.2.2)))
+  change (by
+    let _atomic_wd_1_0 := (Litex.div _value_i2 _value_i3 (M.real_subset_complex _ h_44) (M.real_subset_complex _ h_45) h_1)
+    exact Litex.In _atomic_wd_1_0 (Litex.R (M := M)))
+  exact (by
+    let _atomic_wd_1_0 := (Litex.div _value_i2 _value_i3 (M.real_subset_complex _ h_44) (M.real_subset_complex _ h_45) h_1)
+    exact (Litex.divInR _value_i2 _value_i3 h_44 h_45 (_atomic_wd_1_0).wd.2.2))))
 theorem h_129 : Litex.In (_object_i1 (M := M)) (Litex.fnSet ((_object_i1 (M := M))).val.signature) :=
   (Litex.formulaFnInFnSet (_object_i1 (M := M)))
 theorem h_130 : Litex.Same (_object_i1 (M := M)) (_object_i1 (M := M)) :=
@@ -46,7 +50,11 @@ theorem h_188 : ∀ {_Host_i6 : Type v6} [_rep_i6 : Litex.Representation M _Host
 let _wd_1_1 := _value_i8;
 (Litex.call2 Litex.StandardSetValue.real Litex.StandardSetValue.real Litex.StandardSetValue.real (fun (_raw_i2 : M.Value) (_raw_i3 : M.Value) => (¬ (_raw_i3 = (M.number (0 : ℂ))))) (_object_i1 (M := M)) _object_w12 _wd_1_1 (h_129 (M := M)) (Litex.addInR _value_i6 _value_i7 h_193 h_194) h_195 h_186)) (let _wd_1_0 := (Litex.call2 Litex.StandardSetValue.real Litex.StandardSetValue.real Litex.StandardSetValue.real (fun (_raw_i2 : M.Value) (_raw_i3 : M.Value) => (¬ (_raw_i3 = (M.number (0 : ℂ))))) (_object_i1 (M := M)) _value_i6 _value_i8 (h_129 (M := M)) h_193 h_195 h_186);
 let _wd_1_1 := (Litex.call2 Litex.StandardSetValue.real Litex.StandardSetValue.real Litex.StandardSetValue.real (fun (_raw_i2 : M.Value) (_raw_i3 : M.Value) => (¬ (_raw_i3 = (M.number (0 : ℂ))))) (_object_i1 (M := M)) _value_i7 _value_i8 (h_129 (M := M)) h_194 h_195 h_186);
-(Litex.add _wd_1_0 _wd_1_1 (Litex.realToComplex (Litex.call2 Litex.StandardSetValue.real Litex.StandardSetValue.real Litex.StandardSetValue.real (fun (_raw_i2 : M.Value) (_raw_i3 : M.Value) => (¬ (_raw_i3 = (M.number (0 : ℂ))))) (_object_i1 (M := M)) _value_i6 _value_i8 (h_129 (M := M)) h_193 h_195 h_186) (Litex.call2InOutput (Litex.call2 Litex.StandardSetValue.real Litex.StandardSetValue.real Litex.StandardSetValue.real (fun (_raw_i2 : M.Value) (_raw_i3 : M.Value) => (¬ (_raw_i3 = (M.number (0 : ℂ))))) (_object_i1 (M := M)) _value_i6 _value_i8 (h_129 (M := M)) h_193 h_195 h_186))) (Litex.realToComplex (Litex.call2 Litex.StandardSetValue.real Litex.StandardSetValue.real Litex.StandardSetValue.real (fun (_raw_i2 : M.Value) (_raw_i3 : M.Value) => (¬ (_raw_i3 = (M.number (0 : ℂ))))) (_object_i1 (M := M)) _value_i7 _value_i8 (h_129 (M := M)) h_194 h_195 h_186) (Litex.call2InOutput (Litex.call2 Litex.StandardSetValue.real Litex.StandardSetValue.real Litex.StandardSetValue.real (fun (_raw_i2 : M.Value) (_raw_i3 : M.Value) => (¬ (_raw_i3 = (M.number (0 : ℂ))))) (_object_i1 (M := M)) _value_i7 _value_i8 (h_129 (M := M)) h_194 h_195 h_186))))) :=
+(Litex.add _wd_1_0 _wd_1_1 (by
+  let _atomic_wd_1_0 := _wd_1_0
+  exact (Litex.realToComplex _atomic_wd_1_0 (Litex.call2InOutput _atomic_wd_1_0))) (by
+  let _atomic_wd_1_0 := _wd_1_1
+  exact (Litex.realToComplex _atomic_wd_1_0 (Litex.call2InOutput _atomic_wd_1_0))))) :=
   (by
     intro _Host_i6 _rep_i6 _value_i6 h_193 _Host_i7 _rep_i7 _value_i7 h_194 _Host_i8 _rep_i8 _value_i8 h_195 h_186
     have h_546 : Litex.In _value_i6 (Litex.R (M := M)) :=
@@ -61,7 +69,9 @@ let _wd_1_1 := (Litex.call2 Litex.StandardSetValue.real Litex.StandardSetValue.r
 
     let _object_w25 := (let _wd_1_0 := (Litex.add _value_i6 _value_i7 (M.real_subset_complex _ h_546) (M.real_subset_complex _ h_547));
     let _wd_1_1 := _value_i8;
-    (Litex.div _wd_1_0 _wd_1_1 (Litex.addInC _value_i6 _value_i7 (M.real_subset_complex _ h_546) (M.real_subset_complex _ h_547)) (M.real_subset_complex _ h_548) h_186))
+    (Litex.div _wd_1_0 _wd_1_1 (by
+      let _atomic_wd_1_0 := (Litex.add _value_i6 _value_i7 (M.real_subset_complex _ h_546) (M.real_subset_complex _ h_547))
+      exact (Litex.addInC _value_i6 _value_i7 (M.real_subset_complex _ h_546) (M.real_subset_complex _ h_547))) (M.real_subset_complex _ h_548) h_186))
 
     have h_189 : Litex.Same _object_w24 _object_w25 :=
       (show (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i1 (M := M))) (Litex.FiniteFunction.tupleValue (M := M) ![(M.addValue (Litex.denote _value_i6) (Litex.denote _value_i7)), (Litex.denote _value_i8)])) = (M.divValue (M.addValue (Litex.denote _value_i6) (Litex.denote _value_i7)) (Litex.denote _value_i8)) from by
@@ -121,6 +131,6 @@ let _wd_1_1 := (Litex.call2 Litex.StandardSetValue.real Litex.StandardSetValue.r
         have _litex_nz_0 : ((Litex.NativeBridge.asComplex _value_i8 (Litex.realToComplex _value_i8 h_548)) : ℂ) ≠ 0 := Litex.NativeBridge.nativeNonzeroOfDenote _value_i8 (Litex.NativeBridge.asComplex _value_i8 (Litex.realToComplex _value_i8 h_548)) (Litex.NativeBridge.asComplex_spec _value_i8 (Litex.realToComplex _value_i8 h_548)) h_186
         litex_normalize_rational (disch := repeat' first | exact _litex_nz_0 | apply mul_ne_zero | apply div_ne_zero | apply pow_ne_zero | apply zpow_ne_zero)
       ))
-    exact ((((h_189).trans h_192)).trans (((congrArg₂ M.addValue (h_190).symm (h_191).symm)).trans (show @Eq M.Value _ _ from Eq.refl _)))
+    exact (Eq.trans ((h_189).trans h_192) (Eq.trans (congrArg₂ M.addValue (h_190).symm (h_191).symm) (show @Eq M.Value _ _ from Eq.refl _)))
   )
 end LitexCompiled.file_lean_x2f_examples_x2f_real_x5f_quotient_x5f_distributes_x2f_statement_x2e_lit

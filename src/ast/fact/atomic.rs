@@ -5,6 +5,20 @@ use crate::runtime::FactId;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum AtomicFact {
+    RealSetBoundFact(RealSetBoundFact),
+    NotRealSetBoundFact(NotRealSetBoundFact),
+    RealSetBoundedFact(RealSetBoundedFact),
+    NotRealSetBoundedFact(NotRealSetBoundedFact),
+    SequenceAnalysisFact(SequenceAnalysisFact),
+    NotSequenceAnalysisFact(NotSequenceAnalysisFact),
+    RealAccumulationFact(RealAccumulationFact),
+    NotRealAccumulationFact(NotRealAccumulationFact),
+    FunctionContinuousAtFact(FunctionContinuousAtFact),
+    NotFunctionContinuousAtFact(NotFunctionContinuousAtFact),
+    FunctionContinuousFact(FunctionContinuousFact),
+    NotFunctionContinuousFact(NotFunctionContinuousFact),
+    FunctionLipschitzFact(FunctionLipschitzFact),
+    NotFunctionLipschitzFact(NotFunctionLipschitzFact),
     HasFunctionLimitFact(HasFunctionLimitFact),
     NotHasFunctionLimitFact(NotHasFunctionLimitFact),
     HasSequenceLimitFact(HasSequenceLimitFact),
@@ -401,6 +415,20 @@ pub struct NotIsChoiceFunctionForFact {
 impl AtomicFact {
     pub fn fact_id(&self) -> FactId {
         match self {
+            AtomicFact::RealSetBoundFact(f) => f.fact_id,
+            AtomicFact::NotRealSetBoundFact(f) => f.fact_id,
+            AtomicFact::RealSetBoundedFact(f) => f.fact_id,
+            AtomicFact::NotRealSetBoundedFact(f) => f.fact_id,
+            AtomicFact::SequenceAnalysisFact(f) => f.fact_id,
+            AtomicFact::NotSequenceAnalysisFact(f) => f.fact_id,
+            AtomicFact::RealAccumulationFact(f) => f.fact_id,
+            AtomicFact::NotRealAccumulationFact(f) => f.fact_id,
+            AtomicFact::FunctionContinuousAtFact(f) => f.fact_id,
+            AtomicFact::NotFunctionContinuousAtFact(f) => f.fact_id,
+            AtomicFact::FunctionContinuousFact(f) => f.fact_id,
+            AtomicFact::NotFunctionContinuousFact(f) => f.fact_id,
+            AtomicFact::FunctionLipschitzFact(f) => f.fact_id,
+            AtomicFact::NotFunctionLipschitzFact(f) => f.fact_id,
             AtomicFact::HasSequenceLimitFact(f) => f.fact_id,
             AtomicFact::HasSequenceLimsupFact(f) => f.fact_id,
             AtomicFact::HasSequenceLiminfFact(f) => f.fact_id,
@@ -462,6 +490,24 @@ impl AtomicFact {
             PRIME, PROPER_SUBSET, PROPER_SUPERSET, SUBSET, SUPERSET, SURJECTIVE,
         };
         match self {
+            AtomicFact::RealSetBoundFact(f) => AtomicName::plain(f.predicate_name().into()),
+            AtomicFact::NotRealSetBoundFact(f) => AtomicName::plain(f.predicate_name().into()),
+            AtomicFact::RealSetBoundedFact(f) => AtomicName::plain(f.predicate_name().into()),
+            AtomicFact::NotRealSetBoundedFact(f) => AtomicName::plain(f.predicate_name().into()),
+            AtomicFact::SequenceAnalysisFact(f) => AtomicName::plain(f.predicate_name().into()),
+            AtomicFact::NotSequenceAnalysisFact(f) => AtomicName::plain(f.predicate_name().into()),
+            AtomicFact::RealAccumulationFact(f) => AtomicName::plain(f.predicate_name().into()),
+            AtomicFact::NotRealAccumulationFact(f) => AtomicName::plain(f.predicate_name().into()),
+            AtomicFact::FunctionContinuousAtFact(f) => AtomicName::plain(f.predicate_name().into()),
+            AtomicFact::NotFunctionContinuousAtFact(f) => {
+                AtomicName::plain(f.predicate_name().into())
+            }
+            AtomicFact::FunctionContinuousFact(f) => AtomicName::plain(f.predicate_name().into()),
+            AtomicFact::NotFunctionContinuousFact(f) => {
+                AtomicName::plain(f.predicate_name().into())
+            }
+            AtomicFact::FunctionLipschitzFact(f) => AtomicName::plain(f.predicate_name().into()),
+            AtomicFact::NotFunctionLipschitzFact(f) => AtomicName::plain(f.predicate_name().into()),
             AtomicFact::HasFunctionLimitFact(f) => AtomicName::Plain {
                 name: f.approach.predicate_name().into(),
             },
@@ -625,4 +671,291 @@ pub struct NotHasSequenceLiminfFact {
     pub sequence: Obj,
     pub value: Obj,
     pub line_file: Option<SourceLine>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct RealSetBoundFact {
+    pub fact_id: FactId,
+    pub set: Obj,
+    pub bound: Obj,
+    pub direction: RealBoundDirection,
+    pub line_file: Option<SourceLine>,
+}
+impl RealSetBoundFact {
+    pub fn predicate_name(&self) -> &'static str {
+        self.direction.predicate_name()
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct NotRealSetBoundFact {
+    pub fact_id: FactId,
+    pub set: Obj,
+    pub bound: Obj,
+    pub direction: RealBoundDirection,
+    pub line_file: Option<SourceLine>,
+}
+impl NotRealSetBoundFact {
+    pub fn predicate_name(&self) -> &'static str {
+        self.direction.predicate_name()
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct RealSetBoundedFact {
+    pub fact_id: FactId,
+    pub set: Obj,
+    pub boundedness: RealBoundedness,
+    pub line_file: Option<SourceLine>,
+}
+impl RealSetBoundedFact {
+    pub fn predicate_name(&self) -> &'static str {
+        self.boundedness.predicate_name()
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct NotRealSetBoundedFact {
+    pub fact_id: FactId,
+    pub set: Obj,
+    pub boundedness: RealBoundedness,
+    pub line_file: Option<SourceLine>,
+}
+impl NotRealSetBoundedFact {
+    pub fn predicate_name(&self) -> &'static str {
+        self.boundedness.predicate_name()
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct SequenceAnalysisFact {
+    pub fact_id: FactId,
+    pub sequence: Obj,
+    pub property: SequenceAnalysisProperty,
+    pub line_file: Option<SourceLine>,
+}
+impl SequenceAnalysisFact {
+    pub fn predicate_name(&self) -> &'static str {
+        self.property.predicate_name()
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct NotSequenceAnalysisFact {
+    pub fact_id: FactId,
+    pub sequence: Obj,
+    pub property: SequenceAnalysisProperty,
+    pub line_file: Option<SourceLine>,
+}
+impl NotSequenceAnalysisFact {
+    pub fn predicate_name(&self) -> &'static str {
+        self.property.predicate_name()
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct RealAccumulationFact {
+    pub fact_id: FactId,
+    pub domain: Obj,
+    pub point: Obj,
+    pub side: RealApproachSide,
+    pub line_file: Option<SourceLine>,
+}
+impl RealAccumulationFact {
+    pub fn predicate_name(&self) -> &'static str {
+        self.side.accumulation_name()
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct NotRealAccumulationFact {
+    pub fact_id: FactId,
+    pub domain: Obj,
+    pub point: Obj,
+    pub side: RealApproachSide,
+    pub line_file: Option<SourceLine>,
+}
+impl NotRealAccumulationFact {
+    pub fn predicate_name(&self) -> &'static str {
+        self.side.accumulation_name()
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct FunctionContinuousAtFact {
+    pub fact_id: FactId,
+    pub function: Obj,
+    pub point: Obj,
+    pub side: RealApproachSide,
+    pub line_file: Option<SourceLine>,
+}
+impl FunctionContinuousAtFact {
+    pub fn predicate_name(&self) -> &'static str {
+        self.side.continuity_name()
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct NotFunctionContinuousAtFact {
+    pub fact_id: FactId,
+    pub function: Obj,
+    pub point: Obj,
+    pub side: RealApproachSide,
+    pub line_file: Option<SourceLine>,
+}
+impl NotFunctionContinuousAtFact {
+    pub fn predicate_name(&self) -> &'static str {
+        self.side.continuity_name()
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct FunctionContinuousFact {
+    pub fact_id: FactId,
+    pub function: Obj,
+    pub property: FunctionContinuityProperty,
+    pub line_file: Option<SourceLine>,
+}
+impl FunctionContinuousFact {
+    pub fn predicate_name(&self) -> &'static str {
+        self.property.predicate_name()
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct NotFunctionContinuousFact {
+    pub fact_id: FactId,
+    pub function: Obj,
+    pub property: FunctionContinuityProperty,
+    pub line_file: Option<SourceLine>,
+}
+impl NotFunctionContinuousFact {
+    pub fn predicate_name(&self) -> &'static str {
+        self.property.predicate_name()
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct FunctionLipschitzFact {
+    pub fact_id: FactId,
+    pub function: Obj,
+    pub constant: Obj,
+    pub line_file: Option<SourceLine>,
+}
+impl FunctionLipschitzFact {
+    pub fn predicate_name(&self) -> &'static str {
+        "is_lipschitz"
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct NotFunctionLipschitzFact {
+    pub fact_id: FactId,
+    pub function: Obj,
+    pub constant: Obj,
+    pub line_file: Option<SourceLine>,
+}
+impl NotFunctionLipschitzFact {
+    pub fn predicate_name(&self) -> &'static str {
+        "is_lipschitz"
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum RealBoundDirection {
+    Upper,
+    Lower,
+}
+impl RealBoundDirection {
+    pub fn predicate_name(&self) -> &'static str {
+        match self {
+            Self::Upper => "is_real_upper_bound",
+            Self::Lower => "is_real_lower_bound",
+        }
+    }
+}
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum RealBoundedness {
+    Above,
+    Below,
+    Both,
+}
+impl RealBoundedness {
+    pub fn predicate_name(&self) -> &'static str {
+        match self {
+            Self::Above => "is_real_bounded_above",
+            Self::Below => "is_real_bounded_below",
+            Self::Both => "is_real_bounded",
+        }
+    }
+}
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum SequenceAnalysisProperty {
+    Nondecreasing,
+    Nonincreasing,
+    StrictlyIncreasing,
+    StrictlyDecreasing,
+    BoundedAbove,
+    BoundedBelow,
+    Bounded,
+    Cauchy,
+    Convergent,
+}
+impl SequenceAnalysisProperty {
+    pub fn predicate_name(&self) -> &'static str {
+        match self {
+            Self::Nondecreasing => "is_seq_nondecreasing",
+            Self::Nonincreasing => "is_seq_nonincreasing",
+            Self::StrictlyIncreasing => "is_seq_strictly_increasing",
+            Self::StrictlyDecreasing => "is_seq_strictly_decreasing",
+            Self::BoundedAbove => "is_seq_bounded_above",
+            Self::BoundedBelow => "is_seq_bounded_below",
+            Self::Bounded => "is_seq_bounded",
+            Self::Cauchy => "is_seq_cauchy",
+            Self::Convergent => "is_seq_convergent",
+        }
+    }
+}
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum RealApproachSide {
+    Both,
+    Left,
+    Right,
+}
+impl RealApproachSide {
+    pub fn accumulation_name(&self) -> &'static str {
+        match self {
+            Self::Both => "is_real_accumulation_at",
+            Self::Left => "is_real_accumulation_left",
+            Self::Right => "is_real_accumulation_right",
+        }
+    }
+    pub fn continuity_name(&self) -> &'static str {
+        match self {
+            Self::Both => "is_continuous_at",
+            Self::Left => "is_continuous_left",
+            Self::Right => "is_continuous_right",
+        }
+    }
+    pub fn limit_approach(&self, point: Obj) -> super::super::obj::LimitApproach {
+        use super::super::obj::LimitApproach;
+        match self {
+            Self::Both => LimitApproach::AtPoint(Box::new(point)),
+            Self::Left => LimitApproach::FromLeft(Box::new(point)),
+            Self::Right => LimitApproach::FromRight(Box::new(point)),
+        }
+    }
+}
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum FunctionContinuityProperty {
+    Continuous,
+    UniformContinuous,
+}
+impl FunctionContinuityProperty {
+    pub fn predicate_name(&self) -> &'static str {
+        match self {
+            Self::Continuous => "is_continuous",
+            Self::UniformContinuous => "is_uniformly_continuous",
+        }
+    }
 }

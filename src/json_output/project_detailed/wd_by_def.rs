@@ -44,6 +44,46 @@ pub(super) fn project_obj_wd_by_def(
     runtime: &Runtime,
 ) -> JsonValue {
     match proof {
+        ObjWellDefinedProofByDef::BoundOperator(
+            BoundOperatorObjWellDefinedProofByDef::Supremum(p),
+        ) => object_for(
+            runtime,
+            vec![
+                ("type", string("by_def")),
+                ("family", string("BoundOperator")),
+                ("kind", string("Supremum")),
+                ("obj", string(obj.readable_string())),
+                ("set_wd", project_obj_wd_proof(&p.set_wd, runtime)),
+                (
+                    "real_set",
+                    super::verify::project_verify_fact(&p.real_set, runtime),
+                ),
+                (
+                    "selection",
+                    super::verify::project_verify_fact(&p.selection, runtime),
+                ),
+            ],
+        ),
+        ObjWellDefinedProofByDef::BoundOperator(
+            BoundOperatorObjWellDefinedProofByDef::Infimum(p),
+        ) => object_for(
+            runtime,
+            vec![
+                ("type", string("by_def")),
+                ("family", string("BoundOperator")),
+                ("kind", string("Infimum")),
+                ("obj", string(obj.readable_string())),
+                ("set_wd", project_obj_wd_proof(&p.set_wd, runtime)),
+                (
+                    "real_set",
+                    super::verify::project_verify_fact(&p.real_set, runtime),
+                ),
+                (
+                    "selection",
+                    super::verify::project_verify_fact(&p.selection, runtime),
+                ),
+            ],
+        ),
         ObjWellDefinedProofByDef::LimitOperator(
             LimitOperatorObjWellDefinedProofByDef::Function(p),
         ) => super::function_limit::object_wd(p, runtime),

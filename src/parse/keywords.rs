@@ -302,6 +302,8 @@ pub(super) fn is_reserved_object_name(name: &str) -> bool {
             | LIM
             | LIM_LEFT
             | LIMSUP
+            | SUP
+            | INF
             | LIMINF
             | LIM_RIGHT
             | LIM_POS_INF
@@ -326,6 +328,8 @@ pub const CSCH: &str = "csch";
 pub const SET_DIFF: &str = "set_diff";
 
 pub const LIMSUP: &str = "limsup";
+pub const SUP: &str = "sup";
+pub const INF: &str = "inf";
 pub const LIMINF: &str = "liminf";
 pub const HAS_SEQ_LIMSUP: &str = "has_seq_limsup";
 pub const HAS_SEQ_LIMINF: &str = "has_seq_liminf";

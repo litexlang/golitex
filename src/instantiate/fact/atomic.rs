@@ -25,6 +25,122 @@ impl Runtime {
     ) -> Result<AtomicFact, InstError> {
         let fact_id = self.global_ids.allocate_fact_id();
         match atomic {
+            AtomicFact::RealSetBoundFact(f) => Ok(crate::ast::fact::RealSetBoundFact {
+                fact_id,
+                set: self.inst_obj_rec(&f.set, param_to_arg_map)?,
+                bound: self.inst_obj_rec(&f.bound, param_to_arg_map)?,
+                direction: f.direction,
+                line_file: f.line_file.clone(),
+            }
+            .into()),
+            AtomicFact::NotRealSetBoundFact(f) => Ok(crate::ast::fact::NotRealSetBoundFact {
+                fact_id,
+                set: self.inst_obj_rec(&f.set, param_to_arg_map)?,
+                bound: self.inst_obj_rec(&f.bound, param_to_arg_map)?,
+                direction: f.direction,
+                line_file: f.line_file.clone(),
+            }
+            .into()),
+            AtomicFact::RealSetBoundedFact(f) => Ok(crate::ast::fact::RealSetBoundedFact {
+                fact_id,
+                set: self.inst_obj_rec(&f.set, param_to_arg_map)?,
+                boundedness: f.boundedness,
+                line_file: f.line_file.clone(),
+            }
+            .into()),
+            AtomicFact::NotRealSetBoundedFact(f) => Ok(crate::ast::fact::NotRealSetBoundedFact {
+                fact_id,
+                set: self.inst_obj_rec(&f.set, param_to_arg_map)?,
+                boundedness: f.boundedness,
+                line_file: f.line_file.clone(),
+            }
+            .into()),
+            AtomicFact::SequenceAnalysisFact(f) => Ok(crate::ast::fact::SequenceAnalysisFact {
+                fact_id,
+                sequence: self.inst_obj_rec(&f.sequence, param_to_arg_map)?,
+                property: f.property,
+                line_file: f.line_file.clone(),
+            }
+            .into()),
+            AtomicFact::NotSequenceAnalysisFact(f) => {
+                Ok(crate::ast::fact::NotSequenceAnalysisFact {
+                    fact_id,
+                    sequence: self.inst_obj_rec(&f.sequence, param_to_arg_map)?,
+                    property: f.property,
+                    line_file: f.line_file.clone(),
+                }
+                .into())
+            }
+            AtomicFact::RealAccumulationFact(f) => Ok(crate::ast::fact::RealAccumulationFact {
+                fact_id,
+                domain: self.inst_obj_rec(&f.domain, param_to_arg_map)?,
+                point: self.inst_obj_rec(&f.point, param_to_arg_map)?,
+                side: f.side,
+                line_file: f.line_file.clone(),
+            }
+            .into()),
+            AtomicFact::NotRealAccumulationFact(f) => {
+                Ok(crate::ast::fact::NotRealAccumulationFact {
+                    fact_id,
+                    domain: self.inst_obj_rec(&f.domain, param_to_arg_map)?,
+                    point: self.inst_obj_rec(&f.point, param_to_arg_map)?,
+                    side: f.side,
+                    line_file: f.line_file.clone(),
+                }
+                .into())
+            }
+            AtomicFact::FunctionContinuousAtFact(f) => {
+                Ok(crate::ast::fact::FunctionContinuousAtFact {
+                    fact_id,
+                    function: self.inst_obj_rec(&f.function, param_to_arg_map)?,
+                    point: self.inst_obj_rec(&f.point, param_to_arg_map)?,
+                    side: f.side,
+                    line_file: f.line_file.clone(),
+                }
+                .into())
+            }
+            AtomicFact::NotFunctionContinuousAtFact(f) => {
+                Ok(crate::ast::fact::NotFunctionContinuousAtFact {
+                    fact_id,
+                    function: self.inst_obj_rec(&f.function, param_to_arg_map)?,
+                    point: self.inst_obj_rec(&f.point, param_to_arg_map)?,
+                    side: f.side,
+                    line_file: f.line_file.clone(),
+                }
+                .into())
+            }
+            AtomicFact::FunctionContinuousFact(f) => Ok(crate::ast::fact::FunctionContinuousFact {
+                fact_id,
+                function: self.inst_obj_rec(&f.function, param_to_arg_map)?,
+                property: f.property,
+                line_file: f.line_file.clone(),
+            }
+            .into()),
+            AtomicFact::NotFunctionContinuousFact(f) => {
+                Ok(crate::ast::fact::NotFunctionContinuousFact {
+                    fact_id,
+                    function: self.inst_obj_rec(&f.function, param_to_arg_map)?,
+                    property: f.property,
+                    line_file: f.line_file.clone(),
+                }
+                .into())
+            }
+            AtomicFact::FunctionLipschitzFact(f) => Ok(crate::ast::fact::FunctionLipschitzFact {
+                fact_id,
+                function: self.inst_obj_rec(&f.function, param_to_arg_map)?,
+                constant: self.inst_obj_rec(&f.constant, param_to_arg_map)?,
+                line_file: f.line_file.clone(),
+            }
+            .into()),
+            AtomicFact::NotFunctionLipschitzFact(f) => {
+                Ok(crate::ast::fact::NotFunctionLipschitzFact {
+                    fact_id,
+                    function: self.inst_obj_rec(&f.function, param_to_arg_map)?,
+                    constant: self.inst_obj_rec(&f.constant, param_to_arg_map)?,
+                    line_file: f.line_file.clone(),
+                }
+                .into())
+            }
             AtomicFact::NormalAtomicFact(f) => {
                 let mut body = Vec::with_capacity(f.body.len());
                 for o in &f.body {

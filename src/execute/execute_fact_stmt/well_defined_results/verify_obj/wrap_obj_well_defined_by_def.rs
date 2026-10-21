@@ -25,6 +25,7 @@ fn pack_success_by_def(
 ) -> ObjWellDefinedProofByDef {
     match obj {
         Obj::LimitOperator(_) => unreachable!("limit WD has dedicated proof and failure stages"),
+        Obj::BoundOperator(_) => unreachable!("bound WD has dedicated proof and failure stages"),
         Obj::Identifier(_)
         | Obj::Literal(Literal::Number(_))
         | Obj::Literal(Literal::ImaginaryUnit(_))
@@ -498,6 +499,7 @@ pub(super) fn wrap_common_fail(
 ) -> FailToVerifyObjWellDefinedResult {
     match obj {
         Obj::LimitOperator(_) => unreachable!("limit WD has dedicated proof and failure stages"),
+        Obj::BoundOperator(_) => unreachable!("bound WD has dedicated proof and failure stages"),
         Obj::Identifier(_) => FailToVerifyObjWellDefinedResult::Identifier(
             FailToVerifyIdentifierObjWellDefined::Others(match common {
                 FailToVerifyObjWellDefinedByDefCommon::Others(s) => s,

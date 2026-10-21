@@ -154,6 +154,13 @@ impl LitexToLeanCompiler {
                     prefix_proof = checked;
                     continue;
                 }
+                // Equality transitivity infers its endpoints from the two
+                // exact citations. Rebuilding those objects here adds no
+                // evidence and can expand a large arithmetic tree per edge.
+                if prefix_kind == OrderEdge::Eq && kind == OrderEdge::Eq {
+                    prefix_proof = format!("(Eq.trans {prefix_proof} {checked})");
+                    continue;
+                }
                 let a = self.compile_object_reference(&stored.fact.objs[start_index], &formed)?;
                 let b = self.compile_object_reference(&stored.fact.objs[middle], &formed)?;
                 let c = self.compile_object_reference(&stored.fact.objs[finish], &formed)?;
@@ -177,7 +184,14 @@ impl LitexToLeanCompiler {
                     OrderEdge::Eq
                 };
             }
-            let compiled = (self.fact_proposition(&fact, &formed)?, prefix_proof);
+            // A local citation's type is already fixed by the validated path.
+            // Only exported declarations need a separately rendered statement.
+            let proposition = if prior.is_local() {
+                String::new()
+            } else {
+                self.fact_proposition(&fact, &formed)?
+            };
+            let compiled = (proposition, prefix_proof);
             declarations.push(self.emit_internal_fact_reference(&fact, &compiled, &prior)?);
         }
         Ok(declarations)

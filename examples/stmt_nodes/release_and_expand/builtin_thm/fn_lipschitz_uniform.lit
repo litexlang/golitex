@@ -1,0 +1,10 @@
+# Explicit analysis theorem with checked premises.
+have fn identity(x R) R=x
+claim:
+    ? forall p cart(R,R):
+        abs(identity(p(1))-identity(p(2)))<=1*abs(p(1)-p(2))
+    identity(p(1))=p(1)
+    identity(p(2))=p(2)
+    abs(identity(p(1))-identity(p(2)))=abs(p(1)-p(2))=1*abs(p(1)-p(2))
+by def $is_lipschitz(identity,1)
+release thm fn_lipschitz_uniform(identity,1)

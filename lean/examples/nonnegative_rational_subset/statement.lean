@@ -11,13 +11,17 @@ variable [_setSemantics : Litex.SetSemantics M]
 
 noncomputable def _object_i1 := (Litex.setBuilder (Litex.Q (M := M)) (fun (_value_i2 : Litex.Obj (M := M) M.Value) (h_3 : Litex.In _value_i2 (Litex.Q (M := M))) => Litex.Le (Litex.number (M := M) (0 : ℂ)) _value_i2))
 theorem h_92 : Litex.IsSet (_object_i1 (M := M)) :=
-  (Litex.isSet (Litex.setBuilder (Litex.Q (M := M)) (fun (_value_i2 : Litex.Obj (M := M) M.Value) (h_48 : Litex.In _value_i2 (Litex.Q (M := M))) => Litex.Le (Litex.number (M := M) (0 : ℂ)) _value_i2)))
+  (by
+    let _atomic_wd_1_0 := (Litex.setBuilder (Litex.Q (M := M)) (fun (_value_i2 : Litex.Obj (M := M) M.Value) (h_48 : Litex.In _value_i2 (Litex.Q (M := M))) => Litex.Le (Litex.number (M := M) (0 : ℂ)) _value_i2))
+    exact (Litex.isSet _atomic_wd_1_0))
 theorem h_93 : Litex.Same (_object_i1 (M := M)) (Litex.setBuilder (Litex.Q (M := M)) (fun (_value_i2 : Litex.Obj (M := M) M.Value) (h_48 : Litex.In _value_i2 (Litex.Q (M := M))) => Litex.Le (Litex.number (M := M) (0 : ℂ)) _value_i2)) :=
   (Litex.sameRefl (Litex.setBuilder (Litex.Q (M := M)) (fun (_value_i2 : Litex.Obj (M := M) M.Value) (h_3 : Litex.In _value_i2 (Litex.Q (M := M))) => Litex.Le (Litex.number (M := M) (0 : ℂ)) _value_i2)))
 
 noncomputable def _object_i3 := (Litex.setBuilder (Litex.R (M := M)) (fun (_value_i4 : Litex.Obj (M := M) M.Value) (h_96 : Litex.In _value_i4 (Litex.R (M := M))) => Litex.Le (Litex.number (M := M) (0 : ℂ)) _value_i4))
 theorem h_179 : Litex.IsSet (_object_i3 (M := M)) :=
-  (Litex.isSet (Litex.setBuilder (Litex.R (M := M)) (fun (_value_i4 : Litex.Obj (M := M) M.Value) (h_136 : Litex.In _value_i4 (Litex.R (M := M))) => Litex.Le (Litex.number (M := M) (0 : ℂ)) _value_i4)))
+  (by
+    let _atomic_wd_1_0 := (Litex.setBuilder (Litex.R (M := M)) (fun (_value_i4 : Litex.Obj (M := M) M.Value) (h_136 : Litex.In _value_i4 (Litex.R (M := M))) => Litex.Le (Litex.number (M := M) (0 : ℂ)) _value_i4))
+    exact (Litex.isSet _atomic_wd_1_0))
 theorem h_180 : Litex.Same (_object_i3 (M := M)) (Litex.setBuilder (Litex.R (M := M)) (fun (_value_i4 : Litex.Obj (M := M) M.Value) (h_136 : Litex.In _value_i4 (Litex.R (M := M))) => Litex.Le (Litex.number (M := M) (0 : ℂ)) _value_i4)) :=
   (Litex.sameRefl (Litex.setBuilder (Litex.R (M := M)) (fun (_value_i4 : Litex.Obj (M := M) M.Value) (h_96 : Litex.In _value_i4 (Litex.R (M := M))) => Litex.Le (Litex.number (M := M) (0 : ℂ)) _value_i4)))
 

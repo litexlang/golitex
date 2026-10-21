@@ -1,0 +1,63 @@
+# Before: sup/inf had no native proof-consuming selection interface.
+# sup('(0,1))=1
+# Former behavior: reserved bound operators were unavailable.
+# Now: prove the exact extremal certificate, then select and calculate.
+# Boundary: a supremum or infimum need not belong to the set.
+# Evidence: target/release/litex -lang en -strict -f examples/real_analysis/open_interval_bounds.lit
+claim:
+    ? forall u R:
+        forall x '(0,1):
+            x<=u
+        =>:
+            1<=u
+    1/2 $in '(0,1)
+    1/2<=u
+    by contra:
+        ? 1<=u
+        u<1
+        have midpoint R=(u+1)/2
+        0<u
+        0<u+1
+        0<midpoint
+        u+1<1+1=2
+        midpoint=(u+1)/2<2/2=1
+        midpoint $in '(0,1)
+        midpoint<=u
+        u+u<u+1
+        u=(u+u)/2<(u+1)/2=midpoint
+        impossible midpoint<=u
+
+release thm real_least_upper_bound_from_definition('(0,1),1)
+
+sup('(0,1))=1
+
+sup('(0,1))+2=3
+
+not 1 $in '(0,1)
+
+claim:
+    ? forall lower R:
+        forall x '(0,1):
+            lower<=x
+        =>:
+            lower<=0
+    1/2 $in '(0,1)
+    lower<=1/2
+    by contra:
+        ? lower<=0
+        0<lower
+        have midpoint R=lower/2
+        0<lower/2
+        midpoint=lower/2<lower/2+lower/2=lower<=1/2<1
+        0<midpoint
+        midpoint $in '(0,1)
+        lower<=midpoint<lower
+        impossible lower=lower
+
+release thm real_greatest_lower_bound_from_definition('(0,1),0)
+
+inf('(0,1))=0
+
+inf('(0,1))+2=2
+
+not 0 $in '(0,1)

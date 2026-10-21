@@ -49,11 +49,19 @@ impl LitexToLeanCompiler {
                 return Ok((term, member));
             }
             Obj::FnObj(_) => {
-                let term = position
-                    .with_visible_wd(object, &mut |wd, producer| self.compile_wd(wd, producer))?
-                    .ok_or_else(|| {
-                        LeanCompileError::unsupported("Inference/FunctionApplicationConstructor")
-                    })?;
+                let term = if let Some(term) = position.bound_object_child(object) {
+                    term
+                } else if let Some(term) = position.registered_wd_reference(object, None)? {
+                    term
+                } else {
+                    position
+                        .with_visible_wd(object, &mut |wd, producer| self.compile_wd(wd, producer))?
+                        .ok_or_else(|| {
+                            LeanCompileError::unsupported(
+                                "Inference/FunctionApplicationConstructor",
+                            )
+                        })?
+                };
                 let (_, _, member, _) = self.compile_numeric_observation(object, position)?;
                 return Ok((term, member));
             }

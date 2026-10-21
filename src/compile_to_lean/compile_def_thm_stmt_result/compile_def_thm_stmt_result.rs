@@ -19,7 +19,14 @@ impl LitexToLeanCompiler {
                 ))
             }
         };
-        self.compile_fact_wd(goal_wd, &proof.statement.fact, position)?;
+        // The forall goal renderer consumes this exact header and every then-WD
+        // stage. Do not replay that same formation once more and discard it.
+        if !matches!(
+            (&proof.statement.fact, goal_wd),
+            (Fact::ForallFact(_), FactWellDefinedProof::ForallFact(_))
+        ) {
+            self.compile_fact_wd(goal_wd, &proof.statement.fact, position)?;
+        }
         let source_position = SourcePosition {
             parent: Some(position),
             owner: SourceOwner::Named(proof),
@@ -43,6 +50,15 @@ impl LitexToLeanCompiler {
         proof: &ExecDefThmStmtSuccess,
         position: &SourcePosition<'_>,
     ) -> Result<(String, String), LeanCompileError> {
+        let original_scope = position.parent.ok_or_else(|| {
+            LeanCompileError::new(
+                "Theorem/GoalScope",
+                "The named proof has no original declaration scope.",
+            )
+        })?;
+        // Validate and render the original goal before its separate truth body.
+        let (proposition, introductions, mut body_text) =
+            self.compile_named_theorem_goal(proof, original_scope)?;
         let (_binders, _introductions, definitions, steps, results, expected) =
             match (&proof.statement.fact, &proof.body) {
                 (Fact::ForallFact(fact), ExecDefThmBodyProof::Forall(body)) => {
@@ -99,14 +115,6 @@ impl LitexToLeanCompiler {
             }
             _ => 0,
         };
-        let original_scope = position.parent.ok_or_else(|| {
-            LeanCompileError::new(
-                "Theorem/GoalScope",
-                "The named proof has no original declaration scope.",
-            )
-        })?;
-        let (proposition, introductions, mut body_text) =
-            self.compile_named_theorem_goal(proof, original_scope)?;
         body_text.extend(self.compile_named_header_aliases(proof, original_scope, position)?);
         body_text.extend(definitions);
         for (index, (source, step)) in proof.statement.prove_process.iter().zip(steps).enumerate() {
@@ -177,7 +185,7 @@ impl LitexToLeanCompiler {
                 )?;
                 if wd.then.len() != fact.then_facts.len() {
                     return Err(LeanCompileError::new(
-                        "Theorem/GoalThenWD",
+                        "WD/ForallThenArity",
                         "The original goal has a different ordered WD arity.",
                     ));
                 }

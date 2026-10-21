@@ -1,0 +1,5 @@
+# Explicit relative continuity law; all complete domains and point values are checked.
+have fn identity(x R) R=x
+have fn cont_scale(x R) R=2*x
+release thm fn_continuous_right_identity(identity,0)
+release thm fn_continuous_right_scale(identity,cont_scale,0,2)
