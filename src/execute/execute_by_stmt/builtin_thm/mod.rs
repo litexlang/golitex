@@ -15,3 +15,7 @@ mod tests;
 mod sequence_limits;
 
 mod function_limits;
+
+mod sequence_extrema;
+
+pub(crate) mod derive_sequence_extrema_bounded;

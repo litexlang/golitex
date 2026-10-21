@@ -121,7 +121,7 @@ impl LitexToLeanCompiler {
             member.0.replace('\n', "\n  "),
             member.1.replace('\n', "\n  ")
         );
-        if !self.function_uses_numeric_interface(signature) {
+        if !Self::function_uses_numeric_interface(signature) {
             return self.compile_formula_function_on(function, &h_return, &membership_position);
         }
         let domains = self.compile_function_domains(signature, position)?;
@@ -204,7 +204,7 @@ impl LitexToLeanCompiler {
         assumed: &[AssumeDomFactResult],
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
-        if self.function_uses_numeric_interface(signature) {
+        if Self::function_uses_numeric_interface(signature) {
             self.compile_function_domains(signature, position)?;
         }
         let groups = &signature.set_bound_parameters.groups;
@@ -376,7 +376,7 @@ impl LitexToLeanCompiler {
             .map(|name| format!("({name} : M.Value)"))
             .collect::<Vec<_>>()
             .join(" ");
-        let domains = if self.function_uses_numeric_interface(signature) {
+        let domains = if Self::function_uses_numeric_interface(signature) {
             self.compile_function_domains(signature, position)?
                 .into_iter()
                 .map(|domain| format!("(M.standard {domain})"))

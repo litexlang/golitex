@@ -3,6 +3,7 @@ mod compile_add_zero_from_equalities;
 mod compile_builtin_rewrite;
 mod compile_calculation;
 mod compile_congruence;
+mod compile_equal_from_known_difference_zero;
 mod compile_equality_result;
 mod compile_equivalence_class;
 mod compile_function_definition;

@@ -240,7 +240,7 @@ impl Runtime {
                 function: self.inst_obj_rec(&f.function, param_to_arg_map)?,
                 approach: f
                     .approach
-                    .with_point(self.inst_obj_rec(f.approach.point(), param_to_arg_map)?),
+                    .try_map_point(|point| self.inst_obj_rec(point, param_to_arg_map))?,
                 value: self.inst_obj_rec(&f.value, param_to_arg_map)?,
                 line_file: f.line_file.clone(),
             }
@@ -251,7 +251,7 @@ impl Runtime {
                     function: self.inst_obj_rec(&f.function, param_to_arg_map)?,
                     approach: f
                         .approach
-                        .with_point(self.inst_obj_rec(f.approach.point(), param_to_arg_map)?),
+                        .try_map_point(|point| self.inst_obj_rec(point, param_to_arg_map))?,
                     value: self.inst_obj_rec(&f.value, param_to_arg_map)?,
                     line_file: f.line_file.clone(),
                 }
@@ -264,8 +264,40 @@ impl Runtime {
                 line_file: f.line_file.clone(),
             }
             .into()),
+            AtomicFact::HasSequenceLimsupFact(f) => Ok(crate::ast::fact::HasSequenceLimsupFact {
+                fact_id,
+                sequence: self.inst_obj_rec(&f.sequence, param_to_arg_map)?,
+                value: self.inst_obj_rec(&f.value, param_to_arg_map)?,
+                line_file: f.line_file.clone(),
+            }
+            .into()),
+            AtomicFact::HasSequenceLiminfFact(f) => Ok(crate::ast::fact::HasSequenceLiminfFact {
+                fact_id,
+                sequence: self.inst_obj_rec(&f.sequence, param_to_arg_map)?,
+                value: self.inst_obj_rec(&f.value, param_to_arg_map)?,
+                line_file: f.line_file.clone(),
+            }
+            .into()),
             AtomicFact::NotHasSequenceLimitFact(f) => {
                 Ok(crate::ast::fact::NotHasSequenceLimitFact {
+                    fact_id,
+                    sequence: self.inst_obj_rec(&f.sequence, param_to_arg_map)?,
+                    value: self.inst_obj_rec(&f.value, param_to_arg_map)?,
+                    line_file: f.line_file.clone(),
+                }
+                .into())
+            }
+            AtomicFact::NotHasSequenceLimsupFact(f) => {
+                Ok(crate::ast::fact::NotHasSequenceLimsupFact {
+                    fact_id,
+                    sequence: self.inst_obj_rec(&f.sequence, param_to_arg_map)?,
+                    value: self.inst_obj_rec(&f.value, param_to_arg_map)?,
+                    line_file: f.line_file.clone(),
+                }
+                .into())
+            }
+            AtomicFact::NotHasSequenceLiminfFact(f) => {
+                Ok(crate::ast::fact::NotHasSequenceLiminfFact {
                     fact_id,
                     sequence: self.inst_obj_rec(&f.sequence, param_to_arg_map)?,
                     value: self.inst_obj_rec(&f.value, param_to_arg_map)?,

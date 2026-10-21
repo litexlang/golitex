@@ -5,8 +5,8 @@ algebraic identity. It shows how the source domain condition survives generated
 function calls and the handwritten adapter. For the smaller representation
 conversion alone, start with [adding zero](../add_zero/README.md).
 
-The complete recursive residual-bound experiment was paused at the user's
-request on 2026-10-13; it is not an accepted end-to-end example.
+The recursive residual-bound example also has a generated proof checked by
+Lean as of 2026-10-21. Its ordinary Mathlib interface remains unfinished.
 
 ## Litex input
 
@@ -74,15 +74,16 @@ also have a checked [PositiveAdapter](PositiveAdapter.lean) and
 `newtonPositive (x : ℝ) (hx : 0 < x) : 0 < (x + 2 / x) / 2` and exercise
 `claim`, a positive input domain and a positive return constraint.
 
-## Paused recursive experiment
+## Recursive residual bound
 
 The larger [source](../../../../lean/examples/newton_residual_bound/statement.lit)
 targets `|x_n^2 - 2| ≤ 4*(1/4)^(2^n)` for the recurrence
-`x_0 = 1`, `x_(n+1) = (x_n + 2/x_n)/2`. Strict verification and two identical
-whole-file generation runs succeeded. Full generated Lean checking and the
-native all-index interface did not complete acceptance before work was stopped.
-The generated output is about 7.3 MB; generation took about 18 minutes per run,
-and an isolated bound step exceeded a finite Lean heartbeat budget. This work
-is preserved for later investigation, without a claim of complete Lean
-verification or a speed advantage. Development notes and receipts remain in the
-local-only `scripts/litex_to_lean/` workspace.
+`x_0 = 1`, `x_(n+1) = (x_n + 2/x_n)/2`. On 2026-10-21, strict compilation and
+full generated Lean checking succeeded after constructor sharing and numerical
+observation fixes. The output is 1,580,059 bytes, down from 7,341,525 bytes.
+The check used Lean 4.31.0 and `maxHeartbeats = 2000000`, above Lean's default
+200000 budget.
+
+The native all-index interface remains unfinished. This check establishes the
+generated Litex theorem, with its explicit semantic parameters. Development
+notes and receipts remain in the local-only `scripts/litex_to_lean/` workspace.

@@ -50,6 +50,18 @@ impl LitexToLeanCompiler {
         self.compile_wd_body(proof, &source_position)
     }
 
+    pub(in crate::compile_to_lean) fn compile_wd_requirement(
+        &self,
+        result: &VerifyFactResult,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        if let Some(proof) = position.bound_wd_requirement(result) {
+            return Ok(proof);
+        }
+        self.compile_verify(result, position)
+            .map(|(_, proof)| proof)
+    }
+
     fn compile_wd_body(
         &self,
         proof: &ObjWellDefinedProof,

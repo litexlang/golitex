@@ -243,8 +243,6 @@ impl LitexToLeanCompiler {
             // elaborating the zero in this standalone nonzero proposition.
             native_guards.push(format!("have _litex_nz_{index} : ({} : ℂ) ≠ 0 := Litex.NativeBridge.nativeNonzeroOfDenote {term} {} {} {}", native.0, native.0, native.1, proved.1));
         }
-        let left = self.compile_object_reference(&fact.left, position)?;
-        let right = self.compile_object_reference(&fact.right, position)?;
         let x = self.compile_numeric_observation(&fact.left, position)?;
         let y = self.compile_numeric_observation(&fact.right, position)?;
         // The empty Rational tag contains no monomial trace. The Lean kernel
@@ -263,7 +261,9 @@ impl LitexToLeanCompiler {
             "(by ring)".to_string()
         };
         Ok(format!(
-            "(Litex.NativeBridge.sameOfDenoteNumber {left} {right} {} {} {} {} {normalization})",
+            // Endpoint WD was checked by the equality dispatcher. The exact
+            // denotation certificates determine these same two objects.
+            "(Litex.NativeBridge.sameOfDenoteNumber _ _ {} {} {} {} {normalization})",
             x.0, y.0, x.1, y.1
         ))
     }

@@ -398,9 +398,17 @@ fn project_template_application_domain(
     if let TemplateApplicationDomainProof::Rechecked {
         argument_well_defined,
         requirement_fact_verified,
+        argument_scope,
         ..
     } = domain
     {
+        fields.push((
+            "argument_scope",
+            argument_scope
+                .as_ref()
+                .map(|scope| super::wd_by_def::project_fn_argument_scope(scope, runtime))
+                .unwrap_or(JsonValue::Null),
+        ));
         fields.push((
             "argument_well_defined",
             JsonValue::Array(

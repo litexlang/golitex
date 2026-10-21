@@ -11,7 +11,11 @@ pub fn calculate_closed_atomic_except_equality_fact(
     use NumberCompareResult::{Equal, Greater, Less};
 
     let proof = match fact {
-        HasSequenceLimitFact(_)
+        HasSequenceLimsupFact(_)
+        | HasSequenceLiminfFact(_)
+        | HasSequenceLimitFact(_)
+        | NotHasSequenceLimsupFact(_)
+        | NotHasSequenceLiminfFact(_)
         | NotHasSequenceLimitFact(_)
         | HasFunctionLimitFact(_)
         | NotHasFunctionLimitFact(_) => return None,

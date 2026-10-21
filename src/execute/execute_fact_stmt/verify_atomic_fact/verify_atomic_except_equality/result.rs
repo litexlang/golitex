@@ -124,6 +124,8 @@ pub struct UserDefinedPropDefinitionProof {
 pub enum BuiltinPropDefinitionProof {
     FunctionLimit(BuiltinFunctionLimitDefinitionProof),
     SequenceLimit(BuiltinSequenceLimitDefinitionProof),
+    SequenceLiminf(BuiltinSequenceLiminfDefinitionProof),
+    SequenceLimsup(BuiltinSequenceLimsupDefinitionProof),
     Subset(BuiltinSubsetDefinitionProof),
     Superset(BuiltinSupersetDefinitionProof),
     ProperSubset(BuiltinProperSubsetDefinitionProof),
@@ -227,6 +229,14 @@ pub fn atomic_except_equality_fact_result_from_success(
 }
 
 pub struct BuiltinSequenceLimitDefinitionProof {
+    pub requirement_facts: Vec<crate::ast::fact::Fact>,
+    pub proof_of_requirement_facts: Vec<crate::execute::execute_fact_stmt::VerifyFactResult>,
+}
+pub struct BuiltinSequenceLiminfDefinitionProof {
+    pub requirement_facts: Vec<crate::ast::fact::Fact>,
+    pub proof_of_requirement_facts: Vec<crate::execute::execute_fact_stmt::VerifyFactResult>,
+}
+pub struct BuiltinSequenceLimsupDefinitionProof {
     pub requirement_facts: Vec<crate::ast::fact::Fact>,
     pub proof_of_requirement_facts: Vec<crate::execute::execute_fact_stmt::VerifyFactResult>,
 }

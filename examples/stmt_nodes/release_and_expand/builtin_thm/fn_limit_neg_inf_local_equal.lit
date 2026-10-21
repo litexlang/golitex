@@ -1,0 +1,12 @@
+# Finite real function limit at infinity; all premises are checked.
+# Run: target/release/litex -strict -lang en -f examples/stmt_nodes/release_and_expand/builtin_thm/fn_limit_neg_inf_local_equal.lit
+
+thm fn_limit_neg_inf_local_equal_example:
+    ? forall fa,ga fn(x R) R,L R,r R:
+        $has_limit_neg_inf(fa,L)
+        forall x {t R:t<r}:
+            fa(x)=ga(x)
+        =>:
+            $has_limit_neg_inf(ga,L)
+    release thm fn_limit_neg_inf_real_accumulation()
+    release thm fn_limit_neg_inf_local_equal(fa,ga,L,r)

@@ -1,0 +1,6 @@
+# Expected normal rejection; no false extremal candidate or WD evidence may be invented.
+forall a seq(R),M R+:
+    forall n N+:
+        abs(a(n))<=M
+    =>:
+        lim(a) $in R

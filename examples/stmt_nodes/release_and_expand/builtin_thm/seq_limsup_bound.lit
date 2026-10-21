@@ -1,0 +1,9 @@
+# Finite real sequence extremal limit; all premises are checked.
+# Run: target/release/litex -strict -lang en -f examples/stmt_nodes/release_and_expand/builtin_thm/seq_limsup_bound.lit
+
+thm seq_limsup_bound_example:
+    ? forall a seq(R),L R,epsilon R+:
+        $has_seq_limsup(a,L)
+        =>:
+            exist n0 N+ st {{n N+:n>=n0} $subset preimage_set(a,{v R:v<L+epsilon})}
+    release thm seq_limsup_bound(a,L,epsilon)

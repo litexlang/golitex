@@ -32,8 +32,12 @@ pub const LIM: &str = "lim";
 pub const HAS_SEQ_LIMIT: &str = "has_seq_limit";
 pub const HAS_LIMIT_LEFT: &str = "has_limit_left";
 pub const HAS_LIMIT_RIGHT: &str = "has_limit_right";
+pub const HAS_LIMIT_NEG_INF: &str = "has_limit_neg_inf";
+pub const HAS_LIMIT_POS_INF: &str = "has_limit_pos_inf";
 pub const LIM_LEFT: &str = "lim_left";
 pub const LIM_RIGHT: &str = "lim_right";
+pub const LIM_NEG_INF: &str = "lim_neg_inf";
+pub const LIM_POS_INF: &str = "lim_pos_inf";
 pub const HAS_LIMIT_AT: &str = "has_limit_at";
 pub const SEQ: &str = "seq";
 pub const FINITE_SEQ: &str = "finite_seq";
@@ -297,7 +301,11 @@ pub(super) fn is_reserved_object_name(name: &str) -> bool {
             | SEQ
             | LIM
             | LIM_LEFT
+            | LIMSUP
+            | LIMINF
             | LIM_RIGHT
+            | LIM_POS_INF
+            | LIM_NEG_INF
             | INDEX_UNION
             | INDEX_INTERSECT
             | INDEX_CART
@@ -316,3 +324,8 @@ pub const COTH: &str = "coth";
 pub const SECH: &str = "sech";
 pub const CSCH: &str = "csch";
 pub const SET_DIFF: &str = "set_diff";
+
+pub const LIMSUP: &str = "limsup";
+pub const LIMINF: &str = "liminf";
+pub const HAS_SEQ_LIMSUP: &str = "has_seq_limsup";
+pub const HAS_SEQ_LIMINF: &str = "has_seq_liminf";

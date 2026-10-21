@@ -1422,6 +1422,10 @@ fn project_by_thm(result: &ExecByThmStmtResult, runtime: &Runtime) -> JsonValue 
                 ),
                 ("dom_proofs", project_verify_facts(&s.dom_proofs, runtime)),
                 (
+                    "theorem_derivation",
+                    super::theorem::project_theorem_derivation(&s.theorem_derivation, runtime),
+                ),
+                (
                     "dom_stores",
                     JsonValue::Array(
                         s.dom_stores

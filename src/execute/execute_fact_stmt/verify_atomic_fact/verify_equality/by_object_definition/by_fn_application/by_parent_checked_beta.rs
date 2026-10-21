@@ -91,6 +91,9 @@ pub enum TemplateApplicationDomainProof {
         checked_domain: FnSet,
         argument_well_defined: Vec<Box<ObjWellDefinedProof>>,
         requirement_fact_verified: Vec<crate::execute::execute_fact_stmt::VerifyFactResult>,
+        argument_scope: Option<
+            crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnObjArgumentScope,
+        >,
     },
 }
 
@@ -455,15 +458,16 @@ impl Runtime {
                     else {
                         return Ok(None);
                     };
-                    if !verification.is_fully_known() {
+                    if !verification.stages.is_fully_known() {
                         return Ok(None);
                     }
-                    let (argument_well_defined, requirement_fact_verified) =
+                    let (argument_well_defined, requirement_fact_verified, argument_scope) =
                         verification.into_success_child_proofs();
                     TemplateApplicationDomainProof::Rechecked {
                         checked_domain: literal.body.clone(),
                         argument_well_defined,
                         requirement_fact_verified,
+                        argument_scope,
                     }
                 };
                 let source = ParentCheckedBetaFunctionBody::TemplateAnonymousFunction {

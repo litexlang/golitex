@@ -1,0 +1,3 @@
+# Expected normal rejection; no candidate may be invented.
+have fn f(x R) R=x
+lim_pos_inf(f) $in R

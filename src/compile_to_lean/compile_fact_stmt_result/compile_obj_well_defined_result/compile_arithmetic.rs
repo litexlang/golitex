@@ -38,16 +38,13 @@ impl LitexToLeanCompiler {
         )?;
         let mut proofs = Vec::new();
         for (index, requirement) in requirements.iter().enumerate() {
-            proofs.push(
-                self.compile_verify(
-                    requirement,
-                    &SourcePosition {
-                        before: children.len() + index,
-                        ..*position
-                    },
-                )?
-                .1,
-            );
+            proofs.push(self.compile_wd_requirement(
+                requirement,
+                &SourcePosition {
+                    before: children.len() + index,
+                    ..*position
+                },
+            )?);
         }
         let offset = usize::from(division);
         ensure_complex_member(&source_subject(&requirements[offset])?, left)?;
@@ -95,8 +92,10 @@ impl LitexToLeanCompiler {
             before: children.len() + requirements.len(),
             ..*position
         };
-        let x = self.compile_numeric_observation(left, &formed)?;
-        let y = self.compile_numeric_observation(right, &formed)?;
+        // The ordered child certificates are already in this result. Do not
+        // walk the enclosing proof tree again to rediscover their formation.
+        let x = self.numeric_wd(&children[0], &formed)?;
+        let y = self.numeric_wd(&children[1], &formed)?;
         let (name, symbol, bridge) = operation.names();
         let closed = match (&x.3, &y.3) {
             (Some(x), Some(y)) => match operation {
@@ -107,11 +106,13 @@ impl LitexToLeanCompiler {
             },
             _ => None,
         };
+        // The child certificates determine their scalar arguments. Reprinting
+        // x.0/y.0 here duplicates the observation tree at every arithmetic node.
         Ok((
             format!("({} {symbol} {})", x.0, y.0),
             format!(
-                "(Litex.NativeBridge.denote{bridge} {arguments} {} {} {} {})",
-                x.0, y.0, x.1, y.1
+                "(Litex.NativeBridge.denote{bridge} {arguments} _ _ {} {})",
+                x.1, y.1
             ),
             format!("(Litex.{name}InC {arguments})"),
             closed,
@@ -139,15 +140,13 @@ impl LitexToLeanCompiler {
                 ..*position
             },
         )?;
-        let member = self
-            .compile_verify(
-                &requirements[0],
-                &SourcePosition {
-                    before: 1,
-                    ..*position
-                },
-            )?
-            .1;
+        let member = self.compile_wd_requirement(
+            &requirements[0],
+            &SourcePosition {
+                before: 1,
+                ..*position
+            },
+        )?;
         ensure_complex_member(&source_subject(&requirements[0])?, argument)?;
         Ok(format!("{a} {member}"))
     }
@@ -177,10 +176,10 @@ impl LitexToLeanCompiler {
             before: 2,
             ..*position
         };
-        let x = self.compile_numeric_observation(argument, &formed)?;
+        let x = self.numeric_wd(&children[0], &formed)?;
         Ok((
             format!("(- {})", x.0),
-            format!("(Litex.NativeBridge.denoteNeg {arguments} {} {})", x.0, x.1),
+            format!("(Litex.NativeBridge.denoteNeg {arguments} _ {})", x.1),
             format!("(Litex.negInC {arguments})"),
             x.3.as_ref()
                 .and_then(|value| EvalRational::new(0, 1)?.sub(value)),
@@ -220,16 +219,13 @@ impl LitexToLeanCompiler {
         let integer = closed_integer(exponent);
         let mut proved = Vec::new();
         for (index, requirement) in requirements.iter().enumerate() {
-            proved.push(
-                self.compile_verify(
-                    requirement,
-                    &SourcePosition {
-                        before: 2 + index,
-                        ..*position
-                    },
-                )?
-                .1,
-            );
+            proved.push(self.compile_wd_requirement(
+                requirement,
+                &SourcePosition {
+                    before: 2 + index,
+                    ..*position
+                },
+            )?);
         }
         let formed = SourcePosition {
             before: 2 + requirements.len(),
@@ -260,7 +256,7 @@ impl LitexToLeanCompiler {
         let he_value = if integer.is_none() {
             format!("(Litex.NativeBridge.asNat_spec {e} {})", proved[1])
         } else {
-            let exp_native = self.compile_numeric_observation(exponent, &formed)?;
+            let exp_native = self.numeric_wd(&children[1], &formed)?;
             let integer_complex = format!("({exponent_value} : ℂ)");
             format!("(Litex.NativeBridge.sameOfDenoteNumber {e} (Litex.number (M := M) {integer_complex}) {} {integer_complex} {} (Litex.NativeBridge.denoteNumber (M := M) {integer_complex}) (by norm_num))", exp_native.0, exp_native.1)
         };
@@ -303,13 +299,10 @@ impl LitexToLeanCompiler {
             before: 2 + requirements.len(),
             ..*position
         };
-        let x = self.compile_numeric_observation(base, &formed)?;
+        let x = self.numeric_wd(&children[0], &formed)?;
         Ok((
             format!("({} ^ {exponent_value})", x.0),
-            format!(
-                "(Litex.NativeBridge.denote{bridge} {arguments} {} {})",
-                x.0, x.1
-            ),
+            format!("(Litex.NativeBridge.denote{bridge} {arguments} _ {})", x.1),
             format!("(Litex.{name}InC {arguments})"),
             x.3.as_ref()
                 .zip(integer)

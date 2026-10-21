@@ -50,13 +50,19 @@ Real sequence limit tracers:
 - [Explicit epsilon-N proof for 1/k, then selected-value use](wd/sequence_limit.lit).
 - [Equivalent seq(R) / fn(k N+) R and finite-existence interfaces](wd/sequence_limit_interfaces.lit).
 - [Common sequence-limit proofs](wd/sequence_limit_common_proofs.lit): explicit `1/n -> 0`, rational examples, `sin(n)/n -> 0`, `sqrt(1+1/n) -> 1`, and `(1/2)^n -> 0`; also finite initial changes, even-index subsequences, eventual positivity/nonzero terms, and divergence of `n`. Each convergence proof precedes `lim` use.
-- [Limit rules and their premises](../docs/sequence-limits.md), with one `seq_limit_*.lit` example per theorem in `stmt_nodes/release_and_expand/builtin_thm/`.
+- One `seq_limit_*.lit` example per theorem in `stmt_nodes/release_and_expand/builtin_thm/`.
 
 Finite-point real function limit tracers:
 
 - [Explicit punctured epsilon-delta proof, then selected-value use](wd/real_function_limit_at.lit): `x^2/x` at zero without calling the function at zero.
 - [Polynomial and rational limit proofs](wd/real_function_limit_common_proofs.lit), [relative endpoint](wd/real_function_limit_endpoints.lit), and [existence/congruence interfaces](wd/real_function_limit_interfaces.lit).
-- [All 22 rules and their domain premises](../docs/function-limits.md), with one `fn_limit_at_*.lit` example per theorem in `stmt_nodes/release_and_expand/builtin_thm/` and `real_function_limit_*.lit` rejection controls in `wd_negative/`.
+- One `fn_limit_at_*.lit` example per theorem in `stmt_nodes/release_and_expand/builtin_thm/` and `real_function_limit_*.lit` rejection controls in `wd_negative/`.
+
+Left/right function limit tracers:
+
+- [Jump: left -1, right 1 and no ordinary candidate](wd/real_function_limit_sides.lit), with explicit directional epsilon-delta proofs.
+- [Matching sides for x²](wd/real_function_limit_sides_agree.lit), [R+ endpoint and absent left side](wd/real_function_limit_sides_endpoint.lit), and [direction-preserving interfaces](wd/real_function_limit_sides_interfaces.lit).
+- Directional theorem and bridge examples are in `stmt_nodes/release_and_expand/builtin_thm/`; rejection controls are in `wd_negative/real_function_limit_sides_*.lit`.
 
 ## Other
 

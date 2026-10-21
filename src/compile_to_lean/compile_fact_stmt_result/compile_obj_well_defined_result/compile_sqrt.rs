@@ -31,15 +31,13 @@ impl LitexToLeanCompiler {
                 "The first requirement must certify this exact argument in R.",
             ));
         }
-        let real = self
-            .compile_verify(
-                &requirements[0],
-                &SourcePosition {
-                    before: 1,
-                    ..*position
-                },
-            )?
-            .1;
+        let real = self.compile_wd_requirement(
+            &requirements[0],
+            &SourcePosition {
+                before: 1,
+                ..*position
+            },
+        )?;
         if !matches!(source_subject(&requirements[1])?,
             Fact::AtomicFact(AtomicFact::LessEqualFact(ref fact))
                 if is_exact_zero(&fact.left) && fact.right.ir() == argument.ir())
@@ -49,15 +47,13 @@ impl LitexToLeanCompiler {
                 "The second requirement must be zero <= this exact argument.",
             ));
         }
-        let nonnegative = self
-            .compile_verify(
-                &requirements[1],
-                &SourcePosition {
-                    before: 2,
-                    ..*position
-                },
-            )?
-            .1;
+        let nonnegative = self.compile_wd_requirement(
+            &requirements[1],
+            &SourcePosition {
+                before: 2,
+                ..*position
+            },
+        )?;
         Ok(format!("(Litex.sqrt {object} {real} {nonnegative})"))
     }
 }

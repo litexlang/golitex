@@ -3,15 +3,14 @@
 These lecture notes develop elementary topology from a single question:
 what makes a function continuous when no distance has been specified?
 Two topologies on the set `{0, 1}` provide the running example. Their points
-are identical, but their open sets give different answers about continuity
-and connectedness.
+are identical, but their open sets give different answers about continuity,
+connectedness and separation. Later chapters add compactness, products, a
+compact Hausdorff homeomorphism package, and the metric topology on `R`
+with the intermediate value theorem.
 
-Read [topology.lit](topology.lit) from beginning to end. The first chapter
-constructs spaces and studies open and closed subsets. The second develops
-preimages, continuity and homeomorphisms. The third introduces connectedness
-and shows that continuous surjections preserve it. In Litex, the same subsets
-and functions used in the examples become arguments to the general definitions
-and theorems.
+Read [topology.lit](topology.lit) from beginning to end. In Litex, the same
+subsets and functions used in the examples become arguments to the general
+definitions and theorems.
 
 ## From subsets to spaces
 
@@ -81,6 +80,41 @@ $is_connected(points, indiscrete)
 not $is_connected(points, discrete)
 ```
 
+## Separation, compactness, products and the real line
+
+Chapter 4 defines T0, T1 and Hausdorff, proves the chain
+Hausdorff ⇒ T1 ⇒ T0, and shows that T1 (hence Hausdorff) spaces have closed
+singletons. The discrete two-point space is Hausdorff; the indiscrete one
+fails even T0.
+
+Chapter 5 defines indexed compactness and proves that continuous images of
+compact sets are compact. Chapter 6 introduces open rectangles and
+product-open sets, builds the discrete and indiscrete grids on
+`cart({0,1},{0,1})`, and proves that a product of two spaces with only
+trivial opens remains connected.
+
+Chapter 7 packages the homeomorphism conclusion for a continuous bijection
+that already has a continuous inverse, with the discrete two-point swap as
+instance, and records that the discrete two-point space is a compact
+Hausdorff space. The classical theorem “compact Hausdorff continuous
+bijection ⇒ homeomorphism” is not proved in full generality here; the notes
+keep the continuous-inverse hypothesis explicit.
+
+Chapter 8 equips `R` with the metric topology, builds `real_line`, and proves
+the intermediate value theorem for continuous real functions on a closed
+interval by a least-upper-bound argument.
+
+<!-- litex:skip-test -->
+```litex
+$is_Hausdorff(points, discrete)
+not $is_T0(points, indiscrete)
+by thm continuous_image_of_compact_is_compact(points, points, discrete, discrete, identity, {0})
+    => $is_compact_subset(points, discrete, fn_range(\restricted<discrete.carrier, discrete.carrier, identity, {0}>))
+$is_connected(grid, indiscrete_grid)
+by thm continuous_bijection_with_continuous_inverse_is_homeomorphism(points, points, discrete, discrete, swap, swap)
+    => $is_homeomorphism(points, points, discrete, discrete, swap, swap)
+```
+
 ## Reading guide
 
 | Sections | Mathematical progression |
@@ -93,12 +127,18 @@ not $is_connected(points, discrete)
 | 3.1–3.3 | Connectedness; trivial-open spaces; discrete `{0,1}` disconnected, indiscrete connected |
 | 3.4–3.5 | Preimage union and intersection; continuous surjections preserve connectedness |
 | 3.6 | Clopen characterization in both directions; nontrivial clopen on the discrete space |
+| 4.1–4.4 | T0 / T1 / Hausdorff; Hausdorff ⇒ T1 ⇒ T0; closed singletons; discrete vs indiscrete |
+| 5.1–5.3 | Restrictions; compact subsets and spaces; continuous images of compact sets |
+| 6.1–6.3 | Open rectangles; product opens; discrete / indiscrete grids; trivial-open products connected |
+| 7.1–7.4 | Closed unions; two-point Hausdorff closed sets; continuous bijection with continuous inverse; compact discrete `{0,1}` |
+| 8.1–8.3 | Metric opens on `R`; `real_line`; intermediate value theorem via least upper bounds |
 
 These are original, selected lectures, not a textbook translation or a
-complete topology course. Compactness, separation axioms, subspace and product
-topologies, metric spaces and algebraic topology are outside this development.
-For a separate checked slice reaching compact images, see the existing
-[topology concepts showcase](../math_concepts_in_litex/9_topology/README.md).
+complete topology course. Subspace topology, general product topology as a
+constructed space, path connectedness, one-sided limits and algebraic topology
+remain outside this development. For a separate checked slice that also
+reaches compact images in a settings-first style, see
+[topology concepts](../math_concepts_in_litex/9_topology/README.md).
 
 The complete lecture passes strict Litex verification and contains no user
 `trust`, `axiom` or `abstract_prop`. Verification uses Litex's own verifier

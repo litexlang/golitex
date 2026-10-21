@@ -10,6 +10,28 @@ is the single home for the language guide and detailed reference.
 
 > **Litex is an experimental hobby project still in beta. Expect rough edges.**
 
+<a id="math-is-code"></a>
+
+## Mathematics as source code
+
+**Write math, get formalized code: because the math already is.**
+
+Litex makes mathematical objects, definitions and facts part of the formal
+source itself. In the [example below](#the-core-reading-model), `x + 1 = 3`
+is both the mathematical claim and the statement submitted for checking.
+
+Authors provide the ideas, conditions and meaningful proof steps. For ordinary
+fact statements, the executor checks conditions, searches for local grounds,
+records the result and makes accepted facts available to later steps. Its
+knowledge storage and lookup follow mathematical structure, scope and
+conditions of use.
+
+This division of work is meant to reduce the extra rules and operations an
+author must learn. Supporting familiar writing requires work in the executor;
+Litex is still exploring how far it can go. This manual gives the precise
+syntax, supported checks and boundaries. Supported Lean compilation is a
+further use of the source and its verification evidence.
+
 <a id="manual-introduction"></a>
 
 ## How to use this manual
@@ -24,6 +46,7 @@ identity may need the defining equation as an explicit bridge.
 
 | Part | Read it to | Start here |
 |---|---|---|
+| Core idea | Understand the division of work between author and executor | [Mathematics as source code](#math-is-code) |
 | Design principles | Understand the mathematical object model and checking contracts | [Principles](#design-principles), [core model](#the-core-reading-model) |
 | System pipeline | Follow source input through the complete system and identify each owner's job | [Pipeline and component map](#system-pipeline) |
 | Project organization | Select dependencies/exports and understand names and load order | [Projects](#project-organization) |
@@ -9865,7 +9888,7 @@ equivalently `a fn(k N+) R`, and `L R`. After a candidate or finite convergence
 existence is proved, `lim(a)` is a well-defined real object. WD consumes the
 proof; it does not infer a limit from the sequence body. For explicit epsilon
 proofs, native limit laws, exact premises and compatibility, see
-[Real sequence limits](sequence-limits.md).
+the maintained examples under `examples/wd/`.
 
 ```litex
 forall a seq(R), L R:
@@ -9882,7 +9905,6 @@ unary real domain and punctured epsilon-delta control. After a candidate or
 finite existence proof, `lim(f,x0)` selects the unique real value. The point
 need not belong to the domain; empty or isolated domains supply no vacuous
 limit. WD consumes proof and never discovers a limit from the function body.
-See [Function limits](function-limits.md) for explicit BT calls and examples.
 
 ```litex
 forall f fn(x R) R, x0,L R:

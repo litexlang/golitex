@@ -15,7 +15,6 @@ impl LitexToLeanCompiler {
         proof: &FnObjObjWellDefinedProof,
         receiver: &str,
         output: &Obj,
-        receiver_member: &str,
         child_index: usize,
         requirement_index: usize,
         position: &SourcePosition<'_>,
@@ -70,17 +69,24 @@ impl LitexToLeanCompiler {
             ..domain_position
         };
         let cart_term = self.compile_object_reference(output, &formed)?;
-        let range = self.compile_object_reference(&domain_member.set, &formed)?;
+        self.compile_object_reference(&domain_member.set, &formed)?;
         let factor_term = self.compile_object_reference(factor, &formed)?;
+        // A Cartesian return uses the generic CallOn constructor. Its first
+        // stage has already replayed every domain proof; use that same call's
+        // output law without printing the receiver construction again.
         let setup = format!(
-            "let _receiver := {receiver}\nlet _argument := {argument_term}\nlet _cart := {cart_term}\nhave _cartMember : Litex.In _receiver _cart := {receiver_member}"
+            "let _receiver := {receiver}\nlet _argument := {argument_term}\nlet _cart := {cart_term}\nhave _cartMember : Litex.In _receiver _cart := Litex.callOnInOutput _receiver"
         );
-        let call_body = format!(
-            "{setup}\nlet _sourceRange := {range}\nhave _indexMember : M.mem (Litex.denote _argument) (Litex.FiniteFunction.indexSet {n}) := by\n  have _source := {domain_proof}\n  change M.mem (Litex.denote _argument) (Litex.denote (Litex.closedRange (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (({n} : ℕ) : ℂ)) _sourceRange.wd.1 _sourceRange.wd.2)) at _source\n  rw [Litex.closedRange_indexSet] at _source\n  exact _source\nexact Litex.cartCall _receiver _cart _argument _cartMember _indexMember"
-        );
-        let call = format!("(by\n  {}\n)", call_body.replace('\n', "\n  "));
-        let coordinate =
-            coordinate_membership("_receiver", &factor_term, "_cartMember", index - 1, n);
+        let call = match position.bound_fn_call(application, proof) {
+            Some(call) => call,
+            None => {
+                let body = format!(
+                    "{setup}\nhave _indexMember : M.mem (Litex.denote _argument) (Litex.FiniteFunction.indexSet {n}) := Litex.indexSetMemberOfClosedRange {domain_proof}\nexact Litex.cartCall _receiver _cart _argument _cartMember _indexMember"
+                );
+                format!("(by\n  {}\n)", body.replace('\n', "\n  "))
+            }
+        };
+        let coordinate = coordinate_membership("_cartMember", index - 1, n);
         let member_body = format!("{setup}\nexact {coordinate}");
         let member = format!(
             "(show Litex.In {call} {factor_term} from by\n  {}\n)",

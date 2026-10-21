@@ -1,0 +1,4 @@
+# Expected normal rejection; no false extremal candidate or WD evidence may be invented.
+have fn a(k N+) R=3
+release thm seq_limsup_constant(a,3)
+liminf(a)=3

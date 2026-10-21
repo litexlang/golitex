@@ -28,8 +28,8 @@ impl LitexToLeanCompiler {
             )
         })?;
         let receiver = self.compile_object_reference(&source.element, position)?;
-        let carrier = self.compile_object_reference(&source.set, position)?;
-        let factor = self.compile_object_reference(factor, position)?;
+        self.compile_object_reference(&source.set, position)?;
+        self.compile_object_reference(factor, position)?;
         let n = cart.args.len();
         let term = if let Obj::ProductShape(ProductShape::Tuple(tuple)) = &source.element {
             if tuple.args.len() != n {
@@ -40,12 +40,12 @@ impl LitexToLeanCompiler {
             }
             self.compile_object_reference(&tuple.args[index], position)?
         } else {
-            format!("(Litex.cartCall {receiver} {carrier} (Litex.number (M := M) ({} : ℂ)) {member} (by change M.mem (M.number ({} : ℂ)) (Litex.FiniteFunction.indexSet {n}); simpa [Litex.FiniteFunction.index] using (Litex.FiniteFunction.index_mem (M := M) ({index} : Fin {n}))))", index + 1, index + 1)
+            format!("(Litex.cartCall {receiver} _ (Litex.number (M := M) ({} : ℂ)) {member} (by change M.mem (M.number ({} : ℂ)) (Litex.FiniteFunction.indexSet {n}); simpa [Litex.FiniteFunction.index] using (Litex.FiniteFunction.index_mem (M := M) ({index} : Fin {n}))))", index + 1, index + 1)
         };
         let proof = if matches!(&source.element, Obj::ProductShape(ProductShape::Tuple(_))) {
             format!("(by simpa only [Litex.FiniteFunction.call_tuple] using (Litex.FiniteFunction.coordinate_mem {member} ({index} : Fin {n})))")
         } else {
-            coordinate_membership(&receiver, &factor, member, index, n)
+            coordinate_membership(member, index, n)
         };
         Ok((term, proof))
     }
@@ -182,14 +182,8 @@ impl LitexToLeanCompiler {
             &proof.carrier_equal,
             position,
         )?;
-        let receiver = self.compile_object_reference(&receiver, position)?;
-        let coordinate = coordinate_membership(
-            &receiver,
-            &source,
-            &member,
-            proof.index - 1,
-            cart.args.len(),
-        );
+        self.compile_object_reference(&receiver, position)?;
+        let coordinate = coordinate_membership(&member, proof.index - 1, cart.args.len());
         Ok(format!("(Litex.inOfSame {call} {call} {source} {target} (Litex.sameRefl {call}) {equality} {coordinate})"))
     }
 
@@ -253,10 +247,22 @@ impl LitexToLeanCompiler {
         let (cart, cart_member) =
             self.compile_cart_shape_member(&receiver, &finite.source, &formed)?;
         let n = finite.source.dimension();
-        let source_range = self.compile_object_reference(domain, &formed)?;
+        if matches!(&finite.source, KnownTupleShapeProof::CartesianMembership(source)
+            if source.subject_equal.path.is_empty() && source.carrier_equal.path.is_empty())
+        {
+            // The original membership names this exact Cartesian wrapper;
+            // Lean can infer it from that citation. Validation above still
+            // checks its source constructor and complete finite signature.
+            if matches!(&receiver, Obj::Identifier(_) | Obj::Literal(_))
+                && matches!(argument, Obj::Identifier(_) | Obj::Literal(_))
+            {
+                return Ok(format!("(Litex.cartCall {receiver_term} _ {argument_term} {cart_member} (Litex.indexSetMemberOfClosedRange (n := {n}) {member}))"));
+            }
+            return Ok(format!("(let _receiver := {receiver_term};\nlet _argument := {argument_term};\nLitex.cartCall _receiver _ _argument {cart_member}\n  (Litex.indexSetMemberOfClosedRange (p := _argument) (n := {n}) {member}))"));
+        }
         // These are data definitions, not hypotheses. Term-level lets retain
         // their defining values when a later proof projects a call's receiver.
-        Ok(format!("(let _receiver := {receiver_term};\nlet _argument := {argument_term};\nlet _cart := {cart};\nlet _sourceRange := {source_range};\nlet _cartMember : Litex.In _receiver _cart := {cart_member};\nlet _indexMember : M.mem (Litex.denote _argument) (Litex.FiniteFunction.indexSet {n}) := by\n  have _source := {member}\n  change M.mem (Litex.denote _argument) (Litex.denote (Litex.closedRange (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (({n} : ℕ) : ℂ)) _sourceRange.wd.1 _sourceRange.wd.2)) at _source\n  rw [Litex.closedRange_indexSet] at _source\n  exact _source;\nLitex.cartCall _receiver _cart _argument _cartMember _indexMember)"))
+        Ok(format!("(let _receiver := {receiver_term};\nlet _argument := {argument_term};\nlet _cart := {cart};\nLitex.cartCall _receiver _cart _argument {cart_member}\n  (Litex.indexSetMemberOfClosedRange (p := _argument) (n := {n}) {member}))"))
     }
 
     /// The recorded Cartesian membership is transported only along its own
@@ -321,18 +327,23 @@ impl LitexToLeanCompiler {
         let literal = Obj::ProductShape(ProductShape::Cart(factors.clone()));
         let cart = self.compile_object_reference(&literal, position)?;
         let subject = self.compile_object_reference(receiver, position)?;
+        if subject_path.path.is_empty() && carrier_path.path.is_empty() {
+            if receiver.ir() != membership.element.ir() || membership.set.ir() != literal.ir() {
+                return Err(LeanCompileError::new(
+                    "Equality/PathEndpoint",
+                    "An empty Cartesian equality path changes its source endpoint.",
+                ));
+            }
+            // Both endpoints were just compiled. Identity transport needs the
+            // original citation, not four more reconstructions of those objects.
+            return Ok((cart, citation));
+        }
         let original = self.compile_object_reference(&membership.element, position)?;
         let carrier = self.compile_object_reference(&membership.set, position)?;
         let subject_equal =
             self.compile_equality_path(receiver, &membership.element, subject_path, position)?;
         let carrier_equal =
             self.compile_equality_path(&membership.set, &literal, carrier_path, position)?;
-        // The original empty paths have just been checked against both
-        // endpoints. Their transport is the identity, so retain the exact
-        // proof without rebuilding the same Cartesian constructor.
-        if subject_path.path.is_empty() && carrier_path.path.is_empty() {
-            return Ok((cart, citation));
-        }
         Ok((cart.clone(), format!("(Litex.inOfSame {original} {subject} {carrier} {cart} ({subject_equal}).symm {carrier_equal} {citation})")))
     }
 
@@ -340,6 +351,19 @@ impl LitexToLeanCompiler {
         &self,
         application: &FnObj,
         proof: &FnObjObjWellDefinedProof,
+        finite: &FiniteFunctionSignatureProof,
+        position: &SourcePosition<'_>,
+    ) -> Result<(StandardSet, String), LeanCompileError> {
+        // A membership-only caller must still replay the original call WD.
+        self.compile_finite_fn_call(application, proof, finite, position)?;
+        self.compile_finite_output_after_call(application, finite, position)
+    }
+
+    /// The caller has just compiled this same call's complete WD. Retain its
+    /// output evidence without recursively compiling and discarding the call.
+    pub(super) fn compile_finite_output_after_call(
+        &self,
+        application: &FnObj,
         finite: &FiniteFunctionSignatureProof,
         position: &SourcePosition<'_>,
     ) -> Result<(StandardSet, String), LeanCompileError> {
@@ -359,32 +383,23 @@ impl LitexToLeanCompiler {
             )
         })?;
         let output = self.compile_numeric_carrier(carrier, position)?;
-        // Replaying the constructor also checks its original index requirement.
-        self.compile_finite_fn_call(application, proof, finite, position)?;
         let (_, member) = self.compile_cart_shape_member(&receiver, &finite.source, position)?;
-        let receiver = self.compile_object_reference(&receiver, position)?;
-        let carrier = self.compile_object_reference(carrier, position)?;
+        self.compile_object_reference(&receiver, position)?;
+        self.compile_object_reference(carrier, position)?;
         Ok((
             output,
-            coordinate_membership(&receiver, &carrier, &member, index - 1, cart.args.len()),
+            coordinate_membership(&member, index - 1, cart.args.len()),
         ))
     }
 }
 
 /// The selected coordinate rule uses a Fin index; the source call uses a
-/// one-based complex numeral. Expose both denotations before normalizing it.
-pub(super) fn coordinate_membership(
-    receiver: &str,
-    factor: &str,
-    member: &str,
-    index: usize,
-    arity: usize,
-) -> String {
-    let body = format!(
-        "change M.mem (Litex.FunctionSemantics.callValue (Litex.denote {receiver}) (M.number ({} : ℂ))) (Litex.denote {factor})\nhave _litex_coordinate := (Litex.FiniteFunction.coordinate_mem {member} ({index} : Fin {arity}))\nchange M.mem (Litex.FunctionSemantics.callValue (Litex.denote {receiver}) (Litex.FiniteFunction.index ({index} : Fin {arity}))) (Litex.denote {factor}) at _litex_coordinate\nsimpa [Litex.FiniteFunction.index] using _litex_coordinate",
+/// one-based complex numeral. The Core bridge checks their exact equality.
+pub(super) fn coordinate_membership(member: &str, index: usize, arity: usize) -> String {
+    format!(
+        "(Litex.FiniteFunction.coordinate_mem_number {member} ({index} : Fin {arity}) ({} : ℂ) (by norm_num))",
         index + 1,
-    );
-    format!("(by\n  {}\n)", body.replace('\n', "\n  "))
+    )
 }
 
 pub(in crate::compile_to_lean) fn finite_call_parts(

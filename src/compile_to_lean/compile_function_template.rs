@@ -10,7 +10,7 @@ impl LitexToLeanCompiler {
         signature: &FnSet,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
-        if !self.function_uses_numeric_interface(signature) {
+        if !Self::function_uses_numeric_interface(signature) {
             let (domain, domain_set) = self.compile_function_base_domain(signature, position)?;
             let output = self.compile_object_reference(&signature.ret_set, position)?;
             let guard = self.compile_function_packed_guard_template(signature, position)?;
@@ -33,10 +33,7 @@ impl LitexToLeanCompiler {
         ))
     }
 
-    pub(in crate::compile_to_lean) fn function_uses_numeric_interface(
-        &self,
-        signature: &FnSet,
-    ) -> bool {
+    pub(in crate::compile_to_lean) fn function_uses_numeric_interface(signature: &FnSet) -> bool {
         let count: usize = signature
             .set_bound_parameters
             .groups
@@ -269,7 +266,7 @@ impl LitexToLeanCompiler {
         signature: &FnSet,
         position: &SourcePosition<'_>,
     ) -> Result<Vec<IdentifierId>, LeanCompileError> {
-        if !self.function_uses_numeric_interface(signature) {
+        if !Self::function_uses_numeric_interface(signature) {
             return Ok(Vec::new());
         }
         let mut positive = Vec::new();
@@ -354,7 +351,7 @@ impl LitexToLeanCompiler {
         signature: &FnSet,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
-        if self.function_uses_numeric_interface(signature) {
+        if Self::function_uses_numeric_interface(signature) {
             self.compile_function_domains(signature, position)?;
         }
         let parameters = signature
@@ -394,7 +391,7 @@ impl LitexToLeanCompiler {
         function: &AnonymousFn,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
-        if self.function_uses_numeric_interface(&function.body) {
+        if Self::function_uses_numeric_interface(&function.body) {
             self.compile_function_domains(&function.body, position)?;
         }
         let parameters = function

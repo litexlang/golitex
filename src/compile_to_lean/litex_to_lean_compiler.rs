@@ -86,7 +86,13 @@ impl LitexToLeanCompiler {
         } else {
             ""
         };
-        Ok(format!("import Litex\n\nset_option linter.unusedVariables false\n\nnamespace LitexCompiled.{artifact_namespace}\n\nuniverse {universes}\nvariable {{M : Litex.Semantics.{{u}}}}{sets}{functions}\n\n{}\nend LitexCompiled.{artifact_namespace}\n", declarations.join("\n\n")))
+        let output = format!("import Litex\n\nset_option linter.unusedVariables false\n\nnamespace LitexCompiled.{artifact_namespace}\n\nuniverse {universes}\nvariable {{M : Litex.Semantics.{{u}}}}{sets}{functions}\n\n{}\nend LitexCompiled.{artifact_namespace}\n", declarations.join("\n\n"));
+        Ok(output
+            .lines()
+            .map(str::trim_end)
+            .collect::<Vec<_>>()
+            .join("\n")
+            + "\n")
     }
 }
 
@@ -258,7 +264,9 @@ fn statement_uses_functions(statement: &ExecStmtResult) -> bool {
 fn object_uses_sets(object: &Obj) -> bool {
     match object {
         Obj::StandardSet(StandardSet::RPos) => true,
-        Obj::SetFormer(SetFormer::ListSet(_) | SetFormer::SetBuilder(_)) => true,
+        Obj::SetFormer(
+            SetFormer::ListSet(_) | SetFormer::SetBuilder(_) | SetFormer::ClosedRange(_),
+        ) => true,
         Obj::SetOperator(SetOperator::Union(_) | SetOperator::PowerSet(_)) => true,
         Obj::ArithmeticOperator(operator) => match operator {
             ArithmeticOperator::Add(x) => object_uses_sets(&x.left) || object_uses_sets(&x.right),

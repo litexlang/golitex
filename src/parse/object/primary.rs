@@ -774,6 +774,22 @@ fn try_parse_keyword_primary(
                 n: Box::new(n),
             }))
         })?)),
+        crate::parse::keywords::LIM_POS_INF | crate::parse::keywords::LIM_NEG_INF => {
+            let positive = token == crate::parse::keywords::LIM_POS_INF;
+            tb.advance()?;
+            let mut args = parse_obj_list_paren(rt, tb)?;
+            if args.len() != 1 {
+                return Err(tb.parse_error("infinity limits expect 1 function argument"));
+            }
+            let approach = if positive {
+                crate::ast::obj::LimitApproach::AtPositiveInfinity
+            } else {
+                crate::ast::obj::LimitApproach::AtNegativeInfinity
+            };
+            Ok(Some(
+                crate::ast::obj::FunctionLimit::with_approach(args.pop().unwrap(), approach).into(),
+            ))
+        }
         crate::parse::keywords::LIM_LEFT | crate::parse::keywords::LIM_RIGHT => {
             let left = token == crate::parse::keywords::LIM_LEFT;
             tb.advance()?;
@@ -790,6 +806,20 @@ fn try_parse_keyword_primary(
             Ok(Some(
                 crate::ast::obj::FunctionLimit::with_approach(args.pop().unwrap(), approach).into(),
             ))
+        }
+        crate::parse::keywords::LIMSUP | crate::parse::keywords::LIMINF => {
+            let upper = token == crate::parse::keywords::LIMSUP;
+            tb.advance()?;
+            let mut args = parse_obj_list_paren(rt, tb)?;
+            if args.len() != 1 {
+                return Err(tb.parse_error("limsup/liminf expect 1 sequence argument"));
+            }
+            let sequence = args.pop().unwrap();
+            Ok(Some(if upper {
+                crate::ast::obj::SequenceLimsup::new(sequence).into()
+            } else {
+                crate::ast::obj::SequenceLiminf::new(sequence).into()
+            }))
         }
         crate::parse::keywords::LIM => {
             tb.advance()?;

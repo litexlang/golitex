@@ -1,0 +1,3 @@
+# Expected rejection: the empty actual domain is not unbounded.
+have fn f(x {}) R=3
+release thm fn_limit_pos_inf_constant(f,3)

@@ -1,0 +1,4 @@
+# Expected normal rejection; no candidate may be invented.
+have fn c(x R) R=3
+release thm fn_limit_pos_inf_real_accumulation()
+release thm fn_limit_pos_inf_constant(c,4)

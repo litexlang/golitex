@@ -9,6 +9,7 @@ mod core;
 mod definition_owned_type;
 mod entry;
 pub(crate) mod fail_to_verify_obj_well_defined;
+mod fn_obj_domain_check_result;
 mod helper;
 mod iterated;
 mod obj_well_defined_by_def_common;
@@ -26,6 +27,11 @@ pub use fail_to_verify_obj_well_defined::{
     fail_to_verify_obj_well_defined_others, FailToVerifyFnSetObjWellDefined,
     FailToVerifyFunctionLimitObjWellDefined, FailToVerifyFunctionSpaceObjWellDefinedResult,
     FailToVerifyLimitOperatorObjWellDefinedResult, FailToVerifyObjWellDefinedResult,
-    FailToVerifySequenceLimitObjWellDefined,
+    FailToVerifySequenceLiminfObjWellDefined, FailToVerifySequenceLimitObjWellDefined,
+    FailToVerifySequenceLimsupObjWellDefined,
 };
 pub use obj_well_defined_proof_by_def::*;
+
+pub use fn_obj_domain_check_result::{
+    FnObjArgumentScope, FnObjDomainCheckResult, FormedFunctionArgument,
+};

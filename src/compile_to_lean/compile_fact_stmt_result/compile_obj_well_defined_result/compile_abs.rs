@@ -42,15 +42,13 @@ impl LitexToLeanCompiler {
                 "The absolute-value domain must certify this exact argument in R.",
             ));
         }
-        let real = self
-            .compile_verify(
-                &requirements[0],
-                &SourcePosition {
-                    before: 1,
-                    ..*position
-                },
-            )?
-            .1;
+        let real = self.compile_wd_requirement(
+            &requirements[0],
+            &SourcePosition {
+                before: 1,
+                ..*position
+            },
+        )?;
         Ok((object, real))
     }
 
@@ -66,7 +64,7 @@ impl LitexToLeanCompiler {
             before: 2,
             ..*position
         };
-        let child = self.compile_numeric_observation(argument, &formed)?;
+        let child = self.numeric_wd(&children[0], &formed)?;
         let (native_real, denotation) = match &child.3 {
             Some(value) => {
                 let r = exact_rational_literal(value, "ℝ")?;

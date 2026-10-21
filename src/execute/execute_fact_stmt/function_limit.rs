@@ -22,12 +22,27 @@ impl Runtime {
                 return Ok(VerifyObjWellDefinedResult::Failed { obj, reason })
             }
         };
-        let point = limit.approach.point();
-        let point_wd = match self.verify_obj_well_definedness(point, state)? {
-            VerifyObjWellDefinedResult::Success(p) => p,
-            VerifyObjWellDefinedResult::Failed { reason, .. } => {
-                return Ok(VerifyObjWellDefinedResult::Failed { obj, reason })
+        let approach_wd = match limit.approach.point() {
+            Some(point) => {
+                let point_wd = match self.verify_obj_well_definedness(point, state)? {
+                    VerifyObjWellDefinedResult::Success(p) => p,
+                    VerifyObjWellDefinedResult::Failed { reason, .. } => {
+                        return Ok(VerifyObjWellDefinedResult::Failed { obj, reason })
+                    }
+                };
+                FunctionLimitApproachWellDefinedProof::Finite {
+                    point_wd: Box::new(point_wd),
+                }
             }
+            None => match limit.approach {
+                LimitApproach::AtPositiveInfinity => {
+                    FunctionLimitApproachWellDefinedProof::AtPositiveInfinity
+                }
+                LimitApproach::AtNegativeInfinity => {
+                    FunctionLimitApproachWellDefinedProof::AtNegativeInfinity
+                }
+                _ => unreachable!("finite approaches have points"),
+            },
         };
         let Some(function_domain) =
             self.checked_real_function_limit_domain(&limit.function, state)?
@@ -37,14 +52,30 @@ impl Runtime {
                 FunctionLimitWDFailure::Domain,
             ));
         };
-        let point_fact = self.function_limit_real_member(point.clone());
-        let point_real = self.verify_fact(&point_fact, state)?;
-        if point_real.is_failed() {
-            return Ok(function_limit_wd_failure(
-                obj,
-                FunctionLimitWDFailure::PointReal(Box::new(point_real)),
-            ));
-        }
+        // Preserve the finite pipeline: point WD, checked function domain, then point carrier.
+        use super::verify_atomic_fact::well_defined_result::FunctionLimitApproachRealProof;
+        let approach_real = match limit.approach.point() {
+            Some(point) => {
+                let requirement = self.function_limit_real_member(point.clone());
+                let proof = self.verify_fact(&requirement, state)?;
+                if proof.is_failed() {
+                    return Ok(function_limit_wd_failure(
+                        obj,
+                        FunctionLimitWDFailure::PointReal(Box::new(proof)),
+                    ));
+                }
+                FunctionLimitApproachRealProof::Finite(Box::new(proof))
+            }
+            None => match limit.approach {
+                LimitApproach::AtPositiveInfinity => {
+                    FunctionLimitApproachRealProof::AtPositiveInfinity
+                }
+                LimitApproach::AtNegativeInfinity => {
+                    FunctionLimitApproachRealProof::AtNegativeInfinity
+                }
+                _ => unreachable!("finite approach has a point"),
+            },
+        };
         let mut convergence = None;
         for candidate in self.known_function_limit_candidates() {
             let query = self.function_limit_candidate(
@@ -82,10 +113,10 @@ impl Runtime {
                     LimitOperatorObjWellDefinedProofByDef::Function(
                         FunctionLimitObjWellDefinedProof {
                             function_wd: Box::new(function_wd),
-                            point_wd: Box::new(point_wd),
+                            approach_wd,
                             approach: limit.approach.clone(),
                             function_domain,
-                            point_real: Box::new(point_real),
+                            approach_real,
                             convergence,
                         },
                     ),
@@ -166,7 +197,13 @@ impl Runtime {
 
     pub(crate) fn known_function_limit_candidates(&self) -> Vec<HasFunctionLimitFact> {
         let mut candidates = Vec::new();
-        for name in ["has_limit_at", "has_limit_left", "has_limit_right"] {
+        for name in [
+            "has_limit_at",
+            "has_limit_left",
+            "has_limit_right",
+            "has_limit_pos_inf",
+            "has_limit_neg_inf",
+        ] {
             let key = (AtomicName::Plain { name: name.into() }, true);
             for env in self.execution_environments_stack.iter().rev() {
                 if let Some(facts) = env
@@ -218,6 +255,23 @@ impl Runtime {
     ) -> Fact {
         let r = self.fresh_internal_param();
         let x = self.fresh_internal_param();
+        if approach.point().is_none() {
+            let beyond = match approach {
+                LimitApproach::AtPositiveInfinity => function_limit_less(
+                    self,
+                    function_limit_identifier(&r),
+                    function_limit_identifier(&x),
+                ),
+                LimitApproach::AtNegativeInfinity => function_limit_less(
+                    self,
+                    function_limit_identifier(&x),
+                    function_limit_identifier(&r),
+                ),
+                _ => unreachable!("infinity branch"),
+            };
+            let exists = function_limit_exists(self, x, domain, vec![beyond]);
+            return function_limit_forall(self, r, real(), vec![], vec![exists]);
+        }
         let distance = approach_distance(function_limit_identifier(&x), &approach);
         let positive = function_limit_less(self, zero(), distance.clone());
         let close = function_limit_less(self, distance, function_limit_identifier(&r));
@@ -234,6 +288,7 @@ impl Runtime {
     ) -> Fact {
         let epsilon = self.fresh_internal_param();
         let delta = self.fresh_internal_param();
+        let threshold_set = approach.threshold_set();
         let inclusion = self.function_limit_control(
             function,
             domain,
@@ -242,7 +297,7 @@ impl Runtime {
             function_limit_identifier(&epsilon),
             function_limit_identifier(&delta),
         );
-        let exists = function_limit_exists(self, delta, positive_real(), vec![inclusion]);
+        let exists = function_limit_exists(self, delta, threshold_set, vec![inclusion]);
         function_limit_forall(self, epsilon, positive_real(), vec![], vec![exists])
     }
 
@@ -283,6 +338,22 @@ impl Runtime {
         radius: Obj,
     ) -> Obj {
         let x = self.fresh_internal_param();
+        if approach.point().is_none() {
+            let beyond = match approach {
+                LimitApproach::AtPositiveInfinity => {
+                    function_limit_less(self, radius, function_limit_identifier(&x))
+                }
+                LimitApproach::AtNegativeInfinity => {
+                    function_limit_less(self, function_limit_identifier(&x), radius)
+                }
+                _ => unreachable!("infinity branch"),
+            };
+            return Obj::SetFormer(SetFormer::SetBuilder(SetBuilder {
+                param_binding: x,
+                param_set: Box::new(domain),
+                facts: vec![QuantifierFreeFact::AtomicFact(beyond)],
+            }));
+        }
         let d = approach_distance(function_limit_identifier(&x), &approach);
         let positive = function_limit_less(self, zero(), d.clone());
         let close = function_limit_less(self, d, radius);
@@ -437,6 +508,10 @@ fn distance(x: Obj, y: Obj) -> Obj {
 }
 
 #[cfg(test)]
+#[path = "../../../tests/unit/execute/function_limit_sides/tests.rs"]
+mod function_limit_sides_tests;
+
+#[cfg(test)]
 #[path = "../../../tests/unit/execute/function_limit/tests.rs"]
 mod function_limit_tests;
 
@@ -447,5 +522,12 @@ fn approach_distance(x: Obj, approach: &LimitApproach) -> Obj {
         LimitApproach::AtPoint(point) => distance(x, *point.clone()),
         LimitApproach::FromLeft(point) => sub_objs(*point.clone(), x),
         LimitApproach::FromRight(point) => sub_objs(x, *point.clone()),
+        LimitApproach::AtPositiveInfinity | LimitApproach::AtNegativeInfinity => {
+            unreachable!("finite distance requested for infinity")
+        }
     }
 }
+
+#[cfg(test)]
+#[path = "../../../tests/unit/execute/function_limit_infinity/tests.rs"]
+mod function_limit_infinity_tests;

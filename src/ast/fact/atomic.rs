@@ -8,7 +8,11 @@ pub enum AtomicFact {
     HasFunctionLimitFact(HasFunctionLimitFact),
     NotHasFunctionLimitFact(NotHasFunctionLimitFact),
     HasSequenceLimitFact(HasSequenceLimitFact),
+    HasSequenceLimsupFact(HasSequenceLimsupFact),
+    HasSequenceLiminfFact(HasSequenceLiminfFact),
     NotHasSequenceLimitFact(NotHasSequenceLimitFact),
+    NotHasSequenceLimsupFact(NotHasSequenceLimsupFact),
+    NotHasSequenceLiminfFact(NotHasSequenceLiminfFact),
     // User-defined `$prop(...)` only. Official builtins have dedicated variants.
     NormalAtomicFact(NormalAtomicFact),
     EqualFact(EqualFact),
@@ -398,8 +402,12 @@ impl AtomicFact {
     pub fn fact_id(&self) -> FactId {
         match self {
             AtomicFact::HasSequenceLimitFact(f) => f.fact_id,
+            AtomicFact::HasSequenceLimsupFact(f) => f.fact_id,
+            AtomicFact::HasSequenceLiminfFact(f) => f.fact_id,
             AtomicFact::HasFunctionLimitFact(f) => f.fact_id,
             AtomicFact::NotHasSequenceLimitFact(f) => f.fact_id,
+            AtomicFact::NotHasSequenceLimsupFact(f) => f.fact_id,
+            AtomicFact::NotHasSequenceLiminfFact(f) => f.fact_id,
             AtomicFact::NotHasFunctionLimitFact(f) => f.fact_id,
             AtomicFact::NormalAtomicFact(f) => f.fact_id,
             AtomicFact::EqualFact(f) => f.fact_id,
@@ -463,6 +471,16 @@ impl AtomicFact {
             AtomicFact::HasSequenceLimitFact(_) | AtomicFact::NotHasSequenceLimitFact(_) => {
                 AtomicName::Plain {
                     name: "has_seq_limit".into(),
+                }
+            }
+            AtomicFact::HasSequenceLimsupFact(_) | AtomicFact::NotHasSequenceLimsupFact(_) => {
+                AtomicName::Plain {
+                    name: "has_seq_limsup".into(),
+                }
+            }
+            AtomicFact::HasSequenceLiminfFact(_) | AtomicFact::NotHasSequenceLiminfFact(_) => {
+                AtomicName::Plain {
+                    name: "has_seq_liminf".into(),
                 }
             }
             AtomicFact::NormalAtomicFact(f) => f.predicate.clone(),
@@ -573,6 +591,38 @@ pub struct NotHasFunctionLimitFact {
     pub fact_id: FactId,
     pub function: Obj,
     pub approach: crate::ast::obj::LimitApproach,
+    pub value: Obj,
+    pub line_file: Option<SourceLine>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct HasSequenceLimsupFact {
+    pub fact_id: FactId,
+    pub sequence: Obj,
+    pub value: Obj,
+    pub line_file: Option<SourceLine>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct HasSequenceLiminfFact {
+    pub fact_id: FactId,
+    pub sequence: Obj,
+    pub value: Obj,
+    pub line_file: Option<SourceLine>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct NotHasSequenceLimsupFact {
+    pub fact_id: FactId,
+    pub sequence: Obj,
+    pub value: Obj,
+    pub line_file: Option<SourceLine>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct NotHasSequenceLiminfFact {
+    pub fact_id: FactId,
+    pub sequence: Obj,
     pub value: Obj,
     pub line_file: Option<SourceLine>,
 }

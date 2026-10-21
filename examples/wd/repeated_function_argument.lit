@@ -1,0 +1,9 @@
+# A displacement used twice in a dot product is well-defined and equal to itself.
+# Check: target/release/litex -strict -f examples/wd/repeated_function_argument.lit
+# The first vec(a, b) supplies WD reused by the second argument and membership checks.
+# Domain guards remain required; the Rust companion test rejects a zero denominator.
+
+have fn vec(A, B cart(R, R)) cart(R, R) = (B(1) - A(1), B(2) - A(2))
+have fn dot(u, v cart(R, R)) R = u(1) * v(1) + u(2) * v(2)
+forall a, b cart(R, R):
+    dot(vec(a, b), vec(a, b)) = dot(vec(a, b), vec(a, b))

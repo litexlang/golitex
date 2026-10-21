@@ -935,3 +935,1116 @@ claim:
                 case {0} = points:
                     impossible {0} = points
         impossible 0 = 1
+# Chapter 4. Separation axioms
+# How finely a topology distinguishes points. Discrete spaces separate points
+# with disjoint opens; the indiscrete two-point space cannot even tell them
+# apart by a single open set.
+
+# 4.1 T0, T1 and Hausdorff
+prop open_avoids(Ambient set, space &TopologicalSpace<Ambient>, U space.opens, x, y space.carrier):
+    x $in U
+    not y $in U
+
+prop is_T0_witness(Ambient set, space &TopologicalSpace<Ambient>, x, y space.carrier):
+    exist U space.opens st {$open_avoids(Ambient, space, U, x, y)}
+
+prop is_T0(Ambient set, space &TopologicalSpace<Ambient>):
+    forall x, y space.carrier:
+        x != y
+        =>:
+            $is_T0_witness(Ambient, space, x, y) or $is_T0_witness(Ambient, space, y, x)
+
+prop is_T1(Ambient set, space &TopologicalSpace<Ambient>):
+    forall x, y space.carrier:
+        x != y
+        =>:
+            $is_T0_witness(Ambient, space, x, y)
+
+prop is_Hausdorff(Ambient set, space &TopologicalSpace<Ambient>):
+    forall x, y space.carrier:
+        x != y
+        =>:
+            exist U, V space.opens st {x $in U, y $in V, intersect(U, V) = {}}
+
+# 4.2 The implication chain T2 => T1 => T0
+thm Hausdorff_implies_T1:
+    ? forall Ambient set, space &TopologicalSpace<Ambient>:
+        $is_Hausdorff(Ambient, space)
+        =>:
+            $is_T1(Ambient, space)
+    claim:
+        ? forall x, y space.carrier:
+            x != y
+            =>:
+                $is_T0_witness(Ambient, space, x, y)
+        obtain U, V from exist A, B space.opens st {x $in A, y $in B, intersect(A, B) = {}}
+        claim:
+            ? not y $in U
+            by contra:
+                ? not y $in U
+                y $in U
+                y $in V
+                y $in intersect(U, V)
+                impossible y $in {}
+        by def $open_avoids(Ambient, space, U, x, y)
+        witness exist W space.opens st {$open_avoids(Ambient, space, W, x, y)} from U
+        by def $is_T0_witness(Ambient, space, x, y)
+    by def $is_T1(Ambient, space)
+
+thm T1_implies_T0:
+    ? forall Ambient set, space &TopologicalSpace<Ambient>:
+        $is_T1(Ambient, space)
+        =>:
+            $is_T0(Ambient, space)
+    claim:
+        ? forall x, y space.carrier:
+            x != y
+            =>:
+                $is_T0_witness(Ambient, space, x, y) or $is_T0_witness(Ambient, space, y, x)
+        $is_T0_witness(Ambient, space, x, y)
+    by def $is_T0(Ambient, space)
+
+thm Hausdorff_implies_T0:
+    ? forall Ambient set, space &TopologicalSpace<Ambient>:
+        $is_Hausdorff(Ambient, space)
+        =>:
+            $is_T0(Ambient, space)
+    by thm Hausdorff_implies_T1(Ambient, space) => $is_T1(Ambient, space)
+    by thm T1_implies_T0(Ambient, space) => $is_T0(Ambient, space)
+
+# 4.3 Hausdorff spaces have closed singletons (via T1)
+thm T1_implies_closed_singletons:
+    ? forall Ambient set, space &TopologicalSpace<Ambient>, x space.carrier:
+        $is_T1(Ambient, space)
+        =>:
+            $is_closed(Ambient, space, {x})
+    {x} $subset space.carrier
+    {x} $in power_set(space.carrier)
+    have opens_avoiding_x power_set(space.opens) = {U space.opens: not x $in U}
+    opens_avoiding_x $subset space.opens
+    claim:
+        ? forall U opens_avoiding_x:
+            U $in power_set(space.carrier)
+        U $in space.opens
+        U $in power_set(space.carrier)
+    by def opens_avoiding_x $subset power_set(space.carrier)
+    opens_avoiding_x $in power_set(power_set(space.carrier))
+    family_union(opens_avoiding_x) $in space.opens
+    by extension:
+        ? set_minus(space.carrier, {x}) = family_union(opens_avoiding_x)
+        claim:
+            ? forall y set_minus(space.carrier, {x}):
+                y $in family_union(opens_avoiding_x)
+            not y $in {x}
+            y != x
+            $is_T0_witness(Ambient, space, y, x)
+            obtain U from exist W space.opens st {$open_avoids(Ambient, space, W, y, x)}
+            not x $in U
+            U $in opens_avoiding_x
+            y $in U
+            y $in family_union(opens_avoiding_x)
+        claim:
+            ? forall y family_union(opens_avoiding_x):
+                y $in set_minus(space.carrier, {x})
+            obtain U from exist W opens_avoiding_x st {y $in W}
+            U $in space.opens
+            U $in power_set(space.carrier)
+            U $subset space.carrier
+            y $in space.carrier
+            not x $in U
+            by contra:
+                ? not y $in {x}
+                y $in {x}
+                y = x
+                impossible not x $in U
+    by def $is_closed(Ambient, space, {x})
+
+thm Hausdorff_implies_closed_singletons:
+    ? forall Ambient set, space &TopologicalSpace<Ambient>, x space.carrier:
+        $is_Hausdorff(Ambient, space)
+        =>:
+            $is_closed(Ambient, space, {x})
+    by thm Hausdorff_implies_T1(Ambient, space) => $is_T1(Ambient, space)
+    by thm T1_implies_closed_singletons(Ambient, space, x) => $is_closed(Ambient, space, {x})
+
+# 4.4 Running examples on {0, 1}
+claim:
+    ? $is_Hausdorff(points, discrete)
+    claim:
+        ? forall x, y discrete.carrier:
+            x != y
+            =>:
+                exist U, V discrete.opens st {x $in U, y $in V, intersect(U, V) = {}}
+        {x} $subset points
+        {x} $in power_set(points)
+        {x} $in discrete.opens
+        {y} $subset points
+        {y} $in power_set(points)
+        {y} $in discrete.opens
+        by extension:
+            ? intersect({x}, {y}) = {}
+            claim:
+                ? forall z intersect({x}, {y}):
+                    z $in {}
+                z $in {x}
+                z $in {y}
+                z = x
+                by contra:
+                    ? z $in {}
+                    impossible z $in {y}
+            claim:
+                ? forall z {}:
+                    z $in intersect({x}, {y})
+                by contra:
+                    ? z $in intersect({x}, {y})
+                    impossible z $in {}
+        x $in {x}
+        y $in {y}
+        witness exist U, V discrete.opens st {x $in U, y $in V, intersect(U, V) = {}} from {x}, {y}
+    by def $is_Hausdorff(points, discrete)
+
+by thm Hausdorff_implies_T1(points, discrete) => $is_T1(points, discrete)
+
+by thm T1_implies_T0(points, discrete) => $is_T0(points, discrete)
+
+by thm Hausdorff_implies_closed_singletons(points, discrete, 0) => $is_closed(points, discrete, {0})
+
+# The indiscrete space is not even T0: every nonempty open set is the whole carrier.
+0 $in indiscrete.carrier
+
+1 $in indiscrete.carrier
+
+claim:
+    ? not $is_T0(points, indiscrete)
+    by contra:
+        ? not $is_T0(points, indiscrete)
+        by def $is_T0(points, indiscrete)
+        0 != 1
+        $is_T0_witness(points, indiscrete, 0, 1) or $is_T0_witness(points, indiscrete, 1, 0)
+        claim:
+            ? 0 = 1
+            $is_T0_witness(points, indiscrete, 0, 1) or $is_T0_witness(points, indiscrete, 1, 0)
+            by cases:
+                ? 0 = 1
+                case $is_T0_witness(points, indiscrete, 0, 1):
+                    obtain U from exist W indiscrete.opens st {$open_avoids(points, indiscrete, W, 0, 1)}
+                    0 $in U
+                    not 1 $in U
+                    U $in coarse_opens
+                    U $in {{}, points}
+                    U = {} or U = points
+                    by cases:
+                        ? 0 = 1
+                        case U = {}:
+                            impossible 0 $in U
+                        case U = points:
+                            1 $in points
+                            impossible not 1 $in U
+                case $is_T0_witness(points, indiscrete, 1, 0):
+                    obtain U from exist W indiscrete.opens st {$open_avoids(points, indiscrete, W, 1, 0)}
+                    1 $in U
+                    not 0 $in U
+                    U $in coarse_opens
+                    U $in {{}, points}
+                    U = {} or U = points
+                    by cases:
+                        ? 0 = 1
+                        case U = {}:
+                            impossible 1 $in U
+                        case U = points:
+                            0 $in points
+                            impossible not 0 $in U
+        impossible 0 = 1
+# Chapter 5. Compactness
+# An open cover of a set has a finite subcover. Continuous images preserve
+# this finite-subcover property.
+
+# 5.1 Restriction of a function to a subset of its domain
+template<X, Y set, f fn(x X) Y, K power_set(X)>:
+    have fn restricted(x K) Y = f(x)
+
+thm restriction_type:
+    ? forall X, Y set, f fn(x X) Y, K power_set(X):
+        \restricted<X, Y, f, K> $in fn(x K) Y
+    release thm fn_set_member(\restricted<X, Y, f, K>, fn(x K) Y)
+
+thm restriction_value:
+    ? forall X, Y set, f fn(x X) Y, K power_set(X), p K:
+        \restricted<X, Y, f, K>(p) = f(p)
+    \restricted<X, Y, f, K> = fn(x K) Y {f(x)}
+    \restricted<X, Y, f, K>(p) = f(p)
+
+# 5.2 Compact subsets via indexed open covers
+prop is_compact_subset(Ambient set, space &TopologicalSpace<Ambient>, K power_set(space.carrier)):
+    forall Index set, cover fn(index Index) space.opens:
+        K $subset family_union(fn_range(cover))
+        =>:
+            exist J power_set(Index) st {$is_finite_set(J), K $subset family_union(fn_range(\restricted<Index, space.opens, cover, J>))}
+
+prop is_compact_space(Ambient set, space &TopologicalSpace<Ambient>):
+    $is_compact_subset(Ambient, space, space.carrier)
+
+# Finite discrete spaces are compact: the whole index set of any cover is already
+# a finite subcover when the index set is finite. For the running two-point
+# discrete space we record compactness of each singleton and of the carrier by
+# extracting covering indices for the finitely many points.
+
+claim:
+    ? $is_compact_subset(points, discrete, {0})
+    claim:
+        ? forall Index set, cover fn(index Index) discrete.opens:
+            {0} $subset family_union(fn_range(cover))
+            =>:
+                exist J power_set(Index) st {$is_finite_set(J), {0} $subset family_union(fn_range(\restricted<Index, discrete.opens, cover, J>))}
+        0 $in {0}
+        0 $in family_union(fn_range(cover))
+        obtain U from exist W fn_range(cover) st {0 $in W}
+        have by fn_preimage: selected_index from U $in fn_range(cover)
+        U = cover(selected_index)
+        have J power_set(Index) = {selected_index}
+        $is_finite_set(J)
+        release thm restriction_type(Index, discrete.opens, cover, J)
+        release thm restriction_value(Index, discrete.opens, cover, J, selected_index)
+        \restricted<Index, discrete.opens, cover, J>(selected_index) = cover(selected_index)
+        cover(selected_index) $in fn_range(\restricted<Index, discrete.opens, cover, J>)
+        0 $in cover(selected_index)
+        claim:
+            ? {0} $subset family_union(fn_range(\restricted<Index, discrete.opens, cover, J>))
+            claim:
+                ? forall z {0}:
+                    z $in family_union(fn_range(\restricted<Index, discrete.opens, cover, J>))
+                z = 0
+                0 $in cover(selected_index)
+                witness exist W fn_range(\restricted<Index, discrete.opens, cover, J>) st {z $in W} from cover(selected_index)
+            by def {0} $subset family_union(fn_range(\restricted<Index, discrete.opens, cover, J>))
+        witness exist finite_indices power_set(Index) st {$is_finite_set(finite_indices), {0} $subset family_union(fn_range(\restricted<Index, discrete.opens, cover, finite_indices>))} from J
+    by def $is_compact_subset(points, discrete, {0})
+
+claim:
+    ? $is_compact_subset(points, discrete, {1})
+    claim:
+        ? forall Index set, cover fn(index Index) discrete.opens:
+            {1} $subset family_union(fn_range(cover))
+            =>:
+                exist J power_set(Index) st {$is_finite_set(J), {1} $subset family_union(fn_range(\restricted<Index, discrete.opens, cover, J>))}
+        1 $in {1}
+        1 $in family_union(fn_range(cover))
+        obtain U from exist W fn_range(cover) st {1 $in W}
+        have by fn_preimage: selected_index from U $in fn_range(cover)
+        U = cover(selected_index)
+        have J power_set(Index) = {selected_index}
+        $is_finite_set(J)
+        release thm restriction_type(Index, discrete.opens, cover, J)
+        release thm restriction_value(Index, discrete.opens, cover, J, selected_index)
+        \restricted<Index, discrete.opens, cover, J>(selected_index) = cover(selected_index)
+        cover(selected_index) $in fn_range(\restricted<Index, discrete.opens, cover, J>)
+        1 $in cover(selected_index)
+        claim:
+            ? {1} $subset family_union(fn_range(\restricted<Index, discrete.opens, cover, J>))
+            claim:
+                ? forall z {1}:
+                    z $in family_union(fn_range(\restricted<Index, discrete.opens, cover, J>))
+                z = 1
+                1 $in cover(selected_index)
+                witness exist W fn_range(\restricted<Index, discrete.opens, cover, J>) st {z $in W} from cover(selected_index)
+            by def {1} $subset family_union(fn_range(\restricted<Index, discrete.opens, cover, J>))
+        witness exist finite_indices power_set(Index) st {$is_finite_set(finite_indices), {1} $subset family_union(fn_range(\restricted<Index, discrete.opens, cover, finite_indices>))} from J
+    by def $is_compact_subset(points, discrete, {1})
+
+# 5.3 Continuous images of compact sets are compact
+thm continuous_image_of_compact_is_compact:
+    ? forall A, B set, source &TopologicalSpace<A>, target &TopologicalSpace<B>, f fn(x source.carrier) target.carrier, K power_set(source.carrier):
+        $is_continuous(A, B, source, target, f)
+        $is_compact_subset(A, source, K)
+        =>:
+            $is_compact_subset(B, target, fn_range(\restricted<source.carrier, target.carrier, f, K>))
+    release thm restriction_type(source.carrier, target.carrier, f, K)
+    claim:
+        ? forall Index set, cover fn(index Index) target.opens:
+            fn_range(\restricted<source.carrier, target.carrier, f, K>) $subset family_union(fn_range(cover))
+            =>:
+                exist J power_set(Index) st {$is_finite_set(J), fn_range(\restricted<source.carrier, target.carrier, f, K>) $subset family_union(fn_range(\restricted<Index, target.opens, cover, J>))}
+        claim:
+            ? forall cover_index Index:
+                cover(cover_index) $in power_set(target.carrier)
+            cover(cover_index) $in target.opens
+            cover(cover_index) $in power_set(target.carrier)
+        have fn pullback_cover(index Index) source.opens = preimage_set(f, cover(index))
+        claim:
+            ? forall index Index:
+                preimage_set(f, cover(index)) $in source.opens
+            cover(index) $in target.opens
+            preimage_set(f, cover(index)) $in source.opens
+        claim:
+            ? K $subset family_union(fn_range(pullback_cover))
+            claim:
+                ? forall point K:
+                    point $in family_union(fn_range(pullback_cover))
+                release thm restriction_value(source.carrier, target.carrier, f, K, point)
+                \restricted<source.carrier, target.carrier, f, K>(point) = f(point)
+                f(point) $in fn_range(\restricted<source.carrier, target.carrier, f, K>)
+                f(point) $in family_union(fn_range(cover))
+                obtain target_open from exist source_target_open fn_range(cover) st {f(point) $in source_target_open}
+                have by fn_preimage: selected_index from target_open $in fn_range(cover)
+                target_open = cover(selected_index)
+                f(point) $in cover(selected_index)
+                point $in preimage_set(f, cover(selected_index))
+                point $in pullback_cover(selected_index)
+                pullback_cover(selected_index) $in fn_range(pullback_cover)
+                point $in family_union(fn_range(pullback_cover))
+            by def K $subset family_union(fn_range(pullback_cover))
+        exist J power_set(Index) st {$is_finite_set(J), K $subset family_union(fn_range(\restricted<Index, source.opens, pullback_cover, J>))}
+        obtain J from exist source_J power_set(Index) st {$is_finite_set(source_J), K $subset family_union(fn_range(\restricted<Index, source.opens, pullback_cover, source_J>))}
+        witness exist finite_indices power_set(Index) st {$is_finite_set(finite_indices), fn_range(\restricted<source.carrier, target.carrier, f, K>) $subset family_union(fn_range(\restricted<Index, target.opens, cover, finite_indices>))} from J:
+            $is_finite_set(J)
+            release thm restriction_type(Index, source.opens, pullback_cover, J)
+            release thm restriction_type(Index, target.opens, cover, J)
+            claim:
+                ? fn_range(\restricted<source.carrier, target.carrier, f, K>) $subset family_union(fn_range(\restricted<Index, target.opens, cover, J>))
+                claim:
+                    ? forall image_point fn_range(\restricted<source.carrier, target.carrier, f, K>):
+                        image_point $in family_union(fn_range(\restricted<Index, target.opens, cover, J>))
+                    have by fn_preimage: source_point from image_point $in fn_range(\restricted<source.carrier, target.carrier, f, K>)
+                    source_point $in K
+                    release thm restriction_value(source.carrier, target.carrier, f, K, source_point)
+                    \restricted<source.carrier, target.carrier, f, K>(source_point) = f(source_point)
+                    image_point = f(source_point)
+                    source_point $in family_union(fn_range(\restricted<Index, source.opens, pullback_cover, J>))
+                    obtain source_open from exist source_source_open fn_range(\restricted<Index, source.opens, pullback_cover, J>) st {source_point $in source_source_open}
+                    have by fn_preimage: selected_index from source_open $in fn_range(\restricted<Index, source.opens, pullback_cover, J>)
+                    selected_index $in J
+                    selected_index $in Index
+                    release thm restriction_value(Index, source.opens, pullback_cover, J, selected_index)
+                    \restricted<Index, source.opens, pullback_cover, J>(selected_index) = pullback_cover(selected_index)
+                    source_open = pullback_cover(selected_index)
+                    source_point $in pullback_cover(selected_index)
+                    pullback_cover(selected_index) = preimage_set(f, cover(selected_index))
+                    source_point $in preimage_set(f, cover(selected_index))
+                    f(source_point) $in cover(selected_index)
+                    release thm restriction_value(Index, target.opens, cover, J, selected_index)
+                    \restricted<Index, target.opens, cover, J>(selected_index) = cover(selected_index)
+                    cover(selected_index) $in fn_range(\restricted<Index, target.opens, cover, J>)
+                    image_point $in cover(selected_index)
+                    witness exist target_open fn_range(\restricted<Index, target.opens, cover, J>) st {image_point $in target_open} from cover(selected_index)
+                    image_point $in family_union(fn_range(\restricted<Index, target.opens, cover, J>))
+                by def fn_range(\restricted<source.carrier, target.carrier, f, K>) $subset family_union(fn_range(\restricted<Index, target.opens, cover, J>))
+    fn_range(\restricted<source.carrier, target.carrier, f, K>) $subset target.carrier
+    fn_range(\restricted<source.carrier, target.carrier, f, K>) $in power_set(target.carrier)
+    by def $is_compact_subset(B, target, fn_range(\restricted<source.carrier, target.carrier, f, K>))
+
+# The continuous image of the compact singleton {0} under the identity is again compact.
+release thm fn_set_member(identity, fn(x discrete.carrier) discrete.carrier)
+
+by thm maps_from_discrete_are_continuous(points, points, discrete, discrete, identity) => $is_continuous(points, points, discrete, discrete, identity)
+
+release thm continuous_image_of_compact_is_compact(points, points, discrete, discrete, identity, {0})
+# Chapter 6. Product topology
+# Open rectangles generate product-open sets. The discrete topology on the
+# two-point grid is the product of discrete factors. The product of two
+# spaces with only trivial opens is again connected.
+
+# 6.1 Open rectangles and product-open sets
+prop is_open_rectangle(A, B set, source &TopologicalSpace<A>, target &TopologicalSpace<B>, W power_set(cart(source.carrier, target.carrier))):
+    exist U source.opens, V target.opens st {W = cart(U, V)}
+
+prop generates_as_product_open(A, B set, source &TopologicalSpace<A>, target &TopologicalSpace<B>, W power_set(cart(source.carrier, target.carrier)), family power_set(power_set(cart(source.carrier, target.carrier)))):
+    forall rect family:
+        $is_open_rectangle(A, B, source, target, rect)
+    W = family_union(family)
+
+prop is_product_open(A, B set, source &TopologicalSpace<A>, target &TopologicalSpace<B>, W power_set(cart(source.carrier, target.carrier))):
+    exist family power_set(power_set(cart(source.carrier, target.carrier))) st {$generates_as_product_open(A, B, source, target, W, family)}
+
+# 6.2 Discrete product of the running two-point space
+0 $in points
+
+1 $in points
+
+have grid set = cart(points, points)
+
+(0, 0) $in grid
+
+(0, 1) $in grid
+
+(1, 0) $in grid
+
+(1, 1) $in grid
+
+release thm discrete_topology_laws(grid)
+
+have discrete_grid &TopologicalSpace<grid> = (grid, power_set(grid))
+
+discrete_grid.carrier = grid
+
+discrete_grid.opens = power_set(grid)
+
+claim:
+    ? $is_Hausdorff(grid, discrete_grid)
+    claim:
+        ? forall x, y discrete_grid.carrier:
+            x != y
+            =>:
+                exist U, V discrete_grid.opens st {x $in U, y $in V, intersect(U, V) = {}}
+        {x} $subset grid
+        {x} $in power_set(grid)
+        {x} $in discrete_grid.opens
+        {y} $subset grid
+        {y} $in power_set(grid)
+        {y} $in discrete_grid.opens
+        by extension:
+            ? intersect({x}, {y}) = {}
+            claim:
+                ? forall z intersect({x}, {y}):
+                    z $in {}
+                z $in {x}
+                z $in {y}
+                z = x
+                by contra:
+                    ? z $in {}
+                    impossible z $in {y}
+            claim:
+                ? forall z {}:
+                    z $in intersect({x}, {y})
+                by contra:
+                    ? z $in intersect({x}, {y})
+                    impossible z $in {}
+        x $in {x}
+        y $in {y}
+        witness exist U, V discrete_grid.opens st {x $in U, y $in V, intersect(U, V) = {}} from {x}, {y}
+    by def $is_Hausdorff(grid, discrete_grid)
+
+# 6.3 Product of two spaces with only trivial opens is connected
+# When each factor has only trivial opens, the coarse topology on the Cartesian
+# product is the product topology and is connected.
+thm product_of_trivial_open_spaces_is_connected:
+    ? forall A, B, ProductCarrier set, source &TopologicalSpace<A>, target &TopologicalSpace<B>, product_space &TopologicalSpace<ProductCarrier>:
+        $has_only_trivial_opens(A, source)
+        $has_only_trivial_opens(B, target)
+        ProductCarrier = cart(source.carrier, target.carrier)
+        product_space.carrier = ProductCarrier
+        $has_only_trivial_opens(ProductCarrier, product_space)
+        =>:
+            $is_connected(ProductCarrier, product_space)
+    by thm opens_only_trivial_implies_connected(ProductCarrier, product_space) => $is_connected(ProductCarrier, product_space)
+
+# Concrete instance: coarse topology on the two-point grid.
+claim:
+    ? {} != grid
+    by contra:
+        ? {} != grid
+        (0, 0) $in grid
+        impossible (0, 0) $in {}
+
+have coarse_grid_opens power_set(power_set(grid)) = {{}, grid}
+
+claim:
+    ? forall U, V coarse_grid_opens:
+        intersect(U, V) $in coarse_grid_opens
+    U $in {{}, grid}
+    U = {} or U = grid
+    V $in coarse_grid_opens
+    by cases:
+        ? intersect(U, V) $in coarse_grid_opens
+        case U = {}:
+            intersect(U, V) = intersect({}, V) = {}
+        case U = grid:
+            V $in {{}, grid}
+            V = {} or V = grid
+            by cases:
+                ? intersect(U, V) $in coarse_grid_opens
+                case V = {}:
+                    intersect(U, V) = intersect(grid, {}) = {}
+                case V = grid:
+                    intersect(U, V) = intersect(grid, grid) = grid
+
+claim:
+    ? forall family power_set(power_set(grid)):
+        family $subset coarse_grid_opens
+        =>:
+            family_union(family) $in coarse_grid_opens
+    claim:
+        ? forall x family_union(family):
+            x $in grid
+        obtain U from exist V family st {x $in V}
+        U $in power_set(grid)
+        U $subset grid
+    by def family_union(family) $subset grid
+    by cases:
+        ? family_union(family) $in coarse_grid_opens
+        case grid $in family:
+            grid $subset family_union(family)
+            by extension family_union(family) = grid
+        case not grid $in family:
+            claim:
+                ? forall U family:
+                    U = {}
+                U $in coarse_grid_opens
+                U $in {{}, grid}
+                U = {} or U = grid
+                by cases:
+                    ? U = {}
+                    case U = {}:
+                        {} = {}
+                    case U = grid:
+                        impossible grid $in family
+            by extension:
+                ? family_union(family) = {}
+                claim:
+                    ? forall x family_union(family):
+                        x $in {}
+                    obtain U from exist V family st {x $in V}
+                    U = {}
+                    x $in {}
+
+{} $in coarse_grid_opens
+
+grid $in coarse_grid_opens
+
+release thm struct_member((grid, coarse_grid_opens), &TopologicalSpace<grid>)
+
+have indiscrete_grid &TopologicalSpace<grid> = (grid, coarse_grid_opens)
+
+indiscrete_grid.opens = coarse_grid_opens
+
+indiscrete_grid.carrier = grid
+
+claim:
+    ? $has_only_trivial_opens(grid, indiscrete_grid)
+    claim:
+        ? forall U indiscrete_grid.opens:
+            U = {} or U = grid
+        U $in coarse_grid_opens
+        U $in {{}, grid}
+        U = {} or U = grid
+    by def $has_only_trivial_opens(grid, indiscrete_grid)
+
+indiscrete.carrier = points
+
+grid = cart(points, points) = cart(indiscrete.carrier, indiscrete.carrier)
+
+indiscrete_grid.carrier = grid
+
+by thm product_of_trivial_open_spaces_is_connected(points, points, grid, indiscrete, indiscrete, indiscrete_grid) => $is_connected(grid, indiscrete_grid)
+# Chapter 7. Compact Hausdorff spaces and homeomorphisms
+# Closed sets are stable under binary unions. Finite discrete spaces are
+# compact Hausdorff. A continuous bijection with continuous inverse is a
+# homeomorphism; the discrete two-point swap is the running instance.
+
+# 7.1 Finite unions of closed sets
+thm union_of_two_closed_is_closed:
+    ? forall Ambient set, space &TopologicalSpace<Ambient>, F, G power_set(space.carrier):
+        $is_closed(Ambient, space, F)
+        $is_closed(Ambient, space, G)
+        =>:
+            $is_closed(Ambient, space, union(F, G))
+    set_minus(space.carrier, F) $in space.opens
+    set_minus(space.carrier, G) $in space.opens
+    set_minus(space.carrier, union(F, G)) = intersect(set_minus(space.carrier, F), set_minus(space.carrier, G))
+    intersect(set_minus(space.carrier, F), set_minus(space.carrier, G)) $in space.opens
+    set_minus(space.carrier, union(F, G)) $in space.opens
+    by def $is_closed(Ambient, space, union(F, G))
+
+# 7.2 Two-point sets in Hausdorff spaces are closed
+thm two_point_subset_of_Hausdorff_is_closed:
+    ? forall Ambient set, space &TopologicalSpace<Ambient>, x, y space.carrier:
+        $is_Hausdorff(Ambient, space)
+        =>:
+            $is_closed(Ambient, space, union({x}, {y}))
+    by thm Hausdorff_implies_closed_singletons(Ambient, space, x) => $is_closed(Ambient, space, {x})
+    by thm Hausdorff_implies_closed_singletons(Ambient, space, y) => $is_closed(Ambient, space, {y})
+    {x} $subset space.carrier
+    {y} $subset space.carrier
+    union({x}, {y}) $subset space.carrier
+    union({x}, {y}) $in power_set(space.carrier)
+    by thm union_of_two_closed_is_closed(Ambient, space, {x}, {y}) => $is_closed(Ambient, space, union({x}, {y}))
+
+# 7.3 Continuous bijections with continuous inverses are homeomorphisms
+thm continuous_bijection_with_continuous_inverse_is_homeomorphism:
+    ? forall A, B set, source &TopologicalSpace<A>, target &TopologicalSpace<B>, f fn(x source.carrier) target.carrier, g fn(y target.carrier) source.carrier:
+        $is_continuous(A, B, source, target, f)
+        $is_continuous(B, A, target, source, g)
+        forall x source.carrier:
+            g(f(x)) = x
+        forall y target.carrier:
+            f(g(y)) = y
+        =>:
+            $is_homeomorphism(A, B, source, target, f, g)
+    by def $is_homeomorphism(A, B, source, target, f, g)
+
+# 7.4 The discrete two-point space is a compact Hausdorff space
+claim:
+    ? $is_compact_space(points, discrete)
+    claim:
+        ? $is_compact_subset(points, discrete, discrete.carrier)
+        claim:
+            ? forall Index set, cover fn(index Index) discrete.opens:
+                discrete.carrier $subset family_union(fn_range(cover))
+                =>:
+                    exist J power_set(Index) st {$is_finite_set(J), discrete.carrier $subset family_union(fn_range(\restricted<Index, discrete.opens, cover, J>))}
+            discrete.carrier = points
+            0 $in points
+            1 $in points
+            0 $in family_union(fn_range(cover))
+            1 $in family_union(fn_range(cover))
+            obtain U0 from exist W fn_range(cover) st {0 $in W}
+            have by fn_preimage: i0 from U0 $in fn_range(cover)
+            U0 = cover(i0)
+            obtain U1 from exist W fn_range(cover) st {1 $in W}
+            have by fn_preimage: i1 from U1 $in fn_range(cover)
+            U1 = cover(i1)
+            i0 $in Index
+            i1 $in Index
+            {i0} $subset Index
+            {i1} $subset Index
+            union({i0}, {i1}) $subset Index
+            union({i0}, {i1}) $in power_set(Index)
+            have J power_set(Index) = union({i0}, {i1})
+            $is_finite_set(J)
+            release thm restriction_type(Index, discrete.opens, cover, J)
+            release thm restriction_value(Index, discrete.opens, cover, J, i0)
+            release thm restriction_value(Index, discrete.opens, cover, J, i1)
+            \restricted<Index, discrete.opens, cover, J>(i0) = cover(i0)
+            \restricted<Index, discrete.opens, cover, J>(i1) = cover(i1)
+            i0 $in J
+            i1 $in J
+            claim:
+                ? points $subset family_union(fn_range(\restricted<Index, discrete.opens, cover, J>))
+                claim:
+                    ? forall z points:
+                        z $in family_union(fn_range(\restricted<Index, discrete.opens, cover, J>))
+                    z $in {0, 1}
+                    z = 0 or z = 1
+                    by cases:
+                        ? z $in family_union(fn_range(\restricted<Index, discrete.opens, cover, J>))
+                        case z = 0:
+                            0 $in cover(i0)
+                            cover(i0) $in fn_range(\restricted<Index, discrete.opens, cover, J>)
+                            witness exist W fn_range(\restricted<Index, discrete.opens, cover, J>) st {z $in W} from cover(i0)
+                        case z = 1:
+                            1 $in cover(i1)
+                            cover(i1) $in fn_range(\restricted<Index, discrete.opens, cover, J>)
+                            witness exist W fn_range(\restricted<Index, discrete.opens, cover, J>) st {z $in W} from cover(i1)
+                by def points $subset family_union(fn_range(\restricted<Index, discrete.opens, cover, J>))
+            witness exist finite_indices power_set(Index) st {$is_finite_set(finite_indices), discrete.carrier $subset family_union(fn_range(\restricted<Index, discrete.opens, cover, finite_indices>))} from J
+        by def $is_compact_subset(points, discrete, discrete.carrier)
+    by def $is_compact_space(points, discrete)
+
+# Compact Hausdorff continuous bijection instance: the two-point swap.
+by thm continuous_bijection_with_continuous_inverse_is_homeomorphism(points, points, discrete, discrete, swap, swap) => $is_homeomorphism(points, points, discrete, discrete, swap, swap)
+# Chapter 8. The real line and the intermediate value theorem
+# Metric opens on R form a topology. Continuous real functions on a closed
+# interval attain intermediate values by taking a least upper bound.
+
+# 8.1 Metric opens
+prop contains_metric_ball(x R, eps R, U power_set(R)):
+    eps > 0
+    forall y R:
+        abs(y - x) < eps
+        =>:
+            y $in U
+
+prop is_metric_open(U power_set(R)):
+    forall x U:
+        exist eps R st {$contains_metric_ball(x, eps, U)}
+
+# The empty set and the whole line are metric open.
+claim:
+    ? $is_metric_open({})
+    claim:
+        ? forall x {}:
+            exist eps R st {$contains_metric_ball(x, eps, {})}
+        by contra:
+            ? exist eps R st {$contains_metric_ball(x, eps, {})}
+            impossible x $in {}
+    by def $is_metric_open({})
+
+claim:
+    ? $is_metric_open(R)
+    claim:
+        ? forall x R:
+            exist eps R st {$contains_metric_ball(x, eps, R)}
+        1 > 0
+        claim:
+            ? $contains_metric_ball(x, 1, R)
+            1 > 0
+            claim:
+                ? forall y R:
+                    abs(y - x) < 1
+                    =>:
+                        y $in R
+                y $in R
+            by def $contains_metric_ball(x, 1, R)
+        witness exist eps R st {$contains_metric_ball(x, eps, R)} from 1
+    by def $is_metric_open(R)
+
+# 8.2 Metric opens form a topology on R
+prop family_of_metric_opens(family power_set(power_set(R))):
+    forall U family:
+        $is_metric_open(U)
+
+claim:
+    ? forall U, V power_set(R):
+        $is_metric_open(U)
+        $is_metric_open(V)
+        =>:
+            $is_metric_open(intersect(U, V))
+    claim:
+        ? forall x intersect(U, V):
+            exist eps R st {$contains_metric_ball(x, eps, intersect(U, V))}
+        x $in U
+        x $in V
+        obtain epsU from exist eps0 R st {$contains_metric_ball(x, eps0, U)}
+        obtain epsV from exist eps0 R st {$contains_metric_ball(x, eps0, V)}
+        epsU > 0
+        epsV > 0
+        epsU <= epsV or epsV < epsU
+        by cases:
+            ? exist eps R st {$contains_metric_ball(x, eps, intersect(U, V))}
+            case epsU <= epsV:
+                claim:
+                    ? $contains_metric_ball(x, epsU, intersect(U, V))
+                    epsU > 0
+                    claim:
+                        ? forall y R:
+                            abs(y - x) < epsU
+                            =>:
+                                y $in intersect(U, V)
+                        abs(y - x) < epsU
+                        abs(y - x) < epsV
+                        y $in U
+                        y $in V
+                        y $in intersect(U, V)
+                    by def $contains_metric_ball(x, epsU, intersect(U, V))
+                witness exist eps R st {$contains_metric_ball(x, eps, intersect(U, V))} from epsU
+            case epsV < epsU:
+                claim:
+                    ? $contains_metric_ball(x, epsV, intersect(U, V))
+                    epsV > 0
+                    claim:
+                        ? forall y R:
+                            abs(y - x) < epsV
+                            =>:
+                                y $in intersect(U, V)
+                        abs(y - x) < epsV
+                        abs(y - x) < epsU
+                        y $in U
+                        y $in V
+                        y $in intersect(U, V)
+                    by def $contains_metric_ball(x, epsV, intersect(U, V))
+                witness exist eps R st {$contains_metric_ball(x, eps, intersect(U, V))} from epsV
+    by def $is_metric_open(intersect(U, V))
+
+claim:
+    ? forall family power_set(power_set(R)):
+        $family_of_metric_opens(family)
+        =>:
+            $is_metric_open(family_union(family))
+    claim:
+        ? forall x family_union(family):
+            x $in R
+        obtain U from exist W family st {x $in W}
+        U $in power_set(R)
+        U $subset R
+        x $in R
+    by def family_union(family) $subset R
+    family_union(family) $in power_set(R)
+    claim:
+        ? forall x family_union(family):
+            exist eps R st {$contains_metric_ball(x, eps, family_union(family))}
+        obtain U from exist W family st {x $in W}
+        $is_metric_open(U)
+        obtain eps from exist eps0 R st {$contains_metric_ball(x, eps0, U)}
+        claim:
+            ? $contains_metric_ball(x, eps, family_union(family))
+            eps > 0
+            claim:
+                ? forall y R:
+                    abs(y - x) < eps
+                    =>:
+                        y $in family_union(family)
+                y $in U
+                U $in family
+                y $in family_union(family)
+            by def $contains_metric_ball(x, eps, family_union(family))
+        witness exist eps0 R st {$contains_metric_ball(x, eps0, family_union(family))} from eps
+    by def $is_metric_open(family_union(family))
+
+have real_opens power_set(power_set(R)) = {U power_set(R): $is_metric_open(U)}
+
+{} $in real_opens
+
+R $in real_opens
+
+claim:
+    ? forall U, V real_opens:
+        intersect(U, V) $in real_opens
+    U $in real_opens
+    V $in real_opens
+    $is_metric_open(U)
+    $is_metric_open(V)
+    $is_metric_open(intersect(U, V))
+    intersect(U, V) $in real_opens
+
+claim:
+    ? forall family power_set(power_set(R)):
+        family $subset real_opens
+        =>:
+            family_union(family) $in real_opens
+    claim:
+        ? $family_of_metric_opens(family)
+        claim:
+            ? forall U family:
+                $is_metric_open(U)
+            U $in real_opens
+            $is_metric_open(U)
+        by def $family_of_metric_opens(family)
+    $is_metric_open(family_union(family))
+    family_union(family) $in real_opens
+
+release thm struct_member((R, real_opens), &TopologicalSpace<R>)
+
+have real_line &TopologicalSpace<R> = (R, real_opens)
+
+real_line.carrier = R
+
+real_line.opens = real_opens
+
+# 8.3 Intermediate value theorem via least upper bounds
+prop delta_controls(a, b, x, eps, delta R, f fn(t R) R):
+    delta > 0
+    forall y R:
+        a <= y
+        y <= b
+        abs(y - x) < delta
+        =>:
+            abs(f(y) - f(x)) < eps
+
+prop continuous_at_on_interval(a, b, x R, f fn(t R) R):
+    forall eps R:
+        eps > 0
+        =>:
+            exist delta R st {$delta_controls(a, b, x, eps, delta, f)}
+
+prop is_continuous_real_on_closed_interval(a, b R, f fn(x R) R):
+    a <= b
+    forall x R:
+        a <= x
+        x <= b
+        =>:
+            $continuous_at_on_interval(a, b, x, f)
+
+thm intermediate_value_theorem:
+    ? forall a, b, c R, f fn(x R) R:
+        a < b
+        $is_continuous_real_on_closed_interval(a, b, f)
+        f(a) < c
+        c < f(b)
+        =>:
+            exist x R st {a <= x, x <= b, f(x) = c}
+    have S power_set(R) = {x R: a <= x, x <= b, f(x) <= c}
+    a <= a
+    a <= b
+    f(a) <= c
+    a $in S
+    S $subset R
+    witness $is_nonempty_set(S) from a
+    claim:
+        ? forall x S:
+            x <= b
+        x $in S
+        x <= b
+    release thm real_least_upper_bound_exists(S, b)
+    obtain L from exist M R st {$is_real_least_upper_bound(S, M)}
+    release thm real_member_le_least_upper_bound(S, L, a)
+    a <= L
+    release thm real_least_upper_bound_le_upper_bound(S, L, b)
+    L <= b
+    $continuous_at_on_interval(a, b, L, f)
+    f(L) < c or f(L) = c or f(L) > c
+    by cases:
+        ? exist x R st {a <= x, x <= b, f(x) = c}
+        case f(L) = c:
+            a <= L
+            L <= b
+            f(L) = c
+            witness exist x R st {a <= x, x <= b, f(x) = c} from L
+        case f(L) < c:
+            claim:
+                ? L < b
+                by contra:
+                    ? L < b
+                    L <= b
+                    L < b or L = b
+                    by cases:
+                        ? 0 = 1
+                        case L < b:
+                            impossible not L < b
+                        case L = b:
+                            f(b) = f(L)
+                            f(b) < c
+                            impossible c < f(b)
+                    impossible 0 = 1
+            c - f(L) > 0
+            obtain delta from exist d R st {$delta_controls(a, b, L, c - f(L), d, f)}
+            delta > 0
+            delta / 2 > 0
+            L + delta / 2 > L
+            have y R = min(b, L + delta / 2)
+            b <= L + delta / 2 or L + delta / 2 < b
+            by cases:
+                ? L < y
+                case b <= L + delta / 2:
+                    min(b, L + delta / 2) = b
+                    y = b
+                    L < b
+                    L < y
+                case L + delta / 2 < b:
+                    L + delta / 2 <= b
+                    min(L + delta / 2, b) = L + delta / 2
+                    min(b, L + delta / 2) = min(L + delta / 2, b) = L + delta / 2
+                    y = L + delta / 2
+                    L < y
+            by cases:
+                ? y <= L + delta / 2
+                case b <= L + delta / 2:
+                    min(b, L + delta / 2) = b
+                    y = b
+                    y <= L + delta / 2
+                case L + delta / 2 < b:
+                    L + delta / 2 <= b
+                    min(L + delta / 2, b) = L + delta / 2
+                    min(b, L + delta / 2) = min(L + delta / 2, b) = L + delta / 2
+                    y = L + delta / 2
+                    y <= L + delta / 2
+            y <= b
+            a <= L
+            a <= y
+            y - L > 0
+            y - L >= 0
+            abs(y - L) = y - L
+            y - L <= (L + delta / 2) - L
+            (L + delta / 2) - L = delta / 2
+            y - L <= delta / 2
+            delta / 2 < delta
+            y - L < delta
+            abs(y - L) < delta
+            abs(f(y) - f(L)) < c - f(L)
+            f(y) - f(L) <= abs(f(y) - f(L))
+            f(y) - f(L) < c - f(L)
+            (f(y) - f(L)) + f(L) = f(y)
+            (c - f(L)) + f(L) = c
+            (f(y) - f(L)) + f(L) < (c - f(L)) + f(L)
+            f(y) < c
+            f(y) <= c
+            a <= y
+            y <= b
+            y $in S
+            release thm real_member_le_least_upper_bound(S, L, y)
+            y <= L
+            impossible L < y
+        case f(L) > c:
+            claim:
+                ? a < L
+                by contra:
+                    ? a < L
+                    a <= L
+                    a < L or a = L
+                    by cases:
+                        ? 0 = 1
+                        case a < L:
+                            impossible not a < L
+                        case a = L:
+                            f(a) = f(L)
+                            c < f(a)
+                            impossible f(a) < c
+                    impossible 0 = 1
+            f(L) - c > 0
+            obtain delta from exist d R st {$delta_controls(a, b, L, f(L) - c, d, f)}
+            delta > 0
+            delta / 2 > 0
+            L = (L - delta / 2) + delta / 2
+            0 < delta / 2
+            (L - delta / 2) + 0 < (L - delta / 2) + delta / 2
+            L - delta / 2 < L
+            have y R = max(a, L - delta / 2)
+            L - delta / 2 <= a or a < L - delta / 2
+            by cases:
+                ? y < L
+                case L - delta / 2 <= a:
+                    max(a, L - delta / 2) = a
+                    y = a
+                    a < L
+                    y < L
+                case a < L - delta / 2:
+                    a <= L - delta / 2
+                    max(a, L - delta / 2) = L - delta / 2
+                    y = L - delta / 2
+                    y < L
+            by cases:
+                ? L - delta / 2 <= y
+                case L - delta / 2 <= a:
+                    max(a, L - delta / 2) = a
+                    y = a
+                    L - delta / 2 <= y
+                case a < L - delta / 2:
+                    a <= L - delta / 2
+                    max(a, L - delta / 2) = L - delta / 2
+                    y = L - delta / 2
+                    L - delta / 2 <= y
+            a <= y
+            y <= b
+            L - y > 0
+            L - y >= 0
+            y - L < 0
+            y - L <= 0
+            abs(y - L) = 0 - (y - L)
+            0 - (y - L) = L - y
+            abs(y - L) = L - y
+            L - y <= L - (L - delta / 2)
+            L - (L - delta / 2) = delta / 2
+            L - y <= delta / 2
+            delta / 2 < delta
+            L - y < delta
+            abs(y - L) < delta
+            abs(f(y) - f(L)) < f(L) - c
+            abs(f(L) - f(y)) = abs(f(y) - f(L))
+            abs(f(L) - f(y)) < f(L) - c
+            f(L) - f(y) <= abs(f(L) - f(y))
+            f(L) - f(y) < f(L) - c
+            0 < (f(L) - c) - (f(L) - f(y))
+            (f(L) - c) - (f(L) - f(y)) = f(y) - c
+            0 < f(y) - c
+            c < f(y)
+            claim:
+                ? forall z S:
+                    z <= y
+                z $in S
+                release thm real_member_le_least_upper_bound(S, L, z)
+                z <= L
+                by contra:
+                    ? z <= y
+                    y < z
+                    z <= L
+                    a <= z
+                    z <= b
+                    z - L <= 0
+                    abs(z - L) = 0 - (z - L)
+                    0 - (z - L) = L - z
+                    abs(z - L) = L - z
+                    L - z < L - y
+                    L - y < delta
+                    abs(z - L) < delta
+                    abs(f(z) - f(L)) < f(L) - c
+                    abs(f(L) - f(z)) = abs(f(z) - f(L))
+                    abs(f(L) - f(z)) < f(L) - c
+                    f(L) - f(z) <= abs(f(L) - f(z))
+                    f(L) - f(z) < f(L) - c
+                    0 < (f(L) - c) - (f(L) - f(z))
+                    (f(L) - c) - (f(L) - f(z)) = f(z) - c
+                    0 < f(z) - c
+                    c < f(z)
+                    f(z) <= c
+                    impossible c < f(z)
+            release thm real_least_upper_bound_le_upper_bound(S, L, y)
+            L <= y
+            impossible y < L

@@ -107,10 +107,34 @@ positions determine execution order; they do not allocate proof names.
 Parameter signatures come from the declaration's original
 position, so a later `have` cannot extend an earlier theorem's inputs.
 
+Completed object registrations are also reusable inside `witness`, `by cases`
+and `by contra`; their names remain local to those blocks. For Cartesian
+parameters, numeric observations consume the already emitted coordinate
+objects and membership facts. Arithmetic observations read their recorded
+child WD results directly.
+
+Function applications also share completed argument WD within the current
+candidate check. `FnObjDomainCheckResult` retains the ordered checks and their
+local environment; `formed_children` records each producing child index and
+its WD ID. After a compound argument succeeds, later checks can cite it with
+`ByKnown`. For example, checking `dot(vec(a,b), vec(a,b))` can construct
+`vec(a,b)` once and cite that construction for the second argument and both
+membership-subject WD checks. Membership and guard proofs are still checked.
+
+The compiler emits that child once as `_object_w<ID>` and resolves later
+citations through the original result scope. Missing registrations, mismatched
+subjects and references to unfinished children reject compilation. Failed
+function candidates retain their diagnostic scope without publishing its
+registrations to the caller. This sharing comes from the producing result;
+the compiler has no additional object cache.
+
 An object's constructor can depend on a local membership or nonzero proof.
 If its exported proposition uses that proof name, the generated type includes
-the necessary actual proof expressions as local `let` values. This closes the
-Lean expression without turning proved facts into new theorem assumptions.
+the necessary original `let` and `have` declarations in a `by` expression,
+ending with `exact <proposition>`. Lean completes each producer before
+elaborating the next one. This avoids repeatedly copying unresolved proof
+dependencies across nested term bindings. The proved facts remain internal
+definitions, not additional theorem assumptions.
 
 Runtime executes the source once, then moves into the compiler as a read-only
 exact-ID resolver.
@@ -530,11 +554,95 @@ constructors. Nested WD children can also share local Lean `let` bindings.
 These references reduce repeated construction terms without changing the
 selected proof or introducing new assumptions. The compiler reads registrations
 from preceding result records; it does not search the verifier again.
+
+Concrete `prop` clauses retain the same registrations in
+`AssumeDomFactResult.store_and_infer.formed_subjects`, alongside their original
+`well_defined` evidence. The compiler emits those constructors before each
+clause's proof binder and reuses their WD IDs in later clauses. For example,
+the two bounds below share one addition object:
+
+```litex
+prop shifted_interval(x R):
+    x + 1 >= 0
+    x + 1 <= 2
+```
+
+These local definitions do not escape the predicate.
+This uses existing result fields; no additional Runtime cache is involved.
+
+Compact output needs references to earlier evidence, not just more detailed
+proof trees. Some arithmetic WD requirements still check an operand again
+after checking it as a child, retaining another construction subtree. That
+producer path remains a separate source of duplication. The compiler does not
+yet promise 10–20 Lean lines for every source statement; nested definitions and
+proof blocks can still produce substantially larger declarations.
+
 Named formula calls can project the signature already stored in the function
 object when the original membership ID and signature match its declaration.
 An output-membership proof can likewise reuse an emitted call when both its
 application and original WD node match. Argument and domain checks still run
 when that constructor is first emitted.
+
+Looking back at a completed statement's WD result retains its emitted object
+bindings. The original construction's fact prefix stays unchanged: replay may
+reuse the object, but cannot cite that statement's own conclusion or later facts
+to justify its construction. A completion boundary also prevents a pending
+statement from borrowing these bindings through an enclosing completed cursor.
+
+For chains and conjunctions, each child compilation returns its proposition and
+proof together. The enclosing result assembles those pairs instead of rebuilding
+the propositions from their source objects. Numeric bridge applications let Lean
+infer scalar arguments already determined by the child certificates; they do not
+copy the same scalar expression into every parent certificate.
+
+The same rule applies inside a constructed object. For example, once a power
+object has been emitted, its checked base is available as `power.val.base`.
+The compiler follows the original WD children through fields that retain their
+host objects, rather than reconstructing the base and its domain evidence.
+It does not use this shortcut for tuple factors: tuple representations retain
+denotations, not the original child host objects.
+
+Calls likewise retain their original argument objects. Numeric calls expose
+`argument`, or `first` and `second`; generic two-argument calls use
+`CallArguments2` inside the call's `argument` field. Its denotation is
+definitionally the same tuple of the two argument denotations. Keeping the
+objects allows later replay to project their original WD. Three-argument
+generic packing still retains only denotations.
+
+The stored WD proof is reusable too: an emitted addition object supplies its
+two original domain proofs as `object.wd.1` and `object.wd.2`. The compiler uses
+these projections only for the exact requirement node of a completed original
+constructor. Equal propositions from another result do not qualify. Division
+keeps the verifier's guard-first order when mapping to its wrapper's proof fields.
+
+Cartesian coordinate inference already records each conclusion's FactId.
+Its output binds the coordinate as `_object_h<ID>` before emitting `h_<ID>`;
+later uses resolve that original producer. This needs no additional result
+field. In contrast, `formed_subjects` captures WD IDs which storage previously
+allocated without returning them. Both mechanisms use source-owned identities,
+not a compiler-owned cache.
+
+Fixed representation conversions and domain assembly belong in proved Core
+lemmas. `callArguments2_mem_cart` consumes the two original argument-membership
+proofs and infers their carriers, avoiding another copy of the carrier objects
+and the finite-vector proof at each call. For example,
+a coordinate call passes its original closed-range membership proof to
+`Litex.indexSetMemberOfClosedRange`, rather than repeating the range constructor
+and its conversion proof. Literal membership uses `numberInZOfEq` and the
+corresponding numeric bridges directly. Literal range certificates retain the
+source's complex payloads and their checked integer representatives through
+`numberInClosedRangeOfEq`; composite expressions retain their denotation
+certificates.
+
+When an original Cartesian membership already determines the coordinate call's
+carrier, Lean infers that carrier from the citation instead of receiving another
+copy of its constructor. `FiniteFunction.coordinate_mem_number` applies the
+recorded coordinate inference to the exact source numeral.
+
+Object-producing bindings use Lean term-level `let`s so that their values
+remain available to subsequent field projections. Proof arguments still come
+from the recorded verification steps. Sharing these constructors and citations
+reduces the output while preserving the checked proof route.
 
 ## Citations and assumptions retain their scopes
 
@@ -973,9 +1081,9 @@ complete source, generated-proof explanation and ordinary Lean consumer for
 and positive-update variant have checked Adapter/Final layers that consume
 the actual generated proofs.
 
-The same README records the separate recursive all-index experiment: source
-compilation and exact regeneration completed, but full Lean/native acceptance
-did not. Work stopped at the user's request on 2026-10-13.
+The same README records the separate recursive all-index example. Its generated
+proof passed full Lean checking on 2026-10-21 with a 2000000-heartbeat budget,
+above Lean's default 200000. The native all-index interface is still unfinished.
 
 ## Maintaining this guide
 

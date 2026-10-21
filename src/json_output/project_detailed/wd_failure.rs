@@ -267,6 +267,11 @@ pub(super) fn project_obj_wd_failure(
         FailToVerifyObjWellDefinedResult::LimitOperator(FailToVerifyLimitOperatorObjWellDefinedResult::Function(p)) => super::function_limit::object_failure(p,rt),
         FailToVerifyObjWellDefinedResult::LimitOperator(FailToVerifyLimitOperatorObjWellDefinedResult::Sequence(p)) => node(rt,"SequenceLimit",None,
             object_for(rt,vec![("obj",string(p.obj.readable_string())),("message",string("Sequence limit requires proved finite convergence; no limit is guessed from the body.")),("requirement",project_verify_fact(&p.result,rt))])),
+        FailToVerifyObjWellDefinedResult::LimitOperator(FailToVerifyLimitOperatorObjWellDefinedResult::SequenceLimsup(p)) => node(rt,"SequenceLimsup",None,
+            object_for(rt,vec![("obj",string(p.obj.readable_string())),("message",string("limsup requires a proved finite candidate or existence; WD does not guess from the body.")),("requirement",project_verify_fact(&p.result,rt))])),
+        FailToVerifyObjWellDefinedResult::LimitOperator(FailToVerifyLimitOperatorObjWellDefinedResult::SequenceLiminf(p)) => node(rt,"SequenceLiminf",None,
+            object_for(rt,vec![("obj",string(p.obj.readable_string())),("message",string("liminf requires a proved finite candidate or existence; WD does not guess from the body.")),("requirement",project_verify_fact(&p.result,rt))])),
+
 
         FailToVerifyObjWellDefinedResult::Identifier(p) => node(
             rt,
@@ -791,6 +796,59 @@ fn project_leaf_fail_to_verify_fn_obj_obj_well_defined(
             message(rt, "no matching function signature")
         }
         FailToVerifyFnObjObjWellDefined::Domain(p) => common(p, rt),
+        FailToVerifyFnObjObjWellDefined::Candidate(p) => {
+            let failure = if let Some((index, child)) = p
+                .stages
+                .child_obj_well_defined
+                .iter()
+                .enumerate()
+                .find(|(_, child)| child.is_failed())
+            {
+                node(
+                    rt,
+                    "child",
+                    Some(index),
+                    super::wd::project_verify_obj_wd(child, rt),
+                )
+            } else if let Some((index, req)) = p
+                .stages
+                .requirement_fact_verified
+                .iter()
+                .enumerate()
+                .find(|(_, req)| req.is_failed())
+            {
+                node(rt, "requirement", Some(index), project_verify_fact(req, rt))
+            } else {
+                message(
+                    rt,
+                    "function signature arity or return shape does not match",
+                )
+            };
+            object_for(
+                rt,
+                vec![
+                    ("failure", failure),
+                    (
+                        "argument_scope",
+                        super::wd_by_def::project_fn_argument_scope(&p.scope, rt),
+                    ),
+                    (
+                        "child_obj_well_defined",
+                        JsonValue::Array(
+                            p.stages
+                                .child_obj_well_defined
+                                .iter()
+                                .map(|child| super::wd::project_verify_obj_wd(child, rt))
+                                .collect(),
+                        ),
+                    ),
+                    (
+                        "requirement_fact_verified",
+                        super::store::project_verify_facts(&p.stages.requirement_fact_verified, rt),
+                    ),
+                ],
+            )
+        }
     };
     crate::json_output::helper::inherit_failure_field(rt, projected, "failure")
 }

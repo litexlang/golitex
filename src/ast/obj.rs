@@ -1174,6 +1174,8 @@ pub struct SymmetricDifference {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum LimitOperator {
     Sequence(SequenceLimit),
+    SequenceLimsup(SequenceLimsup),
+    SequenceLiminf(SequenceLiminf),
     Function(FunctionLimit),
 }
 
@@ -1182,6 +1184,30 @@ pub struct SequenceLimit {
     pub sequence: Box<Obj>,
 }
 impl SequenceLimit {
+    pub fn new(sequence: Obj) -> Self {
+        Self {
+            sequence: Box::new(sequence),
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct SequenceLimsup {
+    pub sequence: Box<Obj>,
+}
+impl SequenceLimsup {
+    pub fn new(sequence: Obj) -> Self {
+        Self {
+            sequence: Box::new(sequence),
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct SequenceLiminf {
+    pub sequence: Box<Obj>,
+}
+impl SequenceLiminf {
     pub fn new(sequence: Obj) -> Self {
         Self {
             sequence: Box::new(sequence),
@@ -1200,6 +1226,8 @@ pub enum LimitApproach {
     AtPoint(Box<Obj>),
     FromLeft(Box<Obj>),
     FromRight(Box<Obj>),
+    AtPositiveInfinity,
+    AtNegativeInfinity,
 }
 
 impl LimitApproach {
@@ -1208,7 +1236,28 @@ impl LimitApproach {
             Self::AtPoint(_) => Self::AtPoint(Box::new(point)),
             Self::FromLeft(_) => Self::FromLeft(Box::new(point)),
             Self::FromRight(_) => Self::FromRight(Box::new(point)),
+            Self::AtPositiveInfinity => Self::AtPositiveInfinity,
+            Self::AtNegativeInfinity => Self::AtNegativeInfinity,
         }
+    }
+    pub fn try_map_point<E>(&self, f: impl FnOnce(&Obj) -> Result<Obj, E>) -> Result<Self, E> {
+        Ok(match self.point() {
+            Some(p) => self.with_point(f(p)?),
+            None => self.clone(),
+        })
+    }
+    pub fn operand_refs<'a>(&'a self, function: &'a Obj, value: &'a Obj) -> Vec<&'a Obj> {
+        let mut args = vec![function];
+        args.extend(self.point());
+        args.push(value);
+        args
+    }
+    pub fn threshold_set(&self) -> Obj {
+        Obj::StandardSet(if self.point().is_some() {
+            StandardSet::RPos
+        } else {
+            StandardSet::R
+        })
     }
     pub fn same_direction(&self, other: &Self) -> bool {
         std::mem::discriminant(self) == std::mem::discriminant(other)
@@ -1218,6 +1267,8 @@ impl LimitApproach {
             Self::AtPoint(_) => "lim",
             Self::FromLeft(_) => "lim_left",
             Self::FromRight(_) => "lim_right",
+            Self::AtPositiveInfinity => "lim_pos_inf",
+            Self::AtNegativeInfinity => "lim_neg_inf",
         }
     }
     pub fn predicate_name(&self) -> &'static str {
@@ -1225,12 +1276,15 @@ impl LimitApproach {
             Self::AtPoint(_) => "has_limit_at",
             Self::FromLeft(_) => "has_limit_left",
             Self::FromRight(_) => "has_limit_right",
+            Self::AtPositiveInfinity => "has_limit_pos_inf",
+            Self::AtNegativeInfinity => "has_limit_neg_inf",
         }
     }
 
-    pub fn point(&self) -> &Obj {
+    pub fn point(&self) -> Option<&Obj> {
         match self {
-            Self::AtPoint(point) | Self::FromLeft(point) | Self::FromRight(point) => point,
+            Self::AtPoint(point) | Self::FromLeft(point) | Self::FromRight(point) => Some(point),
+            Self::AtPositiveInfinity | Self::AtNegativeInfinity => None,
         }
     }
 }

@@ -337,6 +337,8 @@ impl Obj {
                 Obj::FunctionSpace(FunctionSpace::FnSet(x)) => s.push_str(&x.ir()),
                 Obj::FunctionSpace(FunctionSpace::AnonymousFn(x)) => s.push_str(&x.ir()),
                 Obj::LimitOperator(LimitOperator::Sequence(x)) => s.push_str(&x.ir()),
+                Obj::LimitOperator(LimitOperator::SequenceLimsup(x)) => s.push_str(&x.ir()),
+                Obj::LimitOperator(LimitOperator::SequenceLiminf(x)) => s.push_str(&x.ir()),
                 Obj::LimitOperator(LimitOperator::Function(x)) => s.push_str(&x.ir()),
                 Obj::StandardSet(x) => s.push_str(&x.ir()),
                 Obj::ProductShape(ProductShape::Cart(x)) => s.push_str(&x.ir()),
@@ -1071,15 +1073,20 @@ impl_obj_kw_unary!(Csch, CSCH, arg);
 impl_obj_kw_call!(SymmetricDifference, SET_DIFF, left, right);
 
 impl_obj_kw_call!(SequenceLimit, LIM, sequence);
+impl_obj_kw_call!(SequenceLimsup, LIMSUP, sequence);
+impl_obj_kw_call!(SequenceLiminf, LIMINF, sequence);
 
 impl FunctionLimit {
     pub fn ir(&self) -> ObjIR {
-        ObjIR(format!(
-            "{}({}, {})",
-            self.approach.value_name(),
-            self.function.ir(),
-            self.approach.point().ir()
-        ))
+        ObjIR(match self.approach.point() {
+            Some(point) => format!(
+                "{}({}, {})",
+                self.approach.value_name(),
+                self.function.ir(),
+                point.ir()
+            ),
+            None => format!("{}({})", self.approach.value_name(), self.function.ir()),
+        })
     }
     impl_display_pair!();
 }

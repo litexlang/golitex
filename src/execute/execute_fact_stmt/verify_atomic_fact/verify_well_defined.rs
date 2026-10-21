@@ -1,4 +1,6 @@
+use super::well_defined_result::FunctionLimitApproachRealProof;
 use crate::ast::fact::AtomicFact;
+use crate::ast::obj::LimitApproach;
 use crate::ast::obj::Obj;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::VerifyEqualFactWellDefinedResult;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::{
@@ -114,15 +116,11 @@ impl Runtime {
             ));
         }
         let function_limit = match fact {
-            AtomicFact::HasFunctionLimitFact(f) => {
-                Some((&f.function, f.approach.point(), &f.value))
-            }
-            AtomicFact::NotHasFunctionLimitFact(f) => {
-                Some((&f.function, f.approach.point(), &f.value))
-            }
+            AtomicFact::HasFunctionLimitFact(f) => Some((&f.function, &f.approach, &f.value)),
+            AtomicFact::NotHasFunctionLimitFact(f) => Some((&f.function, &f.approach, &f.value)),
             _ => None,
         };
-        if let Some((function, point, value)) = function_limit {
+        if let Some((function, approach, value)) = function_limit {
             let Some(function_domain) =
                 self.checked_real_function_limit_domain(function, verify_state)?
             else {
@@ -134,7 +132,7 @@ impl Runtime {
                 ));
             };
             let mut real_proofs = Vec::new();
-            for element in [point, value] {
+            for element in approach.point().into_iter().chain(std::iter::once(value)) {
                 let requirement = self.function_limit_real_member(element.clone());
                 let result = self.verify_fact(&requirement, verify_state)?;
                 if result.is_failed() {
@@ -151,7 +149,17 @@ impl Runtime {
                 real_proofs.push(Box::new(result));
             }
             let value_real = real_proofs.pop().unwrap();
-            let point_real = real_proofs.pop().unwrap();
+            let approach_real = match approach {
+                LimitApproach::AtPositiveInfinity => {
+                    FunctionLimitApproachRealProof::AtPositiveInfinity
+                }
+                LimitApproach::AtNegativeInfinity => {
+                    FunctionLimitApproachRealProof::AtNegativeInfinity
+                }
+                _ => FunctionLimitApproachRealProof::Finite(
+                    real_proofs.pop().expect("finite point evidence"),
+                ),
+            };
             return Ok(VerifyAtomicFactWellDefinedResult::Success(
                 AtomicFactWellDefinedProof {
                     well_defined_of_each_parameter: succeeded_args,
@@ -159,7 +167,7 @@ impl Runtime {
                     predicate_domain: PredicateDomainProof::FunctionLimit(
                         super::well_defined_result::FunctionLimitPredicateDomainProof {
                             function_domain,
-                            point_real,
+                            approach_real,
                             value_real,
                         },
                     ),
@@ -170,7 +178,11 @@ impl Runtime {
         // signature; it does not rerun its body under the predicate-domain ceiling.
         let sequence_limit = match fact {
             AtomicFact::HasSequenceLimitFact(f) => Some((&f.sequence, &f.value)),
+            AtomicFact::HasSequenceLimsupFact(f) => Some((&f.sequence, &f.value)),
+            AtomicFact::HasSequenceLiminfFact(f) => Some((&f.sequence, &f.value)),
             AtomicFact::NotHasSequenceLimitFact(f) => Some((&f.sequence, &f.value)),
+            AtomicFact::NotHasSequenceLimsupFact(f) => Some((&f.sequence, &f.value)),
+            AtomicFact::NotHasSequenceLiminfFact(f) => Some((&f.sequence, &f.value)),
             _ => None,
         };
         if let Some((sequence, value)) = sequence_limit {
@@ -499,7 +511,11 @@ impl Runtime {
         use StandardSet::{ZStar, N, R, Z};
         let sequence_limit = match fact {
             AtomicFact::HasSequenceLimitFact(f) => Some((&f.sequence, &f.value)),
+            AtomicFact::HasSequenceLimsupFact(f) => Some((&f.sequence, &f.value)),
+            AtomicFact::HasSequenceLiminfFact(f) => Some((&f.sequence, &f.value)),
             AtomicFact::NotHasSequenceLimitFact(f) => Some((&f.sequence, &f.value)),
+            AtomicFact::NotHasSequenceLimsupFact(f) => Some((&f.sequence, &f.value)),
+            AtomicFact::NotHasSequenceLiminfFact(f) => Some((&f.sequence, &f.value)),
             _ => None,
         };
         if let Some((sequence, value)) = sequence_limit {
@@ -659,9 +675,13 @@ fn atomic_except_equality_fact_arg_objs(fact: &AtomicFact) -> Vec<&Obj> {
         AtomicFact::CoprimeFact(f) => vec![&f.left, &f.right],
         AtomicFact::NotCoprimeFact(f) => vec![&f.left, &f.right],
         AtomicFact::HasSequenceLimitFact(f) => vec![&f.sequence, &f.value],
-        AtomicFact::HasFunctionLimitFact(f) => vec![&f.function, f.approach.point(), &f.value],
+        AtomicFact::HasSequenceLimsupFact(f) => vec![&f.sequence, &f.value],
+        AtomicFact::HasSequenceLiminfFact(f) => vec![&f.sequence, &f.value],
+        AtomicFact::HasFunctionLimitFact(f) => f.approach.operand_refs(&f.function, &f.value),
         AtomicFact::NotHasSequenceLimitFact(f) => vec![&f.sequence, &f.value],
-        AtomicFact::NotHasFunctionLimitFact(f) => vec![&f.function, f.approach.point(), &f.value],
+        AtomicFact::NotHasSequenceLimsupFact(f) => vec![&f.sequence, &f.value],
+        AtomicFact::NotHasSequenceLiminfFact(f) => vec![&f.sequence, &f.value],
+        AtomicFact::NotHasFunctionLimitFact(f) => f.approach.operand_refs(&f.function, &f.value),
         AtomicFact::DvdFact(f) => vec![&f.left, &f.right],
         AtomicFact::NotDvdFact(f) => vec![&f.left, &f.right],
         AtomicFact::InjectiveFact(f) => vec![&f.domain, &f.codomain, &f.function],

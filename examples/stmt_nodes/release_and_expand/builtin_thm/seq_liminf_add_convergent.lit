@@ -1,0 +1,12 @@
+# Finite real sequence extremal limit; all premises are checked.
+# Run: target/release/litex -strict -lang en -f examples/stmt_nodes/release_and_expand/builtin_thm/seq_liminf_add_convergent.lit
+
+thm seq_liminf_add_convergent_example:
+    ? forall a,b,h seq(R),L,M R:
+        $has_seq_liminf(a,L)
+        $has_seq_limit(b,M)
+        forall n N+:
+            h(n)=a(n)+b(n)
+        =>:
+            $has_seq_liminf(h,L+M)
+    release thm seq_liminf_add_convergent(a,b,h,L,M)

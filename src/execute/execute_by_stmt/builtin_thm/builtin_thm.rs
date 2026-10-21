@@ -63,6 +63,12 @@ fn prepare_contract(
     args: &[Obj],
 ) -> RuntimeResult<Result<(Vec<Fact>, Vec<Fact>), String>> {
     use BuiltinTheoremId::*;
+    if matches!(
+        id,
+        FnLimitPosInfRealAccumulation | FnLimitNegInfRealAccumulation
+    ) {
+        return super::function_limits::prepare_function_limits(rt, id, args);
+    }
     let a = args[0].clone();
     let result = match id {
         FnLimitLeftRealAccumulation
@@ -113,6 +119,48 @@ fn prepare_contract(
         | FnLimitAtToRight
         | FnLimitFromSides
         | FnLimitSidesMismatch
+        | FnLimitPosInfRealAccumulation
+        | FnLimitPosInfFromEpsilon
+        | FnLimitPosInfControl
+        | FnLimitPosInfAccumulation
+        | FnLimitPosInfConstant
+        | FnLimitPosInfUnique
+        | FnLimitPosInfExists
+        | FnLimitPosInfSelected
+        | FnLimitPosInfNeg
+        | FnLimitPosInfAbs
+        | FnLimitPosInfScale
+        | FnLimitPosInfPower
+        | FnLimitPosInfAdd
+        | FnLimitPosInfSubtract
+        | FnLimitPosInfMultiply
+        | FnLimitPosInfDivide
+        | FnLimitPosInfLocalEqual
+        | FnLimitPosInfCompare
+        | FnLimitPosInfSqueeze
+        | FnLimitPosInfEventuallyPositive
+        | FnLimitPosInfEventuallyNonzero
+        | FnLimitNegInfRealAccumulation
+        | FnLimitNegInfFromEpsilon
+        | FnLimitNegInfControl
+        | FnLimitNegInfAccumulation
+        | FnLimitNegInfConstant
+        | FnLimitNegInfUnique
+        | FnLimitNegInfExists
+        | FnLimitNegInfSelected
+        | FnLimitNegInfNeg
+        | FnLimitNegInfAbs
+        | FnLimitNegInfScale
+        | FnLimitNegInfPower
+        | FnLimitNegInfAdd
+        | FnLimitNegInfSubtract
+        | FnLimitNegInfMultiply
+        | FnLimitNegInfDivide
+        | FnLimitNegInfLocalEqual
+        | FnLimitNegInfCompare
+        | FnLimitNegInfSqueeze
+        | FnLimitNegInfEventuallyPositive
+        | FnLimitNegInfEventuallyNonzero
         | FnLimitAtRealAccumulation
         | FnLimitAtFromEpsilon
         | FnLimitAtAccumulation
@@ -136,6 +184,47 @@ fn prepare_contract(
         | FnLimitAtEventuallyPositive
         | FnLimitAtEventuallyNonzero => {
             return super::function_limits::prepare_function_limits(rt, id, args)
+        }
+        SequenceLimsupBoundedExists | SequenceLiminfBoundedExists => {
+            return super::sequence_extrema::prepare_bounded_existence(rt, id, args)
+        }
+        SequenceLimsupFromEpsilon
+        | SequenceLimsupBound
+        | SequenceLimsupHit
+        | SequenceLimsupUnique
+        | SequenceLimsupExists
+        | SequenceLimsupSelected
+        | SequenceLimsupConstant
+        | SequenceLimsupFromLimit
+        | SequenceLimsupCompare
+        | SequenceLimsupEventuallyEqual
+        | SequenceLimsupShift
+        | SequenceLimsupNeg
+        | SequenceLimsupAddConstant
+        | SequenceLimsupScaleNonnegative
+        | SequenceLimsupScaleNegative
+        | SequenceLimsupAddConvergent
+        | SequenceLimsupSumBound
+        | SequenceLiminfFromEpsilon
+        | SequenceLiminfBound
+        | SequenceLiminfHit
+        | SequenceLiminfUnique
+        | SequenceLiminfExists
+        | SequenceLiminfSelected
+        | SequenceLiminfConstant
+        | SequenceLiminfFromLimit
+        | SequenceLiminfCompare
+        | SequenceLiminfEventuallyEqual
+        | SequenceLiminfShift
+        | SequenceLiminfNeg
+        | SequenceLiminfAddConstant
+        | SequenceLiminfScaleNonnegative
+        | SequenceLiminfScaleNegative
+        | SequenceLiminfAddConvergent
+        | SequenceLiminfSumBound
+        | SequenceLimitFromExtrema
+        | SequenceExtremaOrder => {
+            return super::sequence_extrema::prepare_sequence_extrema(rt, id, args)
         }
         SequenceLimitFromEpsilon
         | SequenceLimitTail

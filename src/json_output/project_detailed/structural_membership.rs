@@ -103,6 +103,8 @@ fn intrinsic_name(rule: &IntrinsicCodomain) -> &'static str {
     use IntrinsicCodomain::*;
     match rule {
         SequenceLimit => "lim",
+        SequenceLimsup => "limsup",
+        SequenceLiminf => "liminf",
         FunctionLimit => "lim_at",
         Floor => "floor",
         Ceil => "ceil",

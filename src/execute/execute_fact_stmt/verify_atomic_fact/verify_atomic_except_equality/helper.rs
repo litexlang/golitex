@@ -36,22 +36,36 @@ pub(super) fn atomic_fact_with_args(
     }
     Some(match fact {
         AtomicFact::HasFunctionLimitFact(f) => {
-            let (function, point, value) = take3!(args);
+            let mut args = args.into_iter();
+            let function = args.next()?;
+            let approach = if f.approach.point().is_some() {
+                f.approach.with_point(args.next()?)
+            } else {
+                f.approach.clone()
+            };
+            let value = args.next()?;
             crate::ast::fact::HasFunctionLimitFact {
                 fact_id,
                 function,
-                approach: f.approach.with_point(point),
+                approach,
                 value,
                 line_file: f.line_file.clone(),
             }
             .into()
         }
         AtomicFact::NotHasFunctionLimitFact(f) => {
-            let (function, point, value) = take3!(args);
+            let mut args = args.into_iter();
+            let function = args.next()?;
+            let approach = if f.approach.point().is_some() {
+                f.approach.with_point(args.next()?)
+            } else {
+                f.approach.clone()
+            };
+            let value = args.next()?;
             crate::ast::fact::NotHasFunctionLimitFact {
                 fact_id,
                 function,
-                approach: f.approach.with_point(point),
+                approach,
                 value,
                 line_file: f.line_file.clone(),
             }
@@ -67,9 +81,49 @@ pub(super) fn atomic_fact_with_args(
             }
             .into()
         }
+        AtomicFact::HasSequenceLimsupFact(f) => {
+            let (sequence, value) = take2!(args);
+            crate::ast::fact::HasSequenceLimsupFact {
+                fact_id,
+                sequence,
+                value,
+                line_file: f.line_file.clone(),
+            }
+            .into()
+        }
+        AtomicFact::HasSequenceLiminfFact(f) => {
+            let (sequence, value) = take2!(args);
+            crate::ast::fact::HasSequenceLiminfFact {
+                fact_id,
+                sequence,
+                value,
+                line_file: f.line_file.clone(),
+            }
+            .into()
+        }
         AtomicFact::NotHasSequenceLimitFact(f) => {
             let (sequence, value) = take2!(args);
             crate::ast::fact::NotHasSequenceLimitFact {
+                fact_id,
+                sequence,
+                value,
+                line_file: f.line_file.clone(),
+            }
+            .into()
+        }
+        AtomicFact::NotHasSequenceLimsupFact(f) => {
+            let (sequence, value) = take2!(args);
+            crate::ast::fact::NotHasSequenceLimsupFact {
+                fact_id,
+                sequence,
+                value,
+                line_file: f.line_file.clone(),
+            }
+            .into()
+        }
+        AtomicFact::NotHasSequenceLiminfFact(f) => {
+            let (sequence, value) = take2!(args);
+            crate::ast::fact::NotHasSequenceLiminfFact {
                 fact_id,
                 sequence,
                 value,

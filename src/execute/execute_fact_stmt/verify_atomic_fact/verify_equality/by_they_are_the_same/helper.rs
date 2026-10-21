@@ -194,11 +194,23 @@ fn objs_alpha_equal(left: &Obj, right: &Obj, map: &HashMap<IdentifierId, Identif
         ) => {
             l.approach.same_direction(&r.approach)
                 && objs_alpha_equal(&l.function, &r.function, map)
-                && objs_alpha_equal(l.approach.point(), r.approach.point(), map)
+                && match (l.approach.point(), r.approach.point()) {
+                    (Some(a), Some(b)) => objs_alpha_equal(a, b, map),
+                    (None, None) => true,
+                    _ => false,
+                }
         }
         (
             Obj::LimitOperator(crate::ast::obj::LimitOperator::Sequence(l)),
             Obj::LimitOperator(crate::ast::obj::LimitOperator::Sequence(r)),
+        ) => objs_alpha_equal(&l.sequence, &r.sequence, map),
+        (
+            Obj::LimitOperator(crate::ast::obj::LimitOperator::SequenceLimsup(l)),
+            Obj::LimitOperator(crate::ast::obj::LimitOperator::SequenceLimsup(r)),
+        ) => objs_alpha_equal(&l.sequence, &r.sequence, map),
+        (
+            Obj::LimitOperator(crate::ast::obj::LimitOperator::SequenceLiminf(l)),
+            Obj::LimitOperator(crate::ast::obj::LimitOperator::SequenceLiminf(r)),
         ) => objs_alpha_equal(&l.sequence, &r.sequence, map),
         (Obj::Identifier(l), Obj::Identifier(r)) => identifier_objs_alpha_equal(l, r, map),
         (

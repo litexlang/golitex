@@ -1,0 +1,11 @@
+# Finite real function limit at infinity; all premises are checked.
+# Run: target/release/litex -strict -lang en -f examples/stmt_nodes/release_and_expand/builtin_thm/fn_limit_neg_inf_constant.lit
+
+thm fn_limit_neg_inf_constant_example:
+    ? forall fa fn(x R) R,c R:
+        forall x R:
+            fa(x)=c
+        =>:
+            $has_limit_neg_inf(fa,c)
+    release thm fn_limit_neg_inf_real_accumulation()
+    by thm fn_limit_neg_inf_constant(fa,c) => $has_limit_neg_inf(fa,c)

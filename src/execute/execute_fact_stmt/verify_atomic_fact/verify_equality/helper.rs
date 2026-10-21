@@ -63,13 +63,27 @@ pub(crate) fn corresponding_arg_pairs(left: &Obj, right: &Obj) -> Option<Vec<(Ob
         (
             Obj::LimitOperator(crate::ast::obj::LimitOperator::Function(l)),
             Obj::LimitOperator(crate::ast::obj::LimitOperator::Function(r)),
-        ) if l.approach.same_direction(&r.approach) => Some(vec![
-            (*l.function.clone(), *r.function.clone()),
-            (l.approach.point().clone(), r.approach.point().clone()),
-        ]),
+        ) if l.approach.same_direction(&r.approach) => Some(
+            std::iter::once((*l.function.clone(), *r.function.clone()))
+                .chain(
+                    l.approach
+                        .point()
+                        .zip(r.approach.point())
+                        .map(|(a, b)| (a.clone(), b.clone())),
+                )
+                .collect(),
+        ),
         (
             Obj::LimitOperator(crate::ast::obj::LimitOperator::Sequence(l)),
             Obj::LimitOperator(crate::ast::obj::LimitOperator::Sequence(r)),
+        ) => Some(vec![(*l.sequence.clone(), *r.sequence.clone())]),
+        (
+            Obj::LimitOperator(crate::ast::obj::LimitOperator::SequenceLimsup(l)),
+            Obj::LimitOperator(crate::ast::obj::LimitOperator::SequenceLimsup(r)),
+        ) => Some(vec![(*l.sequence.clone(), *r.sequence.clone())]),
+        (
+            Obj::LimitOperator(crate::ast::obj::LimitOperator::SequenceLiminf(l)),
+            Obj::LimitOperator(crate::ast::obj::LimitOperator::SequenceLiminf(r)),
         ) => Some(vec![(*l.sequence.clone(), *r.sequence.clone())]),
         (Obj::FnObj(l), Obj::FnObj(r)) => fn_obj_corresponding_arg_pairs(l, r),
 

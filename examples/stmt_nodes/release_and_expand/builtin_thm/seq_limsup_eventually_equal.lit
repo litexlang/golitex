@@ -1,0 +1,13 @@
+# Finite real sequence extremal limit; all premises are checked.
+# Run: target/release/litex -strict -lang en -f examples/stmt_nodes/release_and_expand/builtin_thm/seq_limsup_eventually_equal.lit
+
+thm seq_limsup_eventually_equal_example:
+    ? forall a,b seq(R),L R,n0 N+:
+        $has_seq_limsup(a,L)
+        forall n N+:
+            n>=n0
+            =>:
+                b(n)=a(n)
+        =>:
+            $has_seq_limsup(b,L)
+    release thm seq_limsup_eventually_equal(a,b,L,n0)

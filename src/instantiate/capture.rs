@@ -57,9 +57,17 @@ pub fn collect_free_plain_ids(
     match obj {
         Obj::LimitOperator(crate::ast::obj::LimitOperator::Function(a)) => {
             collect_free_plain_ids(&a.function, bound, out);
-            collect_free_plain_ids(a.approach.point(), bound, out);
+            if let Some(point) = a.approach.point() {
+                collect_free_plain_ids(point, bound, out);
+            }
         }
         Obj::LimitOperator(crate::ast::obj::LimitOperator::Sequence(a)) => {
+            collect_free_plain_ids(&a.sequence, bound, out)
+        }
+        Obj::LimitOperator(crate::ast::obj::LimitOperator::SequenceLimsup(a)) => {
+            collect_free_plain_ids(&a.sequence, bound, out)
+        }
+        Obj::LimitOperator(crate::ast::obj::LimitOperator::SequenceLiminf(a)) => {
             collect_free_plain_ids(&a.sequence, bound, out)
         }
         Obj::Identifier(id) => {

@@ -1,0 +1,9 @@
+# Finite real function limit at infinity; all premises are checked.
+# Run: target/release/litex -strict -lang en -f examples/stmt_nodes/release_and_expand/builtin_thm/fn_limit_pos_inf_eventually_positive.lit
+
+thm fn_limit_pos_inf_eventually_positive_example:
+    ? forall fa fn(x R) R,L R+:
+        $has_limit_pos_inf(fa,L)
+        =>:
+            exist delta R st {{x R:delta<x} $subset preimage_set(fa,R+)}
+    release thm fn_limit_pos_inf_eventually_positive(fa,L)

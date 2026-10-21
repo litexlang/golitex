@@ -1,0 +1,12 @@
+# Finite real function limit at infinity; all premises are checked.
+# Run: target/release/litex -strict -lang en -f examples/stmt_nodes/release_and_expand/builtin_thm/fn_limit_pos_inf_add.lit
+
+thm fn_limit_pos_inf_add_example:
+    ? forall fa,ga,ha fn(x R) R,A,B R:
+        $has_limit_pos_inf(fa,A)
+        $has_limit_pos_inf(ga,B)
+        forall x R:
+            ha(x)=fa(x)+ga(x)
+        =>:
+            $has_limit_pos_inf(ha,A+B)
+    release thm fn_limit_pos_inf_add(fa,ga,ha,A,B)

@@ -32,12 +32,24 @@ impl Runtime {
                 Ok(crate::ast::obj::FunctionLimit::with_approach(
                     self.inst_obj_rec(&a.function, param_to_arg_map)?,
                     a.approach
-                        .with_point(self.inst_obj_rec(a.approach.point(), param_to_arg_map)?),
+                        .try_map_point(|point| self.inst_obj_rec(point, param_to_arg_map))?,
                 )
                 .into())
             }
             Obj::LimitOperator(crate::ast::obj::LimitOperator::Sequence(a)) => {
                 Ok(crate::ast::obj::SequenceLimit::new(
+                    self.inst_obj_rec(&a.sequence, param_to_arg_map)?,
+                )
+                .into())
+            }
+            Obj::LimitOperator(crate::ast::obj::LimitOperator::SequenceLimsup(a)) => {
+                Ok(crate::ast::obj::SequenceLimsup::new(
+                    self.inst_obj_rec(&a.sequence, param_to_arg_map)?,
+                )
+                .into())
+            }
+            Obj::LimitOperator(crate::ast::obj::LimitOperator::SequenceLiminf(a)) => {
+                Ok(crate::ast::obj::SequenceLiminf::new(
                     self.inst_obj_rec(&a.sequence, param_to_arg_map)?,
                 )
                 .into())

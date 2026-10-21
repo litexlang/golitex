@@ -1,3 +1,4 @@
+use super::fn_obj_domain_check_result::FnObjArgumentScope;
 // ObjWellDefinedProofByDef mirrors Obj family nesting.
 // Family sub-enums wrap the existing per-leaf proof structs.
 // Transition: non-leaf proofs share CommonStages fields; specialize later per family.
@@ -184,6 +185,7 @@ pub struct FnObjObjWellDefinedProof {
     pub domain_fn_set: Option<FnObjDomainFnSetEvidence>,
     pub child_obj_well_defined: Vec<Box<ObjWellDefinedProof>>,
     pub requirement_fact_verified: Vec<VerifyFactResult>,
+    pub argument_scope: Option<FnObjArgumentScope>,
 }
 
 impl FnObjObjWellDefinedProof {
@@ -191,6 +193,7 @@ impl FnObjObjWellDefinedProof {
         let (child_obj_well_defined, requirement_fact_verified) =
             stages.into_success_child_proofs();
         Self {
+            argument_scope: None,
             domain_fn_set: None,
             child_obj_well_defined,
             requirement_fact_verified,
@@ -1225,6 +1228,7 @@ impl StructObjObjWellDefinedProof {
 pub struct FieldAccessObjWellDefinedProof {
     pub child_obj_well_defined: Vec<Box<ObjWellDefinedProof>>,
     pub requirement_fact_verified: Vec<VerifyFactResult>,
+    pub argument_scope: Option<FnObjArgumentScope>,
 }
 
 impl FieldAccessObjWellDefinedProof {
@@ -1232,6 +1236,7 @@ impl FieldAccessObjWellDefinedProof {
         let (child_obj_well_defined, requirement_fact_verified) =
             stages.into_success_child_proofs();
         Self {
+            argument_scope: None,
             child_obj_well_defined,
             requirement_fact_verified,
         }
@@ -1472,6 +1477,8 @@ impl SymmetricDifferenceObjWellDefinedProof {
 pub enum LimitOperatorObjWellDefinedProofByDef {
     Function(FunctionLimitObjWellDefinedProof),
     Sequence(SequenceLimitObjWellDefinedProof),
+    SequenceLimsup(SequenceLimsupObjWellDefinedProof),
+    SequenceLiminf(SequenceLiminfObjWellDefinedProof),
 }
 pub struct SequenceLimitObjWellDefinedProof {
     pub sequence_wd: Box<ObjWellDefinedProof>,
@@ -1482,9 +1489,27 @@ pub struct SequenceLimitObjWellDefinedProof {
 pub struct FunctionLimitObjWellDefinedProof {
     pub approach: crate::ast::obj::LimitApproach,
     pub function_wd: Box<ObjWellDefinedProof>,
-    pub point_wd: Box<ObjWellDefinedProof>,
+    pub approach_wd: FunctionLimitApproachWellDefinedProof,
     pub function_domain:
         crate::execute::execute_fact_stmt::function_limit::RealFunctionLimitDomainProof,
-    pub point_real: Box<VerifyFactResult>,
+    pub approach_real: crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::FunctionLimitApproachRealProof,
     pub convergence: crate::execute::execute_fact_stmt::function_limit::FunctionConvergenceProof,
+}
+
+/// Only finite approaches have a point, with its own checked WD and carrier.
+pub enum FunctionLimitApproachWellDefinedProof {
+    Finite { point_wd: Box<ObjWellDefinedProof> },
+    AtPositiveInfinity,
+    AtNegativeInfinity,
+}
+
+pub struct SequenceLimsupObjWellDefinedProof {
+    pub sequence_wd: Box<ObjWellDefinedProof>,
+    pub sequence_domain: crate::execute::execute_fact_stmt::sequence_limit::RealSequenceDomainProof,
+    pub convergence: crate::execute::execute_fact_stmt::sequence_limit::SequenceConvergenceProof,
+}
+pub struct SequenceLiminfObjWellDefinedProof {
+    pub sequence_wd: Box<ObjWellDefinedProof>,
+    pub sequence_domain: crate::execute::execute_fact_stmt::sequence_limit::RealSequenceDomainProof,
+    pub convergence: crate::execute::execute_fact_stmt::sequence_limit::SequenceConvergenceProof,
 }

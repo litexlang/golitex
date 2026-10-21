@@ -14,11 +14,23 @@ impl Runtime {
             AtomicFact::HasSequenceLimitFact(_) => {
                 Ok(InferAtomicFactResult::HasSequenceLimitFact(Vec::new()))
             }
+            AtomicFact::HasSequenceLimsupFact(_) => {
+                Ok(InferAtomicFactResult::HasSequenceLimsupFact(Vec::new()))
+            }
+            AtomicFact::HasSequenceLiminfFact(_) => {
+                Ok(InferAtomicFactResult::HasSequenceLiminfFact(Vec::new()))
+            }
             AtomicFact::NotHasFunctionLimitFact(_) => {
                 Ok(InferAtomicFactResult::NotHasFunctionLimitFact(Vec::new()))
             }
             AtomicFact::NotHasSequenceLimitFact(_) => {
                 Ok(InferAtomicFactResult::NotHasSequenceLimitFact(Vec::new()))
+            }
+            AtomicFact::NotHasSequenceLimsupFact(_) => {
+                Ok(InferAtomicFactResult::NotHasSequenceLimsupFact(Vec::new()))
+            }
+            AtomicFact::NotHasSequenceLiminfFact(_) => {
+                Ok(InferAtomicFactResult::NotHasSequenceLiminfFact(Vec::new()))
             }
             AtomicFact::NormalAtomicFact(f) => Ok(InferAtomicFactResult::NormalAtomicFact(
                 self.infer_normal_atomic_fact(f, state)?,

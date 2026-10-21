@@ -1,12 +1,18 @@
 # Litex: In the AI Era, Let Machines and Humans Speak the Same Mathematical Language
 
-_A formal language that is easy to learn and understand, close to natural language, without sacrificing rigor_
+**Write math, get formalized code: because the math already is.**
+
+Litex began with a question: if mathematics is already a rigorous language, in which each step needs justification, could familiar mathematical writing itself serve as formal code? What constraints would let machines check that writing while preserving how people usually express mathematics?
+
+That curiosity led me to rethink the relationship between mathematics, natural language, and code from first principles, including what mathematics is and what proof means. Litex's language, verifier, and tools have grown through building and testing answers to these questions. I hope this can make formal tools directly accessible to anyone who uses mathematics, from school students to AI engineers, without specialized training.
+
+The project is still exploratory and under rapid development; this Blueprint presents its current design, what has been implemented, and directions for further exploration.
 
 **Pronunciation:** /ˈliːtɛk/ (“LEE-tek”, Chinese “里泰克”), not “LYE-tek” (“赖泰克”).
 
 Created and maintained by Jiachen Shen.
 
-Last updated: October 18, 2026.
+Last updated: October 21, 2026.
 
 Website: https://litexlang.com/doc/Litex_Blueprint
 
@@ -49,6 +55,11 @@ _“Language is an instrument of human reason, and not merely a medium for the e
 
 _— George Boole, The Laws of Thought (1854), Chapter II (excerpt)_
 
+Write `1 + 1 = 2`, and that mathematical statement is already the formal
+source. Litex explores how familiar mathematical objects, definitions and
+facts can be written directly as code, with their meanings and conditions
+of use made precise.
+
 **A familiar mathematical expression can mean something different in Lean.**
 In ordinary real arithmetic, `1 / 0` is undefined; Lean/Mathlib's real division
 satisfies `(1 : ℝ) / 0 = 0`. In ordinary integer arithmetic, `1 - 2 = -1`;
@@ -79,14 +90,14 @@ part of the language's default authoring experience.
 
 **Litex is a human-readable, set-theoretic, fact-oriented formal language,
 with experimental Lean compilation for supported proofs.** Its design question
-starts with the mathematical text itself: how should objects, assumptions,
-definitions, and reasoning steps be represented so that people can understand
-them and machines can check them?
+is how mathematical objects, facts and statements can form an executable
+language: how should their structure guide condition checks, the search for
+grounds and the accumulation of knowledge?
 
-Litex explores whether keeping mathematical meaning, direct fact statements,
-and stepwise feedback together can lower the cost of constructing, reading,
-reviewing, repairing, and reusing checked knowledge. That is a design hypothesis
-to test through real mathematical work, not a measured universal advantage.
+The aim is to give authors less extra machinery to learn and operate. The
+executor takes on the storage, lookup and checking needed to support familiar
+writing. How much this helps people construct, read, repair and reuse proofs
+needs to be tested through real mathematical work.
 
 As AI produces more candidate reasoning, this question becomes more pressing:
 both the proof and the meaning of its statement need scrutiny. People choose
@@ -102,14 +113,20 @@ people master the tools that carry their mathematical ideas.*
 
 ### 0.1 The Goal of Litex
 
-**Write mathematics as mathematics: preserve its intended meaning, state its
-conditions, and develop its reasoning in a form that can be checked.**
+**Let familiar mathematical objects, facts and statements be the code.**
 
-This goal connects semantics to the writing experience. A reciprocal should
-carry its nonzero condition; an elementary equality should be writable as an
-equality; a definition should become usable knowledge for the next statement.
-Authors choose the mathematical ideas and proof route. The language checks
-supported domain obligations and local reasoning, and explains where it stops.
+Authors choose the ideas, definitions and proof route, then write meaningful
+steps. The executor keeps the mathematical context, checks conditions, looks
+for local grounds and records the results. Its storage and lookup need to
+respect mathematical structure, scope and the conditions under which a fact
+can be used.
+
+A reciprocal carries its nonzero condition; an elementary equality can be
+written as an equality; a definition becomes usable knowledge for the next
+statement. Supporting that writing requires work inside the executor. This
+division of work is what Litex is exploring, with precise syntax and a growing
+set of supported checks. The Litex text is itself formal source; Lean
+compilation uses the source and its verification evidence for supported routes.
 
 The long-term ambition is to help mathematical knowledge and understanding
 grow together across the discipline. The six characteristics below develop
@@ -138,9 +155,9 @@ The chapters below follow this order. The [verification pipeline](https://litexl
 
 ## 1. Familiar Expressions Should Keep Their Mathematical Meaning
 
-The opening examples expose the first problem Litex addresses: a proof can be
-accepted while familiar notation has a meaning the author did not intend.
-With Mathlib imported, these Lean statements all have proofs:
+For mathematical writing to serve as code, its meanings need to be precise.
+A proof can be accepted while familiar notation has a meaning the author did
+not intend. With Mathlib imported, these Lean statements all have proofs:
 
 ```lean
 import Mathlib
@@ -196,8 +213,8 @@ _“Readability counts.”_
 
 _— Tim Peters, The Zen of Python (PEP 20)_
 
-**Writing mathematics should mean writing mathematics.** To state that one plus
-one equals two, the Litex source is the fact itself:
+**The mathematical statement is already the source to check.** To state that
+one plus one equals two, write the fact itself:
 
 ```litex
 1 + 1 = 2

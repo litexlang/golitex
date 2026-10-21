@@ -17,6 +17,20 @@ const SQRT_RADICAND_DIVISION: &str =
 const SQRT_RECIPROCALS: &str =
     "forall a R, b R:\n    0 <= a\n    0 <= b\n    sqrt(a) != 0\n    sqrt(b) != 0\n    =>:\n        1/sqrt(a)+1/sqrt(b)=(sqrt(a)+sqrt(b))/(sqrt(a)*sqrt(b))\n";
 
+#[test]
+fn rational_coordinates_observe_original_inferred_objects() {
+    let source = "forall p cart(R, R):\n    p(1) + p(2) = p(2) + p(1)\n";
+    let (result, compiler) = checked(source);
+    let lean = compiler
+        .compile_run(&result, "coordinate_observations")
+        .unwrap();
+    assert!(lean.contains("Litex.NativeBridge.asComplex _object_h"));
+    assert!(
+        !lean.contains("_litex_numeric_call"),
+        "coordinate observations should consume the original inferred objects and memberships"
+    );
+}
+
 fn checked(source: &str) -> (RunLitexCodeResult, LitexToLeanCompiler) {
     let mut runtime = Runtime::new(LaunchCommand::Eval {
         code: String::new(),

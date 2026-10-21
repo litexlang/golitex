@@ -1,0 +1,214 @@
+# Finite real limits at the two infinite input ends.
+# Before: these native selectors did not parse. Missing-candidate WD remains a rejection.
+# Now: prove directional unboundedness and epsilon/threshold control explicitly.
+# Run: target/release/litex -strict -lang en -f examples/wd/real_function_limit_infinity.lit
+
+have fn reciprocal(x R:x!=0) R=1/x
+
+claim:
+    ? forall M R:
+        exist x {t R:t!=0} st {M<x}
+    M<=abs(M)
+    0<=abs(M)
+    0<abs(M)+1
+    M<abs(M)+1
+    witness exist x {t R:t!=0} st {M<x} from abs(M)+1
+
+claim:
+    ? forall epsilon R+:
+        exist T R st {{x {t R:t!=0}:T<x} $subset preimage_set(reciprocal,{v R:abs(v-0)<epsilon})}
+    0<1/epsilon
+    witness exist T R st {{x {t R:t!=0}:T<x} $subset preimage_set(reciprocal,{v R:abs(v-0)<epsilon})} from 1/epsilon:
+        claim:
+            ? forall x {s {t R:t!=0}:1/epsilon<s}:
+                x $in preimage_set(reciprocal,{v R:abs(v-0)<epsilon})
+            x $in {t R:t!=0}
+            x $in R
+            x!=0
+            1/epsilon<x
+            0<x
+            (1/epsilon)*epsilon<x*epsilon
+            (1/epsilon)*epsilon=1
+            1<x*epsilon
+            1/x<(x*epsilon)/x
+            (x*epsilon)/x=epsilon
+            0<1/x<epsilon
+            reciprocal(x)=1/x
+            reciprocal(x)-0=1/x
+            abs(1/x)=1/x
+            abs(reciprocal(x)-0)=abs(1/x)=1/x<epsilon
+            reciprocal(x) $in {v R:abs(v-0)<epsilon}
+        by def {x {t R:t!=0}:1/epsilon<x} $subset preimage_set(reciprocal,{v R:abs(v-0)<epsilon})
+
+claim:
+    ? forall M R:
+        exist x {t R:t!=0} st {x<M}
+    -M<=abs(-M)
+    abs(-M)=abs(M)
+    -M<=abs(M)
+    abs(M)*(-1)<=(-M)*(-1)
+    abs(M)*(-1)=-abs(M)
+    (-M)*(-1)=M
+    -abs(M)<=M
+    0<=abs(M)
+    -abs(M)<=0
+    -abs(M)-1<-abs(M)<=0
+    -abs(M)-1<0
+    -abs(M)-1<M
+    witness exist x {t R:t!=0} st {x<M} from -abs(M)-1
+
+claim:
+    ? forall epsilon R+:
+        exist T R st {{x {t R:t!=0}:x<T} $subset preimage_set(reciprocal,{v R:abs(v-0)<epsilon})}
+    0<1/epsilon
+    -(1/epsilon)<0
+    witness exist T R st {{x {t R:t!=0}:x<T} $subset preimage_set(reciprocal,{v R:abs(v-0)<epsilon})} from -(1/epsilon):
+        claim:
+            ? forall x {s {t R:t!=0}:s<-(1/epsilon)}:
+                x $in preimage_set(reciprocal,{v R:abs(v-0)<epsilon})
+            x $in {t R:t!=0}
+            x $in R
+            x!=0
+            x<-(1/epsilon)
+            x<0
+            0<-x
+            (-(1/epsilon))*(-1)<x*(-1)
+            (-(1/epsilon))*(-1)=1/epsilon
+            x*(-1)=-x
+            1/epsilon<-x
+            (1/epsilon)*epsilon<(-x)*epsilon
+            (1/epsilon)*epsilon=1
+            1<(-x)*epsilon
+            1/(-x)<((-x)*epsilon)/(-x)
+            ((-x)*epsilon)/(-x)=epsilon
+            0<1/(-x)<epsilon
+            reciprocal(x)-0=1/x
+            -(1/(-x))<0
+            1/x=-(1/(-x))
+            1/x<0
+            abs(1/x)=-(1/x)
+            -(1/x)=1/(-x)
+            abs(reciprocal(x)-0)=abs(1/x)=-(1/x)=1/(-x)<epsilon
+            reciprocal(x) $in {v R:abs(v-0)<epsilon}
+        by def {x {t R:t!=0}:x<-(1/epsilon)} $subset preimage_set(reciprocal,{v R:abs(v-0)<epsilon})
+
+by def $has_limit_pos_inf(reciprocal,0)
+
+by def $has_limit_neg_inf(reciprocal,0)
+
+lim_pos_inf(reciprocal)=0
+
+lim_neg_inf(reciprocal)=0
+
+lim_pos_inf(reciprocal)+lim_neg_inf(reciprocal)+2=2
+
+# Power law on the same complete guarded domain.
+have fn reciprocal_square(x R:x!=0) R=reciprocal(x)^2
+
+forall x {t R:t!=0}:
+    reciprocal_square(x)=reciprocal(x)^2
+
+release thm fn_limit_pos_inf_power(reciprocal,reciprocal_square,0,2)
+
+release thm fn_limit_neg_inf_power(reciprocal,reciprocal_square,0,2)
+
+lim_pos_inf(reciprocal_square)=0
+
+lim_neg_inf(reciprocal_square)=0
+
+claim:
+    ? forall x {t R:t!=0}:
+        reciprocal_square(x)=1/x^2
+    x $in R
+    x!=0
+    reciprocal(x)=1/x
+    reciprocal_square(x)=reciprocal(x)^2=(1/x)^2
+    (1/x)^2=(1/x)*(1/x)
+    (1/x)*(1/x)=1/(x*x)
+    x*x=x^2
+    1/(x*x)=1/x^2
+    reciprocal_square(x)=1/x^2
+
+# A rational function on the same complete guarded domain.
+claim:
+    ? forall x R:
+        x^2+1!=0
+    0<=x^2
+    0+1<=x^2+1
+    1<=x^2+1
+    0<x^2+1
+
+have fn one(x R:x!=0) R=1
+
+have fn two(x R:x!=0) R=2
+
+have fn numerator(x R:x!=0) R=two(x)+reciprocal_square(x)
+
+have fn denominator(x R:x!=0) R=one(x)+reciprocal_square(x)
+
+have fn rational(x R:x!=0) R=(2*x^2+1)/(x^2+1)
+
+forall x {t R:t!=0}:
+    numerator(x)=two(x)+reciprocal_square(x)
+
+forall x {t R:t!=0}:
+    denominator(x)=one(x)+reciprocal_square(x)
+
+claim:
+    ? forall x {t R:t!=0}:
+        denominator(x)!=0
+    0<=reciprocal(x)^2
+    0+1<=reciprocal(x)^2+1
+    1<=reciprocal(x)^2+1
+    one(x)=1
+    reciprocal_square(x)=reciprocal(x)^2
+    denominator(x)=one(x)+reciprocal_square(x)=1+reciprocal(x)^2=reciprocal(x)^2+1
+    0<denominator(x)
+
+claim:
+    ? forall x {t R:t!=0}:
+        rational(x)=numerator(x)/denominator(x)
+    x $in R
+    x!=0
+    reciprocal_square(x)=1/x^2
+    one(x)=1
+    two(x)=2
+    numerator(x)=two(x)+reciprocal_square(x)=2+1/x^2
+    denominator(x)=one(x)+reciprocal_square(x)=1+1/x^2
+    denominator(x)!=0
+    x^2!=0
+    x^2+1!=0
+    1+1/x^2!=0
+    numerator(x)/denominator(x)=(2+1/x^2)/(1+1/x^2)=(2*x^2+1)/(x^2+1)=rational(x)
+
+release thm fn_limit_pos_inf_constant(one,1)
+
+release thm fn_limit_pos_inf_constant(two,2)
+
+release thm fn_limit_pos_inf_add(two,reciprocal_square,numerator,2,0)
+
+release thm fn_limit_pos_inf_add(one,reciprocal_square,denominator,1,0)
+
+$has_limit_pos_inf(numerator,2)
+
+$has_limit_pos_inf(denominator,1)
+
+release thm fn_limit_pos_inf_divide(numerator,denominator,rational,2,1)
+
+lim_pos_inf(rational)=2
+
+release thm fn_limit_neg_inf_constant(one,1)
+
+release thm fn_limit_neg_inf_constant(two,2)
+
+release thm fn_limit_neg_inf_add(two,reciprocal_square,numerator,2,0)
+
+release thm fn_limit_neg_inf_add(one,reciprocal_square,denominator,1,0)
+
+$has_limit_neg_inf(numerator,2)
+
+$has_limit_neg_inf(denominator,1)
+
+release thm fn_limit_neg_inf_divide(numerator,denominator,rational,2,1)
+
+lim_neg_inf(rational)=2

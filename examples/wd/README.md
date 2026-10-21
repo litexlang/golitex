@@ -3,19 +3,30 @@
 Positive tracers for **already-implemented** Obj / Fact WD.
 Negatives stay in `../wd_negative/`.
 
+[Repeated function arguments](repeated_function_argument.lit) reuse a successful
+argument WD by its recorded ID within one candidate check. Membership and guard
+proofs remain required; failed candidates keep their evidence in a separate scope.
+
 [Finite-point function limits](real_function_limit_at.lit) prove the actual
 punctured approach and epsilon-delta condition before selecting `lim(f,x0)`.
 [Common proofs](real_function_limit_common_proofs.lit),
 [endpoint domains](real_function_limit_endpoints.lit), and
 [existence/congruence](real_function_limit_interfaces.lit) cover downstream
 use. WD consumes proved convergence, including before cancellation by zero.
-See the [22 theorem contracts](../../docs/function-limits.md) and matching
-`real_function_limit_*.lit` controls in `../wd_negative/`.
+The theorem fixtures are in `../stmt_nodes/release_and_expand/builtin_thm/`;
+matching `real_function_limit_*.lit` controls are in `../wd_negative/`.
 
 [Returned sequence applications](sequence_return_application.lit) check each
 call layer of finite_seq, seq and aliased function-space returns, retaining
 the actual carrier equality and guards. The corresponding out-of-range and
 callable-space negatives are in `../negative/exact_function_domains/`.
+
+[Left/right limits of a jump](real_function_limit_sides.lit) keep direction
+through proof, WD and selected arithmetic. [Matching sides](real_function_limit_sides_agree.lit)
+produce an ordinary candidate only through an explicit bridge.
+[Endpoint nonexistence](real_function_limit_sides_endpoint.lit) proves the
+absent side's negation; [generic interfaces](real_function_limit_sides_interfaces.lit)
+check existence, function/point equality and negative-candidate transport.
 
 Showcase migration tracers (strict, no trust):
 
@@ -234,3 +245,13 @@ declaration selects the field view; actual receiver and callable-field guards
 remain required. Regression tests also cover nested results, wrong fields and
 carriers, later memberships that cannot select a view, rollback, and detailed
 proof output in `tests/unit/execute/struct_return_field_access/tests.rs`.
+
+[Finite function limits at infinity](real_function_limit_infinity.lit) prove
+reciprocal and rational limits before selection. The [linear rational example](real_function_limit_infinity_linear_rational.lit),
+[one-ended domain](real_function_limit_infinity_direction.lit), and
+[identity nonexistence proof](real_function_limit_infinity_identity.lit) cover the input-domain boundaries.
+
+[Sequence upper/lower limits](sequence_limsup_liminf.lit) prove the alternating
+sequence's values, nonconvergence, nonadditivity and shift invariance.
+[Convergent sequences](sequence_extrema_convergent.lit) and
+[explicit bounded existence](sequence_extrema_bounded_existence.lit) exercise the corresponding BTs and proof-consuming WD.

@@ -1,0 +1,9 @@
+# Finite real sequence extremal limit; all premises are checked.
+# Run: target/release/litex -strict -lang en -f examples/stmt_nodes/release_and_expand/builtin_thm/seq_liminf_exists.lit
+
+thm seq_liminf_exists_example:
+    ? forall a seq(R),L R:
+        $has_seq_liminf(a,L)
+        =>:
+            exist u R st {$has_seq_liminf(a,u)}
+    release thm seq_liminf_exists(a,L)

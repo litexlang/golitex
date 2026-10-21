@@ -1,0 +1,10 @@
+# Finite real sequence extremal limit; all premises are checked.
+# Run: target/release/litex -strict -lang en -f examples/stmt_nodes/release_and_expand/builtin_thm/seq_liminf_unique.lit
+
+thm seq_liminf_unique_example:
+    ? forall a seq(R),A,B R:
+        $has_seq_liminf(a,A)
+        $has_seq_liminf(a,B)
+        =>:
+            A=B
+    release thm seq_liminf_unique(a,A,B)

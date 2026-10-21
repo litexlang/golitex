@@ -1,0 +1,5 @@
+# Expected normal rejection; no false extremal candidate or WD evidence may be invented.
+forall a fn(k N+:k>2) R,L R:
+    $has_seq_limsup(a,L)
+    =>:
+        limsup(a)=L

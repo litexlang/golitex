@@ -1,0 +1,11 @@
+# Finite real function limit at infinity; all premises are checked.
+# Run: target/release/litex -strict -lang en -f examples/stmt_nodes/release_and_expand/builtin_thm/fn_limit_neg_inf_scale.lit
+
+thm fn_limit_neg_inf_scale_example:
+    ? forall fa,ha fn(x R) R,A R,c R:
+        $has_limit_neg_inf(fa,A)
+        forall x R:
+            ha(x)=c*fa(x)
+        =>:
+            $has_limit_neg_inf(ha,c*A)
+    release thm fn_limit_neg_inf_scale(fa,ha,A,c)

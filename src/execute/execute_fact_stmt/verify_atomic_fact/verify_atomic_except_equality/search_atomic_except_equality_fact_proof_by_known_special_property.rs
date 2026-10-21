@@ -224,7 +224,11 @@ impl Runtime {
         fact: &AtomicFact,
     ) -> Option<AtomicExceptEqualityFactSearchProofByKnownSpecialProperty> {
         match fact {
-            AtomicFact::HasSequenceLimitFact(_)
+            AtomicFact::HasSequenceLimsupFact(_)
+            | AtomicFact::HasSequenceLiminfFact(_)
+            | AtomicFact::HasSequenceLimitFact(_)
+            | AtomicFact::NotHasSequenceLimsupFact(_)
+            | AtomicFact::NotHasSequenceLiminfFact(_)
             | AtomicFact::NotHasSequenceLimitFact(_)
             | AtomicFact::HasFunctionLimitFact(_)
             | AtomicFact::NotHasFunctionLimitFact(_) => None,

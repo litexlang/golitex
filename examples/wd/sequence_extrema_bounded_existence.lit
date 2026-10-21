@@ -1,0 +1,22 @@
+# Explicit bounded-existence calls, followed by finite selected-value use.
+# No numerical limit is guessed by WD.
+
+have fn c(k N+) R=3
+
+claim:
+    ? forall n N+:
+        abs(c(n))<=3
+    c(n)=3
+    abs(c(n))=abs(3)=3
+
+release thm seq_limsup_bounded_exists(c,3)
+
+release thm seq_liminf_bounded_exists(c,3)
+
+limsup(c) $in R
+
+liminf(c) $in R
+
+release thm seq_limsup_selected(c)
+
+release thm seq_liminf_selected(c)

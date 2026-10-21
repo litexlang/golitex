@@ -1,0 +1,9 @@
+# Finite real function limit at infinity; all premises are checked.
+# Run: target/release/litex -strict -lang en -f examples/stmt_nodes/release_and_expand/builtin_thm/fn_limit_pos_inf_accumulation.lit
+
+thm fn_limit_pos_inf_accumulation_example:
+    ? forall fa fn(x R) R,L R,r R:
+        $has_limit_pos_inf(fa,L)
+        =>:
+            exist x R st {r<x}
+    release thm fn_limit_pos_inf_accumulation(fa,L)

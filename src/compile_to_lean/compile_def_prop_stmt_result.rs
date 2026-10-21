@@ -73,13 +73,18 @@ impl LitexToLeanCompiler {
                 before: count + index,
                 ..*position
             };
+            let prior =
+                SourcePosition::new(Some(&prior), SourceOwner::PropObjects(proof, index), 0);
             self.compile_fact_wd(&assumed.well_defined, fact, &prior)?;
             self.validate_store(&assumed.store_and_infer.store, fact)?;
+            let definitions = self.compile_assumed_subjects(assumed, &prior)?;
             let formed = SourcePosition {
                 parent: Some(&prior),
                 owner: SourceOwner::FactWD(&assumed.well_defined),
                 before: usize::MAX,
             };
+            let formed =
+                SourcePosition::new(Some(&formed), SourceOwner::PropObjects(proof, index + 1), 0);
             let clause = (
                 self.fact_proposition(fact, &formed)?,
                 format!("h_{}", fact.fact_id().value()),
@@ -88,6 +93,11 @@ impl LitexToLeanCompiler {
                 before: count + index + 1,
                 ..*position
             };
+            let completed = SourcePosition::new(
+                Some(&completed),
+                SourceOwner::PropObjects(proof, index + 1),
+                0,
+            );
             let mut derived = self.compile_set_builder_parameter_inferences(
                 &assumed.store_and_infer,
                 fact,
@@ -100,12 +110,15 @@ impl LitexToLeanCompiler {
                 &clause,
                 &completed,
             )?);
-            clauses.push((clause.1, clause.0, derived));
+            clauses.push((clause.1, clause.0, derived, definitions));
         }
-        let (_, mut meaning, _) = clauses.pop().expect("validated nonempty predicate clauses");
-        for (name, clause, derived) in clauses.into_iter().rev() {
+        let (_, meaning, _, definitions) =
+            clauses.pop().expect("validated nonempty predicate clauses");
+        let mut meaning = self.scope_proposition(meaning, &definitions);
+        for (name, clause, derived, definitions) in clauses.into_iter().rev() {
             let suffix = self.scope_proposition(meaning, &derived);
-            meaning = format!("∃ ({name} : {clause}), {suffix}");
+            meaning =
+                self.scope_proposition(format!("∃ ({name} : {clause}), {suffix}"), &definitions);
         }
         // A proof witness retains each source domain without making it a Lean
         // parameter. Later constructor WD can depend on the exact earlier fact.

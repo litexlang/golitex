@@ -2,7 +2,10 @@
 
 These original lectures ask what continuity means when distance is no longer
 the starting point. Two topologies on the same two-point set provide a running
-example. The general definitions allow empty spaces as well as nonempty ones.
+example. Later chapters add separation axioms, compactness, product opens, a
+compact Hausdorff homeomorphism package, and the metric topology on `R` with
+the intermediate value theorem. The general definitions allow empty spaces as
+well as nonempty ones.
 
 ## Open sets and a space
 
@@ -63,9 +66,50 @@ connected, and `{0}` is a nontrivial clopen set.
 `continuous_surjection_preserves_connectedness` is the Chapter 3 theorem:
 a continuous surjection pulls a target separation back to a source
 separation via preimage union and intersection identities, then returns an
-empty preimage to an empty target piece. Subspace connectedness, path
-connectedness and compactness remain outside this slice; compact images are
-developed separately in the settings-first topology concepts showcase.
+empty preimage to an empty target piece.
+
+## Separation axioms
+
+`is_T0`, `is_T1` and `is_Hausdorff` are point-separation predicates on a
+space. The notes prove Hausdorff ⇒ T1 ⇒ T0 and that T1 spaces have closed
+singletons. The discrete two-point space is Hausdorff; the indiscrete one
+fails T0. These predicates reuse the same open-set field already present on
+`TopologicalSpace`; they do not introduce a second topology structure.
+
+## Compactness and continuous images
+
+`is_compact_subset` uses indexed open covers and finite index subsets with
+function restriction `\restricted`. Continuous images preserve compactness.
+The discrete singletons `{0}` and `{1}` are compact; the continuous-image
+theorem is released on the identity restricted to `{0}`.
+
+## Product opens
+
+`is_open_rectangle` and `is_product_open` describe the product-open notion
+via unions of rectangles. The notes do not yet construct a general
+`TopologicalSpace` whose opens are exactly the product opens of arbitrary
+factors; they verify discrete and indiscrete grids on
+`cart({0,1},{0,1})` and prove that a product of two trivial-open spaces is
+connected. A full product-topology constructor remains future work.
+
+## Compact Hausdorff packaging
+
+Chapter 7 proves that the union of two closed sets is closed, that a
+two-point subset of a Hausdorff space is closed, and that a continuous
+bijection with continuous inverse is a homeomorphism. The discrete
+two-point space is shown to be a compact Hausdorff space, and the swap is
+the homeomorphism instance. The classical route “compact Hausdorff +
+continuous bijection ⇒ continuous inverse” is not formalized in full; the
+continuous inverse stays an explicit hypothesis.
+
+## Metric topology on `R` and IVT
+
+Metric opens are defined by the existence of positive-radius balls. They
+form a topology `real_opens`, and `real_line` is the corresponding
+`TopologicalSpace<R>`. Continuity of a real function on a closed interval is
+expressed by an ε–δ control predicate. The intermediate value theorem
+extracts a least upper bound of `{x : a ≤ x ≤ b, f(x) ≤ c}` and obtains a
+contradiction unless `f(L) = c`.
 
 ## Dependency and reading order
 
@@ -87,13 +131,26 @@ flowchart LR
   P -->|proof| Q[Continuous surjections preserve connectedness]
   M -->|proof| Q
   N -->|proof| Q
+  T -->|definition| Sep[T0 / T1 / Hausdorff]
+  Sep -->|proof| Chain[Hausdorff implies T1 implies T0]
+  T -->|definition| Comp[Compact subsets]
+  M -->|proof| Img[Continuous images of compact sets]
+  Comp -->|proof| Img
+  T -->|definition| Prod[Product opens and grids]
+  N -->|proof| ProdConn[Trivial-open products connected]
+  Comp -->|proof| CH[Compact discrete Hausdorff instance]
+  Sep -->|proof| CH
+  H -->|proof| Bij[Continuous bijection with continuous inverse]
+  Rmet[Metric opens on R] -->|definition| RL[real_line]
+  RL -->|proof| IVT[Intermediate value theorem]
 ```
 
 Read in this order: sets, space laws, concrete spaces, closed sets, preimages,
-continuity, composition, homeomorphisms, connectedness and continuous
-surjections. Edge labels distinguish definition, signature, law verification
-and proof dependencies; motivation is explanatory. These are selected
-elementary lectures, not a development of compactness, separation axioms,
-subspace or product topologies, metric topology or algebraic topology.
+continuity, composition, homeomorphisms, connectedness, separation,
+compactness, product opens, compact Hausdorff packaging, metric `R` and IVT.
+Edge labels distinguish definition, signature, law verification and proof
+dependencies; motivation is explanatory. These are selected elementary
+lectures: subspace topology, a general product-space constructor, path
+connectedness and algebraic topology remain outside this slice.
 All included definitions, constructions and proofs pass strict verification;
 there are no user assumptions or outstanding proof holes in this slice.

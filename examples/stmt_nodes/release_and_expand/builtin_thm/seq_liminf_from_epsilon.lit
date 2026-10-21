@@ -1,0 +1,12 @@
+# Finite real sequence extremal limit; all premises are checked.
+# Run: target/release/litex -strict -lang en -f examples/stmt_nodes/release_and_expand/builtin_thm/seq_liminf_from_epsilon.lit
+
+thm seq_liminf_from_epsilon_example:
+    ? forall a seq(R),L R:
+        forall epsilon R+:
+            exist n0 N+ st {{n N+:n>=n0} $subset preimage_set(a,{v R:L-epsilon<v})}
+        forall epsilon R+,n0 N+:
+            exist n N+ st {n>=n0 and a(n)<L+epsilon}
+        =>:
+            $has_seq_liminf(a,L)
+    release thm seq_liminf_from_epsilon(a,L)

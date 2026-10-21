@@ -1,4 +1,4 @@
-use crate::compile_to_lean::helper::instantiated_object_matches;
+use crate::compile_to_lean::helper::{finite_vector_proof, instantiated_object_matches};
 use crate::compile_to_lean::compile_fact_stmt_result::compile_obj_well_defined_result::finite_call_parts;
 use crate::compile_to_lean::source_position::{SourceOwner, SourcePosition};
 use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
@@ -9,6 +9,7 @@ use crate::execute::execute_fact_stmt::known_tuple::{
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_they_are_the_same::SameFreeParamShapeProof;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::search_equal_fact_proof_by_known_special_property::{
     EqualFactSearchProofByKnownSpecialProperty, FnTupleProjectionKnownProof, FnTupleValueKnownProof,
+    TupleReconstructionKnownProof,
 };
 use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnObjDomainFnSetEvidence;
 use crate::prelude::*;
@@ -31,10 +32,70 @@ impl LitexToLeanCompiler {
             EqualFactSearchProofByKnownSpecialProperty::TupleProjection(_) => {
                 Err(LeanCompileError::unsupported("Equality/TupleProjection"))
             }
-            EqualFactSearchProofByKnownSpecialProperty::TupleReconstruction(_) => Err(
-                LeanCompileError::unsupported("Equality/TupleReconstruction"),
-            ),
+            EqualFactSearchProofByKnownSpecialProperty::TupleReconstruction(proof) => {
+                self.compile_known_tuple_reconstruction(fact, proof, position)
+            }
         }
+    }
+
+    fn compile_known_tuple_reconstruction(
+        &self,
+        fact: &EqualFact,
+        proof: &TupleReconstructionKnownProof,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        let (subject, target) = if proof.reversed {
+            (&fact.right, &fact.left)
+        } else {
+            (&fact.left, &fact.right)
+        };
+        let Obj::ProductShape(ProductShape::Tuple(tuple)) = target else {
+            return Err(LeanCompileError::new(
+                "TupleReconstruction/Target",
+                "The recorded target is not a tuple.",
+            ));
+        };
+        let n = proof.shape.dimension();
+        if tuple.args.len() != n || proof.subjects.len() != n {
+            return Err(LeanCompileError::new(
+                "TupleReconstruction/Arity",
+                "Reconstruction needs every original coordinate and receiver proof.",
+            ));
+        }
+        let (cart, member) = self.compile_cart_shape_member(subject, &proof.shape, position)?;
+        let point = self.compile_object_reference(subject, position)?;
+        self.compile_object_reference(target, position)?;
+        let mut coordinates = Vec::new();
+        let mut values = Vec::new();
+        for (i, (item, equality)) in tuple.args.iter().zip(&proof.subjects).enumerate() {
+            let Obj::FnObj(call) = item.as_ref() else {
+                return Err(LeanCompileError::new(
+                    "TupleReconstruction/Coordinate",
+                    "Each tuple item must be an original coordinate call.",
+                ));
+            };
+            let (receiver, index) = finite_call_parts(call)?;
+            if literal_positive_usize(index) != Some(i + 1) {
+                return Err(LeanCompileError::new(
+                    "TupleReconstruction/Index",
+                    "The original coordinate indices must cover 1 through n in order.",
+                ));
+            }
+            let source = self.compile_normalization_value(&receiver, position)?;
+            let matched = self.compile_known_tuple_match(&receiver, subject, equality, position)?;
+            let value = self.compile_normalization_value(item, position)?;
+            let number = i + 1;
+            coordinates.push(format!("(show Litex.FunctionSemantics.callValue (M := M) (Litex.denote _litex_point) (Litex.FiniteFunction.index ({i} : Fin {n})) = {value} from by\n  have _receiver_equal : {source} = Litex.denote _litex_point := {matched}\n  simpa only [Litex.FiniteFunction.index] using (congrArg (fun receiver => Litex.FunctionSemantics.callValue (M := M) receiver (M.number ({number} : ℂ))) _receiver_equal).symm\n)"));
+            values.push(value);
+        }
+        let components = finite_vector_proof(&coordinates);
+        let vector = format!("![{}]", values.join(", "));
+        let conclude = if proof.reversed {
+            "_reconstructed.symm"
+        } else {
+            "_reconstructed"
+        };
+        Ok(format!("(by\n  let _litex_point := {point}\n  have _litex_member : Litex.In _litex_point {cart} := {member}\n  have _coordinates : (fun i : Fin {n} => Litex.FunctionSemantics.callValue (M := M) (Litex.denote _litex_point) (Litex.FiniteFunction.index i)) = {vector} := funext {components}\n  have _reconstructed := (Litex.FiniteFunction.reconstruct _litex_member).trans (congrArg (Litex.FiniteFunction.tupleValue (M := M)) _coordinates)\n  exact {conclude}\n)"))
     }
 
     fn compile_known_function_tuple_projection(
@@ -272,8 +333,8 @@ impl LitexToLeanCompiler {
                     }
                 };
                 if !function_domains_alpha_equal(selected_signature, &function.body)
-                    || self.function_uses_numeric_interface(selected_signature)
-                    || self.function_uses_numeric_interface(&function.body)
+                    || Self::function_uses_numeric_interface(selected_signature)
+                    || Self::function_uses_numeric_interface(&function.body)
                 {
                     return Err(LeanCompileError::unsupported("Equality/FnTupleDomain"));
                 }

@@ -885,6 +885,16 @@ fn project_builtin_prop_def(proof: &BuiltinPropDefinitionProof, runtime: &Runtim
             &p.requirement_facts,
             &p.proof_of_requirement_facts,
         ),
+        BuiltinPropDefinitionProof::SequenceLiminf(p) => (
+            "SequenceLiminf",
+            &p.requirement_facts,
+            &p.proof_of_requirement_facts,
+        ),
+        BuiltinPropDefinitionProof::SequenceLimsup(p) => (
+            "SequenceLimsup",
+            &p.requirement_facts,
+            &p.proof_of_requirement_facts,
+        ),
         BuiltinPropDefinitionProof::Subset(p) => (
             "subset",
             &p.requirement_facts,

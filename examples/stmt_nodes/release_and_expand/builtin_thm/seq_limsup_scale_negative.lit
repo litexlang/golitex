@@ -1,0 +1,12 @@
+# Finite real sequence extremal limit; all premises are checked.
+# Run: target/release/litex -strict -lang en -f examples/stmt_nodes/release_and_expand/builtin_thm/seq_limsup_scale_negative.lit
+
+thm seq_limsup_scale_negative_example:
+    ? forall a,b seq(R),L,c R:
+        $has_seq_limsup(a,L)
+        c<0
+        forall n N+:
+            b(n)=c*a(n)
+        =>:
+            $has_seq_liminf(b,c*L)
+    release thm seq_limsup_scale_negative(a,b,L,c)

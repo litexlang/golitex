@@ -58,7 +58,11 @@ fn induction_bound_from_obj(
     }
     let children: Vec<&Obj> = match obj {
         Obj::LimitOperator(LimitOperator::Sequence(a)) => vec![&a.sequence],
-        Obj::LimitOperator(LimitOperator::Function(a)) => vec![&a.function, a.approach.point()],
+        Obj::LimitOperator(LimitOperator::SequenceLimsup(a)) => vec![&a.sequence],
+        Obj::LimitOperator(LimitOperator::SequenceLiminf(a)) => vec![&a.sequence],
+        Obj::LimitOperator(LimitOperator::Function(a)) => std::iter::once(a.function.as_ref())
+            .chain(a.approach.point())
+            .collect(),
         Obj::ArithmeticOperator(ArithmeticOperator::Add(a)) => vec![&a.left, &a.right],
         Obj::ArithmeticOperator(ArithmeticOperator::Sub(a)) => vec![&a.left, &a.right],
         Obj::ArithmeticOperator(ArithmeticOperator::Neg(a)) => vec![&a.arg],

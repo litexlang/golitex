@@ -267,6 +267,10 @@ pub(super) fn project_release_thm(result: &ExecReleaseThmStmtResult, rt: &Runtim
                 ("callee", project_resolved_theorem_callee(&s.callee, rt)),
                 ("builtin", project_builtin_application(&s.builtin, rt)),
                 (
+                    "theorem_derivation",
+                    project_theorem_derivation(&s.theorem_derivation, rt),
+                ),
+                (
                     "type_proofs",
                     super::store::project_verify_facts(&s.type_proofs, rt),
                 ),
@@ -460,4 +464,41 @@ pub(super) fn project_builtin_function_domain(
             ],
         ),
     }
+}
+
+pub(super) fn project_theorem_derivation(
+    p: &crate::execute::execute_by_stmt::TheoremDerivationProof,
+    rt: &Runtime,
+) -> JsonValue {
+    use crate::execute::execute_by_stmt::TheoremDerivationProof::*;
+    let (kind, proof) = match p {
+        UserTheorem => return object_for(rt, vec![("kind", string("user_theorem"))]),
+        NativeSchema => return object_for(rt, vec![("kind", string("native_schema"))]),
+        SequenceLimsupBounded(p) => ("sequence_limsup_bounded", &p.completeness),
+        SequenceLiminfBounded(p) => ("sequence_liminf_bounded", &p.completeness),
+    };
+    object_for(
+        rt,
+        vec![
+            ("kind", string(kind)),
+            (
+                "derivation_steps",
+                JsonValue::Array(
+                    proof
+                        .derivation_steps
+                        .iter()
+                        .map(|p| super::stmt::project_stmt_detailed(p, rt))
+                        .collect(),
+                ),
+            ),
+            (
+                "application",
+                super::stmt::project_stmt_detailed(&proof.application, rt),
+            ),
+            (
+                "conclusion",
+                super::verify::project_verify_fact(&proof.conclusion, rt),
+            ),
+        ],
+    )
 }
