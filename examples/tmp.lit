@@ -1,71 +1,12 @@
-# Probe: nat dichotomy for pos < 2, then length-two range
-claim:
-    ? forall pos N:
-        pos < 2
-        =>:
-            pos = 0 or pos = 1
-    0 <= pos
-    by cases:
-        ? pos = 0 or pos = 1
-        case pos = 0:
-            pos = 0 or pos = 1
-        case 0 < pos:
-            1 <= pos
-            pos < 2
-            pos <= 1
-            pos = 1
-            pos = 0 or pos = 1
-
-thm length_two_distinct_restricted_index_range_is_pair:
-    ? forall I set, indices fn(position N: position < 2) I:
-        indices(0) != indices(1)
-        =>:
-            fn_range(indices) = {indices(0), indices(1)}
-    0 $in {entry N: entry < 2}
-    1 $in {entry N: entry < 2}
-    indices(0) $in fn_range(indices)
-    indices(1) $in fn_range(indices)
-    claim:
-        ? forall x fn_range(indices):
-            x $in {indices(0), indices(1)}
-        have by fn_preimage: pos from x $in fn_range(indices)
-        pos < 2
-        0 <= pos
-        claim:
-            ? pos = 0 or pos = 1
-            by cases:
-                ? pos = 0 or pos = 1
-                case pos = 0:
-                    pos = 0 or pos = 1
-                case 0 < pos:
-                    1 <= pos
-                    pos < 2
-                    pos <= 1
-                    pos = 1
-                    pos = 0 or pos = 1
-        pos = 0 or pos = 1
-        x = indices(pos)
-        by cases:
-            ? x $in {indices(0), indices(1)}
-            case pos = 0:
-                x = indices(0)
-                x $in {indices(0), indices(1)}
-            case pos = 1:
-                x = indices(1)
-                x $in {indices(0), indices(1)}
-    by def:
-        ? fn_range(indices) $subset {indices(0), indices(1)}
-    claim:
-        ? forall x {indices(0), indices(1)}:
-            x $in fn_range(indices)
-        by cases:
-            ? x $in fn_range(indices)
-            case x = indices(0):
-                indices(0) $in fn_range(indices)
-                x $in fn_range(indices)
-            case x = indices(1):
-                indices(1) $in fn_range(indices)
-                x $in fn_range(indices)
-    by def:
-        ? {indices(0), indices(1)} $subset fn_range(indices)
-    by extension fn_range(indices) = {indices(0), indices(1)}
+have Builder power_set(R) = {x R: x > 0}
+have Alias power_set(R) = Builder
+have a R = 1
+# force membership via set_builder_member style
+1 > 0
+a $in Builder
+a $in Alias
+# now from Alias membership get R - already have
+# what about from a typed as Alias after equality?
+have b Alias = a
+b $in Alias
+b $in R
