@@ -8,7 +8,6 @@ use std::collections::HashMap;
 impl LitexToLeanCompiler {
     pub(in crate::compile_to_lean) fn compile_set_builder_projections(
         &self,
-        owner: &StoreFactAndInferResult,
         proof: &InferSetBuilderMembershipProjectionResult,
         source_fact: &Fact,
         source: &(String, String),
@@ -122,9 +121,8 @@ impl LitexToLeanCompiler {
                     }
                 };
                 let prior = SourcePosition {
-                    parent: Some(position),
-                    owner: SourceOwner::PropInference(owner),
-                    before: offset,
+                    before: position.before + offset,
+                    ..*position
                 };
                 self.validate_store(&derived.store, &fact)?;
                 let formed = SourcePosition {
@@ -132,7 +130,13 @@ impl LitexToLeanCompiler {
                     owner: SourceOwner::InferredStore(&derived.store),
                     before: usize::MAX,
                 };
-                let compiled = (self.fact_proposition(&fact, &formed)?, term);
+                // The checked builder predicate already carries the clause's
+                // formation. Project its semantic proposition without inventing
+                // a second WD tree for the substituted function applications.
+                let compiled = (
+                    self.compile_function_raw_predicate(&fact, &formed, &HashMap::new())?,
+                    term,
+                );
                 declarations.push(self.emit_internal_fact(&fact, &compiled, position)?);
                 declarations.extend(self.compile_stored_projections(
                     &derived.store,

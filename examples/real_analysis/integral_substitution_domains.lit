@@ -1,0 +1,42 @@
+# Check: target/release/litex -lang en -strict -f examples/real_analysis/integral_substitution_domains.lit
+# The outer function is defined on the image interval [4,5], not the input interval [0,1].
+have fn sub_local_identity(t '[4,5]) R=t
+
+have fn sub_shifted(x R) R=x+4
+
+have fn sub_one(x R) R=1
+
+claim:
+    ? forall x R:
+        $has_derivative_at(sub_shifted,x,sub_one(x))
+    sub_one(x)=1
+    $has_derivative_at(sub_shifted,x,1)
+    $has_derivative_at(sub_shifted,x,sub_one(x))
+
+forall x '[0,1]:
+    x<=1
+    x+4<=1+4
+    1+4=5
+    x+4<=5
+    sub_shifted(x)=x+4
+    sub_shifted(x)>=4
+    sub_shifted(x)<=5
+    sub_shifted(x) $in '[4,5]
+
+release thm riemann_integral_power(sub_local_identity,4,5,1)
+
+sub_shifted(0)=4
+
+sub_shifted(1)=5
+
+claim:
+    ? forall x '[0,1]:
+        sub_shifted(x)=sub_local_identity(sub_shifted(x))*sub_one(x)
+    sub_shifted(x) $in '[4,5]
+    sub_one(x)=1
+    sub_local_identity(sub_shifted(x))=sub_shifted(x)
+    sub_local_identity(sub_shifted(x))*sub_one(x)=sub_shifted(x)
+
+release thm riemann_integral_substitution(sub_local_identity,sub_shifted,sub_one,sub_shifted,'[4,5],0,1,(5^(1+1)-4^(1+1))/(1+1))
+
+integral(sub_shifted,0,1)=9/2

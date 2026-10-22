@@ -2,6 +2,9 @@ use crate::compile_to_lean::helper::*;
 use crate::compile_to_lean::source_position::{SourceOwner, SourcePosition};
 use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
 use crate::prelude::*;
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_they_are_the_same::{
+    helper::set_builders_alpha_equal, SameFreeParamShapeProof,
+};
 
 impl LitexToLeanCompiler {
     pub(super) fn compile_tuple_component_strategy(
@@ -212,7 +215,16 @@ impl LitexToLeanCompiler {
                     ))
                 }
             }
-            compiled.push(child.1);
+            // The child's closed WD lets cannot determine metavariables from
+            // outside their scope. Give congrArg the exact semantic endpoints,
+            // using only this child's two already checked formation stages.
+            let formed = SourcePosition::new(Some(&child_position), SourceOwner::Verify(result), 2);
+            compiled.push(format!(
+                "(show {} = {} from {})",
+                self.compile_normalization_value(left, &formed)?,
+                self.compile_normalization_value(right, &formed)?,
+                child.1,
+            ));
         }
         let operation_term = arithmetic_operation_term(operation);
         if compiled.len() == 1 {
@@ -241,6 +253,27 @@ impl LitexToLeanCompiler {
                 "Equality/IdentitySubject",
                 "Exact identity evidence has different source endpoints.",
             )),
+            TheyAreTheSameProof::SameFreeParamShape(SameFreeParamShapeProof::SetBuilder(_)) => {
+                let (
+                    Obj::SetFormer(SetFormer::SetBuilder(left_set)),
+                    Obj::SetFormer(SetFormer::SetBuilder(right_set)),
+                ) = (left, right)
+                else {
+                    return Err(LeanCompileError::new(
+                        "Equality/SetBuilderAlphaSubject",
+                        "Set-builder alpha evidence requires two set builders.",
+                    ));
+                };
+                if !set_builders_alpha_equal(left_set, right_set) {
+                    return Err(LeanCompileError::new(
+                        "Equality/SetBuilderAlphaSubject",
+                        "The recorded endpoints differ beyond renaming bound parameters.",
+                    ));
+                }
+                let left = self.compile_object_reference(left, position)?;
+                let right = self.compile_object_reference(right, position)?;
+                Ok(format!("(show Litex.Same {left} {right} from rfl)"))
+            }
             TheyAreTheSameProof::SameFreeParamShape(_) => {
                 Err(LeanCompileError::unsupported("Equality/SameFreeParamShape"))
             }

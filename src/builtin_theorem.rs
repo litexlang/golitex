@@ -4,6 +4,9 @@ use std::fmt;
 /// runtime rather than by a source `thm`/`axiom` declaration.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum BuiltinTheoremId {
+    AntiderivativeCompose,
+    RiemannIntegralSubstitution,
+
     AntiderivativeFromDefinition,
     AntiderivativeToDefinition,
     AntiderivativeShift,
@@ -375,6 +378,8 @@ pub enum BuiltinTheoremId {
 impl BuiltinTheoremId {
     pub fn from_name(name: &str) -> Option<Self> {
         Some(match name {
+            "antiderivative_compose" => Self::AntiderivativeCompose,
+            "riemann_integral_substitution" => Self::RiemannIntegralSubstitution,
             "antiderivative_from_definition" => Self::AntiderivativeFromDefinition,
             "antiderivative_to_definition" => Self::AntiderivativeToDefinition,
             "antiderivative_shift" => Self::AntiderivativeShift,
@@ -758,6 +763,8 @@ impl BuiltinTheoremId {
 
     pub const fn as_str(self) -> &'static str {
         match self {
+            Self::AntiderivativeCompose => "antiderivative_compose",
+            Self::RiemannIntegralSubstitution => "riemann_integral_substitution",
             Self::AntiderivativeFromDefinition => "antiderivative_from_definition",
             Self::AntiderivativeToDefinition => "antiderivative_to_definition",
             Self::AntiderivativeShift => "antiderivative_shift",
@@ -1147,6 +1154,8 @@ impl fmt::Display for BuiltinTheoremId {
 impl BuiltinTheoremId {
     pub fn arity(self) -> usize {
         match self {
+            Self::AntiderivativeCompose => 8,
+            Self::RiemannIntegralSubstitution => 8,
             Self::AntiderivativeFromDefinition => 3,
             Self::AntiderivativeToDefinition => 3,
             Self::AntiderivativeShift => 5,

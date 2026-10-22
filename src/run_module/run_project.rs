@@ -4,7 +4,9 @@ use super::load_config::{load_config, resolve_std_root};
 use super::run_export_file::run_export_file_observed;
 use super::run_import_module::{run_import_module_observed, RunImportModuleOutcome};
 use crate::launch_command::LaunchCommand;
-use crate::run::run_command_outcome::{RunFileResult, RunRepoResult, RunSessionError};
+use crate::run::run_command_outcome::{
+    RunFileResult, RunLitexCodeResult, RunRepoResult, RunSessionError,
+};
 use crate::run::run_repl::run_repl_loop;
 use crate::run::source_observer::SourceObserver;
 use crate::runtime::{Runtime, RuntimeError, RuntimeResult};
@@ -51,6 +53,9 @@ pub fn run_project_observed(
     let mut done = HashSet::new();
     let mut running = HashSet::new();
     let mut file_results = Vec::new();
+    // `Some` only after the target export opens the interactive Session. Its
+    // final snapshot then merges every export file with all REPL turns.
+    let mut session_turns: Option<Vec<RunLitexCodeResult>> = None;
 
     for import in &root_config.imports {
         match run_import_module_observed(
@@ -73,6 +78,7 @@ pub fn run_project_observed(
                     root,
                     file_results,
                     Some(session_error),
+                    None,
                 ));
             }
         }
@@ -103,18 +109,34 @@ pub fn run_project_observed(
                         root,
                         file_results,
                         Some(session_error),
+                        None,
                     ));
                 }
                 if keep_env_open {
-                    match run_repl_loop(&mut runtime) {
+                    let turns = session_turns.get_or_insert_with(Vec::new);
+                    let repl = run_repl_loop(&mut runtime, turns);
+                    if let Some(last) = file_results.last_mut() {
+                        last.run.attach_normal_json_with_repl_turns(
+                            &runtime,
+                            turns,
+                            "file",
+                            Some(last.path.as_path()),
+                        );
+                    }
+                    match repl {
+                        // Keep the live env until finish_repo has rendered
+                        // citations for the full Session snapshot.
                         Ok(()) => {}
                         Err(error) => {
-                            return Ok(finish_repo(
+                            let result = finish_repo(
                                 &runtime,
                                 root,
                                 file_results,
                                 Some(RunSessionError::Runtime(error)),
-                            ));
+                                session_turns.as_deref(),
+                            );
+                            runtime.abort_source();
+                            return Ok(result);
                         }
                     }
                 }
@@ -125,12 +147,17 @@ pub fn run_project_observed(
                     root,
                     file_results,
                     Some(RunSessionError::Runtime(error)),
+                    None,
                 ));
             }
         }
     }
 
-    Ok(finish_repo(&runtime, root, file_results, None))
+    let result = finish_repo(&runtime, root, file_results, None, session_turns.as_deref());
+    if session_turns.is_some() {
+        runtime.abort_source();
+    }
+    Ok(result)
 }
 
 fn finish_repo(
@@ -138,10 +165,22 @@ fn finish_repo(
     root: PathBuf,
     files: Vec<RunFileResult>,
     session_error: Option<RunSessionError>,
+    session_turns: Option<&[RunLitexCodeResult]>,
 ) -> RunRepoResult {
     let mut result = RunRepoResult::new(root.clone(), files, session_error);
-    result
-        .run
-        .attach_normal_json(runtime, "repo", Some(root.as_path()));
+    let json = match session_turns {
+        Some(turns) => crate::json_output::emit_run_normal_with_files_and_turns(
+            &result.run,
+            &result.files,
+            turns,
+            runtime,
+            "repo",
+            Some(root.as_path()),
+        ),
+        None => {
+            crate::json_output::emit_run_normal(&result.run, runtime, "repo", Some(root.as_path()))
+        }
+    };
+    result.run.normal_json = Some(json);
     result
 }

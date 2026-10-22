@@ -1,0 +1,7 @@
+# Check: target/release/litex -lang en -strict -f examples/wd_negative/antiderivative_singleton_region.lit
+# Expected rejection only at the final statement.
+have fn identity(x R) R=x
+
+have fn one(x R) R=1
+
+release thm antiderivative_from_definition(identity,one,{0})

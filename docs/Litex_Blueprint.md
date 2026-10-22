@@ -1298,9 +1298,9 @@ Enter the next statements one at a time in that process. The failure JSON is abb
 
 ```text
 litex> a = 3
-{"run_result": "failure", ..., "session_terminated": false, "termination": null}
+{"run_result": "failure", "target": "repl", "errors": [{"phase": "...", "category": "...", ...}], "session_terminated": false, "termination": null}
 litex> a + 1 = 3
-success
+{"run_result": "success", "target": "repl", "statement_results": [...], "errors": [], "session_terminated": false, "termination": null}
 ```
 
 The failed `a = 3` does not remove `a = 2`; the next calculation still uses it. For an AI author, the rejection gives a concrete stopping point: `why_failed.phase` is `"search_proof"` and `why_failed.goal` is `"a = 3"`. AI can read this feedback and propose the next statement using the retained context. Compare with two independent commands:

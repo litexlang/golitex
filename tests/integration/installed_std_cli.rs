@@ -205,9 +205,15 @@ fn repl_and_continued_file_session_can_use_bundled_std() {
             .unwrap();
         let output = child.wait_with_output().unwrap();
         assert!(output.status.success(), "{output:?}");
-        assert!(output.stderr.is_empty(), "{output:?}");
+        assert!(
+            String::from_utf8_lossy(&output.stderr).contains("REPL"),
+            "{output:?}"
+        );
         let text = std::str::from_utf8(&output.stdout).unwrap();
-        assert!(text.contains("litex> success"), "{text}");
+        assert!(
+            text.contains("\"run_result\": \"success\",\n  \"target\": \"repl\""),
+            "{text}"
+        );
     }
 }
 

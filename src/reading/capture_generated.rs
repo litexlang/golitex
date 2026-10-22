@@ -2913,7 +2913,7 @@ let output = match value {
 crate::store_fact_and_infer::StoreFactAndInferResult { store: f0, formed_subjects: f1, infer: f2 } => {
 let fields = vec![("store", capture_store_fact_and_infer__store_fact_and_infer_result__store_fact_result__StoreFactResult(f0, capture, runtime)), ("formed_subjects", JsonValue::Array((f1).iter().map(|item| capture_store_fact_and_infer__store_fact_and_infer_result__store_and_infer_result__FormedAtomicSubject(item, capture, runtime)).collect())), ("infer", match (f2).as_ref() { Some(item) => capture_store_fact_and_infer__infer_result__infer_result__InferResult(item, capture, runtime), None => JsonValue::Null })];
 let mut output = node("StoreFactAndInferResult", "", fields);
-capture.record_inference(value, &output);
+capture.record_inference(value, &output, runtime);
 output
 },
 };
@@ -8391,6 +8391,20 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_builtin_theorem__BuiltinTheoremId(value: &crate::builtin_theorem::BuiltinTheoremId, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
+crate::builtin_theorem::BuiltinTheoremId::AntiderivativeCompose => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::AntiderivativeCompose");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "AntiderivativeCompose", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "AntiderivativeCompose", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::RiemannIntegralSubstitution => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::RiemannIntegralSubstitution");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "RiemannIntegralSubstitution", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "RiemannIntegralSubstitution", ""); }
+output
+},
 crate::builtin_theorem::BuiltinTheoremId::AntiderivativeFromDefinition => {
 let rule_id = Some("builtin_theorem.BuiltinTheoremId::AntiderivativeFromDefinition");
 let fields = vec![];
@@ -15817,6 +15831,7 @@ let output = match value {
 crate::store_fact_and_infer::StoreInferredFactResult { store: f0 } => {
 let fields = vec![("store", capture_store_fact_and_infer__store_fact_and_infer_result__store_fact_result__StoreFactResult(f0, capture, runtime))];
 let mut output = node("StoreInferredFactResult", "", fields);
+if let JsonValue::Object(fields) = &mut output { fields.insert("stored_fact_ids".into(), JsonValue::Array(value.stored_fact_ids().iter().map(|id| JsonValue::String(id.to_string())).collect())); }
 output
 },
 };

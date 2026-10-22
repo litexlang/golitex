@@ -1,0 +1,9 @@
+# Check: target/release/litex -lang en -strict -f examples/wd_negative/substitution_wrong_outer_domain.lit
+# Expected rejection only at the final statement.
+have fn bad_outer(t '[0,1]) R=t
+
+have fn sub_shifted(x R) R=x+4
+
+have fn sub_one(x R) R=1
+
+release thm riemann_integral_substitution(bad_outer,sub_shifted,sub_one,sub_shifted,'[4,5],0,1,9/2)

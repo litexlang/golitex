@@ -891,6 +891,36 @@ pub(super) fn instantiated_object_matches(
         }
     }
     match (expected, actual) {
+        (
+            Obj::SetFormer(SetFormer::SetBuilder(expected)),
+            Obj::SetFormer(SetFormer::SetBuilder(actual)),
+        ) => {
+            // Match Runtime::inst_set_builder: the carrier is outside the
+            // binder, while body predicates retain and shadow its source ID.
+            if expected.param_binding.id != actual.param_binding.id
+                || expected.facts.len() != actual.facts.len()
+                || !instantiated_object_matches(
+                    &expected.param_set,
+                    &actual.param_set,
+                    substitution,
+                )
+            {
+                return false;
+            }
+            let mut body_substitution = substitution.clone();
+            body_substitution.remove(&expected.param_binding.id);
+            expected
+                .facts
+                .iter()
+                .zip(&actual.facts)
+                .all(|(expected, actual)| {
+                    instantiated_fact_matches(
+                        &crate::instantiate::quantifier_free_fact_to_fact(expected.clone()),
+                        &crate::instantiate::quantifier_free_fact_to_fact(actual.clone()),
+                        &body_substitution,
+                    )
+                })
+        }
         (Obj::ProductShape(expected), Obj::ProductShape(actual)) => {
             let (expected, actual) = match (expected, actual) {
                 (ProductShape::Tuple(expected), ProductShape::Tuple(actual)) => {

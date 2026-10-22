@@ -86,16 +86,24 @@ normal exit instead of accumulating a Boolean over prior attempts.
 The CLI emits failed Normal JSON for recognized `-e` / `-f` / `-r` commands
 even when tokenization or I/O fails before a run result exists. Extraction
 errors use the artifact error envelope. Invalid launch arguments still use
-stderr and exit code 2. The REPL prints `success` for accepted blocks and
-Normal JSON for rejected inputs, preserving the live session. Normal run JSON
-summarizes rejected statements in `errors`; rejected `statement_results` entries
-contain only their verdict and source. Full evidence remains available through
-the standalone Normal and Detailed Rust projections.
+stderr and exit code 2. The REPL emits Normal run JSON for both accepted and rejected blocks
+(`target: "repl"`, `path: null`), preserving the live session. Stdout is
+JSON-only; the REPL banner always goes to stderr, and the `litex>` / `...`
+prompts do so when stdin and stderr are TTYs. Accepted turns include the usual `statement_results`
+proof/stores fields; rejected turns summarize failures in `errors` (including
+flattened `category` when known), and rejected `statement_results` entries
+contain only their verdict and source. After `-session` leaves the REPL, the
+command's final Normal JSON merges the initial batch with every later REPL
+turn. There is no top-level `trace` string. Full evidence remains available
+through the standalone Normal and Detailed Rust projections.
 Hard REPL errors are reported once by the caller. Each interactive submission
-has an independent verdict. In `-session`, ordinary rejections do not rewrite the
-initial batch JSON or turn a normal REPL exit into failure. A hard error still
-adds structured termination information to that initial snapshot and exits 1;
-the pre-REPL snapshot keeps citations intact after the environment aborts.
+has an independent verdict. In `-session`, ordinary rejections do not roll back
+earlier accepted statements and do not turn a normal REPL exit into a nonzero
+process status; the final merged snapshot still reports `"failure"` when a turn
+was rejected. A hard error adds structured termination information to that
+snapshot and exits 1; the snapshot is rendered before the environment aborts so
+citations stay intact. For `-r -session`, the snapshot includes every export
+file plus later REPL turns; non-session `-r` keeps its empty-statement summary.
 Interactive parse/tokenizer diagnostics use `<repl>` rather than the initial
 file or `<eval>`. The REPL text is English; `-lang` selects JSON field names
 and explanations. Non-UTF-8 argv is a launch error rather than a panic.

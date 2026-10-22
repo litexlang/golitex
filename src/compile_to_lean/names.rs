@@ -153,7 +153,7 @@ impl LitexToLeanCompiler {
                 self.context_header(position)?
             },
             fact.0,
-            fact.1.replace('\n', "\n  ")
+            self.share_local_proof(&fact.1, local).replace('\n', "\n  ")
         );
         Ok(declaration)
     }
@@ -286,8 +286,23 @@ impl LitexToLeanCompiler {
                 self.context_header(position)?
             },
             compiled.0,
-            compiled.1.replace('\n', "\n  ")
+            self.share_local_proof(&compiled.1, local)
+                .replace('\n', "\n  ")
         ))
+    }
+
+    /// Keep a checked local proof opaque to later elaboration. The Lean helper
+    /// closes over the actual local definitions, including constructor WD.
+    /// Exported theorems already provide this boundary; inferred references
+    /// remain direct citations through `emit_internal_fact_reference`.
+    fn share_local_proof(&self, proof: &str, local: bool) -> String {
+        if !local {
+            return proof.to_owned();
+        }
+        format!(
+            "(by\n  litex_checked_step =>\n    exact (\n      {}\n    )\n)",
+            proof.replace('\n', "\n      ")
+        )
     }
 
     /// A projection or composition of typed citations determines its own type.

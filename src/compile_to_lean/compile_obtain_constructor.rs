@@ -267,8 +267,15 @@ impl LitexToLeanCompiler {
             // The same retained WD factory supplies the scalar observation;
             // obtained names have renamed stores, not a second WD proof tree.
             let (value, denotation, member, _) = self.numeric_wd(checked, site)?;
-            let definitions = definitions.join("\n").replace('\n', "\n  ");
-            format!("(let _obtained_object := {body};\nshow {{ _z : ℂ // Litex.denote _obtained_object = M.number _z ∧ Litex.In _obtained_object Litex.C }} from by\n  {definitions}\n  exact ⟨{value}, {denotation}, {member}⟩)")
+            // Keep the scalar field transparent to definitional reduction.
+            // A tactic-generated subtype term defers its value behind a fresh
+            // metavariable at each use of .val / .property.
+            let definitions = if definitions.is_empty() {
+                String::new()
+            } else {
+                format!("{};\n", definitions.join(";\n"))
+            };
+            format!("(let _obtained_object := {body};\n{definitions}show {{ _z : ℂ // Litex.denote _obtained_object = M.number _z ∧ Litex.In _obtained_object Litex.C }} from ⟨{value}, {denotation}, {member}⟩)")
         } else {
             body
         };

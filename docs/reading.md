@@ -44,24 +44,37 @@ highlighting is separate and follows resolved identity, including local scopes.
 its definitions and object declaration:
 
 ```text
-by def $reading_outer(reading_value)
-  → $reading_inner(reading_value)    [grey generated row]
+by def $reading_outer(reading_value)  → reading_value $in R · $reading_inner(reading_value)
 $reading_inner(reading_value)
 ```
 
-The arrow row is a display of a kernel inference; it is not inserted into the
-Litex source. Its fact ID is the ID cited by the later statement. Clicking
-either the row or the later citation shows the actual seed and inference
-evidence, and selects the producer in source. Retained local consequences
-are labelled as local proof context; displaying one does not publish it to
-the outer environment.
+The arrow and following results are compact grey annotations on the producing
+statement's source line, not inserted Litex source or extra display rows.
+Long lines scroll horizontally within the source pane. Each result retains
+its fact ID, including the ID cited by a later statement. Clicking a result
+or later citation shows the actual seed and inference basis, and selects the
+producer in source. Annotations show only inferred facts actually published
+by that statement in its own execution scope. Parameter
+assumptions and other temporary inferences used to check a `prop` definition
+stay in the proof evidence; they do not become annotations on the definition.
+An executed nested proof statement can have its own local output annotations;
+these remain local to that statement's scope.
+
+Inline results omit origin prose. Citation and inferred-fact detail cards
+retain each conclusion's origin. For example, the argument-membership
+fact is labelled “由 reading_outer 的参数类型推出”, while the inferred
+`$reading_inner(reading_value)` is labelled “由定义 reading_outer 展开”. Click
+the origin label to visit that exact declaration; other named rule labels open
+their Rule Book entry. The same origin appears on citation and inferred-fact
+cards. Missing per-conclusion provenance in an older bundle is labelled as
+unavailable, not guessed from the enclosing statement's rule list.
 
 The export uses schema `"2"` and a shared evidence DAG. A reference such as
 `{"kind":"evidence_reference","evidence_id":"evidence17"}` resolves through
 `evidence_nodes: [{"id":"evidence17","node": ...}]`. Sharing removes repeated
 copies; it does not discard child proofs. The viewer also reads schema `"1"`
 inline evidence. Older bundles without inference records do not receive
-guessed grey rows.
+guessed inline results.
 
 `fact_reference` is an actual reference to a fact record. An AST fact's own
 `fact_id` is exported as `fact_identity`: internal calculation subjects can
@@ -75,13 +88,22 @@ Useful records for a custom frontend:
 | `sources` | Original source content, logical path and digest. |
 | `statements` | Source/execution identity, scope, status, evidence, `produced_fact_ids`, `cited_fact_ids`, `inferred_fact_ids`, declaration/trust dependencies and coverage. |
 | `facts` | Mathematical text, actual scope, producer and fact-specific evidence; `role` distinguishes hypotheses, verified facts and declarations. `inference_ids` links a derived fact to its recorded inference. |
-| `inferences` | Actual store/infer output: `source_fact_id`, `fact_ids`, `producer_statement_id`, `scope_id`, `rule_ids` and retained evidence. |
+| `inferences` | Actual store/infer output: seed, conclusions, producer, scope, batch `rule_ids`, retained evidence, and `conclusion_origins` linking each stored conclusion to its own rule and available resolved definition. |
 | `well_definedness` | Actual registered object, scope, creator statement, registration node and separately retained formation evidence when available. |
 | `symbols`, `occurrences` | Semantic identities and exact half-open UTF-8 source ranges; comments are excluded. |
 | `rules` | Kernel-derived catalogue, stable rule IDs and available authored labels. |
 
 `produced_fact_ids` records publication in the statement's actual root scope;
-`inferred_fact_ids` can additionally expose retained local proof consequences.
+`inferred_fact_ids` is the inferred subset of that statement's
+`produced_fact_ids`. The full `inferences` index can also retain internal
+verification inferences; do not render that whole index as statement outputs.
+The viewer applies the publication boundary to older bundles as well.
+`conclusion_origins` entries contain `fact_id`, `kind` (`definition`,
+`parameter_type`, `rule` or `unavailable`), the actual `rule_id`, and available
+`source_symbol_id` / `definition_statement_id`. They come from the nearest
+typed infer branch around an actual stored conclusion, not the union of all
+rules in the batch. A compound seed without an unambiguous named definition
+does not receive a guessed definition link.
 Use each fact's scope and producer, not a union of these lists as global
 knowledge. A record's `coverage` describes exported information, separately
 from whether verification succeeded. A rejected statement is not false.

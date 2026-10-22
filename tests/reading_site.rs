@@ -63,6 +63,23 @@ fn site_chapters_preserve_the_complete_bundle_and_reference_closure() {
             .contains(statements[0].field("id")),
         "the actual checked predicate signature links by-def to its source declaration"
     );
+    let named_origin = full
+        .field("inferences")
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|inference| inference.field("producer_statement_id") == application.field("id"))
+        .flat_map(|inference| inference.field("conclusion_origins").as_array().unwrap())
+        .find(|origin| origin.field("kind").as_str().unwrap() == "definition")
+        .expect("actual by-def output retains its expansion origin");
+    assert_eq!(
+        named_origin.field("definition_statement_id"),
+        statements[0].field("id")
+    );
+    assert_eq!(
+        named_origin.field("source_symbol_id").as_str().unwrap(),
+        "named:01-definitions.lit:above_zero"
+    );
     let portable =
         JsonValue::parse(&fs::read_to_string(directory.join("reading.json")).unwrap()).unwrap();
     assert_eq!(portable, full);

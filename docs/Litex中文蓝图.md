@@ -1198,9 +1198,9 @@ litex -lang en -session -e 'have a R = 2'
 
 ```text
 litex> a = 3
-{"run_result": "failure", ..., "session_terminated": false, "termination": null}
+{"run_result": "failure", "target": "repl", "errors": [{"phase": "...", "category": "...", ...}], "session_terminated": false, "termination": null}
 litex> a + 1 = 3
-success
+{"run_result": "success", "target": "repl", "statement_results": [...], "errors": [], "session_terminated": false, "termination": null}
 ```
 
 失败的 `a = 3` 不会移除 `a = 2`，下一句仍能使用它。对 AI 作者，拒绝反馈给出了具体的停止位置：`why_failed.phase` 为 `"search_proof"`，`why_failed.goal` 为 `"a = 3"`。AI 可以读取这份反馈，利用保留的上下文提出下一句。对照两个独立命令：

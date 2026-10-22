@@ -546,6 +546,15 @@ variant tags such as `kind` values may stay English.
 }
 ```
 
+Interactive REPL turns (bare `litex` and `-session` continuations) reuse this
+envelope with `target: "repl"` and `path: null` for both accepted and rejected
+submissions. Stdout stays JSON-only (prompts/banner on stderr). Accepted turns
+keep the usual `statement_results` proof/stores fields; rejected turns put
+concise summaries in `errors` (flattened `category`, `message`, `expression`,
+`obligation` when known). A finished `-session` reprints one Normal envelope
+that concatenates the initial batch statements with every later REPL turn.
+Nested evidence is never stringified into a top-level `trace` field.
+
 For a hard internal conflict, `session_terminated` is true and `termination`
 contains `{ "phase": "internal", "message": "internal_bug: ..." }`; the run
 has `run_result: "failure"`. Normal, Compact and Detailed retain the same

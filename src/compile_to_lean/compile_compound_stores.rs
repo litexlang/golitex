@@ -510,6 +510,13 @@ impl LitexToLeanCompiler {
                                 self.compile_natural_sign_inference(sign, seed, compiled, &prior)?,
                             );
                         }
+                        InferInFactResult::SetBuilder(proof) => {
+                            declarations.extend(
+                                self.compile_set_builder_projections(
+                                    proof, seed, compiled, &prior,
+                                )?,
+                            );
+                        }
                         InferInFactResult::CartCoordinates(proof) => {
                             declarations.extend(self.compile_cart_coordinate_inferences(
                                 proof, seed, compiled, &prior,

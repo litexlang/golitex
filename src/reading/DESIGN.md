@@ -8,7 +8,7 @@ claim that all acceptance criteria have passed or a frozen public API.
 Current concrete model: schema `"2"` uses shared `evidence_nodes`; statement
 records point to real typed evidence by ID. `inferences` preserves actual
 `StoreFactAndInferResult.infer` outputs, source seed FactIds, derived FactIds,
-scope, rule IDs and evidence. The same component renders grey inferred rows,
+scope, rule IDs and evidence. The same component renders grey inline results,
 and a later stored citation can select the derived fact. Schema `"1"` inline
 evidence remains readable. See the [integration guide](../../docs/reading.md)
 and [runnable host example](../../examples/reading/website/README.md) for

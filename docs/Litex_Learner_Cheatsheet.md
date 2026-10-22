@@ -446,13 +446,14 @@ passing prefix once and continue in that same REPL. Or start with one value:
 litex -lang en -session -e 'have a R = 2'
 ```
 
-Submit each statement separately; the failure JSON is abbreviated:
+Submit each statement separately; each turn emits Normal run JSON
+(`target: "repl"`). Soft-failure JSON is abbreviated:
 
 ```text
 litex> a = 3
-{"run_result": "failure", ..., "session_terminated": false, "termination": null}
+{"run_result": "failure", "target": "repl", "errors": [{"phase": "...", "category": "...", ...}], "session_terminated": false, "termination": null}
 litex> a + 1 = 3
-success
+{"run_result": "success", "target": "repl", "statement_results": [...], "errors": [], "session_terminated": false, "termination": null}
 ```
 
 The failed statement leaves `a = 2` available. In contrast, separate

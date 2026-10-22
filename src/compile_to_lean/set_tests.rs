@@ -302,3 +302,45 @@ fn builder_projection_cannot_replace_its_selected_builder() {
         .compile_run(&result, "wrong_projection_builder")
         .is_err());
 }
+
+#[test]
+fn ordinary_membership_emits_each_recorded_builder_projection() {
+    use crate::store_fact_and_infer::{InferAtomicFactResult, InferInFactResult, InferResult};
+    let (result, compiler) = execute("1 $in {x R: x >= 0}\n");
+    let ExecStmtResult::Fact(ExecFactStmtResult::Success(statement)) = &result.statement_results[0]
+    else {
+        panic!("ordinary membership statement")
+    };
+    let Some(InferResult::AtomicFact(InferAtomicFactResult::InFact(rules))) =
+        &statement.store_and_infer_result.infer
+    else {
+        panic!("captured membership inferences")
+    };
+    let projections = rules
+        .iter()
+        .filter_map(|rule| match rule {
+            InferInFactResult::SetBuilder(proof) => Some(proof),
+            _ => None,
+        })
+        .flat_map(|proof| &proof.steps)
+        .flat_map(|step| &step.projections)
+        .collect::<Vec<_>>();
+    assert!(
+        !projections.is_empty(),
+        "the source must exercise projection output"
+    );
+    let lean = compiler
+        .compile_run(&result, "ordinary_builder_projection")
+        .unwrap();
+    for projection in projections {
+        let name = format!(
+            "theorem h_{} ",
+            projection.stored().store.primary_fact_id().value()
+        );
+        assert_eq!(
+            lean.matches(&name).count(),
+            1,
+            "emit this original projection once: {name}"
+        );
+    }
+}

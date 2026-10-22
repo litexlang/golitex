@@ -1,0 +1,57 @@
+# Check: target/release/litex -lang en -strict -f examples/stmt_nodes/release_and_expand/builtin_thm/riemann_integral_by_parts.lit
+# Explicit theorem contract: riemann_integral_by_parts
+have fn identity(x R) R=x
+
+have fn one(x R) R=1
+
+have fn ex(x R) R=exp(x)
+
+have fn weighted_exp(x R) R=x*exp(x)
+
+claim:
+    ? forall x R:
+        $has_derivative_at(identity,x,one(x))
+        $has_derivative_at(ex,x,ex(x))
+    release thm fn_derivative_at_real_interior(x)
+    release thm fn_derivative_at_identity(identity,x)
+    release thm fn_derivative_at_exp(ex,x)
+    one(x)=1
+    ex(x)=exp(x)
+    $has_derivative_at(identity,x,one(x))
+    $has_derivative_at(ex,x,ex(x))
+
+release thm riemann_integrable_continuous(ex,0,1)
+
+release thm riemann_integral_newton_leibniz(ex,ex,0,1)
+
+# Apply integration by parts after proving the right-hand candidate.
+
+release thm riemann_integral_by_parts(identity,one,ex,ex,weighted_exp,ex,0,1,ex(1)-ex(0))
+
+identity(1)=1
+
+identity(0)=0
+
+ex(0)=1
+
+identity(1)*ex(1)-identity(0)*ex(0)-(ex(1)-ex(0))=1
+
+integral(weighted_exp,0,1)=1
+
+release thm riemann_integrable_continuous(ex,1,0)
+
+release thm riemann_integral_newton_leibniz(ex,ex,1,0)
+
+release thm riemann_integral_by_parts(identity,one,ex,ex,weighted_exp,ex,1,0,ex(0)-ex(1))
+
+identity(0)*ex(0)-identity(1)*ex(1)-(ex(0)-ex(1))=-1
+
+integral(weighted_exp,1,0)=-1
+
+release thm riemann_integral_zero(ex,0)
+
+release thm riemann_integral_by_parts(identity,one,ex,ex,weighted_exp,ex,0,0,0)
+
+identity(0)*ex(0)-identity(0)*ex(0)-0=0
+
+integral(weighted_exp,0,0)=0

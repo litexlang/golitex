@@ -100,7 +100,8 @@ Write multiplication explicitly: use `2 * x` rather than `2x`.
 A successful batch check has `"run_result": "success"`,
 `"session_terminated": false`, and `"termination": null` in its JSON result.
 The website may present that result more simply. The
-interactive command-line REPL prints `success` for a successful input block.
+interactive command-line REPL prints the same Normal run JSON for every turn
+(`target: "repl"`), whether the block is accepted or rejected.
 We will read a failed result more carefully in Part 6.
 
 For a visual overview of how Litex checks a fact, see the
@@ -586,9 +587,9 @@ block with a blank line. This checked transcript abbreviates the failure JSON:
 
 ```text
 litex> a = 3
-{"run_result": "failure", ..., "session_terminated": false, "termination": null}
+{"run_result": "failure", "target": "repl", "errors": [{"phase": "...", "category": "...", ...}], "session_terminated": false, "termination": null}
 litex> a + 1 = 3
-success
+{"run_result": "success", "target": "repl", "statement_results": [...], "errors": [], "session_terminated": false, "termination": null}
 ```
 
 `a = 3` fails, but the accepted `a = 2` still supports the next calculation.

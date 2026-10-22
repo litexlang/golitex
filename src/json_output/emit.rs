@@ -2,8 +2,10 @@
 
 use super::project_compact::project_run_compact;
 use super::project_detailed::project_run_detailed;
-use super::project_normal::project_run_normal;
-use crate::run::run_command_outcome::RunLitexCodeResult;
+use super::project_normal::{
+    project_run_normal, project_run_normal_with_files_and_turns, project_run_normal_with_turns,
+};
+use crate::run::run_command_outcome::{RunFileResult, RunLitexCodeResult};
 use crate::runtime::Runtime;
 
 /// Recognized batch commands retain their normal envelope even when execution
@@ -92,6 +94,30 @@ pub fn emit_run_normal(
     path: Option<&std::path::Path>,
 ) -> String {
     project_run_normal(run, runtime, target, path).stringify_pretty()
+}
+
+/// Build Normal JSON for an initial batch plus later REPL turns.
+pub fn emit_run_normal_with_turns(
+    run: &RunLitexCodeResult,
+    turns: &[RunLitexCodeResult],
+    runtime: &Runtime,
+    target: &str,
+    path: Option<&std::path::Path>,
+) -> String {
+    project_run_normal_with_turns(run, turns, runtime, target, path).stringify_pretty()
+}
+
+/// Build the final `-r -session` Normal JSON: every export file plus later REPL turns.
+pub fn emit_run_normal_with_files_and_turns(
+    run: &RunLitexCodeResult,
+    files: &[RunFileResult],
+    turns: &[RunLitexCodeResult],
+    runtime: &Runtime,
+    target: &str,
+    path: Option<&std::path::Path>,
+) -> String {
+    project_run_normal_with_files_and_turns(run, files, turns, runtime, target, path)
+        .stringify_pretty()
 }
 
 /// Build Detailed JSON for a code run (caller still holds Runtime for cites).
