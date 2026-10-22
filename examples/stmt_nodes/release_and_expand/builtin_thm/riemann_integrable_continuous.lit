@@ -1,0 +1,7 @@
+# Explicit Riemann/Darboux theorem: riemann_integrable_continuous.
+# Check: target/release/litex -lang en -strict -f examples/stmt_nodes/release_and_expand/builtin_thm/riemann_integrable_continuous.lit
+# The theorem checks its actual domain and all premises before publishing results.
+have fn square(x R) R=x^2
+release thm riemann_integrable_continuous(square,0,1)
+integral(square,0,1)=integral(square,0,1)
+# Existence permits a symbolic value; it does not identify that value as 1/3.

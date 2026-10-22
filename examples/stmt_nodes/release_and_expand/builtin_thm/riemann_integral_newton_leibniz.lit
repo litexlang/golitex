@@ -1,0 +1,16 @@
+# Explicit Riemann/Darboux theorem: riemann_integral_newton_leibniz.
+# Check: target/release/litex -lang en -strict -f examples/stmt_nodes/release_and_expand/builtin_thm/riemann_integral_newton_leibniz.lit
+# The theorem checks its actual domain and all premises before publishing results.
+have fn unity(x R) R=1
+have fn linear(x R) R=x
+release thm riemann_integrable_continuous(unity,0,1)
+claim:
+    ? forall x R:
+        $has_derivative_at(linear,x,unity(x))
+    unity(x)=1
+    $has_derivative_at(linear,x,1)
+release thm riemann_integral_newton_leibniz(unity,linear,0,1)
+linear(1)=1
+linear(0)=0
+linear(1)-linear(0)=1
+integral(unity,0,1)=1

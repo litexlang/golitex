@@ -242,6 +242,18 @@ impl LitexToLeanCompiler {
             InferAtomicFactResult::NotRealAccumulationFact(_) => {
                 matches!(atomic, AtomicFact::NotRealAccumulationFact(_))
             }
+            InferAtomicFactResult::HasRiemannIntegralFact(_) => {
+                matches!(atomic, AtomicFact::HasRiemannIntegralFact(_))
+            }
+            InferAtomicFactResult::NotHasRiemannIntegralFact(_) => {
+                matches!(atomic, AtomicFact::NotHasRiemannIntegralFact(_))
+            }
+            InferAtomicFactResult::FunctionRiemannIntegrableFact(_) => {
+                matches!(atomic, AtomicFact::FunctionRiemannIntegrableFact(_))
+            }
+            InferAtomicFactResult::NotFunctionRiemannIntegrableFact(_) => {
+                matches!(atomic, AtomicFact::NotFunctionRiemannIntegrableFact(_))
+            }
             InferAtomicFactResult::HasDerivativeAtFact(_) => {
                 matches!(atomic, AtomicFact::HasDerivativeAtFact(_))
             }
@@ -420,6 +432,12 @@ impl LitexToLeanCompiler {
             }
             InferAtomicFactResult::NotRealAccumulationFact(_) => {
                 Err(LeanCompileError::unsupported("Inference/RealAnalysis"))
+            }
+            InferAtomicFactResult::HasRiemannIntegralFact(_)
+            | InferAtomicFactResult::NotHasRiemannIntegralFact(_)
+            | InferAtomicFactResult::FunctionRiemannIntegrableFact(_)
+            | InferAtomicFactResult::NotFunctionRiemannIntegrableFact(_) => {
+                Err(LeanCompileError::unsupported("Inference/RiemannIntegral"))
             }
             InferAtomicFactResult::HasDerivativeAtFact(_)
             | InferAtomicFactResult::NotHasDerivativeAtFact(_) => {

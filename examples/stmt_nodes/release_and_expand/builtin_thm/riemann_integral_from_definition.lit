@@ -1,0 +1,12 @@
+# Darboux definition introduction without assuming an integral candidate.
+# Check: target/release/litex -lang en -strict -f examples/stmt_nodes/release_and_expand/builtin_thm/riemann_integral_from_definition.lit
+thm integral_from_darboux:
+    ? forall f fn(x R) R,I R:
+        $is_real_bounded(fn_range(fn(x '[0,1]) R {f(x)}))
+        forall epsilon R+:
+            0<1
+            =>:
+                exist n N+, p fn(k Z:0<=k,k<=n) R, l fn(k Z:1<=k,k<=n) R, u fn(k Z:1<=k,k<=n) R, L R, U R st {$is_darboux_enclosure(f,0,1,n,p,l,u), L=sum(1,n,fn(k Z:1<=k,k<=n) R {l(k)*(p(k)-p(k-1))}), U=sum(1,n,fn(k Z:1<=k,k<=n) R {u(k)*(p(k)-p(k-1))}), L<=sign(1-0)*I, sign(1-0)*I<=U, U-L<epsilon}
+        =>:
+            $has_riemann_integral(f,0,1,I)
+    release thm riemann_integral_from_definition(f,0,1,I)

@@ -420,6 +420,8 @@ fn all_equality_rules() -> Vec<EqualitySearchProofByBuiltinRule> {
         EqualitySearchProofByBuiltinRule::EqualFromKnownDifferenceZero(
             EqualFromKnownDifferenceZeroBuiltinRuleProof {
                 cite_fact_id: FactId::new(1),
+                difference_on_left: true,
+                zero_path: crate::prelude::KnownEqualityPathProof::new(Vec::new()),
             },
         ),
         EqualitySearchProofByBuiltinRule::ZeroProductCancel(ZeroProductCancelBuiltinRuleProof {

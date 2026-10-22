@@ -55,6 +55,11 @@ pub fn collect_free_plain_ids(
     out: &mut HashSet<IdentifierId>,
 ) {
     match obj {
+        Obj::IntegralOperator(crate::ast::obj::IntegralOperator::Riemann(a)) => {
+            collect_free_plain_ids(&a.function, bound, out);
+            collect_free_plain_ids(&a.lower, bound, out);
+            collect_free_plain_ids(&a.upper, bound, out);
+        }
         Obj::DerivativeOperator(crate::ast::obj::DerivativeOperator::AtPoint(a)) => {
             collect_free_plain_ids(&a.function, bound, out);
             collect_free_plain_ids(&a.point, bound, out);

@@ -414,6 +414,9 @@ pub(super) fn standard_term(set: &StandardSet) -> Result<String, LeanCompileErro
 
 pub(super) fn unsupported_wd_definition(proof: &ObjWellDefinedProofByDef) -> LeanCompileError {
     match proof {
+        ObjWellDefinedProofByDef::IntegralOperator(_) => {
+            LeanCompileError::unsupported("WD/RiemannIntegral")
+        }
         ObjWellDefinedProofByDef::DerivativeOperator(_) => {
             LeanCompileError::unsupported("WD/DerivativeAt")
         }

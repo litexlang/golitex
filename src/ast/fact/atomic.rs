@@ -5,6 +5,10 @@ use crate::runtime::FactId;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum AtomicFact {
+    HasRiemannIntegralFact(HasRiemannIntegralFact),
+    NotHasRiemannIntegralFact(NotHasRiemannIntegralFact),
+    FunctionRiemannIntegrableFact(FunctionRiemannIntegrableFact),
+    NotFunctionRiemannIntegrableFact(NotFunctionRiemannIntegrableFact),
     HasDerivativeAtFact(HasDerivativeAtFact),
     NotHasDerivativeAtFact(NotHasDerivativeAtFact),
     FunctionDifferentiableAtFact(FunctionDifferentiableAtFact),
@@ -420,6 +424,10 @@ pub struct NotIsChoiceFunctionForFact {
 impl AtomicFact {
     pub fn fact_id(&self) -> FactId {
         match self {
+            AtomicFact::HasRiemannIntegralFact(f) => f.fact_id,
+            AtomicFact::NotHasRiemannIntegralFact(f) => f.fact_id,
+            AtomicFact::FunctionRiemannIntegrableFact(f) => f.fact_id,
+            AtomicFact::NotFunctionRiemannIntegrableFact(f) => f.fact_id,
             AtomicFact::HasDerivativeAtFact(f) => f.fact_id,
             AtomicFact::NotHasDerivativeAtFact(f) => f.fact_id,
             AtomicFact::FunctionDifferentiableAtFact(f) => f.fact_id,
@@ -499,6 +507,16 @@ impl AtomicFact {
             PRIME, PROPER_SUBSET, PROPER_SUPERSET, SUBSET, SUPERSET, SURJECTIVE,
         };
         match self {
+            AtomicFact::HasRiemannIntegralFact(f) => AtomicName::plain(f.predicate_name().into()),
+            AtomicFact::NotHasRiemannIntegralFact(f) => {
+                AtomicName::plain(f.predicate_name().into())
+            }
+            AtomicFact::FunctionRiemannIntegrableFact(f) => {
+                AtomicName::plain(f.predicate_name().into())
+            }
+            AtomicFact::NotFunctionRiemannIntegrableFact(f) => {
+                AtomicName::plain(f.predicate_name().into())
+            }
             AtomicFact::HasDerivativeAtFact(f) => AtomicName::plain(f.predicate_name().into()),
             AtomicFact::NotHasDerivativeAtFact(f) => AtomicName::plain(f.predicate_name().into()),
             AtomicFact::FunctionDifferentiableAtFact(f) => {
@@ -1028,5 +1046,63 @@ pub struct NotFunctionDifferentiableAtFact {
 impl NotFunctionDifferentiableAtFact {
     pub fn predicate_name(&self) -> &'static str {
         "is_differentiable_at"
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct HasRiemannIntegralFact {
+    pub fact_id: FactId,
+    pub function: Obj,
+    pub lower: Obj,
+    pub upper: Obj,
+    pub value: Obj,
+    pub line_file: Option<SourceLine>,
+}
+impl HasRiemannIntegralFact {
+    pub fn predicate_name(&self) -> &'static str {
+        "has_riemann_integral"
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct NotHasRiemannIntegralFact {
+    pub fact_id: FactId,
+    pub function: Obj,
+    pub lower: Obj,
+    pub upper: Obj,
+    pub value: Obj,
+    pub line_file: Option<SourceLine>,
+}
+impl NotHasRiemannIntegralFact {
+    pub fn predicate_name(&self) -> &'static str {
+        "has_riemann_integral"
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct FunctionRiemannIntegrableFact {
+    pub fact_id: FactId,
+    pub function: Obj,
+    pub lower: Obj,
+    pub upper: Obj,
+    pub line_file: Option<SourceLine>,
+}
+impl FunctionRiemannIntegrableFact {
+    pub fn predicate_name(&self) -> &'static str {
+        "is_riemann_integrable"
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct NotFunctionRiemannIntegrableFact {
+    pub fact_id: FactId,
+    pub function: Obj,
+    pub lower: Obj,
+    pub upper: Obj,
+    pub line_file: Option<SourceLine>,
+}
+impl NotFunctionRiemannIntegrableFact {
+    pub fn predicate_name(&self) -> &'static str {
+        "is_riemann_integrable"
     }
 }

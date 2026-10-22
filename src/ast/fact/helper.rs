@@ -18,7 +18,9 @@ use std::collections::HashSet;
 pub fn atomic_fact_has_positive_polarity(fact: &AtomicFact) -> bool {
     !matches!(
         fact,
-        AtomicFact::NotHasDerivativeAtFact(_)
+        AtomicFact::NotHasRiemannIntegralFact(_)
+            | AtomicFact::NotFunctionRiemannIntegrableFact(_)
+            | AtomicFact::NotHasDerivativeAtFact(_)
             | AtomicFact::NotFunctionDifferentiableAtFact(_)
             | AtomicFact::NotNormalAtomicFact(_)
             | AtomicFact::NotRealSetBoundFact(_)
@@ -57,6 +59,10 @@ pub fn atomic_fact_has_positive_polarity(fact: &AtomicFact) -> bool {
 
 pub fn atomic_fact_args_ref(fact: &AtomicFact) -> Vec<&Obj> {
     match fact {
+        AtomicFact::HasRiemannIntegralFact(f) => vec![&f.function, &f.lower, &f.upper, &f.value],
+        AtomicFact::NotHasRiemannIntegralFact(f) => vec![&f.function, &f.lower, &f.upper, &f.value],
+        AtomicFact::FunctionRiemannIntegrableFact(f) => vec![&f.function, &f.lower, &f.upper],
+        AtomicFact::NotFunctionRiemannIntegrableFact(f) => vec![&f.function, &f.lower, &f.upper],
         AtomicFact::HasDerivativeAtFact(f) => vec![&f.function, &f.point, &f.value],
         AtomicFact::NotHasDerivativeAtFact(f) => vec![&f.function, &f.point, &f.value],
         AtomicFact::FunctionDifferentiableAtFact(f) => vec![&f.function, &f.point],
@@ -249,6 +255,40 @@ pub fn and_chain_as_fact(branch: &AndChainAtomicFact) -> Fact {
 // Flip atomic polarity with a fresh FactId.
 pub fn negate_atomic_fact(fact: &AtomicFact, new_fact_id: FactId) -> Option<AtomicFact> {
     Some(match fact {
+        AtomicFact::HasRiemannIntegralFact(f) => super::NotHasRiemannIntegralFact {
+            fact_id: new_fact_id,
+            function: f.function.clone(),
+            lower: f.lower.clone(),
+            upper: f.upper.clone(),
+            value: f.value.clone(),
+            line_file: f.line_file.clone(),
+        }
+        .into(),
+        AtomicFact::NotHasRiemannIntegralFact(f) => super::HasRiemannIntegralFact {
+            fact_id: new_fact_id,
+            function: f.function.clone(),
+            lower: f.lower.clone(),
+            upper: f.upper.clone(),
+            value: f.value.clone(),
+            line_file: f.line_file.clone(),
+        }
+        .into(),
+        AtomicFact::FunctionRiemannIntegrableFact(f) => super::NotFunctionRiemannIntegrableFact {
+            fact_id: new_fact_id,
+            function: f.function.clone(),
+            lower: f.lower.clone(),
+            upper: f.upper.clone(),
+            line_file: f.line_file.clone(),
+        }
+        .into(),
+        AtomicFact::NotFunctionRiemannIntegrableFact(f) => super::FunctionRiemannIntegrableFact {
+            fact_id: new_fact_id,
+            function: f.function.clone(),
+            lower: f.lower.clone(),
+            upper: f.upper.clone(),
+            line_file: f.line_file.clone(),
+        }
+        .into(),
         AtomicFact::HasDerivativeAtFact(f) => super::NotHasDerivativeAtFact {
             fact_id: new_fact_id,
             function: f.function.clone(),

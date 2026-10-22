@@ -100,6 +100,20 @@ pub(super) fn project_equality_builtin_rule(
                 ),
             ],
         ),
+        EqualitySearchProofByBuiltinRule::RiemannIntegralSelectedValue(p) => object_for(
+            runtime,
+            vec![
+                ("type", string("builtin_rule")),
+                ("rule", string("RiemannIntegralSelectedValue")),
+                (
+                    "premises",
+                    JsonValue::Array(vec![
+                        super::searched::project_known_premise(&p.candidate, runtime),
+                        super::searched::project_equal_searched(&p.value_equality, runtime),
+                    ]),
+                ),
+            ],
+        ),
         EqualitySearchProofByBuiltinRule::DerivativeSelectedValue(p) => object_for(
             runtime,
             vec![
@@ -1748,6 +1762,11 @@ pub(super) fn project_equality_builtin_rule(
                 ("rule", string("EqualFromKnownDifferenceZero")),
             ];
             entries.push(("cite_fact_id", string(p.cite_fact_id.to_string())));
+            entries.push(("difference_on_left", JsonValue::Bool(p.difference_on_left)));
+            entries.push((
+                "zero_path",
+                super::searched::project_known_equality_path(&p.zero_path, runtime),
+            ));
             if let Some(fact) = runtime.fact_by_id_in_stack(p.cite_fact_id) {
                 entries.push(("cite", string(fact.readable_string())));
             }

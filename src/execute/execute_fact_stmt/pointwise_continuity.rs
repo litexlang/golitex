@@ -4,6 +4,7 @@
 mod pointwise_continuity_tests;
 use super::function_domain::function_domains_alpha_equal;
 use super::function_limit::RealFunctionLimitDomainProof;
+use super::pointwise_elementary::ElementaryRealFunction;
 use crate::prelude::*;
 use std::collections::{HashMap, HashSet};
 
@@ -23,6 +24,11 @@ pub struct PointwiseContinuityExpressionProof {
     pub constructor: PointwiseContinuityConstructorProof,
 }
 pub enum PointwiseContinuityConstructorProof {
+    Elementary {
+        kind: ElementaryRealFunction,
+        argument: Box<PointwiseContinuityExpressionProof>,
+        domain: Box<VerifyFactResult>,
+    },
     Constant,
     Variable,
     Neg {
@@ -158,6 +164,28 @@ impl Runtime {
         } else if matches!(expression, Obj::Identifier(IdentifierObj::Plain { id, .. }) if *id == parameter)
         {
             C::Variable
+        } else if let Some((kind, input)) = ElementaryRealFunction::from_expression(expression) {
+            let Some(argument) = self.prove_continuous_expression(
+                input,
+                parameter,
+                point,
+                state,
+                depth + 1,
+                remaining,
+            )?
+            else {
+                return Ok(None);
+            };
+            let requirement = self.elementary_real_condition(kind, argument.value.clone(), false);
+            let domain = self.verify_fact(&requirement, state)?;
+            if domain.is_failed() {
+                return Ok(None);
+            }
+            C::Elementary {
+                kind,
+                argument: Box::new(argument),
+                domain: Box::new(domain),
+            }
         } else {
             match expression {
                 Obj::ArithmeticOperator(ArithmeticOperator::Neg(a)) => {

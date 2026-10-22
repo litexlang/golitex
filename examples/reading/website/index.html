@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>把 Litex Reading 接入网页</title>
+  <link rel="stylesheet" href="book/reader.css">
+  <script defer src="book/reader.js"></script>
+  <script defer src="main.js"></script>
+  <style>
+    body { margin:0; background:#fff; color:#263238; font:16px/1.7 system-ui,sans-serif; }
+    .host-header { max-width:1400px; margin:24px auto; padding:0 24px; }
+    .host-header h1 { font-size:26px; margin:0; }
+    .host-header p { color:#607067; }
+    #host-controls { display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+    #host-controls button { color:#673ab7; background:#f6f2ff; border:1px solid #c9b4e8; padding:8px 14px; border-radius:6px; font:inherit; cursor:pointer; }
+    #host-controls button:disabled { opacity:.4; cursor:default; }
+    #selection-status { color:#455a64; font-size:13px; }
+    .host-section { max-width:1488px; margin:32px auto; border-top:1px solid #e1e8e3; }
+    .host-section>h2 { padding:0 24px; font-size:18px; color:#2e7d32; }
+    iframe { display:block; width:100%; height:850px; border:1px solid #e1e8e3; border-radius:8px; box-sizing:border-box; }
+    #host-error { color:#c62828; white-space:pre-wrap; }
+  </style>
+</head>
+<body>
+  <header class="host-header">
+    <h1>一份 JSON，两种网页接入方式</h1>
+    <p>上方直接挂载组件，下方嵌入静态页面。宿主按钮通过陈述 ID 或事实 ID 控制两处阅读器。</p>
+    <div id="host-controls">
+      <button id="select-conclusion" disabled>查看后文陈述</button>
+      <button id="select-inferred" disabled>查看推导事实</button>
+      <button id="select-wd" disabled>查看有定义依据</button>
+      <output id="selection-status" aria-live="polite">正在加载阅读数据…</output>
+    </div>
+    <p id="host-error" role="alert"></p>
+  </header>
+  <section class="host-section" aria-label="直接挂载组件">
+    <h2>按章加载：LitexReading.open(root, manifestUrl)</h2>
+    <div id="component-reader"></div>
+  </section>
+  <section class="host-section" aria-label="iframe 嵌入">
+    <h2>iframe：静态页面 + 校验来源的选择消息</h2>
+    <iframe id="frame-reader" title="嵌入的 Litex Reading"></iframe>
+  </section>
+</body>
+</html>

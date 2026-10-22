@@ -34,6 +34,17 @@ impl Runtime {
                 }
             }
         }
+        if let AtomicFact::HasRiemannIntegralFact(f) = fact {
+            let existence = self.riemann_integral_existence(
+                f.function.clone(),
+                f.lower.clone(),
+                f.upper.clone(),
+            );
+            derived.push(self.store_inferred_fact(&existence)?);
+            let integrable =
+                self.riemann_integrable(f.function.clone(), f.lower.clone(), f.upper.clone());
+            derived.push(self.store_inferred_fact(&integrable.into())?);
+        }
         if let AtomicFact::HasDerivativeAtFact(f) = fact {
             let existence = self.derivative_existence(f.function.clone(), f.point.clone());
             derived.push(self.store_inferred_fact(&existence)?);
@@ -93,6 +104,10 @@ impl Runtime {
         state: VerifyState,
     ) -> RuntimeResult<Option<Vec<Fact>>> {
         let clauses = match fact {
+            AtomicFact::HasRiemannIntegralFact(_)
+            | AtomicFact::FunctionRiemannIntegrableFact(_) => {
+                return self.riemann_integral_defining_clauses(fact, state)
+            }
             AtomicFact::HasDerivativeAtFact(_) | AtomicFact::FunctionDifferentiableAtFact(_) => {
                 return self.derivative_defining_clauses(fact, state)
             }

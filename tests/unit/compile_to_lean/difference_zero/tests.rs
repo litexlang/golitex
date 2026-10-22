@@ -68,7 +68,7 @@ fn difference_zero_rejects_other_operands_and_nonzero_endpoint() {
         let expected = if other == "c-d=0" {
             "DifferenceZero/Subjects"
         } else {
-            "DifferenceZero/UncapturedZeroPath"
+            "Equality/PathEndpoint"
         };
         assert_eq!(error.route, expected);
     }
@@ -84,4 +84,80 @@ fn difference_zero_rejects_deleted_citation_producer() {
     assert!(compiler
         .compile_run(&result, "deleted_difference_zero")
         .is_err());
+}
+
+#[test]
+fn difference_zero_captures_and_replays_the_remaining_zero_path() {
+    for premise in ["a-b=c", "c=a-b", "b-a=c", "c=b-a"] {
+        let source = format!(
+            "forall a, b, c, d C:\n    {premise}\n    c=d\n    d=0\n    =>:\n        a=b\n"
+        );
+        let (mut result, compiler) = super::execute(&source);
+        let proof = selected(&mut result);
+        assert_eq!(proof.zero_path.path.len(), 2);
+        let ids = proof
+            .zero_path
+            .path
+            .iter()
+            .map(|step| step.2)
+            .collect::<Vec<_>>();
+        let json = crate::json_output::emit_run_detailed(
+            &result,
+            &compiler.runtime,
+            "difference_zero_path",
+            None,
+        );
+        assert!(json.contains("\"zero_path\""));
+        assert!(json.contains("\"difference_on_left\""));
+        let output = compiler
+            .compile_run(&result, "difference_zero_path")
+            .unwrap();
+        assert!(output.contains("Litex.sameOfSubZero"));
+        for id in ids {
+            assert!(output.contains(&format!("h_{}", id.value())));
+        }
+    }
+}
+
+#[test]
+fn difference_zero_rejects_corrupted_zero_paths_and_selected_side() {
+    let source = "forall a, b, c, d C:\n    a-b=c\n    c=d\n    d=0\n    =>:\n        a=b\n";
+    for mutation in 0..5 {
+        let (mut result, compiler) = super::execute(source);
+        let proof = selected(&mut result);
+        assert_eq!(proof.zero_path.path.len(), 2);
+        match mutation {
+            0 => {
+                proof.zero_path.path.pop();
+            }
+            1 => {
+                proof.zero_path.path.swap(0, 1);
+            }
+            2 => {
+                proof.zero_path.path[0].2 = FactId::new(u64::MAX);
+            }
+            3 => {
+                proof.zero_path.path[0].1 = proof.zero_path.path[0].0.clone();
+            }
+            4 => {
+                proof.difference_on_left = !proof.difference_on_left;
+            }
+            _ => unreachable!(),
+        }
+        assert!(compiler.compile_run(&result, "invalid_zero_path").is_err());
+    }
+}
+
+#[test]
+fn difference_zero_requires_an_actual_connection_to_zero() {
+    let mut runtime = Runtime::new(LaunchCommand::Eval {
+        code: String::new(),
+        session: false,
+        strict: true,
+        language: OutputLanguage::English,
+    });
+    let result = runtime
+        .run_litex_code("forall a, b, c, d C:\n    a-b=c\n    c=d\n    =>:\n        a=b\n")
+        .unwrap();
+    assert!(!result.success);
 }

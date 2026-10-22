@@ -90,6 +90,7 @@ pub mod by_sequence_limit;
 
 pub mod by_derivative;
 pub mod by_real_bounds;
+pub mod by_riemann_integral;
 pub mod by_sequence_limsup;
 
 pub mod by_sequence_liminf;

@@ -1,0 +1,8 @@
+# Expected rejection: a missing proof, false formula, or invalid ordinary-Riemann domain.
+have fn rational_flag(x R) R by cases:
+    case x $in Q: 1
+    case not x $in Q: 0
+rational_flag(0)=1
+rational_flag(1/2)=1
+rational_flag(1)=1
+$has_riemann_integral(rational_flag,0,1,1)

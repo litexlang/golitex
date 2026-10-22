@@ -402,13 +402,24 @@ class Generator:
                 lines.append(f'let rule_id = Some({json.dumps(rule_id)});')
             else:
                 lines.append('let rule_id = None;')
-        declaration_type = record['name'] in {'DefPropStmt', 'DefAbstractPropStmt', 'DefStructStmt', 'DefTemplateStmt', 'DefThmStmt', 'AxiomStmt', 'DefStrategyStmt'}
+        declaration_type = record['name'] in {
+            'DefPropStmt', 'DefAbstractPropStmt', 'DefStructStmt', 'DefTemplateStmt', 'DefThmStmt', 'AxiomStmt', 'DefStrategyStmt',
+            'HaveObjInNonemptySetOrParamTypeStmt', 'HaveObjEqualStmt', 'HaveObjByExistFactsStmt', 'TrustHaveStmt',
+            'HaveByReplacementAxiomStmt', 'LetObjStmt', 'HaveFnEqualStmt', 'HaveFnEqualCaseByCaseStmt',
+            'HaveFnByForallExistUniqueStmt', 'HaveFnByInducStmt',
+        }
         if declaration_type:
             lines.append('capture.source_snapshot_depth += 1;')
         text = []
         for (field, raw), binding in zip(data, bindings):
             raw = re.sub(r'\bSelf\b', full, raw)
             value = self.expression(raw, binding, record['module'])
+            if record['name'] in {'FormedAtomicSubject', 'FormedFunctionArgument'} and field == 'wd_id':
+                value = f'capture.wd_identity({binding}, runtime)'
+            if full.startswith('crate::ast::fact::') and field == 'fact_id' and raw == 'FactId':
+                # An AST subject's own identity is not a citation. Temporary
+                # calculation subjects need not have been stored in an Env.
+                value = f'super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String({binding}.to_string()))])'
             if full.startswith('crate::ast::') and raw == 'Vec<Stmt>':
                 value = f'capture.ast_body({json.dumps(field)}, {binding}, runtime)'
             if full.startswith('crate::ast::') and raw == 'Option<Vec<Stmt>>':
@@ -438,8 +449,28 @@ class Generator:
         if declaration_type and locations:
             binding, raw = locations[0]
             lines.append(f'let declaration = capture.declaration_reference({binding}, {json.dumps(record["name"])}); if let JsonValue::Object(fields) = &mut output {{ fields.insert("declaration".into(), declaration); }}')
+        if record['name'] == 'PredicateSignatureWellDefinedProof' and name in {'Prop', 'AbstractProp'}:
+            predicate = bindings[[field for field, _ in data].index('predicate')]
+            lines.append(f'let declaration = capture.signature_declaration({predicate}, runtime); if let JsonValue::Object(fields) = &mut output {{ fields.insert("declaration".into(), declaration); }}')
         if record['name'] == 'StoreFactResult':
             lines.append('capture.stored(&value.stored_fact_ids());')
+        if record['name'] == 'StoreFactAndInferResult':
+            lines.append('capture.record_inference(value, &output);')
+        if record['name'] == 'AssumeDomFactResult':
+            lines.append('capture.fact_context(&value.store_and_infer, "hypothesis", &output, "well_defined");')
+        if record['name'] == 'ProveAndStoreThenFactResult':
+            lines.append('capture.fact_context(&value.store_and_infer, "verified", &output, "verify_result");')
+        if record['name'] == 'ExecFactStmtSuccessResult':
+            lines.append('capture.fact_context(&value.store_and_infer_result, "verified", &output, "verify_result");')
+        if record['name'] == 'StoreHaveObjAndInferResult':
+            lines.append('for stored in &value.store_and_infer_results { capture.fact_context(stored, "declaration", &output, ""); }')
+        if record['name'] in {'FormedAtomicSubject', 'FormedFunctionArgument'}:
+            lines.append('capture.wd_registration(&value.wd_id, &output);')
+        if record['name'] == 'FnObjDomainCheckResult':
+            lines.append('if let Some(stages) = capture.evidence_field(&output, "stages") { if let Some(JsonValue::Array(children)) = capture.evidence_field(&stages, "child_obj_well_defined") { for formed in &value.scope.formed_children { if let Some(child) = children.get(formed.child_index) { capture.wd_evidence(&formed.wd_id, child, "well_definedness"); } } } }')
+        if {'argument_scope', 'child_obj_well_defined'}.issubset({field for field, _ in data}):
+            scope_binding = bindings[[field for field, _ in data].index('argument_scope')]
+            lines.append(f'if let Some(scope) = {scope_binding}.as_ref() {{ if let Some(JsonValue::Array(children)) = capture.evidence_field(&output, "child_obj_well_defined") {{ for formed in &scope.formed_children {{ if let Some(child) = children.get(formed.child_index) {{ capture.wd_evidence(&formed.wd_id, child, "well_definedness"); }} }} }} }}')
         if record['name'] in {'Fact', 'AtomicFact', 'Obj', 'Stmt'}:
             lines.append('if let JsonValue::Object(fields) = &mut output { fields.insert("text".into(), JsonValue::String(value.readable_string())); }')
         if record['name'] == 'Fact':
@@ -483,7 +514,7 @@ class Generator:
             if record['name'] == 'Stmt':
                 before += 'let source_frame = capture.begin_ast_statement(value);\n'
                 after += 'capture.end_ast_statement(source_frame);\n'
-            functions.append(f'pub(super) fn {self.function(full)}(value: &{self.paths[full]}, capture: &mut Capture, runtime: &Runtime) -> JsonValue {{\n{before}let output = match value {{\n' + '\n'.join(branches) + '\n};\n' + after + 'output\n}')
+            functions.append(f'pub(super) fn {self.function(full)}(value: &{self.paths[full]}, capture: &mut Capture, runtime: &Runtime) -> JsonValue {{\n{before}let output = match value {{\n' + '\n'.join(branches) + '\n};\n' + after + 'capture.intern_evidence(output)\n}')
         header = '// Generated by generate_capture.py. Do not edit; regenerate after evidence changes.\n#![allow(unused_mut, unused_variables, non_snake_case, clippy::all)]\nuse crate::prelude::*;\nuse super::capture::Capture;\nuse super::helper::node;\n\n'
         return header + '\n\n'.join(functions) + '\n'
 

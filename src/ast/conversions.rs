@@ -989,3 +989,48 @@ impl From<crate::ast::obj::DerivativeAt> for crate::ast::obj::Obj {
         Self::DerivativeOperator(crate::ast::obj::DerivativeOperator::AtPoint(v))
     }
 }
+impl From<crate::ast::fact::HasRiemannIntegralFact> for AtomicFact {
+    fn from(f: crate::ast::fact::HasRiemannIntegralFact) -> Self {
+        Self::HasRiemannIntegralFact(f)
+    }
+}
+impl From<crate::ast::fact::HasRiemannIntegralFact> for Fact {
+    fn from(f: crate::ast::fact::HasRiemannIntegralFact) -> Self {
+        Self::AtomicFact(f.into())
+    }
+}
+impl From<crate::ast::fact::NotHasRiemannIntegralFact> for AtomicFact {
+    fn from(f: crate::ast::fact::NotHasRiemannIntegralFact) -> Self {
+        Self::NotHasRiemannIntegralFact(f)
+    }
+}
+impl From<crate::ast::fact::NotHasRiemannIntegralFact> for Fact {
+    fn from(f: crate::ast::fact::NotHasRiemannIntegralFact) -> Self {
+        Self::AtomicFact(f.into())
+    }
+}
+impl From<crate::ast::fact::FunctionRiemannIntegrableFact> for AtomicFact {
+    fn from(f: crate::ast::fact::FunctionRiemannIntegrableFact) -> Self {
+        Self::FunctionRiemannIntegrableFact(f)
+    }
+}
+impl From<crate::ast::fact::FunctionRiemannIntegrableFact> for Fact {
+    fn from(f: crate::ast::fact::FunctionRiemannIntegrableFact) -> Self {
+        Self::AtomicFact(f.into())
+    }
+}
+impl From<crate::ast::fact::NotFunctionRiemannIntegrableFact> for AtomicFact {
+    fn from(f: crate::ast::fact::NotFunctionRiemannIntegrableFact) -> Self {
+        Self::NotFunctionRiemannIntegrableFact(f)
+    }
+}
+impl From<crate::ast::fact::NotFunctionRiemannIntegrableFact> for Fact {
+    fn from(f: crate::ast::fact::NotFunctionRiemannIntegrableFact) -> Self {
+        Self::AtomicFact(f.into())
+    }
+}
+impl From<crate::ast::obj::RiemannIntegral> for crate::ast::obj::Obj {
+    fn from(v: crate::ast::obj::RiemannIntegral) -> Self {
+        Self::IntegralOperator(crate::ast::obj::IntegralOperator::Riemann(v))
+    }
+}

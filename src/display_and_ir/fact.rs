@@ -39,6 +39,10 @@ impl Fact {
 impl AtomicFact {
     pub fn ir(&self) -> FactIR {
         match self {
+            AtomicFact::HasRiemannIntegralFact(x) => x.ir(),
+            AtomicFact::NotHasRiemannIntegralFact(x) => x.ir(),
+            AtomicFact::FunctionRiemannIntegrableFact(x) => x.ir(),
+            AtomicFact::NotFunctionRiemannIntegrableFact(x) => x.ir(),
             AtomicFact::HasDerivativeAtFact(x) => x.ir(),
             AtomicFact::NotHasDerivativeAtFact(x) => x.ir(),
             AtomicFact::FunctionDifferentiableAtFact(x) => x.ir(),
@@ -113,6 +117,10 @@ impl AtomicFact {
     pub fn display_string(&self) -> String {
         match self {
             AtomicFact::NormalAtomicFact(x) => x.display_string(),
+            AtomicFact::HasRiemannIntegralFact(x) => x.display_string(),
+            AtomicFact::NotHasRiemannIntegralFact(x) => x.display_string(),
+            AtomicFact::FunctionRiemannIntegrableFact(x) => x.display_string(),
+            AtomicFact::NotFunctionRiemannIntegrableFact(x) => x.display_string(),
             AtomicFact::HasDerivativeAtFact(x) => x.display_string(),
             AtomicFact::NotHasDerivativeAtFact(x) => x.display_string(),
             AtomicFact::FunctionDifferentiableAtFact(x) => x.display_string(),
@@ -1323,6 +1331,56 @@ impl NotFunctionDifferentiableAtFact {
     pub fn ir(&self) -> FactIR {
         let args = vec![self.function.ir().to_string(), self.point.ir().to_string()].join(", ");
         FactIR(format!("not $is_differentiable_at({})", args))
+    }
+    impl_display_pair!();
+}
+impl HasRiemannIntegralFact {
+    pub fn ir(&self) -> FactIR {
+        let args = vec![
+            self.function.ir().to_string(),
+            self.lower.ir().to_string(),
+            self.upper.ir().to_string(),
+            self.value.ir().to_string(),
+        ]
+        .join(", ");
+        FactIR(format!("$has_riemann_integral({})", args))
+    }
+    impl_display_pair!();
+}
+impl NotHasRiemannIntegralFact {
+    pub fn ir(&self) -> FactIR {
+        let args = vec![
+            self.function.ir().to_string(),
+            self.lower.ir().to_string(),
+            self.upper.ir().to_string(),
+            self.value.ir().to_string(),
+        ]
+        .join(", ");
+        FactIR(format!("not $has_riemann_integral({})", args))
+    }
+    impl_display_pair!();
+}
+impl FunctionRiemannIntegrableFact {
+    pub fn ir(&self) -> FactIR {
+        let args = vec![
+            self.function.ir().to_string(),
+            self.lower.ir().to_string(),
+            self.upper.ir().to_string(),
+        ]
+        .join(", ");
+        FactIR(format!("$is_riemann_integrable({})", args))
+    }
+    impl_display_pair!();
+}
+impl NotFunctionRiemannIntegrableFact {
+    pub fn ir(&self) -> FactIR {
+        let args = vec![
+            self.function.ir().to_string(),
+            self.lower.ir().to_string(),
+            self.upper.ir().to_string(),
+        ]
+        .join(", ");
+        FactIR(format!("not $is_riemann_integrable({})", args))
     }
     impl_display_pair!();
 }

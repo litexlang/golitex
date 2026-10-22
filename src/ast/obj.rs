@@ -24,6 +24,7 @@ use crate::runtime::runtime_ids::IdentifierId;
 pub enum Obj {
     // Finite real supremum/infimum selected only from proved candidate/existence.
     BoundOperator(BoundOperator),
+    IntegralOperator(IntegralOperator),
     DerivativeOperator(DerivativeOperator),
     // Free or qualified name used as a value. Example: `a`, `m1::f0::Point`.
     Identifier(IdentifierObj),
@@ -1347,6 +1348,26 @@ impl DerivativeAt {
         Self {
             function: Box::new(function),
             point: Box::new(point),
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum IntegralOperator {
+    Riemann(RiemannIntegral),
+}
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct RiemannIntegral {
+    pub function: Box<Obj>,
+    pub lower: Box<Obj>,
+    pub upper: Box<Obj>,
+}
+impl RiemannIntegral {
+    pub fn new(function: Obj, lower: Obj, upper: Obj) -> Self {
+        Self {
+            function: Box::new(function),
+            lower: Box::new(lower),
+            upper: Box::new(upper),
         }
     }
 }

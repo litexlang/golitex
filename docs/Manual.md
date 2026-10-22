@@ -6198,6 +6198,75 @@ For a checked complete unary domain `fn(x S) T`, both inverse-image forms are su
 
 **Source and evidence:** [bounded construction](../src/execute/execute_fact_stmt/function_preimage.rs), [maintained strict example](../examples/wd/function_preimages.lit), and `cargo test --release function_preimages`. `have by fn_preimage` continues to extract witnesses from known function-range membership.
 
+### Finite real Riemann integrals (preview)
+
+`integral(f,a,b)` selects a finite real Riemann integral after a proof of
+`$has_riemann_integral(f,a,b,I)` or `$is_riemann_integrable(f,a,b)`. The latter
+means that some real candidate exists; it permits symbolic use without
+identifying a numerical value. WD consumes that evidence and does not search
+for an antiderivative or guess an integral.
+
+The actual complete unary real function domain must cover the closed interval
+between the endpoints. Equal endpoints require the function to be defined
+there and give zero; reversing endpoints negates the integral. The definition
+uses boundedness and Darboux step-function enclosures of arbitrarily small
+upper-minus-lower sum. Continuity is sufficient for integrability and is not
+part of its definition. This ordinary Riemann integral excludes interior
+singularities and unbounded functions.
+
+```litex
+have fn square(x R) R=x^2
+release thm riemann_integral_power(square,0,1,2)
+integral(square,0,1)=1/3
+integral(square,0,1)+2=7/3
+```
+
+Without the candidate/existence proof, even `0*integral(square,0,1)=0`
+fails WD. A guarded function may require an explicit interval-in-domain proof;
+see [actual-domain examples](../examples/real_analysis/riemann_integral_domains.lit).
+
+These reserved explicit theorem calls check every premise before publishing
+their conclusions. Functions named `h` are supplied result functions: the
+corresponding pointwise formula must hold on the integration interval.
+
+| Call | Contract |
+| --- | --- |
+| `riemann_integral_from_definition(f,a,b,I)` | Prove the defining Darboux clauses to introduce the candidate. |
+| `riemann_integral_to_definition(f,a,b,I)` | Expose those clauses from a candidate. |
+| `riemann_integral_exists(f,a,b,I)` | A candidate supplies real candidate existence. |
+| `riemann_integrable_from_candidate(f,a,b,I)` | A candidate supplies integrability. |
+| `riemann_integral_selected(f,a,b)` | Existing integrability supplies the candidate at the selected value. |
+| `riemann_integral_unique(f,a,b,I,J)` | Two candidates have equal values. |
+| `riemann_integral_zero(f,a)` | The singleton integral is zero under the actual-domain condition. |
+| `riemann_integral_constant(f,a,b,c)` | A function equal to `c` throughout the interval has value `c*(b-a)`. |
+| `riemann_integral_power(f,a,b,n)` | For natural `n` and `f(x)=x^n`, give `(b^(n+1)-a^(n+1))/(n+1)`. |
+| `riemann_integral_reverse(f,a,b,I)` | Reverse a proved candidate and negate its value. |
+| `riemann_integral_add(f,g,h,a,b,I,J)` | Candidates for `f,g` and `h(x)=f(x)+g(x)` give value `I+J`. |
+| `riemann_integral_subtract(f,g,h,a,b,I,J)` | The corresponding difference gives value `I-J`. |
+| `riemann_integral_scale(f,h,a,b,c,I)` | A candidate and `h(x)=c*f(x)` give value `c*I`. |
+| `riemann_integral_split(f,a,c,b,I,J)` | With `c` between the endpoints, combine candidates on the two pieces. |
+| `riemann_integral_extensional(f,g,a,b,I)` | Pointwise equality on the interval transfers a candidate between actual domains. |
+| `riemann_integral_compare(f,g,a,b,I,J)` | For `a<=b`, pointwise order and two candidates give `I<=J`. |
+| `riemann_integral_bound(f,a,b,I,M)` | A candidate, `M>=0`, and `abs(f(x))<=M` give `abs(I)<=M*abs(b-a)`. |
+| `riemann_integrable_continuous(f,a,b)` | Continuity at every point of the closed interval supplies integrability. |
+| `riemann_integral_newton_leibniz(f,F,a,b)` | Integrable `f`, closed-interval continuity of `F`, and `F'=f` at every interior point give value `F(b)-F(a)`. |
+| `riemann_integral_step(f,a,c,b,L,U)` | For `a<=c<=b`, constants on `[a,c)` and `(c,b]` give `L*(c-a)+U*(b-c)`; the value at `c` may differ. |
+| `darboux_enclosure_from_definition(f,a,b,n,p,l,u)` | Check a positive-length partition and pointwise lower/upper cell bounds to introduce `$is_darboux_enclosure(...)`. |
+| `darboux_enclosure_to_definition(f,a,b,n,p,l,u)` | Expose those finite partition and bound conditions. |
+
+The enclosure certificate has seven arguments. Its finite index families use
+guarded integer domains (`p`: `0<=k<=n`; `l,u`: `1<=k<=n`). Merely writing
+the certificate never proves it. The integral definition quantifies over
+arbitrary precision and bounds the function throughout every cell. Convergence
+of one sampled sum sequence alone does not establish integrability.
+
+See the [primary example](../examples/real_analysis/riemann_integral.lit),
+[explicit theorem examples](../examples/stmt_nodes/release_and_expand/builtin_thm/riemann_integral_power.lit),
+and [implementation](../src/execute/execute_fact_stmt/riemann_integral.rs).
+LaTeX output renders the selected integral; Lean compilation of these new
+integral objects and proof routes is currently unsupported and rejects them.
+
+
 ### O82. Sums over integer ranges
 
 **Public form:** `sum(a,b,f)`.

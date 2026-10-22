@@ -7227,6 +7227,13 @@
     "labels": {}
   },
   {
+    "id": "builtin.EqualitySearchProofByBuiltinRule::RiemannIntegralSelectedValue",
+    "category": "builtin",
+    "family": "EqualitySearchProofByBuiltinRule",
+    "variant": "RiemannIntegralSelectedValue",
+    "labels": {}
+  },
+  {
     "id": "builtin.EqualitySearchProofByBuiltinRule::ScalarDivisionRelation",
     "category": "builtin",
     "family": "EqualitySearchProofByBuiltinRule",
@@ -24745,10 +24752,73 @@
     }
   },
   {
+    "id": "builtin_theorem.BuiltinTheoremId::AntiderivativeAdd",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "AntiderivativeAdd",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::AntiderivativeDifferenceConstant",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "AntiderivativeDifferenceConstant",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::AntiderivativeFromDefinition",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "AntiderivativeFromDefinition",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::AntiderivativeRestrict",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "AntiderivativeRestrict",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::AntiderivativeScale",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "AntiderivativeScale",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::AntiderivativeShift",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "AntiderivativeShift",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::AntiderivativeToDefinition",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "AntiderivativeToDefinition",
+    "labels": {}
+  },
+  {
     "id": "builtin_theorem.BuiltinTheoremId::CartesianMemberFromCoordinates",
     "category": "builtin_theorem",
     "family": "BuiltinTheoremId",
     "variant": "CartesianMemberFromCoordinates",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::DarbouxEnclosureFromDefinition",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "DarbouxEnclosureFromDefinition",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::DarbouxEnclosureToDefinition",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "DarbouxEnclosureToDefinition",
     "labels": {}
   },
   {
@@ -25340,6 +25410,13 @@
     "labels": {}
   },
   {
+    "id": "builtin_theorem.BuiltinTheoremId::FnDerivativeAtCos",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "FnDerivativeAtCos",
+    "labels": {}
+  },
+  {
     "id": "builtin_theorem.BuiltinTheoremId::FnDerivativeAtDivide",
     "category": "builtin_theorem",
     "family": "BuiltinTheoremId",
@@ -25354,6 +25431,13 @@
     "labels": {}
   },
   {
+    "id": "builtin_theorem.BuiltinTheoremId::FnDerivativeAtExp",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "FnDerivativeAtExp",
+    "labels": {}
+  },
+  {
     "id": "builtin_theorem.BuiltinTheoremId::FnDerivativeAtFromLimit",
     "category": "builtin_theorem",
     "family": "BuiltinTheoremId",
@@ -25365,6 +25449,13 @@
     "category": "builtin_theorem",
     "family": "BuiltinTheoremId",
     "variant": "FnDerivativeAtIdentity",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::FnDerivativeAtLn",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "FnDerivativeAtLn",
     "labels": {}
   },
   {
@@ -25428,6 +25519,20 @@
     "category": "builtin_theorem",
     "family": "BuiltinTheoremId",
     "variant": "FnDerivativeAtSelected",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::FnDerivativeAtSin",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "FnDerivativeAtSin",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::FnDerivativeAtSqrt",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "FnDerivativeAtSqrt",
     "labels": {}
   },
   {
@@ -26502,6 +26607,153 @@
     "labels": {}
   },
   {
+    "id": "builtin_theorem.BuiltinTheoremId::RiemannIntegrableContinuous",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "RiemannIntegrableContinuous",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::RiemannIntegrableFromCandidate",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "RiemannIntegrableFromCandidate",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::RiemannIntegralAdd",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "RiemannIntegralAdd",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::RiemannIntegralBound",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "RiemannIntegralBound",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::RiemannIntegralByParts",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "RiemannIntegralByParts",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::RiemannIntegralCompare",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "RiemannIntegralCompare",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::RiemannIntegralConstant",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "RiemannIntegralConstant",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::RiemannIntegralExists",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "RiemannIntegralExists",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::RiemannIntegralExtensional",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "RiemannIntegralExtensional",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::RiemannIntegralFromDefinition",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "RiemannIntegralFromDefinition",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::RiemannIntegralNewtonLeibniz",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "RiemannIntegralNewtonLeibniz",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::RiemannIntegralPower",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "RiemannIntegralPower",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::RiemannIntegralReverse",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "RiemannIntegralReverse",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::RiemannIntegralScale",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "RiemannIntegralScale",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::RiemannIntegralSelected",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "RiemannIntegralSelected",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::RiemannIntegralSplit",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "RiemannIntegralSplit",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::RiemannIntegralStep",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "RiemannIntegralStep",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::RiemannIntegralSubtract",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "RiemannIntegralSubtract",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::RiemannIntegralToDefinition",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "RiemannIntegralToDefinition",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::RiemannIntegralUnique",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "RiemannIntegralUnique",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::RiemannIntegralZero",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "RiemannIntegralZero",
+    "labels": {}
+  },
+  {
     "id": "builtin_theorem.BuiltinTheoremId::SequenceBoundedFromBounds",
     "category": "builtin_theorem",
     "family": "BuiltinTheoremId",
@@ -27153,6 +27405,13 @@
     "labels": {}
   },
   {
+    "id": "infer.InferFunctionRiemannIntegrableFactResult::Definition",
+    "category": "infer",
+    "family": "InferFunctionRiemannIntegrableFactResult",
+    "variant": "Definition",
+    "labels": {}
+  },
+  {
     "id": "infer.InferGreaterEqualFactResult::WeakIntegerLowerBoundInN",
     "category": "infer",
     "family": "InferGreaterEqualFactResult",
@@ -27170,6 +27429,13 @@
     "id": "infer.InferHasDerivativeAtFactResult::Definition",
     "category": "infer",
     "family": "InferHasDerivativeAtFactResult",
+    "variant": "Definition",
+    "labels": {}
+  },
+  {
+    "id": "infer.InferHasRiemannIntegralFactResult::Definition",
+    "category": "infer",
+    "family": "InferHasRiemannIntegralFactResult",
     "variant": "Definition",
     "labels": {}
   },

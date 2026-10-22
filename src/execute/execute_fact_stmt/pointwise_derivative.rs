@@ -4,7 +4,9 @@
 mod pointwise_derivative_tests;
 use super::function_domain::function_domains_alpha_equal;
 use super::function_limit::RealFunctionLimitDomainProof;
+use super::helper::multiply_derivative_terms;
 use super::pointwise_continuity::PointwiseContinuityExpressionProof;
+use super::pointwise_elementary::ElementaryRealFunction;
 use super::verify_atomic_fact::verify_atomic_except_equality::result::AtomicExceptEqualityFactKnownProof;
 use super::well_defined_results::verify_obj::*;
 use crate::prelude::*;
@@ -61,6 +63,11 @@ pub struct DerivativeExpressionProof {
     pub constructor: DerivativeConstructorProof,
 }
 pub enum DerivativeConstructorProof {
+    Elementary {
+        kind: ElementaryRealFunction,
+        argument: Box<DerivativeExpressionProof>,
+        domain: Box<VerifyFactResult>,
+    },
     Constant,
     Variable,
     Neg {
@@ -287,6 +294,8 @@ impl Runtime {
             let operands: Vec<&Obj> = match guard {
                 AtomicFact::LessFact(f) => vec![&f.left, &f.right],
                 AtomicFact::GreaterFact(f) => vec![&f.left, &f.right],
+                AtomicFact::LessEqualFact(f) => vec![&f.left, &f.right],
+                AtomicFact::GreaterEqualFact(f) => vec![&f.left, &f.right],
                 AtomicFact::NotEqualFact(f) => vec![&f.left, &f.right],
                 AtomicFact::InFact(f)
                     if matches!(
@@ -333,7 +342,25 @@ impl Runtime {
             ) else {
                 return Ok(None);
             };
-            let point_fact: Fact = point_atomic.into();
+            // A weak guard is stable on a neighbourhood only when it has
+            // strict slack here. Endpoint equality never supplies interior.
+            let point_fact: Fact = match point_atomic {
+                AtomicFact::LessEqualFact(f) => LessFact {
+                    fact_id: self.global_ids.allocate_fact_id(),
+                    left: f.left,
+                    right: f.right,
+                    line_file: f.line_file,
+                }
+                .into(),
+                AtomicFact::GreaterEqualFact(f) => GreaterFact {
+                    fact_id: self.global_ids.allocate_fact_id(),
+                    left: f.left,
+                    right: f.right,
+                    line_file: f.line_file,
+                }
+                .into(),
+                fact => fact.into(),
+            };
             let point_proof = self.verify_fact(&point_fact, state)?;
             if point_proof.is_failed() {
                 return Ok(None);
@@ -385,6 +412,31 @@ impl Runtime {
         } else if matches!(expression,Obj::Identifier(IdentifierObj::Plain{id,..}) if *id==parameter)
         {
             (number("1"), C::Variable)
+        } else if let Some((kind, input)) = ElementaryRealFunction::from_expression(expression) {
+            let Some(argument) = self.prove_derivative_expression(
+                input,
+                parameter,
+                point,
+                state,
+                depth + 1,
+                budget,
+            )?
+            else {
+                return Ok(None);
+            };
+            let requirement = self.elementary_real_condition(kind, argument.value.clone(), true);
+            let domain = self.verify_fact(&requirement, state)?;
+            if domain.is_failed() {
+                return Ok(None);
+            }
+            (
+                kind.derivative(argument.value.clone(), argument.derivative.clone()),
+                C::Elementary {
+                    kind,
+                    argument: Box::new(argument),
+                    domain: Box::new(domain),
+                },
+            )
         } else {
             match expression {
                 Obj::ArithmeticOperator(ArithmeticOperator::Neg(a)) => {
@@ -626,7 +678,7 @@ impl Runtime {
                         return Ok(None);
                     };
                     (
-                        mul_objs(slope, argument.derivative.clone()),
+                        multiply_derivative_terms(slope, argument.derivative.clone()),
                         C::Compose {
                             function,
                             argument: Box::new(argument),

@@ -1,0 +1,4 @@
+# Native ln derivative on the checked complete real domain.
+have fn prim_ln(x R+) R=ln(x)
+release thm fn_derivative_at_positive_interior(1)
+release thm fn_derivative_at_ln(prim_ln,1)

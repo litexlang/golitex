@@ -38,14 +38,26 @@ preview and static export without a Node runtime or frontend build.
 
 Source ranges use original UTF-8 byte offsets. Occurrence highlighting uses
 resolved identities and reports mapping coverage per statement. Typed proof
-payloads and retained local scopes are exported; nested source navigation,
-some local declaration identities and whole-book chunked loading still need
-further acceptance work. Rule descriptions are shown when authored metadata
+payloads and retained local scopes are exported. Actual store/infer outputs
+link seed facts to derived fact IDs; the reader displays grey arrow rows and
+can follow a later citation back to an inferred fact. Nested proof statements
+and repeated execution contexts retain separate identities. Ordinary facts
+have exact source focus and hypothesis/verified/declaration roles. Actual WD
+registrations and their retained formation evidence are navigable. Whole-book
+exports load source/proof chapters, search and concept indexes on demand;
+complete JSON and a standalone offline page remain available. The loopback
+service caches identical successful closed-project uploads in bounded memory.
+Rule descriptions are shown when authored metadata
 is available; a catalogue entry alone is not a complete mathematical rule
 specification. [DESIGN.md](DESIGN.md) records the full target and acceptance
 boundaries; this first implementation does not establish every target there.
 
 ## Website embedding
+
+See the [integration guide](../../docs/reading.md) for schema v2 evidence DAGs,
+inference records, the local upload API, component methods and iframe messages.
+The [runnable host example](../../examples/reading/website/README.md) uses the
+same export through both integration paths.
 
 Publish the generated `book-site/` files alongside the website, then embed the
 published page:
@@ -61,8 +73,8 @@ element. Its styles are scoped to the reader; standalone page styles require
 the `litex-reading-page` body class.
 
 ```js
-const document = await fetch('/books/chapter.reading.json').then(r => r.json());
-const reader = LitexReading.mount(documentRoot, { document, locale: 'zh' });
+const reader = await LitexReading.open(document.getElementById('reader'),
+  '/books/book-site/reading.manifest.json', { locale: 'zh' });
 ```
 
 Static browsing uses the exported evidence and needs no running Litex process.
@@ -93,3 +105,17 @@ Existing components retain their responsibilities:
 CLI dispatch in the existing launch/run layers delegates reading work here.
 Reading must preserve statement transactions,
 scope visibility, source order and explicit trust boundaries.
+
+## Maintaining the projection and catalogue
+
+```sh
+python3 src/reading/generate_capture.py
+python3 src/reading/generate_capture.py --check
+cargo test --release --test reading --test reading_http
+```
+
+The generator reads typed Rust evidence and authored rule metadata. Exhaustive
+enum matches and full struct destructuring make newly added fields/variants
+an explicit regeneration obligation. Keep `rule_ids.json`: it preserves
+stable rule identities independently of localized names. Do not maintain a
+second rule list in the website or construct fake proof instances for metadata.

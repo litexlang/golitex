@@ -1,6 +1,7 @@
 //! Explicit first-derivative laws on checked actual unary real domains.
 use super::helper::*;
 use crate::builtin_theorem::BuiltinTheoremId;
+use crate::execute::execute_fact_stmt::pointwise_elementary::ElementaryRealFunction;
 use crate::execute::execute_fact_stmt::real_analysis::analysis_apply as call;
 use crate::prelude::*;
 use crate::rational_expression::helper::{add_objs, div_objs, mul_objs, sub_objs};
@@ -53,6 +54,27 @@ pub(super) fn prepare(
     }]
     .clone();
     req.push(atomic_in(rt, point.clone(), df.clone()).into());
+    let elementary = match id {
+        FnDerivativeAtExp => Some(ElementaryRealFunction::Exp),
+        FnDerivativeAtLn => Some(ElementaryRealFunction::Ln),
+        FnDerivativeAtSin => Some(ElementaryRealFunction::Sin),
+        FnDerivativeAtCos => Some(ElementaryRealFunction::Cos),
+        FnDerivativeAtSqrt => Some(ElementaryRealFunction::Sqrt),
+        _ => None,
+    };
+    if let Some(kind) = elementary {
+        req.push(rt.derivative_interior_condition(df.clone(), point.clone()));
+        req.push(rt.elementary_real_condition(kind, point.clone(), true));
+        let x = rt.fresh_internal_param();
+        let equation = equal(
+            rt,
+            call(f.clone(), identifier(&x)),
+            kind.apply(identifier(&x)),
+        );
+        req.push(forall(rt, x, df, vec![], vec![equation]));
+        let result = rt.derivative_candidate(f, point.clone(), kind.derivative_factor(point));
+        return Ok(Ok((req, vec![result.into()])));
+    }
     let result = match id {
         FnDerivativeAtFromLimit => {
             req.push(atomic_in(rt, args[2].clone(), real).into());

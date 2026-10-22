@@ -1,0 +1,67 @@
+# Before: wave's derivative and continuity goals were unproved.
+# $has_derivative_at(wave,0,1)
+# $is_continuous_at(wave,0)
+# Now: elementary chain rules consume inner certificates and analytic domains.
+# Boundary: ln requires a positive argument; sqrt continuity at0 is not differentiability.
+# Run: target/release/litex -strict -lang en -f examples/proof_nodes/atomic/by_builtin_strategy/pointwise_elementary.lit
+have fn wave(x R) R=sin(x*x)+exp(x)
+$has_derivative_at(wave,0,1)
+derivative(wave,0)=1
+$is_continuous_at(wave,0)
+
+forall p R:
+    $has_derivative_at(fn(x R) R {exp(x)},p,exp(p))
+    $has_derivative_at(fn(x R) R {sin(x)},p,cos(p))
+forall p R:
+    $has_derivative_at(fn(x R) R {cos(x)},p,-sin(p))
+
+forall p R+:
+    $has_derivative_at(fn(x R+) R {ln(x)},p,1/p)
+
+forall p R+:
+    $has_derivative_at(fn(x R+) R {sqrt(x)},p,(1/2)/sqrt(p))
+
+$has_derivative_at(fn(x R+) R {sqrt(x)},4,1/4)
+$is_continuous_at(fn(x R:x>=0) R {sqrt(x)},0)
+
+# Keep the complete nonnegative domain; strict point slack supplies interior.
+$has_derivative_at(fn(x R:x>=0) R {sqrt(x)},4,1/4)
+
+claim:
+    ? forall f fn(x R) R,L R:
+        $has_derivative_at(f,0,L)
+        =>:
+            $has_derivative_at(fn(t R) R {exp(f(t))},0,exp(f(0))*L)
+    $has_derivative_at(fn(t R) R {exp(f(t))},0,exp(f(0))*L)
+
+claim:
+    ? forall f fn(x R) R:
+        $is_differentiable_at(f,0)
+        0<f(0)
+        =>:
+            $is_differentiable_at(fn(t R:0<f(t)) R {ln(f(t))},0)
+    $is_differentiable_at(fn(t R:0<f(t)) R {ln(f(t))},0)
+
+# Candidate slopes retain the usual symbolic chain formulas.
+claim:
+    ? forall f fn(x R) R+,L R:
+        $has_derivative_at(f,0,L)
+        =>:
+            $has_derivative_at(fn(t R) R {ln(f(t))},0,L/f(0))
+    $has_derivative_at(fn(t R) R {ln(f(t))},0,L/f(0))
+
+claim:
+    ? forall f fn(x R) R,L R:
+        $has_derivative_at(f,0,L)
+        0<f(0)
+        =>:
+            $has_derivative_at(fn(t R:0<f(t)) R {ln(f(t))},0,L/f(0))
+    $has_derivative_at(fn(t R:0<f(t)) R {ln(f(t))},0,L/f(0))
+
+claim:
+    ? forall f fn(x R) R,L R:
+        $has_derivative_at(f,0,L)
+        0<f(0)
+        =>:
+            $has_derivative_at(fn(t R:0<f(t)) R {sqrt(f(t))},0,L/2/sqrt(f(0)))
+    $has_derivative_at(fn(t R:0<f(t)) R {sqrt(f(t))},0,L/2/sqrt(f(0)))

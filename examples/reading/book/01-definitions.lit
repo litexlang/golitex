@@ -1,0 +1,7 @@
+prop above_zero(x R):
+    x > 0
+
+thm add_zero_right:
+    ? forall x R:
+        x + 0 = x
+    x + 0 = x

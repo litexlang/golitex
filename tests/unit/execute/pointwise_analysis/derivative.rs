@@ -213,7 +213,7 @@ fn pointwise_derivative_tests_explicit_catalog_and_premise_controls() {
         );
         count += 1;
     }
-    assert_eq!(count, 22);
+    assert_eq!(count, 27);
     for source in [
         "have fn square(x R) R=x*x\nrelease thm fn_derivative_at_constant(square,0,1)",
         "have fn isolated(x {0}) R=1\nrelease thm fn_derivative_at_constant(isolated,0,1)",

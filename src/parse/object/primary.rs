@@ -807,6 +807,21 @@ fn try_parse_keyword_primary(
                 crate::ast::obj::FunctionLimit::with_approach(args.pop().unwrap(), approach).into(),
             ))
         }
+        "integral" => {
+            tb.advance()?;
+            let args = parse_obj_list_paren(rt, tb)?;
+            if args.len() != 3 {
+                return Err(tb.parse_error("integral expects 3 function/lower/upper arguments"));
+            }
+            return Ok(Some(
+                crate::ast::obj::RiemannIntegral::new(
+                    args[0].clone(),
+                    args[1].clone(),
+                    args[2].clone(),
+                )
+                .into(),
+            ));
+        }
         "derivative" => {
             tb.advance()?;
             let mut args = parse_obj_list_paren(rt, tb)?;

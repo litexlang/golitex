@@ -2,6 +2,7 @@
 //! Verify closes the current goal; store+infer writes accepted facts and runs
 //! local inference — not a second open-ended proof search.
 
+pub(crate) mod antiderivative;
 mod exec_fact_stmt;
 pub(crate) mod finite_function;
 pub(crate) mod function_composition;
@@ -14,9 +15,11 @@ pub(crate) mod known_tuple;
 mod negate_quantifier_free_conjunction;
 pub(crate) mod pointwise_continuity;
 pub(crate) mod pointwise_derivative;
+pub(crate) mod pointwise_elementary;
 pub(crate) mod real_analysis;
 pub(crate) mod real_bounds;
 mod result;
+pub(crate) mod riemann_integral;
 pub(crate) mod sequence_extrema;
 mod sequence_liminf;
 pub(crate) mod sequence_limit;

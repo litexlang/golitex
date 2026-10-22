@@ -1,3 +1,4 @@
+use super::partition_reading::ReadingSite;
 use crate::prelude::*;
 use std::fs;
 use std::path::Path;
@@ -25,14 +26,27 @@ pub fn export_reading(path: &Path, document: &JsonValue) -> RuntimeResult<()> {
         path: path.into(),
         message: error.to_string(),
     })?;
+    let site = ReadingSite::new(document);
+    let index = reading_html(&site.manifest, false).replace("<head>", "<head>\n<script>if(location.protocol==='file:')location.replace('standalone.html'+location.hash);</script>");
+    let mut files = site.files;
     for (name, content) in [
-        ("index.html", reading_html(document, false)),
+        ("index.html", index),
+        ("standalone.html", reading_html(document, false)),
         ("reader.js", READER_JS.into()),
         ("reader.css", READER_CSS.into()),
         ("app.js", APP_JS.into()),
         ("reading.json", document.stringify_pretty()),
     ] {
+        files.insert(name.into(), content);
+    }
+    for (name, content) in files {
         let file = path.join(name);
+        if let Some(parent) = file.parent() {
+            fs::create_dir_all(parent).map_err(|error| RuntimeError::Io {
+                path: parent.into(),
+                message: error.to_string(),
+            })?;
+        }
         fs::write(&file, content).map_err(|error| RuntimeError::Io {
             path: file,
             message: error.to_string(),

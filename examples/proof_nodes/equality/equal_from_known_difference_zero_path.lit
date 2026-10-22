@@ -1,0 +1,26 @@
+# Equal numbers follow when their difference is connected to zero by known equalities.
+# The verifier already accepted this proof; the Lean compiler previously rejected
+# it with DifferenceZero/UncapturedZeroPath because the remaining path was absent.
+# Former compiler reproduction:
+# forall a, b, c, d C:
+#     a-b=c
+#     c=d
+#     d=0
+#     =>:
+#         a=b
+# Check: litex -strict -lean -f examples/proof_nodes/equality/equal_from_known_difference_zero_path.lit
+# Boundary: without d=0, a=b is not justified (covered by the Rust rejection test).
+
+forall a, b, c, d C:
+    a-b=c
+    c=d
+    d=0
+    =>:
+        a=b
+
+forall a, b, c, d R:
+    c=b-a
+    d=c
+    0=d
+    =>:
+        a=b

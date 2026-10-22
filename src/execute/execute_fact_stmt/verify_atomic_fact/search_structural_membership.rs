@@ -238,6 +238,7 @@ fn intrinsic_codomain(element: &Obj) -> Option<(StandardSet, IntrinsicCodomain)>
     use IntrinsicCodomain as K;
     use StandardSet::*;
     Some(match element {
+        Obj::IntegralOperator(_) => (R, K::RiemannIntegral),
         Obj::DerivativeOperator(_) => (R, K::DerivativeAt),
         Obj::LimitOperator(LimitOperator::Sequence(_)) => (R, K::SequenceLimit),
         Obj::BoundOperator(BoundOperator::Supremum(_)) => (R, K::Supremum),

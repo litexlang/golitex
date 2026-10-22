@@ -1,0 +1,6 @@
+# Explicit Riemann/Darboux theorem: riemann_integral_exists.
+# Check: target/release/litex -lang en -strict -f examples/stmt_nodes/release_and_expand/builtin_thm/riemann_integral_exists.lit
+# The theorem checks its actual domain and all premises before publishing results.
+have fn square(x R) R=x^2
+release thm riemann_integral_power(square,0,1,2)
+release thm riemann_integral_exists(square,0,1,1/3)

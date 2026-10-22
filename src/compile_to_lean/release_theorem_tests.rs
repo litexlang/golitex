@@ -5,6 +5,7 @@ use crate::prelude::*;
 
 const RELEASE: &str = "thm release_zero:\n    ? forall x R:\n        x+0=x\nrelease thm release_zero(2)\n2+0=2\nby thm release_zero(3) => 3+0=3\n";
 const NATURAL: &str = "thm release_nonnegative:\n    ? forall n N:\n        0 <= n\nhave a N\nrelease thm release_nonnegative(a)\na $in N\n";
+const EXISTENTIAL: &str = "thm copy_witness:\n    ? forall x R:\n        exist y R st {y=x}\n    witness exist y R st {y=x} from x\nrelease thm copy_witness(2)\nobtain copy from exist y R st {y=2}\ncopy=2\n";
 
 fn checked(source: &str) -> (RunLitexCodeResult, LitexToLeanCompiler) {
     let mut runtime = Runtime::new(LaunchCommand::Eval {
@@ -16,6 +17,39 @@ fn checked(source: &str) -> (RunLitexCodeResult, LitexToLeanCompiler) {
     let result = runtime.run_litex_code(source).expect("source run");
     assert!(result.success && result.session_error.is_none(), "{source}");
     (result, LitexToLeanCompiler::new(runtime))
+}
+
+#[test]
+fn release_existential_return_replays_the_package_and_obtained_witness() {
+    let (result, compiler) = checked(EXISTENTIAL);
+    let lean = compiler.compile_run(&result, "released_witness").unwrap();
+    assert!(lean.contains("∃"));
+    assert!(lean.contains("Classical.choose_spec"));
+}
+
+#[test]
+fn release_existential_return_rejects_missing_formation_and_changed_package() {
+    for mutation in 0..3 {
+        let (mut result, compiler) = checked(EXISTENTIAL);
+        let release = release_mut(&mut result.statement_results[1]);
+        match mutation {
+            0 => release.conclusions_wd.clear(),
+            1 => release.stored_wd.clear(),
+            2 => {
+                let StoreFactResult::ExistShapedFact(stored) = &mut release.stored[0].store else {
+                    panic!("original existential return");
+                };
+                let ExistShapedFact::Exist(fact) = &mut stored.fact else {
+                    panic!("plain existential");
+                };
+                fact.facts.clear();
+            }
+            _ => unreachable!(),
+        }
+        assert!(compiler
+            .compile_run(&result, "invalid_released_witness")
+            .is_err());
+    }
 }
 
 fn release_mut(statement: &mut ExecStmtResult) -> &mut ExecReleaseThmStmtSuccess {

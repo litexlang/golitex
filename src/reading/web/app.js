@@ -1,4 +1,4 @@
-(function () {
+(async function () {
   "use strict";
   const initial=JSON.parse(document.getElementById("reading-data").textContent);
   const live=document.body.dataset.live==="true";
@@ -8,10 +8,13 @@
   const fileInput=document.getElementById("source-files");
   const folderInput=document.getElementById("project-files");
   const parentOrigin=(()=>{try{return document.referrer?new URL(document.referrer).origin:null;}catch{return null;}})();
-  const reader=window.LitexReading.mount(document.getElementById("reader"),{
-    document:initial,locale:language.value,
-    onNavigate(selection){if(parentOrigin&&window.parent!==window)window.parent.postMessage({type:"litex-reading:selection",selection},parentOrigin);}
-  });
+  const options={
+    locale:language.value,
+    onNavigate(selection,metadata){if(parentOrigin&&window.parent!==window)window.parent.postMessage({type:"litex-reading:selection",selection,...metadata},parentOrigin);}
+  };
+  let reader;
+  try{reader=initial.kind==="reading_manifest"?await window.LitexReading.open(document.getElementById("reader"),initial,{...options,baseUrl:location.href}):window.LitexReading.mount(document.getElementById("reader"),{...options,document:initial});}
+  catch(error){status.textContent=error.message;status.dataset.error="true";reader=window.LitexReading.mount(document.getElementById("reader"),{...options,document:{sources:[],statements:[],rules:[]}});}
   const chooseFiles=document.getElementById("choose-files");
   const chooseProject=document.getElementById("choose-project");
   document.getElementById("upload-actions").hidden=false;
@@ -26,8 +29,14 @@
   folderInput.addEventListener("change",()=>upload([...folderInput.files].map(file=>({file,path:file.webkitRelativePath||file.name}))));
   window.addEventListener("message",event=>{
     if(!parentOrigin||event.origin!==parentOrigin||event.source!==window.parent)return;
-    if(event.data?.type==="litex-reading:select"&&typeof event.data.statement_id==="string")reader.selectStatement(event.data.statement_id);
+    if(event.data?.type==="litex-reading:select"){
+      if(typeof event.data.bundle_id==="string"&&event.data.bundle_id!==reader.getBundleId())return;
+      if(typeof event.data.well_definedness_id==="string")reader.selectWellDefinedness(event.data.well_definedness_id);
+      else if(typeof event.data.fact_id==="string")reader.selectFact(event.data.fact_id);
+      else if(typeof event.data.statement_id==="string")reader.selectStatement(event.data.statement_id);
+    }
   });
+  if(parentOrigin&&window.parent!==window)window.parent.postMessage({type:"litex-reading:ready",bundle_id:reader.getBundleId(),selection:reader.getSelection()},parentOrigin);
   function report(message,error=false){status.textContent=message;status.dataset.error=String(error);}
   async function upload(entries){
     if(!entries.length)return;
@@ -36,7 +45,7 @@
     try{
       if(entries.length===1&&entries[0].path.endsWith(".json")){
         const data=JSON.parse(await entries[0].file.text());
-        if(data.kind!=="reading"||data.schema_version!=="1"||!Array.isArray(data.sources)||!Array.isArray(data.statements))throw new Error(zh?"这不是受支持的阅读数据包。":"This is not a supported reading bundle.");
+        if(data.kind!=="reading"||!["1","2"].includes(data.schema_version)||!Array.isArray(data.sources)||!Array.isArray(data.statements))throw new Error(zh?"这不是受支持的阅读数据包。":"This is not a supported reading bundle.");
         reader.update(data);report("");return;
       }
       if(!live)throw new Error(zh?"本页面可读取已有阅读 JSON；验证新源码请使用 litex -reading。":"This page reads saved bundles. Use litex -reading to verify new source.");

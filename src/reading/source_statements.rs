@@ -198,6 +198,38 @@ impl Capture {
         ])
     }
 
+    /// A typed signature proof certifies this declaration lookup. Ordinary
+    /// occurrences alone must never create a mathematical dependency edge.
+    pub fn signature_declaration(
+        &mut self,
+        predicate: &AtomicName,
+        runtime: &Runtime,
+    ) -> JsonValue {
+        let reference = self.atomic_name(predicate, runtime);
+        let id = field_text(&reference, "symbol_id");
+        let definition = self
+            .symbols
+            .get(&id)
+            .map(|symbol| field_text(symbol, "definition_statement_id"))
+            .unwrap_or_default();
+        let line = self
+            .statements
+            .iter()
+            .find(|statement| field_text(statement, "id") == definition)
+            .and_then(|statement| {
+                field_text(statement, "source_statement_id")
+                    .strip_prefix("statement")
+                    .and_then(|index| index.parse::<usize>().ok())
+            })
+            .and_then(|index| self.source_statements.nodes.get(&index))
+            .and_then(crate::json_output::reading_statement_source_line)
+            .cloned();
+        match line {
+            Some(line) => self.declaration_reference(&line, "predicate_signature"),
+            None => self.unavailable("predicate_declaration"),
+        }
+    }
+
     pub fn capture_source_result(
         &mut self,
         source_index: usize,
@@ -240,6 +272,8 @@ impl Capture {
         let previous_missing = std::mem::take(&mut self.missing);
         let previous_gaps = std::mem::take(&mut self.source_statements.gaps);
         let previous_declarations = std::mem::take(&mut self.source_statements.declarations);
+        let previous_rules = std::mem::take(&mut self.statement_rules);
+        let previous_wd = std::mem::take(&mut self.wd_uses);
 
         let evidence = capture_execute__exec_stmt_result__ExecStmtResult(result, self, runtime);
         let stores = if result.is_failed() {
@@ -285,6 +319,14 @@ impl Capture {
             );
             fields.insert("evidence".into(), evidence);
             fields.insert(
+                "well_definedness_ids".into(),
+                strings(&self.wd_uses.iter().cloned().collect::<Vec<_>>()),
+            );
+            fields.insert(
+                "rule_ids".into(),
+                strings(&self.statement_rules.iter().cloned().collect::<Vec<_>>()),
+            );
+            fields.insert(
                 "coverage".into(),
                 object(vec![
                     (
@@ -329,6 +371,8 @@ impl Capture {
         self.source_statements
             .declarations
             .extend(previous_declarations);
+        self.statement_rules.extend(previous_rules);
+        self.wd_uses.extend(previous_wd);
         self.current_statement = previous_statement;
         self.source_statements.current = previous_node;
         self.source_statements.scopes = previous_source_scopes;

@@ -13,6 +13,9 @@ use crate::prelude::*;
 use crate::runtime::FactId;
 
 pub enum ObjWellDefinedProofByDef {
+    IntegralOperator(
+        crate::execute::execute_fact_stmt::riemann_integral::IntegralOperatorWellDefinedProof,
+    ),
     DerivativeOperator(
         crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof,
     ),

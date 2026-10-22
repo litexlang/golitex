@@ -5,6 +5,16 @@ lists currently implemented commands, embedding and limitations. The sections
 below retain the full target and illustrative record shapes; they are not a
 claim that all acceptance criteria have passed or a frozen public API.
 
+Current concrete model: schema `"2"` uses shared `evidence_nodes`; statement
+records point to real typed evidence by ID. `inferences` preserves actual
+`StoreFactAndInferResult.infer` outputs, source seed FactIds, derived FactIds,
+scope, rule IDs and evidence. The same component renders grey inferred rows,
+and a later stored citation can select the derived fact. Schema `"1"` inline
+evidence remains readable. See the [integration guide](../../docs/reading.md)
+and [runnable host example](../../examples/reading/website/README.md) for
+current fields and component/iframe APIs rather than the illustrative shape
+below.
+
 ## Goal and evidence
 
 Accept a standalone Litex file or complete project and produce a browsable
@@ -26,14 +36,16 @@ pub struct EvenPowNonnegativeBuiltinRuleProof {
 exports that child proof. This establishes a starting point for evidence
 projection, not complete coverage of every reading interaction. The existing
 [even-power fixture](../../examples/proof_nodes/atomic/by_builtin_rule/less_equal_even_pow_nonnegative.lit)
-is the first source anchor for implementation; it has not been rerun as part
-of creating this directory.
+was the first source anchor for implementation. The maintained reading
+tracers are [linked facts](../../examples/reading/linked_facts.lit) and
+[inferred facts](../../examples/reading/inferred_facts.lit), with exporter,
+scope/identity and HTTP contracts in `tests/reading*.rs`.
 
-Exact occurrence mapping is a separate unfinished boundary.
+Exact occurrence mapping is a separate coverage boundary.
 [TokenBlock](../tokenize/token_block.rs) retains original source and token
 byte ranges, while [SourceLine](../ast/line_file.rs) carries source identity
-and a line. The tokenizer ranges are not yet a complete token-to-resolved-
-symbol map. [IdentifierObj](../ast/obj.rs) distinguishes local IDs and
+and a line. The reader associates original token spans with actual parsed
+semantic mentions and reports incomplete mappings. [IdentifierObj](../ast/obj.rs) distinguishes local IDs and
 qualified module/export names; displayed spelling alone is insufficient.
 
 ## Responsibilities and dependency direction
@@ -195,12 +207,25 @@ coordination can use origin-checked messages; see
 [frame-ancestors](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Content-Security-Policy/frame-ancestors)
 and [postMessage](https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage).
 
-Editing source and rechecking it is a separate execution capability. A future
-website endpoint such as `POST /api/reading/build` would invoke the same
-exporter and return the same bundle, with isolated users and bounded execution.
+Editing source and rechecking it is a separate execution capability. The local
+loopback server implements `POST /api/reading/build` with relative uploaded
+source/config paths and a fresh child verifier. A public website backend can
+invoke `litex -reading -json` and return the same bundle, with its own user
+isolation and resource/concurrency policy.
 It is not required for clicking through prebuilt evidence. The current text
 REPL is not a machine HTTP protocol. Any later incremental editor must preserve
 accepted context and explicitly invalidate/replay it when earlier source changes.
+
+Whole-book exports retain complete portable JSON while serving a manifest,
+per-source proof closures, global search and concept indexes on demand. The
+loopback upload service caches complete successful closed-project builds in
+bounded process memory, keyed by exact request bytes, policy and executable;
+external std imports bypass it. CLI builds still reverify. The ordinary
+knowledge-base cache cannot substitute for retained proof evidence.
+Cached WD references link actual registration IDs, creator statements and
+separately retained formation evidence. Registration coverage and complete
+typed-payload projection remain distinct from expansion of every cached proof
+reference. See [the integration guide](../../docs/reading.md) for exact limits.
 
 ## Implementation sequence and acceptance
 

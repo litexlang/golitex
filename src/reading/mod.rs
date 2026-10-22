@@ -9,8 +9,10 @@ mod build_reading;
 mod export_reading;
 mod helper;
 mod parse_reading_command;
+mod partition_reading;
 mod reading_command;
 mod serve_reading;
+mod upload_cache;
 
 pub use build_reading::{build_reading, ReadingBuildResult};
 pub use export_reading::{export_reading, reading_html, APP_JS, READER_CSS, READER_JS};

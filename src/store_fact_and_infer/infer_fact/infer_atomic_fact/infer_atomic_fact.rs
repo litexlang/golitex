@@ -8,6 +8,32 @@ impl Runtime {
         state: VerifyState,
     ) -> RuntimeResult<InferAtomicFactResult> {
         match fact {
+            AtomicFact::HasRiemannIntegralFact(f) => {
+                Ok(InferAtomicFactResult::HasRiemannIntegralFact(vec![
+                    InferHasRiemannIntegralFactResult::Definition(
+                        InferHasRiemannIntegralDefinitionResult {
+                            source_fact_id: f.fact_id,
+                            derived: self.store_real_analysis_definition(fact, state)?,
+                        },
+                    ),
+                ]))
+            }
+            AtomicFact::NotHasRiemannIntegralFact(_) => {
+                Ok(InferAtomicFactResult::NotHasRiemannIntegralFact(Vec::new()))
+            }
+            AtomicFact::FunctionRiemannIntegrableFact(f) => {
+                Ok(InferAtomicFactResult::FunctionRiemannIntegrableFact(vec![
+                    InferFunctionRiemannIntegrableFactResult::Definition(
+                        InferFunctionRiemannIntegrableDefinitionResult {
+                            source_fact_id: f.fact_id,
+                            derived: self.store_real_analysis_definition(fact, state)?,
+                        },
+                    ),
+                ]))
+            }
+            AtomicFact::NotFunctionRiemannIntegrableFact(_) => Ok(
+                InferAtomicFactResult::NotFunctionRiemannIntegrableFact(Vec::new()),
+            ),
             AtomicFact::HasDerivativeAtFact(f) => {
                 Ok(InferAtomicFactResult::HasDerivativeAtFact(vec![
                     InferHasDerivativeAtFactResult::Definition(

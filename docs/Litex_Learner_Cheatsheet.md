@@ -378,6 +378,23 @@ Use [structs](Manual.md#s16-structured-carriers) and
 [templates](Manual.md#s17-parameterized-declaration-families) for the exact construction
 and law contracts. Existing builtin concepts need no local redefinition.
 
+### Finite real integrals
+
+Prove an integral candidate before selecting its value. For example:
+
+```litex
+have fn square(x R) R=x^2
+release thm riemann_integral_power(square,0,1,2)
+integral(square,0,1)=1/3
+```
+
+`$is_riemann_integrable(f,a,b)` states existence and permits symbolic use.
+It does not determine a numerical result. The actual function domain must
+cover the closed interval between the endpoints; reversed endpoints negate
+the integral. WD never guesses integrability or an antiderivative.
+See the [finite Riemann integral contracts](Manual.md#finite-real-riemann-integrals-preview).
+
+
 ## Supported syntax and recommended writing
 
 | Supported spelling | Recommended for new ordinary examples |

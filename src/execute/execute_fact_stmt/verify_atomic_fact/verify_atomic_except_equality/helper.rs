@@ -35,6 +35,52 @@ pub(super) fn atomic_fact_with_args(
         }};
     }
     Some(match fact {
+        AtomicFact::HasRiemannIntegralFact(f) => {
+            let mut args = args.into_iter();
+            crate::ast::fact::HasRiemannIntegralFact {
+                fact_id,
+                function: args.next()?,
+                lower: args.next()?,
+                upper: args.next()?,
+                value: args.next()?,
+                line_file: f.line_file.clone(),
+            }
+            .into()
+        }
+        AtomicFact::NotHasRiemannIntegralFact(f) => {
+            let mut args = args.into_iter();
+            crate::ast::fact::NotHasRiemannIntegralFact {
+                fact_id,
+                function: args.next()?,
+                lower: args.next()?,
+                upper: args.next()?,
+                value: args.next()?,
+                line_file: f.line_file.clone(),
+            }
+            .into()
+        }
+        AtomicFact::FunctionRiemannIntegrableFact(f) => {
+            let mut args = args.into_iter();
+            crate::ast::fact::FunctionRiemannIntegrableFact {
+                fact_id,
+                function: args.next()?,
+                lower: args.next()?,
+                upper: args.next()?,
+                line_file: f.line_file.clone(),
+            }
+            .into()
+        }
+        AtomicFact::NotFunctionRiemannIntegrableFact(f) => {
+            let mut args = args.into_iter();
+            crate::ast::fact::NotFunctionRiemannIntegrableFact {
+                fact_id,
+                function: args.next()?,
+                lower: args.next()?,
+                upper: args.next()?,
+                line_file: f.line_file.clone(),
+            }
+            .into()
+        }
         AtomicFact::HasDerivativeAtFact(f) => {
             let mut args = args.into_iter();
             crate::ast::fact::HasDerivativeAtFact {
