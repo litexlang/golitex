@@ -10,8 +10,14 @@ use super::capture_generated::{
 };
 use super::helper::{digest, object, strings, text};
 
+#[path = "fact_capture.rs"]
+mod fact_capture;
+#[path = "inference_capture.rs"]
+mod inference_capture;
 #[path = "source_statements.rs"]
 mod source_statements;
+#[path = "well_defined_capture.rs"]
+mod well_defined_capture;
 
 /// One export's observations. It never writes to a Runtime or execution scope.
 pub(super) struct Capture {
@@ -26,6 +32,12 @@ pub(super) struct Capture {
     pub current_line: usize,
     pub subject_depth: usize,
     pub source_snapshot_depth: usize,
+    evidence_nodes: Vec<JsonValue>,
+    evidence_index: BTreeMap<String, String>,
+    statement_rules: BTreeSet<String>,
+    inferences: Vec<JsonValue>,
+    well_definedness: BTreeMap<String, JsonValue>,
+    wd_uses: BTreeSet<String>,
     current_source: String,
     current_path: String,
     current_statement: String,
@@ -71,6 +83,12 @@ impl Capture {
             current_path: String::new(),
             current_statement: String::new(),
             source_snapshot_depth: 0,
+            evidence_nodes: Vec::new(),
+            evidence_index: BTreeMap::new(),
+            statement_rules: BTreeSet::new(),
+            inferences: Vec::new(),
+            well_definedness: BTreeMap::new(),
+            wd_uses: BTreeSet::new(),
             current_scope: String::new(),
             root_scope: String::new(),
             capturing_ast: false,
@@ -97,6 +115,8 @@ impl Capture {
         language: OutputLanguage,
         strict: bool,
     ) -> JsonValue {
+        self.annotate_inferred_facts();
+        self.annotate_wd_coverage();
         let trust = self.annotate_trust_origins();
         let mut diagnostics = self.diagnostics;
         if let Some(error) = error {
@@ -140,9 +160,10 @@ impl Capture {
             })
             .collect();
         let input_id = digest(&JsonValue::Array(input).stringify());
-        object(vec![
+        let mut output = object(vec![
             ("kind", text("reading")),
-            ("schema_version", text("1")),
+            ("schema_version", text("2")),
+            ("evidence_encoding", text("dag")),
             (
                 "engine",
                 object(vec![
@@ -173,6 +194,12 @@ impl Capture {
             ),
             ("sources", JsonValue::Array(self.sources)),
             ("statements", JsonValue::Array(self.statements)),
+            ("evidence_nodes", JsonValue::Array(self.evidence_nodes)),
+            ("inferences", JsonValue::Array(self.inferences)),
+            (
+                "well_definedness",
+                JsonValue::Array(self.well_definedness.into_values().collect()),
+            ),
             (
                 "facts",
                 JsonValue::Array(self.facts.into_values().collect()),
@@ -188,11 +215,38 @@ impl Capture {
             ),
             ("scopes", JsonValue::Array(self.scopes)),
             ("diagnostics", JsonValue::Array(diagnostics)),
-        ])
+        ]);
+        let bundle_id = digest(&output.stringify());
+        if let JsonValue::Object(fields) = &mut output {
+            fields.insert("bundle_id".into(), text(&bundle_id));
+        }
+        output
     }
 
     pub fn set_entry_file(&mut self, path: &Path) {
         self.entry_path = Some(self.logical_path(path));
+    }
+
+    pub fn intern_evidence(&mut self, value: JsonValue) -> JsonValue {
+        if self.capturing_ast {
+            return value;
+        }
+        // Exact structural keys avoid treating a fingerprint collision as
+        // proof identity. Children are references, keeping keys bounded.
+        let key = value.stringify();
+        let id = if let Some(id) = self.evidence_index.get(&key) {
+            id.clone()
+        } else {
+            let id = format!("evidence{}", self.evidence_nodes.len());
+            self.evidence_nodes
+                .push(object(vec![("id", text(&id)), ("node", value)]));
+            self.evidence_index.insert(key, id.clone());
+            id
+        };
+        object(vec![
+            ("kind", text("evidence_reference")),
+            ("evidence_id", text(&id)),
+        ])
     }
 
     pub fn enter_scope(&mut self) -> String {
@@ -212,6 +266,7 @@ impl Capture {
     }
 
     pub fn index_environment(&mut self, environment: &ExecEnv, runtime: &Runtime) {
+        self.index_well_definedness(environment);
         let mut facts = environment.facts.facts_by_id.iter().collect::<Vec<_>>();
         facts.sort_by_key(|(id, _)| id.value());
         for (_, fact) in facts {
@@ -291,6 +346,9 @@ impl Capture {
     }
 
     pub fn wd_reference(&mut self, id: &WellDefinednessId, _runtime: &Runtime) -> JsonValue {
+        if !self.capturing_ast {
+            self.wd_uses.insert(id.to_string());
+        }
         object(vec![
             ("kind", text("well_definedness_reference")),
             ("id", text(&id.to_string())),
@@ -404,6 +462,7 @@ impl Capture {
         name: &str,
         message: &str,
     ) {
+        self.statement_rules.insert(id.into());
         if let JsonValue::Object(fields) = output {
             fields.insert("rule_id".into(), text(id));
         }
@@ -611,6 +670,7 @@ impl SourceObserver for Capture {
         self.current_statement.clear();
         self.current_line = block.line;
         self.citations.clear();
+        self.wd_uses.clear();
         self.stores.clear();
         self.missing.clear();
         self.mentions.clear();

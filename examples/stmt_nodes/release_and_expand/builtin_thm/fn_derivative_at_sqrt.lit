@@ -1,0 +1,4 @@
+# Native sqrt derivative on the checked complete real domain.
+have fn prim_sqrt(x R+) R=sqrt(x)
+release thm fn_derivative_at_positive_interior(4)
+release thm fn_derivative_at_sqrt(prim_sqrt,4)

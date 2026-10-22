@@ -1,3 +1,4 @@
+mod antiderivatives;
 mod builtin_thm;
 mod continuity;
 pub(crate) mod derive_real_sequence;
@@ -8,6 +9,7 @@ mod intersection;
 mod membership;
 mod number_theory;
 mod real_analysis;
+mod riemann_integrals;
 mod sums;
 
 pub(super) use builtin_thm::prepare_builtin_thm;

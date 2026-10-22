@@ -23,6 +23,7 @@ mod pointwise_derivative;
 mod project_have_fn_cases;
 mod reduce_rules;
 pub(in crate::json_output) mod register;
+mod riemann_integral;
 mod searched;
 pub(in crate::json_output) mod stmt;
 mod store;

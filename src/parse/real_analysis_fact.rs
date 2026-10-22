@@ -21,6 +21,8 @@ pub(crate) fn real_analysis_fact_arity(name: &str) -> Option<usize> {
         }
         "is_continuous_at" | "is_continuous_left" | "is_continuous_right" => Some(2),
         "is_continuous" | "is_uniformly_continuous" => Some(1),
+        "has_riemann_integral" => Some(4),
+        "is_riemann_integrable" => Some(3),
         "has_derivative_at" => Some(3),
         "is_differentiable_at" => Some(2),
         "is_lipschitz" => Some(2),
@@ -215,6 +217,50 @@ impl Runtime {
                         fact_id,
                         function: args[0].clone(),
                         property,
+                        line_file,
+                    }
+                    .into()
+                }
+            }
+            "has_riemann_integral" => {
+                if positive {
+                    HasRiemannIntegralFact {
+                        fact_id,
+                        function: args[0].clone(),
+                        lower: args[1].clone(),
+                        upper: args[2].clone(),
+                        value: args[3].clone(),
+                        line_file,
+                    }
+                    .into()
+                } else {
+                    NotHasRiemannIntegralFact {
+                        fact_id,
+                        function: args[0].clone(),
+                        lower: args[1].clone(),
+                        upper: args[2].clone(),
+                        value: args[3].clone(),
+                        line_file,
+                    }
+                    .into()
+                }
+            }
+            "is_riemann_integrable" => {
+                if positive {
+                    FunctionRiemannIntegrableFact {
+                        fact_id,
+                        function: args[0].clone(),
+                        lower: args[1].clone(),
+                        upper: args[2].clone(),
+                        line_file,
+                    }
+                    .into()
+                } else {
+                    NotFunctionRiemannIntegrableFact {
+                        fact_id,
+                        function: args[0].clone(),
+                        lower: args[1].clone(),
+                        upper: args[2].clone(),
                         line_file,
                     }
                     .into()

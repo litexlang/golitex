@@ -151,6 +151,8 @@ pub struct BuiltinFunctionLipschitzDefinitionProof {
 }
 
 pub enum BuiltinPropDefinitionProof {
+    HasRiemannIntegral(BuiltinHasRiemannIntegralDefinitionProof),
+    FunctionRiemannIntegrable(BuiltinFunctionRiemannIntegrableDefinitionProof),
     HasDerivativeAt(BuiltinHasDerivativeAtDefinitionProof),
     FunctionDifferentiableAt(BuiltinFunctionDifferentiableAtDefinitionProof),
     RealSetBound(BuiltinRealSetBoundDefinitionProof),
@@ -290,6 +292,15 @@ pub struct BuiltinHasDerivativeAtDefinitionProof {
 }
 
 pub struct BuiltinFunctionDifferentiableAtDefinitionProof {
+    pub requirement_facts: Vec<Fact>,
+    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
+}
+
+pub struct BuiltinHasRiemannIntegralDefinitionProof {
+    pub requirement_facts: Vec<Fact>,
+    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
+}
+pub struct BuiltinFunctionRiemannIntegrableDefinitionProof {
     pub requirement_facts: Vec<Fact>,
     pub proof_of_requirement_facts: Vec<VerifyFactResult>,
 }

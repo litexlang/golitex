@@ -1,0 +1,9 @@
+# Actual inference and later-citation reading tracer.
+# Run: target/release/litex -reading -f examples/reading/inferred_facts.lit -strict -lang zh
+prop reading_inner(ri R):
+    ri = ri
+prop reading_outer(ro R):
+    $reading_inner(ro)
+have reading_value R
+by def $reading_outer(reading_value)
+$reading_inner(reading_value)

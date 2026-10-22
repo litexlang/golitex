@@ -1,0 +1,10 @@
+# Explicit Riemann/Darboux theorem: riemann_integral_unique.
+# Check: target/release/litex -lang en -strict -f examples/stmt_nodes/release_and_expand/builtin_thm/riemann_integral_unique.lit
+# The theorem checks its actual domain and all premises before publishing results.
+thm uniqueness:
+    ? forall f fn(x R) R,a,b,I,J R:
+        $has_riemann_integral(f,a,b,I)
+        $has_riemann_integral(f,a,b,J)
+        =>:
+            I=J
+    release thm riemann_integral_unique(f,a,b,I,J)

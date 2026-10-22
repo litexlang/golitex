@@ -1,0 +1,2 @@
+by def $definitions::above_zero(1)
+by thm definitions::add_zero_right(2) => 2 + 0 = 2

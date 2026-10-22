@@ -65,6 +65,46 @@ fn prepare_contract(
     use BuiltinTheoremId::*;
     if matches!(
         id,
+        AntiderivativeFromDefinition
+            | AntiderivativeToDefinition
+            | AntiderivativeShift
+            | AntiderivativeAdd
+            | AntiderivativeScale
+            | AntiderivativeRestrict
+            | AntiderivativeDifferenceConstant
+    ) {
+        return super::antiderivatives::prepare(rt, id, args);
+    }
+    if matches!(
+        id,
+        RiemannIntegralByParts
+            | RiemannIntegralFromDefinition
+            | RiemannIntegralToDefinition
+            | RiemannIntegralExists
+            | RiemannIntegrableFromCandidate
+            | RiemannIntegralSelected
+            | RiemannIntegralUnique
+            | RiemannIntegralZero
+            | RiemannIntegralConstant
+            | RiemannIntegralPower
+            | RiemannIntegralReverse
+            | RiemannIntegralAdd
+            | RiemannIntegralSubtract
+            | RiemannIntegralScale
+            | RiemannIntegralSplit
+            | RiemannIntegralExtensional
+            | RiemannIntegralCompare
+            | RiemannIntegralBound
+            | RiemannIntegrableContinuous
+            | RiemannIntegralNewtonLeibniz
+            | RiemannIntegralStep
+            | DarbouxEnclosureFromDefinition
+            | DarbouxEnclosureToDefinition
+    ) {
+        return super::riemann_integrals::prepare(rt, id, args);
+    }
+    if matches!(
+        id,
         FnDerivativeAtRealInterior
             | FnDerivativeAtNonzeroInterior
             | FnDerivativeAtPositiveInterior
@@ -84,6 +124,11 @@ fn prepare_contract(
             | FnDerivativeAtMultiply
             | FnDerivativeAtDivide
             | FnDerivativeAtCompose
+            | FnDerivativeAtExp
+            | FnDerivativeAtLn
+            | FnDerivativeAtSin
+            | FnDerivativeAtCos
+            | FnDerivativeAtSqrt
             | FnDifferentiableAtFromDerivative
             | FnDerivativeAtContinuous
             | FnDifferentiableAtContinuous

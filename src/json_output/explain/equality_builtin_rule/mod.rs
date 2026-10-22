@@ -35,6 +35,11 @@ impl EqualitySearchProofByBuiltinRule {
             Self::SequenceLimsup(p) => {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::English)
             }
+            Self::RiemannIntegralSelectedValue(_) => native_operations::text(
+                "RiemannIntegralSelectedValue",
+                "A proved candidate identifies the unique selected Riemann integral.",
+                OutputLanguage::English,
+            ),
             Self::DerivativeSelectedValue(p) => p.rule_name_and_message(OutputLanguage::English),
             Self::RealBounds(p) => {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::English)
@@ -319,6 +324,11 @@ impl EqualitySearchProofByBuiltinRule {
             Self::SequenceLimsup(p) => {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::Chinese)
             }
+            Self::RiemannIntegralSelectedValue(_) => native_operations::text(
+                "RiemannIntegralSelectedValue",
+                "A proved candidate identifies the unique selected Riemann integral.",
+                OutputLanguage::Chinese,
+            ),
             Self::DerivativeSelectedValue(p) => p.rule_name_and_message(OutputLanguage::Chinese),
             Self::RealBounds(p) => {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::Chinese)
@@ -603,6 +613,11 @@ impl EqualitySearchProofByBuiltinRule {
             Self::SequenceLimsup(p) => {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::ChineseTraditional)
             }
+            Self::RiemannIntegralSelectedValue(_) => native_operations::text(
+                "RiemannIntegralSelectedValue",
+                "A proved candidate identifies the unique selected Riemann integral.",
+                OutputLanguage::ChineseTraditional,
+            ),
             Self::DerivativeSelectedValue(p) => {
                 p.rule_name_and_message(OutputLanguage::ChineseTraditional)
             }
@@ -889,6 +904,11 @@ impl EqualitySearchProofByBuiltinRule {
             Self::SequenceLimsup(p) => {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::French)
             }
+            Self::RiemannIntegralSelectedValue(_) => native_operations::text(
+                "RiemannIntegralSelectedValue",
+                "A proved candidate identifies the unique selected Riemann integral.",
+                OutputLanguage::French,
+            ),
             Self::DerivativeSelectedValue(p) => p.rule_name_and_message(OutputLanguage::French),
             Self::RealBounds(p) => {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::French)
@@ -1175,6 +1195,11 @@ impl EqualitySearchProofByBuiltinRule {
             Self::SequenceLimsup(p) => {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::Russian)
             }
+            Self::RiemannIntegralSelectedValue(_) => native_operations::text(
+                "RiemannIntegralSelectedValue",
+                "A proved candidate identifies the unique selected Riemann integral.",
+                OutputLanguage::Russian,
+            ),
             Self::DerivativeSelectedValue(p) => p.rule_name_and_message(OutputLanguage::Russian),
             Self::RealBounds(p) => {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::Russian)
@@ -1460,6 +1485,11 @@ impl EqualitySearchProofByBuiltinRule {
             Self::SequenceLimsup(p) => {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::Spanish)
             }
+            Self::RiemannIntegralSelectedValue(_) => native_operations::text(
+                "RiemannIntegralSelectedValue",
+                "A proved candidate identifies the unique selected Riemann integral.",
+                OutputLanguage::Spanish,
+            ),
             Self::DerivativeSelectedValue(p) => p.rule_name_and_message(OutputLanguage::Spanish),
             Self::RealBounds(p) => {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::Spanish)
@@ -1746,6 +1776,11 @@ impl EqualitySearchProofByBuiltinRule {
             Self::SequenceLimsup(p) => {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::Arabic)
             }
+            Self::RiemannIntegralSelectedValue(_) => native_operations::text(
+                "RiemannIntegralSelectedValue",
+                "A proved candidate identifies the unique selected Riemann integral.",
+                OutputLanguage::Arabic,
+            ),
             Self::DerivativeSelectedValue(p) => p.rule_name_and_message(OutputLanguage::Arabic),
             Self::RealBounds(p) => {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::Arabic)
@@ -2030,6 +2065,11 @@ impl EqualitySearchProofByBuiltinRule {
             Self::SequenceLimsup(p) => {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::Japanese)
             }
+            Self::RiemannIntegralSelectedValue(_) => native_operations::text(
+                "RiemannIntegralSelectedValue",
+                "A proved candidate identifies the unique selected Riemann integral.",
+                OutputLanguage::Japanese,
+            ),
             Self::DerivativeSelectedValue(p) => p.rule_name_and_message(OutputLanguage::Japanese),
             Self::RealBounds(p) => {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::Japanese)
@@ -2314,6 +2354,11 @@ impl EqualitySearchProofByBuiltinRule {
             Self::SequenceLimsup(p) => {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::Korean)
             }
+            Self::RiemannIntegralSelectedValue(_) => native_operations::text(
+                "RiemannIntegralSelectedValue",
+                "A proved candidate identifies the unique selected Riemann integral.",
+                OutputLanguage::Korean,
+            ),
             Self::DerivativeSelectedValue(p) => p.rule_name_and_message(OutputLanguage::Korean),
             Self::RealBounds(p) => {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::Korean)
@@ -2598,6 +2643,11 @@ impl EqualitySearchProofByBuiltinRule {
             Self::SequenceLimsup(p) => {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::Vietnamese)
             }
+            Self::RiemannIntegralSelectedValue(_) => native_operations::text(
+                "RiemannIntegralSelectedValue",
+                "A proved candidate identifies the unique selected Riemann integral.",
+                OutputLanguage::Vietnamese,
+            ),
             Self::DerivativeSelectedValue(p) => p.rule_name_and_message(OutputLanguage::Vietnamese),
             Self::RealBounds(p) => {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::Vietnamese)

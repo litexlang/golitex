@@ -95,7 +95,9 @@ impl LitexToLeanCompiler {
                 before: 2 * returned_index + 1,
                 ..*position
             };
-            let proposition = self.fact_proposition(fact, &formed)?;
+            let captured_formation =
+                SourcePosition::new(Some(&formed), SourceOwner::FactWD(wd), usize::MAX);
+            let proposition = self.fact_proposition(fact, &captured_formation)?;
             let conclusion = conjunction_projection(&application, returned_index, facts.len());
             let evidence = format!(
                 "(by\n  {}\n  exact {conclusion}\n)",

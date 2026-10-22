@@ -607,6 +607,35 @@ litex -strict -f examples/claim_obtain_scope.lit
 litex -session -f examples/claim_obtain_scope.lit
 ```
 
+## Interactive reading (preview)
+
+```bash
+litex -reading -lang zh
+litex -reading -f chapter.lit
+litex -reading -json -strict -r book/ > book.reading.json
+litex -reading -export public/books/my-book -r book/
+```
+
+Bare `-reading` opens a local browser for `.lit`/project uploads and saved
+reading JSON. `-e`, `-f` and `-r` use the existing source/project execution
+semantics. `-json` writes one reading document without opening a browser;
+`-export` writes a static viewer and `reading.json`. These actions are mutually
+exclusive. `-no-browser` and `-port <0..65535>` apply only to preview; port 0
+chooses an available loopback port. `-strict` and `-lang` apply to verification
+and presentation. Reading does not accept `-session`.
+
+The separate `kind: "reading"`, schema `"2"` contract exports source,
+statements, actual scoped fact citations, inference outputs, shared evidence,
+semantic occurrences and a rule catalogue. Machine keys and runtime IDs are
+independent of display language; the complete snapshot fingerprint includes
+its presentation language. A reading failure exits 1 but may still export accepted
+prefix evidence and diagnostics. Normal run JSON above is unchanged.
+
+See the [Reading guide](reading.md) for the upload API, JSON dependency fields,
+grey inferred rows, website component/iframe APIs and a runnable integration
+example. A static viewer needs no live verifier; rechecking edited source
+requires a website execution backend.
+
 ## LaTeX conversion (preview)
 
 `litex -latex -lang zh -e '1 = 1'` compiles parsed source into a LaTeX

@@ -14,6 +14,11 @@ impl Runtime {
         if let Some(proof) = self.search_real_bound_equality(fact) {
             return Ok(Some(EqualitySearchProofByBuiltinRule::RealBounds(proof)));
         }
+        if let Some(proof) = self.search_riemann_integral_selected_equality(fact) {
+            return Ok(Some(
+                EqualitySearchProofByBuiltinRule::RiemannIntegralSelectedValue(proof),
+            ));
+        }
         if let Some(proof) = self.search_derivative_selected_equality(fact) {
             return Ok(Some(
                 EqualitySearchProofByBuiltinRule::DerivativeSelectedValue(proof),

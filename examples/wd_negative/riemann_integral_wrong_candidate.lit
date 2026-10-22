@@ -1,0 +1,4 @@
+# Expected rejection: a missing proof, false formula, or invalid ordinary-Riemann domain.
+have fn square(x R) R=x^2
+release thm riemann_integral_power(square,0,1,2)
+$has_riemann_integral(square,0,1,1/2)

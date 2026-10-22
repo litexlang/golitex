@@ -70,12 +70,26 @@ fn checked_file(root: &Path, code: &str, expected: bool) {
         result.run.session_error
     );
     assert!(!format!("{:?}", result.run.session_error).contains("InternalBug"));
-    if !expected && result.run.session_error.is_none() && code.starts_with(MAIN) {
+    if let (false, true, Some(appended)) = (
+        expected,
+        result.run.session_error.is_none(),
+        code.strip_prefix(MAIN)
+            .filter(|tail| !tail.trim().is_empty()),
+    ) {
         // Each caller appends exactly one outer statement. Every earlier
         // result must succeed, so the expected rejection cannot hide a
         // broken field or owner in MAIN.
-        let (tail, prefix) = result.run.statement_results.split_last().unwrap();
-        assert!(prefix.len() >= 12 && tail.is_failed());
+        let prefix = if let Some(input) = &result.run.input_error {
+            // A rejected parse has no ExecStmtResult. Check its exact source
+            // rather than mistaking the last accepted prefix for a failure.
+            assert_eq!(input.statement, appended.trim());
+            result.run.statement_results.as_slice()
+        } else {
+            let (tail, prefix) = result.run.statement_results.split_last().unwrap();
+            assert!(tail.is_failed());
+            prefix
+        };
+        assert!(prefix.len() >= 12);
         assert!(
             prefix.iter().all(|stmt| !stmt.is_failed()),
             "a failure in the shared prefix must not masquerade as the expected negative tail"

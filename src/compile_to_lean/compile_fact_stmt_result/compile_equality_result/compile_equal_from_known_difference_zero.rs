@@ -1,4 +1,3 @@
-use crate::compile_to_lean::helper::is_exact_zero;
 use crate::compile_to_lean::source_position::SourcePosition;
 use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equal_from_known_difference_zero::EqualFromKnownDifferenceZeroBuiltinRuleProof;
@@ -18,16 +17,10 @@ impl LitexToLeanCompiler {
                 "The selected citation is not an equality.",
             ));
         };
-        let (difference, zero, zero_on_left) = if is_exact_zero(&cited.right) {
-            (&cited.left, &cited.right, false)
-        } else if is_exact_zero(&cited.left) {
-            (&cited.right, &cited.left, true)
+        let (difference, peer) = if proof.difference_on_left {
+            (&cited.left, &cited.right)
         } else {
-            // The producer can select an edge inside zero's equivalence class.
-            // Its ID alone does not record that edge's remaining path to zero.
-            return Err(LeanCompileError::unsupported(
-                "DifferenceZero/UncapturedZeroPath",
-            ));
+            (&cited.right, &cited.left)
         };
         let Obj::ArithmeticOperator(ArithmeticOperator::Sub(sub)) = difference else {
             return Err(LeanCompileError::new(
@@ -43,12 +36,20 @@ impl LitexToLeanCompiler {
                 "The cited subtraction has different operands.",
             ));
         }
+        let zero = Obj::Literal(Literal::Number(Number {
+            normalized_value: "0".into(),
+        }));
+        let zero_path = self.compile_equality_path(peer, &zero, &proof.zero_path, position)?;
         let difference = self.compile_object_reference(difference, position)?;
-        self.compile_object_reference(zero, position)?;
-        let equality = if zero_on_left {
-            format!("({reference}).symm")
-        } else {
+        let edge = if proof.difference_on_left {
             reference
+        } else {
+            format!("({reference}).symm")
+        };
+        let equality = if proof.zero_path.path.is_empty() {
+            edge
+        } else {
+            format!("({edge}).trans ({zero_path})")
         };
         let conclude = if forward {
             "_litex_same"

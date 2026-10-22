@@ -1,0 +1,6 @@
+# Expected rejection: a missing proof, false formula, or invalid ordinary-Riemann domain.
+have fn filled_reciprocal(x R) R by cases:
+    case x=0: 0
+    case x!=0: 1/x
+filled_reciprocal(0)=0
+$has_riemann_integral(filled_reciprocal,-1,1,0)

@@ -209,3 +209,18 @@ impl Runtime {
         self.verify_fact(premise, premise_state)
     }
 }
+// Candidate construction uses the unit law only. Child certificates still
+// own both operands' WD; zero products never erase domain obligations here.
+pub(crate) fn multiply_derivative_terms(
+    left: crate::ast::obj::Obj,
+    right: crate::ast::obj::Obj,
+) -> crate::ast::obj::Obj {
+    use crate::ast::obj::{Literal, Obj};
+    if matches!(&left, Obj::Literal(Literal::Number(n)) if n.normalized_value=="1") {
+        return right;
+    }
+    if matches!(&right, Obj::Literal(Literal::Number(n)) if n.normalized_value=="1") {
+        return left;
+    }
+    crate::rational_expression::helper::mul_objs(left, right)
+}

@@ -93,6 +93,7 @@ fn interior(p: &PointInteriorProof, rt: &Runtime) -> JsonValue {
                                     rt,
                                     vec![
                                         ("guard", string(g.guard.readable_string())),
+                                        ("stability_rule", string(if matches!(g.guard, crate::ast::fact::AtomicFact::LessEqualFact(_) | crate::ast::fact::AtomicFact::GreaterEqualFact(_)) { "strict_margin_for_weak_guard" } else { "open_guard" })),
                                         ("point_fact", string(g.point_fact.readable_string())),
                                         ("point_proof", project_verify_fact(&g.point_proof, rt)),
                                         (
@@ -139,6 +140,16 @@ fn expression(p: &DerivativeExpressionProof, rt: &Runtime) -> JsonValue {
         ),
     ];
     let rule = match &p.constructor {
+        C::Elementary {
+            kind,
+            argument,
+            domain,
+        } => {
+            fields.push(("function", string(kind.name())));
+            fields.push(("argument", expression(argument, rt)));
+            fields.push(("analytic_domain", project_verify_fact(domain, rt)));
+            "ElementaryChainRule"
+        }
         C::Constant => "Constant",
         C::Variable => "Identity",
         C::Neg { argument } => {

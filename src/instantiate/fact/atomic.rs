@@ -25,6 +25,46 @@ impl Runtime {
     ) -> Result<AtomicFact, InstError> {
         let fact_id = self.global_ids.allocate_fact_id();
         match atomic {
+            AtomicFact::HasRiemannIntegralFact(f) => Ok(crate::ast::fact::HasRiemannIntegralFact {
+                fact_id,
+                function: self.inst_obj_rec(&f.function, param_to_arg_map)?,
+                lower: self.inst_obj_rec(&f.lower, param_to_arg_map)?,
+                upper: self.inst_obj_rec(&f.upper, param_to_arg_map)?,
+                value: self.inst_obj_rec(&f.value, param_to_arg_map)?,
+                line_file: f.line_file.clone(),
+            }
+            .into()),
+            AtomicFact::NotHasRiemannIntegralFact(f) => {
+                Ok(crate::ast::fact::NotHasRiemannIntegralFact {
+                    fact_id,
+                    function: self.inst_obj_rec(&f.function, param_to_arg_map)?,
+                    lower: self.inst_obj_rec(&f.lower, param_to_arg_map)?,
+                    upper: self.inst_obj_rec(&f.upper, param_to_arg_map)?,
+                    value: self.inst_obj_rec(&f.value, param_to_arg_map)?,
+                    line_file: f.line_file.clone(),
+                }
+                .into())
+            }
+            AtomicFact::FunctionRiemannIntegrableFact(f) => {
+                Ok(crate::ast::fact::FunctionRiemannIntegrableFact {
+                    fact_id,
+                    function: self.inst_obj_rec(&f.function, param_to_arg_map)?,
+                    lower: self.inst_obj_rec(&f.lower, param_to_arg_map)?,
+                    upper: self.inst_obj_rec(&f.upper, param_to_arg_map)?,
+                    line_file: f.line_file.clone(),
+                }
+                .into())
+            }
+            AtomicFact::NotFunctionRiemannIntegrableFact(f) => {
+                Ok(crate::ast::fact::NotFunctionRiemannIntegrableFact {
+                    fact_id,
+                    function: self.inst_obj_rec(&f.function, param_to_arg_map)?,
+                    lower: self.inst_obj_rec(&f.lower, param_to_arg_map)?,
+                    upper: self.inst_obj_rec(&f.upper, param_to_arg_map)?,
+                    line_file: f.line_file.clone(),
+                }
+                .into())
+            }
             AtomicFact::HasDerivativeAtFact(f) => Ok(crate::ast::fact::HasDerivativeAtFact {
                 fact_id,
                 function: self.inst_obj_rec(&f.function, param_to_arg_map)?,

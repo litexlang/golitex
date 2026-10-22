@@ -38,6 +38,7 @@ impl Obj {
                 s.push_str(LEFT_PAREN);
             }
             match o {
+                Obj::IntegralOperator(IntegralOperator::Riemann(x)) => s.push_str(x.ir().as_str()),
                 Obj::DerivativeOperator(DerivativeOperator::AtPoint(x)) => {
                     s.push_str(x.ir().as_str())
                 }
@@ -1107,4 +1108,14 @@ impl DerivativeAt {
         ))
     }
     impl_display_pair!();
+}
+impl RiemannIntegral {
+    pub fn ir(&self) -> ObjIR {
+        ObjIR(format!(
+            "integral({}, {}, {})",
+            self.function.ir(),
+            self.lower.ir(),
+            self.upper.ir()
+        ))
+    }
 }

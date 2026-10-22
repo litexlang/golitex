@@ -1,0 +1,7 @@
+# Expected rejection: a missing proof, false formula, or invalid ordinary-Riemann domain.
+have fn square(x R) R=x^2
+have fn one(x R) R=1
+have fn wrong(x R) R=x^2-1
+release thm riemann_integral_power(square,0,1,2)
+release thm riemann_integral_constant(one,0,1,1)
+release thm riemann_integral_add(square,one,wrong,0,1,1/3,1)

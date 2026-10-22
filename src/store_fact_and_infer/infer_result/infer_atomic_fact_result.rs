@@ -109,6 +109,10 @@ impl InferFunctionLipschitzFactResult {
 pub enum InferNotFunctionLipschitzFactResult {}
 
 pub enum InferAtomicFactResult {
+    HasRiemannIntegralFact(Vec<InferHasRiemannIntegralFactResult>),
+    NotHasRiemannIntegralFact(Vec<InferNotHasRiemannIntegralFactResult>),
+    FunctionRiemannIntegrableFact(Vec<InferFunctionRiemannIntegrableFactResult>),
+    NotFunctionRiemannIntegrableFact(Vec<InferNotFunctionRiemannIntegrableFactResult>),
     HasDerivativeAtFact(Vec<InferHasDerivativeAtFactResult>),
     NotHasDerivativeAtFact(Vec<InferNotHasDerivativeAtFactResult>),
     FunctionDifferentiableAtFact(Vec<InferFunctionDifferentiableAtFactResult>),
@@ -198,6 +202,14 @@ impl InferAtomicFactResult {
                 rules.iter().flat_map(|r| r.stored_conclusions()).collect()
             }
             Self::NotRealAccumulationFact(_) => Vec::new(),
+            Self::HasRiemannIntegralFact(rules) => {
+                rules.iter().flat_map(|r| r.stored_conclusions()).collect()
+            }
+            Self::NotHasRiemannIntegralFact(_) => Vec::new(),
+            Self::FunctionRiemannIntegrableFact(rules) => {
+                rules.iter().flat_map(|r| r.stored_conclusions()).collect()
+            }
+            Self::NotFunctionRiemannIntegrableFact(_) => Vec::new(),
             Self::HasDerivativeAtFact(rules) => {
                 rules.iter().flat_map(|r| r.stored_conclusions()).collect()
             }
@@ -439,3 +451,33 @@ impl InferFunctionDifferentiableAtFactResult {
     }
 }
 pub enum InferNotFunctionDifferentiableAtFactResult {}
+pub enum InferHasRiemannIntegralFactResult {
+    Definition(InferHasRiemannIntegralDefinitionResult),
+}
+pub struct InferHasRiemannIntegralDefinitionResult {
+    pub source_fact_id: FactId,
+    pub derived: Vec<StoreInferredFactResult>,
+}
+impl InferHasRiemannIntegralFactResult {
+    pub fn stored_conclusions(&self) -> Vec<&StoreInferredFactResult> {
+        match self {
+            Self::Definition(p) => p.derived.iter().collect(),
+        }
+    }
+}
+pub enum InferNotHasRiemannIntegralFactResult {}
+pub enum InferFunctionRiemannIntegrableFactResult {
+    Definition(InferFunctionRiemannIntegrableDefinitionResult),
+}
+pub struct InferFunctionRiemannIntegrableDefinitionResult {
+    pub source_fact_id: FactId,
+    pub derived: Vec<StoreInferredFactResult>,
+}
+impl InferFunctionRiemannIntegrableFactResult {
+    pub fn stored_conclusions(&self) -> Vec<&StoreInferredFactResult> {
+        match self {
+            Self::Definition(p) => p.derived.iter().collect(),
+        }
+    }
+}
+pub enum InferNotFunctionRiemannIntegrableFactResult {}

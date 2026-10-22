@@ -1,0 +1,3 @@
+# Expected rejection: a missing proof, false formula, or invalid ordinary-Riemann domain.
+have fn reciprocal(x R*) R=1/x
+$has_riemann_integral(reciprocal,-1,1,0)

@@ -1341,6 +1341,49 @@ impl Runtime {
         for (member, non_member) in [(&fact.left, &fact.right), (&fact.right, &fact.left)] {
             let member_ir = member.ir();
             let mut candidate_sets = Vec::new();
+            // A declared nonzero codomain is also a membership source.
+            // Example: f: R -> R+ supplies f(0) in R+, while 0 is not in R+.
+            // This only selects a candidate: both facts below still require
+            // their ordinary inherited-level proofs, including application WD.
+            if is_zero_obj(non_member) {
+                if let Obj::FnObj(call) = member {
+                    use crate::ast::obj::{FnObjHead, FunctionSpace, StructAndFieldAccessObj};
+                    let head = match call.head.as_ref() {
+                        FnObjHead::Identifier(id) => Obj::Identifier(id.clone()),
+                        FnObjHead::Object(obj) => *obj.clone(),
+                        FnObjHead::AnonymousFnLiteral(body) => {
+                            Obj::FunctionSpace(FunctionSpace::AnonymousFn(*body.clone()))
+                        }
+                        FnObjHead::FieldAccess(field) => Obj::StructAndFieldAccessObj(
+                            StructAndFieldAccessObj::FieldAccess(field.clone()),
+                        ),
+                        FnObjHead::InstantiatedTemplateObj(instance) => {
+                            Obj::InstantiatedTemplateObj(instance.clone())
+                        }
+                    };
+                    if let Some(signature) = self.resolve_callable_fn_set(&head) {
+                        if let Some(set) = self.applied_fn_set_return_set(call, &signature) {
+                            if matches!(
+                                &set,
+                                Obj::StandardSet(
+                                    StandardSet::NPos
+                                        | StandardSet::QPos
+                                        | StandardSet::RPos
+                                        | StandardSet::QNeg
+                                        | StandardSet::ZNeg
+                                        | StandardSet::RNeg
+                                        | StandardSet::QStar
+                                        | StandardSet::ZStar
+                                        | StandardSet::RStar
+                                        | StandardSet::CStar
+                                )
+                            ) {
+                                candidate_sets.push(set);
+                            }
+                        }
+                    }
+                }
+            }
             for env in self.execution_environments_stack.iter().rev() {
                 let Some(knowns) = env
                     .facts

@@ -144,6 +144,22 @@ impl Runtime {
             ));
         }
         let analysis_function = match fact {
+            AtomicFact::NormalAtomicFact(f)
+                if f.predicate
+                    == crate::ast::names::AtomicName::plain("is_darboux_enclosure".into()) =>
+            {
+                Some(&f.body[0])
+            }
+            AtomicFact::NotNormalAtomicFact(f)
+                if f.predicate
+                    == crate::ast::names::AtomicName::plain("is_darboux_enclosure".into()) =>
+            {
+                Some(&f.body[0])
+            }
+            AtomicFact::HasRiemannIntegralFact(f) => Some(&f.function),
+            AtomicFact::NotHasRiemannIntegralFact(f) => Some(&f.function),
+            AtomicFact::FunctionRiemannIntegrableFact(f) => Some(&f.function),
+            AtomicFact::NotFunctionRiemannIntegrableFact(f) => Some(&f.function),
             AtomicFact::HasDerivativeAtFact(f) => Some(&f.function),
             AtomicFact::NotHasDerivativeAtFact(f) => Some(&f.function),
             AtomicFact::FunctionDifferentiableAtFact(f) => Some(&f.function),
@@ -167,7 +183,54 @@ impl Runtime {
                     },
                 ));
             };
-            let mut requirements = Vec::new();
+            let mut requirements = match fact {
+                AtomicFact::NormalAtomicFact(f)
+                    if f.predicate
+                        == crate::ast::names::AtomicName::plain("is_darboux_enclosure".into()) =>
+                {
+                    let mut req = self.riemann_domain_requirements(
+                        f.body[1].clone(),
+                        f.body[2].clone(),
+                        function_domain.domain.clone(),
+                    );
+                    req.extend(self.riemann_enclosure_signature_requirements(&f.body));
+                    req
+                }
+                AtomicFact::NotNormalAtomicFact(f)
+                    if f.predicate
+                        == crate::ast::names::AtomicName::plain("is_darboux_enclosure".into()) =>
+                {
+                    let mut req = self.riemann_domain_requirements(
+                        f.body[1].clone(),
+                        f.body[2].clone(),
+                        function_domain.domain.clone(),
+                    );
+                    req.extend(self.riemann_enclosure_signature_requirements(&f.body));
+                    req
+                }
+                AtomicFact::HasRiemannIntegralFact(f) => self.riemann_domain_requirements(
+                    f.lower.clone(),
+                    f.upper.clone(),
+                    function_domain.domain.clone(),
+                ),
+                AtomicFact::NotHasRiemannIntegralFact(f) => self.riemann_domain_requirements(
+                    f.lower.clone(),
+                    f.upper.clone(),
+                    function_domain.domain.clone(),
+                ),
+                AtomicFact::FunctionRiemannIntegrableFact(f) => self.riemann_domain_requirements(
+                    f.lower.clone(),
+                    f.upper.clone(),
+                    function_domain.domain.clone(),
+                ),
+                AtomicFact::NotFunctionRiemannIntegrableFact(f) => self
+                    .riemann_domain_requirements(
+                        f.lower.clone(),
+                        f.upper.clone(),
+                        function_domain.domain.clone(),
+                    ),
+                _ => Vec::new(),
+            };
             let point = match fact {
                 AtomicFact::HasDerivativeAtFact(f) => Some(&f.point),
                 AtomicFact::NotHasDerivativeAtFact(f) => Some(&f.point),
@@ -186,6 +249,8 @@ impl Runtime {
                 }));
             }
             let derivative_value = match fact {
+                AtomicFact::HasRiemannIntegralFact(f) => Some(&f.value),
+                AtomicFact::NotHasRiemannIntegralFact(f) => Some(&f.value),
                 AtomicFact::HasDerivativeAtFact(f) => Some(&f.value),
                 AtomicFact::NotHasDerivativeAtFact(f) => Some(&f.value),
                 _ => None,
@@ -378,7 +443,22 @@ impl Runtime {
             }
         }
         let mut first_failure = None;
-        for requirements in self.atomic_predicate_domain_requirement_routes(fact) {
+        let routes = if let Some(arguments) = super::super::antiderivative::arguments(fact) {
+            let Some(requirements) =
+                super::super::antiderivative::domain_requirements(self, arguments, verify_state)?
+            else {
+                return Ok(VerifyAtomicFactWellDefinedResult::Failed(
+                    FailToVerifyAtomicFactWellDefinedResult::RealAnalysisDomain {
+                        fact: fact.clone(),
+                        well_defined_of_each_parameter: succeeded_args,
+                    },
+                ));
+            };
+            vec![requirements]
+        } else {
+            self.atomic_predicate_domain_requirement_routes(fact)
+        };
+        for requirements in routes {
             let mut predicate_domain = Vec::new();
             let mut failed = None;
             for requirement in requirements.iter().cloned() {
@@ -870,6 +950,10 @@ impl Runtime {
 
 fn atomic_except_equality_fact_arg_objs(fact: &AtomicFact) -> Vec<&Obj> {
     match fact {
+        AtomicFact::HasRiemannIntegralFact(f) => vec![&f.function, &f.lower, &f.upper, &f.value],
+        AtomicFact::NotHasRiemannIntegralFact(f) => vec![&f.function, &f.lower, &f.upper, &f.value],
+        AtomicFact::FunctionRiemannIntegrableFact(f) => vec![&f.function, &f.lower, &f.upper],
+        AtomicFact::NotFunctionRiemannIntegrableFact(f) => vec![&f.function, &f.lower, &f.upper],
         AtomicFact::HasDerivativeAtFact(f) => vec![&f.function, &f.point, &f.value],
         AtomicFact::NotHasDerivativeAtFact(f) => vec![&f.function, &f.point, &f.value],
         AtomicFact::FunctionDifferentiableAtFact(f) => vec![&f.function, &f.point],

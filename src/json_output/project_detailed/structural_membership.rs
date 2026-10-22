@@ -124,6 +124,7 @@ fn intrinsic_name(rule: &IntrinsicCodomain) -> &'static str {
     match rule {
         SequenceLimit => "lim",
         SequenceLimsup => "limsup",
+        RiemannIntegral => "riemann_integral",
         DerivativeAt => "derivative",
         Supremum => "sup",
         Infimum => "inf",

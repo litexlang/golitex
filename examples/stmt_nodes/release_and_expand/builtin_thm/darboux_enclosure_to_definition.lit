@@ -1,0 +1,9 @@
+# Explicit Riemann/Darboux theorem: darboux_enclosure_to_definition.
+# Check: target/release/litex -lang en -strict -f examples/stmt_nodes/release_and_expand/builtin_thm/darboux_enclosure_to_definition.lit
+# The theorem checks its actual domain and all premises before publishing results.
+have fn two(x R) R=2
+have fn p(k Z:0<=k,k<=1) R=k
+have fn lo(k Z:1<=k,k<=1) R=2
+have fn hi(k Z:1<=k,k<=1) R=2
+release thm darboux_enclosure_from_definition(two,0,1,1,p,lo,hi)
+release thm darboux_enclosure_to_definition(two,0,1,1,p,lo,hi)

@@ -1,0 +1,10 @@
+# Before: the derived function-call membership was not a candidate for nonzero proof.
+# forall f fn(x R) R+:
+#     f(0)!=0
+# Now: use the actual declared return carrier and retain both membership proofs.
+# Boundary: an R codomain alone does not imply nonzero; application guards still apply.
+# Run: target/release/litex -strict -lang en -f examples/proof_nodes/atomic/by_builtin_rule/nonzero_function_codomain.lit
+forall f fn(x R) R+:
+    f(0)!=0
+forall f fn(x R) C*:
+    f(0)!=0

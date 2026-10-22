@@ -1,0 +1,11 @@
+# Before proving integrability, the selector fails well-definedness:
+# have fn square(x R) R=x^2
+# integral(square,0,1)=1/3
+# Observed boundary: phase well_defined; the Session remains usable.
+# Now: an explicit theorem proves the candidate before selection.
+# Check: target/release/litex -lang en -strict -f examples/real_analysis/riemann_integral.lit
+have fn square(x R) R=x^2
+release thm riemann_integral_power(square,0,1,2)
+integral(square,0,1)=1/3
+integral(square,0,1)+2=7/3
+# No antiderivative or integral value is guessed by the selector's WD.

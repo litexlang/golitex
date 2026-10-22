@@ -4,6 +4,218 @@ use litex::reading::{build_reading, parse_reading_command, ReadingAction, Readin
 use std::collections::BTreeSet;
 
 #[test]
+fn fact_level_hypotheses_and_conclusions_keep_different_evidence_roles() {
+    let result = build_reading(
+        &ReadingInput::Source("forall x R:\n    x = 2\n    =>:\n        x + 1 = 3\n".into()),
+        true,
+        OutputLanguage::English,
+    );
+    assert!(result.success);
+    let facts = result.document.field("facts").as_array().unwrap();
+    let hypothesis = facts
+        .iter()
+        .find(|fact| {
+            fact.field("text").as_str().unwrap() == "x = 2"
+                && fact.as_object().unwrap().get("role").is_some()
+        })
+        .unwrap();
+    let conclusion = facts
+        .iter()
+        .find(|fact| {
+            fact.field("text").as_str().unwrap() == "(x + 1) = 3"
+                && fact.as_object().unwrap().get("role").is_some()
+        })
+        .unwrap();
+    assert_eq!(hypothesis.field("role").as_str().unwrap(), "hypothesis");
+    assert_eq!(hypothesis.field("line").as_u64().unwrap(), 2);
+    assert_eq!(conclusion.field("role").as_str().unwrap(), "verified");
+    assert_eq!(conclusion.field("line").as_u64().unwrap(), 4);
+    assert!(matches!(
+        hypothesis.field("is_primary"),
+        JsonValue::Bool(true)
+    ));
+    let evidence = reachable_evidence(&result.document, conclusion.field("evidence"));
+    assert!(evidence.contains(hypothesis.field("id").as_str().unwrap()));
+    let outer = &result.document.field("statements").as_array().unwrap()[0];
+    assert!(
+        !ids(outer.field("produced_fact_ids")).contains(hypothesis.field("id").as_str().unwrap())
+    );
+    assert!(
+        !ids(outer.field("produced_fact_ids")).contains(conclusion.field("id").as_str().unwrap())
+    );
+}
+
+#[test]
+fn cached_wd_references_resolve_to_actual_scoped_registrations() {
+    let result = build_reading(
+        &ReadingInput::Source("have x R\n0 <= x ^ 2\n1 <= x ^ 2 + 1\n".into()),
+        true,
+        OutputLanguage::English,
+    );
+    assert!(result.success);
+    let records = result
+        .document
+        .field("well_definedness")
+        .as_array()
+        .unwrap();
+    let statements = result.document.field("statements").as_array().unwrap();
+    let square = records
+        .iter()
+        .find(|record| record.field("object").as_str().unwrap().contains("x ^ 2"))
+        .unwrap();
+    assert_eq!(
+        square.field("producer_statement_id"),
+        statements[1].field("id")
+    );
+    assert!(ids(statements[2].field("well_definedness_ids"))
+        .contains(square.field("id").as_str().unwrap()));
+    assert!(square.as_object().unwrap().get("evidence").is_some());
+    for statement in statements {
+        assert_eq!(
+            statement
+                .field("coverage")
+                .field("well_definedness")
+                .as_str()
+                .unwrap(),
+            "complete"
+        );
+        for id in ids(statement.field("well_definedness_ids")) {
+            let record = records
+                .iter()
+                .find(|record| record.field("id").as_str().unwrap() == id)
+                .unwrap();
+            assert!(statements
+                .iter()
+                .any(|statement| statement.field("id") == record.field("producer_statement_id")));
+            assert!(!record.field("scope_id").as_str().unwrap().is_empty());
+        }
+    }
+}
+
+#[test]
+fn temporary_calculation_subject_ids_are_not_dangling_citations() {
+    // Unchanged proof from Mechanics Chapter 1: internal EqualFact subjects
+    // can be temporary even though every real stored-fact citation resolves.
+    let result = build_reading(
+        &ReadingInput::Source("forall x R:\n    x = 2\n    =>:\n        x + 1 = 3\n".into()),
+        true,
+        OutputLanguage::English,
+    );
+    assert!(result.success);
+    let facts = result
+        .document
+        .field("facts")
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|fact| fact.field("id").as_str().unwrap())
+        .collect::<BTreeSet<_>>();
+    let mut pending = vec![result.document.field("evidence_nodes")];
+    let mut temporary = 0;
+    while let Some(value) = pending.pop() {
+        match value {
+            JsonValue::Array(values) => pending.extend(values),
+            JsonValue::Object(fields) => {
+                match fields.get("kind").and_then(|value| value.as_str().ok()) {
+                    Some("fact_reference") => {
+                        assert!(facts.contains(value.field("fact_id").as_str().unwrap()))
+                    }
+                    Some("fact_identity")
+                        if !facts.contains(value.field("fact_id").as_str().unwrap()) =>
+                    {
+                        temporary += 1
+                    }
+                    _ => {}
+                }
+                pending.extend(fields.iter().map(|(_, value)| value));
+            }
+            _ => {}
+        }
+    }
+    assert!(
+        temporary > 0,
+        "the real calculation must exercise an unstored subject"
+    );
+}
+
+#[test]
+fn inferred_conclusions_keep_their_seed_evidence_and_later_citation() {
+    let result = build_reading(
+        &ReadingInput::Source(include_str!("../examples/reading/inferred_facts.lit").into()),
+        true,
+        OutputLanguage::English,
+    );
+    assert!(result.success);
+    let statements = result.document.field("statements").as_array().unwrap();
+    let inferred = ids(statements[3].field("inferred_fact_ids"));
+    let citations = ids(statements[4].field("cited_fact_ids"));
+    let id = inferred
+        .intersection(&citations)
+        .next()
+        .expect("later statement cites the actual inferred fact");
+    let facts = result.document.field("facts").as_array().unwrap();
+    let fact = facts
+        .iter()
+        .find(|fact| fact.field("id").as_str().unwrap() == id)
+        .unwrap();
+    assert_eq!(
+        fact.field("text").as_str().unwrap(),
+        "$reading_inner(reading_value)"
+    );
+    assert_eq!(
+        fact.field("producer_statement_id"),
+        statements[3].field("id")
+    );
+    let inferences = result.document.field("inferences").as_array().unwrap();
+    let inference = inferences
+        .iter()
+        .find(|inference| ids(inference.field("fact_ids")).contains(id))
+        .unwrap();
+    assert_eq!(
+        inference.field("producer_statement_id"),
+        statements[3].field("id")
+    );
+    assert!(ids(fact.field("inference_ids")).contains(inference.field("id").as_str().unwrap()));
+    let seed = facts
+        .iter()
+        .find(|fact| fact.field("id") == inference.field("source_fact_id"))
+        .unwrap();
+    assert_eq!(
+        seed.field("text").as_str().unwrap(),
+        "$reading_outer(reading_value)"
+    );
+    assert_eq!(inference.field("scope_id"), seed.field("scope_id"));
+    assert!(
+        reachable_evidence(&result.document, inference.field("evidence"))
+            .contains("ExpandDefinition")
+    );
+    assert!(ids(inference.field("rule_ids"))
+        .iter()
+        .any(|id| id.contains("ExpandDefinition")));
+    assert!(
+        !ids(statements[4].field("inferred_fact_ids")).contains(id),
+        "rechecking is not the original inference producer"
+    );
+    for inference in inferences {
+        assert!(facts
+            .iter()
+            .any(|fact| fact.field("id") == inference.field("source_fact_id")));
+        assert!(statements
+            .iter()
+            .any(|stmt| stmt.field("id") == inference.field("producer_statement_id")));
+        for id in ids(inference.field("fact_ids")) {
+            let fact = facts
+                .iter()
+                .find(|fact| fact.field("id").as_str().unwrap() == id)
+                .unwrap();
+            assert!(
+                ids(fact.field("inference_ids")).contains(inference.field("id").as_str().unwrap())
+            );
+        }
+    }
+}
+
+#[test]
 fn real_rule_children_and_prior_fact_citations_are_exported() {
     let source = "have x R\n0 <= x ^ 2\n1 <= x ^ 2 + 1\n";
     let result = build_reading(
@@ -14,7 +226,7 @@ fn real_rule_children_and_prior_fact_citations_are_exported() {
     assert!(result.success);
     let statements = (&result.document).field("statements").as_array().unwrap();
     assert_eq!(statements.len(), 3);
-    let evidence = (&statements[1]).field("evidence").stringify();
+    let evidence = reachable_evidence(&result.document, statements[1].field("evidence"));
     assert!(evidence.contains("EvenPowNonnegative"), "{evidence}");
     assert!(evidence.contains("base_in_real_proof"));
     let prior = ids((&statements[1]).field("produced_fact_ids"));
@@ -50,7 +262,7 @@ fn original_unicode_and_comment_offsets_select_only_real_occurrences() {
     assert!(result.success);
     assert_eq!(
         (&result.document).field("schema_version").as_str().unwrap(),
-        "1"
+        "2"
     );
     let occurrences = (&result.document)
         .field("occurrences")
@@ -117,6 +329,11 @@ fn failed_statement_publishes_no_facts_and_later_statement_keeps_context() {
     );
     assert!((&statements[1])
         .field("produced_fact_ids")
+        .as_array()
+        .unwrap()
+        .is_empty());
+    assert!(statements[1]
+        .field("inferred_fact_ids")
         .as_array()
         .unwrap()
         .is_empty());
@@ -191,10 +408,10 @@ fn nested_claim_steps_keep_local_producers_and_publish_only_the_goal() {
         assert_eq!(fact.field("scope_id"), square.field("scope_id"));
     }
     assert!(!ids(outer.field("produced_fact_ids")).is_empty());
-    assert!(outer
-        .field("evidence")
-        .stringify()
-        .contains("statement_reference"));
+    assert!(
+        reachable_evidence(&result.document, outer.field("evidence"))
+            .contains("statement_reference")
+    );
     assert_eq!(
         outer
             .field("coverage")
@@ -247,7 +464,10 @@ fn sibling_local_predicate_definitions_do_not_share_highlights() {
         assert_eq!(
             occurrences
                 .iter()
-                .filter(|occurrence| occurrence.field("definition").as_bool().unwrap())
+                .filter(|occurrence| matches!(
+                    occurrence.field("definition"),
+                    JsonValue::Bool(true)
+                ))
                 .count(),
             1
         );
@@ -349,19 +569,122 @@ fn source_and_engine_fingerprints_are_bound_to_the_bundle() {
         .as_str()
         .unwrap()
         .starts_with("fnv1a64:"));
-    assert_eq!(
-        result
-            .document
-            .field("execution_policy")
-            .field("strict")
-            .as_bool()
-            .unwrap(),
-        true
+    assert!(matches!(
+        result.document.field("execution_policy").field("strict"),
+        JsonValue::Bool(true)
+    ));
+}
+
+#[test]
+fn language_changes_presentation_without_changing_machine_evidence() {
+    let input = ReadingInput::Source("have x R\n0 <= x ^ 2\n1 <= x ^ 2 + 1\n".into());
+    let english = build_reading(&input, true, OutputLanguage::English);
+    let chinese = build_reading(&input, true, OutputLanguage::Chinese);
+    assert!(english.success && chinese.success);
+    for key in [
+        "sources",
+        "statements",
+        "evidence_nodes",
+        "inferences",
+        "well_definedness",
+        "facts",
+        "symbols",
+        "occurrences",
+        "scopes",
+        "input_digest",
+        "catalogue_id",
+    ] {
+        assert_eq!(
+            english.document.field(key),
+            chinese.document.field(key),
+            "machine field differs: {key}"
+        );
+    }
+}
+
+#[test]
+fn exported_evidence_and_rule_references_resolve_inside_the_bundle() {
+    let result = build_reading(
+        &ReadingInput::Source("have x R\n0 <= x ^ 2\n1 <= x ^ 2 + 1\n".into()),
+        true,
+        OutputLanguage::English,
     );
+    let rules = result
+        .document
+        .field("rules")
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|rule| rule.field("id").as_str().unwrap())
+        .collect::<BTreeSet<_>>();
+    let facts = result
+        .document
+        .field("facts")
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|fact| fact.field("id").as_str().unwrap())
+        .collect::<BTreeSet<_>>();
+    for statement in result.document.field("statements").as_array().unwrap() {
+        assert!(!reachable_evidence(&result.document, statement.field("evidence")).is_empty());
+        for id in ids(statement.field("rule_ids")) {
+            assert!(rules.contains(id.as_str()), "unknown rule {id}");
+        }
+        for field in ["produced_fact_ids", "cited_fact_ids"] {
+            for id in ids(statement.field(field)) {
+                assert!(facts.contains(id.as_str()), "unknown fact {id}");
+            }
+        }
+    }
 }
 
 trait ReadingFields {
     fn field(&self, key: &str) -> &JsonValue;
+}
+
+fn reachable_evidence(bundle: &JsonValue, root: &JsonValue) -> String {
+    let nodes = bundle
+        .field("evidence_nodes")
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|entry| (entry.field("id").as_str().unwrap(), entry.field("node")))
+        .collect::<std::collections::BTreeMap<_, _>>();
+    let statements = bundle
+        .field("statements")
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|entry| (entry.field("id").as_str().unwrap(), entry.field("evidence")))
+        .collect::<std::collections::BTreeMap<_, _>>();
+    let mut visited = BTreeSet::new();
+    let mut pending = vec![root];
+    let mut output = String::new();
+    while let Some(value) = pending.pop() {
+        output.push_str(&value.stringify());
+        match value {
+            JsonValue::Object(fields) => {
+                match fields.get("kind").and_then(|value| value.as_str().ok()) {
+                    Some("evidence_reference") => {
+                        let id = value.field("evidence_id").as_str().unwrap();
+                        if visited.insert(format!("node:{id}")) {
+                            pending.push(nodes[id]);
+                        }
+                    }
+                    Some("statement_reference") => {
+                        let id = value.field("statement_id").as_str().unwrap();
+                        if visited.insert(format!("stmt:{id}")) {
+                            pending.push(statements[id]);
+                        }
+                    }
+                    _ => pending.extend(fields.iter().map(|(_, value)| value)),
+                }
+            }
+            JsonValue::Array(values) => pending.extend(values),
+            _ => {}
+        }
+    }
+    output
 }
 
 impl ReadingFields for JsonValue {

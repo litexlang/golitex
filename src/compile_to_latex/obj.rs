@@ -22,6 +22,15 @@ fn expression(
     let o = |x: &Obj| obj(x, modules, lang);
     let e = |x: &Obj, p| expression(x, modules, lang, p);
     let (text, precedence) = match value {
+        Obj::IntegralOperator(IntegralOperator::Riemann(x)) => (
+            format!(
+                r"\int_{{{}}}^{{{}}} {}(\xi)\,\mathrm{{d}}\xi",
+                o(&x.lower)?,
+                o(&x.upper)?,
+                e(&x.function, 51)?
+            ),
+            50,
+        ),
         Obj::DerivativeOperator(DerivativeOperator::AtPoint(x)) => (
             format!(
                 "{}^{{\\prime}}{}",

@@ -2847,6 +2847,14 @@ fn atomic_inference_stages(infer: &InferAtomicFactResult) -> Vec<&StoreInferredF
             rules.iter().flat_map(|r| r.stored_conclusions()).collect()
         }
         InferAtomicFactResult::NotRealAccumulationFact(_) => Vec::new(),
+        InferAtomicFactResult::HasRiemannIntegralFact(rules) => {
+            rules.iter().flat_map(|r| r.stored_conclusions()).collect()
+        }
+        InferAtomicFactResult::NotHasRiemannIntegralFact(_) => Vec::new(),
+        InferAtomicFactResult::FunctionRiemannIntegrableFact(rules) => {
+            rules.iter().flat_map(|r| r.stored_conclusions()).collect()
+        }
+        InferAtomicFactResult::NotFunctionRiemannIntegrableFact(_) => Vec::new(),
         InferAtomicFactResult::HasDerivativeAtFact(rules) => {
             rules.iter().flat_map(|r| r.stored_conclusions()).collect()
         }

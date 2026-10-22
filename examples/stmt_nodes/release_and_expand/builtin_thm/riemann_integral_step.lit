@@ -1,0 +1,7 @@
+# Explicit Riemann/Darboux theorem: riemann_integral_step.
+# Check: target/release/litex -lang en -strict -f examples/stmt_nodes/release_and_expand/builtin_thm/riemann_integral_step.lit
+# The theorem checks its actual domain and all premises before publishing results.
+have fn jump(x R) R=sign(x)
+release thm riemann_integral_step(jump,-1,0,1,-1,1)
+integral(jump,-1,1)=0
+# jump(0)=0 is unrestricted by the two constant open-cell formulas.

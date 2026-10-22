@@ -224,7 +224,11 @@ impl Runtime {
         fact: &AtomicFact,
     ) -> Option<AtomicExceptEqualityFactSearchProofByKnownSpecialProperty> {
         match fact {
-            AtomicFact::HasDerivativeAtFact(_)
+            AtomicFact::HasRiemannIntegralFact(_)
+            | AtomicFact::NotHasRiemannIntegralFact(_)
+            | AtomicFact::FunctionRiemannIntegrableFact(_)
+            | AtomicFact::NotFunctionRiemannIntegrableFact(_)
+            | AtomicFact::HasDerivativeAtFact(_)
             | AtomicFact::NotHasDerivativeAtFact(_)
             | AtomicFact::FunctionDifferentiableAtFact(_)
             | AtomicFact::NotFunctionDifferentiableAtFact(_)

@@ -61,6 +61,14 @@ pub(crate) fn corresponding_arg_pairs(left: &Obj, right: &Obj) -> Option<Vec<(Ob
 
     match (left, right) {
         (
+            Obj::IntegralOperator(crate::ast::obj::IntegralOperator::Riemann(l)),
+            Obj::IntegralOperator(crate::ast::obj::IntegralOperator::Riemann(r)),
+        ) => Some(vec![
+            (*l.function.clone(), *r.function.clone()),
+            (*l.lower.clone(), *r.lower.clone()),
+            (*l.upper.clone(), *r.upper.clone()),
+        ]),
+        (
             Obj::DerivativeOperator(crate::ast::obj::DerivativeOperator::AtPoint(l)),
             Obj::DerivativeOperator(crate::ast::obj::DerivativeOperator::AtPoint(r)),
         ) => Some(vec![

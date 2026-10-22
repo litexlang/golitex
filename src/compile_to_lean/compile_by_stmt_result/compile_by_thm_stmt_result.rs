@@ -108,8 +108,13 @@ impl LitexToLeanCompiler {
                 before: return_head + index,
                 ..*position
             };
+            let captured_formation = SourcePosition::new(
+                Some(&prior),
+                SourceOwner::FactWD(&proof.conclusions_wd[index]),
+                usize::MAX,
+            );
             let compiled = (
-                self.fact_proposition(fact, &prior)?,
+                self.fact_proposition(fact, &captured_formation)?,
                 conjunction_projection(&application, index, conclusions_count),
             );
             definitions.push(self.emit_internal_fact(fact, &compiled, &prior)?);
@@ -288,6 +293,9 @@ impl LitexToLeanCompiler {
                         ExistOrAndChainAtomicFact::ChainFact(fact) => {
                             Ok(Fact::ChainFact(fact.clone()))
                         }
+                        ExistOrAndChainAtomicFact::ExistFact(fact) => {
+                            Ok(Fact::ExistFact(fact.clone()))
+                        }
                         _ => Err(LeanCompileError::unsupported("ByThm/CompoundConclusion")),
                     })
                     .collect::<Result<Vec<_>, _>>()?;
@@ -360,6 +368,10 @@ impl LitexToLeanCompiler {
                 StoreFactResult::AtomicFact(stored) => Fact::AtomicFact(stored.fact.clone()),
                 StoreFactResult::AndFact(stored) => Fact::AndFact(stored.fact.clone()),
                 StoreFactResult::ChainFact(stored) => Fact::ChainFact(stored.fact.clone()),
+                StoreFactResult::ExistShapedFact(stored) => match &stored.fact {
+                    ExistShapedFact::Exist(fact) => Fact::ExistFact(fact.clone()),
+                    _ => return Err(LeanCompileError::unsupported("ByThm/ReturnedPackage")),
+                },
                 _ => return Err(LeanCompileError::unsupported("ByThm/ReturnedPackage")),
             };
             self.validate_store(&stored.store, &fact)?;

@@ -895,6 +895,16 @@ fn project_builtin_prop_def(proof: &BuiltinPropDefinitionProof, runtime: &Runtim
             &p.requirement_facts,
             &p.proof_of_requirement_facts,
         ),
+        BuiltinPropDefinitionProof::HasRiemannIntegral(p) => (
+            "HasRiemannIntegral",
+            &p.requirement_facts,
+            &p.proof_of_requirement_facts,
+        ),
+        BuiltinPropDefinitionProof::FunctionRiemannIntegrable(p) => (
+            "FunctionRiemannIntegrable",
+            &p.requirement_facts,
+            &p.proof_of_requirement_facts,
+        ),
         BuiltinPropDefinitionProof::HasDerivativeAt(p) => (
             "HasDerivativeAt",
             &p.requirement_facts,

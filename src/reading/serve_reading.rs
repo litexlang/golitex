@@ -10,6 +10,8 @@ use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 use super::export_reading::{reading_html, APP_JS, READER_CSS, READER_JS};
 use super::helper::{object, text};
+use super::partition_reading::ReadingSite;
+use super::upload_cache::{UploadBuild, UploadCache};
 
 const MAX_REQUEST: usize = 16 * 1024 * 1024;
 const MAX_SOURCE: usize = 8 * 1024 * 1024;
@@ -28,8 +30,26 @@ pub fn serve_reading(
         .local_addr()
         .map_err(|error| io_error(Path::new("<reading-server>"), error))?;
     let origin = format!("http://{address}");
-    let html = Arc::new(reading_html(&document, true));
-    let json = Arc::new(document.stringify());
+    let site = ReadingSite::new(&document);
+    let html = Arc::new(reading_html(&site.manifest, true));
+    let full_url = site
+        .manifest
+        .as_object()
+        .unwrap()
+        .get("full_document_url")
+        .unwrap()
+        .as_str()
+        .unwrap()
+        .to_string();
+    let mut files = site.files;
+    let json = Arc::new(files.remove(&full_url).unwrap());
+    let mut files = files
+        .into_iter()
+        .map(|(path, data)| (path, Arc::new(data)))
+        .collect::<std::collections::BTreeMap<_, _>>();
+    files.insert(full_url, Arc::clone(&json));
+    let parts = Arc::new(files);
+    let cache = Arc::new(UploadCache::new());
     eprintln!("Litex Reading: {origin}/");
     eprintln!("Press Ctrl-C to stop the local reader.");
     if open_browser {
@@ -41,9 +61,13 @@ pub fn serve_reading(
         let stream = incoming.map_err(|error| io_error(Path::new("<reading-server>"), error))?;
         let html = Arc::clone(&html);
         let json = Arc::clone(&json);
+        let parts = Arc::clone(&parts);
+        let cache = Arc::clone(&cache);
         let origin = origin.clone();
         std::thread::spawn(move || {
-            if let Err(error) = handle_connection(stream, &html, &json, &origin, strict) {
+            if let Err(error) =
+                handle_connection(stream, &html, &json, &parts, &origin, strict, &cache)
+            {
                 eprintln!("reading request: {error}");
             }
         });
@@ -55,8 +79,10 @@ fn handle_connection(
     mut stream: TcpStream,
     html: &str,
     json: &str,
+    parts: &std::collections::BTreeMap<String, Arc<String>>,
     origin: &str,
     strict: bool,
+    cache: &UploadCache,
 ) -> std::io::Result<()> {
     stream.set_read_timeout(Some(Duration::from_secs(10)))?;
     stream.set_write_timeout(Some(Duration::from_secs(30)))?;
@@ -79,6 +105,9 @@ fn handle_connection(
         Ok(header) => header.to_string(),
         Err(_) => return response(&mut stream, 400, "text/plain", "Invalid request header"),
     };
+    if header_end > 16 * 1024 {
+        return response(&mut stream, 431, "text/plain", "Request headers too large");
+    }
     let mut lines = header.split("\r\n");
     let mut request = lines.next().unwrap_or("").split_whitespace();
     let method = request.next().unwrap_or("");
@@ -124,6 +153,9 @@ fn handle_connection(
         );
     }
     if method == "GET" {
+        if let Some(part) = parts.get(path.trim_start_matches('/')) {
+            return response(&mut stream, 200, "application/json; charset=utf-8", part);
+        }
         return match path {
             "/" | "/index.html" => response(&mut stream, 200, "text/html; charset=utf-8", html),
             "/reader.js" => response(
@@ -192,9 +224,12 @@ fn handle_connection(
     }
     let result = std::str::from_utf8(&bytes[header_end..header_end + length])
         .map_err(|_| "Reading input must be UTF-8".to_string())
-        .and_then(|body| build_upload(body, strict));
+        .and_then(|body| build_upload(body, strict, cache));
     match result {
-        Ok(json) => response(&mut stream, 200, "application/json; charset=utf-8", &json),
+        Ok(build) => {
+            write!(stream, "HTTP/1.1 200 OK\r\nContent-Type: application/json; charset=utf-8\r\nContent-Length: {}\r\nCache-Control: no-store\r\nX-Litex-Reading-Cache: {}\r\nConnection: close\r\n\r\n", build.json.len(), build.cache_status)?;
+            stream.write_all(build.json.as_bytes())
+        }
         Err(error) => response(
             &mut stream,
             400,
@@ -204,7 +239,7 @@ fn handle_connection(
     }
 }
 
-pub(super) fn build_upload(body: &str, strict: bool) -> Result<String, String> {
+fn build_upload(body: &str, strict: bool, cache: &UploadCache) -> Result<UploadBuild, String> {
     check_json_depth(body)?;
     let request = JsonValue::parse(body).map_err(|error| error.to_string())?;
     let fields = request.as_object().map_err(|error| error.to_string())?;
@@ -261,24 +296,32 @@ pub(super) fn build_upload(body: &str, strict: bool) -> Result<String, String> {
         }
         fs::write(destination, content).map_err(|error| error.to_string())?;
     }
-    validate_upload_configs(&input_root, &configs)?;
+    let closed_project = validate_upload_configs(&input_root, &configs)?;
     configs.sort_by_key(|path| (path.components().count(), path.clone()));
     let (mode, entry) = if let Some(entry) = fields.get("entry") {
         let entry = entry.as_object().map_err(|error| error.to_string())?;
-        let path = input_root.join(safe_upload_path(
-            entry
-                .get("path")
-                .ok_or("Missing entry path")?
-                .as_str()
-                .map_err(|error| error.to_string())?,
-        )?);
         let kind = entry
             .get("kind")
             .ok_or("Missing entry kind")?
             .as_str()
             .map_err(|error| error.to_string())?;
+        let name = entry
+            .get("path")
+            .ok_or("Missing entry path")?
+            .as_str()
+            .map_err(|error| error.to_string())?;
+        let path = if kind == "project" && name == "." {
+            input_root.clone()
+        } else {
+            input_root.join(safe_upload_path(name)?)
+        };
         match kind {
-            "file" if path.is_file() => ("-f", path),
+            "file"
+                if path.is_file()
+                    && path.extension().is_some_and(|extension| extension == "lit") =>
+            {
+                ("-f", path)
+            }
             "project" if path.join("litex.config").is_file() => ("-r", path),
             _ => {
                 return Err(
@@ -308,10 +351,23 @@ pub(super) fn build_upload(body: &str, strict: bool) -> Result<String, String> {
         .transpose()?
         .unwrap_or("en");
     OutputLanguage::parse_token(language).map_err(|error| error.to_string())?;
-    let requested_strict = matches!(fields.get("strict"), Some(JsonValue::Bool(true)));
+    let requested_strict = match fields.get("strict") {
+        Some(JsonValue::Bool(value)) => *value,
+        None => false,
+        Some(_) => return Err("strict must be a boolean".into()),
+    };
     let stdout_path = workspace.path.join("output.json");
     let stderr_path = workspace.path.join("error.txt");
     let executable = std::env::current_exe().map_err(|error| error.to_string())?;
+    let engine_id = if closed_project {
+        super::helper::executable_digest()
+    } else {
+        None
+    };
+    let cache_key = engine_id.as_ref().map(|id| format!("{strict}:{id}:{body}"));
+    if let Some(json) = cache_key.as_ref().and_then(|key| cache.get(key)) {
+        return Ok(UploadBuild::new(json, "hit"));
+    }
     let mut command = Command::new(executable);
     command
         .args(["-reading", "-json", mode])
@@ -350,7 +406,31 @@ pub(super) fn build_upload(body: &str, strict: bool) -> Result<String, String> {
     if json.is_empty() || json.len() as u64 > MAX_OUTPUT {
         return Err("Reading process produced no usable bundle".into());
     }
-    Ok(json)
+    if let Some(key) = cache_key.as_ref() {
+        if status.success() {
+            let document = JsonValue::parse(&json).map_err(|error| error.to_string())?;
+            let actual_engine = document
+                .as_object()
+                .ok()
+                .and_then(|fields| fields.get("engine"))
+                .and_then(|engine| engine.as_object().ok())
+                .and_then(|fields| fields.get("executable_id"))
+                .and_then(|id| id.as_str().ok());
+            if actual_engine == engine_id.as_deref() {
+                let json = Arc::new(json);
+                cache.insert(key.clone(), Arc::clone(&json));
+                return Ok(UploadBuild::new(json, "miss"));
+            }
+        }
+    }
+    Ok(UploadBuild::new(
+        Arc::new(json),
+        if cache_key.is_some() {
+            "miss"
+        } else {
+            "bypass"
+        },
+    ))
 }
 
 pub(super) fn safe_upload_path(name: &str) -> Result<PathBuf, String> {
@@ -369,9 +449,10 @@ pub(super) fn safe_upload_path(name: &str) -> Result<PathBuf, String> {
     Ok(path)
 }
 
-fn validate_upload_configs(root: &Path, configs: &[PathBuf]) -> Result<(), String> {
+fn validate_upload_configs(root: &Path, configs: &[PathBuf]) -> Result<bool, String> {
     let std_root = crate::run_module::resolve_std_root(Some(root));
     let allowed_std = normalize_path(&std_root);
+    let mut closed_project = true;
     for config in configs {
         let config = crate::run_module::load_config(config.parent().unwrap(), &std_root)
             .map_err(|error| error.to_string())?;
@@ -382,12 +463,13 @@ fn validate_upload_configs(root: &Path, configs: &[PathBuf]) -> Result<(), Strin
         }
         for import in &config.imports {
             let path = normalize_path(&import.path);
+            closed_project &= path.starts_with(root);
             if !path.starts_with(root) && !path.starts_with(&allowed_std) {
                 return Err("Upload all project dependencies; imports may only use uploaded files or the configured std library".into());
             }
         }
     }
-    Ok(())
+    Ok(closed_project)
 }
 
 fn normalize_path(path: &Path) -> PathBuf {

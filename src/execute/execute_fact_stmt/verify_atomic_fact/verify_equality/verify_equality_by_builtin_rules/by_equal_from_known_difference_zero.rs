@@ -1,6 +1,8 @@
 use crate::ast::fact::EqualFact;
 use crate::ast::obj::{ArithmeticOperator, Literal, Number, Obj, Sub};
 use crate::execute::execute_fact_stmt::VerifyState;
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::equivalence_class_graph::equivalence_class_path_in_adjacency;
+use crate::prelude::KnownEqualityPathProof;
 use crate::runtime::{FactId, Runtime, RuntimeResult};
 
 // Builtin: prove `a = b` from a known fact `a - b = 0` (or `0 = a - b`).
@@ -12,6 +14,8 @@ use crate::runtime::{FactId, Runtime, RuntimeResult};
 // cycling with DiffZeroFromEqualOperands, which proves the opposite direction).
 pub struct EqualFromKnownDifferenceZeroBuiltinRuleProof {
     pub cite_fact_id: FactId,
+    pub difference_on_left: bool,
+    pub zero_path: KnownEqualityPathProof,
 }
 
 impl Runtime {
@@ -34,15 +38,28 @@ impl Runtime {
                 continue;
             };
             for (_peer, equal_fact) in neighbors.iter() {
-                for side in [&equal_fact.left, &equal_fact.right] {
+                for (side, peer, difference_on_left) in [
+                    (&equal_fact.left, &equal_fact.right, true),
+                    (&equal_fact.right, &equal_fact.left, false),
+                ] {
                     let Some((x, y)) = match_sub(side) else {
                         continue;
                     };
                     let xy = x.ir() == a_ir && y.ir() == b_ir;
                     let yx = x.ir() == b_ir && y.ir() == a_ir;
                     if xy || yx {
+                        // The selected edge can end at another member of zero's
+                        // class. Retain its remaining path from this same visible
+                        // graph, without nested verification or new stored facts.
+                        let Some(path) =
+                            equivalence_class_path_in_adjacency(&adjacency, peer, &zero)
+                        else {
+                            continue;
+                        };
                         return Ok(Some(EqualFromKnownDifferenceZeroBuiltinRuleProof {
                             cite_fact_id: equal_fact.fact_id,
+                            difference_on_left,
+                            zero_path: KnownEqualityPathProof::new(path),
                         }));
                     }
                 }

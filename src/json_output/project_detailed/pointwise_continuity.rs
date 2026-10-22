@@ -55,6 +55,16 @@ pub(super) fn expression(p: &PointwiseContinuityExpressionProof, rt: &Runtime) -
         ("value_real", project_verify_fact(&p.value_real, rt)),
     ];
     let rule = match &p.constructor {
+        C::Elementary {
+            kind,
+            argument,
+            domain,
+        } => {
+            fields.push(("function", string(kind.name())));
+            fields.push(("argument", expression(argument, rt)));
+            fields.push(("analytic_domain", project_verify_fact(domain, rt)));
+            "ElementaryContinuity"
+        }
         C::Constant => "Constant",
         C::Variable => "Identity",
         C::Neg { argument } => {

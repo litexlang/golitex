@@ -28,6 +28,14 @@ impl Runtime {
         param_to_arg_map: &HashMap<IdentifierId, Obj>,
     ) -> Result<Obj, InstError> {
         match obj {
+            Obj::IntegralOperator(crate::ast::obj::IntegralOperator::Riemann(a)) => {
+                Ok(crate::ast::obj::RiemannIntegral::new(
+                    self.inst_obj_rec(&a.function, param_to_arg_map)?,
+                    self.inst_obj_rec(&a.lower, param_to_arg_map)?,
+                    self.inst_obj_rec(&a.upper, param_to_arg_map)?,
+                )
+                .into())
+            }
             Obj::DerivativeOperator(crate::ast::obj::DerivativeOperator::AtPoint(a)) => {
                 Ok(crate::ast::obj::DerivativeAt::new(
                     self.inst_obj_rec(&a.function, param_to_arg_map)?,

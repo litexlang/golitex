@@ -1,24 +1,9 @@
-# Scratch: a != b implies intersect({a},{b}) = {} (used for MIL C10 two-element folds).
 claim:
-    ? forall a, b R:
-        a != b
-        =>:
-            not $is_nonempty_set(intersect({a}, {b}))
-    by contra:
-        ? not $is_nonempty_set(intersect({a}, {b}))
-        $is_nonempty_set(intersect({a}, {b}))
-        have x intersect({a}, {b})
-        x $in {a}
-        x $in {b}
-        x = a
-        x = b
-        a = b
-        impossible a = b
-
-claim:
-    ? forall a, b R:
-        a != b
-        =>:
-            intersect({a}, {b}) = {}
-    not $is_nonempty_set(intersect({a}, {b}))
-    intersect({a}, {b}) = {}
+    ? forall a, b N+:
+        lcm(a, b) = 0 or lcm(a, b) != 0
+    by cases:
+        ? lcm(a, b) = 0 or lcm(a, b) != 0
+        case lcm(a, b) = 0:
+            lcm(a, b) = 0
+        case lcm(a, b) != 0:
+            lcm(a, b) != 0

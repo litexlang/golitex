@@ -1,0 +1,6 @@
+# Explicit Riemann/Darboux theorem: riemann_integral_constant.
+# Check: target/release/litex -lang en -strict -f examples/stmt_nodes/release_and_expand/builtin_thm/riemann_integral_constant.lit
+# The theorem checks its actual domain and all premises before publishing results.
+have fn one(x R) R=1
+release thm riemann_integral_constant(one,0,1,1)
+integral(one,0,1)=1
