@@ -4,10 +4,126 @@ use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::{
 };
 use crate::execute::{ExecHaveFnEqualStmtResult, ExecHaveFnEqualStmtSuccessResult};
 use crate::prelude::*;
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::{
+    EqualitySearchProofByObjectDefinition,
+    by_fn_application::{
+        EqualitySearchProofByFnApplicationObjectDefinition,
+        normalize_function_body::{AnonymousFunctionBodyExpansionProof, FunctionBodyExpansionProof},
+    },
+};
 
 const LINE: &str = "have fn line(a, b, c R: a != 0 or b != 0) power_set(cart(R, R)) = {p cart(R, R): a * p(1) + b * p(2) + c = 0}\n";
 const GUARDED_SLICE: &str =
     "have fn constrained_slice(a R) power_set(R) = {x R: x != 0, a / x = a / x}\n";
+const SET_RETURN_BETA: &str =
+    "have fn cut(a R) power_set(R) = {x R: x = a}\nhave a R\ncut(a) = {y R: y = a}\n";
+
+fn set_return_beta(statement: &mut ExecStmtResult) -> &mut AnonymousFunctionBodyExpansionProof {
+    let proof = super::equality_proof_mut(&mut super::fact_statement_mut(statement).verify_result);
+    let EqualFactSearchedProof::ByObjectDefinition(
+        EqualitySearchProofByObjectDefinition::ByFnApplication(
+            EqualitySearchProofByFnApplicationObjectDefinition::HaveFnEqual(proof),
+        ),
+    ) = &mut proof.searched_proof
+    else {
+        panic!("actual set-valued function expansion")
+    };
+    let [FunctionBodyExpansionProof::Anonymous(expansion)] =
+        &mut proof.normalization.expansions[..]
+    else {
+        panic!("one captured beta substitution")
+    };
+    expansion
+}
+
+#[test]
+fn set_builder_beta_replays_outer_parameter_substitution_and_bound_renaming() {
+    let (mut result, compiler) = super::execute(SET_RETURN_BETA);
+    set_return_beta(&mut result.statement_results[2]);
+    compiler
+        .compile_run(&result, "set_return_beta")
+        .expect("replay the recorded set-valued beta step, then the alpha-equal residual");
+}
+
+#[test]
+fn set_builder_beta_rejects_changed_captured_carrier_body_and_binder() {
+    for change in ["carrier", "missing_clause", "argument", "binder"] {
+        let (mut result, compiler) = super::execute(SET_RETURN_BETA);
+        let step = set_return_beta(&mut result.statement_results[2]);
+        let Obj::FnObj(call) = &step.application else {
+            panic!("actual call")
+        };
+        let Obj::Identifier(IdentifierObj::Plain { id, .. }) = call.body[0][0].as_ref() else {
+            panic!("original caller parameter")
+        };
+        let wrong_binder = *id;
+        let Obj::SetFormer(SetFormer::SetBuilder(set)) = &mut step.expanded_body else {
+            panic!("original expanded set")
+        };
+        match change {
+            "carrier" => set.param_set = Box::new(Obj::StandardSet(StandardSet::C)),
+            "missing_clause" => set.facts.clear(),
+            "binder" => set.param_binding.id = wrong_binder,
+            "argument" => {
+                let QuantifierFreeFact::AtomicFact(AtomicFact::EqualFact(fact)) = &mut set.facts[0]
+                else {
+                    panic!("original equality predicate")
+                };
+                fact.right = super::number_object("7");
+            }
+            _ => unreachable!(),
+        }
+        step.continued_body = step.expanded_body.clone();
+        let error = compiler
+            .compile_run(&result, "changed_set_beta")
+            .unwrap_err();
+        assert_eq!(error.route, "FunctionDefinition/Substitution", "{change}");
+    }
+}
+
+#[test]
+fn set_builder_alpha_rejects_changed_carrier_predicate_and_free_parameter() {
+    use crate::compile_to_lean::source_position::{SourceOwner, SourcePosition};
+    let (result, compiler) = super::execute(SET_RETURN_BETA);
+    let success =
+        super::equality_proof(&super::fact_statement(&result.statement_results[2]).verify_result);
+    let EqualFactSearchedProof::ByObjectDefinition(
+        EqualitySearchProofByObjectDefinition::ByFnApplication(
+            EqualitySearchProofByFnApplicationObjectDefinition::HaveFnEqual(expansion),
+        ),
+    ) = &success.searched_proof
+    else {
+        panic!("actual beta evidence")
+    };
+    let residual = super::equality_proof(&expansion.residual_equal);
+    let EqualFactSearchedProof::ByTheyAreTheSame(identity) = &residual.searched_proof else {
+        panic!("actual alpha evidence")
+    };
+    let position = SourcePosition::new(None, SourceOwner::Run(&result), 2);
+    for change in ["carrier", "predicate", "free_parameter", "family"] {
+        let mut wrong = residual.fact.right.clone();
+        let Obj::SetFormer(SetFormer::SetBuilder(set)) = &mut wrong else {
+            panic!("actual set endpoint")
+        };
+        match change {
+            "carrier" => set.param_set = Box::new(Obj::StandardSet(StandardSet::C)),
+            "predicate" => set.facts.clear(),
+            "free_parameter" => {
+                let QuantifierFreeFact::AtomicFact(AtomicFact::EqualFact(fact)) = &mut set.facts[0]
+                else {
+                    panic!("equality clause")
+                };
+                fact.right = Obj::Identifier(IdentifierObj::from_bound_name(&set.param_binding));
+            }
+            "family" => wrong = super::number_object("1"),
+            _ => unreachable!(),
+        }
+        let error = compiler
+            .compile_identity(&residual.fact.left, &wrong, identity, &position)
+            .expect_err("bound renaming never changes the carrier, predicate or free variable");
+        assert_eq!(error.route, "Equality/SetBuilderAlphaSubject", "{change}");
+    }
+}
 
 fn function(statement: &mut ExecStmtResult) -> &mut ExecHaveFnEqualStmtSuccessResult {
     match statement {

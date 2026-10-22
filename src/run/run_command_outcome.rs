@@ -185,6 +185,21 @@ impl RunLitexCodeResult {
         ));
     }
 
+    /// Fill `normal_json` with the initial batch plus later REPL turns.
+    /// Does not change `success` / process exit; the snapshot `run_result`
+    /// follows the merged statements.
+    pub fn attach_normal_json_with_repl_turns(
+        &mut self,
+        runtime: &crate::runtime::Runtime,
+        turns: &[RunLitexCodeResult],
+        target: &str,
+        path: Option<&std::path::Path>,
+    ) {
+        self.normal_json = Some(crate::json_output::emit_run_normal_with_turns(
+            self, turns, runtime, target, path,
+        ));
+    }
+
     /// Preserve the batch's already-rendered citations after a REPL abort has
     /// discarded the live environment. Only the run envelope changes.
     pub fn attach_session_error(

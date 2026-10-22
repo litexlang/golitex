@@ -41,6 +41,42 @@ fn output_detail_normal_is_default_label() {
 }
 
 #[test]
+fn repl_turn_envelope_keeps_objects_and_error_category() {
+    let mut runtime = runtime_with_file_env();
+    assert!(runtime.run_litex_code("have a R = 2").unwrap().success);
+
+    let accepted = runtime.run_litex_code("a + 1 = 3").unwrap();
+    assert!(accepted.success);
+    let accepted_json = super::project_run_normal(&accepted, &runtime, "repl", None);
+    assert_eq!(object_field(&accepted_json, "target").as_str(), Ok("repl"));
+    assert_eq!(
+        object_field(&accepted_json, "run_result").as_str(),
+        Ok("success")
+    );
+    assert!(object_field(&accepted_json, "errors")
+        .as_array()
+        .unwrap()
+        .is_empty());
+    assert!(!accepted_json.stringify().contains("\"trace\""));
+
+    let rejected = runtime.run_litex_code("a = 3").unwrap();
+    assert!(!rejected.success);
+    let rejected_json = super::project_run_normal(&rejected, &runtime, "repl", None);
+    assert_eq!(object_field(&rejected_json, "target").as_str(), Ok("repl"));
+    assert_eq!(
+        object_field(&rejected_json, "run_result").as_str(),
+        Ok("failure")
+    );
+    let errors = object_field(&rejected_json, "errors").as_array().unwrap();
+    assert_eq!(errors.len(), 1);
+    assert_eq!(
+        object_field(&errors[0], "category").as_str(),
+        Ok("proof_search")
+    );
+    assert!(!rejected_json.stringify().contains("\"trace\""));
+}
+
+#[test]
 fn concise_run_feedback_keeps_full_verification_available_in_detailed() {
     let mut runtime = runtime_with_file_env();
     let run = runtime

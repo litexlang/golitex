@@ -1,0 +1,4 @@
+# Expand a set-valued function while preserving its bound set variable.
+have fn cut(a R) power_set(R) = {x R: x = a}
+have a R
+cut(a) = {y R: y = a}

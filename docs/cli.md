@@ -38,14 +38,16 @@ litex
 The REPL mounts `cwd/litex.config` when that file exists (otherwise an empty
 project), then accepts interactive blocks. A single line without a trailing
 colon runs immediately; finish an indented block with a blank line. Use
-`exit`, `quit`, `:quit`, or end-of-input to exit. Successful blocks print
-`success`. A failed verification prints Normal JSON with the original
-statement and failure reason, then accepts the next block. Hard session
-errors stop the REPL and are reported once. Parse/tokenizer errors reject the
-current submission and return to the prompt, retaining earlier accepted context.
-Every interactive submission has its own verdict. Ordinary rejections do not
-change the initial batch snapshot printed after `-session` exits; a hard error
-still marks that snapshot terminated. Interactive input errors refer to `<repl>`.
+`exit`, `quit`, `:quit`, or end-of-input to exit. Every accepted or rejected
+block prints Normal run JSON on stdout with `target: "repl"`; prompts and the
+banner go to stderr. A failed verification keeps the Session open, then accepts
+the next block. Hard session errors stop the REPL and are reported once.
+Parse/tokenizer errors reject the current submission and return to the prompt,
+retaining earlier accepted context. Every interactive submission has its own
+verdict. The final JSON printed after `-session` exits merges the initial batch
+with every later REPL turn, so a rejected turn can make that snapshot
+`"failure"`; a hard error also marks it terminated. Interactive input errors
+refer to `<repl>`.
 
 Parse errors include the original source line. When the parser knows the exact
 token position, the diagnostic includes a one-based character column and a
@@ -162,8 +164,8 @@ semantics. Details: [`src/extract_executable_code/README.md`](../src/extract_exe
 Source and path operands must be the next argv item and must be nonempty.
 Both `litex -e '-2 < 0'` and `litex -extractpython '-2 < 0'` are valid.
 All argv items must be valid UTF-8; invalid bytes produce a launch error with
-exit code `2`. `-lang` selects JSON keys and explanations; usage text, REPL
-prompts and `success` feedback remain English.
+exit code `2`. `-lang` selects JSON keys and explanations; usage text, the REPL
+banner and `litex>` / `...` prompts remain English.
 
 Launch and mount details live in
 [`src/run/README.md`](../src/run/README.md) and
@@ -230,18 +232,22 @@ Invalid command-line shapes still produce text
 on stderr with exit code `2`, because no command was selected. Extraction
 failures produce a failed artifact document with `error`. Success and failure
 artifacts share `format`, `target`, `path`, `output_path`, and `language`, and
-their field names follow `-lang`. A successful `-session` enters the text REPL
-before the batch JSON is printed, so its stdout is not one standalone JSON value.
-The projection
+their field names follow `-lang`. A successful `-session` first emits one Normal run JSON per REPL turn, then one
+final Normal run JSON that merges the initial batch with those turns; stdout
+contains only JSON documents, never prompts or banners. The projection
 is defined in [`src/json_output/README.md`](../src/json_output/README.md).
 It does **not** dump the full verify/exec IR; that tree remains available for
 the Rust Detailed projection and other tooling.
 
 Recoverable input errors are reported on stdout in `errors`, including the
 original input and structured `source_location` (`path`, one-based `line`, and
-one-based `column` when known). Captured REPL runs use the same concise JSON
-feedback without an additional stderr error report. Hard session errors keep
-their command-specific termination diagnostic.
+one-based `column` when known). Interactive REPL turns (bare `litex` and `-session` continuations) emit the
+same Normal run envelope for both accepted and rejected submissions, with
+`target: "repl"` and `path: null`. Stdout is JSON-only: the REPL banner always
+goes to stderr, and human prompts do so when stdin and stderr are TTYs. After a successful `-session`
+exits the REPL, Litex also prints one final Normal JSON that merges the initial
+batch with every later REPL turn. Hard session errors keep their command-specific
+termination diagnostic.
 When a downstream reader closes stdout, Litex preserves the command's exit
 status without panicking. Other output I/O errors are reported normally.
 
@@ -270,7 +276,7 @@ status without panicking. Other output I/O errors are reported normally.
 | `path` | `null` for `-e`; requested path for `-f` / `-r` |
 | `detail` | `"normal"` for the default CLI projection |
 | `language` | Selected locale from `-lang`: `"en"`, `"zh"`, `"zh-hant"`, `"fr"`, `"ru"`, `"es"`, `"ar"`, `"ja"`, `"ko"`, or `"vi"` (default `"en"`); non-English output localizes known keys too |
-| `statement_results` | `-e` / target `-f` statements in order; the current `-r` summary leaves this array empty |
+| `statement_results` | `-e` / target `-f` statements in order; a non-session `-r` summary leaves this array empty, while the final `-r -session` snapshot merges all export files plus REPL turns |
 | `errors` | Concise failures from this submission, in statement order; zero-based `statement_index` refers to `statement_results` |
 | `session_terminated` | Boolean hard-stop indicator; ordinary proof and parse/tokenizer rejection leave it false |
 | `termination` | `null`, or `{ "phase": ..., "message": ... }` for a hard stop |
@@ -283,9 +289,11 @@ statement that causes a hard termination is a failed run and exits `1`.
 For machine consumers, use `-lang en`, require exit `0`, parse the JSON, and
 require `kind == "run"`, `run_result == "success"`,
 `session_terminated == false`, and `termination == null`.
-The current envelope has neither `success` nor `ok`. `-r` computes its overall
-verdict from its files but does not serialize their statement arrays into this summary.
-Use `-f` on a target file when you need its statement explanations.
+The current envelope has neither `success` nor `ok`. A non-session `-r`
+computes its overall verdict from its files but does not serialize their
+statement arrays into this summary. Use `-f` on a target file when you need its
+statement explanations; `-r -session` uses the final full-session snapshot
+described above instead.
 
 `statement` preserves the complete parsed source in readable form, including
 theorem/axiom names, theorem arguments and selected conclusions. Computed or
@@ -311,8 +319,9 @@ visualizations without a separate graph output format.
 Normal JSON does not contain every verification child or FactId citation, so
 it cannot guarantee reconstruction of the complete dependency graph. The Rust
 Detailed projection exposes more typed proof evidence; it is an API, not a CLI
-flag. The `-r` Normal summary has an empty `statement_results` array; use `-f`
-for the statement output of each target file. A failed file's successful
+flag. The non-session `-r` Normal summary has an empty `statement_results`
+array; use `-f` for the statement output of each target file. Only the final
+`-r -session` snapshot expands all export files and later REPL turns. A failed file's successful
 statement entries do not mean the file was published as a completed export.
 
 ### Chinese output
@@ -493,13 +502,14 @@ litex -session -f chapter.lit
 ```
 
 For a short comparison, start `litex -lang en -session -e 'have a R = 2'`,
-then enter each statement separately. The failure JSON is abbreviated:
+then enter each statement separately. Every turn emits the same Normal run
+JSON (`target: "repl"`). Soft-failure JSON is abbreviated:
 
 ```text
 litex> a = 3
-{"run_result": "failure", ..., "session_terminated": false, "termination": null}
+{"run_result": "failure", "target": "repl", "errors": [{"phase": "...", "category": "...", ...}], "session_terminated": false, "termination": null}
 litex> a + 1 = 3
-success
+{"run_result": "success", "target": "repl", "statement_results": [...], "errors": [], "session_terminated": false, "termination": null}
 ```
 
 `a = 2` survives the ordinary rejection. Two separate `-e` commands cannot
@@ -683,9 +693,9 @@ Parsing recovery uses the same context:
 litex> have fn incomplete_function(x R) R = x +
 {"run_result": "failure", "errors": [{"phase": "parse", "message": "expected object", "...": "..."}], "session_terminated": false}
 litex> a = 2
-success
+{"run_result": "success", "target": "repl", "statement_results": [...], "errors": [], "session_terminated": false}
 litex> have fn incomplete_function(x R) R = x + 1
-success
+{"run_result": "success", "target": "repl", "statement_results": [...], "errors": [], "session_terminated": false}
 ```
 
 The JSON above is abbreviated. Parsing stops the rest of the current submitted
@@ -693,7 +703,8 @@ block, while tokenization failure prevents that whole block from executing.
 Neither prevents the next REPL submission. A rejected declaration reserves no
 name. `-session` still requires its initial batch input to pass before entering
 the REPL. A normal `exit` returns 0; earlier rejected attempts remain in their
-own feedback and do not taint later verdicts or the initial batch snapshot.
+own turn feedback, while the final `-session` snapshot records them alongside
+the accepted statements.
 
 ### One persistent Session
 
@@ -706,16 +717,16 @@ Then, in that same process:
 
 ```text
 litex> a = 3
-{"run_result": "failure", "session_terminated": false}
+{"run_result": "failure", "target": "repl", "errors": [{"category": "...", ...}], "session_terminated": false}
 litex> a + 1 = 3
-success
+{"run_result": "success", "target": "repl", "errors": [], "session_terminated": false}
 ```
 
 Record `a = 2` once. Rejecting `a = 3` leaves that fact available for checking
-`a + 1 = 3`. Read `run_result`, `session_terminated`, and `termination` from the
-rejection JSON (the excerpt above shows selected fields only). While
-`session_terminated` is false and another `litex>` prompt appears, repair in
-place.
+`a + 1 = 3`. Read `run_result`, `errors`, `session_terminated`, and
+`termination` from the turn JSON (the excerpt above shows selected fields
+only). While `session_terminated` is false and another `litex>` prompt
+appears, repair in place.
 
 ### A fresh process for every attempt
 
@@ -740,9 +751,12 @@ final verification.
    an accepted prefix). Keep that process open across ordinary soft failures.
 2. Submit one top-level statement at a time; finish an indented block with a
    blank line. Consume the response before sending the next candidate.
-3. On plain-text `success`, journal the accepted source outside the process.
-   On soft rejection (`statement_result: "rejected"`, `session_terminated: false`),
-   keep the Session and repair only the failed statement.
+3. Parse each turn as one Normal run JSON object (`target: "repl"`). There is
+   no top-level `trace` string. On `run_result: "success"`, journal the accepted
+   source outside the process. On soft rejection (`statement_result: "rejected"`,
+   `session_terminated: false`), read `errors` (`phase`, `category`, …), keep the
+   Session, and repair only the failed statement. Independent `-e` / `-f` runs
+   are batch gates, not a Session substitute.
 4. At checkpoints, run a separate clean `litex -f` / `-e` gate on the saved
    file while the authoring Session can stay open. If the process stops or its
    loaded module context must change, restart and replay the journaled source.

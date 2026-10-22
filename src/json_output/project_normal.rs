@@ -41,7 +41,7 @@ use crate::execute::execute_fact_stmt::verify_not_forall_fact::{
 use crate::execute::execute_fact_stmt::verify_or_fact::{VerifyOrFactFailed, VerifyOrFactResult};
 use crate::execute::execute_fact_stmt::VerifyFactResult;
 use crate::knowledge_base::JsonValue;
-use crate::run::run_command_outcome::RunLitexCodeResult;
+use crate::run::run_command_outcome::{RunFileResult, RunLitexCodeResult};
 use crate::runtime::Runtime;
 use std::path::Path;
 
@@ -101,9 +101,55 @@ pub fn project_run_normal(
     target: &str,
     path: Option<&Path>,
 ) -> JsonValue {
+    project_run_normal_with_turns(run, &[], runtime, target, path)
+}
+
+/// Batch plus later REPL turns as one Normal envelope (full Session snapshot).
+pub fn project_run_normal_with_turns(
+    run: &RunLitexCodeResult,
+    turns: &[RunLitexCodeResult],
+    runtime: &Runtime,
+    target: &str,
+    path: Option<&Path>,
+) -> JsonValue {
+    let mut statements = project_run_statements_normal(run, runtime);
+    for turn in turns {
+        statements.extend(project_run_statements_normal(turn, runtime));
+    }
+    project_run_normal_envelope(run, statements, !turns.is_empty(), runtime, target, path)
+}
+
+/// Repository batch (all export files) plus later REPL turns as one Normal
+/// envelope. Non-session `-r` keeps its compact empty-statement summary; this
+/// projection is only used for the final Session snapshot.
+pub fn project_run_normal_with_files_and_turns(
+    run: &RunLitexCodeResult,
+    files: &[RunFileResult],
+    turns: &[RunLitexCodeResult],
+    runtime: &Runtime,
+    target: &str,
+    path: Option<&Path>,
+) -> JsonValue {
+    let mut statements = Vec::new();
+    for file in files {
+        statements.extend(project_run_statements_normal(&file.run, runtime));
+    }
+    for turn in turns {
+        statements.extend(project_run_statements_normal(turn, runtime));
+    }
+    project_run_normal_envelope(run, statements, !turns.is_empty(), runtime, target, path)
+}
+
+fn project_run_normal_envelope(
+    run: &RunLitexCodeResult,
+    statements: Vec<JsonValue>,
+    merged_repl_turns: bool,
+    runtime: &Runtime,
+    target: &str,
+    path: Option<&Path>,
+) -> JsonValue {
     let lang = output_language(runtime);
-    let (statement_results, errors) =
-        super::feedback::summarize_statements(project_run_statements_normal(run, runtime), lang);
+    let (statement_results, errors) = super::feedback::summarize_statements(statements, lang);
     let path_value = match path {
         Some(p) => string(p.display().to_string()),
         None => JsonValue::Null,
@@ -112,11 +158,19 @@ pub fn project_run_normal(
         None => JsonValue::Null,
         Some(err) => session_termination_value(err, lang),
     };
+    // Only a Session snapshot with REPL turns derives its verdict from the
+    // merged statements. Ordinary batches keep `run.success`, including the
+    // empty-statement `-r` summary whose verdict comes from its files.
+    let snapshot_success = if merged_repl_turns {
+        run.session_error.is_none() && errors.is_empty()
+    } else {
+        run.success
+    };
     object(
         lang,
         vec![
             ("kind", string("run")),
-            ("run_result", run_result_value(run.success)),
+            ("run_result", run_result_value(snapshot_success)),
             ("target", string(target)),
             ("path", path_value),
             ("detail", string(OutputDetail::Normal.as_str())),

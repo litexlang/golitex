@@ -1,0 +1,20 @@
+# Check: target/release/litex -lang en -strict -f examples/stmt_nodes/release_and_expand/builtin_thm/antiderivative_from_definition.lit
+# Explicit theorem contract: antiderivative_from_definition
+have fn square(x R) R=x^2
+
+have fn twice(x R) R=2*x
+
+have fn identity(x R) R=x
+
+claim:
+    ? forall x R:
+        $has_derivative_at(square,x,twice(x))
+    release thm fn_derivative_at_real_interior(x)
+    release thm fn_derivative_at_identity(identity,x)
+    release thm fn_derivative_at_multiply(identity,identity,square,x,1,1)
+    identity(x)=x
+    twice(x)=2*x
+    1*identity(x)+identity(x)*1=twice(x)
+    $has_derivative_at(square,x,twice(x))
+
+release thm antiderivative_from_definition(square,twice,R)

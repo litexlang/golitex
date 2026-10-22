@@ -17,6 +17,19 @@ universe u v w x
 
 namespace Litex
 
+open Lean Meta Elab Tactic in
+/-- Reuse one already generated proof as a kernel-checked auxiliary theorem.
+Local definitions are expanded when closing the theorem, preserving object
+values and their WD evidence. This performs no proof search. -/
+elab "litex_checked_step" " => " body:tacticSeq : tactic => withMainContext do
+  let goal ← getMainGoal
+  let goals ← Tactic.run goal (evalTactic body)
+  unless goals.isEmpty do
+    throwError "The recorded Litex step left open goals."
+  let value ← instantiateMVars (mkMVar goal)
+  let checked ← mkAuxTheorem (← goal.getType) value (zetaDelta := true)
+  goal.assign checked
+
 open Lean Elab Tactic Lean.Parser.Tactic in
 /-- Check only the already selected rational-normalization adapter. An explicit
 discharger supplies the source's certified denominator evidence. The fixed

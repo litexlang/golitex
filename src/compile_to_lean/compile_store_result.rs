@@ -2,8 +2,7 @@ use crate::compile_to_lean::helper::*;
 use crate::compile_to_lean::source_position::{SourceOwner, SourcePosition};
 use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
 use crate::prelude::*;
-use crate::store_fact_and_infer::InferInFactResult;
-use crate::store_fact_and_infer::{InferAtomicFactResult, InferResult};
+use crate::store_fact_and_infer::InferResult;
 
 impl LitexToLeanCompiler {
     pub(in crate::compile_to_lean) fn compile_stored_inferences(
@@ -56,8 +55,7 @@ impl LitexToLeanCompiler {
         member: &(String, String),
         position: &SourcePosition<'_>,
     ) -> Result<Vec<String>, LeanCompileError> {
-        let mut declarations =
-            self.compile_set_builder_parameter_inferences(store, member_fact, member, position)?;
+        let mut declarations = Vec::new();
         if let Some(InferResult::AtomicFact(infer)) = &store.infer {
             let current = SourcePosition::new(
                 Some(position),
@@ -70,32 +68,6 @@ impl LitexToLeanCompiler {
                 member,
                 &current,
             )?);
-        }
-        Ok(declarations)
-    }
-
-    pub(in crate::compile_to_lean) fn compile_set_builder_parameter_inferences(
-        &self,
-        store: &StoreFactAndInferResult,
-        member_fact: &Fact,
-        member: &(String, String),
-        position: &SourcePosition<'_>,
-    ) -> Result<Vec<String>, LeanCompileError> {
-        let rules = match &store.infer {
-            Some(InferResult::AtomicFact(InferAtomicFactResult::InFact(rules))) => rules,
-            _ => return Ok(Vec::new()),
-        };
-        let mut declarations = Vec::new();
-        for rule in rules {
-            if let InferInFactResult::SetBuilder(proof) = rule {
-                declarations.extend(self.compile_set_builder_projections(
-                    store,
-                    proof,
-                    member_fact,
-                    member,
-                    position,
-                )?);
-            }
         }
         Ok(declarations)
     }

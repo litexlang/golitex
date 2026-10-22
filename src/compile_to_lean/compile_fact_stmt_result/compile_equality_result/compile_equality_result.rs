@@ -158,9 +158,9 @@ impl LitexToLeanCompiler {
                 // a second copy of the complete object and its certificates.
                 "(show @Eq M.Value _ _ from Eq.refl _)".to_string()
             }
-            EqualFactSearchedProof::ByTheyAreTheSame(TheyAreTheSameProof::SameFreeParamShape(
-                _,
-            )) => return Err(LeanCompileError::unsupported("Equality/SameFreeParamShape")),
+            EqualFactSearchedProof::ByTheyAreTheSame(
+                proof @ TheyAreTheSameProof::SameFreeParamShape(_),
+            ) => self.compile_identity(&fact.left, &fact.right, proof, position)?,
             EqualFactSearchedProof::ByClosedCalculation(proof) => {
                 self.compile_closed_equality(fact, proof, position)?
             }

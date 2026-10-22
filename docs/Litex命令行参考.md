@@ -32,7 +32,7 @@ Markdown 源码：https://github.com/litexlang/golitex/blob/main/docs/cli.md
 litex
 ```
 
-REPL 在 `cwd/litex.config` 存在时挂载该配置（否则使用空项目），然后接收交互输入块。没有末尾冒号的单行会立即运行；缩进块用空行结束。输入 `exit`、`quit`、`:quit` 或结束输入即可退出。成功的块打印 `success`。验证失败会打印包含原始语句和失败原因的 Normal JSON，然后接收下一个块。会话硬错误会停止 REPL，并报告一次。在续接的 `-session` 中，任何交互语句被拒绝都会使最终 `run_result` 为 `failure`，但 `session_terminated` 仍为 false；硬错误才会加入 `termination`。交互式解析/分词错误引用 `<repl>`。
+REPL 在 `cwd/litex.config` 存在时挂载该配置（否则使用空项目），然后接收交互输入块。没有末尾冒号的单行会立即运行；缩进块用空行结束。输入 `exit`、`quit`、`:quit` 或结束输入即可退出。stdout 只输出 JSON：每一轮（接受或拒绝）都打印同一份 Normal run JSON（`target: "repl"`，`path: null`）；REPL 横幅总是写到 stderr，人机提示符在 stdin 与 stderr 都是 TTY 时写到 stderr。接受轮含 `statement_results` 的证明/存储字段，拒绝轮在 `errors` 中给出简洁摘要（含 `category` 等）。`-session` 退出 REPL 后还会再打印一份汇总 JSON，合并初始批与之后每一轮。会话硬错误会停止 REPL，并报告一次。交互式解析/分词错误引用 `<repl>`。
 
 运行 `.lit` 文件：
 
@@ -108,7 +108,7 @@ litex -f examples/claim_obtain_scope.lit
 
 `-extractpython` / `-extractc` 不接受 `-session` 或 `-strict`。使用 `-f` 时，源码必须包含成对的 `# [-extract]` / `# [end of -extract]` 标记；只有这些块会被验证和翻译。内联源码和 `-r` 对整个输入处理。详见 [`src/extract_executable_code/README.md`](../src/extract_executable_code/README.md)。
 
-源码与路径操作数必须是下一项 argv，且不能为空。`litex -e '-2 < 0'` 和 `litex -extractpython '-2 < 0'` 都合法。所有 argv 项必须是合法 UTF-8；无效字节产生启动错误，以 `2` 退出。`-lang` 选择 JSON 键与解释语言；用法文本、REPL 提示符与 `success` 反馈仍为英文。
+源码与路径操作数必须是下一项 argv，且不能为空。`litex -e '-2 < 0'` 和 `litex -extractpython '-2 < 0'` 都合法。所有 argv 项必须是合法 UTF-8；无效字节产生启动错误，以 `2` 退出。`-lang` 选择 JSON 键与解释语言；用法文本与 REPL 提示符仍为英文。
 
 启动与挂载细节见 [`src/run/README.md`](../src/run/README.md) 和 [`src/module_manager/README.md`](../src/module_manager/README.md)。
 
@@ -140,7 +140,7 @@ litex -f examples/claim_obtain_scope.lit
 
 ## JSON 输出契约
 
-`-e`、`-f` 和 `-r` 的批量结果在标准输出上产生一份 Normal `run` 文档。分词、解析和早期 I/O 失败也产生 `session_terminated: true` 并带结构化 `termination` 的失败 Normal 文档。无效命令行形式仍在标准错误上产生文本，并以 `2` 退出，因为没有选定命令。提取失败产生带 `error` 的失败产物文档。成功与失败产物共用 `format`、`target`、`path`、`output_path` 和 `language`，字段名遵循 `-lang`。`-session` 在打印批量 JSON 前进入文本 REPL，因此它的标准输出不是一个独立 JSON 值。
+`-e`、`-f` 和 `-r` 的批量结果在标准输出上产生一份 Normal `run` 文档。分词、解析和早期 I/O 失败也产生 `session_terminated: true` 并带结构化 `termination` 的失败 Normal 文档。无效命令行形式仍在标准错误上产生文本，并以 `2` 退出，因为没有选定命令。提取失败产生带 `error` 的失败产物文档。成功与失败产物共用 `format`、`target`、`path`、`output_path` 和 `language`，字段名遵循 `-lang`。成功的 `-session` 先为每一轮 REPL 输出一份 Normal run JSON，退出时再输出一份汇总 JSON，合并初始批与之后每一轮；标准输出只含 JSON 文档，不含提示符或横幅。
 
 投影定义见 [`src/json_output/README.md`](../src/json_output/README.md)。它**不会**转储完整 verify/exec IR；该树仍可供 Rust Detailed 投影与其他工具使用。下游读取方关闭标准输出时，Litex 保留命令的退出状态，不会 panic。其他输出 I/O 错误会正常报告。
 
@@ -170,11 +170,11 @@ litex -f examples/claim_obtain_scope.lit
 | `path` | `-e` 为 `null`；`-f` / `-r` 为请求的路径 |
 | `detail` | 默认 CLI 投影为 `"normal"` |
 | `language` | `-lang` 选定的语言：`"en"`、`"zh"`、`"zh-hant"`、`"fr"`、`"ru"`、`"es"`、`"ar"`、`"ja"`、`"ko"` 或 `"vi"`（默认 `"en"`）；非英文输出也会本地化已知键 |
-| `statement_results` | 按顺序排列的 `-e` / 目标 `-f` 语句；当前 `-r` 摘要让数组保持为空 |
+| `statement_results` | 按顺序排列的 `-e` / 目标 `-f` 语句；非 `-session` 的 `-r` 摘要让数组保持为空，而最终 `-r -session` 快照会合并全部导出文件与 REPL 轮次 |
 | `session_terminated` | 是否因硬错误终止；普通证明拒绝仍为 false |
 | `termination` | `null`，或硬终止的 `{ "phase": ..., "message": ... }` |
 
-程序应读取 `run_result`、`statement_results`、`session_terminated` 和 `termination`。退出状态 `0` 表示批量成功；`1` 表示运行失败或解析/I/O 错误；`2` 表示返回给启动器的无效参数错误。机器消费者应使用 `-lang en`，要求退出码为 `0`，解析 JSON 并要求 `kind == "run"`、`run_result == "success"`、`session_terminated == false`、`termination == null`。当前封装没有 `success` 或 `ok` 字段。`-r` 根据各文件计算整体成功，但不把它们的语句数组序列化进摘要。需要目标文件的语句解释时使用 `-f`。
+程序应读取 `run_result`、`statement_results`、`session_terminated` 和 `termination`。退出状态 `0` 表示批量成功；`1` 表示运行失败或解析/I/O 错误；`2` 表示返回给启动器的无效参数错误。机器消费者应使用 `-lang en`，要求退出码为 `0`，解析 JSON 并要求 `kind == "run"`、`run_result == "success"`、`session_terminated == false`、`termination == null`。当前封装没有 `success` 或 `ok` 字段。非 `-session` 的 `-r` 根据各文件计算整体成功，但不把它们的语句数组序列化进摘要。需要目标文件的语句解释时使用 `-f`；`-r -session` 则使用上述最终整场快照。
 
 `statement` 以可读形式保留完整的已解析源码，包括定理/公理名称、定理参数和选定结论。计算或发布的事实放在 `stores`。对于 `1 / 0 = 0`，失败语句仍为 `1 / 0 = 0`；`why_failed.phase` 为 `well_defined`，消息说明无法证明良定义性。这是证明失败，不是在断言每个未证明的表达式都在数学上无定义。
 
@@ -190,7 +190,7 @@ litex -lang en -f example.lit > result.json
 
 利用 `statement_results` 中的成功项，从 `statement` 读取声明和定理调用，从 `stores` 与 `infers` 读取已接受的数学事实。`proof_method` 提供摘要，部分验证路线还带可读引用。这些字段支持自定义索引和可视化，无需单独的图输出格式。
 
-Normal JSON 不包含每个验证子节点或 FactId 引用，因此不能保证重建完整依赖图。Rust Detailed 投影暴露更多带类型的证明证据；它是 API，而不是 CLI 选项。`-r` 的 Normal 摘要中 `statement_results` 为空；每个目标文件的语句输出应使用 `-f`。失败文件中的成功语句项，不代表该文件已作为完整导出发布。
+Normal JSON 不包含每个验证子节点或 FactId 引用，因此不能保证重建完整依赖图。Rust Detailed 投影暴露更多带类型的证明证据；它是 API，而不是 CLI 选项。非 `-session` 的 `-r` Normal 摘要中 `statement_results` 为空；每个目标文件的语句输出应使用 `-f`。只有最终 `-r -session` 快照会展开全部导出文件与之后的 REPL 轮次。失败文件中的成功语句项，不代表该文件已作为完整导出发布。
 
 <a id="chinese-output"></a>
 
@@ -361,9 +361,9 @@ litex -session -f chapter.lit
 
 ```text
 litex> a = 3
-{"run_result": "failure", ..., "session_terminated": false, "termination": null}
+{"run_result": "failure", "target": "repl", "errors": [{"phase": "...", "category": "...", ...}], "session_terminated": false, "termination": null}
 litex> a + 1 = 3
-success
+{"run_result": "success", "target": "repl", "statement_results": [...], "errors": [], "session_terminated": false, "termination": null}
 ```
 
 普通拒绝后，`a = 2` 仍在。两个独立的 `-e` 命令不能共享上下文：`litex -e 'have a R = 2'` 成功，但随后单独运行 `litex -e 'a + 1 = 3'` 会失败，因为新进程没有 `a` 的声明。干净的批量文件运行用于基线、连贯的阶段检查点和最终验收。硬错误可能停止 REPL；必要时重启并重放已接受源码。面向智能体的循环与更完整的对照，见 [如何把 Litex 接到你的 AI agent](#how-to-connect-litex-to-your-ai-agent) 和 [智能体指南](Litex智能体指南.md)。
@@ -459,12 +459,12 @@ litex -strict -lang en -session \
 
 ```text
 litex> a = 3
-{"run_result": "failure", "session_terminated": false}
+{"run_result": "failure", "target": "repl", "errors": [{"category": "...", ...}], "session_terminated": false}
 litex> a + 1 = 3
-success
+{"run_result": "success", "target": "repl", "errors": [], "session_terminated": false}
 ```
 
-`a = 2` 只记录一次。拒绝 `a = 3` 后，该事实仍可用于检查 `a + 1 = 3`。从拒绝 JSON 中读取 `run_result`、`session_terminated` 和 `termination`（上例只展示了部分字段）。只要 `session_terminated` 为 false 且再次出现 `litex>` 提示符，就在原地修复。
+`a = 2` 只记录一次。拒绝 `a = 3` 后，该事实仍可用于检查 `a + 1 = 3`。从本轮 JSON 中读取 `run_result`、`errors`、`session_terminated` 和 `termination`（上例只展示了部分字段）。只要 `session_terminated` 为 false 且再次出现 `litex>` 提示符，就在原地修复。
 
 ### 每次尝试都开新进程
 
@@ -484,7 +484,7 @@ a + 1 = 3'
 
 1. 启动 `litex -strict -lang en -session`（可选 `-e` / `-f` 加载已接受前缀）。在普通软失败期间保持该进程打开。
 2. 每次提交一条顶层语句；缩进块用空行结束。消费完本次响应后再发下一条候选。
-3. 看到纯文本 `success` 时，在进程外记录已接受源码。软拒绝（`statement_result: "rejected"`，`session_terminated: false`）时保留 Session，只修复失败语句。
+3. 将每一轮解析为同一份 Normal run JSON（`target: "repl"`）；没有顶层 `trace` 字符串。当 `run_result: "success"` 时，在进程外记录已接受源码。软拒绝（`statement_result: "rejected"`，`session_terminated: false`）时阅读 `errors`（`phase`、`category` 等），保留 Session，只修复失败语句。独立的 `-e` / `-f` 是批跑门禁，不能代替 Session。
 4. 在检查点，对已保存文件另跑干净的 `litex -f` / `-e` 门禁；书写 Session 可继续保持打开。若进程停止，或其已加载的模块上下文必须变更，则重启并重放已记录的源码。
 
 [官网 playground](https://litexlang.com) 是整份源码分开运行；它不能替代本地持久 Session。完整智能体工作流、重启边界与二次方代价说明见 [智能体指南](Litex智能体指南.md)。本页的 flag 形态与 JSON 字段仍是智能体应解析的契约。

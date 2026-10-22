@@ -147,6 +147,19 @@ fn inferred_conclusions_keep_their_seed_evidence_and_later_citation() {
     );
     assert!(result.success);
     let statements = result.document.field("statements").as_array().unwrap();
+    for definition in &statements[..2] {
+        assert!(
+            ids(definition.field("inferred_fact_ids")).is_empty(),
+            "prop checking internals are not outputs of the declaration"
+        );
+    }
+    for statement in statements {
+        assert!(
+            ids(statement.field("inferred_fact_ids"))
+                .is_subset(&ids(statement.field("produced_fact_ids"))),
+            "only actual published inference outputs belong under a statement"
+        );
+    }
     let inferred = ids(statements[3].field("inferred_fact_ids"));
     let citations = ids(statements[4].field("cited_fact_ids"));
     let id = inferred
@@ -154,6 +167,19 @@ fn inferred_conclusions_keep_their_seed_evidence_and_later_citation() {
         .next()
         .expect("later statement cites the actual inferred fact");
     let facts = result.document.field("facts").as_array().unwrap();
+    assert!(
+        facts
+            .iter()
+            .any(|fact| fact.field("text").as_str().unwrap() == "ro $in R"),
+        "internal verification evidence is retained, not deleted to hide the row"
+    );
+    assert!(
+        facts
+            .iter()
+            .any(|fact| inferred.contains(fact.field("id").as_str().unwrap())
+                && fact.field("text").as_str().unwrap() == "reading_value $in R"),
+        "real membership inference is preserved; filtering is by ownership, not text"
+    );
     let fact = facts
         .iter()
         .find(|fact| fact.field("id").as_str().unwrap() == id)
@@ -185,6 +211,60 @@ fn inferred_conclusions_keep_their_seed_evidence_and_later_citation() {
         "$reading_outer(reading_value)"
     );
     assert_eq!(inference.field("scope_id"), seed.field("scope_id"));
+    let origins = inference.field("conclusion_origins").as_array().unwrap();
+    let expansion = origins
+        .iter()
+        .find(|origin| origin.field("fact_id").as_str().unwrap() == id)
+        .unwrap();
+    assert_eq!(expansion.field("kind").as_str().unwrap(), "definition");
+    assert_eq!(
+        expansion.field("definition_statement_id"),
+        statements[1].field("id")
+    );
+    let definition_symbol = result
+        .document
+        .field("symbols")
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|symbol| symbol.field("id") == expansion.field("source_symbol_id"))
+        .unwrap();
+    assert_eq!(
+        definition_symbol.field("name").as_str().unwrap(),
+        "reading_outer"
+    );
+    assert_eq!(
+        definition_symbol.field("definition_statement_id"),
+        statements[1].field("id")
+    );
+    assert!(expansion
+        .field("rule_id")
+        .as_str()
+        .unwrap()
+        .ends_with("::ExpandDefinition"));
+    let membership = origins
+        .iter()
+        .find(|origin| {
+            facts.iter().any(|fact| {
+                fact.field("id") == origin.field("fact_id")
+                    && fact.field("text").as_str().unwrap() == "reading_value $in R"
+            })
+        })
+        .unwrap();
+    assert_eq!(
+        membership.field("kind").as_str().unwrap(),
+        "parameter_type",
+        "do not attribute the whole inference batch to definition expansion"
+    );
+    assert!(membership
+        .field("rule_id")
+        .as_str()
+        .unwrap()
+        .ends_with("::ParamTypes"));
+    assert_eq!(
+        membership.field("definition_statement_id"),
+        statements[1].field("id")
+    );
     assert!(
         reachable_evidence(&result.document, inference.field("evidence"))
             .contains("ExpandDefinition")

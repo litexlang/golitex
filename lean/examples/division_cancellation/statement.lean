@@ -13,7 +13,9 @@ theorem h_3 : ∀ {_Host_i1 : Type v1} [_rep_i1 : Litex.Representation M _Host_i
   (Litex.mul _wd_1_0 _wd_1_1 (by
     let _atomic_wd_1_0 := (Litex.div _value_i1 _wd_1_1 h_16 h_17 h_1)
     exact (Litex.divInC _value_i1 _wd_1_1 h_16 h_17 (_atomic_wd_1_0).wd.2.2)) h_17))
-  exact Litex.Same _object_w3 _value_i1
+  exact (by
+    let _equal_wd_1_0 := _object_w3
+    exact Litex.Same _equal_wd_1_0 _value_i1)
 ) :=
   (by
     intro _Host_i1 _rep_i1 _value_i1 h_16 _Host_i2 _rep_i2 _value_i2 h_17 h_1
@@ -22,13 +24,24 @@ theorem h_3 : ∀ {_Host_i1 : Type v1} [_rep_i1 : Litex.Representation M _Host_i
     (Litex.mul _wd_1_0 _wd_1_1 (by
       let _atomic_wd_1_0 := (Litex.div _value_i1 _wd_1_1 h_16 h_17 h_1)
       exact (Litex.divInC _value_i1 _wd_1_1 h_16 h_17 (_atomic_wd_1_0).wd.2.2)) h_17))
-    have h_2 : Litex.Same _object_w3 _value_i1 :=
+    have h_2 : (by
+      let _equal_wd_1_0 := _object_w3
+      exact Litex.Same _equal_wd_1_0 _value_i1) :=
       (by
-        let _quotient := (_object_w3).val.left
-        let _product := _object_w3
-        have _child : Litex.Same (Litex.div _value_i1 _value_i2 h_16 h_17 h_1) (Litex.div _value_i1 _value_i2 h_16 h_17 h_1) := (show @Eq M.Value _ _ from Eq.refl _)
-        have _conversion := Litex.sameDivIffSameMul _quotient.val.left _quotient.val.right _product.val.left _quotient.wd.1 _quotient.wd.2.1 _product.wd.1 _quotient.wd.2.2
-        exact ((_conversion.mp _child).symm))
+        litex_checked_step =>
+          exact (
+            (let _equal_wd_1_0 := _object_w3;
+            (show Litex.Same _equal_wd_1_0 _value_i1 from (by
+              let _quotient := (_equal_wd_1_0).val.left
+              let _product := _equal_wd_1_0
+              have _child : (by
+                let _equal_wd_2_0 := (Litex.div _value_i1 _value_i2 h_16 h_17 h_1)
+                let _equal_wd_2_1 := (Litex.div _value_i1 _value_i2 h_16 h_17 h_1)
+                exact Litex.Same _equal_wd_2_1 _equal_wd_2_1) := (show @Eq M.Value _ _ from Eq.refl _)
+              have _conversion := Litex.sameDivIffSameMul _quotient.val.left _quotient.val.right _product.val.left _quotient.wd.1 _quotient.wd.2.1 _product.wd.1 _quotient.wd.2.2
+              exact ((_conversion.mp _child).symm))))
+          )
+      )
     exact h_2
   )
 end LitexCompiled.file_lean_x2f_examples_x2f_division_x5f_cancellation_x2f_statement_x2e_lit

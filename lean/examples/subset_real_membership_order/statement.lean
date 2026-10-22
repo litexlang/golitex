@@ -11,7 +11,12 @@ theorem h_3 : ∀ {_Host_i1 : Type v1} [_rep_i1 : Litex.Representation M _Host_i
   (by
     intro _Host_i1 _rep_i1 _value_i1 h_5 _Host_i2 _rep_i2 _value_i2 h_6 h_1
     have h_2 : Litex.In _value_i2 (Litex.R (M := M)) :=
-      (h_1 (Litex.denote _value_i2) h_6)
+      (by
+        litex_checked_step =>
+          exact (
+            (h_1 (Litex.denote _value_i2) h_6)
+          )
+      )
     exact h_2
   )
 
@@ -19,7 +24,12 @@ theorem h_39 : ∀ {_Host_i4 : Type v4} [_rep_i4 : Litex.Representation M _Host_
   (by
     intro _Host_i4 _rep_i4 _value_i4 h_43 _Host_i5 _rep_i5 _value_i5 h_44 h_37
     have h_38 : Litex.Le _value_i5 _value_i5 :=
-      (Litex.leRefl _value_i5 (h_37 (Litex.denote _value_i5) h_44))
+      (by
+        litex_checked_step =>
+          exact (
+            (Litex.leRefl _value_i5 (h_37 (Litex.denote _value_i5) h_44))
+          )
+      )
     exact h_38
   )
 end LitexCompiled.file_lean_x2f_examples_x2f_subset_x5f_real_x5f_membership_x5f_order_x2f_statement_x2e_lit

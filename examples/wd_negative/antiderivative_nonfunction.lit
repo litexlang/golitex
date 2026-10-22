@@ -1,0 +1,5 @@
+# Check: target/release/litex -lang en -strict -f examples/wd_negative/antiderivative_nonfunction.lit
+# Expected rejection only at the final statement.
+have fn one(x R) R=1
+
+$is_antiderivative_on(1,one,R)

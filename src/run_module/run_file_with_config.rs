@@ -119,8 +119,18 @@ pub fn run_file_with_config_observed(
                 if is_target {
                     if keep_env_open {
                         attach_file_json(&runtime, &path, &mut file_result.run);
-                        match run_repl_loop(&mut runtime) {
-                            Ok(()) => {}
+                        let mut turns = Vec::new();
+                        let repl = run_repl_loop(&mut runtime, &mut turns);
+                        file_result.run.attach_normal_json_with_repl_turns(
+                            &runtime,
+                            &turns,
+                            "file",
+                            Some(path.as_path()),
+                        );
+                        match repl {
+                            Ok(()) => {
+                                runtime.abort_source();
+                            }
                             Err(error) => {
                                 file_result.run.attach_session_error(
                                     &runtime,
@@ -128,6 +138,7 @@ pub fn run_file_with_config_observed(
                                     Some(path.as_path()),
                                     RunSessionError::Runtime(error),
                                 );
+                                runtime.abort_source();
                                 return Ok(RunFileResult::new(path, file_result.run));
                             }
                         }
@@ -161,8 +172,18 @@ pub fn run_file_with_config_observed(
             }
             if session {
                 attach_file_json(&runtime, &path, &mut file_result.run);
-                match run_repl_loop(&mut runtime) {
-                    Ok(()) => {}
+                let mut turns = Vec::new();
+                let repl = run_repl_loop(&mut runtime, &mut turns);
+                file_result.run.attach_normal_json_with_repl_turns(
+                    &runtime,
+                    &turns,
+                    "file",
+                    Some(path.as_path()),
+                );
+                match repl {
+                    Ok(()) => {
+                        runtime.abort_source();
+                    }
                     Err(error) => {
                         file_result.run.attach_session_error(
                             &runtime,
@@ -170,6 +191,7 @@ pub fn run_file_with_config_observed(
                             Some(path.as_path()),
                             RunSessionError::Runtime(error),
                         );
+                        runtime.abort_source();
                         return Ok(RunFileResult::new(path, file_result.run));
                     }
                 }
@@ -208,8 +230,18 @@ fn run_file_isolated(
     }
 
     if session {
-        match run_repl_loop(&mut runtime) {
-            Ok(()) => {}
+        let mut turns = Vec::new();
+        let repl = run_repl_loop(&mut runtime, &mut turns);
+        code_result.attach_normal_json_with_repl_turns(
+            &runtime,
+            &turns,
+            "file",
+            Some(path.as_path()),
+        );
+        match repl {
+            Ok(()) => {
+                runtime.abort_source();
+            }
             Err(error) => {
                 code_result.attach_session_error(
                     &runtime,
@@ -217,6 +249,7 @@ fn run_file_isolated(
                     Some(path.as_path()),
                     RunSessionError::Runtime(error),
                 );
+                runtime.abort_source();
                 return Ok(RunFileResult::new(path, code_result));
             }
         }

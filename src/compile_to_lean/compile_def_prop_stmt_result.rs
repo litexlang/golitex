@@ -98,18 +98,12 @@ impl LitexToLeanCompiler {
                 SourceOwner::PropObjects(proof, index + 1),
                 0,
             );
-            let mut derived = self.compile_set_builder_parameter_inferences(
+            let derived = self.compile_stored_inferences(
                 &assumed.store_and_infer,
                 fact,
                 &clause,
                 &completed,
             )?;
-            derived.extend(self.compile_stored_inferences(
-                &assumed.store_and_infer,
-                fact,
-                &clause,
-                &completed,
-            )?);
             clauses.push((clause.1, clause.0, derived, definitions));
         }
         let (_, meaning, _, definitions) =

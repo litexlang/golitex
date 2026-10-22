@@ -45,8 +45,13 @@ pub fn run_eval(command: LaunchCommand) -> RuntimeResult<RunEvalResult> {
     }
 
     if session {
-        match run_repl_loop(&mut runtime) {
-            Ok(()) => {}
+        let mut turns = Vec::new();
+        let repl = run_repl_loop(&mut runtime, &mut turns);
+        code_result.attach_normal_json_with_repl_turns(&runtime, &turns, "eval", None);
+        match repl {
+            Ok(()) => {
+                runtime.abort_source();
+            }
             Err(error) => {
                 code_result.attach_session_error(
                     &runtime,
@@ -54,6 +59,7 @@ pub fn run_eval(command: LaunchCommand) -> RuntimeResult<RunEvalResult> {
                     None,
                     RunSessionError::Runtime(error),
                 );
+                runtime.abort_source();
                 return Ok(RunEvalResult::new(code_result));
             }
         }

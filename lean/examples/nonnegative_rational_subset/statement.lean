@@ -26,16 +26,44 @@ theorem h_180 : Litex.Same (_object_i3 (M := M)) (Litex.setBuilder (Litex.R (M :
   (Litex.sameRefl (Litex.setBuilder (Litex.R (M := M)) (fun (_value_i4 : Litex.Obj (M := M) M.Value) (h_96 : Litex.In _value_i4 (Litex.R (M := M))) => Litex.Le (Litex.number (M := M) (0 : ℂ)) _value_i4)))
 
 theorem h_181 : Litex.Subset (_object_i1 (M := M)) (_object_i3 (M := M)) :=
-  (Litex.subsetOfSame (_object_i1 (M := M)) (Litex.setBuilder (Litex.R (M := M)) (fun (_value_i4 : Litex.Obj (M := M) M.Value) (h_136 : Litex.In _value_i4 (Litex.R (M := M))) => Litex.Le (Litex.number (M := M) (0 : ℂ)) _value_i4)) (_object_i1 (M := M)) (_object_i3 (M := M)) (Litex.sameRefl (_object_i1 (M := M))) ((((Litex.sameRefl (_object_i3 (M := M)))).trans (h_180 (M := M)))).symm (Litex.subsetOfForall (_object_i1 (M := M)) (Litex.setBuilder (Litex.R (M := M)) (fun (_value_i4 : Litex.Obj (M := M) M.Value) (h_136 : Litex.In _value_i4 (Litex.R (M := M))) => Litex.Le (Litex.number (M := M) (0 : ℂ)) _value_i4)) (by
-    intro _Host_i7 _rep_i7 _value_i7 h_264
-    have h_265 : Litex.In _value_i7 (Litex.Q (M := M)) :=
-      (((Litex.inSetBuilder_iff _value_i7 ((Litex.setBuilder (Litex.Q (M := M)) (fun (_value_i2 : Litex.Obj (M := M) M.Value) (h_48 : Litex.In _value_i2 (Litex.Q (M := M))) => Litex.Le (Litex.number (M := M) (0 : ℂ)) _value_i2))).val.bound ((Litex.setBuilder (Litex.Q (M := M)) (fun (_value_i2 : Litex.Obj (M := M) M.Value) (h_48 : Litex.In _value_i2 (Litex.Q (M := M))) => Litex.Le (Litex.number (M := M) (0 : ℂ)) _value_i2))).val.predicate).mp (Litex.inOfSame _value_i7 _value_i7 (_object_i1 (M := M)) (Litex.setBuilder (Litex.Q (M := M)) (fun (_value_i2 : Litex.Obj (M := M) M.Value) (h_48 : Litex.In _value_i2 (Litex.Q (M := M))) => Litex.Le (Litex.number (M := M) (0 : ℂ)) _value_i2)) (Litex.sameRefl _value_i7) (((Litex.sameRefl (_object_i1 (M := M)))).trans (h_93 (M := M))) h_264))).choose
-    have h_266 : Litex.Le (Litex.number (M := M) (0 : ℂ)) _value_i7 :=
-      (((Litex.inSetBuilder_iff _value_i7 ((Litex.setBuilder (Litex.Q (M := M)) (fun (_value_i2 : Litex.Obj (M := M) M.Value) (h_48 : Litex.In _value_i2 (Litex.Q (M := M))) => Litex.Le (Litex.number (M := M) (0 : ℂ)) _value_i2))).val.bound ((Litex.setBuilder (Litex.Q (M := M)) (fun (_value_i2 : Litex.Obj (M := M) M.Value) (h_48 : Litex.In _value_i2 (Litex.Q (M := M))) => Litex.Le (Litex.number (M := M) (0 : ℂ)) _value_i2))).val.predicate).mp (Litex.inOfSame _value_i7 _value_i7 (_object_i1 (M := M)) (Litex.setBuilder (Litex.Q (M := M)) (fun (_value_i2 : Litex.Obj (M := M) M.Value) (h_48 : Litex.In _value_i2 (Litex.Q (M := M))) => Litex.Le (Litex.number (M := M) (0 : ℂ)) _value_i2)) (Litex.sameRefl _value_i7) (((Litex.sameRefl (_object_i1 (M := M)))).trans (h_93 (M := M))) h_264))).choose_spec
-    have h_251 : Litex.In _value_i7 (Litex.setBuilder (Litex.R (M := M)) (fun (_value_i4 : Litex.Obj (M := M) M.Value) (h_136 : Litex.In _value_i4 (Litex.R (M := M))) => Litex.Le (Litex.number (M := M) (0 : ℂ)) _value_i4)) :=
-      (by
-        let _set := (Litex.setBuilder (Litex.R (M := M)) (fun (_value_i4 : Litex.Obj (M := M) M.Value) (h_136 : Litex.In _value_i4 (Litex.R (M := M))) => Litex.Le (Litex.number (M := M) (0 : ℂ)) _value_i4))
-        exact (Litex.inSetBuilder_iff _value_i7 _set.val.bound _set.val.predicate).mpr ⟨(Litex.rationalToReal _value_i7 h_265), h_266⟩)
-    exact h_251
-  )))
+  (Litex.subsetOfSame (_object_i1 (M := M)) (Litex.setBuilder (Litex.R (M := M)) (fun (_value_i4 : Litex.Obj (M := M) M.Value) (h_136 : Litex.In _value_i4 (Litex.R (M := M))) => Litex.Le (Litex.number (M := M) (0 : ℂ)) _value_i4)) (_object_i1 (M := M)) (_object_i3 (M := M)) (Litex.sameRefl (_object_i1 (M := M))) ((((Litex.sameRefl (_object_i3 (M := M)))).trans (h_180 (M := M)))).symm (by
+    let _atomic_wd_2_1 := (Litex.setBuilder (Litex.R (M := M)) (fun (_value_i4 : Litex.Obj (M := M) M.Value) (h_136 : Litex.In _value_i4 (Litex.R (M := M))) => Litex.Le (Litex.number (M := M) (0 : ℂ)) _value_i4))
+    exact (Litex.subsetOfForall (_object_i1 (M := M)) _atomic_wd_2_1 (by
+      intro _Host_i7 _rep_i7 _value_i7 h_264
+      have h_265 : (M.mem (Litex.denote _value_i7) (M.standard Litex.StandardSetValue.rational)) :=
+        (by
+          litex_checked_step =>
+            exact (
+              (((Litex.inSetBuilder_iff _value_i7 ((Litex.setBuilder (Litex.Q (M := M)) (fun (_value_i2 : Litex.Obj (M := M) M.Value) (h_48 : Litex.In _value_i2 (Litex.Q (M := M))) => Litex.Le (Litex.number (M := M) (0 : ℂ)) _value_i2))).val.bound ((Litex.setBuilder (Litex.Q (M := M)) (fun (_value_i2 : Litex.Obj (M := M) M.Value) (h_48 : Litex.In _value_i2 (Litex.Q (M := M))) => Litex.Le (Litex.number (M := M) (0 : ℂ)) _value_i2))).val.predicate).mp (Litex.inOfSame _value_i7 _value_i7 (_object_i1 (M := M)) (Litex.setBuilder (Litex.Q (M := M)) (fun (_value_i2 : Litex.Obj (M := M) M.Value) (h_48 : Litex.In _value_i2 (Litex.Q (M := M))) => Litex.Le (Litex.number (M := M) (0 : ℂ)) _value_i2)) (Litex.sameRefl _value_i7) (((Litex.sameRefl (_object_i1 (M := M)))).trans (h_93 (M := M))) h_264))).choose
+            )
+        )
+      have h_266 : (∃ (_r _s : ℝ), (M.number (0 : ℂ)) = M.number (_r : ℂ) ∧ (Litex.denote _value_i7) = M.number (_s : ℂ) ∧ _r ≤ _s) :=
+        (by
+          litex_checked_step =>
+            exact (
+              (((Litex.inSetBuilder_iff _value_i7 ((Litex.setBuilder (Litex.Q (M := M)) (fun (_value_i2 : Litex.Obj (M := M) M.Value) (h_48 : Litex.In _value_i2 (Litex.Q (M := M))) => Litex.Le (Litex.number (M := M) (0 : ℂ)) _value_i2))).val.bound ((Litex.setBuilder (Litex.Q (M := M)) (fun (_value_i2 : Litex.Obj (M := M) M.Value) (h_48 : Litex.In _value_i2 (Litex.Q (M := M))) => Litex.Le (Litex.number (M := M) (0 : ℂ)) _value_i2))).val.predicate).mp (Litex.inOfSame _value_i7 _value_i7 (_object_i1 (M := M)) (Litex.setBuilder (Litex.Q (M := M)) (fun (_value_i2 : Litex.Obj (M := M) M.Value) (h_48 : Litex.In _value_i2 (Litex.Q (M := M))) => Litex.Le (Litex.number (M := M) (0 : ℂ)) _value_i2)) (Litex.sameRefl _value_i7) (((Litex.sameRefl (_object_i1 (M := M)))).trans (h_93 (M := M))) h_264))).choose_spec
+            )
+        )
+      have h_251 : (by
+        let _atomic_wd_3_1 := _atomic_wd_2_1
+        exact Litex.In _value_i7 _atomic_wd_3_1) :=
+        (by
+          litex_checked_step =>
+            exact (
+              (by
+                let _atomic_wd_3_1 := _atomic_wd_2_1
+                exact (by
+                  let _set := _atomic_wd_3_1
+                  exact (Litex.inSetBuilder_iff _value_i7 _set.val.bound _set.val.predicate).mpr ⟨(Litex.rationalToReal _value_i7 h_265), h_266⟩))
+            )
+        )
+      have h_317 : (M.mem (Litex.denote _value_i7) (M.standard Litex.StandardSetValue.real)) :=
+        (by
+          litex_checked_step =>
+            exact (
+              (((Litex.inSetBuilder_iff _value_i7 (_atomic_wd_2_1).val.bound (_atomic_wd_2_1).val.predicate).mp (Litex.inOfSame _value_i7 _value_i7 _atomic_wd_2_1 _atomic_wd_2_1 (Litex.sameRefl _value_i7) (Litex.sameRefl _atomic_wd_2_1) h_251))).choose
+            )
+        )
+      exact h_251
+    ))))
 end LitexCompiled.file_lean_x2f_examples_x2f_nonnegative_x5f_rational_x5f_subset_x2f_statement_x2e_lit

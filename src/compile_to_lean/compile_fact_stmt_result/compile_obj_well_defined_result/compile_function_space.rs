@@ -329,12 +329,6 @@ impl LitexToLeanCompiler {
             };
             lines.push(self.emit_internal_fact(&fact, &compiled, &completed)?);
             let compiled = (compiled.0, format!("h_{}", fact.fact_id().value()));
-            lines.extend(self.compile_set_builder_parameter_inferences(
-                &paired.store_and_infer,
-                &fact,
-                &compiled,
-                &completed,
-            )?);
             lines.extend(self.compile_stored_inferences(
                 &paired.store_and_infer,
                 &fact,

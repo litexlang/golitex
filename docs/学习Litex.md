@@ -64,7 +64,7 @@ litex -lang en -strict -f first.lit
 
 `*` 表示乘法，`^` 表示乘方。`=` 陈述数学相等，不是给左边赋新值的命令。乘法要显式写出：用 `2 * x`，不要写 `2x`。
 
-成功的批量检查在 JSON 结果里有 `"run_result": "success"`、`"session_terminated": false` 且 `"termination": null`。网站可能把结果呈现得更简单。交互式命令行 REPL 对成功输入块打印 `success`。第 6 部分会更仔细地读失败结果。
+成功的批量检查在 JSON 结果里有 `"run_result": "success"`、`"session_terminated": false` 且 `"termination": null`。网站可能把结果呈现得更简单。交互式命令行 REPL 对每一轮（成功或失败）都打印同一份 Normal run JSON（`target: "repl"`）。第 6 部分会更仔细地读失败结果。
 
 想直观看到 Litex 如何检查一条事实，可以看 [Litex 验证流程图](https://litexlang.com/assets/diagrams/litex-verification-pipeline-v1.png)。
 
@@ -436,9 +436,9 @@ litex -lang en -session -e 'have a R = 2'
 
 ```text
 litex> a = 3
-{"run_result": "failure", ..., "session_terminated": false, "termination": null}
+{"run_result": "failure", "target": "repl", "errors": [{"phase": "...", "category": "...", ...}], "session_terminated": false, "termination": null}
 litex> a + 1 = 3
-success
+{"run_result": "success", "target": "repl", "statement_results": [...], "errors": [], "session_terminated": false, "termination": null}
 ```
 
 `a = 3` 失败，但已接受的 `a = 2` 仍能支持下一句计算。对照独立进程：

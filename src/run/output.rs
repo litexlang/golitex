@@ -86,12 +86,14 @@ pub fn write_command_error(
     write_stderr(format_args!("{diagnostic}\n"))
 }
 
-fn write_stderr(text: Arguments<'_>) -> RuntimeResult<()> {
-    io::stderr()
-        .lock()
-        .write_fmt(text)
-        .map_err(|error| RuntimeError::Io {
+pub(crate) fn write_stderr(text: Arguments<'_>) -> RuntimeResult<()> {
+    let mut stderr = io::stderr().lock();
+    match stderr.write_fmt(text).and_then(|_| stderr.flush()) {
+        Ok(()) => Ok(()),
+        Err(error) if error.kind() == io::ErrorKind::BrokenPipe => Ok(()),
+        Err(error) => Err(RuntimeError::Io {
             path: PathBuf::from("<stderr>"),
             message: error.to_string(),
-        })
+        }),
+    }
 }

@@ -11,9 +11,19 @@ theorem h_2 : ∀ {_Host_i1 : Type v1} [_rep_i1 : Litex.Representation M _Host_i
   (by
     intro _Host_i1 _rep_i1 _value_i1 h_15
     have h_16 : Litex.Le (Litex.number (M := M) (0 : ℂ)) _value_i1 :=
-      (Litex.naturalNonnegative _value_i1 h_15)
+      (by
+        litex_checked_step =>
+          exact (
+            (Litex.naturalNonnegative _value_i1 h_15)
+          )
+      )
     have h_1 : Litex.In _value_i1 (Litex.Z (M := M)) :=
-      (Litex.naturalToInteger _value_i1 h_15)
+      (by
+        litex_checked_step =>
+          exact (
+            (Litex.naturalToInteger _value_i1 h_15)
+          )
+      )
     exact h_1
   )
 
@@ -21,7 +31,12 @@ theorem h_27 : ∀ {_Host_i2 : Type v2} [_rep_i2 : Litex.Representation M _Host_
   (by
     intro _Host_i2 _rep_i2 _value_i2 h_40
     have h_26 : Litex.In _value_i2 (Litex.Q (M := M)) :=
-      (Litex.integerToRational _value_i2 h_40)
+      (by
+        litex_checked_step =>
+          exact (
+            (Litex.integerToRational _value_i2 h_40)
+          )
+      )
     exact h_26
   )
 
@@ -29,7 +44,12 @@ theorem h_51 : ∀ {_Host_i3 : Type v3} [_rep_i3 : Litex.Representation M _Host_
   (by
     intro _Host_i3 _rep_i3 _value_i3 h_64
     have h_50 : Litex.In _value_i3 (Litex.R (M := M)) :=
-      (Litex.rationalToReal _value_i3 h_64)
+      (by
+        litex_checked_step =>
+          exact (
+            (Litex.rationalToReal _value_i3 h_64)
+          )
+      )
     exact h_50
   )
 
@@ -37,7 +57,12 @@ theorem h_75 : ∀ {_Host_i4 : Type v4} [_rep_i4 : Litex.Representation M _Host_
   (by
     intro _Host_i4 _rep_i4 _value_i4 h_88
     have h_74 : Litex.In _value_i4 (Litex.C (M := M)) :=
-      (M.real_subset_complex _ h_88)
+      (by
+        litex_checked_step =>
+          exact (
+            (M.real_subset_complex _ h_88)
+          )
+      )
     exact h_74
   )
 end LitexCompiled.file_lean_x2f_examples_x2f_numeric_x5f_hierarchy_x2f_statement_x2e_lit

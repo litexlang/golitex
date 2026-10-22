@@ -1,5 +1,6 @@
 mod antiderivatives;
 mod builtin_thm;
+mod calculus_substitution;
 mod continuity;
 pub(crate) mod derive_real_sequence;
 mod folds;

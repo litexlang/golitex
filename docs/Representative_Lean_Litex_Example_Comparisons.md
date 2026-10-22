@@ -336,9 +336,9 @@ directory without a project configuration; the failure output below is abbreviat
 ```text
 $ litex -lang en -strict -session -e 'have a R = 2'
 litex> a = 3
-{"run_result": "failure", ..., "session_terminated": false, "termination": null}
+{"run_result": "failure", "target": "repl", "errors": [{"phase": "...", "category": "...", ...}], "session_terminated": false, "termination": null}
 litex> a + 1 = 3
-success
+{"run_result": "success", "target": "repl", "statement_results": [...], "errors": [], "session_terminated": false, "termination": null}
 ```
 
 The rejected equality does not erase the declaration or `a = 2`. The next

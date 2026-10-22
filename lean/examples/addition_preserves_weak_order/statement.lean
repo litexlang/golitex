@@ -24,9 +24,14 @@ theorem h_3 : ∀ {_Host_i1 : Type v1} [_rep_i1 : Litex.Representation M _Host_i
       let _atomic_wd_1_1 := _object_w3
       exact Litex.Le _atomic_wd_1_0 _atomic_wd_1_1) :=
       (by
-        let _atomic_wd_1_0 := _object_w2
-        let _atomic_wd_1_1 := _object_w3
-        exact (Litex.leAddRight _value_i1 _value_i2 _value_i3 (Litex.realToComplex _value_i1 h_16) (Litex.realToComplex _value_i2 h_17) (Litex.realToComplex _value_i3 h_18) h_18 h_1))
+        litex_checked_step =>
+          exact (
+            (by
+              let _atomic_wd_1_0 := _object_w2
+              let _atomic_wd_1_1 := _object_w3
+              exact (Litex.leAddRight _value_i1 _value_i2 _value_i3 (Litex.realToComplex _value_i1 h_16) (Litex.realToComplex _value_i2 h_17) (Litex.realToComplex _value_i3 h_18) h_18 h_1))
+          )
+      )
     exact h_2
   )
 end LitexCompiled.file_lean_x2f_examples_x2f_addition_x5f_preserves_x5f_weak_x5f_order_x2f_statement_x2e_lit

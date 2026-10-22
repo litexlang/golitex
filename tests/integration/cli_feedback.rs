@@ -77,6 +77,41 @@ fn batch(output: &Output, exit: i32, succeeded: bool) -> JsonValue {
     json
 }
 
+/// Pretty Normal JSON for an accepted REPL turn (field order from project_run_normal).
+fn repl_success_marker(language: OutputLanguage) -> String {
+    let run_result = litex::json_output::json_keys::localize_key("run_result", language);
+    let target = litex::json_output::json_keys::localize_key("target", language);
+    format!("\"{run_result}\": \"success\",\n  \"{target}\": \"repl\"")
+}
+
+fn count_repl_successes(stdout: &str, language: OutputLanguage) -> usize {
+    stdout.matches(&repl_success_marker(language)).count()
+}
+
+fn assert_stdout_is_json_only(stdout: &str) {
+    assert!(
+        !stdout.contains("litex>"),
+        "prompts must not appear on stdout: {stdout}"
+    );
+    assert!(
+        !stdout.contains("REPL "),
+        "REPL banner must not appear on stdout: {stdout}"
+    );
+}
+
+fn assert_repl_banner_on_stderr(stderr: &[u8]) {
+    let text = std::str::from_utf8(stderr).unwrap();
+    assert!(text.contains("REPL"), "{text}");
+    assert!(text.contains("type `exit`"), "{text}");
+}
+
+fn last_run_json(stdout: &str) -> JsonValue {
+    let start = stdout
+        .rfind("{\n  \"kind\": \"run\"")
+        .expect("final run JSON");
+    JsonValue::parse(&stdout[start..]).unwrap()
+}
+
 fn assert_session_state(json: &JsonValue, terminated: bool) {
     assert_eq!(
         field(json, "session_terminated"),
@@ -491,14 +526,31 @@ fn repl_explains_well_definedness_failure_and_continues() {
     ] {
         let output = dir.run(&args, Some("(1 / 0) = 0\n1 = 1\nexit\n"));
         assert_eq!(output.status.code(), Some(0));
-        assert!(output.stderr.is_empty());
+        assert_repl_banner_on_stderr(&output.stderr);
         let stdout = String::from_utf8(output.stdout).unwrap();
+        assert_stdout_is_json_only(&stdout);
         assert!(stdout.contains("(1 / 0) = 0"), "{stdout}");
         assert!(stdout.contains(message), "{stdout}");
         assert!(!stdout.contains("<wd_failed>"));
-        assert!(
-            stdout.contains("litex> success"),
+        let language = if args.iter().any(|arg| *arg == "zh") {
+            OutputLanguage::Chinese
+        } else {
+            OutputLanguage::English
+        };
+        assert_eq!(
+            count_repl_successes(&stdout, language),
+            1,
             "later statements remain usable: {stdout}"
+        );
+        let target = litex::json_output::json_keys::localize_key("target", language);
+        let category = litex::json_output::json_keys::localize_key("category", language);
+        assert!(
+            stdout.contains(&format!("\"{target}\": \"repl\"")),
+            "{stdout}"
+        );
+        assert!(
+            stdout.contains(&format!("\"{category}\": \"well_defined\"")),
+            "rejected turn keeps category in errors: {stdout}"
         );
     }
 }
@@ -558,31 +610,34 @@ fn file_session_recovers_parse_errors_and_retains_the_original_declaration() {
             Some("have\nby thm identity(2) => 2 = 2\nexit\n"),
         );
         assert_eq!(output.status.code(), Some(0));
-        assert!(output.stderr.is_empty(), "{output:?}");
+        assert_repl_banner_on_stderr(&output.stderr);
         let stdout = std::str::from_utf8(&output.stdout).unwrap();
-        let start = stdout
-            .rfind("{\n  \"kind\": \"run\"")
-            .expect("final batch JSON");
-        let json = JsonValue::parse(&stdout[start..]).unwrap();
-        assert_eq!(field(&json, "run_result").as_str().ok(), Some("success"));
+        assert_stdout_is_json_only(stdout);
+        let json = last_run_json(stdout);
+        // Parse reject in the REPL makes the full-session snapshot a failure.
+        assert_eq!(field(&json, "run_result").as_str().ok(), Some("failure"));
         assert_session_state(&json, false);
         assert!(stdout.contains("<repl>"));
-        assert!(stdout.contains("litex> success"), "{stdout}");
+        assert_eq!(
+            count_repl_successes(stdout, OutputLanguage::English),
+            1,
+            "{stdout}"
+        );
         let results = field(&json, "statement_results").as_array().unwrap();
         assert!(field(&results[0], "statement")
             .as_str()
             .unwrap()
             .contains("thm identity:"));
-        assert_eq!(
-            field(&json, "statement_results"),
-            field(&initial, "statement_results")
-        );
+        assert!(results.len() > initial_results.len(), "{results:?}");
+        assert!(results.iter().any(|stmt| {
+            field(stmt, "statement").as_str().ok() == Some("by thm identity(2) => 2 = 2")
+        }));
         let output = dir.run(&["-strict", "-f", "main.lit", "-session"], Some("exit\n"));
         assert_eq!(output.status.code(), Some(0));
-        assert!(output.stderr.is_empty());
+        assert_repl_banner_on_stderr(&output.stderr);
         let stdout = std::str::from_utf8(&output.stdout).unwrap();
-        let start = stdout.rfind("{\n  \"kind\": \"run\"").unwrap();
-        let json = JsonValue::parse(&stdout[start..]).unwrap();
+        assert_stdout_is_json_only(stdout);
+        let json = last_run_json(stdout);
         assert_eq!(field(&json, "run_result").as_str().ok(), Some("success"));
         assert_session_state(&json, false);
         assert_eq!(
@@ -601,15 +656,64 @@ fn file_session_preserves_context_and_reports_a_soft_failure() {
         Some("k >= 0\n1 = 2\nk >= 0\nexit\n"),
     );
     assert_eq!(output.status.code(), Some(0), "{output:?}");
-    assert!(output.stderr.is_empty(), "{output:?}");
+    assert_repl_banner_on_stderr(&output.stderr);
     let stdout = std::str::from_utf8(&output.stdout).unwrap();
-    assert_eq!(stdout.matches("litex> success").count(), 2, "{stdout}");
+    assert_stdout_is_json_only(stdout);
+    assert_eq!(
+        count_repl_successes(stdout, OutputLanguage::English),
+        2,
+        "{stdout}"
+    );
     assert!(stdout.contains("\"run_result\": \"failure\""), "{stdout}");
-    let start = stdout.rfind("{\n  \"kind\": \"run\"").unwrap();
-    let json = JsonValue::parse(&stdout[start..]).unwrap();
+    assert!(
+        stdout.contains("\"category\": \"proof_search\""),
+        "soft failure keeps category: {stdout}"
+    );
+    let json = last_run_json(stdout);
     assert_eq!(field(&json, "path").as_str().unwrap(), "main.lit");
-    assert_eq!(field(&json, "run_result").as_str().ok(), Some("success"));
+    // Full-session snapshot includes the rejected `1 = 2` turn.
+    assert_eq!(field(&json, "run_result").as_str().ok(), Some("failure"));
     assert_session_state(&json, false);
+    let results = field(&json, "statement_results").as_array().unwrap();
+    assert!(results.len() >= 4, "{results:?}");
+}
+
+#[test]
+fn repo_session_final_snapshot_merges_export_files_and_repl_turns() {
+    let dir = FixtureDir::new();
+    fs::write(
+        dir.0.join("litex.config"),
+        "[export]\nmain = \"./main.lit\"\n",
+    )
+    .unwrap();
+    fs::write(dir.0.join("main.lit"), "have a R = 2\n").unwrap();
+
+    let output = dir.run(
+        &["-lang", "en", "-session", "-r", "."],
+        Some("have b R = 3\nexit\n"),
+    );
+    assert_eq!(output.status.code(), Some(0), "{output:?}");
+    assert_repl_banner_on_stderr(&output.stderr);
+    let stdout = std::str::from_utf8(&output.stdout).unwrap();
+    assert_stdout_is_json_only(stdout);
+    assert_eq!(
+        count_repl_successes(stdout, OutputLanguage::English),
+        1,
+        "{stdout}"
+    );
+
+    let json = last_run_json(stdout);
+    assert_eq!(field(&json, "target").as_str(), Ok("repo"));
+    assert_eq!(field(&json, "path").as_str(), Ok("."));
+    assert_eq!(field(&json, "run_result").as_str(), Ok("success"));
+    assert_session_state(&json, false);
+    let results = field(&json, "statement_results").as_array().unwrap();
+    assert!(results
+        .iter()
+        .any(|stmt| { field(stmt, "statement").as_str().ok() == Some("have a R = 2") }));
+    assert!(results
+        .iter()
+        .any(|stmt| { field(stmt, "statement").as_str().ok() == Some("have b R = 3") }));
 }
 
 #[test]
@@ -620,10 +724,10 @@ fn eval_session_hard_errors_retain_the_initial_proof_and_report_once() {
     for input in ["trust 1 = 2\n"] {
         let output = dir.run(&["-strict", "-session", "-e", code], Some(input));
         assert_eq!(output.status.code(), Some(1), "{output:?}");
-        assert!(output.stderr.is_empty(), "{output:?}");
+        assert_repl_banner_on_stderr(&output.stderr);
         let stdout = std::str::from_utf8(&output.stdout).unwrap();
-        let start = stdout.rfind("{\n  \"kind\": \"run\"").unwrap();
-        let json = JsonValue::parse(&stdout[start..]).unwrap();
+        assert_stdout_is_json_only(stdout);
+        let json = last_run_json(stdout);
         assert_eq!(field(&json, "run_result").as_str().ok(), Some("failure"));
         assert_session_state(&json, true);
         let error = field(field(&json, "termination"), "message")
@@ -648,8 +752,14 @@ fn eval_session_hard_errors_retain_the_initial_proof_and_report_once() {
         Some("by thm identity(2) => 2 = 2\nexit\n"),
     );
     assert_eq!(output.status.code(), Some(0));
-    assert!(output.stderr.is_empty());
-    assert!(String::from_utf8_lossy(&output.stdout).contains("litex> success"));
+    assert_repl_banner_on_stderr(&output.stderr);
+    let stdout = std::str::from_utf8(&output.stdout).unwrap();
+    assert_stdout_is_json_only(stdout);
+    assert_eq!(count_repl_successes(stdout, OutputLanguage::English), 1);
+    let json = last_run_json(stdout);
+    assert_eq!(field(&json, "run_result").as_str().ok(), Some("success"));
+    let results = field(&json, "statement_results").as_array().unwrap();
+    assert!(results.len() > 3, "{results:?}");
 }
 
 #[test]
@@ -707,28 +817,28 @@ fn session_recovers_incomplete_functions_tokenizer_errors_and_proof_misses() {
     ] {
         let output = dir.run(&args, Some(&input));
         assert_eq!(output.status.code(), Some(0), "{output:?}");
-        assert!(output.stderr.is_empty(), "{output:?}");
+        assert_repl_banner_on_stderr(&output.stderr);
         let stdout = String::from_utf8(output.stdout).unwrap();
+        assert_stdout_is_json_only(&stdout);
         assert_eq!(
-            stdout.matches("litex> success").count(),
+            count_repl_successes(&stdout, OutputLanguage::English),
             successes,
             "{stdout}"
         );
-        assert_eq!(
-            stdout.matches("\"run_result\": \"failure\"").count(),
-            3,
-            "{stdout}"
-        );
+        let failure_turns = stdout.matches("\"run_result\": \"failure\"").count();
+        if args.contains(&"-session") {
+            // Three rejected REPL turns plus the full-session snapshot.
+            assert_eq!(failure_turns, 4, "{stdout}");
+            let final_json = last_run_json(&stdout);
+            assert_eq!(field(&final_json, "run_result").as_str(), Ok("failure"));
+            assert!(!field(&final_json, "errors").as_array().unwrap().is_empty());
+        } else {
+            assert_eq!(failure_turns, 3, "{stdout}");
+        }
         assert!(!stdout.contains("\"session_terminated\": true"), "{stdout}");
         assert!(!stdout.contains("\"verification\""), "{stdout}");
         assert!(stdout.contains("expected object"), "{stdout}");
         assert!(stdout.contains("<repl>"), "{stdout}");
-        if args.contains(&"-session") {
-            let start = stdout.rfind("{\n  \"kind\": \"run\"").unwrap();
-            let final_json = JsonValue::parse(&stdout[start..]).unwrap();
-            assert_eq!(field(&final_json, "run_result").as_str(), Ok("success"));
-            assert!(field(&final_json, "errors").as_array().unwrap().is_empty());
-        }
     }
 }
 
@@ -755,6 +865,8 @@ fn default_errors_summarize_each_rejected_statement_and_missing_condition() {
         field(&errors[1], "statement_index"),
         &JsonValue::Number(2.0)
     );
+    assert_eq!(field(&errors[0], "category").as_str(), Ok("proof_search"));
+    assert_eq!(field(&errors[1], "category").as_str(), Ok("well_defined"));
     assert_eq!(field(&errors[1], "expression").as_str(), Ok("(1 / x)"));
     assert_eq!(field(&errors[1], "obligation").as_str(), Ok("x != 0"));
     let statements = field(&json, "statement_results").as_array().unwrap();
@@ -906,14 +1018,14 @@ fn help_lists_repository_extraction_and_all_notes() {
 #[test]
 fn closed_stdout_keeps_command_exit_status_without_panicking() {
     let dir = FixtureDir::new();
-    for (args, exit) in [
-        (&["-e", "1 = 1"][..], 0),
-        (&["-e", "1 = 2"][..], 1),
-        (&["-e", "\""][..], 1),
-        (&["-extractpython", "have a R = 1"][..], 0),
-        (&["-help"][..], 0),
-        (&["-version"][..], 0),
-        (&[][..], 0),
+    for (args, exit, repl_banner) in [
+        (&["-e", "1 = 1"][..], 0, false),
+        (&["-e", "1 = 2"][..], 1, false),
+        (&["-e", "\""][..], 1, false),
+        (&["-extractpython", "have a R = 1"][..], 0, false),
+        (&["-help"][..], 0, false),
+        (&["-version"][..], 0, false),
+        (&[][..], 0, true),
     ] {
         let mut child = Command::new(env!("CARGO_BIN_EXE_litex"))
             .args(args)
@@ -926,6 +1038,10 @@ fn closed_stdout_keeps_command_exit_status_without_panicking() {
         drop(child.stdout.take());
         let output = child.wait_with_output().unwrap();
         assert_eq!(output.status.code(), Some(exit), "{args:?}: {output:?}");
-        assert!(output.stderr.is_empty(), "{args:?}: {output:?}");
+        if repl_banner {
+            assert_repl_banner_on_stderr(&output.stderr);
+        } else {
+            assert!(output.stderr.is_empty(), "{args:?}: {output:?}");
+        }
     }
 }

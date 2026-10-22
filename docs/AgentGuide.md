@@ -32,14 +32,15 @@ From a directory without `litex.config`, start with one accepted declaration:
 litex -lang en -session -e 'have a R = 2'
 ```
 
-Enter the next statements **one at a time in that same process**. The failure
-JSON is abbreviated:
+Enter the next statements **one at a time in that same process**. Each turn
+emits the same Normal run JSON envelope (`target: "repl"`). Soft-failure JSON
+is abbreviated:
 
 ```text
 litex> a = 3
-{"run_result": "failure", ..., "session_terminated": false, "termination": null}
+{"run_result": "failure", "target": "repl", "errors": [{"phase": "...", "category": "...", ...}], "session_terminated": false, "termination": null}
 litex> a + 1 = 3
-success
+{"run_result": "success", "target": "repl", "statement_results": [...], "errors": [], "session_terminated": false, "termination": null}
 ```
 
 The failed `a = 3` does not remove the accepted declaration or its fact `a = 2`.
@@ -84,15 +85,22 @@ restart/replay.
    source order. A `claim` or theorem and its entire nested proof form one
    statement. Consume its response before sending the next candidate;
    terminate multiline input with a blank line.
-3. On the REPL's plain-text `success` response (not a JSON field), journal the
-   accepted source and continue. On an ordinary
-   failure with `session_terminated: false`, `termination: null` followed by another `litex>` prompt,
-   keep the process and repair the current statement. Read the concise `errors`
-   array for the failing statement, phase, location or missing condition. Each
-   submission has its own verdict; earlier rejected attempts do not taint a later
-   accepted submission or the initial batch snapshot. Verification rejection
-   means missing proof or well-definedness evidence, not proof of the
-   proposition's negation; parse rejection instead identifies malformed input.
+3. Read **stdout only**: it is JSON-only (no `litex>` prompts; those go to
+   stderr when a human TTY is attached). Each turn is one Normal run JSON
+   object (`target: "repl"`). There is no top-level `trace` string and no
+   second `JSON.parse` of a string field. On `run_result: "success"`, journal
+   the accepted source and continue. On an ordinary failure with
+   `session_terminated: false`, `termination: null`, keep the process and repair
+   the current statement. Read the concise `errors` array for the failing
+   statement, `phase`, `category`, location or missing condition. Soft failures
+   may leave `session_terminated` / `termination` as false / null; ignore them
+   until a hard stop sets `session_terminated: true`. Each submission has its
+   own verdict. After `exit`, Litex prints one final Normal JSON that merges the
+   initial `-e` / `-f` / `-r` batch with every later REPL turn (accepted and rejected).
+   Verification rejection means missing proof or well-definedness evidence, not
+   proof of the proposition's negation; parse rejection instead identifies
+   malformed input. Do not treat independent `-e` / `-f` runs as a substitute
+   for Session incremental verification.
 4. At a coherent checkpoint or final verification, save the accepted code and
    run a separate clean file gate while keeping the authoring Session open.
    Do not run the whole file again after each new statement or small batch.

@@ -37,15 +37,18 @@ theorem h_63 : Litex.Same (_object_i3 (M := M)) (_object_i3 (M := M)) :=
 noncomputable def _object_w4 := (let _litex_call_arg_0 := (Litex.number (M := M) (2 : ℂ));
 Litex.callOn ((_object_i3 (M := M))).val.signature (_object_i3 (M := M)) _litex_call_arg_0 (h_62 (M := M)) ((Litex.SetSemantics.sep_members (M := M) _ _ _).mpr ⟨(Litex.inOfSame (Litex.number (M := M) (2 : ℂ)) (Litex.number (M := M) (2 : ℂ)) (Litex.R (M := M)) (_object_i1 (M := M)) (Litex.sameRefl (Litex.number (M := M) (2 : ℂ))) ((((Litex.sameRefl (_object_i1 (M := M)))).trans (h_4 (M := M)))).symm (Litex.NativeBridge.numberInROfEq (M := M) (2 : ℂ) (2 : ℝ) (by norm_num))), True.intro⟩))
 
-theorem h_64 : Litex.Same (_object_w4 (M := M)) (Litex.number (M := M) (2 : ℂ)) :=
-  (((show (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i3 (M := M))) (M.number (2 : ℂ))) = (M.number (2 : ℂ)) from by
-    let _litex_original := (_object_w4 (M := M))
+theorem h_64 : (by
+  let _equal_wd_1_0 := (_object_w4 (M := M))
+  exact Litex.Same _equal_wd_1_0 (Litex.number (M := M) (2 : ℂ))) :=
+  (let _equal_wd_1_0 := (_object_w4 (M := M));
+  (show Litex.Same _equal_wd_1_0 (Litex.number (M := M) (2 : ℂ)) from (((show (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i3 (M := M))) (M.number (2 : ℂ))) = (M.number (2 : ℂ)) from by
+    let _litex_original := _equal_wd_1_0
     let _litex_formula := (_object_i3 (M := M))
     have _litex_head_eq : Litex.Same _litex_original.val.function _litex_formula := (h_63 (M := M))
     have _litex_call_eq := congrArg (fun _f => Litex.FunctionSemantics.callValue (M := M) _f (Litex.denote _litex_original.val.argument)) _litex_head_eq
     have _litex_beta := Litex.FunctionSemantics.call_graphValue _ _ _ _litex_formula.wd (Litex.denote _litex_original.val.argument) _litex_original.wd.2
     exact _litex_call_eq.trans (_litex_beta.trans (by change (fun (_litex_input : M.Value) => (fun (_raw_i4 : M.Value) => _raw_i4) _litex_input) (Litex.denote _litex_original.val.argument) = (M.number (2 : ℂ)); exact rfl))
-  )).trans (show @Eq M.Value _ _ from Eq.refl _))
+  )).trans (show @Eq M.Value _ _ from Eq.refl _))))
 
 def prop_5 {_Host_i5 : Type v5} [_rep_i5 : Litex.Representation M _Host_i5] (_value_i5 : Litex.Obj (M := M) _Host_i5) : Prop :=
   ∃ (h_137 : Litex.In _value_i5 (_object_i1 (M := M))), ¬ Litex.Same _value_i5 (Litex.number (M := M) (0 : ℂ))
@@ -57,8 +60,13 @@ noncomputable def _object_i7 := (Litex.formulaFnOn (Litex.FunctionSignature.with
     have h_204 : Litex.In _value_i8 (_object_i2 (M := M)) := h_204
     have h_138 : ((prop_5 (M := M)) _value_i8) :=
       (by
-        change (∃ (_predicate_witness : (M.mem _raw_i8 (Litex.denote (_object_i1 (M := M))))), (¬ (_raw_i8 = (M.number (0 : ℂ)))))
-        exact h_138)
+        litex_checked_step =>
+          exact (
+            (by
+              change (∃ (_predicate_witness : (M.mem _raw_i8 (Litex.denote (_object_i1 (M := M))))), (¬ (_raw_i8 = (M.number (0 : ℂ)))))
+              exact h_138)
+          )
+      )
     have h_205 :=
       (Classical.choose (show ((prop_5 (M := M)) _value_i8) from h_138))
     have h_206 :=
@@ -81,8 +89,10 @@ theorem h_338 : Litex.Same (_object_i7 (M := M)) (_object_i7 (M := M)) :=
 
 theorem h_339 : ((prop_5 (M := M)) (Litex.number (M := M) (2 : ℂ))) :=
   (Exists.intro (Litex.inOfSame (_object_w4 (M := M)) (Litex.number (M := M) (2 : ℂ)) (_object_i1 (M := M)) (_object_i1 (M := M)) ((((Litex.sameRefl (Litex.number (M := M) (2 : ℂ)))).trans ((h_64 (M := M))).symm)).symm (Litex.sameRefl (_object_i1 (M := M))) (by
-    let _litex_return_call := (_object_w4 (M := M))
-    exact Litex.inOfSame _litex_return_call _litex_return_call (_object_i2 (M := M)) (_object_i1 (M := M)) (Litex.sameRefl _litex_return_call) (h_5 (M := M)) (Litex.callOnInOutput _litex_return_call))) (Litex.NativeBridge.notSameOfDenoteNumber (Litex.number (M := M) (2 : ℂ)) (Litex.number (M := M) (0 : ℂ)) (2 : ℂ) (0 : ℂ) (Litex.NativeBridge.denoteNumber (M := M) (2 : ℂ)) (Litex.NativeBridge.denoteNumber (M := M) (0 : ℂ)) (by norm_num)))
+    let _atomic_wd_3_0 := (_object_w4 (M := M))
+    exact (by
+      let _litex_return_call := (_object_w4 (M := M))
+      exact Litex.inOfSame _litex_return_call _litex_return_call (_object_i2 (M := M)) (_object_i1 (M := M)) (Litex.sameRefl _litex_return_call) (h_5 (M := M)) (Litex.callOnInOutput _litex_return_call)))) (Litex.NativeBridge.notSameOfDenoteNumber (Litex.number (M := M) (2 : ℂ)) (Litex.number (M := M) (0 : ℂ)) (2 : ℂ) (0 : ℂ) (Litex.NativeBridge.denoteNumber (M := M) (2 : ℂ)) (Litex.NativeBridge.denoteNumber (M := M) (0 : ℂ)) (by norm_num)))
 
 theorem h_362 : Litex.In (Litex.number (M := M) (2 : ℂ)) (_object_i1 (M := M)) :=
   (by rcases (h_339 (M := M)) with ⟨h_137, h_136⟩; exact h_137)
@@ -95,7 +105,10 @@ Litex.callOn ((_object_i7 (M := M))).val.signature (_object_i7 (M := M)) _litex_
 
 noncomputable def _object_w10 := (Litex.div (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (2 : ℂ)) (Litex.numberInC (M := M) (1 : ℂ)) (Litex.numberInC (M := M) (2 : ℂ)) (h_363 (M := M)))
 
-theorem h_364 : Litex.Same (_object_w9 (M := M)) (_object_w10 (M := M)) :=
+theorem h_364 : (by
+  let _equal_wd_1_0 := (_object_w9 (M := M))
+  let _equal_wd_1_1 := (_object_w10 (M := M))
+  exact Litex.Same _equal_wd_1_0 _equal_wd_1_1) :=
   (show (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i7 (M := M))) (M.number (2 : ℂ))) = (M.divValue (M.number (1 : ℂ)) (M.number (2 : ℂ))) from by
     have _litex_residual : (M.divValue (M.number (1 : ℂ)) (M.number (2 : ℂ))) = (M.divValue (M.number (1 : ℂ)) (M.number (2 : ℂ))) := (show @Eq M.Value _ _ from Eq.refl _)
     exact ((((Eq.refl (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i7 (M := M))) (M.number (2 : ℂ))))).trans (show (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i7 (M := M))) (M.number (2 : ℂ))) = (M.divValue (M.number (1 : ℂ)) (M.number (2 : ℂ))) from by

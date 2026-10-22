@@ -11,7 +11,12 @@ theorem h_3 : ∀ {_Host_i1 : Type v1} [_rep_i1 : Litex.Representation M _Host_i
   (by
     intro _Host_i1 _rep_i1 _value_i1 h_16 _Host_i2 _rep_i2 _value_i2 h_17 h_1
     have h_2 : Litex.Le _value_i1 _value_i2 :=
-      h_1
+      (by
+        litex_checked_step =>
+          exact (
+            h_1
+          )
+      )
     exact h_2
   )
 end LitexCompiled.file_lean_x2f_examples_x2f_weak_x5f_order_x5f_duality_x2f_statement_x2e_lit

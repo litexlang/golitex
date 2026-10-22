@@ -1,0 +1,5 @@
+# Halving an obtained real witness scales its square by one quarter.
+have a R
+witness exist t R st {t*t=a*a} from a
+obtain x from exist t R st {t*t=a*a}
+(x/2)*(x/2) = (x*x)/4

@@ -21,7 +21,12 @@ theorem h_3 : ∀ {_Host_i1 : Type v1} [_rep_i1 : Litex.Representation M _Host_i
     have h_122 :=
       (Litex.leLtTrans _value_i1 _value_i2 _value_i3 h_49 h_50)
     have h_2 : Litex.Lt _value_i1 _value_i3 :=
-      h_122
+      (by
+        litex_checked_step =>
+          exact (
+            h_122
+          )
+      )
     exact h_2
   )
 end LitexCompiled.file_lean_x2f_examples_x2f_mixed_x5f_real_x5f_order_x5f_chain_x2f_statement_x2e_lit

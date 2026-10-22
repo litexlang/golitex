@@ -455,7 +455,9 @@ class Generator:
         if record['name'] == 'StoreFactResult':
             lines.append('capture.stored(&value.stored_fact_ids());')
         if record['name'] == 'StoreFactAndInferResult':
-            lines.append('capture.record_inference(value, &output);')
+            lines.append('capture.record_inference(value, &output, runtime);')
+        if record['name'] == 'StoreInferredFactResult':
+            lines.append('if let JsonValue::Object(fields) = &mut output { fields.insert("stored_fact_ids".into(), JsonValue::Array(value.stored_fact_ids().iter().map(|id| JsonValue::String(id.to_string())).collect())); }')
         if record['name'] == 'AssumeDomFactResult':
             lines.append('capture.fact_context(&value.store_and_infer, "hypothesis", &output, "well_defined");')
         if record['name'] == 'ProveAndStoreThenFactResult':

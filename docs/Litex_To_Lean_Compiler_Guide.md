@@ -136,6 +136,13 @@ elaborating the next one. This avoids repeatedly copying unresolved proof
 dependencies across nested term bindings. The proved facts remain internal
 definitions, not additional theorem assumptions.
 
+Local typed facts use `litex_checked_step` to turn the generated proof into a
+kernel-checked auxiliary theorem. Its closure retains the local object values
+and WD definitions (`mkAuxTheorem` with `zetaDelta := true`), so later facts can
+reference the checked proof. This helper does not search for a proof, and it
+rejects open goals. Exported theorems and direct projection citations keep
+their existing declaration forms.
+
 Runtime executes the source once, then moves into the compiler as a read-only
 exact-ID resolver.
 The current result is not self-contained after Runtime disposal: some source
@@ -1131,6 +1138,11 @@ examples also expose ordinary Lean/Mathlib theorems through handwritten adapters
 | Sets | Arbitrary set parameters, empty sets, finite enumerations, bounded set builders, membership, subsets and associated reasoning. | [Arbitrary sets](../lean/examples/arbitrary_set_laws/), [finite sets](../lean/examples/finite_natural_set/), [closed unit interval](../lean/examples/closed_unit_interval/) |
 | Functions | Formula functions with one or two numeric parameters, explicit domain conditions, evaluation and composition; complete inverse and injectivity examples. | [Guarded two-argument function](../lean/examples/two_argument_shifted_quotient/), [composition](../lean/examples/composed_real_formula/), [rational inverse maps](../lean/examples/rational_inverse_maps/) |
 | Definitions and proofs | Concrete predicates, universal and conditional facts, equality chains, selected conjunctions, named theorems and calls, local objects, `let` and `claim`. | [Predicate equality transport](../lean/examples/concrete_predicate_equality_transport/), [theorem returns and calls](../lean/examples/named_compound_theorem_returns/), [local objects](../lean/examples/local_witness_additive_identity/), [claim and positive return domain](../lean/examples/newton_positive_update/) |
+
+Further checked pairs show [expansion of a set-valued function](../lean/examples/set_function_expansion/),
+[a line member satisfying its determinant equation](../lean/examples/line_membership_condition/),
+and [arithmetic with an obtained real witness](../lean/examples/obtained_real_square/).
+Each includes the source and actual compiler output checked by Lean.
 
 Coverage refers to implemented and checked constructions and proof routes;
 it does not mean every Litex proof in this mathematical area can be compiled.

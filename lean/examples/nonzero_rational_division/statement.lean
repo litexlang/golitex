@@ -20,8 +20,13 @@ theorem h_3 : ∀ {_Host_i1 : Type v1} [_rep_i1 : Litex.Representation M _Host_i
       let _atomic_wd_1_0 := _object_w3
       exact Litex.In _atomic_wd_1_0 (Litex.Q (M := M))) :=
       (by
-        let _atomic_wd_1_0 := _object_w3
-        exact (Litex.divInQ _value_i1 _value_i2 h_16 h_17 (_atomic_wd_1_0).wd.2.2))
+        litex_checked_step =>
+          exact (
+            (by
+              let _atomic_wd_1_0 := _object_w3
+              exact (Litex.divInQ _value_i1 _value_i2 h_16 h_17 (_atomic_wd_1_0).wd.2.2))
+          )
+      )
     exact h_2
   )
 end LitexCompiled.file_lean_x2f_examples_x2f_nonzero_x5f_rational_x5f_division_x2f_statement_x2e_lit

@@ -1,4 +1,7 @@
 //! Antiderivatives are relations between existing functions, never new objects.
+#[cfg(test)]
+#[path = "../../../tests/unit/execute/riemann_integral/antiderivatives.rs"]
+mod tests;
 use super::riemann_integral::helper::*;
 use crate::prelude::*;
 
@@ -27,6 +30,18 @@ pub(crate) fn domain_requirements(
 ) -> RuntimeResult<Option<Vec<Fact>>> {
     let region = args[2].clone();
     let mut req = vec![subset(rt, region.clone(), real()).into()];
+    // Equality on a region transfers classical derivatives only at interior
+    // points. This first interface accepts R or explicit nonempty open intervals.
+    // In particular it never turns equality on {0} into derivative equality.
+    match &region {
+        Obj::StandardSet(StandardSet::R) => {}
+        Obj::SetFormer(SetFormer::IntervalObj(IntervalObj::LeftOpenRightOpen(bounds))) => {
+            req.push(member(rt, *bounds.start.clone(), real()).into());
+            req.push(member(rt, *bounds.end.clone(), real()).into());
+            req.push(lt(rt, *bounds.start.clone(), *bounds.end.clone()).into());
+        }
+        _ => return Ok(None),
+    }
     for function in &args[..2] {
         let Some(domain) = rt.checked_real_function_limit_domain(function, state)? else {
             return Ok(None);

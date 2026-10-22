@@ -1,0 +1,58 @@
+# Check: target/release/litex -lang en -strict -f examples/wd_negative/substitution_wrong_product.lit
+# Expected rejection only at the final statement.
+have fn sub_identity(x R) R=x
+
+have fn sub_sin(x R) R=sin(x)
+
+have fn sub_cos(x R) R=cos(x)
+
+have fn sub_square(x R) R=x^2
+
+have fn sub_twice(x R) R=2*x
+
+have fn sub_primitive(x R) R=sin(x^2)
+
+have fn sub_integrand(x R) R=2*x*cos(x^2)
+
+claim:
+    ? forall x R:
+        $has_derivative_at(sub_square,x,sub_twice(x))
+        $has_derivative_at(sub_sin,x,sub_cos(x))
+    release thm fn_derivative_at_real_interior(x)
+    release thm fn_derivative_at_identity(sub_identity,x)
+    release thm fn_derivative_at_multiply(sub_identity,sub_identity,sub_square,x,1,1)
+    sub_identity(x)=x
+    sub_twice(x)=2*x
+    1*sub_identity(x)+sub_identity(x)*1=sub_twice(x)
+    $has_derivative_at(sub_square,x,sub_twice(x))
+    release thm fn_derivative_at_sin(sub_sin,x)
+    sub_cos(x)=cos(x)
+    $has_derivative_at(sub_sin,x,sub_cos(x))
+
+claim:
+    ? forall x R:
+        sub_primitive(x)=sub_sin(sub_square(x))
+        sub_integrand(x)=sub_cos(sub_square(x))*sub_twice(x)
+    sub_square(x)=x^2
+    sub_twice(x)=2*x
+    sub_sin(sub_square(x))=sin(x^2)
+    sub_cos(sub_square(x))=cos(x^2)
+    sub_integrand(x)=2*x*cos(x^2)
+    sub_cos(sub_square(x))*sub_twice(x)=cos(x^2)*(2*x)
+    cos(x^2)*(2*x)=2*x*cos(x^2)
+
+release thm riemann_integrable_continuous(sub_cos,0,4)
+
+release thm riemann_integral_newton_leibniz(sub_cos,sub_sin,0,4)
+
+sub_square(0)=0
+
+sub_square(2)=4
+
+sub_sin(0)=0
+
+sub_sin(4)=sin(4)
+
+have fn bad_h(x R) R=0
+
+release thm riemann_integral_substitution(sub_cos,sub_square,sub_twice,bad_h,R,0,2,sub_sin(4)-sub_sin(0))

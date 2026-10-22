@@ -362,13 +362,13 @@ litex -lang en -strict -r path/to/project
 litex -lang en -session -e 'have a R = 2'
 ```
 
-每次分别提交一条语句；失败 JSON 在这里被缩略：
+每次分别提交一条语句；每一轮都输出 Normal run JSON（`target: "repl"`）。软失败 JSON 在这里被缩略：
 
 ```text
 litex> a = 3
-{"run_result": "failure", ..., "session_terminated": false, "termination": null}
+{"run_result": "failure", "target": "repl", "errors": [{"phase": "...", "category": "...", ...}], "session_terminated": false, "termination": null}
 litex> a + 1 = 3
-success
+{"run_result": "success", "target": "repl", "statement_results": [...], "errors": [], "session_terminated": false, "termination": null}
 ```
 
 失败语句之后，`a = 2` 仍然可用。作为对照，分别运行 `litex -e 'have a R = 2'` 和 `litex -e 'a + 1 = 3'` 不能共享声明，第二条会失败。不要每做一个小改动就重新加载此前所有已接受语句。缩进的 REPL 块用空行结束。在连贯的阶段检查点和最终 JSON 检查时，另行运行批量命令。进程停止或上下文必须改变时，重启并重放已接受源码；见 [Agent Guide](Litex智能体指南.md)。

@@ -670,8 +670,18 @@ impl LitexToLeanCompiler {
                     "(Litex.FiniteFunction.{constructor} (M := M) {vector})"
                 ))
             }
+            Obj::SetFormer(SetFormer::SetBuilder(_)) => {
+                // Beta compares semantic values. The selected literal and the
+                // equality endpoints retain their separately checked WD; this
+                // internal substitution endpoint needs no second constructor.
+                self.compile_function_raw_expression_bound(object, position, &HashMap::new())
+            }
             Obj::ExpLogOperator(ExpLogOperator::Sqrt(value)) => Ok(format!(
                 "(Litex.sqrtValue (M := M) {})",
+                self.compile_normalization_value(&value.arg, position)?
+            )),
+            Obj::ArithmeticOperator(ArithmeticOperator::Abs(value)) => Ok(format!(
+                "(Litex.absValue (M := M) {})",
                 self.compile_normalization_value(&value.arg, position)?
             )),
             Obj::ArithmeticOperator(operator) => {

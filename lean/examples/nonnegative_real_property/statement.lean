@@ -34,7 +34,12 @@ theorem h_50 : ∀ {_Host_i3 : Type v3} [_rep_i3 : Litex.Representation M _Host_
     have h_67 :=
       (Classical.choose_spec (show ((prop_1 (M := M)) _value_i3) from h_48))
     have h_49 : Litex.Le (Litex.number (M := M) (0 : ℂ)) _value_i3 :=
-      h_67
+      (by
+        litex_checked_step =>
+          exact (
+            h_67
+          )
+      )
     exact h_49
   )
 end LitexCompiled.file_lean_x2f_examples_x2f_nonnegative_x5f_real_x5f_property_x2f_statement_x2e_lit

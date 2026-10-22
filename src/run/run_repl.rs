@@ -1,10 +1,11 @@
-use super::output::write_stdout;
+use super::output::{write_stderr, write_stdout};
 use super::run_command::VERSION;
+use super::run_command_outcome::RunLitexCodeResult;
 use crate::launch_command::LaunchCommand;
 use crate::run_module::{mount_cwd_config, MountCwdConfigOutcome};
 use crate::runtime::{CodeSource, Runtime, RuntimeError, RuntimeResult};
 use crate::LITEX;
-use std::io;
+use std::io::{self, IsTerminal};
 
 /// Interactive REPL: mount cwd `litex.config` when present (else empty), then loop.
 pub fn run_repl(command: LaunchCommand) -> RuntimeResult<()> {
@@ -20,17 +21,23 @@ pub fn run_repl(command: LaunchCommand) -> RuntimeResult<()> {
     }
 
     runtime.begin_source(CodeSource::Repl);
-    run_repl_loop(&mut runtime)
+    let mut turns = Vec::new();
+    let result = run_repl_loop(&mut runtime, &mut turns);
+    runtime.abort_source();
+    result
 }
 
 /// Continue a REPL in an already-open file/eval Runtime env (used by `-session`).
-/// Each block has its own verdict. Rejected inputs leave the Session open.
-pub fn run_repl_loop(runtime: &mut Runtime) -> RuntimeResult<()> {
+/// Each block emits one Normal run JSON on stdout (`target: "repl"`). Human
+/// prompts go to stderr so stdout stays JSON-only. Rejected inputs leave the
+/// Session open. Accepted and rejected turns are appended to `turns` for the
+/// caller's final session snapshot.
+pub fn run_repl_loop(
+    runtime: &mut Runtime,
+    turns: &mut Vec<RunLitexCodeResult>,
+) -> RuntimeResult<()> {
     runtime.current_file = CodeSource::Repl;
-    write_stdout(format_args!("{} REPL {}\n", LITEX, VERSION))?;
-    write_stdout(format_args!(
-        "type `exit` or Ctrl-D to quit; end a block with a blank line\n"
-    ))?;
+    write_repl_banner()?;
 
     loop {
         let Some(code) = read_repl_block()? else {
@@ -38,29 +45,29 @@ pub fn run_repl_loop(runtime: &mut Runtime) -> RuntimeResult<()> {
         };
         let code_result = match runtime.run_litex_code(&code) {
             Ok(result) => result,
-            Err(error) => {
-                runtime.abort_source();
-                return Err(error);
-            }
+            Err(error) => return Err(error),
         };
 
         if let Some(session_error) = code_result.session_error {
-            runtime.abort_source();
             return Err(mount_session_error_to_runtime_error(session_error));
         }
 
-        if code_result.success {
-            write_stdout(format_args!("success\n"))?;
-        } else {
-            write_stdout(format_args!(
-                "{}\n",
-                crate::json_output::emit_run_normal(&code_result, runtime, "repl", None)
-            ))?;
-        }
+        write_stdout(format_args!(
+            "{}\n",
+            crate::json_output::emit_run_normal(&code_result, runtime, "repl", None)
+        ))?;
+        turns.push(code_result);
     }
 
-    runtime.abort_source();
     Ok(())
+}
+
+fn write_repl_banner() -> RuntimeResult<()> {
+    // Keep stdout JSON-only; banner is human UX on stderr.
+    write_stderr(format_args!("{} REPL {}\n", LITEX, VERSION))?;
+    write_stderr(format_args!(
+        "type `exit` or Ctrl-D to quit; end a block with a blank line\n"
+    ))
 }
 
 fn mount_session_error_to_runtime_error(
@@ -94,13 +101,16 @@ fn read_repl_block() -> RuntimeResult<Option<String>> {
     let stdin = io::stdin();
     let mut buffer = String::new();
     let bin = LITEX.to_ascii_lowercase();
+    let show_prompt = io::stderr().is_terminal() && stdin.is_terminal();
     loop {
-        let prompt = if buffer.is_empty() {
-            format!("{}> ", bin)
-        } else {
-            "... ".to_string()
-        };
-        write_stdout(format_args!("{}", prompt))?;
+        if show_prompt {
+            let prompt = if buffer.is_empty() {
+                format!("{}> ", bin)
+            } else {
+                "... ".to_string()
+            };
+            write_stderr(format_args!("{}", prompt))?;
+        }
 
         let mut line = String::new();
         let n = stdin

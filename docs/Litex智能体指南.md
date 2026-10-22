@@ -22,13 +22,13 @@ Litex 逐条语句构建数学上下文。复用上下文既保留先前证明�
 litex -lang en -session -e 'have a R = 2'
 ```
 
-随后在**同一个进程中，每次输入一条**语句。失败 JSON 在这里被缩略：
+随后在**同一个进程中，每次输入一条**语句。每一轮都输出同一份 Normal run JSON（`target: "repl"`）。软失败 JSON 在这里被缩略：
 
 ```text
 litex> a = 3
-{"run_result": "failure", ..., "session_terminated": false, "termination": null}
+{"run_result": "failure", "target": "repl", "errors": [{"phase": "...", "category": "...", ...}], "session_terminated": false, "termination": null}
 litex> a + 1 = 3
-success
+{"run_result": "success", "target": "repl", "statement_results": [...], "errors": [], "session_terminated": false, "termination": null}
 ```
 
 失败的 `a = 3` 不会移除已接受的声明及其事实 `a = 2`。下一句立即使用这个事实。不需要重写声明，也不需要重启进程再尝试。
@@ -57,7 +57,7 @@ litex -lang en -e 'a + 1 = 3'
 
 1. 理解目标数学，查看已有内置、库和模块接口。开启 `-session`，一次加载所需的已接受上下文。
 2. 按源码顺序，向同一个活动 Session 每次提交一条顶层语句。`claim` 或定理及其完整嵌套证明构成一条语句。发送下一候选前读完响应；多行输入用空行结束。
-3. 收到 REPL 的纯文本 `success` 回复（它不是 JSON 字段）时，记录已接受源码并继续。普通失败若有 `session_terminated: false`, `termination: null` 且重新出现 `litex>` 提示符，应保持进程并修复当前语句。失败表示缺少证明或良定义性证据，不是命题否定的证明。
+3. 只读 **stdout**：它是纯 JSON（没有 `litex>`；人机提示在有 TTY 时走 stderr）。每一轮是一份 Normal run JSON（`target: "repl"`）。没有顶层 `trace` 字符串，也不需要对字符串字段二次 `JSON.parse`。当 `run_result: "success"` 时，记录已接受源码并继续。普通失败若有 `session_terminated: false`、`termination: null`，应保持进程并修复当前语句；阅读 `errors` 中的 `phase`、`category` 等字段。`exit` 后还会再打印一份汇总 JSON，把初始 `-e` / `-f` / `-r` 批与之后每一轮 REPL（接受与拒绝）合并在一起。失败表示缺少证明或良定义性证据，不是命题否定的证明。独立的 `-e` / `-f` 批跑是验收门，不能代替 Session 增量验证。
 4. 在连贯的阶段检查点或最终验证时保存已接受代码，另行运行干净文件检查，并保持书写用的 Session 开启。不要每加一条语句或几条新代码就重新运行整个文件。交互上下文不能替代可复现文件。
 
 **事务边界是语句，而不是整段粘贴输入。** 失败语句丢弃自身暂存的解析绑定与执行状态。先前成功语句保留。如果一个输入帧包含多条顶层语句，即使整帧 `run_result` 为 `"failure"`，成功语句也可以提交；软失败不会阻止后续语句。不要假定整个候选片段都已回滚，也不要盲目重新提交已经提交的名称。在活动进程之外记录已接受前缀，使其可在重启或中断后恢复。

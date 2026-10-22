@@ -1,0 +1,7 @@
+# Check: target/release/litex -lang en -strict -f examples/wd_negative/antiderivative_missing_domain.lit
+# Expected rejection only at the final statement.
+have fn partial(x R*) R=x
+
+have fn one(x R) R=1
+
+$is_antiderivative_on(partial,one,R)

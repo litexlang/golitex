@@ -18,16 +18,36 @@ noncomputable def _object_i3 := (Litex.formulaFn (M := M) Litex.StandardSetValue
   have h_35 : Litex.In _value_i4 (Litex.R (M := M)) := h_35
   have h_5 : ((prop_1 (M := M)) _value_i4) :=
     (by
-      change (∃ (_predicate_witness : (M.mem _raw_i4 (M.standard Litex.StandardSetValue.real))), (((¬ (_raw_i4 = (M.number (0 : ℂ))))) ∧ ((_raw_i4 = _raw_i4))))
-      exact h_5)
+      litex_checked_step =>
+        exact (
+          (by
+            change (∃ (_predicate_witness : (M.mem _raw_i4 (M.standard Litex.StandardSetValue.real))), (((¬ (_raw_i4 = (M.number (0 : ℂ))))) ∧ ((_raw_i4 = _raw_i4))))
+            exact h_5)
+        )
+    )
   have h_36 :=
     (Classical.choose (show ((prop_1 (M := M)) _value_i4) from h_5))
   have h_39 : ((¬ Litex.Same _value_i4 (Litex.number (M := M) (0 : ℂ))) ∧ (Litex.Same _value_i4 _value_i4)) :=
-    (by rcases h_5 with ⟨h_4, h_3⟩; exact h_3)
+    (by
+      litex_checked_step =>
+        exact (
+          (by rcases h_5 with ⟨h_4, h_3⟩; exact h_3)
+        )
+    )
   have h_37 : ¬ Litex.Same _value_i4 (Litex.number (M := M) (0 : ℂ)) :=
-    (And.left (by rcases h_5 with ⟨h_4, h_3⟩; exact h_3))
+    (by
+      litex_checked_step =>
+        exact (
+          (And.left (by rcases h_5 with ⟨h_4, h_3⟩; exact h_3))
+        )
+    )
   have h_38 : Litex.Same _value_i4 _value_i4 :=
-    (And.right (by rcases h_5 with ⟨h_4, h_3⟩; exact h_3))
+    (by
+      litex_checked_step =>
+        exact (
+          (And.right (by rcases h_5 with ⟨h_4, h_3⟩; exact h_3))
+        )
+    )
   change (by
     let _atomic_wd_1_0 := (Litex.div (Litex.number (M := M) (1 : ℂ)) _value_i4 (Litex.numberInC (M := M) (1 : ℂ)) (M.real_subset_complex _ h_35) h_37)
     exact Litex.In _atomic_wd_1_0 (Litex.R (M := M)))
@@ -58,7 +78,10 @@ noncomputable def _object_w8 := (Litex.call Litex.StandardSetValue.real Litex.St
 
 noncomputable def _object_w9 := (Litex.div (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (2 : ℂ)) (Litex.numberInC (M := M) (1 : ℂ)) (Litex.numberInC (M := M) (2 : ℂ)) (h_124 (M := M)))
 
-theorem h_127 : Litex.Same (_object_w8 (M := M)) (_object_w9 (M := M)) :=
+theorem h_127 : (by
+  let _equal_wd_1_0 := (_object_w8 (M := M))
+  let _equal_wd_1_1 := (_object_w9 (M := M))
+  exact Litex.Same _equal_wd_1_0 _equal_wd_1_1) :=
   (show (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i3 (M := M))) (M.number (2 : ℂ))) = (M.divValue (M.number (1 : ℂ)) (M.number (2 : ℂ))) from by
     have _litex_residual : (M.divValue (M.number (1 : ℂ)) (M.number (2 : ℂ))) = (M.divValue (M.number (1 : ℂ)) (M.number (2 : ℂ))) := (show @Eq M.Value _ _ from Eq.refl _)
     exact ((((Eq.refl (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i3 (M := M))) (M.number (2 : ℂ))))).trans (by

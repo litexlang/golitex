@@ -9,6 +9,17 @@ definitions and facts. Never rerun from the beginning after adding a few new
 lines. It includes a checked comparison and the exact restart/replay boundary.
 Apply the `golitex-repository-policy` skill for the full repository working policy.
 
+## Native mathematics inventory
+
+For every addition, change, or removal on the native mathematical Obj/prop
+roadmap that began with `lim`, update the same local inventory in the same task:
+`scripts/litex_limit_designs/native-analysis-inventory.md`.
+Record exact Obj/Fact interfaces, predicates, builtin rules and strategies,
+reserved BT names/arities, source `thm` declarations, domains and WD, examples,
+verification evidence, compatibility changes, and unsupported boundaries.
+Distinguish new features from reused dependencies and plans from delivered work.
+This inventory remains local-only under the scripts policy below.
+
 ## Local-only scripts workspace
 
 The entire `scripts/` directory directly under this repository root is local-only.

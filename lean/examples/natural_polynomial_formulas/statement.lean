@@ -14,7 +14,12 @@ noncomputable def _object_i1 := (Litex.formulaFn (M := M) Litex.StandardSetValue
   let _value_i2 := Litex.semanticObject (M := M) _raw_i2 (M.member_isSet h_14)
   have h_14 : Litex.In _value_i2 (Litex.N (M := M)) := h_14
   have h_15 : Litex.Le (Litex.number (M := M) (0 : ℂ)) _value_i2 :=
-    (Litex.naturalNonnegative _value_i2 h_14)
+    (by
+      litex_checked_step =>
+        exact (
+          (Litex.naturalNonnegative _value_i2 h_14)
+        )
+    )
   change (by
     let _atomic_wd_1_0 := (Litex.mul (Litex.number (M := M) (2 : ℂ)) _value_i2 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.naturalToComplex _value_i2 h_14))
     exact Litex.In _atomic_wd_1_0 (Litex.N (M := M)))
@@ -31,7 +36,12 @@ noncomputable def _object_i3 := (Litex.formulaFn (M := M) Litex.StandardSetValue
   let _value_i4 := Litex.semanticObject (M := M) _raw_i4 (M.member_isSet h_76)
   have h_76 : Litex.In _value_i4 (Litex.N (M := M)) := h_76
   have h_77 : Litex.Le (Litex.number (M := M) (0 : ℂ)) _value_i4 :=
-    (Litex.naturalNonnegative _value_i4 h_76)
+    (by
+      litex_checked_step =>
+        exact (
+          (Litex.naturalNonnegative _value_i4 h_76)
+        )
+    )
   change (by
     let _atomic_wd_1_0 := (Litex.powNatReal _value_i4 (Litex.number (M := M) (2 : ℂ)) (2 : ℕ) (Litex.naturalToReal _value_i4 h_76) (Litex.NativeBridge.numberInNOfEq (M := M) (2 : ℂ) (2 : ℕ) (by norm_num)) (Litex.NativeBridge.sameOfDenoteNumber (Litex.number (M := M) (2 : ℂ)) (Litex.number (M := M) ((2 : ℕ) : ℂ)) (2 : ℂ) ((2 : ℕ) : ℂ) (Litex.NativeBridge.denoteNumber (M := M) (2 : ℂ)) (Litex.NativeBridge.denoteNumber (M := M) ((2 : ℕ) : ℂ)) (by norm_num)))
     exact Litex.In _atomic_wd_1_0 (Litex.N (M := M)))
@@ -52,9 +62,12 @@ theorem h_139 : Litex.Same (_object_i3 (M := M)) (_object_i3 (M := M)) :=
 
 noncomputable def _object_w9 := (Litex.call Litex.StandardSetValue.natural Litex.StandardSetValue.natural (fun (_raw_i2 : M.Value) => True) (_object_i1 (M := M)) (Litex.number (M := M) (3 : ℂ)) (h_61 (M := M)) (Litex.NativeBridge.numberInNOfEq (M := M) (3 : ℂ) (3 : ℕ) (by norm_num)) True.intro)
 
-theorem h_140 : Litex.Same (_object_w9 (M := M)) (Litex.number (M := M) (6 : ℂ)) :=
+theorem h_140 : (by
+  let _equal_wd_1_0 := (_object_w9 (M := M))
+  exact Litex.Same _equal_wd_1_0 (Litex.number (M := M) (6 : ℂ))) :=
   (show (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i1 (M := M))) (M.number (3 : ℂ))) = (M.number (6 : ℂ)) from by
-    have _litex_residual : (M.mulValue (M.number (2 : ℂ)) (M.number (3 : ℂ))) = (M.number (6 : ℂ)) := (Litex.NativeBridge.sameOfDenoteNumber (Litex.mul (Litex.number (M := M) (2 : ℂ)) (Litex.number (M := M) (3 : ℂ)) (Litex.numberInC (M := M) (2 : ℂ)) (Litex.numberInC (M := M) (3 : ℂ))) (Litex.number (M := M) (6 : ℂ)) ((2 : ℂ) * (3 : ℂ)) (6 : ℂ) (Litex.NativeBridge.denoteMul (Litex.number (M := M) (2 : ℂ)) (Litex.number (M := M) (3 : ℂ)) (Litex.numberInC (M := M) (2 : ℂ)) (Litex.numberInC (M := M) (3 : ℂ)) _ _ (Litex.NativeBridge.denoteNumber (M := M) (2 : ℂ)) (Litex.NativeBridge.denoteNumber (M := M) (3 : ℂ))) (Litex.NativeBridge.denoteNumber (M := M) (6 : ℂ)) (by norm_num))
+    have _litex_residual : (M.mulValue (M.number (2 : ℂ)) (M.number (3 : ℂ))) = (M.number (6 : ℂ)) := (let _equal_wd_2_0 := (Litex.mul (Litex.number (M := M) (2 : ℂ)) (Litex.number (M := M) (3 : ℂ)) (Litex.numberInC (M := M) (2 : ℂ)) (Litex.numberInC (M := M) (3 : ℂ)));
+    (show Litex.Same _equal_wd_2_0 (Litex.number (M := M) (6 : ℂ)) from (Litex.NativeBridge.sameOfDenoteNumber _equal_wd_2_0 (Litex.number (M := M) (6 : ℂ)) ((2 : ℂ) * (3 : ℂ)) (6 : ℂ) (Litex.NativeBridge.denoteMul (Litex.number (M := M) (2 : ℂ)) (Litex.number (M := M) (3 : ℂ)) (_equal_wd_2_0).wd.1 (_equal_wd_2_0).wd.2 _ _ (Litex.NativeBridge.denoteNumber (M := M) (2 : ℂ)) (Litex.NativeBridge.denoteNumber (M := M) (3 : ℂ))) (Litex.NativeBridge.denoteNumber (M := M) (6 : ℂ)) (by norm_num))))
     exact ((((Eq.refl (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i1 (M := M))) (M.number (3 : ℂ))))).trans (by
     let _litex_original := (Litex.call Litex.StandardSetValue.natural Litex.StandardSetValue.natural (fun (_raw_i2 : M.Value) => True) (_object_i1 (M := M)) (Litex.number (M := M) (3 : ℂ)) (h_61 (M := M)) (Litex.NativeBridge.numberInNOfEq (M := M) (3 : ℂ) (3 : ℕ) (by norm_num)) True.intro)
     let _litex_literal := (let _wd_1_0 := (_object_i1 (M := M));
@@ -67,9 +80,12 @@ theorem h_140 : Litex.Same (_object_w9 (M := M)) (Litex.number (M := M) (6 : ℂ
 
 noncomputable def _object_w11 := (Litex.call Litex.StandardSetValue.natural Litex.StandardSetValue.natural (fun (_raw_i4 : M.Value) => True) (_object_i3 (M := M)) (Litex.number (M := M) (3 : ℂ)) (h_138 (M := M)) (Litex.NativeBridge.numberInNOfEq (M := M) (3 : ℂ) (3 : ℕ) (by norm_num)) True.intro)
 
-theorem h_188 : Litex.Same (_object_w11 (M := M)) (Litex.number (M := M) (9 : ℂ)) :=
+theorem h_188 : (by
+  let _equal_wd_1_0 := (_object_w11 (M := M))
+  exact Litex.Same _equal_wd_1_0 (Litex.number (M := M) (9 : ℂ))) :=
   (show (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i3 (M := M))) (M.number (3 : ℂ))) = (M.number (9 : ℂ)) from by
-    have _litex_residual : (M.powValue (M.number (3 : ℂ)) (M.number (2 : ℂ))) = (M.number (9 : ℂ)) := (Litex.NativeBridge.sameOfDenoteNumber (Litex.powNatReal (Litex.number (M := M) (3 : ℂ)) (Litex.number (M := M) (2 : ℂ)) (2 : ℕ) (Litex.NativeBridge.numberInROfEq (M := M) (3 : ℂ) (3 : ℝ) (by norm_num)) (Litex.NativeBridge.numberInNOfEq (M := M) (2 : ℂ) (2 : ℕ) (by norm_num)) (Litex.NativeBridge.sameOfDenoteNumber (Litex.number (M := M) (2 : ℂ)) (Litex.number (M := M) ((2 : ℕ) : ℂ)) (2 : ℂ) ((2 : ℕ) : ℂ) (Litex.NativeBridge.denoteNumber (M := M) (2 : ℂ)) (Litex.NativeBridge.denoteNumber (M := M) ((2 : ℕ) : ℂ)) (by norm_num))) (Litex.number (M := M) (9 : ℂ)) ((3 : ℂ) ^ (2 : ℕ)) (9 : ℂ) (Litex.NativeBridge.denotePowNatReal (Litex.number (M := M) (3 : ℂ)) (Litex.number (M := M) (2 : ℂ)) (2 : ℕ) (Litex.NativeBridge.numberInROfEq (M := M) (3 : ℂ) (3 : ℝ) (by norm_num)) (Litex.NativeBridge.numberInNOfEq (M := M) (2 : ℂ) (2 : ℕ) (by norm_num)) (Litex.NativeBridge.sameOfDenoteNumber (Litex.number (M := M) (2 : ℂ)) (Litex.number (M := M) ((2 : ℕ) : ℂ)) (2 : ℂ) ((2 : ℕ) : ℂ) (Litex.NativeBridge.denoteNumber (M := M) (2 : ℂ)) (Litex.NativeBridge.denoteNumber (M := M) ((2 : ℕ) : ℂ)) (by norm_num)) _ (Litex.NativeBridge.denoteNumber (M := M) (3 : ℂ))) (Litex.NativeBridge.denoteNumber (M := M) (9 : ℂ)) (by norm_num))
+    have _litex_residual : (M.powValue (M.number (3 : ℂ)) (M.number (2 : ℂ))) = (M.number (9 : ℂ)) := (let _equal_wd_2_0 := (Litex.powNatReal (Litex.number (M := M) (3 : ℂ)) (Litex.number (M := M) (2 : ℂ)) (2 : ℕ) (Litex.NativeBridge.numberInROfEq (M := M) (3 : ℂ) (3 : ℝ) (by norm_num)) (Litex.NativeBridge.numberInNOfEq (M := M) (2 : ℂ) (2 : ℕ) (by norm_num)) (Litex.NativeBridge.sameOfDenoteNumber (Litex.number (M := M) (2 : ℂ)) (Litex.number (M := M) ((2 : ℕ) : ℂ)) (2 : ℂ) ((2 : ℕ) : ℂ) (Litex.NativeBridge.denoteNumber (M := M) (2 : ℂ)) (Litex.NativeBridge.denoteNumber (M := M) ((2 : ℕ) : ℂ)) (by norm_num)));
+    (show Litex.Same _equal_wd_2_0 (Litex.number (M := M) (9 : ℂ)) from (Litex.NativeBridge.sameOfDenoteNumber _equal_wd_2_0 (Litex.number (M := M) (9 : ℂ)) ((3 : ℂ) ^ (2 : ℕ)) (9 : ℂ) (Litex.NativeBridge.denotePowNatReal (Litex.number (M := M) (3 : ℂ)) (Litex.number (M := M) (2 : ℂ)) (2 : ℕ) (Litex.NativeBridge.numberInROfEq (M := M) (3 : ℂ) (3 : ℝ) (by norm_num)) (Litex.NativeBridge.numberInNOfEq (M := M) (2 : ℂ) (2 : ℕ) (by norm_num)) (Litex.NativeBridge.sameOfDenoteNumber (Litex.number (M := M) (2 : ℂ)) (Litex.number (M := M) ((2 : ℕ) : ℂ)) (2 : ℂ) ((2 : ℕ) : ℂ) (Litex.NativeBridge.denoteNumber (M := M) (2 : ℂ)) (Litex.NativeBridge.denoteNumber (M := M) ((2 : ℕ) : ℂ)) (by norm_num)) _ (Litex.NativeBridge.denoteNumber (M := M) (3 : ℂ))) (Litex.NativeBridge.denoteNumber (M := M) (9 : ℂ)) (by norm_num))))
     exact ((((Eq.refl (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i3 (M := M))) (M.number (3 : ℂ))))).trans (by
     let _litex_original := (Litex.call Litex.StandardSetValue.natural Litex.StandardSetValue.natural (fun (_raw_i4 : M.Value) => True) (_object_i3 (M := M)) (Litex.number (M := M) (3 : ℂ)) (h_138 (M := M)) (Litex.NativeBridge.numberInNOfEq (M := M) (3 : ℂ) (3 : ℕ) (by norm_num)) True.intro)
     let _litex_literal := (let _wd_1_0 := (_object_i3 (M := M));
@@ -88,8 +104,10 @@ def prop_5 {_Host_i5 : Type v5} [_rep_i5 : Litex.Representation M _Host_i5] (_va
 
 theorem h_248 : ((prop_5 (M := M)) (Litex.number (M := M) (3 : ℂ))) :=
   (Exists.intro (Litex.NativeBridge.numberInNOfEq (M := M) (3 : ℂ) (3 : ℕ) (by norm_num)) (by
-    let _litex_return_call := (_object_w11 (M := M))
-    exact Litex.inOfSame _litex_return_call _litex_return_call (Litex.N (M := M)) (Litex.N (M := M)) (Litex.sameRefl _litex_return_call) (Litex.sameRefl (Litex.N (M := M))) (Litex.callInOutput _litex_return_call)))
+    let _atomic_wd_2_0 := (_object_w11 (M := M))
+    exact (by
+      let _litex_return_call := (_object_w11 (M := M))
+      exact Litex.inOfSame _litex_return_call _litex_return_call (Litex.N (M := M)) (Litex.N (M := M)) (Litex.sameRefl _litex_return_call) (Litex.sameRefl (Litex.N (M := M))) (Litex.callInOutput _litex_return_call))))
 
 theorem h_274 : Litex.In (Litex.number (M := M) (3 : ℂ)) (Litex.N (M := M)) :=
   (by rcases (h_248 (M := M)) with ⟨h_237, h_236⟩; exact h_237)

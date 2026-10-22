@@ -206,23 +206,9 @@ impl LitexToLeanCompiler {
                 before: 3 + i,
                 ..scope
             };
-            let mut derived = self
-                .compile_set_builder_parameter_inferences(
-                    &captured.store_and_infer,
-                    &fact,
-                    &clause,
-                    &completed,
-                )
-                .map_err(|error| in_clause("parameter inference", error))?;
-            derived.extend(
-                self.compile_stored_inferences(
-                    &captured.store_and_infer,
-                    &fact,
-                    &clause,
-                    &completed,
-                )
-                .map_err(|error| in_clause("stored inference", error))?,
-            );
+            let derived = self
+                .compile_stored_inferences(&captured.store_and_infer, &fact, &clause, &completed)
+                .map_err(|error| in_clause("stored inference", error))?;
             clauses.push((clause.1, clause.0, derived));
         }
         let mut meaning = if let Some((_, last, _)) = clauses.pop() {

@@ -290,9 +290,9 @@ Litex 检查器完成常规的成员拆解与传递；Lean 证明通过 `hx` 和
 ```text
 $ litex -lang en -strict -session -e 'have a R = 2'
 litex> a = 3
-{"run_result": "failure", ..., "session_terminated": false, "termination": null}
+{"run_result": "failure", "target": "repl", "errors": [{"phase": "...", "category": "...", ...}], "session_terminated": false, "termination": null}
 litex> a + 1 = 3
-success
+{"run_result": "success", "target": "repl", "statement_results": [...], "errors": [], "session_terminated": false, "termination": null}
 ```
 
 失败的等式不会删除声明或 `a = 2`。下一条语句仍能使用已接受的上下文；换一个进程则需要加载或重放这些上下文。事务单位是一条语句，多条粘贴的语句可以分别提交。硬错误或替换已提交声明可能需要重启。

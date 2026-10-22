@@ -24759,6 +24759,13 @@
     "labels": {}
   },
   {
+    "id": "builtin_theorem.BuiltinTheoremId::AntiderivativeCompose",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "AntiderivativeCompose",
+    "labels": {}
+  },
+  {
     "id": "builtin_theorem.BuiltinTheoremId::AntiderivativeDifferenceConstant",
     "category": "builtin_theorem",
     "family": "BuiltinTheoremId",
@@ -26723,6 +26730,13 @@
     "category": "builtin_theorem",
     "family": "BuiltinTheoremId",
     "variant": "RiemannIntegralStep",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::RiemannIntegralSubstitution",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "RiemannIntegralSubstitution",
     "labels": {}
   },
   {

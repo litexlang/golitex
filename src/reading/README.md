@@ -32,15 +32,26 @@ dependencies. The local service listens only on `127.0.0.1`.
 The viewer follows the typography and palette of `../litex-webpage`: a light
 background, green controls, blue current statements, green cited facts and
 purple concepts. The initial selection prefers an accepted statement with
-actual citations. Premises lead into a conclusion card; detailed execution
-evidence and the Rule Book start collapsed. The same viewer handles local
-preview and static export without a Node runtime or frontend build.
+actual citations. Premises lead into a conclusion card. Statement and fact
+details show concise origins, citations and rules, without full proof-tree
+expanders or related-concept lists. Source concepts remain clickable, and
+complete execution evidence remains in the exported JSON. The Rule Book
+starts collapsed. The same viewer handles local preview and static export
+without a Node runtime or frontend build.
 
 Source ranges use original UTF-8 byte offsets. Occurrence highlighting uses
 resolved identities and reports mapping coverage per statement. Typed proof
 payloads and retained local scopes are exported. Actual store/infer outputs
-link seed facts to derived fact IDs; the reader displays grey arrow rows and
-can follow a later citation back to an inferred fact. Nested proof statements
+link seed facts to derived fact IDs; the reader displays compact grey results
+beside the producing statement on the same source line, excluding temporary
+definition/parameter-checking assumptions, and can follow a later citation
+back to an inferred fact. These inline results omit origin prose and do not
+add display rows; long source lines scroll horizontally within the source pane.
+Citation and inferred-fact detail cards name each conclusion's retained origin,
+distinguishing definition expansion from parameter typing. Available named
+definition labels link to the actual declaration; other rule labels link to
+the Rule Book. Older bundles without this metadata report the gap.
+Nested proof statements
 and repeated execution contexts retain separate identities. Ordinary facts
 have exact source focus and hypothesis/verified/declaration roles. Actual WD
 registrations and their retained formation evidence are navigable. Whole-book

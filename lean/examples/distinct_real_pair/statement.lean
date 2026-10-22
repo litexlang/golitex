@@ -20,7 +20,9 @@ theorem h_4 : ∀ {_Host_i1 : Type v1} [_rep_i1 : Litex.Representation M _Host_i
     _setTail_0)
   exact (((by
     let _atomic_wd_1_1 := _object_w2
-    exact Litex.In _value_i1 _atomic_wd_1_1)) ∧ (Litex.Subset _object_w2 (Litex.R (M := M))))
+    exact Litex.In _value_i1 _atomic_wd_1_1)) ∧ ((by
+    let _atomic_wd_1_0 := _object_w2
+    exact Litex.Subset _atomic_wd_1_0 (Litex.R (M := M)))))
 ) :=
   (by
     intro _Host_i1 _rep_i1 _value_i1 h_17 _Host_i2 _rep_i2 _value_i2 h_18 h_1
@@ -36,14 +38,28 @@ theorem h_4 : ∀ {_Host_i1 : Type v1} [_rep_i1 : Litex.Representation M _Host_i
       let _atomic_wd_1_1 := _object_w2
       exact Litex.In _value_i1 _atomic_wd_1_1) :=
       (by
-        let _atomic_wd_1_1 := _object_w2
-        exact (by
-          let _set := _atomic_wd_1_1
-          exact ((Litex.inInsert_iff _value_i1 _set.val.element _set.val.tail _set.wd).mpr (Or.inl (show @Eq M.Value _ _ from Eq.refl _)))))
-    have h_3 : Litex.Subset _object_w2 (Litex.R (M := M)) :=
+        litex_checked_step =>
+          exact (
+            (by
+              let _atomic_wd_1_1 := _object_w2
+              exact (by
+                let _set := _atomic_wd_1_1
+                exact ((Litex.inInsert_iff _value_i1 _set.val.element _set.val.tail _set.wd).mpr (Or.inl (show @Eq M.Value _ _ from Eq.refl _)))))
+          )
+      )
+    have h_3 : (by
+      let _atomic_wd_1_0 := _object_w2
+      exact Litex.Subset _atomic_wd_1_0 (Litex.R (M := M))) :=
       (by
-        let _set := _object_w2
-        exact (Litex.insertSubset _set.val.element _set.val.tail (Litex.R (M := M)) _set.wd h_17 (Litex.insertSubset _set.val.tail.val.element _set.val.tail.val.tail (Litex.R (M := M)) _set.val.tail.wd h_18 (Litex.emptySubset (Litex.R (M := M))))))
+        litex_checked_step =>
+          exact (
+            (by
+              let _atomic_wd_1_0 := _object_w2
+              exact (by
+                let _set := _atomic_wd_1_0
+                exact (Litex.insertSubset _set.val.element _set.val.tail (Litex.R (M := M)) _set.wd h_17 (Litex.insertSubset _set.val.tail.val.element _set.val.tail.val.tail (Litex.R (M := M)) _set.val.tail.wd h_18 (Litex.emptySubset (Litex.R (M := M)))))))
+          )
+      )
     exact (And.intro h_2 h_3)
   )
 end LitexCompiled.file_lean_x2f_examples_x2f_distinct_x5f_real_x5f_pair_x2f_statement_x2e_lit
