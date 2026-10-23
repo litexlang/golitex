@@ -104,7 +104,7 @@ pub(super) fn atomic(
     })
 }
 
-pub(super) fn parameters(
+pub(crate) fn parameters(
     value: &TypedParameterList,
     modules: &GlobalModuleManager,
     lang: OutputLanguage,

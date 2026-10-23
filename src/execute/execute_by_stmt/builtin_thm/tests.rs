@@ -122,7 +122,8 @@ fn exact_function_domain_acceptance_files_keep_successful_prefixes_and_failure_p
                 "{file}"
             );
             assert!(
-                format!("{:?}", run.session_error).contains(expected_diagnostic),
+                format!("{:?}{:?}", run.session_error, run.input_error)
+                    .contains(expected_diagnostic),
                 "{file}"
             );
             continue;

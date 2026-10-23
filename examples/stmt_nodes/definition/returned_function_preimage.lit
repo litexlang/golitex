@@ -1,0 +1,23 @@
+# Before: the same valid preimage source terminated with InternalBug:
+# have fn shifted(t R) fn(x R) R=fn(x R) R {x+t}
+# shifted(2) $in fn(x R) R
+# claim:
+#     ? forall value fn_range(shifted(2)):
+#         exist x R st {value=shifted(2)(x)}
+#     have by fn_preimage: source from value $in fn_range(shifted(2))
+#     witness exist x R st {value=shifted(2)(x)} from source
+# Now: preserve shifted(2) and append the witness argument group canonically.
+# Boundary: wrong ranges/arity/guards/equations still reject in the focused Rust tests.
+# Run: target/release/litex -lang en -strict -f examples/stmt_nodes/definition/returned_function_preimage.lit
+
+have fn shifted(t R) fn(x R) R=fn(x R) R {x+t}
+shifted(2) $in fn(x R) R
+# The complete call also belongs to the image of its returned function.
+shifted(2)(3) $in fn_range(shifted(2))
+have by fn_preimage: actual from shifted(2)(3) $in fn_range(shifted(2))
+shifted(2)(actual)=shifted(2)(3)
+claim:
+    ? forall value fn_range(shifted(2)):
+        exist x R st {value=shifted(2)(x)}
+    have by fn_preimage: source from value $in fn_range(shifted(2))
+    witness exist x R st {value=shifted(2)(x)} from source

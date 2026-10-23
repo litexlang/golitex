@@ -509,23 +509,90 @@ agent search, or checking each step in an interactive textbook. These are
 workflow hypotheses to test; checker speed alone does not establish their
 effect on completed mathematics.
 
+<a id="loaded-checking-comparison"></a>
+
+### Common tasks: roughly 10–100× checking differences after startup and imports
+
+**On some common mathematical tasks, Litex can check a statement roughly
+10–100× as fast as Lean.** In a local measurement on 2026-10-23, the selected
+examples below showed differences of about 12–77×, with process startup and
+`import Mathlib` already excluded.
+
+For example, prove that the sum of any two positive real numbers is positive:
+
+```litex
+forall x,y R:
+    x > 0
+    y > 0
+    =>:
+        x+y > 0
+```
+
+The corresponding Lean proof can reference the theorem directly:
+
+```lean
+import Mathlib
+
+example : ∀ x y : Real, 0 < x → 0 < y → 0 < x+y := by
+  intro x y hx hy
+  exact add_pos hx hy
+```
+
+Litex's detailed verification record uses the builtin strategy
+`PosAddPosIsPos`. Checking this complete universally quantified statement
+took a median **0.394 ms** in Litex. The direct Lean `add_pos` proof took
+**9.305 ms**, a ratio of **23.60×**. The measured `linarith` proof of the same
+goal took 14.923 ms; the table uses the faster direct theorem proof.
+
+The table selects common examples from this batch where Litex was faster.
+Each Lean entry uses the fastest successful route tested for that task,
+including direct theorems and compact proof terms. Times are median
+milliseconds; ratios use the unrounded medians.
+
+| Complete mathematical task | Litex | Lean | Lean/Litex | Fastest Lean route tested |
+| --- | ---: | ---: | ---: | --- |
+| Sum of two positive reals is positive | 0.394 | 9.305 | **23.60×** | `add_pos` |
+| Product of two positive reals is positive | 0.408 | 4.986 | **12.23×** | `mul_pos` |
+| Every real square is nonnegative | 0.597 | 13.491 | **22.60×** | `sq_nonneg` |
+| Reciprocal of a positive real is positive | 0.287 | 8.167 | **28.43×** | `one_div_pos.mpr` |
+| A zero real product has a zero factor | 0.203 | 6.860 | **33.83×** | `mul_eq_zero.mp` |
+| Witness that the positive-real set is nonempty | 0.084 | 6.439 | **76.88×** | Explicitly typed `⟨1, zero_lt_one⟩` |
+
+This batch used one macOS arm64 workstation, release Litex 1.1.2-beta, and
+Lean/Mathlib 4.31.0. Every Litex file passed independently in strict mode;
+each successful Lean route also passed in an ordinary independent file
+without `sorry`. Each Litex case has 90 warm samples across three processes;
+each Lean route in this table has 21 across three processes. First checks
+were recorded separately and excluded from these medians.
+
+Litex's interval includes tokenization, parsing, well-definedness, verification,
+and storage of the complete statement, with fresh Runtime construction outside
+the interval. Lean's interval includes command elaboration, proof construction,
+and synchronous kernel checking, with command parsing outside. Both exclude
+startup, dependency imports, and result output. These measure the respective
+checking paths, rather than isolated kernel reduction, and exclude compiling
+Litex into Lean and rechecking it. The workstation had no CPU isolation or
+controlled cache clearing. These selected local results are not an overall
+ratio across tasks and do not yet establish a proportional reduction in
+authoring time.
+
 <a id="9-local-runtime-spot-checks"></a>
 
-### Local runtime observations, 2026-10-21
+### Whole-process observations, 2026-10-21: including startup and loading
 
 The existing local spot check on Apple Silicon recorded the following results.
 Litex used a built `target/release/litex -f`. Lean used `lake env lean` in
 `showcases/litex_to_lean_adapter`, with Mathlib olean caches already present.
 Litex times are medians over repeated runs; Lean times are a second, warmer
-run. This table preserves the earlier observations; additional proof styles
-shown on this page were not retimed.
+run. This subsection preserves those whole-command observations; they must
+not be mixed with the startup- and import-excluded timings above.
 
 | Scenario | Litex (median) | Lean (2nd warmer run) | Approximate ratio |
 | --- | --- | --- | --- |
 | Short arithmetic / `x = 2` ⇒ `x + 1 = 3`, `x^2 = 4` | ~6 ms | ~7 s | ~1000× |
 | Two-equation calculation chain | ~16 ms | ~30 s | ~2000× |
 | Sets: intersection preserves inclusion | ~4 ms | ~3.4 s | ~800× |
-| Large witness `a^4 + b^4 + c^4 = d^4` (95800…) | ~5 ms | ~16–21 s (`norm_num` / `native_decide`) | ~3000×+ |
+| Positive-integer witness `(95800,217519,414560,422481)` for `a^4+b^4+c^4=d^4` | ~5 ms | ~16–21 s (`norm_num` / `native_decide`) | ~3000×+ |
 | Control: Lean `1 + 1 = 2` with no Mathlib | — | ~2.3 s (`lake env lean` startup) | No paired ratio |
 
 The orders of magnitude are a notable observation about these command-line
@@ -577,10 +644,13 @@ measure finding the numbers or rebuilding the historical disproof.
 | Complete task under a fixed budget | How checking time combines with generation, search, repair, and completion. |
 | Required independent checking | Total source checking, proof generation, adapter, and backend-checking cost. |
 
-The existing table addresses the first row for a small local sample. It does
-not imply a thousandfold increase in AI success or throughput. Formal timing
-should freeze source and tools, retain raw commands and inputs, use consistent
-repetition, report variation and memory, and include unsuccessful cases.
+The two sets of results above give whole-command times for new processes and
+single-statement checking times after startup and imports. Resident editor
+interaction, growing contexts, and complete authoring tasks still need separate
+measurement. These numbers do not imply the same multiplier in AI success or
+throughput. Broader benchmarks should freeze source and tools, retain raw
+commands and inputs, use consistent repetition, report variation and memory,
+and include unsuccessful cases.
 
 <a id="a-research-hypothesis-that-can-be-tested"></a>
 <a id="reading-the-comparison-fairly"></a>

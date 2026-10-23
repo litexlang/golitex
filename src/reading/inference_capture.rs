@@ -161,6 +161,10 @@ impl Capture {
             ("scope_id", text(&scope)),
             ("rule_ids", strings(&rules.into_iter().collect::<Vec<_>>())),
             ("conclusion_origins", JsonValue::Array(origins)),
+            (
+                "mathematics",
+                super::mathematical_meaning::inference_math(result, runtime, self.language),
+            ),
             ("evidence", evidence),
         ]));
         for fact in facts {

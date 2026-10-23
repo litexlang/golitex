@@ -57,12 +57,12 @@ theorem h_215 : ∀ {_Host_i7 : Type v7} [_rep_i7 : Litex.Representation M _Host
   let _equal_wd_1_0 := (let _wd_1_0 := (Litex.sub _value_i7 _value_i9 (Litex.rationalToComplex _value_i7 h_228) (Litex.rationalToComplex _value_i9 h_230));
   let _wd_1_1 := _value_i10;
   (Litex.sub _wd_1_0 _wd_1_1 (by
-    let _atomic_wd_1_0 := (Litex.sub _value_i7 _value_i9 (Litex.rationalToComplex _value_i7 h_228) (Litex.rationalToComplex _value_i9 h_230))
+    let _atomic_wd_1_0 := _wd_1_0
     exact (Litex.subInC _value_i7 _value_i9 (Litex.rationalToComplex _value_i7 h_228) (Litex.rationalToComplex _value_i9 h_230))) (Litex.rationalToComplex _wd_1_1 h_231)))
   let _equal_wd_1_1 := (let _wd_1_0 := (Litex.sub _value_i8 _value_i9 (Litex.rationalToComplex _value_i8 h_229) (Litex.rationalToComplex _value_i9 h_230));
   let _wd_1_1 := _value_i10;
   (Litex.sub _wd_1_0 _wd_1_1 (by
-    let _atomic_wd_1_0 := (Litex.sub _value_i8 _value_i9 (Litex.rationalToComplex _value_i8 h_229) (Litex.rationalToComplex _value_i9 h_230))
+    let _atomic_wd_1_0 := _wd_1_0
     exact (Litex.subInC _value_i8 _value_i9 (Litex.rationalToComplex _value_i8 h_229) (Litex.rationalToComplex _value_i9 h_230))) (Litex.rationalToComplex _wd_1_1 h_231)))
   exact Litex.Same _equal_wd_1_0 _equal_wd_1_1)), (by
   let _object_w10 := (Litex.sub _value_i7 _value_i9 (Litex.rationalToComplex _value_i7 h_228) (Litex.rationalToComplex _value_i9 h_230))

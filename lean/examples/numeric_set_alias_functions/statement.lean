@@ -77,7 +77,7 @@ noncomputable def _object_i7 := (Litex.formulaFnOn (Litex.FunctionSignature.with
     exact (by
       let _atomic_wd_1_0 := (Litex.div (Litex.number (M := M) (1 : ℂ)) _value_i8 (Litex.numberInC (M := M) (1 : ℂ)) (M.real_subset_complex _ (Litex.inOfSame _value_i8 _value_i8 (_object_i2 (M := M)) (Litex.R (M := M)) (show @Eq M.Value _ _ from Eq.refl _) (((h_5 (M := M))).trans (h_4 (M := M))) h_204)) h_206)
       exact (Litex.inOfSame _atomic_wd_1_0 _atomic_wd_1_0 (Litex.R (M := M)) (_object_i1 (M := M)) (Litex.sameRefl _atomic_wd_1_0) ((((Litex.sameRefl (_object_i1 (M := M)))).trans (h_4 (M := M)))).symm (by
-        let _atomic_wd_2_0 := (Litex.div (Litex.number (M := M) (1 : ℂ)) _value_i8 (Litex.numberInC (M := M) (1 : ℂ)) (M.real_subset_complex _ (Litex.inOfSame _value_i8 _value_i8 (_object_i2 (M := M)) (Litex.R (M := M)) (show @Eq M.Value _ _ from Eq.refl _) (((h_5 (M := M))).trans (h_4 (M := M))) h_204)) h_206)
+        let _atomic_wd_2_0 := _atomic_wd_1_0
         exact (Litex.divInR (Litex.number (M := M) (1 : ℂ)) _value_i8 (Litex.NativeBridge.numberInROfEq (M := M) (1 : ℂ) (1 : ℝ) (by norm_num)) (Litex.inOfSame _value_i8 _value_i8 (_object_i2 (M := M)) (Litex.R (M := M)) (show @Eq M.Value _ _ from Eq.refl _) (((h_5 (M := M))).trans (h_4 (M := M))) h_204) (_atomic_wd_2_0).wd.2.2)))))
   intro _litex_input _litex_domain
   obtain ⟨_litex_members, _litex_guard⟩ := (Litex.FunctionSignature.withGuard_domain (Litex.denote (_object_i2 (M := M))) (Litex.denote (_object_i1 (M := M))) (Litex.isSet (_object_i2 (M := M))) (Litex.isSet (_object_i1 (M := M))) (fun (_litex_input : M.Value) => (fun (_raw_i8 : M.Value) => (∃ (_predicate_witness : (M.mem _raw_i8 (Litex.denote (_object_i1 (M := M))))), (¬ (_raw_i8 = (M.number (0 : ℂ)))))) _litex_input) _litex_input).mp _litex_domain
@@ -109,11 +109,12 @@ theorem h_364 : (by
   let _equal_wd_1_0 := (_object_w9 (M := M))
   let _equal_wd_1_1 := (_object_w10 (M := M))
   exact Litex.Same _equal_wd_1_0 _equal_wd_1_1) :=
-  (show (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i7 (M := M))) (M.number (2 : ℂ))) = (M.divValue (M.number (1 : ℂ)) (M.number (2 : ℂ))) from by
+  (let _equal_wd_1_0 := (_object_w9 (M := M));
+  let _equal_wd_1_1 := (_object_w10 (M := M));
+  (show Litex.Same _equal_wd_1_0 _equal_wd_1_1 from (show (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i7 (M := M))) (M.number (2 : ℂ))) = (M.divValue (M.number (1 : ℂ)) (M.number (2 : ℂ))) from by
     have _litex_residual : (M.divValue (M.number (1 : ℂ)) (M.number (2 : ℂ))) = (M.divValue (M.number (1 : ℂ)) (M.number (2 : ℂ))) := (show @Eq M.Value _ _ from Eq.refl _)
     exact ((((Eq.refl (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i7 (M := M))) (M.number (2 : ℂ))))).trans (show (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i7 (M := M))) (M.number (2 : ℂ))) = (M.divValue (M.number (1 : ℂ)) (M.number (2 : ℂ))) from by
-    let _litex_original := (let _litex_call_arg_0 := (Litex.number (M := M) (2 : ℂ));
-  Litex.callOn ((_object_i7 (M := M))).val.signature (_object_i7 (M := M)) _litex_call_arg_0 (h_337 (M := M)) ((Litex.SetSemantics.sep_members (M := M) _ _ _).mpr ⟨(Litex.inOfSame (Litex.number (M := M) (2 : ℂ)) (Litex.number (M := M) (2 : ℂ)) (_object_i1 (M := M)) (_object_i2 (M := M)) (show @Eq M.Value _ _ from Eq.refl _) ((h_5 (M := M))).symm (h_362 (M := M))), (h_339 (M := M))⟩))
+    let _litex_original := _equal_wd_1_0
     let _litex_literal := (let _wd_1_0 := (_object_i7 (M := M));
   let _wd_1_1 := (Litex.number (M := M) (2 : ℂ));
   (let _litex_call_arg_0 := _wd_1_1;
@@ -121,5 +122,5 @@ theorem h_364 : (by
     have _litex_call_eq := Litex.callOnCongr _litex_original _litex_literal (h_338 (M := M)) (Litex.sameRefl _litex_original.val.argument)
     have _litex_beta := Litex.FunctionSemantics.call_graphValue _ _ _ _litex_literal.val.function.wd (Litex.denote _litex_literal.val.argument) _litex_literal.wd.2
     exact _litex_call_eq.trans (_litex_beta.trans (by change (fun (_litex_input : M.Value) => (fun (_raw_i8 : M.Value) => (M.divValue (M.number (1 : ℂ)) _raw_i8)) _litex_input) (Litex.denote _litex_literal.val.argument) = (M.divValue (M.number (1 : ℂ)) (M.number (2 : ℂ))); exact rfl))
-  ))).trans _litex_residual)
+  ))).trans _litex_residual)))
 end LitexCompiled.file_lean_x2f_examples_x2f_numeric_x5f_set_x5f_alias_x5f_functions_x2f_statement_x2e_lit

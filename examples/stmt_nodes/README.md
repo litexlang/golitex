@@ -56,6 +56,7 @@ command/       Eval (exact evaluation, checked algorithm equations, result equal
 | `definition/obtain_*.lit` | Name exist witnesses | `obtain a from exist …` / `$P` |
 | `definition/have_by_*.lit` | Preimage / Replacement | `have by fn_preimage:` / `replacement_axiom:` |
 | [definition/field_function_preimage.lit](definition/field_function_preimage.lit) | Preimage of a checked callable field | Retain `ops.op` as the application head and preserve source, arity and guard checks |
+| [definition/returned_function_preimage.lit](definition/returned_function_preimage.lit) | Preimage of a returned function | Preserve curried argument groups in `shifted(2)(source)` with the same signature, membership, arity and guard checks |
 | `definition/have_fn_*.lit` | Define named functions | `have fn … =` / `by cases` / `by induc` / `by exist!` |
 | [definition/have_fn_cases_evidence.lit](definition/have_fn_cases_evidence.lit) | Piecewise proof evidence | Coverage, disjointness and branch return checks retain their local evidence |
 | `definition/def_algo.lit` | Algo fn + executable cases | `algo f(x R) R by cases:` … |

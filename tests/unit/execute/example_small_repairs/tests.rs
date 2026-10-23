@@ -166,7 +166,8 @@ fn example_small_cases_and_fact_wd_report_nested_reason_in_both_profiles() {
         ("have fn bad(x R: 0 <= x < 1 or 1 <= x < 2) N by cases:\n    case 0 <= x < 1: 1 / 0\n    case 1 <= x < 2: 1","case_body_well_defined"),
         ("have fn bad(x R: 0 <= x < 1 or 1 <= x < 2) N by cases:\n    case 0 <= x < 1: -1\n    case 1 <= x < 2: 1","case_body_in_return_set"),
     ] {let (normal,detailed)=check(code,false);assert!(normal.contains(phase),"{normal}");assert!(detailed.contains(phase));
-        if phase.starts_with("case_body") || phase=="disjoint" {assert!(normal.contains("\"case_index\": 1"));}}
+        // Normal keeps the phase; the nested case index belongs to Detailed.
+        if phase.starts_with("case_body") || phase=="disjoint" {assert!(detailed.contains("\"case_index\": 1"),"{detailed}");}}
     let (normal, detailed) = check(
         "let family = fn(k {1, 2}) power_set(N) {{1}}\nfamily(3) = {1}",
         false,

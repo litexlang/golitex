@@ -10,6 +10,56 @@ const IDENTITY: &str =
     "thm identity:\n    ? forall x R:\n        x = x\nby thm identity(2) => 2 = 2\n";
 
 #[test]
+fn display_formulas_preserve_guards_conjunctions_and_grouping_without_execution() {
+    let mut runtime = Runtime::new(LaunchCommand::Eval {
+        code: String::new(),
+        session: false,
+        strict: false,
+        language: OutputLanguage::English,
+    });
+    let source = "forall x R:\n    x = 2\n    =>:\n        x + 1 = 3\nforall x R:\n    x = x\n    x^2 >= 0\n(1 + 2) * 3 = 9\nnot forall x R:\n    x = 0\n";
+    let blocks = Tokenizer::new()
+        .tokenize(source, runtime.current_file.clone())
+        .unwrap();
+    let statements = runtime.parse(&blocks).unwrap();
+    let render = |index: usize| {
+        let crate::ast::stmt::Stmt::Fact(value) = &statements[index] else {
+            panic!("expected a fact");
+        };
+        super::math_display::fact_to_display_latex(
+            value,
+            &runtime.global_module_manager,
+            OutputLanguage::English,
+        )
+        .unwrap()
+    };
+    let guarded = render(0);
+    assert!(
+        guarded.contains(r"\forall") && guarded.contains(r"x = 2 \Rightarrow x + 1 = 3"),
+        "{guarded}"
+    );
+    let conjunction = render(1);
+    assert!(
+        conjunction.contains(r"\forall")
+            && conjunction.contains(r"\land")
+            && conjunction.contains(r"x^{2} \geq 0"),
+        "{conjunction}"
+    );
+    let comparison = render(2);
+    assert!(
+        comparison.contains(r"\left(1 + 2\right) \cdot 3") && comparison.contains(r"\\&=\ 9"),
+        "{comparison}"
+    );
+    let negated = render(3);
+    assert!(negated.contains(r"\neg\left(\forall"), "{negated}");
+    let environment = &runtime.execution_environments_stack[0];
+    assert!(
+        environment.facts.facts_by_id.is_empty()
+            && environment.well_defined_objects.object_to_wd_id.is_empty()
+    );
+}
+
+#[test]
 fn identity_has_ten_localized_latex_renderings() {
     let titles = [
         "Theorem",

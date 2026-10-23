@@ -11,7 +11,7 @@ theorem h_2 : ∀ {_Host_i1 : Type v1} [_rep_i1 : Litex.Representation M _Host_i
   let _object_w2 := (Litex.add _value_i1 _value_i2 h_27 h_28)
   exact (by
     let _equal_wd_1_0 := _object_w2
-    let _equal_wd_1_1 := (Litex.add _value_i1 _value_i2 h_27 h_28)
+    let _equal_wd_1_1 := _equal_wd_1_0
     exact Litex.Same _equal_wd_1_1 _equal_wd_1_1)
 ) :=
   (by
@@ -19,7 +19,7 @@ theorem h_2 : ∀ {_Host_i1 : Type v1} [_rep_i1 : Litex.Representation M _Host_i
     let _object_w2 := (Litex.add _value_i1 _value_i2 h_27 h_28)
     have h_1 : (by
       let _equal_wd_1_0 := _object_w2
-      let _equal_wd_1_1 := (Litex.add _value_i1 _value_i2 h_27 h_28)
+      let _equal_wd_1_1 := _equal_wd_1_0
       exact Litex.Same _equal_wd_1_1 _equal_wd_1_1) :=
       (by
         litex_checked_step =>

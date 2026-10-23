@@ -10,12 +10,12 @@ variable {M : Litex.Semantics.{u}}
 theorem h_2 : ∀ {_Host_i1 : Type v1} [_rep_i1 : Litex.Representation M _Host_i1] (_value_i1 : Litex.Obj (M := M) _Host_i1) (h_15 : Litex.In _value_i1 (Litex.C (M := M))) {_Host_i2 : Type v2} [_rep_i2 : Litex.Representation M _Host_i2] (_value_i2 : Litex.Obj (M := M) _Host_i2) (h_16 : Litex.In _value_i2 (Litex.C (M := M))), (by
   let _object_w2 := (let _wd_1_0 := (Litex.add _value_i1 _value_i2 h_15 h_16);
   (Litex.neg _wd_1_0 (by
-    let _atomic_wd_1_0 := (Litex.add _value_i1 _value_i2 h_15 h_16)
+    let _atomic_wd_1_0 := _wd_1_0
     exact (Litex.addInC _value_i1 _value_i2 h_15 h_16))))
   let _object_w3 := (let _wd_1_0 := (Litex.neg _value_i1 h_15);
   let _wd_1_1 := _value_i2;
   (Litex.sub _wd_1_0 _wd_1_1 (by
-    let _atomic_wd_1_0 := (Litex.neg _value_i1 h_15)
+    let _atomic_wd_1_0 := _wd_1_0
     exact (Litex.negInC _value_i1 h_15)) h_16))
   exact (by
     let _equal_wd_1_0 := _object_w2
@@ -26,12 +26,12 @@ theorem h_2 : ∀ {_Host_i1 : Type v1} [_rep_i1 : Litex.Representation M _Host_i
     intro _Host_i1 _rep_i1 _value_i1 h_15 _Host_i2 _rep_i2 _value_i2 h_16
     let _object_w2 := (let _wd_1_0 := (Litex.add _value_i1 _value_i2 h_15 h_16);
     (Litex.neg _wd_1_0 (by
-      let _atomic_wd_1_0 := (Litex.add _value_i1 _value_i2 h_15 h_16)
+      let _atomic_wd_1_0 := _wd_1_0
       exact (Litex.addInC _value_i1 _value_i2 h_15 h_16))))
     let _object_w3 := (let _wd_1_0 := (Litex.neg _value_i1 h_15);
     let _wd_1_1 := _value_i2;
     (Litex.sub _wd_1_0 _wd_1_1 (by
-      let _atomic_wd_1_0 := (Litex.neg _value_i1 h_15)
+      let _atomic_wd_1_0 := _wd_1_0
       exact (Litex.negInC _value_i1 h_15)) h_16))
     have h_1 : (by
       let _equal_wd_1_0 := _object_w2

@@ -51,7 +51,7 @@ fn arithmetic_membership_reuses_completed_call_after_validation() {
     for source in [SOURCE, GUARDED] {
         let (result, compiler) = super::execute(source);
         let output = compiler.compile_run(&result, "call_sharing").unwrap();
-        assert_eq!(output.matches("Litex.call ").count(), 4, "{output}");
+        assert_eq!(output.matches("Litex.call ").count(), 2, "{output}");
         assert!(output.contains("let _atomic_wd_1_0 := _wd_"));
         assert!(output.contains("let _litex_return_call := _atomic_wd_"));
     }

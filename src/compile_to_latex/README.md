@@ -81,7 +81,11 @@ let document = to_latex_document(&fragment, OutputLanguage::Chinese);
 already parsed batch. Module metadata is required because qualified names in
 AST nodes carry module/export indices. Invalid indices fail explicitly instead
 of printing placeholder names. The existing AST and Runtime structures are
-unchanged. The lower-level `to_latex(source, &mut Runtime)` retains the normal
+unchanged. Crate-local `parameters_to_latex` and `fact_to_display_latex` also
+let Reading reuse formula conversion directly. The display helper adds
+structural breaks for ordinary unguarded quantified comparisons; other logical
+forms retain the canonical formula and grouping. It does not alter document
+compilation or execute/instantiate facts. The lower-level `to_latex(source, &mut Runtime)` retains the normal
 parse API's successful bindings, but never publishes execution facts or defs.
 
 Repository `-r` renders root `[export]` files in manifest order, with a section

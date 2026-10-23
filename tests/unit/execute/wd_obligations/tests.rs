@@ -42,7 +42,8 @@ fn finite_extrema_require_real_elements_and_discard_failed_bindings() {
         check(&mut rt, &format!("let bad = {operator}({{i}})"), &[false]);
         let run = rt.run_litex_code("bad = bad").unwrap();
         assert!(!run.success);
-        assert!(format!("{:?}", run.session_error).contains("undefined name `bad`"));
+        assert!(format!("{:?}{:?}", run.session_error, run.input_error)
+            .contains("undefined name `bad`"));
         check(
             &mut rt,
             &format!("{operator}({{i}}) = {operator}({{i}})"),
@@ -103,7 +104,10 @@ fn finite_set_fold_requires_iterand_domain_and_predicate_coverage() {
         );
         let result = rt.run_litex_code("bad = bad").unwrap();
         assert!(!result.success);
-        assert!(format!("{:?}", result.session_error).contains("undefined name `bad`"));
+        assert!(
+            format!("{:?}{:?}", result.session_error, result.input_error)
+                .contains("undefined name `bad`")
+        );
         check(&mut rt, "0 = 1", &[false]);
     }
 }
@@ -116,7 +120,9 @@ fn invalid_function_returns_fail_before_their_signature_can_prove_false_membersh
         check(&mut rt, "(-1) $in N\n-1 >= 0", &[false, false]);
         let run = rt.run_litex_code("f(-1) = -1").unwrap();
         assert!(!run.success);
-        assert!(format!("{:?}", run.session_error).contains("undefined name `f`"));
+        assert!(
+            format!("{:?}{:?}", run.session_error, run.input_error).contains("undefined name `f`")
+        );
     }
     check(
         &mut runtime(),

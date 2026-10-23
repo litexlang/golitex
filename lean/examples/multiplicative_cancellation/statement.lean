@@ -103,12 +103,12 @@ theorem h_456 : ∀ {_Host_i13 : Type v13} [_rep_i13 : Litex.Representation M _H
   let _equal_wd_1_0 := (let _wd_1_0 := (Litex.mul _value_i13 _value_i15 (Litex.rationalToComplex _value_i13 h_469) (Litex.rationalToComplex _value_i15 h_471));
   let _wd_1_1 := _value_i16;
   (Litex.mul _wd_1_0 _wd_1_1 (by
-    let _atomic_wd_1_0 := (Litex.mul _value_i13 _value_i15 (Litex.rationalToComplex _value_i13 h_469) (Litex.rationalToComplex _value_i15 h_471))
+    let _atomic_wd_1_0 := _wd_1_0
     exact (Litex.mulInC _value_i13 _value_i15 (Litex.rationalToComplex _value_i13 h_469) (Litex.rationalToComplex _value_i15 h_471))) (Litex.rationalToComplex _wd_1_1 h_472)))
   let _equal_wd_1_1 := (let _wd_1_0 := (Litex.mul _value_i14 _value_i15 (Litex.rationalToComplex _value_i14 h_470) (Litex.rationalToComplex _value_i15 h_471));
   let _wd_1_1 := _value_i16;
   (Litex.mul _wd_1_0 _wd_1_1 (by
-    let _atomic_wd_1_0 := (Litex.mul _value_i14 _value_i15 (Litex.rationalToComplex _value_i14 h_470) (Litex.rationalToComplex _value_i15 h_471))
+    let _atomic_wd_1_0 := _wd_1_0
     exact (Litex.mulInC _value_i14 _value_i15 (Litex.rationalToComplex _value_i14 h_470) (Litex.rationalToComplex _value_i15 h_471))) (Litex.rationalToComplex _wd_1_1 h_472)))
   exact Litex.Same _equal_wd_1_0 _equal_wd_1_1)), (by
   let _object_w21 := (Litex.mul _value_i13 _value_i15 (Litex.rationalToComplex _value_i13 h_469) (Litex.rationalToComplex _value_i15 h_471))

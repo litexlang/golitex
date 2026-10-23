@@ -1414,6 +1414,36 @@ impl<'a> SourcePosition<'a> {
         object: &Obj,
         id: Option<WellDefinednessId>,
     ) -> Result<Option<String>, LeanCompileError> {
+        self.registered_wd_constructor(object, id, None)
+    }
+
+    /// Reuse an earlier host constructor only after the caller has checked the
+    /// new occurrence's own WD. No child WD registration is required: a parent
+    /// can already retain that certified child in a projection field.
+    pub fn compatible_wd_reference(
+        &self,
+        proof: &ObjWellDefinedProof,
+    ) -> Result<Option<String>, LeanCompileError> {
+        if matches!(
+            proof.obj(),
+            Obj::Identifier(_) | Obj::Literal(_) | Obj::StandardSet(_)
+        ) {
+            return Ok(None);
+        }
+        if let Some((_, term)) =
+            self.bound_constructor(|original| same_wd_constructor(original, proof))
+        {
+            return Ok(Some(term));
+        }
+        self.registered_wd_constructor(proof.obj(), None, Some(proof))
+    }
+
+    fn registered_wd_constructor(
+        &self,
+        object: &Obj,
+        id: Option<WellDefinednessId>,
+        expected: Option<&ObjWellDefinedProof>,
+    ) -> Result<Option<String>, LeanCompileError> {
         let mut cursor = Some(self);
         while let Some(position) = cursor {
             if let SourceOwner::PropObjects(proof, completed) = position.owner {
@@ -1433,9 +1463,11 @@ impl<'a> SourcePosition<'a> {
                             }
                             return Ok(Some(term));
                         }
-                        if let Some((_, term)) =
-                            projected_wd_child(wd, term, &|child| child.obj() == object)
-                        {
+                        if let Some((_, term)) = projected_wd_child(wd, term, &|child| {
+                            child.obj() == object
+                                && expected
+                                    .is_none_or(|expected| same_wd_constructor(child, expected))
+                        }) {
                             return Ok(Some(term));
                         }
                     }
@@ -1502,8 +1534,10 @@ impl<'a> SourcePosition<'a> {
                             "The WD registration and producing child have different subjects.",
                         ));
                     }
-                    if let Some(term) = self.bound_wd_child(original) {
-                        return Ok(Some(term));
+                    if expected.is_none_or(|expected| same_wd_constructor(original, expected)) {
+                        if let Some(term) = self.bound_wd_child(original) {
+                            return Ok(Some(term));
+                        }
                     }
                 }
             }
@@ -1522,6 +1556,7 @@ impl<'a> SourcePosition<'a> {
             active: &SourcePosition<'_>,
             object: &Obj,
             id: Option<WellDefinednessId>,
+            expected: Option<&ObjWellDefinedProof>,
         ) -> Result<Option<String>, LeanCompileError> {
             if !obeys_active_stage_ceilings(active, producer) {
                 return Ok(None);
@@ -1546,9 +1581,10 @@ impl<'a> SourcePosition<'a> {
                         if proof.obj() == object {
                             return Ok(Some(term));
                         }
-                    } else if let Some((_, term)) =
-                        projected_wd_child(proof, term, &|child| child.obj() == object)
-                    {
+                    } else if let Some((_, term)) = projected_wd_child(proof, term, &|child| {
+                        child.obj() == object
+                            && expected.is_none_or(|expected| same_wd_constructor(child, expected))
+                    }) {
                         return Ok(Some(term));
                     }
                 }
@@ -1556,17 +1592,93 @@ impl<'a> SourcePosition<'a> {
             Ok(None)
         }
         let in_statement = |statement: &ExecStmtResult, producer: &SourcePosition<'_>| {
-            if let ExecStmtResult::Fact(ExecFactStmtResult::Success(result)) = statement {
-                in_result(
+            match statement {
+                ExecStmtResult::Fact(ExecFactStmtResult::Success(result)) => in_result(
                     &result.verify_result,
                     &result.store_and_infer_result,
                     producer,
                     self,
                     object,
                     id,
-                )
-            } else {
-                Ok(None)
+                    expected,
+                ),
+                ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
+                    ExecDefineObjStmtResult::HaveObjEqual(ExecHaveObjEqualStmtResult::Success(
+                        proof,
+                    )),
+                )) => {
+                    let count = proof.statement.objs_equal_to.len();
+                    for (index, parameter) in proof
+                        .statement
+                        .param_def
+                        .groups
+                        .iter()
+                        .flat_map(|group| &group.params)
+                        .enumerate()
+                    {
+                        let ready = SourcePosition {
+                            before: 2 * count + index + 1,
+                            ..*producer
+                        };
+                        if producer.before < ready.before
+                            || !obeys_active_stage_ceilings(self, &ready)
+                        {
+                            continue;
+                        }
+                        let Some(store) = proof
+                            .store_and_infer_result
+                            .store_and_infer_results
+                            .get(count + index)
+                        else {
+                            return Err(LeanCompileError::new(
+                                "WD/HaveEqualRegistration",
+                                "Missing original equality store.",
+                            ));
+                        };
+                        for subject in &store.formed_subjects {
+                            if id.is_some_and(|id| id != subject.wd_id) {
+                                continue;
+                            }
+                            // The alias is the original certified RHS value. Its equality
+                            // store registers argument 1; argument 0 is the named alias.
+                            if subject.argument_index != 1 {
+                                return Err(LeanCompileError::new(
+                                    "WD/HaveEqualRegistration",
+                                    "Registration is not the original RHS argument.",
+                                ));
+                            }
+                            let value = &proof.statement.objs_equal_to[index];
+                            let checked = super::helper::success_object_wd(
+                                &proof.equal_to_well_defined[index],
+                                value,
+                            )?;
+                            let name = format!("_object_i{}", parameter.id.value());
+                            let term = if producer.is_local() {
+                                name
+                            } else {
+                                producer.context_application(&name)
+                            };
+                            if id.is_some() {
+                                if checked.obj() != object {
+                                    return Err(LeanCompileError::new(
+                                        "WD/HaveEqualRegistration",
+                                        "WD id refers to another declared value.",
+                                    ));
+                                }
+                                return Ok(Some(term));
+                            }
+                            if let Some((_, term)) = projected_wd_child(checked, term, &|child| {
+                                child.obj() == object
+                                    && expected
+                                        .is_none_or(|expected| same_wd_constructor(child, expected))
+                            }) {
+                                return Ok(Some(term));
+                            }
+                        }
+                    }
+                    Ok(None)
+                }
+                _ => Ok(None),
             }
         };
         let mut cursor = Some(self);
@@ -1602,8 +1714,11 @@ impl<'a> SourcePosition<'a> {
                         before: head + index,
                         ..*position
                     };
-                    let producer =
-                        SourcePosition::new(Some(&prior), SourceOwner::Statement(statement), 1);
+                    let producer = SourcePosition::new(
+                        Some(&prior),
+                        SourceOwner::Statement(statement),
+                        usize::MAX,
+                    );
                     if let Some(name) = in_statement(statement, &producer)? {
                         return Ok(Some(name));
                     }
@@ -1630,6 +1745,7 @@ impl<'a> SourcePosition<'a> {
                         self,
                         object,
                         id,
+                        expected,
                     )? {
                         return Ok(Some(name));
                     }
@@ -8204,34 +8320,55 @@ fn same_call_constructor(
     left.child_obj_well_defined
         .iter()
         .zip(&right.child_obj_well_defined)
-        .all(|(a, b)| {
-            if a.obj() != b.obj() {
+        .all(|(a, b)| same_wd_constructor(a, b))
+}
+
+// This is host-constructor compatibility, not a new mathematical proof rule.
+// Distinct WD proofs may certify the same representation; selected function
+// signatures and every compound child's representation must still agree.
+fn same_wd_constructor(left: &ObjWellDefinedProof, right: &ObjWellDefinedProof) -> bool {
+    if left.obj() != right.obj() {
+        return false;
+    }
+    if std::ptr::eq(left, right)
+        || matches!(
+            left.obj(),
+            Obj::Identifier(_) | Obj::Literal(_) | Obj::StandardSet(_)
+        )
+    {
+        return true;
+    }
+    match (left, right) {
+        (
+            ObjWellDefinedProof::ByKnown { wd_id: a, .. },
+            ObjWellDefinedProof::ByKnown { wd_id: b, .. },
+        ) => a == b,
+        (
+            ObjWellDefinedProof::ByDef {
+                proof: ObjWellDefinedProofByDef::FnObj(a),
+                ..
+            },
+            ObjWellDefinedProof::ByDef {
+                proof: ObjWellDefinedProofByDef::FnObj(b),
+                ..
+            },
+        ) => same_call_constructor(a, b),
+        (
+            ObjWellDefinedProof::ByDef {
+                proof: ObjWellDefinedProofByDef::ArithmeticOperator(a),
+                ..
+            },
+            ObjWellDefinedProof::ByDef {
+                proof: ObjWellDefinedProofByDef::ArithmeticOperator(b),
+                ..
+            },
+        ) if std::mem::discriminant(a) == std::mem::discriminant(b) => {
+            let (Some((a, _)), Some((b, _))) = (arithmetic_stages(left), arithmetic_stages(right))
+            else {
                 return false;
-            }
-            if std::ptr::eq(a.as_ref(), b.as_ref())
-                || matches!(
-                    a.obj(),
-                    Obj::Identifier(_) | Obj::Literal(_) | Obj::StandardSet(_)
-                )
-            {
-                return true;
-            }
-            match (a.as_ref(), b.as_ref()) {
-                (
-                    ObjWellDefinedProof::ByKnown { wd_id: a, .. },
-                    ObjWellDefinedProof::ByKnown { wd_id: b, .. },
-                ) => a == b,
-                (
-                    ObjWellDefinedProof::ByDef {
-                        proof: ObjWellDefinedProofByDef::FnObj(a),
-                        ..
-                    },
-                    ObjWellDefinedProof::ByDef {
-                        proof: ObjWellDefinedProofByDef::FnObj(b),
-                        ..
-                    },
-                ) => same_call_constructor(a, b),
-                _ => false,
-            }
-        })
+            };
+            a.len() == b.len() && a.iter().zip(b).all(|(a, b)| same_wd_constructor(a, b))
+        }
+        _ => false,
+    }
 }

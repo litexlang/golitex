@@ -11,30 +11,24 @@ theorem h_4 : ∀ {_Host_i1 : Type v1} [_rep_i1 : Litex.Representation M _Host_i
   let _object_w3 := (let _wd_1_0 := (Litex.div _value_i1 _value_i2 h_17 h_18 h_1);
   let _wd_1_1 := (Litex.div _value_i3 _value_i4 h_19 h_20 h_2);
   (Litex.sub _wd_1_0 _wd_1_1 (by
-    let _atomic_wd_1_0 := (Litex.div _value_i1 _value_i2 h_17 h_18 h_1)
+    let _atomic_wd_1_0 := _wd_1_0
     exact (Litex.divInC _value_i1 _value_i2 h_17 h_18 (_atomic_wd_1_0).wd.2.2)) (by
-    let _atomic_wd_1_0 := (Litex.div _value_i3 _value_i4 h_19 h_20 h_2)
+    let _atomic_wd_1_0 := _wd_1_1
     exact (Litex.divInC _value_i3 _value_i4 h_19 h_20 (_atomic_wd_1_0).wd.2.2))))
   let _object_w4 := (let _wd_1_0 := (let _wd_2_0 := (Litex.mul _value_i1 _value_i4 h_17 h_20);
   let _wd_2_1 := (Litex.mul _value_i3 _value_i2 h_19 h_18);
   (Litex.sub _wd_2_0 _wd_2_1 (by
-    let _atomic_wd_1_0 := (Litex.mul _value_i1 _value_i4 h_17 h_20)
+    let _atomic_wd_1_0 := _wd_2_0
     exact (Litex.mulInC _value_i1 _value_i4 h_17 h_20)) (by
-    let _atomic_wd_1_0 := (Litex.mul _value_i3 _value_i2 h_19 h_18)
+    let _atomic_wd_1_0 := _wd_2_1
     exact (Litex.mulInC _value_i3 _value_i2 h_19 h_18))));
   let _wd_1_1 := (Litex.mul _value_i2 _value_i4 h_18 h_20);
   (Litex.div _wd_1_0 _wd_1_1 (by
-    let _atomic_wd_1_0 := (let _wd_2_0 := (Litex.mul _value_i1 _value_i4 h_17 h_20);
-    let _wd_2_1 := (Litex.mul _value_i3 _value_i2 h_19 h_18);
-    (Litex.sub _wd_2_0 _wd_2_1 (by
-      let _atomic_wd_2_0 := (Litex.mul _value_i1 _value_i4 h_17 h_20)
-      exact (Litex.mulInC _value_i1 _value_i4 h_17 h_20)) (by
-      let _atomic_wd_2_0 := (Litex.mul _value_i3 _value_i2 h_19 h_18)
-      exact (Litex.mulInC _value_i3 _value_i2 h_19 h_18))))
+    let _atomic_wd_1_0 := _wd_1_0
     exact (Litex.subInC (_atomic_wd_1_0).val.left (_atomic_wd_1_0).val.right (Litex.mulInC _value_i1 _value_i4 h_17 h_20) (Litex.mulInC _value_i3 _value_i2 h_19 h_18))) (by
-    let _atomic_wd_1_0 := (Litex.mul _value_i2 _value_i4 h_18 h_20)
+    let _atomic_wd_1_0 := _wd_1_1
     exact (Litex.mulInC _value_i2 _value_i4 h_18 h_20)) (by
-    let _atomic_wd_1_0 := (Litex.mul _value_i2 _value_i4 h_18 h_20)
+    let _atomic_wd_1_0 := _wd_1_1
     exact (Litex.NativeBridge.notSameOfDenoteNumber _atomic_wd_1_0 (Litex.number (M := M) (0 : ℂ)) ((Litex.NativeBridge.asComplex _value_i2 h_18) * (Litex.NativeBridge.asComplex _value_i4 h_20)) (0 : ℂ) (Litex.NativeBridge.denoteMul _value_i2 _value_i4 (_atomic_wd_1_0).wd.1 (_atomic_wd_1_0).wd.2 _ _ (Litex.NativeBridge.asComplex_spec _value_i2 h_18) (Litex.NativeBridge.asComplex_spec _value_i4 h_20)) (Litex.NativeBridge.denoteNumber (M := M) (0 : ℂ)) (mul_ne_zero (Litex.NativeBridge.nativeNonzeroOfDenote _value_i2 (Litex.NativeBridge.asComplex _value_i2 h_18) (Litex.NativeBridge.asComplex_spec _value_i2 h_18) h_1) (Litex.NativeBridge.nativeNonzeroOfDenote _value_i4 (Litex.NativeBridge.asComplex _value_i4 h_20) (Litex.NativeBridge.asComplex_spec _value_i4 h_20) h_2))))))
   exact (by
     let _equal_wd_1_0 := _object_w3
@@ -46,30 +40,24 @@ theorem h_4 : ∀ {_Host_i1 : Type v1} [_rep_i1 : Litex.Representation M _Host_i
     let _object_w3 := (let _wd_1_0 := (Litex.div _value_i1 _value_i2 h_17 h_18 h_1);
     let _wd_1_1 := (Litex.div _value_i3 _value_i4 h_19 h_20 h_2);
     (Litex.sub _wd_1_0 _wd_1_1 (by
-      let _atomic_wd_1_0 := (Litex.div _value_i1 _value_i2 h_17 h_18 h_1)
+      let _atomic_wd_1_0 := _wd_1_0
       exact (Litex.divInC _value_i1 _value_i2 h_17 h_18 (_atomic_wd_1_0).wd.2.2)) (by
-      let _atomic_wd_1_0 := (Litex.div _value_i3 _value_i4 h_19 h_20 h_2)
+      let _atomic_wd_1_0 := _wd_1_1
       exact (Litex.divInC _value_i3 _value_i4 h_19 h_20 (_atomic_wd_1_0).wd.2.2))))
     let _object_w4 := (let _wd_1_0 := (let _wd_2_0 := (Litex.mul _value_i1 _value_i4 h_17 h_20);
     let _wd_2_1 := (Litex.mul _value_i3 _value_i2 h_19 h_18);
     (Litex.sub _wd_2_0 _wd_2_1 (by
-      let _atomic_wd_1_0 := (Litex.mul _value_i1 _value_i4 h_17 h_20)
+      let _atomic_wd_1_0 := _wd_2_0
       exact (Litex.mulInC _value_i1 _value_i4 h_17 h_20)) (by
-      let _atomic_wd_1_0 := (Litex.mul _value_i3 _value_i2 h_19 h_18)
+      let _atomic_wd_1_0 := _wd_2_1
       exact (Litex.mulInC _value_i3 _value_i2 h_19 h_18))));
     let _wd_1_1 := (Litex.mul _value_i2 _value_i4 h_18 h_20);
     (Litex.div _wd_1_0 _wd_1_1 (by
-      let _atomic_wd_1_0 := (let _wd_2_0 := (Litex.mul _value_i1 _value_i4 h_17 h_20);
-      let _wd_2_1 := (Litex.mul _value_i3 _value_i2 h_19 h_18);
-      (Litex.sub _wd_2_0 _wd_2_1 (by
-        let _atomic_wd_2_0 := (Litex.mul _value_i1 _value_i4 h_17 h_20)
-        exact (Litex.mulInC _value_i1 _value_i4 h_17 h_20)) (by
-        let _atomic_wd_2_0 := (Litex.mul _value_i3 _value_i2 h_19 h_18)
-        exact (Litex.mulInC _value_i3 _value_i2 h_19 h_18))))
+      let _atomic_wd_1_0 := _wd_1_0
       exact (Litex.subInC (_atomic_wd_1_0).val.left (_atomic_wd_1_0).val.right (Litex.mulInC _value_i1 _value_i4 h_17 h_20) (Litex.mulInC _value_i3 _value_i2 h_19 h_18))) (by
-      let _atomic_wd_1_0 := (Litex.mul _value_i2 _value_i4 h_18 h_20)
+      let _atomic_wd_1_0 := _wd_1_1
       exact (Litex.mulInC _value_i2 _value_i4 h_18 h_20)) (by
-      let _atomic_wd_1_0 := (Litex.mul _value_i2 _value_i4 h_18 h_20)
+      let _atomic_wd_1_0 := _wd_1_1
       exact (Litex.NativeBridge.notSameOfDenoteNumber _atomic_wd_1_0 (Litex.number (M := M) (0 : ℂ)) ((Litex.NativeBridge.asComplex _value_i2 h_18) * (Litex.NativeBridge.asComplex _value_i4 h_20)) (0 : ℂ) (Litex.NativeBridge.denoteMul _value_i2 _value_i4 (_atomic_wd_1_0).wd.1 (_atomic_wd_1_0).wd.2 _ _ (Litex.NativeBridge.asComplex_spec _value_i2 h_18) (Litex.NativeBridge.asComplex_spec _value_i4 h_20)) (Litex.NativeBridge.denoteNumber (M := M) (0 : ℂ)) (mul_ne_zero (Litex.NativeBridge.nativeNonzeroOfDenote _value_i2 (Litex.NativeBridge.asComplex _value_i2 h_18) (Litex.NativeBridge.asComplex_spec _value_i2 h_18) h_1) (Litex.NativeBridge.nativeNonzeroOfDenote _value_i4 (Litex.NativeBridge.asComplex _value_i4 h_20) (Litex.NativeBridge.asComplex_spec _value_i4 h_20) h_2))))))
     have h_3 : (by
       let _equal_wd_1_0 := _object_w3

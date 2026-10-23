@@ -29,7 +29,7 @@ theorem h_2 : ∀ {_Host_i1 : Type v1} [_rep_i1 : Litex.Representation M _Host_i
     let _object_w3 := (let _wd_1_0 := (Litex.add _value_i1 (Litex.number (M := M) (0 : ℂ)) (M.real_subset_complex _ h_18) (Litex.numberInC (M := M) (0 : ℂ)));
     let _wd_1_1 := _value_i2;
     (Litex.add _wd_1_0 _wd_1_1 (by
-      let _atomic_wd_1_0 := (Litex.add _value_i1 (Litex.number (M := M) (0 : ℂ)) (M.real_subset_complex _ h_18) (Litex.numberInC (M := M) (0 : ℂ)))
+      let _atomic_wd_1_0 := _wd_1_0
       exact (Litex.addInC _value_i1 (Litex.number (M := M) (0 : ℂ)) (M.real_subset_complex _ h_18) (Litex.numberInC (M := M) (0 : ℂ)))) (M.real_subset_complex _ h_20)))
 
     let _object_w4 := (Litex.add _value_i1 _value_i2 (M.real_subset_complex _ h_18) (M.real_subset_complex _ h_20))
@@ -52,7 +52,7 @@ theorem h_2 : ∀ {_Host_i1 : Type v1} [_rep_i1 : Litex.Representation M _Host_i
         litex_checked_step =>
           exact (
             (Litex.addCancelRightRight (_object_w3).val.left _value_i1 _value_i2 (by
-              let _atomic_wd_1_0 := (Litex.add _value_i1 (Litex.number (M := M) (0 : ℂ)) (M.real_subset_complex _ h_18) (Litex.numberInC (M := M) (0 : ℂ)))
+              let _atomic_wd_1_0 := (_object_w3).val.left
               exact (Litex.addInC _value_i1 (Litex.number (M := M) (0 : ℂ)) (M.real_subset_complex _ h_18) (Litex.numberInC (M := M) (0 : ℂ)))) (M.real_subset_complex _ h_18) (M.real_subset_complex _ h_20) h_3)
           )
       )
@@ -88,7 +88,7 @@ theorem h_238 : ∀ {_Host_i4 : Type v4} [_rep_i4 : Litex.Representation M _Host
               exact (Litex.addInR _value_i5 (Litex.number (M := M) (1 : ℂ)) h_257 (Litex.NativeBridge.numberInROfEq (M := M) (1 : ℂ) (1 : ℝ) (by norm_num))))
           )
       )
-    have h_315 : Litex.Same _object_i6 (Litex.add _value_i5 (Litex.number (M := M) (1 : ℂ)) (M.real_subset_complex _ h_257) (Litex.numberInC (M := M) (1 : ℂ))) :=
+    have h_315 : Litex.Same _object_i6 _object_i6 :=
       (by
         litex_checked_step =>
           exact (
@@ -115,7 +115,7 @@ theorem h_238 : ∀ {_Host_i4 : Type v4} [_rep_i4 : Litex.Representation M _Host
     let _object_w10 := (let _wd_1_0 := (Litex.add _value_i4 (Litex.number (M := M) (0 : ℂ)) (M.real_subset_complex _ h_255) (Litex.numberInC (M := M) (0 : ℂ)));
     let _wd_1_1 := _object_i7;
     (Litex.add _wd_1_0 _wd_1_1 (by
-      let _atomic_wd_1_0 := (Litex.add _value_i4 (Litex.number (M := M) (0 : ℂ)) (M.real_subset_complex _ h_255) (Litex.numberInC (M := M) (0 : ℂ)))
+      let _atomic_wd_1_0 := _wd_1_0
       exact (Litex.addInC _value_i4 (Litex.number (M := M) (0 : ℂ)) (M.real_subset_complex _ h_255) (Litex.numberInC (M := M) (0 : ℂ)))) (Litex.inOfSame (Litex.add _object_i6 (Litex.number (M := M) (1 : ℂ)) (M.real_subset_complex _ h_314) (Litex.numberInC (M := M) (1 : ℂ))) _wd_1_1 (Litex.C (M := M)) (Litex.C (M := M)) ((((Litex.sameRefl _wd_1_1)).trans h_341)).symm (Litex.sameRefl (Litex.C (M := M))) (by
       let _atomic_wd_2_0 := (Litex.add _object_i6 (Litex.number (M := M) (1 : ℂ)) (M.real_subset_complex _ h_314) (Litex.numberInC (M := M) (1 : ℂ)))
       exact (Litex.addInC _object_i6 (Litex.number (M := M) (1 : ℂ)) (M.real_subset_complex _ h_314) (Litex.numberInC (M := M) (1 : ℂ)))))))
@@ -144,7 +144,7 @@ theorem h_238 : ∀ {_Host_i4 : Type v4} [_rep_i4 : Litex.Representation M _Host
               exact (Litex.addInC _object_i6 (Litex.number (M := M) (1 : ℂ)) (M.real_subset_complex _ h_314) (Litex.numberInC (M := M) (1 : ℂ))))))) (by ring!))))
           )
       )
-    exact (let _equal_wd_1_0 := (Litex.add _value_i4 (Litex.number (M := M) (0 : ℂ)) (M.real_subset_complex _ h_255) (Litex.numberInC (M := M) (0 : ℂ)));
+    exact (let _equal_wd_1_0 := (_object_w10).val.left;
     (show Litex.Same _equal_wd_1_0 _value_i4 from (Litex.NativeBridge.sameOfDenoteNumber _ _ ((Litex.NativeBridge.asComplex _value_i4 (Litex.realToComplex _value_i4 h_255)) + (0 : ℂ)) (Litex.NativeBridge.asComplex _value_i4 (Litex.realToComplex _value_i4 h_255)) (Litex.NativeBridge.denoteAdd _value_i4 (Litex.number (M := M) (0 : ℂ)) (_equal_wd_1_0).wd.1 (_equal_wd_1_0).wd.2 _ _ (Litex.NativeBridge.asComplex_spec _value_i4 (Litex.realToComplex _value_i4 h_255)) (Litex.NativeBridge.denoteNumber (M := M) (0 : ℂ))) (Litex.NativeBridge.asComplex_spec _value_i4 (Litex.realToComplex _value_i4 h_255)) (by ring!))))
   )
 
@@ -226,7 +226,7 @@ theorem h_5743 : ∀ {_Host_i14 : Type v14} [_rep_i14 : Litex.Representation M _
     let _object_w16 := (let _wd_1_0 := (Litex.add _value_i14 (Litex.number (M := M) (0 : ℂ)) (M.real_subset_complex _ h_5759) (Litex.numberInC (M := M) (0 : ℂ)));
     let _wd_1_1 := _value_i15;
     (Litex.add _wd_1_0 _wd_1_1 (by
-      let _atomic_wd_1_0 := (Litex.add _value_i14 (Litex.number (M := M) (0 : ℂ)) (M.real_subset_complex _ h_5759) (Litex.numberInC (M := M) (0 : ℂ)))
+      let _atomic_wd_1_0 := _wd_1_0
       exact (Litex.addInC _value_i14 (Litex.number (M := M) (0 : ℂ)) (M.real_subset_complex _ h_5759) (Litex.numberInC (M := M) (0 : ℂ)))) (M.real_subset_complex _ h_5761)))
 
     let _object_w17 := (Litex.add _value_i14 _value_i15 (M.real_subset_complex _ h_5759) (M.real_subset_complex _ h_5761))
@@ -249,7 +249,7 @@ theorem h_5743 : ∀ {_Host_i14 : Type v14} [_rep_i14 : Litex.Representation M _
         litex_checked_step =>
           exact (
             (Litex.addCancelRightRight (_object_w16).val.left _value_i14 _value_i15 (by
-              let _atomic_wd_1_0 := (Litex.add _value_i14 (Litex.number (M := M) (0 : ℂ)) (M.real_subset_complex _ h_5759) (Litex.numberInC (M := M) (0 : ℂ)))
+              let _atomic_wd_1_0 := (_object_w16).val.left
               exact (Litex.addInC _value_i14 (Litex.number (M := M) (0 : ℂ)) (M.real_subset_complex _ h_5759) (Litex.numberInC (M := M) (0 : ℂ)))) (M.real_subset_complex _ h_5759) (M.real_subset_complex _ h_5761) h_5744)
           )
       )

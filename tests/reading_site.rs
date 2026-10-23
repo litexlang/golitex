@@ -48,6 +48,14 @@ fn site_chapters_preserve_the_complete_bundle_and_reference_closure() {
     .unwrap();
     assert_eq!(full, result.document);
     let statements = full.field("statements").as_array().unwrap();
+    assert!(statements.iter().all(|statement| !statement
+        .field("statement_kind")
+        .as_str()
+        .unwrap()
+        .is_empty()));
+    assert!(statements.iter().any(
+        |statement| statement.field("statement_kind").as_str().unwrap() == "Definition.DefThmStmt"
+    ));
     let application = statements
         .iter()
         .find(|value| {
@@ -85,6 +93,15 @@ fn site_chapters_preserve_the_complete_bundle_and_reference_closure() {
     assert_eq!(portable, full);
     let html = fs::read_to_string(directory.join("index.html")).unwrap();
     assert!(html.contains("reading_manifest") && html.contains("standalone.html"));
+    assert!(html.contains("katex.min.js") && html.contains("katex.min.css"));
+    let math_css = fs::read_to_string(directory.join("katex.min.css")).unwrap();
+    assert!(math_css.contains("data:font/woff2;base64,") && !math_css.contains("url(fonts/"));
+    assert!(fs::read_to_string(directory.join("katex.min.js"))
+        .unwrap()
+        .contains("KaTeX"));
+    assert!(fs::read_to_string(directory.join("katex.LICENSE"))
+        .unwrap()
+        .contains("Permission is hereby granted"));
     assert!(fs::read_to_string(directory.join("standalone.html"))
         .unwrap()
         .contains("\"evidence_nodes\""));
@@ -112,6 +129,20 @@ fn site_chapters_preserve_the_complete_bundle_and_reference_closure() {
         .unwrap();
         assert_eq!(part.field("manifest_id"), manifest.field("manifest_id"));
         assert_eq!(part.field("source_id"), source.field("id"));
+        for statement in part.field("statements").as_array().unwrap() {
+            let original = statements
+                .iter()
+                .find(|original| original.field("id") == statement.field("id"))
+                .unwrap();
+            assert_eq!(
+                statement.field("statement_kind"),
+                original.field("statement_kind")
+            );
+            assert_eq!(
+                statement.field("mathematics"),
+                original.field("mathematics")
+            );
+        }
         assert!(!part.field("sources").as_array().unwrap()[0]
             .field("content")
             .as_str()

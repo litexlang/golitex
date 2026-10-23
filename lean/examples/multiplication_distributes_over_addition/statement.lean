@@ -11,14 +11,14 @@ theorem h_2 : ∀ {_Host_i1 : Type v1} [_rep_i1 : Litex.Representation M _Host_i
   let _object_w2 := (let _wd_1_0 := _value_i1;
   let _wd_1_1 := (Litex.add _value_i2 _value_i3 h_16 h_17);
   (Litex.mul _wd_1_0 _wd_1_1 h_15 (by
-    let _atomic_wd_1_0 := (Litex.add _value_i2 _value_i3 h_16 h_17)
+    let _atomic_wd_1_0 := _wd_1_1
     exact (Litex.addInC _value_i2 _value_i3 h_16 h_17))))
   let _object_w3 := (let _wd_1_0 := (Litex.mul _value_i1 _value_i2 h_15 h_16);
   let _wd_1_1 := (Litex.mul _value_i1 _value_i3 h_15 h_17);
   (Litex.add _wd_1_0 _wd_1_1 (by
-    let _atomic_wd_1_0 := (Litex.mul _value_i1 _value_i2 h_15 h_16)
+    let _atomic_wd_1_0 := _wd_1_0
     exact (Litex.mulInC _value_i1 _value_i2 h_15 h_16)) (by
-    let _atomic_wd_1_0 := (Litex.mul _value_i1 _value_i3 h_15 h_17)
+    let _atomic_wd_1_0 := _wd_1_1
     exact (Litex.mulInC _value_i1 _value_i3 h_15 h_17))))
   exact (by
     let _equal_wd_1_0 := _object_w2
@@ -30,14 +30,14 @@ theorem h_2 : ∀ {_Host_i1 : Type v1} [_rep_i1 : Litex.Representation M _Host_i
     let _object_w2 := (let _wd_1_0 := _value_i1;
     let _wd_1_1 := (Litex.add _value_i2 _value_i3 h_16 h_17);
     (Litex.mul _wd_1_0 _wd_1_1 h_15 (by
-      let _atomic_wd_1_0 := (Litex.add _value_i2 _value_i3 h_16 h_17)
+      let _atomic_wd_1_0 := _wd_1_1
       exact (Litex.addInC _value_i2 _value_i3 h_16 h_17))))
     let _object_w3 := (let _wd_1_0 := (Litex.mul _value_i1 _value_i2 h_15 h_16);
     let _wd_1_1 := (Litex.mul _value_i1 _value_i3 h_15 h_17);
     (Litex.add _wd_1_0 _wd_1_1 (by
-      let _atomic_wd_1_0 := (Litex.mul _value_i1 _value_i2 h_15 h_16)
+      let _atomic_wd_1_0 := _wd_1_0
       exact (Litex.mulInC _value_i1 _value_i2 h_15 h_16)) (by
-      let _atomic_wd_1_0 := (Litex.mul _value_i1 _value_i3 h_15 h_17)
+      let _atomic_wd_1_0 := _wd_1_1
       exact (Litex.mulInC _value_i1 _value_i3 h_15 h_17))))
     have h_1 : (by
       let _equal_wd_1_0 := _object_w2

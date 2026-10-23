@@ -134,6 +134,17 @@ impl LitexToLeanCompiler {
             self.validate_store(&stores[count + index].store, &equal)?;
             let left =
                 alias_equality_subject(&equal, parameter, &proof.statement.objs_equal_to[index])?;
+            for subject in &stores[count + index].formed_subjects {
+                if subject.argument_index != 1
+                    || self.resolve_wd(subject.wd_id, position)?.ir()
+                        != proof.statement.objs_equal_to[index].ir()
+                {
+                    return Err(LeanCompileError::new(
+                        "WD/HaveEqualRegistration",
+                        "The equality store must register the original RHS value.",
+                    ));
+                }
+            }
             declarations.push(self.bind_alias(
                 parameter,
                 left,

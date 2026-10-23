@@ -18,33 +18,33 @@ theorem h_43 : Litex.In (_object_i2 (M := M)) (Litex.R (M := M)) :=
   (by
     let _atomic_wd_1_0 := (Litex.add (_object_i1 (M := M)) (Litex.number (M := M) (1 : ℂ)) (M.real_subset_complex _ (h_3 (M := M))) (Litex.numberInC (M := M) (1 : ℂ)))
     exact (Litex.addInR (_object_i1 (M := M)) (Litex.number (M := M) (1 : ℂ)) (h_3 (M := M)) (Litex.NativeBridge.numberInROfEq (M := M) (1 : ℂ) (1 : ℝ) (by norm_num))))
-theorem h_44 : Litex.Same (_object_i2 (M := M)) (Litex.add (_object_i1 (M := M)) (Litex.number (M := M) (1 : ℂ)) (M.real_subset_complex _ (h_3 (M := M))) (Litex.numberInC (M := M) (1 : ℂ))) :=
+theorem h_44 : Litex.Same (_object_i2 (M := M)) (_object_i2 (M := M)) :=
   (Litex.sameRefl (Litex.add (_object_i1 (M := M)) (Litex.number (M := M) (1 : ℂ)) (M.real_subset_complex _ (h_3 (M := M))) (Litex.numberInC (M := M) (1 : ℂ))))
 
 theorem h_45 : (by
-  let _chain_wd_45_1 := (Litex.add (_object_i1 (M := M)) (Litex.number (M := M) (1 : ℂ)) (M.real_subset_complex _ (h_3 (M := M))) (Litex.numberInC (M := M) (1 : ℂ)))
-  let _chain_wd_45_2 := _chain_wd_45_1
+  let _chain_wd_45_1 := (_object_i2 (M := M))
+  let _chain_wd_45_2 := (_object_i2 (M := M))
   exact ((by
     let _equal_wd_1_1 := _chain_wd_45_1
     exact Litex.Same (_object_i2 (M := M)) _equal_wd_1_1)) ∧ ((by
     let _equal_wd_1_0 := _chain_wd_45_2
     exact Litex.Same _equal_wd_1_0 (Litex.number (M := M) (3 : ℂ))))) :=
   (by
-    let _chain_wd_45_1 := (Litex.add (_object_i1 (M := M)) (Litex.number (M := M) (1 : ℂ)) (M.real_subset_complex _ (h_3 (M := M))) (Litex.numberInC (M := M) (1 : ℂ)))
-    let _chain_wd_45_2 := _chain_wd_45_1
+    let _chain_wd_45_1 := (_object_i2 (M := M))
+    let _chain_wd_45_2 := (_object_i2 (M := M))
     exact (And.intro (h_44 (M := M)) (((congrArg₂ M.addValue (h_4 (M := M)) (Litex.sameRefl (Litex.number (M := M) (1 : ℂ))))).trans (((let _equal_wd_2_0 := (Litex.add (Litex.number (M := M) (2 : ℂ)) (Litex.number (M := M) (1 : ℂ)) (Litex.numberInC (M := M) (2 : ℂ)) (Litex.numberInC (M := M) (1 : ℂ)));
     (show Litex.Same _equal_wd_2_0 (Litex.number (M := M) (3 : ℂ)) from (Litex.NativeBridge.sameOfDenoteNumber _equal_wd_2_0 (Litex.number (M := M) (3 : ℂ)) ((2 : ℂ) + (1 : ℂ)) (3 : ℂ) (Litex.NativeBridge.denoteAdd (Litex.number (M := M) (2 : ℂ)) (Litex.number (M := M) (1 : ℂ)) (_equal_wd_2_0).wd.1 (_equal_wd_2_0).wd.2 _ _ (Litex.NativeBridge.denoteNumber (M := M) (2 : ℂ)) (Litex.NativeBridge.denoteNumber (M := M) (1 : ℂ))) (Litex.NativeBridge.denoteNumber (M := M) (3 : ℂ)) (by norm_num))))).trans ((Litex.sameRefl (Litex.number (M := M) (3 : ℂ)))).symm))))
 
-theorem h_85 : Litex.Same (_object_i2 (M := M)) (Litex.add (_object_i1 (M := M)) (Litex.number (M := M) (1 : ℂ)) (M.real_subset_complex _ (h_3 (M := M))) (Litex.numberInC (M := M) (1 : ℂ))) :=
+theorem h_85 : Litex.Same (_object_i2 (M := M)) (_object_i2 (M := M)) :=
   (And.left (h_45 (M := M)))
 
-theorem h_86 : Litex.Same (Litex.add (_object_i1 (M := M)) (Litex.number (M := M) (1 : ℂ)) (M.real_subset_complex _ (h_3 (M := M))) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.number (M := M) (3 : ℂ)) :=
+theorem h_86 : Litex.Same (_object_i2 (M := M)) (Litex.number (M := M) (3 : ℂ)) :=
   (And.right (h_45 (M := M)))
 
-theorem h_87 : Litex.Same (_object_i2 (M := M)) (Litex.add (_object_i1 (M := M)) (Litex.number (M := M) (1 : ℂ)) (M.real_subset_complex _ (h_3 (M := M))) (Litex.numberInC (M := M) (1 : ℂ))) :=
+theorem h_87 : Litex.Same (_object_i2 (M := M)) (_object_i2 (M := M)) :=
   (h_85 (M := M))
 
-theorem h_88 : Litex.Same (Litex.add (_object_i1 (M := M)) (Litex.number (M := M) (1 : ℂ)) (M.real_subset_complex _ (h_3 (M := M))) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.number (M := M) (3 : ℂ)) :=
+theorem h_88 : Litex.Same (_object_i2 (M := M)) (Litex.number (M := M) (3 : ℂ)) :=
   (h_86 (M := M))
 
 theorem h_89 : Litex.Same (_object_i2 (M := M)) (Litex.number (M := M) (3 : ℂ)) :=

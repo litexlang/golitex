@@ -90,13 +90,12 @@ theorem h_119 : ∀ {_Host_i6 : Type v6} [_rep_i6 : Litex.Representation M _Host
       (by
         litex_checked_step =>
           exact (
-            (show (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i3 (M := M))) (Litex.denote _value_i7)) = (M.powValue (Litex.denote _value_i7) (M.number (2 : ℂ))) from by
+            (let _equal_wd_1_0 := _object_w9;
+            let _equal_wd_1_1 := _object_w10;
+            (show Litex.Same _equal_wd_1_0 _equal_wd_1_1 from (show (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i3 (M := M))) (Litex.denote _value_i7)) = (M.powValue (Litex.denote _value_i7) (M.number (2 : ℂ))) from by
               have _litex_residual : (M.powValue (Litex.denote _value_i7) (M.number (2 : ℂ))) = (M.powValue (Litex.denote _value_i7) (M.number (2 : ℂ))) := (show @Eq M.Value _ _ from Eq.refl _)
               exact ((((Eq.refl (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i3 (M := M))) (Litex.denote _value_i7)))).trans (by
-              let _litex_original := (Litex.call Litex.StandardSetValue.real Litex.StandardSetValue.real (fun (_raw_i4 : M.Value) => (∃ (_predicate_witness : (M.mem _raw_i4 (M.standard Litex.StandardSetValue.real))), (∃ (_r _s : ℝ), (M.number (0 : ℂ)) = M.number (_r : ℂ) ∧ _raw_i4 = M.number (_s : ℂ) ∧ _r ≤ _s))) (_object_i3 (M := M)) _value_i7 (h_113 (M := M)) (Litex.inOfSame _value_i6 _value_i7 (Litex.R (M := M)) (Litex.R (M := M)) h_115 (show @Eq M.Value _ _ from Eq.refl _) h_132) (show ((fun (_known_argument_0 : M.Value) => (∃ (_predicate_witness : (M.mem _known_argument_0 (M.standard Litex.StandardSetValue.real))), (∃ (_r _s : ℝ), (M.number (0 : ℂ)) = M.number (_r : ℂ) ∧ _known_argument_0 = M.number (_s : ℂ) ∧ _r ≤ _s))) (Litex.denote _value_i7)) from by
-                have _known_citation : ((fun (_known_argument_0 : M.Value) => (∃ (_predicate_witness : (M.mem _known_argument_0 (M.standard Litex.StandardSetValue.real))), (∃ (_r _s : ℝ), (M.number (0 : ℂ)) = M.number (_r : ℂ) ∧ _known_argument_0 = M.number (_s : ℂ) ∧ _r ≤ _s))) (Litex.denote _value_i6)) := h_116
-                exact Eq.mp (((Eq.refl ((fun (_known_argument_0 : M.Value) => (∃ (_predicate_witness : (M.mem _known_argument_0 (M.standard Litex.StandardSetValue.real))), (∃ (_r _s : ℝ), (M.number (0 : ℂ)) = M.number (_r : ℂ) ∧ _known_argument_0 = M.number (_s : ℂ) ∧ _r ≤ _s))) (Litex.denote _value_i6)))).trans (congrArg (fun (_known_value : M.Value) => ((fun (_known_argument_0 : M.Value) => (∃ (_predicate_witness : (M.mem _known_argument_0 (M.standard Litex.StandardSetValue.real))), (∃ (_r _s : ℝ), (M.number (0 : ℂ)) = M.number (_r : ℂ) ∧ _known_argument_0 = M.number (_s : ℂ) ∧ _r ≤ _s))) _known_value)) h_115)) _known_citation
-              ))
+              let _litex_original := _equal_wd_1_0
               let _litex_literal := (let _wd_1_0 := (_object_i3 (M := M));
               let _wd_1_1 := _value_i7;
               (Litex.call Litex.StandardSetValue.real Litex.StandardSetValue.real (fun (_raw_i4 : M.Value) => (∃ (_predicate_witness : (M.mem _raw_i4 (M.standard Litex.StandardSetValue.real))), (∃ (_r _s : ℝ), (M.number (0 : ℂ)) = M.number (_r : ℂ) ∧ _raw_i4 = M.number (_s : ℂ) ∧ _r ≤ _s))) _wd_1_0 _wd_1_1 (Litex.formulaFnInFnSet _wd_1_0) (Litex.inOfSame _value_i6 _wd_1_1 (Litex.R (M := M)) (Litex.R (M := M)) h_115 (show @Eq M.Value _ _ from Eq.refl _) h_132) (show ((fun (_known_argument_0 : M.Value) => (∃ (_predicate_witness : (M.mem _known_argument_0 (M.standard Litex.StandardSetValue.real))), (∃ (_r _s : ℝ), (M.number (0 : ℂ)) = M.number (_r : ℂ) ∧ _known_argument_0 = M.number (_s : ℂ) ∧ _r ≤ _s))) (Litex.denote _wd_1_1)) from by
@@ -106,7 +105,7 @@ theorem h_119 : ∀ {_Host_i6 : Type v6} [_rep_i6 : Litex.Representation M _Host
               have _litex_call_eq := Litex.callCongr _litex_original _litex_literal (h_114 (M := M)) (Litex.sameRefl _litex_original.val.argument)
               have _litex_beta := Litex.callFormula_denote Litex.StandardSetValue.real Litex.StandardSetValue.real (fun (_raw_i4 : M.Value) => (∃ (_predicate_witness : (M.mem _raw_i4 (M.standard Litex.StandardSetValue.real))), (∃ (_r _s : ℝ), (M.number (0 : ℂ)) = M.number (_r : ℂ) ∧ _raw_i4 = M.number (_s : ℂ) ∧ _r ≤ _s))) (fun (_raw_i4 : M.Value) => (M.powValue _raw_i4 (M.number (2 : ℂ)))) (by intro _x _hx _hg; exact _litex_literal.val.function.wd _x ((Litex.FunctionSignature.one_domain Litex.StandardSetValue.real Litex.StandardSetValue.real (fun (_raw_i4 : M.Value) => (∃ (_predicate_witness : (M.mem _raw_i4 (M.standard Litex.StandardSetValue.real))), (∃ (_r _s : ℝ), (M.number (0 : ℂ)) = M.number (_r : ℂ) ∧ _raw_i4 = M.number (_s : ℂ) ∧ _r ≤ _s))) _x).mpr ⟨_hx, _hg⟩)) _litex_literal.val.argument _litex_literal.wd.2.1 _litex_literal.wd.2.2
               exact _litex_call_eq.trans (_litex_beta.trans (show (fun (_raw_i4 : M.Value) => (M.powValue _raw_i4 (M.number (2 : ℂ)))) (Litex.denote _litex_literal.val.argument) = (M.powValue (Litex.denote _value_i7) (M.number (2 : ℂ))) from rfl))
-            ))).trans _litex_residual)
+            ))).trans _litex_residual)))
           )
       )
     exact (And.intro h_117 h_118)

@@ -29,6 +29,7 @@ To try chapter navigation/search, export `-r examples/reading/book` instead
 of the single-file input above.
 
 For a real website, publish `book/` with the site. Copy only the integration
-you need from `main.js`. The host does not need Node or Litex to browse
+you need from `main.js`. The host loads the exported KaTeX CSS/JS before the reader assets; its fonts
+are embedded for offline math display. The host does not need Node or Litex to browse
 prebuilt evidence. Rechecking edited Litex needs a backend running the
 reading exporter; see the [integration guide](../../../docs/reading.md).

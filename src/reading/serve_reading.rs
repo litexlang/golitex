@@ -8,7 +8,9 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
-use super::export_reading::{reading_html, APP_JS, READER_CSS, READER_JS};
+use super::export_reading::{
+    reading_html, APP_JS, KATEX_CSS, KATEX_JS, KATEX_LICENSE, READER_CSS, READER_JS,
+};
 use super::helper::{object, text};
 use super::partition_reading::ReadingSite;
 use super::upload_cache::{UploadBuild, UploadCache};
@@ -165,6 +167,13 @@ fn handle_connection(
                 READER_JS,
             ),
             "/reader.css" => response(&mut stream, 200, "text/css; charset=utf-8", READER_CSS),
+            "/katex.min.js" => {
+                response(&mut stream, 200, "text/javascript; charset=utf-8", KATEX_JS)
+            }
+            "/katex.min.css" => response(&mut stream, 200, "text/css; charset=utf-8", KATEX_CSS),
+            "/katex.LICENSE" => {
+                response(&mut stream, 200, "text/plain; charset=utf-8", KATEX_LICENSE)
+            }
             "/app.js" => response(&mut stream, 200, "text/javascript; charset=utf-8", APP_JS),
             "/reading.json" => response(&mut stream, 200, "application/json; charset=utf-8", json),
             _ => response(&mut stream, 404, "text/plain", "Not found"),

@@ -19,6 +19,7 @@ examples/
   infer/                store → Infer*Result consequences
   tokenize/             tokenizer / Unicode input surface
   module_manager/       -r / -f / litex.config mount
+  real_analysis/series/ imported real series source library and rejection controls
   agent_session_demo/    Python driver for persistent-Session authoring
   knowledge_base/       persist / restore goldens
   _internal/            fixtures / drafts / non-public regressions
@@ -51,6 +52,13 @@ Real sequence limit tracers:
 - [Equivalent seq(R) / fn(k N+) R and finite-existence interfaces](wd/sequence_limit_interfaces.lit).
 - [Common sequence-limit proofs](wd/sequence_limit_common_proofs.lit): explicit `1/n -> 0`, rational examples, `sin(n)/n -> 0`, `sqrt(1+1/n) -> 1`, and `(1/2)^n -> 0`; also finite initial changes, even-index subsequences, eventual positivity/nonzero terms, and divergence of `n`. Each convergence proof precedes `lim` use.
 - One `seq_limit_*.lit` example per theorem in `stmt_nodes/release_and_expand/builtin_thm/`.
+
+Ordered real series:
+
+- [Imported library example](real_analysis/series/README.md): partial sums,
+  candidate/convergence properties, guarded selected values, linearity, tails,
+  finite support and finite-prefix corrections. The geometric sum is proved
+  before it is selected; eight independent controls check nearby invalid uses.
 
 Finite-point real function limit tracers:
 

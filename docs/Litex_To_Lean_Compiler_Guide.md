@@ -562,6 +562,22 @@ These references reduce repeated construction terms without changing the
 selected proof or introducing new assumptions. The compiler reads registrations
 from preceding result records; it does not search the verifier again.
 
+A child does not need its own Runtime WD registration to be reused. After
+`$is_set((a + 1) * (a + 2))`, a later `$is_set(a + 1)` can take the certified
+left operand from the stored product's `.val.left`. The later result may still
+contain an independent `ByDef` proof. The compiler validates that proof's own
+construction conditions, then uses the earlier projection when the object and
+its Lean representation match. Function calls must also retain the same
+selected signature citation. Only preceding, visible constructors qualify;
+children built inside a closed proof cannot escape it. This uses the existing
+result tree and source-position lookup, without adding a Runtime cache.
+
+The equality store for `have points set = cart(R, R)` also registers the
+right-hand object's WD. Later uses of `cart(R, R)` reuse the declaration's
+`_object_i<ID>`, which already contains its value and WD proof. The compiler
+checks the original registration and source scope before citing it; a
+declaration inside a proof remains local to that proof.
+
 Concrete `prop` clauses retain the same registrations in
 `AssumeDomFactResult.store_and_infer.formed_subjects`, alongside their original
 `well_defined` evidence. The compiler emits those constructors before each
@@ -1156,3 +1172,8 @@ then follow the [rational inverse-map walkthrough](#two-rational-maps-from-defin
 Each example directory in the table contains its `.lit` source beside the
 actual generated `.lean`. Browse the [full source/generated collection](../lean/examples/)
 to see how these capabilities combine into proofs that Lean can consume.
+
+The [coverage plan](Litex_To_Lean_Coverage_Plan.md) inventories the remaining
+statement, object and builtin-rule routes as of 2026-10-23 and groups them into
+implementation phases. Its counts describe compiler entrypoints and planned
+work; the examples above provide the checked mathematical coverage.

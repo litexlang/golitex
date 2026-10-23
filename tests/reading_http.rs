@@ -195,6 +195,20 @@ fn real_upload_preview_project_and_failure_boundaries() {
     assert_eq!(status, 200);
     assert!(html.contains("litex-reading-page"));
     assert!(html.contains("data-live=\"true\""));
+    assert!(html.contains("katex.min.js") && html.contains("katex.min.css"));
+    for (path, marker, mime) in [
+        ("/katex.min.js", "KaTeX", "text/javascript"),
+        ("/katex.min.css", "data:font/woff2;base64,", "text/css"),
+        (
+            "/katex.LICENSE",
+            "Permission is hereby granted",
+            "text/plain",
+        ),
+    ] {
+        let (status, asset, headers) = server.request_details("GET", path, "", "");
+        assert_eq!(status, 200);
+        assert!(asset.contains(marker) && headers.contains(mime));
+    }
     let (status, manifest) = server.request("GET", "/reading.manifest.json", "", "");
     assert_eq!(status, 200);
     let manifest = JsonValue::parse(&manifest).unwrap();

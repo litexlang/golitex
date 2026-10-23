@@ -29,7 +29,7 @@ pub fn build_reading(
         ReadingInput::Project(path) => path.as_path(),
         ReadingInput::Source(_) | ReadingInput::Empty => Path::new("."),
     };
-    let mut capture = Capture::new(base);
+    let mut capture = Capture::new(base, language);
     if let ReadingInput::File(path) = input {
         capture.set_entry_file(path);
     }
@@ -86,5 +86,5 @@ pub fn build_reading(
         Ok(result) => result,
         Err(error) => (false, Some(error.to_string())),
     };
-    ReadingBuildResult::new(capture.finish(success, error, language, strict), success)
+    ReadingBuildResult::new(capture.finish(success, error, strict), success)
 }

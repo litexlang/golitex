@@ -6,6 +6,9 @@ use std::path::Path;
 pub const READER_JS: &str = include_str!("web/reader.js");
 pub const READER_CSS: &str = include_str!("web/reader.css");
 pub const APP_JS: &str = include_str!("web/app.js");
+pub(super) const KATEX_JS: &str = include_str!("web/vendor/katex/katex.min.js");
+pub(super) const KATEX_CSS: &str = include_str!("web/vendor/katex/katex.min.css");
+pub(super) const KATEX_LICENSE: &str = include_str!("web/vendor/katex/LICENSE");
 
 pub fn reading_html(document: &JsonValue, live: bool) -> String {
     let data = document
@@ -35,6 +38,9 @@ pub fn export_reading(path: &Path, document: &JsonValue) -> RuntimeResult<()> {
         ("reader.js", READER_JS.into()),
         ("reader.css", READER_CSS.into()),
         ("app.js", APP_JS.into()),
+        ("katex.min.js", KATEX_JS.into()),
+        ("katex.min.css", KATEX_CSS.into()),
+        ("katex.LICENSE", KATEX_LICENSE.into()),
         ("reading.json", document.stringify_pretty()),
     ] {
         files.insert(name.into(), content);

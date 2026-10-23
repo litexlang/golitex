@@ -511,6 +511,24 @@ impl Runtime {
         let Obj::FnObj(application) = &fact.element else {
             return None;
         };
+        // For f(t)(x) in fn_range(f(t)), the image owner is the checked
+        // prefix f(t). Read its signature using the same one-layer rule below.
+        // Whole-application WD has already checked every group and guard.
+        let mut range_application = None;
+        if let Obj::FunctionSpace(FunctionSpace::FnRange(range)) = &fact.set {
+            if application.body.len() > 1 {
+                let mut receiver = application.clone();
+                let arguments = receiver.body.pop().unwrap();
+                let receiver: Obj = receiver.into();
+                if receiver.ir() == range.function.ir() {
+                    range_application = Some(crate::ast::obj::FnObj {
+                        head: Box::new(FnObjHead::Object(Box::new(receiver))),
+                        body: vec![arguments],
+                    });
+                }
+            }
+        }
+        let application = range_application.as_ref().unwrap_or(application);
         if application.body.is_empty() {
             return None;
         }
