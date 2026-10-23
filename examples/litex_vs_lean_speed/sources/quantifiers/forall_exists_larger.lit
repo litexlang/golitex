@@ -1,0 +1,4 @@
+claim:
+    ? forall x R:
+        exist y R st {x<y}
+    witness exist y R st {x<y} from x+1

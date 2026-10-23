@@ -1,0 +1,6 @@
+thm bench_positive_is_nonzero:
+    ? forall x R:
+        x>0
+        =>:
+            x!=0
+release thm bench_positive_is_nonzero(3)

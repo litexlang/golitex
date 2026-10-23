@@ -1,0 +1,2 @@
+forall A,B,D power_set(R):
+    set_minus(A,union(B,D))=intersect(set_minus(A,B),set_minus(A,D))

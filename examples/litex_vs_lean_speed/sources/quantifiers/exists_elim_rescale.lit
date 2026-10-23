@@ -1,0 +1,8 @@
+claim:
+    ? forall s R:
+        exist t R st {t^2=s}
+        =>:
+            exist u R st {u^2=4*s}
+    obtain root from exist t R st {t^2=s}
+    witness exist u R st {u^2=4*s} from 2*root:
+        (2*root)^2 = 4*root^2 = 4*s

@@ -1,0 +1,206 @@
+{
+  "litex/sqrt_two_irrational": {
+    "n": 90,
+    "median_ms": 25.5540625,
+    "min_ms": 24.290167,
+    "max_ms": 31.437791
+  },
+  "litex/set_union_inter_distrib": {
+    "n": 90,
+    "median_ms": 0.23352050000000002,
+    "min_ms": 0.2215,
+    "max_ms": 0.395833
+  },
+  "litex/set_diff_union": {
+    "n": 90,
+    "median_ms": 0.22149950000000002,
+    "min_ms": 0.214125,
+    "max_ms": 0.291625
+  },
+  "litex/set_inter_monotone": {
+    "n": 90,
+    "median_ms": 0.28625049999999996,
+    "min_ms": 0.280708,
+    "max_ms": 0.393959
+  },
+  "litex/function_mem_range": {
+    "n": 90,
+    "median_ms": 0.2277705,
+    "min_ms": 0.220459,
+    "max_ms": 0.34575
+  },
+  "litex/function_comp_assoc": {
+    "n": 90,
+    "median_ms": 6.453875,
+    "min_ms": 6.303333,
+    "max_ms": 7.244333
+  },
+  "litex/integer_division_decomposition": {
+    "n": 90,
+    "median_ms": 0.378583,
+    "min_ms": 0.374375,
+    "max_ms": 0.439209
+  },
+  "litex/integer_divisibility": {
+    "n": 90,
+    "median_ms": 0.204146,
+    "min_ms": 0.199917,
+    "max_ms": 0.281541
+  },
+  "litex/finite_cardinality": {
+    "n": 90,
+    "median_ms": 0.061625,
+    "min_ms": 0.0595,
+    "max_ms": 0.083
+  },
+  "litex/powerset_cardinality": {
+    "n": 90,
+    "median_ms": 0.16514600000000002,
+    "min_ms": 0.161209,
+    "max_ms": 0.232542
+  },
+  "litex/factorial_positive": {
+    "n": 90,
+    "median_ms": 0.09560450000000001,
+    "min_ms": 0.092375,
+    "max_ms": 0.118625
+  },
+  "litex/derivative_square_at_three": {
+    "n": 90,
+    "median_ms": 0.8503125,
+    "min_ms": 0.833208,
+    "max_ms": 1.079583
+  },
+  "litex/pair_reconstruction": {
+    "n": 90,
+    "median_ms": 0.19466699999999998,
+    "min_ms": 0.189833,
+    "max_ms": 0.285875
+  },
+  "litex/continuity_square_at_three": {
+    "n": 90,
+    "median_ms": 0.249687,
+    "min_ms": 0.245625,
+    "max_ms": 0.2875
+  },
+  "lean/sqrt_two_irrational__mathlib_theorem": {
+    "n": 21,
+    "median_ms": 0.657542,
+    "min_ms": 0.584,
+    "max_ms": 1.40725
+  },
+  "lean/sqrt_two_irrational__scratch": {
+    "n": 21,
+    "median_ms": 750.544291,
+    "min_ms": 711.606041,
+    "max_ms": 788.6055
+  },
+  "lean/set_union_inter_distrib__lemma": {
+    "n": 21,
+    "median_ms": 1.34775,
+    "min_ms": 1.250125,
+    "max_ms": 1.724125
+  },
+  "lean/set_union_inter_distrib__ext_simp": {
+    "n": 21,
+    "median_ms": 32.525708,
+    "min_ms": 31.959125,
+    "max_ms": 35.921167
+  },
+  "lean/set_diff_union__ext_simp": {
+    "n": 21,
+    "median_ms": 21.592,
+    "min_ms": 21.104542,
+    "max_ms": 24.263875
+  },
+  "lean/set_inter_monotone__lemma": {
+    "n": 21,
+    "median_ms": 1.3545,
+    "min_ms": 1.306167,
+    "max_ms": 1.564959
+  },
+  "lean/set_inter_monotone__term": {
+    "n": 21,
+    "median_ms": 1.962125,
+    "min_ms": 1.861708,
+    "max_ms": 2.223
+  },
+  "lean/function_mem_range__lemma": {
+    "n": 21,
+    "median_ms": 0.860542,
+    "min_ms": 0.816416,
+    "max_ms": 1.115
+  },
+  "lean/function_comp_assoc__term": {
+    "n": 21,
+    "median_ms": 0.894667,
+    "min_ms": 0.869167,
+    "max_ms": 1.406083
+  },
+  "lean/function_comp_assoc__lemma": {
+    "n": 21,
+    "median_ms": 0.87875,
+    "min_ms": 0.836625,
+    "max_ms": 1.001708
+  },
+  "lean/integer_division_decomposition__lemma": {
+    "n": 21,
+    "median_ms": 3.183292,
+    "min_ms": 3.081333,
+    "max_ms": 3.404792
+  },
+  "lean/integer_divisibility__lemma": {
+    "n": 21,
+    "median_ms": 1.718917,
+    "min_ms": 1.60825,
+    "max_ms": 2.199333
+  },
+  "lean/finite_cardinality__decide": {
+    "n": 21,
+    "median_ms": 3.753541,
+    "min_ms": 3.310208,
+    "max_ms": 4.353958
+  },
+  "lean/finite_cardinality__norm_num": {
+    "n": 21,
+    "median_ms": 18.636834,
+    "min_ms": 18.002458,
+    "max_ms": 24.951375
+  },
+  "lean/powerset_cardinality__lemma": {
+    "n": 21,
+    "median_ms": 1.083125,
+    "min_ms": 1.012416,
+    "max_ms": 1.193583
+  },
+  "lean/factorial_positive__lemma": {
+    "n": 21,
+    "median_ms": 0.597334,
+    "min_ms": 0.545375,
+    "max_ms": 0.901292
+  },
+  "lean/derivative_square_at_three__chain": {
+    "n": 21,
+    "median_ms": 49.034709,
+    "min_ms": 44.549959,
+    "max_ms": 54.956208
+  },
+  "lean/pair_reconstruction__term": {
+    "n": 21,
+    "median_ms": 0.663833,
+    "min_ms": 0.567584,
+    "max_ms": 0.834833
+  },
+  "lean/pair_reconstruction__lemma": {
+    "n": 21,
+    "median_ms": 0.607917,
+    "min_ms": 0.551792,
+    "max_ms": 0.814625
+  },
+  "lean/continuity_square_at_three__lemma": {
+    "n": 21,
+    "median_ms": 8.68625,
+    "min_ms": 8.393875,
+    "max_ms": 10.54625
+  }
+}

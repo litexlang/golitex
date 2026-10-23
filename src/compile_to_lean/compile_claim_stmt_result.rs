@@ -307,6 +307,23 @@ impl LitexToLeanCompiler {
         goal_position: &SourcePosition<'_>,
         body_position: &SourcePosition<'_>,
     ) -> Result<Vec<String>, LeanCompileError> {
+        // Iff sugar stores only its two directions. Its source assumption is
+        // already captured here and is not a separate Runtime fact.
+        if let (
+            StoreFactResult::ForallFactWithIff(goal_iff),
+            StoreFactResult::ForallFactWithIff(body_iff),
+        ) = (&goal.store, &body.store)
+        {
+            let source = Fact::ForallFactWithIff(goal_iff.fact.clone());
+            self.validate_store(&goal.store, &source)?;
+            self.validate_store(&body.store, &source)?;
+            if goal_iff.fact != body_iff.fact {
+                return Err(LeanCompileError::unsupported("ForallIff/HeaderSubject"));
+            }
+            // Each header replays its own direction stores from this same
+            // hypothesis; their fresh projection IDs are not extra premises.
+            return Ok(Vec::new());
+        }
         let goal_fact = self.resolve_fact(goal.primary_fact_id(), goal_position)?;
         let body_fact = self.resolve_fact(body.primary_fact_id(), body_position)?;
         self.validate_store(&goal.store, &goal_fact)?;

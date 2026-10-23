@@ -1,0 +1,89 @@
+{
+  "kind": "reading_long_examples",
+  "examples": [
+    {
+      "source": {
+        "path": "showcases/math_concepts_in_litex/3_number_theory/main.lit",
+        "sha256": "8bc3acbd59b3a43804c82442e6b5ae12af1c5e6ba8316fb297a23bfc6af02fc4"
+      },
+      "problem": "Witness-based divisibility, a positive gcd/Bezout certificate, Diophantine solvability and congruence.",
+      "proof_idea": "Compose integer witnesses, pass to linear combinations, scale Bezout coefficients and specialize to 84*(-3)+30*9=18.",
+      "litex_code": {
+        "path": "06-number-theory.lit",
+        "sha256": "7ed3144b9ba1434c9405ea69355758cdb41b1285bae34e87b9ff610b7612d2ef",
+        "lines": 174,
+        "original_lines": 167
+      },
+      "comments": {
+        "adaptation": "Chinese introductory comments only; original complete source follows unchanged.",
+        "trust_boundary": "No user trust, local axioms or abstract predicate placeholders. Strict source verification does not claim Lean certification.",
+        "verification": {
+          "status": "strict_verified",
+          "command": "target/release/litex -reading -export <output> -strict -lang zh -r examples/reading/homepage",
+          "collection_run_result": "success",
+          "source_id": "source5",
+          "source_baseline": "target/release/litex -strict -lang en -f showcases/math_concepts_in_litex/3_number_theory/main.lit",
+          "date": "2026-10-23",
+          "added_user_trust": 0,
+          "added_user_axioms": 0
+        }
+      }
+    },
+    {
+      "source": {
+        "path": "showcases/math_concepts_in_litex/10_real_analysis_in_nutshell/main.lit",
+        "sha256": "7147ad83cea370558ec5a1bf137f473288a4f037be7fd8f980ecba45fcf73a5a"
+      },
+      "problem": "Positive-index real sequences: epsilon tails, constant convergence, uniqueness and a guarded limit selector.",
+      "proof_idea": "Construct tail witnesses for constants, combine two tails and use the triangle inequality to force equal limits.",
+      "litex_code": {
+        "path": "07-sequence-limits.lit",
+        "sha256": "c67511ceae664836727e3686e0609b71e4da886b8b6bea6265d71b465988b377",
+        "lines": 130,
+        "original_lines": 123
+      },
+      "comments": {
+        "adaptation": "Chinese introductory comments only; original complete source follows unchanged.",
+        "trust_boundary": "No user trust, local axioms or abstract predicate placeholders. Strict source verification does not claim Lean certification.",
+        "verification": {
+          "status": "strict_verified",
+          "command": "target/release/litex -reading -export <output> -strict -lang zh -r examples/reading/homepage",
+          "collection_run_result": "success",
+          "source_id": "source6",
+          "source_baseline": "target/release/litex -strict -lang en -f showcases/math_concepts_in_litex/10_real_analysis_in_nutshell/main.lit",
+          "date": "2026-10-23",
+          "added_user_trust": 0,
+          "added_user_axioms": 0
+        }
+      }
+    },
+    {
+      "source": {
+        "path": "showcases/abstract_algebra/abstract_algebra.lit",
+        "sha256": "594790be8dfc5b761e7112c83d5467a0527a354a415a1240bec537c8a6b15b76"
+      },
+      "problem": "Groups, subgroups, homomorphisms, kernel normality and trivial-kernel injectivity with integer examples.",
+      "proof_idea": "Derive cancellation from group laws, prove preservation laws, build kernel subsets and contrast doubling with the zero map.",
+      "litex_code": {
+        "path": "08-groups-and-homomorphisms.lit",
+        "sha256": "eff6f540ee3c9709d5620b0d53704ab568a4d11f848f55120acfd06af35fa0ca",
+        "lines": 402,
+        "original_lines": 395
+      },
+      "comments": {
+        "adaptation": "Chinese introductory comments only; original complete source follows unchanged.",
+        "trust_boundary": "No user trust, local axioms or abstract predicate placeholders. Strict source verification does not claim Lean certification.",
+        "verification": {
+          "status": "strict_verified",
+          "command": "target/release/litex -reading -export <output> -strict -lang zh -r examples/reading/homepage",
+          "collection_run_result": "success",
+          "source_id": "source7",
+          "source_baseline": "target/release/litex -strict -lang en -f showcases/abstract_algebra/abstract_algebra.lit",
+          "date": "2026-10-23",
+          "added_user_trust": 0,
+          "added_user_axioms": 0
+        }
+      }
+    }
+  ]
+}

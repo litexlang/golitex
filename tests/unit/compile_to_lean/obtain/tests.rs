@@ -396,3 +396,115 @@ fn have_by_existence_does_not_relax_obtain_binder_freshness() {
         .unwrap_err();
     assert!(error.to_string().contains("Obtain/ParameterIdentity"));
 }
+
+#[test]
+fn have_from_universal_existence_replays_cited_conclusion() {
+    let (run, runtime) = checked(include_str!(
+        "../../../../lean/examples/choice_from_universal/statement.lit"
+    ));
+    let lean = LitexToLeanCompiler::new(runtime)
+        .compile_run(&run, "universal_choice")
+        .unwrap();
+    assert!(lean.contains("_exist_match_"));
+}
+
+#[test]
+fn have_from_universal_existence_rejects_corrupt_matching_evidence() {
+    use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::ForallConclusionArgMatchProof;
+    use crate::execute::execute_fact_stmt::verify_exist_shaped_fact::ExistShapedFactSearchedProof;
+    for corruption in 0..4 {
+        let (mut run, runtime) = checked(include_str!(
+            "../../../../lean/examples/choice_from_universal/statement.lit"
+        ));
+        let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
+            ExecDefineObjStmtResult::HaveObjByExistFacts(
+                crate::execute::ExecHaveObjByExistFactsStmtResult::Success(have),
+            ),
+        )) = &mut run.statement_results[2]
+        else {
+            panic!("have")
+        };
+        let ExistShapedFactSearchedProof::ByKnownForallFact(proof) =
+            &mut have.verify_exist.searched_proof
+        else {
+            panic!("known universal")
+        };
+        match corruption {
+            0 => {
+                proof.arg_match_proofs.pop();
+            }
+            1 => {
+                proof
+                    .instantiation_requirements
+                    .param_type_requirements
+                    .pop();
+            }
+            2 => {
+                proof.forall_parameters_match_what_args[0] = Obj::StandardSet(StandardSet::C);
+            }
+            _ => {
+                let ForallConclusionArgMatchProof::NonParamEqual { pattern, .. } =
+                    &mut proof.arg_match_proofs[0]
+                else {
+                    panic!("carrier comparison")
+                };
+                *pattern = Obj::StandardSet(StandardSet::C);
+            }
+        }
+        assert!(LitexToLeanCompiler::new(runtime)
+            .compile_run(&run, "corrupt_universal_choice")
+            .is_err());
+    }
+}
+
+#[test]
+fn have_from_universal_existence_rejects_missing_guard_and_future_citation() {
+    use crate::execute::execute_fact_stmt::verify_exist_shaped_fact::ExistShapedFactSearchedProof;
+    for future in [false, true] {
+        let (mut run, runtime) = checked(include_str!(
+            "../../../../lean/examples/choice_from_universal/statement.lit"
+        ));
+        let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefThm(
+            ExecDefThmStmtResult::Success(last),
+        )) = run.statement_results.last_mut().unwrap()
+        else {
+            panic!("local choice theorem")
+        };
+        let future_id = last.statement.fact.fact_id();
+        let have = if future {
+            &mut run.statement_results[2]
+        } else {
+            let ExecDefThmBodyProof::Forall(body) = &mut last.body else {
+                panic!("forall theorem")
+            };
+            &mut body.proof_steps[0]
+        };
+        let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
+            ExecDefineObjStmtResult::HaveObjByExistFacts(
+                crate::execute::ExecHaveObjByExistFactsStmtResult::Success(have),
+            ),
+        )) = have
+        else {
+            panic!("have by existence")
+        };
+        let ExistShapedFactSearchedProof::ByKnownForallFact(proof) =
+            &mut have.verify_exist.searched_proof
+        else {
+            panic!("known forall")
+        };
+        if future {
+            proof.cite.fact_id = future_id;
+        } else {
+            assert_eq!(proof.instantiation_requirements.proof_of_dom_facts.len(), 1);
+            proof.instantiation_requirements.proof_of_dom_facts.clear();
+        }
+        let error = LitexToLeanCompiler::new(runtime)
+            .compile_run(&run, "invalid_existential_citation")
+            .unwrap_err();
+        if future {
+            assert!(error.route.starts_with("FactId/"), "{error}");
+        } else {
+            assert_eq!(error.route, "CompoundKnown/RequirementArity");
+        }
+    }
+}

@@ -81,6 +81,7 @@ pub(super) enum SourceOwner<'a> {
     Forall(&'a VerifyForallFactSuccess),
     EmptyForall(&'a crate::execute::execute_fact_stmt::verify_forall_fact::VerifyEmptyParameterDomainForallProof),
     ForallWD(&'a ForallFact, &'a ForallFactWellDefinedProof),
+    ForallIffWD(&'a ForallFactWithIff, &'a crate::execute::execute_fact_stmt::verify_forall_fact_with_iff::ForallFactWithIffWellDefinedProof),
     // Params, then each sequential body WD/assumption pair.
     ExistWD(&'a PlainExistFact, &'a ExistShapedFactWellDefinedProof),
     // Local stages only: params, equality stores, proof steps, body checks, uniqueness.
@@ -146,6 +147,32 @@ impl<'a> SourcePosition<'a> {
     /// Local quantified proofs are Lean terms, whose carrier levels are
     /// inferred at their uses. Only declarations introduce level parameters.
     pub fn parameter_universe(&self, id: IdentifierId) -> String {
+        // An iff contains two independently quantified directions. Their
+        // carrier levels cannot be inferred from an application of the pair;
+        // use the original source binder's declared level on both sides.
+        let mut scope = Some(self);
+        while let Some(position) = scope {
+            let iff = match position.owner {
+                SourceOwner::ForallIffWD(fact, _) => Some(fact),
+                SourceOwner::Verify(VerifyFactResult::ForallFactWithIff(result)) => {
+                    match result.as_ref() {
+                        VerifyForallFactWithIffResult::Success(proof) => Some(&proof.fact),
+                        _ => None,
+                    }
+                }
+                _ => None,
+            };
+            if iff.is_some_and(|fact| {
+                fact.forall_fact
+                    .typed_parameters
+                    .groups
+                    .iter()
+                    .any(|group| group.params.iter().any(|parameter| parameter.id == id))
+            }) {
+                return format!("v{}", id.value());
+            }
+            scope = position.parent;
+        }
         let mut cursor = Some(self);
         while let Some(position) = cursor {
             if parameter_in_owner(position, id).is_some() {
@@ -498,6 +525,7 @@ impl<'a> SourcePosition<'a> {
                 | SourceOwner::Contra(_)
                 | SourceOwner::CasesBranch(_)
                 | SourceOwner::ForallWD(_, _)
+                | SourceOwner::ForallIffWD(_, _)
                 | SourceOwner::KnownForall(_)
                 | SourceOwner::Call(_)
                 | SourceOwner::ThmRelease(_)
@@ -796,6 +824,7 @@ impl<'a> SourcePosition<'a> {
                 SourceOwner::Forall(p) => Some(p.local_env.as_ref()),
                 SourceOwner::EmptyForall(p) => Some(p.local_env.as_ref()),
                 SourceOwner::ForallWD(_, p) => Some(p.local_env.as_ref()),
+                SourceOwner::ForallIffWD(_, p) => Some(p.local_env.as_ref()),
                 SourceOwner::ExistWD(_, p) => Some(p.local_env.as_ref()),
                 SourceOwner::WitnessExist(p) => Some(p.local_env.as_ref()),
                 SourceOwner::WitnessAtomic(p) => Some(p.local_env.as_ref()),
@@ -845,6 +874,7 @@ impl<'a> SourcePosition<'a> {
                 SourceOwner::Forall(p) => Some(p.local_env.as_ref()),
                 SourceOwner::EmptyForall(p) => Some(p.local_env.as_ref()),
                 SourceOwner::ForallWD(_, p) => Some(p.local_env.as_ref()),
+                SourceOwner::ForallIffWD(_, p) => Some(p.local_env.as_ref()),
                 SourceOwner::ExistWD(_, p) => Some(p.local_env.as_ref()),
                 SourceOwner::WitnessExist(p) => Some(p.local_env.as_ref()),
                 SourceOwner::WitnessAtomic(p) => Some(p.local_env.as_ref()),
@@ -2737,6 +2767,12 @@ fn parameter_in_owner<'a>(
             position.before,
             id,
         ),
+        SourceOwner::ForallIffWD(fact, p) => parameter_from_groups(
+            &fact.forall_fact.typed_parameters.groups,
+            &p.introduced_params.defined_params.store_and_infer_results,
+            position.before,
+            id,
+        ),
         SourceOwner::ForallWD(fact, p) => parameter_from_groups(
             &fact.typed_parameters.groups,
             &p.introduced_params.defined_params.store_and_infer_results,
@@ -2929,6 +2965,7 @@ fn check_store_subject(store: &StoreFactResult, actual: &Fact) -> Result<(), Lea
     let expected = match store {
         StoreFactResult::AtomicFact(p) => Fact::AtomicFact(p.fact.clone()),
         StoreFactResult::ForallFact(p) => Fact::ForallFact(p.fact.clone()),
+        StoreFactResult::ForallFactWithIff(p) => Fact::ForallFactWithIff(p.fact.clone()),
         StoreFactResult::AndFact(p) => Fact::AndFact(p.fact.clone()),
         StoreFactResult::ChainFact(p) => Fact::ChainFact(p.fact.clone()),
         StoreFactResult::OrFact(p) => Fact::OrFact(p.fact.clone()),
@@ -3762,6 +3799,14 @@ fn fact_reference_in_owner(
             }
             Ok(None)
         }
+        SourceOwner::ForallIffWD(fact, p) => header_reference(
+            &fact.forall_fact.typed_parameters.groups,
+            &p.introduced_params,
+            &p.assumed_dom_facts,
+            position.before,
+            id,
+            actual,
+        ),
         SourceOwner::ForallWD(fact, p) => header_reference(
             &fact.typed_parameters.groups,
             &p.introduced_params,
@@ -4459,6 +4504,7 @@ fn same_source_owner(left: SourceOwner<'_>, right: SourceOwner<'_>) -> bool {
         (SourceOwner::Forall(a), SourceOwner::Forall(b)) => std::ptr::eq(a, b),
         (SourceOwner::EmptyForall(a), SourceOwner::EmptyForall(b)) => std::ptr::eq(a, b),
         (SourceOwner::ForallWD(_, a), SourceOwner::ForallWD(_, b)) => std::ptr::eq(a, b),
+        (SourceOwner::ForallIffWD(_, a), SourceOwner::ForallIffWD(_, b)) => std::ptr::eq(a, b),
         (SourceOwner::ExistWD(_, a), SourceOwner::ExistWD(_, b)) => std::ptr::eq(a, b),
         (SourceOwner::WitnessExist(a), SourceOwner::WitnessExist(b)) => std::ptr::eq(a, b),
         (SourceOwner::WitnessAtomic(a), SourceOwner::WitnessAtomic(b)) => std::ptr::eq(a, b),
@@ -5606,6 +5652,18 @@ fn visit_owner<T>(
             }
             return visit_header(
                 &proof.fact.typed_parameters.groups,
+                &proof.introduced_params,
+                &proof.assumed_dom_facts,
+                position,
+                wd,
+                verify,
+            );
+        }
+        SourceOwner::ForallIffWD(fact, proof) => {
+            // Both sides are formed under the common domain only. No side is
+            // a truth assumption while forming the opposite side.
+            return visit_header(
+                &fact.forall_fact.typed_parameters.groups,
                 &proof.introduced_params,
                 &proof.assumed_dom_facts,
                 position,
@@ -7960,6 +8018,14 @@ fn stored_projection_has_fact(
     id: FactId,
     actual: &Fact,
 ) -> Result<bool, LeanCompileError> {
+    if let StoreFactResult::ForallFactWithIff(stored) = store {
+        for direction in [&stored.forward, &stored.reverse] {
+            if direction.fact_id == id {
+                check_subject(&Fact::ForallFact(direction.fact.clone()), actual)?;
+                return Ok(true);
+            }
+        }
+    }
     for (stored_id, atomic) in store.atomic_components() {
         if stored_id == id {
             check_subject(&Fact::AtomicFact(atomic), actual)?;
@@ -8191,6 +8257,38 @@ fn statement_forall_constructor_owner(
     statement: &ExecStmtResult,
     id: FactId,
 ) -> Option<SourceOwner<'_>> {
+    if let ExecStmtResult::Fact(ExecFactStmtResult::Success(statement)) = statement {
+        if let (
+            VerifyFactResult::ForallFactWithIff(result),
+            StoreFactResult::ForallFactWithIff(stored),
+        ) = (
+            &statement.verify_result,
+            &statement.store_and_infer_result.store,
+        ) {
+            let VerifyForallFactWithIffResult::Success(proof) = result.as_ref() else {
+                return None;
+            };
+            let direction = if stored.forward.fact_id == id {
+                &proof.then_implies_iff
+            } else if stored.reverse.fact_id == id {
+                &proof.iff_implies_then
+            } else {
+                return None;
+            };
+            let VerifyFactResult::ForallFact(result) = direction else {
+                return None;
+            };
+            return match result.as_ref() {
+                VerifyForallFactResult::Success(VerifyForallFactProof::ByLocalIntroduction(
+                    proof,
+                )) => Some(SourceOwner::Forall(proof)),
+                VerifyForallFactResult::Success(VerifyForallFactProof::ByKnownForallFact(
+                    proof,
+                )) => Some(SourceOwner::ForallWD(&proof.fact, &proof.well_defined)),
+                _ => None,
+            };
+        }
+    }
     match statement {
         ExecStmtResult::By(ExecByStmtResult::Induc(ExecByInducStmtResult::Success(proof)))
             if proof.stored.primary_fact_id() == id =>

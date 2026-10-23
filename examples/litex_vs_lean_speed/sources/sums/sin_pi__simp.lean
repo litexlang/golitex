@@ -1,0 +1,5 @@
+import Mathlib
+set_option Elab.async false
+set_option maxRecDepth 4096
+set_option maxHeartbeats 2000000
+example : Real.sin Real.pi = 0 := by simp

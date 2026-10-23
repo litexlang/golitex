@@ -1,0 +1,5 @@
+forall f fn(t R) R:
+    forall t R:
+        f(t) > 0
+    =>:
+        f(0) > 0

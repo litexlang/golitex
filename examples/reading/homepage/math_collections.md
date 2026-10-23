@@ -45,5 +45,38 @@ subset of `S`; a hypothetical preimage contradicts its membership condition.
 The argument preserves both the function's domain/codomain and the local
 surjectivity assumption. It does not assume that `S` is finite or nonempty.
 
-All five developments use existing kernel interfaces. They have no user
+## Longer lecture: divisibility to Diophantine equations
+
+Reuse the existing number-theory showcase's witness-facing `divides_by`,
+`is_gcd_certificate`, `linear_diophantine_soluble` and `congruent_mod` interfaces.
+The supplied positive gcd certificate includes divisor laws and a Bezout
+witness; it does not define a new global gcd function. The proof chain leads
+to the concrete solution `84*(-3) + 30*9 = 18`. Preserve integer domains,
+positive modulus and all witness scopes. General Euclidean algorithms and CRT
+are outside this lecture.
+
+## Longer lecture: epsilon tails and unique limits
+
+Reuse the existing real-analysis showcase, keeping sequences on `N+`.
+Tail closeness leads to a limit predicate and convergence. A constant-sequence
+template supplies an example; a common tail index and triangle inequality
+prove uniqueness. Only convergent sequences may enter `sequence_limit_value`.
+This is an explicit pedagogical definition, not a replacement for native limit
+interfaces; no uniform-convergence or integration theorem is added.
+
+## Longer lecture: integer groups to kernels
+
+Reuse the abstract-algebra lecture's `Group<A nonempty_set>` structure,
+integer additive example, subgroup predicates, homomorphisms and kernel sets.
+Associativity, identity and inverse laws are structure conditions; cancellation
+and preservation of identity/inverse are proved consequences. The kernel is a
+subset, not a predicate or arbitrary record. Its normality and the equivalence
+between trivial kernel and injectivity culminate in doubling and zero-map
+examples. Quotient groups and Lagrange's theorem are outside this slice.
+
+The three longer files retain all mathematical source from their maintained
+showcases, adding only introductory reading comments. Provenance, exact file
+hashes and current verification are recorded in `long_examples.json`.
+
+All eight developments use existing kernel interfaces. They have no user
 trust, axioms, abstract predicate placeholders or unresolved proof holes.

@@ -1,0 +1,5 @@
+forall x,y R:
+    x <= y
+    y <= x
+    =>:
+        x = y

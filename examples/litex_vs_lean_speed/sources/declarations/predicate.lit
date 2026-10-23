@@ -1,0 +1,4 @@
+prop bench_in_open(x,a,b R):
+    a<x
+    x<b
+by def $bench_in_open(1,0,2)

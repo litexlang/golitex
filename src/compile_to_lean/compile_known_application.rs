@@ -434,7 +434,7 @@ impl LitexToLeanCompiler {
         Ok((definitions, arguments))
     }
 
-    fn compile_forall_argument_match(
+    pub(in crate::compile_to_lean) fn compile_forall_argument_match(
         &self,
         pattern: &Obj,
         goal: &Obj,

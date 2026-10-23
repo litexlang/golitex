@@ -1,0 +1,11 @@
+claim:
+    ? forall a R:
+        exist! x R st {x+a=0}
+    witness exist! x R st {x+a=0} from -a:
+        claim:
+            ? forall u,v R:
+                u+a=0
+                v+a=0
+                =>:
+                    u=v
+            u+a=v+a

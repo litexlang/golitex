@@ -1,0 +1,6 @@
+claim:
+    ? forall epsilon R:
+        epsilon > 0
+        =>:
+            exist delta R st {0<delta and delta<epsilon}
+    witness exist delta R st {0<delta and delta<epsilon} from epsilon/2

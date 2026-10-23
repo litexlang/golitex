@@ -78,8 +78,25 @@ show actual recorded output facts where available, or an explicit unavailable
 message. Older bundles remain readable without guessed mathematical meaning.
 Clicking source selects the statement; result/citation buttons select the fact.
 
-Source ranges use original UTF-8 byte offsets. Occurrence highlighting uses
-resolved identities and reports mapping coverage per statement. Typed proof
+Source ranges use original UTF-8 byte offsets. Syntax highlighting distinguishes
+keywords, predicates, functions, objects/variables, types/sets, theorem names,
+numbers/constants, operators, punctuation and comments/asides. Resolved symbol
+identities, declaration kinds and typed function-head evidence determine semantic
+colors; source spelling never overrides a resolved identifier. Declarations and
+uses share their role. Selection/citation highlights retain priority.
+`python3 src/reading/generate_highlighting.py` refreshes the inline lexical
+catalogue from parser constants, analysis-property dispatch and tokenizer symbols;
+`--check` detects stale vocabulary. No extra browser asset or frontend build is
+required. Tokens without a specific authored explanation receive concise role
+help where appropriate. Builtin set
+help (for example `R`: real numbers ℝ) is keyed by resolved symbol identity,
+not spelling. Tooltips support Escape and stay inside the viewport. Optional
+source `tokens` records normalized tokenizer text with original UTF-8 ranges;
+comments and inline asides are excluded, Unicode aliases retain their original
+source spelling, and lazy exports load tokens with the chapter. Tokenization
+failure leaves plain source; older bundles retain resolved-set help without
+inventing lexical boundaries. This is language help, not mathematical proof
+evidence. Occurrence highlighting uses resolved identities and reports mapping coverage per statement. Typed proof
 payloads and retained local scopes are exported. Actual store/infer outputs
 link seed facts to derived fact IDs; the reader displays compact grey results
 beside the producing statement on the same source line, excluding temporary

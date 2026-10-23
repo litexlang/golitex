@@ -1,0 +1,7 @@
+claim:
+    ? forall s R:
+        exist t R st {t^2=s}
+        =>:
+            s >= 0
+    obtain root from exist t R st {t^2=s}
+    root^2 >= 0

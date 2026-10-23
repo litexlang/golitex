@@ -1,0 +1,1 @@
+finite_set_sum({1,3,5,7,9}, fn(k Z) Z {k}) = 25

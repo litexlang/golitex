@@ -143,6 +143,10 @@ fn object_uses_functions(object: &Obj) -> bool {
 
 fn fact_uses_functions(fact: &Fact) -> bool {
     match fact {
+        Fact::ForallFactWithIff(fact) => {
+            fact_uses_functions(&Fact::ForallFact(fact.forall_fact.clone()))
+                || fact.iff_facts.iter().any(|clause| fact_uses_functions(&clause.clone().into()))
+        }
         Fact::AtomicFact(fact) => atomic_fact_args_ref(fact)
             .into_iter()
             .any(object_uses_functions),
@@ -311,6 +315,10 @@ fn object_uses_sets(object: &Obj) -> bool {
 
 fn fact_uses_sets(fact: &Fact) -> bool {
     match fact {
+        Fact::ForallFactWithIff(fact) => {
+            fact_uses_sets(&Fact::ForallFact(fact.forall_fact.clone()))
+                || fact.iff_facts.iter().any(|clause| fact_uses_sets(&clause.clone().into()))
+        }
         Fact::AtomicFact(f) => atomic_fact_args_ref(f).iter().any(|a| object_uses_sets(a)),
         Fact::AndFact(f) => f
             .facts
@@ -503,6 +511,13 @@ fn domains_have_set_inference(domains: &[AssumeDomFactResult]) -> bool {
 
 fn verify_has_set_inference(proof: &VerifyFactResult) -> bool {
     match proof {
+        VerifyFactResult::ForallFactWithIff(result) => match result.as_ref() {
+            VerifyForallFactWithIffResult::Success(proof) => {
+                verify_has_set_inference(&proof.then_implies_iff)
+                    || verify_has_set_inference(&proof.iff_implies_then)
+            }
+            _ => false,
+        },
         VerifyFactResult::AtomicExceptEquality(proof) => matches!(proof.as_ref(),
             VerifyAtomicExceptEqualityFactResult::Success(proof) if matches!(&proof.searched_proof,
                 AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::PowSharedExponentLessEqual(_)))),

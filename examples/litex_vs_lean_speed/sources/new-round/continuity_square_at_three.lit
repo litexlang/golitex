@@ -1,0 +1,1 @@
+$is_continuous_at(fn(t R) R {t^2},3)

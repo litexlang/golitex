@@ -1,0 +1,2 @@
+forall f,g,h fn(t R) R:
+    compose(compose(f,g),h)=compose(f,compose(g,h))

@@ -308,7 +308,9 @@ Litex 仍在快速开发中。欢迎大家使用并提出宝贵建议。想要�
 | 实数运算 | 手动定义 | 现成（Real 类型） |
 | 几何库 | 完全自建 | 部分现成 |
 
+在[IMO 几何题实验](https://github.com/malloc-realloc/litex_imo_problems)中，**未经 Litex 专项训练的通用大模型，配合通用 Agent、语言指南和证明工作流提示（可封装为 skills），已经能编写并逐步修正 IMO 几何题的形式化证明。**按仓库公布的归档统计，12 道 IMO 几何题中，11 道的解答通过了 Litex 0.9.116-beta 的严格验证；15 个解答包中通过 14 个，未使用 `trust` 或用户公理。
 
+这种工作方式可以与 DeepMind 在 IMO 2024 中采用的路线对照。[AlphaProof 论文](https://www.nature.com/articles/s41586-025-09833-y)明确指出，当时 Mathlib 的高层几何库存在缺口，许多奥赛几何题甚至难以陈述，因此专门的几何题交给 AlphaGeometry 2 处理，AlphaProof 则在 Lean 中搜索代数、数论等题目的证明。[AlphaGeometry 论文](https://www.nature.com/articles/s41586-023-06747-5)也解释了选择几何专用语言和符号推理引擎的原因：直接用 Lean 描述多数 IMO 几何题，需要大量基础建设。**Litex 展示的优势，是让通用 Agent 在同一套数学语言中处理几何概念、代数运算和不等式，并通过验证反馈逐步构建证明。**本实验的自建几何库仅约 **7.3 KB、39 条声明**。
 
 ## Litex和Lean设计和实现上的比较
 
@@ -337,46 +339,7 @@ a + 1 = 3
 
 `a + 1 = 3` 是事实表达式，说了一个需要检查的事情。
 
-**2. Litex 主要的源码证明流程是自下而上的，从条件出发，积累中间步骤，最后达到结果。积累的过程可以是每句话紧紧依赖前一句话，也可以依赖更前面的某句话。因此阅读 Litex 像是从第一页到最后一页地看教科书；Lean 常见的目标驱动式写法更像是自上而下的，从结果出发，不断改变当前要证明的目标，阅读的时候要跟着这些目标的变化。因此阅读这种 Lean 证明，有点像从最后一页往第一页看教科书。**
-
-这里不是说 Lean 一定只能自上而下。Lean 也有 `have` 和 `calc`，可以从条件往后写。这里说的是这两种写法给人的通感。
-
-举例，已知：
-
-```text
-P
-P 能推出 Q
-Q 能推出 R
-```
-
-从条件出发，就是：
-
-```text
-P 成立，所以 Q 成立，所以 R 成立。
-```
-
-从目标出发，就是：
-
-```text
-要证明 R，只需要证明 Q。
-要证明 Q，只需要证明 P。
-P 已知，结束。
-```
-
-再举一个计算的例子：
-
-```litex
-forall x, y R:
-    2 * x + 3 * y = 10
-    4 * x + 5 * y = 14
-    =>:
-        y = 2 * (2 * x + 3 * y) - (4 * x + 5 * y) = 6
-        x = ((2 * x + 3 * y) - 3 * y) / 2 = (-4)
-```
-
-就是先消元，得到 `y`，再代回去得到 `x`。最后一句既用到前一句，也用到最开始的条件。读的时候能直接顺着数学过程往下看。
-
-3. 图灵奖得主 Dijkstra 的重要贡献之一，就是推动了[结构化编程（structured programming）](https://www.cs.utexas.edu/~EWD/transcriptions/EWD02xx/EWD249/EWD249.html)。顺序、分支、循环这些基本结构，让人不用跟着一堆跳转去理解程序。它们足够通用，也足够直白，让人能把代码和自己想表达的事情对应起来。
+2. 图灵奖得主 Dijkstra 的重要贡献之一，就是推动了[结构化编程（structured programming）](https://www.cs.utexas.edu/~EWD/transcriptions/EWD02xx/EWD249/EWD249.html)。顺序、分支、循环这些基本结构，让人不用跟着一堆跳转去理解程序。它们足够通用，也足够直白，让人能把代码和自己想表达的事情对应起来。
 
 Python 也可以从这个角度理解。用户不用自己处理对象的[内存分配和释放](https://docs.python.org/3/c-api/memory.html)，很多底层细节都帮用户封装好了。这些事情仍然要做，只是交给 Python 的实现来完成。Python 替用户做的越多，它内部需要承担的工作也就越多。
 
@@ -413,6 +376,90 @@ norm_num
 
 不管是把Litex视作Lean的一个大前端语言（甚至是可以视作一个巨大的宏或者一个巨大的tactic），还是把Litex视作独立的形式化语言，我相信都是有价值的。总之可以说，在所有ai都在追求前沿数学，把前沿数学问题当benchmark刷时，litex是一个重新思考数学底层基础的工作从我们最熟悉的经验出发，让人类和机器说同一种数学语言。
 
+## 如何把Litex编译成Lean的代码和Lean代码接上
+
+假设你已经在 Lean 中写好了题目头：定义实函数 `mobius(x) = (x + 1) / (x - 1)`，证明当 `x ≠ 1` 时，连续作用两次得到原来的 `x`。下面的 `sorry` 表示还没完成的证明：
+
+```lean
+import Mathlib
+
+noncomputable def mobius (x : ℝ) : ℝ := (x + 1) / (x - 1)
+
+theorem mobius_twice (x : ℝ) (hx : x ≠ 1) :
+    mobius (mobius x) = x := by
+  sorry
+```
+
+这时，你可以保留这个题目头，在 Litex 中证明同一个数学问题。先证明 `mobius(x) - 1 = 2 / (x - 1) ≠ 0`，保证第二次作用仍在定义域内，再代入函数定义并化简。下面只摘出关键代码，`...` 表示省略的辅助步骤：
+
+<!-- litex:skip-test -->
+```litex
+...
+have fn mobius(x R:x!=1) R=(x+1)/(x-1)
+...
+thm mobius_involution:
+    ? forall x R:
+        x!=1
+        =>:
+            mobius(mobius(x))=x
+    mobius(x)!=1
+    mobius(x)-1!=0
+    ...
+    mobius(mobius(x))=(mobius(x)+1)/(mobius(x)-1)=...=x
+```
+
+完成 Litex 证明后，将它编译成 Lean：
+
+```sh
+litex -strict -lean -f proof.lit > Generated.lean
+```
+
+生成代码中的对合定理如下。较长的参数、函数调用构造和证明体用 `...` 省略：
+
+```lean
+theorem h_3588 : ∀ ..., (by
+  let _equal_wd_1_0 := ...
+  exact Litex.Same _equal_wd_1_0 _value_i8) :=
+  (by
+    ...
+  )
+```
+
+这里的 `_value_i8` 表示输入，`_equal_wd_1_0` 表示连续两次函数调用的结果，`Litex.Same` 表示它们在 Litex 语义下相等。要把这个结论交给原来的 Lean 题目，还需要手写一层 Adapter，将输入、前提和结论在两种表示之间转换。它的关键代码是：
+
+```lean
+namespace Adapter
+...
+theorem mobiusInvolution (x : ℝ) (hx : x ≠ 1) :
+    (x + 1) / (x - 1) ≠ 1 ∧
+      (((x + 1) / (x - 1)) + 1) / (((x + 1) / (x - 1)) - 1) = x := by
+  ...
+  have generated := LitexCompiled.file_lean_x2f_examples_x2f_real_x5f_mobius_x5f_involution_x2f_statement_x2e_lit.h_3588
+    (M := mobiusModel) a ha h1
+  ...
+  rw [secondValue] at generated
+  exact ⟨nativeGuard, Complex.ofReal_injective (mobiusModel.number_injective generated)⟩
+
+end Adapter
+```
+
+`a`、`ha`、`h1` 是转换后的输入及前提；`generated` 来自编译器生成的定理。后两句把这个证明转回普通实数等式，数学证明不需要在 Adapter 中重新做一遍。
+
+现在回到原来的 Lean 题目，导入 Adapter，填上证明体：
+
+```lean
+import Adapter
+
+noncomputable def mobius (x : ℝ) : ℝ := (x + 1) / (x - 1)
+
+theorem mobius_twice (x : ℝ) (hx : x ≠ 1) :
+    mobius (mobius x) = x := by
+  simpa only [mobius] using (Adapter.mobiusInvolution x hx).2
+```
+
+**原来的定义、参数、前提和结论都保留了，证明体通过 Adapter 使用 Litex 编译出的证明。** `.2` 取出两次作用得到原值的结论，`simpa only [mobius]` 展开 Lean 中的函数定义。后续 Lean 代码可以直接调用 `mobius_twice`。
+
+这个例子的完整代码已通过 Litex 严格验证、实际编译和 Lean 检查。当前 Adapter 仍需手写，两边函数的对应在 `x ≠ 1` 条件下使用；这个例子的直接 Lean 证明也很短，因此这里只展示接通流程，不据此声称能少写很多行。
 
 <!-- litex-lean-checking-code-appendix:start -->
 
@@ -420,7 +467,9 @@ norm_num
 
 编号与[计时表](#litex-lean-checking-times)的顺序一致。每个例子单独运行；不同例子的定义和定理名称可能重复，不应直接拼接为同一个程序。Lean 代码中的 `import Mathlib` 在计时前完成，导入耗时不在主表内。
 
-这些是 2026-10-22 至 23 日在同一台 macOS arm64 工作机上的多批本地观测，工具为 Litex 1.1.2-beta release 和 Lean/Mathlib 4.31.0。
+这些是在同一台 macOS arm64 工作机上的多批本地观测，工具为 Litex 1.1.2-beta release 和 Lean/Mathlib 4.31.0。
+
+*注意：这里出现的Litex的运行时间，是Litex自己的验证过程的时间，不是Litex验证完毕并编译到Lean代码然后让Lean代码运行的时间。Litex编译到Lean相等于对Litex代码做了一个二次验证，但不意味着你必须这么做。*
 
 Litex 计时包含词法、解析、良定义性、验证执行和存储，新 Runtime 的创建在计时外；Lean 包含命令 elaboration、证明构造或声明生成及同步内核检查，命令解析在计时外。各项在三个进程中重复采样：Litex 共 90 或 300 个暖样本，Lean 共 21、93 或 303 个；首次检查另记，不混入中位数。工作机没有隔离 CPU 或受控清空缓存。
 

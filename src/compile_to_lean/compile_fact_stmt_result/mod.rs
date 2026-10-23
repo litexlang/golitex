@@ -3,6 +3,7 @@ mod compile_equality_result;
 mod compile_exist_fact_result;
 mod compile_fact_stmt_result;
 mod compile_forall_fact_result;
+pub(in crate::compile_to_lean) mod compile_forall_iff_result;
 pub(super) mod compile_formed_subjects;
 mod compile_obj_well_defined_result;
 pub(in crate::compile_to_lean) use compile_obj_well_defined_result::validate_finite_signature;

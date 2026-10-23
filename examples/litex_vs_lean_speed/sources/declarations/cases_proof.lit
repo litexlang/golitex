@@ -1,0 +1,9 @@
+claim:
+    ? forall x R:
+        abs(x)=x or abs(x)=-x
+    by cases:
+        ? abs(x)=x or abs(x)=-x
+        case x>=0:
+            abs(x)=x
+        case x<0:
+            abs(x)=-x

@@ -2,6 +2,9 @@
 
 For real mathematics, open the [homepage collection](homepage/README.md):
 least squares, sets, Newton iteration, irrationality of √2 and Cantor's theorem.
+It also includes three longer complete lectures: number theory (174 lines),
+sequence limits (130 lines), and groups/homomorphisms (402 lines). These retain
+their showcase proofs and add Chinese introductory reading notes.
 
 ```sh
 target/release/litex -reading -strict -lang zh -r examples/reading/homepage

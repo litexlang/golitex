@@ -1,0 +1,9 @@
+claim:
+    ? forall a,b R:
+        a < b
+        =>:
+            exist m R st {a<m and m<b}
+    a+a < a+b
+    a+b < b+b
+    witness exist m R st {a<m and m<b} from (a+b)/2:
+        a = (a+a)/2 < (a+b)/2 < (b+b)/2 = b

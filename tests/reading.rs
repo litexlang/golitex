@@ -626,6 +626,24 @@ fn original_unicode_and_comment_offsets_select_only_real_occurrences() {
         })
         .collect::<Vec<_>>();
     assert_eq!(occurrences.len(), 2, "{}", result.document.stringify());
+    let tokens = result.document.field("sources").as_array().unwrap()[0]
+        .field("tokens")
+        .as_array()
+        .unwrap();
+    assert_eq!(
+        tokens
+            .iter()
+            .filter(|t| t.field("text").as_str().unwrap() == "x")
+            .count(),
+        2
+    );
+    for token in tokens {
+        let start = token.field("start_byte").as_u64().unwrap() as usize;
+        let end = token.field("end_byte").as_u64().unwrap() as usize;
+        assert_eq!(&source[start..end], token.field("text").as_str().unwrap());
+        assert!(start > source.find('\n').unwrap());
+        assert!(end <= source.rfind('#').unwrap());
+    }
     for occurrence in &occurrences {
         let start = (occurrence).field("start_byte").as_u64().unwrap() as usize;
         let end = (occurrence).field("end_byte").as_u64().unwrap() as usize;
@@ -635,6 +653,41 @@ fn original_unicode_and_comment_offsets_select_only_real_occurrences() {
         (&occurrences[0]).field("symbol_id"),
         (&occurrences[1]).field("symbol_id")
     );
+}
+
+#[test]
+fn source_tokens_preserve_unicode_spans_and_exclude_inline_asides() {
+    let source = "have x ℝ \"prop forall R\"\nx ∈ ℝ\n";
+    let result = build_reading(
+        &ReadingInput::Source(source.into()),
+        true,
+        OutputLanguage::Chinese,
+    );
+    assert!(result.success);
+    let tokens = result.document.field("sources").as_array().unwrap()[0]
+        .field("tokens")
+        .as_array()
+        .unwrap();
+    assert!(!tokens
+        .iter()
+        .any(|t| matches!(t.field("text").as_str().unwrap(), "prop" | "forall")));
+    let real = tokens
+        .iter()
+        .filter(|t| t.field("text").as_str().unwrap() == "R")
+        .collect::<Vec<_>>();
+    assert_eq!(real.len(), 2);
+    for token in real {
+        let start = token.field("start_byte").as_u64().unwrap() as usize;
+        let end = token.field("end_byte").as_u64().unwrap() as usize;
+        assert_eq!(&source[start..end], "ℝ");
+    }
+    let membership = tokens
+        .iter()
+        .find(|t| t.field("text").as_str().unwrap() == "in")
+        .unwrap();
+    let start = membership.field("start_byte").as_u64().unwrap() as usize;
+    let end = membership.field("end_byte").as_u64().unwrap() as usize;
+    assert_eq!(&source[start..end], "∈");
 }
 
 #[test]

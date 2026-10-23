@@ -477,6 +477,9 @@ impl LitexToLeanCompiler {
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
         match (wd, fact) {
+            (FactWellDefinedProof::ForallFactWithIff(proof), Fact::ForallFactWithIff(fact)) => {
+                self.compile_forall_iff_formation(fact, proof, position)
+            }
             (FactWellDefinedProof::Equality(wd), Fact::AtomicFact(AtomicFact::EqualFact(fact))) => {
                 let bindings = self.compile_equal_wd_locals(fact, wd, position)?;
                 let formed =
@@ -554,6 +557,9 @@ impl LitexToLeanCompiler {
             (FactWellDefinedProof::ForallFact(proof), Fact::ForallFact(fact)) => {
                 self.compile_forall_wd(fact, proof, position)
             }
+            (FactWellDefinedProof::ForallFactWithIff(proof), Fact::ForallFactWithIff(fact)) => self
+                .compile_forall_iff_formation(fact, proof, position)
+                .map(|_| ()),
             (FactWellDefinedProof::ForallFact(_), _) => Err(LeanCompileError::new(
                 "WD/ForallSubject",
                 "Quantified WD evidence has another source fact family.",

@@ -1,0 +1,5 @@
+struct BenchPoint:
+    x R
+    y R
+have bench_point &BenchPoint=(1,2)
+bench_point.x=1

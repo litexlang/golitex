@@ -1,0 +1,6 @@
+by contra:
+    ? not exist x R st {x^2=-1}
+    obtain root from exist x R st {x^2=-1}
+    root^2>=0
+    root^2=-1<0
+    impossible root^2>=0
