@@ -2156,6 +2156,11 @@ copy $in R
 
 **Execution and result.** Verify the source membership, recover input domains, introduce opaque input witnesses, and store their types and application/relation equations.
 
+The callable may also be a function returned by another call, such as
+`shifted(2)`. Its checked signature supplies the witness domains and guards;
+the stored equation retains the complete call `shifted(2)(source)`.
+See the [returned-function preimage example](../examples/stmt_nodes/definition/returned_function_preimage.lit).
+
 **Nearest boundary.** Keep the source image constructor visible; an arbitrary equal set alias does not necessarily fit this structural statement interface.
 
 **Checked example.**

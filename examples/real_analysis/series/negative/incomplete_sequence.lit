@@ -1,0 +1,8 @@
+# Must reject only the final statement; see ../README.md.
+release obj def series:::partial_sum
+release obj def series:::partial_sums
+release obj def series:::series_sum
+release obj def series:::series_tail
+
+series:::partial_sum((1,2),2)=3
+

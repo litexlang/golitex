@@ -344,15 +344,13 @@ fn function_composition_evidence_and_permission_ceiling() {
         .unwrap()
         .as_array()
         .unwrap()[0];
+    // Rejected Normal rows are concise: they may omit the success-only
+    // proof/store arrays entirely, but they must never carry nonempty ones.
     for key in ["stores", "infers"] {
-        assert!(row
-            .as_object()
-            .unwrap()
-            .get(key)
-            .unwrap()
-            .as_array()
-            .unwrap()
-            .is_empty());
+        match row.as_object().unwrap().get(key) {
+            None => {}
+            Some(value) => assert!(value.as_array().unwrap().is_empty(), "{key}: {row:?}"),
+        }
     }
     check(&mut rt, "have invalid R=7", true);
     check(&mut rt, "invalid=7", true);

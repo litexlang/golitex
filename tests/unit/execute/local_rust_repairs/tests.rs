@@ -90,7 +90,7 @@ fn induction_mismatched_headers_reject_with_the_expected_method() {
         let mut rt = runtime();
         let run = rt.run_litex_code(&source).unwrap();
         assert!(!run.success);
-        let error = format!("{:?}", run.session_error);
+        let error = format!("{:?}{:?}", run.session_error, run.input_error);
         assert!(
             error.contains(&format!("expected `? {method}:`")),
             "{error}"

@@ -1,9 +1,0 @@
-claim:
-    ? forall a, b N+:
-        lcm(a, b) = 0 or lcm(a, b) != 0
-    by cases:
-        ? lcm(a, b) = 0 or lcm(a, b) != 0
-        case lcm(a, b) = 0:
-            lcm(a, b) = 0
-        case lcm(a, b) != 0:
-            lcm(a, b) != 0

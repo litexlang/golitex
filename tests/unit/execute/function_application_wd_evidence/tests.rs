@@ -42,10 +42,21 @@ fn application_wd_does_not_return_ids_owned_only_by_a_discarded_candidate_scope(
         else {
             panic!("application WD proof")
         };
+        // The application proof retains its candidate argument scope. Its
+        // local env is part of the returned evidence, so it owns the WD ids
+        // that the candidate formed before the application was committed.
+        let mut retained_owners: Vec<&_> = rt
+            .execution_environments_stack
+            .iter()
+            .map(|env| env.as_ref())
+            .collect();
+        if let Some(scope) = &p.argument_scope {
+            retained_owners.push(scope.local_env.as_ref());
+        }
         for child in &p.child_obj_well_defined {
             if let ObjWellDefinedProof::ByKnown { wd_id, obj } = child.as_ref() {
                 assert!(
-                    rt.execution_environments_stack.iter().any(|env| env
+                    retained_owners.iter().any(|env| env
                         .well_defined_objects
                         .wd_id_to_object
                         .get(wd_id)
@@ -59,8 +70,7 @@ fn application_wd_does_not_return_ids_owned_only_by_a_discarded_candidate_scope(
             crate::json_output::project_stmt_detailed(run.statement_results.last().unwrap(), &rt);
         let mut ids = Vec::new();
         collect_wd_ids(&projected, &mut ids);
-        let mut retained_ids: Vec<String> = rt
-            .execution_environments_stack
+        let mut retained_ids: Vec<String> = retained_owners
             .iter()
             .flat_map(|env| {
                 env.well_defined_objects
@@ -69,8 +79,8 @@ fn application_wd_does_not_return_ids_owned_only_by_a_discarded_candidate_scope(
                     .map(|wd| wd.to_string())
             })
             .collect();
-        // Literal heads legitimately retain their own binder environment.
-        // Candidate argument scopes have no such returned owner.
+        // Literal heads and nested function-space proofs retain their own
+        // binder environments; add those to the resolvable-id set as well.
         for child in &p.child_obj_well_defined {
             if let ObjWellDefinedProof::ByDef {
                 proof: ObjWellDefinedProofByDef::FunctionSpace(space),
@@ -138,12 +148,15 @@ fn field_application_wd_citations_stay_in_the_retained_definition_scope() {
     else {
         panic!("field application WD")
     };
-    let owners: Vec<_> = rt
+    let mut owners: Vec<_> = rt
         .execution_environments_stack
         .iter()
         .map(|env| env.as_ref())
         .chain(std::iter::once(s.local_env.as_ref()))
         .collect();
+    if let Some(scope) = &p.argument_scope {
+        owners.push(scope.local_env.as_ref());
+    }
     for child in &p.child_obj_well_defined {
         if let ObjWellDefinedProof::ByKnown { wd_id, obj } = child.as_ref() {
             assert!(

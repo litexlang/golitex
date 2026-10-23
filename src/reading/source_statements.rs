@@ -29,7 +29,11 @@ impl Capture {
         collect_spans(block, &mut self.source_statements.spans);
     }
 
-    pub fn begin_ast_statement(&mut self, statement: &Stmt) -> Option<(String, usize)> {
+    pub fn begin_ast_statement(
+        &mut self,
+        statement: &Stmt,
+        runtime: &Runtime,
+    ) -> Option<(String, usize)> {
         if !self.capturing_ast {
             return None;
         }
@@ -62,6 +66,10 @@ impl Capture {
             ("end_byte", JsonValue::Number(end as f64)),
             ("text", text(&statement.reading_text())),
             ("source_text", text(&statement.readable_string())),
+            (
+                "mathematics",
+                super::mathematical_meaning::statement_math(statement, runtime, self.language),
+            ),
             ("origin", text(statement_origin(statement))),
             ("status", text("not_exported")),
             ("produced_fact_ids", JsonValue::Array(Vec::new())),
@@ -88,8 +96,46 @@ impl Capture {
         Some(saved)
     }
 
-    pub fn end_ast_statement(&mut self, saved: Option<(String, usize)>) {
+    pub fn end_ast_statement(&mut self, saved: Option<(String, usize)>, syntax: &JsonValue) {
         if let Some((statement, line)) = saved {
+            // Reuse the typed AST projection, stopping before facts, objects
+            // or the bodies of definitions. This describes source syntax,
+            // independently of whether its execution produced evidence.
+            let mut node = syntax;
+            let mut path = Vec::new();
+            while matches!(
+                field_text(node, "type").as_str(),
+                "Stmt"
+                    | "DefinitionStmt"
+                    | "DefineObjStmt"
+                    | "TrustBoundaryStmt"
+                    | "ReleaseAndExpandStmt"
+                    | "ByStmt"
+                    | "RegisterStmt"
+                    | "WitnessStmt"
+                    | "ProofBlockStmt"
+                    | "CommandStmt"
+            ) {
+                path.push(field_text(node, "variant"));
+                let Some(child) = node
+                    .as_object()
+                    .ok()
+                    .and_then(|fields| fields.get("fields"))
+                    .and_then(|fields| fields.as_object().ok())
+                    .and_then(|fields| fields.get("0"))
+                else {
+                    break;
+                };
+                node = child;
+            }
+            if let Some(JsonValue::Object(fields)) = self
+                .current_statement
+                .strip_prefix("statement")
+                .and_then(|id| id.parse::<usize>().ok())
+                .and_then(|index| self.statements.get_mut(index))
+            {
+                fields.insert("statement_kind".into(), text(&path.join(".")));
+            }
             self.current_statement = statement;
             self.current_line = line;
         }

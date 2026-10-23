@@ -1,0 +1,10 @@
+# Must reject only the final statement; see ../README.md.
+release obj def series:::partial_sum
+release obj def series:::partial_sums
+release obj def series:::series_sum
+release obj def series:::series_tail
+
+have fn zero_terms(k N+) R=0
+
+0*series:::series_sum(zero_terms)=0
+

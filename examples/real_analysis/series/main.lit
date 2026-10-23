@@ -1,0 +1,272 @@
+# Ordered real series: import the library, prove candidates, then select values.
+# Run: LITEX_STD_PATH="$PWD/std" target/release/litex -lang en -strict -f examples/real_analysis/series/main.lit
+
+# Import the ordinary source interfaces explicitly.
+release obj def series:::partial_sum
+
+release obj def series:::partial_sums
+
+release obj def series:::series_sum
+
+release obj def series:::series_tail
+
+# Zero series, proof-consuming selection, and equivalent complete function types.
+have fn zero_terms(k N+) R=0
+
+release thm series:::series_sum_zero(zero_terms)
+
+release thm series:::series_sum_convergent(zero_terms,0)
+
+series:::partial_sum(zero_terms,1)=0
+
+release thm series:::series_sum_value(zero_terms,0)
+
+series:::series_sum(zero_terms)=0
+
+lim(series:::partial_sums(zero_terms))=0
+
+forall a fn(k N+) R,n N+:
+    series:::partial_sum(a,n) $in R
+    series:::partial_sums(a) $in seq(R)
+
+thm equivalent_function_signature:
+    ? forall a fn(k N+) R,L R:
+        $series:::has_series_sum(a,L)
+        =>:
+            $series:::is_convergent_series(a)
+    release thm series:::series_sum_convergent(a,L)
+
+thm convergence_and_selected_candidate:
+    ? forall a seq(R):
+        $series:::is_convergent_series(a)
+        =>:
+            $series:::has_series_sum(a,series:::series_sum(a))
+            $is_seq_convergent(series:::partial_sums(a))
+    release thm series:::series_sum_selected(a)
+    release thm series:::convergent_series_partial_sums(a)
+
+# Geometric terms tend to zero; their partial sums tend to one.
+have fn reciprocal_terms(k N+) R = 1/k
+
+claim:
+    ? forall epsilon R+:
+        exist n0 N+ st {{n N+: n >= n0} $subset preimage_set(reciprocal_terms,{v R: abs(v-0) < epsilon})}
+    release thm real_archimedean_natural_upper_bound(1/epsilon)
+    obtain n0 from exist n0 N+ st {1/epsilon < n0}
+    0 < n0
+    (1/epsilon)*epsilon < n0*epsilon
+    (1/epsilon)*epsilon = 1
+    1 < n0*epsilon
+    1/n0 < (n0*epsilon)/n0
+    (n0*epsilon)/n0 = epsilon
+    1/n0 < epsilon
+    claim:
+        ? forall k N+:
+            k >= n0
+            =>:
+                abs(reciprocal_terms(k)-0) < epsilon
+        0 < n0*k
+        1/k = n0/(n0*k)
+        n0/(n0*k) <= k/(n0*k)
+        k/(n0*k) = 1/n0
+        1/k <= 1/n0 < epsilon
+        reciprocal_terms(k)-0 = reciprocal_terms(k) = 1/k
+        0 < 1/k
+        abs(reciprocal_terms(k)-0) = abs(1/k)
+        abs(1/k) = 1/k < epsilon
+    witness exist cutoff N+ st {{k N+: k >= cutoff} $subset preimage_set(reciprocal_terms,{v R: abs(v-0) < epsilon})} from n0:
+        claim:
+            ? forall k {j N+: j >= n0}:
+                k $in preimage_set(reciprocal_terms,{v R: abs(v-0) < epsilon})
+            abs(reciprocal_terms(k)-0) < epsilon
+        by def {k N+: k >= n0} $subset preimage_set(reciprocal_terms,{v R: abs(v-0) < epsilon})
+
+by def $has_seq_limit(reciprocal_terms,0)
+
+have fn geometric(k N+) R=(1/2)^k
+
+claim:
+    ? forall n N:
+        2^n>=n+1
+    by induc k from 0:
+        ? 2^k>=k+1
+        ? from k = 0:
+            2^0=1>=0+1
+        ? induc:
+            0<=k
+            0<=k+1
+            k $in N
+            1 $in N
+            2 $in C
+            2^(k+1)=2^k*2^1
+            2^1=2
+            2^k*2>=(k+1)*2
+            2^(k+1)>=(k+1)*2=(k+1)+(k+1)>=k+1+1
+
+claim:
+    ? forall k N+:
+        (1/2)^k=1/(2^k)
+    0<2^k
+    1/2=2^(-1)
+    (1/2)^k=(2^(-1))^k=2^((-1)*k)
+    (-1)*k=-k
+    2^((-1)*k)=2^(-k)=1/(2^k)
+
+claim:
+    ? forall k N+:
+        zero_terms(k)<=geometric(k)
+        geometric(k)<=reciprocal_terms(k)
+    have power R=2^k
+    2^k>=k+1>k>0
+    0<power
+    k<=power
+    0<k*power
+    1/power=k/(k*power)<=power/(k*power)=1/k
+    geometric(k)=(1/2)^k=1/(2^k)=1/power
+    zero_terms(k)=0<1/power<=1/k=reciprocal_terms(k)
+
+release thm seq_limit_constant(zero_terms,0)
+
+release thm seq_limit_squeeze(zero_terms,geometric,reciprocal_terms,0,1)
+
+claim:
+    ? forall n N+:
+        series:::partial_sum(geometric,n)=1-(1/2)^n
+    by induc n from 1:
+        ? series:::partial_sum(geometric,n)=1-(1/2)^n
+        ? from n=1:
+            series:::partial_sum(geometric,1)=geometric(1)=1/2=1-(1/2)^1
+        ? induc:
+            n>=1
+            geometric(n+1)=(1/2)^(n+1)
+            (1/2)^(n+1)=(1/2)^n*(1/2)^1=(1/2)^n/2
+            by thm series:::partial_sum_successor(geometric,n) => series:::partial_sum(geometric,n+1)=series:::partial_sum(geometric,n)+geometric(n+1)
+            series:::partial_sum(geometric,n)+geometric(n+1)=(1-(1/2)^n)+(1/2)^n/2=1-(1/2)^n/2
+            1-(1/2)^n/2=1-(1/2)^(n+1)
+            series:::partial_sum(geometric,n+1)=1-(1/2)^(n+1)
+
+have fn one_terms(k N+) R=1
+
+release thm seq_limit_constant(one_terms,1)
+
+release thm seq_limit_subtract(one_terms,geometric,1,0)
+
+claim:
+    ? forall k N+:
+        fn(j N+) R {one_terms(j)-geometric(j)}(k)=series:::partial_sums(geometric)(k)
+    one_terms(k)=1
+    geometric(k)=(1/2)^k
+    fn(j N+) R {one_terms(j)-geometric(j)}(k)=one_terms(k)-geometric(k)=1-(1/2)^k
+    series:::partial_sums(geometric)(k)=series:::partial_sum(geometric,k)=1-(1/2)^k
+
+release thm seq_limit_eventually_equal(fn(k N+) R {one_terms(k)-geometric(k)},series:::partial_sums(geometric),1,1)
+
+by def $series:::has_series_sum(geometric,1)
+
+release thm series:::series_sum_convergent(geometric,1)
+
+release thm series:::series_sum_value(geometric,1)
+
+series:::series_sum(geometric)+2=3
+
+series:::partial_sum(geometric,4)=15/16
+
+release thm series:::series_sum_tail(geometric,1,1)
+
+series:::partial_sum(geometric,1)=geometric(1)=1/2
+
+1-series:::partial_sum(geometric,1)=1/2
+
+$series:::has_series_sum(series:::series_tail(geometric,1),1/2)
+
+release thm series:::series_sum_from_tail(geometric,1/2,1)
+
+release thm series:::convergent_series_tail(geometric,1)
+
+release thm series:::tail_convergent_series(geometric,1)
+
+release thm series:::convergent_series_terms_zero(geometric)
+
+lim(geometric)=0
+
+# Changing only the first term changes the sum by the finite prefix difference.
+have fn modified(k N+) R by cases:
+    case k=1: 3/2
+    case k!=1: geometric(k)
+
+claim:
+    ? forall k N+:
+        k>1
+        =>:
+            geometric(k)=modified(k)
+    k!=1
+    modified(k)=geometric(k)
+
+release thm series:::series_sum_eventually_equal(geometric,modified,1,1)
+
+series:::partial_sum(modified,1)=modified(1)=3/2
+
+(1-series:::partial_sum(geometric,1))+series:::partial_sum(modified,1)=2
+
+$series:::has_series_sum(modified,2)
+
+release thm series:::series_sum_convergent(modified,2)
+
+release thm series:::series_sum_value(modified,2)
+
+series:::series_sum(modified)=2
+
+# Linear laws, pointwise equality, finite support and the zero-term necessary condition.
+have fn doubled(k N+) R=2*geometric(k)
+
+release thm series:::series_sum_scale(geometric,doubled,1,2)
+
+$series:::has_series_sum(doubled,2)
+
+have fn added(k N+) R=geometric(k)+modified(k)
+
+release thm series:::series_sum_add(geometric,modified,added,1,2)
+
+$series:::has_series_sum(added,3)
+
+have fn difference(k N+) R=modified(k)-geometric(k)
+
+release thm series:::series_sum_subtract(modified,geometric,difference,2,1)
+
+$series:::has_series_sum(difference,1)
+
+have fn negative(k N+) R=-geometric(k)
+
+release thm series:::series_sum_neg(geometric,negative,1)
+
+$series:::has_series_sum(negative,-1)
+
+have geometric_copy seq(R)=fn(k N+) R {geometric(k)}
+
+release thm series:::series_sum_extensional(geometric,geometric_copy,1)
+
+have fn spike(k N+) R by cases:
+    case k=1: 3
+    case k!=1: 0
+
+claim:
+    ? forall k N+:
+        k>1
+        =>:
+            spike(k)=0
+    k!=1
+    spike(k)=0
+
+release thm series:::series_sum_finite_support(spike,1)
+
+series:::partial_sum(spike,1)=spike(1)=3
+
+$series:::has_series_sum(spike,3)
+
+thm convergence_requires_zero_terms:
+    ? forall a seq(R):
+        $series:::is_convergent_series(a)
+        =>:
+            $has_seq_limit(a,0)
+    release thm series:::convergent_series_terms_zero(a)
+

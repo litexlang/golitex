@@ -75,6 +75,32 @@
 .lr-inspector-header { background:var(--reading-paper); color:var(--reading-ink); font-size:14px; font-weight:600; }
 .lr-inspector-title { display:flex; align-items:center; gap:8px; }
 .lr-inspector-title::before { content:"↳"; color:var(--reading-accent); font-size:20px; font-weight:400; }
+.lr-type-badge { flex-shrink:0; border:1px solid var(--reading-line); border-radius:4px; padding:2px 7px; background:var(--reading-hover); color:var(--reading-accent); font:11px/1.6 var(--reading-code); }
+.lr-type-badge[aria-expanded="true"] { border-color:var(--reading-accent); background:var(--reading-soft); }
+.lr-type-help { padding:16px 20px; border-bottom:1px solid var(--reading-line); background:var(--reading-soft); font-size:13px; }
+.lr-type-help[hidden] { display:none; }
+.lr-type-help p { margin:8px 0; color:var(--reading-muted); }
+.lr-prop-info { position:fixed; top:50%; left:50%; right:auto; transform:translate(-50%,-50%); width:min(640px,calc(100vw - 32px)); z-index:20; max-height:75vh; overflow:auto; border:1px solid var(--reading-line); border-radius:6px; background:var(--reading-paper); box-shadow:0 8px 28px #20331c26; }
+.lr-help-heading { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:16px; }
+.lr-latex { min-width:0; max-width:100%; overflow-x:auto; overflow-y:hidden; padding:3px 0; }
+.lr-latex .katex { font-size:1.12em; }
+.lr-latex .katex-display { margin:8px 0; text-align:left; }
+.lr-latex .katex-display>.katex { text-align:left; }
+.lr-latex-clause { margin-top:12px; }
+.lr-iff-intro { display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 8px; margin:0 0 10px; font-size:14px; line-height:1.8; }
+.lr-prop-guide { font-size:14px; line-height:1.9; }
+.lr-prop-guide p { margin:0 0 14px; }
+.lr-prop-guide p:last-child { margin-bottom:0; }
+.lr-guide-example { margin:10px 0 18px; padding:14px 16px; border:1px solid var(--reading-line); border-radius:5px; background:var(--reading-hover); white-space:pre-wrap; overflow-wrap:anywhere; font:12.5px/1.9 var(--reading-code); }
+.lr-formula { font:17px/1.8 Cambria,"Noto Serif","STIX Two Text",Georgia,"Songti SC",serif; white-space:pre-wrap; overflow-wrap:anywhere; }
+.lr-equivalence { display:grid; grid-template-columns:minmax(0,1fr) auto minmax(0,1.2fr); align-items:center; gap:16px; padding:22px 0; }
+.lr-equivalence-operator { color:var(--reading-accent); font:26px/1.6 Cambria,Georgia,serif; }
+.lr-math-and { display:block; color:var(--reading-muted); font-size:12px; padding:4px 0; }
+.lr-math-fact { display:block; width:100%; border:0; border-radius:4px; padding:3px 6px; background:transparent; text-align:left; }
+.lr-math-fact:hover { background:var(--reading-hover); }
+.lr-current-math { background:var(--reading-select); outline:1px solid #90caf9; }
+.lr-math-links { display:flex; flex-wrap:wrap; gap:8px; margin-top:22px; border-top:1px solid var(--reading-line); padding-top:12px; }
+.lr-math-link { border:0; padding:3px 0; margin-right:12px; background:transparent; color:var(--reading-accent)!important; font-size:12px!important; text-align:left; text-decoration:underline dotted; text-underline-offset:3px; }
 .lr-step-nav { display:flex; justify-content:space-between; align-items:center; gap:10px; border-bottom:1px solid var(--reading-line); padding:8px 12px; color:var(--reading-muted); font-size:11px; }
 .lr-step-nav .lr-button { border:0; color:var(--reading-accent); font-size:12px; padding:4px; }
 .lr-code { overflow:auto; max-height:calc(100vh - 260px); padding:12px 0 20px; font:12.5px/1.85 var(--reading-code); tab-size:4; }
@@ -90,13 +116,14 @@
 .lr-inline-inferences { display:inline-flex; align-items:baseline; gap:7px; margin-left:18px; color:#8b9096; font:11px/1.85 var(--reading-code); white-space:nowrap; }
 .lr-inferred-result { display:inline-block; border:0; border-radius:3px; padding:0 2px; text-align:left; background:transparent; color:#858d94!important; font:inherit!important; white-space:nowrap; }
 .lr-origin-link { display:block; max-width:100%; border:0; padding:0; margin:2px 0; background:transparent; color:var(--reading-accent)!important; font-size:12px!important; line-height:1.6; text-align:left; text-decoration:underline dotted; text-underline-offset:3px; overflow-wrap:anywhere; }
-.lr-origin-note { display:block; color:var(--reading-muted); font-size:12px; overflow-wrap:anywhere; }
+.lr-inference-origin { display:block; color:var(--reading-muted); font-size:12px; overflow-wrap:anywhere; }
 .lr-inferred-arrow,.lr-inferred-separator { color:#9ba1a7; }
 .lr-inferred-result:hover { background:#eceff1; color:#596168!important; }
 .lr-inferred-result.lr-inferred-selected { background:#e7ebef; outline:1px solid var(--reading-blue); }
 .lr-inferred-result.lr-inferred-premise { background:var(--reading-premise); box-shadow:inset 0 0 0 1px #a8c9ab; }
 .lr-inferred-link { background:#f3f4f5; }
 .lr-inferred-conclusion { background:#f3f4f5; border-color:#c9cdd1; border-left-color:#7b8288; }
+.lr-explanation { margin:10px 0 0; color:var(--reading-muted); font-size:13px; }
 .lr-token { display:inline; vertical-align:baseline; border:0; background:none; padding:0 1px; font:inherit!important; color:var(--reading-blue)!important; border-radius:3px; text-decoration:underline dotted; text-underline-offset:4px; }
 .lr-token:hover { background:rgba(123,31,162,.12); }
 .lr-token.lr-symbol-selected { background:rgba(123,31,162,.19); color:var(--reading-purple)!important; }
@@ -114,6 +141,7 @@
 .lr-fact-link { display:block; width:100%; text-align:left; padding:10px 12px; border:1px solid var(--reading-line); border-radius:6px; background:var(--reading-paper); margin:8px 0; color:var(--reading-ink); }
 .lr-fact-link:hover:not(:disabled) { background:var(--reading-hover); border-color:rgba(67,160,71,.55); }
 .lr-fact-link code { font:12.5px/1.8 var(--reading-code); display:block; overflow-wrap:anywhere; white-space:pre-wrap; }
+.lr-fact-link .lr-formula { font-size:15px; }
 .lr-fact-link small { display:block; font-size:11px; color:var(--reading-muted); margin-top:4px; }
 .lr-chip { display:inline-flex; align-items:center; border:0; background:var(--reading-soft); color:var(--reading-accent)!important; border-radius:4px; padding:5px 9px; margin:3px 5px 3px 0; font-size:12px!important; text-align:left; max-width:100%; overflow-wrap:anywhere; }
 .lr-chip:hover { background:rgba(46,125,50,.12); }

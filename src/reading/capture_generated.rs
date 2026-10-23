@@ -57,7 +57,7 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_ast__stmt__Stmt(value: &crate::ast::Stmt, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 capture.subject_depth += 1;
-let source_frame = capture.begin_ast_statement(value);
+let source_frame = capture.begin_ast_statement(value, runtime);
 let output = match value {
 crate::ast::Stmt::Fact(f0) => {
 let fields = vec![("0", capture_ast__fact__fact__Fact(f0, capture, runtime))];
@@ -115,7 +115,7 @@ output
 },
 };
 capture.subject_depth -= 1;
-capture.end_ast_statement(source_frame);
+capture.end_ast_statement(source_frame, &output);
 capture.intern_evidence(output)
 }
 

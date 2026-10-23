@@ -1,0 +1,9 @@
+have r R+ = sqrt(2)
+have fn newton(x R+) R = (x + 2 / x) / 2
+
+claim:
+    ? forall x R+:
+        newton(x) - r = (x - r)^2 / (2 * x)
+    r^2 = 2
+    (x - r)^2 = x^2 - 2 * x * r + r^2 = x^2 - 2 * x * r + 2
+    newton(x) - r = (x^2 - 2 * x * r + 2) / (2 * x) = (x - r)^2 / (2 * x)

@@ -1,0 +1,13 @@
+# Mathematical explanations: dependent domains, complete iff clauses and interfaces.
+prop reading_conditions(A set, x A):
+    x = x
+    x $in A
+have reading_carrier set = {1}
+by def $reading_conditions(reading_carrier, 1)
+
+prop reading_chain(x R):
+    x = x = x
+by def $reading_chain(1)
+
+have fn reading_square(x R) R = x ^ 2
+abstract_prop reading_unknown(x, y)

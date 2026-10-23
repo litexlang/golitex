@@ -53,7 +53,10 @@ fn difference_zero_rejects_missing_or_future_citation() {
 
 #[test]
 fn difference_zero_rejects_other_operands_and_nonzero_endpoint() {
-    for other in ["c-d=0", "a-b=c"] {
+    for (other, expected) in [
+        ("c-d=0", "DifferenceZero/Subjects"),
+        ("a-b=c", "Equality/PathEndpoint"),
+    ] {
         let source =
             format!("forall a, b, c, d C:\n    a-b=0\n    {other}\n    =>:\n        a=b\n");
         let (mut result, compiler) = super::execute(&source);
@@ -61,15 +64,16 @@ fn difference_zero_rejects_other_operands_and_nonzero_endpoint() {
             .store_and_infer
             .store
             .primary_fact_id();
-        selected(&mut result).cite_fact_id = id;
+        let proof = selected(&mut result);
+        proof.cite_fact_id = id;
+        proof.difference_on_left = true;
+        // Both premises imply c=0 when `other` is a-b=c. The runtime may
+        // already have selected that citation with a valid path to zero;
+        // explicitly remove the path to make this a broken certificate.
+        proof.zero_path.path.clear();
         let error = compiler
             .compile_run(&result, "wrong_difference_zero")
             .unwrap_err();
-        let expected = if other == "c-d=0" {
-            "DifferenceZero/Subjects"
-        } else {
-            "Equality/PathEndpoint"
-        };
         assert_eq!(error.route, expected);
     }
 }

@@ -39,7 +39,12 @@ impl LitexToLeanCompiler {
                     0,
                 );
                 let term = self.compile_wd_body(proof, &formed)?;
-                return Ok(format!("({bindings}{term})"));
+                // Validate all stages above before reusing an earlier certified
+                // host object. The alias belongs to the enclosing source prefix,
+                // never to the temporary bindings being constructed here.
+                return Ok(position
+                    .compatible_wd_reference(proof)?
+                    .unwrap_or_else(|| format!("({bindings}{term})")));
             }
         }
         let source_position = SourcePosition {
@@ -47,7 +52,13 @@ impl LitexToLeanCompiler {
             owner: SourceOwner::WD(proof),
             before: 0,
         };
-        self.compile_wd_body(proof, &source_position)
+        let term = self.compile_wd_body(proof, &source_position)?;
+        if matches!(proof, ObjWellDefinedProof::ByDef { .. }) {
+            if let Some(reference) = position.compatible_wd_reference(proof)? {
+                return Ok(reference);
+            }
+        }
+        Ok(term)
     }
 
     pub(in crate::compile_to_lean) fn compile_wd_requirement(

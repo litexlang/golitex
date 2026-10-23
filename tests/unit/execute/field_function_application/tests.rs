@@ -44,6 +44,68 @@ fn checked_tuple_function_field_names_valid_preimages() {
 }
 
 #[test]
+fn returned_function_preimage_retains_curried_arguments_and_opaque_witnesses() {
+    check(
+        include_str!("../../../../examples/stmt_nodes/definition/returned_function_preimage.lit"),
+        true,
+    );
+    check("have fn make(t R) fn(x R:x>0)R=fn(x R:x>0)R{x+t}\nmake(2) $in fn(x R:x>0)R\nclaim:\n    ? forall value fn_range(make(2)):\n        exist x {j R:j>0} st {value=make(2)(x)}\n    have by fn_preimage: a from value $in fn_range(make(2))\n    a>0\n    witness exist x {j R:j>0} st {value=make(2)(x)} from a\n", true);
+    check("have fn make(t R) fn(x N+,y R)R=fn(x N+,y R)R{x*y+t}\nmake(2) $in fn(x N+,y R)R\nclaim:\n    ? forall value fn_range(make(2)):\n        exist x N+,y R st {value=make(2)(x,y)}\n    have by fn_preimage: a,b from value $in fn_range(make(2))\n    witness exist x N+,y R st {value=make(2)(x,y)} from a,b\n", true);
+}
+
+#[test]
+fn returned_function_preimage_rejects_wrong_range_arity_guard_and_equation() {
+    let setup = "have fn make(t R) fn(x R)R=fn(x R)R{x+t}\nmake(2) $in fn(x R)R\n";
+    check(
+        &format!("{setup}claim:\n    ? forall value fn_range(make(2)):\n        value=value\n    have by fn_preimage: a,b from value $in fn_range(make(2))\n"),
+        false,
+    );
+    check(
+        &format!("{setup}have by fn_preimage: a from make(2)(3) $in fn_range(0)\n"),
+        false,
+    );
+    check(&format!("{setup}have fn zero(t R) fn(x R)R=fn(x R)R{{0}}\nzero(2) $in fn(x R)R\nclaim:\n    ? forall value fn_range(make(2)):\n        value=value\n    have by fn_preimage: a from value $in fn_range(zero(2))\n"), false);
+    check(&format!("{setup}claim:\n    ? forall value fn_range(make(2)):\n        value=value\n    have by fn_preimage: a from value $in fn_range(make(2))\n    value=make(2)(a)+1\n"), false);
+    check("have fn make(t R) fn(x R:x>0)R=fn(x R:x>0)R{x+t}\nmake(2) $in fn(x R:x>0)R\nhave by fn_preimage: a from make(2)(0) $in fn_range(make(2))\n", false);
+}
+
+#[test]
+fn returned_function_preimage_failure_preserves_the_live_context() {
+    let mut rt = runtime(CodeSource::Repl);
+    assert!(
+        rt.run_litex_code("have fn make(t R) fn(x R)R=fn(x R)R{x+t}\nmake(2) $in fn(x R)R\n")
+            .unwrap()
+            .success
+    );
+    let failed = rt
+        .run_litex_code("have by fn_preimage: a,b from make(2)(3) $in fn_range(make(2))\n")
+        .unwrap();
+    assert!(!failed.success && failed.session_error.is_none());
+    assert!(
+        rt.run_litex_code("have a N=0\nhave b N=1\nmake(2)(3)=5\n")
+            .unwrap()
+            .success
+    );
+}
+
+#[test]
+fn returned_function_image_membership_preserves_owner_arguments_and_guards() {
+    let setup = "have fn make(t R) fn(x N+,y R)R=fn(x N+,y R)R{x+y+t}\nmake(2) $in fn(x N+,y R)R\n";
+    check(
+        &format!("{setup}make(2)(1,3) $in fn_range(make(2))\n"),
+        true,
+    );
+    check(
+        &format!("{setup}make(2)(0,3) $in fn_range(make(2))\n"),
+        false,
+    );
+    check(&format!("{setup}make(2)(1) $in fn_range(make(2))\n"), false);
+    check(&format!("{setup}have fn zero(t R) fn(x N+,y R)R=fn(x N+,y R)R{{0}}\nzero(2) $in fn(x N+,y R)R\nmake(2)(1,3) $in fn_range(zero(2))\n"),false);
+    check("have fn make(t R) fn(x R:x>0)R=fn(x R:x>0)R{x+t}\nmake(2) $in fn(x R:x>0)R\nmake(2)(1) $in fn_range(make(2))\n",true);
+    check("have fn make(t R) fn(x R:x>0)R=fn(x R:x>0)R{x+t}\nmake(2) $in fn(x R:x>0)R\nmake(2)(0) $in fn_range(make(2))\n",false);
+}
+
+#[test]
 fn opaque_field_range_members_publish_real_existential_evidence() {
     check(&format!("{OPS}ops.op(2) $in fn_range(ops.op)\nwitness $is_nonempty_set(fn_range(ops.op)) from ops.op(2)\nhave z fn_range(ops.op)\nexist x R st {{z=ops.op(x)}}\nobtain a from exist x R st {{z=ops.op(x)}}\nz=ops.op(a)\n"), true);
     check("struct Ops:\n    op fn(x R)R\n    tag N\nforall ops &Ops,y R:\n    ops.op $in fn(x R)R\n    y $in fn_range(ops.op)\n    =>:\n        exist x R st {y=ops.op(x)}\n", true);

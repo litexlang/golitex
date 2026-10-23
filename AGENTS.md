@@ -19,6 +19,8 @@ reserved BT names/arities, source `thm` declarations, domains and WD, examples,
 verification evidence, compatibility changes, and unsupported boundaries.
 Distinguish new features from reused dependencies and plans from delivered work.
 This inventory remains local-only under the scripts policy below.
+Apply `litex-math-feature-maintainer` for this workflow; its maintained local
+source is `scripts/litex_limit_designs/skills/litex-math-feature-maintainer/SKILL.md`.
 
 ## Local-only scripts workspace
 

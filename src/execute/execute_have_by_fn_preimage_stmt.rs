@@ -13,11 +13,12 @@
 use std::collections::HashMap;
 
 use crate::ast::fact::{AtomicFact, EqualFact, Fact};
-use crate::ast::obj::{FnObj, FnObjHead, FnSet, FunctionSpace, Obj, StructAndFieldAccessObj};
+use crate::ast::obj::{FnSet, FunctionSpace, Obj};
 use crate::ast::param::{
     ParamType, SetBoundParameterList, TypedParameterGroup, TypedParameterList,
 };
 use crate::ast::stmt::HaveByPreimageStmt;
+use crate::execute::execute_fact_stmt::function_domain::function_application;
 use crate::execute::execute_fact_stmt::{VerifyFactResult, VerifyState};
 use crate::execute::execute_have_obj_in_nonempty_set_stmt::StoreHaveObjAndInferResult;
 use crate::instantiate::quantifier_free_fact_to_fact;
@@ -115,12 +116,11 @@ impl Runtime {
             store_and_infer_result.push(stored);
         }
 
-        let Some(application) = fn_preimage_application_obj(&function, &preimage_objs) else {
-            return Err(RuntimeError::InternalBug(format!(
-                "have by fn_preimage: cannot build application for `{}`",
-                function.ir()
-            )));
-        };
+        // The signature and range membership above already establish callability.
+        // Reuse the canonical constructor, including another argument group for f(t).
+        let application =
+            function_application(&function, preimage_objs.into_iter().map(Box::new).collect())
+                .map_err(RuntimeError::InternalBug)?;
         let equality = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact {
             fact_id: self.global_ids.allocate_fact_id(),
             left: stmt.range_membership.element.clone(),
@@ -195,23 +195,4 @@ fn set_bound_parameter_count(list: &SetBoundParameterList) -> usize {
         n += group.params.len();
     }
     n
-}
-
-fn fn_preimage_application_obj(function: &Obj, args: &[Obj]) -> Option<Obj> {
-    let head = match function {
-        Obj::Identifier(id) => FnObjHead::Identifier(id.clone()),
-        Obj::FunctionSpace(FunctionSpace::AnonymousFn(anon)) => {
-            FnObjHead::AnonymousFnLiteral(Box::new(anon.clone()))
-        }
-        Obj::InstantiatedTemplateObj(inst) => FnObjHead::InstantiatedTemplateObj(inst.clone()),
-        Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(field)) => {
-            FnObjHead::FieldAccess(field.clone())
-        }
-        _ => return None,
-    };
-    let group = args.iter().cloned().map(Box::new).collect();
-    Some(Obj::FnObj(FnObj {
-        head: Box::new(head),
-        body: vec![group],
-    }))
 }

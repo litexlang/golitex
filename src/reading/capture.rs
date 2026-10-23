@@ -14,6 +14,8 @@ use super::helper::{digest, object, strings, text};
 mod fact_capture;
 #[path = "inference_capture.rs"]
 mod inference_capture;
+#[path = "mathematical_meaning.rs"]
+mod mathematical_meaning;
 #[path = "source_statements.rs"]
 mod source_statements;
 #[path = "well_defined_capture.rs"]
@@ -53,12 +55,13 @@ pub(super) struct Capture {
     entry_path: Option<String>,
     base_path: std::path::PathBuf,
     source_statements: source_statements::SourceStatements,
+    language: OutputLanguage,
     pub proof_branch: Option<usize>,
     pub proof_part: String,
 }
 
 impl Capture {
-    pub fn new(base_path: &Path) -> Self {
+    pub fn new(base_path: &Path, language: OutputLanguage) -> Self {
         let catalogue = JsonValue::parse(include_str!("rule_catalogue_generated.json"))
             .expect("generated reading catalogue is JSON");
         let mut rules = BTreeMap::new();
@@ -69,6 +72,7 @@ impl Capture {
             }
         }
         Self {
+            language,
             sources: Vec::new(),
             statements: Vec::new(),
             facts: BTreeMap::new(),
@@ -108,13 +112,8 @@ impl Capture {
         }
     }
 
-    pub fn finish(
-        mut self,
-        success: bool,
-        error: Option<String>,
-        language: OutputLanguage,
-        strict: bool,
-    ) -> JsonValue {
+    pub fn finish(mut self, success: bool, error: Option<String>, strict: bool) -> JsonValue {
+        let language = self.language;
         self.annotate_inferred_facts();
         self.annotate_wd_coverage();
         let trust = self.annotate_trust_origins();

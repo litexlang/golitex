@@ -1,0 +1,16 @@
+thm cantor:
+    ? forall S set, f fn(x S) power_set(S):
+        not $surjective(S, power_set(S), f)
+    by contra:
+        ? not $surjective(S, power_set(S), f)
+        have diagonal_set power_set(S) = {x S: not x $in f(x)}
+        $surjective(S, power_set(S), f)
+        obtain a from exist a S st {diagonal_set = f(a)}
+
+        by contra:
+            ? a $in diagonal_set
+            not a $in f(a)
+            a $in {x S: not x $in f(x)}
+            impossible not a $in diagonal_set
+
+        impossible not a $in f(a)

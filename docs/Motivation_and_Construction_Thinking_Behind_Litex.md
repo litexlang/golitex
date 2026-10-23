@@ -273,7 +273,23 @@ let a = 2
 a + 1 = 3
 ```
 
-Here, `a = 2` is part of the context for `a + 1 = 3`. Substituting the value of `a` and checking that the two sides are equal is how the proof rules justify this step. These basic proof rules are built into Litex. Litex has hundreds of common rules to make things easier for users. Each rule feels familiar on its own, but finding them, implementing them, and making them work together is a lot of work. That is also part of the hard work behind Litex. The context comes from your Litex source: the definitions, assumptions, and facts available at that point.
+Here, `a = 2` is part of the context for `a + 1 = 3`; substituting the value of `a` and checking that `2 + 1` really equals `3` is the proof rule. The context comes from your Litex source: the definitions, assumptions, and facts available at that point. The rules are built into Litex. Litex has hundreds of common rules to make things easier for users. Each rule feels familiar on its own, but finding them, implementing them, and making them work together is a lot of work. That is also part of the hard work behind Litex.
+
+For a Lean comparison, suppose the context already contains `h : a = 2` and the goal is `a + 1 = 3`. The closest proof is:
+
+```lean
+subst a
+norm_num
+```
+
+or:
+
+```lean
+rw [h]
+norm_num
+```
+
+Here `subst` / `rw` performs the substitution and `norm_num` checks that both sides are equal. The important difference is that in Lean you usually identify which hypothesis `h` to use and which tactic to apply. A Litex built-in rule instead searches the current context, finds the relevant equality `a = 2`, selects the “equality rewrite + closed calculation” route, and accepts `a + 1 = 3`. So Litex provides both built-in rules and a context-search layer that finds the right premise `h`. The author writes the fact to establish; the system finds the contextual fact that lets it pass.
 
 One of Turing Award winner Dijkstra's important contributions was helping establish [structured programming](https://www.cs.utexas.edu/~EWD/transcriptions/EWD02xx/EWD249/EWD249.html). Basic structures such as sequences, branches, and loops let people understand a program without following a tangle of jumps. They are general enough to be useful and straightforward enough for people to connect the code with what they want to say.
 

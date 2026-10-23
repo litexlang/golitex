@@ -24,7 +24,7 @@ fn rejected_binding(code: &str) {
         let mut rt = runtime(source);
         let run = rt.run_litex_code(code).unwrap();
         assert!(!run.success, "reserved binding accepted: {code}");
-        let error = format!("{:?}", run.session_error);
+        let error = format!("{:?}{:?}", run.session_error, run.input_error);
         assert!(error.contains("reserved builtin name"), "{code}: {error}");
         assert!(!error.contains("internal_bug"));
         // Parse rejection must discard both the attempted name and any prefix.

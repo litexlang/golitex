@@ -1,0 +1,568 @@
+# Ordered real series, indexed by N+. See README.md for domains and proof guards.
+# These ordinary source definitions reuse native finite sum and sequence limit.
+
+have fn partial_sum(a seq(R),n N+) R = sum(1,n,a)
+
+have fn partial_sums(a seq(R)) seq(R) = fn(n N+) R {partial_sum(a,n)}
+
+prop has_series_sum(a seq(R),L R):
+    $has_seq_limit(partial_sums(a),L)
+
+
+prop is_convergent_series(a seq(R)):
+    exist L R st {$has_series_sum(a,L)}
+
+
+thm partial_sum_first:
+    ? forall a seq(R):
+        partial_sum(a,1)=a(1)
+
+
+thm partial_sum_successor:
+    ? forall a seq(R),n N+:
+        partial_sum(a,n+1)=partial_sum(a,n)+a(n+1)
+    n>=1
+    sum(1,n+1,a)=sum(1,n,a)+sum(n+1,n+1,a)
+    have next N+=n+1
+    sum(next,next,a)=a(next)
+    sum(n+1,n+1,a)=sum(next,next,a)=a(next)=a(n+1)
+    partial_sum(a,n+1)=sum(1,n+1,a)
+    partial_sum(a,n)=sum(1,n,a)
+
+
+thm series_sum_unique:
+    ? forall a seq(R),A,B R:
+        $has_series_sum(a,A)
+        $has_series_sum(a,B)
+        =>:
+            A=B
+    $has_seq_limit(partial_sums(a),A)
+    $has_seq_limit(partial_sums(a),B)
+    by thm seq_limit_unique(partial_sums(a),A,B) => A=B
+
+
+thm series_sum_convergent:
+    ? forall a seq(R),L R:
+        $has_series_sum(a,L)
+        =>:
+            $is_convergent_series(a)
+    witness $is_convergent_series(a) from L
+
+
+thm convergent_series_limit_exists:
+    ? forall a seq(R):
+        $is_convergent_series(a)
+        =>:
+            exist L R st {$has_seq_limit(partial_sums(a),L)}
+    obtain L from $is_convergent_series(a)
+    $has_seq_limit(partial_sums(a),L)
+    witness exist value R st {$has_seq_limit(partial_sums(a),value)} from L
+
+
+have fn series_sum(a seq(R): $is_convergent_series(a)) R = lim(partial_sums(a))
+
+thm series_sum_selected:
+    ? forall a seq(R):
+        $is_convergent_series(a)
+        =>:
+            $has_series_sum(a,series_sum(a))
+    release thm convergent_series_limit_exists(a)
+    release thm seq_limit_selected(partial_sums(a))
+    series_sum(a)=lim(partial_sums(a))
+    by def $has_series_sum(a,series_sum(a))
+
+
+thm series_sum_value:
+    ? forall a seq(R),L R:
+        $has_series_sum(a,L)
+        =>:
+            $is_convergent_series(a)
+            series_sum(a)=L
+    witness $is_convergent_series(a) from L
+    series_sum(a)=lim(partial_sums(a))
+    $has_seq_limit(partial_sums(a),L)
+    lim(partial_sums(a))=L
+
+
+thm series_sum_from_partial_sums:
+    ? forall a,s seq(R),L R:
+        $has_seq_limit(s,L)
+        forall n N+:
+            s(n)=partial_sum(a,n)
+        =>:
+            $has_series_sum(a,L)
+    claim:
+        ? forall n N+:
+            s(n)=partial_sums(a)(n)
+        s(n)=partial_sum(a,n)=partial_sums(a)(n)
+    release thm seq_limit_eventually_equal(s,partial_sums(a),L,1)
+    by def $has_series_sum(a,L)
+
+
+thm partial_sum_add:
+    ? forall a,b,c seq(R),n N+:
+        forall k N+:
+            c(k)=a(k)+b(k)
+        =>:
+            partial_sum(c,n)=partial_sum(a,n)+partial_sum(b,n)
+    n>=1
+    by induc n from 1:
+        ? partial_sum(c,n)=partial_sum(a,n)+partial_sum(b,n)
+        ? from n=1:
+            partial_sum(c,1)=c(1)=a(1)+b(1)=partial_sum(a,1)+partial_sum(b,1)
+        ? induc:
+            n>=1
+            by thm partial_sum_successor(a,n) => partial_sum(a,n+1)=partial_sum(a,n)+a(n+1)
+            by thm partial_sum_successor(b,n) => partial_sum(b,n+1)=partial_sum(b,n)+b(n+1)
+            by thm partial_sum_successor(c,n) => partial_sum(c,n+1)=partial_sum(c,n)+c(n+1)
+            have next N+=n+1
+            c(next)=a(next)+b(next)
+            c(n+1)=c(next)
+            a(n+1)=a(next)
+            b(n+1)=b(next)
+            c(n+1)=a(n+1)+b(n+1)
+            partial_sum(c,n)+c(n+1)=(partial_sum(a,n)+partial_sum(b,n))+(a(n+1)+b(n+1))
+            (partial_sum(a,n)+partial_sum(b,n))+(a(n+1)+b(n+1))=(partial_sum(a,n)+a(n+1))+(partial_sum(b,n)+b(n+1))
+            partial_sum(c,n+1)=partial_sum(a,n+1)+partial_sum(b,n+1)
+
+
+thm partial_sum_scale:
+    ? forall a,c seq(R),t R,n N+:
+        forall k N+:
+            c(k)=t*a(k)
+        =>:
+            partial_sum(c,n)=t*partial_sum(a,n)
+    n>=1
+    by induc n from 1:
+        ? partial_sum(c,n)=t*partial_sum(a,n)
+        ? from n=1:
+            partial_sum(c,1)=c(1)=t*a(1)=t*partial_sum(a,1)
+        ? induc:
+            n>=1
+            have next N+=n+1
+            c(next)=t*a(next)
+            c(n+1)=c(next)=t*a(next)=t*a(n+1)
+            by thm partial_sum_successor(a,n) => partial_sum(a,n+1)=partial_sum(a,n)+a(n+1)
+            by thm partial_sum_successor(c,n) => partial_sum(c,n+1)=partial_sum(c,n)+c(n+1)
+            partial_sum(c,n)+c(n+1)=t*partial_sum(a,n)+t*a(n+1)=t*(partial_sum(a,n)+a(n+1))
+            partial_sum(c,n+1)=t*partial_sum(a,n+1)
+
+
+thm partial_sum_extensional:
+    ? forall a,b seq(R),n N+:
+        forall k N+:
+            a(k)=b(k)
+        =>:
+            partial_sum(a,n)=partial_sum(b,n)
+    n>=1
+    by induc n from 1:
+        ? partial_sum(a,n)=partial_sum(b,n)
+        ? from n=1:
+            partial_sum(a,1)=a(1)=b(1)=partial_sum(b,1)
+        ? induc:
+            n>=1
+            have next N+=n+1
+            a(next)=b(next)
+            a(n+1)=a(next)=b(next)=b(n+1)
+            by thm partial_sum_successor(a,n) => partial_sum(a,n+1)=partial_sum(a,n)+a(n+1)
+            by thm partial_sum_successor(b,n) => partial_sum(b,n+1)=partial_sum(b,n)+b(n+1)
+            partial_sum(a,n)+a(n+1)=partial_sum(b,n)+b(n+1)
+            partial_sum(a,n+1)=partial_sum(b,n+1)
+
+
+thm partial_sum_constant:
+    ? forall a seq(R),t R,n N+:
+        forall k N+:
+            a(k)=t
+        =>:
+            partial_sum(a,n)=n*t
+    n>=1
+    by induc n from 1:
+        ? partial_sum(a,n)=n*t
+        ? from n=1:
+            partial_sum(a,1)=a(1)=t=1*t
+        ? induc:
+            n>=1
+            have next N+=n+1
+            a(next)=t
+            a(n+1)=a(next)=t
+            by thm partial_sum_successor(a,n) => partial_sum(a,n+1)=partial_sum(a,n)+a(n+1)
+            partial_sum(a,n)+a(n+1)=n*t+t=(n+1)*t
+            partial_sum(a,n+1)=(n+1)*t
+
+
+thm partial_sum_subtract:
+    ? forall a,b,c seq(R),n N+:
+        forall k N+:
+            c(k)=a(k)-b(k)
+        =>:
+            partial_sum(c,n)=partial_sum(a,n)-partial_sum(b,n)
+    have d seq(R)=fn(k N+) R {-b(k)}
+    claim:
+        ? forall k N+:
+            d(k)=(-1)*b(k)
+            c(k)=a(k)+d(k)
+        d(k)=-b(k)=(-1)*b(k)
+        c(k)=a(k)-b(k)=a(k)+d(k)
+    by thm partial_sum_scale(b,d,-1,n) => partial_sum(d,n)=(-1)*partial_sum(b,n)
+    by thm partial_sum_add(a,d,c,n) => partial_sum(c,n)=partial_sum(a,n)+partial_sum(d,n)
+    partial_sum(d,n)=(-1)*partial_sum(b,n)=-partial_sum(b,n)
+    partial_sum(a,n)+partial_sum(d,n)=partial_sum(a,n)+(-partial_sum(b,n))=partial_sum(a,n)-partial_sum(b,n)
+
+
+thm series_sum_add:
+    ? forall a,b,c seq(R),A,B R:
+        $has_series_sum(a,A)
+        $has_series_sum(b,B)
+        forall k N+:
+            c(k)=a(k)+b(k)
+        =>:
+            $has_series_sum(c,A+B)
+    $has_seq_limit(partial_sums(a),A)
+    $has_seq_limit(partial_sums(b),B)
+    release thm seq_limit_add(partial_sums(a),partial_sums(b),A,B)
+    claim:
+        ? forall n N+:
+            fn(k N+) R {partial_sums(a)(k)+partial_sums(b)(k)}(n)=partial_sum(c,n)
+        by thm partial_sum_add(a,b,c,n) => partial_sum(c,n)=partial_sum(a,n)+partial_sum(b,n)
+        partial_sums(a)(n)=partial_sum(a,n)
+        partial_sums(b)(n)=partial_sum(b,n)
+        fn(k N+) R {partial_sums(a)(k)+partial_sums(b)(k)}(n)=partial_sums(a)(n)+partial_sums(b)(n)=partial_sum(c,n)
+    release thm series_sum_from_partial_sums(c,fn(k N+) R {partial_sums(a)(k)+partial_sums(b)(k)},A+B)
+
+
+thm series_sum_scale:
+    ? forall a,c seq(R),A,t R:
+        $has_series_sum(a,A)
+        forall k N+:
+            c(k)=t*a(k)
+        =>:
+            $has_series_sum(c,t*A)
+    $has_seq_limit(partial_sums(a),A)
+    release thm seq_limit_scale(partial_sums(a),A,t)
+    claim:
+        ? forall n N+:
+            fn(k N+) R {t*partial_sums(a)(k)}(n)=partial_sum(c,n)
+        by thm partial_sum_scale(a,c,t,n) => partial_sum(c,n)=t*partial_sum(a,n)
+        partial_sums(a)(n)=partial_sum(a,n)
+        fn(k N+) R {t*partial_sums(a)(k)}(n)=t*partial_sums(a)(n)=partial_sum(c,n)
+    release thm series_sum_from_partial_sums(c,fn(k N+) R {t*partial_sums(a)(k)},t*A)
+
+
+thm series_sum_subtract:
+    ? forall a,b,c seq(R),A,B R:
+        $has_series_sum(a,A)
+        $has_series_sum(b,B)
+        forall k N+:
+            c(k)=a(k)-b(k)
+        =>:
+            $has_series_sum(c,A-B)
+    $has_seq_limit(partial_sums(a),A)
+    $has_seq_limit(partial_sums(b),B)
+    release thm seq_limit_subtract(partial_sums(a),partial_sums(b),A,B)
+    claim:
+        ? forall n N+:
+            fn(k N+) R {partial_sums(a)(k)-partial_sums(b)(k)}(n)=partial_sum(c,n)
+        by thm partial_sum_subtract(a,b,c,n) => partial_sum(c,n)=partial_sum(a,n)-partial_sum(b,n)
+        partial_sums(a)(n)=partial_sum(a,n)
+        partial_sums(b)(n)=partial_sum(b,n)
+        fn(k N+) R {partial_sums(a)(k)-partial_sums(b)(k)}(n)=partial_sums(a)(n)-partial_sums(b)(n)=partial_sum(c,n)
+    release thm series_sum_from_partial_sums(c,fn(k N+) R {partial_sums(a)(k)-partial_sums(b)(k)},A-B)
+
+
+thm series_sum_zero:
+    ? forall a seq(R):
+        forall k N+:
+            a(k)=0
+        =>:
+            $has_series_sum(a,0)
+    claim:
+        ? forall n N+:
+            partial_sums(a)(n)=0
+        by thm partial_sum_constant(a,0,n) => partial_sum(a,n)=n*0
+        partial_sums(a)(n)=partial_sum(a,n)=n*0=0
+    release thm seq_limit_constant(partial_sums(a),0)
+    by def $has_series_sum(a,0)
+
+
+thm series_sum_extensional:
+    ? forall a,b seq(R),L R:
+        $has_series_sum(a,L)
+        forall k N+:
+            a(k)=b(k)
+        =>:
+            $has_series_sum(b,L)
+    $has_seq_limit(partial_sums(a),L)
+    claim:
+        ? forall n N+:
+            partial_sums(a)(n)=partial_sum(b,n)
+        by thm partial_sum_extensional(a,b,n) => partial_sum(a,n)=partial_sum(b,n)
+        partial_sums(a)(n)=partial_sum(a,n)=partial_sum(b,n)
+    release thm series_sum_from_partial_sums(b,partial_sums(a),L)
+
+
+thm series_sum_neg:
+    ? forall a,c seq(R),A R:
+        $has_series_sum(a,A)
+        forall k N+:
+            c(k)=-a(k)
+        =>:
+            $has_series_sum(c,-A)
+    claim:
+        ? forall k N+:
+            c(k)=(-1)*a(k)
+        c(k)=-a(k)=(-1)*a(k)
+    release thm series_sum_scale(a,c,A,-1)
+    (-1)*A=-A
+    $has_seq_limit(partial_sums(c),-A)
+    by def $has_series_sum(c,-A)
+
+
+thm convergent_series_partial_sums:
+    ? forall a seq(R):
+        $is_convergent_series(a)
+        =>:
+            $is_seq_convergent(partial_sums(a))
+    release thm convergent_series_limit_exists(a)
+    by def $is_seq_convergent(partial_sums(a))
+
+
+thm partial_sums_convergent_series:
+    ? forall a seq(R):
+        $is_seq_convergent(partial_sums(a))
+        =>:
+            $is_convergent_series(a)
+    release thm sequence_limit_from_convergent(partial_sums(a))
+    obtain L from exist L R st {$has_seq_limit(partial_sums(a),L)}
+    by def $has_series_sum(a,L)
+    witness $is_convergent_series(a) from L
+
+
+have fn series_tail(a seq(R),m N+) fn(k N+) R=fn(k N+) R {a(k+m)}
+
+forall a seq(R),m N+:
+    series_tail(a,m) $in seq(R)
+
+
+thm partial_sum_tail:
+    ? forall a seq(R),m,n N+:
+        partial_sum(series_tail(a,m),n)=partial_sum(a,n+m)-partial_sum(a,m)
+    n>=1
+    by induc n from 1:
+        ? partial_sum(series_tail(a,m),n)=partial_sum(a,n+m)-partial_sum(a,m)
+        ? from n=1:
+            by thm partial_sum_successor(a,m) => partial_sum(a,m+1)=partial_sum(a,m)+a(m+1)
+            m+1=1+m
+            a(m+1)=a(1+m)
+            partial_sum(a,m+1)=partial_sum(a,1+m)
+            partial_sum(series_tail(a,m),1)=series_tail(a,m)(1)=a(1+m)
+            partial_sum(a,1+m)-partial_sum(a,m)=a(1+m)
+        ? induc:
+            n>=1
+            have total N+=n+m
+            total=n+m
+            total+1=(n+m)+1=(n+1)+m
+            partial_sum(a,total)=partial_sum(a,n+m)
+            partial_sum(a,total+1)=partial_sum(a,n+1+m)
+            a(total+1)=a(n+1+m)
+            by thm partial_sum_successor(a,total) => partial_sum(a,total+1)=partial_sum(a,total)+a(total+1)
+            by thm partial_sum_successor(series_tail(a,m),n) => partial_sum(series_tail(a,m),n+1)=partial_sum(series_tail(a,m),n)+series_tail(a,m)(n+1)
+            series_tail(a,m)(n+1)=a(n+1+m)
+            partial_sum(series_tail(a,m),n)+series_tail(a,m)(n+1)=(partial_sum(a,n+m)-partial_sum(a,m))+a(n+1+m)
+            (partial_sum(a,n+m)-partial_sum(a,m))+a(n+1+m)=(partial_sum(a,total)-partial_sum(a,m))+a(total+1)
+            (partial_sum(a,total)-partial_sum(a,m))+a(total+1)=partial_sum(a,total)+a(total+1)-partial_sum(a,m)
+            partial_sum(series_tail(a,m),n+1)=partial_sum(a,total+1)-partial_sum(a,m)=partial_sum(a,n+1+m)-partial_sum(a,m)
+
+
+thm partial_sums_at:
+    ? forall a seq(R),n N+:
+        partial_sums(a)(n)=partial_sum(a,n)
+
+
+thm series_sum_tail:
+    ? forall a seq(R),L R,m N+:
+        $has_series_sum(a,L)
+        =>:
+            $has_series_sum(series_tail(a,m),L-partial_sum(a,m))
+    $has_seq_limit(partial_sums(a),L)
+    release thm seq_limit_shift(partial_sums(a),L,m)
+    let shifted=fn(k N+) R {partial_sums(a)(k+m)}
+    $has_seq_limit(shifted,L)
+    have fn prefix(k N+) R=partial_sum(a,m)
+    release thm seq_limit_constant(prefix,partial_sum(a,m))
+    release thm seq_limit_subtract(shifted,prefix,L,partial_sum(a,m))
+    claim:
+        ? forall n N+:
+            fn(k N+) R {shifted(k)-prefix(k)}(n)=partial_sum(series_tail(a,m),n)
+        by thm partial_sum_tail(a,m,n) => partial_sum(series_tail(a,m),n)=partial_sum(a,n+m)-partial_sum(a,m)
+        by thm partial_sums_at(a,n+m) => partial_sums(a)(n+m)=partial_sum(a,n+m)
+        shifted(n)=partial_sums(a)(n+m)=partial_sum(a,n+m)
+        prefix(n)=partial_sum(a,m)
+        fn(k N+) R {shifted(k)-prefix(k)}(n)=shifted(n)-prefix(n)=partial_sum(a,n+m)-partial_sum(a,m)=partial_sum(series_tail(a,m),n)
+    release thm series_sum_from_partial_sums(series_tail(a,m),fn(k N+) R {shifted(k)-prefix(k)},L-partial_sum(a,m))
+
+
+thm sequence_limit_from_shift:
+    ? forall a,s seq(R),L R,m N+:
+        $has_seq_limit(s,L)
+        forall k N+:
+            s(k)=a(k+m)
+        =>:
+            $has_seq_limit(a,L)
+    claim:
+        ? forall epsilon R+:
+            exist cutoff N+ st {{k N+:k>=cutoff} $subset preimage_set(a,{v R:abs(v-L)<epsilon})}
+        release thm seq_limit_tail(s,L,epsilon)
+        obtain cutoff from exist cutoff N+ st {{k N+:k>=cutoff} $subset preimage_set(s,{v R:abs(v-L)<epsilon})}
+        have start N+=cutoff+m
+        witness exist bound N+ st {{k N+:k>=bound} $subset preimage_set(a,{v R:abs(v-L)<epsilon})} from start:
+            claim:
+                ? forall k {j N+:j>=start}:
+                    k $in preimage_set(a,{v R:abs(v-L)<epsilon})
+                k>=start=cutoff+m
+                k-m>=cutoff+m-m=cutoff>=1
+                k-m $in Z
+                k-m>=1>0
+                k-m $in N+
+                have index N+=k-m
+                index>=cutoff
+                index $in {j N+:j>=cutoff}
+                index $in preimage_set(s,{v R:abs(v-L)<epsilon})
+                s(index) $in {v R:abs(v-L)<epsilon}
+                index+m=(k-m)+m=k
+                s(index)=a(index+m)=a(k)
+                abs(a(k)-L)=abs(s(index)-L)<epsilon
+                a(k) $in {v R:abs(v-L)<epsilon}
+            by def {k N+:k>=start} $subset preimage_set(a,{v R:abs(v-L)<epsilon})
+    by def $has_seq_limit(a,L)
+
+
+thm series_sum_from_tail:
+    ? forall a seq(R),T R,m N+:
+        $has_series_sum(series_tail(a,m),T)
+        =>:
+            $has_series_sum(a,T+partial_sum(a,m))
+    $has_seq_limit(partial_sums(series_tail(a,m)),T)
+    have fn prefix(k N+) R=partial_sum(a,m)
+    release thm seq_limit_constant(prefix,partial_sum(a,m))
+    release thm seq_limit_add(partial_sums(series_tail(a,m)),prefix,T,partial_sum(a,m))
+    have fn shifted(k N+) R=partial_sums(series_tail(a,m))(k)+prefix(k)
+    $has_seq_limit(shifted,T+partial_sum(a,m))
+    claim:
+        ? forall n N+:
+            shifted(n)=partial_sums(a)(n+m)
+        by thm partial_sum_tail(a,m,n) => partial_sum(series_tail(a,m),n)=partial_sum(a,n+m)-partial_sum(a,m)
+        by thm partial_sums_at(series_tail(a,m),n) => partial_sums(series_tail(a,m))(n)=partial_sum(series_tail(a,m),n)
+        by thm partial_sums_at(a,n+m) => partial_sums(a)(n+m)=partial_sum(a,n+m)
+        prefix(n)=partial_sum(a,m)
+        shifted(n)=partial_sums(series_tail(a,m))(n)+prefix(n)=partial_sum(series_tail(a,m),n)+partial_sum(a,m)
+        partial_sum(series_tail(a,m),n)+partial_sum(a,m)=(partial_sum(a,n+m)-partial_sum(a,m))+partial_sum(a,m)=partial_sum(a,n+m)=partial_sums(a)(n+m)
+    partial_sums(a) $in seq(R)
+    release thm sequence_limit_from_shift(partial_sums(a),shifted,T+partial_sum(a,m),m)
+    by def $has_series_sum(a,T+partial_sum(a,m))
+
+
+thm series_sum_finite_support:
+    ? forall a seq(R),m N+:
+        forall k N+:
+            k>m
+            =>:
+                a(k)=0
+        =>:
+            $has_series_sum(a,partial_sum(a,m))
+    claim:
+        ? forall k N+:
+            series_tail(a,m)(k)=0
+        have index N+=k+m
+        index=k+m>m
+        a(index)=0
+        series_tail(a,m)(k)=a(k+m)=a(index)=0
+    release thm series_sum_zero(series_tail(a,m))
+    release thm series_sum_from_tail(a,0,m)
+    0+partial_sum(a,m)=partial_sum(a,m)
+    $has_seq_limit(partial_sums(a),partial_sum(a,m))
+    by def $has_series_sum(a,partial_sum(a,m))
+
+
+thm series_tail_at:
+    ? forall a seq(R),m,k N+:
+        series_tail(a,m)(k)=a(k+m)
+
+
+thm series_sum_eventually_equal:
+    ? forall a,b seq(R),L R,m N+:
+        $has_series_sum(a,L)
+        forall k N+:
+            k>m
+            =>:
+                a(k)=b(k)
+        =>:
+            $has_series_sum(b,(L-partial_sum(a,m))+partial_sum(b,m))
+    release thm series_sum_tail(a,L,m)
+    claim:
+        ? forall k N+:
+            series_tail(a,m)(k)=series_tail(b,m)(k)
+        have index N+=k+m
+        index=k+m>m
+        a(index)=b(index)
+        by thm series_tail_at(a,m,k) => series_tail(a,m)(k)=a(k+m)
+        a(k+m)=a(index)
+        by thm series_tail_at(b,m,k) => series_tail(b,m)(k)=b(k+m)
+        b(k+m)=b(index)
+    release thm series_sum_extensional(series_tail(a,m),series_tail(b,m),L-partial_sum(a,m))
+    release thm series_sum_from_tail(b,L-partial_sum(a,m),m)
+
+
+thm series_terms_zero:
+    ? forall a seq(R),L R:
+        $has_series_sum(a,L)
+        =>:
+            $has_seq_limit(a,0)
+    $has_seq_limit(partial_sums(a),L)
+    release thm seq_limit_shift(partial_sums(a),L,1)
+    have fn shifted(k N+) R=partial_sums(a)(k+1)
+    $has_seq_limit(shifted,L)
+    release thm seq_limit_subtract(shifted,partial_sums(a),L,L)
+    have fn terms(k N+) R=shifted(k)-partial_sums(a)(k)
+    L-L=0
+    $has_seq_limit(terms,0)
+    claim:
+        ? forall k N+:
+            terms(k)=a(k+1)
+        by thm partial_sum_successor(a,k) => partial_sum(a,k+1)=partial_sum(a,k)+a(k+1)
+        by thm partial_sums_at(a,k+1) => partial_sums(a)(k+1)=partial_sum(a,k+1)
+        by thm partial_sums_at(a,k) => partial_sums(a)(k)=partial_sum(a,k)
+        shifted(k)=partial_sums(a)(k+1)=partial_sum(a,k+1)
+        terms(k)=shifted(k)-partial_sums(a)(k)=partial_sum(a,k+1)-partial_sum(a,k)
+        partial_sum(a,k+1)-partial_sum(a,k)=a(k+1)
+    release thm sequence_limit_from_shift(a,terms,0,1)
+
+
+thm convergent_series_tail:
+    ? forall a seq(R),m N+:
+        $is_convergent_series(a)
+        =>:
+            $is_convergent_series(series_tail(a,m))
+    obtain L from $is_convergent_series(a)
+    release thm series_sum_tail(a,L,m)
+    release thm series_sum_convergent(series_tail(a,m),L-partial_sum(a,m))
+
+
+thm tail_convergent_series:
+    ? forall a seq(R),m N+:
+        $is_convergent_series(series_tail(a,m))
+        =>:
+            $is_convergent_series(a)
+    obtain T from $is_convergent_series(series_tail(a,m))
+    release thm series_sum_from_tail(a,T,m)
+    release thm series_sum_convergent(a,T+partial_sum(a,m))
+
+
+thm convergent_series_terms_zero:
+    ? forall a seq(R):
+        $is_convergent_series(a)
+        =>:
+            $has_seq_limit(a,0)
+    obtain L from $is_convergent_series(a)
+    release thm series_terms_zero(a,L)
+

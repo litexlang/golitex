@@ -5,6 +5,12 @@ same JavaScript reader uses that JSON in a local browser or a hosted webpage.
 Its source pane and explanation pane share statement IDs, fact IDs, semantic
 symbol identities and actual verifier citations.
 
+For real mathematical examples, run
+`litex -reading -strict -lang zh -r examples/reading/homepage`.
+The [homepage collection](../examples/reading/homepage/README.md) contains
+least squares, sets, Newton iteration, irrationality of √2 and Cantor's theorem;
+use the contents or source selector to switch between them.
+
 ## Import source and save JSON
 
 ```sh
@@ -36,9 +42,26 @@ visible. Reading does not alter ordinary verification or Normal JSON output.
 
 ## Follow dependencies and inferred facts
 
-Click a source statement to see its actual cited facts, rule applications,
-and definition/theorem uses. Click a cited fact to visit its producer. Concept
-highlighting is separate and follows resolved identity, including local scopes.
+Clicking a `prop` source statement shows the actual predicate application,
+“holds if and only if”, and its complete conditions in rendered LaTeX. The
+separate parameter-domain section is omitted; types remain in the source and
+metadata. Quantifiers, conjunctions and dependencies come from the real AST.
+Click `prop ⓘ` to open the purpose/semantics guide and its checked short example.
+The guide is hidden initially, supports keyboard/touch and closes with Escape,
+its close button, an outside click or a new selection.
+
+The selected source is not echoed; engine versions and source file/line
+metadata stay out of the detail pane. Result/citation buttons select facts
+separately. Concept highlighting follows resolved identity, including local
+scopes. Mathematical metadata remains in the exported JSON independently of
+which explanation the viewer chooses to show.
+
+Optional `statement_kind` records the original tagged AST path, for example
+`Definition.DefPropStmt`, `Definition.DefineObj.HaveObjInNonemptySetStmt`,
+`By.ByDefStmt`, or `Fact`. It is available independently of execution status,
+including unexecuted proof bodies and repeated execution contexts, and survives
+static partitioning. The viewer does not guess the type from rendered source
+or execution messages. Old bundles without it show neutral statement details.
 
 `examples/reading/inferred_facts.lit` contains this runnable sequence after
 its definitions and object declaration:
@@ -60,14 +83,37 @@ stay in the proof evidence; they do not become annotations on the definition.
 An executed nested proof statement can have its own local output annotations;
 these remain local to that statement's scope.
 
-Inline results omit origin prose. Citation and inferred-fact detail cards
-retain each conclusion's origin. For example, the argument-membership
-fact is labelled “由 reading_outer 的参数类型推出”, while the inferred
-`$reading_inner(reading_value)` is labelled “由定义 reading_outer 展开”. Click
-the origin label to visit that exact declaration; other named rule labels open
-their Rule Book entry. The same origin appears on citation and inferred-fact
-cards. Missing per-conclusion provenance in an older bundle is labelled as
-unavailable, not guessed from the enclosing statement's rule list.
+Inline results omit origin prose. Selecting one shows the complete predicate
+equivalence retained for its actual producer, highlighting the selected domain
+or condition. Compact named definition links open the definition's mathematical
+view. Failures, trust and local assumptions remain explicit. The default pane
+does not show a rule catalogue or raw evidence tree; full typed evidence and
+per-conclusion origins remain in JSON.
+
+Optional `mathematics` data on statements is projected from the actual AST;
+on inference batches it comes from retained parameter-type and complete
+definition-expansion results. Parameter domains are outside the equivalence.
+Set, nonempty-set, finite-set and element parameter kinds stay distinct.
+Definition clauses preserve their full structure and order, including chains
+and quantifiers. Published outputs may split a clause into several facts or
+omit already-known facts, so they must never be used to reconstruct an iff.
+Abstract predicates have no invented iff clauses. Display projection does not
+instantiate through mutable Runtime methods or allocate proof identities.
+Unsupported forms and older bundles show actual output facts where available,
+or explain that mathematical display data is unavailable; the reader does not
+guess from source strings. This is an additive schema-v2 display projection,
+not a replacement for typed verification evidence.
+
+Optional `mathematics.latex` has a `subject` formula and parallel `parameters`
+and `facts` arrays for predicate definitions and complete retained predicate
+expansions. Older bundles without `subject` use the retained readable subject. Each array
+keeps the corresponding domain/clause order. The existing AST-to-LaTeX compiler
+produces them without parsing display strings or executing statements. Ordinary
+unguarded quantified comparisons use structural line breaks; guarded/nested
+logic keeps the canonical grouped formula. Other long expressions can scroll
+within the formula. Older data or unavailable conversion uses the complete
+retained text. A missing/failed renderer also falls back to that text, with a
+notice rather than raw LaTeX or a blank panel.
 
 The export uses schema `"2"` and a shared evidence DAG. A reference such as
 `{"kind":"evidence_reference","evidence_id":"evidence17"}` resolves through
@@ -86,9 +132,9 @@ Useful records for a custom frontend:
 | Record | Meaning |
 | --- | --- |
 | `sources` | Original source content, logical path and digest. |
-| `statements` | Source/execution identity, scope, status, evidence, `produced_fact_ids`, `cited_fact_ids`, `inferred_fact_ids`, declaration/trust dependencies and coverage. |
+| `statements` | Source/execution identity, optional `statement_kind` AST path and `mathematics` display data, scope, status, evidence, `produced_fact_ids`, `cited_fact_ids`, `inferred_fact_ids`, declaration/trust dependencies and coverage. |
 | `facts` | Mathematical text, actual scope, producer and fact-specific evidence; `role` distinguishes hypotheses, verified facts and declarations. `inference_ids` links a derived fact to its recorded inference. |
-| `inferences` | Actual store/infer output: seed, conclusions, producer, scope, batch `rule_ids`, retained evidence, and `conclusion_origins` linking each stored conclusion to its own rule and available resolved definition. |
+| `inferences` | Actual store/infer output: seed, conclusions, producer, scope, batch `rule_ids`, retained evidence, optional `mathematics`, and `conclusion_origins` linking each stored conclusion to its own rule and available resolved definition. |
 | `well_definedness` | Actual registered object, scope, creator statement, registration node and separately retained formation evidence when available. |
 | `symbols`, `occurrences` | Semantic identities and exact half-open UTF-8 source ranges; comments are excluded. |
 | `rules` | Kernel-derived catalogue, stable rule IDs and available authored labels. |
@@ -132,7 +178,8 @@ litex -reading -strict -lang zh -r book/ -export public/books/my-book
 
 The directory contains `index.html`, complete portable `reading.json`,
 `reading.manifest.json`, versioned `reading-data/` parts, `standalone.html`,
-`reader.js`, `reader.css` and `app.js`. Publish the whole directory with your
+`reader.js`, `reader.css`, `app.js`, `katex.min.js`, `katex.min.css` and
+`katex.LICENSE`. The math CSS embeds its WOFF2 fonts; no CDN is needed. Publish the whole directory with your
 website. The normal page loads the entry chapter first, then each selected
 chapter's source and proof DAG. The global search and concept occurrence
 indexes load on demand. Search includes source comments/prose and paginates
@@ -153,8 +200,15 @@ The smallest integration is an iframe:
         style="width:100%;height:85vh;border:0"></iframe>
 ```
 
-For a component inside your own layout, load `reader.css` and `reader.js` from
-that export, then open its manifest:
+For a component inside your own layout, load the exported styles and scripts
+in this order, then open its manifest:
+
+```html
+<link rel="stylesheet" href="/books/my-book/katex.min.css">
+<link rel="stylesheet" href="/books/my-book/reader.css">
+<script defer src="/books/my-book/katex.min.js"></script>
+<script defer src="/books/my-book/reader.js"></script>
+```
 
 ```js
 const reader = await LitexReading.open(

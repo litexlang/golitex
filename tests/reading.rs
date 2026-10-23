@@ -147,6 +147,42 @@ fn inferred_conclusions_keep_their_seed_evidence_and_later_citation() {
     );
     assert!(result.success);
     let statements = result.document.field("statements").as_array().unwrap();
+    let meaning = statements[1].field("mathematics");
+    assert_eq!(
+        meaning.field("kind").as_str().unwrap(),
+        "predicate_definition"
+    );
+    assert_eq!(
+        meaning.field("subject").as_str().unwrap(),
+        "$reading_outer(ro)"
+    );
+    assert_eq!(
+        meaning.field("parameters").as_array().unwrap()[0]
+            .field("domain")
+            .as_str()
+            .unwrap(),
+        "R"
+    );
+    assert_eq!(
+        meaning.field("facts").as_array().unwrap()[0]
+            .as_str()
+            .unwrap(),
+        "$reading_inner(ro)"
+    );
+    assert_eq!(
+        statements
+            .iter()
+            .map(|statement| statement.field("statement_kind").as_str().unwrap())
+            .collect::<Vec<_>>(),
+        [
+            "Definition.DefPropStmt",
+            "Definition.DefPropStmt",
+            "Definition.DefineObj.HaveObjInNonemptySetStmt",
+            "By.ByDefStmt",
+            "Fact",
+        ],
+        "syntax identity is independent of stored fact roles and inference origins"
+    );
     for definition in &statements[..2] {
         assert!(
             ids(definition.field("inferred_fact_ids")).is_empty(),
@@ -296,6 +332,240 @@ fn inferred_conclusions_keep_their_seed_evidence_and_later_citation() {
 }
 
 #[test]
+fn mathematical_meaning_keeps_complete_iff_clauses_and_dependent_parameter_kinds() {
+    let result = build_reading(
+        &ReadingInput::Source(include_str!("../examples/reading/mathematical_meaning.lit").into()),
+        true,
+        OutputLanguage::English,
+    );
+    assert!(result.success, "{}", result.document.stringify());
+    let statements = result.document.field("statements").as_array().unwrap();
+    let definition = statements[0].field("mathematics");
+    let parameters = definition.field("parameters").as_array().unwrap();
+    assert_eq!(parameters[0].field("kind").as_str().unwrap(), "set");
+    assert!(matches!(parameters[0].field("domain"), JsonValue::Null));
+    assert_eq!(parameters[1].field("kind").as_str().unwrap(), "element");
+    assert_eq!(parameters[1].field("domain").as_str().unwrap(), "A");
+    assert_eq!(definition.field("facts").as_array().unwrap().len(), 2);
+    let tex = definition.field("latex");
+    let domains = tex.field("parameters").as_array().unwrap();
+    assert!(domains[0].as_str().unwrap().contains(r"A:\text{set}"));
+    assert!(!domains[0].as_str().unwrap().contains(r"\in"));
+    assert!(domains[1].as_str().unwrap().contains(r"x\in A"));
+    assert_eq!(tex.field("facts").as_array().unwrap().len(), 2);
+    let expansions = result
+        .document
+        .field("inferences")
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter_map(|inference| {
+            let math = inference.as_object().unwrap().get("mathematics")?;
+            math.as_object().ok()?;
+            Some((inference, math))
+        })
+        .collect::<Vec<_>>();
+    let (_, application) = expansions
+        .iter()
+        .find(|(_, math)| {
+            math.field("subject").as_str().unwrap() == "$reading_conditions(reading_carrier, 1)"
+        })
+        .unwrap();
+    assert_eq!(
+        application.field("parameters").as_array().unwrap()[1]
+            .field("domain")
+            .as_str()
+            .unwrap(),
+        "reading_carrier"
+    );
+    assert_eq!(
+        application.field("parameters").as_array().unwrap()[0]
+            .field("kind")
+            .as_str()
+            .unwrap(),
+        "set"
+    );
+    assert_eq!(
+        application
+            .field("facts")
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|fact| fact.as_str().unwrap())
+            .collect::<Vec<_>>(),
+        ["1 = 1", "1 $in reading_carrier"]
+    );
+    let (inference, chain) = expansions
+        .iter()
+        .find(|(_, math)| math.field("subject").as_str().unwrap() == "$reading_chain(1)")
+        .unwrap();
+    assert_eq!(
+        chain
+            .field("latex")
+            .field("facts")
+            .as_array()
+            .unwrap()
+            .len(),
+        1
+    );
+    assert!(chain.field("latex").field("facts").as_array().unwrap()[0]
+        .as_str()
+        .unwrap()
+        .contains("1 = 1 = 1"));
+    assert_eq!(
+        chain
+            .field("facts")
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|fact| fact.as_str().unwrap())
+            .collect::<Vec<_>>(),
+        ["1 = 1 = 1"]
+    );
+    assert!(
+        ids(inference.field("fact_ids")).len() > chain.field("facts").as_array().unwrap().len(),
+        "one whole chain clause must not be reconstructed from its several published components"
+    );
+    let function = statements
+        .iter()
+        .find(|statement| {
+            statement.field("statement_kind").as_str().unwrap() == "Definition.HaveFnEqualStmt"
+        })
+        .unwrap()
+        .field("mathematics");
+    assert_eq!(function.field("kind").as_str().unwrap(), "function");
+    assert_eq!(function.field("codomain").as_str().unwrap(), "R");
+    let abstract_prop = statements.last().unwrap().field("mathematics");
+    assert_eq!(
+        abstract_prop.field("kind").as_str().unwrap(),
+        "abstract_predicate"
+    );
+    assert!(
+        abstract_prop.as_object().unwrap().get("facts").is_none(),
+        "an abstract interface must not gain invented iff clauses"
+    );
+}
+
+#[test]
+fn least_squares_latex_preserves_each_real_domain_and_the_whole_quantifier() {
+    let result = build_reading(
+        &ReadingInput::Source(
+            include_str!("../examples/reading/homepage/01-mean-squared-error.lit").into(),
+        ),
+        true,
+        OutputLanguage::Chinese,
+    );
+    assert!(result.success);
+    let statements = result.document.field("statements").as_array().unwrap();
+    let definition = statements[0].field("mathematics");
+    let latex = definition.field("latex");
+    assert_eq!(
+        latex.field("subject").as_str().unwrap(),
+        r"\mathit{is\_least\_squares\_center}(\mathit{center}, a, b, c)"
+    );
+    let domains = latex.field("parameters").as_array().unwrap();
+    assert_eq!(domains.len(), 4);
+    assert!(domains
+        .iter()
+        .all(|value| value.as_str().unwrap().contains(r"\in \mathbb{R}")));
+    let clauses = latex.field("facts").as_array().unwrap();
+    assert_eq!(clauses.len(), 1);
+    let formula = clauses[0].as_str().unwrap();
+    assert!(
+        formula.contains(r"\forall \mathit{candidate}\in \mathbb{R}"),
+        "{formula}"
+    );
+    assert!(
+        formula.contains(r"\leq") && formula.contains(r"\mathit{center}"),
+        "{formula}"
+    );
+    assert_eq!(
+        formula.matches("^{2}").count(),
+        6,
+        "both sides of the inequality must survive: {formula}"
+    );
+    let application = result
+        .document
+        .field("inferences")
+        .as_array()
+        .unwrap()
+        .iter()
+        .find_map(|batch| {
+            let math = batch.as_object().unwrap().get("mathematics")?;
+            let fields = math.as_object().ok()?;
+            fields
+                .get("subject")?
+                .as_str()
+                .ok()?
+                .contains("mean(72, 84, 96)")
+                .then_some(math)
+        })
+        .unwrap();
+    assert_eq!(
+        application
+            .field("latex")
+            .field("parameters")
+            .as_array()
+            .unwrap()
+            .len(),
+        4
+    );
+    let concrete_subject = application
+        .field("latex")
+        .field("subject")
+        .as_str()
+        .unwrap();
+    assert!(
+        concrete_subject.contains(r"\mathit{mean}(72, 84, 96)"),
+        "{concrete_subject}"
+    );
+    assert!(
+        !concrete_subject.contains("candidate"),
+        "candidate stays bound in the condition"
+    );
+    let concrete = application
+        .field("latex")
+        .field("facts")
+        .as_array()
+        .unwrap()[0]
+        .as_str()
+        .unwrap();
+    assert!(
+        concrete.contains("72")
+            && concrete.contains("84")
+            && concrete.contains("96")
+            && concrete.contains(r"\forall")
+    );
+}
+
+#[test]
+fn abstract_predicate_rejection_does_not_gain_a_definition_equivalence() {
+    let result = build_reading(
+        &ReadingInput::Source("abstract_prop unexplained(x)\nby def $unexplained(1)\n".into()),
+        true,
+        OutputLanguage::English,
+    );
+    assert!(!result.success);
+    let statements = result.document.field("statements").as_array().unwrap();
+    assert_eq!(statements[1].field("status").as_str().unwrap(), "rejected");
+    assert_eq!(
+        statements[1]
+            .field("mathematics")
+            .field("kind")
+            .as_str()
+            .unwrap(),
+        "fact"
+    );
+    assert!(result
+        .document
+        .field("inferences")
+        .as_array()
+        .unwrap()
+        .iter()
+        .all(|inference| inference.field("producer_statement_id") != statements[1].field("id")));
+}
+
+#[test]
 fn real_rule_children_and_prior_fact_citations_are_exported() {
     let source = "have x R\n0 <= x ^ 2\n1 <= x ^ 2 + 1\n";
     let result = build_reading(
@@ -404,6 +674,14 @@ fn failed_statement_publishes_no_facts_and_later_statement_keeps_context() {
     let statements = (&result.document).field("statements").as_array().unwrap();
     assert_eq!(statements.len(), 3);
     assert_eq!(
+        statements[1].field("statement_kind").as_str().unwrap(),
+        "Fact"
+    );
+    assert_eq!(
+        statements[2].field("statement_kind").as_str().unwrap(),
+        "Fact"
+    );
+    assert_eq!(
         (&statements[1]).field("status").as_str().unwrap(),
         "rejected"
     );
@@ -469,6 +747,12 @@ fn nested_claim_steps_keep_local_producers_and_publish_only_the_goal() {
     let outer = &statements[0];
     let square = &statements[1];
     let addition = &statements[2];
+    assert_eq!(
+        outer.field("statement_kind").as_str().unwrap(),
+        "ProofBlock.ClaimStmt"
+    );
+    assert_eq!(square.field("statement_kind").as_str().unwrap(), "Fact");
+    assert_eq!(addition.field("statement_kind").as_str().unwrap(), "Fact");
     assert_eq!(square.field("line").as_u64().unwrap(), 4);
     assert_eq!(addition.field("line").as_u64().unwrap(), 5);
     assert_eq!(square.field("parent_statement_id"), outer.field("id"));
@@ -566,6 +850,14 @@ fn repeated_induction_body_keeps_distinct_execution_contexts() {
     let statements = result.document.field("statements").as_array().unwrap();
     assert_eq!(statements.len(), 3);
     assert_eq!(
+        statements[0].field("statement_kind").as_str().unwrap(),
+        "By.ByInducStmt"
+    );
+    assert_eq!(
+        statements[1].field("statement_kind"),
+        statements[2].field("statement_kind")
+    );
+    assert_eq!(
         statements[1].field("source_statement_id"),
         statements[2].field("source_statement_id")
     );
@@ -582,6 +874,25 @@ fn repeated_induction_body_keeps_distinct_execution_contexts() {
             .unwrap(),
         "complete"
     );
+}
+
+#[test]
+fn unexecuted_proof_body_keeps_syntax_identity_without_a_verdict() {
+    let result = build_reading(
+        &ReadingInput::Source("claim:\n    ? 1 = 1\n    1 = 2\n    1 = 1\n".into()),
+        true,
+        OutputLanguage::English,
+    );
+    assert!(!result.success);
+    let statements = result.document.field("statements").as_array().unwrap();
+    assert_eq!(statements.len(), 3);
+    assert_eq!(
+        statements[0].field("statement_kind").as_str().unwrap(),
+        "ProofBlock.ClaimStmt"
+    );
+    let unexecuted = &statements[2];
+    assert_eq!(unexecuted.field("status").as_str().unwrap(), "not_exported");
+    assert_eq!(unexecuted.field("statement_kind").as_str().unwrap(), "Fact");
 }
 
 #[test]

@@ -92,12 +92,14 @@ fn false_inferences_and_failed_claims_do_not_leak() {
     check(&mut rt, "$is_uniformly_continuous(identity)", false);
     check(&mut rt, "$is_lipschitz(identity,1)", false);
     check(&mut rt, "have fn fresh_identity(x R) R=x", true);
+    // Continuity of a definitional identity is directly searchable, so use a
+    // Lipschitz release as the claim-local fact that must not escape rejection.
     check(
         &mut rt,
-        "claim:\n    ? 0=1\n    release thm fn_continuous_at_identity(fresh_identity,3)\n    0=1",
+        "claim:\n    ? 0=1\n    release thm fn_lipschitz_from_estimate(fresh_identity,1)\n    0=1",
         false,
     );
-    check(&mut rt, "$is_continuous_at(fresh_identity,3)", false);
+    check(&mut rt, "$is_lipschitz(fresh_identity,1)", false);
     check(&mut rt, "anchor+1=8", true);
 }
 #[test]
