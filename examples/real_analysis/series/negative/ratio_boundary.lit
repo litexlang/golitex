@@ -1,0 +1,13 @@
+have fn ratio_boundary_terms(k N+) R=1
+
+claim:
+    ? forall k N+:
+        abs(ratio_boundary_terms(k+1))<=1*abs(ratio_boundary_terms(k))
+    have next N+=k+1
+    ratio_boundary_terms(next)=1
+    ratio_boundary_terms(k+1)=ratio_boundary_terms(next)=1
+    ratio_boundary_terms(k)=1
+    abs(ratio_boundary_terms(k+1))=1=1*abs(ratio_boundary_terms(k))
+
+release thm series:::series_ratio_test(ratio_boundary_terms,1,1)
+

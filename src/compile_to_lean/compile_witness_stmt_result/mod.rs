@@ -1,10 +1,12 @@
 mod compile_witness_atomic_fact_result;
 mod compile_witness_exist_fact_result;
+mod compile_witness_nonempty_set_result;
 
 use crate::compile_to_lean::source_position::SourcePosition;
 use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
 use crate::execute::execute_witness_stmt::{
-    ExecWitnessAtomicFactStmtResult, ExecWitnessExistFactStmtResult, ExecWitnessStmtResult,
+    ExecWitnessAtomicFactStmtResult, ExecWitnessExistFactStmtResult,
+    ExecWitnessNonemptySetStmtResult, ExecWitnessStmtResult,
 };
 
 impl LitexToLeanCompiler {
@@ -34,9 +36,12 @@ impl LitexToLeanCompiler {
                 "Witness/Failed",
                 "A failed predicate witness is not proof evidence.",
             )),
-            ExecWitnessStmtResult::WitnessNonemptySet(_) => {
-                Err(LeanCompileError::unsupported("Witness/NonemptySet"))
-            }
+            ExecWitnessStmtResult::WitnessNonemptySet(
+                ExecWitnessNonemptySetStmtResult::Success(proof),
+            ) => self.compile_witness_nonempty_statement(proof, position, index, local),
+            ExecWitnessStmtResult::WitnessNonemptySet(
+                ExecWitnessNonemptySetStmtResult::Failed(_),
+            ) => Err(LeanCompileError::unsupported("WitnessNonempty/Failed")),
         }
     }
 }

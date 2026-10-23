@@ -13,6 +13,9 @@ and the [rational-map walkthrough](../../docs/Litex_To_Lean_Compiler_Guide.md#tw
 The [compiler guide](../../docs/Litex_To_Lean_Compiler_Guide.md) covers detailed
 usage; [CLI documentation](../../docs/cli.md#lean-compiler-boundary) owns command
 syntax and stdout/error behavior.
+The [coverage inventory and phase plan](../../docs/Litex_To_Lean_Coverage_Plan.md)
+tracks remaining statement, object and builtin-theorem entrypoints separately
+and records which new routes have passed Lean.
 
 ## The complete path
 

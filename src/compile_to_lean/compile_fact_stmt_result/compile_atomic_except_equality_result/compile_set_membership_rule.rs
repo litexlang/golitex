@@ -66,21 +66,43 @@ impl LitexToLeanCompiler {
         proofs: &[VerifyFactResult],
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
+        if requirements.len() != proofs.len() {
+            return Err(LeanCompileError::unsupported("SetBuilder/MembershipArity"));
+        }
+        let mut witnesses = Vec::new();
+        for (requirement, proof) in requirements.iter().zip(proofs) {
+            if source_subject(proof)? != *requirement {
+                return Err(LeanCompileError::new(
+                    "SetBuilder/FilterProof",
+                    "Predicate premise and evidence differ.",
+                ));
+            }
+            witnesses.push(self.compile_verify(proof, position)?.1);
+        }
+        self.compile_builder_membership_evidence(fact, requirements, witnesses, position)
+    }
+
+    pub(in crate::compile_to_lean) fn compile_builder_membership_evidence(
+        &self,
+        fact: &InFact,
+        requirements: &[Fact],
+        mut witnesses: Vec<String>,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
         let Obj::SetFormer(SetFormer::SetBuilder(set)) = &fact.set else {
             return Err(LeanCompileError::new(
                 "SetBuilder/MembershipSubject",
                 "Selected formation rule has another bound constructor.",
             ));
         };
-        if requirements.len() != 1 + set.facts.len() || proofs.len() != requirements.len() {
+        if requirements.len() != 1 + set.facts.len() || witnesses.len() != requirements.len() {
             return Err(LeanCompileError::new(
                 "SetBuilder/MembershipArity",
                 "Membership needs the recorded bound and every filter proof.",
             ));
         }
         let substitution = HashMap::from([(set.param_binding.id, fact.element.clone())]);
-        let mut witnesses = Vec::new();
-        for (i, (requirement, proof)) in requirements.iter().zip(proofs).enumerate() {
+        for (i, requirement) in requirements.iter().enumerate() {
             if i == 0 {
                 match requirement {
                     Fact::AtomicFact(AtomicFact::InFact(f))
@@ -103,13 +125,6 @@ impl LitexToLeanCompiler {
                     "An ordered filter proves another instantiated predicate.",
                 ));
             }
-            if source_subject(proof)? != *requirement {
-                return Err(LeanCompileError::new(
-                    "SetBuilder/FilterProof",
-                    "Predicate premise and evidence differ.",
-                ));
-            }
-            witnesses.push(self.compile_verify(proof, position)?.1);
         }
         let predicate = if set.facts.is_empty() {
             "True.intro".into()

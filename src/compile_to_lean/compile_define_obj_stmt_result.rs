@@ -25,8 +25,10 @@ impl LitexToLeanCompiler {
             ExecDefineObjStmtResult::ObtainObjFromAtomicFact(result) => {
                 self.compile_obtain_atomic_statement(result, position, local)
             }
-            ExecDefineObjStmtResult::HaveObjByExistFacts(_)
-            | ExecDefineObjStmtResult::HaveByFnPreimage(_)
+            ExecDefineObjStmtResult::HaveObjByExistFacts(result) => {
+                self.compile_have_by_exist_statement(result, position, local)
+            }
+            ExecDefineObjStmtResult::HaveByFnPreimage(_)
             | ExecDefineObjStmtResult::HaveByReplacementAxiom(_) => {
                 Err(LeanCompileError::unsupported("Definition/DefineObj"))
             }

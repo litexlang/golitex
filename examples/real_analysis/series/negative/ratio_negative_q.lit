@@ -1,0 +1,13 @@
+have fn negative_q_terms(k N+) R=0
+
+claim:
+    ? forall k N+:
+        abs(negative_q_terms(k+1))<=(-1/2)*abs(negative_q_terms(k))
+    have next N+=k+1
+    negative_q_terms(next)=0
+    negative_q_terms(k+1)=negative_q_terms(next)=0
+    negative_q_terms(k)=0
+    abs(negative_q_terms(k+1))=0=(-1/2)*abs(negative_q_terms(k))
+
+release thm series:::series_ratio_test(negative_q_terms,-1/2,1)
+

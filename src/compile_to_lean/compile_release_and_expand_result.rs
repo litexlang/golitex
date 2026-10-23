@@ -27,8 +27,24 @@ impl LitexToLeanCompiler {
         let invocation = SourcePosition::new(Some(position), SourceOwner::ThmRelease(proof), 0);
         let (definitions, application, facts, retained_fact_id) =
             if matches!(proof.callee, ResolvedTheoremCallee::Builtin) {
-                let (definitions, application, facts) =
-                    self.compile_builtin_tuple_theorem(proof, &invocation)?;
+                let (definitions, application, facts) = if proof.builtin.as_ref().is_some_and(|b| {
+                    b.theorem == crate::builtin_theorem::BuiltinTheoremId::TupleEqualFromCoordinates
+                }) {
+                    self.compile_builtin_tuple_theorem(proof, &invocation)?
+                } else {
+                    self.compile_builtin_membership_theorem(
+                        &proof.call,
+                        proof.builtin.as_ref(),
+                        &proof.theorem_derivation,
+                        &proof.type_proofs,
+                        &proof.type_stores,
+                        proof.function_domain.as_ref(),
+                        &proof.dom_proofs,
+                        &proof.dom_stores,
+                        &proof.conclusions_wd,
+                        &invocation,
+                    )?
+                };
                 (definitions, application, facts, None)
             } else {
                 let ResolvedTheoremCallee::UserTheorem(declaration) = &proof.callee else {

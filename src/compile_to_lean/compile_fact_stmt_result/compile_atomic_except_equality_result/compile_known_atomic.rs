@@ -121,8 +121,9 @@ impl LitexToLeanCompiler {
                 &registered.1,
                 position,
             ),
-            (AtomicFact::NormalAtomicFact(_), AtomicFact::NormalAtomicFact(_)) => self
-                .compile_concrete_known_atomic_transport(
+            (AtomicFact::NormalAtomicFact(_), AtomicFact::NormalAtomicFact(_))
+            | (AtomicFact::IsNonemptySetFact(_), AtomicFact::IsNonemptySetFact(_)) => self
+                .compile_raw_known_atomic_transport(
                     cited,
                     goal,
                     &arguments,
@@ -138,7 +139,7 @@ impl LitexToLeanCompiler {
     // Same is equality of M.Value denotations, not equality of the host Obj
     // carriers. The preceding dispatcher has checked the original predicate,
     // polarity, ordered arity, citation and every selected equality winner.
-    fn compile_concrete_known_atomic_transport(
+    fn compile_raw_known_atomic_transport(
         &self,
         cited: &AtomicFact,
         goal: &AtomicFact,
@@ -154,8 +155,8 @@ impl LitexToLeanCompiler {
             .map(|variable| format!("({variable} : M.Value)"))
             .collect::<Vec<_>>()
             .join(" ");
-        // This renderer uses the actual prior concrete declaration and its
-        // IdentifierIds. It does not run definition verification or search.
+        // User predicates use their prior declaration; builtin predicates use
+        // their fixed meaning. Neither route performs new proof search.
         let meaning = self.compile_atomic_raw_proposition(goal, &variables, position)?;
         let predicate = format!("(fun {binders} => {meaning})");
         let values = |fact: &AtomicFact| {

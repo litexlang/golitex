@@ -16,13 +16,14 @@ impl LitexToLeanCompiler {
         match result {
             ExecByThmStmtResult::Success(proof) => {
                 let compiled = self.compile_by_theorem(proof, position)?;
-                Ok(self.emit_fact(
+                self.compile_completed_fact_statement(
                     &source_subject(&proof.selected_proof)?,
                     compiled,
+                    &proof.stored,
+                    position,
                     index,
                     local,
-                    position,
-                )?)
+                )
             }
             ExecByThmStmtResult::Failed(_) => Err(LeanCompileError::new(
                 "ByThm/Failed",
@@ -36,67 +37,91 @@ impl LitexToLeanCompiler {
         proof: &ExecByThmStmtSuccess,
         position: &SourcePosition<'_>,
     ) -> Result<(String, String), LeanCompileError> {
-        let declaration = match &proof.callee {
-            ResolvedTheoremCallee::UserTheorem(declaration) => declaration,
-            _ => return Err(LeanCompileError::unsupported("ByThm/Callee")),
-        };
-        let source_name = match &proof.call.name {
-            AtomicName::Plain { name } => name,
-            _ => return Err(LeanCompileError::unsupported("ByThm/QualifiedCallee")),
-        };
-        let (registered, declaration_position, declaration_index) =
-            position.visible_theorem(source_name)?;
-        let declaration_index = declaration_index + 1;
-        if registered != declaration
-            || source_name != &declaration.name
-            || proof.builtin.is_some()
-            || proof.function_domain.is_some()
-        {
-            return Err(LeanCompileError::new(
-                "ByThm/Callee",
-                "The resolved declaration differs from the cited compiled theorem.",
-            ));
-        }
         let source_position = SourcePosition {
             parent: Some(position),
             owner: SourceOwner::Call(proof),
             before: 0,
         };
-        let compiled = self.compile_by_theorem_body(
-            proof,
-            registered,
-            &declaration_position,
-            declaration_index,
-            &source_position,
-        );
-        let compiled = compiled?;
+        let compiled = if matches!(proof.callee, ResolvedTheoremCallee::Builtin) {
+            let (definitions, application, facts) = self.compile_builtin_membership_theorem(
+                &proof.call,
+                proof.builtin.as_ref(),
+                &proof.theorem_derivation,
+                &proof.type_proofs,
+                &proof.type_stores,
+                proof.function_domain.as_ref(),
+                &proof.dom_proofs,
+                &proof.dom_stores,
+                &proof.conclusions_wd,
+                &source_position,
+            )?;
+            self.compile_by_theorem_selection(
+                proof,
+                definitions,
+                application,
+                facts,
+                &source_position,
+            )?
+        } else {
+            let declaration = match &proof.callee {
+                ResolvedTheoremCallee::UserTheorem(declaration) => declaration,
+                _ => return Err(LeanCompileError::unsupported("ByThm/Callee")),
+            };
+            let source_name = match &proof.call.name {
+                AtomicName::Plain { name } => name,
+                _ => return Err(LeanCompileError::unsupported("ByThm/QualifiedCallee")),
+            };
+            let (registered, declaration_position, _) = position.visible_theorem(source_name)?;
+            if registered != declaration
+                || source_name != &declaration.name
+                || proof.builtin.is_some()
+                || proof.function_domain.is_some()
+            {
+                return Err(LeanCompileError::new(
+                    "ByThm/Callee",
+                    "The resolved declaration differs from the cited compiled theorem.",
+                ));
+            }
+            let (definitions, application, returned_facts) = self.compile_user_theorem_instance(
+                &proof.call,
+                &proof.type_proofs,
+                &proof.type_stores,
+                &proof.dom_proofs,
+                &proof.dom_stores,
+                &proof.conclusions_wd,
+                &proof.returned_conclusions,
+                registered,
+                &declaration_position,
+                &source_position,
+            )?;
+            self.compile_by_theorem_selection(
+                proof,
+                definitions,
+                application,
+                returned_facts,
+                &source_position,
+            )?
+        };
         let selected = source_subject(&proof.selected_proof)?;
         self.compile_fact_wd(&proof.selected_wd, &selected, position)?;
         self.validate_store(&proof.stored.store, &selected)?;
         Ok(compiled)
     }
 
-    pub(in crate::compile_to_lean) fn compile_by_theorem_body(
+    fn compile_by_theorem_selection(
         &self,
         proof: &ExecByThmStmtSuccess,
-        registered: &DefThmStmt,
-        declaration_position: &SourcePosition<'_>,
-        _declaration_index: usize,
+        mut definitions: Vec<String>,
+        application: String,
+        returned_facts: Vec<Fact>,
         position: &SourcePosition<'_>,
     ) -> Result<(String, String), LeanCompileError> {
-        let (mut definitions, application, returned_facts) = self.compile_user_theorem_instance(
-            &proof.call,
-            &proof.type_proofs,
-            &proof.type_stores,
-            &proof.dom_proofs,
-            &proof.dom_stores,
-            &proof.conclusions_wd,
-            &proof.returned_conclusions,
-            registered,
-            declaration_position,
-            position,
-        )?;
         let conclusions_count = returned_facts.len();
+        if conclusions_count != proof.returned_conclusions.len()
+            || conclusions_count != proof.conclusions_wd.len()
+        {
+            return Err(LeanCompileError::unsupported("ByThm/ReturnStages"));
+        }
         let return_head =
             proof.type_proofs.len() + proof.dom_proofs.len() + proof.conclusions_wd.len();
         for (index, (fact, stored)) in returned_facts
@@ -104,6 +129,7 @@ impl LitexToLeanCompiler {
             .zip(&proof.returned_conclusions)
             .enumerate()
         {
+            self.validate_store(&stored.store, fact)?;
             let prior = SourcePosition {
                 before: return_head + index,
                 ..*position

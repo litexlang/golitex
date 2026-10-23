@@ -519,7 +519,7 @@ impl Runtime {
             if application.body.len() > 1 {
                 let mut receiver = application.clone();
                 let arguments = receiver.body.pop().unwrap();
-                let receiver: Obj = receiver.into();
+                let receiver = Obj::FnObj(receiver);
                 if receiver.ir() == range.function.ir() {
                     range_application = Some(crate::ast::obj::FnObj {
                         head: Box::new(FnObjHead::Object(Box::new(receiver))),

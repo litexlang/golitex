@@ -1,3 +1,5 @@
+use crate::execute::ExecHaveObjByExistFactsStmtResult;
+use crate::execute::execute_witness_stmt::{ExecWitnessNonemptySetStmtResult, ExecWitnessNonemptySetStmtSuccessResult};
 use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::StructishObjWellDefinedProofByDef;
 use crate::execute::execute_witness_stmt::{ExecWitnessStmtResult, ExecWitnessExistFactStmtResult, ExecWitnessExistFactStmtSuccessResult, ExecWitnessAtomicFactStmtResult, ExecWitnessAtomicFactStmtSuccessResult};
 use crate::execute::execute_witness_stmt::{WitnessExistAmbientSuccess, WitnessExistObligationSuccess};
@@ -84,6 +86,7 @@ pub(super) enum SourceOwner<'a> {
     // Local stages only: params, equality stores, proof steps, body checks, uniqueness.
     WitnessExist(&'a ExecWitnessExistFactStmtSuccessResult),
     WitnessAtomic(&'a ExecWitnessAtomicFactStmtSuccessResult),
+    WitnessNonempty(&'a ExecWitnessNonemptySetStmtSuccessResult),
     // Assumption WD, assumption store, proof steps, closing checks/stores.
     Contra(&'a ExecByContraStmtSuccess),
     CasesBranch(&'a ByCasesBranchSuccess),
@@ -491,6 +494,7 @@ impl<'a> SourcePosition<'a> {
                 | SourceOwner::ExistWD(_, _)
                 | SourceOwner::WitnessExist(_)
                 | SourceOwner::WitnessAtomic(_)
+                | SourceOwner::WitnessNonempty(_)
                 | SourceOwner::Contra(_)
                 | SourceOwner::CasesBranch(_)
                 | SourceOwner::ForallWD(_, _)
@@ -795,6 +799,7 @@ impl<'a> SourcePosition<'a> {
                 SourceOwner::ExistWD(_, p) => Some(p.local_env.as_ref()),
                 SourceOwner::WitnessExist(p) => Some(p.local_env.as_ref()),
                 SourceOwner::WitnessAtomic(p) => Some(p.local_env.as_ref()),
+                SourceOwner::WitnessNonempty(p) => Some(p.local_env.as_ref()),
                 SourceOwner::Contra(p) => Some(p.local_env.as_ref()),
                 SourceOwner::CasesBranch(p) => Some(p.local_env.as_ref()),
                 SourceOwner::KnownForall(p) => Some(p.well_defined.local_env.as_ref()),
@@ -843,6 +848,7 @@ impl<'a> SourcePosition<'a> {
                 SourceOwner::ExistWD(_, p) => Some(p.local_env.as_ref()),
                 SourceOwner::WitnessExist(p) => Some(p.local_env.as_ref()),
                 SourceOwner::WitnessAtomic(p) => Some(p.local_env.as_ref()),
+                SourceOwner::WitnessNonempty(p) => Some(p.local_env.as_ref()),
                 SourceOwner::Contra(p) => Some(p.local_env.as_ref()),
                 SourceOwner::CasesBranch(p) => Some(p.local_env.as_ref()),
                 SourceOwner::KnownForall(p) => Some(p.well_defined.local_env.as_ref()),
@@ -905,6 +911,7 @@ impl<'a> SourcePosition<'a> {
                 SourceOwner::ExistWD(_, _)
                     | SourceOwner::WitnessExist(_)
                     | SourceOwner::WitnessAtomic(_)
+                    | SourceOwner::WitnessNonempty(_)
                     | SourceOwner::Contra(_)
                     | SourceOwner::CasesBranch(_)
             ) {
@@ -921,6 +928,7 @@ impl<'a> SourcePosition<'a> {
                         SourceOwner::ExistWD(..) => "existential formation",
                         SourceOwner::WitnessExist(..) => "existential witness",
                         SourceOwner::WitnessAtomic(..) => "atomic witness",
+                        SourceOwner::WitnessNonempty(..) => "nonempty witness",
                         SourceOwner::Contra(..) => "contradiction",
                         SourceOwner::CasesBranch(..) => "case branch",
                         _ => unreachable!("local producer boundary checked above"),
@@ -938,6 +946,7 @@ impl<'a> SourcePosition<'a> {
             }
             if let SourceOwner::Statement(statement) = current.owner {
                 if witness_statement(statement).is_some()
+                    || nonempty_witness_statement(statement).is_some()
                     || obtain_parts(statement).is_some()
                     || matches!(
                         statement,
@@ -1033,12 +1042,21 @@ impl<'a> SourcePosition<'a> {
                 };
                 return Err(LeanCompileError::new(route, "The cited binder, assumption, self restriction, or final equation store is after this original source stage."));
             }
+            // A theorem may return the same FactId as an already proved
+            // premise. The later return does not hide that earlier producer.
+            if matches!(
+                current.owner,
+                SourceOwner::Call(_) | SourceOwner::ThmRelease(_)
+            ) {
+                local_primary_is_stored |= fact_reference_in_owner(current, id, actual)?.is_some();
+            }
             if let SourceOwner::Call(proof) = current.owner {
                 if proof
                     .type_stores
                     .iter()
                     .skip(current.before)
                     .any(|store| store.stored_fact_ids().contains(&id))
+                    && !local_primary_is_stored
                 {
                     return Err(LeanCompileError::new(
                         "ByThm/FutureTypeProducer",
@@ -1050,6 +1068,7 @@ impl<'a> SourcePosition<'a> {
                     .iter()
                     .skip(current.before.saturating_sub(proof.type_proofs.len()))
                     .any(|store| store.stored_fact_ids().contains(&id))
+                    && !local_primary_is_stored
                 {
                     return Err(LeanCompileError::new(
                         "ByThm/FutureDomainProducer",
@@ -1063,25 +1082,27 @@ impl<'a> SourcePosition<'a> {
                     .iter()
                     .skip(current.before.saturating_sub(head))
                     .any(|store| store.stored_fact_ids().contains(&id))
+                    && !local_primary_is_stored
                 {
                     return Err(LeanCompileError::new("ByThm/FutureProducer", "The returned package is after all conclusion formation and its original store stage."));
                 }
             }
             if let SourceOwner::ThmRelease(proof) = current.owner {
-                if proof
-                    .type_stores
-                    .iter()
-                    .skip(current.before)
-                    .any(|store| store.stored_fact_ids().contains(&id))
-                    || proof
-                        .dom_stores
+                if !local_primary_is_stored
+                    && (proof
+                        .type_stores
                         .iter()
-                        .skip(current.before.saturating_sub(proof.type_proofs.len()))
+                        .skip(current.before)
                         .any(|store| store.stored_fact_ids().contains(&id))
-                    || proof
-                        .stored
-                        .iter()
-                        .any(|store| store.stored_fact_ids().contains(&id))
+                        || proof
+                            .dom_stores
+                            .iter()
+                            .skip(current.before.saturating_sub(proof.type_proofs.len()))
+                            .any(|store| store.stored_fact_ids().contains(&id))
+                        || proof
+                            .stored
+                            .iter()
+                            .any(|store| store.stored_fact_ids().contains(&id)))
                 {
                     return Err(LeanCompileError::new("ReleaseThm/FutureProducer", "The cited type/domain store or caller return is after this original invocation stage."));
                 }
@@ -1090,11 +1111,12 @@ impl<'a> SourcePosition<'a> {
                 ExecReleaseAndExpandStmtResult::Thm(ExecReleaseThmStmtResult::Success(proof)),
             )) = current.owner
             {
-                if proof
-                    .stored
-                    .iter()
-                    .skip(current.before / 2)
-                    .any(|store| store.stored_fact_ids().contains(&id))
+                if !local_primary_is_stored
+                    && proof
+                        .stored
+                        .iter()
+                        .skip(current.before / 2)
+                        .any(|store| store.stored_fact_ids().contains(&id))
                 {
                     return Err(LeanCompileError::new(
                         "ReleaseThm/FutureReturn",
@@ -1281,6 +1303,7 @@ impl<'a> SourcePosition<'a> {
                 SourceOwner::ExistWD(_, _)
                     | SourceOwner::WitnessExist(_)
                     | SourceOwner::WitnessAtomic(_)
+                    | SourceOwner::WitnessNonempty(_)
                     | SourceOwner::Contra(_)
                     | SourceOwner::CasesBranch(_)
             ) {
@@ -1356,6 +1379,14 @@ impl<'a> SourcePosition<'a> {
                     }
                     return None;
                 }
+            }
+            // A nearer lexical binder owns this occurrence. Have-by-existence
+            // retains the same IDs inside its existential and in its exported
+            // choices; the bound occurrences must not acquire global arguments.
+            if !matches!(current.owner, SourceOwner::Run(_))
+                && parameter_in_owner(current, id).is_some()
+            {
+                return None;
             }
             if let SourceOwner::Run(run) = current.owner {
                 for (index, statement) in run
@@ -1958,7 +1989,10 @@ impl<'a> SourcePosition<'a> {
                         ..*current
                     };
                     if let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
-                        proof @ (ExecDefineObjStmtResult::ObtainObjFromExistFact(
+                        proof @ (ExecDefineObjStmtResult::HaveObjByExistFacts(
+                            ExecHaveObjByExistFactsStmtResult::Success(_),
+                        )
+                        | ExecDefineObjStmtResult::ObtainObjFromExistFact(
                             ExecObtainObjFromExistFactStmtResult::Success(_),
                         )
                         | ExecDefineObjStmtResult::ObtainObjFromAtomicFact(
@@ -1982,7 +2016,10 @@ impl<'a> SourcePosition<'a> {
             }
             if let SourceOwner::Statement(ExecStmtResult::Definition(
                 ExecDefinitionStmtResult::DefineObj(
-                    proof @ (ExecDefineObjStmtResult::ObtainObjFromExistFact(
+                    proof @ (ExecDefineObjStmtResult::HaveObjByExistFacts(
+                        ExecHaveObjByExistFactsStmtResult::Success(_),
+                    )
+                    | ExecDefineObjStmtResult::ObtainObjFromExistFact(
                         ExecObtainObjFromExistFactStmtResult::Success(_),
                     )
                     | ExecDefineObjStmtResult::ObtainObjFromAtomicFact(
@@ -2451,6 +2488,17 @@ fn parameter_from_groups<'a>(
 }
 
 // These views borrow the original stage owners; they do not cache introductions or proofs.
+fn nonempty_witness_statement(
+    statement: &ExecStmtResult,
+) -> Option<&ExecWitnessNonemptySetStmtSuccessResult> {
+    match statement {
+        ExecStmtResult::Witness(ExecWitnessStmtResult::WitnessNonemptySet(
+            ExecWitnessNonemptySetStmtResult::Success(p),
+        )) => Some(p),
+        _ => None,
+    }
+}
+
 fn local_steps(owner: SourceOwner<'_>) -> Option<(&[ExecStmtResult], usize)> {
     match owner {
         SourceOwner::WitnessExist(p) => Some((
@@ -2469,6 +2517,7 @@ fn local_steps(owner: SourceOwner<'_>) -> Option<(&[ExecStmtResult], usize)> {
                 .len()
                 + p.witness_equalities.len(),
         )),
+        SourceOwner::WitnessNonempty(p) => Some((&p.proof_steps, 0)),
         SourceOwner::Contra(p) => Some((&p.proof_steps, 2)),
         SourceOwner::CasesBranch(p) => Some((&p.proof_steps, 2)),
         _ => None,
@@ -2533,18 +2582,39 @@ fn witness_ambient_len(
     arguments.len() + 1 + ambient.witness_obj_well_defined.len() + ambient.witness_type_checks.len()
 }
 
-fn obtain_parts(statement: &ExecStmtResult) -> Option<(&[BoundName], &StoreHaveObjAndInferResult)> {
+fn obtain_parts(
+    statement: &ExecStmtResult,
+) -> Option<(Vec<&BoundName>, &StoreHaveObjAndInferResult)> {
     match statement {
         ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
             ExecDefineObjStmtResult::ObtainObjFromExistFact(
                 ExecObtainObjFromExistFactStmtResult::Success(p),
             ),
-        )) => Some((&p.statement.equal_tos, &p.store_and_infer_result)),
+        )) => Some((
+            p.statement.equal_tos.iter().collect(),
+            &p.store_and_infer_result,
+        )),
         ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
             ExecDefineObjStmtResult::ObtainObjFromAtomicFact(
                 ExecObtainObjFromAtomicFactStmtResult::Success(p),
             ),
-        )) => Some((&p.statement.equal_tos, &p.store_and_infer_result)),
+        )) => Some((
+            p.statement.equal_tos.iter().collect(),
+            &p.store_and_infer_result,
+        )),
+        ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
+            ExecDefineObjStmtResult::HaveObjByExistFacts(
+                ExecHaveObjByExistFactsStmtResult::Success(p),
+            ),
+        )) => Some((
+            p.statement
+                .param_def
+                .groups
+                .iter()
+                .flat_map(|g| g.params.iter())
+                .collect(),
+            &p.store_and_infer_result,
+        )),
         _ => None,
     }
 }
@@ -3175,6 +3245,13 @@ fn statement_reference(
         Some((run, index)) => application(&name, &context_arguments_before(run, index)),
         None => name,
     };
+    if let Some(proof) = nonempty_witness_statement(statement) {
+        return if before > 2 {
+            Ok(stored_reference(&proof.store_and_infer_result, id, actual)?.map(global_reference))
+        } else {
+            Ok(None)
+        };
+    }
     if let Some((ambient, arguments, _, store)) = witness_statement(statement) {
         return if before > witness_ambient_len(ambient, arguments) {
             Ok(stored_reference(store, id, actual)?.map(global_reference))
@@ -3299,15 +3376,21 @@ fn statement_reference(
             }
         }
         ExecStmtResult::By(ExecByStmtResult::Thm(ExecByThmStmtResult::Success(p)))
-            if before > 0 && p.stored.primary_fact_id() == id =>
+            if before > 0 =>
         {
-            check_store_subject(&p.stored.store, actual)?;
-            check_subject(
-                &verified_subject(&p.selected_proof)
-                    .ok_or_else(|| LeanCompileError::unsupported("ByThm/Subject"))?,
-                actual,
-            )?;
-            Ok(Some(global_reference(internal())))
+            if p.stored.primary_fact_id() == id {
+                check_store_subject(&p.stored.store, actual)?;
+                check_subject(
+                    &verified_subject(&p.selected_proof)
+                        .ok_or_else(|| LeanCompileError::unsupported("ByThm/Subject"))?,
+                    actual,
+                )?;
+                return Ok(Some(global_reference(internal())));
+            }
+            if infer_has_fact(&p.stored, id, actual)? {
+                return Ok(Some(global_reference(internal())));
+            }
+            Ok(None)
         }
         ExecStmtResult::ReleaseAndExpand(ExecReleaseAndExpandStmtResult::Thm(
             ExecReleaseThmStmtResult::Success(proof),
@@ -3469,6 +3552,7 @@ fn fact_reference_in_owner(
             id,
             actual,
         ),
+        SourceOwner::WitnessNonempty(_) => Ok(None),
         SourceOwner::WitnessExist(_) | SourceOwner::WitnessAtomic(_) => {
             unreachable!("witness header handled above")
         }
@@ -4378,6 +4462,7 @@ fn same_source_owner(left: SourceOwner<'_>, right: SourceOwner<'_>) -> bool {
         (SourceOwner::ExistWD(_, a), SourceOwner::ExistWD(_, b)) => std::ptr::eq(a, b),
         (SourceOwner::WitnessExist(a), SourceOwner::WitnessExist(b)) => std::ptr::eq(a, b),
         (SourceOwner::WitnessAtomic(a), SourceOwner::WitnessAtomic(b)) => std::ptr::eq(a, b),
+        (SourceOwner::WitnessNonempty(a), SourceOwner::WitnessNonempty(b)) => std::ptr::eq(a, b),
         (SourceOwner::Contra(a), SourceOwner::Contra(b)) => std::ptr::eq(a, b),
         (SourceOwner::CasesBranch(a), SourceOwner::CasesBranch(b)) => std::ptr::eq(a, b),
         (SourceOwner::KnownForall(a), SourceOwner::KnownForall(b)) => std::ptr::eq(a, b),
@@ -4742,6 +4827,13 @@ fn visit_local_scope<T>(
     let (steps, head) = local_steps(position.owner).expect("local proof owner");
     let closing_head = head + steps.len();
     match position.owner {
+        SourceOwner::WitnessNonempty(p) => {
+            if let Some(value) =
+                visit_verify_stage(&p.membership_check, closing_head, position, wd, verify)?
+            {
+                return Ok(Some(value));
+            }
+        }
         SourceOwner::WitnessExist(p) => {
             if let Some(value) =
                 visit_witness_obligations(&p.obligations, closing_head, position, wd, verify)?
@@ -4825,6 +4917,9 @@ fn visit_local_scope<T>(
             wd,
             verify,
         );
+    }
+    if matches!(position.owner, SourceOwner::WitnessNonempty(_)) {
+        return Ok(None);
     }
     let (assumption, store) = match position.owner {
         SourceOwner::Contra(p) => (&p.reverse_assumption_wd, &p.negation_assumed),
@@ -4966,6 +5061,7 @@ fn visit_owner<T>(
         }
         SourceOwner::WitnessExist(_)
         | SourceOwner::WitnessAtomic(_)
+        | SourceOwner::WitnessNonempty(_)
         | SourceOwner::Contra(_)
         | SourceOwner::CasesBranch(_) => return visit_local_scope(position, wd, verify),
         SourceOwner::Induction(proof) => {
@@ -6503,6 +6599,42 @@ fn visit_statement<T>(
     };
     let position = SourcePosition::new(Some(parent), SourceOwner::Statement(statement), 0);
     let completed = SourcePosition { before, ..position };
+    if let Some(proof) = nonempty_witness_statement(statement) {
+        if let Some(value) =
+            visit_store_stage(&proof.store_and_infer_result, 2, &completed, wd, verify)?
+        {
+            return Ok(Some(value));
+        }
+        if before > 2 {
+            let caller = SourcePosition {
+                before: 2,
+                ..completed
+            };
+            if let Some(value) =
+                visit_closed_scope(SourceOwner::WitnessNonempty(proof), &caller, wd)?
+            {
+                return Ok(Some(value));
+            }
+        }
+        for (index, result) in [&proof.obj_well_defined, &proof.set_well_defined]
+            .into_iter()
+            .enumerate()
+            .rev()
+        {
+            if before > index {
+                if let VerifyObjWellDefinedResult::Success(proof) = result {
+                    let prior = SourcePosition {
+                        before: index,
+                        ..completed
+                    };
+                    if let Some(value) = visit_complete_wd(proof, &prior, wd, verify)? {
+                        return Ok(Some(value));
+                    }
+                }
+            }
+        }
+        return Ok(None);
+    }
     if let Some((ambient, arguments, owner, store)) = witness_statement(statement) {
         return visit_witness_statement(ambient, arguments, owner, store, &completed, wd, verify);
     }
@@ -6534,6 +6666,18 @@ fn visit_statement<T>(
                     ExecObtainObjFromAtomicFactStmtResult::Success(p),
                 ),
             )) => visit_complete_verify(&p.verify_atomic, &position, wd, verify),
+            ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
+                ExecDefineObjStmtResult::HaveObjByExistFacts(
+                    ExecHaveObjByExistFactsStmtResult::Success(p),
+                ),
+            )) => visit_closed_scope(
+                SourceOwner::ExistWD(
+                    p.verify_exist.fact.plain(),
+                    &p.verify_exist.well_defined_proof,
+                ),
+                &position,
+                wd,
+            ),
             _ => unreachable!("obtain statement"),
         };
     }
@@ -8353,6 +8497,26 @@ fn same_wd_constructor(left: &ObjWellDefinedProof, right: &ObjWellDefinedProof) 
                 ..
             },
         ) => same_call_constructor(a, b),
+        (
+            ObjWellDefinedProof::ByDef {
+                proof:
+                    ObjWellDefinedProofByDef::ExpLogOperator(
+                        ExpLogOperatorObjWellDefinedProofByDef::Sqrt(a),
+                    ),
+                ..
+            },
+            ObjWellDefinedProof::ByDef {
+                proof:
+                    ObjWellDefinedProofByDef::ExpLogOperator(
+                        ExpLogOperatorObjWellDefinedProofByDef::Sqrt(b),
+                    ),
+                ..
+            },
+        ) => {
+            a.child_obj_well_defined.len() == 1
+                && b.child_obj_well_defined.len() == 1
+                && same_wd_constructor(&a.child_obj_well_defined[0], &b.child_obj_well_defined[0])
+        }
         (
             ObjWellDefinedProof::ByDef {
                 proof: ObjWellDefinedProofByDef::ArithmeticOperator(a),

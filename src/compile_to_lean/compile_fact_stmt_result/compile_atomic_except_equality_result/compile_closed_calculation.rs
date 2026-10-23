@@ -147,9 +147,10 @@ impl LitexToLeanCompiler {
                 native.0
             ));
         }
-        let calculated = self
-            .compile_numeric_observation(element, position)?
+        let native = self.compile_numeric_observation(element, position)?;
+        let calculated = native
             .3
+            .as_ref()
             .ok_or_else(|| LeanCompileError::unsupported("ClosedMembership/Expression"))?;
         let scalar = match value {
             ClosedScalarValue::Decimal(value) => scalar_decimal(value)?,
@@ -162,14 +163,13 @@ impl LitexToLeanCompiler {
                 ))
             }
         };
-        if calculated != scalar {
+        if calculated != &scalar {
             return Err(LeanCompileError::new(
                 "ClosedMembership/Value",
                 "The recorded exact scalar differs from its source arithmetic.",
             ));
         }
         let object = self.compile_object_reference(element, position)?;
-        let native = self.compile_numeric_observation(element, position)?;
         if *target == StandardSet::C {
             let scalar = exact_rational_literal(&scalar, "ℂ")?;
             let denotation = format!(

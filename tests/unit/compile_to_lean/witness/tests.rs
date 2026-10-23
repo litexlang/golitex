@@ -108,3 +108,88 @@ fn geo_witness_rejects_missing_original_equality_stage() {
         .unwrap_err();
     assert_eq!(error.route, "Witness/Stages");
 }
+
+#[test]
+fn nonempty_witness_compiles_local_membership_and_publishes_only_nonemptiness() {
+    let source = include_str!("../../../../lean/examples/nonempty_witness/statement.lit");
+    let (run, runtime) = checked(source);
+    let compiler = LitexToLeanCompiler::new(runtime);
+    let output = compiler.compile_run(&run, "nonempty_witness").unwrap();
+    assert!(output.contains("Litex.IsNonempty"));
+    use crate::compile_to_lean::source_position::{SourceOwner, SourcePosition};
+    use crate::execute::execute_witness_stmt::ExecWitnessNonemptySetStmtResult;
+    let ExecStmtResult::Witness(ExecWitnessStmtResult::WitnessNonemptySet(
+        ExecWitnessNonemptySetStmtResult::Success(proof),
+    )) = &run.statement_results[0]
+    else {
+        panic!("witness")
+    };
+    let ExecStmtResult::Fact(ExecFactStmtResult::Success(step)) = &proof.proof_steps[0] else {
+        panic!("proof step")
+    };
+    let id = step.store_and_infer_result.primary_fact_id();
+    let root = SourcePosition::new(None, SourceOwner::Run(&run), 0);
+    let statement = SourcePosition::new(
+        Some(&root),
+        SourceOwner::Statement(&run.statement_results[0]),
+        2,
+    );
+    let before = SourcePosition::new(Some(&statement), SourceOwner::WitnessNonempty(proof), 0);
+    assert!(before.visible_fact(id, &compiler.runtime).is_err());
+    let after = SourcePosition {
+        before: 1,
+        ..before
+    };
+    assert!(after.visible_fact(id, &compiler.runtime).is_ok());
+    assert!(statement
+        .visible_fact(
+            proof.store_and_infer_result.primary_fact_id(),
+            &compiler.runtime
+        )
+        .is_err());
+    let outer = SourcePosition { before: 1, ..root };
+    assert!(outer.visible_fact(id, &compiler.runtime).is_err());
+    assert!(outer
+        .visible_fact(
+            proof.store_and_infer_result.primary_fact_id(),
+            &compiler.runtime
+        )
+        .is_ok());
+}
+
+#[test]
+fn nonempty_witness_rejects_missing_body_or_changed_membership() {
+    use crate::execute::execute_witness_stmt::ExecWitnessNonemptySetStmtResult;
+    for change in ["body", "membership", "source"] {
+        let (mut run, runtime) = checked(include_str!(
+            "../../../../lean/examples/nonempty_witness/statement.lit"
+        ));
+        let ExecStmtResult::Witness(ExecWitnessStmtResult::WitnessNonemptySet(
+            ExecWitnessNonemptySetStmtResult::Success(proof),
+        )) = &mut run.statement_results[0]
+        else {
+            panic!("witness")
+        };
+        if change == "body" {
+            proof.proof_steps.clear();
+        } else if change == "source" {
+            proof.statement.proof[0] = Stmt::Fact(
+                crate::compile_to_lean::helper::source_subject(&proof.membership_check).unwrap(),
+            );
+        } else {
+            let VerifyFactResult::AtomicExceptEquality(result) = &mut proof.membership_check else {
+                panic!("member")
+            };
+            let VerifyAtomicExceptEqualityFactResult::Success(result) = result.as_mut() else {
+                panic!("verified")
+            };
+            let AtomicFact::InFact(member) = &mut result.fact else {
+                panic!("member")
+            };
+            member.element = Obj::StandardSet(StandardSet::R);
+        }
+        assert!(LitexToLeanCompiler::new(runtime)
+            .compile_run(&run, "bad_nonempty")
+            .is_err());
+    }
+}

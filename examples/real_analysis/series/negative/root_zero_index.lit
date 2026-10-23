@@ -1,0 +1,6 @@
+release obj def series:::root_terms
+
+have fn root_index_terms(k N+) R=1
+
+release thm series:::root_terms_at(root_index_terms,0)
+

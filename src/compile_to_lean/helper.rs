@@ -575,6 +575,17 @@ pub(super) fn alias_equality_subject<'a>(
     }
 }
 
+pub(in crate::compile_to_lean) fn validate_obtain_output_names(
+    source: &PlainExistFact,
+    outputs: &[BoundName],
+) -> Result<(), LeanCompileError> {
+    let source_ids = source.typed_parameters.ordered_param_ids();
+    if outputs.iter().any(|name| source_ids.contains(&name.id)) {
+        return Err(LeanCompileError::unsupported("Obtain/ParameterIdentity"));
+    }
+    Ok(())
+}
+
 pub(super) fn source_subject(result: &VerifyFactResult) -> Result<Fact, LeanCompileError> {
     verified_subject(result).ok_or_else(|| LeanCompileError::unsupported("Verify/SourceSubject"))
 }
@@ -629,6 +640,17 @@ pub(super) fn validate_statement_capture(
 ) -> Result<(), LeanCompileError> {
     let matches = match (source, result) {
         (
+            Stmt::Definition(DefinitionStmt::DefineObj(DefineObjStmt::HaveObjByExistFactsStmt(
+                source,
+            ))),
+            ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
+                ExecDefineObjStmtResult::HaveObjByExistFacts(
+                    crate::execute::ExecHaveObjByExistFactsStmtResult::Success(proof),
+                ),
+            )),
+        ) => source == &proof.statement,
+
+        (
             Stmt::ProofBlock(ProofBlockStmt::ClaimStmt(source)),
             ExecStmtResult::ProofBlock(
                 crate::execute::execute_proof_block_stmt::ExecProofBlockStmtResult::Claim(
@@ -643,6 +665,16 @@ pub(super) fn validate_statement_capture(
                 ExecDefThmStmtResult::Success(proof),
             )),
         ) => source == &proof.statement,
+        (
+            Stmt::Witness(WitnessStmt::WitnessNonemptySet(source)),
+            ExecStmtResult::Witness(
+                crate::execute::execute_witness_stmt::ExecWitnessStmtResult::WitnessNonemptySet(
+                    crate::execute::execute_witness_stmt::ExecWitnessNonemptySetStmtResult::Success(
+                        proof,
+                    ),
+                ),
+            ),
+        ) => &proof.statement == source,
         (
             Stmt::Witness(WitnessStmt::WitnessAtomicFact(source)),
             ExecStmtResult::Witness(

@@ -820,6 +820,23 @@ fn sibling_local_predicate_definitions_do_not_share_highlights() {
     assert_ne!(symbols[0].field("id"), symbols[1].field("id"));
     let mentions = result.document.field("occurrences").as_array().unwrap();
     for symbol in symbols {
+        assert_eq!(
+            result
+                .document
+                .field("statements")
+                .as_array()
+                .unwrap()
+                .iter()
+                .filter(|statement| statement
+                    .as_object()
+                    .unwrap()
+                    .get("declaration_symbol_ids")
+                    .and_then(|ids| ids.as_array().ok())
+                    .is_some_and(|ids| ids.contains(symbol.field("id"))))
+                .count(),
+            1,
+            "each local predicate owns its own declaration identity"
+        );
         let occurrences = mentions
             .iter()
             .filter(|occurrence| occurrence.field("symbol_id") == symbol.field("id"))
@@ -835,6 +852,87 @@ fn sibling_local_predicate_definitions_do_not_share_highlights() {
                 .count(),
             1
         );
+    }
+}
+
+#[test]
+fn declaration_reference_badges_exclude_parameter_and_existential_binders() {
+    for (source, kind, expected) in [
+        (
+            include_str!("../examples/test_statements/def_prop_stmt.lit"),
+            "DefPropStmt",
+            "prop_pos",
+        ),
+        (
+            include_str!("../examples/test_statements/have_fn_equal_stmt.lit"),
+            "HaveFnEqualStmt",
+            "fn_square",
+        ),
+        (
+            include_str!("../examples/test_statements/have_obj_equal_stmt.lit"),
+            "HaveObjEqualStmt",
+            "typed_n",
+        ),
+        (
+            include_str!("../examples/test_statements/obtain_obj_from_exist_fact.lit"),
+            "ObtainObjFromExistFact",
+            "obtained_a",
+        ),
+        (
+            include_str!("../examples/test_statements/have_by_preimage_stmt.lit"),
+            "HaveByPreimageStmt",
+            "pre_a",
+        ),
+        (
+            include_str!("../examples/stmt_nodes/definition/def_template.lit"),
+            "DefTemplateStmt",
+            "carrier_copy",
+        ),
+    ] {
+        let result = build_reading(
+            &ReadingInput::Source(source.into()),
+            true,
+            OutputLanguage::Chinese,
+        );
+        assert!(
+            result.success,
+            "{kind}: {}",
+            result.document.field("diagnostics").stringify()
+        );
+        let statement = result
+            .document
+            .field("statements")
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|statement| {
+                statement
+                    .field("statement_kind")
+                    .as_str()
+                    .unwrap()
+                    .split('.')
+                    .next_back()
+                    == Some(kind)
+            })
+            .unwrap();
+        let ids = statement
+            .field("declaration_symbol_ids")
+            .as_array()
+            .unwrap();
+        assert_eq!(
+            ids.len(),
+            1,
+            "{kind}: parameters and nested binders must not become root declarations"
+        );
+        let symbol = result
+            .document
+            .field("symbols")
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|symbol| symbol.field("id") == &ids[0])
+            .unwrap();
+        assert_eq!(symbol.field("name").as_str().unwrap(), expected);
     }
 }
 

@@ -1,0 +1,471 @@
+{
+  "statement_leaves": 52,
+  "examples": 61,
+  "all_examples_passed": true,
+  "binary_sha256": "05df7638b1f1e5391023228af6d3af12b28349700b540bf50ecda9f728207c42",
+  "designs_sha256": "13b5a88514d7a3ea287d9c08a1f82da9bd88bb8358098a98999c553c47631334",
+  "examples_checked": [
+    {
+      "id": "Fact",
+      "leaf": "Fact",
+      "statement_kind": "Fact",
+      "source_sha256": "e8c37bf5183b48ab02d037a6dda41cdfea4178e2ef163525232ae6bba54b5b93",
+      "strict": true
+    },
+    {
+      "id": "TrustStmt",
+      "leaf": "TrustStmt",
+      "statement_kind": "Trust.TrustStmt",
+      "source_sha256": "1f574eb8ab1aa0fbd083719a4d5d3a88e924418aa3f44f5d6c9ecf968cb7aac1",
+      "strict": false
+    },
+    {
+      "id": "TrustHaveStmt",
+      "leaf": "TrustHaveStmt",
+      "statement_kind": "Trust.TrustHaveStmt",
+      "source_sha256": "6383ae83e5afb08cd2cdeb49892ae3341b862e638632bb98a25384cae706fef7",
+      "strict": false
+    },
+    {
+      "id": "LetObjStmt",
+      "leaf": "LetObjStmt",
+      "statement_kind": "Definition.DefineObj.LetObjStmt",
+      "source_sha256": "e636b99890c3c6f001939b46df989c61da5df7aaed29895c04942c84e53b68b6",
+      "strict": true
+    },
+    {
+      "id": "HaveObjInNonemptySetStmt",
+      "leaf": "HaveObjInNonemptySetStmt",
+      "statement_kind": "Definition.DefineObj.HaveObjInNonemptySetStmt",
+      "source_sha256": "045bb59ce2bc4bcac6e21e696c10dbb5a4e32687ba19b9e81c52eb114ca50b82",
+      "strict": true
+    },
+    {
+      "id": "HaveObjEqualStmt",
+      "leaf": "HaveObjEqualStmt",
+      "statement_kind": "Definition.DefineObj.HaveObjEqualStmt",
+      "source_sha256": "64a45d2b1050bcffab38273426dcdaabfbda0b480d3c3d28b0127f7951cc881d",
+      "strict": true
+    },
+    {
+      "id": "HaveObjByExistFactsStmt",
+      "leaf": "HaveObjByExistFactsStmt",
+      "statement_kind": "Definition.DefineObj.HaveObjByExistFactsStmt",
+      "source_sha256": "a73f048ce236873b38e86e8da0939f55244ddfef3092a2fe8aaae644b051e4c4",
+      "strict": true
+    },
+    {
+      "id": "ObtainObjFromExistFact",
+      "leaf": "ObtainObjFromExistFact",
+      "statement_kind": "Definition.DefineObj.ObtainObjFromExistFact",
+      "source_sha256": "ecbae92e08a01858e1dce1adccb8830b4af28f2c079d30ccb565d22687cc7d62",
+      "strict": true
+    },
+    {
+      "id": "ObtainObjFromAtomicFact",
+      "leaf": "ObtainObjFromAtomicFact",
+      "statement_kind": "Definition.DefineObj.ObtainObjFromAtomicFact",
+      "source_sha256": "69df7033fb4f0efd572684eb726cc0d2d32dba3c86e26ac669e09ac151dc4f28",
+      "strict": true
+    },
+    {
+      "id": "HaveByPreimageStmt",
+      "leaf": "HaveByPreimageStmt",
+      "statement_kind": "Definition.DefineObj.HaveByPreimageStmt",
+      "source_sha256": "ada0124fe50739dc21e777cc8e97a0b1e8f64cdc0ebd075efb2df054a99b5188",
+      "strict": true
+    },
+    {
+      "id": "HaveByReplacementAxiomStmt",
+      "leaf": "HaveByReplacementAxiomStmt",
+      "statement_kind": "Definition.DefineObj.HaveByReplacementAxiomStmt",
+      "source_sha256": "b86d60d973c1c47ae537a87ac0ea58cda74c267191130700ecd0d3317e8c5bc4",
+      "strict": true
+    },
+    {
+      "id": "HaveFnEqualStmt",
+      "leaf": "HaveFnEqualStmt",
+      "statement_kind": "Definition.HaveFnEqualStmt",
+      "source_sha256": "ea0e8465f14cd70680a434d916a7ba66479ff212f0f802e56806d716ea138ff0",
+      "strict": true
+    },
+    {
+      "id": "HaveFnEqualCaseByCaseStmt",
+      "leaf": "HaveFnEqualCaseByCaseStmt",
+      "statement_kind": "Definition.HaveFnEqualCaseByCaseStmt",
+      "source_sha256": "c07dfb9bf0f79335be5fc446695d6146f7744bc02e85e11b4013b64898993112",
+      "strict": true
+    },
+    {
+      "id": "HaveFnByInducStmt",
+      "leaf": "HaveFnByInducStmt",
+      "statement_kind": "Definition.HaveFnByInducStmt",
+      "source_sha256": "55eee1bbe1f65b309fa6cc3ac027b79782eb479d9794267fb02b0891bf85ca4b",
+      "strict": true
+    },
+    {
+      "id": "HaveFnByForallExistUniqueStmt",
+      "leaf": "HaveFnByForallExistUniqueStmt",
+      "statement_kind": "Definition.HaveFnByForallExistUniqueStmt",
+      "source_sha256": "a027d01b4322e4169facbad124e78a7838ef5115d05c03090339df7004b6cd08",
+      "strict": true
+    },
+    {
+      "id": "DefPropStmt",
+      "leaf": "DefPropStmt",
+      "statement_kind": "Definition.DefPropStmt",
+      "source_sha256": "8790a7655b4838dfdbe59084780d4675b695985303443329adb51055a956ee49",
+      "strict": true
+    },
+    {
+      "id": "DefAbstractPropStmt",
+      "leaf": "DefAbstractPropStmt",
+      "statement_kind": "Definition.DefAbstractPropStmt",
+      "source_sha256": "51c017f0606fd37b02cbf84651e93c0674d69d658e1f4c8e66feb70b9b718066",
+      "strict": false
+    },
+    {
+      "id": "DefTemplateStmt",
+      "leaf": "DefTemplateStmt",
+      "statement_kind": "Definition.DefTemplateStmt",
+      "source_sha256": "08c14e8e845b6ed27cbd462aa8226c2242261978a9899d188c69833c3459aa13",
+      "strict": true
+    },
+    {
+      "id": "DefStructStmt",
+      "leaf": "DefStructStmt",
+      "statement_kind": "Definition.DefStructStmt",
+      "source_sha256": "2e0f7a1157a2ae7b152852d73fae2727af6feac54332444235f03c9eb649c4a7",
+      "strict": true
+    },
+    {
+      "id": "DefAlgoByCasesStmt",
+      "leaf": "DefAlgoByCasesStmt",
+      "statement_kind": "Definition.DefAlgoByCasesStmt",
+      "source_sha256": "2f36b613f75ed26559e6f83f97eac82cb49a1b427f3b9bc39ebd141de0cf9554",
+      "strict": true
+    },
+    {
+      "id": "DefAlgoByInducStmt",
+      "leaf": "DefAlgoByInducStmt",
+      "statement_kind": "Definition.DefAlgoByInducStmt",
+      "source_sha256": "9698f30cf946d8f37c9fc501a73689a9c628a8eecff73371bbe60c292d6d3b13",
+      "strict": true
+    },
+    {
+      "id": "DefThmStmt",
+      "leaf": "DefThmStmt",
+      "statement_kind": "Definition.DefThmStmt",
+      "source_sha256": "d1ddfaa6d152f63db518f42ee8a6bbccf1fc3cb033db1df66b172f140f6e8772",
+      "strict": true
+    },
+    {
+      "id": "AxiomStmt",
+      "leaf": "AxiomStmt",
+      "statement_kind": "Definition.AxiomStmt",
+      "source_sha256": "4cdf7f95f11cb423389dfcf6dc5bcb5606aea423479cf5322d4fd0e7125414aa",
+      "strict": false
+    },
+    {
+      "id": "DefStrategyStmt",
+      "leaf": "DefStrategyStmt",
+      "statement_kind": "Definition.DefStrategyStmt",
+      "source_sha256": "96498e45cbb50a3128159569c93dac4e61117f0a29ec737dbcaaf37428dc39eb",
+      "strict": true
+    },
+    {
+      "id": "ReleaseThmStmt",
+      "leaf": "ReleaseThmStmt",
+      "statement_kind": "ReleaseAndExpand.ReleaseThmStmt",
+      "source_sha256": "57d734db9a18bde76bc49e1ca58102be1c07b8254546ee0456f47b44ca77d378",
+      "strict": true
+    },
+    {
+      "id": "ReleaseStructDefStmt",
+      "leaf": "ReleaseStructDefStmt",
+      "statement_kind": "ReleaseAndExpand.ReleaseStructDefStmt",
+      "source_sha256": "0660b6753d22269b46b1da6d788c2a0d3562541f37bad8a6a6d43c60df8141ab",
+      "strict": true
+    },
+    {
+      "id": "ReleaseObjDefStmt",
+      "leaf": "ReleaseObjDefStmt",
+      "statement_kind": "ReleaseAndExpand.ReleaseObjDefStmt",
+      "source_sha256": "8e418687a048860f5d2a666139d8b77648a28210db9441eab02760c5c9ddef20",
+      "strict": true
+    },
+    {
+      "id": "ExpandRangeStmt",
+      "leaf": "ExpandRangeStmt",
+      "statement_kind": "ReleaseAndExpand.ExpandRangeStmt",
+      "source_sha256": "0653681fb9b75369cf4b230d1ef1f10a9fcfd87afc0717336589611b48b72cd1",
+      "strict": true
+    },
+    {
+      "id": "ReleaseZornLemmaStmt",
+      "leaf": "ReleaseZornLemmaStmt",
+      "statement_kind": "ReleaseAndExpand.ReleaseZornLemmaStmt",
+      "source_sha256": "88fc4897ceec04f3df703edbed7b9cd4d6338459b1576df919d5dc958df59422",
+      "strict": false
+    },
+    {
+      "id": "ReleaseAxiomOfChoiceStmt",
+      "leaf": "ReleaseAxiomOfChoiceStmt",
+      "statement_kind": "ReleaseAndExpand.ReleaseAxiomOfChoiceStmt",
+      "source_sha256": "992b102982713b069dc14018e1440efe4a2298ec6257121a421466e7917adf0b",
+      "strict": false
+    },
+    {
+      "id": "ReleaseRegularityAxiomStmt",
+      "leaf": "ReleaseRegularityAxiomStmt",
+      "statement_kind": "ReleaseAndExpand.ReleaseRegularityAxiomStmt",
+      "source_sha256": "27e0f404e10aa13731c2f5d8a02bb5c79c292916be92117952e8cfde588bdfb9",
+      "strict": false
+    },
+    {
+      "id": "ByCasesStmt",
+      "leaf": "ByCasesStmt",
+      "statement_kind": "By.ByCasesStmt",
+      "source_sha256": "7e8e9b681f561a39ba523661e44b78a516770a3d0f4d7753618af212154af1b2",
+      "strict": true
+    },
+    {
+      "id": "ByContraStmt",
+      "leaf": "ByContraStmt",
+      "statement_kind": "By.ByContraStmt",
+      "source_sha256": "4c56b78a79683f270616c679e7bb478e0a39706ebe86fd7e5fcd9b16a24d388e",
+      "strict": true
+    },
+    {
+      "id": "ByEnumerateFiniteSetStmt",
+      "leaf": "ByEnumerateFiniteSetStmt",
+      "statement_kind": "By.ByEnumerateFiniteSetStmt",
+      "source_sha256": "550cefc07635adbae7cc821d9eb0e1538acfa5e2d1d8abb95fe986add61049c8",
+      "strict": true
+    },
+    {
+      "id": "ByInducStmt",
+      "leaf": "ByInducStmt",
+      "statement_kind": "By.ByInducStmt",
+      "source_sha256": "fb434b1b0358d3ef7f42696bb1c4bdfdf2ee07db7ecc2a12946eb1ab2f694696",
+      "strict": true
+    },
+    {
+      "id": "ByStrongInducStmt",
+      "leaf": "ByStrongInducStmt",
+      "statement_kind": "By.ByStrongInducStmt",
+      "source_sha256": "d54826b7e7cd70414aff6cea9ce313d5011b71b06336ea4895ba30d99553177d",
+      "strict": true
+    },
+    {
+      "id": "ByForStmt",
+      "leaf": "ByForStmt",
+      "statement_kind": "By.ByForStmt",
+      "source_sha256": "74b818045c30bc4d29ad2421810f599f11f77384b6db4b456a7f843d4c6f25b2",
+      "strict": true
+    },
+    {
+      "id": "ByExtensionStmt",
+      "leaf": "ByExtensionStmt",
+      "statement_kind": "By.ByExtensionStmt",
+      "source_sha256": "97db030aacb4bfc380a65ad2142ac69e23101c3929a3f767d9379af5c4a19188",
+      "strict": true
+    },
+    {
+      "id": "ByFnExtensionStmt",
+      "leaf": "ByFnExtensionStmt",
+      "statement_kind": "By.ByFnExtensionStmt",
+      "source_sha256": "fa5ebeb682fcfd3f978cd1f3793980153676da195337b5d5dd7200aa1435c821",
+      "strict": true
+    },
+    {
+      "id": "ByDefStmt",
+      "leaf": "ByDefStmt",
+      "statement_kind": "By.ByDefStmt",
+      "source_sha256": "b8476a5f3c921524847ada9d90b37c16371b9f44d96432a27c94c9464494d7c5",
+      "strict": true
+    },
+    {
+      "id": "ByThmStmt",
+      "leaf": "ByThmStmt",
+      "statement_kind": "By.ByThmStmt",
+      "source_sha256": "36ff3b3ee4cd7680740f70cce8c171384a03d80bf990bc341c7421349f22768e",
+      "strict": true
+    },
+    {
+      "id": "RegisterReflexivePropStmt",
+      "leaf": "RegisterReflexivePropStmt",
+      "statement_kind": "Register.RegisterReflexivePropStmt",
+      "source_sha256": "a3b5fe429fd8ef399defcbe997ec2b0f3288fff362960c8e6f586cc833b90f7d",
+      "strict": true
+    },
+    {
+      "id": "RegisterSymmetricPropStmt",
+      "leaf": "RegisterSymmetricPropStmt",
+      "statement_kind": "Register.RegisterSymmetricPropStmt",
+      "source_sha256": "f5ee35efcd504268462af2368946007e3b0ad256684891af1b09ec472f9beb92",
+      "strict": true
+    },
+    {
+      "id": "RegisterTransitivePropStmt",
+      "leaf": "RegisterTransitivePropStmt",
+      "statement_kind": "Register.RegisterTransitivePropStmt",
+      "source_sha256": "a08658d4a0792f2e322f2025d8c59d3a05768f7ec046ec0e51fb64aeb8e3e6b7",
+      "strict": true
+    },
+    {
+      "id": "WitnessExistFact",
+      "leaf": "WitnessExistFact",
+      "statement_kind": "Witness.WitnessExistFact",
+      "source_sha256": "9921547d9444b44eb1dbb6a13e715684243a017369f9324110c8c0c3c6d360eb",
+      "strict": true
+    },
+    {
+      "id": "WitnessAtomicFact",
+      "leaf": "WitnessAtomicFact",
+      "statement_kind": "Witness.WitnessAtomicFact",
+      "source_sha256": "4f098ce6485fde58d5ff8e96e3a4c8e7fcc8000874e0f8aa67fbf6a8bb2a780f",
+      "strict": true
+    },
+    {
+      "id": "WitnessNonemptySet",
+      "leaf": "WitnessNonemptySet",
+      "statement_kind": "Witness.WitnessNonemptySet",
+      "source_sha256": "120e356828dba8bbe28e8f4c9f26cf3951e967a25d28676241a7502a8c8d871f",
+      "strict": true
+    },
+    {
+      "id": "ClaimStmt",
+      "leaf": "ClaimStmt",
+      "statement_kind": "ProofBlock.ClaimStmt",
+      "source_sha256": "ecc437281f59a64dccc11958e47c82ccf7b27367d498995e219caed2915f92ef",
+      "strict": true
+    },
+    {
+      "id": "SketchStmt",
+      "leaf": "SketchStmt",
+      "statement_kind": "ProofBlock.SketchStmt",
+      "source_sha256": "c76367ebb49b716cbde5a405de5a9fb33c79e46d0c863c3c44b418ecb7b23ea7",
+      "strict": true
+    },
+    {
+      "id": "EvalStmt",
+      "leaf": "EvalStmt",
+      "statement_kind": "Command.EvalStmt",
+      "source_sha256": "3a7c1bfbeb0387166530fda0c899f55d15dd8647b3c4e53d2d88c29b7d41de69",
+      "strict": true
+    },
+    {
+      "id": "ReleaseCartDefStmt",
+      "leaf": "ReleaseCartDefStmt",
+      "statement_kind": "ReleaseAndExpand.ReleaseCartDefStmt",
+      "source_sha256": "4415bffdfe621a4d924fdab6d3ff15e4e08594ca5029324696815a5a094e9668",
+      "strict": true
+    },
+    {
+      "id": "ReleaseTupleDefStmt",
+      "leaf": "ReleaseTupleDefStmt",
+      "statement_kind": "ReleaseAndExpand.ReleaseTupleDefStmt",
+      "source_sha256": "c31767c1d4900f4f0da27da44bbbfd5882a52c9729a3e19de9379085fb4ed505",
+      "strict": true
+    },
+    {
+      "id": "Fact-AndFact",
+      "leaf": "Fact",
+      "statement_kind": "Fact",
+      "source_sha256": "97c5eb33802337d8c28bfadd87223efa827ddcf22a9616932ec881de8d2988fc",
+      "strict": true
+    },
+    {
+      "id": "Fact-OrFact",
+      "leaf": "Fact",
+      "statement_kind": "Fact",
+      "source_sha256": "97c5eb33802337d8c28bfadd87223efa827ddcf22a9616932ec881de8d2988fc",
+      "strict": true
+    },
+    {
+      "id": "Fact-ChainFact",
+      "leaf": "Fact",
+      "statement_kind": "Fact",
+      "source_sha256": "97c5eb33802337d8c28bfadd87223efa827ddcf22a9616932ec881de8d2988fc",
+      "strict": true
+    },
+    {
+      "id": "Fact-ForallFact",
+      "leaf": "Fact",
+      "statement_kind": "Fact",
+      "source_sha256": "e4d9e85ec8c2666d15ff12fd9fb788aaaee220bfadb55e64fbbeb2299bfc4b5e",
+      "strict": true
+    },
+    {
+      "id": "Fact-ForallFactWithIff",
+      "leaf": "Fact",
+      "statement_kind": "Fact",
+      "source_sha256": "01ee92346852365f64db41401f7b42d2c9b6feb20a36560c62d81adfe315c423",
+      "strict": true
+    },
+    {
+      "id": "Fact-ExistFact",
+      "leaf": "Fact",
+      "statement_kind": "Fact",
+      "source_sha256": "e4d9e85ec8c2666d15ff12fd9fb788aaaee220bfadb55e64fbbeb2299bfc4b5e",
+      "strict": true
+    },
+    {
+      "id": "Fact-ExistUniqueFact",
+      "leaf": "Fact",
+      "statement_kind": "Fact",
+      "source_sha256": "e4d9e85ec8c2666d15ff12fd9fb788aaaee220bfadb55e64fbbeb2299bfc4b5e",
+      "strict": true
+    },
+    {
+      "id": "Fact-NotExistFact",
+      "leaf": "Fact",
+      "statement_kind": "Fact",
+      "source_sha256": "e4d9e85ec8c2666d15ff12fd9fb788aaaee220bfadb55e64fbbeb2299bfc4b5e",
+      "strict": true
+    },
+    {
+      "id": "Fact-NotForall",
+      "leaf": "Fact",
+      "statement_kind": "Fact",
+      "source_sha256": "e4d9e85ec8c2666d15ff12fd9fb788aaaee220bfadb55e64fbbeb2299bfc4b5e",
+      "strict": true
+    }
+  ],
+  "date": "2026-10-23",
+  "artifact_kind": "review_only_presentation_design",
+  "formula_render_check": {
+    "renderer": "KaTeX 0.16.21",
+    "parsed": 134,
+    "failures": 0
+  },
+  "browser_check": {
+    "natural_viewports_observed": [
+      "1280x720",
+      "594x762"
+    ],
+    "primary_types_checked": 52,
+    "fact_forms_checked": 10,
+    "render_errors": 0,
+    "document_horizontal_overflow": false,
+    "real_mathematical_proofs_checked": [
+      "sqrt(2) not in Q",
+      "forall n in N: 2^n >= n+1"
+    ],
+    "type_help": "open, Escape, close and focus restoration checked",
+    "inferred_fact_inspection": "actual published 1 > 0 checked"
+  },
+  "limits": [
+    "Formulas are curated proposals; not 52 implemented production Reading projections.",
+    "Accepted trust/axiom examples are identified as assumptions, not proofs of their assumed truth.",
+    "CLI execution validates source, not the mathematical faithfulness of arbitrary future edits to display formulas."
+  ],
+  "gallery_sources_sha256": {
+    "build.py": "a6838ff91a3fd45bfdc1a686ffc879138a16ad2f4afb024c3bc5804e2c4c279b",
+    "index.html": "65bca4be9588a829d4b024da62ab30950d614666683617a1284dac4281e24a11",
+    "gallery.css": "c10dc0f568fdef9afb71d5ed697225ae0263df9258f4e5299d62a98166393a19",
+    "gallery.js": "7e3ee75109e0758c115d0bd63a036c225b5bd8d9ddfc1818dfbee555b4e8000c",
+    "designs.json": "13b5a88514d7a3ea287d9c08a1f82da9bd88bb8358098a98999c553c47631334"
+  }
+}

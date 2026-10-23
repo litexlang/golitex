@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Litex · 语句展示设计</title>
+  <link rel="stylesheet" href="katex.min.css">
+  <link rel="stylesheet" href="reader.css">
+  <link rel="stylesheet" href="gallery.css">
+  <script defer src="katex.min.js"></script>
+  <script defer src="catalogue.js"></script>
+  <script defer src="gallery.js"></script>
+</head>
+<body class="litex-reading-page">
+  <header class="reading-shell-header">
+    <a class="reading-brand" href="#DefPropStmt">Litex <span>Reading · 展示设计</span></a>
+    <span id="inventory-label"></span>
+  </header>
+  <main class="gallery-shell">
+    <aside class="gallery-navigation" aria-label="语句类型目录">
+      <label class="gallery-search">语句类型<input type="search" id="search" placeholder="搜索类型或语法" autocomplete="off"></label>
+      <nav id="type-navigation" aria-label="选择语句类型"></nav>
+      <p id="no-results" hidden>没有匹配的语句类型。</p>
+    </aside>
+    <div class="gallery-content">
+      <label class="gallery-mobile-selector">语句类型<select id="type-select" aria-label="语句类型"></select></label>
+      <div class="gallery-selection-heading"><div><p class="lr-kicker">对应展示 · 设计稿</p><h1 id="selection-title"></h1></div><span id="check-status" class="lr-badge"></span></div>
+      <div id="fact-forms" class="gallery-fact-forms" aria-label="事实的不同形式" hidden></div>
+      <div class="gallery-comparison">
+        <section class="lr-source-pane gallery-source" aria-label="Litex 示例">
+          <div class="lr-pane-header"><span>Litex 示例</span><a id="example-download" download>下载例子</a></div>
+          <div id="example-code" class="gallery-code" aria-label="已检查的完整例子"></div>
+        </section>
+        <section class="lr-details gallery-meaning" aria-label="拟采用的数学展示">
+          <div class="lr-pane-header lr-inspector-header"><span class="lr-inspector-title">数学含义</span><button id="type-help" class="lr-type-badge" type="button" aria-haspopup="dialog"></button></div>
+          <div class="lr-detail-body"><div id="scope-label" class="gallery-scope" hidden></div><div id="meaning" aria-live="polite"></div></div>
+        </section>
+      </div>
+      <p class="gallery-design-note">蓝色源码对应数学展示。灰色行内结果来自例子的实际执行记录；公式是待审阅的展示设计。</p>
+    </div>
+  </main>
+  <dialog id="explanation-dialog" class="gallery-dialog">
+    <div class="lr-help-heading"><strong id="dialog-title"></strong><button id="close-dialog" type="button" class="lr-math-link">收起说明</button></div>
+    <div id="dialog-body"></div>
+  </dialog>
+</body>
+</html>

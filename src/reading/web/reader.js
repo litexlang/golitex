@@ -27,8 +27,10 @@
   Object.assign(copy.zh,{mathematicalMeaning:"数学含义",parameterRange:"参数范围",iff:"当且仅当",and:"且",setKind:"是集合",nonemptySetKind:"是非空集合",finiteSetKind:"是有限集合",takeObjects:"在以下范围内取对象",alsoSatisfies:"同时满足",valueRange:"取值范围",meaningUnavailable:"此数据包暂未提供这条语句的数学解释。",abstractMeaning:"这是由接口指定的命题，此处没有定义它的等价条件。",closeHelp:"收起说明",typeHelp:"这种语句的作用",inferredHelp:"这是处理语句时记录的推导结果，可以被后续语句引用。",mathGrounds:"依据",underHypotheses:"在当前证明假设下",unverifiedMeaning:"这条语句尚未建立。",unexecutedMeaning:"这条语句在此上下文中尚未执行。",viewDefinition:"定义：{name}",viewSource:"在源码中定位"});
   Object.assign(copy.en,{propGuideTitle:"What is a prop statement?",propGuidePurpose:"prop gives a name to a mathematical condition with parameters. You can then use that name in theorem statements and proofs.",propGuideUse:"A definition does not establish any particular instance. An instance holds when its arguments satisfy all the defining conditions.",propGuideExample:"An example",propGuideMeaning:"Here x R requires a real argument, and nonnegative(x) means that x is nonnegative. The definition does not assert that every real number is nonnegative.",propGuideProof:"by def $nonnegative(3) substitutes 3 for x and checks 3 >= 0. This establishes the fact that 3 is nonnegative, which later statements can use."});
   Object.assign(copy.zh,{propGuideTitle:"什么是 prop 语句？",propGuidePurpose:"prop 用来给一个带参数的数学条件起名字，定义一个命题。这样就能在定理和证明中反复使用这个名字。",propGuideUse:"定义本身不证明任何具体实例。代入的参数满足定义中的全部条件时，对应的命题才成立。",propGuideExample:"一个例子",propGuideMeaning:"这里 x R 要求参数是实数，nonnegative(x) 表示“x 非负”。这个定义没有声称所有实数都非负。",propGuideProof:"by def $nonnegative(3) 把 x 换成 3，检查 3 >= 0，建立“3 非负”这个事实，后面的语句就可以继续使用它。"});
-  Object.assign(copy.en,{iffConditions:"holds if and only if:",typesettingUnavailable:"Formula typesetting is unavailable; showing the retained mathematical text.",propHelpButton:"About prop"});
-  Object.assign(copy.zh,{iffConditions:"成立，当且仅当：",typesettingUnavailable:"公式排版暂不可用，以下保留完整的数学文本。",propHelpButton:"了解 prop 语句"});
+  Object.assign(copy.en,{typesettingUnavailable:"Formula typesetting is unavailable; showing the retained mathematical text.",propHelpButton:"About prop"});
+  Object.assign(copy.zh,{typesettingUnavailable:"公式排版暂不可用，以下保留完整的数学文本。",propHelpButton:"了解 prop 语句"});
+  Object.assign(copy.en,{referenceCount:"{count} references",currentFileReferences:"Current file · {count} references",noReferences:"No source references in this file.",referenceHelp:"Source references only; excludes the declaration and inferred output.",closeReferences:"Close references",referenceFor:"References to {name}",referenceLine:"Line {line}"});
+  Object.assign(copy.zh,{referenceCount:"引用 {count} 处",currentFileReferences:"当前文件 · {count} 处",noReferences:"当前文件没有源码引用。",referenceHelp:"只统计源码中的引用，不含定义本身和推导输出。",closeReferences:"收起引用",referenceFor:"{name} 的引用",referenceLine:"第 {line} 行"});
   // Keys are exported AST variants, not keywords inferred from source text.
   const statementTypes = {
     Fact:["Fact assertion","事实陈述","fact"],
@@ -60,6 +62,7 @@
     let history=[];
     let sources,statements,statementsBySource,facts,symbols,rules,occurrences,usedRules,evidenceNodes,inferences,wellDefinedness;
     let codePane,detailPane,rulebook,ruleGrid,ruleSearch,usedOnly,paging;
+    let referencesBySource,declarationsBySource;
     let rulePage=0,activeRule=null;
     let rulebookState={query:"",usedOnly:true,open:false,category:"all"};
     let destroyed=false;
@@ -85,6 +88,24 @@
       inferences=new Map(array(bundle.inferences).map(value=>[value.id,value]));
       wellDefinedness=new Map(array(bundle.well_definedness).map(value=>[value.id,value]));
       occurrences=array(bundle.occurrences);
+      referencesBySource=new Map();declarationsBySource=new Map();
+      const spanKey=value=>[value.source_id,value.symbol_id,value.start_byte,value.end_byte].join("|"),definitions=new Set(occurrences.filter(value=>value.definition===true).map(spanKey)),seenUses=new Set();
+      for(const occurrence of occurrences){
+        const key=spanKey(occurrence);if(occurrence.definition!==false||definitions.has(key)||seenUses.has(key))continue;seenUses.add(key);
+        if(!referencesBySource.has(occurrence.source_id))referencesBySource.set(occurrence.source_id,new Map());
+        const sourceUses=referencesBySource.get(occurrence.source_id);if(!sourceUses.has(occurrence.symbol_id))sourceUses.set(occurrence.symbol_id,[]);sourceUses.get(occurrence.symbol_id).push(occurrence);
+      }
+      const seenDeclarations=new Set();
+      for(const statement of statements.values()){
+        const canonical=statement.source_statement_id||statement.id;
+        let ids=array(statement.declaration_symbol_ids);
+        if(!ids.length){
+          ids=[...symbols.values()].filter(symbol=>symbol.definition_statement_id===canonical).map(symbol=>symbol.id);
+          const model=statement.mathematics,names=model?.kind==="objects"?array(model.parameters).flatMap(param=>array(param.names)):model?.kind==="binding"?[model.name]:[];
+          if(names.length)ids.push(...occurrences.filter(value=>value.source_id===statement.source_id&&value.statement_id===canonical&&value.definition&&names.includes(symbols.get(value.symbol_id)?.name)).map(value=>value.symbol_id));
+        }
+        for(const id of ids){const definition=occurrences.find(value=>value.source_id===statement.source_id&&value.statement_id===canonical&&value.symbol_id===id&&value.definition===true);if(!definition||seenDeclarations.has(spanKey(definition)))continue;seenDeclarations.add(spanKey(definition));if(!declarationsBySource.has(statement.source_id))declarationsBySource.set(statement.source_id,[]);declarationsBySource.get(statement.source_id).push(definition);}
+      }
       if(!statements.size)rulebookState.usedOnly=false;
       usedRules=new Map();
       for(const statement of statements.values())for(const id of statementRules(statement)){if(!usedRules.has(id))usedRules.set(id,new Set());usedRules.get(id).add(statement.id);}
@@ -125,7 +146,7 @@
       if(destroyed||epoch!==generation||serial!==navigationSerial)return false;
       operationStatus="";operationError=false;
       if(remember)history.push({...state});
-      state={...state,...next};
+      state={...state,reference:null,...next};
       if(next.statement){const statement=statements.get(next.statement);if(statement)state.source=statement.source_id;}
       render();
       if(state.focusLine)root.querySelector('[data-line="'+state.focusLine+'"]')?.scrollIntoView({block:"nearest",behavior:"smooth"});
@@ -134,6 +155,24 @@
     }
     function selectStatement(id,line){return navigate({statement:id,symbol:null,fact:null,wd:null,focusLine:line||statements.get(id)?.line});}
     function selectSymbol(id){return navigate({symbol:id,fact:null,wd:null,focusLine:null});}
+    function referenceUses(symbolId,sourceId){return (referencesBySource.get(sourceId)?.get(symbolId)||[]).slice().sort((a,b)=>a.start_byte-b.start_byte);}
+    function occurrenceLocation(occurrence){
+      const source=sources.get(occurrence.source_id),content=source?.content;if(typeof content!=="string")return null;
+      const offsets=bytePositions(content),start=offsets.get(occurrence.start_byte),end=offsets.get(occurrence.end_byte);if(start===undefined||end===undefined)return null;
+      const lineStart=content.lastIndexOf("\n",start-1)+1,next=content.indexOf("\n",end),lineEnd=next<0?content.length:next;
+      return {line:content.slice(0,start).split("\n").length,before:content.slice(lineStart,start),token:content.slice(start,end),after:content.slice(end,lineEnd)};
+    }
+    function openReferences(symbolId,sourceId,opener){
+      root.querySelector(".lr-references-dialog")?.remove();
+      const dialog=element("dialog","lr-references-dialog"),name=symbols.get(symbolId)?.name||"",uses=referenceUses(symbolId,sourceId),title=t("referenceFor").replace("{name}",name);
+      dialog.setAttribute("aria-label",title);const header=element("div","lr-help-heading"),close=button(t("closeReferences"),"lr-math-link",()=>dialog.close());header.append(element("strong",null,title),close);dialog.append(header,element("p","lr-reference-summary",t("currentFileReferences").replace("{count}",uses.length)),element("p","lr-empty-note",t("referenceHelp")));
+      if(!uses.length)dialog.append(element("p","lr-empty-note",t("noReferences")));
+      for(const occurrence of uses){const location=occurrenceLocation(occurrence);if(!location)continue;
+        const link=button("","lr-reference-location",()=>{dialog.close();navigate({source:sourceId,statement:statements.has(occurrence.statement_id)?occurrence.statement_id:null,symbol:null,fact:null,wd:null,focusLine:location.line,reference:occurrence});});
+        const snippet=element("code");snippet.append(document.createTextNode(location.before),element("mark",null,location.token),document.createTextNode(location.after));link.append(element("span","lr-reference-line",t("referenceLine").replace("{line}",location.line)),snippet);dialog.append(link);
+      }
+      dialog.addEventListener("close",()=>{dialog.remove();if(opener.isConnected)opener.focus();});dialog.addEventListener("click",event=>{if(event.target===dialog){const box=dialog.getBoundingClientRect();if(event.clientX<box.left||event.clientX>box.right||event.clientY<box.top||event.clientY>box.bottom)dialog.close();}});root.append(dialog);dialog.showModal();close.focus();
+    }
     function factInferences(id){return array(facts.get(id)?.inference_ids).map(key=>inferences.get(key)).filter(Boolean);}
     function statementInferredFacts(statement){const published=new Set(array(statement?.produced_fact_ids));return array(statement?.inferred_fact_ids).filter(id=>published.has(id));}
     function inferenceOrigins(id){return factInferences(id).flatMap(inference=>array(inference.conclusion_origins).filter(origin=>origin.fact_id===id));}
@@ -174,18 +213,21 @@
       try{global.katex.render(value,node,{displayMode:display,throwOnError:true,trust:false,strict:"ignore",maxExpand:500,maxSize:50,output:"htmlAndMathml"});return node;}catch(_){return null;}
     }
     function renderPredicateLatex(model){
-      const data=model.latex,clauses=array(data?.facts);
-      if(!clauses.length||clauses.length!==array(model.facts).length)return false;
-      const clauseNodes=clauses.map(value=>latexFormula(value,true));
-      if(clauseNodes.some(value=>!value))return false;
+      const data=model.latex,domains=array(data?.parameters),clauses=array(data?.facts);
+      const parameterCount=array(model.parameters).reduce((count,param)=>count+(typeof param==="string"?1:array(param.names).length),0);
+      if(!clauses.length||clauses.length!==array(model.facts).length||domains.length!==parameterCount)return false;
+      const domainNodes=domains.map(value=>latexFormula(value,false)),clauseNodes=clauses.map(value=>latexFormula(value,true));
+      if([...domainNodes,...clauseNodes].some(value=>!value))return false;
       const linked=(node,id,className)=>{if(!facts.has(id)){node.classList.add(className);return node;}const link=button("","lr-math-fact "+className,()=>selectFact(id));link.append(node);if(id===state.fact){link.classList.add("lr-current-math");link.setAttribute("aria-current","true");}return link;};
-      predicateIntro(model);
-      clauseNodes.forEach((node,index)=>{if(index)detailPane.append(element("div","lr-math-and",t("and")));detailPane.append(linked(node,array(model.fact_ids)[index],"lr-latex-clause"));});return true;
+      const conditions=predicateIntro(model);
+      if(domainNodes.length){const row=element("div","lr-predicate-domains");domainNodes.forEach((node,index)=>{if(index)row.append(element("span",null,","));row.append(linked(node,array(model.parameter_fact_ids)[index],"lr-latex-domain"));});conditions.append(row);}
+      clauseNodes.forEach((node,index)=>{if(index)conditions.append(element("div","lr-math-and","∧"));conditions.append(linked(node,array(model.fact_ids)[index],"lr-latex-clause"));});return true;
     }
     function predicateIntro(model){
       const intro=element("div","lr-iff-intro");
-      intro.append(latexFormula(model.latex?.subject,false)||formula(model.subject),element("span",null,t("iffConditions")));
-      detailPane.append(intro);
+      intro.append(latexFormula(model.latex?.subject,false)||formula(model.subject),latexFormula("\\Longleftrightarrow",false)||element("span","lr-equivalence-operator","⇔"));
+      const conditions=element("div","lr-predicate-conditions");
+      detailPane.append(intro,conditions);return conditions;
     }
     function mathFact(value,id){
       if(!facts.has(id))return formula(value);
@@ -200,7 +242,9 @@
       const clauses=array(model.facts);
       if(["predicate_definition","predicate_equivalence"].includes(model.kind)){
         if(!clauses.length){detailPane.append(element("p","lr-empty-note",t("meaningUnavailable")));return true;}
-        predicateIntro(model);clauses.forEach((fact,index)=>{if(index)detailPane.append(element("div","lr-math-and",t("and")));detailPane.append(mathFact(fact,array(model.fact_ids)[index]));});return true;
+        const conditions=predicateIntro(model);
+        if(params.length){const row=element("div","lr-predicate-domains");params.forEach((param,index)=>{if(index)row.append(element("span",null,","));const text=typeof param==="string"?param:array(param.names).join(", ")+(param.kind==="element"?" ∈ "+mathText(param.domain):" : "+param.kind);row.append(mathFact(text,array(model.parameter_fact_ids)[index]));});conditions.append(row);}
+        clauses.forEach((fact,index)=>{if(index)conditions.append(element("div","lr-math-and","∧"));conditions.append(mathFact(fact,array(model.fact_ids)[index]));});return true;
       }
       if(model.kind==="abstract_predicate"){detailPane.append(formula(model.subject),element("p","lr-empty-note",t("abstractMeaning")));return true;}
       if(model.kind==="objects"){
@@ -339,6 +383,8 @@
       const premiseLines=new Set(citations.map(id=>factLocation(facts.get(id))).filter(value=>value.sourceId===source.id).map(value=>value.line));
       function selectLine(owning,line){if(owning)selectStatement(owning.id,line);}
       const mentions=occurrences.filter(value=>value.source_id===source.id).map(value=>({...value,start:offsets.get(value.start_byte),end:offsets.get(value.end_byte)})).filter(value=>value.start!==undefined&&value.end!==undefined).sort((a,b)=>a.start-b.start);
+      const declarationsAt=new Map();
+      for(const declaration of declarationsBySource.get(source.id)||[]){const start=offsets.get(declaration.start_byte);if(start===undefined)continue;const line=content.slice(0,start).split("\n").length;if(!declarationsAt.has(line))declarationsAt.set(line,[]);declarationsAt.get(line).push(declaration);}
       const inferredAt=new Map();
       for(const statement of sourceStatements){
         const line=statement.line;
@@ -357,9 +403,13 @@
           if(occurrence.start<cursor)continue;
           code.append(document.createTextNode(content.slice(cursor,occurrence.start)));
           const token=button(content.slice(occurrence.start,occurrence.end),"lr-token",event=>{event.stopPropagation();selectSymbol(occurrence.symbol_id);});token.dataset.symbol=occurrence.symbol_id;token.title=symbols.get(occurrence.symbol_id)?.name||"";
-          if(occurrence.symbol_id===state.symbol)token.classList.add("lr-symbol-selected");code.append(token);cursor=occurrence.end;
+          if(occurrence.symbol_id===state.symbol)token.classList.add("lr-symbol-selected");
+          if(state.reference&&occurrence.symbol_id===state.reference.symbol_id&&occurrence.source_id===state.reference.source_id&&occurrence.start_byte===state.reference.start_byte&&occurrence.end_byte===state.reference.end_byte)token.classList.add("lr-reference-selected");
+          code.append(token);cursor=occurrence.end;
         }
         code.append(document.createTextNode(content.slice(cursor,lineEnd)||(!line?" ":"")));lineContent.append(code);code.addEventListener("click",()=>selectLine(owning,lineNumber));
+        const declarations=declarationsAt.get(lineNumber)||[];
+        if(declarations.length){const counts=element("span","lr-definition-references");for(const declaration of declarations){const uses=referenceUses(declaration.symbol_id,source.id),name=symbols.get(declaration.symbol_id)?.name||"",label=t("referenceCount").replace("{count}",uses.length);const count=button((declarations.length>1?name+" · ":"")+label,"lr-reference-count",()=>openReferences(declaration.symbol_id,source.id,count));count.dataset.symbol=declaration.symbol_id;count.setAttribute("aria-label",t("referenceFor").replace("{name}",name)+" · "+label);counts.append(count);}lineContent.append(counts);}
         const inferredIds=[...new Set(inferredAt.get(lineNumber)||[])];
         if(inferredIds.length){
           const results=element("span","lr-inline-inferences");results.setAttribute("role","group");results.setAttribute("aria-label",t("inferredFacts"));
@@ -374,7 +424,7 @@
         }
         row.append(lineContent);codePane.append(row);lineStart=lineEnd+1;lineByteStart+=encoder.encode(line).length+1;
       }
-      const selectedInference=codePane.querySelector(".lr-inferred-selected"),selectedRow=selectedInference||codePane.querySelector(".lr-selected");if(selectedRow){const rowBounds=selectedRow.getBoundingClientRect(),paneBounds=codePane.getBoundingClientRect();if(rowBounds.bottom>paneBounds.bottom||rowBounds.top<paneBounds.top)codePane.scrollTop+=rowBounds.top-paneBounds.top-codePane.clientHeight/3;if(selectedInference&&(rowBounds.right>paneBounds.right||rowBounds.left<paneBounds.left))codePane.scrollLeft+=rowBounds.left-paneBounds.left-64;}
+      const selectedInference=codePane.querySelector(".lr-inferred-selected"),selectedMarker=selectedInference||codePane.querySelector(".lr-reference-selected"),selectedRow=selectedMarker||codePane.querySelector(".lr-selected");if(selectedRow){const rowBounds=selectedRow.getBoundingClientRect(),paneBounds=codePane.getBoundingClientRect();if(rowBounds.bottom>paneBounds.bottom||rowBounds.top<paneBounds.top)codePane.scrollTop+=rowBounds.top-paneBounds.top-codePane.clientHeight/3;if(selectedMarker&&(rowBounds.right>paneBounds.right||rowBounds.left<paneBounds.left))codePane.scrollLeft+=rowBounds.left-paneBounds.left-64;}
     }
 
     function factButton(id){

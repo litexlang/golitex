@@ -13,11 +13,11 @@ statement, WD, verification and inference results.
 
 | Layer | Inventory | Existing compiler entrypoints | Remaining work |
 | --- | ---: | ---: | --- |
-| Statement forms | 52 | 19 | 33 forms have no successful dispatcher route; some require an explicit assumptions/model policy |
+| Statement forms | 52 | 21 at the accepted checkpoint | 31 forms lack a consumer; some require an explicit assumptions/model policy |
 | Object constructors | 94 | 21 | 73 constructors have no direct WD construction route |
 | Standard number sets | 15 | 7 | 8 additional signed/nonzero number sets |
 | Atomic fact variants | 72 | 16 proposition renderers | 56 variants lack a proposition renderer, before their proof routes can be replayed |
-| Explicit reserved theorem IDs | 364 | 1 through `release thm` | 363 IDs have no explicit theorem adapter; `by thm` currently accepts user theorems only |
+| Explicit reserved theorem IDs | 364 | 5 Lean-checked adapters | 359 IDs remain; the four membership IDs work through both `release thm` and `by thm` |
 | Automatic equality builtin result branches | 232 | 14 explicitly referenced branches | Audit and implement the remaining branches and their nested certificates |
 | Automatic non-equality builtin result branches | 397 | 69 explicitly referenced branches | Audit and implement the remaining branches and their nested certificates |
 | Builtin strategy result branches | 138 | 19 explicitly referenced branches | 8 equality strategies and 130 non-equality strategies must be tracked separately from builtin rules |
@@ -27,6 +27,12 @@ the atomic-fact column counts statement rendering; automatic-rule columns count
 static references in compiler code. A reference is not a successful Lean check.
 No single percentage combines these denominators.
 
+A fresh static scan on 2026-10-23 confirmed these inventory totals and rule
+reference counts. The latest accepted addition is `HaveObjByExistFacts`: global
+and local choices from a plain existential, including dependent division WD,
+pass Lean. Unique existence and the known-forall existential search route still
+reject explicitly. A dispatcher arm alone does not complete every proof route.
+
 Statement counting expands `Stmt`, definition, object introduction, `by`,
 release, witness, register, trust, proof-block and command enums to leaf forms;
 a fact assertion counts once. Object counting expands the operation families
@@ -35,11 +41,11 @@ interval endpoint combinations, function arity or limit approach metadata.
 The 15 standard sets are listed separately. Nested evidence enums inside an
 automatic rule are not additional rows in the 232/397 counts.
 
-The existing 19 statement entrypoints are fact assertions; `let`; nonempty
-carrier introductions; typed equalities; both `obtain` forms; formula functions;
+The existing 21 statement entrypoints are fact assertions; `let`; nonempty
+carrier introductions; typed equalities; `have` from existence; both `obtain` forms; formula functions;
 bounded function induction; concrete predicates; named theorems; theorem
 release; `by cases`, `by contra`, `by induc`, `by def`, `by thm`; both existential
-witness forms; and `claim`. Each retains its existing scope/domain restrictions.
+witness forms; nonempty-set witnesses; and `claim`. Each retains its existing scope/domain restrictions.
 
 The existing 21 object entries comprise identifiers, calls, numeric literals,
 standard sets; add/subtract/negate/multiply/divide/power/absolute value; square
@@ -52,11 +58,14 @@ The seven rendered number sets are `N`, `Z`, `Q`, `R`, `C`, `R+`, and `N+`.
 The recent minimal `have a R+` failure concerns a missing generated semantic
 parameter, not the absence of the `R+` representation.
 
-The sole explicit reserved-theorem adapter is
-`tuple_equal_from_coordinates`, through theorem release and within its finite
-coordinate boundary. This count does not include automatic arithmetic rules.
-The existing compiler can therefore replay an automatic membership proof while
-rejecting a mathematically similar explicit `release thm set_builder_member(...)`.
+The explicit adapters currently checked by Lean are
+`tuple_equal_from_coordinates` (theorem release, finite-coordinate boundary),
+`set_builder_member`, `defined_set_member`, `fn_set_member`, and
+`cart_member_from_coordinates` (release and selected invocation).
+Function membership currently accepts one/two-argument formula or cited
+functions with alpha-equivalent complete domains; Cartesian membership uses
+the retained finite-function shape. Other source/domain evidence variants still
+reject explicitly. This count does not include automatic arithmetic rules.
 
 Sources of the inventory:
 
@@ -163,20 +172,27 @@ and nearest rejected domains remain implementation work.
 
 ## Phases
 
-The counts below allocate missing entrypoints, not completed features or
+The counts below allocate work remaining after the accepted checkpoint, not
 estimates of development time. Predicate/proof/inference routes belong to each
-phase as well; their work is not exhausted by the object count.
+phase as well; their work is not exhausted by the object count. An existing
+entrypoint can also need broader domains or additional selected-proof branches.
 
-| Phase | Deliverable | Additional statement / object entries | Additional explicit BT IDs |
+| Phase | Deliverable | Remaining statement / object entries | Remaining explicit BT IDs |
 | --- | --- | ---: | ---: |
-| P0 | Repair current small failures and preserve the accepted baseline | 0 / 0 | 0 |
-| P1 | Common proof statements, logical forms and the explicit BT entrypoint | 11 / 0 | 4 |
+| P0 | Current small failures repaired; retain the accepted baseline | 0 / 0 | 0 |
+| P1 | Common proof statements and logical forms; broaden existing membership consumers where needed | 9 / 0 | 0 (four membership IDs delivered within their documented domains) |
 | P2 | Elementary scalar operations and number theory | 0 / 11 | 4 |
 | P3 | Set operations, finite collections and finite proof iteration | 3 / 22 | 12 |
 | P4 | Function/structure/template interfaces and reusable proof declarations | 11 / 7 | 1 |
 | P5 | Elementary transcendental and complex operations | 0 / 25 | 0 |
 | P6 | Real analysis, delivered in five subphases | 0 / 8 | 340 |
 | P7 | Explicit assumptions and foundation-model boundaries | 8 / 0 | 2 |
+
+The remaining columns sum to 31 statement forms, 73 object constructors and
+359 explicit BT IDs. The original P1 allocation was eleven forms and four BT
+IDs; nonempty witnesses, `have` from existence and all four membership IDs have passed their
+focused Lean checks. Completing these inventories still requires the associated
+WD, automatic rules, citations and inferred facts to be replayed.
 
 P0 repairs the confirmed standalone `have a R+` semantic-parameter omission and
 `$is_set(sqrt(4) + 1)` closed-membership failure. It also completes square-root
@@ -192,6 +208,13 @@ the supported object domain. Connect explicit `fn_set_member`,
 through both checked invocation surfaces. Preserve the existing tuple adapter.
 A definition-only wrapper for an abstract predicate can be introduced here if
 needed; the complete declaration/instantiation interface belongs to P4.
+
+Finish P1 in three batches: (1) existential introduction/elimination and the
+remaining logical forms; (2) verified registration and object/cart/tuple
+definition release; (3) set/function extensionality and strong induction.
+Reuse the existing result dispatch and source-scoped citations in each batch.
+Registration produces a proved law in Lean; subsequent reflexive, symmetric or
+transitive uses must cite that law rather than export a runtime search flag.
 
 P2 adds min/max, floor/ceiling/sign, mod/quotient/gcd/lcm/factorial and the
 imaginary-unit literal. Extend the remaining eight signed/nonzero number sets.
@@ -248,6 +271,72 @@ assumed to introduce an axiom. Foundation/assumption policy remains a maintainer
 choice before implementing that mode.
 
 ## Acceptance for each increment
+
+### Earlier checkpoint: P0, P1 membership consumers and nonempty witnesses
+
+- Standalone `have a R+` now includes the required set semantics. Exact closed
+  square roots can feed arithmetic; a later occurrence of an already formed
+  square-root child reuses its object reference.
+- `set_builder_member` and `defined_set_member` consume their recorded premise
+  proofs and stores. A selected theorem result also exports its recorded
+  inferences for subsequent statements. A premise and return sharing a FactId
+  become visible only after the original premise is proved.
+- `witness $is_nonempty_set(S) from a` consumes both original WD results,
+  its local proof body and the checked `a $in S`. It exports nonemptiness;
+  local facts become unavailable after the witness body closes.
+- Checks: 686 compiler tests; regeneration of all 94 current source pairs;
+  ten affected/new pairs checked with Lean 4.31.0 (48 theorem declarations), with only `propext`,
+  `Classical.choice` and `Quot.sound` in their axiom audit. These checks do not
+  cover the ten P1 statement forms still pending at that checkpoint or the
+  unfinished logical branches.
+
+Examples: [square-root reuse](../lean/examples/square_root_subexpressions/statement.lit),
+[exact square-root arithmetic](../lean/examples/exact_square_root_sum/statement.lit),
+[builder membership](../lean/examples/positive_set_membership/statement.lit),
+[named-set membership](../lean/examples/defined_positive_set_membership/statement.lit),
+and [membership followed by a fact citation](../lean/examples/square_set_membership/statement.lit).
+Each directory includes its generated Lean file.
+The [nonempty-witness example](../lean/examples/nonempty_witness/statement.lit)
+includes both a top-level builder witness and a singleton witness inside a theorem.
+
+The next two P1 pairs also pass Lean and the axiom audit:
+[Cartesian membership](../lean/examples/cart_membership_theorem/statement.lit)
+includes a literal tuple and an arbitrary real pair; [function membership](../lean/examples/function_membership_theorem/statement.lit)
+includes a formula, a named reciprocal, and a two-argument quotient. The
+nonzero guards remain in the complete input domain when the return bound is
+changed from real to complex. The generated files are about 23 KB and 36 KB.
+Their bridges (`cart_of_coordinates`, `fnSet_of_returns`) are proved from the
+existing function semantics. No new model assumption was added.
+
+A separate existing gap remains: top-level `have point cart(R, R)` selects a
+Cartesian nonemptiness strategy that the compiler does not yet replay. The
+Cartesian BT example introduces arbitrary points as theorem parameters.
+
+### Latest P1 increment: choices from existence and real-line witnesses
+
+The [existential choice pair](../lean/examples/have_from_existence/statement.lit)
+introduces a real equal to two, uses it in arithmetic, makes a local choice
+inside a theorem, and extracts two objects with a nonzero divisor. Later uses
+cite the returned properties and reconstruct division with the original WD.
+`have` retains its source binder IDs; `obtain` keeps its separate fresh-name
+requirement. Existentially bound occurrences retain lexical scope even when
+the same ID also names an exported choice.
+
+The [real-line witness pair](../lean/examples/real_line_witnesses/statement.lit)
+covers all six comparisons, both operand orientations and one/two real binders.
+It replays `RealLineComparisonWitness`, validates its original membership
+children, and uses the proved `existsRealAbove` / `existsRealBelow` bridges.
+Plain existential goals are also accepted by named theorem compilation.
+
+Checks: 692 compiler tests passed; all 96 canonical source pairs regenerated
+without drift. Both new pairs and the existing obtained-real-square pair passed
+Lean 4.31.0, with 18 exported theorem declarations audited. Only `propext`,
+`Classical.choice` and `Quot.sound` occurred. Generated sizes are approximately
+15 KB and 22 KB for the new pairs. Runtime, AST and result types are unchanged;
+Core adds two proved lemmas without new semantic assumptions. This completes
+two of the original eleven P1 statement forms, not P1 as a whole.
+
+### Per-route checks
 
 Each tracked route needs:
 

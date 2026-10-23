@@ -2204,6 +2204,24 @@ def semanticObject {M : Semantics.{u}} (x : M.Value) (hx : M.isSet x) :
 theorem semanticObject_denote {M : Semantics.{u}} (x : M.Value) (hx : M.isSet x) :
     denote (semanticObject x hx) = x := rfl
 
+/-- The real-line existence rule chooses a semantic real above its free operand. -/
+theorem existsRealAbove {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (a : Obj (M := M) α) (ha : In a R) :
+    ∃ b : Obj (M := M) M.Value, In b R ∧ Lt a b := by
+  obtain ⟨r, hr⟩ := (M.real_members (denote a)).mp ha
+  have hb := NativeBridge.numberInR (M := M) (r + 1)
+  exact ⟨semanticObject (M.number ((r + 1 : ℝ) : ℂ)) (M.member_isSet hb),
+    hb, r, r + 1, hr, rfl, lt_add_one r⟩
+
+/-- The same rule chooses a semantic real below its free operand. -/
+theorem existsRealBelow {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (a : Obj (M := M) α) (ha : In a R) :
+    ∃ b : Obj (M := M) M.Value, In b R ∧ Lt b a := by
+  obtain ⟨r, hr⟩ := (M.real_members (denote a)).mp ha
+  have hb := NativeBridge.numberInR (M := M) (r - 1)
+  exact ⟨semanticObject (M.number ((r - 1 : ℝ) : ℂ)) (M.member_isSet hb),
+    hb, r - 1, r, rfl, hr, sub_one_lt r⟩
+
 namespace NativeBridge
 
 theorem naturalValue_lt_number {M : Semantics.{u}} (n : ℕ) (x : M.Value)
@@ -2931,6 +2949,21 @@ theorem graph_pair_value {D B f x y : M.Value}
   obtain ⟨z, _, hz⟩ := hf.2 x ha
   exact ⟨ha, (hz y hxy).trans (hz _ hcall).symm⟩
 
+/-- A complete finite function belongs to new factors when each coordinate does. -/
+theorem cart_of_coordinates {n : ℕ} {A B : Fin n → M.Value} {p : M.Value}
+    (hp : M.mem p (cartValue A))
+    (h : ∀ i : Fin n, M.mem (F.callValue p (index i)) (B i)) :
+    M.mem p (cartValue B) := by
+  have hf := ((cart_members A p).mp hp).1
+  apply (cart_members B p).mpr
+  refine ⟨⟨?_, hf.2⟩, h⟩
+  intro edge he
+  obtain ⟨x, hx, y, _, rfl⟩ := hf.1 edge he
+  obtain ⟨i, rfl⟩ := (indexSet_members x).mp hx
+  refine ⟨index i, index_mem i, y, ?_, rfl⟩
+  rw [(graph_pair_value hf he).2]
+  exact (finiteUnion_members _ _).mpr ⟨B i, List.mem_ofFn.mpr ⟨i, rfl⟩, h i⟩
+
 theorem cart_ext {n : ℕ} {A B : Fin n → M.Value} {p q : M.Value}
     (hp : M.mem p (cartValue A)) (hq : M.mem q (cartValue B))
     (h : ∀ i : Fin n, F.callValue p (index i) = F.callValue q (index i)) : p = q := by
@@ -2991,6 +3024,24 @@ theorem cart2_members (A B p : M.Value) :
     · exact hb
 
 end FiniteFunction
+
+namespace FunctionSemantics
+
+/-- Change a function's return bound while retaining its complete input domain. -/
+theorem fnSet_of_returns {M : Semantics.{u}} [F : FunctionSemantics M]
+    {D B E f : M.Value} (hf : M.mem f (F.fnSetValue D B))
+    (h : ∀ x, M.mem x D → M.mem (F.callValue f x) E) :
+    M.mem f (F.fnSetValue D E) := by
+  have hg := (F.fnSet_members D B f).mp hf
+  apply (F.fnSet_members D E f).mpr
+  refine ⟨?_, hg.2⟩
+  intro edge he
+  obtain ⟨x, hx, y, _, rfl⟩ := hg.1 edge he
+  refine ⟨x, hx, y, ?_, rfl⟩
+  rw [(FiniteFunction.graph_pair_value hg he).2]
+  exact h x hx
+
+end FunctionSemantics
 
 structure TupleObj (M : Semantics.{u}) (n : ℕ) where
   values : Fin n → M.Value
@@ -3053,6 +3104,13 @@ theorem tupleInCart {M : Semantics.{u}} [FunctionSemantics M] {n : ℕ}
     (t : Obj (M := M) (TupleObj M n)) (c : Obj (M := M) (CartObj M n))
     (h : ∀ i, M.mem (t.val.values i) (c.val.factors i)) : In t c :=
   FiniteFunction.tuple_inCart _ _ h
+
+theorem tuple_coordinate_mem {M : Semantics.{u}} [FunctionSemantics M] {n : ℕ}
+    (t : Obj (M := M) (TupleObj M n)) (c : Obj (M := M) (CartObj M n))
+    (h : In t c) (i : Fin n) : M.mem (t.val.values i) (c.val.factors i) := by
+  have hc : M.mem (FunctionSemantics.callValue (FiniteFunction.tupleValue t.val.values)
+    (FiniteFunction.index i)) (c.val.factors i) := FiniteFunction.coordinate_mem h i
+  simpa only [FiniteFunction.call_tuple] using hc
 
 /-- A tuple's own values provide the singleton factors of its finite contract. -/
 def tupleSingletonCart {M : Semantics.{u}} [FunctionSemantics M] {n : ℕ}

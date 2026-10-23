@@ -1,5 +1,5 @@
 use crate::compile_to_lean::helper::*;
-use crate::compile_to_lean::source_position::SourcePosition;
+use crate::compile_to_lean::source_position::{SourceOwner, SourcePosition};
 use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
 use crate::prelude::*;
 
@@ -55,5 +55,53 @@ impl LitexToLeanCompiler {
             },
         )?;
         Ok(format!("(Litex.sqrt {object} {real} {nonnegative})"))
+    }
+
+    pub(in crate::compile_to_lean) fn numeric_sqrt_wd(
+        &self,
+        wd: &ObjWellDefinedProof,
+        position: &SourcePosition<'_>,
+    ) -> Result<(String, String, String, Option<EvalRational>), LeanCompileError> {
+        let term = self.compile_wd(wd, position)?;
+        let ObjWellDefinedProof::ByDef {
+            proof:
+                ObjWellDefinedProofByDef::ExpLogOperator(ExpLogOperatorObjWellDefinedProofByDef::Sqrt(
+                    proof,
+                )),
+            ..
+        } = wd
+        else {
+            return Err(LeanCompileError::unsupported("WD/SqrtObservation"));
+        };
+        let setup = format!("let _litex_sqrt := {term};\nlet _litex_sqrt_member : Litex.In _litex_sqrt Litex.C := Litex.sqrtInC _litex_sqrt.val.arg _litex_sqrt.wd.1 _litex_sqrt.wd.2;");
+        // Opaque roots use the membership observation below; do not render an
+        // unused observation of their entire argument expression.
+        if let Some(value) = EvalRational::from_obj(wd.obj()) {
+            let formed = SourcePosition::new(Some(position), SourceOwner::WD(wd), 3);
+            let child = self.numeric_wd(&proof.child_obj_well_defined[0], &formed)?;
+            let argument = child
+                .3
+                .as_ref()
+                .ok_or_else(|| LeanCompileError::unsupported("WD/SqrtClosedArgument"))?;
+            let argument = exact_rational_literal(argument, "ℝ")?;
+            let value_term = exact_rational_literal(&value, "ℂ")?;
+            let real_value = exact_rational_literal(&value, "ℝ")?;
+            let denotation = format!(
+                "({}).trans (congrArg M.number (by norm_num : {} = (({argument} : ℝ) : ℂ)))",
+                child.1, child.0
+            );
+            return Ok((
+                value_term.clone(),
+                format!("({setup}\n(Litex.NativeBridge.denoteSqrt _litex_sqrt.val.arg _litex_sqrt.wd.1 _litex_sqrt.wd.2 {argument} ({denotation})).trans (congrArg M.number (by have _sqrt_value : Real.sqrt {argument} = {real_value} := (Real.sqrt_eq_iff_eq_sq (by norm_num) (by norm_num)).mpr (by norm_num); rw [_sqrt_value]; norm_num : ((Real.sqrt {argument} : ℝ) : ℂ) = {value_term})))"),
+                format!("({setup}\n_litex_sqrt_member)"),
+                Some(value),
+            ));
+        }
+        Ok((
+            format!("({setup}\nLitex.NativeBridge.asComplex _litex_sqrt _litex_sqrt_member)"),
+            format!("({setup}\nLitex.NativeBridge.asComplex_spec _litex_sqrt _litex_sqrt_member)"),
+            format!("({setup}\n_litex_sqrt_member)"),
+            None,
+        ))
     }
 }

@@ -1,0 +1,243 @@
+# Real series convergence: candidates, criteria and actual nonconvergence.
+# Run: LITEX_STD_PATH="$PWD/std" target/release/litex -lang en -strict -f examples/real_analysis/series/convergence/main.lit
+
+release obj def series:::partial_sum
+
+release obj def series:::partial_sums
+
+release obj def series:::series_sum
+
+release obj def series:::series_tail
+
+release obj def series:::absolute_terms
+
+release obj def series:::root_terms
+
+have fn alternating(k N+) R=(-1/2)^k
+
+release thm series:::series_sum_geometric(alternating,-1/2)
+
+release thm series:::series_sum_convergent(alternating,-1/3)
+
+release thm series:::series_sum_value(alternating,-1/3)
+
+series:::series_sum(alternating)=-1/3
+
+have fn zero_geometric(k N+) R=0^k
+
+release thm series:::series_sum_geometric(zero_geometric,0)
+
+have fn reciprocal(k N+) R=1/k
+
+release thm series:::sequence_reciprocal_limit(reciprocal)
+
+lim(reciprocal)=0
+
+release thm series:::harmonic_series_diverges(reciprocal)
+
+not $series:::is_convergent_series(reciprocal)
+
+have fn ones(k N+) R=1
+
+release thm series:::nonzero_constant_series_diverges(ones,1)
+
+forall k N+:
+    k+1>0
+    k*(k+1)>0
+    k*(k+1)!=0
+
+have fn telescope(k N+) R=1/(k*(k+1))
+
+claim:
+    ? forall k N+:
+        telescope(k)=reciprocal(k)-reciprocal(k+1)
+    reciprocal(k)=1/k
+    have next N+=k+1
+    reciprocal(next)=1/next
+    reciprocal(k+1)=reciprocal(next)=1/next=1/(k+1)
+    0<k*(k+1)
+    telescope(k)=1/(k*(k+1))=1/k-1/(k+1)=reciprocal(k)-reciprocal(k+1)
+
+release thm series:::series_sum_telescoping(telescope,reciprocal,0)
+
+reciprocal(1)=1
+
+$series:::has_series_sum(telescope,reciprocal(1)-0)
+
+reciprocal(1)-0=1-0=1
+
+$series:::has_series_sum(telescope,1)
+
+release thm series:::series_sum_convergent(telescope,1)
+
+release thm series:::series_sum_value(telescope,1)
+
+series:::series_sum(telescope)=1
+
+claim:
+    ? forall k N+:
+        k>=1
+        =>:
+            abs(zero_geometric(k+1))<=0*abs(zero_geometric(k))
+    have next N+=k+1
+    zero_geometric(next)=0^next=0
+    zero_geometric(k+1)=zero_geometric(next)=0
+    abs(zero_geometric(k+1))=0
+    0*abs(zero_geometric(k))=0
+
+release thm series:::series_ratio_test(zero_geometric,0,1)
+
+have fn geometric(k N+) R=(1/2)^k
+
+release thm series:::series_sum_geometric(geometric,1/2)
+
+release thm series:::series_sum_convergent(geometric,1)
+
+release thm series:::series_cauchy_from_convergent(geometric)
+
+release thm series:::series_convergent_from_cauchy(geometric)
+
+have fn ratio_half(k N+) R=1/2
+
+release thm seq_limit_constant(ratio_half,1/2)
+
+forall k N+:
+    0<(1/2)^k
+    geometric(k)=(1/2)^k
+    0<geometric(k)
+    abs(geometric(k))=geometric(k)
+    0<abs(geometric(k))
+
+claim:
+    ? forall k N+:
+        k>=1
+        0<abs(geometric(k))
+        =>:
+            ratio_half(k)=abs(geometric(k+1))/abs(geometric(k))
+    have next N+=k+1
+    0<geometric(next)
+    abs(geometric(next))=geometric(next)
+    geometric(k+1)=geometric(next)=(1/2)^(k+1)
+    (1/2)^(k+1)=(1/2)^k*(1/2)^1=(1/2)^k/2
+    geometric(k+1)=geometric(k)/2
+    abs(geometric(k+1))=abs(geometric(next))=geometric(k+1)
+    abs(geometric(k))=geometric(k)
+    abs(geometric(k+1))/abs(geometric(k))=(geometric(k)/2)/geometric(k)=1/2=ratio_half(k)
+
+release thm series:::series_ratio_limit_test(geometric,ratio_half,1/2,1)
+
+release thm seq_limsup_from_limit(ratio_half,1/2)
+
+release thm series:::series_ratio_limsup_test(geometric,ratio_half,1/2,1)
+
+claim:
+    ? forall k N+:
+        series:::root_terms(geometric)(k)=ratio_half(k)
+    release thm series:::root_terms_at(geometric,k)
+    abs(geometric(k))=geometric(k)=(1/2)^k
+    ((1/2)^k)^(1/k)=1/2
+    series:::root_terms(geometric)(k)=abs(geometric(k))^(1/k)=((1/2)^k)^(1/k)=1/2=ratio_half(k)
+
+release thm seq_limit_eventually_equal(ratio_half,series:::root_terms(geometric),1/2,1)
+
+claim:
+    ? forall k N+:
+        series:::root_terms(geometric)(k)<=1/2
+    series:::root_terms(geometric)(k)=ratio_half(k)=1/2
+    series:::root_terms(geometric)(k)<=1/2
+
+release thm series:::series_root_test(geometric,1/2,1)
+
+release thm series:::series_root_limit_test(geometric,1/2)
+
+release thm seq_limsup_from_limit(series:::root_terms(geometric),1/2)
+
+release thm series:::series_root_limsup_test(geometric,1/2)
+
+have fn smaller(k N+) R=geometric(k)/2
+
+claim:
+    ? forall k N+:
+        0<=smaller(k)
+        smaller(k)<=geometric(k)
+        abs(smaller(k))<=geometric(k)
+    0<geometric(k)
+    0<geometric(k)/2
+    smaller(k)=geometric(k)/2
+    0<smaller(k)
+    0<=smaller(k)
+    geometric(k)/2<geometric(k)/2+geometric(k)/2=geometric(k)
+    geometric(k)/2<=geometric(k)
+    smaller(k)<=geometric(k)
+    abs(smaller(k))=smaller(k)<=geometric(k)
+
+release thm series:::series_comparison(smaller,geometric)
+
+release thm series:::absolute_series_comparison(smaller,geometric)
+
+release thm series:::series_eventual_comparison(smaller,geometric,1)
+
+release thm series:::absolute_series_eventual_comparison(smaller,geometric,1)
+
+release thm series:::absolute_series_converges(smaller)
+
+have fn growing(k N+) R=2^k
+
+have fn ratio_two(k N+) R=2
+
+release thm seq_limit_constant(ratio_two,2)
+
+forall k N+:
+    0<2^k
+    growing(k)=2^k
+    0<growing(k)
+    abs(growing(k))=growing(k)
+    0<abs(growing(k))
+
+claim:
+    ? forall k N+:
+        k>=1
+        0<abs(growing(k))
+        =>:
+            ratio_two(k)=abs(growing(k+1))/abs(growing(k))
+    have next N+=k+1
+    0<growing(next)
+    abs(growing(next))=growing(next)
+    growing(k+1)=growing(next)=2^(k+1)
+    2^(k+1)=2^k*2^1=2^k*2
+    growing(k+1)=growing(k)*2
+    abs(growing(k+1))=abs(growing(next))=growing(k+1)
+    abs(growing(k))=growing(k)
+    abs(growing(k+1))/abs(growing(k))=(growing(k)*2)/growing(k)=1*2=ratio_two(k)
+
+release thm series:::series_ratio_limit_diverges(growing,ratio_two,2,1)
+
+release thm seq_liminf_from_limit(ratio_two,2)
+
+release thm series:::series_ratio_liminf_diverges(growing,ratio_two,2,1)
+
+claim:
+    ? forall k N+:
+        series:::root_terms(growing)(k)=ratio_two(k)
+    release thm series:::root_terms_at(growing,k)
+    abs(growing(k))=growing(k)=(2)^k
+    ((2)^k)^(1/k)=2
+    series:::root_terms(growing)(k)=abs(growing(k))^(1/k)=((2)^k)^(1/k)=2=ratio_two(k)
+
+release thm seq_limit_eventually_equal(ratio_two,series:::root_terms(growing),2,1)
+
+release thm series:::series_root_limit_diverges(growing,2)
+
+release thm seq_limsup_from_limit(series:::root_terms(growing),2)
+
+release thm series:::series_root_limsup_diverges(growing,2)
+
+not $series:::is_convergent_series(growing)
+
+thm equivalent_complete_function_convergence:
+    ? forall a fn(k N+) R:
+        $series:::is_cauchy_series(a)
+        =>:
+            $series:::is_convergent_series(a)
+    release thm series:::series_convergent_from_cauchy(a)
+

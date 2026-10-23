@@ -42,10 +42,11 @@ visible. Reading does not alter ordinary verification or Normal JSON output.
 
 ## Follow dependencies and inferred facts
 
-Clicking a `prop` source statement shows the actual predicate application,
-“holds if and only if”, and its complete conditions in rendered LaTeX. The
-separate parameter-domain section is omitted; types remain in the source and
-metadata. Quantifiers, conjunctions and dependencies come from the real AST.
+Clicking a `prop` source statement shows its full predicate application and ⇔,
+then an indented block containing every argument type and all complete defining
+conditions in rendered LaTeX. The formula contains no prose or separate domain
+heading. It presents the declared typed interface; the source domains and
+quantifier scopes are preserved.
 Click `prop ⓘ` to open the purpose/semantics guide and its checked short example.
 The guide is hidden initially, supports keyboard/touch and closes with Escape,
 its close button, an outside click or a new selection.
@@ -62,6 +63,16 @@ Optional `statement_kind` records the original tagged AST path, for example
 including unexecuted proof bodies and repeated execution contexts, and survives
 static partitioning. The viewer does not guess the type from rendered source
 or execution messages. Old bundles without it show neutral statement details.
+
+Optional `declaration_symbol_ids` records direct named declarations from captured
+typed fields. It excludes parameter and nested binders. The shared viewer places
+a compact reference badge beside each mapped declaration; clicking it opens
+current-file source snippets and clicking a snippet jumps to its exact token.
+Counts use resolved identity and unique source spans, excluding declarations,
+comments and generated inference output. Repeated execution and loading another
+chapter do not inflate the current-file count. This reports source references,
+not proof dependencies. Older bundles remain readable and use existing explicit
+declaration metadata where available.
 
 `examples/reading/inferred_facts.lit` contains this runnable sequence after
 its definitions and object declaration:

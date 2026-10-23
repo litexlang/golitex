@@ -416,46 +416,42 @@ theorem mobiusInvolution (x : ℝ) (hx : x ≠ 1) :
 
 <a id="loaded-checking-comparison"></a>
 
-### 常见任务：排除启动和导入后，约 10–100 倍的检查差距
+### 16 个常见任务：定义、证明过程与数学概念
 
-**在一些常见数学任务上，Litex 的检查速度可能比 Lean 快约 10–100 倍。** 2026-10-23 的一组本地测量中，下面这些例子的实测倍率约为 12–77 倍；这里已经排除了进程启动和 `import Mathlib` 的时间。
+<!-- litex-lean-checking-table:start -->
 
-例如，证明任意两个正实数之和仍为正：
+<a id="litex-lean-checking-times"></a>
 
-```litex
-forall x,y R:
-    x > 0
-    y > 0
-    =>:
-        x+y > 0
-```
+下面列出 **16 个去重后的常见任务**，涵盖基础算术、定义、结构、定理复用、全称命题、见证、反证、归纳及数学概念。Lean 均在 `import Mathlib` 已完成、`Elab.async=false` 的环境中计时。**单位为毫秒，数值是暖样本中位数；倍率 = Lean 时间 ÷ Litex 时间，由未舍入的中位数计算。**
 
-对应的 Lean 证明可以直接引用定理：
+点击数学任务可查看附录中的完整 Litex 和 Lean 代码。定义类时间包含声明及随后使用，证明类包含完整证明。启动、依赖导入和结果输出均不计入。
 
-```lean
-import Mathlib
+| 数学任务 | Litex (ms) | Lean (ms) | Lean ÷ Litex |
+| --- | ---: | ---: | ---: |
+| [自然数算术：1 + 1 = 2](#litex-lean-code-nat_mathlib) | 0.037 | 1.361 | **36.7×** |
+| [定义平方函数并计算](#litex-lean-code-expression_function) | 0.730 | 7.609 | **10.4×** |
+| [定义开区间谓词并验证成员](#litex-lean-code-predicate) | 0.189 | 8.223 | **43.4×** |
+| [按正负分段定义绝对值并计算](#litex-lean-code-piecewise_function) | 0.729 | 7.330 | **10.1×** |
+| [二维点：声明、构造与字段访问](#litex-lean-code-structure) | 0.573 | 7.615 | **13.3×** |
+| [定义并调用“正实数非零”定理](#litex-lean-code-named_theorem) | 0.158 | 8.018 | **50.7×** |
+| [全称命题：两个正实数之和为正](#litex-lean-code-forall_add_pos) | 0.392 | 10.487 | **26.7×** |
+| [集合论：正实数集合非空](#litex-lean-code-witness_nonempty_positive) | 0.084 | 6.439 | **76.9×** |
+| [反证：不存在平方等于 −1 的实数](#litex-lean-code-contradiction) | 4.127 | 49.472 | **12.0×** |
+| [归纳：前 n 个正整数求和公式（n≥1）](#litex-lean-code-induction_proof) | 43.626 | 174.986 | **4.0×** |
+| [集合差的德摩根律](#litex-lean-code-set_de_morgan) | 0.425 | 2.991 | **7.0×** |
+| [有限集合的子集数为 2ⁿ](#litex-lean-code-powerset_general) | 0.296 | 1.320 | **4.5×** |
+| [使用 sum：1²＋⋯＋10²＝385](#litex-lean-code-sum_sq_10) | 2.224 | 8.266 | **3.7×** |
+| [数论：1000000007 是素数](#litex-lean-code-prime_1000000007) | 0.027 | 4.029 | **147.2×** |
+| [对数：log₂8 = 3](#litex-lean-code-log_2_8) | 0.064 | 13.992 | **217.0×** |
+| [平方函数在 3 处的导数为 6](#litex-lean-code-derivative_square_at_three) | 1.464 | 29.945 | **20.5×** |
 
-example : ∀ x y : Real, 0 < x → 0 < y → 0 < x+y := by
-  intro x y hx hy
-  exact add_pos hx hy
-```
+这些是 2026-10-22 至 23 日在同一台 macOS arm64 工作机上的多批本地观测，工具为 Litex 1.1.2-beta release 和 Lean/Mathlib 4.31.0；Litex 二进制哈希随批次变化。每行的双方数据来自同一批配对测量，不把不同批次的较快分子、分母拼在一起。这里只选录 Litex 较快的任务，不代表所有任务的总体倍率；事实类使用该批最快已测成功 Lean 路线，定义和证明过程按对应代码结构比较。
 
-Litex 的详细验证记录使用内置策略 `PosAddPosIsPos`。这条完整全称命题的检查中位数为 **0.394 ms**；Lean 的直接 `add_pos` 写法为 **9.305 ms**，约为前者的 **23.60 倍**。同一目标使用 `linarith` 的已测中位数为 14.923 ms；下表采用较快的直接定理写法。
+Litex 计时包含词法、解析、良定义性、验证执行和存储，新 Runtime 的创建在计时外；Lean 包含命令 elaboration、证明构造或声明生成及同步内核检查，命令解析在计时外。各项在三个进程中重复采样：Litex 共 90 或 300 个暖样本，Lean 共 21、93 或 303 个；首次检查另记，不混入中位数。工作机没有隔离 CPU 或受控清空缓存。
 
-以下选取这批测试中 Litex 较快的常见例子。Lean 列使用每题本轮实测通过的最快写法，包含直接定理和简短证明项；时间单位为毫秒，比例由未舍入的中位数计算。
+Litex 程序以严格模式验证，Lean 对应程序也已通过检查，没有使用 `sorry`。素性行明确使用 `native_decide`，其编译求值有额外信任项；Litex 同样信任自身的规则与计算实现。结构声明在两边生成的底层内容也不同。这些数字衡量各自的检查路径，不是相同内核操作的归约时间，也不包含 Litex 编译为 Lean 后再复核的成本。
 
-| 完整数学任务 | Litex | Lean | Lean÷Litex | Lean 已测最快路线 |
-| --- | ---: | ---: | ---: | --- |
-| 两个正实数之和为正 | 0.394 | 9.305 | **23.60×** | `add_pos` |
-| 两个正实数之积为正 | 0.408 | 4.986 | **12.23×** | `mul_pos` |
-| 任意实数的平方非负 | 0.597 | 13.491 | **22.60×** | `sq_nonneg` |
-| 正实数的倒数为正 | 0.287 | 8.167 | **28.43×** | `one_div_pos.mpr` |
-| 实数零乘积推出一个因子为零 | 0.203 | 6.860 | **33.83×** | `mul_eq_zero.mp` |
-| 用见证证明正实数集合非空 | 0.084 | 6.439 | **76.88×** | 显式类型的 `⟨1, zero_lt_one⟩` |
-
-这批数据使用同一台 macOS arm64 工作机、Litex 1.1.2-beta release 和 Lean/Mathlib 4.31.0。每个 Litex 文件以严格模式独立通过；每条成功 Lean 路线也在普通文件中独立验证，没有使用 `sorry`。Litex 每例取三个进程共 90 个暖样本，表中 Lean 路线各取三个进程共 21 个暖样本，首次检查另列，不混入中位数。
-
-Litex 计时包含整条语句的词法、解析、良定义性、验证和存储，新 Runtime 的创建在计时外；Lean 计时包含命令 elaboration、证明构造和同步内核检查，命令解析在计时外。两边均不计启动、依赖导入和结果输出。这衡量各自的完整检查路径，不是孤立的内核归约时间，也不包括把 Litex 再编译为 Lean 并复核的成本。工作机没有隔离 CPU 或受控清缓存；这些是选录的本地结果，不是所有任务的总体倍率，也尚未证明作者完成任务的时间同比缩短。
+<!-- litex-lean-checking-table:end -->
 
 <a id="9-local-runtime-spot-checks"></a>
 
@@ -786,3 +782,394 @@ example : ({a : ℕ | a % 4 = 0} : Set ℕ) ≠
 - [Agent 指南](Litex智能体指南.md)：持续 Session 与重启边界。
 - [数学主题模块](../showcases/math_concepts_in_litex/README.md)：定义、构造与后续使用。
 - [Litex 到 Lean 编译器指南](Litex到Lean编译器指南.md)和[互操作 showcase](../showcases/litex_to_lean_adapter/README.md)：受支持的重放与普通 Lean 接口。
+
+
+<!-- litex-lean-checking-code-appendix:start -->
+
+## 附录：16 个计时例子的完整代码
+
+编号与[计时表](#litex-lean-checking-times)的顺序一致。每个例子单独运行；不同例子的定义和定理名称可能重复，不应直接拼接为同一个程序。Lean 代码中的 `import Mathlib` 在计时前完成，导入耗时不在主表内。
+
+<a id="litex-lean-code-nat_mathlib"></a>
+
+### 1. 自然数算术：1 + 1 = 2
+
+Litex：
+
+```litex
+1 + 1 = 2
+```
+
+Lean：
+
+```lean
+import Mathlib
+
+example : (1 : Nat) + 1 = 2 := by rfl
+```
+
+[返回计时表](#litex-lean-checking-times)
+
+<a id="litex-lean-code-expression_function"></a>
+
+### 2. 定义平方函数并计算
+
+Litex：
+
+```litex
+have fn bench_square(x R) R=x^2
+bench_square(3)=9
+```
+
+Lean：
+
+```lean
+import Mathlib
+
+def bench_square (x : Real) : Real := x^2
+theorem bench_use : bench_square 3 = 9 := by norm_num [bench_square]
+```
+
+[返回计时表](#litex-lean-checking-times)
+
+<a id="litex-lean-code-predicate"></a>
+
+### 3. 定义开区间谓词并验证成员
+
+Litex：
+
+```litex
+prop bench_in_open(x,a,b R):
+    a<x
+    x<b
+by def $bench_in_open(1,0,2)
+```
+
+Lean：
+
+```lean
+import Mathlib
+
+def bench_in_open (x a b : Real) : Prop := a < x ∧ x < b
+theorem bench_use : bench_in_open 1 0 2 := by norm_num [bench_in_open]
+```
+
+[返回计时表](#litex-lean-checking-times)
+
+<a id="litex-lean-code-piecewise_function"></a>
+
+### 4. 按正负分段定义绝对值并计算
+
+Litex：
+
+```litex
+have fn bench_abs(x R) R by cases:
+    case x>=0: x
+    case x<0: -x
+bench_abs(-3)=3
+```
+
+Lean：
+
+```lean
+import Mathlib
+
+noncomputable def bench_abs (x : Real) : Real := if 0 ≤ x then x else -x
+theorem bench_use : bench_abs (-3) = 3 := by norm_num [bench_abs]
+```
+
+[返回计时表](#litex-lean-checking-times)
+
+<a id="litex-lean-code-structure"></a>
+
+### 5. 二维点：声明、构造与字段访问
+
+Litex：
+
+```litex
+struct BenchPoint:
+    x R
+    y R
+have bench_point &BenchPoint=(1,2)
+bench_point.x=1
+```
+
+Lean：
+
+```lean
+import Mathlib
+
+structure BenchPoint where
+  x : Real
+  y : Real
+def bench_point : BenchPoint := ⟨1,2⟩
+theorem bench_use : bench_point.x = 1 := by rfl
+```
+
+[返回计时表](#litex-lean-checking-times)
+
+<a id="litex-lean-code-named_theorem"></a>
+
+### 6. 定义并调用“正实数非零”定理
+
+Litex：
+
+```litex
+thm bench_positive_is_nonzero:
+    ? forall x R:
+        x>0
+        =>:
+            x!=0
+release thm bench_positive_is_nonzero(3)
+```
+
+Lean：
+
+```lean
+import Mathlib
+
+theorem bench_positive_is_nonzero : ∀ x : Real, 0 < x → x ≠ 0 := by
+  intro x hx
+  exact ne_of_gt hx
+theorem bench_use : (3 : Real) ≠ 0 := bench_positive_is_nonzero 3 (by norm_num)
+```
+
+[返回计时表](#litex-lean-checking-times)
+
+<a id="litex-lean-code-forall_add_pos"></a>
+
+### 7. 全称命题：两个正实数之和为正
+
+Litex：
+
+```litex
+forall x,y R:
+    x > 0
+    y > 0
+    =>:
+        x+y > 0
+```
+
+Lean：
+
+```lean
+import Mathlib
+
+theorem bench : ∀ x y : Real, 0 < x → 0 < y → 0 < x+y := fun x y hx hy => add_pos hx hy
+```
+
+[返回计时表](#litex-lean-checking-times)
+
+<a id="litex-lean-code-witness_nonempty_positive"></a>
+
+### 8. 集合论：正实数集合非空
+
+Litex：
+
+```litex
+witness $is_nonempty_set({x R:x>0}) from 1
+```
+
+Lean：
+
+```lean
+import Mathlib
+
+example : Set.Nonempty {x : Real | 0 < x} := ⟨(1 : Real), (show (0 : Real) < 1 from zero_lt_one)⟩
+```
+
+[返回计时表](#litex-lean-checking-times)
+
+<a id="litex-lean-code-contradiction"></a>
+
+### 9. 反证：不存在平方等于 −1 的实数
+
+Litex：
+
+```litex
+by contra:
+    ? not exist x R st {x^2=-1}
+    obtain root from exist x R st {x^2=-1}
+    root^2>=0
+    root^2=-1<0
+    impossible root^2>=0
+```
+
+Lean：
+
+```lean
+import Mathlib
+
+theorem bench_use : ¬ ∃ x : Real, x^2 = -1 := by
+  by_contra h
+  obtain ⟨x,hx⟩ := h
+  nlinarith [sq_nonneg x]
+```
+
+[返回计时表](#litex-lean-checking-times)
+
+<a id="litex-lean-code-induction_proof"></a>
+
+### 10. 归纳：前 n 个正整数求和公式（n≥1）
+
+Litex：
+
+```litex
+have fn bench_terms(k Z) Z=k
+by induc n from 1:
+    ? 2*sum(1,n,bench_terms)=n*(n+1)
+    ? from n=1:
+        sum(1,1,bench_terms)=bench_terms(1)=1
+    ? induc:
+        bench_terms(n+1)=n+1
+        sum(1,n+1,bench_terms)=sum(1,n,bench_terms)+bench_terms(n+1)
+        2*sum(1,n+1,bench_terms)=2*(sum(1,n,bench_terms)+(n+1))=2*sum(1,n,bench_terms)+2*(n+1)=n*(n+1)+2*(n+1)=(n+1)*(n+2)
+```
+
+Lean：
+
+```lean
+import Mathlib
+
+def bench_terms (k : Int) : Int := k
+theorem bench_use : ∀ n : Nat, 1 ≤ n → 2 * (∑ k ∈ Finset.range n, bench_terms ((k+1 : Nat) : Int)) = (n : Int) * ((n : Int)+1) := by
+  intro n hn
+  induction n, hn using Nat.le_induction with
+  | base => norm_num [bench_terms]
+  | succ n hn ih =>
+    rw [Finset.sum_range_succ]
+    simp only [bench_terms] at *
+    push_cast at *
+    nlinarith
+```
+
+[返回计时表](#litex-lean-checking-times)
+
+<a id="litex-lean-code-set_de_morgan"></a>
+
+### 11. 集合差的德摩根律
+
+Litex：
+
+```litex
+forall A,B,D power_set(R):
+    set_minus(A,union(B,D))=intersect(set_minus(A,B),set_minus(A,D))
+```
+
+Lean：
+
+```lean
+import Mathlib
+
+theorem bench : ∀ A B D : Set Real, A \ (B ∪ D) = (A \ B) ∩ (A \ D) := fun A B D => sdiff_sup
+```
+
+[返回计时表](#litex-lean-checking-times)
+
+<a id="litex-lean-code-powerset_general"></a>
+
+### 12. 有限集合的子集数为 2ⁿ
+
+Litex：
+
+```litex
+forall A finite_set:
+    A $subset N
+    =>:
+        finite_set_size(power_set(A))=2^finite_set_size(A)
+```
+
+Lean：
+
+```lean
+import Mathlib
+
+theorem bench : ∀ A : Finset Nat, A.powerset.card = 2 ^ A.card := by intro A; exact Finset.card_powerset A
+```
+
+[返回计时表](#litex-lean-checking-times)
+
+<a id="litex-lean-code-sum_sq_10"></a>
+
+### 13. 使用 sum：1²＋⋯＋10²＝385
+
+Litex：
+
+```litex
+sum(1, 10, fn(k Z) Z {k^2}) = 385
+```
+
+Lean：
+
+```lean
+import Mathlib
+
+theorem bench : Finset.sum (Finset.range 10) (fun k => (((k + 1 : Nat) : Int)^2)) = 385 := by decide
+```
+
+[返回计时表](#litex-lean-checking-times)
+
+<a id="litex-lean-code-prime_1000000007"></a>
+
+### 14. 数论：1000000007 是素数
+
+Litex：
+
+```litex
+$prime(1000000007)
+```
+
+Lean：
+
+```lean
+import Mathlib
+
+example : Nat.Prime 1000000007 := by native_decide
+```
+
+[返回计时表](#litex-lean-checking-times)
+
+<a id="litex-lean-code-log_2_8"></a>
+
+### 15. 对数：log₂8 = 3
+
+Litex：
+
+```litex
+log(2,8)=3
+```
+
+Lean：
+
+```lean
+import Mathlib
+
+example : Real.logb 2 8=3 := by
+  rw [show (8:Real)=2^3 by norm_num, Real.logb_pow]
+  rw [Real.logb_self_eq_one (by norm_num : (1:Real)<2)]
+  norm_num
+```
+
+[返回计时表](#litex-lean-checking-times)
+
+<a id="litex-lean-code-derivative_square_at_three"></a>
+
+### 16. 平方函数在 3 处的导数为 6
+
+Litex：
+
+```litex
+$has_derivative_at(fn(t R) R {t^2},3,6)
+```
+
+Lean：
+
+```lean
+import Mathlib
+
+theorem bench : HasDerivAt (fun t : Real => t ^ 2) 6 3 := by have h := hasDerivAt_pow 2 (3 : Real); norm_num at h; exact h
+```
+
+[返回计时表](#litex-lean-checking-times)
+
+<!-- litex-lean-checking-code-appendix:end -->

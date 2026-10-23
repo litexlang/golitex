@@ -27,6 +27,7 @@ impl LitexToLeanCompiler {
                 "The retained verification proves another existential.",
             ));
         }
+        validate_obtain_output_names(source, &proof.statement.equal_tos)?;
         let verified_position = SourcePosition {
             before: 0,
             ..*position
@@ -47,8 +48,8 @@ impl LitexToLeanCompiler {
         )
     }
 
-    /// Eliminate the actual source existential and replay its ordered renamed
-    /// stores. Both direct and concrete-predicate obtain use this same stage.
+    /// Eliminate the actual existential and replay its ordered output stores.
+    /// Obtain renames its binders; have-by-existence retains their identities.
     pub(in crate::compile_to_lean) fn compile_obtain_elimination(
         &self,
         source: &PlainExistFact,
@@ -80,10 +81,14 @@ impl LitexToLeanCompiler {
                     .map(|name| Obj::Identifier(IdentifierObj::from_bound_name(name))),
             )
             .collect();
+        let same_binders = outputs
+            .iter()
+            .zip(&parameters)
+            .all(|(name, id)| name.id == *id);
         if renaming.len() != count
-            || outputs
-                .iter()
-                .any(|name| !output_ids.insert(name.id) || parameters.contains(&name.id))
+            || outputs.iter().any(|name| {
+                !output_ids.insert(name.id) || (!same_binders && parameters.contains(&name.id))
+            })
         {
             return Err(LeanCompileError::unsupported("Obtain/ParameterIdentity"));
         }
