@@ -32,8 +32,8 @@ impl LitexToLeanCompiler {
             VerifyFactResult::ExistShapedFact(result) => {
                 self.compile_verify_exist_result(result, position)
             }
-            VerifyFactResult::ForallFactWithIff(_) => {
-                Err(LeanCompileError::unsupported("ForallFactWithIff"))
+            VerifyFactResult::ForallFactWithIff(result) => {
+                self.compile_verify_forall_iff(result, position)
             }
             VerifyFactResult::NotForall(_) => Err(LeanCompileError::unsupported("NotForall")),
         }

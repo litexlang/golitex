@@ -60,7 +60,7 @@ impl ReadingSite {
         for (index, source) in sources.iter().enumerate() {
             let id = field(source, "id");
             let url = format!("{directory}/part{index}.json");
-            let mut metadata = without(source, &["content"]);
+            let mut metadata = without(source, &["content", "tokens"]);
             insert(&mut metadata, "chunk_url", text(&url));
             source_index.push(metadata);
             let owned = |value: &JsonValue| {

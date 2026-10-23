@@ -1,0 +1,4 @@
+forall A,B,D power_set(R):
+    A $subset B
+    =>:
+        intersect(A,D) $subset intersect(B,D)

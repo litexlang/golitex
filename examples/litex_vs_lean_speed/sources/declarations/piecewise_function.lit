@@ -1,0 +1,4 @@
+have fn bench_abs(x R) R by cases:
+    case x>=0: x
+    case x<0: -x
+bench_abs(-3)=3

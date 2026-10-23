@@ -1,0 +1,2 @@
+forall f fn(t R) R,x R:
+    f(x) $in fn_range(f)

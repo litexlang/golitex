@@ -1,0 +1,2 @@
+have fn bench_recip(x R:x!=0) R=1/x
+bench_recip(2)=1/2

@@ -109,6 +109,25 @@ impl Runtime {
         if let Some(proof) = search_equal_fact_proof_by_they_are_the_same(&comparison) {
             return Some(proof.into());
         }
+        // Known-fact argument matching uses syntactic identity and stored
+        // equality paths. A zero-premise algebraic identity (associativity,
+        // commutativity, ring normalization) is the same kind of computed
+        // identity: it needs no stored premise and no further truth search.
+        // Example: `(a*b)*(c*d) = a*b*c*d`.
+        if let Some(calculation) = self
+            .search_equal_fact_by_calculation(
+                &comparison,
+                crate::execute::execute_fact_stmt::VerifyState::top_level(),
+            )
+            .ok()
+            .flatten()
+        {
+            return Some(EqualFactSearchedProof::ByBuiltinRule(
+                crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::Calculation(
+                    calculation,
+                ),
+            ));
+        }
         let path = match adjacency.as_ref() {
             Some(graph) => super::super::verify_equality::equivalence_class_graph::equivalence_class_path_in_adjacency(graph, left, right),
             None => self.equivalence_class_path(left, right),

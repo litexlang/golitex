@@ -30,8 +30,10 @@ No single percentage combines these denominators.
 A fresh static scan on 2026-10-23 confirmed these inventory totals and rule
 reference counts. The latest accepted addition is `HaveObjByExistFacts`: global
 and local choices from a plain existential, including dependent division WD,
-pass Lean. Unique existence and the known-forall existential search route still
-reject explicitly. A dispatcher arm alone does not complete every proof route.
+pass Lean. Plain existence also consumes a cited universal conclusion with its
+recorded substitution and premises. Unique existence and unsupported nested
+argument-matching certificates still reject explicitly. A dispatcher arm alone
+does not complete every proof route.
 
 Statement counting expands `Stmt`, definition, object introduction, `by`,
 release, witness, register, trust, proof-block and command enums to leaf forms;
@@ -335,6 +337,25 @@ Lean 4.31.0, with 18 exported theorem declarations audited. Only `propext`,
 15 KB and 22 KB for the new pairs. Runtime, AST and result types are unchanged;
 Core adds two proved lemmas without new semantic assumptions. This completes
 two of the original eleven P1 statement forms, not P1 as a whole.
+
+### Universal conclusions supplying existential choices
+
+The [choice-from-universal pair](../lean/examples/choice_from_universal/statement.lit)
+uses a universal square-witness theorem to choose an object for an arbitrary
+real. A second theorem gives a reciprocal witness under a nonzero premise;
+its consumer makes the choice inside a theorem. Compilation checks the exact
+cited conclusion, outer parameter substitution, inner witness renaming,
+argument-match certificates and premise proofs. It invokes the existing
+universal theorem and eliminates its existential result.
+
+The generated 16 KB file passes Lean 4.31.0; its seven exported theorems use
+only the standard `propext`, `Classical.choice` and `Quot.sound` axioms. Focused
+rejection tests cover missing argument/premise evidence, changed patterns or
+substitutions, a missing nonzero premise, and a citation to a later declaration.
+The batch passed 695 compiler tests, and all 97 canonical pairs regenerated
+without drift. No Runtime, result-type or Core changes were needed. This increment covers the
+documented first-order argument certificates; more general nested binder
+matching remains part of the unfinished logical work.
 
 ### Per-route checks
 

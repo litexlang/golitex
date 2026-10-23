@@ -1,0 +1,4 @@
+forall x,y R:
+    x*y = 0
+    =>:
+        x=0 or y=0

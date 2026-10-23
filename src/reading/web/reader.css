@@ -120,6 +120,23 @@
 .lr-reference-count { border:0; border-radius:3px; padding:0 3px; background:var(--reading-soft); color:var(--reading-accent)!important; font:10.5px/1.8 var(--reading-code)!important; }
 .lr-reference-count:hover { background:var(--reading-premise); }
 .lr-token.lr-reference-selected { background:rgba(123,31,162,.16); outline:1px solid var(--reading-purple); }
+/* Semantic roles share the same palette for declarations and their uses. */
+.lr-syntax-keyword { --reading-token-color:#7b1fa2; color:var(--reading-token-color); font-weight:600; }
+.lr-syntax-predicate { --reading-token-color:#137a3f; color:var(--reading-token-color); }
+.lr-syntax-function { --reading-token-color:#996007; color:var(--reading-token-color); }
+.lr-syntax-object,.lr-syntax-identifier { --reading-token-color:#1565c0; color:var(--reading-token-color); }
+.lr-syntax-type { --reading-token-color:#00796b; color:var(--reading-token-color); }
+.lr-syntax-theorem { --reading-token-color:#ad3d36; color:var(--reading-token-color); }
+.lr-syntax-number,.lr-syntax-constant { --reading-token-color:#b65f16; color:var(--reading-token-color); }
+.lr-syntax-operator { --reading-token-color:#59636e; color:var(--reading-token-color); }
+.lr-syntax-punctuation { --reading-token-color:#87919c; color:var(--reading-token-color); }
+.lr-syntax-comment { color:#7a8490; font-style:italic; }
+.lr-source-code [tabindex="0"] { cursor:help; border-radius:2px; }
+.lr-source-code [tabindex="0"]:hover { background:rgba(0,0,0,.045); }
+.lr-token.lr-builtin-symbol { font-weight:600!important; }
+.lr-token-help { position:fixed; z-index:40; max-width:min(320px,calc(100vw - 16px)); padding:10px 13px; border:1px solid var(--reading-line); border-radius:6px; background:var(--reading-paper); box-shadow:0 4px 18px #0002; pointer-events:none; font:12px/1.6 Roboto,"PingFang SC",sans-serif; overflow-wrap:anywhere; }
+.lr-token-help strong { display:block; color:var(--reading-accent); font-family:var(--reading-code); font-size:13px; margin-bottom:3px; }
+.lr-token-help span { color:var(--reading-ink); }
 .lr-references-dialog { width:min(680px,calc(100vw - 32px)); max-height:75vh; overflow:auto; border:1px solid var(--reading-line); border-radius:6px; padding:22px; background:var(--reading-paper); color:var(--reading-ink); }
 .lr-references-dialog::backdrop { background:#243c2426; }
 .lr-references-dialog .lr-help-heading { margin-bottom:8px; }
@@ -140,8 +157,8 @@
 .lr-inferred-link { background:#f3f4f5; }
 .lr-inferred-conclusion { background:#f3f4f5; border-color:#c9cdd1; border-left-color:#7b8288; }
 .lr-explanation { margin:10px 0 0; color:var(--reading-muted); font-size:13px; }
-.lr-token { display:inline; vertical-align:baseline; border:0; background:none; padding:0 1px; font:inherit!important; color:var(--reading-blue)!important; border-radius:3px; text-decoration:underline dotted; text-underline-offset:4px; }
-.lr-token:hover { background:rgba(123,31,162,.12); }
+.lr-token { display:inline; vertical-align:baseline; border:0; background:none; padding:0 1px; font:inherit!important; color:var(--reading-token-color,var(--reading-blue))!important; border-radius:3px; text-decoration:none; text-underline-offset:4px; }
+.lr-token:hover { background:rgba(123,31,162,.08); text-decoration:underline dotted; }
 .lr-token.lr-symbol-selected { background:rgba(123,31,162,.19); color:var(--reading-purple)!important; }
 .lr-detail-body { padding:20px; overflow:auto; max-height:calc(100vh - 320px); }
 .lr-conclusion { background:rgba(25,118,210,.045); border:1px solid rgba(25,118,210,.3); border-left:3px solid var(--reading-blue); border-radius:8px; padding:16px; margin-bottom:20px; }

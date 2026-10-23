@@ -32,6 +32,8 @@ mod difference_zero_tests;
 mod finite_cart_coordinates_tests;
 #[path = "../../tests/unit/compile_to_lean/fn_application_unfold_substitution/tests.rs"]
 mod fn_application_unfold_substitution_tests;
+#[path = "../../tests/unit/compile_to_lean/forall_iff/tests.rs"]
+mod forall_iff_tests;
 #[path = "../../tests/unit/compile_to_lean/forall_premise_scope/tests.rs"]
 mod forall_premise_scope_tests;
 #[path = "../../tests/unit/compile_to_lean/formed_subjects/tests.rs"]

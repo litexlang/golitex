@@ -1,0 +1,4 @@
+claim:
+    ? forall a,b R:
+        exist u,v R st {u+v=a and u-v=b}
+    witness exist u,v R st {u+v=a and u-v=b} from (a+b)/2,(a-b)/2

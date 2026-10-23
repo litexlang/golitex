@@ -1,0 +1,2 @@
+forall x R:
+    sin(x)^2 + cos(x)^2 = 1

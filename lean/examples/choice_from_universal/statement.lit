@@ -1,0 +1,26 @@
+# A universal square witness can be chosen and used for an arbitrary real.
+thm square_witness_for_each_real:
+    ? forall seed R:
+        exist root R st {root * root = seed * seed}
+    witness exist root R st {root * root = seed * seed} from seed
+have square_seed R
+have square_root_choice R:
+    square_root_choice * square_root_choice = square_seed * square_seed
+square_root_choice * square_root_choice = square_seed * square_seed
+
+thm reciprocal_witness_for_nonzero:
+    ? forall divisor R:
+        divisor != 0
+        =>:
+            exist reciprocal R st {reciprocal * divisor = 1}
+    witness exist reciprocal R st {reciprocal * divisor = 1} from 1 / divisor:
+        (1 / divisor) * divisor = 1
+
+thm reciprocal_choice_use:
+    ? forall nonzero_seed R:
+        nonzero_seed != 0
+        =>:
+            exist selected R st {selected * nonzero_seed = 1}
+    have local_inverse R:
+        local_inverse * nonzero_seed = 1
+    witness exist selected R st {selected * nonzero_seed = 1} from local_inverse

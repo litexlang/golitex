@@ -1,0 +1,9 @@
+have fn bench_terms(k Z) Z=k
+by induc n from 1:
+    ? 2*sum(1,n,bench_terms)=n*(n+1)
+    ? from n=1:
+        sum(1,1,bench_terms)=bench_terms(1)=1
+    ? induc:
+        bench_terms(n+1)=n+1
+        sum(1,n+1,bench_terms)=sum(1,n,bench_terms)+bench_terms(n+1)
+        2*sum(1,n+1,bench_terms)=2*(sum(1,n,bench_terms)+(n+1))=2*sum(1,n,bench_terms)+2*(n+1)=n*(n+1)+2*(n+1)=(n+1)*(n+2)

@@ -12,6 +12,9 @@ impl LitexToLeanCompiler {
         compiled: &(String, String),
         position: &SourcePosition<'_>,
     ) -> Result<Vec<String>, LeanCompileError> {
+        if matches!(seed, Fact::ForallFactWithIff(_)) {
+            return self.compile_iff_stored_directions(store, seed, compiled, position);
+        }
         match &store.infer {
             None => self.compile_stored_projections(&store.store, seed, compiled, position),
             Some(InferResult::AtomicFact(infer)) => {
@@ -222,7 +225,20 @@ impl LitexToLeanCompiler {
             StoreFactResult::ExistShapedFact(stored) => {
                 crate::ast::fact::exist_shaped_fact_to_fact(&stored.fact)
             }
-            StoreFactResult::NotForallFact(_) | StoreFactResult::ForallFactWithIff(_) => {
+            StoreFactResult::ForallFactWithIff(stored) => {
+                use crate::compile_to_lean::compile_fact_stmt_result::compile_forall_iff_result::validate_iff_direction;
+                for (forward, direction) in [(true, &stored.forward), (false, &stored.reverse)] {
+                    validate_iff_direction(&stored.fact, &direction.fact, forward)?;
+                    if direction.fact_id != direction.fact.fact_id
+                        || direction.fact_id == stored.fact_id
+                        || stored.forward.fact_id == stored.reverse.fact_id
+                    {
+                        return Err(LeanCompileError::unsupported("ForallIff/StoreIdentity"));
+                    }
+                }
+                Fact::ForallFactWithIff(stored.fact.clone())
+            }
+            StoreFactResult::NotForallFact(_) => {
                 return Err(LeanCompileError::unsupported("Store/Compound"))
             }
         };

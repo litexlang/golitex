@@ -333,7 +333,7 @@ impl LitexToLeanCompiler {
 
     /// Only assumptions preceding the selected source constructor are binders.
     /// Their actual inference results are local definitions inside the factory.
-    fn compile_exist_constructor_prefix(
+    pub(in crate::compile_to_lean) fn compile_exist_constructor_prefix(
         &self,
         source: &PlainExistFact,
         formation: &ExistShapedFactWellDefinedProof,

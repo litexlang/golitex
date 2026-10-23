@@ -1,0 +1,151 @@
+[
+  {
+    "id": "sqrt_two_irrational",
+    "domain": "经典大证明",
+    "label": "sqrt(2) 不是有理数",
+    "litex": "# sqrt(2) is not rational.\nby contra:\n    ? not sqrt(2) $in Q\n    release thm rational_has_unique_reduced_fraction(sqrt(2))\n    obtain p, q from exist! p Z, q N+ st {sqrt(2) = p / q, gcd(p, q) = 1}\n\n    p^2 = (sqrt(2) * q)^2 = sqrt(2)^2 * q^2 = 2 * q^2\n    p^2 % 2 = (2 * q^2) % 2 = 0\n    release thm prime_divides_power(p, 2, 2)\n\n    p / 2 $in Z\n    q^2 = p^2 / 2 = 2 * (p / 2)^2\n    q^2 % 2 = (2 * (p / 2)^2) % 2 = 0\n    release thm prime_divides_power(q, 2, 2)\n\n    impossible 2 <= gcd(p, q) = 1",
+    "lean": "Irrational (Real.sqrt 2)",
+    "methods": {
+      "mathlib_theorem": "irrational_sqrt_two",
+      "scratch": "by\n  rintro ⟨q, hq⟩\n  have h2 : (q : Real) ^ 2 = 2 := by\n    rw [hq, Real.sq_sqrt (by norm_num : (0 : Real) ≤ 2)]\n  -- 唯一既约分数：p = |num|, m = den, gcd p m = 1\n  set p : Nat := q.num.natAbs with hp\n  set m : Nat := q.den with hm\n  have hden : (m : Real) ≠ 0 := by\n    have : (0 : Nat) < m := q.den_pos\n    exact_mod_cast this.ne'\n  -- 把 (q : ℝ) = num / den 代入\n  have hqeq : (q : Real) = (q.num : Real) / (m : Real) := by\n    rw [Rat.cast_def, hm]\n  -- p² = 2 m²（先把 ℤ 上的等式转成 ℕ）\n  have hnat : p ^ 2 = 2 * m ^ 2 := by\n    have hreal : (q.num : Real) ^ 2 = 2 * (m : Real) ^ 2 := by\n      rw [hqeq] at h2\n      field_simp at h2\n      nlinarith [h2]\n    have hint : q.num ^ 2 = 2 * (m : Int) ^ 2 := by\n      exact_mod_cast hreal\n    have habs : ((p : Int)) ^ 2 = 2 * (m : Int) ^ 2 := by\n      have hnum : q.num ^ 2 = ((p : Int)) ^ 2 := by\n        rcases Int.natAbs_eq q.num with h | h\n        · rw [h, hp]\n        · rw [h, hp]; ring\n      rw [← hnum, hint]\n    exact_mod_cast habs\n  -- p 是偶数\n  have hp2 : 2 ∣ p ^ 2 := ⟨m ^ 2, hnat⟩\n  have hp_even : 2 ∣ p := Nat.Prime.dvd_of_dvd_pow Nat.prime_two hp2\n  -- 于是 q 也是偶数\n  obtain ⟨k, hk⟩ := hp_even\n  have hm2 : m ^ 2 = 2 * k ^ 2 := by\n    rw [hk] at hnat\n    nlinarith\n  have hm2dvd : 2 ∣ m ^ 2 := ⟨k ^ 2, hm2⟩\n  have hm_even : 2 ∣ m := Nat.Prime.dvd_of_dvd_pow Nat.prime_two hm2dvd\n  -- 与 gcd(p, m) = 1 矛盾\n  have hcop : p.Coprime m := q.reduced\n  have hgcd : 2 ∣ p.gcd m := Nat.dvd_gcd ⟨k, hk⟩ hm_even\n  rw [hcop] at hgcd\n  omega"
+    },
+    "note": "两侧都走同一套步骤：反证取得唯一既约分数 p/q，由 p² = 2q² 推出 p、q 同为偶数，与 gcd(p,q)=1 矛盾。Lean 另有 mathlib_theorem 路线（直接引用 irrational_sqrt_two），仅用于对照“引用现成定理”与“重新检查证明”的差别，不作为主表口径。",
+    "primary_method": "scratch"
+  },
+  {
+    "id": "set_union_inter_distrib",
+    "domain": "集合",
+    "label": "并交分配律",
+    "litex": "forall A,B,D power_set(R):\n    union(A,intersect(B,D))=intersect(union(A,B),union(A,D))",
+    "lean": "∀ A B D : Set Real, A ∪ (B ∩ D) = (A ∪ B) ∩ (A ∪ D)",
+    "methods": {
+      "lemma": "fun A B D => Set.union_inter_distrib_left A B D",
+      "ext_simp": "by intro A B D; ext x; simp [Set.mem_union, Set.mem_inter_iff]; tauto"
+    }
+  },
+  {
+    "id": "set_diff_union",
+    "domain": "集合",
+    "label": "差集对并集的德摩根律",
+    "litex": "forall A,B,D power_set(R):\n    set_minus(A,union(B,D))=intersect(set_minus(A,B),set_minus(A,D))",
+    "lean": "∀ A B D : Set Real, A \\ (B ∪ D) = (A \\ B) ∩ (A \\ D)",
+    "methods": {
+      "ext_simp": "by intro A B D; ext x; simp only [Set.mem_sdiff, Set.mem_union, Set.mem_inter_iff]; tauto"
+    }
+  },
+  {
+    "id": "set_inter_monotone",
+    "domain": "集合",
+    "label": "交集保持包含",
+    "litex": "forall A,B,D power_set(R):\n    A $subset B\n    =>:\n        intersect(A,D) $subset intersect(B,D)",
+    "lean": "∀ A B D : Set Real, A ⊆ B → A ∩ D ⊆ B ∩ D",
+    "methods": {
+      "lemma": "fun A B D h => Set.inter_subset_inter_left D h",
+      "term": "fun A B D h x hx => ⟨h hx.1, hx.2⟩"
+    }
+  },
+  {
+    "id": "function_mem_range",
+    "domain": "函数",
+    "label": "函数值属于值域",
+    "litex": "forall f fn(t R) R,x R:\n    f(x) $in fn_range(f)",
+    "lean": "∀ (f : Real → Real) (x : Real), f x ∈ Set.range f",
+    "methods": {
+      "lemma": "fun f x => Set.mem_range_self x"
+    }
+  },
+  {
+    "id": "function_comp_assoc",
+    "domain": "函数",
+    "label": "复合的结合律",
+    "litex": "forall f,g,h fn(t R) R:\n    compose(compose(f,g),h)=compose(f,compose(g,h))",
+    "lean": "∀ f g h : Real → Real, (f ∘ g) ∘ h = f ∘ (g ∘ h)",
+    "methods": {
+      "term": "fun _ _ _ => rfl",
+      "lemma": "fun f g h => Function.comp_assoc f g h"
+    }
+  },
+  {
+    "id": "integer_division_decomposition",
+    "domain": "整数算术",
+    "label": "整数除法的商余分解",
+    "litex": "forall a Z,d N+:\n    a=d*quot(a,d)+a%d",
+    "lean": "∀ (a : Int) (d : Nat), 0 < d → a = (d : Int) * (a / (d : Int)) + a % (d : Int)",
+    "methods": {
+      "lemma": "fun a d _ => (Int.mul_ediv_add_emod a (d : Int)).symm"
+    }
+  },
+  {
+    "id": "integer_divisibility",
+    "domain": "整除",
+    "label": "整数乘积被其因子整除",
+    "litex": "forall a Z,c Z*:\n    $dvd(a*c,c)",
+    "lean": "∀ (a : Int) (c : Int), c ≠ 0 → c ∣ a * c",
+    "methods": {
+      "lemma": "fun a c _ => dvd_mul_left c a"
+    }
+  },
+  {
+    "id": "finite_cardinality",
+    "domain": "有限组合",
+    "label": "集合 {1,2,3} 的元素个数",
+    "litex": "finite_set_size({1,2,3})=3",
+    "lean": "({1, 2, 3} : Finset Nat).card = 3",
+    "methods": {
+      "decide": "by decide",
+      "norm_num": "by norm_num"
+    }
+  },
+  {
+    "id": "powerset_cardinality",
+    "domain": "有限组合",
+    "label": "n 元集合有 2^n 个子集",
+    "litex": "forall A finite_set:\n    A $subset N\n    =>:\n        finite_set_size(power_set(A))=2^finite_set_size(A)",
+    "lean": "∀ s : Finset Nat, s.powerset.card = 2 ^ s.card",
+    "methods": {
+      "lemma": "fun s => Finset.card_powerset s"
+    }
+  },
+  {
+    "id": "factorial_positive",
+    "domain": "组合",
+    "label": "自然数阶乘为正",
+    "litex": "forall n N:\n    factorial(n)>0",
+    "lean": "∀ n : Nat, 0 < n.factorial",
+    "methods": {
+      "lemma": "fun n => Nat.factorial_pos n"
+    }
+  },
+  {
+    "id": "derivative_square_at_three",
+    "domain": "微积分",
+    "label": "x^2 在 3 处的导数为 6",
+    "litex": "$has_derivative_at(fn(t R) R {t^2},3,6)",
+    "lean": "HasDerivAt (fun t : Real => t ^ 2) 6 3",
+    "methods": {
+      "chain": "by\n  have h : HasDerivAt (fun t : Real => t ^ 2) ((2 : Real) * 3 ^ (2 - 1)) 3 := hasDerivAt_pow 2 3\n  refine h.congr_deriv ?_\n  norm_num"
+    }
+  },
+  {
+    "id": "pair_reconstruction",
+    "domain": "笛卡尔积",
+    "label": "有序对的坐标重构",
+    "litex": "forall p cart(R,R):\n    (p(1),p(2))=p",
+    "lean": "∀ p : Real × Real, (p.1, p.2) = p",
+    "methods": {
+      "term": "fun _ => rfl",
+      "lemma": "fun p => Prod.mk.eta (p := p)"
+    }
+  },
+  {
+    "id": "continuity_square_at_three",
+    "domain": "微积分",
+    "label": "x^2 在 3 处连续",
+    "litex": "$is_continuous_at(fn(t R) R {t^2},3)",
+    "lean": "ContinuousAt (fun x : Real => x ^ 2) 3",
+    "methods": {
+      "lemma": "continuousAt_pow (3 : Real) 2"
+    },
+    "note": "极限语句 lim(fn(t R) R {t^2},3)=9 需要先给出空间是实数聚点、连续性蕴含极限这两步，Litex 侧不接受裸语句；因此本轮只测连续，极限留待按整段程序比较。"
+  }
+]

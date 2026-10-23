@@ -11,17 +11,29 @@ impl LitexToLeanCompiler {
         result: &RunLitexCodeResult,
     ) -> Result<String, LeanCompileError> {
         fn parameters<'s>(fact: &'s Fact, out: &mut Vec<IdentifierId>) {
-            if let Fact::ForallFact(fact) = fact {
-                for group in &fact.typed_parameters.groups {
-                    for parameter in &group.params {
-                        if !out.contains(&parameter.id) {
-                            out.push(parameter.id);
-                        }
+            let fact = match fact {
+                Fact::ForallFact(fact) => fact,
+                Fact::ForallFactWithIff(fact) => &fact.forall_fact,
+                _ => return,
+            };
+            for group in &fact.typed_parameters.groups {
+                for parameter in &group.params {
+                    if !out.contains(&parameter.id) {
+                        out.push(parameter.id);
                     }
                 }
             }
+            for premise in &fact.dom_facts {
+                parameters(premise, out);
+            }
         }
         fn verify(result: &VerifyFactResult, out: &mut Vec<IdentifierId>) {
+            if let VerifyFactResult::ForallFactWithIff(result) = result {
+                if let VerifyForallFactWithIffResult::Success(proof) = result.as_ref() {
+                    verify(&proof.then_implies_iff, out);
+                    verify(&proof.iff_implies_then, out);
+                }
+            }
             if let VerifyFactResult::ForallFact(result) = result {
                 if let VerifyForallFactResult::Success(proof) = result.as_ref() {
                     parameters(&Fact::ForallFact(proof.fact().clone()), out);

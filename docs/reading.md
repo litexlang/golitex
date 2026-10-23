@@ -74,6 +74,23 @@ chapter do not inflate the current-file count. This reports source references,
 not proof dependencies. Older bundles remain readable and use existing explicit
 declaration metadata where available.
 
+The source uses IDE-style colors for keywords, predicates, functions, objects,
+types/sets, named theorems, numbers/constants, operators and punctuation.
+Comments and inline asides are muted. Semantic colors use resolved identities,
+declaration kinds and typed function-head evidence; a resolved identifier takes
+precedence over the lexical catalogue. The catalogue is generated from current
+parser spellings and tokenizer symbols with
+`python3 src/reading/generate_highlighting.py`; use `--check` to detect drift.
+Hovering or focusing supported tokens explains their language role; resolved builtin sets have brief
+mathematical labels such as `R` → real numbers ℝ. Escape dismisses the tooltip.
+An optional source `tokens` array carries normalized tokenizer `text` and original
+UTF-8 `start_byte`/`end_byte` ranges. Comments and inline asides are excluded by
+the language tokenizer. Unicode aliases keep their authored spelling in the
+viewer. Resolved symbol occurrences take precedence over lexical highlighting,
+so an identifier is never assigned a keyword meaning by spelling alone. Lazy
+exports retain tokens in chapter chunks, not the initial index. Older bundles
+retain ordinary source rendering and builtin-set help from resolved identities.
+
 `examples/reading/inferred_facts.lit` contains this runnable sequence after
 its definitions and object declaration:
 

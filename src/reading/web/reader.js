@@ -50,6 +50,71 @@
   function humanize(value) { return String(value||"").replace(/([a-z])([A-Z])/g,"$1 $2").replace(/_/g," "); }
   function bytePositions(source) { const positions=new Map([[0,0]]); let bytes=0,units=0; for(const char of source){ const point=char.codePointAt(0); bytes+=point<128?1:point<2048?2:point<65536?3:4; units+=char.length; positions.set(bytes,units); } return positions; }
 
+  // Authored language help. Token boundaries come from the real tokenizer;
+  // builtin-set meanings are keyed by resolved identities, never source names.
+  const syntaxHelp={
+    prop:["定义命题：给出它的参数和成立条件。","Define a predicate with parameters and defining conditions."],
+    abstract_prop:["声明抽象命题接口，不给出等价定义。","Declare a predicate interface without a defining equivalence."],
+    have:["引入对象或函数，并检查声明要求。","Introduce an object or function and check its declaration requirements."],
+    let:["引入当前上下文中的变量或绑定。","Introduce a variable or binding in the current context."],
+    fn:["函数：描述参数和取值类型。","Function: describe parameter and result types."],
+    forall:["全称量词 ∀：对指定范围内的每一个对象。","Universal quantifier ∀: for every object in the specified domain."],
+    exist:["存在量词 ∃：存在满足条件的对象。","Existential quantifier ∃: an object satisfying the conditions exists."],
+    "exist!":["唯一存在 ∃!：恰有一个对象满足条件。","Unique existence ∃!: exactly one object satisfies the conditions."],
+    claim:["提出待证明的结论，并在块内给出证明。","State a goal and provide its proof in the block."],
+    thm:["定义可供后文使用的定理。","Define a theorem for later use."],
+    by:["指定证明或展开所采用的方法。","Specify a proof or expansion method."],
+    def:["按定义检查或展开命题。","Check or unfold a predicate by its definition."],
+    contra:["反证法：假设结论不成立并推出矛盾。","Proof by contradiction: negate the goal and derive a contradiction."],
+    cases:["分情况证明。","Prove by cases."],
+    case:["一个分支的条件与证明。","A case condition and its proof."],
+    induc:["归纳证明。","Proof by induction."],
+    strong_induc:["强归纳证明。","Proof by strong induction."],
+    obtain:["从已知存在事实中取出见证对象。","Obtain witness objects from an existence fact."],
+    witness:["提供满足存在性结论的具体见证。","Supply a concrete witness for an existence goal."],
+    trust:["显式信任：此处内容作为假设接受。","Explicit trust: accept the content here as an assumption."],
+    axiom:["声明公理，作为后续推理的前提。","Declare an axiom as a premise for subsequent reasoning."],
+    struct:["定义带字段与约束的结构。","Define a structure with fields and constraints."],
+    template:["定义可实例化的模板。","Define a template that can be instantiated."],
+    set:["集合参数类型。","Set parameter type."],
+    nonempty_set:["非空集合参数类型。","Nonempty-set parameter type."],
+    finite_set:["有限集合参数类型。","Finite-set parameter type."],
+    in:["属于 ∈：左边的对象属于右边的集合。","Membership ∈: the object on the left belongs to the set on the right."],
+    and:["且 ∧：各条件同时成立。","Conjunction ∧: all conditions hold."],
+    or:["或 ∨：至少一个条件成立。","Disjunction ∨: at least one condition holds."],
+    not:["否定 ¬：后面的命题不成立。","Negation ¬: the following proposition does not hold."],
+    "=>":["蕴含 ⇒：前面的条件推出后面的结论。","Implication ⇒: the preceding conditions imply the conclusion."],
+    "<=>":["等价 ⇔：两边互相推出。","Equivalence ⇔: each side implies the other."],
+    "?":["标出待证明的目标。","Mark a goal to be proved."],
+    "$" :["命题应用的前缀。","Prefix for a predicate application."],
+    "=":["相等。","Equality."],
+    "!=":["不相等 ≠。","Inequality ≠."],
+    "<=":["小于或等于 ≤。","Less than or equal to ≤."],
+    ">=":["大于或等于 ≥。","Greater than or equal to ≥."],
+    "<":["小于。","Less than."],
+    ">":["大于。","Greater than."]
+  };
+  // BEGIN GENERATED LEXICAL KINDS
+  const lexicalKinds=new Map([["keyword",["?","abstract_prop","algo","and","as","axiom","axiom_of_choice","by","case","cases","claim","contra","def","enumerate","eval","exist","exist!","expand","extension","fn","fn_extension","for","forall","from","have","import","impossible","induc","let","not","obtain","or","prop","reflexive","register","regularity_axiom","release","replacement_axiom","sketch","st","strategy","strong_induc","struct","symmetric","template","thm","transitive","trust","witness","zorn_lemma"]],["predicate",["$","bijective","coprime","dvd","fn_eq","fn_eq_in","has_derivative_at","has_limit_at","has_limit_left","has_limit_neg_inf","has_limit_pos_inf","has_limit_right","has_riemann_integral","has_seq_liminf","has_seq_limit","has_seq_limsup","in","injective","is_cart","is_choice_function_for","is_continuous","is_continuous_at","is_continuous_left","is_continuous_right","is_differentiable_at","is_finite_set","is_lipschitz","is_nonempty_set","is_real_accumulation_at","is_real_accumulation_left","is_real_accumulation_right","is_real_bounded","is_real_bounded_above","is_real_bounded_below","is_real_lower_bound","is_real_upper_bound","is_riemann_integrable","is_seq_bounded","is_seq_bounded_above","is_seq_bounded_below","is_seq_cauchy","is_seq_convergent","is_seq_nondecreasing","is_seq_nonincreasing","is_seq_strictly_decreasing","is_seq_strictly_increasing","is_set","is_tuple","is_uniformly_continuous","prime","proper_subset","proper_superset","subset","superset","surjective","∉"]],["function",["C_abs","abs","arccos","arccot","arcsin","arctan","cart","cart_dim","ceil","closed_range","compose","conj","cos","cosh","cot","coth","csc","csch","derivative","exp","factorial","family_intersect","family_union","finite_seq","finite_set_max","finite_set_min","finite_set_product","finite_set_reduce","finite_set_size","finite_set_sum","floor","fn_preimage","fn_range","gcd","img","index_cart","index_intersect","index_union","inf","integral","intersect","lcm","lim","lim_left","lim_neg_inf","lim_pos_inf","lim_right","liminf","limsup","ln","log","max","min","power_set","preimage","preimage_set","product","proj","quot","range","re","reduce","sec","sech","seq","set_diff","set_minus","sign","sin","sinh","sqrt","sum","sup","tan","tanh","tuple","tuple_dim","union"]],["type",["C","C*","N","N+","Q","Q*","Q+","Q-","R","R*","R+","R-","Z","Z*","Z+","Z-","finite_set","matrix","nonempty_set","obj","set","ℂ*","ℕ+","ℚ*","ℚ+","ℚ-","ℝ*","ℝ+","ℝ-","ℤ*","ℤ+","ℤ-"]],["constant",["e","i","pi"]],["operator",["!","!=","%","&","'*","'+","'-","'^","*","*'","+","-","->","/","<","<=","<=>","=","=>",">",">=","^","×","∘","∩","∪"]],["punctuation",["'","(",")",",",".","...",":","::",":::","[","\\","]","{","|","}"]]].flatMap(([kind,tokens])=>tokens.map(token=>[token,kind])));
+  // END GENERATED LEXICAL KINDS
+  const syntaxRoleHelp={
+    keyword:["Litex 关键词。","Litex keyword."],
+    predicate:["谓词：表达一个数学条件。","Predicate: express a mathematical condition."],
+    function:["函数：把参数映射到一个值。","Function: map arguments to a value."],
+    object:["对象或变量：表示一个数学对象。","Object or variable: denote a mathematical object."],
+    type:["类型或集合：描述对象的范围。","Type or set: describe a domain of objects."],
+    theorem:["已命名的定理、公理或证明策略。","Named theorem, axiom or proof strategy."]
+  };
+  const standardSetHelp={
+    N:["自然数集 ℕ（含 0）","Natural numbers ℕ (including 0)"],
+    Z:["整数集 ℤ","Integers ℤ"], Q:["有理数集 ℚ","Rational numbers ℚ"],
+    R:["实数集 ℝ","Real numbers ℝ"], C:["复数集 ℂ","Complex numbers ℂ"],
+    "N+":["正自然数集","Positive natural numbers"],
+    "Z+":["正整数集","Positive integers"], "Q+":["正有理数集","Positive rational numbers"], "R+":["正实数集","Positive real numbers"],
+    "Z-":["负整数集","Negative integers"], "Q-":["负有理数集","Negative rational numbers"], "R-":["负实数集","Negative real numbers"],
+    "Z*":["非零整数集","Nonzero integers"], "Q*":["非零有理数集","Nonzero rational numbers"], "R*":["非零实数集","Nonzero real numbers"], "C*":["非零复数集","Nonzero complex numbers"]
+  };
+
   function mountReadingReader(root, options) {
     options=options||{};
     let bundle=options.document||{sources:[],statements:[],rules:[]};
@@ -62,10 +127,10 @@
     let history=[];
     let sources,statements,statementsBySource,facts,symbols,rules,occurrences,usedRules,evidenceNodes,inferences,wellDefinedness;
     let codePane,detailPane,rulebook,ruleGrid,ruleSearch,usedOnly,paging;
-    let referencesBySource,declarationsBySource;
+    let referencesBySource,declarationsBySource,symbolRoles;
     let rulePage=0,activeRule=null;
     let rulebookState={query:"",usedOnly:true,open:false,category:"all"};
-    let destroyed=false;
+    let destroyed=false,tokenHelp=null;
     function lang(){return locale.startsWith("zh")?"zh":"en";}
     function t(key){return copy[lang()][key]||key;}
     function statementPresentation(statement){
@@ -106,6 +171,18 @@
         }
         for(const id of ids){const definition=occurrences.find(value=>value.source_id===statement.source_id&&value.statement_id===canonical&&value.symbol_id===id&&value.definition===true);if(!definition||seenDeclarations.has(spanKey(definition)))continue;seenDeclarations.add(spanKey(definition));if(!declarationsBySource.has(statement.source_id))declarationsBySource.set(statement.source_id,[]);declarationsBySource.get(statement.source_id).push(definition);}
       }
+      symbolRoles=new Map();
+      for(const symbol of symbols.values()){
+        const kind=symbol.kind;
+        symbolRoles.set(symbol.id,symbol.id.startsWith("builtin:set:")?"type":["DefPropStmt","DefAbstractPropStmt"].includes(kind)?"predicate":["DefThmStmt","AxiomStmt","DefStrategyStmt"].includes(kind)?"theorem":["DefStructStmt","DefTemplateStmt"].includes(kind)?"type":"object");
+      }
+      for(const statement of statements.values())if(["HaveFnEqualStmt","HaveFnEqualCaseByCaseStmt","HaveFnByInducStmt","HaveFnByForallExistUniqueStmt","DefAlgoByCasesStmt","DefAlgoByInducStmt"].includes(String(statement.statement_kind||"").split(".").at(-1)))for(const id of array(statement.declaration_symbol_ids))symbolRoles.set(id,"function");
+      const assignRole=(id,kind)=>{if(id&&(!symbolRoles.has(id)||symbolRoles.get(id)==="object"))symbolRoles.set(id,kind);};
+      const inspectRole=node=>{
+        if(node.type==="FnObjHead"&&node.variant==="Identifier")assignRole(node.fields?.["0"]?.symbol_id,"function");
+        if(["NormalAtomicFact","NotNormalAtomicFact"].includes(node.type))assignRole(node.fields?.predicate?.symbol_id,"predicate");
+      };
+      const seenRoles=new Set();for(const statement of statements.values())walkEvidence(statement.evidence,inspectRole,seenRoles);
       if(!statements.size)rulebookState.usedOnly=false;
       usedRules=new Map();
       for(const statement of statements.values())for(const id of statementRules(statement)){if(!usedRules.has(id))usedRules.set(id,new Set());usedRules.get(id).add(statement.id);}
@@ -278,7 +355,7 @@
 
     function render(){
       if(destroyed)return;
-      root.replaceChildren();root.classList.add("lr-root");
+      hideTokenHelp();root.replaceChildren();root.classList.add("lr-root");
       const toolbar=element("div","lr-toolbar");
       const titleBlock=element("div","lr-title-block");titleBlock.append(element("p","lr-kicker",t("title")));const heading=element("div","lr-book-heading");titleBlock.append(heading);toolbar.append(titleBlock);
       const actions=element("div","lr-toolbar-actions");
@@ -374,6 +451,30 @@
 
     function renderSourceLine(){detailPane.append(element("p","lr-empty-note",t("noStatement")));}
 
+    function hideTokenHelp(){if(tokenHelp){tokenHelp.node.remove();tokenHelp.owner.removeAttribute("aria-describedby");tokenHelp=null;}}
+    function positionTokenHelp(){
+      if(!tokenHelp)return;const box=tokenHelp.owner.getBoundingClientRect(),tip=tokenHelp.node,rect=tip.getBoundingClientRect(),view=document.documentElement;
+      if(box.bottom<0||box.top>view.clientHeight){hideTokenHelp();return;}
+      tip.style.left=Math.max(8,Math.min(box.left,view.clientWidth-rect.width-8))+"px";
+      tip.style.top=Math.max(8,box.bottom+8+rect.height<=view.clientHeight?box.bottom+8:box.top-rect.height-8)+"px";
+    }
+    function attachTokenHelp(token,heading,meaning){
+      token.setAttribute("aria-label",heading+" · "+meaning);
+      function show(){
+        if(tokenHelp?.owner===token)return;hideTokenHelp();
+        const tip=element("div","lr-token-help"),id="lr-token-help-"+Math.random().toString(36).slice(2);tip.id=id;tip.setAttribute("role","tooltip");
+        tip.append(element("strong",null,heading),element("span",null,meaning));root.append(tip);token.setAttribute("aria-describedby",id);tokenHelp={node:tip,owner:token};
+        positionTokenHelp();
+      }
+      token.addEventListener("mouseenter",show);token.addEventListener("focus",show);
+      token.addEventListener("mouseleave",hideTokenHelp);token.addEventListener("blur",hideTokenHelp);
+      token.addEventListener("keydown",event=>{if(event.key==="Escape")hideTokenHelp();});
+    }
+    function symbolHelp(id){
+      if(!id.startsWith("builtin:set:"))return null;
+      return standardSetHelp[id.slice("builtin:set:".length)]?.[lang()==="zh"?0:1]||null;
+    }
+
     function renderCode(){
       const source=sources.get(state.source);if(!source)return;
       const content=source.content||"";const offsets=bytePositions(content);
@@ -383,6 +484,8 @@
       const premiseLines=new Set(citations.map(id=>factLocation(facts.get(id))).filter(value=>value.sourceId===source.id).map(value=>value.line));
       function selectLine(owning,line){if(owning)selectStatement(owning.id,line);}
       const mentions=occurrences.filter(value=>value.source_id===source.id).map(value=>({...value,start:offsets.get(value.start_byte),end:offsets.get(value.end_byte)})).filter(value=>value.start!==undefined&&value.end!==undefined).sort((a,b)=>a.start-b.start);
+      let mentionIndex=0;
+      const lexical=array(source.tokens).map(value=>({...value,start:offsets.get(value.start_byte),end:offsets.get(value.end_byte)})).filter(value=>value.start!==undefined&&value.end!==undefined).sort((a,b)=>a.start-b.start).filter(value=>{while(mentionIndex<mentions.length&&mentions[mentionIndex].end<=value.start)mentionIndex++;return !mentions[mentionIndex]||mentions[mentionIndex].start>=value.end;});
       const declarationsAt=new Map();
       for(const declaration of declarationsBySource.get(source.id)||[]){const start=offsets.get(declaration.start_byte);if(start===undefined)continue;const line=content.slice(0,start).split("\n").length;if(!declarationsAt.has(line))declarationsAt.set(line,[]);declarationsAt.get(line).push(declaration);}
       const inferredAt=new Map();
@@ -390,6 +493,8 @@
         const line=statement.line;
         for(const id of statementInferredFacts(statement))if(facts.has(id)&&factInferences(id).length){if(!inferredAt.has(line))inferredAt.set(line,[]);inferredAt.get(line).push(id);}
       }
+      const hasTokens=array(source.tokens).length>0;
+      function appendTrivia(target,text){if(hasTokens&&text.trim())target.append(element("span","lr-syntax-comment",text));else target.append(document.createTextNode(text));}
       let lineStart=0,lineByteStart=0;const encoder=new TextEncoder();
       const lines=content.split("\n");
       for(let i=0;i<lines.length;i++){
@@ -399,15 +504,23 @@
         if(state.focusLine?lineNumber===state.focusLine:owning?.id===state.statement)row.classList.add("lr-selected");else if(premiseLines.has(lineNumber))row.classList.add("lr-premise");
         const number=button(String(lineNumber),"lr-line-number",()=>selectLine(owning,lineNumber));number.disabled=!owning;number.setAttribute("aria-label",t("sourceLine")+" "+lineNumber);row.append(number);
         const lineContent=element("div","lr-code-content"),code=element("code","lr-source-code");let cursor=lineStart;
-        for(const occurrence of mentions.filter(value=>value.start>=lineStart&&value.end<=lineEnd)){
+        const lineTokens=[...mentions.filter(value=>value.start>=lineStart&&value.end<=lineEnd),...lexical.filter(value=>value.start>=lineStart&&value.end<=lineEnd)].sort((a,b)=>a.start-b.start||Number(!!b.symbol_id)-Number(!!a.symbol_id)||Number(a.text==="$")-Number(b.text==="$"));
+        for(const occurrence of lineTokens){
           if(occurrence.start<cursor)continue;
-          code.append(document.createTextNode(content.slice(cursor,occurrence.start)));
-          const token=button(content.slice(occurrence.start,occurrence.end),"lr-token",event=>{event.stopPropagation();selectSymbol(occurrence.symbol_id);});token.dataset.symbol=occurrence.symbol_id;token.title=symbols.get(occurrence.symbol_id)?.name||"";
+          appendTrivia(code,content.slice(cursor,occurrence.start));
+          const spelling=content.slice(occurrence.start,occurrence.end);
+          if(!occurrence.symbol_id){
+            const role=lexicalKinds.get(occurrence.text)||(/^\d+(?:\.\d+)?$/.test(occurrence.text)?"number":"identifier"),token=element("span","lr-syntax-"+role,spelling);token.dataset.syntax=role;
+            const help=(Object.prototype.hasOwnProperty.call(syntaxHelp,occurrence.text)?syntaxHelp[occurrence.text]:syntaxRoleHelp[role])?.[lang()==="zh"?0:1];
+            if(help){token.tabIndex=0;attachTokenHelp(token,spelling,help);}code.append(token);cursor=occurrence.end;continue;
+          }
+          const role=symbolRoles.get(occurrence.symbol_id)||"object",token=button(spelling,"lr-token lr-syntax-"+role,event=>{event.stopPropagation();selectSymbol(occurrence.symbol_id);});token.dataset.symbol=occurrence.symbol_id;token.dataset.syntax=role;
+          const builtinMeaning=symbolHelp(occurrence.symbol_id),meaning=builtinMeaning||syntaxRoleHelp[role]?.[lang()==="zh"?0:1];if(builtinMeaning)token.classList.add("lr-builtin-symbol");if(meaning)attachTokenHelp(token,spelling,meaning);
           if(occurrence.symbol_id===state.symbol)token.classList.add("lr-symbol-selected");
           if(state.reference&&occurrence.symbol_id===state.reference.symbol_id&&occurrence.source_id===state.reference.source_id&&occurrence.start_byte===state.reference.start_byte&&occurrence.end_byte===state.reference.end_byte)token.classList.add("lr-reference-selected");
           code.append(token);cursor=occurrence.end;
         }
-        code.append(document.createTextNode(content.slice(cursor,lineEnd)||(!line?" ":"")));lineContent.append(code);code.addEventListener("click",()=>selectLine(owning,lineNumber));
+        appendTrivia(code,content.slice(cursor,lineEnd)||(!line?" ":""));lineContent.append(code);code.addEventListener("click",()=>selectLine(owning,lineNumber));
         const declarations=declarationsAt.get(lineNumber)||[];
         if(declarations.length){const counts=element("span","lr-definition-references");for(const declaration of declarations){const uses=referenceUses(declaration.symbol_id,source.id),name=symbols.get(declaration.symbol_id)?.name||"",label=t("referenceCount").replace("{count}",uses.length);const count=button((declarations.length>1?name+" · ":"")+label,"lr-reference-count",()=>openReferences(declaration.symbol_id,source.id,count));count.dataset.symbol=declaration.symbol_id;count.setAttribute("aria-label",t("referenceFor").replace("{name}",name)+" · "+label);counts.append(count);}lineContent.append(counts);}
         const inferredIds=[...new Set(inferredAt.get(lineNumber)||[])];
@@ -534,6 +647,8 @@
 
     const dismissTypeHelp=event=>{const help=root.querySelector(".lr-type-help"),tag=root.querySelector(".lr-type-badge");if(help&&!help.hidden&&!help.contains(event.target)&&!tag?.contains(event.target)){help.hidden=true;tag?.setAttribute("aria-expanded","false");}};
     document.addEventListener("pointerdown",dismissTypeHelp);
+    window.addEventListener("scroll",positionTokenHelp,true);
+    window.addEventListener("resize",positionTokenHelp);
     index();render();
     return {
       update(document){if(document.kind==="reading_manifest")throw new Error("Use LitexReading.open for a manifest");generation++;navigationSerial++;bookSerial++;loader=null;allOccurrencesLoaded=true;bookIndex=null;bookQuery="";bookOpen=null;operationStatus="";bundle=document;history=[];state={source:null,statement:null,symbol:null,fact:null,wd:null,focusLine:null};activeRule=null;rulePage=0;rulebookState={query:"",usedOnly:true,open:false,category:"all"};index();render();if(options.onNavigate)options.onNavigate({...state},{bundle_id:bundle.bundle_id||null});},
@@ -543,7 +658,7 @@
       selectWellDefinedness(id){return wellDefinedness.has(id)?selectWellDefinedness(id):false;},
       getSelection(){return {...state};},
       getBundleId(){return bundle.bundle_id||null;},
-      destroy(){destroyed=true;generation++;navigationSerial++;bookSerial++;document.removeEventListener("pointerdown",dismissTypeHelp);root.replaceChildren();}
+      destroy(){hideTokenHelp();window.removeEventListener("scroll",positionTokenHelp,true);window.removeEventListener("resize",positionTokenHelp);destroyed=true;generation++;navigationSerial++;bookSerial++;document.removeEventListener("pointerdown",dismissTypeHelp);root.replaceChildren();}
     };
   }
   function mergeReadingChunk(bundle,part){

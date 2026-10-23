@@ -1,0 +1,17 @@
+{
+  "date": "2026-10-23 12:00 CST",
+  "platform": "Darwin arm64",
+  "litex": "Litex 1.1.2-beta",
+  "lean": "Lean (version 4.31.0, arm64-apple-darwin24.6.0, commit 68218e876d2a38b1985b8590fff244a83c321783, Release)",
+  "rustc": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
+  "golitex_commit": "1203597f289c9ff048d4e0ab9144111083211291",
+  "sha256": {
+    "litex": "1f5a5b1689dd70e2aa13b6b1e6b2f0ecc166f0c78a43f663b650825e3943cb36",
+    "liblitex.rlib": "d487d8fcf9aceb106681fa29e4bf84cdaa890a7c039942fcc21b9e8ac715fb74"
+  },
+  "reps": {
+    "litex_warm_per_process": 30,
+    "lean_warm_per_process": 7,
+    "processes": 3
+  }
+}

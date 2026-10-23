@@ -1,0 +1,4 @@
+forall A finite_set:
+    A $subset N
+    =>:
+        finite_set_size(power_set(A))=2^finite_set_size(A)

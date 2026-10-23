@@ -1,0 +1,67 @@
+{
+  "litex": [
+    {
+      "case": "sqrt_two_irrational",
+      "litex": "success"
+    },
+    {
+      "case": "set_union_inter_distrib",
+      "litex": "success"
+    },
+    {
+      "case": "set_diff_union",
+      "litex": "success"
+    },
+    {
+      "case": "set_inter_monotone",
+      "litex": "success"
+    },
+    {
+      "case": "function_mem_range",
+      "litex": "success"
+    },
+    {
+      "case": "function_comp_assoc",
+      "litex": "success"
+    },
+    {
+      "case": "integer_division_decomposition",
+      "litex": "success"
+    },
+    {
+      "case": "integer_divisibility",
+      "litex": "success"
+    },
+    {
+      "case": "finite_cardinality",
+      "litex": "success"
+    },
+    {
+      "case": "powerset_cardinality",
+      "litex": "success"
+    },
+    {
+      "case": "factorial_positive",
+      "litex": "success"
+    },
+    {
+      "case": "derivative_square_at_three",
+      "litex": "success"
+    },
+    {
+      "case": "pair_reconstruction",
+      "litex": "success"
+    },
+    {
+      "case": "continuity_square_at_three",
+      "litex": "success"
+    }
+  ],
+  "lean": {
+    "file": "sources/new-round/Validate.lean",
+    "exit": 0,
+    "sorry": false,
+    "stderr": "",
+    "stdout_tail": "'validated_sqrt_two_irrational_mathlib_theorem' depends on axioms: [propext, Classical.choice, Quot.sound]\n'validated_sqrt_two_irrational_scratch' depends on axioms: [propext, Classical.choice, Quot.sound]\n'validated_set_union_inter_distrib_lemma' depends on axioms: [propext, Classical.choice, Quot.sound]\n'validated_set_union_inter_distrib_ext_simp' depends on axioms: [propext, Classical.choice, Quot.sound]\n'validated_set_diff_union_ext_simp' depends on axioms: [propext, Classical.choice, Quot.sound]\n'validated_set_inter_monotone_lemma' depends on axioms: [propext, Classical.choice, Quot.sound]\n'validated_set_inter_monotone_term' depends on axioms: [propext, Classical.choice, Quot.sound]\n'validated_function_mem_range_lemma' depends on axioms: [propext, Classical.choice, Quot.sound]\n'validated_function_comp_assoc_term' depends on axioms: [propext, Classical.choice, Quot.sound]\n'validated_function_comp_assoc_lemma' depends on axioms: [propext, Classical.choice, Quot.sound]\n'validated_integer_division_decomposition_lemma' depends on axioms: [propext]\n'validated_integer_divisibility_lemma' depends on axioms: [propext]\n'validated_finite_cardinality_decide' depends on axioms: [propext, Quot.sound]\n'validated_finite_cardinality_norm_num' depends on axioms: [propext, Classical.choice, Quot.sound]\n'validated_powerset_cardinality_lemma' depends on axioms: [propext, Classical.choice, Quot.sound]\n'validated_factorial_positive_lemma' does not depend on any axioms\n'validated_derivative_square_at_three_chain' depends on axioms: [propext, Classical.choice, Quot.sound]\n'validated_pair_reconstruction_term' depends on axioms: [propext, Classical.choice, Quot.sound]\n'validated_pair_reconstruction_lemma' depends on axioms: [propext, Classical.choice, Quot.sound]\n'validated_continuity_square_at_three_lemma' depends on axioms: [propext, Classical.choice, Quot.sound]\n"
+  }
+}

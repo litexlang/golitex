@@ -1,0 +1,2 @@
+have fn bench_square(x R) R=x^2
+bench_square(3)=9

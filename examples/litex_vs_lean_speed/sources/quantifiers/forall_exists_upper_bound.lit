@@ -1,0 +1,4 @@
+claim:
+    ? forall a,b R:
+        exist u R st {a<=u and b<=u}
+    witness exist u R st {a<=u and b<=u} from max(a,b)

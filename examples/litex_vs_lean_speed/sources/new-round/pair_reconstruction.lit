@@ -1,0 +1,2 @@
+forall p cart(R,R):
+    (p(1),p(2))=p

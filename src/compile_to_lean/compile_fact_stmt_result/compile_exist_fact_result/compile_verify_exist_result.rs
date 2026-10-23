@@ -55,8 +55,8 @@ impl LitexToLeanCompiler {
             ExistShapedFactSearchedProof::ByBuiltinRule(builtin) => {
                 self.compile_exist_builtin_result(fact, builtin, position)?
             }
-            ExistShapedFactSearchedProof::ByKnownForallFact(_) => {
-                return Err(LeanCompileError::unsupported("Exist/KnownForall"))
+            ExistShapedFactSearchedProof::ByKnownForallFact(known) => {
+                self.compile_exist_known_forall(fact, &proof.well_defined_proof, known, position)?
             }
         };
         Ok((proposition, evidence))

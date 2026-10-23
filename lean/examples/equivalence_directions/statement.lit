@@ -1,0 +1,45 @@
+# Equality has both orientations; quotient equivalence retains the nonzero divisor premise.
+forall iff_zero R:
+    =>:
+        iff_zero = 0
+    <=>:
+        0 = iff_zero
+
+forall iff_forward R:
+    iff_forward = 0
+    =>:
+        0 = iff_forward
+
+forall iff_reverse R:
+    0 = iff_reverse
+    =>:
+        iff_reverse = 0
+
+forall iff_divisor R:
+    iff_divisor != 0
+    =>:
+        iff_divisor / iff_divisor = 1
+    <=>:
+        1 = iff_divisor / iff_divisor
+
+thm equality_orientation_from_local_iff:
+    ? forall left, right R:
+        left = right
+        =>:
+            right = left
+    forall local_left, local_right R:
+        =>:
+            local_left = local_right
+        <=>:
+            local_right = local_left
+
+thm use_equivalence_premise:
+    ? forall source_value R:
+        forall bound_value R:
+            =>:
+                bound_value = 0
+            <=>:
+                0 = bound_value
+        source_value = 0
+        =>:
+            0 = source_value

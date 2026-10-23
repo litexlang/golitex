@@ -1,7 +1,7 @@
 use crate::ast::SourceLine;
 use crate::prelude::*;
 use crate::run::source_observer::SourceObserver;
-use crate::tokenize::TokenBlock;
+use crate::tokenize::{TokenBlock, Tokenizer};
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 
@@ -647,10 +647,30 @@ impl SourceObserver for Capture {
         } else {
             "book"
         };
+        // Reuse the language tokenizer, including comment removal and Unicode
+        // normalization. These spans describe presentation, not proof state.
+        let mut source_tokens = BTreeMap::new();
+        if let Ok(blocks) = Tokenizer::new().tokenize(code, runtime.current_file.clone()) {
+            for block in &blocks {
+                collect_tokens(block, &mut source_tokens);
+            }
+        }
+        let tokens = source_tokens
+            .into_values()
+            .flatten()
+            .map(|(token, start, end)| {
+                object(vec![
+                    ("text", text(&token)),
+                    ("start_byte", JsonValue::Number(start as f64)),
+                    ("end_byte", JsonValue::Number(end as f64)),
+                ])
+            })
+            .collect();
         self.sources.push(object(vec![
             ("id", text(&id)),
             ("path", text(&path)),
             ("content", text(code)),
+            ("tokens", JsonValue::Array(tokens)),
             ("digest", text(&digest(code))),
             ("role", text(role)),
             ("configuration_id", text(&configuration_id)),

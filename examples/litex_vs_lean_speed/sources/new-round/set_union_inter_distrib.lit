@@ -1,0 +1,2 @@
+forall A,B,D power_set(R):
+    union(A,intersect(B,D))=intersect(union(A,B),union(A,D))

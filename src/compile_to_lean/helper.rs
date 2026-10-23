@@ -592,6 +592,10 @@ pub(super) fn source_subject(result: &VerifyFactResult) -> Result<Fact, LeanComp
 
 pub(super) fn verified_subject(result: &VerifyFactResult) -> Option<Fact> {
     match result {
+        VerifyFactResult::ForallFactWithIff(result) => match result.as_ref() {
+            VerifyForallFactWithIffResult::Success(proof) => Some(Fact::ForallFactWithIff(proof.fact.clone())),
+            _ => None,
+        },
         VerifyFactResult::Equality(result) => match result.as_ref() {
             VerifyEqualityResult::Success(proof) => {
                 Some(Fact::AtomicFact(AtomicFact::EqualFact(proof.fact.clone())))

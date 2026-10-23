@@ -1,0 +1,9 @@
+have fn bench_fac(n N) N by induc n from 0:
+    case n=0: 1
+    case n>=1: n*bench_fac(n-1)
+bench_fac(0)=1
+bench_fac(1)=1*bench_fac(0)=1
+bench_fac(2)=2*bench_fac(1)=2
+bench_fac(3)=3*bench_fac(2)=6
+bench_fac(4)=4*bench_fac(3)=24
+bench_fac(5)=5*bench_fac(4)=120
