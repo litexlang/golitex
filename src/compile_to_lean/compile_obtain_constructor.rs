@@ -110,6 +110,34 @@ impl LitexToLeanCompiler {
                 )
                 .map(|factory| Some(apply_constructor(factory, arguments)))
             }
+            ExecDefineObjStmtResult::HaveObjByExistFacts(
+                crate::execute::ExecHaveObjByExistFactsStmtResult::Success(have),
+            ) => {
+                let ExistShapedFact::Exist(source) = &have.verify_exist.fact else {
+                    return Ok(None);
+                };
+                let outputs: Vec<_> = have
+                    .statement
+                    .param_def
+                    .groups
+                    .iter()
+                    .flat_map(|g| g.params.iter().cloned())
+                    .collect();
+                self.compile_obtain_constructor_in_source(
+                    object,
+                    source,
+                    &have.verify_exist.well_defined_proof,
+                    &outputs,
+                    &have.store_and_infer_result,
+                    &HashMap::new(),
+                    current,
+                    current,
+                    observe_numeric,
+                )
+                .map(|found| {
+                    found.map(|(factory, arguments)| apply_constructor(factory, arguments))
+                })
+            }
             _ => Ok(None),
         })
     }

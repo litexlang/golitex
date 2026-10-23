@@ -1,0 +1,28 @@
+# Real witnesses for equality, inequality and order, with either operand orientation.
+forall real_line_seed R:
+    exist witness R st {witness = real_line_seed}
+    exist witness R st {real_line_seed = witness}
+    exist witness R st {witness != real_line_seed}
+    exist witness R st {real_line_seed != witness}
+    exist witness R st {witness < real_line_seed}
+    exist witness R st {real_line_seed < witness}
+    exist witness R st {witness > real_line_seed}
+    exist witness R st {real_line_seed > witness}
+    exist witness R st {witness <= real_line_seed}
+    exist witness R st {real_line_seed <= witness}
+    exist witness R st {witness >= real_line_seed}
+    exist witness R st {real_line_seed >= witness}
+
+forall real_line_pair_seed R:
+    exist x, y R st {x = y}
+    exist x, y R st {y = x}
+    exist x, y R st {x != y}
+    exist x, y R st {y != x}
+    exist x, y R st {x < y}
+    exist x, y R st {y < x}
+    exist x, y R st {x > y}
+    exist x, y R st {y > x}
+    exist x, y R st {x <= y}
+    exist x, y R st {y <= x}
+    exist x, y R st {x >= y}
+    exist x R, y R st {y >= x}

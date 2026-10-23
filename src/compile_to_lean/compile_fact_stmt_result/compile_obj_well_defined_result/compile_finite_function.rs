@@ -28,7 +28,7 @@ impl LitexToLeanCompiler {
             )
         })?;
         let receiver = self.compile_object_reference(&source.element, position)?;
-        self.compile_object_reference(&source.set, position)?;
+        let carrier = self.compile_object_reference(&source.set, position)?;
         self.compile_object_reference(factor, position)?;
         let n = cart.args.len();
         let term = if let Obj::ProductShape(ProductShape::Tuple(tuple)) = &source.element {
@@ -43,7 +43,9 @@ impl LitexToLeanCompiler {
             format!("(Litex.cartCall {receiver} _ (Litex.number (M := M) ({} : ℂ)) {member} (by change M.mem (M.number ({} : ℂ)) (Litex.FiniteFunction.indexSet {n}); simpa [Litex.FiniteFunction.index] using (Litex.FiniteFunction.index_mem (M := M) ({index} : Fin {n}))))", index + 1, index + 1)
         };
         let proof = if matches!(&source.element, Obj::ProductShape(ProductShape::Tuple(_))) {
-            format!("(by simpa only [Litex.FiniteFunction.call_tuple] using (Litex.FiniteFunction.coordinate_mem {member} ({index} : Fin {n})))")
+            format!(
+                "(Litex.tuple_coordinate_mem {receiver} {carrier} {member} ({index} : Fin {n}))"
+            )
         } else {
             coordinate_membership(member, index, n)
         };

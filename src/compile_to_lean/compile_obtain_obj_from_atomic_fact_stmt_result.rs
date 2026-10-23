@@ -54,6 +54,7 @@ impl LitexToLeanCompiler {
                 .ordered_param_ids()
                 .len(),
         );
+        validate_obtain_output_names(source, &proof.statement.equal_tos)?;
         self.compile_obtain_elimination(
             source,
             formation,

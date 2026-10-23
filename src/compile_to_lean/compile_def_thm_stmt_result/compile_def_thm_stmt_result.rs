@@ -74,7 +74,10 @@ impl LitexToLeanCompiler {
                     )
                 }
                 (
-                    Fact::AtomicFact(_) | Fact::AndFact(_) | Fact::ChainFact(_),
+                    Fact::AtomicFact(_)
+                    | Fact::AndFact(_)
+                    | Fact::ChainFact(_)
+                    | Fact::ExistFact(_),
                     ExecDefThmBodyProof::NonForall(body),
                 ) => (
                     Vec::new(),
@@ -204,7 +207,10 @@ impl LitexToLeanCompiler {
                     definitions,
                 ))
             }
-            (Fact::AtomicFact(_) | Fact::AndFact(_) | Fact::ChainFact(_), _) => Ok((
+            (
+                Fact::AtomicFact(_) | Fact::AndFact(_) | Fact::ChainFact(_) | Fact::ExistFact(_),
+                _,
+            ) => Ok((
                 self.compile_formed_fact_proposition(goal_wd, &proof.statement.fact, position)?,
                 Vec::new(),
                 Vec::new(),

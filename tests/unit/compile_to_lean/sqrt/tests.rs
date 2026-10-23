@@ -8,6 +8,61 @@ const NONNEGATIVE: &str = include_str!(
 );
 const SCALAR: &str = include_str!("../../../../examples/wd/obj/scalar_sqrt.lit");
 
+#[test]
+fn positive_parameter_carries_its_set_semantics_dependency() {
+    let (result, compiler) = super::execute("have a R+\n");
+    let output = compiler.compile_run(&result, "positive_parameter").unwrap();
+    assert!(
+        output.contains("[_setSemantics : Litex.SetSemantics M]"),
+        "{output}"
+    );
+}
+
+#[test]
+fn sqrt_child_reuses_the_completed_parent_projection() {
+    let (result, compiler) =
+        super::execute("have a R+\n0 <= a\n$is_set(sqrt(a) + 1)\n$is_set(sqrt(a))\n");
+    let output = compiler.compile_run(&result, "sqrt_child").unwrap();
+    assert_eq!(output.matches("Litex.sqrt ").count(), 1, "{output}");
+    assert!(output.contains(".val.left"), "{output}");
+}
+
+#[test]
+fn closed_sqrt_membership_replays_its_exact_numeric_observation() {
+    for source in [
+        "$is_set(sqrt(4) + 1)\n$is_set(sqrt(4))\n",
+        "$is_set(sqrt(1 / 4) + 1)\n",
+        "$is_set(sqrt(sqrt(16)) + 1)\n",
+    ] {
+        let (result, compiler) = super::execute(source);
+        let output = compiler.compile_run(&result, "closed_sqrt").unwrap();
+        assert!(output.contains("Litex.NativeBridge.denoteSqrt"), "{output}");
+        assert!(!output.contains("sorry") && !output.contains("axiom"));
+    }
+}
+
+#[test]
+fn reused_sqrt_still_requires_its_own_domain_evidence() {
+    let (mut result, compiler) =
+        super::execute("have a R+\n0 <= a\n$is_set(sqrt(a) + 1)\n$is_set(sqrt(a))\n");
+    let proof = super::atomic_proof_mut(
+        &mut super::fact_statement_mut(&mut result.statement_results[3]).verify_result,
+    );
+    let ObjWellDefinedProof::ByDef {
+        proof:
+            ObjWellDefinedProofByDef::ExpLogOperator(ExpLogOperatorObjWellDefinedProofByDef::Sqrt(root)),
+        ..
+    } = &mut proof.well_defined_proof.well_defined_of_each_parameter[0]
+    else {
+        panic!("the child is independently checked")
+    };
+    root.requirement_fact_verified.pop();
+    let error = compiler
+        .compile_run(&result, "missing_reused_sqrt_domain")
+        .unwrap_err();
+    assert_eq!(error.route, "WD/SqrtStages");
+}
+
 fn square(result: &mut RunLitexCodeResult) -> &mut VerifyEqualitySuccess {
     super::equality_proof_mut(
         &mut super::fact_statement_mut(&mut result.statement_results[2]).verify_result,

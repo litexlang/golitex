@@ -1,0 +1,5 @@
+# Formula functions retain their nonzero input conditions when their return bound is widened.
+release thm fn_set_member(fn(x R) R {x}, fn(y R) C)
+have fn recip_fn(x R: x != 0) R = 1 / x
+by thm fn_set_member(recip_fn, fn(y R: y != 0) C) => recip_fn $in fn(y R: y != 0) C
+release thm fn_set_member(fn(x R, y R: y != 0) R {x / y}, fn(u R, v R: v != 0) C)

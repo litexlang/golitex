@@ -16,7 +16,15 @@ LITEX_STD_PATH="$PWD/std" target/release/litex -lang en -strict -f examples/real
 python3 examples/real_analysis/series/check.py
 ```
 
-The checker runs the public example and eight separate rejection controls.
+The [convergence example](convergence/main.lit) also imports the public library.
+It proves the negative-ratio geometric sum -1/3, the zero-ratio case and the
+telescoping sum 1. It proves both the harmonic zero-term limit and its actual
+nonconvergence, as well as nonconvergence of the all-one series. Further calls
+cover the Cauchy equivalence, positive and absolute comparisons, zero-permitting
+ratio contraction, ratio/root limit and extremum tests, and their strict
+divergence directions.
+
+The checker runs both public examples and seventeen separate rejection controls.
 Every rejection must occur in the final statement, with its complete prefix
 accepted and no session termination:
 
@@ -30,9 +38,19 @@ accepted and no session termination:
 | `incomplete_sequence.lit` | A finite tuple is not a complete real sequence |
 | `wrong_finite_correction.lit` | Equal tails do not make different finite-prefix sums equal |
 | `incorrect_zero_converse.lit` | A zero term limit supplies no converse series theorem |
+| `geometric_boundary.lit` | The geometric theorem requires `abs(r)<1` |
+| `ratio_boundary.lit` | A contraction factor of 1 gives no conclusion |
+| `root_boundary.lit` | A root bound of 1 gives no conclusion |
+| `ratio_negative_q.lit` | The contraction factor must be nonnegative |
+| `missing_ratio_nonzero.lit` | A quotient-limit test needs a genuinely nonzero tail |
+| `comparison_missing_sign.lit` | Upper comparison alone does not replace `a(k)>=0` |
+| `wrong_geometric_value.lit` | The negative-ratio candidate is -1/3, not 1/3 |
+| `root_missing_bound.lit` | A strict q does not supply a missing root bound |
+| `root_zero_index.lit` | The real root-map index must be positive |
 
-The last rejection does not itself prove the divergence of a particular
-series. Harmonic divergence and general convergence tests remain later work.
+The zero-limit converse rejection does not itself prove divergence. The
+convergence example separately proves harmonic divergence using the library's
+Cauchy-block argument.
 `negative/context.lit` is the accepted empty module prefix; it is not a
 rejection control. Run the named negative fixtures separately, not as an
 ordered sequence of expected successes.

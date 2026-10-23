@@ -1,8 +1,9 @@
 # Ordered real series
 
 This source library defines finite partial sums, real series convergence and a
-guarded sum value. It proves 33 theorems using native finite sums, induction
-and real sequence limits. It adds no kernel objects, reserved theorems or
+guarded sum value, absolute convergence and convergence tests. It proves 78
+source theorems using native finite sums, induction and real sequence limits.
+It adds no kernel objects, reserved theorems or
 automatic convergence search.
 
 ## Import and use
@@ -49,11 +50,20 @@ complete `fn(k N+) R` is accepted. Parameters `n,m` are positive integers and
 | `$is_convergent_series(a)` | A finite real candidate exists |
 | `series_sum(a) R` | `lim(partial_sums(a))`, guarded by convergence |
 | `series_tail(a,m) fn(k N+) R` | The complete sequence `k -> a(k+m)`, also in `seq(R)` |
+| `absolute_terms(a) fn(k N+) R` | The complete sequence `k -> abs(a(k))` |
+| `root_terms(a) fn(k N+) R` | The complete sequence `k -> abs(a(k))^(1/k)`; includes zero terms |
+| `$is_absolutely_convergent_series(a)` | Convergence of `absolute_terms(a)` |
+| `$is_cauchy_series(a)` | The native Cauchy property of `partial_sums(a)` |
 
-The two propositions are ordinary source `prop` declarations. Negation uses
+The four propositions are ordinary source `prop` declarations. Negation uses
 ordinary predicate negation; there are no dedicated series Fact variants.
 `series_sum` consumes convergence evidence. Even the zero sequence has no
 selected sum until that evidence is published.
+
+Release `series:::absolute_terms` and `series:::root_terms` with
+`release obj def` when using those constructions. The absolute and root maps
+are functions; their convergence properties are propositions. No infinite-sum
+AST or separate root-sequence AST is introduced.
 
 ## Theorems
 
@@ -97,13 +107,87 @@ range over every `k in N+`, unless a tail restriction is stated. Write
 | `tail_convergent_series(a,m)` | Tail convergence gives convergence |
 | `convergent_series_terms_zero(a)` | Convergence implies `$has_seq_limit(a,0)` |
 
+## Convergence and divergence theorems
+
+The following 45 source theorems extend the 33 basic theorems above. All
+sequence parameters are complete real sequences. Candidate limits and extrema
+are finite reals. A conclusion of convergence does not compute a sum value.
+
+| Call | Required premises and result |
+| --- | --- |
+| `series_cauchy_from_convergent(a)` | Convergence implies `is_cauchy_series(a)` |
+| `series_convergent_from_cauchy(a)` | The converse, using real sequence completeness |
+| `sequence_reciprocal_limit(a)` | `a(k)=1/k` implies `a -> 0` |
+| `bernoulli_nonnegative(t,n)` | `t>=0,n in N` imply `(1+t)^n>=1+n*t` |
+| `sequence_geometric_nonnegative_limit(a,q)` | `0<=q<1,a(k)=q^k` imply `a -> 0` |
+| `absolute_natural_power(x,n)` | `abs(x^n)=abs(x)^n` for real x and positive integer n |
+| `sequence_geometric_limit(a,r)` | `abs(r)<1,a(k)=r^k` imply `a -> 0` |
+| `one_minus_nonzero(r)` | `r!=1` implies `1-r!=0` |
+| `partial_sum_geometric(a,r,n)` | `r!=1,a(k)=r^k` give `S(a,n)=r*(1-r^n)/(1-r)` |
+| `unit_abs_upper_bound(r)` | `abs(r)<1` gives `r<1,r!=1,1-r>0,1-r!=0` |
+| `series_sum_geometric(a,r)` | `abs(r)<1,a(k)=r^k` give candidate `r/(1-r)`, including negative r and r=0 |
+| `partial_sum_telescoping(a,u,n)` | `a(k)=u(k)-u(k+1)` gives `S(a,n)=u(1)-u(n+1)` |
+| `series_sum_telescoping(a,u,L)` | Additionally `u -> L` gives candidate `u(1)-L` |
+| `partial_sum_le(a,b,n)` | Pointwise `a<=b` implies `S(a,n)<=S(b,n)` |
+| `partial_sum_nondecreasing(a,n,m)` | Nonnegative terms and `n<=m` imply `S(a,n)<=S(a,m)` |
+| `nonnegative_partial_sums_nondecreasing(a)` | Nonnegative terms imply native `is_seq_nondecreasing(partial_sums(a))` |
+| `nonzero_constant_series_diverges(a,c)` | `c!=0,a(k)=c` imply `not is_convergent_series(a)` |
+| `harmonic_block_lower(a,n)` | `a(k)=1/k` implies `abs(S(a,2*n)-S(a,n))>=1/2` |
+| `series_comparison(a,b)` | `b` converges and `0<=a(k)<=b(k)` imply convergence of `a` |
+| `harmonic_series_diverges(a)` | `a(k)=1/k` implies actual nonconvergence |
+| `absolute_terms_at(a,k)` | The absolute-term map's defining equality |
+| `absolute_series_converges(a)` | Absolute convergence implies convergence |
+| `absolute_series_comparison(a,b)` | `b` converges and `abs(a(k))<=b(k)` imply absolute convergence of `a` |
+| `series_eventual_comparison(a,b,m)` | Positive comparison with inequalities only for `k>m` |
+| `absolute_series_eventual_comparison(a,b,m)` | Absolute comparison with inequalities only for `k>m` |
+| `absolute_terms_tail_at(a,m,k)` | Absolute terms commute pointwise with the tail construction |
+| `absolute_series_from_tail(a,m)` | Absolute convergence of `series_tail(a,m)` implies absolute convergence of `a` |
+| `series_geometric_domination(a,q,t,m)` | `0<=q<1,abs(a(k))<=t*q^k` for `k>m` imply absolute and ordinary convergence; t is real |
+| `series_ratio_test(a,q,m)` | `0<=q<1,abs(a(k+1))<=q*abs(a(k))` for `k>=m` imply absolute and ordinary convergence; zeros are allowed |
+| `nonnegative_natural_power_le(x,y,n)` | `0<=x<=y` implies `x^n<=y^n` for positive integer n |
+| `nonnegative_root_power(x,n)` | `x>=0,n in N+` give a nonnegative real nth root and `(x^(1/n))^n=x` |
+| `root_terms_at(a,k)` | Root-map equality, nonnegativity and `root_terms(a)(k)^k=abs(a(k))` |
+| `series_root_test(a,q,m)` | `0<=q<1,root_terms(a)(k)<=q` for `k>=m` imply absolute and ordinary convergence |
+| `nonnegative_sequence_limsup(a,L,m)` | Eventual `a(k)>=0` for `k>=m` and finite limsup L imply `L>=0` |
+| `series_root_limsup_test(a,L)` | `has_seq_limsup(root_terms(a),L),L<1` imply absolute and ordinary convergence |
+| `series_root_limit_test(a,L)` | The corresponding ordinary root-limit version |
+| `absolute_terms_limit(a,L)` | `a -> L` implies `absolute_terms(a) -> abs(L)` |
+| `series_ratio_limsup_test(a,ratio,L,m)` | A tail quotient represented by ratio, with finite limsup `L<1`, implies absolute and ordinary convergence |
+| `series_ratio_limit_test(a,ratio,L,m)` | The corresponding ordinary ratio-limit version |
+| `base_le_natural_power(x,n)` | `x>=1,n in N+` imply `x<=x^n` |
+| `series_root_limsup_diverges(a,L)` | A finite root limsup `L>1` implies nonconvergence |
+| `series_root_limit_diverges(a,L)` | The corresponding ordinary root-limit version |
+| `series_ratio_diverges(a,q,m)` | `q>1,abs(a(m))>0` and `q*abs(a(k))<=abs(a(k+1))` for `k>=m` imply nonconvergence |
+| `series_ratio_liminf_diverges(a,ratio,L,m)` | A tail quotient represented by ratio, with finite liminf `L>1`, implies nonconvergence |
+| `series_ratio_limit_diverges(a,ratio,L,m)` | The corresponding ordinary ratio-limit version |
+
+The four quotient theorems take a supplied complete real sequence `ratio`.
+They require both `abs(a(k))>0` for `k>=m` and the guarded equality below.
+Its early values are arbitrary, so early zero terms never create undefined
+division:
+
+```litex
+forall k N+:
+    k>=m
+    0<abs(a(k))
+    =>:
+        ratio(k)=abs(a(k+1))/abs(a(k))
+```
+
+The strict thresholds matter: a ratio or root limit of 1 gives no conclusion.
+A ratio limsup greater than 1 alone is not a divergence criterion. The root
+limsup criterion does have a divergence direction above 1. See the
+[imported convergence examples](../../examples/real_analysis/series/convergence/main.lit)
+for actual checked calls in both directions.
+
 ## Boundaries and verification
 
 There is no zero-length prefix in this version: `partial_sum(a,0)` is invalid.
 Finite tuples and incomplete functions are not silently extended by zero.
-Values are finite reals; absolute convergence, rearrangement, general geometric
-series and convergence tests are subsequent work. A zero term limit alone
-does not establish series convergence.
+Values are finite reals. Rearrangements, infinite extrema, conditional
+convergence classification and products are outside this module. A zero term
+limit alone does not establish series convergence; the harmonic example
+proves both its zero term limit and its nonconvergence.
 
 Normal verification JSON uses existing source-definition/theorem evidence.
 This module adds no special infinite-sum LaTeX rendering or Lean support;

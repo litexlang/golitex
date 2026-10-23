@@ -7,6 +7,11 @@ least squares, sets, Newton iteration, irrationality of √2 and Cantor's theore
 target/release/litex -reading -strict -lang zh -r examples/reading/homepage
 ```
 
+For the proposed detail-pane design for every statement type, build the
+[statement presentation gallery](statement-gallery/README.md): 52 statement
+leaves, 61 checked examples, and curated mathematical layouts. This gallery
+is a design preview; it does not claim all layouts are wired into Reading yet.
+
 The real even-power and addition rules connect the declaration of a real
 object to a nonnegative square and a shifted lower bound in
 [`linked_facts.lit`](linked_facts.lit). Use it to compare source locations,

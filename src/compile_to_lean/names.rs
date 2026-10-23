@@ -30,6 +30,10 @@ impl LitexToLeanCompiler {
         }
         fn statement(result: &ExecStmtResult, out: &mut Vec<IdentifierId>) {
             match result {
+                ExecStmtResult::Witness(crate::execute::execute_witness_stmt::ExecWitnessStmtResult::WitnessNonemptySet(crate::execute::execute_witness_stmt::ExecWitnessNonemptySetStmtResult::Success(proof))) => {
+                    for step in &proof.proof_steps { statement(step, out); }
+                }
+
                 ExecStmtResult::Witness(crate::execute::execute_witness_stmt::ExecWitnessStmtResult::WitnessAtomicFact(crate::execute::execute_witness_stmt::ExecWitnessAtomicFactStmtResult::Success(proof))) => {
                     for step in &proof.proof_steps { statement(step, out); }
                 }

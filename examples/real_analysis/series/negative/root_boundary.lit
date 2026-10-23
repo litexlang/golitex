@@ -1,0 +1,14 @@
+release obj def series:::root_terms
+
+have fn root_boundary_terms(k N+) R=1
+
+claim:
+    ? forall k N+:
+        series:::root_terms(root_boundary_terms)(k)=1
+    release thm series:::root_terms_at(root_boundary_terms,k)
+    root_boundary_terms(k)=1
+    abs(root_boundary_terms(k))=1
+    series:::root_terms(root_boundary_terms)(k)=abs(root_boundary_terms(k))^(1/k)=1^(1/k)=1
+
+release thm series:::series_root_test(root_boundary_terms,1,1)
+

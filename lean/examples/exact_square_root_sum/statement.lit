@@ -1,0 +1,3 @@
+# The square root of four and its sum with one are well-defined sets.
+$is_set(sqrt(4) + 1)
+$is_set(sqrt(4))

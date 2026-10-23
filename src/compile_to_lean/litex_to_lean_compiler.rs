@@ -195,6 +195,18 @@ fn fact_uses_functions(fact: &Fact) -> bool {
 
 fn statement_uses_functions(statement: &ExecStmtResult) -> bool {
     match statement {
+        ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
+            ExecDefineObjStmtResult::HaveObjByExistFacts(crate::execute::ExecHaveObjByExistFactsStmtResult::Success(p)),
+        )) => fact_uses_functions(&crate::ast::fact::exist_shaped_fact_to_fact(&p.verify_exist.fact)),
+
+        ExecStmtResult::Witness(ExecWitnessStmtResult::WitnessNonemptySet(crate::execute::execute_witness_stmt::ExecWitnessNonemptySetStmtResult::Success(p))) =>
+            object_uses_functions(&p.statement.set) || object_uses_functions(&p.statement.obj) || p.proof_steps.iter().any(statement_uses_functions),
+        ExecStmtResult::By(ExecByStmtResult::Thm(ExecByThmStmtResult::Success(proof))) =>
+            verified_subject(&proof.selected_proof).as_ref().is_some_and(fact_uses_functions)
+                || proof.builtin.as_ref().is_some_and(|b| b.conclusions.iter().any(fact_uses_functions)),
+        ExecStmtResult::ReleaseAndExpand(crate::execute::ExecReleaseAndExpandStmtResult::Thm(
+            crate::execute::execute_by_stmt::ExecReleaseThmStmtResult::Success(proof))) =>
+            proof.builtin.as_ref().is_some_and(|b| b.conclusions.iter().any(fact_uses_functions)),
         ExecStmtResult::By(ExecByStmtResult::Contra(crate::execute::execute_by_stmt::ExecByContraStmtResult::Success(proof))) => {
             fact_uses_functions(&proof.goal)
                 || fact_uses_functions(&proof.reverse_assumption)
@@ -350,6 +362,26 @@ fn statement_uses_sets(statement: &ExecStmtResult) -> bool {
         return true;
     }
     match statement {
+        ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
+            ExecDefineObjStmtResult::HaveObjByExistFacts(crate::execute::ExecHaveObjByExistFactsStmtResult::Success(p)),
+        )) => fact_uses_sets(&crate::ast::fact::exist_shaped_fact_to_fact(&p.verify_exist.fact)),
+
+        ExecStmtResult::Witness(ExecWitnessStmtResult::WitnessNonemptySet(crate::execute::execute_witness_stmt::ExecWitnessNonemptySetStmtResult::Success(p))) =>
+            object_uses_sets(&p.statement.set) || object_uses_sets(&p.statement.obj) || p.proof_steps.iter().any(statement_uses_sets),
+        ExecStmtResult::By(ExecByStmtResult::Thm(ExecByThmStmtResult::Success(proof))) => {
+            proof.builtin.as_ref().is_some_and(|b| b.conclusions.iter().any(fact_uses_sets))
+                || verified_subject(&proof.selected_proof).as_ref().is_some_and(fact_uses_sets)
+        }
+        ExecStmtResult::ReleaseAndExpand(ExecReleaseAndExpandStmtResult::Thm(
+            ExecReleaseThmStmtResult::Success(proof),
+        )) => proof.builtin.as_ref().is_some_and(|b| b.conclusions.iter().any(fact_uses_sets)),
+        ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
+            ExecDefineObjStmtResult::HaveObjInNonemptySet(
+                ExecHaveObjInNonemptySetStmtResult::Success(proof),
+            ),
+        )) => proof.statement.param_def.groups.iter().any(|group| {
+            matches!(&group.param_type, ParamType::Obj(carrier) if object_uses_sets(carrier))
+        }),
         ExecStmtResult::By(ExecByStmtResult::Contra(
             crate::execute::execute_by_stmt::ExecByContraStmtResult::Success(proof),
         )) => {

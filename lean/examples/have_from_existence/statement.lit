@@ -1,0 +1,19 @@
+# Choose a real equal to two, calculate with it, and choose locally inside a theorem.
+witness exist chosen_source R st {chosen_source = 2} from 2
+have chosen_two R:
+    chosen_two = 2
+chosen_two + 1 = 3
+
+thm choose_positive:
+    ? exist positive_choice R st {positive_choice > 0}
+    have local_choice R:
+        local_choice = 2
+    witness exist positive_choice R st {positive_choice > 0} from local_choice:
+        local_choice > 0
+
+witness exist have_num, have_den R st {have_den != 0, have_num = 1 / have_den} from 1, 1:
+    1 / 1 = 1
+have selected_num, selected_den R:
+    selected_den != 0
+    selected_num = 1 / selected_den
+selected_num = 1 / selected_den

@@ -128,6 +128,7 @@ impl Capture {
                 };
                 node = child;
             }
+            let declared = declaration_symbol_ids(node, &path);
             if let Some(JsonValue::Object(fields)) = self
                 .current_statement
                 .strip_prefix("statement")
@@ -135,6 +136,9 @@ impl Capture {
                 .and_then(|index| self.statements.get_mut(index))
             {
                 fields.insert("statement_kind".into(), text(&path.join(".")));
+                if !declared.is_empty() {
+                    fields.insert("declaration_symbol_ids".into(), strings(&declared));
+                }
             }
             self.current_statement = statement;
             self.current_line = line;
@@ -598,6 +602,62 @@ impl Capture {
             ),
         ])
     }
+}
+
+// Read only the declaration's own fields in the existing typed projection.
+// Recursing through its body would incorrectly promote function parameters,
+// existential binders, and nested definitions to names owned by this line.
+fn declaration_symbol_ids(node: &JsonValue, path: &[String]) -> Vec<String> {
+    if !matches!(
+        path.first().map(String::as_str),
+        Some("Definition" | "Trust")
+    ) {
+        return Vec::new();
+    }
+    let get = |value: &JsonValue, key: &str| {
+        value
+            .as_object()
+            .ok()
+            .and_then(|fields| fields.get(key))
+            .cloned()
+            .unwrap_or(JsonValue::Null)
+    };
+    let fields = get(node, "fields");
+    let mut refs = Vec::new();
+    match field_text(node, "type").as_str() {
+        "HaveObjInNonemptySetOrParamTypeStmt"
+        | "HaveObjEqualStmt"
+        | "HaveObjByExistFactsStmt"
+        | "TrustHaveStmt" => {
+            let params = get(&fields, "param_def");
+            let groups = get(&get(&params, "fields"), "groups");
+            if let Ok(groups) = groups.as_array() {
+                for group in groups {
+                    if let Ok(params) = get(&get(group, "fields"), "params").as_array() {
+                        refs.extend(params.iter().cloned());
+                    }
+                }
+            }
+        }
+        "ObtainObjFromExistFact" | "ObtainObjFromAtomicFact" => {
+            if let Ok(names) = get(&fields, "equal_tos").as_array() {
+                refs.extend(names.iter().cloned());
+            }
+        }
+        "HaveByPreimageStmt" => {
+            if let Ok(names) = get(&fields, "preimage_names").as_array() {
+                refs.extend(names.iter().cloned());
+            }
+        }
+        "DefTemplateStmt" => refs.push(get(&fields, "template_name")),
+        _ => refs.push(get(&fields, "name")),
+    }
+    let mut seen = BTreeSet::new();
+    refs.iter()
+        .filter(|value| field_text(value, "kind") == "symbol_reference")
+        .map(|value| field_text(value, "symbol_id"))
+        .filter(|id| !id.is_empty() && seen.insert(id.clone()))
+        .collect()
 }
 
 fn string_list(value: &JsonValue, key: &str) -> BTreeSet<String> {

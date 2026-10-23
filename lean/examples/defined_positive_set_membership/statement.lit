@@ -1,0 +1,4 @@
+# One and two belong to a named set of positive real numbers.
+let positives = {x R: x > 0}
+release thm defined_set_member(1, positives)
+by thm defined_set_member(2, positives) => 2 $in positives

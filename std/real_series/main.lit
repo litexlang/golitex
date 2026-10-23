@@ -566,3 +566,1138 @@ thm convergent_series_terms_zero:
     obtain L from $is_convergent_series(a)
     release thm series_terms_zero(a,L)
 
+# Absolute convergence, comparison and convergence tests.
+
+have fn absolute_terms(a seq(R)) fn(k N+) R=fn(k N+) R {abs(a(k))}
+
+forall a seq(R):
+    absolute_terms(a) $in seq(R)
+
+prop is_absolutely_convergent_series(a seq(R)):
+    $is_convergent_series(absolute_terms(a))
+
+prop is_cauchy_series(a seq(R)):
+    $is_seq_cauchy(partial_sums(a))
+
+thm series_cauchy_from_convergent:
+    ? forall a seq(R):
+        $is_convergent_series(a)
+        =>:
+            $is_cauchy_series(a)
+    obtain L from $is_convergent_series(a)
+    $has_seq_limit(partial_sums(a),L)
+    release thm sequence_limit_cauchy(partial_sums(a),L)
+    by def $is_cauchy_series(a)
+
+thm series_convergent_from_cauchy:
+    ? forall a seq(R):
+        $is_cauchy_series(a)
+        =>:
+            $is_convergent_series(a)
+    $is_seq_cauchy(partial_sums(a))
+    release thm sequence_cauchy_convergent(partial_sums(a))
+    release thm partial_sums_convergent_series(a)
+
+thm sequence_reciprocal_limit:
+    ? forall a seq(R):
+        forall k N+:
+            a(k)=1/k
+        =>:
+            $has_seq_limit(a,0)
+    claim:
+        ? forall epsilon R+:
+            exist cutoff N+ st {{k N+:k>=cutoff} $subset preimage_set(a,{v R:abs(v-0)<epsilon})}
+        release thm real_archimedean_natural_upper_bound(1/epsilon)
+        obtain N0 from exist N0 N+ st {1/epsilon<N0}
+        0<N0
+        (1/epsilon)*epsilon<N0*epsilon
+        (1/epsilon)*epsilon=1
+        1<N0*epsilon
+        1/N0<(N0*epsilon)/N0=epsilon
+        witness exist cutoff N+ st {{k N+:k>=cutoff} $subset preimage_set(a,{v R:abs(v-0)<epsilon})} from N0:
+            claim:
+                ? forall k {j N+:j>=N0}:
+                    k $in preimage_set(a,{v R:abs(v-0)<epsilon})
+                0<N0*k
+                1/k=N0/(N0*k)<=k/(N0*k)=1/N0<epsilon
+                a(k)=1/k>0
+                a(k)-0=a(k)
+                abs(a(k)-0)=a(k)=1/k<epsilon
+                a(k) $in {v R:abs(v-0)<epsilon}
+            by def {k N+:k>=N0} $subset preimage_set(a,{v R:abs(v-0)<epsilon})
+    by def $has_seq_limit(a,0)
+
+thm bernoulli_nonnegative:
+    ? forall t R,n N:
+        t>=0
+        =>:
+            (1+t)^n>=1+n*t
+    n>=0
+    1+t>=1>0
+    by induc n from 0:
+        ? (1+t)^n>=1+n*t
+        ? from n=0:
+            (1+t)^0=1=1+0*t
+        ? induc:
+            n>=0
+            1+t>=1>0
+            (1+t)^(n+1)=(1+t)^n*(1+t)^1=(1+t)^n*(1+t)
+            (1+t)^n*(1+t)>=(1+n*t)*(1+t)
+            (1+t)^(n+1)>=(1+n*t)*(1+t)
+            0<=n*t^2
+            (1+n*t)*(1+t)=1+(n+1)*t+n*t^2>=1+(n+1)*t
+
+thm sequence_geometric_nonnegative_limit:
+    ? forall a seq(R),q R:
+        0<=q
+        q<1
+        forall k N+:
+            a(k)=q^k
+        =>:
+            $has_seq_limit(a,0)
+    by cases:
+        ? $has_seq_limit(a,0)
+        case q=0:
+            claim:
+                ? forall k N+:
+                    a(k)=0
+                q^k=0^k=0
+                a(k)=q^k=0
+            release thm seq_limit_constant(a,0)
+        case q!=0:
+            by contra:
+                ? q>0
+                q<=0
+                q=0
+                impossible q!=0
+            1-q>0
+            have d R=1/q-1
+            q/q<1/q
+            q/q=1
+            1<1/q
+            d>0
+            have coefficient R=q/(1-q)
+            coefficient>0
+            have fn reciprocal(k N+) R=1/k
+            release thm sequence_reciprocal_limit(reciprocal)
+            release thm seq_limit_scale(reciprocal,0,coefficient)
+            have fn upper(k N+) R=coefficient*reciprocal(k)
+            coefficient*0=0
+            $has_seq_limit(upper,0)
+            have fn zero(k N+) R=0
+            release thm seq_limit_constant(zero,0)
+            claim:
+                ? forall k N+:
+                    zero(k)<=a(k)
+                    a(k)<=upper(k)
+                k $in N
+                by thm bernoulli_nonnegative(d,k) => (1+d)^k>=1+k*d
+                1+d=1+(1/q-1)=1/q
+                (1/q)^k=(1+d)^k>=1+k*d>k*d>0
+                have power R=(1/q)^k
+                1/q=q^(-1)
+                (1/q)^k=(q^(-1))^k=q^((-1)*k)
+                (-1)*k=-k
+                q^((-1)*k)=q^(-k)=1/(q^k)
+                power=1/(q^k)
+                0<q^k
+                1/power=1/(1/(q^k))=q^k
+                a(k)=q^k=1/power
+                k*d<=power
+                0<k*d*power
+                1/power=(k*d)/(k*d*power)<=power/(k*d*power)=1/(k*d)
+                1/d=1/(1/q-1)=q/(1-q)=coefficient
+                1/(k*d)=(1/d)*(1/k)=coefficient*(1/k)=upper(k)
+                zero(k)=0<a(k)
+            release thm seq_limit_squeeze(zero,a,upper,0,1)
+
+thm absolute_natural_power:
+    ? forall x R,n N+:
+        abs(x^n)=abs(x)^n
+    n>=1
+    by induc n from 1:
+        ? abs(x^n)=abs(x)^n
+        ? from n=1:
+            x^1=x
+            abs(x)^1=abs(x)
+            abs(x^1)=abs(x)=abs(x)^1
+        ? induc:
+            n>=1
+            x^(n+1)=x^n*x^1=x^n*x
+            abs(x^n*x)=abs(x^n)*abs(x)
+            abs(x^n)*abs(x)=abs(x)^n*abs(x)
+            abs(x)^(n+1)=abs(x)^n*abs(x)^1=abs(x)^n*abs(x)
+            abs(x^(n+1))=abs(x^n*x)=abs(x)^n*abs(x)=abs(x)^(n+1)
+
+thm sequence_geometric_limit:
+    ? forall a seq(R),r R:
+        abs(r)<1
+        forall k N+:
+            a(k)=r^k
+        =>:
+            $has_seq_limit(a,0)
+    have fn magnitude(k N+) R=abs(a(k))
+    claim:
+        ? forall k N+:
+            magnitude(k)=abs(r)^k
+        a(k)=r^k
+        magnitude(k)=abs(a(k))=abs(r^k)=abs(r)^k
+    0<=abs(r)
+    release thm sequence_geometric_nonnegative_limit(magnitude,abs(r))
+    release thm seq_limit_neg(magnitude,0)
+    have fn lower(k N+) R=-magnitude(k)
+    -0=0
+    $has_seq_limit(lower,0)
+    claim:
+        ? forall k N+:
+            lower(k)<=a(k)
+            a(k)<=magnitude(k)
+        -a(k)<=abs(-a(k))=abs(a(k))
+        -abs(a(k))<=-(-a(k))=a(k)
+        lower(k)=-magnitude(k)=-abs(a(k))<=a(k)
+        a(k)<=abs(a(k))=magnitude(k)
+    release thm seq_limit_squeeze(lower,a,magnitude,0,1)
+
+thm one_minus_nonzero:
+    ? forall r R:
+        r!=1
+        =>:
+            1-r!=0
+    by contra:
+        ? 1-r!=0
+        1-r=0
+        r=1
+        impossible r!=1
+
+thm partial_sum_geometric:
+    ? forall a seq(R),r R,n N+:
+        r!=1
+        forall k N+:
+            a(k)=r^k
+        =>:
+            partial_sum(a,n)=r*(1-r^n)/(1-r)
+    1-r!=0
+    n>=1
+    by induc n from 1:
+        ? partial_sum(a,n)=r*(1-r^n)/(1-r)
+        ? from n=1:
+            a(1)=r^1=r
+            partial_sum(a,1)=a(1)=r
+            r*(1-r^1)/(1-r)=r*(1-r)/(1-r)=r
+        ? induc:
+            n>=1
+            have next N+=n+1
+            a(next)=r^next
+            a(n+1)=a(next)=r^next=r^(n+1)
+            r^(n+1)=r^n*r^1=r^n*r
+            by thm partial_sum_successor(a,n) => partial_sum(a,n+1)=partial_sum(a,n)+a(n+1)
+            partial_sum(a,n)+a(n+1)=r*(1-r^n)/(1-r)+r^(n+1)
+            r*(1-r^n)/(1-r)+r^(n+1)=r*(1-r^n)/(1-r)+r^n*r
+            r*(1-r^n)/(1-r)+r^n*r=r*(1-r^n*r)/(1-r)
+            r*(1-r^n*r)/(1-r)=r*(1-r^(n+1))/(1-r)
+
+thm unit_abs_upper_bound:
+    ? forall r R:
+        abs(r)<1
+        =>:
+            r<1
+            r!=1
+            1-r>0
+            1-r!=0
+    r<=abs(r)<1
+    by contra:
+        ? r!=1
+        r=1
+        abs(r)=abs(1)=1
+        impossible abs(r)<1
+    1-r>0
+    release thm one_minus_nonzero(r)
+
+thm series_sum_geometric:
+    ? forall a seq(R),r R:
+        abs(r)<1
+        forall k N+:
+            a(k)=r^k
+        =>:
+            $has_series_sum(a,r/(1-r))
+    release thm unit_abs_upper_bound(r)
+    release thm sequence_geometric_limit(a,r)
+    have coefficient R=r/(1-r)
+    have fn constant(k N+) R=coefficient
+    release thm seq_limit_constant(constant,coefficient)
+    release thm seq_limit_scale(a,0,coefficient)
+    have fn decaying(k N+) R=coefficient*a(k)
+    coefficient*0=0
+    $has_seq_limit(decaying,0)
+    release thm seq_limit_subtract(constant,decaying,coefficient,0)
+    claim:
+        ? forall n N+:
+            fn(k N+) R {constant(k)-decaying(k)}(n)=partial_sum(a,n)
+        by thm partial_sum_geometric(a,r,n) => partial_sum(a,n)=r*(1-r^n)/(1-r)
+        a(n)=r^n
+        constant(n)=coefficient
+        decaying(n)=coefficient*a(n)=coefficient*r^n
+        fn(k N+) R {constant(k)-decaying(k)}(n)=constant(n)-decaying(n)=coefficient-coefficient*r^n
+        coefficient-coefficient*r^n=r/(1-r)-(r/(1-r))*r^n=r*(1-r^n)/(1-r)=partial_sum(a,n)
+    coefficient-0=coefficient
+    release thm series_sum_from_partial_sums(a,fn(k N+) R {constant(k)-decaying(k)},coefficient)
+    $has_seq_limit(partial_sums(a),r/(1-r))
+    by def $has_series_sum(a,r/(1-r))
+
+thm partial_sum_telescoping:
+    ? forall a,u seq(R),n N+:
+        forall k N+:
+            a(k)=u(k)-u(k+1)
+        =>:
+            partial_sum(a,n)=u(1)-u(n+1)
+    n>=1
+    by induc n from 1:
+        ? partial_sum(a,n)=u(1)-u(n+1)
+        ? from n=1:
+            a(1)=u(1)-u(1+1)
+            partial_sum(a,1)=a(1)=u(1)-u(1+1)
+        ? induc:
+            n>=1
+            have next N+=n+1
+            a(next)=u(next)-u(next+1)
+            a(n+1)=a(next)
+            u(n+1)=u(next)
+            u(n+1+1)=u(next+1)
+            a(n+1)=u(n+1)-u(n+1+1)
+            by thm partial_sum_successor(a,n) => partial_sum(a,n+1)=partial_sum(a,n)+a(n+1)
+            partial_sum(a,n)+a(n+1)=(u(1)-u(n+1))+(u(n+1)-u(n+1+1))
+            (u(1)-u(n+1))+(u(n+1)-u(n+1+1))=u(1)-u(n+1+1)
+
+thm series_sum_telescoping:
+    ? forall a,u seq(R),L R:
+        $has_seq_limit(u,L)
+        forall k N+:
+            a(k)=u(k)-u(k+1)
+        =>:
+            $has_series_sum(a,u(1)-L)
+    release thm seq_limit_shift(u,L,1)
+    have fn shifted(k N+) R=u(k+1)
+    $has_seq_limit(shifted,L)
+    have fn constant(k N+) R=u(1)
+    release thm seq_limit_constant(constant,u(1))
+    release thm seq_limit_subtract(constant,shifted,u(1),L)
+    claim:
+        ? forall n N+:
+            fn(k N+) R {constant(k)-shifted(k)}(n)=partial_sum(a,n)
+        by thm partial_sum_telescoping(a,u,n) => partial_sum(a,n)=u(1)-u(n+1)
+        constant(n)=u(1)
+        shifted(n)=u(n+1)
+        fn(k N+) R {constant(k)-shifted(k)}(n)=constant(n)-shifted(n)=u(1)-u(n+1)=partial_sum(a,n)
+    release thm series_sum_from_partial_sums(a,fn(k N+) R {constant(k)-shifted(k)},u(1)-L)
+
+thm partial_sum_le:
+    ? forall a,b seq(R),n N+:
+        forall k N+:
+            a(k)<=b(k)
+        =>:
+            partial_sum(a,n)<=partial_sum(b,n)
+    n>=1
+    by induc n from 1:
+        ? partial_sum(a,n)<=partial_sum(b,n)
+        ? from n=1:
+            a(1)<=b(1)
+            partial_sum(a,1)=a(1)<=b(1)=partial_sum(b,1)
+        ? induc:
+            n>=1
+            have next N+=n+1
+            a(next)<=b(next)
+            a(n+1)=a(next)
+            b(n+1)=b(next)
+            a(n+1)<=b(n+1)
+            by thm partial_sum_successor(a,n) => partial_sum(a,n+1)=partial_sum(a,n)+a(n+1)
+            by thm partial_sum_successor(b,n) => partial_sum(b,n+1)=partial_sum(b,n)+b(n+1)
+            partial_sum(a,n)+a(n+1)<=partial_sum(b,n)+a(n+1)<=partial_sum(b,n)+b(n+1)
+
+thm partial_sum_nondecreasing:
+    ? forall a seq(R),n,m N+:
+        forall k N+:
+            0<=a(k)
+        n<=m
+        =>:
+            partial_sum(a,n)<=partial_sum(a,m)
+    m>=n
+    by induc m from n:
+        ? partial_sum(a,n)<=partial_sum(a,m)
+        ? from m=n:
+            partial_sum(a,n)<=partial_sum(a,n)=partial_sum(a,m)
+        ? induc:
+            m>=n>=1
+            m $in N+
+            have next N+=m+1
+            a(next)>=0
+            a(m+1)=a(next)>=0
+            by thm partial_sum_successor(a,m) => partial_sum(a,m+1)=partial_sum(a,m)+a(m+1)
+            partial_sum(a,n)<=partial_sum(a,m)<=partial_sum(a,m)+a(m+1)=partial_sum(a,m+1)
+
+thm nonnegative_partial_sums_nondecreasing:
+    ? forall a seq(R):
+        forall k N+:
+            0<=a(k)
+        =>:
+            $is_seq_nondecreasing(partial_sums(a))
+    claim:
+        ? forall n,m N+:
+            n<=m
+            =>:
+                partial_sums(a)(n)<=partial_sums(a)(m)
+        by thm partial_sum_nondecreasing(a,n,m) => partial_sum(a,n)<=partial_sum(a,m)
+        by thm partial_sums_at(a,n) => partial_sums(a)(n)=partial_sum(a,n)
+        by thm partial_sums_at(a,m) => partial_sums(a)(m)=partial_sum(a,m)
+    by def $is_seq_nondecreasing(partial_sums(a))
+
+thm nonzero_constant_series_diverges:
+    ? forall a seq(R),c R:
+        c!=0
+        forall k N+:
+            a(k)=c
+        =>:
+            not $is_convergent_series(a)
+    by contra:
+        ? not $is_convergent_series(a)
+        $is_convergent_series(a)
+        release thm convergent_series_terms_zero(a)
+        release thm seq_limit_constant(a,c)
+        by thm seq_limit_unique(a,c,0) => c=0
+        impossible c!=0
+
+thm harmonic_block_lower:
+    ? forall a seq(R),n N+:
+        forall k N+:
+            a(k)=1/k
+        =>:
+            abs(partial_sum(a,2*n)-partial_sum(a,n))>=1/2
+    n>=1
+    n+1<=n+n=2*n
+    have fn lower(k N+) R=1/(2*n)
+    by thm partial_sum_constant(lower,1/(2*n),n) => partial_sum(lower,n)=n*(1/(2*n))
+    partial_sum(lower,n)=n*(1/(2*n))=1/2
+    have end N+=2*n
+    by thm partial_sum_constant(lower,1/(2*n),end) => partial_sum(lower,end)=end*(1/(2*n))
+    partial_sum(lower,2*n)=partial_sum(lower,end)=end*(1/(2*n))=(2*n)*(1/(2*n))=1
+    sum(1,2*n,lower)=sum(1,n,lower)+sum(n+1,2*n,lower)
+    sum(1,2*n,lower)=partial_sum(lower,2*n)=1
+    sum(1,n,lower)=partial_sum(lower,n)=1/2
+    1=sum(1,2*n,lower)=sum(1,n,lower)+sum(n+1,2*n,lower)=1/2+sum(n+1,2*n,lower)
+    sum(n+1,2*n,lower)=(1/2+sum(n+1,2*n,lower))-1/2=1-1/2=1/2
+    claim:
+        ? forall k N+:
+            n+1<=k
+            k<=2*n
+            =>:
+                1/(2*n)<=a(k)
+        a(k)=1/k
+        0<2*n*k
+        k/(2*n*k)<=(2*n)/(2*n*k)
+        1/(2*n)=k/(2*n*k)<=(2*n)/(2*n*k)=1/k=a(k)
+    sum(n+1,2*n,fn(k N+) R {1/(2*n)})=sum(n+1,2*n,lower)=1/2
+    sum(1,2*n,a)=sum(1,n,a)+sum(n+1,2*n,a)
+    partial_sum(a,2*n)=sum(1,2*n,a)=sum(1,n,a)+sum(n+1,2*n,a)=partial_sum(a,n)+sum(n+1,2*n,a)
+    partial_sum(a,2*n)-partial_sum(a,n)=sum(n+1,2*n,a)
+    partial_sum(a,2*n) $in R
+    partial_sum(a,n) $in R
+    partial_sum(a,2*n)-partial_sum(a,n) $in R
+    sum(n+1,2*n,a) $in R
+    sum(n+1,2*n,fn(k N+) R {1/(2*n)}) $in R
+    release thm sum_le_sum_from_pointwise(sum(n+1,2*n,fn(k N+) R {1/(2*n)}),sum(n+1,2*n,a))
+    sum(n+1,2*n,a)>=1/2
+    sum(n+1,2*n,a)<=abs(sum(n+1,2*n,a))
+    abs(partial_sum(a,2*n)-partial_sum(a,n))=abs(sum(n+1,2*n,a))>=sum(n+1,2*n,a)>=1/2
+
+thm series_comparison:
+    ? forall a,b seq(R):
+        $is_convergent_series(b)
+        forall k N+:
+            0<=a(k)
+            a(k)<=b(k)
+        =>:
+            $is_convergent_series(a)
+    release thm nonnegative_partial_sums_nondecreasing(a)
+    release thm convergent_series_partial_sums(b)
+    release thm sequence_convergent_bounded(partial_sums(b))
+    $is_seq_bounded_above(partial_sums(b))
+    obtain bound from exist bound R st {$is_real_upper_bound(fn_range(partial_sums(b)),bound)}
+    partial_sums(a) $in fn(k N+) R
+    partial_sums(b) $in fn(k N+) R
+    fn_range(partial_sums(a)) $subset R
+    claim:
+        ? forall x fn_range(partial_sums(a)):
+            x<=bound
+        have by fn_preimage: n from x $in fn_range(partial_sums(a))
+        x=partial_sums(a)(n)
+        by thm partial_sum_le(a,b,n) => partial_sum(a,n)<=partial_sum(b,n)
+        by thm partial_sums_at(a,n) => partial_sums(a)(n)=partial_sum(a,n)
+        by thm partial_sums_at(b,n) => partial_sums(b)(n)=partial_sum(b,n)
+        partial_sums(b)(n) $in fn_range(partial_sums(b))
+        partial_sums(b)(n)<=bound
+        x=partial_sums(a)(n)=partial_sum(a,n)<=partial_sum(b,n)=partial_sums(b)(n)<=bound
+    by def $is_real_upper_bound(fn_range(partial_sums(a)),bound)
+    witness exist upper R st {$is_real_upper_bound(fn_range(partial_sums(a)),upper)} from bound
+    by def $is_real_bounded_above(fn_range(partial_sums(a)))
+    by def $is_seq_bounded_above(partial_sums(a))
+    release thm sequence_monotone_bounded_above(partial_sums(a))
+    obtain L from exist L R st {$has_seq_limit(partial_sums(a),L)}
+    by def $has_series_sum(a,L)
+    release thm series_sum_convergent(a,L)
+
+thm harmonic_series_diverges:
+    ? forall a seq(R):
+        forall k N+:
+            a(k)=1/k
+        =>:
+            not $is_convergent_series(a)
+    by contra:
+        ? not $is_convergent_series(a)
+        $is_convergent_series(a)
+        release thm series_cauchy_from_convergent(a)
+        $is_seq_cauchy(partial_sums(a))
+        release thm sequence_cauchy_tail(partial_sums(a),1/4)
+        obtain cutoff from exist cutoff N+ st {cart({n N+:n>=cutoff},{n N+:n>=cutoff}) $subset {p cart(N+,N+):abs(partial_sums(a)(p(1))-partial_sums(a)(p(2)))<1/4}}
+        have double N+=2*cutoff
+        double=cutoff+cutoff>=cutoff
+        double $in {n N+:n>=cutoff}
+        cutoff $in {n N+:n>=cutoff}
+        (double,cutoff) $in cart({n N+:n>=cutoff},{n N+:n>=cutoff})
+        (double,cutoff) $in {p cart(N+,N+):abs(partial_sums(a)(p(1))-partial_sums(a)(p(2)))<1/4}
+        (double,cutoff)(1)=double
+        (double,cutoff)(2)=cutoff
+        partial_sums(a)((double,cutoff)(1))=partial_sums(a)(double)
+        partial_sums(a)((double,cutoff)(2))=partial_sums(a)(cutoff)
+        abs(partial_sums(a)((double,cutoff)(1))-partial_sums(a)((double,cutoff)(2)))<1/4
+        abs(partial_sums(a)(double)-partial_sums(a)(cutoff))=abs(partial_sums(a)((double,cutoff)(1))-partial_sums(a)((double,cutoff)(2)))<1/4
+        by thm partial_sums_at(a,double) => partial_sums(a)(double)=partial_sum(a,double)
+        by thm partial_sums_at(a,cutoff) => partial_sums(a)(cutoff)=partial_sum(a,cutoff)
+        partial_sum(a,double)=partial_sum(a,2*cutoff)
+        abs(partial_sum(a,2*cutoff)-partial_sum(a,cutoff))=abs(partial_sum(a,double)-partial_sum(a,cutoff))=abs(partial_sums(a)(double)-partial_sums(a)(cutoff))<1/4
+        by thm harmonic_block_lower(a,cutoff) => abs(partial_sum(a,2*cutoff)-partial_sum(a,cutoff))>=1/2
+        abs(partial_sum(a,2*cutoff)-partial_sum(a,cutoff))>=1/2>1/4
+        impossible abs(partial_sum(a,2*cutoff)-partial_sum(a,cutoff))<1/4
+
+thm absolute_terms_at:
+    ? forall a seq(R),k N+:
+        absolute_terms(a)(k)=abs(a(k))
+
+thm absolute_series_converges:
+    ? forall a seq(R):
+        $is_absolutely_convergent_series(a)
+        =>:
+            $is_convergent_series(a)
+    $is_convergent_series(absolute_terms(a))
+    obtain M from $is_convergent_series(absolute_terms(a))
+    have fn majorant(k N+) R=2*absolute_terms(a)(k)
+    release thm series_sum_scale(absolute_terms(a),majorant,M,2)
+    release thm series_sum_convergent(majorant,2*M)
+    have fn positive(k N+) R=abs(a(k))+a(k)
+    claim:
+        ? forall k N+:
+            0<=positive(k)
+            positive(k)<=majorant(k)
+        by thm absolute_terms_at(a,k) => absolute_terms(a)(k)=abs(a(k))
+        -a(k)<=abs(-a(k))=abs(a(k))
+        0=-a(k)+a(k)<=abs(a(k))+a(k)=positive(k)
+        a(k)<=abs(a(k))
+        positive(k)=abs(a(k))+a(k)<=abs(a(k))+abs(a(k))=2*abs(a(k))
+        majorant(k)=2*absolute_terms(a)(k)=2*abs(a(k))
+    release thm series_comparison(positive,majorant)
+    obtain P from $is_convergent_series(positive)
+    claim:
+        ? forall k N+:
+            a(k)=positive(k)-absolute_terms(a)(k)
+        by thm absolute_terms_at(a,k) => absolute_terms(a)(k)=abs(a(k))
+        positive(k)=abs(a(k))+a(k)
+        positive(k)-absolute_terms(a)(k)=(abs(a(k))+a(k))-abs(a(k))=a(k)
+    release thm series_sum_subtract(positive,absolute_terms(a),a,P,M)
+    release thm series_sum_convergent(a,P-M)
+
+thm absolute_series_comparison:
+    ? forall a,b seq(R):
+        $is_convergent_series(b)
+        forall k N+:
+            abs(a(k))<=b(k)
+        =>:
+            $is_absolutely_convergent_series(a)
+    claim:
+        ? forall k N+:
+            0<=absolute_terms(a)(k)
+            absolute_terms(a)(k)<=b(k)
+        by thm absolute_terms_at(a,k) => absolute_terms(a)(k)=abs(a(k))
+        0<=abs(a(k))=absolute_terms(a)(k)
+        absolute_terms(a)(k)=abs(a(k))<=b(k)
+    release thm series_comparison(absolute_terms(a),b)
+    by def $is_absolutely_convergent_series(a)
+
+thm series_eventual_comparison:
+    ? forall a,b seq(R),m N+:
+        $is_convergent_series(b)
+        forall k N+:
+            k>m
+            =>:
+                0<=a(k)
+                a(k)<=b(k)
+        =>:
+            $is_convergent_series(a)
+    release thm convergent_series_tail(b,m)
+    claim:
+        ? forall k N+:
+            0<=series_tail(a,m)(k)
+            series_tail(a,m)(k)<=series_tail(b,m)(k)
+        have index N+=k+m
+        index=k+m>m
+        0<=a(index)
+        a(index)<=b(index)
+        by thm series_tail_at(a,m,k) => series_tail(a,m)(k)=a(k+m)
+        by thm series_tail_at(b,m,k) => series_tail(b,m)(k)=b(k+m)
+        a(k+m)=a(index)
+        b(k+m)=b(index)
+    release thm series_comparison(series_tail(a,m),series_tail(b,m))
+    release thm tail_convergent_series(a,m)
+
+thm absolute_series_eventual_comparison:
+    ? forall a,b seq(R),m N+:
+        $is_convergent_series(b)
+        forall k N+:
+            k>m
+            =>:
+                abs(a(k))<=b(k)
+        =>:
+            $is_absolutely_convergent_series(a)
+    claim:
+        ? forall k N+:
+            k>m
+            =>:
+                0<=absolute_terms(a)(k)
+                absolute_terms(a)(k)<=b(k)
+        by thm absolute_terms_at(a,k) => absolute_terms(a)(k)=abs(a(k))
+        0<=abs(a(k))=absolute_terms(a)(k)
+        absolute_terms(a)(k)=abs(a(k))<=b(k)
+    release thm series_eventual_comparison(absolute_terms(a),b,m)
+    by def $is_absolutely_convergent_series(a)
+
+thm absolute_terms_tail_at:
+    ? forall a seq(R),m,k N+:
+        absolute_terms(series_tail(a,m))(k)=series_tail(absolute_terms(a),m)(k)
+    by thm absolute_terms_at(series_tail(a,m),k) => absolute_terms(series_tail(a,m))(k)=abs(series_tail(a,m)(k))
+    by thm series_tail_at(a,m,k) => series_tail(a,m)(k)=a(k+m)
+    by thm series_tail_at(absolute_terms(a),m,k) => series_tail(absolute_terms(a),m)(k)=absolute_terms(a)(k+m)
+    by thm absolute_terms_at(a,k+m) => absolute_terms(a)(k+m)=abs(a(k+m))
+    abs(series_tail(a,m)(k))=abs(a(k+m))
+    absolute_terms(series_tail(a,m))(k)=abs(a(k+m))=absolute_terms(a)(k+m)=series_tail(absolute_terms(a),m)(k)
+
+thm absolute_series_from_tail:
+    ? forall a seq(R),m N+:
+        $is_absolutely_convergent_series(series_tail(a,m))
+        =>:
+            $is_absolutely_convergent_series(a)
+    $is_convergent_series(absolute_terms(series_tail(a,m)))
+    obtain L from $is_convergent_series(absolute_terms(series_tail(a,m)))
+    absolute_terms(a) $in seq(R)
+    series_tail(absolute_terms(a),m) $in seq(R)
+    release thm series_sum_extensional(absolute_terms(series_tail(a,m)),series_tail(absolute_terms(a),m),L)
+    release thm series_sum_convergent(series_tail(absolute_terms(a),m),L)
+    release thm tail_convergent_series(absolute_terms(a),m)
+    by def $is_absolutely_convergent_series(a)
+
+thm series_geometric_domination:
+    ? forall a seq(R),q,t R,m N+:
+        0<=q
+        q<1
+        forall k N+:
+            k>m
+            =>:
+                abs(a(k))<=t*q^k
+        =>:
+            $is_absolutely_convergent_series(a)
+            $is_convergent_series(a)
+    abs(q)=q<1
+    release thm unit_abs_upper_bound(q)
+    have fn geometric(k N+) R=q^k
+    release thm series_sum_geometric(geometric,q)
+    release thm series_sum_convergent(geometric,q/(1-q))
+    have fn majorant(k N+) R=t*geometric(k)
+    release thm series_sum_scale(geometric,majorant,q/(1-q),t)
+    release thm series_sum_convergent(majorant,t*(q/(1-q)))
+    claim:
+        ? forall k N+:
+            k>m
+            =>:
+                abs(a(k))<=majorant(k)
+        geometric(k)=q^k
+        majorant(k)=t*geometric(k)=t*q^k
+        abs(a(k))<=t*q^k=majorant(k)
+    release thm absolute_series_eventual_comparison(a,majorant,m)
+    release thm absolute_series_converges(a)
+
+thm series_ratio_test:
+    ? forall a seq(R),q R,m N+:
+        0<=q
+        q<1
+        forall k N+:
+            k>=m
+            =>:
+                abs(a(k+1))<=q*abs(a(k))
+        =>:
+            $is_absolutely_convergent_series(a)
+            $is_convergent_series(a)
+    have coefficient R=abs(a(m))
+    0<=coefficient
+    claim:
+        ? forall k N+:
+            abs(a(k+m))<=coefficient*q^k
+        k>=1
+        by induc k from 1:
+            ? abs(a(k+m))<=coefficient*q^k
+            ? from k=1:
+                abs(a(m+1))<=q*abs(a(m))
+                1+m=m+1
+                a(1+m)=a(m+1)
+                abs(a(1+m))=abs(a(m+1))
+                q*abs(a(m))=abs(a(m))*q=coefficient*q=coefficient*q^1
+                abs(a(1+m))=abs(a(m+1))<=q*abs(a(m))=coefficient*q^1
+            ? induc:
+                k>=1
+                k+m $in N+
+                k+m>=m
+                abs(a(k+m+1))<=q*abs(a(k+m))
+                k+1+m=k+m+1
+                a(k+1+m)=a(k+m+1)
+                abs(a(k+1+m))=abs(a(k+m+1))
+                q*abs(a(k+m))<=q*(coefficient*q^k)
+                q^(k+1)=q^k*q^1=q^k*q
+                q*(coefficient*q^k)=coefficient*(q^k*q)=coefficient*q^(k+1)
+                abs(a(k+1+m))=abs(a(k+m+1))<=q*abs(a(k+m))<=coefficient*q^(k+1)
+    claim:
+        ? forall k N+:
+            abs(series_tail(a,m)(k))<=coefficient*q^k
+        by thm series_tail_at(a,m,k) => series_tail(a,m)(k)=a(k+m)
+        abs(series_tail(a,m)(k))=abs(a(k+m))<=coefficient*q^k
+    release thm series_geometric_domination(series_tail(a,m),q,coefficient,1)
+    release thm absolute_series_from_tail(a,m)
+    release thm absolute_series_converges(a)
+
+thm nonnegative_natural_power_le:
+    ? forall x,y R,n N+:
+        0<=x
+        x<=y
+        =>:
+            x^n<=y^n
+    0<=y
+    n>=1
+    by induc n from 1:
+        ? x^n<=y^n
+        ? from n=1:
+            x^1=x<=y=y^1
+        ? induc:
+            n>=1
+            0<=y^n
+            x^(n+1)=x^n*x^1=x^n*x
+            y^(n+1)=y^n*y^1=y^n*y
+            x^n*x<=y^n*x<=y^n*y
+            x^(n+1)=x^n*x<=y^n*y=y^(n+1)
+
+thm nonnegative_root_power:
+    ? forall x R,n N+:
+        0<=x
+        =>:
+            0<=x^(1/n)
+            (x^(1/n))^n=x
+    1/n $in R+
+    by cases:
+        ? 0<=x^(1/n) and (x^(1/n))^n=x
+        case x=0:
+            0^(1/n)=0
+            x^(1/n)=0^(1/n)=0
+            (x^(1/n))^n=0^n=0=x
+            0<=x^(1/n)
+        case x!=0:
+            by contra:
+                ? x>0
+                x<=0
+                x=0
+                impossible x!=0
+            0<x^(1/n)
+            0<=x^(1/n)
+            have root R+=x^(1/n)
+            0<root^n
+            log(2,x^(1/n))=(1/n)*log(2,x)
+            log(2,root)=log(2,x^(1/n))=(1/n)*log(2,x)
+            log(2,root^n)=n*log(2,root)
+            n*log(2,root)=n*((1/n)*log(2,x))=log(2,x)
+            log(2,root^n)=log(2,x)
+            root^n=2^log(2,root^n)=2^log(2,x)=x
+            (x^(1/n))^n=root^n=x
+
+have fn root_terms(a seq(R)) fn(k N+) R=fn(k N+) R {abs(a(k))^(1/k)}
+
+forall a seq(R):
+    root_terms(a) $in seq(R)
+
+thm root_terms_at:
+    ? forall a seq(R),k N+:
+        root_terms(a)(k)=abs(a(k))^(1/k)
+        0<=root_terms(a)(k)
+        root_terms(a)(k)^k=abs(a(k))
+    root_terms(a)(k)=abs(a(k))^(1/k)
+    0<=abs(a(k))
+    release thm nonnegative_root_power(abs(a(k)),k)
+    0<=root_terms(a)(k)
+    root_terms(a)(k)^k=(abs(a(k))^(1/k))^k=abs(a(k))
+
+thm series_root_test:
+    ? forall a seq(R),q R,m N+:
+        0<=q
+        q<1
+        forall k N+:
+            k>=m
+            =>:
+                root_terms(a)(k)<=q
+        =>:
+            $is_absolutely_convergent_series(a)
+            $is_convergent_series(a)
+    claim:
+        ? forall k N+:
+            k>m
+            =>:
+                abs(a(k))<=1*q^k
+        k>=m
+        release thm root_terms_at(a,k)
+        release thm nonnegative_natural_power_le(root_terms(a)(k),q,k)
+        abs(a(k))=root_terms(a)(k)^k<=q^k=1*q^k
+    release thm series_geometric_domination(a,q,1,m)
+
+thm nonnegative_sequence_limsup:
+    ? forall a seq(R),L R,m N+:
+        $has_seq_limsup(a,L)
+        forall k N+:
+            k>=m
+            =>:
+                0<=a(k)
+        =>:
+            0<=L
+    by contra:
+        ? 0<=L
+        L<0
+        -L>0
+        -L/2>0
+        -L/2 $in R+
+        release thm seq_limsup_bound(a,L,-L/2)
+        obtain cutoff from exist cutoff N+ st {{n N+:n>=cutoff} $subset preimage_set(a,{v R:v<L+(-L/2)})}
+        cutoff+m $in N+
+        cutoff+m>=cutoff
+        cutoff+m>=m
+        cutoff+m $in {n N+:n>=cutoff}
+        cutoff+m $in preimage_set(a,{v R:v<L+(-L/2)})
+        a(cutoff+m) $in {v R:v<L+(-L/2)}
+        0<=a(cutoff+m)<L+(-L/2)=L/2<0
+        impossible 0<0
+
+thm series_root_limsup_test:
+    ? forall a seq(R),L R:
+        $has_seq_limsup(root_terms(a),L)
+        L<1
+        =>:
+            $is_absolutely_convergent_series(a)
+            $is_convergent_series(a)
+    claim:
+        ? forall k N+:
+            k>=1
+            =>:
+                0<=root_terms(a)(k)
+        release thm root_terms_at(a,k)
+    release thm nonnegative_sequence_limsup(root_terms(a),L,1)
+    have q R=(L+1)/2
+    0<=L
+    0<q
+    L<1
+    L+1<1+1=2
+    (L+1)/2<2/2=1
+    q=(L+1)/2<1
+    L+L<L+1
+    2*L=L+L<L+1
+    L=2*L/2<(L+1)/2=q
+    L<q
+    q-L>0
+    q-L $in R+
+    release thm seq_limsup_bound(root_terms(a),L,q-L)
+    obtain cutoff from exist cutoff N+ st {{n N+:n>=cutoff} $subset preimage_set(root_terms(a),{v R:v<L+(q-L)})}
+    claim:
+        ? forall k N+:
+            k>=cutoff
+            =>:
+                root_terms(a)(k)<=q
+        k $in {n N+:n>=cutoff}
+        k $in preimage_set(root_terms(a),{v R:v<L+(q-L)})
+        root_terms(a)(k) $in {v R:v<L+(q-L)}
+        root_terms(a)(k)<L+(q-L)=q
+        root_terms(a)(k)<=q
+    release thm series_root_test(a,q,cutoff)
+
+thm series_root_limit_test:
+    ? forall a seq(R),L R:
+        $has_seq_limit(root_terms(a),L)
+        L<1
+        =>:
+            $is_absolutely_convergent_series(a)
+            $is_convergent_series(a)
+    release thm seq_limsup_from_limit(root_terms(a),L)
+    release thm series_root_limsup_test(a,L)
+
+thm absolute_terms_limit:
+    ? forall a seq(R),L R:
+        $has_seq_limit(a,L)
+        =>:
+            $has_seq_limit(absolute_terms(a),abs(L))
+    release thm seq_limit_abs(a,L)
+    claim:
+        ? forall k N+:
+            fn(n N+) R {abs(a(n))}(k)=absolute_terms(a)(k)
+        release thm absolute_terms_at(a,k)
+    release thm seq_limit_eventually_equal(fn(n N+) R {abs(a(n))},absolute_terms(a),abs(L),1)
+
+thm series_ratio_limsup_test:
+    ? forall a,ratio seq(R),L R,m N+:
+        $has_seq_limsup(ratio,L)
+        L<1
+        forall k N+:
+            k>=m
+            =>:
+                0<abs(a(k))
+        forall k N+:
+            k>=m
+            0<abs(a(k))
+            =>:
+                ratio(k)=abs(a(k+1))/abs(a(k))
+        =>:
+            $is_absolutely_convergent_series(a)
+            $is_convergent_series(a)
+    claim:
+        ? forall k N+:
+            k>=m
+            =>:
+                0<=ratio(k)
+        0<=abs(a(k+1))
+        0<abs(a(k))
+        0<=abs(a(k+1))/abs(a(k))=ratio(k)
+    release thm nonnegative_sequence_limsup(ratio,L,m)
+    have q R=(L+1)/2
+    0<=L
+    0<q
+    L<1
+    L+1<1+1=2
+    (L+1)/2<2/2=1
+    q=(L+1)/2<1
+    L+L<L+1
+    2*L=L+L<L+1
+    L=2*L/2<(L+1)/2=q
+    L<q
+    q-L>0
+    q-L $in R+
+    release thm seq_limsup_bound(ratio,L,q-L)
+    obtain cutoff from exist cutoff N+ st {{n N+:n>=cutoff} $subset preimage_set(ratio,{v R:v<L+(q-L)})}
+    claim:
+        ? forall k N+:
+            k>=cutoff+m
+            =>:
+                abs(a(k+1))<=q*abs(a(k))
+        cutoff<=cutoff+m<=k
+        m<=cutoff+m<=k
+        0<abs(a(k))
+        k $in {n N+:n>=cutoff}
+        k $in preimage_set(ratio,{v R:v<L+(q-L)})
+        ratio(k) $in {v R:v<L+(q-L)}
+        ratio(k)<L+(q-L)=q
+        ratio(k)*abs(a(k))<q*abs(a(k))
+        ratio(k)=abs(a(k+1))/abs(a(k))
+        abs(a(k+1))=(abs(a(k+1))/abs(a(k)))*abs(a(k))=ratio(k)*abs(a(k))
+        abs(a(k+1))<=q*abs(a(k))
+    release thm series_ratio_test(a,q,cutoff+m)
+
+thm series_ratio_limit_test:
+    ? forall a,ratio seq(R),L R,m N+:
+        $has_seq_limit(ratio,L)
+        L<1
+        forall k N+:
+            k>=m
+            =>:
+                0<abs(a(k))
+        forall k N+:
+            k>=m
+            0<abs(a(k))
+            =>:
+                ratio(k)=abs(a(k+1))/abs(a(k))
+        =>:
+            $is_absolutely_convergent_series(a)
+            $is_convergent_series(a)
+    release thm seq_limsup_from_limit(ratio,L)
+    release thm series_ratio_limsup_test(a,ratio,L,m)
+
+thm base_le_natural_power:
+    ? forall x R,n N+:
+        1<=x
+        =>:
+            x<=x^n
+    0<=x
+    claim:
+        ? forall k N+:
+            1<=x^k
+        release thm nonnegative_natural_power_le(1,x,k)
+        1=1^k<=x^k
+    n>=1
+    by induc n from 1:
+        ? x<=x^n
+        ? from n=1:
+            x=x^1
+        ? induc:
+            0<=x^n
+            x<=x^n
+            x^n<=x^n*x
+            x^(n+1)=x^n*x^1=x^n*x
+            x<=x^(n+1)
+
+thm series_root_limsup_diverges:
+    ? forall a seq(R),L R:
+        $has_seq_limsup(root_terms(a),L)
+        1<L
+        =>:
+            not $is_convergent_series(a)
+    by contra:
+        ? not $is_convergent_series(a)
+        $is_convergent_series(a)
+        release thm convergent_series_terms_zero(a)
+        release thm seq_limit_tail(a,0,1)
+        obtain cutoff from exist cutoff N+ st {{n N+:n>=cutoff} $subset preimage_set(a,{v R:abs(v-0)<1})}
+        L-1>0
+        (L-1)/2>0
+        (L-1)/2 $in R+
+        release thm seq_limsup_hit(root_terms(a),L,(L-1)/2,cutoff)
+        obtain n from exist n N+ st {n>=cutoff and L-(L-1)/2<root_terms(a)(n)}
+        1<1+(L-1)/2=L-(L-1)/2
+        1<root_terms(a)(n)
+        release thm root_terms_at(a,n)
+        release thm base_le_natural_power(root_terms(a)(n),n)
+        1<root_terms(a)(n)<=root_terms(a)(n)^n=abs(a(n))
+        n $in {k N+:k>=cutoff}
+        n $in preimage_set(a,{v R:abs(v-0)<1})
+        a(n) $in {v R:abs(v-0)<1}
+        abs(a(n)-0)<1
+        abs(a(n))=abs(a(n)-0)<1
+        1<abs(a(n))
+        1<=abs(a(n))
+        impossible abs(a(n))<1
+
+thm series_root_limit_diverges:
+    ? forall a seq(R),L R:
+        $has_seq_limit(root_terms(a),L)
+        1<L
+        =>:
+            not $is_convergent_series(a)
+    release thm seq_limsup_from_limit(root_terms(a),L)
+    release thm series_root_limsup_diverges(a,L)
+
+thm series_ratio_diverges:
+    ? forall a seq(R),q R,m N+:
+        1<q
+        0<abs(a(m))
+        forall k N+:
+            k>=m
+            =>:
+                q*abs(a(k))<=abs(a(k+1))
+        =>:
+            not $is_convergent_series(a)
+    0<q
+    claim:
+        ? forall k N+:
+            k>=m
+            =>:
+                abs(a(m))<=abs(a(k))
+        by induc k from m:
+            ? abs(a(m))<=abs(a(k))
+            ? from k=m:
+                abs(a(m))=abs(a(m))
+            ? induc:
+                0<=abs(a(k))
+                abs(a(k))<=q*abs(a(k))<=abs(a(k+1))
+                abs(a(m))<=abs(a(k+1))
+    by contra:
+        ? not $is_convergent_series(a)
+        $is_convergent_series(a)
+        release thm convergent_series_terms_zero(a)
+        release thm absolute_terms_limit(a,0)
+        abs(0)=0
+        $has_seq_limit(absolute_terms(a),0)
+        have fn lower(k N+) R=abs(a(m))
+        release thm seq_limit_constant(lower,abs(a(m)))
+        claim:
+            ? forall k N+:
+                k>=m
+                =>:
+                    lower(k)<=absolute_terms(a)(k)
+            release thm absolute_terms_at(a,k)
+            lower(k)=abs(a(m))<=abs(a(k))=absolute_terms(a)(k)
+        release thm seq_limit_compare(lower,absolute_terms(a),abs(a(m)),0,m)
+        impossible 0<abs(a(m))
+
+thm series_ratio_liminf_diverges:
+    ? forall a,ratio seq(R),L R,m N+:
+        $has_seq_liminf(ratio,L)
+        1<L
+        forall k N+:
+            k>=m
+            =>:
+                0<abs(a(k))
+        forall k N+:
+            k>=m
+            0<abs(a(k))
+            =>:
+                ratio(k)=abs(a(k+1))/abs(a(k))
+        =>:
+            not $is_convergent_series(a)
+    L-1>0
+    (L-1)/2>0
+    (L-1)/2 $in R+
+    have q R=(L+1)/2
+    1<1+(L-1)/2=(L+1)/2=q
+    release thm seq_liminf_bound(ratio,L,(L-1)/2)
+    obtain cutoff from exist cutoff N+ st {{n N+:n>=cutoff} $subset preimage_set(ratio,{v R:L-(L-1)/2<v})}
+    cutoff+m $in N+
+    cutoff+m>=m
+    0<abs(a(cutoff+m))
+    claim:
+        ? forall k N+:
+            k>=cutoff+m
+            =>:
+                q*abs(a(k))<=abs(a(k+1))
+        cutoff<=cutoff+m<=k
+        m<=cutoff+m<=k
+        0<abs(a(k))
+        k $in {n N+:n>=cutoff}
+        k $in preimage_set(ratio,{v R:L-(L-1)/2<v})
+        ratio(k) $in {v R:L-(L-1)/2<v}
+        q=(L+1)/2=L-(L-1)/2<ratio(k)
+        q*abs(a(k))<ratio(k)*abs(a(k))
+        ratio(k)=abs(a(k+1))/abs(a(k))
+        ratio(k)*abs(a(k))=(abs(a(k+1))/abs(a(k)))*abs(a(k))=abs(a(k+1))
+        q*abs(a(k))<=abs(a(k+1))
+    release thm series_ratio_diverges(a,q,cutoff+m)
+
+thm series_ratio_limit_diverges:
+    ? forall a,ratio seq(R),L R,m N+:
+        $has_seq_limit(ratio,L)
+        1<L
+        forall k N+:
+            k>=m
+            =>:
+                0<abs(a(k))
+        forall k N+:
+            k>=m
+            0<abs(a(k))
+            =>:
+                ratio(k)=abs(a(k+1))/abs(a(k))
+        =>:
+            not $is_convergent_series(a)
+    release thm seq_liminf_from_limit(ratio,L)
+    release thm series_ratio_liminf_diverges(a,ratio,L,m)
+

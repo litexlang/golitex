@@ -1,0 +1,6 @@
+# A real pair and a numeric tuple belong to their Cartesian carriers.
+release thm cart_member_from_coordinates((1, 2), cart(R, R))
+thm widen_cart:
+    ? forall point_arg cart(R, R):
+        point_arg $in cart(C, C)
+    by thm cart_member_from_coordinates(point_arg, cart(C, C)) => point_arg $in cart(C, C)

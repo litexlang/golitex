@@ -1,0 +1,830 @@
+[
+  {
+    "id": "Fact",
+    "leaf": "Fact",
+    "title": "事实陈述",
+    "syntax": "fact",
+    "group": "事实",
+    "math": [
+      "1+2=3"
+    ],
+    "help": "直接陈述并检查一个事实；检查通过后，后面的语句可以引用它。",
+    "focus": "1 + 2 = 3"
+  },
+  {
+    "id": "TrustStmt",
+    "leaf": "TrustStmt",
+    "title": "显式假设",
+    "syntax": "trust",
+    "group": "假设与公理",
+    "math": [
+      "1=1"
+    ],
+    "help": "直接采用所写事实；它的真值没有经过这条语句的证明检查。展示时必须保留显式假设标记。",
+    "badge": "显式假设"
+  },
+  {
+    "id": "TrustHaveStmt",
+    "leaf": "TrustHaveStmt",
+    "title": "带假设引入对象",
+    "syntax": "trust have",
+    "group": "假设与公理",
+    "math": [
+      "\\mathit{trusted\\_a}\\in\\mathbb R",
+      "\\mathit{trusted\\_a}=1"
+    ],
+    "help": "引入对象并直接采用给出的条件。后面的使用依赖这项显式假设。",
+    "badge": "显式假设"
+  },
+  {
+    "id": "LetObjStmt",
+    "leaf": "LetObjStmt",
+    "title": "绑定名称",
+    "syntax": "let",
+    "group": "对象",
+    "math": [
+      "\\mathit{let\\_a}:=3"
+    ],
+    "help": "给已有表达式起一个新名字；这是数学上的名称绑定，不是可变赋值。"
+  },
+  {
+    "id": "HaveObjInNonemptySetStmt",
+    "leaf": "HaveObjInNonemptySetStmt",
+    "title": "引入对象",
+    "syntax": "have",
+    "group": "对象",
+    "math": [
+      "\\mathit{arbitrary\\_r}\\in\\mathbb R"
+    ],
+    "help": "从非空范围引入一个对象；没有指定它的具体值。"
+  },
+  {
+    "id": "HaveObjEqualStmt",
+    "leaf": "HaveObjEqualStmt",
+    "title": "按值定义对象",
+    "syntax": "have =",
+    "group": "对象",
+    "math": [
+      "\\mathit{typed\\_n}\\in\\mathbb N",
+      "\\mathit{typed\\_n}:=1"
+    ],
+    "help": "同时指定对象的范围和值，所给值必须属于所写范围。"
+  },
+  {
+    "id": "HaveObjByExistFactsStmt",
+    "leaf": "HaveObjByExistFactsStmt",
+    "title": "按条件取对象",
+    "syntax": "have :",
+    "group": "对象",
+    "math": [
+      "\\exists u\\in\\mathbb R:\\ u=4",
+      "\\Downarrow",
+      "\\mathit{existing\\_a}\\in\\mathbb R,\\quad\\mathit{existing\\_a}=4"
+    ],
+    "help": "利用已有的存在性引入满足条件的对象；不能凭空假定这些对象存在。"
+  },
+  {
+    "id": "ObtainObjFromExistFact",
+    "leaf": "ObtainObjFromExistFact",
+    "title": "提取存在见证",
+    "syntax": "obtain from exist",
+    "group": "对象",
+    "math": [
+      "\\exists x\\in\\mathbb R:\\ x=5",
+      "\\Downarrow",
+      "\\mathit{obtained\\_a}\\in\\mathbb R,\\quad\\mathit{obtained\\_a}=5"
+    ],
+    "help": "把已经证明存在的见证命名，得到该见证的范围和条件。"
+  },
+  {
+    "id": "ObtainObjFromAtomicFact",
+    "leaf": "ObtainObjFromAtomicFact",
+    "title": "从命题提取见证",
+    "syntax": "obtain from $P",
+    "group": "对象",
+    "math": [
+      "\\mathit{obtain\\_copy}(2)",
+      "\\Updownarrow",
+      "2\\in\\mathbb R,\\quad \\exists x\\in\\mathbb R:\\ x=2",
+      "\\Downarrow",
+      "\\mathit{atomic\\_a}\\in\\mathbb R,\\quad\\mathit{atomic\\_a}=2"
+    ],
+    "help": "所用命题的定义给出存在性；将其中的见证命名。",
+    "layout": "flow"
+  },
+  {
+    "id": "HaveByPreimageStmt",
+    "leaf": "HaveByPreimageStmt",
+    "title": "取原像",
+    "syntax": "have by fn_preimage",
+    "group": "对象",
+    "math": [
+      "\\mathit{pre\\_shift}(2)\\in\\operatorname{fn\\_range}(\\mathit{pre\\_shift})",
+      "\\Downarrow",
+      "\\mathit{pre\\_a}\\in\\mathbb R",
+      "\\mathit{pre\\_shift}(\\mathit{pre\\_a})=\\mathit{pre\\_shift}(2)"
+    ],
+    "help": "从已知的值域成员关系取原像。展示实际得到的原像变量与函数等式，不擅自把原像设为某个数。"
+  },
+  {
+    "id": "HaveByReplacementAxiomStmt",
+    "leaf": "HaveByReplacementAxiomStmt",
+    "title": "构造关系的像集",
+    "syntax": "have by replacement_axiom",
+    "group": "对象",
+    "math": [
+      "\\begin{aligned}\\mathit{replace\\_img}:=\\{y:\\mathrm{set}\\mid {}&\\exists x\\in\\{1,2\\}:\\\\&\\mathit{replace\\_id}(x,y)\\}\\end{aligned}"
+    ],
+    "help": "当关系对源集合中每个输入唯一确定输出时，利用替换公理形成像集；单独保留所用关系及唯一性前提。",
+    "badge": "替换公理"
+  },
+  {
+    "id": "HaveFnEqualStmt",
+    "leaf": "HaveFnEqualStmt",
+    "title": "表达式定义函数",
+    "syntax": "have fn =",
+    "group": "函数",
+    "math": [
+      "\\mathit{mean}:\\mathbb R^3\\longrightarrow\\mathbb R",
+      "\\mathit{mean}(a,b,c):=\\frac{a+b+c}{3}"
+    ],
+    "help": "给出函数的输入、输出范围和取值公式。多参数函数的每个参数都要出现在公式中。",
+    "source": "examples/reading/homepage/01-mean-squared-error.lit",
+    "lines": [
+      7,
+      7
+    ]
+  },
+  {
+    "id": "HaveFnEqualCaseByCaseStmt",
+    "leaf": "HaveFnEqualCaseByCaseStmt",
+    "title": "分段定义函数",
+    "syntax": "have fn by cases",
+    "group": "函数",
+    "math": [
+      "\\mathit{case\\_flag}:\\mathbb R\\longrightarrow\\mathbb N",
+      "\\mathit{case\\_flag}(x):=\\begin{cases}0,&x=0,\\\\1,&x\\ne0.\\end{cases}"
+    ],
+    "help": "各分支必须覆盖定义域，且互不重叠。右侧按数学中的分段函数排版。",
+    "layout": "cases"
+  },
+  {
+    "id": "HaveFnByInducStmt",
+    "leaf": "HaveFnByInducStmt",
+    "title": "递归定义函数",
+    "syntax": "have fn by induc",
+    "group": "函数",
+    "math": [
+      "\\mathit{ind\\_inc}:\\mathbb N\\longrightarrow\\mathbb N",
+      "\\mathit{ind\\_inc}(0):=0",
+      "\\mathit{ind\\_inc}(n):=\\mathit{ind\\_inc}(n-1)+1\\quad(n\\ge1)"
+    ],
+    "help": "展示初始值、递归步和起点，不把递归定义替换成没有在源码中给出的闭式。",
+    "case": 2,
+    "layout": "recursion"
+  },
+  {
+    "id": "HaveFnByForallExistUniqueStmt",
+    "leaf": "HaveFnByForallExistUniqueStmt",
+    "title": "由唯一存在性定义函数",
+    "syntax": "have fn by exist!",
+    "group": "函数",
+    "math": [
+      "\\forall x\\in\\mathbb R:\\ \\exists!y\\in\\mathbb R:\\ \\mathit{unique\\_id\\_rel}(x,y)",
+      "\\Downarrow",
+      "\\mathit{unique\\_id}:\\mathbb R\\longrightarrow\\mathbb R",
+      "\\forall x\\in\\mathbb R:\\ \\mathit{unique\\_id\\_rel}(x,\\mathit{unique\\_id}(x))"
+    ],
+    "help": "每个输入都存在唯一输出，因此可以用函数名指称该输出。展示原关系，不凭空补一个计算公式。"
+  },
+  {
+    "id": "DefPropStmt",
+    "leaf": "DefPropStmt",
+    "title": "命题定义",
+    "syntax": "prop",
+    "group": "定义",
+    "math": [
+      "\\mathit{is\\_least\\_squares\\_center}(\\mathit{center},a,b,c)\\Longleftrightarrow",
+      "\\mathit{center}\\in\\mathbb R,\\quad a\\in\\mathbb R,\\quad b\\in\\mathbb R,\\quad c\\in\\mathbb R",
+      "\\begin{gathered}\\forall\\mathit{candidate}\\in\\mathbb R:\\\\[0.5em]\\begin{aligned}&(a-\\mathit{center})^2+(b-\\mathit{center})^2+(c-\\mathit{center})^2\\\\&\\le(a-\\mathit{candidate})^2+(b-\\mathit{candidate})^2+(c-\\mathit{candidate})^2\\end{aligned}\\end{gathered}"
+    ],
+    "help": "给一个带参数的条件起名字。定义本身不证明任何具体实例；四个参数的类型与完整定义条件都保留在右侧。",
+    "source": "examples/reading/homepage/01-mean-squared-error.lit",
+    "lines": [
+      3,
+      5
+    ],
+    "layout": "equivalence"
+  },
+  {
+    "id": "DefAbstractPropStmt",
+    "leaf": "DefAbstractPropStmt",
+    "title": "抽象命题接口",
+    "syntax": "abstract_prop",
+    "group": "定义",
+    "math": [
+      "\\mathit{abstract\\_mark}(x)"
+    ],
+    "help": "只声明命题的名称和参数接口，没有给出等价条件，也没有断言任何实例成立。",
+    "badge": "仅声明接口"
+  },
+  {
+    "id": "DefTemplateStmt",
+    "leaf": "DefTemplateStmt",
+    "title": "参数化定义",
+    "syntax": "template",
+    "group": "定义",
+    "math": [
+      "S:\\mathrm{set}",
+      "\\mathit{template\\_copy}\\langle S\\rangle:=S"
+    ],
+    "help": "给出随集合参数变化的一族定义。这里 set 是参数种类，不是一个“所有集合组成的集合”。"
+  },
+  {
+    "id": "DefStructStmt",
+    "leaf": "DefStructStmt",
+    "title": "结构定义",
+    "syntax": "struct",
+    "group": "定义",
+    "math": [
+      "\\forall p\\in\\&\\mathit{TestPoint}:",
+      "\\mathit{p.x}\\in\\mathbb R,\\quad\\mathit{p.y}\\in\\mathbb R"
+    ],
+    "help": "定义带字段的结构；展示所有字段及附加条件。这里的结构有两个实数字段，不额外捏造一个等价于坐标对的定理。"
+  },
+  {
+    "id": "DefAlgoByCasesStmt",
+    "leaf": "DefAlgoByCasesStmt",
+    "title": "分支算法",
+    "syntax": "algo by cases",
+    "group": "函数",
+    "math": [
+      "\\mathit{algo\\_flag}:\\mathbb R\\longrightarrow\\mathbb N",
+      "\\mathit{algo\\_flag}(x):=\\begin{cases}0,&x=0,\\\\1,&x\\ne0.\\end{cases}"
+    ],
+    "help": "除了函数定义，还提供可供 eval 使用的分支计算规则。",
+    "badge": "可求值",
+    "layout": "cases"
+  },
+  {
+    "id": "DefAlgoByInducStmt",
+    "leaf": "DefAlgoByInducStmt",
+    "title": "递归算法",
+    "syntax": "algo by induc",
+    "group": "函数",
+    "math": [
+      "\\mathit{algo\\_count}:\\mathbb N\\longrightarrow\\mathbb N",
+      "\\mathit{algo\\_count}(0):=0",
+      "\\mathit{algo\\_count}(n):=\\mathit{algo\\_count}(n-1)\\quad(n\\ge1)"
+    ],
+    "help": "给出可执行的初始值与递归规则；默认保留递归关系，不替换成猜测的闭式。",
+    "badge": "可求值",
+    "layout": "recursion"
+  },
+  {
+    "id": "DefThmStmt",
+    "leaf": "DefThmStmt",
+    "title": "命名定理",
+    "syntax": "thm",
+    "group": "定义",
+    "math": [
+      "\\forall x\\in\\mathbb R:\\quad x+0=x"
+    ],
+    "help": "给已建立的数学结论起名字，供后文实例化使用。数学框显示完整定理，不默认重放证明过程。",
+    "case": 1
+  },
+  {
+    "id": "AxiomStmt",
+    "leaf": "AxiomStmt",
+    "title": "公理声明",
+    "syntax": "axiom",
+    "group": "假设与公理",
+    "math": [
+      "\\forall x\\in\\mathbb R:\\quad x=0\\Longrightarrow\\mathit{ax\\_background}(x)"
+    ],
+    "help": "作为公理采用这条陈述；它不是在这里证明得到的定理。",
+    "badge": "公理声明"
+  },
+  {
+    "id": "DefStrategyStmt",
+    "leaf": "DefStrategyStmt",
+    "title": "复用证明策略",
+    "syntax": "strategy",
+    "group": "定义",
+    "math": [
+      "\\forall x\\in\\mathbb R:\\quad x=1\\Longrightarrow\\mathit{strat\\_one}(x)"
+    ],
+    "help": "登记一个已经检查的推导策略，后续遇到匹配的目标和条件时可以复用它。"
+  },
+  {
+    "id": "ReleaseThmStmt",
+    "leaf": "ReleaseThmStmt",
+    "title": "实例化定理",
+    "syntax": "release thm",
+    "group": "展开",
+    "math": [
+      "4+0=4",
+      "0+4=4"
+    ],
+    "help": "把定理用于实际参数，取得这次实例化的全部结论。与 by thm 只选取一条结论不同。",
+    "case": 1
+  },
+  {
+    "id": "ReleaseStructDefStmt",
+    "leaf": "ReleaseStructDefStmt",
+    "title": "展开结构",
+    "syntax": "release struct def",
+    "group": "展开",
+    "math": [
+      "\\mathit{p.inner.x}\\in\\mathbb R,\\quad\\mathit{p.inner.y}\\in\\mathbb R",
+      "\\mathit{p.inner.x}=0"
+    ],
+    "help": "展开当前指定的那层结构，取得实际字段类型和结构条件；这里展开的是 p.inner。",
+    "badge": "局部证明上下文"
+  },
+  {
+    "id": "ReleaseObjDefStmt",
+    "leaf": "ReleaseObjDefStmt",
+    "title": "展开对象定义",
+    "syntax": "release obj def",
+    "group": "展开",
+    "math": [
+      "\\mathit{open\\_obj\\_a}=1"
+    ],
+    "help": "打开已有对象定义，使其中的等式和性质可供后文使用。"
+  },
+  {
+    "id": "ExpandRangeStmt",
+    "leaf": "ExpandRangeStmt",
+    "title": "展开范围成员关系",
+    "syntax": "expand",
+    "group": "展开",
+    "math": [
+      "x\\in\\operatorname{range}(1,3)",
+      "\\Downarrow",
+      "x=1\\lor x=2"
+    ],
+    "help": "把有限范围中的成员关系展开为各个可能取值；range 的右端点不包含在内。",
+    "badge": "局部证明上下文"
+  },
+  {
+    "id": "ReleaseZornLemmaStmt",
+    "leaf": "ReleaseZornLemmaStmt",
+    "title": "应用佐恩引理",
+    "syntax": "release zorn_lemma",
+    "group": "展开",
+    "math": [
+      "S:\\mathrm{set}",
+      "S\\ne\\varnothing",
+      "\\forall x\\in S:\\ \\mathit{leq}(x,x)",
+      "\\forall x,y,z\\in S:\\ (\\mathit{leq}(x,y)\\land\\mathit{leq}(y,z))\\Rightarrow\\mathit{leq}(x,z)",
+      "\\forall x,y\\in S:\\ (\\mathit{leq}(x,y)\\land\\mathit{leq}(y,x))\\Rightarrow x=y",
+      "\\begin{gathered}\\forall c\\in\\mathcal P(S):\\\\ (\\forall x,y\\in c:\\ \\mathit{leq}(x,y)\\lor\\mathit{leq}(y,x))\\\\\\Rightarrow\\exists u\\in S:\\ \\mathit{upper\\_bound}(c,u)\\end{gathered}",
+      "\\Downarrow",
+      "\\exists m\\in S:\\ \\mathit{maximal}(m)"
+    ],
+    "help": "保留非空性、偏序的三条性质及每条链有上界的条件，再展示得到的极大元结论。不能只显示结论而省掉这些前提。",
+    "badge": "局部条件下的公理应用",
+    "layout": "premises"
+  },
+  {
+    "id": "ReleaseAxiomOfChoiceStmt",
+    "leaf": "ReleaseAxiomOfChoiceStmt",
+    "title": "应用选择公理",
+    "syntax": "release axiom_of_choice",
+    "group": "展开",
+    "math": [
+      "F:\\mathrm{set}",
+      "\\forall A\\in F:\\ A\\ne\\varnothing",
+      "\\Downarrow",
+      "\\exists f:F\\longrightarrow\\bigcup F:",
+      "\\forall A\\in F:\\ f(A)\\in A"
+    ],
+    "help": "对一族非空集合取得选择函数；保留每个成员集合非空的前提及选择函数的逐点条件。",
+    "badge": "局部条件下的公理应用"
+  },
+  {
+    "id": "ReleaseRegularityAxiomStmt",
+    "leaf": "ReleaseRegularityAxiomStmt",
+    "title": "应用正则公理",
+    "syntax": "release regularity_axiom",
+    "group": "展开",
+    "math": [
+      "\\{1\\}\\ne\\varnothing",
+      "\\Downarrow",
+      "\\exists a\\in\\{1\\}:\\ a\\cap\\{1\\}=\\varnothing"
+    ],
+    "help": "展示正则公理为本次非空集合给出的元素及其与原集合不相交的性质。",
+    "badge": "公理应用"
+  },
+  {
+    "id": "ByCasesStmt",
+    "leaf": "ByCasesStmt",
+    "title": "分类证明",
+    "syntax": "by cases",
+    "group": "证明",
+    "math": [
+      "x\\in\\mathbb R,\\quad x=0\\lor x=1",
+      "\\begin{cases}x=0\\Rightarrow x\\ge0,\\\\x=1\\Rightarrow x\\ge0.\\end{cases}",
+      "\\therefore\\ x\\ge0"
+    ],
+    "help": "每个可能情形都要得到同一目标。展示情形条件与共同结论，具体证明仍在源码中。",
+    "case": 1,
+    "badge": "局部证明上下文",
+    "layout": "cases"
+  },
+  {
+    "id": "ByContraStmt",
+    "leaf": "ByContraStmt",
+    "title": "反证法",
+    "syntax": "by contra",
+    "group": "证明",
+    "math": [
+      "\\sqrt2\\in\\mathbb Q",
+      "\\Downarrow",
+      "\\exists p\\in\\mathbb Z,\\ q\\in\\mathbb N_{>0}:",
+      "\\sqrt2=\\frac pq,\\quad\\gcd(p,q)=1",
+      "p^2=2q^2\\ \\Longrightarrow\\ 2\\mid p,\\ 2\\mid q",
+      "2\\le\\gcd(p,q)=1\\ \\Longrightarrow\\ \\bot",
+      "\\therefore\\ \\sqrt2\\notin\\mathbb Q"
+    ],
+    "help": "反设目标不成立，并用一条已经检查的相反事实形成矛盾；显示实际目标和实际反设。",
+    "layout": "contradiction",
+    "source": "examples/reading/homepage/04-sqrt-two-irrational.lit",
+    "lines": [
+      2,
+      16
+    ]
+  },
+  {
+    "id": "ByEnumerateFiniteSetStmt",
+    "leaf": "ByEnumerateFiniteSetStmt",
+    "title": "有限集合枚举",
+    "syntax": "by enumerate finite_set",
+    "group": "证明",
+    "math": [
+      "1>0,\\quad2>0",
+      "\\Downarrow",
+      "\\forall x\\in\\{1,2\\}:\\ x>0"
+    ],
+    "help": "逐个检查有限集合的成员，再建立全称结论。枚举不会引入集合以外的取值。"
+  },
+  {
+    "id": "ByInducStmt",
+    "leaf": "ByInducStmt",
+    "title": "数学归纳",
+    "syntax": "by induc",
+    "group": "证明",
+    "math": [
+      "2^0=1=0+1",
+      "\\begin{gathered}k\\in\\mathbb N,\\quad2^k\\ge k+1:\\\\\\begin{aligned}2^{k+1}&=2\\cdot2^k\\\\&\\ge2(k+1)\\ge k+2\\end{aligned}\\end{gathered}",
+      "\\therefore\\ \\forall n\\in\\mathbb N:\\ 2^n\\ge n+1"
+    ],
+    "help": "从 0 处的基础情形出发，在归纳步使用 2^k ≥ k+1 推出 2^(k+1) ≥ k+2，最后建立对所有自然数成立的结论。",
+    "layout": "induction",
+    "source": "examples/stmt_nodes/by/by_induc_order.lit",
+    "lines": [
+      25,
+      41
+    ]
+  },
+  {
+    "id": "ByStrongInducStmt",
+    "leaf": "ByStrongInducStmt",
+    "title": "强归纳",
+    "syntax": "by strong_induc",
+    "group": "证明",
+    "math": [
+      "2\\ge2",
+      "\\begin{gathered}\\forall k\\in\\mathbb N,\\ k\\ge2:\\\\(\\forall j\\in\\mathbb N:\\ 2\\le j\\le k\\Rightarrow j\\ge2)\\\\\\Rightarrow k+1\\ge2\\end{gathered}",
+      "\\therefore\\ \\forall k\\in\\mathbb N:\\ k\\ge2\\Rightarrow k\\ge2"
+    ],
+    "help": "归纳步可以使用起点到当前值之间所有较早情形的假设；保留实际起点与范围。",
+    "case": 1,
+    "layout": "induction"
+  },
+  {
+    "id": "ByForStmt",
+    "leaf": "ByForStmt",
+    "title": "有限范围遍历",
+    "syntax": "by for",
+    "group": "证明",
+    "math": [
+      "n\\in\\{0,1,2\\}",
+      "\\Downarrow",
+      "\\forall n\\in\\operatorname{range}(0,3):\\ n<3"
+    ],
+    "help": "遍历指定有限范围中的取值，建立所写全称结论。这里实际检查的是 0、1、2。"
+  },
+  {
+    "id": "ByExtensionStmt",
+    "leaf": "ByExtensionStmt",
+    "title": "集合外延证明",
+    "syntax": "by extension",
+    "group": "证明",
+    "math": [
+      "\\{1\\}\\subseteq\\{1\\}",
+      "\\{1\\}\\subseteq\\{1\\}",
+      "\\therefore\\ \\{1\\}=\\{1\\}"
+    ],
+    "help": "证明两个集合相等时，分别检查两个方向的包含关系。"
+  },
+  {
+    "id": "ByFnExtensionStmt",
+    "leaf": "ByFnExtensionStmt",
+    "title": "函数外延证明",
+    "syntax": "by fn_extension",
+    "group": "证明",
+    "math": [
+      "\\mathit{ext\\_f},\\mathit{ext\\_g}:\\mathbb R\\longrightarrow\\mathbb R",
+      "\\forall x\\in\\mathbb R:\\ \\mathit{ext\\_f}(x)=x=\\mathit{ext\\_g}(x)",
+      "\\therefore\\ \\mathit{ext\\_f}=\\mathit{ext\\_g}"
+    ],
+    "help": "先有共同的完整定义域，再逐点证明函数值相等。不能只在几个输入处相等就宣称函数相等。"
+  },
+  {
+    "id": "ByDefStmt",
+    "leaf": "ByDefStmt",
+    "title": "按定义检查",
+    "syntax": "by def",
+    "group": "证明",
+    "math": [
+      "\\mathit{def\\_pos}(1)\\Longleftrightarrow",
+      "1\\in\\mathbb R,\\quad1>0"
+    ],
+    "help": "将实际参数代入定义，检查全部定义条件，再建立这个具体命题实例。",
+    "layout": "equivalence"
+  },
+  {
+    "id": "ByThmStmt",
+    "leaf": "ByThmStmt",
+    "title": "选取定理结论",
+    "syntax": "by thm",
+    "group": "证明",
+    "math": [
+      "2+0=2"
+    ],
+    "help": "从 select_sides(2) 的结论中选取源码指定的这一条。默认数学框只显示选中的结论；定理的其他结论不会冒充本次选取结果。"
+  },
+  {
+    "id": "RegisterReflexivePropStmt",
+    "leaf": "RegisterReflexivePropStmt",
+    "title": "登记自反性",
+    "syntax": "register reflexive",
+    "group": "性质",
+    "math": [
+      "\\forall x:\\mathrm{set},\\quad\\ \\mathit{reg\\_reflexive\\_first}(x,x)"
+    ],
+    "help": "登记该关系的自反性，让后续检查能按这条性质使用它。参数 set 是种类约束，不写成对虚构全集的归属。"
+  },
+  {
+    "id": "RegisterSymmetricPropStmt",
+    "leaf": "RegisterSymmetricPropStmt",
+    "title": "登记对称性",
+    "syntax": "register symmetric",
+    "group": "性质",
+    "math": [
+      "\\forall x,y:\\mathrm{set},\\quad\\ \\mathit{reg\\_symmetric\\_first}(x,y)\\Rightarrow\\mathit{reg\\_symmetric\\_first}(y,x)"
+    ],
+    "help": "登记关系的对称性；展示原关系名和交换参数后的方向。"
+  },
+  {
+    "id": "RegisterTransitivePropStmt",
+    "leaf": "RegisterTransitivePropStmt",
+    "title": "登记传递性",
+    "syntax": "register transitive",
+    "group": "性质",
+    "math": [
+      "\\begin{gathered}\\forall x,y,z:\\mathrm{set},\\quad\\\\\\mathit{reg\\_transitive\\_first}(x,y)\\land\\mathit{reg\\_transitive\\_first}(y,z)\\\\\\Rightarrow\\mathit{reg\\_transitive\\_first}(x,z)\\end{gathered}"
+    ],
+    "help": "登记关系的传递性；两个前提和得到的结论都要完整保留。"
+  },
+  {
+    "id": "WitnessExistFact",
+    "leaf": "WitnessExistFact",
+    "title": "构造存在见证",
+    "syntax": "witness exist",
+    "group": "见证",
+    "math": [
+      "1\\in\\mathbb R,\\quad1=1",
+      "\\Downarrow",
+      "\\exists x\\in\\mathbb R:\\ x=1"
+    ],
+    "help": "给出一个具体对象，并检查它满足目标的范围及全部条件；唯一存在还需要唯一性。"
+  },
+  {
+    "id": "WitnessAtomicFact",
+    "leaf": "WitnessAtomicFact",
+    "title": "构造命题见证",
+    "syntax": "witness $P",
+    "group": "见证",
+    "math": [
+      "2\\in\\mathbb R,\\quad2=2",
+      "\\Downarrow",
+      "\\exists x\\in\\mathbb R:\\ x=2",
+      "\\therefore\\ \\mathit{witness\\_copy}(2)"
+    ],
+    "help": "命题定义中的存在性由给出的具体见证建立；实际见证为 2。"
+  },
+  {
+    "id": "WitnessNonemptySet",
+    "leaf": "WitnessNonemptySet",
+    "title": "构造非空见证",
+    "syntax": "witness $is_nonempty_set",
+    "group": "见证",
+    "math": [
+      "1\\in\\{1\\}",
+      "\\Downarrow",
+      "\\{1\\}\\ne\\varnothing"
+    ],
+    "help": "给出集合中的一个成员，从而建立集合非空。不会把元素与整个集合混为一谈。"
+  },
+  {
+    "id": "ClaimStmt",
+    "leaf": "ClaimStmt",
+    "title": "证明中间结论",
+    "syntax": "claim",
+    "group": "证明",
+    "math": [
+      "\\exists x\\in\\mathbb R:\\ x=9"
+    ],
+    "help": "在子证明中建立一个目标；结束后对外保留目标，辅助对象和中间步骤留在块内。",
+    "case": 2,
+    "badge": "只对外保留目标"
+  },
+  {
+    "id": "SketchStmt",
+    "leaf": "SketchStmt",
+    "title": "局部演算",
+    "syntax": "sketch",
+    "group": "证明",
+    "math": [
+      "1+1=2"
+    ],
+    "help": "内部步骤仍要检查，但这段演算的结论不会直接成为外部上下文中的事实。",
+    "badge": "局部，不向外发布"
+  },
+  {
+    "id": "EvalStmt",
+    "leaf": "EvalStmt",
+    "title": "计算表达式",
+    "syntax": "eval",
+    "group": "计算",
+    "math": [
+      "(1+2)^2=9"
+    ],
+    "help": "展示实际执行得到的精确计算结果，成功求值会保留对应等式。这里的 9 必须与实际计算结果核对。",
+    "focus": "eval (1 + 2)^2",
+    "expected_published": "((1 + 2) ^ 2) = 9"
+  },
+  {
+    "id": "ReleaseCartDefStmt",
+    "leaf": "ReleaseCartDefStmt",
+    "title": "展开笛卡尔积",
+    "syntax": "release cart def",
+    "group": "展开",
+    "math": [
+      "\\begin{aligned}\\operatorname{cart}(\\mathbb R,\\mathbb Z)=\\{p\\in{}&\\operatorname{finite\\_seq}(\\mathbb R\\cup\\mathbb Z,2):\\\\&p(1)\\in\\mathbb R,\\ p(2)\\in\\mathbb Z\\}\\end{aligned}"
+    ],
+    "help": "保留元组作为有限序列的完整定义域、长度和两个坐标条件；不能仅显示最后一个坐标。"
+  },
+  {
+    "id": "ReleaseTupleDefStmt",
+    "leaf": "ReleaseTupleDefStmt",
+    "title": "展开元组",
+    "syntax": "release tuple def",
+    "group": "展开",
+    "math": [
+      "t\\in\\operatorname{finite\\_seq}(\\{1\\}\\cup\\{2\\},2)",
+      "t(1)=1,\\quad t(2)=2"
+    ],
+    "help": "展开实际元组的范围、长度和每个坐标值。这里有两个坐标，不能只展示其中一个。"
+  },
+  {
+    "id": "Fact-AndFact",
+    "leaf": "Fact",
+    "fact_form": "AndFact",
+    "title": "合取",
+    "syntax": "and",
+    "group": "事实",
+    "case": 1,
+    "focus": "1 = 1 and",
+    "math": [
+      "(1=1)\\land(2=2)"
+    ],
+    "help": "两条事实同时成立，保留全部合取项。"
+  },
+  {
+    "id": "Fact-OrFact",
+    "leaf": "Fact",
+    "fact_form": "OrFact",
+    "title": "析取",
+    "syntax": "or",
+    "group": "事实",
+    "case": 1,
+    "focus": "1 = 1 or",
+    "math": [
+      "(1=1)\\lor(1=2)"
+    ],
+    "help": "至少一个分支成立；不能把析取改写成两个分支都成立。"
+  },
+  {
+    "id": "Fact-ChainFact",
+    "leaf": "Fact",
+    "fact_form": "ChainFact",
+    "title": "关系链",
+    "syntax": "关系链",
+    "group": "事实",
+    "case": 1,
+    "focus": "0 < 1",
+    "math": [
+      "0<1=2-1\\le2"
+    ],
+    "help": "完整保留每个对象和相邻关系，不丢掉中间等式。"
+  },
+  {
+    "id": "Fact-ForallFact",
+    "leaf": "Fact",
+    "fact_form": "ForallFact",
+    "title": "全称命题",
+    "syntax": "forall",
+    "group": "事实",
+    "case": 2,
+    "focus": "forall x R",
+    "math": [
+      "\\forall x\\in\\mathbb R:\\ x=x"
+    ],
+    "help": "量词约束整个结论，参数范围必须位于量词内。"
+  },
+  {
+    "id": "Fact-ForallFactWithIff",
+    "leaf": "Fact",
+    "fact_form": "ForallFactWithIff",
+    "title": "全称等价",
+    "syntax": "forall iff",
+    "group": "事实",
+    "case": 3,
+    "focus": "forall x R",
+    "math": [
+      "\\forall x\\in\\mathbb R:\\quad x=0\\Longleftrightarrow0=x"
+    ],
+    "help": "量词内的左右两侧互为充要条件，保留完整作用域。"
+  },
+  {
+    "id": "Fact-ExistFact",
+    "leaf": "Fact",
+    "fact_form": "ExistFact",
+    "title": "存在命题",
+    "syntax": "exist",
+    "group": "事实",
+    "case": 2,
+    "focus": "exist x R",
+    "math": [
+      "\\exists x\\in\\mathbb R:\\ x=2"
+    ],
+    "help": "断言至少有一个对象满足所写范围及条件。"
+  },
+  {
+    "id": "Fact-ExistUniqueFact",
+    "leaf": "Fact",
+    "fact_form": "ExistUniqueFact",
+    "title": "唯一存在命题",
+    "syntax": "exist!",
+    "group": "事实",
+    "case": 2,
+    "focus": "exist! x R",
+    "math": [
+      "\\exists!x\\in\\mathbb R:\\ x=3"
+    ],
+    "help": "不仅断言存在，还断言满足条件的对象唯一。"
+  },
+  {
+    "id": "Fact-NotExistFact",
+    "leaf": "Fact",
+    "fact_form": "NotExistFact",
+    "title": "不存在命题",
+    "syntax": "not exist",
+    "group": "事实",
+    "case": 2,
+    "focus": "not exist x",
+    "math": [
+      "\\nexists x\\in\\{0\\}:\\ x=1"
+    ],
+    "help": "否定的是整个存在性。当前例子位于一个证明的局部假设下。",
+    "badge": "局部证明上下文"
+  },
+  {
+    "id": "Fact-NotForall",
+    "leaf": "Fact",
+    "fact_form": "NotForall",
+    "title": "非全称命题",
+    "syntax": "not forall",
+    "group": "事实",
+    "case": 2,
+    "focus": "not forall x",
+    "math": [
+      "\\neg\\bigl(\\forall x\\in\\{0,1\\}:\\ x=0\\bigr)"
+    ],
+    "help": "并非所有对象都满足条件；不等于所有对象都不满足条件。"
+  }
+]

@@ -274,6 +274,21 @@ impl LitexToLeanCompiler {
                 let right = self.compile_object_reference(right, position)?;
                 Ok(format!("(show Litex.Same {left} {right} from rfl)"))
             }
+            TheyAreTheSameProof::SameFreeParamShape(SameFreeParamShapeProof::FnSet(_)) => {
+                let (
+                    Obj::FunctionSpace(FunctionSpace::FnSet(a)),
+                    Obj::FunctionSpace(FunctionSpace::FnSet(b)),
+                ) = (left, right)
+                else {
+                    return Err(LeanCompileError::unsupported("Equality/FnSetAlphaSubject"));
+                };
+                if !crate::execute::execute_fact_stmt::fn_sets_alpha_equal(a, b) {
+                    return Err(LeanCompileError::unsupported("Equality/FnSetAlphaSubject"));
+                }
+                let left = self.compile_object_reference(left, position)?;
+                let right = self.compile_object_reference(right, position)?;
+                Ok(format!("(by\n  let _left : Litex.Obj (M := M) (Litex.FunctionSignature M) := {left}\n  let _right : Litex.Obj (M := M) (Litex.FunctionSignature M) := {right}\n  exact (show Litex.Same _left _right from rfl))"))
+            }
             TheyAreTheSameProof::SameFreeParamShape(_) => {
                 Err(LeanCompileError::unsupported("Equality/SameFreeParamShape"))
             }

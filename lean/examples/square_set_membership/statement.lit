@@ -1,0 +1,4 @@
+# A real number belongs to the set defined by nonnegativity of its square.
+have b R
+by thm set_builder_member(b, {x R: 0 <= x^2}) => b $in {x R: 0 <= x^2}
+0 <= b^2

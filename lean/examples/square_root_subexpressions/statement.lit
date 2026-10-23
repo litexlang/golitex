@@ -1,0 +1,4 @@
+# A positive real square root and its sum with one are well-defined sets.
+have a R+
+$is_set(sqrt(a) + 1)
+$is_set(sqrt(a))

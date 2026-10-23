@@ -1,0 +1,6 @@
+have fn wrong_value_terms(k N+) R=(-1/2)^k
+
+release thm series:::series_sum_geometric(wrong_value_terms,-1/2)
+
+$series:::has_series_sum(wrong_value_terms,1/3)
+

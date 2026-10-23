@@ -1,4 +1,7 @@
 mod compile_additive_inference;
+mod compile_builtin_cart_membership;
+mod compile_builtin_function_membership;
+mod compile_builtin_membership_theorem;
 mod compile_builtin_tuple_theorem;
 mod compile_by_stmt_result;
 mod compile_callee_constructor;
@@ -17,6 +20,7 @@ mod compile_fact_stmt_result;
 mod compile_function_template;
 mod compile_have_fn_by_induc_result;
 mod compile_have_fn_equal_stmt_result;
+mod compile_have_obj_by_exist_facts_result;
 mod compile_have_obj_equal_stmt_result;
 mod compile_have_obj_in_nonempty_set_stmt_result;
 mod compile_inferred_obj;

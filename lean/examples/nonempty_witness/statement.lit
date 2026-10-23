@@ -1,0 +1,11 @@
+# A positive-real builder and every real singleton are nonempty.
+witness $is_nonempty_set({x R: x > 0}) from 1:
+    1 > 0
+
+$is_nonempty_set({x R: x > 0})
+
+thm singleton_nonempty:
+    ? forall singleton_elem R:
+        $is_nonempty_set({singleton_elem})
+    witness $is_nonempty_set({singleton_elem}) from singleton_elem:
+        singleton_elem $in {singleton_elem}

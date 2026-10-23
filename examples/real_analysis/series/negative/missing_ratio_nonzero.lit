@@ -1,0 +1,13 @@
+thm ratio_limit_without_nonzero:
+    ? forall a,ratio seq(R),L R,m N+:
+        $has_seq_limit(ratio,L)
+        L<1
+        forall k N+:
+            k>=m
+            0<abs(a(k))
+            =>:
+                ratio(k)=abs(a(k+1))/abs(a(k))
+        =>:
+            $series:::is_convergent_series(a)
+    release thm series:::series_ratio_limit_test(a,ratio,L,m)
+

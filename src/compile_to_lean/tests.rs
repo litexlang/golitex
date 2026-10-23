@@ -6,6 +6,8 @@ mod additive_inference_tests;
 mod arithmetic_congruence_tests;
 #[path = "../../tests/unit/compile_to_lean/bounded_set_combinations/tests.rs"]
 mod bounded_set_combinations_tests;
+#[path = "../../tests/unit/compile_to_lean/builtin_membership/tests.rs"]
+mod builtin_membership_tests;
 #[path = "../../tests/unit/compile_to_lean/builtin_tuple_release/tests.rs"]
 mod builtin_tuple_release_tests;
 #[path = "../../tests/unit/compile_to_lean/by_definition_in_theorem/tests.rs"]

@@ -199,7 +199,7 @@ fn geo_exist_real_equality_rejects_missing_original_requirement() {
             .compile_run(&run, "missing_real_requirement")
             .unwrap_err()
             .route,
-        "Exist/RealLineEqualityRequirements"
+        "Exist/RealLineComparisonRequirements"
     );
 }
 
@@ -214,7 +214,7 @@ fn geo_exist_real_equality_rejects_missing_original_child() {
             .compile_run(&run, "missing_real_child")
             .unwrap_err()
             .route,
-        "Exist/RealLineEqualityRequirements"
+        "Exist/RealLineComparisonRequirements"
     );
 }
 
@@ -230,7 +230,7 @@ fn geo_exist_real_equality_rejects_another_original_requirement() {
             .compile_run(&run, "wrong_real_requirement")
             .unwrap_err()
             .route,
-        "Exist/RealLineEqualityMembership"
+        "Exist/RealLineComparisonMembership"
     );
 }
 
@@ -246,6 +246,49 @@ fn geo_exist_real_equality_rejects_another_successful_child() {
             .compile_run(&run, "wrong_real_child")
             .unwrap_err()
             .route,
-        "Exist/RealLineEqualityChild"
+        "Exist/RealLineComparisonChild"
+    );
+}
+
+#[test]
+fn real_line_comparison_witnesses_replay_every_relation_and_orientation() {
+    let (run, compiler) = checked(include_str!(
+        "../../../../lean/examples/real_line_witnesses/statement.lit"
+    ));
+    let lean = compiler.compile_run(&run, "real_line_comparisons").unwrap();
+    assert!(lean.contains("Litex.existsRealAbove"));
+    assert!(lean.contains("Litex.existsRealBelow"));
+    assert!(lean.contains("Litex.ltNotSame"));
+    assert!(lean.contains("Litex.ltToLe"));
+}
+
+#[test]
+fn real_line_comparison_rejects_missing_membership_child() {
+    let (mut run, compiler) = checked("forall c R:\n    exist x R st {x > c}\n");
+    real_line_requirements(&mut forall(&mut run).proved_then_facts[0].verify_result)
+        .1
+        .clear();
+    assert_eq!(
+        compiler
+            .compile_run(&run, "missing_comparison_child")
+            .unwrap_err()
+            .route,
+        "Exist/RealLineComparisonRequirements"
+    );
+}
+
+#[test]
+fn real_line_two_binder_rule_rejects_extra_requirements() {
+    let (mut run, compiler) =
+        checked("forall c R:\n    exist x R st {x > c}\n    exist x, y R st {x > y}\n");
+    let (one, two) = forall(&mut run).proved_then_facts.split_at_mut(1);
+    *real_line_requirements(&mut two[0].verify_result).0 =
+        real_line_requirements(&mut one[0].verify_result).0.clone();
+    assert_eq!(
+        compiler
+            .compile_run(&run, "extra_comparison_requirement")
+            .unwrap_err()
+            .route,
+        "Exist/RealLineComparisonRequirements"
     );
 }

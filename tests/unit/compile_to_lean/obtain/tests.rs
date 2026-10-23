@@ -313,3 +313,86 @@ thm affine_coordinate:
         .unwrap();
     assert!(output.contains("_obtained_object"));
 }
+
+#[test]
+fn have_by_existence_replays_global_and_local_choices() {
+    let (run, runtime) = checked(include_str!(
+        "../../../../lean/examples/have_from_existence/statement.lit"
+    ));
+    let compiler = LitexToLeanCompiler::new(runtime);
+    let output = compiler.compile_run(&run, "have_by_existence").unwrap();
+    assert!(output.contains("Classical.choose"));
+    assert!(output.contains("rcases"));
+    let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
+        ExecDefineObjStmtResult::HaveObjByExistFacts(
+            crate::execute::ExecHaveObjByExistFactsStmtResult::Success(proof),
+        ),
+    )) = &run.statement_results[1]
+    else {
+        panic!("have by existence")
+    };
+    let id = proof.statement.param_def.ordered_param_ids()[0];
+    let root = SourcePosition::new(None, SourceOwner::Run(&run), 1);
+    let before = SourcePosition::new(
+        Some(&root),
+        SourceOwner::Statement(&run.statement_results[1]),
+        0,
+    );
+    assert!(before.visible_parameter(id, &compiler.runtime).is_err());
+    let after = SourcePosition {
+        before: 2,
+        ..before
+    };
+    assert!(after.visible_parameter(id, &compiler.runtime).is_ok());
+    let bound = SourcePosition::new(
+        Some(&after),
+        SourceOwner::ExistWD(
+            proof.verify_exist.fact.plain(),
+            &proof.verify_exist.well_defined_proof,
+        ),
+        1,
+    );
+    assert!(bound.global_obtain_position(id).is_none());
+    assert_eq!(
+        compiler.compile_parameter_reference(id, &bound).unwrap(),
+        format!("_value_i{}", id.value())
+    );
+    assert!(after.global_obtain_position(id).is_some());
+}
+
+#[test]
+fn have_by_existence_rejects_changed_existential_or_missing_store() {
+    for change_source in [true, false] {
+        let (mut run, runtime) = checked(include_str!(
+            "../../../../lean/examples/have_from_existence/statement.lit"
+        ));
+        let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
+            ExecDefineObjStmtResult::HaveObjByExistFacts(
+                crate::execute::ExecHaveObjByExistFactsStmtResult::Success(proof),
+            ),
+        )) = &mut run.statement_results[1]
+        else {
+            panic!("have by existence")
+        };
+        if change_source {
+            proof.statement.facts.clear();
+        } else {
+            proof.store_and_infer_result.store_and_infer_results.pop();
+        }
+        assert!(LitexToLeanCompiler::new(runtime)
+            .compile_run(&run, "bad_have_by_existence")
+            .is_err());
+    }
+}
+
+#[test]
+fn have_by_existence_does_not_relax_obtain_binder_freshness() {
+    let (mut run, runtime) = checked(SOURCE);
+    let p = obtain(&mut run.statement_results[1]);
+    p.statement.equal_tos[0] =
+        p.statement.fact.plain().typed_parameters.groups[0].params[0].clone();
+    let error = LitexToLeanCompiler::new(runtime)
+        .compile_run(&run, "bad_obtain")
+        .unwrap_err();
+    assert!(error.to_string().contains("Obtain/ParameterIdentity"));
+}
