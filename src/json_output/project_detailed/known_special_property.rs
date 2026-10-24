@@ -14,6 +14,46 @@ pub(super) fn project_known_special_property(
 ) -> JsonValue {
     let (rule, id, matches) = match proof {
         AtomicExceptEqualityFactSearchProofByKnownSpecialProperty::InFact(
+            InFactSearchProofByKnownSpecialProperty::FiniteTupleInStandardFunctionSpace(p),
+        ) => {
+            return object_for(
+                runtime,
+                vec![
+                    ("type", string("by_known_special_property")),
+                    ("rule", string("FiniteTupleInStandardFunctionSpace")),
+                    (
+                        "tuple_equal",
+                        super::searched::project_known_equality_path(
+                            &p.source.tuple_equal,
+                            runtime,
+                        ),
+                    ),
+                    (
+                        "signature",
+                        string(
+                            crate::ast::obj::Obj::FunctionSpace(
+                                crate::ast::obj::FunctionSpace::FnSet(p.signature.clone()),
+                            )
+                            .readable_string(),
+                        ),
+                    ),
+                    (
+                        "coordinates",
+                        JsonValue::Array(
+                            p.coordinates
+                                .iter()
+                                .map(|p| {
+                                    super::structural_membership::project_structural_membership(
+                                        p, runtime,
+                                    )
+                                })
+                                .collect(),
+                        ),
+                    ),
+                ],
+            )
+        }
+        AtomicExceptEqualityFactSearchProofByKnownSpecialProperty::InFact(
             InFactSearchProofByKnownSpecialProperty::LiteralTupleNumericCoordinate(p),
         ) => {
             return object_for(

@@ -270,6 +270,31 @@ pub(super) fn project_obj_wd_failure(
     rt: &Runtime,
 ) -> JsonValue {
     let projected = match f {
+        FailToVerifyObjWellDefinedResult::MatrixOperator(value) => match value {
+            FailToVerifyMatrixOperatorObjWellDefinedResult::Determinant(p) => node(rt, "Determinant", None, common(&p.0, rt)),
+            FailToVerifyMatrixOperatorObjWellDefinedResult::ZeroMatrix(p) => node(rt, "ZeroMatrix", None, common(&p.0, rt)),
+            FailToVerifyMatrixOperatorObjWellDefinedResult::IdentityMatrix(p) => node(rt, "IdentityMatrix", None, common(&p.0, rt)),
+            FailToVerifyMatrixOperatorObjWellDefinedResult::Transpose(p) => node(rt, "Transpose", None, common(&p.0, rt)),
+            FailToVerifyMatrixOperatorObjWellDefinedResult::ConjugateTranspose(p) => node(rt, "ConjugateTranspose", None, common(&p.0, rt)),
+            FailToVerifyMatrixOperatorObjWellDefinedResult::Add(p) => node(rt,"Add",None,common(&p.0,rt)),
+            FailToVerifyMatrixOperatorObjWellDefinedResult::Subtract(p) => node(rt,"Subtract",None,common(&p.0,rt)),
+            FailToVerifyMatrixOperatorObjWellDefinedResult::Scale(p) => node(rt,"Scale",None,common(&p.0,rt)),
+            FailToVerifyMatrixOperatorObjWellDefinedResult::Multiply(p) => node(rt,"Multiply",None,common(&p.0,rt)),
+            FailToVerifyMatrixOperatorObjWellDefinedResult::Apply(p) => node(rt,"Apply",None,common(&p.0,rt)),
+            FailToVerifyMatrixOperatorObjWellDefinedResult::Power(p) => node(rt,"Power",None,common(&p.0,rt)),
+            FailToVerifyMatrixOperatorObjWellDefinedResult::Inverse(p) => node(rt,"Inverse",None,common(&p.0,rt)),
+            FailToVerifyMatrixOperatorObjWellDefinedResult::Rank(p) => node(rt,"Rank",None,common(&p.0,rt)),
+            FailToVerifyMatrixOperatorObjWellDefinedResult::Minor(p) => node(rt,"Minor",None,common(&p.0,rt)),
+            FailToVerifyMatrixOperatorObjWellDefinedResult::Cofactor(p) => node(rt,"Cofactor",None,common(&p.0,rt)),
+            FailToVerifyMatrixOperatorObjWellDefinedResult::Adjugate(p) => node(rt,"Adjugate",None,common(&p.0,rt)),
+            FailToVerifyMatrixOperatorObjWellDefinedResult::Diagonal(p) => node(rt,"Diagonal",None,common(&p.0,rt)),
+            FailToVerifyMatrixOperatorObjWellDefinedResult::OuterProduct(p) => node(rt,"OuterProduct",None,common(&p.0,rt)),
+            FailToVerifyMatrixOperatorObjWellDefinedResult::InnerProduct(p) => node(rt,"InnerProduct",None,common(&p.0,rt)),
+            FailToVerifyMatrixOperatorObjWellDefinedResult::EuclideanNorm(p) => node(rt,"EuclideanNorm",None,common(&p.0,rt)),
+            FailToVerifyMatrixOperatorObjWellDefinedResult::FrobeniusNorm(p) => node(rt,"FrobeniusNorm",None,common(&p.0,rt)),
+            FailToVerifyMatrixOperatorObjWellDefinedResult::Trace(p) => node(rt, "Trace", None, common(&p.0, rt)),
+        },
+
         FailToVerifyObjWellDefinedResult::IntegralOperator(crate::execute::execute_fact_stmt::riemann_integral::IntegralOperatorWellDefinedFailure::Riemann(p))=>super::riemann_integral::object_failure(p,rt),
         FailToVerifyObjWellDefinedResult::DerivativeOperator(crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedFailure::AtPoint(p)) => super::function_derivative::object_failure(p,rt),
         FailToVerifyObjWellDefinedResult::BoundOperator(FailToVerifyBoundOperatorObjWellDefinedResult::Supremum(p)) => node(rt,"Supremum",None,
@@ -647,6 +672,9 @@ fn project_fail_to_verify_set_former_obj_well_defined_result(
     rt: &Runtime,
 ) -> JsonValue {
     match f {
+        FailToVerifySetFormerObjWellDefinedResult::MatrixSet(p) => {
+            node(rt, "MatrixSet", None, common(&p.0, rt))
+        }
         FailToVerifySetFormerObjWellDefinedResult::ListSet(p) => {
             node(rt, "ListSet", None, common(&p.0, rt))
         }

@@ -24,6 +24,151 @@ fn pack_success_by_def(
     stages: ObjWellDefinedByDefCommonStages,
 ) -> ObjWellDefinedProofByDef {
     match obj {
+        Obj::SetFormer(SetFormer::MatrixSet(_)) => {
+            ObjWellDefinedProofByDef::SetFormer(SetFormerObjWellDefinedProofByDef::MatrixSet(
+                MatrixSetObjWellDefinedProof::from_stages(stages),
+            ))
+        }
+        Obj::MatrixOperator(crate::ast::obj::MatrixOperator::Determinant(_)) => {
+            ObjWellDefinedProofByDef::MatrixOperator(
+                MatrixOperatorObjWellDefinedProofByDef::Determinant(
+                    DeterminantObjWellDefinedProof::from_stages(stages),
+                ),
+            )
+        }
+        Obj::MatrixOperator(crate::ast::obj::MatrixOperator::ZeroMatrix(_)) => {
+            ObjWellDefinedProofByDef::MatrixOperator(
+                MatrixOperatorObjWellDefinedProofByDef::ZeroMatrix(
+                    ZeroMatrixObjWellDefinedProof::from_stages(stages),
+                ),
+            )
+        }
+        Obj::MatrixOperator(crate::ast::obj::MatrixOperator::IdentityMatrix(_)) => {
+            ObjWellDefinedProofByDef::MatrixOperator(
+                MatrixOperatorObjWellDefinedProofByDef::IdentityMatrix(
+                    IdentityMatrixObjWellDefinedProof::from_stages(stages),
+                ),
+            )
+        }
+        Obj::MatrixOperator(crate::ast::obj::MatrixOperator::Transpose(_)) => {
+            ObjWellDefinedProofByDef::MatrixOperator(
+                MatrixOperatorObjWellDefinedProofByDef::Transpose(
+                    MatrixTransposeObjWellDefinedProof::from_stages(stages),
+                ),
+            )
+        }
+        Obj::MatrixOperator(crate::ast::obj::MatrixOperator::ConjugateTranspose(_)) => {
+            ObjWellDefinedProofByDef::MatrixOperator(
+                MatrixOperatorObjWellDefinedProofByDef::ConjugateTranspose(
+                    MatrixConjugateTransposeObjWellDefinedProof::from_stages(stages),
+                ),
+            )
+        }
+        Obj::MatrixOperator(crate::ast::obj::MatrixOperator::Add(_)) => {
+            ObjWellDefinedProofByDef::MatrixOperator(MatrixOperatorObjWellDefinedProofByDef::Add(
+                MatrixAddObjWellDefinedProof::from_stages(stages),
+            ))
+        }
+        Obj::MatrixOperator(crate::ast::obj::MatrixOperator::Subtract(_)) => {
+            ObjWellDefinedProofByDef::MatrixOperator(
+                MatrixOperatorObjWellDefinedProofByDef::Subtract(
+                    MatrixSubtractObjWellDefinedProof::from_stages(stages),
+                ),
+            )
+        }
+        Obj::MatrixOperator(crate::ast::obj::MatrixOperator::Scale(_)) => {
+            ObjWellDefinedProofByDef::MatrixOperator(MatrixOperatorObjWellDefinedProofByDef::Scale(
+                MatrixScaleObjWellDefinedProof::from_stages(stages),
+            ))
+        }
+        Obj::MatrixOperator(crate::ast::obj::MatrixOperator::Multiply(_)) => {
+            ObjWellDefinedProofByDef::MatrixOperator(
+                MatrixOperatorObjWellDefinedProofByDef::Multiply(
+                    MatrixMultiplyObjWellDefinedProof::from_stages(stages),
+                ),
+            )
+        }
+        Obj::MatrixOperator(crate::ast::obj::MatrixOperator::Apply(_)) => {
+            ObjWellDefinedProofByDef::MatrixOperator(MatrixOperatorObjWellDefinedProofByDef::Apply(
+                MatrixApplyObjWellDefinedProof::from_stages(stages),
+            ))
+        }
+        Obj::MatrixOperator(crate::ast::obj::MatrixOperator::Power(_)) => {
+            ObjWellDefinedProofByDef::MatrixOperator(MatrixOperatorObjWellDefinedProofByDef::Power(
+                MatrixPowerObjWellDefinedProof::from_stages(stages),
+            ))
+        }
+        Obj::MatrixOperator(crate::ast::obj::MatrixOperator::Inverse(_)) => {
+            ObjWellDefinedProofByDef::MatrixOperator(
+                MatrixOperatorObjWellDefinedProofByDef::Inverse(
+                    MatrixInverseObjWellDefinedProof::from_stages(stages),
+                ),
+            )
+        }
+        Obj::MatrixOperator(crate::ast::obj::MatrixOperator::Rank(_)) => {
+            ObjWellDefinedProofByDef::MatrixOperator(MatrixOperatorObjWellDefinedProofByDef::Rank(
+                MatrixRankObjWellDefinedProof::from_stages(stages),
+            ))
+        }
+        Obj::MatrixOperator(crate::ast::obj::MatrixOperator::Minor(_)) => {
+            ObjWellDefinedProofByDef::MatrixOperator(MatrixOperatorObjWellDefinedProofByDef::Minor(
+                MatrixMinorObjWellDefinedProof::from_stages(stages),
+            ))
+        }
+        Obj::MatrixOperator(crate::ast::obj::MatrixOperator::Cofactor(_)) => {
+            ObjWellDefinedProofByDef::MatrixOperator(
+                MatrixOperatorObjWellDefinedProofByDef::Cofactor(
+                    MatrixCofactorObjWellDefinedProof::from_stages(stages),
+                ),
+            )
+        }
+        Obj::MatrixOperator(crate::ast::obj::MatrixOperator::Adjugate(_)) => {
+            ObjWellDefinedProofByDef::MatrixOperator(
+                MatrixOperatorObjWellDefinedProofByDef::Adjugate(
+                    MatrixAdjugateObjWellDefinedProof::from_stages(stages),
+                ),
+            )
+        }
+        Obj::MatrixOperator(crate::ast::obj::MatrixOperator::Diagonal(_)) => {
+            ObjWellDefinedProofByDef::MatrixOperator(
+                MatrixOperatorObjWellDefinedProofByDef::Diagonal(
+                    MatrixDiagonalObjWellDefinedProof::from_stages(stages),
+                ),
+            )
+        }
+        Obj::MatrixOperator(crate::ast::obj::MatrixOperator::OuterProduct(_)) => {
+            ObjWellDefinedProofByDef::MatrixOperator(
+                MatrixOperatorObjWellDefinedProofByDef::OuterProduct(
+                    MatrixOuterProductObjWellDefinedProof::from_stages(stages),
+                ),
+            )
+        }
+        Obj::MatrixOperator(crate::ast::obj::MatrixOperator::InnerProduct(_)) => {
+            ObjWellDefinedProofByDef::MatrixOperator(
+                MatrixOperatorObjWellDefinedProofByDef::InnerProduct(
+                    FiniteInnerProductObjWellDefinedProof::from_stages(stages),
+                ),
+            )
+        }
+        Obj::MatrixOperator(crate::ast::obj::MatrixOperator::EuclideanNorm(_)) => {
+            ObjWellDefinedProofByDef::MatrixOperator(
+                MatrixOperatorObjWellDefinedProofByDef::EuclideanNorm(
+                    EuclideanNormObjWellDefinedProof::from_stages(stages),
+                ),
+            )
+        }
+        Obj::MatrixOperator(crate::ast::obj::MatrixOperator::FrobeniusNorm(_)) => {
+            ObjWellDefinedProofByDef::MatrixOperator(
+                MatrixOperatorObjWellDefinedProofByDef::FrobeniusNorm(
+                    MatrixFrobeniusNormObjWellDefinedProof::from_stages(stages),
+                ),
+            )
+        }
+        Obj::MatrixOperator(crate::ast::obj::MatrixOperator::Trace(_)) => {
+            ObjWellDefinedProofByDef::MatrixOperator(MatrixOperatorObjWellDefinedProofByDef::Trace(
+                MatrixTraceObjWellDefinedProof::from_stages(stages),
+            ))
+        }
         Obj::LimitOperator(_) => unreachable!("limit WD has dedicated proof and failure stages"),
         Obj::IntegralOperator(_) => {
             unreachable!("integral WD has dedicated proof and failure stages")
@@ -504,6 +649,165 @@ pub(super) fn wrap_common_fail(
     common: FailToVerifyObjWellDefinedByDefCommon,
 ) -> FailToVerifyObjWellDefinedResult {
     match obj {
+        Obj::SetFormer(SetFormer::MatrixSet(_)) => FailToVerifyObjWellDefinedResult::SetFormer(
+            FailToVerifySetFormerObjWellDefinedResult::MatrixSet(
+                FailToVerifyMatrixSetObjWellDefined(common),
+            ),
+        ),
+        Obj::MatrixOperator(crate::ast::obj::MatrixOperator::Determinant(_)) => {
+            FailToVerifyObjWellDefinedResult::MatrixOperator(
+                FailToVerifyMatrixOperatorObjWellDefinedResult::Determinant(
+                    FailToVerifyDeterminantObjWellDefined(common),
+                ),
+            )
+        }
+        Obj::MatrixOperator(crate::ast::obj::MatrixOperator::ZeroMatrix(_)) => {
+            FailToVerifyObjWellDefinedResult::MatrixOperator(
+                FailToVerifyMatrixOperatorObjWellDefinedResult::ZeroMatrix(
+                    FailToVerifyZeroMatrixObjWellDefined(common),
+                ),
+            )
+        }
+        Obj::MatrixOperator(crate::ast::obj::MatrixOperator::IdentityMatrix(_)) => {
+            FailToVerifyObjWellDefinedResult::MatrixOperator(
+                FailToVerifyMatrixOperatorObjWellDefinedResult::IdentityMatrix(
+                    FailToVerifyIdentityMatrixObjWellDefined(common),
+                ),
+            )
+        }
+        Obj::MatrixOperator(crate::ast::obj::MatrixOperator::Transpose(_)) => {
+            FailToVerifyObjWellDefinedResult::MatrixOperator(
+                FailToVerifyMatrixOperatorObjWellDefinedResult::Transpose(
+                    FailToVerifyMatrixTransposeObjWellDefined(common),
+                ),
+            )
+        }
+        Obj::MatrixOperator(crate::ast::obj::MatrixOperator::ConjugateTranspose(_)) => {
+            FailToVerifyObjWellDefinedResult::MatrixOperator(
+                FailToVerifyMatrixOperatorObjWellDefinedResult::ConjugateTranspose(
+                    FailToVerifyMatrixConjugateTransposeObjWellDefined(common),
+                ),
+            )
+        }
+        Obj::MatrixOperator(crate::ast::obj::MatrixOperator::Add(_)) => {
+            FailToVerifyObjWellDefinedResult::MatrixOperator(
+                FailToVerifyMatrixOperatorObjWellDefinedResult::Add(
+                    FailToVerifyMatrixAddObjWellDefined(common),
+                ),
+            )
+        }
+        Obj::MatrixOperator(crate::ast::obj::MatrixOperator::Subtract(_)) => {
+            FailToVerifyObjWellDefinedResult::MatrixOperator(
+                FailToVerifyMatrixOperatorObjWellDefinedResult::Subtract(
+                    FailToVerifyMatrixSubtractObjWellDefined(common),
+                ),
+            )
+        }
+        Obj::MatrixOperator(crate::ast::obj::MatrixOperator::Scale(_)) => {
+            FailToVerifyObjWellDefinedResult::MatrixOperator(
+                FailToVerifyMatrixOperatorObjWellDefinedResult::Scale(
+                    FailToVerifyMatrixScaleObjWellDefined(common),
+                ),
+            )
+        }
+        Obj::MatrixOperator(crate::ast::obj::MatrixOperator::Multiply(_)) => {
+            FailToVerifyObjWellDefinedResult::MatrixOperator(
+                FailToVerifyMatrixOperatorObjWellDefinedResult::Multiply(
+                    FailToVerifyMatrixMultiplyObjWellDefined(common),
+                ),
+            )
+        }
+        Obj::MatrixOperator(crate::ast::obj::MatrixOperator::Apply(_)) => {
+            FailToVerifyObjWellDefinedResult::MatrixOperator(
+                FailToVerifyMatrixOperatorObjWellDefinedResult::Apply(
+                    FailToVerifyMatrixApplyObjWellDefined(common),
+                ),
+            )
+        }
+        Obj::MatrixOperator(crate::ast::obj::MatrixOperator::Power(_)) => {
+            FailToVerifyObjWellDefinedResult::MatrixOperator(
+                FailToVerifyMatrixOperatorObjWellDefinedResult::Power(
+                    FailToVerifyMatrixPowerObjWellDefined(common),
+                ),
+            )
+        }
+        Obj::MatrixOperator(crate::ast::obj::MatrixOperator::Inverse(_)) => {
+            FailToVerifyObjWellDefinedResult::MatrixOperator(
+                FailToVerifyMatrixOperatorObjWellDefinedResult::Inverse(
+                    FailToVerifyMatrixInverseObjWellDefined(common),
+                ),
+            )
+        }
+        Obj::MatrixOperator(crate::ast::obj::MatrixOperator::Rank(_)) => {
+            FailToVerifyObjWellDefinedResult::MatrixOperator(
+                FailToVerifyMatrixOperatorObjWellDefinedResult::Rank(
+                    FailToVerifyMatrixRankObjWellDefined(common),
+                ),
+            )
+        }
+        Obj::MatrixOperator(crate::ast::obj::MatrixOperator::Minor(_)) => {
+            FailToVerifyObjWellDefinedResult::MatrixOperator(
+                FailToVerifyMatrixOperatorObjWellDefinedResult::Minor(
+                    FailToVerifyMatrixMinorObjWellDefined(common),
+                ),
+            )
+        }
+        Obj::MatrixOperator(crate::ast::obj::MatrixOperator::Cofactor(_)) => {
+            FailToVerifyObjWellDefinedResult::MatrixOperator(
+                FailToVerifyMatrixOperatorObjWellDefinedResult::Cofactor(
+                    FailToVerifyMatrixCofactorObjWellDefined(common),
+                ),
+            )
+        }
+        Obj::MatrixOperator(crate::ast::obj::MatrixOperator::Adjugate(_)) => {
+            FailToVerifyObjWellDefinedResult::MatrixOperator(
+                FailToVerifyMatrixOperatorObjWellDefinedResult::Adjugate(
+                    FailToVerifyMatrixAdjugateObjWellDefined(common),
+                ),
+            )
+        }
+        Obj::MatrixOperator(crate::ast::obj::MatrixOperator::Diagonal(_)) => {
+            FailToVerifyObjWellDefinedResult::MatrixOperator(
+                FailToVerifyMatrixOperatorObjWellDefinedResult::Diagonal(
+                    FailToVerifyMatrixDiagonalObjWellDefined(common),
+                ),
+            )
+        }
+        Obj::MatrixOperator(crate::ast::obj::MatrixOperator::OuterProduct(_)) => {
+            FailToVerifyObjWellDefinedResult::MatrixOperator(
+                FailToVerifyMatrixOperatorObjWellDefinedResult::OuterProduct(
+                    FailToVerifyMatrixOuterProductObjWellDefined(common),
+                ),
+            )
+        }
+        Obj::MatrixOperator(crate::ast::obj::MatrixOperator::InnerProduct(_)) => {
+            FailToVerifyObjWellDefinedResult::MatrixOperator(
+                FailToVerifyMatrixOperatorObjWellDefinedResult::InnerProduct(
+                    FailToVerifyFiniteInnerProductObjWellDefined(common),
+                ),
+            )
+        }
+        Obj::MatrixOperator(crate::ast::obj::MatrixOperator::EuclideanNorm(_)) => {
+            FailToVerifyObjWellDefinedResult::MatrixOperator(
+                FailToVerifyMatrixOperatorObjWellDefinedResult::EuclideanNorm(
+                    FailToVerifyEuclideanNormObjWellDefined(common),
+                ),
+            )
+        }
+        Obj::MatrixOperator(crate::ast::obj::MatrixOperator::FrobeniusNorm(_)) => {
+            FailToVerifyObjWellDefinedResult::MatrixOperator(
+                FailToVerifyMatrixOperatorObjWellDefinedResult::FrobeniusNorm(
+                    FailToVerifyMatrixFrobeniusNormObjWellDefined(common),
+                ),
+            )
+        }
+        Obj::MatrixOperator(crate::ast::obj::MatrixOperator::Trace(_)) => {
+            FailToVerifyObjWellDefinedResult::MatrixOperator(
+                FailToVerifyMatrixOperatorObjWellDefinedResult::Trace(
+                    FailToVerifyMatrixTraceObjWellDefined(common),
+                ),
+            )
+        }
         Obj::LimitOperator(_) => unreachable!("limit WD has dedicated proof and failure stages"),
         Obj::IntegralOperator(_) => {
             unreachable!("integral WD has dedicated proof and failure stages")

@@ -74,9 +74,82 @@ subset, not a predicate or arbitrary record. Its normality and the equivalence
 between trivial kernel and injectivity culminate in doubling and zero-map
 examples. Quotient groups and Lagrange's theorem are outside this slice.
 
-The three longer files retain all mathematical source from their maintained
-showcases, adding only introductory reading comments. Provenance, exact file
-hashes and current verification are recorded in `long_examples.json`.
+## Branch chapter: linear algebra to unique standard coordinates
 
-All eight developments use existing kernel interfaces. They have no user
-trust, axioms, abstract predicate placeholders or unresolved proof holes.
+Keep the complete lecture prefix through section2.4: real field and plane,
+subspaces with an affine-line counterexample, finite partial sums, span,
+independence and bases. Standard expansion supplies existence; the theorem
+`standard_coordinates_unique` compares coordinates to prove uniqueness for
+the standard basis of the real plane. It does not claim the later general
+dimension theorem or rank-nullity material.
+
+## Branch chapter: open sets to homeomorphisms
+
+Keep Chapters1–2, including every foundational definition and proof. Discrete
+and indiscrete topologies on `{0,1}` contrast continuity of the two identity
+directions. Preimages provide continuity of composition and the closed-set
+criterion; the self-inverse swap closes the chapter with a homeomorphism.
+Later connectedness, compactness and real-line IVT material is not included.
+
+## Branch chapter: finite probability to Bayes
+
+Keep the complete two-point probability, expectation and variance source.
+The least-squares decomposition links it to the first short example.
+`bayes_rule` substitutes `joint = likelihood * prior` in conditional
+probability with positive evidence; its concrete coherent input yields1/2.
+The weighted affine-expectation identity is algebraic and needs no probability
+vector premise. No general probability-space or measure construction is claimed.
+
+## Branch chapter: a complete geometry problem
+
+Keep IMO1966P6's complete definitions and proof. Strict interior points on
+the three sides give affine witnesses; determinant factorizations express
+corner triangle area ratios. A case split forces one ratio to be at most1/4.
+The conclusion `16 * small_det^2 <= original_det^2` compares unsigned areas
+without introducing square roots. Nondegeneracy and strict interior domains
+remain explicit. The source's theorem name `problem_12` is its collection ID,
+not the official IMO problem number.
+
+The seven branch chapters reuse existing showcase source (complete files or
+complete prefixes), with Chinese reading introductions. The number-theory
+chapter also uses inline bodyless `by def`. Exact source ranges, file hashes
+and verification records live in `long_examples.json`.
+
+The strict main collection uses existing kernel interfaces with no user trust
+or axioms. Separate homepage language demonstrations retain their explicitly
+marked assumptions; they are outside that strict collection.
+
+## Complete homepage snapshot
+
+Fifty distinct strict homepage/shared-public examples now join the seven branch
+chapters. Full orthogonal projection uses a nonzero direction in `cart(R,R)`,
+proves positivity of its squared norm before division, then orthogonality,
+squared-distance decomposition, minimality and uniqueness. This is the actual
+homepage proof, including the concrete projection of (3,1) onto (1,1).
+
+The ellipse example retains `a > b > 0` and `c > 0`; its checked result is the
+squared horizontal separation of its designated focal points, not a new proof
+of an arbitrary geometric characterization of ellipses. The group example
+retains its complete GroupProperty and Group declarations before cancellation.
+Newton residual identities are exact finite-step identities, not a general
+convergence theorem. Age arithmetic and all small language examples remain
+standalone sources. Exact source identities, normalization and checks are in
+`homepage_sources.json`; human-readable entries are in `homepage_examples.md`.
+
+Two explicit-assumption examples and four intended domain failures are stored
+separately. They must not be promoted into the strict mathematical collection
+or have their assumptions/failed checks hidden. The multi-file Newton example
+retains both source files and its original configuration in `reuse/`.
+
+## Independent problem/correction exercises
+
+The reading gallery includes four separate expected-failure exercises under
+`problems/`, each with a checked correction. Names must be declared before use;
+reflexivity does not legalize division by zero; the real square root requires
+a nonnegative input. The Socrates pair uses abstract predicate interfaces
+`is_human(person)` and `is_mortal(person)`, with a nonempty discussion universe.
+Its rejected conditional lacks the human antecedent; the corrected conditional
+provides that premise before applying the universal mortality rule. No user
+axiom or trust is added. A missing proof is not an established negation.
+The gallery owns links between independent exports; failed examples never
+enter the main ordered module or share execution/fact identities with it.

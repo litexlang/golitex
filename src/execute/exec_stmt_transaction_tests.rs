@@ -3155,9 +3155,9 @@ fn prop_and_exist_body_assume_earlier_facts_for_later_wd() {
     let mut runtime = runtime_with_file_env();
     for code in [
         "have fn vec(A, B cart(R, R)) cart(R, R) = (B(1) - A(1), B(2) - A(2))",
-        "have fn det(u, v cart(R, R)) R = u(1) * v(2) - u(2) * v(1)",
+        "have fn det2(u, v cart(R, R)) R = u(1) * v(2) - u(2) * v(1)",
         "have fn line(a, b, c R: a != 0 or b != 0) power_set(cart(R, R)) = {p cart(R, R): a * p(1) + b * p(2) + c = 0}",
-        "have fn line_through_points(a, b cart(R, R): a != b) power_set(cart(R, R)) = {p cart(R, R): det(vec(a, p), vec(a, b)) = 0}",
+        "have fn line_through_points(a, b cart(R, R): a != b) power_set(cart(R, R)) = {p cart(R, R): det2(vec(a, p), vec(a, b)) = 0}",
     ] {
         assert!(
             !exec_one(&mut runtime, code).is_failed(),

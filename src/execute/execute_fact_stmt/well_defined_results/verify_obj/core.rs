@@ -199,6 +199,32 @@ impl Runtime {
                 Err(stages) => finite_domain_failure = Some(stages),
             }
         }
+        for source in self.matrix_callables(&head_obj, verify_state)? {
+            match self.try_verify_fn_obj_against_fn_set(
+                value,
+                &source.function.body,
+                verify_state,
+            )? {
+                Ok(stages) => {
+                    let (child_obj_well_defined, requirement_fact_verified, argument_scope) =
+                        stages.into_success_child_proofs();
+                    return Ok(VerifyObjWellDefinedResult::Success(
+                        ObjWellDefinedProof::ByDef {
+                            obj: root,
+                            proof: ObjWellDefinedProofByDef::FnObj(FnObjObjWellDefinedProof {
+                                domain_fn_set: Some(FnObjDomainFnSetEvidence::Matrix(Box::new(
+                                    source,
+                                ))),
+                                child_obj_well_defined,
+                                requirement_fact_verified,
+                                argument_scope,
+                            }),
+                        },
+                    ));
+                }
+                Err(stages) => finite_domain_failure = Some(stages),
+            }
+        }
         let candidates = self.collect_in_function_set_candidates(&head_obj);
         if candidates.is_empty() {
             if let Some(stages) = finite_domain_failure {

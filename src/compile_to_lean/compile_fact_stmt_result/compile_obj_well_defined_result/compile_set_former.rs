@@ -20,18 +20,28 @@ impl LitexToLeanCompiler {
             (SetFormer::SetBuilder(set), SetFormerObjWellDefinedProofByDef::SetBuilder(wd)) => {
                 self.compile_set_builder_wd(set, wd, position)
             }
+            (SetFormer::Range(set), SetFormerObjWellDefinedProofByDef::Range(wd)) => {
+                self.compile_range_wd(set, wd, position)
+            }
             (SetFormer::ClosedRange(set), SetFormerObjWellDefinedProofByDef::ClosedRange(wd)) => {
                 self.compile_closed_range_wd(set, wd, position)
             }
-            (SetFormer::ListSet(_) | SetFormer::SetBuilder(_) | SetFormer::ClosedRange(_), _) => {
-                Err(LeanCompileError::new(
-                    "SetFormer/WDSubject",
-                    "Set formation evidence has another constructor family.",
-                ))
+            (SetFormer::FiniteSeqSet(set), SetFormerObjWellDefinedProofByDef::FiniteSeqSet(wd)) => {
+                self.compile_finite_seq_wd(set, wd, position)
             }
             (
-                SetFormer::Range(_)
-                | SetFormer::FiniteSeqSet(_)
+                SetFormer::ListSet(_)
+                | SetFormer::SetBuilder(_)
+                | SetFormer::Range(_)
+                | SetFormer::ClosedRange(_)
+                | SetFormer::FiniteSeqSet(_),
+                _,
+            ) => Err(LeanCompileError::new(
+                "SetFormer/WDSubject",
+                "Set formation evidence has another constructor family.",
+            )),
+            (
+                SetFormer::MatrixSet(_)
                 | SetFormer::SeqSet(_)
                 | SetFormer::OneSideInfinityIntervalObj(_)
                 | SetFormer::IntervalObj(_),

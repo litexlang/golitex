@@ -1,0 +1,52 @@
+{
+  "date": "2026-10-24T11:57:54.013721+08:00",
+  "platform": "Darwin arm64",
+  "litex": "Litex 1.1.2-beta",
+  "lean": "Lean (version 4.31.0, arm64-apple-darwin24.6.0, commit 68218e876d2a38b1985b8590fff244a83c321783, Release)",
+  "rustc": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
+  "golitex_commit": "e3df05dec579e3f7f915c2ef48a71f83d064b269",
+  "sha256": {
+    "litex": "c7b3dc120ee6f4af61772343ac5bf377a9ea28f07d0b985e8ce498aa7d575fe5",
+    "liblitex.rlib": "935233b081c2c6106375aeeb322a7df2ad16d9c60e473f5a731e58040ea1c33d"
+  },
+  "reps": {
+    "litex_warm_per_process": 10,
+    "lean_warm_per_process": 3,
+    "processes": 3,
+    "first_per_route_per_process": 1
+  },
+  "mathlib_commit": "fabf563a7c95a166b8d7b6efca11c8b4dc9d911f",
+  "source_hashes": {
+    "cases/search-expansion.json": "216de0d06c0da68953bda1dacc3be8025b9cf66ff60b8f3aeb9dc786b290f91a",
+    "sources/search-expansion/affine_sum_128.lit": "e1511f3291a70f9a1640d357b9bfd12c06f669acfac314a64f29f311c464cda9",
+    "sources/search-expansion/affine_sum_16.lit": "48c38b013a3d51b4141be3f16abe868cc40fb0cd50ad89493b18bada7e34b81d",
+    "sources/search-expansion/affine_sum_64.lit": "e8624d0c958cbfffb9a7a46d36fc2badcb16da79f52bc1b52a902263441285d6",
+    "sources/search-expansion/quadratic_context_0.lit": "8f1dc34c79d8d203ae813b5e34ec76ff2e6ae5cae99490da78d05aa6384fd7d3",
+    "sources/search-expansion/quadratic_context_12.lit": "7542290150f12ef9709ac4748018440ed98fca9bcb64e35cfa45343b35c12c9d",
+    "sources/search-expansion/quadratic_context_24.lit": "02b76d2aaf79640fd9033f5ec42219c79a567fcd1da9c26528006e2bf03af0ac",
+    "sources/search-expansion/affine_sum_128__expanded.lean": "ac764229e826f062bb690f47501f74a7c74faaad186096b191bc5d42f647e0c5",
+    "sources/search-expansion/affine_sum_128__formula.lean": "b1f4ff7cf60a08b4d7495cc5257d4ed21346f9b649c1ea09969bc2034fee8681",
+    "sources/search-expansion/affine_sum_16__expanded.lean": "e4b926926fb25153b12761b06f09dc41b91b2d1cb0a6288f896e714829e6be09",
+    "sources/search-expansion/affine_sum_16__formula.lean": "473b1dc89768cd73ae851660cc9a4ce79b86850060ffe0c2c1055f4643706503",
+    "sources/search-expansion/affine_sum_64__expanded.lean": "ae9e079416a9444a6ffb5d8840f6db0171add41eb5823e4752593934fe67150c",
+    "sources/search-expansion/affine_sum_64__formula.lean": "8a1e4cb33ed89691a32eed149a8b73c868f87d9eb39d8448926e3f9b13cf1850",
+    "sources/search-expansion/quadratic_context_0__all_hypotheses.lean": "41f9c6695b8b5235964c2c6331388c569348c3fc2686d0186a6a04514d2b9aba",
+    "sources/search-expansion/quadratic_context_0__lemma.lean": "0cd9b5c27032752c5513ed25a272161673a43355cc1279c3341ae18d879a221e",
+    "sources/search-expansion/quadratic_context_0__only_certificate.lean": "6642306ed555083f043d668adfab8d21c6b01ee0726a95ca4422dafaa9f55058",
+    "sources/search-expansion/quadratic_context_12__all_hypotheses.lean": "17102562fc26548ab12bdbccf43a06e757f88dac0442181f23ee8ffaed30916c",
+    "sources/search-expansion/quadratic_context_12__lemma.lean": "112e1485061d941938abb111a8b2fe97b83a8ac4aa56d28c3570aa8d48c31a07",
+    "sources/search-expansion/quadratic_context_12__only_certificate.lean": "96f695ef36d00520623e22732a1c122052287f1ddbf13dbc9997f71b0742f589",
+    "sources/search-expansion/quadratic_context_24__all_hypotheses.lean": "0ab9a02eb8966b3833c5ec46e10f736db0ee0c25af5d7a08c19e30ee18a9b7dc",
+    "sources/search-expansion/quadratic_context_24__lemma.lean": "5ce1ca827fbc7f41a024d268aaac122921c3bd57810911d332b6c73917218dd8",
+    "sources/search-expansion/quadratic_context_24__only_certificate.lean": "128bb57b3ed00a4251991ed76b93d6ef4fac8bb40c365cab54994b221e33f4ae"
+  },
+  "scope": "warm checking paths; all completed cases retained; startup/imports excluded",
+  "artifact_snapshot_hashes": {
+    "litex": "c7b3dc120ee6f4af61772343ac5bf377a9ea28f07d0b985e8ce498aa7d575fe5",
+    "liblitex.rlib": "935233b081c2c6106375aeeb322a7df2ad16d9c60e473f5a731e58040ea1c33d"
+  },
+  "timing_harness_hashes": {
+    "search_expansion.py": "bd25dc77ebe08f48b1125d9193a4663696f684e0b5ebb7e5ac3f81f8a0d18047",
+    "bench.py": "e8f878bb4119da34bd62a44d77660d61541457d056f58d11f21f3da5467837fc"
+  }
+}

@@ -11526,6 +11526,13 @@
     }
   },
   {
+    "id": "builtin.InFactSearchProofByBuiltinRule::NativeMatrix",
+    "category": "builtin",
+    "family": "InFactSearchProofByBuiltinRule",
+    "variant": "NativeMatrix",
+    "labels": {}
+  },
+  {
     "id": "builtin.InFactSearchProofByBuiltinRule::NativeScalarCodomain",
     "category": "builtin",
     "family": "InFactSearchProofByBuiltinRule",
@@ -24836,6 +24843,34 @@
     "labels": {}
   },
   {
+    "id": "builtin_theorem.BuiltinTheoremId::EuclideanNormScale",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "EuclideanNormScale",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::EuclideanNormSquare",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "EuclideanNormSquare",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::EuclideanNormTriangle",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "EuclideanNormTriangle",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::EuclideanNormZero",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "EuclideanNormZero",
+    "labels": {}
+  },
+  {
     "id": "builtin_theorem.BuiltinTheoremId::FamilyIntersectionMember",
     "category": "builtin_theorem",
     "family": "BuiltinTheoremId",
@@ -26411,6 +26446,34 @@
     "labels": {}
   },
   {
+    "id": "builtin_theorem.BuiltinTheoremId::FrobeniusNormScale",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "FrobeniusNormScale",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::FrobeniusNormSquare",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "FrobeniusNormSquare",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::FrobeniusNormTriangle",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "FrobeniusNormTriangle",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::FrobeniusNormZero",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "FrobeniusNormZero",
+    "labels": {}
+  },
+  {
     "id": "builtin_theorem.BuiltinTheoremId::FunctionSetMember",
     "category": "builtin_theorem",
     "family": "BuiltinTheoremId",
@@ -26450,6 +26513,335 @@
     "category": "builtin_theorem",
     "family": "BuiltinTheoremId",
     "variant": "IndexedIntersectionMember",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::InnerProductCauchySchwarz",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "InnerProductCauchySchwarz",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::InnerProductConjugateSymmetry",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "InnerProductConjugateSymmetry",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::InnerProductLinearRight",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "InnerProductLinearRight",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::InnerProductPositive",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "InnerProductPositive",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::MatrixAddAssociative",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "MatrixAddAssociative",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::MatrixAddCommutative",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "MatrixAddCommutative",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::MatrixAddZero",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "MatrixAddZero",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::MatrixAdjointMul",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "MatrixAdjointMul",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::MatrixAdjugateIdentity",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "MatrixAdjugateIdentity",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::MatrixApplyCompose",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "MatrixApplyCompose",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::MatrixApplyIdentity",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "MatrixApplyIdentity",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::MatrixDetAdjoint",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "MatrixDetAdjoint",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::MatrixDetIdentity",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "MatrixDetIdentity",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::MatrixDetLaplaceColumn",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "MatrixDetLaplaceColumn",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::MatrixDetLaplaceRow",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "MatrixDetLaplaceRow",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::MatrixDetLowerTriangular",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "MatrixDetLowerTriangular",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::MatrixDetMul",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "MatrixDetMul",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::MatrixDetTranspose",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "MatrixDetTranspose",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::MatrixDetUpperTriangular",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "MatrixDetUpperTriangular",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::MatrixInnerProductAdjoint",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "MatrixInnerProductAdjoint",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::MatrixInverseFromCandidate",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "MatrixInverseFromCandidate",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::MatrixInverseLaws",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "MatrixInverseLaws",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::MatrixInvertibleFromCandidate",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "MatrixInvertibleFromCandidate",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::MatrixMulAssociative",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "MatrixMulAssociative",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::MatrixMulDistributiveLeft",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "MatrixMulDistributiveLeft",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::MatrixMulDistributiveRight",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "MatrixMulDistributiveRight",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::MatrixMulIdentity",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "MatrixMulIdentity",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::MatrixMulZero",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "MatrixMulZero",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::MatrixPowerAdd",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "MatrixPowerAdd",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::MatrixPowerSuccessor",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "MatrixPowerSuccessor",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::MatrixPowerZero",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "MatrixPowerZero",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::MatrixRankAdjoint",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "MatrixRankAdjoint",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::MatrixRankBounds",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "MatrixRankBounds",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::MatrixRankFactorizationExists",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "MatrixRankFactorizationExists",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::MatrixRankFromFactorization",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "MatrixRankFromFactorization",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::MatrixRankIdentity",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "MatrixRankIdentity",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::MatrixRankInvertible",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "MatrixRankInvertible",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::MatrixRankProduct",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "MatrixRankProduct",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::MatrixRankTranspose",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "MatrixRankTranspose",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::MatrixRankZero",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "MatrixRankZero",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::MatrixScaleDistributive",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "MatrixScaleDistributive",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::MatrixScaleOne",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "MatrixScaleOne",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::MatrixScaleZero",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "MatrixScaleZero",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::MatrixSubSelf",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "MatrixSubSelf",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::MatrixTraceCyclic",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "MatrixTraceCyclic",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::MatrixTraceLinearity",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "MatrixTraceLinearity",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::MatrixTransposeMul",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "MatrixTransposeMul",
     "labels": {}
   },
   {
@@ -27535,6 +27927,13 @@
     "category": "infer",
     "family": "InferInFactResult",
     "variant": "ListSetSingletonEqual",
+    "labels": {}
+  },
+  {
+    "id": "infer.InferInFactResult::MatrixExpand",
+    "category": "infer",
+    "family": "InferInFactResult",
+    "variant": "MatrixExpand",
     "labels": {}
   },
   {

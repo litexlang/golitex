@@ -15,33 +15,47 @@ impl LitexToLeanCompiler {
         let ExecObtainObjFromExistFactStmtResult::Success(proof) = result else {
             return Err(LeanCompileError::unsupported("Obtain/Failed"));
         };
-        let ObtainExistVerifySuccess::Exist(verified) = &proof.verify_exist else {
-            return Err(LeanCompileError::unsupported("Obtain/Unique"));
+        let verified_position = SourcePosition {
+            before: 0,
+            ..*position
         };
-        let ExistShapedFact::Exist(source) = &proof.statement.fact else {
-            return Err(LeanCompileError::unsupported("Obtain/SourceFamily"));
+        let (fact, formation, compiled, unique) = match &proof.verify_exist {
+            ObtainExistVerifySuccess::Exist(p) => (
+                &p.fact,
+                &p.well_defined_proof,
+                self.compile_verify_plain_exist_success(p, &verified_position)?,
+                false,
+            ),
+            ObtainExistVerifySuccess::ExistUnique(p) => (
+                &p.fact,
+                &p.well_defined_proof,
+                self.compile_verify_unique_success(p, &verified_position)?,
+                true,
+            ),
         };
-        if verified.fact != proof.statement.fact {
+        if *fact != proof.statement.fact {
             return Err(LeanCompileError::new(
                 "Obtain/SourceSubject",
                 "The retained verification proves another existential.",
             ));
         }
+        let source = fact.plain();
         validate_obtain_output_names(source, &proof.statement.equal_tos)?;
-        let verified_position = SourcePosition {
-            before: 0,
-            ..*position
+        let evidence = format!("(show {} from {})", compiled.0, compiled.1);
+        let tail = if unique {
+            format!("({evidence}).1")
+        } else {
+            evidence.clone()
         };
-        let (proposition, tail) =
-            self.compile_verify_plain_exist_success(verified, &verified_position)?;
-        let tail = format!("(show {proposition} from {tail})");
+        let uniqueness = unique.then(|| format!("({evidence}).2"));
         self.compile_obtain_elimination(
             source,
-            &verified.well_defined_proof,
+            formation,
             &proof.statement.equal_tos,
             &proof.store_and_infer_result,
             &HashMap::new(),
             tail,
+            uniqueness.as_deref(),
             &verified_position,
             position,
             local,
@@ -58,6 +72,7 @@ impl LitexToLeanCompiler {
         captured: &StoreHaveObjAndInferResult,
         outer_substitution: &HashMap<IdentifierId, Obj>,
         mut tail: String,
+        uniqueness: Option<&str>,
         original_parent: &SourcePosition<'_>,
         position: &SourcePosition<'_>,
         local: bool,
@@ -65,7 +80,11 @@ impl LitexToLeanCompiler {
         let parameters = source.typed_parameters.ordered_param_ids();
         let count = parameters.len();
         let stores = &captured.store_and_infer_results;
-        if count == 0 || outputs.len() != count || stores.len() != count + source.facts.len() {
+        let primary_count = count + source.facts.len();
+        if count == 0
+            || outputs.len() != count
+            || stores.len() != primary_count + usize::from(uniqueness.is_some())
+        {
             return Err(LeanCompileError::new(
                 "Obtain/Stages",
                 "Obtain needs each original renamed parameter and body store in order.",
@@ -102,7 +121,7 @@ impl LitexToLeanCompiler {
             SourceOwner::ExistWD(source, formation),
             usize::MAX,
         );
-        for (index, store) in stores.iter().enumerate() {
+        for (index, store) in stores.iter().take(primary_count).enumerate() {
             let completed = SourcePosition {
                 before: 2 + index,
                 ..*position
@@ -138,6 +157,7 @@ impl LitexToLeanCompiler {
             names.extend(
                 stores
                     .iter()
+                    .take(primary_count)
                     .skip(count)
                     .map(|store| format!("h_{}", store.primary_fact_id().value())),
             );
@@ -147,7 +167,7 @@ impl LitexToLeanCompiler {
             lines.push(format!("rcases {tail} with ⟨{}⟩", names.join(", ")));
         }
 
-        for (index, store) in stores.iter().enumerate() {
+        for (index, store) in stores.iter().take(primary_count).enumerate() {
             let completed = SourcePosition {
                 before: 2 + index,
                 ..*position
@@ -161,7 +181,7 @@ impl LitexToLeanCompiler {
             let proposition = self.fact_proposition(&fact, &completed)?;
             let name = format!("h_{}", fact.fact_id().value());
             if !local {
-                let last = index + 1 == stores.len() && index >= count;
+                let last = index + 1 == primary_count && index >= count;
                 let evidence = if last {
                     tail.clone()
                 } else {
@@ -187,6 +207,19 @@ impl LitexToLeanCompiler {
             } else {
                 self.compile_stored_inferences(store, &fact, &compiled, &completed)?
             });
+        }
+        if let Some(unique) = uniqueness {
+            let completed = SourcePosition {
+                before: 2 + primary_count,
+                ..*position
+            };
+            lines.push(self.compile_unique_forall_store(
+                source,
+                &stores[primary_count].store,
+                unique,
+                false,
+                &completed,
+            )?);
         }
         Ok(lines.join("\n\n"))
     }

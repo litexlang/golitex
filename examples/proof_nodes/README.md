@@ -573,6 +573,11 @@ done < <(find examples/proof_nodes -name '*.lit' | sort)
 exit $fail
 ```
 
+Known-fact argument matching also accepts a zero-premise multiplication
+association/commutation identity: [cite_mul_associativity.lit](atomic/by_known_atomic_fact/cite_mul_associativity.lit)
+transfers a stored `(a*b)*(c*d)` bound to `a*b*c*d`. Subtraction, division and
+their dedicated order rules keep their own premise checks.
+
 Equality pipeline and evidence: [step-by-step README](../../src/execute/execute_fact_stmt/verify_atomic_fact/verify_equality/README.md).
 
 ## Order and induction support

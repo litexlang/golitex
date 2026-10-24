@@ -1,8 +1,9 @@
+use super::induction_evidence::InductionEvidence;
 use crate::compile_to_lean::helper::*;
 use crate::compile_to_lean::source_position::{SourceOwner, SourcePosition};
 use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
 use crate::execute::execute_by_stmt::{
-    ByInducBodySuccess, ByInducCaseSuccess, ExecByInducStmtResult, ExecByInducStmtSuccess,
+    ByInducBodySuccess, ByInducCaseSuccess, ExecByInducStmtResult,
 };
 use crate::prelude::*;
 use std::collections::HashMap;
@@ -18,6 +19,30 @@ impl LitexToLeanCompiler {
         let ExecByInducStmtResult::Success(proof) = result else {
             return Err(LeanCompileError::unsupported("Induction/Failed"));
         };
+        self.compile_induction(proof.into(), position, index, local)
+    }
+
+    pub(in crate::compile_to_lean) fn compile_by_strong_induc_result(
+        &self,
+        result: &crate::execute::execute_by_stmt::ExecByStrongInducStmtResult,
+        position: &SourcePosition<'_>,
+        index: usize,
+        local: bool,
+    ) -> Result<String, LeanCompileError> {
+        let crate::execute::execute_by_stmt::ExecByStrongInducStmtResult::Success(proof) = result
+        else {
+            return Err(LeanCompileError::unsupported("StrongInduction/Failed"));
+        };
+        self.compile_induction(proof.into(), position, index, local)
+    }
+
+    fn compile_induction(
+        &self,
+        proof: InductionEvidence<'_>,
+        position: &SourcePosition<'_>,
+        index: usize,
+        local: bool,
+    ) -> Result<String, LeanCompileError> {
         if !is_exact_zero(&proof.induc_from)
             || proof.goals.is_empty()
             || proof.goals.len() != proof.goals_wd.len()
@@ -27,7 +52,7 @@ impl LitexToLeanCompiler {
             ));
         }
         let from = source_subject(&proof.from_in_z)?;
-        if !matches!(&from, Fact::AtomicFact(AtomicFact::InFact(f)) if f.element == proof.induc_from && f.set == Obj::StandardSet(StandardSet::Z))
+        if !matches!(&from, Fact::AtomicFact(AtomicFact::InFact(f)) if f.element == *proof.induc_from && f.set == Obj::StandardSet(StandardSet::Z))
         {
             return Err(LeanCompileError::unsupported("Induction/FromSubject"));
         }
@@ -85,7 +110,7 @@ impl LitexToLeanCompiler {
             &complete,
         )?);
         let mut propositions = Vec::new();
-        for (j, (goal, wd)) in proof.goals.iter().zip(&proof.goals_wd).enumerate() {
+        for (j, (goal, wd)) in proof.goals.iter().zip(proof.goals_wd).enumerate() {
             let VerifyFactWellDefinedResult::Success(wd) = wd else {
                 return Err(LeanCompileError::unsupported("Induction/GoalWD"));
             };
@@ -115,9 +140,9 @@ impl LitexToLeanCompiler {
             | ByInducBodySuccess::Unstructured { base, step } => (base, step),
         };
         let base =
-            self.compile_induction_case(proof, base, &header, &predicate, &from_compiled.1, true)?;
+            self.compile_induction_case(&proof, base, &header, &predicate, &from_compiled.1, true)?;
         let step = self.compile_induction_case(
-            proof,
+            &proof,
             step,
             &header,
             &predicate,
@@ -145,7 +170,15 @@ impl LitexToLeanCompiler {
             )
         };
         body.extend(definitions);
-        body.push(format!("exact Litex.integerInductionFromZero {predicate} {base} {step} _value_i{} {h_z} {h_lower}", proof.parameter.id.value()));
+        let bridge = if proof.strong {
+            "integerStrongInductionFromZero"
+        } else {
+            "integerInductionFromZero"
+        };
+        body.push(format!(
+            "exact Litex.{bridge} {predicate} {base} {step} _value_i{} {h_z} {h_lower}",
+            proof.parameter.id.value()
+        ));
         let compiled = (
             proposition,
             format!("(by\n  {}\n)", body.join("\n").replace('\n', "\n  ")),
@@ -171,7 +204,7 @@ impl LitexToLeanCompiler {
             || !final_fact
                 .then_facts
                 .iter()
-                .zip(&proof.goals)
+                .zip(proof.goals)
                 .all(|(a, b)| instantiated_fact_matches(&Fact::from(a.clone()), b, &HashMap::new()))
         {
             return Err(LeanCompileError::unsupported("Induction/FinalSubject"));
@@ -186,9 +219,94 @@ impl LitexToLeanCompiler {
         )
     }
 
+    fn compile_strong_induction_hypothesis(
+        &self,
+        induction: &InductionEvidence<'_>,
+        source: &Fact,
+        wd: &FactWellDefinedProof,
+        index: usize,
+        position: &SourcePosition<'_>,
+    ) -> Result<(String, String), LeanCompileError> {
+        let (Fact::ForallFact(fact), FactWellDefinedProof::ForallFact(wd)) = (source, wd) else {
+            return Err(LeanCompileError::unsupported(
+                "StrongInduction/HypothesisFamily",
+            ));
+        };
+        let [group] = fact.typed_parameters.groups.as_slice() else {
+            return Err(LeanCompileError::unsupported(
+                "StrongInduction/HypothesisParameters",
+            ));
+        };
+        let [parameter] = group.params.as_slice() else {
+            return Err(LeanCompileError::unsupported(
+                "StrongInduction/HypothesisParameters",
+            ));
+        };
+        let object = Obj::Identifier(IdentifierObj::from_bound_name(parameter));
+        let current = Obj::Identifier(IdentifierObj::from_bound_name(induction.parameter));
+        if group.param_type != ParamType::Obj(Obj::StandardSet(StandardSet::Z))
+            || fact.dom_facts.len() != 2
+            || fact.then_facts.len() != 1
+            || !matches!(&fact.dom_facts[0], Fact::AtomicFact(AtomicFact::GreaterEqualFact(f))
+                if f.left.ir() == object.ir() && f.right.ir() == induction.induc_from.ir())
+            || !matches!(&fact.dom_facts[1], Fact::AtomicFact(AtomicFact::LessEqualFact(f))
+                if f.left.ir() == object.ir() && f.right.ir() == current.ir())
+            || !instantiated_fact_matches(
+                &induction.goals[index],
+                &fact.then_facts[0].clone().into(),
+                &HashMap::from([(induction.parameter.id, object)]),
+            )
+        {
+            return Err(LeanCompileError::unsupported(
+                "StrongInduction/HypothesisSubject",
+            ));
+        }
+        let scope = SourcePosition::new(Some(position), SourceOwner::ForallWD(fact, wd), 0);
+        let (binders, introductions, mut lines) =
+            self.compile_forall_head(fact, &wd.introduced_params, &wd.assumed_dom_facts, &scope)?;
+        let store = wd
+            .introduced_params
+            .defined_params
+            .store_and_infer_results
+            .first()
+            .ok_or_else(|| {
+                LeanCompileError::unsupported("StrongInduction/HypothesisParameterStore")
+            })?;
+        let member = format!("h_{}", store.primary_fact_id().value());
+        let low = format!("h_{}", fact.dom_facts[0].fact_id().value());
+        let high = format!("h_{}", fact.dom_facts[1].fact_id().value());
+        let proof = format!(
+            "(_induction_hypothesis (Litex.denote _value_i{}) {member} {low} {high})",
+            parameter.id.value()
+        );
+        let then = Fact::from(fact.then_facts[0].clone());
+        let formation = wd
+            .then
+            .first()
+            .ok_or_else(|| LeanCompileError::unsupported("StrongInduction/HypothesisGoalWD"))?;
+        let complete = SourcePosition { before: 3, ..scope };
+        let formed =
+            SourcePosition::new(Some(&complete), SourceOwner::FactWD(formation), usize::MAX);
+        let conclusion = self.fact_proposition(&then, &formed)?;
+        let proposition = format!(
+            "∀ {}, {}",
+            binders.join(" "),
+            self.scope_proposition(conclusion, &lines)
+        );
+        lines.insert(0, format!("intro {}", introductions.join(" ")));
+        lines.push(format!(
+            "exact {}",
+            conjunction_projection(&proof, index, induction.goals.len())
+        ));
+        Ok((
+            proposition,
+            format!("(by\n  {}\n)", lines.join("\n").replace('\n', "\n  ")),
+        ))
+    }
+
     fn compile_induction_case(
         &self,
-        induction: &ExecByInducStmtSuccess,
+        induction: &InductionEvidence<'_>,
         case: &ByInducCaseSuccess,
         header: &SourcePosition<'_>,
         predicate: &str,
@@ -200,8 +318,11 @@ impl LitexToLeanCompiler {
         {
             return Err(LeanCompileError::unsupported("Induction/CaseStages"));
         }
-        let scope =
-            SourcePosition::new(Some(header), SourceOwner::InductionCase(induction, case), 0);
+        let scope = SourcePosition::new(
+            Some(header),
+            SourceOwner::InductionCase(*induction, case),
+            0,
+        );
         self.validate_parameter_store_capture(&case.introduced_parameter.defined_params)?;
         let introduced = SourcePosition { before: 1, ..scope };
         let store = induction_parameter_store(&case.introduced_parameter)?;
@@ -262,10 +383,25 @@ impl LitexToLeanCompiler {
                 SourceOwner::FactWD(&assumption.well_defined),
                 usize::MAX,
             );
-            let proposition = self.fact_proposition(&source, &formed)?;
+            let strong_hypothesis = if induction.strong && j > 0 {
+                Some(self.compile_strong_induction_hypothesis(
+                    induction,
+                    &source,
+                    &assumption.well_defined,
+                    j - 1,
+                    &prior,
+                )?)
+            } else {
+                None
+            };
+            let proposition = if let Some(compiled) = &strong_hypothesis {
+                compiled.0.clone()
+            } else {
+                self.fact_proposition(&source, &formed)?
+            };
             let proof = if j == 0 {
                 if base {
-                    if !matches!(&source, Fact::AtomicFact(AtomicFact::EqualFact(f)) if f.left.ir() == original.ir() && f.right == induction.induc_from)
+                    if !matches!(&source, Fact::AtomicFact(AtomicFact::EqualFact(f)) if f.left.ir() == original.ir() && f.right == *induction.induc_from)
                     {
                         return Err(LeanCompileError::unsupported("Induction/BaseAssumption"));
                     }
@@ -278,6 +414,8 @@ impl LitexToLeanCompiler {
                     )?;
                     "_induction_nonnegative".to_string()
                 }
+            } else if induction.strong {
+                strong_hypothesis.unwrap().1
             } else {
                 if !instantiated_fact_matches(&induction.goals[j - 1], &source, &HashMap::new()) {
                     return Err(LeanCompileError::unsupported("Induction/HypothesisSubject"));

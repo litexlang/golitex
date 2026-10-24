@@ -28,8 +28,10 @@ impl LitexToLeanCompiler {
             ExecDefineObjStmtResult::HaveObjByExistFacts(result) => {
                 self.compile_have_by_exist_statement(result, position, local)
             }
-            ExecDefineObjStmtResult::HaveByFnPreimage(_)
-            | ExecDefineObjStmtResult::HaveByReplacementAxiom(_) => {
+            ExecDefineObjStmtResult::HaveByFnPreimage(result) => {
+                self.compile_have_fn_preimage_statement(result, position, local)
+            }
+            ExecDefineObjStmtResult::HaveByReplacementAxiom(_) => {
                 Err(LeanCompileError::unsupported("Definition/DefineObj"))
             }
         }

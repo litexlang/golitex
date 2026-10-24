@@ -1,11 +1,15 @@
 mod compile_atomic_except_equality_result;
 mod compile_equality_result;
 mod compile_exist_fact_result;
+pub(in crate::compile_to_lean) use compile_exist_fact_result::exist_instance_matches;
 mod compile_fact_stmt_result;
 mod compile_forall_fact_result;
 pub(in crate::compile_to_lean) mod compile_forall_iff_result;
 pub(super) mod compile_formed_subjects;
 mod compile_obj_well_defined_result;
 pub(in crate::compile_to_lean) use compile_obj_well_defined_result::validate_finite_signature;
+mod compile_not_forall_result;
 mod compile_verify_fact_result;
 mod compile_verify_or_fact_result;
+
+pub(in crate::compile_to_lean) use compile_equality_result::validate_cart_definition;

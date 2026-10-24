@@ -11,19 +11,19 @@
 
 release obj def geo::vec
 release obj def geo::dot
-release obj def geo::det
+release obj def geo::det2
 release obj def geo::distance_sq
 release obj def geo::angle_cos_num
 release obj def geo::angle_cos_den
 
 thm boundary_det_coordinates:
     ? forall a, b, c, d cart(R,R):
-        geo::det(geo::vec(a,b),geo::vec(c,d)) = (b(1)-a(1))*(d(2)-c(2))-(b(2)-a(2))*(d(1)-c(1))
+        geo::det2(geo::vec(a,b),geo::vec(c,d)) = (b(1)-a(1))*(d(2)-c(2))-(b(2)-a(2))*(d(1)-c(1))
     geo::vec(a,b)(1) = b(1)-a(1)
     geo::vec(a,b)(2) = b(2)-a(2)
     geo::vec(c,d)(1) = d(1)-c(1)
     geo::vec(c,d)(2) = d(2)-c(2)
-    geo::det(geo::vec(a,b),geo::vec(c,d)) = geo::vec(a,b)(1)*geo::vec(c,d)(2)-geo::vec(a,b)(2)*geo::vec(c,d)(1) = (b(1)-a(1))*(d(2)-c(2))-(b(2)-a(2))*(d(1)-c(1))
+    geo::det2(geo::vec(a,b),geo::vec(c,d)) = geo::vec(a,b)(1)*geo::vec(c,d)(2)-geo::vec(a,b)(2)*geo::vec(c,d)(1) = (b(1)-a(1))*(d(2)-c(2))-(b(2)-a(2))*(d(1)-c(1))
 
 thm boundary_dot_coordinates:
     ? forall a, b, c, d cart(R,R):
@@ -50,10 +50,10 @@ claim:
     d(1)=0
     d(2)=1
     release thm boundary_det_coordinates(a,b,a,c)
-    geo::det(geo::vec(a,b),geo::vec(a,c))=2
+    geo::det2(geo::vec(a,b),geo::vec(a,c))=2
     by def $geo::is_triangle(a,b,c)
     release thm boundary_det_coordinates(a,b,d,c)
-    geo::det(geo::vec(a,b),geo::vec(d,c))=0
+    geo::det2(geo::vec(a,b),geo::vec(d,c))=0
     by contra:
         ? a != b
         a(1)=b(1)
@@ -64,7 +64,7 @@ claim:
         impossible d(1)=c(1)
     by def $geo::is_parallel(a,b,d,c)
     release thm boundary_det_coordinates(a,d,b,c)
-    geo::det(geo::vec(a,d),geo::vec(b,c))=0
+    geo::det2(geo::vec(a,d),geo::vec(b,c))=0
     by contra:
         ? a != d
         a(2)=d(2)
@@ -93,7 +93,7 @@ claim:
     d(2)=0
     release thm boundary_det_coordinates(a,b,a,c)
     release thm boundary_det_coordinates(a,b,d,c)
-    geo::det(geo::vec(a,b),geo::vec(d,c))=0
+    geo::det2(geo::vec(a,b),geo::vec(d,c))=0
     by contra:
         ? a != b
         a(1)=b(1)
@@ -104,7 +104,7 @@ claim:
         impossible d(1)=c(1)
     by def $geo::is_parallel(a,b,d,c)
     release thm boundary_det_coordinates(a,d,b,c)
-    geo::det(geo::vec(a,d),geo::vec(b,c))=0
+    geo::det2(geo::vec(a,d),geo::vec(b,c))=0
     by contra:
         ? a != d
         a(1)=d(1)
@@ -114,11 +114,11 @@ claim:
         b(1)=c(1)
         impossible b(1)=c(1)
     by def $geo::is_parallel(a,d,b,c)
-    geo::det(geo::vec(a,b),geo::vec(a,c))=0
+    geo::det2(geo::vec(a,b),geo::vec(a,c))=0
     by contra:
         ? not $geo::is_parallelogram(a,b,c,d)
         $geo::is_triangle(a,b,c)
-        impossible geo::det(geo::vec(a,b),geo::vec(a,c))=0
+        impossible geo::det2(geo::vec(a,b),geo::vec(a,c))=0
 
 # The internal right-angle bisector is accepted, with its tip beyond the opposite side.
 claim:
@@ -148,10 +148,10 @@ claim:
         d(1)=b(1)
         impossible d(1)=b(1)
     release thm boundary_det_coordinates(a,b,a,c)
-    geo::det(geo::vec(a,b),geo::vec(a,c))=-1
+    geo::det2(geo::vec(a,b),geo::vec(a,c))=-1
     by contra:
         ? not $geo::is_collinear(a,b,c)
-        impossible geo::det(geo::vec(a,b),geo::vec(a,c))=-1
+        impossible geo::det2(geo::vec(a,b),geo::vec(a,c))=-1
     release thm boundary_dot_coordinates(b,a,b,d)
     geo::dot(geo::vec(b,a),geo::vec(b,d))=1
     release thm boundary_dot_coordinates(b,d,b,c)
@@ -200,10 +200,10 @@ claim:
         d(1)=b(1)
         impossible d(1)=b(1)
     release thm boundary_det_coordinates(a,b,a,c)
-    geo::det(geo::vec(a,b),geo::vec(a,c))=-1
+    geo::det2(geo::vec(a,b),geo::vec(a,c))=-1
     by contra:
         ? not $geo::is_collinear(a,b,c)
-        impossible geo::det(geo::vec(a,b),geo::vec(a,c))=-1
+        impossible geo::det2(geo::vec(a,b),geo::vec(a,c))=-1
     release thm boundary_dot_coordinates(b,a,b,d)
     geo::dot(geo::vec(b,a),geo::vec(b,d))=-1
     release thm boundary_dot_coordinates(b,d,b,c)
@@ -275,10 +275,10 @@ claim:
         d(1)=b(1)
         impossible d(1)=b(1)
     release thm boundary_det_coordinates(a,b,a,c)
-    geo::det(geo::vec(a,b),geo::vec(a,c))=24
+    geo::det2(geo::vec(a,b),geo::vec(a,c))=24
     by contra:
         ? not $geo::is_collinear(a,b,c)
-        impossible geo::det(geo::vec(a,b),geo::vec(a,c))=24
+        impossible geo::det2(geo::vec(a,b),geo::vec(a,c))=24
     release thm boundary_dot_coordinates(b,a,b,d)
     geo::dot(geo::vec(b,a),geo::vec(b,d))=3
     release thm boundary_dot_coordinates(b,d,b,c)

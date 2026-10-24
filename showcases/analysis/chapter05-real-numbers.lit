@@ -2775,7 +2775,7 @@ claim:
     $is_nonempty_subset_of_reals(E)
     $is_nonempty_set(E)
     release thm least_upper_bound_existence(E)
-have fn sup by exist!:
+have fn supremum by exist!:
     ? forall E real_supremum_domain:
         exist! M R st {$is_least_upper_bound(E, M)}
 thm sqrt_two_low_perturbation_epsilon:
@@ -2928,9 +2928,9 @@ claim:
     by def $is_nonempty_subset_of_reals(sqrt_two_candidate_set)
     by def $is_nonempty_bounded_above_subset_of_reals(sqrt_two_candidate_set)
     release thm real_supremum_domain_intro(sqrt_two_candidate_set)
-    have x R = sup(sqrt_two_candidate_set)
-    $is_least_upper_bound(sqrt_two_candidate_set, sup(sqrt_two_candidate_set))
-    sup(sqrt_two_candidate_set) = x
+    have x R = supremum(sqrt_two_candidate_set)
+    $is_least_upper_bound(sqrt_two_candidate_set, supremum(sqrt_two_candidate_set))
+    supremum(sqrt_two_candidate_set) = x
     $is_least_upper_bound(sqrt_two_candidate_set, x)
     $is_upper_bound(sqrt_two_candidate_set, x)
     1 <= x

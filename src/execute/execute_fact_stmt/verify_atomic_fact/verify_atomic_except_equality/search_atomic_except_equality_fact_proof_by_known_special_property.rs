@@ -24,6 +24,9 @@ pub enum AtomicExceptEqualityFactSearchProofByKnownSpecialProperty {
 impl AtomicExceptEqualityFactSearchProofByKnownSpecialProperty {
     pub fn cite_property_fact_id(&self) -> Option<FactId> {
         match self {
+            Self::InFact(
+                InFactSearchProofByKnownSpecialProperty::FiniteTupleInStandardFunctionSpace(p),
+            ) => p.source.tuple_equal.path.first().map(|edge| edge.2),
             Self::InFact(InFactSearchProofByKnownSpecialProperty::KnownSubsetMembership(p)) => {
                 p.subset_proof.cite_fact_id()
             }
@@ -81,6 +84,7 @@ impl AtomicExceptEqualityFactSearchProofByKnownSpecialProperty {
 }
 
 pub enum InFactSearchProofByKnownSpecialProperty {
+    FiniteTupleInStandardFunctionSpace(FiniteTupleInStandardFunctionSpaceProof),
     KnownSubsetMembership(crate::execute::execute_fact_stmt::verify_atomic_fact::structural_membership_proof::KnownSubsetMembershipProof),
     PositiveRealFromKnownStrictOrder(PositiveRealFromKnownStrictOrderProof),
     StandardNumericSuperset(StandardNumericSupersetKnownProof),
@@ -97,6 +101,12 @@ pub enum InFactSearchProofByKnownSpecialProperty {
     TupleCoordinate(TupleCoordinateKnownProof),
     HomogeneousTupleCoordinate(HomogeneousTupleCoordinateKnownProof),
     LiteralTupleNumericCoordinate(super::known_literal_tuple_numeric_coordinate::LiteralTupleNumericCoordinateKnownProof),
+}
+
+pub struct FiniteTupleInStandardFunctionSpaceProof {
+    pub source:crate::execute::execute_fact_stmt::known_tuple::KnownTupleValueProof,
+    pub signature:FnSet,
+    pub coordinates:Vec<crate::execute::execute_fact_stmt::verify_atomic_fact::structural_membership_proof::StructuralMembershipProof>,
 }
 
 // The enclosing atomic WD has checked every template argument and guard.
@@ -223,6 +233,26 @@ impl Runtime {
         &mut self,
         fact: &AtomicFact,
     ) -> Option<AtomicExceptEqualityFactSearchProofByKnownSpecialProperty> {
+        self.lookup_atomic_special_property(fact, false)
+    }
+
+    pub(in crate::execute) fn search_atomic_except_equality_fact_proof_by_known_special_property_at_ceiling(
+        &mut self,
+        fact: &AtomicFact,
+        state: VerifyState,
+    ) -> Option<AtomicExceptEqualityFactSearchProofByKnownSpecialProperty> {
+        if state.level() > VerifyStateLevel::BuiltinRule {
+            self.search_atomic_except_equality_fact_proof_by_known_special_property(fact)
+        } else {
+            self.lookup_atomic_special_property(fact, true)
+        }
+    }
+
+    fn lookup_atomic_special_property(
+        &mut self,
+        fact: &AtomicFact,
+        restricted_carriers: bool,
+    ) -> Option<AtomicExceptEqualityFactSearchProofByKnownSpecialProperty> {
         match fact {
             AtomicFact::HasRiemannIntegralFact(_)
             | AtomicFact::NotHasRiemannIntegralFact(_)
@@ -256,7 +286,7 @@ impl Runtime {
             | AtomicFact::NotHasFunctionLimitFact(_) => None,
             AtomicFact::EqualFact(_) => unreachable!("equality uses its own known search"),
             AtomicFact::InFact(fact) => self
-                .search_in_fact_proof_by_known_special_property(fact)
+                .lookup_in_fact_special_property(fact, restricted_carriers)
                 .map(AtomicExceptEqualityFactSearchProofByKnownSpecialProperty::InFact),
             AtomicFact::NormalAtomicFact(_)
             | AtomicFact::NotNormalAtomicFact(_)
@@ -305,6 +335,25 @@ impl Runtime {
         &mut self,
         fact: &InFact,
     ) -> Option<InFactSearchProofByKnownSpecialProperty> {
+        self.lookup_in_fact_special_property(fact, false)
+    }
+
+    fn lookup_in_fact_special_property(
+        &mut self,
+        fact: &InFact,
+        restricted_carriers: bool,
+    ) -> Option<InFactSearchProofByKnownSpecialProperty> {
+        // Preserve established full-search routes and their constructor evidence.
+        // The new pure carrier leaf fills only restricted-premise gaps.
+        if restricted_carriers {
+            if let Some(proof) = self.finite_tuple_in_standard_function_space(fact) {
+                return Some(
+                    InFactSearchProofByKnownSpecialProperty::FiniteTupleInStandardFunctionSpace(
+                        proof,
+                    ),
+                );
+            }
+        }
         if let Some(proof) = self.known_literal_tuple_numeric_coordinate(fact) {
             return Some(
                 InFactSearchProofByKnownSpecialProperty::LiteralTupleNumericCoordinate(proof),
@@ -800,6 +849,68 @@ impl Runtime {
             }
         }
         properties
+    }
+}
+
+impl Runtime {
+    // Structural finite-function carrier: lookup a checked tuple, compare its
+    // exact I_n domain, then prove each coordinate using Direct carriers only.
+    // No verifier recursion, domain restriction, or truth permission reset.
+    fn finite_tuple_in_standard_function_space(
+        &mut self,
+        fact: &InFact,
+    ) -> Option<FiniteTupleInStandardFunctionSpaceProof> {
+        if !matches!(
+            fact.set,
+            Obj::SetFormer(SetFormer::FiniteSeqSet(_))
+                | Obj::FunctionSpace(FunctionSpace::FnSet(_))
+        ) {
+            return None;
+        }
+        let signature = self.function_space_signature(&fact.set)?;
+        if !signature.dom_facts.is_empty() || signature.set_bound_parameters.groups.len() != 1 {
+            return None;
+        }
+        let group = &signature.set_bound_parameters.groups[0];
+        if group.params.len() != 1 {
+            return None;
+        }
+        let Obj::SetFormer(SetFormer::ClosedRange(domain)) = group.param_type.as_ref() else {
+            return None;
+        };
+        let integer = |o: &Obj| {
+            crate::rational_expression::exact_rational::EvalRational::from_obj(o)
+                .and_then(|r| r.to_i128_if_integer())
+        };
+        if integer(&domain.start) != Some(1) {
+            return None;
+        }
+        let Obj::Literal(Literal::Number(length)) = domain.end.as_ref() else {
+            return None;
+        };
+        let n = length.normalized_value.parse::<usize>().ok()?;
+        let Obj::StandardSet(scalar) = signature.ret_set.as_ref() else {
+            return None;
+        };
+        for source in self.known_literal_tuple_candidates(&fact.element) {
+            if source.value.args.len() != n {
+                continue;
+            }
+            let coordinates: Option<Vec<_>> = source
+                .value
+                .args
+                .iter()
+                .map(|v| self.search_structural_membership(v, scalar))
+                .collect();
+            if let Some(coordinates) = coordinates {
+                return Some(FiniteTupleInStandardFunctionSpaceProof {
+                    source,
+                    signature,
+                    coordinates,
+                });
+            }
+        }
+        None
     }
 }
 

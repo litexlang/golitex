@@ -159,6 +159,25 @@ impl LitexToLeanCompiler {
                     return self.compile_exist_formation(fact, proof, position);
                 }
                 SourceOwner::Verify(VerifyFactResult::ExistShapedFact(result)) => {
+                    if let VerifyExistShapedFactResult::ExistUniqueFact(
+                        VerifyExistUniqueFactResult::Success(proof),
+                    ) = result.as_ref()
+                    {
+                        if proof.fact.plain() == fact {
+                            return self.compile_exist_formation(
+                                fact,
+                                &proof.well_defined_proof,
+                                position,
+                            );
+                        }
+                    }
+                    if let VerifyExistShapedFactResult::NotExistFact(
+                        crate::execute::execute_fact_stmt::verify_exist_shaped_fact::VerifyNotExistFactResult::Success(proof),
+                    ) = result.as_ref() {
+                        if proof.fact.plain() == fact {
+                            return self.compile_exist_formation(fact, &proof.well_defined_proof, position);
+                        }
+                    }
                     if let VerifyExistShapedFactResult::PlainExistFact(
                         VerifyPlainExistFactResult::Success(proof),
                     ) = result.as_ref()

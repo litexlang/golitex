@@ -3,6 +3,31 @@ use crate::json_output::helper::{object_for, string};
 use crate::knowledge_base::JsonValue;
 use crate::runtime::Runtime;
 
+pub(super) fn project_matrix_scalar_evaluations(
+    proofs: &[MatrixScalarEvaluationResult],
+    runtime: &Runtime,
+) -> JsonValue {
+    JsonValue::Array(
+        proofs
+            .iter()
+            .map(|p| {
+                object_for(
+                    runtime,
+                    vec![
+                        ("source", string(p.source.readable_string())),
+                        (
+                            "source_well_defined",
+                            super::wd::project_obj_wd_proof(&p.source_well_defined, runtime),
+                        ),
+                        ("expression", string(p.expression.readable_string())),
+                        ("value", string(p.value.readable_string())),
+                    ],
+                )
+            })
+            .collect(),
+    )
+}
+
 pub(super) fn project_aggregate_evaluations(
     proofs: &[AggregateEvaluationResult],
     runtime: &Runtime,

@@ -937,6 +937,13 @@ pub(super) fn project_equality_builtin_rule(
                     super::aggregate_evaluation::cites(&p.cited_equal_fact_ids),
                 ),
                 (
+                    "matrix_scalar_evaluations",
+                    super::aggregate_evaluation::project_matrix_scalar_evaluations(
+                        &p.matrix_scalar_evaluations,
+                        runtime,
+                    ),
+                ),
+                (
                     "aggregate_evaluations",
                     super::aggregate_evaluation::project_aggregate_evaluations(
                         &p.aggregate_evaluations,

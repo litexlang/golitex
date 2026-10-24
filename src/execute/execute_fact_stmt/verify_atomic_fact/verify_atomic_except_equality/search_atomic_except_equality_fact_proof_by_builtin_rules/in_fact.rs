@@ -40,6 +40,7 @@ pub use real_arithmetic_constructor::{
 
 // Builtin rules for `$in` facts (zero-premise or known-cite routes).
 pub enum InFactSearchProofByBuiltinRule {
+    NativeMatrix(crate::execute::execute_fact_stmt::native_matrix::MatrixMembershipProof),
     ExactIntegerQuotient(super::selected_scalar_bt_rules::ExactIntegerQuotientProof),
 
     MinPreservesPositiveCarrier(positive_minimum::MinPreservesPositiveCarrierProof),
@@ -415,6 +416,9 @@ impl Runtime {
         fact: &InFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<InFactSearchProofByBuiltinRule>> {
+        if let Some(proof) = self.search_native_matrix_membership(fact, verify_state)? {
+            return Ok(Some(InFactSearchProofByBuiltinRule::NativeMatrix(proof)));
+        }
         // Composition's complete interface is certified by its constructor.
         // Application WD has already checked this call's arguments and guards.
         if let Obj::FunctionSpace(FunctionSpace::FnSet(target)) = &fact.set {

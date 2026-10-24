@@ -1,0 +1,97 @@
+{
+  "kind": "reading_problem_examples",
+  "cases": [
+    {
+      "id": "undefined-name",
+      "titles": {
+        "zh": "未定义名称",
+        "en": "Undefined name"
+      },
+      "source": "Authored Litex reading exercise, 2026-10-24",
+      "problem": "A name must be declared before use.",
+      "proof_idea": "Declare problem_score before using it in the answer.",
+      "litex_code": {
+        "broken": "undefined-name.lit",
+        "corrected": "undefined-name-fixed.lit"
+      },
+      "comments": {
+        "broken_run_result": "failure",
+        "corrected_run_result": "success",
+        "user_trust": 0,
+        "user_axioms": 0,
+        "verified_on": "2026-10-24",
+        "broken_sha256": "6e84b04390075dcea298a50e2927bdd99bbce3ac06c65e3c602006fbe6507a08",
+        "corrected_sha256": "d20dd9cebd5ce787d64c8f776f0db57d49734ba8964e7ec8c727597a746eeb68"
+      }
+    },
+    {
+      "id": "zero-divisor",
+      "titles": {
+        "zh": "除以零",
+        "en": "Division by zero"
+      },
+      "source": "Authored Litex reading exercise, 2026-10-24",
+      "problem": "Reflexivity cannot make an undefined quotient meaningful.",
+      "proof_idea": "Use a nonzero divisor before checking equality.",
+      "litex_code": {
+        "broken": "zero-divisor.lit",
+        "corrected": "zero-divisor-fixed.lit"
+      },
+      "comments": {
+        "broken_run_result": "failure",
+        "corrected_run_result": "success",
+        "user_trust": 0,
+        "user_axioms": 0,
+        "verified_on": "2026-10-24",
+        "broken_sha256": "2bbc93a26316574762a976b62643188db3106f9a4d284c3ff6eb4d077df4c167",
+        "corrected_sha256": "a775e5ee357e4fe4d35433bda19397a5511c4c4200d95ac8df472ca94a3c6dff"
+      }
+    },
+    {
+      "id": "sqrt-domain",
+      "titles": {
+        "zh": "负数的实数平方根",
+        "en": "Real square root of a negative number"
+      },
+      "source": "Authored Litex reading exercise, 2026-10-24",
+      "problem": "The real square-root domain excludes negative inputs.",
+      "proof_idea": "Replace the input by a nonnegative real; sqrt(4)=2.",
+      "litex_code": {
+        "broken": "sqrt-domain.lit",
+        "corrected": "sqrt-domain-fixed.lit"
+      },
+      "comments": {
+        "broken_run_result": "failure",
+        "corrected_run_result": "success",
+        "user_trust": 0,
+        "user_axioms": 0,
+        "verified_on": "2026-10-24",
+        "broken_sha256": "c4239c9926309064c295afd18123b1c1ad0104115a97da7816e8feba4a3c21fd",
+        "corrected_sha256": "90faae358ed83d537bfe99ad5b12eed7d63c253ead2717fcfeda221ac5b16e0c"
+      }
+    },
+    {
+      "id": "missing-premise",
+      "titles": {
+        "zh": "三段论（缺少前提）",
+        "en": "Syllogism (missing premise)"
+      },
+      "source": "Authored Litex reading exercise, 2026-10-24",
+      "problem": "A universal implication does not establish its antecedent for Socrates.",
+      "proof_idea": "Assume is_human(socrates) together with the universal mortality rule, then specialize the rule.",
+      "litex_code": {
+        "broken": "missing-premise.lit",
+        "corrected": "missing-premise-fixed.lit"
+      },
+      "comments": {
+        "broken_run_result": "failure",
+        "corrected_run_result": "success",
+        "user_trust": 0,
+        "user_axioms": 0,
+        "verified_on": "2026-10-24",
+        "broken_sha256": "733e5e690c53fe7db1415b2fde6e38c1956c091e263e667f720a881c53af74f8",
+        "corrected_sha256": "7340190498237b37ced4f3c9cbb3adb54393efa7b50324bf7fd25dfd0f26e1fd"
+      }
+    }
+  ]
+}

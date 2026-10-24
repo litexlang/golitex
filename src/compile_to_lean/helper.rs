@@ -3,7 +3,7 @@ use crate::ast::stmt::{ProofBlockStmt, ReleaseAndExpandStmt, WitnessStmt};
 use crate::execute::execute_by_stmt::ExecByDefStmtResult;
 use crate::execute::execute_fact_stmt::verify_exist_shaped_fact::VerifyNotExistFactResult;
 use crate::prelude::*;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 /// Cartesian inference can only have produced a one-based literal projection.
 /// This only filters impossible lookups; its original store is still validated.
@@ -96,6 +96,7 @@ pub(super) fn validate_arithmetic_expression(object: &Obj) -> Result<(), LeanCom
     match object {
         Obj::Identifier(IdentifierObj::Plain { .. }) => Ok(()),
         Obj::Literal(Literal::Number(n)) => number_literal(n, "ℂ").map(|_| ()),
+        Obj::Literal(Literal::ImaginaryUnit(_)) => Ok(()),
         Obj::FnObj(call)
             if call.body.len() == 1 && !call.body[0].is_empty() =>
         {
@@ -132,8 +133,9 @@ pub(super) fn validate_arithmetic_expression(object: &Obj) -> Result<(), LeanCom
         Obj::ArithmeticOperator(ArithmeticOperator::Pow(x)) => {
             validate_arithmetic_expression(&x.base)?;
             validate_arithmetic_expression(&x.exponent)?;
-            closed_integer(&x.exponent)
-                .ok_or_else(|| LeanCompileError::unsupported("Rational/NonClosedIntegerPower"))?;
+            // The selected normalization retains a symbolic power as an
+            // opaque monomial. Its original WD still has to supply the exact
+            // supported exponent domain to the numeric observer.
             Ok(())
         }
         _ => Err(LeanCompileError::new(
@@ -334,6 +336,26 @@ pub(super) fn arithmetic_constructor_pairs<'a>(
 ) -> Option<(&'static str, Vec<(&'a Obj, &'a Obj)>)> {
     use ArithmeticOperator::*;
     match (left, right) {
+        (
+            Obj::IntegerOperator(IntegerOperator::Factorial(a)),
+            Obj::IntegerOperator(IntegerOperator::Factorial(b)),
+        ) => Some(("factorialValue", vec![(&a.arg, &b.arg)])),
+        (
+            Obj::IntegerOperator(IntegerOperator::Gcd(a)),
+            Obj::IntegerOperator(IntegerOperator::Gcd(b)),
+        ) => Some(("gcdValue", vec![(&a.left, &b.left), (&a.right, &b.right)])),
+        (
+            Obj::IntegerOperator(IntegerOperator::Lcm(a)),
+            Obj::IntegerOperator(IntegerOperator::Lcm(b)),
+        ) => Some(("lcmValue", vec![(&a.left, &b.left), (&a.right, &b.right)])),
+        (
+            Obj::IntegerOperator(IntegerOperator::Mod(a)),
+            Obj::IntegerOperator(IntegerOperator::Mod(b)),
+        ) => Some(("modValue", vec![(&a.left, &b.left), (&a.right, &b.right)])),
+        (
+            Obj::IntegerOperator(IntegerOperator::Quot(a)),
+            Obj::IntegerOperator(IntegerOperator::Quot(b)),
+        ) => Some(("quotValue", vec![(&a.left, &b.left), (&a.right, &b.right)])),
         (Obj::ArithmeticOperator(Add(a)), Obj::ArithmeticOperator(Add(b))) => {
             Some(("addValue", vec![(&a.left, &b.left), (&a.right, &b.right)]))
         }
@@ -365,10 +387,18 @@ pub(super) fn arithmetic_constructor_pairs<'a>(
 }
 
 pub(super) fn arithmetic_operation_term(operation: &str) -> String {
-    if matches!(operation, "absValue" | "sqrtValue") {
-        format!("(Litex.{operation} (M := M))")
-    } else {
-        format!("M.{operation}")
+    match operation {
+        "absValue" | "sqrtValue" | "signValue" => format!("(Litex.{operation} (M := M))"),
+        "minValue" => "(Litex.minMaxValue (M := M) false)".into(),
+        "factorialValue" => "(Litex.factorialValue (M := M))".into(),
+        "gcdValue" => "(Litex.gcdLcmValue (M := M) false)".into(),
+        "lcmValue" => "(Litex.gcdLcmValue (M := M) true)".into(),
+        "modValue" => "(Litex.integerDivisionValue (M := M) false)".into(),
+        "quotValue" => "(Litex.integerDivisionValue (M := M) true)".into(),
+        "floorValue" => "(Litex.roundingValue (M := M) false)".into(),
+        "ceilValue" => "(Litex.roundingValue (M := M) true)".into(),
+        "maxValue" => "(Litex.minMaxValue (M := M) true)".into(),
+        _ => format!("M.{operation}"),
     }
 }
 
@@ -398,22 +428,153 @@ pub(super) fn standard_term(set: &StandardSet) -> Result<String, LeanCompileErro
         StandardSet::C => "C",
         StandardSet::RPos => "RPos",
         StandardSet::NPos => "NPos",
-        StandardSet::QPos
-        | StandardSet::QNeg
-        | StandardSet::ZNeg
-        | StandardSet::RNeg
-        | StandardSet::QStar
-        | StandardSet::ZStar
-        | StandardSet::RStar
-        | StandardSet::CStar => {
-            return Err(LeanCompileError::unsupported("StandardSet/SignedOrNonzero"))
-        }
+        StandardSet::QPos => "QPos",
+        StandardSet::QNeg => "QNeg",
+        StandardSet::ZNeg => "ZNeg",
+        StandardSet::RNeg => "RNeg",
+        StandardSet::QStar => "QStar",
+        StandardSet::ZStar => "ZStar",
+        StandardSet::RStar => "RStar",
+        StandardSet::CStar => "CStar",
     };
     Ok(format!("(Litex.{name} (M := M))"))
 }
 
+/// Base projection for the additional bounded numeric carriers.
+pub(super) fn numeric_refinement(set: &StandardSet) -> Option<(StandardSet, &'static str)> {
+    Some(match set {
+        StandardSet::QPos => (StandardSet::Q, "QPos"),
+        StandardSet::QNeg => (StandardSet::Q, "QNeg"),
+        StandardSet::ZNeg => (StandardSet::Z, "ZNeg"),
+        StandardSet::RNeg => (StandardSet::R, "RNeg"),
+        StandardSet::QStar => (StandardSet::Q, "QStar"),
+        StandardSet::ZStar => (StandardSet::Z, "ZStar"),
+        StandardSet::RStar => (StandardSet::R, "RStar"),
+        StandardSet::CStar => (StandardSet::C, "CStar"),
+        _ => return None,
+    })
+}
+
+/// Replay a selected standard inclusion; no environment lookup or proof search.
+pub(super) fn standard_inclusion_term(
+    source: &StandardSet,
+    target: &StandardSet,
+    object: &str,
+    member: &str,
+) -> Result<String, LeanCompileError> {
+    if source == target {
+        return Ok(member.to_string());
+    }
+    let refinement = numeric_refinement(target).or_else(|| match target {
+        StandardSet::RPos => Some((StandardSet::R, "RPos")),
+        _ => None,
+    });
+    if let Some((base, name)) = refinement {
+        let condition = match (source, target) {
+            (
+                StandardSet::NPos | StandardSet::QPos | StandardSet::RPos,
+                StandardSet::QPos | StandardSet::RPos,
+            ) => "positive",
+            (
+                StandardSet::ZNeg | StandardSet::QNeg | StandardSet::RNeg,
+                StandardSet::ZNeg | StandardSet::QNeg | StandardSet::RNeg,
+            ) => "negative",
+            (
+                _,
+                StandardSet::ZStar | StandardSet::QStar | StandardSet::RStar | StandardSet::CStar,
+            ) => "nonzero",
+            _ => {
+                return Err(LeanCompileError::unsupported(
+                    "StructuralMembership/StandardSuperset",
+                ))
+            }
+        };
+        let base_proof = standard_inclusion_term(source, &base, object, member)?;
+        let sign = standard_sign_term(source, condition, object, member)?;
+        return Ok(format!(
+            "(Litex.in{name}_intro {object} {base_proof} {sign})"
+        ));
+    }
+    if let Some((base, name)) = numeric_refinement(source) {
+        let base_proof = format!("(Litex.in{name}_base {object} {member})");
+        return standard_inclusion_term(&base, target, object, &base_proof);
+    }
+    if *source == StandardSet::NPos {
+        return standard_inclusion_term(
+            &StandardSet::N,
+            target,
+            object,
+            &format!("(Litex.inNPos_natural {object} {member})"),
+        );
+    }
+    if *source == StandardSet::RPos {
+        return standard_inclusion_term(
+            &StandardSet::R,
+            target,
+            object,
+            &format!("(Litex.inRPos_real {object} {member})"),
+        );
+    }
+    let bridge = match (source, target) {
+        (StandardSet::N, StandardSet::Z) => "naturalToInteger",
+        (StandardSet::N, StandardSet::Q) => "naturalToRational",
+        (StandardSet::N, StandardSet::R) => "naturalToReal",
+        (StandardSet::N, StandardSet::C) => "naturalToComplex",
+        (StandardSet::Z, StandardSet::Q) => "integerToRational",
+        (StandardSet::Z, StandardSet::R) => "integerToReal",
+        (StandardSet::Z, StandardSet::C) => "integerToComplex",
+        (StandardSet::Q, StandardSet::R) => "rationalToReal",
+        (StandardSet::Q, StandardSet::C) => "rationalToComplex",
+        (StandardSet::R, StandardSet::C) => "realToComplex",
+        _ => {
+            return Err(LeanCompileError::unsupported(
+                "StructuralMembership/StandardSuperset",
+            ))
+        }
+    };
+    Ok(format!("(Litex.{bridge} {object} {member})"))
+}
+
+pub(super) fn standard_sign_term(
+    source: &StandardSet,
+    condition: &str,
+    object: &str,
+    member: &str,
+) -> Result<String, LeanCompileError> {
+    let (name, sign) = match source {
+        StandardSet::NPos => ("NPos", "positive"),
+        StandardSet::QPos => ("QPos", "positive"),
+        StandardSet::RPos => ("RPos", "positive"),
+        StandardSet::ZNeg => ("ZNeg", "negative"),
+        StandardSet::QNeg => ("QNeg", "negative"),
+        StandardSet::RNeg => ("RNeg", "negative"),
+        StandardSet::ZStar => ("ZStar", "nonzero"),
+        StandardSet::QStar => ("QStar", "nonzero"),
+        StandardSet::RStar => ("RStar", "nonzero"),
+        StandardSet::CStar => ("CStar", "nonzero"),
+        _ => return Err(LeanCompileError::unsupported("StandardSet/Sign")),
+    };
+    let proof = format!("(Litex.in{name}_{sign} {object} {member})");
+    if sign == condition {
+        return Ok(proof);
+    }
+    if condition == "nonzero" {
+        return Ok(match sign {
+            "positive" => format!(
+                "(fun h => (Litex.ltNotSame (Litex.number (M := M) 0) {object} {proof}) h.symm)"
+            ),
+            "negative" => format!("(Litex.ltNotSame {object} (Litex.number (M := M) 0) {proof})"),
+            _ => unreachable!(),
+        });
+    }
+    Err(LeanCompileError::unsupported("StandardSet/Sign"))
+}
+
 pub(super) fn unsupported_wd_definition(proof: &ObjWellDefinedProofByDef) -> LeanCompileError {
     match proof {
+        ObjWellDefinedProofByDef::MatrixOperator(_) => {
+            LeanCompileError::unsupported("WD/MatrixOperator")
+        }
         ObjWellDefinedProofByDef::IntegralOperator(_) => {
             LeanCompileError::unsupported("WD/RiemannIntegral")
         }
@@ -592,6 +753,10 @@ pub(super) fn source_subject(result: &VerifyFactResult) -> Result<Fact, LeanComp
 
 pub(super) fn verified_subject(result: &VerifyFactResult) -> Option<Fact> {
     match result {
+        VerifyFactResult::NotForall(result) => match result.as_ref() {
+            crate::execute::execute_fact_stmt::verify_not_forall_fact::VerifyNotForallFactResult::Success(p) => Some(Fact::NotForall(p.fact.clone())),
+            _ => None,
+        },
         VerifyFactResult::ForallFactWithIff(result) => match result.as_ref() {
             VerifyForallFactWithIffResult::Success(proof) => Some(Fact::ForallFactWithIff(proof.fact.clone())),
             _ => None,
@@ -634,7 +799,6 @@ pub(super) fn verified_subject(result: &VerifyFactResult) -> Option<Fact> {
             VerifyExistShapedFactResult::NotExistFact(VerifyNotExistFactResult::Success(proof)) => Some(crate::ast::fact::exist_shaped_fact_to_fact(&proof.fact)),
             _ => None,
         },
-        _ => None,
     }
 }
 
@@ -642,7 +806,59 @@ pub(super) fn validate_statement_capture(
     source: &Stmt,
     result: &ExecStmtResult,
 ) -> Result<(), LeanCompileError> {
+    let enumeration_source = match source {
+        Stmt::By(ByStmt::ByForStmt(s)) => Some((&s.forall_fact, s.proof.as_slice())),
+        Stmt::By(ByStmt::ByEnumerateFiniteSetStmt(s)) => Some((&s.forall_fact, s.proof.as_slice())),
+        _ => None,
+    };
+    if let Some((source, steps)) = enumeration_source {
+        let Some((_, assignments, stored)) = super::source_position::enumeration_statement(result)
+        else {
+            return Err(LeanCompileError::unsupported("Enumeration/SourceCapture"));
+        };
+        if !matches!(&stored.store, StoreFactResult::ForallFact(f) if f.fact == *source) {
+            return Err(LeanCompileError::unsupported("Enumeration/SourceSubject"));
+        }
+        for assignment in assignments {
+            if let crate::execute::execute_by_stmt::EnumerateAssignmentOutcome::Proved {
+                proof_steps,
+                ..
+            } = &assignment.outcome
+            {
+                if !validate_captured_steps(steps, proof_steps)? {
+                    return Err(LeanCompileError::unsupported("Enumeration/SourceSteps"));
+                }
+            }
+        }
+        return Ok(());
+    }
     let matches = match (source, result) {
+        (Stmt::By(ByStmt::ByFnExtensionStmt(stmt)), ExecStmtResult::By(ExecByStmtResult::FnExtension(
+            crate::execute::execute_by_stmt::ExecByFnExtensionStmtResult::Success(proof)))) => {
+            matches!(&proof.stored.store, StoreFactResult::AtomicFact(s) if matches!(&s.fact, AtomicFact::EqualFact(f)
+                if f.left.ir() == stmt.left.ir() && f.right.ir() == stmt.right.ir()))
+                && validate_captured_steps(&stmt.proof, &proof.proof_steps)?
+        }
+        (Stmt::By(ByStmt::ByExtensionStmt(stmt)), ExecStmtResult::By(ExecByStmtResult::Extension(
+            crate::execute::execute_by_stmt::ExecByExtensionStmtResult::Success(proof)))) => {
+            matches!(source_subject(&proof.left_to_right)?, Fact::AtomicFact(AtomicFact::SubsetFact(f))
+                if f.left.ir() == stmt.left.ir() && f.right.ir() == stmt.right.ir())
+                && matches!(source_subject(&proof.right_to_left)?, Fact::AtomicFact(AtomicFact::SubsetFact(f))
+                    if f.left.ir() == stmt.right.ir() && f.right.ir() == stmt.left.ir())
+                && validate_captured_steps(&stmt.proof, &proof.proof_steps)?
+        }
+        (Stmt::Register(source), ExecStmtResult::Register(result)) => {
+            use crate::ast::stmt::RegisterStmt;
+            use crate::execute::execute_register_stmt::ExecRegisterStmtResult;
+            let source = match (source, result) {
+                (RegisterStmt::RegisterReflexivePropStmt(s), ExecRegisterStmtResult::ReflexiveProp(_)) => &s.forall_fact,
+                (RegisterStmt::RegisterSymmetricPropStmt(s), ExecRegisterStmtResult::SymmetricProp(_)) => &s.forall_fact,
+                (RegisterStmt::RegisterTransitivePropStmt(s), ExecRegisterStmtResult::TransitiveProp(_)) => &s.forall_fact,
+                _ => return Err(LeanCompileError::unsupported("Register/CaptureFamily")),
+            };
+            let proof = crate::compile_to_lean::compile_register_stmt_result::registration_proof(result)?;
+            source_subject(proof)? == Fact::ForallFact(source.clone())
+        }
         (
             Stmt::Definition(DefinitionStmt::DefineObj(DefineObjStmt::HaveObjByExistFactsStmt(
                 source,
@@ -653,6 +869,17 @@ pub(super) fn validate_statement_capture(
                 ),
             )),
         ) => source == &proof.statement,
+
+        (
+            Stmt::ProofBlock(ProofBlockStmt::SketchStmt(source)),
+            ExecStmtResult::ProofBlock(
+                crate::execute::execute_proof_block_stmt::ExecProofBlockStmtResult::Sketch(
+                    crate::execute::execute_proof_block_stmt::ExecSketchStmtResult::Success(proof),
+                ),
+            ),
+        ) => source.proof.len() == proof.proof_steps.len()
+            && source.proof.iter().zip(&proof.proof_steps)
+                .all(|(source, step)| validate_statement_capture(source, step).is_ok()),
 
         (
             Stmt::ProofBlock(ProofBlockStmt::ClaimStmt(source)),
@@ -814,6 +1041,37 @@ pub(super) fn validate_statement_capture(
             }
         }
         (
+            Stmt::ReleaseAndExpand(ReleaseAndExpandStmt::ExpandRangeStmt(stmt)),
+            ExecStmtResult::ReleaseAndExpand(crate::execute::ExecReleaseAndExpandStmtResult::ExpandRange(
+                crate::execute::execute_by_stmt::ExecExpandRangeStmtResult::Success(p),
+            )),
+        ) => {
+            let set = match &stmt.range {
+                crate::ast::stmt::ClosedRangeOrRange::Range(r) => Obj::SetFormer(SetFormer::Range(r.clone())),
+                crate::ast::stmt::ClosedRangeOrRange::ClosedRange(r) => Obj::SetFormer(SetFormer::ClosedRange(r.clone())),
+            };
+            matches!(verified_subject(&p.membership), Some(Fact::AtomicFact(AtomicFact::InFact(f)))
+                if f.element == stmt.element && f.set == set)
+        }
+        (
+            Stmt::ReleaseAndExpand(ReleaseAndExpandStmt::ReleaseCartDefStmt(stmt)),
+            ExecStmtResult::ReleaseAndExpand(crate::execute::ExecReleaseAndExpandStmtResult::CartDef(
+                crate::execute::execute_release_cart_def_stmt::ExecReleaseCartDefStmtResult::Success(p),
+            )),
+        ) => stmt == &p.statement,
+        (
+            Stmt::ReleaseAndExpand(ReleaseAndExpandStmt::ReleaseTupleDefStmt(stmt)),
+            ExecStmtResult::ReleaseAndExpand(crate::execute::ExecReleaseAndExpandStmtResult::TupleDef(
+                crate::execute::execute_release_tuple_def_stmt::ExecReleaseTupleDefStmtResult::Success(p),
+            )),
+        ) => stmt == &p.statement,
+        (
+            Stmt::ReleaseAndExpand(ReleaseAndExpandStmt::ReleaseObjDefStmt(stmt)),
+            ExecStmtResult::ReleaseAndExpand(crate::execute::ExecReleaseAndExpandStmtResult::ObjDef(
+                crate::execute::execute_release_obj_def_stmt::ExecReleaseObjDefStmtResult::Success(p),
+            )),
+        ) => stmt == &p.statement,
+        (
             Stmt::ReleaseAndExpand(ReleaseAndExpandStmt::ReleaseThmStmt(stmt)),
             ExecStmtResult::ReleaseAndExpand(crate::execute::ExecReleaseAndExpandStmtResult::Thm(
                 crate::execute::execute_by_stmt::ExecReleaseThmStmtResult::Success(proof),
@@ -873,6 +1131,66 @@ pub(super) fn validate_statement_capture(
                 }
             }
         }
+        (
+            Stmt::By(ByStmt::ByStrongInducStmt(stmt)),
+            ExecStmtResult::By(ExecByStmtResult::StrongInduc(
+                crate::execute::execute_by_stmt::ExecByStrongInducStmtResult::Success(proof),
+            )),
+        ) => {
+            let expected: Vec<Fact> = stmt.to_prove.iter().cloned().map(Fact::from).collect();
+            if stmt.param_binding != proof.parameter.name
+                || stmt.induc_from != proof.induc_from
+                || expected != proof.goals
+            {
+                false
+            } else {
+                let (base, step) = match &proof.body {
+                    crate::execute::execute_by_stmt::ByInducBodySuccess::Structured {
+                        base,
+                        step,
+                    } => {
+                        if stmt.base_proof.is_none()
+                            || stmt.step_proof.is_none()
+                            || !stmt.proof.is_empty()
+                        {
+                            return Err(LeanCompileError::unsupported("Induction/BodyShape"));
+                        }
+                        (base, step)
+                    }
+                    crate::execute::execute_by_stmt::ByInducBodySuccess::Unstructured {
+                        base,
+                        step,
+                    } => {
+                        if stmt.base_proof.is_some() || stmt.step_proof.is_some() {
+                            return Err(LeanCompileError::unsupported("Induction/BodyShape"));
+                        }
+                        (base, step)
+                    }
+                };
+                let base_source = stmt.base_proof.as_deref().unwrap_or(&stmt.proof);
+                let step_source = stmt.step_proof.as_deref().unwrap_or(&stmt.proof);
+                if base_source.len() != base.proof_steps.len()
+                    || step_source.len() != step.proof_steps.len()
+                {
+                    false
+                } else {
+                    for (source, result) in base_source
+                        .iter()
+                        .zip(&base.proof_steps)
+                        .chain(step_source.iter().zip(&step.proof_steps))
+                    {
+                        validate_statement_capture(source, result)?;
+                    }
+                    true
+                }
+            }
+        }
+        (
+            Stmt::Definition(DefinitionStmt::DefineObj(DefineObjStmt::HaveByPreimageStmt(stmt))),
+            ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
+                ExecDefineObjStmtResult::HaveByFnPreimage(crate::execute::ExecHaveByFnPreimageStmtResult::Success(proof)),
+            )),
+        ) => stmt == &proof.statement,
         _ => return Err(LeanCompileError::unsupported("Theorem/ProofStepCapture")),
     };
     if matches {
@@ -927,6 +1245,24 @@ pub(super) fn instantiated_object_matches(
         }
     }
     match (expected, actual) {
+        (Obj::SetFormer(SetFormer::ListSet(a)), Obj::SetFormer(SetFormer::ListSet(b))) => {
+            a.list.len() == b.list.len()
+                && a.list
+                    .iter()
+                    .zip(&b.list)
+                    .all(|(a, b)| instantiated_object_matches(a, b, substitution))
+        }
+        (
+            Obj::SetFormer(SetFormer::FiniteSeqSet(a)),
+            Obj::SetFormer(SetFormer::FiniteSeqSet(b)),
+        ) => {
+            instantiated_object_matches(&a.set, &b.set, substitution)
+                && instantiated_object_matches(&a.n, &b.n, substitution)
+        }
+        (Obj::SetOperator(SetOperator::Union(a)), Obj::SetOperator(SetOperator::Union(b))) => {
+            instantiated_object_matches(&a.left, &b.left, substitution)
+                && instantiated_object_matches(&a.right, &b.right, substitution)
+        }
         (
             Obj::SetFormer(SetFormer::SetBuilder(expected)),
             Obj::SetFormer(SetFormer::SetBuilder(actual)),
@@ -1063,6 +1399,64 @@ pub(super) fn instantiated_object_matches(
             Obj::ArithmeticOperator(ArithmeticOperator::Abs(b)),
         ) => instantiated_object_matches(&a.arg, &b.arg, substitution),
         (
+            Obj::ArithmeticOperator(ArithmeticOperator::Sign(a)),
+            Obj::ArithmeticOperator(ArithmeticOperator::Sign(b)),
+        ) => instantiated_object_matches(&a.arg, &b.arg, substitution),
+        (
+            Obj::IntegerOperator(IntegerOperator::Factorial(a)),
+            Obj::IntegerOperator(IntegerOperator::Factorial(b)),
+        ) => instantiated_object_matches(&a.arg, &b.arg, substitution),
+        (
+            Obj::IntegerOperator(IntegerOperator::Gcd(a)),
+            Obj::IntegerOperator(IntegerOperator::Gcd(b)),
+        ) => {
+            instantiated_object_matches(&a.left, &b.left, substitution)
+                && instantiated_object_matches(&a.right, &b.right, substitution)
+        }
+        (
+            Obj::IntegerOperator(IntegerOperator::Lcm(a)),
+            Obj::IntegerOperator(IntegerOperator::Lcm(b)),
+        ) => {
+            instantiated_object_matches(&a.left, &b.left, substitution)
+                && instantiated_object_matches(&a.right, &b.right, substitution)
+        }
+        (
+            Obj::IntegerOperator(IntegerOperator::Mod(a)),
+            Obj::IntegerOperator(IntegerOperator::Mod(b)),
+        ) => {
+            instantiated_object_matches(&a.left, &b.left, substitution)
+                && instantiated_object_matches(&a.right, &b.right, substitution)
+        }
+        (
+            Obj::IntegerOperator(IntegerOperator::Quot(a)),
+            Obj::IntegerOperator(IntegerOperator::Quot(b)),
+        ) => {
+            instantiated_object_matches(&a.left, &b.left, substitution)
+                && instantiated_object_matches(&a.right, &b.right, substitution)
+        }
+        (
+            Obj::ArithmeticOperator(ArithmeticOperator::Floor(a)),
+            Obj::ArithmeticOperator(ArithmeticOperator::Floor(b)),
+        ) => instantiated_object_matches(&a.arg, &b.arg, substitution),
+        (
+            Obj::ArithmeticOperator(ArithmeticOperator::Ceil(a)),
+            Obj::ArithmeticOperator(ArithmeticOperator::Ceil(b)),
+        ) => instantiated_object_matches(&a.arg, &b.arg, substitution),
+        (
+            Obj::ArithmeticOperator(ArithmeticOperator::Min(a)),
+            Obj::ArithmeticOperator(ArithmeticOperator::Min(b)),
+        ) => {
+            instantiated_object_matches(&a.left, &b.left, substitution)
+                && instantiated_object_matches(&a.right, &b.right, substitution)
+        }
+        (
+            Obj::ArithmeticOperator(ArithmeticOperator::Max(a)),
+            Obj::ArithmeticOperator(ArithmeticOperator::Max(b)),
+        ) => {
+            instantiated_object_matches(&a.left, &b.left, substitution)
+                && instantiated_object_matches(&a.right, &b.right, substitution)
+        }
+        (
             Obj::ExpLogOperator(ExpLogOperator::Sqrt(a)),
             Obj::ExpLogOperator(ExpLogOperator::Sqrt(b)),
         ) => instantiated_object_matches(&a.arg, &b.arg, substitution),
@@ -1084,12 +1478,78 @@ fn function_head_object_for_match(head: &FnObjHead) -> Obj {
     }
 }
 
+/// Compare binders in source order, preserving dependent carriers and free
+/// inputs. The returned substitution contains only the original captured IDs.
+pub(super) fn quantified_parameter_substitution(
+    source: &TypedParameterList,
+    goal: &TypedParameterList,
+    substitution: &HashMap<IdentifierId, Obj>,
+) -> Option<HashMap<IdentifierId, Obj>> {
+    if source.groups.len() != goal.groups.len() {
+        return None;
+    }
+    let mut scoped = substitution.clone();
+    let mut local_ids = HashSet::new();
+    let mut goal_ids = HashSet::new();
+    let mut outer_targets = HashSet::new();
+    for value in substitution.values() {
+        crate::instantiate::collect_free_plain_ids(value, &HashSet::new(), &mut outer_targets);
+    }
+    for (old, new) in source.groups.iter().zip(&goal.groups) {
+        if old.params.len() != new.params.len()
+            || !match (&old.param_type, &new.param_type) {
+                (ParamType::Obj(a), ParamType::Obj(b)) => {
+                    instantiated_object_matches(a, b, &scoped)
+                }
+                (ParamType::Set(_), ParamType::Set(_)) => true,
+                _ => false,
+            }
+        {
+            return None;
+        }
+        for (old, new) in old.params.iter().zip(&new.params) {
+            if substitution.contains_key(&old.id)
+                || outer_targets.contains(&new.id)
+                || !local_ids.insert(old.id)
+                || !goal_ids.insert(new.id)
+            {
+                return None;
+            }
+            scoped.insert(old.id, Obj::Identifier(IdentifierObj::from_bound_name(new)));
+        }
+    }
+    Some(scoped)
+}
+
 pub(super) fn instantiated_fact_matches(
     expected: &Fact,
     actual: &Fact,
     substitution: &HashMap<IdentifierId, Obj>,
 ) -> bool {
     match (expected, actual) {
+        (Fact::NotForall(expected), Fact::NotForall(actual)) => {
+            let Some(scoped) = quantified_parameter_substitution(
+                &expected.typed_parameters,
+                &actual.typed_parameters,
+                substitution,
+            ) else {
+                return false;
+            };
+            expected.dom_facts.len() == actual.dom_facts.len()
+                && expected.then_facts.len() == actual.then_facts.len()
+                && expected
+                    .dom_facts
+                    .iter()
+                    .chain(&expected.then_facts)
+                    .zip(actual.dom_facts.iter().chain(&actual.then_facts))
+                    .all(|(a, b)| {
+                        instantiated_fact_matches(
+                            &crate::instantiate::quantifier_free_fact_to_fact(a.clone()),
+                            &crate::instantiate::quantifier_free_fact_to_fact(b.clone()),
+                            &scoped,
+                        )
+                    })
+        }
         (Fact::AtomicFact(expected), Fact::AtomicFact(actual))
             if expected.prop_name() == actual.prop_name()
                 && atomic_fact_has_positive_polarity(expected)
@@ -1131,45 +1591,10 @@ pub(super) fn instantiated_fact_matches(
                         )
                     })
         }
-        (Fact::ExistFact(expected), Fact::ExistFact(actual)) => {
-            if expected.typed_parameters.groups.len() != actual.typed_parameters.groups.len()
-                || expected.facts.len() != actual.facts.len()
-            {
-                return false;
-            }
-            let mut scoped = substitution.clone();
-            for id in expected.typed_parameters.ordered_param_ids() {
-                scoped.remove(&id);
-            }
-            expected
-                .typed_parameters
-                .groups
-                .iter()
-                .zip(&actual.typed_parameters.groups)
-                .all(|(left, right)| {
-                    left.params
-                        .iter()
-                        .map(|p| p.id)
-                        .eq(right.params.iter().map(|p| p.id))
-                        && match (&left.param_type, &right.param_type) {
-                            (ParamType::Obj(left), ParamType::Obj(right)) => {
-                                instantiated_object_matches(left, right, &scoped)
-                            }
-                            (ParamType::Set(_), ParamType::Set(_)) => true,
-                            _ => false,
-                        }
-                })
-                && expected
-                    .facts
-                    .iter()
-                    .zip(&actual.facts)
-                    .all(|(left, right)| {
-                        instantiated_fact_matches(
-                            &crate::instantiate::quantifier_free_fact_to_fact(left.clone()),
-                            &crate::instantiate::quantifier_free_fact_to_fact(right.clone()),
-                            &scoped,
-                        )
-                    })
+        (Fact::ExistFact(expected), Fact::ExistFact(actual))
+        | (Fact::NotExistFact(expected), Fact::NotExistFact(actual))
+        | (Fact::ExistUniqueFact(expected), Fact::ExistUniqueFact(actual)) => {
+            super::compile_fact_stmt_result::exist_instance_matches(expected, actual, substitution)
         }
         (Fact::ChainFact(expected), Fact::ChainFact(actual)) => {
             expected.prop_names == actual.prop_names

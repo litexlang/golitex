@@ -1,0 +1,976 @@
+{
+  "date": "2026-10-24",
+  "status": "complete",
+  "scope": "Seven complete explanatory mathematical sample chapters; eight selected full source gates, seven standalone snippet gates, context-excerpt provenance, links and a rendered geometry figure.",
+  "build": {
+    "command": "cargo build --release",
+    "exit_code": 0,
+    "version": "Litex 1.1.2-beta",
+    "binary_sha256": "3f26e9f3551eff13a4e8de2201502a2a80be617cdace20d9f242e785f6a41d8c",
+    "pinned_executable": "tmp/2026-10-24/mathematical-sample-chapters/litex-pinned"
+  },
+  "source_gates": [
+    {
+      "source": "showcases/abstract_algebra/abstract_algebra.lit",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-24/mathematical-sample-chapters/litex-pinned",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "showcases/abstract_algebra/abstract_algebra.lit"
+      ],
+      "exit_code": 0,
+      "seconds": 3.033,
+      "envelope": {
+        "kind": "run",
+        "run_result": "success",
+        "session_terminated": false,
+        "termination": null
+      },
+      "sha256": "594790be8dfc5b761e7112c83d5467a0527a354a415a1240bec537c8a6b15b76",
+      "baseline_unchanged": true,
+      "unchanged_during_gate": true,
+      "passed": true,
+      "stdout": "tmp/2026-10-24/mathematical-sample-chapters/showcases__abstract_algebra__abstract_algebra.stdout.json",
+      "configuration_sha256": "ff0ea75dedd5611074abe9ee89d88d23cb30e905e73584617757bd28bd98c734"
+    },
+    {
+      "source": "showcases/linear_algebra/linear_algebra.lit",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-24/mathematical-sample-chapters/litex-pinned",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "showcases/linear_algebra/linear_algebra.lit"
+      ],
+      "exit_code": 0,
+      "envelope": {
+        "kind": "run",
+        "run_result": "success",
+        "session_terminated": false,
+        "termination": null
+      },
+      "sha256": "b9fa60faead345dacbf5fce95c5f299a019aabad5fe73a4dfd9d17c0aeed1195",
+      "baseline_unchanged": false,
+      "unchanged_during_gate": true,
+      "passed": true,
+      "stdout": "tmp/2026-10-24/mathematical-sample-chapters/linear-algebra-final.stdout.json",
+      "accepted_statements": 194,
+      "configuration_sha256": "cdba5cb777ec1e9c9ce598454d337e5a108fe49ac875d43bc719a540d7dddc7d"
+    },
+    {
+      "source": "showcases/math_concepts_in_litex/10_real_analysis_in_nutshell/main.lit",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-24/mathematical-sample-chapters/litex-pinned",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "showcases/math_concepts_in_litex/10_real_analysis_in_nutshell/main.lit"
+      ],
+      "exit_code": 0,
+      "seconds": 0.326,
+      "envelope": {
+        "kind": "run",
+        "run_result": "success",
+        "session_terminated": false,
+        "termination": null
+      },
+      "sha256": "7147ad83cea370558ec5a1bf137f473288a4f037be7fd8f980ecba45fcf73a5a",
+      "baseline_unchanged": true,
+      "unchanged_during_gate": true,
+      "passed": true,
+      "stdout": "tmp/2026-10-24/mathematical-sample-chapters/showcases__math_concepts_in_litex__10_real_analysis_in_nutshell__main.stdout.json",
+      "configuration_sha256": "3fdcb5ab744932ed964ad51994de2167c6408ae014f9c107e55ca0fb997ccf1b"
+    },
+    {
+      "source": "showcases/math_concepts_in_litex/2_euclidean_geometry/main.lit",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-24/mathematical-sample-chapters/litex-pinned",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "showcases/math_concepts_in_litex/2_euclidean_geometry/main.lit"
+      ],
+      "exit_code": 0,
+      "seconds": 11.031,
+      "envelope": {
+        "kind": "run",
+        "run_result": "success",
+        "session_terminated": false,
+        "termination": null
+      },
+      "sha256": "949ab17b4737dafc1e442b8320e068dede75797cfa76045c9a8859d11ba4fe9c",
+      "baseline_unchanged": true,
+      "unchanged_during_gate": true,
+      "passed": true,
+      "stdout": "tmp/2026-10-24/mathematical-sample-chapters/showcases__math_concepts_in_litex__2_euclidean_geometry__main.stdout.json",
+      "configuration_sha256": "3fdcb5ab744932ed964ad51994de2167c6408ae014f9c107e55ca0fb997ccf1b"
+    },
+    {
+      "source": "showcases/math_concepts_in_litex/3_number_theory/main.lit",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-24/mathematical-sample-chapters/litex-pinned",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "showcases/math_concepts_in_litex/3_number_theory/main.lit"
+      ],
+      "exit_code": 0,
+      "seconds": 0.105,
+      "envelope": {
+        "kind": "run",
+        "run_result": "success",
+        "session_terminated": false,
+        "termination": null
+      },
+      "sha256": "8bc3acbd59b3a43804c82442e6b5ae12af1c5e6ba8316fb297a23bfc6af02fc4",
+      "baseline_unchanged": true,
+      "unchanged_during_gate": true,
+      "passed": true,
+      "stdout": "tmp/2026-10-24/mathematical-sample-chapters/showcases__math_concepts_in_litex__3_number_theory__main.stdout.json",
+      "configuration_sha256": "3fdcb5ab744932ed964ad51994de2167c6408ae014f9c107e55ca0fb997ccf1b"
+    },
+    {
+      "source": "showcases/math_concepts_in_litex/8_probability_and_statistics_in_nutshell/main.lit",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-24/mathematical-sample-chapters/litex-pinned",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "showcases/math_concepts_in_litex/8_probability_and_statistics_in_nutshell/main.lit"
+      ],
+      "exit_code": 0,
+      "seconds": 8.994,
+      "envelope": {
+        "kind": "run",
+        "run_result": "success",
+        "session_terminated": false,
+        "termination": null
+      },
+      "sha256": "2191b2ac85b12713a322d19947a1f7d9bf614a4a470a0c1e61516e985c9a8545",
+      "baseline_unchanged": true,
+      "unchanged_during_gate": true,
+      "passed": true,
+      "stdout": "tmp/2026-10-24/mathematical-sample-chapters/showcases__math_concepts_in_litex__8_probability_and_statistics_in_nutshell__main.stdout.json",
+      "configuration_sha256": "3fdcb5ab744932ed964ad51994de2167c6408ae014f9c107e55ca0fb997ccf1b"
+    },
+    {
+      "source": "showcases/topology/topology.lit",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-24/mathematical-sample-chapters/litex-pinned",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "showcases/topology/topology.lit"
+      ],
+      "exit_code": 0,
+      "seconds": 39.507,
+      "envelope": {
+        "kind": "run",
+        "run_result": "success",
+        "session_terminated": false,
+        "termination": null
+      },
+      "sha256": "ff624531df882a106557893e9fcf9db0679ebc019c0ebfade20a3f055896338b",
+      "baseline_unchanged": true,
+      "unchanged_during_gate": true,
+      "passed": true,
+      "stdout": "tmp/2026-10-24/mathematical-sample-chapters/showcases__topology__topology.stdout.json",
+      "configuration_sha256": "3c33f39cfcb4d898471b1bdeebcf45570c5e192fcdcf6050f73b65d3ef94b7ad"
+    },
+    {
+      "source": "showcases/2D_Geometry/IMO/problem_12/solution.lit",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-24/mathematical-sample-chapters/litex-pinned",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "showcases/2D_Geometry/IMO/problem_12/solution.lit"
+      ],
+      "exit_code": 0,
+      "envelope": {
+        "kind": "run",
+        "run_result": "success",
+        "session_terminated": false,
+        "termination": null
+      },
+      "sha256": "5aafe004109c25a1eae78e2338f1bc6926659c7a5012930582e36a39632caa18",
+      "passed": true,
+      "accepted_statements": 14,
+      "stdout": "tmp/2026-10-24/mathematical-sample-chapters/geometry-imo-final.stdout.json",
+      "configuration_sha256": "451d6fece213e27da7833478612dc97389483cb59a4f317318f302040a3218c6"
+    }
+  ],
+  "initial_linear_algebra_failure": {
+    "source": "showcases/linear_algebra/linear_algebra.lit",
+    "command": [
+      "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-24/mathematical-sample-chapters/litex-pinned",
+      "-lang",
+      "en",
+      "-strict",
+      "-f",
+      "showcases/linear_algebra/linear_algebra.lit"
+    ],
+    "exit_code": 1,
+    "seconds": 9.639,
+    "envelope": {
+      "kind": "run",
+      "run_result": "failure",
+      "session_terminated": false,
+      "termination": null
+    },
+    "sha256": "4069ba25d55d30d2786e48cd7e49465ce8e2f51de00ac8d2da8ce2c37e488139",
+    "baseline_unchanged": true,
+    "unchanged_during_gate": true,
+    "passed": false,
+    "stdout": "tmp/2026-10-24/mathematical-sample-chapters/showcases__linear_algebra__linear_algebra.stdout.json"
+  },
+  "proof_compatibility_repair": {
+    "source": "showcases/linear_algebra/linear_algebra.lit",
+    "original_sha256": "4069ba25d55d30d2786e48cd7e49465ce8e2f51de00ac8d2da8ce2c37e488139",
+    "current_sha256": "b9fa60faead345dacbf5fce95c5f299a019aabad5fe73a4dfd9d17c0aeed1195",
+    "only_delta": "Bound-variable alpha-renaming: trace -> partial_sums",
+    "renamed_token_occurrences": 57,
+    "affected_top_level_declarations": 8,
+    "accepted_session_statement_frames": 28,
+    "session_journal": "tmp/2026-10-24/mathematical-sample-chapters/linear-algebra-repair-journal.json",
+    "before": "witness exist trace fn(k closed_range(0, n)) V st {$is_partial_sum(K, field, V, space, n, coefficients, vectors, trace), sums(n) = trace(n)} from sums",
+    "after": "witness exist partial_sums fn(k closed_range(0, n)) V st {$is_partial_sum(K, field, V, space, n, coefficients, vectors, partial_sums), sums(n) = partial_sums(n)} from sums",
+    "canonical_source_matches_alpha_renamed_baseline": true
+  },
+  "chapters": [
+    {
+      "path": "docs/mathematical_sample_chapters/01-linear-algebra.md",
+      "words_including_code": 944,
+      "sha256": "94de1bb79fb21ccab0669aa1379f8eb46d1aa062354694d15fc2f324434bbcd0",
+      "mathematical_review": "Standard-plane spanning, independence and coordinate uniqueness are distinguished; alternative-basis exercise is explanatory mathematics.",
+      "exercise_answers_reviewed": true
+    },
+    {
+      "path": "docs/mathematical_sample_chapters/02-abstract-algebra.md",
+      "words_including_code": 867,
+      "sha256": "d8ab4c0457280c257a3b3729dcb623774bcc6754aca6fe8fa7119a86932c47f5",
+      "mathematical_review": "Kernel criterion uses the homomorphism premise, inverse preservation and cancellation without commutativity; injectivity is distinguished from surjectivity.",
+      "exercise_answers_reviewed": true
+    },
+    {
+      "path": "docs/mathematical_sample_chapters/03-topology.md",
+      "words_including_code": 997,
+      "sha256": "f88f206a8fed872763f7f4158272a6564c251b8fdb485d78b5ccf45f81139038",
+      "mathematical_review": "Two-point continuity directions and the non-homeomorphism are correct; composition and relative-complement arguments retain actual carriers.",
+      "exercise_answers_reviewed": true
+    },
+    {
+      "path": "docs/mathematical_sample_chapters/04-analysis.md",
+      "words_including_code": 975,
+      "sha256": "bd3625ceeabbaf1b6cfade4c6045006be73ef7364d9cbb8b0c9565e0f9e7bf91",
+      "mathematical_review": "Positive indices, epsilon quantifier order, common tail and positive distance are explicit; selector remains convergence-guarded.",
+      "exercise_answers_reviewed": true
+    },
+    {
+      "path": "docs/mathematical_sample_chapters/05-number-theory.md",
+      "words_including_code": 887,
+      "sha256": "67a4037bf6e3cdacd2d0d959488912473a59d37da0330c88d07115d641ed46dd",
+      "mathematical_review": "The supplied positive gcd certificate includes Bezout data; necessity and constructive sufficiency do not claim general certificate existence.",
+      "exercise_answers_reviewed": true
+    },
+    {
+      "path": "docs/mathematical_sample_chapters/06-probability.md",
+      "words_including_code": 908,
+      "sha256": "9c821487ad0c7b4aefff268c090468752f41dc4979a71ba8473a8d68571aa59f",
+      "mathematical_review": "Finite distribution conditions are separate from weighted-sum algebra; the four-cell Bayes model is coherent and denominator positivity is explicit.",
+      "exercise_answers_reviewed": true
+    },
+    {
+      "path": "docs/mathematical_sample_chapters/07-geometry.md",
+      "words_including_code": 1050,
+      "sha256": "e21c8e6a0224afe5c81f474d086eb34c027aad99a9b72fe97a202ac9f59fbbcc",
+      "mathematical_review": "Analytic equilateral construction retains distinct endpoints; squared distances and determinant-area ratios have correct nondegeneracy and orientation interpretation.",
+      "exercise_answers_reviewed": true
+    }
+  ],
+  "user_trust_axiom_abstract_prop_source_audit": "zero active declarations in all eight selected source files",
+  "figure": {
+    "path": "docs/mathematical_sample_chapters/assets/geometry-constructions.svg",
+    "preview": "tmp/2026-10-24/mathematical-sample-chapters/geometry-preview.png",
+    "visually_inspected": true
+  },
+  "excluded_gates": [
+    "unrelated Rust tests",
+    "other showcases",
+    "local textbooks",
+    "Lean replay",
+    "release packaging"
+  ],
+  "limitations": [
+    "Verification uses Litex builtin mathematics and its own checker.",
+    "Exercises and prose extensions are not counted as extra formalized results.",
+    "Dated evidence applies to the recorded executable and source hashes."
+  ],
+  "snippet_gates": [
+    {
+      "markdown": "docs/mathematical_sample_chapters/01-linear-algebra.md",
+      "fence_line": 27,
+      "code_sha256": "6e27b794c40fa741f194cf7f28ee598630bda1f526042f0e98c092ff1faf6eee",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-24/mathematical-sample-chapters/litex-pinned",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-24/mathematical-sample-chapters/01-linear-algebra-1.lit"
+      ],
+      "exit_code": 0,
+      "envelope": {
+        "kind": "run",
+        "run_result": "success",
+        "session_terminated": false,
+        "termination": null
+      },
+      "passed": true
+    },
+    {
+      "markdown": "docs/mathematical_sample_chapters/02-abstract-algebra.md",
+      "fence_line": 26,
+      "code_sha256": "3325cb8b957618ab776ca8cc77cf77073bab9295ebe9c1b3afb686e8bbae9a64",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-24/mathematical-sample-chapters/litex-pinned",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-24/mathematical-sample-chapters/02-abstract-algebra-1.lit"
+      ],
+      "exit_code": 0,
+      "envelope": {
+        "kind": "run",
+        "run_result": "success",
+        "session_terminated": false,
+        "termination": null
+      },
+      "passed": true
+    },
+    {
+      "markdown": "docs/mathematical_sample_chapters/03-topology.md",
+      "fence_line": 20,
+      "code_sha256": "a634bd39f7b73433d30c54f6a51839c5387df25dce6c32d1dfe8840238aae7af",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-24/mathematical-sample-chapters/litex-pinned",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-24/mathematical-sample-chapters/03-topology-1.lit"
+      ],
+      "exit_code": 0,
+      "envelope": {
+        "kind": "run",
+        "run_result": "success",
+        "session_terminated": false,
+        "termination": null
+      },
+      "passed": true
+    },
+    {
+      "markdown": "docs/mathematical_sample_chapters/04-analysis.md",
+      "fence_line": 33,
+      "code_sha256": "d1eb5e3a7a820772fd21d39cb3896244ba6f53ef7f0252aaded3fde48d3dac73",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-24/mathematical-sample-chapters/litex-pinned",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-24/mathematical-sample-chapters/04-analysis-1.lit"
+      ],
+      "exit_code": 0,
+      "envelope": {
+        "kind": "run",
+        "run_result": "success",
+        "session_terminated": false,
+        "termination": null
+      },
+      "passed": true
+    },
+    {
+      "markdown": "docs/mathematical_sample_chapters/05-number-theory.md",
+      "fence_line": 22,
+      "code_sha256": "d8c036c25557ade400ea8fe04e6b282fc2422ae8de818b7f50d1a3b15f8f6cb0",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-24/mathematical-sample-chapters/litex-pinned",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-24/mathematical-sample-chapters/05-number-theory-1.lit"
+      ],
+      "exit_code": 0,
+      "envelope": {
+        "kind": "run",
+        "run_result": "success",
+        "session_terminated": false,
+        "termination": null
+      },
+      "passed": true
+    },
+    {
+      "markdown": "docs/mathematical_sample_chapters/06-probability.md",
+      "fence_line": 101,
+      "code_sha256": "122bc98a646cec29bc44508a6a6e4827c8420da486c295b2acecb510e7efac4a",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-24/mathematical-sample-chapters/litex-pinned",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-24/mathematical-sample-chapters/06-probability-1.lit"
+      ],
+      "exit_code": 0,
+      "envelope": {
+        "kind": "run",
+        "run_result": "success",
+        "session_terminated": false,
+        "termination": null
+      },
+      "passed": true
+    },
+    {
+      "markdown": "docs/mathematical_sample_chapters/07-geometry.md",
+      "fence_line": 33,
+      "code_sha256": "725a1a5a8ea589d0ecde7ba4ebc52137136ba1943d394f6b11dd7f8f5561cbf7",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-24/mathematical-sample-chapters/litex-pinned",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-24/mathematical-sample-chapters/07-geometry-1.lit"
+      ],
+      "exit_code": 0,
+      "envelope": {
+        "kind": "run",
+        "run_result": "success",
+        "session_terminated": false,
+        "termination": null
+      },
+      "passed": true
+    }
+  ],
+  "excerpt_provenance": [
+    {
+      "markdown": "docs/mathematical_sample_chapters/01-linear-algebra.md",
+      "source": "showcases/linear_algebra/linear_algebra.lit",
+      "source_line": 558,
+      "excerpt_sha256": "3beb73b63de669c98c50b936a7249a6cc1e7cf09f6fffaae351c33b46af1a4e9",
+      "passed": true
+    },
+    {
+      "markdown": "docs/mathematical_sample_chapters/01-linear-algebra.md",
+      "source": "showcases/linear_algebra/linear_algebra.lit",
+      "source_line": 721,
+      "excerpt_sha256": "1a60b0ac13f85ab171c5d474f1c283727b0b0894c8cecb7a794b17b3bee9f336",
+      "passed": true
+    },
+    {
+      "markdown": "docs/mathematical_sample_chapters/02-abstract-algebra.md",
+      "source": "showcases/abstract_algebra/abstract_algebra.lit",
+      "source_line": 188,
+      "excerpt_sha256": "17231d71c719d65b655407475cc4636be0ce4eb3a99c665a8080309ab233fd22",
+      "passed": true
+    },
+    {
+      "markdown": "docs/mathematical_sample_chapters/02-abstract-algebra.md",
+      "source": "showcases/abstract_algebra/abstract_algebra.lit",
+      "source_line": 306,
+      "excerpt_sha256": "7dd206d4e17d8b3bef4fbaba93f8eea3aff420667a6370b7e313085a4c4b9d49",
+      "passed": true
+    },
+    {
+      "markdown": "docs/mathematical_sample_chapters/03-topology.md",
+      "source": "showcases/topology/topology.lit",
+      "source_line": 267,
+      "excerpt_sha256": "20316879edfcdc14c5935ee14310047937eb67c8566c19813c99a8a12f68e16f",
+      "passed": true
+    },
+    {
+      "markdown": "docs/mathematical_sample_chapters/03-topology.md",
+      "source": "showcases/topology/topology.lit",
+      "source_line": 292,
+      "excerpt_sha256": "af4301d5be6311ee784429dc5816fd33a4e817ca3487de93d7e5660af35b09c3",
+      "passed": true
+    },
+    {
+      "markdown": "docs/mathematical_sample_chapters/04-analysis.md",
+      "source": "showcases/math_concepts_in_litex/10_real_analysis_in_nutshell/main.lit",
+      "source_line": 77,
+      "excerpt_sha256": "24709cf230e2a13e686c5dc99bc3103c93074234d03fd21a409ac6aef8265527",
+      "passed": true
+    },
+    {
+      "markdown": "docs/mathematical_sample_chapters/04-analysis.md",
+      "source": "showcases/math_concepts_in_litex/10_real_analysis_in_nutshell/main.lit",
+      "source_line": 114,
+      "excerpt_sha256": "552df8e1e2b7d5190224f0955f475e70d230cadede0f138ff983d43e4deebe7a",
+      "passed": true
+    },
+    {
+      "markdown": "docs/mathematical_sample_chapters/05-number-theory.md",
+      "source": "showcases/math_concepts_in_litex/3_number_theory/main.lit",
+      "source_line": 48,
+      "excerpt_sha256": "82b9b68d3d735528689a9c57a475316ca46ae8c39208485a2eb0dcf067452b64",
+      "passed": true
+    },
+    {
+      "markdown": "docs/mathematical_sample_chapters/05-number-theory.md",
+      "source": "showcases/math_concepts_in_litex/3_number_theory/main.lit",
+      "source_line": 116,
+      "excerpt_sha256": "063ef5a4e0465b7524cd3ee66ccb39ecbad1b348e7eaab6b07d85b6fcb65e28c",
+      "passed": true
+    },
+    {
+      "markdown": "docs/mathematical_sample_chapters/06-probability.md",
+      "source": "showcases/math_concepts_in_litex/8_probability_and_statistics_in_nutshell/main.lit",
+      "source_line": 14,
+      "excerpt_sha256": "5f8003ca233f0656919b2b6b58d99b82a3dbcc478df5394b370947fcac92674f",
+      "passed": true
+    },
+    {
+      "markdown": "docs/mathematical_sample_chapters/07-geometry.md",
+      "source": "showcases/math_concepts_in_litex/2_euclidean_geometry/main.lit",
+      "source_line": 41,
+      "excerpt_sha256": "1f8a9730328d939f6bb7c8317b4d2d67ccd41a012c67bab7335d0e3b8034ccad",
+      "passed": true
+    },
+    {
+      "markdown": "docs/mathematical_sample_chapters/07-geometry.md",
+      "source": "showcases/math_concepts_in_litex/2_euclidean_geometry/main.lit",
+      "source_line": 108,
+      "excerpt_sha256": "af1e49f238a703adf9c1e32418dd2edbb842992b1cdea825da1b031010e7a98c",
+      "passed": true
+    }
+  ],
+  "link_audit": {
+    "checked": 68,
+    "failures": [],
+    "links": [
+      {
+        "from": "docs/mathematical_sample_chapters/01-linear-algebra.md",
+        "target": "../../showcases/linear_algebra/linear_algebra.lit",
+        "passed": true
+      },
+      {
+        "from": "docs/mathematical_sample_chapters/01-linear-algebra.md",
+        "target": "../../showcases/linear_algebra/README.md",
+        "passed": true
+      },
+      {
+        "from": "docs/mathematical_sample_chapters/01-linear-algebra.md",
+        "target": "README.md",
+        "passed": true
+      },
+      {
+        "from": "docs/mathematical_sample_chapters/01-linear-algebra.md",
+        "target": "02-abstract-algebra.md",
+        "passed": true
+      },
+      {
+        "from": "docs/mathematical_sample_chapters/02-abstract-algebra.md",
+        "target": "../../showcases/abstract_algebra/abstract_algebra.lit",
+        "passed": true
+      },
+      {
+        "from": "docs/mathematical_sample_chapters/02-abstract-algebra.md",
+        "target": "../../showcases/abstract_algebra/README.md",
+        "passed": true
+      },
+      {
+        "from": "docs/mathematical_sample_chapters/02-abstract-algebra.md",
+        "target": "01-linear-algebra.md",
+        "passed": true
+      },
+      {
+        "from": "docs/mathematical_sample_chapters/02-abstract-algebra.md",
+        "target": "README.md",
+        "passed": true
+      },
+      {
+        "from": "docs/mathematical_sample_chapters/02-abstract-algebra.md",
+        "target": "03-topology.md",
+        "passed": true
+      },
+      {
+        "from": "docs/mathematical_sample_chapters/03-topology.md",
+        "target": "../../showcases/topology/topology.lit",
+        "passed": true
+      },
+      {
+        "from": "docs/mathematical_sample_chapters/03-topology.md",
+        "target": "../../showcases/topology/README.md",
+        "passed": true
+      },
+      {
+        "from": "docs/mathematical_sample_chapters/03-topology.md",
+        "target": "02-abstract-algebra.md",
+        "passed": true
+      },
+      {
+        "from": "docs/mathematical_sample_chapters/03-topology.md",
+        "target": "README.md",
+        "passed": true
+      },
+      {
+        "from": "docs/mathematical_sample_chapters/03-topology.md",
+        "target": "04-analysis.md",
+        "passed": true
+      },
+      {
+        "from": "docs/mathematical_sample_chapters/04-analysis.md",
+        "target": "../../showcases/math_concepts_in_litex/10_real_analysis_in_nutshell/main.lit",
+        "passed": true
+      },
+      {
+        "from": "docs/mathematical_sample_chapters/04-analysis.md",
+        "target": "../../showcases/math_concepts_in_litex/10_real_analysis_in_nutshell/README.md",
+        "passed": true
+      },
+      {
+        "from": "docs/mathematical_sample_chapters/04-analysis.md",
+        "target": "../../showcases/analysis/calculus/README.md",
+        "passed": true
+      },
+      {
+        "from": "docs/mathematical_sample_chapters/04-analysis.md",
+        "target": "03-topology.md",
+        "passed": true
+      },
+      {
+        "from": "docs/mathematical_sample_chapters/04-analysis.md",
+        "target": "README.md",
+        "passed": true
+      },
+      {
+        "from": "docs/mathematical_sample_chapters/04-analysis.md",
+        "target": "05-number-theory.md",
+        "passed": true
+      },
+      {
+        "from": "docs/mathematical_sample_chapters/05-number-theory.md",
+        "target": "../../showcases/math_concepts_in_litex/3_number_theory/main.lit",
+        "passed": true
+      },
+      {
+        "from": "docs/mathematical_sample_chapters/05-number-theory.md",
+        "target": "../../showcases/math_concepts_in_litex/3_number_theory/README.md",
+        "passed": true
+      },
+      {
+        "from": "docs/mathematical_sample_chapters/05-number-theory.md",
+        "target": "04-analysis.md",
+        "passed": true
+      },
+      {
+        "from": "docs/mathematical_sample_chapters/05-number-theory.md",
+        "target": "README.md",
+        "passed": true
+      },
+      {
+        "from": "docs/mathematical_sample_chapters/05-number-theory.md",
+        "target": "06-probability.md",
+        "passed": true
+      },
+      {
+        "from": "docs/mathematical_sample_chapters/06-probability.md",
+        "target": "../../showcases/math_concepts_in_litex/8_probability_and_statistics_in_nutshell/main.lit",
+        "passed": true
+      },
+      {
+        "from": "docs/mathematical_sample_chapters/06-probability.md",
+        "target": "../../showcases/math_concepts_in_litex/8_probability_and_statistics_in_nutshell/README.md",
+        "passed": true
+      },
+      {
+        "from": "docs/mathematical_sample_chapters/06-probability.md",
+        "target": "05-number-theory.md",
+        "passed": true
+      },
+      {
+        "from": "docs/mathematical_sample_chapters/06-probability.md",
+        "target": "README.md",
+        "passed": true
+      },
+      {
+        "from": "docs/mathematical_sample_chapters/06-probability.md",
+        "target": "07-geometry.md",
+        "passed": true
+      },
+      {
+        "from": "docs/mathematical_sample_chapters/07-geometry.md",
+        "target": "assets/geometry-constructions.svg",
+        "passed": true
+      },
+      {
+        "from": "docs/mathematical_sample_chapters/07-geometry.md",
+        "target": "../../showcases/math_concepts_in_litex/2_euclidean_geometry/main.lit",
+        "passed": true
+      },
+      {
+        "from": "docs/mathematical_sample_chapters/07-geometry.md",
+        "target": "../../showcases/2D_Geometry/IMO/problem_12/solution.lit",
+        "passed": true
+      },
+      {
+        "from": "docs/mathematical_sample_chapters/07-geometry.md",
+        "target": "../../showcases/math_concepts_in_litex/2_euclidean_geometry/README.md",
+        "passed": true
+      },
+      {
+        "from": "docs/mathematical_sample_chapters/07-geometry.md",
+        "target": "../../showcases/2D_Geometry/README.md",
+        "passed": true
+      },
+      {
+        "from": "docs/mathematical_sample_chapters/07-geometry.md",
+        "target": "06-probability.md",
+        "passed": true
+      },
+      {
+        "from": "docs/mathematical_sample_chapters/07-geometry.md",
+        "target": "README.md",
+        "passed": true
+      },
+      {
+        "from": "docs/mathematical_sample_chapters/README.md",
+        "target": "01-linear-algebra.md",
+        "passed": true
+      },
+      {
+        "from": "docs/mathematical_sample_chapters/README.md",
+        "target": "02-abstract-algebra.md",
+        "passed": true
+      },
+      {
+        "from": "docs/mathematical_sample_chapters/README.md",
+        "target": "03-topology.md",
+        "passed": true
+      },
+      {
+        "from": "docs/mathematical_sample_chapters/README.md",
+        "target": "04-analysis.md",
+        "passed": true
+      },
+      {
+        "from": "docs/mathematical_sample_chapters/README.md",
+        "target": "05-number-theory.md",
+        "passed": true
+      },
+      {
+        "from": "docs/mathematical_sample_chapters/README.md",
+        "target": "06-probability.md",
+        "passed": true
+      },
+      {
+        "from": "docs/mathematical_sample_chapters/README.md",
+        "target": "07-geometry.md",
+        "passed": true
+      },
+      {
+        "from": "docs/mathematical_sample_chapters/README.md",
+        "target": "README.zh-CN.md",
+        "passed": true
+      },
+      {
+        "from": "docs/mathematical_sample_chapters/README.md",
+        "target": "verification.md",
+        "passed": true
+      },
+      {
+        "from": "docs/mathematical_sample_chapters/README.md",
+        "target": "../../showcases/README.md",
+        "passed": true
+      },
+      {
+        "from": "docs/mathematical_sample_chapters/README.md",
+        "target": "../../showcases/The-Mechanics-of-Litex-Proof/README.md",
+        "passed": true
+      },
+      {
+        "from": "docs/mathematical_sample_chapters/README.zh-CN.md",
+        "target": "01-linear-algebra.md",
+        "passed": true
+      },
+      {
+        "from": "docs/mathematical_sample_chapters/README.zh-CN.md",
+        "target": "02-abstract-algebra.md",
+        "passed": true
+      },
+      {
+        "from": "docs/mathematical_sample_chapters/README.zh-CN.md",
+        "target": "03-topology.md",
+        "passed": true
+      },
+      {
+        "from": "docs/mathematical_sample_chapters/README.zh-CN.md",
+        "target": "04-analysis.md",
+        "passed": true
+      },
+      {
+        "from": "docs/mathematical_sample_chapters/README.zh-CN.md",
+        "target": "05-number-theory.md",
+        "passed": true
+      },
+      {
+        "from": "docs/mathematical_sample_chapters/README.zh-CN.md",
+        "target": "06-probability.md",
+        "passed": true
+      },
+      {
+        "from": "docs/mathematical_sample_chapters/README.zh-CN.md",
+        "target": "07-geometry.md",
+        "passed": true
+      },
+      {
+        "from": "docs/mathematical_sample_chapters/README.zh-CN.md",
+        "target": "verification.md",
+        "passed": true
+      },
+      {
+        "from": "docs/mathematical_sample_chapters/verification.md",
+        "target": "../../showcases/linear_algebra/linear_algebra.lit",
+        "passed": true
+      },
+      {
+        "from": "docs/mathematical_sample_chapters/verification.md",
+        "target": "../../showcases/abstract_algebra/abstract_algebra.lit",
+        "passed": true
+      },
+      {
+        "from": "docs/mathematical_sample_chapters/verification.md",
+        "target": "../../showcases/topology/topology.lit",
+        "passed": true
+      },
+      {
+        "from": "docs/mathematical_sample_chapters/verification.md",
+        "target": "../../showcases/math_concepts_in_litex/10_real_analysis_in_nutshell/main.lit",
+        "passed": true
+      },
+      {
+        "from": "docs/mathematical_sample_chapters/verification.md",
+        "target": "../../showcases/math_concepts_in_litex/3_number_theory/main.lit",
+        "passed": true
+      },
+      {
+        "from": "docs/mathematical_sample_chapters/verification.md",
+        "target": "../../showcases/math_concepts_in_litex/8_probability_and_statistics_in_nutshell/main.lit",
+        "passed": true
+      },
+      {
+        "from": "docs/mathematical_sample_chapters/verification.md",
+        "target": "../../showcases/math_concepts_in_litex/2_euclidean_geometry/main.lit",
+        "passed": true
+      },
+      {
+        "from": "docs/mathematical_sample_chapters/verification.md",
+        "target": "../../showcases/2D_Geometry/IMO/problem_12/solution.lit",
+        "passed": true
+      },
+      {
+        "from": "docs/mathematical_sample_chapters/verification.md",
+        "target": "../../tests/tooling/run_docs_markdown_files.py",
+        "passed": true
+      },
+      {
+        "from": "docs/mathematical_sample_chapters/verification.md",
+        "target": "../../showcases/verification_runs/2026-10-24-mathematical-sample-chapters.json",
+        "passed": true
+      },
+      {
+        "from": "docs/mathematical_sample_chapters/verification.md",
+        "target": "README.md",
+        "passed": true
+      },
+      {
+        "from": "docs/mathematical_sample_chapters/verification.md",
+        "target": "README.zh-CN.md",
+        "passed": true
+      }
+    ]
+  },
+  "artifacts": [
+    {
+      "path": "docs/mathematical_sample_chapters/01-linear-algebra.md",
+      "sha256": "94de1bb79fb21ccab0669aa1379f8eb46d1aa062354694d15fc2f324434bbcd0"
+    },
+    {
+      "path": "docs/mathematical_sample_chapters/02-abstract-algebra.md",
+      "sha256": "d8ab4c0457280c257a3b3729dcb623774bcc6754aca6fe8fa7119a86932c47f5"
+    },
+    {
+      "path": "docs/mathematical_sample_chapters/03-topology.md",
+      "sha256": "f88f206a8fed872763f7f4158272a6564c251b8fdb485d78b5ccf45f81139038"
+    },
+    {
+      "path": "docs/mathematical_sample_chapters/04-analysis.md",
+      "sha256": "bd3625ceeabbaf1b6cfade4c6045006be73ef7364d9cbb8b0c9565e0f9e7bf91"
+    },
+    {
+      "path": "docs/mathematical_sample_chapters/05-number-theory.md",
+      "sha256": "67a4037bf6e3cdacd2d0d959488912473a59d37da0330c88d07115d641ed46dd"
+    },
+    {
+      "path": "docs/mathematical_sample_chapters/06-probability.md",
+      "sha256": "9c821487ad0c7b4aefff268c090468752f41dc4979a71ba8473a8d68571aa59f"
+    },
+    {
+      "path": "docs/mathematical_sample_chapters/07-geometry.md",
+      "sha256": "e21c8e6a0224afe5c81f474d086eb34c027aad99a9b72fe97a202ac9f59fbbcc"
+    },
+    {
+      "path": "docs/mathematical_sample_chapters/README.md",
+      "sha256": "bb8b0da99f85bcf1b35eeda29aa19237da2d145e6b41cd62ed649589efe2a37d"
+    },
+    {
+      "path": "docs/mathematical_sample_chapters/README.zh-CN.md",
+      "sha256": "a3fe7ee670b810775ce2304d0739c890068c73bd60731c88cffe4efcd3f38b5a"
+    },
+    {
+      "path": "docs/mathematical_sample_chapters/assets/geometry-constructions.svg",
+      "sha256": "e313b62bd74ee45b31c4d059a47097bd05f1ddccb962d010d91df5521bedd3df"
+    },
+    {
+      "path": "docs/mathematical_sample_chapters/verification.md",
+      "sha256": "ce490b17b63186251450c84fbb2bab3615e3667727e40281672c77433cc0ebc8"
+    }
+  ],
+  "public_recheck_recipe": {
+    "path": "docs/mathematical_sample_chapters/verification.md",
+    "executed": true,
+    "exit_code": 0,
+    "strict_snippets": 7,
+    "runtime_binary_sha256": "3f26e9f3551eff13a4e8de2201502a2a80be617cdace20d9f242e785f6a41d8c"
+  },
+  "completion_audit": {
+    "seven_chapters_with_complete_arguments_examples_and_answered_exercises": true,
+    "english_index_and_chinese_guide": true,
+    "showcase_navigation": true,
+    "eight_full_sources_and_seven_snippets_strictly_accepted": true,
+    "all_thirteen_excerpts_match_source": true,
+    "all_sixty_eight_links_resolve": true,
+    "geometry_figure_rendered_and_inspected": true,
+    "source_changes_only_alpha_renaming": true,
+    "no_kernel_or_protected_owner_edit": true,
+    "drafts_confined_to_allocated_ignored_task_area": true,
+    "no_publish_or_commit": true
+  },
+  "contract_deviations": [
+    "Geometry additionally includes a complete IMO quarter-area proof; its eighth source gate is included.",
+    "Current reserved-name compatibility required bound-variable alpha-renaming in the linear-algebra source; all affected statements were accepted in one persistent Session before materialization."
+  ]
+}

@@ -554,35 +554,35 @@ thm orthonormal_coordinate_decomposition_17:
         ex * fx + ey * fy = 0
         =>:
             exist x, y R st {px = dx + x * ex + y * fx, py = dy + x * ey + y * fy}
-    have det R = ex * fy - ey * fx
+    have det2 R = ex * fy - ey * fx
     (ex * fy - ey * fx)^2 = (ex^2 + ey^2) * (fx^2 + fy^2) - (ex * fx + ey * fy)^2
     (ex^2 + ey^2) * (fx^2 + fy^2) - (ex * fx + ey * fy)^2 = 1 * 1 - 0^2
     1 * 1 - 0^2 = 1
     (ex * fy - ey * fx)^2 = 1
-    det = ex * fy - ey * fx
-    det^2 = (ex * fy - ey * fx)^2
-    det^2 = 1
-    witness exist x, y R st {px = dx + x * ex + y * fx, py = dy + x * ey + y * fy} from det * ((px - dx) * fy - (py - dy) * fx), det * (ex * (py - dy) - ey * (px - dx)):
-        (det * ((px - dx) * fy - (py - dy) * fx)) * ex + (det * (ex * (py - dy) - ey * (px - dx))) * fx = det * ((((px - dx) * fy - (py - dy) * fx) * ex) + ((ex * (py - dy) - ey * (px - dx)) * fx))
+    det2 = ex * fy - ey * fx
+    det2^2 = (ex * fy - ey * fx)^2
+    det2^2 = 1
+    witness exist x, y R st {px = dx + x * ex + y * fx, py = dy + x * ey + y * fy} from det2 * ((px - dx) * fy - (py - dy) * fx), det2 * (ex * (py - dy) - ey * (px - dx)):
+        (det2 * ((px - dx) * fy - (py - dy) * fx)) * ex + (det2 * (ex * (py - dy) - ey * (px - dx))) * fx = det2 * ((((px - dx) * fy - (py - dy) * fx) * ex) + ((ex * (py - dy) - ey * (px - dx)) * fx))
         (((px - dx) * fy - (py - dy) * fx) * ex) + ((ex * (py - dy) - ey * (px - dx)) * fx) = (ex * fy - ey * fx) * (px - dx)
-        det * ((((px - dx) * fy - (py - dy) * fx) * ex) + ((ex * (py - dy) - ey * (px - dx)) * fx)) = det * ((ex * fy - ey * fx) * (px - dx))
-        det * ((ex * fy - ey * fx) * (px - dx)) = det * (det * (px - dx))
-        det * (det * (px - dx)) = det^2 * (px - dx)
-        det^2 * (px - dx) = px - dx
+        det2 * ((((px - dx) * fy - (py - dy) * fx) * ex) + ((ex * (py - dy) - ey * (px - dx)) * fx)) = det2 * ((ex * fy - ey * fx) * (px - dx))
+        det2 * ((ex * fy - ey * fx) * (px - dx)) = det2 * (det2 * (px - dx))
+        det2 * (det2 * (px - dx)) = det2^2 * (px - dx)
+        det2^2 * (px - dx) = px - dx
         px = dx + (px - dx)
-        dx + (px - dx) = dx + ((det * ((px - dx) * fy - (py - dy) * fx)) * ex + (det * (ex * (py - dy) - ey * (px - dx))) * fx)
-        px = dx + ((det * ((px - dx) * fy - (py - dy) * fx)) * ex + (det * (ex * (py - dy) - ey * (px - dx))) * fx)
-        px = dx + (det * ((px - dx) * fy - (py - dy) * fx)) * ex + (det * (ex * (py - dy) - ey * (px - dx))) * fx
-        (det * ((px - dx) * fy - (py - dy) * fx)) * ey + (det * (ex * (py - dy) - ey * (px - dx))) * fy = det * ((((px - dx) * fy - (py - dy) * fx) * ey) + ((ex * (py - dy) - ey * (px - dx)) * fy))
+        dx + (px - dx) = dx + ((det2 * ((px - dx) * fy - (py - dy) * fx)) * ex + (det2 * (ex * (py - dy) - ey * (px - dx))) * fx)
+        px = dx + ((det2 * ((px - dx) * fy - (py - dy) * fx)) * ex + (det2 * (ex * (py - dy) - ey * (px - dx))) * fx)
+        px = dx + (det2 * ((px - dx) * fy - (py - dy) * fx)) * ex + (det2 * (ex * (py - dy) - ey * (px - dx))) * fx
+        (det2 * ((px - dx) * fy - (py - dy) * fx)) * ey + (det2 * (ex * (py - dy) - ey * (px - dx))) * fy = det2 * ((((px - dx) * fy - (py - dy) * fx) * ey) + ((ex * (py - dy) - ey * (px - dx)) * fy))
         (((px - dx) * fy - (py - dy) * fx) * ey) + ((ex * (py - dy) - ey * (px - dx)) * fy) = (ex * fy - ey * fx) * (py - dy)
-        det * ((((px - dx) * fy - (py - dy) * fx) * ey) + ((ex * (py - dy) - ey * (px - dx)) * fy)) = det * ((ex * fy - ey * fx) * (py - dy))
-        det * ((ex * fy - ey * fx) * (py - dy)) = det * (det * (py - dy))
-        det * (det * (py - dy)) = det^2 * (py - dy)
-        det^2 * (py - dy) = py - dy
+        det2 * ((((px - dx) * fy - (py - dy) * fx) * ey) + ((ex * (py - dy) - ey * (px - dx)) * fy)) = det2 * ((ex * fy - ey * fx) * (py - dy))
+        det2 * ((ex * fy - ey * fx) * (py - dy)) = det2 * (det2 * (py - dy))
+        det2 * (det2 * (py - dy)) = det2^2 * (py - dy)
+        det2^2 * (py - dy) = py - dy
         py = dy + (py - dy)
-        dy + (py - dy) = dy + ((det * ((px - dx) * fy - (py - dy) * fx)) * ey + (det * (ex * (py - dy) - ey * (px - dx))) * fy)
-        py = dy + ((det * ((px - dx) * fy - (py - dy) * fx)) * ey + (det * (ex * (py - dy) - ey * (px - dx))) * fy)
-        py = dy + (det * ((px - dx) * fy - (py - dy) * fx)) * ey + (det * (ex * (py - dy) - ey * (px - dx))) * fy
+        dy + (py - dy) = dy + ((det2 * ((px - dx) * fy - (py - dy) * fx)) * ey + (det2 * (ex * (py - dy) - ey * (px - dx))) * fy)
+        py = dy + ((det2 * ((px - dx) * fy - (py - dy) * fx)) * ey + (det2 * (ex * (py - dy) - ey * (px - dx))) * fy)
+        py = dy + (det2 * ((px - dx) * fy - (py - dy) * fx)) * ey + (det2 * (ex * (py - dy) - ey * (px - dx))) * fy
 
 # Equal products with a positive common left factor have equal right factors.
 
@@ -2943,7 +2943,7 @@ thm multiplication_congruence_inline:
     x * y = x2 * y2
 
 
-have fn det(u, v cart(R, R)) R = u(1) * v(2) - u(2) * v(1)
+have fn det2(u, v cart(R, R)) R = u(1) * v(2) - u(2) * v(1)
 
 # Squared Euclidean distance |ab|^2 (avoids square roots).
 
@@ -2966,7 +2966,7 @@ prop is_midpoint(m, a, b cart(R, R)):
 # p lies on the affine line through a and b (any real parameter t).
 # Allows a = b (then only p = a); use is_on_line when a distinct line is required.
 
-have fn line_through_points(a, b cart(R, R): a != b) power_set(cart(R, R)) = {p cart(R, R): det(vec(a, p), vec(a, b)) = 0}
+have fn line_through_points(a, b cart(R, R): a != b) power_set(cart(R, R)) = {p cart(R, R): det2(vec(a, p), vec(a, b)) = 0}
 
 # Cosine of angle pqr at q, without square roots:
 #   cos^2 = num^2 / den, where
@@ -3001,7 +3001,7 @@ prop circles_internally_tangent(center_small cart(R, R), radius_small R, center_
 
 prop circle_internally_tangent_to_semicircle(center_small cart(R, R), radius_small R, center_big cart(R, R), radius_big R, point_a, point_b, arc_point cart(R, R)):
     $circles_internally_tangent(center_small, radius_small, center_big, radius_big)
-    det(vec(point_a, point_b), vec(point_a, center_small)) * det(vec(point_a, point_b), vec(point_a, arc_point)) > 0
+    det2(vec(point_a, point_b), vec(point_a, center_small)) * det2(vec(point_a, point_b), vec(point_a, arc_point)) > 0
 
 # Two coefficient triples represent distinct projective lines.
 
@@ -3032,24 +3032,24 @@ thm squared_distance_coordinates_17:
 
 thm det_of_vectors_coordinates_17:
     ? forall p,q,a,b cart(R,R):
-        det(vec(p,q),vec(a,b))=(q(1)-p(1))*(b(2)-a(2))-(q(2)-p(2))*(b(1)-a(1))
+        det2(vec(p,q),vec(a,b))=(q(1)-p(1))*(b(2)-a(2))-(q(2)-p(2))*(b(1)-a(1))
     vec(p,q)=(q(1)-p(1),q(2)-p(2))
     vec(a,b)=(b(1)-a(1),b(2)-a(2))
     vec(p,q)(1)=q(1)-p(1)
     vec(p,q)(2)=q(2)-p(2)
     vec(a,b)(1)=b(1)-a(1)
     vec(a,b)(2)=b(2)-a(2)
-    det(vec(p,q),vec(a,b))=vec(p,q)(1)*vec(a,b)(2)-vec(p,q)(2)*vec(a,b)(1)
+    det2(vec(p,q),vec(a,b))=vec(p,q)(1)*vec(a,b)(2)-vec(p,q)(2)*vec(a,b)(1)
     by thm multiplication_congruence_17(vec(p,q)(1),q(1)-p(1),vec(a,b)(2),b(2)-a(2))
     by thm multiplication_congruence_17(vec(p,q)(2),q(2)-p(2),vec(a,b)(1),b(1)-a(1))
     by thm subtraction_congruence_17(vec(p,q)(1)*vec(a,b)(2),(q(1)-p(1))*(b(2)-a(2)),vec(p,q)(2)*vec(a,b)(1),(q(2)-p(2))*(b(1)-a(1)))
-    det(vec(p,q),vec(a,b))=(q(1)-p(1))*(b(2)-a(2))-(q(2)-p(2))*(b(1)-a(1))
+    det2(vec(p,q),vec(a,b))=(q(1)-p(1))*(b(2)-a(2))-(q(2)-p(2))*(b(1)-a(1))
 
 thm on_line_zero_determinant_17:
     ? forall point,a,b cart(R,R):
         $is_on_line(point,a,b)
         =>:
-            det(vec(a,point),vec(a,b))=0
+            det2(vec(a,point),vec(a,b))=0
     thm membership_transport_17:
         ? forall source_carrier,target_carrier set,member source_carrier:
             source_carrier=target_carrier
@@ -3058,9 +3058,9 @@ thm on_line_zero_determinant_17:
     by def $is_on_line(point,a,b)
     a!=b
     point $in line_through_points(a,b)
-    line_through_points(a,b)={p cart(R,R):det(vec(a,p),vec(a,b))=0}
-    release thm membership_transport_17(line_through_points(a,b),{p cart(R,R):det(vec(a,p),vec(a,b))=0},point)
-    det(vec(a,point),vec(a,b))=0
+    line_through_points(a,b)={p cart(R,R):det2(vec(a,p),vec(a,b))=0}
+    release thm membership_transport_17(line_through_points(a,b),{p cart(R,R):det2(vec(a,p),vec(a,b))=0},point)
+    det2(vec(a,point),vec(a,b))=0
 
 thm rotated_components_give_distance_17:
     ? forall p, q cart(R, R), ex, ey, fx, fy, x, y R:
@@ -3168,7 +3168,7 @@ thm ab_geometry_product_to_raw_17:
         sx = dx + x * ex + y * nx
         sy = dy + x * ey + y * ny
         =>:
-            det(vec((ax, ay), (bx, byy)), vec((ax, ay), (sx, sy))) * det(vec((ax, ay), (bx, byy)), vec((ax, ay), (cx, cy))) = ((((p + q) * ex) * ((x + p) * ey + y * ny) - ((p + q) * ey) * ((x + p) * ex + y * nx)) * (((p + q) * ex) * (p * ey + h * ny) - ((p + q) * ey) * (p * ex + h * nx)))
+            det2(vec((ax, ay), (bx, byy)), vec((ax, ay), (sx, sy))) * det2(vec((ax, ay), (bx, byy)), vec((ax, ay), (cx, cy))) = ((((p + q) * ex) * ((x + p) * ey + y * ny) - ((p + q) * ey) * ((x + p) * ex + y * nx)) * (((p + q) * ex) * (p * ey + h * ny) - ((p + q) * ey) * (p * ex + h * nx)))
     by thm addition_congruence_17(bx - dx, q * ex, dx - ax, p * ex)
     (bx - dx) + (dx - ax) = q * ex + p * ex
     (bx - dx) + (dx - ax) = bx - ax
@@ -3246,17 +3246,17 @@ thm ab_geometry_product_to_raw_17:
     by thm subtraction_congruence_17((cx,cy)(2),cy,(ax,ay)(2),ay)
     (cx,cy)(2)-(ax,ay)(2)=cy-ay
     vec((ax,ay),(cx,cy))(2)=cy-ay=p*ey+h*ny
-    det(vec((ax,ay),(bx,byy)),vec((ax,ay),(sx,sy)))=vec((ax,ay),(bx,byy))(1)*vec((ax,ay),(sx,sy))(2)-vec((ax,ay),(bx,byy))(2)*vec((ax,ay),(sx,sy))(1)
+    det2(vec((ax,ay),(bx,byy)),vec((ax,ay),(sx,sy)))=vec((ax,ay),(bx,byy))(1)*vec((ax,ay),(sx,sy))(2)-vec((ax,ay),(bx,byy))(2)*vec((ax,ay),(sx,sy))(1)
     by thm multiplication_congruence_17(vec((ax,ay),(bx,byy))(1),(p+q)*ex,vec((ax,ay),(sx,sy))(2),(x+p)*ey+y*ny)
     by thm multiplication_congruence_17(vec((ax,ay),(bx,byy))(2),(p+q)*ey,vec((ax,ay),(sx,sy))(1),(x+p)*ex+y*nx)
     by thm subtraction_congruence_17(vec((ax,ay),(bx,byy))(1)*vec((ax,ay),(sx,sy))(2),((p+q)*ex)*((x+p)*ey+y*ny),vec((ax,ay),(bx,byy))(2)*vec((ax,ay),(sx,sy))(1),((p+q)*ey)*((x+p)*ex+y*nx))
-    det(vec((ax,ay),(bx,byy)),vec((ax,ay),(sx,sy)))=((p+q)*ex)*((x+p)*ey+y*ny)-((p+q)*ey)*((x+p)*ex+y*nx)
-    det(vec((ax,ay),(bx,byy)),vec((ax,ay),(cx,cy)))=vec((ax,ay),(bx,byy))(1)*vec((ax,ay),(cx,cy))(2)-vec((ax,ay),(bx,byy))(2)*vec((ax,ay),(cx,cy))(1)
+    det2(vec((ax,ay),(bx,byy)),vec((ax,ay),(sx,sy)))=((p+q)*ex)*((x+p)*ey+y*ny)-((p+q)*ey)*((x+p)*ex+y*nx)
+    det2(vec((ax,ay),(bx,byy)),vec((ax,ay),(cx,cy)))=vec((ax,ay),(bx,byy))(1)*vec((ax,ay),(cx,cy))(2)-vec((ax,ay),(bx,byy))(2)*vec((ax,ay),(cx,cy))(1)
     by thm multiplication_congruence_17(vec((ax,ay),(bx,byy))(1),(p+q)*ex,vec((ax,ay),(cx,cy))(2),p*ey+h*ny)
     by thm multiplication_congruence_17(vec((ax,ay),(bx,byy))(2),(p+q)*ey,vec((ax,ay),(cx,cy))(1),p*ex+h*nx)
     by thm subtraction_congruence_17(vec((ax,ay),(bx,byy))(1)*vec((ax,ay),(cx,cy))(2),((p+q)*ex)*(p*ey+h*ny),vec((ax,ay),(bx,byy))(2)*vec((ax,ay),(cx,cy))(1),((p+q)*ey)*(p*ex+h*nx))
-    det(vec((ax,ay),(bx,byy)),vec((ax,ay),(cx,cy)))=((p+q)*ex)*(p*ey+h*ny)-((p+q)*ey)*(p*ex+h*nx)
-    by thm multiplication_congruence_17(det(vec((ax,ay),(bx,byy)),vec((ax,ay),(sx,sy))),((p+q)*ex)*((x+p)*ey+y*ny)-((p+q)*ey)*((x+p)*ex+y*nx),det(vec((ax,ay),(bx,byy)),vec((ax,ay),(cx,cy))),((p+q)*ex)*(p*ey+h*ny)-((p+q)*ey)*(p*ex+h*nx))
+    det2(vec((ax,ay),(bx,byy)),vec((ax,ay),(cx,cy)))=((p+q)*ex)*(p*ey+h*ny)-((p+q)*ey)*(p*ex+h*nx)
+    by thm multiplication_congruence_17(det2(vec((ax,ay),(bx,byy)),vec((ax,ay),(sx,sy))),((p+q)*ex)*((x+p)*ey+y*ny)-((p+q)*ey)*((x+p)*ex+y*nx),det2(vec((ax,ay),(bx,byy)),vec((ax,ay),(cx,cy))),((p+q)*ex)*(p*ey+h*ny)-((p+q)*ey)*(p*ex+h*nx))
 
 thm ab_positive_side_root_17:
     ? forall ax, ay, bx, byy, cx, cy, sx, sy, dx, dy, ex, ey, nx, ny, p, q, h, x, y, radius R:
@@ -3275,12 +3275,12 @@ thm ab_positive_side_root_17:
         cy - dy = h * ny
         sx = dx + x * ex + y * nx
         sy = dy + x * ey + y * ny
-        (det(vec((ax, ay), (bx, byy)), vec((ax, ay), (sx, sy))) * det(vec((ax, ay), (bx, byy)), vec((ax, ay), (cx, cy)))) > 0
+        (det2(vec((ax, ay), (bx, byy)), vec((ax, ay), (sx, sy))) * det2(vec((ax, ay), (bx, byy)), vec((ax, ay), (cx, cy)))) > 0
         y^2 = radius^2
         =>:
             y = radius
     by thm ab_geometry_product_to_raw_17(ax, ay, bx, byy, cx, cy, sx, sy, dx, dy, ex, ey, nx, ny, p, q, h, x, y)
-    (det(vec((ax, ay), (bx, byy)), vec((ax, ay), (sx, sy))) * det(vec((ax, ay), (bx, byy)), vec((ax, ay), (cx, cy)))) = ((((p + q) * ex) * ((x + p) * ey + y * ny) - ((p + q) * ey) * ((x + p) * ex + y * nx)) * (((p + q) * ex) * (p * ey + h * ny) - ((p + q) * ey) * (p * ex + h * nx)))
+    (det2(vec((ax, ay), (bx, byy)), vec((ax, ay), (sx, sy))) * det2(vec((ax, ay), (bx, byy)), vec((ax, ay), (cx, cy)))) = ((((p + q) * ex) * ((x + p) * ey + y * ny) - ((p + q) * ey) * ((x + p) * ex + y * nx)) * (((p + q) * ex) * (p * ey + h * ny) - ((p + q) * ey) * (p * ex + h * nx)))
     by thm ab_raw_determinant_product_normalizes_17(p, q, h, x, y, ex, ey, nx, ny)
     ((p + q) * y) * ((p + q) * h) > 0
     by thm ab_positive_root_17(p, q, h, y, radius)
@@ -3731,7 +3731,7 @@ thm problem_17:
     # Proof: construct the second common tangent from the given geometric data.
     thm coordinate_determinant_value_17:
         ? forall a,b,s cart(R,R):
-            det(vec((a(1),a(2)),(b(1),b(2))),vec((a(1),a(2)),(s(1),s(2))))=det(vec(a,b),vec(a,s))
+            det2(vec((a(1),a(2)),(b(1),b(2))),vec((a(1),a(2)),(s(1),s(2))))=det2(vec(a,b),vec(a,s))
         by thm det_of_vectors_coordinates_17(a,b,a,s)
         (a(1),a(2))(1)=a(1)
         (a(1),a(2))(2)=a(2)
@@ -3753,17 +3753,17 @@ thm problem_17:
         by thm multiplication_congruence_17((b(1),b(2))(2)-(a(1),a(2))(2),b(2)-a(2),(s(1),s(2))(1)-(a(1),a(2))(1),s(1)-a(1))
         ((b(1),b(2))(2)-(a(1),a(2))(2))*((s(1),s(2))(1)-(a(1),a(2))(1))=(b(2)-a(2))*(s(1)-a(1))
         by thm subtraction_congruence_17(((b(1),b(2))(1)-(a(1),a(2))(1))*((s(1),s(2))(2)-(a(1),a(2))(2)),(b(1)-a(1))*(s(2)-a(2)),((b(1),b(2))(2)-(a(1),a(2))(2))*((s(1),s(2))(1)-(a(1),a(2))(1)),(b(2)-a(2))*(s(1)-a(1)))
-        det(vec((a(1),a(2)),(b(1),b(2))),vec((a(1),a(2)),(s(1),s(2))))=((b(1),b(2))(1)-(a(1),a(2))(1))*((s(1),s(2))(2)-(a(1),a(2))(2))-((b(1),b(2))(2)-(a(1),a(2))(2))*((s(1),s(2))(1)-(a(1),a(2))(1))=(b(1)-a(1))*(s(2)-a(2))-(b(2)-a(2))*(s(1)-a(1))=det(vec(a,b),vec(a,s))
+        det2(vec((a(1),a(2)),(b(1),b(2))),vec((a(1),a(2)),(s(1),s(2))))=((b(1),b(2))(1)-(a(1),a(2))(1))*((s(1),s(2))(2)-(a(1),a(2))(2))-((b(1),b(2))(2)-(a(1),a(2))(2))*((s(1),s(2))(1)-(a(1),a(2))(1))=(b(1)-a(1))*(s(2)-a(2))-(b(2)-a(2))*(s(1)-a(1))=det2(vec(a,b),vec(a,s))
 
     thm coordinate_semicircle_side_transport_17:
         ? forall a,b,s,c cart(R,R):
-            det(vec(a,b),vec(a,s))*det(vec(a,b),vec(a,c))>0
+            det2(vec(a,b),vec(a,s))*det2(vec(a,b),vec(a,c))>0
             =>:
-                det(vec((a(1),a(2)),(b(1),b(2))),vec((a(1),a(2)),(s(1),s(2))))*det(vec((a(1),a(2)),(b(1),b(2))),vec((a(1),a(2)),(c(1),c(2))))>0
+                det2(vec((a(1),a(2)),(b(1),b(2))),vec((a(1),a(2)),(s(1),s(2))))*det2(vec((a(1),a(2)),(b(1),b(2))),vec((a(1),a(2)),(c(1),c(2))))>0
         by thm coordinate_determinant_value_17(a,b,s)
         by thm coordinate_determinant_value_17(a,b,c)
-        by thm multiplication_congruence_17(det(vec((a(1),a(2)),(b(1),b(2))),vec((a(1),a(2)),(s(1),s(2)))),det(vec(a,b),vec(a,s)),det(vec((a(1),a(2)),(b(1),b(2))),vec((a(1),a(2)),(c(1),c(2)))),det(vec(a,b),vec(a,c)))
-        det(vec((a(1),a(2)),(b(1),b(2))),vec((a(1),a(2)),(s(1),s(2))))*det(vec((a(1),a(2)),(b(1),b(2))),vec((a(1),a(2)),(c(1),c(2))))=det(vec(a,b),vec(a,s))*det(vec(a,b),vec(a,c))>0
+        by thm multiplication_congruence_17(det2(vec((a(1),a(2)),(b(1),b(2))),vec((a(1),a(2)),(s(1),s(2)))),det2(vec(a,b),vec(a,s)),det2(vec((a(1),a(2)),(b(1),b(2))),vec((a(1),a(2)),(c(1),c(2)))),det2(vec(a,b),vec(a,c)))
+        det2(vec((a(1),a(2)),(b(1),b(2))),vec((a(1),a(2)),(s(1),s(2))))*det2(vec((a(1),a(2)),(b(1),b(2))),vec((a(1),a(2)),(c(1),c(2))))=det2(vec(a,b),vec(a,s))*det2(vec(a,b),vec(a,c))>0
 
     # First expose the exact polynomial content of the geometric hypotheses.
     by def $is_midpoint(center_gamma, point_a, point_b)
@@ -3794,9 +3794,9 @@ thm problem_17:
 
     # Convert D collinear with AB into signed diameter coordinates AD=p and DB=q.
     by thm on_line_zero_determinant_17(point_d,point_a,point_b)
-    det(vec(point_a, point_d), vec(point_a, point_b)) = 0
+    det2(vec(point_a, point_d), vec(point_a, point_b)) = 0
     by thm det_of_vectors_coordinates_17(point_a,point_d,point_a,point_b)
-    det(vec(point_a,point_d),vec(point_a,point_b))=(point_d(1)-point_a(1))*(point_b(2)-point_a(2))-(point_d(2)-point_a(2))*(point_b(1)-point_a(1))
+    det2(vec(point_a,point_d),vec(point_a,point_b))=(point_d(1)-point_a(1))*(point_b(2)-point_a(2))-(point_d(2)-point_a(2))*(point_b(1)-point_a(1))
     by thm multiplication_congruence_17(point_d(1) - point_a(1), point_d(1) - point_a(1), point_b(2) - point_a(2), 2 * radius_gamma * ey)
     (point_d(1) - point_a(1)) * (point_b(2) - point_a(2)) = (point_d(1) - point_a(1)) * (2 * radius_gamma * ey)
     by thm multiplication_congruence_17(point_d(2) - point_a(2), point_d(2) - point_a(2), point_b(1) - point_a(1), 2 * radius_gamma * ex)
@@ -3897,12 +3897,12 @@ thm problem_17:
     point_c = (point_c(1), point_c(2))
     center_2 = (center_2(1), center_2(2))
     by thm coordinate_semicircle_side_transport_17(point_a,point_b,center_2,point_c)
-    det(vec((point_a(1), point_a(2)), (point_b(1), point_b(2))), vec((point_a(1), point_a(2)), (center_2(1), center_2(2)))) * det(vec((point_a(1), point_a(2)), (point_b(1), point_b(2))), vec((point_a(1), point_a(2)), (point_c(1), point_c(2)))) > 0
+    det2(vec((point_a(1), point_a(2)), (point_b(1), point_b(2))), vec((point_a(1), point_a(2)), (center_2(1), center_2(2)))) * det2(vec((point_a(1), point_a(2)), (point_b(1), point_b(2))), vec((point_a(1), point_a(2)), (point_c(1), point_c(2)))) > 0
     by thm ab_positive_side_root_17(point_a(1), point_a(2), point_b(1), point_b(2), point_c(1), point_c(2), center_2(1), center_2(2), point_d(1), point_d(2), ex, ey, nx, ny, p, q, h, x_2, y_2, radius_2)
     y_2 = radius_2
     center_3 = (center_3(1), center_3(2))
     by thm coordinate_semicircle_side_transport_17(point_a,point_b,center_3,point_c)
-    det(vec((point_a(1), point_a(2)), (point_b(1), point_b(2))), vec((point_a(1), point_a(2)), (center_3(1), center_3(2)))) * det(vec((point_a(1), point_a(2)), (point_b(1), point_b(2))), vec((point_a(1), point_a(2)), (point_c(1), point_c(2)))) > 0
+    det2(vec((point_a(1), point_a(2)), (point_b(1), point_b(2))), vec((point_a(1), point_a(2)), (center_3(1), center_3(2)))) * det2(vec((point_a(1), point_a(2)), (point_b(1), point_b(2))), vec((point_a(1), point_a(2)), (point_c(1), point_c(2)))) > 0
     by thm ab_positive_side_root_17(point_a(1), point_a(2), point_b(1), point_b(2), point_c(1), point_c(2), center_3(1), center_3(2), point_d(1), point_d(2), ex, ey, nx, ny, p, q, h, x_3, y_3, radius_3)
     y_3 = radius_3
 

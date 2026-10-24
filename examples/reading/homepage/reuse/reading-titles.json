@@ -1,0 +1,13 @@
+{
+  "kind": "reading_titles",
+  "sources": {
+    "newton.lit": {
+      "zh": "牛顿迭代：定义与不动点",
+      "en": "Newton iteration: definitions and fixed points"
+    },
+    "example.lit": {
+      "zh": "复用已经证明的牛顿定理",
+      "en": "Reusing a proved Newton theorem"
+    }
+  }
+}

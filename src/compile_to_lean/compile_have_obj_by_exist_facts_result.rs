@@ -40,6 +40,7 @@ impl LitexToLeanCompiler {
             &proof.store_and_infer_result,
             &HashMap::new(),
             format!("(show {proposition} from {evidence})"),
+            None,
             position,
             position,
             local,

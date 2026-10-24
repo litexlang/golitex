@@ -1,0 +1,13 @@
+have fn reciprocal(x R: x != 0) R = 1 / x
+
+reciprocal(2) = 1 / 2
+
+claim:
+    ? forall x R:
+        x != 0
+        =>:
+            reciprocal(x) * x = 1
+    reciprocal(x) = 1 / x
+    reciprocal(x) * x = (1 / x) * x = 1
+
+reciprocal(2) * 2 = 1

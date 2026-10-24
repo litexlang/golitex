@@ -1,0 +1,4 @@
+forall x,y R:
+    x^2 + y^2 = 0
+    =>:
+        x = 0 and y = 0

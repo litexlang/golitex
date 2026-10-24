@@ -17,6 +17,9 @@ pub(super) fn project_atomic_builtin_rule(
     runtime: &Runtime,
 ) -> JsonValue {
     match proof {
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(br::in_fact::InFactSearchProofByBuiltinRule::NativeMatrix(p)) =>
+            super::native_matrix::membership(p,runtime),
+
         AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(br::not_equal::NotEqualFactSearchProofByBuiltinRule::SinComplementNonzeroFromCos(p)) => object_for(runtime, vec![("type", string("builtin_rule")), ("rule", string("SinComplementNonzeroFromCos")), ("source_nonzero", super::searched::project_known_premise(&p.source_nonzero, runtime))]),
         AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(br::not_equal::NotEqualFactSearchProofByBuiltinRule::NegationNonzero(p)) => object_for(runtime, vec![("type", string("builtin_rule")), ("rule", string("NegationNonzero")), ("argument_nonzero", project_verify_fact(&p.argument_nonzero, runtime))]),
         AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(br::not_equal::NotEqualFactSearchProofByBuiltinRule::CoshNonzero(_)) => object_for(runtime, vec![("type", string("builtin_rule")), ("rule", string("CoshNonzero"))]),

@@ -13,6 +13,18 @@ impl LitexToLeanCompiler {
         index: usize,
         local: bool,
     ) -> Result<String, LeanCompileError> {
+        if let ExecReleaseAndExpandStmtResult::ExpandRange(result) = result {
+            return self.compile_expand_range_statement(result, position, index, local);
+        }
+        if let ExecReleaseAndExpandStmtResult::ObjDef(result) = result {
+            return self.compile_release_obj_definition(result, position, index, local);
+        }
+        if let ExecReleaseAndExpandStmtResult::TupleDef(result) = result {
+            return self.compile_release_tuple_definition(result, position, index, local);
+        }
+        if let ExecReleaseAndExpandStmtResult::CartDef(result) = result {
+            return self.compile_release_cart_definition(result, position, index, local);
+        }
         let ExecReleaseAndExpandStmtResult::Thm(result) = result else {
             return Err(LeanCompileError::unsupported(
                 "ReleaseAndExpand/OtherFamily",

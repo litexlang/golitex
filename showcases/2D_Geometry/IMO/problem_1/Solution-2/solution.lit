@@ -1,6 +1,6 @@
 release obj def geo::vec
 release obj def geo::dot
-release obj def geo::det
+release obj def geo::det2
 release obj def geo::distance_sq
 
 # IMO 1960 Problem 3
@@ -91,15 +91,15 @@ thm imo_1960_problem_3:
     4 * n^2 * geo::dot(geo::vec(point_a, p1), geo::vec(point_a, p2)) = (n^2 - 1) * geo::distance_sq(point_b, point_c)
     release thm theorem::central_det(p1(1)-point_a(1), p1(2)-point_a(2), p2(1)-point_a(1), p2(2)-point_a(2), point_b(1)-point_a(1), point_b(2)-point_a(2), point_c(1)-point_a(1), point_c(2)-point_a(2), n)
     n*((p1(1)-point_a(1))*(p2(2)-point_a(2))-(p1(2)-point_a(2))*(p2(1)-point_a(1))) = (point_b(1)-point_a(1))*(point_c(2)-point_a(2))-(point_b(2)-point_a(2))*(point_c(1)-point_a(1))
-    geo::det(geo::vec(point_a,p1),geo::vec(point_a,p2)) = geo::vec(point_a,p1)(1)*geo::vec(point_a,p2)(2)-geo::vec(point_a,p1)(2)*geo::vec(point_a,p2)(1)
-    geo::det(geo::vec(point_a,p1),geo::vec(point_a,p2)) = (p1(1)-point_a(1))*(p2(2)-point_a(2))-(p1(2)-point_a(2))*(p2(1)-point_a(1))
-    geo::det(geo::vec(point_a,point_b),geo::vec(point_a,point_c)) = geo::vec(point_a,point_b)(1)*geo::vec(point_a,point_c)(2)-geo::vec(point_a,point_b)(2)*geo::vec(point_a,point_c)(1)
-    geo::det(geo::vec(point_a,point_b),geo::vec(point_a,point_c)) = (point_b(1)-point_a(1))*(point_c(2)-point_a(2))-(point_b(2)-point_a(2))*(point_c(1)-point_a(1))
-    n*geo::det(geo::vec(point_a,p1),geo::vec(point_a,p2)) = n*((p1(1)-point_a(1))*(p2(2)-point_a(2))-(p1(2)-point_a(2))*(p2(1)-point_a(1)))
-    n*geo::det(geo::vec(point_a,p1),geo::vec(point_a,p2)) = geo::det(geo::vec(point_a,point_b),geo::vec(point_a,point_c))
-    (n*geo::det(geo::vec(point_a,p1),geo::vec(point_a,p2)))^2 = geo::det(geo::vec(point_a,point_b),geo::vec(point_a,point_c))^2
-    n^2 * geo::det(geo::vec(point_a, p1), geo::vec(point_a, p2))^2 = (n*geo::det(geo::vec(point_a,p1),geo::vec(point_a,p2)))^2
-    n^2 * geo::det(geo::vec(point_a, p1), geo::vec(point_a, p2))^2 = geo::det(geo::vec(point_a, point_b), geo::vec(point_a, point_c))^2
+    geo::det2(geo::vec(point_a,p1),geo::vec(point_a,p2)) = geo::vec(point_a,p1)(1)*geo::vec(point_a,p2)(2)-geo::vec(point_a,p1)(2)*geo::vec(point_a,p2)(1)
+    geo::det2(geo::vec(point_a,p1),geo::vec(point_a,p2)) = (p1(1)-point_a(1))*(p2(2)-point_a(2))-(p1(2)-point_a(2))*(p2(1)-point_a(1))
+    geo::det2(geo::vec(point_a,point_b),geo::vec(point_a,point_c)) = geo::vec(point_a,point_b)(1)*geo::vec(point_a,point_c)(2)-geo::vec(point_a,point_b)(2)*geo::vec(point_a,point_c)(1)
+    geo::det2(geo::vec(point_a,point_b),geo::vec(point_a,point_c)) = (point_b(1)-point_a(1))*(point_c(2)-point_a(2))-(point_b(2)-point_a(2))*(point_c(1)-point_a(1))
+    n*geo::det2(geo::vec(point_a,p1),geo::vec(point_a,p2)) = n*((p1(1)-point_a(1))*(p2(2)-point_a(2))-(p1(2)-point_a(2))*(p2(1)-point_a(1)))
+    n*geo::det2(geo::vec(point_a,p1),geo::vec(point_a,p2)) = geo::det2(geo::vec(point_a,point_b),geo::vec(point_a,point_c))
+    (n*geo::det2(geo::vec(point_a,p1),geo::vec(point_a,p2)))^2 = geo::det2(geo::vec(point_a,point_b),geo::vec(point_a,point_c))^2
+    n^2 * geo::det2(geo::vec(point_a, p1), geo::vec(point_a, p2))^2 = (n*geo::det2(geo::vec(point_a,p1),geo::vec(point_a,p2)))^2
+    n^2 * geo::det2(geo::vec(point_a, p1), geo::vec(point_a, p2))^2 = geo::det2(geo::vec(point_a, point_b), geo::vec(point_a, point_c))^2
 
     # Combine the tangent and altitude identities without division.
     (n^2-1)*geo::distance_sq(point_b,point_c) = (n^2-1)*a^2
@@ -109,7 +109,7 @@ thm imo_1960_problem_3:
     release thm theorem::dot_positivity_from_identity(geo::dot(geo::vec(point_a,p1),geo::vec(point_a,p2)), a, n)
     geo::dot(geo::vec(point_a,p1),geo::vec(point_a,p2)) > 0
 
-    release thm theorem::central_tangent_square(tan_alpha, geo::dot(geo::vec(point_a,p1),geo::vec(point_a,p2)), geo::det(geo::vec(point_a,p1),geo::vec(point_a,p2)), geo::det(geo::vec(point_a,point_b),geo::vec(point_a,point_c)), a, h, n)
+    release thm theorem::central_tangent_square(tan_alpha, geo::dot(geo::vec(point_a,p1),geo::vec(point_a,p2)), geo::det2(geo::vec(point_a,p1),geo::vec(point_a,p2)), geo::det2(geo::vec(point_a,point_b),geo::vec(point_a,point_c)), a, h, n)
     (tan_alpha * (n^2 - 1) * a)^2 = (4 * n * h)^2
     n-1 > 0
     n+1 > 0

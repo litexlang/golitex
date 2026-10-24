@@ -236,6 +236,32 @@ impl Runtime {
 
 fn intrinsic_codomain(element: &Obj) -> Option<(StandardSet, IntrinsicCodomain)> {
     use IntrinsicCodomain as K;
+    if let Obj::MatrixOperator(operator) = element {
+        return match operator {
+            MatrixOperator::Determinant(_) => Some((StandardSet::C, K::MatrixDeterminant)),
+            MatrixOperator::Trace(_) => Some((StandardSet::C, K::MatrixTrace)),
+            MatrixOperator::Rank(_) => Some((StandardSet::N, K::MatrixRank)),
+            MatrixOperator::Cofactor(_) => Some((StandardSet::C, K::MatrixCofactor)),
+            MatrixOperator::InnerProduct(_) => Some((StandardSet::C, K::FiniteInnerProduct)),
+            MatrixOperator::EuclideanNorm(_) => Some((StandardSet::R, K::EuclideanNorm)),
+            MatrixOperator::FrobeniusNorm(_) => Some((StandardSet::R, K::MatrixFrobeniusNorm)),
+            MatrixOperator::ZeroMatrix(_)
+            | MatrixOperator::IdentityMatrix(_)
+            | MatrixOperator::Transpose(_)
+            | MatrixOperator::ConjugateTranspose(_)
+            | MatrixOperator::Add(_)
+            | MatrixOperator::Subtract(_)
+            | MatrixOperator::Scale(_)
+            | MatrixOperator::Multiply(_)
+            | MatrixOperator::Apply(_)
+            | MatrixOperator::Power(_)
+            | MatrixOperator::Inverse(_)
+            | MatrixOperator::Minor(_)
+            | MatrixOperator::Adjugate(_)
+            | MatrixOperator::Diagonal(_)
+            | MatrixOperator::OuterProduct(_) => None,
+        };
+    }
     use StandardSet::*;
     Some(match element {
         Obj::IntegralOperator(_) => (R, K::RiemannIntegral),

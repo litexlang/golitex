@@ -18,15 +18,16 @@ use crate::ast::obj::{
 use crate::ast::param::{SetBoundParameterGroup, SetBoundParameterList};
 use crate::parse::keywords::COMPOSE;
 use crate::parse::keywords::{
-    ABS, ARCCOS, ARCCOT, ARCSIN, ARCTAN, C, CART, CART_DIM, CEIL, CLOSED_RANGE, COLON, COMMA, COS,
-    COT, C_ABS, C_STAR, DOT, EXP, FACTORIAL, FAMILY_INTERSECT, FAMILY_UNION, FINITE_SEQ,
-    FINITE_SET_MAX, FINITE_SET_MIN, FINITE_SET_PRODUCT, FINITE_SET_REDUCE, FINITE_SET_SIZE,
-    FINITE_SET_SUM, FLOOR, FN, FN_RANGE, GCD, GREATER, IMG, INDEX_CART, INDEX_INTERSECT,
-    INDEX_UNION, INTERSECT, INTERVAL_LITERAL_PREFIX, LCM, LEFT_BRACKET, LEFT_CURLY, LEFT_PAREN,
-    LESS, LN, LOG, MAX, MIN, MOD_FLAT_SIGN, MOD_SIGN, N, N_POS, POWER_SET, PREIMAGE, PREIMAGE_SET,
-    PRODUCT, PROJ, Q, QUOT, Q_NEG, Q_POS, Q_STAR, R, RANGE, RE, REDUCE, RIGHT_BRACKET, RIGHT_CURLY,
-    RIGHT_PAREN, R_NEG, R_POS, R_STAR, SEQ, SET_MINUS, SIGN, SIN, SQRT, STRUCT_VIEW_PREFIX, SUM,
-    TAN, TEMPLATE_INSTANCE_PREFIX, TUPLE, TUPLE_DIM, UNION, Z, Z_NEG, Z_POS, Z_STAR,
+    ABS, ARCCOS, ARCCOT, ARCSIN, ARCTAN, C, CART, CART_DIM, CART_N, CEIL, CLOSED_RANGE, COLON,
+    COMMA, COS, COT, C_ABS, C_STAR, DOT, EXP, FACTORIAL, FAMILY_INTERSECT, FAMILY_UNION,
+    FINITE_SEQ, FINITE_SET_MAX, FINITE_SET_MIN, FINITE_SET_PRODUCT, FINITE_SET_REDUCE,
+    FINITE_SET_SIZE, FINITE_SET_SUM, FLOOR, FN, FN_RANGE, GCD, GREATER, IMG, INDEX_CART,
+    INDEX_INTERSECT, INDEX_UNION, INTERSECT, INTERVAL_LITERAL_PREFIX, LCM, LEFT_BRACKET,
+    LEFT_CURLY, LEFT_PAREN, LESS, LN, LOG, MAX, MIN, MOD_FLAT_SIGN, MOD_SIGN, N, N_POS, POWER_SET,
+    PREIMAGE, PREIMAGE_SET, PRODUCT, PROJ, Q, QUOT, Q_NEG, Q_POS, Q_STAR, R, RANGE, RE, REDUCE,
+    RIGHT_BRACKET, RIGHT_CURLY, RIGHT_PAREN, R_NEG, R_POS, R_STAR, SEQ, SET_MINUS, SIGN, SIN, SQRT,
+    STRUCT_VIEW_PREFIX, SUM, TAN, TEMPLATE_INSTANCE_PREFIX, TUPLE, TUPLE_DIM, UNION, Z, Z_NEG,
+    Z_POS, Z_STAR,
 };
 use crate::parse::keywords::{CONJ, COSH, COTH, CSC, CSCH, SEC, SECH, SET_DIFF, SINH, TANH};
 use crate::runtime::{Runtime, RuntimeResult};
@@ -767,8 +768,185 @@ fn try_parse_keyword_primary(
             PREIMAGE_SET,
             |function, target_set| PreimageSet::new(function, target_set).into(),
         )?)),
+        "matrix"
+        | "det"
+        | "zero_matrix"
+        | "identity_matrix"
+        | "transpose"
+        | "conjugate_transpose"
+        | "trace"
+        | "matrix_add"
+        | "matrix_sub"
+        | "matrix_scale"
+        | "matrix_mul"
+        | "matrix_apply"
+        | "matrix_power"
+        | "matrix_inverse"
+        | "matrix_rank"
+        | "matrix_minor"
+        | "matrix_cofactor"
+        | "matrix_adjugate"
+        | "diagonal_matrix"
+        | "outer_product"
+        | "inner_product"
+        | "euclidean_norm"
+        | "frobenius_norm" => {
+            use crate::ast::obj::*;
+            tb.advance()?;
+            let args = parse_obj_list_paren(rt, tb)?;
+            let expected = match token {
+                "matrix_add" => 4,
+                "matrix_sub" => 4,
+                "matrix_scale" => 4,
+                "matrix_mul" => 5,
+                "matrix_apply" => 4,
+                "matrix_power" => 3,
+                "matrix_inverse" => 2,
+                "matrix_rank" => 3,
+                "matrix_minor" => 4,
+                "matrix_cofactor" => 4,
+                "matrix_adjugate" => 2,
+                "diagonal_matrix" => 2,
+                "outer_product" => 4,
+                "inner_product" => 3,
+                "euclidean_norm" => 2,
+                "frobenius_norm" => 3,
+
+                "identity_matrix" => 1,
+                "matrix" | "transpose" | "conjugate_transpose" => 3,
+                _ => 2,
+            };
+            if args.len() != expected {
+                return Err(tb.parse_error(format!("{token} expects {expected} arguments")));
+            }
+            let mut args = args.into_iter().map(Box::new);
+            let first = args.next().unwrap();
+            let result = match token {
+                "matrix" => {
+                    return Ok(Some(Obj::SetFormer(SetFormer::MatrixSet(MatrixSet {
+                        set: first,
+                        rows: args.next().unwrap(),
+                        cols: args.next().unwrap(),
+                    }))))
+                }
+                "det" => MatrixOperator::Determinant(Determinant {
+                    matrix: first,
+                    order: args.next().unwrap(),
+                }),
+                "zero_matrix" => MatrixOperator::ZeroMatrix(ZeroMatrix {
+                    rows: first,
+                    cols: args.next().unwrap(),
+                }),
+                "identity_matrix" => {
+                    MatrixOperator::IdentityMatrix(IdentityMatrix { order: first })
+                }
+                "transpose" => MatrixOperator::Transpose(MatrixTranspose {
+                    matrix: first,
+                    rows: args.next().unwrap(),
+                    cols: args.next().unwrap(),
+                }),
+                "conjugate_transpose" => {
+                    MatrixOperator::ConjugateTranspose(MatrixConjugateTranspose {
+                        matrix: first,
+                        rows: args.next().unwrap(),
+                        cols: args.next().unwrap(),
+                    })
+                }
+                "matrix_add" => MatrixOperator::Add(MatrixAdd {
+                    left: first,
+                    right: args.next().unwrap(),
+                    rows: args.next().unwrap(),
+                    cols: args.next().unwrap(),
+                }),
+                "matrix_sub" => MatrixOperator::Subtract(MatrixSubtract {
+                    left: first,
+                    right: args.next().unwrap(),
+                    rows: args.next().unwrap(),
+                    cols: args.next().unwrap(),
+                }),
+                "matrix_scale" => MatrixOperator::Scale(MatrixScale {
+                    scalar: first,
+                    matrix: args.next().unwrap(),
+                    rows: args.next().unwrap(),
+                    cols: args.next().unwrap(),
+                }),
+                "matrix_mul" => MatrixOperator::Multiply(MatrixMultiply {
+                    left: first,
+                    right: args.next().unwrap(),
+                    rows: args.next().unwrap(),
+                    inner: args.next().unwrap(),
+                    cols: args.next().unwrap(),
+                }),
+                "matrix_apply" => MatrixOperator::Apply(MatrixApply {
+                    matrix: first,
+                    vector: args.next().unwrap(),
+                    rows: args.next().unwrap(),
+                    cols: args.next().unwrap(),
+                }),
+                "matrix_power" => MatrixOperator::Power(MatrixPower {
+                    matrix: first,
+                    order: args.next().unwrap(),
+                    exponent: args.next().unwrap(),
+                }),
+                "matrix_inverse" => MatrixOperator::Inverse(MatrixInverse {
+                    matrix: first,
+                    order: args.next().unwrap(),
+                }),
+                "matrix_rank" => MatrixOperator::Rank(MatrixRank {
+                    matrix: first,
+                    rows: args.next().unwrap(),
+                    cols: args.next().unwrap(),
+                }),
+                "matrix_minor" => MatrixOperator::Minor(MatrixMinor {
+                    matrix: first,
+                    order: args.next().unwrap(),
+                    row: args.next().unwrap(),
+                    col: args.next().unwrap(),
+                }),
+                "matrix_cofactor" => MatrixOperator::Cofactor(MatrixCofactor {
+                    matrix: first,
+                    order: args.next().unwrap(),
+                    row: args.next().unwrap(),
+                    col: args.next().unwrap(),
+                }),
+                "matrix_adjugate" => MatrixOperator::Adjugate(MatrixAdjugate {
+                    matrix: first,
+                    order: args.next().unwrap(),
+                }),
+                "diagonal_matrix" => MatrixOperator::Diagonal(MatrixDiagonal {
+                    vector: first,
+                    order: args.next().unwrap(),
+                }),
+                "outer_product" => MatrixOperator::OuterProduct(MatrixOuterProduct {
+                    left: first,
+                    right: args.next().unwrap(),
+                    rows: args.next().unwrap(),
+                    cols: args.next().unwrap(),
+                }),
+                "inner_product" => MatrixOperator::InnerProduct(FiniteInnerProduct {
+                    left: first,
+                    right: args.next().unwrap(),
+                    dimension: args.next().unwrap(),
+                }),
+                "euclidean_norm" => MatrixOperator::EuclideanNorm(EuclideanNorm {
+                    vector: first,
+                    dimension: args.next().unwrap(),
+                }),
+                "frobenius_norm" => MatrixOperator::FrobeniusNorm(MatrixFrobeniusNorm {
+                    matrix: first,
+                    rows: args.next().unwrap(),
+                    cols: args.next().unwrap(),
+                }),
+                "trace" => MatrixOperator::Trace(MatrixTrace {
+                    matrix: first,
+                    order: args.next().unwrap(),
+                }),
+                _ => unreachable!(),
+            };
+            Ok(Some(Obj::MatrixOperator(result)))
+        }
         // Finite sequences of length n in S. Example: `finite_seq(R, 3)`.
-        FINITE_SEQ => Ok(Some(parse_binary_keyword(rt, tb, FINITE_SEQ, |set, n| {
+        FINITE_SEQ | CART_N => Ok(Some(parse_binary_keyword(rt, tb, token, |set, n| {
             Obj::SetFormer(SetFormer::FiniteSeqSet(FiniteSeqSet {
                 set: Box::new(set),
                 n: Box::new(n),

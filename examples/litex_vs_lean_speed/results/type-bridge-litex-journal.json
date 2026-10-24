@@ -1,0 +1,50 @@
+{
+  "date": "2026-10-24",
+  "command": "target/release/litex -lang en -strict -session -e '1 = 1'",
+  "session_policy": "One live Session; one top-level statement per submission. No restarts.",
+  "attempts": [
+    {
+      "case": "cast_annotations",
+      "source": "forall a Z,d N+:\n    a=d*quot(a,d)+a%d",
+      "kind": "run",
+      "run_result": "success",
+      "target": "repl",
+      "session_terminated": false,
+      "termination": null,
+      "errors": [],
+      "lesson": "Existing quotient/remainder interface checks directly for an integer dividend and positive natural divisor."
+    },
+    {
+      "case": "square_nonnegative",
+      "source": "forall n N:\n    n^2 >= 0",
+      "kind": "run",
+      "run_result": "success",
+      "target": "repl",
+      "session_terminated": false,
+      "termination": null,
+      "errors": [],
+      "lesson": "Natural-square nonnegativity checks without a source-level cast transport."
+    }
+  ],
+  "session_closed_after_clean_file_checks": true,
+  "clean_file_checks": {
+    "cast_annotations": "success, exit 0, strict",
+    "square_nonnegative": "success, exit 0, strict"
+  },
+  "translation_records": [
+    {
+      "source": "Self-contained type-bridge experiment; existing quotient/remainder benchmark interface.",
+      "problem": "For an integer a and positive natural d, a equals d times its quotient plus its remainder.",
+      "proof_idea": "Use the existing integer quotient/remainder identity with a positive divisor.",
+      "litex_code": "forall a Z,d N+:\n    a=d*quot(a,d)+a%d",
+      "comments": "Checked in one strict Session and then by a clean release -f run. No user trust or axiom. The native verifier rules remain trusted."
+    },
+    {
+      "source": "Self-contained type-bridge experiment.",
+      "problem": "For every natural number n, its square is nonnegative. The Lean statement views n in the reals.",
+      "proof_idea": "Use the native nonnegativity fact for a square; Litex uses one numeric object across the natural and real memberships.",
+      "litex_code": "forall n N:\n    n^2 >= 0",
+      "comments": "Checked in the same strict Session and by clean release -f. No user trust. This is a matched arithmetic target, not an isolated measure of type-system costs."
+    }
+  ]
+}

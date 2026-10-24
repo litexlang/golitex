@@ -1,0 +1,29 @@
+prop GroupProperty(s nonempty_set, inv fn(x s) s, op fn(x, y s) s, identity s):
+    forall x, y, z s:
+        op(x, op(y, z)) = op(op(x, y), z)
+    forall x s:
+        op(identity, x) = x
+        op(x, identity) = x
+    forall x s:
+        op(x, inv(x)) = identity
+        op(inv(x), x) = identity
+
+struct Group<s nonempty_set>:
+    inv fn(x s) s
+    op fn(x, y s) s
+    identity s
+    <=>:
+        $GroupProperty(s, inv, op, identity)
+
+thm group_left_cancel:
+    ? forall s nonempty_set, g &Group<s>, a, b, c s:
+        g.op(a, b) = g.op(a, c)
+        =>:
+            b = c
+    $GroupProperty(s, g.inv, g.op, g.identity)
+    g.op(g.inv(a), a) = g.identity
+    g.op(g.identity, b) = b
+    g.op(g.identity, c) = c
+    g.op(g.op(g.inv(a), a), b) = g.op(g.identity, b) = b
+    g.op(g.op(g.inv(a), a), b) = g.op(g.inv(a), g.op(a, b)) = g.op(g.inv(a), g.op(a, c)) = g.op(g.op(g.inv(a), a), c) = g.op(g.identity, c) = c
+    b = c

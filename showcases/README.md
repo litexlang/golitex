@@ -9,6 +9,12 @@ For a short mathematical introduction, begin with [Linear Algebra in Litex](line
 For a systematic introduction
 to writing proofs, follow [The Mechanics of Litex Proof](The-Mechanics-of-Litex-Proof/README.md).
 
+For a guided mathematical reading, use the
+[seven sample chapters](../docs/mathematical_sample_chapters/README.md)
+or their [Chinese reading guide](../docs/mathematical_sample_chapters/README.zh-CN.md).
+Each chapter develops one question through definitions, a complete central
+argument, concrete examples and exercises with answers.
+
 ## Mathematical lecture notes
 
 A lecture develops a small mathematical world: definitions lead to examples,
@@ -18,6 +24,7 @@ lecture a chapter-by-chapter adaptation.
 | Collection | Mathematical progression | Scope |
 | --- | --- | --- |
 | [Linear Algebra in Litex](linear_algebra/README.md) | Coordinate operations → vector spaces and subspaces → span, bases and unique coordinates | Selected lectures inspired by Axler's *Linear Algebra Done Right*, using the real plane. |
+| [From derivatives to definite integrals](analysis/calculus/README.md) | Point derivatives → antiderivatives → Newton–Leibniz → substitution and integration by parts | A standalone strict calculus lecture using native analysis interfaces; separate from the Tao chapter adaptation. |
 | [Topology in Litex](topology/README.md) | Open and closed sets → continuous maps → homeomorphisms | Two chapters with discrete and indiscrete two-point spaces, continuous composition and the closed-preimage criterion. |
 | [Abstract Algebra in Litex](abstract_algebra/README.md) | Groups and subgroups → homomorphisms → kernels and injectivity | Two chapters on group theory, using integer addition, multiples, doubling and the zero map. |
 | [Mathematical Concepts in Litex](math_concepts_in_litex/README.md) | Subject-specific slices from elementary constructions to undergraduate structures | A collection of checked vertical slices, rather than a complete curriculum. |
@@ -67,6 +74,8 @@ show how its output can be used elsewhere.
 
 | Collection | Demonstrated capability | Scope |
 | --- | --- | --- |
+| [Matrices as functions](matrices_as_functions/README.md) | One matrix-valued function used for entry calculations, row vectors and universal invariants | A real 2×2 parameter family with constant determinant, transpose and conjugate-transpose equalities, and empty-matrix conventions. |
+| [A certified matrix solve](matrix_linear_algebra/README.md) | Inverse action → exact coordinates and norm → solution correctness and uniqueness | A real 2×2 system, full rank and symmetry, using the source matrix library and native operators. |
 | [Litex proofs in ordinary Lean](litex_to_lean_adapter/README.md) | Litex source → generated Lean proof → handwritten adapter → ordinary Lean/Mathlib theorem | Worked interoperability examples, including a nonzero-denominator identity and a fractional linear involution; not a general proof-length comparison. |
 | [Write Mathematically Correct Code with Litex](Write_Mathematically_Correct_Code_With_Litex/README.md) | One mathematical definition used in proofs and exported as Python or C | A concrete Newton-step calculation with an exact-real residual bound. Target floating-point rounding, overflow and surrounding application correctness are outside the demonstrated guarantee. |
 

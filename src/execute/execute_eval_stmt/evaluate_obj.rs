@@ -27,10 +27,12 @@ pub fn evaluate_obj(
     }
 
     if ClosedNumericExpr::try_from_obj(obj).is_some() {
-        return Ok(match evaluate_closed_numeric_obj(obj) {
-            Some(v) => Ok(v),
-            None => Err(ExecEvalStmtFailed::EvaluationFailed),
-        });
+        return Ok(
+            match evaluate_numeric_source(obj, active_calls.proof_mode) {
+                Some(v) => Ok(v),
+                None => Err(ExecEvalStmtFailed::EvaluationFailed),
+            },
+        );
     }
 
     if crate::rational_expression::contains_imaginary_unit(obj) {
@@ -40,9 +42,83 @@ pub fn evaluate_obj(
     }
 
     match obj {
-        Obj::ComplexOperator(_) => {
-            let value = crate::rational_expression::exact_rational::evaluate_obj_to_exact_rational_obj_for_eval(obj)
-                .or_else(|| crate::rational_expression::exact_complex::exact_modulus_value(obj));
+        Obj::MatrixOperator(operator) => {
+            let source_well_defined = match runtime
+                .verify_obj_well_definedness(obj, active_calls.function_proof_state)?
+            {
+                crate::execute::execute_fact_stmt::VerifyObjWellDefinedResult::Success(p) => p,
+                failed => return Ok(Err(ExecEvalStmtFailed::WellDefined(Box::new(failed)))),
+            };
+            let Some(expression) = runtime.matrix_scalar_definition(operator) else {
+                return Ok(Err(ExecEvalStmtFailed::UnsupportedExpression));
+            };
+            let value = match evaluate_obj(runtime, &expression, depth + 1, active_calls)? {
+                Ok(v) => v,
+                Err(e) => return Ok(Err(e)),
+            };
+            active_calls.matrix_scalar_evaluations.push(
+                super::aggregate_evaluation_result::MatrixScalarEvaluationResult {
+                    source: obj.clone(),
+                    source_well_defined,
+                    expression,
+                    value: value.clone(),
+                },
+            );
+            Ok(Ok(value))
+        }
+        Obj::ExpLogOperator(crate::ast::obj::ExpLogOperator::Sqrt(x)) => {
+            let argument = match evaluate_obj(runtime, &x.arg, depth + 1, active_calls)? {
+                Ok(v) => v,
+                Err(e) => return Ok(Err(e)),
+            };
+            let expression = Obj::ExpLogOperator(crate::ast::obj::ExpLogOperator::Sqrt(
+                crate::ast::obj::Sqrt {
+                    arg: Box::new(argument),
+                },
+            ));
+            Ok(
+                evaluate_numeric_source(&expression, active_calls.proof_mode)
+                    .ok_or(ExecEvalStmtFailed::EvaluationFailed),
+            )
+        }
+        Obj::ComplexOperator(crate::ast::obj::ComplexOperator::Conjugate(value)) => {
+            let argument = match evaluate_obj(runtime, &value.arg, depth + 1, active_calls)? {
+                Ok(value) => value,
+                Err(error) => return Ok(Err(error)),
+            };
+            let exact = Obj::ComplexOperator(crate::ast::obj::ComplexOperator::Conjugate(
+                crate::ast::obj::Conjugate {
+                    arg: Box::new(argument),
+                },
+            ));
+            Ok(
+                crate::rational_expression::exact_complex::exact_complex_value(&exact)
+                    .map(Ok)
+                    .unwrap_or(Err(ExecEvalStmtFailed::UnsupportedExpression)),
+            )
+        }
+        Obj::ComplexOperator(operator) => {
+            use crate::ast::obj::{ComplexAbs, ComplexOperator, ImaginaryPart, RealPart};
+            let arg = match operator {
+                ComplexOperator::ComplexAbs(x) => &x.arg,
+                ComplexOperator::RealPart(x) => &x.arg,
+                ComplexOperator::ImaginaryPart(x) => &x.arg,
+                ComplexOperator::Conjugate(_) => unreachable!(),
+            };
+            let arg = match evaluate_obj(runtime, arg, depth + 1, active_calls)? {
+                Ok(v) => Box::new(v),
+                Err(e) => return Ok(Err(e)),
+            };
+            let expression = Obj::ComplexOperator(match operator {
+                ComplexOperator::ComplexAbs(_) => ComplexOperator::ComplexAbs(ComplexAbs { arg }),
+                ComplexOperator::RealPart(_) => ComplexOperator::RealPart(RealPart { arg }),
+                ComplexOperator::ImaginaryPart(_) => {
+                    ComplexOperator::ImaginaryPart(ImaginaryPart { arg })
+                }
+                ComplexOperator::Conjugate(_) => unreachable!(),
+            });
+            let value = crate::rational_expression::exact_rational::evaluate_obj_to_exact_rational_obj_for_eval(&expression)
+                .or_else(|| crate::rational_expression::exact_complex::exact_modulus_value(&expression));
             Ok(match value {
                 Some(value) => Ok(
                     crate::rational_expression::exact_radical::ExactRadical::from_obj(&value)
@@ -227,10 +303,12 @@ where
         Err(failed) => return Ok(Err(failed)),
     };
     let combined = rebuild(left_v, right_v);
-    Ok(match evaluate_closed_numeric_obj(&combined) {
-        Some(v) => Ok(v),
-        None => Err(ExecEvalStmtFailed::EvaluationFailed),
-    })
+    Ok(
+        match evaluate_numeric_source(&combined, active_calls.proof_mode) {
+            Some(v) => Ok(v),
+            None => Err(ExecEvalStmtFailed::EvaluationFailed),
+        },
+    )
 }
 
 fn eval_un<F>(
@@ -248,8 +326,66 @@ where
         Err(failed) => return Ok(Err(failed)),
     };
     let combined = rebuild(arg_v);
-    Ok(match evaluate_closed_numeric_obj(&combined) {
-        Some(v) => Ok(v),
-        None => Err(ExecEvalStmtFailed::EvaluationFailed),
-    })
+    Ok(
+        match evaluate_numeric_source(&combined, active_calls.proof_mode) {
+            Some(v) => Ok(v),
+            None => Err(ExecEvalStmtFailed::EvaluationFailed),
+        },
+    )
+}
+
+// Mathematical proof evaluation cannot turn a display-only decimal
+// approximation (or an overflowing exact operation) into an equality witness.
+// Ordinary `eval` keeps its existing display behavior.
+pub(super) fn evaluate_numeric_source(obj: &Obj, proof_mode: bool) -> Option<Obj> {
+    if crate::rational_expression::contains_imaginary_unit(obj) {
+        if let Some(value) = crate::rational_expression::exact_complex::exact_complex_value(obj) {
+            return Some(value);
+        }
+    }
+    if proof_mode {
+        crate::rational_expression::exact_rational::evaluate_obj_to_exact_rational_obj_for_eval(obj)
+            .or_else(|| {
+                crate::rational_expression::exact_radical::ExactRadical::from_obj(obj)
+                    .map(|x| x.to_obj())
+            })
+    } else {
+        evaluate_closed_numeric_obj(obj)
+    }
+}
+
+#[cfg(test)]
+mod matrix_exact_evaluation_tests {
+    use super::*;
+    use crate::ast::obj::{Literal, Number};
+
+    fn number(n: &str) -> Obj {
+        Obj::Literal(Literal::Number(Number::new(n.into())))
+    }
+
+    #[test]
+    fn native_matrix_proof_evaluation_declines_decimal_and_overflow_fallbacks() {
+        let exponent = Obj::ArithmeticOperator(ArithmeticOperator::Div(Div {
+            left: Box::new(number("1")),
+            right: Box::new(number("3")),
+        }));
+        let cube_root = Obj::ArithmeticOperator(ArithmeticOperator::Pow(Pow {
+            base: Box::new(number("2")),
+            exponent: Box::new(exponent),
+        }));
+        assert!(evaluate_numeric_source(&cube_root, true).is_none());
+        assert_eq!(
+            evaluate_numeric_source(&cube_root, false),
+            evaluate_closed_numeric_obj(&cube_root)
+        );
+        let overflow = Obj::ArithmeticOperator(ArithmeticOperator::Mul(Mul {
+            left: Box::new(number(&i128::MAX.to_string())),
+            right: Box::new(number("2")),
+        }));
+        assert!(evaluate_numeric_source(&overflow, true).is_none());
+        assert_eq!(
+            evaluate_numeric_source(&overflow, false),
+            evaluate_closed_numeric_obj(&overflow)
+        );
+    }
 }

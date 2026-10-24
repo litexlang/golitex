@@ -16,14 +16,19 @@ mod compile_define_obj_stmt_result;
 mod compile_definition_stmt_result;
 mod compile_division_inference;
 mod compile_equality_inferences;
+mod compile_expand_range_stmt_result;
 mod compile_fact_stmt_result;
+mod compile_finite_function_membership;
+mod compile_finite_seq_inference;
 mod compile_function_template;
+mod compile_have_fn_by_exist_result;
 mod compile_have_fn_by_induc_result;
 mod compile_have_fn_equal_stmt_result;
 mod compile_have_obj_by_exist_facts_result;
 mod compile_have_obj_equal_stmt_result;
 mod compile_have_obj_in_nonempty_set_stmt_result;
 mod compile_inferred_obj;
+mod compile_integer_interval_inference;
 mod compile_known_application;
 mod compile_let_stmt_result;
 mod compile_nonzero_factor_inference;
@@ -34,8 +39,13 @@ mod compile_order_bound_inferences;
 mod compile_positive_power_inference;
 mod compile_prop_clause_instance;
 mod compile_recursive_unfold_result;
+mod compile_register_stmt_result;
 mod compile_release_and_expand_result;
+mod compile_release_cart_def_result;
+mod compile_release_obj_def_result;
+mod compile_release_tuple_def_result;
 mod compile_run;
+mod compile_sketch_stmt_result;
 mod compile_stmt_result;
 mod compile_store_result;
 mod compile_subtractive_inference;
@@ -97,3 +107,15 @@ mod selected_arithmetic_tests;
 mod set_tests;
 #[cfg(test)]
 mod tests;
+
+mod compile_builder_constructor;
+
+mod compile_have_fn_cases_result;
+mod compile_piecewise_unfold_result;
+mod piecewise_evidence;
+
+mod compile_mapping_properties;
+
+mod compile_function_range;
+
+mod compile_range_preimage;

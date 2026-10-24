@@ -1,0 +1,332 @@
+{
+  "lean/cast_annotations/explicit": {
+    "n": 33,
+    "target_ms": {
+      "median": 3.310333,
+      "min": 2.893958,
+      "max": 6.614708,
+      "mad": 0.23091699999999982
+    },
+    "proof_ms": {
+      "median": 0.589792,
+      "min": 0.509375,
+      "max": 1.746917,
+      "mad": 0.04233399999999998
+    },
+    "finalization_ms": {
+      "median": 0.051291,
+      "min": 0.042583,
+      "max": 0.173041,
+      "mad": 0.005625000000000005
+    },
+    "kernel_ms": {
+      "median": 0.174333,
+      "min": 0.156833,
+      "max": 0.365042,
+      "mad": 0.013040999999999997
+    },
+    "total_ms": {
+      "median": 4.14825,
+      "min": 3.605916,
+      "max": 8.899708,
+      "mad": 0.280084
+    },
+    "proof_hashes": [
+      2075750680
+    ],
+    "proof_tree_nodes": [
+      123
+    ]
+  },
+  "lean/cast_order/automation": {
+    "n": 33,
+    "target_ms": {
+      "median": 1.248417,
+      "min": 1.123584,
+      "max": 3.336709,
+      "mad": 0.09908299999999981
+    },
+    "proof_ms": {
+      "median": 7.097833,
+      "min": 6.436667,
+      "max": 10.485667,
+      "mad": 0.44816700000000065
+    },
+    "finalization_ms": {
+      "median": 0.021708,
+      "min": 0.012042,
+      "max": 0.039042,
+      "mad": 0.005666000000000001
+    },
+    "kernel_ms": {
+      "median": 0.632041,
+      "min": 0.599917,
+      "max": 0.85975,
+      "mad": 0.02129200000000009
+    },
+    "total_ms": {
+      "median": 9.173917,
+      "min": 8.234417,
+      "max": 12.63875,
+      "mad": 0.6494579999999992
+    },
+    "proof_hashes": [
+      1104624607
+    ],
+    "proof_tree_nodes": [
+      203
+    ]
+  },
+  "lean/cast_annotations/inferred": {
+    "n": 33,
+    "target_ms": {
+      "median": 3.340083,
+      "min": 2.911959,
+      "max": 6.487833,
+      "mad": 0.3090829999999998
+    },
+    "proof_ms": {
+      "median": 0.523416,
+      "min": 0.465625,
+      "max": 1.11025,
+      "mad": 0.033708000000000016
+    },
+    "finalization_ms": {
+      "median": 0.050042,
+      "min": 0.042166,
+      "max": 0.0865,
+      "mad": 0.006165999999999998
+    },
+    "kernel_ms": {
+      "median": 0.182042,
+      "min": 0.157125,
+      "max": 0.254084,
+      "mad": 0.01008400000000001
+    },
+    "total_ms": {
+      "median": 4.346166,
+      "min": 3.58525,
+      "max": 7.913292,
+      "mad": 0.4401250000000001
+    },
+    "proof_hashes": [
+      2075750680
+    ],
+    "proof_tree_nodes": [
+      123
+    ]
+  },
+  "lean/square_nonnegative/direct": {
+    "n": 33,
+    "target_ms": {
+      "median": 2.150708,
+      "min": 1.829333,
+      "max": 5.527458,
+      "mad": 0.19720799999999983
+    },
+    "proof_ms": {
+      "median": 9.134875,
+      "min": 8.36575,
+      "max": 13.362666,
+      "mad": 0.43637499999999996
+    },
+    "finalization_ms": {
+      "median": 0.32675,
+      "min": 0.238625,
+      "max": 0.495834,
+      "mad": 0.058499999999999996
+    },
+    "kernel_ms": {
+      "median": 3.2685,
+      "min": 2.987709,
+      "max": 4.816875,
+      "mad": 0.18279200000000007
+    },
+    "total_ms": {
+      "median": 15.047584,
+      "min": 13.495,
+      "max": 21.966041,
+      "mad": 0.8354169999999996
+    },
+    "proof_hashes": [
+      888072110
+    ],
+    "proof_tree_nodes": [
+      65
+    ]
+  },
+  "lean/cast_order/direct": {
+    "n": 33,
+    "target_ms": {
+      "median": 1.284083,
+      "min": 1.127917,
+      "max": 2.574375,
+      "mad": 0.109375
+    },
+    "proof_ms": {
+      "median": 7.73125,
+      "min": 6.858584,
+      "max": 13.740166,
+      "mad": 0.40720899999999904
+    },
+    "finalization_ms": {
+      "median": 0.213042,
+      "min": 0.179833,
+      "max": 0.6385,
+      "mad": 0.023916999999999994
+    },
+    "kernel_ms": {
+      "median": 0.626333,
+      "min": 0.586667,
+      "max": 13.303667,
+      "mad": 0.021457999999999977
+    },
+    "total_ms": {
+      "median": 10.106584,
+      "min": 8.843792,
+      "max": 22.8665,
+      "mad": 0.574541
+    },
+    "proof_hashes": [
+      3321865734
+    ],
+    "proof_tree_nodes": [
+      135
+    ]
+  },
+  "lean/square_nonnegative/bridge": {
+    "n": 33,
+    "target_ms": {
+      "median": 2.142,
+      "min": 1.867958,
+      "max": 3.363708,
+      "mad": 0.188083
+    },
+    "proof_ms": {
+      "median": 14.349708,
+      "min": 12.587917,
+      "max": 18.5325,
+      "mad": 0.6400420000000011
+    },
+    "finalization_ms": {
+      "median": 0.0285,
+      "min": 0.015792,
+      "max": 0.044959,
+      "mad": 0.004292000000000001
+    },
+    "kernel_ms": {
+      "median": 0.9455,
+      "min": 0.878083,
+      "max": 1.069167,
+      "mad": 0.028000000000000025
+    },
+    "total_ms": {
+      "median": 17.805916,
+      "min": 15.486417,
+      "max": 22.120875,
+      "mad": 0.915541000000001
+    },
+    "proof_hashes": [
+      2057807064
+    ],
+    "proof_tree_nodes": [
+      1092
+    ]
+  },
+  "lean/cast_addition/direct": {
+    "n": 33,
+    "target_ms": {
+      "median": 2.372167,
+      "min": 2.049959,
+      "max": 12.735125,
+      "mad": 0.2549579999999998
+    },
+    "proof_ms": {
+      "median": 1.360958,
+      "min": 1.210125,
+      "max": 2.208625,
+      "mad": 0.10479200000000022
+    },
+    "finalization_ms": {
+      "median": 0.068041,
+      "min": 0.056667,
+      "max": 0.10125,
+      "mad": 0.0069160000000000055
+    },
+    "kernel_ms": {
+      "median": 0.213625,
+      "min": 0.18975,
+      "max": 0.26925,
+      "mad": 0.013208999999999999
+    },
+    "total_ms": {
+      "median": 4.053375,
+      "min": 3.517667,
+      "max": 15.266,
+      "mad": 0.34191700000000047
+    },
+    "proof_hashes": [
+      3898705633
+    ],
+    "proof_tree_nodes": [
+      21
+    ]
+  },
+  "lean/cast_addition/automation": {
+    "n": 33,
+    "target_ms": {
+      "median": 2.3835,
+      "min": 2.040125,
+      "max": 4.027125,
+      "mad": 0.19766700000000004
+    },
+    "proof_ms": {
+      "median": 4.795042,
+      "min": 4.28,
+      "max": 8.369083,
+      "mad": 0.3514160000000004
+    },
+    "finalization_ms": {
+      "median": 0.020459,
+      "min": 0.014083,
+      "max": 0.032917,
+      "mad": 0.0037909999999999992
+    },
+    "kernel_ms": {
+      "median": 0.661791,
+      "min": 0.616083,
+      "max": 1.515875,
+      "mad": 0.030082000000000053
+    },
+    "total_ms": {
+      "median": 8.011292,
+      "min": 6.965917,
+      "max": 13.682,
+      "mad": 0.4368749999999988
+    },
+    "proof_hashes": [
+      4018872661
+    ],
+    "proof_tree_nodes": [
+      585
+    ]
+  },
+  "litex/cast_annotations": {
+    "n": 33,
+    "total_ms": {
+      "median": 0.732584,
+      "min": 0.688917,
+      "max": 2.829125,
+      "mad": 0.038541999999999965
+    }
+  },
+  "litex/square_nonnegative": {
+    "n": 33,
+    "total_ms": {
+      "median": 0.827833,
+      "min": 0.776375,
+      "max": 3.337417,
+      "mad": 0.048624
+    }
+  }
+}

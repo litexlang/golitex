@@ -16,6 +16,9 @@ impl LitexToLeanCompiler {
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
         match (space, proof) {
+            (FunctionSpace::FnRange(range), FunctionSpaceObjWellDefinedProofByDef::FnRange(wd)) => {
+                self.compile_function_range_wd(range, wd, position)
+            }
             (FunctionSpace::Composition(_), _) => Err(LeanCompileError::unsupported(
                 "WD/FunctionSpace/Composition",
             )),
@@ -196,7 +199,7 @@ impl LitexToLeanCompiler {
         ))
     }
 
-    fn compile_function_binder_head(
+    pub(in crate::compile_to_lean) fn compile_function_binder_head(
         &self,
         signature: &FnSet,
         carriers: &[Box<ObjWellDefinedProof>],
@@ -339,7 +342,7 @@ impl LitexToLeanCompiler {
         Ok(lines.join("\n"))
     }
 
-    fn function_header_stages(&self, signature: &FnSet) -> usize {
+    pub(in crate::compile_to_lean) fn function_header_stages(&self, signature: &FnSet) -> usize {
         signature.set_bound_parameters.groups.len()
             + signature
                 .set_bound_parameters
@@ -353,6 +356,15 @@ impl LitexToLeanCompiler {
     fn compile_function_raw_header(
         &self,
         signature: &FnSet,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        self.compile_function_raw_quantified(signature, "True", position)
+    }
+
+    pub(in crate::compile_to_lean) fn compile_function_raw_quantified(
+        &self,
+        signature: &FnSet,
+        conclusion: &str,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
         let parameters = signature
@@ -389,7 +401,7 @@ impl LitexToLeanCompiler {
             .join(" → ");
         let guard = self.compile_function_guard_template(signature, position)?;
         Ok(format!(
-            "∀ {binders}, {members} → ({guard} {}) → True",
+            "∀ {binders}, {members} → ({guard} {}) → {conclusion}",
             variables.join(" ")
         ))
     }

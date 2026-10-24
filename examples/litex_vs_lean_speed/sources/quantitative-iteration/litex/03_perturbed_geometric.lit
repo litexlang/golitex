@@ -1,0 +1,55 @@
+# Exact-real comparison experiment; see ../math_collections.md.
+
+forall q R:
+    q < 1
+    =>:
+        1 - q > 0
+        1 - q != 0
+
+have fn bound(q R+, c, d R, n N: q < 1) R = q^n * c + d * (1 - q^n) / (1 - q)
+
+thm bound_zero:
+    ? forall q R+, c, d R:
+        q < 1
+        =>:
+            bound(q, c, d, 0) = c
+    1 - q != 0
+
+thm bound_step:
+    ? forall q R+, c, d R, n N:
+        q < 1
+        =>:
+            bound(q, c, d, n + 1) = q * bound(q, c, d, n) + d
+    1 - q != 0
+    have t R+ = q^n
+    q^(n + 1) = q^n * q^1 = t * q
+    (t * q) * c + d * (1 - t * q) / (1 - q) = q * (t * c + d * (1 - t) / (1 - q)) + d
+    bound(q, c, d, n + 1) = q * (t * c + d * (1 - t) / (1 - q)) + d = q * bound(q, c, d, n) + d
+
+thm affine_recurrence_bound:
+    ? forall err fn(idx N) R, q R+, d R, n N:
+        q < 1
+        forall j N:
+            err(j + 1) <= q * err(j) + d
+        =>:
+            err(n) <= bound(q, err(0), d, n)
+    by induc n from 0:
+        ? err(n) <= bound(q, err(0), d, n)
+        ? from n = 0:
+            by thm bound_zero(q, err(0), d) => bound(q, err(0), d, 0) = err(0)
+        ? induc:
+            err(n + 1) <= q * err(n) + d <= q * bound(q, err(0), d, n) + d = bound(q, err(0), d, n + 1)
+
+thm noiseless_affine_bound:
+    ? forall err fn(idx N) R, q R+, n N:
+        q < 1
+        forall j N:
+            err(j + 1) <= q * err(j)
+        =>:
+            err(n) <= q^n * err(0)
+    claim:
+        ? forall j N:
+            err(j + 1) <= q * err(j) + 0
+        q * err(j) + 0 = q * err(j)
+    1 - q != 0
+    bound(q, err(0), 0, n) = q^n * err(0) + 0 * (1 - q^n) / (1 - q) = q^n * err(0) + 0 = q^n * err(0)

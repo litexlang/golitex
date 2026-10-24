@@ -14,7 +14,7 @@ impl LitexToLeanCompiler {
     /// separate from alpha-renaming the existential witnesses.
     pub(super) fn compile_exist_known_forall(
         &self,
-        goal: &PlainExistFact,
+        goal_family: &ExistShapedFact,
         formation: &ExistShapedFactWellDefinedProof,
         proof: &SearchProofByKnownForallFact,
         position: &SourcePosition<'_>,
@@ -26,11 +26,25 @@ impl LitexToLeanCompiler {
         let ForallConclusionLocation::DirectThenFact(location) = &proof.cite.location else {
             return Err(LeanCompileError::unsupported("Exist/KnownForallLocation"));
         };
-        let Some(ExistOrAndChainAtomicFact::ExistFact(selected)) =
-            source.then_facts.get(location.then_fact_index)
-        else {
-            return Err(LeanCompileError::unsupported("Exist/KnownForallConclusion"));
+        // Match Runtime's family rule: unique existence can also prove plain
+        // existence, but no positive/negative or plain/unique reversal is valid.
+        let selected = source.then_facts.get(location.then_fact_index);
+        let (selected, source_unique) = match (selected, goal_family) {
+            (Some(ExistOrAndChainAtomicFact::ExistFact(f)), ExistShapedFact::Exist(_)) => {
+                (f, false)
+            }
+            (
+                Some(ExistOrAndChainAtomicFact::ExistUniqueFact(f)),
+                ExistShapedFact::Exist(_) | ExistShapedFact::ExistUnique(_),
+            ) => (f, true),
+            (Some(ExistOrAndChainAtomicFact::NotExistFact(f)), ExistShapedFact::NotExist(_)) => {
+                (f, false)
+            }
+            _ => return Err(LeanCompileError::unsupported("Exist/KnownForallConclusion")),
         };
+        let goal = goal_family.plain();
+        let negative = matches!(goal_family, ExistShapedFact::NotExist(_));
+        let unique = matches!(goal_family, ExistShapedFact::ExistUnique(_));
         let parameters = source.typed_parameters.ordered_param_ids();
         if parameters.len() != proof.forall_parameters_match_what_args.len() {
             return Err(LeanCompileError::unsupported("Exist/KnownForallArity"));
@@ -133,7 +147,20 @@ impl LitexToLeanCompiler {
             .collect();
         let names = names.join(", ");
         let empty_body = if goal.facts.is_empty() { ", _" } else { "" };
-        lines.push(format!("rcases {application} with ⟨{names}{empty_body}⟩"));
+        let existence = if negative {
+            lines.push("intro _exist_candidate".to_string());
+            "_exist_candidate".to_string()
+        } else if unique {
+            lines.push(format!(
+                "rcases {application} with ⟨_known_exists, _known_unique⟩"
+            ));
+            "_known_exists".to_string()
+        } else if source_unique {
+            format!("({application}).1")
+        } else {
+            application.clone()
+        };
+        lines.push(format!("rcases {existence} with ⟨{names}{empty_body}⟩"));
         let (_, definitions) = self.compile_exist_constructor_prefix(
             goal,
             formation,
@@ -179,7 +206,13 @@ impl LitexToLeanCompiler {
         } else {
             ""
         };
-        lines.push(format!("exact ⟨{names}{empty_body}⟩"));
+        lines.push(if negative {
+            format!("exact ({application}) ⟨{names}{empty_body}⟩")
+        } else if unique {
+            format!("exact ⟨⟨{names}{empty_body}⟩, _known_unique⟩")
+        } else {
+            format!("exact ⟨{names}{empty_body}⟩")
+        });
         Ok(format!(
             "(by\n  {}\n)",
             lines.join("\n").replace('\n', "\n  ")

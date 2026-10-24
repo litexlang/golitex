@@ -1,0 +1,9 @@
+claim:
+    ? forall n N+:
+        exist m N+ st {m > n and $dvd(m, 2)}
+    n > 0
+    2*n - n = n
+    2*n - n > 0
+    2*n > n
+    witness exist m N+ st {m > n and $dvd(m, 2)} from 2*n
+    $dvd(2*n, 2)

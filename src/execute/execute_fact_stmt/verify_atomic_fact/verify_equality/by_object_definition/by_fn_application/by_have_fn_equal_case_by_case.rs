@@ -29,8 +29,16 @@ use super::super::helper::{
 
 pub struct ByUnfoldHaveFnEqualCaseByCaseApplicationObjectDefinitionProof {
     pub matched_case_index: usize,
+    pub guard: VerifyFactResult,
     pub expanded_body: Obj,
     pub residual_equal: VerifyFactResult,
+}
+
+/// The successful selected branch, in the matcher's original execution order.
+pub struct MatchCaseByCaseBodySuccess {
+    pub case_index: usize,
+    pub guard: VerifyFactResult,
+    pub expanded_body: Obj,
 }
 
 impl Runtime {
@@ -58,12 +66,16 @@ impl Runtime {
             return Ok(None);
         }
         let subst = set_bound_params_to_arg_map(&stmt.fn_set_clause.set_bound_parameters, &args);
-        let Some((matched_case_index, expanded_body)) =
-            self.match_case_by_case_body(&stmt, &subst, verify_state.clone())?
+        let Some(selected) = self.match_case_by_case_body(&stmt, &subst, verify_state.clone())?
         else {
             return Ok(None);
         };
 
+        let MatchCaseByCaseBodySuccess {
+            case_index: matched_case_index,
+            guard,
+            expanded_body,
+        } = selected;
         let residual = EqualFact {
             fact_id: self.global_ids.allocate_fact_id(),
             left: expanded_body.clone(),
@@ -78,6 +90,7 @@ impl Runtime {
         Ok(Some(
             ByUnfoldHaveFnEqualCaseByCaseApplicationObjectDefinitionProof {
                 matched_case_index,
+                guard,
                 expanded_body,
                 residual_equal,
             },
@@ -91,7 +104,7 @@ impl Runtime {
         stmt: &HaveFnEqualCaseByCaseStmt,
         subst: &HashMap<IdentifierId, Obj>,
         verify_state: VerifyState,
-    ) -> RuntimeResult<Option<(usize, Obj)>> {
+    ) -> RuntimeResult<Option<MatchCaseByCaseBodySuccess>> {
         // Case guards often need arithmetic rewrite (e.g. `1 - 1 = 0`).
         // Guards inherit the definition stage premise ceiling; never restore rewrite.
         let case_guard_state = verify_state.without_rewrite();
@@ -107,7 +120,11 @@ impl Runtime {
             let Ok(expanded_body) = self.inst_obj(equal_to, subst) else {
                 continue;
             };
-            return Ok(Some((i, expanded_body)));
+            return Ok(Some(MatchCaseByCaseBodySuccess {
+                case_index: i,
+                guard: case_check,
+                expanded_body,
+            }));
         }
         Ok(None)
     }

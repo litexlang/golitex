@@ -1,0 +1,104 @@
+{
+  "litex/sum_sq_zero": {
+    "n": 90,
+    "median_ms": 0.6851875000000001,
+    "min_ms": 0.595792,
+    "max_ms": 3.676833
+  },
+  "litex/positive_ratio": {
+    "n": 90,
+    "median_ms": 0.948604,
+    "min_ms": 0.92425,
+    "max_ms": 2.805917
+  },
+  "litex/mul_cancel": {
+    "n": 90,
+    "median_ms": 0.335042,
+    "min_ms": 0.327,
+    "max_ms": 2.087375
+  },
+  "litex/sq_plus_one_pos": {
+    "n": 90,
+    "median_ms": 2.189146,
+    "min_ms": 2.1495,
+    "max_ms": 10.953792
+  },
+  "litex/sum_sq_ge_two_mul": {
+    "n": 90,
+    "median_ms": 52.271083,
+    "min_ms": 41.974916,
+    "max_ms": 108.22375
+  },
+  "litex/even_witness_above": {
+    "n": 90,
+    "median_ms": 4.4257919999999995,
+    "min_ms": 4.221083,
+    "max_ms": 10.014542
+  },
+  "litex/nat_succ_lt_two_mul": {
+    "n": 90,
+    "median_ms": 0.8845415000000001,
+    "min_ms": 0.85675,
+    "max_ms": 4.119209
+  },
+  "lean/sum_sq_zero__nlinarith": {
+    "n": 21,
+    "median_ms": 209.744208,
+    "min_ms": 176.777834,
+    "max_ms": 396.547
+  },
+  "lean/positive_ratio__div_pos": {
+    "n": 21,
+    "median_ms": 29.169791,
+    "min_ms": 26.415542,
+    "max_ms": 45.004833
+  },
+  "lean/mul_cancel__linarith": {
+    "n": 21,
+    "median_ms": 37.737375,
+    "min_ms": 33.085,
+    "max_ms": 61.657167
+  },
+  "lean/mul_cancel__cancel": {
+    "n": 21,
+    "median_ms": 10.725875,
+    "min_ms": 9.102584,
+    "max_ms": 20.537333
+  },
+  "lean/sq_plus_one_pos__positivity": {
+    "n": 21,
+    "median_ms": 17.404209,
+    "min_ms": 15.633709,
+    "max_ms": 30.605708
+  },
+  "lean/sq_plus_one_pos__nlinarith": {
+    "n": 21,
+    "median_ms": 49.473542,
+    "min_ms": 45.34825,
+    "max_ms": 61.013458
+  },
+  "lean/sum_sq_ge_two_mul__nlinarith": {
+    "n": 21,
+    "median_ms": 87.953917,
+    "min_ms": 72.090833,
+    "max_ms": 143.829917
+  },
+  "lean/even_witness_above__witness": {
+    "n": 21,
+    "median_ms": 34.877459,
+    "min_ms": 27.78675,
+    "max_ms": 46.369583
+  },
+  "lean/nat_succ_lt_two_mul__omega": {
+    "n": 21,
+    "median_ms": 14.760792,
+    "min_ms": 10.810666,
+    "max_ms": 23.918375
+  },
+  "lean/nat_succ_lt_two_mul__nlinarith": {
+    "n": 21,
+    "median_ms": 63.21725,
+    "min_ms": 57.96825,
+    "max_ms": 103.8495
+  }
+}

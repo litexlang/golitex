@@ -10,16 +10,24 @@ impl LitexToLeanCompiler {
         result: &VerifyExistShapedFactResult,
         position: &SourcePosition<'_>,
     ) -> Result<(String, String), LeanCompileError> {
-        let VerifyExistShapedFactResult::PlainExistFact(result) = result else {
-            return Err(LeanCompileError::unsupported("Exist/UniqueOrNegative"));
-        };
-        let VerifyPlainExistFactResult::Success(proof) = result else {
-            return Err(LeanCompileError::new(
+        match result {
+            VerifyExistShapedFactResult::NotExistFact(result) => {
+                self.compile_verify_not_exist_result(result, position)
+            }
+            VerifyExistShapedFactResult::ExistUniqueFact(VerifyExistUniqueFactResult::Success(
+                proof,
+            )) => self.compile_verify_unique_success(proof, position),
+            VerifyExistShapedFactResult::PlainExistFact(VerifyPlainExistFactResult::Success(
+                proof,
+            )) => self.compile_verify_plain_exist_success(proof, position),
+            VerifyExistShapedFactResult::ExistUniqueFact(_) => {
+                Err(LeanCompileError::unsupported("ExistUnique/Failed"))
+            }
+            VerifyExistShapedFactResult::PlainExistFact(_) => Err(LeanCompileError::new(
                 "Exist/Failed",
                 "A failed existence result is not proof evidence.",
-            ));
-        };
-        self.compile_verify_plain_exist_success(proof, position)
+            )),
+        }
     }
 
     /// Obtain retains this exact success directly, without a VerifyFact wrapper.
@@ -39,8 +47,10 @@ impl LitexToLeanCompiler {
         let evidence = match &proof.searched_proof {
             ExistShapedFactSearchedProof::ByKnownExistShapedFact(known) => {
                 let registered = self.cited_fact_reference(known.cite_fact_id, position)?;
-                let Fact::ExistFact(source) = registered.0 else {
-                    return Err(LeanCompileError::unsupported("Exist/CitationFamily"));
+                let (source, unique) = match registered.0 {
+                    Fact::ExistFact(source) => (source, false),
+                    Fact::ExistUniqueFact(source) => (source, true),
+                    _ => return Err(LeanCompileError::unsupported("Exist/CitationFamily")),
                 };
                 if source.fact_id != known.cite_fact_id
                     || !plain_exist_facts_alpha_equal(source, fact)
@@ -50,14 +60,22 @@ impl LitexToLeanCompiler {
                         "The original cited existential differs from this goal.",
                     ));
                 }
-                registered.1
+                if unique {
+                    format!("({}).1", registered.1)
+                } else {
+                    registered.1
+                }
             }
             ExistShapedFactSearchedProof::ByBuiltinRule(builtin) => {
                 self.compile_exist_builtin_result(fact, builtin, position)?
             }
-            ExistShapedFactSearchedProof::ByKnownForallFact(known) => {
-                self.compile_exist_known_forall(fact, &proof.well_defined_proof, known, position)?
-            }
+            ExistShapedFactSearchedProof::ByKnownForallFact(known) => self
+                .compile_exist_known_forall(
+                    &proof.fact,
+                    &proof.well_defined_proof,
+                    known,
+                    position,
+                )?,
         };
         Ok((proposition, evidence))
     }

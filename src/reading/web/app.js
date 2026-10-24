@@ -3,28 +3,26 @@
   const initial=JSON.parse(document.getElementById("reading-data").textContent);
   const live=document.body.dataset.live==="true";
   const language=document.getElementById("language");
-  language.value=(initial.language||"en").startsWith("zh")?"zh":"en";
+  const requestedLanguage=new URLSearchParams(location.search).get("lang");
+  language.value=["zh","en"].includes(requestedLanguage)?requestedLanguage:(initial.language||"en").startsWith("zh")?"zh":"en";
   const status=document.getElementById("upload-status");
   const fileInput=document.getElementById("source-files");
   const folderInput=document.getElementById("project-files");
   const parentOrigin=(()=>{try{return document.referrer?new URL(document.referrer).origin:null;}catch{return null;}})();
   const options={
     locale:language.value,
+    exampleGroups:JSON.parse(document.getElementById("reading-example-groups")?.textContent||"[]"),
+    onOpenFiles:()=>fileInput.click(),
+    onOpenProject:live?()=>folderInput.click():undefined,
     onNavigate(selection,metadata){if(parentOrigin&&window.parent!==window)window.parent.postMessage({type:"litex-reading:selection",selection,...metadata},parentOrigin);}
   };
   let reader;
   try{reader=initial.kind==="reading_manifest"?await window.LitexReading.open(document.getElementById("reader"),initial,{...options,baseUrl:location.href}):window.LitexReading.mount(document.getElementById("reader"),{...options,document:initial});}
   catch(error){status.textContent=error.message;status.dataset.error="true";reader=window.LitexReading.mount(document.getElementById("reader"),{...options,document:{sources:[],statements:[],rules:[]}});}
-  const chooseFiles=document.getElementById("choose-files");
-  const chooseProject=document.getElementById("choose-project");
-  document.getElementById("upload-actions").hidden=false;
-  chooseProject.hidden=!live;
   if(!live)fileInput.accept=".json";
-  function labels(){const zh=language.value==="zh";chooseFiles.textContent=live?(zh?"打开文件":"Open files"):(zh?"打开阅读 JSON":"Open reading JSON");chooseProject.textContent=zh?"打开项目文件夹":"Open project folder";document.getElementById("language-label").textContent=zh?"语言":"Language";document.documentElement.lang=zh?"zh-CN":"en";document.body.dataset.dropLabel=live?(zh?"拖入 Litex 文件或项目文件夹":"Drop Litex files or a project folder"):(zh?"拖入阅读 JSON":"Drop a reading JSON bundle");}
+  function labels(){const zh=language.value==="zh";document.getElementById("language-label").textContent=zh?"语言":"Language";document.documentElement.lang=zh?"zh-CN":"en";document.body.dataset.dropLabel=live?(zh?"把自己的文件放到这里":"Drop your files here"):(zh?"把阅读记录放到这里":"Drop reading records here");}
   labels();
   language.addEventListener("change",()=>{labels();reader.setLanguage(language.value);});
-  chooseFiles.addEventListener("click",()=>fileInput.click());
-  chooseProject.addEventListener("click",()=>folderInput.click());
   fileInput.addEventListener("change",()=>upload([...fileInput.files].map(file=>({file,path:file.webkitRelativePath||file.name}))));
   folderInput.addEventListener("change",()=>upload([...folderInput.files].map(file=>({file,path:file.webkitRelativePath||file.name}))));
   window.addEventListener("message",event=>{
@@ -41,15 +39,15 @@
   async function upload(entries){
     if(!entries.length)return;
     const zh=language.value==="zh";
-    chooseFiles.disabled=true;chooseProject.disabled=true;
+    fileInput.disabled=true;folderInput.disabled=true;
     try{
       if(entries.length===1&&entries[0].path.endsWith(".json")){
         const data=JSON.parse(await entries[0].file.text());
-        if(data.kind!=="reading"||!["1","2"].includes(data.schema_version)||!Array.isArray(data.sources)||!Array.isArray(data.statements))throw new Error(zh?"这不是受支持的阅读数据包。":"This is not a supported reading bundle.");
+        if(data.kind!=="reading"||!["1","2"].includes(data.schema_version)||!Array.isArray(data.sources)||!Array.isArray(data.statements))throw new Error(zh?"这份文件不是可打开的阅读记录。":"This file does not contain supported reading records.");
         reader.update(data);report("");return;
       }
-      if(!live)throw new Error(zh?"本页面可读取已有阅读 JSON；验证新源码请使用 litex -reading。":"This page reads saved bundles. Use litex -reading to verify new source.");
-      entries=entries.filter(entry=>entry.path.endsWith(".lit")||entry.path.split("/").at(-1)==="litex.config");
+      if(!live)throw new Error(zh?"这里可以打开已保存的阅读记录（.json）。检查自己的 Litex 原文，请在电脑上运行 litex -reading。":"Open saved reading records (.json) here. To check your own Litex source, run litex -reading on your computer.");
+      entries=entries.filter(entry=>entry.path.endsWith(".lit")||["litex.config","reading-titles.json"].includes(entry.path.split("/").at(-1)));
       if(!entries.length)throw new Error(zh?"请选择 .lit 文件或包含 litex.config 的项目。":"Choose .lit files or a project containing litex.config.");
       if(entries.length>512)throw new Error(zh?"一次最多打开 512 个源码与配置文件。":"At most 512 source/config files can be opened at once.");
       if(entries.reduce((sum,entry)=>sum+entry.file.size,0)>8*1024*1024)throw new Error(zh?"源码与配置总大小不能超过 8 MiB。":"Source/config input must not exceed 8 MiB.");
@@ -59,7 +57,7 @@
       const data=await response.json();
       if(data.kind!=="reading")throw new Error(data.error||"Reading build failed");
       reader.update(data);report(data.run_result==="success"?"":(zh?"部分源码未通过验证；可查看已接受的步骤与失败原因。":"Some source was not accepted. Inspect the accepted steps and diagnostics."),data.run_result!=="success");
-    }catch(error){report(error.message,true);}finally{chooseFiles.disabled=false;chooseProject.disabled=false;fileInput.value="";folderInput.value="";}
+    }catch(error){report(error.message,true);}finally{fileInput.disabled=false;folderInput.disabled=false;fileInput.value="";folderInput.value="";}
   }
   async function droppedEntry(entry,prefix=""){
     if(entry.isFile){const file=await new Promise((resolve,reject)=>entry.file(resolve,reject));return [{file,path:prefix+entry.name}];}

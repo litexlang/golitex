@@ -1,0 +1,7 @@
+claim:
+    ? forall n N+:
+        2 * n > n
+    n > 0
+    2 * n - n = n
+    2 * n - n > 0
+    2 * n > n

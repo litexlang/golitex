@@ -1,0 +1,34 @@
+{
+  "lean": "Lean (version 4.31.0, arm64-apple-darwin24.6.0, commit 68218e876d2a38b1985b8590fff244a83c321783, Release)",
+  "litex": "Litex 1.1.2-beta",
+  "platform": "Darwin arm64",
+  "date": "2026-10-24T11:59:17+0800",
+  "reps": 11,
+  "processes": 3,
+  "warmup_per_variant": 2,
+  "imports": [
+    "Mathlib",
+    "Lean"
+  ],
+  "startup_and_imports_timed": false,
+  "parser_timed": {
+    "lean": false,
+    "litex": true
+  },
+  "sample_order_seed_base": 20261024,
+  "lean_kernel_entrypoint": "Lean.Environment.addDeclCore 0 declaration none true",
+  "phase_note": "Proof elaboration may also check generated auxiliary declarations. The final kernel phase is not a profiler of every kernel call.",
+  "git_head": "e3df05dec579e3f7f915c2ef48a71f83d064b269",
+  "rustc": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
+  "phase_source_sha256": {
+    "Measure-0.lean": "a9eabc6af915d8789477a2260e8e06223940ccc238012f4954b75dd09f645339",
+    "Measure-1.lean": "915b860dcab139270d0827b7fd1ebc043f8e4d96f47df25d6970248804e1a4aa",
+    "Measure-2.lean": "a76958cb83b063fde3bd32c3aac93dea7f441b5f3b783df489b8847c8be37c31"
+  },
+  "sha256": {
+    "examples/litex_vs_lean_speed/cases/type-bridge.json": "55c9dac2e0ad19dc1366d376d650ad23aa06faebcc9cf842ce608e51e867f8a0",
+    "examples/litex_vs_lean_speed/harness/type_bridge.py": "50839b892c5feff610729086a153c2760959b89ce8203d57cdb2cb0bbe10f3ef",
+    "target/release/litex": "c7b3dc120ee6f4af61772343ac5bf377a9ea28f07d0b985e8ce498aa7d575fe5",
+    "target/release/liblitex.rlib": "935233b081c2c6106375aeeb322a7df2ad16d9c60e473f5a731e58040ea1c33d"
+  }
+}

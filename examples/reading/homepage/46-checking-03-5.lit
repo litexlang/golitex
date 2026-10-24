@@ -1,0 +1,4 @@
+by contra:
+    ? not exist x R st {x != x}
+    obtain a from exist x R st {x != x}
+    impossible a = a

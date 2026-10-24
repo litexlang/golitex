@@ -1,0 +1,9 @@
+# error: division by zero is not meaningful.
+# 1 / 0 = 1 / 0
+
+# unknown: meaningful, but not established.
+# have x R
+# x^2 = 2
+
+# success: meaningful and verified.
+1 + 1 = 2

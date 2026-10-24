@@ -15,6 +15,15 @@ impl LitexToLeanCompiler {
         if matches!(seed, Fact::ForallFactWithIff(_)) {
             return self.compile_iff_stored_directions(store, seed, compiled, position);
         }
+        if let Fact::NotForall(fact) = seed {
+            return self.compile_not_forall_inference(store, fact, compiled, position);
+        }
+        if let Fact::ExistUniqueFact(fact) = seed {
+            return self.compile_unique_inference(store, fact, compiled, position);
+        }
+        if let Fact::NotExistFact(fact) = seed {
+            return self.compile_not_exist_inference(store, fact, compiled, position);
+        }
         match &store.infer {
             None => self.compile_stored_projections(&store.store, seed, compiled, position),
             Some(InferResult::AtomicFact(infer)) => {
@@ -82,9 +91,9 @@ impl LitexToLeanCompiler {
         member: &(String, String),
         position: &SourcePosition<'_>,
     ) -> Result<Vec<String>, LeanCompileError> {
-        if matches!(member_fact, Fact::AtomicFact(AtomicFact::InFact(f)) if f.set == Obj::StandardSet(StandardSet::RPos))
+        if matches!(member_fact, Fact::AtomicFact(AtomicFact::InFact(f)) if matches!(&f.set, Obj::StandardSet(set) if *set != StandardSet::N && (*set == StandardSet::RPos || *set == StandardSet::NPos || numeric_refinement(set).is_some())))
         {
-            return self.compile_positive_real_sign_inference(sign, member_fact, member, position);
+            return self.compile_positive_sign_inference(sign, member_fact, member, position);
         }
         let mut declarations = Vec::new();
         let source = match member_fact {
@@ -136,7 +145,7 @@ impl LitexToLeanCompiler {
         Ok(declarations)
     }
 
-    fn compile_positive_real_sign_inference(
+    fn compile_positive_sign_inference(
         &self,
         sign: &crate::store_fact_and_infer::InferInFactSignedStandardSetSignResult,
         member_fact: &Fact,
@@ -148,10 +157,21 @@ impl LitexToLeanCompiler {
                 "Inference/PositiveRealFamily",
             ));
         };
-        if source.set != Obj::StandardSet(StandardSet::RPos) || sign.derived.len() != 3 {
+        let Obj::StandardSet(set) = &source.set else {
+            return Err(LeanCompileError::unsupported("Inference/SignedCarrier"));
+        };
+        let negative = matches!(
+            set,
+            StandardSet::QNeg | StandardSet::ZNeg | StandardSet::RNeg
+        );
+        let nonzero = matches!(
+            set,
+            StandardSet::QStar | StandardSet::ZStar | StandardSet::RStar | StandardSet::CStar
+        );
+        if sign.derived.len() != if nonzero { 1 } else { 3 } {
             return Err(LeanCompileError::new(
                 "Inference/PositiveRealArity",
-                "Positive-real membership needs its three actual ordered sign stores.",
+                "Signed membership must retain its actual ordered sign stores.",
             ));
         }
         let mut declarations = Vec::new();
@@ -169,13 +189,26 @@ impl LitexToLeanCompiler {
                 ));
             }
             let subject_matches = match (index, &fact) {
-                (0, Fact::AtomicFact(AtomicFact::LessFact(f))) => {
-                    is_exact_zero(&f.left) && f.right.ir() == source.element.ir()
+                (0, Fact::AtomicFact(AtomicFact::NotEqualFact(f))) if nonzero => {
+                    f.left.ir() == source.element.ir() && is_exact_zero(&f.right)
                 }
-                (1, Fact::AtomicFact(AtomicFact::LessEqualFact(f))) => {
-                    is_exact_zero(&f.left) && f.right.ir() == source.element.ir()
+                (0, Fact::AtomicFact(AtomicFact::LessFact(f))) if !nonzero => {
+                    let (low, high) = if negative {
+                        (&f.right, &f.left)
+                    } else {
+                        (&f.left, &f.right)
+                    };
+                    is_exact_zero(low) && high.ir() == source.element.ir()
                 }
-                (2, Fact::AtomicFact(AtomicFact::NotEqualFact(f))) => {
+                (1, Fact::AtomicFact(AtomicFact::LessEqualFact(f))) if !nonzero => {
+                    let (low, high) = if negative {
+                        (&f.right, &f.left)
+                    } else {
+                        (&f.left, &f.right)
+                    };
+                    is_exact_zero(low) && high.ir() == source.element.ir()
+                }
+                (2, Fact::AtomicFact(AtomicFact::NotEqualFact(f))) if !nonzero => {
                     f.left.ir() == source.element.ir() && is_exact_zero(&f.right)
                 }
                 _ => false,
@@ -200,8 +233,10 @@ impl LitexToLeanCompiler {
                 String::new()
             };
             let proof = match index {
-                0 => format!("(Litex.inRPos_positive {object} {})", member.1),
+                0 => standard_sign_term(set, if nonzero { "nonzero" } else if negative { "negative" } else { "positive" }, &object, &member.1)?,
+                1 if negative => format!("(Litex.ltToLe {object} (Litex.number (M := M) 0) {strict})"),
                 1 => format!("(Litex.ltToLe (Litex.number (M := M) 0) {object} {strict})"),
+                2 if negative => format!("(Litex.ltNotSame {object} (Litex.number (M := M) 0) {strict})"),
                 2 => format!("(fun _litex_zero => (Litex.ltNotSame (Litex.number (M := M) 0) {object} {strict}) _litex_zero.symm)"),
                 _ => unreachable!(),
             };
@@ -238,9 +273,7 @@ impl LitexToLeanCompiler {
                 }
                 Fact::ForallFactWithIff(stored.fact.clone())
             }
-            StoreFactResult::NotForallFact(_) => {
-                return Err(LeanCompileError::unsupported("Store/Compound"))
-            }
+            StoreFactResult::NotForallFact(stored) => Fact::NotForall(stored.fact.clone()),
         };
         if &actual != expected || store.primary_fact_id() != expected.fact_id() {
             return Err(LeanCompileError::new(

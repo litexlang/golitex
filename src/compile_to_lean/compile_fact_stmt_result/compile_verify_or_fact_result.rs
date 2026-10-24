@@ -23,11 +23,158 @@ impl LitexToLeanCompiler {
         let position = &formed;
         let fact = Fact::OrFact(proof.fact.clone());
         let term = match &proof.searched_proof {
+            OrFactSearchedProof::ByBuiltinRule(
+                OrFactSearchProofByBuiltinRule::ComplementaryAtomic(selected),
+            ) => {
+                let [AndChainAtomicFact::AtomicFact(left), AndChainAtomicFact::AtomicFact(right)] =
+                    proof.fact.facts.as_slice()
+                else {
+                    return Err(LeanCompileError::unsupported("Or/ComplementaryShape"));
+                };
+                if left != &selected.left || right != &selected.right {
+                    return Err(LeanCompileError::new(
+                        "Or/ComplementarySubject",
+                        "The complementary certificate differs from the original ordered branches.",
+                    ));
+                }
+                let negative = crate::compile_to_lean::compile_by_stmt_result::compile_by_contra_stmt_result::validate_atomic_negation(
+                    &Fact::AtomicFact(left.clone()), &Fact::AtomicFact(right.clone()))?;
+                if negative {
+                    format!(
+                        "(Or.symm (Classical.em ({})))",
+                        self.atomic_proposition(right, position)?
+                    )
+                } else {
+                    format!(
+                        "(Classical.em ({}))",
+                        self.atomic_proposition(left, position)?
+                    )
+                }
+            }
+            OrFactSearchedProof::ByBuiltinRule(
+                OrFactSearchProofByBuiltinRule::LessOrGreaterEqual(p),
+            ) => self.compile_real_order_split(
+                &proof.fact,
+                &p.left,
+                &p.right,
+                &p.left_in_r,
+                &p.right_in_r,
+                false,
+                position,
+            )?,
+            OrFactSearchedProof::ByBuiltinRule(
+                OrFactSearchProofByBuiltinRule::GreaterOrLessEqual(p),
+            ) => self.compile_real_order_split(
+                &proof.fact,
+                &p.left,
+                &p.right,
+                &p.left_in_r,
+                &p.right_in_r,
+                true,
+                position,
+            )?,
             OrFactSearchedProof::ByKnownOrFact(known) => {
                 return self.compile_known_or_fact(&proof.fact, known, position)
             }
             OrFactSearchedProof::ByKnownForallFact(known) => {
                 return self.compile_known_application(&fact, known, position)
+            }
+            OrFactSearchedProof::BySelectedBranch(selected)
+                if !selected.assumed_negated_branches.is_empty() =>
+            {
+                use crate::compile_to_lean::compile_by_stmt_result::compile_by_contra_stmt_result::validate_atomic_negation;
+                if selected.selected_index >= proof.fact.facts.len()
+                    || selected.assumed_negated_branches.len() + 1 != proof.fact.facts.len()
+                    || source_subject(&selected.selected_branch)?
+                        != crate::ast::fact::and_chain_as_fact(
+                            &proof.fact.facts[selected.selected_index],
+                        )
+                {
+                    return Err(LeanCompileError::unsupported("Or/SelectedCoverage"));
+                }
+                let introduce = |mut term: String, index: usize| {
+                    if index + 1 != proof.fact.facts.len() {
+                        term = format!("(Or.inl {term})");
+                    }
+                    for _ in 0..index {
+                        term = format!("(Or.inr {term})");
+                    }
+                    term
+                };
+                let scope =
+                    SourcePosition::new(Some(position), SourceOwner::OrSelected(selected), 0);
+                let mut lines = vec![
+                    "classical".to_string(),
+                    "apply Classical.byContradiction".to_string(),
+                    "intro _negative_disjunction".to_string(),
+                ];
+                let mut indices =
+                    (0..proof.fact.facts.len()).filter(|i| *i != selected.selected_index);
+                for (i, assumption) in selected.assumed_negated_branches.iter().enumerate() {
+                    let expected = indices.next().unwrap();
+                    if assumption.branch_index != expected {
+                        return Err(LeanCompileError::unsupported("Or/SelectedAssumptionOrder"));
+                    }
+                    let original = crate::ast::fact::and_chain_as_fact(&proof.fact.facts[expected]);
+                    let negative = validate_atomic_negation(&original, &assumption.negated_fact)?;
+                    let prior = SourcePosition {
+                        before: 2 * i,
+                        ..scope
+                    };
+                    self.compile_fact_wd(
+                        &assumption.well_defined,
+                        &assumption.negated_fact,
+                        &prior,
+                    )?;
+                    self.validate_store(
+                        &assumption.store_and_infer.store,
+                        &assumption.negated_fact,
+                    )?;
+                    let formed = SourcePosition::new(
+                        Some(&prior),
+                        SourceOwner::FactWD(&assumption.well_defined),
+                        usize::MAX,
+                    );
+                    let proposition = self.fact_proposition(&assumption.negated_fact, &formed)?;
+                    let not_branch = format!(
+                        "(fun _branch => _negative_disjunction {})",
+                        introduce("_branch".into(), expected)
+                    );
+                    let term = if negative {
+                        format!("(Classical.byContradiction {not_branch})")
+                    } else {
+                        not_branch
+                    };
+                    lines.push(self.emit_internal_fact(
+                        &assumption.negated_fact,
+                        &(proposition.clone(), term),
+                        &formed,
+                    )?);
+                    lines.extend(self.compile_stored_inferences(
+                        &assumption.store_and_infer,
+                        &assumption.negated_fact,
+                        &(
+                            proposition,
+                            format!("h_{}", assumption.negated_fact.fact_id().value()),
+                        ),
+                        &SourcePosition {
+                            before: 2 * i + 2,
+                            ..scope
+                        },
+                    )?);
+                }
+                let checked = self.compile_verify(
+                    &selected.selected_branch,
+                    &SourcePosition {
+                        before: 2 * selected.assumed_negated_branches.len(),
+                        ..scope
+                    },
+                )?;
+                lines.push(format!(
+                    "exact _negative_disjunction {}",
+                    introduce(checked.1, selected.selected_index)
+                ));
+                format!("(by\n  {}\n)", lines.join("\n").replace('\n', "\n  "))
             }
             OrFactSearchedProof::BySelectedBranch(selected)
                 if selected.assumed_negated_branches.is_empty() =>
@@ -51,6 +198,113 @@ impl LitexToLeanCompiler {
                     term = format!("(Or.inr {term})");
                 }
                 term
+            }
+            OrFactSearchedProof::ByBuiltinRule(
+                OrFactSearchProofByBuiltinRule::ZeroProductSplit(selected),
+            ) => {
+                let [AndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(left)), AndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(right))] =
+                    proof.fact.facts.as_slice()
+                else {
+                    return Err(LeanCompileError::unsupported("Or/ZeroProductShape"));
+                };
+                let orientation = |equal: &EqualFact, object: &Obj| {
+                    if equal.left.ir() == object.ir() && is_exact_zero(&equal.right) {
+                        Ok(false)
+                    } else if equal.right.ir() == object.ir() && is_exact_zero(&equal.left) {
+                        Ok(true)
+                    } else {
+                        Err(LeanCompileError::unsupported("Or/ZeroProductBranch"))
+                    }
+                };
+                let left_reversed = orientation(left, &selected.left)?;
+                let right_reversed = orientation(right, &selected.right)?;
+                let mut lines = vec!["classical".to_string()];
+                for (i, (child, object)) in [
+                    (&selected.left_in_r, &selected.left),
+                    (&selected.right_in_r, &selected.right),
+                ]
+                .into_iter()
+                .enumerate()
+                {
+                    if !matches!(source_subject(child)?, Fact::AtomicFact(AtomicFact::InFact(f)) if f.element.ir() == object.ir() && f.set == Obj::StandardSet(StandardSet::R))
+                    {
+                        return Err(LeanCompileError::unsupported("Or/ZeroProductMember"));
+                    }
+                    let checked = self.compile_verify(
+                        child,
+                        &SourcePosition {
+                            before: position.before + i,
+                            ..*position
+                        },
+                    )?;
+                    lines.push(format!(
+                        "have _factor_real_{i} : {} := {}",
+                        checked.0, checked.1
+                    ));
+                }
+                let source = source_subject(&selected.product_zero)?;
+                let Fact::AtomicFact(AtomicFact::EqualFact(equal)) = &source else {
+                    return Err(LeanCompileError::unsupported("Or/ZeroProductPremise"));
+                };
+                let Obj::ArithmeticOperator(ArithmeticOperator::Mul(product)) = &equal.left else {
+                    return Err(LeanCompileError::unsupported("Or/ZeroProductPremise"));
+                };
+                if !is_exact_zero(&equal.right) {
+                    return Err(LeanCompileError::unsupported("Or/ZeroProductPremise"));
+                }
+                let swapped = if product.left.ir() == selected.left.ir()
+                    && product.right.ir() == selected.right.ir()
+                {
+                    false
+                } else if product.left.ir() == selected.right.ir()
+                    && product.right.ir() == selected.left.ir()
+                {
+                    true
+                } else {
+                    return Err(LeanCompileError::unsupported("Or/ZeroProductFactors"));
+                };
+                let checked = self.compile_verify(
+                    &selected.product_zero,
+                    &SourcePosition {
+                        before: position.before + 2,
+                        ..*position
+                    },
+                )?;
+                let complete = SourcePosition {
+                    before: position.before + 3,
+                    ..*position
+                };
+                let term = self.compile_object_reference(&equal.left, &complete)?;
+                lines.push(format!("let _product := {term}"));
+                lines.push(format!(
+                    "have _product_zero : Litex.Same _product (Litex.number 0) := {}",
+                    checked.1
+                ));
+                lines.push(format!(
+                    "by_cases _left : {}",
+                    self.atomic_proposition(&AtomicFact::EqualFact(left.clone()), position)?
+                ));
+                lines.push("· exact Or.inl _left".into());
+                let left_nonzero = if left_reversed {
+                    "(fun h => _left h.symm)"
+                } else {
+                    "_left"
+                };
+                let right_nonzero = if right_reversed {
+                    "(fun h => _right h.symm)"
+                } else {
+                    "_right"
+                };
+                let (first, second) = if swapped {
+                    (right_nonzero, left_nonzero)
+                } else {
+                    (left_nonzero, right_nonzero)
+                };
+                lines.push(format!("· apply Or.inr
+  apply Classical.byContradiction
+  intro _right
+  exact (Litex.mulNonzero _product.val.left _product.val.right _product.wd.1 _product.wd.2 {first} {second}) _product_zero"));
+                format!("(by\n  {}\n)", lines.join("\n").replace('\n', "\n  "))
             }
             OrFactSearchedProof::ByBuiltinRule(
                 OrFactSearchProofByBuiltinRule::SquareSumComponentNonzero(selected),
@@ -118,6 +372,85 @@ impl LitexToLeanCompiler {
             _ => return Err(LeanCompileError::unsupported("Or/SelectedRule")),
         };
         Ok((self.fact_proposition(&fact, position)?, term))
+    }
+
+    fn compile_real_order_split(
+        &self,
+        fact: &OrFact,
+        left: &Obj,
+        right: &Obj,
+        left_real: &VerifyFactResult,
+        right_real: &VerifyFactResult,
+        reverse: bool,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        let [AndChainAtomicFact::AtomicFact(first), AndChainAtomicFact::AtomicFact(second)] =
+            fact.facts.as_slice()
+        else {
+            return Err(LeanCompileError::unsupported("Or/RealSplitShape"));
+        };
+        let (a, b) = if reverse {
+            (right, left)
+        } else {
+            (left, right)
+        };
+        let (x, y, first_strict) = source_order_oriented(first)?;
+        let (z, t, second_strict) = source_order_oriented(second)?;
+        let valid = if first_strict {
+            x == a && y == b && z == b && t == a && !second_strict
+        } else {
+            x == b && y == a && z == a && t == b && second_strict
+        };
+        if !valid {
+            return Err(LeanCompileError::unsupported("Or/RealSplitSubject"));
+        }
+        let mut lines = Vec::new();
+        for (i, (proof, object)) in [(left_real, left), (right_real, right)]
+            .into_iter()
+            .enumerate()
+        {
+            if membership_subject(&source_subject(proof)?, object)? != StandardSet::R {
+                return Err(LeanCompileError::unsupported("Or/RealSplitCarrier"));
+            }
+            let checked = self.compile_verify(
+                proof,
+                &SourcePosition {
+                    before: position.before + i,
+                    ..*position
+                },
+            )?;
+            lines.push(format!(
+                "have _split_member_{i} : {} := {}",
+                checked.0, checked.1
+            ));
+        }
+        let completed = SourcePosition {
+            before: position.before + 2,
+            ..*position
+        };
+        let a = self.compile_object_reference(a, &completed)?;
+        let b = self.compile_object_reference(b, &completed)?;
+        let (ha, hb) = if reverse {
+            ("_split_member_1", "_split_member_0")
+        } else {
+            ("_split_member_0", "_split_member_1")
+        };
+        lines.push(format!("rcases lt_or_ge (Litex.NativeBridge.asReal {a} {ha}) (Litex.NativeBridge.asReal {b} {hb}) with _lt | _ge"));
+        let (strict, weak) = if first_strict {
+            ("inl", "inr")
+        } else {
+            ("inr", "inl")
+        };
+        lines.push(format!(
+            "· exact Or.{strict} ((Litex.NativeBridge.lt_iff_asReal {a} {b} {ha} {hb}).mpr _lt)"
+        ));
+        lines.push(format!(
+            "· exact Or.{weak} ((Litex.NativeBridge.le_iff_asReal {b} {a} {hb} {ha}).mpr _ge)"
+        ));
+        Ok(format!(
+            "(by\n  {})",
+            lines.join("\n").replace('\n', "\n  ")
+        ))
     }
 
     fn compile_or_square_sum_nonzero(

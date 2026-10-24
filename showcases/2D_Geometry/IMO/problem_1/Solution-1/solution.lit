@@ -1,6 +1,6 @@
 release obj def geo::vec
 release obj def geo::dot
-release obj def geo::det
+release obj def geo::det2
 release obj def geo::distance_sq
 
 thm imo_1960_problem_3:
@@ -40,8 +40,8 @@ thm imo_1960_problem_3:
 
 
     have d R = geo::dot(geo::vec(point_a,p1),geo::vec(point_a,p2))
-    have cross R = geo::det(geo::vec(point_a,p1),geo::vec(point_a,p2))
-    have area R = geo::det(geo::vec(point_a,point_b),geo::vec(point_a,point_c))
+    have cross R = geo::det2(geo::vec(point_a,p1),geo::vec(point_a,p2))
+    have area R = geo::det2(geo::vec(point_a,point_b),geo::vec(point_a,point_c))
 
     claim:
         ? 4*n^2*d = (n^2-1)*a^2
@@ -122,8 +122,8 @@ thm imo_1960_problem_3:
         have ray2 cart(R, R) = geo::vec(point_a, p2)
         have ab cart(R, R) = geo::vec(point_a, point_b)
         have ac cart(R, R) = geo::vec(point_a, point_c)
-        geo::det(geo::vec(point_a, p1), geo::vec(point_a, p2)) = geo::det(ray1, ray2)
-        geo::det(geo::vec(point_a, point_b), geo::vec(point_a, point_c)) = geo::det(ab, ac)
+        geo::det2(geo::vec(point_a, p1), geo::vec(point_a, p2)) = geo::det2(ray1, ray2)
+        geo::det2(geo::vec(point_a, point_b), geo::vec(point_a, point_c)) = geo::det2(ab, ac)
         ray1 = (p1(1)-point_a(1),p1(2)-point_a(2))
         ray2 = (p2(1)-point_a(1),p2(2)-point_a(2))
         ray1(1) = p1(1)-point_a(1)
@@ -136,21 +136,21 @@ thm imo_1960_problem_3:
         ab(2) = point_b(2)-point_a(2)
         ac(1) = point_c(1)-point_a(1)
         ac(2) = point_c(2)-point_a(2)
-        cross = geo::det(ray1,ray2)
-        area = geo::det(ab,ac)
+        cross = geo::det2(ray1,ray2)
+        area = geo::det2(ab,ac)
         by thm theorem::central_det(p1(1)-point_a(1), p1(2)-point_a(2), p2(1)-point_a(1), p2(2)-point_a(2), point_b(1)-point_a(1), point_b(2)-point_a(2), point_c(1)-point_a(1), point_c(2)-point_a(2), n) => n*((p1(1)-point_a(1))*(p2(2)-point_a(2))-(p1(2)-point_a(2))*(p2(1)-point_a(1))) = (point_b(1)-point_a(1))*(point_c(2)-point_a(2))-(point_b(2)-point_a(2))*(point_c(1)-point_a(1))
 
-        geo::det(ray1,ray2) = ray1(1)*ray2(2)-ray1(2)*ray2(1)
+        geo::det2(ray1,ray2) = ray1(1)*ray2(2)-ray1(2)*ray2(1)
         ray1(1)*ray2(2) = (p1(1)-point_a(1))*(p2(2)-point_a(2))
         ray1(2)*ray2(1) = (p1(2)-point_a(2))*(p2(1)-point_a(1))
-        geo::det(ray1,ray2) = (p1(1)-point_a(1))*(p2(2)-point_a(2))-(p1(2)-point_a(2))*(p2(1)-point_a(1))
-        geo::det(ab,ac) = ab(1)*ac(2)-ab(2)*ac(1)
+        geo::det2(ray1,ray2) = (p1(1)-point_a(1))*(p2(2)-point_a(2))-(p1(2)-point_a(2))*(p2(1)-point_a(1))
+        geo::det2(ab,ac) = ab(1)*ac(2)-ab(2)*ac(1)
         ab(1)*ac(2) = (point_b(1)-point_a(1))*(point_c(2)-point_a(2))
         ab(2)*ac(1) = (point_b(2)-point_a(2))*(point_c(1)-point_a(1))
-        geo::det(ab,ac) = (point_b(1)-point_a(1))*(point_c(2)-point_a(2))-(point_b(2)-point_a(2))*(point_c(1)-point_a(1))
-        n*geo::det(ray1,ray2) = n*((p1(1)-point_a(1))*(p2(2)-point_a(2))-(p1(2)-point_a(2))*(p2(1)-point_a(1)))
-        n*geo::det(ray1,ray2) = geo::det(ab,ac)
-        n*cross = n*geo::det(ray1,ray2)
+        geo::det2(ab,ac) = (point_b(1)-point_a(1))*(point_c(2)-point_a(2))-(point_b(2)-point_a(2))*(point_c(1)-point_a(1))
+        n*geo::det2(ray1,ray2) = n*((p1(1)-point_a(1))*(p2(2)-point_a(2))-(p1(2)-point_a(2))*(p2(1)-point_a(1)))
+        n*geo::det2(ray1,ray2) = geo::det2(ab,ac)
+        n*cross = n*geo::det2(ray1,ray2)
 
     (n*cross)^2 = area^2
     n^2 * cross^2 = (n*cross)^2
@@ -159,9 +159,9 @@ thm imo_1960_problem_3:
     # Combine the tangent and altitude identities without division.
     tan_alpha*geo::dot(geo::vec(point_a,p1),geo::vec(point_a,p2)) = tan_alpha*d
     (tan_alpha*geo::dot(geo::vec(point_a,p1),geo::vec(point_a,p2)))^2 = (tan_alpha*d)^2
-    geo::det(geo::vec(point_a,p1),geo::vec(point_a,p2))^2 = cross^2
+    geo::det2(geo::vec(point_a,p1),geo::vec(point_a,p2))^2 = cross^2
     (tan_alpha*d)^2 = cross^2
-    geo::det(geo::vec(point_a,point_b),geo::vec(point_a,point_c))^2 = area^2
+    geo::det2(geo::vec(point_a,point_b),geo::vec(point_a,point_c))^2 = area^2
     (h*a)^2 = area^2
     by thm theorem::central_tangent_square(tan_alpha, d, cross, area, a, h, n) => (tan_alpha * (n^2 - 1) * a)^2 = (4 * n * h)^2
 

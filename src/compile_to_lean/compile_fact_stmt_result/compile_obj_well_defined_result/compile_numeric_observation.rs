@@ -1,6 +1,7 @@
 use crate::compile_to_lean::helper::*;
 use crate::compile_to_lean::source_position::{SourceOwner, SourcePosition};
 use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
+use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IntegerOperatorObjWellDefinedProofByDef;
 use crate::prelude::*;
 
 impl LitexToLeanCompiler {
@@ -13,6 +14,18 @@ impl LitexToLeanCompiler {
             if let Ok((_, Some(set), _, hypothesis)) =
                 position.visible_parameter(*id, &self.runtime)
             {
+                if let Obj::StandardSet(set) = set {
+                    if *set == StandardSet::NPos || numeric_refinement(set).is_some() {
+                        if *set != StandardSet::CStar {
+                            return standard_inclusion_term(
+                                set,
+                                &StandardSet::R,
+                                &self.compile_object_reference(object, position)?,
+                                &hypothesis,
+                            );
+                        }
+                    }
+                }
                 if set == &Obj::StandardSet(StandardSet::R) {
                     return Ok(hypothesis);
                 }
@@ -152,12 +165,24 @@ impl LitexToLeanCompiler {
         object: &Obj,
         position: &SourcePosition<'_>,
     ) -> Result<(String, String, String, Option<EvalRational>), LeanCompileError> {
+        if let Some(number) = position.enumeration_literal(object) {
+            let value = number_literal(number, "ℂ")?;
+            return Ok((
+                value.clone(),
+                format!("(Litex.NativeBridge.denoteNumber (M := M) {value})"),
+                format!("(Litex.numberInC (M := M) {value})"),
+                EvalRational::from_obj(object),
+            ));
+        }
         if let Some(observation) =
             position.with_visible_alias(object, &mut |_, value, wd, producer| {
                 let wd = success_object_wd(wd, value)?;
                 self.numeric_wd(wd, producer)
             })?
         {
+            return Ok(observation);
+        }
+        if let Some(observation) = self.numeric_inferred_coordinate(object, position)? {
             return Ok(observation);
         }
         if !matches!(object, Obj::Identifier(_)) {
@@ -193,9 +218,31 @@ impl LitexToLeanCompiler {
                 }
             }
         }
+        // Replay formation owned by the exact named inference before consuming
+        // a membership citation whose argument matching can observe this same
+        // expression. This keeps the source dependency acyclic.
+        if matches!(object, Obj::ArithmeticOperator(_)) {
+            if let Some(observation) = position
+                .with_visible_inferred_subject(object, &mut |_, producer| {
+                    self.compile_inferred_numeric_observation(object, producer)
+                })?
+            {
+                return Ok(observation);
+            }
+        }
         // An obtained compound term retains its original constructor WD.
         // Observe that operation before falling back to an opaque scalar from
         // membership, so the normalization certificate sees the same factors.
+        if let Some(observation) =
+            self.compile_callee_expression_reference(object, position, true)?
+        {
+            return Ok((
+                format!("({observation}).val"),
+                format!("({observation}).property.1"),
+                format!("({observation}).property.2"),
+                EvalRational::from_obj(object),
+            ));
+        }
         if let Some(observation) =
             self.compile_obtain_expression_reference(object, position, true)?
         {
@@ -249,6 +296,48 @@ impl LitexToLeanCompiler {
         Err(LeanCompileError::new("Arithmetic/NumericEvidence", &format!("No preceding original constructor or checked C-membership certificate supplies the observation of {}.", object.ir())))
     }
 
+    fn numeric_inferred_coordinate(
+        &self,
+        object: &Obj,
+        position: &SourcePosition<'_>,
+    ) -> Result<Option<(String, String, String, Option<EvalRational>)>, LeanCompileError> {
+        if !is_literal_coordinate_call(object) {
+            return Ok(None);
+        }
+        let observation =
+            position.with_visible_inferred_subject_filter(object, &mut |store, producer| {
+                let Some(term) = self.compile_cart_inferred_subject(object, store, producer)?
+                else {
+                    return Ok(None);
+                };
+                let StoreFactResult::AtomicFact(stored) = store else {
+                    return Ok(None);
+                };
+                let AtomicFact::InFact(member) = &stored.fact else {
+                    return Ok(None);
+                };
+                let (actual, reference) = producer.visible_fact(stored.fact_id, &self.runtime)?;
+                if actual != &Fact::AtomicFact(stored.fact.clone()) {
+                    return Err(LeanCompileError::new(
+                        "CartInference/ObservationSubject",
+                        "The coordinate observation cites another stored membership.",
+                    ));
+                }
+                let Some(complex) =
+                    self.parameter_complex_membership(object, &member.set, &reference, producer)?
+                else {
+                    return Ok(None);
+                };
+                Ok(Some((
+                    format!("(Litex.NativeBridge.asComplex {term} {complex})"),
+                    format!("(Litex.NativeBridge.asComplex_spec {term} {complex})"),
+                    complex,
+                    None,
+                )))
+            })?;
+        Ok(observation)
+    }
+
     pub(in crate::compile_to_lean) fn numeric_member(
         &self,
         object: &Obj,
@@ -287,6 +376,58 @@ impl LitexToLeanCompiler {
                         _ => unreachable!(),
                     }),
                 ))
+            }
+            ObjWellDefinedProof::ByDef {
+                obj: Obj::Literal(Literal::ImaginaryUnit(_)),
+                proof:
+                    ObjWellDefinedProofByDef::Literal(LiteralObjWellDefinedProofByDef::ImaginaryUnit(_)),
+            } => Ok((
+                "Complex.I".into(),
+                "(Litex.NativeBridge.denoteNumber (M := M) Complex.I)".into(),
+                "(Litex.numberInC (M := M) Complex.I)".into(),
+                None,
+            )),
+            ObjWellDefinedProof::ByDef {
+                obj: Obj::IntegerOperator(operator),
+                proof: ObjWellDefinedProofByDef::IntegerOperator(proof),
+            } => {
+                let position = SourcePosition {
+                    parent: Some(position),
+                    owner: SourceOwner::WD(wd),
+                    before: usize::MAX,
+                };
+                match (operator, proof) {
+                    (
+                        IntegerOperator::Factorial(_),
+                        IntegerOperatorObjWellDefinedProofByDef::Factorial(p),
+                    ) => self.numeric_factorial_wd(wd, &p.child_obj_well_defined, &position),
+                    (IntegerOperator::Gcd(_), IntegerOperatorObjWellDefinedProofByDef::Gcd(p)) => {
+                        self.numeric_gcd_lcm_wd(wd, &p.child_obj_well_defined, false, &position)
+                    }
+                    (IntegerOperator::Lcm(_), IntegerOperatorObjWellDefinedProofByDef::Lcm(p)) => {
+                        self.numeric_gcd_lcm_wd(wd, &p.child_obj_well_defined, true, &position)
+                    }
+                    (IntegerOperator::Mod(_), IntegerOperatorObjWellDefinedProofByDef::Mod(p)) => {
+                        self.numeric_integer_division_wd(
+                            wd,
+                            &p.child_obj_well_defined,
+                            false,
+                            &position,
+                        )
+                    }
+                    (
+                        IntegerOperator::Quot(_),
+                        IntegerOperatorObjWellDefinedProofByDef::Quot(p),
+                    ) => self.numeric_integer_division_wd(
+                        wd,
+                        &p.child_obj_well_defined,
+                        true,
+                        &position,
+                    ),
+                    _ => Err(LeanCompileError::unsupported(
+                        "NumericObservation/IntegerOperator",
+                    )),
+                }
             }
             ObjWellDefinedProof::ByDef {
                 obj: Obj::ArithmeticOperator(operation),
@@ -361,6 +502,26 @@ impl LitexToLeanCompiler {
                         &position,
                     ),
                     (
+                        ArithmeticOperator::Min(_),
+                        ArithmeticOperatorObjWellDefinedProofByDef::Min(p),
+                    ) => self.numeric_min_max_wd(wd, &p.child_obj_well_defined, false, &position),
+                    (
+                        ArithmeticOperator::Sign(_),
+                        ArithmeticOperatorObjWellDefinedProofByDef::Sign(p),
+                    ) => self.numeric_sign_wd(wd, &p.child_obj_well_defined, &position),
+                    (
+                        ArithmeticOperator::Floor(_),
+                        ArithmeticOperatorObjWellDefinedProofByDef::Floor(p),
+                    ) => self.numeric_rounding_wd(wd, &p.child_obj_well_defined, false, &position),
+                    (
+                        ArithmeticOperator::Ceil(_),
+                        ArithmeticOperatorObjWellDefinedProofByDef::Ceil(p),
+                    ) => self.numeric_rounding_wd(wd, &p.child_obj_well_defined, true, &position),
+                    (
+                        ArithmeticOperator::Max(_),
+                        ArithmeticOperatorObjWellDefinedProofByDef::Max(p),
+                    ) => self.numeric_min_max_wd(wd, &p.child_obj_well_defined, true, &position),
+                    (
                         ArithmeticOperator::Pow(x),
                         ArithmeticOperatorObjWellDefinedProofByDef::Pow(p),
                     ) => self.numeric_pow_wd(
@@ -388,72 +549,47 @@ impl LitexToLeanCompiler {
                 // Cartesian parameter inference already publishes the coordinate
                 // object and its membership. Numeric observation consumes that
                 // exact completed producer; endpoint WD is checked separately.
-                let inferred = if is_literal_coordinate_call(object) {
-                    position.with_visible_inferred_subject(object, &mut |store, producer| {
-                        let Some(term) =
-                            self.compile_cart_inferred_subject(object, store, producer)?
-                        else {
-                            return Ok(None);
-                        };
-                        let StoreFactResult::AtomicFact(stored) = store else {
-                            return Ok(None);
-                        };
-                        let AtomicFact::InFact(member) = &stored.fact else {
-                            return Ok(None);
-                        };
-                        let (actual, reference) =
-                            producer.visible_fact(stored.fact_id, &self.runtime)?;
-                        if actual != &Fact::AtomicFact(stored.fact.clone()) {
-                            return Err(LeanCompileError::new(
-                                "CartInference/ObservationSubject",
-                                "The coordinate observation cites another stored membership.",
-                            ));
-                        }
-                        let Some(complex) = self.parameter_complex_membership(
-                            object,
-                            &member.set,
-                            &reference,
-                            producer,
-                        )?
-                        else {
-                            return Ok(None);
-                        };
-                        Ok(Some((
-                            format!("(Litex.NativeBridge.asComplex {term} {complex})"),
-                            format!("(Litex.NativeBridge.asComplex_spec {term} {complex})"),
-                            complex,
-                            None,
-                        )))
-                    })?
-                } else {
-                    None
-                };
-                if let Some(Some(observation)) = inferred {
+                if let Some(observation) = self.numeric_inferred_coordinate(object, position)? {
                     return Ok(observation);
                 }
                 let (call, output, member) =
                     self.numeric_function_output_wd(wd, position, Some("_litex_numeric_call"))?;
-                let (carrier, bridge) = match output {
-                    StandardSet::N => ("N", Some("naturalToComplex")),
-                    StandardSet::Z => ("Z", Some("integerToComplex")),
-                    StandardSet::Q => ("Q", Some("rationalToComplex")),
-                    StandardSet::R => ("R", Some("realToComplex")),
-                    StandardSet::RPos => ("RPos", Some("positiveRealToComplex")),
-                    StandardSet::C => ("C", None),
-                    _ => {
-                        return Err(LeanCompileError::unsupported(
-                            "Arithmetic/FunctionOutputCarrier",
-                        ))
-                    }
-                };
-                let member =
-                    format!("(show Litex.In _litex_numeric_call Litex.{carrier} from {member})");
-                let complex = match bridge {
-                    Some(bridge) => {
-                        format!("(Litex.{bridge} _litex_numeric_call {member})")
-                    }
-                    None => member,
-                };
+                let complex =
+                    if numeric_refinement(&output).is_some() || output == StandardSet::NPos {
+                        let member = format!(
+                            "(show Litex.In _litex_numeric_call {} from {member})",
+                            standard_term(&output)?
+                        );
+                        standard_inclusion_term(
+                            &output,
+                            &StandardSet::C,
+                            "_litex_numeric_call",
+                            &member,
+                        )?
+                    } else {
+                        let (carrier, bridge) = match output {
+                            StandardSet::N => ("N", Some("naturalToComplex")),
+                            StandardSet::Z => ("Z", Some("integerToComplex")),
+                            StandardSet::Q => ("Q", Some("rationalToComplex")),
+                            StandardSet::R => ("R", Some("realToComplex")),
+                            StandardSet::RPos => ("RPos", Some("positiveRealToComplex")),
+                            StandardSet::C => ("C", None),
+                            _ => {
+                                return Err(LeanCompileError::unsupported(
+                                    "Arithmetic/FunctionOutputCarrier",
+                                ))
+                            }
+                        };
+                        let member = format!(
+                            "(show Litex.In _litex_numeric_call Litex.{carrier} from {member})"
+                        );
+                        match bridge {
+                            Some(bridge) => {
+                                format!("(Litex.{bridge} _litex_numeric_call {member})")
+                            }
+                            None => member,
+                        }
+                    };
                 // Keep the original constructor and return law, sharing the
                 // constructor locally instead of repeating its full WD term.
                 let setup = format!(
@@ -604,6 +740,12 @@ impl LitexToLeanCompiler {
                 proof: ObjWellDefinedProofByDef::FnObj(_),
             } => {
                 let (call, output, member) = self.numeric_function_output_wd(wd, position, None)?;
+                if (numeric_refinement(&output).is_some() && output != StandardSet::CStar)
+                    || output == StandardSet::NPos
+                {
+                    return standard_inclusion_term(&output, &StandardSet::R, &call, &member)
+                        .map(Some);
+                }
                 Ok(match output {
                     StandardSet::N => Some(format!("(Litex.naturalToReal {call} {member})")),
                     StandardSet::Z => Some(format!("(Litex.integerToReal {call} {member})")),
@@ -625,6 +767,17 @@ impl LitexToLeanCompiler {
         member: &str,
         position: &SourcePosition<'_>,
     ) -> Result<Option<String>, LeanCompileError> {
+        if let Obj::StandardSet(set) = carrier {
+            if *set == StandardSet::NPos || numeric_refinement(set).is_some() {
+                return standard_inclusion_term(
+                    set,
+                    &StandardSet::C,
+                    &self.compile_object_reference(object, position)?,
+                    member,
+                )
+                .map(Some);
+            }
+        }
         let bridge = match carrier {
             Obj::StandardSet(StandardSet::C) => return Ok(Some(member.to_string())),
             Obj::StandardSet(StandardSet::N) => "naturalToComplex",

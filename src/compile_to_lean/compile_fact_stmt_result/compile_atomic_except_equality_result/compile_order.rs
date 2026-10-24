@@ -173,6 +173,54 @@ impl LitexToLeanCompiler {
         ))
     }
 
+    fn compile_integer_predecessor(
+        &self,
+        goal: &AtomicFact,
+        left_integer: &VerifyFactResult,
+        right_integer: &VerifyFactResult,
+        order: &VerifyFactResult,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        let (left, right, strict) = source_order_oriented(goal)?;
+        let Obj::ArithmeticOperator(ArithmeticOperator::Sub(previous)) = right else {
+            return Err(LeanCompileError::unsupported("IntegerPredecessor/Subject"));
+        };
+        if strict
+            || !matches!(previous.right.as_ref(), Obj::Literal(Literal::Number(n)) if n.normalized_value == "1")
+        {
+            return Err(LeanCompileError::unsupported("IntegerPredecessor/Subject"));
+        }
+        if membership_subject(&source_subject(left_integer)?, left)? != StandardSet::Z
+            || membership_subject(&source_subject(right_integer)?, &previous.left)?
+                != StandardSet::Z
+        {
+            return Err(LeanCompileError::unsupported(
+                "IntegerPredecessor/IntegerDomains",
+            ));
+        }
+        let Fact::AtomicFact(subject) = source_subject(order)? else {
+            return Err(LeanCompileError::unsupported(
+                "IntegerPredecessor/StrictOrder",
+            ));
+        };
+        let (a, b, strict) = source_order_oriented(&subject)?;
+        if !strict || a.ir() != left.ir() || b.ir() != previous.left.ir() {
+            return Err(LeanCompileError::unsupported(
+                "IntegerPredecessor/StrictOrder",
+            ));
+        }
+        let mut proofs = Vec::new();
+        for (index, premise) in [left_integer, right_integer, order].into_iter().enumerate() {
+            proofs.push(
+                self.compile_verify(premise, &position.atomic_search_prior(index)?)?
+                    .1,
+            );
+        }
+        let complete = position.atomic_search_prior(3)?;
+        Ok(format!("(Litex.integerPredecessorLe {} {} {} {} (Litex.sameRefl (Litex.number (M := M) 1)) {})",
+            self.compile_object_reference(left, &complete)?, self.compile_object_reference(right, &complete)?, proofs[0], proofs[1], proofs[2]))
+    }
+
     pub(in crate::compile_to_lean) fn compile_order_builtin(
         &self,
         goal: &AtomicFact,
@@ -180,6 +228,41 @@ impl LitexToLeanCompiler {
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
         match (goal, rule) {
+            (
+                AtomicFact::LessFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(
+                    LessFactSearchProofByBuiltinRule::ModRemainderStrictUpperBound(p),
+                ),
+            ) => self.compile_mod_bound(
+                goal,
+                true,
+                &p.dividend_in_z_proof,
+                &p.modulus_in_n_pos_proof,
+                position,
+            ),
+            (
+                AtomicFact::LessFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(
+                    LessFactSearchProofByBuiltinRule::FactorialStrictMonotone(p),
+                ),
+            ) => self.compile_factorial_monotone(
+                goal,
+                Some(&p.positive_smaller),
+                &p.argument_order,
+                position,
+            ),
+            (
+                AtomicFact::LessFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(
+                    LessFactSearchProofByBuiltinRule::FloorStrictUpperBound(_),
+                ),
+            ) => self.compile_rounding_bound(goal, false, true, position),
+            (
+                AtomicFact::LessFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(
+                    LessFactSearchProofByBuiltinRule::CeilStrictLowerBound(_),
+                ),
+            ) => self.compile_rounding_bound(goal, true, true, position),
             (
                 AtomicFact::LessEqualFact(_),
                 AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(rule),
@@ -316,6 +399,47 @@ impl LitexToLeanCompiler {
                         p.mid_to_right_cite_fact_id,
                         position,
                     ),
+                LessEqualFactSearchProofByBuiltinRule::MinLowerBound(_) => {
+                    self.compile_min_max_bound(goal, false, position)
+                }
+                LessEqualFactSearchProofByBuiltinRule::ModRemainderNonnegative(p) => self
+                    .compile_mod_bound(
+                        goal,
+                        false,
+                        &p.dividend_in_z_proof,
+                        &p.modulus_in_n_pos_proof,
+                        position,
+                    ),
+                LessEqualFactSearchProofByBuiltinRule::FloorLowerBound(_) => {
+                    self.compile_rounding_bound(goal, false, false, position)
+                }
+                LessEqualFactSearchProofByBuiltinRule::CeilUpperBound(_) => {
+                    self.compile_rounding_bound(goal, true, false, position)
+                }
+                LessEqualFactSearchProofByBuiltinRule::IntegerPredecessorLe(p) => self
+                    .compile_integer_predecessor(
+                        goal,
+                        &p.left_in_z_proof,
+                        &p.right_in_z_proof,
+                        &p.strict_proof,
+                        position,
+                    ),
+                LessEqualFactSearchProofByBuiltinRule::FactorialMonotone(p) => {
+                    self.compile_factorial_monotone(goal, None, &p.argument_order, position)
+                }
+                LessEqualFactSearchProofByBuiltinRule::FloorMonotone(p) => {
+                    self.compile_rounding_monotone(goal, false, &p.argument_order, position)
+                }
+                LessEqualFactSearchProofByBuiltinRule::CeilMonotone(p) => {
+                    self.compile_rounding_monotone(goal, true, &p.argument_order, position)
+                }
+                LessEqualFactSearchProofByBuiltinRule::MaxUpperBound(_) => {
+                    self.compile_min_max_bound(goal, true, position)
+                }
+                LessEqualFactSearchProofByBuiltinRule::MinWeakMonotone(p) => self
+                    .compile_min_max_monotone(goal, false, &p.left_order, &p.right_order, position),
+                LessEqualFactSearchProofByBuiltinRule::MaxWeakMonotone(p) => self
+                    .compile_min_max_monotone(goal, true, &p.left_order, &p.right_order, position),
                 _ => Err(LeanCompileError::unsupported("Order/LessEqualBuiltin")),
             },
             (
@@ -501,6 +625,20 @@ impl LitexToLeanCompiler {
                 false,
                 position,
             ),
+            (
+                AtomicFact::NotEqualFact(goal),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(
+                    NotEqualFactSearchProofByBuiltinRule::MembershipContradiction(p),
+                ),
+            ) => {
+                self.compile_membership_contradiction(goal, &p.in_proof, &p.not_in_proof, position)
+            }
+            (
+                AtomicFact::NotEqualFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(
+                    NotEqualFactSearchProofByBuiltinRule::FactorialNonzero(_),
+                ),
+            ) => self.compile_factorial_nonzero(goal, position),
             (
                 AtomicFact::NotEqualFact(fact),
                 AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(

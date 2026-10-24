@@ -1034,3 +1034,14 @@ impl From<crate::ast::obj::RiemannIntegral> for crate::ast::obj::Obj {
         Self::IntegralOperator(crate::ast::obj::IntegralOperator::Riemann(v))
     }
 }
+
+impl From<crate::ast::obj::MatrixOperator> for crate::ast::obj::Obj {
+    fn from(value: crate::ast::obj::MatrixOperator) -> Self {
+        Self::MatrixOperator(value)
+    }
+}
+impl From<crate::ast::obj::MatrixSet> for crate::ast::obj::Obj {
+    fn from(value: crate::ast::obj::MatrixSet) -> Self {
+        Self::SetFormer(crate::ast::obj::SetFormer::MatrixSet(value))
+    }
+}

@@ -1,0 +1,6 @@
+# Accept a background measurement as a trusted fact.
+trust have radius R:
+    radius = 5
+
+# Reuse the known equality in a new calculation.
+2 * radius = 10

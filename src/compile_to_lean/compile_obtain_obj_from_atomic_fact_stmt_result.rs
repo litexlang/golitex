@@ -62,6 +62,7 @@ impl LitexToLeanCompiler {
             &proof.store_and_infer_result,
             &substitution,
             tail,
+            None,
             &original,
             position,
             local,

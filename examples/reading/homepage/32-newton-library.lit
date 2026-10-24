@@ -1,0 +1,16 @@
+claim:
+    ? forall x R+:
+        (x + 2 / x) / 2 $in R+
+    2 / x > 0
+    x + 2 / x > 0
+    (x + 2 / x) / 2 > 0
+
+have fn newton_sqrt_two(x R+) R+ = (x + 2 / x) / 2
+
+thm fixed_point:
+    ? forall x R+:
+        x^2 = 2
+        =>:
+            newton_sqrt_two(x) = x
+    x = x * x / x = x^2 / x = 2 / x
+    newton_sqrt_two(x) = (x + 2 / x) / 2 = (x + x) / 2 = x

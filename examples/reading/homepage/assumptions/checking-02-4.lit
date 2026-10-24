@@ -1,0 +1,14 @@
+abstract_prop related(x, y)
+
+# Store one reusable relation-preservation rule.
+trust:
+    forall x, y, z R:
+        $related(x, y)
+        =>:
+            $related(x + z, y + z)
+
+# Match x with a + b, y with c, and z with d.
+forall a, b, c, d R:
+    $related(a + b, c)
+    =>:
+        $related(a + b + d, c + d)

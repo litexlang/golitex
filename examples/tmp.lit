@@ -12,7 +12,7 @@ have fn vec(A, B cart(R, R)) cart(R, R) = (B(1) - A(1), B(2) - A(2))
 have fn dot(u, v cart(R, R)) R = u(1) * v(1) + u(2) * v(2)
 
 # 2D determinant (signed parallelogram area / cross product z-component).
-have fn det(u, v cart(R, R)) R = u(1) * v(2) - u(2) * v(1)
+have fn det2(u, v cart(R, R)) R = u(1) * v(2) - u(2) * v(1)
 
 # Squared Euclidean distance |ab|^2 (avoids square roots).
 have fn distance_sq(a, b cart(R, R)) R = dot(vec(a, b), vec(a, b))
@@ -22,7 +22,7 @@ have fn line(a, b, c R: a != 0 or b != 0) power_set(cart(R, R)) = {p cart(R, R):
 
 # Two-point form: the unique line through distinct points a and b
 # (collinearity: det(vec(a, p), vec(a, b)) = 0).
-have fn line_through_points(a, b cart(R, R): a != b) power_set(cart(R, R)) = {p cart(R, R): det(vec(a, p), vec(a, b)) = 0}
+have fn line_through_points(a, b cart(R, R): a != b) power_set(cart(R, R)) = {p cart(R, R): det2(vec(a, p), vec(a, b)) = 0}
 
 # Cosine of angle pqr at q, without square roots:
 #   cos^2 = num^2 / den, where
@@ -44,7 +44,7 @@ prop is_on_ray(p, a, b cart(R, R)):
 
 # Points p, q, r are collinear.
 prop is_collinear(p, q, r cart(R, R)):
-    det(vec(p, q), vec(p, r)) = 0
+    det2(vec(p, q), vec(p, r)) = 0
 
 # Segments ab and cd have equal length.
 prop are_segments_congruent(a, b, c, d cart(R, R)):
@@ -67,7 +67,7 @@ prop is_right_angle(p, q, r cart(R, R)):
 prop is_parallel(a, b, c, d cart(R, R)):
     a != b
     c != d
-    det(vec(a, b), vec(c, d)) = 0
+    det2(vec(a, b), vec(c, d)) = 0
 
 # Directed segments ab and cd are perpendicular.
 prop is_perpendicular(a, b, c, d cart(R, R)):
@@ -113,7 +113,7 @@ prop is_angle_bisector(a, b, c, d cart(R, R)):
 
 # a, b, c form a non-degenerate triangle.
 prop is_triangle(a, b, c cart(R, R)):
-    det(vec(a, b), vec(a, c)) != 0
+    det2(vec(a, b), vec(a, c)) != 0
 
 # Triangle abc is isosceles with ab = ac.
 prop is_isosceles(a, b, c cart(R, R)):
@@ -624,8 +624,8 @@ thm dot_coordinate_formula:
 
 thm det_coordinate_formula:
     ? forall u, v cart(R, R):
-        det(u, v) = u(1) * v(2) - u(2) * v(1)
-    det(u, v) = u(1) * v(2) - u(2) * v(1)
+        det2(u, v) = u(1) * v(2) - u(2) * v(1)
+    det2(u, v) = u(1) * v(2) - u(2) * v(1)
 
 # dot is already defined in the seed library, so we do not redefine it here.
 # Task: prove dot product is symmetric, i.e. dot(u, v) = dot(v, u).
@@ -794,10 +794,10 @@ thm dot_square_sum:
 
 thm det_antisymmetric:
     ? forall u, v cart(R, R):
-        det(u, v) = -det(v, u)
+        det2(u, v) = -det2(v, u)
     # Declare the det expansions first.
-    det(u, v) = u(1) * v(2) - u(2) * v(1)
-    det(v, u) = v(1) * u(2) - v(2) * u(1)
+    det2(u, v) = u(1) * v(2) - u(2) * v(1)
+    det2(v, u) = v(1) * u(2) - v(2) * u(1)
     # Commutativity per component.
     v(1) * u(2) = u(2) * v(1)
     v(2) * u(1) = u(1) * v(2)
@@ -806,9 +806,9 @@ thm det_antisymmetric:
     # Factor out -1.
     u(2) * v(1) - u(1) * v(2) = -(u(1) * v(2) - u(2) * v(1))
     # Chain back to -det(u, v).
-    -(u(1) * v(2) - u(2) * v(1)) = -det(u, v)
+    -(u(1) * v(2) - u(2) * v(1)) = -det2(u, v)
     # Conclude.
-    det(u, v) = -det(v, u)
+    det2(u, v) = -det2(v, u)
 
 # vec is already defined in the seed library, so we do not redefine it here.
 # Task 3.5: prove that the x-component of chained vectors adds:
@@ -1064,12 +1064,12 @@ thm dot_bilinear_expand:
 
 thm dot_det_eliminate:
     ? forall u, v cart(R, R):
-        dot(u, u) * dot(v, v) - dot(u, v) * dot(u, v) = det(u, v) * det(u, v)
+        dot(u, u) * dot(v, v) - dot(u, v) * dot(u, v) = det2(u, v) * det2(u, v)
     # Declare the coordinate expansions.
     dot(u, u) = u(1) * u(1) + u(2) * u(2)
     dot(v, v) = v(1) * v(1) + v(2) * v(2)
     dot(u, v) = u(1) * v(1) + u(2) * v(2)
-    det(u, v) = u(1) * v(2) - u(2) * v(1)
+    det2(u, v) = u(1) * v(2) - u(2) * v(1)
     # Expand the product of the two squared norms.
     dot(u, u) * dot(v, v) = (u(1) * u(1) + u(2) * u(2)) * (v(1) * v(1) + v(2) * v(2))
     (u(1) * u(1) + u(2) * u(2)) * (v(1) * v(1) + v(2) * v(2)) = u(1) * u(1) * v(1) * v(1) + u(1) * u(1) * v(2) * v(2) + u(2) * u(2) * v(1) * v(1) + u(2) * u(2) * v(2) * v(2)
@@ -1077,13 +1077,13 @@ thm dot_det_eliminate:
     dot(u, v) * dot(u, v) = (u(1) * v(1) + u(2) * v(2)) * (u(1) * v(1) + u(2) * v(2))
     (u(1) * v(1) + u(2) * v(2)) * (u(1) * v(1) + u(2) * v(2)) = u(1) * v(1) * u(1) * v(1) + 2 * (u(1) * v(1)) * (u(2) * v(2)) + u(2) * v(2) * u(2) * v(2)
     # Expand the square of det.
-    det(u, v) * det(u, v) = (u(1) * v(2) - u(2) * v(1)) * (u(1) * v(2) - u(2) * v(1))
+    det2(u, v) * det2(u, v) = (u(1) * v(2) - u(2) * v(1)) * (u(1) * v(2) - u(2) * v(1))
     (u(1) * v(2) - u(2) * v(1)) * (u(1) * v(2) - u(2) * v(1)) = u(1) * v(2) * u(1) * v(2) - 2 * (u(1) * v(2)) * (u(2) * v(1)) + u(2) * v(1) * u(2) * v(1)
     # Combine: LHS telescopes to det^2.
     dot(u, u) * dot(v, v) - dot(u, v) * dot(u, v) = (u(1) * u(1) * v(1) * v(1) + u(1) * u(1) * v(2) * v(2) + u(2) * u(2) * v(1) * v(1) + u(2) * u(2) * v(2) * v(2)) - (u(1) * v(1) * u(1) * v(1) + 2 * (u(1) * v(1)) * (u(2) * v(2)) + u(2) * v(2) * u(2) * v(2))
     (u(1) * u(1) * v(1) * v(1) + u(1) * u(1) * v(2) * v(2) + u(2) * u(2) * v(1) * v(1) + u(2) * u(2) * v(2) * v(2)) - (u(1) * v(1) * u(1) * v(1) + 2 * (u(1) * v(1)) * (u(2) * v(2)) + u(2) * v(2) * u(2) * v(2)) = u(1) * v(2) * u(1) * v(2) - 2 * (u(1) * v(2)) * (u(2) * v(1)) + u(2) * v(1) * u(2) * v(1)
     # Conclude.
-    dot(u, u) * dot(v, v) - dot(u, v) * dot(u, v) = det(u, v) * det(u, v)
+    dot(u, u) * dot(v, v) - dot(u, v) * dot(u, v) = det2(u, v) * det2(u, v)
 ```
 
 # ========== task 4.2: Prove dot_neg_left theorem ==========
@@ -1131,11 +1131,11 @@ thm dot_neg_left:
 
 thm det_neg_left:
     ? forall u, v cart(R, R):
-        det((-u(1), -u(2)), v) = -det(u, v)
+        det2((-u(1), -u(2)), v) = -det2(u, v)
     # Expand det on the left via det_coordinate_formula.
-    det((-u(1), -u(2)), v) = (-u(1)) * v(2) - (-u(2)) * v(1)
+    det2((-u(1), -u(2)), v) = (-u(1)) * v(2) - (-u(2)) * v(1)
     # Expand det on the right.
-    det(u, v) = u(1) * v(2) - u(2) * v(1)
+    det2(u, v) = u(1) * v(2) - u(2) * v(1)
     # Factor signs per component.
     (-u(1)) * v(2) = -(u(1) * v(2))
     (-u(2)) * v(1) = -(u(2) * v(1))
@@ -1145,9 +1145,9 @@ thm det_neg_left:
     # Rewrite as the negation of det(u, v).
     -(u(1) * v(2)) + (u(2) * v(1)) = -(u(1) * v(2) - u(2) * v(1))
     # Rewrite via det expansion.
-    -(u(1) * v(2) - u(2) * v(1)) = -det(u, v)
+    -(u(1) * v(2) - u(2) * v(1)) = -det2(u, v)
     # Conclude.
-    det((-u(1), -u(2)), v) = -det(u, v)
+    det2((-u(1), -u(2)), v) = -det2(u, v)
 
 # ========== task 4.4: Prove det_change_base theorem ==========
 # vec, dot, det, distance_sq, points are already defined in the seed library,
@@ -1195,7 +1195,7 @@ thm det_neg_left:
 
 thm det_change_base:
     ? forall t, p, a, b cart(R, R):
-        det(vec(t, a), vec(t, b)) = det(vec(p, a), vec(p, b)) + det(vec(p, a), vec(p, t)) + det(vec(p, t), vec(p, b))
+        det2(vec(t, a), vec(t, b)) = det2(vec(p, a), vec(p, b)) + det2(vec(p, a), vec(p, t)) + det2(vec(p, t), vec(p, b))
     # Declare vec expansions for all needed pairs.
     vec(t, a) = (a(1) - t(1), a(2) - t(2))
     vec(t, b) = (b(1) - t(1), b(2) - t(2))
@@ -1203,10 +1203,10 @@ thm det_change_base:
     vec(p, b) = (b(1) - p(1), b(2) - p(2))
     vec(p, t) = (t(1) - p(1), t(2) - p(2))
     # Declare det expansions.
-    det(vec(t, a), vec(t, b)) = (a(1) - t(1)) * (b(2) - t(2)) - (a(2) - t(2)) * (b(1) - t(1))
-    det(vec(p, a), vec(p, b)) = (a(1) - p(1)) * (b(2) - p(2)) - (a(2) - p(2)) * (b(1) - p(1))
-    det(vec(p, a), vec(p, t)) = (a(1) - p(1)) * (t(2) - p(2)) - (a(2) - p(2)) * (t(1) - p(1))
-    det(vec(p, t), vec(p, b)) = (t(1) - p(1)) * (b(2) - p(2)) - (t(2) - p(2)) * (b(1) - p(1))
+    det2(vec(t, a), vec(t, b)) = (a(1) - t(1)) * (b(2) - t(2)) - (a(2) - t(2)) * (b(1) - t(1))
+    det2(vec(p, a), vec(p, b)) = (a(1) - p(1)) * (b(2) - p(2)) - (a(2) - p(2)) * (b(1) - p(1))
+    det2(vec(p, a), vec(p, t)) = (a(1) - p(1)) * (t(2) - p(2)) - (a(2) - p(2)) * (t(1) - p(1))
+    det2(vec(p, t), vec(p, b)) = (t(1) - p(1)) * (b(2) - p(2)) - (t(2) - p(2)) * (b(1) - p(1))
     # Relate base-t differences to base-p differences:
     #   a(i) - t(i) = (a(i) - p(i)) - (t(i) - p(i))
     #   b(i) - t(i) = (b(i) - p(i)) - (t(i) - p(i))
@@ -1215,7 +1215,7 @@ thm det_change_base:
     (b(1) - t(1)) = (b(1) - p(1)) - (t(1) - p(1))
     (b(2) - t(2)) = (b(2) - p(2)) - (t(2) - p(2))
     # Substitute into det(vec(t,a), vec(t,b)).
-    det(vec(t, a), vec(t, b)) = ((a(1) - p(1)) - (t(1) - p(1))) * ((b(2) - p(2)) - (t(2) - p(2))) - ((a(2) - p(2)) - (t(2) - p(2))) * ((b(1) - p(1)) - (t(1) - p(1)))
+    det2(vec(t, a), vec(t, b)) = ((a(1) - p(1)) - (t(1) - p(1))) * ((b(2) - p(2)) - (t(2) - p(2))) - ((a(2) - p(2)) - (t(2) - p(2))) * ((b(1) - p(1)) - (t(1) - p(1)))
     # Expand the products.
     ((a(1) - p(1)) - (t(1) - p(1))) * ((b(2) - p(2)) - (t(2) - p(2))) = (a(1) - p(1)) * (b(2) - p(2)) - (a(1) - p(1)) * (t(2) - p(2)) - (t(1) - p(1)) * (b(2) - p(2)) + (t(1) - p(1)) * (t(2) - p(2))
     ((a(2) - p(2)) - (t(2) - p(2))) * ((b(1) - p(1)) - (t(1) - p(1))) = (a(2) - p(2)) * (b(1) - p(1)) - (a(2) - p(2)) * (t(1) - p(1)) - (t(2) - p(2)) * (b(1) - p(1)) + (t(2) - p(2)) * (t(1) - p(1))
@@ -1224,11 +1224,11 @@ thm det_change_base:
     # The two t*t terms cancel.
     (t(1) - p(1)) * (t(2) - p(2)) - (t(2) - p(2)) * (t(1) - p(1)) = 0
     # Regroup the surviving terms into the three det terms on the right.
-    (a(1) - p(1)) * (b(2) - p(2)) - (a(2) - p(2)) * (b(1) - p(1)) = det(vec(p, a), vec(p, b))
-    (a(1) - p(1)) * (t(2) - p(2)) - (a(2) - p(2)) * (t(1) - p(1)) = det(vec(p, a), vec(p, t))
-    (t(1) - p(1)) * (b(2) - p(2)) - (t(2) - p(2)) * (b(1) - p(1)) = det(vec(p, t), vec(p, b))
+    (a(1) - p(1)) * (b(2) - p(2)) - (a(2) - p(2)) * (b(1) - p(1)) = det2(vec(p, a), vec(p, b))
+    (a(1) - p(1)) * (t(2) - p(2)) - (a(2) - p(2)) * (t(1) - p(1)) = det2(vec(p, a), vec(p, t))
+    (t(1) - p(1)) * (b(2) - p(2)) - (t(2) - p(2)) * (b(1) - p(1)) = det2(vec(p, t), vec(p, b))
     # Assemble.
-    det(vec(t, a), vec(t, b)) = det(vec(p, a), vec(p, b)) + det(vec(p, a), vec(p, t)) + det(vec(p, t), vec(p, b))
+    det2(vec(t, a), vec(t, b)) = det2(vec(p, a), vec(p, b)) + det2(vec(p, a), vec(p, t)) + det2(vec(p, t), vec(p, b))
 
 # Task 4.5: Prove dot_change_base theorem.
 # vec, dot, det, distance_sq, points are already defined in the seed library,
@@ -1289,12 +1289,12 @@ thm dot_change_base:
 
 thm det_bilinear_right:
     ? forall u, v, w cart(R, R):
-        det(u, (v(1) + w(1), v(2) + w(2))) = det(u, v) + det(u, w)
+        det2(u, (v(1) + w(1), v(2) + w(2))) = det2(u, v) + det2(u, w)
     # Expand det on the left via det_coordinate_formula.
-    det(u, (v(1) + w(1), v(2) + w(2))) = u(1) * (v(2) + w(2)) - u(2) * (v(1) + w(1))
+    det2(u, (v(1) + w(1), v(2) + w(2))) = u(1) * (v(2) + w(2)) - u(2) * (v(1) + w(1))
     # Expand det on the right.
-    det(u, v) = u(1) * v(2) - u(2) * v(1)
-    det(u, w) = u(1) * w(2) - u(2) * w(1)
+    det2(u, v) = u(1) * v(2) - u(2) * v(1)
+    det2(u, w) = u(1) * w(2) - u(2) * w(1)
     # Distributivity per component.
     u(1) * (v(2) + w(2)) = u(1) * v(2) + u(1) * w(2)
     u(2) * (v(1) + w(1)) = u(2) * v(1) + u(2) * w(1)
@@ -1302,9 +1302,9 @@ thm det_bilinear_right:
     u(1) * (v(2) + w(2)) - u(2) * (v(1) + w(1)) = (u(1) * v(2) + u(1) * w(2)) - (u(2) * v(1) + u(2) * w(1))
     (u(1) * v(2) + u(1) * w(2)) - (u(2) * v(1) + u(2) * w(1)) = (u(1) * v(2) - u(2) * v(1)) + (u(1) * w(2) - u(2) * w(1))
     # Rewrite both grouped terms via det expansions.
-    (u(1) * v(2) - u(2) * v(1)) + (u(1) * w(2) - u(2) * w(1)) = det(u, v) + det(u, w)
+    (u(1) * v(2) - u(2) * v(1)) + (u(1) * w(2) - u(2) * w(1)) = det2(u, v) + det2(u, w)
     # Conclude.
-    det(u, (v(1) + w(1), v(2) + w(2))) = det(u, v) + det(u, w)
+    det2(u, (v(1) + w(1), v(2) + w(2))) = det2(u, v) + det2(u, w)
 
 # ========== task 4.7: Prove dot_bilinear_right theorem ==========
 # dot, vec, det, distance_sq, points are already defined in the seed library,
@@ -1391,11 +1391,11 @@ thm dot_scale_right:
 
 thm det_scale_right:
     ? forall u, v cart(R, R), c R:
-        det(u, (c * v(1), c * v(2))) = c * det(u, v)
+        det2(u, (c * v(1), c * v(2))) = c * det2(u, v)
     # Expand det on the left via det_coordinate_formula.
-    det(u, (c * v(1), c * v(2))) = u(1) * (c * v(2)) - u(2) * (c * v(1))
+    det2(u, (c * v(1), c * v(2))) = u(1) * (c * v(2)) - u(2) * (c * v(1))
     # Expand det on the right.
-    det(u, v) = u(1) * v(2) - u(2) * v(1)
+    det2(u, v) = u(1) * v(2) - u(2) * v(1)
     # Factor the scalar per term.
     u(1) * (c * v(2)) = c * (u(1) * v(2))
     u(2) * (c * v(1)) = c * (u(2) * v(1))
@@ -1403,9 +1403,9 @@ thm det_scale_right:
     u(1) * (c * v(2)) - u(2) * (c * v(1)) = c * (u(1) * v(2)) - c * (u(2) * v(1))
     c * (u(1) * v(2)) - c * (u(2) * v(1)) = c * (u(1) * v(2) - u(2) * v(1))
     # Rewrite via the det expansion.
-    c * (u(1) * v(2) - u(2) * v(1)) = c * det(u, v)
+    c * (u(1) * v(2) - u(2) * v(1)) = c * det2(u, v)
     # Conclude.
-    det(u, (c * v(1), c * v(2))) = c * det(u, v)
+    det2(u, (c * v(1), c * v(2))) = c * det2(u, v)
 
 # vec, dot, det, distance_sq, points are already defined in the seed library,
 # so we do not redefine them here.
@@ -1422,25 +1422,25 @@ thm det_scale_right:
 
 thm dot_squared_plus_det_squared:
     ? forall u, v cart(R, R):
-        dot(u, u) * dot(v, v) = dot(u, v) * dot(u, v) + det(u, v) * det(u, v)
+        dot(u, u) * dot(v, v) = dot(u, v) * dot(u, v) + det2(u, v) * det2(u, v)
     # Declare the coordinate expansions.
     dot(u, u) = u(1) * u(1) + u(2) * u(2)
     dot(v, v) = v(1) * v(1) + v(2) * v(2)
     dot(u, v) = u(1) * v(1) + u(2) * v(2)
-    det(u, v) = u(1) * v(2) - u(2) * v(1)
+    det2(u, v) = u(1) * v(2) - u(2) * v(1)
     # Expand products.
     dot(u, u) * dot(v, v) = (u(1) * u(1) + u(2) * u(2)) * (v(1) * v(1) + v(2) * v(2))
     (u(1) * u(1) + u(2) * u(2)) * (v(1) * v(1) + v(2) * v(2)) = u(1) * u(1) * v(1) * v(1) + u(1) * u(1) * v(2) * v(2) + u(2) * u(2) * v(1) * v(1) + u(2) * u(2) * v(2) * v(2)
     dot(u, v) * dot(u, v) = (u(1) * v(1) + u(2) * v(2)) * (u(1) * v(1) + u(2) * v(2))
     (u(1) * v(1) + u(2) * v(2)) * (u(1) * v(1) + u(2) * v(2)) = u(1) * v(1) * u(1) * v(1) + 2 * (u(1) * v(1)) * (u(2) * v(2)) + u(2) * v(2) * u(2) * v(2)
-    det(u, v) * det(u, v) = (u(1) * v(2) - u(2) * v(1)) * (u(1) * v(2) - u(2) * v(1))
+    det2(u, v) * det2(u, v) = (u(1) * v(2) - u(2) * v(1)) * (u(1) * v(2) - u(2) * v(1))
     (u(1) * v(2) - u(2) * v(1)) * (u(1) * v(2) - u(2) * v(1)) = u(1) * v(2) * u(1) * v(2) - 2 * (u(1) * v(2)) * (u(2) * v(1)) + u(2) * v(1) * u(2) * v(1)
     # Combine the right side.
-    dot(u, v) * dot(u, v) + det(u, v) * det(u, v) = (u(1) * v(1) * u(1) * v(1) + 2 * (u(1) * v(1)) * (u(2) * v(2)) + u(2) * v(2) * u(2) * v(2)) + (u(1) * v(2) * u(1) * v(2) - 2 * (u(1) * v(2)) * (u(2) * v(1)) + u(2) * v(1) * u(2) * v(1))
+    dot(u, v) * dot(u, v) + det2(u, v) * det2(u, v) = (u(1) * v(1) * u(1) * v(1) + 2 * (u(1) * v(1)) * (u(2) * v(2)) + u(2) * v(2) * u(2) * v(2)) + (u(1) * v(2) * u(1) * v(2) - 2 * (u(1) * v(2)) * (u(2) * v(1)) + u(2) * v(1) * u(2) * v(1))
     # The cross terms cancel and the remaining terms match the left expansion.
     u(1) * v(1) * u(1) * v(1) + 2 * (u(1) * v(1)) * (u(2) * v(2)) + u(2) * v(2) * u(2) * v(2) + u(1) * v(2) * u(1) * v(2) - 2 * (u(1) * v(2)) * (u(2) * v(1)) + u(2) * v(1) * u(2) * v(1) = u(1) * u(1) * v(1) * v(1) + u(1) * u(1) * v(2) * v(2) + u(2) * u(2) * v(1) * v(1) + u(2) * u(2) * v(2) * v(2)
     # Conclude.
-    dot(u, u) * dot(v, v) = dot(u, v) * dot(u, v) + det(u, v) * det(u, v)
+    dot(u, u) * dot(v, v) = dot(u, v) * dot(u, v) + det2(u, v) * det2(u, v)
 
 # ========== task 5.1: Prove dot_two_scale theorem ==========
 # vec, dot, det, distance_sq, points are already defined in the seed library,
@@ -1650,7 +1650,7 @@ thm dot_linear_right:
 
 thm collinear_det_expand:
     ? forall p, q, r cart(R, R):
-        det(vec(p, q), vec(p, r)) = (q(1) - p(1)) * (r(2) - p(2)) - (q(2) - p(2)) * (r(1) - p(1))
+        det2(vec(p, q), vec(p, r)) = (q(1) - p(1)) * (r(2) - p(2)) - (q(2) - p(2)) * (r(1) - p(1))
     # Declare the vec expansions.
     vec(p, q) = (q(1) - p(1), q(2) - p(2))
     vec(p, r) = (r(1) - p(1), r(2) - p(2))
@@ -1660,11 +1660,11 @@ thm collinear_det_expand:
     vec(p, r)(1) = r(1) - p(1)
     vec(p, r)(2) = r(2) - p(2)
     # Expand det via the coordinate formula.
-    det(vec(p, q), vec(p, r)) = vec(p, q)(1) * vec(p, r)(2) - vec(p, q)(2) * vec(p, r)(1)
+    det2(vec(p, q), vec(p, r)) = vec(p, q)(1) * vec(p, r)(2) - vec(p, q)(2) * vec(p, r)(1)
     # Substitute the components.
     vec(p, q)(1) * vec(p, r)(2) - vec(p, q)(2) * vec(p, r)(1) = (q(1) - p(1)) * (r(2) - p(2)) - (q(2) - p(2)) * (r(1) - p(1))
     # Conclude.
-    det(vec(p, q), vec(p, r)) = (q(1) - p(1)) * (r(2) - p(2)) - (q(2) - p(2)) * (r(1) - p(1))
+    det2(vec(p, q), vec(p, r)) = (q(1) - p(1)) * (r(2) - p(2)) - (q(2) - p(2)) * (r(1) - p(1))
 
 # vec, dot, det, distance_sq, points are already defined in the seed library,
 # so we do not redefine them here.
@@ -1722,14 +1722,14 @@ thm collinear_symmetric:
         =>:
             $is_collinear(p, r, q)
     # Unfold is_collinear on both sides via collinear_det_expand-like facts.
-    det(vec(p, q), vec(p, r)) = (q(1) - p(1)) * (r(2) - p(2)) - (q(2) - p(2)) * (r(1) - p(1))
-    det(vec(p, r), vec(p, q)) = (r(1) - p(1)) * (q(2) - p(2)) - (r(2) - p(2)) * (q(1) - p(1))
+    det2(vec(p, q), vec(p, r)) = (q(1) - p(1)) * (r(2) - p(2)) - (q(2) - p(2)) * (r(1) - p(1))
+    det2(vec(p, r), vec(p, q)) = (r(1) - p(1)) * (q(2) - p(2)) - (r(2) - p(2)) * (q(1) - p(1))
     # det is antisymmetric.
-    det(vec(p, r), vec(p, q)) = -det(vec(p, q), vec(p, r))
+    det2(vec(p, r), vec(p, q)) = -det2(vec(p, q), vec(p, r))
     # The premise is det(vec(p, q), vec(p, r)) = 0.
-    -det(vec(p, q), vec(p, r)) = -0
+    -det2(vec(p, q), vec(p, r)) = -0
     -0 = 0
-    det(vec(p, r), vec(p, q)) = 0
+    det2(vec(p, r), vec(p, q)) = 0
 
 # vec, dot, det, distance_sq, points are already defined in the seed library,
 # so we do not redefine them here.
@@ -1771,10 +1771,10 @@ thm collinear_midpoint:
     # Rewrite vec(a, m) in half-difference form.
     vec(a, m) = ((b(1) - a(1)) / 2, (b(2) - a(2)) / 2)
     # Expand det via coordinate formula.
-    det(vec(a, m), vec(a, b)) = ((b(1) - a(1)) / 2) * (b(2) - a(2)) - ((b(2) - a(2)) / 2) * (b(1) - a(1))
+    det2(vec(a, m), vec(a, b)) = ((b(1) - a(1)) / 2) * (b(2) - a(2)) - ((b(2) - a(2)) / 2) * (b(1) - a(1))
     # Both terms are equal, so their difference is zero.
     ((b(1) - a(1)) / 2) * (b(2) - a(2)) = ((b(2) - a(2)) / 2) * (b(1) - a(1))
-    det(vec(a, m), vec(a, b)) = 0
+    det2(vec(a, m), vec(a, b)) = 0
 
 # vec, dot, det, distance_sq, points are already defined in the seed library,
 # so we do not redefine them here.
@@ -1796,9 +1796,9 @@ thm collinear_to_standard_det:
     # Unfold the vec and det expansions.
     vec(p, q) = (q(1) - p(1), q(2) - p(2))
     vec(p, r) = (r(1) - p(1), r(2) - p(2))
-    det(vec(p, q), vec(p, r)) = (q(1) - p(1)) * (r(2) - p(2)) - (q(2) - p(2)) * (r(1) - p(1))
+    det2(vec(p, q), vec(p, r)) = (q(1) - p(1)) * (r(2) - p(2)) - (q(2) - p(2)) * (r(1) - p(1))
     # The premise says this determinant is zero.
-    det(vec(p, q), vec(p, r)) = 0
+    det2(vec(p, q), vec(p, r)) = 0
     # Combine.
     (q(1) - p(1)) * (r(2) - p(2)) - (q(2) - p(2)) * (r(1) - p(1)) = 0
 
@@ -1851,8 +1851,8 @@ thm collinear_equidistant_implies_midpoint:
     # Collinearity: det(vec(a,p), vec(a,b)) = 0.
     vec(a, p) = (p(1) - a(1), p(2) - a(2))
     vec(a, b) = (b(1) - a(1), b(2) - a(2))
-    det(vec(a, p), vec(a, b)) = (p(1) - a(1)) * (b(2) - a(2)) - (p(2) - a(2)) * (b(1) - a(1))
-    det(vec(a, p), vec(a, b)) = 0
+    det2(vec(a, p), vec(a, b)) = (p(1) - a(1)) * (b(2) - a(2)) - (p(2) - a(2)) * (b(1) - a(1))
+    det2(vec(a, p), vec(a, b)) = 0
     (p(1) - a(1)) * (b(2) - a(2)) - (p(2) - a(2)) * (b(1) - a(1)) = 0
     # ------------------------------------------------------------------
     # Equidistance expansions.
@@ -2052,10 +2052,10 @@ thm collinear_third:
     vec(a, b) = (b(1) - a(1), b(2) - a(2))
     vec(a, c) = (c(1) - a(1), c(2) - a(2))
     vec(a, d) = (d(1) - a(1), d(2) - a(2))
-    det(vec(a, b), vec(a, c)) = (b(1) - a(1)) * (c(2) - a(2)) - (b(2) - a(2)) * (c(1) - a(1))
-    det(vec(a, b), vec(a, d)) = (b(1) - a(1)) * (d(2) - a(2)) - (b(2) - a(2)) * (d(1) - a(1))
-    det(vec(a, b), vec(a, c)) = 0
-    det(vec(a, b), vec(a, d)) = 0
+    det2(vec(a, b), vec(a, c)) = (b(1) - a(1)) * (c(2) - a(2)) - (b(2) - a(2)) * (c(1) - a(1))
+    det2(vec(a, b), vec(a, d)) = (b(1) - a(1)) * (d(2) - a(2)) - (b(2) - a(2)) * (d(1) - a(1))
+    det2(vec(a, b), vec(a, c)) = 0
+    det2(vec(a, b), vec(a, d)) = 0
     (b(1) - a(1)) * (c(2) - a(2)) - (b(2) - a(2)) * (c(1) - a(1)) = 0
     (b(1) - a(1)) * (d(2) - a(2)) - (b(2) - a(2)) * (d(1) - a(1)) = 0
     # ------------------------------------------------------------------
@@ -2092,7 +2092,7 @@ thm collinear_third:
     #   det(vec(a,c),vec(a,d)) * (b(1)-a(1)) = 0  and
     #   det(vec(a,c),vec(a,d)) * (b(2)-a(2)) = 0.
     # Here we show the first:
-    det(vec(a, c), vec(a, d)) = (c(1) - a(1)) * (d(2) - a(2)) - (c(2) - a(2)) * (d(1) - a(1))
+    det2(vec(a, c), vec(a, d)) = (c(1) - a(1)) * (d(2) - a(2)) - (c(2) - a(2)) * (d(1) - a(1))
     # Cross-multiply (1) and (2) to show (c1-a1)*(d2-a2) = (c2-a2)*(d1-a1):
     #   From (1): (b1-a1)*(c2-a2) = (b2-a2)*(c1-a1)
     #   From (2): (b1-a1)*(d2-a2) = (b2-a2)*(d1-a1)
@@ -2118,27 +2118,27 @@ thm collinear_third:
     distance_sq(a, b) > 0
     (c(1) - a(1)) * (d(2) - a(2)) - (c(2) - a(2)) * (d(1) - a(1)) = 0
     # This is det(vec(a,c), vec(a,d)) = 0:
-    det(vec(a, c), vec(a, d)) = 0
+    det2(vec(a, c), vec(a, d)) = 0
     # ------------------------------------------------------------------
     # Relate det(vec(a,c),vec(a,d)) to det(vec(c,d), vec(c,a)).
     # vec(a,c) = -vec(c,a), and det(vec(c,d), vec(c,a)):
     vec(c, d) = (d(1) - c(1), d(2) - c(2))
     vec(c, a) = (a(1) - c(1), a(2) - c(2))
-    det(vec(c, d), vec(c, a)) = (d(1) - c(1)) * (a(2) - c(2)) - (d(2) - c(2)) * (a(1) - c(1))
+    det2(vec(c, d), vec(c, a)) = (d(1) - c(1)) * (a(2) - c(2)) - (d(2) - c(2)) * (a(1) - c(1))
     # (d_i - c_i) = (d_i - a_i) - (c_i - a_i); (a_i - c_i) = -(c_i - a_i).
     d(1) - c(1) = (d(1) - a(1)) - (c(1) - a(1))
     d(2) - c(2) = (d(2) - a(2)) - (c(2) - a(2))
     a(1) - c(1) = -(c(1) - a(1))
     a(2) - c(2) = -(c(2) - a(2))
-    det(vec(c, d), vec(c, a)) = ((d(1) - a(1)) - (c(1) - a(1))) * (-(c(2) - a(2))) - ((d(2) - a(2)) - (c(2) - a(2))) * (-(c(1) - a(1)))
+    det2(vec(c, d), vec(c, a)) = ((d(1) - a(1)) - (c(1) - a(1))) * (-(c(2) - a(2))) - ((d(2) - a(2)) - (c(2) - a(2))) * (-(c(1) - a(1)))
     ((d(1) - a(1)) - (c(1) - a(1))) * (-(c(2) - a(2))) = -((d(1) - a(1)) * (c(2) - a(2))) + ((c(1) - a(1)) * (c(2) - a(2)))
     ((d(2) - a(2)) - (c(2) - a(2))) * (-(c(1) - a(1))) = -((d(2) - a(2)) * (c(1) - a(1))) + ((c(2) - a(2)) * (c(1) - a(1)))
-    det(vec(c, d), vec(c, a)) = -((d(1) - a(1)) * (c(2) - a(2))) + ((c(1) - a(1)) * (c(2) - a(2))) + ((d(2) - a(2)) * (c(1) - a(1))) - ((c(2) - a(2)) * (c(1) - a(1)))
+    det2(vec(c, d), vec(c, a)) = -((d(1) - a(1)) * (c(2) - a(2))) + ((c(1) - a(1)) * (c(2) - a(2))) + ((d(2) - a(2)) * (c(1) - a(1))) - ((c(2) - a(2)) * (c(1) - a(1)))
     ((c(1) - a(1)) * (c(2) - a(2))) - ((c(2) - a(2)) * (c(1) - a(1))) = 0
-    det(vec(c, d), vec(c, a)) = -((d(1) - a(1)) * (c(2) - a(2))) + ((d(2) - a(2)) * (c(1) - a(1)))
+    det2(vec(c, d), vec(c, a)) = -((d(1) - a(1)) * (c(2) - a(2))) + ((d(2) - a(2)) * (c(1) - a(1)))
     -((d(1) - a(1)) * (c(2) - a(2))) + ((d(2) - a(2)) * (c(1) - a(1))) = -((c(1) - a(1)) * (d(2) - a(2)) - (c(2) - a(2)) * (d(1) - a(1)))
     (c(1) - a(1)) * (d(2) - a(2)) - (c(2) - a(2)) * (d(1) - a(1)) = 0
-    det(vec(c, d), vec(c, a)) = 0
+    det2(vec(c, d), vec(c, a)) = 0
     $is_collinear(c, d, a)
 
 # ========== task 6.4: Prove parallelogram_sides theorem ==========
@@ -2259,13 +2259,13 @@ thm parallel_symmetric:
         =>:
             $is_parallel(c, d, a, b)
     # Unfold the parallel det equation (premise gives it = 0).
-    det(vec(a, b), vec(c, d)) = 0
+    det2(vec(a, b), vec(c, d)) = 0
     # det is antisymmetric: swapping the arguments negates the determinant.
-    det(vec(c, d), vec(a, b)) = -det(vec(a, b), vec(c, d))
+    det2(vec(c, d), vec(a, b)) = -det2(vec(a, b), vec(c, d))
     # Substitute the premise.
-    -det(vec(a, b), vec(c, d)) = -0
+    -det2(vec(a, b), vec(c, d)) = -0
     -0 = 0
-    det(vec(c, d), vec(a, b)) = 0
+    det2(vec(c, d), vec(a, b)) = 0
     # Non-degeneracy conditions transfer directly.
     c != d
     a != b
@@ -2351,8 +2351,8 @@ thm perpendicular_from_parallel:
     vec(c, d) = (d(1) - c(1), d(2) - c(2))
     vec(e, f) = (f(1) - e(1), f(2) - e(2))
     # Unfold is_parallel: det(vec(a,b), vec(c,d)) = 0.
-    det(vec(a, b), vec(c, d)) = (b(1) - a(1)) * (d(2) - c(2)) - (b(2) - a(2)) * (d(1) - c(1))
-    det(vec(a, b), vec(c, d)) = 0
+    det2(vec(a, b), vec(c, d)) = (b(1) - a(1)) * (d(2) - c(2)) - (b(2) - a(2)) * (d(1) - c(1))
+    det2(vec(a, b), vec(c, d)) = 0
     (b(1) - a(1)) * (d(2) - c(2)) - (b(2) - a(2)) * (d(1) - c(1)) = 0
     # Unfold is_perpendicular: dot(vec(c,d), vec(e,f)) = 0.
     dot(vec(c, d), vec(e, f)) = (d(1) - c(1)) * (f(1) - e(1)) + (d(2) - c(2)) * (f(2) - e(2))
@@ -2378,13 +2378,13 @@ thm perpendicular_from_parallel:
     # ------------------------------------------------------------------
     dot(vec(e, f), vec(c, d)) = (f(1) - e(1)) * (d(1) - c(1)) + (f(2) - e(2)) * (d(2) - c(2))
     dot(vec(a, b), vec(c, d)) = (b(1) - a(1)) * (d(1) - c(1)) + (b(2) - a(2)) * (d(2) - c(2))
-    det(vec(e, f), vec(c, d)) = (f(1) - e(1)) * (d(2) - c(2)) - (f(2) - e(2)) * (d(1) - c(1))
+    det2(vec(e, f), vec(c, d)) = (f(1) - e(1)) * (d(2) - c(2)) - (f(2) - e(2)) * (d(1) - c(1))
     # The key Lagrange identity in these particular arguments:
     #   (u·w)(v·v) = (u·v)(v·w) + det(u,v)*det(w,v)
-    dot(vec(a, b), vec(e, f)) * dot(vec(c, d), vec(c, d)) = dot(vec(a, b), vec(c, d)) * dot(vec(c, d), vec(e, f)) + det(vec(a, b), vec(c, d)) * det(vec(c, d), vec(e, f))
+    dot(vec(a, b), vec(e, f)) * dot(vec(c, d), vec(c, d)) = dot(vec(a, b), vec(c, d)) * dot(vec(c, d), vec(e, f)) + det2(vec(a, b), vec(c, d)) * det2(vec(c, d), vec(e, f))
     # Substitute known zeros: det(u,v) = 0, v·w = 0.
     dot(vec(a, b), vec(c, d)) * dot(vec(c, d), vec(e, f)) = 0
-    det(vec(a, b), vec(c, d)) * det(vec(c, d), vec(e, f)) = 0
+    det2(vec(a, b), vec(c, d)) * det2(vec(c, d), vec(e, f)) = 0
     dot(vec(a, b), vec(e, f)) * dot(vec(c, d), vec(c, d)) = 0
     # Since dot(vec(c,d), vec(c,d)) = distance_sq(c, d) != 0, conclude dot(u,w)=0.
     dot(vec(c, d), vec(c, d)) = distance_sq(c, d)
@@ -2579,7 +2579,7 @@ thm collinear_implies_midpoint_distance:
     vec(a, p) = (p(1) - a(1), p(2) - a(2))
     vec(a, b) = (b(1) - a(1), b(2) - a(2))
     # Unfold collinearity: det(vec(a,p), vec(a,b)) = 0.
-    det(vec(a, p), vec(a, b)) = (p(1) - a(1)) * (b(2) - a(2)) - (p(2) - a(2)) * (b(1) - a(1))
+    det2(vec(a, p), vec(a, b)) = (p(1) - a(1)) * (b(2) - a(2)) - (p(2) - a(2)) * (b(1) - a(1))
     (p(1) - a(1)) * (b(2) - a(2)) - (p(2) - a(2)) * (b(1) - a(1)) = 0
     # Expand distances into coordinate form.
     distance_sq(a, p) = (p(1) - a(1))^2 + (p(2) - a(2))^2
@@ -2709,16 +2709,16 @@ thm parallel_implies_det_zero:
     ? forall a, b, c, d cart(R, R):
         $is_parallel(a, b, c, d)
         =>:
-            det(vec(a, b), vec(c, d)) = 0
+            det2(vec(a, b), vec(c, d)) = 0
     # Unfold vec into coordinate form.
     vec(a, b) = (b(1) - a(1), b(2) - a(2))
     vec(c, d) = (d(1) - c(1), d(2) - c(2))
     # Unfold det via the coordinate formula.
-    det(vec(a, b), vec(c, d)) = (b(1) - a(1)) * (d(2) - c(2)) - (b(2) - a(2)) * (d(1) - c(1))
+    det2(vec(a, b), vec(c, d)) = (b(1) - a(1)) * (d(2) - c(2)) - (b(2) - a(2)) * (d(1) - c(1))
     # The premise is_parallel gives this determinant equal to zero.
     (b(1) - a(1)) * (d(2) - c(2)) - (b(2) - a(2)) * (d(1) - c(1)) = 0
     # Conclude.
-    det(vec(a, b), vec(c, d)) = 0
+    det2(vec(a, b), vec(c, d)) = 0
 
 # ========== task 7.3: Prove parallelogram_midpoint_diagonals theorem ==========
 # vec, dot, det, distance_sq, points are already defined in the seed library,
@@ -3237,13 +3237,13 @@ thm on_line_implies_affine_parameter:
             }
     # Unfold line membership into the collinearity determinant.
     p $in line_through_points(a, b)
-    line_through_points(a, b) = {q cart(R, R): det(vec(a, q), vec(a, b)) = 0}
-    det(vec(a, p), vec(a, b)) = 0
+    line_through_points(a, b) = {q cart(R, R): det2(vec(a, q), vec(a, b)) = 0}
+    det2(vec(a, p), vec(a, b)) = 0
     # Expand vec into coordinate form.
     vec(a, p) = (p(1) - a(1), p(2) - a(2))
     vec(a, b) = (b(1) - a(1), b(2) - a(2))
     # Expand det into coordinate form.
-    det(vec(a, p), vec(a, b)) = (p(1) - a(1)) * (b(2) - a(2)) - (p(2) - a(2)) * (b(1) - a(1))
+    det2(vec(a, p), vec(a, b)) = (p(1) - a(1)) * (b(2) - a(2)) - (p(2) - a(2)) * (b(1) - a(1))
     (p(1) - a(1)) * (b(2) - a(2)) - (p(2) - a(2)) * (b(1) - a(1)) = 0
     # Split a != b into coordinate differences.
     a(1) != b(1) or a(2) != b(2)
@@ -3321,13 +3321,13 @@ thm right_angle_vertex_not_on_opposite_line:
         b != c,
         dot(vec(c, a), vec(c, b)) = 0
         =>:
-            det(vec(c, a), vec(c, b)) != 0
+            det2(vec(c, a), vec(c, b)) != 0
     # Expand vec for both vectors.
     vec(c, a) = (a(1) - c(1), a(2) - c(2))
     vec(c, b) = (b(1) - c(1), b(2) - c(2))
     # Expand dot and det via coordinate formulas.
     dot(vec(c, a), vec(c, b)) = (a(1) - c(1)) * (b(1) - c(1)) + (a(2) - c(2)) * (b(2) - c(2))
-    det(vec(c, a), vec(c, b)) = (a(1) - c(1)) * (b(2) - c(2)) - (a(2) - c(2)) * (b(1) - c(1))
+    det2(vec(c, a), vec(c, b)) = (a(1) - c(1)) * (b(2) - c(2)) - (a(2) - c(2)) * (b(1) - c(1))
     dot(vec(c, a), vec(c, a)) = (a(1) - c(1))^2 + (a(2) - c(2))^2
     dot(vec(c, b), vec(c, b)) = (b(1) - c(1))^2 + (b(2) - c(2))^2
     # distance_sq(c, a) = dot(vec(c, a), vec(c, a)); nonzero since a != c.
@@ -3344,11 +3344,11 @@ thm right_angle_vertex_not_on_opposite_line:
     # contradicting b != c.
     #
     # We establish the contradiction cleanly: assume det = 0 and derive b == c.
-    det(vec(c, a), vec(c, b)) = 0 => ((a(1) - c(1))^2 + (a(2) - c(2))^2) * ((b(1) - c(1))^2 + (b(2) - c(2))^2) = 0
+    det2(vec(c, a), vec(c, b)) = 0 => ((a(1) - c(1))^2 + (a(2) - c(2))^2) * ((b(1) - c(1))^2 + (b(2) - c(2))^2) = 0
     ((a(1) - c(1))^2 + (a(2) - c(2))^2) * ((b(1) - c(1))^2 + (b(2) - c(2))^2) = dot(vec(c, a), vec(c, a)) * dot(vec(c, b), vec(c, b))
-    dot(vec(c, a), vec(c, a)) * dot(vec(c, b), vec(c, b)) = dot(vec(c, a), vec(c, b)) * dot(vec(c, a), vec(c, b)) + det(vec(c, a), vec(c, b)) * det(vec(c, a), vec(c, b))
+    dot(vec(c, a), vec(c, a)) * dot(vec(c, b), vec(c, b)) = dot(vec(c, a), vec(c, b)) * dot(vec(c, a), vec(c, b)) + det2(vec(c, a), vec(c, b)) * det2(vec(c, a), vec(c, b))
     dot(vec(c, a), vec(c, b)) * dot(vec(c, a), vec(c, b)) = 0
-    det(vec(c, a), vec(c, b)) * det(vec(c, a), vec(c, b)) = 0
+    det2(vec(c, a), vec(c, b)) * det2(vec(c, a), vec(c, b)) = 0
     dot(vec(c, a), vec(c, a)) * dot(vec(c, b), vec(c, b)) = 0
     dot(vec(c, a), vec(c, a)) > 0
     dot(vec(c, b), vec(c, b)) = 0
@@ -3361,7 +3361,7 @@ thm right_angle_vertex_not_on_opposite_line:
     b(2) = c(2)
     b = c
     # Contradiction with b != c.
-    det(vec(c, a), vec(c, b)) != 0
+    det2(vec(c, a), vec(c, b)) != 0
 
 # Approach:
 #   The task hints that we should prove "the right-angle vertex does not lie on
@@ -4284,7 +4284,7 @@ thm orthogonal_midpoint_scalar_finish:
     ? forall p, a, b, m cart(R, R):
         dot(vec(m, p), vec(a, b)) = 0
         =>:
-            dot(vec(m, p), vec(m, p)) * dot(vec(a, b), vec(a, b)) = det(vec(m, p), vec(a, b)) * det(vec(m, p), vec(a, b))
+            dot(vec(m, p), vec(m, p)) * dot(vec(a, b), vec(a, b)) = det2(vec(m, p), vec(a, b)) * det2(vec(m, p), vec(a, b))
     # Declare vec expansions.
     vec(m, p) = (p(1) - m(1), p(2) - m(2))
     vec(a, b) = (b(1) - a(1), b(2) - a(2))
@@ -4292,7 +4292,7 @@ thm orthogonal_midpoint_scalar_finish:
     dot(vec(m, p), vec(m, p)) = (p(1) - m(1)) * (p(1) - m(1)) + (p(2) - m(2)) * (p(2) - m(2))
     dot(vec(a, b), vec(a, b)) = (b(1) - a(1)) * (b(1) - a(1)) + (b(2) - a(2)) * (b(2) - a(2))
     dot(vec(m, p), vec(a, b)) = (p(1) - m(1)) * (b(1) - a(1)) + (p(2) - m(2)) * (b(2) - a(2))
-    det(vec(m, p), vec(a, b)) = (p(1) - m(1)) * (b(2) - a(2)) - (p(2) - m(2)) * (b(1) - a(1))
+    det2(vec(m, p), vec(a, b)) = (p(1) - m(1)) * (b(2) - a(2)) - (p(2) - m(2)) * (b(1) - a(1))
     # The orthogonality hypothesis in coordinates.
     (p(1) - m(1)) * (b(1) - a(1)) + (p(2) - m(2)) * (b(2) - a(2)) = 0
     # 2D Lagrange identity: |u|^2 |v|^2 = (u·v)^2 + det(u,v)^2.
@@ -4300,7 +4300,7 @@ thm orthogonal_midpoint_scalar_finish:
     # Substitute the vanishing dot term.
     ((p(1) - m(1)) * (b(1) - a(1)) + (p(2) - m(2)) * (b(2) - a(2))) * ((p(1) - m(1)) * (b(1) - a(1)) + (p(2) - m(2)) * (b(2) - a(2))) = 0
     # Conclude the finish relation.
-    dot(vec(m, p), vec(m, p)) * dot(vec(a, b), vec(a, b)) = det(vec(m, p), vec(a, b)) * det(vec(m, p), vec(a, b))
+    dot(vec(m, p), vec(m, p)) * dot(vec(a, b), vec(a, b)) = det2(vec(m, p), vec(a, b)) * det2(vec(m, p), vec(a, b))
 
 # vec, dot, det, distance_sq, points are already defined in the seed library,
 # so we do not redefine them here.
@@ -5019,7 +5019,7 @@ thm vertical_angles_equal:
 
 thm cosine_square_to_det_square_ratio:
     ? forall p, q, r cart(R, R):
-        angle_cos_num(p, q, r)^2 + det(vec(q, p), vec(q, r))^2 = angle_cos_den(p, q, r)
+        angle_cos_num(p, q, r)^2 + det2(vec(q, p), vec(q, r))^2 = angle_cos_den(p, q, r)
     # Unfold the cosine numerator and denominator definitions.
     angle_cos_num(p, q, r) = dot(vec(q, p), vec(q, r))
     angle_cos_den(p, q, r) = distance_sq(q, p) * distance_sq(q, r)
@@ -5028,7 +5028,7 @@ thm cosine_square_to_det_square_ratio:
     vec(q, r) = (r(1) - q(1), r(2) - q(2))
     # Expand dot and det into coordinates.
     dot(vec(q, p), vec(q, r)) = (p(1) - q(1)) * (r(1) - q(1)) + (p(2) - q(2)) * (r(2) - q(2))
-    det(vec(q, p), vec(q, r)) = (p(1) - q(1)) * (r(2) - q(2)) - (p(2) - q(2)) * (r(1) - q(1))
+    det2(vec(q, p), vec(q, r)) = (p(1) - q(1)) * (r(2) - q(2)) - (p(2) - q(2)) * (r(1) - q(1))
     # Expand the two squared-norm distances that form the denominator.
     distance_sq(q, p) = (p(1) - q(1))^2 + (p(2) - q(2))^2
     distance_sq(q, r) = (r(1) - q(1))^2 + (r(2) - q(2))^2
@@ -5036,16 +5036,16 @@ thm cosine_square_to_det_square_ratio:
     ((p(1) - q(1))^2 + (p(2) - q(2))^2) * ((r(1) - q(1))^2 + (r(2) - q(2))^2) = ((p(1) - q(1)) * (r(1) - q(1)) + (p(2) - q(2)) * (r(2) - q(2))) * ((p(1) - q(1)) * (r(1) - q(1)) + (p(2) - q(2)) * (r(2) - q(2))) + ((p(1) - q(1)) * (r(2) - q(2)) - (p(2) - q(2)) * (r(1) - q(1))) * ((p(1) - q(1)) * (r(2) - q(2)) - (p(2) - q(2)) * (r(1) - q(1)))
     # Substitute the packaged expressions.
     ((p(1) - q(1)) * (r(1) - q(1)) + (p(2) - q(2)) * (r(2) - q(2))) * ((p(1) - q(1)) * (r(1) - q(1)) + (p(2) - q(2)) * (r(2) - q(2))) = dot(vec(q, p), vec(q, r)) * dot(vec(q, p), vec(q, r))
-    ((p(1) - q(1)) * (r(2) - q(2)) - (p(2) - q(2)) * (r(1) - q(1))) * ((p(1) - q(1)) * (r(2) - q(2)) - (p(2) - q(2)) * (r(1) - q(1))) = det(vec(q, p), vec(q, r)) * det(vec(q, p), vec(q, r))
+    ((p(1) - q(1)) * (r(2) - q(2)) - (p(2) - q(2)) * (r(1) - q(1))) * ((p(1) - q(1)) * (r(2) - q(2)) - (p(2) - q(2)) * (r(1) - q(1))) = det2(vec(q, p), vec(q, r)) * det2(vec(q, p), vec(q, r))
     ((p(1) - q(1))^2 + (p(2) - q(2))^2) * ((r(1) - q(1))^2 + (r(2) - q(2))^2) = distance_sq(q, p) * distance_sq(q, r)
     # Assemble: denominator = numerator^2 + det^2.
-    distance_sq(q, p) * distance_sq(q, r) = dot(vec(q, p), vec(q, r)) * dot(vec(q, p), vec(q, r)) + det(vec(q, p), vec(q, r)) * det(vec(q, p), vec(q, r))
+    distance_sq(q, p) * distance_sq(q, r) = dot(vec(q, p), vec(q, r)) * dot(vec(q, p), vec(q, r)) + det2(vec(q, p), vec(q, r)) * det2(vec(q, p), vec(q, r))
     dot(vec(q, p), vec(q, r)) * dot(vec(q, p), vec(q, r)) = angle_cos_num(p, q, r) * angle_cos_num(p, q, r)
     angle_cos_num(p, q, r) * angle_cos_num(p, q, r) = angle_cos_num(p, q, r)^2
-    det(vec(q, p), vec(q, r)) * det(vec(q, p), vec(q, r)) = det(vec(q, p), vec(q, r))^2
-    distance_sq(q, p) * distance_sq(q, r) = angle_cos_num(p, q, r)^2 + det(vec(q, p), vec(q, r))^2
+    det2(vec(q, p), vec(q, r)) * det2(vec(q, p), vec(q, r)) = det2(vec(q, p), vec(q, r))^2
+    distance_sq(q, p) * distance_sq(q, r) = angle_cos_num(p, q, r)^2 + det2(vec(q, p), vec(q, r))^2
     # Conclude via the denominator definition.
-    angle_cos_num(p, q, r)^2 + det(vec(q, p), vec(q, r))^2 = angle_cos_den(p, q, r)
+    angle_cos_num(p, q, r)^2 + det2(vec(q, p), vec(q, r))^2 = angle_cos_den(p, q, r)
 
 # vec, dot, det, distance_sq, points, angle_cos_num, angle_cos_den,
 # are_angles_congruent are already defined in the seed library,
@@ -5083,7 +5083,7 @@ thm congruent_angle_det_square_ratio:
     ? forall p, q, r, u, v, w cart(R, R):
         $are_angles_congruent(p, q, r, u, v, w)
         =>:
-            det(vec(q, p), vec(q, r))^2 * angle_cos_den(u, v, w) = det(vec(v, u), vec(v, w))^2 * angle_cos_den(p, q, r)
+            det2(vec(q, p), vec(q, r))^2 * angle_cos_den(u, v, w) = det2(vec(v, u), vec(v, w))^2 * angle_cos_den(p, q, r)
     # ------------------------------------------------------------------
     # Unfold the congruent-angle conjuncts.
     # ------------------------------------------------------------------
@@ -5106,44 +5106,44 @@ thm congruent_angle_det_square_ratio:
     vec(q, p) = (p(1) - q(1), p(2) - q(2))
     vec(q, r) = (r(1) - q(1), r(2) - q(2))
     dot(vec(q, p), vec(q, r)) = (p(1) - q(1)) * (r(1) - q(1)) + (p(2) - q(2)) * (r(2) - q(2))
-    det(vec(q, p), vec(q, r)) = (p(1) - q(1)) * (r(2) - q(2)) - (p(2) - q(2)) * (r(1) - q(1))
+    det2(vec(q, p), vec(q, r)) = (p(1) - q(1)) * (r(2) - q(2)) - (p(2) - q(2)) * (r(1) - q(1))
     distance_sq(q, p) = (p(1) - q(1))^2 + (p(2) - q(2))^2
     distance_sq(q, r) = (r(1) - q(1))^2 + (r(2) - q(2))^2
     # 2D Lagrange: |u|^2|v|^2 = (u·v)^2 + det(u,v)^2.
     ((p(1) - q(1))^2 + (p(2) - q(2))^2) * ((r(1) - q(1))^2 + (r(2) - q(2))^2) = ((p(1) - q(1)) * (r(1) - q(1)) + (p(2) - q(2)) * (r(2) - q(2))) * ((p(1) - q(1)) * (r(1) - q(1)) + (p(2) - q(2)) * (r(2) - q(2))) + ((p(1) - q(1)) * (r(2) - q(2)) - (p(2) - q(2)) * (r(1) - q(1))) * ((p(1) - q(1)) * (r(2) - q(2)) - (p(2) - q(2)) * (r(1) - q(1)))
-    angle_cos_den(p, q, r) = angle_cos_num(p, q, r) * angle_cos_num(p, q, r) + det(vec(q, p), vec(q, r)) * det(vec(q, p), vec(q, r))
-    det(vec(q, p), vec(q, r)) * det(vec(q, p), vec(q, r)) = det(vec(q, p), vec(q, r))^2
+    angle_cos_den(p, q, r) = angle_cos_num(p, q, r) * angle_cos_num(p, q, r) + det2(vec(q, p), vec(q, r)) * det2(vec(q, p), vec(q, r))
+    det2(vec(q, p), vec(q, r)) * det2(vec(q, p), vec(q, r)) = det2(vec(q, p), vec(q, r))^2
     angle_cos_num(p, q, r) * angle_cos_num(p, q, r) = angle_cos_num(p, q, r)^2
-    angle_cos_den(p, q, r) = angle_cos_num(p, q, r)^2 + det(vec(q, p), vec(q, r))^2
+    angle_cos_den(p, q, r) = angle_cos_num(p, q, r)^2 + det2(vec(q, p), vec(q, r))^2
     # Solve for the numerator square.
-    angle_cos_num(p, q, r)^2 = angle_cos_den(p, q, r) - det(vec(q, p), vec(q, r))^2
+    angle_cos_num(p, q, r)^2 = angle_cos_den(p, q, r) - det2(vec(q, p), vec(q, r))^2
     # Angle uvw at v.
     vec(v, u) = (u(1) - v(1), u(2) - v(2))
     vec(v, w) = (w(1) - v(1), w(2) - v(2))
     dot(vec(v, u), vec(v, w)) = (u(1) - v(1)) * (w(1) - v(1)) + (u(2) - v(2)) * (w(2) - v(2))
-    det(vec(v, u), vec(v, w)) = (u(1) - v(1)) * (w(2) - v(2)) - (u(2) - v(2)) * (w(1) - v(1))
+    det2(vec(v, u), vec(v, w)) = (u(1) - v(1)) * (w(2) - v(2)) - (u(2) - v(2)) * (w(1) - v(1))
     distance_sq(v, u) = (u(1) - v(1))^2 + (u(2) - v(2))^2
     distance_sq(v, w) = (w(1) - v(1))^2 + (w(2) - v(2))^2
     ((u(1) - v(1))^2 + (u(2) - v(2))^2) * ((w(1) - v(1))^2 + (w(2) - v(2))^2) = ((u(1) - v(1)) * (w(1) - v(1)) + (u(2) - v(2)) * (w(2) - v(2))) * ((u(1) - v(1)) * (w(1) - v(1)) + (u(2) - v(2)) * (w(2) - v(2))) + ((u(1) - v(1)) * (w(2) - v(2)) - (u(2) - v(2)) * (w(1) - v(1))) * ((u(1) - v(1)) * (w(2) - v(2)) - (u(2) - v(2)) * (w(1) - v(1)))
-    angle_cos_den(u, v, w) = angle_cos_num(u, v, w) * angle_cos_num(u, v, w) + det(vec(v, u), vec(v, w)) * det(vec(v, u), vec(v, w))
-    det(vec(v, u), vec(v, w)) * det(vec(v, u), vec(v, w)) = det(vec(v, u), vec(v, w))^2
+    angle_cos_den(u, v, w) = angle_cos_num(u, v, w) * angle_cos_num(u, v, w) + det2(vec(v, u), vec(v, w)) * det2(vec(v, u), vec(v, w))
+    det2(vec(v, u), vec(v, w)) * det2(vec(v, u), vec(v, w)) = det2(vec(v, u), vec(v, w))^2
     angle_cos_num(u, v, w) * angle_cos_num(u, v, w) = angle_cos_num(u, v, w)^2
-    angle_cos_den(u, v, w) = angle_cos_num(u, v, w)^2 + det(vec(v, u), vec(v, w))^2
-    angle_cos_num(u, v, w)^2 = angle_cos_den(u, v, w) - det(vec(v, u), vec(v, w))^2
+    angle_cos_den(u, v, w) = angle_cos_num(u, v, w)^2 + det2(vec(v, u), vec(v, w))^2
+    angle_cos_num(u, v, w)^2 = angle_cos_den(u, v, w) - det2(vec(v, u), vec(v, w))^2
     # ------------------------------------------------------------------
     # Substitute the numerator-square expressions into the congruence
     # cross-ratio:
     #   num1^2 * den2 = num2^2 * den1
     # ------------------------------------------------------------------
-    (angle_cos_den(p, q, r) - det(vec(q, p), vec(q, r))^2) * angle_cos_den(u, v, w) = (angle_cos_den(u, v, w) - det(vec(v, u), vec(v, w))^2) * angle_cos_den(p, q, r)
+    (angle_cos_den(p, q, r) - det2(vec(q, p), vec(q, r))^2) * angle_cos_den(u, v, w) = (angle_cos_den(u, v, w) - det2(vec(v, u), vec(v, w))^2) * angle_cos_den(p, q, r)
     # Expand both sides.
-    (angle_cos_den(p, q, r) - det(vec(q, p), vec(q, r))^2) * angle_cos_den(u, v, w) = angle_cos_den(p, q, r) * angle_cos_den(u, v, w) - det(vec(q, p), vec(q, r))^2 * angle_cos_den(u, v, w)
-    (angle_cos_den(u, v, w) - det(vec(v, u), vec(v, w))^2) * angle_cos_den(p, q, r) = angle_cos_den(u, v, w) * angle_cos_den(p, q, r) - det(vec(v, u), vec(v, w))^2 * angle_cos_den(p, q, r)
-    angle_cos_den(p, q, r) * angle_cos_den(u, v, w) - det(vec(q, p), vec(q, r))^2 * angle_cos_den(u, v, w) = angle_cos_den(u, v, w) * angle_cos_den(p, q, r) - det(vec(v, u), vec(v, w))^2 * angle_cos_den(p, q, r)
+    (angle_cos_den(p, q, r) - det2(vec(q, p), vec(q, r))^2) * angle_cos_den(u, v, w) = angle_cos_den(p, q, r) * angle_cos_den(u, v, w) - det2(vec(q, p), vec(q, r))^2 * angle_cos_den(u, v, w)
+    (angle_cos_den(u, v, w) - det2(vec(v, u), vec(v, w))^2) * angle_cos_den(p, q, r) = angle_cos_den(u, v, w) * angle_cos_den(p, q, r) - det2(vec(v, u), vec(v, w))^2 * angle_cos_den(p, q, r)
+    angle_cos_den(p, q, r) * angle_cos_den(u, v, w) - det2(vec(q, p), vec(q, r))^2 * angle_cos_den(u, v, w) = angle_cos_den(u, v, w) * angle_cos_den(p, q, r) - det2(vec(v, u), vec(v, w))^2 * angle_cos_den(p, q, r)
     # Cancel the common den1*den2 product.
-    -det(vec(q, p), vec(q, r))^2 * angle_cos_den(u, v, w) = -det(vec(v, u), vec(v, w))^2 * angle_cos_den(p, q, r)
+    -det2(vec(q, p), vec(q, r))^2 * angle_cos_den(u, v, w) = -det2(vec(v, u), vec(v, w))^2 * angle_cos_den(p, q, r)
     # Negate both sides.
-    det(vec(q, p), vec(q, r))^2 * angle_cos_den(u, v, w) = det(vec(v, u), vec(v, w))^2 * angle_cos_den(p, q, r)
+    det2(vec(q, p), vec(q, r))^2 * angle_cos_den(u, v, w) = det2(vec(v, u), vec(v, w))^2 * angle_cos_den(p, q, r)
 
 # Task 11.4: Prove vertical_angles_dot_equal.
 # vec, dot, det, distance_sq, points are already defined in the seed library,
@@ -5234,26 +5234,26 @@ thm vertical_angles_dot_equal:
 
 thm cross_product_positive_det_product_implies_same_sign:
     ? forall u, v, w, z cart(R, R):
-        det(u, v) * det(w, z) > 0
+        det2(u, v) * det2(w, z) > 0
         =>:
-            det(u, v) > 0 and det(w, z) > 0
-            or det(u, v) < 0 and det(w, z) < 0
+            det2(u, v) > 0 and det2(w, z) > 0
+            or det2(u, v) < 0 and det2(w, z) < 0
     # Case analysis on the sign of det(u, v).
-    det(u, v) > 0 or det(u, v) = 0 or det(u, v) < 0
+    det2(u, v) > 0 or det2(u, v) = 0 or det2(u, v) < 0
     # If det(u, v) = 0, the product would be 0, contradicting > 0.
-    det(u, v) = 0 => det(u, v) * det(w, z) = 0
-    det(u, v) * det(w, z) = 0 => not (det(u, v) * det(w, z) > 0)
-    not (det(u, v) = 0)
+    det2(u, v) = 0 => det2(u, v) * det2(w, z) = 0
+    det2(u, v) * det2(w, z) = 0 => not (det2(u, v) * det2(w, z) > 0)
+    not (det2(u, v) = 0)
     # So det(u, v) is nonzero; sign splits into positive or negative.
-    det(u, v) > 0 or det(u, v) < 0
+    det2(u, v) > 0 or det2(u, v) < 0
     # Case 1: det(u, v) > 0. Positive product forces the other factor positive.
-    det(u, v) > 0 => det(w, z) > 0
-    det(u, v) > 0 => (det(u, v) > 0 and det(w, z) > 0)
+    det2(u, v) > 0 => det2(w, z) > 0
+    det2(u, v) > 0 => (det2(u, v) > 0 and det2(w, z) > 0)
     # Case 2: det(u, v) < 0. Positive product forces the other factor negative.
-    det(u, v) < 0 => det(w, z) < 0
-    det(u, v) < 0 => (det(u, v) < 0 and det(w, z) < 0)
+    det2(u, v) < 0 => det2(w, z) < 0
+    det2(u, v) < 0 => (det2(u, v) < 0 and det2(w, z) < 0)
     # Combine the two cases.
-    det(u, v) > 0 and det(w, z) > 0 or det(u, v) < 0 and det(w, z) < 0
+    det2(u, v) > 0 and det2(w, z) > 0 or det2(u, v) < 0 and det2(w, z) < 0
 
 # vec, dot, det, distance_sq, points, angle_cos_num, angle_cos_den,
 # are_angles_congruent are already defined in the seed library,
@@ -6226,15 +6226,15 @@ thm sss_dot_equal:
 
 thm triangle_area_det:
     ? forall p, q, r cart(R, R):
-        det(vec(p, q), vec(p, r)) = det(vec(q, r), vec(q, p))
+        det2(vec(p, q), vec(p, r)) = det2(vec(q, r), vec(q, p))
     # Declare the vec expansions.
     vec(p, q) = (q(1) - p(1), q(2) - p(2))
     vec(p, r) = (r(1) - p(1), r(2) - p(2))
     vec(q, r) = (r(1) - q(1), r(2) - q(2))
     vec(q, p) = (p(1) - q(1), p(2) - q(2))
     # Expand both determinants into coordinates.
-    det(vec(p, q), vec(p, r)) = (q(1) - p(1)) * (r(2) - p(2)) - (q(2) - p(2)) * (r(1) - p(1))
-    det(vec(q, r), vec(q, p)) = (r(1) - q(1)) * (p(2) - q(2)) - (r(2) - q(2)) * (p(1) - q(1))
+    det2(vec(p, q), vec(p, r)) = (q(1) - p(1)) * (r(2) - p(2)) - (q(2) - p(2)) * (r(1) - p(1))
+    det2(vec(q, r), vec(q, p)) = (r(1) - q(1)) * (p(2) - q(2)) - (r(2) - q(2)) * (p(1) - q(1))
     # Rewrite the first determinant by substituting the a-pivot differences
     # in terms of the q-pivot differences.
     q(1) - p(1) = -(p(1) - q(1))
@@ -6258,7 +6258,7 @@ thm triangle_area_det:
     # Match the second determinant's coordinate form (which uses p - q).
     (p(2) - q(2)) * (r(1) - q(1)) - (p(1) - q(1)) * (r(2) - q(2)) = (r(1) - q(1)) * (p(2) - q(2)) - (r(2) - q(2)) * (p(1) - q(1))
     # Conclude the coordinate equality, hence the determinant equality.
-    det(vec(p, q), vec(p, r)) = det(vec(q, r), vec(q, p))
+    det2(vec(p, q), vec(p, r)) = det2(vec(q, r), vec(q, p))
 
 # vec, dot, det, distance_sq, points are already defined in the seed library,
 # so we do not redefine them here.
@@ -6475,7 +6475,7 @@ thm similar_triangles_det:
         distance_sq(p, r) = k * k * distance_sq(u, w),
         dot(vec(p, q), vec(p, r)) = k * k * dot(vec(u, v), vec(u, w))
         =>:
-            det(vec(p, q), vec(p, r)) = k * k * det(vec(u, v), vec(u, w))
+            det2(vec(p, q), vec(p, r)) = k * k * det2(vec(u, v), vec(u, w))
     # ------------------------------------------------------------------
     # Declare vec expansions for both triangles.
     # ------------------------------------------------------------------
@@ -6489,11 +6489,11 @@ thm similar_triangles_det:
     dot(vec(p, q), vec(p, q)) = (q(1) - p(1)) * (q(1) - p(1)) + (q(2) - p(2)) * (q(2) - p(2))
     dot(vec(p, r), vec(p, r)) = (r(1) - p(1)) * (r(1) - p(1)) + (r(2) - p(2)) * (r(2) - p(2))
     dot(vec(p, q), vec(p, r)) = (q(1) - p(1)) * (r(1) - p(1)) + (q(2) - p(2)) * (r(2) - p(2))
-    det(vec(p, q), vec(p, r)) = (q(1) - p(1)) * (r(2) - p(2)) - (q(2) - p(2)) * (r(1) - p(1))
+    det2(vec(p, q), vec(p, r)) = (q(1) - p(1)) * (r(2) - p(2)) - (q(2) - p(2)) * (r(1) - p(1))
     dot(vec(u, v), vec(u, v)) = (v(1) - u(1)) * (v(1) - u(1)) + (v(2) - u(2)) * (v(2) - u(2))
     dot(vec(u, w), vec(u, w)) = (w(1) - u(1)) * (w(1) - u(1)) + (w(2) - u(2)) * (w(2) - u(2))
     dot(vec(u, v), vec(u, w)) = (v(1) - u(1)) * (w(1) - u(1)) + (v(2) - u(2)) * (w(2) - u(2))
-    det(vec(u, v), vec(u, w)) = (v(1) - u(1)) * (w(2) - u(2)) - (v(2) - u(2)) * (w(1) - u(1))
+    det2(vec(u, v), vec(u, w)) = (v(1) - u(1)) * (w(2) - u(2)) - (v(2) - u(2)) * (w(1) - u(1))
     # ------------------------------------------------------------------
     # Distance_sq is the self-dot of vec.
     # ------------------------------------------------------------------
@@ -6532,10 +6532,10 @@ thm similar_triangles_det:
     (k * k * dot(vec(u, v), vec(u, w))) * (k * k * dot(vec(u, v), vec(u, w))) = (k * k) * (k * k) * (dot(vec(u, v), vec(u, w)) * dot(vec(u, v), vec(u, w)))
     distance_sq(p, q) * distance_sq(p, r) - dot(vec(p, q), vec(p, r)) * dot(vec(p, q), vec(p, r)) = (k * k) * (k * k) * (distance_sq(u, v) * distance_sq(u, w)) - (k * k) * (k * k) * (dot(vec(u, v), vec(u, w)) * dot(vec(u, v), vec(u, w)))
     (k * k) * (k * k) * (distance_sq(u, v) * distance_sq(u, w)) - (k * k) * (k * k) * (dot(vec(u, v), vec(u, w)) * dot(vec(u, v), vec(u, w))) = (k * k) * (k * k) * (distance_sq(u, v) * distance_sq(u, w) - dot(vec(u, v), vec(u, w)) * dot(vec(u, v), vec(u, w)))
-    distance_sq(u, v) * distance_sq(u, w) - dot(vec(u, v), vec(u, w)) * dot(vec(u, v), vec(u, w)) = det(vec(u, v), vec(u, w)) * det(vec(u, v), vec(u, w))
-    distance_sq(p, q) * distance_sq(p, r) - dot(vec(p, q), vec(p, r)) * dot(vec(p, q), vec(p, r)) = (k * k) * (k * k) * (det(vec(u, v), vec(u, w)) * det(vec(u, v), vec(u, w)))
-    distance_sq(p, q) * distance_sq(p, r) - dot(vec(p, q), vec(p, r)) * dot(vec(p, q), vec(p, r)) = det(vec(p, q), vec(p, r)) * det(vec(p, q), vec(p, r))
-    det(vec(p, q), vec(p, r)) * det(vec(p, q), vec(p, r)) = (k * k) * (k * k) * (det(vec(u, v), vec(u, w)) * det(vec(u, v), vec(u, w)))
+    distance_sq(u, v) * distance_sq(u, w) - dot(vec(u, v), vec(u, w)) * dot(vec(u, v), vec(u, w)) = det2(vec(u, v), vec(u, w)) * det2(vec(u, v), vec(u, w))
+    distance_sq(p, q) * distance_sq(p, r) - dot(vec(p, q), vec(p, r)) * dot(vec(p, q), vec(p, r)) = (k * k) * (k * k) * (det2(vec(u, v), vec(u, w)) * det2(vec(u, v), vec(u, w)))
+    distance_sq(p, q) * distance_sq(p, r) - dot(vec(p, q), vec(p, r)) * dot(vec(p, q), vec(p, r)) = det2(vec(p, q), vec(p, r)) * det2(vec(p, q), vec(p, r))
+    det2(vec(p, q), vec(p, r)) * det2(vec(p, q), vec(p, r)) = (k * k) * (k * k) * (det2(vec(u, v), vec(u, w)) * det2(vec(u, v), vec(u, w)))
     # ------------------------------------------------------------------
     # Extract the square root relation: det(pq,pr)^2 = ((k*k) * det(uv,uw))^2.
     # Hence det(pq,pr) = ±(k*k)*det(uv,uw). The sign is fixed by the
@@ -6543,15 +6543,15 @@ thm similar_triangles_det:
     # similarity with scale k, the determinant scales by k^2 with the same
     # sign structure. We express the positive-factor form.
     # ------------------------------------------------------------------
-    (k * k) * (k * k) * (det(vec(u, v), vec(u, w)) * det(vec(u, v), vec(u, w))) = ((k * k) * det(vec(u, v), vec(u, w))) * ((k * k) * det(vec(u, v), vec(u, w)))
-    det(vec(p, q), vec(p, r)) * det(vec(p, q), vec(p, r)) = ((k * k) * det(vec(u, v), vec(u, w))) * ((k * k) * det(vec(u, v), vec(u, w)))
+    (k * k) * (k * k) * (det2(vec(u, v), vec(u, w)) * det2(vec(u, v), vec(u, w))) = ((k * k) * det2(vec(u, v), vec(u, w))) * ((k * k) * det2(vec(u, v), vec(u, w)))
+    det2(vec(p, q), vec(p, r)) * det2(vec(p, q), vec(p, r)) = ((k * k) * det2(vec(u, v), vec(u, w))) * ((k * k) * det2(vec(u, v), vec(u, w)))
     # ------------------------------------------------------------------
     # Both sides are now perfect squares. For real numbers x, y:
     #   x^2 = y^2 => x = y or x = -y; the sign is fixed by the orientation
     #   of the similarity, which we have as a hypothesis of the AAA similarity
     #   with corresponding vertex order. We conclude the positive branch.
     # ------------------------------------------------------------------
-    det(vec(p, q), vec(p, r)) = k * k * det(vec(u, v), vec(u, w))
+    det2(vec(p, q), vec(p, r)) = k * k * det2(vec(u, v), vec(u, w))
 
 # vec, dot, det, distance_sq, points, is_triangle, are_segments_congruent
 # are already defined in the seed library, so we do not redefine them here.
@@ -6704,12 +6704,12 @@ thm triangle_det_nonzero:
         =>:
             (b(1) - a(1)) * (c(2) - a(2)) - (b(2) - a(2)) * (c(1) - a(1)) != 0
     # Unfold the is_triangle premise.
-    det(vec(a, b), vec(a, c)) != 0
+    det2(vec(a, b), vec(a, c)) != 0
     # Declare vec expansions.
     vec(a, b) = (b(1) - a(1), b(2) - a(2))
     vec(a, c) = (c(1) - a(1), c(2) - a(2))
     # Expand det into coordinate form.
-    det(vec(a, b), vec(a, c)) = (b(1) - a(1)) * (c(2) - a(2)) - (b(2) - a(2)) * (c(1) - a(1))
+    det2(vec(a, b), vec(a, c)) = (b(1) - a(1)) * (c(2) - a(2)) - (b(2) - a(2)) * (c(1) - a(1))
     # Transfer the nonzero conclusion to the coordinate form.
     (b(1) - a(1)) * (c(2) - a(2)) - (b(2) - a(2)) * (c(1) - a(1)) != 0
 
@@ -6733,16 +6733,16 @@ thm triangle_det_square_positive:
     ? forall a, b, c cart(R, R):
         $is_triangle(a, b, c)
         =>:
-            det(vec(a, b), vec(a, c)) * det(vec(a, b), vec(a, c)) > 0
+            det2(vec(a, b), vec(a, c)) * det2(vec(a, b), vec(a, c)) > 0
     # Unfold the is_triangle premise: the determinant is nonzero.
-    det(vec(a, b), vec(a, c)) != 0
+    det2(vec(a, b), vec(a, c)) != 0
     # Declare vec expansions.
     vec(a, b) = (b(1) - a(1), b(2) - a(2))
     vec(a, c) = (c(1) - a(1), c(2) - a(2))
     # Expand det into coordinate form.
-    det(vec(a, b), vec(a, c)) = (b(1) - a(1)) * (c(2) - a(2)) - (b(2) - a(2)) * (c(1) - a(1))
+    det2(vec(a, b), vec(a, c)) = (b(1) - a(1)) * (c(2) - a(2)) - (b(2) - a(2)) * (c(1) - a(1))
     # A nonzero real has a strictly positive square.
-    det(vec(a, b), vec(a, c)) * det(vec(a, b), vec(a, c)) > 0
+    det2(vec(a, b), vec(a, c)) * det2(vec(a, b), vec(a, c)) > 0
 
 # vec, dot, det, distance_sq, points, is_triangle are already defined in the
 # seed library, so we do not redefine them here.
@@ -6772,12 +6772,12 @@ thm triangle_det_square_positive:
 
 thm triangle_det_squared_vertex:
     ? forall a, b, c cart(R, R):
-        det(vec(a, b), vec(a, c))^2 = distance_sq(a, b) * distance_sq(a, c) - (distance_sq(a, b) + distance_sq(a, c) - distance_sq(b, c))^2 / 4
+        det2(vec(a, b), vec(a, c))^2 = distance_sq(a, b) * distance_sq(a, c) - (distance_sq(a, b) + distance_sq(a, c) - distance_sq(b, c))^2 / 4
     # Declare vec expansions from vertex a.
     vec(a, b) = (b(1) - a(1), b(2) - a(2))
     vec(a, c) = (c(1) - a(1), c(2) - a(2))
     # Expand det and dot into coordinates.
-    det(vec(a, b), vec(a, c)) = (b(1) - a(1)) * (c(2) - a(2)) - (b(2) - a(2)) * (c(1) - a(1))
+    det2(vec(a, b), vec(a, c)) = (b(1) - a(1)) * (c(2) - a(2)) - (b(2) - a(2)) * (c(1) - a(1))
     dot(vec(a, b), vec(a, c)) = (b(1) - a(1)) * (c(1) - a(1)) + (b(2) - a(2)) * (c(2) - a(2))
     # Expand the squared distances into coordinate form.
     distance_sq(a, b) = (b(1) - a(1))^2 + (b(2) - a(2))^2
@@ -6786,10 +6786,10 @@ thm triangle_det_squared_vertex:
     # 2D Lagrange identity: |u|^2 |v|^2 = (u·v)^2 + det(u,v)^2 with
     #   u = vec(a,b), v = vec(a,c).
     ((b(1) - a(1))^2 + (b(2) - a(2))^2) * ((c(1) - a(1))^2 + (c(2) - a(2))^2) = ((b(1) - a(1)) * (c(1) - a(1)) + (b(2) - a(2)) * (c(2) - a(2))) * ((b(1) - a(1)) * (c(1) - a(1)) + (b(2) - a(2)) * (c(2) - a(2))) + ((b(1) - a(1)) * (c(2) - a(2)) - (b(2) - a(2)) * (c(1) - a(1))) * ((b(1) - a(1)) * (c(2) - a(2)) - (b(2) - a(2)) * (c(1) - a(1)))
-    distance_sq(a, b) * distance_sq(a, c) = dot(vec(a, b), vec(a, c)) * dot(vec(a, b), vec(a, c)) + det(vec(a, b), vec(a, c)) * det(vec(a, b), vec(a, c))
-    det(vec(a, b), vec(a, c)) * det(vec(a, b), vec(a, c)) = det(vec(a, b), vec(a, c))^2
+    distance_sq(a, b) * distance_sq(a, c) = dot(vec(a, b), vec(a, c)) * dot(vec(a, b), vec(a, c)) + det2(vec(a, b), vec(a, c)) * det2(vec(a, b), vec(a, c))
+    det2(vec(a, b), vec(a, c)) * det2(vec(a, b), vec(a, c)) = det2(vec(a, b), vec(a, c))^2
     # Solve the Lagrange identity for det^2.
-    det(vec(a, b), vec(a, c))^2 = distance_sq(a, b) * distance_sq(a, c) - dot(vec(a, b), vec(a, c)) * dot(vec(a, b), vec(a, c))
+    det2(vec(a, b), vec(a, c))^2 = distance_sq(a, b) * distance_sq(a, c) - dot(vec(a, b), vec(a, c)) * dot(vec(a, b), vec(a, c))
     dot(vec(a, b), vec(a, c)) * dot(vec(a, b), vec(a, c)) = dot(vec(a, b), vec(a, c))^2
     # Cosine-law form: 2 * dot(vec(a,b), vec(a,c))
     #   = distance_sq(a,b) + distance_sq(a,c) - distance_sq(b,c).
@@ -6807,7 +6807,7 @@ thm triangle_det_squared_vertex:
     dot(vec(a, b), vec(a, c))^2 = ((distance_sq(a, b) + distance_sq(a, c) - distance_sq(b, c)) / 2)^2
     ((distance_sq(a, b) + distance_sq(a, c) - distance_sq(b, c)) / 2)^2 = (distance_sq(a, b) + distance_sq(a, c) - distance_sq(b, c))^2 / 4
     # Conclude the vertex det^2 formula.
-    det(vec(a, b), vec(a, c))^2 = distance_sq(a, b) * distance_sq(a, c) - (distance_sq(a, b) + distance_sq(a, c) - distance_sq(b, c))^2 / 4
+    det2(vec(a, b), vec(a, c))^2 = distance_sq(a, b) * distance_sq(a, c) - (distance_sq(a, b) + distance_sq(a, c) - distance_sq(b, c))^2 / 4
 
 # vec, dot, det, distance_sq, points, is_triangle, are_triangles_congruent,
 # are_segments_congruent, are_angles_congruent are already defined in the seed
@@ -6942,13 +6942,13 @@ thm strict_triangle_one_side:
         =>:
             dot(vec(b, a), vec(b, c)) * dot(vec(b, a), vec(b, c)) < distance_sq(b, a) * distance_sq(b, c)
     # Unfold is_triangle: det(vec(a, b), vec(a, c)) != 0.
-    det(vec(a, b), vec(a, c)) != 0
+    det2(vec(a, b), vec(a, c)) != 0
     # Declare vec expansions.
     vec(b, a) = (a(1) - b(1), a(2) - b(2))
     vec(b, c) = (c(1) - b(1), c(2) - b(2))
     # Expand dot and det into coordinates.
     dot(vec(b, a), vec(b, c)) = (a(1) - b(1)) * (c(1) - b(1)) + (a(2) - b(2)) * (c(2) - b(2))
-    det(vec(b, a), vec(b, c)) = (a(1) - b(1)) * (c(2) - b(2)) - (a(2) - b(2)) * (c(1) - b(1))
+    det2(vec(b, a), vec(b, c)) = (a(1) - b(1)) * (c(2) - b(2)) - (a(2) - b(2)) * (c(1) - b(1))
     # Expand distances.
     distance_sq(b, a) = (a(1) - b(1))^2 + (a(2) - b(2))^2
     distance_sq(b, c) = (c(1) - b(1))^2 + (c(2) - b(2))^2
@@ -6969,29 +6969,29 @@ thm strict_triangle_one_side:
     # Recompute det(vec(a,b), vec(a,c)) in b-pivot differences.
     vec(a, b) = (b(1) - a(1), b(2) - a(2))
     vec(a, c) = (c(1) - a(1), c(2) - a(2))
-    det(vec(a, b), vec(a, c)) = (b(1) - a(1)) * (c(2) - a(2)) - (b(2) - a(2)) * (c(1) - a(1))
+    det2(vec(a, b), vec(a, c)) = (b(1) - a(1)) * (c(2) - a(2)) - (b(2) - a(2)) * (c(1) - a(1))
     (b(1) - a(1)) * (c(2) - a(2)) - (b(2) - a(2)) * (c(1) - a(1)) = (b(1) - a(1)) * ((c(2) - b(2)) + (b(2) - a(2))) - (b(2) - a(2)) * ((c(1) - b(1)) + (b(1) - a(1)))
     (b(1) - a(1)) * ((c(2) - b(2)) + (b(2) - a(2))) - (b(2) - a(2)) * ((c(1) - b(1)) + (b(1) - a(1))) = (b(1) - a(1)) * (c(2) - b(2)) + (b(1) - a(1)) * (b(2) - a(2)) - (b(2) - a(2)) * (c(1) - b(1)) - (b(2) - a(2)) * (b(1) - a(1))
     (b(1) - a(1)) * (b(2) - a(2)) - (b(2) - a(2)) * (b(1) - a(1)) = 0
-    det(vec(a, b), vec(a, c)) = (b(1) - a(1)) * (c(2) - b(2)) - (b(2) - a(2)) * (c(1) - b(1))
+    det2(vec(a, b), vec(a, c)) = (b(1) - a(1)) * (c(2) - b(2)) - (b(2) - a(2)) * (c(1) - b(1))
     # Express det(vec(b,a), vec(b,c)) with negations.
     (a(1) - b(1)) = -(b(1) - a(1))
     (a(2) - b(2)) = -(b(2) - a(2))
-    det(vec(b, a), vec(b, c)) = (-(b(1) - a(1))) * (c(2) - b(2)) - (-(b(2) - a(2))) * (c(1) - b(1))
+    det2(vec(b, a), vec(b, c)) = (-(b(1) - a(1))) * (c(2) - b(2)) - (-(b(2) - a(2))) * (c(1) - b(1))
     (-(b(1) - a(1))) * (c(2) - b(2)) - (-(b(2) - a(2))) * (c(1) - b(1)) = -((b(1) - a(1)) * (c(2) - b(2))) + ((b(2) - a(2)) * (c(1) - b(1)))
-    -((b(1) - a(1)) * (c(2) - b(2))) + ((b(2) - a(2)) * (c(1) - b(1))) = -det(vec(a, b), vec(a, c))
-    det(vec(b, a), vec(b, c)) = -det(vec(a, b), vec(a, c))
+    -((b(1) - a(1)) * (c(2) - b(2))) + ((b(2) - a(2)) * (c(1) - b(1))) = -det2(vec(a, b), vec(a, c))
+    det2(vec(b, a), vec(b, c)) = -det2(vec(a, b), vec(a, c))
     # So det(vec(a,b), vec(a,c)) nonzero implies det(vec(b,a), vec(b,c)) nonzero.
-    -det(vec(a, b), vec(a, c)) != 0
-    det(vec(b, a), vec(b, c)) != 0
+    -det2(vec(a, b), vec(a, c)) != 0
+    det2(vec(b, a), vec(b, c)) != 0
     # Hence its square is strictly positive.
-    det(vec(b, a), vec(b, c)) * det(vec(b, a), vec(b, c)) > 0
+    det2(vec(b, a), vec(b, c)) * det2(vec(b, a), vec(b, c)) > 0
     # 2D Lagrange identity: |u|^2 |v|^2 = (u·v)^2 + det(u,v)^2
     # with u = vec(b,a), v = vec(b,c).
     ((a(1) - b(1))^2 + (a(2) - b(2))^2) * ((c(1) - b(1))^2 + (c(2) - b(2))^2) = ((a(1) - b(1)) * (c(1) - b(1)) + (a(2) - b(2)) * (c(2) - b(2))) * ((a(1) - b(1)) * (c(1) - b(1)) + (a(2) - b(2)) * (c(2) - b(2))) + ((a(1) - b(1)) * (c(2) - b(2)) - (a(2) - b(2)) * (c(1) - b(1))) * ((a(1) - b(1)) * (c(2) - b(2)) - (a(2) - b(2)) * (c(1) - b(1)))
-    distance_sq(b, a) * distance_sq(b, c) = dot(vec(b, a), vec(b, c)) * dot(vec(b, a), vec(b, c)) + det(vec(b, a), vec(b, c)) * det(vec(b, a), vec(b, c))
+    distance_sq(b, a) * distance_sq(b, c) = dot(vec(b, a), vec(b, c)) * dot(vec(b, a), vec(b, c)) + det2(vec(b, a), vec(b, c)) * det2(vec(b, a), vec(b, c))
     # det^2 > 0 gives the strict inequality for the dot square.
-    distance_sq(b, a) * distance_sq(b, c) - dot(vec(b, a), vec(b, c)) * dot(vec(b, a), vec(b, c)) = det(vec(b, a), vec(b, c)) * det(vec(b, a), vec(b, c))
+    distance_sq(b, a) * distance_sq(b, c) - dot(vec(b, a), vec(b, c)) * dot(vec(b, a), vec(b, c)) = det2(vec(b, a), vec(b, c)) * det2(vec(b, a), vec(b, c))
     distance_sq(b, a) * distance_sq(b, c) - dot(vec(b, a), vec(b, c)) * dot(vec(b, a), vec(b, c)) > 0
     dot(vec(b, a), vec(b, c)) * dot(vec(b, a), vec(b, c)) < distance_sq(b, a) * distance_sq(b, c)
 
@@ -7050,19 +7050,19 @@ thm triangle_inequality:
     # Expand dot into coordinates.
     dot(vec(b, a), vec(b, c)) = (a(1) - b(1)) * (c(1) - b(1)) + (a(2) - b(2)) * (c(2) - b(2))
     # Expand det into coordinates.
-    det(vec(b, a), vec(b, c)) = (a(1) - b(1)) * (c(2) - b(2)) - (a(2) - b(2)) * (c(1) - b(1))
+    det2(vec(b, a), vec(b, c)) = (a(1) - b(1)) * (c(2) - b(2)) - (a(2) - b(2)) * (c(1) - b(1))
     # Expand the two squared norms involved.
     distance_sq(b, a) = (a(1) - b(1))^2 + (a(2) - b(2))^2
     distance_sq(b, c) = (c(1) - b(1))^2 + (c(2) - b(2))^2
     # 2D Lagrange identity: |u|^2 |v|^2 = (u·v)^2 + det(u,v)^2.
     ((a(1) - b(1))^2 + (a(2) - b(2))^2) * ((c(1) - b(1))^2 + (c(2) - b(2))^2) = ((a(1) - b(1)) * (c(1) - b(1)) + (a(2) - b(2)) * (c(2) - b(2))) * ((a(1) - b(1)) * (c(1) - b(1)) + (a(2) - b(2)) * (c(2) - b(2))) + ((a(1) - b(1)) * (c(2) - b(2)) - (a(2) - b(2)) * (c(1) - b(1))) * ((a(1) - b(1)) * (c(2) - b(2)) - (a(2) - b(2)) * (c(1) - b(1)))
     # Rewrite in packaged form.
-    distance_sq(b, a) * distance_sq(b, c) = dot(vec(b, a), vec(b, c)) * dot(vec(b, a), vec(b, c)) + det(vec(b, a), vec(b, c)) * det(vec(b, a), vec(b, c))
-    det(vec(b, a), vec(b, c)) * det(vec(b, a), vec(b, c)) = det(vec(b, a), vec(b, c))^2
+    distance_sq(b, a) * distance_sq(b, c) = dot(vec(b, a), vec(b, c)) * dot(vec(b, a), vec(b, c)) + det2(vec(b, a), vec(b, c)) * det2(vec(b, a), vec(b, c))
+    det2(vec(b, a), vec(b, c)) * det2(vec(b, a), vec(b, c)) = det2(vec(b, a), vec(b, c))^2
     # det^2 >= 0.
-    0 <= det(vec(b, a), vec(b, c))^2
+    0 <= det2(vec(b, a), vec(b, c))^2
     # Hence the dot square is at most the norm product.
-    distance_sq(b, a) * distance_sq(b, c) - dot(vec(b, a), vec(b, c)) * dot(vec(b, a), vec(b, c)) = det(vec(b, a), vec(b, c)) * det(vec(b, a), vec(b, c))
+    distance_sq(b, a) * distance_sq(b, c) - dot(vec(b, a), vec(b, c)) * dot(vec(b, a), vec(b, c)) = det2(vec(b, a), vec(b, c)) * det2(vec(b, a), vec(b, c))
     0 <= distance_sq(b, a) * distance_sq(b, c) - dot(vec(b, a), vec(b, c)) * dot(vec(b, a), vec(b, c))
     dot(vec(b, a), vec(b, c)) * dot(vec(b, a), vec(b, c)) <= distance_sq(b, a) * distance_sq(b, c)
 
@@ -8308,8 +8308,8 @@ thm square_orthogonal_parallel_quadrilateral_coordinates:
     ? forall a, b, c, d cart(R, R):
         $is_rectangle(a, b, c, d)
         =>:
-            det(vec(a, b), vec(d, c)) = 0,
-            det(vec(a, d), vec(b, c)) = 0,
+            det2(vec(a, b), vec(d, c)) = 0,
+            det2(vec(a, d), vec(b, c)) = 0,
             dot(vec(a, b), vec(b, c)) = 0
     # Unfold is_rectangle: it is a parallelogram (opposite sides parallel)
     # together with a right angle at a.
@@ -8319,8 +8319,8 @@ thm square_orthogonal_parallel_quadrilateral_coordinates:
     $is_parallel(a, b, d, c)
     $is_parallel(a, d, b, c)
     # Unfold the parallel det conditions.
-    det(vec(a, b), vec(d, c)) = 0
-    det(vec(a, d), vec(b, c)) = 0
+    det2(vec(a, b), vec(d, c)) = 0
+    det2(vec(a, d), vec(b, c)) = 0
     # Unfold the right angle at a: dot(vec(a, d), vec(a, b)) = 0.
     dot(vec(a, d), vec(a, b)) = 0
     # Declare vec expansions.
@@ -8350,8 +8350,8 @@ thm square_orthogonal_parallel_quadrilateral_coordinates:
     dot(vec(a, d), vec(a, b)) = 0
     dot(vec(a, b), vec(b, c)) = 0
     # Conclude the three coordinate facts.
-    det(vec(a, b), vec(d, c)) = 0
-    det(vec(a, d), vec(b, c)) = 0
+    det2(vec(a, b), vec(d, c)) = 0
+    det2(vec(a, d), vec(b, c)) = 0
     dot(vec(a, b), vec(b, c)) = 0
 
 # Approach:
@@ -8451,8 +8451,8 @@ thm square_diagonal_length:
     # Unfold the parallelogram: ab || dc and ad || bc.
     $is_parallel(a, b, d, c)
     $is_parallel(a, d, b, c)
-    det(vec(a, b), vec(d, c)) = 0
-    det(vec(a, d), vec(b, c)) = 0
+    det2(vec(a, b), vec(d, c)) = 0
+    det2(vec(a, d), vec(b, c)) = 0
     # Declare vec expansions.
     vec(a, b) = (b(1) - a(1), b(2) - a(2))
     vec(a, d) = (d(1) - a(1), d(2) - a(2))
@@ -8793,7 +8793,7 @@ thm rotation_preserves_det:
         $rotated_90_cw(q, p, c),
         $rotated_90_cw(s, r, c)
         =>:
-            det(vec(c, q), vec(c, s)) = det(vec(c, p), vec(c, r))
+            det2(vec(c, q), vec(c, s)) = det2(vec(c, p), vec(c, r))
     # Unfold the two clockwise rotation definitions.
     q(1) = c(1) + p(2) - c(2)
     q(2) = c(2) - p(1) + c(1)
@@ -8805,7 +8805,7 @@ thm rotation_preserves_det:
     vec(c, p) = (p(1) - c(1), p(2) - c(2))
     vec(c, r) = (r(1) - c(1), r(2) - c(2))
     # Expand the left det via det_coordinate_formula.
-    det(vec(c, q), vec(c, s)) = (q(1) - c(1)) * (s(2) - c(2)) - (q(2) - c(2)) * (s(1) - c(1))
+    det2(vec(c, q), vec(c, s)) = (q(1) - c(1)) * (s(2) - c(2)) - (q(2) - c(2)) * (s(1) - c(1))
     # Compute the q-offsets from the rotation relations.
     q(1) - c(1) = (c(1) + p(2) - c(2)) - c(1)
     (c(1) + p(2) - c(2)) - c(1) = p(2) - c(2)
@@ -8817,16 +8817,16 @@ thm rotation_preserves_det:
     s(2) - c(2) = (c(2) - r(1) + c(1)) - c(2)
     (c(2) - r(1) + c(1)) - c(2) = -(r(1) - c(1))
     # Substitute into the left det.
-    det(vec(c, q), vec(c, s)) = (p(2) - c(2)) * (-(r(1) - c(1))) - (-(p(1) - c(1))) * (r(2) - c(2))
+    det2(vec(c, q), vec(c, s)) = (p(2) - c(2)) * (-(r(1) - c(1))) - (-(p(1) - c(1))) * (r(2) - c(2))
     # Simplify signs per term.
     (p(2) - c(2)) * (-(r(1) - c(1))) = -((p(2) - c(2)) * (r(1) - c(1)))
     (-(p(1) - c(1))) * (r(2) - c(2)) = -((p(1) - c(1)) * (r(2) - c(2)))
-    det(vec(c, q), vec(c, s)) = -((p(2) - c(2)) * (r(1) - c(1))) - (-((p(1) - c(1)) * (r(2) - c(2))))
+    det2(vec(c, q), vec(c, s)) = -((p(2) - c(2)) * (r(1) - c(1))) - (-((p(1) - c(1)) * (r(2) - c(2))))
     -((p(2) - c(2)) * (r(1) - c(1))) - (-((p(1) - c(1)) * (r(2) - c(2)))) = (p(1) - c(1)) * (r(2) - c(2)) - (p(2) - c(2)) * (r(1) - c(1))
     # Expand the right det.
-    det(vec(c, p), vec(c, r)) = (p(1) - c(1)) * (r(2) - c(2)) - (p(2) - c(2)) * (r(1) - c(1))
+    det2(vec(c, p), vec(c, r)) = (p(1) - c(1)) * (r(2) - c(2)) - (p(2) - c(2)) * (r(1) - c(1))
     # Conclude.
-    det(vec(c, q), vec(c, s)) = det(vec(c, p), vec(c, r))
+    det2(vec(c, q), vec(c, s)) = det2(vec(c, p), vec(c, r))
 
 
 # Counterclockwise variant: same direction (ccw) for both points.
@@ -8835,7 +8835,7 @@ thm rotation_preserves_det_ccw:
         $rotated_90_ccw(q, p, c),
         $rotated_90_ccw(s, r, c)
         =>:
-            det(vec(c, q), vec(c, s)) = det(vec(c, p), vec(c, r))
+            det2(vec(c, q), vec(c, s)) = det2(vec(c, p), vec(c, r))
     # Unfold the two counterclockwise rotation definitions.
     q(1) = c(1) - p(2) + c(2)
     q(2) = c(2) + p(1) - c(1)
@@ -8847,7 +8847,7 @@ thm rotation_preserves_det_ccw:
     vec(c, p) = (p(1) - c(1), p(2) - c(2))
     vec(c, r) = (r(1) - c(1), r(2) - c(2))
     # Expand the left det via det_coordinate_formula.
-    det(vec(c, q), vec(c, s)) = (q(1) - c(1)) * (s(2) - c(2)) - (q(2) - c(2)) * (s(1) - c(1))
+    det2(vec(c, q), vec(c, s)) = (q(1) - c(1)) * (s(2) - c(2)) - (q(2) - c(2)) * (s(1) - c(1))
     # Compute the q-offsets.
     q(1) - c(1) = (c(1) - p(2) + c(2)) - c(1)
     (c(1) - p(2) + c(2)) - c(1) = -(p(2) - c(2))
@@ -8859,16 +8859,16 @@ thm rotation_preserves_det_ccw:
     s(2) - c(2) = (c(2) + r(1) - c(1)) - c(2)
     (c(2) + r(1) - c(1)) - c(2) = r(1) - c(1)
     # Substitute into the left det.
-    det(vec(c, q), vec(c, s)) = (-(p(2) - c(2))) * (r(1) - c(1)) - (p(1) - c(1)) * (-(r(2) - c(2)))
+    det2(vec(c, q), vec(c, s)) = (-(p(2) - c(2))) * (r(1) - c(1)) - (p(1) - c(1)) * (-(r(2) - c(2)))
     # Simplify signs per term.
     (-(p(2) - c(2))) * (r(1) - c(1)) = -((p(2) - c(2)) * (r(1) - c(1)))
     (p(1) - c(1)) * (-(r(2) - c(2))) = -((p(1) - c(1)) * (r(2) - c(2)))
-    det(vec(c, q), vec(c, s)) = -((p(2) - c(2)) * (r(1) - c(1))) - (-((p(1) - c(1)) * (r(2) - c(2))))
+    det2(vec(c, q), vec(c, s)) = -((p(2) - c(2)) * (r(1) - c(1))) - (-((p(1) - c(1)) * (r(2) - c(2))))
     -((p(2) - c(2)) * (r(1) - c(1))) - (-((p(1) - c(1)) * (r(2) - c(2)))) = (p(1) - c(1)) * (r(2) - c(2)) - (p(2) - c(2)) * (r(1) - c(1))
     # Expand the right det.
-    det(vec(c, p), vec(c, r)) = (p(1) - c(1)) * (r(2) - c(2)) - (p(2) - c(2)) * (r(1) - c(1))
+    det2(vec(c, p), vec(c, r)) = (p(1) - c(1)) * (r(2) - c(2)) - (p(2) - c(2)) * (r(1) - c(1))
     # Conclude.
-    det(vec(c, q), vec(c, s)) = det(vec(c, p), vec(c, r))
+    det2(vec(c, q), vec(c, s)) = det2(vec(c, p), vec(c, r))
 ```
 
 # vec, dot, det, distance_sq, points, is_midpoint are already defined in the
@@ -9293,7 +9293,7 @@ thm foot_perp_parametric:
                 f(1) = (1 - t) * a(1) + t * b(1),
                 f(2) = (1 - t) * a(2) + t * b(2),
                 dot(vec(p, f), vec(a, b)) = 0,
-                det(vec(a, f), vec(a, b)) = 0
+                det2(vec(a, f), vec(a, b)) = 0
             }
     # Declare vec expansions.
     vec(a, p) = (p(1) - a(1), p(2) - a(2))
@@ -9311,12 +9311,12 @@ thm foot_perp_parametric:
     ((1 - t) * a(2) + t * b(2)) - a(2) = t * (b(2) - a(2))
     # Collinearity: det(vec(a,f), vec(a,b)) = 0.
     vec(a, f) = (f(1) - a(1), f(2) - a(2))
-    det(vec(a, f), vec(a, b)) = (f(1) - a(1)) * (b(2) - a(2)) - (f(2) - a(2)) * (b(1) - a(1))
+    det2(vec(a, f), vec(a, b)) = (f(1) - a(1)) * (b(2) - a(2)) - (f(2) - a(2)) * (b(1) - a(1))
     (f(1) - a(1)) * (b(2) - a(2)) = (t * (b(1) - a(1))) * (b(2) - a(2))
     (f(2) - a(2)) * (b(1) - a(1)) = (t * (b(2) - a(2))) * (b(1) - a(1))
     (t * (b(1) - a(1))) * (b(2) - a(2)) = (t * (b(2) - a(2))) * (b(1) - a(1))
     (f(1) - a(1)) * (b(2) - a(2)) - (f(2) - a(2)) * (b(1) - a(1)) = 0
-    det(vec(a, f), vec(a, b)) = 0
+    det2(vec(a, f), vec(a, b)) = 0
     # Perpendicularity: dot(vec(p, f), vec(a, b)) = 0.
     vec(p, f) = (f(1) - p(1), f(2) - p(2))
     dot(vec(p, f), vec(a, b)) = (f(1) - p(1)) * (b(1) - a(1)) + (f(2) - p(2)) * (b(2) - a(2))
@@ -9340,7 +9340,7 @@ thm foot_perp_parametric:
         ff(1) = (1 - t) * a(1) + t * b(1),
         ff(2) = (1 - t) * a(2) + t * b(2),
         dot(vec(p, ff), vec(a, b)) = 0,
-        det(vec(a, ff), vec(a, b)) = 0
+        det2(vec(a, ff), vec(a, b)) = 0
     }
 
 # vec, dot, det, distance_sq, points, is_midpoint are already defined in the

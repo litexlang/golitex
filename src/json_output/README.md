@@ -231,8 +231,11 @@ Whole-forall replay has Detailed `searched_proof.type: by_known_forall_fact`,
 with a real `cite_fact_id` and `parameter_renamings` (`source` / `target`
 IdentifierIds), followed by the goal WD evidence. The local-introduction
 route keeps its introduced parameters, assumed domains and proved conclusions.
-Successful `have_fn_by_forall_exist_unique` now exposes `source_forall` and
-`fn_set_well_defined`; failures identify the source / FnSet / property stage.
+Successful `have_fn_by_forall_exist_unique` exposes `source_forall`,
+`fn_set_well_defined`, the original `membership` store, `property_well_defined`,
+and the `property` and `uniqueness` stores. These retain the existing stages'
+WD and inference evidence; `store_and_infer` preserves the flattened ID view.
+Failures identify the source / FnSet / property stage.
 See `examples/stmt_nodes/definition/forall_source_replay.lit` for an unused
 outer binder and renamed existential witness.
 

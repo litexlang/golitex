@@ -1,0 +1,9 @@
+{
+  "ordinary_lean_theorems": 8,
+  "exit": 0,
+  "axioms_output": "'checked_cast_annotations_explicit' depends on axioms: [propext]\n'checked_cast_annotations_inferred' depends on axioms: [propext]\n'checked_cast_addition_automation' depends on axioms: [propext, Classical.choice, Quot.sound]\n'checked_cast_addition_direct' depends on axioms: [propext, Classical.choice, Quot.sound]\n'checked_cast_order_automation' depends on axioms: [propext, Classical.choice, Quot.sound]\n'checked_cast_order_direct' depends on axioms: [propext, Classical.choice, Quot.sound]\n'checked_square_nonnegative_bridge' depends on axioms: [propext, Classical.choice, Quot.sound]\n'checked_square_nonnegative_direct' depends on axioms: [propext, Classical.choice, Quot.sound]\nANNOTATION_EXPR_EQUAL,true\n",
+  "annotation_proofs_identical_expr": true,
+  "kernel_negative_controls_passed": 3,
+  "measured_lean_samples_including_warmup": 312,
+  "all_phase_totals_checked": true
+}

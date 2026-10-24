@@ -10,6 +10,43 @@ use crate::execute::execute_fact_stmt::known_tuple::KnownTupleShapeProof;
 use crate::prelude::*;
 
 impl LitexToLeanCompiler {
+    pub(super) fn compile_cart_nonempty_strategy(
+        &self,
+        fact: &AtomicFact,
+        requirements: &[Fact],
+        proofs: &[VerifyFactResult],
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        let AtomicFact::IsNonemptySetFact(goal) = fact else {
+            return Err(LeanCompileError::unsupported("CartNonempty/Family"));
+        };
+        let Obj::ProductShape(ProductShape::Cart(cart)) = &goal.set else {
+            return Err(LeanCompileError::unsupported("CartNonempty/Carrier"));
+        };
+        if cart.args.len() != requirements.len() || requirements.len() != proofs.len() {
+            return Err(LeanCompileError::unsupported("CartNonempty/Stages"));
+        }
+        let mut certificates = Vec::new();
+        for (index, ((factor, requirement), proof)) in
+            cart.args.iter().zip(requirements).zip(proofs).enumerate()
+        {
+            if !matches!(requirement, Fact::AtomicFact(AtomicFact::IsNonemptySetFact(f)) if f.set.ir() == factor.ir())
+                || source_subject(proof)? != *requirement
+            {
+                return Err(LeanCompileError::unsupported("CartNonempty/Factor"));
+            }
+            certificates.push(
+                self.compile_verify(proof, &position.atomic_search_prior(index)?)?
+                    .1,
+            );
+        }
+        Ok(format!(
+            "(Litex.cartNonemptyOfFactors {} {})",
+            self.compile_object_reference(&goal.set, position)?,
+            finite_vector_proof(&certificates)
+        ))
+    }
+
     pub(in crate::compile_to_lean) fn compile_cart_membership(
         &self,
         fact: &InFact,

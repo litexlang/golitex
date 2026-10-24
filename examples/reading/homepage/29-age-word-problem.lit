@@ -1,0 +1,6 @@
+let my_age = 8
+let brother_age = my_age + 5
+let mother_age = 3 * brother_age - 2
+
+brother_age = my_age + 5 = 13
+mother_age = 3 * brother_age - 2 = 37

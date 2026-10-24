@@ -230,6 +230,9 @@ impl LitexToLeanCompiler {
                 "The successful child does not prove the exact recorded residual fact.",
             ));
         }
+        let after_residual =
+            SourcePosition::new(Some(position), SourceOwner::Verify(child), usize::MAX);
+        let position = &after_residual;
         let original_args = atomic_fact_args_ref(goal);
         let residual_args = atomic_fact_args_ref(residual);
         let changed = original_args
@@ -254,9 +257,9 @@ impl LitexToLeanCompiler {
                 continue;
             }
             if closed_numeric {
-                // A whole-argument alias keeps the exact closed endpoint of
-                // its selected source equality. The source producer preserves
-                // that closed AST rather than replacing it by a computed value.
+                // Replay either the exact whole-argument endpoint or the
+                // captured substitutions under matching arithmetic constructors.
+                // Keep the original residual AST, without recalculating it.
                 if ClosedNumericExpr::try_from_obj(original).is_some()
                     || ClosedNumericExpr::try_from_obj(residual).is_none()
                 {
@@ -274,6 +277,23 @@ impl LitexToLeanCompiler {
                                 && equality.left.ir() == residual.ir())
                     })
                     .collect();
+                if matching.is_empty() && arithmetic_constructor_pairs(original, residual).is_some()
+                {
+                    let cited = cited_ids
+                        .iter()
+                        .copied()
+                        .zip(equalities.iter().cloned())
+                        .collect::<Vec<_>>();
+                    let equality = self.compile_cited_equality_substitution(
+                        original,
+                        residual,
+                        &cited,
+                        &mut used_ids,
+                        position,
+                    )?;
+                    arguments.push(format!("({equality}).symm"));
+                    continue;
+                }
                 if matching.len() != 1 {
                     return Err(LeanCompileError::new(
                         "AtomicRewrite/ClosedTopLevelCitation",

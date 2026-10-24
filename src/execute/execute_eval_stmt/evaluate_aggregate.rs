@@ -1,6 +1,5 @@
 use super::aggregate_evaluation_result::*;
-use super::evaluate_closed_numeric::evaluate_closed_numeric_obj;
-use super::evaluate_obj::evaluate_obj;
+use super::evaluate_obj::{evaluate_numeric_source, evaluate_obj};
 use super::helper::{ActiveAlgoCalls, MAX_AGGREGATE_TERMS};
 use super::result::ExecEvalStmtFailed;
 use crate::ast::obj::{
@@ -480,7 +479,7 @@ fn evaluate_terms(
         } else {
             add_objs(accumulated, value.clone())
         };
-        let Some(next) = evaluate_closed_numeric_obj(&combined) else {
+        let Some(next) = evaluate_numeric_source(&combined, context.proof_mode) else {
             return Ok(Err(ExecEvalStmtFailed::EvaluationFailed));
         };
         accumulated = next;

@@ -63,6 +63,9 @@ fn prepare_contract(
     args: &[Obj],
 ) -> RuntimeResult<Result<(Vec<Fact>, Vec<Fact>), String>> {
     use BuiltinTheoremId::*;
+    if id.is_matrix() {
+        return super::matrices::prepare_matrices(rt, id, args);
+    }
     if matches!(id, AntiderivativeCompose | RiemannIntegralSubstitution) {
         return super::calculus_substitution::prepare(rt, id, args);
     }

@@ -1,3 +1,4 @@
+use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnObjDomainFnSetEvidence;
 use crate::compile_to_lean::helper::*;
 use crate::compile_to_lean::source_position::{SourceOwner, SourcePosition};
 use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
@@ -8,6 +9,107 @@ use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnObjOb
 use crate::prelude::*;
 
 impl LitexToLeanCompiler {
+    pub(in crate::compile_to_lean) fn compile_finite_application_membership(
+        &self,
+        fact: &AtomicFact,
+        source: &FiniteFunctionSignatureProof,
+        selected_index: Option<usize>,
+        requirements: &[Fact],
+        checks: &[VerifyFactResult],
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        let AtomicFact::InFact(goal) = fact else {
+            return Err(LeanCompileError::unsupported("FiniteReturn/Family"));
+        };
+        let Obj::FnObj(application) = &goal.element else {
+            return Err(LeanCompileError::unsupported("FiniteReturn/Call"));
+        };
+        let (receiver, argument) = finite_call_parts(application)?;
+        validate_finite_signature(source)?;
+        let n = source.source.dimension();
+        if selected_index != literal_positive_usize(argument)
+            || selected_index.is_some_and(|i| i > n)
+        {
+            return Err(LeanCompileError::unsupported("FiniteReturn/Index"));
+        }
+        let indices: Vec<_> = selected_index
+            .map(|i| vec![i - 1])
+            .unwrap_or_else(|| (0..n).collect());
+        if requirements.len() != indices.len() || checks.len() != indices.len() {
+            return Err(LeanCompileError::unsupported("FiniteReturn/Stages"));
+        }
+        let call = position
+            .with_visible_wd(&goal.element, &mut |wd, producer| {
+                let ObjWellDefinedProof::ByDef {
+                    proof: ObjWellDefinedProofByDef::FnObj(wd_call),
+                    ..
+                } = wd
+                else {
+                    return Err(LeanCompileError::unsupported("FiniteReturn/Constructor"));
+                };
+                let Some(FnObjDomainFnSetEvidence::FiniteFunction(finite)) = &wd_call.domain_fn_set
+                else {
+                    return Err(LeanCompileError::unsupported(
+                        "FiniteReturn/ConstructorDomain",
+                    ));
+                };
+                if finite.source.dimension() != n {
+                    return Err(LeanCompileError::unsupported("FiniteReturn/Dimension"));
+                }
+                let ctor = SourcePosition::new(Some(producer), SourceOwner::WD(wd), 0);
+                self.compile_finite_fn_call(application, wd_call, finite, &ctor)
+            })?
+            .ok_or_else(|| LeanCompileError::unsupported("FiniteReturn/ConstructorProducer"))?;
+        let receiver_term = self.compile_object_reference(&receiver, position)?;
+        let argument_term = self.compile_object_reference(argument, position)?;
+        let target = self.compile_object_reference(&goal.set, position)?;
+        let (cart, cart_member) =
+            self.compile_cart_shape_member(&receiver, &source.source, position)?;
+        let mut coordinates = Vec::new();
+        for (offset, ((index, requirement), checked)) in
+            indices.iter().zip(requirements).zip(checks).enumerate()
+        {
+            if source_subject(checked)? != *requirement {
+                return Err(LeanCompileError::unsupported("FiniteReturn/Requirement"));
+            }
+            let certificate = self
+                .compile_verify(checked, &position.atomic_search_prior(offset)?)?
+                .1;
+            let term = if let KnownTupleShapeProof::TupleEquality(source) = &source.source {
+                if !matches!(requirement, Fact::AtomicFact(AtomicFact::InFact(f)) if f.element.ir() == source.value.args[*index].ir() && f.set.ir() == goal.set.ir())
+                {
+                    return Err(LeanCompileError::unsupported("FiniteReturn/Value"));
+                }
+                let tuple_obj = Obj::ProductShape(ProductShape::Tuple(source.value.clone()));
+                let tuple = self.compile_object_reference(&tuple_obj, position)?;
+                let same = self.compile_equality_path(
+                    &receiver,
+                    &tuple_obj,
+                    &source.tuple_equal,
+                    position,
+                )?;
+                format!("(by\n  have _same : Litex.Same _receiver {tuple} := {same}\n  have _coordinate := (congrArg (fun p => Litex.FunctionSemantics.callValue (M := M) p (Litex.FiniteFunction.index ({index} : Fin {n}))) _same).trans (Litex.tuple_coordinate {tuple} ({index} : Fin {n}))\n  rw [_coordinate]\n  exact {certificate})")
+            } else {
+                let factor = &source.source.cart().unwrap().args[*index];
+                if !matches!(requirement, Fact::AtomicFact(AtomicFact::SubsetFact(f)) if f.left.ir() == factor.ir() && f.right.ir() == goal.set.ir())
+                {
+                    return Err(LeanCompileError::unsupported("FiniteReturn/Factor"));
+                }
+                let factor_term = self.compile_object_reference(factor, position)?;
+                format!("((show Litex.Subset {factor_term} _target from {certificate}) _ (Litex.FiniteFunction.coordinate_mem _source_member ({index} : Fin {n})))")
+            };
+            coordinates.push(format!("(show M.mem (Litex.FunctionSemantics.callValue (M := M) (Litex.denote _receiver) (Litex.FiniteFunction.index ({index} : Fin {n}))) (Litex.denote _target) from {term})"));
+        }
+        let finish = if let Some(index) = selected_index {
+            let coordinate = &coordinates[0];
+            format!("have _index : M.number ({index} : ℂ) = Litex.FiniteFunction.index (M := M) ({} : Fin {n}) := by norm_num [Litex.FiniteFunction.index]\n  change M.mem (Litex.FunctionSemantics.callValue (M := M) (Litex.denote _receiver) (M.number ({index} : ℂ))) (Litex.denote _target)\n  rw [_index]\n  exact {coordinate}", index - 1)
+        } else {
+            let returns = finite_vector_proof(&coordinates);
+            format!("have _returns : ∀ i : Fin {n}, M.mem (Litex.FunctionSemantics.callValue (M := M) (Litex.denote _receiver) (Litex.FiniteFunction.index i)) (Litex.denote _target) := {returns}\n  have _input : M.mem (Litex.denote _argument) (Litex.FiniteFunction.indexSet (M := M) {n}) := _call.wd.2\n  obtain ⟨_index, _hi⟩ := (Litex.FiniteFunction.indexSet_members (M := M) (n := {n}) (Litex.denote _argument)).mp _input\n  change M.mem (Litex.FunctionSemantics.callValue (M := M) (Litex.denote _receiver) (Litex.denote _argument)) (Litex.denote _target)\n  rw [_hi]\n  exact _returns _index")
+        };
+        Ok(format!("(by\n  let _receiver := {receiver_term}\n  let _argument := {argument_term}\n  let _target := {target}\n  let _call := {call}\n  let _source_cart := {cart}\n  have _source_member : Litex.In _receiver _source_cart := {cart_member}\n  {finish})"))
+    }
+
     pub(in crate::compile_to_lean) fn compile_cart_inference_coordinate(
         &self,
         source: &InFact,
@@ -274,16 +376,17 @@ impl LitexToLeanCompiler {
                     unreachable!()
                 };
                 let object = Obj::FnObj(application.clone());
-                if let Some(Some(reference)) =
-                    position.with_visible_inferred_subject(&object, &mut |store, producer| {
+                if let Some(reference) = position.with_visible_inferred_subject_filter(
+                    &object,
+                    &mut |store, producer| {
                         self.compile_cart_inferred_subject_from(
                             &object,
                             store,
                             producer,
                             Some(&source.membership),
                         )
-                    })?
-                {
+                    },
+                )? {
                     return Ok(reference);
                 }
             }
@@ -293,13 +396,13 @@ impl LitexToLeanCompiler {
             if matches!(&receiver, Obj::Identifier(_) | Obj::Literal(_))
                 && matches!(argument, Obj::Identifier(_) | Obj::Literal(_))
             {
-                return Ok(format!("(Litex.cartCall {receiver_term} _ {argument_term} {cart_member} (Litex.indexSetMemberOfClosedRange (n := {n}) {member}))"));
+                return Ok(format!("(Litex.cartCall {receiver_term} _ {argument_term} {cart_member} (Litex.indexSetMemberOfClosedRangeOfEq (n := {n}) ({n} : ℂ) (by norm_num) {member}))"));
             }
-            return Ok(format!("(let _receiver := {receiver_term};\nlet _argument := {argument_term};\nLitex.cartCall _receiver _ _argument {cart_member}\n  (Litex.indexSetMemberOfClosedRange (p := _argument) (n := {n}) {member}))"));
+            return Ok(format!("(let _receiver := {receiver_term};\nlet _argument := {argument_term};\nLitex.cartCall _receiver _ _argument {cart_member}\n  (Litex.indexSetMemberOfClosedRangeOfEq (p := _argument) (n := {n}) ({n} : ℂ) (by norm_num) {member}))"));
         }
         // These are data definitions, not hypotheses. Term-level lets retain
         // their defining values when a later proof projects a call's receiver.
-        Ok(format!("(let _receiver := {receiver_term};\nlet _argument := {argument_term};\nlet _cart := {cart};\nLitex.cartCall _receiver _cart _argument {cart_member}\n  (Litex.indexSetMemberOfClosedRange (p := _argument) (n := {n}) {member}))"))
+        Ok(format!("(let _receiver := {receiver_term};\nlet _argument := {argument_term};\nlet _cart := {cart};\nLitex.cartCall _receiver _cart _argument {cart_member}\n  (Litex.indexSetMemberOfClosedRangeOfEq (p := _argument) (n := {n}) ({n} : ℂ) (by norm_num) {member}))"))
     }
 
     /// The recorded Cartesian membership is transported only along its own

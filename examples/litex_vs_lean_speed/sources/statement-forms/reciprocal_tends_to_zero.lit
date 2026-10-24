@@ -1,0 +1,10 @@
+have fn a(n N+) R = 1 / n
+
+claim:
+    ? forall epsilon R+:
+        exist n N+ st {a(n) < epsilon}
+    obtain n0 from exist n N+ st {1 / n < epsilon}
+    a(n0) = 1 / n0
+    1 / n0 < epsilon
+    a(n0) < epsilon
+    witness exist n N+ st {a(n) < epsilon} from n0

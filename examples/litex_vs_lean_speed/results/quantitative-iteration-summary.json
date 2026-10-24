@@ -1,0 +1,65 @@
+[
+  {
+    "case": "01_parametric_newton",
+    "litex": {
+      "seconds": [
+        0.21647770795971155,
+        0.21258612489327788,
+        0.19108133390545845
+      ],
+      "median_seconds": 0.21258612489327788,
+      "nonblank_source_lines_excluding_headers": 16
+    },
+    "lean": {
+      "seconds": [
+        14.163907083217055,
+        60.18029612489045,
+        67.6591736250557
+      ],
+      "median_seconds": 60.18029612489045,
+      "nonblank_source_lines_excluding_headers": 25
+    }
+  },
+  {
+    "case": "02_quadratic_descent",
+    "litex": {
+      "seconds": [
+        2.8809468750841916,
+        2.905032374896109,
+        2.952232874929905
+      ],
+      "median_seconds": 2.905032374896109,
+      "nonblank_source_lines_excluding_headers": 35
+    },
+    "lean": {
+      "seconds": [
+        13.89302354119718,
+        28.77559162536636,
+        21.303137000184506
+      ],
+      "median_seconds": 21.303137000184506,
+      "nonblank_source_lines_excluding_headers": 31
+    }
+  },
+  {
+    "case": "03_perturbed_geometric",
+    "litex": {
+      "seconds": [
+        1.3191370842978358,
+        1.4842085409909487,
+        1.3518199170939624
+      ],
+      "median_seconds": 1.3518199170939624,
+      "nonblank_source_lines_excluding_headers": 48
+    },
+    "lean": {
+      "seconds": [
+        13.798623790964484,
+        36.54746679216623,
+        17.1298963339068
+      ],
+      "median_seconds": 17.1298963339068,
+      "nonblank_source_lines_excluding_headers": 30
+    }
+  }
+]

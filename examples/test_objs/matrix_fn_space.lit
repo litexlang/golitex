@@ -1,0 +1,32 @@
+# Matrices are ordinary two-argument finite-domain functions.
+# Natural dimensions include zero; matrix aliases retain the actual call domain.
+
+forall S set,m,n N:
+    matrix(S,m,n)=fn(r closed_range(1,m),c closed_range(1,n)) S
+
+have fn entries(r closed_range(1,2),c closed_range(1,3)) R=r+c
+
+entries $in matrix(R,2,3)
+
+release thm fn_set_member(entries,matrix(C,2,3))
+
+forall S set,m,n N,mat matrix(S,m,n),r closed_range(1,m),c closed_range(1,n):
+    mat(r,c) $in S
+
+have MatrixCarrier set=matrix(R,2,3)
+
+have as_matrix MatrixCarrier=entries
+
+as_matrix(2,3) $in R
+
+have fn make_matrix(t R) matrix(R,2,2)=fn(r closed_range(1,2),c closed_range(1,2)) R {t+r+c}
+
+make_matrix(1)(2,1)=4
+
+have fn flip_matrix(t R) matrix(R,2,2)=transpose(make_matrix(t),2,2)
+
+flip_matrix(1)(1,2)=4
+
+have fn empty_rows(r closed_range(1,0),c closed_range(1,3)) R=0
+
+empty_rows $in matrix(R,0,3)

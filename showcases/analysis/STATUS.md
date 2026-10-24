@@ -5,6 +5,15 @@ independent Litex adaptation of Terence Tao's *Analysis I*, plus Appendix A.
 It follows chapter order; it does not claim complete coverage of the source
 book, all exercises, or Chapters 9–11.
 
+The separate [calculus companion](calculus/README.md) now demonstrates native
+point derivatives, antiderivatives, Newton–Leibniz, nonmonotone substitution
+and integration by parts. Its own manifest and strict
+[2026-10-24 receipt](../verification_runs/2026-10-24-native-calculus.json)
+cover that module only. It adds no source trust or chapter assumptions and
+does not certify a translation of Chapters 9–11. Native derivatives require
+interior points; the book's relative-domain and endpoint derivatives have a
+wider meaning.
+
 ## Included proof scope
 
 The selected development includes natural-number induction, maps and finite

@@ -504,8 +504,7 @@ impl LitexToLeanCompiler {
                                 "Inference/TemplateMembership",
                             ));
                         }
-                        InferInFactResult::SignedStandardSetSign(sign) if matches!(atomic, AtomicFact::InFact(member) if matches!(member.set, Obj::StandardSet(StandardSet::N | StandardSet::RPos))) =>
-                        {
+                        InferInFactResult::SignedStandardSetSign(sign) => {
                             declarations.extend(
                                 self.compile_natural_sign_inference(sign, seed, compiled, &prior)?,
                             );
@@ -522,6 +521,81 @@ impl LitexToLeanCompiler {
                                 proof, seed, compiled, &prior,
                             )?);
                         }
+                        InferInFactResult::FnRange(proof) => {
+                            declarations.extend(
+                                self.compile_range_inference(proof, seed, compiled, &prior)?,
+                            );
+                        }
+                        InferInFactResult::FiniteSeqExpand(proof) => {
+                            declarations.extend(
+                                self.compile_finite_seq_inference(proof, seed, compiled, &prior)?,
+                            );
+                        }
+                        InferInFactResult::Range(proof) => {
+                            declarations.extend(self.compile_integer_interval_inference(
+                                &proof.bounds,
+                                false,
+                                seed,
+                                compiled,
+                                &prior,
+                            )?);
+                        }
+                        InferInFactResult::ClosedRange(proof) => {
+                            declarations.extend(self.compile_integer_interval_inference(
+                                &proof.bounds,
+                                true,
+                                seed,
+                                compiled,
+                                &prior,
+                            )?);
+                        }
+                        InferInFactResult::ListSetSingletonEqual(proof) => {
+                            declarations.extend(self.compile_singleton_member_inference(
+                                seed,
+                                compiled,
+                                &proof.derived.store,
+                                &prior,
+                            )?);
+                        }
+                        InferInFactResult::UnionOr(proof) => {
+                            let AtomicFact::InFact(member) = atomic else {
+                                unreachable!()
+                            };
+                            let Obj::SetOperator(SetOperator::Union(union)) = &member.set else {
+                                return Err(LeanCompileError::unsupported("Inference/UnionSource"));
+                            };
+                            let fact =
+                                self.resolve_fact(proof.derived.primary_fact_id(), &prior)?;
+                            let Fact::OrFact(or) = &fact else {
+                                return Err(LeanCompileError::unsupported(
+                                    "Inference/UnionConclusion",
+                                ));
+                            };
+                            if or.facts.len() != 2 || or.facts.iter().zip([&union.left, &union.right]).any(|(branch, set)| {
+                                !matches!(branch, AndChainAtomicFact::AtomicFact(AtomicFact::InFact(f))
+                                    if f.element.ir() == member.element.ir() && f.set.ir() == set.ir())
+                            }) {
+                                return Err(LeanCompileError::new("Inference/UnionConclusion", "The original union projection has different ordered membership branches."));
+                            }
+                            self.validate_store(&proof.derived.store, &fact)?;
+                            let term = format!(
+                                "((Litex.inUnion_iff {} {} {}).mp {})",
+                                self.compile_object_reference(&member.element, &prior)?,
+                                self.compile_object_reference(&union.left, &prior)?,
+                                self.compile_object_reference(&union.right, &prior)?,
+                                compiled.1
+                            );
+                            let formed = SourcePosition::new(
+                                Some(&prior),
+                                SourceOwner::InferredStore(&proof.derived.store),
+                                usize::MAX,
+                            );
+                            declarations.push(self.emit_internal_fact(
+                                &fact,
+                                &(self.fact_proposition(&fact, &formed)?, term),
+                                &formed,
+                            )?);
+                        }
                         _ => {}
                     }
                     if matches!(
@@ -529,7 +603,12 @@ impl LitexToLeanCompiler {
                         InferInFactResult::SetBuilder(_)
                             | InferInFactResult::SignedStandardSetSign(_)
                             | InferInFactResult::CartCoordinates(_)
+                            | InferInFactResult::FnRange(_)
+                            | InferInFactResult::FiniteSeqExpand(_)
+                            | InferInFactResult::Range(_)
                             | InferInFactResult::ClosedRange(_)
+                            | InferInFactResult::UnionOr(_)
+                            | InferInFactResult::ListSetSingletonEqual(_)
                     ) {
                         completed += rule.stored_conclusions().len();
                     }
@@ -542,6 +621,11 @@ impl LitexToLeanCompiler {
             | InferAtomicFactResult::GreaterEqualFact(_) => {
                 self.compile_order_bound_inferences(infer, seed, compiled, position)
             }
+            InferAtomicFactResult::InjectiveFact(_)
+            | InferAtomicFactResult::SurjectiveFact(_)
+            | InferAtomicFactResult::BijectiveFact(_) => {
+                self.compile_mapping_inferences(infer, seed, compiled, position)
+            }
             InferAtomicFactResult::IsSetFact(_)
             | InferAtomicFactResult::IsNonemptySetFact(_)
             | InferAtomicFactResult::IsFiniteSetFact(_)
@@ -552,9 +636,6 @@ impl LitexToLeanCompiler {
             | InferAtomicFactResult::PrimeFact(_)
             | InferAtomicFactResult::CoprimeFact(_)
             | InferAtomicFactResult::DvdFact(_)
-            | InferAtomicFactResult::InjectiveFact(_)
-            | InferAtomicFactResult::SurjectiveFact(_)
-            | InferAtomicFactResult::BijectiveFact(_)
             | InferAtomicFactResult::IsChoiceFunctionForFact(_)
             | InferAtomicFactResult::NotNormalAtomicFact(_)
             | InferAtomicFactResult::NotEqualFact(_)
@@ -585,5 +666,54 @@ fn inferred_chain(store: &StoreFactAndInferResult) -> Result<ChainFact, LeanComp
     match &store.store {
         StoreFactResult::ChainFact(stored) => Ok(stored.fact.clone()),
         _ => Err(LeanCompileError::unsupported("Chain/StoreFamily")),
+    }
+}
+
+impl LitexToLeanCompiler {
+    fn compile_singleton_member_inference(
+        &self,
+        source: &Fact,
+        compiled: &(String, String),
+        store: &StoreFactResult,
+        position: &SourcePosition<'_>,
+    ) -> Result<Vec<String>, LeanCompileError> {
+        let Fact::AtomicFact(AtomicFact::InFact(member)) = source else {
+            return Err(LeanCompileError::unsupported("Singleton/InferenceSource"));
+        };
+        let Obj::SetFormer(SetFormer::ListSet(set)) = &member.set else {
+            return Err(LeanCompileError::unsupported("Singleton/InferenceCarrier"));
+        };
+        let [element] = set.list.as_slice() else {
+            return Err(LeanCompileError::unsupported("Singleton/InferenceArity"));
+        };
+        let StoreFactResult::AtomicFact(stored) = store else {
+            return Err(LeanCompileError::unsupported("Singleton/InferenceStore"));
+        };
+        let AtomicFact::EqualFact(equal) = &stored.fact else {
+            return Err(LeanCompileError::unsupported(
+                "Singleton/InferenceConclusion",
+            ));
+        };
+        if equal.left.ir() != member.element.ir()
+            || equal.right.ir() != element.ir()
+            || equal.fact_id == member.fact_id
+        {
+            return Err(LeanCompileError::unsupported("Singleton/InferenceSubject"));
+        }
+        let fact = Fact::AtomicFact(stored.fact.clone());
+        self.validate_store(store, &fact)?;
+        let receiver = self.compile_object_reference(&member.element, position)?;
+        let element = self.compile_object_reference(element, position)?;
+        let term = format!("(by\n  have _member : M.mem (Litex.denote {receiver}) (Litex.SetSemantics.insertValue (Litex.denote {element}) (Litex.SetSemantics.emptyValue (M := M))) := {}\n  exact ((Litex.SetSemantics.insert_members _ _ _).mp _member).elim (fun h => h) (fun h => False.elim (Litex.SetSemantics.empty_members _ h)))",compiled.1);
+        let formed = SourcePosition::new(
+            Some(position),
+            SourceOwner::InferredStore(store),
+            usize::MAX,
+        );
+        Ok(vec![self.emit_internal_fact(
+            &fact,
+            &(format!("Litex.Same {receiver} {element}"), term),
+            &formed,
+        )?])
     }
 }

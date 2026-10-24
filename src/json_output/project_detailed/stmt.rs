@@ -175,6 +175,19 @@ fn project_definition(def: &ExecDefinitionStmtResult, runtime: &Runtime) -> Json
                             super::wd::project_verify_obj_wd(&s.fn_set_well_defined, runtime),
                         ),
                         (
+                            "membership",
+                            project_store_and_infer(&s.membership, runtime),
+                        ),
+                        (
+                            "property_well_defined",
+                            project_fact_wd_proof(&s.property_well_defined, runtime),
+                        ),
+                        ("property", project_store_and_infer(&s.property, runtime)),
+                        (
+                            "uniqueness",
+                            project_store_and_infer(&s.uniqueness, runtime),
+                        ),
+                        (
                             "store_and_infer",
                             project_have_store_ids(&s.stored_fact_ids, runtime),
                         ),
@@ -656,6 +669,18 @@ fn project_define_obj(def: &ExecDefineObjStmtResult, runtime: &Runtime) -> JsonV
                     ("statement_result", statement_result_value(true)),
                     ("kind", string("have_by_fn_preimage")),
                     ("statement", string(s.statement.readable_string())),
+                    (
+                        "signature_selection",
+                        super::store::project_signature_selection(&s.signature_selection, runtime),
+                    ),
+                    (
+                        "source_membership",
+                        project_verify_fact(&s.source_membership, runtime),
+                    ),
+                    (
+                        "preimage_parameters",
+                        string(s.preimage_parameters.display_string()),
+                    ),
                     (
                         "store_and_infer",
                         project_have_store_and_infer(&s.store_and_infer_result, runtime),
@@ -2150,6 +2175,13 @@ fn project_command(result: &ExecCommandStmtResult, runtime: &Runtime) -> JsonVal
                     ("statement_result", statement_result_value(true)),
                     ("kind", string("eval")),
                     ("statement", string(s.statement.readable_string())),
+                    (
+                        "matrix_scalar_evaluations",
+                        super::aggregate_evaluation::project_matrix_scalar_evaluations(
+                            &s.matrix_scalar_evaluations,
+                            runtime,
+                        ),
+                    ),
                     (
                         "aggregate_evaluations",
                         super::aggregate_evaluation::project_aggregate_evaluations(

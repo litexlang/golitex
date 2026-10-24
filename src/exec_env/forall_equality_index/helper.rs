@@ -22,6 +22,7 @@ pub(super) enum Constructor {
     Arithmetic(Discriminant<ArithmeticOperator>),
     Bound(Discriminant<BoundOperator>),
     Integral(Discriminant<IntegralOperator>),
+    Matrix(Discriminant<MatrixOperator>),
     Derivative(Discriminant<DerivativeOperator>),
     Integer(Discriminant<IntegerOperator>),
     Trig(Discriminant<TrigOperator>),
@@ -145,6 +146,7 @@ pub(super) fn structural_view(object: &Obj) -> (Token, Vec<Obj>) {
     }
     let constructor = match object {
         Obj::IntegralOperator(value) => Constructor::Integral(discriminant(value)),
+        Obj::MatrixOperator(value) => Constructor::Matrix(discriminant(value)),
         Obj::DerivativeOperator(value) => Constructor::Derivative(discriminant(value)),
         Obj::BoundOperator(value) => Constructor::Bound(discriminant(value)),
         Obj::Identifier(_) => unreachable!("identifier handled above"),

@@ -160,7 +160,7 @@ have fn vec(A, B cart(R, R)) cart(R, R) = (B(1) - A(1), B(2) - A(2))
 have fn dot(u, v cart(R, R)) R = u(1) * v(1) + u(2) * v(2)
 
 # 2D determinant (signed parallelogram area / cross product z-component).
-have fn det(u, v cart(R, R)) R = u(1) * v(2) - u(2) * v(1)
+have fn det2(u, v cart(R, R)) R = u(1) * v(2) - u(2) * v(1)
 
 # Squared Euclidean distance |ab|^2 (avoids square roots).
 have fn distance_sq(a, b cart(R, R)) R = dot(vec(a, b), vec(a, b))
@@ -172,13 +172,13 @@ prop is_on_segment(p, a, b cart(R, R)):
 
 # p lies on the ray from a through distinct point b (t >= 0).
 prop is_triangle(a, b, c cart(R, R)):
-    det(vec(a, b), vec(a, c)) != 0
+    det2(vec(a, b), vec(a, c)) != 0
 
 # Triangle abc is isosceles with apex a (ab = ac), not the general "two sides equal".
 have fn segment_length(p, q cart(R, R)) R = sqrt((q(1) - p(1))^2 + (q(2) - p(2))^2)
 
 # Twice the (unsigned) area of triangle pqr.
-have fn double_area(p, q, r cart(R, R)) R = sqrt(det(vec(p, q), vec(p, r))^2)
+have fn double_area(p, q, r cart(R, R)) R = sqrt(det2(vec(p, q), vec(p, r))^2)
 
 # radius is the radius of the incircle of triangle pqr.
 prop is_incircle_radius(p, q, r cart(R, R), radius R):
@@ -193,14 +193,14 @@ prop is_excircle_radius_in_angle_at_third_vertex(p, q, r cart(R, R), radius R):
     radius * (segment_length(r, p) + segment_length(r, q) - segment_length(p, q)) = double_area(p, q, r)
 thm determinant_coordinates_18:
     ? forall a,b,c cart(R,R):
-        det(vec(a,b),vec(a,c)) = (b(1)-a(1))*(c(2)-a(2))-(b(2)-a(2))*(c(1)-a(1))
+        det2(vec(a,b),vec(a,c)) = (b(1)-a(1))*(c(2)-a(2))-(b(2)-a(2))*(c(1)-a(1))
     vec(a,b) = (b(1)-a(1),b(2)-a(2))
     vec(a,c) = (c(1)-a(1),c(2)-a(2))
     vec(a,b)(1) = (b(1)-a(1),b(2)-a(2))(1) = b(1)-a(1)
     vec(a,b)(2) = (b(1)-a(1),b(2)-a(2))(2) = b(2)-a(2)
     vec(a,c)(1) = (c(1)-a(1),c(2)-a(2))(1) = c(1)-a(1)
     vec(a,c)(2) = (c(1)-a(1),c(2)-a(2))(2) = c(2)-a(2)
-    det(vec(a,b),vec(a,c)) = vec(a,b)(1)*vec(a,c)(2)-vec(a,b)(2)*vec(a,c)(1) = (b(1)-a(1))*(c(2)-a(2))-(b(2)-a(2))*(c(1)-a(1))
+    det2(vec(a,b),vec(a,c)) = vec(a,b)(1)*vec(a,c)(2)-vec(a,b)(2)*vec(a,c)(1) = (b(1)-a(1))*(c(2)-a(2))-(b(2)-a(2))*(c(1)-a(1))
 thm segment_length_value_18:
     ? forall p,q cart(R,R):
         segment_length(p,q)=sqrt((q(1)-p(1))^2+(q(2)-p(2))^2)
@@ -229,7 +229,7 @@ thm triangle_first_two_distinct_18:
             p != q
     by thm determinant_coordinates_18(p,q,r)
     by def $is_triangle(p, q, r)
-    det(vec(p, q), vec(p, r)) != 0
+    det2(vec(p, q), vec(p, r)) != 0
     by contra:
         ? p != q
         p = q
@@ -237,13 +237,13 @@ thm triangle_first_two_distinct_18:
         p(2) = q(2)
         vec(p, q) = (q(1) - p(1), q(2) - p(2))
         vec(p, r) = (r(1) - p(1), r(2) - p(2))
-        det(vec(p, q), vec(p, r)) = vec(p, q)(1) * vec(p, r)(2) - vec(p, q)(2) * vec(p, r)(1)
-        det(vec(p, q), vec(p, r)) = (q(1) - p(1)) * (r(2) - p(2)) - (q(2) - p(2)) * (r(1) - p(1))
+        det2(vec(p, q), vec(p, r)) = vec(p, q)(1) * vec(p, r)(2) - vec(p, q)(2) * vec(p, r)(1)
+        det2(vec(p, q), vec(p, r)) = (q(1) - p(1)) * (r(2) - p(2)) - (q(2) - p(2)) * (r(1) - p(1))
         q(1) - p(1) = 0
         q(2) - p(2) = 0
         (q(1) - p(1)) * (r(2) - p(2)) - (q(2) - p(2)) * (r(1) - p(1)) = 0
-        det(vec(p, q), vec(p, r)) = 0
-        impossible det(vec(p, q), vec(p, r)) != 0
+        det2(vec(p, q), vec(p, r)) = 0
+        impossible det2(vec(p, q), vec(p, r)) != 0
 
 # A nondegenerate triangle has distinct first and third vertices.
 thm triangle_first_third_distinct_18:
@@ -253,7 +253,7 @@ thm triangle_first_third_distinct_18:
             p != r
     by thm determinant_coordinates_18(p,q,r)
     by def $is_triangle(p, q, r)
-    det(vec(p, q), vec(p, r)) != 0
+    det2(vec(p, q), vec(p, r)) != 0
     by contra:
         ? p != r
         p = r
@@ -261,13 +261,13 @@ thm triangle_first_third_distinct_18:
         p(2) = r(2)
         vec(p, q) = (q(1) - p(1), q(2) - p(2))
         vec(p, r) = (r(1) - p(1), r(2) - p(2))
-        det(vec(p, q), vec(p, r)) = vec(p, q)(1) * vec(p, r)(2) - vec(p, q)(2) * vec(p, r)(1)
-        det(vec(p, q), vec(p, r)) = (q(1) - p(1)) * (r(2) - p(2)) - (q(2) - p(2)) * (r(1) - p(1))
+        det2(vec(p, q), vec(p, r)) = vec(p, q)(1) * vec(p, r)(2) - vec(p, q)(2) * vec(p, r)(1)
+        det2(vec(p, q), vec(p, r)) = (q(1) - p(1)) * (r(2) - p(2)) - (q(2) - p(2)) * (r(1) - p(1))
         r(1) - p(1) = 0
         r(2) - p(2) = 0
         (q(1) - p(1)) * (r(2) - p(2)) - (q(2) - p(2)) * (r(1) - p(1)) = 0
-        det(vec(p, q), vec(p, r)) = 0
-        impossible det(vec(p, q), vec(p, r)) != 0
+        det2(vec(p, q), vec(p, r)) = 0
+        impossible det2(vec(p, q), vec(p, r)) != 0
 
 # A nondegenerate triangle has distinct second and third vertices.
 thm triangle_second_third_distinct_18:
@@ -277,7 +277,7 @@ thm triangle_second_third_distinct_18:
             q != r
     by thm determinant_coordinates_18(p,q,r)
     by def $is_triangle(p, q, r)
-    det(vec(p, q), vec(p, r)) != 0
+    det2(vec(p, q), vec(p, r)) != 0
     by contra:
         ? q != r
         q = r
@@ -285,8 +285,8 @@ thm triangle_second_third_distinct_18:
         q(2) = r(2)
         vec(p, q) = (q(1) - p(1), q(2) - p(2))
         vec(p, r) = (r(1) - p(1), r(2) - p(2))
-        det(vec(p, q), vec(p, r)) = vec(p, q)(1) * vec(p, r)(2) - vec(p, q)(2) * vec(p, r)(1)
-        det(vec(p, q), vec(p, r)) = (q(1) - p(1)) * (r(2) - p(2)) - (q(2) - p(2)) * (r(1) - p(1))
+        det2(vec(p, q), vec(p, r)) = vec(p, q)(1) * vec(p, r)(2) - vec(p, q)(2) * vec(p, r)(1)
+        det2(vec(p, q), vec(p, r)) = (q(1) - p(1)) * (r(2) - p(2)) - (q(2) - p(2)) * (r(1) - p(1))
         q(1) - p(1) = r(1) - p(1)
         q(2) - p(2) = r(2) - p(2)
         (q(1) - p(1)) * (r(2) - p(2)) = (q(1) - p(1)) * (q(2) - p(2))
@@ -294,8 +294,8 @@ thm triangle_second_third_distinct_18:
         (q(2) - p(2)) * (q(1) - p(1)) = (q(2) - p(2)) * (r(1) - p(1))
         (q(1) - p(1)) * (r(2) - p(2)) = (q(2) - p(2)) * (r(1) - p(1))
         (q(1) - p(1)) * (r(2) - p(2)) - (q(2) - p(2)) * (r(1) - p(1)) = 0
-        det(vec(p, q), vec(p, r)) = 0
-        impossible det(vec(p, q), vec(p, r)) != 0
+        det2(vec(p, q), vec(p, r)) = 0
+        impossible det2(vec(p, q), vec(p, r)) != 0
 
 # Squared Euclidean distance in coordinates.
 thm distance_sq_coordinates_18:

@@ -265,3 +265,41 @@ fn shared_function_definition_rejects_another_stored_literal_with_the_same_fact_
         &["Declaration/StoreSubject", "Store/Subject"],
     );
 }
+
+#[test]
+fn projected_line_condition_replays_its_original_builder_constructor() {
+    let (result, compiler) = super::execute(include_str!(
+        "../../../../lean/examples/line_membership_condition/statement.lit"
+    ));
+    let output = compiler
+        .compile_run(&result, "line_condition_constructor")
+        .unwrap();
+    assert!(output.contains("fun (_value_i"));
+    assert!(output.contains("Litex.inSetBuilder_iff"));
+}
+
+#[test]
+fn projected_line_condition_rejects_missing_original_clause_formation() {
+    let (mut result, compiler) = super::execute(include_str!(
+        "../../../../lean/examples/line_membership_condition/statement.lit"
+    ));
+    let theorem = super::named_theorem_mut(&mut result.statement_results[3]);
+    let ExecDefThmBodyProof::Forall(body) = &mut theorem.body else {
+        panic!("original theorem body")
+    };
+    let equality = super::equality_proof_mut(
+        &mut super::fact_statement_mut(&mut body.proof_steps[0]).verify_result,
+    );
+    let ObjWellDefinedProof::ByDef {
+        proof:
+            ObjWellDefinedProofByDef::SetFormer(SetFormerObjWellDefinedProofByDef::SetBuilder(builder)),
+        ..
+    } = &mut equality.well_defined_proof.right
+    else {
+        panic!("original bounded builder")
+    };
+    builder.assumed_facts.clear();
+    assert!(compiler
+        .compile_run(&result, "missing_builder_clause_formation")
+        .is_err());
+}

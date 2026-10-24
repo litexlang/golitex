@@ -1,0 +1,48 @@
+# A nonzero rectangular matrix has rank one, certified without floating point.
+# Formerly neither the native rank object nor its factorization theorem existed.
+# Boundary: all factors and both full-rank certificates are required.
+# Run: target/release/litex -strict -lang en -f examples/test_objs/matrix_rank_factorization.lit
+
+have fn col(r closed_range(1,2),c closed_range(1,1)) R=1
+
+have fn row(r closed_range(1,1),c closed_range(1,3)) R=c
+
+have fn left(r closed_range(1,1),c closed_range(1,2)) R=2-c
+
+have fn right(r closed_range(1,3),c closed_range(1,1)) R=(r-2)*(r-3)/2
+
+have M matrix(R,2,3)=matrix_mul(col,row,2,1,3)
+
+matrix_mul(left,col,1,2,1)(1,1)=1
+
+matrix_mul(row,right,1,3,1)(1,1)=1
+
+claim:
+    ? matrix_mul(left,col,1,2,1)=identity_matrix(1)
+    by fn_extension:
+        ? matrix_mul(left,col,1,2,1)=identity_matrix(1)
+        claim:
+            ? forall r,c closed_range(1,1):
+                matrix_mul(left,col,1,2,1)(r,c)=identity_matrix(1)(r,c)
+            r=1
+            c=1
+            r=c
+            identity_matrix(1)(r,c)=identity_matrix(1)(r,r)=1
+            matrix_mul(left,col,1,2,1)(r,c)=1=identity_matrix(1)(r,c)
+
+claim:
+    ? matrix_mul(row,right,1,3,1)=identity_matrix(1)
+    by fn_extension:
+        ? matrix_mul(row,right,1,3,1)=identity_matrix(1)
+        claim:
+            ? forall r,c closed_range(1,1):
+                matrix_mul(row,right,1,3,1)(r,c)=identity_matrix(1)(r,c)
+            r=1
+            c=1
+            r=c
+            identity_matrix(1)(r,c)=identity_matrix(1)(r,r)=1
+            matrix_mul(row,right,1,3,1)(r,c)=1=identity_matrix(1)(r,c)
+
+release thm matrix_rank_from_factorization(M,col,row,left,right,2,1,3)
+
+matrix_rank(M,2,3)=1

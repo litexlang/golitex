@@ -1,6 +1,7 @@
 use crate::compile_to_lean::helper::*;
 use crate::compile_to_lean::source_position::{arithmetic_stages, SourceOwner, SourcePosition};
 use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
+use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IntegerOperatorObjWellDefinedProofByDef;
 use crate::prelude::*;
 
 impl LitexToLeanCompiler {
@@ -87,6 +88,12 @@ impl LitexToLeanCompiler {
                         "WD id resolves to another object.",
                     ));
                 }
+                if let Some(number) = position.enumeration_literal(obj) {
+                    return Ok(format!(
+                        "(Litex.number (M := M) {})",
+                        number_literal(number, "ℂ")?
+                    ));
+                }
                 if let Some(term) = position.registered_wd_reference(obj, Some(*wd_id))? {
                     return Ok(term);
                 }
@@ -139,6 +146,23 @@ impl LitexToLeanCompiler {
                         let value = number_literal(number, "ℂ")?;
                         format!("(Litex.number (M := M) {value})")
                     }
+                    (
+                        Obj::IntegerOperator(IntegerOperator::Factorial(x)),
+                        ObjWellDefinedProofByDef::IntegerOperator(
+                            IntegerOperatorObjWellDefinedProofByDef::Factorial(p),
+                        ),
+                    ) => self.compile_factorial_wd(
+                        &x.arg,
+                        &p.child_obj_well_defined,
+                        &p.requirement_fact_verified,
+                        position,
+                    )?,
+                    (
+                        Obj::Literal(Literal::ImaginaryUnit(_)),
+                        ObjWellDefinedProofByDef::Literal(
+                            LiteralObjWellDefinedProofByDef::ImaginaryUnit(_),
+                        ),
+                    ) => "(Litex.number (M := M) Complex.I)".into(),
                     (Obj::StandardSet(set), ObjWellDefinedProofByDef::StandardSet(_)) => {
                         standard_term(set)?
                     }
@@ -169,10 +193,113 @@ impl LitexToLeanCompiler {
                         position,
                     )?,
                     (
+                        Obj::IntegerOperator(IntegerOperator::Gcd(x)),
+                        ObjWellDefinedProofByDef::IntegerOperator(
+                            IntegerOperatorObjWellDefinedProofByDef::Gcd(p),
+                        ),
+                    ) => self.compile_gcd_lcm_wd(
+                        &x.left,
+                        &x.right,
+                        &p.child_obj_well_defined,
+                        &p.requirement_fact_verified,
+                        false,
+                        position,
+                    )?,
+                    (
+                        Obj::IntegerOperator(IntegerOperator::Lcm(x)),
+                        ObjWellDefinedProofByDef::IntegerOperator(
+                            IntegerOperatorObjWellDefinedProofByDef::Lcm(p),
+                        ),
+                    ) => self.compile_gcd_lcm_wd(
+                        &x.left,
+                        &x.right,
+                        &p.child_obj_well_defined,
+                        &p.requirement_fact_verified,
+                        true,
+                        position,
+                    )?,
+                    (
+                        Obj::IntegerOperator(IntegerOperator::Mod(x)),
+                        ObjWellDefinedProofByDef::IntegerOperator(
+                            IntegerOperatorObjWellDefinedProofByDef::Mod(p),
+                        ),
+                    ) => self.compile_integer_division_wd(
+                        &x.left,
+                        &x.right,
+                        &p.child_obj_well_defined,
+                        &p.requirement_fact_verified,
+                        false,
+                        position,
+                    )?,
+                    (
+                        Obj::IntegerOperator(IntegerOperator::Quot(x)),
+                        ObjWellDefinedProofByDef::IntegerOperator(
+                            IntegerOperatorObjWellDefinedProofByDef::Quot(p),
+                        ),
+                    ) => self.compile_integer_division_wd(
+                        &x.left,
+                        &x.right,
+                        &p.child_obj_well_defined,
+                        &p.requirement_fact_verified,
+                        true,
+                        position,
+                    )?,
+                    (
                         Obj::ArithmeticOperator(operator),
                         ObjWellDefinedProofByDef::ArithmeticOperator(wd),
                     ) => {
                         let term = match (operator, wd) {
+                            (
+                                ArithmeticOperator::Floor(x),
+                                ArithmeticOperatorObjWellDefinedProofByDef::Floor(p),
+                            ) => self.compile_rounding_wd(
+                                &x.arg,
+                                &p.child_obj_well_defined,
+                                &p.requirement_fact_verified,
+                                false,
+                                position,
+                            )?,
+                            (
+                                ArithmeticOperator::Ceil(x),
+                                ArithmeticOperatorObjWellDefinedProofByDef::Ceil(p),
+                            ) => self.compile_rounding_wd(
+                                &x.arg,
+                                &p.child_obj_well_defined,
+                                &p.requirement_fact_verified,
+                                true,
+                                position,
+                            )?,
+                            (
+                                ArithmeticOperator::Sign(x),
+                                ArithmeticOperatorObjWellDefinedProofByDef::Sign(p),
+                            ) => self.compile_sign_wd(
+                                &x.arg,
+                                &p.child_obj_well_defined,
+                                &p.requirement_fact_verified,
+                                position,
+                            )?,
+                            (
+                                ArithmeticOperator::Min(x),
+                                ArithmeticOperatorObjWellDefinedProofByDef::Min(p),
+                            ) => self.compile_min_max_wd(
+                                &x.left,
+                                &x.right,
+                                &p.child_obj_well_defined,
+                                &p.requirement_fact_verified,
+                                false,
+                                position,
+                            )?,
+                            (
+                                ArithmeticOperator::Max(x),
+                                ArithmeticOperatorObjWellDefinedProofByDef::Max(p),
+                            ) => self.compile_min_max_wd(
+                                &x.left,
+                                &x.right,
+                                &p.child_obj_well_defined,
+                                &p.requirement_fact_verified,
+                                true,
+                                position,
+                            )?,
                             (
                                 ArithmeticOperator::Add(x),
                                 ArithmeticOperatorObjWellDefinedProofByDef::Add(p),
@@ -415,6 +542,13 @@ impl LitexToLeanCompiler {
                 }
             }
             PredicateDomainProof::ByRequirements(requirements) => {
+                self.validate_mapping_domain(
+                    fact,
+                    &requirements
+                        .iter()
+                        .map(|r| &r.requirement)
+                        .collect::<Vec<_>>(),
+                )?;
                 if matches!(
                     fact,
                     AtomicFact::NormalAtomicFact(_) | AtomicFact::NotNormalAtomicFact(_)
@@ -477,6 +611,9 @@ impl LitexToLeanCompiler {
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
         match (wd, fact) {
+            (FactWellDefinedProof::ForallFact(proof), Fact::ForallFact(fact)) => {
+                self.compile_forall_formation(fact, proof, position)
+            }
             (FactWellDefinedProof::ForallFactWithIff(proof), Fact::ForallFactWithIff(fact)) => {
                 self.compile_forall_iff_formation(fact, proof, position)
             }
@@ -557,6 +694,9 @@ impl LitexToLeanCompiler {
             (FactWellDefinedProof::ForallFact(proof), Fact::ForallFact(fact)) => {
                 self.compile_forall_wd(fact, proof, position)
             }
+            (FactWellDefinedProof::NotForall(proof), Fact::NotForall(fact)) => {
+                self.compile_not_forall_wd(fact, proof, position)
+            }
             (FactWellDefinedProof::ForallFactWithIff(proof), Fact::ForallFactWithIff(fact)) => self
                 .compile_forall_iff_formation(fact, proof, position)
                 .map(|_| ()),
@@ -595,7 +735,10 @@ impl LitexToLeanCompiler {
                 }
                 Ok(())
             }
-            (FactWellDefinedProof::ExistFact(proof), Fact::ExistFact(fact)) => self
+            (
+                FactWellDefinedProof::ExistFact(proof),
+                Fact::ExistFact(fact) | Fact::NotExistFact(fact) | Fact::ExistUniqueFact(fact),
+            ) => self
                 .compile_exist_formation(fact, proof, position)
                 .map(|_| ()),
             (

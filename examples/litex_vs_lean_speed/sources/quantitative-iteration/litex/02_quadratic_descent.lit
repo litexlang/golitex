@@ -1,0 +1,43 @@
+# Exact-real comparison experiment; see ../math_collections.md.
+
+have fn energy(a R+, b, x R) R = a * (x - b)^2 / 2
+
+have fn gradient_step(a R+, b, eta, x R) R = x - eta * a * (x - b)
+
+thm gradient_error_identity:
+    ? forall a R+, b, eta, x R:
+        gradient_step(a, b, eta, x) - b = (1 - eta * a) * (x - b)
+
+thm gradient_drop_identity:
+    ? forall a R+, b, eta, x R:
+        energy(a, b, x) - energy(a, b, gradient_step(a, b, eta, x)) = eta * a^2 * (2 - eta * a) * (x - b)^2 / 2
+    energy(a, b, gradient_step(a, b, eta, x)) = a * (gradient_step(a, b, eta, x) - b)^2 / 2 = a * ((1 - eta * a) * (x - b))^2 / 2
+    energy(a, b, x) - energy(a, b, gradient_step(a, b, eta, x)) = a * (x - b)^2 / 2 - a * ((1 - eta * a) * (x - b))^2 / 2 = eta * a^2 * (2 - eta * a) * (x - b)^2 / 2
+
+thm gradient_descent:
+    ? forall a R+, b, eta, x R:
+        eta > 0
+        eta * a < 2
+        =>:
+            energy(a, b, gradient_step(a, b, eta, x)) <= energy(a, b, x)
+    eta * a^2 > 0
+    eta * a^2 * (2 - eta * a) >= 0
+    eta * a^2 * (2 - eta * a) * (x - b)^2 >= 0
+    by thm gradient_drop_identity(a, b, eta, x) => energy(a, b, x) - energy(a, b, gradient_step(a, b, eta, x)) = eta * a^2 * (2 - eta * a) * (x - b)^2 / 2
+    energy(a, b, x) - energy(a, b, gradient_step(a, b, eta, x)) >= 0
+
+thm gradient_strict_descent:
+    ? forall a R+, b, eta, x R:
+        eta > 0
+        eta * a < 2
+        x != b
+        =>:
+            energy(a, b, gradient_step(a, b, eta, x)) < energy(a, b, x)
+    x - b != 0
+    eta * a^2 > 0
+    eta * a^2 * (2 - eta * a) > 0
+    eta * a^2 * (2 - eta * a) * (x - b)^2 > 0
+    by thm gradient_drop_identity(a, b, eta, x) => energy(a, b, x) - energy(a, b, gradient_step(a, b, eta, x)) = eta * a^2 * (2 - eta * a) * (x - b)^2 / 2
+    energy(a, b, x) - energy(a, b, gradient_step(a, b, eta, x)) > 0
+
+by thm gradient_strict_descent(2, 3, 1 / 4, 5) => energy(2, 3, gradient_step(2, 3, 1 / 4, 5)) < energy(2, 3, 5)

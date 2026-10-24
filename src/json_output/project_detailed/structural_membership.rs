@@ -122,6 +122,13 @@ pub(super) fn project_structural_membership(
 fn intrinsic_name(rule: &IntrinsicCodomain) -> &'static str {
     use IntrinsicCodomain::*;
     match rule {
+        MatrixDeterminant => "MatrixDeterminant",
+        MatrixTrace => "MatrixTrace",
+        MatrixRank => "MatrixRank",
+        MatrixCofactor => "MatrixCofactor",
+        FiniteInnerProduct => "FiniteInnerProduct",
+        EuclideanNorm => "EuclideanNorm",
+        MatrixFrobeniusNorm => "MatrixFrobeniusNorm",
         SequenceLimit => "lim",
         SequenceLimsup => "limsup",
         RiemannIntegral => "riemann_integral",

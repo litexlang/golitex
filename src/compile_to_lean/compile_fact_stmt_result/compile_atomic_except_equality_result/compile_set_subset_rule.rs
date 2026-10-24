@@ -12,6 +12,19 @@ impl LitexToLeanCompiler {
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
         match rule {
+            SubsetFactSearchProofByBuiltinRule::StandardSetSubset(proof) => {
+                if fact.left != Obj::StandardSet(proof.left.clone())
+                    || fact.right != Obj::StandardSet(proof.right.clone())
+                {
+                    return Err(LeanCompileError::unsupported("Subset/StandardSubject"));
+                }
+                let member = standard_inclusion_term(&proof.left, &proof.right, "_a", "_ha")?;
+                Ok(format!(
+                    "(Litex.subsetOfForall {} {} (fun _a _ha => {member}))",
+                    standard_term(&proof.left)?,
+                    standard_term(&proof.right)?
+                ))
+            }
             SubsetFactSearchProofByBuiltinRule::SubsetReflexivity(_)
                 if fact.left.ir() == fact.right.ir() =>
             {
@@ -22,6 +35,21 @@ impl LitexToLeanCompiler {
             }
             SubsetFactSearchProofByBuiltinRule::ListSetSubsetFromMembers(proof) => {
                 self.compile_list_subset(fact, &proof.member_in_proofs, position)
+            }
+            SubsetFactSearchProofByBuiltinRule::SubsetUnionLeft(_)
+            | SubsetFactSearchProofByBuiltinRule::SubsetUnionRight(_) => {
+                let Obj::SetOperator(SetOperator::Union(union)) = &fact.right else {
+                    return Err(LeanCompileError::unsupported("SubsetUnion/Target"));
+                };
+                let left = matches!(rule, SubsetFactSearchProofByBuiltinRule::SubsetUnionLeft(_));
+                let selected = if left { &union.left } else { &union.right };
+                if fact.left.ir() != selected.ir() {
+                    return Err(LeanCompileError::unsupported("SubsetUnion/Operand"));
+                }
+                let a = self.compile_object_reference(&union.left, position)?;
+                let b = self.compile_object_reference(&union.right, position)?;
+                let injection = if left { "Or.inl" } else { "Or.inr" };
+                Ok(format!("(fun _x _hx => (Litex.SetSemantics.union_members (M := M) (Litex.denote {a}) (Litex.denote {b}) _x).mpr ({injection} _hx))"))
             }
             SubsetFactSearchProofByBuiltinRule::SetBuilderSubsetOfParamSet(_) => {
                 let Obj::SetFormer(SetFormer::SetBuilder(set)) = &fact.left else {

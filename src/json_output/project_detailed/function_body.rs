@@ -84,6 +84,9 @@ pub(super) fn project_parent_checked_function_body(
 ) -> JsonValue {
     use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::by_fn_application::by_parent_checked_beta::ParentCheckedBetaFunctionBody;
     match proof {
+        ParentCheckedBetaFunctionBody::NativeMatrix(proof) => {
+            super::native_matrix::callable(proof, runtime)
+        }
         ParentCheckedBetaFunctionBody::StructField(proof) => {
             use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::by_fn_application::struct_field_value::StructTupleValueSource;
             let source = match &proof.source {

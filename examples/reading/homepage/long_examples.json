@@ -10,22 +10,23 @@
       "proof_idea": "Compose integer witnesses, pass to linear combinations, scale Bezout coefficients and specialize to 84*(-3)+30*9=18.",
       "litex_code": {
         "path": "06-number-theory.lit",
-        "sha256": "7ed3144b9ba1434c9405ea69355758cdb41b1285bae34e87b9ff610b7612d2ef",
-        "lines": 174,
+        "sha256": "bf08ab73f87a8a939989b9dc12b1241817b8c4fa438c427c0166d258932df2ef",
+        "lines": 166,
         "original_lines": 167
       },
       "comments": {
-        "adaptation": "Chinese introductory comments only; original complete source follows unchanged.",
+        "adaptation": "Chinese introductory comments added; eight bodyless by def goal blocks use the equivalent inline by def spelling. Mathematical definitions and proof steps preserved.",
         "trust_boundary": "No user trust, local axioms or abstract predicate placeholders. Strict source verification does not claim Lean certification.",
         "verification": {
           "status": "strict_verified",
-          "command": "target/release/litex -reading -export <output> -strict -lang zh -r examples/reading/homepage",
+          "command": "target/release/litex -strict -lang en -f examples/reading/homepage/06-number-theory.lit",
           "collection_run_result": "success",
           "source_id": "source5",
           "source_baseline": "target/release/litex -strict -lang en -f showcases/math_concepts_in_litex/3_number_theory/main.lit",
           "date": "2026-10-23",
           "added_user_trust": 0,
-          "added_user_axioms": 0
+          "added_user_axioms": 0,
+          "proof_journal": "proof_journals/inline-by-def.json"
         }
       }
     },
@@ -84,6 +85,169 @@
           "added_user_axioms": 0
         }
       }
+    },
+    {
+      "source": {
+        "path": "showcases/linear_algebra/linear_algebra.lit",
+        "sha256": "4069ba25d55d30d2786e48cd7e49465ce8e2f51de00ac8d2da8ce2c37e488139",
+        "start_line": 1,
+        "end_line": 736,
+        "slice_sha256": "ed5923e271419569893ba2e1f853537fea583e5f888397047e49a3f6252678a5"
+      },
+      "problem": "线性代数样章：为什么标准基下的坐标是唯一的？",
+      "proof_idea": "Coordinate arithmetic builds the real plane, then spanning gives standard representations and coefficient comparison proves uniqueness.",
+      "litex_code": {
+        "path": "09-linear-algebra.lit",
+        "sha256": "86f0adaf9cd093ba1c79811e21ba2375002da2ea5593c3acc190f6c8ea1731c1",
+        "lines": 741
+      },
+      "comments": {
+        "adaptation": "Brief Chinese reading comments prepended; selected mathematical source preserved exactly. Full prefix through section2.4; later dimension/rank/eigenvalue material excluded.",
+        "trust_boundary": "No user trust, local axioms or abstract predicate placeholders. Strict Litex verification does not claim Lean certification.",
+        "verification": {
+          "status": "strict_verified",
+          "command": "target/release/litex -strict -lang en -f tmp/2026-10-23/reading-branch-chapters/09-linear-algebra.lit",
+          "run_result": "success",
+          "date": "2026-10-23",
+          "added_user_trust": 0,
+          "added_user_axioms": 0,
+          "collection_run_result": "success",
+          "source_id": "source8"
+        }
+      }
+    },
+    {
+      "source": {
+        "path": "showcases/topology/topology.lit",
+        "sha256": "ff624531df882a106557893e9fcf9db0679ebc019c0ebfade20a3f055896338b",
+        "start_line": 1,
+        "end_line": 484,
+        "slice_sha256": "3bc465434982aa8666acec9732339c83a4913f273af0d08a4853cea8e9c7bad5"
+      },
+      "problem": "拓扑样章：同一个集合，为什么会有不同的连续映射？",
+      "proof_idea": "Compare discrete and indiscrete opens on two points, pull back opens for continuity, and verify the self-inverse swap is a homeomorphism.",
+      "litex_code": {
+        "path": "10-topology.lit",
+        "sha256": "cf5b97a3bae66757eba81cc972f001e14668537f451cc8cfe7cc6899e08e92d8",
+        "lines": 489
+      },
+      "comments": {
+        "adaptation": "Brief Chinese reading comments prepended; selected mathematical source preserved exactly. Full chapters1–2 prefix; connectedness, compactness and IVT chapters excluded.",
+        "trust_boundary": "No user trust, local axioms or abstract predicate placeholders. Strict Litex verification does not claim Lean certification.",
+        "verification": {
+          "status": "strict_verified",
+          "command": "target/release/litex -strict -lang en -f tmp/2026-10-23/reading-branch-chapters/10-topology.lit",
+          "run_result": "success",
+          "date": "2026-10-23",
+          "added_user_trust": 0,
+          "added_user_axioms": 0,
+          "collection_run_result": "success",
+          "source_id": "source9"
+        }
+      }
+    },
+    {
+      "source": {
+        "path": "showcases/math_concepts_in_litex/8_probability_and_statistics_in_nutshell/main.lit",
+        "sha256": "2191b2ac85b12713a322d19947a1f7d9bf614a4a470a0c1e61516e985c9a8545",
+        "start_line": 1,
+        "end_line": 149,
+        "slice_sha256": "2191b2ac85b12713a322d19947a1f7d9bf614a4a470a0c1e61516e985c9a8545"
+      },
+      "problem": "概率样章：从有限分布走到期望、方差与贝叶斯计算。",
+      "proof_idea": "Evaluate weighted sums and nonnegative squared deviations; derive Bayes by substituting joint=likelihood*prior and compute the posterior.",
+      "litex_code": {
+        "path": "11-finite-probability.lit",
+        "sha256": "c8da3b3597541552f75f1b602b3f39d010ecac9c94ef5ef1fb1128a39441eb1d",
+        "lines": 154
+      },
+      "comments": {
+        "adaptation": "Brief Chinese reading comments prepended; selected mathematical source preserved exactly. Complete source; finite models only. Bayes is conditional-probability algebra with evidence>0, not a measure-theory development.",
+        "trust_boundary": "No user trust, local axioms or abstract predicate placeholders. Strict Litex verification does not claim Lean certification.",
+        "verification": {
+          "status": "strict_verified",
+          "command": "target/release/litex -strict -lang en -f tmp/2026-10-23/reading-branch-chapters/11-finite-probability.lit",
+          "run_result": "success",
+          "date": "2026-10-23",
+          "added_user_trust": 0,
+          "added_user_axioms": 0,
+          "collection_run_result": "success",
+          "source_id": "source10"
+        }
+      }
+    },
+    {
+      "source": {
+        "path": "showcases/2D_Geometry/IMO/problem_12/solution.lit",
+        "sha256": "6baad86c017ba4f6fac7154b81806acfcde0b37fe54d651cb8dc512b04cb382e",
+        "start_line": 1,
+        "end_line": 332,
+        "slice_sha256": "6baad86c017ba4f6fac7154b81806acfcde0b37fe54d651cb8dc512b04cb382e"
+      },
+      "problem": "几何样章：IMO 1966 第 6 题的三角形面积界。",
+      "proof_idea": "Extract side-point affine witnesses, factor determinants, bound one of three nonnegative ratios by1/4 and transfer the bound to squared determinants.",
+      "litex_code": {
+        "path": "12-geometry-imo1966.lit",
+        "sha256": "2c4c5342611e0de12b68f51bc05b27befe83852f0bffbab531cf72020946efc3",
+        "lines": 338
+      },
+      "comments": {
+        "adaptation": "Brief Chinese reading comments prepended; selected mathematical source preserved exactly. Complete IMO1966P6 source; nondegenerate triangle and strict interior points retained. Squared determinant inequality expresses unsigned area ratio.",
+        "trust_boundary": "No user trust, local axioms or abstract predicate placeholders. Strict Litex verification does not claim Lean certification.",
+        "verification": {
+          "status": "strict_verified",
+          "command": "target/release/litex -strict -lang en -f tmp/2026-10-23/reading-branch-chapters/12-geometry-imo1966.lit",
+          "run_result": "success",
+          "date": "2026-10-23",
+          "added_user_trust": 0,
+          "added_user_axioms": 0,
+          "collection_run_result": "success",
+          "source_id": "source11"
+        }
+      }
     }
-  ]
+  ],
+  "collection_verification": {
+    "command": "target/release/litex -reading -strict -lang zh -r examples/reading/homepage -export tmp/2026-10-23/reading-example-titles/site",
+    "exit_code": 0,
+    "run_result": "success",
+    "source_count": 57,
+    "entry_source": "04-sqrt-two-irrational.lit",
+    "input_digest": "fnv1a64:fc749faf77ef3e65",
+    "bundle_id": "fnv1a64:3ba353e609997620",
+    "user_assumptions": 0,
+    "axioms": 0,
+    "browser_checks": [
+      "projection definition at source line34",
+      "ellipse definition with a > b > 0 and c > 0",
+      "separate reciprocal-zero rejected statement labeled not established",
+      "57 authored labels in Chinese and English; no numbered filenames or .lit in labels",
+      "definition location title switches language without changing selected source",
+      "Chinese-title search works in English mode"
+    ]
+  },
+  "prior_collection_verification": {
+    "date": "2026-10-23",
+    "command": "target/release/litex -reading -lang zh -strict -r examples/reading/homepage -export tmp/2026-10-23/reading-definition-help/site",
+    "exit_code": 0,
+    "run_result": "success",
+    "source_count": 12,
+    "user_assumptions": 0,
+    "axioms": 0,
+    "browser_checks": {
+      "loaded_chapters": [
+        "09-linear-algebra.lit",
+        "10-topology.lit",
+        "11-finite-probability.lit",
+        "12-geometry-imo1966.lit"
+      ],
+      "mathematical_details": [
+        "is_basis",
+        "is_triangle",
+        "plane_add"
+      ],
+      "preview_url": "http://127.0.0.1:49183/"
+    },
+    "entry_source": "04-sqrt-two-irrational.lit"
+  }
 }

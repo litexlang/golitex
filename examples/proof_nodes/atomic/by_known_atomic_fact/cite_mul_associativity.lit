@@ -1,0 +1,20 @@
+# Node: by known atomic fact, multiplication association in an argument
+# Run: target/release/litex -strict -f examples/proof_nodes/atomic/by_known_atomic_fact/cite_mul_associativity.lit
+#
+# A stored bound and the goal may spell the same product with different
+# multiplication grouping. Zero-premise associativity/commutativity closes only
+# multiplication trees; subtraction and division keep their dedicated rules.
+
+thm product_bound_transfer:
+    ? forall a, b, c, d R:
+        (a * b) * (c * d) <= 100
+        =>:
+            a * b * c * d <= 100
+    a * b * c * d <= 100
+
+thm product_bound_transfer_reversed:
+    ? forall a, b, c, d R:
+        a * b * c * d <= 100
+        =>:
+            (a * b) * (c * d) <= 100
+    (a * b) * (c * d) <= 100

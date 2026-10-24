@@ -1,0 +1,4 @@
+forall x,y R:
+    2*x = 2*y
+    =>:
+        x = y

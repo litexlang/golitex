@@ -1,0 +1,278 @@
+# Finite linear algebra over the standard real and complex numbers.
+# Dimensions of source functions use templates, following existing independent
+# function-signature scopes. Native operators retain explicit dimensions.
+
+template<n N>:
+    have zero_vector cart_n(C,n)=fn(k closed_range(1,n)) C {0}
+
+template<n N>:
+    have fn vector_add(u,v cart_n(C,n)) cart_n(C,n)=fn(k closed_range(1,n)) C {u(k)+v(k)}
+
+template<n N>:
+    have fn vector_sub(u,v cart_n(C,n)) cart_n(C,n)=fn(k closed_range(1,n)) C {u(k)-v(k)}
+
+template<n N>:
+    have fn vector_scale(z C,v cart_n(C,n)) cart_n(C,n)=fn(k closed_range(1,n)) C {z*v(k)}
+
+template<m,n N>:
+    have fn row_vector(mat matrix(C,m,n),r closed_range(1,m)) cart_n(C,n)=fn(c closed_range(1,n)) C {mat(r,c)}
+
+template<m,n N>:
+    have fn column_vector(mat matrix(C,m,n),c closed_range(1,n)) cart_n(C,m)=fn(r closed_range(1,m)) C {mat(r,c)}
+
+template<n N>:
+    have fn matrix_diagonal(mat matrix(C,n,n)) cart_n(C,n)=fn(k closed_range(1,n)) C {mat(k,k)}
+
+template<m,n,p,q N>:
+    have fn select_matrix(mat matrix(C,m,n),rows fn(k closed_range(1,p)) closed_range(1,m),cols fn(k closed_range(1,q)) closed_range(1,n)) matrix(C,p,q)=fn(r closed_range(1,p),c closed_range(1,q)) C {mat(rows(r),cols(c))}
+
+prop is_matrix_inverse(n N,mat,candidate matrix(C,n,n)):
+    matrix_mul(mat,candidate,n,n,n)=identity_matrix(n)
+    matrix_mul(candidate,mat,n,n,n)=identity_matrix(n)
+
+prop is_invertible_matrix(n N,mat matrix(C,n,n)):
+    exist candidate matrix(C,n,n) st {$is_matrix_inverse(n,mat,candidate)}
+
+prop has_matrix_rank_factorization(m,n,r N,mat matrix(C,m,n),U matrix(C,m,r),V matrix(C,r,n),L matrix(C,r,m),Right matrix(C,n,r)):
+    r<=m
+    r<=n
+    mat=matrix_mul(U,V,m,r,n)
+    matrix_mul(L,U,r,m,r)=identity_matrix(r)
+    matrix_mul(V,Right,r,n,r)=identity_matrix(r)
+
+prop has_matrix_rank(m,n,r N,mat matrix(C,m,n)):
+    exist U matrix(C,m,r),V matrix(C,r,n),L matrix(C,r,m),Right matrix(C,n,r) st {$has_matrix_rank_factorization(m,n,r,mat,U,V,L,Right)}
+
+prop is_symmetric_matrix(n N,mat matrix(C,n,n)):
+    transpose(mat,n,n)=mat
+
+prop is_hermitian_matrix(n N,mat matrix(C,n,n)):
+    conjugate_transpose(mat,n,n)=mat
+
+prop is_orthogonal_matrix(n N,mat matrix(R,n,n)):
+    matrix_mul(transpose(mat,n,n),mat,n,n,n)=identity_matrix(n)
+    matrix_mul(mat,transpose(mat,n,n),n,n,n)=identity_matrix(n)
+
+prop is_unitary_matrix(n N,mat matrix(C,n,n)):
+    matrix_mul(conjugate_transpose(mat,n,n),mat,n,n,n)=identity_matrix(n)
+    matrix_mul(mat,conjugate_transpose(mat,n,n),n,n,n)=identity_matrix(n)
+
+prop is_normal_matrix(n N,mat matrix(C,n,n)):
+    matrix_mul(conjugate_transpose(mat,n,n),mat,n,n,n)=matrix_mul(mat,conjugate_transpose(mat,n,n),n,n,n)
+
+prop is_diagonal_matrix(n N,mat matrix(C,n,n)):
+    forall r,c closed_range(1,n):
+        r!=c
+        =>:
+            mat(r,c)=0
+
+prop is_upper_triangular_matrix(n N,mat matrix(C,n,n)):
+    forall r,c closed_range(1,n):
+        r>c
+        =>:
+            mat(r,c)=0
+
+prop is_lower_triangular_matrix(n N,mat matrix(C,n,n)):
+    forall r,c closed_range(1,n):
+        r<c
+        =>:
+            mat(r,c)=0
+
+prop is_idempotent_matrix(n N,mat matrix(C,n,n)):
+    matrix_mul(mat,mat,n,n,n)=mat
+
+prop is_projection_matrix(n N,mat matrix(C,n,n)):
+    $is_hermitian_matrix(n,mat)
+    $is_idempotent_matrix(n,mat)
+
+prop is_nilpotent_matrix(n N,mat matrix(C,n,n)):
+    exist p N+ st {matrix_power(mat,n,p)=zero_matrix(n,n)}
+
+prop is_positive_semidefinite_matrix(n N,mat matrix(C,n,n)):
+    $is_hermitian_matrix(n,mat)
+    forall v cart_n(C,n):
+        re(inner_product(v,matrix_apply(mat,v,n,n),n))>=0
+
+prop is_positive_definite_matrix(n N,mat matrix(C,n,n)):
+    $is_hermitian_matrix(n,mat)
+    forall v cart_n(C,n):
+        v!=\zero_vector<n>
+        =>:
+            re(inner_product(v,matrix_apply(mat,v,n,n),n))>0
+
+prop solves_matrix_system(m,n N,mat matrix(C,m,n),x cart_n(C,n),b cart_n(C,m)):
+    matrix_apply(mat,x,m,n)=b
+
+prop is_matrix_eigenpair(n N,mat matrix(C,n,n),z C,v cart_n(C,n)):
+    v!=\zero_vector<n>
+    matrix_apply(mat,v,n,n)=\vector_scale<n>(z,v)
+
+prop is_matrix_eigenvalue(n N,mat matrix(C,n,n),z C):
+    exist v cart_n(C,n) st {$is_matrix_eigenpair(n,mat,z,v)}
+
+prop is_matrix_image_member(m,n N,mat matrix(C,m,n),w cart_n(C,m)):
+    exist v cart_n(C,n) st {matrix_apply(mat,v,m,n)=w}
+
+template<m,n N>:
+    have fn matrix_kernel(mat matrix(C,m,n)) power_set(cart_n(C,n))={v cart_n(C,n): matrix_apply(mat,v,m,n)=\zero_vector<m>}
+
+template<m,n N>:
+    have fn matrix_image(mat matrix(C,m,n)) power_set(cart_n(C,m))={w cart_n(C,m): $is_matrix_image_member(m,n,mat,w)}
+
+template<n N>:
+    have fn characteristic_polynomial(mat matrix(C,n,n)) fn(z C) C=fn(z C) C {det(matrix_sub(matrix_scale(z,identity_matrix(n),n,n),mat,n,n),n)}
+
+template<n N>:
+    have fn matrix_spectrum(mat matrix(C,n,n)) power_set(C)={z C: $is_matrix_eigenvalue(n,mat,z)}
+
+prop is_diagonalizable_matrix(n N,mat matrix(C,n,n)):
+    exist P,D matrix(C,n,n) st {$is_invertible_matrix(n,P), $is_diagonal_matrix(n,D), matrix_mul(mat,P,n,n,n)=matrix_mul(P,D,n,n,n)}
+
+thm matrix_inverse_candidate_unique:
+    ? forall n N,mat,first,second matrix(C,n,n):
+        $is_matrix_inverse(n,mat,first)
+        $is_matrix_inverse(n,mat,second)
+        =>:
+            first=second
+    matrix_mul(first,mat,n,n,n)=identity_matrix(n)
+    matrix_mul(mat,second,n,n,n)=identity_matrix(n)
+    release thm matrix_mul_associative(first,mat,second,n,n,n,n)
+    release thm matrix_mul_identity(first,n,n)
+    release thm matrix_mul_identity(second,n,n)
+    matrix_mul(matrix_mul(first,mat,n,n,n),second,n,n,n)=matrix_mul(identity_matrix(n),second,n,n,n)=second
+    matrix_mul(first,matrix_mul(mat,second,n,n,n),n,n,n)=matrix_mul(first,identity_matrix(n),n,n,n)=first
+    first=second
+
+thm matrix_inverse_candidate_nonsingular:
+    ? forall n N,mat,candidate matrix(C,n,n):
+        $is_matrix_inverse(n,mat,candidate)
+        =>:
+            det(mat,n)!=0
+    matrix_mul(mat,candidate,n,n,n)=identity_matrix(n)
+    matrix_mul(candidate,mat,n,n,n)=identity_matrix(n)
+    by thm matrix_invertible_from_candidate(mat,candidate,n) => det(mat,n)!=0
+
+thm matrix_inverse_candidate_selected:
+    ? forall n N,mat,candidate matrix(C,n,n):
+        $is_matrix_inverse(n,mat,candidate)
+        =>:
+            matrix_inverse(mat,n)=candidate
+    matrix_mul(mat,candidate,n,n,n)=identity_matrix(n)
+    matrix_mul(candidate,mat,n,n,n)=identity_matrix(n)
+    release thm matrix_invertible_from_candidate(mat,candidate,n)
+    by thm matrix_inverse_from_candidate(mat,candidate,n) => matrix_inverse(mat,n)=candidate
+
+thm matrix_inverse_exists_from_determinant:
+    ? forall n N,mat matrix(C,n,n):
+        det(mat,n)!=0
+        =>:
+            $is_invertible_matrix(n,mat)
+    release thm matrix_inverse_laws(mat,n)
+    $is_matrix_inverse(n,mat,matrix_inverse(mat,n))
+    witness $is_invertible_matrix(n,mat) from matrix_inverse(mat,n)
+
+thm matrix_rank_from_certificate:
+    ? forall m,n,r N,mat matrix(C,m,n),U matrix(C,m,r),V matrix(C,r,n),L matrix(C,r,m),Right matrix(C,n,r):
+        $has_matrix_rank_factorization(m,n,r,mat,U,V,L,Right)
+        =>:
+            matrix_rank(mat,m,n)=r
+    r<=m
+    r<=n
+    mat=matrix_mul(U,V,m,r,n)
+    matrix_mul(L,U,r,m,r)=identity_matrix(r)
+    matrix_mul(V,Right,r,n,r)=identity_matrix(r)
+    by thm matrix_rank_from_factorization(mat,U,V,L,Right,m,r,n) => matrix_rank(mat,m,n)=r
+
+thm matrix_invertible_nonsingular:
+    ? forall n N,mat matrix(C,n,n):
+        $is_invertible_matrix(n,mat)
+        =>:
+            det(mat,n)!=0
+    obtain candidate from exist candidate matrix(C,n,n) st {$is_matrix_inverse(n,mat,candidate)}
+    by thm matrix_inverse_candidate_nonsingular(n,mat,candidate) => det(mat,n)!=0
+
+thm matrix_rank_candidate_selected:
+    ? forall m,n,r N,mat matrix(C,m,n):
+        $has_matrix_rank(m,n,r,mat)
+        =>:
+            matrix_rank(mat,m,n)=r
+    obtain U,V,L,Right from exist U matrix(C,m,r),V matrix(C,r,n),L matrix(C,r,m),Right matrix(C,n,r) st {$has_matrix_rank_factorization(m,n,r,mat,U,V,L,Right)}
+    by thm matrix_rank_from_certificate(m,n,r,mat,U,V,L,Right) => matrix_rank(mat,m,n)=r
+
+thm matrix_rank_candidate_unique:
+    ? forall m,n,r,s N,mat matrix(C,m,n):
+        $has_matrix_rank(m,n,r,mat)
+        $has_matrix_rank(m,n,s,mat)
+        =>:
+            r=s
+    release thm matrix_rank_candidate_selected(m,n,r,mat)
+    release thm matrix_rank_candidate_selected(m,n,s,mat)
+    r=matrix_rank(mat,m,n)=s
+
+thm matrix_rank_has_candidate:
+    ? forall m,n N,mat matrix(C,m,n):
+        $has_matrix_rank(m,n,matrix_rank(mat,m,n),mat)
+    release thm matrix_rank_bounds(mat,m,n)
+    release thm matrix_rank_factorization_exists(mat,m,n)
+    obtain U,V,L,Right from exist U matrix(C,m,matrix_rank(mat,m,n)),V matrix(C,matrix_rank(mat,m,n),n),L matrix(C,matrix_rank(mat,m,n),m),Right matrix(C,n,matrix_rank(mat,m,n)) st {mat=matrix_mul(U,V,m,matrix_rank(mat,m,n),n) and matrix_mul(L,U,matrix_rank(mat,m,n),m,matrix_rank(mat,m,n))=identity_matrix(matrix_rank(mat,m,n)) and matrix_mul(V,Right,matrix_rank(mat,m,n),n,matrix_rank(mat,m,n))=identity_matrix(matrix_rank(mat,m,n))}
+    $has_matrix_rank_factorization(m,n,matrix_rank(mat,m,n),mat,U,V,L,Right)
+    witness $has_matrix_rank(m,n,matrix_rank(mat,m,n),mat) from U,V,L,Right
+
+thm unitary_matrix_nonsingular:
+    ? forall n N,mat matrix(C,n,n):
+        $is_unitary_matrix(n,mat)
+        =>:
+            det(mat,n)!=0
+    matrix_mul(mat,conjugate_transpose(mat,n,n),n,n,n)=identity_matrix(n)
+    matrix_mul(conjugate_transpose(mat,n,n),mat,n,n,n)=identity_matrix(n)
+    by thm matrix_invertible_from_candidate(mat,conjugate_transpose(mat,n,n),n) => det(mat,n)!=0
+
+thm unitary_matrix_inverse:
+    ? forall n N,mat matrix(C,n,n):
+        $is_unitary_matrix(n,mat)
+        =>:
+            matrix_inverse(mat,n)=conjugate_transpose(mat,n,n)
+    matrix_mul(mat,conjugate_transpose(mat,n,n),n,n,n)=identity_matrix(n)
+    matrix_mul(conjugate_transpose(mat,n,n),mat,n,n,n)=identity_matrix(n)
+    $is_matrix_inverse(n,mat,conjugate_transpose(mat,n,n))
+    by thm matrix_inverse_candidate_selected(n,mat,conjugate_transpose(mat,n,n)) => matrix_inverse(mat,n)=conjugate_transpose(mat,n,n)
+
+template<n N>:
+    have fn solve_matrix(mat matrix(C,n,n),rhs cart_n(C,n): det(mat,n)!=0) cart_n(C,n)=matrix_apply(matrix_inverse(mat,n),rhs,n,n)
+
+thm solve_matrix_correct:
+    ? forall n N,mat matrix(C,n,n),rhs cart_n(C,n):
+        det(mat,n)!=0
+        =>:
+            $solves_matrix_system(n,n,mat,\solve_matrix<n>(mat,rhs),rhs)
+    release thm matrix_inverse_laws(mat,n)
+    release thm matrix_apply_compose(mat,matrix_inverse(mat,n),rhs,n,n,n)
+    release thm matrix_apply_identity(rhs,n)
+    \solve_matrix<n>(mat,rhs)=matrix_apply(matrix_inverse(mat,n),rhs,n,n)
+    matrix_apply(mat,\solve_matrix<n>(mat,rhs),n,n)=matrix_apply(mat,matrix_apply(matrix_inverse(mat,n),rhs,n,n),n,n)=matrix_apply(matrix_mul(mat,matrix_inverse(mat,n),n,n,n),rhs,n,n)=matrix_apply(identity_matrix(n),rhs,n,n)=rhs
+    $solves_matrix_system(n,n,mat,\solve_matrix<n>(mat,rhs),rhs)
+
+thm invertible_matrix_solution_unique:
+    ? forall n N,mat matrix(C,n,n),rhs,x,y cart_n(C,n):
+        det(mat,n)!=0
+        $solves_matrix_system(n,n,mat,x,rhs)
+        $solves_matrix_system(n,n,mat,y,rhs)
+        =>:
+            x=y
+    matrix_apply(mat,x,n,n)=rhs
+    matrix_apply(mat,y,n,n)=rhs
+    release thm matrix_inverse_laws(mat,n)
+    release thm matrix_apply_compose(matrix_inverse(mat,n),mat,x,n,n,n)
+    release thm matrix_apply_compose(matrix_inverse(mat,n),mat,y,n,n,n)
+    release thm matrix_apply_identity(x,n)
+    release thm matrix_apply_identity(y,n)
+    x=matrix_apply(identity_matrix(n),x,n,n)=matrix_apply(matrix_mul(matrix_inverse(mat,n),mat,n,n,n),x,n,n)=matrix_apply(matrix_inverse(mat,n),matrix_apply(mat,x,n,n),n,n)=matrix_apply(matrix_inverse(mat,n),rhs,n,n)
+    y=matrix_apply(identity_matrix(n),y,n,n)=matrix_apply(matrix_mul(matrix_inverse(mat,n),mat,n,n,n),y,n,n)=matrix_apply(matrix_inverse(mat,n),matrix_apply(mat,y,n,n),n,n)=matrix_apply(matrix_inverse(mat,n),rhs,n,n)
+    x=y
+
+thm solve_matrix_definition:
+    ? forall n N,mat matrix(C,n,n),rhs cart_n(C,n):
+        det(mat,n)!=0
+        =>:
+            \solve_matrix<n>(mat,rhs)=matrix_apply(matrix_inverse(mat,n),rhs,n,n)
+    \solve_matrix<n>(mat,rhs)=matrix_apply(matrix_inverse(mat,n),rhs,n,n)

@@ -188,6 +188,19 @@ pub fn compound_objs_alpha_equal(left: &Obj, right: &Obj) -> bool {
 
 fn objs_alpha_equal(left: &Obj, right: &Obj, map: &HashMap<IdentifierId, IdentifierId>) -> bool {
     match (left, right) {
+        (Obj::MatrixOperator(a), Obj::MatrixOperator(b)) => {
+            std::mem::discriminant(a) == std::mem::discriminant(b)
+                && a.operand_refs()
+                    .into_iter()
+                    .zip(b.operand_refs())
+                    .all(|(a, b)| objs_alpha_equal(a, b, map))
+        }
+        (Obj::SetFormer(SetFormer::MatrixSet(a)), Obj::SetFormer(SetFormer::MatrixSet(b))) => {
+            objs_alpha_equal(&a.set, &b.set, map)
+                && objs_alpha_equal(&a.rows, &b.rows, map)
+                && objs_alpha_equal(&a.cols, &b.cols, map)
+        }
+
         (
             Obj::IntegralOperator(crate::ast::obj::IntegralOperator::Riemann(l)),
             Obj::IntegralOperator(crate::ast::obj::IntegralOperator::Riemann(r)),

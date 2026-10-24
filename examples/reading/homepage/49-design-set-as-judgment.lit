@@ -1,0 +1,9 @@
+# Membership binders range over a set.
+forall x R:
+    x + 0 = x
+forall x {1, 2}:
+    x $in {1, 2}
+
+# "X set" means the judgment $is_set(X).
+forall X set:
+    X $subset X

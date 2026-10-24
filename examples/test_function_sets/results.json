@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "built_from_current_source": true,
+  "mode": "supported_regression",
+  "source_sha256": "3bb7b0f8b83415e91697ceb4cf03465be130c11d1bae63b47c0e76849b1e09f7",
+  "binary_sha256": "b75b34e02a245128418624858eff2a6eb19b75bc2b20e1a72e85e197ebb92152",
+  "observations": [
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/explicit_proofs/n22.lit"
+      ],
+      "observed": "reject",
+      "phase": "verification",
+      "statement_statuses": [
+        true,
+        true,
+        false
+      ],
+      "exit_code": 1,
+      "termination": null,
+      "failures": [
+        {
+          "statement_result": "rejected",
+          "statement": "shift_two(3) = \\shift<2>(3) = 6"
+        }
+      ],
+      "id": "N22",
+      "group": "explicit_proofs",
+      "title": "False specialized-template call chain",
+      "file": "explicit_proofs/n22.lit",
+      "expect": "reject",
+      "fixture_sha256": "bee3e56e08951c1d66554700db381fdb87f818bfd18340b6ff7b3ed3c17baa97",
+      "matches": false
+    }
+  ],
+  "identity_stable": true,
+  "ok": false,
+  "counts": {
+    "total": 1,
+    "positive": 0,
+    "negative": 1,
+    "passed": 0,
+    "unexpected": 1
+  }
+}

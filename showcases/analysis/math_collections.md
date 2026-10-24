@@ -1,10 +1,19 @@
 # Mathematical interfaces and dependencies
 
 The [manifest](litex.config) exposes the selected chapter development in
-source order: `Introduction`, `chap1` through `chap7`, `appendix_a`, then
-`chap8`. [README.md](README.md) supplies the reading path and [STATUS.md](STATUS.md)
+source order: `chap2` through `chap7`, `appendix_a`, then `chap8`, followed by
+the small map, finite-product and induction examples.
+[README.md](README.md) supplies the reading path and [STATUS.md](STATUS.md)
 the omissions and foundation assumptions. The original number carriers are
 Litex builtins; chapter constructions explain and connect their interfaces.
+
+The independent [calculus companion](calculus/README.md) has its own
+single-export manifest and no chapter imports. It distinguishes native
+derivative candidates from selected derivative values, then uses
+antiderivative relations, Newton–Leibniz, substitution and integration by
+parts. Its [interface guide](calculus/math_collections.md) records the actual
+domains and proof dependencies. The native interior derivative must not be
+identified with a derivative relative to an arbitrary subset or at an endpoint.
 
 ## Induction, sets and arithmetic
 

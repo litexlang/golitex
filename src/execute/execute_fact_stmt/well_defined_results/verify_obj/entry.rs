@@ -224,6 +224,12 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
         match obj {
+            Obj::MatrixOperator(value) => {
+                self.verify_matrix_operator_well_definedness_by_def(value, verify_state)
+            }
+            Obj::SetFormer(SetFormer::MatrixSet(value)) => {
+                self.verify_matrix_set_well_definedness_by_def(value, verify_state)
+            }
             Obj::LimitOperator(_) => unreachable!("limit has dedicated WD stages"),
             Obj::BoundOperator(_) => unreachable!("supremum/infimum have dedicated WD stages"),
             Obj::IntegralOperator(_) => unreachable!("integral has dedicated WD stages"),

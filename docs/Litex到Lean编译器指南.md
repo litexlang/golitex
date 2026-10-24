@@ -43,6 +43,8 @@ target/release/litex -strict -lean -f lean/examples/one_equals_itself/statement.
 
 ## 从几十组实际例子开始
 
+[证明语句对应与验收](Litex_To_Lean_Proof_Commands.md)按主题列出复合反证、集合／函数外延、强归纳、有限枚举和中点几何的源码／生成 Lean 对，并说明各适配器当前支持的范围。
+
 最短的源码／生成证明／Adapter／Final 完整讲解见
 [加零示例 README](examples/litex_to_lean/add_zero/README.md)。
 [Newton README](examples/litex_to_lean/newton_residual/README.md)进一步展示
@@ -529,6 +531,249 @@ target/release/litex -strict -lean -f lean/examples/rational_inverse_maps/statem
 
 ## 当前覆盖的数学范围与示例
 
+`release obj def` 已支持 `let`、普通对象／集合声明、带等式的声明、从存在事实
+选出的对象和公式函数。它按 result 记录的原定义找到原证明，再用新的 FactId
+引用它们；局部事实仍留在原作用域。四组通过 Lean 检查的例子是
+[数值与别名](../lean/examples/released_value_definitions/)、
+[带非零条件的倒数函数](../lean/examples/released_reciprocal_definition/)、
+[存在见证](../lean/examples/released_witness_definition/)和
+[局部定义](../lean/examples/released_local_definitions/)。
+模块限定名及其他定义类别尚未接入；`release tuple def`、`release cart def`
+的语句与证明编译也还没有接上。
+
+`finite_seq(A, n)` 已支持任意集合载体和自然数长度，包括零长度，定义域精确为
+`closed_range(1, n)`。runtime 原本就记录了从有限序列成员到函数集合成员的推导；
+编译器现在按原 FactId 输出一次，后续调用直接引用。
+[有限序列集合](../lean/examples/finite_sequence_spaces/)、
+[合法下标取值](../lean/examples/finite_sequence_coordinates/)和
+[取第一项函数](../lean/examples/finite_sequence_first/)这三组源码／生成文件已通过 Lean 检查。
+无限序列 `seq` 和 tuple/cart 定义释放仍是后续工作。
+
+本轮新增的 Lean 检查通过例子包括：[双向全称命题](../lean/examples/equivalence_directions/)、
+[关系的注册声明](../lean/examples/registered_equality/)和
+[实数最小值与最大值](../lean/examples/real_min_max/)。它们覆盖局部等价命题、
+任意集合对象上的谓词、三种注册声明，以及 min/max 的交换律、幂等性、实数和整数成员关系。
+后续还补上了 [min/max 精确计算](../lean/examples/min_max_evaluation/)和
+[上下界与单调性](../lean/examples/min_max_bounds/)，包括分数、负数、嵌套运算，
+以及引用原比较前提的单调性证明。
+[条件取值](../lean/examples/ordered_min_max_selection/)支持选取任意一侧及反向书写等式；
+[最小值与最大值函数](../lean/examples/ordered_min_max_functions/)把 `have fn`、
+函数展开、具体 `prop`、条件 `thm`、`let` 和 `by thm` 接在同一个例子中。
+注册传递律之后的链式推导仍需补充编译分支。
+
+[实数符号](../lean/examples/real_sign/)覆盖具体数值计算、整数成员关系，以及
+由严格正负条件推出的等式；[平移后的符号函数](../lean/examples/shifted_sign_function/)
+把它用于函数定义、嵌套调用和定理调用。底层含义通过已证明的桥接定理对应到
+Mathlib 的 `Real.sign`。[乘积](../lean/examples/sign_product/)与
+[取负](../lean/examples/sign_negation/)规则也已接入，包括反向等式和原 verifier 支持的取负写法。
+[符号与绝对值](../lean/examples/signed_magnitude/)对任意实数证明
+`sign(x) * abs(x) = x`、`abs(x) = sign(x) * x`；
+[方向与大小函数](../lean/examples/direction_magnitude_functions/)把这些等式用于命名定理和函数乘积。
+
+[向下／向上取整](../lean/examples/rounding_integers/)支持精确分数计算和整数不变性，
+例如 `floor(-3 / 2) = -2`、`ceil(-3 / 2) = -1`。
+[上下界与单调性](../lean/examples/rounding_bounds/)保留原实数域和比较证据，
+通过已证明的桥接定理对应到 `Int.floor`、`Int.ceil`。
+[取整函数](../lean/examples/shifted_rounding_function/)把它们用于 `have fn`、嵌套调用、
+带参数的 `thm` 和 `by thm`；三个例子的生成文件均已通过 Lean 检查。
+
+[整数商和余数](../lean/examples/signed_integer_division/)支持负被除数及非零负模数，
+`quot` 的除数则保留 `N+` 条件。[商余分解](../lean/examples/quotient_remainder_decomposition/)
+对任意 `a Z, d N+` 证明 `a = d * quot(a, d) + a % d` 及余数上下界。
+[商余函数](../lean/examples/integer_division_functions/)展示函数展开、参数等式替换和定理复用。
+`have d N+` 及函数参数产生的正、非负、非零事实保留原 FactId，后续构造可以直接引用。
+
+[最大公约数和最小公倍数](../lean/examples/gcd_lcm_values/)支持有符号整数计算。
+`gcd(a, b)` 保留“至少一个非零”的条件，结果属于 `N+`；`lcm(a, b)` 属于 `N`，
+允许 `lcm(0, 0) = 0`。[恒等式](../lean/examples/gcd_lcm_identities/)覆盖交换律、
+绝对值关系和乘积关系；[欧几里得步骤](../lean/examples/gcd_euclidean_step/)覆盖
+`gcd(a, b) = gcd(b, a % b)`。[函数示例](../lean/examples/gcd_lcm_functions/)还包含
+带条件的 `have fn`、`thm`、`by thm` 和参数等式替换。四组生成文件均已通过 Lean 检查。
+已有 gcd 对象作为模数时，非零条件从它的 WD 取得，不再另行证明。
+
+[阶乘](../lean/examples/factorial_values/)保留参数属于 `N` 的证据，结果属于 `N+`，
+通过已证明的接口对应到 `Nat.factorial`。[递推关系](../lean/examples/factorial_identities/)
+和[单调性](../lean/examples/factorial_order/)均已接入；严格单调性保留较小参数属于
+`N+` 的条件，因为 `0! = 1!`。[排列计数函数](../lean/examples/factorial_function/)
+展示它在 `have fn` 中的定义与调用。
+
+虚数单位写作 `i`，在既有数字包装中使用 `Complex.I`。
+[具体复数计算](../lean/examples/imaginary_unit_values/)复核 result 中记录的实部和虚部；
+[任意复数参数的多项式恒等式](../lean/examples/complex_polynomial_identity/)使用对应的
+固定归一化过程。[旋转函数](../lean/examples/complex_rotation/)定义 `rotate(z) = i * z`，
+再用命名定理和多步等式证明两次调用得到 `-z`。这些例子的生成文件均已通过 Lean。
+
+[正负与非零数域](../lean/examples/signed_numeric_values/)补齐了 `Q+`、`Q-`、
+`Z-`、`R-`、`Q*`、`Z*`、`R*`、`C*`。[对象声明](../lean/examples/signed_numeric_declarations/)
+和[任意参数](../lean/examples/signed_numeric_domains/)产生的符号、非零事实沿用原 FactId，
+后续除法 WD 可以直接引用。[带前提的成员断言](../lean/examples/refined_numeric_membership/)
+消费原 result 中的基础数域与条件证明；[函数](../lean/examples/signed_numeric_functions/)
+保留这些定义域和值域。[集合包含语句](../lean/examples/signed_numeric_subsets/)也已接入。
+这些集合由现有 `SetSemantics` 的分离操作构造，没有增加模型字段或公理。
+
+[正实数、非零有理数的乘除](../lean/examples/refined_products/)保留原操作数的成员证明和 WD。
+[倒数函数](../lean/examples/nonzero_rational_reciprocal/)、
+[正数缩放函数](../lean/examples/positive_scaling_functions/)和
+[倒数乘积定理](../lean/examples/nonzero_rational_product_theorem/)把这些值域用于嵌套调用、
+`thm` 和 `by thm`。[数值非成员关系](../lean/examples/numeric_nonmembership/)包括
+`not 1 / 3 $in Z`、`not i $in R`；
+[有限集合非成员关系](../lean/examples/finite_nonmembership/)包括 `not 4 $in {1, 2, 3}`，
+以及由一个对象属于某集合、另一个不属于该集合推出两者不等。六组生成文件均已通过 Lean。
+
+`have fn … by exist!` 现在可以从“每个合法输入都有唯一输出”的证明构造函数。
+编译器消费原 result 中的全称证明、函数集合 WD 和成员／性质／唯一性三个存储结果，
+后续调用引用原 FactId。例子包括[恒等函数](../lean/examples/selected_identity_function/)、
+[带非零条件的倒数](../lean/examples/selected_reciprocal_function/)、
+[两参数加法及计算](../lean/examples/selected_sum_function/)，以及
+[任意集合上的恒等函数](../lean/examples/selected_set_identity_function/)。
+四组源码和生成文件均通过实际 Lean 检查，生成文件约 13–28 KB。
+目前支持顶层声明、一个输出变量和既有函数接口所支持的定义域；任意集合例子不要求集合非空。
+
+`by contra` 已接入 `forall` 和 `not forall` 目标，包括
+[带非零前提的倒数](../lean/examples/contradiction_with_reciprocal_guard/)；
+[定理中的 `not forall` 前提](../lean/examples/negated_universal_premise/)也可以通过
+`obtain` 取出反例。编译器沿用原 result 的参数、前提、WD 和 FactId，局部假设不会泄漏到外面。
+四个新例子均通过实际 Lean 检查，生成文件约 2.4–8 KB。这批例子用原子事实结束反证。
+
+`by contra` 也已接入 `exist!` 目标，包括
+[两个实数坐标](../lean/examples/unique_pair_by_contradiction/)、
+[带非零条件的倒数](../lean/examples/unique_guarded_value_by_contradiction/)、
+[可调用的定理](../lean/examples/unique_copy_by_contradiction/)、
+[任意集合对象](../lean/examples/unique_set_copy_by_contradiction/)和
+[第二个变量依赖第一个变量的集合](../lean/examples/unique_dependent_pair_by_contradiction/)。
+编译器消费原来的“另有一个不同候选”的全称假设，唯一性仍按对象表示的值比较。
+六组生成文件均通过实际 Lean 检查。
+
+`impossible` 也可以用整个量词命题结束反证：
+[`forall`](../lean/examples/universal_contradiction_closing/)、
+[带非零条件的 `forall`](../lean/examples/guarded_universal_contradiction_closing/)、
+[`not forall`](../lean/examples/counterexample_contradiction_closing/)、
+[`exist!`](../lean/examples/unique_contradiction_closing/)和
+[两个变量的唯一存在](../lean/examples/unique_pair_contradiction_closing/)。
+编译器先消费正反两条原始验证结果，再组合出矛盾。
+[命名反例定理](../lean/examples/named_counterexample/)还展示了保存 `not forall`、
+调用定理、用 `obtain` 取出反例的完整过程。
+
+局部全称假设在 Lean 内部量化 `M.Value`，每次引用时转换输入对象的表示；
+原对象和成员／前提的 FactId 保持不变。
+[同一假设先用于数字、再用于一般对象](../lean/examples/counterexample_after_universal_use/)
+已有实际检查，避免了局部假设被第一次使用固定到某个 Lean 类型层级的问题。
+本批七组新例子和九组相关旧例子均通过严格 Litex、相同输出再生成和 Lean 4.31.0 检查；
+43 个导出定理只使用标准公理。新增文件约 4–24 KB，没有修改 Runtime、result 类型或 `Litex.lean`。
+
+`have fn … by cases` 已接入顶层分段函数声明和调用：
+[绝对值](../lean/examples/piecewise_absolute_value/)、
+[零点补定义的倒数](../lean/examples/piecewise_total_reciprocal/)、
+[两个数取较大值](../lean/examples/piecewise_larger_value/)和
+[带非零定义域的倒数绝对值](../lean/examples/piecewise_inverse_magnitude/)均通过实际 Lean 检查。
+声明消费原 result 中的覆盖、互斥和返回值 WD 证明；调用保留选中分支的条件证明，
+引用原 FactId 对应的分支等式。四份生成文件约 14–35 KB。
+本批检查了一个／两个实数输入、两个分支和非零条件；倒数例子还包含任意非零输入的全称等式。
+`Litex.lean` 用已有函数语义证明分段函数的构造和调用性质，没有增加语义公理。
+
+函数性质也已接入：`$injective(A, B, f)`、`$surjective(A, B, f)`、
+`$bijective(A, B, f)` 可以消费原来的定义证明，并按原 FactId 发布、引用推导事实。
+可以看[恒等函数的双射证明](../lean/examples/identity_bijection/)、
+[从单射和满射前提出发的推理](../lean/examples/mapping_property_inference/)、
+[平移函数的双射证明](../lean/examples/shift_bijection/)，以及
+[任意集合上双射的唯一原像](../lean/examples/bijective_unique_preimages/)。
+唯一原像规则消费 result 中已有的双射引用和目标成员证明，支持等式的两个方向。
+`Litex.lean` 在已有函数语义上定义这些性质并证明转换定理，没有增加模型字段或公理。
+四份生成文件约 13–27 KB，均通过 Lean 4.31.0；28 个导出定理通过公理审计。
+本批检查的是精确的一元函数签名；通过集合相等或有限前缀转换的 WD 路线，留待后续接入。
+
+函数值域和取原像语句也已接入：
+
+```litex
+have fn shift(x R) R = x + 1
+shift(2) $in fn_range(shift)
+have by fn_preimage: a from shift(2) $in fn_range(shift)
+a $in R
+shift(a) = shift(2)
+```
+
+对应例子有[平移函数](../lean/examples/shift_range_preimage/)、
+[倒数函数与非零原像](../lean/examples/reciprocal_range_preimage/)、
+[双参数函数](../lean/examples/sum_range_preimage/)，以及
+[任意集合上的值域成员](../lean/examples/function_range_members/)。
+倒数例子还包含定理内部的局部取原像。四组均通过严格 Litex、相同输出再生成和
+Lean 4.31.0 检查，生成文件约 9–55 KB。
+
+`fn_range(f)` 的语义只由函数的图决定，提供 WD 的函数签名不会改变这个集合。
+`Litex.lean` 从已有的分离和函数图性质证明值域、成员及原像定理，没有增加公理。
+原 result 现在保留已经选中的函数签名、对应 FactId 和实际原像参数；编译器按这些
+引用及返回的成员、条件、等式生成证明。取原像的存在性证明只生成一次，后续引用它；
+原像处的函数调用用声明返回的成员和条件构造。Runtime 存储、证明搜索和源码 AST 没有改变。
+
+[匿名函数调用的值域成员规则](../lean/examples/anonymous_function_ranges/)也已接入，
+包括带非零条件的双参数除法。编译器消费原来的函数相等证据和调用 WD；匿名函数
+只改绑定参数名时，先核对 alpha 等价，再生成对应的 Lean 自反证明。
+
+原像还可以保留[正实数成员事实](../lean/examples/positive_range_preimage/)，
+支持[两个正数坐标](../lean/examples/positive_pair_preimage/)，以及
+[正数域与两个额外条件](../lean/examples/guarded_positive_preimage/)；最后一个例子
+也在命名定理内部取原像。编译器按签名中的顺序拆出正性和显式条件，恢复每个 `R+`
+成员事实，然后按原 FactId 发布条件。这四组补充例子均通过严格 Litex、相同输出
+再生成和 Lean 4.31.0，生成文件约 15–95 KB，没有修改 Core 语义或 result 生产过程。
+
+依赖型输入域和其他完整定义域证据分支仍待接入。嵌套匿名函数捕获外层函数参数的
+情况，例如 `have fn outer(x R) R = fn(y R) R {x + y}(1)`，目前明确拒绝编译；
+需要让原来的函数构造随着外层参数一起实例化。
+
+`sketch:` 会检查块内全部语句，然后丢弃这个局部作用域。编译器把原来的子结果放进
+私有 Lean 证明块，保留外部引用和原 WD 编号，块内事实不会成为块外的源码事实。
+可看[局部计算](../lean/examples/local_arithmetic_sketch/)、
+[嵌套块](../lean/examples/nested_arithmetic_sketch/)、
+[定理参数和引用](../lean/examples/sketch_in_named_theorem/)、
+[tuple 坐标](../lean/examples/local_tuple_sketch/)和
+[有限集成员](../lean/examples/local_finite_set_sketch/)；五组都已通过 Lean 检查。
+块内语句仍遵守原有支持边界，例如局部 `have fn` 声明尚未接入。
+
+整数区间现在也能用 `expand:` 展开：
+
+```litex
+claim:
+    ? forall x range(1, 3):
+        x = 1 or x = 2
+    expand: x $in range(1, 3)
+```
+
+编译器读取原来的成员证明、完整枚举值和存储的析取事实，按原 FactId 输出。
+`range(a, b)` 不含右端点，`closed_range(a, b)` 包含右端点；构造时保留整数端点
+的 WD 和成员证据，推导出的整数性、上下界等事实也沿用原编号。
+可看[源码与生成 Lean](../lean/examples/expand_half_open_integer_range/)，以及
+[展开后分情况证明平方上界](../lean/examples/integer_range_square_bound/)的例子。
+这批七组例子均通过 Lean 4.31.0，覆盖负数、单点区间和算式端点。展开要求端点能
+精确算成整数、枚举长度为 1–1,024；区间构造和边界推理也支持任意整数端点。
+
+`by for` 和 `by enumerate finite_set` 也支持在整数区间上逐项证明：
+
+```litex
+by for:
+    ? forall n range(0, 4):
+        n * n <= 9
+    n * n <= 9
+```
+
+每个取值都使用 result 中原来的绑定、条件和证明步骤，编译器检查完整性与顺序，
+最后引用已经生成的结论。可看[四个平方值](../lean/examples/integer_range_square_values/)、
+[带非零条件的除法](../lean/examples/guarded_integer_range_division/)，以及
+[命名定理中的循环证明](../lean/examples/named_integer_range_enumeration/)。
+负数、空区间、单点区间和算式端点均有例子。也支持多个参数的组合：
+
+```litex
+by for:
+    ? forall x range(0, 3), y range(0, 2):
+        x * x + y * y <= 5
+    x * x + y * y <= 5
+```
+
+可看[矩形范围内的平方和](../lean/examples/integer_rectangle_square_bound/)、
+[两个非零条件](../lean/examples/nonzero_integer_pair_division/)和
+[三个参数混用列表与区间](../lean/examples/finite_triple_product/)。同组参数可以共用一个域。
+组合按源码顺序排列，最后一个参数变化最快；编译器检查全部赋值，总数上限为 1,024。
+任一域为空时直接关闭证明。依赖前面参数的枚举域仍未接入。
+
 **Litex 已经在一个明确的数学子集上打通了从源码证明、编译生成 Lean 到 Lean 复核的流程：
 标准数域上的初等代数与不等式，配上基础集合、带定义域的函数和可复用定理。**
 这些能力可以组合使用，处理带任意参数、前提和中间步骤的证明；已有案例还通过手写
@@ -536,11 +781,11 @@ Adapter 导出普通 Lean／Mathlib 定理。
 
 | 数学层面 | 当前覆盖的主要内容 | 对应示例 |
 | --- | --- | --- |
-| 数 | ℕ、ℤ、ℚ、ℝ、ℂ 及其包含关系，正实数；参数可以是域内任意对象。 | [数域包含链](../lean/examples/numeric_hierarchy/)、[正实数函数](../lean/examples/newton_positive_update/) |
+| 数 | ℕ、ℤ、ℚ、ℝ、ℂ，以及正数、负数、非零子集；15 种源码数域都有表示，参数保留原来的宿主表示。 | [数域包含链](../lean/examples/numeric_hierarchy/)、[正负与非零参数](../lean/examples/signed_numeric_domains/)、[集合包含语句](../lean/examples/signed_numeric_subsets/) |
 | 运算与关系 | 精确分数与有限小数、四则、多项式与有理式恒等式、消去律；部分固定整数幂和实数不等式规则。 | [精确分数与小数](../lean/examples/exact_fractions_and_decimals/)、[平方差](../lean/examples/real_difference_of_squares/)、[消去律](../lean/examples/multiplicative_cancellation/)、[平方非负](../lean/examples/real_squares_nonnegative/) |
 | 集合 | 任意集合参数、空集、有限枚举、有界集合构造，以及成员、子集和相关推理。 | [任意集合](../lean/examples/arbitrary_set_laws/)、[有限集合](../lean/examples/finite_natural_set/)、[闭单位区间](../lean/examples/closed_unit_interval/) |
 | 函数 | 一个或两个数值参数的公式函数，显式定义域条件、求值与组合；已有互逆和单射的完整案例。 | [带条件的双参数函数](../lean/examples/two_argument_shifted_quotient/)、[函数组合](../lean/examples/composed_real_formula/)、[有理函数的互逆与单射](../lean/examples/rational_inverse_maps/) |
-| 定义与证明 | 具体谓词、全称与条件命题、等式链、部分合取、命名定理及调用、局部对象、`let` 和 `claim`。 | [谓词与等式替换](../lean/examples/concrete_predicate_equality_transport/)、[定理返回与调用](../lean/examples/named_compound_theorem_returns/)、[局部对象](../lean/examples/local_witness_additive_identity/)、[claim 与正数值域](../lean/examples/newton_positive_update/) |
+| 定义与证明 | 具体谓词、全称与条件命题、等式链、部分合取、命名定理及调用、局部对象、`let`、`claim` 和 `sketch`。 | [谓词与等式替换](../lean/examples/concrete_predicate_equality_transport/)、[定理返回与调用](../lean/examples/named_compound_theorem_returns/)、[局部对象](../lean/examples/local_witness_additive_identity/)、[claim 与正数值域](../lean/examples/newton_positive_update/) |
 
 这里的覆盖指已实现并检查过的构造和证明路线，并不意味着该领域内任意 Litex 证明都能编译。
 绝对值、符号自然幂和部分析取也已有受限规则的编译及局部 Lean 检查；完整递归 Newton

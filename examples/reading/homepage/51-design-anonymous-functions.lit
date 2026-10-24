@@ -1,0 +1,8 @@
+have fn f(x R) R = x^2
+have fn g(x R) R = x + 1
+
+# A temporary pointwise sum needs no permanent name.
+fn(x R) R {f(x) + g(x)} $in fn(x R) R
+
+# Anonymous functions can be evaluated directly.
+fn(x R) R {x^2 + x + 1}(2) = 7

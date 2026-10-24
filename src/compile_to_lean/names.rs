@@ -1,7 +1,9 @@
 use crate::compile_to_lean::helper::*;
 use crate::compile_to_lean::source_position::SourcePosition;
 use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
-use crate::execute::execute_proof_block_stmt::{ExecClaimStmtResult, ExecProofBlockStmtResult};
+use crate::execute::execute_proof_block_stmt::{
+    ExecClaimStmtResult, ExecProofBlockStmtResult, ExecSketchStmtResult,
+};
 use crate::execute::{ExecDefPropStmtResult, ExecHaveFnByInducStmtResult};
 use crate::prelude::*;
 
@@ -42,6 +44,38 @@ impl LitexToLeanCompiler {
         }
         fn statement(result: &ExecStmtResult, out: &mut Vec<IdentifierId>) {
             match result {
+                ExecStmtResult::ProofBlock(ExecProofBlockStmtResult::Sketch(ExecSketchStmtResult::Success(p))) => {
+                    for step in &p.proof_steps { statement(step, out); }
+                }
+                ExecStmtResult::By(crate::execute::execute_by_stmt::ExecByStmtResult::Contra(
+                    crate::execute::execute_by_stmt::ExecByContraStmtResult::Success(p),
+                )) => {
+                    parameters(&p.goal, out);
+                    parameters(&p.reverse_assumption, out);
+                    for step in &p.proof_steps { statement(step, out); }
+                    verify(&p.closing.impossible, out);
+                    verify(&p.closing.negated_impossible, out);
+                }
+                ExecStmtResult::Definition(ExecDefinitionStmtResult::HaveFnByForallExistUnique(
+                    crate::execute::ExecHaveFnByForallExistUniqueStmtResult::Success(p),
+                )) => {
+                    verify(&p.source_forall, out);
+                    for store in [&p.property, &p.uniqueness] {
+                        if let StoreFactResult::ForallFact(stored) = &store.store {
+                            parameters(&Fact::ForallFact(stored.fact.clone()), out);
+                        }
+                    }
+                }
+                ExecStmtResult::Definition(ExecDefinitionStmtResult::HaveFnEqualCaseByCase(crate::execute::ExecHaveFnEqualCaseByCaseStmtResult::Success(p))) => {
+                    for store in &p.store_and_infer_result.case_defining {
+                        if let StoreFactResult::ForallFact(stored) = &store.store { parameters(&Fact::ForallFact(stored.fact.clone()), out); }
+                    }
+                }
+                ExecStmtResult::Register(result) => {
+                    if let Ok(proof) = crate::compile_to_lean::compile_register_stmt_result::registration_proof(result) {
+                        verify(proof, out);
+                    }
+                }
                 ExecStmtResult::Witness(crate::execute::execute_witness_stmt::ExecWitnessStmtResult::WitnessNonemptySet(crate::execute::execute_witness_stmt::ExecWitnessNonemptySetStmtResult::Success(proof))) => {
                     for step in &proof.proof_steps { statement(step, out); }
                 }
@@ -311,12 +345,14 @@ impl LitexToLeanCompiler {
     /// closes over the actual local definitions, including constructor WD.
     /// Exported theorems already provide this boundary; inferred references
     /// remain direct citations through `emit_internal_fact_reference`.
-    fn share_local_proof(&self, proof: &str, local: bool) -> String {
-        if !local {
-            return proof.to_owned();
-        }
+    pub(in crate::compile_to_lean) fn share_local_proof(&self, proof: &str, local: bool) -> String {
+        let checker = if local {
+            "litex_checked_step"
+        } else {
+            "litex_complete"
+        };
         format!(
-            "(by\n  litex_checked_step =>\n    exact (\n      {}\n    )\n)",
+            "(by\n  {checker} =>\n    exact (\n      {}\n    )\n)",
             proof.replace('\n', "\n      ")
         )
     }
@@ -454,6 +490,15 @@ impl LitexToLeanCompiler {
                 Ok(proposition)
             }
             Fact::ExistFact(fact) => self.exist_proposition(fact, position),
+            Fact::ExistUniqueFact(fact) => Ok(format!(
+                "({}) ∧ ({})",
+                self.exist_proposition(fact, position)?,
+                self.unique_signature(fact, position)?.0
+            )),
+            Fact::NotExistFact(fact) => {
+                Ok(format!("¬ ({})", self.exist_proposition(fact, position)?))
+            }
+            Fact::NotForall(fact) => self.not_forall_proposition(fact, position),
             _ => Err(LeanCompileError::unsupported("Declaration/CompoundFact")),
         }
     }
@@ -479,8 +524,18 @@ impl LitexToLeanCompiler {
                 self.compile_object_reference(&fact.element, position)?,
                 self.compile_object_reference(&fact.set, position)?
             )),
+            AtomicFact::NotInFact(fact) => Ok(format!(
+                "¬ Litex.In {} {}",
+                self.compile_object_reference(&fact.element, position)?,
+                self.compile_object_reference(&fact.set, position)?
+            )),
             AtomicFact::SubsetFact(fact) => Ok(format!(
                 "Litex.Subset {} {}",
+                self.compile_object_reference(&fact.left, position)?,
+                self.compile_object_reference(&fact.right, position)?
+            )),
+            AtomicFact::NotSubsetFact(fact) => Ok(format!(
+                "¬ Litex.Subset {} {}",
                 self.compile_object_reference(&fact.left, position)?,
                 self.compile_object_reference(&fact.right, position)?
             )),
@@ -531,6 +586,18 @@ impl LitexToLeanCompiler {
                     self.compile_normal_atomic_proposition(&positive, position)?
                 ))
             }
+            fact if crate::compile_to_lean::compile_mapping_properties::mapping_parts(fact)
+                .is_some() =>
+            {
+                let arguments = atomic_fact_args_ref(fact)
+                    .iter()
+                    .map(|obj| {
+                        self.compile_object_reference(obj, position)
+                            .map(|term| format!("(Litex.denote {term})"))
+                    })
+                    .collect::<Result<Vec<_>, _>>()?;
+                self.compile_atomic_raw_proposition(fact, &arguments, position)
+            }
             AtomicFact::IsFiniteSetFact(_)
             | AtomicFact::HasRiemannIntegralFact(_)
             | AtomicFact::NotHasRiemannIntegralFact(_)
@@ -575,8 +642,6 @@ impl LitexToLeanCompiler {
             | AtomicFact::NotIsSetFact(_)
             | AtomicFact::NotIsNonemptySetFact(_)
             | AtomicFact::NotIsFiniteSetFact(_)
-            | AtomicFact::NotInFact(_)
-            | AtomicFact::NotSubsetFact(_)
             | AtomicFact::NotSupersetFact(_)
             | AtomicFact::NotProperSubsetFact(_)
             | AtomicFact::NotProperSupersetFact(_)
@@ -597,6 +662,12 @@ impl LitexToLeanCompiler {
         object: &Obj,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
+        if let Some(number) = position.enumeration_literal(object) {
+            return Ok(format!(
+                "(Litex.number (M := M) {})",
+                number_literal(number, "ℂ")?
+            ));
+        }
         if let Some(term) = position.bound_object_child(object) {
             return Ok(term);
         }
@@ -616,6 +687,12 @@ impl LitexToLeanCompiler {
             return Ok(term);
         }
         if let Obj::Identifier(IdentifierObj::Plain { id, .. }) = object {
+            if let Ok((_, producer)) = position.visible_piecewise_function(id) {
+                return Ok(self.context_application(&format!("_object_i{}", id.value()), &producer));
+            }
+            if let Ok((_, producer)) = position.visible_selected_function(id) {
+                return Ok(self.context_application(&format!("_object_i{}", id.value()), &producer));
+            }
             if let Ok((proof, _)) = position.visible_recursive_self(id) {
                 return Ok(format!("_object_i{}", proof.statement.name.id.value()));
             }
@@ -639,8 +716,8 @@ impl LitexToLeanCompiler {
             return Ok(term);
         }
         if is_literal_coordinate_call(object) {
-            if let Some(Some(term)) = position
-                .with_visible_inferred_subject(object, &mut |store, producer| {
+            if let Some(term) = position
+                .with_visible_inferred_subject_filter(object, &mut |store, producer| {
                     self.compile_cart_inferred_subject(object, store, producer)
                 })?
             {
@@ -658,6 +735,16 @@ impl LitexToLeanCompiler {
         if let Some(term) =
             position.with_visible_inferred_subject(object, &mut |store, producer| {
                 if let Some(term) = self.compile_cart_inferred_subject(object, store, producer)? {
+                    return Ok(term);
+                }
+                if let Some(term) =
+                    self.compile_inferred_builder_constructor(object, store, producer)?
+                {
+                    return Ok(term);
+                }
+                if let Some(term) =
+                    self.compile_finite_seq_inferred_subject(object, store, producer)?
+                {
                     return Ok(term);
                 }
                 // The named rule creates this primitive; its Lean constructor proves WD.

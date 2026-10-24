@@ -258,13 +258,9 @@ fn claim_rejects_original_goal_that_differs_from_parent_store() {
 }
 
 #[test]
-fn sketch_remains_an_explicit_rejected_compiler_boundary() {
+fn sketch_checks_its_body_without_a_claim_conclusion() {
     let (result, compiler) = checked("sketch:\n    1 = 1\n");
-    assert_eq!(
-        compiler
-            .compile_run(&result, "sketch_boundary")
-            .unwrap_err()
-            .route,
-        "ProofBlock/Sketch"
-    );
+    let lean = compiler.compile_run(&result, "sketch_boundary").unwrap();
+    assert!(lean.contains("private theorem _sketch_1"));
+    assert!(!lean.lines().any(|line| line.starts_with("theorem h_")));
 }

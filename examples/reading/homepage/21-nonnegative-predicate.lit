@@ -1,0 +1,9 @@
+prop nonnegative(x R):
+    x >= 0
+
+thm squares_are_nonnegative:
+    ? forall x R:
+        $nonnegative(x ^ 2)
+    x ^ 2 >= 0
+
+by thm squares_are_nonnegative(3) => $nonnegative(3 ^ 2)

@@ -128,8 +128,8 @@ impl LitexToLeanCompiler {
                         ))
                     }
                     EqualitySearchProofByFnApplicationObjectDefinition::HaveFnEqualCaseByCase(
-                        _,
-                    ) => Err(LeanCompileError::unsupported("FunctionDefinition/Cases")),
+                        proof,
+                    ) => self.compile_piecewise_unfold_result(fact, proof, parent_wd, position),
                     EqualitySearchProofByFnApplicationObjectDefinition::HaveFnByInduc(proof) => {
                         self.compile_recursive_unfold_result(fact, proof, parent_wd, position)
                     }
@@ -144,9 +144,12 @@ impl LitexToLeanCompiler {
                     }
                 }
             }
-            EqualitySearchProofByObjectDefinition::CartesianDefinition(_) => Err(
-                LeanCompileError::unsupported("FunctionDefinition/Cartesian"),
+            EqualitySearchProofByObjectDefinition::NativeMatrix(_) => Err(
+                LeanCompileError::unsupported("FunctionDefinition/NativeMatrix"),
             ),
+            EqualitySearchProofByObjectDefinition::CartesianDefinition(proof) => {
+                self.compile_cartesian_definition(fact, proof, position)
+            }
             EqualitySearchProofByObjectDefinition::ByIdentifier(_) => Err(
                 LeanCompileError::unsupported("FunctionDefinition/Identifier"),
             ),
@@ -273,6 +276,11 @@ impl LitexToLeanCompiler {
             }
         };
         let (function, known_path) = match source {
+            ParentCheckedBetaFunctionBody::NativeMatrix(_) => {
+                return Err(LeanCompileError::unsupported(
+                    "FunctionDefinition/NativeMatrix",
+                ))
+            }
             ParentCheckedBetaFunctionBody::Composition { .. } => {
                 return Err(LeanCompileError::unsupported(
                     "function definition/Composition",
@@ -564,9 +572,11 @@ impl LitexToLeanCompiler {
         let literal_position = SourcePosition { before: 2, ..step };
         let selected = self.compile_wd(&proof.body_application_well_defined, &literal_position)?;
         let completed = SourcePosition { before: 3, ..step };
+        // A beta proof can be the receiver of .trans, with no expected type.
+        // Keep its original endpoints explicit for every function interface.
+        let application_value = self.compile_normalization_value(&proof.application, &step)?;
+        let expanded = self.compile_normalization_value(&proof.expanded_body, &completed)?;
         if !Self::function_uses_numeric_interface(&function.body) {
-            let application_value = self.compile_normalization_value(&proof.application, &step)?;
-            let expanded = self.compile_normalization_value(&proof.expanded_body, &completed)?;
             let body_equality = self.compile_packed_function_body_equality(
                 function,
                 arguments,
@@ -580,7 +590,6 @@ impl LitexToLeanCompiler {
             self.compile_function_constructor_arguments(&function.body, &completed)?;
         let guard = self.compile_function_guard_template(&function.body, &completed)?;
         let body = self.compile_function_body_template(function, &completed)?;
-        let expanded = self.compile_normalization_value(&proof.expanded_body, &completed)?;
         let names = format!("let _litex_original := {actual}\nlet _litex_literal := {selected}");
         if arguments.len() == 1 {
             let domain_law = if target {
@@ -594,7 +603,7 @@ impl LitexToLeanCompiler {
                 "callFormula_denote"
             };
             let return_proof = format!("(by intro _x _hx _hg; exact _litex_literal.val.function.wd _x ((Litex.FunctionSignature.{domain_law} {constructor_arguments} {guard} _x).mpr ⟨_hx, _hg⟩))");
-            Ok(format!("(by\n  {}\n  have _litex_call_eq := Litex.callCongr _litex_original _litex_literal {head_equal} (Litex.sameRefl _litex_original.val.argument)\n  have _litex_beta := Litex.{beta_law} {constructor_arguments} {guard} {body} {return_proof} _litex_literal.val.argument _litex_literal.wd.2.1 _litex_literal.wd.2.2\n  exact _litex_call_eq.trans (_litex_beta.trans (show {body} (Litex.denote _litex_literal.val.argument) = {expanded} from rfl))\n)", names.replace('\n', "\n  ")))
+            Ok(format!("(show {application_value} = {expanded} from by\n  {}\n  have _litex_call_eq := Litex.callCongr _litex_original _litex_literal {head_equal} (Litex.sameRefl _litex_original.val.argument)\n  have _litex_beta := Litex.{beta_law} {constructor_arguments} {guard} {body} {return_proof} _litex_literal.val.argument _litex_literal.wd.2.1 _litex_literal.wd.2.2\n  exact _litex_call_eq.trans (_litex_beta.trans (show {body} (Litex.denote _litex_literal.val.argument) = {expanded} from rfl))\n)", names.replace('\n', "\n  ")))
         } else {
             let domain_law = if target {
                 "twoTarget_domain"
@@ -619,7 +628,7 @@ impl LitexToLeanCompiler {
                 )
             };
             let return_proof = format!("(by intro _x _y _hx _hy _hg; have _h := _litex_literal.val.function.wd (Litex.FiniteFunction.pack2 (M := M) _x _y) ((Litex.FunctionSignature.{domain_law} {constructor_arguments} {guard} _x _y).mpr ⟨_hx, _hy, _hg⟩); change M.mem ({body} (Litex.FiniteFunction.unpack2 (M := M) (Litex.FiniteFunction.pack2 (M := M) _x _y)).1 (Litex.FiniteFunction.unpack2 (M := M) (Litex.FiniteFunction.pack2 (M := M) _x _y)).2) {output} at _h; simpa only [Litex.FiniteFunction.unpack_pack2] using _h)");
-            Ok(format!("(by\n  {}\n  have _litex_call_eq := Litex.call2Congr _litex_original _litex_literal {head_equal} (Litex.sameRefl _litex_original.val.first) (Litex.sameRefl _litex_original.val.second)\n  have _litex_beta := Litex.{beta_law} {constructor_arguments} {guard} {body} {return_proof} _litex_literal.val.first _litex_literal.val.second _litex_literal.wd.2.1 _litex_literal.wd.2.2.1 _litex_literal.wd.2.2.2\n  exact _litex_call_eq.trans (_litex_beta.trans (show {body} (Litex.denote _litex_literal.val.first) (Litex.denote _litex_literal.val.second) = {expanded} from rfl))\n)", names.replace('\n', "\n  ")))
+            Ok(format!("(show {application_value} = {expanded} from by\n  {}\n  have _litex_call_eq := Litex.call2Congr _litex_original _litex_literal {head_equal} (Litex.sameRefl _litex_original.val.first) (Litex.sameRefl _litex_original.val.second)\n  have _litex_beta := Litex.{beta_law} {constructor_arguments} {guard} {body} {return_proof} _litex_literal.val.first _litex_literal.val.second _litex_literal.wd.2.1 _litex_literal.wd.2.2.1 _litex_literal.wd.2.2.2\n  exact _litex_call_eq.trans (_litex_beta.trans (show {body} (Litex.denote _litex_literal.val.first) (Litex.denote _litex_literal.val.second) = {expanded} from rfl))\n)", names.replace('\n', "\n  ")))
         }
     }
 
@@ -684,8 +693,8 @@ impl LitexToLeanCompiler {
                 "(Litex.absValue (M := M) {})",
                 self.compile_normalization_value(&value.arg, position)?
             )),
-            Obj::ArithmeticOperator(operator) => {
-                let (operation, children) = normalization_arithmetic_children(operator)?;
+            Obj::ArithmeticOperator(_) | Obj::IntegerOperator(_) => {
+                let (operation, children) = normalization_operation_children(object)?;
                 let values = children
                     .into_iter()
                     .map(|child| self.compile_normalization_value(child, position))
@@ -757,11 +766,11 @@ impl LitexToLeanCompiler {
                 }
                 Ok(None)
             }
-            Obj::ArithmeticOperator(operator) => {
-                let (operation, _) = normalization_arithmetic_children(operator)?;
+            Obj::ArithmeticOperator(_) | Obj::IntegerOperator(_) => {
+                let (operation, _) = normalization_operation_children(current)?;
                 let operation = arithmetic_operation_term(operation);
-                let mut rebuilt = operator.clone();
-                let children = normalization_arithmetic_children_mut(&mut rebuilt)?;
+                let mut rebuilt = current.clone();
+                let children = normalization_operation_children_mut(&mut rebuilt)?;
                 let count = children.len();
                 for (index, child) in children.into_iter().enumerate() {
                     if let Some((next, equality)) = self.embed_recorded_function_expansion(
@@ -779,7 +788,7 @@ impl LitexToLeanCompiler {
                         } else {
                             format!("(congrArg₂ {operation} rfl {equality})")
                         };
-                        return Ok(Some((Obj::ArithmeticOperator(rebuilt), proof)));
+                        return Ok(Some((rebuilt, proof)));
                     }
                 }
                 Ok(None)
@@ -834,6 +843,40 @@ fn function_head_object(head: &FnObjHead) -> Result<Obj, LeanCompileError> {
     }
 }
 
+fn normalization_operation_children(
+    object: &Obj,
+) -> Result<(&'static str, Vec<&Obj>), LeanCompileError> {
+    match object {
+        Obj::ArithmeticOperator(p) => normalization_arithmetic_children(p),
+        Obj::IntegerOperator(IntegerOperator::Factorial(p)) => Ok(("factorialValue", vec![&p.arg])),
+        Obj::IntegerOperator(IntegerOperator::Gcd(p)) => Ok(("gcdValue", vec![&p.left, &p.right])),
+        Obj::IntegerOperator(IntegerOperator::Lcm(p)) => Ok(("lcmValue", vec![&p.left, &p.right])),
+        Obj::IntegerOperator(IntegerOperator::Mod(p)) => Ok(("modValue", vec![&p.left, &p.right])),
+        Obj::IntegerOperator(IntegerOperator::Quot(p)) => {
+            Ok(("quotValue", vec![&p.left, &p.right]))
+        }
+        _ => Err(LeanCompileError::unsupported(
+            "FunctionDefinition/Operation",
+        )),
+    }
+}
+
+fn normalization_operation_children_mut(
+    object: &mut Obj,
+) -> Result<Vec<&mut Box<Obj>>, LeanCompileError> {
+    match object {
+        Obj::ArithmeticOperator(p) => normalization_arithmetic_children_mut(p),
+        Obj::IntegerOperator(IntegerOperator::Factorial(p)) => Ok(vec![&mut p.arg]),
+        Obj::IntegerOperator(IntegerOperator::Gcd(p)) => Ok(vec![&mut p.left, &mut p.right]),
+        Obj::IntegerOperator(IntegerOperator::Lcm(p)) => Ok(vec![&mut p.left, &mut p.right]),
+        Obj::IntegerOperator(IntegerOperator::Mod(p)) => Ok(vec![&mut p.left, &mut p.right]),
+        Obj::IntegerOperator(IntegerOperator::Quot(p)) => Ok(vec![&mut p.left, &mut p.right]),
+        _ => Err(LeanCompileError::unsupported(
+            "FunctionDefinition/Operation",
+        )),
+    }
+}
+
 fn normalization_arithmetic_children(
     operator: &ArithmeticOperator,
 ) -> Result<(&'static str, Vec<&Obj>), LeanCompileError> {
@@ -845,9 +888,11 @@ fn normalization_arithmetic_children(
         ArithmeticOperator::Pow(value) => Ok(("powValue", vec![&value.base, &value.exponent])),
         ArithmeticOperator::Neg(value) => Ok(("negValue", vec![&value.arg])),
         ArithmeticOperator::Abs(value) => Ok(("absValue", vec![&value.arg])),
-        _ => Err(LeanCompileError::unsupported(
-            "FunctionDefinition/ArithmeticContext",
-        )),
+        ArithmeticOperator::Sign(value) => Ok(("signValue", vec![&value.arg])),
+        ArithmeticOperator::Floor(value) => Ok(("floorValue", vec![&value.arg])),
+        ArithmeticOperator::Ceil(value) => Ok(("ceilValue", vec![&value.arg])),
+        ArithmeticOperator::Min(value) => Ok(("minValue", vec![&value.left, &value.right])),
+        ArithmeticOperator::Max(value) => Ok(("maxValue", vec![&value.left, &value.right])),
     }
 }
 
@@ -862,8 +907,10 @@ fn normalization_arithmetic_children_mut(
         ArithmeticOperator::Pow(value) => Ok(vec![&mut value.base, &mut value.exponent]),
         ArithmeticOperator::Neg(value) => Ok(vec![&mut value.arg]),
         ArithmeticOperator::Abs(value) => Ok(vec![&mut value.arg]),
-        _ => Err(LeanCompileError::unsupported(
-            "FunctionDefinition/ArithmeticContext",
-        )),
+        ArithmeticOperator::Sign(value) => Ok(vec![&mut value.arg]),
+        ArithmeticOperator::Floor(value) => Ok(vec![&mut value.arg]),
+        ArithmeticOperator::Ceil(value) => Ok(vec![&mut value.arg]),
+        ArithmeticOperator::Min(value) => Ok(vec![&mut value.left, &mut value.right]),
+        ArithmeticOperator::Max(value) => Ok(vec![&mut value.left, &mut value.right]),
     }
 }

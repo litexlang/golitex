@@ -1,0 +1,18 @@
+have fn clamp_at_zero(x R) R by cases:
+    case x < 0: 0
+    case x >= 0: x
+
+prop is_nonnegative(x R):
+    x >= 0
+
+thm clamp_at_zero_is_nonnegative:
+    ? forall x R:
+        $is_nonnegative(clamp_at_zero(x))
+    by cases:
+        ? $is_nonnegative(clamp_at_zero(x))
+        case x < 0:
+            clamp_at_zero(x) = 0
+            0 >= 0
+        case x >= 0:
+            clamp_at_zero(x) = x
+            x >= 0

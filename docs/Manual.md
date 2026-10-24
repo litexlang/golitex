@@ -543,7 +543,10 @@ naturals.
   Leading spaces on the continued line are ordinary whitespace. Mid-line `\\`
   is not continuation and is unrelated to the template prefix `\`. A trailing
   `\\` with no following line is a parse error.
-- Bracket sequence literals, the matrix carrier, and apostrophe matrix operators are removed; use functions with explicit index sets.
+- Bracket sequence literals, legacy `have matrix` declarations, and apostrophe
+  matrix operators are removed. Use `matrix(S,m,n)` for the finite two-argument
+  function space and `A(r,c)` for a component; dimensions start at zero and
+  indices run from 1 through the corresponding dimension.
 
 ### Unicode mathematical input aliases (preview)
 

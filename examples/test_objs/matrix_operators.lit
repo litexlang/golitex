@@ -1,0 +1,34 @@
+# Zero, identity, transpose, conjugate transpose and diagonal trace.
+# Shapes are explicit; extensional equality uses the ordinary function rule.
+
+zero_matrix(2,3)(2,3)=0
+
+zero_matrix(2,3) $in matrix(R,2,3)
+
+identity_matrix(3)(2,2)=1
+
+identity_matrix(3)(1,2)=0
+
+identity_matrix(3) $in matrix(C,3,3)
+
+have fn complex_entries(r closed_range(1,2),c closed_range(1,3)) C=r+c+i
+
+transpose(complex_entries,2,3)(3,2)=5+i
+
+conjugate_transpose(complex_entries,2,3)(3,2)=5-i
+
+by fn_extension transpose(transpose(complex_entries,2,3),3,2)=complex_entries
+
+by fn_extension conjugate_transpose(conjugate_transpose(complex_entries,2,3),3,2)=complex_entries
+
+have fn diagonal_entries(r closed_range(1,2),c closed_range(1,2)) R=r+c
+
+trace(diagonal_entries,2)=6
+
+trace(identity_matrix(3),3)=3
+
+forall mat matrix(C,2,3),r closed_range(1,3),c closed_range(1,2):
+    transpose(mat,2,3)(r,c)=mat(c,r)
+
+forall mat matrix(R,2,3):
+    transpose(mat,2,3) $in matrix(R,3,2)

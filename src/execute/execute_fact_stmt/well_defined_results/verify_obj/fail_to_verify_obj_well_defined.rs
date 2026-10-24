@@ -11,6 +11,7 @@ use crate::execute::execute_fact_stmt::well_defined_results::well_defined_result
 use crate::prelude::*;
 
 pub enum FailToVerifyObjWellDefinedResult {
+    MatrixOperator(FailToVerifyMatrixOperatorObjWellDefinedResult),
     IntegralOperator(crate::execute::execute_fact_stmt::riemann_integral::IntegralOperatorWellDefinedFailure),
     DerivativeOperator(crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedFailure),
     BoundOperator(FailToVerifyBoundOperatorObjWellDefinedResult),
@@ -119,6 +120,7 @@ pub enum FailToVerifySetOperatorObjWellDefinedResult {
 }
 
 pub enum FailToVerifySetFormerObjWellDefinedResult {
+    MatrixSet(FailToVerifyMatrixSetObjWellDefined),
     ListSet(FailToVerifyListSetObjWellDefined),
     SetBuilder(FailToVerifySetBuilderObjWellDefined),
     Range(FailToVerifyRangeObjWellDefined),
@@ -505,3 +507,54 @@ pub struct FailToVerifySequenceLiminfObjWellDefined {
     pub obj: crate::ast::obj::Obj,
     pub result: Box<crate::execute::execute_fact_stmt::VerifyFactResult>,
 }
+
+pub enum FailToVerifyMatrixOperatorObjWellDefinedResult {
+    Determinant(FailToVerifyDeterminantObjWellDefined),
+    ZeroMatrix(FailToVerifyZeroMatrixObjWellDefined),
+    IdentityMatrix(FailToVerifyIdentityMatrixObjWellDefined),
+    Transpose(FailToVerifyMatrixTransposeObjWellDefined),
+    ConjugateTranspose(FailToVerifyMatrixConjugateTransposeObjWellDefined),
+    Trace(FailToVerifyMatrixTraceObjWellDefined),
+    Add(FailToVerifyMatrixAddObjWellDefined),
+    Subtract(FailToVerifyMatrixSubtractObjWellDefined),
+    Scale(FailToVerifyMatrixScaleObjWellDefined),
+    Multiply(FailToVerifyMatrixMultiplyObjWellDefined),
+    Apply(FailToVerifyMatrixApplyObjWellDefined),
+    Power(FailToVerifyMatrixPowerObjWellDefined),
+    Inverse(FailToVerifyMatrixInverseObjWellDefined),
+    Rank(FailToVerifyMatrixRankObjWellDefined),
+    Minor(FailToVerifyMatrixMinorObjWellDefined),
+    Cofactor(FailToVerifyMatrixCofactorObjWellDefined),
+    Adjugate(FailToVerifyMatrixAdjugateObjWellDefined),
+    Diagonal(FailToVerifyMatrixDiagonalObjWellDefined),
+    OuterProduct(FailToVerifyMatrixOuterProductObjWellDefined),
+    InnerProduct(FailToVerifyFiniteInnerProductObjWellDefined),
+    EuclideanNorm(FailToVerifyEuclideanNormObjWellDefined),
+    FrobeniusNorm(FailToVerifyMatrixFrobeniusNormObjWellDefined),
+}
+pub struct FailToVerifyMatrixSetObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
+pub struct FailToVerifyDeterminantObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
+pub struct FailToVerifyZeroMatrixObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
+pub struct FailToVerifyIdentityMatrixObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
+pub struct FailToVerifyMatrixTransposeObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
+pub struct FailToVerifyMatrixConjugateTransposeObjWellDefined(
+    pub FailToVerifyObjWellDefinedByDefCommon,
+);
+pub struct FailToVerifyMatrixTraceObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
+
+pub struct FailToVerifyMatrixAddObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
+pub struct FailToVerifyMatrixSubtractObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
+pub struct FailToVerifyMatrixScaleObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
+pub struct FailToVerifyMatrixMultiplyObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
+pub struct FailToVerifyMatrixApplyObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
+pub struct FailToVerifyMatrixPowerObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
+pub struct FailToVerifyMatrixInverseObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
+pub struct FailToVerifyMatrixRankObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
+pub struct FailToVerifyMatrixMinorObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
+pub struct FailToVerifyMatrixCofactorObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
+pub struct FailToVerifyMatrixAdjugateObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
+pub struct FailToVerifyMatrixDiagonalObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
+pub struct FailToVerifyMatrixOuterProductObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
+pub struct FailToVerifyFiniteInnerProductObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
+pub struct FailToVerifyEuclideanNormObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
+pub struct FailToVerifyMatrixFrobeniusNormObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);

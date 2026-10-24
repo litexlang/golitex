@@ -487,7 +487,7 @@ impl LitexToLeanCompiler {
         Ok((call, output, member))
     }
 
-    fn compile_packed_call_arguments(
+    pub(in crate::compile_to_lean) fn compile_packed_call_arguments(
         &self,
         signature: &FnSet,
         arguments: &[String],
@@ -581,6 +581,14 @@ impl LitexToLeanCompiler {
         rule: &InFactSearchProofByKnownSpecialProperty,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
+        if let InFactSearchProofByKnownSpecialProperty::FiniteTupleInStandardFunctionSpace(proof) =
+            rule
+        {
+            let _ = proof;
+            return Err(LeanCompileError::unsupported(
+                "FunctionReturn/RestrictedFiniteTupleCarrier",
+            ));
+        }
         if let InFactSearchProofByKnownSpecialProperty::KnownSubsetMembership(proof) = rule {
             return self.compile_known_subset_member(goal, proof, position);
         }
@@ -643,7 +651,11 @@ impl LitexToLeanCompiler {
                         if self.compile_numeric_carrier(&signature.ret_set, position)? != entry.source_set {
                             return Err(LeanCompileError::new("FunctionReturn/SourceCarrier", "The recorded source upper bound differs from its exact signature citation."));
                         }
-                        fn_return_bridge(&entry.source_set, target)?;
+                        if numeric_refinement(&entry.source_set).is_some() || numeric_refinement(target).is_some() || entry.source_set == StandardSet::NPos {
+                            standard_inclusion_term(&entry.source_set, target, "_", "_")?;
+                        } else {
+                            fn_return_bridge(&entry.source_set, target)?;
+                        }
                         strict |= entry.source_set != *target;
                         if selected_id == Some(entry.cite_signature_fact_id) {
                             if signature != selected_signature {
@@ -818,7 +830,7 @@ impl LitexToLeanCompiler {
         }
     }
 
-    fn compile_fn_return_citation<'p>(
+    pub(in crate::compile_to_lean) fn compile_fn_return_citation<'p>(
         &'p self,
         id: FactId,
         head: &Obj,
@@ -1081,6 +1093,12 @@ fn lift_fn_return(
     target: &StandardSet,
     proof: &str,
 ) -> Result<String, LeanCompileError> {
+    if numeric_refinement(source).is_some()
+        || numeric_refinement(target).is_some()
+        || *source == StandardSet::NPos
+    {
+        return standard_inclusion_term(source, target, call, proof);
+    }
     Ok(match fn_return_bridge(source, target)? {
         Some(bridge) => format!("(Litex.{bridge} {call} {proof})"),
         None => proof.into(),
