@@ -10,11 +10,11 @@ have fn vec(A, B cart(R, R)) cart(R, R) = (B(1) - A(1), B(2) - A(2))
 
 have fn dot(u, v cart(R, R)) R = u(1) * v(1) + u(2) * v(2)
 
-have fn det(u, v cart(R, R)) R = u(1) * v(2) - u(2) * v(1)
+have fn det2(u, v cart(R, R)) R = u(1) * v(2) - u(2) * v(1)
 
 thm det_coordinate_formula:
     ? forall u, v cart(R, R):
-        det(u, v) = u(1) * v(2) - u(2) * v(1)
+        det2(u, v) = u(1) * v(2) - u(2) * v(1)
 
 thm dot_coordinate_formula:
     ? forall u, v cart(R, R):
@@ -46,12 +46,12 @@ thm dot_add_right:
 
 thm collinear_det_expand:
     ? forall p, q, r cart(R, R):
-        det(vec(p, q), vec(p, r)) = (q(1) - p(1)) * (r(2) - p(2)) - (q(2) - p(2)) * (r(1) - p(1))
+        det2(vec(p, q), vec(p, r)) = (q(1) - p(1)) * (r(2) - p(2)) - (q(2) - p(2)) * (r(1) - p(1))
     vec(p,q)(1) = q(1)-p(1)
     vec(p,q)(2) = q(2)-p(2)
     vec(p,r)(1) = r(1)-p(1)
     vec(p,r)(2) = r(2)-p(2)
-    det(vec(p, q), vec(p, r)) = vec(p, q)(1) * vec(p, r)(2) - vec(p, q)(2) * vec(p, r)(1) = (q(1) - p(1)) * (r(2) - p(2)) - (q(2) - p(2)) * (r(1) - p(1))
+    det2(vec(p, q), vec(p, r)) = vec(p, q)(1) * vec(p, r)(2) - vec(p, q)(2) * vec(p, r)(1) = (q(1) - p(1)) * (r(2) - p(2)) - (q(2) - p(2)) * (r(1) - p(1))
 
 thm perpendicular_dot_expand:
     ? forall a, b, c, d cart(R, R):

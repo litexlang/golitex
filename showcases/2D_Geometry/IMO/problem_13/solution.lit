@@ -813,7 +813,7 @@ have fn dot(u, v cart(R, R)) R = u(1) * v(1) + u(2) * v(2)
 
 # 2D determinant (signed parallelogram area / cross product z-component).
 
-have fn det(u, v cart(R, R)) R = u(1) * v(2) - u(2) * v(1)
+have fn det2(u, v cart(R, R)) R = u(1) * v(2) - u(2) * v(1)
 
 # Squared Euclidean distance |ab|^2 (avoids square roots).
 
@@ -824,7 +824,7 @@ have fn distance_sq(a, b cart(R, R)) R = dot(vec(a, b), vec(a, b))
 prop is_parallel(a, b, c, d cart(R, R)):
     a != b
     c != d
-    det(vec(a, b), vec(c, d)) = 0
+    det2(vec(a, b), vec(c, d)) = 0
 
 # Directed segments ab and cd are perpendicular.
 
@@ -1626,17 +1626,17 @@ thm two_product_difference_congruence_13:
 
 thm determinant_difference_coordinates_13:
     ? forall a,b,c,d cart(R,R):
-        det(vec(a,b),vec(c,d))=(b(1)-a(1))*(d(2)-c(2))-(b(2)-a(2))*(d(1)-c(1))
+        det2(vec(a,b),vec(c,d))=(b(1)-a(1))*(d(2)-c(2))-(b(2)-a(2))*(d(1)-c(1))
     vec(a,b)=(b(1)-a(1),b(2)-a(2))
     vec(c,d)=(d(1)-c(1),d(2)-c(2))
     vec(a,b)(1)=b(1)-a(1)
     vec(a,b)(2)=b(2)-a(2)
     vec(c,d)(1)=d(1)-c(1)
     vec(c,d)(2)=d(2)-c(2)
-    det(vec(a,b),vec(c,d))=vec(a,b)(1)*vec(c,d)(2)-vec(a,b)(2)*vec(c,d)(1)
+    det2(vec(a,b),vec(c,d))=vec(a,b)(1)*vec(c,d)(2)-vec(a,b)(2)*vec(c,d)(1)
     by thm two_product_difference_congruence_13(vec(a,b)(1),vec(c,d)(2),vec(a,b)(2),vec(c,d)(1),b(1)-a(1),d(2)-c(2),b(2)-a(2),d(1)-c(1))
     vec(a,b)(1)*vec(c,d)(2)-vec(a,b)(2)*vec(c,d)(1)=(b(1)-a(1))*(d(2)-c(2))-(b(2)-a(2))*(d(1)-c(1))
-    det(vec(a,b),vec(c,d))=(b(1)-a(1))*(d(2)-c(2))-(b(2)-a(2))*(d(1)-c(1))
+    det2(vec(a,b),vec(c,d))=(b(1)-a(1))*(d(2)-c(2))-(b(2)-a(2))*(d(1)-c(1))
 
 thm library_parallelogram_vertex_13:
     ? forall a, b, c, d cart(R, R), ux, uy, vx, vy R:
@@ -1658,8 +1658,8 @@ thm library_parallelogram_vertex_13:
     vec(b, c) = (c(1) - b(1), c(2) - b(2))
     by thm determinant_difference_coordinates_13(a,b,d,c)
     by thm determinant_difference_coordinates_13(a,d,b,c)
-    det(vec(a, b), vec(d, c)) = (b(1) - a(1)) * (c(2) - d(2)) - (b(2) - a(2)) * (c(1) - d(1))
-    det(vec(a, d), vec(b, c)) = (d(1) - a(1)) * (c(2) - b(2)) - (d(2) - a(2)) * (c(1) - b(1))
+    det2(vec(a, b), vec(d, c)) = (b(1) - a(1)) * (c(2) - d(2)) - (b(2) - a(2)) * (c(1) - d(1))
+    det2(vec(a, d), vec(b, c)) = (d(1) - a(1)) * (c(2) - b(2)) - (d(2) - a(2)) * (c(1) - b(1))
     (b(1) - a(1)) * (c(2) - d(2)) - (b(2) - a(2)) * (c(1) - d(1)) = 0
     (d(1) - a(1)) * (c(2) - b(2)) - (d(2) - a(2)) * (c(1) - b(1)) = 0
     ux * (c(2) - d(2)) = (b(1) - a(1)) * (c(2) - d(2))

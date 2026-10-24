@@ -17,6 +17,13 @@ assumptions remain explicit. Four user axioms and one exported abstract predicat
 so this is not a strict proof development, a complete formalization or an
 official edition of the book.
 
+For a shorter route into calculus, read the independent
+[From derivatives to definite integrals](calculus/README.md) companion.
+It uses native derivative candidates, antiderivative relations,
+Newton–Leibniz, substitution and integration by parts in a standalone strict
+module. It does not depend on the chapter selection's axioms or extend its
+claimed chapter coverage.
+
 ## A small fact inside a larger construction
 
 Chapter 5 includes this complete theorem:
@@ -98,6 +105,7 @@ and the [assumption boundary](STATUS.md).
 | [Chapter 7](chapter07-series.lit) | Partial sums, convergence tests and absolute-convergence rearrangements |
 | [Appendix A](appendix-a-logic-and-proof-language.lit) | Logic and proof language; an ordered prerequisite of Chapter 8 |
 | [Chapter 8](chapter08-infinite-sets.lit) | Countability, Cantor's argument, products and choice |
+| [Calculus companion](calculus/README.md) | Point derivatives → chain rule → definite integrals → substitution and integration by parts; independent strict module |
 
 [Mathematical interfaces](math_collections.md) explains the main dependencies.
 The [manifest](litex.config) preserves their verified export order.

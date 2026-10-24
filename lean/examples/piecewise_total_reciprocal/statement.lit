@@ -1,0 +1,10 @@
+# Extend the reciprocal to zero by giving it the value zero.
+have fn reciprocal(x R) R by cases:
+    case x = 0: 0
+    case x != 0: 1 / x
+reciprocal(2) = 1 / 2
+reciprocal(0) = 0
+forall t R:
+    t != 0
+    =>:
+        reciprocal(t) = 1 / t

@@ -1,0 +1,3 @@
+# Describe a real/integer pair as a length-two function with coordinate bounds.
+release cart def cart(R, Z)
+cart(R, Z) = {p finite_seq(union(R, Z), 2): p(1) $in R, p(2) $in Z}

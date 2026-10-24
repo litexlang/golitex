@@ -1,0 +1,27 @@
+# Before: cart_n(R,3) was undefined; use finite_seq(R,3).
+# Now: both spellings share the existing finite-function set node and WD.
+# Gate: target/release/litex -lang en -strict -f examples/test_objs/cart_n.lit
+# Boundary: negative/noninteger lengths, wrong indices and a wider complete
+# domain still reject (executable controls in tests/unit/parse/cart_n.rs).
+
+forall S set,n N:
+    cart_n(S,n)=finite_seq(S,n)=fn(k closed_range(1,n)) S
+
+have v cart_n(R,3)=(1,2,3)
+v(2)=2
+v $in finite_seq(R,3)
+v $in fn(k closed_range(1,3)) R
+
+have w finite_seq(C,2)=(1+i,2)
+w $in cart_n(C,2)
+w(1)=1+i
+
+have fn exact(k closed_range(1,3)) R=k
+release thm fn_set_member(exact,cart_n(R,3))
+exact(2)=2
+
+have fn empty(k closed_range(1,0)) R=0
+release thm fn_set_member(empty,cart_n(R,0))
+
+forall S set,n N,f cart_n(S,n),k closed_range(1,n):
+    f(k) $in S

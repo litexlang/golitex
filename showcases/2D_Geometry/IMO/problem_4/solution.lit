@@ -10,7 +10,7 @@ have fn dot(u, v cart(R, R)) R = u(1) * v(1) + u(2) * v(2)
 
 # 2D determinant (signed parallelogram area / cross product z-component).
 
-have fn det(u, v cart(R, R)) R = u(1) * v(2) - u(2) * v(1)
+have fn det2(u, v cart(R, R)) R = u(1) * v(2) - u(2) * v(1)
 
 # Squared Euclidean distance |ab|^2 (avoids square roots).
 
@@ -19,7 +19,7 @@ have fn distance_sq(a, b cart(R, R)) R = dot(vec(a, b), vec(a, b))
 # General form: the line ax + by + c = 0 (a, b not both zero).
 
 prop is_collinear(p, q, r cart(R, R)):
-    det(vec(p, q), vec(p, r)) = 0
+    det2(vec(p, q), vec(p, r)) = 0
 
 # Segments ab and cd have equal length.
 
@@ -38,7 +38,7 @@ prop is_midpoint(m, a, b cart(R, R)):
 # Allows a = b (then only p = a); use is_on_line when a distinct line is required.
 
 prop is_triangle(a, b, c cart(R, R)):
-    det(vec(a, b), vec(a, c)) != 0
+    det2(vec(a, b), vec(a, c)) != 0
 
 # Triangle abc is isosceles with apex a (ab = ac), not the general "two sides equal".
 
@@ -323,14 +323,14 @@ thm distance_coordinates_4:
 
 thm determinant_coordinates_4:
     ? forall a,b,c cart(R,R):
-        det(vec(a,b),vec(a,c)) = (b(1)-a(1))*(c(2)-a(2))-(b(2)-a(2))*(c(1)-a(1))
+        det2(vec(a,b),vec(a,c)) = (b(1)-a(1))*(c(2)-a(2))-(b(2)-a(2))*(c(1)-a(1))
     vec(a,b) = (b(1)-a(1),b(2)-a(2))
     vec(a,c) = (c(1)-a(1),c(2)-a(2))
     vec(a,b)(1) = (b(1)-a(1),b(2)-a(2))(1) = b(1)-a(1)
     vec(a,b)(2) = (b(1)-a(1),b(2)-a(2))(2) = b(2)-a(2)
     vec(a,c)(1) = (c(1)-a(1),c(2)-a(2))(1) = c(1)-a(1)
     vec(a,c)(2) = (c(1)-a(1),c(2)-a(2))(2) = c(2)-a(2)
-    det(vec(a,b),vec(a,c)) = vec(a,b)(1)*vec(a,c)(2)-vec(a,b)(2)*vec(a,c)(1) = (b(1)-a(1))*(c(2)-a(2))-(b(2)-a(2))*(c(1)-a(1))
+    det2(vec(a,b),vec(a,c)) = vec(a,b)(1)*vec(a,c)(2)-vec(a,b)(2)*vec(a,c)(1) = (b(1)-a(1))*(c(2)-a(2))-(b(2)-a(2))*(c(1)-a(1))
 
 thm tuple_distance_coordinates_4:
     ? forall x,y,u,v R:
@@ -371,12 +371,12 @@ thm tuple_dot_coordinates_4:
 
 thm tuple_determinant_coordinates_4:
     ? forall x,y,u,v,r,s R:
-        det(vec((x,y),(u,v)),vec((x,y),(r,s))) = (u-x)*(s-y)-(v-y)*(r-x)
+        det2(vec((x,y),(u,v)),vec((x,y),(r,s))) = (u-x)*(s-y)-(v-y)*(r-x)
     release thm tuple_vector_projections_4(x,y,u,v)
     release thm tuple_vector_projections_4(x,y,r,s)
     vec((x,y),(u,v))(1)*vec((x,y),(r,s))(2) = (u-x)*(s-y)
     vec((x,y),(u,v))(2)*vec((x,y),(r,s))(1) = (v-y)*(r-x)
-    det(vec((x,y),(u,v)),vec((x,y),(r,s))) = vec((x,y),(u,v))(1)*vec((x,y),(r,s))(2)-vec((x,y),(u,v))(2)*vec((x,y),(r,s))(1) = (u-x)*(s-y)-(v-y)*(r-x)
+    det2(vec((x,y),(u,v)),vec((x,y),(r,s))) = vec((x,y),(u,v))(1)*vec((x,y),(r,s))(2)-vec((x,y),(u,v))(2)*vec((x,y),(r,s))(1) = (u-x)*(s-y)-(v-y)*(r-x)
 
 thm coordinate_configuration_from_values_4:
     ? forall side_b,side_c,t,p,x,y R:
@@ -406,10 +406,10 @@ thm coordinate_configuration_from_values_4:
     dot(vec((0,0),(p,0)),vec((0,0),(x,y))) > 0
     (1+t^2)^2*dot(vec((0,0),(p,0)),vec((0,0),(x,y)))^2 = (1+t^2)^2*(p*x)^2 = (1-t^2)^2*p^2*(x^2+y^2) = (1-t^2)^2*distance_sq((0,0),(p,0))*distance_sq((0,0),(x,y))
     release thm tuple_determinant_coordinates_4(p,0,x,y,-x,-y)
-    det(vec((p,0),(x,y)),vec((p,0),(-x,-y))) = (x-p)*(-y-0)-(y-0)*(-x-p) = 2*p*y
+    det2(vec((p,0),(x,y)),vec((p,0),(-x,-y))) = (x-p)*(-y-0)-(y-0)*(-x-p) = 2*p*y
     2*p > 0
     2*p*y > 0
-    det(vec((p,0),(x,y)),vec((p,0),(-x,-y))) != 0
+    det2(vec((p,0),(x,y)),vec((p,0),(-x,-y))) != 0
     by def $is_triangle((p,0),(x,y),(-x,-y))
     (x,y)(1) = x
     (x,y)(2) = y
@@ -659,8 +659,8 @@ thm triangle_nonzero_arms_4:
         b(2)-a(2) = 0
         (b(1)-a(1))*(c(2)-a(2)) = 0*(c(2)-a(2)) = 0
         (b(2)-a(2))*(c(1)-a(1)) = 0*(c(1)-a(1)) = 0
-        det(vec(a,b),vec(a,c)) = (b(1)-a(1))*(c(2)-a(2))-(b(2)-a(2))*(c(1)-a(1)) = 0-0 = 0
-        impossible det(vec(a,b),vec(a,c)) != 0
+        det2(vec(a,b),vec(a,c)) = (b(1)-a(1))*(c(2)-a(2))-(b(2)-a(2))*(c(1)-a(1)) = 0-0 = 0
+        impossible det2(vec(a,b),vec(a,c)) != 0
     by contra:
         ? c != a
         c = a
@@ -670,8 +670,8 @@ thm triangle_nonzero_arms_4:
         c(2)-a(2) = 0
         (b(1)-a(1))*(c(2)-a(2)) = (b(1)-a(1))*0 = 0
         (b(2)-a(2))*(c(1)-a(1)) = (b(2)-a(2))*0 = 0
-        det(vec(a,b),vec(a,c)) = (b(1)-a(1))*(c(2)-a(2))-(b(2)-a(2))*(c(1)-a(1)) = 0-0 = 0
-        impossible det(vec(a,b),vec(a,c)) != 0
+        det2(vec(a,b),vec(a,c)) = (b(1)-a(1))*(c(2)-a(2))-(b(2)-a(2))*(c(1)-a(1)) = 0-0 = 0
+        impossible det2(vec(a,b),vec(a,c)) != 0
 
 thm problem_4_necessity:
     ? forall side_b, side_c, t R, a, b, c, m cart(R, R):

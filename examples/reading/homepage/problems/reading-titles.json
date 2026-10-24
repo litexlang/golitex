@@ -1,0 +1,37 @@
+{
+  "kind": "reading_titles",
+  "sources": {
+    "undefined-name.lit": {
+      "zh": "未定义名称",
+      "en": "Undefined name"
+    },
+    "undefined-name-fixed.lit": {
+      "zh": "对象声明与计算",
+      "en": "Object declarations and calculation"
+    },
+    "zero-divisor.lit": {
+      "zh": "除以零",
+      "en": "Division by zero"
+    },
+    "zero-divisor-fixed.lit": {
+      "zh": "使用非零分母",
+      "en": "A nonzero divisor"
+    },
+    "sqrt-domain.lit": {
+      "zh": "负数的实数平方根",
+      "en": "Real square root of a negative number"
+    },
+    "sqrt-domain-fixed.lit": {
+      "zh": "非负数的平方根",
+      "en": "Square root of a nonnegative number"
+    },
+    "missing-premise.lit": {
+      "zh": "三段论（缺少前提）",
+      "en": "Syllogism (missing premise)"
+    },
+    "missing-premise-fixed.lit": {
+      "zh": "三段论",
+      "en": "Syllogism"
+    }
+  }
+}

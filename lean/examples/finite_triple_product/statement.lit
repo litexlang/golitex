@@ -1,0 +1,5 @@
+# Check associativity for two binary integers and a sign.
+by enumerate finite_set:
+    ? forall x, y range(0, 2), z {-1, 1}:
+        (x * y) * z = x * (y * z)
+    (x * y) * z = x * (y * z)

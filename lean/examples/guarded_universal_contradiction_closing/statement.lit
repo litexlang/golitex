@@ -1,0 +1,10 @@
+# Close a universal reciprocal proof while retaining the nonzero domain.
+by contra:
+    ? forall x R:
+        x != 0
+        =>:
+            1 / x = 1 / x
+    impossible forall y R:
+        y != 0
+        =>:
+            1 / y = 1 / y

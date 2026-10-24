@@ -34,8 +34,10 @@ impl Runtime {
             {
                 return Ok(Some(P::ByKnownAtomicFact(proof)));
             }
-            if let Some(proof) =
-                self.search_atomic_except_equality_fact_proof_by_known_special_property(fact)
+            if let Some(proof) = self
+                .search_atomic_except_equality_fact_proof_by_known_special_property_at_ceiling(
+                    fact, state,
+                )
             {
                 return Ok(Some(P::ByKnownSpecialProperty(proof)));
             }

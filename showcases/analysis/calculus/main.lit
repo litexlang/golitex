@@ -1,0 +1,116 @@
+# Point derivatives: prove a candidate, then use the selected value.
+
+have fn square(x R) R = x^2
+
+$has_derivative_at(square, 3, 6)
+
+derivative(square, 3) = 6
+
+release thm fn_derivative_at_to_limit(square, 3, 6)
+
+$has_derivative_at(fn(x R*) R {1/x}, 2, -1/4)
+
+have fn identity(x R) R = x
+
+# The chain rule constructs an antiderivative for 2*x*cos(x^2).
+
+have fn twice(x R) R = 2*x
+
+have fn sine(x R) R = sin(x)
+
+have fn cosine(x R) R = cos(x)
+
+have fn wave(x R) R = sin(x^2)
+
+have fn weighted_cosine(x R) R = 2*x*cos(x^2)
+
+claim:
+    ? forall x R:
+        $has_derivative_at(square, x, twice(x))
+        $has_derivative_at(sine, x, cosine(x))
+    release thm fn_derivative_at_real_interior(x)
+    release thm fn_derivative_at_identity(identity, x)
+    release thm fn_derivative_at_multiply(identity, identity, square, x, 1, 1)
+    identity(x) = x
+    twice(x) = 2*x
+    1*identity(x)+identity(x)*1 = twice(x)
+    release thm fn_derivative_at_sin(sine, x)
+    cosine(x) = cos(x)
+
+release thm antiderivative_from_definition(sine, cosine, R)
+
+claim:
+    ? forall x R:
+        wave(x) = sine(square(x))
+        weighted_cosine(x) = cosine(square(x))*twice(x)
+    square(x) = x^2
+    twice(x) = 2*x
+    sine(square(x)) = sin(x^2)
+    cosine(square(x)) = cos(x^2)
+    weighted_cosine(x) = 2*x*cos(x^2)
+    cosine(square(x))*twice(x) = cos(x^2)*(2*x)
+    cos(x^2)*(2*x) = 2*x*cos(x^2)
+
+release thm antiderivative_compose(sine, cosine, square, twice, wave, weighted_cosine, R, R)
+
+release thm antiderivative_to_definition(wave, weighted_cosine, R)
+
+# Newton-Leibniz turns a derivative law into a definite integral.
+
+release thm riemann_integrable_continuous(weighted_cosine, 0, 2)
+
+release thm riemann_integral_newton_leibniz(weighted_cosine, wave, 0, 2)
+
+wave(2) = sin(4)
+
+wave(0) = 0
+
+wave(2)-wave(0) = sin(4)
+
+integral(weighted_cosine, 0, 2) = sin(4)
+
+# Substitution also works for the nonmonotone map x^2 on [-1,1].
+
+square(-1) = 1
+
+square(1) = 1
+
+release thm riemann_integral_zero(cosine, 1)
+
+release thm riemann_integral_substitution(cosine, square, twice, weighted_cosine, R, -1, 1, 0)
+
+integral(weighted_cosine, -1, 1) = 0
+
+# Integration by parts reuses the exponential integral.
+
+have fn one(x R) R = 1
+
+have fn exponential(x R) R = exp(x)
+
+have fn weighted_exp(x R) R = x*exp(x)
+
+claim:
+    ? forall x R:
+        $has_derivative_at(identity, x, one(x))
+        $has_derivative_at(exponential, x, exponential(x))
+    release thm fn_derivative_at_real_interior(x)
+    release thm fn_derivative_at_identity(identity, x)
+    release thm fn_derivative_at_exp(exponential, x)
+    one(x) = 1
+    exponential(x) = exp(x)
+
+release thm riemann_integrable_continuous(exponential, 0, 1)
+
+release thm riemann_integral_newton_leibniz(exponential, exponential, 0, 1)
+
+release thm riemann_integral_by_parts(identity, one, exponential, exponential, weighted_exp, exponential, 0, 1, exponential(1)-exponential(0))
+
+identity(1) = 1
+
+identity(0) = 0
+
+exponential(0) = 1
+
+identity(1)*exponential(1)-identity(0)*exponential(0)-(exponential(1)-exponential(0)) = 1
+
+integral(weighted_exp, 0, 1) = 1

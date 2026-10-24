@@ -1,0 +1,233 @@
+{
+  "kind": "reading_titles",
+  "sources": {
+    "13-orthogonal-projection.lit": {
+      "zh": "正交投影与唯一最近点",
+      "en": "Orthogonal projection and the unique closest point"
+    },
+    "01-mean-squared-error.lit": {
+      "zh": "平均值与最小平方误差",
+      "en": "The mean and least squares"
+    },
+    "02-union-and-intersection.lit": {
+      "zh": "并集与交集",
+      "en": "Union and intersection"
+    },
+    "03-newton-error.lit": {
+      "zh": "牛顿迭代的误差恒等式",
+      "en": "The error in a Newton step"
+    },
+    "04-sqrt-two-irrational.lit": {
+      "zh": "√2 的无理性",
+      "en": "Why √2 is irrational"
+    },
+    "05-cantor-diagonal.lit": {
+      "zh": "康托尔对角论证",
+      "en": "Cantor’s diagonal argument"
+    },
+    "14-newton-residual.lit": {
+      "zh": "牛顿迭代与残差",
+      "en": "Newton iteration and residuals"
+    },
+    "15-clamp-at-zero.lit": {
+      "zh": "分段函数：把负数截为零",
+      "en": "A piecewise function: clamping at zero"
+    },
+    "16-reciprocal-proof.lit": {
+      "zh": "倒数函数与乘法",
+      "en": "The reciprocal function and multiplication"
+    },
+    "17-reciprocal-definition.lit": {
+      "zh": "倒数函数定义",
+      "en": "Defining the reciprocal function"
+    },
+    "18-context-search.lit": {
+      "zh": "已有等式与下一步计算",
+      "en": "Using a known equality"
+    },
+    "19-positive-is-nonzero.lit": {
+      "zh": "正数不为零",
+      "en": "Positive numbers are nonzero"
+    },
+    "20-cauchy-schwarz.lit": {
+      "zh": "柯西–施瓦茨不等式",
+      "en": "The Cauchy–Schwarz inequality"
+    },
+    "21-nonnegative-predicate.lit": {
+      "zh": "非负命题与平方定理",
+      "en": "A nonnegative predicate and a theorem about squares"
+    },
+    "22-conditional-equality.lit": {
+      "zh": "利用假设检查等式",
+      "en": "Proving an equality from an assumption"
+    },
+    "23-question-arithmetic.lit": {
+      "zh": "算术：一加一等于二",
+      "en": "Arithmetic: one plus one"
+    },
+    "24-question-finiteset.lit": {
+      "zh": "有限集合中的元素",
+      "en": "Elements of a finite set"
+    },
+    "25-question-intersection.lit": {
+      "zh": "交集中的元素",
+      "en": "Membership in an intersection"
+    },
+    "26-question-existence.lit": {
+      "zh": "大于 10 的实数存在",
+      "en": "A real number greater than ten exists"
+    },
+    "27-question-sum.lit": {
+      "zh": "有限求和",
+      "en": "A finite sum"
+    },
+    "28-question-definitions.lit": {
+      "zh": "集合与函数定义",
+      "en": "Defining sets and functions"
+    },
+    "29-age-word-problem.lit": {
+      "zh": "把年龄问题写成方程",
+      "en": "An age word problem"
+    },
+    "30-ellipse-foci.lit": {
+      "zh": "把椭圆定义为点集",
+      "en": "An ellipse and its focal points"
+    },
+    "31-group-left-cancellation.lit": {
+      "zh": "从群公理推导定理",
+      "en": "Left cancellation in a group"
+    },
+    "32-newton-library.lit": {
+      "zh": "复用牛顿迭代与不动点",
+      "en": "Newton iteration and fixed points"
+    },
+    "33-agent-accepted.lit": {
+      "zh": "带定义域的倒数恒等式",
+      "en": "A reciprocal identity with domain conditions"
+    },
+    "34-python-newton.lit": {
+      "zh": "按情况计算牛顿迭代",
+      "en": "A Newton step defined by cases"
+    },
+    "35-lean-source.lit": {
+      "zh": "检查一个等式",
+      "en": "An equality for independent checking"
+    },
+    "36-blueprint-group.lit": {
+      "zh": "群结构的定义",
+      "en": "Defining a group structure"
+    },
+    "37-checking-01-1.lit": {
+      "zh": "作用域",
+      "en": "Names and scope"
+    },
+    "38-checking-01-2.lit": {
+      "zh": "良定义性",
+      "en": "Well-defined function applications"
+    },
+    "39-checking-01-3.lit": {
+      "zh": "定义域",
+      "en": "Domain conditions"
+    },
+    "40-checking-02-1.lit": {
+      "zh": "内置规则",
+      "en": "Calculations, inequalities and sets"
+    },
+    "41-checking-02-3.lit": {
+      "zh": "定义",
+      "en": "Unfolding a definition"
+    },
+    "42-checking-03-1.lit": {
+      "zh": "用定理证明",
+      "en": "Proof using a theorem"
+    },
+    "43-checking-03-2.lit": {
+      "zh": "用定义证明",
+      "en": "Proof using a definition"
+    },
+    "44-checking-03-3.lit": {
+      "zh": "数学归纳法",
+      "en": "Proof by induction"
+    },
+    "45-checking-03-4.lit": {
+      "zh": "分类讨论",
+      "en": "Proof by cases"
+    },
+    "46-checking-03-5.lit": {
+      "zh": "反证法",
+      "en": "Proof by contradiction"
+    },
+    "47-checking-03-6.lit": {
+      "zh": "为存在性提供见证",
+      "en": "Providing a witness"
+    },
+    "48-design-fact-shape-reuse.lit": {
+      "zh": "复用事实，无需逐一命名",
+      "en": "Reusing facts without naming each step"
+    },
+    "49-design-set-as-judgment.lit": {
+      "zh": "集合类型与成员关系",
+      "en": "Sets and membership"
+    },
+    "50-design-template-carriers.lit": {
+      "zh": "模板在使用时绑定载体",
+      "en": "Templates and their carrier sets"
+    },
+    "51-design-anonymous-functions.lit": {
+      "zh": "匿名函数让局部数学保持局部",
+      "en": "Anonymous functions"
+    },
+    "52-design-meaning-before-truth.lit": {
+      "zh": "先判断含义，再判断真假",
+      "en": "Meaning before truth"
+    },
+    "53-design-scoped-commit.lit": {
+      "zh": "证明只提交它承诺的内容",
+      "en": "Keeping proof assumptions local"
+    },
+    "54-design-existence-to-function.lit": {
+      "zh": "从存在得到构造",
+      "en": "Constructing a function from unique existence"
+    },
+    "55-convention-natural-subtraction.lit": {
+      "zh": "减法随数的类型而变",
+      "en": "Subtraction and number domains"
+    },
+    "56-representation-facts.lit": {
+      "zh": "事实 · 陈述等式或存在性",
+      "en": "Facts: equalities, existence and sums"
+    },
+    "57-representation-statements.lit": {
+      "zh": "语句 · 两种推进方向",
+      "en": "Objects and the facts that follow"
+    },
+    "06-number-theory.lit": {
+      "zh": "数论：整除、贝祖等式与不定方程",
+      "en": "Number theory: divisibility, Bézout and Diophantine equations"
+    },
+    "07-sequence-limits.lit": {
+      "zh": "分析：数列收敛与极限唯一性",
+      "en": "Analysis: sequences and uniqueness of limits"
+    },
+    "08-groups-and-homomorphisms.lit": {
+      "zh": "抽象代数：群、同态与核",
+      "en": "Abstract algebra: groups, homomorphisms and kernels"
+    },
+    "09-linear-algebra.lit": {
+      "zh": "线性代数：基与唯一坐标",
+      "en": "Linear algebra: bases and unique coordinates"
+    },
+    "10-topology.lit": {
+      "zh": "拓扑：连续映射与同胚",
+      "en": "Topology: continuity and homeomorphisms"
+    },
+    "11-finite-probability.lit": {
+      "zh": "概率：期望、方差与贝叶斯公式",
+      "en": "Probability: expectation, variance and Bayes’ rule"
+    },
+    "12-geometry-imo1966.lit": {
+      "zh": "几何：三角形面积与一道 IMO 问题",
+      "en": "Geometry: triangle areas and an IMO problem"
+    }
+  }
+}

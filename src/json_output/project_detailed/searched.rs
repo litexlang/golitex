@@ -271,6 +271,9 @@ fn project_object_definition(
         by_template::EqualitySearchProofByTemplateObjectDefinition,
     };
     match proof {
+        EqualitySearchProofByObjectDefinition::NativeMatrix(p) => {
+            super::native_matrix::equality(p, runtime)
+        }
         EqualitySearchProofByObjectDefinition::CartesianDefinition(p) => object_for(
             runtime,
             vec![
@@ -371,6 +374,7 @@ fn project_object_definition(
                     vec![
                         ("type", string("by_object_definition")),
                         ("kind", string("fn_application_have_fn_equal_case_by_case")),
+                        ("guard", project_verify_fact(&p.guard, runtime)),
                         (
                             "matched_case_index",
                             JsonValue::Number(p.matched_case_index as f64),
@@ -464,6 +468,7 @@ fn project_object_definition(
                             "matched_case_index",
                             JsonValue::Number(p.matched_case_index as f64),
                         ),
+                        ("guard", project_verify_fact(&p.guard, runtime)),
                         ("expanded_body", string(p.expanded_body.readable_string())),
                         (
                             "residual_equal",

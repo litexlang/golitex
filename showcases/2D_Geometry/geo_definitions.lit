@@ -12,7 +12,7 @@ have fn vec(A, B cart(R, R)) cart(R, R) = (B(1) - A(1), B(2) - A(2))
 have fn dot(u, v cart(R, R)) R = u(1) * v(1) + u(2) * v(2)
 
 # 2D determinant (signed parallelogram area / cross product z-component).
-have fn det(u, v cart(R, R)) R = u(1) * v(2) - u(2) * v(1)
+have fn det2(u, v cart(R, R)) R = u(1) * v(2) - u(2) * v(1)
 
 # Squared Euclidean distance |ab|^2 (avoids square roots).
 have fn distance_sq(a, b cart(R, R)) R = dot(vec(a, b), vec(a, b))
@@ -22,7 +22,7 @@ have fn line(a, b, c R: a != 0 or b != 0) power_set(cart(R, R)) = {p cart(R, R):
 
 # Two-point form: the unique line through distinct points a and b
 # (collinearity: det(vec(a, p), vec(a, b)) = 0).
-have fn line_through_points(a, b cart(R, R): a != b) power_set(cart(R, R)) = {p cart(R, R): det(vec(a, p), vec(a, b)) = 0}
+have fn line_through_points(a, b cart(R, R): a != b) power_set(cart(R, R)) = {p cart(R, R): det2(vec(a, p), vec(a, b)) = 0}
 
 # Cosine of angle pqr at q, without square roots:
 #   cos^2 = num^2 / den, where
@@ -49,7 +49,7 @@ prop is_on_ray(p, a, b cart(R, R)):
 
 # Points p, q, r are collinear.
 prop is_collinear(p, q, r cart(R, R)):
-    det(vec(p, q), vec(p, r)) = 0
+    det2(vec(p, q), vec(p, r)) = 0
 
 # Segments ab and cd have equal length.
 prop are_segments_congruent(a, b, c, d cart(R, R)):
@@ -76,7 +76,7 @@ prop is_right_angle(p, q, r cart(R, R)):
 prop is_parallel(a, b, c, d cart(R, R)):
     a != b
     c != d
-    det(vec(a, b), vec(c, d)) = 0
+    det2(vec(a, b), vec(c, d)) = 0
 
 # Directed segments ab and cd are perpendicular.
 prop is_perpendicular(a, b, c, d cart(R, R)):
@@ -127,7 +127,7 @@ prop is_angle_bisector(a, b, c, d cart(R, R)):
 
 # a, b, c form a non-degenerate triangle.
 prop is_triangle(a, b, c cart(R, R)):
-    det(vec(a, b), vec(a, c)) != 0
+    det2(vec(a, b), vec(a, c)) != 0
 
 # Triangle abc is isosceles with apex a (ab = ac), not the general "two sides equal".
 prop is_isosceles(a, b, c cart(R, R)):

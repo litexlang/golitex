@@ -1,0 +1,10 @@
+# Prove a rectangular square bound by local enumeration, then reuse the theorem.
+thm rectangle_squares_checked:
+    ? forall x range(0, 3), y range(0, 2):
+        x * x + y * y <= 5
+    by for:
+        ? forall u range(0, 3), v range(0, 2):
+            u * u + v * v <= 5
+        u * u + v * v <= 5
+
+by thm rectangle_squares_checked(2, 1) => 2 * 2 + 1 * 1 <= 5

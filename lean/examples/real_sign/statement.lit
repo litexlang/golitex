@@ -1,0 +1,26 @@
+# The sign of a real number is an integer and is determined by its strict sign.
+sign(-3) = -1
+sign(0) = 0
+sign(4) = 1
+sign(-3 / 2) = -1
+
+forall x R:
+    sign(x) $in Z
+    sign(x) $in R
+    sign(x) $in C
+    $is_set(sign(x))
+
+forall x R:
+    0 < x
+    =>:
+        sign(x) = 1
+
+forall x R:
+    x < 0
+    =>:
+        sign(x) = 0 - 1
+
+forall x R:
+    x < 0
+    =>:
+        -1 = sign(x)

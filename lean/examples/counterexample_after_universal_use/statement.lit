@@ -1,0 +1,8 @@
+# Reuse a universal assumption at a number before closing with a counterexample.
+witness exist x R st {x != 0} from 1
+by contra:
+    ? not forall y R:
+        y = 0
+    1 = 0
+    impossible not forall z R:
+        z = 0

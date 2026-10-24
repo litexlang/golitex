@@ -1,0 +1,9 @@
+# Every target of a bijection has exactly one preimage, in either equation orientation.
+forall A, B set, f fn(t A)B, y B:
+    $bijective(A, B, f)
+    =>:
+        exist! x A st {f(x) = y}
+forall A, B set, f fn(t A)B, y B:
+    $bijective(A, B, f)
+    =>:
+        exist! x A st {y = f(x)}

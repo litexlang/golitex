@@ -40,6 +40,7 @@ pub struct ParentCheckedBetaTwoSidesProof {
 }
 
 pub enum ParentCheckedBetaFunctionBody {
+    NativeMatrix(Box<crate::execute::execute_fact_stmt::native_matrix::MatrixCallableProof>),
     StructField(super::struct_field_value::StructFieldValueProof),
     KnownFiniteFunctionCoordinate {
         source:
@@ -215,6 +216,16 @@ impl Runtime {
                     Obj::FunctionSpace(FunctionSpace::AnonymousFn(function.as_ref().clone()))
                 }
             };
+            if app.body.len() == 1 {
+                for callable in self.parent_checked_matrix_callables(&head, state)? {
+                    if let Some(body) = self.matrix_component_body(app, &callable) {
+                        return Ok(Some((
+                            ParentCheckedBetaFunctionBody::NativeMatrix(Box::new(callable)),
+                            body,
+                        )));
+                    }
+                }
+            }
             for (candidate, path) in self.composition_source_values(&head) {
                 let Obj::FunctionSpace(FunctionSpace::Composition(composition)) = candidate else {
                     continue;
@@ -529,6 +540,7 @@ fn checked_application_domain(proof: &ObjWellDefinedProof) -> Option<&FnSet> {
         return None;
     };
     match proof.domain_fn_set.as_ref()? {
+        FnObjDomainFnSetEvidence::Matrix(source) => Some(&source.function.body),
         FnObjDomainFnSetEvidence::Composition(source) => Some(&source.function.body),
         FnObjDomainFnSetEvidence::FiniteFunction(source) => Some(&source.signature),
         FnObjDomainFnSetEvidence::InFunctionSet { fn_set, .. }

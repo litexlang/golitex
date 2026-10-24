@@ -1,0 +1,15 @@
+# Use injectivity to cancel a function and surjectivity to obtain preimages.
+forall f fn(t R)R, a, b R:
+    $injective(R, R, f)
+    f(a) = f(b)
+    =>:
+        a = b
+forall f fn(t R)R, y R:
+    $surjective(R, R, f)
+    =>:
+        exist x R st {y = f(x)}
+forall A, B set, f fn(t A)B:
+    $bijective(A, B, f)
+    =>:
+        $injective(A, B, f)
+        $surjective(A, B, f)

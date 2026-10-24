@@ -1,0 +1,28 @@
+# Native finite matrix arithmetic. Formerly these constructor names were unavailable.
+# Values retain their exact ordinary function domains; mismatched dimensions reject.
+# Run: target/release/litex -strict -lang en -f examples/test_objs/matrix_arithmetic.lit
+
+have fn A(r closed_range(1,2),c closed_range(1,2)) R=r+c
+have fn B(r closed_range(1,2),c closed_range(1,2)) R=r-c
+
+matrix_add(A,B,2,2)(1,2)=2
+matrix_sub(A,B,2,2)(1,2)=4
+matrix_scale(i,A,2,2)(1,2)=3*i
+matrix_mul(A,B,2,2,2)(1,1)=3
+matrix_mul(B,A,2,2,2)(1,1)=-3
+matrix_mul(A,B,2,2,2) $in matrix(R,2,2)
+matrix_apply(A,(1,2),2,2)(1)=8
+matrix_apply(A,(1,2),2,2) $in cart_n(R,2)
+matrix_power(A,2,0)(2,2)=1
+matrix_power(A,2,2)(1,1)=13
+diagonal_matrix((2,3),2)(1,2)=0
+outer_product((2,3),(4,5),2,2)(2,1)=12
+
+forall m,n N,first,second matrix(R,m,n):
+    matrix_add(first,second,m,n) $in matrix(R,m,n)
+
+forall n,p N,mat matrix(C,n,n):
+    matrix_power(mat,n,p) $in matrix(C,n,n)
+
+release thm matrix_mul_zero(zero_matrix(2,0),2,0,3)
+matrix_mul(zero_matrix(2,0),zero_matrix(0,3),2,0,3)=zero_matrix(2,3)

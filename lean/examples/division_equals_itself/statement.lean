@@ -15,18 +15,23 @@ theorem h_3 : ∀ {_Host_i1 : Type v1} [_rep_i1 : Litex.Representation M _Host_i
     exact Litex.Same _equal_wd_1_1 _equal_wd_1_1)
 ) :=
   (by
-    intro _Host_i1 _rep_i1 _value_i1 h_28 _Host_i2 _rep_i2 _value_i2 h_29 h_1
-    let _object_w3 := (Litex.div _value_i1 _value_i2 h_28 h_29 h_1)
-    have h_2 : (by
-      let _equal_wd_1_0 := _object_w3
-      let _equal_wd_1_1 := _equal_wd_1_0
-      exact Litex.Same _equal_wd_1_1 _equal_wd_1_1) :=
-      (by
-        litex_checked_step =>
-          exact (
-            (show @Eq M.Value _ _ from Eq.refl _)
-          )
+    litex_complete =>
+      exact (
+        (by
+          intro _Host_i1 _rep_i1 _value_i1 h_28 _Host_i2 _rep_i2 _value_i2 h_29 h_1
+          let _object_w3 := (Litex.div _value_i1 _value_i2 h_28 h_29 h_1)
+          have h_2 : (by
+            let _equal_wd_1_0 := _object_w3
+            let _equal_wd_1_1 := _equal_wd_1_0
+            exact Litex.Same _equal_wd_1_1 _equal_wd_1_1) :=
+            (by
+              litex_checked_step =>
+                exact (
+                  (show @Eq M.Value _ _ from Eq.refl _)
+                )
+            )
+          exact h_2
+        )
       )
-    exact h_2
   )
 end LitexCompiled.file_lean_x2f_examples_x2f_division_x5f_equals_x5f_itself_x2f_statement_x2e_lit

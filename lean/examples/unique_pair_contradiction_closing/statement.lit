@@ -1,0 +1,5 @@
+# Close a unique-pair proof by contradicting a different alternative coordinate.
+witness exist! x R, y R st {x = 0, y = 1} from 0, 1
+by contra:
+    ? exist! u R, v R st {u = 0, v = 1}
+    impossible exist! a R, b R st {a = 0, b = 1}

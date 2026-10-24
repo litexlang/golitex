@@ -1,0 +1,7 @@
+# Check a local arithmetic calculation, then reuse its name outside the sketch.
+sketch:
+    let x = 2
+    x + 1 = 3
+
+let x = 5
+x = 5

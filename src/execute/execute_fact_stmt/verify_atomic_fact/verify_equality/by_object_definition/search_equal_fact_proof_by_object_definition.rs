@@ -26,6 +26,11 @@ impl Runtime {
         fact: &EqualFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<EqualitySearchProofByObjectDefinition>> {
+        if let Some(proof) = self.search_native_matrix_equality(fact, verify_state)? {
+            return Ok(Some(EqualitySearchProofByObjectDefinition::NativeMatrix(
+                proof,
+            )));
+        }
         if let Some(proof) = self.try_unfold_both_function_bodies(fact, verify_state)? {
             return Ok(Some(
                 EqualitySearchProofByObjectDefinition::ByFnApplication(

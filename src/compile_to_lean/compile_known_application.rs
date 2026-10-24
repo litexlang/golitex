@@ -65,6 +65,30 @@ impl LitexToLeanCompiler {
                 right: (*goal_arg).clone(),
                 line_file: None,
             };
+            // Enumeration stores signed integer literals; source `-n` is a
+            // negation object with the same Litex IR. Their Lean denotations
+            // agree by the retained numeric constructor, not by reduction.
+            if let Obj::Literal(Literal::Number(number)) = source {
+                if !matches!(goal_arg, Obj::Literal(Literal::Number(_)))
+                    && source.ir() == goal_arg.ir()
+                    && matches!(
+                        equality,
+                        EqualFactSearchedProof::ByTheyAreTheSame(TheyAreTheSameProof::SameIr(_))
+                    )
+                {
+                    let target = self.compile_numeric_observation(goal_arg, position)?;
+                    if target.3.is_none() || target.3 != EvalRational::from_obj(source) {
+                        return Err(LeanCompileError::unsupported("Or/KnownLiteralIdentity"));
+                    }
+                    let literal = number_literal(number, "ℂ")?;
+                    equalities.push(format!(
+                        "((congrArg M.number (by norm_num : {literal} = {})).trans ({}).symm)",
+                        target.0, target.1
+                    ));
+                    exact_identity = false;
+                    continue;
+                }
+            }
             equalities.push(self.compile_equality_search(&obligation, equality, position)?);
             exact_identity &= source.ir() == goal_arg.ir()
                 && matches!(
@@ -739,6 +763,10 @@ impl LitexToLeanCompiler {
             StrictEqualArgProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::Calculation(
                 EqualitySearchProofByCalculation::Rational {},
             )) => self.compile_rational(fact, &[], &[], false, position),
+            StrictEqualArgProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::Calculation(
+                proof @ (EqualitySearchProofByCalculation::ClosedDecimal { .. }
+                | EqualitySearchProofByCalculation::ClosedRational { .. }),
+            )) => self.compile_builtin_closed_equality(fact, proof, position),
             StrictEqualArgProof::ByBuiltinRule(
                 EqualitySearchProofByBuiltinRule::ScalarDivisionRelation(proof),
             ) => self.compile_scalar_division_relation(fact, proof, position),
@@ -787,6 +815,15 @@ impl LitexToLeanCompiler {
                 "CompoundKnown/TransportArity",
             ));
         }
+        if matches!(
+            (old, new),
+            (AtomicFact::EqualFact(_), AtomicFact::EqualFact(_))
+        ) {
+            return Ok(format!(
+                "(Eq.trans (Eq.symm {}) (Eq.trans {proof} {}))",
+                equalities[0], equalities[1]
+            ));
+        }
         let a = atomic_fact_args_ref(old)
             .iter()
             .map(|x| self.compile_object_reference(x, position))
@@ -796,10 +833,6 @@ impl LitexToLeanCompiler {
             .map(|x| self.compile_object_reference(x, position))
             .collect::<Result<Vec<_>, _>>()?;
         match (old, new) {
-            (AtomicFact::EqualFact(_), AtomicFact::EqualFact(_)) => Ok(format!(
-                "(Eq.trans (Eq.symm {}) (Eq.trans {proof} {}))",
-                equalities[0], equalities[1]
-            )),
             (AtomicFact::NotEqualFact(_), AtomicFact::NotEqualFact(_)) => Ok(format!(
                 "(Litex.notSameOfSame {} {} {} {} {} {} {proof})",
                 a[0], b[0], a[1], b[1], equalities[0], equalities[1]

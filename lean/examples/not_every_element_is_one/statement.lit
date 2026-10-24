@@ -1,0 +1,5 @@
+# Zero is a counterexample to every element of the singleton being one.
+witness exist x {0} st {x != 1} from 0
+not forall x {0}:
+    x = 1
+exist x {0} st {x != 1}

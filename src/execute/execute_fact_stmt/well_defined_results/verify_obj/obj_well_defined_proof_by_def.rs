@@ -13,6 +13,7 @@ use crate::prelude::*;
 use crate::runtime::FactId;
 
 pub enum ObjWellDefinedProofByDef {
+    MatrixOperator(MatrixOperatorObjWellDefinedProofByDef),
     IntegralOperator(
         crate::execute::execute_fact_stmt::riemann_integral::IntegralOperatorWellDefinedProof,
     ),
@@ -127,6 +128,7 @@ pub enum SetOperatorObjWellDefinedProofByDef {
 }
 
 pub enum SetFormerObjWellDefinedProofByDef {
+    MatrixSet(MatrixSetObjWellDefinedProof),
     ListSet(ListSetObjWellDefinedProof),
     SetBuilder(SetBuilderObjWellDefinedProof),
     Range(RangeObjWellDefinedProof),
@@ -183,6 +185,7 @@ impl IdentifierObjWellDefinedProof {
 // their own body. Templates may read a checked declaration after instance WD,
 // including nested checks where signature caching is disabled.
 pub enum FnObjDomainFnSetEvidence {
+    Matrix(Box<crate::execute::execute_fact_stmt::native_matrix::MatrixCallableProof>),
     FiniteFunction(
         Box<crate::execute::execute_fact_stmt::finite_function::FiniteFunctionSignatureProof>,
     ),
@@ -1534,4 +1537,359 @@ pub struct SequenceLiminfObjWellDefinedProof {
     pub sequence_wd: Box<ObjWellDefinedProof>,
     pub sequence_domain: crate::execute::execute_fact_stmt::sequence_limit::RealSequenceDomainProof,
     pub convergence: crate::execute::execute_fact_stmt::sequence_limit::SequenceConvergenceProof,
+}
+
+pub enum MatrixOperatorObjWellDefinedProofByDef {
+    Determinant(DeterminantObjWellDefinedProof),
+    ZeroMatrix(ZeroMatrixObjWellDefinedProof),
+    IdentityMatrix(IdentityMatrixObjWellDefinedProof),
+    Transpose(MatrixTransposeObjWellDefinedProof),
+    ConjugateTranspose(MatrixConjugateTransposeObjWellDefinedProof),
+    Trace(MatrixTraceObjWellDefinedProof),
+    Add(MatrixAddObjWellDefinedProof),
+    Subtract(MatrixSubtractObjWellDefinedProof),
+    Scale(MatrixScaleObjWellDefinedProof),
+    Multiply(MatrixMultiplyObjWellDefinedProof),
+    Apply(MatrixApplyObjWellDefinedProof),
+    Power(MatrixPowerObjWellDefinedProof),
+    Inverse(MatrixInverseObjWellDefinedProof),
+    Rank(MatrixRankObjWellDefinedProof),
+    Minor(MatrixMinorObjWellDefinedProof),
+    Cofactor(MatrixCofactorObjWellDefinedProof),
+    Adjugate(MatrixAdjugateObjWellDefinedProof),
+    Diagonal(MatrixDiagonalObjWellDefinedProof),
+    OuterProduct(MatrixOuterProductObjWellDefinedProof),
+    InnerProduct(FiniteInnerProductObjWellDefinedProof),
+    EuclideanNorm(EuclideanNormObjWellDefinedProof),
+    FrobeniusNorm(MatrixFrobeniusNormObjWellDefinedProof),
+}
+
+pub struct MatrixSetObjWellDefinedProof {
+    pub child_obj_well_defined: Vec<Box<ObjWellDefinedProof>>,
+    pub requirement_fact_verified: Vec<VerifyFactResult>,
+}
+impl MatrixSetObjWellDefinedProof {
+    pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
+        Self {
+            child_obj_well_defined,
+            requirement_fact_verified,
+        }
+    }
+}
+
+pub struct DeterminantObjWellDefinedProof {
+    pub child_obj_well_defined: Vec<Box<ObjWellDefinedProof>>,
+    pub requirement_fact_verified: Vec<VerifyFactResult>,
+}
+impl DeterminantObjWellDefinedProof {
+    pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
+        Self {
+            child_obj_well_defined,
+            requirement_fact_verified,
+        }
+    }
+}
+
+pub struct ZeroMatrixObjWellDefinedProof {
+    pub child_obj_well_defined: Vec<Box<ObjWellDefinedProof>>,
+    pub requirement_fact_verified: Vec<VerifyFactResult>,
+}
+impl ZeroMatrixObjWellDefinedProof {
+    pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
+        Self {
+            child_obj_well_defined,
+            requirement_fact_verified,
+        }
+    }
+}
+
+pub struct IdentityMatrixObjWellDefinedProof {
+    pub child_obj_well_defined: Vec<Box<ObjWellDefinedProof>>,
+    pub requirement_fact_verified: Vec<VerifyFactResult>,
+}
+impl IdentityMatrixObjWellDefinedProof {
+    pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
+        Self {
+            child_obj_well_defined,
+            requirement_fact_verified,
+        }
+    }
+}
+
+pub struct MatrixTransposeObjWellDefinedProof {
+    pub child_obj_well_defined: Vec<Box<ObjWellDefinedProof>>,
+    pub requirement_fact_verified: Vec<VerifyFactResult>,
+}
+impl MatrixTransposeObjWellDefinedProof {
+    pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
+        Self {
+            child_obj_well_defined,
+            requirement_fact_verified,
+        }
+    }
+}
+
+pub struct MatrixConjugateTransposeObjWellDefinedProof {
+    pub child_obj_well_defined: Vec<Box<ObjWellDefinedProof>>,
+    pub requirement_fact_verified: Vec<VerifyFactResult>,
+}
+impl MatrixConjugateTransposeObjWellDefinedProof {
+    pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
+        Self {
+            child_obj_well_defined,
+            requirement_fact_verified,
+        }
+    }
+}
+
+pub struct MatrixTraceObjWellDefinedProof {
+    pub child_obj_well_defined: Vec<Box<ObjWellDefinedProof>>,
+    pub requirement_fact_verified: Vec<VerifyFactResult>,
+}
+impl MatrixTraceObjWellDefinedProof {
+    pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
+        Self {
+            child_obj_well_defined,
+            requirement_fact_verified,
+        }
+    }
+}
+
+pub struct MatrixAddObjWellDefinedProof {
+    pub child_obj_well_defined: Vec<Box<ObjWellDefinedProof>>,
+    pub requirement_fact_verified: Vec<VerifyFactResult>,
+}
+impl MatrixAddObjWellDefinedProof {
+    pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
+        Self {
+            child_obj_well_defined,
+            requirement_fact_verified,
+        }
+    }
+}
+pub struct MatrixSubtractObjWellDefinedProof {
+    pub child_obj_well_defined: Vec<Box<ObjWellDefinedProof>>,
+    pub requirement_fact_verified: Vec<VerifyFactResult>,
+}
+impl MatrixSubtractObjWellDefinedProof {
+    pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
+        Self {
+            child_obj_well_defined,
+            requirement_fact_verified,
+        }
+    }
+}
+pub struct MatrixScaleObjWellDefinedProof {
+    pub child_obj_well_defined: Vec<Box<ObjWellDefinedProof>>,
+    pub requirement_fact_verified: Vec<VerifyFactResult>,
+}
+impl MatrixScaleObjWellDefinedProof {
+    pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
+        Self {
+            child_obj_well_defined,
+            requirement_fact_verified,
+        }
+    }
+}
+pub struct MatrixMultiplyObjWellDefinedProof {
+    pub child_obj_well_defined: Vec<Box<ObjWellDefinedProof>>,
+    pub requirement_fact_verified: Vec<VerifyFactResult>,
+}
+impl MatrixMultiplyObjWellDefinedProof {
+    pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
+        Self {
+            child_obj_well_defined,
+            requirement_fact_verified,
+        }
+    }
+}
+pub struct MatrixApplyObjWellDefinedProof {
+    pub child_obj_well_defined: Vec<Box<ObjWellDefinedProof>>,
+    pub requirement_fact_verified: Vec<VerifyFactResult>,
+}
+impl MatrixApplyObjWellDefinedProof {
+    pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
+        Self {
+            child_obj_well_defined,
+            requirement_fact_verified,
+        }
+    }
+}
+pub struct MatrixPowerObjWellDefinedProof {
+    pub child_obj_well_defined: Vec<Box<ObjWellDefinedProof>>,
+    pub requirement_fact_verified: Vec<VerifyFactResult>,
+}
+impl MatrixPowerObjWellDefinedProof {
+    pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
+        Self {
+            child_obj_well_defined,
+            requirement_fact_verified,
+        }
+    }
+}
+pub struct MatrixInverseObjWellDefinedProof {
+    pub child_obj_well_defined: Vec<Box<ObjWellDefinedProof>>,
+    pub requirement_fact_verified: Vec<VerifyFactResult>,
+}
+impl MatrixInverseObjWellDefinedProof {
+    pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
+        Self {
+            child_obj_well_defined,
+            requirement_fact_verified,
+        }
+    }
+}
+pub struct MatrixRankObjWellDefinedProof {
+    pub child_obj_well_defined: Vec<Box<ObjWellDefinedProof>>,
+    pub requirement_fact_verified: Vec<VerifyFactResult>,
+}
+impl MatrixRankObjWellDefinedProof {
+    pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
+        Self {
+            child_obj_well_defined,
+            requirement_fact_verified,
+        }
+    }
+}
+pub struct MatrixMinorObjWellDefinedProof {
+    pub child_obj_well_defined: Vec<Box<ObjWellDefinedProof>>,
+    pub requirement_fact_verified: Vec<VerifyFactResult>,
+}
+impl MatrixMinorObjWellDefinedProof {
+    pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
+        Self {
+            child_obj_well_defined,
+            requirement_fact_verified,
+        }
+    }
+}
+pub struct MatrixCofactorObjWellDefinedProof {
+    pub child_obj_well_defined: Vec<Box<ObjWellDefinedProof>>,
+    pub requirement_fact_verified: Vec<VerifyFactResult>,
+}
+impl MatrixCofactorObjWellDefinedProof {
+    pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
+        Self {
+            child_obj_well_defined,
+            requirement_fact_verified,
+        }
+    }
+}
+pub struct MatrixAdjugateObjWellDefinedProof {
+    pub child_obj_well_defined: Vec<Box<ObjWellDefinedProof>>,
+    pub requirement_fact_verified: Vec<VerifyFactResult>,
+}
+impl MatrixAdjugateObjWellDefinedProof {
+    pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
+        Self {
+            child_obj_well_defined,
+            requirement_fact_verified,
+        }
+    }
+}
+pub struct MatrixDiagonalObjWellDefinedProof {
+    pub child_obj_well_defined: Vec<Box<ObjWellDefinedProof>>,
+    pub requirement_fact_verified: Vec<VerifyFactResult>,
+}
+impl MatrixDiagonalObjWellDefinedProof {
+    pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
+        Self {
+            child_obj_well_defined,
+            requirement_fact_verified,
+        }
+    }
+}
+pub struct MatrixOuterProductObjWellDefinedProof {
+    pub child_obj_well_defined: Vec<Box<ObjWellDefinedProof>>,
+    pub requirement_fact_verified: Vec<VerifyFactResult>,
+}
+impl MatrixOuterProductObjWellDefinedProof {
+    pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
+        Self {
+            child_obj_well_defined,
+            requirement_fact_verified,
+        }
+    }
+}
+pub struct FiniteInnerProductObjWellDefinedProof {
+    pub child_obj_well_defined: Vec<Box<ObjWellDefinedProof>>,
+    pub requirement_fact_verified: Vec<VerifyFactResult>,
+}
+impl FiniteInnerProductObjWellDefinedProof {
+    pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
+        Self {
+            child_obj_well_defined,
+            requirement_fact_verified,
+        }
+    }
+}
+pub struct EuclideanNormObjWellDefinedProof {
+    pub child_obj_well_defined: Vec<Box<ObjWellDefinedProof>>,
+    pub requirement_fact_verified: Vec<VerifyFactResult>,
+}
+impl EuclideanNormObjWellDefinedProof {
+    pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
+        Self {
+            child_obj_well_defined,
+            requirement_fact_verified,
+        }
+    }
+}
+pub struct MatrixFrobeniusNormObjWellDefinedProof {
+    pub child_obj_well_defined: Vec<Box<ObjWellDefinedProof>>,
+    pub requirement_fact_verified: Vec<VerifyFactResult>,
+}
+impl MatrixFrobeniusNormObjWellDefinedProof {
+    pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
+        Self {
+            child_obj_well_defined,
+            requirement_fact_verified,
+        }
+    }
 }

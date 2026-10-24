@@ -1,0 +1,9 @@
+# Select the identity function from its unique output specification.
+thm unique_copy:
+    ? forall seed R:
+        exist! value R st {value = seed}
+    witness exist! value R st {value = seed} from seed
+have fn selected by exist!:
+    ? forall x R:
+        exist! y R st {y = x}
+selected(3) = 3

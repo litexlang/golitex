@@ -1,0 +1,16 @@
+# The real line contains distinct values, also relative to an arbitrary real.
+not forall x, y R:
+    x = y
+have a R
+not forall x R:
+    x = a
+
+thm distinct_real:
+    ? forall seed R:
+        exist other R st {other != seed}
+    not forall candidate R:
+        candidate = seed
+
+witness exist x R st {not x > 0} from 0
+not forall x R:
+    x > 0

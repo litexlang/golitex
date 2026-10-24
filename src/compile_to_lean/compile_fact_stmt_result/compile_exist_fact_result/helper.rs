@@ -1,6 +1,8 @@
-use crate::compile_to_lean::helper::{instantiated_fact_matches, instantiated_object_matches};
+use crate::compile_to_lean::helper::{
+    instantiated_fact_matches, quantified_parameter_substitution,
+};
 use crate::prelude::*;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 /// Construct the one/two-binder result of the checked real-line certificate.
 pub(super) fn real_comparison_witness(
@@ -46,46 +48,21 @@ pub(super) fn real_comparison_witness(
 
 /// Check the complete instantiated existential, including binders' carriers.
 /// This compares original captures; it allocates no source identities.
-pub(super) fn exist_instance_matches(
+pub(in crate::compile_to_lean) fn exist_instance_matches(
     source: &PlainExistFact,
     goal: &PlainExistFact,
     substitution: &HashMap<IdentifierId, Obj>,
 ) -> bool {
-    if source.typed_parameters.groups.len() != goal.typed_parameters.groups.len()
-        || source.facts.len() != goal.facts.len()
-    {
+    if source.facts.len() != goal.facts.len() {
         return false;
     }
-    let mut scoped = substitution.clone();
-    let mut local_ids = HashSet::new();
-    let mut goal_ids = HashSet::new();
-    for (old, new) in source
-        .typed_parameters
-        .groups
-        .iter()
-        .zip(&goal.typed_parameters.groups)
-    {
-        if old.params.len() != new.params.len()
-            || !match (&old.param_type, &new.param_type) {
-                (ParamType::Obj(a), ParamType::Obj(b)) => {
-                    instantiated_object_matches(a, b, &scoped)
-                }
-                (ParamType::Set(_), ParamType::Set(_)) => true,
-                _ => false,
-            }
-        {
-            return false;
-        }
-        for (old, new) in old.params.iter().zip(&new.params) {
-            if substitution.contains_key(&old.id)
-                || !local_ids.insert(old.id)
-                || !goal_ids.insert(new.id)
-            {
-                return false;
-            }
-            scoped.insert(old.id, Obj::Identifier(IdentifierObj::from_bound_name(new)));
-        }
-    }
+    let Some(scoped) = quantified_parameter_substitution(
+        &source.typed_parameters,
+        &goal.typed_parameters,
+        substitution,
+    ) else {
+        return false;
+    };
     source.facts.iter().zip(&goal.facts).all(|(a, b)| {
         instantiated_fact_matches(
             &crate::instantiate::quantifier_free_fact_to_fact(a.clone()),

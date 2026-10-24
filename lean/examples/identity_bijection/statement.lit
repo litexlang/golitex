@@ -1,0 +1,17 @@
+# The real identity is injective, surjective and bijective.
+have fn identity(x R) R = x
+claim:
+    ? forall left, right R:
+        identity(left) = identity(right)
+        =>:
+            left = right
+    left = identity(left)
+    identity(right) = right
+    left = right
+by def $injective(R, R, identity)
+claim:
+    ? forall target R:
+        exist source R st {target = identity(source)}
+    witness exist source R st {target = identity(source)} from target
+by def $surjective(R, R, identity)
+by def $bijective(R, R, identity)

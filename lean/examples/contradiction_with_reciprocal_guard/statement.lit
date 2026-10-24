@@ -1,0 +1,8 @@
+# Carry the nonzero condition into a hypothetical reciprocal counterexample.
+by contra:
+    ? forall x R:
+        x != 0
+        =>:
+            1 / x = 1 / x
+    obtain a from exist y R st {y != 0, 1 / y != 1 / y}
+    impossible 1 / a != 1 / a

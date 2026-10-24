@@ -1,0 +1,6 @@
+# Describe Cartesian products of arbitrary sets by their exact finite function domains.
+forall A, B, T set:
+    cart(A, B, T) = {p finite_seq(union(union(A, B), T), 3): p(1) $in A, p(2) $in B, p(3) $in T}
+
+forall A, B set:
+    {p finite_seq(union(A, B), 2): p(1) $in A, p(2) $in B} = cart(A, B)

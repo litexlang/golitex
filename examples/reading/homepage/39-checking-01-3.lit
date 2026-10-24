@@ -1,0 +1,6 @@
+# 1 / 0 = 1 / 0 would be an error.
+# Division by zero is not mathematically well-defined.
+forall x R:
+    x != 0
+    =>:
+        1 / x = 1 / x

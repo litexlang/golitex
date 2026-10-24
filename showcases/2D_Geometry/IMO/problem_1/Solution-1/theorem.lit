@@ -2,7 +2,7 @@ release obj def geo::vec
 
 release obj def geo::dot
 
-release obj def geo::det
+release obj def geo::det2
 
 release obj def geo::distance_sq
 

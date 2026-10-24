@@ -272,7 +272,24 @@ impl LitexToLeanCompiler {
         assumed: &[AssumeDomFactResult],
         position: &SourcePosition<'_>,
     ) -> Result<(Vec<String>, Vec<String>, Vec<String>), LeanCompileError> {
-        let groups = &fact.typed_parameters.groups;
+        self.compile_quantified_head(
+            &fact.typed_parameters,
+            &fact.dom_facts,
+            introduced,
+            assumed,
+            position,
+        )
+    }
+
+    pub(in crate::compile_to_lean) fn compile_quantified_head(
+        &self,
+        parameters: &TypedParameterList,
+        domains: &[Fact],
+        introduced: &IntroduceTypedParametersResult,
+        assumed: &[AssumeDomFactResult],
+        position: &SourcePosition<'_>,
+    ) -> Result<(Vec<String>, Vec<String>, Vec<String>), LeanCompileError> {
+        let groups = &parameters.groups;
         let parameters = groups
             .iter()
             .flat_map(|group| &group.params)
@@ -384,13 +401,13 @@ impl LitexToLeanCompiler {
                 offset += 1;
             }
         }
-        if assumed.len() != fact.dom_facts.len() {
+        if assumed.len() != domains.len() {
             return Err(LeanCompileError::new(
                 "Forall/Domain",
                 "Domain evidence has the wrong arity.",
             ));
         }
-        for (index, (fact, assumed)) in fact.dom_facts.iter().zip(assumed).enumerate() {
+        for (index, (fact, assumed)) in domains.iter().zip(assumed).enumerate() {
             let domain_position = SourcePosition {
                 before: expected_count + index,
                 ..*position
@@ -467,9 +484,9 @@ impl LitexToLeanCompiler {
                 ExistOrAndChainAtomicFact::ChainFact(chain) => Fact::ChainFact(chain.clone()),
                 ExistOrAndChainAtomicFact::OrFact(or) => Fact::OrFact(or.clone()),
                 ExistOrAndChainAtomicFact::ExistFact(exist) => Fact::ExistFact(exist.clone()),
-                ExistOrAndChainAtomicFact::ExistUniqueFact(_)
-                | ExistOrAndChainAtomicFact::NotExistFact(_) => {
-                    return Err(LeanCompileError::unsupported("Forall/CompoundThen"))
+                ExistOrAndChainAtomicFact::NotExistFact(exist) => Fact::NotExistFact(exist.clone()),
+                ExistOrAndChainAtomicFact::ExistUniqueFact(fact) => {
+                    Fact::ExistUniqueFact(fact.clone())
                 }
             };
             if source_subject(&proved.verify_result)? != expected {
@@ -544,29 +561,74 @@ impl LitexToLeanCompiler {
         proof: &ForallFactWellDefinedProof,
         position: &SourcePosition<'_>,
     ) -> Result<(), LeanCompileError> {
+        let scope = SourcePosition::new(Some(position), SourceOwner::ForallWD(fact, proof), 0);
+        self.compile_forall_head(
+            fact,
+            &proof.introduced_params,
+            &proof.assumed_dom_facts,
+            &scope,
+        )?;
+        if proof.then.len() != fact.then_facts.len() {
+            return Err(LeanCompileError::unsupported("WD/ForallThenArity"));
+        }
+        let head = fact.typed_parameters.ordered_param_ids().len() + fact.dom_facts.len();
+        for (index, (clause, wd)) in fact.then_facts.iter().zip(&proof.then).enumerate() {
+            self.compile_fact_wd(
+                wd,
+                &clause.clone().into(),
+                &SourcePosition {
+                    before: head + index,
+                    ..scope
+                },
+            )?;
+        }
+        Ok(())
+    }
+
+    pub(in crate::compile_to_lean) fn compile_forall_formation(
+        &self,
+        fact: &ForallFact,
+        proof: &ForallFactWellDefinedProof,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
         let source_position = SourcePosition {
             parent: Some(position),
             owner: SourceOwner::ForallWD(fact, proof),
             before: 0,
         };
-        let compiled = self.compile_forall_wd_body(fact, proof, &source_position);
+        let compiled = self.compile_forall_wd_body(fact, proof, &source_position, false);
         compiled
     }
 
-    pub(in crate::compile_to_lean) fn compile_forall_wd_body(
+    pub(in crate::compile_to_lean) fn compile_canonical_forall_formation(
         &self,
         fact: &ForallFact,
         proof: &ForallFactWellDefinedProof,
         position: &SourcePosition<'_>,
-    ) -> Result<(), LeanCompileError> {
+    ) -> Result<String, LeanCompileError> {
+        let scope = SourcePosition::new(Some(position), SourceOwner::ForallWD(fact, proof), 0);
+        self.compile_forall_wd_body(fact, proof, &scope, true)
+    }
+
+    fn compile_forall_wd_body(
+        &self,
+        fact: &ForallFact,
+        proof: &ForallFactWellDefinedProof,
+        position: &SourcePosition<'_>,
+        canonical: bool,
+    ) -> Result<String, LeanCompileError> {
         // Reuse the same binder/domain replay, but emit no declaration or
         // truth proof. In particular, then-WD never assumes a conclusion.
-        self.compile_forall_head(
-            fact,
-            &proof.introduced_params,
-            &proof.assumed_dom_facts,
-            position,
-        )?;
+        let (binders, _, definitions) = if canonical {
+            self.compile_canonical_forall_head(fact, proof, position)?
+        } else {
+            self.compile_forall_head(
+                fact,
+                &proof.introduced_params,
+                &proof.assumed_dom_facts,
+                position,
+            )?
+        };
         let formed = SourcePosition {
             before: fact
                 .typed_parameters
@@ -584,11 +646,22 @@ impl LitexToLeanCompiler {
                 "Quantified conclusion WD has the wrong ordered stage arity.",
             ));
         }
-        for (fact, wd) in fact.then_facts.iter().zip(&proof.then) {
+        let mut conclusions = Vec::new();
+        for (index, (fact, wd)) in fact.then_facts.iter().zip(&proof.then).enumerate() {
             let fact: Fact = fact.clone().into();
-            self.compile_fact_wd(wd, &fact, position)?;
+            let prior = SourcePosition {
+                before: position.before + index,
+                ..*position
+            };
+            conclusions.push(self.compile_formed_fact_proposition(wd, &fact, &prior)?);
         }
-        Ok(())
+        let conclusion =
+            self.scope_proposition(conjunction_proposition(conclusions)?, &definitions);
+        Ok(if binders.is_empty() {
+            conclusion
+        } else {
+            format!("∀ {}, {conclusion}", binders.join(" "))
+        })
     }
 
     // Endpoints have already been certified by the owning verify/argument stage.

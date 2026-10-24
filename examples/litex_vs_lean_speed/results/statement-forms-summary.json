@@ -1,0 +1,56 @@
+{
+  "litex/prop_definition_witness": {
+    "n": 90,
+    "median_ms": 0.5213745000000001,
+    "min_ms": 0.498,
+    "max_ms": 3.191041
+  },
+  "litex/odd_shift": {
+    "n": 90,
+    "median_ms": 6.810271500000001,
+    "min_ms": 6.522458,
+    "max_ms": 11.075125
+  },
+  "litex/reciprocal_tends_to_zero": {
+    "n": 90,
+    "median_ms": 9.553104000000001,
+    "min_ms": 9.266375,
+    "max_ms": 10.372791
+  },
+  "litex/set_union_subset_eq": {
+    "n": 90,
+    "median_ms": 0.1863125,
+    "min_ms": 0.179,
+    "max_ms": 0.31975
+  },
+  "lean/prop_definition_witness__term": {
+    "n": 21,
+    "median_ms": 4.57475,
+    "min_ms": 3.535583,
+    "max_ms": 14.356291
+  },
+  "lean/odd_shift__rcases_omega": {
+    "n": 21,
+    "median_ms": 36.352667,
+    "min_ms": 29.138167,
+    "max_ms": 60.935541
+  },
+  "lean/reciprocal_tends_to_zero__archimedean": {
+    "n": 21,
+    "median_ms": 35.2685,
+    "min_ms": 32.676542,
+    "max_ms": 42.398458
+  },
+  "lean/set_union_subset_eq__ext_cases": {
+    "n": 21,
+    "median_ms": 2.320875,
+    "min_ms": 1.9345,
+    "max_ms": 7.227
+  },
+  "lean/set_union_subset_eq__lemma": {
+    "n": 21,
+    "median_ms": 1.216667,
+    "min_ms": 1.042292,
+    "max_ms": 3.644875
+  }
+}

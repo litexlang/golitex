@@ -1,0 +1,11 @@
+# Check standard numeric subset statements with their recorded inclusion rule.
+N+ $subset Q+
+Q+ $subset R+
+Z- $subset Q-
+Q- $subset R-
+Q+ $subset Q*
+R- $subset R*
+Z* $subset Q*
+Q* $subset R*
+R* $subset C*
+C* $subset C

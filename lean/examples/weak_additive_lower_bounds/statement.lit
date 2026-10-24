@@ -1,0 +1,12 @@
+# A nonnegative addend preserves a lower bound, on either side of the sum.
+forall lo, a, b R:
+    lo <= a
+    0 <= b
+    =>:
+        lo <= a + b
+
+forall lo, a, b R:
+    lo <= b
+    0 <= a
+    =>:
+        lo <= a + b

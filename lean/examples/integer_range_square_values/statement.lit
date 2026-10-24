@@ -1,0 +1,5 @@
+# Every integer in [0, 4) has square at most 9.
+by for:
+    ? forall n range(0, 4):
+        n * n <= 9
+    n * n <= 9

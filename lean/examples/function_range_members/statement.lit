@@ -1,0 +1,4 @@
+# A range element lies in the codomain and has a preimage in the full domain.
+forall A, B set, f fn(t A)B, y fn_range(f):
+    y $in B
+    exist x A st {y = f(x)}

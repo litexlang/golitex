@@ -1,0 +1,8 @@
+# Save a negated universal theorem, invoke it and obtain its counterexample.
+thm not_all_one:
+    ? not forall x {0}:
+        x = 1
+    witness exist y {0} st {y != 1} from 0
+by thm not_all_one
+obtain a from exist y {0} st {y != 1}
+a != 1

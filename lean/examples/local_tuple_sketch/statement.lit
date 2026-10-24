@@ -1,0 +1,6 @@
+# Check the coordinates of a tuple without exporting the tuple or its facts.
+sketch:
+    let pair = (2, 3)
+    release tuple def pair
+    pair(1) = 2
+    pair(2) = 3

@@ -27,6 +27,7 @@ use super::super::helper::{fn_app_args, set_bound_parameter_count, set_bound_par
 
 pub struct ByUnfoldInstantiatedTemplateHaveFnEqualCaseByCaseApplicationObjectDefinitionProof {
     pub matched_case_index: usize,
+    pub guard: VerifyFactResult,
     pub expanded_body: Obj,
     pub residual_equal: VerifyFactResult,
 }
@@ -78,12 +79,14 @@ impl Runtime {
             (stmt.clone(), subst)
         };
 
-        let Some((matched_case_index, expanded_body)) =
-            self.match_case_by_case_body(&stmt, &subst, verify_state.clone())?
+        let Some(selected) = self.match_case_by_case_body(&stmt, &subst, verify_state.clone())?
         else {
             return Ok(None);
         };
 
+        let super::super::by_fn_application::by_have_fn_equal_case_by_case::MatchCaseByCaseBodySuccess {
+            case_index: matched_case_index, guard, expanded_body,
+        } = selected;
         let residual = EqualFact {
             fact_id: self.global_ids.allocate_fact_id(),
             left: expanded_body.clone(),
@@ -98,6 +101,7 @@ impl Runtime {
         Ok(Some(
             ByUnfoldInstantiatedTemplateHaveFnEqualCaseByCaseApplicationObjectDefinitionProof {
                 matched_case_index,
+                guard,
                 expanded_body,
                 residual_equal,
             },

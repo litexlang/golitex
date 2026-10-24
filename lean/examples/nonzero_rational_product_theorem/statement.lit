@@ -1,0 +1,11 @@
+# Reuse a named theorem about reciprocal products on nonzero rationals.
+have fn inverse(x Q*) Q* = 1 / x
+thm inverse_product:
+    ? forall a Q*, b Q*:
+        inverse(a * b) = inverse(a) * inverse(b)
+    inverse(a * b) = 1 / (a * b)
+    inverse(a) = 1 / a
+    inverse(b) = 1 / b
+    inverse(a) * inverse(b) = (1 / a) * (1 / b)
+    (1 / a) * (1 / b) = 1 / (a * b)
+by thm inverse_product(2, -3) => inverse(2 * (-3)) = inverse(2) * inverse(-3)

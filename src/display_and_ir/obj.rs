@@ -38,6 +38,22 @@ impl Obj {
                 s.push_str(LEFT_PAREN);
             }
             match o {
+                Obj::MatrixOperator(value) => {
+                    let args: Vec<_> = value
+                        .operand_refs()
+                        .into_iter()
+                        .map(|arg| arg.ir().to_string())
+                        .collect();
+                    s.push_str(&format!("{}({})", value.name(), args.join(", ")));
+                }
+                Obj::SetFormer(SetFormer::MatrixSet(value)) => {
+                    s.push_str(&format!(
+                        "matrix({}, {}, {})",
+                        value.set.ir(),
+                        value.rows.ir(),
+                        value.cols.ir()
+                    ));
+                }
                 Obj::IntegralOperator(IntegralOperator::Riemann(x)) => s.push_str(x.ir().as_str()),
                 Obj::DerivativeOperator(DerivativeOperator::AtPoint(x)) => {
                     s.push_str(x.ir().as_str())

@@ -1,0 +1,6 @@
+# Neither zero nor one can be unequal to itself.
+by contra:
+    ? not exist x R st {x = 0 or x = 1, x != x}
+    obtain a from exist x R st {x = 0 or x = 1, x != x}
+    impossible a != a
+not exist y R st {y = 0 or y = 1, y != y}

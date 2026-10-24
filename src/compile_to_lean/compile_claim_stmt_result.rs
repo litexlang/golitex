@@ -68,7 +68,13 @@ impl LitexToLeanCompiler {
                     )
                 }
                 (
-                    Fact::AtomicFact(_) | Fact::AndFact(_) | Fact::ChainFact(_) | Fact::OrFact(_),
+                    Fact::AtomicFact(_)
+                    | Fact::AndFact(_)
+                    | Fact::ChainFact(_)
+                    | Fact::OrFact(_)
+                    | Fact::ExistFact(_)
+                    | Fact::NotExistFact(_)
+                    | Fact::ExistUniqueFact(_),
                     ExecClaimBodyProof::NonForall(body),
                 ) => (
                     Vec::new(),
@@ -211,7 +217,16 @@ impl LitexToLeanCompiler {
                     definitions,
                 ))
             }
-            (Fact::AtomicFact(_) | Fact::AndFact(_) | Fact::ChainFact(_) | Fact::OrFact(_), _) => {
+            (
+                Fact::AtomicFact(_)
+                | Fact::AndFact(_)
+                | Fact::ChainFact(_)
+                | Fact::OrFact(_)
+                | Fact::ExistFact(_)
+                | Fact::NotExistFact(_)
+                | Fact::ExistUniqueFact(_),
+                _,
+            ) => {
                 let formed =
                     SourcePosition::new(Some(position), SourceOwner::FactWD(goal_wd), usize::MAX);
                 Ok((
@@ -355,10 +370,8 @@ fn claim_goal_component(fact: &ExistOrAndChainAtomicFact) -> Result<Fact, LeanCo
         ExistOrAndChainAtomicFact::AndFact(fact) => Ok(Fact::AndFact(fact.clone())),
         ExistOrAndChainAtomicFact::ChainFact(fact) => Ok(Fact::ChainFact(fact.clone())),
         ExistOrAndChainAtomicFact::OrFact(fact) => Ok(Fact::OrFact(fact.clone())),
-        ExistOrAndChainAtomicFact::ExistFact(_)
-        | ExistOrAndChainAtomicFact::ExistUniqueFact(_)
-        | ExistOrAndChainAtomicFact::NotExistFact(_) => {
-            Err(LeanCompileError::unsupported("Claim/CompoundThen"))
-        }
+        ExistOrAndChainAtomicFact::ExistFact(fact) => Ok(Fact::ExistFact(fact.clone())),
+        ExistOrAndChainAtomicFact::NotExistFact(fact) => Ok(Fact::NotExistFact(fact.clone())),
+        ExistOrAndChainAtomicFact::ExistUniqueFact(fact) => Ok(Fact::ExistUniqueFact(fact.clone())),
     }
 }

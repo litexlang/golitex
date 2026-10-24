@@ -1,0 +1,8 @@
+# Every set has a unique equal copy, proved by contradiction with generic objects.
+thm unique_set_copy:
+    ? forall A set:
+        exist! X set st {X = A}
+    by contra:
+        ? exist! X set st {X = A}
+        obtain B from exist Y set st {Y = A, Y != A}
+        impossible B != A

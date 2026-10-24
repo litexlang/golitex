@@ -4,6 +4,13 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_o
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::KnownEqualityPathProof;
 use crate::runtime::FactId;
 
+pub struct MatrixScalarEvaluationResult {
+    pub source: Obj,
+    pub source_well_defined: ObjWellDefinedProof,
+    pub expression: Obj,
+    pub value: Obj,
+}
+
 // Four scalar aggregation branches have separate success results. The shared
 // fold records every argument, checked application, beta expansion and value.
 pub enum AggregateEvaluationResult {

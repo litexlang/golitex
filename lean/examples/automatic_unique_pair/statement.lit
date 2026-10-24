@@ -1,0 +1,11 @@
+# Two real coordinates have a unique specified pair, and unique existence implies existence.
+thm unique_pair:
+    ? forall first, second R:
+        exist! x, y R st {x = first, y = second}
+    witness exist! x, y R st {x = first, y = second} from first, second
+exist! u, v R st {u = 2, v = 3}
+exist s, t R st {s = 2, t = 3}
+exist p, q R st {p = 4, q = 5}
+obtain a, b from exist x, y R st {x = 4, y = 5}
+a = 4
+b = 5

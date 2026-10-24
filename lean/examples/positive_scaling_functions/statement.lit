@@ -1,0 +1,5 @@
+# Keep positive domains and codomains through products and quotients.
+have fn scale(x R+, y R+) R+ = x * y
+have fn unscale(x R+, y R+) R+ = x / y
+forall x R+, y R+:
+    unscale(scale(x, y), y) = x

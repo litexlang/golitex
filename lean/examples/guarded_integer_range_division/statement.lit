@@ -1,0 +1,7 @@
+# Division by a nonzero member of [-1, 2) cancels; the zero case has a false premise.
+by for:
+    ? forall n range(-1, 2):
+        n != 0
+        =>:
+            n / n = 1
+    n / n = 1

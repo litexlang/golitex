@@ -1,0 +1,14 @@
+# Integer floor and ceiling bracket each real number and preserve weak order.
+forall x R:
+    floor(x) $in Z
+    ceil(x) $in Z
+    floor(x) <= x
+    x < floor(x) + 1
+    ceil(x) - 1 < x
+    x <= ceil(x)
+
+forall x, y R:
+    x <= y
+    =>:
+        floor(x) <= floor(y)
+        ceil(x) <= ceil(y)

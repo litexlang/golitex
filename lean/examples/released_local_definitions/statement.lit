@@ -1,0 +1,10 @@
+# Use released local definitions inside a proof of the additive identity.
+thm local_definition:
+    ? forall x R:
+        x + 0 = x
+    have a R = 2
+    release obj def a
+    let successor = a + 1
+    release obj def successor
+    successor = a + 1
+    (x + 0) + successor = x + successor

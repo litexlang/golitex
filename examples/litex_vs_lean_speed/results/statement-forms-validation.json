@@ -1,0 +1,27 @@
+{
+  "litex": [
+    {
+      "case": "prop_definition_witness",
+      "litex": "success"
+    },
+    {
+      "case": "odd_shift",
+      "litex": "success"
+    },
+    {
+      "case": "reciprocal_tends_to_zero",
+      "litex": "success"
+    },
+    {
+      "case": "set_union_subset_eq",
+      "litex": "success"
+    }
+  ],
+  "lean": {
+    "file": "sources/new-round/Validate.lean",
+    "exit": 0,
+    "sorry": false,
+    "stderr": "",
+    "stdout_tail": "'validated_prop_definition_witness_term' depends on axioms: [propext]\n'validated_odd_shift_rcases_omega' depends on axioms: [propext, Quot.sound]\n'validated_reciprocal_tends_to_zero_archimedean' depends on axioms: [propext, Classical.choice, Quot.sound]\n'validated_set_union_subset_eq_ext_cases' depends on axioms: [propext, Classical.choice, Quot.sound]\n'validated_set_union_subset_eq_lemma' depends on axioms: [propext, Classical.choice, Quot.sound]\n"
+  }
+}

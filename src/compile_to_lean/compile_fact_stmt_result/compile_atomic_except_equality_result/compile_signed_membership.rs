@@ -5,13 +5,110 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_
 use crate::prelude::*;
 
 impl LitexToLeanCompiler {
-    pub(in crate::compile_to_lean) fn compile_refined_positive_real_strategy(
+    pub(in crate::compile_to_lean) fn compile_refined_numeric_strategy(
         &self,
         fact: &InFact,
         requirements: &[Fact],
         results: &[VerifyFactResult],
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
+        if fact.set == Obj::StandardSet(StandardSet::N) {
+            if requirements.len() != 2 || results.len() != 2 {
+                return Err(LeanCompileError::unsupported("RefinedNatural/Requirements"));
+            }
+            if membership_subject(&requirements[0], &fact.element)? != StandardSet::Z {
+                return Err(LeanCompileError::unsupported(
+                    "RefinedNatural/IntegerSubject",
+                ));
+            }
+            let Fact::AtomicFact(order) = &requirements[1] else {
+                return Err(LeanCompileError::unsupported("RefinedNatural/OrderSubject"));
+            };
+            let (zero, element, strict) = source_order_oriented(order)?;
+            if strict || !is_exact_zero(zero) || element.ir() != fact.element.ir() {
+                return Err(LeanCompileError::unsupported("RefinedNatural/OrderSubject"));
+            }
+            let mut proofs = Vec::new();
+            for (requirement, result) in requirements.iter().zip(results) {
+                if source_subject(result)? != *requirement {
+                    return Err(LeanCompileError::unsupported(
+                        "RefinedNatural/RequirementCapture",
+                    ));
+                }
+                proofs.push(self.compile_verify(result, position)?.1);
+            }
+            return Ok(format!(
+                "(Litex.integerToNaturalOfNonnegative {} {} {})",
+                self.compile_object_reference(&fact.element, position)?,
+                proofs[0],
+                proofs[1]
+            ));
+        }
+        if let Obj::StandardSet(set) = &fact.set {
+            if let Some((base, name)) = numeric_refinement(set) {
+                if requirements.len() != 2 || results.len() != 2 {
+                    return Err(LeanCompileError::unsupported(
+                        "RefinedNumericCarrier/Requirements",
+                    ));
+                }
+                if membership_subject(&requirements[0], &fact.element)? != base {
+                    return Err(LeanCompileError::unsupported(
+                        "RefinedNumericCarrier/BaseSubject",
+                    ));
+                }
+                let condition_matches = match &requirements[1] {
+                    Fact::AtomicFact(AtomicFact::NotEqualFact(f))
+                        if matches!(
+                            set,
+                            StandardSet::QStar
+                                | StandardSet::ZStar
+                                | StandardSet::RStar
+                                | StandardSet::CStar
+                        ) =>
+                    {
+                        f.left.ir() == fact.element.ir() && is_exact_zero(&f.right)
+                    }
+                    Fact::AtomicFact(f)
+                        if matches!(
+                            set,
+                            StandardSet::QPos
+                                | StandardSet::QNeg
+                                | StandardSet::ZNeg
+                                | StandardSet::RNeg
+                        ) =>
+                    {
+                        let (left, right, strict) = source_order_oriented(f)?;
+                        let (zero, value) = if *set == StandardSet::QPos {
+                            (left, right)
+                        } else {
+                            (right, left)
+                        };
+                        strict && is_exact_zero(zero) && value.ir() == fact.element.ir()
+                    }
+                    _ => false,
+                };
+                if !condition_matches {
+                    return Err(LeanCompileError::unsupported(
+                        "RefinedNumericCarrier/ConditionSubject",
+                    ));
+                }
+                let mut proofs = Vec::new();
+                for (requirement, result) in requirements.iter().zip(results) {
+                    if source_subject(result)? != *requirement {
+                        return Err(LeanCompileError::unsupported(
+                            "RefinedNumericCarrier/RequirementCapture",
+                        ));
+                    }
+                    proofs.push(self.compile_verify(result, position)?.1);
+                }
+                return Ok(format!(
+                    "(Litex.in{name}_intro {} {} {})",
+                    self.compile_object_reference(&fact.element, position)?,
+                    proofs[0],
+                    proofs[1]
+                ));
+            }
+        }
         if fact.set != Obj::StandardSet(StandardSet::RPos) {
             return Err(LeanCompileError::unsupported(
                 "RefinedNumericCarrier/OtherTarget",

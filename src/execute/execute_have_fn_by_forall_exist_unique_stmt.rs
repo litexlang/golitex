@@ -36,12 +36,14 @@ use crate::ast::param::{
 };
 use crate::ast::stmt::{FnSetClause, HaveFnByForallExistUniqueStmt};
 use crate::exec_env::StoredIdentifierDefinition;
+use crate::execute::execute_fact_stmt::FactWellDefinedProof;
 use crate::execute::execute_fact_stmt::{
     FailToVerifyFactWellDefinedResult, VerifyFactResult, VerifyFactWellDefinedResult,
     VerifyObjWellDefinedResult, VerifyState,
 };
 use crate::instantiate::quantifier_free_fact_to_fact;
 use crate::runtime::{FactId, Runtime, RuntimeError, RuntimeResult};
+use crate::store_fact_and_infer::StoreFactAndInferResult;
 use std::rc::Rc;
 
 pub enum ExecHaveFnByForallExistUniqueStmtFailed {
@@ -56,6 +58,11 @@ pub struct ExecHaveFnByForallExistUniqueStmtSuccessResult {
     pub statement: HaveFnByForallExistUniqueStmt,
     pub source_forall: VerifyFactResult,
     pub fn_set_well_defined: VerifyObjWellDefinedResult,
+    pub membership: StoreFactAndInferResult,
+    pub property_well_defined: FactWellDefinedProof,
+    pub property: StoreFactAndInferResult,
+    pub uniqueness: StoreFactAndInferResult,
+    // Compatibility summaries of the captured stores above.
     pub membership_fact_id: FactId,
     pub property_forall_fact_id: FactId,
     pub uniqueness_forall_fact_id: FactId,
@@ -137,12 +144,11 @@ impl Runtime {
             set: Obj::FunctionSpace(FunctionSpace::FnSet(fn_set)),
             line_file: Some(stmt.line_file.clone()),
         }));
-        let mut stored_fact_ids = self
-            .store_fact_and_infer(
-                &membership,
-                crate::execute::execute_fact_stmt::VerifyState::top_level(),
-            )?
-            .stored_fact_ids();
+        let membership_store = self.store_fact_and_infer(
+            &membership,
+            crate::execute::execute_fact_stmt::VerifyState::top_level(),
+        )?;
+        let mut stored_fact_ids = membership_store.stored_fact_ids();
 
         let applied = applied_function_obj(
             &Obj::Identifier(function_ident.clone()),
@@ -151,34 +157,31 @@ impl Runtime {
         let property_forall =
             self.build_have_fn_by_exist_property_forall(stmt, &shape, applied.clone())?;
         let property_fact = Fact::ForallFact(property_forall);
-        match self.verify_fact_well_definedness(&property_fact, verify_state)? {
-            VerifyFactWellDefinedResult::Success(_) => {}
-            VerifyFactWellDefinedResult::Failed(reason) => {
-                return Ok(ExecHaveFnByForallExistUniqueStmtResult::Failed(
-                    ExecHaveFnByForallExistUniqueStmtFailed::PropertyWellDefined(reason),
-                ));
-            }
-        }
+        let property_well_defined =
+            match self.verify_fact_well_definedness(&property_fact, verify_state)? {
+                VerifyFactWellDefinedResult::Success(proof) => proof,
+                VerifyFactWellDefinedResult::Failed(reason) => {
+                    return Ok(ExecHaveFnByForallExistUniqueStmtResult::Failed(
+                        ExecHaveFnByForallExistUniqueStmtFailed::PropertyWellDefined(reason),
+                    ));
+                }
+            };
         let property_forall_fact_id = property_fact.fact_id();
-        stored_fact_ids.extend(
-            self.store_fact_and_infer(
-                &property_fact,
-                crate::execute::execute_fact_stmt::VerifyState::top_level(),
-            )?
-            .stored_fact_ids(),
-        );
+        let property_store = self.store_fact_and_infer(
+            &property_fact,
+            crate::execute::execute_fact_stmt::VerifyState::top_level(),
+        )?;
+        stored_fact_ids.extend(property_store.stored_fact_ids());
 
         let uniqueness_forall =
             self.build_have_fn_by_exist_uniqueness_forall(stmt, &shape, applied)?;
         let uniqueness_fact = Fact::ForallFact(uniqueness_forall);
         let uniqueness_forall_fact_id = uniqueness_fact.fact_id();
-        stored_fact_ids.extend(
-            self.store_fact_and_infer(
-                &uniqueness_fact,
-                crate::execute::execute_fact_stmt::VerifyState::top_level(),
-            )?
-            .stored_fact_ids(),
-        );
+        let uniqueness_store = self.store_fact_and_infer(
+            &uniqueness_fact,
+            crate::execute::execute_fact_stmt::VerifyState::top_level(),
+        )?;
+        stored_fact_ids.extend(uniqueness_store.stored_fact_ids());
 
         self.top_exec_env_mut().definitions.identifiers.insert(
             stmt.name.name.clone(),
@@ -193,6 +196,10 @@ impl Runtime {
                 statement: stmt.clone(),
                 source_forall,
                 fn_set_well_defined,
+                membership: membership_store,
+                property_well_defined,
+                property: property_store,
+                uniqueness: uniqueness_store,
                 membership_fact_id,
                 property_forall_fact_id,
                 uniqueness_forall_fact_id,

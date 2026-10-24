@@ -1,0 +1,10 @@
+# Compare factorials, retaining the positive lower argument for strict order.
+forall m, n N:
+    m <= n
+    =>:
+        m! <= n!
+
+forall m N+, n N:
+    m < n
+    =>:
+        m! < n!

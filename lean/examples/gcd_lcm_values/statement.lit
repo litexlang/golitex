@@ -1,0 +1,6 @@
+# Compute gcd and lcm of signed integers, including the permitted zero cases.
+gcd(54, -24) = 6
+lcm(-6, 15) = 30
+gcd(0, -9) = 9
+lcm(0, 0) = 0
+

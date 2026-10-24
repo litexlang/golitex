@@ -45,6 +45,7 @@ use crate::json_output::explain::text::text;
 impl InFactSearchProofByBuiltinRule {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
         match self {
+            Self::NativeMatrix(p) => crate::json_output::explain::text::native_matrix_rule(p.rule_id(),p.law(),OutputLanguage::English),
             Self::ExactIntegerQuotient(_) => text("ExactIntegerQuotient", "a,b in Z, b!=0, $dvd(a,b) => a/b in Z"),
 
             Self::MinPreservesPositiveCarrier(_) => text("Positive minimum", "a,b $in R+ => min(a,b) $in R+"),
@@ -105,6 +106,7 @@ impl InFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         match self {
+            Self::NativeMatrix(p) => crate::json_output::explain::text::native_matrix_rule(p.rule_id(),p.law(),OutputLanguage::Chinese),
             Self::ExactIntegerQuotient(_) => text(
                 "ExactIntegerQuotient",
                 "a,b in Z, b!=0, $dvd(a,b) => a/b in Z",
@@ -206,6 +208,7 @@ impl InFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
         match self {
+            Self::NativeMatrix(p) => crate::json_output::explain::text::native_matrix_rule(p.rule_id(),p.law(),OutputLanguage::ChineseTraditional),
             Self::ExactIntegerQuotient(_) => text(
                 "ExactIntegerQuotient",
                 "a,b in Z, b!=0, $dvd(a,b) => a/b in Z",
@@ -305,6 +308,7 @@ impl InFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
         match self {
+            Self::NativeMatrix(p) => crate::json_output::explain::text::native_matrix_rule(p.rule_id(),p.law(),OutputLanguage::French),
             Self::ExactIntegerQuotient(_) => text("ExactIntegerQuotient", "a,b in Z, b!=0, $dvd(a,b) => a/b in Z"),
 
             Self::MinPreservesPositiveCarrier(_) => text("Minimum positif", "a,b $in R+ => min(a,b) $in R+"),
@@ -365,6 +369,7 @@ impl InFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
         match self {
+            Self::NativeMatrix(p) => crate::json_output::explain::text::native_matrix_rule(p.rule_id(),p.law(),OutputLanguage::Russian),
             Self::ExactIntegerQuotient(_) => text("ExactIntegerQuotient", "a,b in Z, b!=0, $dvd(a,b) => a/b in Z"),
 
             Self::MinPreservesPositiveCarrier(_) => text("Положительный минимум", "a,b $in R+ => min(a,b) $in R+"),
@@ -425,6 +430,7 @@ impl InFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
         match self {
+            Self::NativeMatrix(p) => crate::json_output::explain::text::native_matrix_rule(p.rule_id(),p.law(),OutputLanguage::Spanish),
             Self::ExactIntegerQuotient(_) => text("ExactIntegerQuotient", "a,b in Z, b!=0, $dvd(a,b) => a/b in Z"),
 
             Self::MinPreservesPositiveCarrier(_) => text("Mínimo positivo", "a,b $in R+ => min(a,b) $in R+"),
@@ -485,6 +491,7 @@ impl InFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
         match self {
+            Self::NativeMatrix(p) => crate::json_output::explain::text::native_matrix_rule(p.rule_id(),p.law(),OutputLanguage::Arabic),
             Self::ExactIntegerQuotient(_) => text("ExactIntegerQuotient", "a,b in Z, b!=0, $dvd(a,b) => a/b in Z"),
 
             Self::MinPreservesPositiveCarrier(_) => text("القيمة الصغرى موجبة", "a,b $in R+ => min(a,b) $in R+"),
@@ -545,6 +552,7 @@ impl InFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
         match self {
+            Self::NativeMatrix(p) => crate::json_output::explain::text::native_matrix_rule(p.rule_id(),p.law(),OutputLanguage::Japanese),
             Self::ExactIntegerQuotient(_) => text("ExactIntegerQuotient", "a,b in Z, b!=0, $dvd(a,b) => a/b in Z"),
 
             Self::MinPreservesPositiveCarrier(_) => text("正の実数の最小値", "a,b $in R+ => min(a,b) $in R+"),
@@ -623,6 +631,7 @@ impl InFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
         match self {
+            Self::NativeMatrix(p) => crate::json_output::explain::text::native_matrix_rule(p.rule_id(),p.law(),OutputLanguage::Korean),
             Self::ExactIntegerQuotient(_) => text("ExactIntegerQuotient", "a,b in Z, b!=0, $dvd(a,b) => a/b in Z"),
 
             Self::MinPreservesPositiveCarrier(_) => text("양의 실수의 최솟값", "a,b $in R+ => min(a,b) $in R+"),
@@ -683,6 +692,7 @@ impl InFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
         match self {
+            Self::NativeMatrix(p) => crate::json_output::explain::text::native_matrix_rule(p.rule_id(),p.law(),OutputLanguage::Vietnamese),
             Self::ExactIntegerQuotient(_) => text("ExactIntegerQuotient", "a,b in Z, b!=0, $dvd(a,b) => a/b in Z"),
 
             Self::MinPreservesPositiveCarrier(_) => text("Giá trị nhỏ nhất dương", "a,b $in R+ => min(a,b) $in R+"),
@@ -758,6 +768,7 @@ impl InFactSearchProofByBuiltinRule {
 
     pub fn cite_fact_id(&self) -> Option<FactId> {
         match self {
+            Self::NativeMatrix(_) => None,
             Self::ExactIntegerQuotient(_) => None,
 
             Self::MinPreservesPositiveCarrier(_) => None,

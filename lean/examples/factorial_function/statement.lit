@@ -1,0 +1,3 @@
+# Define the permutation-count function with natural domain and positive-natural range.
+have fn permutations(n N) N+ = n!
+permutations(5) = 120

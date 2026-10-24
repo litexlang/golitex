@@ -57,4 +57,8 @@ mod retired_function_arrow_tests;
 #[path = "../../tests/unit/parse/absolute_value_bars.rs"]
 mod absolute_value_bar_tests;
 
+#[cfg(test)]
+#[path = "../../tests/unit/parse/cart_n.rs"]
+mod cart_n_tests;
+
 pub use statements::prop_registration_shape;

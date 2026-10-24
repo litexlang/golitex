@@ -1,0 +1,8 @@
+# Recover a reciprocal function's definition and evaluate it at a nonzero input.
+have fn reciprocal(x R: x != 0) R = 1 / x
+release obj def reciprocal
+reciprocal(2) = 1 / 2
+forall x R:
+    x != 0
+    =>:
+        reciprocal(x) = 1 / x

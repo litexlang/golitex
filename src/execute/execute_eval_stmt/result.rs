@@ -29,6 +29,7 @@ pub struct ExecEvalStmtSuccess {
     pub rewritten_object: Obj,
     pub cited_equal_fact_ids: Vec<FactId>,
     pub evaluated_object: Obj,
+    pub matrix_scalar_evaluations: Vec<crate::execute::execute_eval_stmt::aggregate_evaluation_result::MatrixScalarEvaluationResult>,
     pub aggregate_evaluations: Vec<super::aggregate_evaluation_result::AggregateEvaluationResult>,
     pub function_evaluations:
         Vec<super::aggregate_evaluation_result::FunctionApplicationEvaluationResult>,

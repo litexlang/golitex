@@ -7,8 +7,6 @@ set_option linter.unusedTactic false
 set_option linter.unreachableTactic false
 set_option linter.unusedVariables false
 
-theorem validated_sqrt_two_irrational_mathlib_theorem : Irrational (Real.sqrt 2) := irrational_sqrt_two
-
 theorem validated_sqrt_two_irrational_scratch : Irrational (Real.sqrt 2) := by
   rintro ⟨q, hq⟩
   have h2 : (q : Real) ^ 2 = 2 := by
@@ -65,10 +63,6 @@ theorem validated_set_inter_monotone_term : ∀ A B D : Set Real, A ⊆ B → A 
 
 theorem validated_function_mem_range_lemma : ∀ (f : Real → Real) (x : Real), f x ∈ Set.range f := fun f x => Set.mem_range_self x
 
-theorem validated_function_comp_assoc_term : ∀ f g h : Real → Real, (f ∘ g) ∘ h = f ∘ (g ∘ h) := fun _ _ _ => rfl
-
-theorem validated_function_comp_assoc_lemma : ∀ f g h : Real → Real, (f ∘ g) ∘ h = f ∘ (g ∘ h) := fun f g h => Function.comp_assoc f g h
-
 theorem validated_integer_division_decomposition_lemma : ∀ (a : Int) (d : Nat), 0 < d → a = (d : Int) * (a / (d : Int)) + a % (d : Int) := fun a d _ => (Int.mul_ediv_add_emod a (d : Int)).symm
 
 theorem validated_integer_divisibility_lemma : ∀ (a : Int) (c : Int), c ≠ 0 → c ∣ a * c := fun a c _ => dvd_mul_left c a
@@ -92,8 +86,6 @@ theorem validated_pair_reconstruction_lemma : ∀ p : Real × Real, (p.1, p.2) =
 
 theorem validated_continuity_square_at_three_lemma : ContinuousAt (fun x : Real => x ^ 2) 3 := continuousAt_pow (3 : Real) 2
 
-#print axioms validated_sqrt_two_irrational_mathlib_theorem
-
 #print axioms validated_sqrt_two_irrational_scratch
 
 #print axioms validated_set_union_inter_distrib_lemma
@@ -107,10 +99,6 @@ theorem validated_continuity_square_at_three_lemma : ContinuousAt (fun x : Real 
 #print axioms validated_set_inter_monotone_term
 
 #print axioms validated_function_mem_range_lemma
-
-#print axioms validated_function_comp_assoc_term
-
-#print axioms validated_function_comp_assoc_lemma
 
 #print axioms validated_integer_division_decomposition_lemma
 

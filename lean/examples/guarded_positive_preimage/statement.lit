@@ -1,0 +1,13 @@
+# Preimages retain positivity and both restrictions of a punctured interval.
+have fn restricted_identity(x R+: x != 1, x < 5) R+ = x
+have by fn_preimage: a from restricted_identity(2) $in fn_range(restricted_identity)
+a != 1
+a < 5
+
+thm local_positive_preimage:
+    ? forall y fn_range(restricted_identity):
+        y $in R+
+    have by fn_preimage: b from y $in fn_range(restricted_identity)
+    b $in R+
+    b != 1
+    b < 5

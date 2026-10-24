@@ -1,0 +1,8 @@
+# Check a dependent calculation inside two discarded scopes.
+sketch:
+    let outer = 2
+    outer + 1 = 3
+    sketch:
+        let inner = outer + 1
+        inner = 3
+    outer = 2

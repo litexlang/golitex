@@ -9,7 +9,26 @@ For real mathematical examples, run
 `litex -reading -strict -lang zh -r examples/reading/homepage`.
 The [homepage collection](../examples/reading/homepage/README.md) contains
 least squares, sets, Newton iteration, irrationality of √2 and Cantor's theorem;
-use the contents or source selector to switch between them.
+use the top-right example menu to switch between them.
+
+## Semantic hover hints
+
+Hover or focus an object name for its concise role, declaration and scope.
+Common builtin numeric operations have authored bilingual reference cards with
+surface syntax, domain/range, meaning and a checked example. The current 31
+entries cover arithmetic, powers, integer operations, elementary real functions,
+inverse trigonometric functions and complex parts/modulus. These cards describe
+the language operation, not a computed type for this particular expression.
+For example `+` accepts complex operands; `/` requires a nonzero divisor;
+`sqrt` takes a nonnegative real argument. Resolved user declarations retain their
+own source help. Builtins outside this catalogue keep available generic help;
+the reader does not guess missing signatures.
+
+The viewer is read-only: it has no inline code editor or hover diagnostic
+markers. The native preview can open `.lit` files and report failed verification
+or parse diagnostics, including available source positions. A rejected fact
+such as `1 = 2` and a parse error such as an undefined name remain distinct.
+Static hosting opens previously exported reading JSON, without verification.
 
 ## Import source and save JSON
 
@@ -20,9 +39,8 @@ litex -reading -lang zh
 This opens a browser backed by a service on `127.0.0.1`. Open/drop a `.lit`
 file, or select/drop a complete project folder. A project must include its
 `litex.config` files and dependencies. Several unrelated `.lit` files need
-configuration to establish execution order. Choose “下载 JSON” to save the
-currently displayed bundle. Reopen that JSON to read it without rechecking
-the source. A static export can also open existing reading JSON.
+configuration to establish execution order. The viewer has no download button. Export JSON with the CLI below,
+then reopen it to read without rechecking the source. A static export can also open existing reading JSON.
 
 For reproducible builds or a website backend, invoke the exporter directly:
 
@@ -47,9 +65,9 @@ then an indented block containing every argument type and all complete defining
 conditions in rendered LaTeX. The formula contains no prose or separate domain
 heading. It presents the declared typed interface; the source domains and
 quantifier scopes are preserved.
-Click `prop ⓘ` to open the purpose/semantics guide and its checked short example.
-The guide is hidden initially, supports keyboard/touch and closes with Escape,
-its close button, an outside click or a new selection.
+Click the source keyword `prop` to open the purpose/semantics guide and its
+checked short example. Keyword help supports Enter/Space; Escape returns focus
+to the source keyword. Selecting another statement restores mathematical content.
 
 The selected source is not echoed; engine versions and source file/line
 metadata stay out of the detail pane. Result/citation buttons select facts
@@ -83,6 +101,21 @@ parser spellings and tokenizer symbols with
 `python3 src/reading/generate_highlighting.py`; use `--check` to detect drift.
 Hovering or focusing supported tokens explains their language role; resolved builtin sets have brief
 mathematical labels such as `R` → real numbers ℝ. Escape dismisses the tooltip.
+
+The top-right **示例目录 / Examples** button opens chapter selection and search.
+Resolved names show their recorded definition line and exact source declaration
+on hover or keyboard focus; selecting a name also shows that declaration in the
+inspector. Lazy chapters are loaded on demand. Missing source stays unavailable
+rather than being reconstructed from a normalized statement. Compound keywords
+such as `by def`, `by contra`, `have fn` and `release thm` share one help target;
+clicking `by def` explains “用定义来证明”.
+
+Mathematical output shortens a qualified name only when the recorded
+configuration and symbol identity identify an unambiguous declaration in that
+context. This applies to plain and retained LaTeX output; source spelling,
+FactIds and citation targets remain unchanged. Unknown or ambiguous names
+remain qualified.
+
 An optional source `tokens` array carries normalized tokenizer `text` and original
 UTF-8 `start_byte`/`end_byte` ranges. Comments and inline asides are excluded by
 the language tokenizer. Unicode aliases keep their authored spelling in the
@@ -253,8 +286,25 @@ For an already loaded complete JSON, `LitexReading.mount(root, {
 document: readingJson, locale: 'zh' })` remains available. `open` also accepts
 an inline manifest plus `baseUrl` pointing to its URL. Parts must share that
 origin and snapshot ID; failed loads report an error while retaining the
-previous selection. The download button always saves the complete snapshot,
-including chapters that have not yet been visited.
+previous selection. “Open a file” is the primary action; the viewer has no
+download control. The footer’s closed “Reading help” disclosure contains usage hints, the color
+legend and an explanation of how statements
+were checked, which facts were used and what was inferred. JSON remains the
+transport format. Optional `onOpenFiles()` and `onOpenProject()` callbacks add
+file/folder opening; the host owns file selection and validation. The supplied
+shell opens saved records and, in live preview, Litex files and folders.
+The example menu starts collapsed; there is no duplicate source selector.
+Small file-local reference counts appear beside each explicit predicate, function
+and object declaration; clicking a count opens its actual source uses. Definition
+spans and inferred output do not count as references. Occurrence lists in the
+detail pane still start closed.
+
+Hover or focus a resolved name to see its exact authored declaration line and
+source. Bound parameters also show their declared domain from typed parameter
+evidence, independently of later inferred memberships: in `forall x Q:`, the
+body’s `x` reports `x ∈ Q`, even when its statement checks `x $in R`. Same-name
+binders are separated by symbol identity. When older records lack this evidence,
+the reader keeps available source information without guessing a domain.
 
 The returned component has `selectStatement(id)`, `selectFact(id)`,
 `selectWellDefinedness(id)`, `getSelection()`, `getBundleId()`,
@@ -312,7 +362,7 @@ For a project, upload relative source/config paths together and use
 root is unambiguous. The response is the reading bundle; HTTP 200 can still
 have `run_result: "failure"`. Malformed upload requests return HTTP 400 and
 `{"error": ...}`. The initial `GET /reading.json` remains the server's startup
-document; the build response/download is the newly generated document.
+document; the build response is the newly generated document.
 
 The local server accepts builds from its own origin. A public webpage should
 use its own backend to run `litex -reading -json` in an isolated request
@@ -338,3 +388,56 @@ service clears this cache. Command-line JSON/export builds still reverify;
 this cache does not replace the ordinary knowledge-base cache or provide
 incremental proof invalidation. Versioned static parts separately support
 browser caching. Full portable JSON remains available for durable reuse.
+
+### Human-readable example titles
+
+A project may place `reading-titles.json` beside its independent `.lit` files:
+
+```json
+{
+  "kind": "reading_titles",
+  "sources": {
+    "13-orthogonal-projection.lit": {
+      "zh": "正交投影与唯一最近点",
+      "en": "Orthogonal projection and the unique closest point"
+    }
+  }
+}
+```
+
+The observer copies valid labels into optional `sources[].titles`. The shared
+reader uses the selected language for page titles, example menus, source
+menus, definition locations and search results. Both language labels can
+be searched. Actual source paths, source bodies, digests and reference IDs
+remain unchanged. Exported/lazy/offline reading data retain the titles; embedding
+uses the same component. Older records without titles retain their source names.
+
+Project uploads accept this specifically named sidecar alongside source/config
+files. It does not count as an executable input. Missing, malformed, unrelated
+or oversized title data fall back to source names and do not affect proof
+checking. The sidecar is limited to 64 KiB; individual nonempty locale labels
+are limited to 300 characters. This is presentation metadata, independent of
+mathematical verification and the source input digest; bundle fingerprints
+include it. The main mathematical example collection supplies both Chinese and
+English titles for every source.
+
+## Independent problem examples in the homepage gallery
+
+`python3 examples/reading/homepage/export_gallery.py <output-directory>` builds
+the usual strict collection plus four independent problem/correction pairs.
+The Examples menu groups entries as Passes / Does not pass, including normal
+chapters and the independent pairs. Case pages retain both categories and a
+link to the remaining passing collection. Expected failures retain their actual
+failure status. `--reuse-main` reuses a previously verified main export without rerunning
+its mathematics. The supplied builder validates all eight exercise outcomes.
+
+Hosts may pass optional `exampleGroups` to the shared reader: each group has
+`titles: {zh, en}` and `items: [{titles: {zh, en}, href: "cases/example/"}]`.
+A group may set `includeSources: true` to include this bundle’s source chapters
+in that category instead of listing them again outside the categories.
+Only relative directory links with optional parent segments are accepted. The
+supplied shell reads host-authored groups from an optional JSON script with
+id `reading-example-groups`; this is host navigation metadata, separate from
+proof JSON. Cross-page links retain the current locale using `?lang=zh|en`.
+The gallery versions its shared asset URLs to prevent cached old scripts from
+hiding freshly added navigation. Existing exports without groups still work.

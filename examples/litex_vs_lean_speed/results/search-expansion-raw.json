@@ -1,0 +1,2648 @@
+[
+  {
+    "system": "litex",
+    "case": "affine_sum_16",
+    "process": 0,
+    "rep": "first",
+    "ms": 48.739167
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_16",
+    "process": 0,
+    "rep": 0,
+    "ms": 43.935625
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_16",
+    "process": 0,
+    "rep": 1,
+    "ms": 40.954166
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_16",
+    "process": 0,
+    "rep": 2,
+    "ms": 52.169292
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_16",
+    "process": 0,
+    "rep": 3,
+    "ms": 166.396458
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_16",
+    "process": 0,
+    "rep": 4,
+    "ms": 76.963791
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_16",
+    "process": 0,
+    "rep": 5,
+    "ms": 93.090875
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_16",
+    "process": 0,
+    "rep": 6,
+    "ms": 133.037625
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_16",
+    "process": 0,
+    "rep": 7,
+    "ms": 98.591209
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_16",
+    "process": 0,
+    "rep": 8,
+    "ms": 50.60275
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_16",
+    "process": 0,
+    "rep": 9,
+    "ms": 97.158791
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_64",
+    "process": 0,
+    "rep": "first",
+    "ms": 103.513875
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_64",
+    "process": 0,
+    "rep": 0,
+    "ms": 60.321542
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_64",
+    "process": 0,
+    "rep": 1,
+    "ms": 126.01725
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_64",
+    "process": 0,
+    "rep": 2,
+    "ms": 155.567667
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_64",
+    "process": 0,
+    "rep": 3,
+    "ms": 135.86125
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_64",
+    "process": 0,
+    "rep": 4,
+    "ms": 50.704917
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_64",
+    "process": 0,
+    "rep": 5,
+    "ms": 145.426875
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_64",
+    "process": 0,
+    "rep": 6,
+    "ms": 116.912958
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_64",
+    "process": 0,
+    "rep": 7,
+    "ms": 131.927875
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_64",
+    "process": 0,
+    "rep": 8,
+    "ms": 120.952792
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_64",
+    "process": 0,
+    "rep": 9,
+    "ms": 314.034041
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_128",
+    "process": 0,
+    "rep": "first",
+    "ms": 189.328084
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_128",
+    "process": 0,
+    "rep": 0,
+    "ms": 149.463666
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_128",
+    "process": 0,
+    "rep": 1,
+    "ms": 207.107
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_128",
+    "process": 0,
+    "rep": 2,
+    "ms": 84.099791
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_128",
+    "process": 0,
+    "rep": 3,
+    "ms": 46.269917
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_128",
+    "process": 0,
+    "rep": 4,
+    "ms": 49.230042
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_128",
+    "process": 0,
+    "rep": 5,
+    "ms": 43.548292
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_128",
+    "process": 0,
+    "rep": 6,
+    "ms": 64.725667
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_128",
+    "process": 0,
+    "rep": 7,
+    "ms": 78.362458
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_128",
+    "process": 0,
+    "rep": 8,
+    "ms": 56.413792
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_128",
+    "process": 0,
+    "rep": 9,
+    "ms": 54.173417
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_0",
+    "process": 0,
+    "rep": "first",
+    "ms": 11.428041
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_0",
+    "process": 0,
+    "rep": 0,
+    "ms": 12.160583
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_0",
+    "process": 0,
+    "rep": 1,
+    "ms": 11.141041
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_0",
+    "process": 0,
+    "rep": 2,
+    "ms": 10.900791
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_0",
+    "process": 0,
+    "rep": 3,
+    "ms": 11.1675
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_0",
+    "process": 0,
+    "rep": 4,
+    "ms": 11.516458
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_0",
+    "process": 0,
+    "rep": 5,
+    "ms": 10.984541
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_0",
+    "process": 0,
+    "rep": 6,
+    "ms": 11.175958
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_0",
+    "process": 0,
+    "rep": 7,
+    "ms": 10.807208
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_0",
+    "process": 0,
+    "rep": 8,
+    "ms": 10.728708
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_0",
+    "process": 0,
+    "rep": 9,
+    "ms": 10.848917
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_12",
+    "process": 0,
+    "rep": "first",
+    "ms": 57.457667
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_12",
+    "process": 0,
+    "rep": 0,
+    "ms": 56.516959
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_12",
+    "process": 0,
+    "rep": 1,
+    "ms": 59.702583
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_12",
+    "process": 0,
+    "rep": 2,
+    "ms": 55.61925
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_12",
+    "process": 0,
+    "rep": 3,
+    "ms": 61.550417
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_12",
+    "process": 0,
+    "rep": 4,
+    "ms": 57.44625
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_12",
+    "process": 0,
+    "rep": 5,
+    "ms": 56.585375
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_12",
+    "process": 0,
+    "rep": 6,
+    "ms": 57.776416
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_12",
+    "process": 0,
+    "rep": 7,
+    "ms": 87.327917
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_12",
+    "process": 0,
+    "rep": 8,
+    "ms": 57.764625
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_12",
+    "process": 0,
+    "rep": 9,
+    "ms": 57.357583
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_24",
+    "process": 0,
+    "rep": "first",
+    "ms": 116.824792
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_24",
+    "process": 0,
+    "rep": 0,
+    "ms": 116.641292
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_24",
+    "process": 0,
+    "rep": 1,
+    "ms": 117.098875
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_24",
+    "process": 0,
+    "rep": 2,
+    "ms": 120.296083
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_24",
+    "process": 0,
+    "rep": 3,
+    "ms": 131.614375
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_24",
+    "process": 0,
+    "rep": 4,
+    "ms": 120.968875
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_24",
+    "process": 0,
+    "rep": 5,
+    "ms": 118.260791
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_24",
+    "process": 0,
+    "rep": 6,
+    "ms": 125.527291
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_24",
+    "process": 0,
+    "rep": 7,
+    "ms": 119.960083
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_24",
+    "process": 0,
+    "rep": 8,
+    "ms": 121.970708
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_24",
+    "process": 0,
+    "rep": 9,
+    "ms": 116.674416
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_16",
+    "process": 1,
+    "rep": "first",
+    "ms": 46.187541
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_16",
+    "process": 1,
+    "rep": 0,
+    "ms": 49.029542
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_16",
+    "process": 1,
+    "rep": 1,
+    "ms": 42.528417
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_16",
+    "process": 1,
+    "rep": 2,
+    "ms": 43.162459
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_16",
+    "process": 1,
+    "rep": 3,
+    "ms": 42.686417
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_16",
+    "process": 1,
+    "rep": 4,
+    "ms": 42.482167
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_16",
+    "process": 1,
+    "rep": 5,
+    "ms": 42.676583
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_16",
+    "process": 1,
+    "rep": 6,
+    "ms": 42.998791
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_16",
+    "process": 1,
+    "rep": 7,
+    "ms": 42.62575
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_16",
+    "process": 1,
+    "rep": 8,
+    "ms": 64.708792
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_16",
+    "process": 1,
+    "rep": 9,
+    "ms": 74.094166
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_64",
+    "process": 1,
+    "rep": "first",
+    "ms": 43.122708
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_64",
+    "process": 1,
+    "rep": 0,
+    "ms": 42.723875
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_64",
+    "process": 1,
+    "rep": 1,
+    "ms": 42.793084
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_64",
+    "process": 1,
+    "rep": 2,
+    "ms": 42.696709
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_64",
+    "process": 1,
+    "rep": 3,
+    "ms": 42.3995
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_64",
+    "process": 1,
+    "rep": 4,
+    "ms": 42.344917
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_64",
+    "process": 1,
+    "rep": 5,
+    "ms": 41.702083
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_64",
+    "process": 1,
+    "rep": 6,
+    "ms": 42.809875
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_64",
+    "process": 1,
+    "rep": 7,
+    "ms": 42.64425
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_64",
+    "process": 1,
+    "rep": 8,
+    "ms": 42.066208
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_64",
+    "process": 1,
+    "rep": 9,
+    "ms": 42.493625
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_128",
+    "process": 1,
+    "rep": "first",
+    "ms": 42.563333
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_128",
+    "process": 1,
+    "rep": 0,
+    "ms": 42.883916
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_128",
+    "process": 1,
+    "rep": 1,
+    "ms": 42.642792
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_128",
+    "process": 1,
+    "rep": 2,
+    "ms": 42.629875
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_128",
+    "process": 1,
+    "rep": 3,
+    "ms": 42.505333
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_128",
+    "process": 1,
+    "rep": 4,
+    "ms": 43.133209
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_128",
+    "process": 1,
+    "rep": 5,
+    "ms": 43.170708
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_128",
+    "process": 1,
+    "rep": 6,
+    "ms": 42.582416
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_128",
+    "process": 1,
+    "rep": 7,
+    "ms": 42.77275
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_128",
+    "process": 1,
+    "rep": 8,
+    "ms": 41.941375
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_128",
+    "process": 1,
+    "rep": 9,
+    "ms": 42.490083
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_0",
+    "process": 1,
+    "rep": "first",
+    "ms": 10.763125
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_0",
+    "process": 1,
+    "rep": 0,
+    "ms": 10.57
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_0",
+    "process": 1,
+    "rep": 1,
+    "ms": 10.684666
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_0",
+    "process": 1,
+    "rep": 2,
+    "ms": 10.4215
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_0",
+    "process": 1,
+    "rep": 3,
+    "ms": 10.756125
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_0",
+    "process": 1,
+    "rep": 4,
+    "ms": 10.936084
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_0",
+    "process": 1,
+    "rep": 5,
+    "ms": 10.727041
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_0",
+    "process": 1,
+    "rep": 6,
+    "ms": 10.668375
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_0",
+    "process": 1,
+    "rep": 7,
+    "ms": 10.664875
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_0",
+    "process": 1,
+    "rep": 8,
+    "ms": 10.723458
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_0",
+    "process": 1,
+    "rep": 9,
+    "ms": 10.851
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_12",
+    "process": 1,
+    "rep": "first",
+    "ms": 55.236667
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_12",
+    "process": 1,
+    "rep": 0,
+    "ms": 55.429541
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_12",
+    "process": 1,
+    "rep": 1,
+    "ms": 56.029625
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_12",
+    "process": 1,
+    "rep": 2,
+    "ms": 56.235208
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_12",
+    "process": 1,
+    "rep": 3,
+    "ms": 61.196083
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_12",
+    "process": 1,
+    "rep": 4,
+    "ms": 55.917333
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_12",
+    "process": 1,
+    "rep": 5,
+    "ms": 56.231625
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_12",
+    "process": 1,
+    "rep": 6,
+    "ms": 56.186333
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_12",
+    "process": 1,
+    "rep": 7,
+    "ms": 57.762042
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_12",
+    "process": 1,
+    "rep": 8,
+    "ms": 56.201042
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_12",
+    "process": 1,
+    "rep": 9,
+    "ms": 61.459
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_24",
+    "process": 1,
+    "rep": "first",
+    "ms": 129.138709
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_24",
+    "process": 1,
+    "rep": 0,
+    "ms": 116.013542
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_24",
+    "process": 1,
+    "rep": 1,
+    "ms": 159.589125
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_24",
+    "process": 1,
+    "rep": 2,
+    "ms": 217.652125
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_24",
+    "process": 1,
+    "rep": 3,
+    "ms": 120.737375
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_24",
+    "process": 1,
+    "rep": 4,
+    "ms": 117.595417
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_24",
+    "process": 1,
+    "rep": 5,
+    "ms": 117.510791
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_24",
+    "process": 1,
+    "rep": 6,
+    "ms": 161.823959
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_24",
+    "process": 1,
+    "rep": 7,
+    "ms": 145.367542
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_24",
+    "process": 1,
+    "rep": 8,
+    "ms": 122.731125
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_24",
+    "process": 1,
+    "rep": 9,
+    "ms": 118.624667
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_16",
+    "process": 2,
+    "rep": "first",
+    "ms": 46.307542
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_16",
+    "process": 2,
+    "rep": 0,
+    "ms": 45.75175
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_16",
+    "process": 2,
+    "rep": 1,
+    "ms": 44.263667
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_16",
+    "process": 2,
+    "rep": 2,
+    "ms": 46.765334
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_16",
+    "process": 2,
+    "rep": 3,
+    "ms": 43.717834
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_16",
+    "process": 2,
+    "rep": 4,
+    "ms": 42.926833
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_16",
+    "process": 2,
+    "rep": 5,
+    "ms": 43.243792
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_16",
+    "process": 2,
+    "rep": 6,
+    "ms": 43.20725
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_16",
+    "process": 2,
+    "rep": 7,
+    "ms": 43.224625
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_16",
+    "process": 2,
+    "rep": 8,
+    "ms": 43.442959
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_16",
+    "process": 2,
+    "rep": 9,
+    "ms": 44.431208
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_64",
+    "process": 2,
+    "rep": "first",
+    "ms": 43.737792
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_64",
+    "process": 2,
+    "rep": 0,
+    "ms": 43.228291
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_64",
+    "process": 2,
+    "rep": 1,
+    "ms": 43.49775
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_64",
+    "process": 2,
+    "rep": 2,
+    "ms": 43.49625
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_64",
+    "process": 2,
+    "rep": 3,
+    "ms": 43.275166
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_64",
+    "process": 2,
+    "rep": 4,
+    "ms": 43.008291
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_64",
+    "process": 2,
+    "rep": 5,
+    "ms": 42.195958
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_64",
+    "process": 2,
+    "rep": 6,
+    "ms": 42.281042
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_64",
+    "process": 2,
+    "rep": 7,
+    "ms": 42.687667
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_64",
+    "process": 2,
+    "rep": 8,
+    "ms": 42.240375
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_64",
+    "process": 2,
+    "rep": 9,
+    "ms": 41.991167
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_128",
+    "process": 2,
+    "rep": "first",
+    "ms": 42.651834
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_128",
+    "process": 2,
+    "rep": 0,
+    "ms": 42.95125
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_128",
+    "process": 2,
+    "rep": 1,
+    "ms": 42.550125
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_128",
+    "process": 2,
+    "rep": 2,
+    "ms": 42.73225
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_128",
+    "process": 2,
+    "rep": 3,
+    "ms": 42.617375
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_128",
+    "process": 2,
+    "rep": 4,
+    "ms": 42.501083
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_128",
+    "process": 2,
+    "rep": 5,
+    "ms": 43.538791
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_128",
+    "process": 2,
+    "rep": 6,
+    "ms": 42.80175
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_128",
+    "process": 2,
+    "rep": 7,
+    "ms": 42.506666
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_128",
+    "process": 2,
+    "rep": 8,
+    "ms": 42.311667
+  },
+  {
+    "system": "litex",
+    "case": "affine_sum_128",
+    "process": 2,
+    "rep": 9,
+    "ms": 44.485667
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_0",
+    "process": 2,
+    "rep": "first",
+    "ms": 13.904709
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_0",
+    "process": 2,
+    "rep": 0,
+    "ms": 11.939667
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_0",
+    "process": 2,
+    "rep": 1,
+    "ms": 11.894417
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_0",
+    "process": 2,
+    "rep": 2,
+    "ms": 10.905291
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_0",
+    "process": 2,
+    "rep": 3,
+    "ms": 10.981375
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_0",
+    "process": 2,
+    "rep": 4,
+    "ms": 10.980083
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_0",
+    "process": 2,
+    "rep": 5,
+    "ms": 11.112208
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_0",
+    "process": 2,
+    "rep": 6,
+    "ms": 10.917084
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_0",
+    "process": 2,
+    "rep": 7,
+    "ms": 10.67
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_0",
+    "process": 2,
+    "rep": 8,
+    "ms": 10.93425
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_0",
+    "process": 2,
+    "rep": 9,
+    "ms": 11.0935
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_12",
+    "process": 2,
+    "rep": "first",
+    "ms": 55.656833
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_12",
+    "process": 2,
+    "rep": 0,
+    "ms": 56.099958
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_12",
+    "process": 2,
+    "rep": 1,
+    "ms": 55.885083
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_12",
+    "process": 2,
+    "rep": 2,
+    "ms": 56.03475
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_12",
+    "process": 2,
+    "rep": 3,
+    "ms": 56.366042
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_12",
+    "process": 2,
+    "rep": 4,
+    "ms": 56.978
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_12",
+    "process": 2,
+    "rep": 5,
+    "ms": 56.205375
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_12",
+    "process": 2,
+    "rep": 6,
+    "ms": 56.928417
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_12",
+    "process": 2,
+    "rep": 7,
+    "ms": 56.306334
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_12",
+    "process": 2,
+    "rep": 8,
+    "ms": 58.628958
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_12",
+    "process": 2,
+    "rep": 9,
+    "ms": 58.142917
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_24",
+    "process": 2,
+    "rep": "first",
+    "ms": 124.433791
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_24",
+    "process": 2,
+    "rep": 0,
+    "ms": 120.771
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_24",
+    "process": 2,
+    "rep": 1,
+    "ms": 160.634541
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_24",
+    "process": 2,
+    "rep": 2,
+    "ms": 120.404208
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_24",
+    "process": 2,
+    "rep": 3,
+    "ms": 120.174458
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_24",
+    "process": 2,
+    "rep": 4,
+    "ms": 118.702333
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_24",
+    "process": 2,
+    "rep": 5,
+    "ms": 117.174833
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_24",
+    "process": 2,
+    "rep": 6,
+    "ms": 117.282875
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_24",
+    "process": 2,
+    "rep": 7,
+    "ms": 169.831208
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_24",
+    "process": 2,
+    "rep": 8,
+    "ms": 144.23475
+  },
+  {
+    "system": "litex",
+    "case": "quadratic_context_24",
+    "process": 2,
+    "rep": 9,
+    "ms": 119.160917
+  },
+  {
+    "system": "lean",
+    "case": "affine_sum_16__expanded",
+    "process": 0,
+    "rep": "first",
+    "ms": 123.864458
+  },
+  {
+    "system": "lean",
+    "case": "affine_sum_16__formula",
+    "process": 0,
+    "rep": "first",
+    "ms": 13.743875
+  },
+  {
+    "system": "lean",
+    "case": "affine_sum_16__expanded",
+    "process": 0,
+    "rep": "warm",
+    "ms": 42.149083
+  },
+  {
+    "system": "lean",
+    "case": "affine_sum_16__expanded",
+    "process": 0,
+    "rep": "warm",
+    "ms": 41.438
+  },
+  {
+    "system": "lean",
+    "case": "affine_sum_16__expanded",
+    "process": 0,
+    "rep": "warm",
+    "ms": 43.445167
+  },
+  {
+    "system": "lean",
+    "case": "affine_sum_16__formula",
+    "process": 0,
+    "rep": "warm",
+    "ms": 11.915583
+  },
+  {
+    "system": "lean",
+    "case": "affine_sum_16__formula",
+    "process": 0,
+    "rep": "warm",
+    "ms": 19.081042
+  },
+  {
+    "system": "lean",
+    "case": "affine_sum_16__formula",
+    "process": 0,
+    "rep": "warm",
+    "ms": 12.652208
+  },
+  {
+    "system": "lean",
+    "case": "affine_sum_64__expanded",
+    "process": 0,
+    "rep": "first",
+    "ms": 238.422958
+  },
+  {
+    "system": "lean",
+    "case": "affine_sum_64__formula",
+    "process": 0,
+    "rep": "first",
+    "ms": 11.696667
+  },
+  {
+    "system": "lean",
+    "case": "affine_sum_64__expanded",
+    "process": 0,
+    "rep": "warm",
+    "ms": 223.140625
+  },
+  {
+    "system": "lean",
+    "case": "affine_sum_64__expanded",
+    "process": 0,
+    "rep": "warm",
+    "ms": 238.338958
+  },
+  {
+    "system": "lean",
+    "case": "affine_sum_64__expanded",
+    "process": 0,
+    "rep": "warm",
+    "ms": 236.178167
+  },
+  {
+    "system": "lean",
+    "case": "affine_sum_64__formula",
+    "process": 0,
+    "rep": "warm",
+    "ms": 12.393583
+  },
+  {
+    "system": "lean",
+    "case": "affine_sum_64__formula",
+    "process": 0,
+    "rep": "warm",
+    "ms": 11.784833
+  },
+  {
+    "system": "lean",
+    "case": "affine_sum_64__formula",
+    "process": 0,
+    "rep": "warm",
+    "ms": 11.411166
+  },
+  {
+    "system": "lean",
+    "case": "affine_sum_128__expanded",
+    "process": 0,
+    "rep": "first",
+    "ms": 736.729458
+  },
+  {
+    "system": "lean",
+    "case": "affine_sum_128__formula",
+    "process": 0,
+    "rep": "first",
+    "ms": 12.735125
+  },
+  {
+    "system": "lean",
+    "case": "affine_sum_128__expanded",
+    "process": 0,
+    "rep": "warm",
+    "ms": 720.814625
+  },
+  {
+    "system": "lean",
+    "case": "affine_sum_128__expanded",
+    "process": 0,
+    "rep": "warm",
+    "ms": 710.018958
+  },
+  {
+    "system": "lean",
+    "case": "affine_sum_128__expanded",
+    "process": 0,
+    "rep": "warm",
+    "ms": 744.291041
+  },
+  {
+    "system": "lean",
+    "case": "affine_sum_128__formula",
+    "process": 0,
+    "rep": "warm",
+    "ms": 13.566375
+  },
+  {
+    "system": "lean",
+    "case": "affine_sum_128__formula",
+    "process": 0,
+    "rep": "warm",
+    "ms": 12.512375
+  },
+  {
+    "system": "lean",
+    "case": "affine_sum_128__formula",
+    "process": 0,
+    "rep": "warm",
+    "ms": 12.207833
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_0__all_hypotheses",
+    "process": 0,
+    "rep": "first",
+    "ms": 121.543625
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_0__only_certificate",
+    "process": 0,
+    "rep": "first",
+    "ms": 72.412292
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_0__lemma",
+    "process": 0,
+    "rep": "first",
+    "ms": 26.004292
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_0__all_hypotheses",
+    "process": 0,
+    "rep": "warm",
+    "ms": 81.319459
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_0__all_hypotheses",
+    "process": 0,
+    "rep": "warm",
+    "ms": 79.8575
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_0__all_hypotheses",
+    "process": 0,
+    "rep": "warm",
+    "ms": 74.902209
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_0__only_certificate",
+    "process": 0,
+    "rep": "warm",
+    "ms": 97.171875
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_0__only_certificate",
+    "process": 0,
+    "rep": "warm",
+    "ms": 83.154083
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_0__only_certificate",
+    "process": 0,
+    "rep": "warm",
+    "ms": 79.756292
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_0__lemma",
+    "process": 0,
+    "rep": "warm",
+    "ms": 26.271833
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_0__lemma",
+    "process": 0,
+    "rep": "warm",
+    "ms": 25.834458
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_0__lemma",
+    "process": 0,
+    "rep": "warm",
+    "ms": 25.50325
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_12__all_hypotheses",
+    "process": 0,
+    "rep": "first",
+    "ms": 224.656167
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_12__only_certificate",
+    "process": 0,
+    "rep": "first",
+    "ms": 82.531667
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_12__lemma",
+    "process": 0,
+    "rep": "first",
+    "ms": 34.081583
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_12__all_hypotheses",
+    "process": 0,
+    "rep": "warm",
+    "ms": 225.846958
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_12__all_hypotheses",
+    "process": 0,
+    "rep": "warm",
+    "ms": 231.236
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_12__all_hypotheses",
+    "process": 0,
+    "rep": "warm",
+    "ms": 228.125875
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_12__only_certificate",
+    "process": 0,
+    "rep": "warm",
+    "ms": 78.243084
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_12__only_certificate",
+    "process": 0,
+    "rep": "warm",
+    "ms": 84.752292
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_12__only_certificate",
+    "process": 0,
+    "rep": "warm",
+    "ms": 88.071333
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_12__lemma",
+    "process": 0,
+    "rep": "warm",
+    "ms": 29.900084
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_12__lemma",
+    "process": 0,
+    "rep": "warm",
+    "ms": 29.157375
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_12__lemma",
+    "process": 0,
+    "rep": "warm",
+    "ms": 28.822
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_24__all_hypotheses",
+    "process": 0,
+    "rep": "first",
+    "ms": 708.511583
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_24__only_certificate",
+    "process": 0,
+    "rep": "first",
+    "ms": 94.520333
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_24__lemma",
+    "process": 0,
+    "rep": "first",
+    "ms": 39.026625
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_24__all_hypotheses",
+    "process": 0,
+    "rep": "warm",
+    "ms": 757.794083
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_24__all_hypotheses",
+    "process": 0,
+    "rep": "warm",
+    "ms": 721.889167
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_24__all_hypotheses",
+    "process": 0,
+    "rep": "warm",
+    "ms": 719.49225
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_24__only_certificate",
+    "process": 0,
+    "rep": "warm",
+    "ms": 108.814542
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_24__only_certificate",
+    "process": 0,
+    "rep": "warm",
+    "ms": 152.714625
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_24__only_certificate",
+    "process": 0,
+    "rep": "warm",
+    "ms": 97.773541
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_24__lemma",
+    "process": 0,
+    "rep": "warm",
+    "ms": 41.016041
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_24__lemma",
+    "process": 0,
+    "rep": "warm",
+    "ms": 39.708459
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_24__lemma",
+    "process": 0,
+    "rep": "warm",
+    "ms": 39.371625
+  },
+  {
+    "system": "lean",
+    "case": "affine_sum_16__expanded",
+    "process": 1,
+    "rep": "first",
+    "ms": 77.154084
+  },
+  {
+    "system": "lean",
+    "case": "affine_sum_16__formula",
+    "process": 1,
+    "rep": "first",
+    "ms": 13.216667
+  },
+  {
+    "system": "lean",
+    "case": "affine_sum_16__expanded",
+    "process": 1,
+    "rep": "warm",
+    "ms": 51.707542
+  },
+  {
+    "system": "lean",
+    "case": "affine_sum_16__expanded",
+    "process": 1,
+    "rep": "warm",
+    "ms": 49.022625
+  },
+  {
+    "system": "lean",
+    "case": "affine_sum_16__expanded",
+    "process": 1,
+    "rep": "warm",
+    "ms": 47.062584
+  },
+  {
+    "system": "lean",
+    "case": "affine_sum_16__formula",
+    "process": 1,
+    "rep": "warm",
+    "ms": 13.110791
+  },
+  {
+    "system": "lean",
+    "case": "affine_sum_16__formula",
+    "process": 1,
+    "rep": "warm",
+    "ms": 12.583791
+  },
+  {
+    "system": "lean",
+    "case": "affine_sum_16__formula",
+    "process": 1,
+    "rep": "warm",
+    "ms": 12.770042
+  },
+  {
+    "system": "lean",
+    "case": "affine_sum_64__expanded",
+    "process": 1,
+    "rep": "first",
+    "ms": 237.954042
+  },
+  {
+    "system": "lean",
+    "case": "affine_sum_64__formula",
+    "process": 1,
+    "rep": "first",
+    "ms": 12.466584
+  },
+  {
+    "system": "lean",
+    "case": "affine_sum_64__expanded",
+    "process": 1,
+    "rep": "warm",
+    "ms": 229.833166
+  },
+  {
+    "system": "lean",
+    "case": "affine_sum_64__expanded",
+    "process": 1,
+    "rep": "warm",
+    "ms": 236.427833
+  },
+  {
+    "system": "lean",
+    "case": "affine_sum_64__expanded",
+    "process": 1,
+    "rep": "warm",
+    "ms": 246.046375
+  },
+  {
+    "system": "lean",
+    "case": "affine_sum_64__formula",
+    "process": 1,
+    "rep": "warm",
+    "ms": 14.126875
+  },
+  {
+    "system": "lean",
+    "case": "affine_sum_64__formula",
+    "process": 1,
+    "rep": "warm",
+    "ms": 12.636708
+  },
+  {
+    "system": "lean",
+    "case": "affine_sum_64__formula",
+    "process": 1,
+    "rep": "warm",
+    "ms": 11.197959
+  },
+  {
+    "system": "lean",
+    "case": "affine_sum_128__expanded",
+    "process": 1,
+    "rep": "first",
+    "ms": 750.253917
+  },
+  {
+    "system": "lean",
+    "case": "affine_sum_128__formula",
+    "process": 1,
+    "rep": "first",
+    "ms": 14.064167
+  },
+  {
+    "system": "lean",
+    "case": "affine_sum_128__expanded",
+    "process": 1,
+    "rep": "warm",
+    "ms": 767.782083
+  },
+  {
+    "system": "lean",
+    "case": "affine_sum_128__expanded",
+    "process": 1,
+    "rep": "warm",
+    "ms": 727.942625
+  },
+  {
+    "system": "lean",
+    "case": "affine_sum_128__expanded",
+    "process": 1,
+    "rep": "warm",
+    "ms": 921.208125
+  },
+  {
+    "system": "lean",
+    "case": "affine_sum_128__formula",
+    "process": 1,
+    "rep": "warm",
+    "ms": 27.242708
+  },
+  {
+    "system": "lean",
+    "case": "affine_sum_128__formula",
+    "process": 1,
+    "rep": "warm",
+    "ms": 13.307084
+  },
+  {
+    "system": "lean",
+    "case": "affine_sum_128__formula",
+    "process": 1,
+    "rep": "warm",
+    "ms": 13.981083
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_0__all_hypotheses",
+    "process": 1,
+    "rep": "first",
+    "ms": 138.757583
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_0__only_certificate",
+    "process": 1,
+    "rep": "first",
+    "ms": 114.858792
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_0__lemma",
+    "process": 1,
+    "rep": "first",
+    "ms": 28.600625
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_0__all_hypotheses",
+    "process": 1,
+    "rep": "warm",
+    "ms": 79.257084
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_0__all_hypotheses",
+    "process": 1,
+    "rep": "warm",
+    "ms": 82.41725
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_0__all_hypotheses",
+    "process": 1,
+    "rep": "warm",
+    "ms": 77.394625
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_0__only_certificate",
+    "process": 1,
+    "rep": "warm",
+    "ms": 78.207542
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_0__only_certificate",
+    "process": 1,
+    "rep": "warm",
+    "ms": 76.909292
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_0__only_certificate",
+    "process": 1,
+    "rep": "warm",
+    "ms": 76.187417
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_0__lemma",
+    "process": 1,
+    "rep": "warm",
+    "ms": 24.564459
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_0__lemma",
+    "process": 1,
+    "rep": "warm",
+    "ms": 23.836833
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_0__lemma",
+    "process": 1,
+    "rep": "warm",
+    "ms": 23.759958
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_12__all_hypotheses",
+    "process": 1,
+    "rep": "first",
+    "ms": 237.671
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_12__only_certificate",
+    "process": 1,
+    "rep": "first",
+    "ms": 85.271
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_12__lemma",
+    "process": 1,
+    "rep": "first",
+    "ms": 32.218042
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_12__all_hypotheses",
+    "process": 1,
+    "rep": "warm",
+    "ms": 231.357208
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_12__all_hypotheses",
+    "process": 1,
+    "rep": "warm",
+    "ms": 289.529458
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_12__all_hypotheses",
+    "process": 1,
+    "rep": "warm",
+    "ms": 231.373042
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_12__only_certificate",
+    "process": 1,
+    "rep": "warm",
+    "ms": 81.751959
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_12__only_certificate",
+    "process": 1,
+    "rep": "warm",
+    "ms": 82.198333
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_12__only_certificate",
+    "process": 1,
+    "rep": "warm",
+    "ms": 84.453791
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_12__lemma",
+    "process": 1,
+    "rep": "warm",
+    "ms": 31.254209
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_12__lemma",
+    "process": 1,
+    "rep": "warm",
+    "ms": 33.182333
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_12__lemma",
+    "process": 1,
+    "rep": "warm",
+    "ms": 31.421792
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_24__all_hypotheses",
+    "process": 1,
+    "rep": "first",
+    "ms": 702.242875
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_24__only_certificate",
+    "process": 1,
+    "rep": "first",
+    "ms": 88.215125
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_24__lemma",
+    "process": 1,
+    "rep": "first",
+    "ms": 36.173791
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_24__all_hypotheses",
+    "process": 1,
+    "rep": "warm",
+    "ms": 707.8845
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_24__all_hypotheses",
+    "process": 1,
+    "rep": "warm",
+    "ms": 697.916334
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_24__all_hypotheses",
+    "process": 1,
+    "rep": "warm",
+    "ms": 677.791042
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_24__only_certificate",
+    "process": 1,
+    "rep": "warm",
+    "ms": 91.207458
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_24__only_certificate",
+    "process": 1,
+    "rep": "warm",
+    "ms": 93.083083
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_24__only_certificate",
+    "process": 1,
+    "rep": "warm",
+    "ms": 88.455417
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_24__lemma",
+    "process": 1,
+    "rep": "warm",
+    "ms": 40.02325
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_24__lemma",
+    "process": 1,
+    "rep": "warm",
+    "ms": 35.268791
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_24__lemma",
+    "process": 1,
+    "rep": "warm",
+    "ms": 33.534917
+  },
+  {
+    "system": "lean",
+    "case": "affine_sum_16__expanded",
+    "process": 2,
+    "rep": "first",
+    "ms": 86.10675
+  },
+  {
+    "system": "lean",
+    "case": "affine_sum_16__formula",
+    "process": 2,
+    "rep": "first",
+    "ms": 14.823542
+  },
+  {
+    "system": "lean",
+    "case": "affine_sum_16__expanded",
+    "process": 2,
+    "rep": "warm",
+    "ms": 45.714
+  },
+  {
+    "system": "lean",
+    "case": "affine_sum_16__expanded",
+    "process": 2,
+    "rep": "warm",
+    "ms": 45.868333
+  },
+  {
+    "system": "lean",
+    "case": "affine_sum_16__expanded",
+    "process": 2,
+    "rep": "warm",
+    "ms": 46.363416
+  },
+  {
+    "system": "lean",
+    "case": "affine_sum_16__formula",
+    "process": 2,
+    "rep": "warm",
+    "ms": 11.766167
+  },
+  {
+    "system": "lean",
+    "case": "affine_sum_16__formula",
+    "process": 2,
+    "rep": "warm",
+    "ms": 11.779959
+  },
+  {
+    "system": "lean",
+    "case": "affine_sum_16__formula",
+    "process": 2,
+    "rep": "warm",
+    "ms": 11.854125
+  },
+  {
+    "system": "lean",
+    "case": "affine_sum_64__expanded",
+    "process": 2,
+    "rep": "first",
+    "ms": 243.52775
+  },
+  {
+    "system": "lean",
+    "case": "affine_sum_64__formula",
+    "process": 2,
+    "rep": "first",
+    "ms": 13.058375
+  },
+  {
+    "system": "lean",
+    "case": "affine_sum_64__expanded",
+    "process": 2,
+    "rep": "warm",
+    "ms": 249.866917
+  },
+  {
+    "system": "lean",
+    "case": "affine_sum_64__expanded",
+    "process": 2,
+    "rep": "warm",
+    "ms": 242.45925
+  },
+  {
+    "system": "lean",
+    "case": "affine_sum_64__expanded",
+    "process": 2,
+    "rep": "warm",
+    "ms": 242.860417
+  },
+  {
+    "system": "lean",
+    "case": "affine_sum_64__formula",
+    "process": 2,
+    "rep": "warm",
+    "ms": 13.338708
+  },
+  {
+    "system": "lean",
+    "case": "affine_sum_64__formula",
+    "process": 2,
+    "rep": "warm",
+    "ms": 12.991875
+  },
+  {
+    "system": "lean",
+    "case": "affine_sum_64__formula",
+    "process": 2,
+    "rep": "warm",
+    "ms": 12.678542
+  },
+  {
+    "system": "lean",
+    "case": "affine_sum_128__expanded",
+    "process": 2,
+    "rep": "first",
+    "ms": 738.31
+  },
+  {
+    "system": "lean",
+    "case": "affine_sum_128__formula",
+    "process": 2,
+    "rep": "first",
+    "ms": 14.644833
+  },
+  {
+    "system": "lean",
+    "case": "affine_sum_128__expanded",
+    "process": 2,
+    "rep": "warm",
+    "ms": 762.757875
+  },
+  {
+    "system": "lean",
+    "case": "affine_sum_128__expanded",
+    "process": 2,
+    "rep": "warm",
+    "ms": 840.447209
+  },
+  {
+    "system": "lean",
+    "case": "affine_sum_128__expanded",
+    "process": 2,
+    "rep": "warm",
+    "ms": 840.945875
+  },
+  {
+    "system": "lean",
+    "case": "affine_sum_128__formula",
+    "process": 2,
+    "rep": "warm",
+    "ms": 13.91
+  },
+  {
+    "system": "lean",
+    "case": "affine_sum_128__formula",
+    "process": 2,
+    "rep": "warm",
+    "ms": 12.429791
+  },
+  {
+    "system": "lean",
+    "case": "affine_sum_128__formula",
+    "process": 2,
+    "rep": "warm",
+    "ms": 11.789291
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_0__all_hypotheses",
+    "process": 2,
+    "rep": "first",
+    "ms": 205.091792
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_0__only_certificate",
+    "process": 2,
+    "rep": "first",
+    "ms": 102.847834
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_0__lemma",
+    "process": 2,
+    "rep": "first",
+    "ms": 44.644542
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_0__all_hypotheses",
+    "process": 2,
+    "rep": "warm",
+    "ms": 78.551667
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_0__all_hypotheses",
+    "process": 2,
+    "rep": "warm",
+    "ms": 78.896334
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_0__all_hypotheses",
+    "process": 2,
+    "rep": "warm",
+    "ms": 84.571125
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_0__only_certificate",
+    "process": 2,
+    "rep": "warm",
+    "ms": 82.682667
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_0__only_certificate",
+    "process": 2,
+    "rep": "warm",
+    "ms": 84.121167
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_0__only_certificate",
+    "process": 2,
+    "rep": "warm",
+    "ms": 81.156166
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_0__lemma",
+    "process": 2,
+    "rep": "warm",
+    "ms": 26.044041
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_0__lemma",
+    "process": 2,
+    "rep": "warm",
+    "ms": 26.205958
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_0__lemma",
+    "process": 2,
+    "rep": "warm",
+    "ms": 26.281542
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_12__all_hypotheses",
+    "process": 2,
+    "rep": "first",
+    "ms": 224.46425
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_12__only_certificate",
+    "process": 2,
+    "rep": "first",
+    "ms": 85.442333
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_12__lemma",
+    "process": 2,
+    "rep": "first",
+    "ms": 30.814625
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_12__all_hypotheses",
+    "process": 2,
+    "rep": "warm",
+    "ms": 225.823417
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_12__all_hypotheses",
+    "process": 2,
+    "rep": "warm",
+    "ms": 229.047542
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_12__all_hypotheses",
+    "process": 2,
+    "rep": "warm",
+    "ms": 224.630375
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_12__only_certificate",
+    "process": 2,
+    "rep": "warm",
+    "ms": 83.280292
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_12__only_certificate",
+    "process": 2,
+    "rep": "warm",
+    "ms": 83.715167
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_12__only_certificate",
+    "process": 2,
+    "rep": "warm",
+    "ms": 93.488792
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_12__lemma",
+    "process": 2,
+    "rep": "warm",
+    "ms": 33.73575
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_12__lemma",
+    "process": 2,
+    "rep": "warm",
+    "ms": 34.162166
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_12__lemma",
+    "process": 2,
+    "rep": "warm",
+    "ms": 35.45625
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_24__all_hypotheses",
+    "process": 2,
+    "rep": "first",
+    "ms": 758.885875
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_24__only_certificate",
+    "process": 2,
+    "rep": "first",
+    "ms": 89.127
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_24__lemma",
+    "process": 2,
+    "rep": "first",
+    "ms": 37.373333
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_24__all_hypotheses",
+    "process": 2,
+    "rep": "warm",
+    "ms": 688.474625
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_24__all_hypotheses",
+    "process": 2,
+    "rep": "warm",
+    "ms": 698.933875
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_24__all_hypotheses",
+    "process": 2,
+    "rep": "warm",
+    "ms": 1206.449916
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_24__only_certificate",
+    "process": 2,
+    "rep": "warm",
+    "ms": 153.10675
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_24__only_certificate",
+    "process": 2,
+    "rep": "warm",
+    "ms": 161.816708
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_24__only_certificate",
+    "process": 2,
+    "rep": "warm",
+    "ms": 312.884333
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_24__lemma",
+    "process": 2,
+    "rep": "warm",
+    "ms": 86.054208
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_24__lemma",
+    "process": 2,
+    "rep": "warm",
+    "ms": 76.230416
+  },
+  {
+    "system": "lean",
+    "case": "quadratic_context_24__lemma",
+    "process": 2,
+    "rep": "warm",
+    "ms": 76.711042
+  }
+]

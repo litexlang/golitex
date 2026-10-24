@@ -1,0 +1,16 @@
+# Define direction and magnitude functions and reuse the reconstruction theorem.
+have fn direction(x R) Z = sign(x)
+have fn magnitude(x R) R = abs(x)
+
+thm reconstruct_real:
+    ? forall x R:
+        direction(x) * magnitude(x) = x
+    direction(x) = sign(x)
+    magnitude(x) = abs(x)
+    direction(x) * magnitude(x) = sign(x) * abs(x)
+    sign(x) * abs(x) = x
+
+by thm reconstruct_real(-3) => direction(-3) * magnitude(-3) = -3
+
+forall x R, y R:
+    direction(x * y) = direction(x) * direction(y)

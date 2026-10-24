@@ -28,6 +28,16 @@ impl Runtime {
         param_to_arg_map: &HashMap<IdentifierId, Obj>,
     ) -> Result<Obj, InstError> {
         match obj {
+            Obj::MatrixOperator(value) => value
+                .try_map_operands(|arg| self.inst_obj_rec(arg, param_to_arg_map))
+                .map(Obj::MatrixOperator),
+            Obj::SetFormer(SetFormer::MatrixSet(value)) => Ok(Obj::SetFormer(
+                SetFormer::MatrixSet(crate::ast::obj::MatrixSet {
+                    set: Box::new(self.inst_obj_rec(&value.set, param_to_arg_map)?),
+                    rows: Box::new(self.inst_obj_rec(&value.rows, param_to_arg_map)?),
+                    cols: Box::new(self.inst_obj_rec(&value.cols, param_to_arg_map)?),
+                }),
+            )),
             Obj::IntegralOperator(crate::ast::obj::IntegralOperator::Riemann(a)) => {
                 Ok(crate::ast::obj::RiemannIntegral::new(
                     self.inst_obj_rec(&a.function, param_to_arg_map)?,

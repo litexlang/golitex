@@ -67,6 +67,7 @@ pub const MAX_AGGREGATE_TERMS: usize = 1024;
 pub struct ActiveAlgoCalls {
     calls: HashSet<String>,
     pub aggregate_terms_remaining: usize,
+    pub matrix_scalar_evaluations: Vec<crate::execute::execute_eval_stmt::aggregate_evaluation_result::MatrixScalarEvaluationResult>,
     pub aggregate_evaluations: Vec<super::aggregate_evaluation_result::AggregateEvaluationResult>,
     pub function_evaluations:
         Vec<super::aggregate_evaluation_result::FunctionApplicationEvaluationResult>,
@@ -80,6 +81,7 @@ impl ActiveAlgoCalls {
         Self {
             calls: HashSet::new(),
             aggregate_terms_remaining: MAX_AGGREGATE_TERMS,
+            matrix_scalar_evaluations: vec![],
             aggregate_evaluations: vec![],
             function_evaluations: vec![],
             algo_evaluations: vec![],

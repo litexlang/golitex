@@ -1,0 +1,4 @@
+# Check membership in a finite set whose name stays inside the sketch.
+sketch:
+    let A = {1, 2}
+    1 $in A

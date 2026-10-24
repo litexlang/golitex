@@ -1,0 +1,24 @@
+# Define gcd/lcm functions with their exact domains and reuse a guarded theorem.
+have fn common(a Z, b Z: a != 0 or b != 0) N+ = gcd(a, b)
+
+have fn multiple(a Z, b Z) N = lcm(a, b)
+
+common(54, -24) = 6
+
+multiple(-6, 15) = 30
+
+thm common_self:
+    ? forall n Z:
+        n != 0
+        =>:
+            common(n, n) = abs(n)
+    common(n, n) = gcd(n, n)
+    gcd(n, n) = abs(n)
+
+by thm common_self(-9) => common(-9, -9) = abs(-9)
+
+have fn next(n Z) Z = n + 1
+next(5) = 6
+gcd(next(5), 15) = gcd(6, 15)
+gcd(6, 15) = 3
+

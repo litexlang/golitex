@@ -1,0 +1,9 @@
+# Empty, singleton and mixed tuples retain their exact lengths and values.
+release tuple def tuple()
+tuple() $in finite_seq({}, 0)
+release tuple def tuple(7)
+tuple(7) $in finite_seq({7}, 1)
+tuple(7)(1) = 7
+release tuple def (R, 1)
+(R, 1) $in finite_seq(union({R}, {1}), 2)
+(R, 1)(1) = R

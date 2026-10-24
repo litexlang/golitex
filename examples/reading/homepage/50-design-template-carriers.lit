@@ -1,0 +1,5 @@
+template<S set>:
+    have carrier_copy set = S
+
+\carrier_copy<R> = R
+\carrier_copy<Z> = Z

@@ -2,12 +2,12 @@ have fn vec(A, B cart(R, R)) cart(R, R) = (B(1) - A(1), B(2) - A(2))
 
 # Dot product.
 
-have fn det(u, v cart(R, R)) R = u(1) * v(2) - u(2) * v(1)
+have fn det2(u, v cart(R, R)) R = u(1) * v(2) - u(2) * v(1)
 
 # Squared Euclidean distance |ab|^2 (avoids square roots).
 
 prop is_triangle(a, b, c cart(R, R)):
-    det(vec(a, b), vec(a, c)) != 0
+    det2(vec(a, b), vec(a, c)) != 0
 
 # Triangle abc is isosceles with apex a (ab = ac), not the general "two sides equal".
 
@@ -22,14 +22,14 @@ thm vector_projections_12:
 
 thm determinant_coordinates_12:
     ? forall a,b,c cart(R,R):
-        det(vec(a,b),vec(a,c)) = (b(1)-a(1))*(c(2)-a(2))-(b(2)-a(2))*(c(1)-a(1))
+        det2(vec(a,b),vec(a,c)) = (b(1)-a(1))*(c(2)-a(2))-(b(2)-a(2))*(c(1)-a(1))
     vec(a,b) = (b(1)-a(1),b(2)-a(2))
     vec(a,c) = (c(1)-a(1),c(2)-a(2))
     vec(a,b)(1) = (b(1)-a(1),b(2)-a(2))(1) = b(1)-a(1)
     vec(a,b)(2) = (b(1)-a(1),b(2)-a(2))(2) = b(2)-a(2)
     vec(a,c)(1) = (c(1)-a(1),c(2)-a(2))(1) = c(1)-a(1)
     vec(a,c)(2) = (c(1)-a(1),c(2)-a(2))(2) = c(2)-a(2)
-    det(vec(a,b),vec(a,c)) = vec(a,b)(1)*vec(a,c)(2)-vec(a,b)(2)*vec(a,c)(1) = (b(1)-a(1))*(c(2)-a(2))-(b(2)-a(2))*(c(1)-a(1))
+    det2(vec(a,b),vec(a,c)) = vec(a,b)(1)*vec(a,c)(2)-vec(a,b)(2)*vec(a,c)(1) = (b(1)-a(1))*(c(2)-a(2))-(b(2)-a(2))*(c(1)-a(1))
 
 
 prop is_strictly_inside_segment(k, b, c cart(R, R)):
@@ -168,13 +168,13 @@ thm bkm_det_factor:
         m(1) = (1 - z) * a(1) + z * b(1)
         m(2) = (1 - z) * a(2) + z * b(2)
         =>:
-            det(vec(b, k), vec(b, m)) = x * (1 - z) * det(vec(a, b), vec(a, c))
+            det2(vec(b, k), vec(b, m)) = x * (1 - z) * det2(vec(a, b), vec(a, c))
     vec(b, k) = (k(1) - b(1), k(2) - b(2))
     vec(b, m) = (m(1) - b(1), m(2) - b(2))
-    det(vec(b, k), vec(b, m)) = (k(1) - b(1)) * (m(2) - b(2)) - (k(2) - b(2)) * (m(1) - b(1))
+    det2(vec(b, k), vec(b, m)) = (k(1) - b(1)) * (m(2) - b(2)) - (k(2) - b(2)) * (m(1) - b(1))
     vec(a, b) = (b(1) - a(1), b(2) - a(2))
     vec(a, c) = (c(1) - a(1), c(2) - a(2))
-    det(vec(a, b), vec(a, c)) = (b(1) - a(1)) * (c(2) - a(2)) - (b(2) - a(2)) * (c(1) - a(1))
+    det2(vec(a, b), vec(a, c)) = (b(1) - a(1)) * (c(2) - a(2)) - (b(2) - a(2)) * (c(1) - a(1))
     k(1)-b(1) = ((1-x)*b(1)+x*c(1))-b(1)
     ((1-x)*b(1)+x*c(1))-b(1) = x*(c(1)-b(1))
     k(1) - b(1) = x * (c(1) - b(1))
@@ -191,25 +191,25 @@ thm bkm_det_factor:
     (x * (c(1) - b(1))) * ((1 - z) * (a(2) - b(2))) - (x * (c(2) - b(2))) * ((1 - z) * (a(1) - b(1))) = x * (1 - z) * ((c(1) - b(1)) * (a(2) - b(2)) - (c(2) - b(2)) * (a(1) - b(1)))
     (c(1) - b(1)) * (a(2) - b(2)) - (c(2) - b(2)) * (a(1) - b(1)) = (b(1) - a(1)) * (c(2) - a(2)) - (b(2) - a(2)) * (c(1) - a(1))
     x * (1 - z) * ((c(1) - b(1)) * (a(2) - b(2)) - (c(2) - b(2)) * (a(1) - b(1))) = x * (1 - z) * ((b(1) - a(1)) * (c(2) - a(2)) - (b(2) - a(2)) * (c(1) - a(1)))
-    det(vec(b, k), vec(b, m)) = x * (1 - z) * ((b(1) - a(1)) * (c(2) - a(2)) - (b(2) - a(2)) * (c(1) - a(1)))
-    x * (1 - z) * det(vec(a, b), vec(a, c)) = x * (1 - z) * ((b(1) - a(1)) * (c(2) - a(2)) - (b(2) - a(2)) * (c(1) - a(1)))
-    det(vec(b, k), vec(b, m)) = x * (1 - z) * det(vec(a, b), vec(a, c))
+    det2(vec(b, k), vec(b, m)) = x * (1 - z) * ((b(1) - a(1)) * (c(2) - a(2)) - (b(2) - a(2)) * (c(1) - a(1)))
+    x * (1 - z) * det2(vec(a, b), vec(a, c)) = x * (1 - z) * ((b(1) - a(1)) * (c(2) - a(2)) - (b(2) - a(2)) * (c(1) - a(1)))
+    det2(vec(b, k), vec(b, m)) = x * (1 - z) * det2(vec(a, b), vec(a, c))
 
 # Cyclic determinants are equal for triangle ABC
 
 thm triangle_det_cycles:
     ? forall a, b, c cart(R, R):
-        det(vec(b, c), vec(b, a)) = det(vec(a, b), vec(a, c))
-        det(vec(c, a), vec(c, b)) = det(vec(a, b), vec(a, c))
+        det2(vec(b, c), vec(b, a)) = det2(vec(a, b), vec(a, c))
+        det2(vec(c, a), vec(c, b)) = det2(vec(a, b), vec(a, c))
     vec(a, b) = (b(1) - a(1), b(2) - a(2))
     vec(a, c) = (c(1) - a(1), c(2) - a(2))
     vec(b, c) = (c(1) - b(1), c(2) - b(2))
     vec(b, a) = (a(1) - b(1), a(2) - b(2))
     vec(c, a) = (a(1) - c(1), a(2) - c(2))
     vec(c, b) = (b(1) - c(1), b(2) - c(2))
-    det(vec(a, b), vec(a, c)) = (b(1) - a(1)) * (c(2) - a(2)) - (b(2) - a(2)) * (c(1) - a(1))
-    det(vec(b, c), vec(b, a)) = (c(1) - b(1)) * (a(2) - b(2)) - (c(2) - b(2)) * (a(1) - b(1))
-    det(vec(c, a), vec(c, b)) = (a(1) - c(1)) * (b(2) - c(2)) - (a(2) - c(2)) * (b(1) - c(1))
+    det2(vec(a, b), vec(a, c)) = (b(1) - a(1)) * (c(2) - a(2)) - (b(2) - a(2)) * (c(1) - a(1))
+    det2(vec(b, c), vec(b, a)) = (c(1) - b(1)) * (a(2) - b(2)) - (c(2) - b(2)) * (a(1) - b(1))
+    det2(vec(c, a), vec(c, b)) = (a(1) - c(1)) * (b(2) - c(2)) - (a(2) - c(2)) * (b(1) - c(1))
     (c(1) - b(1)) * (a(2) - b(2)) - (c(2) - b(2)) * (a(1) - b(1)) = (b(1) - a(1)) * (c(2) - a(2)) - (b(2) - a(2)) * (c(1) - a(1))
     (a(1) - c(1)) * (b(2) - c(2)) - (a(2) - c(2)) * (b(1) - c(1)) = (b(1) - a(1)) * (c(2) - a(2)) - (b(2) - a(2)) * (c(1) - a(1))
 
@@ -254,7 +254,7 @@ thm problem_12:
         $is_strictly_inside_segment(l, c, a)
         $is_strictly_inside_segment(m, a, b)
         =>:
-            16 * det(vec(a, m), vec(a, l))^2 <= det(vec(a, b), vec(a, c))^2 or 16 * det(vec(b, k), vec(b, m))^2 <= det(vec(a, b), vec(a, c))^2 or 16 * det(vec(c, l), vec(c, k))^2 <= det(vec(a, b), vec(a, c))^2
+            16 * det2(vec(a, m), vec(a, l))^2 <= det2(vec(a, b), vec(a, c))^2 or 16 * det2(vec(b, k), vec(b, m))^2 <= det2(vec(a, b), vec(a, c))^2 or 16 * det2(vec(c, l), vec(c, k))^2 <= det2(vec(a, b), vec(a, c))^2
     # Extract affine coordinates from predicate witnesses
     by def $is_strictly_inside_segment(k, b, c)
     obtain xk from exist xk R st {0 < xk, xk < 1, k(1) = (1 - xk) * b(1) + xk * c(1), k(2) = (1 - xk) * b(2) + xk * c(2)}
@@ -282,51 +282,51 @@ thm problem_12:
     xk * (1 - zm) <= 1 / 4 or yl * (1 - xk) <= 1 / 4 or zm * (1 - yl) <= 1 / 4
     
     by cases:
-        ? 16 * det(vec(a, m), vec(a, l))^2 <= det(vec(a, b), vec(a, c))^2 or 16 * det(vec(b, k), vec(b, m))^2 <= det(vec(a, b), vec(a, c))^2 or 16 * det(vec(c, l), vec(c, k))^2 <= det(vec(a, b), vec(a, c))^2
+        ? 16 * det2(vec(a, m), vec(a, l))^2 <= det2(vec(a, b), vec(a, c))^2 or 16 * det2(vec(b, k), vec(b, m))^2 <= det2(vec(a, b), vec(a, c))^2 or 16 * det2(vec(c, l), vec(c, k))^2 <= det2(vec(a, b), vec(a, c))^2
         
         case xk * (1 - zm) <= 1 / 4:
             # BKM triangle: det(BK, BM) = xk*(1-zm)*det(AB, AC)
             by thm bkm_det_factor(a, b, c, k, m, xk, zm)
-            det(vec(b, k), vec(b, m)) = xk * (1 - zm) * det(vec(a, b), vec(a, c))
+            det2(vec(b, k), vec(b, m)) = xk * (1 - zm) * det2(vec(a, b), vec(a, c))
             
             # Apply area bound: xk*(1-zm) ≤ 1/4 ⇒ 16*[xk*(1-zm)*d]² ≤ d²
             xk * (1 - zm) >= 0
-            by thm ratio_square_area_bound(xk * (1 - zm), det(vec(b, k), vec(b, m)), det(vec(a, b), vec(a, c)))
-            16 * det(vec(b, k), vec(b, m))^2 <= det(vec(a, b), vec(a, c))^2
+            by thm ratio_square_area_bound(xk * (1 - zm), det2(vec(b, k), vec(b, m)), det2(vec(a, b), vec(a, c)))
+            16 * det2(vec(b, k), vec(b, m))^2 <= det2(vec(a, b), vec(a, c))^2
             
-            16 * det(vec(a, m), vec(a, l))^2 <= det(vec(a, b), vec(a, c))^2 or 16 * det(vec(b, k), vec(b, m))^2 <= det(vec(a, b), vec(a, c))^2 or 16 * det(vec(c, l), vec(c, k))^2 <= det(vec(a, b), vec(a, c))^2
+            16 * det2(vec(a, m), vec(a, l))^2 <= det2(vec(a, b), vec(a, c))^2 or 16 * det2(vec(b, k), vec(b, m))^2 <= det2(vec(a, b), vec(a, c))^2 or 16 * det2(vec(c, l), vec(c, k))^2 <= det2(vec(a, b), vec(a, c))^2
         
         case yl * (1 - xk) <= 1 / 4:
             # CLK triangle: need cyclic determinant identity
             by thm triangle_det_cycles(a, b, c)
-            det(vec(c, a), vec(c, b)) = det(vec(a, b), vec(a, c))
+            det2(vec(c, a), vec(c, b)) = det2(vec(a, b), vec(a, c))
             
             # Apply bkm_det_factor with cyclic relabeling: C→L→K
             by thm bkm_det_factor(b, c, a, l, k, yl, xk)
-            det(vec(c, l), vec(c, k)) = yl * (1 - xk) * det(vec(b, c), vec(b, a))
+            det2(vec(c, l), vec(c, k)) = yl * (1 - xk) * det2(vec(b, c), vec(b, a))
             
-            det(vec(b, c), vec(b, a)) = det(vec(a, b), vec(a, c))
-            yl * (1 - xk) * det(vec(b, c), vec(b, a)) = yl * (1 - xk) * det(vec(a, b), vec(a, c))
-            det(vec(c, l), vec(c, k)) = yl * (1 - xk) * det(vec(a, b), vec(a, c))
+            det2(vec(b, c), vec(b, a)) = det2(vec(a, b), vec(a, c))
+            yl * (1 - xk) * det2(vec(b, c), vec(b, a)) = yl * (1 - xk) * det2(vec(a, b), vec(a, c))
+            det2(vec(c, l), vec(c, k)) = yl * (1 - xk) * det2(vec(a, b), vec(a, c))
             
             yl * (1 - xk) >= 0
-            by thm ratio_square_area_bound(yl * (1 - xk), det(vec(c, l), vec(c, k)), det(vec(a, b), vec(a, c)))
-            16 * det(vec(c, l), vec(c, k))^2 <= det(vec(a, b), vec(a, c))^2
+            by thm ratio_square_area_bound(yl * (1 - xk), det2(vec(c, l), vec(c, k)), det2(vec(a, b), vec(a, c)))
+            16 * det2(vec(c, l), vec(c, k))^2 <= det2(vec(a, b), vec(a, c))^2
             
-            16 * det(vec(a, m), vec(a, l))^2 <= det(vec(a, b), vec(a, c))^2 or 16 * det(vec(b, k), vec(b, m))^2 <= det(vec(a, b), vec(a, c))^2 or 16 * det(vec(c, l), vec(c, k))^2 <= det(vec(a, b), vec(a, c))^2
+            16 * det2(vec(a, m), vec(a, l))^2 <= det2(vec(a, b), vec(a, c))^2 or 16 * det2(vec(b, k), vec(b, m))^2 <= det2(vec(a, b), vec(a, c))^2 or 16 * det2(vec(c, l), vec(c, k))^2 <= det2(vec(a, b), vec(a, c))^2
         
         case zm * (1 - yl) <= 1 / 4:
             # AML triangle: direct application
             by thm bkm_det_factor(c, a, b, m, l, zm, yl)
-            det(vec(a, m), vec(a, l)) = zm * (1 - yl) * det(vec(c, a), vec(c, b))
+            det2(vec(a, m), vec(a, l)) = zm * (1 - yl) * det2(vec(c, a), vec(c, b))
             
             by thm triangle_det_cycles(a, b, c)
-            det(vec(c, a), vec(c, b)) = det(vec(a, b), vec(a, c))
-            zm * (1 - yl) * det(vec(c, a), vec(c, b)) = zm * (1 - yl) * det(vec(a, b), vec(a, c))
-            det(vec(a, m), vec(a, l)) = zm * (1 - yl) * det(vec(a, b), vec(a, c))
+            det2(vec(c, a), vec(c, b)) = det2(vec(a, b), vec(a, c))
+            zm * (1 - yl) * det2(vec(c, a), vec(c, b)) = zm * (1 - yl) * det2(vec(a, b), vec(a, c))
+            det2(vec(a, m), vec(a, l)) = zm * (1 - yl) * det2(vec(a, b), vec(a, c))
             
             zm * (1 - yl) >= 0
-            by thm ratio_square_area_bound(zm * (1 - yl), det(vec(a, m), vec(a, l)), det(vec(a, b), vec(a, c)))
-            16 * det(vec(a, m), vec(a, l))^2 <= det(vec(a, b), vec(a, c))^2
+            by thm ratio_square_area_bound(zm * (1 - yl), det2(vec(a, m), vec(a, l)), det2(vec(a, b), vec(a, c)))
+            16 * det2(vec(a, m), vec(a, l))^2 <= det2(vec(a, b), vec(a, c))^2
             
-            16 * det(vec(a, m), vec(a, l))^2 <= det(vec(a, b), vec(a, c))^2 or 16 * det(vec(b, k), vec(b, m))^2 <= det(vec(a, b), vec(a, c))^2 or 16 * det(vec(c, l), vec(c, k))^2 <= det(vec(a, b), vec(a, c))^2
+            16 * det2(vec(a, m), vec(a, l))^2 <= det2(vec(a, b), vec(a, c))^2 or 16 * det2(vec(b, k), vec(b, m))^2 <= det2(vec(a, b), vec(a, c))^2 or 16 * det2(vec(c, l), vec(c, k))^2 <= det2(vec(a, b), vec(a, c))^2

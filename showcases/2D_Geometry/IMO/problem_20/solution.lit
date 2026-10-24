@@ -547,12 +547,12 @@ have fn dot(u, v cart(R, R)) R = u(1) * v(1) + u(2) * v(2)
 
 # 2D determinant (signed parallelogram area / cross product z-component).
 
-have fn det(u, v cart(R, R)) R = u(1) * v(2) - u(2) * v(1)
+have fn det2(u, v cart(R, R)) R = u(1) * v(2) - u(2) * v(1)
 
 # Squared Euclidean distance |ab|^2 (avoids square roots).
 
 prop is_collinear(p, q, r cart(R, R)):
-    det(vec(p, q), vec(p, r)) = 0
+    det2(vec(p, q), vec(p, r)) = 0
 
 # Segments ab and cd have equal length.
 
@@ -1099,14 +1099,14 @@ thm dot_coordinates_20:
 
 thm determinant_coordinates_20:
     ? forall a,b,c cart(R,R):
-        det(vec(a,b),vec(a,c)) = (b(1)-a(1))*(c(2)-a(2))-(b(2)-a(2))*(c(1)-a(1))
+        det2(vec(a,b),vec(a,c)) = (b(1)-a(1))*(c(2)-a(2))-(b(2)-a(2))*(c(1)-a(1))
     vec(a,b) = (b(1)-a(1),b(2)-a(2))
     vec(a,c) = (c(1)-a(1),c(2)-a(2))
     vec(a,b)(1) = (b(1)-a(1),b(2)-a(2))(1) = b(1)-a(1)
     vec(a,b)(2) = (b(1)-a(1),b(2)-a(2))(2) = b(2)-a(2)
     vec(a,c)(1) = (c(1)-a(1),c(2)-a(2))(1) = c(1)-a(1)
     vec(a,c)(2) = (c(1)-a(1),c(2)-a(2))(2) = c(2)-a(2)
-    det(vec(a,b),vec(a,c)) = vec(a,b)(1)*vec(a,c)(2)-vec(a,b)(2)*vec(a,c)(1) = (b(1)-a(1))*(c(2)-a(2))-(b(2)-a(2))*(c(1)-a(1))
+    det2(vec(a,b),vec(a,c)) = vec(a,b)(1)*vec(a,c)(2)-vec(a,b)(2)*vec(a,c)(1) = (b(1)-a(1))*(c(2)-a(2))-(b(2)-a(2))*(c(1)-a(1))
 
 
 algo acute_flag_20(p,q,r cart(R,R)) N by cases:
@@ -1191,7 +1191,7 @@ thm noncollinear_determinant_nonzero_20:
     by contra:
         ? (b(1)-a(1))*(c(2)-a(2))-(b(2)-a(2))*(c(1)-a(1)) != 0
         (b(1)-a(1))*(c(2)-a(2))-(b(2)-a(2))*(c(1)-a(1)) = 0
-        det(vec(a,b),vec(a,c)) = 0
+        det2(vec(a,b),vec(a,c)) = 0
         by def:
             ? $is_collinear(a,b,c)
         impossible not $is_collinear(a,b,c)

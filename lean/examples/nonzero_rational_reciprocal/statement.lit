@@ -1,0 +1,7 @@
+# Define a reciprocal with a nonzero rational codomain and reuse it.
+have fn reciprocal(x Q*) Q* = 1 / x
+reciprocal(-2) = -1 / 2
+forall x Q*:
+    reciprocal(x) != 0
+    reciprocal(x) * x = 1
+    reciprocal(reciprocal(x)) = x

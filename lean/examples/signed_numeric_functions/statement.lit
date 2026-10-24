@@ -1,0 +1,9 @@
+# Keep refined domains and codomains on Litex function objects.
+have fn reciprocal(x Q*) Q = 1 / x
+reciprocal(-2) = -1 / 2
+have fn keep_negative(x Z-) Z- = x
+keep_negative(-2) = -2
+keep_negative(-2) + 2 = 0
+have fn keep_nonzero(x C*) C* = x
+keep_nonzero(i) = i
+keep_nonzero(i) * i = -1

@@ -1,0 +1,48 @@
+[
+  {
+    "id": "cast_annotations",
+    "kind": "matching_arithmetic",
+    "label": "Integer quotient and remainder",
+    "statement": "∀ (a : Int) (d : Nat), 0 < d → a = (d : Int) * (a / (d : Int)) + a % (d : Int)",
+    "methods": {
+      "explicit": "fun a d _ => (Int.mul_ediv_add_emod a (d : Int)).symm",
+      "inferred": "fun a d _ => (Int.mul_ediv_add_emod a d).symm"
+    },
+    "litex": "forall a Z,d N+:\n    a=d*quot(a,d)+a%d",
+    "control": "Same proposition and same lemma; only the explicit cast annotation in the proof changes."
+  },
+  {
+    "id": "cast_addition",
+    "kind": "lean_bridge_only",
+    "label": "Natural addition embedded into reals",
+    "statement": "∀ m n : Nat, ((m + n : Nat) : Real) = (m : Real) + (n : Real)",
+    "methods": {
+      "automation": "by\n  intro m n\n  norm_cast",
+      "direct": "fun m n => Nat.cast_add m n"
+    },
+    "control": "Same proposition; general cast normalization versus its direct library lemma. No matched Litex timing: a representation-specific bridge is absent from the unified object interface."
+  },
+  {
+    "id": "cast_order",
+    "kind": "lean_bridge_only",
+    "label": "Natural strict order lifted to reals",
+    "statement": "∀ m n : Nat, m < n → (m : Real) < (n : Real)",
+    "methods": {
+      "automation": "by\n  intro m n h\n  exact_mod_cast h",
+      "direct": "fun _ _ h => Nat.cast_lt.mpr h"
+    },
+    "control": "Same proposition; general cast transport versus a direct order-embedding lemma. No matched Litex timing."
+  },
+  {
+    "id": "square_nonnegative",
+    "kind": "matching_arithmetic",
+    "label": "Square of a natural number is nonnegative as a real",
+    "statement": "∀ n : Nat, (0 : Real) ≤ (n : Real)^2",
+    "methods": {
+      "bridge": "by\n  intro n\n  have h : 0 ≤ n^2 := Nat.zero_le _\n  exact_mod_cast h",
+      "direct": "fun n => sq_nonneg (n : Real)"
+    },
+    "litex": "forall n N:\n    n^2 >= 0",
+    "control": "Same proposition; a natural-number proof transported to reals versus a direct real-square lemma. This changes the proof route as well as the bridge automation."
+  }
+]

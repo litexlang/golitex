@@ -1,0 +1,13 @@
+{
+  "kind": "reading_titles",
+  "sources": {
+    "checking-02-2.lit": {
+      "zh": "使用显式假设的事实",
+      "en": "Using an explicitly assumed fact"
+    },
+    "checking-02-4.lit": {
+      "zh": "在假设下匹配与代入",
+      "en": "Matching and substitution under an assumption"
+    }
+  }
+}

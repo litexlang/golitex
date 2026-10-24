@@ -1,0 +1,28 @@
+# Relate gcd and lcm to absolute values and preserve the nonzero-pair domain.
+forall a, b Z:
+    a != 0 or b != 0
+    =>:
+        gcd(a, b) $in N+
+        gcd(a, b) = gcd(b, a)
+        lcm(a, b) * gcd(a, b) = abs(a * b)
+        $is_set(a % gcd(a, b))
+
+forall a Z:
+    a != 0
+    =>:
+        gcd(a, 0) = abs(a)
+        gcd(0, a) = abs(a)
+        gcd(a, a) = abs(a)
+
+forall a, b Z:
+    lcm(a, b) = lcm(b, a)
+    lcm(a, a) = abs(a)
+
+forall a, b Z:
+    b != 0 or a != 0
+    =>:
+        gcd(a, b) $in N+
+
+forall a, b Z:
+    lcm(a, b) $in N
+

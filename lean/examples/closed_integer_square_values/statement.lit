@@ -1,0 +1,5 @@
+# Enumerate [-2, 1] to bound each integer's square by 4.
+by enumerate finite_set:
+    ? forall n closed_range(-2, 1):
+        n * n <= 4
+    n * n <= 4

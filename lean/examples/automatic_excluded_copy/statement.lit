@@ -1,0 +1,9 @@
+# No real number can be both equal and unequal to a specified real value.
+thm excluded_copy:
+    ? forall seed R:
+        not exist x R st {x = seed, x != seed}
+    by contra:
+        ? not exist x R st {x = seed, x != seed}
+        obtain bad from exist x R st {x = seed, x != seed}
+        impossible bad = seed
+not exist y R st {y = 7, y != 7}

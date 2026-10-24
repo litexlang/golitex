@@ -211,14 +211,18 @@ fn induction_case_facts_do_not_escape_or_become_future_producers() {
     let (ByInducBodySuccess::Structured { step, .. }
     | ByInducBodySuccess::Unstructured { step, .. }) = &proof.body;
     let root = SourcePosition::new(None, SourceOwner::Run(&result), 0);
-    let header = SourcePosition::new(Some(&root), SourceOwner::Induction(proof), 0);
+    let header = SourcePosition::new(Some(&root), SourceOwner::Induction(proof.into()), 0);
     assert!(header
         .visible_fact(
             proof.goal_domain.store_and_infer.primary_fact_id(),
             &compiler.runtime
         )
         .is_err());
-    let case = SourcePosition::new(Some(&header), SourceOwner::InductionCase(proof, step), 1);
+    let case = SourcePosition::new(
+        Some(&header),
+        SourceOwner::InductionCase(proof.into(), step),
+        1,
+    );
     assert!(case
         .visible_fact(
             step.assumptions[1].store_and_infer.primary_fact_id(),
@@ -232,4 +236,81 @@ fn induction_case_facts_do_not_escape_or_become_future_producers() {
             &compiler.runtime
         )
         .is_err());
+}
+
+#[test]
+fn strong_induction_replays_original_bounded_hypotheses_and_both_cases() {
+    let (result, compiler) = checked_source(include_str!(
+        "../../lean/examples/strong_integer_identity/statement.lit"
+    ));
+    let output = compiler
+        .compile_run(&result, "strong_integer_identity")
+        .unwrap();
+    assert!(output.contains("Litex.integerStrongInductionFromZero"));
+    assert!(output.contains("_induction_hypothesis (Litex.denote _value_i"));
+    assert!(!output.contains("sorry") && !output.contains("axiom"));
+}
+
+#[test]
+fn strong_induction_rejects_changed_or_missing_original_hypothesis_and_conclusions() {
+    for change in [
+        "upper",
+        "lower",
+        "conclusion",
+        "missing_ih",
+        "missing_base",
+        "missing_step",
+    ] {
+        let (mut result, compiler) = checked_source(include_str!(
+            "../../lean/examples/strong_integer_identity/statement.lit"
+        ));
+        let ExecStmtResult::By(ExecByStmtResult::StrongInduc(
+            crate::execute::execute_by_stmt::ExecByStrongInducStmtResult::Success(proof),
+        )) = &mut result.statement_results[1]
+        else {
+            panic!("original strong induction")
+        };
+        let (ByInducBodySuccess::Structured { base, step }
+        | ByInducBodySuccess::Unstructured { base, step }) = &mut proof.body;
+        match change {
+            "missing_ih" => {
+                step.assumptions.pop();
+            }
+            "missing_base" => base.goals_verified.clear(),
+            "missing_step" => step.goals_verified.clear(),
+            _ => {
+                let StoreFactResult::ForallFact(source) =
+                    &mut step.assumptions[1].store_and_infer.store
+                else {
+                    panic!("bounded IH")
+                };
+                match change {
+                    "upper" => {
+                        let Fact::AtomicFact(AtomicFact::LessEqualFact(f)) =
+                            &mut source.fact.dom_facts[1]
+                        else {
+                            panic!("upper")
+                        };
+                        f.right = Obj::Literal(Literal::Number(Number::new("7".into())));
+                    }
+                    "lower" => {
+                        let Fact::AtomicFact(AtomicFact::GreaterEqualFact(f)) =
+                            &mut source.fact.dom_facts[0]
+                        else {
+                            panic!("lower")
+                        };
+                        f.right = Obj::Literal(Literal::Number(Number::new("7".into())));
+                    }
+                    "conclusion" => source.fact.then_facts.clear(),
+                    _ => unreachable!(),
+                }
+            }
+        }
+        assert!(
+            compiler
+                .compile_run(&result, "corrupted_strong_induction")
+                .is_err(),
+            "{change}"
+        );
+    }
 }

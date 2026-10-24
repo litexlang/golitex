@@ -1,0 +1,7 @@
+# An integer is its divisor times quotient plus a remainder in the standard range.
+forall a Z, d N+:
+    quot(a, d) $in Z
+    a % d $in Z
+    a = d * quot(a, d) + a % d
+    0 <= a % d
+    a % d < d

@@ -12,6 +12,213 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_
 
 const CONTRA: &str = "have a C\nby contra:\n    ? a = a\n    a = a\n    impossible a = a\na = a\n";
 const CASES: &str = "have a R\nby cases:\n    ? a = a\n    case a = 0:\n        a = a\n    case a != 0:\n        a = a\na = a\n";
+const COMPOUND_CONTRA: &str = "have a R\nby contra:\n    ? a = a and a = a\n    impossible a = a and a = a\na = a and a = a\n";
+const EXTENSION: &str = "thm subset_antisymmetry:\n    ? forall A, B set:\n        A $subset B\n        B $subset A\n        =>:\n            A = B\n    by extension A = B\n";
+const SET_CONTRA: &str = "thm member_prevents_subset:\n    ? forall A, B set, a set:\n        a $in A\n        not a $in B\n        =>:\n            not A $subset B\n    by contra:\n        ? not A $subset B\n        impossible a $in B\n";
+
+#[test]
+fn membership_cases_replay_the_original_union_projection() {
+    let (result, compiler) = checked(include_str!(
+        "../../../lean/examples/membership_distinguishes_sets/statement.lit"
+    ));
+    let lean = compiler.compile_run(&result, "membership_cases").unwrap();
+    assert!(lean.contains("Litex.inUnion_iff"));
+    assert!(lean.contains("Or.elim"));
+}
+
+#[test]
+fn membership_projection_rejects_reordered_union_store() {
+    let (mut result, compiler) = checked(include_str!(
+        "../../../lean/examples/membership_distinguishes_sets/statement.lit"
+    ));
+    let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefThm(
+        ExecDefThmStmtResult::Success(theorem),
+    )) = &mut result.statement_results[2]
+    else {
+        panic!("theorem");
+    };
+    let ExecDefThmBodyProof::Forall(body) = &mut theorem.body else {
+        panic!("body");
+    };
+    let Some(crate::store_fact_and_infer::InferResult::AtomicFact(
+        crate::store_fact_and_infer::InferAtomicFactResult::InFact(rules),
+    )) = &mut body.assumed_dom_facts[0].store_and_infer.infer
+    else {
+        panic!("membership inference");
+    };
+    let crate::store_fact_and_infer::InferInFactResult::UnionOr(projection) = rules
+        .iter_mut()
+        .find(|r| {
+            matches!(
+                r,
+                crate::store_fact_and_infer::InferInFactResult::UnionOr(_)
+            )
+        })
+        .unwrap()
+    else {
+        unreachable!()
+    };
+    let StoreFactResult::OrFact(stored) = &mut projection.derived.store else {
+        panic!("or store");
+    };
+    stored.fact.facts.swap(0, 1);
+    assert!(compiler.compile_run(&result, "reordered_union").is_err());
+}
+
+#[test]
+fn complementary_atomic_rejects_changed_selected_certificate() {
+    let (mut result, compiler) = checked("have a R\na = a or a != a\n");
+    let ExecStmtResult::Fact(ExecFactStmtResult::Success(statement)) =
+        &mut result.statement_results[1]
+    else {
+        panic!("fact");
+    };
+    let VerifyFactResult::OrFact(result_or) = &mut statement.verify_result else {
+        panic!("or");
+    };
+    let VerifyOrFactResult::Success(proof) = result_or.as_mut() else {
+        panic!("success");
+    };
+    let OrFactSearchedProof::ByBuiltinRule(OrFactSearchProofByBuiltinRule::ComplementaryAtomic(
+        selected,
+    )) = &mut proof.searched_proof
+    else {
+        panic!("complementary builtin");
+    };
+    selected.right = selected.left.clone();
+    assert_eq!(
+        compiler
+            .compile_run(&result, "changed_complement")
+            .unwrap_err()
+            .route,
+        "Or/ComplementarySubject"
+    );
+}
+
+#[test]
+fn contra_replays_negative_membership_and_subset() {
+    for goal in ["A != B", "not A $subset B"] {
+        let source = SET_CONTRA.replace("not A $subset B", goal);
+        let (result, compiler) = checked(&source);
+        let lean = compiler.compile_run(&result, "set_contradiction").unwrap();
+        assert!(lean.contains("¬ Litex.In"));
+        assert!(lean.contains("Classical.byContradiction"));
+    }
+}
+
+#[test]
+fn contra_rejects_changed_compound_closing() {
+    let (mut result, compiler) = checked(COMPOUND_CONTRA);
+    let closing = &mut contra(&mut result).closing;
+    std::mem::swap(&mut closing.impossible, &mut closing.negated_impossible);
+    assert!(compiler
+        .compile_run(&result, "changed_compound_closing")
+        .is_err());
+}
+
+#[test]
+fn compound_contra_does_not_export_local_names() {
+    let mut runtime = Runtime::new(LaunchCommand::Eval {
+        code: String::new(),
+        session: false,
+        strict: true,
+        language: OutputLanguage::English,
+    });
+    let result = runtime.run_litex_code("by contra:\n    ? 0 = 0 and 1 = 1\n    have local_witness R = 2\n    impossible 0 = 0 and 1 = 1\nlocal_witness = 2\n").unwrap();
+    assert!(!result.success);
+    let compiler = LitexToLeanCompiler::new(runtime);
+    assert_eq!(
+        compiler
+            .compile_run(&result, "local_leak")
+            .unwrap_err()
+            .route,
+        "source_failed"
+    );
+}
+
+#[test]
+fn set_extension_replays_both_original_subset_directions() {
+    let (result, compiler) = checked(EXTENSION);
+    let lean = compiler.compile_run(&result, "set_extension").unwrap();
+    assert!(lean.contains("Litex.SetSemantics.ext"));
+    assert!(lean.contains("_extension_forward"));
+    assert!(lean.contains("_extension_reverse"));
+}
+
+#[test]
+fn set_extension_rejects_changed_subset_direction() {
+    let (mut result, compiler) = checked(EXTENSION);
+    let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefThm(
+        ExecDefThmStmtResult::Success(theorem),
+    )) = &mut result.statement_results[0]
+    else {
+        panic!("theorem");
+    };
+    let ExecDefThmBodyProof::Forall(body) = &mut theorem.body else {
+        panic!("forall body");
+    };
+    let ExecStmtResult::By(ExecByStmtResult::Extension(
+        crate::execute::execute_by_stmt::ExecByExtensionStmtResult::Success(proof),
+    )) = &mut body.proof_steps[0]
+    else {
+        panic!("extension");
+    };
+    std::mem::swap(&mut proof.left_to_right, &mut proof.right_to_left);
+    assert_eq!(
+        compiler
+            .compile_run(&result, "changed_extension")
+            .unwrap_err()
+            .route,
+        "Theorem/ProofStepCapture"
+    );
+}
+
+#[test]
+fn contra_replays_classified_compound_negation() {
+    for goal in [
+        "a = a and a = a",
+        "a = a or a != a",
+        "a = a = a",
+        "a = a and a = a or a != a and a != a",
+    ] {
+        let source = format!("have a R\nby contra:\n    ? {goal}\n    impossible {goal}\n");
+        let (result, compiler) = checked(&source);
+        let lean = compiler
+            .compile_run(&result, "compound_contra")
+            .unwrap_or_else(|e| panic!("{goal}: {e:?}"));
+        assert!(lean.contains("simpa only [not_and_or, not_or, not_not"));
+    }
+}
+
+#[test]
+fn contra_rejects_changed_compound_negation() {
+    let (mut result, compiler) = checked(COMPOUND_CONTRA);
+    let proof = contra(&mut result);
+    proof.reverse_assumption = proof.goal.clone();
+    assert_eq!(
+        compiler
+            .compile_run(&result, "wrong_compound_negation")
+            .unwrap_err()
+            .route,
+        "By/NegationSubject"
+    );
+}
+
+#[test]
+fn contra_rejects_missing_compound_negation_branch() {
+    let (mut result, compiler) = checked(COMPOUND_CONTRA);
+    let Fact::OrFact(negative) = &mut contra(&mut result).reverse_assumption else {
+        panic!("conjunction has a disjunctive negation");
+    };
+    negative.facts.pop();
+    assert_eq!(
+        compiler
+            .compile_run(&result, "incomplete_compound_negation")
+            .unwrap_err()
+            .route,
+        "By/NegationSubject"
+    );
+}
 // Original geo theorem: its closing proof rewrites `not z > 0` via `z = 0`.
 const CONTRA_POSITIVE_FACTOR: &str = "thm cancel_positive_right_factor:\n    ? forall a, b, z R:\n        z > 0\n        a * z = b * z\n        =>:\n            a = b\n    by contra:\n        ? z != 0\n        impossible z > 0\n    a = (a * z) / z = (b * z) / z = b\n";
 
@@ -418,4 +625,291 @@ fn a_case_cannot_cite_another_branch_assumption() {
         2,
     );
     assert!(compiler.cited_fact_reference(id, &sibling).is_err());
+}
+
+#[test]
+fn function_extensionality_replays_complete_domains_and_the_original_pointwise_forall() {
+    let (result, compiler) = checked(include_str!(
+        "../../../lean/examples/equal_shift_functions/statement.lit"
+    ));
+    let output = compiler
+        .compile_run(&result, "equal_shift_functions")
+        .unwrap();
+    assert!(output.contains("Litex.functionExtOnDomain"));
+    assert!(output.contains("have _pointwise :"));
+}
+
+#[test]
+fn function_extensionality_rejects_changed_domains_and_pointwise_subjects() {
+    for change in ["carrier", "function", "guard", "conclusion"] {
+        let (mut result, compiler) = checked(include_str!(
+            "../../../lean/examples/equal_shift_functions/statement.lit"
+        ));
+        let ExecStmtResult::By(ExecByStmtResult::FnExtension(
+            crate::execute::execute_by_stmt::ExecByFnExtensionStmtResult::Success(proof),
+        )) = &mut result.statement_results[5]
+        else {
+            panic!("extension")
+        };
+        match change {
+            "carrier" => proof.carrier.ret_set = Box::new(Obj::StandardSet(StandardSet::N)),
+            "function" => proof.domain_match.source.signature.dom_facts.clear(),
+            _ => {
+                let VerifyFactResult::ForallFact(p) = &mut proof.pointwise_proof else {
+                    panic!("forall")
+                };
+                let VerifyForallFactResult::Success(VerifyForallFactProof::ByLocalIntroduction(p)) =
+                    p.as_mut()
+                else {
+                    panic!("pointwise introduction")
+                };
+                if change == "guard" {
+                    p.fact.dom_facts.clear();
+                } else {
+                    p.fact.then_facts.clear();
+                }
+            }
+        }
+        assert!(
+            compiler
+                .compile_run(&result, "corrupted_function_extension")
+                .is_err(),
+            "{change}"
+        );
+    }
+}
+
+#[test]
+fn finite_enumeration_replays_original_assignments_and_false_antecedent() {
+    let (result, compiler) = checked(include_str!(
+        "../../../lean/examples/finite_square_values/statement.lit"
+    ));
+    let output = compiler
+        .compile_run(&result, "finite_square_values")
+        .unwrap();
+    assert!(output.contains("Litex.SetSemantics.insert_members"));
+    assert!(output.contains("have _excluded"));
+}
+
+#[test]
+fn finite_enumeration_rejects_missing_reordered_or_changed_assignments() {
+    for change in ["missing", "order", "binding", "premise"] {
+        let (mut result, compiler) = checked(include_str!(
+            "../../../lean/examples/finite_square_values/statement.lit"
+        ));
+        let ExecStmtResult::By(ExecByStmtResult::For(
+            crate::execute::execute_by_stmt::ExecByForStmtResult::Success(proof),
+        )) = &mut result.statement_results[2]
+        else {
+            panic!("for")
+        };
+        match change {
+            "missing" => {
+                proof.assignments.pop();
+            }
+            "order" => proof.assignments.swap(0, 1),
+            "binding" => {
+                let StoreFactResult::AtomicFact(f) = &mut proof.assignments[1].binding_assumptions
+                    [0]
+                .store_and_infer
+                .store
+                else {
+                    panic!("binding")
+                };
+                let AtomicFact::EqualFact(f) = &mut f.fact else {
+                    panic!("equality")
+                };
+                f.right = Obj::Literal(Literal::Number(Number::new("7".into())));
+            }
+            "premise" => {
+                let crate::execute::execute_by_stmt::EnumerateAssignmentOutcome::Skipped {
+                    premise_index,
+                    ..
+                } = &mut proof.assignments[0].outcome
+                else {
+                    panic!("skipped")
+                };
+                *premise_index = 1;
+            }
+            _ => unreachable!(),
+        }
+        assert!(
+            compiler
+                .compile_run(&result, "corrupted_enumeration")
+                .is_err(),
+            "{change}"
+        );
+    }
+}
+
+#[test]
+fn selected_or_branch_keeps_original_negative_assumptions_local() {
+    let (mut result, compiler) = checked("have selected_or_value R\nselected_or_value = selected_or_value or selected_or_value = 0\n");
+    compiler.compile_run(&result, "selected_or_local").unwrap();
+    let ExecStmtResult::Fact(ExecFactStmtResult::Success(fact)) = &mut result.statement_results[1]
+    else {
+        panic!("fact")
+    };
+    let VerifyFactResult::OrFact(proof) = &mut fact.verify_result else {
+        panic!("or")
+    };
+    let VerifyOrFactResult::Success(proof) = proof.as_mut() else {
+        panic!("or success")
+    };
+    let OrFactSearchedProof::BySelectedBranch(selected) = &mut proof.searched_proof else {
+        panic!("selected original branch")
+    };
+    assert!(!selected.assumed_negated_branches.is_empty());
+    selected.assumed_negated_branches[0].branch_index = selected.selected_index;
+    assert!(compiler
+        .compile_run(&result, "wrong_selected_negative")
+        .unwrap_err()
+        .route
+        .starts_with("Or/Selected"));
+}
+
+#[test]
+fn finite_assignment_hypotheses_do_not_escape_to_siblings_or_callers() {
+    let (result, compiler) = checked(include_str!(
+        "../../../lean/examples/finite_square_values/statement.lit"
+    ));
+    let ExecStmtResult::By(ExecByStmtResult::For(
+        crate::execute::execute_by_stmt::ExecByForStmtResult::Success(proof),
+    )) = &result.statement_results[0]
+    else {
+        panic!("for")
+    };
+    let StoreFactResult::ForallFact(goal) = &proof.stored.store else {
+        panic!("forall")
+    };
+    let root = SourcePosition::new(None, SourceOwner::Run(&result), 0);
+    let branch = SourcePosition::new(
+        Some(&root),
+        SourceOwner::EnumerationAssignment(&goal.fact, &proof.assignments[1]),
+        2,
+    );
+    let foreign = proof.assignments[0].binding_assumptions[0]
+        .store_and_infer
+        .primary_fact_id();
+    assert!(branch.visible_fact(foreign, &compiler.runtime).is_err());
+    let future = proof.assignments[1].binding_assumptions[0]
+        .store_and_infer
+        .primary_fact_id();
+    assert!(SourcePosition {
+        before: 1,
+        ..branch
+    }
+    .visible_fact(future, &compiler.runtime)
+    .is_err());
+    let after = SourcePosition::new(None, SourceOwner::Run(&result), 1);
+    assert!(after.visible_fact(foreign, &compiler.runtime).is_err());
+}
+
+#[test]
+fn finite_numeric_membership_rejects_changed_or_missing_ordered_member_evidence() {
+    use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule;
+    let source = "forall listed_real {0, 1}:\n    listed_real $in R\n";
+    for change in ["members", "order", "source"] {
+        let (mut result, compiler) = checked(source);
+        compiler.compile_run(&result, "listed_reals").unwrap();
+        let ExecStmtResult::Fact(ExecFactStmtResult::Success(f)) = &mut result.statement_results[0]
+        else {
+            panic!("forall")
+        };
+        let VerifyFactResult::ForallFact(f) = &mut f.verify_result else {
+            panic!("forall")
+        };
+        let VerifyForallFactResult::Success(VerifyForallFactProof::ByLocalIntroduction(f)) =
+            f.as_mut()
+        else {
+            panic!("introduction")
+        };
+        let VerifyFactResult::AtomicExceptEquality(p) = &mut f.proved_then_facts[0].verify_result
+        else {
+            panic!("membership")
+        };
+        let VerifyAtomicExceptEqualityFactResult::Success(p) = p.as_mut() else {
+            panic!("membership success")
+        };
+        let AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(
+            AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(
+                InFactSearchProofByBuiltinRule::FiniteSetSubsetMembership(p),
+            ),
+        ) = &mut p.searched_proof
+        else {
+            panic!("original finite subset rule")
+        };
+        match change {
+            "members" => {
+                p.member_in_proofs.pop();
+            }
+            "order" => p.member_in_proofs.swap(0, 1),
+            "source" => p.source_set = Obj::StandardSet(StandardSet::R),
+            _ => unreachable!(),
+        }
+        assert!(
+            compiler
+                .compile_run(&result, "corrupted_finite_membership")
+                .unwrap_err()
+                .route
+                .starts_with("FiniteSetMembership/"),
+            "{change}"
+        );
+    }
+}
+
+#[test]
+fn proof_adapters_keep_their_declared_domain_boundaries() {
+    for (source, route) in [
+        (
+            "by strong_induc n from 1:\n    ? n=n\n    n=n\n",
+            "Induction/ZeroLowerBoundAndGoals",
+        ),
+        (
+            "have fn f(x,y R) R=x+y\nhave fn g(x,y R) R=y+x\nby fn_extension f=g\n",
+            "FnExtension/OneParameter",
+        ),
+        (
+            "by for:\n    ? forall n {0,1}, m {n}:\n        m=m\n    m=m\n",
+            "Enumeration/DependentDomain",
+        ),
+    ] {
+        let (result, compiler) = checked(source);
+        assert_eq!(
+            compiler
+                .compile_run(&result, "outside_adapter_domain")
+                .unwrap_err()
+                .route,
+            route
+        );
+    }
+}
+
+#[test]
+fn selected_or_assumptions_have_only_their_original_completed_prefix() {
+    let (result, compiler) = checked("have selected_or_value R\nselected_or_value = selected_or_value or selected_or_value = 0\n");
+    let ExecStmtResult::Fact(ExecFactStmtResult::Success(fact)) = &result.statement_results[1]
+    else {
+        panic!("fact")
+    };
+    let VerifyFactResult::OrFact(proof) = &fact.verify_result else {
+        panic!("or")
+    };
+    let VerifyOrFactResult::Success(proof) = proof.as_ref() else {
+        panic!("success")
+    };
+    let OrFactSearchedProof::BySelectedBranch(selected) = &proof.searched_proof else {
+        panic!("selected")
+    };
+    let id = selected.assumed_negated_branches[0]
+        .store_and_infer
+        .primary_fact_id();
+    let root = SourcePosition::new(None, SourceOwner::Run(&result), 1);
+    let scope = SourcePosition::new(Some(&root), SourceOwner::OrSelected(selected), 0);
+    assert!(scope.visible_fact(id, &compiler.runtime).is_err());
+    assert!(SourcePosition { before: 2, ..scope }
+        .visible_fact(id, &compiler.runtime)
+        .is_ok());
+    let after = SourcePosition::new(None, SourceOwner::Run(&result), 2);
+    assert!(after.visible_fact(id, &compiler.runtime).is_err());
 }

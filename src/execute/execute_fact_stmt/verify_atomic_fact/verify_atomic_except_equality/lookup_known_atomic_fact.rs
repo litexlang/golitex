@@ -69,10 +69,41 @@ impl Runtime {
             }
             let mut matches = Vec::new();
             for (left, right) in args.iter().zip(&goal_args) {
-                let Some(proof) =
-                    self.lookup_known_obj_equality_with_graph(left, right, &mut adjacency)
-                else {
-                    break;
+                let proof = match self.lookup_known_obj_equality_with_graph(
+                    left,
+                    right,
+                    &mut adjacency,
+                ) {
+                    Some(proof) => proof,
+                    // Stored-fact argument matching may also use a zero-premise
+                    // algebraic identity such as `(a*b)*(c*d) = a*b*c*d`.
+                    // This is a computed certificate, not a new truth search.
+                    None if multiplication_association_shape(left)
+                        && multiplication_association_shape(right) =>
+                    {
+                        let comparison = EqualFact {
+                            fact_id: self.global_ids.allocate_fact_id(),
+                            left: (*left).clone(),
+                            right: (*right).clone(),
+                            line_file: None,
+                        };
+                        let Some(calculation) = self
+                            .search_equal_fact_by_calculation(
+                                &comparison,
+                                crate::execute::execute_fact_stmt::VerifyState::top_level(),
+                            )
+                            .ok()
+                            .flatten()
+                        else {
+                            break;
+                        };
+                        EqualFactSearchedProof::ByBuiltinRule(
+                            crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::Calculation(
+                                calculation,
+                            ),
+                        )
+                    }
+                    None => break,
                 };
                 matches.push(proof);
             }
@@ -109,25 +140,6 @@ impl Runtime {
         if let Some(proof) = search_equal_fact_proof_by_they_are_the_same(&comparison) {
             return Some(proof.into());
         }
-        // Known-fact argument matching uses syntactic identity and stored
-        // equality paths. A zero-premise algebraic identity (associativity,
-        // commutativity, ring normalization) is the same kind of computed
-        // identity: it needs no stored premise and no further truth search.
-        // Example: `(a*b)*(c*d) = a*b*c*d`.
-        if let Some(calculation) = self
-            .search_equal_fact_by_calculation(
-                &comparison,
-                crate::execute::execute_fact_stmt::VerifyState::top_level(),
-            )
-            .ok()
-            .flatten()
-        {
-            return Some(EqualFactSearchedProof::ByBuiltinRule(
-                crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::Calculation(
-                    calculation,
-                ),
-            ));
-        }
         let path = match adjacency.as_ref() {
             Some(graph) => super::super::verify_equality::equivalence_class_graph::equivalence_class_path_in_adjacency(graph, left, right),
             None => self.equivalence_class_path(left, right),
@@ -141,4 +153,25 @@ impl Runtime {
         // It does not scan unrelated graph endpoints for an alpha bridge.
         None
     }
+}
+// Only a multiplication tree's associativity/commutativity is accepted here.
+// Addition/subtraction/division identities keep their dedicated rules and
+// premise checks; known-fact matching must not silently simplify `x - 0` to
+// `x` in an order obligation.
+fn multiplication_association_shape(obj: &Obj) -> bool {
+    if !matches!(
+        obj,
+        Obj::ArithmeticOperator(crate::ast::obj::ArithmeticOperator::Mul(_))
+    ) {
+        return false;
+    }
+    fn only_mul_nodes(obj: &Obj) -> bool {
+        match obj {
+            Obj::ArithmeticOperator(crate::ast::obj::ArithmeticOperator::Mul(m)) => {
+                only_mul_nodes(&m.left) && only_mul_nodes(&m.right)
+            }
+            _ => true,
+        }
+    }
+    only_mul_nodes(obj)
 }

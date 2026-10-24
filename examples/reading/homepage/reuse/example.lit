@@ -1,0 +1,2 @@
+release obj def newton::newton_sqrt_two
+release thm newton::fixed_point(sqrt(2))

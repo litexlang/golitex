@@ -1,0 +1,10 @@
+# Negating a real reverses its sign in the supported arithmetic spellings.
+forall x R:
+    sign(-x) = -sign(x)
+    sign(0 - x) = 0 - sign(x)
+    sign((-1) * x) = (-1) * sign(x)
+    sign(x * (-1)) = sign(x) * (-1)
+    (0 - 1) * sign(x) = sign((0 - 1) * x)
+    sign(x * (0 - 1)) = sign(x) * (0 - 1)
+    sign(-x) = (0 - 1) * sign(x)
+    0 - sign(x) = sign(x * (-1))

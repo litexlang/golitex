@@ -22,6 +22,15 @@ fn expression(
     let o = |x: &Obj| obj(x, modules, lang);
     let e = |x: &Obj, p| expression(x, modules, lang, p);
     let (text, precedence) = match value {
+        Obj::MatrixOperator(value) => {
+            let args = value
+                .operand_refs()
+                .into_iter()
+                .map(o)
+                .collect::<RuntimeResult<Vec<_>>>()?;
+            (operator(value.name(), &args), 50)
+        }
+
         Obj::IntegralOperator(IntegralOperator::Riemann(x)) => (
             format!(
                 r"\int_{{{}}}^{{{}}} {}(\xi)\,\mathrm{{d}}\xi",
@@ -269,6 +278,13 @@ fn expression(
         },
         Obj::SetFormer(x) => (
             match x {
+                SetFormer::MatrixSet(value) => format!(
+                    "{}^{{{}\\times {}}}",
+                    e(&value.set, 41)?,
+                    o(&value.rows)?,
+                    o(&value.cols)?
+                ),
+
                 SetFormer::ListSet(x) => {
                     let mut items = Vec::new();
                     for y in &x.list {

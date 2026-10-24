@@ -1,0 +1,5 @@
+# A rectangle with an empty second factor has no points.
+by for:
+    ? forall x range(0, 3), y range(2, 2):
+        x = y
+    x = y

@@ -1,0 +1,14 @@
+# Prove factorial positivity and the successor/predecessor recurrences.
+forall n N:
+    n! $in N+
+    n! != 0
+    (n + 1)! = (n + 1) * n!
+
+forall n N+:
+    n! = n * (n - 1)!
+
+forall t N:
+    (1 + t)! = t! * (t + 1)
+
+forall t N+:
+    (t - 1)! * t = t!

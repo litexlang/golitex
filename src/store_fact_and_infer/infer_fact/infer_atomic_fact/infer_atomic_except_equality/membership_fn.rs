@@ -5,6 +5,7 @@ use crate::ast::obj::{
 use crate::ast::param::{
     ParamType, SetBoundParameterList, TypedParameterGroup, TypedParameterList,
 };
+use crate::execute::execute_fact_stmt::function_signature_selection::FunctionSignatureSelection;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::KnownEqualityPathProof;
 use crate::prelude::*;
 use crate::runtime::runtime_ids::IdentifierId;
@@ -35,6 +36,9 @@ impl Runtime {
         if let Some(r) = self.infer_in_fact_finite_seq_expand(in_fact, verify_state)? {
             rules.push(r);
         }
+        if let Some(r) = self.infer_in_fact_matrix_expand(in_fact, verify_state)? {
+            rules.push(r);
+        }
         if let Some(r) = self.infer_in_fact_seq_expand(in_fact, verify_state)? {
             rules.push(r);
         }
@@ -55,7 +59,9 @@ impl Runtime {
         if matches!(
             &in_fact.set,
             Obj::FunctionSpace(FunctionSpace::FnSet(_))
-                | Obj::SetFormer(SetFormer::FiniteSeqSet(_) | SetFormer::SeqSet(_))
+                | Obj::SetFormer(
+                    SetFormer::FiniteSeqSet(_) | SetFormer::SeqSet(_) | SetFormer::MatrixSet(_)
+                )
         ) {
             return Ok(None);
         }
@@ -66,13 +72,16 @@ impl Runtime {
                 EqualToObjShape::FnSet,
                 EqualToObjShape::SeqSet,
                 EqualToObjShape::FiniteSeqSet,
+                EqualToObjShape::Other,
             ],
         );
         for (peer, path) in peers {
             if !matches!(
                 &peer,
                 Obj::FunctionSpace(FunctionSpace::FnSet(_))
-                    | Obj::SetFormer(SetFormer::FiniteSeqSet(_) | SetFormer::SeqSet(_))
+                    | Obj::SetFormer(
+                        SetFormer::FiniteSeqSet(_) | SetFormer::SeqSet(_) | SetFormer::MatrixSet(_)
+                    )
             ) {
                 continue;
             }
@@ -111,9 +120,12 @@ impl Runtime {
         let Obj::FunctionSpace(FunctionSpace::FnRange(fn_range)) = &in_fact.set else {
             return Ok(None);
         };
-        let Some(body) = self.resolve_fn_set_body_for_fn_range(fn_range.function.as_ref()) else {
+        let Some(signature_selection) =
+            self.resolve_fn_set_body_for_fn_range(fn_range.function.as_ref())
+        else {
             return Ok(None);
         };
+        let body = signature_selection.signature();
         let mut derived: Vec<StoreInferredFactResult> = Vec::new();
         let codomain_id = self.global_ids.allocate_fact_id();
         let codomain = AtomicFact::InFact(InFact {
@@ -136,6 +148,7 @@ impl Runtime {
             }
         }
         Ok(Some(InferInFactResult::FnRange(InferInFactFnRangeResult {
+            signature_selection,
             codomain_membership: derived.remove(0),
             preimage_witness: derived.pop(),
         })))
@@ -199,14 +212,19 @@ impl Runtime {
         )))
     }
 
-    fn resolve_fn_set_body_for_fn_range(&self, function: &Obj) -> Option<FnSet> {
+    fn resolve_fn_set_body_for_fn_range(
+        &self,
+        function: &Obj,
+    ) -> Option<FunctionSignatureSelection> {
         if let Obj::FunctionSpace(FunctionSpace::AnonymousFn(anon)) = function {
-            return Some(anon.body.clone());
+            return Some(FunctionSignatureSelection::AnonymousLiteral {
+                signature: anon.body.clone(),
+            });
         }
         self.collect_in_function_set_candidates(function)
             .into_iter()
             .next()
-            .map(|(fn_set, _)| fn_set)
+            .map(|(signature, fact_id)| FunctionSignatureSelection::Property { signature, fact_id })
     }
 
     fn preimage_exist_fact_from_fn_set(
@@ -316,4 +334,42 @@ fn set_bound_params_to_arg_map(
         }
     }
     map
+}
+
+impl Runtime {
+    fn infer_in_fact_matrix_expand(
+        &mut self,
+        in_fact: &InFact,
+        _state: crate::execute::execute_fact_stmt::VerifyState,
+    ) -> RuntimeResult<Option<InferInFactResult>> {
+        let Some((space, carrier_path)) = self
+            .exact_property_object_values_of_shapes(&in_fact.set, &[EqualToObjShape::Other])
+            .into_iter()
+            .find(|(peer, _)| matches!(peer, Obj::SetFormer(SetFormer::MatrixSet(_))))
+        else {
+            return Ok(None);
+        };
+        let signature = self
+            .function_space_signature(&space)
+            .expect("matrix has a two-parameter signature");
+        let Obj::SetFormer(SetFormer::MatrixSet(matrix_space)) = space else {
+            unreachable!()
+        };
+        let expanded: Fact = AtomicFact::InFact(InFact {
+            fact_id: self.global_ids.allocate_fact_id(),
+            element: in_fact.element.clone(),
+            set: Obj::FunctionSpace(FunctionSpace::FnSet(signature)),
+            line_file: in_fact.line_file.clone(),
+        })
+        .into();
+        let stored = self.store_inferred_fact(&expanded)?;
+        Ok(Some(InferInFactResult::MatrixExpand(
+            crate::store_fact_and_infer::InferInFactMatrixExpandResult {
+                source_fact_id: in_fact.fact_id,
+                matrix_space,
+                carrier_equal: KnownEqualityPathProof::new(carrier_path),
+                derived: Box::new(stored),
+            },
+        )))
+    }
 }

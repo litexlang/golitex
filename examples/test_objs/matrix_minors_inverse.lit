@@ -1,0 +1,32 @@
+# Exact minors, determinant expansion, inverse and rank certificates.
+# Formerly exact determinant calculation stopped at orders 0/1/2.
+# Inverse formation requires a proved nonzero determinant; rank values need evidence.
+# Run: target/release/litex -strict -lang en -f examples/test_objs/matrix_minors_inverse.lit
+
+have fn A(r closed_range(1,2),c closed_range(1,2)) R=r+c
+matrix_minor(A,2,1,1)(1,1)=4
+matrix_minor(A,2,2,2)(1,1)=2
+matrix_cofactor(A,2,1,2)=-3
+matrix_adjugate(A,2)(1,1)=4
+det(diagonal_matrix((2,3,5),3),3)=30
+
+det(A,2)=-1
+det(A,2)!=0
+matrix_inverse(A,2)(1,1)=-4
+matrix_inverse(A,2)(1,2)=3
+release thm matrix_inverse_laws(A,2)
+release thm matrix_rank_invertible(A,2)
+matrix_rank(A,2,2)=2
+
+# A candidate inverse is checked on both sides before the selected value is used.
+release thm matrix_mul_identity(identity_matrix(2),2,2)
+release thm matrix_invertible_from_candidate(identity_matrix(2),identity_matrix(2),2)
+release thm matrix_inverse_from_candidate(identity_matrix(2),identity_matrix(2),2)
+matrix_inverse(identity_matrix(2),2)=identity_matrix(2)
+
+# The zero-dimensional inverse and ranks follow the same formation rules.
+det(zero_matrix(0,0),0)=1
+det(zero_matrix(0,0),0)!=0
+matrix_inverse(zero_matrix(0,0),0) $in matrix(R,0,0)
+release thm matrix_rank_zero(0,3)
+matrix_rank(zero_matrix(0,3),0,3)=0

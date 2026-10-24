@@ -1,0 +1,3 @@
+# A value of addition on positive reals has two positive preimage coordinates.
+have fn positive_sum(x, y R+) R+ = x + y
+have by fn_preimage: a, b from positive_sum(2, 3) $in fn_range(positive_sum)

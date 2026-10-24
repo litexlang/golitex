@@ -1,0 +1,6 @@
+# The coordinates one and two specify a unique ordered pair of real numbers.
+witness exist! x, y R st {x = 1, y = 2} from 1, 2
+exist! u, v R st {u = 1, v = 2}
+obtain a, b from exist! x, y R st {x = 1, y = 2}
+a = 1
+b = 2

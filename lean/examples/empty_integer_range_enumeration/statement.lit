@@ -1,0 +1,5 @@
+# A universal statement over the empty interval [2, 2) is vacuous.
+by for:
+    ? forall n range(2, 2):
+        n = 0
+    n = 0

@@ -1,0 +1,37 @@
+# Define lower and upper real values, then reuse their conditional selection theorems.
+have fn lower_value(a, b R) R = min(a, b)
+have fn upper_value(a, b R) R = max(a, b)
+
+lower_value(3, 5) = 3
+upper_value(3, 5) = 5
+
+thm lower_selected:
+    ? forall x, y R:
+        x <= y
+        =>:
+            lower_value(x, y) = x
+    lower_value(x, y) = min(x, y)
+    min(x, y) = x
+
+prop ordered_pair(a, b R):
+    a <= b
+
+thm upper_selected:
+    ? forall x, y R:
+        $ordered_pair(x, y)
+        =>:
+            upper_value(x, y) = y
+    x <= y
+    upper_value(x, y) = max(x, y)
+    max(x, y) = y
+
+let low = lower_value(2, 7)
+by thm lower_selected(2, 7) => lower_value(2, 7) = 2
+low = 2
+
+$ordered_pair(2, 7)
+by thm upper_selected(2, 7) => upper_value(2, 7) = 7
+
+have fn bounded(x R) R = max(lower_value(x, 5), 0)
+bounded(7) = 5
+bounded(-2) = 0

@@ -19,6 +19,15 @@ impl LitexToLeanCompiler {
                 ))
             }
         };
+        if matches!(proof.values, ClosedValuePair::Complex { .. }) {
+            return self.compile_closed_complex_relation(
+                &goal.left,
+                &goal.right,
+                &proof.values,
+                false,
+                position,
+            );
+        }
         let left = EvalRational::from_obj(&goal.left)
             .ok_or_else(|| LeanCompileError::unsupported("ClosedNotEqual/Expression"))?;
         let right = EvalRational::from_obj(&goal.right)
@@ -92,6 +101,104 @@ impl LitexToLeanCompiler {
                     .compile_closed_range_membership(element, set, value, start, end, position);
             }
         };
+        self.compile_closed_standard_membership(element, value, target, position)
+    }
+
+    fn compile_closed_standard_membership(
+        &self,
+        element: &Obj,
+        value: &ClosedScalarValue,
+        target: &StandardSet,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        if let Some((base, name)) = numeric_refinement(target) {
+            let nonzero = matches!(
+                target,
+                StandardSet::QStar | StandardSet::ZStar | StandardSet::RStar | StandardSet::CStar
+            );
+            let positive = *target == StandardSet::QPos;
+            let (decimal, exact_real) = match value {
+                ClosedScalarValue::Decimal(recorded) => {
+                    if let Obj::Literal(Literal::Number(number)) = element {
+                        if &number.normalized_value != recorded {
+                            return Err(LeanCompileError::unsupported("ClosedMembership/Value"));
+                        }
+                    }
+                    // Preserve the existing unbounded literal path.
+                    let order = compare_number_strings(recorded, "0");
+                    let valid = if nonzero {
+                        order != NumberCompareResult::Equal
+                    } else if positive {
+                        order == NumberCompareResult::Greater
+                    } else {
+                        order == NumberCompareResult::Less
+                    };
+                    if !valid {
+                        return Err(LeanCompileError::unsupported(
+                            "ClosedMembership/RefinedSign",
+                        ));
+                    }
+                    (Some(recorded.clone()), None)
+                }
+                ClosedScalarValue::ExactComplex { real, imaginary } => {
+                    let Some((a, b)) =
+                        crate::rational_expression::exact_complex::exact_complex_coordinates(
+                            element,
+                        )
+                    else {
+                        return Err(LeanCompileError::unsupported(
+                            "ClosedMembership/ComplexExpression",
+                        ));
+                    };
+                    if &a != real || &b != imaginary {
+                        return Err(LeanCompileError::unsupported("ClosedMembership/Value"));
+                    }
+                    let order = real.compare(&scalar_decimal("0")?);
+                    let valid = if nonzero {
+                        !real.is_zero() || !imaginary.is_zero()
+                    } else {
+                        imaginary.is_zero()
+                            && order
+                                == Some(if positive {
+                                    NumberCompareResult::Greater
+                                } else {
+                                    NumberCompareResult::Less
+                                })
+                    };
+                    if !valid {
+                        return Err(LeanCompileError::unsupported(
+                            "ClosedMembership/RefinedSign",
+                        ));
+                    }
+                    (None, Some(real))
+                }
+            };
+            let base_proof =
+                self.compile_closed_standard_membership(element, value, &base, position)?;
+            let native = self.compile_numeric_observation(element, position)?;
+            let object = self.compile_object_reference(element, position)?;
+            let condition = if nonzero {
+                format!("(Litex.NativeBridge.notSameOfDenoteNumber {object} (Litex.number (M := M) 0) {} 0 {} rfl (by norm_num [Complex.ext_iff]))", native.0, native.1)
+            } else {
+                let representative = if let Some(real) = decimal {
+                    format!("({real} : ℝ)")
+                } else {
+                    exact_rational_literal(exact_real.unwrap(), "ℝ")?
+                };
+                let denotation = format!(
+                    "(({}).trans (congrArg M.number (by norm_num : {} = ({representative} : ℂ))))",
+                    native.1, native.0
+                );
+                if positive {
+                    format!("(Litex.NativeBridge.ltOfDenoteReal (Litex.number (M := M) 0) {object} 0 {representative} rfl {denotation} (by norm_num))")
+                } else {
+                    format!("(Litex.NativeBridge.ltOfDenoteReal {object} (Litex.number (M := M) 0) {representative} 0 {denotation} rfl (by norm_num))")
+                }
+            };
+            return Ok(format!(
+                "(Litex.in{name}_intro {object} {base_proof} {condition})"
+            ));
+        }
         if *target == StandardSet::RPos {
             return self.compile_closed_positive_real_membership(element, value, position);
         }
@@ -146,6 +253,11 @@ impl LitexToLeanCompiler {
                 "(Litex.NativeBridge.{bridge} (M := M) {} {representative} (by norm_num))",
                 native.0
             ));
+        }
+        if *target == StandardSet::C {
+            if let ClosedScalarValue::ExactComplex { real, imaginary } = value {
+                return self.compile_closed_complex_membership(element, real, imaginary, position);
+            }
         }
         let native = self.compile_numeric_observation(element, position)?;
         let calculated = native
@@ -225,11 +337,16 @@ impl LitexToLeanCompiler {
         end: &ClosedScalarValue,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
-        let Obj::SetFormer(SetFormer::ClosedRange(range)) = set else {
-            return Err(LeanCompileError::unsupported(
-                "ClosedMembership/HalfOpenRange",
-            ));
+        let (range_start, range_end, closed) = match set {
+            Obj::SetFormer(SetFormer::ClosedRange(r)) => (&r.start, &r.end, true),
+            Obj::SetFormer(SetFormer::Range(r)) => (&r.start, &r.end, false),
+            _ => {
+                return Err(LeanCompileError::unsupported(
+                    "ClosedMembership/RangeSubject",
+                ))
+            }
         };
+        let family = if closed { "ClosedRange" } else { "Range" };
         let integer = |object: &Obj,
                        recorded: &ClosedScalarValue|
          -> Result<(i128, String), LeanCompileError> {
@@ -262,16 +379,22 @@ impl LitexToLeanCompiler {
                 ),
             ))
         };
-        let (lower, h_lower) = integer(&range.start, start)?;
-        let (upper, h_upper) = integer(&range.end, end)?;
+        let (lower, h_lower) = integer(range_start, start)?;
+        let (upper, h_upper) = integer(range_end, end)?;
         let (value, h_value) = integer(element, value)?;
-        if lower > value || value > upper {
+        if lower > value
+            || (if closed {
+                value > upper
+            } else {
+                value >= upper
+            })
+        {
             return Err(LeanCompileError::new(
                 "ClosedMembership/RangeBounds",
-                "The recorded integer is outside the closed source bounds.",
+                "The recorded integer is outside the original source bounds.",
             ));
         }
-        if [&range.start, &range.end, element]
+        if [range_start, range_end, element]
             .into_iter()
             .all(|obj| matches!(obj, Obj::Literal(Literal::Number(_))))
         {
@@ -281,15 +404,15 @@ impl LitexToLeanCompiler {
                 Obj::Literal(Literal::Number(number)) => number_literal(number, "ℂ"),
                 _ => unreachable!("checked literal endpoints and element"),
             };
-            let a = literal(&range.start)?;
-            let b = literal(&range.end)?;
+            let a = literal(range_start)?;
+            let b = literal(range_end)?;
             let p = literal(element)?;
             return Ok(format!(
-                "(Litex.numberInClosedRangeOfEq (M := M) {a} {b} {p} ({lower} : ℤ) ({upper} : ℤ) ({value} : ℤ) (by norm_num) (by norm_num) (by norm_num) (by norm_num) (by norm_num))"
+                "(Litex.numberIn{family}OfEq (M := M) {a} {b} {p} ({lower} : ℤ) ({upper} : ℤ) ({value} : ℤ) (by norm_num) (by norm_num) (by norm_num) (by norm_num) (by norm_num))"
             ));
         }
         let term = self.compile_object_reference(set, position)?;
         let element = self.compile_object_reference(element, position)?;
-        Ok(format!("(by\n  let _range := {term}\n  exact Litex.inClosedRangeOfDenote _range.val.start _range.val.finish {element} _range.wd.1 _range.wd.2 ({lower} : ℤ) ({upper} : ℤ) ({value} : ℤ) {h_lower} {h_upper} {h_value} (by norm_num) (by norm_num))"))
+        Ok(format!("(by\n  let _range := {term}\n  exact Litex.in{family}OfDenote _range.val.start _range.val.finish {element} _range.wd.1 _range.wd.2 ({lower} : ℤ) ({upper} : ℤ) ({value} : ℤ) {h_lower} {h_upper} {h_value} (by norm_num) (by norm_num))"))
     }
 }

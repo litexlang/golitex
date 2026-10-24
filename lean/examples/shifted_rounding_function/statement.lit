@@ -1,0 +1,15 @@
+# Round after a half-unit shift and reuse the theorem that floor fixes integers.
+have fn lowered(x R) Z = floor(x)
+have fn shift(x R) R = x + 1 / 2
+have fn bucket(x R) Z = ceil(shift(x))
+
+bucket(1 / 2) = 1
+bucket(-2) = -1
+
+thm lower_integer:
+    ? forall n Z:
+        lowered(n) = n
+    lowered(n) = floor(n)
+    floor(n) = n
+
+by thm lower_integer(3) => lowered(3) = 3

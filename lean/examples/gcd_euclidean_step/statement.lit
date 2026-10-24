@@ -1,0 +1,4 @@
+# Preserve gcd when replacing the first integer by its remainder.
+forall a Z, b N+:
+    gcd(a, b) = gcd(b, a % b)
+

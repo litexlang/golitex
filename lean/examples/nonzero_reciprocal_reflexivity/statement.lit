@@ -1,0 +1,6 @@
+# Every defined reciprocal equals itself, so no nonzero real is a counterexample.
+by contra:
+    ? not exist x R st {x != 0, 1 / x != 1 / x}
+    obtain a from exist x R st {x != 0, 1 / x != 1 / x}
+    impossible 1 / a != 1 / a
+not exist y R st {y != 0, 1 / y != 1 / y}

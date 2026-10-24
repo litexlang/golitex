@@ -1,0 +1,7 @@
+# Enumerate a range and a displayed set to bound their sum.
+by for:
+    ? forall x range(0, 3), y {1, 2}:
+        y $in R
+        =>:
+            x + y <= 4
+    x + y <= 4

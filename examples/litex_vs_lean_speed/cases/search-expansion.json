@@ -1,0 +1,95 @@
+[
+  {
+    "id": "affine_sum_16",
+    "domain": "有限和展开",
+    "label": "任意有理数列逐项平移，16 项",
+    "family": "sum_expansion",
+    "size": 16,
+    "litex": "claim:\n    ? forall u fn(k N) Q, c Q:\n        sum(1,16,fn(k N) Q {u(k)+c})=sum(1,16,u)+16*c\n    sum(1,16,fn(k N) Q {u(k)+c})=sum(1,16,fn(k N) Q {u(k)})+sum(1,16,fn(k N) Q {c})=sum(1,16,u)+sum(1,16,fn(k N) Q {c})=sum(1,16,u)+16*c",
+    "lean": "∀ (u : ℕ → ℚ) (c : ℚ), (∑ k ∈ Finset.range 16, (u (k+1) + c)) = (∑ k ∈ Finset.range 16, u (k+1)) + 16*c",
+    "methods": {
+      "expanded": "by\n  intro u c\n  simp only [Finset.sum_range_succ, Finset.sum_range_zero]\n  ring",
+      "formula": "by\n  intro u c\n  simp [Finset.sum_add_distrib]"
+    },
+    "note": "Two routes prove the identical statement; expanded is deliberately the general unfolding route, formula is the efficient direct Lean baseline. Litex range 1..N corresponds to Lean k+1 for k in range N.",
+    "reject_litex": "forall u fn(k N) Q, c Q:\n    sum(1,16,fn(k N) Q {u(k)+c})=sum(1,16,u)+17*c"
+  },
+  {
+    "id": "affine_sum_64",
+    "domain": "有限和展开",
+    "label": "任意有理数列逐项平移，64 项",
+    "family": "sum_expansion",
+    "size": 64,
+    "litex": "claim:\n    ? forall u fn(k N) Q, c Q:\n        sum(1,64,fn(k N) Q {u(k)+c})=sum(1,64,u)+64*c\n    sum(1,64,fn(k N) Q {u(k)+c})=sum(1,64,fn(k N) Q {u(k)})+sum(1,64,fn(k N) Q {c})=sum(1,64,u)+sum(1,64,fn(k N) Q {c})=sum(1,64,u)+64*c",
+    "lean": "∀ (u : ℕ → ℚ) (c : ℚ), (∑ k ∈ Finset.range 64, (u (k+1) + c)) = (∑ k ∈ Finset.range 64, u (k+1)) + 64*c",
+    "methods": {
+      "expanded": "by\n  intro u c\n  simp only [Finset.sum_range_succ, Finset.sum_range_zero]\n  ring",
+      "formula": "by\n  intro u c\n  simp [Finset.sum_add_distrib]"
+    },
+    "note": "Two routes prove the identical statement; expanded is deliberately the general unfolding route, formula is the efficient direct Lean baseline. Litex range 1..N corresponds to Lean k+1 for k in range N.",
+    "reject_litex": "forall u fn(k N) Q, c Q:\n    sum(1,64,fn(k N) Q {u(k)+c})=sum(1,64,u)+65*c"
+  },
+  {
+    "id": "affine_sum_128",
+    "domain": "有限和展开",
+    "label": "任意有理数列逐项平移，128 项",
+    "family": "sum_expansion",
+    "size": 128,
+    "litex": "claim:\n    ? forall u fn(k N) Q, c Q:\n        sum(1,128,fn(k N) Q {u(k)+c})=sum(1,128,u)+128*c\n    sum(1,128,fn(k N) Q {u(k)+c})=sum(1,128,fn(k N) Q {u(k)})+sum(1,128,fn(k N) Q {c})=sum(1,128,u)+sum(1,128,fn(k N) Q {c})=sum(1,128,u)+128*c",
+    "lean": "∀ (u : ℕ → ℚ) (c : ℚ), (∑ k ∈ Finset.range 128, (u (k+1) + c)) = (∑ k ∈ Finset.range 128, u (k+1)) + 128*c",
+    "methods": {
+      "expanded": "by\n  intro u c\n  simp only [Finset.sum_range_succ, Finset.sum_range_zero]\n  ring",
+      "formula": "by\n  intro u c\n  simp [Finset.sum_add_distrib]"
+    },
+    "note": "Two routes prove the identical statement; expanded is deliberately the general unfolding route, formula is the efficient direct Lean baseline. Litex range 1..N corresponds to Lean k+1 for k in range N.",
+    "reject_litex": "forall u fn(k N) Q, c Q:\n    sum(1,128,fn(k N) Q {u(k)+c})=sum(1,128,u)+129*c"
+  },
+  {
+    "id": "quadratic_context_0",
+    "domain": "算术上下文负载",
+    "label": "平方差证书，0 条无关假设",
+    "family": "context_load",
+    "size": 0,
+    "litex": "claim:\n    ? forall x,y R:\n            2*x*y <= x^2+y^2\n    x^2+y^2-2*x*y=(x-y)^2 >= 0",
+    "lean": "∀ (x y : ℝ), 2*x*y ≤ x^2+y^2",
+    "methods": {
+      "all_hypotheses": "by\n  intro x y\n  nlinarith [sq_nonneg (x-y)]",
+      "only_certificate": "by\n  intro x y\n  nlinarith only [sq_nonneg (x-y)]",
+      "lemma": "by\n  intro x y\n  exact two_mul_le_add_sq x y"
+    },
+    "note": "Artificial context-load control: the extra nonnegative variables are irrelevant to the conclusion. Their quantification and assumptions are identical on both sides; this is not a harder mathematical theorem.",
+    "reject_litex": "forall x,y R:\n        3*x*y <= x^2+y^2\n"
+  },
+  {
+    "id": "quadratic_context_12",
+    "domain": "算术上下文负载",
+    "label": "平方差证书，12 条无关假设",
+    "family": "context_load",
+    "size": 12,
+    "litex": "claim:\n    ? forall x,y,z0,z1,z2,z3,z4,z5,z6,z7,z8,z9,z10,z11 R:\n        z0 >= 0\n        z1 >= 0\n        z2 >= 0\n        z3 >= 0\n        z4 >= 0\n        z5 >= 0\n        z6 >= 0\n        z7 >= 0\n        z8 >= 0\n        z9 >= 0\n        z10 >= 0\n        z11 >= 0\n        =>:\n            2*x*y <= x^2+y^2\n    x^2+y^2-2*x*y=(x-y)^2 >= 0",
+    "lean": "∀ (x y z0 z1 z2 z3 z4 z5 z6 z7 z8 z9 z10 z11 : ℝ), 0 ≤ z0 → 0 ≤ z1 → 0 ≤ z2 → 0 ≤ z3 → 0 ≤ z4 → 0 ≤ z5 → 0 ≤ z6 → 0 ≤ z7 → 0 ≤ z8 → 0 ≤ z9 → 0 ≤ z10 → 0 ≤ z11 → 2*x*y ≤ x^2+y^2",
+    "methods": {
+      "all_hypotheses": "by\n  intro x y z0 z1 z2 z3 z4 z5 z6 z7 z8 z9 z10 z11 h0 h1 h2 h3 h4 h5 h6 h7 h8 h9 h10 h11\n  nlinarith [sq_nonneg (x-y)]",
+      "only_certificate": "by\n  intro x y z0 z1 z2 z3 z4 z5 z6 z7 z8 z9 z10 z11 h0 h1 h2 h3 h4 h5 h6 h7 h8 h9 h10 h11\n  nlinarith only [sq_nonneg (x-y)]",
+      "lemma": "by\n  intro x y z0 z1 z2 z3 z4 z5 z6 z7 z8 z9 z10 z11 h0 h1 h2 h3 h4 h5 h6 h7 h8 h9 h10 h11\n  exact two_mul_le_add_sq x y"
+    },
+    "note": "Artificial context-load control: the extra nonnegative variables are irrelevant to the conclusion. Their quantification and assumptions are identical on both sides; this is not a harder mathematical theorem.",
+    "reject_litex": "forall x,y,z0,z1,z2,z3,z4,z5,z6,z7,z8,z9,z10,z11 R:\n    z0 >= 0\n    z1 >= 0\n    z2 >= 0\n    z3 >= 0\n    z4 >= 0\n    z5 >= 0\n    z6 >= 0\n    z7 >= 0\n    z8 >= 0\n    z9 >= 0\n    z10 >= 0\n    z11 >= 0\n    =>:\n        3*x*y <= x^2+y^2\n"
+  },
+  {
+    "id": "quadratic_context_24",
+    "domain": "算术上下文负载",
+    "label": "平方差证书，24 条无关假设",
+    "family": "context_load",
+    "size": 24,
+    "litex": "claim:\n    ? forall x,y,z0,z1,z2,z3,z4,z5,z6,z7,z8,z9,z10,z11,z12,z13,z14,z15,z16,z17,z18,z19,z20,z21,z22,z23 R:\n        z0 >= 0\n        z1 >= 0\n        z2 >= 0\n        z3 >= 0\n        z4 >= 0\n        z5 >= 0\n        z6 >= 0\n        z7 >= 0\n        z8 >= 0\n        z9 >= 0\n        z10 >= 0\n        z11 >= 0\n        z12 >= 0\n        z13 >= 0\n        z14 >= 0\n        z15 >= 0\n        z16 >= 0\n        z17 >= 0\n        z18 >= 0\n        z19 >= 0\n        z20 >= 0\n        z21 >= 0\n        z22 >= 0\n        z23 >= 0\n        =>:\n            2*x*y <= x^2+y^2\n    x^2+y^2-2*x*y=(x-y)^2 >= 0",
+    "lean": "∀ (x y z0 z1 z2 z3 z4 z5 z6 z7 z8 z9 z10 z11 z12 z13 z14 z15 z16 z17 z18 z19 z20 z21 z22 z23 : ℝ), 0 ≤ z0 → 0 ≤ z1 → 0 ≤ z2 → 0 ≤ z3 → 0 ≤ z4 → 0 ≤ z5 → 0 ≤ z6 → 0 ≤ z7 → 0 ≤ z8 → 0 ≤ z9 → 0 ≤ z10 → 0 ≤ z11 → 0 ≤ z12 → 0 ≤ z13 → 0 ≤ z14 → 0 ≤ z15 → 0 ≤ z16 → 0 ≤ z17 → 0 ≤ z18 → 0 ≤ z19 → 0 ≤ z20 → 0 ≤ z21 → 0 ≤ z22 → 0 ≤ z23 → 2*x*y ≤ x^2+y^2",
+    "methods": {
+      "all_hypotheses": "by\n  intro x y z0 z1 z2 z3 z4 z5 z6 z7 z8 z9 z10 z11 z12 z13 z14 z15 z16 z17 z18 z19 z20 z21 z22 z23 h0 h1 h2 h3 h4 h5 h6 h7 h8 h9 h10 h11 h12 h13 h14 h15 h16 h17 h18 h19 h20 h21 h22 h23\n  nlinarith [sq_nonneg (x-y)]",
+      "only_certificate": "by\n  intro x y z0 z1 z2 z3 z4 z5 z6 z7 z8 z9 z10 z11 z12 z13 z14 z15 z16 z17 z18 z19 z20 z21 z22 z23 h0 h1 h2 h3 h4 h5 h6 h7 h8 h9 h10 h11 h12 h13 h14 h15 h16 h17 h18 h19 h20 h21 h22 h23\n  nlinarith only [sq_nonneg (x-y)]",
+      "lemma": "by\n  intro x y z0 z1 z2 z3 z4 z5 z6 z7 z8 z9 z10 z11 z12 z13 z14 z15 z16 z17 z18 z19 z20 z21 z22 z23 h0 h1 h2 h3 h4 h5 h6 h7 h8 h9 h10 h11 h12 h13 h14 h15 h16 h17 h18 h19 h20 h21 h22 h23\n  exact two_mul_le_add_sq x y"
+    },
+    "note": "Artificial context-load control: the extra nonnegative variables are irrelevant to the conclusion. Their quantification and assumptions are identical on both sides; this is not a harder mathematical theorem.",
+    "reject_litex": "forall x,y,z0,z1,z2,z3,z4,z5,z6,z7,z8,z9,z10,z11,z12,z13,z14,z15,z16,z17,z18,z19,z20,z21,z22,z23 R:\n    z0 >= 0\n    z1 >= 0\n    z2 >= 0\n    z3 >= 0\n    z4 >= 0\n    z5 >= 0\n    z6 >= 0\n    z7 >= 0\n    z8 >= 0\n    z9 >= 0\n    z10 >= 0\n    z11 >= 0\n    z12 >= 0\n    z13 >= 0\n    z14 >= 0\n    z15 >= 0\n    z16 >= 0\n    z17 >= 0\n    z18 >= 0\n    z19 >= 0\n    z20 >= 0\n    z21 >= 0\n    z22 >= 0\n    z23 >= 0\n    =>:\n        3*x*y <= x^2+y^2\n"
+  }
+]

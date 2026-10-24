@@ -1,0 +1,6 @@
+# Define a positive reciprocal magnitude on nonzero real inputs.
+have fn inverse_magnitude(x R: x != 0) R by cases:
+    case x > 0: 1 / x
+    case x <= 0: -1 / x
+inverse_magnitude(2) = 1 / 2
+inverse_magnitude(-2) = 1 / 2

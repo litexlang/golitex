@@ -1,0 +1,25 @@
+# A determinant is defined for any natural-order complex square matrix.
+# Exact computation currently covers orders 0, 1 and 2; no invertibility premise.
+
+have fn square_entries(r closed_range(1,2),c closed_range(1,2)) R=r+c
+
+square_entries $in matrix(R,2,2)
+
+det(square_entries,2)=-1
+
+det(square_entries,2)+2=1
+
+det(square_entries,2)=square_entries(1,1)*square_entries(2,2)-square_entries(1,2)*square_entries(2,1)
+
+have fn complex_one(r closed_range(1,1),c closed_range(1,1)) C=i
+
+det(complex_one,1)=i
+
+have fn empty_square(r closed_range(1,0),c closed_range(1,0)) C=0
+
+det(empty_square,0)=1
+
+det(zero_matrix(2,2),2)=0
+
+forall M matrix(C,3,3):
+    det(M,3) $in C

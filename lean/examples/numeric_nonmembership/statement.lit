@@ -1,0 +1,21 @@
+# Exclude closed numbers using their exact decimal certificates.
+not -1 $in N
+not 1.5 $in N
+not -1.5 $in N+
+not 1.5 $in Z
+not 0 $in N+
+not 0 $in Q+
+not -2 $in R+
+not 2 $in Q-
+not 1.5 $in Z-
+not 0 $in R-
+not 0 $in Q*
+not 1.5 $in Z*
+not 0 $in R*
+not 0 $in C*
+not (1 - 1) $in C*
+not 1 / 3 $in Z
+not 1 / 3 $in N
+not i $in R
+not (1 + i) $in Q*
+not i $in N+

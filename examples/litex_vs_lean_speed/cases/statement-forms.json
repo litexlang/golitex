@@ -1,0 +1,47 @@
+[
+  {
+    "id": "prop_definition_witness",
+    "domain": "谓词定义 + 见证",
+    "label": "自定义奇数谓词并见证 7 为奇数",
+    "litex": "prop odd(a Z):\n    exist t Z st {a = 2 * t + 1}\n\nwitness $odd(7) from 3",
+    "lean": "∃ t : Int, (7 : Int) = 2*t + 1",
+    "methods": {
+      "term": "⟨3, by norm_num⟩"
+    },
+    "note": "Litex 侧在会话里先定义 prop odd（定义计入时间），Lean 侧直接证展开后的存在式。"
+  },
+  {
+    "id": "odd_shift",
+    "domain": "自定义谓词推理",
+    "label": "奇数乘以 3 加 2 仍是奇数",
+    "litex": "prop odd(a Z):\n    exist t Z st {a = 2 * t + 1}\n\nclaim:\n    ? forall n Z:\n        $odd(n)\n        =>:\n            $odd(3 * n + 2)\n    obtain k from $odd(n)\n    witness $odd(3 * n + 2) from 3 * k + 2:\n        3 * n + 2 = 3 * (2 * k + 1) + 2 = 2 * (3 * k + 2) + 1",
+    "lean": "∀ n : Int, (∃ t : Int, n = 2*t + 1) → ∃ t : Int, 3*n + 2 = 2*t + 1",
+    "methods": {
+      "rcases_omega": "by\n  rintro n ⟨k, hk⟩\n  exact ⟨3*k + 2, by omega⟩"
+    },
+    "note": "两边都要从 $odd(n) / (∃t, n = 2t+1) 取出见证 k，再给出 3k+2 并验算。"
+  },
+  {
+    "id": "reciprocal_tends_to_zero",
+    "domain": "极限风格（ε-N）",
+    "label": "互反序列 1/n 可以任意小",
+    "litex": "have fn a(n N+) R = 1 / n\n\nclaim:\n    ? forall epsilon R+:\n        exist n N+ st {a(n) < epsilon}\n    obtain n0 from exist n N+ st {1 / n < epsilon}\n    a(n0) = 1 / n0\n    1 / n0 < epsilon\n    a(n0) < epsilon\n    witness exist n N+ st {a(n) < epsilon} from n0",
+    "lean": "∀ ε : Real, 0 < ε → ∃ n : Nat, 0 < n ∧ 1/(n:Real) < ε",
+    "methods": {
+      "archimedean": "by\n  intro ε hε\n  obtain ⟨n, hn⟩ := exists_nat_one_div_lt hε\n  refine ⟨n+1, by omega, ?_⟩\n  simpa using hn"
+    },
+    "note": "Litex 侧包含函数定义与两条具体计算，再证 ∀ε>0 ∃n 的对数式结论；Lean 侧用 Archimedean 性质的一次引用。"
+  },
+  {
+    "id": "set_union_subset_eq",
+    "domain": "集合相等的义务",
+    "label": "包含于 B 的集合与 B 的并等于 B",
+    "litex": "forall A,B power_set(R):\n    A $subset B\n    =>:\n        union(A,B) = B",
+    "lean": "∀ A B : Set Real, A ⊆ B → A ∪ B = B",
+    "methods": {
+      "ext_cases": "by\n  intro A B h\n  ext x\n  constructor\n  · rintro (hx | hx)\n    · exact h hx\n    · exact hx\n  · intro hx; exact Or.inr hx",
+      "lemma": "fun A B h => Set.union_eq_right.mpr h"
+    },
+    "note": "两者都要处理集合相等的双向义务；Litex 用内置的并集规则直接给出等式，Lean 用 ext + 两个方向或一条引理。"
+  }
+]

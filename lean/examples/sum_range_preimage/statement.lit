@@ -1,0 +1,4 @@
+# A value in the range of addition has two real preimage coordinates.
+have fn add_pair(x, y R) R = x + y
+have by fn_preimage: a, b from add_pair(2, 3) $in fn_range(add_pair)
+add_pair(a, b) = add_pair(2, 3)

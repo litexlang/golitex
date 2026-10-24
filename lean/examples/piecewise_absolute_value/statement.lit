@@ -1,0 +1,6 @@
+# Define absolute value by sign and evaluate both branches.
+have fn absolute(x R) R by cases:
+    case x >= 0: x
+    case x < 0: -x
+absolute(-2) = 2
+absolute(3) = 3

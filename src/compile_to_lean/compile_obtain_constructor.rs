@@ -27,23 +27,26 @@ impl LitexToLeanCompiler {
         position: &SourcePosition<'_>,
         observe_numeric: bool,
     ) -> Result<Option<String>, LeanCompileError> {
-        if !matches!(object, Obj::ArithmeticOperator(_) | Obj::FnObj(_)) {
+        if !matches!(
+            object,
+            Obj::ArithmeticOperator(_) | Obj::FnObj(_) | Obj::SetFormer(SetFormer::ListSet(_))
+        ) {
             return Ok(None);
         }
         position.with_visible_obtain(&mut |obtain, current| match obtain {
             ExecDefineObjStmtResult::ObtainObjFromExistFact(
                 ExecObtainObjFromExistFactStmtResult::Success(obtain),
             ) => {
-                let ObtainExistVerifySuccess::Exist(verified) = &obtain.verify_exist else {
-                    return Ok(None);
-                };
-                let ExistShapedFact::Exist(source) = &verified.fact else {
-                    return Ok(None);
+                let (source, formation) = match &obtain.verify_exist {
+                    ObtainExistVerifySuccess::Exist(p) => (p.fact.plain(), &p.well_defined_proof),
+                    ObtainExistVerifySuccess::ExistUnique(p) => {
+                        (p.fact.plain(), &p.well_defined_proof)
+                    }
                 };
                 self.compile_obtain_constructor_in_source(
                     object,
                     source,
-                    &verified.well_defined_proof,
+                    formation,
                     &obtain.statement.equal_tos,
                     &obtain.store_and_infer_result,
                     &HashMap::new(),
@@ -138,6 +141,9 @@ impl LitexToLeanCompiler {
                     found.map(|(factory, arguments)| apply_constructor(factory, arguments))
                 })
             }
+            ExecDefineObjStmtResult::HaveByFnPreimage(
+                crate::execute::ExecHaveByFnPreimageStmtResult::Success(p),
+            ) => self.compile_preimage_call_reference(object, p, current, observe_numeric),
             _ => Ok(None),
         })
     }

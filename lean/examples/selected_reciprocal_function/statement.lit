@@ -1,0 +1,13 @@
+# Select a reciprocal function on the nonzero real numbers.
+thm unique_reciprocal:
+    ? forall seed R:
+        seed != 0
+        =>:
+            exist! value R st {value = 1 / seed}
+    witness exist! value R st {value = 1 / seed} from 1 / seed
+have fn selected by exist!:
+    ? forall x R:
+        x != 0
+        =>:
+            exist! y R st {y = 1 / x}
+selected(2) = 1 / 2

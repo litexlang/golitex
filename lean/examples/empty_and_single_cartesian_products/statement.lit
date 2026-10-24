@@ -1,0 +1,5 @@
+# The empty product is the space of empty functions; a single factor has one coordinate.
+release cart def cart()
+cart() = finite_seq({}, 0)
+release cart def cart(R)
+cart(R) = {p finite_seq(R, 1): p(1) $in R}

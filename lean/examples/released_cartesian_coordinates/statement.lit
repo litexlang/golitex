@@ -1,0 +1,6 @@
+# A Cartesian member is a finite sequence with its original coordinate bounds.
+have p cart(R, Z)
+release tuple def p
+p $in finite_seq(union(R, Z), 2)
+p(1) $in R
+p(2) $in Z

@@ -295,9 +295,14 @@ fn build_upload(body: &str, strict: bool, cache: &UploadCache) -> Result<UploadB
             configs.push(destination.clone());
         } else if path.extension().is_some_and(|extension| extension == "lit") {
             sources.push(destination.clone());
+        } else if path
+            .file_name()
+            .is_some_and(|name| name == "reading-titles.json")
+        {
+            // Optional source presentation metadata; not a runnable input.
         } else {
             return Err(format!(
-                "Only .lit and litex.config files are accepted: {name}"
+                "Only .lit, litex.config and reading-titles.json files are accepted: {name}"
             ));
         }
         if let Some(parent) = destination.parent() {

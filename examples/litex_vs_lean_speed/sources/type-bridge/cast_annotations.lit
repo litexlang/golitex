@@ -1,0 +1,2 @@
+forall a Z,d N+:
+    a=d*quot(a,d)+a%d

@@ -14,12 +14,8 @@
 <body class="litex-reading-page" data-live="__LITEX_READING_LIVE__">
   <header class="reading-shell-header">
     <a class="reading-brand" href="#">Litex <span>Reading</span></a>
-    <div class="reading-upload-actions" id="upload-actions" hidden>
-      <button id="choose-files" class="reading-primary" type="button">Open files</button>
-      <button id="choose-project" type="button">Open project folder</button>
-      <input id="source-files" type="file" accept=".lit,.config,.json" multiple hidden>
-      <input id="project-files" type="file" webkitdirectory multiple hidden>
-    </div>
+    <input id="source-files" type="file" accept=".lit,.config,.json" multiple hidden>
+    <input id="project-files" type="file" webkitdirectory multiple hidden>
     <label class="reading-language"><span id="language-label">Language</span> <select id="language"><option value="en">English</option><option value="zh">中文</option></select></label>
   </header>
   <div class="reading-upload-status" id="upload-status" role="status" aria-live="polite"></div>

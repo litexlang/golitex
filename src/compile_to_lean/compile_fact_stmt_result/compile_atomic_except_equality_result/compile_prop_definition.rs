@@ -40,6 +40,39 @@ impl LitexToLeanCompiler {
                 &proof.proof_of_requirement_facts,
                 position,
             ),
+            (
+                AtomicFact::InjectiveFact(_),
+                AtomicExceptEqualityFactSearchProofByDefinition::BuiltinProp(
+                    BuiltinPropDefinitionProof::Injective(p),
+                ),
+            ) => self.compile_mapping_definition(
+                goal,
+                &p.requirement_facts,
+                &p.proof_of_requirement_facts,
+                position,
+            ),
+            (
+                AtomicFact::SurjectiveFact(_),
+                AtomicExceptEqualityFactSearchProofByDefinition::BuiltinProp(
+                    BuiltinPropDefinitionProof::Surjective(p),
+                ),
+            ) => self.compile_mapping_definition(
+                goal,
+                &p.requirement_facts,
+                &p.proof_of_requirement_facts,
+                position,
+            ),
+            (
+                AtomicFact::BijectiveFact(_),
+                AtomicExceptEqualityFactSearchProofByDefinition::BuiltinProp(
+                    BuiltinPropDefinitionProof::Bijective(p),
+                ),
+            ) => self.compile_mapping_definition(
+                goal,
+                &p.requirement_facts,
+                &p.proof_of_requirement_facts,
+                position,
+            ),
             (_, AtomicExceptEqualityFactSearchProofByDefinition::BuiltinProp(_)) => {
                 Err(LeanCompileError::unsupported("Prop/BuiltinDefinition"))
             }
@@ -86,13 +119,18 @@ impl LitexToLeanCompiler {
             if index < parameters.len() {
                 let (_, param_type) = parameters[index];
                 let set = match param_type {
-                    ParamType::Obj(set) => set,
+                    ParamType::Obj(set) => Some(set),
+                    ParamType::Set(_) => None,
                     _ => return Err(LeanCompileError::unsupported("Prop/FoldParameterKind")),
                 };
                 match requirement {
                     Fact::AtomicFact(AtomicFact::InFact(member))
                         if member.element.ir() == normal.body[index].ir()
-                            && instantiated_object_matches(set, &member.set, &substitution) => {}
+                            && set.is_some_and(|set| {
+                                instantiated_object_matches(set, &member.set, &substitution)
+                            }) => {}
+                    Fact::AtomicFact(AtomicFact::IsSetFact(member))
+                        if set.is_none() && member.set.ir() == normal.body[index].ir() => {}
                     _ => {
                         return Err(LeanCompileError::new(
                             "Prop/FoldDomain",
@@ -339,13 +377,16 @@ impl LitexToLeanCompiler {
                     }
                 } else {
                     let set = match parameters[index].1 {
-                        ParamType::Obj(set) => set,
+                        ParamType::Obj(set) => Some(set),
+                        ParamType::Set(_) => None,
                         _ => return Err(LeanCompileError::unsupported("Prop/InferParameterKind")),
                     };
                     match &fact {
                         Fact::AtomicFact(AtomicFact::InFact(member))
                             if member.element.ir() == normal.body[index].ir()
-                                && instantiated_object_matches(set, &member.set, &substitution) => {}
+                                && set.is_some_and(|set| instantiated_object_matches(set, &member.set, &substitution)) => {}
+                        Fact::AtomicFact(AtomicFact::IsSetFact(member))
+                            if set.is_none() && member.set.ir() == normal.body[index].ir() => {}
                         _ => return Err(LeanCompileError::new("Prop/InferDomainSubject", "An inferred predicate domain differs from its actual argument or carrier.")),
                     }
                 }

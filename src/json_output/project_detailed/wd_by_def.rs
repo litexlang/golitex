@@ -44,6 +44,37 @@ pub(super) fn project_obj_wd_by_def(
     runtime: &Runtime,
 ) -> JsonValue {
     match proof {
+        ObjWellDefinedProofByDef::MatrixOperator(MatrixOperatorObjWellDefinedProofByDef::Add(p)) => project_common_by_def(obj,"MatrixOperator","Add",&p.child_obj_well_defined,&p.requirement_fact_verified,runtime),
+        ObjWellDefinedProofByDef::MatrixOperator(MatrixOperatorObjWellDefinedProofByDef::Subtract(p)) => project_common_by_def(obj,"MatrixOperator","Subtract",&p.child_obj_well_defined,&p.requirement_fact_verified,runtime),
+        ObjWellDefinedProofByDef::MatrixOperator(MatrixOperatorObjWellDefinedProofByDef::Scale(p)) => project_common_by_def(obj,"MatrixOperator","Scale",&p.child_obj_well_defined,&p.requirement_fact_verified,runtime),
+        ObjWellDefinedProofByDef::MatrixOperator(MatrixOperatorObjWellDefinedProofByDef::Multiply(p)) => project_common_by_def(obj,"MatrixOperator","Multiply",&p.child_obj_well_defined,&p.requirement_fact_verified,runtime),
+        ObjWellDefinedProofByDef::MatrixOperator(MatrixOperatorObjWellDefinedProofByDef::Apply(p)) => project_common_by_def(obj,"MatrixOperator","Apply",&p.child_obj_well_defined,&p.requirement_fact_verified,runtime),
+        ObjWellDefinedProofByDef::MatrixOperator(MatrixOperatorObjWellDefinedProofByDef::Power(p)) => project_common_by_def(obj,"MatrixOperator","Power",&p.child_obj_well_defined,&p.requirement_fact_verified,runtime),
+        ObjWellDefinedProofByDef::MatrixOperator(MatrixOperatorObjWellDefinedProofByDef::Inverse(p)) => project_common_by_def(obj,"MatrixOperator","Inverse",&p.child_obj_well_defined,&p.requirement_fact_verified,runtime),
+        ObjWellDefinedProofByDef::MatrixOperator(MatrixOperatorObjWellDefinedProofByDef::Rank(p)) => project_common_by_def(obj,"MatrixOperator","Rank",&p.child_obj_well_defined,&p.requirement_fact_verified,runtime),
+        ObjWellDefinedProofByDef::MatrixOperator(MatrixOperatorObjWellDefinedProofByDef::Minor(p)) => project_common_by_def(obj,"MatrixOperator","Minor",&p.child_obj_well_defined,&p.requirement_fact_verified,runtime),
+        ObjWellDefinedProofByDef::MatrixOperator(MatrixOperatorObjWellDefinedProofByDef::Cofactor(p)) => project_common_by_def(obj,"MatrixOperator","Cofactor",&p.child_obj_well_defined,&p.requirement_fact_verified,runtime),
+        ObjWellDefinedProofByDef::MatrixOperator(MatrixOperatorObjWellDefinedProofByDef::Adjugate(p)) => project_common_by_def(obj,"MatrixOperator","Adjugate",&p.child_obj_well_defined,&p.requirement_fact_verified,runtime),
+        ObjWellDefinedProofByDef::MatrixOperator(MatrixOperatorObjWellDefinedProofByDef::Diagonal(p)) => project_common_by_def(obj,"MatrixOperator","Diagonal",&p.child_obj_well_defined,&p.requirement_fact_verified,runtime),
+        ObjWellDefinedProofByDef::MatrixOperator(MatrixOperatorObjWellDefinedProofByDef::OuterProduct(p)) => project_common_by_def(obj,"MatrixOperator","OuterProduct",&p.child_obj_well_defined,&p.requirement_fact_verified,runtime),
+        ObjWellDefinedProofByDef::MatrixOperator(MatrixOperatorObjWellDefinedProofByDef::InnerProduct(p)) => project_common_by_def(obj,"MatrixOperator","InnerProduct",&p.child_obj_well_defined,&p.requirement_fact_verified,runtime),
+        ObjWellDefinedProofByDef::MatrixOperator(MatrixOperatorObjWellDefinedProofByDef::EuclideanNorm(p)) => project_common_by_def(obj,"MatrixOperator","EuclideanNorm",&p.child_obj_well_defined,&p.requirement_fact_verified,runtime),
+        ObjWellDefinedProofByDef::MatrixOperator(MatrixOperatorObjWellDefinedProofByDef::FrobeniusNorm(p)) => project_common_by_def(obj,"MatrixOperator","FrobeniusNorm",&p.child_obj_well_defined,&p.requirement_fact_verified,runtime),
+
+        ObjWellDefinedProofByDef::SetFormer(SetFormerObjWellDefinedProofByDef::MatrixSet(p)) =>
+            project_common_by_def(obj, "SetFormer", "MatrixSet", &p.child_obj_well_defined, &p.requirement_fact_verified, runtime),
+        ObjWellDefinedProofByDef::MatrixOperator(MatrixOperatorObjWellDefinedProofByDef::Determinant(p)) =>
+            project_common_by_def(obj, "MatrixOperator", "Determinant", &p.child_obj_well_defined, &p.requirement_fact_verified, runtime),
+        ObjWellDefinedProofByDef::MatrixOperator(MatrixOperatorObjWellDefinedProofByDef::ZeroMatrix(p)) =>
+            project_common_by_def(obj, "MatrixOperator", "ZeroMatrix", &p.child_obj_well_defined, &p.requirement_fact_verified, runtime),
+        ObjWellDefinedProofByDef::MatrixOperator(MatrixOperatorObjWellDefinedProofByDef::IdentityMatrix(p)) =>
+            project_common_by_def(obj, "MatrixOperator", "IdentityMatrix", &p.child_obj_well_defined, &p.requirement_fact_verified, runtime),
+        ObjWellDefinedProofByDef::MatrixOperator(MatrixOperatorObjWellDefinedProofByDef::Transpose(p)) =>
+            project_common_by_def(obj, "MatrixOperator", "Transpose", &p.child_obj_well_defined, &p.requirement_fact_verified, runtime),
+        ObjWellDefinedProofByDef::MatrixOperator(MatrixOperatorObjWellDefinedProofByDef::ConjugateTranspose(p)) =>
+            project_common_by_def(obj, "MatrixOperator", "ConjugateTranspose", &p.child_obj_well_defined, &p.requirement_fact_verified, runtime),
+        ObjWellDefinedProofByDef::MatrixOperator(MatrixOperatorObjWellDefinedProofByDef::Trace(p)) =>
+            project_common_by_def(obj, "MatrixOperator", "Trace", &p.child_obj_well_defined, &p.requirement_fact_verified, runtime),
         ObjWellDefinedProofByDef::IntegralOperator(crate::execute::execute_fact_stmt::riemann_integral::IntegralOperatorWellDefinedProof::Riemann(p))=>super::riemann_integral::object_wd(p,runtime),
         ObjWellDefinedProofByDef::DerivativeOperator(crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof::AtPoint(p)) => super::function_derivative::object_wd(p,runtime),
         ObjWellDefinedProofByDef::BoundOperator(
@@ -400,6 +431,7 @@ pub(super) fn project_obj_wd_by_def(
             }
             if let Some(domain) = &p.domain_fn_set {
                 let d = match domain {
+                    FnObjDomainFnSetEvidence::Matrix(p) => super::native_matrix::callable(p, runtime),
                     FnObjDomainFnSetEvidence::Composition(p) => {
                         super::composition::callable(p, runtime)
                     }

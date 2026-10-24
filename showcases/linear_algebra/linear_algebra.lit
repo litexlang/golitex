@@ -793,7 +793,7 @@ thm linear_combination_exists:
         k >= 1
         sums(k) = space.add(sums(k - 1), space.smul(coefficients(k), vectors(k)))
     by def $is_partial_sum(K, field, V, space, n, coefficients, vectors, sums)
-    witness exist trace fn(k closed_range(0, n)) V st {$is_partial_sum(K, field, V, space, n, coefficients, vectors, trace), sums(n) = trace(n)} from sums
+    witness exist partial_sums fn(k closed_range(0, n)) V st {$is_partial_sum(K, field, V, space, n, coefficients, vectors, partial_sums), sums(n) = partial_sums(n)} from sums
     by def $has_linear_combination_value(K, field, V, space, n, coefficients, vectors, sums(n))
     witness exist value V st {$has_linear_combination_value(K, field, V, space, n, coefficients, vectors, value)} from sums(n)
 
@@ -858,7 +858,7 @@ thm partial_sum_determines_combination:
         $is_partial_sum(K, field, V, space, n, coefficients, vectors, sums)
         =>:
             \linear_combination<K, field, V, space, n>(coefficients, vectors) = sums(n)
-    witness exist trace fn(k closed_range(0, n)) V st {$is_partial_sum(K, field, V, space, n, coefficients, vectors, trace), sums(n) = trace(n)} from sums
+    witness exist partial_sums fn(k closed_range(0, n)) V st {$is_partial_sum(K, field, V, space, n, coefficients, vectors, partial_sums), sums(n) = partial_sums(n)} from sums
     by def $has_linear_combination_value(K, field, V, space, n, coefficients, vectors, sums(n))
     release thm linear_combination_exists_unique(K, field, V, space, n, coefficients, vectors)
 
@@ -990,27 +990,27 @@ thm zero_coefficients_is_partial_sum:
     ? forall K nonempty_set, field &Field<K>, V nonempty_set, space &VectorSpace<K, field, V>, n N, vectors finite_seq(V, n):
         $is_partial_sum(K, field, V, space, n, \zero_coefficients<K, field, n>, vectors, fn(k closed_range(0, n)) V {space.zero})
     claim:
-        ? forall coefficients finite_seq(K, n), trace fn(k closed_range(0, n)) V:
+        ? forall coefficients finite_seq(K, n), partial_sums fn(k closed_range(0, n)) V:
             coefficients = \zero_coefficients<K, field, n>
             forall j closed_range(0, n):
-                trace(j) = space.zero
+                partial_sums(j) = space.zero
             =>:
-                $is_partial_sum(K, field, V, space, n, coefficients, vectors, trace)
+                $is_partial_sum(K, field, V, space, n, coefficients, vectors, partial_sums)
         0 $in closed_range(0, n)
-        trace(0) = space.zero
+        partial_sums(0) = space.zero
         claim:
             ? forall k N+:
                 k <= n
                 =>:
-                    trace(k) = space.add(trace(k - 1), space.smul(coefficients(k), vectors(k)))
+                    partial_sums(k) = space.add(partial_sums(k - 1), space.smul(coefficients(k), vectors(k)))
             k - 1 $in closed_range(0, n)
             k $in closed_range(0, n)
-            trace(k - 1) = space.zero
-            trace(k) = space.zero
+            partial_sums(k - 1) = space.zero
+            partial_sums(k) = space.zero
             release thm zero_coefficient_contribution(K, field, V, space, n, vectors, coefficients, k)
             space.smul(coefficients(k), vectors(k)) = space.zero
-            space.add(trace(k - 1), space.smul(coefficients(k), vectors(k))) = space.add(space.zero, space.zero) = space.zero = trace(k)
-        by def $is_partial_sum(K, field, V, space, n, coefficients, vectors, trace)
+            space.add(partial_sums(k - 1), space.smul(coefficients(k), vectors(k))) = space.add(space.zero, space.zero) = space.zero = partial_sums(k)
+        by def $is_partial_sum(K, field, V, space, n, coefficients, vectors, partial_sums)
     \zero_coefficients<K, field, n> $in finite_seq(K, n)
     fn(k closed_range(0, n)) V {space.zero} $in fn(k closed_range(0, n)) V
     forall j closed_range(0, n):
@@ -1022,7 +1022,7 @@ thm zero_coefficients_has_zero_value:
         $has_linear_combination_value(K, field, V, space, n, \zero_coefficients<K, field, n>, vectors, space.zero)
     release thm zero_coefficients_is_partial_sum(K, field, V, space, n, vectors)
     space.zero = (fn(k closed_range(0, n)) V {space.zero})(n)
-    witness exist trace fn(k closed_range(0, n)) V st {$is_partial_sum(K, field, V, space, n, \zero_coefficients<K, field, n>, vectors, trace), space.zero = trace(n)} from fn(k closed_range(0, n)) V {space.zero}
+    witness exist partial_sums fn(k closed_range(0, n)) V st {$is_partial_sum(K, field, V, space, n, \zero_coefficients<K, field, n>, vectors, partial_sums), space.zero = partial_sums(n)} from fn(k closed_range(0, n)) V {space.zero}
     by def $has_linear_combination_value(K, field, V, space, n, \zero_coefficients<K, field, n>, vectors, space.zero)
 
 thm linear_combination_zero_coefficients:
@@ -1100,7 +1100,7 @@ thm linear_combination_add_coefficients:
     have result finite_seq(K, n) = \add_coefficients<K, field, n>(left, right)
     release thm add_coefficients_is_partial_sum(K, field, V, space, n, left, right, result, vectors, trace1, trace2, trace_sum)
     space.add(\linear_combination<K, field, V, space, n>(left, vectors), \linear_combination<K, field, V, space, n>(right, vectors)) = space.add(trace1(n), trace2(n)) = trace_sum(n)
-    witness exist trace fn(k closed_range(0, n)) V st {$is_partial_sum(K, field, V, space, n, result, vectors, trace), space.add(\linear_combination<K, field, V, space, n>(left, vectors), \linear_combination<K, field, V, space, n>(right, vectors)) = trace(n)} from trace_sum
+    witness exist partial_sums fn(k closed_range(0, n)) V st {$is_partial_sum(K, field, V, space, n, result, vectors, partial_sums), space.add(\linear_combination<K, field, V, space, n>(left, vectors), \linear_combination<K, field, V, space, n>(right, vectors)) = partial_sums(n)} from trace_sum
     by def $has_linear_combination_value(K, field, V, space, n, result, vectors, space.add(\linear_combination<K, field, V, space, n>(left, vectors), \linear_combination<K, field, V, space, n>(right, vectors)))
     release thm linear_combination_exists_unique(K, field, V, space, n, result, vectors)
     \linear_combination<K, field, V, space, n>(result, vectors) = space.add(\linear_combination<K, field, V, space, n>(left, vectors), \linear_combination<K, field, V, space, n>(right, vectors))
@@ -1121,38 +1121,38 @@ thm smul_coefficient_contribution:
     space.smul(result(k), vectors(k)) = space.smul(field.mul(a, coefficients(k)), vectors(k)) = space.smul(a, space.smul(coefficients(k), vectors(k)))
 
 thm smul_trace_step:
-    ? forall K nonempty_set, field &Field<K>, V nonempty_set, space &VectorSpace<K, field, V>, n N, a K, coefficients, result finite_seq(K, n), vectors finite_seq(V, n), trace fn(j closed_range(0, n)) V, k N+:
+    ? forall K nonempty_set, field &Field<K>, V nonempty_set, space &VectorSpace<K, field, V>, n N, a K, coefficients, result finite_seq(K, n), vectors finite_seq(V, n), partial_sums fn(j closed_range(0, n)) V, k N+:
         result = \smul_coefficients<K, field, n>(a, coefficients)
         k <= n
-        trace(k) = space.add(trace(k - 1), space.smul(coefficients(k), vectors(k)))
+        partial_sums(k) = space.add(partial_sums(k - 1), space.smul(coefficients(k), vectors(k)))
         =>:
-            space.smul(a, trace(k)) = space.add(space.smul(a, trace(k - 1)), space.smul(result(k), vectors(k)))
-    release thm scalar_partial_trace_step(K, field, V, space, a, trace(k), trace(k - 1), space.smul(coefficients(k), vectors(k)))
-    space.smul(a, trace(k)) = space.add(space.smul(a, trace(k - 1)), space.smul(a, space.smul(coefficients(k), vectors(k))))
+            space.smul(a, partial_sums(k)) = space.add(space.smul(a, partial_sums(k - 1)), space.smul(result(k), vectors(k)))
+    release thm scalar_partial_trace_step(K, field, V, space, a, partial_sums(k), partial_sums(k - 1), space.smul(coefficients(k), vectors(k)))
+    space.smul(a, partial_sums(k)) = space.add(space.smul(a, partial_sums(k - 1)), space.smul(a, space.smul(coefficients(k), vectors(k))))
     release thm smul_coefficient_contribution(K, field, V, space, n, a, coefficients, result, vectors, k)
     space.smul(result(k), vectors(k)) = space.smul(a, space.smul(coefficients(k), vectors(k)))
-    space.smul(a, trace(k - 1)) $in V
+    space.smul(a, partial_sums(k - 1)) $in V
     space.smul(a, space.smul(coefficients(k), vectors(k))) $in V
     space.smul(result(k), vectors(k)) $in V
-    space.add(space.smul(a, trace(k - 1)), space.smul(a, space.smul(coefficients(k), vectors(k)))) = space.add(space.smul(a, trace(k - 1)), space.smul(result(k), vectors(k)))
-    space.smul(a, trace(k)) = space.add(space.smul(a, trace(k - 1)), space.smul(a, space.smul(coefficients(k), vectors(k)))) = space.add(space.smul(a, trace(k - 1)), space.smul(result(k), vectors(k)))
+    space.add(space.smul(a, partial_sums(k - 1)), space.smul(a, space.smul(coefficients(k), vectors(k)))) = space.add(space.smul(a, partial_sums(k - 1)), space.smul(result(k), vectors(k)))
+    space.smul(a, partial_sums(k)) = space.add(space.smul(a, partial_sums(k - 1)), space.smul(a, space.smul(coefficients(k), vectors(k)))) = space.add(space.smul(a, partial_sums(k - 1)), space.smul(result(k), vectors(k)))
 
 thm smul_coefficients_is_partial_sum:
-    ? forall K nonempty_set, field &Field<K>, V nonempty_set, space &VectorSpace<K, field, V>, n N, a K, coefficients, result finite_seq(K, n), vectors finite_seq(V, n), trace, result_trace fn(k closed_range(0, n)) V:
+    ? forall K nonempty_set, field &Field<K>, V nonempty_set, space &VectorSpace<K, field, V>, n N, a K, coefficients, result finite_seq(K, n), vectors finite_seq(V, n), partial_sums, result_trace fn(k closed_range(0, n)) V:
         result = \smul_coefficients<K, field, n>(a, coefficients)
-        $is_partial_sum(K, field, V, space, n, coefficients, vectors, trace)
+        $is_partial_sum(K, field, V, space, n, coefficients, vectors, partial_sums)
         forall j closed_range(0, n):
-            result_trace(j) = space.smul(a, trace(j))
+            result_trace(j) = space.smul(a, partial_sums(j))
         =>:
             $is_partial_sum(K, field, V, space, n, result, vectors, result_trace)
-    by def $is_partial_sum(K, field, V, space, n, coefficients, vectors, trace)
+    by def $is_partial_sum(K, field, V, space, n, coefficients, vectors, partial_sums)
     0 $in closed_range(0, n)
-    result_trace(0) = space.smul(a, trace(0))
-    trace(0) $in V
+    result_trace(0) = space.smul(a, partial_sums(0))
+    partial_sums(0) $in V
     space.zero $in V
-    trace(0) = space.zero
+    partial_sums(0) = space.zero
     release thm scalar_times_zero(K, field, V, space, a)
-    result_trace(0) = space.smul(a, trace(0)) = space.smul(a, space.zero) = space.zero
+    result_trace(0) = space.smul(a, partial_sums(0)) = space.smul(a, space.zero) = space.zero
     claim:
         ? forall k N+:
             k <= n
@@ -1160,14 +1160,14 @@ thm smul_coefficients_is_partial_sum:
                 result_trace(k) = space.add(result_trace(k - 1), space.smul(result(k), vectors(k)))
         k $in closed_range(0, n)
         k - 1 $in closed_range(0, n)
-        trace(k) = space.add(trace(k - 1), space.smul(coefficients(k), vectors(k)))
-        release thm smul_trace_step(K, field, V, space, n, a, coefficients, result, vectors, trace, k)
-        result_trace(k) = space.smul(a, trace(k))
-        result_trace(k - 1) = space.smul(a, trace(k - 1))
-        space.smul(a, trace(k - 1)) $in V
+        partial_sums(k) = space.add(partial_sums(k - 1), space.smul(coefficients(k), vectors(k)))
+        release thm smul_trace_step(K, field, V, space, n, a, coefficients, result, vectors, partial_sums, k)
+        result_trace(k) = space.smul(a, partial_sums(k))
+        result_trace(k - 1) = space.smul(a, partial_sums(k - 1))
+        space.smul(a, partial_sums(k - 1)) $in V
         result_trace(k - 1) $in V
         space.smul(result(k), vectors(k)) $in V
-        result_trace(k) = space.smul(a, trace(k)) = space.add(space.smul(a, trace(k - 1)), space.smul(result(k), vectors(k))) = space.add(result_trace(k - 1), space.smul(result(k), vectors(k)))
+        result_trace(k) = space.smul(a, partial_sums(k)) = space.add(space.smul(a, partial_sums(k - 1)), space.smul(result(k), vectors(k))) = space.add(result_trace(k - 1), space.smul(result(k), vectors(k)))
     by def $is_partial_sum(K, field, V, space, n, result, vectors, result_trace)
 
 thm linear_combination_smul_coefficients:
@@ -1178,7 +1178,7 @@ thm linear_combination_smul_coefficients:
     have result finite_seq(K, n) = \smul_coefficients<K, field, n>(a, coefficients)
     release thm smul_coefficients_is_partial_sum(K, field, V, space, n, a, coefficients, result, vectors, source_trace, scaled_trace)
     space.smul(a, \linear_combination<K, field, V, space, n>(coefficients, vectors)) = space.smul(a, source_trace(n)) = scaled_trace(n)
-    witness exist trace fn(k closed_range(0, n)) V st {$is_partial_sum(K, field, V, space, n, result, vectors, trace), space.smul(a, \linear_combination<K, field, V, space, n>(coefficients, vectors)) = trace(n)} from scaled_trace
+    witness exist partial_sums fn(k closed_range(0, n)) V st {$is_partial_sum(K, field, V, space, n, result, vectors, partial_sums), space.smul(a, \linear_combination<K, field, V, space, n>(coefficients, vectors)) = partial_sums(n)} from scaled_trace
     by def $has_linear_combination_value(K, field, V, space, n, result, vectors, space.smul(a, \linear_combination<K, field, V, space, n>(coefficients, vectors)))
     release thm linear_combination_exists_unique(K, field, V, space, n, result, vectors)
     \linear_combination<K, field, V, space, n>(result, vectors) = space.smul(a, \linear_combination<K, field, V, space, n>(coefficients, vectors))

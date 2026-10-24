@@ -1,0 +1,20 @@
+# Reflexivity holds for every nonnegative integer, with a bounded strong induction hypothesis.
+# Before: by strong_induc verified in Litex but Lean compilation rejected By.
+# Now: replay the original base, bounded forall hypotheses, successor case and store.
+# Boundary: this compiler adapter currently starts at zero and keeps both original cases.
+# Gate: litex -strict -lean -f lean/examples/strong_integer_identity/statement.lit
+by strong_induc strong_index from 0:
+    ? strong_index = strong_index
+    strong_index = strong_index
+
+by strong_induc induction_index from 0:
+    ? induction_index = induction_index
+    ? from induction_index = 0:
+        0 = 0
+    ? strong_induc:
+        forall prior_index Z:
+            prior_index >= 0
+            prior_index <= induction_index
+            =>:
+                prior_index = prior_index
+        induction_index + 1 = induction_index + 1

@@ -1,0 +1,17 @@
+# Euclidean division keeps a nonnegative remainder, including negative inputs.
+quot(7, 3) = 2
+quot(-7, 3) = -3
+7 % 3 = 1
+(-7) % 3 = 2
+7 % (-3) = 1
+(-7) % (-3) = 2
+
+forall n Z:
+    quot(n, 1) = n
+
+forall n N+:
+    quot(n, n) = 1
+
+have dividend Z
+have divisor N+
+dividend = divisor * quot(dividend, divisor) + dividend % divisor

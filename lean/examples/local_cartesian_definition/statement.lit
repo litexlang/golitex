@@ -1,0 +1,8 @@
+# Release a Cartesian definition inside a reusable theorem on arbitrary carriers.
+thm cart_description:
+    ? forall A, B set:
+        cart(A, B) = {p finite_seq(union(A, B), 2): p(1) $in A, p(2) $in B}
+    release cart def cart(A, B)
+    cart(A, B) = {p finite_seq(union(A, B), 2): p(1) $in A, p(2) $in B}
+
+by thm cart_description(R, Z) => cart(R, Z) = {p finite_seq(union(R, Z), 2): p(1) $in R, p(2) $in Z}

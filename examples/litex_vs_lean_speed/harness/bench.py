@@ -48,6 +48,7 @@ ADAPTER = ROOT / "showcases" / "litex_to_lean_adapter"
 
 LITEX = ROOT / "target" / "release" / "litex"
 RLIB = ROOT / "target" / "release" / "liblitex.rlib"
+RUST_DEPS = ROOT / "target" / "release" / "deps"
 
 LEAN_HEADER = """import Mathlib
 import Lean
@@ -222,7 +223,7 @@ def build_litex_harness(cases):
             "--extern",
             f"litex={RLIB}",
             "-L",
-            f"dependency={ROOT / 'target' / 'release' / 'deps'}",
+            f"dependency={RUST_DEPS}",
             "-o",
             out,
         ]
@@ -280,7 +281,7 @@ def measure_lean(cases):
         if p.returncode != 0:
             sys.exit("Lean harness failed:\n" + (p.stderr + p.stdout)[-6000:])
         for label, ok, ns in re.findall(r"PROBE,(\w+),(true|false),(\d+)", p.stdout):
-            if not ok:
+            if ok != "true":
                 sys.exit(f"Lean route {label} did not succeed")
             if label.endswith("__first"):
                 kind = "first"
@@ -339,8 +340,8 @@ def markdown(cases, summary):
         out.append(
             f"| {c['domain']} | {c['label']} | {lit_ms:.3f} | {lean_ms:.3f} "
             f"| **{ratio:.2f}×** | `{best[0]}` "
-            f"| [litex](../sources/new-round/{c['id']}.lit) · "
-            f"[lean](../sources/new-round/{slug(c['id'], best[0])}.lean) |"
+            f"| [litex](../sources/{SOURCES.name}/{c['id']}.lit) · "
+            f"[lean](../sources/{SOURCES.name}/{slug(c['id'], best[0])}.lean) |"
         )
     return "\n".join(out)
 

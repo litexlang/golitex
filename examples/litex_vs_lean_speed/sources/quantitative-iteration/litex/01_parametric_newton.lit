@@ -1,0 +1,23 @@
+# Exact-real comparison experiment; see ../math_collections.md.
+
+have fn newton(a R+, x R+) R = (x + a / x) / 2
+
+thm newton_positive:
+    ? forall a, x R+:
+        newton(a, x) > 0
+    a / x > 0
+    x + a / x > 0
+
+thm newton_residual_identity:
+    ? forall a, x R+:
+        4 * x^2 * (newton(a, x)^2 - a) = (x^2 - a)^2
+
+thm newton_above_root:
+    ? forall a, x R+:
+        newton(a, x)^2 >= a
+    4 * x^2 > 0
+    newton(a, x)^2 - a = (x^2 - a)^2 / (4 * x^2) >= 0
+
+newton(9, 4) = (4 + 9 / 4) / 2 = 25 / 8
+
+by thm newton_above_root(9, 4) => newton(9, 4)^2 >= 9

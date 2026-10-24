@@ -1,0 +1,489 @@
+# 拓扑样章：同一个集合，为什么会有不同的连续映射？
+# 阅读路线：开集与拓扑 → 离散和平凡拓扑（只有空集与全空间开） → 原像与连续性 → 同胚。
+# 贯穿例子：在 {0,1} 上改变开集；恒等映射的两个方向不再同时连续。
+# 结尾验证离散两点空间的交换映射是同胚。这里选择原讲义前两章，不包含后续紧致性与介值定理。
+
+# Topology: From Open Sets to Continuous Maps
+# A topology tells us which subsets count as open. Two different choices
+# on the same set will show why continuity depends on more than a formula.
+# Chapter 1. Open and closed sets
+# 1.1 The same points can carry different collections of open sets.
+have points nonempty_set = {0, 1}
+
+0 $in points
+
+{0} $subset points
+
+{0} $in power_set(points)
+
+# Arbitrary unions and finite intersections are the defining closure laws.
+# Binary intersections and the whole-space axiom include empty finite intersections.
+struct TopologicalSpace<Ambient set>:
+    carrier power_set(Ambient)
+    opens power_set(power_set(carrier))
+    <=>:
+        {} $in opens
+        carrier $in opens
+        forall U, V opens:
+            intersect(U, V) $in opens
+        forall family power_set(power_set(carrier)):
+            family $subset opens
+            =>:
+                family_union(family) $in opens
+
+# 1.2 Every subset is open in the discrete topology.
+# This construction works on any set, including the empty set.
+thm discrete_topology_laws:
+    ? forall X set:
+        (X, power_set(X)) $in &TopologicalSpace<X>
+    claim:
+        ? forall family power_set(power_set(X)):
+            family $subset power_set(X)
+            =>:
+                family_union(family) $in power_set(X)
+        claim:
+            ? forall x family_union(family):
+                x $in X
+            obtain U from exist V family st {x $in V}
+            U $in power_set(X)
+            U $subset X
+        by def family_union(family) $subset X
+    X $in power_set(X)
+    power_set(X) $in power_set(power_set(X))
+    {} $in power_set(X)
+    forall U, V power_set(X):
+        intersect(U, V) $in power_set(X)
+    release thm struct_member((X, power_set(X)), &TopologicalSpace<X>)
+
+release thm discrete_topology_laws(points)
+
+have discrete &TopologicalSpace<points> = (points, power_set(points))
+
+discrete.carrier = points
+
+discrete.opens = power_set(points)
+
+{0} $in discrete.opens
+
+{} $in power_set(points)
+
+points $in power_set(points)
+
+{{}, points} $subset power_set(points)
+
+# At the other extreme, only the empty set and the whole space are open.
+# For a family of these sets, its union is empty unless it contains points.
+have coarse_opens power_set(power_set(points)) = {{}, points}
+
+claim:
+    ? forall U, V coarse_opens:
+        intersect(U, V) $in coarse_opens
+    U $in {{}, points}
+    U = {} or U = points
+    V $in power_set(points)
+    V $subset points
+    by cases:
+        ? intersect(U, V) $in coarse_opens
+        case U = {}:
+            intersect(U, V) = intersect({}, V) = {}
+        case U = points:
+            intersect(U, V) = intersect(points, V) = V
+
+claim:
+    ? forall family power_set(power_set(points)):
+        family $subset coarse_opens
+        =>:
+            family_union(family) $in coarse_opens
+    claim:
+        ? forall x family_union(family):
+            x $in points
+        obtain U from exist V family st {x $in V}
+        U $in power_set(points)
+        U $subset points
+    by def family_union(family) $subset points
+    by cases:
+        ? family_union(family) $in coarse_opens
+        case points $in family:
+            points $subset family_union(family)
+            by extension family_union(family) = points
+        case not points $in family:
+            claim:
+                ? forall U family:
+                    U = {}
+                U $in coarse_opens
+                U $in {{}, points}
+                U = {} or U = points
+                by cases:
+                    ? U = {}
+                    case U = {}:
+                        {} = {}
+                    case U = points:
+                        impossible points $in family
+            by extension:
+                ? family_union(family) = {}
+                claim:
+                    ? forall x family_union(family):
+                        x $in {}
+                    obtain U from exist V family st {x $in V}
+                    U = {}
+                    x $in {}
+
+{} $in coarse_opens
+
+points $in coarse_opens
+
+release thm struct_member((points, coarse_opens), &TopologicalSpace<points>)
+
+have indiscrete &TopologicalSpace<points> = (points, coarse_opens)
+
+indiscrete.opens = coarse_opens
+
+indiscrete.carrier = points
+
+# Each singleton is nonempty and omits the other point.
+claim:
+    ? {0} != points
+    by contra:
+        ? {0} != points
+        1 $in points
+        impossible 1 $in {0}
+
+claim:
+    ? {1} != points
+    by contra:
+        ? {1} != points
+        impossible 0 $in {1}
+
+{0} != {}
+
+{1} != {}
+
+not {0} $in {{}, points}
+
+not {1} $in {{}, points}
+
+not {0} $in coarse_opens
+
+not {1} $in coarse_opens
+
+# The singleton distinguishes the two topologies.
+not {0} $in indiscrete.opens
+
+# 1.3 Closed sets are complements of open sets, relative to the space.
+prop is_closed(Ambient set, space &TopologicalSpace<Ambient>, F power_set(space.carrier)):
+    set_minus(space.carrier, F) $in space.opens
+
+by extension:
+    ? set_minus(points, {0}) = {1}
+    claim:
+        ? forall x set_minus(points, {0}):
+            x $in {1}
+        x $in {0, 1}
+        x != 0
+        by cases:
+            ? x $in {1}
+            case x = 0:
+                impossible x != 0
+            case x = 1:
+                1 $in {1}
+    claim:
+        ? forall x {1}:
+            x $in set_minus(points, {0})
+        x = 1
+        1 $in points
+        not x $in {0}
+
+claim:
+    ? $is_closed(points, discrete, {0})
+    set_minus(discrete.carrier, {0}) = set_minus(points, {0}) = {1}
+    {1} $subset points
+    {1} $in power_set(points)
+    by def $is_closed(points, discrete, {0})
+
+claim:
+    ? not $is_closed(points, indiscrete, {0})
+    by contra:
+        ? not $is_closed(points, indiscrete, {0})
+        set_minus(indiscrete.carrier, {0}) = set_minus(points, {0})
+        set_minus(points, {0}) $in indiscrete.opens
+        set_minus(points, {0}) = {1}
+        impossible {1} $in indiscrete.opens
+
+# The empty set and the entire space are both open and closed.
+claim:
+    ? forall Ambient set, space &TopologicalSpace<Ambient>:
+        $is_closed(Ambient, space, {})
+        $is_closed(Ambient, space, space.carrier)
+    set_minus(space.carrier, {}) = space.carrier
+    set_minus(space.carrier, space.carrier) = {}
+    by def $is_closed(Ambient, space, {})
+    by def $is_closed(Ambient, space, space.carrier)
+
+# A triple intersection is a first use of the packaged topology laws.
+claim:
+    ? forall X set, space &TopologicalSpace<X>, U, V, W space.opens:
+        intersect(intersect(U, V), W) $in space.opens
+    intersect(U, V) $in space.opens
+
+# Chapter 2. Continuity and the topology of a map
+# 2.1 Preimages turn target subsets into source subsets.
+# Unlike inverse functions, they need neither injectivity nor surjectivity.
+template<X set>:
+    have fn identity_map(x X) X = x
+
+template<X, Y, Zeta set, f fn(x X) Y, g fn(y Y) Zeta>:
+    have fn composition(x X) Zeta = g(f(x))
+
+thm identity_preimage:
+    ? forall X set, U power_set(X):
+        preimage_set(\identity_map<X>, U) = U
+    by extension:
+        ? preimage_set(\identity_map<X>, U) = U
+        claim:
+            ? forall x preimage_set(\identity_map<X>, U):
+                x $in U
+            \identity_map<X>(x) = x
+        claim:
+            ? forall x U:
+                x $in preimage_set(\identity_map<X>, U)
+            \identity_map<X>(x) = x
+
+thm composition_preimage:
+    ? forall X, Y, Zeta set, f fn(x X) Y, g fn(y Y) Zeta, U power_set(Zeta):
+        preimage_set(\composition<X, Y, Zeta, f, g>, U) = preimage_set(f, preimage_set(g, U))
+    by extension:
+        ? preimage_set(\composition<X, Y, Zeta, f, g>, U) = preimage_set(f, preimage_set(g, U))
+        claim:
+            ? forall x preimage_set(\composition<X, Y, Zeta, f, g>, U):
+                x $in preimage_set(f, preimage_set(g, U))
+            \composition<X, Y, Zeta, f, g>(x) = g(f(x))
+            g(f(x)) $in U
+            f(x) $in preimage_set(g, U)
+        claim:
+            ? forall x preimage_set(f, preimage_set(g, U)):
+                x $in preimage_set(\composition<X, Y, Zeta, f, g>, U)
+            f(x) $in preimage_set(g, U)
+            g(f(x)) $in U
+            \composition<X, Y, Zeta, f, g>(x) = g(f(x))
+
+# Continuity means every open target set has an open preimage.
+# The ambient parameters contain the carriers; all map domains are the
+# actual carriers stored in the two spaces.
+prop is_topologically_continuous(A, B set, source &TopologicalSpace<A>, target &TopologicalSpace<B>, f fn(x source.carrier) target.carrier):
+    forall U target.opens:
+        preimage_set(f, U) $in source.opens
+
+# 2.2 Identity maps and compositions
+thm identity_is_continuous:
+    ? forall A set, space &TopologicalSpace<A>:
+        $is_topologically_continuous(A, A, space, space, \identity_map<space.carrier>)
+    claim:
+        ? forall U space.opens:
+            preimage_set(\identity_map<space.carrier>, U) $in space.opens
+        U $in power_set(space.carrier)
+        by thm identity_preimage(space.carrier, U) => preimage_set(\identity_map<space.carrier>, U) = U
+    by def $is_topologically_continuous(A, A, space, space, \identity_map<space.carrier>)
+
+# Pull an open set back twice. Each continuity hypothesis supplies one step.
+thm continuous_composition:
+    ? forall A, B, D set, source &TopologicalSpace<A>, middle &TopologicalSpace<B>, target &TopologicalSpace<D>, f fn(x source.carrier) middle.carrier, g fn(y middle.carrier) target.carrier:
+        $is_topologically_continuous(A, B, source, middle, f)
+        $is_topologically_continuous(B, D, middle, target, g)
+        =>:
+            $is_topologically_continuous(A, D, source, target, \composition<source.carrier, middle.carrier, target.carrier, f, g>)
+    claim:
+        ? forall U target.opens:
+            preimage_set(\composition<source.carrier, middle.carrier, target.carrier, f, g>, U) $in source.opens
+        U $in power_set(target.carrier)
+        preimage_set(g, U) $in middle.opens
+        preimage_set(f, preimage_set(g, U)) $in source.opens
+        by thm composition_preimage(source.carrier, middle.carrier, target.carrier, f, g, U) => preimage_set(\composition<source.carrier, middle.carrier, target.carrier, f, g>, U) = preimage_set(f, preimage_set(g, U))
+    by def $is_topologically_continuous(A, D, source, target, \composition<source.carrier, middle.carrier, target.carrier, f, g>)
+
+# 2.3 Closed preimages give the same test for continuity.
+# Preimages commute with complements taken in the source and target carriers.
+thm complement_preimage:
+    ? forall X, Y set, f fn(x X) Y, F power_set(Y):
+        preimage_set(f, set_minus(Y, F)) = set_minus(X, preimage_set(f, F))
+    by extension:
+        ? preimage_set(f, set_minus(Y, F)) = set_minus(X, preimage_set(f, F))
+        claim:
+            ? forall x preimage_set(f, set_minus(Y, F)):
+                x $in set_minus(X, preimage_set(f, F))
+            f(x) $in set_minus(Y, F)
+            not f(x) $in F
+            by contra:
+                ? not x $in preimage_set(f, F)
+                f(x) $in F
+                impossible f(x) $in F
+        claim:
+            ? forall x set_minus(X, preimage_set(f, F)):
+                x $in preimage_set(f, set_minus(Y, F))
+            by contra:
+                ? not f(x) $in F
+                x $in preimage_set(f, F)
+                impossible x $in preimage_set(f, F)
+            f(x) $in set_minus(Y, F)
+
+prop has_closed_preimages(A, B set, source &TopologicalSpace<A>, target &TopologicalSpace<B>, f fn(x source.carrier) target.carrier):
+    forall F power_set(target.carrier):
+        $is_closed(B, target, F)
+        =>:
+            $is_closed(A, source, preimage_set(f, F))
+
+thm continuous_maps_have_closed_preimages:
+    ? forall A, B set, source &TopologicalSpace<A>, target &TopologicalSpace<B>, f fn(x source.carrier) target.carrier:
+        $is_topologically_continuous(A, B, source, target, f)
+        =>:
+            $has_closed_preimages(A, B, source, target, f)
+    claim:
+        ? forall F power_set(target.carrier):
+            $is_closed(B, target, F)
+            =>:
+                $is_closed(A, source, preimage_set(f, F))
+        preimage_set(f, set_minus(target.carrier, F)) $in source.opens
+        by thm complement_preimage(source.carrier, target.carrier, f, F) => preimage_set(f, set_minus(target.carrier, F)) = set_minus(source.carrier, preimage_set(f, F))
+        by def $is_closed(A, source, preimage_set(f, F))
+    by def $has_closed_preimages(A, B, source, target, f)
+
+thm closed_preimages_imply_continuity:
+    ? forall A, B set, source &TopologicalSpace<A>, target &TopologicalSpace<B>, f fn(x source.carrier) target.carrier:
+        $has_closed_preimages(A, B, source, target, f)
+        =>:
+            $is_topologically_continuous(A, B, source, target, f)
+    claim:
+        ? forall U target.opens:
+            preimage_set(f, U) $in source.opens
+        U $in power_set(target.carrier)
+        set_minus(target.carrier, set_minus(target.carrier, U)) = U
+        by def $is_closed(B, target, set_minus(target.carrier, U))
+        $is_closed(A, source, preimage_set(f, set_minus(target.carrier, U)))
+        by thm complement_preimage(source.carrier, target.carrier, f, U) => preimage_set(f, set_minus(target.carrier, U)) = set_minus(source.carrier, preimage_set(f, U))
+        set_minus(source.carrier, preimage_set(f, set_minus(target.carrier, U))) $in source.opens
+        preimage_set(f, U) $subset source.carrier
+        set_minus(source.carrier, preimage_set(f, set_minus(target.carrier, U))) = set_minus(source.carrier, set_minus(source.carrier, preimage_set(f, U))) = preimage_set(f, U)
+    by def $is_topologically_continuous(A, B, source, target, f)
+
+# 2.4 A continuous bijection need not be a homeomorphism.
+# Every map out of a discrete space is continuous: any preimage is a subset.
+thm maps_from_discrete_are_continuous:
+    ? forall A, B set, source &TopologicalSpace<A>, target &TopologicalSpace<B>, f fn(x source.carrier) target.carrier:
+        source.opens = power_set(source.carrier)
+        =>:
+            $is_topologically_continuous(A, B, source, target, f)
+    claim:
+        ? forall U target.opens:
+            preimage_set(f, U) $in source.opens
+        preimage_set(f, U) $in power_set(source.carrier)
+    by def $is_topologically_continuous(A, B, source, target, f)
+
+have fn identity(x points) points = x
+
+release thm fn_set_member(identity, fn(x discrete.carrier) indiscrete.carrier)
+
+power_set(discrete.carrier) = power_set(points) = discrete.opens
+
+by thm maps_from_discrete_are_continuous(points, points, discrete, indiscrete, identity) => $is_topologically_continuous(points, points, discrete, indiscrete, identity)
+
+claim:
+    ? $injective(points, points, identity)
+    claim:
+        ? forall x, y points:
+            identity(x) = identity(y)
+            =>:
+                x = y
+        x = identity(x) = identity(y) = y
+    by def $injective(points, points, identity)
+
+claim:
+    ? $surjective(points, points, identity)
+    claim:
+        ? forall y points:
+            exist x points st {y = identity(x)}
+        witness exist x points st {y = identity(x)} from y
+    by def $surjective(points, points, identity)
+
+by def $bijective(points, points, identity)
+
+release thm fn_set_member(identity, fn(x indiscrete.carrier) discrete.carrier)
+
+# In the reverse direction, the preimage of the open singleton {0}
+# is {0}, which is not open in the indiscrete source.
+by extension:
+    ? preimage_set(identity, {0}) = {0}
+    claim:
+        ? forall x preimage_set(identity, {0}):
+            x $in {0}
+        identity(x) = x
+    claim:
+        ? forall x {0}:
+            x $in preimage_set(identity, {0})
+        x = 0
+        0 $in points
+        identity(x) = x
+
+claim:
+    ? not $is_topologically_continuous(points, points, indiscrete, discrete, identity)
+    by contra:
+        ? not $is_topologically_continuous(points, points, indiscrete, discrete, identity)
+        preimage_set(identity, {0}) $in indiscrete.opens
+        impossible {0} $in indiscrete.opens
+
+# A homeomorphism requires continuity in both directions, as well as
+# two inverse equations. These equations make the chosen maps bijections.
+prop is_homeomorphism(A, B set, source &TopologicalSpace<A>, target &TopologicalSpace<B>, f fn(x source.carrier) target.carrier, g fn(y target.carrier) source.carrier):
+    $is_topologically_continuous(A, B, source, target, f)
+    $is_topologically_continuous(B, A, target, source, g)
+    forall x source.carrier:
+        g(f(x)) = x
+    forall y target.carrier:
+        f(g(y)) = y
+
+claim:
+    ? not $is_homeomorphism(points, points, discrete, indiscrete, identity, identity)
+    by contra:
+        ? not $is_homeomorphism(points, points, discrete, indiscrete, identity, identity)
+        impossible $is_topologically_continuous(points, points, indiscrete, discrete, identity)
+
+thm homeomorphism_inverse:
+    ? forall A, B set, source &TopologicalSpace<A>, target &TopologicalSpace<B>, f fn(x source.carrier) target.carrier, g fn(y target.carrier) source.carrier:
+        $is_homeomorphism(A, B, source, target, f, g)
+        =>:
+            $is_homeomorphism(B, A, target, source, g, f)
+    by def $is_homeomorphism(B, A, target, source, g, f)
+
+# Swapping the two points is a nonidentity homeomorphism of the discrete space.
+points $subset R
+
+claim:
+    ? forall x points:
+        1 - x $in points
+    x $in {0, 1}
+    x = 0 or x = 1
+    by cases:
+        ? 1 - x $in points
+        case x = 0:
+            1 - x = 1
+            1 $in points
+        case x = 1:
+            1 - x = 0
+            0 $in points
+
+have fn swap(x points) points = 1 - x
+
+swap(0) = 1
+
+swap(1) = 0
+
+release thm fn_set_member(swap, fn(x discrete.carrier) discrete.carrier)
+
+by thm maps_from_discrete_are_continuous(points, points, discrete, discrete, swap) => $is_topologically_continuous(points, points, discrete, discrete, swap)
+
+claim:
+    ? $is_homeomorphism(points, points, discrete, discrete, swap, swap)
+    claim:
+        ? forall x discrete.carrier:
+            swap(swap(x)) = x
+        swap(x) = 1 - x
+        swap(swap(x)) = 1 - swap(x) = 1 - (1 - x) = x
+    by def $is_homeomorphism(points, points, discrete, discrete, swap, swap)

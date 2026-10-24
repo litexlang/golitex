@@ -17,6 +17,7 @@ mod helper;
 mod induction;
 mod known_special_property;
 mod known_tuple;
+mod native_matrix;
 mod or_builtin_gen;
 mod pointwise_continuity;
 mod pointwise_derivative;

@@ -1,0 +1,82 @@
+[
+  {
+    "id": "sum_sq_zero",
+    "domain": "不等式",
+    "label": "平方和为零则两数都为零",
+    "litex": "forall x,y R:\n    x^2 + y^2 = 0\n    =>:\n        x = 0 and y = 0",
+    "lean": "∀ x y : Real, x^2 + y^2 = 0 → x = 0 ∧ y = 0",
+    "methods": {
+      "nlinarith": "by\n  intro x y h\n  constructor <;> nlinarith [sq_nonneg x, sq_nonneg y]"
+    },
+    "note": "Mathlib 没有与这条命题同形的定理名；Lean 侧要自己用两个平方非负夹出结论。"
+  },
+  {
+    "id": "positive_ratio",
+    "domain": "不等式",
+    "label": "正数的 x/(x+1) 为正",
+    "litex": "forall x R:\n    x > 0\n    =>:\n        x+1 > 0\n        x/(x+1) > 0",
+    "lean": "∀ x : Real, 0 < x → 0 < x/(x+1)",
+    "methods": {
+      "div_pos": "by\n  intro x hx\n  have h1 : (0 : Real) < x + 1 := by linarith\n  exact div_pos hx h1"
+    },
+    "note": "两边都要先补出分母为正；Litex 把这一步写成一条显式语句，Lean 写成 have。"
+  },
+  {
+    "id": "mul_cancel",
+    "domain": "代数",
+    "label": "等式两边同乘 2 的消去",
+    "litex": "forall x,y R:\n    2*x = 2*y\n    =>:\n        x = y",
+    "lean": "∀ x y : Real, 2*x = 2*y → x = y",
+    "methods": {
+      "linarith": "by intro x y h; linarith",
+      "cancel": "by intro x y h; exact mul_left_cancel₀ (by norm_num : (2:Real) ≠ 0) h"
+    },
+    "note": "没有同名的“乘 2 消去”定理；Lean 用线性算术或一般消去律，Litex 用内置的乘法消去规则。"
+  },
+  {
+    "id": "sq_plus_one_pos",
+    "domain": "不等式",
+    "label": "实数的平方加一为正",
+    "litex": "forall x R:\n    x^2 + 1 > 0",
+    "lean": "∀ x : Real, 0 < x^2 + 1",
+    "methods": {
+      "positivity": "by intro x; positivity",
+      "nlinarith": "by intro x; nlinarith [sq_nonneg x]"
+    },
+    "note": "命题本身不是 Mathlib 的定理名，需要“平方非负 + 正数”两步。"
+  },
+  {
+    "id": "sum_sq_ge_two_mul",
+    "domain": "不等式",
+    "label": "x²+y² ≥ 2xy",
+    "litex": "forall x,y R:\n    (x-y)^2 >= 0\n    x^2 + y^2 - 2*x*y >= 0\n    x^2 + y^2 >= 2*x*y",
+    "lean": "∀ x y : Real, 2*x*y ≤ x^2 + y^2",
+    "methods": {
+      "nlinarith": "by intro x y; nlinarith [sq_nonneg (x-y)]"
+    },
+    "note": "母不等式 (x−y)² ≥ 0 两侧都有，但结论要靠展开与移项；Litex 写成三条语句，Lean 用 nlinarith 一步。"
+  },
+  {
+    "id": "even_witness_above",
+    "domain": "存在构造",
+    "label": "任意正整数之上都有偶数",
+    "litex": "claim:\n    ? forall n N+:\n        exist m N+ st {m > n and $dvd(m, 2)}\n    witness exist m N+ st {m > n and $dvd(m, 2)} from 2*n\n    $dvd(2*n, 2)\n    2*n > n",
+    "lean": "∀ n : Nat, 0 < n → ∃ m : Nat, 0 < m ∧ m > n ∧ 2 ∣ m",
+    "methods": {
+      "witness": "by\n  intro n hn\n  exact ⟨2*n, by omega, by omega, ⟨n, by ring⟩⟩"
+    },
+    "note": "两侧都要给出见证 2n 并分别验证正性、大于 n、被 2 整除；没有现成定理可直接套。"
+  },
+  {
+    "id": "nat_succ_lt_two_mul",
+    "domain": "算术",
+    "label": "正整数小于它的两倍",
+    "litex": "forall n N+:\n    2*n > n",
+    "lean": "∀ n : Nat, 0 < n → n < 2*n",
+    "methods": {
+      "omega": "by intro n hn; omega",
+      "nlinarith": "by intro n hn; nlinarith"
+    },
+    "note": "需要用到 n ≥ 1 这一步；Lean 用 omega/nlinarith，Litex 用内置算术规则。"
+  }
+]

@@ -1,0 +1,5 @@
+# Prove uniqueness of a nonzero real value while preserving its reciprocal WD.
+by contra:
+    ? exist! x R st {x != 0, x = 2, 1 / x = 1 / 2}
+    obtain a from exist y R st {y != 0, y = 2, 1 / y = 1 / 2, y != 2}
+    impossible a != 2

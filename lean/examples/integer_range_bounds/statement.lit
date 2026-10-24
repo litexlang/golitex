@@ -1,0 +1,9 @@
+# Integer-interval membership supplies integrality and the exact endpoint bounds.
+forall x range(-1, 2):
+    x $in Z
+    -1 <= x
+    x < 2
+
+forall a Z, b Z, x range(a, b):
+    a <= x
+    x < b

@@ -1,0 +1,5 @@
+# The sum of three binary integers is at most 3.
+by for:
+    ? forall x, y, z range(0, 2):
+        x + y + z <= 3
+    x + y + z <= 3

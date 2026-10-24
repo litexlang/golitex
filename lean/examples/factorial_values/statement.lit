@@ -1,0 +1,6 @@
+# Evaluate factorials and prove that every natural factorial is nonzero.
+0! = 1
+factorial(5) = 120
+
+forall u N:
+    0 != u!

@@ -8,7 +8,11 @@ impl LitexToLeanCompiler {
         id: FactId,
         position: &SourcePosition<'p>,
     ) -> Result<(&'p Fact, String), LeanCompileError> {
-        position.visible_fact(id, &self.runtime)
+        let (fact, reference) = position.visible_fact(id, &self.runtime)?;
+        Ok((
+            fact,
+            self.compile_local_forall_citation(id, reference, position)?,
+        ))
     }
 
     pub(in crate::compile_to_lean) fn resolve_fact(

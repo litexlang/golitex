@@ -1,0 +1,17 @@
+claim:
+    ? forall x R:
+        exist! y R st {y = x}
+    witness exist! y R st {y = x} from x:
+        claim:
+            ? forall y1, y2 R:
+                y1 = x
+                y2 = x
+                =>:
+                    y1 = y2
+            y1 = x = y2
+
+have fn identity_choice by exist!:
+    ? forall x R:
+        exist! y R st {y = x}
+
+identity_choice(3) = 3

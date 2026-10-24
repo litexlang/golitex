@@ -1,0 +1,8 @@
+# Reuse the universal unique-copy theorem through automatic fact lookup.
+thm unique_copy:
+    ? forall seed R:
+        exist! x R st {x = seed}
+    witness exist! x R st {x = seed} from seed
+exist! y R st {y = 3}
+obtain a from exist! z R st {z = 3}
+a = 3

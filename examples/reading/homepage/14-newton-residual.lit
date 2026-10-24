@@ -1,0 +1,29 @@
+# The update stays positive.
+claim:
+    ? forall x R+:
+        (x + 2 / x) / 2 $in R+
+    2 / x > 0
+    x + 2 / x > 0
+    (x + 2 / x) / 2 > 0
+
+have fn newton_sqrt_two(x R+) R+ = (x + 2 / x) / 2
+have fn residual(x R) R = x^2 - 2
+
+# Prove how the squared-equation residual changes.
+thm newton_residual_identity:
+    ? forall x R+:
+        4 * x^2 * residual(newton_sqrt_two(x)) = residual(x)^2
+    newton_sqrt_two(x) = (x + 2 / x) / 2
+    residual(x) = x^2 - 2
+    residual(newton_sqrt_two(x)) = newton_sqrt_two(x)^2 - 2 = ((x + 2 / x) / 2)^2 - 2
+    4 * x^2 * residual(newton_sqrt_two(x)) = 4 * x^2 * (((x + 2 / x) / 2)^2 - 2) = (x^2 - 2)^2 = residual(x)^2
+
+# First update: 1 -> 3/2, with residual 1/4.
+by thm newton_residual_identity(1) => 4 * 1^2 * residual(newton_sqrt_two(1)) = residual(1)^2
+newton_sqrt_two(1) = 3 / 2
+residual(3 / 2) = 1 / 4
+
+# Second update: 3/2 -> 17/12, with residual 1/144.
+by thm newton_residual_identity(3 / 2) => 4 * (3 / 2)^2 * residual(newton_sqrt_two(3 / 2)) = residual(3 / 2)^2
+newton_sqrt_two(3 / 2) = 17 / 12
+residual(17 / 12) = 1 / 144

@@ -8,5 +8,10 @@ universe u
 variable {M : Litex.Semantics.{u}}
 
 theorem h_1 : Litex.IsSet (Litex.number (M := M) (1 : ℂ)) :=
-  (Litex.isSet (Litex.number (M := M) (1 : ℂ)))
+  (by
+    litex_complete =>
+      exact (
+        (Litex.isSet (Litex.number (M := M) (1 : ℂ)))
+      )
+  )
 end LitexCompiled.file_lean_x2f_examples_x2f_one_x5f_is_x5f_a_x5f_set_x2f_statement_x2e_lit

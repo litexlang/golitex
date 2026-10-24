@@ -121,6 +121,29 @@ impl LitexToLeanCompiler {
         }
     }
 
+    pub(super) fn compile_union_membership_strategy(
+        &self,
+        fact: &AtomicFact,
+        requirements: &[Fact],
+        proofs: &[VerifyFactResult],
+        left: bool,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        let AtomicFact::InFact(member) = fact else {
+            return Err(LeanCompileError::unsupported("Union/StrategyFamily"));
+        };
+        let Obj::SetOperator(SetOperator::Union(union)) = &member.set else {
+            return Err(LeanCompileError::unsupported("Union/StrategyCarrier"));
+        };
+        let ([requirement], [proof]) = (requirements, proofs) else {
+            return Err(LeanCompileError::unsupported("Union/StrategyStages"));
+        };
+        if source_subject(proof)? != *requirement {
+            return Err(LeanCompileError::unsupported("Union/StrategyRequirement"));
+        }
+        self.compile_union_membership(member, union, proof, left, position)
+    }
+
     fn compile_union_membership(
         &self,
         fact: &InFact,

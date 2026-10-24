@@ -12,6 +12,7 @@ pub(crate) mod fail_to_verify_obj_well_defined;
 mod fn_obj_domain_check_result;
 mod helper;
 mod iterated;
+mod matrix;
 mod obj_well_defined_by_def_common;
 mod obj_well_defined_proof_by_def;
 mod preimage;

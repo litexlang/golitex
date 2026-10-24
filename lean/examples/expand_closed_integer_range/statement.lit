@@ -1,0 +1,5 @@
+# An integer in [-1, 1] is -1, 0, or 1, including both endpoints.
+claim:
+    ? forall x closed_range(-1, 1):
+        x = -1 or x = 0 or x = 1
+    expand: x $in closed_range(-1, 1)

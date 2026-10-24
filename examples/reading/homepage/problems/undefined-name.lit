@@ -1,0 +1,3 @@
+# 不能通过：problem_score 还没有定义，不能直接拿来计算。
+# 通过的条件：先声明 problem_score，再使用它。
+have problem_answer R = problem_score + 1

@@ -6,11 +6,9 @@
     "litex": "# sqrt(2) is not rational.\nby contra:\n    ? not sqrt(2) $in Q\n    release thm rational_has_unique_reduced_fraction(sqrt(2))\n    obtain p, q from exist! p Z, q N+ st {sqrt(2) = p / q, gcd(p, q) = 1}\n\n    p^2 = (sqrt(2) * q)^2 = sqrt(2)^2 * q^2 = 2 * q^2\n    p^2 % 2 = (2 * q^2) % 2 = 0\n    release thm prime_divides_power(p, 2, 2)\n\n    p / 2 $in Z\n    q^2 = p^2 / 2 = 2 * (p / 2)^2\n    q^2 % 2 = (2 * (p / 2)^2) % 2 = 0\n    release thm prime_divides_power(q, 2, 2)\n\n    impossible 2 <= gcd(p, q) = 1",
     "lean": "Irrational (Real.sqrt 2)",
     "methods": {
-      "mathlib_theorem": "irrational_sqrt_two",
       "scratch": "by\n  rintro ⟨q, hq⟩\n  have h2 : (q : Real) ^ 2 = 2 := by\n    rw [hq, Real.sq_sqrt (by norm_num : (0 : Real) ≤ 2)]\n  -- 唯一既约分数：p = |num|, m = den, gcd p m = 1\n  set p : Nat := q.num.natAbs with hp\n  set m : Nat := q.den with hm\n  have hden : (m : Real) ≠ 0 := by\n    have : (0 : Nat) < m := q.den_pos\n    exact_mod_cast this.ne'\n  -- 把 (q : ℝ) = num / den 代入\n  have hqeq : (q : Real) = (q.num : Real) / (m : Real) := by\n    rw [Rat.cast_def, hm]\n  -- p² = 2 m²（先把 ℤ 上的等式转成 ℕ）\n  have hnat : p ^ 2 = 2 * m ^ 2 := by\n    have hreal : (q.num : Real) ^ 2 = 2 * (m : Real) ^ 2 := by\n      rw [hqeq] at h2\n      field_simp at h2\n      nlinarith [h2]\n    have hint : q.num ^ 2 = 2 * (m : Int) ^ 2 := by\n      exact_mod_cast hreal\n    have habs : ((p : Int)) ^ 2 = 2 * (m : Int) ^ 2 := by\n      have hnum : q.num ^ 2 = ((p : Int)) ^ 2 := by\n        rcases Int.natAbs_eq q.num with h | h\n        · rw [h, hp]\n        · rw [h, hp]; ring\n      rw [← hnum, hint]\n    exact_mod_cast habs\n  -- p 是偶数\n  have hp2 : 2 ∣ p ^ 2 := ⟨m ^ 2, hnat⟩\n  have hp_even : 2 ∣ p := Nat.Prime.dvd_of_dvd_pow Nat.prime_two hp2\n  -- 于是 q 也是偶数\n  obtain ⟨k, hk⟩ := hp_even\n  have hm2 : m ^ 2 = 2 * k ^ 2 := by\n    rw [hk] at hnat\n    nlinarith\n  have hm2dvd : 2 ∣ m ^ 2 := ⟨k ^ 2, hm2⟩\n  have hm_even : 2 ∣ m := Nat.Prime.dvd_of_dvd_pow Nat.prime_two hm2dvd\n  -- 与 gcd(p, m) = 1 矛盾\n  have hcop : p.Coprime m := q.reduced\n  have hgcd : 2 ∣ p.gcd m := Nat.dvd_gcd ⟨k, hk⟩ hm_even\n  rw [hcop] at hgcd\n  omega"
     },
-    "note": "两侧都走同一套步骤：反证取得唯一既约分数 p/q，由 p² = 2q² 推出 p、q 同为偶数，与 gcd(p,q)=1 矛盾。Lean 另有 mathlib_theorem 路线（直接引用 irrational_sqrt_two），仅用于对照“引用现成定理”与“重新检查证明”的差别，不作为主表口径。",
-    "primary_method": "scratch"
+    "note": "两侧走同一套步骤：反证取得唯一既约分数 p/q，由 p² = 2q² 推出 p、q 同为偶数，与 gcd(p,q)=1 矛盾。"
   },
   {
     "id": "set_union_inter_distrib",
@@ -52,17 +50,6 @@
     "lean": "∀ (f : Real → Real) (x : Real), f x ∈ Set.range f",
     "methods": {
       "lemma": "fun f x => Set.mem_range_self x"
-    }
-  },
-  {
-    "id": "function_comp_assoc",
-    "domain": "函数",
-    "label": "复合的结合律",
-    "litex": "forall f,g,h fn(t R) R:\n    compose(compose(f,g),h)=compose(f,compose(g,h))",
-    "lean": "∀ f g h : Real → Real, (f ∘ g) ∘ h = f ∘ (g ∘ h)",
-    "methods": {
-      "term": "fun _ _ _ => rfl",
-      "lemma": "fun f g h => Function.comp_assoc f g h"
     }
   },
   {

@@ -1,0 +1,10 @@
+# Package the four checked squares as a reusable theorem and apply it at 2.
+thm interval_squares_checked:
+    ? forall x range(0, 4):
+        x * x <= 9
+    by for:
+        ? forall n range(0, 4):
+            n * n <= 9
+        n * n <= 9
+
+by thm interval_squares_checked(2) => 2 * 2 <= 9

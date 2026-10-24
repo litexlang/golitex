@@ -1,0 +1,12 @@
+# Define a quarter-turn and prove that applying it twice negates any complex input.
+have fn rotate(z C) C = i * z
+
+thm half_turn:
+    ? forall z C:
+        rotate(rotate(z)) = -z
+    rotate(rotate(z)) = i * rotate(z)
+    rotate(z) = i * z
+    i * rotate(z) = i * (i * z)
+    i * (i * z) = -z
+
+by thm half_turn(1 + i) => rotate(rotate(1 + i)) = -(1 + i)

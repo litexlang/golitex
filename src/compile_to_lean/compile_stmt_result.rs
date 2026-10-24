@@ -38,7 +38,9 @@ impl LitexToLeanCompiler {
             }
             ExecStmtResult::Trust(_) => Err(LeanCompileError::unsupported("Trust")),
             ExecStmtResult::By(result) => self.compile_by_statement(result, position, index, local),
-            ExecStmtResult::Register(_) => Err(LeanCompileError::unsupported("Register")),
+            ExecStmtResult::Register(result) => {
+                self.compile_register_statement(result, position, index, local)
+            }
             ExecStmtResult::ReleaseAndExpand(result) => {
                 self.compile_release_and_expand_statement(result, position, index, local)
             }
@@ -46,8 +48,8 @@ impl LitexToLeanCompiler {
                 ExecProofBlockStmtResult::Claim(claim) => {
                     self.compile_claim_statement(claim, position, index, local)
                 }
-                ExecProofBlockStmtResult::Sketch(_) => {
-                    Err(LeanCompileError::unsupported("ProofBlock/Sketch"))
+                ExecProofBlockStmtResult::Sketch(proof) => {
+                    self.compile_sketch_statement(proof, position, index, local)
                 }
             },
             ExecStmtResult::Command(_) => Err(LeanCompileError::unsupported("Command")),

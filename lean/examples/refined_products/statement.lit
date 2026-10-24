@@ -1,0 +1,7 @@
+# Products and quotients preserve positive reals and nonzero rationals.
+forall a R+, b R+:
+    a * b $in R+
+    a / b $in R+
+forall a Q*, b Q*:
+    a * b $in Q*
+    a / b $in Q*

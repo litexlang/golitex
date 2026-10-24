@@ -1,0 +1,5 @@
+# Define the first entry of a two-term real sequence and expose its formula.
+have fn first(sequence finite_seq(R, 2)) R = sequence(1)
+
+forall sequence finite_seq(R, 2):
+    first(sequence) = sequence(1)

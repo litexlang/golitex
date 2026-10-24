@@ -1,0 +1,13 @@
+# Evaluate complex expressions and divide only after the original nonzero check.
+i $in C
+i != 0
+i * i = -1
+i ^ 2 = -1
+(1 + i) * (1 - i) = 2
+i / i = 1
+1 / i + i = 0
+
+let z = 1 + i
+z = 1 + i
+z * (1 - i) = (1 + i) * (1 - i)
+z * (1 - i) = 2

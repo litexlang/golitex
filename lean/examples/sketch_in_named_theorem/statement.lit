@@ -1,0 +1,14 @@
+# Use a local calculation while checking reflexivity, then cite the theorem in another sketch.
+thm reflexivity:
+    ? forall a R:
+        a = a
+    sketch:
+        a + 0 = a
+
+sketch:
+    have r R
+    by thm reflexivity(r) => r = r
+
+have anchor R
+sketch:
+    by thm reflexivity(anchor) => anchor = anchor

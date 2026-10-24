@@ -1,0 +1,25 @@
+# Standard complex inner product: conjugate the first argument.
+# Outer products are bilinear, and the two norms are Euclidean and Frobenius.
+# Formerly these native interfaces were unavailable. Wrong conjugation rejects.
+# Run: target/release/litex -strict -lang en -f examples/test_objs/finite_inner_product_norm.lit
+
+have fn imaginary_vector(k closed_range(1,1)) C=i
+have fn one_vector(k closed_range(1,1)) R=1
+inner_product(imaginary_vector,imaginary_vector,1)=1
+inner_product(imaginary_vector,one_vector,1)=-i
+inner_product(one_vector,imaginary_vector,1)=i
+outer_product(imaginary_vector,imaginary_vector,1,1)(1,1)=-1
+
+euclidean_norm((3,4),2)=5
+have fn A(r closed_range(1,2),c closed_range(1,2)) R=r+c
+release thm frobenius_norm_square(A,2,2)
+frobenius_norm(A,2,2)^2=38
+release thm inner_product_cauchy_schwarz((1,i),(i,2),2)
+release thm euclidean_norm_triangle((1,i),(i,2),2)
+
+forall n N,u,v cart_n(C,n):
+    euclidean_norm(u,n)*euclidean_norm(v,n) $in R
+
+inner_product(tuple(),tuple(),0)=0
+euclidean_norm(tuple(),0)=0
+frobenius_norm(zero_matrix(0,3),0,3)=0

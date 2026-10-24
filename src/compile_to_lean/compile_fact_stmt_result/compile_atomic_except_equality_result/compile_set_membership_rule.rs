@@ -13,6 +13,81 @@ impl LitexToLeanCompiler {
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
         match rule {
+            InFactSearchProofByBuiltinRule::FiniteSetSubsetMembership(proof) => {
+                let Obj::SetFormer(SetFormer::ListSet(set)) = &proof.source_set else {
+                    return Err(LeanCompileError::unsupported(
+                        "FiniteSetMembership/SourceSet",
+                    ));
+                };
+                if proof.member_in_proofs.len() != set.list.len()
+                    || !matches!(source_subject(&proof.source_membership_proof)?, Fact::AtomicFact(AtomicFact::InFact(f)) if f.element.ir() == fact.element.ir() && f.set.ir() == proof.source_set.ir())
+                {
+                    return Err(LeanCompileError::unsupported(
+                        "FiniteSetMembership/SourceSubject",
+                    ));
+                }
+                let source = self.compile_verify(
+                    &proof.source_membership_proof,
+                    &position.atomic_search_prior(0)?,
+                )?;
+                let mut values = Vec::new();
+                let mut lines = Vec::new();
+                let target = self.compile_object_reference(&fact.set, position)?;
+                for (i, (value, member)) in set.list.iter().zip(&proof.member_in_proofs).enumerate()
+                {
+                    if !matches!(source_subject(member)?, Fact::AtomicFact(AtomicFact::InFact(f)) if f.element.ir() == value.ir() && f.set.ir() == fact.set.ir())
+                    {
+                        return Err(LeanCompileError::unsupported(
+                            "FiniteSetMembership/MemberSubject",
+                        ));
+                    }
+                    let prior = position.atomic_search_prior(i + 1)?;
+                    let member = self.compile_verify(member, &prior)?;
+                    let raw =
+                        self.compile_function_raw_expression_bound(value, &prior, &HashMap::new())?;
+                    lines.push(format!(
+                        "have _finite_member_{i} : M.mem {raw} (Litex.denote {target}) := {}",
+                        member.1
+                    ));
+                    values.push(raw);
+                }
+                let object = self.compile_object_reference(&fact.element, position)?;
+                let x = format!("(Litex.denote {object})");
+                let mut tails =
+                    vec!["(Litex.SetSemantics.emptyValue (M := M))".to_string(); values.len() + 1];
+                for i in (0..values.len()).rev() {
+                    tails[i] = format!(
+                        "(Litex.SetSemantics.insertValue {} {})",
+                        values[i],
+                        tails[i + 1]
+                    );
+                }
+                lines.push(format!(
+                    "have _finite_source : M.mem {x} {} := {}",
+                    tails[0], source.1
+                ));
+                let mut proof =
+                    format!("(False.elim (Litex.SetSemantics.empty_members {x} _finite_tail))");
+                for i in (0..values.len()).rev() {
+                    let member = if i == 0 {
+                        "_finite_source"
+                    } else {
+                        "_finite_tail"
+                    };
+                    proof = format!("(Or.elim ((Litex.SetSemantics.insert_members {} {} {x}).mp {member}) (fun _finite_case => (show M.mem {x} (Litex.denote {target}) from Eq.mpr (congrArg (fun _v => M.mem _v (Litex.denote {target})) _finite_case) _finite_member_{i})) (fun _finite_tail => {proof}))", values[i], tails[i+1]);
+                }
+                if values.is_empty() {
+                    proof = format!(
+                        "(False.elim (Litex.SetSemantics.empty_members {x} _finite_source))"
+                    );
+                }
+                lines.push(format!("exact {proof}"));
+                Ok(format!(
+                    "(by\n  {}\n)",
+                    lines.join("\n").replace('\n', "\n  ")
+                ))
+            }
+
             InFactSearchProofByBuiltinRule::ListSetElementMembership(proof) => {
                 let Obj::SetFormer(SetFormer::ListSet(set)) = &fact.set else {
                     return Err(LeanCompileError::new(

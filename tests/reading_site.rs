@@ -220,3 +220,85 @@ fn site_chapters_preserve_the_complete_bundle_and_reference_closure() {
     );
     fs::remove_dir_all(directory).unwrap();
 }
+
+#[test]
+fn localized_titles_survive_export_without_changing_proofs() {
+    let nonce = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_nanos();
+    let directory = std::env::temp_dir().join(format!(
+        "litex-reading-titles-{}-{nonce}",
+        std::process::id()
+    ));
+    fs::create_dir_all(&directory).unwrap();
+    let source = directory.join("chapter.lit");
+    fs::write(&source, "1 = 1\n").unwrap();
+    let before = build_reading(
+        &ReadingInput::File(source.clone()),
+        true,
+        OutputLanguage::English,
+    );
+    assert!(before.success);
+    let labels = directory.join("reading-titles.json");
+    fs::write(&labels, r#"{"kind":"reading_titles","sources":{"chapter.lit":{"zh":"一个等式","en":"An equality"},"other.lit":{"zh":"另一个例子"}}}"#).unwrap();
+    let after = build_reading(
+        &ReadingInput::File(source.clone()),
+        true,
+        OutputLanguage::English,
+    );
+    assert!(after.success);
+    for key in ["statements", "facts", "occurrences", "input_digest"] {
+        assert_eq!(
+            before.document.field(key),
+            after.document.field(key),
+            "{key}"
+        );
+    }
+    let record = &after.document.field("sources").as_array().unwrap()[0];
+    assert_eq!(
+        record.field("titles").field("zh").as_str().unwrap(),
+        "一个等式"
+    );
+    assert_eq!(
+        record.field("titles").field("en").as_str().unwrap(),
+        "An equality"
+    );
+    assert_eq!(record.field("path").as_str().unwrap(), "chapter.lit");
+    assert_ne!(
+        before.document.field("bundle_id"),
+        after.document.field("bundle_id")
+    );
+    let site = directory.join("site");
+    export_reading(&site, &after.document).unwrap();
+    let manifest =
+        JsonValue::parse(&fs::read_to_string(site.join("reading.manifest.json")).unwrap()).unwrap();
+    assert_eq!(
+        manifest.field("sources").as_array().unwrap()[0].field("titles"),
+        record.field("titles")
+    );
+    // Missing, unrelated, malformed or oversized sidecars cannot change a proof.
+    for content in [
+        "not JSON".into(),
+        r#"{"kind":"reading_titles","sources":{"other.lit":{"en":"Other"}}}"#.into(),
+        " ".repeat(65_537),
+    ] {
+        fs::write(&labels, content).unwrap();
+        let fallback = build_reading(
+            &ReadingInput::File(source.clone()),
+            true,
+            OutputLanguage::English,
+        );
+        assert!(fallback.success);
+        assert!(fallback.document.field("sources").as_array().unwrap()[0]
+            .as_object()
+            .unwrap()
+            .get("titles")
+            .is_none());
+        assert_eq!(
+            before.document.field("facts"),
+            fallback.document.field("facts")
+        );
+    }
+    fs::remove_dir_all(directory).unwrap();
+}

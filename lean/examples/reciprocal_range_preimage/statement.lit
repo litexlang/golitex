@@ -1,0 +1,13 @@
+# Every value of the reciprocal function has a nonzero real preimage.
+have fn reciprocal(x R: x != 0) R = 1 / x
+forall y fn_range(reciprocal):
+    exist x R st {x != 0, y = reciprocal(x)}
+have by fn_preimage: a from reciprocal(2) $in fn_range(reciprocal)
+a != 0
+
+thm local_preimage:
+    ? forall y fn_range(reciprocal):
+        y $in R
+    have by fn_preimage: b from y $in fn_range(reciprocal)
+    b != 0
+    y = reciprocal(b)

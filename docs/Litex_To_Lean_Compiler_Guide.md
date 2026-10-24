@@ -44,6 +44,8 @@ target/release/litex -strict -lean -f lean/examples/one_equals_itself/statement.
 The second command writes Lean source to stdout. Generating that source and
 checking it with the Lean kernel are separate steps.
 
+The [proof-command checkpoint](Litex_To_Lean_Proof_Commands.md) adds paired examples for compound contradiction, set/function extensionality, strong induction, finite enumeration and midpoint geometry. It records the checked scope and each adapter's current domain boundaries.
+
 ## Explore the example collection
 
 For the shortest complete source/generated/Adapter/Final walkthrough, start
@@ -682,6 +684,26 @@ remain available to subsequent field projections. Proof arguments still come
 from the recorded verification steps. Sharing these constructors and citations
 reduces the output while preserving the checked proof route.
 
+`Litex.SelectedFn` supplies the semantic construction for a function specified
+by unique existence. Its payload contains a `FunctionSignature` and an output
+predicate; its WD proof establishes exactly one output for every input in the
+declared domain. The denotation is a set-theoretic function graph, independent
+of the supplied WD proof. No output inhabitant is required outside the domain.
+
+`existsUniqueValueOfObjects` converts canonical Litex witnesses and pairwise
+`Same` uniqueness to uniqueness of their denotations. `selectedFn_call_spec`
+proves that a call satisfies the output predicate, and `selectedFn_unique`
+identifies any other admissible output with that call. These laws follow from
+the existing `FunctionSemantics` interface without new model fields or axioms.
+The compiler consumes `have fn … by exist!` through
+`compile_have_fn_by_exist_result.rs`. It replays `source_forall` and
+`fn_set_well_defined`, constructs the function, then publishes the captured
+membership, property and uniqueness facts under their original FactIds.
+`property_well_defined` supplies the original input bindings and constructors
+when a later call reuses the property. No second proof search or function
+registry is introduced. Local declarations and unsupported function signatures
+still reject explicitly.
+
 ## Citations and assumptions retain their scopes
 
 In the division example, `b != 0` belongs to the universal theorem's local
@@ -1149,16 +1171,374 @@ examples also expose ordinary Lean/Mathlib theorems through handwritten adapters
 
 | Mathematical layer | Current coverage | Corresponding examples |
 | --- | --- | --- |
-| Numbers | ℕ, ℤ, ℚ, ℝ, ℂ and their inclusions, plus positive reals; parameters can be arbitrary members of their domains. | [Numeric hierarchy](../lean/examples/numeric_hierarchy/), [positive-real functions](../lean/examples/newton_positive_update/) |
+| Numbers | ℕ, ℤ, ℚ, ℝ, ℂ and the supported positive, negative and nonzero subsets: all 15 source number sets are represented; parameters retain their original host representations. | [Numeric hierarchy](../lean/examples/numeric_hierarchy/), [signed/nonzero domains](../lean/examples/signed_numeric_domains/), [subset statements](../lean/examples/signed_numeric_subsets/) |
 | Operations and relations | Exact fractions and finite decimals, four arithmetic operations, polynomial and rational identities, cancellation; selected fixed integer powers and real inequalities. | [Fractions and decimals](../lean/examples/exact_fractions_and_decimals/), [difference of squares](../lean/examples/real_difference_of_squares/), [cancellation](../lean/examples/multiplicative_cancellation/), [nonnegative squares](../lean/examples/real_squares_nonnegative/) |
 | Sets | Arbitrary set parameters, empty sets, finite enumerations, bounded set builders, membership, subsets and associated reasoning. | [Arbitrary sets](../lean/examples/arbitrary_set_laws/), [finite sets](../lean/examples/finite_natural_set/), [closed unit interval](../lean/examples/closed_unit_interval/) |
 | Functions | Formula functions with one or two numeric parameters, explicit domain conditions, evaluation and composition; complete inverse and injectivity examples. | [Guarded two-argument function](../lean/examples/two_argument_shifted_quotient/), [composition](../lean/examples/composed_real_formula/), [rational inverse maps](../lean/examples/rational_inverse_maps/) |
-| Definitions and proofs | Concrete predicates, universal and conditional facts, equality chains, selected conjunctions, named theorems and calls, local objects, `let` and `claim`. | [Predicate equality transport](../lean/examples/concrete_predicate_equality_transport/), [theorem returns and calls](../lean/examples/named_compound_theorem_returns/), [local objects](../lean/examples/local_witness_additive_identity/), [claim and positive return domain](../lean/examples/newton_positive_update/) |
+| Definitions and proofs | Concrete predicates, universal and conditional facts, equality chains, selected conjunctions, named theorems and calls, local objects, `let`, `claim` and `sketch`. | [Predicate equality transport](../lean/examples/concrete_predicate_equality_transport/), [theorem returns and calls](../lean/examples/named_compound_theorem_returns/), [local objects](../lean/examples/local_witness_additive_identity/), [claim and positive return domain](../lean/examples/newton_positive_update/) |
+
+`sketch:` checks its body in a discarded scope. The compiler replays every child
+result inside a private Lean proof block, retaining outer citations and original
+WD IDs. It publishes no source facts from that block. See [local arithmetic](../lean/examples/local_arithmetic_sketch/),
+[nested blocks](../lean/examples/nested_arithmetic_sketch/),
+[theorem citations](../lean/examples/sketch_in_named_theorem/),
+[tuple coordinates](../lean/examples/local_tuple_sketch/) and
+[finite-set membership](../lean/examples/local_finite_set_sketch/).
+
+Finite integer intervals support `expand:` as well:
+
+```litex
+claim:
+    ? forall x range(1, 3):
+        x = 1 or x = 2
+    expand: x $in range(1, 3)
+```
+
+The compiler consumes the stored membership, complete ordered enumeration and
+returned disjunction. `range(a, b)` excludes `b`; `closed_range(a, b)` includes
+it. Their constructors carry integer endpoint evidence, and inferred bounds
+retain their original FactIds. See the [source/generated pair](../lean/examples/expand_half_open_integer_range/)
+and the [square-bound theorem](../lean/examples/integer_range_square_bound/),
+which reuses the alternatives in `by cases`. Seven interval examples pass Lean
+4.31.0, including negative values, singletons and calculated endpoints. Expansion
+requires exact closed integer endpoints and 1–1,024 values; interval construction
+and bound projections also accept arbitrary integer endpoints.
+
+`by for` and `by enumerate finite_set` check independent parameters over displayed
+finite sets and integer intervals:
+
+```litex
+by for:
+    ? forall n range(0, 4):
+        n * n <= 9
+    n * n <= 9
+```
+
+Each recorded assignment supplies its own binding, assumptions and proof steps.
+The compiler checks complete ordered coverage and cites each emitted conclusion.
+See the [four square values](../lean/examples/integer_range_square_values/),
+[nonzero division with a skipped zero case](../lean/examples/guarded_integer_range_division/)
+and [a loop inside a reusable theorem](../lean/examples/named_integer_range_enumeration/).
+Empty intervals, negative values, singletons and calculated endpoints are also
+covered. Several parameters may share a domain or use different domains:
+
+```litex
+by for:
+    ? forall x range(0, 3), y range(0, 2):
+        x * x + y * y <= 5
+    x * x + y * y <= 5
+```
+
+See the [rectangular square bound](../lean/examples/integer_rectangle_square_bound/),
+[two nonzero guards](../lean/examples/nonzero_integer_pair_division/) and
+[three parameters in mixed domains](../lean/examples/finite_triple_product/).
+The last parameter varies fastest. The compiler checks the entire recorded
+product, capped at 1,024 assignments, before replaying any branch. Dependent
+enumeration domains remain unsupported. Existing child-statement restrictions still apply;
+for example, a local `have fn` declaration remains unsupported.
+
+`release obj def` republishes definition facts by citing their original proof
+IDs. It supports `let`, arbitrary carrier/set introductions, typed equalities,
+plain-existential choices and formula functions. See [values and aliases](../lean/examples/released_value_definitions/),
+[a guarded reciprocal](../lean/examples/released_reciprocal_definition/),
+[a chosen witness](../lean/examples/released_witness_definition/) and
+[local definitions](../lean/examples/released_local_definitions/).
+These pairs pass Lean; local facts retain their original scope. Qualified names
+and other definition families remain unsupported; tuple-definition release is
+covered below.
+
+`finite_seq(A, n)` supports arbitrary set carriers and natural lengths, including
+zero. Its exact domain is `closed_range(1, n)`. The compiler replays the original
+inferred function-set membership once under its FactId; later calls cite it.
+See [sequence spaces](../lean/examples/finite_sequence_spaces/),
+[legal indices](../lean/examples/finite_sequence_coordinates/) and
+[a first-entry function](../lean/examples/finite_sequence_first/). All three
+source/generated pairs pass Lean. Infinite sequences remain a separate extension.
+
+`release tuple def` publishes a tuple's finite-sequence membership and coordinate
+facts. It supports literals, aliases, empty and singleton tuples, Cartesian
+members and use inside a theorem. See [pair coordinates](../lean/examples/released_tuple_coordinates/),
+[boundary lengths and mixed entries](../lean/examples/released_finite_tuples/),
+[Cartesian members](../lean/examples/released_cartesian_coordinates/) and
+[a local tuple theorem](../lean/examples/released_local_tuple/). These four pairs
+pass Lean. The compiler uses the result's original domain, return proofs and
+coordinate proofs, then emits the stored FactIds.
+
+`release cart def` connects the product to its complete bounded definition:
+`cart(R,Z) = {p finite_seq(union(R,Z),2): p(1) $in R, p(2) $in Z}`.
+See [the definition and its citation](../lean/examples/released_cartesian_definition/),
+[empty and single-factor products](../lean/examples/empty_and_single_cartesian_products/),
+[arbitrary sets](../lean/examples/generic_cartesian_definitions/) and
+[a reusable theorem](../lean/examples/local_cartesian_definition/). These pairs
+pass Lean. The compiler retains exact length, factor order and every coordinate
+condition. Set parameters in theorem calls consume their original sethood proofs.
 
 Further checked pairs show [expansion of a set-valued function](../lean/examples/set_function_expansion/),
 [a line member satisfying its determinant equation](../lean/examples/line_membership_condition/),
 and [arithmetic with an obtained real witness](../lean/examples/obtained_real_square/).
 Each includes the source and actual compiler output checked by Lean.
+
+The latest checked pairs add [two-way quantified implications](../lean/examples/equivalence_directions/),
+[verified relation registration](../lean/examples/registered_equality/), and
+[real minimum and maximum](../lean/examples/real_min_max/). They cover local
+equivalence facts, predicates on arbitrary set objects, all three registration
+declarations, min/max symmetry and idempotence, and real/integer membership.
+Further pairs cover [exact min/max evaluation](../lean/examples/min_max_evaluation/)
+and [operand bounds and monotonicity](../lean/examples/min_max_bounds/). The latter
+retains both input comparisons, including the case where one operand stays
+fixed. [Conditional selection](../lean/examples/ordered_min_max_selection/)
+consumes the recorded order premise for either operand and equality orientation.
+[Lower/upper functions](../lean/examples/ordered_min_max_functions/) combine
+formula bodies, call unfolding, a concrete predicate, conditional named theorems,
+aliases and theorem calls. Registered transitive-chain inference remains separate work.
+
+[Real sign](../lean/examples/real_sign/) adds exact values, integer membership
+and positive/negative conditional equalities. The
+[shifted direction function](../lean/examples/shifted_sign_function/) uses sign
+inside a formula body and a nested function call. Its denotation is bridged to
+Mathlib's `Real.sign`. [Products](../lean/examples/sign_product/) and
+[negation](../lean/examples/sign_negation/) now replay their selected identities,
+including reversed equalities and the producer's supported negation spellings.
+[Magnitude reconstruction](../lean/examples/signed_magnitude/) proves
+`sign(x) * abs(x) = x` and `abs(x) = sign(x) * x` for arbitrary real members.
+The [direction and magnitude functions](../lean/examples/direction_magnitude_functions/)
+reuse these laws in a named theorem and in a product of function calls.
+
+[Floor and ceiling](../lean/examples/rounding_integers/) preserve integer values
+and compute exact fractions, including `floor(-3 / 2) = -2` and
+`ceil(-3 / 2) = -1`. Their [bounds and monotonicity](../lean/examples/rounding_bounds/)
+use proved bridges to `Int.floor` and `Int.ceil` with the original real-domain
+and order evidence. [Rounding functions](../lean/examples/shifted_rounding_function/)
+combine `have fn`, nested calls, a parameterized `thm` and `by thm`.
+
+[Integer quotient and remainder](../lean/examples/signed_integer_division/)
+include negative dividends and nonzero negative moduli. Quotient divisors
+retain their positive-natural domain. The [decomposition example](../lean/examples/quotient_remainder_decomposition/)
+proves `a = d * quot(a, d) + a % d` and the remainder bounds for arbitrary
+`a ∈ Z`, `d ∈ N+`. [Division functions](../lean/examples/integer_division_functions/)
+show explicit function expansion, argument equality transport and named theorem
+reuse. `have d N+` and function parameters preserve the original sign and
+nonzero inference IDs, which subsequent WD can cite.
+
+[Gcd/lcm](../lean/examples/gcd_lcm_values/) now preserve signed integer inputs,
+`gcd`'s nonzero-pair condition, and the distinct `N+`/`N` codomains. The
+[identity examples](../lean/examples/gcd_lcm_identities/) include commutativity,
+absolute values and the product law; the [Euclidean step](../lean/examples/gcd_euclidean_step/)
+reuses the checked remainder construction. Their proved bridges use `Int.gcd`
+and `Int.lcm`. The [function example](../lean/examples/gcd_lcm_functions/)
+combines guarded `have fn`, a named `thm`, `by thm` and argument-equality reuse.
+Each pair has passed actual Lean checking.
+
+[Factorial](../lean/examples/factorial_values/) keeps its natural argument proof
+and positive-natural range. [Recurrences](../lean/examples/factorial_identities/)
+and [order rules](../lean/examples/factorial_order/) use proved `Nat.factorial`
+bridges; strict monotonicity keeps the positive smaller-argument condition.
+The [permutation-count function](../lean/examples/factorial_function/) retains
+those domains in its declaration and call.
+
+The source literal `i` uses `Complex.I` in the existing number wrapper.
+[Exact calculations and aliases](../lean/examples/imaginary_unit_values/) check
+both complex coordinates. [Symbolic polynomial identities](../lean/examples/complex_polynomial_identity/)
+consume the selected Complex result with fixed coordinate normalization.
+The [quarter-turn example](../lean/examples/complex_rotation/) defines
+`rotate(z) = i * z` and uses a named theorem to prove that two calls give `-z`.
+These generated pairs pass Lean.
+
+[Signed and nonzero numeric sets](../lean/examples/signed_numeric_values/)
+now include `Q+`, `Q-`, `Z-`, `R-`, `Q*`, `Z*`, `R*` and `C*`.
+[`have` declarations](../lean/examples/signed_numeric_declarations/) and
+[arbitrary parameters](../lean/examples/signed_numeric_domains/) publish the
+original sign/nonzero FactIds for later WD. [Conditional refinement](../lean/examples/refined_numeric_membership/)
+consumes the recorded base membership and guard. [Functions](../lean/examples/signed_numeric_functions/)
+retain these domains and codomains on the existing Litex call object.
+The sets are bounded separations in `SetSemantics`; no model fields or axioms
+are added. [Direct subset statements](../lean/examples/signed_numeric_subsets/)
+replay the selected standard-inclusion rule.
+
+[Positive and nonzero products/quotients](../lean/examples/refined_products/)
+retain their refined membership through the original operand proofs and WD.
+The [rational reciprocal](../lean/examples/nonzero_rational_reciprocal/),
+[positive scaling functions](../lean/examples/positive_scaling_functions/) and
+[reciprocal-product theorem](../lean/examples/nonzero_rational_product_theorem/)
+combine these codomains with nested calls and named theorem reuse.
+[Numeric nonmembership](../lean/examples/numeric_nonmembership/) includes
+`not 1 / 3 $in Z` and `not i $in R`;
+[finite nonmembership](../lean/examples/finite_nonmembership/) includes
+`not 4 $in {1, 2, 3}` and disequality from membership in the same set.
+All six generated pairs pass Lean.
+
+[Negated universals](../lean/examples/not_every_element_is_one/) now replay
+counterexample existence proofs. The [reciprocal example](../lean/examples/reciprocal_counterexample/)
+keeps the nonzero guard; [multiple conclusions](../lean/examples/incompatible_universal_equalities/)
+and [alternatives](../lean/examples/alternatives_counterexample/) use the recorded
+De Morgan transformation. [Real counterexamples](../lean/examples/real_counterexamples/)
+include arbitrary free objects, multiple bound variables, order and a local
+theorem. The inference's existence fact has its own original `h_<fact_id>`.
+Negated premises and contradiction goals also consume their retained formation
+evidence; examples appear below.
+
+[Negative existence](../lean/examples/no_one_in_zero_singleton/) now compiles
+through a recorded contradiction proof and exact later fact citations. The
+[reciprocal example](../lean/examples/nonzero_reciprocal_reflexivity/) obtains
+a witness with its real membership and nonzero guard before using division.
+[A reusable theorem](../lean/examples/incompatible_existential_equalities/)
+also exercises `claim` and `by thm`; [an alternative body](../lean/examples/no_self_unequal_alternative/)
+keeps the runtime's decision not to produce a De Morgan inference. All four
+source/generated pairs pass strict source verification, identical regeneration
+and Lean 4.31.0; generated files are 2,162–14,099 bytes. The compiler emits any
+recorded De Morgan forall under its original FactId, deriving it from the
+negative existential. This increment adds no semantic-model fields or axioms.
+Automatic applications of a universal negative-existence theorem are covered below.
+
+[Unique existence](../lean/examples/unique_real_zero/) now consumes both the
+witness and its recorded uniqueness proof. The generated meaning is existence
+conjoined with pairwise `Litex.Same` uniqueness. [Two coordinates](../lean/examples/unique_real_pair/)
+use the original tuple equality and derive the stored componentwise equalities.
+[A reciprocal value](../lean/examples/unique_reciprocal_value/) retains the
+free object's host representation and nonzero-domain evidence.
+[A saved theorem and claim](../lean/examples/unique_real_theorem/) and
+[a universally quantified theorem call](../lean/examples/unique_copy_theorem/)
+exercise reuse and `obtain`. All five pairs pass strict source verification,
+identical regeneration and Lean 4.31.0; generated files are 11,601–30,010 bytes.
+All 45 exported declarations use only standard axioms. No Core or semantic-model
+fields were added. The bijective-preimage builtin remains unsupported;
+unique-existence function declarations are covered below.
+
+Automatic theorem lookup now replays universal conclusions in all three
+existential families. Four pairs cover [a unique copy](../lean/examples/automatic_unique_copy/),
+[a nonzero reciprocal](../lean/examples/automatic_unique_reciprocal/),
+[a pair of coordinates](../lean/examples/automatic_unique_pair/), and
+[an excluded copy](../lean/examples/automatic_excluded_copy/). The coordinate
+example also uses unique existence as ordinary existence, both through a saved
+fact and through a universal theorem. The compiler checks the original citation,
+conclusion position, parameter substitution, argument-match evidence and domain
+proofs. It retains Runtime's requirement that the instantiated existential body
+matches the goal up to bound-name renaming. All four pairs pass strict source
+verification, identical regeneration and Lean 4.31.0; their generated files are
+6,206–24,063 bytes. This increment changes compiler consumers only.
+
+Functions can now be selected from a proved unique-output specification using
+`have fn … by exist!`. Four source/generated pairs cover
+[identity](../lean/examples/selected_identity_function/),
+[a guarded reciprocal](../lean/examples/selected_reciprocal_function/),
+[two-input addition](../lean/examples/selected_sum_function/), and
+[identity on an arbitrary set](../lean/examples/selected_set_identity_function/).
+The last example does not assume the set is inhabited. Calls cite the stored
+property, including the final calculation `selected(2, 3) = 5`.
+All four pass strict Litex and Lean 4.31.0; generated files are
+12,928–28,112 bytes. The declaration currently requires one output witness,
+uses the existing supported function domains, and is restricted to top level.
+
+`by contra` now accepts `forall` and `not forall` goals with the supported
+quantifier-free bodies, including [nonzero reciprocal guards](../lean/examples/contradiction_with_reciprocal_guard/).
+A [negated universal premise](../lean/examples/negated_universal_premise/) can
+also supply a counterexample to `obtain` inside a named theorem. The compiler
+replays the original WD and assumption stores, keeping their FactIds and local
+visibility. Four new pairs pass actual Lean checks; generated files are
+2,407–7,953 bytes. These cases use atomic contradiction closings.
+
+Unique-existence goals also compile through `by contra`. Examples cover
+[two coordinates](../lean/examples/unique_pair_by_contradiction/),
+[a guarded reciprocal](../lean/examples/unique_guarded_value_by_contradiction/),
+[a reusable theorem](../lean/examples/unique_copy_by_contradiction/),
+[set objects](../lean/examples/unique_set_copy_by_contradiction/) and
+[a dependent carrier](../lean/examples/unique_dependent_pair_by_contradiction/).
+The compiler preserves the recorded alternative-witness assumption and proves
+uniqueness using equality of denotations. All six pairs pass actual Lean.
+
+Contradictions can also close with a complete quantified formula:
+[`impossible forall …`](../lean/examples/universal_contradiction_closing/),
+[a nonzero guard](../lean/examples/guarded_universal_contradiction_closing/),
+[`impossible not forall …`](../lean/examples/counterexample_contradiction_closing/),
+and [`impossible exist! …`](../lean/examples/unique_contradiction_closing/),
+including [two unique coordinates](../lean/examples/unique_pair_contradiction_closing/).
+Both original closing proofs are replayed before applying their logical contradiction.
+A [named counterexample theorem](../lean/examples/named_counterexample/) can be
+invoked and its inferred existence fact consumed by `obtain`.
+
+A local universal assumption is stored over `M.Value`. Each citation converts
+its supplied objects to semantic representatives, preserving membership/domain
+FactIds and leaving the source objects' representations unchanged. This lets
+[one assumption be used at a numeral and then at a semantic witness](../lean/examples/counterexample_after_universal_use/)
+without fixing its callers to one Lean universe. These seven new pairs and nine
+neighboring pairs pass strict Litex, identical regeneration and Lean 4.31.0;
+43 exported declarations use only the standard axioms. The new generated files
+are 3,712–23,575 bytes. Runtime, result types and `Litex.lean` are unchanged.
+
+`have fn … by cases` also compiles: examples cover
+[absolute value](../lean/examples/piecewise_absolute_value/),
+[a reciprocal extended to zero](../lean/examples/piecewise_total_reciprocal/),
+[two-input maximum](../lean/examples/piecewise_larger_value/) and
+[a reciprocal magnitude with a nonzero domain](../lean/examples/piecewise_inverse_magnitude/).
+The declaration consumes the original coverage, disjointness and return-WD
+checks. A call retains the selected guard proof and cites the stored branch
+equation. All four generated files pass Lean 4.31.0 and are about 14–35 KB.
+This checked slice covers top-level declarations with one or two real inputs
+and two branches; the reciprocal example also proves its equation for an
+arbitrary nonzero input. `Litex.lean` derives the piecewise graph and call law
+from existing function semantics, without new model assumptions.
+
+Mapping properties now replay their original definition proofs and inferred
+facts: `$injective(A, B, f)`, `$surjective(A, B, f)` and `$bijective(A, B, f)`.
+Examples prove the [real identity is bijective](../lean/examples/identity_bijection/),
+[use mapping properties as premises](../lean/examples/mapping_property_inference/),
+and [prove translation by one is bijective](../lean/examples/shift_bijection/).
+The [unique-preimage example](../lean/examples/bijective_unique_preimages/) works
+with arbitrary sets and a unary function, in either equation orientation.
+Its selected builtin consumes the stored bijection certificate and target
+membership; inferred facts keep their original FactIds. `Litex.lean` defines
+these properties over semantic values and proves the bridges from existing
+function laws, with no new model fields or axioms. The four generated files
+pass Lean 4.31.0, occupy 13–27 KB and export 28 audited theorems.
+This slice checks exact unary callable signatures; carrier-equality and
+finite-prefix WD alternatives remain separate compiler work.
+
+Function ranges and preimage declarations now compile too:
+
+```litex
+have fn shift(x R) R = x + 1
+shift(2) $in fn_range(shift)
+have by fn_preimage: a from shift(2) $in fn_range(shift)
+a $in R
+shift(a) = shift(2)
+```
+
+See the paired [shift example](../lean/examples/shift_range_preimage/),
+[nonzero reciprocal preimages](../lean/examples/reciprocal_range_preimage/),
+[two-input preimages](../lean/examples/sum_range_preimage/) and
+[range members on arbitrary sets](../lean/examples/function_range_members/).
+These include a preimage declaration inside a named theorem. Each passes strict
+Litex, identical regeneration and Lean 4.31.0; the files occupy 9–55 KB.
+
+`fn_range(f)` denotes the range of the semantic graph, independently of which
+function signature supplies its WD. `Litex.lean` derives this set and its
+membership/preimage laws from existing separation and function-graph laws.
+The source producers now retain the signature and exact property FactId they
+already selected, plus the actual preimage parameter list. The compiler uses
+these and the ordered returned membership/guard/equality stores; it does not
+search for a new signature. A preimage declaration supplies its call constructor
+from those stores, and its existence proof is emitted once and then cited.
+Runtime storage, proof search and the source AST are unchanged.
+
+The range builtin also accepts [anonymous function calls](../lean/examples/anonymous_function_ranges/),
+including a two-input quotient with a nonzero guard. It consumes the original
+function-equality certificate and call WD. Renaming a literal's bound parameters
+is checked as alpha-equivalence before the corresponding Lean reflexivity proof.
+
+Preimages now retain [positive-real membership](../lean/examples/positive_range_preimage/),
+including [two positive coordinates](../lean/examples/positive_pair_preimage/) and
+[positive inputs with two explicit conditions](../lean/examples/guarded_positive_preimage/).
+The latter also obtains a preimage inside a named theorem. The compiler splits
+the signature's ordered positivity and explicit guards, restores each `R+`
+membership, then exports the original condition FactIds. These four additional
+pairs pass strict Litex, identical regeneration and Lean 4.31.0; their generated
+files occupy 15–95 KB. Core semantics and result producers are unchanged.
+
+Dependent input domains and other complete-domain evidence variants remain
+outside these checks. A nested anonymous function that captures a raw enclosing
+function parameter, such as `have fn outer(x R) R = fn(y R) R {x + y}(1)`, still
+rejects explicitly: its original constructor must be instantiated along with the
+outer binder before that route can be compiled.
 
 Coverage refers to implemented and checked constructions and proof routes;
 it does not mean every Litex proof in this mathematical area can be compiled.

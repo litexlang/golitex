@@ -1,0 +1,2 @@
+have S set = {1, 2}
+have fn reciprocal(x R: x != 0) R = 1 / x

@@ -1,0 +1,35 @@
+# Equality is reflexive, symmetric and transitive on arbitrary Litex objects.
+prop lean_eqrel(x, y set):
+    x = y
+
+register reflexive:
+    ? forall reg_x set:
+        $lean_eqrel(reg_x, reg_x)
+
+register symmetric:
+    ? forall reg_x, reg_y set:
+        $lean_eqrel(reg_x, reg_y)
+        =>:
+            $lean_eqrel(reg_y, reg_x)
+
+register transitive:
+    ? forall reg_x, reg_y, reg_z set:
+        $lean_eqrel(reg_x, reg_y)
+        $lean_eqrel(reg_y, reg_z)
+        =>:
+            $lean_eqrel(reg_x, reg_z)
+
+$lean_eqrel(1, 1)
+
+forall reg_a, reg_b, reg_c set:
+    $lean_eqrel(reg_a, reg_b)
+    $lean_eqrel(reg_b, reg_c)
+    =>:
+        $lean_eqrel(reg_a, reg_c)
+
+thm locally_registered_equality:
+    ? forall reg_t set:
+        $lean_eqrel(reg_t, reg_t)
+    register reflexive:
+        ? forall local_reg_t set:
+            $lean_eqrel(local_reg_t, local_reg_t)

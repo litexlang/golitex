@@ -1,0 +1,10 @@
+# Two nonzero integers in {-1, 0, 1} each divide themselves to 1.
+by for:
+    ? forall x, y closed_range(-1, 1):
+        x != 0
+        y != 0
+        =>:
+            x / x = 1
+            y / y = 1
+    x / x = 1
+    y / y = 1

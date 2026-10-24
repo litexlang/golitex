@@ -1,0 +1,9 @@
+# Prove unique copies for arbitrary real inputs, then invoke the theorem.
+thm unique_copy:
+    ? forall seed R:
+        exist! x R st {x = seed}
+    by contra:
+        ? exist! x R st {x = seed}
+        obtain other from exist y R st {y = seed, y != seed}
+        impossible other != seed
+by thm unique_copy(3)

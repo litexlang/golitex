@@ -1,0 +1,25 @@
+# Observe function results without changing their refined source carriers.
+have fn identity_0(x Q+) Q+ = x
+forall x Q+:
+    identity_0(x) + 0 = identity_0(x)
+have fn identity_1(x Q-) Q- = x
+forall x Q-:
+    identity_1(x) + 0 = identity_1(x)
+have fn identity_2(x Z-) Z- = x
+forall x Z-:
+    identity_2(x) + 0 = identity_2(x)
+have fn identity_3(x R-) R- = x
+forall x R-:
+    identity_3(x) + 0 = identity_3(x)
+have fn identity_4(x Q*) Q* = x
+forall x Q*:
+    identity_4(x) + 0 = identity_4(x)
+have fn identity_5(x Z*) Z* = x
+forall x Z*:
+    identity_5(x) + 0 = identity_5(x)
+have fn identity_6(x R*) R* = x
+forall x R*:
+    identity_6(x) + 0 = identity_6(x)
+have fn identity_7(x C*) C* = x
+forall x C*:
+    identity_7(x) + 0 = identity_7(x)

@@ -140,10 +140,14 @@ fn chain_and_whole_forall_denies_future_application_truth_and_instantiates_calle
 
     let source = "forall t R:\n    t=t+0=t\nhave x R=2\nx=x+0=x\n";
     let (mut result, compiler) = super::execute(source);
-    whole_known_mut(&mut result.statement_results[2]);
+    let member_id = whole_known_mut(&mut result.statement_results[2])
+        .instantiation_requirements
+        .param_type_requirements[0]
+        .type_fact
+        .fact_id();
     let output = super::compile_run(&result, &compiler, "instantiated_whole_constructor").unwrap();
     assert!(output.contains("(fun {") && output.contains("Type _") && output.contains("Litex.add"));
-    assert!(output.contains("show Litex.Obj (M := M) _ from by"));
+    assert!(output.contains(&format!("have h_{} : Litex.In", member_id.value())));
     assert!(!output.contains("sorry"));
 }
 

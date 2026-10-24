@@ -1,0 +1,4 @@
+claim:
+    ? forall u fn(k N) Q, c Q:
+        sum(1,64,fn(k N) Q {u(k)+c})=sum(1,64,u)+64*c
+    sum(1,64,fn(k N) Q {u(k)+c})=sum(1,64,fn(k N) Q {u(k)})+sum(1,64,fn(k N) Q {c})=sum(1,64,u)+sum(1,64,fn(k N) Q {c})=sum(1,64,u)+64*c

@@ -1,0 +1,17 @@
+# Calculation
+3 * 8 + 10 = 34
+(3 + 5)^2 = 64
+forall x R:
+    (x + 1)^2 = x^2 + 2 * x + 1
+
+# Comparison
+3 < 5
+forall a, b R:
+    a < b
+    =>:
+        a + 1 < b + 1
+
+# Sets
+2 $in union({1, 2}, {2, 3})
+2 $in intersect({1, 2}, {2, 3})
+intersect({1, 2}, {2, 3}) $subset union({1, 2}, {2, 3})

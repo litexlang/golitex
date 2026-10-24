@@ -491,20 +491,21 @@ fn compound_theorem_returns_do_not_publish_early_packages_during_later_wd() {
 
 #[test]
 fn compound_theorem_returns_keep_caller_wd_outside_closed_and_future_stores() {
-    // Selected equality left WD for `by thm sum_chain` is now a ByDef
-    // reconstruction of `a_sum+0` (no ByKnown cache token on that package).
-    // The future-store attack still applies: a later `let` ByKnown for the same
-    // add must not replace the caller construction.
+    // The invocation's selected proof can reuse its local returned package.
+    // Its separate caller WD precedes the caller store and the later alias;
+    // that stage must not acquire a cache token from either later producer.
     let (mut result, compiler) = super::execute(SUM_CHAIN);
     let call = super::by_theorem(&result.statement_results[2]);
     assert!(
         matches!(
-            &super::equality_proof(&call.selected_proof)
-                .well_defined_proof
-                .left,
+            &match &call.selected_wd {
+                FactWellDefinedProof::Equality(wd) => wd,
+                _ => panic!("original caller equality WD"),
+            }
+            .left,
             ObjWellDefinedProof::ByDef { .. }
         ),
-        "selected proof left is reconstructed by definition"
+        "the caller constructor is checked before publishing its own cache token"
     );
     let VerifyObjWellDefinedResult::Success(wd) =
         &super::let_definition(&result.statement_results[3]).value_well_defined

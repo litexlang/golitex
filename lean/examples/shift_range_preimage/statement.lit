@@ -1,0 +1,6 @@
+# A value of the real shift belongs to its range and has a real preimage.
+have fn shift(x R) R = x + 1
+shift(2) $in fn_range(shift)
+have by fn_preimage: a from shift(2) $in fn_range(shift)
+a $in R
+shift(a) = shift(2)

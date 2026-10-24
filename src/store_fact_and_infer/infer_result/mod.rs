@@ -34,6 +34,8 @@ mod infer_in_fact_equal_fn_set_expand_result;
 mod infer_in_fact_equal_fn_set_transport;
 mod infer_in_fact_family_union_result;
 mod infer_in_fact_finite_seq_expand_result;
+mod infer_in_fact_matrix_expand_result;
+pub use infer_in_fact_matrix_expand_result::InferInFactMatrixExpandResult;
 mod infer_in_fact_fn_range_result;
 mod infer_in_fact_index_cart_result;
 mod infer_in_fact_index_intersect_result;

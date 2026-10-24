@@ -37,6 +37,39 @@ fn forall_source_replay_supports_an_unused_parameter_and_same_spelling() {
         else {
             panic!("selected function");
         };
+        assert_eq!(
+            selected.membership.primary_fact_id(),
+            selected.membership_fact_id
+        );
+        assert_eq!(
+            selected.property.primary_fact_id(),
+            selected.property_forall_fact_id
+        );
+        assert_eq!(
+            selected.uniqueness.primary_fact_id(),
+            selected.uniqueness_forall_fact_id
+        );
+        let stored = [
+            &selected.membership,
+            &selected.property,
+            &selected.uniqueness,
+        ]
+        .into_iter()
+        .flat_map(|store| store.stored_fact_ids())
+        .collect::<Vec<_>>();
+        assert_eq!(stored, selected.stored_fact_ids);
+        assert!(matches!(
+            &selected.property_well_defined,
+            crate::execute::execute_fact_stmt::FactWellDefinedProof::ForallFact(_)
+        ));
+        for field in [
+            "membership",
+            "property_well_defined",
+            "property",
+            "uniqueness",
+        ] {
+            assert!(detail.contains(field), "missing {field}: {detail}");
+        }
         let crate::execute::execute_fact_stmt::VerifyFactResult::ForallFact(source) =
             &selected.source_forall
         else {

@@ -1,0 +1,5 @@
+1 + 1 = 2
+
+exist x R st {x > 10}
+
+sum(1, 3, fn(k Z) Z {k}) = 6

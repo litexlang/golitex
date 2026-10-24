@@ -115,6 +115,8 @@ thm positive_epsilon_has_smaller_delta:
         2 * epsilon / 3 < 3 * epsilon / 3
         3 * epsilon / 3 = epsilon
         2 * epsilon / 3 < epsilon
+        2 * (epsilon / 3) = 2 * epsilon / 3
+        2 * (epsilon / 3) < epsilon
 thm equality_reflexive_demo:
     ? forall x R:
         x = x

@@ -1,0 +1,67 @@
+# 1. A matrix space is an exact finite function space.
+
+forall S set,m,n N:
+    matrix(S,m,n)=fn(r closed_range(1,m),c closed_range(1,n)) S
+
+# 2. A parameter chooses a matrix; a row is an explicit finite vector.
+
+have fn family(t R) matrix(R,2,2)=fn(r closed_range(1,2),c closed_range(1,2)) R {t+r+c}
+
+have fn first_row(t R) cart_n(R,2)=fn(c closed_range(1,2)) R {family(t)(1,c)}
+
+family(0)(1,1)=2
+
+first_row(0)(2)=3
+
+# 3. Both diagonal products vary, but their difference is constant.
+
+claim:
+    ? forall t R:
+        det(family(t),2)=-1
+    family(t)(1,1)=t+2
+    family(t)(1,2)=t+3
+    family(t)(2,1)=t+3
+    family(t)(2,2)=t+4
+    family(t)(1,1)*family(t)(2,2)=(t+2)*(t+4)
+    family(t)(1,2)*family(t)(2,1)=(t+3)*(t+3)
+    det(family(t),2)=(t+2)*(t+4)-(t+3)*(t+3)=-1
+
+claim:
+    ? forall t R:
+        det(family(t),2)!=0
+    det(family(t),2)=-1
+
+# 4. The trace distinguishes two members of the same family.
+
+trace(family(0),2)=6
+
+trace(family(1),2)=8
+
+# 5. Symmetry and self-adjointness are equalities of functions.
+
+claim:
+    ? forall t R:
+        transpose(family(t),2,2)=family(t)
+    by fn_extension transpose(family(t),2,2)=family(t)
+
+forall t R:
+    family(t) $in matrix(C,2,2)
+
+claim:
+    ? forall t R:
+        conjugate_transpose(family(t),2,2)=family(t)
+    by fn_extension:
+        ? conjugate_transpose(family(t),2,2)=family(t)
+        claim:
+            ? forall r,c closed_range(1,2):
+                conjugate_transpose(family(t),2,2)(r,c)=family(t)(r,c)
+            family(t)(c,r) $in R
+            conj(family(t)(c,r))=family(t)(c,r)
+            family(t)(c,r)=t+c+r=t+r+c=family(t)(r,c)
+            conjugate_transpose(family(t),2,2)(r,c)=conj(family(t)(c,r))
+
+# 6. The empty matrix has no entries; its determinant and trace differ.
+
+det(zero_matrix(0,0),0)=1
+
+trace(zero_matrix(0,0),0)=0

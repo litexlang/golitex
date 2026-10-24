@@ -1,0 +1,17 @@
+# Declare objects in all refined numeric sets and use their stored facts.
+have sp Q+
+sp / sp = 1
+have nq Q-
+nq / nq = 1
+have nz Z-
+nz / nz = 1
+have nr R-
+nr / nr = 1
+have sq Q*
+sq / sq = 1
+have sz Z*
+sz / sz = 1
+have sr R*
+sr / sr = 1
+have sc C*
+sc / sc = 1

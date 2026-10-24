@@ -35,7 +35,7 @@ impl LitexToLeanCompiler {
             VerifyFactResult::ForallFactWithIff(result) => {
                 self.compile_verify_forall_iff(result, position)
             }
-            VerifyFactResult::NotForall(_) => Err(LeanCompileError::unsupported("NotForall")),
+            VerifyFactResult::NotForall(result) => self.compile_not_forall_result(result, position),
         }
     }
 }

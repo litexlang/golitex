@@ -1,4 +1,19 @@
+#[path = "../../tests/unit/compile_to_lean/exist_unique_tests.rs"]
+mod exist_unique_tests;
+#[path = "../../tests/unit/compile_to_lean/logical_closing_tests.rs"]
+mod logical_closing_tests;
+#[path = "../../tests/unit/compile_to_lean/not_exist_tests.rs"]
+mod not_exist_tests;
+#[path = "../../tests/unit/compile_to_lean/unique_contra_tests.rs"]
+mod unique_contra_tests;
+
+#[path = "../../tests/unit/compile_to_lean/not_forall_tests.rs"]
+mod not_forall_tests;
+
 use super::{compile_run as compile_run_owned_runtime, LeanCompileError, LitexToLeanCompiler};
+
+#[path = "../../tests/unit/compile_to_lean/cart_release_tests.rs"]
+mod cart_release_tests;
 
 #[path = "../../tests/unit/compile_to_lean/additive_inference/tests.rs"]
 mod additive_inference_tests;
@@ -30,6 +45,8 @@ mod concrete_predicate_transport_tests;
 mod difference_zero_tests;
 #[path = "../../tests/unit/compile_to_lean/finite_cart_coordinates/tests.rs"]
 mod finite_cart_coordinates_tests;
+#[path = "../../tests/unit/compile_to_lean/finite_sequence_tests.rs"]
+mod finite_sequence_tests;
 #[path = "../../tests/unit/compile_to_lean/fn_application_unfold_substitution/tests.rs"]
 mod fn_application_unfold_substitution_tests;
 #[path = "../../tests/unit/compile_to_lean/forall_iff/tests.rs"]
@@ -50,6 +67,8 @@ mod inference_context_citations_tests;
 mod inference_publication_once_tests;
 #[path = "../../tests/unit/compile_to_lean/local_arbitrary_have/tests.rs"]
 mod local_arbitrary_have_tests;
+#[path = "../../tests/unit/compile_to_lean/min_max/tests.rs"]
+mod min_max_tests;
 #[path = "../../tests/unit/compile_to_lean/mobius_nonzero/tests.rs"]
 mod mobius_nonzero_tests;
 #[path = "../../tests/unit/compile_to_lean/named_call_wd/tests.rs"]
@@ -62,14 +81,42 @@ mod nonnegative_builtin_tests;
 mod nonzero_difference_tests;
 #[path = "../../tests/unit/compile_to_lean/numeric_carrier_closure/tests.rs"]
 mod numeric_carrier_closure_tests;
+#[path = "../../tests/unit/compile_to_lean/object_release_tests.rs"]
+mod object_release_tests;
 #[path = "../../tests/unit/compile_to_lean/order_complement/tests.rs"]
 mod order_complement_tests;
 #[path = "../../tests/unit/compile_to_lean/prop_object_sharing/tests.rs"]
 mod prop_object_sharing_tests;
+#[path = "../../tests/unit/compile_to_lean/register/tests.rs"]
+mod register_tests;
+#[path = "../../tests/unit/compile_to_lean/rounding_tests.rs"]
+mod rounding_tests;
+#[path = "../../tests/unit/compile_to_lean/sign_identities_tests.rs"]
+mod sign_identities_tests;
+#[path = "../../tests/unit/compile_to_lean/sign/tests.rs"]
+mod sign_tests;
+
+#[path = "../../tests/unit/compile_to_lean/integer_division_tests.rs"]
+mod integer_division_tests;
+
+#[path = "../../tests/unit/compile_to_lean/builtin_closed_calculation/tests.rs"]
+mod builtin_closed_calculation_tests;
+#[path = "../../tests/unit/compile_to_lean/factorial_tests.rs"]
+mod factorial_tests;
+#[path = "../../tests/unit/compile_to_lean/gcd_lcm_tests.rs"]
+mod gcd_lcm_tests;
+#[path = "../../tests/unit/compile_to_lean/imaginary_tests.rs"]
+mod imaginary_tests;
+#[path = "../../tests/unit/compile_to_lean/nonmembership_tests.rs"]
+mod nonmembership_tests;
+#[path = "../../tests/unit/compile_to_lean/refined_closure_tests.rs"]
+mod refined_closure_tests;
 #[path = "../../tests/unit/compile_to_lean/returned_cart_call/tests.rs"]
 mod returned_cart_call_tests;
 #[path = "../../tests/unit/compile_to_lean/set_builder_function_bodies/tests.rs"]
 mod set_builder_function_bodies_tests;
+#[path = "../../tests/unit/compile_to_lean/signed_carrier_tests.rs"]
+mod signed_carrier_tests;
 #[path = "../../tests/unit/compile_to_lean/sqrt/tests.rs"]
 mod sqrt_tests;
 #[path = "../../tests/unit/compile_to_lean/subset_numeric_membership/tests.rs"]
@@ -740,6 +787,9 @@ fn closed_numeric_congruence_leaf_rejects_a_changed_scalar_certificate() {
             ClosedValuePair::Decimal { left, .. } => *left = "0.25".to_string(),
             _ => panic!("actual exact decimal pair"),
         },
+        EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::Calculation(
+            EqualitySearchProofByCalculation::ClosedDecimal { left_normal, .. },
+        )) => *left_normal = "0.25".to_string(),
         _ => panic!("actual closed calculation leaf"),
     }
     let error = compile_run(&result, &compiler, "changed_closed_leaf")
@@ -2036,6 +2086,10 @@ fn phase2_typed_half_uses_the_actual_closed_substitution_and_closed_child() {
     assert!(matches!(
         &child.searched_proof,
         EqualFactSearchedProof::ByClosedCalculation(_)
+            | EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::Calculation(
+                EqualitySearchProofByCalculation::ClosedDecimal { .. }
+                    | EqualitySearchProofByCalculation::ClosedRational { .. }
+            ))
     ));
     assert!(compile_run(&result, &compiler, "phase2_half_exact_route").is_ok());
 }
@@ -2096,6 +2150,10 @@ fn phase2_half_substitution_requires_exact_residual_and_scalar_evidence() {
             ClosedValuePair::Decimal { right, .. } => *right = "2".into(),
             _ => panic!("actual half-sum decimal certificate"),
         },
+        EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::Calculation(
+            EqualitySearchProofByCalculation::ClosedDecimal { right_normal, .. }
+            | EqualitySearchProofByCalculation::ClosedRational { right_normal, .. },
+        )) => *right_normal = "2".into(),
         _ => panic!("actual closed residual child"),
     }
     phase2_rejected(
@@ -2969,6 +3027,10 @@ fn simplification_alias_equality_uses_its_stored_id_in_the_selected_rewrite() {
     assert!(matches!(
         &equality_proof(&rewrite.residual_equal).searched_proof,
         EqualFactSearchedProof::ByClosedCalculation(_)
+            | EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::Calculation(
+                EqualitySearchProofByCalculation::ClosedDecimal { .. }
+                    | EqualitySearchProofByCalculation::ClosedRational { .. }
+            ))
     ));
     let output = compile_run(&result, &compiler, "simplification_alias_equality")
         .expect("the selected substitution uses the emitted alias equality");
@@ -3060,10 +3122,21 @@ fn simplification_each_returned_component_has_an_invocation_local_producer() {
         let selected_name = format!("h_{}", selected_id.value());
         // An endpoint certificate can itself contain a multiline proof. Keep
         // the rest of the selected term, not only the line starting `exact`.
-        let selected_proof = body
-            .rsplit_once("\n    exact ")
-            .expect("the invocation finishes by selecting its returned proof")
-            .1;
+        let tail = &body[second..];
+        let mut offset = 0;
+        let mut selected = None;
+        let mut minimum_indent = usize::MAX;
+        for line in tail.split_inclusive('\n') {
+            let trimmed = line.trim_start();
+            let indent = line.len() - trimmed.len();
+            if trimmed.starts_with("exact ") && indent < minimum_indent {
+                minimum_indent = indent;
+                selected = Some(offset + indent);
+            }
+            offset += line.len();
+        }
+        let selected_proof =
+            &tail[selected.expect("the invocation selects its returned proof after both stores")..];
         assert!(
             selected_proof.contains(&selected_name),
             "selected {selected_name} is missing from the invocation tail:\n{selected_proof}"
@@ -3235,3 +3308,36 @@ fn ordinary_have(statement: &ExecStmtResult) -> &ExecHaveObjInNonemptySetStmtSuc
 
 #[path = "../../tests/unit/compile_to_lean/function_argument_wd_sharing/tests.rs"]
 mod function_argument_wd_sharing_tests;
+
+#[path = "../../tests/unit/compile_to_lean/tuple_release_tests.rs"]
+mod tuple_release_tests;
+
+#[path = "../../tests/unit/compile_to_lean/automatic_exist_tests.rs"]
+mod automatic_exist_tests;
+
+#[path = "../../tests/unit/compile_to_lean/selected_function_tests.rs"]
+mod selected_function_tests;
+
+#[path = "../../tests/unit/compile_to_lean/piecewise_function_tests.rs"]
+mod piecewise_function_tests;
+
+#[path = "../../tests/unit/compile_to_lean/mapping_property_tests.rs"]
+mod mapping_property_tests;
+
+#[path = "../../tests/unit/compile_to_lean/range_preimage_tests.rs"]
+mod range_preimage_tests;
+
+#[path = "../../tests/unit/compile_to_lean/sketch_tests.rs"]
+mod sketch_tests;
+
+#[path = "../../tests/unit/compile_to_lean/integer_range_tests.rs"]
+mod integer_range_tests;
+
+#[path = "../../tests/unit/compile_to_lean/integer_enumeration_tests.rs"]
+mod integer_enumeration_tests;
+
+#[path = "../../tests/unit/compile_to_lean/enumeration_product_tests.rs"]
+mod enumeration_product_tests;
+
+#[path = "../../tests/unit/compile_to_lean/weak_additive_shift_tests.rs"]
+mod weak_additive_shift_tests;

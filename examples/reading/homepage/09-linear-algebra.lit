@@ -1,0 +1,741 @@
+# 线性代数样章：为什么标准基下的坐标是唯一的？
+# 阅读路线：平面向量运算 → 向量空间与子空间 → 线性组合 → 张成与线性无关 → 基与唯一坐标。
+# 正反例：坐标轴是子空间，平移直线不是；标准方向构成基，重复方向线性相关。
+# 结尾把存在表示与系数唯一性分开证明。这里选择原讲义第 1 章到第 2.4 节的完整前缀。
+
+# Linear Algebra: From Vectors to Coordinates
+#
+# These lecture notes develop selected ideas from Sheldon Axler's
+# Linear Algebra Done Right. The real plane is our running example:
+# its familiar coordinate operations lead us to vector spaces, subspaces,
+# linear combinations, and bases. Each new definition answers a question
+# raised by the examples that precede it.
+#
+# Chapter 1. Vector Spaces
+# 1.1 Vectors and coordinate operations
+# The real plane is R² = R × R: its vectors are ordered pairs of real numbers.
+# We write this product as R × R, also written cart(R, R).
+# It is the same set as finite_seq(R, 2): each vector has two real
+# coordinates, accessed as v(1) and v(2).
+# Two vectors are equal precisely when their corresponding coordinates are equal.
+have fn plane_add(u, v R × R) R × R = (u(1) + v(1), u(2) + v(2))
+
+have fn plane_smul(a R, v R × R) R × R = (a * v(1), a * v(2))
+
+# Addition and scalar multiplication act on each coordinate.
+# The following calculations illustrate these operations in the plane.
+(1 + 3, 2 + 4) = (4, 6)
+
+(3 * 1, 3 * 2) = (3, 6)
+
+(3 * 1 + 4 * 0, 3 * 0 + 4 * 1) = (3, 4)
+
+# The last equation expresses (3, 4) in terms of two coordinate directions.
+# We will return to this observation when we study linear combinations.
+# A list of vectors may contain repeated entries; it may also be empty.
+have e1 R × R = (1, 0)
+
+have e2 R × R = (0, 1)
+
+have repeated_directions finite_seq(R × R, 2) = (e1, e1)
+
+repeated_directions(1) = repeated_directions(2)
+
+have empty_directions finite_seq(R × R, 0) = tuple()
+
+# 1.2 The scalar field
+# The laws of vector arithmetic depend on the laws of the scalars.
+# A field supplies addition, multiplication, and their identity and inverse
+# laws. Multiplicative inverses are required only for nonzero scalars.
+struct Field<K nonempty_set>:
+    zero K
+    one K
+    add fn(x, y K) K
+    neg fn(x K) K
+    mul fn(x, y K) K
+    inv fn(x K: x != zero) K
+    <=>:
+        zero != one
+        forall x, y, z K:
+            add(add(x, y), z) = add(x, add(y, z))
+            mul(mul(x, y), z) = mul(x, mul(y, z))
+            mul(x, add(y, z)) = add(mul(x, y), mul(x, z))
+        forall x, y K:
+            add(x, y) = add(y, x)
+            mul(x, y) = mul(y, x)
+        forall x K:
+            add(zero, x) = x
+            add(x, neg(x)) = zero
+            mul(one, x) = x
+        forall x K:
+            x != zero
+            =>:
+                mul(x, inv(x)) = one
+
+# The real numbers form a field with their usual arithmetic operations.
+# We first establish the field laws, then collect these operations into
+# one field structure.
+have fn real_inv(x R: x != 0) R = 1 / x
+
+have fn real_add(x, y R) R = x + y
+
+have fn real_neg(x R) R = -x
+
+have fn real_mul(x, y R) R = x * y
+
+forall x, y, z R:
+    real_add(real_add(x, y), z) = real_add(x, real_add(y, z))
+    real_mul(real_mul(x, y), z) = real_mul(x, real_mul(y, z))
+    real_mul(x, real_add(y, z)) = real_add(real_mul(x, y), real_mul(x, z))
+
+forall x, y R:
+    real_add(x, y) = real_add(y, x)
+    real_mul(x, y) = real_mul(y, x)
+
+forall x R:
+    real_add(0, x) = x
+    real_add(x, real_neg(x)) = 0
+    real_mul(1, x) = x
+
+forall x R:
+    x != 0
+    =>:
+        real_mul(x, real_inv(x)) = 1
+
+release thm struct_member((0, 1, real_add, real_neg, real_mul, real_inv), &Field<R>)
+
+have real_field &Field<R> = (0, 1, real_add, real_neg, real_mul, real_inv)
+
+struct VectorSpace<K nonempty_set, field &Field<K>, V nonempty_set>:
+    zero V
+    add fn(x, y V) V
+    smul fn(a K, x V) V
+    <=>:
+        forall x, y, z V:
+            add(add(x, y), z) = add(x, add(y, z))
+        forall x, y V:
+            add(x, y) = add(y, x)
+        forall x V:
+            add(zero, x) = x
+            exist y V st {add(x, y) = zero}
+        forall a, b K, x V:
+            smul(field.mul(a, b), x) = smul(a, smul(b, x))
+            smul(field.add(a, b), x) = add(smul(a, x), smul(b, x))
+        forall a K, x, y V:
+            smul(a, add(x, y)) = add(smul(a, x), smul(a, y))
+        forall x V:
+            smul(field.one, x) = x
+
+# We now show that coordinate addition and scalar multiplication make
+# the real plane a vector space. Equality of vectors reduces each law
+# to an equality of their two coordinates.
+#
+# First, vector addition is associative.
+claim:
+    ? forall x, y, z R × R:
+        plane_add(plane_add(x, y), z) = plane_add(x, plane_add(y, z))
+    plane_add(x, y) = (x(1) + y(1), x(2) + y(2))
+    plane_add(x, y)(1) = x(1) + y(1)
+    plane_add(x, y)(2) = x(2) + y(2)
+    plane_add(plane_add(x, y), z) = (plane_add(x, y)(1) + z(1), plane_add(x, y)(2) + z(2)) = ((x(1) + y(1)) + z(1), (x(2) + y(2)) + z(2))
+    plane_add(y, z) = (y(1) + z(1), y(2) + z(2))
+    plane_add(y, z)(1) = y(1) + z(1)
+    plane_add(y, z)(2) = y(2) + z(2)
+    plane_add(x, plane_add(y, z)) = (x(1) + plane_add(y, z)(1), x(2) + plane_add(y, z)(2)) = (x(1) + (y(1) + z(1)), x(2) + (y(2) + z(2)))
+    plane_add(plane_add(x, y), z) = ((x(1) + y(1)) + z(1), (x(2) + y(2)) + z(2)) = (x(1) + (y(1) + z(1)), x(2) + (y(2) + z(2))) = plane_add(x, plane_add(y, z))
+
+# Commutativity of real addition gives commutativity of vector addition.
+claim:
+    ? forall x, y R × R:
+        plane_add(x, y) = plane_add(y, x)
+    plane_add(x, y) = (x(1) + y(1), x(2) + y(2)) = (y(1) + x(1), y(2) + x(2)) = plane_add(y, x)
+
+# The pair (0, 0) is an additive identity. Negating both coordinates
+# produces an additive inverse for every vector.
+claim:
+    ? forall x R × R:
+        plane_add((0, 0), x) = x
+        exist inverse_x R × R st {plane_add(x, inverse_x) = (0, 0)}
+    plane_add((0, 0), x) = (x(1), x(2)) = x
+    have inverse_x R × R = (0 - x(1), 0 - x(2))
+    inverse_x(1) = 0 - x(1)
+    inverse_x(2) = 0 - x(2)
+    x(1) + inverse_x(1) = x(1) + (0 - x(1)) = 0
+    x(2) + inverse_x(2) = x(2) + (0 - x(2)) = 0
+    plane_add(x, inverse_x) = (x(1) + inverse_x(1), x(2) + inverse_x(2)) = (0, 0)
+    witness exist inverse_x2 R × R st {plane_add(x, inverse_x2) = (0, 0)} from inverse_x
+
+# Successive scalar multiplications agree with multiplication of the
+# scalars. Adding scalars distributes over their action on a vector.
+claim:
+    ? forall a, b R, x R × R:
+        plane_smul(real_field.mul(a, b), x) = plane_smul(a, plane_smul(b, x))
+        plane_smul(real_field.add(a, b), x) = plane_add(plane_smul(a, x), plane_smul(b, x))
+    real_field.mul = real_mul
+    real_field.add = real_add
+    real_field.mul(a, b) = real_mul(a, b) = a * b
+    real_field.add(a, b) = real_add(a, b) = a + b
+    plane_smul(b, x) = (b * x(1), b * x(2))
+    plane_smul(b, x)(1) = b * x(1)
+    plane_smul(b, x)(2) = b * x(2)
+    plane_smul(a, plane_smul(b, x)) = (a * plane_smul(b, x)(1), a * plane_smul(b, x)(2)) = (a * (b * x(1)), a * (b * x(2)))
+    plane_smul(real_field.mul(a, b), x) = plane_smul(a * b, x)
+    plane_smul(a * b, x) = ((a * b) * x(1), (a * b) * x(2))
+    plane_smul(real_field.mul(a, b), x) = ((a * b) * x(1), (a * b) * x(2)) = (a * (b * x(1)), a * (b * x(2))) = plane_smul(a, plane_smul(b, x))
+    plane_smul(a, x) = (a * x(1), a * x(2))
+    plane_smul(a, x)(1) = a * x(1)
+    plane_smul(a, x)(2) = a * x(2)
+    plane_smul(b, x) = (b * x(1), b * x(2))
+    plane_add(plane_smul(a, x), plane_smul(b, x)) = (plane_smul(a, x)(1) + plane_smul(b, x)(1), plane_smul(a, x)(2) + plane_smul(b, x)(2)) = (a * x(1) + b * x(1), a * x(2) + b * x(2))
+    plane_smul(real_field.add(a, b), x) = plane_smul(a + b, x)
+    plane_smul(a + b, x) = ((a + b) * x(1), (a + b) * x(2))
+    plane_smul(real_field.add(a, b), x) = ((a + b) * x(1), (a + b) * x(2)) = (a * x(1) + b * x(1), a * x(2) + b * x(2)) = plane_add(plane_smul(a, x), plane_smul(b, x))
+
+# Scalar multiplication also distributes over vector addition.
+claim:
+    ? forall a R, x, y R × R:
+        plane_smul(a, plane_add(x, y)) = plane_add(plane_smul(a, x), plane_smul(a, y))
+    plane_add(x, y) = (x(1) + y(1), x(2) + y(2))
+    plane_add(x, y)(1) = x(1) + y(1)
+    plane_add(x, y)(2) = x(2) + y(2)
+    plane_smul(a, plane_add(x, y)) = (a * plane_add(x, y)(1), a * plane_add(x, y)(2)) = (a * (x(1) + y(1)), a * (x(2) + y(2)))
+    plane_smul(a, x) = (a * x(1), a * x(2))
+    plane_smul(a, y) = (a * y(1), a * y(2))
+    plane_smul(a, x)(1) = a * x(1)
+    plane_smul(a, x)(2) = a * x(2)
+    plane_smul(a, y)(1) = a * y(1)
+    plane_smul(a, y)(2) = a * y(2)
+    plane_add(plane_smul(a, x), plane_smul(a, y)) = (plane_smul(a, x)(1) + plane_smul(a, y)(1), plane_smul(a, x)(2) + plane_smul(a, y)(2))
+    plane_smul(a, x)(1) + plane_smul(a, y)(1) = a * x(1) + a * y(1)
+    plane_smul(a, x)(2) + plane_smul(a, y)(2) = a * x(2) + a * y(2)
+    (plane_smul(a, x)(1) + plane_smul(a, y)(1), plane_smul(a, x)(2) + plane_smul(a, y)(2)) = (a * x(1) + a * y(1), a * x(2) + a * y(2))
+    plane_add(plane_smul(a, x), plane_smul(a, y)) = (a * x(1) + a * y(1), a * x(2) + a * y(2))
+    plane_smul(a, plane_add(x, y)) = (a * (x(1) + y(1)), a * (x(2) + y(2))) = (a * x(1) + a * y(1), a * x(2) + a * y(2)) = plane_add(plane_smul(a, x), plane_smul(a, y))
+
+# Multiplication by the scalar one leaves every vector unchanged.
+claim:
+    ? forall x R × R:
+        plane_smul(real_field.one, x) = x
+    real_field.one = 1
+    x = (x(1), x(2))
+    plane_smul(real_field.one, x) = plane_smul(1, x)
+    plane_smul(1, x) = (1 * x(1), 1 * x(2)) = (x(1), x(2))
+    plane_smul(real_field.one, x) = (x(1), x(2)) = x
+
+(0, 0) $in R × R
+
+release thm struct_member(((0, 0), plane_add, plane_smul), &VectorSpace<R, real_field, R × R>)
+
+have real_plane &VectorSpace<R, real_field, R × R> = ((0, 0), plane_add, plane_smul)
+
+# Coordinate formulas for the two plane operations.
+claim:
+    ? forall u, v R × R:
+        plane_add(u, v)(1) = u(1) + v(1)
+        plane_add(u, v)(2) = u(2) + v(2)
+    plane_add(u, v) = (u(1) + v(1), u(2) + v(2))
+
+claim:
+    ? forall a R, v R × R:
+        plane_smul(a, v)(1) = a * v(1)
+        plane_smul(a, v)(2) = a * v(2)
+    plane_smul(a, v) = (a * v(1), a * v(2))
+
+# The axioms provide an additive identity. We can now prove that it is
+# unique: any vector acting as an identity must equal the designated zero.
+thm additive_identity_unique:
+    ? forall K nonempty_set, field &Field<K>, V nonempty_set, space &VectorSpace<K, field, V>, identity_candidate V:
+        forall x V:
+            space.add(identity_candidate, x) = x
+        =>:
+            identity_candidate = space.zero
+    space.add(identity_candidate, space.zero) = space.zero
+    space.add(identity_candidate, space.zero) = space.add(space.zero, identity_candidate) = identity_candidate
+
+# Additive inverses are unique as well. Associativity and commutativity
+# allow us to compare any two inverses of the same vector.
+thm additive_inverse_exists_unique:
+    ? forall K nonempty_set, field &Field<K>, V nonempty_set, space &VectorSpace<K, field, V>, x V:
+        exist! y V st {space.add(x, y) = space.zero}
+    obtain y from exist y V st {space.add(x, y) = space.zero}
+    forall y1, y2 V:
+        space.add(x, y1) = space.zero
+        space.add(x, y2) = space.zero
+        =>:
+            space.add(y2, x) = space.add(x, y2) = space.zero
+            y1 = space.add(space.zero, y1) = space.add(space.add(y2, x), y1) = space.add(y2, space.add(x, y1)) = space.add(y2, space.zero) = space.add(space.zero, y2) = y2
+            y1 = y2
+    witness exist! y2 V st {space.add(x, y2) = space.zero} from y
+
+# 1.4 Functions as vectors
+# Coordinates are not essential to the idea of a vector. Real-valued
+# functions can also be added and multiplied by scalars, point by point.
+# The following example illustrates these operations on the square function.
+have fn pointwise_add(f, g fn(t R) R) fn(t R) R = fn(t R) R {f(t) + g(t)}
+
+have fn pointwise_smul(a R, f fn(t R) R) fn(t R) R = fn(t R) R {a * f(t)}
+
+have fn square(t R) R = t * t
+
+pointwise_add(square, square)(3) = 18
+
+pointwise_smul(2, square)(3) = 18
+
+# 1.5 Subspaces and decomposition
+# A subspace is a subset of a vector space that contains zero and is
+# closed under addition and scalar multiplication. Its operations are
+# inherited from the surrounding space.
+prop is_subspace(K nonempty_set, field &Field<K>, V nonempty_set, space &VectorSpace<K, field, V>, U power_set(V)):
+    space.zero $in U
+    forall u, v V:
+        u $in U
+        v $in U
+        =>:
+            space.add(u, v) $in U
+    forall a K, v V:
+        v $in U
+        =>:
+            space.smul(a, v) $in U
+
+# The two coordinate axes are natural candidates for subspaces.
+# Each is described by setting one coordinate equal to zero.
+have x_axis power_set(R × R) = {p R × R: p(2) = 0}
+
+have y_axis power_set(R × R) = {p R × R: p(1) = 0}
+
+e1 $in x_axis
+
+e2 $in y_axis
+
+# The vector (1, 1) does not lie on the horizontal axis: its second
+# coordinate is nonzero.
+by contra:
+    ? not (1, 1) $in x_axis
+    (1, 1) $in x_axis
+    (1, 1)(2) = 0
+    (1, 1)(2) = 1
+    impossible 1 = 0
+
+claim:
+    ? $is_subspace(R, real_field, R × R, real_plane, x_axis)
+    real_plane.zero = (0, 0)
+    real_plane.add = plane_add
+    real_plane.smul = plane_smul
+    real_plane.zero $in x_axis
+    claim:
+        ? forall u, v R × R:
+            u $in x_axis
+            v $in x_axis
+            =>:
+                real_plane.add(u, v) $in x_axis
+        real_plane.add(u, v)(2) = plane_add(u, v)(2) = u(2) + v(2) = 0
+    claim:
+        ? forall a R, v R × R:
+            v $in x_axis
+            =>:
+                real_plane.smul(a, v) $in x_axis
+        real_plane.smul(a, v)(2) = plane_smul(a, v)(2) = a * v(2) = 0
+    by def $is_subspace(R, real_field, R × R, real_plane, x_axis)
+
+claim:
+    ? $is_subspace(R, real_field, R × R, real_plane, y_axis)
+    real_plane.zero = (0, 0)
+    real_plane.add = plane_add
+    real_plane.smul = plane_smul
+    real_plane.zero $in y_axis
+    claim:
+        ? forall u, v R × R:
+            u $in y_axis
+            v $in y_axis
+            =>:
+                real_plane.add(u, v) $in y_axis
+        real_plane.add(u, v)(1) = plane_add(u, v)(1) = u(1) + v(1) = 0
+    claim:
+        ? forall a R, v R × R:
+            v $in y_axis
+            =>:
+                real_plane.smul(a, v) $in y_axis
+        real_plane.smul(a, v)(1) = plane_smul(a, v)(1) = a * v(1) = 0
+    by def $is_subspace(R, real_field, R × R, real_plane, y_axis)
+
+# Being a line is not enough to be a subspace. Translating the horizontal
+# axis upward produces a line that does not contain the zero vector.
+have shifted_line power_set(R × R) = {p R × R: p(2) = 1}
+
+# Every point on this translated line has second coordinate one,
+# whereas the zero vector has second coordinate zero.
+by contra:
+    ? not (0, 0) $in shifted_line
+    (0, 0) $in shifted_line
+    (0, 0)(2) = 1
+    (0, 0)(2) = 0
+    impossible 0 = 1
+
+by contra:
+    ? not $is_subspace(R, real_field, R × R, real_plane, shifted_line)
+    $is_subspace(R, real_field, R × R, real_plane, shifted_line)
+    real_plane.zero $in shifted_line
+    real_plane.zero = (0, 0)
+    impossible (0, 0) $in shifted_line
+
+# Every vector in the plane is the sum of a horizontal vector and a
+# vertical vector. Its coordinates give these two components directly.
+claim:
+    ? forall p R × R:
+        exist horizontal, vertical R × R st {horizontal $in x_axis, vertical $in y_axis, p = plane_add(horizontal, vertical)}
+    have horizontal R × R = (p(1), 0)
+    have vertical R × R = (0, p(2))
+    horizontal(2) = 0
+    vertical(1) = 0
+    horizontal $in x_axis
+    vertical $in y_axis
+    horizontal(1) = p(1)
+    vertical(2) = p(2)
+    p = (p(1), p(2))
+    horizontal(1) + vertical(1) = p(1) + 0 = p(1)
+    horizontal(2) + vertical(2) = 0 + p(2) = p(2)
+    plane_add(horizontal, vertical) = (horizontal(1) + vertical(1), horizontal(2) + vertical(2)) = (p(1), p(2)) = p
+    witness exist h, v R × R st {h $in x_axis, v $in y_axis, p = plane_add(h, v)} from horizontal, vertical
+
+# This decomposition is unique. If two pairs of axis components have
+# the same sum, comparing coordinates shows that the components agree.
+# Thus the plane is the direct sum of its two coordinate axes.
+thm axis_decomposition_unique:
+    ? forall left, right, left_again, right_again R × R:
+        left $in x_axis
+        left_again $in x_axis
+        right $in y_axis
+        right_again $in y_axis
+        plane_add(left, right) = plane_add(left_again, right_again)
+        =>:
+            left = left_again
+            right = right_again
+    left(2) = 0
+    left_again(2) = 0
+    right(1) = 0
+    right_again(1) = 0
+    plane_add(left, right)(1) = left(1) + right(1) = left(1)
+    plane_add(left_again, right_again)(1) = left_again(1) + right_again(1) = left_again(1)
+    plane_add(left, right)(2) = left(2) + right(2) = right(2)
+    plane_add(left_again, right_again)(2) = left_again(2) + right_again(2) = right_again(2)
+    left(1) = plane_add(left, right)(1) = plane_add(left_again, right_again)(1) = left_again(1)
+    right(2) = plane_add(left, right)(2) = plane_add(left_again, right_again)(2) = right_again(2)
+    left = (left(1), left(2)) = (left_again(1), left_again(2)) = left_again
+    right = (right(1), right(2)) = (right_again(1), right_again(2)) = right_again
+
+# Chapter 2. Spanning, Independence, and Bases
+# 2.1 Linear combinations
+# Given a list of vectors and a list of scalars of the same length,
+# we multiply each vector by its scalar and add the results.
+# The empty sum is zero; longer sums add one scalar multiple at a time.
+prop is_partial_sum(K nonempty_set, field &Field<K>, V nonempty_set, space &VectorSpace<K, field, V>, n N, coefficients finite_seq(K, n), vectors finite_seq(V, n), sums fn(k closed_range(0, n)) V):
+    sums(0) = space.zero
+    forall k N+:
+        k <= n
+        =>:
+            sums(k) = space.add(sums(k - 1), space.smul(coefficients(k), vectors(k)))
+
+# The value of a linear combination is the final partial sum.
+# For an empty list, no terms are added, so the value is the zero vector.
+prop has_linear_combination_value(K nonempty_set, field &Field<K>, V nonempty_set, space &VectorSpace<K, field, V>, n N, coefficients finite_seq(K, n), vectors finite_seq(V, n), value V):
+    exist sums fn(k closed_range(0, n)) V st {$is_partial_sum(K, field, V, space, n, coefficients, vectors, sums), value = sums(n)}
+
+# A vector is a linear combination of a given list if some choice of
+# coefficients produces it. The definition applies to any finite length;
+# we develop the two-term case for our examples in the plane.
+prop is_linear_combination(K nonempty_set, field &Field<K>, V nonempty_set, space &VectorSpace<K, field, V>, n N, x V, vectors finite_seq(V, n)):
+    exist coefficients finite_seq(K, n) st {$has_linear_combination_value(K, field, V, space, n, coefficients, vectors, x)}
+
+# The partial sums for two terms are zero, the first scalar multiple,
+# and the sum of both scalar multiples.
+claim:
+    ? forall prefix_index closed_range(0, 2):
+        prefix_index = 0 or prefix_index = 1 or prefix_index = 2
+    by for:
+        ? forall enum_index closed_range(0, 2):
+            enum_index = 0 or enum_index = 1 or enum_index = 2
+        enum_index = 0 or enum_index = 1 or enum_index = 2
+
+have fn two_term_partial_sum(coefficients finite_seq(R, 2), vectors finite_seq(R × R, 2), k closed_range(0, 2)) R × R by cases:
+    case k = 0: (0, 0)
+    case k = 1: plane_smul(coefficients(1), vectors(1))
+    case k = 2: plane_add(plane_smul(coefficients(1), vectors(1)), plane_smul(coefficients(2), vectors(2)))
+
+thm two_term_combination_exists:
+    ? forall coefficients finite_seq(R, 2), vectors finite_seq(R × R, 2):
+        $has_linear_combination_value(R, real_field, R × R, real_plane, 2, coefficients, vectors, plane_add(plane_smul(coefficients(1), vectors(1)), plane_smul(coefficients(2), vectors(2))))
+    release struct def real_plane
+    real_plane.add = plane_add
+    real_plane.smul = plane_smul
+    have first_term R × R = plane_smul(coefficients(1), vectors(1))
+    real_plane.smul(coefficients(1), vectors(1)) = first_term
+    real_plane.add(real_plane.zero, first_term) = first_term
+    have second_term R × R = plane_smul(coefficients(2), vectors(2))
+    real_plane.smul(coefficients(2), vectors(2)) = second_term
+    have fn sums(k closed_range(0, 2)) R × R = two_term_partial_sum(coefficients, vectors, k)
+    sums(1) = two_term_partial_sum(coefficients, vectors, 1)
+    two_term_partial_sum(coefficients, vectors, 1) = plane_smul(coefficients(1), vectors(1))
+    sums(1) = plane_smul(coefficients(1), vectors(1))
+    sums(2) = two_term_partial_sum(coefficients, vectors, 2)
+    two_term_partial_sum(coefficients, vectors, 2) = plane_add(plane_smul(coefficients(1), vectors(1)), plane_smul(coefficients(2), vectors(2)))
+    sums(2) = plane_add(plane_smul(coefficients(1), vectors(1)), plane_smul(coefficients(2), vectors(2)))
+    sums(0) = two_term_partial_sum(coefficients, vectors, 0)
+    two_term_partial_sum(coefficients, vectors, 0) = (0, 0)
+    real_plane.zero = (0, 0)
+    sums(0) = (0, 0) = real_plane.zero
+    claim:
+        ? forall k N+:
+            k <= 2
+            =>:
+                sums(k) = real_plane.add(sums(k - 1), real_plane.smul(coefficients(k), vectors(k)))
+        k $in closed_range(1, 2)
+        expand: k $in closed_range(1, 2)
+        k = 1 or k = 2
+        by cases:
+            ? sums(k) = real_plane.add(sums(k - 1), real_plane.smul(coefficients(k), vectors(k)))
+            case k = 1:
+                k - 1 = 0
+                sums(k) = sums(1) = plane_smul(coefficients(1), vectors(1))
+                sums(k - 1) = sums(0) = real_plane.zero
+                real_plane.smul(coefficients(k), vectors(k)) = real_plane.smul(coefficients(1), vectors(1)) = first_term
+                real_plane.add(sums(k - 1), real_plane.smul(coefficients(k), vectors(k))) = real_plane.add(real_plane.zero, first_term) = first_term = plane_smul(coefficients(1), vectors(1))
+            case k = 2:
+                k - 1 = 1
+                sums(1) = plane_smul(coefficients(1), vectors(1))
+                sums(k - 1) = sums(1) = first_term
+                real_plane.smul(coefficients(k), vectors(k)) = real_plane.smul(coefficients(2), vectors(2)) = second_term
+                sums(k - 1) $in R × R
+                real_plane.smul(coefficients(k), vectors(k)) $in R × R
+                plane_add(first_term, second_term) = real_plane.add(first_term, second_term)
+                sums(k) = sums(2) = plane_add(plane_smul(coefficients(1), vectors(1)), plane_smul(coefficients(2), vectors(2))) = plane_add(first_term, second_term) = real_plane.add(first_term, second_term) = real_plane.add(sums(k - 1), real_plane.smul(coefficients(k), vectors(k)))
+    by def $is_partial_sum(R, real_field, R × R, real_plane, 2, coefficients, vectors, sums)
+    sums(2) = plane_add(plane_smul(coefficients(1), vectors(1)), plane_smul(coefficients(2), vectors(2)))
+    witness exist partial fn(k closed_range(0, 2)) R × R st {$is_partial_sum(R, real_field, R × R, real_plane, 2, coefficients, vectors, partial), plane_add(plane_smul(coefficients(1), vectors(1)), plane_smul(coefficients(2), vectors(2))) = partial(2)} from sums
+    by def $has_linear_combination_value(R, real_field, R × R, real_plane, 2, coefficients, vectors, plane_add(plane_smul(coefficients(1), vectors(1)), plane_smul(coefficients(2), vectors(2))))
+
+thm two_term_combination_value:
+    ? forall coefficients finite_seq(R, 2), vectors finite_seq(R × R, 2), value R × R:
+        $has_linear_combination_value(R, real_field, R × R, real_plane, 2, coefficients, vectors, value)
+        =>:
+            value = plane_add(plane_smul(coefficients(1), vectors(1)), plane_smul(coefficients(2), vectors(2)))
+    release struct def real_plane
+    real_plane.add = plane_add
+    real_plane.smul = plane_smul
+    obtain sums from $has_linear_combination_value(R, real_field, R × R, real_plane, 2, coefficients, vectors, value)
+    by def $is_partial_sum(R, real_field, R × R, real_plane, 2, coefficients, vectors, sums)
+    sums(0) = real_plane.zero
+    sums(1) = real_plane.add(sums(0), real_plane.smul(coefficients(1), vectors(1))) = real_plane.smul(coefficients(1), vectors(1))
+    have first_term R × R = real_plane.smul(coefficients(1), vectors(1))
+    have second_term R × R = real_plane.smul(coefficients(2), vectors(2))
+    sums(1) = first_term
+    first_term = plane_smul(coefficients(1), vectors(1))
+    second_term = plane_smul(coefficients(2), vectors(2))
+    sums(2) = real_plane.add(sums(1), real_plane.smul(coefficients(2), vectors(2)))
+    real_plane.add(first_term, second_term) = plane_add(first_term, second_term)
+    sums(2) = real_plane.add(sums(1), real_plane.smul(coefficients(2), vectors(2))) = real_plane.add(first_term, second_term) = plane_add(first_term, second_term)
+    value = sums(2) = real_plane.add(sums(1), real_plane.smul(coefficients(2), vectors(2))) = plane_add(plane_smul(coefficients(1), vectors(1)), plane_smul(coefficients(2), vectors(2)))
+
+# The two standard directions give a particularly simple combination:
+# multiplying them by a and b and adding yields the pair (a, b).
+release tuple def e1
+
+release tuple def e2
+
+thm standard_expansion:
+    ? forall a, b R:
+        plane_add(plane_smul(a, e1), plane_smul(b, e2)) = (a, b)
+    have horizontal R × R = plane_smul(a, e1)
+    have vertical R × R = plane_smul(b, e2)
+    a * e1(1) = a
+    a * e1(2) = 0
+    b * e2(1) = 0
+    b * e2(2) = b
+    horizontal = (a * e1(1), a * e1(2)) = (a, 0)
+    vertical = (b * e2(1), b * e2(2)) = (0, b)
+    horizontal(1) + vertical(1) = a + 0 = a
+    horizontal(2) + vertical(2) = 0 + b = b
+    plane_add(horizontal, vertical) = (horizontal(1) + vertical(1), horizontal(2) + vertical(2)) = (a, b)
+    plane_add(plane_smul(a, e1), plane_smul(b, e2)) = plane_add(horizontal, vertical) = (a, b)
+
+# 2.2 Span
+# The span of a list is the set of all its linear combinations.
+# It describes exactly which vectors can be reached using those directions.
+template<K nonempty_set, field &Field<K>, V nonempty_set, space &VectorSpace<K, field, V>, n N, vectors finite_seq(V, n)>:
+    have span power_set(V) = {x V: $is_linear_combination(K, field, V, space, n, x, vectors)}
+
+# A list spans the whole space when every vector belongs to its span.
+prop spans(K nonempty_set, field &Field<K>, V nonempty_set, space &VectorSpace<K, field, V>, n N, vectors finite_seq(V, n)):
+    \span<K, field, V, space, n, vectors> = V
+
+# Consider the two standard coordinate directions. We will show that
+# together they span the real plane.
+have standard_basis finite_seq(R × R, 2) = (e1, e2)
+
+standard_basis(1) = (1, 0)
+
+standard_basis(2) = (0, 1)
+
+claim:
+    ? forall v R × R:
+        v $in \span<R, real_field, R × R, real_plane, 2, standard_basis>
+    have S power_set(R × R) = {x R × R: $is_linear_combination(R, real_field, R × R, real_plane, 2, x, standard_basis)}
+    release obj def S
+    \span<R, real_field, R × R, real_plane, 2, standard_basis> = {x R × R: $is_linear_combination(R, real_field, R × R, real_plane, 2, x, standard_basis)}
+    \span<R, real_field, R × R, real_plane, 2, standard_basis> = S
+    have coefficients finite_seq(R, 2) = (v(1), v(2))
+    coefficients(1) = v(1)
+    coefficients(2) = v(2)
+    standard_basis(1) = e1
+    standard_basis(2) = e2
+    release thm standard_expansion(v(1), v(2))
+    plane_smul(coefficients(1), standard_basis(1)) = plane_smul(v(1), e1)
+    plane_smul(coefficients(2), standard_basis(2)) = plane_smul(v(2), e2)
+    plane_add(plane_smul(coefficients(1), standard_basis(1)), plane_smul(coefficients(2), standard_basis(2))) = plane_add(plane_smul(v(1), e1), plane_smul(v(2), e2)) = (v(1), v(2)) = v
+    release thm two_term_combination_exists(coefficients, standard_basis)
+    witness exist scalars finite_seq(R, 2) st {$has_linear_combination_value(R, real_field, R × R, real_plane, 2, scalars, standard_basis, v)} from coefficients
+    by def $is_linear_combination(R, real_field, R × R, real_plane, 2, v, standard_basis)
+    v $in S
+    v $in \span<R, real_field, R × R, real_plane, 2, standard_basis>
+
+\span<R, real_field, R × R, real_plane, 2, standard_basis> $subset R × R
+
+by def R × R $subset \span<R, real_field, R × R, real_plane, 2, standard_basis>
+
+# Every plane vector lies in the span of the standard directions,
+# and every vector in that span lies in the plane. The sets are therefore equal.
+by extension:
+    ? \span<R, real_field, R × R, real_plane, 2, standard_basis> = R × R
+    forall v \span<R, real_field, R × R, real_plane, 2, standard_basis>:
+        v $in R × R
+    forall v R × R:
+        v $in \span<R, real_field, R × R, real_plane, 2, standard_basis>
+
+by def $spans(R, real_field, R × R, real_plane, 2, standard_basis)
+
+(3, 4) $in \span<R, real_field, R × R, real_plane, 2, standard_basis>
+
+# 2.3 Linear independence
+# A spanning list may include unnecessary directions. Linear independence
+# rules out this redundancy: a combination equals zero only when all
+# of its coefficients are zero.
+prop has_only_zero_coefficients(K nonempty_set, field &Field<K>, n N, coefficients finite_seq(K, n)):
+    forall k N+:
+        k <= n
+        =>:
+            coefficients(k) = field.zero
+
+prop is_linearly_independent(K nonempty_set, field &Field<K>, V nonempty_set, space &VectorSpace<K, field, V>, n N, vectors finite_seq(V, n)):
+    forall coefficients finite_seq(K, n):
+        $has_linear_combination_value(K, field, V, space, n, coefficients, vectors, space.zero)
+        =>:
+            $has_only_zero_coefficients(K, field, n, coefficients)
+
+# For the standard directions, the coefficients of a combination are
+# its two coordinates. A zero combination therefore has zero coefficients.
+claim:
+    ? $is_linearly_independent(R, real_field, R × R, real_plane, 2, standard_basis)
+    claim:
+        ? forall coefficients finite_seq(R, 2):
+            $has_linear_combination_value(R, real_field, R × R, real_plane, 2, coefficients, standard_basis, real_plane.zero)
+            =>:
+                $has_only_zero_coefficients(R, real_field, 2, coefficients)
+        release thm two_term_combination_value(coefficients, standard_basis, real_plane.zero)
+        release thm standard_expansion(coefficients(1), coefficients(2))
+        standard_basis(1) = e1
+        standard_basis(2) = e2
+        plane_smul(coefficients(1), standard_basis(1)) = plane_smul(coefficients(1), e1)
+        plane_smul(coefficients(2), standard_basis(2)) = plane_smul(coefficients(2), e2)
+        plane_add(plane_smul(coefficients(1), standard_basis(1)), plane_smul(coefficients(2), standard_basis(2))) = plane_add(plane_smul(coefficients(1), e1), plane_smul(coefficients(2), e2)) = (coefficients(1), coefficients(2)) = coefficients
+        real_plane.zero = (0, 0)
+        coefficients = real_plane.zero = (0, 0)
+        coefficients(1) = 0
+        coefficients(2) = 0
+        claim:
+            ? forall k N+:
+                k <= 2
+                =>:
+                    coefficients(k) = real_field.zero
+            k $in closed_range(1, 2)
+            expand: k $in closed_range(1, 2)
+            by cases:
+                ? coefficients(k) = real_field.zero
+                case k = 1:
+                    coefficients(k) = coefficients(1) = 0 = real_field.zero
+                case k = 2:
+                    coefficients(k) = coefficients(2) = 0 = real_field.zero
+        by def $has_only_zero_coefficients(R, real_field, 2, coefficients)
+    by def $is_linearly_independent(R, real_field, R × R, real_plane, 2, standard_basis)
+
+# Repeating a direction creates a dependence: coefficients one and
+# negative one give zero without both coefficients being zero.
+by contra:
+    ? not $is_linearly_independent(R, real_field, R × R, real_plane, 2, repeated_directions)
+    $is_linearly_independent(R, real_field, R × R, real_plane, 2, repeated_directions)
+    have coefficients finite_seq(R, 2) = (1, -1)
+    repeated_directions(1) = e1
+    repeated_directions(2) = e1
+    have forward R × R = plane_smul(1, e1)
+    have backward R × R = plane_smul(-1, e1)
+    1 * e1(1) = 1
+    1 * e1(2) = 0
+    -1 * e1(1) = -1
+    -1 * e1(2) = 0
+    forward = (1 * e1(1), 1 * e1(2)) = (1, 0)
+    backward = (-1 * e1(1), -1 * e1(2)) = (-1, 0)
+    forward(1) = 1
+    backward(1) = -1
+    forward(2) = 0
+    backward(2) = 0
+    forward(1) + backward(1) = 1 + (-1) = 0
+    forward(2) + backward(2) = 0 + 0 = 0
+    plane_add(forward, backward) = (forward(1) + backward(1), forward(2) + backward(2)) = (0, 0) = real_plane.zero
+    plane_smul(coefficients(1), repeated_directions(1)) = plane_smul(1, e1) = forward
+    plane_smul(coefficients(2), repeated_directions(2)) = plane_smul(-1, e1) = backward
+    plane_smul(coefficients(1), repeated_directions(1)) $in R × R
+    plane_smul(coefficients(2), repeated_directions(2)) $in R × R
+    plane_add(plane_smul(coefficients(1), repeated_directions(1)), plane_smul(coefficients(2), repeated_directions(2))) = plane_add(forward, backward) = real_plane.zero
+    release thm two_term_combination_exists(coefficients, repeated_directions)
+    $has_linear_combination_value(R, real_field, R × R, real_plane, 2, coefficients, repeated_directions, real_plane.zero)
+    $has_only_zero_coefficients(R, real_field, 2, coefficients)
+    coefficients(1) = real_field.zero = 0
+    coefficients(1) = 1
+    impossible 1 = 0
+
+prop is_basis(K nonempty_set, field &Field<K>, V nonempty_set, space &VectorSpace<K, field, V>, n N, vectors finite_seq(V, n)):
+    $is_linearly_independent(K, field, V, space, n, vectors)
+    $spans(K, field, V, space, n, vectors)
+
+# The two standard directions satisfy both conditions and hence form a basis.
+by def $is_basis(R, real_field, R × R, real_plane, 2, standard_basis)
+
+# The coordinates of a plane vector supply its coefficients in the
+# standard basis. We first establish this expansion for an arbitrary vector.
+claim:
+    ? forall v R × R:
+        plane_add(plane_smul(v(1), standard_basis(1)), plane_smul(v(2), standard_basis(2))) = v
+    standard_basis(1) = e1
+    standard_basis(2) = e2
+    release thm standard_expansion(v(1), v(2))
+    plane_smul(v(1), standard_basis(1)) = plane_smul(v(1), e1)
+    plane_smul(v(2), standard_basis(2)) = plane_smul(v(2), e2)
+    plane_add(plane_smul(v(1), standard_basis(1)), plane_smul(v(2), standard_basis(2))) = plane_add(plane_smul(v(1), e1), plane_smul(v(2), e2)) = (v(1), v(2)) = v
+
+# Conversely, expanding a coefficient pair in the standard directions
+# returns that pair. Two expansions of the same vector must therefore
+# use the same coefficients.
+thm standard_coordinates_unique:
+    ? forall v R × R, a, b R:
+        v = plane_add(plane_smul(a, standard_basis(1)), plane_smul(b, standard_basis(2)))
+        =>:
+            a = v(1)
+            b = v(2)
+    have coordinates R × R = (a, b)
+    coordinates(1) = a
+    coordinates(2) = b
+    plane_add(plane_smul(coordinates(1), standard_basis(1)), plane_smul(coordinates(2), standard_basis(2))) = coordinates
+    plane_smul(coordinates(1), standard_basis(1)) = plane_smul(a, standard_basis(1))
+    plane_smul(coordinates(2), standard_basis(2)) = plane_smul(b, standard_basis(2))
+    coordinates = plane_add(plane_smul(coordinates(1), standard_basis(1)), plane_smul(coordinates(2), standard_basis(2))) = plane_add(plane_smul(a, standard_basis(1)), plane_smul(b, standard_basis(2))) = v
+    a = coordinates(1) = v(1)
+    b = coordinates(2) = v(2)
+

@@ -1,0 +1,14 @@
+# 能通过：给出两个前提，再检查结论。
+# is_human 表示是人，is_mortal 表示会死；它们只是命题名称。
+# 这个条件命题说明：假如前提成立，那么结论成立。
+abstract_prop is_human(person)
+abstract_prop is_mortal(person)
+
+forall people nonempty_set, socrates people:
+    $is_human(socrates)
+    forall person people:
+        $is_human(person)
+        =>:
+            $is_mortal(person)
+    =>:
+        $is_mortal(socrates)

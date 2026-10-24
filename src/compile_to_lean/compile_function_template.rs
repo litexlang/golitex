@@ -34,6 +34,19 @@ impl LitexToLeanCompiler {
     }
 
     pub(in crate::compile_to_lean) fn function_uses_numeric_interface(signature: &FnSet) -> bool {
+        let numeric_carrier = |object: &Obj| {
+            matches!(
+                object,
+                Obj::StandardSet(
+                    StandardSet::N
+                        | StandardSet::Z
+                        | StandardSet::Q
+                        | StandardSet::R
+                        | StandardSet::C
+                        | StandardSet::RPos
+                )
+            )
+        };
         let count: usize = signature
             .set_bound_parameters
             .groups
@@ -45,8 +58,8 @@ impl LitexToLeanCompiler {
                 .set_bound_parameters
                 .groups
                 .iter()
-                .all(|group| matches!(group.param_type.as_ref(), Obj::StandardSet(_)))
-            && matches!(signature.ret_set.as_ref(), Obj::StandardSet(_))
+                .all(|group| numeric_carrier(&group.param_type))
+            && numeric_carrier(&signature.ret_set)
     }
 
     pub(in crate::compile_to_lean) fn compile_function_input_sets(
@@ -73,6 +86,37 @@ impl LitexToLeanCompiler {
             return Err(LeanCompileError::unsupported("Function/Arity"));
         }
         Ok(sets)
+    }
+
+    pub(in crate::compile_to_lean) fn compile_function_semantic_base_domain(
+        &self,
+        signature: &FnSet,
+        position: &SourcePosition<'_>,
+    ) -> Result<(String, String), LeanCompileError> {
+        if !Self::function_uses_numeric_interface(signature) {
+            return self.compile_function_base_domain(signature, position);
+        }
+        let mut domains = self.compile_function_domains(signature, position)?;
+        domains.pop();
+        let values: Vec<_> = domains
+            .iter()
+            .map(|d| format!("(M.standard {d})"))
+            .collect();
+        let proofs: Vec<_> = domains
+            .iter()
+            .map(|d| format!("(M.standard_isSet {d})"))
+            .collect();
+        if values.len() == 1 {
+            return Ok((values[0].clone(), proofs[0].clone()));
+        }
+        let vector = format!("![{}]", values.join(", "));
+        Ok((
+            format!("(Litex.FiniteFunction.cartValue (M := M) {vector})"),
+            format!(
+                "(Litex.FiniteFunction.cart_isSet (M := M) {vector} {})",
+                finite_vector_proof(&proofs)
+            ),
+        ))
     }
 
     pub(in crate::compile_to_lean) fn compile_function_base_domain(
@@ -441,7 +485,13 @@ impl LitexToLeanCompiler {
             Obj::Literal(Literal::Number(number)) => {
                 Ok(format!("(M.number {})", number_literal(number, "ℂ")?))
             }
+            Obj::Literal(Literal::ImaginaryUnit(_)) => Ok("(M.number Complex.I)".into()),
             Obj::StandardSet(StandardSet::RPos) => Ok("(Litex.positiveReal (M := M))".into()),
+            Obj::StandardSet(set)
+                if *set == StandardSet::NPos || numeric_refinement(set).is_some() =>
+            {
+                Ok(format!("(Litex.denote {})", standard_term(set)?))
+            }
             Obj::StandardSet(set) => Ok(format!(
                 "(M.standard Litex.StandardSetValue.{})",
                 standard_value_constructor(set)?
@@ -470,9 +520,9 @@ impl LitexToLeanCompiler {
                     .iter()
                     .map(|child| expression(child))
                     .collect::<Result<Vec<_>, _>>()?;
-                Ok(format!(
-                    "(Litex.FiniteFunction.finiteSetValue (M := M) [{}])",
-                    values.join(", ")
+                Ok(values.into_iter().rev().fold(
+                    "(Litex.SetSemantics.emptyValue (M := M))".to_string(),
+                    |tail, value| format!("(Litex.SetSemantics.insertValue {value} {tail})"),
                 ))
             }
             Obj::SetFormer(SetFormer::SetBuilder(value)) => {
@@ -513,11 +563,63 @@ impl LitexToLeanCompiler {
                 "(Litex.sqrtValue (M := M) {})",
                 expression(&value.arg)?
             )),
+            Obj::IntegerOperator(IntegerOperator::Factorial(p)) => Ok(format!(
+                "(Litex.factorialValue (M := M) {})",
+                expression(&p.arg)?
+            )),
+            Obj::IntegerOperator(operator) => {
+                let (operation, left, right) = match operator {
+                    IntegerOperator::Mod(p) => ("modValue", &p.left, &p.right),
+                    IntegerOperator::Quot(p) => ("quotValue", &p.left, &p.right),
+                    IntegerOperator::Gcd(p) => ("gcdValue", &p.left, &p.right),
+                    IntegerOperator::Lcm(p) => ("lcmValue", &p.left, &p.right),
+                    _ => {
+                        return Err(LeanCompileError::unsupported(
+                            "FunctionTemplate/IntegerOperator",
+                        ))
+                    }
+                };
+                Ok(format!(
+                    "({} {} {})",
+                    arithmetic_operation_term(operation),
+                    expression(left)?,
+                    expression(right)?
+                ))
+            }
             Obj::ArithmeticOperator(operator) => {
+                let rounding = match operator {
+                    ArithmeticOperator::Floor(value) => Some((false, &value.arg)),
+                    ArithmeticOperator::Ceil(value) => Some((true, &value.arg)),
+                    _ => None,
+                };
+                if let Some((ceiling, argument)) = rounding {
+                    return Ok(format!(
+                        "(Litex.roundingValue (M := M) {ceiling} {})",
+                        expression(argument)?
+                    ));
+                }
+                if let ArithmeticOperator::Sign(value) = operator {
+                    return Ok(format!(
+                        "(Litex.signValue (M := M) {})",
+                        expression(&value.arg)?
+                    ));
+                }
                 if let ArithmeticOperator::Abs(value) = operator {
                     return Ok(format!(
                         "(Litex.absValue (M := M) {})",
                         expression(&value.arg)?
+                    ));
+                }
+                let extremum = match operator {
+                    ArithmeticOperator::Min(value) => Some((false, &value.left, &value.right)),
+                    ArithmeticOperator::Max(value) => Some((true, &value.left, &value.right)),
+                    _ => None,
+                };
+                if let Some((maximum, left, right)) = extremum {
+                    return Ok(format!(
+                        "(Litex.minMaxValue (M := M) {maximum} {} {})",
+                        expression(left)?,
+                        expression(right)?
                     ));
                 }
                 let (name, left, right) = match operator {
@@ -538,6 +640,46 @@ impl LitexToLeanCompiler {
                     .unwrap_or_default();
                 Ok(format!("(M.{name} {left}{right})"))
             }
+            Obj::SetFormer(SetFormer::Range(_) | SetFormer::ClosedRange(_)) => {
+                let mut free = std::collections::HashSet::new();
+                crate::instantiate::collect_free_plain_ids(
+                    object,
+                    &std::collections::HashSet::new(),
+                    &mut free,
+                );
+                if free.iter().any(|id| bindings.contains_key(id)) {
+                    return Err(LeanCompileError::unsupported(
+                        "Function/BoundIntegerInterval",
+                    ));
+                }
+                Ok(format!(
+                    "(Litex.denote {})",
+                    self.compile_object_reference(object, position)?
+                ))
+            }
+            Obj::FunctionSpace(FunctionSpace::FnRange(r)) => Ok(format!(
+                "(Litex.FunctionSemantics.rangeValue {})",
+                expression(&r.function)?
+            )),
+            Obj::FunctionSpace(FunctionSpace::AnonymousFn(_)) => {
+                // Reuse the literal's original certified constructor. A raw
+                // binder substitution must not silently change its capture.
+                let mut free = std::collections::HashSet::new();
+                crate::instantiate::collect_free_plain_ids(
+                    object,
+                    &std::collections::HashSet::new(),
+                    &mut free,
+                );
+                if free.iter().any(|id| bindings.contains_key(id)) {
+                    return Err(LeanCompileError::unsupported(
+                        "Function/BoundAnonymousCapture",
+                    ));
+                }
+                Ok(format!(
+                    "(Litex.denote {})",
+                    self.compile_object_reference(object, position)?
+                ))
+            }
             Obj::FnObj(application) => {
                 if application.body.is_empty()
                     || application
@@ -550,6 +692,9 @@ impl LitexToLeanCompiler {
                 let object = match application.head.as_ref() {
                     FnObjHead::Identifier(identifier) => Obj::Identifier(identifier.clone()),
                     FnObjHead::Object(object) => object.as_ref().clone(),
+                    FnObjHead::AnonymousFnLiteral(literal) => {
+                        Obj::FunctionSpace(FunctionSpace::AnonymousFn(literal.as_ref().clone()))
+                    }
                     _ => return Err(LeanCompileError::unsupported("Function/BodyCallHead")),
                 };
                 let mut head = if let Some(value) = match &object {
@@ -593,7 +738,10 @@ impl LitexToLeanCompiler {
         position: &SourcePosition<'_>,
     ) -> Result<(), LeanCompileError> {
         if let Obj::Identifier(IdentifierObj::Plain { id, .. }) = object {
-            if position.visible_function(id).is_ok()
+            if matches!(
+                position.visible_parameter(*id, &self.runtime),
+                Ok((_, Some(Obj::FunctionSpace(FunctionSpace::FnSet(_))), _, _))
+            ) || position.visible_function(id).is_ok()
                 || position.visible_recursive_function(id).is_ok()
             {
                 return Ok(());
@@ -605,7 +753,7 @@ impl LitexToLeanCompiler {
         position.with_visible_alias(object, &mut |_, value, result, producer| {
             self.compile_wd(success_object_wd(result, value)?, producer)?;
             self.validate_formula_head_producer(value, producer)
-        })?.ok_or_else(|| LeanCompileError::new("Function/BodyCallProducer", "The raw call must cite a preceding original formula-function constructor or its RHS/let alias."))
+        })?.ok_or_else(|| LeanCompileError::new("Function/BodyCallProducer", "The raw call must cite an original function parameter, formula constructor or its RHS/let alias."))
     }
 
     pub(in crate::compile_to_lean) fn compile_function_raw_clause(
@@ -681,6 +829,22 @@ impl LitexToLeanCompiler {
         position: &SourcePosition<'_>,
         bindings: &HashMap<IdentifierId, String>,
     ) -> Result<String, LeanCompileError> {
+        if matches!(
+            fact,
+            AtomicFact::NotLessFact(_)
+                | AtomicFact::NotLessEqualFact(_)
+                | AtomicFact::NotGreaterFact(_)
+                | AtomicFact::NotGreaterEqualFact(_)
+                | AtomicFact::NotSubsetFact(_)
+                | AtomicFact::NotNormalAtomicFact(_)
+        ) {
+            let positive = crate::ast::fact::negate_atomic_fact(fact, fact.fact_id())
+                .ok_or_else(|| LeanCompileError::unsupported("Function/RawNegation"))?;
+            return Ok(format!(
+                "(¬ ({}))",
+                self.compile_function_raw_fact_bound(&positive, position, bindings)?
+            ));
+        }
         let arguments = atomic_fact_args_ref(fact)
             .iter()
             .map(|argument| {
@@ -734,6 +898,20 @@ impl LitexToLeanCompiler {
                 };
                 format!("(∃ (_r _s : ℝ), {left} = M.number (_r : ℂ) ∧ {right} = M.number (_s : ℂ) ∧ _r {} _s)", if strict { "<" } else { "≤" })
             }
+            fact if crate::compile_to_lean::compile_mapping_properties::mapping_parts(fact)
+                .is_some() =>
+            {
+                let (kind, negative, _) =
+                    crate::compile_to_lean::compile_mapping_properties::mapping_parts(fact)
+                        .unwrap();
+                format!(
+                    "({}Litex.{kind}Value {} {} {})",
+                    if negative { "¬ " } else { "" },
+                    arguments[0],
+                    arguments[1],
+                    arguments[2]
+                )
+            }
             AtomicFact::NormalAtomicFact(normal) => {
                 let (definition, producer, _) = position.visible_prop(&normal.predicate)?;
                 let parameters = definition
@@ -763,6 +941,10 @@ impl LitexToLeanCompiler {
                     .collect::<HashMap<_, _>>();
                 let mut clauses = Vec::new();
                 for ((_, carrier), argument) in parameters.iter().zip(arguments) {
+                    if matches!(carrier, ParamType::Set(_)) {
+                        clauses.push(format!("(M.isSet {argument})"));
+                        continue;
+                    }
                     let ParamType::Obj(carrier) = carrier else {
                         return Err(LeanCompileError::unsupported(
                             "Function/GuardPredicateCarrier",

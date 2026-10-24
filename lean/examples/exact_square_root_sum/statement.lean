@@ -26,8 +26,13 @@ theorem h_1 : (by
   let _atomic_wd_1_0 := (_object_w1 (M := M))
   exact Litex.IsSet _atomic_wd_1_0) :=
   (by
-    let _atomic_wd_1_0 := (_object_w1 (M := M))
-    exact (Litex.isSet _atomic_wd_1_0))
+    litex_complete =>
+      exact (
+        (by
+          let _atomic_wd_1_0 := (_object_w1 (M := M))
+          exact (Litex.isSet _atomic_wd_1_0))
+      )
+  )
 
 noncomputable def _object_w2 := ((_object_w1 (M := M))).val.left
 
@@ -35,6 +40,11 @@ theorem h_12 : (by
   let _atomic_wd_1_0 := (_object_w2 (M := M))
   exact Litex.IsSet _atomic_wd_1_0) :=
   (by
-    let _atomic_wd_1_0 := (_object_w2 (M := M))
-    exact (Litex.isSet _atomic_wd_1_0))
+    litex_complete =>
+      exact (
+        (by
+          let _atomic_wd_1_0 := (_object_w2 (M := M))
+          exact (Litex.isSet _atomic_wd_1_0))
+      )
+  )
 end LitexCompiled.file_lean_x2f_examples_x2f_exact_x5f_square_x5f_root_x5f_sum_x2f_statement_x2e_lit

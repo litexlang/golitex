@@ -10,12 +10,13 @@ env and may **store routine consequences**. It is not open-ended proof search.
 | `store_fact` | Index by shape into known-\* / ExecEnv (no math consequences) |
 | `infer_fact` | Generate direct facts only via `store_inferred_fact` |
 | `store_fact_and_infer` | `{ store, infer }` for a verified seed |
-| `store_inferred_fact` | Direct store only; no WD-cache write (`remember_formed` stays on the user `store_fact_and_infer` path). Correctness belongs to the named infer rule. |
+| `store_inferred_fact` | Direct store plus the direct formed-subject WD cache (`remember_formed_atomic_subjects`), with no further verification or inference. Correctness belongs to the named infer rule. |
 
 Forward inference runs once per seed. Each named rule guarantees formation and
 truth of its direct conclusions from the checked source and its own applicable
-conditions. Conclusions store without another WD or inference pass. A later
-explicit statement can verify a stored conclusion and use it as a new seed.
+conditions. Conclusions store without another WD or inference pass, while their
+direct atomic subjects keep the same WD cache entry as a checked user fact. A
+later explicit statement can verify a stored conclusion and use it as a new seed.
 `StoreInferredFactResult { store }` records the actual storage stage. The owning
 infer enum retains the rule identity, source IDs and genuine condition proofs.
 Lean uses this instance data with a proved rule and certified constructors from

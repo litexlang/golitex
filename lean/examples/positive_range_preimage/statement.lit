@@ -1,0 +1,4 @@
+# A preimage of a positive identity value retains positive-real membership.
+have fn positive_identity(x R+) R+ = x
+have by fn_preimage: a from positive_identity(2) $in fn_range(positive_identity)
+a $in R+

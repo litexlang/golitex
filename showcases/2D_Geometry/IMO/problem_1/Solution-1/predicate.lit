@@ -1,6 +1,6 @@
 release obj def geo::vec
 release obj def geo::dot
-release obj def geo::det
+release obj def geo::det2
 release obj def geo::distance_sq
 
 # Predicates specific to IMO 1960 Problem 3.
@@ -21,7 +21,7 @@ prop is_altitude_length(a, b, c cart(R, R), h, base_length R):
     h >= 0
     base_length > 0
     base_length^2 = geo::distance_sq(b, c)
-    (h * base_length)^2 = geo::det(geo::vec(a, b), geo::vec(a, c))^2
+    (h * base_length)^2 = geo::det2(geo::vec(a, b), geo::vec(a, c))^2
 
 # t is the tangent of the acute, undirected angle subtended by P1P2 at A.
 # Positivity of the dot product selects the acute angle; squaring removes
@@ -31,4 +31,4 @@ prop is_acute_subtended_tangent(a, p1, p2 cart(R, R), t R):
     a != p2
     geo::dot(geo::vec(a, p1), geo::vec(a, p2)) > 0
     t >= 0
-    (t * geo::dot(geo::vec(a, p1), geo::vec(a, p2)))^2 = geo::det(geo::vec(a, p1), geo::vec(a, p2))^2
+    (t * geo::dot(geo::vec(a, p1), geo::vec(a, p2)))^2 = geo::det2(geo::vec(a, p1), geo::vec(a, p2))^2

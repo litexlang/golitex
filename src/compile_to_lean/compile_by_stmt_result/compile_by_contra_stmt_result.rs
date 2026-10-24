@@ -1,3 +1,6 @@
+use super::compile_classified_negation::{
+    classified_negation_bridge, validate_classified_negation,
+};
 use crate::compile_to_lean::helper::*;
 use crate::compile_to_lean::source_position::{SourceOwner, SourcePosition};
 use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
@@ -18,11 +21,16 @@ impl LitexToLeanCompiler {
         let VerifyFactWellDefinedResult::Success(goal_wd) = &proof.goal_wd else {
             return Err(LeanCompileError::unsupported("Contra/GoalWD"));
         };
-        let negative_goal = validate_atomic_negation(&proof.goal, &proof.reverse_assumption)?;
-        self.compile_fact_wd(goal_wd, &proof.goal, position)?;
-        let goal_formed =
-            SourcePosition::new(Some(position), SourceOwner::FactWD(goal_wd), usize::MAX);
-        let proposition = self.fact_proposition(&proof.goal, &goal_formed)?;
+        validate_classified_negation(&proof.goal, &proof.reverse_assumption)?;
+        let atomic_negative = if matches!(proof.goal, Fact::AtomicFact(_)) {
+            Some(validate_atomic_negation(
+                &proof.goal,
+                &proof.reverse_assumption,
+            )?)
+        } else {
+            None
+        };
+        let proposition = self.compile_formed_fact_proposition(goal_wd, &proof.goal, position)?;
         let caller = SourcePosition {
             before: 1,
             ..*position
@@ -37,21 +45,30 @@ impl LitexToLeanCompiler {
             &scope,
         )?;
         let name = format!("h_{}", proof.reverse_assumption_fact_id.value());
-        let mut steps = if negative_goal {
-            vec![
+        let mut steps = match atomic_negative {
+            Some(true) => vec![
                 "classical".to_string(),
                 "apply Classical.byContradiction".to_string(),
                 "intro _litex_negated_goal".to_string(),
                 format!(
                     "have {name} : {assumption} := Classical.byContradiction _litex_negated_goal"
                 ),
-            ]
-        } else {
-            vec![
-                "classical".into(),
-                "apply Classical.byContradiction".into(),
+            ],
+            Some(false) => vec![
+                "classical".to_string(),
+                "apply Classical.byContradiction".to_string(),
                 format!("intro {name}"),
-            ]
+            ],
+            None => vec![
+                "classical".to_string(),
+                "apply Classical.byContradiction".to_string(),
+                "intro _litex_negated_goal".to_string(),
+                format!(
+                    "have {name} : {assumption} := {}",
+                    self.compile_quantified_contra_bridge(proof, "_litex_negated_goal", position)?
+                        .unwrap_or_else(|| classified_negation_bridge("_litex_negated_goal"))
+                ),
+            ],
         };
         steps.append(&mut body);
         for (step_index, step) in proof.proof_steps.iter().enumerate() {
@@ -110,13 +127,15 @@ impl LitexToLeanCompiler {
                 "The local assumption ID or ordered components differ from its original store.",
             ));
         }
-        self.compile_fact_wd(wd, fact, scope)?;
-        self.validate_store(&store.store, fact)?;
-        let formed = SourcePosition {
-            before: 1,
-            ..*scope
+        let proposition = match (fact, wd, scope.owner) {
+            (
+                Fact::ForallFact(fact),
+                FactWellDefinedProof::ForallFact(wd),
+                SourceOwner::Contra(_),
+            ) => self.compile_canonical_forall_formation(fact, wd, scope)?,
+            _ => self.compile_formed_fact_proposition(wd, fact, scope)?,
         };
-        let proposition = self.fact_proposition(fact, &formed)?;
+        self.validate_store(&store.store, fact)?;
         let complete = SourcePosition {
             before: 2,
             ..*scope
@@ -145,7 +164,7 @@ impl LitexToLeanCompiler {
             ));
         }
         let negated = source_subject(&closing.negated_impossible)?;
-        let impossible_is_negative = validate_atomic_negation(&impossible, &negated)?;
+        validate_classified_negation(&impossible, &negated)?;
         let positive = self.compile_verify(&closing.impossible, position)?;
         let next = SourcePosition {
             before: position.before + 1,
@@ -173,14 +192,24 @@ impl LitexToLeanCompiler {
                 }
             }
         }
-        let (asserted, denied) = if impossible_is_negative {
-            (negative, positive)
+        if let Some(term) =
+            self.compile_quantified_closing(&impossible, &negated, &positive, &negative, position)?
+        {
+            return Ok(term);
+        }
+        let (asserted, denied) = if matches!(impossible, Fact::AtomicFact(_)) {
+            if validate_atomic_negation(&impossible, &negated)? {
+                (negative, positive.1)
+            } else {
+                (positive, negative.1)
+            }
         } else {
-            (positive, negative)
+            let typed = format!("(show {} from {})", negative.0, negative.1);
+            (positive, classified_negation_bridge(&typed))
         };
         Ok(format!(
             "(by\n  have _asserted : {} := {}\n  have _denied : ¬ ({}) := {}\n  exact _denied _asserted)",
-            asserted.0, asserted.1, asserted.0, denied.1
+            asserted.0, asserted.1, asserted.0, denied
         ))
     }
 
@@ -221,7 +250,7 @@ impl LitexToLeanCompiler {
 
 // Reconstruct only the classified negation shape, reusing the recorded target
 // ID. This does not allocate an ID, mutate Runtime, or search for a proof.
-pub(super) fn validate_atomic_negation(
+pub(in crate::compile_to_lean) fn validate_atomic_negation(
     left: &Fact,
     right: &Fact,
 ) -> Result<bool, LeanCompileError> {
@@ -230,12 +259,16 @@ pub(super) fn validate_atomic_negation(
     };
     let negative = match left {
         AtomicFact::NormalAtomicFact(_)
+        | AtomicFact::InFact(_)
+        | AtomicFact::SubsetFact(_)
         | AtomicFact::EqualFact(_)
         | AtomicFact::LessFact(_)
         | AtomicFact::GreaterFact(_)
         | AtomicFact::LessEqualFact(_)
         | AtomicFact::GreaterEqualFact(_) => false,
         AtomicFact::NotNormalAtomicFact(_)
+        | AtomicFact::NotInFact(_)
+        | AtomicFact::NotSubsetFact(_)
         | AtomicFact::NotEqualFact(_)
         | AtomicFact::NotLessFact(_)
         | AtomicFact::NotGreaterFact(_)

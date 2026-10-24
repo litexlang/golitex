@@ -1,0 +1,5 @@
+# Expand an interval whose integer endpoints are arithmetic expressions.
+claim:
+    ? forall x range(1 + 1, 2 + 2):
+        x = 2 or x = 3
+    expand: x $in range(1 + 1, 2 + 2)

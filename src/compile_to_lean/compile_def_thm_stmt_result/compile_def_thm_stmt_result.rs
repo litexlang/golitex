@@ -31,8 +31,54 @@ impl LitexToLeanCompiler {
                 self.context_header(position)?
             },
             compiled.0,
-            compiled.1.replace('\n', "\n  ")
+            self.share_local_proof(&compiled.1, local)
+                .replace('\n', "\n  ")
         );
+        if let Fact::NotExistFact(fact) = &proof.statement.fact {
+            let reference = if local {
+                name
+            } else {
+                self.context_application(&name, position)
+            };
+            let mut declarations = vec![declaration];
+            declarations.extend(self.compile_not_exist_inference(
+                &proof.stored,
+                fact,
+                &(compiled.0, reference),
+                position,
+            )?);
+            return Ok(declarations.join("\n\n"));
+        }
+        if let Fact::ExistUniqueFact(fact) = &proof.statement.fact {
+            let reference = if local {
+                name
+            } else {
+                self.context_application(&name, position)
+            };
+            let mut declarations = vec![declaration];
+            declarations.extend(self.compile_unique_inference(
+                &proof.stored,
+                fact,
+                &(compiled.0, reference),
+                position,
+            )?);
+            return Ok(declarations.join("\n\n"));
+        }
+        if let Fact::NotForall(fact) = &proof.statement.fact {
+            let reference = if local {
+                name
+            } else {
+                self.context_application(&name, position)
+            };
+            let mut declarations = vec![declaration];
+            declarations.extend(self.compile_not_forall_inference(
+                &proof.stored,
+                fact,
+                &(compiled.0, reference),
+                position,
+            )?);
+            return Ok(declarations.join("\n\n"));
+        }
         Ok(declaration)
     }
 
@@ -77,7 +123,10 @@ impl LitexToLeanCompiler {
                     Fact::AtomicFact(_)
                     | Fact::AndFact(_)
                     | Fact::ChainFact(_)
-                    | Fact::ExistFact(_),
+                    | Fact::ExistFact(_)
+                    | Fact::NotExistFact(_)
+                    | Fact::ExistUniqueFact(_)
+                    | Fact::NotForall(_),
                     ExecDefThmBodyProof::NonForall(body),
                 ) => (
                     Vec::new(),
@@ -208,7 +257,13 @@ impl LitexToLeanCompiler {
                 ))
             }
             (
-                Fact::AtomicFact(_) | Fact::AndFact(_) | Fact::ChainFact(_) | Fact::ExistFact(_),
+                Fact::AtomicFact(_)
+                | Fact::AndFact(_)
+                | Fact::ChainFact(_)
+                | Fact::ExistFact(_)
+                | Fact::NotExistFact(_)
+                | Fact::ExistUniqueFact(_)
+                | Fact::NotForall(_),
                 _,
             ) => Ok((
                 self.compile_formed_fact_proposition(goal_wd, &proof.statement.fact, position)?,
@@ -351,9 +406,7 @@ fn named_goal_component(fact: &ExistOrAndChainAtomicFact) -> Result<Fact, LeanCo
         ExistOrAndChainAtomicFact::ChainFact(fact) => Ok(Fact::ChainFact(fact.clone())),
         ExistOrAndChainAtomicFact::OrFact(fact) => Ok(Fact::OrFact(fact.clone())),
         ExistOrAndChainAtomicFact::ExistFact(fact) => Ok(Fact::ExistFact(fact.clone())),
-        ExistOrAndChainAtomicFact::ExistUniqueFact(_)
-        | ExistOrAndChainAtomicFact::NotExistFact(_) => {
-            Err(LeanCompileError::unsupported("Theorem/CompoundThen"))
-        }
+        ExistOrAndChainAtomicFact::NotExistFact(fact) => Ok(Fact::NotExistFact(fact.clone())),
+        ExistOrAndChainAtomicFact::ExistUniqueFact(fact) => Ok(Fact::ExistUniqueFact(fact.clone())),
     }
 }

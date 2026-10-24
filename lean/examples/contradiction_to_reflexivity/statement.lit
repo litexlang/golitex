@@ -1,0 +1,6 @@
+# Exclude a hypothetical counterexample to equality reflexivity on R.
+by contra:
+    ? forall x R:
+        x = x
+    obtain a from exist y R st {y != y}
+    impossible a != a

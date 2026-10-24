@@ -264,9 +264,44 @@ fn positive_closed_membership_rejects_changed_certificate_value() {
 }
 
 #[test]
-fn other_signed_carriers_remain_rejected_boundaries() {
+fn negative_real_binder_now_replays_its_sign_stores() {
     let (result, compiler) = checked("forall x R-:\n    x = x\n");
+    let output = compiler
+        .compile_run(&result, "negative_real_binder")
+        .unwrap();
+    assert!(output.contains("Litex.inRNeg_negative"));
+}
+
+#[test]
+fn positive_natural_binder_emits_all_original_sign_stores() {
+    let source = "claim:\n    ? forall n N+:\n        n = n\n    n = n\n";
+    let (mut result, compiler) = checked(source);
+    let captured = sign(
+        &body(&result.statement_results[0])
+            .introduced_params
+            .defined_params
+            .store_and_infer_results[0],
+    );
+    let lean = compiler
+        .compile_run(&result, "natural_sign_stores")
+        .unwrap();
+    assert!(lean.contains("Litex.inNPos_positive"));
+    assert_eq!(captured.derived.len(), 3);
+    for store in &captured.derived {
+        assert!(lean.contains(&format!("have h_{}", store.primary_fact_id().value())));
+    }
+    sign_mut(
+        std::rc::Rc::get_mut(
+            &mut body_mut(&mut result.statement_results[0])
+                .introduced_params
+                .defined_params
+                .store_and_infer_results[0],
+        )
+        .expect("test-owned positive natural store"),
+    )
+    .derived
+    .pop();
     assert!(compiler
-        .compile_run(&result, "negative_real_boundary")
+        .compile_run(&result, "missing_natural_sign_store")
         .is_err());
 }

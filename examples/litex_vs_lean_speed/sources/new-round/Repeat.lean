@@ -23,8 +23,6 @@ elab "#probe " label:str cmd:command : command => do
   IO.println s!"PROBE,{label.getString},{success},{elapsed}"
   set before
 
-#probe "sqrt_two_irrational__mathlib_theorem__first" theorem initial_sqrt_two_irrational_mathlib_theorem : Irrational (Real.sqrt 2) := irrational_sqrt_two
-
 #probe "sqrt_two_irrational__scratch__first" theorem initial_sqrt_two_irrational_scratch : Irrational (Real.sqrt 2) := by
   rintro ⟨q, hq⟩
   have h2 : (q : Real) ^ 2 = 2 := by
@@ -68,20 +66,6 @@ elab "#probe " label:str cmd:command : command => do
   have hgcd : 2 ∣ p.gcd m := Nat.dvd_gcd ⟨k, hk⟩ hm_even
   rw [hcop] at hgcd
   omega
-
-#probe "sqrt_two_irrational__mathlib_theorem" theorem sample_sqrt_two_irrational_mathlib_theorem_0 : Irrational (Real.sqrt 2) := irrational_sqrt_two
-
-#probe "sqrt_two_irrational__mathlib_theorem" theorem sample_sqrt_two_irrational_mathlib_theorem_1 : Irrational (Real.sqrt 2) := irrational_sqrt_two
-
-#probe "sqrt_two_irrational__mathlib_theorem" theorem sample_sqrt_two_irrational_mathlib_theorem_2 : Irrational (Real.sqrt 2) := irrational_sqrt_two
-
-#probe "sqrt_two_irrational__mathlib_theorem" theorem sample_sqrt_two_irrational_mathlib_theorem_3 : Irrational (Real.sqrt 2) := irrational_sqrt_two
-
-#probe "sqrt_two_irrational__mathlib_theorem" theorem sample_sqrt_two_irrational_mathlib_theorem_4 : Irrational (Real.sqrt 2) := irrational_sqrt_two
-
-#probe "sqrt_two_irrational__mathlib_theorem" theorem sample_sqrt_two_irrational_mathlib_theorem_5 : Irrational (Real.sqrt 2) := irrational_sqrt_two
-
-#probe "sqrt_two_irrational__mathlib_theorem" theorem sample_sqrt_two_irrational_mathlib_theorem_6 : Irrational (Real.sqrt 2) := irrational_sqrt_two
 
 #probe "sqrt_two_irrational__scratch" theorem sample_sqrt_two_irrational_scratch_0 : Irrational (Real.sqrt 2) := by
   rintro ⟨q, hq⟩
@@ -486,38 +470,6 @@ elab "#probe " label:str cmd:command : command => do
 #probe "function_mem_range__lemma" theorem sample_function_mem_range_lemma_5 : ∀ (f : Real → Real) (x : Real), f x ∈ Set.range f := fun f x => Set.mem_range_self x
 
 #probe "function_mem_range__lemma" theorem sample_function_mem_range_lemma_6 : ∀ (f : Real → Real) (x : Real), f x ∈ Set.range f := fun f x => Set.mem_range_self x
-
-#probe "function_comp_assoc__term__first" theorem initial_function_comp_assoc_term : ∀ f g h : Real → Real, (f ∘ g) ∘ h = f ∘ (g ∘ h) := fun _ _ _ => rfl
-
-#probe "function_comp_assoc__lemma__first" theorem initial_function_comp_assoc_lemma : ∀ f g h : Real → Real, (f ∘ g) ∘ h = f ∘ (g ∘ h) := fun f g h => Function.comp_assoc f g h
-
-#probe "function_comp_assoc__term" theorem sample_function_comp_assoc_term_0 : ∀ f g h : Real → Real, (f ∘ g) ∘ h = f ∘ (g ∘ h) := fun _ _ _ => rfl
-
-#probe "function_comp_assoc__term" theorem sample_function_comp_assoc_term_1 : ∀ f g h : Real → Real, (f ∘ g) ∘ h = f ∘ (g ∘ h) := fun _ _ _ => rfl
-
-#probe "function_comp_assoc__term" theorem sample_function_comp_assoc_term_2 : ∀ f g h : Real → Real, (f ∘ g) ∘ h = f ∘ (g ∘ h) := fun _ _ _ => rfl
-
-#probe "function_comp_assoc__term" theorem sample_function_comp_assoc_term_3 : ∀ f g h : Real → Real, (f ∘ g) ∘ h = f ∘ (g ∘ h) := fun _ _ _ => rfl
-
-#probe "function_comp_assoc__term" theorem sample_function_comp_assoc_term_4 : ∀ f g h : Real → Real, (f ∘ g) ∘ h = f ∘ (g ∘ h) := fun _ _ _ => rfl
-
-#probe "function_comp_assoc__term" theorem sample_function_comp_assoc_term_5 : ∀ f g h : Real → Real, (f ∘ g) ∘ h = f ∘ (g ∘ h) := fun _ _ _ => rfl
-
-#probe "function_comp_assoc__term" theorem sample_function_comp_assoc_term_6 : ∀ f g h : Real → Real, (f ∘ g) ∘ h = f ∘ (g ∘ h) := fun _ _ _ => rfl
-
-#probe "function_comp_assoc__lemma" theorem sample_function_comp_assoc_lemma_0 : ∀ f g h : Real → Real, (f ∘ g) ∘ h = f ∘ (g ∘ h) := fun f g h => Function.comp_assoc f g h
-
-#probe "function_comp_assoc__lemma" theorem sample_function_comp_assoc_lemma_1 : ∀ f g h : Real → Real, (f ∘ g) ∘ h = f ∘ (g ∘ h) := fun f g h => Function.comp_assoc f g h
-
-#probe "function_comp_assoc__lemma" theorem sample_function_comp_assoc_lemma_2 : ∀ f g h : Real → Real, (f ∘ g) ∘ h = f ∘ (g ∘ h) := fun f g h => Function.comp_assoc f g h
-
-#probe "function_comp_assoc__lemma" theorem sample_function_comp_assoc_lemma_3 : ∀ f g h : Real → Real, (f ∘ g) ∘ h = f ∘ (g ∘ h) := fun f g h => Function.comp_assoc f g h
-
-#probe "function_comp_assoc__lemma" theorem sample_function_comp_assoc_lemma_4 : ∀ f g h : Real → Real, (f ∘ g) ∘ h = f ∘ (g ∘ h) := fun f g h => Function.comp_assoc f g h
-
-#probe "function_comp_assoc__lemma" theorem sample_function_comp_assoc_lemma_5 : ∀ f g h : Real → Real, (f ∘ g) ∘ h = f ∘ (g ∘ h) := fun f g h => Function.comp_assoc f g h
-
-#probe "function_comp_assoc__lemma" theorem sample_function_comp_assoc_lemma_6 : ∀ f g h : Real → Real, (f ∘ g) ∘ h = f ∘ (g ∘ h) := fun f g h => Function.comp_assoc f g h
 
 #probe "integer_division_decomposition__lemma__first" theorem initial_integer_division_decomposition_lemma : ∀ (a : Int) (d : Nat), 0 < d → a = (d : Int) * (a / (d : Int)) + a % (d : Int) := fun a d _ => (Int.mul_ediv_add_emod a (d : Int)).symm
 

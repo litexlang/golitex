@@ -1,0 +1,47 @@
+have fn standard_ellipse(a, b, c R: a > b > 0, c > 0) power_set(cart(R, R)) = {z cart(R, R): z(1)^2 / a + z(2)^2 / b = c}
+
+claim:
+    ? forall a, b, c R, w cart(R, R):
+            a > b > 0
+            c > 0
+            w(1)^2 / a + w(2)^2 / b = c
+            =>:
+                w $in standard_ellipse(a, b, c)
+    standard_ellipse(a, b, c) = {z cart(R, R): z(1)^2 / a + z(2)^2 / b = c}
+    w $in {z cart(R, R): z(1)^2 / a + z(2)^2 / b = c}
+    w $in standard_ellipse(a, b, c)
+
+claim:
+    ? forall a, b, c R:
+        a > b > 0
+        c > 0
+        =>:
+            0 <= c * (a - b)
+    a - b > 0
+    c * (a - b) > 0
+
+have fn ellipse_focal_radius(a, b, c R: a > b > 0, c > 0) R by cases:
+    case c > 0: sqrt(c * (a - b))
+have fn left_ellipse_focus(a, b, c R: a > b > 0, c > 0) cart(R, R) = (-ellipse_focal_radius(a, b, c), 0)
+have fn right_ellipse_focus(a, b, c R: a > b > 0, c > 0) cart(R, R) = (ellipse_focal_radius(a, b, c), 0)
+
+claim:
+    ? forall a, b, c R:
+            a > b > 0
+            c > 0
+            =>:
+                (right_ellipse_focus(a, b, c)(1) - left_ellipse_focus(a, b, c)(1))^2 = 4 * c * (a - b)
+    a - b > 0
+    c * (a - b) > 0
+    0 <= c * (a - b)
+    ellipse_focal_radius(a, b, c) = sqrt(c * (a - b))
+    have focal_square R+ = c * (a - b)
+    sqrt(focal_square) = sqrt(c * (a - b)) = ellipse_focal_radius(a, b, c)
+    ellipse_focal_radius(a, b, c)^2 = sqrt(focal_square)^2 = focal_square = c * (a - b)
+    left_ellipse_focus(a, b, c) = (-ellipse_focal_radius(a, b, c), 0)
+    right_ellipse_focus(a, b, c) = (ellipse_focal_radius(a, b, c), 0)
+    left_ellipse_focus(a, b, c)(1) = -ellipse_focal_radius(a, b, c)
+    right_ellipse_focus(a, b, c)(1) = ellipse_focal_radius(a, b, c)
+    right_ellipse_focus(a, b, c)(1) - left_ellipse_focus(a, b, c)(1) = ellipse_focal_radius(a, b, c) - (-ellipse_focal_radius(a, b, c)) = 2 * ellipse_focal_radius(a, b, c)
+    (right_ellipse_focus(a, b, c)(1) - left_ellipse_focus(a, b, c)(1))^2 = (2 * ellipse_focal_radius(a, b, c))^2 = 4 * ellipse_focal_radius(a, b, c)^2
+    4 * ellipse_focal_radius(a, b, c)^2 = 4 * (c * (a - b)) = 4 * c * (a - b)

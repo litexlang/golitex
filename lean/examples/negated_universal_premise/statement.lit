@@ -1,0 +1,10 @@
+# Use a negated universal premise to obtain a witness and prove a nonzero value.
+thm nonzero_from_counterexample:
+    ? forall a R:
+        not forall x {a}:
+            x = 0
+        =>:
+            a != 0
+    obtain b from exist x {a} st {x != 0}
+    b = a
+    a != 0

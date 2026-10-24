@@ -1,0 +1,5 @@
+# The sum of an integer in [0, 3) and one in [1, 3) is at most 4.
+by for:
+    ? forall x range(0, 3), y range(1, 3):
+        x + y <= 4
+    x + y <= 4

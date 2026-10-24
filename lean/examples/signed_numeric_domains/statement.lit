@@ -1,0 +1,25 @@
+# Use the sign and nonzero facts supplied by numeric domain membership.
+forall x Q+:
+    0 < x
+    x / x = 1
+forall x Q-:
+    x < 0
+    x / x = 1
+forall x Z-:
+    x <= 0
+    x / x = 1
+forall x R-:
+    x < 0
+    x / x = 1
+forall x Q*:
+    x != 0
+    x / x = 1
+forall x Z*:
+    x != 0
+    x / x = 1
+forall x R*:
+    x != 0
+    x / x = 1
+forall x C*:
+    x != 0
+    x / x = 1

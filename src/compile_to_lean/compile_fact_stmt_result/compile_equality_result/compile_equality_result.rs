@@ -2,6 +2,7 @@ use crate::compile_to_lean::helper::*;
 use crate::compile_to_lean::source_position::{SourcePosition, SourceOwner};
 use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::well_defined_result::EqualFactWellDefinedProof;
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::VerifyEqualitySuccess;
 use crate::prelude::*;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_elementary_arithmetic::ElementaryArithmeticProof;
 
@@ -13,44 +14,45 @@ impl LitexToLeanCompiler {
     ) -> Result<(String, String), LeanCompileError> {
         match result {
             VerifyEqualityResult::Success(success) => {
-                let bindings = self.compile_equal_wd_locals(
-                    &success.fact,
-                    &success.well_defined_proof,
-                    position,
-                )?;
-                let locals = SourcePosition::new(
-                    position.parent,
-                    SourceOwner::EqualWDLocals(&success.well_defined_proof, 2),
-                    2,
-                );
-                let formed = SourcePosition {
-                    parent: Some(&locals),
-                    before: 2,
-                    ..*position
-                };
-                let position = &formed;
-                let left = self.compile_object_reference(&success.fact.left, position)?;
-                let right = self.compile_object_reference(&success.fact.right, position)?;
-                let proof = self.compile_equality_search_with_parent_wd(
-                    &success.fact,
-                    &success.searched_proof,
-                    Some(&success.well_defined_proof),
-                    position,
-                )?;
-                Ok((
-                    Self::scope_equal_wd(format!("Litex.Same {left} {right}"), &bindings),
-                    Self::scope_equal_wd_proof(
-                        format!("Litex.Same {left} {right}"),
-                        proof,
-                        &bindings,
-                    ),
-                ))
+                self.compile_equality_success(success, position)
             }
             VerifyEqualityResult::Failed(_) => Err(LeanCompileError::new(
                 "Equality/Failed",
                 "Failed verification is not proof evidence.",
             )),
         }
+    }
+
+    pub(in crate::compile_to_lean) fn compile_equality_success(
+        &self,
+        success: &VerifyEqualitySuccess,
+        position: &SourcePosition<'_>,
+    ) -> Result<(String, String), LeanCompileError> {
+        let bindings =
+            self.compile_equal_wd_locals(&success.fact, &success.well_defined_proof, position)?;
+        let locals = SourcePosition::new(
+            position.parent,
+            SourceOwner::EqualWDLocals(&success.well_defined_proof, 2),
+            2,
+        );
+        let formed = SourcePosition {
+            parent: Some(&locals),
+            before: 2,
+            ..*position
+        };
+        let position = &formed;
+        let left = self.compile_object_reference(&success.fact.left, position)?;
+        let right = self.compile_object_reference(&success.fact.right, position)?;
+        let proof = self.compile_equality_search_with_parent_wd(
+            &success.fact,
+            &success.searched_proof,
+            Some(&success.well_defined_proof),
+            position,
+        )?;
+        Ok((
+            Self::scope_equal_wd(format!("Litex.Same {left} {right}"), &bindings),
+            Self::scope_equal_wd_proof(format!("Litex.Same {left} {right}"), proof, &bindings),
+        ))
     }
 
     pub(in crate::compile_to_lean) fn compile_equal_wd_locals(
@@ -171,6 +173,159 @@ impl LitexToLeanCompiler {
                 EqualitySearchProofByBuiltinRule::AbsNonnegEqualsSelf(proof),
             ) => self.compile_abs_nonnegative_identity(fact, proof, position)?,
             EqualFactSearchedProof::ByBuiltinRule(
+                EqualitySearchProofByBuiltinRule::MinIdempotent(_),
+            ) => self.compile_min_max_identity(fact, false, false, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(
+                EqualitySearchProofByBuiltinRule::FactorialSuccessor(p),
+            ) => self.compile_factorial_step(
+                fact,
+                false,
+                &p.proof_of_requirement_facts.iter().collect::<Vec<_>>(),
+                position,
+            )?,
+            EqualFactSearchedProof::ByBuiltinRule(
+                EqualitySearchProofByBuiltinRule::FactorialPredecessor(p),
+            ) => self.compile_factorial_step(fact, true, &[&p.positive_natural], position)?,
+            EqualFactSearchedProof::ByBuiltinRule(
+                EqualitySearchProofByBuiltinRule::GcdCommutative(_),
+            ) => self.compile_gcd_lcm_commutative(fact, false, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(
+                EqualitySearchProofByBuiltinRule::LcmCommutative(_),
+            ) => self.compile_gcd_lcm_commutative(fact, true, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(
+                EqualitySearchProofByBuiltinRule::GcdIdempotentAbs(_),
+            ) => self.compile_gcd_lcm_self_abs(fact, false, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(
+                EqualitySearchProofByBuiltinRule::LcmIdempotentAbs(_),
+            ) => self.compile_gcd_lcm_self_abs(fact, true, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(
+                EqualitySearchProofByBuiltinRule::GcdRightZeroAbs(p),
+            ) => self.compile_gcd_zero_abs(fact, false, &p.proof_of_requirement_facts, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(
+                EqualitySearchProofByBuiltinRule::GcdLeftZeroAbs(p),
+            ) => self.compile_gcd_zero_abs(fact, true, &p.proof_of_requirement_facts, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(
+                EqualitySearchProofByBuiltinRule::GcdEuclideanStep(_),
+            ) => self.compile_gcd_euclidean_step(fact, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(
+                EqualitySearchProofByBuiltinRule::LcmGcdProductAbs(_),
+            ) => self.compile_gcd_lcm_product(fact, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(
+                EqualitySearchProofByBuiltinRule::QuotEuclideanDecomposition(_),
+            ) => self.compile_quot_decomposition(fact, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::QuotByOne(
+                _,
+            )) => self.compile_quot_identity(fact, false, &[], position)?,
+            EqualFactSearchedProof::ByBuiltinRule(
+                EqualitySearchProofByBuiltinRule::QuotSelfOne(p),
+            ) => self.compile_quot_identity(fact, true, &p.proof_of_requirement_facts, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(
+                EqualitySearchProofByBuiltinRule::FloorOfInteger(p),
+            ) => self.compile_rounding_integer_identity(
+                fact,
+                false,
+                false,
+                &p.proof_of_requirement_facts,
+                position,
+            )?,
+            EqualFactSearchedProof::ByBuiltinRule(
+                EqualitySearchProofByBuiltinRule::CeilOfInteger(p),
+            ) => self.compile_rounding_integer_identity(
+                fact,
+                true,
+                false,
+                &p.proof_of_requirement_facts,
+                position,
+            )?,
+            EqualFactSearchedProof::ByBuiltinRule(
+                EqualitySearchProofByBuiltinRule::FloorOfCeilOfInteger(p),
+            ) => self.compile_rounding_integer_identity(
+                fact,
+                false,
+                true,
+                &p.proof_of_requirement_facts,
+                position,
+            )?,
+            EqualFactSearchedProof::ByBuiltinRule(
+                EqualitySearchProofByBuiltinRule::CeilOfFloorOfInteger(p),
+            ) => self.compile_rounding_integer_identity(
+                fact,
+                true,
+                true,
+                &p.proof_of_requirement_facts,
+                position,
+            )?,
+            EqualFactSearchedProof::ByBuiltinRule(
+                EqualitySearchProofByBuiltinRule::SignOfPositive(proof),
+            ) => {
+                self.compile_sign_identity(fact, true, &proof.proof_of_requirement_facts, position)?
+            }
+            EqualFactSearchedProof::ByBuiltinRule(
+                EqualitySearchProofByBuiltinRule::SignOfNegative(proof),
+            ) => self.compile_sign_identity(
+                fact,
+                false,
+                &proof.proof_of_requirement_facts,
+                position,
+            )?,
+            EqualFactSearchedProof::ByBuiltinRule(
+                EqualitySearchProofByBuiltinRule::SignOfNegation(_),
+            ) => self.compile_sign_negation(fact, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(
+                EqualitySearchProofByBuiltinRule::SignOfProduct(_),
+            ) => self.compile_sign_product(fact, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(
+                EqualitySearchProofByBuiltinRule::SignTimesAbsEqualsArg(_),
+            ) => self.compile_sign_abs_identity(fact, false, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(
+                EqualitySearchProofByBuiltinRule::AbsEqualsSignTimesArg(_),
+            ) => self.compile_sign_abs_identity(fact, true, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(
+                EqualitySearchProofByBuiltinRule::MaxIdempotent(_),
+            ) => self.compile_min_max_identity(fact, true, false, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(
+                EqualitySearchProofByBuiltinRule::MinCommutative(_),
+            ) => self.compile_min_max_identity(fact, false, true, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(
+                EqualitySearchProofByBuiltinRule::MaxCommutative(_),
+            ) => self.compile_min_max_identity(fact, true, true, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(
+                EqualitySearchProofByBuiltinRule::MinLeftWhenLessEqual(proof),
+            ) => self.compile_min_max_selection(
+                fact,
+                false,
+                true,
+                &proof.proof_of_requirement_facts,
+                position,
+            )?,
+            EqualFactSearchedProof::ByBuiltinRule(
+                EqualitySearchProofByBuiltinRule::MinRightWhenLessEqual(proof),
+            ) => self.compile_min_max_selection(
+                fact,
+                false,
+                false,
+                &proof.proof_of_requirement_facts,
+                position,
+            )?,
+            EqualFactSearchedProof::ByBuiltinRule(
+                EqualitySearchProofByBuiltinRule::MaxLeftWhenLessEqual(proof),
+            ) => self.compile_min_max_selection(
+                fact,
+                true,
+                true,
+                &proof.proof_of_requirement_facts,
+                position,
+            )?,
+            EqualFactSearchedProof::ByBuiltinRule(
+                EqualitySearchProofByBuiltinRule::MaxRightWhenLessEqual(proof),
+            ) => self.compile_min_max_selection(
+                fact,
+                true,
+                false,
+                &proof.proof_of_requirement_facts,
+                position,
+            )?,
+            EqualFactSearchedProof::ByBuiltinRule(
                 EqualitySearchProofByBuiltinRule::SqrtSquare(proof),
             ) => self.compile_sqrt_square(fact, &proof.proof_of_requirement_facts, position)?,
             EqualFactSearchedProof::ByBuiltinRule(
@@ -214,9 +369,20 @@ impl LitexToLeanCompiler {
             )?,
             EqualFactSearchedProof::ByBuiltinRule(
                 EqualitySearchProofByBuiltinRule::Calculation(
+                    EqualitySearchProofByCalculation::Complex {},
+                ),
+            ) => self.compile_complex_polynomial(fact, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(
+                EqualitySearchProofByBuiltinRule::Calculation(
                     EqualitySearchProofByCalculation::Rational {},
                 ),
             ) => self.compile_rational(fact, &[], &[], false, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(
+                EqualitySearchProofByBuiltinRule::Calculation(
+                    proof @ (EqualitySearchProofByCalculation::ClosedDecimal { .. }
+                    | EqualitySearchProofByCalculation::ClosedRational { .. }),
+                ),
+            ) => self.compile_builtin_closed_equality(fact, proof, position)?,
             EqualFactSearchedProof::ByBuiltinRule(
                 EqualitySearchProofByBuiltinRule::ScalarDivisionRelation(proof),
             ) => self.compile_scalar_division_relation(fact, proof, position)?,

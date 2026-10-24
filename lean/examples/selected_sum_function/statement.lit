@@ -1,0 +1,9 @@
+# Select a two-input sum function from its unique output specification.
+thm unique_sum:
+    ? forall first, second R:
+        exist! total R st {total = first + second}
+    witness exist! total R st {total = first + second} from first + second
+have fn selected by exist!:
+    ? forall left, right R:
+        exist! output R st {output = left + right}
+selected(2, 3) = 5

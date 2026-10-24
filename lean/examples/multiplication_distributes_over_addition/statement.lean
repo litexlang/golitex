@@ -26,31 +26,36 @@ theorem h_2 : ∀ {_Host_i1 : Type v1} [_rep_i1 : Litex.Representation M _Host_i
     exact Litex.Same _equal_wd_1_0 _equal_wd_1_1)
 ) :=
   (by
-    intro _Host_i1 _rep_i1 _value_i1 h_15 _Host_i2 _rep_i2 _value_i2 h_16 _Host_i3 _rep_i3 _value_i3 h_17
-    let _object_w2 := (let _wd_1_0 := _value_i1;
-    let _wd_1_1 := (Litex.add _value_i2 _value_i3 h_16 h_17);
-    (Litex.mul _wd_1_0 _wd_1_1 h_15 (by
-      let _atomic_wd_1_0 := _wd_1_1
-      exact (Litex.addInC _value_i2 _value_i3 h_16 h_17))))
-    let _object_w3 := (let _wd_1_0 := (Litex.mul _value_i1 _value_i2 h_15 h_16);
-    let _wd_1_1 := (Litex.mul _value_i1 _value_i3 h_15 h_17);
-    (Litex.add _wd_1_0 _wd_1_1 (by
-      let _atomic_wd_1_0 := _wd_1_0
-      exact (Litex.mulInC _value_i1 _value_i2 h_15 h_16)) (by
-      let _atomic_wd_1_0 := _wd_1_1
-      exact (Litex.mulInC _value_i1 _value_i3 h_15 h_17))))
-    have h_1 : (by
-      let _equal_wd_1_0 := _object_w2
-      let _equal_wd_1_1 := _object_w3
-      exact Litex.Same _equal_wd_1_0 _equal_wd_1_1) :=
-      (by
-        litex_checked_step =>
-          exact (
-            (let _equal_wd_1_0 := _object_w2;
-            let _equal_wd_1_1 := _object_w3;
-            (show Litex.Same _equal_wd_1_0 _equal_wd_1_1 from (Litex.NativeBridge.sameOfDenoteNumber _ _ ((Litex.NativeBridge.asComplex _value_i1 h_15) * ((Litex.NativeBridge.asComplex _value_i2 h_16) + (Litex.NativeBridge.asComplex _value_i3 h_17))) (((Litex.NativeBridge.asComplex _value_i1 h_15) * (Litex.NativeBridge.asComplex _value_i2 h_16)) + ((Litex.NativeBridge.asComplex _value_i1 h_15) * (Litex.NativeBridge.asComplex _value_i3 h_17))) (Litex.NativeBridge.denoteMul _value_i1 (_equal_wd_1_0).val.right (_equal_wd_1_0).wd.1 (_equal_wd_1_0).wd.2 _ _ (Litex.NativeBridge.asComplex_spec _value_i1 h_15) (Litex.NativeBridge.denoteAdd _value_i2 _value_i3 ((_equal_wd_1_0).val.right).wd.1 ((_equal_wd_1_0).val.right).wd.2 _ _ (Litex.NativeBridge.asComplex_spec _value_i2 h_16) (Litex.NativeBridge.asComplex_spec _value_i3 h_17))) (Litex.NativeBridge.denoteAdd (_equal_wd_1_1).val.left (_equal_wd_1_1).val.right (_equal_wd_1_1).wd.1 (_equal_wd_1_1).wd.2 _ _ (Litex.NativeBridge.denoteMul _value_i1 _value_i2 ((_equal_wd_1_1).val.left).wd.1 ((_equal_wd_1_1).val.left).wd.2 _ _ (Litex.NativeBridge.asComplex_spec _value_i1 h_15) (Litex.NativeBridge.asComplex_spec _value_i2 h_16)) (Litex.NativeBridge.denoteMul _value_i1 _value_i3 ((_equal_wd_1_1).val.right).wd.1 ((_equal_wd_1_1).val.right).wd.2 _ _ (Litex.NativeBridge.asComplex_spec _value_i1 h_15) (Litex.NativeBridge.asComplex_spec _value_i3 h_17))) (by ring!))))
-          )
+    litex_complete =>
+      exact (
+        (by
+          intro _Host_i1 _rep_i1 _value_i1 h_15 _Host_i2 _rep_i2 _value_i2 h_16 _Host_i3 _rep_i3 _value_i3 h_17
+          let _object_w2 := (let _wd_1_0 := _value_i1;
+          let _wd_1_1 := (Litex.add _value_i2 _value_i3 h_16 h_17);
+          (Litex.mul _wd_1_0 _wd_1_1 h_15 (by
+            let _atomic_wd_1_0 := _wd_1_1
+            exact (Litex.addInC _value_i2 _value_i3 h_16 h_17))))
+          let _object_w3 := (let _wd_1_0 := (Litex.mul _value_i1 _value_i2 h_15 h_16);
+          let _wd_1_1 := (Litex.mul _value_i1 _value_i3 h_15 h_17);
+          (Litex.add _wd_1_0 _wd_1_1 (by
+            let _atomic_wd_1_0 := _wd_1_0
+            exact (Litex.mulInC _value_i1 _value_i2 h_15 h_16)) (by
+            let _atomic_wd_1_0 := _wd_1_1
+            exact (Litex.mulInC _value_i1 _value_i3 h_15 h_17))))
+          have h_1 : (by
+            let _equal_wd_1_0 := _object_w2
+            let _equal_wd_1_1 := _object_w3
+            exact Litex.Same _equal_wd_1_0 _equal_wd_1_1) :=
+            (by
+              litex_checked_step =>
+                exact (
+                  (let _equal_wd_1_0 := _object_w2;
+                  let _equal_wd_1_1 := _object_w3;
+                  (show Litex.Same _equal_wd_1_0 _equal_wd_1_1 from (Litex.NativeBridge.sameOfDenoteNumber _ _ ((Litex.NativeBridge.asComplex _value_i1 h_15) * ((Litex.NativeBridge.asComplex _value_i2 h_16) + (Litex.NativeBridge.asComplex _value_i3 h_17))) (((Litex.NativeBridge.asComplex _value_i1 h_15) * (Litex.NativeBridge.asComplex _value_i2 h_16)) + ((Litex.NativeBridge.asComplex _value_i1 h_15) * (Litex.NativeBridge.asComplex _value_i3 h_17))) (Litex.NativeBridge.denoteMul _value_i1 (_equal_wd_1_0).val.right (_equal_wd_1_0).wd.1 (_equal_wd_1_0).wd.2 _ _ (Litex.NativeBridge.asComplex_spec _value_i1 h_15) (Litex.NativeBridge.denoteAdd _value_i2 _value_i3 ((_equal_wd_1_0).val.right).wd.1 ((_equal_wd_1_0).val.right).wd.2 _ _ (Litex.NativeBridge.asComplex_spec _value_i2 h_16) (Litex.NativeBridge.asComplex_spec _value_i3 h_17))) (Litex.NativeBridge.denoteAdd (_equal_wd_1_1).val.left (_equal_wd_1_1).val.right (_equal_wd_1_1).wd.1 (_equal_wd_1_1).wd.2 _ _ (Litex.NativeBridge.denoteMul _value_i1 _value_i2 ((_equal_wd_1_1).val.left).wd.1 ((_equal_wd_1_1).val.left).wd.2 _ _ (Litex.NativeBridge.asComplex_spec _value_i1 h_15) (Litex.NativeBridge.asComplex_spec _value_i2 h_16)) (Litex.NativeBridge.denoteMul _value_i1 _value_i3 ((_equal_wd_1_1).val.right).wd.1 ((_equal_wd_1_1).val.right).wd.2 _ _ (Litex.NativeBridge.asComplex_spec _value_i1 h_15) (Litex.NativeBridge.asComplex_spec _value_i3 h_17))) (by ring!))))
+                )
+            )
+          exact h_1
+        )
       )
-    exact h_1
   )
 end LitexCompiled.file_lean_x2f_examples_x2f_multiplication_x5f_distributes_x5f_over_x5f_addition_x2f_statement_x2e_lit

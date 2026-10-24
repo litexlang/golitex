@@ -272,7 +272,9 @@ impl LitexToLeanCompiler {
                 }
                 let left = self.compile_object_reference(left, position)?;
                 let right = self.compile_object_reference(right, position)?;
-                Ok(format!("(show Litex.Same {left} {right} from rfl)"))
+                // Elaborate both dependent predicates before reflexivity is
+                // used as an argument of an enclosing equality composition.
+                Ok(format!("(by\n  let _left := {left}\n  let _right := {right}\n  exact (show Litex.Same _left _right from rfl))"))
             }
             TheyAreTheSameProof::SameFreeParamShape(SameFreeParamShapeProof::FnSet(_)) => {
                 let (
@@ -288,6 +290,23 @@ impl LitexToLeanCompiler {
                 let left = self.compile_object_reference(left, position)?;
                 let right = self.compile_object_reference(right, position)?;
                 Ok(format!("(by\n  let _left : Litex.Obj (M := M) (Litex.FunctionSignature M) := {left}\n  let _right : Litex.Obj (M := M) (Litex.FunctionSignature M) := {right}\n  exact (show Litex.Same _left _right from rfl))"))
+            }
+            TheyAreTheSameProof::SameFreeParamShape(SameFreeParamShapeProof::AnonymousFn(_)) => {
+                let (
+                    Obj::FunctionSpace(FunctionSpace::AnonymousFn(a)),
+                    Obj::FunctionSpace(FunctionSpace::AnonymousFn(b)),
+                ) = (left, right)
+                else {
+                    return Err(LeanCompileError::unsupported(
+                        "Equality/AnonymousFnAlphaSubject",
+                    ));
+                };
+                if !crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_they_are_the_same::helper::anonymous_fns_alpha_equal(a,b) {
+                    return Err(LeanCompileError::unsupported("Equality/AnonymousFnAlphaSubject"));
+                }
+                let left = self.compile_object_reference(left, position)?;
+                let right = self.compile_object_reference(right, position)?;
+                Ok(format!("(by\n  let _left : Litex.Obj (M := M) (Litex.FormulaFn M) := {left}\n  let _right : Litex.Obj (M := M) (Litex.FormulaFn M) := {right}\n  exact (show Litex.Same _left _right from rfl))"))
             }
             TheyAreTheSameProof::SameFreeParamShape(_) => {
                 Err(LeanCompileError::unsupported("Equality/SameFreeParamShape"))

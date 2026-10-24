@@ -1,0 +1,5 @@
+# Prove by contradiction that the real coordinates (0, 1) form a unique pair.
+by contra:
+    ? exist! x R, y R st {x = 0, y = 1}
+    obtain a, b from exist u R, v R st {u = 0, v = 1, u != 0 or v != 1}
+    impossible a != 0 or b != 1

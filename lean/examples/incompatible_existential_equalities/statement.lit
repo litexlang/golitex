@@ -1,0 +1,12 @@
+# No pair of real numbers is both equal and unequal.
+thm unequal_equal_pair:
+    ? not exist x, y R st {x = y, x != y}
+    by contra:
+        ? not exist x, y R st {x = y, x != y}
+        obtain x, y from exist x, y R st {x = y, x != y}
+        impossible x = y
+by thm unequal_equal_pair
+claim:
+    ? not exist u, v R st {u = v, u != v}
+    by thm unequal_equal_pair
+not exist a, b R st {a = b, a != b}

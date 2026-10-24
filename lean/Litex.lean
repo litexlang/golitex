@@ -1,8 +1,12 @@
 import Mathlib.Data.Complex.Basic
 import Mathlib.Algebra.Order.Archimedean.Real.Basic
 import Mathlib.Analysis.Real.Sqrt
+import Mathlib.Data.Real.Sign
+import Mathlib.Algebra.Order.Floor.Ring
 import Mathlib.Tactic.FieldSimp
 import Mathlib.Tactic.FinCases
+import Mathlib.Tactic.NormNum.GCD
+import Mathlib.Tactic.NormNum.NatFactorial
 import Mathlib.SetTheory.ZFC.Ordinal
 
 /-! Litex object semantics, certified constructors, and native numeric bridges.
@@ -16,6 +20,23 @@ a default model or a completed model of all Litex objects and rules.
 universe u v w x
 
 namespace Litex
+
+open Lean Meta Elab Tactic in
+/-- Finish a generated proof without leaving unused local carrier levels open.
+Applications first determine every constrained level. Only residual levels
+absent from the public proposition receive zero; host types and the proposition
+are not changed. The supplied proof must close every goal and is kernel checked.
+This performs no proof search. -/
+elab "litex_complete" " => " body:tacticSeq : tactic => withMainContext do
+  let goal ← getMainGoal
+  let goals ← Tactic.run goal (evalTactic body)
+  unless goals.isEmpty do
+    throwError "The recorded Litex proof left open goals."
+  let publicLevels := (collectLevelMVars {} (← instantiateMVars (← goal.getType))).result
+  let value ← instantiateMVars (mkMVar goal)
+  for level in (collectLevelMVars {} value).result do
+    unless publicLevels.contains level do
+      assignLevelMVar level .zero
 
 open Lean Meta Elab Tactic in
 /-- Reuse one already generated proof as a kernel-checked auxiliary theorem.
@@ -161,6 +182,18 @@ theorem inOfSame {M : Semantics.{u}} {α : Type v} {β : Type w}
     (A : Obj (M := M) γ) (B : Obj (M := M) δ)
     (hab : Same a b) (hAB : Same A B) (haA : In a A) : In b B :=
   Eq.mp (congrArg₂ M.mem hab hAB) haA
+
+theorem notInOfSame {M : Semantics.{u}} {α : Type v} {β : Type w} {γ : Type x}
+    [Representation M α] [Representation M β] [Representation M γ]
+    (a : Obj (M := M) α) (b : Obj (M := M) β) (A : Obj (M := M) γ)
+    (hab : Same a b) (hb : ¬ In b A) : ¬ In a A :=
+  fun ha => hb (inOfSame a b A A hab (sameRefl A) ha)
+
+theorem notSameOfMembership {M : Semantics.{u}} {α : Type v} {β : Type w} {γ : Type x}
+    [Representation M α] [Representation M β] [Representation M γ]
+    (a : Obj (M := M) α) (b : Obj (M := M) β) (A : Obj (M := M) γ)
+    (ha : In a A) (hb : ¬ In b A) : ¬ Same a b :=
+  fun hab => hb (inOfSame a b A A hab (sameRefl A) ha)
 
 theorem isSetOfSame {M : Semantics.{u}} {α : Type v} {β : Type w}
     [Representation M α] [Representation M β]
@@ -971,6 +1004,10 @@ theorem asComplex_spec {α : Type v} [Representation M α]
     (a : Obj (M := M) α) (haC : In a C) :
     denote a = M.number (asComplex a haC) :=
   Classical.choose_spec ((M.complex_members (denote a)).mp haC)
+
+@[simp] theorem asComplex_number (z : ℂ) (h : In (number (M := M) z) C) :
+    asComplex (number z) h = z :=
+  M.number_injective (asComplex_spec (number z) h).symm
 
 theorem asComplex_proofIndependent {α : Type v} [Representation M α]
     (a : Obj (M := M) α) (h₁ h₂ : In a C) :
@@ -2269,6 +2306,51 @@ theorem integerInductionFromZero {M : Semantics.{u}}
         hstep (M.number (n : ℂ)) hz hnonnegative ih
   exact (NativeBridge.asNat_spec a hn).symm ▸ hall (NativeBridge.asNat a hn)
 
+/-- Strong induction uses precisely the integer indices from zero through the
+current predecessor. The exported object keeps its original representation. -/
+theorem integerStrongInductionFromZero {M : Semantics.{u}}
+    (P : M.Value → Prop) (h0 : P (M.number 0))
+    (hstep : ∀ (k : M.Value) (hkZ : M.mem k (M.standard .integer)),
+      Le (number 0) (semanticObject k (M.member_isSet hkZ)) →
+      (∀ (m : M.Value) (hmZ : M.mem m (M.standard .integer)),
+        Le (number 0) (semanticObject m (M.member_isSet hmZ)) →
+        Le (semanticObject m (M.member_isSet hmZ))
+          (semanticObject k (M.member_isSet hkZ)) → P m) →
+      P (M.addValue k (M.number 1)))
+    {α : Type v} [Representation M α]
+    (a : Obj (M := M) α) (haZ : In a Z) (ha0 : Le (number 0) a) : P (denote a) := by
+  have hn := integerToNaturalOfNonnegative a haZ ha0
+  have hall : ∀ n : ℕ, P (M.number (n : ℂ)) := by
+    intro n
+    induction n using Nat.strong_induction_on with
+    | h n ih =>
+      cases n with
+      | zero => simpa only [Nat.cast_zero] using h0
+      | succ k =>
+        have hkZ : M.mem (M.number (k : ℂ)) (M.standard .integer) :=
+          (M.integer_members _).mpr ⟨(k : ℤ), by simp only [Int.cast_natCast]⟩
+        have hk0 := naturalNonnegative
+          (semanticObject (M.number (k : ℂ)) (M.member_isSet hkZ))
+          (NativeBridge.numberInN k)
+        have previous (m : M.Value) (hmZ : M.mem m (M.standard .integer))
+            (hm0 : Le (number 0) (semanticObject m (M.member_isSet hmZ)))
+            (hmk : Le (semanticObject m (M.member_isSet hmZ))
+              (semanticObject (M.number (k : ℂ)) (M.member_isSet hkZ))) : P m := by
+          have hmN := integerToNaturalOfNonnegative
+            (semanticObject m (M.member_isSet hmZ)) hmZ hm0
+          obtain ⟨j, hj⟩ := (M.natural_members m).mp hmN
+          have hle := (NativeBridge.le_iff_ofDenoteReal
+            (semanticObject m (M.member_isSet hmZ))
+            (semanticObject (M.number (k : ℂ)) (M.member_isSet hkZ))
+            (j : ℝ) (k : ℝ)
+            (by simpa only [semanticObject_denote, Complex.ofReal_natCast] using hj)
+            (by simp only [semanticObject_denote, Complex.ofReal_natCast])).mp hmk
+          have hjk : j ≤ k := by exact_mod_cast hle
+          exact hj.symm ▸ ih j (Nat.lt_succ_of_le hjk)
+        simpa only [M.add_numbers, Nat.cast_add, Nat.cast_one] using
+          hstep (M.number (k : ℂ)) hkZ hk0 previous
+  exact (NativeBridge.asNat_spec a hn).symm ▸ hall (NativeBridge.asNat a hn)
+
 /-- The bounded set primitives are shared by set builders and function domains.
 The laws are explicit model obligations, proved by the ZF model below. -/
 class SetSemantics (M : Semantics.{u}) where
@@ -2343,6 +2425,255 @@ theorem numberInNPosOfEq {M : Semantics.{u}} [S : SetSemantics M]
     simpa only [Complex.ofReal_natCast] using congrArg M.number hz
   · exact_mod_cast hn
 
+/-- A refined numeric carrier is bounded separation, using the existing model. -/
+def refinedNumericSet {M : Semantics.{u}} [S : SetSemantics M]
+    (base : StandardSetValue) (condition : M.Value → Prop) : Obj (M := M) M.Value :=
+  semanticObject (S.sepValue (M.standard base) condition)
+    (S.sep_isSet _ _ (M.standard_isSet base))
+
+def negativeRealPredicate {M : Semantics.{u}} (x : M.Value) : Prop :=
+  ∃ r : ℝ, x = M.number (r : ℂ) ∧ r < 0
+
+theorem positiveRealPredicate_iff {M : Semantics.{u}}
+    {α : Type v} [Representation M α] (a : Obj (M := M) α) :
+    positiveRealPredicate (denote a) ↔ Lt (number 0) a := by
+  constructor
+  · rintro ⟨r, hr, h⟩
+    exact NativeBridge.ltOfDenoteReal (number 0) a 0 r rfl hr h
+  · rintro ⟨r, s, hr, hs, h⟩
+    have hzero : r = 0 := Complex.ofReal_injective (M.number_injective hr).symm
+    exact ⟨s, hs, hzero ▸ h⟩
+
+theorem negativeRealPredicate_iff {M : Semantics.{u}}
+    {α : Type v} [Representation M α] (a : Obj (M := M) α) :
+    negativeRealPredicate (denote a) ↔ Lt a (number 0) := by
+  constructor
+  · rintro ⟨r, hr, h⟩
+    exact NativeBridge.ltOfDenoteReal a (number 0) r 0 hr rfl h
+  · rintro ⟨r, s, hr, hs, h⟩
+    have hzero : s = 0 := Complex.ofReal_injective (M.number_injective hs).symm
+    exact ⟨r, hr, hzero ▸ h⟩
+
+def QPos {M : Semantics.{u}} [SetSemantics M] : Obj (M := M) M.Value :=
+  refinedNumericSet .rational positiveRealPredicate
+
+theorem inQPos_iff {M : Semantics.{u}} [S : SetSemantics M]
+    {α : Type v} [Representation M α] (a : Obj (M := M) α) :
+    In a QPos ↔ In a Q ∧ Lt (number 0) a := by
+  change M.mem (denote a) (S.sepValue (M.standard .rational) positiveRealPredicate) ↔ _
+  rw [S.sep_members]
+  rw [positiveRealPredicate_iff]
+  rfl
+
+theorem inQPos_base {M : Semantics.{u}} [SetSemantics M]
+    {α : Type v} [Representation M α] (a : Obj (M := M) α) (ha : In a QPos) :
+    In a Q := ((inQPos_iff a).mp ha).1
+
+theorem inQPos_positive {M : Semantics.{u}} [SetSemantics M]
+    {α : Type v} [Representation M α] (a : Obj (M := M) α) (ha : In a QPos) :
+    Lt (number 0) a := ((inQPos_iff a).mp ha).2
+
+theorem inQPos_intro {M : Semantics.{u}} [SetSemantics M]
+    {α : Type v} [Representation M α] (a : Obj (M := M) α)
+    (ha : In a Q) (h : Lt (number 0) a) : In a QPos :=
+  (inQPos_iff a).mpr ⟨ha, h⟩
+
+theorem qPosNonempty {M : Semantics.{u}} [SetSemantics M] :
+    IsNonempty (QPos (M := M)) :=
+  ⟨M.number (1), inQPos_intro (number (1)) (NativeBridge.numberInQOfEq (M := M) (1) (1 : ℚ) (by norm_num)) (NativeBridge.ltOfDenoteReal (number 0) (number (1)) 0 (1) rfl rfl (by norm_num))⟩
+
+def QNeg {M : Semantics.{u}} [SetSemantics M] : Obj (M := M) M.Value :=
+  refinedNumericSet .rational negativeRealPredicate
+
+theorem inQNeg_iff {M : Semantics.{u}} [S : SetSemantics M]
+    {α : Type v} [Representation M α] (a : Obj (M := M) α) :
+    In a QNeg ↔ In a Q ∧ Lt a (number 0) := by
+  change M.mem (denote a) (S.sepValue (M.standard .rational) negativeRealPredicate) ↔ _
+  rw [S.sep_members]
+  rw [negativeRealPredicate_iff]
+  rfl
+
+theorem inQNeg_base {M : Semantics.{u}} [SetSemantics M]
+    {α : Type v} [Representation M α] (a : Obj (M := M) α) (ha : In a QNeg) :
+    In a Q := ((inQNeg_iff a).mp ha).1
+
+theorem inQNeg_negative {M : Semantics.{u}} [SetSemantics M]
+    {α : Type v} [Representation M α] (a : Obj (M := M) α) (ha : In a QNeg) :
+    Lt a (number 0) := ((inQNeg_iff a).mp ha).2
+
+theorem inQNeg_intro {M : Semantics.{u}} [SetSemantics M]
+    {α : Type v} [Representation M α] (a : Obj (M := M) α)
+    (ha : In a Q) (h : Lt a (number 0)) : In a QNeg :=
+  (inQNeg_iff a).mpr ⟨ha, h⟩
+
+theorem qNegNonempty {M : Semantics.{u}} [SetSemantics M] :
+    IsNonempty (QNeg (M := M)) :=
+  ⟨M.number (-1), inQNeg_intro (number (-1)) (NativeBridge.numberInQOfEq (M := M) (-1) (-1 : ℚ) (by norm_num)) (NativeBridge.ltOfDenoteReal (number (-1)) (number 0) (-1) 0 (congrArg M.number (by norm_num [number])) rfl (by norm_num))⟩
+
+def ZNeg {M : Semantics.{u}} [SetSemantics M] : Obj (M := M) M.Value :=
+  refinedNumericSet .integer negativeRealPredicate
+
+theorem inZNeg_iff {M : Semantics.{u}} [S : SetSemantics M]
+    {α : Type v} [Representation M α] (a : Obj (M := M) α) :
+    In a ZNeg ↔ In a Z ∧ Lt a (number 0) := by
+  change M.mem (denote a) (S.sepValue (M.standard .integer) negativeRealPredicate) ↔ _
+  rw [S.sep_members]
+  rw [negativeRealPredicate_iff]
+  rfl
+
+theorem inZNeg_base {M : Semantics.{u}} [SetSemantics M]
+    {α : Type v} [Representation M α] (a : Obj (M := M) α) (ha : In a ZNeg) :
+    In a Z := ((inZNeg_iff a).mp ha).1
+
+theorem inZNeg_negative {M : Semantics.{u}} [SetSemantics M]
+    {α : Type v} [Representation M α] (a : Obj (M := M) α) (ha : In a ZNeg) :
+    Lt a (number 0) := ((inZNeg_iff a).mp ha).2
+
+theorem inZNeg_intro {M : Semantics.{u}} [SetSemantics M]
+    {α : Type v} [Representation M α] (a : Obj (M := M) α)
+    (ha : In a Z) (h : Lt a (number 0)) : In a ZNeg :=
+  (inZNeg_iff a).mpr ⟨ha, h⟩
+
+theorem zNegNonempty {M : Semantics.{u}} [SetSemantics M] :
+    IsNonempty (ZNeg (M := M)) :=
+  ⟨M.number (-1), inZNeg_intro (number (-1)) (NativeBridge.numberInZOfEq (M := M) (-1) (-1 : ℤ) (by norm_num)) (NativeBridge.ltOfDenoteReal (number (-1)) (number 0) (-1) 0 (congrArg M.number (by norm_num [number])) rfl (by norm_num))⟩
+
+def RNeg {M : Semantics.{u}} [SetSemantics M] : Obj (M := M) M.Value :=
+  refinedNumericSet .real negativeRealPredicate
+
+theorem inRNeg_iff {M : Semantics.{u}} [S : SetSemantics M]
+    {α : Type v} [Representation M α] (a : Obj (M := M) α) :
+    In a RNeg ↔ In a R ∧ Lt a (number 0) := by
+  change M.mem (denote a) (S.sepValue (M.standard .real) negativeRealPredicate) ↔ _
+  rw [S.sep_members]
+  rw [negativeRealPredicate_iff]
+  rfl
+
+theorem inRNeg_base {M : Semantics.{u}} [SetSemantics M]
+    {α : Type v} [Representation M α] (a : Obj (M := M) α) (ha : In a RNeg) :
+    In a R := ((inRNeg_iff a).mp ha).1
+
+theorem inRNeg_negative {M : Semantics.{u}} [SetSemantics M]
+    {α : Type v} [Representation M α] (a : Obj (M := M) α) (ha : In a RNeg) :
+    Lt a (number 0) := ((inRNeg_iff a).mp ha).2
+
+theorem inRNeg_intro {M : Semantics.{u}} [SetSemantics M]
+    {α : Type v} [Representation M α] (a : Obj (M := M) α)
+    (ha : In a R) (h : Lt a (number 0)) : In a RNeg :=
+  (inRNeg_iff a).mpr ⟨ha, h⟩
+
+theorem rNegNonempty {M : Semantics.{u}} [SetSemantics M] :
+    IsNonempty (RNeg (M := M)) :=
+  ⟨M.number (-1), inRNeg_intro (number (-1)) (NativeBridge.numberInROfEq (M := M) (-1) (-1 : ℝ) (by norm_num)) (NativeBridge.ltOfDenoteReal (number (-1)) (number 0) (-1) 0 (congrArg M.number (by norm_num [number])) rfl (by norm_num))⟩
+
+def QStar {M : Semantics.{u}} [SetSemantics M] : Obj (M := M) M.Value :=
+  refinedNumericSet .rational (fun x => x ≠ M.number 0)
+
+theorem inQStar_iff {M : Semantics.{u}} [S : SetSemantics M]
+    {α : Type v} [Representation M α] (a : Obj (M := M) α) :
+    In a QStar ↔ In a Q ∧ ¬ Same a (number 0) := by
+  change M.mem (denote a) (S.sepValue (M.standard .rational) (fun x => x ≠ M.number 0)) ↔ _
+  rw [S.sep_members]
+  rfl
+
+theorem inQStar_base {M : Semantics.{u}} [SetSemantics M]
+    {α : Type v} [Representation M α] (a : Obj (M := M) α) (ha : In a QStar) :
+    In a Q := ((inQStar_iff a).mp ha).1
+
+theorem inQStar_nonzero {M : Semantics.{u}} [SetSemantics M]
+    {α : Type v} [Representation M α] (a : Obj (M := M) α) (ha : In a QStar) :
+    ¬ Same a (number 0) := ((inQStar_iff a).mp ha).2
+
+theorem inQStar_intro {M : Semantics.{u}} [SetSemantics M]
+    {α : Type v} [Representation M α] (a : Obj (M := M) α)
+    (ha : In a Q) (h : ¬ Same a (number 0)) : In a QStar :=
+  (inQStar_iff a).mpr ⟨ha, h⟩
+
+theorem qStarNonempty {M : Semantics.{u}} [SetSemantics M] :
+    IsNonempty (QStar (M := M)) :=
+  ⟨M.number (1), inQStar_intro (number (1)) (NativeBridge.numberInQOfEq (M := M) (1) (1 : ℚ) (by norm_num)) (NativeBridge.numberNonzero (M := M) (1) (by norm_num))⟩
+
+def ZStar {M : Semantics.{u}} [SetSemantics M] : Obj (M := M) M.Value :=
+  refinedNumericSet .integer (fun x => x ≠ M.number 0)
+
+theorem inZStar_iff {M : Semantics.{u}} [S : SetSemantics M]
+    {α : Type v} [Representation M α] (a : Obj (M := M) α) :
+    In a ZStar ↔ In a Z ∧ ¬ Same a (number 0) := by
+  change M.mem (denote a) (S.sepValue (M.standard .integer) (fun x => x ≠ M.number 0)) ↔ _
+  rw [S.sep_members]
+  rfl
+
+theorem inZStar_base {M : Semantics.{u}} [SetSemantics M]
+    {α : Type v} [Representation M α] (a : Obj (M := M) α) (ha : In a ZStar) :
+    In a Z := ((inZStar_iff a).mp ha).1
+
+theorem inZStar_nonzero {M : Semantics.{u}} [SetSemantics M]
+    {α : Type v} [Representation M α] (a : Obj (M := M) α) (ha : In a ZStar) :
+    ¬ Same a (number 0) := ((inZStar_iff a).mp ha).2
+
+theorem inZStar_intro {M : Semantics.{u}} [SetSemantics M]
+    {α : Type v} [Representation M α] (a : Obj (M := M) α)
+    (ha : In a Z) (h : ¬ Same a (number 0)) : In a ZStar :=
+  (inZStar_iff a).mpr ⟨ha, h⟩
+
+theorem zStarNonempty {M : Semantics.{u}} [SetSemantics M] :
+    IsNonempty (ZStar (M := M)) :=
+  ⟨M.number (1), inZStar_intro (number (1)) (NativeBridge.numberInZOfEq (M := M) (1) (1 : ℤ) (by norm_num)) (NativeBridge.numberNonzero (M := M) (1) (by norm_num))⟩
+
+def RStar {M : Semantics.{u}} [SetSemantics M] : Obj (M := M) M.Value :=
+  refinedNumericSet .real (fun x => x ≠ M.number 0)
+
+theorem inRStar_iff {M : Semantics.{u}} [S : SetSemantics M]
+    {α : Type v} [Representation M α] (a : Obj (M := M) α) :
+    In a RStar ↔ In a R ∧ ¬ Same a (number 0) := by
+  change M.mem (denote a) (S.sepValue (M.standard .real) (fun x => x ≠ M.number 0)) ↔ _
+  rw [S.sep_members]
+  rfl
+
+theorem inRStar_base {M : Semantics.{u}} [SetSemantics M]
+    {α : Type v} [Representation M α] (a : Obj (M := M) α) (ha : In a RStar) :
+    In a R := ((inRStar_iff a).mp ha).1
+
+theorem inRStar_nonzero {M : Semantics.{u}} [SetSemantics M]
+    {α : Type v} [Representation M α] (a : Obj (M := M) α) (ha : In a RStar) :
+    ¬ Same a (number 0) := ((inRStar_iff a).mp ha).2
+
+theorem inRStar_intro {M : Semantics.{u}} [SetSemantics M]
+    {α : Type v} [Representation M α] (a : Obj (M := M) α)
+    (ha : In a R) (h : ¬ Same a (number 0)) : In a RStar :=
+  (inRStar_iff a).mpr ⟨ha, h⟩
+
+theorem rStarNonempty {M : Semantics.{u}} [SetSemantics M] :
+    IsNonempty (RStar (M := M)) :=
+  ⟨M.number (1), inRStar_intro (number (1)) (NativeBridge.numberInROfEq (M := M) (1) (1 : ℝ) (by norm_num)) (NativeBridge.numberNonzero (M := M) (1) (by norm_num))⟩
+
+def CStar {M : Semantics.{u}} [SetSemantics M] : Obj (M := M) M.Value :=
+  refinedNumericSet .complex (fun x => x ≠ M.number 0)
+
+theorem inCStar_iff {M : Semantics.{u}} [S : SetSemantics M]
+    {α : Type v} [Representation M α] (a : Obj (M := M) α) :
+    In a CStar ↔ In a C ∧ ¬ Same a (number 0) := by
+  change M.mem (denote a) (S.sepValue (M.standard .complex) (fun x => x ≠ M.number 0)) ↔ _
+  rw [S.sep_members]
+  rfl
+
+theorem inCStar_base {M : Semantics.{u}} [SetSemantics M]
+    {α : Type v} [Representation M α] (a : Obj (M := M) α) (ha : In a CStar) :
+    In a C := ((inCStar_iff a).mp ha).1
+
+theorem inCStar_nonzero {M : Semantics.{u}} [SetSemantics M]
+    {α : Type v} [Representation M α] (a : Obj (M := M) α) (ha : In a CStar) :
+    ¬ Same a (number 0) := ((inCStar_iff a).mp ha).2
+
+theorem inCStar_intro {M : Semantics.{u}} [SetSemantics M]
+    {α : Type v} [Representation M α] (a : Obj (M := M) α)
+    (ha : In a C) (h : ¬ Same a (number 0)) : In a CStar :=
+  (inCStar_iff a).mpr ⟨ha, h⟩
+
+theorem cStarNonempty {M : Semantics.{u}} [SetSemantics M] :
+    IsNonempty (CStar (M := M)) :=
+  ⟨M.number (1), inCStar_intro (number (1)) (numberInC (M := M) (1)) (NativeBridge.numberNonzero (M := M) (1) (by norm_num))⟩
+
 theorem sameBaseZeroOfPositivePowerZero {M : Semantics.{u}} [SetSemantics M]
     {α : Type v} {β : Type w} [Representation M α] [Representation M β]
     (p : Obj (M := M) (PowObj (M := M) α β))
@@ -2388,6 +2719,90 @@ theorem inRPos_intro {M : Semantics.{u}} [SetSemantics M]
     (ha : In a R) (hpos : Lt (number 0) a) : In a RPos :=
   (inRPos_iff a).mpr ⟨ha, hpos⟩
 
+/-- Replay the recorded operand memberships on the original mul constructor. -/
+theorem mulInRPos {M : Semantics.{u}} [SetSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β]
+    (p : Obj (M := M) (MulObj (M := M) α β))
+    (ha : In p.val.left RPos) (hb : In p.val.right RPos) : In p RPos := by
+  apply inRPos_intro p
+  · exact mulInR p.val.left p.val.right
+      (inRPos_real _ ha) (inRPos_real _ hb)
+  · exact mulPositive p.val.left p.val.right p.wd.1 p.wd.2
+      (inRPos_positive _ ha) (inRPos_positive _ hb)
+
+/-- Replay the recorded operand memberships on the original div constructor. -/
+theorem divInRPos {M : Semantics.{u}} [SetSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β]
+    (p : Obj (M := M) (DivObj (M := M) α β))
+    (ha : In p.val.left RPos) (hb : In p.val.right RPos) : In p RPos := by
+  apply inRPos_intro p
+  · exact divInR p.val.left p.val.right
+      (inRPos_real _ ha) (inRPos_real _ hb) p.wd.2.2
+  · exact divPositive p.val.left p.val.right p.wd.1 p.wd.2.1 p.wd.2.2
+      (inRPos_positive _ ha) (inRPos_positive _ hb)
+
+/-- Replay the recorded operand memberships on the original mul constructor. -/
+theorem mulInQStar {M : Semantics.{u}} [SetSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β]
+    (p : Obj (M := M) (MulObj (M := M) α β))
+    (ha : In p.val.left QStar) (hb : In p.val.right QStar) : In p QStar := by
+  apply inQStar_intro p
+  · exact mulInQ p.val.left p.val.right
+      (inQStar_base _ ha) (inQStar_base _ hb)
+  · exact mulNonzero p.val.left p.val.right p.wd.1 p.wd.2
+      (inQStar_nonzero _ ha) (inQStar_nonzero _ hb)
+
+/-- Replay the recorded operand memberships on the original div constructor. -/
+theorem divInQStar {M : Semantics.{u}} [SetSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β]
+    (p : Obj (M := M) (DivObj (M := M) α β))
+    (ha : In p.val.left QStar) (hb : In p.val.right QStar) : In p QStar := by
+  apply inQStar_intro p
+  · exact divInQ p.val.left p.val.right
+      (inQStar_base _ ha) (inQStar_base _ hb) p.wd.2.2
+  · exact divNonzero p.val.left p.val.right p.wd.1 p.wd.2.1
+      (inQStar_nonzero _ ha) (inQStar_nonzero _ hb)
+
+theorem numberNotInROfImaginary {M : Semantics.{u}} (z : ℂ) (hz : z.im ≠ 0) :
+    ¬ In (number (M := M) z) R := by
+  intro h
+  obtain ⟨r, hr⟩ := (M.real_members _).mp h
+  have heq : z = (r : ℂ) := M.number_injective hr
+  exact hz (heq ▸ Complex.ofReal_im r)
+
+theorem numberNotInZOfDenominator {M : Semantics.{u}} (q : ℚ) (hq : q.den ≠ 1) :
+    ¬ In (number (M := M) (q : ℂ)) Z := by
+  intro h
+  obtain ⟨z, hz⟩ := (M.integer_members _).mp h
+  have hc : (q : ℂ) = (z : ℂ) := M.number_injective hz
+  have heq : q = (z : ℚ) := by exact_mod_cast hc
+  apply hq
+  rw [heq, Rat.den_intCast]
+
+theorem numberNotInNOfNegative {M : Semantics.{u}} (q : ℚ) (hq : q < 0) :
+    ¬ In (number (M := M) (q : ℂ)) N := by
+  intro h
+  have hnonneg := (NativeBridge.le_iff_ofDenoteReal (number 0)
+    (number (q : ℂ)) 0 (q : ℝ) rfl rfl).mp (naturalNonnegative _ h)
+  have hneg : (q : ℝ) < 0 := by exact_mod_cast hq
+  exact (not_lt_of_ge hnonneg) hneg
+
+theorem numberNotPositive {M : Semantics.{u}} (q : ℚ) (hq : q ≤ 0) :
+    ¬ Lt (number (M := M) 0) (number (q : ℂ)) := by
+  intro h
+  have hpos := (NativeBridge.lt_iff_ofDenoteReal (number 0)
+    (number (q : ℂ)) 0 (q : ℝ) rfl rfl).mp h
+  have hnonpos : (q : ℝ) ≤ 0 := by exact_mod_cast hq
+  exact (not_lt_of_ge hnonpos) hpos
+
+theorem numberNotNegative {M : Semantics.{u}} (q : ℚ) (hq : 0 ≤ q) :
+    ¬ Lt (number (M := M) (q : ℂ)) (number 0) := by
+  intro h
+  have hneg := (NativeBridge.lt_iff_ofDenoteReal (number (q : ℂ))
+    (number 0) (q : ℝ) 0 rfl rfl).mp h
+  have hnonneg : 0 ≤ (q : ℝ) := by exact_mod_cast hq
+  exact (not_lt_of_ge hnonneg) hneg
+
 theorem numberInRPos_iff {M : Semantics.{u}} [SetSemantics M] (r : ℝ) :
     In (number (r : ℂ)) (RPos (M := M)) ↔ 0 < r := by
   rw [inRPos_iff]
@@ -2419,6 +2834,18 @@ theorem rPosNonempty {M : Semantics.{u}} [SetSemantics M] :
   have h := numberInRPos (M := M) (1 : ℝ) zero_lt_one
   change M.mem (M.number ((1 : ℝ) : ℂ)) (denote (RPos (M := M))) at h
   simpa only [Complex.ofReal_one] using h
+
+theorem nPosNonempty {M : Semantics.{u}} [SetSemantics M] :
+    IsNonempty (NPos (M := M)) := by
+  exact ⟨M.number 1, numberInNPosOfEq 1 1 (by norm_num) (by decide)⟩
+
+theorem inNPos_positive {M : Semantics.{u}} [S : SetSemantics M]
+    {α : Type v} [Representation M α] (a : Obj (M := M) α) (ha : In a NPos) :
+    Lt (number 0) a := by
+  obtain ⟨r, hr, hpos⟩ := ((S.sep_members _ _ _).mp ha).2
+  refine ⟨0, r, ?_, hr, hpos⟩
+  change M.number (0 : ℂ) = M.number ((0 : ℝ) : ℂ)
+  rw [Complex.ofReal_zero]
 
 inductive EmptySetObj where
   | empty
@@ -3100,6 +3527,72 @@ def cart {M : Semantics.{u}} [FunctionSemantics M] {n : ℕ}
     (factors : Fin n → M.Value) (hSets : ∀ i, M.isSet (factors i)) :
     Obj (M := M) (CartObj M n) := ⟨⟨factors⟩, hSets⟩
 
+theorem cartNonemptyOfFactors {M : Semantics.{u}} [FunctionSemantics M] {n : ℕ}
+    (c : Obj (M := M) (CartObj M n))
+    (h : ∀ i, ∃ x, M.mem x (c.val.factors i)) : IsNonempty c := by
+  classical
+  refine ⟨FiniteFunction.tupleValue (fun i => Classical.choose (h i)), ?_⟩
+  exact FiniteFunction.tuple_inCart _ _ (fun i => Classical.choose_spec (h i))
+
+/-- The return bound can contain the factors in any association/order of unions;
+the complete domain and every coordinate condition remain explicit. -/
+theorem cartMembersWithReturnBound {M : Semantics.{u}} [F : FunctionSemantics M]
+    {n : ℕ} (A : Fin n → M.Value) (B : M.Value)
+    (hB : ∀ i x, M.mem x (A i) → M.mem x B) (p : M.Value) :
+    M.mem p (FiniteFunction.cartValue A) ↔
+      M.mem p (F.fnSetValue (FiniteFunction.indexSet n) B) ∧
+      ∀ i, M.mem (F.callValue p (FiniteFunction.index i)) (A i) := by
+  constructor
+  · intro hp
+    obtain ⟨hg, hc⟩ := (F.sep_members _ _ _).mp hp
+    refine ⟨F.fnSet_of_returns hg ?_, hc⟩
+    intro x hx
+    obtain ⟨i, rfl⟩ := (FiniteFunction.indexSet_members (M := M) x).mp hx
+    exact hB i _ (hc i)
+  · rintro ⟨hg, hc⟩
+    apply (F.sep_members _ _ _).mpr
+    refine ⟨F.fnSet_of_returns hg ?_, hc⟩
+    intro x hx
+    obtain ⟨i, rfl⟩ := (FiniteFunction.indexSet_members (M := M) x).mp hx
+    exact (FiniteFunction.finiteUnion_members _ _).mpr
+      ⟨A i, List.mem_ofFn.mpr ⟨i, rfl⟩, hc i⟩
+
+theorem cartSameSetBuilder {M : Semantics.{u}} [F : FunctionSemantics M]
+    {n : ℕ} {β : Type v} [Representation M β]
+    (c : Obj (M := M) (CartObj M n)) (D : Obj (M := M) β)
+    (P : (x : Obj (M := M) M.Value) → In x D → Prop) (B : M.Value)
+    (hD : denote D = F.fnSetValue (FiniteFunction.indexSet n) B)
+    (hB : ∀ i x, M.mem x (c.val.factors i) → M.mem x B)
+    (hP : ∀ x hx, P x hx ↔
+      ∀ i, M.mem (F.callValue (denote x) (FiniteFunction.index i)) (c.val.factors i)) :
+    Same c (setBuilder D P) := by
+  apply F.ext _ _ (isSet c) (isSet (setBuilder D P))
+  intro raw
+  change M.mem raw (FiniteFunction.cartValue c.val.factors) ↔
+    M.mem raw (F.sepValue (denote D) (SetBuilderObj.condition ⟨D, P⟩))
+  rw [F.sep_members]
+  constructor
+  · intro hc
+    obtain ⟨hg, hp⟩ := (cartMembersWithReturnBound _ B hB raw).mp hc
+    have hx : M.mem raw (denote D) := by rw [hD]; exact hg
+    exact ⟨hx, hx, (hP (semanticObject raw (M.member_isSet hx)) hx).mpr hp⟩
+  · rintro ⟨hx, hx', hp⟩
+    apply (cartMembersWithReturnBound _ B hB raw).mpr
+    exact ⟨by rw [← hD]; exact hx,
+      (hP (semanticObject raw (M.member_isSet hx')) hx').mp hp⟩
+
+theorem cartZeroSame {M : Semantics.{u}} [F : FunctionSemantics M]
+    {β : Type v} [Representation M β]
+    (c : Obj (M := M) (CartObj M 0)) (D : Obj (M := M) β)
+    (hD : denote D = F.fnSetValue (FiniteFunction.indexSet 0) F.emptyValue) :
+    Same c D := by
+  apply F.ext _ _ (isSet c) (isSet D)
+  intro raw
+  rw [hD]
+  exact (cartMembersWithReturnBound c.val.factors F.emptyValue
+    (fun i => Fin.elim0 i) raw).trans
+      ⟨And.left, fun h => ⟨h, fun i => Fin.elim0 i⟩⟩
+
 theorem tupleInCart {M : Semantics.{u}} [FunctionSemantics M] {n : ℕ}
     (t : Obj (M := M) (TupleObj M n)) (c : Obj (M := M) (CartObj M n))
     (h : ∀ i, M.mem (t.val.values i) (c.val.factors i)) : In t c :=
@@ -3255,6 +3748,15 @@ theorem indexSetMemberOfClosedRange {M : Semantics.{u}} [FunctionSemantics M]
   change M.mem (denote p) (denote (closedRange _ _ ha hb)) at h
   rwa [closedRange_indexSet] at h
 
+theorem indexSetMemberOfClosedRangeOfEq {M : Semantics.{u}} [FunctionSemantics M]
+    {α : Type v} [Representation M α] {p : Obj (M := M) α} {n : ℕ}
+    (z : ℂ) (hz : z = (n : ℂ))
+    {ha : In (number (M := M) 1) Z} {hb : In (number (M := M) z) Z}
+    (h : In p (closedRange (number (M := M) 1) (number z) ha hb)) :
+    M.mem (denote p) (FiniteFunction.indexSet n) := by
+  subst z
+  exact indexSetMemberOfClosedRange h
+
 structure UnionObj {M : Semantics.{u}} (α : Type v) (β : Type w)
     [Representation M α] [Representation M β] where
   left : Obj (M := M) α
@@ -3382,6 +3884,281 @@ instance functionSignatureRepresentation {M : Semantics.{u}} [F : FunctionSemant
 def fnSet {M : Semantics.{u}} [FunctionSemantics M] (s : FunctionSignature M) :
     Obj (M := M) (FunctionSignature M) := ⟨s, True.intro⟩
 
+/-- Finite sequences retain the source carrier and length objects. Their
+complete domain is the one-based integer interval, with no extra guard. -/
+structure FiniteSeqSetObj {M : Semantics.{u}} (α : Type v) (β : Type w)
+    [Representation M α] [Representation M β] where
+  carrier : Obj (M := M) α
+  length : Obj (M := M) β
+
+def finiteSeqDomain {M : Semantics.{u}} [F : FunctionSemantics M]
+    {β : Type w} [Representation M β] (length : Obj (M := M) β) : M.Value :=
+  F.sepValue (F.sepValue (M.standard .integer)
+    (ClosedRangeObj.condition ⟨number 1, length⟩)) (fun _ => True)
+
+theorem finiteSeqDomain_isSet {M : Semantics.{u}} [F : FunctionSemantics M]
+    {β : Type w} [Representation M β] (length : Obj (M := M) β) :
+    M.isSet (finiteSeqDomain length) :=
+  F.sep_isSet _ _ (F.sep_isSet _ _ (M.standard_isSet .integer))
+
+instance finiteSeqSetRepresentation {M : Semantics.{u}} [F : FunctionSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β] :
+    Representation M (FiniteSeqSetObj (M := M) α β) where
+  wd s := IsSet s.carrier ∧ In s.length N
+  denote s := F.fnSetValue (finiteSeqDomain s.length) (denote s.carrier)
+  wd_isSet {s} h := F.fnSet_isSet _ _ (finiteSeqDomain_isSet s.length) h.1
+
+def finiteSeq {M : Semantics.{u}} [FunctionSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β]
+    (A : Obj (M := M) α) (n : Obj (M := M) β) (hA : IsSet A) (hn : In n N) :
+    Obj (M := M) (FiniteSeqSetObj (M := M) α β) := ⟨⟨A, n⟩, hA, hn⟩
+
+def finiteSeqSignature {M : Semantics.{u}} [FunctionSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β]
+    (s : Obj (M := M) (FiniteSeqSetObj (M := M) α β)) : FunctionSignature M :=
+  ⟨finiteSeqDomain s.val.length, finiteSeqDomain_isSet s.val.length,
+    denote s.val.carrier, s.wd.1⟩
+
+theorem finiteSeq_eq_fnSet {M : Semantics.{u}} [FunctionSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β]
+    (s : Obj (M := M) (FiniteSeqSetObj (M := M) α β)) :
+    Same s (fnSet (finiteSeqSignature s)) := rfl
+
+/-- Injectivity compares semantic values on the requested domain. Callability
+and the codomain are checked by the source fact's separate WD evidence. -/
+def injectiveValue {M : Semantics.{u}} [F : FunctionSemantics M]
+    (A _B f : M.Value) : Prop :=
+  ∀ x, M.mem x A → ∀ y, M.mem y A → F.callValue f x = F.callValue f y → x = y
+
+def surjectiveValue {M : Semantics.{u}} [F : FunctionSemantics M]
+    (A B f : M.Value) : Prop :=
+  ∀ y, M.mem y B → ∃ x, M.mem x A ∧ y = F.callValue f x
+
+def bijectiveValue {M : Semantics.{u}} [FunctionSemantics M]
+    (A B f : M.Value) : Prop := injectiveValue A B f ∧ surjectiveValue A B f
+
+theorem injectiveValue_iff {M : Semantics.{u}} [F : FunctionSemantics M]
+    (A B f : M.Value) : injectiveValue A B f ↔
+    (∀ (x : Obj (M := M) M.Value), M.mem (denote x) A →
+     ∀ (y : Obj (M := M) M.Value), M.mem (denote y) A →
+       F.callValue f (denote x) = F.callValue f (denote y) → denote x = denote y) := by
+  constructor
+  · intro h x hx y hy eq
+    exact h (denote x) hx (denote y) hy eq
+  · intro h x hx y hy eq
+    exact h (semanticObject x (M.member_isSet hx)) hx
+      (semanticObject y (M.member_isSet hy)) hy eq
+
+theorem surjectiveValue_iff {M : Semantics.{u}} [F : FunctionSemantics M]
+    (A B f : M.Value) : surjectiveValue A B f ↔
+    (∀ (y : Obj (M := M) M.Value), M.mem (denote y) B →
+      ∃ x : Obj (M := M) M.Value, ∃ (_hx : M.mem (denote x) A), denote y = F.callValue f (denote x)) := by
+  constructor
+  · intro h y hy
+    obtain ⟨x, hx, eq⟩ := h (denote y) hy
+    exact ⟨semanticObject x (M.member_isSet hx), hx, eq⟩
+  · intro h y hy
+    obtain ⟨x, hx, eq⟩ := h (semanticObject y (M.member_isSet hy)) hy
+    exact ⟨denote x, hx, eq⟩
+
+theorem bijectiveValue_preimage {M : Semantics.{u}} [F : FunctionSemantics M]
+    (A B f y : M.Value) (h : bijectiveValue A B f) (hy : M.mem y B) :
+    (∃ x : Obj (M := M) M.Value, ∃ (_hx : M.mem (denote x) A), F.callValue f (denote x) = y) ∧
+    (∀ (x : Obj (M := M) M.Value), M.mem (denote x) A →
+     ∀ (z : Obj (M := M) M.Value), M.mem (denote z) A →
+       F.callValue f (denote x) = y → F.callValue f (denote z) = y → denote x = denote z) := by
+  constructor
+  · obtain ⟨x, hx, eq⟩ := h.2 y hy
+    exact ⟨semanticObject x (M.member_isSet hx), hx, eq.symm⟩
+  · intro x hx z hz ex ez
+    exact h.1 (denote x) hx (denote z) hz (ex.trans ez.symm)
+
+/-- A checked Cartesian member retains its complete finite domain when its
+return bound is changed using the supplied return proof. -/
+theorem cartMemberInFnSetOfReturns {M : Semantics.{u}} [F : FunctionSemantics M]
+    {α : Type v} [Representation M α] {n : ℕ}
+    (f : Obj (M := M) α) (A : Obj (M := M) (CartObj M n))
+    (s : FunctionSignature M) (hf : In f A)
+    (hd : s.domain = FiniteFunction.indexSet n)
+    (hr : ∀ x, M.mem x s.domain → M.mem (F.callValue (denote f) x) s.output) :
+    In f (fnSet s) := by
+  have graph : M.mem (denote f) (F.fnSetValue (FiniteFunction.indexSet n)
+      (FiniteFunction.finiteUnionValue (List.ofFn A.val.factors))) :=
+    ((F.sep_members _ _ _).mp hf).1
+  rw [← hd] at graph
+  exact F.fnSet_of_returns graph hr
+
+theorem finiteSeqDomain_number {M : Semantics.{u}} [F : FunctionSemantics M] (n : ℕ) :
+    finiteSeqDomain (number (M := M) (n : ℂ)) = FiniteFunction.indexSet n := by
+  let interval := closedRange (number (M := M) 1) (number (n : ℂ))
+    (NativeBridge.numberInZOfEq 1 1 (by norm_num)) (naturalToInteger _ (NativeBridge.numberInN n))
+  have h : F.sepValue (denote interval) (fun _ => True) = denote interval := by
+    apply F.ext _ _ (F.sep_isSet _ _ (isSet interval)) (isSet interval)
+    intro x
+    exact (F.sep_members _ _ x).trans ⟨And.left, fun h => ⟨h, True.intro⟩⟩
+  exact h.trans (closedRange_indexSet n _ _)
+
+theorem finiteSeqDomain_ofDenote {M : Semantics.{u}} [F : FunctionSemantics M]
+    {β : Type w} [Representation M β] (length : Obj (M := M) β) (n : ℕ)
+    (hn : denote length = M.number (n : ℂ)) :
+    finiteSeqDomain length = FiniteFunction.indexSet n := by
+  change F.sepValue (F.sepValue (M.standard .integer)
+    (fun value => ∃ lower upper k : ℤ, M.number 1 = M.number (lower : ℂ) ∧
+      denote length = M.number (upper : ℂ) ∧ value = M.number (k : ℂ) ∧
+      lower ≤ k ∧ k ≤ upper)) (fun _ => True) = _
+  rw [hn]
+  exact finiteSeqDomain_number n
+
+theorem denoteFiniteSeq {M : Semantics.{u}} [F : FunctionSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β]
+    (s : Obj (M := M) (FiniteSeqSetObj (M := M) α β)) (n : ℕ)
+    (hn : Same s.val.length (number (n : ℂ))) :
+    denote s = F.fnSetValue (FiniteFunction.indexSet n) (denote s.val.carrier) :=
+  congrArg (fun D => F.fnSetValue D (denote s.val.carrier))
+    (finiteSeqDomain_ofDenote s.val.length n hn)
+
+structure FunctionBranch (M : Semantics.{u}) where
+  guard : M.Value → Prop
+  body : M.Value → M.Value
+
+noncomputable def piecewiseValue {M : Semantics.{u}} : List (FunctionBranch M) → M.Value → M.Value
+  | [], _ => M.number 0
+  | branch :: rest, x => by
+      classical
+      exact if branch.guard x then branch.body x else piecewiseValue rest x
+
+theorem piecewiseValue_eq {M : Semantics.{u}} (branches : List (FunctionBranch M))
+    (D : M.Value)
+    (disjoint : branches.Pairwise (fun a b => ∀ x, M.mem x D → ¬ (a.guard x ∧ b.guard x)))
+    (branch : FunctionBranch M) (member : branch ∈ branches)
+    (x : M.Value) (hx : M.mem x D) (guard : branch.guard x) :
+    piecewiseValue branches x = branch.body x := by
+  classical
+  induction branches with
+  | nil => cases member
+  | cons first rest ih =>
+      obtain ⟨apart, tail⟩ := List.pairwise_cons.mp disjoint
+      rcases List.mem_cons.mp member with rfl | member
+      · exact if_pos guard
+      · have no_first : ¬ first.guard x := fun h => apart branch member x hx ⟨h, guard⟩
+        change (if first.guard x then first.body x else piecewiseValue rest x) = _
+        rw [if_neg no_first]
+        exact ih tail member
+
+structure PiecewiseFn (M : Semantics.{u}) where
+  signature : FunctionSignature M
+  branches : List (FunctionBranch M)
+
+def PiecewiseFn.Valid {M : Semantics.{u}} (f : PiecewiseFn M) : Prop :=
+  (∀ x, M.mem x f.signature.domain → ∃ b ∈ f.branches, b.guard x) ∧
+  f.branches.Pairwise (fun a b => ∀ x, M.mem x f.signature.domain → ¬ (a.guard x ∧ b.guard x)) ∧
+  (∀ b ∈ f.branches, ∀ x, M.mem x f.signature.domain → b.guard x → M.mem (b.body x) f.signature.output)
+
+theorem PiecewiseFn.value_mem {M : Semantics.{u}} (f : PiecewiseFn M) (h : f.Valid)
+    (x : M.Value) (hx : M.mem x f.signature.domain) :
+    M.mem (piecewiseValue f.branches x) f.signature.output := by
+  obtain ⟨b, hb, hg⟩ := h.1 x hx
+  rw [piecewiseValue_eq f.branches f.signature.domain h.2.1 b hb x hx hg]
+  exact h.2.2 b hb x hx hg
+
+noncomputable instance piecewiseFnRepresentation {M : Semantics.{u}} [F : FunctionSemantics M] :
+    Representation M (PiecewiseFn M) where
+  wd := PiecewiseFn.Valid
+  denote f := F.graphValue f.signature.domain f.signature.output (piecewiseValue f.branches)
+  wd_isSet {f} h := M.member_isSet
+    (FunctionSemantics.graph_inFnSet _ _ _ (f.value_mem h))
+
+noncomputable def piecewiseFn {M : Semantics.{u}} [FunctionSemantics M]
+    (signature : FunctionSignature M) (branches : List (FunctionBranch M))
+    (h : (PiecewiseFn.mk signature branches).Valid) : Obj (M := M) (PiecewiseFn M) :=
+  ⟨⟨signature, branches⟩, h⟩
+
+theorem piecewiseFnInFnSet {M : Semantics.{u}} [FunctionSemantics M]
+    (f : Obj (M := M) (PiecewiseFn M)) : In f (fnSet f.val.signature) :=
+  FunctionSemantics.graph_inFnSet _ _ _ (f.val.value_mem f.wd)
+
+theorem piecewiseFn_call_eq {M : Semantics.{u}} [F : FunctionSemantics M]
+    (f : Obj (M := M) (PiecewiseFn M)) (branch : FunctionBranch M)
+    (member : branch ∈ f.val.branches) (x : M.Value)
+    (hx : M.mem x f.val.signature.domain) (guard : branch.guard x) :
+    F.callValue (denote f) x = branch.body x := by
+  have h := FunctionSemantics.call_graphValue f.val.signature.domain f.val.signature.output
+    (piecewiseValue f.val.branches) (f.val.value_mem f.wd) x hx
+  exact h.trans (piecewiseValue_eq _ _ f.wd.2.1 branch member x hx guard)
+
+/-- A function specified by a unique output, with no formula body to unfold. -/
+structure SelectedFn (M : Semantics.{u}) where
+  signature : FunctionSignature M
+  property : M.Value → M.Value → Prop
+
+/-- Move canonical Litex witnesses to semantic values; uniqueness still compares
+denotations, never arbitrary host payloads. -/
+theorem existsUniqueValueOfObjects {M : Semantics.{u}} (B : M.Value)
+    (P : M.Value → Prop)
+    (existsObject : ∃ y : Obj (M := M) M.Value, M.mem (denote y) B ∧ P (denote y))
+    (uniqueObject : ∀ a b : Obj (M := M) M.Value,
+      M.mem (denote a) B → M.mem (denote b) B → P (denote a) → P (denote b) → Same a b) :
+    ∃! y, M.mem y B ∧ P y := by
+  obtain ⟨y, hy, hp⟩ := existsObject
+  refine ⟨denote y, ⟨hy, hp⟩, ?_⟩
+  intro z hz
+  exact uniqueObject (semanticObject z (M.member_isSet hz.1)) y hz.1 hy hz.2 hp
+
+noncomputable def SelectedFn.value {M : Semantics.{u}}
+    (f : SelectedFn M) (x : M.Value) : M.Value := by
+  classical
+  exact if h : ∃ y, M.mem y f.signature.output ∧ f.property x y then
+    Classical.choose h
+  else M.number 0
+
+theorem SelectedFn.value_spec {M : Semantics.{u}} (f : SelectedFn M) (x : M.Value)
+    (h : ∃! y, M.mem y f.signature.output ∧ f.property x y) :
+    M.mem (f.value x) f.signature.output ∧ f.property x (f.value x) := by
+  rw [SelectedFn.value, dif_pos h.exists]
+  exact Classical.choose_spec h.exists
+
+noncomputable instance selectedFnRepresentation {M : Semantics.{u}}
+    [F : FunctionSemantics M] : Representation M (SelectedFn M) where
+  wd f := ∀ x, M.mem x f.signature.domain →
+    ∃! y, M.mem y f.signature.output ∧ f.property x y
+  denote f := F.graphValue f.signature.domain f.signature.output f.value
+  wd_isSet h := M.member_isSet
+    (FunctionSemantics.graph_inFnSet _ _ _ (fun x hx =>
+      (SelectedFn.value_spec _ x (h x hx)).1))
+
+noncomputable def selectedFn {M : Semantics.{u}} [FunctionSemantics M]
+    (s : FunctionSignature M) (property : M.Value → M.Value → Prop)
+    (h : ∀ x, M.mem x s.domain → ∃! y, M.mem y s.output ∧ property x y) :
+    Obj (M := M) (SelectedFn M) := ⟨⟨s, property⟩, h⟩
+
+theorem selectedFnInFnSet {M : Semantics.{u}} [FunctionSemantics M]
+    (f : Obj (M := M) (SelectedFn M)) : In f (fnSet f.val.signature) :=
+  FunctionSemantics.graph_inFnSet _ _ _ (fun x hx =>
+    (SelectedFn.value_spec f.val x (f.wd x hx)).1)
+
+theorem selectedFn_call_spec {M : Semantics.{u}} [F : FunctionSemantics M]
+    (f : Obj (M := M) (SelectedFn M)) (x : M.Value)
+    (hx : M.mem x f.val.signature.domain) :
+    M.mem (F.callValue (denote f) x) f.val.signature.output ∧
+      f.val.property x (F.callValue (denote f) x) := by
+  have value_eq : F.callValue (denote f) x = f.val.value x :=
+    FunctionSemantics.call_graphValue _ _ _
+      (fun x hx => (SelectedFn.value_spec f.val x (f.wd x hx)).1) x hx
+  rw [value_eq]
+  exact SelectedFn.value_spec f.val x (f.wd x hx)
+
+theorem selectedFn_unique {M : Semantics.{u}} [F : FunctionSemantics M]
+    (f : Obj (M := M) (SelectedFn M)) (x y : M.Value)
+    (hx : M.mem x f.val.signature.domain)
+    (hy : M.mem y f.val.signature.output ∧ f.val.property x y) :
+    y = F.callValue (denote f) x :=
+  (f.wd x hx).unique hy (selectedFn_call_spec f x hx)
+
+theorem selectedFn_proofIndependent {M : Semantics.{u}} [FunctionSemantics M]
+    (s : FunctionSignature M) (property : M.Value → M.Value → Prop)
+    (h k : ∀ x, M.mem x s.domain → ∃! y, M.mem y s.output ∧ property x y) :
+    Same (selectedFn s property h) (selectedFn s property k) := rfl
+
 /-- A formula object denotes a set-theoretic graph, not its interpretation callback.
 The callback is the compiler's recursive interpretation of the source body AST. -/
 structure FormulaFn (M : Semantics.{u}) where
@@ -3485,6 +4262,32 @@ theorem callOnInOutput {M : Semantics.{u}} [FunctionSemantics M]
     (c : Obj (M := M) (CallOnObj (M := M) α β)) :
     In c (semanticObject c.val.signature.output c.val.signature.output_isSet) :=
   FunctionSemantics.call_mem _ _ _ _ c.wd.1 c.wd.2
+
+/-- Complete equal domains and equal calls identify the graphs. Return upper
+bounds may differ, so they are retained independently for the two functions. -/
+theorem functionExtOnDomain {M : Semantics.{u}} [F : FunctionSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β]
+    (f : Obj (M := M) α) (g : Obj (M := M) β)
+    (s t : FunctionSignature M) (hf : In f (fnSet s)) (hg : In g (fnSet t))
+    (hD : s.domain = t.domain)
+    (h : ∀ x, M.mem x s.domain → F.callValue (denote f) x = F.callValue (denote g) x) :
+    Same f g := by
+  have hfg := (F.fnSet_members _ _ _).mp hf
+  have hgg := (F.fnSet_members _ _ _).mp hg
+  apply F.ext _ _ (isSet f) (isSet g)
+  intro edge
+  constructor
+  · intro he
+    obtain ⟨x, hx, y, _, rfl⟩ := hfg.1 edge he
+    have hy := (FiniteFunction.graph_pair_value hfg he).2
+    rw [hy, h x hx]
+    exact F.call_graph _ _ _ _ hgg (hD ▸ hx)
+  · intro he
+    obtain ⟨x, hx, y, _, rfl⟩ := hgg.1 edge he
+    have hy := (FiniteFunction.graph_pair_value hgg he).2
+    have hx' : M.mem x s.domain := hD.symm ▸ hx
+    rw [hy, ← h x hx']
+    exact F.call_graph _ _ _ _ hfg hx'
 
 /-- A Cartesian membership supplies the complete finite function contract. -/
 def cartCall {M : Semantics.{u}} [F : FunctionSemantics M]
@@ -4182,5 +4985,1294 @@ theorem divStructuralNonpositive {M : Semantics.{u}} {α : Type v} {β : Type w}
     (div_nonpos_of_nonpos_of_nonneg ha0 (le_of_lt hc0))
   change M.divValue (denote q.val.left) (denote q.val.right) = _
   rw [ha, hc, M.div_numbers _ _ hc0C, Complex.ofReal_div]
+
+end Litex
+
+namespace Litex
+
+/-- The denotation chooses one original value; WD does not choose the meaning. -/
+noncomputable def minMaxValue {M : Semantics.{u}} (maximum : Bool)
+    (a b : M.Value) : M.Value := by
+  classical
+  exact if (∃ r s : ℝ, a = M.number (r : ℂ) ∧ b = M.number (s : ℂ) ∧ r ≤ s)
+    then (if maximum then b else a) else (if maximum then a else b)
+
+theorem minMaxValue_number {M : Semantics.{u}} (maximum : Bool) (r s : ℝ) :
+    minMaxValue maximum (M.number (r : ℂ)) (M.number (s : ℂ)) =
+      M.number ((if maximum then Max.max r s else Min.min r s : ℝ) : ℂ) := by
+  classical
+  have iff_le : (∃ x y : ℝ, M.number (r : ℂ) = M.number (x : ℂ) ∧
+      M.number (s : ℂ) = M.number (y : ℂ) ∧ x ≤ y) ↔ r ≤ s := by
+    constructor
+    · rintro ⟨x, y, hx, hy, hxy⟩
+      have hr := Complex.ofReal_injective (M.number_injective hx)
+      have hs := Complex.ofReal_injective (M.number_injective hy)
+      exact hr.symm ▸ hs.symm ▸ hxy
+    · intro h; exact ⟨r, s, rfl, rfl, h⟩
+  unfold minMaxValue
+  simp only [iff_le]
+  cases maximum <;> by_cases h : r ≤ s
+  · simp only [h, if_true, Bool.false_eq_true, if_false, min_eq_left h]
+  · simp only [h, if_false, Bool.false_eq_true, min_eq_right (le_of_not_ge h)]
+  · simp only [h, if_true, max_eq_right h]
+  · simp only [h, if_false, if_true, max_eq_left (le_of_not_ge h)]
+
+structure MinMaxObj {M : Semantics.{u}} (maximum : Bool)
+    (α : Type v) (β : Type w) [Representation M α] [Representation M β] where
+  left : Obj (M := M) α
+  right : Obj (M := M) β
+
+noncomputable instance minMaxRepresentation {M : Semantics.{u}} {maximum : Bool}
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β] :
+    Representation M (MinMaxObj (M := M) maximum α β) where
+  wd p := In p.left R ∧ In p.right R
+  denote p := minMaxValue maximum (denote p.left) (denote p.right)
+  wd_isSet {p} _ := by
+    classical
+    unfold minMaxValue
+    split <;> cases maximum <;> first | exact isSet p.left | exact isSet p.right
+
+noncomputable def min {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β] (a : Obj (M := M) α) (b : Obj (M := M) β)
+    (ha : In a R) (hb : In b R) : Obj (M := M) (MinMaxObj (M := M) false α β) :=
+  ⟨⟨a, b⟩, ha, hb⟩
+
+noncomputable def max {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β] (a : Obj (M := M) α) (b : Obj (M := M) β)
+    (ha : In a R) (hb : In b R) : Obj (M := M) (MinMaxObj (M := M) true α β) :=
+  ⟨⟨a, b⟩, ha, hb⟩
+
+theorem minMaxMember {M : Semantics.{u}} {maximum : Bool}
+    {α : Type v} {β : Type w} {γ : Type x}
+    [Representation M α] [Representation M β] [Representation M γ]
+    (p : Obj (M := M) (MinMaxObj (M := M) maximum α β)) (A : Obj (M := M) γ)
+    (ha : In p.val.left A) (hb : In p.val.right A) : In p A := by
+  classical
+  change M.mem (minMaxValue maximum (denote p.val.left) (denote p.val.right)) (denote A)
+  unfold minMaxValue
+  split <;> cases maximum <;> first | exact ha | exact hb
+
+theorem minMaxIdempotent {M : Semantics.{u}} {maximum : Bool}
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β]
+    (p : Obj (M := M) (MinMaxObj (M := M) maximum α β))
+    (h : Same p.val.left p.val.right) : Same p p.val.left := by
+  classical
+  change minMaxValue maximum (denote p.val.left) (denote p.val.right) = denote p.val.left
+  change denote p.val.left = denote p.val.right at h
+  rw [← h]
+  unfold minMaxValue
+  split <;> cases maximum <;> rfl
+
+theorem minMaxCommutative {M : Semantics.{u}} {maximum : Bool}
+    {α : Type v} {β : Type w} {γ : Type x} {δ : Type*}
+    [Representation M α] [Representation M β] [Representation M γ] [Representation M δ]
+    (p : Obj (M := M) (MinMaxObj (M := M) maximum α β))
+    (q : Obj (M := M) (MinMaxObj (M := M) maximum γ δ))
+    (h₁ : Same p.val.left q.val.right) (h₂ : Same p.val.right q.val.left) : Same p q := by
+  obtain ⟨r, hr⟩ := (M.real_members _).mp p.wd.1
+  obtain ⟨s, hs⟩ := (M.real_members _).mp p.wd.2
+  change denote p.val.left = denote q.val.right at h₁
+  change denote p.val.right = denote q.val.left at h₂
+  change minMaxValue maximum (denote p.val.left) (denote p.val.right) =
+    minMaxValue maximum (denote q.val.left) (denote q.val.right)
+  rw [← h₁, ← h₂, hr, hs, minMaxValue_number, minMaxValue_number]
+  cases maximum
+  · exact congrArg (fun x : ℝ => M.number (x : ℂ)) (min_comm r s)
+  · exact congrArg (fun x : ℝ => M.number (x : ℂ)) (max_comm r s)
+
+end Litex
+
+namespace Litex
+
+theorem minMaxDenoteReal {M : Semantics.{u}} {maximum : Bool}
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β]
+    (p : Obj (M := M) (MinMaxObj (M := M) maximum α β)) (r s : ℝ)
+    (hr : denote p.val.left = M.number (r : ℂ))
+    (hs : denote p.val.right = M.number (s : ℂ)) :
+    denote p = M.number ((if maximum then Max.max r s else Min.min r s : ℝ) : ℂ) := by
+  change minMaxValue maximum (denote p.val.left) (denote p.val.right) = _
+  rw [hr, hs, minMaxValue_number]
+
+theorem minLeOperands {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (p : Obj (M := M) (MinMaxObj (M := M) false α β)) :
+    Le p p.val.left ∧ Le p p.val.right := by
+  obtain ⟨r, hr⟩ := (M.real_members _).mp p.wd.1
+  obtain ⟨s, hs⟩ := (M.real_members _).mp p.wd.2
+  have hp : denote p = M.number ((Min.min r s : ℝ) : ℂ) := minMaxDenoteReal p r s hr hs
+  exact ⟨⟨_, _, hp, hr, min_le_left r s⟩, ⟨_, _, hp, hs, min_le_right r s⟩⟩
+
+theorem operandsLeMax {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (p : Obj (M := M) (MinMaxObj (M := M) true α β)) :
+    Le p.val.left p ∧ Le p.val.right p := by
+  obtain ⟨r, hr⟩ := (M.real_members _).mp p.wd.1
+  obtain ⟨s, hs⟩ := (M.real_members _).mp p.wd.2
+  have hp : denote p = M.number ((Max.max r s : ℝ) : ℂ) := minMaxDenoteReal p r s hr hs
+  exact ⟨⟨_, _, hr, hp, le_max_left r s⟩, ⟨_, _, hs, hp, le_max_right r s⟩⟩
+
+theorem minOfLeOperands {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (p : Obj (M := M) (MinMaxObj (M := M) false α β))
+    (h : Le p.val.left p.val.right) : Same p p.val.left := by
+  obtain ⟨a, b, ha, hb, hab⟩ := h
+  change minMaxValue false (denote p.val.left) (denote p.val.right) = denote p.val.left
+  rw [ha, hb, minMaxValue_number]
+  simp only [Bool.false_eq_true, if_false, min_eq_left hab]
+
+theorem minOfGeOperands {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (p : Obj (M := M) (MinMaxObj (M := M) false α β))
+    (h : Le p.val.right p.val.left) : Same p p.val.right := by
+  obtain ⟨b, a, hb, ha, hba⟩ := h
+  change minMaxValue false (denote p.val.left) (denote p.val.right) = denote p.val.right
+  rw [ha, hb, minMaxValue_number]
+  simp only [Bool.false_eq_true, if_false, min_eq_right hba]
+
+theorem maxOfLeOperands {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (p : Obj (M := M) (MinMaxObj (M := M) true α β))
+    (h : Le p.val.left p.val.right) : Same p p.val.right := by
+  obtain ⟨a, b, ha, hb, hab⟩ := h
+  change minMaxValue true (denote p.val.left) (denote p.val.right) = denote p.val.right
+  rw [ha, hb, minMaxValue_number]
+  simp only [if_true, max_eq_right hab]
+
+theorem maxOfGeOperands {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (p : Obj (M := M) (MinMaxObj (M := M) true α β))
+    (h : Le p.val.right p.val.left) : Same p p.val.left := by
+  obtain ⟨b, a, hb, ha, hba⟩ := h
+  change minMaxValue true (denote p.val.left) (denote p.val.right) = denote p.val.left
+  rw [ha, hb, minMaxValue_number]
+  simp only [if_true, max_eq_left hba]
+
+theorem minMaxMonotone {M : Semantics.{u}} {maximum : Bool}
+    {α : Type v} {β : Type w} {γ : Type x} {δ : Type*}
+    [Representation M α] [Representation M β] [Representation M γ] [Representation M δ]
+    (p : Obj (M := M) (MinMaxObj (M := M) maximum α β))
+    (q : Obj (M := M) (MinMaxObj (M := M) maximum γ δ))
+    (ha : Le p.val.left q.val.left) (hb : Le p.val.right q.val.right) : Le p q := by
+  obtain ⟨a, c, ha, hc, hac⟩ := ha
+  obtain ⟨b, d, hb, hd, hbd⟩ := hb
+  refine ⟨_, _, minMaxDenoteReal p a b ha hb, minMaxDenoteReal q c d hc hd, ?_⟩
+  cases maximum
+  · exact min_le_min hac hbd
+  · exact max_le_max hac hbd
+
+end Litex
+
+namespace Litex
+
+/-- The native real sign, observed through the fixed numeric embedding. -/
+noncomputable def signValue {M : Semantics.{u}} (a : M.Value) : M.Value := by
+  classical
+  exact if h : ∃ r : ℝ, a = M.number (r : ℂ)
+    then M.number ((Real.sign (Classical.choose h) : ℝ) : ℂ)
+    else M.number 0
+
+theorem signValue_number {M : Semantics.{u}} (r : ℝ) :
+    signValue (M.number (r : ℂ)) = M.number ((Real.sign r : ℝ) : ℂ) := by
+  classical
+  have h : ∃ s : ℝ, M.number (r : ℂ) = M.number (s : ℂ) := ⟨r, rfl⟩
+  have hr : Classical.choose h = r :=
+    (Complex.ofReal_injective (M.number_injective (Classical.choose_spec h))).symm
+  unfold signValue
+  rw [dif_pos h, hr]
+
+structure SignObj {M : Semantics.{u}} (α : Type v) [Representation M α] where
+  arg : Obj (M := M) α
+
+noncomputable instance signRepresentation {M : Semantics.{u}} {α : Type v}
+    [Representation M α] : Representation M (SignObj (M := M) α) where
+  wd p := In p.arg R
+  denote p := signValue (denote p.arg)
+  wd_isSet {p} h := by
+    obtain ⟨r, hr⟩ := (M.real_members _).mp h
+    exact M.member_isSet ((M.real_members _).mpr ⟨Real.sign r, by
+      rw [hr, signValue_number]⟩)
+
+noncomputable def sign {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (a : Obj (M := M) α) (h : In a R) : Obj (M := M) (SignObj (M := M) α) :=
+  ⟨⟨a⟩, h⟩
+
+theorem signDenoteReal {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (p : Obj (M := M) (SignObj (M := M) α)) (r : ℝ)
+    (hr : denote p.val.arg = M.number (r : ℂ)) :
+    denote p = M.number ((Real.sign r : ℝ) : ℂ) := by
+  change signValue (denote p.val.arg) = _
+  rw [hr, signValue_number]
+
+theorem signInZ {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (p : Obj (M := M) (SignObj (M := M) α)) : In p Z := by
+  obtain ⟨r, hr⟩ := (M.real_members _).mp p.wd
+  have hp := signDenoteReal p r hr
+  rcases Real.sign_apply_eq r with hn | hz | ho
+  · exact (M.integer_members _).mpr ⟨-1, by rw [hp, hn]; norm_num⟩
+  · exact (M.integer_members _).mpr ⟨0, by rw [hp, hz]; norm_num⟩
+  · exact (M.integer_members _).mpr ⟨1, by rw [hp, ho]; norm_num⟩
+
+theorem signOfPositive {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (p : Obj (M := M) (SignObj (M := M) α))
+    (h : Lt (number 0) p.val.arg) : Same p (number 1) := by
+  obtain ⟨r, hr, hpos⟩ := NativeBridge.realWitnessOfPositive p.val.arg h
+  change denote p = M.number 1
+  rw [signDenoteReal p r hr, Real.sign_of_pos hpos, Complex.ofReal_one]
+
+theorem signOfNegative {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (p : Obj (M := M) (SignObj (M := M) α))
+    (h : Lt p.val.arg (number 0)) : Same p (number (-1)) := by
+  obtain ⟨r, z, hr, hz, hneg⟩ := h
+  change M.number 0 = M.number (z : ℂ) at hz
+  have hz0 : z = 0 := Complex.ofReal_injective (M.number_injective hz).symm
+  subst z
+  change denote p = M.number (-1)
+  rw [signDenoteReal p r hr, Real.sign_of_neg hneg, Complex.ofReal_neg, Complex.ofReal_one]
+
+theorem realSignMul (a b : ℝ) : Real.sign (a * b) = Real.sign a * Real.sign b := by
+  rcases lt_trichotomy a 0 with ha | rfl | ha
+  · rcases lt_trichotomy b 0 with hb | rfl | hb
+    · rw [Real.sign_of_neg ha, Real.sign_of_neg hb,
+        Real.sign_of_pos (mul_pos_of_neg_of_neg ha hb)]
+      norm_num
+    · rw [mul_zero, Real.sign_zero, mul_zero]
+    · rw [Real.sign_of_neg ha, Real.sign_of_pos hb,
+        Real.sign_of_neg (mul_neg_of_neg_of_pos ha hb), mul_one]
+  · rw [zero_mul, Real.sign_zero, zero_mul]
+  · rcases lt_trichotomy b 0 with hb | rfl | hb
+    · rw [Real.sign_of_pos ha, Real.sign_of_neg hb,
+        Real.sign_of_neg (mul_neg_of_pos_of_neg ha hb), one_mul]
+    · rw [mul_zero, Real.sign_zero, mul_zero]
+    · rw [Real.sign_of_pos ha, Real.sign_of_pos hb,
+        Real.sign_of_pos (mul_pos ha hb), one_mul]
+
+theorem realSignMulAbs (a : ℝ) : Real.sign a * |a| = a := by
+  rcases lt_trichotomy a 0 with ha | rfl | ha
+  · rw [Real.sign_of_neg ha, abs_of_neg ha, neg_one_mul, neg_neg]
+  · rw [Real.sign_zero, zero_mul]
+  · rw [Real.sign_of_pos ha, abs_of_pos ha, one_mul]
+
+theorem realAbsEqSignMul (a : ℝ) : |a| = Real.sign a * a := by
+  rcases lt_trichotomy a 0 with ha | rfl | ha
+  · rw [Real.sign_of_neg ha, abs_of_neg ha, neg_one_mul]
+  · rw [Real.sign_zero, zero_mul, abs_zero]
+  · rw [Real.sign_of_pos ha, abs_of_pos ha, one_mul]
+
+theorem signNegation {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (p : Obj (M := M) (SignObj (M := M) α)) :
+    signValue (M.negValue (denote p.val.arg)) = M.negValue (denote p) := by
+  obtain ⟨r, hr⟩ := (M.real_members _).mp p.wd
+  simp only [signDenoteReal p r hr, hr, M.neg_numbers, ← Complex.ofReal_neg,
+    signValue_number, Real.sign_neg]
+
+theorem signProduct {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (p : Obj (M := M) (SignObj (M := M) α))
+    (q : Obj (M := M) (SignObj (M := M) β)) (reverseArgs : Bool) :
+    signValue (if reverseArgs then M.mulValue (denote q.val.arg) (denote p.val.arg)
+      else M.mulValue (denote p.val.arg) (denote q.val.arg)) =
+      M.mulValue (denote p) (denote q) := by
+  obtain ⟨a, ha⟩ := (M.real_members _).mp p.wd
+  obtain ⟨b, hb⟩ := (M.real_members _).mp q.wd
+  rw [signDenoteReal p a ha, signDenoteReal q b hb, ha, hb]
+  cases reverseArgs <;>
+    simp only [Bool.false_eq_true, if_false, if_true, M.mul_numbers,
+      ← Complex.ofReal_mul, signValue_number, realSignMul, mul_comm]
+
+theorem signTimesAbs {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (p : Obj (M := M) (SignObj (M := M) α)) (signFirst : Bool) :
+    (if signFirst then M.mulValue (denote p) (absValue (denote p.val.arg))
+      else M.mulValue (absValue (denote p.val.arg)) (denote p)) = denote p.val.arg := by
+  obtain ⟨a, ha⟩ := (M.real_members _).mp p.wd
+  rw [signDenoteReal p a ha, ha, absValue_number]
+  cases signFirst <;>
+    simp only [Bool.false_eq_true, if_false, if_true, M.mul_numbers,
+      ← Complex.ofReal_mul, mul_comm (|a|) (Real.sign a), realSignMulAbs]
+
+theorem absEqualsSignTimes {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (p : Obj (M := M) (SignObj (M := M) α)) (signFirst : Bool) :
+    absValue (denote p.val.arg) =
+      (if signFirst then M.mulValue (denote p) (denote p.val.arg)
+        else M.mulValue (denote p.val.arg) (denote p)) := by
+  obtain ⟨a, ha⟩ := (M.real_members _).mp p.wd
+  rw [signDenoteReal p a ha, ha, absValue_number]
+  cases signFirst <;>
+    simp only [Bool.false_eq_true, if_false, if_true, M.mul_numbers,
+      ← Complex.ofReal_mul, mul_comm a (Real.sign a), ← realAbsEqSignMul]
+
+theorem zeroSubValue {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (a : Obj (M := M) α) (ha : In a C) :
+    M.subValue (M.number 0) (denote a) = M.negValue (denote a) := by
+  obtain ⟨z, hz⟩ := (M.complex_members _).mp ha
+  rw [hz, M.sub_numbers, M.neg_numbers, zero_sub]
+
+theorem negOneMulValue {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (a : Obj (M := M) α) (ha : In a C) :
+    M.mulValue (M.number (-1)) (denote a) = M.negValue (denote a) := by
+  obtain ⟨z, hz⟩ := (M.complex_members _).mp ha
+  rw [hz, M.mul_numbers, M.neg_numbers, neg_one_mul]
+
+theorem mulNegOneValue {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (a : Obj (M := M) α) (ha : In a C) :
+    M.mulValue (denote a) (M.number (-1)) = M.negValue (denote a) := by
+  obtain ⟨z, hz⟩ := (M.complex_members _).mp ha
+  rw [hz, M.mul_numbers, M.neg_numbers, mul_neg_one]
+
+end Litex
+
+namespace Litex
+
+noncomputable def roundingValue {M : Semantics.{u}} (ceiling : Bool)
+    (a : M.Value) : M.Value := by
+  classical
+  exact if h : ∃ r : ℝ, a = M.number (r : ℂ)
+    then M.number ((if ceiling then Int.ceil (Classical.choose h)
+      else Int.floor (Classical.choose h) : ℤ) : ℂ)
+    else M.number 0
+
+theorem roundingValue_number {M : Semantics.{u}} (ceiling : Bool) (r : ℝ) :
+    roundingValue ceiling (M.number (r : ℂ)) =
+      M.number ((if ceiling then Int.ceil r else Int.floor r : ℤ) : ℂ) := by
+  classical
+  have h : ∃ s : ℝ, M.number (r : ℂ) = M.number (s : ℂ) := ⟨r, rfl⟩
+  have hr : Classical.choose h = r :=
+    (Complex.ofReal_injective (M.number_injective (Classical.choose_spec h))).symm
+  unfold roundingValue
+  rw [dif_pos h, hr]
+
+structure RoundingObj {M : Semantics.{u}} (ceiling : Bool)
+    (α : Type v) [Representation M α] where
+  arg : Obj (M := M) α
+
+noncomputable instance roundingRepresentation {M : Semantics.{u}} {ceiling : Bool}
+    {α : Type v} [Representation M α] :
+    Representation M (RoundingObj (M := M) ceiling α) where
+  wd p := In p.arg R
+  denote p := roundingValue ceiling (denote p.arg)
+  wd_isSet {p} h := by
+    obtain ⟨r, hr⟩ := (M.real_members _).mp h
+    exact M.member_isSet ((M.integer_members _).mpr
+      ⟨if ceiling then Int.ceil r else Int.floor r, by rw [hr, roundingValue_number]⟩)
+
+noncomputable def floor {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (a : Obj (M := M) α) (h : In a R) : Obj (M := M) (RoundingObj (M := M) false α) :=
+  ⟨⟨a⟩, h⟩
+
+noncomputable def ceil {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (a : Obj (M := M) α) (h : In a R) : Obj (M := M) (RoundingObj (M := M) true α) :=
+  ⟨⟨a⟩, h⟩
+
+theorem roundingDenoteReal {M : Semantics.{u}} {ceiling : Bool}
+    {α : Type v} [Representation M α]
+    (p : Obj (M := M) (RoundingObj (M := M) ceiling α)) (r : ℝ)
+    (hr : denote p.val.arg = M.number (r : ℂ)) :
+    denote p = M.number ((if ceiling then Int.ceil r else Int.floor r : ℤ) : ℂ) := by
+  change roundingValue ceiling (denote p.val.arg) = _
+  rw [hr, roundingValue_number]
+
+theorem roundingInZ {M : Semantics.{u}} {ceiling : Bool}
+    {α : Type v} [Representation M α]
+    (p : Obj (M := M) (RoundingObj (M := M) ceiling α)) : In p Z := by
+  obtain ⟨r, hr⟩ := (M.real_members _).mp p.wd
+  exact (M.integer_members _).mpr ⟨_, roundingDenoteReal p r hr⟩
+
+theorem roundingOfInteger {M : Semantics.{u}} {ceiling : Bool}
+    {α : Type v} [Representation M α]
+    (p : Obj (M := M) (RoundingObj (M := M) ceiling α))
+    (h : In p.val.arg Z) : Same p p.val.arg := by
+  obtain ⟨z, hz⟩ := (M.integer_members _).mp h
+  have hr : denote p.val.arg = M.number ((z : ℝ) : ℂ) := by
+    simpa only [Complex.ofReal_intCast] using hz
+  change denote p = denote p.val.arg
+  rw [roundingDenoteReal p (z : ℝ) hr, Int.ceil_intCast, Int.floor_intCast, ite_self, hz]
+
+theorem floorLeArgument {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (p : Obj (M := M) (RoundingObj (M := M) false α)) : Le p p.val.arg := by
+  obtain ⟨r, hr⟩ := (M.real_members _).mp p.wd
+  exact ⟨(Int.floor r : ℝ), r, by
+    simpa only [Complex.ofReal_intCast, Bool.false_eq_true, if_false] using roundingDenoteReal p r hr,
+    hr, Int.floor_le r⟩
+
+theorem argumentLeCeil {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (p : Obj (M := M) (RoundingObj (M := M) true α)) : Le p.val.arg p := by
+  obtain ⟨r, hr⟩ := (M.real_members _).mp p.wd
+  exact ⟨r, (Int.ceil r : ℝ), hr, by
+    simpa only [Complex.ofReal_intCast, if_true] using roundingDenoteReal p r hr,
+    Int.le_ceil r⟩
+
+theorem floorStrictUpper {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (q : Obj (M := M) (AddObj (M := M) (RoundingObj (M := M) false α) β))
+    (h : Same q.val.right (number 1)) : Lt q.val.left.val.arg q := by
+  obtain ⟨r, hr⟩ := (M.real_members _).mp q.val.left.wd
+  change denote q.val.right = M.number 1 at h
+  refine ⟨r, (Int.floor r : ℝ) + 1, hr, ?_, Int.lt_floor_add_one r⟩
+  change M.addValue (denote q.val.left) (denote q.val.right) = _
+  rw [roundingDenoteReal q.val.left r hr, h, M.add_numbers,
+    Complex.ofReal_add, Complex.ofReal_intCast, Complex.ofReal_one]
+  rfl
+
+theorem ceilStrictLower {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (q : Obj (M := M) (SubObj (M := M) (RoundingObj (M := M) true α) β))
+    (h : Same q.val.right (number 1)) : Lt q q.val.left.val.arg := by
+  obtain ⟨r, hr⟩ := (M.real_members _).mp q.val.left.wd
+  change denote q.val.right = M.number 1 at h
+  refine ⟨(Int.ceil r : ℝ) - 1, r, ?_, hr,
+    (sub_lt_iff_lt_add).mpr (Int.ceil_lt_add_one r)⟩
+  change M.subValue (denote q.val.left) (denote q.val.right) = _
+  rw [roundingDenoteReal q.val.left r hr, h, M.sub_numbers,
+    Complex.ofReal_sub, Complex.ofReal_intCast, Complex.ofReal_one]
+  rfl
+
+theorem roundingMonotone {M : Semantics.{u}} {ceiling : Bool}
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β]
+    (p : Obj (M := M) (RoundingObj (M := M) ceiling α))
+    (q : Obj (M := M) (RoundingObj (M := M) ceiling β))
+    (h : Le p.val.arg q.val.arg) : Le p q := by
+  obtain ⟨r, s, hr, hs, hrs⟩ := h
+  refine ⟨((if ceiling then Int.ceil r else Int.floor r : ℤ) : ℝ),
+    ((if ceiling then Int.ceil s else Int.floor s : ℤ) : ℝ), ?_, ?_, ?_⟩
+  · simpa only [Complex.ofReal_intCast] using roundingDenoteReal p r hr
+  · simpa only [Complex.ofReal_intCast] using roundingDenoteReal q s hs
+  · cases ceiling
+    · exact_mod_cast Int.floor_mono hrs
+    · exact_mod_cast Int.ceil_mono hrs
+
+end Litex
+
+namespace Litex
+
+/-- Fixed integer denotation; domain evidence is carried by each constructor. -/
+noncomputable def integerDivisionValue {M : Semantics.{u}} (quotient : Bool)
+    (a b : M.Value) : M.Value := by
+  classical
+  exact if h : ∃ p : ℤ × ℤ, a = M.number (p.1 : ℂ) ∧ b = M.number (p.2 : ℂ)
+    then M.number ((if quotient then (Classical.choose h).1 / (Classical.choose h).2
+      else (Classical.choose h).1 % (Classical.choose h).2 : ℤ) : ℂ)
+    else M.number 0
+
+theorem integerDivisionValue_numbers {M : Semantics.{u}} (quotient : Bool) (a b : ℤ) :
+    integerDivisionValue quotient (M.number (a : ℂ)) (M.number (b : ℂ)) =
+      M.number ((if quotient then a / b else a % b : ℤ) : ℂ) := by
+  classical
+  have h : ∃ p : ℤ × ℤ,
+      M.number (a : ℂ) = M.number (p.1 : ℂ) ∧ M.number (b : ℂ) = M.number (p.2 : ℂ) :=
+    ⟨(a, b), rfl, rfl⟩
+  have hp : Classical.choose h = (a, b) := Prod.ext
+    (Int.cast_injective (M.number_injective (Classical.choose_spec h).1)).symm
+    (Int.cast_injective (M.number_injective (Classical.choose_spec h).2)).symm
+  unfold integerDivisionValue
+  rw [dif_pos h, hp]
+
+structure ModObj {M : Semantics.{u}} (α : Type v) (β : Type w)
+    [Representation M α] [Representation M β] where
+  left : Obj (M := M) α
+  right : Obj (M := M) β
+
+structure QuotObj {M : Semantics.{u}} (α : Type v) (β : Type w)
+    [Representation M α] [Representation M β] where
+  left : Obj (M := M) α
+  right : Obj (M := M) β
+
+noncomputable instance modRepresentation {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β] : Representation M (ModObj (M := M) α β) where
+  wd p := In p.left Z ∧ In p.right Z ∧ ¬ Same p.right (number 0)
+  denote p := integerDivisionValue false (denote p.left) (denote p.right)
+  wd_isSet {p} h := by
+    obtain ⟨a, ha⟩ := (M.integer_members _).mp h.1
+    obtain ⟨b, hb⟩ := (M.integer_members _).mp h.2.1
+    exact M.member_isSet ((M.integer_members _).mpr
+      ⟨a % b, by rw [ha, hb, integerDivisionValue_numbers]; rfl⟩)
+
+noncomputable instance quotRepresentation {M : Semantics.{u}} [SetSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β] :
+    Representation M (QuotObj (M := M) α β) where
+  wd p := In p.left Z ∧ In p.right NPos
+  denote p := integerDivisionValue true (denote p.left) (denote p.right)
+  wd_isSet {p} h := by
+    obtain ⟨a, ha⟩ := (M.integer_members _).mp h.1
+    obtain ⟨b, hb⟩ := (M.integer_members _).mp (naturalToInteger _ (inNPos_natural _ h.2))
+    exact M.member_isSet ((M.integer_members _).mpr
+      ⟨a / b, by rw [ha, hb, integerDivisionValue_numbers]; rfl⟩)
+
+noncomputable def mod {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β] (a : Obj (M := M) α) (b : Obj (M := M) β)
+    (ha : In a Z) (hb : In b Z) (h0 : ¬ Same b (number 0)) : Obj (M := M) (ModObj (M := M) α β) :=
+  ⟨⟨a, b⟩, ha, hb, h0⟩
+
+noncomputable def quot {M : Semantics.{u}} [SetSemantics M] {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β] (a : Obj (M := M) α) (b : Obj (M := M) β)
+    (ha : In a Z) (hb : In b NPos) : Obj (M := M) (QuotObj (M := M) α β) :=
+  ⟨⟨a, b⟩, ha, hb⟩
+
+theorem modDenoteInt {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β] (p : Obj (M := M) (ModObj (M := M) α β))
+    (a b : ℤ) (ha : denote p.val.left = M.number (a : ℂ))
+    (hb : denote p.val.right = M.number (b : ℂ)) : denote p = M.number ((a % b : ℤ) : ℂ) := by
+  change integerDivisionValue false _ _ = _
+  rw [ha, hb, integerDivisionValue_numbers]; rfl
+
+theorem quotDenoteInt {M : Semantics.{u}} [SetSemantics M] {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β] (p : Obj (M := M) (QuotObj (M := M) α β))
+    (a b : ℤ) (ha : denote p.val.left = M.number (a : ℂ))
+    (hb : denote p.val.right = M.number (b : ℂ)) : denote p = M.number ((a / b : ℤ) : ℂ) := by
+  change integerDivisionValue true _ _ = _
+  rw [ha, hb, integerDivisionValue_numbers]; rfl
+
+theorem modInZ {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β] (p : Obj (M := M) (ModObj (M := M) α β)) : In p Z := by
+  obtain ⟨a, ha⟩ := (M.integer_members _).mp p.wd.1
+  obtain ⟨b, hb⟩ := (M.integer_members _).mp p.wd.2.1
+  exact (M.integer_members _).mpr ⟨_, modDenoteInt p a b ha hb⟩
+
+theorem quotInZ {M : Semantics.{u}} [SetSemantics M] {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β] (p : Obj (M := M) (QuotObj (M := M) α β)) : In p Z := by
+  obtain ⟨a, ha⟩ := (M.integer_members _).mp p.wd.1
+  obtain ⟨b, hb⟩ := (M.integer_members _).mp (naturalToInteger _ (inNPos_natural _ p.wd.2))
+  exact (M.integer_members _).mpr ⟨_, quotDenoteInt p a b ha hb⟩
+
+theorem integerWitnessOfNPos {M : Semantics.{u}} [S : SetSemantics M]
+    {α : Type v} [Representation M α] (a : Obj (M := M) α) (h : In a NPos) :
+    ∃ z : ℤ, denote a = M.number (z : ℂ) ∧ 0 < z := by
+  obtain ⟨z, hz⟩ := (M.integer_members _).mp (naturalToInteger _ (inNPos_natural _ h))
+  obtain ⟨r, hr, hpos⟩ := ((S.sep_members _ _ _).mp h).2
+  have heq : (z : ℝ) = r := Complex.ofReal_injective (by
+    simpa only [Complex.ofReal_intCast] using M.number_injective (hz.symm.trans hr))
+  refine ⟨z, hz, ?_⟩
+  rw [← heq] at hpos
+  exact_mod_cast hpos
+
+theorem quotDecomposition {M : Semantics.{u}} [SetSemantics M] {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β] (p : Obj (M := M) (QuotObj (M := M) α β))
+    (quotientFirst : Bool) :
+    denote p.val.left = M.addValue
+      (if quotientFirst then M.mulValue (denote p) (denote p.val.right)
+       else M.mulValue (denote p.val.right) (denote p))
+      (integerDivisionValue false (denote p.val.left) (denote p.val.right)) := by
+  obtain ⟨a, ha⟩ := (M.integer_members _).mp p.wd.1
+  obtain ⟨b, hb⟩ := (M.integer_members _).mp (naturalToInteger _ (inNPos_natural _ p.wd.2))
+  rw [quotDenoteInt p a b ha hb, ha, hb, integerDivisionValue_numbers]
+  cases quotientFirst <;> simp only [Bool.false_eq_true, if_false, if_true,
+    M.mul_numbers, M.add_numbers]
+  · exact congrArg M.number (by exact_mod_cast (Int.mul_ediv_add_emod a b).symm)
+  · exact congrArg M.number (by exact_mod_cast (Int.ediv_mul_add_emod a b).symm)
+
+theorem quotByOne {M : Semantics.{u}} [SetSemantics M] {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β] (p : Obj (M := M) (QuotObj (M := M) α β))
+    (h : Same p.val.right (number 1)) : Same p p.val.left := by
+  obtain ⟨a, ha⟩ := (M.integer_members _).mp p.wd.1
+  change denote p.val.right = M.number 1 at h
+  change denote p = denote p.val.left
+  rw [quotDenoteInt p a 1 ha (by simpa only [Int.cast_one] using h), Int.ediv_one, ha]
+
+theorem quotSelfOne {M : Semantics.{u}} [SetSemantics M] {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β] (p : Obj (M := M) (QuotObj (M := M) α β))
+    (h : Same p.val.left p.val.right) (hp : In p.val.right NPos) : Same p (number 1) := by
+  obtain ⟨b, hb, hpos⟩ := integerWitnessOfNPos p.val.right hp
+  change denote p = M.number 1
+  rw [quotDenoteInt p b b (h.trans hb) hb, Int.ediv_self (ne_of_gt hpos), Int.cast_one]
+
+theorem modNonnegative {M : Semantics.{u}} [SetSemantics M] {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β] (p : Obj (M := M) (ModObj (M := M) α β))
+    (ha : In p.val.left Z) (hb : In p.val.right NPos) : Le (number 0) p := by
+  obtain ⟨a, ha⟩ := (M.integer_members _).mp ha
+  obtain ⟨b, hb, hpos⟩ := integerWitnessOfNPos p.val.right hb
+  refine ⟨0, ((a % b : ℤ) : ℝ), ?_, ?_, ?_⟩
+  · change M.number (0 : ℂ) = M.number ((0 : ℝ) : ℂ)
+    rw [Complex.ofReal_zero]
+  · simpa only [Complex.ofReal_intCast] using modDenoteInt p a b ha hb
+  · exact_mod_cast Int.emod_nonneg a (ne_of_gt hpos)
+
+theorem modStrictUpper {M : Semantics.{u}} [SetSemantics M] {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β] (p : Obj (M := M) (ModObj (M := M) α β))
+    (ha : In p.val.left Z) (hb : In p.val.right NPos) : Lt p p.val.right := by
+  obtain ⟨a, ha⟩ := (M.integer_members _).mp ha
+  obtain ⟨b, hb, hpos⟩ := integerWitnessOfNPos p.val.right hb
+  refine ⟨((a % b : ℤ) : ℝ), (b : ℝ), ?_, ?_, ?_⟩
+  · simpa only [Complex.ofReal_intCast] using modDenoteInt p a b ha hb
+  · simpa only [Complex.ofReal_intCast] using hb
+  · exact_mod_cast Int.emod_lt_of_pos a hpos
+
+end Litex
+
+namespace Litex
+
+noncomputable def gcdLcmValue {M : Semantics.{u}} (least : Bool) (a b : M.Value) : M.Value := by
+  classical
+  exact if h : ∃ p : ℤ × ℤ, a = M.number (p.1 : ℂ) ∧ b = M.number (p.2 : ℂ)
+    then M.number ((if least then Int.lcm (Classical.choose h).1 (Classical.choose h).2
+      else Int.gcd (Classical.choose h).1 (Classical.choose h).2 : ℕ) : ℂ)
+    else M.number 0
+
+theorem gcdLcmValue_numbers {M : Semantics.{u}} (least : Bool) (a b : ℤ) :
+    gcdLcmValue least (M.number (a : ℂ)) (M.number (b : ℂ)) =
+      M.number ((if least then Int.lcm a b else Int.gcd a b : ℕ) : ℂ) := by
+  classical
+  have h : ∃ p : ℤ × ℤ,
+      M.number (a : ℂ) = M.number (p.1 : ℂ) ∧ M.number (b : ℂ) = M.number (p.2 : ℂ) :=
+    ⟨(a, b), rfl, rfl⟩
+  have hp : Classical.choose h = (a, b) := Prod.ext
+    (Int.cast_injective (M.number_injective (Classical.choose_spec h).1)).symm
+    (Int.cast_injective (M.number_injective (Classical.choose_spec h).2)).symm
+  unfold gcdLcmValue
+  rw [dif_pos h, hp]
+
+structure GcdObj {M : Semantics.{u}} (α : Type v) (β : Type w)
+    [Representation M α] [Representation M β] where
+  left : Obj (M := M) α
+  right : Obj (M := M) β
+
+structure LcmObj {M : Semantics.{u}} (α : Type v) (β : Type w)
+    [Representation M α] [Representation M β] where
+  left : Obj (M := M) α
+  right : Obj (M := M) β
+
+noncomputable instance gcdRepresentation {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β] : Representation M (GcdObj (M := M) α β) where
+  wd p := In p.left Z ∧ In p.right Z ∧ (¬ Same p.left (number 0) ∨ ¬ Same p.right (number 0))
+  denote p := gcdLcmValue false (denote p.left) (denote p.right)
+  wd_isSet {p} h := by
+    obtain ⟨a, ha⟩ := (M.integer_members _).mp h.1
+    obtain ⟨b, hb⟩ := (M.integer_members _).mp h.2.1
+    exact M.member_isSet ((M.natural_members _).mpr
+      ⟨Int.gcd a b, by rw [ha, hb, gcdLcmValue_numbers]; rfl⟩)
+
+noncomputable instance lcmRepresentation {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β] : Representation M (LcmObj (M := M) α β) where
+  wd p := In p.left Z ∧ In p.right Z
+  denote p := gcdLcmValue true (denote p.left) (denote p.right)
+  wd_isSet {p} h := by
+    obtain ⟨a, ha⟩ := (M.integer_members _).mp h.1
+    obtain ⟨b, hb⟩ := (M.integer_members _).mp h.2
+    exact M.member_isSet ((M.natural_members _).mpr
+      ⟨Int.lcm a b, by rw [ha, hb, gcdLcmValue_numbers]; rfl⟩)
+
+noncomputable def gcd {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β] (a : Obj (M := M) α) (b : Obj (M := M) β)
+    (ha : In a Z) (hb : In b Z) (h0 : ¬ Same a (number 0) ∨ ¬ Same b (number 0)) :
+    Obj (M := M) (GcdObj (M := M) α β) := ⟨⟨a, b⟩, ha, hb, h0⟩
+
+noncomputable def lcm {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β] (a : Obj (M := M) α) (b : Obj (M := M) β)
+    (ha : In a Z) (hb : In b Z) : Obj (M := M) (LcmObj (M := M) α β) := ⟨⟨a, b⟩, ha, hb⟩
+
+theorem gcdDenoteInt {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β] (p : Obj (M := M) (GcdObj (M := M) α β))
+    (a b : ℤ) (ha : denote p.val.left = M.number (a : ℂ))
+    (hb : denote p.val.right = M.number (b : ℂ)) : denote p = M.number (Int.gcd a b : ℂ) := by
+  change gcdLcmValue false _ _ = _
+  rw [ha, hb, gcdLcmValue_numbers]; rfl
+
+theorem lcmDenoteInt {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β] (p : Obj (M := M) (LcmObj (M := M) α β))
+    (a b : ℤ) (ha : denote p.val.left = M.number (a : ℂ))
+    (hb : denote p.val.right = M.number (b : ℂ)) : denote p = M.number (Int.lcm a b : ℂ) := by
+  change gcdLcmValue true _ _ = _
+  rw [ha, hb, gcdLcmValue_numbers]; rfl
+
+theorem gcdInN {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β] (p : Obj (M := M) (GcdObj (M := M) α β)) : In p N := by
+  obtain ⟨a, ha⟩ := (M.integer_members _).mp p.wd.1
+  obtain ⟨b, hb⟩ := (M.integer_members _).mp p.wd.2.1
+  exact (M.natural_members _).mpr ⟨_, gcdDenoteInt p a b ha hb⟩
+
+theorem lcmInN {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β] (p : Obj (M := M) (LcmObj (M := M) α β)) : In p N := by
+  obtain ⟨a, ha⟩ := (M.integer_members _).mp p.wd.1
+  obtain ⟨b, hb⟩ := (M.integer_members _).mp p.wd.2
+  exact (M.natural_members _).mpr ⟨_, lcmDenoteInt p a b ha hb⟩
+
+theorem gcdPositiveWitness {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β] (p : Obj (M := M) (GcdObj (M := M) α β)) :
+    ∃ n : ℕ, denote p = M.number (n : ℂ) ∧ 0 < n := by
+  obtain ⟨a, ha⟩ := (M.integer_members _).mp p.wd.1
+  obtain ⟨b, hb⟩ := (M.integer_members _).mp p.wd.2.1
+  refine ⟨Int.gcd a b, gcdDenoteInt p a b ha hb, Int.gcd_pos_iff.mpr ?_⟩
+  rcases p.wd.2.2 with h | h
+  · exact Or.inl (fun h0 => h (by change denote p.val.left = M.number 0; rw [ha, h0, Int.cast_zero]))
+  · exact Or.inr (fun h0 => h (by change denote p.val.right = M.number 0; rw [hb, h0, Int.cast_zero]))
+
+theorem gcdNonzero {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β] (p : Obj (M := M) (GcdObj (M := M) α β)) :
+    ¬ Same p (number 0) := by
+  obtain ⟨n, hn, hp⟩ := gcdPositiveWitness p
+  intro h
+  have hz : (n : ℂ) = 0 := M.number_injective (hn.symm.trans h)
+  exact (Nat.ne_of_gt hp) (by exact_mod_cast hz)
+
+theorem gcdInNPos {M : Semantics.{u}} [S : SetSemantics M] {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β] (p : Obj (M := M) (GcdObj (M := M) α β)) : In p NPos := by
+  obtain ⟨n, hn, hp⟩ := gcdPositiveWitness p
+  apply (S.sep_members _ _ _).mpr
+  refine ⟨gcdInN p, (n : ℝ), ?_, ?_⟩
+  · simpa only [Complex.ofReal_natCast] using hn
+  · exact_mod_cast hp
+
+theorem absValue_int {M : Semantics.{u}} (a : ℤ) :
+    absValue (M.number (a : ℂ)) = M.number (a.natAbs : ℂ) := by
+  rw [← Complex.ofReal_intCast, absValue_number]
+  have h : |(a : ℝ)| = (a.natAbs : ℝ) := by
+    rw [← Int.cast_abs, ← Int.natCast_natAbs, Int.cast_natCast]
+  rw [h, Complex.ofReal_natCast]
+
+theorem gcdCommutative {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β] (p : Obj (M := M) (GcdObj (M := M) α β)) :
+    denote p = gcdLcmValue false (denote p.val.right) (denote p.val.left) := by
+  obtain ⟨a, ha⟩ := (M.integer_members _).mp p.wd.1
+  obtain ⟨b, hb⟩ := (M.integer_members _).mp p.wd.2.1
+  rw [gcdDenoteInt p a b ha hb, ha, hb, gcdLcmValue_numbers, Int.gcd_comm a b]; rfl
+
+theorem lcmCommutative {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β] (p : Obj (M := M) (LcmObj (M := M) α β)) :
+    denote p = gcdLcmValue true (denote p.val.right) (denote p.val.left) := by
+  obtain ⟨a, ha⟩ := (M.integer_members _).mp p.wd.1
+  obtain ⟨b, hb⟩ := (M.integer_members _).mp p.wd.2
+  rw [lcmDenoteInt p a b ha hb, ha, hb, gcdLcmValue_numbers, Int.lcm_comm a b]; rfl
+
+theorem gcdSelfAbs {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β] (p : Obj (M := M) (GcdObj (M := M) α β))
+    (h : Same p.val.left p.val.right) : denote p = absValue (denote p.val.left) := by
+  obtain ⟨a, ha⟩ := (M.integer_members _).mp p.wd.1
+  rw [gcdDenoteInt p a a ha (h.symm.trans ha), Int.gcd_self, ha, absValue_int]
+
+theorem lcmSelfAbs {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β] (p : Obj (M := M) (LcmObj (M := M) α β))
+    (h : Same p.val.left p.val.right) : denote p = absValue (denote p.val.left) := by
+  obtain ⟨a, ha⟩ := (M.integer_members _).mp p.wd.1
+  rw [lcmDenoteInt p a a ha (h.symm.trans ha), Int.lcm_self, ha, absValue_int]
+
+theorem gcdRightZeroAbs {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β] (p : Obj (M := M) (GcdObj (M := M) α β))
+    (hz : Same p.val.right (number 0)) (_hn : ¬ Same p.val.left (number 0)) :
+    denote p = absValue (denote p.val.left) := by
+  obtain ⟨a, ha⟩ := (M.integer_members _).mp p.wd.1
+  change denote p.val.right = M.number 0 at hz
+  rw [gcdDenoteInt p a 0 ha (by simpa only [Int.cast_zero] using hz), Int.gcd_zero, ha, absValue_int]
+
+theorem gcdLeftZeroAbs {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β] (p : Obj (M := M) (GcdObj (M := M) α β))
+    (hz : Same p.val.left (number 0)) (_hn : ¬ Same p.val.right (number 0)) :
+    denote p = absValue (denote p.val.right) := by
+  obtain ⟨b, hb⟩ := (M.integer_members _).mp p.wd.2.1
+  change denote p.val.left = M.number 0 at hz
+  rw [gcdDenoteInt p 0 b (by simpa only [Int.cast_zero] using hz) hb, Int.gcd_zero_left, hb, absValue_int]
+
+theorem gcdEuclideanStep {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β] (p : Obj (M := M) (GcdObj (M := M) α β)) :
+    denote p = gcdLcmValue false (denote p.val.right)
+      (integerDivisionValue false (denote p.val.left) (denote p.val.right)) := by
+  obtain ⟨a, ha⟩ := (M.integer_members _).mp p.wd.1
+  obtain ⟨b, hb⟩ := (M.integer_members _).mp p.wd.2.1
+  rw [gcdDenoteInt p a b ha hb, ha, hb, integerDivisionValue_numbers]
+  change M.number (Int.gcd a b : ℂ) = gcdLcmValue false (M.number (b : ℂ)) (M.number ((a % b : ℤ) : ℂ))
+  rw [gcdLcmValue_numbers, Int.gcd_comm b (a % b), Int.gcd_emod]; rfl
+
+theorem gcdLcmProduct {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β] (p : Obj (M := M) (GcdObj (M := M) α β))
+    (gcdFirst reverseArgs : Bool) :
+    (if gcdFirst then M.mulValue (denote p) (gcdLcmValue true (denote p.val.left) (denote p.val.right))
+     else M.mulValue (gcdLcmValue true (denote p.val.left) (denote p.val.right)) (denote p)) =
+    absValue (if reverseArgs then M.mulValue (denote p.val.right) (denote p.val.left)
+      else M.mulValue (denote p.val.left) (denote p.val.right)) := by
+  obtain ⟨a, ha⟩ := (M.integer_members _).mp p.wd.1
+  obtain ⟨b, hb⟩ := (M.integer_members _).mp p.wd.2.1
+  rw [gcdDenoteInt p a b ha hb, ha, hb, gcdLcmValue_numbers]
+  cases gcdFirst <;> cases reverseArgs <;>
+    simp only [Bool.false_eq_true, if_false, if_true, M.mul_numbers, ← Int.cast_mul, absValue_int]
+  all_goals
+    apply congrArg M.number
+    norm_cast
+    simp only [Int.gcd_mul_lcm, Int.natAbs_mul, Nat.mul_comm]
+
+end Litex
+
+namespace Litex
+
+noncomputable def factorialValue {M : Semantics.{u}} (a : M.Value) : M.Value := by
+  classical
+  exact if h : ∃ n : ℕ, a = M.number (n : ℂ)
+    then M.number ((Classical.choose h).factorial : ℂ) else M.number 0
+
+theorem factorialValue_number {M : Semantics.{u}} (n : ℕ) :
+    factorialValue (M.number (n : ℂ)) = M.number (n.factorial : ℂ) := by
+  classical
+  have h : ∃ k : ℕ, M.number (n : ℂ) = M.number (k : ℂ) := ⟨n, rfl⟩
+  have hk : Classical.choose h = n :=
+    (Nat.cast_injective (M.number_injective (Classical.choose_spec h))).symm
+  unfold factorialValue
+  rw [dif_pos h, hk]
+
+structure FactorialObj {M : Semantics.{u}} (α : Type v) [Representation M α] where
+  arg : Obj (M := M) α
+
+noncomputable instance factorialRepresentation {M : Semantics.{u}} {α : Type v}
+    [Representation M α] : Representation M (FactorialObj (M := M) α) where
+  wd p := In p.arg N
+  denote p := factorialValue (denote p.arg)
+  wd_isSet {p} h := by
+    obtain ⟨n, hn⟩ := (M.natural_members _).mp h
+    exact M.member_isSet ((M.natural_members _).mpr
+      ⟨n.factorial, by rw [hn, factorialValue_number]⟩)
+
+noncomputable def factorial {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (a : Obj (M := M) α) (h : In a N) : Obj (M := M) (FactorialObj (M := M) α) :=
+  ⟨⟨a⟩, h⟩
+
+theorem factorialDenoteNat {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (p : Obj (M := M) (FactorialObj (M := M) α)) (n : ℕ)
+    (hn : denote p.val.arg = M.number (n : ℂ)) : denote p = M.number (n.factorial : ℂ) := by
+  change factorialValue _ = _
+  rw [hn, factorialValue_number]
+
+theorem factorialInN {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (p : Obj (M := M) (FactorialObj (M := M) α)) : In p N := by
+  obtain ⟨n, hn⟩ := (M.natural_members _).mp p.wd
+  exact (M.natural_members _).mpr ⟨_, factorialDenoteNat p n hn⟩
+
+theorem factorialInNPos {M : Semantics.{u}} [S : SetSemantics M]
+    {α : Type v} [Representation M α]
+    (p : Obj (M := M) (FactorialObj (M := M) α)) : In p NPos := by
+  obtain ⟨n, hn⟩ := (M.natural_members _).mp p.wd
+  apply (S.sep_members _ _ _).mpr
+  refine ⟨factorialInN p, (n.factorial : ℝ), ?_, ?_⟩
+  · simpa only [Complex.ofReal_natCast] using factorialDenoteNat p n hn
+  · exact_mod_cast Nat.factorial_pos n
+
+theorem factorialNonzero {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (p : Obj (M := M) (FactorialObj (M := M) α)) : ¬ Same p (number 0) := by
+  obtain ⟨n, hn⟩ := (M.natural_members _).mp p.wd
+  intro h
+  have hz : (n.factorial : ℂ) = 0 :=
+    M.number_injective ((factorialDenoteNat p n hn).symm.trans h)
+  exact Nat.factorial_ne_zero n (by exact_mod_cast hz)
+
+/-- The two original certified factorial arguments differ by one. -/
+theorem factorialStep {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (p : Obj (M := M) (FactorialObj (M := M) α))
+    (q : Obj (M := M) (FactorialObj (M := M) β))
+    (h : denote p.val.arg = M.addValue (denote q.val.arg) (M.number 1))
+    (coefficientFirst : Bool) : denote p =
+      (if coefficientFirst then M.mulValue (denote p.val.arg) (denote q)
+       else M.mulValue (denote q) (denote p.val.arg)) := by
+  obtain ⟨n, hn⟩ := (M.natural_members _).mp q.wd
+  have hs : denote p.val.arg = M.number ((n + 1 : ℕ) : ℂ) := by
+    rw [h, hn, M.add_numbers, Nat.cast_add, Nat.cast_one]
+  rw [factorialDenoteNat p (n + 1) hs, factorialDenoteNat q n hn, hs]
+  cases coefficientFirst <;> simp only [Bool.false_eq_true, if_false, if_true, M.mul_numbers]
+  · rw [Nat.factorial_succ, Nat.cast_mul, mul_comm]
+  · rw [Nat.factorial_succ, Nat.cast_mul]
+
+theorem factorialMonotone {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (p : Obj (M := M) (FactorialObj (M := M) α))
+    (q : Obj (M := M) (FactorialObj (M := M) β))
+    (h : Le p.val.arg q.val.arg) : Le p q := by
+  obtain ⟨m, hm⟩ := (M.natural_members _).mp p.wd
+  obtain ⟨n, hn⟩ := (M.natural_members _).mp q.wd
+  have hmr : denote p.val.arg = M.number ((m : ℝ) : ℂ) := by
+    simpa only [Complex.ofReal_natCast] using hm
+  have hnr : denote q.val.arg = M.number ((n : ℝ) : ℂ) := by
+    simpa only [Complex.ofReal_natCast] using hn
+  have hmn : m ≤ n := by
+    exact_mod_cast (NativeBridge.le_iff_ofDenoteReal _ _ _ _ hmr hnr).mp h
+  refine ⟨(m.factorial : ℝ), (n.factorial : ℝ), ?_, ?_, ?_⟩
+  · simpa only [Complex.ofReal_natCast] using factorialDenoteNat p m hm
+  · simpa only [Complex.ofReal_natCast] using factorialDenoteNat q n hn
+  · exact_mod_cast Nat.factorial_le hmn
+
+theorem factorialStrictMonotone {M : Semantics.{u}} [S : SetSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β]
+    (p : Obj (M := M) (FactorialObj (M := M) α))
+    (q : Obj (M := M) (FactorialObj (M := M) β))
+    (hp : In p.val.arg NPos) (h : Lt p.val.arg q.val.arg) : Lt p q := by
+  obtain ⟨m, hm⟩ := (M.natural_members _).mp p.wd
+  obtain ⟨n, hn⟩ := (M.natural_members _).mp q.wd
+  have hmr : denote p.val.arg = M.number ((m : ℝ) : ℂ) := by
+    simpa only [Complex.ofReal_natCast] using hm
+  have hnr : denote q.val.arg = M.number ((n : ℝ) : ℂ) := by
+    simpa only [Complex.ofReal_natCast] using hn
+  have hmn : m < n := by
+    exact_mod_cast (NativeBridge.lt_iff_ofDenoteReal _ _ _ _ hmr hnr).mp h
+  have hm0 : 0 < m := by
+    exact_mod_cast (NativeBridge.lt_iff_ofDenoteReal _ _ 0 _ rfl hmr).mp (inNPos_positive _ hp)
+  refine ⟨(m.factorial : ℝ), (n.factorial : ℝ), ?_, ?_, ?_⟩
+  · simpa only [Complex.ofReal_natCast] using factorialDenoteNat p m hm
+  · simpa only [Complex.ofReal_natCast] using factorialDenoteNat q n hn
+  · exact_mod_cast Nat.factorial_lt_of_lt hm0 hmn
+
+end Litex
+
+namespace Litex
+
+theorem integerPredecessorLe {M : Semantics.{u}} {α : Type v} {β : Type w} {γ : Type x}
+    [Representation M α] [Representation M β] [Representation M γ]
+    (a : Obj (M := M) α) (p : Obj (M := M) (SubObj (M := M) β γ))
+    (ha : In a Z) (hb : In p.val.left Z) (h1 : Same p.val.right (number 1))
+    (hlt : Lt a p.val.left) : Le a p := by
+  obtain ⟨m, hm⟩ := (M.integer_members _).mp ha
+  obtain ⟨n, hn⟩ := (M.integer_members _).mp hb
+  have hmr : denote a = M.number ((m : ℝ) : ℂ) := by
+    simpa only [Complex.ofReal_intCast] using hm
+  have hnr : denote p.val.left = M.number ((n : ℝ) : ℂ) := by
+    simpa only [Complex.ofReal_intCast] using hn
+  have hmn : m < n := by
+    exact_mod_cast (NativeBridge.lt_iff_ofDenoteReal _ _ _ _ hmr hnr).mp hlt
+  have hpred : m ≤ n - 1 := by omega
+  refine ⟨(m : ℝ), (n : ℝ) - 1, hmr, ?_, ?_⟩
+  · change M.subValue (denote p.val.left) (denote p.val.right) = _
+    change denote p.val.right = M.number 1 at h1
+    rw [hnr, h1, M.sub_numbers, Complex.ofReal_sub, Complex.ofReal_one]
+  · exact_mod_cast hpred
+
+end Litex
+
+namespace Litex
+
+open Lean Elab Tactic in
+/-- Fixed coordinate normalization for the verifier's Complex polynomial tag.
+Each stage runs only on remaining goals; the produced proof is kernel checked. -/
+elab "litex_normalize_complex" : tactic => do
+  evalTactic (← `(tactic| apply Complex.ext))
+  unless (← getGoals).isEmpty do
+    evalTactic (← `(tactic| all_goals norm_num [pow_succ]))
+  unless (← getGoals).isEmpty do
+    evalTactic (← `(tactic| all_goals ring!))
+
+namespace FunctionSemantics
+variable {M : Semantics.{u}} [F : FunctionSemantics M]
+
+def IsRange (f r : M.Value) : Prop :=
+  M.isSet r ∧ ∀ y, M.mem y r ↔ ∃ a, M.mem (F.pairValue a y) f
+
+/-- The range depends only on the graph, independently of which signature certifies it. -/
+noncomputable def rangeValue (f : M.Value) : M.Value :=
+  by classical exact if h : ∃ r, IsRange f r then Classical.choose h else F.emptyValue
+
+theorem range_spec {D B f : M.Value} (hB : M.isSet B)
+    (hf : M.mem f (F.fnSetValue D B)) : IsRange f (rangeValue f) := by
+  have exists_range : ∃ r, IsRange f r := by
+    refine ⟨F.sepValue B (fun y => ∃ a, M.mem (F.pairValue a y) f), F.sep_isSet _ _ hB, ?_⟩
+    intro y
+    rw [F.sep_members]
+    constructor
+    · exact And.right
+    · intro h
+      obtain ⟨a, ha⟩ := h
+      obtain ⟨x, _, z, hz, eq⟩ := ((F.fnSet_members D B f).mp hf).1 _ ha
+      have hy : M.mem y B := (F.pair_injective eq).2.symm ▸ hz
+      exact ⟨hy, a, ha⟩
+  simpa only [rangeValue, dif_pos exists_range] using Classical.choose_spec exists_range
+
+theorem range_mem_iff {D B f y : M.Value} (hB : M.isSet B)
+    (hf : M.mem f (F.fnSetValue D B)) :
+    M.mem y (rangeValue f) ↔ ∃ a, M.mem a D ∧ y = F.callValue f a := by
+  rw [(range_spec hB hf).2 y]
+  constructor
+  · rintro ⟨a, ha⟩
+    exact ⟨a, FiniteFunction.graph_pair_value ((F.fnSet_members D B f).mp hf) ha⟩
+  · rintro ⟨a, ha, rfl⟩
+    exact ⟨a, F.call_graph D B f a ((F.fnSet_members D B f).mp hf) ha⟩
+
+theorem range_subset {D B f y : M.Value} (hB : M.isSet B)
+    (hf : M.mem f (F.fnSetValue D B)) (hy : M.mem y (rangeValue f)) : M.mem y B := by
+  obtain ⟨a, ha, rfl⟩ := (range_mem_iff hB hf).mp hy
+  exact call_mem D B f a hf ha
+end FunctionSemantics
+
+structure FunctionRange {M : Semantics.{u}} (α : Type v) [Representation M α] where
+  function : Obj (M := M) α
+
+noncomputable instance functionRangeRepresentation {M : Semantics.{u}} [F : FunctionSemantics M]
+    {α : Type v} [Representation M α] : Representation M (FunctionRange (M := M) α) where
+  wd r := ∃ s : FunctionSignature M, In r.function (fnSet s)
+  denote r := FunctionSemantics.rangeValue (denote r.function)
+  wd_isSet h := by
+    obtain ⟨s, hs⟩ := h
+    exact (FunctionSemantics.range_spec s.output_isSet hs).1
+
+noncomputable def fnRange {M : Semantics.{u}} [FunctionSemantics M]
+    {α : Type v} [Representation M α] (f : Obj (M := M) α)
+    (s : FunctionSignature M) (hf : In f (fnSet s)) : Obj (M := M) (FunctionRange (M := M) α) :=
+  ⟨⟨f⟩, ⟨s, hf⟩⟩
+
+theorem inFnRange_iff {M : Semantics.{u}} [F : FunctionSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β]
+    (r : Obj (M := M) (FunctionRange (M := M) α)) (y : Obj (M := M) β)
+    (s : FunctionSignature M) (hf : In r.val.function (fnSet s)) :
+    In y r ↔ ∃ a : Obj (M := M) M.Value, ∃ (_ha : M.mem (denote a) s.domain),
+      denote y = F.callValue (denote r.val.function) (denote a) := by
+  change M.mem (denote y) (FunctionSemantics.rangeValue (denote r.val.function)) ↔ _
+  rw [FunctionSemantics.range_mem_iff s.output_isSet hf]
+  constructor
+  · rintro ⟨a, ha, eq⟩
+    exact ⟨semanticObject a (M.member_isSet ha), ha, eq⟩
+  · rintro ⟨a, ha, eq⟩
+    exact ⟨denote a, ha, eq⟩
+
+theorem fnRangeInOutput {M : Semantics.{u}} [FunctionSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β]
+    (r : Obj (M := M) (FunctionRange (M := M) α)) (y : Obj (M := M) β)
+    (s : FunctionSignature M) (hf : In r.val.function (fnSet s)) (hy : In y r) :
+    M.mem (denote y) s.output := FunctionSemantics.range_subset s.output_isSet hf hy
+
+theorem callOnInFnRange {M : Semantics.{u}} [F : FunctionSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β]
+    (c : Obj (M := M) (CallOnObj (M := M) α β))
+    (r : Obj (M := M) (FunctionRange (M := M) α))
+    (same : Same c.val.function r.val.function) : In c r := by
+  change M.mem (F.callValue (denote c.val.function) (denote c.val.argument))
+    (FunctionSemantics.rangeValue (denote r.val.function))
+  rw [← same]
+  exact (FunctionSemantics.range_mem_iff c.val.signature.output_isSet c.wd.1).mpr
+    ⟨denote c.val.argument, c.wd.2, rfl⟩
+
+theorem callInFnRange {M : Semantics.{u}} [F : FunctionSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β]
+    (c : Obj (M := M) (CallObj (M := M) α β))
+    (r : Obj (M := M) (FunctionRange (M := M) α))
+    (same : Same c.val.function r.val.function) : In c r := by
+  change M.mem (F.callValue (denote c.val.function) (denote c.val.argument))
+    (FunctionSemantics.rangeValue (denote r.val.function))
+  rw [← same]
+  exact (FunctionSemantics.range_mem_iff c.val.output_isSet c.wd.1).mpr
+    ⟨denote c.val.argument, (FunctionSignature.oneTarget_domain _ _ _ _ _).mpr c.wd.2, rfl⟩
+
+theorem call2InFnRange {M : Semantics.{u}} [F : FunctionSemantics M]
+    {α : Type v} {β : Type w} {γ : Type t}
+    [Representation M α] [Representation M β] [Representation M γ]
+    (c : Obj (M := M) (CallObj2 (M := M) α β γ))
+    (r : Obj (M := M) (FunctionRange (M := M) α))
+    (same : Same c.val.function r.val.function) : In c r := by
+  change M.mem (F.callValue (denote c.val.function) (FiniteFunction.pack2 (denote c.val.first) (denote c.val.second)))
+    (FunctionSemantics.rangeValue (denote r.val.function))
+  rw [← same]
+  exact (FunctionSemantics.range_mem_iff c.val.output_isSet c.wd.1).mpr
+    ⟨FiniteFunction.pack2 (denote c.val.first) (denote c.val.second),
+      (FunctionSignature.twoTarget_domain _ _ _ _ _ _ _).mpr c.wd.2, rfl⟩
+
+end Litex
+
+namespace Litex
+
+structure RangeObj {M : Semantics.{u}} (α : Type v) (β : Type w)
+    [Representation M α] [Representation M β] where
+  start : Obj (M := M) α
+  finish : Obj (M := M) β
+
+def RangeObj.condition {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (r : RangeObj (M := M) α β) (value : M.Value) : Prop :=
+  ∃ lower upper k : ℤ, denote r.start = M.number (lower : ℂ) ∧
+    denote r.finish = M.number (upper : ℂ) ∧ value = M.number (k : ℂ) ∧
+    lower ≤ k ∧ k < upper
+
+instance rangeRepresentation {M : Semantics.{u}} [S : SetSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β] :
+    Representation M (RangeObj (M := M) α β) where
+  wd r := In r.start Z ∧ In r.finish Z
+  denote r := S.sepValue (M.standard .integer) r.condition
+  wd_isSet _ := S.sep_isSet _ _ (M.standard_isSet .integer)
+
+def range {M : Semantics.{u}} [SetSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β]
+    (a : Obj (M := M) α) (b : Obj (M := M) β) (ha : In a Z) (hb : In b Z) :
+    Obj (M := M) (RangeObj (M := M) α β) := ⟨⟨a, b⟩, ⟨ha, hb⟩⟩
+
+theorem inRange_iff {M : Semantics.{u}} [S : SetSemantics M]
+    {α : Type v} {β : Type w} {γ : Type x}
+    [Representation M α] [Representation M β] [Representation M γ]
+    (a : Obj (M := M) α) (b : Obj (M := M) β) (p : Obj (M := M) γ)
+    (ha : In a Z) (hb : In b Z) :
+    In p (range a b ha hb) ↔
+      ∃ lower upper k : ℤ, denote a = M.number (lower : ℂ) ∧
+        denote b = M.number (upper : ℂ) ∧ denote p = M.number (k : ℂ) ∧
+        lower ≤ k ∧ k < upper := by
+  change M.mem (denote p) (S.sepValue (M.standard .integer) _) ↔ _
+  rw [S.sep_members]
+  constructor
+  · exact fun h => h.2
+  · rintro ⟨lower, upper, k, hl, hu, hp, hlo, hhi⟩
+    exact ⟨(M.integer_members _).mpr ⟨k, hp⟩, lower, upper, k, hl, hu, hp, hlo, hhi⟩
+
+theorem inRangeOfDenote {M : Semantics.{u}} [SetSemantics M]
+    {α : Type v} {β : Type w} {γ : Type x}
+    [Representation M α] [Representation M β] [Representation M γ]
+    (a : Obj (M := M) α) (b : Obj (M := M) β) (p : Obj (M := M) γ)
+    (ha : In a Z) (hb : In b Z) (lower upper k : ℤ)
+    (hl : denote a = M.number (lower : ℂ))
+    (hu : denote b = M.number (upper : ℂ))
+    (hp : denote p = M.number (k : ℂ)) (hlo : lower ≤ k) (hhi : k < upper) :
+    In p (range a b ha hb) :=
+  (inRange_iff a b p ha hb).mpr ⟨lower, upper, k, hl, hu, hp, hlo, hhi⟩
+
+theorem numberInRange {M : Semantics.{u}} [SetSemantics M]
+    (lower upper k : ℤ) (hlo : lower ≤ k) (hhi : k < upper) :
+    In (number (M := M) (k : ℂ))
+      (range (number (lower : ℂ)) (number (upper : ℂ))
+        (NativeBridge.numberInZ lower) (NativeBridge.numberInZ upper)) :=
+  inRangeOfDenote _ _ _ _ _ lower upper k rfl rfl rfl hlo hhi
+
+theorem numberInRangeOfEq {M : Semantics.{u}} [SetSemantics M]
+    (a b p : ℂ) (lower upper k : ℤ)
+    (ha : a = (lower : ℂ)) (hb : b = (upper : ℂ)) (hp : p = (k : ℂ))
+    (hlo : lower ≤ k) (hhi : k < upper) :
+    In (number (M := M) p)
+      (range (number a) (number b)
+        (NativeBridge.numberInZOfEq a lower ha) (NativeBridge.numberInZOfEq b upper hb)) :=
+  inRangeOfDenote _ _ _ _ _ lower upper k
+    (congrArg M.number ha) (congrArg M.number hb) (congrArg M.number hp) hlo hhi
+
+
+theorem integerPositiveOfWitness {M : Semantics.{u}} [S : SetSemantics M]
+    {α : Type v} [Representation M α] (p : Obj (M := M) α) (k : ℤ)
+    (hk : denote p = M.number (k : ℂ)) (hpos : 0 < k) : In p NPos := by
+  apply (S.sep_members _ _ _).mpr
+  have hn : (k.toNat : ℤ) = k := Int.toNat_of_nonneg (le_of_lt hpos)
+  refine ⟨(M.natural_members _).mpr ⟨k.toNat, ?_⟩, (k : ℝ), ?_, ?_⟩
+  · exact hk.trans (congrArg M.number (by exact_mod_cast hn.symm))
+  · simpa only [Complex.ofReal_intCast] using hk
+  · exact_mod_cast hpos
+
+theorem inClosedRangeInteger {M : Semantics.{u}} [SetSemantics M]
+    {α : Type v} {β : Type w} {γ : Type x}
+    [Representation M α] [Representation M β] [Representation M γ]
+    (r : Obj (M := M) (ClosedRangeObj (M := M) α β)) (p : Obj (M := M) γ)
+    (lower upper : ℤ)
+    (hl : denote r.val.start = M.number (lower : ℂ))
+    (hu : denote r.val.finish = M.number (upper : ℂ)) (h : In p r) :
+    ∃ k : ℤ, Same p (number (k : ℂ)) ∧ lower ≤ k ∧ k ≤ upper := by
+  obtain ⟨l, u, k, ha, hb, hp, hlo, hhi⟩ :=
+    (inClosedRange_iff r.val.start r.val.finish p r.wd.1 r.wd.2).mp h
+  have ha' : l = lower := by exact_mod_cast M.number_injective (ha.symm.trans hl)
+  have hb' : u = upper := by exact_mod_cast M.number_injective (hb.symm.trans hu)
+  subst l
+  subst u
+  exact ⟨k, hp, hlo, hhi⟩
+
+theorem inClosedRangeBounds {M : Semantics.{u}} [SetSemantics M]
+    {α : Type v} {β : Type w} {γ : Type x}
+    [Representation M α] [Representation M β] [Representation M γ]
+    (r : Obj (M := M) (ClosedRangeObj (M := M) α β)) (p : Obj (M := M) γ)
+    (h : In p r) : In p Z ∧ Le r.val.start p ∧ Le p r.val.finish := by
+  obtain ⟨lower, upper, k, hl, hu, hp, hlo, hhi⟩ :=
+    (inClosedRange_iff r.val.start r.val.finish p r.wd.1 r.wd.2).mp h
+  refine ⟨(M.integer_members _).mpr ⟨k, hp⟩, ?_, ?_⟩
+  · refine ⟨(lower : ℝ), (k : ℝ), ?_, ?_, ?_⟩
+    · simpa only [Complex.ofReal_intCast] using hl
+    · simpa only [Complex.ofReal_intCast] using hp
+    · exact_mod_cast hlo
+  · refine ⟨(k : ℝ), (upper : ℝ), ?_, ?_, ?_⟩
+    · simpa only [Complex.ofReal_intCast] using hp
+    · simpa only [Complex.ofReal_intCast] using hu
+    · exact_mod_cast hhi
+
+theorem inClosedRangePositive {M : Semantics.{u}} [SetSemantics M]
+    {α : Type v} {β : Type w} {γ : Type x}
+    [Representation M α] [Representation M β] [Representation M γ]
+    (r : Obj (M := M) (ClosedRangeObj (M := M) α β)) (p : Obj (M := M) γ)
+    (lower : ℤ) (hl : denote r.val.start = M.number (lower : ℂ))
+    (hpos : 0 < lower) (h : In p r) : In p NPos := by
+  obtain ⟨l, upper, k, ha, _, hp, hlo, _⟩ :=
+    (inClosedRange_iff r.val.start r.val.finish p r.wd.1 r.wd.2).mp h
+  have ha' : l = lower := by exact_mod_cast M.number_injective (ha.symm.trans hl)
+  subst l
+  exact integerPositiveOfWitness p k hp (lt_of_lt_of_le hpos hlo)
+
+theorem inRangeInteger {M : Semantics.{u}} [SetSemantics M]
+    {α : Type v} {β : Type w} {γ : Type x}
+    [Representation M α] [Representation M β] [Representation M γ]
+    (r : Obj (M := M) (RangeObj (M := M) α β)) (p : Obj (M := M) γ)
+    (lower upper : ℤ)
+    (hl : denote r.val.start = M.number (lower : ℂ))
+    (hu : denote r.val.finish = M.number (upper : ℂ)) (h : In p r) :
+    ∃ k : ℤ, Same p (number (k : ℂ)) ∧ lower ≤ k ∧ k < upper := by
+  obtain ⟨l, u, k, ha, hb, hp, hlo, hhi⟩ :=
+    (inRange_iff r.val.start r.val.finish p r.wd.1 r.wd.2).mp h
+  have ha' : l = lower := by exact_mod_cast M.number_injective (ha.symm.trans hl)
+  have hb' : u = upper := by exact_mod_cast M.number_injective (hb.symm.trans hu)
+  subst l
+  subst u
+  exact ⟨k, hp, hlo, hhi⟩
+
+theorem inRangeBounds {M : Semantics.{u}} [SetSemantics M]
+    {α : Type v} {β : Type w} {γ : Type x}
+    [Representation M α] [Representation M β] [Representation M γ]
+    (r : Obj (M := M) (RangeObj (M := M) α β)) (p : Obj (M := M) γ)
+    (h : In p r) : In p Z ∧ Le r.val.start p ∧ Lt p r.val.finish := by
+  obtain ⟨lower, upper, k, hl, hu, hp, hlo, hhi⟩ :=
+    (inRange_iff r.val.start r.val.finish p r.wd.1 r.wd.2).mp h
+  refine ⟨(M.integer_members _).mpr ⟨k, hp⟩, ?_, ?_⟩
+  · refine ⟨(lower : ℝ), (k : ℝ), ?_, ?_, ?_⟩
+    · simpa only [Complex.ofReal_intCast] using hl
+    · simpa only [Complex.ofReal_intCast] using hp
+    · exact_mod_cast hlo
+  · refine ⟨(k : ℝ), (upper : ℝ), ?_, ?_, ?_⟩
+    · simpa only [Complex.ofReal_intCast] using hp
+    · simpa only [Complex.ofReal_intCast] using hu
+    · exact_mod_cast hhi
+
+theorem inRangePositive {M : Semantics.{u}} [SetSemantics M]
+    {α : Type v} {β : Type w} {γ : Type x}
+    [Representation M α] [Representation M β] [Representation M γ]
+    (r : Obj (M := M) (RangeObj (M := M) α β)) (p : Obj (M := M) γ)
+    (lower : ℤ) (hl : denote r.val.start = M.number (lower : ℂ))
+    (hpos : 0 < lower) (h : In p r) : In p NPos := by
+  obtain ⟨l, upper, k, ha, _, hp, hlo, _⟩ :=
+    (inRange_iff r.val.start r.val.finish p r.wd.1 r.wd.2).mp h
+  have ha' : l = lower := by exact_mod_cast M.number_injective (ha.symm.trans hl)
+  subst l
+  exact integerPositiveOfWitness p k hp (lt_of_lt_of_le hpos hlo)
+
+/-! Weak additive shifts consume an ordered bound and a signed addend. -/
+
+theorem leAddOfLeOfNonneg {M : Semantics.{u}}
+    {α : Type v} {β : Type w} {γ : Type x}
+    [Representation M α] [Representation M β] [Representation M γ]
+    (a : Obj (M := M) α) (p : Obj (M := M) (AddObj (M := M) β γ))
+    (ha : Le a p.val.left) (hb : Le (number 0) p.val.right) : Le a p := by
+  obtain ⟨a', x', ha', hx', hax⟩ := ha
+  obtain ⟨z', y', hz', hy', hzy⟩ := hb
+  have hz0 : z' = 0 := Complex.ofReal_injective (M.number_injective hz').symm
+  refine ⟨a', x' + y', ha', ?_, le_trans hax (le_add_of_nonneg_right (hz0 ▸ hzy))⟩
+  change M.addValue (denote p.val.left) (denote p.val.right) = _
+  rw [hx', hy', M.add_numbers, Complex.ofReal_add]
+
+theorem leAddOfLeOfNonnegSwap {M : Semantics.{u}}
+    {α : Type v} {β : Type w} {γ : Type x}
+    [Representation M α] [Representation M β] [Representation M γ]
+    (a : Obj (M := M) α) (p : Obj (M := M) (AddObj (M := M) β γ))
+    (ha : Le a p.val.right) (hb : Le (number 0) p.val.left) : Le a p := by
+  obtain ⟨a', y', ha', hy', hay⟩ := ha
+  obtain ⟨z', x', hz', hx', hzx⟩ := hb
+  have hz0 : z' = 0 := Complex.ofReal_injective (M.number_injective hz').symm
+  refine ⟨a', x' + y', ha', ?_, le_trans hay (le_add_of_nonneg_left (hz0 ▸ hzx))⟩
+  change M.addValue (denote p.val.left) (denote p.val.right) = _
+  rw [hx', hy', M.add_numbers, Complex.ofReal_add]
+
+theorem addLeOfLeOfNonpos {M : Semantics.{u}}
+    {α : Type v} {β : Type w} {γ : Type x}
+    [Representation M α] [Representation M β] [Representation M γ]
+    (p : Obj (M := M) (AddObj (M := M) α β)) (a : Obj (M := M) γ)
+    (ha : Le p.val.left a) (hb : Le p.val.right (number 0)) : Le p a := by
+  obtain ⟨x', a', hx', ha', hxa⟩ := ha
+  obtain ⟨y', z', hy', hz', hyz⟩ := hb
+  have hz0 : z' = 0 := Complex.ofReal_injective (M.number_injective hz').symm
+  refine ⟨x' + y', a', ?_, ha', le_trans (add_le_of_nonpos_right (hz0 ▸ hyz)) hxa⟩
+  change M.addValue (denote p.val.left) (denote p.val.right) = _
+  rw [hx', hy', M.add_numbers, Complex.ofReal_add]
+
+theorem addLeOfLeOfNonposSwap {M : Semantics.{u}}
+    {α : Type v} {β : Type w} {γ : Type x}
+    [Representation M α] [Representation M β] [Representation M γ]
+    (p : Obj (M := M) (AddObj (M := M) α β)) (a : Obj (M := M) γ)
+    (ha : Le p.val.right a) (hb : Le p.val.left (number 0)) : Le p a := by
+  obtain ⟨y', a', hy', ha', hya⟩ := ha
+  obtain ⟨x', z', hx', hz', hxz⟩ := hb
+  have hz0 : z' = 0 := Complex.ofReal_injective (M.number_injective hz').symm
+  refine ⟨x' + y', a', ?_, ha', le_trans (add_le_of_nonpos_left (hz0 ▸ hxz)) hya⟩
+  change M.addValue (denote p.val.left) (denote p.val.right) = _
+  rw [hx', hy', M.add_numbers, Complex.ofReal_add]
 
 end Litex

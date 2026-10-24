@@ -1,0 +1,9 @@
+# Release a locally named pair while proving its second-coordinate theorem.
+thm pair_second:
+    ? forall a, b R:
+        (a, b)(2) = b
+    let pair = (a, b)
+    release tuple def pair
+    pair(2) = b
+
+by thm pair_second(3, 4) => (3, 4)(2) = 4

@@ -1,0 +1,19 @@
+# Sets included in each other are equal, using the checked set extensionality command.
+# Before: the source verified, but Lean compilation rejected the By dispatcher.
+# thm subset_antisymmetry:
+#     ? forall A, B set:
+#         A $subset B
+#         B $subset A
+#         =>:
+#             A = B
+#     by extension A = B
+# Now: both original subset proofs feed the existing semantic extensionality law.
+# Boundary: a missing or reversed direction must still be rejected.
+# Gate: litex -strict -lean -f lean/examples/mutual_subset_equality/statement.lit
+thm subset_antisymmetry:
+    ? forall A, B set:
+        A $subset B
+        B $subset A
+        =>:
+            A = B
+    by extension A = B

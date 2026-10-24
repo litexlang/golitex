@@ -1,0 +1,5 @@
+# Prove by contradiction that exactly one member of {7} equals 7.
+by contra:
+    ? exist! x {7} st {x = 7}
+    obtain a from exist y {7} st {y = 7, y != 7}
+    impossible a != 7

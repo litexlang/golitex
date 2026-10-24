@@ -1,0 +1,12 @@
+# Positive interval members are positive integers; singleton intervals determine their member.
+forall x range(2, 5):
+    x $in N+
+
+forall x range(-2, -1):
+    x = -2
+
+forall x closed_range(2, 2):
+    x = 2
+
+# An empty interval is still a well-defined set.
+$is_set(range(0, 0))

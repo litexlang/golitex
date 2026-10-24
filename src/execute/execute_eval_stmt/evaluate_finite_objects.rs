@@ -3,7 +3,8 @@ use super::evaluate_obj::evaluate_obj;
 use super::helper::ActiveAlgoCalls;
 use super::result::ExecEvalStmtFailed;
 use crate::ast::obj::{
-    ArithmeticOperator, FiniteSetStat, Literal, Number, Obj, ProductShape, SetFormer, Sub, Tuple,
+    ArithmeticOperator, FiniteSetStat, Literal, Number, Obj, ProductShape, SetFormer, SetOperator,
+    Sub, Tuple,
 };
 use crate::rational_expression::exact_rational::EvalRational;
 use crate::runtime::{Runtime, RuntimeResult};
@@ -31,6 +32,40 @@ pub(super) fn evaluate_finite_object(
                 FiniteSetStat::FiniteSetMax(s) => (&s.set, Some(true)),
                 FiniteSetStat::FiniteSetMin(s) => (&s.set, Some(false)),
             };
+            // Exact singleton intersection cardinality. Distinct expression
+            // spellings alone never justify unequal mathematical elements.
+            if max.is_none() {
+                if let Obj::SetOperator(SetOperator::Intersect(intersection)) = set.as_ref() {
+                    if let (
+                        Obj::SetFormer(SetFormer::ListSet(left)),
+                        Obj::SetFormer(SetFormer::ListSet(right)),
+                    ) = (intersection.left.as_ref(), intersection.right.as_ref())
+                    {
+                        if left.list.len() == 1 && right.list.len() == 1 {
+                            let left = left.list[0].as_ref();
+                            let right = right.list[0].as_ref();
+                            if left.ir() == right.ir() {
+                                return Ok(Ok(number(1)));
+                            }
+                            let left = match evaluate_obj(runtime, left, depth + 1, context)? {
+                                Ok(value) => value,
+                                Err(error) => return Ok(Err(error)),
+                            };
+                            let right = match evaluate_obj(runtime, right, depth + 1, context)? {
+                                Ok(value) => value,
+                                Err(error) => return Ok(Err(error)),
+                            };
+                            if let (Some(left), Some(right)) = (
+                                EvalRational::from_obj(&left),
+                                EvalRational::from_obj(&right),
+                            ) {
+                                return Ok(Ok(number(usize::from(left == right))));
+                            }
+                        }
+                    }
+                    return Ok(Err(ExecEvalStmtFailed::UnsupportedExpression));
+                }
+            }
             let Obj::SetFormer(SetFormer::ListSet(list)) = set.as_ref() else {
                 return Ok(Err(ExecEvalStmtFailed::UnsupportedExpression));
             };

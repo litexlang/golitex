@@ -1,0 +1,3 @@
+# A finite sequence returns an element of its carrier at every legal index.
+forall A set, n N, f finite_seq(A, n), k closed_range(1, n):
+    f(k) $in A

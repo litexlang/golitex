@@ -1,0 +1,53 @@
+# Solve a real square system, certify its unique solution and measure its norm.
+# Matrix values remain functions; all inverse uses follow the determinant proof.
+
+have fn system(r closed_range(1,2),c closed_range(1,2)) R=r+c
+
+det(system,2)=-1
+
+det(system,2)!=0
+
+have displacement cart_n(C,2)=matrix_apply(matrix_inverse(system,2),(1,0),2,2)
+
+displacement(1)=-4
+
+displacement(2)=3
+
+euclidean_norm(displacement,2)=5
+
+release thm matrix_inverse_laws(system,2)
+
+release thm matrix_apply_compose(system,matrix_inverse(system,2),(1,0),2,2,2)
+
+release thm matrix_apply_identity((1,0),2)
+
+matrix_apply(system,displacement,2,2)=matrix_apply(system,matrix_apply(matrix_inverse(system,2),(1,0),2,2),2,2)=matrix_apply(matrix_mul(system,matrix_inverse(system,2),2,2,2),(1,0),2,2)=matrix_apply(identity_matrix(2),(1,0),2,2)=(1,0)
+
+$Matrix::main::solves_matrix_system(2,2,system,displacement,(1,0))
+
+claim:
+    ? forall other cart_n(C,2):
+        $Matrix::main::solves_matrix_system(2,2,system,other,(1,0))
+        =>:
+            other=displacement
+    by thm Matrix::main::invertible_matrix_solution_unique(2,system,(1,0),other,displacement) => other=displacement
+
+release thm matrix_rank_invertible(system,2)
+
+matrix_rank(system,2,2)=2
+
+claim:
+    ? $Matrix::main::is_symmetric_matrix(2,system)
+    by fn_extension transpose(system,2,2)=system
+    $Matrix::main::is_symmetric_matrix(2,system)
+
+# The source solver exposes its defining equation across the module boundary.
+have selected_solution cart_n(C,2)=\Matrix::main::solve_matrix<2>(system,(1,0))
+
+release thm Matrix::main::solve_matrix_definition(2,system,(1,0))
+
+selected_solution=displacement
+
+selected_solution(1)=-4
+
+selected_solution(2)=3

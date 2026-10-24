@@ -666,7 +666,7 @@ impl SourceObserver for Capture {
                 ])
             })
             .collect();
-        self.sources.push(object(vec![
+        let mut source = object(vec![
             ("id", text(&id)),
             ("path", text(&path)),
             ("content", text(code)),
@@ -674,7 +674,13 @@ impl SourceObserver for Capture {
             ("digest", text(&digest(code))),
             ("role", text(role)),
             ("configuration_id", text(&configuration_id)),
-        ]));
+        ]);
+        if let Some(titles) = super::helper::source_titles(&runtime.current_file.display_path()) {
+            if let JsonValue::Object(fields) = &mut source {
+                fields.insert("titles".into(), titles);
+            }
+        }
+        self.sources.push(source);
     }
 
     fn statement(

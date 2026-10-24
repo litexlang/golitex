@@ -1,0 +1,21 @@
+# Define an integer-valued direction and determine it on either side of two.
+have fn direction(x R) Z = sign(x)
+have fn shift(x R) R = x - 2
+have fn shifted_direction(x R) Z = sign(shift(x))
+
+direction(-3) = -1
+direction(0) = 0
+direction(4) = 1
+shifted_direction(1) = -1
+shifted_direction(2) = 0
+shifted_direction(3) = 1
+
+thm direction_positive:
+    ? forall x R:
+        0 < x
+        =>:
+            direction(x) = 1
+    direction(x) = sign(x)
+    sign(x) = 1
+
+by thm direction_positive(5) => direction(5) = 1

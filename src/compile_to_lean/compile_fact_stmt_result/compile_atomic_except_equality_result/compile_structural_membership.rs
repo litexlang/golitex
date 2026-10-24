@@ -54,9 +54,30 @@ impl LitexToLeanCompiler {
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
         let compiled = match &proof.reason {
-            StructuralMembershipReason::Min { .. }
-            | StructuralMembershipReason::Max { .. }
-            | StructuralMembershipReason::NaturalMaxDifference { .. } => Err(
+            StructuralMembershipReason::Min { left, right }
+            | StructuralMembershipReason::Max { left, right } => {
+                let maximum = matches!(&proof.reason, StructuralMembershipReason::Max { .. });
+                let Some((a, b)) = crate::compile_to_lean::compile_fact_stmt_result::compile_obj_well_defined_result::min_max_arguments(&proof.element, maximum) else {
+                    return Err(LeanCompileError::unsupported("StructuralMembership/MinMaxConstructor"));
+                };
+                if a.ir() != left.element.ir()
+                    || b.ir() != right.element.ir()
+                    || left.set != proof.set
+                    || right.set != proof.set
+                {
+                    return Err(LeanCompileError::unsupported(
+                        "StructuralMembership/MinMaxSubject",
+                    ));
+                }
+                Ok(format!(
+                    "(Litex.minMaxMember {} {} {} {})",
+                    self.compile_object_reference(&proof.element, position)?,
+                    standard_term(&proof.set)?,
+                    self.compile_structural(left, position)?,
+                    self.compile_structural(right, position)?
+                ))
+            }
+            StructuralMembershipReason::NaturalMaxDifference { .. } => Err(
                 LeanCompileError::unsupported("StructuralMembership/OrderedSelection"),
             ),
             StructuralMembershipReason::Known(known) => {
@@ -87,6 +108,37 @@ impl LitexToLeanCompiler {
                         "StructuralMembership/SupersetSubject",
                         "Standard inclusion evidence changes its element.",
                     ));
+                }
+                if numeric_refinement(&child.set).is_some()
+                    || numeric_refinement(&proof.set).is_some()
+                {
+                    return standard_inclusion_term(
+                        &child.set,
+                        &proof.set,
+                        &self.compile_object_reference(&proof.element, position)?,
+                        &self.compile_structural(child, position)?,
+                    );
+                }
+                if child.set == StandardSet::NPos {
+                    let bridge = match proof.set {
+                        StandardSet::N => None,
+                        StandardSet::Z => Some("naturalToInteger"),
+                        StandardSet::Q => Some("naturalToRational"),
+                        StandardSet::R => Some("naturalToReal"),
+                        StandardSet::C => Some("naturalToComplex"),
+                        _ => {
+                            return Err(LeanCompileError::unsupported(
+                                "StructuralMembership/StandardSuperset",
+                            ))
+                        }
+                    };
+                    let member = self.compile_structural(child, position)?;
+                    let object = self.compile_object_reference(&proof.element, position)?;
+                    let natural = format!("(Litex.inNPos_natural {object} {member})");
+                    return Ok(match bridge {
+                        Some(bridge) => format!("(Litex.{bridge} {object} {natural})"),
+                        None => natural,
+                    });
                 }
                 let bridge = match (&child.set, &proof.set) {
                     (StandardSet::RPos, StandardSet::R) => "inRPos_real",
@@ -259,6 +311,16 @@ impl LitexToLeanCompiler {
                     standard_term(&expected_exponent)?,
                 ))
             }
+            StructuralMembershipReason::Intrinsic(
+                kind @ (IntrinsicCodomain::Min | IntrinsicCodomain::Max),
+            ) => {
+                let maximum = matches!(kind, IntrinsicCodomain::Max);
+                if proof.set != StandardSet::R || crate::compile_to_lean::compile_fact_stmt_result::compile_obj_well_defined_result::min_max_arguments(&proof.element, maximum).is_none() {
+                    return Err(LeanCompileError::unsupported("StructuralMembership/IntrinsicMinMax"));
+                }
+                let term = self.compile_object_reference(&proof.element, position)?;
+                Ok(format!("(by\n  let _extremum := {term}\n  exact Litex.minMaxMember _extremum Litex.R _extremum.wd.1 _extremum.wd.2\n)"))
+            }
             StructuralMembershipReason::Intrinsic(IntrinsicCodomain::Abs) => {
                 if proof.set != StandardSet::R
                     || !matches!(
@@ -270,6 +332,85 @@ impl LitexToLeanCompiler {
                 }
                 let term = self.compile_object_reference(&proof.element, position)?;
                 Ok(format!("(by\n  let _litex_abs := {term}\n  exact Litex.absInR _litex_abs.val.arg _litex_abs.wd\n)"))
+            }
+            StructuralMembershipReason::Intrinsic(IntrinsicCodomain::Factorial) => {
+                if proof.set != StandardSet::NPos
+                    || !matches!(
+                        &proof.element,
+                        Obj::IntegerOperator(IntegerOperator::Factorial(_))
+                    )
+                {
+                    return Err(LeanCompileError::unsupported(
+                        "StructuralMembership/Factorial",
+                    ));
+                }
+                Ok(format!(
+                    "(Litex.factorialInNPos {})",
+                    self.compile_object_reference(&proof.element, position)?
+                ))
+            }
+            StructuralMembershipReason::Intrinsic(
+                kind @ (IntrinsicCodomain::Gcd | IntrinsicCodomain::Lcm),
+            ) => {
+                use super::super::compile_obj_well_defined_result::compile_gcd_lcm::gcd_lcm_arguments;
+                let least = matches!(kind, IntrinsicCodomain::Lcm);
+                if proof.set
+                    != if least {
+                        StandardSet::N
+                    } else {
+                        StandardSet::NPos
+                    }
+                    || gcd_lcm_arguments(&proof.element, least).is_none()
+                {
+                    return Err(LeanCompileError::unsupported("StructuralMembership/GcdLcm"));
+                }
+                let term = self.compile_object_reference(&proof.element, position)?;
+                let law = if least { "lcmInN" } else { "gcdInNPos" };
+                Ok(format!("(Litex.{law} {term})"))
+            }
+            StructuralMembershipReason::Intrinsic(
+                kind @ (IntrinsicCodomain::Mod | IntrinsicCodomain::Quot),
+            ) => {
+                use super::super::compile_obj_well_defined_result::compile_integer_division::integer_division_arguments;
+                let quotient = matches!(kind, IntrinsicCodomain::Quot);
+                if proof.set != StandardSet::Z
+                    || integer_division_arguments(&proof.element, quotient).is_none()
+                {
+                    return Err(LeanCompileError::unsupported(
+                        "StructuralMembership/IntegerDivision",
+                    ));
+                }
+                let term = self.compile_object_reference(&proof.element, position)?;
+                let name = if quotient { "quot" } else { "mod" };
+                Ok(format!("(Litex.{name}InZ {term})"))
+            }
+            StructuralMembershipReason::Intrinsic(IntrinsicCodomain::Sign) => {
+                if proof.set != StandardSet::Z
+                    || !matches!(
+                        &proof.element,
+                        Obj::ArithmeticOperator(ArithmeticOperator::Sign(_))
+                    )
+                {
+                    return Err(LeanCompileError::unsupported(
+                        "StructuralMembership/IntrinsicSign",
+                    ));
+                }
+                Ok(format!(
+                    "(Litex.signInZ {})",
+                    self.compile_object_reference(&proof.element, position)?
+                ))
+            }
+            StructuralMembershipReason::Intrinsic(
+                kind @ (IntrinsicCodomain::Floor | IntrinsicCodomain::Ceil),
+            ) => {
+                let ceiling = matches!(kind, IntrinsicCodomain::Ceil);
+                if proof.set != StandardSet::Z || crate::compile_to_lean::compile_fact_stmt_result::compile_obj_well_defined_result::compile_rounding::rounding_argument(&proof.element, ceiling).is_none() {
+                    return Err(LeanCompileError::unsupported("StructuralMembership/IntrinsicRounding"));
+                }
+                Ok(format!(
+                    "(Litex.roundingInZ {})",
+                    self.compile_object_reference(&proof.element, position)?
+                ))
             }
             StructuralMembershipReason::Intrinsic(IntrinsicCodomain::Sqrt) => {
                 if proof.set != StandardSet::R

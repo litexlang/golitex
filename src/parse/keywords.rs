@@ -41,7 +41,31 @@ pub const LIM_POS_INF: &str = "lim_pos_inf";
 pub const HAS_LIMIT_AT: &str = "has_limit_at";
 pub const SEQ: &str = "seq";
 pub const FINITE_SEQ: &str = "finite_seq";
+pub const CART_N: &str = "cart_n";
 pub const MATRIX: &str = "matrix";
+pub const DET: &str = "det";
+pub const ZERO_MATRIX: &str = "zero_matrix";
+pub const IDENTITY_MATRIX: &str = "identity_matrix";
+pub const TRANSPOSE: &str = "transpose";
+pub const CONJUGATE_TRANSPOSE: &str = "conjugate_transpose";
+pub const TRACE: &str = "trace";
+pub const MATRIX_ADD: &str = "matrix_add";
+pub const MATRIX_SUB: &str = "matrix_sub";
+pub const MATRIX_SCALE: &str = "matrix_scale";
+pub const MATRIX_MUL: &str = "matrix_mul";
+pub const MATRIX_APPLY: &str = "matrix_apply";
+pub const MATRIX_POWER: &str = "matrix_power";
+pub const MATRIX_INVERSE: &str = "matrix_inverse";
+pub const MATRIX_RANK: &str = "matrix_rank";
+pub const MATRIX_MINOR: &str = "matrix_minor";
+pub const MATRIX_COFACTOR: &str = "matrix_cofactor";
+pub const MATRIX_ADJUGATE: &str = "matrix_adjugate";
+pub const DIAGONAL_MATRIX: &str = "diagonal_matrix";
+pub const OUTER_PRODUCT: &str = "outer_product";
+pub const INNER_PRODUCT: &str = "inner_product";
+pub const EUCLIDEAN_NORM: &str = "euclidean_norm";
+pub const FROBENIUS_NORM: &str = "frobenius_norm";
+
 pub const FN: &str = "fn";
 pub const COMPOSE: &str = "compose";
 pub const UNICODE_COMPOSE: &str = "∘";
@@ -301,6 +325,30 @@ pub(super) fn is_reserved_object_name(name: &str) -> bool {
             | COMPOSE
             | FN_RANGE
             | FINITE_SEQ
+            | CART_N
+            | MATRIX
+            | DET
+            | ZERO_MATRIX
+            | IDENTITY_MATRIX
+            | TRANSPOSE
+            | CONJUGATE_TRANSPOSE
+            | TRACE
+            | MATRIX_ADD
+            | MATRIX_SUB
+            | MATRIX_SCALE
+            | MATRIX_MUL
+            | MATRIX_APPLY
+            | MATRIX_POWER
+            | MATRIX_INVERSE
+            | MATRIX_RANK
+            | MATRIX_MINOR
+            | MATRIX_COFACTOR
+            | MATRIX_ADJUGATE
+            | DIAGONAL_MATRIX
+            | OUTER_PRODUCT
+            | INNER_PRODUCT
+            | EUCLIDEAN_NORM
+            | FROBENIUS_NORM
             | SEQ
             | LIM
             | LIM_LEFT

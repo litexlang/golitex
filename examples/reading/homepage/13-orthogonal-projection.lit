@@ -1,0 +1,174 @@
+# Project a point onto the line spanned by a nonzero vector.
+have fn dot(u, v cart(R, R)) R = u(1) * v(1) + u(2) * v(2)
+have fn norm_sq(v cart(R, R)) R = dot(v, v)
+have fn scale(t R, v cart(R, R)) cart(R, R) = (t * v(1), t * v(2))
+have fn subtract(u, v cart(R, R)) cart(R, R) = (u(1) - v(1), u(2) - v(2))
+have fn distance_sq(u, v cart(R, R)) R = norm_sq(subtract(u, v))
+
+# A nonzero direction has positive squared length.
+thm norm_sq_positive:
+    ? forall v cart(R, R):
+        v != (0, 0)
+        =>:
+            norm_sq(v) > 0
+    norm_sq(v) = v(1)^2 + v(2)^2
+    by contra:
+        ? norm_sq(v) > 0
+        0 <= v(1)^2 <= v(1)^2 + v(2)^2 = norm_sq(v) <= 0
+        0 <= v(2)^2 <= v(1)^2 + v(2)^2 = norm_sq(v) <= 0
+        v(1)^2 = 0
+        v(2)^2 = 0
+        v(1) = 0
+        v(2) = 0
+        v = (v(1), v(2)) = (0, 0)
+        impossible v = (0, 0)
+
+claim:
+    ? forall v cart(R, R):
+        v != (0, 0)
+        =>:
+            norm_sq(v) != 0
+    release thm norm_sq_positive(v)
+
+have fn coefficient(u, v cart(R, R): v != (0, 0)) R = dot(u, v) / norm_sq(v)
+have fn projection(u, v cart(R, R): v != (0, 0)) cart(R, R) = scale(coefficient(u, v), v)
+have fn residual(u, v cart(R, R): v != (0, 0)) cart(R, R) = subtract(u, projection(u, v))
+
+# Two dot-product laws used by orthogonality.
+thm dot_subtract:
+    ? forall u, w, v cart(R, R):
+        dot(subtract(u, w), v) = dot(u, v) - dot(w, v)
+    subtract(u, w)(1) = u(1) - w(1)
+    subtract(u, w)(2) = u(2) - w(2)
+    dot(subtract(u, w), v) = (u(1) - w(1)) * v(1) + (u(2) - w(2)) * v(2) = dot(u, v) - dot(w, v)
+
+thm dot_scale:
+    ? forall u, v cart(R, R), t R:
+        dot(scale(t, u), v) = t * dot(u, v)
+    scale(t, u)(1) = t * u(1)
+    scale(t, u)(2) = t * u(2)
+    dot(scale(t, u), v) = t * u(1) * v(1) + t * u(2) * v(2) = t * dot(u, v)
+
+# The residual is perpendicular to the line.
+thm residual_orthogonal:
+    ? forall u, v cart(R, R):
+        v != (0, 0)
+        =>:
+            dot(residual(u, v), v) = 0
+    projection(u, v) = scale(coefficient(u, v), v)
+    residual(u, v) = subtract(u, projection(u, v))
+    coefficient(u, v) = dot(u, v) / norm_sq(v)
+    norm_sq(v) = dot(v, v)
+    release thm norm_sq_positive(v)
+    release thm dot_subtract(u, projection(u, v), v)
+    release thm dot_scale(v, v, coefficient(u, v))
+    dot(projection(u, v), v) = dot(scale(coefficient(u, v), v), v) = coefficient(u, v) * dot(v, v) = (dot(u, v) / norm_sq(v)) * norm_sq(v) = dot(u, v)
+    dot(residual(u, v), v) = dot(subtract(u, projection(u, v)), v) = dot(u, v) - dot(projection(u, v), v) = 0
+
+# Expand the squared distance along the line.
+thm distance_expansion:
+    ? forall u, v cart(R, R), t R:
+        distance_sq(u, scale(t, v)) = norm_sq(u) - 2 * t * dot(u, v) + t^2 * norm_sq(v)
+    have w cart(R, R) = subtract(u, scale(t, v))
+    scale(t, v)(1) = t * v(1)
+    scale(t, v)(2) = t * v(2)
+    w(1) = subtract(u, scale(t, v))(1) = u(1) - scale(t, v)(1) = u(1) - t * v(1)
+    w(2) = subtract(u, scale(t, v))(2) = u(2) - scale(t, v)(2) = u(2) - t * v(2)
+    norm_sq(w) = w(1)^2 + w(2)^2
+    norm_sq(u) = u(1)^2 + u(2)^2
+    norm_sq(v) = v(1)^2 + v(2)^2
+    dot(u, v) = u(1) * v(1) + u(2) * v(2)
+    2 * t * dot(u, v) = 2 * t * (u(1) * v(1) + u(2) * v(2))
+    t^2 * norm_sq(v) = t^2 * (v(1)^2 + v(2)^2)
+    norm_sq(u) - 2 * t * dot(u, v) = (u(1)^2 + u(2)^2) - 2 * t * (u(1) * v(1) + u(2) * v(2))
+    norm_sq(u) - 2 * t * dot(u, v) + t^2 * norm_sq(v) = (u(1)^2 + u(2)^2) - 2 * t * (u(1) * v(1) + u(2) * v(2)) + t^2 * (v(1)^2 + v(2)^2) = (u(1) - t * v(1))^2 + (u(2) - t * v(2))^2 = norm_sq(w) = distance_sq(u, scale(t, v))
+
+# Every other point adds a square to the minimum distance.
+thm distance_decomposition:
+    ? forall u, v cart(R, R), t R:
+        v != (0, 0)
+        =>:
+            distance_sq(u, scale(t, v)) = distance_sq(u, projection(u, v)) + (t - coefficient(u, v))^2 * norm_sq(v)
+    have a R = coefficient(u, v)
+    have n R = norm_sq(v)
+    n = norm_sq(v) = dot(v, v)
+    have b R = dot(u, v)
+    projection(u, v) = scale(a, v)
+    residual(u, v) = subtract(u, projection(u, v))
+    release thm dot_subtract(u, projection(u, v), v)
+    release thm dot_scale(v, v, a)
+    release thm residual_orthogonal(u, v)
+    dot(projection(u, v), v) = dot(scale(a, v), v) = a * dot(v, v) = a * n
+    0 = dot(residual(u, v), v) = dot(subtract(u, projection(u, v)), v) = dot(u, v) - dot(projection(u, v), v) = b - a * n
+    b = a * n
+    release thm distance_expansion(u, v, a)
+    release thm distance_expansion(u, v, t)
+    distance_sq(u, projection(u, v)) = distance_sq(u, scale(a, v)) = norm_sq(u) - 2 * a * b + a^2 * n
+    distance_sq(u, scale(t, v)) = norm_sq(u) - 2 * t * b + t^2 * n
+    2 * (a - t) * b = 2 * (a - t) * (a * n) = 2 * (a - t) * a * n
+    (norm_sq(u) - 2 * t * b + t^2 * n) - (norm_sq(u) - 2 * a * b + a^2 * n) = 2 * (a - t) * b + (t^2 - a^2) * n = 2 * (a - t) * a * n + (t^2 - a^2) * n = (t - a)^2 * n
+    distance_sq(u, scale(t, v)) - distance_sq(u, projection(u, v)) = (norm_sq(u) - 2 * t * b + t^2 * n) - (norm_sq(u) - 2 * a * b + a^2 * n) = (t - a)^2 * n
+    distance_sq(u, scale(t, v)) = distance_sq(u, projection(u, v)) + (distance_sq(u, scale(t, v)) - distance_sq(u, projection(u, v))) = distance_sq(u, projection(u, v)) + (t - a)^2 * n
+    (t - a)^2 = (t - coefficient(u, v))^2
+    (t - a)^2 * n = (t - coefficient(u, v))^2 * norm_sq(v)
+    distance_sq(u, scale(t, v)) = distance_sq(u, projection(u, v)) + (t - a)^2 * n = distance_sq(u, projection(u, v)) + (t - coefficient(u, v))^2 * norm_sq(v)
+
+# A nonnegative extra term proves minimality.
+thm projection_minimizes:
+    ? forall u, v cart(R, R), t R:
+        v != (0, 0)
+        =>:
+            distance_sq(u, projection(u, v)) <= distance_sq(u, scale(t, v))
+    release thm norm_sq_positive(v)
+    release thm distance_decomposition(u, v, t)
+    have offset R = t - coefficient(u, v)
+    (t - coefficient(u, v))^2 = offset^2 >= 0
+    (t - coefficient(u, v))^2 * norm_sq(v) >= 0
+    distance_sq(u, projection(u, v)) <= distance_sq(u, projection(u, v)) + (t - coefficient(u, v))^2 * norm_sq(v) = distance_sq(u, scale(t, v))
+
+# Equality forces the same coefficient, hence the same point.
+thm projection_unique:
+    ? forall u, v cart(R, R), t R:
+        v != (0, 0)
+        distance_sq(u, scale(t, v)) <= distance_sq(u, projection(u, v))
+        =>:
+            t = coefficient(u, v)
+            scale(t, v) = projection(u, v)
+    release thm norm_sq_positive(v)
+    release thm projection_minimizes(u, v, t)
+    release thm distance_decomposition(u, v, t)
+    distance_sq(u, scale(t, v)) = distance_sq(u, projection(u, v))
+    distance_sq(u, projection(u, v)) + (t - coefficient(u, v))^2 * norm_sq(v) = distance_sq(u, scale(t, v)) = distance_sq(u, projection(u, v))
+    (t - coefficient(u, v))^2 * norm_sq(v) = (distance_sq(u, projection(u, v)) + (t - coefficient(u, v))^2 * norm_sq(v)) - distance_sq(u, projection(u, v)) = 0
+    (t - coefficient(u, v))^2 = ((t - coefficient(u, v))^2 * norm_sq(v)) / norm_sq(v) = 0
+    have offset R = t - coefficient(u, v)
+    offset^2 = (t - coefficient(u, v))^2 = 0
+    offset = 0
+    t - coefficient(u, v) = offset = 0
+    t = coefficient(u, v)
+    scale(t, v) = scale(coefficient(u, v), v) = projection(u, v)
+
+# Example: project (3, 1) onto the line through (1, 1).
+by contra:
+    ? (1, 1) != (0, 0)
+    1 = (1, 1)(1) = (0, 0)(1) = 0
+    impossible 1 = 0
+
+eval coefficient((3, 1), (1, 1))
+eval projection((3, 1), (1, 1))
+
+eval residual((3, 1), (1, 1))
+
+eval distance_sq((3, 1), projection((3, 1), (1, 1)))
+
+claim:
+    ? forall t R:
+        2 <= distance_sq((3, 1), scale(t, (1, 1)))
+    release thm projection_minimizes((3, 1), (1, 1), t)
+
+claim:
+    ? forall t R:
+        distance_sq((3, 1), scale(t, (1, 1))) = 2
+        =>:
+            t = 2
+    release thm projection_unique((3, 1), (1, 1), t)

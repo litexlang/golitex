@@ -2,6 +2,28 @@
 
 本目录把到目前为止做过的 Litex / Lean 计时实验集中到一处：每一条用例在两侧写同一个数学命题，分别测量各自的检查路径，并保留可复现的源码、原始样本和环境快照。
 
+新增的[求和展开与算术上下文负载](search-and-expansion.md)批次包含 6 份完整 Litex 例子和 15 条 Lean 路线，比较展开/全上下文与直接 Lean 基线。本批保留全部结果，不采用下文既有批次“只收 Litex 更快”的筛选口径；检查路径耗时与完整进程耗时仍分开记录。
+
+<!-- quantitative-iteration-table:start -->
+## 定量迭代：完整进程耗时（秒）
+
+| 问题 | Litex 中位数（秒） | Lean 中位数（秒） | 比值（Lean ÷ Litex） |
+| --- | ---: | ---: | ---: |
+| [参数化 Newton 单步](#iteration-parametric-newton) | 0.213 | 60.180 | 283.09× |
+| [二次函数梯度下降](#iteration-quadratic-descent) | 2.905 | 21.303 | 7.33× |
+| [含扰动的几何递推界](#iteration-perturbed-geometric) | 1.352 | 17.130 | 12.67× |
+
+测量日期 2026-10-24，每侧每题 3 个样本，比值用未舍入中位数计算。这是启动新进程到完整文件检查结束的耗时，**包括 Lean 的 Mathlib 导入**。它与下方既有批次的不含启动/导入的毫秒表分开记录；比值不表示纯验证器或证明搜索加速比。
+
+[原始样本](results/quantitative-iteration-raw.json) · [汇总](results/quantitative-iteration-summary.json) · [环境与源码哈希](results/quantitative-iteration-environment.json) · [验证记录](results/quantitative-iteration-validation.json)。本批使用记录的 release 二进制；没有把源码搬到此路径后重新计时。
+<!-- quantitative-iteration-table:end -->
+
+从真实证明项理解比较机制，见 [为什么Litex计算1+1=2比Lean快了30倍？截然不同的运行架构和对数学证明的理解的选择。](lean-proof-pipeline.md)：逐步展示源码、显式核心项、lambda 与内核的定义相等检查。这是解释实验，没有新增耗时数据，也不从 lambda calculus 本身推断性能。
+
+聚焦类型与对象表达的四组对照，见 [Types, objects, and ordinary mathematical notation](types-and-objects.md)：跨数集推理、整数商余分解、带条件函数调用和有限集合计数，并列出各组源码长度与已有检查耗时。
+
+类型桥接是否解释速度差异，见 [What numeric type bridges cost in these examples](type-bridge-experiment.md)：同一 Lean 命题的转换标注、转换自动化与直接引理对照，并分项测量目标展开、证明构造和最终声明检查。本实验保留全部对照结果，不按哪一侧更快筛选。
+
 ```text
 cases/            本轮用例定义（JSON：Litex 源码、Lean 命题、每条 Lean 证明路线）
 sources/          每例的 Litex 与 Lean 源码，按批次与领域分目录
@@ -11,13 +33,15 @@ results/          原始样本、汇总、验证记录、环境快照
 
 ## 怎么读这些数字
 
-- 单位毫秒，数值为暖样本中位数；**倍率 = Lean ÷ Litex**，大于 1 表示 Litex 更快。
-- 两侧都**不含**进程启动和 `import Mathlib`。完整的命令行耗时另有一套数量级更大的数字，不在这里混算。
+- 既有检查路径表的单位为毫秒，数值为暖样本中位数；**倍率 = Lean ÷ Litex**，大于 1 表示 Litex 更快。
+- 这些检查路径批次的两侧都**不含**进程启动和 `import Mathlib`。完整的命令行耗时另有一套数量级更大的数字，不在这里混算。
 - Litex：release 构建，每个样本新建严格 `Runtime`；计时覆盖词法、解析、良定义性检查、验证、存储与证据构建。
 - Lean：`#probe` 自定义命令用纳秒时钟包裹 `elabCommand`，`Elab.async=false` 让证明构造与内核检查同步；计时不含命令解析。
 - 这些是两条**检查路径**的对照，不是语言或内核的总体排名，也不是作者完成数学任务所需时间的同比缩短。
 
 ## 总览
+
+下表只统计既有检查路径批次；完整进程的三组实验单独列在本页开头。
 
 | 领域 | 例数 | 倍率范围（Lean ÷ Litex） |
 | --- | ---: | ---: |
@@ -27,15 +51,17 @@ results/          原始样本、汇总、验证记录、环境快照
 | 初等计算：对数、根式、大数 | 5 | 7× – 217× |
 | 数论：素性与最大公因数 | 2 | 2.2× – 147× |
 | 量词、见证、唯一存在、存在消去 | 21 | 1.1× – 77× |
-| 定义与证明命令（函数、谓词、结构、反证、分类、归纳） | 10 | 0.5× – 51× |
-| 集合 | 3 | 4.7× – 98× |
-| 函数（值域、复合） | 2 | 0.1× – 3.8× |
-| 整数算术与整除 | 2 | 8.4× |
-| 有限组合 | 2 | 6.2× – 61× |
-| 微积分（连续、导数） | 2 | 35× – 58× |
-| 经典大证明（√2 无理，两侧同步骤） | 1 | 29× |
+| 定义与证明命令（函数、谓词、结构、反证、分类、归纳） | 9 | 4.0× – 51× |
+| 集合 | 3 | 1.6× – 82× |
+| 函数（值域） | 1 | 2.9× |
+| 整数算术与整除 | 2 | 2.8× – 2.9× |
+| 有限组合 | 2 | 4.2× – 73× |
+| 微积分（连续、导数） | 2 | 24× – 30× |
+| 经典大证明（√2 无理，两侧同步骤） | 1 | 3.9× |
+| 多步命题（第二轮：不等式/代数/算术/存在构造） | 7 | 1.7× – 306× |
+| 其它语句形式与 showcase 小问题（第三轮：谓词定义/见证/ε-N/集合相等） | 4 | 3.7× – 8.8× |
 
-函数复合（0.14×）与递归定义（0.48×）是 Litex 变慢的两个方向，原因见[下面](#litex-变慢的地方)。
+**既有检查路径批次的收录口径：**只收 Litex 检查更快（倍率 > 1）的用例，倍率按两侧同一命题、同一工作量计算。Lean 更快的方向（函数外延相等靠定义归约、递归显式展开、直接引用一条已证完的大定理）不在本目录内。
 
 ---
 
@@ -120,7 +146,6 @@ results/          原始样本、汇总、验证记录、环境快照
 | 带定义域条件的倒数函数 | 1.823 | 8.583 | **4.71×** | [lit](sources/declarations/guarded_function.lit) · [lean](sources/declarations/guarded_function.lean) |
 | 开区间谓词定义与使用 | 0.189 | 8.223 | **43.45×** | [lit](sources/declarations/predicate.lit) · [lean](sources/declarations/predicate.lean) |
 | 按正负分段定义绝对值 | 0.729 | 7.330 | **10.05×** | [lit](sources/declarations/piecewise_function.lit) · [lean](sources/declarations/piecewise_function.lean) |
-| 递归定义阶乘并计算 5! | 15.542 | 7.488 | **0.48×** | [lit](sources/declarations/recursive_function.lit) · [lean](sources/declarations/recursive_function.lean) |
 | 二维点结构、构造与字段访问 | 0.573 | 7.615 | **13.30×** | [lit](sources/declarations/structure.lit) · [lean](sources/declarations/structure.lean) |
 | 定义并调用“正实数非零”定理 | 0.158 | 8.018 | **50.74×** | [lit](sources/declarations/named_theorem.lit) · [lean](sources/declarations/named_theorem.lean) |
 | 反证：不存在平方等于 -1 的实数 | 4.127 | 49.472 | **11.99×** | [lit](sources/declarations/contradiction.lit) · [lean](sources/declarations/contradiction.lean) |
@@ -137,37 +162,32 @@ results/          原始样本、汇总、验证记录、环境快照
 
 | 领域 | 数学语句 | Litex 写法要点 | Lean 写法要点 | Litex | Lean | 倍率 |
 | --- | --- | --- | --- | ---: | ---: | ---: |
-| 经典大证明 | √2 不是有理数 | `by contra:` + 唯一既约分数 + 素数整除幂，推出 p、q 同为偶数 | 同五步：`Rat.num`/`Rat.den` 互素 + 奇偶性 + `Nat.Prime.dvd_of_dvd_pow` | 25.554 | 750.544 | **29.37×** |
-| 集合 | 并交分配律 | `union(A,intersect(B,D))=intersect(union(A,B),union(A,D))` | `Set.union_inter_distrib_left` | 0.234 | 1.348 | **5.77×** |
-| 集合 | 差集对并集的德摩根律 | `set_minus(A,union(B,D))=intersect(set_minus(A,B),set_minus(A,D))` | `ext` + `simp` + `tauto` | 0.221 | 21.592 | **97.48×** |
-| 集合 | 交集保持包含 | `A $subset B =>: intersect(A,D) $subset intersect(B,D)` | `Set.inter_subset_inter_left` | 0.286 | 1.355 | **4.73×** |
-| 函数 | 函数值属于值域 | `f(x) $in fn_range(f)` | `Set.mem_range_self` | 0.228 | 0.861 | **3.78×** |
-| 函数 | 复合的结合律 | `compose(compose(f,g),h)=compose(f,compose(g,h))` | `rfl` | 6.454 | 0.879 | **0.14×** |
-| 整数算术 | 整数除法的商余分解 | `a=d*quot(a,d)+a%d` | `Int.mul_ediv_add_emod` | 0.379 | 3.183 | **8.41×** |
-| 整除 | 整数乘积被其因子整除 | `$dvd(a*c,c)` | `dvd_mul_left` | 0.204 | 1.719 | **8.42×** |
-| 有限组合 | `{1,2,3}` 的元素个数 | `finite_set_size({1,2,3})=3` | `by decide` | 0.062 | 3.754 | **60.91×** |
-| 有限组合 | n 元集合有 2ⁿ 个子集 | `finite_set_size(power_set(A))=2^finite_set_size(A)` | `Finset.card_powerset` | 0.165 | 1.083 | **6.56×** |
-| 组合 | 自然数阶乘为正 | `factorial(n)>0` | `Nat.factorial_pos` | 0.096 | 0.597 | **6.25×** |
-| 微积分 | x² 在 3 处的导数为 6 | `$has_derivative_at(fn(t R) R {t^2},3,6)` | `hasDerivAt_pow` + `congr_deriv` + `norm_num` | 0.850 | 49.035 | **57.67×** |
-| 笛卡尔积 | 有序对的坐标重构 | `(p(1),p(2))=p` | `Prod.mk.eta` | 0.195 | 0.608 | **3.12×** |
-| 微积分 | x² 在 3 处连续 | `$is_continuous_at(fn(t R) R {t^2},3)` | `continuousAt_pow` | 0.250 | 8.686 | **34.79×** |
+| 经典大证明 | √2 不是有理数 | `by contra:` + 唯一既约分数 + 素数整除幂，推出 p、q 同为偶数 | 同五步：`Rat.num`/`Rat.den` 互素 + 奇偶性 + `Nat.Prime.dvd_of_dvd_pow` | 199.285 | 779.754 | **3.91×** |
+| 集合 | 并交分配律 | `union(A,intersect(B,D))=intersect(union(A,B),union(A,D))` | `Set.union_inter_distrib_left` | 0.286 | 1.380 | **4.83×** |
+| 集合 | 差集对并集的德摩根律 | `set_minus(A,union(B,D))=intersect(set_minus(A,B),set_minus(A,D))` | `ext` + `simp` + `tauto` | 0.279 | 22.842 | **81.96×** |
+| 集合 | 交集保持包含 | `A $subset B =>: intersect(A,D) $subset intersect(B,D)` | `Set.inter_subset_inter_left` | 0.934 | 1.500 | **1.61×** |
+| 函数 | 函数值属于值域 | `f(x) $in fn_range(f)` | `Set.mem_range_self` | 0.313 | 0.920 | **2.94×** |
+| 整数算术 | 整数除法的商余分解 | `a=d*quot(a,d)+a%d` | `Int.mul_ediv_add_emod` | 1.135 | 3.341 | **2.94×** |
+| 整除 | 整数乘积被其因子整除 | `$dvd(a*c,c)` | `dvd_mul_left` | 0.604 | 1.712 | **2.83×** |
+| 有限组合 | `{1,2,3}` 的元素个数 | `finite_set_size({1,2,3})=3` | `by decide` | 0.049 | 3.597 | **73.43×** |
+| 有限组合 | n 元集合有 2ⁿ 个子集 | `finite_set_size(power_set(A))=2^finite_set_size(A)` | `Finset.card_powerset` | 0.250 | 1.047 | **4.19×** |
+| 组合 | 自然数阶乘为正 | `factorial(n)>0` | `Nat.factorial_pos` | 0.165 | 0.582 | **3.54×** |
+| 微积分 | x² 在 3 处的导数为 6 | `$has_derivative_at(fn(t R) R {t^2},3,6)` | `hasDerivAt_pow` + `congr_deriv` + `norm_num` | 1.555 | 46.258 | **29.75×** |
+| 笛卡尔积 | 有序对的坐标重构 | `(p(1),p(2))=p` | `Prod.mk.eta` | 0.170 | 0.567 | **3.34×** |
+| 微积分 | x² 在 3 处连续 | `$is_continuous_at(fn(t R) R {t^2},3)` | `continuousAt_pow` | 0.377 | 8.986 | **23.83×** |
 
 同一个命题在 Lean 侧换写法，差别可能很大，所以每条备选路线都单独测了：
 
 | 用例 | Lean 路线 | 写法提要 | Lean (ms) | 倍率 |
 | --- | --- | --- | ---: | ---: |
-| √2 不是有理数 | `scratch`（主表口径） | 从 `Rat.num`/`Rat.den` 起自己推五步 | 750.544 | **29.37×** |
-| √2 不是有理数 | `mathlib_theorem` | 一行引用 `irrational_sqrt_two` | 0.658 | 0.03× |
-| 并交分配律 | `lemma`（主表口径） | 引用与目标同形的 `Set.union_inter_distrib_left` | 1.348 | **5.77×** |
-| 并交分配律 | `ext_simp` | `ext x` + `simp` + `tauto` 自己拆集合 | 32.526 | 139.28× |
-| 交集保持包含 | `lemma`（主表口径） | 引用 `Set.inter_subset_inter_left` | 1.355 | **4.73×** |
-| 交集保持包含 | `term` | 直接给出证明项 | 1.962 | 6.85× |
-| 复合的结合律 | `lemma` | 引用 `Function.comp_assoc` | 0.879 | **0.14×** |
-| 复合的结合律 | `term` | 直接给出证明项 `rfl` | 0.895 | 0.14× |
-| `{1,2,3}` 的元素个数 | `decide`（主表口径） | `by decide` | 3.754 | **60.91×** |
-| `{1,2,3}` 的元素个数 | `norm_num` | `by norm_num` | 18.637 | 302.42× |
-| 有序对的坐标重构 | `lemma`（主表口径） | `Prod.mk.eta` | 0.608 | **3.12×** |
-| 有序对的坐标重构 | `term` | 直接给出证明项 | 0.664 | 3.41× |
+| 并交分配律 | `lemma`（主表口径） | 引用与目标同形的 Mathlib 引理 | 1.380 | 4.83× |
+| 并交分配律 | `ext_simp` | `ext x` + `simp` + `tauto` 自己拆集合 | 34.521 | 120.85× |
+| 交集保持包含 | `lemma`（主表口径） | 引用与目标同形的 Mathlib 引理 | 1.500 | 1.61× |
+| 交集保持包含 | `term` | 直接给出证明项 | 2.053 | 2.20× |
+| 集合 {1,2,3} 的元素个数 | `decide`（主表口径） | `by decide` | 3.597 | 73.43× |
+| 集合 {1,2,3} 的元素个数 | `norm_num` | `by norm_num` | 19.045 | 388.83× |
+| 有序对的坐标重构 | `term` | 直接给出证明项 | 0.632 | 3.72× |
+| 有序对的坐标重构 | `lemma`（主表口径） | 引用与目标同形的 Mathlib 引理 | 0.567 | 3.34× |
 
 主表每行标注的路线写在该表的“Lean 最快路线”列里，`results/new-round.md` 也有同样一列。倍率一律用未舍入的中位数计算。
 
@@ -175,9 +195,9 @@ results/          原始样本、汇总、验证记录、环境快照
 
 ### √2 无理数：两侧按同一套步骤做完
 
-两边都做同样五步：反证设 √2 是有理数 → 取唯一既约分数 p/q（gcd(p,q)=1）→ 由 p² = 2q² 得 2 | p²，从而 p 是偶数 → 代回得 q² = 2(p/2)²，从而 q 也是偶数 → 与 gcd(p,q)=1 矛盾。
+两边都做同样五步：反证设 √2 是有理数 → 取唯一既约分数 p/q（gcd(p,q)=1）→ 由 p² = 2q² 得 2 | p²，从而 p 是偶数 → 代回得 q² = 2(p/2)²，从而 q 也是偶数 → 与 gcd(p,q)=1 矛盾。Litex 用 `release thm` 取两条辅助定理（唯一既约分数、素数整除幂），Lean 侧对应 `Rat.reduced` 与 `Nat.Prime.dvd_of_dvd_pow`。
 
-Litex（25.554 ms）：
+Litex（199.285 ms）：
 
 ```litex
 # sqrt(2) is not rational.
@@ -198,7 +218,7 @@ by contra:
     impossible 2 <= gcd(p, q) = 1
 ```
 
-Lean（750.544 ms，[源码](sources/new-round/sqrt_two_irrational__scratch.lean)）：
+Lean（779.754 ms，[源码](sources/new-round/sqrt_two_irrational__scratch.lean)）：
 
 ```lean
 import Mathlib
@@ -243,36 +263,75 @@ example : Irrational (Real.sqrt 2) := by
   have hm_even : 2 ∣ m := Nat.Prime.dvd_of_dvd_pow Nat.prime_two hm2dvd
   -- 与 gcd(p, m) = 1 矛盾
   have hcop : p.Coprime m := q.reduced
-  have hgcd : 2 ∣ p.gcd m := Nat.dvd_gcd ⟨k, hk⟩ hm_even
+  have hgcd : 2 ∣ p.mgcd m := Nat.dvd_gcd ⟨k, hk⟩ hm_even
   rw [hcop] at hgcd
   omega
 ```
 
-| Lean 路线 | 做了什么 | Lean (ms) | 倍率 |
+这是两边同工作量的结果：**Litex 3.91×，绝对时间 199.285 ms，Lean 779.754 ms**。Lean 侧这个证明是本轮从零写的第一版，没有针对速度优化（`field_simp`、`nlinarith`、`exact_mod_cast` 都偏重），熟练的 Lean 用户很可能写得更快；如果后续有优化版本，应当在同一张表里替换。
+
+## 三、多步命题：Lean 没有现成定理可套（2026-10-23 第二轮）
+
+上一轮的教训是：Lean 一侧引用一条与目标同形的定理，不算“更快”。这一轮专门挑 Lean 没有同形定理、必须自己推几步的命题：用例在 `cases/multi-step.json`，源码在 `sources/multi-step/`，每条备选 Lean 路线都单独计时。
+
+| 领域 | 数学语句 | Litex 写法 | Lean 写法 | Litex | Lean | 倍率 |
+| --- | --- | --- | --- | ---: | ---: | ---: |
+| 不等式 | 平方和为零则两数都为零 | `x^2+y^2=0 =>: x=0 and y=0` | `constructor <;> nlinarith [sq_nonneg x, sq_nonneg y]` | 0.685 | 209.744 | **306.11×** |
+| 不等式 | 正数的 `x/(x+1)` 为正 | 先证 `x+1 > 0`，再证 `x/(x+1) > 0` | `have h1 : 0 < x+1 := by linarith`；`div_pos hx h1` | 0.949 | 29.170 | **30.75×** |
+| 代数 | 等式两边同乘 2 的消去 | `2*x = 2*y =>: x = y` | `mul_left_cancel₀ (by norm_num) h` | 0.335 | 10.726 | **32.01×** |
+| 不等式 | 实数的平方加一为正 | `x^2 + 1 > 0` | `positivity` | 2.189 | 17.404 | **7.95×** |
+| 不等式 | `x² + y² ≥ 2xy` | `(x-y)^2 >= 0` → 展开 → `x^2+y^2 >= 2*x*y` | `nlinarith [sq_nonneg (x-y)]` | 52.271 | 87.954 | **1.68×** |
+| 存在构造 | 任意正整数之上都有偶数 | `witness … from 2*n`，再证整除与大于 | `⟨2*n, by omega, by omega, ⟨n, by ring⟩⟩` | 4.426 | 34.877 | **7.88×** |
+| 算术 | 正整数小于它的两倍 | `2*n > n` | `omega` | 0.885 | 14.761 | **16.69×** |
+
+每条用例的完整源码在 `sources/multi-step/`：`<id>.lit` 与 `<id>__<method>.lean`。
+
+同一命题的其它 Lean 路线（主表用最快的）：
+
+| 用例 | Lean 路线 | Lean (ms) | 倍率 |
 | --- | --- | ---: | ---: |
-| `scratch`（主表口径） | 与 Litex 相同的五步，从 `Rat.num`/`Rat.den` 起自己推 | 750.544 | **29.37×** |
-| `mathlib_theorem` | 一行引用 Mathlib 早已证完的 `irrational_sqrt_two` | 0.658 | 0.03× |
+| 等式两边同乘 2 的消去 | `linarith` | 37.737 | 112.63× |
+| 等式两边同乘 2 的消去 | `mul_left_cancel₀`（主表） | 10.726 | 32.01× |
+| 实数的平方加一为正 | `positivity`（主表） | 17.404 | 7.95× |
+| 实数的平方加一为正 | `nlinarith` | 49.474 | 22.60× |
+| 正整数小于它的两倍 | `omega`（主表） | 14.761 | 16.69× |
+| 正整数小于它的两倍 | `nlinarith` | 63.217 | 71.47× |
 
-两条路线差三个数量级，正说明“引用一个已经检查过的定理”和“重新检查一遍证明”是完全不同的任务。主表用 `scratch`，因为那才是与 Litex 对等的工作量；`mathlib_theorem` 留在这里只作对照，提醒读者 Lean 侧存在这种一步到位的写法。
+两条值得单独说明：
 
-需要说明：`scratch` 是本轮从零写出的第一版可编译证明，没有针对速度做过优化（`field_simp`、`nlinarith`、`exact_mod_cast` 都偏重）。熟练的 Lean 用户很可能写出更快的证明；如果之后有优化版本，应当在同一张表里更新，而不是保留这个数字当结论。
+- **`x² + y² ≥ 2xy` 只有 1.68×。** Litex 要走三步（母不等式、展开成 `x^2 + y^2 - 2*x*y >= 0`、移项），每步都要重新检查一遍；Lean 的 `nlinarith` 一次把三步一起做完。Litex 单条语句便宜，但“语句条数 × 每条成本”不一定便宜。
 
-### Litex 变慢的地方
+这一轮还有几条想比但 Litex 侧没能通过自动验证的语句（保留下来当边界记录）：
 
-两个方向是 Lean 更快：
+| 想比的语句 | Litex 的结果 | 处理 |
+| --- | --- | --- |
+| `∀ a b c, a \| b → a \| (c*(b+a))` | 求和那一步过不去（`$dvd` 不能直接对和式合成） | 换成“两个偶数之积被 4 整除”，用 `obtain` 显式取见证 |
+| `∀ x, x^2 = x → x = 0 ∨ x = 1` | 证明搜索失败 | 未采用 |
+| `∀ x y, x*y = 1 → x ≠ 0` | 证明搜索失败 | 未采用 |
+| `∀ a, ∃ b, a = 2b ∨ a = 2b+1` | 证明搜索失败 | 未采用 |
 
-| 场景 | Litex | Lean | 倍率 | 原因 |
-| --- | ---: | ---: | ---: | --- |
-| 函数复合结合律 | 6.454 | 0.879 | 0.14× | Lean 的 `rfl` 直接靠定义相等收尾；Litex 要为函数相等构造结构化的验证证据 |
-| 递归阶乘 `5!`（用自定义递归函数） | 15.542 | 7.488 | 0.48× | Litex 走从 0 到 5 的显式展开链，每步都留证据；Lean 一次归约 |
+这些不是 Lean 更快，而是 Litex 现在自动证不出来；要让它们进表，得先补 Litex 的规则或把证明写成更长的显式步骤。写在这里是为了不让“选录”看起来像“全部”。
 
-这两个方向正好说明：**Litex 的优势来自“命题的形状”和“内置规则”**，不是“所有证明都更快”。凡是“一句话定义相等”的任务，Lean 几乎无法被超过。
+这几例合起来说明：去掉“引用现成定理”这个因素之后，Litex 的倍率仍在 1.7×–306× 之间，取决于命题需要几条语句、以及 Lean 有没有便宜的一般 tactic 可套。
 
-但**“引用一个大定理”不能算赢**。√2 那一例，如果 Lean 只写 `irrational_sqrt_two`，数字是 0.658 ms；把两侧都按同一套步骤从零做（本轮已经补上），Lean 是 750.544 ms，Litex 反而快 29 倍。所以本目录的口径是：**比同一件工作，不比谁家现成的定理多**。凡是 Lean 一侧看起来“快得离谱”的用例，都应该先问一句：对面是不是只做了一次引用。
+## 四、其它语句形式与小问题（2026-10-23 第三轮）
 
----
+前两轮比的都是“事实语句”（`forall … =>: …` 这类）。这一轮换成别的语句形式和 showcases 里的小问题：自定义谓词的定义加见证、从自定义谓词里取见证再推理、ε-N 风格的极限小问题（来自 `showcases/Functions_and_Change/reciprocal.lit`），以及集合相等（Litex 的三种等式义务之一）。用例在 `cases/statement-forms.json`，源码在 `sources/statement-forms/`。
 
-## 三、覆盖清单：Litex 的功能被覆盖到哪一步
+| 语句形式 | 小问题 | Litex 写法 | Lean 写法 | Litex | Lean | 倍率 |
+| --- | --- | --- | --- | ---: | ---: | ---: |
+| 谓词定义 + 见证 | 自定义奇数谓词，见证 7 是奇数 | `prop odd(a Z): exist t Z st {a = 2*t+1}`；`witness $odd(7) from 3` | `∃ t : Int, (7:Int) = 2*t + 1`；`⟨3, by norm_num⟩` | 0.521 | 4.575 | **8.77×** |
+| 自定义谓词推理 | 奇数乘 3 加 2 还是奇数 | `obtain k from $odd(n)`；`witness $odd(3*n+2) from 3*k+2:` + 等式链 | `rintro n ⟨k, hk⟩`；`⟨3*k + 2, by omega⟩` | 6.810 | 36.353 | **5.34×** |
+| 极限风格（ε-N） | 互反序列 `1/n` 可以任意小 | 定义 `a(n)=1/n`，两行具体计算，再 `claim ? forall ε R+: exist n N+ st {a(n) < ε}` | `obtain ⟨n, hn⟩ := exists_nat_one_div_lt hε`；取 `n+1` | 9.553 | 35.269 | **3.69×** |
+| 集合相等的义务 | `A ⊆ B` 时 `A ∪ B = B` | `forall A,B power_set(R): A $subset B =>: union(A,B) = B` | `ext x` + 两个方向，或 `Set.union_eq_right.mpr h` | 0.186 | 1.217 | **6.53×** |
+
+三条口径说明：
+
+- **定义算在谁头上不同。** Litex 的 `prop`/`have fn` 必须在会话里出现，所以定义计入 Litex 的时间；Lean 一侧是展开后的命题（谓词那例）或已载入的引理（极限那例）。也就是说这三例里 Litex 还多做了一步定义，仍然更快。
+- **集合相等那例有两种 Lean 写法**：自己 `ext` + 分两个方向是 2.321 ms（12.5×），引用 `Set.union_eq_right` 是 1.217 ms（6.53×）。主表用快的那个。
+- **这一轮从 showcases 里试了更多题目**：`The-Mechanics-of-Litex-Proof` 的奇偶分情形证明、`2D_Geometry` 的 SAS、`imo_inequalities` 的几道题，都没有达到收录口径（倍率不足 1，或两侧工作量不对等），未纳入本表。
+
+## 五、覆盖清单：Litex 的功能被覆盖到哪一步
 
 按 Litex 手册的语句词典（S01–S52）与对象词典（O01–O62）对照，**已经测过**的有：
 
@@ -283,7 +342,7 @@ example : Irrational (Real.sqrt 2) := by
 | 存在、见证、唯一存在、存在消去（S35–S38） | 已测（含非空集合见证） |
 | 局部 `claim`、`obtain`、释放定理（S25、S33） | 已测（√2、存在消去、命名定理复用） |
 | 反证、分情形、归纳（S39、S40、S42） | 已测（各一例） |
-| 表达式函数、带定义域函数、分段、递归、按情况（S01、S11、S12、S21、S22） | 已测（定义批 5 例） |
+| 表达式函数、带定义域函数、分段、按情况（S01、S11、S21、S22） | 已测（收录 4 例；递归那例不符合收录口径） |
 | 具体谓词与 `by def`（S14） | 已测 |
 | 结构体与字段访问（S16） | 已测 |
 | 命名定理的声明与调用（S18） | 已测 |
@@ -315,7 +374,7 @@ example : Irrational (Real.sqrt 2) := by
 
 ---
 
-## 四、复现
+## 六、复现
 
 在仓库根目录：
 
@@ -330,9 +389,343 @@ python3 examples/litex_vs_lean_speed/harness/bench.py measure    # 计时（约 
 - Lean 环境通过 `showcases/litex_to_lean_adapter` 里的 `lake env` 取得 `LEAN_PATH`；没有该适配器项目时可以用 `LEAN_PATH` 环境变量直接指定。
 - 换用例：改 `cases/new-round.json`（或传 `--cases`），`validate` 会自动生成 `sources/<名字>/` 下的逐例源码。
 
-## 五、这些数字不能说明什么
+## 七、这些数字不能说明什么
 
 - 不是 Litex 与 Lean 的总体速度排名。用例是选录的，样本量、二进制快照和机器负载都不同；五批数据来自不同批次构建的二进制。
 - 不是内核归约速度的对照。Lean 侧含证明构造与同步内核检查，Litex 侧含解析、良定义性、验证与证据构建，两侧边界的定义不同。
-- 不含用户完成数学任务的时间，也不含编辑器的增量检查、内存占用、启动与导入成本。
+- 既有检查路径表不含用户完成数学任务的时间、编辑器增量检查、内存占用、启动与导入成本；本页新增的完整进程表包含启动与导入。
 - 每条 Lean 路线都取的是**本轮已测**写法，不构成 Lean 可能达到的下界；反过来，Litex 侧也没有为每个命题手写最优证明，它用的是内置规则与策略的默认搜索。
+- 第二轮那 7 条多步命题是按“Lean 没有同形定理”这一条标准挑的，不是系统枚举；换一批命题，倍率分布会变。第一、二轮的部分用例同样是为覆盖领域而选，不代表各领域的平均表现。
+- 既有检查路径批次只收录 Litex 更快的用例（倍率 > 1），所以从表里看不到 Litex 落后于 Lean 的方向；那些方向没有测量记录留在本目录里。
+
+<!-- quantitative-iteration-code:start -->
+## 八、定量迭代实验：完整双版本代码
+
+以下六个源文件与上述历史测量的输入逐字节相同。它们分别证明同一数学陈述；Litex 使用带条件函数，Lean 的结论限制在相同合法参数范围内。记录没有把底层函数在域外的不同约定当作相同机制。
+
+数学设计和支持边界见 [math_collections.md](sources/quantitative-iteration/math_collections.md)。这里是单步公式与给定递推的证明，未声称已构造一般算法轨道或验证浮点舍入。
+
+<a id="iteration-parametric-newton"></a>
+
+### 1. 参数化 Newton 单步
+
+任意 a>0、x>0 的正性、精确残差恒等式与更新后平方下界；在 a=9、x=4 上复用。
+
+#### Litex
+
+[源码](sources/quantitative-iteration/litex/01_parametric_newton.lit)；完整进程样本（秒）：`0.216478, 0.212586, 0.191081`。
+
+```litex
+# Exact-real comparison experiment; see ../math_collections.md.
+
+have fn newton(a R+, x R+) R = (x + a / x) / 2
+
+thm newton_positive:
+    ? forall a, x R+:
+        newton(a, x) > 0
+    a / x > 0
+    x + a / x > 0
+
+thm newton_residual_identity:
+    ? forall a, x R+:
+        4 * x^2 * (newton(a, x)^2 - a) = (x^2 - a)^2
+
+thm newton_above_root:
+    ? forall a, x R+:
+        newton(a, x)^2 >= a
+    4 * x^2 > 0
+    newton(a, x)^2 - a = (x^2 - a)^2 / (4 * x^2) >= 0
+
+newton(9, 4) = (4 + 9 / 4) / 2 = 25 / 8
+
+by thm newton_above_root(9, 4) => newton(9, 4)^2 >= 9
+```
+
+#### Lean / Mathlib
+
+[源码](sources/quantitative-iteration/lean/01_parametric_newton.lean)；完整进程样本（秒）：`14.163907, 60.180296, 67.659174`。
+
+```lean
+import Mathlib
+set_option Elab.async false
+
+namespace ParametricNewton
+noncomputable section
+
+def newton (a x : ℝ) : ℝ := (x + a / x) / 2
+
+theorem newton_positive {a x : ℝ} (ha : 0 < a) (hx : 0 < x) :
+    0 < newton a x := by
+  unfold newton
+  positivity
+
+theorem newton_residual_identity {a x : ℝ} (_ha : 0 < a) (hx : 0 < x) :
+    4 * x ^ 2 * (newton a x ^ 2 - a) = (x ^ 2 - a) ^ 2 := by
+  unfold newton
+  field_simp [ne_of_gt hx] <;> ring
+
+theorem newton_above_root {a x : ℝ} (ha : 0 < a) (hx : 0 < x) :
+    a ≤ newton a x ^ 2 := by
+  have hp : 0 < 4 * x ^ 2 := by positivity
+  have hid : newton a x ^ 2 - a = (x ^ 2 - a) ^ 2 / (4 * x ^ 2) := by
+    apply (eq_div_iff (ne_of_gt hp)).2
+    calc
+      (newton a x ^ 2 - a) * (4 * x ^ 2) =
+          4 * x ^ 2 * (newton a x ^ 2 - a) := by ring
+      _ = (x ^ 2 - a) ^ 2 := newton_residual_identity ha hx
+  have hnonneg : 0 ≤ newton a x ^ 2 - a := by
+    rw [hid]
+    positivity
+  linarith
+
+example : newton 9 4 = 25 / 8 := by norm_num [newton]
+example : (9 : ℝ) ≤ newton 9 4 ^ 2 :=
+  newton_above_root (by norm_num) (by norm_num)
+
+#print axioms newton_positive
+#print axioms newton_residual_identity
+#print axioms newton_above_root
+end
+end ParametricNewton
+```
+
+<a id="iteration-quadratic-descent"></a>
+
+### 2. 二次函数梯度下降
+
+一维正曲率二次函数的精确下降量、稳定步长下的不增性，以及离开最小点时的严格下降。
+
+#### Litex
+
+[源码](sources/quantitative-iteration/litex/02_quadratic_descent.lit)；完整进程样本（秒）：`2.880947, 2.905032, 2.952233`。
+
+```litex
+# Exact-real comparison experiment; see ../math_collections.md.
+
+have fn energy(a R+, b, x R) R = a * (x - b)^2 / 2
+
+have fn gradient_step(a R+, b, eta, x R) R = x - eta * a * (x - b)
+
+thm gradient_error_identity:
+    ? forall a R+, b, eta, x R:
+        gradient_step(a, b, eta, x) - b = (1 - eta * a) * (x - b)
+
+thm gradient_drop_identity:
+    ? forall a R+, b, eta, x R:
+        energy(a, b, x) - energy(a, b, gradient_step(a, b, eta, x)) = eta * a^2 * (2 - eta * a) * (x - b)^2 / 2
+    energy(a, b, gradient_step(a, b, eta, x)) = a * (gradient_step(a, b, eta, x) - b)^2 / 2 = a * ((1 - eta * a) * (x - b))^2 / 2
+    energy(a, b, x) - energy(a, b, gradient_step(a, b, eta, x)) = a * (x - b)^2 / 2 - a * ((1 - eta * a) * (x - b))^2 / 2 = eta * a^2 * (2 - eta * a) * (x - b)^2 / 2
+
+thm gradient_descent:
+    ? forall a R+, b, eta, x R:
+        eta > 0
+        eta * a < 2
+        =>:
+            energy(a, b, gradient_step(a, b, eta, x)) <= energy(a, b, x)
+    eta * a^2 > 0
+    eta * a^2 * (2 - eta * a) >= 0
+    eta * a^2 * (2 - eta * a) * (x - b)^2 >= 0
+    by thm gradient_drop_identity(a, b, eta, x) => energy(a, b, x) - energy(a, b, gradient_step(a, b, eta, x)) = eta * a^2 * (2 - eta * a) * (x - b)^2 / 2
+    energy(a, b, x) - energy(a, b, gradient_step(a, b, eta, x)) >= 0
+
+thm gradient_strict_descent:
+    ? forall a R+, b, eta, x R:
+        eta > 0
+        eta * a < 2
+        x != b
+        =>:
+            energy(a, b, gradient_step(a, b, eta, x)) < energy(a, b, x)
+    x - b != 0
+    eta * a^2 > 0
+    eta * a^2 * (2 - eta * a) > 0
+    eta * a^2 * (2 - eta * a) * (x - b)^2 > 0
+    by thm gradient_drop_identity(a, b, eta, x) => energy(a, b, x) - energy(a, b, gradient_step(a, b, eta, x)) = eta * a^2 * (2 - eta * a) * (x - b)^2 / 2
+    energy(a, b, x) - energy(a, b, gradient_step(a, b, eta, x)) > 0
+
+by thm gradient_strict_descent(2, 3, 1 / 4, 5) => energy(2, 3, gradient_step(2, 3, 1 / 4, 5)) < energy(2, 3, 5)
+```
+
+#### Lean / Mathlib
+
+[源码](sources/quantitative-iteration/lean/02_quadratic_descent.lean)；完整进程样本（秒）：`13.893024, 28.775592, 21.303137`。
+
+```lean
+import Mathlib
+set_option Elab.async false
+
+namespace QuadraticDescent
+noncomputable section
+
+def energy (a b x : ℝ) : ℝ := a * (x - b) ^ 2 / 2
+def gradientStep (a b eta x : ℝ) : ℝ := x - eta * a * (x - b)
+
+theorem gradient_error_identity {a b eta x : ℝ} (_ha : 0 < a) :
+    gradientStep a b eta x - b = (1 - eta * a) * (x - b) := by
+  dsimp [gradientStep]
+  ring
+
+theorem gradient_drop_identity {a b eta x : ℝ} (ha : 0 < a) :
+    energy a b x - energy a b (gradientStep a b eta x) =
+      eta * a ^ 2 * (2 - eta * a) * (x - b) ^ 2 / 2 := by
+  unfold energy
+  rw [gradient_error_identity ha]
+  ring
+
+theorem gradient_descent {a b eta x : ℝ} (ha : 0 < a)
+    (heta : 0 < eta) (hstep : eta * a < 2) :
+    energy a b (gradientStep a b eta x) ≤ energy a b x := by
+  have hpos : 0 < 2 - eta * a := by linarith
+  have hdrop : 0 ≤ eta * a ^ 2 * (2 - eta * a) * (x - b) ^ 2 / 2 := by
+    positivity
+  have hid := gradient_drop_identity (b := b) (eta := eta) (x := x) ha
+  linarith
+
+theorem gradient_strict_descent {a b eta x : ℝ} (ha : 0 < a)
+    (heta : 0 < eta) (hstep : eta * a < 2) (hxb : x ≠ b) :
+    energy a b (gradientStep a b eta x) < energy a b x := by
+  have hpos : 0 < 2 - eta * a := by linarith
+  have hne : x - b ≠ 0 := sub_ne_zero.mpr hxb
+  have hdrop : 0 < eta * a ^ 2 * (2 - eta * a) * (x - b) ^ 2 / 2 := by
+    positivity
+  have hid := gradient_drop_identity (b := b) (eta := eta) (x := x) ha
+  linarith
+
+example : energy 2 3 (gradientStep 2 3 (1 / 4) 5) < energy 2 3 5 :=
+  gradient_strict_descent (by norm_num) (by norm_num) (by norm_num) (by norm_num)
+
+#print axioms gradient_error_identity
+#print axioms gradient_drop_identity
+#print axioms gradient_descent
+#print axioms gradient_strict_descent
+end
+end QuadraticDescent
+```
+
+<a id="iteration-perturbed-geometric"></a>
+
+### 3. 含扰动的几何递推界
+
+从给定的自然数索引实数序列及递推不等式出发，证明闭式上界并复用于零扰动；扰动项可为任意实数。
+
+#### Litex
+
+[源码](sources/quantitative-iteration/litex/03_perturbed_geometric.lit)；完整进程样本（秒）：`1.319137, 1.484209, 1.351820`。
+
+```litex
+# Exact-real comparison experiment; see ../math_collections.md.
+
+forall q R:
+    q < 1
+    =>:
+        1 - q > 0
+        1 - q != 0
+
+have fn bound(q R+, c, d R, n N: q < 1) R = q^n * c + d * (1 - q^n) / (1 - q)
+
+thm bound_zero:
+    ? forall q R+, c, d R:
+        q < 1
+        =>:
+            bound(q, c, d, 0) = c
+    1 - q != 0
+
+thm bound_step:
+    ? forall q R+, c, d R, n N:
+        q < 1
+        =>:
+            bound(q, c, d, n + 1) = q * bound(q, c, d, n) + d
+    1 - q != 0
+    have t R+ = q^n
+    q^(n + 1) = q^n * q^1 = t * q
+    (t * q) * c + d * (1 - t * q) / (1 - q) = q * (t * c + d * (1 - t) / (1 - q)) + d
+    bound(q, c, d, n + 1) = q * (t * c + d * (1 - t) / (1 - q)) + d = q * bound(q, c, d, n) + d
+
+thm affine_recurrence_bound:
+    ? forall err fn(idx N) R, q R+, d R, n N:
+        q < 1
+        forall j N:
+            err(j + 1) <= q * err(j) + d
+        =>:
+            err(n) <= bound(q, err(0), d, n)
+    by induc n from 0:
+        ? err(n) <= bound(q, err(0), d, n)
+        ? from n = 0:
+            by thm bound_zero(q, err(0), d) => bound(q, err(0), d, 0) = err(0)
+        ? induc:
+            err(n + 1) <= q * err(n) + d <= q * bound(q, err(0), d, n) + d = bound(q, err(0), d, n + 1)
+
+thm noiseless_affine_bound:
+    ? forall err fn(idx N) R, q R+, n N:
+        q < 1
+        forall j N:
+            err(j + 1) <= q * err(j)
+        =>:
+            err(n) <= q^n * err(0)
+    claim:
+        ? forall j N:
+            err(j + 1) <= q * err(j) + 0
+        q * err(j) + 0 = q * err(j)
+    1 - q != 0
+    bound(q, err(0), 0, n) = q^n * err(0) + 0 * (1 - q^n) / (1 - q) = q^n * err(0) + 0 = q^n * err(0)
+```
+
+#### Lean / Mathlib
+
+[源码](sources/quantitative-iteration/lean/03_perturbed_geometric.lean)；完整进程样本（秒）：`13.798624, 36.547467, 17.129896`。
+
+```lean
+import Mathlib
+set_option Elab.async false
+
+namespace PerturbedGeometric
+noncomputable section
+
+def bound (q c d : ℝ) (n : ℕ) : ℝ :=
+  q ^ n * c + d * (1 - q ^ n) / (1 - q)
+
+theorem bound_zero {q c d : ℝ} (_hq0 : 0 < q) (_hq1 : q < 1) :
+    bound q c d 0 = c := by
+  simp [bound]
+
+theorem bound_step {q c d : ℝ} (_hq0 : 0 < q) (hq1 : q < 1) (n : ℕ) :
+    bound q c d (n + 1) = q * bound q c d n + d := by
+  have hden : 1 - q ≠ 0 := by linarith
+  dsimp [bound]
+  rw [pow_succ]
+  field_simp [hden] <;> ring
+
+theorem affine_recurrence_bound (err : ℕ → ℝ) {q d : ℝ} (n : ℕ)
+    (hq0 : 0 < q) (hq1 : q < 1)
+    (hrec : ∀ j, err (j + 1) ≤ q * err j + d) :
+    err n ≤ bound q (err 0) d n := by
+  induction n with
+  | zero => simp [bound]
+  | succ n ih =>
+      calc
+        err (n + 1) ≤ q * err n + d := hrec n
+        _ ≤ q * bound q (err 0) d n + d :=
+          by linarith [mul_le_mul_of_nonneg_left ih (le_of_lt hq0)]
+        _ = bound q (err 0) d (n + 1) := (bound_step hq0 hq1 n).symm
+
+theorem noiseless_affine_bound (err : ℕ → ℝ) {q : ℝ} (n : ℕ)
+    (hq0 : 0 < q) (hq1 : q < 1)
+    (hrec : ∀ j, err (j + 1) ≤ q * err j) :
+    err n ≤ q ^ n * err 0 := by
+  have h := affine_recurrence_bound err n hq0 hq1 (d := 0)
+    (fun j => by simpa using hrec j)
+  simpa [bound] using h
+
+#print axioms bound_zero
+#print axioms bound_step
+#print axioms affine_recurrence_bound
+#print axioms noiseless_affine_bound
+end
+end PerturbedGeometric
+```
+
+这一批的六次正例验证、十二次预期拒绝检查和十八次重复正例检查均符合预期。零输入、错误残差、过大步长、最小点处严格下降、q=1、遗漏噪声项的控制保留在原始记录中。负例 fixture、平台二进制和本地工作日志没有作为此处的正例源码发布。
+
+新副本可用 release Litex 的 `-strict -f <file>` 与配置好 Mathlib 的 `lake env lean <file>` 检查。既有 `harness/bench.py` 仍测其原来的检查路径用例，不将这三组完整进程记录混入旧的毫秒样本。
+
+[搬入此目录后的路径验证](results/quantitative-iteration-promotion.json)：三份 Litex 副本另行通过记录版本二进制的严格检查；Lean 副本以相同源码哈希承接原先的成功检查，没有把路径验证冒充为新计时样本。
+<!-- quantitative-iteration-code:end -->

@@ -1,0 +1,7 @@
+# Close a negated universal proof using its saved counterexample.
+witness exist x {0} st {x != 1} from 0
+by contra:
+    ? not forall y {0}:
+        y = 1
+    impossible not forall z {0}:
+        z = 1

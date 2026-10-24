@@ -1,0 +1,7 @@
+# Recover a real number from its sign and magnitude, including zero.
+forall x R:
+    sign(x) * abs(x) = x
+    abs(x) * sign(x) = x
+    abs(x) = sign(x) * x
+    x * sign(x) = abs(x)
+    x = abs(x) * sign(x)

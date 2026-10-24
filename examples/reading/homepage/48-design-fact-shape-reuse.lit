@@ -1,0 +1,8 @@
+forall x R:
+    x > 0
+    =>:
+        x != 0
+
+have a R = 2
+a > 0
+a != 0

@@ -1,0 +1,130 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-24",
+  "scope": "Independent native-calculus companion; no Chapter 9–11 acceptance or chapter trust removal.",
+  "build": {
+    "command": "cargo build --release",
+    "exit_code": 0,
+    "version": "Litex 1.1.2-beta",
+    "binary_sha256": "27dae5447183e23b49455e01adb41fd9d300d57f0494ed3240c91a8b2564e585",
+    "warnings": 3,
+    "rust_source_changed_by_this_task": false
+  },
+  "files": {
+    "showcases/analysis/calculus/main.lit": "3820dd14d4506b3bb26d50845642c24aeace5801f1d040c91d067de2b5a5e551",
+    "showcases/analysis/calculus/litex.config": "79f41068b5d2f9403ce5c68bc3db7e9974b4288ebdeac8033abefc29b14c0dc2",
+    "showcases/analysis/calculus/README.md": "e24b9c85ee2c41cc6431664aea66a0f90084c7b2e73e78398c1e9ae00fa4e259",
+    "showcases/analysis/calculus/math_collections.md": "f4268b4c68c64a7379b650684646985b558536c0b28fb1b8b0e29849e610356a"
+  },
+  "gates": [
+    {
+      "command": "target/release/litex -lang en -strict -f showcases/analysis/calculus/main.lit",
+      "exit_code": 0,
+      "kind": "run",
+      "run_result": "success",
+      "accepted_top_level_statements": 39,
+      "errors": [],
+      "session_terminated": false,
+      "termination": null
+    },
+    {
+      "scope": "The one self-contained litex fence in the calculus README, extracted verbatim to a task-owned file. The context-dependent excerpt is marked skip-test and is checked as part of main.lit.",
+      "command_template": "target/release/litex -lang en -strict -f <extracted-readme-example.lit>",
+      "exit_code": 0,
+      "run_result": "success",
+      "accepted_top_level_statements": 3
+    }
+  ],
+  "negative_controls": [
+    {
+      "input": "derivative(square, 3) = 6",
+      "expected": "rejected",
+      "observed": "failure",
+      "errors": [
+        {
+          "statement_index": 0,
+          "statement": "derivative(square, 3) = 6",
+          "phase": "well_defined",
+          "message": "Could not prove that the statement is well-defined.",
+          "category": "well_defined"
+        }
+      ],
+      "session_terminated": false,
+      "termination": null
+    },
+    {
+      "input": "$has_derivative_at(square, 3, 5)",
+      "expected": "rejected",
+      "observed": "failure",
+      "errors": [
+        {
+          "statement_index": 0,
+          "statement": "$has_derivative_at(square, 3, 5)",
+          "phase": "search_proof",
+          "message": "Could not prove the goal.",
+          "category": "proof_search",
+          "obligation": "$has_derivative_at(square, 3, 5)"
+        }
+      ],
+      "session_terminated": false,
+      "termination": null
+    },
+    {
+      "input": "integral(weighted_cosine, 0, 2) = sin(4)",
+      "expected": "rejected",
+      "observed": "failure",
+      "errors": [
+        {
+          "statement_index": 0,
+          "statement": "integral(weighted_cosine, 0, 2) = sin(4)",
+          "phase": "well_defined",
+          "message": "Could not prove that the statement is well-defined.",
+          "category": "well_defined"
+        }
+      ],
+      "session_terminated": false,
+      "termination": null
+    },
+    {
+      "input": "$has_derivative_at(fn(x '[0,)) R {x}, 0, 1)",
+      "expected": "rejected",
+      "observed": "failure",
+      "errors": [
+        {
+          "statement_index": 0,
+          "statement": "$has_derivative_at(fn (x '[0,)) R{x}, 0, 1)",
+          "phase": "search_proof",
+          "message": "Could not prove the goal.",
+          "category": "proof_search",
+          "obligation": "$has_derivative_at(fn (x '[0,)) R{x}, 0, 1)"
+        }
+      ],
+      "session_terminated": false,
+      "termination": null
+    }
+  ],
+  "source_audit": {
+    "trust": 0,
+    "axiom": 0,
+    "abstract_prop": 0,
+    "import": 0
+  },
+  "checked_results": [
+    "derivative(square,3)=6",
+    "difference-quotient limit for square at 3 equals 6",
+    "reciprocal derivative at 2 equals -1/4",
+    "square and sine pointwise derivative laws",
+    "sine of square is an antiderivative of weighted cosine",
+    "integral(weighted_cosine,0,2)=sin(4)",
+    "integral(weighted_cosine,-1,1)=0",
+    "integral(weighted_exp,0,1)=1"
+  ],
+  "boundaries": [
+    "Strict mode excludes source trust and user axioms; builtin mathematical rules and the Litex verifier remain trusted.",
+    "Native derivatives require actual-domain interior points; arbitrary relative-domain and one-sided derivatives are not migrated.",
+    "Finite proper Riemann integrals only; no general integration search, improper integrals or higher derivatives.",
+    "Integration by parts uses C1 sufficient conditions; no claim to the full generality of Tao Proposition 11.10.1.",
+    "No Lean replay or whole-book gate."
+  ],
+  "proof_liveness": "A coherent deletion control rejected missing composition/product equations. The final source consolidates square derivative laws and removes automatic theorem-result echoes; endpoint calculations are retained as reader bridges."
+}

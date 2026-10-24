@@ -3288,8 +3288,8 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_have_fn_by_forall_exist_unique_stmt__ExecHaveFnByForallExistUniqueStmtSuccessResult(value: &crate::execute::ExecHaveFnByForallExistUniqueStmtSuccessResult, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::ExecHaveFnByForallExistUniqueStmtSuccessResult { statement: f0, source_forall: f1, fn_set_well_defined: f2, membership_fact_id: f3, property_forall_fact_id: f4, uniqueness_forall_fact_id: f5, stored_fact_ids: f6 } => {
-let fields = vec![("statement", { capture.source_snapshot_depth += 1; let value = capture_ast__stmt__HaveFnByForallExistUniqueStmt(f0, capture, runtime); capture.source_snapshot_depth -= 1; value }), ("source_forall", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f1, capture, runtime)), ("fn_set_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__VerifyObjWellDefinedResult(f2, capture, runtime)), ("membership_fact_id", capture.fact_reference(f3, runtime)), ("property_forall_fact_id", capture.fact_reference(f4, runtime)), ("uniqueness_forall_fact_id", capture.fact_reference(f5, runtime)), ("stored_fact_ids", { let value = { capture.subject_depth += 1; let value = JsonValue::Array((f6).iter().map(|item| capture.fact_reference(item, runtime)).collect()); capture.subject_depth -= 1; value }; capture.stored(f6); value })];
+crate::execute::ExecHaveFnByForallExistUniqueStmtSuccessResult { statement: f0, source_forall: f1, fn_set_well_defined: f2, membership: f3, property_well_defined: f4, property: f5, uniqueness: f6, membership_fact_id: f7, property_forall_fact_id: f8, uniqueness_forall_fact_id: f9, stored_fact_ids: f10 } => {
+let fields = vec![("statement", { capture.source_snapshot_depth += 1; let value = capture_ast__stmt__HaveFnByForallExistUniqueStmt(f0, capture, runtime); capture.source_snapshot_depth -= 1; value }), ("source_forall", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f1, capture, runtime)), ("fn_set_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__VerifyObjWellDefinedResult(f2, capture, runtime)), ("membership", capture_store_fact_and_infer__store_fact_and_infer_result__store_and_infer_result__StoreFactAndInferResult(f3, capture, runtime)), ("property_well_defined", capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FactWellDefinedProof(f4, capture, runtime)), ("property", capture_store_fact_and_infer__store_fact_and_infer_result__store_and_infer_result__StoreFactAndInferResult(f5, capture, runtime)), ("uniqueness", capture_store_fact_and_infer__store_fact_and_infer_result__store_and_infer_result__StoreFactAndInferResult(f6, capture, runtime)), ("membership_fact_id", capture.fact_reference(f7, runtime)), ("property_forall_fact_id", capture.fact_reference(f8, runtime)), ("uniqueness_forall_fact_id", capture.fact_reference(f9, runtime)), ("stored_fact_ids", { let value = { capture.subject_depth += 1; let value = JsonValue::Array((f10).iter().map(|item| capture.fact_reference(item, runtime)).collect()); capture.subject_depth -= 1; value }; capture.stored(f10); value })];
 let mut output = node("ExecHaveFnByForallExistUniqueStmtSuccessResult", "", fields);
 output
 },
@@ -5113,8 +5113,8 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_eval_stmt__result__ExecEvalStmtSuccess(value: &crate::execute::ExecEvalStmtSuccess, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::ExecEvalStmtSuccess { statement: f0, source_object: f1, source_well_defined: f2, rewritten_object: f3, cited_equal_fact_ids: f4, evaluated_object: f5, aggregate_evaluations: f6, function_evaluations: f7, algo_evaluations: f8, evaluated_equal_fact: f9, evaluated_equal_well_defined: f10, store_and_infer_result: f11 } => {
-let fields = vec![("statement", { capture.source_snapshot_depth += 1; let value = capture_ast__stmt__EvalStmt(f0, capture, runtime); capture.source_snapshot_depth -= 1; value }), ("source_object", capture_ast__obj__Obj(f1, capture, runtime)), ("source_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(f2, capture, runtime)), ("rewritten_object", capture_ast__obj__Obj(f3, capture, runtime)), ("cited_equal_fact_ids", JsonValue::Array((f4).iter().map(|item| capture.fact_reference(item, runtime)).collect())), ("evaluated_object", capture_ast__obj__Obj(f5, capture, runtime)), ("aggregate_evaluations", JsonValue::Array((f6).iter().map(|item| capture_execute__execute_eval_stmt__aggregate_evaluation_result__AggregateEvaluationResult(item, capture, runtime)).collect())), ("function_evaluations", JsonValue::Array((f7).iter().map(|item| capture_execute__execute_eval_stmt__aggregate_evaluation_result__FunctionApplicationEvaluationResult(item, capture, runtime)).collect())), ("algo_evaluations", JsonValue::Array((f8).iter().map(|item| capture_execute__execute_eval_stmt__aggregate_evaluation_result__AlgoApplicationEvaluationResult(item, capture, runtime)).collect())), ("evaluated_equal_fact", capture_ast__fact__atomic__EqualFact(f9, capture, runtime)), ("evaluated_equal_well_defined", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__well_defined_result__EqualFactWellDefinedProof(f10, capture, runtime)), ("store_and_infer_result", capture_store_fact_and_infer__store_fact_and_infer_result__store_and_infer_result__StoreFactAndInferResult(f11, capture, runtime))];
+crate::execute::ExecEvalStmtSuccess { statement: f0, source_object: f1, source_well_defined: f2, rewritten_object: f3, cited_equal_fact_ids: f4, evaluated_object: f5, matrix_scalar_evaluations: f6, aggregate_evaluations: f7, function_evaluations: f8, algo_evaluations: f9, evaluated_equal_fact: f10, evaluated_equal_well_defined: f11, store_and_infer_result: f12 } => {
+let fields = vec![("statement", { capture.source_snapshot_depth += 1; let value = capture_ast__stmt__EvalStmt(f0, capture, runtime); capture.source_snapshot_depth -= 1; value }), ("source_object", capture_ast__obj__Obj(f1, capture, runtime)), ("source_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(f2, capture, runtime)), ("rewritten_object", capture_ast__obj__Obj(f3, capture, runtime)), ("cited_equal_fact_ids", JsonValue::Array((f4).iter().map(|item| capture.fact_reference(item, runtime)).collect())), ("evaluated_object", capture_ast__obj__Obj(f5, capture, runtime)), ("matrix_scalar_evaluations", JsonValue::Array((f6).iter().map(|item| capture_execute__execute_eval_stmt__aggregate_evaluation_result__MatrixScalarEvaluationResult(item, capture, runtime)).collect())), ("aggregate_evaluations", JsonValue::Array((f7).iter().map(|item| capture_execute__execute_eval_stmt__aggregate_evaluation_result__AggregateEvaluationResult(item, capture, runtime)).collect())), ("function_evaluations", JsonValue::Array((f8).iter().map(|item| capture_execute__execute_eval_stmt__aggregate_evaluation_result__FunctionApplicationEvaluationResult(item, capture, runtime)).collect())), ("algo_evaluations", JsonValue::Array((f9).iter().map(|item| capture_execute__execute_eval_stmt__aggregate_evaluation_result__AlgoApplicationEvaluationResult(item, capture, runtime)).collect())), ("evaluated_equal_fact", capture_ast__fact__atomic__EqualFact(f10, capture, runtime)), ("evaluated_equal_well_defined", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__well_defined_result__EqualFactWellDefinedProof(f11, capture, runtime)), ("store_and_infer_result", capture_store_fact_and_infer__store_fact_and_infer_result__store_and_infer_result__StoreFactAndInferResult(f12, capture, runtime))];
 let mut output = node("ExecEvalStmtSuccess", "", fields);
 output
 },
@@ -6325,6 +6325,12 @@ capture.intern_evidence(output)
 pub(super) fn capture_ast__obj__Obj(value: &crate::ast::Obj, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 capture.subject_depth += 1;
 let output = match value {
+crate::ast::Obj::MatrixOperator(f0) => {
+let fields = vec![("0", capture_ast__obj__MatrixOperator(f0, capture, runtime))];
+let mut output = node("Obj", "MatrixOperator", fields);
+if let JsonValue::Object(fields) = &mut output { fields.insert("text".into(), JsonValue::String(value.readable_string())); }
+output
+},
 crate::ast::Obj::BoundOperator(f0) => {
 let fields = vec![("0", capture_ast__obj__BoundOperator(f0, capture, runtime))];
 let mut output = node("Obj", "BoundOperator", fields);
@@ -7434,8 +7440,8 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_have_by_fn_preimage_stmt__ExecHaveByFnPreimageStmtSuccessResult(value: &crate::execute::ExecHaveByFnPreimageStmtSuccessResult, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::ExecHaveByFnPreimageStmtSuccessResult { statement: f0, source_membership: f1, store_and_infer_result: f2 } => {
-let fields = vec![("statement", { capture.source_snapshot_depth += 1; let value = capture_ast__stmt__HaveByPreimageStmt(f0, capture, runtime); capture.source_snapshot_depth -= 1; value }), ("source_membership", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f1, capture, runtime)), ("store_and_infer_result", capture_execute__execute_have_obj_in_nonempty_set_stmt__StoreHaveObjAndInferResult(f2, capture, runtime))];
+crate::execute::ExecHaveByFnPreimageStmtSuccessResult { statement: f0, signature_selection: f1, source_membership: f2, preimage_parameters: f3, store_and_infer_result: f4 } => {
+let fields = vec![("statement", { capture.source_snapshot_depth += 1; let value = capture_ast__stmt__HaveByPreimageStmt(f0, capture, runtime); capture.source_snapshot_depth -= 1; value }), ("signature_selection", capture_execute__execute_fact_stmt__function_signature_selection__FunctionSignatureSelection(f1, capture, runtime)), ("source_membership", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f2, capture, runtime)), ("preimage_parameters", capture_ast__param__TypedParameterList(f3, capture, runtime)), ("store_and_infer_result", capture_execute__execute_have_obj_in_nonempty_set_stmt__StoreHaveObjAndInferResult(f4, capture, runtime))];
 let mut output = node("ExecHaveByFnPreimageStmtSuccessResult", "", fields);
 output
 },
@@ -7586,6 +7592,57 @@ output
 capture.intern_evidence(output)
 }
 
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FactWellDefinedProof(value: &crate::execute::execute_fact_stmt::FactWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::FactWellDefinedProof::Equality(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__well_defined_result__EqualFactWellDefinedProof(f0, capture, runtime))];
+let mut output = node("FactWellDefinedProof", "Equality", fields);
+output
+},
+crate::execute::execute_fact_stmt::FactWellDefinedProof::AtomicExceptEquality(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__AtomicFactWellDefinedProof(f0, capture, runtime))];
+let mut output = node("FactWellDefinedProof", "AtomicExceptEquality", fields);
+output
+},
+crate::execute::execute_fact_stmt::FactWellDefinedProof::AndFact { components: f0 } => {
+let fields = vec![("components", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__AtomicFactWellDefinedProof(item, capture, runtime)).collect()))];
+let mut output = node("FactWellDefinedProof", "AndFact", fields);
+output
+},
+crate::execute::execute_fact_stmt::FactWellDefinedProof::ChainFact { adjacent: f0 } => {
+let fields = vec![("adjacent", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__AtomicFactWellDefinedProof(item, capture, runtime)).collect()))];
+let mut output = node("FactWellDefinedProof", "ChainFact", fields);
+output
+},
+crate::execute::execute_fact_stmt::FactWellDefinedProof::OrFact(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_or_fact__well_defined_result__OrFactWellDefinedProof(f0, capture, runtime))];
+let mut output = node("FactWellDefinedProof", "OrFact", fields);
+output
+},
+crate::execute::execute_fact_stmt::FactWellDefinedProof::ExistFact(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_exist_shaped_fact__well_defined_result__ExistShapedFactWellDefinedProof(f0, capture, runtime))];
+let mut output = node("FactWellDefinedProof", "ExistFact", fields);
+output
+},
+crate::execute::execute_fact_stmt::FactWellDefinedProof::ForallFact(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_forall_fact__well_defined_result__ForallFactWellDefinedProof(f0, capture, runtime))];
+let mut output = node("FactWellDefinedProof", "ForallFact", fields);
+output
+},
+crate::execute::execute_fact_stmt::FactWellDefinedProof::ForallFactWithIff(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_forall_fact_with_iff__well_defined_result__ForallFactWithIffWellDefinedProof(f0, capture, runtime))];
+let mut output = node("FactWellDefinedProof", "ForallFactWithIff", fields);
+output
+},
+crate::execute::execute_fact_stmt::FactWellDefinedProof::NotForall(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_not_forall_fact__well_defined_result__NotForallFactWellDefinedProof(f0, capture, runtime))];
+let mut output = node("FactWellDefinedProof", "NotForall", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
 pub(super) fn capture_execute__execute_have_fn_equal_case_by_case_stmt__IntroduceFnSetClauseBindersResult(value: &crate::execute::IntroduceFnSetClauseBindersResult, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::IntroduceFnSetClauseBindersResult { defined_params: f0, assumed_dom_facts: f1 } => {
@@ -7674,57 +7731,6 @@ let output = match value {
 crate::execute::IntroduceTypedParametersResult { param_type_well_defined: f0, defined_params: f1, auto_opened_struct_layers: f2 } => {
 let fields = vec![("param_type_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__exec_stmt_result__ParamTypeWellDefinedProof(item, capture, runtime)).collect())), ("defined_params", capture_execute__execute_have_obj_in_nonempty_set_stmt__StoreHaveObjAndInferResult(f1, capture, runtime)), ("auto_opened_struct_layers", match (f2).as_ref() { Some(item) => JsonValue::Array((item).iter().map(|item| capture_execute__release_one_struct_layer__ReleaseOneStructLayerProof(item, capture, runtime)).collect()), None => JsonValue::Null })];
 let mut output = node("IntroduceTypedParametersResult", "", fields);
-output
-},
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FactWellDefinedProof(value: &crate::execute::execute_fact_stmt::FactWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::FactWellDefinedProof::Equality(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__well_defined_result__EqualFactWellDefinedProof(f0, capture, runtime))];
-let mut output = node("FactWellDefinedProof", "Equality", fields);
-output
-},
-crate::execute::execute_fact_stmt::FactWellDefinedProof::AtomicExceptEquality(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__AtomicFactWellDefinedProof(f0, capture, runtime))];
-let mut output = node("FactWellDefinedProof", "AtomicExceptEquality", fields);
-output
-},
-crate::execute::execute_fact_stmt::FactWellDefinedProof::AndFact { components: f0 } => {
-let fields = vec![("components", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__AtomicFactWellDefinedProof(item, capture, runtime)).collect()))];
-let mut output = node("FactWellDefinedProof", "AndFact", fields);
-output
-},
-crate::execute::execute_fact_stmt::FactWellDefinedProof::ChainFact { adjacent: f0 } => {
-let fields = vec![("adjacent", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__AtomicFactWellDefinedProof(item, capture, runtime)).collect()))];
-let mut output = node("FactWellDefinedProof", "ChainFact", fields);
-output
-},
-crate::execute::execute_fact_stmt::FactWellDefinedProof::OrFact(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__verify_or_fact__well_defined_result__OrFactWellDefinedProof(f0, capture, runtime))];
-let mut output = node("FactWellDefinedProof", "OrFact", fields);
-output
-},
-crate::execute::execute_fact_stmt::FactWellDefinedProof::ExistFact(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__verify_exist_shaped_fact__well_defined_result__ExistShapedFactWellDefinedProof(f0, capture, runtime))];
-let mut output = node("FactWellDefinedProof", "ExistFact", fields);
-output
-},
-crate::execute::execute_fact_stmt::FactWellDefinedProof::ForallFact(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__verify_forall_fact__well_defined_result__ForallFactWellDefinedProof(f0, capture, runtime))];
-let mut output = node("FactWellDefinedProof", "ForallFact", fields);
-output
-},
-crate::execute::execute_fact_stmt::FactWellDefinedProof::ForallFactWithIff(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__verify_forall_fact_with_iff__well_defined_result__ForallFactWithIffWellDefinedProof(f0, capture, runtime))];
-let mut output = node("FactWellDefinedProof", "ForallFactWithIff", fields);
-output
-},
-crate::execute::execute_fact_stmt::FactWellDefinedProof::NotForall(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__verify_not_forall_fact__well_defined_result__NotForallFactWellDefinedProof(f0, capture, runtime))];
-let mut output = node("FactWellDefinedProof", "NotForall", fields);
 output
 },
 };
@@ -8391,6 +8397,391 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_builtin_theorem__BuiltinTheoremId(value: &crate::builtin_theorem::BuiltinTheoremId, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
+crate::builtin_theorem::BuiltinTheoremId::MatrixApplyIdentity => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::MatrixApplyIdentity");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "MatrixApplyIdentity", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "MatrixApplyIdentity", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::MatrixInnerProductAdjoint => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::MatrixInnerProductAdjoint");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "MatrixInnerProductAdjoint", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "MatrixInnerProductAdjoint", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::MatrixRankFactorizationExists => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::MatrixRankFactorizationExists");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "MatrixRankFactorizationExists", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "MatrixRankFactorizationExists", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::MatrixAddCommutative => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::MatrixAddCommutative");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "MatrixAddCommutative", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "MatrixAddCommutative", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::MatrixAddAssociative => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::MatrixAddAssociative");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "MatrixAddAssociative", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "MatrixAddAssociative", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::MatrixAddZero => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::MatrixAddZero");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "MatrixAddZero", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "MatrixAddZero", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::MatrixSubSelf => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::MatrixSubSelf");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "MatrixSubSelf", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "MatrixSubSelf", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::MatrixScaleOne => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::MatrixScaleOne");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "MatrixScaleOne", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "MatrixScaleOne", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::MatrixScaleZero => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::MatrixScaleZero");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "MatrixScaleZero", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "MatrixScaleZero", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::MatrixScaleDistributive => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::MatrixScaleDistributive");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "MatrixScaleDistributive", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "MatrixScaleDistributive", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::MatrixMulAssociative => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::MatrixMulAssociative");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "MatrixMulAssociative", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "MatrixMulAssociative", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::MatrixMulDistributiveLeft => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::MatrixMulDistributiveLeft");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "MatrixMulDistributiveLeft", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "MatrixMulDistributiveLeft", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::MatrixMulDistributiveRight => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::MatrixMulDistributiveRight");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "MatrixMulDistributiveRight", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "MatrixMulDistributiveRight", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::MatrixMulIdentity => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::MatrixMulIdentity");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "MatrixMulIdentity", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "MatrixMulIdentity", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::MatrixMulZero => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::MatrixMulZero");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "MatrixMulZero", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "MatrixMulZero", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::MatrixApplyCompose => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::MatrixApplyCompose");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "MatrixApplyCompose", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "MatrixApplyCompose", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::MatrixTransposeMul => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::MatrixTransposeMul");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "MatrixTransposeMul", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "MatrixTransposeMul", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::MatrixAdjointMul => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::MatrixAdjointMul");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "MatrixAdjointMul", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "MatrixAdjointMul", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::MatrixTraceLinearity => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::MatrixTraceLinearity");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "MatrixTraceLinearity", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "MatrixTraceLinearity", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::MatrixTraceCyclic => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::MatrixTraceCyclic");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "MatrixTraceCyclic", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "MatrixTraceCyclic", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::MatrixPowerZero => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::MatrixPowerZero");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "MatrixPowerZero", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "MatrixPowerZero", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::MatrixPowerSuccessor => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::MatrixPowerSuccessor");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "MatrixPowerSuccessor", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "MatrixPowerSuccessor", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::MatrixPowerAdd => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::MatrixPowerAdd");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "MatrixPowerAdd", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "MatrixPowerAdd", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::MatrixDetIdentity => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::MatrixDetIdentity");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "MatrixDetIdentity", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "MatrixDetIdentity", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::MatrixDetTranspose => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::MatrixDetTranspose");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "MatrixDetTranspose", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "MatrixDetTranspose", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::MatrixDetAdjoint => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::MatrixDetAdjoint");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "MatrixDetAdjoint", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "MatrixDetAdjoint", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::MatrixDetMul => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::MatrixDetMul");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "MatrixDetMul", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "MatrixDetMul", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::MatrixDetLaplaceRow => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::MatrixDetLaplaceRow");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "MatrixDetLaplaceRow", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "MatrixDetLaplaceRow", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::MatrixDetLaplaceColumn => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::MatrixDetLaplaceColumn");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "MatrixDetLaplaceColumn", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "MatrixDetLaplaceColumn", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::MatrixDetUpperTriangular => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::MatrixDetUpperTriangular");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "MatrixDetUpperTriangular", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "MatrixDetUpperTriangular", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::MatrixDetLowerTriangular => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::MatrixDetLowerTriangular");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "MatrixDetLowerTriangular", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "MatrixDetLowerTriangular", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::MatrixAdjugateIdentity => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::MatrixAdjugateIdentity");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "MatrixAdjugateIdentity", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "MatrixAdjugateIdentity", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::MatrixInvertibleFromCandidate => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::MatrixInvertibleFromCandidate");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "MatrixInvertibleFromCandidate", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "MatrixInvertibleFromCandidate", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::MatrixInverseFromCandidate => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::MatrixInverseFromCandidate");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "MatrixInverseFromCandidate", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "MatrixInverseFromCandidate", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::MatrixInverseLaws => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::MatrixInverseLaws");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "MatrixInverseLaws", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "MatrixInverseLaws", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::MatrixRankBounds => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::MatrixRankBounds");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "MatrixRankBounds", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "MatrixRankBounds", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::MatrixRankZero => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::MatrixRankZero");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "MatrixRankZero", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "MatrixRankZero", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::MatrixRankIdentity => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::MatrixRankIdentity");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "MatrixRankIdentity", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "MatrixRankIdentity", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::MatrixRankFromFactorization => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::MatrixRankFromFactorization");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "MatrixRankFromFactorization", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "MatrixRankFromFactorization", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::MatrixRankTranspose => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::MatrixRankTranspose");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "MatrixRankTranspose", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "MatrixRankTranspose", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::MatrixRankAdjoint => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::MatrixRankAdjoint");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "MatrixRankAdjoint", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "MatrixRankAdjoint", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::MatrixRankProduct => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::MatrixRankProduct");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "MatrixRankProduct", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "MatrixRankProduct", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::MatrixRankInvertible => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::MatrixRankInvertible");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "MatrixRankInvertible", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "MatrixRankInvertible", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::InnerProductConjugateSymmetry => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::InnerProductConjugateSymmetry");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "InnerProductConjugateSymmetry", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "InnerProductConjugateSymmetry", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::InnerProductLinearRight => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::InnerProductLinearRight");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "InnerProductLinearRight", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "InnerProductLinearRight", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::InnerProductPositive => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::InnerProductPositive");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "InnerProductPositive", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "InnerProductPositive", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::InnerProductCauchySchwarz => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::InnerProductCauchySchwarz");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "InnerProductCauchySchwarz", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "InnerProductCauchySchwarz", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::EuclideanNormSquare => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::EuclideanNormSquare");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "EuclideanNormSquare", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "EuclideanNormSquare", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::EuclideanNormZero => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::EuclideanNormZero");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "EuclideanNormZero", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "EuclideanNormZero", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::EuclideanNormScale => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::EuclideanNormScale");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "EuclideanNormScale", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "EuclideanNormScale", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::EuclideanNormTriangle => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::EuclideanNormTriangle");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "EuclideanNormTriangle", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "EuclideanNormTriangle", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::FrobeniusNormSquare => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::FrobeniusNormSquare");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "FrobeniusNormSquare", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "FrobeniusNormSquare", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::FrobeniusNormZero => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::FrobeniusNormZero");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "FrobeniusNormZero", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "FrobeniusNormZero", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::FrobeniusNormScale => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::FrobeniusNormScale");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "FrobeniusNormScale", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "FrobeniusNormScale", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::FrobeniusNormTriangle => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::FrobeniusNormTriangle");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "FrobeniusNormTriangle", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "FrobeniusNormTriangle", ""); }
+output
+},
 crate::builtin_theorem::BuiltinTheoremId::AntiderivativeCompose => {
 let rule_id = Some("builtin_theorem.BuiltinTheoremId::AntiderivativeCompose");
 let fields = vec![];
@@ -11153,6 +11544,17 @@ output
 capture.intern_evidence(output)
 }
 
+pub(super) fn capture_execute__execute_eval_stmt__aggregate_evaluation_result__MatrixScalarEvaluationResult(value: &crate::execute::execute_eval_stmt::aggregate_evaluation_result::MatrixScalarEvaluationResult, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_eval_stmt::aggregate_evaluation_result::MatrixScalarEvaluationResult { source: f0, source_well_defined: f1, expression: f2, value: f3 } => {
+let fields = vec![("source", capture_ast__obj__Obj(f0, capture, runtime)), ("source_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(f1, capture, runtime)), ("expression", capture_ast__obj__Obj(f2, capture, runtime)), ("value", capture_ast__obj__Obj(f3, capture, runtime))];
+let mut output = node("MatrixScalarEvaluationResult", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
 pub(super) fn capture_execute__execute_eval_stmt__aggregate_evaluation_result__AggregateEvaluationResult(value: &crate::execute::execute_eval_stmt::aggregate_evaluation_result::AggregateEvaluationResult, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_eval_stmt::aggregate_evaluation_result::AggregateEvaluationResult::Sum(f0) => {
@@ -11401,6 +11803,124 @@ let output = match value {
 crate::ast::param::TypedParameterGroup { params: f0, param_type: f1 } => {
 let fields = vec![("params", JsonValue::Array((f0).iter().map(|item| capture.bound_name(item, runtime)).collect())), ("param_type", capture_ast__param__ParamType(f1, capture, runtime))];
 let mut output = node("TypedParameterGroup", "", fields);
+output
+},
+};
+capture.subject_depth -= 1;
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_ast__obj__MatrixOperator(value: &crate::ast::obj::MatrixOperator, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+capture.subject_depth += 1;
+let output = match value {
+crate::ast::obj::MatrixOperator::Determinant(f0) => {
+let fields = vec![("0", capture_ast__obj__Determinant(f0, capture, runtime))];
+let mut output = node("MatrixOperator", "Determinant", fields);
+output
+},
+crate::ast::obj::MatrixOperator::ZeroMatrix(f0) => {
+let fields = vec![("0", capture_ast__obj__ZeroMatrix(f0, capture, runtime))];
+let mut output = node("MatrixOperator", "ZeroMatrix", fields);
+output
+},
+crate::ast::obj::MatrixOperator::IdentityMatrix(f0) => {
+let fields = vec![("0", capture_ast__obj__IdentityMatrix(f0, capture, runtime))];
+let mut output = node("MatrixOperator", "IdentityMatrix", fields);
+output
+},
+crate::ast::obj::MatrixOperator::Transpose(f0) => {
+let fields = vec![("0", capture_ast__obj__MatrixTranspose(f0, capture, runtime))];
+let mut output = node("MatrixOperator", "Transpose", fields);
+output
+},
+crate::ast::obj::MatrixOperator::ConjugateTranspose(f0) => {
+let fields = vec![("0", capture_ast__obj__MatrixConjugateTranspose(f0, capture, runtime))];
+let mut output = node("MatrixOperator", "ConjugateTranspose", fields);
+output
+},
+crate::ast::obj::MatrixOperator::Trace(f0) => {
+let fields = vec![("0", capture_ast__obj__MatrixTrace(f0, capture, runtime))];
+let mut output = node("MatrixOperator", "Trace", fields);
+output
+},
+crate::ast::obj::MatrixOperator::Add(f0) => {
+let fields = vec![("0", capture_ast__obj__MatrixAdd(f0, capture, runtime))];
+let mut output = node("MatrixOperator", "Add", fields);
+output
+},
+crate::ast::obj::MatrixOperator::Subtract(f0) => {
+let fields = vec![("0", capture_ast__obj__MatrixSubtract(f0, capture, runtime))];
+let mut output = node("MatrixOperator", "Subtract", fields);
+output
+},
+crate::ast::obj::MatrixOperator::Scale(f0) => {
+let fields = vec![("0", capture_ast__obj__MatrixScale(f0, capture, runtime))];
+let mut output = node("MatrixOperator", "Scale", fields);
+output
+},
+crate::ast::obj::MatrixOperator::Multiply(f0) => {
+let fields = vec![("0", capture_ast__obj__MatrixMultiply(f0, capture, runtime))];
+let mut output = node("MatrixOperator", "Multiply", fields);
+output
+},
+crate::ast::obj::MatrixOperator::Apply(f0) => {
+let fields = vec![("0", capture_ast__obj__MatrixApply(f0, capture, runtime))];
+let mut output = node("MatrixOperator", "Apply", fields);
+output
+},
+crate::ast::obj::MatrixOperator::Power(f0) => {
+let fields = vec![("0", capture_ast__obj__MatrixPower(f0, capture, runtime))];
+let mut output = node("MatrixOperator", "Power", fields);
+output
+},
+crate::ast::obj::MatrixOperator::Inverse(f0) => {
+let fields = vec![("0", capture_ast__obj__MatrixInverse(f0, capture, runtime))];
+let mut output = node("MatrixOperator", "Inverse", fields);
+output
+},
+crate::ast::obj::MatrixOperator::Rank(f0) => {
+let fields = vec![("0", capture_ast__obj__MatrixRank(f0, capture, runtime))];
+let mut output = node("MatrixOperator", "Rank", fields);
+output
+},
+crate::ast::obj::MatrixOperator::Minor(f0) => {
+let fields = vec![("0", capture_ast__obj__MatrixMinor(f0, capture, runtime))];
+let mut output = node("MatrixOperator", "Minor", fields);
+output
+},
+crate::ast::obj::MatrixOperator::Cofactor(f0) => {
+let fields = vec![("0", capture_ast__obj__MatrixCofactor(f0, capture, runtime))];
+let mut output = node("MatrixOperator", "Cofactor", fields);
+output
+},
+crate::ast::obj::MatrixOperator::Adjugate(f0) => {
+let fields = vec![("0", capture_ast__obj__MatrixAdjugate(f0, capture, runtime))];
+let mut output = node("MatrixOperator", "Adjugate", fields);
+output
+},
+crate::ast::obj::MatrixOperator::Diagonal(f0) => {
+let fields = vec![("0", capture_ast__obj__MatrixDiagonal(f0, capture, runtime))];
+let mut output = node("MatrixOperator", "Diagonal", fields);
+output
+},
+crate::ast::obj::MatrixOperator::OuterProduct(f0) => {
+let fields = vec![("0", capture_ast__obj__MatrixOuterProduct(f0, capture, runtime))];
+let mut output = node("MatrixOperator", "OuterProduct", fields);
+output
+},
+crate::ast::obj::MatrixOperator::InnerProduct(f0) => {
+let fields = vec![("0", capture_ast__obj__FiniteInnerProduct(f0, capture, runtime))];
+let mut output = node("MatrixOperator", "InnerProduct", fields);
+output
+},
+crate::ast::obj::MatrixOperator::EuclideanNorm(f0) => {
+let fields = vec![("0", capture_ast__obj__EuclideanNorm(f0, capture, runtime))];
+let mut output = node("MatrixOperator", "EuclideanNorm", fields);
+output
+},
+crate::ast::obj::MatrixOperator::FrobeniusNorm(f0) => {
+let fields = vec![("0", capture_ast__obj__MatrixFrobeniusNorm(f0, capture, runtime))];
+let mut output = node("MatrixOperator", "FrobeniusNorm", fields);
 output
 },
 };
@@ -11858,6 +12378,11 @@ output
 crate::ast::SetFormer::FiniteSeqSet(f0) => {
 let fields = vec![("0", capture_ast__obj__FiniteSeqSet(f0, capture, runtime))];
 let mut output = node("SetFormer", "FiniteSeqSet", fields);
+output
+},
+crate::ast::SetFormer::MatrixSet(f0) => {
+let fields = vec![("0", capture_ast__obj__MatrixSet(f0, capture, runtime))];
+let mut output = node("SetFormer", "MatrixSet", fields);
 output
 },
 crate::ast::SetFormer::SeqSet(f0) => {
@@ -13144,8 +13669,29 @@ output
 capture.intern_evidence(output)
 }
 
+pub(super) fn capture_execute__execute_fact_stmt__function_signature_selection__FunctionSignatureSelection(value: &crate::execute::execute_fact_stmt::function_signature_selection::FunctionSignatureSelection, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::function_signature_selection::FunctionSignatureSelection::AnonymousLiteral { signature: f0 } => {
+let fields = vec![("signature", capture_ast__obj__FnSet(f0, capture, runtime))];
+let mut output = node("FunctionSignatureSelection", "AnonymousLiteral", fields);
+output
+},
+crate::execute::execute_fact_stmt::function_signature_selection::FunctionSignatureSelection::Property { signature: f0, fact_id: f1 } => {
+let fields = vec![("signature", capture_ast__obj__FnSet(f0, capture, runtime)), ("fact_id", capture.fact_reference(f1, runtime))];
+let mut output = node("FunctionSignatureSelection", "Property", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
 pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyObjWellDefinedResult(value: &crate::execute::execute_fact_stmt::FailToVerifyObjWellDefinedResult, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
+crate::execute::execute_fact_stmt::FailToVerifyObjWellDefinedResult::MatrixOperator(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyMatrixOperatorObjWellDefinedResult(f0, capture, runtime))];
+let mut output = node("FailToVerifyObjWellDefinedResult", "MatrixOperator", fields);
+output
+},
 crate::execute::execute_fact_stmt::FailToVerifyObjWellDefinedResult::IntegralOperator(f0) => {
 let fields = vec![("0", capture_execute__execute_fact_stmt__riemann_integral__IntegralOperatorWellDefinedFailure(f0, capture, runtime))];
 let mut output = node("FailToVerifyObjWellDefinedResult", "IntegralOperator", fields);
@@ -13260,34 +13806,6 @@ output
 capture.intern_evidence(output)
 }
 
-pub(super) fn capture_execute__execute_have_fn_by_induc_stmt__InducCasesDisjointSuccess(value: &crate::execute::InducCasesDisjointSuccess, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::InducCasesDisjointSuccess { i: f0, j: f1, assumption_stored: f2, negated_component: f3, local_env: f4 } => {
-let saved_scope = capture.enter_scope();
-capture.index_environment(f4, runtime);
-let fields = vec![("i", JsonValue::String((f0).to_string())), ("j", JsonValue::String((f1).to_string())), ("assumption_stored", capture_store_fact_and_infer__store_fact_and_infer_result__store_and_infer_result__StoreFactAndInferResult(f2, capture, runtime)), ("negated_component", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f3, capture, runtime)), ("local_env", capture.environment(f4, runtime))];
-let mut output = node("InducCasesDisjointSuccess", "", fields);
-capture.leave_scope(saved_scope);
-output
-},
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_have_fn_by_induc_stmt__InducCaseSuccess(value: &crate::execute::InducCaseSuccess, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::InducCaseSuccess { assumption_stored: f0, body: f1, local_env: f2 } => {
-let saved_scope = capture.enter_scope();
-capture.index_environment(f2, runtime);
-let fields = vec![("assumption_stored", capture_store_fact_and_infer__store_fact_and_infer_result__store_and_infer_result__StoreFactAndInferResult(f0, capture, runtime)), ("body", capture_execute__execute_have_fn_by_induc_stmt__InducCaseBodySuccess(f1, capture, runtime)), ("local_env", capture.environment(f2, runtime))];
-let mut output = node("InducCaseSuccess", "", fields);
-capture.leave_scope(saved_scope);
-output
-},
-};
-capture.intern_evidence(output)
-}
-
 pub(super) fn capture_execute__execute_fact_stmt__verify_exist_shaped_fact__well_defined_result__ExistShapedFactWellDefinedProof(value: &crate::execute::execute_fact_stmt::ExistShapedFactWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::ExistShapedFactWellDefinedProof { introduced_params: f0, assumed_body_facts: f1, local_env: f2 } => {
@@ -13337,6 +13855,34 @@ let saved_scope = capture.enter_scope();
 capture.index_environment(f3, runtime);
 let fields = vec![("introduced_params", capture_execute__introduce_typed_parameters__IntroduceTypedParametersResult(f0, capture, runtime)), ("assumed_dom_facts", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_forall_fact__result__AssumeDomFactResult(item, capture, runtime)).collect())), ("then", JsonValue::Array((f2).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FactWellDefinedProof(item, capture, runtime)).collect())), ("local_env", capture.environment(f3, runtime))];
 let mut output = node("NotForallFactWellDefinedProof", "", fields);
+capture.leave_scope(saved_scope);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_have_fn_by_induc_stmt__InducCasesDisjointSuccess(value: &crate::execute::InducCasesDisjointSuccess, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::InducCasesDisjointSuccess { i: f0, j: f1, assumption_stored: f2, negated_component: f3, local_env: f4 } => {
+let saved_scope = capture.enter_scope();
+capture.index_environment(f4, runtime);
+let fields = vec![("i", JsonValue::String((f0).to_string())), ("j", JsonValue::String((f1).to_string())), ("assumption_stored", capture_store_fact_and_infer__store_fact_and_infer_result__store_and_infer_result__StoreFactAndInferResult(f2, capture, runtime)), ("negated_component", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f3, capture, runtime)), ("local_env", capture.environment(f4, runtime))];
+let mut output = node("InducCasesDisjointSuccess", "", fields);
+capture.leave_scope(saved_scope);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_have_fn_by_induc_stmt__InducCaseSuccess(value: &crate::execute::InducCaseSuccess, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::InducCaseSuccess { assumption_stored: f0, body: f1, local_env: f2 } => {
+let saved_scope = capture.enter_scope();
+capture.index_environment(f2, runtime);
+let fields = vec![("assumption_stored", capture_store_fact_and_infer__store_fact_and_infer_result__store_and_infer_result__StoreFactAndInferResult(f0, capture, runtime)), ("body", capture_execute__execute_have_fn_by_induc_stmt__InducCaseBodySuccess(f1, capture, runtime)), ("local_env", capture.environment(f2, runtime))];
+let mut output = node("InducCaseSuccess", "", fields);
 capture.leave_scope(saved_scope);
 output
 },
@@ -13461,6 +14007,11 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__function_domain__CompleteFunctionDomainSourceProof(value: &crate::execute::execute_fact_stmt::function_domain::CompleteFunctionDomainSourceProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
+crate::execute::execute_fact_stmt::function_domain::CompleteFunctionDomainSourceProof::Matrix(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__native_matrix__MatrixCallableProof(f0, capture, runtime))];
+let mut output = node("CompleteFunctionDomainSourceProof", "Matrix", fields);
+output
+},
 crate::execute::execute_fact_stmt::function_domain::CompleteFunctionDomainSourceProof::FiniteFunction(f0) => {
 let fields = vec![("0", capture_execute__execute_fact_stmt__finite_function__FiniteFunctionSignatureProof(f0, capture, runtime))];
 let mut output = node("CompleteFunctionDomainSourceProof", "FiniteFunction", fields);
@@ -13707,6 +14258,11 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ObjWellDefinedProofByDef(value: &crate::execute::execute_fact_stmt::ObjWellDefinedProofByDef, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
+crate::execute::execute_fact_stmt::ObjWellDefinedProofByDef::MatrixOperator(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixOperatorObjWellDefinedProofByDef(f0, capture, runtime))];
+let mut output = node("ObjWellDefinedProofByDef", "MatrixOperator", fields);
+output
+},
 crate::execute::execute_fact_stmt::ObjWellDefinedProofByDef::IntegralOperator(f0) => {
 let fields = vec![("0", capture_execute__execute_fact_stmt__riemann_integral__IntegralOperatorWellDefinedProof(f0, capture, runtime))];
 let mut output = node("ObjWellDefinedProofByDef", "IntegralOperator", fields);
@@ -13916,6 +14472,292 @@ let mut output = node("AlgoDefinitionEvidence", "Checked", fields);
 output
 },
 };
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_ast__obj__Determinant(value: &crate::ast::obj::Determinant, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+capture.subject_depth += 1;
+let output = match value {
+crate::ast::obj::Determinant { matrix: f0, order: f1 } => {
+let fields = vec![("matrix", capture_ast__obj__Obj(f0, capture, runtime)), ("order", capture_ast__obj__Obj(f1, capture, runtime))];
+let mut output = node("Determinant", "", fields);
+output
+},
+};
+capture.subject_depth -= 1;
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_ast__obj__ZeroMatrix(value: &crate::ast::obj::ZeroMatrix, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+capture.subject_depth += 1;
+let output = match value {
+crate::ast::obj::ZeroMatrix { rows: f0, cols: f1 } => {
+let fields = vec![("rows", capture_ast__obj__Obj(f0, capture, runtime)), ("cols", capture_ast__obj__Obj(f1, capture, runtime))];
+let mut output = node("ZeroMatrix", "", fields);
+output
+},
+};
+capture.subject_depth -= 1;
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_ast__obj__IdentityMatrix(value: &crate::ast::obj::IdentityMatrix, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+capture.subject_depth += 1;
+let output = match value {
+crate::ast::obj::IdentityMatrix { order: f0 } => {
+let fields = vec![("order", capture_ast__obj__Obj(f0, capture, runtime))];
+let mut output = node("IdentityMatrix", "", fields);
+output
+},
+};
+capture.subject_depth -= 1;
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_ast__obj__MatrixTranspose(value: &crate::ast::obj::MatrixTranspose, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+capture.subject_depth += 1;
+let output = match value {
+crate::ast::obj::MatrixTranspose { matrix: f0, rows: f1, cols: f2 } => {
+let fields = vec![("matrix", capture_ast__obj__Obj(f0, capture, runtime)), ("rows", capture_ast__obj__Obj(f1, capture, runtime)), ("cols", capture_ast__obj__Obj(f2, capture, runtime))];
+let mut output = node("MatrixTranspose", "", fields);
+output
+},
+};
+capture.subject_depth -= 1;
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_ast__obj__MatrixConjugateTranspose(value: &crate::ast::obj::MatrixConjugateTranspose, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+capture.subject_depth += 1;
+let output = match value {
+crate::ast::obj::MatrixConjugateTranspose { matrix: f0, rows: f1, cols: f2 } => {
+let fields = vec![("matrix", capture_ast__obj__Obj(f0, capture, runtime)), ("rows", capture_ast__obj__Obj(f1, capture, runtime)), ("cols", capture_ast__obj__Obj(f2, capture, runtime))];
+let mut output = node("MatrixConjugateTranspose", "", fields);
+output
+},
+};
+capture.subject_depth -= 1;
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_ast__obj__MatrixTrace(value: &crate::ast::obj::MatrixTrace, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+capture.subject_depth += 1;
+let output = match value {
+crate::ast::obj::MatrixTrace { matrix: f0, order: f1 } => {
+let fields = vec![("matrix", capture_ast__obj__Obj(f0, capture, runtime)), ("order", capture_ast__obj__Obj(f1, capture, runtime))];
+let mut output = node("MatrixTrace", "", fields);
+output
+},
+};
+capture.subject_depth -= 1;
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_ast__obj__MatrixAdd(value: &crate::ast::obj::MatrixAdd, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+capture.subject_depth += 1;
+let output = match value {
+crate::ast::obj::MatrixAdd { left: f0, right: f1, rows: f2, cols: f3 } => {
+let fields = vec![("left", capture_ast__obj__Obj(f0, capture, runtime)), ("right", capture_ast__obj__Obj(f1, capture, runtime)), ("rows", capture_ast__obj__Obj(f2, capture, runtime)), ("cols", capture_ast__obj__Obj(f3, capture, runtime))];
+let mut output = node("MatrixAdd", "", fields);
+output
+},
+};
+capture.subject_depth -= 1;
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_ast__obj__MatrixSubtract(value: &crate::ast::obj::MatrixSubtract, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+capture.subject_depth += 1;
+let output = match value {
+crate::ast::obj::MatrixSubtract { left: f0, right: f1, rows: f2, cols: f3 } => {
+let fields = vec![("left", capture_ast__obj__Obj(f0, capture, runtime)), ("right", capture_ast__obj__Obj(f1, capture, runtime)), ("rows", capture_ast__obj__Obj(f2, capture, runtime)), ("cols", capture_ast__obj__Obj(f3, capture, runtime))];
+let mut output = node("MatrixSubtract", "", fields);
+output
+},
+};
+capture.subject_depth -= 1;
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_ast__obj__MatrixScale(value: &crate::ast::obj::MatrixScale, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+capture.subject_depth += 1;
+let output = match value {
+crate::ast::obj::MatrixScale { scalar: f0, matrix: f1, rows: f2, cols: f3 } => {
+let fields = vec![("scalar", capture_ast__obj__Obj(f0, capture, runtime)), ("matrix", capture_ast__obj__Obj(f1, capture, runtime)), ("rows", capture_ast__obj__Obj(f2, capture, runtime)), ("cols", capture_ast__obj__Obj(f3, capture, runtime))];
+let mut output = node("MatrixScale", "", fields);
+output
+},
+};
+capture.subject_depth -= 1;
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_ast__obj__MatrixMultiply(value: &crate::ast::obj::MatrixMultiply, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+capture.subject_depth += 1;
+let output = match value {
+crate::ast::obj::MatrixMultiply { left: f0, right: f1, rows: f2, inner: f3, cols: f4 } => {
+let fields = vec![("left", capture_ast__obj__Obj(f0, capture, runtime)), ("right", capture_ast__obj__Obj(f1, capture, runtime)), ("rows", capture_ast__obj__Obj(f2, capture, runtime)), ("inner", capture_ast__obj__Obj(f3, capture, runtime)), ("cols", capture_ast__obj__Obj(f4, capture, runtime))];
+let mut output = node("MatrixMultiply", "", fields);
+output
+},
+};
+capture.subject_depth -= 1;
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_ast__obj__MatrixApply(value: &crate::ast::obj::MatrixApply, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+capture.subject_depth += 1;
+let output = match value {
+crate::ast::obj::MatrixApply { matrix: f0, vector: f1, rows: f2, cols: f3 } => {
+let fields = vec![("matrix", capture_ast__obj__Obj(f0, capture, runtime)), ("vector", capture_ast__obj__Obj(f1, capture, runtime)), ("rows", capture_ast__obj__Obj(f2, capture, runtime)), ("cols", capture_ast__obj__Obj(f3, capture, runtime))];
+let mut output = node("MatrixApply", "", fields);
+output
+},
+};
+capture.subject_depth -= 1;
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_ast__obj__MatrixPower(value: &crate::ast::obj::MatrixPower, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+capture.subject_depth += 1;
+let output = match value {
+crate::ast::obj::MatrixPower { matrix: f0, order: f1, exponent: f2 } => {
+let fields = vec![("matrix", capture_ast__obj__Obj(f0, capture, runtime)), ("order", capture_ast__obj__Obj(f1, capture, runtime)), ("exponent", capture_ast__obj__Obj(f2, capture, runtime))];
+let mut output = node("MatrixPower", "", fields);
+output
+},
+};
+capture.subject_depth -= 1;
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_ast__obj__MatrixInverse(value: &crate::ast::obj::MatrixInverse, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+capture.subject_depth += 1;
+let output = match value {
+crate::ast::obj::MatrixInverse { matrix: f0, order: f1 } => {
+let fields = vec![("matrix", capture_ast__obj__Obj(f0, capture, runtime)), ("order", capture_ast__obj__Obj(f1, capture, runtime))];
+let mut output = node("MatrixInverse", "", fields);
+output
+},
+};
+capture.subject_depth -= 1;
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_ast__obj__MatrixRank(value: &crate::ast::obj::MatrixRank, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+capture.subject_depth += 1;
+let output = match value {
+crate::ast::obj::MatrixRank { matrix: f0, rows: f1, cols: f2 } => {
+let fields = vec![("matrix", capture_ast__obj__Obj(f0, capture, runtime)), ("rows", capture_ast__obj__Obj(f1, capture, runtime)), ("cols", capture_ast__obj__Obj(f2, capture, runtime))];
+let mut output = node("MatrixRank", "", fields);
+output
+},
+};
+capture.subject_depth -= 1;
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_ast__obj__MatrixMinor(value: &crate::ast::obj::MatrixMinor, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+capture.subject_depth += 1;
+let output = match value {
+crate::ast::obj::MatrixMinor { matrix: f0, order: f1, row: f2, col: f3 } => {
+let fields = vec![("matrix", capture_ast__obj__Obj(f0, capture, runtime)), ("order", capture_ast__obj__Obj(f1, capture, runtime)), ("row", capture_ast__obj__Obj(f2, capture, runtime)), ("col", capture_ast__obj__Obj(f3, capture, runtime))];
+let mut output = node("MatrixMinor", "", fields);
+output
+},
+};
+capture.subject_depth -= 1;
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_ast__obj__MatrixCofactor(value: &crate::ast::obj::MatrixCofactor, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+capture.subject_depth += 1;
+let output = match value {
+crate::ast::obj::MatrixCofactor { matrix: f0, order: f1, row: f2, col: f3 } => {
+let fields = vec![("matrix", capture_ast__obj__Obj(f0, capture, runtime)), ("order", capture_ast__obj__Obj(f1, capture, runtime)), ("row", capture_ast__obj__Obj(f2, capture, runtime)), ("col", capture_ast__obj__Obj(f3, capture, runtime))];
+let mut output = node("MatrixCofactor", "", fields);
+output
+},
+};
+capture.subject_depth -= 1;
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_ast__obj__MatrixAdjugate(value: &crate::ast::obj::MatrixAdjugate, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+capture.subject_depth += 1;
+let output = match value {
+crate::ast::obj::MatrixAdjugate { matrix: f0, order: f1 } => {
+let fields = vec![("matrix", capture_ast__obj__Obj(f0, capture, runtime)), ("order", capture_ast__obj__Obj(f1, capture, runtime))];
+let mut output = node("MatrixAdjugate", "", fields);
+output
+},
+};
+capture.subject_depth -= 1;
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_ast__obj__MatrixDiagonal(value: &crate::ast::obj::MatrixDiagonal, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+capture.subject_depth += 1;
+let output = match value {
+crate::ast::obj::MatrixDiagonal { vector: f0, order: f1 } => {
+let fields = vec![("vector", capture_ast__obj__Obj(f0, capture, runtime)), ("order", capture_ast__obj__Obj(f1, capture, runtime))];
+let mut output = node("MatrixDiagonal", "", fields);
+output
+},
+};
+capture.subject_depth -= 1;
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_ast__obj__MatrixOuterProduct(value: &crate::ast::obj::MatrixOuterProduct, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+capture.subject_depth += 1;
+let output = match value {
+crate::ast::obj::MatrixOuterProduct { left: f0, right: f1, rows: f2, cols: f3 } => {
+let fields = vec![("left", capture_ast__obj__Obj(f0, capture, runtime)), ("right", capture_ast__obj__Obj(f1, capture, runtime)), ("rows", capture_ast__obj__Obj(f2, capture, runtime)), ("cols", capture_ast__obj__Obj(f3, capture, runtime))];
+let mut output = node("MatrixOuterProduct", "", fields);
+output
+},
+};
+capture.subject_depth -= 1;
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_ast__obj__FiniteInnerProduct(value: &crate::ast::obj::FiniteInnerProduct, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+capture.subject_depth += 1;
+let output = match value {
+crate::ast::obj::FiniteInnerProduct { left: f0, right: f1, dimension: f2 } => {
+let fields = vec![("left", capture_ast__obj__Obj(f0, capture, runtime)), ("right", capture_ast__obj__Obj(f1, capture, runtime)), ("dimension", capture_ast__obj__Obj(f2, capture, runtime))];
+let mut output = node("FiniteInnerProduct", "", fields);
+output
+},
+};
+capture.subject_depth -= 1;
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_ast__obj__EuclideanNorm(value: &crate::ast::obj::EuclideanNorm, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+capture.subject_depth += 1;
+let output = match value {
+crate::ast::obj::EuclideanNorm { vector: f0, dimension: f1 } => {
+let fields = vec![("vector", capture_ast__obj__Obj(f0, capture, runtime)), ("dimension", capture_ast__obj__Obj(f1, capture, runtime))];
+let mut output = node("EuclideanNorm", "", fields);
+output
+},
+};
+capture.subject_depth -= 1;
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_ast__obj__MatrixFrobeniusNorm(value: &crate::ast::obj::MatrixFrobeniusNorm, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+capture.subject_depth += 1;
+let output = match value {
+crate::ast::obj::MatrixFrobeniusNorm { matrix: f0, rows: f1, cols: f2 } => {
+let fields = vec![("matrix", capture_ast__obj__Obj(f0, capture, runtime)), ("rows", capture_ast__obj__Obj(f1, capture, runtime)), ("cols", capture_ast__obj__Obj(f2, capture, runtime))];
+let mut output = node("MatrixFrobeniusNorm", "", fields);
+output
+},
+};
+capture.subject_depth -= 1;
 capture.intern_evidence(output)
 }
 
@@ -14810,6 +15652,19 @@ capture.subject_depth -= 1;
 capture.intern_evidence(output)
 }
 
+pub(super) fn capture_ast__obj__MatrixSet(value: &crate::ast::obj::MatrixSet, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+capture.subject_depth += 1;
+let output = match value {
+crate::ast::obj::MatrixSet { set: f0, rows: f1, cols: f2 } => {
+let fields = vec![("set", capture_ast__obj__Obj(f0, capture, runtime)), ("rows", capture_ast__obj__Obj(f1, capture, runtime)), ("cols", capture_ast__obj__Obj(f2, capture, runtime))];
+let mut output = node("MatrixSet", "", fields);
+output
+},
+};
+capture.subject_depth -= 1;
+capture.intern_evidence(output)
+}
+
 pub(super) fn capture_ast__obj__SeqSet(value: &crate::ast::obj::SeqSet, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 capture.subject_depth += 1;
 let output = match value {
@@ -15418,6 +16273,13 @@ pub(super) fn capture_store_fact_and_infer__infer_result__infer_is_finite_set_fa
 
 pub(super) fn capture_store_fact_and_infer__infer_result__infer_in_fact_result__InferInFactResult(value: &crate::store_fact_and_infer::InferInFactResult, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
+crate::store_fact_and_infer::InferInFactResult::MatrixExpand(f0) => {
+let rule_id = Some("infer.InferInFactResult::MatrixExpand");
+let fields = vec![("0", capture_store_fact_and_infer__infer_result__infer_in_fact_matrix_expand_result__InferInFactMatrixExpandResult(f0, capture, runtime))];
+let mut output = node("InferInFactResult", "MatrixExpand", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "MatrixExpand", ""); }
+output
+},
 crate::store_fact_and_infer::InferInFactResult::Template(f0) => {
 let rule_id = Some("infer.InferInFactResult::Template");
 let fields = vec![("0", capture_store_fact_and_infer__infer_result__infer_template_membership_result__InferTemplateMembershipResult(f0, capture, runtime))];
@@ -17549,6 +18411,11 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__by_object_definition__search_equal_fact_proof_by_object_definition_result__EqualitySearchProofByObjectDefinition(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByObjectDefinition, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByObjectDefinition::NativeMatrix(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__native_matrix__MatrixEqualityProof(f0, capture, runtime))];
+let mut output = node("EqualitySearchProofByObjectDefinition", "NativeMatrix", fields);
+output
+},
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByObjectDefinition::CartesianDefinition(f0) => {
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__by_object_definition__cart_definition__CartesianDefinitionProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByObjectDefinition", "CartesianDefinition", fields);
@@ -19086,6 +19953,122 @@ output
 capture.intern_evidence(output)
 }
 
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyMatrixOperatorObjWellDefinedResult(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyMatrixOperatorObjWellDefinedResult, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyMatrixOperatorObjWellDefinedResult::Determinant(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyDeterminantObjWellDefined(f0, capture, runtime))];
+let mut output = node("FailToVerifyMatrixOperatorObjWellDefinedResult", "Determinant", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyMatrixOperatorObjWellDefinedResult::ZeroMatrix(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyZeroMatrixObjWellDefined(f0, capture, runtime))];
+let mut output = node("FailToVerifyMatrixOperatorObjWellDefinedResult", "ZeroMatrix", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyMatrixOperatorObjWellDefinedResult::IdentityMatrix(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyIdentityMatrixObjWellDefined(f0, capture, runtime))];
+let mut output = node("FailToVerifyMatrixOperatorObjWellDefinedResult", "IdentityMatrix", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyMatrixOperatorObjWellDefinedResult::Transpose(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyMatrixTransposeObjWellDefined(f0, capture, runtime))];
+let mut output = node("FailToVerifyMatrixOperatorObjWellDefinedResult", "Transpose", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyMatrixOperatorObjWellDefinedResult::ConjugateTranspose(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyMatrixConjugateTransposeObjWellDefined(f0, capture, runtime))];
+let mut output = node("FailToVerifyMatrixOperatorObjWellDefinedResult", "ConjugateTranspose", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyMatrixOperatorObjWellDefinedResult::Trace(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyMatrixTraceObjWellDefined(f0, capture, runtime))];
+let mut output = node("FailToVerifyMatrixOperatorObjWellDefinedResult", "Trace", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyMatrixOperatorObjWellDefinedResult::Add(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyMatrixAddObjWellDefined(f0, capture, runtime))];
+let mut output = node("FailToVerifyMatrixOperatorObjWellDefinedResult", "Add", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyMatrixOperatorObjWellDefinedResult::Subtract(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyMatrixSubtractObjWellDefined(f0, capture, runtime))];
+let mut output = node("FailToVerifyMatrixOperatorObjWellDefinedResult", "Subtract", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyMatrixOperatorObjWellDefinedResult::Scale(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyMatrixScaleObjWellDefined(f0, capture, runtime))];
+let mut output = node("FailToVerifyMatrixOperatorObjWellDefinedResult", "Scale", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyMatrixOperatorObjWellDefinedResult::Multiply(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyMatrixMultiplyObjWellDefined(f0, capture, runtime))];
+let mut output = node("FailToVerifyMatrixOperatorObjWellDefinedResult", "Multiply", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyMatrixOperatorObjWellDefinedResult::Apply(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyMatrixApplyObjWellDefined(f0, capture, runtime))];
+let mut output = node("FailToVerifyMatrixOperatorObjWellDefinedResult", "Apply", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyMatrixOperatorObjWellDefinedResult::Power(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyMatrixPowerObjWellDefined(f0, capture, runtime))];
+let mut output = node("FailToVerifyMatrixOperatorObjWellDefinedResult", "Power", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyMatrixOperatorObjWellDefinedResult::Inverse(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyMatrixInverseObjWellDefined(f0, capture, runtime))];
+let mut output = node("FailToVerifyMatrixOperatorObjWellDefinedResult", "Inverse", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyMatrixOperatorObjWellDefinedResult::Rank(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyMatrixRankObjWellDefined(f0, capture, runtime))];
+let mut output = node("FailToVerifyMatrixOperatorObjWellDefinedResult", "Rank", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyMatrixOperatorObjWellDefinedResult::Minor(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyMatrixMinorObjWellDefined(f0, capture, runtime))];
+let mut output = node("FailToVerifyMatrixOperatorObjWellDefinedResult", "Minor", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyMatrixOperatorObjWellDefinedResult::Cofactor(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyMatrixCofactorObjWellDefined(f0, capture, runtime))];
+let mut output = node("FailToVerifyMatrixOperatorObjWellDefinedResult", "Cofactor", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyMatrixOperatorObjWellDefinedResult::Adjugate(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyMatrixAdjugateObjWellDefined(f0, capture, runtime))];
+let mut output = node("FailToVerifyMatrixOperatorObjWellDefinedResult", "Adjugate", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyMatrixOperatorObjWellDefinedResult::Diagonal(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyMatrixDiagonalObjWellDefined(f0, capture, runtime))];
+let mut output = node("FailToVerifyMatrixOperatorObjWellDefinedResult", "Diagonal", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyMatrixOperatorObjWellDefinedResult::OuterProduct(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyMatrixOuterProductObjWellDefined(f0, capture, runtime))];
+let mut output = node("FailToVerifyMatrixOperatorObjWellDefinedResult", "OuterProduct", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyMatrixOperatorObjWellDefinedResult::InnerProduct(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyFiniteInnerProductObjWellDefined(f0, capture, runtime))];
+let mut output = node("FailToVerifyMatrixOperatorObjWellDefinedResult", "InnerProduct", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyMatrixOperatorObjWellDefinedResult::EuclideanNorm(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyEuclideanNormObjWellDefined(f0, capture, runtime))];
+let mut output = node("FailToVerifyMatrixOperatorObjWellDefinedResult", "EuclideanNorm", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyMatrixOperatorObjWellDefinedResult::FrobeniusNorm(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyMatrixFrobeniusNormObjWellDefined(f0, capture, runtime))];
+let mut output = node("FailToVerifyMatrixOperatorObjWellDefinedResult", "FrobeniusNorm", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
 pub(super) fn capture_execute__execute_fact_stmt__riemann_integral__IntegralOperatorWellDefinedFailure(value: &crate::execute::execute_fact_stmt::riemann_integral::IntegralOperatorWellDefinedFailure, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::riemann_integral::IntegralOperatorWellDefinedFailure::Riemann(f0) => {
@@ -19523,6 +20506,11 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifySetFormerObjWellDefinedResult(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifySetFormerObjWellDefinedResult, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifySetFormerObjWellDefinedResult::MatrixSet(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyMatrixSetObjWellDefined(f0, capture, runtime))];
+let mut output = node("FailToVerifySetFormerObjWellDefinedResult", "MatrixSet", fields);
+output
+},
 crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifySetFormerObjWellDefinedResult::ListSet(f0) => {
 let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyListSetObjWellDefined(f0, capture, runtime))];
 let mut output = node("FailToVerifySetFormerObjWellDefinedResult", "ListSet", fields);
@@ -19719,6 +20707,17 @@ output
 capture.intern_evidence(output)
 }
 
+pub(super) fn capture_execute__execute_fact_stmt__native_matrix__MatrixCallableProof(value: &crate::execute::execute_fact_stmt::native_matrix::MatrixCallableProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::native_matrix::MatrixCallableProof { operator: f0, function_equal: f1, well_defined: f2, scalar_carrier: f3, function: f4 } => {
+let fields = vec![("operator", capture_ast__obj__MatrixOperator(f0, capture, runtime)), ("function_equal", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__KnownEqualityPathProof(f1, capture, runtime)), ("well_defined", capture_execute__execute_fact_stmt__native_matrix__MatrixCallableWellDefinedProof(f2, capture, runtime)), ("scalar_carrier", capture_execute__execute_fact_stmt__native_matrix__MatrixFunctionScalarCarrierProof(f3, capture, runtime)), ("function", capture_ast__obj__AnonymousFn(f4, capture, runtime))];
+let mut output = node("MatrixCallableProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
 pub(super) fn capture_execute__execute_fact_stmt__function_composition__CompositionCallableProof(value: &crate::execute::execute_fact_stmt::function_composition::CompositionCallableProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::function_composition::CompositionCallableProof { composition: f0, function_equal: f1, well_defined: f2, signature: f3, function: f4 } => {
@@ -19743,6 +20742,11 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FnObjDomainFnSetEvidence(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnObjDomainFnSetEvidence, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnObjDomainFnSetEvidence::Matrix(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__native_matrix__MatrixCallableProof(f0, capture, runtime))];
+let mut output = node("FnObjDomainFnSetEvidence", "Matrix", fields);
+output
+},
 crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnObjDomainFnSetEvidence::FiniteFunction(f0) => {
 let fields = vec![("0", capture_execute__execute_fact_stmt__finite_function__FiniteFunctionSignatureProof(f0, capture, runtime))];
 let mut output = node("FnObjDomainFnSetEvidence", "FiniteFunction", fields);
@@ -19911,6 +20915,122 @@ let output = match value {
 crate::execute::execute_fact_stmt::known_tuple::KnownCartesianCoordinateTupleProof { receiver: f0, index: f1, carrier_equal: f2, cart: f3 } => {
 let fields = vec![("receiver", capture_execute__execute_fact_stmt__known_tuple__KnownTupleShapeProof(f0, capture, runtime)), ("index", JsonValue::String((f1).to_string())), ("carrier_equal", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__KnownEqualityPathProof(f2, capture, runtime)), ("cart", capture_ast__obj__Cart(f3, capture, runtime))];
 let mut output = node("KnownCartesianCoordinateTupleProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixOperatorObjWellDefinedProofByDef(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOperatorObjWellDefinedProofByDef, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOperatorObjWellDefinedProofByDef::Determinant(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__DeterminantObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("MatrixOperatorObjWellDefinedProofByDef", "Determinant", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOperatorObjWellDefinedProofByDef::ZeroMatrix(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ZeroMatrixObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("MatrixOperatorObjWellDefinedProofByDef", "ZeroMatrix", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOperatorObjWellDefinedProofByDef::IdentityMatrix(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__IdentityMatrixObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("MatrixOperatorObjWellDefinedProofByDef", "IdentityMatrix", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOperatorObjWellDefinedProofByDef::Transpose(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixTransposeObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("MatrixOperatorObjWellDefinedProofByDef", "Transpose", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOperatorObjWellDefinedProofByDef::ConjugateTranspose(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixConjugateTransposeObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("MatrixOperatorObjWellDefinedProofByDef", "ConjugateTranspose", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOperatorObjWellDefinedProofByDef::Trace(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixTraceObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("MatrixOperatorObjWellDefinedProofByDef", "Trace", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOperatorObjWellDefinedProofByDef::Add(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixAddObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("MatrixOperatorObjWellDefinedProofByDef", "Add", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOperatorObjWellDefinedProofByDef::Subtract(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixSubtractObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("MatrixOperatorObjWellDefinedProofByDef", "Subtract", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOperatorObjWellDefinedProofByDef::Scale(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixScaleObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("MatrixOperatorObjWellDefinedProofByDef", "Scale", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOperatorObjWellDefinedProofByDef::Multiply(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixMultiplyObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("MatrixOperatorObjWellDefinedProofByDef", "Multiply", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOperatorObjWellDefinedProofByDef::Apply(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixApplyObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("MatrixOperatorObjWellDefinedProofByDef", "Apply", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOperatorObjWellDefinedProofByDef::Power(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixPowerObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("MatrixOperatorObjWellDefinedProofByDef", "Power", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOperatorObjWellDefinedProofByDef::Inverse(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixInverseObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("MatrixOperatorObjWellDefinedProofByDef", "Inverse", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOperatorObjWellDefinedProofByDef::Rank(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixRankObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("MatrixOperatorObjWellDefinedProofByDef", "Rank", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOperatorObjWellDefinedProofByDef::Minor(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixMinorObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("MatrixOperatorObjWellDefinedProofByDef", "Minor", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOperatorObjWellDefinedProofByDef::Cofactor(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixCofactorObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("MatrixOperatorObjWellDefinedProofByDef", "Cofactor", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOperatorObjWellDefinedProofByDef::Adjugate(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixAdjugateObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("MatrixOperatorObjWellDefinedProofByDef", "Adjugate", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOperatorObjWellDefinedProofByDef::Diagonal(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixDiagonalObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("MatrixOperatorObjWellDefinedProofByDef", "Diagonal", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOperatorObjWellDefinedProofByDef::OuterProduct(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixOuterProductObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("MatrixOperatorObjWellDefinedProofByDef", "OuterProduct", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOperatorObjWellDefinedProofByDef::InnerProduct(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FiniteInnerProductObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("MatrixOperatorObjWellDefinedProofByDef", "InnerProduct", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOperatorObjWellDefinedProofByDef::EuclideanNorm(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__EuclideanNormObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("MatrixOperatorObjWellDefinedProofByDef", "EuclideanNorm", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOperatorObjWellDefinedProofByDef::FrobeniusNorm(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixFrobeniusNormObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("MatrixOperatorObjWellDefinedProofByDef", "FrobeniusNorm", fields);
 output
 },
 };
@@ -20340,6 +21460,11 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SetFormerObjWellDefinedProofByDef(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SetFormerObjWellDefinedProofByDef, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SetFormerObjWellDefinedProofByDef::MatrixSet(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixSetObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("SetFormerObjWellDefinedProofByDef", "MatrixSet", fields);
+output
+},
 crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SetFormerObjWellDefinedProofByDef::ListSet(f0) => {
 let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ListSetObjWellDefinedProof(f0, capture, runtime))];
 let mut output = node("SetFormerObjWellDefinedProofByDef", "ListSet", fields);
@@ -20843,6 +21968,17 @@ output
 capture.intern_evidence(output)
 }
 
+pub(super) fn capture_store_fact_and_infer__infer_result__infer_in_fact_matrix_expand_result__InferInFactMatrixExpandResult(value: &crate::store_fact_and_infer::InferInFactMatrixExpandResult, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::store_fact_and_infer::InferInFactMatrixExpandResult { source_fact_id: f0, matrix_space: f1, carrier_equal: f2, derived: f3 } => {
+let fields = vec![("source_fact_id", capture.fact_reference(f0, runtime)), ("matrix_space", capture_ast__obj__MatrixSet(f1, capture, runtime)), ("carrier_equal", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__KnownEqualityPathProof(f2, capture, runtime)), ("derived", capture_store_fact_and_infer__store_fact_and_infer_result__store_inferred_fact_result__StoreInferredFactResult(f3, capture, runtime))];
+let mut output = node("InferInFactMatrixExpandResult", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
 pub(super) fn capture_store_fact_and_infer__infer_result__infer_template_membership_result__InferTemplateMembershipResult(value: &crate::store_fact_and_infer::InferTemplateMembershipResult, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::store_fact_and_infer::InferTemplateMembershipResult { source_fact_id: f0, expansions: f1, stores: f2, native_rules: f3 } => {
@@ -21032,8 +22168,8 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_store_fact_and_infer__infer_result__infer_in_fact_fn_range_result__InferInFactFnRangeResult(value: &crate::store_fact_and_infer::InferInFactFnRangeResult, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::store_fact_and_infer::InferInFactFnRangeResult { codomain_membership: f0, preimage_witness: f1 } => {
-let fields = vec![("codomain_membership", capture_store_fact_and_infer__store_fact_and_infer_result__store_inferred_fact_result__StoreInferredFactResult(f0, capture, runtime)), ("preimage_witness", match (f1).as_ref() { Some(item) => capture_store_fact_and_infer__store_fact_and_infer_result__store_inferred_fact_result__StoreInferredFactResult(item, capture, runtime), None => JsonValue::Null })];
+crate::store_fact_and_infer::InferInFactFnRangeResult { signature_selection: f0, codomain_membership: f1, preimage_witness: f2 } => {
+let fields = vec![("signature_selection", capture_execute__execute_fact_stmt__function_signature_selection__FunctionSignatureSelection(f0, capture, runtime)), ("codomain_membership", capture_store_fact_and_infer__store_fact_and_infer_result__store_inferred_fact_result__StoreInferredFactResult(f1, capture, runtime)), ("preimage_witness", match (f2).as_ref() { Some(item) => capture_store_fact_and_infer__store_fact_and_infer_result__store_inferred_fact_result__StoreInferredFactResult(item, capture, runtime), None => JsonValue::Null })];
 let mut output = node("InferInFactFnRangeResult", "", fields);
 output
 },
@@ -22650,8 +23786,8 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__search_equal_fact_by_aggregate_calculation__AggregateCalculationBuiltinRuleProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::search_equal_fact_by_aggregate_calculation::AggregateCalculationBuiltinRuleProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::search_equal_fact_by_aggregate_calculation::AggregateCalculationBuiltinRuleProof { rewritten_left: f0, left_value: f1, rewritten_right: f2, right_value: f3, cited_equal_fact_ids: f4, aggregate_evaluations: f5, function_evaluations: f6, algo_evaluations: f7 } => {
-let fields = vec![("rewritten_left", capture_ast__obj__Obj(f0, capture, runtime)), ("left_value", capture_ast__obj__Obj(f1, capture, runtime)), ("rewritten_right", capture_ast__obj__Obj(f2, capture, runtime)), ("right_value", capture_ast__obj__Obj(f3, capture, runtime)), ("cited_equal_fact_ids", JsonValue::Array((f4).iter().map(|item| capture.fact_reference(item, runtime)).collect())), ("aggregate_evaluations", JsonValue::Array((f5).iter().map(|item| capture_execute__execute_eval_stmt__aggregate_evaluation_result__AggregateEvaluationResult(item, capture, runtime)).collect())), ("function_evaluations", JsonValue::Array((f6).iter().map(|item| capture_execute__execute_eval_stmt__aggregate_evaluation_result__FunctionApplicationEvaluationResult(item, capture, runtime)).collect())), ("algo_evaluations", JsonValue::Array((f7).iter().map(|item| capture_execute__execute_eval_stmt__aggregate_evaluation_result__AlgoApplicationEvaluationResult(item, capture, runtime)).collect()))];
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::search_equal_fact_by_aggregate_calculation::AggregateCalculationBuiltinRuleProof { rewritten_left: f0, left_value: f1, rewritten_right: f2, right_value: f3, cited_equal_fact_ids: f4, matrix_scalar_evaluations: f5, aggregate_evaluations: f6, function_evaluations: f7, algo_evaluations: f8 } => {
+let fields = vec![("rewritten_left", capture_ast__obj__Obj(f0, capture, runtime)), ("left_value", capture_ast__obj__Obj(f1, capture, runtime)), ("rewritten_right", capture_ast__obj__Obj(f2, capture, runtime)), ("right_value", capture_ast__obj__Obj(f3, capture, runtime)), ("cited_equal_fact_ids", JsonValue::Array((f4).iter().map(|item| capture.fact_reference(item, runtime)).collect())), ("matrix_scalar_evaluations", JsonValue::Array((f5).iter().map(|item| capture_execute__execute_eval_stmt__aggregate_evaluation_result__MatrixScalarEvaluationResult(item, capture, runtime)).collect())), ("aggregate_evaluations", JsonValue::Array((f6).iter().map(|item| capture_execute__execute_eval_stmt__aggregate_evaluation_result__AggregateEvaluationResult(item, capture, runtime)).collect())), ("function_evaluations", JsonValue::Array((f7).iter().map(|item| capture_execute__execute_eval_stmt__aggregate_evaluation_result__FunctionApplicationEvaluationResult(item, capture, runtime)).collect())), ("algo_evaluations", JsonValue::Array((f8).iter().map(|item| capture_execute__execute_eval_stmt__aggregate_evaluation_result__AlgoApplicationEvaluationResult(item, capture, runtime)).collect()))];
 let mut output = node("AggregateCalculationBuiltinRuleProof", "", fields);
 output
 },
@@ -24790,6 +25926,32 @@ output
 capture.intern_evidence(output)
 }
 
+pub(super) fn capture_execute__execute_fact_stmt__native_matrix__MatrixEqualityProof(value: &crate::execute::execute_fact_stmt::native_matrix::MatrixEqualityProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::native_matrix::MatrixEqualityProof::SpaceDefinition(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__native_matrix__MatrixSpaceDefinitionProof(f0, capture, runtime))];
+let mut output = node("MatrixEqualityProof", "SpaceDefinition", fields);
+output
+},
+crate::execute::execute_fact_stmt::native_matrix::MatrixEqualityProof::FunctionDefinition(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__native_matrix__MatrixFunctionDefinitionProof(f0, capture, runtime))];
+let mut output = node("MatrixEqualityProof", "FunctionDefinition", fields);
+output
+},
+crate::execute::execute_fact_stmt::native_matrix::MatrixEqualityProof::ComponentDefinition(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__native_matrix__MatrixComponentDefinitionProof(f0, capture, runtime))];
+let mut output = node("MatrixEqualityProof", "ComponentDefinition", fields);
+output
+},
+crate::execute::execute_fact_stmt::native_matrix::MatrixEqualityProof::ScalarDefinition(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__native_matrix__MatrixScalarDefinitionProof(f0, capture, runtime))];
+let mut output = node("MatrixEqualityProof", "ScalarDefinition", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__by_object_definition__cart_definition__CartesianDefinitionProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::cart_definition::CartesianDefinitionProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::cart_definition::CartesianDefinitionProof { expanded_definition: f0, definition_match: f1 } => {
@@ -25168,6 +26330,11 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_known_special_property__InFactSearchProofByKnownSpecialProperty(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_known_special_property::InFactSearchProofByKnownSpecialProperty, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_known_special_property::InFactSearchProofByKnownSpecialProperty::FiniteTupleInStandardFunctionSpace(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_known_special_property__FiniteTupleInStandardFunctionSpaceProof(f0, capture, runtime))];
+let mut output = node("InFactSearchProofByKnownSpecialProperty", "FiniteTupleInStandardFunctionSpace", fields);
+output
+},
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_known_special_property::InFactSearchProofByKnownSpecialProperty::KnownSubsetMembership(f0) => {
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_membership_proof__KnownSubsetMembershipProof(f0, capture, runtime))];
 let mut output = node("InFactSearchProofByKnownSpecialProperty", "KnownSubsetMembership", fields);
@@ -26901,6 +28068,13 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__in_fact__InFactSearchProofByBuiltinRule(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule::NativeMatrix(f0) => {
+let rule_id = Some("builtin.InFactSearchProofByBuiltinRule::NativeMatrix");
+let fields = vec![("0", capture_execute__execute_fact_stmt__native_matrix__MatrixMembershipProof(f0, capture, runtime))];
+let mut output = node("InFactSearchProofByBuiltinRule", "NativeMatrix", fields);
+if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+output
+},
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule::ExactIntegerQuotient(f0) => {
 let rule_id = Some("builtin.InFactSearchProofByBuiltinRule::ExactIntegerQuotient");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__selected_scalar_bt_rules__ExactIntegerQuotientProof(f0, capture, runtime))];
@@ -30171,6 +31345,248 @@ output
 capture.intern_evidence(output)
 }
 
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyDeterminantObjWellDefined(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyDeterminantObjWellDefined, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyDeterminantObjWellDefined(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyObjWellDefinedByDefCommon(f0, capture, runtime))];
+let mut output = node("FailToVerifyDeterminantObjWellDefined", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyZeroMatrixObjWellDefined(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyZeroMatrixObjWellDefined, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyZeroMatrixObjWellDefined(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyObjWellDefinedByDefCommon(f0, capture, runtime))];
+let mut output = node("FailToVerifyZeroMatrixObjWellDefined", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyIdentityMatrixObjWellDefined(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyIdentityMatrixObjWellDefined, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyIdentityMatrixObjWellDefined(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyObjWellDefinedByDefCommon(f0, capture, runtime))];
+let mut output = node("FailToVerifyIdentityMatrixObjWellDefined", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyMatrixTransposeObjWellDefined(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyMatrixTransposeObjWellDefined, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyMatrixTransposeObjWellDefined(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyObjWellDefinedByDefCommon(f0, capture, runtime))];
+let mut output = node("FailToVerifyMatrixTransposeObjWellDefined", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyMatrixConjugateTransposeObjWellDefined(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyMatrixConjugateTransposeObjWellDefined, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyMatrixConjugateTransposeObjWellDefined(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyObjWellDefinedByDefCommon(f0, capture, runtime))];
+let mut output = node("FailToVerifyMatrixConjugateTransposeObjWellDefined", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyMatrixTraceObjWellDefined(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyMatrixTraceObjWellDefined, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyMatrixTraceObjWellDefined(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyObjWellDefinedByDefCommon(f0, capture, runtime))];
+let mut output = node("FailToVerifyMatrixTraceObjWellDefined", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyMatrixAddObjWellDefined(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyMatrixAddObjWellDefined, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyMatrixAddObjWellDefined(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyObjWellDefinedByDefCommon(f0, capture, runtime))];
+let mut output = node("FailToVerifyMatrixAddObjWellDefined", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyMatrixSubtractObjWellDefined(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyMatrixSubtractObjWellDefined, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyMatrixSubtractObjWellDefined(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyObjWellDefinedByDefCommon(f0, capture, runtime))];
+let mut output = node("FailToVerifyMatrixSubtractObjWellDefined", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyMatrixScaleObjWellDefined(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyMatrixScaleObjWellDefined, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyMatrixScaleObjWellDefined(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyObjWellDefinedByDefCommon(f0, capture, runtime))];
+let mut output = node("FailToVerifyMatrixScaleObjWellDefined", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyMatrixMultiplyObjWellDefined(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyMatrixMultiplyObjWellDefined, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyMatrixMultiplyObjWellDefined(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyObjWellDefinedByDefCommon(f0, capture, runtime))];
+let mut output = node("FailToVerifyMatrixMultiplyObjWellDefined", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyMatrixApplyObjWellDefined(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyMatrixApplyObjWellDefined, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyMatrixApplyObjWellDefined(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyObjWellDefinedByDefCommon(f0, capture, runtime))];
+let mut output = node("FailToVerifyMatrixApplyObjWellDefined", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyMatrixPowerObjWellDefined(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyMatrixPowerObjWellDefined, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyMatrixPowerObjWellDefined(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyObjWellDefinedByDefCommon(f0, capture, runtime))];
+let mut output = node("FailToVerifyMatrixPowerObjWellDefined", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyMatrixInverseObjWellDefined(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyMatrixInverseObjWellDefined, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyMatrixInverseObjWellDefined(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyObjWellDefinedByDefCommon(f0, capture, runtime))];
+let mut output = node("FailToVerifyMatrixInverseObjWellDefined", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyMatrixRankObjWellDefined(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyMatrixRankObjWellDefined, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyMatrixRankObjWellDefined(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyObjWellDefinedByDefCommon(f0, capture, runtime))];
+let mut output = node("FailToVerifyMatrixRankObjWellDefined", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyMatrixMinorObjWellDefined(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyMatrixMinorObjWellDefined, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyMatrixMinorObjWellDefined(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyObjWellDefinedByDefCommon(f0, capture, runtime))];
+let mut output = node("FailToVerifyMatrixMinorObjWellDefined", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyMatrixCofactorObjWellDefined(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyMatrixCofactorObjWellDefined, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyMatrixCofactorObjWellDefined(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyObjWellDefinedByDefCommon(f0, capture, runtime))];
+let mut output = node("FailToVerifyMatrixCofactorObjWellDefined", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyMatrixAdjugateObjWellDefined(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyMatrixAdjugateObjWellDefined, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyMatrixAdjugateObjWellDefined(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyObjWellDefinedByDefCommon(f0, capture, runtime))];
+let mut output = node("FailToVerifyMatrixAdjugateObjWellDefined", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyMatrixDiagonalObjWellDefined(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyMatrixDiagonalObjWellDefined, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyMatrixDiagonalObjWellDefined(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyObjWellDefinedByDefCommon(f0, capture, runtime))];
+let mut output = node("FailToVerifyMatrixDiagonalObjWellDefined", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyMatrixOuterProductObjWellDefined(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyMatrixOuterProductObjWellDefined, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyMatrixOuterProductObjWellDefined(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyObjWellDefinedByDefCommon(f0, capture, runtime))];
+let mut output = node("FailToVerifyMatrixOuterProductObjWellDefined", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyFiniteInnerProductObjWellDefined(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyFiniteInnerProductObjWellDefined, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyFiniteInnerProductObjWellDefined(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyObjWellDefinedByDefCommon(f0, capture, runtime))];
+let mut output = node("FailToVerifyFiniteInnerProductObjWellDefined", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyEuclideanNormObjWellDefined(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyEuclideanNormObjWellDefined, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyEuclideanNormObjWellDefined(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyObjWellDefinedByDefCommon(f0, capture, runtime))];
+let mut output = node("FailToVerifyEuclideanNormObjWellDefined", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyMatrixFrobeniusNormObjWellDefined(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyMatrixFrobeniusNormObjWellDefined, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyMatrixFrobeniusNormObjWellDefined(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyObjWellDefinedByDefCommon(f0, capture, runtime))];
+let mut output = node("FailToVerifyMatrixFrobeniusNormObjWellDefined", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
 pub(super) fn capture_execute__execute_fact_stmt__riemann_integral__RiemannIntegralWellDefinedFailure(value: &crate::execute::execute_fact_stmt::riemann_integral::RiemannIntegralWellDefinedFailure, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::riemann_integral::RiemannIntegralWellDefinedFailure { obj: f0, stage: f1 } => {
@@ -30912,6 +32328,17 @@ output
 capture.intern_evidence(output)
 }
 
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyMatrixSetObjWellDefined(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyMatrixSetObjWellDefined, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyMatrixSetObjWellDefined(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyObjWellDefinedByDefCommon(f0, capture, runtime))];
+let mut output = node("FailToVerifyMatrixSetObjWellDefined", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
 pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyListSetObjWellDefined(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyListSetObjWellDefined, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyListSetObjWellDefined(f0) => {
@@ -31299,6 +32726,53 @@ output
 capture.intern_evidence(output)
 }
 
+pub(super) fn capture_execute__execute_fact_stmt__native_matrix__MatrixCallableWellDefinedProof(value: &crate::execute::execute_fact_stmt::native_matrix::MatrixCallableWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::native_matrix::MatrixCallableWellDefinedProof::Checked(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("MatrixCallableWellDefinedProof", "Checked", fields);
+output
+},
+crate::execute::execute_fact_stmt::native_matrix::MatrixCallableWellDefinedProof::ParentAtomic => {
+let fields = vec![];
+let mut output = node("MatrixCallableWellDefinedProof", "ParentAtomic", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__native_matrix__MatrixFunctionScalarCarrierProof(value: &crate::execute::execute_fact_stmt::native_matrix::MatrixFunctionScalarCarrierProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::native_matrix::MatrixFunctionScalarCarrierProof::RealConstants => {
+let fields = vec![];
+let mut output = node("MatrixFunctionScalarCarrierProof", "RealConstants", fields);
+output
+},
+crate::execute::execute_fact_stmt::native_matrix::MatrixFunctionScalarCarrierProof::RealOperands(f0) => {
+let fields = vec![("0", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__matrix_operations__MatrixRealOperandProof(item, capture, runtime)).collect()))];
+let mut output = node("MatrixFunctionScalarCarrierProof", "RealOperands", fields);
+output
+},
+crate::execute::execute_fact_stmt::native_matrix::MatrixFunctionScalarCarrierProof::RealInput(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f0, capture, runtime))];
+let mut output = node("MatrixFunctionScalarCarrierProof", "RealInput", fields);
+output
+},
+crate::execute::execute_fact_stmt::native_matrix::MatrixFunctionScalarCarrierProof::RealReturnedFunction(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__function_domain__CompleteFunctionDomainProof(f0, capture, runtime))];
+let mut output = node("MatrixFunctionScalarCarrierProof", "RealReturnedFunction", fields);
+output
+},
+crate::execute::execute_fact_stmt::native_matrix::MatrixFunctionScalarCarrierProof::ComplexInput => {
+let fields = vec![];
+let mut output = node("MatrixFunctionScalarCarrierProof", "ComplexInput", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
 pub(super) fn capture_execute__execute_fact_stmt__function_composition__CompositionWellDefinedPremise(value: &crate::execute::execute_fact_stmt::function_composition::CompositionWellDefinedPremise, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::function_composition::CompositionWellDefinedPremise::Checked(f0) => {
@@ -31348,6 +32822,248 @@ let output = match value {
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_known_special_property::FnApplicationInCodomainKnownSpecialPropertyProof { cite_property_fact_id: f0, function_equal: f1, signature_uses: f2 } => {
 let fields = vec![("cite_property_fact_id", capture.fact_reference(f0, runtime)), ("function_equal", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__KnownEqualityPathProof(f1, capture, runtime)), ("signature_uses", JsonValue::Array((f2).iter().map(|item| capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_known_special_property__SignatureCodomainUseProof(item, capture, runtime)).collect()))];
 let mut output = node("FnApplicationInCodomainKnownSpecialPropertyProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__DeterminantObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::DeterminantObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::DeterminantObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("DeterminantObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ZeroMatrixObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ZeroMatrixObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ZeroMatrixObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("ZeroMatrixObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__IdentityMatrixObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IdentityMatrixObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IdentityMatrixObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("IdentityMatrixObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixTransposeObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixTransposeObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixTransposeObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("MatrixTransposeObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixConjugateTransposeObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixConjugateTransposeObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixConjugateTransposeObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("MatrixConjugateTransposeObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixTraceObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixTraceObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixTraceObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("MatrixTraceObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixAddObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixAddObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixAddObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("MatrixAddObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixSubtractObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixSubtractObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixSubtractObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("MatrixSubtractObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixScaleObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixScaleObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixScaleObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("MatrixScaleObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixMultiplyObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixMultiplyObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixMultiplyObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("MatrixMultiplyObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixApplyObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixApplyObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixApplyObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("MatrixApplyObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixPowerObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixPowerObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixPowerObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("MatrixPowerObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixInverseObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixInverseObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixInverseObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("MatrixInverseObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixRankObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixRankObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixRankObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("MatrixRankObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixMinorObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixMinorObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixMinorObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("MatrixMinorObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixCofactorObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixCofactorObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixCofactorObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("MatrixCofactorObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixAdjugateObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixAdjugateObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixAdjugateObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("MatrixAdjugateObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixDiagonalObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixDiagonalObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixDiagonalObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("MatrixDiagonalObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixOuterProductObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOuterProductObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOuterProductObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("MatrixOuterProductObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FiniteInnerProductObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FiniteInnerProductObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FiniteInnerProductObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("FiniteInnerProductObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__EuclideanNormObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::EuclideanNormObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::EuclideanNormObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("EuclideanNormObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixFrobeniusNormObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixFrobeniusNormObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixFrobeniusNormObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("MatrixFrobeniusNormObjWellDefinedProof", "", fields);
 output
 },
 };
@@ -32047,6 +33763,17 @@ output
 capture.intern_evidence(output)
 }
 
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixSetObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixSetObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixSetObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("MatrixSetObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
 pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ListSetObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ListSetObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ListSetObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
@@ -32372,6 +34099,11 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__by_object_definition__by_fn_application__by_parent_checked_beta__ParentCheckedBetaFunctionBody(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::by_fn_application::by_parent_checked_beta::ParentCheckedBetaFunctionBody, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::by_fn_application::by_parent_checked_beta::ParentCheckedBetaFunctionBody::NativeMatrix(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__native_matrix__MatrixCallableProof(f0, capture, runtime))];
+let mut output = node("ParentCheckedBetaFunctionBody", "NativeMatrix", fields);
+output
+},
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::by_fn_application::by_parent_checked_beta::ParentCheckedBetaFunctionBody::StructField(f0) => {
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__by_object_definition__by_fn_application__struct_field_value__StructFieldValueProof(f0, capture, runtime))];
 let mut output = node("ParentCheckedBetaFunctionBody", "StructField", fields);
@@ -34399,6 +36131,50 @@ output
 capture.intern_evidence(output)
 }
 
+pub(super) fn capture_execute__execute_fact_stmt__native_matrix__MatrixSpaceDefinitionProof(value: &crate::execute::execute_fact_stmt::native_matrix::MatrixSpaceDefinitionProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::native_matrix::MatrixSpaceDefinitionProof { signature: f0, equality: f1 } => {
+let fields = vec![("signature", capture_ast__obj__FnSet(f0, capture, runtime)), ("equality", capture_execute__execute_fact_stmt__native_matrix__MatrixDefinitionResidualProof(f1, capture, runtime))];
+let mut output = node("MatrixSpaceDefinitionProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__native_matrix__MatrixFunctionDefinitionProof(value: &crate::execute::execute_fact_stmt::native_matrix::MatrixFunctionDefinitionProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::native_matrix::MatrixFunctionDefinitionProof { callable: f0, equality: f1 } => {
+let fields = vec![("callable", capture_execute__execute_fact_stmt__native_matrix__MatrixCallableProof(f0, capture, runtime)), ("equality", capture_execute__execute_fact_stmt__native_matrix__MatrixDefinitionResidualProof(f1, capture, runtime))];
+let mut output = node("MatrixFunctionDefinitionProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__native_matrix__MatrixComponentDefinitionProof(value: &crate::execute::execute_fact_stmt::native_matrix::MatrixComponentDefinitionProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::native_matrix::MatrixComponentDefinitionProof { callable: f0, body: f1, reduction: f2, equality: f3 } => {
+let fields = vec![("callable", capture_execute__execute_fact_stmt__native_matrix__MatrixCallableProof(f0, capture, runtime)), ("body", capture_ast__obj__Obj(f1, capture, runtime)), ("reduction", capture_execute__execute_fact_stmt__native_matrix__MatrixComponentReduction(f2, capture, runtime)), ("equality", capture_execute__execute_fact_stmt__native_matrix__MatrixDefinitionResidualProof(f3, capture, runtime))];
+let mut output = node("MatrixComponentDefinitionProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__native_matrix__MatrixScalarDefinitionProof(value: &crate::execute::execute_fact_stmt::native_matrix::MatrixScalarDefinitionProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::native_matrix::MatrixScalarDefinitionProof { expression: f0, equality: f1 } => {
+let fields = vec![("expression", capture_ast__obj__Obj(f0, capture, runtime)), ("equality", capture_execute__execute_fact_stmt__native_matrix__MatrixDefinitionResidualProof(f1, capture, runtime))];
+let mut output = node("MatrixScalarDefinitionProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__by_object_definition__by_identifier__by_have_obj_equal__ByHaveObjEqualObjectDefinitionProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::by_identifier::by_have_obj_equal::ByHaveObjEqualObjectDefinitionProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::by_identifier::by_have_obj_equal::ByHaveObjEqualObjectDefinitionProof { expanded_rhs: f0, residual_equal: f1 } => {
@@ -34445,8 +36221,8 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__by_object_definition__by_fn_application__by_have_fn_equal_case_by_case__ByUnfoldHaveFnEqualCaseByCaseApplicationObjectDefinitionProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::by_fn_application::by_have_fn_equal_case_by_case::ByUnfoldHaveFnEqualCaseByCaseApplicationObjectDefinitionProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::by_fn_application::by_have_fn_equal_case_by_case::ByUnfoldHaveFnEqualCaseByCaseApplicationObjectDefinitionProof { matched_case_index: f0, expanded_body: f1, residual_equal: f2 } => {
-let fields = vec![("matched_case_index", JsonValue::String((f0).to_string())), ("expanded_body", capture_ast__obj__Obj(f1, capture, runtime)), ("residual_equal", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f2, capture, runtime))];
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::by_fn_application::by_have_fn_equal_case_by_case::ByUnfoldHaveFnEqualCaseByCaseApplicationObjectDefinitionProof { matched_case_index: f0, guard: f1, expanded_body: f2, residual_equal: f3 } => {
+let fields = vec![("matched_case_index", JsonValue::String((f0).to_string())), ("guard", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f1, capture, runtime)), ("expanded_body", capture_ast__obj__Obj(f2, capture, runtime)), ("residual_equal", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f3, capture, runtime))];
 let mut output = node("ByUnfoldHaveFnEqualCaseByCaseApplicationObjectDefinitionProof", "", fields);
 output
 },
@@ -34505,8 +36281,8 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__by_object_definition__by_template__by_have_fn_equal_case_by_case_application__ByUnfoldInstantiatedTemplateHaveFnEqualCaseByCaseApplicationObjectDefinitionProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::by_template::by_have_fn_equal_case_by_case_application::ByUnfoldInstantiatedTemplateHaveFnEqualCaseByCaseApplicationObjectDefinitionProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::by_template::by_have_fn_equal_case_by_case_application::ByUnfoldInstantiatedTemplateHaveFnEqualCaseByCaseApplicationObjectDefinitionProof { matched_case_index: f0, expanded_body: f1, residual_equal: f2 } => {
-let fields = vec![("matched_case_index", JsonValue::String((f0).to_string())), ("expanded_body", capture_ast__obj__Obj(f1, capture, runtime)), ("residual_equal", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f2, capture, runtime))];
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::by_template::by_have_fn_equal_case_by_case_application::ByUnfoldInstantiatedTemplateHaveFnEqualCaseByCaseApplicationObjectDefinitionProof { matched_case_index: f0, guard: f1, expanded_body: f2, residual_equal: f3 } => {
+let fields = vec![("matched_case_index", JsonValue::String((f0).to_string())), ("guard", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f1, capture, runtime)), ("expanded_body", capture_ast__obj__Obj(f2, capture, runtime)), ("residual_equal", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f3, capture, runtime))];
 let mut output = node("ByUnfoldInstantiatedTemplateHaveFnEqualCaseByCaseApplicationObjectDefinitionProof", "", fields);
 output
 },
@@ -34581,6 +36357,41 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__structural_membership_proof__IntrinsicCodomain(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::structural_membership_proof::IntrinsicCodomain, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::structural_membership_proof::IntrinsicCodomain::MatrixDeterminant => {
+let fields = vec![];
+let mut output = node("IntrinsicCodomain", "MatrixDeterminant", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::structural_membership_proof::IntrinsicCodomain::MatrixTrace => {
+let fields = vec![];
+let mut output = node("IntrinsicCodomain", "MatrixTrace", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::structural_membership_proof::IntrinsicCodomain::MatrixRank => {
+let fields = vec![];
+let mut output = node("IntrinsicCodomain", "MatrixRank", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::structural_membership_proof::IntrinsicCodomain::MatrixCofactor => {
+let fields = vec![];
+let mut output = node("IntrinsicCodomain", "MatrixCofactor", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::structural_membership_proof::IntrinsicCodomain::FiniteInnerProduct => {
+let fields = vec![];
+let mut output = node("IntrinsicCodomain", "FiniteInnerProduct", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::structural_membership_proof::IntrinsicCodomain::EuclideanNorm => {
+let fields = vec![];
+let mut output = node("IntrinsicCodomain", "EuclideanNorm", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::structural_membership_proof::IntrinsicCodomain::MatrixFrobeniusNorm => {
+let fields = vec![];
+let mut output = node("IntrinsicCodomain", "MatrixFrobeniusNorm", fields);
+output
+},
 crate::execute::execute_fact_stmt::verify_atomic_fact::structural_membership_proof::IntrinsicCodomain::RiemannIntegral => {
 let fields = vec![];
 let mut output = node("IntrinsicCodomain", "RiemannIntegral", fields);
@@ -34861,6 +36672,17 @@ output
 crate::execute::execute_fact_stmt::verify_atomic_fact::closed_calculation_proof::ClosedScalarValue::ExactComplex { real: f0, imaginary: f1 } => {
 let fields = vec![("real", JsonValue::String((f0).to_obj().readable_string())), ("imaginary", JsonValue::String((f1).to_obj().readable_string()))];
 let mut output = node("ClosedScalarValue", "ExactComplex", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_known_special_property__FiniteTupleInStandardFunctionSpaceProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_known_special_property::FiniteTupleInStandardFunctionSpaceProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_known_special_property::FiniteTupleInStandardFunctionSpaceProof { source: f0, signature: f1, coordinates: f2 } => {
+let fields = vec![("source", capture_execute__execute_fact_stmt__known_tuple__KnownTupleValueProof(f0, capture, runtime)), ("signature", capture_ast__obj__FnSet(f1, capture, runtime)), ("coordinates", JsonValue::Array((f2).iter().map(|item| capture_execute__execute_fact_stmt__verify_atomic_fact__structural_membership_proof__StructuralMembershipProof(item, capture, runtime)).collect()))];
+let mut output = node("FiniteTupleInStandardFunctionSpaceProof", "", fields);
 output
 },
 };
@@ -37474,6 +39296,42 @@ output
 capture.intern_evidence(output)
 }
 
+pub(super) fn capture_execute__execute_fact_stmt__native_matrix__MatrixMembershipProof(value: &crate::execute::execute_fact_stmt::native_matrix::MatrixMembershipProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::native_matrix::MatrixMembershipProof::ExtendedScalar(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__matrix_operations__ExtendedMatrixScalarMembershipProof(f0, capture, runtime))];
+let mut output = node("MatrixMembershipProof", "ExtendedScalar", fields);
+output
+},
+crate::execute::execute_fact_stmt::native_matrix::MatrixMembershipProof::Space(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__native_matrix__MatrixSpaceMembershipProof(f0, capture, runtime))];
+let mut output = node("MatrixMembershipProof", "Space", fields);
+output
+},
+crate::execute::execute_fact_stmt::native_matrix::MatrixMembershipProof::Function(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__native_matrix__MatrixFunctionMembershipProof(f0, capture, runtime))];
+let mut output = node("MatrixMembershipProof", "Function", fields);
+output
+},
+crate::execute::execute_fact_stmt::native_matrix::MatrixMembershipProof::Application(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__native_matrix__MatrixApplicationMembershipProof(f0, capture, runtime))];
+let mut output = node("MatrixMembershipProof", "Application", fields);
+output
+},
+crate::execute::execute_fact_stmt::native_matrix::MatrixMembershipProof::ScalarComplex(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__native_matrix__MatrixScalarComplexProof(f0, capture, runtime))];
+let mut output = node("MatrixMembershipProof", "ScalarComplex", fields);
+output
+},
+crate::execute::execute_fact_stmt::native_matrix::MatrixMembershipProof::ScalarReal(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__native_matrix__MatrixScalarRealProof(f0, capture, runtime))];
+let mut output = node("MatrixMembershipProof", "ScalarReal", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__selected_scalar_bt_rules__ExactIntegerQuotientProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::selected_scalar_bt_rules::ExactIntegerQuotientProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::selected_scalar_bt_rules::ExactIntegerQuotientProof { numerator_integer: f0, denominator_integer: f1, denominator_nonzero: f2, divisibility: f3 } => {
@@ -39991,6 +41849,22 @@ output
 capture.intern_evidence(output)
 }
 
+pub(super) fn capture_execute__execute_fact_stmt__matrix_operations__MatrixRealOperandProof(value: &crate::execute::execute_fact_stmt::matrix_operations::MatrixRealOperandProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::matrix_operations::MatrixRealOperandProof::Membership(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f0, capture, runtime))];
+let mut output = node("MatrixRealOperandProof", "Membership", fields);
+output
+},
+crate::execute::execute_fact_stmt::matrix_operations::MatrixRealOperandProof::FiniteCoordinates(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__matrix_operations__MatrixRealCoordinatesProof(f0, capture, runtime))];
+let mut output = node("MatrixRealOperandProof", "FiniteCoordinates", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_known_special_property__SignatureCodomainUseProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_known_special_property::SignatureCodomainUseProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_known_special_property::SignatureCodomainUseProof::ReturnSetMatch(f0) => {
@@ -40391,6 +42265,38 @@ output
 capture.intern_evidence(output)
 }
 
+pub(super) fn capture_execute__execute_fact_stmt__native_matrix__MatrixDefinitionResidualProof(value: &crate::execute::execute_fact_stmt::native_matrix::MatrixDefinitionResidualProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::native_matrix::MatrixDefinitionResidualProof::Verified(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f0, capture, runtime))];
+let mut output = node("MatrixDefinitionResidualProof", "Verified", fields);
+output
+},
+crate::execute::execute_fact_stmt::native_matrix::MatrixDefinitionResidualProof::CheckedBeta(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__native_matrix__MatrixResidualBetaProof(f0, capture, runtime))];
+let mut output = node("MatrixDefinitionResidualProof", "CheckedBeta", fields);
+output
+},
+crate::execute::execute_fact_stmt::native_matrix::MatrixDefinitionResidualProof::ExactEvaluation(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__native_matrix__MatrixExactEvaluationProof(f0, capture, runtime))];
+let mut output = node("MatrixDefinitionResidualProof", "ExactEvaluation", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__native_matrix__MatrixComponentReduction(value: &crate::execute::execute_fact_stmt::native_matrix::MatrixComponentReduction, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::native_matrix::MatrixComponentReduction { value: f0, evidence: f1 } => {
+let fields = vec![("value", capture_ast__obj__Obj(f0, capture, runtime)), ("evidence", capture_execute__execute_fact_stmt__native_matrix__MatrixComponentReductionEvidence(f1, capture, runtime))];
+let mut output = node("MatrixComponentReduction", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__by_object_definition__by_fn_application__normalize_function_body__FunctionBodyNormalizationProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::by_fn_application::normalize_function_body::FunctionBodyNormalizationProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::by_fn_application::normalize_function_body::FunctionBodyNormalizationProof { expansions: f0, expanded_body: f1 } => {
@@ -40586,6 +42492,92 @@ let output = match value {
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::finite_index_union::FiniteFibresCertificate { fact: f0, cite_fact_id: f1, parameter_renamings: f2 } => {
 let fields = vec![("fact", capture_ast__fact__forall_fact__ForallFact(f0, capture, runtime)), ("cite_fact_id", capture.fact_reference(f1, runtime)), ("parameter_renamings", JsonValue::Array((f2).iter().map(|item| capture_execute__execute_fact_stmt__verify_forall_fact__result__ForallParameterRenaming(item, capture, runtime)).collect()))];
 let mut output = node("FiniteFibresCertificate", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__matrix_operations__ExtendedMatrixScalarMembershipProof(value: &crate::execute::execute_fact_stmt::matrix_operations::ExtendedMatrixScalarMembershipProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::matrix_operations::ExtendedMatrixScalarMembershipProof::Rank(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__matrix_operations__MatrixRankScalarProof(f0, capture, runtime))];
+let mut output = node("ExtendedMatrixScalarMembershipProof", "Rank", fields);
+output
+},
+crate::execute::execute_fact_stmt::matrix_operations::ExtendedMatrixScalarMembershipProof::Cofactor(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__matrix_operations__MatrixCofactorScalarProof(f0, capture, runtime))];
+let mut output = node("ExtendedMatrixScalarMembershipProof", "Cofactor", fields);
+output
+},
+crate::execute::execute_fact_stmt::matrix_operations::ExtendedMatrixScalarMembershipProof::InnerProduct(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__matrix_operations__FiniteInnerProductScalarProof(f0, capture, runtime))];
+let mut output = node("ExtendedMatrixScalarMembershipProof", "InnerProduct", fields);
+output
+},
+crate::execute::execute_fact_stmt::matrix_operations::ExtendedMatrixScalarMembershipProof::EuclideanNorm(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__matrix_operations__EuclideanNormScalarProof(f0, capture, runtime))];
+let mut output = node("ExtendedMatrixScalarMembershipProof", "EuclideanNorm", fields);
+output
+},
+crate::execute::execute_fact_stmt::matrix_operations::ExtendedMatrixScalarMembershipProof::FrobeniusNorm(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__matrix_operations__MatrixFrobeniusNormScalarProof(f0, capture, runtime))];
+let mut output = node("ExtendedMatrixScalarMembershipProof", "FrobeniusNorm", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__native_matrix__MatrixSpaceMembershipProof(value: &crate::execute::execute_fact_stmt::native_matrix::MatrixSpaceMembershipProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::native_matrix::MatrixSpaceMembershipProof { signature: f0, membership: f1 } => {
+let fields = vec![("signature", capture_ast__obj__FnSet(f0, capture, runtime)), ("membership", capture_execute__execute_fact_stmt__native_matrix__MatrixSpaceMembershipEvidence(f1, capture, runtime))];
+let mut output = node("MatrixSpaceMembershipProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__native_matrix__MatrixFunctionMembershipProof(value: &crate::execute::execute_fact_stmt::native_matrix::MatrixFunctionMembershipProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::native_matrix::MatrixFunctionMembershipProof { callable: f0, target: f1 } => {
+let fields = vec![("callable", capture_execute__execute_fact_stmt__native_matrix__MatrixCallableProof(f0, capture, runtime)), ("target", capture_ast__obj__FnSet(f1, capture, runtime))];
+let mut output = node("MatrixFunctionMembershipProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__native_matrix__MatrixApplicationMembershipProof(value: &crate::execute::execute_fact_stmt::native_matrix::MatrixApplicationMembershipProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::native_matrix::MatrixApplicationMembershipProof { callable: f0, return_set: f1 } => {
+let fields = vec![("callable", capture_execute__execute_fact_stmt__native_matrix__MatrixCallableProof(f0, capture, runtime)), ("return_set", capture_ast__obj__Obj(f1, capture, runtime))];
+let mut output = node("MatrixApplicationMembershipProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__native_matrix__MatrixScalarComplexProof(value: &crate::execute::execute_fact_stmt::native_matrix::MatrixScalarComplexProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::native_matrix::MatrixScalarComplexProof {  } => {
+let fields = vec![];
+let mut output = node("MatrixScalarComplexProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__native_matrix__MatrixScalarRealProof(value: &crate::execute::execute_fact_stmt::native_matrix::MatrixScalarRealProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::native_matrix::MatrixScalarRealProof { input_is_real: f0 } => {
+let fields = vec![("input_is_real", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f0, capture, runtime))];
+let mut output = node("MatrixScalarRealProof", "", fields);
 output
 },
 };
@@ -40870,6 +42862,17 @@ output
 capture.intern_evidence(output)
 }
 
+pub(super) fn capture_execute__execute_fact_stmt__matrix_operations__MatrixRealCoordinatesProof(value: &crate::execute::execute_fact_stmt::matrix_operations::MatrixRealCoordinatesProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::matrix_operations::MatrixRealCoordinatesProof { source: f0, coordinates: f1 } => {
+let fields = vec![("source", capture_execute__execute_fact_stmt__known_tuple__KnownTupleValueProof(f0, capture, runtime)), ("coordinates", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("MatrixRealCoordinatesProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
 pub(super) fn capture_execute__execute_fact_stmt__function_domain__FunctionCallDomainsAlphaMatchProof(value: &crate::execute::execute_fact_stmt::function_domain::FunctionCallDomainsAlphaMatchProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::function_domain::FunctionCallDomainsAlphaMatchProof { layers: f0 } => {
@@ -40993,6 +42996,49 @@ output
 capture.intern_evidence(output)
 }
 
+pub(super) fn capture_execute__execute_fact_stmt__native_matrix__MatrixResidualBetaProof(value: &crate::execute::execute_fact_stmt::native_matrix::MatrixResidualBetaProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::native_matrix::MatrixResidualBetaProof { left: f0, right: f1, proof: f2 } => {
+let fields = vec![("left", capture_execute__execute_fact_stmt__native_matrix__MatrixResidualBeta(f0, capture, runtime)), ("right", capture_execute__execute_fact_stmt__native_matrix__MatrixResidualBeta(f1, capture, runtime)), ("proof", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f2, capture, runtime))];
+let mut output = node("MatrixResidualBetaProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__native_matrix__MatrixExactEvaluationProof(value: &crate::execute::execute_fact_stmt::native_matrix::MatrixExactEvaluationProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::native_matrix::MatrixExactEvaluationProof { left_value: f0, right_value: f1, cited_equal_fact_ids: f2, matrix_scalar_evaluations: f3, aggregate_evaluations: f4, function_evaluations: f5 } => {
+let fields = vec![("left_value", capture_ast__obj__Obj(f0, capture, runtime)), ("right_value", capture_ast__obj__Obj(f1, capture, runtime)), ("cited_equal_fact_ids", JsonValue::Array((f2).iter().map(|item| capture.fact_reference(item, runtime)).collect())), ("matrix_scalar_evaluations", JsonValue::Array((f3).iter().map(|item| capture_execute__execute_eval_stmt__aggregate_evaluation_result__MatrixScalarEvaluationResult(item, capture, runtime)).collect())), ("aggregate_evaluations", JsonValue::Array((f4).iter().map(|item| capture_execute__execute_eval_stmt__aggregate_evaluation_result__AggregateEvaluationResult(item, capture, runtime)).collect())), ("function_evaluations", JsonValue::Array((f5).iter().map(|item| capture_execute__execute_eval_stmt__aggregate_evaluation_result__FunctionApplicationEvaluationResult(item, capture, runtime)).collect()))];
+let mut output = node("MatrixExactEvaluationProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__native_matrix__MatrixComponentReductionEvidence(value: &crate::execute::execute_fact_stmt::native_matrix::MatrixComponentReductionEvidence, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::native_matrix::MatrixComponentReductionEvidence::Unchanged => {
+let fields = vec![];
+let mut output = node("MatrixComponentReductionEvidence", "Unchanged", fields);
+output
+},
+crate::execute::execute_fact_stmt::native_matrix::MatrixComponentReductionEvidence::NativeApplication(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__native_matrix__MatrixNestedApplicationReduction(f0, capture, runtime))];
+let mut output = node("MatrixComponentReductionEvidence", "NativeApplication", fields);
+output
+},
+crate::execute::execute_fact_stmt::native_matrix::MatrixComponentReductionEvidence::ConjugateArgument(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__native_matrix__MatrixComponentReduction(f0, capture, runtime))];
+let mut output = node("MatrixComponentReductionEvidence", "ConjugateArgument", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__by_object_definition__by_fn_application__normalize_function_body__FunctionBodyExpansionProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::by_fn_application::normalize_function_body::FunctionBodyExpansionProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::by_fn_application::normalize_function_body::FunctionBodyExpansionProof::Composition(f0) => {
@@ -41040,6 +43086,77 @@ output
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::closed_subtraction_bound::BoundDirection::Upper => {
 let fields = vec![];
 let mut output = node("BoundDirection", "Upper", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__matrix_operations__MatrixRankScalarProof(value: &crate::execute::execute_fact_stmt::matrix_operations::MatrixRankScalarProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::matrix_operations::MatrixRankScalarProof { target: f0 } => {
+let fields = vec![("target", capture.standard_set(f0, runtime))];
+let mut output = node("MatrixRankScalarProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__matrix_operations__MatrixCofactorScalarProof(value: &crate::execute::execute_fact_stmt::matrix_operations::MatrixCofactorScalarProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::matrix_operations::MatrixCofactorScalarProof { carrier: f0 } => {
+let fields = vec![("carrier", capture_execute__execute_fact_stmt__matrix_operations__MatrixScalarCarrierProof(f0, capture, runtime))];
+let mut output = node("MatrixCofactorScalarProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__matrix_operations__FiniteInnerProductScalarProof(value: &crate::execute::execute_fact_stmt::matrix_operations::FiniteInnerProductScalarProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::matrix_operations::FiniteInnerProductScalarProof { carrier: f0 } => {
+let fields = vec![("carrier", capture_execute__execute_fact_stmt__matrix_operations__MatrixScalarCarrierProof(f0, capture, runtime))];
+let mut output = node("FiniteInnerProductScalarProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__matrix_operations__EuclideanNormScalarProof(value: &crate::execute::execute_fact_stmt::matrix_operations::EuclideanNormScalarProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::matrix_operations::EuclideanNormScalarProof { target: f0 } => {
+let fields = vec![("target", capture.standard_set(f0, runtime))];
+let mut output = node("EuclideanNormScalarProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__matrix_operations__MatrixFrobeniusNormScalarProof(value: &crate::execute::execute_fact_stmt::matrix_operations::MatrixFrobeniusNormScalarProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::matrix_operations::MatrixFrobeniusNormScalarProof { target: f0 } => {
+let fields = vec![("target", capture.standard_set(f0, runtime))];
+let mut output = node("MatrixFrobeniusNormScalarProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__native_matrix__MatrixSpaceMembershipEvidence(value: &crate::execute::execute_fact_stmt::native_matrix::MatrixSpaceMembershipEvidence, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::native_matrix::MatrixSpaceMembershipEvidence::Exact(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f0, capture, runtime))];
+let mut output = node("MatrixSpaceMembershipEvidence", "Exact", fields);
+output
+},
+crate::execute::execute_fact_stmt::native_matrix::MatrixSpaceMembershipEvidence::RealToComplex(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f0, capture, runtime))];
+let mut output = node("MatrixSpaceMembershipEvidence", "RealToComplex", fields);
 output
 },
 };
@@ -41131,6 +43248,33 @@ output
 capture.intern_evidence(output)
 }
 
+pub(super) fn capture_execute__execute_fact_stmt__native_matrix__MatrixResidualBeta(value: &crate::execute::execute_fact_stmt::native_matrix::MatrixResidualBeta, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::native_matrix::MatrixResidualBeta::Unchanged(f0) => {
+let fields = vec![("0", capture_ast__obj__Obj(f0, capture, runtime))];
+let mut output = node("MatrixResidualBeta", "Unchanged", fields);
+output
+},
+crate::execute::execute_fact_stmt::native_matrix::MatrixResidualBeta::Expanded(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__native_matrix__MatrixResidualBetaExpansion(f0, capture, runtime))];
+let mut output = node("MatrixResidualBeta", "Expanded", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__native_matrix__MatrixNestedApplicationReduction(value: &crate::execute::execute_fact_stmt::native_matrix::MatrixNestedApplicationReduction, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::native_matrix::MatrixNestedApplicationReduction { application_well_defined: f0, callable: f1, body: f2, continuation: f3 } => {
+let fields = vec![("application_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(f0, capture, runtime)), ("callable", capture_execute__execute_fact_stmt__native_matrix__MatrixCallableProof(f1, capture, runtime)), ("body", capture_ast__obj__Obj(f2, capture, runtime)), ("continuation", capture_execute__execute_fact_stmt__native_matrix__MatrixComponentReduction(f3, capture, runtime))];
+let mut output = node("MatrixNestedApplicationReduction", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__by_object_definition__by_fn_application__normalize_function_body__CompositionBodyExpansionProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::by_fn_application::normalize_function_body::CompositionBodyExpansionProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::by_fn_application::normalize_function_body::CompositionBodyExpansionProof { application: f0, application_well_defined: f1, composition: f2, function_equal: f3, expanded_body: f4, continued_body: f5 } => {
@@ -41153,11 +43297,38 @@ output
 capture.intern_evidence(output)
 }
 
+pub(super) fn capture_execute__execute_fact_stmt__matrix_operations__MatrixScalarCarrierProof(value: &crate::execute::execute_fact_stmt::matrix_operations::MatrixScalarCarrierProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::matrix_operations::MatrixScalarCarrierProof::StandardSubset => {
+let fields = vec![];
+let mut output = node("MatrixScalarCarrierProof", "StandardSubset", fields);
+output
+},
+crate::execute::execute_fact_stmt::matrix_operations::MatrixScalarCarrierProof::RealInputs(f0) => {
+let fields = vec![("0", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__matrix_operations__MatrixRealOperandProof(item, capture, runtime)).collect()))];
+let mut output = node("MatrixScalarCarrierProof", "RealInputs", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
 pub(super) fn capture_execute__execute_fact_stmt__function_domain__FunctionCallReturnCarriersProof(value: &crate::execute::execute_fact_stmt::function_domain::FunctionCallReturnCarriersProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::function_domain::FunctionCallReturnCarriersProof { selected_equal: f0, alternative_equal: f1 } => {
 let fields = vec![("selected_equal", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__KnownEqualityPathProof(f0, capture, runtime)), ("alternative_equal", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__KnownEqualityPathProof(f1, capture, runtime))];
 let mut output = node("FunctionCallReturnCarriersProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__native_matrix__MatrixResidualBetaExpansion(value: &crate::execute::execute_fact_stmt::native_matrix::MatrixResidualBetaExpansion, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::native_matrix::MatrixResidualBetaExpansion { application_well_defined: f0, source: f1, body: f2 } => {
+let fields = vec![("application_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(f0, capture, runtime)), ("source", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__by_object_definition__by_fn_application__by_parent_checked_beta__ParentCheckedBetaFunctionBody(f1, capture, runtime)), ("body", capture_ast__obj__Obj(f2, capture, runtime))];
+let mut output = node("MatrixResidualBetaExpansion", "", fields);
 output
 },
 };

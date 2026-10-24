@@ -1,0 +1,34 @@
+# A member absent from another set witnesses unequal sets and failure of inclusion.
+thm member_distinguishes_sets:
+    ? forall A, B set, a set:
+        a $in A
+        not a $in B
+        =>:
+            A != B
+    by contra:
+        ? A != B
+        impossible a $in B
+
+thm member_prevents_subset:
+    ? forall A, B set, a set:
+        a $in A
+        not a $in B
+        =>:
+            not A $subset B
+    by contra:
+        ? not A $subset B
+        impossible a $in B
+
+# Split union membership; the left branch contradicts the retained absence premise.
+thm union_member_outside_left:
+    ? forall A, B set, a set:
+        a $in union(A, B)
+        not a $in A
+        =>:
+            a $in B
+    by cases:
+        ? a $in B
+        case a $in A:
+            impossible a $in A
+        case a $in B:
+            a $in B

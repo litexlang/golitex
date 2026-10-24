@@ -1,0 +1,20 @@
+# Preserve sign and nonzero information along standard numeric inclusions.
+forall x Z-:
+    x $in Q-
+    x $in R-
+    x $in Z*
+    x $in Q*
+    x $in R*
+    x $in C*
+    x $in C
+forall x Q+:
+    x $in R+
+    x $in Q*
+    x $in R*
+    x $in C*
+forall x N+:
+    x $in Q+
+    x $in Z*
+forall x Q*:
+    x $in R*
+    x $in C*

@@ -185,7 +185,7 @@ fn dispatch_algo_by_cases(
         line_file: stmt.line_file.clone(),
     };
     match runtime.match_case_by_case_body(&pseudo, &subst, verify_state)? {
-        Some((_i, body)) => Ok(Ok(body)),
+        Some(selected) => Ok(Ok(selected.expanded_body)),
         None => Ok(Err(ExecEvalStmtFailed::AlgoDispatchFailed)),
     }
 }

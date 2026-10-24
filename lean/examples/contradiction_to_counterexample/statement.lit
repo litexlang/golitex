@@ -1,0 +1,7 @@
+# Prove by contradiction that not every member of {0} equals 1.
+by contra:
+    ? not forall x {0}:
+        x = 1
+    impossible 0 = 1
+obtain a from exist x {0} st {x != 1}
+a != 1

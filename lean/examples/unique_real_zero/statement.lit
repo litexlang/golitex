@@ -1,0 +1,5 @@
+# Zero is the unique real number equal to zero; obtain and reuse that witness.
+witness exist! x R st {x = 0} from 0
+exist! y R st {y = 0}
+obtain a from exist! x R st {x = 0}
+a = 0

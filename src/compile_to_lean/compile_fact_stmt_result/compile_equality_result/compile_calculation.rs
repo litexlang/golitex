@@ -4,12 +4,63 @@ use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
 use crate::prelude::*;
 
 impl LitexToLeanCompiler {
+    pub(in crate::compile_to_lean) fn compile_builtin_closed_equality(
+        &self,
+        fact: &EqualFact,
+        proof: &EqualitySearchProofByCalculation,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        let values = match proof {
+            EqualitySearchProofByCalculation::ClosedDecimal {
+                left_normal,
+                right_normal,
+            } => ClosedValuePair::Decimal {
+                left: left_normal.clone(),
+                right: right_normal.clone(),
+            },
+            EqualitySearchProofByCalculation::ClosedRational {
+                left_normal,
+                right_normal,
+            } => {
+                let left = self
+                    .compile_numeric_observation(&fact.left, position)?
+                    .3
+                    .ok_or_else(|| LeanCompileError::unsupported("ClosedEquality/Expression"))?;
+                let right = self
+                    .compile_numeric_observation(&fact.right, position)?
+                    .3
+                    .ok_or_else(|| LeanCompileError::unsupported("ClosedEquality/Expression"))?;
+                if left.to_obj().readable_string() != *left_normal
+                    || right.to_obj().readable_string() != *right_normal
+                {
+                    return Err(LeanCompileError::unsupported("ClosedEquality/NormalForms"));
+                }
+                ClosedValuePair::Rational { left, right }
+            }
+            _ => {
+                return Err(LeanCompileError::unsupported(
+                    "ClosedEquality/BuiltinFamily",
+                ))
+            }
+        };
+        self.compile_closed_equality(fact, &ClosedEqualityCalculationProof { values }, position)
+    }
+
     pub(in crate::compile_to_lean) fn compile_closed_equality(
         &self,
         fact: &EqualFact,
         proof: &ClosedEqualityCalculationProof,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
+        if matches!(proof.values, ClosedValuePair::Complex { .. }) {
+            return self.compile_closed_complex_relation(
+                &fact.left,
+                &fact.right,
+                &proof.values,
+                true,
+                position,
+            );
+        }
         let left = self
             .compile_numeric_observation(&fact.left, position)?
             .3

@@ -1,0 +1,12 @@
+# A nonpositive addend preserves an upper bound, on either side of the sum.
+forall hi, a, b R:
+    a <= hi
+    b <= 0
+    =>:
+        a + b <= hi
+
+forall hi, a, b R:
+    b <= hi
+    a <= 0
+    =>:
+        a + b <= hi

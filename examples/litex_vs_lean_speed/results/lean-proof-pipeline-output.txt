@@ -1,0 +1,139 @@
+theorem ProofPipeline.one_add_one : 1 + 1 = 2 :=
+Eq.refl (1 + 1)
+theorem ProofPipeline.add_one : ∀ (n : Nat), n + 1 = n.succ :=
+fun n => Eq.refl (n + 1)
+theorem ProofPipeline.one_add_one : @Eq.{1} Nat
+  (@HAdd.hAdd.{0, 0, 0} Nat Nat Nat (@instHAdd.{0} Nat instAddNat)
+    (@OfNat.ofNat.{0} Nat (nat_lit 1) (instOfNatNat (nat_lit 1)))
+    (@OfNat.ofNat.{0} Nat (nat_lit 1) (instOfNatNat (nat_lit 1))))
+  (@OfNat.ofNat.{0} Nat (nat_lit 2) (instOfNatNat (nat_lit 2))) :=
+@Eq.refl.{1} Nat
+  (@HAdd.hAdd.{0, 0, 0} Nat Nat Nat (@instHAdd.{0} Nat instAddNat)
+    (@OfNat.ofNat.{0} Nat (nat_lit 1) (instOfNatNat (nat_lit 1)))
+    (@OfNat.ofNat.{0} Nat (nat_lit 1) (instOfNatNat (nat_lit 1))))
+theorem ProofPipeline.add_one : ∀ (n : Nat),
+  @Eq.{1} Nat
+    (@HAdd.hAdd.{0, 0, 0} Nat Nat Nat (@instHAdd.{0} Nat instAddNat) n
+      (@OfNat.ofNat.{0} Nat (nat_lit 1) (instOfNatNat (nat_lit 1))))
+    (Nat.succ n) :=
+fun (n : Nat) =>
+  @Eq.refl.{1} Nat
+    (@HAdd.hAdd.{0, 0, 0} Nat Nat Nat (@instHAdd.{0} Nat instAddNat) n
+      (@OfNat.ofNat.{0} Nat (nat_lit 1) (instOfNatNat (nat_lit 1))))
+theorem ProofPipeline.one_add_one_term : 1 + 1 = 2 :=
+Eq.refl 2
+@Eq.refl : ∀ {α : Sort u_1} (a : α), a = a
+2
+@[implicit_reducible] protected def Nat.add : Nat → Nat → Nat :=
+fun x x_1 => Nat.brecOn (motive := fun x => Nat → Nat) x_1 Nat.add._f x
+'ProofPipeline.one_add_one' does not depend on any axioms
+'ProofPipeline.add_one' does not depend on any axioms
+'ProofPipeline.one_add_one_term' does not depend on any axioms
+RAW_TYPE Lean.Expr.app
+  (Lean.Expr.app
+    (Lean.Expr.app (Lean.Expr.const `Eq [Lean.Level.succ (Lean.Level.zero)]) (Lean.Expr.const `Nat []))
+    (Lean.Expr.app
+      (Lean.Expr.app
+        (Lean.Expr.app
+          (Lean.Expr.app
+            (Lean.Expr.app
+              (Lean.Expr.app
+                (Lean.Expr.const `HAdd.hAdd [Lean.Level.zero, Lean.Level.zero, Lean.Level.zero])
+                (Lean.Expr.const `Nat []))
+              (Lean.Expr.const `Nat []))
+            (Lean.Expr.const `Nat []))
+          (Lean.Expr.app
+            (Lean.Expr.app (Lean.Expr.const `instHAdd [Lean.Level.zero]) (Lean.Expr.const `Nat []))
+            (Lean.Expr.const `instAddNat [])))
+        (Lean.Expr.app
+          (Lean.Expr.app
+            (Lean.Expr.app (Lean.Expr.const `OfNat.ofNat [Lean.Level.zero]) (Lean.Expr.const `Nat []))
+            (Lean.Expr.lit (Lean.Literal.natVal 1)))
+          (Lean.Expr.app (Lean.Expr.const `instOfNatNat []) (Lean.Expr.lit (Lean.Literal.natVal 1)))))
+      (Lean.Expr.app
+        (Lean.Expr.app
+          (Lean.Expr.app (Lean.Expr.const `OfNat.ofNat [Lean.Level.zero]) (Lean.Expr.const `Nat []))
+          (Lean.Expr.lit (Lean.Literal.natVal 1)))
+        (Lean.Expr.app (Lean.Expr.const `instOfNatNat []) (Lean.Expr.lit (Lean.Literal.natVal 1))))))
+  (Lean.Expr.app
+    (Lean.Expr.app
+      (Lean.Expr.app (Lean.Expr.const `OfNat.ofNat [Lean.Level.zero]) (Lean.Expr.const `Nat []))
+      (Lean.Expr.lit (Lean.Literal.natVal 2)))
+    (Lean.Expr.app (Lean.Expr.const `instOfNatNat []) (Lean.Expr.lit (Lean.Literal.natVal 2))))
+RAW_PROOF Lean.Expr.app
+  (Lean.Expr.app (Lean.Expr.const `Eq.refl [Lean.Level.succ (Lean.Level.zero)]) (Lean.Expr.const `Nat []))
+  (Lean.Expr.app
+    (Lean.Expr.app
+      (Lean.Expr.app
+        (Lean.Expr.app
+          (Lean.Expr.app
+            (Lean.Expr.app
+              (Lean.Expr.const `HAdd.hAdd [Lean.Level.zero, Lean.Level.zero, Lean.Level.zero])
+              (Lean.Expr.const `Nat []))
+            (Lean.Expr.const `Nat []))
+          (Lean.Expr.const `Nat []))
+        (Lean.Expr.app
+          (Lean.Expr.app (Lean.Expr.const `instHAdd [Lean.Level.zero]) (Lean.Expr.const `Nat []))
+          (Lean.Expr.const `instAddNat [])))
+      (Lean.Expr.app
+        (Lean.Expr.app
+          (Lean.Expr.app (Lean.Expr.const `OfNat.ofNat [Lean.Level.zero]) (Lean.Expr.const `Nat []))
+          (Lean.Expr.lit (Lean.Literal.natVal 1)))
+        (Lean.Expr.app (Lean.Expr.const `instOfNatNat []) (Lean.Expr.lit (Lean.Literal.natVal 1)))))
+    (Lean.Expr.app
+      (Lean.Expr.app
+        (Lean.Expr.app (Lean.Expr.const `OfNat.ofNat [Lean.Level.zero]) (Lean.Expr.const `Nat []))
+        (Lean.Expr.lit (Lean.Literal.natVal 1)))
+      (Lean.Expr.app (Lean.Expr.const `instOfNatNat []) (Lean.Expr.lit (Lean.Literal.natVal 1)))))
+RAW_TYPE Lean.Expr.forallE
+  `n
+  (Lean.Expr.const `Nat [])
+  (Lean.Expr.app
+    (Lean.Expr.app
+      (Lean.Expr.app (Lean.Expr.const `Eq [Lean.Level.succ (Lean.Level.zero)]) (Lean.Expr.const `Nat []))
+      (Lean.Expr.app
+        (Lean.Expr.app
+          (Lean.Expr.app
+            (Lean.Expr.app
+              (Lean.Expr.app
+                (Lean.Expr.app
+                  (Lean.Expr.const `HAdd.hAdd [Lean.Level.zero, Lean.Level.zero, Lean.Level.zero])
+                  (Lean.Expr.const `Nat []))
+                (Lean.Expr.const `Nat []))
+              (Lean.Expr.const `Nat []))
+            (Lean.Expr.app
+              (Lean.Expr.app (Lean.Expr.const `instHAdd [Lean.Level.zero]) (Lean.Expr.const `Nat []))
+              (Lean.Expr.const `instAddNat [])))
+          (Lean.Expr.bvar 0))
+        (Lean.Expr.app
+          (Lean.Expr.app
+            (Lean.Expr.app (Lean.Expr.const `OfNat.ofNat [Lean.Level.zero]) (Lean.Expr.const `Nat []))
+            (Lean.Expr.lit (Lean.Literal.natVal 1)))
+          (Lean.Expr.app (Lean.Expr.const `instOfNatNat []) (Lean.Expr.lit (Lean.Literal.natVal 1))))))
+    (Lean.Expr.app (Lean.Expr.const `Nat.succ []) (Lean.Expr.bvar 0)))
+  (Lean.BinderInfo.default)
+RAW_PROOF Lean.Expr.lam
+  `n
+  (Lean.Expr.const `Nat [])
+  (Lean.Expr.app
+    (Lean.Expr.app (Lean.Expr.const `Eq.refl [Lean.Level.succ (Lean.Level.zero)]) (Lean.Expr.const `Nat []))
+    (Lean.Expr.app
+      (Lean.Expr.app
+        (Lean.Expr.app
+          (Lean.Expr.app
+            (Lean.Expr.app
+              (Lean.Expr.app
+                (Lean.Expr.const `HAdd.hAdd [Lean.Level.zero, Lean.Level.zero, Lean.Level.zero])
+                (Lean.Expr.const `Nat []))
+              (Lean.Expr.const `Nat []))
+            (Lean.Expr.const `Nat []))
+          (Lean.Expr.app
+            (Lean.Expr.app (Lean.Expr.const `instHAdd [Lean.Level.zero]) (Lean.Expr.const `Nat []))
+            (Lean.Expr.const `instAddNat [])))
+        (Lean.Expr.bvar 0))
+      (Lean.Expr.app
+        (Lean.Expr.app
+          (Lean.Expr.app (Lean.Expr.const `OfNat.ofNat [Lean.Level.zero]) (Lean.Expr.const `Nat []))
+          (Lean.Expr.lit (Lean.Literal.natVal 1)))
+        (Lean.Expr.app (Lean.Expr.const `instOfNatNat []) (Lean.Expr.lit (Lean.Literal.natVal 1))))))
+  (Lean.BinderInfo.default)

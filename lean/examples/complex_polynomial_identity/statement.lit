@@ -1,0 +1,3 @@
+# Prove a polynomial identity for an arbitrary complex object.
+forall z C:
+    (z + i) * (z - i) = z ^ 2 + 1

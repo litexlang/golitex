@@ -1,0 +1,33 @@
+# Combine the recorded base membership with a sign or nonzero premise.
+forall x Q:
+    0 < x
+    =>:
+        x $in Q+
+forall x Q:
+    x < 0
+    =>:
+        x $in Q-
+forall x Z:
+    x < 0
+    =>:
+        x $in Z-
+forall x R:
+    x < 0
+    =>:
+        x $in R-
+forall x Q:
+    x != 0
+    =>:
+        x $in Q*
+forall x Z:
+    x != 0
+    =>:
+        x $in Z*
+forall x R:
+    x != 0
+    =>:
+        x $in R*
+forall x C:
+    x != 0
+    =>:
+        x $in C*

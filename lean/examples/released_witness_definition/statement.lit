@@ -1,0 +1,6 @@
+# Recover the property of a chosen real witness, then compute its successor.
+witness exist source R st {source = 2} from 2
+have chosen R:
+    chosen = 2
+release obj def chosen
+chosen + 1 = 3

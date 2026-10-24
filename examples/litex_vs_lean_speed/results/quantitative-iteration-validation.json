@@ -1,0 +1,21 @@
+{
+  "provenance": {
+    "kind": "archived_full_process_measurements",
+    "measured_at": "2026-10-24T10:08:04.051673+08:00",
+    "note": "Measured before this public source placement; source bytes are unchanged. Host and original workspace paths are redacted, not rewritten as claims of historical execution at the public paths.",
+    "timing_scope": "Serial fresh processes; Litex strict full-file checking vs native Lean full-file checking including Mathlib imports and axiom printouts; excludes lake environment setup. No proof-search or language-wide speed claim."
+  },
+  "positive_validations": 6,
+  "expected_rejections": 12,
+  "repeated_successful_checks": 18,
+  "all_expected_outcomes_passed": true,
+  "source_hashes": {
+    "sources/quantitative-iteration/litex/01_parametric_newton.lit": "bdb0503aa08ab458b6f4bb1040c3ca7cf3a6de1388c1009df7ba1019fa98d897",
+    "sources/quantitative-iteration/lean/01_parametric_newton.lean": "0f7224e92a1d19c92111113cfdb2153c2d55c45536eeaf69cae53c4838acf4b4",
+    "sources/quantitative-iteration/litex/02_quadratic_descent.lit": "b361f522d12147189855ccfe6c4bda8aefc4b8cc877817c004e844097c72fa37",
+    "sources/quantitative-iteration/lean/02_quadratic_descent.lean": "3f8859b53b59a5c97f73040621dffad83eec45062aa5ee860302db7211186ee6",
+    "sources/quantitative-iteration/litex/03_perturbed_geometric.lit": "4083d14791a6e325254994526979021535b1572d987a17276a0dc7ab49c77db1",
+    "sources/quantitative-iteration/lean/03_perturbed_geometric.lean": "c75eaf44e9616f25725fe84e14347b37e18729bfbd01616a62d43f525c116a52"
+  },
+  "trust": "No user trust, axiom, abstract_prop, sorry or admit in the promoted source. Native Lean named results print only propext, Classical.choice and Quot.sound. Independent native proofs do not replay Litex proof evidence."
+}

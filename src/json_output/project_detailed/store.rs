@@ -74,6 +74,37 @@ pub(super) fn project_store_and_infer(
         return object_for(runtime, entries);
     };
     if let InferResult::AtomicFact(InferAtomicFactResult::InFact(rules)) = infer {
+        let matrices: Vec<_> = rules
+            .iter()
+            .filter_map(|rule| {
+                let InferInFactResult::MatrixExpand(proof) = rule else {
+                    return None;
+                };
+                Some(object_for(
+                    runtime,
+                    vec![
+                        ("source", fact_id_entry(runtime, proof.source_fact_id)),
+                        (
+                            "matrix_space",
+                            string(
+                                Obj::SetFormer(SetFormer::MatrixSet(proof.matrix_space.clone()))
+                                    .readable_string(),
+                            ),
+                        ),
+                        (
+                            "carrier_equal",
+                            super::searched::project_known_equality_path(
+                                &proof.carrier_equal,
+                                runtime,
+                            ),
+                        ),
+                    ],
+                ))
+            })
+            .collect();
+        if !matrices.is_empty() {
+            entries.push(("matrix_expansions", JsonValue::Array(matrices)));
+        }
         let templates = rules
             .iter()
             .filter_map(|rule| {
@@ -116,6 +147,39 @@ pub(super) fn project_store_and_infer(
             .collect::<Vec<_>>();
         if !templates.is_empty() {
             entries.push(("template_membership_rules", JsonValue::Array(templates)));
+        }
+    }
+    if let InferResult::AtomicFact(InferAtomicFactResult::InFact(rules)) = infer {
+        let ranges = rules
+            .iter()
+            .filter_map(|r| {
+                let InferInFactResult::FnRange(p) = r else {
+                    return None;
+                };
+                Some(object_for(
+                    runtime,
+                    vec![
+                        (
+                            "signature_selection",
+                            project_signature_selection(&p.signature_selection, runtime),
+                        ),
+                        (
+                            "codomain_membership",
+                            project_inferred_store(&p.codomain_membership, runtime),
+                        ),
+                        (
+                            "preimage_witness",
+                            p.preimage_witness
+                                .as_ref()
+                                .map(|p| project_inferred_store(p, runtime))
+                                .unwrap_or(JsonValue::Null),
+                        ),
+                    ],
+                ))
+            })
+            .collect::<Vec<_>>();
+        if !ranges.is_empty() {
+            entries.push(("function_range_rules", JsonValue::Array(ranges)));
         }
     }
     let prop_rules = project_prop_definition_infer(infer, runtime);
@@ -673,4 +737,27 @@ fn project_store(store: &StoreFactResult, runtime: &Runtime) -> JsonValue {
             ),
         )],
     )
+}
+
+pub(super) fn project_signature_selection(
+    selected: &crate::execute::execute_fact_stmt::function_signature_selection::FunctionSignatureSelection,
+    runtime: &Runtime,
+) -> JsonValue {
+    use crate::execute::execute_fact_stmt::function_signature_selection::FunctionSignatureSelection;
+    let mut fields = vec![(
+        "signature",
+        string(
+            Obj::FunctionSpace(FunctionSpace::FnSet(selected.signature().clone()))
+                .readable_string(),
+        ),
+    )];
+    match selected {
+        FunctionSignatureSelection::AnonymousLiteral { .. } => {
+            fields.push(("source", string("anonymous_literal")))
+        }
+        FunctionSignatureSelection::Property { fact_id, .. } => {
+            fields.push(("source", fact_id_entry(runtime, *fact_id)))
+        }
+    }
+    object_for(runtime, fields)
 }

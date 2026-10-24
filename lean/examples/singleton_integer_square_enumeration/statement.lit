@@ -1,0 +1,5 @@
+# The only integer in [-2, -2] has square 4.
+by enumerate finite_set:
+    ? forall n closed_range(-2, -2):
+        n * n = 4
+    n * n = 4

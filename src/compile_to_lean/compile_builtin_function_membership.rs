@@ -20,7 +20,14 @@ impl LitexToLeanCompiler {
         let source = &domain.source.signature;
         let target = &domain.target;
         let target_obj = Obj::FunctionSpace(FunctionSpace::FnSet(target.clone()));
-        if member.set.ir() != target_obj.ir()
+        let target_matches = match &member.set {
+            Obj::SetFormer(SetFormer::FiniteSeqSet(sequence)) => {
+                Self::validate_finite_seq_signature(sequence, target)?;
+                true
+            }
+            _ => member.set.ir() == target_obj.ir(),
+        };
+        if !target_matches
             || !matches!(
                 domain.comparison,
                 FunctionDomainComparisonProof::AlphaEquivalent
@@ -30,6 +37,16 @@ impl LitexToLeanCompiler {
             return Err(LeanCompileError::unsupported(
                 "FunctionTheorem/CompleteDomain",
             ));
+        }
+        if let CompleteFunctionDomainSourceProof::FiniteFunction(finite) = &domain.source.source {
+            return self.compile_finite_function_membership(
+                member,
+                domain,
+                finite,
+                requirements,
+                references,
+                position,
+            );
         }
         let source_signature = self.compile_fn_signature(source, position)?;
         let source_member = match &domain.source.source {
@@ -84,6 +101,25 @@ impl LitexToLeanCompiler {
                 ))
             }
         };
+        let body = self.compile_function_return_forall(
+            &member.element,
+            target,
+            requirements,
+            references,
+            position,
+        )?;
+        let target_term = self.compile_object_reference(&member.set, position)?;
+        Ok(format!("(by\n  let _source_signature := {source_signature}\n  have _source_member : Litex.In _membership_function (Litex.fnSet _source_signature) := {source_member}\n  have _same_domain : _source_signature.domain = _membership_target.val.domain := rfl\n  let _target := {target_term}\n  change M.mem (Litex.denote _membership_function) (Litex.FunctionSemantics.fnSetValue _membership_target.val.domain _membership_target.val.output)\n  have _source_graph : M.mem (Litex.denote _membership_function) (Litex.FunctionSemantics.fnSetValue _source_signature.domain _source_signature.output) := _source_member\n  rw [_same_domain] at _source_graph\n  apply Litex.FunctionSemantics.fnSet_of_returns _source_graph\n  {})", body.replace('\n', "\n  ")))
+    }
+
+    pub(in crate::compile_to_lean) fn compile_function_return_forall(
+        &self,
+        function: &Obj,
+        target: &FnSet,
+        requirements: &[Fact],
+        references: &[String],
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
         let [Fact::ForallFact(forall)] = requirements else {
             return Err(LeanCompileError::unsupported(
                 "FunctionTheorem/ReturnForall",
@@ -127,7 +163,7 @@ impl LitexToLeanCompiler {
             return Err(LeanCompileError::unsupported("FunctionTheorem/Arity"));
         }
         let call = function_application(
-            &member.element,
+            function,
             parameters
                 .iter()
                 .map(|(p, _)| Box::new(Obj::Identifier(IdentifierObj::from_bound_name(p))))
@@ -177,7 +213,6 @@ impl LitexToLeanCompiler {
             ));
         }
         body.push(format!("exact {} {}", references[0], arguments.join(" ")));
-        let target_term = self.compile_object_reference(&member.set, position)?;
-        Ok(format!("(by\n  let _source_signature := {source_signature}\n  have _source_member : Litex.In _membership_function (Litex.fnSet _source_signature) := {source_member}\n  have _same_domain : _source_signature.domain = _membership_target.val.domain := rfl\n  let _target := {target_term}\n  change M.mem (Litex.denote _membership_function) (Litex.FunctionSemantics.fnSetValue _membership_target.val.domain _membership_target.val.output)\n  have _source_graph : M.mem (Litex.denote _membership_function) (Litex.FunctionSemantics.fnSetValue _source_signature.domain _source_signature.output) := _source_member\n  rw [_same_domain] at _source_graph\n  apply Litex.FunctionSemantics.fnSet_of_returns _source_graph\n  {})", body.join("\n").replace('\n', "\n  ")))
+        Ok(body.join("\n"))
     }
 }

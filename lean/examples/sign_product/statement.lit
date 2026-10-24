@@ -1,0 +1,5 @@
+# The sign of a product factors, independently of operand order.
+forall x R, y R:
+    sign(x * y) = sign(x) * sign(y)
+    sign(x * y) = sign(y) * sign(x)
+    sign(x) * sign(y) = sign(y * x)

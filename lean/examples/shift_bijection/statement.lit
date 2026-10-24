@@ -1,0 +1,21 @@
+# Translation by one is a bijection of the reals; each target has a unique preimage.
+have fn shift(x R) R = x + 1
+claim:
+    ? forall left, right R:
+        shift(left) = shift(right)
+        =>:
+            left = right
+    left + 1 = shift(left)
+    shift(right) = right + 1
+    left + 1 = right + 1
+    left = right
+by def $injective(R, R, shift)
+claim:
+    ? forall target R:
+        exist source R st {target = shift(source)}
+    shift(target - 1) = target
+    witness exist source R st {target = shift(source)} from target - 1
+by def $surjective(R, R, shift)
+by def $bijective(R, R, shift)
+forall target R:
+    exist! source R st {shift(source) = target}

@@ -1,0 +1,39 @@
+{
+  "litex": [
+    {
+      "case": "sum_sq_zero",
+      "litex": "success"
+    },
+    {
+      "case": "positive_ratio",
+      "litex": "success"
+    },
+    {
+      "case": "mul_cancel",
+      "litex": "success"
+    },
+    {
+      "case": "sq_plus_one_pos",
+      "litex": "success"
+    },
+    {
+      "case": "sum_sq_ge_two_mul",
+      "litex": "success"
+    },
+    {
+      "case": "even_witness_above",
+      "litex": "success"
+    },
+    {
+      "case": "nat_succ_lt_two_mul",
+      "litex": "success"
+    }
+  ],
+  "lean": {
+    "file": "sources/new-round/Validate.lean",
+    "exit": 0,
+    "sorry": false,
+    "stderr": "",
+    "stdout_tail": "'validated_sum_sq_zero_nlinarith' depends on axioms: [propext, Classical.choice, Quot.sound]\n'validated_positive_ratio_div_pos' depends on axioms: [propext, Classical.choice, Quot.sound]\n'validated_mul_cancel_linarith' depends on axioms: [propext, Classical.choice, Quot.sound]\n'validated_mul_cancel_cancel' depends on axioms: [propext, Classical.choice, Quot.sound]\n'validated_sq_plus_one_pos_positivity' depends on axioms: [propext, Classical.choice, Quot.sound]\n'validated_sq_plus_one_pos_nlinarith' depends on axioms: [propext, Classical.choice, Quot.sound]\n'validated_sum_sq_ge_two_mul_nlinarith' depends on axioms: [propext, Classical.choice, Quot.sound]\n'validated_even_witness_above_witness' depends on axioms: [propext, Quot.sound]\n'validated_nat_succ_lt_two_mul_omega' depends on axioms: [propext, Quot.sound]\n'validated_nat_succ_lt_two_mul_nlinarith' depends on axioms: [propext, Classical.choice, Quot.sound]\n"
+  }
+}

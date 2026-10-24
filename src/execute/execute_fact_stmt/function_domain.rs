@@ -556,6 +556,7 @@ pub struct CompleteFunctionDomainProof {
 }
 
 pub enum CompleteFunctionDomainSourceProof {
+    Matrix(Box<super::native_matrix::MatrixCallableProof>),
     FiniteFunction(Box<super::finite_function::FiniteFunctionSignatureProof>),
     Composition(Box<CompositionCallableProof>),
     AnonymousFunction {
@@ -754,6 +755,12 @@ impl Runtime {
                 source: CompleteFunctionDomainSourceProof::Composition(Box::new(proof)),
             });
         }
+        for proof in self.matrix_callables(function, ctx)? {
+            domains.push(CompleteFunctionDomainProof {
+                signature: proof.function.body.clone(),
+                source: CompleteFunctionDomainSourceProof::Matrix(Box::new(proof)),
+            });
+        }
         // Do not read a neighbor's memberships: exact-subject properties are
         // the authority for complete domains, including checked space aliases.
         let mut seen_memberships = HashSet::new();
@@ -767,6 +774,7 @@ impl Runtime {
                     EqualToObjShape::FnSet,
                     EqualToObjShape::SeqSet,
                     EqualToObjShape::FiniteSeqSet,
+                    EqualToObjShape::Other,
                 ],
             ) {
                 let Some(signature) = self.function_space_signature(&carrier) else {
@@ -785,7 +793,7 @@ impl Runtime {
         Ok(domains)
     }
 
-    fn complete_application_return_domains(
+    pub(crate) fn complete_application_return_domains(
         &mut self,
         application: &FnObj,
         path: &[(Obj, Obj, crate::runtime::FactId)],
@@ -884,13 +892,18 @@ impl Runtime {
                     EqualToObjShape::FnSet,
                     EqualToObjShape::SeqSet,
                     EqualToObjShape::FiniteSeqSet,
+                    EqualToObjShape::Other,
                 ],
             );
             let Some((carrier, carrier_path)) = return_peers.into_iter().find(|(carrier, _)| {
                 matches!(
                     carrier,
                     Obj::FunctionSpace(FunctionSpace::FnSet(_))
-                        | Obj::SetFormer(SetFormer::SeqSet(_) | SetFormer::FiniteSeqSet(_))
+                        | Obj::SetFormer(
+                            SetFormer::SeqSet(_)
+                                | SetFormer::FiniteSeqSet(_)
+                                | SetFormer::MatrixSet(_)
+                        )
                 )
             }) else {
                 continue;
@@ -931,6 +944,9 @@ impl Runtime {
     /// The same exact signature represents ordinary and sequence spaces.
     /// Return carriers remain upper bounds; they do not identify a function.
     pub(crate) fn function_space_signature(&mut self, space: &Obj) -> Option<FnSet> {
+        if let Obj::SetFormer(SetFormer::MatrixSet(matrix)) = space {
+            return Some(self.matrix_fn_signature(&matrix.set, &matrix.rows, &matrix.cols));
+        }
         let (domain, ret_set) = match space {
             Obj::FunctionSpace(FunctionSpace::FnSet(signature)) => return Some(signature.clone()),
             Obj::SetFormer(SetFormer::SeqSet(sequence)) => {
@@ -972,6 +988,7 @@ impl Runtime {
                 EqualToObjShape::FnSet,
                 EqualToObjShape::SeqSet,
                 EqualToObjShape::FiniteSeqSet,
+                EqualToObjShape::Other,
             ],
         );
         for (carrier, _) in peers {

@@ -1,0 +1,2114 @@
+{
+  "kind": "homepage_reading_sources",
+  "snapshot_date": "2026-10-23",
+  "source_repository": "../litex-webpage",
+  "normalization": "LF line endings; exactly one trailing newline; otherwise source unchanged",
+  "source_entries": 63,
+  "distinct_examples": 56,
+  "examples": [
+    {
+      "id": "homepageProjectionPlaygroundSource",
+      "title": "正交投影与唯一最近点",
+      "expected": "success",
+      "category": "example",
+      "sha256": "01866ecb4dc8dcf9f7b185b476a53c08f9b2e0348ae1f2f298d8ddcfd7099d18",
+      "origins": [
+        {
+          "id": "homepageProjectionPlaygroundSource",
+          "origin": "app/lib/litex/homepageProjection.ts:homepageProjectionPlaygroundSource",
+          "title": "正交投影与唯一最近点"
+        }
+      ],
+      "file": "13-orthogonal-projection.lit",
+      "group": "main",
+      "verification": {
+        "id": "homepageProjectionPlaygroundSource",
+        "exit_code": 0,
+        "run_result": "success",
+        "kind": "run",
+        "session_terminated": false,
+        "termination": null,
+        "trust": false,
+        "seconds": 5.22,
+        "command": [
+          "target/release/litex",
+          "-lang",
+          "en",
+          "-f",
+          "tmp/2026-10-23/reading-homepage-import/probes/homepageProjectionPlaygroundSource.lit",
+          "-strict"
+        ]
+      }
+    },
+    {
+      "id": "homepageAveragePlaygroundSource",
+      "title": "平均值与最小平方误差",
+      "expected": "success",
+      "category": "example",
+      "sha256": "d3bf55bb8cccbd37c40b7eeca0c378a0387378d06a0a70747b51a953a479e9d2",
+      "origins": [
+        {
+          "id": "homepageAveragePlaygroundSource",
+          "origin": "app/lib/litex/publicSources.ts:homepageAveragePlaygroundSource",
+          "title": "平均值与最小平方误差"
+        },
+        {
+          "id": "progression-mean-squared-error",
+          "origin": "app/ui/homepage/homepageNarrativeContent.ts:homepageProgression.mean-squared-error",
+          "title": "为什么平均值是最佳拟合"
+        }
+      ],
+      "file": "01-mean-squared-error.lit",
+      "group": "main",
+      "verification": {
+        "id": "homepageAveragePlaygroundSource",
+        "exit_code": 0,
+        "run_result": "success",
+        "kind": "run",
+        "session_terminated": false,
+        "termination": null,
+        "trust": false,
+        "seconds": 3.17,
+        "command": [
+          "target/release/litex",
+          "-lang",
+          "en",
+          "-f",
+          "tmp/2026-10-23/reading-homepage-import/probes/homepageAveragePlaygroundSource.lit",
+          "-strict"
+        ]
+      }
+    },
+    {
+      "id": "homepageFiniteSetsSource",
+      "title": "并集与交集",
+      "expected": "success",
+      "category": "example",
+      "sha256": "23bb9b834cfabc87b1fce2482aa26380a1dea2a83cb1b8641bfc5cdbbec91f76",
+      "origins": [
+        {
+          "id": "homepageFiniteSetsSource",
+          "origin": "app/lib/litex/publicSources.ts:homepageFiniteSetsSource",
+          "title": "并集与交集"
+        },
+        {
+          "id": "progression-finite-sets",
+          "origin": "app/ui/homepage/homepageNarrativeContent.ts:homepageProgression.finite-sets",
+          "title": "逐条理解并集与交集"
+        }
+      ],
+      "file": "02-union-and-intersection.lit",
+      "group": "main",
+      "verification": {
+        "id": "homepageFiniteSetsSource",
+        "exit_code": 0,
+        "run_result": "success",
+        "kind": "run",
+        "session_terminated": false,
+        "termination": null,
+        "trust": false,
+        "seconds": 0.03,
+        "command": [
+          "target/release/litex",
+          "-lang",
+          "en",
+          "-f",
+          "tmp/2026-10-23/reading-homepage-import/probes/homepageFiniteSetsSource.lit",
+          "-strict"
+        ]
+      }
+    },
+    {
+      "id": "homepageNewtonErrorSource",
+      "title": "牛顿迭代的误差恒等式",
+      "expected": "success",
+      "category": "example",
+      "sha256": "68dab249c48a2bd46931f8ea3f4e16db759407e31dd1c2d69cff5e425d7a642b",
+      "origins": [
+        {
+          "id": "homepageNewtonErrorSource",
+          "origin": "app/lib/litex/publicSources.ts:homepageNewtonErrorSource",
+          "title": "牛顿迭代的误差恒等式"
+        }
+      ],
+      "file": "03-newton-error.lit",
+      "group": "main",
+      "verification": {
+        "id": "homepageNewtonErrorSource",
+        "exit_code": 0,
+        "run_result": "success",
+        "kind": "run",
+        "session_terminated": false,
+        "termination": null,
+        "trust": false,
+        "seconds": 0.1,
+        "command": [
+          "target/release/litex",
+          "-lang",
+          "en",
+          "-f",
+          "tmp/2026-10-23/reading-homepage-import/probes/homepageNewtonErrorSource.lit",
+          "-strict"
+        ]
+      }
+    },
+    {
+      "id": "homepageSqrtTwoIrrationalSource",
+      "title": "√2 的无理性",
+      "expected": "success",
+      "category": "example",
+      "sha256": "f1bf3bb0f02cbaa63436bb7e06cd5f5e92a5c67b4b876e016ec5ec328e0f0c62",
+      "origins": [
+        {
+          "id": "homepageSqrtTwoIrrationalSource",
+          "origin": "app/lib/litex/publicSources.ts:homepageSqrtTwoIrrationalSource",
+          "title": "√2 的无理性"
+        },
+        {
+          "id": "progression-sqrt-two-irrational",
+          "origin": "app/ui/homepage/homepageNarrativeContent.ts:homepageProgression.sqrt-two-irrational",
+          "title": "为什么 √2 不是有理数"
+        }
+      ],
+      "file": "04-sqrt-two-irrational.lit",
+      "group": "main",
+      "verification": {
+        "id": "homepageSqrtTwoIrrationalSource",
+        "exit_code": 0,
+        "run_result": "success",
+        "kind": "run",
+        "session_terminated": false,
+        "termination": null,
+        "trust": false,
+        "seconds": 0.05,
+        "command": [
+          "target/release/litex",
+          "-lang",
+          "en",
+          "-f",
+          "tmp/2026-10-23/reading-homepage-import/probes/homepageSqrtTwoIrrationalSource.lit",
+          "-strict"
+        ]
+      }
+    },
+    {
+      "id": "homepageCantorPlaygroundSource",
+      "title": "康托尔对角论证",
+      "expected": "success",
+      "category": "example",
+      "sha256": "fa120d4d6c155b48a25fb3073b39617bb37dd01566b8b1476d6f32324d89873e",
+      "origins": [
+        {
+          "id": "homepageCantorPlaygroundSource",
+          "origin": "app/lib/litex/publicSources.ts:homepageCantorPlaygroundSource",
+          "title": "康托尔对角论证"
+        },
+        {
+          "id": "progression-cantor-diagonal",
+          "origin": "app/ui/homepage/homepageNarrativeContent.ts:homepageProgression.cantor-diagonal",
+          "title": "康托尔对角论证"
+        }
+      ],
+      "file": "05-cantor-diagonal.lit",
+      "group": "main",
+      "verification": {
+        "id": "homepageCantorPlaygroundSource",
+        "exit_code": 0,
+        "run_result": "success",
+        "kind": "run",
+        "session_terminated": false,
+        "termination": null,
+        "trust": false,
+        "seconds": 0.01,
+        "command": [
+          "target/release/litex",
+          "-lang",
+          "en",
+          "-f",
+          "tmp/2026-10-23/reading-homepage-import/probes/homepageCantorPlaygroundSource.lit",
+          "-strict"
+        ]
+      }
+    },
+    {
+      "id": "homepageNewtonPlaygroundSource",
+      "title": "牛顿迭代与残差",
+      "expected": "success",
+      "category": "example",
+      "sha256": "d1b38f0e768d9b42e7b458ccfe85e6d1c9cfe89d0a36a97a04660f26cee03de1",
+      "origins": [
+        {
+          "id": "homepageNewtonPlaygroundSource",
+          "origin": "app/lib/litex/publicSources.ts:homepageNewtonPlaygroundSource",
+          "title": "牛顿迭代与残差"
+        }
+      ],
+      "file": "14-newton-residual.lit",
+      "group": "main",
+      "verification": {
+        "id": "homepageNewtonPlaygroundSource",
+        "exit_code": 0,
+        "run_result": "success",
+        "kind": "run",
+        "session_terminated": false,
+        "termination": null,
+        "trust": false,
+        "seconds": 0.1,
+        "command": [
+          "target/release/litex",
+          "-lang",
+          "en",
+          "-f",
+          "tmp/2026-10-23/reading-homepage-import/probes/homepageNewtonPlaygroundSource.lit",
+          "-strict"
+        ]
+      }
+    },
+    {
+      "id": "homepageClampPlaygroundSource",
+      "title": "分段函数：把负数截为零",
+      "expected": "success",
+      "category": "example",
+      "sha256": "4e61a7e7c408a4fa7e7100e6fc90170bbaecf082599b1258035361e73f26fde3",
+      "origins": [
+        {
+          "id": "homepageClampPlaygroundSource",
+          "origin": "app/lib/litex/publicSources.ts:homepageClampPlaygroundSource",
+          "title": "分段函数：把负数截为零"
+        }
+      ],
+      "file": "15-clamp-at-zero.lit",
+      "group": "main",
+      "verification": {
+        "id": "homepageClampPlaygroundSource",
+        "exit_code": 0,
+        "run_result": "success",
+        "kind": "run",
+        "session_terminated": false,
+        "termination": null,
+        "trust": false,
+        "seconds": 0.01,
+        "command": [
+          "target/release/litex",
+          "-lang",
+          "en",
+          "-f",
+          "tmp/2026-10-23/reading-homepage-import/probes/homepageClampPlaygroundSource.lit",
+          "-strict"
+        ]
+      }
+    },
+    {
+      "id": "homepageReciprocalPlaygroundSource",
+      "title": "倒数函数与乘法",
+      "expected": "success",
+      "category": "example",
+      "sha256": "e8d0eff0123dd0150c0178bfbdc4a8386e15069d3666526cc77f3342cd66c773",
+      "origins": [
+        {
+          "id": "homepageReciprocalPlaygroundSource",
+          "origin": "app/lib/litex/publicSources.ts:homepageReciprocalPlaygroundSource",
+          "title": "倒数函数与乘法"
+        }
+      ],
+      "file": "16-reciprocal-proof.lit",
+      "group": "main",
+      "verification": {
+        "id": "homepageReciprocalPlaygroundSource",
+        "exit_code": 0,
+        "run_result": "success",
+        "kind": "run",
+        "session_terminated": false,
+        "termination": null,
+        "trust": false,
+        "seconds": 0.01,
+        "command": [
+          "target/release/litex",
+          "-lang",
+          "en",
+          "-f",
+          "tmp/2026-10-23/reading-homepage-import/probes/homepageReciprocalPlaygroundSource.lit",
+          "-strict"
+        ]
+      }
+    },
+    {
+      "id": "homepageReciprocalLatexSource",
+      "title": "倒数函数定义",
+      "expected": "success",
+      "category": "example",
+      "sha256": "0189d3f198f1f1b6fbaa52038b25495efd091ac7215c70aa7f445620e36e039d",
+      "origins": [
+        {
+          "id": "homepageReciprocalLatexSource",
+          "origin": "app/lib/litex/publicSources.ts:homepageReciprocalLatexSource",
+          "title": "倒数函数定义"
+        }
+      ],
+      "file": "17-reciprocal-definition.lit",
+      "group": "main",
+      "verification": {
+        "id": "homepageReciprocalLatexSource",
+        "exit_code": 0,
+        "run_result": "success",
+        "kind": "run",
+        "session_terminated": false,
+        "termination": null,
+        "trust": false,
+        "seconds": 0.01,
+        "command": [
+          "target/release/litex",
+          "-lang",
+          "en",
+          "-f",
+          "tmp/2026-10-23/reading-homepage-import/probes/homepageReciprocalLatexSource.lit",
+          "-strict"
+        ]
+      }
+    },
+    {
+      "id": "homepageContextSearchSource",
+      "title": "已有等式与下一步计算",
+      "expected": "success",
+      "category": "example",
+      "sha256": "a6fdb98f0cbeee2b56442c78e81cd0c0a069d555d83f0d117fb17de98e4b0478",
+      "origins": [
+        {
+          "id": "homepageContextSearchSource",
+          "origin": "app/lib/litex/publicSources.ts:homepageContextSearchSource",
+          "title": "已有等式与下一步计算"
+        }
+      ],
+      "file": "18-context-search.lit",
+      "group": "main",
+      "verification": {
+        "id": "homepageContextSearchSource",
+        "exit_code": 0,
+        "run_result": "success",
+        "kind": "run",
+        "session_terminated": false,
+        "termination": null,
+        "trust": false,
+        "seconds": 0.0,
+        "command": [
+          "target/release/litex",
+          "-lang",
+          "en",
+          "-f",
+          "tmp/2026-10-23/reading-homepage-import/probes/homepageContextSearchSource.lit",
+          "-strict"
+        ]
+      }
+    },
+    {
+      "id": "homepageNonzeroImplicationSource",
+      "title": "正数不为零",
+      "expected": "success",
+      "category": "example",
+      "sha256": "a736e5c43a22bd11ec50095ddc105b0435dc78090f48d576e34f0db7ab33e682",
+      "origins": [
+        {
+          "id": "homepageNonzeroImplicationSource",
+          "origin": "app/lib/litex/publicSources.ts:homepageNonzeroImplicationSource",
+          "title": "正数不为零"
+        }
+      ],
+      "file": "19-positive-is-nonzero.lit",
+      "group": "main",
+      "verification": {
+        "id": "homepageNonzeroImplicationSource",
+        "exit_code": 0,
+        "run_result": "success",
+        "kind": "run",
+        "session_terminated": false,
+        "termination": null,
+        "trust": false,
+        "seconds": 0.0,
+        "command": [
+          "target/release/litex",
+          "-lang",
+          "en",
+          "-f",
+          "tmp/2026-10-23/reading-homepage-import/probes/homepageNonzeroImplicationSource.lit",
+          "-strict"
+        ]
+      }
+    },
+    {
+      "id": "homepageCauchySchwarzSource",
+      "title": "柯西–施瓦茨不等式",
+      "expected": "success",
+      "category": "example",
+      "sha256": "94f6541e5338190a150d382cbe8b435e550a19c9fd4c0c559bcf77f8cafa095d",
+      "origins": [
+        {
+          "id": "homepageCauchySchwarzSource",
+          "origin": "app/lib/litex/publicSources.ts:homepageCauchySchwarzSource",
+          "title": "柯西–施瓦茨不等式"
+        }
+      ],
+      "file": "20-cauchy-schwarz.lit",
+      "group": "main",
+      "verification": {
+        "id": "homepageCauchySchwarzSource",
+        "exit_code": 0,
+        "run_result": "success",
+        "kind": "run",
+        "session_terminated": false,
+        "termination": null,
+        "trust": false,
+        "seconds": 0.13,
+        "command": [
+          "target/release/litex",
+          "-lang",
+          "en",
+          "-f",
+          "tmp/2026-10-23/reading-homepage-import/probes/homepageCauchySchwarzSource.lit",
+          "-strict"
+        ]
+      }
+    },
+    {
+      "id": "interactiveTextbookSource",
+      "title": "非负命题与平方定理",
+      "expected": "success",
+      "category": "example",
+      "sha256": "85805e71cfbc928c9db024d5f33d5607ae60393c9bebaa7cb7e8d4759eec0a70",
+      "origins": [
+        {
+          "id": "interactiveTextbookSource",
+          "origin": "app/lib/litex/publicSources.ts:interactiveTextbookSource",
+          "title": "非负命题与平方定理"
+        }
+      ],
+      "file": "21-nonnegative-predicate.lit",
+      "group": "main",
+      "verification": {
+        "id": "interactiveTextbookSource",
+        "exit_code": 0,
+        "run_result": "success",
+        "kind": "run",
+        "session_terminated": false,
+        "termination": null,
+        "trust": false,
+        "seconds": 0.01,
+        "command": [
+          "target/release/litex",
+          "-lang",
+          "en",
+          "-f",
+          "tmp/2026-10-23/reading-homepage-import/probes/interactiveTextbookSource.lit",
+          "-strict"
+        ]
+      }
+    },
+    {
+      "id": "howKernelComparisonSource",
+      "title": "利用假设检查等式",
+      "expected": "success",
+      "category": "example",
+      "sha256": "c00ba140a632f18ed2db5ab2fd10e5978bf4a1a57fe8ab3b560718d1de73032c",
+      "origins": [
+        {
+          "id": "howKernelComparisonSource",
+          "origin": "app/lib/litex/publicSources.ts:howKernelComparisonSource",
+          "title": "利用假设检查等式"
+        }
+      ],
+      "file": "22-conditional-equality.lit",
+      "group": "main",
+      "verification": {
+        "id": "howKernelComparisonSource",
+        "exit_code": 0,
+        "run_result": "success",
+        "kind": "run",
+        "session_terminated": false,
+        "termination": null,
+        "trust": false,
+        "seconds": 0.01,
+        "command": [
+          "target/release/litex",
+          "-lang",
+          "en",
+          "-f",
+          "tmp/2026-10-23/reading-homepage-import/probes/howKernelComparisonSource.lit",
+          "-strict"
+        ]
+      }
+    },
+    {
+      "id": "question-arithmetic",
+      "title": "1 + 1 = 2",
+      "expected": "success",
+      "category": "example",
+      "sha256": "2915bec7143e99b209b2d9f7d21379e67e6472785534a3e12c4d2f9abe7f2cdb",
+      "origins": [
+        {
+          "id": "question-arithmetic",
+          "origin": "app/lib/litex/publicSources.ts:homepageQuestionSources.arithmetic",
+          "title": "1 + 1 = 2"
+        }
+      ],
+      "file": "23-question-arithmetic.lit",
+      "group": "main",
+      "verification": {
+        "id": "question-arithmetic",
+        "exit_code": 0,
+        "run_result": "success",
+        "kind": "run",
+        "session_terminated": false,
+        "termination": null,
+        "trust": false,
+        "seconds": 0.0,
+        "command": [
+          "target/release/litex",
+          "-lang",
+          "en",
+          "-f",
+          "tmp/2026-10-23/reading-homepage-import/probes/question-arithmetic.lit",
+          "-strict"
+        ]
+      }
+    },
+    {
+      "id": "question-finiteSet",
+      "title": "有限集合中的元素",
+      "expected": "success",
+      "category": "example",
+      "sha256": "537feb2aa277ca82a01304c04a16e86e4d14a3c3c67c6d4fd0826e894fb88da5",
+      "origins": [
+        {
+          "id": "question-finiteSet",
+          "origin": "app/lib/litex/publicSources.ts:homepageQuestionSources.finiteSet",
+          "title": "有限集合中的元素"
+        }
+      ],
+      "file": "24-question-finiteset.lit",
+      "group": "main",
+      "verification": {
+        "id": "question-finiteSet",
+        "exit_code": 0,
+        "run_result": "success",
+        "kind": "run",
+        "session_terminated": false,
+        "termination": null,
+        "trust": false,
+        "seconds": 0.0,
+        "command": [
+          "target/release/litex",
+          "-lang",
+          "en",
+          "-f",
+          "tmp/2026-10-23/reading-homepage-import/probes/question-finiteSet.lit",
+          "-strict"
+        ]
+      }
+    },
+    {
+      "id": "question-intersection",
+      "title": "交集中的元素",
+      "expected": "success",
+      "category": "example",
+      "sha256": "9dc63f4006098a55f83bc01da10e449c5348c2cbda8416f783fc7a37a8831ecb",
+      "origins": [
+        {
+          "id": "question-intersection",
+          "origin": "app/lib/litex/publicSources.ts:homepageQuestionSources.intersection",
+          "title": "交集中的元素"
+        }
+      ],
+      "file": "25-question-intersection.lit",
+      "group": "main",
+      "verification": {
+        "id": "question-intersection",
+        "exit_code": 0,
+        "run_result": "success",
+        "kind": "run",
+        "session_terminated": false,
+        "termination": null,
+        "trust": false,
+        "seconds": 0.0,
+        "command": [
+          "target/release/litex",
+          "-lang",
+          "en",
+          "-f",
+          "tmp/2026-10-23/reading-homepage-import/probes/question-intersection.lit",
+          "-strict"
+        ]
+      }
+    },
+    {
+      "id": "question-existence",
+      "title": "大于 10 的实数存在",
+      "expected": "success",
+      "category": "example",
+      "sha256": "3a9dd79e8630c9a5ac6e82a1c70b5bc1f6f481e7cfa1864364e30c7ecc6a0f8b",
+      "origins": [
+        {
+          "id": "question-existence",
+          "origin": "app/lib/litex/publicSources.ts:homepageQuestionSources.existence",
+          "title": "大于 10 的实数存在"
+        }
+      ],
+      "file": "26-question-existence.lit",
+      "group": "main",
+      "verification": {
+        "id": "question-existence",
+        "exit_code": 0,
+        "run_result": "success",
+        "kind": "run",
+        "session_terminated": false,
+        "termination": null,
+        "trust": false,
+        "seconds": 0.0,
+        "command": [
+          "target/release/litex",
+          "-lang",
+          "en",
+          "-f",
+          "tmp/2026-10-23/reading-homepage-import/probes/question-existence.lit",
+          "-strict"
+        ]
+      }
+    },
+    {
+      "id": "question-sum",
+      "title": "有限求和",
+      "expected": "success",
+      "category": "example",
+      "sha256": "a15f35db4336d8498facc1421e47ef46f22c40dda915583405c651e3cc78e311",
+      "origins": [
+        {
+          "id": "question-sum",
+          "origin": "app/lib/litex/publicSources.ts:homepageQuestionSources.sum",
+          "title": "有限求和"
+        }
+      ],
+      "file": "27-question-sum.lit",
+      "group": "main",
+      "verification": {
+        "id": "question-sum",
+        "exit_code": 0,
+        "run_result": "success",
+        "kind": "run",
+        "session_terminated": false,
+        "termination": null,
+        "trust": false,
+        "seconds": 0.0,
+        "command": [
+          "target/release/litex",
+          "-lang",
+          "en",
+          "-f",
+          "tmp/2026-10-23/reading-homepage-import/probes/question-sum.lit",
+          "-strict"
+        ]
+      }
+    },
+    {
+      "id": "question-definitions",
+      "title": "集合与函数定义",
+      "expected": "success",
+      "category": "example",
+      "sha256": "980091f9ad15fca26c7b1704dab0fdaf7919dc750ba1e8c367492a550720b03d",
+      "origins": [
+        {
+          "id": "question-definitions",
+          "origin": "app/lib/litex/publicSources.ts:homepageQuestionSources.definitions",
+          "title": "集合与函数定义"
+        },
+        {
+          "id": "representation-definitions",
+          "origin": "app/ui/homepage/homepageQuestionsContent.ts:homepageOpeningComparisons.definitions",
+          "title": "定义 · 命名对象，给函数写明条件"
+        }
+      ],
+      "file": "28-question-definitions.lit",
+      "group": "main",
+      "verification": {
+        "id": "question-definitions",
+        "exit_code": 0,
+        "run_result": "success",
+        "kind": "run",
+        "session_terminated": false,
+        "termination": null,
+        "trust": false,
+        "seconds": 0.0,
+        "command": [
+          "target/release/litex",
+          "-lang",
+          "en",
+          "-f",
+          "tmp/2026-10-23/reading-homepage-import/probes/question-definitions.lit",
+          "-strict"
+        ]
+      }
+    },
+    {
+      "id": "progression-finite-arithmetic",
+      "title": "把年龄问题写成方程",
+      "expected": "success",
+      "category": "example",
+      "sha256": "41543fc4802c4aae770c84c65f6a75762fdd0bb35014919788669626f8cdb1ad",
+      "origins": [
+        {
+          "id": "progression-finite-arithmetic",
+          "origin": "app/ui/homepage/homepageNarrativeContent.ts:homepageProgression.finite-arithmetic",
+          "title": "把年龄问题写成方程"
+        }
+      ],
+      "file": "29-age-word-problem.lit",
+      "group": "main",
+      "verification": {
+        "id": "progression-finite-arithmetic",
+        "exit_code": 0,
+        "run_result": "success",
+        "kind": "run",
+        "session_terminated": false,
+        "termination": null,
+        "trust": false,
+        "seconds": 0.01,
+        "command": [
+          "target/release/litex",
+          "-lang",
+          "en",
+          "-f",
+          "tmp/2026-10-23/reading-homepage-import/probes/progression-finite-arithmetic.lit",
+          "-strict"
+        ]
+      }
+    },
+    {
+      "id": "progression-ellipse-foci",
+      "title": "把椭圆定义为点集",
+      "expected": "success",
+      "category": "example",
+      "sha256": "c9c3859a9afe899c3a9540a476a39a5f80dbdb0b9d49803cf603826cf6dfff78",
+      "origins": [
+        {
+          "id": "progression-ellipse-foci",
+          "origin": "app/ui/homepage/homepageNarrativeContent.ts:homepageProgression.ellipse-foci",
+          "title": "把椭圆定义为点集"
+        }
+      ],
+      "file": "30-ellipse-foci.lit",
+      "group": "main",
+      "verification": {
+        "id": "progression-ellipse-foci",
+        "exit_code": 0,
+        "run_result": "success",
+        "kind": "run",
+        "session_terminated": false,
+        "termination": null,
+        "trust": false,
+        "seconds": 0.48,
+        "command": [
+          "target/release/litex",
+          "-lang",
+          "en",
+          "-f",
+          "tmp/2026-10-23/reading-homepage-import/probes/progression-ellipse-foci.lit",
+          "-strict"
+        ]
+      }
+    },
+    {
+      "id": "progression-group-left-cancellation",
+      "title": "从群公理推导定理",
+      "expected": "success",
+      "category": "example",
+      "sha256": "76b27ae01df033c32ed2ac7aa0e694ef2707c15e5997e8e420f56e9878fae18e",
+      "origins": [
+        {
+          "id": "progression-group-left-cancellation",
+          "origin": "app/ui/homepage/homepageNarrativeContent.ts:homepageProgression.group-left-cancellation",
+          "title": "从群公理推导定理"
+        }
+      ],
+      "file": "31-group-left-cancellation.lit",
+      "group": "main",
+      "verification": {
+        "id": "progression-group-left-cancellation",
+        "exit_code": 0,
+        "run_result": "success",
+        "kind": "run",
+        "session_terminated": false,
+        "termination": null,
+        "trust": false,
+        "seconds": 0.03,
+        "command": [
+          "target/release/litex",
+          "-lang",
+          "en",
+          "-f",
+          "tmp/2026-10-23/reading-homepage-import/probes/progression-group-left-cancellation.lit",
+          "-strict"
+        ]
+      }
+    },
+    {
+      "id": "newton-library",
+      "title": "复用牛顿迭代与不动点",
+      "expected": "success",
+      "category": "example",
+      "sha256": "0c675caad0c389dfb69a28549435b24d4366cd7a3365fd8e324335f6d3674dc7",
+      "origins": [
+        {
+          "id": "newton-library",
+          "origin": "app/ui/homepage/homepageNarrativeContent.ts:newton-library",
+          "title": "复用牛顿迭代与不动点"
+        }
+      ],
+      "file": "32-newton-library.lit",
+      "group": "main",
+      "verification": {
+        "id": "newton-library",
+        "exit_code": 0,
+        "run_result": "success",
+        "kind": "run",
+        "session_terminated": false,
+        "termination": null,
+        "trust": false,
+        "seconds": 0.03,
+        "command": [
+          "target/release/litex",
+          "-lang",
+          "en",
+          "-f",
+          "tmp/2026-10-23/reading-homepage-import/probes/newton-library.lit",
+          "-strict"
+        ]
+      }
+    },
+    {
+      "id": "agent-accepted",
+      "title": "带定义域的倒数恒等式",
+      "expected": "success",
+      "category": "example",
+      "sha256": "33daac00bd67cf68afb2587888f86eb4c6f91a3618492394132b126677581ad6",
+      "origins": [
+        {
+          "id": "agent-accepted",
+          "origin": "app/ui/homepage/homepageNarrativeContent.ts:agent-accepted",
+          "title": "带定义域的倒数恒等式"
+        }
+      ],
+      "file": "33-agent-accepted.lit",
+      "group": "main",
+      "verification": {
+        "id": "agent-accepted",
+        "exit_code": 0,
+        "run_result": "success",
+        "kind": "run",
+        "session_terminated": false,
+        "termination": null,
+        "trust": false,
+        "seconds": 0.01,
+        "command": [
+          "target/release/litex",
+          "-lang",
+          "en",
+          "-f",
+          "tmp/2026-10-23/reading-homepage-import/probes/agent-accepted.lit",
+          "-strict"
+        ]
+      }
+    },
+    {
+      "id": "python-newton",
+      "title": "按情况计算牛顿迭代",
+      "expected": "success",
+      "category": "example",
+      "sha256": "d755814447a5a5345bf70a180163b1e71b5d1d794beb4ae817e3f2c8f947a9f4",
+      "origins": [
+        {
+          "id": "python-newton",
+          "origin": "app/ui/homepage/homepageNarrativeContent.ts:python-newton",
+          "title": "按情况计算牛顿迭代"
+        }
+      ],
+      "file": "34-python-newton.lit",
+      "group": "main",
+      "verification": {
+        "id": "python-newton",
+        "exit_code": 0,
+        "run_result": "success",
+        "kind": "run",
+        "session_terminated": false,
+        "termination": null,
+        "trust": false,
+        "seconds": 0.0,
+        "command": [
+          "target/release/litex",
+          "-lang",
+          "en",
+          "-f",
+          "tmp/2026-10-23/reading-homepage-import/probes/python-newton.lit",
+          "-strict"
+        ]
+      }
+    },
+    {
+      "id": "lean-source",
+      "title": "等式的独立复核",
+      "expected": "success",
+      "category": "example",
+      "sha256": "c8095a3ca44202e720e0174003cfe99c6efa1ed20e1363e27992bcc2e62f0b32",
+      "origins": [
+        {
+          "id": "lean-source",
+          "origin": "app/ui/homepage/homepageNarrativeContent.ts:lean-source",
+          "title": "等式的独立复核"
+        }
+      ],
+      "file": "35-lean-source.lit",
+      "group": "main",
+      "verification": {
+        "id": "lean-source",
+        "exit_code": 0,
+        "run_result": "success",
+        "kind": "run",
+        "session_terminated": false,
+        "termination": null,
+        "trust": false,
+        "seconds": 0.0,
+        "command": [
+          "target/release/litex",
+          "-lang",
+          "en",
+          "-f",
+          "tmp/2026-10-23/reading-homepage-import/probes/lean-source.lit",
+          "-strict"
+        ]
+      }
+    },
+    {
+      "id": "blueprint-group",
+      "title": "群结构的定义",
+      "expected": "success",
+      "category": "example",
+      "sha256": "e194c929d19777173c11cabbb1ddfcf612d76b09de0c7e968cbf774e2e40bf87",
+      "origins": [
+        {
+          "id": "blueprint-group",
+          "origin": "app/ui/homepage/homepageNarrativeContent.ts:homepageBlueprint.litexCode",
+          "title": "群结构的定义"
+        }
+      ],
+      "file": "36-blueprint-group.lit",
+      "group": "main",
+      "verification": {
+        "id": "blueprint-group",
+        "exit_code": 0,
+        "run_result": "success",
+        "kind": "run",
+        "session_terminated": false,
+        "termination": null,
+        "trust": false,
+        "seconds": 0.01,
+        "command": [
+          "target/release/litex",
+          "-lang",
+          "en",
+          "-f",
+          "tmp/2026-10-23/reading-homepage-import/probes/blueprint-group.lit",
+          "-strict"
+        ]
+      }
+    },
+    {
+      "id": "checking-01-1",
+      "title": "作用域",
+      "expected": "success",
+      "category": "language",
+      "sha256": "1743102b151bb94ef1c051c093de1893d1da4f719f2a7d217801cd6e6778ddc1",
+      "origins": [
+        {
+          "id": "checking-01-1",
+          "origin": "app/ui/homepage/homepageNarrativeContent.ts:checkingLayers.01.1",
+          "title": "作用域"
+        }
+      ],
+      "file": "37-checking-01-1.lit",
+      "group": "main",
+      "verification": {
+        "id": "checking-01-1",
+        "exit_code": 0,
+        "run_result": "success",
+        "kind": "run",
+        "session_terminated": false,
+        "termination": null,
+        "trust": false,
+        "seconds": 0.0,
+        "command": [
+          "target/release/litex",
+          "-lang",
+          "en",
+          "-f",
+          "tmp/2026-10-23/reading-homepage-import/probes/checking-01-1.lit",
+          "-strict"
+        ]
+      }
+    },
+    {
+      "id": "checking-01-2",
+      "title": "良定义性",
+      "expected": "success",
+      "category": "language",
+      "sha256": "b480675f758bb46f9b0c819c780783679b9aad8fd907f6a8f042b83de22681b0",
+      "origins": [
+        {
+          "id": "checking-01-2",
+          "origin": "app/ui/homepage/homepageNarrativeContent.ts:checkingLayers.01.2",
+          "title": "良定义性"
+        }
+      ],
+      "file": "38-checking-01-2.lit",
+      "group": "main",
+      "verification": {
+        "id": "checking-01-2",
+        "exit_code": 0,
+        "run_result": "success",
+        "kind": "run",
+        "session_terminated": false,
+        "termination": null,
+        "trust": false,
+        "seconds": 0.0,
+        "command": [
+          "target/release/litex",
+          "-lang",
+          "en",
+          "-f",
+          "tmp/2026-10-23/reading-homepage-import/probes/checking-01-2.lit",
+          "-strict"
+        ]
+      }
+    },
+    {
+      "id": "checking-01-3",
+      "title": "定义域",
+      "expected": "success",
+      "category": "language",
+      "sha256": "0eadd3be2753210d8c4ab278263cf2a8e3d1e85072aa84516cd053192710741c",
+      "origins": [
+        {
+          "id": "checking-01-3",
+          "origin": "app/ui/homepage/homepageNarrativeContent.ts:checkingLayers.01.3",
+          "title": "定义域"
+        }
+      ],
+      "file": "39-checking-01-3.lit",
+      "group": "main",
+      "verification": {
+        "id": "checking-01-3",
+        "exit_code": 0,
+        "run_result": "success",
+        "kind": "run",
+        "session_terminated": false,
+        "termination": null,
+        "trust": false,
+        "seconds": 0.0,
+        "command": [
+          "target/release/litex",
+          "-lang",
+          "en",
+          "-f",
+          "tmp/2026-10-23/reading-homepage-import/probes/checking-01-3.lit",
+          "-strict"
+        ]
+      }
+    },
+    {
+      "id": "checking-02-1",
+      "title": "内置规则",
+      "expected": "success",
+      "category": "language",
+      "sha256": "79db1a624daf81ee875d8a50d85e060cd93c6d30a0dd32c94c6589f38d708e24",
+      "origins": [
+        {
+          "id": "checking-02-1",
+          "origin": "app/ui/homepage/homepageNarrativeContent.ts:checkingLayers.02.1",
+          "title": "内置规则"
+        }
+      ],
+      "file": "40-checking-02-1.lit",
+      "group": "main",
+      "verification": {
+        "id": "checking-02-1",
+        "exit_code": 0,
+        "run_result": "success",
+        "kind": "run",
+        "session_terminated": false,
+        "termination": null,
+        "trust": false,
+        "seconds": 0.01,
+        "command": [
+          "target/release/litex",
+          "-lang",
+          "en",
+          "-f",
+          "tmp/2026-10-23/reading-homepage-import/probes/checking-02-1.lit",
+          "-strict"
+        ]
+      }
+    },
+    {
+      "id": "checking-02-2",
+      "title": "已知事实",
+      "expected": "success",
+      "category": "language",
+      "sha256": "2e05feb21367d7dd9d8c6c71c03938a0e381c4f8ed9eb74e84a9268f9cec3958",
+      "origins": [
+        {
+          "id": "checking-02-2",
+          "origin": "app/ui/homepage/homepageNarrativeContent.ts:checkingLayers.02.2",
+          "title": "已知事实"
+        }
+      ],
+      "file": "assumptions/checking-02-2.lit",
+      "group": "assumptions",
+      "verification": {
+        "id": "checking-02-2",
+        "exit_code": 0,
+        "run_result": "success",
+        "kind": "run",
+        "session_terminated": false,
+        "termination": null,
+        "trust": true,
+        "seconds": 0.0,
+        "command": [
+          "target/release/litex",
+          "-lang",
+          "en",
+          "-f",
+          "tmp/2026-10-23/reading-homepage-import/probes/checking-02-2.lit"
+        ]
+      }
+    },
+    {
+      "id": "checking-02-3",
+      "title": "定义",
+      "expected": "success",
+      "category": "language",
+      "sha256": "07b2ed713326eb96d56eb15714253aa31c6b39eed9a156b03104af5dd3998adf",
+      "origins": [
+        {
+          "id": "checking-02-3",
+          "origin": "app/ui/homepage/homepageNarrativeContent.ts:checkingLayers.02.3",
+          "title": "定义"
+        }
+      ],
+      "file": "41-checking-02-3.lit",
+      "group": "main",
+      "verification": {
+        "id": "checking-02-3",
+        "exit_code": 0,
+        "run_result": "success",
+        "kind": "run",
+        "session_terminated": false,
+        "termination": null,
+        "trust": false,
+        "seconds": 0.0,
+        "command": [
+          "target/release/litex",
+          "-lang",
+          "en",
+          "-f",
+          "tmp/2026-10-23/reading-homepage-import/probes/checking-02-3.lit",
+          "-strict"
+        ]
+      }
+    },
+    {
+      "id": "checking-02-4",
+      "title": "匹配与代入",
+      "expected": "success",
+      "category": "language",
+      "sha256": "4472e4eeec949ebfedda817d76ef1aa72f4f82fb021efb006260df61f5abf9a2",
+      "origins": [
+        {
+          "id": "checking-02-4",
+          "origin": "app/ui/homepage/homepageNarrativeContent.ts:checkingLayers.02.4",
+          "title": "匹配与代入"
+        }
+      ],
+      "file": "assumptions/checking-02-4.lit",
+      "group": "assumptions",
+      "verification": {
+        "id": "checking-02-4",
+        "exit_code": 0,
+        "run_result": "success",
+        "kind": "run",
+        "session_terminated": false,
+        "termination": null,
+        "trust": true,
+        "seconds": 0.0,
+        "command": [
+          "target/release/litex",
+          "-lang",
+          "en",
+          "-f",
+          "tmp/2026-10-23/reading-homepage-import/probes/checking-02-4.lit"
+        ]
+      }
+    },
+    {
+      "id": "checking-03-1",
+      "title": "by thm",
+      "expected": "success",
+      "category": "language",
+      "sha256": "4f727c728042a2b1c90fdbd1734d00f430b3a9d63f3454b0043bf39d0bb329cf",
+      "origins": [
+        {
+          "id": "checking-03-1",
+          "origin": "app/ui/homepage/homepageNarrativeContent.ts:checkingLayers.03.1",
+          "title": "by thm"
+        }
+      ],
+      "file": "42-checking-03-1.lit",
+      "group": "main",
+      "verification": {
+        "id": "checking-03-1",
+        "exit_code": 0,
+        "run_result": "success",
+        "kind": "run",
+        "session_terminated": false,
+        "termination": null,
+        "trust": false,
+        "seconds": 0.0,
+        "command": [
+          "target/release/litex",
+          "-lang",
+          "en",
+          "-f",
+          "tmp/2026-10-23/reading-homepage-import/probes/checking-03-1.lit",
+          "-strict"
+        ]
+      }
+    },
+    {
+      "id": "checking-03-2",
+      "title": "by def",
+      "expected": "success",
+      "category": "language",
+      "sha256": "fc1857e92abe1c601a826ac8619fa9f36b19c9266811af4e4e65951e3ae560a7",
+      "origins": [
+        {
+          "id": "checking-03-2",
+          "origin": "app/ui/homepage/homepageNarrativeContent.ts:checkingLayers.03.2",
+          "title": "by def"
+        }
+      ],
+      "file": "43-checking-03-2.lit",
+      "group": "main",
+      "verification": {
+        "id": "checking-03-2",
+        "exit_code": 0,
+        "run_result": "success",
+        "kind": "run",
+        "session_terminated": false,
+        "termination": null,
+        "trust": false,
+        "seconds": 0.0,
+        "command": [
+          "target/release/litex",
+          "-lang",
+          "en",
+          "-f",
+          "tmp/2026-10-23/reading-homepage-import/probes/checking-03-2.lit",
+          "-strict"
+        ]
+      }
+    },
+    {
+      "id": "checking-03-3",
+      "title": "by induc",
+      "expected": "success",
+      "category": "language",
+      "sha256": "bc4bde6e6f5a31174d86f1efaf91c4ea294066e981ee183aa5ab28265145601a",
+      "origins": [
+        {
+          "id": "checking-03-3",
+          "origin": "app/ui/homepage/homepageNarrativeContent.ts:checkingLayers.03.3",
+          "title": "by induc"
+        }
+      ],
+      "file": "44-checking-03-3.lit",
+      "group": "main",
+      "verification": {
+        "id": "checking-03-3",
+        "exit_code": 0,
+        "run_result": "success",
+        "kind": "run",
+        "session_terminated": false,
+        "termination": null,
+        "trust": false,
+        "seconds": 0.01,
+        "command": [
+          "target/release/litex",
+          "-lang",
+          "en",
+          "-f",
+          "tmp/2026-10-23/reading-homepage-import/probes/checking-03-3.lit",
+          "-strict"
+        ]
+      }
+    },
+    {
+      "id": "checking-03-4",
+      "title": "by cases",
+      "expected": "success",
+      "category": "language",
+      "sha256": "cf92a8052335f8bb010ceb6531f8695289ab3ec68a457fdded0fc87df5ad8daa",
+      "origins": [
+        {
+          "id": "checking-03-4",
+          "origin": "app/ui/homepage/homepageNarrativeContent.ts:checkingLayers.03.4",
+          "title": "by cases"
+        }
+      ],
+      "file": "45-checking-03-4.lit",
+      "group": "main",
+      "verification": {
+        "id": "checking-03-4",
+        "exit_code": 0,
+        "run_result": "success",
+        "kind": "run",
+        "session_terminated": false,
+        "termination": null,
+        "trust": false,
+        "seconds": 0.0,
+        "command": [
+          "target/release/litex",
+          "-lang",
+          "en",
+          "-f",
+          "tmp/2026-10-23/reading-homepage-import/probes/checking-03-4.lit",
+          "-strict"
+        ]
+      }
+    },
+    {
+      "id": "checking-03-5",
+      "title": "by contra",
+      "expected": "success",
+      "category": "language",
+      "sha256": "ccbc03982769b5eba687541b99ad1d2d4fd2fb7028cc6152470b95a084cc988f",
+      "origins": [
+        {
+          "id": "checking-03-5",
+          "origin": "app/ui/homepage/homepageNarrativeContent.ts:checkingLayers.03.5",
+          "title": "by contra"
+        }
+      ],
+      "file": "46-checking-03-5.lit",
+      "group": "main",
+      "verification": {
+        "id": "checking-03-5",
+        "exit_code": 0,
+        "run_result": "success",
+        "kind": "run",
+        "session_terminated": false,
+        "termination": null,
+        "trust": false,
+        "seconds": 0.0,
+        "command": [
+          "target/release/litex",
+          "-lang",
+          "en",
+          "-f",
+          "tmp/2026-10-23/reading-homepage-import/probes/checking-03-5.lit",
+          "-strict"
+        ]
+      }
+    },
+    {
+      "id": "checking-03-6",
+      "title": "witness",
+      "expected": "success",
+      "category": "language",
+      "sha256": "7aba753128a6e231c4808112f3a4fe4d35fb155f078342a4eec36431a9ee5b6f",
+      "origins": [
+        {
+          "id": "checking-03-6",
+          "origin": "app/ui/homepage/homepageNarrativeContent.ts:checkingLayers.03.6",
+          "title": "witness"
+        }
+      ],
+      "file": "47-checking-03-6.lit",
+      "group": "main",
+      "verification": {
+        "id": "checking-03-6",
+        "exit_code": 0,
+        "run_result": "success",
+        "kind": "run",
+        "session_terminated": false,
+        "termination": null,
+        "trust": false,
+        "seconds": 0.0,
+        "command": [
+          "target/release/litex",
+          "-lang",
+          "en",
+          "-f",
+          "tmp/2026-10-23/reading-homepage-import/probes/checking-03-6.lit",
+          "-strict"
+        ]
+      }
+    },
+    {
+      "id": "design-fact-shape-reuse",
+      "title": "复用事实，无需逐一命名",
+      "expected": "success",
+      "category": "language",
+      "sha256": "34467f0a914d3951504b500f2a8f77de27619514b1261f91f9a27df910e0639d",
+      "origins": [
+        {
+          "id": "design-fact-shape-reuse",
+          "origin": "app/ui/homepage/homepageNarrativeContent.ts:homepageDesignNotes.fact-shape-reuse",
+          "title": "复用事实，无需逐一命名"
+        }
+      ],
+      "file": "48-design-fact-shape-reuse.lit",
+      "group": "main",
+      "verification": {
+        "id": "design-fact-shape-reuse",
+        "exit_code": 0,
+        "run_result": "success",
+        "kind": "run",
+        "session_terminated": false,
+        "termination": null,
+        "trust": false,
+        "seconds": 0.0,
+        "command": [
+          "target/release/litex",
+          "-lang",
+          "en",
+          "-f",
+          "tmp/2026-10-23/reading-homepage-import/probes/design-fact-shape-reuse.lit",
+          "-strict"
+        ]
+      }
+    },
+    {
+      "id": "design-set-as-judgment",
+      "title": "`set` 是一种判断，并非全集",
+      "expected": "success",
+      "category": "language",
+      "sha256": "b1e21b1f5086b4dbfaedc1e54463d237bf33ba8c0ea455e4ccdb37c208a6658a",
+      "origins": [
+        {
+          "id": "design-set-as-judgment",
+          "origin": "app/ui/homepage/homepageNarrativeContent.ts:homepageDesignNotes.set-as-judgment",
+          "title": "`set` 是一种判断，并非全集"
+        }
+      ],
+      "file": "49-design-set-as-judgment.lit",
+      "group": "main",
+      "verification": {
+        "id": "design-set-as-judgment",
+        "exit_code": 0,
+        "run_result": "success",
+        "kind": "run",
+        "session_terminated": false,
+        "termination": null,
+        "trust": false,
+        "seconds": 0.0,
+        "command": [
+          "target/release/litex",
+          "-lang",
+          "en",
+          "-f",
+          "tmp/2026-10-23/reading-homepage-import/probes/design-set-as-judgment.lit",
+          "-strict"
+        ]
+      }
+    },
+    {
+      "id": "design-template-carriers",
+      "title": "模板在使用时绑定载体",
+      "expected": "success",
+      "category": "language",
+      "sha256": "8e6698b72740f2128b036b164ba1d4043a3d799150721a9e03889149192eddd5",
+      "origins": [
+        {
+          "id": "design-template-carriers",
+          "origin": "app/ui/homepage/homepageNarrativeContent.ts:homepageDesignNotes.template-carriers",
+          "title": "模板在使用时绑定载体"
+        }
+      ],
+      "file": "50-design-template-carriers.lit",
+      "group": "main",
+      "verification": {
+        "id": "design-template-carriers",
+        "exit_code": 0,
+        "run_result": "success",
+        "kind": "run",
+        "session_terminated": false,
+        "termination": null,
+        "trust": false,
+        "seconds": 0.0,
+        "command": [
+          "target/release/litex",
+          "-lang",
+          "en",
+          "-f",
+          "tmp/2026-10-23/reading-homepage-import/probes/design-template-carriers.lit",
+          "-strict"
+        ]
+      }
+    },
+    {
+      "id": "design-anonymous-functions",
+      "title": "匿名函数让局部数学保持局部",
+      "expected": "success",
+      "category": "language",
+      "sha256": "6cb4473a4cebf8893fccbb4109e5565244f0da82967ccec813761745e78bbe9c",
+      "origins": [
+        {
+          "id": "design-anonymous-functions",
+          "origin": "app/ui/homepage/homepageNarrativeContent.ts:homepageDesignNotes.anonymous-functions",
+          "title": "匿名函数让局部数学保持局部"
+        }
+      ],
+      "file": "51-design-anonymous-functions.lit",
+      "group": "main",
+      "verification": {
+        "id": "design-anonymous-functions",
+        "exit_code": 0,
+        "run_result": "success",
+        "kind": "run",
+        "session_terminated": false,
+        "termination": null,
+        "trust": false,
+        "seconds": 0.02,
+        "command": [
+          "target/release/litex",
+          "-lang",
+          "en",
+          "-f",
+          "tmp/2026-10-23/reading-homepage-import/probes/design-anonymous-functions.lit",
+          "-strict"
+        ]
+      }
+    },
+    {
+      "id": "design-meaning-before-truth",
+      "title": "先判断含义，再判断真假",
+      "expected": "success",
+      "category": "language",
+      "sha256": "53885b95310fddcacdd2c83b7d36f42abe7e4adc6617f746e4e0cfc20ae4ba42",
+      "origins": [
+        {
+          "id": "design-meaning-before-truth",
+          "origin": "app/ui/homepage/homepageNarrativeContent.ts:homepageDesignNotes.meaning-before-truth",
+          "title": "先判断含义，再判断真假"
+        }
+      ],
+      "file": "52-design-meaning-before-truth.lit",
+      "group": "main",
+      "verification": {
+        "id": "design-meaning-before-truth",
+        "exit_code": 0,
+        "run_result": "success",
+        "kind": "run",
+        "session_terminated": false,
+        "termination": null,
+        "trust": false,
+        "seconds": 0.0,
+        "command": [
+          "target/release/litex",
+          "-lang",
+          "en",
+          "-f",
+          "tmp/2026-10-23/reading-homepage-import/probes/design-meaning-before-truth.lit",
+          "-strict"
+        ]
+      }
+    },
+    {
+      "id": "design-scoped-commit",
+      "title": "证明只提交它承诺的内容",
+      "expected": "success",
+      "category": "language",
+      "sha256": "90ff887e9ae0c3a95c86d6bb51c27ded41cfcfe84910ce24b8a817631cb77be1",
+      "origins": [
+        {
+          "id": "design-scoped-commit",
+          "origin": "app/ui/homepage/homepageNarrativeContent.ts:homepageDesignNotes.scoped-commit",
+          "title": "证明只提交它承诺的内容"
+        }
+      ],
+      "file": "53-design-scoped-commit.lit",
+      "group": "main",
+      "verification": {
+        "id": "design-scoped-commit",
+        "exit_code": 0,
+        "run_result": "success",
+        "kind": "run",
+        "session_terminated": false,
+        "termination": null,
+        "trust": false,
+        "seconds": 0.0,
+        "command": [
+          "target/release/litex",
+          "-lang",
+          "en",
+          "-f",
+          "tmp/2026-10-23/reading-homepage-import/probes/design-scoped-commit.lit",
+          "-strict"
+        ]
+      }
+    },
+    {
+      "id": "design-existence-to-function",
+      "title": "从存在得到构造",
+      "expected": "success",
+      "category": "language",
+      "sha256": "5b43639653b1acb3a18d0b6445519b3361e749fcc98435a8cc3be417f8078edb",
+      "origins": [
+        {
+          "id": "design-existence-to-function",
+          "origin": "app/ui/homepage/homepageNarrativeContent.ts:homepageDesignNotes.existence-to-function",
+          "title": "从存在得到构造"
+        }
+      ],
+      "file": "54-design-existence-to-function.lit",
+      "group": "main",
+      "verification": {
+        "id": "design-existence-to-function",
+        "exit_code": 0,
+        "run_result": "success",
+        "kind": "run",
+        "session_terminated": false,
+        "termination": null,
+        "trust": false,
+        "seconds": 0.0,
+        "command": [
+          "target/release/litex",
+          "-lang",
+          "en",
+          "-f",
+          "tmp/2026-10-23/reading-homepage-import/probes/design-existence-to-function.lit",
+          "-strict"
+        ]
+      }
+    },
+    {
+      "id": "convention-division-by-zero",
+      "title": "除以零",
+      "expected": "rejected",
+      "category": "boundary",
+      "sha256": "f0d3dd3b3d52ab4fb1353d6705053646e900ab3db1d1b0c814dfd8182118d019",
+      "origins": [
+        {
+          "id": "convention-division-by-zero",
+          "origin": "app/ui/homepage/homepageQuestionsContent.ts:homepageLeanConventionExamples.division-by-zero",
+          "title": "除以零"
+        },
+        {
+          "id": "representation-division-by-zero",
+          "origin": "app/ui/homepage/homepageQuestionsContent.ts:homepageOpeningComparisons.division-by-zero",
+          "title": "除以零"
+        }
+      ],
+      "file": "boundaries/convention-division-by-zero.lit",
+      "group": "boundaries",
+      "verification": {
+        "id": "convention-division-by-zero",
+        "exit_code": 1,
+        "run_result": "failure",
+        "kind": "run",
+        "session_terminated": false,
+        "termination": null,
+        "trust": false,
+        "seconds": 0.0,
+        "command": [
+          "target/release/litex",
+          "-lang",
+          "en",
+          "-f",
+          "tmp/2026-10-23/reading-homepage-import/probes/convention-division-by-zero.lit",
+          "-strict"
+        ],
+        "diagnostic": "{\n  \"kind\": \"run\",\n  \"run_result\": \"failure\",\n  \"target\": \"file\",\n  \"path\": \"tmp/2026-10-23/reading-homepage-import/probes/convention-division-by-zero.lit\",\n  \"detail\": \"normal\",\n  \"language\": \"en\",\n  \"statement_results\": [\n    {\n      \"statement_result\": \"rejected\",\n      \"statement\": \"(1 / 0) = 0\"\n    }\n  ],\n  \"errors\": [\n    {\n      \"statement_index\": 0,\n      \"statement\": \"(1 / 0) = 0\",\n      \"phase\": \"well_defined\",\n      \"message\": \"Could not prove that the statement is well-defined.\",\n      \"category\": \"well_defined\",\n      \"expression\": \"(1 / 0)\",\n      \"obligation\": \"0 != 0\"\n    }\n  ],\n  \"session_terminated\": false,\n  \"termination\": null\n}\n"
+      }
+    },
+    {
+      "id": "convention-natural-subtraction",
+      "title": "减法随数的类型而变",
+      "expected": "success",
+      "category": "boundary",
+      "sha256": "6cc9b2d9ae9a2553d2cabc9f646435ec70db8ea2a433000907f6932c8f05d377",
+      "origins": [
+        {
+          "id": "convention-natural-subtraction",
+          "origin": "app/ui/homepage/homepageQuestionsContent.ts:homepageLeanConventionExamples.natural-subtraction",
+          "title": "减法随数的类型而变"
+        },
+        {
+          "id": "representation-natural-subtraction",
+          "origin": "app/ui/homepage/homepageQuestionsContent.ts:homepageOpeningComparisons.natural-subtraction",
+          "title": "减法随数的类型而变"
+        }
+      ],
+      "file": "55-convention-natural-subtraction.lit",
+      "group": "main",
+      "verification": {
+        "id": "convention-natural-subtraction",
+        "exit_code": 0,
+        "run_result": "success",
+        "kind": "run",
+        "session_terminated": false,
+        "termination": null,
+        "trust": false,
+        "seconds": 0.0,
+        "command": [
+          "target/release/litex",
+          "-lang",
+          "en",
+          "-f",
+          "tmp/2026-10-23/reading-homepage-import/probes/convention-natural-subtraction.lit",
+          "-strict"
+        ]
+      }
+    },
+    {
+      "id": "representation-facts",
+      "title": "事实 · 陈述等式或存在性",
+      "expected": "success",
+      "category": "example",
+      "sha256": "152f1f4dbec44ce24e543014570343295398868a09127ad9cd889ca65a3c58fb",
+      "origins": [
+        {
+          "id": "representation-facts",
+          "origin": "app/ui/homepage/homepageQuestionsContent.ts:homepageOpeningComparisons.facts",
+          "title": "事实 · 陈述等式或存在性"
+        }
+      ],
+      "file": "56-representation-facts.lit",
+      "group": "main",
+      "verification": {
+        "id": "representation-facts",
+        "exit_code": 0,
+        "run_result": "success",
+        "kind": "run",
+        "session_terminated": false,
+        "termination": null,
+        "trust": false,
+        "seconds": 0.01,
+        "command": [
+          "target/release/litex",
+          "-lang",
+          "en",
+          "-f",
+          "tmp/2026-10-23/reading-homepage-import/probes/representation-facts.lit",
+          "-strict"
+        ]
+      }
+    },
+    {
+      "id": "representation-statements",
+      "title": "语句 · 两种推进方向",
+      "expected": "success",
+      "category": "example",
+      "sha256": "f58f9f43099ab15e8d556e926b0602b0e72d0e46624e2df5c1d7f6720efe032a",
+      "origins": [
+        {
+          "id": "representation-statements",
+          "origin": "app/ui/homepage/homepageQuestionsContent.ts:homepageOpeningComparisons.statements",
+          "title": "语句 · 两种推进方向"
+        }
+      ],
+      "file": "57-representation-statements.lit",
+      "group": "main",
+      "verification": {
+        "id": "representation-statements",
+        "exit_code": 0,
+        "run_result": "success",
+        "kind": "run",
+        "session_terminated": false,
+        "termination": null,
+        "trust": false,
+        "seconds": 0.01,
+        "command": [
+          "target/release/litex",
+          "-lang",
+          "en",
+          "-f",
+          "tmp/2026-10-23/reading-homepage-import/probes/representation-statements.lit",
+          "-strict"
+        ]
+      }
+    },
+    {
+      "id": "homepageDivisionByZeroSource",
+      "title": "除以零没有定义",
+      "expected": "rejected",
+      "category": "boundary",
+      "sha256": "2e00f14a97ea059c50b2a417a74b9887c8377a50ff8b7ef17e5cb3a3aa8c2ae6",
+      "origins": [
+        {
+          "id": "homepageDivisionByZeroSource",
+          "origin": "app/lib/litex/publicSources.ts:homepageDivisionByZeroSource",
+          "title": "除以零没有定义"
+        }
+      ],
+      "file": "boundaries/homepagedivisionbyzerosource.lit",
+      "group": "boundaries",
+      "verification": {
+        "id": "homepageDivisionByZeroSource",
+        "exit_code": 1,
+        "run_result": "failure",
+        "kind": "run",
+        "session_terminated": false,
+        "termination": null,
+        "trust": false,
+        "seconds": 0.0,
+        "command": [
+          "target/release/litex",
+          "-lang",
+          "en",
+          "-f",
+          "tmp/2026-10-23/reading-homepage-import/probes/homepageDivisionByZeroSource.lit",
+          "-strict"
+        ],
+        "diagnostic": "{\n  \"kind\": \"run\",\n  \"run_result\": \"failure\",\n  \"target\": \"file\",\n  \"path\": \"tmp/2026-10-23/reading-homepage-import/probes/homepageDivisionByZeroSource.lit\",\n  \"detail\": \"normal\",\n  \"language\": \"en\",\n  \"statement_results\": [\n    {\n      \"statement_result\": \"rejected\",\n      \"statement\": \"(1 / 0) = (1 / 0)\"\n    }\n  ],\n  \"errors\": [\n    {\n      \"statement_index\": 0,\n      \"statement\": \"(1 / 0) = (1 / 0)\",\n      \"phase\": \"well_defined\",\n      \"message\": \"Could not prove that the statement is well-defined.\",\n      \"category\": \"well_defined\",\n      \"expression\": \"(1 / 0)\",\n      \"obligation\": \"0 != 0\"\n    }\n  ],\n  \"session_terminated\": false,\n  \"termination\": null\n}\n"
+      }
+    },
+    {
+      "id": "homepageReciprocalZeroSource",
+      "title": "倒数函数不能接受零",
+      "expected": "rejected",
+      "category": "boundary",
+      "sha256": "091cd80747d4e565677622b91815d174f0391c685bb5ce917ea070faf5d20ef5",
+      "origins": [
+        {
+          "id": "homepageReciprocalZeroSource",
+          "origin": "app/lib/litex/publicSources.ts:homepageReciprocalZeroSource",
+          "title": "倒数函数不能接受零"
+        }
+      ],
+      "file": "boundaries/homepagereciprocalzerosource.lit",
+      "group": "boundaries",
+      "verification": {
+        "id": "homepageReciprocalZeroSource",
+        "exit_code": 1,
+        "run_result": "failure",
+        "kind": "run",
+        "session_terminated": false,
+        "termination": null,
+        "trust": false,
+        "seconds": 0.0,
+        "command": [
+          "target/release/litex",
+          "-lang",
+          "en",
+          "-f",
+          "tmp/2026-10-23/reading-homepage-import/probes/homepageReciprocalZeroSource.lit",
+          "-strict"
+        ],
+        "diagnostic": "{\n  \"kind\": \"run\",\n  \"run_result\": \"failure\",\n  \"target\": \"file\",\n  \"path\": \"tmp/2026-10-23/reading-homepage-import/probes/homepageReciprocalZeroSource.lit\",\n  \"detail\": \"normal\",\n  \"language\": \"en\",\n  \"statement_results\": [\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"have fn reciprocal(x R: x != 0) = (1 / x)\",\n      \"proof_method\": {\n        \"type\": \"define_fn\",\n        \"rule_name\": \"Have function equal\",\n        \"message\": \"Define a named function equal to an anonymous function\"\n      },\n      \"stores\": [\n        \"reciprocal $in fn (x R: x != 0) R\"\n      ],\n      \"infers\": [\n        \"reciprocal = fn (x R: x != 0) R{(1 / x)}\"\n      ]\n    },\n    {\n      \"statement_result\": \"rejected\",\n      \"statement\": \"reciprocal(0) = 1\"\n    }\n  ],\n  \"errors\": [\n    {\n      \"statement_index\": 1,\n      \"statement\": \"reciprocal(0) = 1\",\n      \"phase\": \"well_defined\",\n      \"message\": \"Could not prove that the statement is well-defined.\",\n      \"category\": \"well_defined\",\n      \"obligation\": \"0 != 0\"\n    }\n  ],\n  \"session_terminated\": false,\n  \"termination\": null\n}\n"
+      }
+    },
+    {
+      "id": "session-rejected",
+      "title": "交互会话中的错误调用",
+      "expected": "rejected",
+      "category": "boundary",
+      "sha256": "42c4cb77187535d9efcc8db1b393ba6151e4f3372fa30922306baf3a55636027",
+      "origins": [
+        {
+          "id": "session-rejected",
+          "origin": "app/ui/homepage/homepageQuestionsContent.ts:homepageSessionSteps",
+          "title": "交互会话中的错误调用"
+        }
+      ],
+      "file": "boundaries/session-rejected.lit",
+      "group": "boundaries",
+      "verification": {
+        "id": "session-rejected",
+        "exit_code": 1,
+        "run_result": "failure",
+        "kind": "run",
+        "session_terminated": false,
+        "termination": null,
+        "trust": false,
+        "seconds": 0.01,
+        "command": [
+          "target/release/litex",
+          "-lang",
+          "en",
+          "-f",
+          "tmp/2026-10-23/reading-homepage-import/probes/session-rejected.lit",
+          "-strict"
+        ],
+        "diagnostic": "{\n  \"kind\": \"run\",\n  \"run_result\": \"failure\",\n  \"target\": \"file\",\n  \"path\": \"tmp/2026-10-23/reading-homepage-import/probes/session-rejected.lit\",\n  \"detail\": \"normal\",\n  \"language\": \"en\",\n  \"statement_results\": [\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"have fn reciprocal(x R: x != 0) = (1 / x)\",\n      \"proof_method\": {\n        \"type\": \"define_fn\",\n        \"rule_name\": \"Have function equal\",\n        \"message\": \"Define a named function equal to an anonymous function\"\n      },\n      \"stores\": [\n        \"reciprocal $in fn (x R: x != 0) R\"\n      ],\n      \"infers\": [\n        \"reciprocal = fn (x R: x != 0) R{(1 / x)}\"\n      ]\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"reciprocal(2) = (1 / 2)\",\n      \"proof_method\": {\n        \"type\": \"object_definition\",\n        \"rule_name\": \"Object definition\",\n        \"message\": \"Equality follows from an object definition\"\n      },\n      \"stores\": [\n        \"reciprocal(2) = (1 / 2)\"\n      ],\n      \"infers\": []\n    },\n    {\n      \"statement_result\": \"rejected\",\n      \"statement\": \"reciprocal(0) = 0\"\n    }\n  ],\n  \"errors\": [\n    {\n      \"statement_index\": 2,\n      \"statement\": \"reciprocal(0) = 0\",\n      \"phase\": \"well_defined\",\n      \"message\": \"Could not prove that the statement is well-defined.\",\n      \"category\": \"well_defined\",\n      \"obligation\": \"0 != 0\"\n    }\n  ],\n  \"session_terminated\": false,\n  \"termination\": null\n}\n"
+      }
+    }
+  ],
+  "reuse_project": {
+    "directory": "reuse",
+    "origin": "app/ui/homepage/homepageNarrativeContent.ts:mathematicalWorkflow.reuse"
+  },
+  "session_steps": [
+    {
+      "source": "have fn reciprocal(x R: x != 0) R = 1 / x",
+      "accepted": true
+    },
+    {
+      "source": "reciprocal(2) = 1 / 2",
+      "accepted": true
+    },
+    {
+      "source": "reciprocal(0) = 0",
+      "accepted": false
+    },
+    {
+      "source": "reciprocal(4) = 1 / 4",
+      "accepted": true
+    }
+  ],
+  "snapshot_captured_local": "2026-10-23T22:50:15",
+  "snapshot_note": "Copied from the sibling working tree at capture time; later homepage edits do not mutate these checked examples.",
+  "collection_verification": {
+    "command": "target/release/litex -reading -strict -lang zh -r examples/reading/homepage -export tmp/2026-10-23/reading-example-titles/site",
+    "exit_code": 0,
+    "run_result": "success",
+    "source_count": 57,
+    "entry_source": "04-sqrt-two-irrational.lit",
+    "input_digest": "fnv1a64:fc749faf77ef3e65",
+    "bundle_id": "fnv1a64:3ba353e609997620",
+    "user_assumptions": 0,
+    "axioms": 0,
+    "browser_checks": [
+      "projection definition at source line34",
+      "ellipse definition with a > b > 0 and c > 0",
+      "separate reciprocal-zero rejected statement labeled not established",
+      "57 authored labels in Chinese and English; no numbered filenames or .lit in labels",
+      "definition location title switches language without changing selected source",
+      "Chinese-title search works in English mode"
+    ]
+  },
+  "separate_reading_exports": [
+    {
+      "id": "checking-02-2",
+      "command": [
+        "target/release/litex",
+        "-reading",
+        "-lang",
+        "zh",
+        "-f",
+        "examples/reading/homepage/assumptions/checking-02-2.lit",
+        "-export",
+        "tmp/2026-10-23/reading-example-titles/case-sites/checking-02-2"
+      ],
+      "exit_code": 0,
+      "run_result": "success",
+      "site": "tmp/2026-10-23/reading-example-titles/case-sites/checking-02-2"
+    },
+    {
+      "id": "checking-02-4",
+      "command": [
+        "target/release/litex",
+        "-reading",
+        "-lang",
+        "zh",
+        "-f",
+        "examples/reading/homepage/assumptions/checking-02-4.lit",
+        "-export",
+        "tmp/2026-10-23/reading-example-titles/case-sites/checking-02-4"
+      ],
+      "exit_code": 0,
+      "run_result": "success",
+      "site": "tmp/2026-10-23/reading-example-titles/case-sites/checking-02-4"
+    },
+    {
+      "id": "convention-division-by-zero",
+      "command": [
+        "target/release/litex",
+        "-reading",
+        "-lang",
+        "zh",
+        "-strict",
+        "-f",
+        "examples/reading/homepage/boundaries/convention-division-by-zero.lit",
+        "-export",
+        "tmp/2026-10-23/reading-example-titles/case-sites/convention-division-by-zero"
+      ],
+      "exit_code": 1,
+      "run_result": "failure",
+      "site": "tmp/2026-10-23/reading-example-titles/case-sites/convention-division-by-zero"
+    },
+    {
+      "id": "homepageDivisionByZeroSource",
+      "command": [
+        "target/release/litex",
+        "-reading",
+        "-lang",
+        "zh",
+        "-strict",
+        "-f",
+        "examples/reading/homepage/boundaries/homepagedivisionbyzerosource.lit",
+        "-export",
+        "tmp/2026-10-23/reading-example-titles/case-sites/homepageDivisionByZeroSource"
+      ],
+      "exit_code": 1,
+      "run_result": "failure",
+      "site": "tmp/2026-10-23/reading-example-titles/case-sites/homepageDivisionByZeroSource"
+    },
+    {
+      "id": "homepageReciprocalZeroSource",
+      "command": [
+        "target/release/litex",
+        "-reading",
+        "-lang",
+        "zh",
+        "-strict",
+        "-f",
+        "examples/reading/homepage/boundaries/homepagereciprocalzerosource.lit",
+        "-export",
+        "tmp/2026-10-23/reading-example-titles/case-sites/homepageReciprocalZeroSource"
+      ],
+      "exit_code": 1,
+      "run_result": "failure",
+      "site": "tmp/2026-10-23/reading-example-titles/case-sites/homepageReciprocalZeroSource"
+    },
+    {
+      "id": "session-rejected",
+      "command": [
+        "target/release/litex",
+        "-reading",
+        "-lang",
+        "zh",
+        "-strict",
+        "-f",
+        "examples/reading/homepage/boundaries/session-rejected.lit",
+        "-export",
+        "tmp/2026-10-23/reading-example-titles/case-sites/session-rejected"
+      ],
+      "exit_code": 1,
+      "run_result": "failure",
+      "site": "tmp/2026-10-23/reading-example-titles/case-sites/session-rejected"
+    },
+    {
+      "id": "reuse",
+      "command": [
+        "target/release/litex",
+        "-reading",
+        "-lang",
+        "zh",
+        "-strict",
+        "-r",
+        "examples/reading/homepage/reuse",
+        "-export",
+        "tmp/2026-10-23/reading-example-titles/case-sites/reuse"
+      ],
+      "exit_code": 0,
+      "run_result": "success",
+      "site": "tmp/2026-10-23/reading-example-titles/case-sites/reuse"
+    }
+  ],
+  "presentation_titles": "reading-titles.json"
+}

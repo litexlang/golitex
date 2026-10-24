@@ -1,0 +1,5 @@
+# Prove a unique pair when the second coordinate belongs to the first's singleton.
+by contra:
+    ? exist! x {7}, y {x} st {y = x}
+    obtain a, b from exist u {7}, v {u} st {v = u, u != 7 or v != 7}
+    impossible a != 7 or b != 7

@@ -1,3 +1,4 @@
+use crate::compile_to_lean::compile_by_stmt_result::induction_evidence::InductionEvidence;
 use crate::compile_to_lean::helper::*;
 use crate::compile_to_lean::source_position::{SourceOwner, SourcePosition};
 use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
@@ -10,6 +11,15 @@ impl LitexToLeanCompiler {
         &self,
         object: &Obj,
         position: &SourcePosition<'_>,
+    ) -> Result<Option<String>, LeanCompileError> {
+        self.compile_callee_expression_reference(object, position, false)
+    }
+
+    pub(in crate::compile_to_lean) fn compile_callee_expression_reference(
+        &self,
+        object: &Obj,
+        position: &SourcePosition<'_>,
+        observe_numeric: bool,
     ) -> Result<Option<String>, LeanCompileError> {
         if !matches!(object, Obj::ArithmeticOperator(_) | Obj::FnObj(_)) {
             return Ok(None);
@@ -51,7 +61,7 @@ impl LitexToLeanCompiler {
                     if fact != source || wd.obj().ir() != pattern.ir() {
                         return Err(LeanCompileError::unsupported("WD/CalleeConstructorSubject"));
                     }
-                    self.compile_callee_constructor_factory(fact,introduced,assumed,wd,site,application,caller)
+                    self.compile_callee_constructor_factory(fact,introduced,assumed,wd,site,application,caller,observe_numeric)
                 },
             )?;
             found.map(Some).ok_or_else(|| LeanCompileError::new("WD/CalleeProducer", "The selected prior forall has no original constructor at this exact argument stage."))
@@ -67,6 +77,7 @@ impl LitexToLeanCompiler {
         site: &SourcePosition<'_>,
         application: &SearchProofByKnownForallFact,
         caller: &SourcePosition<'_>,
+        observe_numeric: bool,
     ) -> Result<String, LeanCompileError> {
         let header = SourcePosition {
             before: 0,
@@ -76,7 +87,7 @@ impl LitexToLeanCompiler {
         };
         let (mut binders, definitions) = match header.owner {
             SourceOwner::Induction(proof) => {
-                self.compile_induction_constructor_header(source, proof, &header)?
+                self.compile_induction_constructor_header(source, &proof, &header)?
             }
             _ => {
                 let (binders, _, definitions) =
@@ -101,10 +112,20 @@ impl LitexToLeanCompiler {
         let body = if definitions.is_empty() {
             constructor
         } else {
-            format!(
-                "(show Litex.Obj (M := M) _ from by\n  {}\n  exact {constructor}\n)",
-                definitions.join("\n").replace('\n', "\n  ")
-            )
+            format!("({};\n{constructor})", definitions.join(";\n"))
+        };
+        let body = if observe_numeric {
+            // Instantiate the original scalar certificate under the same
+            // source binders and checked call arguments as the constructor.
+            let (value, denotation, member, _) = self.numeric_wd(wd, site)?;
+            let definitions = if definitions.is_empty() {
+                String::new()
+            } else {
+                format!("{};\n", definitions.join(";\n"))
+            };
+            format!("(let _callee_object := {body};\n{definitions}show {{ _z : ℂ // Litex.denote _callee_object = M.number _z ∧ Litex.In _callee_object Litex.C }} from ⟨{value}, {denotation}, {member}⟩)")
+        } else {
+            body
         };
         let factory = if binders.is_empty() {
             body
@@ -123,17 +144,16 @@ impl LitexToLeanCompiler {
         if definitions.is_empty() {
             Ok(applied)
         } else {
-            Ok(format!(
-                "(show Litex.Obj (M := M) _ from by\n  {}\n  exact {applied}\n)",
-                definitions.join("\n").replace('\n', "\n  ")
-            ))
+            // Object values must reduce through the checked argument bindings.
+            // A tactic-created Obj hides its payload behind a metavariable.
+            Ok(format!("({};\n{applied})", definitions.join(";\n")))
         }
     }
 
     fn compile_induction_constructor_header(
         &self,
         source: &ForallFact,
-        proof: &crate::execute::execute_by_stmt::ExecByInducStmtSuccess,
+        proof: &InductionEvidence<'_>,
         position: &SourcePosition<'_>,
     ) -> Result<(Vec<String>, Vec<String>), LeanCompileError> {
         let introduced = &proof.introduced_parameter;
@@ -225,12 +245,15 @@ pub(in crate::compile_to_lean) fn exact_constructor_pattern<'a>(
     object: &Obj,
     substitution: &HashMap<IdentifierId, Obj>,
 ) -> Option<&'a Obj> {
-    if matches!(pattern, Obj::ArithmeticOperator(_) | Obj::FnObj(_))
-        && instantiated_object_matches(pattern, object, substitution)
+    if matches!(
+        pattern,
+        Obj::ArithmeticOperator(_) | Obj::FnObj(_) | Obj::SetFormer(SetFormer::ListSet(_))
+    ) && instantiated_object_matches(pattern, object, substitution)
     {
         return Some(pattern);
     }
     let children: Vec<&Obj> = match pattern {
+        Obj::SetFormer(SetFormer::ListSet(set)) => set.list.iter().map(Box::as_ref).collect(),
         Obj::ArithmeticOperator(ArithmeticOperator::Add(value)) => vec![&value.left, &value.right],
         Obj::ArithmeticOperator(ArithmeticOperator::Sub(value)) => vec![&value.left, &value.right],
         Obj::ArithmeticOperator(ArithmeticOperator::Mul(value)) => vec![&value.left, &value.right],

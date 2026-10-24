@@ -72,8 +72,10 @@ impl LitexToLeanCompiler {
             ),
             _ => return Err(LeanCompileError::unsupported("Witness/Owner")),
         };
-        let ExistShapedFact::Exist(fact) = existential else {
-            return Err(LeanCompileError::unsupported("Witness/ExistUnique"));
+        let (fact, unique) = match existential {
+            ExistShapedFact::Exist(fact) => (fact, false),
+            ExistShapedFact::ExistUnique(fact) => (fact, true),
+            _ => return Err(LeanCompileError::unsupported("Witness/NegativeExistence")),
         };
         let FactWellDefinedProof::ExistFact(formation) = &ambient.exist_fact_well_defined else {
             return Err(LeanCompileError::new(
@@ -97,12 +99,12 @@ impl LitexToLeanCompiler {
             || equalities.len() != count
             || steps.len() != source_steps.len()
             || obligations.body_checks.len() != fact.facts.len()
-            || obligations.uniqueness_check.is_some()
+            || obligations.uniqueness_check.is_some() != unique
         {
             return Err(LeanCompileError::new("Witness/Stages", "The witness must retain every original ordered binder, equality, proof step, and body check."));
         }
         self.validate_parameter_store_capture(&introduced_params.defined_params)?;
-        let proposition = self.compile_exist_formation(fact, formation, position)?;
+        let mut proposition = self.compile_exist_formation(fact, formation, position)?;
         let mut witnesses = Vec::new();
         for (i, (value, checked)) in values
             .iter()
@@ -218,7 +220,18 @@ impl LitexToLeanCompiler {
         if fact.facts.is_empty() {
             tuple.push("True.intro".into());
         }
-        lines.push(format!("exact ⟨{}⟩", tuple.join(", ")));
+        if let Some(check) = &obligations.uniqueness_check {
+            let prior = SourcePosition {
+                before: 2 * count + steps.len() + obligations.body_checks.len(),
+                ..scope
+            };
+            let (unique_type, unique_proof) =
+                self.compile_unique_witness_check(fact, check, &prior)?;
+            proposition = format!("({proposition}) ∧ ({unique_type})");
+            lines.push(format!("exact ⟨⟨{}⟩, {unique_proof}⟩", tuple.join(", ")));
+        } else {
+            lines.push(format!("exact ⟨{}⟩", tuple.join(", ")));
+        }
         let body = lines
             .into_iter()
             .enumerate()

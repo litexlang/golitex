@@ -1,0 +1,13 @@
+# Exclude a value by checking every listed element; use the result to separate values.
+not 4 $in {1, 2, 3}
+forall x R:
+    x != 1
+    x != 2
+    =>:
+        not x $in {1, 2}
+forall A set, x R, y R:
+    x $in A
+    not y $in A
+    =>:
+        x != y
+        y != x

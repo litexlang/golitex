@@ -1,0 +1,8 @@
+claim:
+    ? 2 != 3
+    by contra:
+        ? 2 != 3
+        impossible 2 = 3
+
+# The temporary assumption 2 = 3 is gone.
+2 != 3

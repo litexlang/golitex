@@ -22,6 +22,7 @@ use crate::runtime::runtime_ids::IdentifierId;
 // Shape cut: one nesting level of family enums; leaf payloads unchanged.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Obj {
+    MatrixOperator(MatrixOperator),
     // Finite real supremum/infimum selected only from proved candidate/existence.
     BoundOperator(BoundOperator),
     IntegralOperator(IntegralOperator),
@@ -250,6 +251,9 @@ pub enum SetFormer {
     // Length-n sequences in S (n may be 0). Essentially the FnSet of maps from
     // the one-based index set 1..n into S. Example: `finite_seq(S, n)`.
     FiniteSeqSet(FiniteSeqSet),
+
+    // All two-argument functions on 1..rows × 1..cols with values in set.
+    MatrixSet(MatrixSet),
 
     // Infinite sequences in S. Essentially the FnSet `fn(N+) S`. Example: `seq(S)`.
     SeqSet(SeqSet),
@@ -1024,6 +1028,362 @@ pub struct ClosedRange {
 pub struct FiniteSeqSet {
     pub set: Box<Obj>,
     pub n: Box<Obj>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct MatrixSet {
+    pub set: Box<Obj>,
+    pub rows: Box<Obj>,
+    pub cols: Box<Obj>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum MatrixOperator {
+    Determinant(Determinant),
+    ZeroMatrix(ZeroMatrix),
+    IdentityMatrix(IdentityMatrix),
+    Transpose(MatrixTranspose),
+    ConjugateTranspose(MatrixConjugateTranspose),
+    Trace(MatrixTrace),
+    Add(MatrixAdd),
+    Subtract(MatrixSubtract),
+    Scale(MatrixScale),
+    Multiply(MatrixMultiply),
+    Apply(MatrixApply),
+    Power(MatrixPower),
+    Inverse(MatrixInverse),
+    Rank(MatrixRank),
+    Minor(MatrixMinor),
+    Cofactor(MatrixCofactor),
+    Adjugate(MatrixAdjugate),
+    Diagonal(MatrixDiagonal),
+    OuterProduct(MatrixOuterProduct),
+    InnerProduct(FiniteInnerProduct),
+    EuclideanNorm(EuclideanNorm),
+    FrobeniusNorm(MatrixFrobeniusNorm),
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Determinant {
+    pub matrix: Box<Obj>,
+    pub order: Box<Obj>,
+}
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ZeroMatrix {
+    pub rows: Box<Obj>,
+    pub cols: Box<Obj>,
+}
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct IdentityMatrix {
+    pub order: Box<Obj>,
+}
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct MatrixTranspose {
+    pub matrix: Box<Obj>,
+    pub rows: Box<Obj>,
+    pub cols: Box<Obj>,
+}
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct MatrixConjugateTranspose {
+    pub matrix: Box<Obj>,
+    pub rows: Box<Obj>,
+    pub cols: Box<Obj>,
+}
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct MatrixTrace {
+    pub matrix: Box<Obj>,
+    pub order: Box<Obj>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct MatrixAdd {
+    pub left: Box<Obj>,
+    pub right: Box<Obj>,
+    pub rows: Box<Obj>,
+    pub cols: Box<Obj>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct MatrixSubtract {
+    pub left: Box<Obj>,
+    pub right: Box<Obj>,
+    pub rows: Box<Obj>,
+    pub cols: Box<Obj>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct MatrixScale {
+    pub scalar: Box<Obj>,
+    pub matrix: Box<Obj>,
+    pub rows: Box<Obj>,
+    pub cols: Box<Obj>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct MatrixMultiply {
+    pub left: Box<Obj>,
+    pub right: Box<Obj>,
+    pub rows: Box<Obj>,
+    pub inner: Box<Obj>,
+    pub cols: Box<Obj>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct MatrixApply {
+    pub matrix: Box<Obj>,
+    pub vector: Box<Obj>,
+    pub rows: Box<Obj>,
+    pub cols: Box<Obj>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct MatrixPower {
+    pub matrix: Box<Obj>,
+    pub order: Box<Obj>,
+    pub exponent: Box<Obj>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct MatrixInverse {
+    pub matrix: Box<Obj>,
+    pub order: Box<Obj>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct MatrixRank {
+    pub matrix: Box<Obj>,
+    pub rows: Box<Obj>,
+    pub cols: Box<Obj>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct MatrixMinor {
+    pub matrix: Box<Obj>,
+    pub order: Box<Obj>,
+    pub row: Box<Obj>,
+    pub col: Box<Obj>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct MatrixCofactor {
+    pub matrix: Box<Obj>,
+    pub order: Box<Obj>,
+    pub row: Box<Obj>,
+    pub col: Box<Obj>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct MatrixAdjugate {
+    pub matrix: Box<Obj>,
+    pub order: Box<Obj>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct MatrixDiagonal {
+    pub vector: Box<Obj>,
+    pub order: Box<Obj>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct MatrixOuterProduct {
+    pub left: Box<Obj>,
+    pub right: Box<Obj>,
+    pub rows: Box<Obj>,
+    pub cols: Box<Obj>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct FiniteInnerProduct {
+    pub left: Box<Obj>,
+    pub right: Box<Obj>,
+    pub dimension: Box<Obj>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct EuclideanNorm {
+    pub vector: Box<Obj>,
+    pub dimension: Box<Obj>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct MatrixFrobeniusNorm {
+    pub matrix: Box<Obj>,
+    pub rows: Box<Obj>,
+    pub cols: Box<Obj>,
+}
+
+impl MatrixOperator {
+    pub fn name(&self) -> &'static str {
+        match self {
+            Self::Determinant(_) => "det",
+            Self::ZeroMatrix(_) => "zero_matrix",
+            Self::IdentityMatrix(_) => "identity_matrix",
+            Self::Transpose(_) => "transpose",
+            Self::ConjugateTranspose(_) => "conjugate_transpose",
+            Self::Trace(_) => "trace",
+            Self::Add(_) => "matrix_add",
+            Self::Subtract(_) => "matrix_sub",
+            Self::Scale(_) => "matrix_scale",
+            Self::Multiply(_) => "matrix_mul",
+            Self::Apply(_) => "matrix_apply",
+            Self::Power(_) => "matrix_power",
+            Self::Inverse(_) => "matrix_inverse",
+            Self::Rank(_) => "matrix_rank",
+            Self::Minor(_) => "matrix_minor",
+            Self::Cofactor(_) => "matrix_cofactor",
+            Self::Adjugate(_) => "matrix_adjugate",
+            Self::Diagonal(_) => "diagonal_matrix",
+            Self::OuterProduct(_) => "outer_product",
+            Self::InnerProduct(_) => "inner_product",
+            Self::EuclideanNorm(_) => "euclidean_norm",
+            Self::FrobeniusNorm(_) => "frobenius_norm",
+        }
+    }
+
+    pub fn operand_refs(&self) -> Vec<&Obj> {
+        match self {
+            Self::Determinant(x) => vec![&x.matrix, &x.order],
+            Self::ZeroMatrix(x) => vec![&x.rows, &x.cols],
+            Self::IdentityMatrix(x) => vec![&x.order],
+            Self::Transpose(x) => vec![&x.matrix, &x.rows, &x.cols],
+            Self::ConjugateTranspose(x) => vec![&x.matrix, &x.rows, &x.cols],
+            Self::Trace(x) => vec![&x.matrix, &x.order],
+            Self::Add(x) => vec![&x.left, &x.right, &x.rows, &x.cols],
+            Self::Subtract(x) => vec![&x.left, &x.right, &x.rows, &x.cols],
+            Self::Scale(x) => vec![&x.scalar, &x.matrix, &x.rows, &x.cols],
+            Self::Multiply(x) => vec![&x.left, &x.right, &x.rows, &x.inner, &x.cols],
+            Self::Apply(x) => vec![&x.matrix, &x.vector, &x.rows, &x.cols],
+            Self::Power(x) => vec![&x.matrix, &x.order, &x.exponent],
+            Self::Inverse(x) => vec![&x.matrix, &x.order],
+            Self::Rank(x) => vec![&x.matrix, &x.rows, &x.cols],
+            Self::Minor(x) => vec![&x.matrix, &x.order, &x.row, &x.col],
+            Self::Cofactor(x) => vec![&x.matrix, &x.order, &x.row, &x.col],
+            Self::Adjugate(x) => vec![&x.matrix, &x.order],
+            Self::Diagonal(x) => vec![&x.vector, &x.order],
+            Self::OuterProduct(x) => vec![&x.left, &x.right, &x.rows, &x.cols],
+            Self::InnerProduct(x) => vec![&x.left, &x.right, &x.dimension],
+            Self::EuclideanNorm(x) => vec![&x.vector, &x.dimension],
+            Self::FrobeniusNorm(x) => vec![&x.matrix, &x.rows, &x.cols],
+        }
+    }
+
+    pub fn try_map_operands<E>(
+        &self,
+        mut map: impl FnMut(&Obj) -> Result<Obj, E>,
+    ) -> Result<Self, E> {
+        Ok(match self {
+            Self::Determinant(x) => Self::Determinant(Determinant {
+                matrix: Box::new(map(&x.matrix)?),
+                order: Box::new(map(&x.order)?),
+            }),
+            Self::ZeroMatrix(x) => Self::ZeroMatrix(ZeroMatrix {
+                rows: Box::new(map(&x.rows)?),
+                cols: Box::new(map(&x.cols)?),
+            }),
+            Self::IdentityMatrix(x) => Self::IdentityMatrix(IdentityMatrix {
+                order: Box::new(map(&x.order)?),
+            }),
+            Self::Transpose(x) => Self::Transpose(MatrixTranspose {
+                matrix: Box::new(map(&x.matrix)?),
+                rows: Box::new(map(&x.rows)?),
+                cols: Box::new(map(&x.cols)?),
+            }),
+            Self::ConjugateTranspose(x) => Self::ConjugateTranspose(MatrixConjugateTranspose {
+                matrix: Box::new(map(&x.matrix)?),
+                rows: Box::new(map(&x.rows)?),
+                cols: Box::new(map(&x.cols)?),
+            }),
+            Self::Add(x) => Self::Add(MatrixAdd {
+                left: Box::new(map(&x.left)?),
+                right: Box::new(map(&x.right)?),
+                rows: Box::new(map(&x.rows)?),
+                cols: Box::new(map(&x.cols)?),
+            }),
+            Self::Subtract(x) => Self::Subtract(MatrixSubtract {
+                left: Box::new(map(&x.left)?),
+                right: Box::new(map(&x.right)?),
+                rows: Box::new(map(&x.rows)?),
+                cols: Box::new(map(&x.cols)?),
+            }),
+            Self::Scale(x) => Self::Scale(MatrixScale {
+                scalar: Box::new(map(&x.scalar)?),
+                matrix: Box::new(map(&x.matrix)?),
+                rows: Box::new(map(&x.rows)?),
+                cols: Box::new(map(&x.cols)?),
+            }),
+            Self::Multiply(x) => Self::Multiply(MatrixMultiply {
+                left: Box::new(map(&x.left)?),
+                right: Box::new(map(&x.right)?),
+                rows: Box::new(map(&x.rows)?),
+                inner: Box::new(map(&x.inner)?),
+                cols: Box::new(map(&x.cols)?),
+            }),
+            Self::Apply(x) => Self::Apply(MatrixApply {
+                matrix: Box::new(map(&x.matrix)?),
+                vector: Box::new(map(&x.vector)?),
+                rows: Box::new(map(&x.rows)?),
+                cols: Box::new(map(&x.cols)?),
+            }),
+            Self::Power(x) => Self::Power(MatrixPower {
+                matrix: Box::new(map(&x.matrix)?),
+                order: Box::new(map(&x.order)?),
+                exponent: Box::new(map(&x.exponent)?),
+            }),
+            Self::Inverse(x) => Self::Inverse(MatrixInverse {
+                matrix: Box::new(map(&x.matrix)?),
+                order: Box::new(map(&x.order)?),
+            }),
+            Self::Rank(x) => Self::Rank(MatrixRank {
+                matrix: Box::new(map(&x.matrix)?),
+                rows: Box::new(map(&x.rows)?),
+                cols: Box::new(map(&x.cols)?),
+            }),
+            Self::Minor(x) => Self::Minor(MatrixMinor {
+                matrix: Box::new(map(&x.matrix)?),
+                order: Box::new(map(&x.order)?),
+                row: Box::new(map(&x.row)?),
+                col: Box::new(map(&x.col)?),
+            }),
+            Self::Cofactor(x) => Self::Cofactor(MatrixCofactor {
+                matrix: Box::new(map(&x.matrix)?),
+                order: Box::new(map(&x.order)?),
+                row: Box::new(map(&x.row)?),
+                col: Box::new(map(&x.col)?),
+            }),
+            Self::Adjugate(x) => Self::Adjugate(MatrixAdjugate {
+                matrix: Box::new(map(&x.matrix)?),
+                order: Box::new(map(&x.order)?),
+            }),
+            Self::Diagonal(x) => Self::Diagonal(MatrixDiagonal {
+                vector: Box::new(map(&x.vector)?),
+                order: Box::new(map(&x.order)?),
+            }),
+            Self::OuterProduct(x) => Self::OuterProduct(MatrixOuterProduct {
+                left: Box::new(map(&x.left)?),
+                right: Box::new(map(&x.right)?),
+                rows: Box::new(map(&x.rows)?),
+                cols: Box::new(map(&x.cols)?),
+            }),
+            Self::InnerProduct(x) => Self::InnerProduct(FiniteInnerProduct {
+                left: Box::new(map(&x.left)?),
+                right: Box::new(map(&x.right)?),
+                dimension: Box::new(map(&x.dimension)?),
+            }),
+            Self::EuclideanNorm(x) => Self::EuclideanNorm(EuclideanNorm {
+                vector: Box::new(map(&x.vector)?),
+                dimension: Box::new(map(&x.dimension)?),
+            }),
+            Self::FrobeniusNorm(x) => Self::FrobeniusNorm(MatrixFrobeniusNorm {
+                matrix: Box::new(map(&x.matrix)?),
+                rows: Box::new(map(&x.rows)?),
+                cols: Box::new(map(&x.cols)?),
+            }),
+            Self::Trace(x) => Self::Trace(MatrixTrace {
+                matrix: Box::new(map(&x.matrix)?),
+                order: Box::new(map(&x.order)?),
+            }),
+        })
+    }
 }
 
 // Infinite sequences in S. Essentially the FnSet `fn(N+) S`. Example: `seq(S)`.

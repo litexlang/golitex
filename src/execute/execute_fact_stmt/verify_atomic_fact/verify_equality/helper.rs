@@ -60,6 +60,25 @@ pub(crate) fn corresponding_arg_pairs(left: &Obj, right: &Obj) -> Option<Vec<(Ob
     }
 
     match (left, right) {
+        (Obj::MatrixOperator(a), Obj::MatrixOperator(b))
+            if std::mem::discriminant(a) == std::mem::discriminant(b) =>
+        {
+            Some(
+                a.operand_refs()
+                    .into_iter()
+                    .zip(b.operand_refs())
+                    .map(|(a, b)| (a.clone(), b.clone()))
+                    .collect(),
+            )
+        }
+        (Obj::SetFormer(SetFormer::MatrixSet(a)), Obj::SetFormer(SetFormer::MatrixSet(b))) => {
+            Some(vec![
+                (a.set.as_ref().clone(), b.set.as_ref().clone()),
+                (a.rows.as_ref().clone(), b.rows.as_ref().clone()),
+                (a.cols.as_ref().clone(), b.cols.as_ref().clone()),
+            ])
+        }
+
         (
             Obj::IntegralOperator(crate::ast::obj::IntegralOperator::Riemann(l)),
             Obj::IntegralOperator(crate::ast::obj::IntegralOperator::Riemann(r)),

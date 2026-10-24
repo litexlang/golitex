@@ -1,0 +1,4 @@
+claim:
+    ? forall u fn(k N) Q, c Q:
+        sum(1,16,fn(k N) Q {u(k)+c})=sum(1,16,u)+16*c
+    sum(1,16,fn(k N) Q {u(k)+c})=sum(1,16,fn(k N) Q {u(k)})+sum(1,16,fn(k N) Q {c})=sum(1,16,u)+sum(1,16,fn(k N) Q {c})=sum(1,16,u)+16*c

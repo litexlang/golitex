@@ -1,0 +1,5 @@
+# The squared coordinates of an integer point in [0, 3) times [0, 2) sum to at most 5.
+by for:
+    ? forall x range(0, 3), y range(0, 2):
+        x * x + y * y <= 5
+    x * x + y * y <= 5

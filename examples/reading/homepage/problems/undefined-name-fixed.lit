@@ -1,0 +1,4 @@
+# 能通过：先给出分数，再计算结果。
+have problem_score R = 2
+have problem_answer R = problem_score + 1
+problem_answer = problem_score + 1 = 2 + 1 = 3

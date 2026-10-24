@@ -1,0 +1,6 @@
+# Close a reflexivity proof with a universal formula and its counterexample.
+by contra:
+    ? forall x R:
+        x = x
+    impossible forall y R:
+        y = y

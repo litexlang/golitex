@@ -1,0 +1,13 @@
+# Enumerate [1, 3), then reuse the alternatives to bound the square.
+thm range_square_bound:
+    ? forall x range(1, 3):
+        x * x <= 4
+    expand: x $in range(1, 3)
+    by cases:
+        ? x * x <= 4
+        case x = 1:
+            x * x = 1
+            x * x <= 4
+        case x = 2:
+            x * x = 4
+            x * x <= 4

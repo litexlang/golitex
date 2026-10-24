@@ -55,6 +55,17 @@ pub fn collect_free_plain_ids(
     out: &mut HashSet<IdentifierId>,
 ) {
     match obj {
+        Obj::MatrixOperator(value) => {
+            for arg in value.operand_refs() {
+                collect_free_plain_ids(arg, bound, out);
+            }
+        }
+        Obj::SetFormer(SetFormer::MatrixSet(value)) => {
+            collect_free_plain_ids(&value.set, bound, out);
+            collect_free_plain_ids(&value.rows, bound, out);
+            collect_free_plain_ids(&value.cols, bound, out);
+        }
+
         Obj::IntegralOperator(crate::ast::obj::IntegralOperator::Riemann(a)) => {
             collect_free_plain_ids(&a.function, bound, out);
             collect_free_plain_ids(&a.lower, bound, out);

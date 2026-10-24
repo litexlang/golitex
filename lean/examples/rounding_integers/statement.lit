@@ -1,0 +1,13 @@
+# Floor and ceiling round negative fractions in opposite directions and fix integers.
+floor(-3 / 2) = -2
+ceil(-3 / 2) = -1
+floor(2.75) = 2
+ceil(2.75) = 3
+floor(0) = 0
+ceil(0) = 0
+
+forall n Z:
+    floor(n) = n
+    ceil(n) = n
+    floor(ceil(n)) = n
+    ceil(floor(n)) = n

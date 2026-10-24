@@ -1,0 +1,10 @@
+# Form spaces of finite sequences with arbitrary carriers and natural lengths.
+have A set
+have n N
+$is_set(finite_seq(A, n))
+let sequences = finite_seq(A, n)
+sequences = finite_seq(A, n)
+$is_set(finite_seq(sequences, 0))
+
+forall B set, k N:
+    $is_set(finite_seq(B, k))

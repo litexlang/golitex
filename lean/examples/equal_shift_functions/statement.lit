@@ -1,0 +1,13 @@
+# Equal real shifts and equal guarded identities have the same complete function graph.
+# Before: by fn_extension verified in Litex but Lean compilation rejected By.
+# Now: replay complete alpha-equivalent domains and the original pointwise forall.
+# Boundary: the current adapter accepts one parameter, anonymous or cited membership sources;
+# non-alpha domain comparisons and multi-parameter inputs remain rejected explicitly.
+# Gate: litex -strict -lean -f lean/examples/equal_shift_functions/statement.lit
+have fn ext_shift_left(x R) R = x + 1
+have fn ext_shift_right(x R) R = 1 + x
+by fn_extension ext_shift_left = ext_shift_right
+
+have fn ext_guarded_real(x R: x != 0) R = x
+have fn ext_guarded_complex(x R: x != 0) C = x + 0
+by fn_extension ext_guarded_real = ext_guarded_complex

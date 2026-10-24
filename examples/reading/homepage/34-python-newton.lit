@@ -1,0 +1,3 @@
+algo newton_step(x R) R by cases:
+    case x = 0: 1
+    case x != 0: (x + 2 / x) / 2

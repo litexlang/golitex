@@ -1,0 +1,14 @@
+# Recover the definitions of two and its successor, then calculate with them.
+have a R = 2
+release obj def a
+a + 1 = 3
+let successor = a + 1
+release obj def successor
+successor = 3
+
+have x R
+release obj def x
+x $in C
+have A set
+release obj def A
+$is_set(A)

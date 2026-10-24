@@ -1,0 +1,6 @@
+# Select the larger of two real inputs by cases.
+have fn larger(x R, y R) R by cases:
+    case x >= y: x
+    case x < y: y
+larger(-2, 3) = 3
+larger(5, 3) = 5

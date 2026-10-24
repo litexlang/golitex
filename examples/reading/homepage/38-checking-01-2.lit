@@ -1,0 +1,6 @@
+have fn square(x R) R = x^2
+
+square(3) = 9
+
+# square({}) = {}^2 would be an error:
+# {} is not in square's declared domain R.

@@ -1,0 +1,8 @@
+# Every real value has a unique equal copy; instantiate the theorem at two.
+thm unique_copy:
+    ? forall seed R:
+        exist! x R st {x = seed}
+    witness exist! x R st {x = seed} from seed
+by thm unique_copy(2)
+obtain a from exist! y R st {y = 2}
+a = 2

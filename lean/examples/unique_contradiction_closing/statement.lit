@@ -1,0 +1,5 @@
+# Use a unique-existence fact itself to close a contradiction.
+witness exist! x {7} st {x = 7} from 7
+by contra:
+    ? exist! y {7} st {y = 7}
+    impossible exist! z {7} st {z = 7}

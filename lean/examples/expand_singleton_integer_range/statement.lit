@@ -1,0 +1,5 @@
+# The half-open integer interval [2, 3) contains only 2.
+claim:
+    ? forall x range(2, 3):
+        x = 2
+    expand: x $in range(2, 3)

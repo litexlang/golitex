@@ -1,0 +1,9 @@
+# Check exact values in positive, negative, and nonzero numeric sets.
+1 / 2 $in Q+
+-1 / 2 $in Q-
+-3 $in Z-
+-0.25 $in R-
+2 / 3 $in Q*
+-2 $in Z*
+0.25 $in R*
+i $in C*

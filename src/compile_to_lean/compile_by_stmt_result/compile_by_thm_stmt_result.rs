@@ -257,10 +257,6 @@ impl LitexToLeanCompiler {
                 }
                 let mut offset = 0;
                 for group in &fact.typed_parameters.groups {
-                    let set = match &group.param_type {
-                        ParamType::Obj(set) => set,
-                        _ => return Err(LeanCompileError::unsupported("ByThm/ParameterKind")),
-                    };
                     for _ in &group.params {
                         let arg = &args[offset];
                         let type_position = SourcePosition {
@@ -268,14 +264,16 @@ impl LitexToLeanCompiler {
                             ..*position
                         };
                         let member = self.compile_verify(&type_proofs[offset], &type_position)?;
-                        match &source_subject(&type_proofs[offset])? {
-                            Fact::AtomicFact(AtomicFact::InFact(f))
+                        match (&group.param_type, &source_subject(&type_proofs[offset])?) {
+                            (ParamType::Obj(set), Fact::AtomicFact(AtomicFact::InFact(f)))
                                 if f.element.ir() == arg.ir()
                                     && instantiated_object_matches(set, &f.set, &substitution) => {}
+                            (ParamType::Set(_), Fact::AtomicFact(AtomicFact::IsSetFact(f)))
+                                if f.set.ir() == arg.ir() => {}
                             _ => {
                                 return Err(LeanCompileError::new(
                                     "ByThm/TypeProof",
-                                    "The membership proves another parameter or carrier.",
+                                    "The recorded parameter proof has another subject or domain kind.",
                                 ));
                             }
                         }
@@ -322,13 +320,25 @@ impl LitexToLeanCompiler {
                         ExistOrAndChainAtomicFact::ExistFact(fact) => {
                             Ok(Fact::ExistFact(fact.clone()))
                         }
+                        ExistOrAndChainAtomicFact::NotExistFact(fact) => {
+                            Ok(Fact::NotExistFact(fact.clone()))
+                        }
+                        ExistOrAndChainAtomicFact::ExistUniqueFact(fact) => {
+                            Ok(Fact::ExistUniqueFact(fact.clone()))
+                        }
                         _ => Err(LeanCompileError::unsupported("ByThm/CompoundConclusion")),
                     })
                     .collect::<Result<Vec<_>, _>>()?;
                 (fact.dom_facts.iter().collect::<Vec<_>>(), conclusions)
             }
             (
-                Fact::AtomicFact(_) | Fact::AndFact(_) | Fact::ChainFact(_),
+                Fact::AtomicFact(_)
+                | Fact::AndFact(_)
+                | Fact::ChainFact(_)
+                | Fact::ExistFact(_)
+                | Fact::NotExistFact(_)
+                | Fact::ExistUniqueFact(_)
+                | Fact::NotForall(_),
                 TheoremCallArguments::Bare,
             ) if type_proofs.is_empty() => (Vec::new(), vec![registered.fact.clone()]),
             _ => return Err(LeanCompileError::unsupported("ByThm/CallShape")),
@@ -391,12 +401,14 @@ impl LitexToLeanCompiler {
             .enumerate()
         {
             let fact = match &stored.store {
+                StoreFactResult::NotForallFact(stored) => Fact::NotForall(stored.fact.clone()),
                 StoreFactResult::AtomicFact(stored) => Fact::AtomicFact(stored.fact.clone()),
                 StoreFactResult::AndFact(stored) => Fact::AndFact(stored.fact.clone()),
                 StoreFactResult::ChainFact(stored) => Fact::ChainFact(stored.fact.clone()),
                 StoreFactResult::ExistShapedFact(stored) => match &stored.fact {
                     ExistShapedFact::Exist(fact) => Fact::ExistFact(fact.clone()),
-                    _ => return Err(LeanCompileError::unsupported("ByThm/ReturnedPackage")),
+                    ExistShapedFact::NotExist(fact) => Fact::NotExistFact(fact.clone()),
+                    ExistShapedFact::ExistUnique(fact) => Fact::ExistUniqueFact(fact.clone()),
                 },
                 _ => return Err(LeanCompileError::unsupported("ByThm/ReturnedPackage")),
             };

@@ -1,0 +1,5 @@
+# Check multiplication for every pair of binary values.
+by enumerate finite_set:
+    ? forall x, y {0, 1}:
+        x * y = y * x
+    x * y = y * x

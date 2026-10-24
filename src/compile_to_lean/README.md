@@ -104,6 +104,29 @@ dispatches verification results. Their leaf files own the mathematical cases.
 For example, the [equality consumer](compile_fact_stmt_result/compile_equality_result/compile_equality_result.rs)
 first compiles the original left and right WD, then the selected equality proof.
 
+The [sketch consumer](compile_sketch_stmt_result.rs) shows a branch with no
+exported conclusion. It compiles the original child results inside a private
+proof block, using their captured environment only to resolve exact citations.
+The block ends with `True.intro`; its facts and objects stay local. No new
+Core law or result fields are needed for this scope wrapper.
+
+The [tuple-release consumer](compile_release_tuple_def_result.rs) is one complete
+example of this dispatch. It reads the existing finite shape and domain result,
+compiles the return and coordinate proofs, then emits the ordered stores. Its
+[finite-function membership adapter](compile_finite_function_membership.rs)
+connects these checked premises to proved laws in `Litex.lean`.
+[Source/generated pairs](../../lean/examples/released_tuple_coordinates/) show
+this path; [coverage notes](../../docs/Litex_To_Lean_Coverage_Plan.md#tuple-definition-release-2026-10-24)
+record the checked cases and remaining boundaries.
+
+[Cartesian release](compile_release_cart_def_result.rs) reuses the ordinary
+equality compiler on its captured verification. The selected definition adapter
+checks the exact finite domain and coordinate conditions, then applies the Core
+membership equivalence. It publishes the original equality FactId after the
+verification stages. [Examples](../../lean/examples/released_cartesian_definition/)
+include subsequent citations; the [coverage notes](../../docs/Litex_To_Lean_Coverage_Plan.md#cartesian-definition-release-2026-10-24)
+also cover empty products and arbitrary set parameters.
+
 ### Original identities and source visibility
 
 Emitted fact declarations use `h_<original FactId>`. Temporary requirement
@@ -129,6 +152,125 @@ needs a visible certified construction; the cache entry alone is not a proof.
 
 Lean binders, local proof blocks and necessary proof-valued `let`s preserve
 these dependencies in the output. Indentation alone does not establish scope.
+
+Local quantifiers use inferred carrier universes. At an exported proof boundary,
+`litex_complete` checks the supplied proof and defaults any remaining universe
+metavariables that do not occur in the public theorem type. This handles an
+unused local quantified lemma without adding proof-only universe parameters to
+the exported declaration. It neither searches for a proof nor changes public
+carrier parameters.
+
+### Recent result consumers
+
+- `ForallFactWithIff` replays its two recorded universal implications. Stored
+  forward and reverse facts cite the corresponding projection. The
+  [equivalence example](../../lean/examples/equivalence_directions/statement.lit)
+  includes shared premises and a theorem-local equivalence.
+- [Negated universals](compile_fact_stmt_result/compile_not_forall_result.rs)
+  consume the recorded counterexample existence proof, checking the original
+  binders, domain prefix and ordered CNF/DNF negation. The generated conclusion
+  is `¬ ∀`, and its stored counterexample is emitted under the inference's
+  original FactId. See [a singleton counterexample](../../lean/examples/not_every_element_is_one/statement.lit)
+  and [a guarded reciprocal](../../lean/examples/reciprocal_counterexample/statement.lit).
+  Quantifiers inside this proposition range over canonical semantic objects,
+  as existing existential statements do; free objects retain their generic
+  host types. Ordinary verified facts and local proof steps are covered.
+  Separate NotForall WD consumers for assumptions/contra remain unsupported.
+- [Negative existence](compile_fact_stmt_result/compile_exist_fact_result/compile_not_exist_result.rs)
+  renders `not exist` as the negation of the existing semantic existential.
+  Contradiction proofs consume their captured reverse assumption, obtained
+  witnesses and closing contradiction; later uses cite the saved negative fact.
+  Captured De Morgan forall inferences receive their original FactIds.
+  See [the singleton exclusion](../../lean/examples/no_one_in_zero_singleton/statement.lit),
+  [guarded division](../../lean/examples/nonzero_reciprocal_reflexivity/statement.lit),
+  [a theorem, claim and theorem call](../../lean/examples/incompatible_existential_equalities/statement.lit),
+  and [an existential body containing alternatives](../../lean/examples/no_self_unequal_alternative/statement.lit).
+  The latter follows the producer's `NoInfer` result. Automatic universal
+  applications are covered by the shared existential consumer below.
+- [Unique existence](compile_fact_stmt_result/compile_exist_fact_result/compile_exist_unique_result.rs)
+  pairs the existing existential with pairwise semantic uniqueness. A `witness
+  exist!` consumes its recorded two-candidate forall proof; exact citations,
+  `obtain`, named theorems, `claim` and explicit `by thm` preserve that pair.
+  The inference's component equalities follow from the checked tuple equality.
+  See [one real witness](../../lean/examples/unique_real_zero/statement.lit),
+  [two coordinates](../../lean/examples/unique_real_pair/statement.lit),
+  [a reciprocal with a free parameter](../../lean/examples/unique_reciprocal_value/statement.lit),
+  [a saved theorem](../../lean/examples/unique_real_theorem/statement.lit), and
+  [a universally quantified theorem call](../../lean/examples/unique_copy_theorem/statement.lit).
+  The bijective-preimage builtin and functions selected by `have fn … by exist!`
+  remain separate consumers.
+- [Automatic existential theorem applications](compile_fact_stmt_result/compile_exist_fact_result/compile_exist_known_forall.rs)
+  replay the recorded universal citation, selected conclusion, argument matches,
+  memberships and domain proofs for `exist`, `exist!` and `not exist`.
+  Unique existence also supplies ordinary existence by projecting its witness
+  component. See [a unique copy](../../lean/examples/automatic_unique_copy/statement.lit),
+  [a guarded reciprocal](../../lean/examples/automatic_unique_reciprocal/statement.lit),
+  [two coordinates and existence weakening](../../lean/examples/automatic_unique_pair/statement.lit),
+  and [an excluded copy](../../lean/examples/automatic_excluded_copy/statement.lit).
+  `obtain` reuses the retained constructor WD for both positive families.
+- [Registration](compile_register_stmt_result.rs) emits the verified `forall`
+  law under its original FactId. Reflexive and symmetric rewrite results cite
+  that visible law and replay their recorded premises. All three registration
+  declarations compile; registered transitive-chain inference remains outside
+  this increment. Concrete predicates may have arbitrary `set` parameters;
+  see [registered equality](../../lean/examples/registered_equality/statement.lit).
+- [Min/max construction](compile_fact_stmt_result/compile_obj_well_defined_result/compile_min_max.rs)
+  consumes two child objects and their ordered real-membership proofs.
+  `Litex.min` and `Litex.max` retain those proofs in the resulting object's WD.
+  Four equality branches use proved idempotence/commutativity lemmas; structural
+  membership retains a common carrier. The [example](../../lean/examples/real_min_max/statement.lit)
+  checks real and integer membership, nesting and a `let` alias.
+  [Closed evaluation](../../lean/examples/min_max_evaluation/statement.lit)
+  uses a proved native min/max denotation and checks the returned exact value.
+  [Bounds and monotonicity](../../lean/examples/min_max_bounds/statement.lit)
+  replay `MinLowerBound`, `MaxUpperBound`, `MinWeakMonotone`, and `MaxWeakMonotone`.
+  A fixed operand uses its recorded `SameArgument`; a changing operand consumes
+  the original ordered comparison proof. The four conditional selection rules
+  consume their exact weak-order premise and support either equality orientation;
+  see [ordered selection](../../lean/examples/ordered_min_max_selection/statement.lit).
+  Formula functions use the same `minMaxValue` denotation as these constructors.
+  [Lower/upper functions](../../lean/examples/ordered_min_max_functions/statement.lit)
+  exercise `have fn`, call unfolding, a concrete `prop`, conditional `thm`,
+  `let`, and `by thm` together, retaining the existing function WD and call ABI.
+- [Real sign](compile_fact_stmt_result/compile_obj_well_defined_result/compile_sign.rs)
+  consumes one child WD and its real-membership proof. Its denotation uses
+  Mathlib's `Real.sign`; the proved integer codomain supplies ordinary numeric
+  observations. `SignOfPositive` and `SignOfNegative` consume the recorded
+  strict-order premise, including reversed equality statements.
+  [Sign values and membership](../../lean/examples/real_sign/statement.lit) and
+  [a shifted direction function](../../lean/examples/shifted_sign_function/statement.lit)
+  cover exact calculation, function bodies, nested expansion and theorem calls.
+  The sign-of-product and sign-of-negation rule consumers remain unsupported.
+- [Floor and ceiling](compile_fact_stmt_result/compile_obj_well_defined_result/compile_rounding.rs)
+  retain one child WD and its real-domain proof, with denotation laws proved
+  through Mathlib's `Int.floor` and `Int.ceil`. Integer identities consume the
+  original integer-membership premise; monotonicity consumes the original
+  argument comparison. The four defining bounds cite proved Core lemmas.
+  [Exact values and integer identities](../../lean/examples/rounding_integers/statement.lit),
+  [bounds and monotonicity](../../lean/examples/rounding_bounds/statement.lit), and
+  [rounding functions](../../lean/examples/shifted_rounding_function/statement.lit)
+  cover negative fractions, nesting, formula bodies and named theorem calls.
+- [Integer division](compile_fact_stmt_result/compile_obj_well_defined_result/compile_integer_division.rs)
+  keeps distinct WD contracts: `quot(a, d)` requires `a ∈ Z`, `d ∈ N+`;
+  `a % d` requires integer operands and a nonzero divisor. `QuotObj` and `ModObj`
+  denote native integer Euclidean division/remainder through proved bridges.
+  Consumers replay quotient identities, both product orientations of the
+  quotient/remainder decomposition, remainder bounds and argument congruence.
+  See [signed values and declarations](../../lean/examples/signed_integer_division/statement.lit),
+  [decomposition and bounds](../../lean/examples/quotient_remainder_decomposition/statement.lit),
+  and [functions and fact reuse](../../lean/examples/integer_division_functions/statement.lit).
+  Positive-natural assumptions emit their original positive, nonnegative and
+  nonzero FactIds. Functions with `N+` domains use the existing set-domain
+  signature, retaining that exact domain. The special gcd-modulus WD route
+  remains unsupported alongside the gcd constructor.
+- Builtin `Calculation::ClosedDecimal` and `ClosedRational` reuse the existing
+  exact closed-equality bridge. Their recorded normal forms must match both
+  original endpoints; a changed calculation certificate is rejected.
+
+The registration rewrite tests additionally select the Runtime's actual rewrite
+result directly: ordinary source verification can find a predicate-definition
+proof first. These selected-stage fixtures test that consumer separately from
+the source/generated examples' winning routes.
 
 ## 3. Litex.lean defines the object world
 

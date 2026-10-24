@@ -1,0 +1,23 @@
+# Minimum and maximum retain their real domains, symmetry and integer membership.
+forall extrema_a, extrema_b R:
+    min(extrema_a, extrema_b) = min(extrema_b, extrema_a)
+
+forall extrema_a, extrema_b R:
+    max(extrema_a, extrema_b) = max(extrema_b, extrema_a)
+
+forall extrema_a R:
+    min(extrema_a, extrema_a) = extrema_a
+    max(extrema_a, extrema_a) = extrema_a
+
+forall extrema_a, extrema_b R:
+    min(extrema_a, extrema_b) $in R
+    max(extrema_a, extrema_b) $in R
+    min(extrema_a, max(extrema_a, extrema_b)) $in R
+
+forall extrema_a, extrema_b Z:
+    min(extrema_a, extrema_b) $in Z
+    max(extrema_a, extrema_b) $in Z
+
+let extrema_low = min(1, 2)
+
+$is_set(extrema_low)

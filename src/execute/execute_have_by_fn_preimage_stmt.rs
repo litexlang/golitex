@@ -10,6 +10,7 @@
 //!   have by fn_preimage: source from shift(2) $in fn_range(shift)
 //!   // stores `source $in Z` and `shift(2) = shift(source)`
 
+use crate::execute::execute_fact_stmt::function_signature_selection::FunctionSignatureSelection;
 use std::collections::HashMap;
 
 use crate::ast::fact::{AtomicFact, EqualFact, Fact};
@@ -33,7 +34,9 @@ pub enum ExecHaveByFnPreimageStmtFailed {
 
 pub struct ExecHaveByFnPreimageStmtSuccessResult {
     pub statement: HaveByPreimageStmt,
+    pub signature_selection: FunctionSignatureSelection,
     pub source_membership: VerifyFactResult,
+    pub preimage_parameters: TypedParameterList,
     pub store_and_infer_result: StoreHaveObjAndInferResult,
 }
 
@@ -63,7 +66,7 @@ impl Runtime {
             ));
         };
         let function = fn_range.function.as_ref().clone();
-        let Some(body) = self.resolve_fn_set_body_for_fn_preimage(&function) else {
+        let Some(signature_selection) = self.resolve_fn_set_body_for_fn_preimage(&function) else {
             return Ok(ExecHaveByFnPreimageStmtResult::Failed(
                 ExecHaveByFnPreimageStmtFailed::NoFnSetBody(format!(
                     "have by fn_preimage: function `{}` has no known function set",
@@ -72,6 +75,7 @@ impl Runtime {
             ));
         };
 
+        let body = signature_selection.signature();
         let expected = set_bound_parameter_count(&body.set_bound_parameters);
         let got = stmt.preimage_names.len();
         if expected != got {
@@ -136,20 +140,27 @@ impl Runtime {
         Ok(ExecHaveByFnPreimageStmtResult::Success(
             ExecHaveByFnPreimageStmtSuccessResult {
                 statement: stmt.clone(),
+                signature_selection,
                 source_membership,
+                preimage_parameters: renamed_params,
                 store_and_infer_result,
             },
         ))
     }
 
-    fn resolve_fn_set_body_for_fn_preimage(&self, function: &Obj) -> Option<FnSet> {
+    fn resolve_fn_set_body_for_fn_preimage(
+        &self,
+        function: &Obj,
+    ) -> Option<FunctionSignatureSelection> {
         if let Obj::FunctionSpace(FunctionSpace::AnonymousFn(anon)) = function {
-            return Some(anon.body.clone());
+            return Some(FunctionSignatureSelection::AnonymousLiteral {
+                signature: anon.body.clone(),
+            });
         }
         self.collect_in_function_set_candidates(function)
             .into_iter()
             .next()
-            .map(|(fn_set, _)| fn_set)
+            .map(|(signature, fact_id)| FunctionSignatureSelection::Property { signature, fact_id })
     }
 
     fn build_fn_preimage_params_and_subst(

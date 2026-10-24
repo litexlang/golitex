@@ -1,0 +1,21 @@
+{
+  "kind": "reading_titles",
+  "sources": {
+    "convention-division-by-zero.lit": {
+      "zh": "除以零",
+      "en": "Division by zero is undefined"
+    },
+    "homepagedivisionbyzerosource.lit": {
+      "zh": "除以零没有定义",
+      "en": "An undefined expression cannot equal itself"
+    },
+    "homepagereciprocalzerosource.lit": {
+      "zh": "倒数函数不能接受零",
+      "en": "Zero is outside the reciprocal domain"
+    },
+    "session-rejected.lit": {
+      "zh": "交互会话中的错误调用",
+      "en": "Rejecting an invalid function call"
+    }
+  }
+}

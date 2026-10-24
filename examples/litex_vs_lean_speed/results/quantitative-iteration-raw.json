@@ -1,0 +1,586 @@
+{
+  "provenance": {
+    "kind": "archived_full_process_measurements",
+    "measured_at": "2026-10-24T10:08:04.051673+08:00",
+    "note": "Measured before this public source placement; source bytes are unchanged. Host and original workspace paths are redacted, not rewritten as claims of historical execution at the public paths.",
+    "timing_scope": "Serial fresh processes; Litex strict full-file checking vs native Lean full-file checking including Mathlib imports and axiom printouts; excludes lake environment setup. No proof-search or language-wide speed claim."
+  },
+  "runs": [
+    {
+      "command": [
+        "{original_experiment}/.runtime/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "{original_experiment}/litex/01_parametric_newton.lit"
+      ],
+      "cwd": "{repository_root}",
+      "exit": 0,
+      "seconds": 0.1811240827664733,
+      "stdout": "{\n  \"kind\": \"run\",\n  \"run_result\": \"success\",\n  \"target\": \"file\",\n  \"path\": \"{original_experiment}/litex/01_parametric_newton.lit\",\n  \"detail\": \"normal\",\n  \"language\": \"en\",\n  \"statement_results\": [\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"have fn newton(a R+, x R+) = ((x + (a / x)) / 2)\",\n      \"proof_method\": {\n        \"type\": \"define_fn\",\n        \"rule_name\": \"Have function equal\",\n        \"message\": \"Define a named function equal to an anonymous function\"\n      },\n      \"stores\": [\n        \"newton $in fn (a R+, x R+) R\"\n      ],\n      \"infers\": [\n        \"newton = fn (a R+, x R+) R{((x + (a / x)) / 2)}\"\n      ]\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"thm newton_positive:\\n    ? forall a, x R+:\\n        newton(a, x) > 0\\n    (a / x) > 0\\n    (x + (a / x)) > 0\",\n      \"proof_method\": {\n        \"type\": \"definition\",\n        \"rule_name\": \"Define theorem\",\n        \"message\": \"Record a theorem\"\n      },\n      \"stores\": [\n        \"forall a, x R+:\\n    newton(a, x) > 0\"\n      ],\n      \"infers\": []\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"thm newton_residual_identity:\\n    ? forall a, x R+:\\n        ((4 * (x ^ 2)) * ((newton(a, x) ^ 2) - a)) = (((x ^ 2) - a) ^ 2)\",\n      \"proof_method\": {\n        \"type\": \"definition\",\n        \"rule_name\": \"Define theorem\",\n        \"message\": \"Record a theorem\"\n      },\n      \"stores\": [\n        \"forall a, x R+:\\n    ((4 * (x ^ 2)) * ((newton(a, x) ^ 2) - a)) = (((x ^ 2) - a) ^ 2)\"\n      ],\n      \"infers\": []\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"thm newton_above_root:\\n    ? forall a, x R+:\\n        (newton(a, x) ^ 2) >= a\\n    (4 * (x ^ 2)) > 0\\n    ((newton(a, x) ^ 2) - a) = ((((x ^ 2) - a) ^ 2) / (4 * (x ^ 2))) >= 0\",\n      \"proof_method\": {\n        \"type\": \"definition\",\n        \"rule_name\": \"Define theorem\",\n        \"message\": \"Record a theorem\"\n      },\n      \"stores\": [\n        \"forall a, x R+:\\n    (newton(a, x) ^ 2) >= a\"\n      ],\n      \"infers\": []\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"newton(9, 4) = ((4 + (9 / 4)) / 2) = (25 / 8)\",\n      \"proof_method\": {\n        \"type\": \"compound_fact\",\n        \"rule_name\": \"Chain\",\n        \"message\": \"Verified as a chain fact (details omitted in Normal)\"\n      },\n      \"stores\": [\n        \"newton(9, 4) = ((4 + (9 / 4)) / 2) = (25 / 8)\",\n        \"newton(9, 4) = ((4 + (9 / 4)) / 2)\",\n        \"((4 + (9 / 4)) / 2) = (25 / 8)\"\n      ],\n      \"infers\": [\n        \"newton(9, 4) = (25 / 8)\"\n      ]\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"by thm newton_above_root(9, 4) => (newton(9, 4) ^ 2) >= 9\",\n      \"proof_method\": {\n        \"type\": \"by\",\n        \"rule_name\": \"By theorem\",\n        \"message\": \"Apply a recorded theorem\"\n      },\n      \"stores\": [\n        \"(newton(9, 4) ^ 2) >= 9\"\n      ],\n      \"infers\": []\n    }\n  ],\n  \"errors\": [],\n  \"session_terminated\": false,\n  \"termination\": null\n}\n",
+      "stderr": "",
+      "passed": true,
+      "name": "validate:01_parametric_newton",
+      "language": "litex"
+    },
+    {
+      "command": [
+        "{user_home}/.elan/toolchains/leanprover--lean4---v4.31.0/bin/lean",
+        "{original_experiment}/lean/01_parametric_newton.lean"
+      ],
+      "cwd": "{repository_root}",
+      "exit": 0,
+      "seconds": 41.30451187491417,
+      "stdout": "{original_experiment}/lean/01_parametric_newton.lean:17:27: warning: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice\n\nNote: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`\n'ParametricNewton.newton_positive' depends on axioms: [propext, Classical.choice, Quot.sound]\n'ParametricNewton.newton_residual_identity' depends on axioms: [propext, Classical.choice, Quot.sound]\n'ParametricNewton.newton_above_root' depends on axioms: [propext, Classical.choice, Quot.sound]\n",
+      "stderr": "",
+      "passed": true,
+      "name": "validate:01_parametric_newton",
+      "language": "lean"
+    },
+    {
+      "command": [
+        "{original_experiment}/.runtime/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "{original_experiment}/litex/02_quadratic_descent.lit"
+      ],
+      "cwd": "{repository_root}",
+      "exit": 0,
+      "seconds": 2.8975076247006655,
+      "stdout": "{\n  \"kind\": \"run\",\n  \"run_result\": \"success\",\n  \"target\": \"file\",\n  \"path\": \"{original_experiment}/litex/02_quadratic_descent.lit\",\n  \"detail\": \"normal\",\n  \"language\": \"en\",\n  \"statement_results\": [\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"have fn energy(a R+, b, x R) = ((a * ((x - b) ^ 2)) / 2)\",\n      \"proof_method\": {\n        \"type\": \"define_fn\",\n        \"rule_name\": \"Have function equal\",\n        \"message\": \"Define a named function equal to an anonymous function\"\n      },\n      \"stores\": [\n        \"energy $in fn (a R+, b, x R) R\"\n      ],\n      \"infers\": [\n        \"energy = fn (a R+, b, x R) R{((a * ((x - b) ^ 2)) / 2)}\"\n      ]\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"have fn gradient_step(a R+, b, eta, x R) = (x - ((eta * a) * (x - b)))\",\n      \"proof_method\": {\n        \"type\": \"define_fn\",\n        \"rule_name\": \"Have function equal\",\n        \"message\": \"Define a named function equal to an anonymous function\"\n      },\n      \"stores\": [\n        \"gradient_step $in fn (a R+, b, eta, x R) R\"\n      ],\n      \"infers\": [\n        \"gradient_step = fn (a R+, b, eta, x R) R{(x - ((eta * a) * (x - b)))}\"\n      ]\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"thm gradient_error_identity:\\n    ? forall a R+, b, eta, x R:\\n        (gradient_step(a, b, eta, x) - b) = ((1 - (eta * a)) * (x - b))\",\n      \"proof_method\": {\n        \"type\": \"definition\",\n        \"rule_name\": \"Define theorem\",\n        \"message\": \"Record a theorem\"\n      },\n      \"stores\": [\n        \"forall a R+, b, eta, x R:\\n    (gradient_step(a, b, eta, x) - b) = ((1 - (eta * a)) * (x - b))\"\n      ],\n      \"infers\": []\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"thm gradient_drop_identity:\\n    ? forall a R+, b, eta, x R:\\n        (energy(a, b, x) - energy(a, b, gradient_step(a, b, eta, x))) = ((((eta * (a ^ 2)) * (2 - (eta * a))) * ((x - b) ^ 2)) / 2)\\n    energy(a, b, gradient_step(a, b, eta, x)) = ((a * ((gradient_step(a, b, eta, x) - b) ^ 2)) / 2) = ((a * (((1 - (eta * a)) * (x - b)) ^ 2)) / 2)\\n    (energy(a, b, x) - energy(a, b, gradient_step(a, b, eta, x))) = (((a * ((x - b) ^ 2)) / 2) - ((a * (((1 - (eta * a)) * (x - b)) ^ 2)) / 2)) = ((((eta * (a ^ 2)) * (2 - (eta * a))) * ((x - b) ^ 2)) / 2)\",\n      \"proof_method\": {\n        \"type\": \"definition\",\n        \"rule_name\": \"Define theorem\",\n        \"message\": \"Record a theorem\"\n      },\n      \"stores\": [\n        \"forall a R+, b, eta, x R:\\n    (energy(a, b, x) - energy(a, b, gradient_step(a, b, eta, x))) = ((((eta * (a ^ 2)) * (2 - (eta * a))) * ((x - b) ^ 2)) / 2)\"\n      ],\n      \"infers\": []\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"thm gradient_descent:\\n    ? forall a R+, b, eta, x R:\\n        eta > 0\\n        (eta * a) < 2\\n        =>:\\n            energy(a, b, gradient_step(a, b, eta, x)) <= energy(a, b, x)\\n    (eta * (a ^ 2)) > 0\\n    ((eta * (a ^ 2)) * (2 - (eta * a))) >= 0\\n    (((eta * (a ^ 2)) * (2 - (eta * a))) * ((x - b) ^ 2)) >= 0\\n    by thm gradient_drop_identity(a, b, eta, x) => (energy(a, b, x) - energy(a, b, gradient_step(a, b, eta, x))) = ((((eta * (a ^ 2)) * (2 - (eta * a))) * ((x - b) ^ 2)) / 2)\\n    (energy(a, b, x) - energy(a, b, gradient_step(a, b, eta, x))) >= 0\",\n      \"proof_method\": {\n        \"type\": \"definition\",\n        \"rule_name\": \"Define theorem\",\n        \"message\": \"Record a theorem\"\n      },\n      \"stores\": [\n        \"forall a R+, b, eta, x R:\\n    eta > 0\\n    (eta * a) < 2\\n    =>:\\n        energy(a, b, gradient_step(a, b, eta, x)) <= energy(a, b, x)\"\n      ],\n      \"infers\": []\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"thm gradient_strict_descent:\\n    ? forall a R+, b, eta, x R:\\n        eta > 0\\n        (eta * a) < 2\\n        x != b\\n        =>:\\n            energy(a, b, gradient_step(a, b, eta, x)) < energy(a, b, x)\\n    (x - b) != 0\\n    (eta * (a ^ 2)) > 0\\n    ((eta * (a ^ 2)) * (2 - (eta * a))) > 0\\n    (((eta * (a ^ 2)) * (2 - (eta * a))) * ((x - b) ^ 2)) > 0\\n    by thm gradient_drop_identity(a, b, eta, x) => (energy(a, b, x) - energy(a, b, gradient_step(a, b, eta, x))) = ((((eta * (a ^ 2)) * (2 - (eta * a))) * ((x - b) ^ 2)) / 2)\\n    (energy(a, b, x) - energy(a, b, gradient_step(a, b, eta, x))) > 0\",\n      \"proof_method\": {\n        \"type\": \"definition\",\n        \"rule_name\": \"Define theorem\",\n        \"message\": \"Record a theorem\"\n      },\n      \"stores\": [\n        \"forall a R+, b, eta, x R:\\n    eta > 0\\n    (eta * a) < 2\\n    x != b\\n    =>:\\n        energy(a, b, gradient_step(a, b, eta, x)) < energy(a, b, x)\"\n      ],\n      \"infers\": []\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"by thm gradient_strict_descent(2, 3, (1 / 4), 5) => energy(2, 3, gradient_step(2, 3, (1 / 4), 5)) < energy(2, 3, 5)\",\n      \"proof_method\": {\n        \"type\": \"by\",\n        \"rule_name\": \"By theorem\",\n        \"message\": \"Apply a recorded theorem\"\n      },\n      \"stores\": [\n        \"energy(2, 3, gradient_step(2, 3, (1 / 4), 5)) < energy(2, 3, 5)\"\n      ],\n      \"infers\": []\n    }\n  ],\n  \"errors\": [],\n  \"session_terminated\": false,\n  \"termination\": null\n}\n",
+      "stderr": "",
+      "passed": true,
+      "name": "validate:02_quadratic_descent",
+      "language": "litex"
+    },
+    {
+      "command": [
+        "{user_home}/.elan/toolchains/leanprover--lean4---v4.31.0/bin/lean",
+        "{original_experiment}/lean/02_quadratic_descent.lean"
+      ],
+      "cwd": "{repository_root}",
+      "exit": 0,
+      "seconds": 31.257118084002286,
+      "stdout": "'QuadraticDescent.gradient_error_identity' depends on axioms: [propext, Classical.choice, Quot.sound]\n'QuadraticDescent.gradient_drop_identity' depends on axioms: [propext, Classical.choice, Quot.sound]\n'QuadraticDescent.gradient_descent' depends on axioms: [propext, Classical.choice, Quot.sound]\n'QuadraticDescent.gradient_strict_descent' depends on axioms: [propext, Classical.choice, Quot.sound]\n",
+      "stderr": "",
+      "passed": true,
+      "name": "validate:02_quadratic_descent",
+      "language": "lean"
+    },
+    {
+      "command": [
+        "{original_experiment}/.runtime/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "{original_experiment}/litex/03_perturbed_geometric.lit"
+      ],
+      "cwd": "{repository_root}",
+      "exit": 0,
+      "seconds": 1.3332117078825831,
+      "stdout": "{\n  \"kind\": \"run\",\n  \"run_result\": \"success\",\n  \"target\": \"file\",\n  \"path\": \"{original_experiment}/litex/03_perturbed_geometric.lit\",\n  \"detail\": \"normal\",\n  \"language\": \"en\",\n  \"statement_results\": [\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"forall q R:\\n    q < 1\\n    =>:\\n        (1 - q) > 0\\n        (1 - q) != 0\",\n      \"proof_method\": {\n        \"type\": \"compound_fact\",\n        \"rule_name\": \"Universal\",\n        \"message\": \"Verified as a forall fact (details omitted in Normal)\"\n      },\n      \"stores\": [\n        \"forall q R:\\n    q < 1\\n    =>:\\n        (1 - q) > 0\\n        (1 - q) != 0\"\n      ],\n      \"infers\": []\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"have fn bound(q R+, c, d R, n N: q < 1) = (((q ^ n) * c) + ((d * (1 - (q ^ n))) / (1 - q)))\",\n      \"proof_method\": {\n        \"type\": \"define_fn\",\n        \"rule_name\": \"Have function equal\",\n        \"message\": \"Define a named function equal to an anonymous function\"\n      },\n      \"stores\": [\n        \"bound $in fn (q R+, c, d R, n N: q < 1) R\"\n      ],\n      \"infers\": [\n        \"bound = fn (q R+, c, d R, n N: q < 1) R{(((q ^ n) * c) + ((d * (1 - (q ^ n))) / (1 - q)))}\"\n      ]\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"thm bound_zero:\\n    ? forall q R+, c, d R:\\n        q < 1\\n        =>:\\n            bound(q, c, d, 0) = c\\n    (1 - q) != 0\",\n      \"proof_method\": {\n        \"type\": \"definition\",\n        \"rule_name\": \"Define theorem\",\n        \"message\": \"Record a theorem\"\n      },\n      \"stores\": [\n        \"forall q R+, c, d R:\\n    q < 1\\n    =>:\\n        bound(q, c, d, 0) = c\"\n      ],\n      \"infers\": []\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"thm bound_step:\\n    ? forall q R+, c, d R, n N:\\n        q < 1\\n        =>:\\n            bound(q, c, d, (n + 1)) = ((q * bound(q, c, d, n)) + d)\\n    (1 - q) != 0\\n    have t R+ = (q ^ n)\\n    (q ^ (n + 1)) = ((q ^ n) * (q ^ 1)) = (t * q)\\n    (((t * q) * c) + ((d * (1 - (t * q))) / (1 - q))) = ((q * ((t * c) + ((d * (1 - t)) / (1 - q)))) + d)\\n    bound(q, c, d, (n + 1)) = ((q * ((t * c) + ((d * (1 - t)) / (1 - q)))) + d) = ((q * bound(q, c, d, n)) + d)\",\n      \"proof_method\": {\n        \"type\": \"definition\",\n        \"rule_name\": \"Define theorem\",\n        \"message\": \"Record a theorem\"\n      },\n      \"stores\": [\n        \"forall q R+, c, d R, n N:\\n    q < 1\\n    =>:\\n        bound(q, c, d, (n + 1)) = ((q * bound(q, c, d, n)) + d)\"\n      ],\n      \"infers\": []\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"thm affine_recurrence_bound:\\n    ? forall err fn (idx N) R, q R+, d R, n N:\\n        q < 1\\n        forall j N:\\n            err((j + 1)) <= ((q * err(j)) + d)\\n        =>:\\n            err(n) <= bound(q, err(0), d, n)\\n    by induc n from 0:\\n        ? err(n) <= bound(q, err(0), d, n)\\n        ? from n = 0:\\n            by thm bound_zero(q, err(0), d) => bound(q, err(0), d, 0) = err(0)\\n        ? induc:\\n            err((n + 1)) <= ((q * err(n)) + d) <= ((q * bound(q, err(0), d, n)) + d) = bound(q, err(0), d, (n + 1))\",\n      \"proof_method\": {\n        \"type\": \"definition\",\n        \"rule_name\": \"Define theorem\",\n        \"message\": \"Record a theorem\"\n      },\n      \"stores\": [\n        \"forall err fn (idx N) R, q R+, d R, n N:\\n    q < 1\\n    forall j N:\\n        err((j + 1)) <= ((q * err(j)) + d)\\n    =>:\\n        err(n) <= bound(q, err(0), d, n)\"\n      ],\n      \"infers\": []\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"thm noiseless_affine_bound:\\n    ? forall err fn (idx N) R, q R+, n N:\\n        q < 1\\n        forall j N:\\n            err((j + 1)) <= (q * err(j))\\n        =>:\\n            err(n) <= ((q ^ n) * err(0))\\n    claim:\\n        ? forall j N:\\n            err((j + 1)) <= ((q * err(j)) + 0)\\n        ((q * err(j)) + 0) = (q * err(j))\\n    (1 - q) != 0\\n    bound(q, err(0), 0, n) = (((q ^ n) * err(0)) + ((0 * (1 - (q ^ n))) / (1 - q))) = (((q ^ n) * err(0)) + 0) = ((q ^ n) * err(0))\",\n      \"proof_method\": {\n        \"type\": \"definition\",\n        \"rule_name\": \"Define theorem\",\n        \"message\": \"Record a theorem\"\n      },\n      \"stores\": [\n        \"forall err fn (idx N) R, q R+, n N:\\n    q < 1\\n    forall j N:\\n        err((j + 1)) <= (q * err(j))\\n    =>:\\n        err(n) <= ((q ^ n) * err(0))\"\n      ],\n      \"infers\": []\n    }\n  ],\n  \"errors\": [],\n  \"session_terminated\": false,\n  \"termination\": null\n}\n",
+      "stderr": "",
+      "passed": true,
+      "name": "validate:03_perturbed_geometric",
+      "language": "litex"
+    },
+    {
+      "command": [
+        "{user_home}/.elan/toolchains/leanprover--lean4---v4.31.0/bin/lean",
+        "{original_experiment}/lean/03_perturbed_geometric.lean"
+      ],
+      "cwd": "{repository_root}",
+      "exit": 0,
+      "seconds": 15.348486042115837,
+      "stdout": "{original_experiment}/lean/03_perturbed_geometric.lean:19:20: warning: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice\n\nNote: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`\n'PerturbedGeometric.bound_zero' depends on axioms: [propext, Classical.choice, Quot.sound]\n'PerturbedGeometric.bound_step' depends on axioms: [propext, Classical.choice, Quot.sound]\n'PerturbedGeometric.affine_recurrence_bound' depends on axioms: [propext, Classical.choice, Quot.sound]\n'PerturbedGeometric.noiseless_affine_bound' depends on axioms: [propext, Classical.choice, Quot.sound]\n",
+      "stderr": "",
+      "passed": true,
+      "name": "validate:03_perturbed_geometric",
+      "language": "lean"
+    },
+    {
+      "command": [
+        "{original_experiment}/.runtime/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "{original_experiment}/controls/newton_zero_domain.lit"
+      ],
+      "cwd": "{repository_root}",
+      "exit": 1,
+      "seconds": 0.20772870816290379,
+      "stdout": "{\n  \"kind\": \"run\",\n  \"run_result\": \"failure\",\n  \"target\": \"file\",\n  \"path\": \"{original_experiment}/controls/newton_zero_domain.lit\",\n  \"detail\": \"normal\",\n  \"language\": \"en\",\n  \"statement_results\": [\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"have fn newton(a R+, x R+) = ((x + (a / x)) / 2)\",\n      \"proof_method\": {\n        \"type\": \"define_fn\",\n        \"rule_name\": \"Have function equal\",\n        \"message\": \"Define a named function equal to an anonymous function\"\n      },\n      \"stores\": [\n        \"newton $in fn (a R+, x R+) R\"\n      ],\n      \"infers\": [\n        \"newton = fn (a R+, x R+) R{((x + (a / x)) / 2)}\"\n      ]\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"thm newton_positive:\\n    ? forall a, x R+:\\n        newton(a, x) > 0\\n    (a / x) > 0\\n    (x + (a / x)) > 0\",\n      \"proof_method\": {\n        \"type\": \"definition\",\n        \"rule_name\": \"Define theorem\",\n        \"message\": \"Record a theorem\"\n      },\n      \"stores\": [\n        \"forall a, x R+:\\n    newton(a, x) > 0\"\n      ],\n      \"infers\": []\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"thm newton_residual_identity:\\n    ? forall a, x R+:\\n        ((4 * (x ^ 2)) * ((newton(a, x) ^ 2) - a)) = (((x ^ 2) - a) ^ 2)\",\n      \"proof_method\": {\n        \"type\": \"definition\",\n        \"rule_name\": \"Define theorem\",\n        \"message\": \"Record a theorem\"\n      },\n      \"stores\": [\n        \"forall a, x R+:\\n    ((4 * (x ^ 2)) * ((newton(a, x) ^ 2) - a)) = (((x ^ 2) - a) ^ 2)\"\n      ],\n      \"infers\": []\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"thm newton_above_root:\\n    ? forall a, x R+:\\n        (newton(a, x) ^ 2) >= a\\n    (4 * (x ^ 2)) > 0\\n    ((newton(a, x) ^ 2) - a) = ((((x ^ 2) - a) ^ 2) / (4 * (x ^ 2))) >= 0\",\n      \"proof_method\": {\n        \"type\": \"definition\",\n        \"rule_name\": \"Define theorem\",\n        \"message\": \"Record a theorem\"\n      },\n      \"stores\": [\n        \"forall a, x R+:\\n    (newton(a, x) ^ 2) >= a\"\n      ],\n      \"infers\": []\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"newton(9, 4) = ((4 + (9 / 4)) / 2) = (25 / 8)\",\n      \"proof_method\": {\n        \"type\": \"compound_fact\",\n        \"rule_name\": \"Chain\",\n        \"message\": \"Verified as a chain fact (details omitted in Normal)\"\n      },\n      \"stores\": [\n        \"newton(9, 4) = ((4 + (9 / 4)) / 2) = (25 / 8)\",\n        \"newton(9, 4) = ((4 + (9 / 4)) / 2)\",\n        \"((4 + (9 / 4)) / 2) = (25 / 8)\"\n      ],\n      \"infers\": [\n        \"newton(9, 4) = (25 / 8)\"\n      ]\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"by thm newton_above_root(9, 4) => (newton(9, 4) ^ 2) >= 9\",\n      \"proof_method\": {\n        \"type\": \"by\",\n        \"rule_name\": \"By theorem\",\n        \"message\": \"Apply a recorded theorem\"\n      },\n      \"stores\": [\n        \"(newton(9, 4) ^ 2) >= 9\"\n      ],\n      \"infers\": []\n    },\n    {\n      \"statement_result\": \"rejected\",\n      \"statement\": \"newton(2, 0) = 1\"\n    }\n  ],\n  \"errors\": [\n    {\n      \"statement_index\": 6,\n      \"statement\": \"newton(2, 0) = 1\",\n      \"phase\": \"well_defined\",\n      \"message\": \"Could not prove that the statement is well-defined.\",\n      \"category\": \"well_defined\",\n      \"obligation\": \"0 $in R+\"\n    }\n  ],\n  \"session_terminated\": false,\n  \"termination\": null\n}\n",
+      "stderr": "",
+      "passed": true,
+      "name": "reject:newton_zero_domain",
+      "language": "litex"
+    },
+    {
+      "command": [
+        "{user_home}/.elan/toolchains/leanprover--lean4---v4.31.0/bin/lean",
+        "{original_experiment}/controls/newton_zero_domain.lean"
+      ],
+      "cwd": "{repository_root}",
+      "exit": 1,
+      "seconds": 52.36092704208568,
+      "stdout": "{original_experiment}/controls/newton_zero_domain.lean:17:27: warning: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice\n\nNote: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`\n'ParametricNewton.newton_positive' depends on axioms: [propext, Classical.choice, Quot.sound]\n'ParametricNewton.newton_residual_identity' depends on axioms: [propext, Classical.choice, Quot.sound]\n'ParametricNewton.newton_above_root' depends on axioms: [propext, Classical.choice, Quot.sound]\n{original_experiment}/controls/newton_zero_domain.lean:44:87: error: unsolved goals\n⊢ False\n",
+      "stderr": "",
+      "passed": true,
+      "name": "reject:newton_zero_domain",
+      "language": "lean"
+    },
+    {
+      "command": [
+        "{original_experiment}/.runtime/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "{original_experiment}/controls/newton_false_residual.lit"
+      ],
+      "cwd": "{repository_root}",
+      "exit": 1,
+      "seconds": 0.2518599168397486,
+      "stdout": "{\n  \"kind\": \"run\",\n  \"run_result\": \"failure\",\n  \"target\": \"file\",\n  \"path\": \"{original_experiment}/controls/newton_false_residual.lit\",\n  \"detail\": \"normal\",\n  \"language\": \"en\",\n  \"statement_results\": [\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"have fn newton(a R+, x R+) = ((x + (a / x)) / 2)\",\n      \"proof_method\": {\n        \"type\": \"define_fn\",\n        \"rule_name\": \"Have function equal\",\n        \"message\": \"Define a named function equal to an anonymous function\"\n      },\n      \"stores\": [\n        \"newton $in fn (a R+, x R+) R\"\n      ],\n      \"infers\": [\n        \"newton = fn (a R+, x R+) R{((x + (a / x)) / 2)}\"\n      ]\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"thm newton_positive:\\n    ? forall a, x R+:\\n        newton(a, x) > 0\\n    (a / x) > 0\\n    (x + (a / x)) > 0\",\n      \"proof_method\": {\n        \"type\": \"definition\",\n        \"rule_name\": \"Define theorem\",\n        \"message\": \"Record a theorem\"\n      },\n      \"stores\": [\n        \"forall a, x R+:\\n    newton(a, x) > 0\"\n      ],\n      \"infers\": []\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"thm newton_residual_identity:\\n    ? forall a, x R+:\\n        ((4 * (x ^ 2)) * ((newton(a, x) ^ 2) - a)) = (((x ^ 2) - a) ^ 2)\",\n      \"proof_method\": {\n        \"type\": \"definition\",\n        \"rule_name\": \"Define theorem\",\n        \"message\": \"Record a theorem\"\n      },\n      \"stores\": [\n        \"forall a, x R+:\\n    ((4 * (x ^ 2)) * ((newton(a, x) ^ 2) - a)) = (((x ^ 2) - a) ^ 2)\"\n      ],\n      \"infers\": []\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"thm newton_above_root:\\n    ? forall a, x R+:\\n        (newton(a, x) ^ 2) >= a\\n    (4 * (x ^ 2)) > 0\\n    ((newton(a, x) ^ 2) - a) = ((((x ^ 2) - a) ^ 2) / (4 * (x ^ 2))) >= 0\",\n      \"proof_method\": {\n        \"type\": \"definition\",\n        \"rule_name\": \"Define theorem\",\n        \"message\": \"Record a theorem\"\n      },\n      \"stores\": [\n        \"forall a, x R+:\\n    (newton(a, x) ^ 2) >= a\"\n      ],\n      \"infers\": []\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"newton(9, 4) = ((4 + (9 / 4)) / 2) = (25 / 8)\",\n      \"proof_method\": {\n        \"type\": \"compound_fact\",\n        \"rule_name\": \"Chain\",\n        \"message\": \"Verified as a chain fact (details omitted in Normal)\"\n      },\n      \"stores\": [\n        \"newton(9, 4) = ((4 + (9 / 4)) / 2) = (25 / 8)\",\n        \"newton(9, 4) = ((4 + (9 / 4)) / 2)\",\n        \"((4 + (9 / 4)) / 2) = (25 / 8)\"\n      ],\n      \"infers\": [\n        \"newton(9, 4) = (25 / 8)\"\n      ]\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"by thm newton_above_root(9, 4) => (newton(9, 4) ^ 2) >= 9\",\n      \"proof_method\": {\n        \"type\": \"by\",\n        \"rule_name\": \"By theorem\",\n        \"message\": \"Apply a recorded theorem\"\n      },\n      \"stores\": [\n        \"(newton(9, 4) ^ 2) >= 9\"\n      ],\n      \"infers\": []\n    },\n    {\n      \"statement_result\": \"rejected\",\n      \"statement\": \"((4 * (4 ^ 2)) * ((newton(9, 4) ^ 2) - 9)) = ((((4 ^ 2) - 9) ^ 2) + 1)\"\n    }\n  ],\n  \"errors\": [\n    {\n      \"statement_index\": 6,\n      \"statement\": \"((4 * (4 ^ 2)) * ((newton(9, 4) ^ 2) - 9)) = ((((4 ^ 2) - 9) ^ 2) + 1)\",\n      \"phase\": \"search_proof\",\n      \"message\": \"Could not prove the goal.\",\n      \"category\": \"proof_search\",\n      \"obligation\": \"((4 * (4 ^ 2)) * ((newton(9, 4) ^ 2) - 9)) = ((((4 ^ 2) - 9) ^ 2) + 1)\"\n    }\n  ],\n  \"session_terminated\": false,\n  \"termination\": null\n}\n",
+      "stderr": "",
+      "passed": true,
+      "name": "reject:newton_false_residual",
+      "language": "litex"
+    },
+    {
+      "command": [
+        "{user_home}/.elan/toolchains/leanprover--lean4---v4.31.0/bin/lean",
+        "{original_experiment}/controls/newton_false_residual.lean"
+      ],
+      "cwd": "{repository_root}",
+      "exit": 1,
+      "seconds": 23.642519417218864,
+      "stdout": "{original_experiment}/controls/newton_false_residual.lean:17:27: warning: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice\n\nNote: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`\n'ParametricNewton.newton_positive' depends on axioms: [propext, Classical.choice, Quot.sound]\n'ParametricNewton.newton_residual_identity' depends on axioms: [propext, Classical.choice, Quot.sound]\n'ParametricNewton.newton_above_root' depends on axioms: [propext, Classical.choice, Quot.sound]\n{original_experiment}/controls/newton_false_residual.lean:44:91: error: unsolved goals\n⊢ False\n",
+      "stderr": "",
+      "passed": true,
+      "name": "reject:newton_false_residual",
+      "language": "lean"
+    },
+    {
+      "command": [
+        "{original_experiment}/.runtime/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "{original_experiment}/controls/descent_oversized_step.lit"
+      ],
+      "cwd": "{repository_root}",
+      "exit": 1,
+      "seconds": 4.289556208066642,
+      "stdout": "{\n  \"kind\": \"run\",\n  \"run_result\": \"failure\",\n  \"target\": \"file\",\n  \"path\": \"{original_experiment}/controls/descent_oversized_step.lit\",\n  \"detail\": \"normal\",\n  \"language\": \"en\",\n  \"statement_results\": [\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"have fn energy(a R+, b, x R) = ((a * ((x - b) ^ 2)) / 2)\",\n      \"proof_method\": {\n        \"type\": \"define_fn\",\n        \"rule_name\": \"Have function equal\",\n        \"message\": \"Define a named function equal to an anonymous function\"\n      },\n      \"stores\": [\n        \"energy $in fn (a R+, b, x R) R\"\n      ],\n      \"infers\": [\n        \"energy = fn (a R+, b, x R) R{((a * ((x - b) ^ 2)) / 2)}\"\n      ]\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"have fn gradient_step(a R+, b, eta, x R) = (x - ((eta * a) * (x - b)))\",\n      \"proof_method\": {\n        \"type\": \"define_fn\",\n        \"rule_name\": \"Have function equal\",\n        \"message\": \"Define a named function equal to an anonymous function\"\n      },\n      \"stores\": [\n        \"gradient_step $in fn (a R+, b, eta, x R) R\"\n      ],\n      \"infers\": [\n        \"gradient_step = fn (a R+, b, eta, x R) R{(x - ((eta * a) * (x - b)))}\"\n      ]\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"thm gradient_error_identity:\\n    ? forall a R+, b, eta, x R:\\n        (gradient_step(a, b, eta, x) - b) = ((1 - (eta * a)) * (x - b))\",\n      \"proof_method\": {\n        \"type\": \"definition\",\n        \"rule_name\": \"Define theorem\",\n        \"message\": \"Record a theorem\"\n      },\n      \"stores\": [\n        \"forall a R+, b, eta, x R:\\n    (gradient_step(a, b, eta, x) - b) = ((1 - (eta * a)) * (x - b))\"\n      ],\n      \"infers\": []\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"thm gradient_drop_identity:\\n    ? forall a R+, b, eta, x R:\\n        (energy(a, b, x) - energy(a, b, gradient_step(a, b, eta, x))) = ((((eta * (a ^ 2)) * (2 - (eta * a))) * ((x - b) ^ 2)) / 2)\\n    energy(a, b, gradient_step(a, b, eta, x)) = ((a * ((gradient_step(a, b, eta, x) - b) ^ 2)) / 2) = ((a * (((1 - (eta * a)) * (x - b)) ^ 2)) / 2)\\n    (energy(a, b, x) - energy(a, b, gradient_step(a, b, eta, x))) = (((a * ((x - b) ^ 2)) / 2) - ((a * (((1 - (eta * a)) * (x - b)) ^ 2)) / 2)) = ((((eta * (a ^ 2)) * (2 - (eta * a))) * ((x - b) ^ 2)) / 2)\",\n      \"proof_method\": {\n        \"type\": \"definition\",\n        \"rule_name\": \"Define theorem\",\n        \"message\": \"Record a theorem\"\n      },\n      \"stores\": [\n        \"forall a R+, b, eta, x R:\\n    (energy(a, b, x) - energy(a, b, gradient_step(a, b, eta, x))) = ((((eta * (a ^ 2)) * (2 - (eta * a))) * ((x - b) ^ 2)) / 2)\"\n      ],\n      \"infers\": []\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"thm gradient_descent:\\n    ? forall a R+, b, eta, x R:\\n        eta > 0\\n        (eta * a) < 2\\n        =>:\\n            energy(a, b, gradient_step(a, b, eta, x)) <= energy(a, b, x)\\n    (eta * (a ^ 2)) > 0\\n    ((eta * (a ^ 2)) * (2 - (eta * a))) >= 0\\n    (((eta * (a ^ 2)) * (2 - (eta * a))) * ((x - b) ^ 2)) >= 0\\n    by thm gradient_drop_identity(a, b, eta, x) => (energy(a, b, x) - energy(a, b, gradient_step(a, b, eta, x))) = ((((eta * (a ^ 2)) * (2 - (eta * a))) * ((x - b) ^ 2)) / 2)\\n    (energy(a, b, x) - energy(a, b, gradient_step(a, b, eta, x))) >= 0\",\n      \"proof_method\": {\n        \"type\": \"definition\",\n        \"rule_name\": \"Define theorem\",\n        \"message\": \"Record a theorem\"\n      },\n      \"stores\": [\n        \"forall a R+, b, eta, x R:\\n    eta > 0\\n    (eta * a) < 2\\n    =>:\\n        energy(a, b, gradient_step(a, b, eta, x)) <= energy(a, b, x)\"\n      ],\n      \"infers\": []\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"thm gradient_strict_descent:\\n    ? forall a R+, b, eta, x R:\\n        eta > 0\\n        (eta * a) < 2\\n        x != b\\n        =>:\\n            energy(a, b, gradient_step(a, b, eta, x)) < energy(a, b, x)\\n    (x - b) != 0\\n    (eta * (a ^ 2)) > 0\\n    ((eta * (a ^ 2)) * (2 - (eta * a))) > 0\\n    (((eta * (a ^ 2)) * (2 - (eta * a))) * ((x - b) ^ 2)) > 0\\n    by thm gradient_drop_identity(a, b, eta, x) => (energy(a, b, x) - energy(a, b, gradient_step(a, b, eta, x))) = ((((eta * (a ^ 2)) * (2 - (eta * a))) * ((x - b) ^ 2)) / 2)\\n    (energy(a, b, x) - energy(a, b, gradient_step(a, b, eta, x))) > 0\",\n      \"proof_method\": {\n        \"type\": \"definition\",\n        \"rule_name\": \"Define theorem\",\n        \"message\": \"Record a theorem\"\n      },\n      \"stores\": [\n        \"forall a R+, b, eta, x R:\\n    eta > 0\\n    (eta * a) < 2\\n    x != b\\n    =>:\\n        energy(a, b, gradient_step(a, b, eta, x)) < energy(a, b, x)\"\n      ],\n      \"infers\": []\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"by thm gradient_strict_descent(2, 3, (1 / 4), 5) => energy(2, 3, gradient_step(2, 3, (1 / 4), 5)) < energy(2, 3, 5)\",\n      \"proof_method\": {\n        \"type\": \"by\",\n        \"rule_name\": \"By theorem\",\n        \"message\": \"Apply a recorded theorem\"\n      },\n      \"stores\": [\n        \"energy(2, 3, gradient_step(2, 3, (1 / 4), 5)) < energy(2, 3, 5)\"\n      ],\n      \"infers\": []\n    },\n    {\n      \"statement_result\": \"rejected\",\n      \"statement\": \"energy(1, 0, gradient_step(1, 0, 3, 1)) <= energy(1, 0, 1)\"\n    }\n  ],\n  \"errors\": [\n    {\n      \"statement_index\": 7,\n      \"statement\": \"energy(1, 0, gradient_step(1, 0, 3, 1)) <= energy(1, 0, 1)\",\n      \"phase\": \"search_proof\",\n      \"message\": \"Could not prove the goal.\",\n      \"category\": \"proof_search\",\n      \"obligation\": \"energy(1, 0, gradient_step(1, 0, 3, 1)) <= energy(1, 0, 1)\"\n    }\n  ],\n  \"session_terminated\": false,\n  \"termination\": null\n}\n",
+      "stderr": "",
+      "passed": true,
+      "name": "reject:descent_oversized_step",
+      "language": "litex"
+    },
+    {
+      "command": [
+        "{user_home}/.elan/toolchains/leanprover--lean4---v4.31.0/bin/lean",
+        "{original_experiment}/controls/descent_oversized_step.lean"
+      ],
+      "cwd": "{repository_root}",
+      "exit": 1,
+      "seconds": 19.09207291714847,
+      "stdout": "'QuadraticDescent.gradient_error_identity' depends on axioms: [propext, Classical.choice, Quot.sound]\n'QuadraticDescent.gradient_drop_identity' depends on axioms: [propext, Classical.choice, Quot.sound]\n'QuadraticDescent.gradient_descent' depends on axioms: [propext, Classical.choice, Quot.sound]\n'QuadraticDescent.gradient_strict_descent' depends on axioms: [propext, Classical.choice, Quot.sound]\n{original_experiment}/controls/descent_oversized_step.lean:52:113: error: unsolved goals\n⊢ False\n",
+      "stderr": "",
+      "passed": true,
+      "name": "reject:descent_oversized_step",
+      "language": "lean"
+    },
+    {
+      "command": [
+        "{original_experiment}/.runtime/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "{original_experiment}/controls/descent_strict_at_minimum.lit"
+      ],
+      "cwd": "{repository_root}",
+      "exit": 1,
+      "seconds": 3.392821916844696,
+      "stdout": "{\n  \"kind\": \"run\",\n  \"run_result\": \"failure\",\n  \"target\": \"file\",\n  \"path\": \"{original_experiment}/controls/descent_strict_at_minimum.lit\",\n  \"detail\": \"normal\",\n  \"language\": \"en\",\n  \"statement_results\": [\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"have fn energy(a R+, b, x R) = ((a * ((x - b) ^ 2)) / 2)\",\n      \"proof_method\": {\n        \"type\": \"define_fn\",\n        \"rule_name\": \"Have function equal\",\n        \"message\": \"Define a named function equal to an anonymous function\"\n      },\n      \"stores\": [\n        \"energy $in fn (a R+, b, x R) R\"\n      ],\n      \"infers\": [\n        \"energy = fn (a R+, b, x R) R{((a * ((x - b) ^ 2)) / 2)}\"\n      ]\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"have fn gradient_step(a R+, b, eta, x R) = (x - ((eta * a) * (x - b)))\",\n      \"proof_method\": {\n        \"type\": \"define_fn\",\n        \"rule_name\": \"Have function equal\",\n        \"message\": \"Define a named function equal to an anonymous function\"\n      },\n      \"stores\": [\n        \"gradient_step $in fn (a R+, b, eta, x R) R\"\n      ],\n      \"infers\": [\n        \"gradient_step = fn (a R+, b, eta, x R) R{(x - ((eta * a) * (x - b)))}\"\n      ]\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"thm gradient_error_identity:\\n    ? forall a R+, b, eta, x R:\\n        (gradient_step(a, b, eta, x) - b) = ((1 - (eta * a)) * (x - b))\",\n      \"proof_method\": {\n        \"type\": \"definition\",\n        \"rule_name\": \"Define theorem\",\n        \"message\": \"Record a theorem\"\n      },\n      \"stores\": [\n        \"forall a R+, b, eta, x R:\\n    (gradient_step(a, b, eta, x) - b) = ((1 - (eta * a)) * (x - b))\"\n      ],\n      \"infers\": []\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"thm gradient_drop_identity:\\n    ? forall a R+, b, eta, x R:\\n        (energy(a, b, x) - energy(a, b, gradient_step(a, b, eta, x))) = ((((eta * (a ^ 2)) * (2 - (eta * a))) * ((x - b) ^ 2)) / 2)\\n    energy(a, b, gradient_step(a, b, eta, x)) = ((a * ((gradient_step(a, b, eta, x) - b) ^ 2)) / 2) = ((a * (((1 - (eta * a)) * (x - b)) ^ 2)) / 2)\\n    (energy(a, b, x) - energy(a, b, gradient_step(a, b, eta, x))) = (((a * ((x - b) ^ 2)) / 2) - ((a * (((1 - (eta * a)) * (x - b)) ^ 2)) / 2)) = ((((eta * (a ^ 2)) * (2 - (eta * a))) * ((x - b) ^ 2)) / 2)\",\n      \"proof_method\": {\n        \"type\": \"definition\",\n        \"rule_name\": \"Define theorem\",\n        \"message\": \"Record a theorem\"\n      },\n      \"stores\": [\n        \"forall a R+, b, eta, x R:\\n    (energy(a, b, x) - energy(a, b, gradient_step(a, b, eta, x))) = ((((eta * (a ^ 2)) * (2 - (eta * a))) * ((x - b) ^ 2)) / 2)\"\n      ],\n      \"infers\": []\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"thm gradient_descent:\\n    ? forall a R+, b, eta, x R:\\n        eta > 0\\n        (eta * a) < 2\\n        =>:\\n            energy(a, b, gradient_step(a, b, eta, x)) <= energy(a, b, x)\\n    (eta * (a ^ 2)) > 0\\n    ((eta * (a ^ 2)) * (2 - (eta * a))) >= 0\\n    (((eta * (a ^ 2)) * (2 - (eta * a))) * ((x - b) ^ 2)) >= 0\\n    by thm gradient_drop_identity(a, b, eta, x) => (energy(a, b, x) - energy(a, b, gradient_step(a, b, eta, x))) = ((((eta * (a ^ 2)) * (2 - (eta * a))) * ((x - b) ^ 2)) / 2)\\n    (energy(a, b, x) - energy(a, b, gradient_step(a, b, eta, x))) >= 0\",\n      \"proof_method\": {\n        \"type\": \"definition\",\n        \"rule_name\": \"Define theorem\",\n        \"message\": \"Record a theorem\"\n      },\n      \"stores\": [\n        \"forall a R+, b, eta, x R:\\n    eta > 0\\n    (eta * a) < 2\\n    =>:\\n        energy(a, b, gradient_step(a, b, eta, x)) <= energy(a, b, x)\"\n      ],\n      \"infers\": []\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"thm gradient_strict_descent:\\n    ? forall a R+, b, eta, x R:\\n        eta > 0\\n        (eta * a) < 2\\n        x != b\\n        =>:\\n            energy(a, b, gradient_step(a, b, eta, x)) < energy(a, b, x)\\n    (x - b) != 0\\n    (eta * (a ^ 2)) > 0\\n    ((eta * (a ^ 2)) * (2 - (eta * a))) > 0\\n    (((eta * (a ^ 2)) * (2 - (eta * a))) * ((x - b) ^ 2)) > 0\\n    by thm gradient_drop_identity(a, b, eta, x) => (energy(a, b, x) - energy(a, b, gradient_step(a, b, eta, x))) = ((((eta * (a ^ 2)) * (2 - (eta * a))) * ((x - b) ^ 2)) / 2)\\n    (energy(a, b, x) - energy(a, b, gradient_step(a, b, eta, x))) > 0\",\n      \"proof_method\": {\n        \"type\": \"definition\",\n        \"rule_name\": \"Define theorem\",\n        \"message\": \"Record a theorem\"\n      },\n      \"stores\": [\n        \"forall a R+, b, eta, x R:\\n    eta > 0\\n    (eta * a) < 2\\n    x != b\\n    =>:\\n        energy(a, b, gradient_step(a, b, eta, x)) < energy(a, b, x)\"\n      ],\n      \"infers\": []\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"by thm gradient_strict_descent(2, 3, (1 / 4), 5) => energy(2, 3, gradient_step(2, 3, (1 / 4), 5)) < energy(2, 3, 5)\",\n      \"proof_method\": {\n        \"type\": \"by\",\n        \"rule_name\": \"By theorem\",\n        \"message\": \"Apply a recorded theorem\"\n      },\n      \"stores\": [\n        \"energy(2, 3, gradient_step(2, 3, (1 / 4), 5)) < energy(2, 3, 5)\"\n      ],\n      \"infers\": []\n    },\n    {\n      \"statement_result\": \"rejected\",\n      \"statement\": \"energy(1, 0, gradient_step(1, 0, 1, 0)) < energy(1, 0, 0)\"\n    }\n  ],\n  \"errors\": [\n    {\n      \"statement_index\": 7,\n      \"statement\": \"energy(1, 0, gradient_step(1, 0, 1, 0)) < energy(1, 0, 0)\",\n      \"phase\": \"search_proof\",\n      \"message\": \"Could not prove the goal.\",\n      \"category\": \"proof_search\",\n      \"obligation\": \"energy(1, 0, gradient_step(1, 0, 1, 0)) < energy(1, 0, 0)\"\n    }\n  ],\n  \"session_terminated\": false,\n  \"termination\": null\n}\n",
+      "stderr": "",
+      "passed": true,
+      "name": "reject:descent_strict_at_minimum",
+      "language": "litex"
+    },
+    {
+      "command": [
+        "{user_home}/.elan/toolchains/leanprover--lean4---v4.31.0/bin/lean",
+        "{original_experiment}/controls/descent_strict_at_minimum.lean"
+      ],
+      "cwd": "{repository_root}",
+      "exit": 1,
+      "seconds": 29.659727375023067,
+      "stdout": "'QuadraticDescent.gradient_error_identity' depends on axioms: [propext, Classical.choice, Quot.sound]\n'QuadraticDescent.gradient_drop_identity' depends on axioms: [propext, Classical.choice, Quot.sound]\n'QuadraticDescent.gradient_descent' depends on axioms: [propext, Classical.choice, Quot.sound]\n'QuadraticDescent.gradient_strict_descent' depends on axioms: [propext, Classical.choice, Quot.sound]\n{original_experiment}/controls/descent_strict_at_minimum.lean:52:113: error: unsolved goals\n⊢ False\n",
+      "stderr": "",
+      "passed": true,
+      "name": "reject:descent_strict_at_minimum",
+      "language": "lean"
+    },
+    {
+      "command": [
+        "{original_experiment}/.runtime/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "{original_experiment}/controls/geometric_q_one_domain.lit"
+      ],
+      "cwd": "{repository_root}",
+      "exit": 1,
+      "seconds": 1.3304505408741534,
+      "stdout": "{\n  \"kind\": \"run\",\n  \"run_result\": \"failure\",\n  \"target\": \"file\",\n  \"path\": \"{original_experiment}/controls/geometric_q_one_domain.lit\",\n  \"detail\": \"normal\",\n  \"language\": \"en\",\n  \"statement_results\": [\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"forall q R:\\n    q < 1\\n    =>:\\n        (1 - q) > 0\\n        (1 - q) != 0\",\n      \"proof_method\": {\n        \"type\": \"compound_fact\",\n        \"rule_name\": \"Universal\",\n        \"message\": \"Verified as a forall fact (details omitted in Normal)\"\n      },\n      \"stores\": [\n        \"forall q R:\\n    q < 1\\n    =>:\\n        (1 - q) > 0\\n        (1 - q) != 0\"\n      ],\n      \"infers\": []\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"have fn bound(q R+, c, d R, n N: q < 1) = (((q ^ n) * c) + ((d * (1 - (q ^ n))) / (1 - q)))\",\n      \"proof_method\": {\n        \"type\": \"define_fn\",\n        \"rule_name\": \"Have function equal\",\n        \"message\": \"Define a named function equal to an anonymous function\"\n      },\n      \"stores\": [\n        \"bound $in fn (q R+, c, d R, n N: q < 1) R\"\n      ],\n      \"infers\": [\n        \"bound = fn (q R+, c, d R, n N: q < 1) R{(((q ^ n) * c) + ((d * (1 - (q ^ n))) / (1 - q)))}\"\n      ]\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"thm bound_zero:\\n    ? forall q R+, c, d R:\\n        q < 1\\n        =>:\\n            bound(q, c, d, 0) = c\\n    (1 - q) != 0\",\n      \"proof_method\": {\n        \"type\": \"definition\",\n        \"rule_name\": \"Define theorem\",\n        \"message\": \"Record a theorem\"\n      },\n      \"stores\": [\n        \"forall q R+, c, d R:\\n    q < 1\\n    =>:\\n        bound(q, c, d, 0) = c\"\n      ],\n      \"infers\": []\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"thm bound_step:\\n    ? forall q R+, c, d R, n N:\\n        q < 1\\n        =>:\\n            bound(q, c, d, (n + 1)) = ((q * bound(q, c, d, n)) + d)\\n    (1 - q) != 0\\n    have t R+ = (q ^ n)\\n    (q ^ (n + 1)) = ((q ^ n) * (q ^ 1)) = (t * q)\\n    (((t * q) * c) + ((d * (1 - (t * q))) / (1 - q))) = ((q * ((t * c) + ((d * (1 - t)) / (1 - q)))) + d)\\n    bound(q, c, d, (n + 1)) = ((q * ((t * c) + ((d * (1 - t)) / (1 - q)))) + d) = ((q * bound(q, c, d, n)) + d)\",\n      \"proof_method\": {\n        \"type\": \"definition\",\n        \"rule_name\": \"Define theorem\",\n        \"message\": \"Record a theorem\"\n      },\n      \"stores\": [\n        \"forall q R+, c, d R, n N:\\n    q < 1\\n    =>:\\n        bound(q, c, d, (n + 1)) = ((q * bound(q, c, d, n)) + d)\"\n      ],\n      \"infers\": []\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"thm affine_recurrence_bound:\\n    ? forall err fn (idx N) R, q R+, d R, n N:\\n        q < 1\\n        forall j N:\\n            err((j + 1)) <= ((q * err(j)) + d)\\n        =>:\\n            err(n) <= bound(q, err(0), d, n)\\n    by induc n from 0:\\n        ? err(n) <= bound(q, err(0), d, n)\\n        ? from n = 0:\\n            by thm bound_zero(q, err(0), d) => bound(q, err(0), d, 0) = err(0)\\n        ? induc:\\n            err((n + 1)) <= ((q * err(n)) + d) <= ((q * bound(q, err(0), d, n)) + d) = bound(q, err(0), d, (n + 1))\",\n      \"proof_method\": {\n        \"type\": \"definition\",\n        \"rule_name\": \"Define theorem\",\n        \"message\": \"Record a theorem\"\n      },\n      \"stores\": [\n        \"forall err fn (idx N) R, q R+, d R, n N:\\n    q < 1\\n    forall j N:\\n        err((j + 1)) <= ((q * err(j)) + d)\\n    =>:\\n        err(n) <= bound(q, err(0), d, n)\"\n      ],\n      \"infers\": []\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"thm noiseless_affine_bound:\\n    ? forall err fn (idx N) R, q R+, n N:\\n        q < 1\\n        forall j N:\\n            err((j + 1)) <= (q * err(j))\\n        =>:\\n            err(n) <= ((q ^ n) * err(0))\\n    claim:\\n        ? forall j N:\\n            err((j + 1)) <= ((q * err(j)) + 0)\\n        ((q * err(j)) + 0) = (q * err(j))\\n    (1 - q) != 0\\n    bound(q, err(0), 0, n) = (((q ^ n) * err(0)) + ((0 * (1 - (q ^ n))) / (1 - q))) = (((q ^ n) * err(0)) + 0) = ((q ^ n) * err(0))\",\n      \"proof_method\": {\n        \"type\": \"definition\",\n        \"rule_name\": \"Define theorem\",\n        \"message\": \"Record a theorem\"\n      },\n      \"stores\": [\n        \"forall err fn (idx N) R, q R+, n N:\\n    q < 1\\n    forall j N:\\n        err((j + 1)) <= (q * err(j))\\n    =>:\\n        err(n) <= ((q ^ n) * err(0))\"\n      ],\n      \"infers\": []\n    },\n    {\n      \"statement_result\": \"rejected\",\n      \"statement\": \"bound(1, 0, 1, 1) = 1\"\n    }\n  ],\n  \"errors\": [\n    {\n      \"statement_index\": 6,\n      \"statement\": \"bound(1, 0, 1, 1) = 1\",\n      \"phase\": \"well_defined\",\n      \"message\": \"Could not prove that the statement is well-defined.\",\n      \"category\": \"well_defined\",\n      \"obligation\": \"1 < 1\"\n    }\n  ],\n  \"session_terminated\": false,\n  \"termination\": null\n}\n",
+      "stderr": "",
+      "passed": true,
+      "name": "reject:geometric_q_one_domain",
+      "language": "litex"
+    },
+    {
+      "command": [
+        "{user_home}/.elan/toolchains/leanprover--lean4---v4.31.0/bin/lean",
+        "{original_experiment}/controls/geometric_q_one_domain.lean"
+      ],
+      "cwd": "{repository_root}",
+      "exit": 1,
+      "seconds": 17.138319042045623,
+      "stdout": "{original_experiment}/controls/geometric_q_one_domain.lean:19:20: warning: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice\n\nNote: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`\n'PerturbedGeometric.bound_zero' depends on axioms: [propext, Classical.choice, Quot.sound]\n'PerturbedGeometric.bound_step' depends on axioms: [propext, Classical.choice, Quot.sound]\n'PerturbedGeometric.affine_recurrence_bound' depends on axioms: [propext, Classical.choice, Quot.sound]\n'PerturbedGeometric.noiseless_affine_bound' depends on axioms: [propext, Classical.choice, Quot.sound]\n{original_experiment}/controls/geometric_q_one_domain.lean:50:56: error: unsolved goals\n⊢ False\n",
+      "stderr": "",
+      "passed": true,
+      "name": "reject:geometric_q_one_domain",
+      "language": "lean"
+    },
+    {
+      "command": [
+        "{original_experiment}/.runtime/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "{original_experiment}/controls/geometric_omitted_noise.lit"
+      ],
+      "cwd": "{repository_root}",
+      "exit": 1,
+      "seconds": 1.3956462922506034,
+      "stdout": "{\n  \"kind\": \"run\",\n  \"run_result\": \"failure\",\n  \"target\": \"file\",\n  \"path\": \"{original_experiment}/controls/geometric_omitted_noise.lit\",\n  \"detail\": \"normal\",\n  \"language\": \"en\",\n  \"statement_results\": [\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"forall q R:\\n    q < 1\\n    =>:\\n        (1 - q) > 0\\n        (1 - q) != 0\",\n      \"proof_method\": {\n        \"type\": \"compound_fact\",\n        \"rule_name\": \"Universal\",\n        \"message\": \"Verified as a forall fact (details omitted in Normal)\"\n      },\n      \"stores\": [\n        \"forall q R:\\n    q < 1\\n    =>:\\n        (1 - q) > 0\\n        (1 - q) != 0\"\n      ],\n      \"infers\": []\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"have fn bound(q R+, c, d R, n N: q < 1) = (((q ^ n) * c) + ((d * (1 - (q ^ n))) / (1 - q)))\",\n      \"proof_method\": {\n        \"type\": \"define_fn\",\n        \"rule_name\": \"Have function equal\",\n        \"message\": \"Define a named function equal to an anonymous function\"\n      },\n      \"stores\": [\n        \"bound $in fn (q R+, c, d R, n N: q < 1) R\"\n      ],\n      \"infers\": [\n        \"bound = fn (q R+, c, d R, n N: q < 1) R{(((q ^ n) * c) + ((d * (1 - (q ^ n))) / (1 - q)))}\"\n      ]\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"thm bound_zero:\\n    ? forall q R+, c, d R:\\n        q < 1\\n        =>:\\n            bound(q, c, d, 0) = c\\n    (1 - q) != 0\",\n      \"proof_method\": {\n        \"type\": \"definition\",\n        \"rule_name\": \"Define theorem\",\n        \"message\": \"Record a theorem\"\n      },\n      \"stores\": [\n        \"forall q R+, c, d R:\\n    q < 1\\n    =>:\\n        bound(q, c, d, 0) = c\"\n      ],\n      \"infers\": []\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"thm bound_step:\\n    ? forall q R+, c, d R, n N:\\n        q < 1\\n        =>:\\n            bound(q, c, d, (n + 1)) = ((q * bound(q, c, d, n)) + d)\\n    (1 - q) != 0\\n    have t R+ = (q ^ n)\\n    (q ^ (n + 1)) = ((q ^ n) * (q ^ 1)) = (t * q)\\n    (((t * q) * c) + ((d * (1 - (t * q))) / (1 - q))) = ((q * ((t * c) + ((d * (1 - t)) / (1 - q)))) + d)\\n    bound(q, c, d, (n + 1)) = ((q * ((t * c) + ((d * (1 - t)) / (1 - q)))) + d) = ((q * bound(q, c, d, n)) + d)\",\n      \"proof_method\": {\n        \"type\": \"definition\",\n        \"rule_name\": \"Define theorem\",\n        \"message\": \"Record a theorem\"\n      },\n      \"stores\": [\n        \"forall q R+, c, d R, n N:\\n    q < 1\\n    =>:\\n        bound(q, c, d, (n + 1)) = ((q * bound(q, c, d, n)) + d)\"\n      ],\n      \"infers\": []\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"thm affine_recurrence_bound:\\n    ? forall err fn (idx N) R, q R+, d R, n N:\\n        q < 1\\n        forall j N:\\n            err((j + 1)) <= ((q * err(j)) + d)\\n        =>:\\n            err(n) <= bound(q, err(0), d, n)\\n    by induc n from 0:\\n        ? err(n) <= bound(q, err(0), d, n)\\n        ? from n = 0:\\n            by thm bound_zero(q, err(0), d) => bound(q, err(0), d, 0) = err(0)\\n        ? induc:\\n            err((n + 1)) <= ((q * err(n)) + d) <= ((q * bound(q, err(0), d, n)) + d) = bound(q, err(0), d, (n + 1))\",\n      \"proof_method\": {\n        \"type\": \"definition\",\n        \"rule_name\": \"Define theorem\",\n        \"message\": \"Record a theorem\"\n      },\n      \"stores\": [\n        \"forall err fn (idx N) R, q R+, d R, n N:\\n    q < 1\\n    forall j N:\\n        err((j + 1)) <= ((q * err(j)) + d)\\n    =>:\\n        err(n) <= bound(q, err(0), d, n)\"\n      ],\n      \"infers\": []\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"thm noiseless_affine_bound:\\n    ? forall err fn (idx N) R, q R+, n N:\\n        q < 1\\n        forall j N:\\n            err((j + 1)) <= (q * err(j))\\n        =>:\\n            err(n) <= ((q ^ n) * err(0))\\n    claim:\\n        ? forall j N:\\n            err((j + 1)) <= ((q * err(j)) + 0)\\n        ((q * err(j)) + 0) = (q * err(j))\\n    (1 - q) != 0\\n    bound(q, err(0), 0, n) = (((q ^ n) * err(0)) + ((0 * (1 - (q ^ n))) / (1 - q))) = (((q ^ n) * err(0)) + 0) = ((q ^ n) * err(0))\",\n      \"proof_method\": {\n        \"type\": \"definition\",\n        \"rule_name\": \"Define theorem\",\n        \"message\": \"Record a theorem\"\n      },\n      \"stores\": [\n        \"forall err fn (idx N) R, q R+, n N:\\n    q < 1\\n    forall j N:\\n        err((j + 1)) <= (q * err(j))\\n    =>:\\n        err(n) <= ((q ^ n) * err(0))\"\n      ],\n      \"infers\": []\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"1 <= (((1 / 2) * 1) + (1 / 2))\",\n      \"proof_method\": {\n        \"type\": \"by_closed_calculation\",\n        \"rule_name\": \"Closed calculation\",\n        \"message\": \"Exact evaluation of closed expressions without proof search\"\n      },\n      \"stores\": [\n        \"1 <= (((1 / 2) * 1) + (1 / 2))\"\n      ],\n      \"infers\": [\n        \"(((1 / 2) * 1) + (1 / 2)) $in N\"\n      ]\n    },\n    {\n      \"statement_result\": \"rejected\",\n      \"statement\": \"1 <= (((1 / 2) ^ 1) * 1)\"\n    }\n  ],\n  \"errors\": [\n    {\n      \"statement_index\": 7,\n      \"statement\": \"1 <= (((1 / 2) ^ 1) * 1)\",\n      \"phase\": \"search_proof\",\n      \"message\": \"Could not prove the goal.\",\n      \"category\": \"proof_search\",\n      \"obligation\": \"1 <= (((1 / 2) ^ 1) * 1)\"\n    }\n  ],\n  \"session_terminated\": false,\n  \"termination\": null\n}\n",
+      "stderr": "",
+      "passed": true,
+      "name": "reject:geometric_omitted_noise",
+      "language": "litex"
+    },
+    {
+      "command": [
+        "{user_home}/.elan/toolchains/leanprover--lean4---v4.31.0/bin/lean",
+        "{original_experiment}/controls/geometric_omitted_noise.lean"
+      ],
+      "cwd": "{repository_root}",
+      "exit": 1,
+      "seconds": 20.163819374982268,
+      "stdout": "{original_experiment}/controls/geometric_omitted_noise.lean:19:20: warning: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice\n\nNote: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`\n'PerturbedGeometric.bound_zero' depends on axioms: [propext, Classical.choice, Quot.sound]\n'PerturbedGeometric.bound_step' depends on axioms: [propext, Classical.choice, Quot.sound]\n'PerturbedGeometric.affine_recurrence_bound' depends on axioms: [propext, Classical.choice, Quot.sound]\n'PerturbedGeometric.noiseless_affine_bound' depends on axioms: [propext, Classical.choice, Quot.sound]\n{original_experiment}/controls/geometric_omitted_noise.lean:51:37: error: unsolved goals\n⊢ False\n",
+      "stderr": "",
+      "passed": true,
+      "name": "reject:geometric_omitted_noise",
+      "language": "lean"
+    },
+    {
+      "command": [
+        "{original_experiment}/.runtime/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "{original_experiment}/litex/01_parametric_newton.lit"
+      ],
+      "cwd": "{repository_root}",
+      "exit": 0,
+      "seconds": 0.21647770795971155,
+      "stdout": "{\n  \"kind\": \"run\",\n  \"run_result\": \"success\",\n  \"target\": \"file\",\n  \"path\": \"{original_experiment}/litex/01_parametric_newton.lit\",\n  \"detail\": \"normal\",\n  \"language\": \"en\",\n  \"statement_results\": [\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"have fn newton(a R+, x R+) = ((x + (a / x)) / 2)\",\n      \"proof_method\": {\n        \"type\": \"define_fn\",\n        \"rule_name\": \"Have function equal\",\n        \"message\": \"Define a named function equal to an anonymous function\"\n      },\n      \"stores\": [\n        \"newton $in fn (a R+, x R+) R\"\n      ],\n      \"infers\": [\n        \"newton = fn (a R+, x R+) R{((x + (a / x)) / 2)}\"\n      ]\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"thm newton_positive:\\n    ? forall a, x R+:\\n        newton(a, x) > 0\\n    (a / x) > 0\\n    (x + (a / x)) > 0\",\n      \"proof_method\": {\n        \"type\": \"definition\",\n        \"rule_name\": \"Define theorem\",\n        \"message\": \"Record a theorem\"\n      },\n      \"stores\": [\n        \"forall a, x R+:\\n    newton(a, x) > 0\"\n      ],\n      \"infers\": []\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"thm newton_residual_identity:\\n    ? forall a, x R+:\\n        ((4 * (x ^ 2)) * ((newton(a, x) ^ 2) - a)) = (((x ^ 2) - a) ^ 2)\",\n      \"proof_method\": {\n        \"type\": \"definition\",\n        \"rule_name\": \"Define theorem\",\n        \"message\": \"Record a theorem\"\n      },\n      \"stores\": [\n        \"forall a, x R+:\\n    ((4 * (x ^ 2)) * ((newton(a, x) ^ 2) - a)) = (((x ^ 2) - a) ^ 2)\"\n      ],\n      \"infers\": []\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"thm newton_above_root:\\n    ? forall a, x R+:\\n        (newton(a, x) ^ 2) >= a\\n    (4 * (x ^ 2)) > 0\\n    ((newton(a, x) ^ 2) - a) = ((((x ^ 2) - a) ^ 2) / (4 * (x ^ 2))) >= 0\",\n      \"proof_method\": {\n        \"type\": \"definition\",\n        \"rule_name\": \"Define theorem\",\n        \"message\": \"Record a theorem\"\n      },\n      \"stores\": [\n        \"forall a, x R+:\\n    (newton(a, x) ^ 2) >= a\"\n      ],\n      \"infers\": []\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"newton(9, 4) = ((4 + (9 / 4)) / 2) = (25 / 8)\",\n      \"proof_method\": {\n        \"type\": \"compound_fact\",\n        \"rule_name\": \"Chain\",\n        \"message\": \"Verified as a chain fact (details omitted in Normal)\"\n      },\n      \"stores\": [\n        \"newton(9, 4) = ((4 + (9 / 4)) / 2) = (25 / 8)\",\n        \"newton(9, 4) = ((4 + (9 / 4)) / 2)\",\n        \"((4 + (9 / 4)) / 2) = (25 / 8)\"\n      ],\n      \"infers\": [\n        \"newton(9, 4) = (25 / 8)\"\n      ]\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"by thm newton_above_root(9, 4) => (newton(9, 4) ^ 2) >= 9\",\n      \"proof_method\": {\n        \"type\": \"by\",\n        \"rule_name\": \"By theorem\",\n        \"message\": \"Apply a recorded theorem\"\n      },\n      \"stores\": [\n        \"(newton(9, 4) ^ 2) >= 9\"\n      ],\n      \"infers\": []\n    }\n  ],\n  \"errors\": [],\n  \"session_terminated\": false,\n  \"termination\": null\n}\n",
+      "stderr": "",
+      "passed": true,
+      "name": "measure:01_parametric_newton:1",
+      "language": "litex"
+    },
+    {
+      "command": [
+        "{user_home}/.elan/toolchains/leanprover--lean4---v4.31.0/bin/lean",
+        "{original_experiment}/lean/01_parametric_newton.lean"
+      ],
+      "cwd": "{repository_root}",
+      "exit": 0,
+      "seconds": 14.163907083217055,
+      "stdout": "{original_experiment}/lean/01_parametric_newton.lean:17:27: warning: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice\n\nNote: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`\n'ParametricNewton.newton_positive' depends on axioms: [propext, Classical.choice, Quot.sound]\n'ParametricNewton.newton_residual_identity' depends on axioms: [propext, Classical.choice, Quot.sound]\n'ParametricNewton.newton_above_root' depends on axioms: [propext, Classical.choice, Quot.sound]\n",
+      "stderr": "",
+      "passed": true,
+      "name": "measure:01_parametric_newton:1",
+      "language": "lean"
+    },
+    {
+      "command": [
+        "{original_experiment}/.runtime/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "{original_experiment}/litex/02_quadratic_descent.lit"
+      ],
+      "cwd": "{repository_root}",
+      "exit": 0,
+      "seconds": 2.8809468750841916,
+      "stdout": "{\n  \"kind\": \"run\",\n  \"run_result\": \"success\",\n  \"target\": \"file\",\n  \"path\": \"{original_experiment}/litex/02_quadratic_descent.lit\",\n  \"detail\": \"normal\",\n  \"language\": \"en\",\n  \"statement_results\": [\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"have fn energy(a R+, b, x R) = ((a * ((x - b) ^ 2)) / 2)\",\n      \"proof_method\": {\n        \"type\": \"define_fn\",\n        \"rule_name\": \"Have function equal\",\n        \"message\": \"Define a named function equal to an anonymous function\"\n      },\n      \"stores\": [\n        \"energy $in fn (a R+, b, x R) R\"\n      ],\n      \"infers\": [\n        \"energy = fn (a R+, b, x R) R{((a * ((x - b) ^ 2)) / 2)}\"\n      ]\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"have fn gradient_step(a R+, b, eta, x R) = (x - ((eta * a) * (x - b)))\",\n      \"proof_method\": {\n        \"type\": \"define_fn\",\n        \"rule_name\": \"Have function equal\",\n        \"message\": \"Define a named function equal to an anonymous function\"\n      },\n      \"stores\": [\n        \"gradient_step $in fn (a R+, b, eta, x R) R\"\n      ],\n      \"infers\": [\n        \"gradient_step = fn (a R+, b, eta, x R) R{(x - ((eta * a) * (x - b)))}\"\n      ]\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"thm gradient_error_identity:\\n    ? forall a R+, b, eta, x R:\\n        (gradient_step(a, b, eta, x) - b) = ((1 - (eta * a)) * (x - b))\",\n      \"proof_method\": {\n        \"type\": \"definition\",\n        \"rule_name\": \"Define theorem\",\n        \"message\": \"Record a theorem\"\n      },\n      \"stores\": [\n        \"forall a R+, b, eta, x R:\\n    (gradient_step(a, b, eta, x) - b) = ((1 - (eta * a)) * (x - b))\"\n      ],\n      \"infers\": []\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"thm gradient_drop_identity:\\n    ? forall a R+, b, eta, x R:\\n        (energy(a, b, x) - energy(a, b, gradient_step(a, b, eta, x))) = ((((eta * (a ^ 2)) * (2 - (eta * a))) * ((x - b) ^ 2)) / 2)\\n    energy(a, b, gradient_step(a, b, eta, x)) = ((a * ((gradient_step(a, b, eta, x) - b) ^ 2)) / 2) = ((a * (((1 - (eta * a)) * (x - b)) ^ 2)) / 2)\\n    (energy(a, b, x) - energy(a, b, gradient_step(a, b, eta, x))) = (((a * ((x - b) ^ 2)) / 2) - ((a * (((1 - (eta * a)) * (x - b)) ^ 2)) / 2)) = ((((eta * (a ^ 2)) * (2 - (eta * a))) * ((x - b) ^ 2)) / 2)\",\n      \"proof_method\": {\n        \"type\": \"definition\",\n        \"rule_name\": \"Define theorem\",\n        \"message\": \"Record a theorem\"\n      },\n      \"stores\": [\n        \"forall a R+, b, eta, x R:\\n    (energy(a, b, x) - energy(a, b, gradient_step(a, b, eta, x))) = ((((eta * (a ^ 2)) * (2 - (eta * a))) * ((x - b) ^ 2)) / 2)\"\n      ],\n      \"infers\": []\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"thm gradient_descent:\\n    ? forall a R+, b, eta, x R:\\n        eta > 0\\n        (eta * a) < 2\\n        =>:\\n            energy(a, b, gradient_step(a, b, eta, x)) <= energy(a, b, x)\\n    (eta * (a ^ 2)) > 0\\n    ((eta * (a ^ 2)) * (2 - (eta * a))) >= 0\\n    (((eta * (a ^ 2)) * (2 - (eta * a))) * ((x - b) ^ 2)) >= 0\\n    by thm gradient_drop_identity(a, b, eta, x) => (energy(a, b, x) - energy(a, b, gradient_step(a, b, eta, x))) = ((((eta * (a ^ 2)) * (2 - (eta * a))) * ((x - b) ^ 2)) / 2)\\n    (energy(a, b, x) - energy(a, b, gradient_step(a, b, eta, x))) >= 0\",\n      \"proof_method\": {\n        \"type\": \"definition\",\n        \"rule_name\": \"Define theorem\",\n        \"message\": \"Record a theorem\"\n      },\n      \"stores\": [\n        \"forall a R+, b, eta, x R:\\n    eta > 0\\n    (eta * a) < 2\\n    =>:\\n        energy(a, b, gradient_step(a, b, eta, x)) <= energy(a, b, x)\"\n      ],\n      \"infers\": []\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"thm gradient_strict_descent:\\n    ? forall a R+, b, eta, x R:\\n        eta > 0\\n        (eta * a) < 2\\n        x != b\\n        =>:\\n            energy(a, b, gradient_step(a, b, eta, x)) < energy(a, b, x)\\n    (x - b) != 0\\n    (eta * (a ^ 2)) > 0\\n    ((eta * (a ^ 2)) * (2 - (eta * a))) > 0\\n    (((eta * (a ^ 2)) * (2 - (eta * a))) * ((x - b) ^ 2)) > 0\\n    by thm gradient_drop_identity(a, b, eta, x) => (energy(a, b, x) - energy(a, b, gradient_step(a, b, eta, x))) = ((((eta * (a ^ 2)) * (2 - (eta * a))) * ((x - b) ^ 2)) / 2)\\n    (energy(a, b, x) - energy(a, b, gradient_step(a, b, eta, x))) > 0\",\n      \"proof_method\": {\n        \"type\": \"definition\",\n        \"rule_name\": \"Define theorem\",\n        \"message\": \"Record a theorem\"\n      },\n      \"stores\": [\n        \"forall a R+, b, eta, x R:\\n    eta > 0\\n    (eta * a) < 2\\n    x != b\\n    =>:\\n        energy(a, b, gradient_step(a, b, eta, x)) < energy(a, b, x)\"\n      ],\n      \"infers\": []\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"by thm gradient_strict_descent(2, 3, (1 / 4), 5) => energy(2, 3, gradient_step(2, 3, (1 / 4), 5)) < energy(2, 3, 5)\",\n      \"proof_method\": {\n        \"type\": \"by\",\n        \"rule_name\": \"By theorem\",\n        \"message\": \"Apply a recorded theorem\"\n      },\n      \"stores\": [\n        \"energy(2, 3, gradient_step(2, 3, (1 / 4), 5)) < energy(2, 3, 5)\"\n      ],\n      \"infers\": []\n    }\n  ],\n  \"errors\": [],\n  \"session_terminated\": false,\n  \"termination\": null\n}\n",
+      "stderr": "",
+      "passed": true,
+      "name": "measure:02_quadratic_descent:1",
+      "language": "litex"
+    },
+    {
+      "command": [
+        "{user_home}/.elan/toolchains/leanprover--lean4---v4.31.0/bin/lean",
+        "{original_experiment}/lean/02_quadratic_descent.lean"
+      ],
+      "cwd": "{repository_root}",
+      "exit": 0,
+      "seconds": 13.89302354119718,
+      "stdout": "'QuadraticDescent.gradient_error_identity' depends on axioms: [propext, Classical.choice, Quot.sound]\n'QuadraticDescent.gradient_drop_identity' depends on axioms: [propext, Classical.choice, Quot.sound]\n'QuadraticDescent.gradient_descent' depends on axioms: [propext, Classical.choice, Quot.sound]\n'QuadraticDescent.gradient_strict_descent' depends on axioms: [propext, Classical.choice, Quot.sound]\n",
+      "stderr": "",
+      "passed": true,
+      "name": "measure:02_quadratic_descent:1",
+      "language": "lean"
+    },
+    {
+      "command": [
+        "{original_experiment}/.runtime/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "{original_experiment}/litex/03_perturbed_geometric.lit"
+      ],
+      "cwd": "{repository_root}",
+      "exit": 0,
+      "seconds": 1.3191370842978358,
+      "stdout": "{\n  \"kind\": \"run\",\n  \"run_result\": \"success\",\n  \"target\": \"file\",\n  \"path\": \"{original_experiment}/litex/03_perturbed_geometric.lit\",\n  \"detail\": \"normal\",\n  \"language\": \"en\",\n  \"statement_results\": [\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"forall q R:\\n    q < 1\\n    =>:\\n        (1 - q) > 0\\n        (1 - q) != 0\",\n      \"proof_method\": {\n        \"type\": \"compound_fact\",\n        \"rule_name\": \"Universal\",\n        \"message\": \"Verified as a forall fact (details omitted in Normal)\"\n      },\n      \"stores\": [\n        \"forall q R:\\n    q < 1\\n    =>:\\n        (1 - q) > 0\\n        (1 - q) != 0\"\n      ],\n      \"infers\": []\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"have fn bound(q R+, c, d R, n N: q < 1) = (((q ^ n) * c) + ((d * (1 - (q ^ n))) / (1 - q)))\",\n      \"proof_method\": {\n        \"type\": \"define_fn\",\n        \"rule_name\": \"Have function equal\",\n        \"message\": \"Define a named function equal to an anonymous function\"\n      },\n      \"stores\": [\n        \"bound $in fn (q R+, c, d R, n N: q < 1) R\"\n      ],\n      \"infers\": [\n        \"bound = fn (q R+, c, d R, n N: q < 1) R{(((q ^ n) * c) + ((d * (1 - (q ^ n))) / (1 - q)))}\"\n      ]\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"thm bound_zero:\\n    ? forall q R+, c, d R:\\n        q < 1\\n        =>:\\n            bound(q, c, d, 0) = c\\n    (1 - q) != 0\",\n      \"proof_method\": {\n        \"type\": \"definition\",\n        \"rule_name\": \"Define theorem\",\n        \"message\": \"Record a theorem\"\n      },\n      \"stores\": [\n        \"forall q R+, c, d R:\\n    q < 1\\n    =>:\\n        bound(q, c, d, 0) = c\"\n      ],\n      \"infers\": []\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"thm bound_step:\\n    ? forall q R+, c, d R, n N:\\n        q < 1\\n        =>:\\n            bound(q, c, d, (n + 1)) = ((q * bound(q, c, d, n)) + d)\\n    (1 - q) != 0\\n    have t R+ = (q ^ n)\\n    (q ^ (n + 1)) = ((q ^ n) * (q ^ 1)) = (t * q)\\n    (((t * q) * c) + ((d * (1 - (t * q))) / (1 - q))) = ((q * ((t * c) + ((d * (1 - t)) / (1 - q)))) + d)\\n    bound(q, c, d, (n + 1)) = ((q * ((t * c) + ((d * (1 - t)) / (1 - q)))) + d) = ((q * bound(q, c, d, n)) + d)\",\n      \"proof_method\": {\n        \"type\": \"definition\",\n        \"rule_name\": \"Define theorem\",\n        \"message\": \"Record a theorem\"\n      },\n      \"stores\": [\n        \"forall q R+, c, d R, n N:\\n    q < 1\\n    =>:\\n        bound(q, c, d, (n + 1)) = ((q * bound(q, c, d, n)) + d)\"\n      ],\n      \"infers\": []\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"thm affine_recurrence_bound:\\n    ? forall err fn (idx N) R, q R+, d R, n N:\\n        q < 1\\n        forall j N:\\n            err((j + 1)) <= ((q * err(j)) + d)\\n        =>:\\n            err(n) <= bound(q, err(0), d, n)\\n    by induc n from 0:\\n        ? err(n) <= bound(q, err(0), d, n)\\n        ? from n = 0:\\n            by thm bound_zero(q, err(0), d) => bound(q, err(0), d, 0) = err(0)\\n        ? induc:\\n            err((n + 1)) <= ((q * err(n)) + d) <= ((q * bound(q, err(0), d, n)) + d) = bound(q, err(0), d, (n + 1))\",\n      \"proof_method\": {\n        \"type\": \"definition\",\n        \"rule_name\": \"Define theorem\",\n        \"message\": \"Record a theorem\"\n      },\n      \"stores\": [\n        \"forall err fn (idx N) R, q R+, d R, n N:\\n    q < 1\\n    forall j N:\\n        err((j + 1)) <= ((q * err(j)) + d)\\n    =>:\\n        err(n) <= bound(q, err(0), d, n)\"\n      ],\n      \"infers\": []\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"thm noiseless_affine_bound:\\n    ? forall err fn (idx N) R, q R+, n N:\\n        q < 1\\n        forall j N:\\n            err((j + 1)) <= (q * err(j))\\n        =>:\\n            err(n) <= ((q ^ n) * err(0))\\n    claim:\\n        ? forall j N:\\n            err((j + 1)) <= ((q * err(j)) + 0)\\n        ((q * err(j)) + 0) = (q * err(j))\\n    (1 - q) != 0\\n    bound(q, err(0), 0, n) = (((q ^ n) * err(0)) + ((0 * (1 - (q ^ n))) / (1 - q))) = (((q ^ n) * err(0)) + 0) = ((q ^ n) * err(0))\",\n      \"proof_method\": {\n        \"type\": \"definition\",\n        \"rule_name\": \"Define theorem\",\n        \"message\": \"Record a theorem\"\n      },\n      \"stores\": [\n        \"forall err fn (idx N) R, q R+, n N:\\n    q < 1\\n    forall j N:\\n        err((j + 1)) <= (q * err(j))\\n    =>:\\n        err(n) <= ((q ^ n) * err(0))\"\n      ],\n      \"infers\": []\n    }\n  ],\n  \"errors\": [],\n  \"session_terminated\": false,\n  \"termination\": null\n}\n",
+      "stderr": "",
+      "passed": true,
+      "name": "measure:03_perturbed_geometric:1",
+      "language": "litex"
+    },
+    {
+      "command": [
+        "{user_home}/.elan/toolchains/leanprover--lean4---v4.31.0/bin/lean",
+        "{original_experiment}/lean/03_perturbed_geometric.lean"
+      ],
+      "cwd": "{repository_root}",
+      "exit": 0,
+      "seconds": 13.798623790964484,
+      "stdout": "{original_experiment}/lean/03_perturbed_geometric.lean:19:20: warning: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice\n\nNote: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`\n'PerturbedGeometric.bound_zero' depends on axioms: [propext, Classical.choice, Quot.sound]\n'PerturbedGeometric.bound_step' depends on axioms: [propext, Classical.choice, Quot.sound]\n'PerturbedGeometric.affine_recurrence_bound' depends on axioms: [propext, Classical.choice, Quot.sound]\n'PerturbedGeometric.noiseless_affine_bound' depends on axioms: [propext, Classical.choice, Quot.sound]\n",
+      "stderr": "",
+      "passed": true,
+      "name": "measure:03_perturbed_geometric:1",
+      "language": "lean"
+    },
+    {
+      "command": [
+        "{user_home}/.elan/toolchains/leanprover--lean4---v4.31.0/bin/lean",
+        "{original_experiment}/lean/01_parametric_newton.lean"
+      ],
+      "cwd": "{repository_root}",
+      "exit": 0,
+      "seconds": 60.18029612489045,
+      "stdout": "{original_experiment}/lean/01_parametric_newton.lean:17:27: warning: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice\n\nNote: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`\n'ParametricNewton.newton_positive' depends on axioms: [propext, Classical.choice, Quot.sound]\n'ParametricNewton.newton_residual_identity' depends on axioms: [propext, Classical.choice, Quot.sound]\n'ParametricNewton.newton_above_root' depends on axioms: [propext, Classical.choice, Quot.sound]\n",
+      "stderr": "",
+      "passed": true,
+      "name": "measure:01_parametric_newton:2",
+      "language": "lean"
+    },
+    {
+      "command": [
+        "{original_experiment}/.runtime/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "{original_experiment}/litex/01_parametric_newton.lit"
+      ],
+      "cwd": "{repository_root}",
+      "exit": 0,
+      "seconds": 0.21258612489327788,
+      "stdout": "{\n  \"kind\": \"run\",\n  \"run_result\": \"success\",\n  \"target\": \"file\",\n  \"path\": \"{original_experiment}/litex/01_parametric_newton.lit\",\n  \"detail\": \"normal\",\n  \"language\": \"en\",\n  \"statement_results\": [\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"have fn newton(a R+, x R+) = ((x + (a / x)) / 2)\",\n      \"proof_method\": {\n        \"type\": \"define_fn\",\n        \"rule_name\": \"Have function equal\",\n        \"message\": \"Define a named function equal to an anonymous function\"\n      },\n      \"stores\": [\n        \"newton $in fn (a R+, x R+) R\"\n      ],\n      \"infers\": [\n        \"newton = fn (a R+, x R+) R{((x + (a / x)) / 2)}\"\n      ]\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"thm newton_positive:\\n    ? forall a, x R+:\\n        newton(a, x) > 0\\n    (a / x) > 0\\n    (x + (a / x)) > 0\",\n      \"proof_method\": {\n        \"type\": \"definition\",\n        \"rule_name\": \"Define theorem\",\n        \"message\": \"Record a theorem\"\n      },\n      \"stores\": [\n        \"forall a, x R+:\\n    newton(a, x) > 0\"\n      ],\n      \"infers\": []\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"thm newton_residual_identity:\\n    ? forall a, x R+:\\n        ((4 * (x ^ 2)) * ((newton(a, x) ^ 2) - a)) = (((x ^ 2) - a) ^ 2)\",\n      \"proof_method\": {\n        \"type\": \"definition\",\n        \"rule_name\": \"Define theorem\",\n        \"message\": \"Record a theorem\"\n      },\n      \"stores\": [\n        \"forall a, x R+:\\n    ((4 * (x ^ 2)) * ((newton(a, x) ^ 2) - a)) = (((x ^ 2) - a) ^ 2)\"\n      ],\n      \"infers\": []\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"thm newton_above_root:\\n    ? forall a, x R+:\\n        (newton(a, x) ^ 2) >= a\\n    (4 * (x ^ 2)) > 0\\n    ((newton(a, x) ^ 2) - a) = ((((x ^ 2) - a) ^ 2) / (4 * (x ^ 2))) >= 0\",\n      \"proof_method\": {\n        \"type\": \"definition\",\n        \"rule_name\": \"Define theorem\",\n        \"message\": \"Record a theorem\"\n      },\n      \"stores\": [\n        \"forall a, x R+:\\n    (newton(a, x) ^ 2) >= a\"\n      ],\n      \"infers\": []\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"newton(9, 4) = ((4 + (9 / 4)) / 2) = (25 / 8)\",\n      \"proof_method\": {\n        \"type\": \"compound_fact\",\n        \"rule_name\": \"Chain\",\n        \"message\": \"Verified as a chain fact (details omitted in Normal)\"\n      },\n      \"stores\": [\n        \"newton(9, 4) = ((4 + (9 / 4)) / 2) = (25 / 8)\",\n        \"newton(9, 4) = ((4 + (9 / 4)) / 2)\",\n        \"((4 + (9 / 4)) / 2) = (25 / 8)\"\n      ],\n      \"infers\": [\n        \"newton(9, 4) = (25 / 8)\"\n      ]\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"by thm newton_above_root(9, 4) => (newton(9, 4) ^ 2) >= 9\",\n      \"proof_method\": {\n        \"type\": \"by\",\n        \"rule_name\": \"By theorem\",\n        \"message\": \"Apply a recorded theorem\"\n      },\n      \"stores\": [\n        \"(newton(9, 4) ^ 2) >= 9\"\n      ],\n      \"infers\": []\n    }\n  ],\n  \"errors\": [],\n  \"session_terminated\": false,\n  \"termination\": null\n}\n",
+      "stderr": "",
+      "passed": true,
+      "name": "measure:01_parametric_newton:2",
+      "language": "litex"
+    },
+    {
+      "command": [
+        "{user_home}/.elan/toolchains/leanprover--lean4---v4.31.0/bin/lean",
+        "{original_experiment}/lean/02_quadratic_descent.lean"
+      ],
+      "cwd": "{repository_root}",
+      "exit": 0,
+      "seconds": 28.77559162536636,
+      "stdout": "'QuadraticDescent.gradient_error_identity' depends on axioms: [propext, Classical.choice, Quot.sound]\n'QuadraticDescent.gradient_drop_identity' depends on axioms: [propext, Classical.choice, Quot.sound]\n'QuadraticDescent.gradient_descent' depends on axioms: [propext, Classical.choice, Quot.sound]\n'QuadraticDescent.gradient_strict_descent' depends on axioms: [propext, Classical.choice, Quot.sound]\n",
+      "stderr": "",
+      "passed": true,
+      "name": "measure:02_quadratic_descent:2",
+      "language": "lean"
+    },
+    {
+      "command": [
+        "{original_experiment}/.runtime/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "{original_experiment}/litex/02_quadratic_descent.lit"
+      ],
+      "cwd": "{repository_root}",
+      "exit": 0,
+      "seconds": 2.905032374896109,
+      "stdout": "{\n  \"kind\": \"run\",\n  \"run_result\": \"success\",\n  \"target\": \"file\",\n  \"path\": \"{original_experiment}/litex/02_quadratic_descent.lit\",\n  \"detail\": \"normal\",\n  \"language\": \"en\",\n  \"statement_results\": [\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"have fn energy(a R+, b, x R) = ((a * ((x - b) ^ 2)) / 2)\",\n      \"proof_method\": {\n        \"type\": \"define_fn\",\n        \"rule_name\": \"Have function equal\",\n        \"message\": \"Define a named function equal to an anonymous function\"\n      },\n      \"stores\": [\n        \"energy $in fn (a R+, b, x R) R\"\n      ],\n      \"infers\": [\n        \"energy = fn (a R+, b, x R) R{((a * ((x - b) ^ 2)) / 2)}\"\n      ]\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"have fn gradient_step(a R+, b, eta, x R) = (x - ((eta * a) * (x - b)))\",\n      \"proof_method\": {\n        \"type\": \"define_fn\",\n        \"rule_name\": \"Have function equal\",\n        \"message\": \"Define a named function equal to an anonymous function\"\n      },\n      \"stores\": [\n        \"gradient_step $in fn (a R+, b, eta, x R) R\"\n      ],\n      \"infers\": [\n        \"gradient_step = fn (a R+, b, eta, x R) R{(x - ((eta * a) * (x - b)))}\"\n      ]\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"thm gradient_error_identity:\\n    ? forall a R+, b, eta, x R:\\n        (gradient_step(a, b, eta, x) - b) = ((1 - (eta * a)) * (x - b))\",\n      \"proof_method\": {\n        \"type\": \"definition\",\n        \"rule_name\": \"Define theorem\",\n        \"message\": \"Record a theorem\"\n      },\n      \"stores\": [\n        \"forall a R+, b, eta, x R:\\n    (gradient_step(a, b, eta, x) - b) = ((1 - (eta * a)) * (x - b))\"\n      ],\n      \"infers\": []\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"thm gradient_drop_identity:\\n    ? forall a R+, b, eta, x R:\\n        (energy(a, b, x) - energy(a, b, gradient_step(a, b, eta, x))) = ((((eta * (a ^ 2)) * (2 - (eta * a))) * ((x - b) ^ 2)) / 2)\\n    energy(a, b, gradient_step(a, b, eta, x)) = ((a * ((gradient_step(a, b, eta, x) - b) ^ 2)) / 2) = ((a * (((1 - (eta * a)) * (x - b)) ^ 2)) / 2)\\n    (energy(a, b, x) - energy(a, b, gradient_step(a, b, eta, x))) = (((a * ((x - b) ^ 2)) / 2) - ((a * (((1 - (eta * a)) * (x - b)) ^ 2)) / 2)) = ((((eta * (a ^ 2)) * (2 - (eta * a))) * ((x - b) ^ 2)) / 2)\",\n      \"proof_method\": {\n        \"type\": \"definition\",\n        \"rule_name\": \"Define theorem\",\n        \"message\": \"Record a theorem\"\n      },\n      \"stores\": [\n        \"forall a R+, b, eta, x R:\\n    (energy(a, b, x) - energy(a, b, gradient_step(a, b, eta, x))) = ((((eta * (a ^ 2)) * (2 - (eta * a))) * ((x - b) ^ 2)) / 2)\"\n      ],\n      \"infers\": []\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"thm gradient_descent:\\n    ? forall a R+, b, eta, x R:\\n        eta > 0\\n        (eta * a) < 2\\n        =>:\\n            energy(a, b, gradient_step(a, b, eta, x)) <= energy(a, b, x)\\n    (eta * (a ^ 2)) > 0\\n    ((eta * (a ^ 2)) * (2 - (eta * a))) >= 0\\n    (((eta * (a ^ 2)) * (2 - (eta * a))) * ((x - b) ^ 2)) >= 0\\n    by thm gradient_drop_identity(a, b, eta, x) => (energy(a, b, x) - energy(a, b, gradient_step(a, b, eta, x))) = ((((eta * (a ^ 2)) * (2 - (eta * a))) * ((x - b) ^ 2)) / 2)\\n    (energy(a, b, x) - energy(a, b, gradient_step(a, b, eta, x))) >= 0\",\n      \"proof_method\": {\n        \"type\": \"definition\",\n        \"rule_name\": \"Define theorem\",\n        \"message\": \"Record a theorem\"\n      },\n      \"stores\": [\n        \"forall a R+, b, eta, x R:\\n    eta > 0\\n    (eta * a) < 2\\n    =>:\\n        energy(a, b, gradient_step(a, b, eta, x)) <= energy(a, b, x)\"\n      ],\n      \"infers\": []\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"thm gradient_strict_descent:\\n    ? forall a R+, b, eta, x R:\\n        eta > 0\\n        (eta * a) < 2\\n        x != b\\n        =>:\\n            energy(a, b, gradient_step(a, b, eta, x)) < energy(a, b, x)\\n    (x - b) != 0\\n    (eta * (a ^ 2)) > 0\\n    ((eta * (a ^ 2)) * (2 - (eta * a))) > 0\\n    (((eta * (a ^ 2)) * (2 - (eta * a))) * ((x - b) ^ 2)) > 0\\n    by thm gradient_drop_identity(a, b, eta, x) => (energy(a, b, x) - energy(a, b, gradient_step(a, b, eta, x))) = ((((eta * (a ^ 2)) * (2 - (eta * a))) * ((x - b) ^ 2)) / 2)\\n    (energy(a, b, x) - energy(a, b, gradient_step(a, b, eta, x))) > 0\",\n      \"proof_method\": {\n        \"type\": \"definition\",\n        \"rule_name\": \"Define theorem\",\n        \"message\": \"Record a theorem\"\n      },\n      \"stores\": [\n        \"forall a R+, b, eta, x R:\\n    eta > 0\\n    (eta * a) < 2\\n    x != b\\n    =>:\\n        energy(a, b, gradient_step(a, b, eta, x)) < energy(a, b, x)\"\n      ],\n      \"infers\": []\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"by thm gradient_strict_descent(2, 3, (1 / 4), 5) => energy(2, 3, gradient_step(2, 3, (1 / 4), 5)) < energy(2, 3, 5)\",\n      \"proof_method\": {\n        \"type\": \"by\",\n        \"rule_name\": \"By theorem\",\n        \"message\": \"Apply a recorded theorem\"\n      },\n      \"stores\": [\n        \"energy(2, 3, gradient_step(2, 3, (1 / 4), 5)) < energy(2, 3, 5)\"\n      ],\n      \"infers\": []\n    }\n  ],\n  \"errors\": [],\n  \"session_terminated\": false,\n  \"termination\": null\n}\n",
+      "stderr": "",
+      "passed": true,
+      "name": "measure:02_quadratic_descent:2",
+      "language": "litex"
+    },
+    {
+      "command": [
+        "{user_home}/.elan/toolchains/leanprover--lean4---v4.31.0/bin/lean",
+        "{original_experiment}/lean/03_perturbed_geometric.lean"
+      ],
+      "cwd": "{repository_root}",
+      "exit": 0,
+      "seconds": 36.54746679216623,
+      "stdout": "{original_experiment}/lean/03_perturbed_geometric.lean:19:20: warning: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice\n\nNote: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`\n'PerturbedGeometric.bound_zero' depends on axioms: [propext, Classical.choice, Quot.sound]\n'PerturbedGeometric.bound_step' depends on axioms: [propext, Classical.choice, Quot.sound]\n'PerturbedGeometric.affine_recurrence_bound' depends on axioms: [propext, Classical.choice, Quot.sound]\n'PerturbedGeometric.noiseless_affine_bound' depends on axioms: [propext, Classical.choice, Quot.sound]\n",
+      "stderr": "",
+      "passed": true,
+      "name": "measure:03_perturbed_geometric:2",
+      "language": "lean"
+    },
+    {
+      "command": [
+        "{original_experiment}/.runtime/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "{original_experiment}/litex/03_perturbed_geometric.lit"
+      ],
+      "cwd": "{repository_root}",
+      "exit": 0,
+      "seconds": 1.4842085409909487,
+      "stdout": "{\n  \"kind\": \"run\",\n  \"run_result\": \"success\",\n  \"target\": \"file\",\n  \"path\": \"{original_experiment}/litex/03_perturbed_geometric.lit\",\n  \"detail\": \"normal\",\n  \"language\": \"en\",\n  \"statement_results\": [\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"forall q R:\\n    q < 1\\n    =>:\\n        (1 - q) > 0\\n        (1 - q) != 0\",\n      \"proof_method\": {\n        \"type\": \"compound_fact\",\n        \"rule_name\": \"Universal\",\n        \"message\": \"Verified as a forall fact (details omitted in Normal)\"\n      },\n      \"stores\": [\n        \"forall q R:\\n    q < 1\\n    =>:\\n        (1 - q) > 0\\n        (1 - q) != 0\"\n      ],\n      \"infers\": []\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"have fn bound(q R+, c, d R, n N: q < 1) = (((q ^ n) * c) + ((d * (1 - (q ^ n))) / (1 - q)))\",\n      \"proof_method\": {\n        \"type\": \"define_fn\",\n        \"rule_name\": \"Have function equal\",\n        \"message\": \"Define a named function equal to an anonymous function\"\n      },\n      \"stores\": [\n        \"bound $in fn (q R+, c, d R, n N: q < 1) R\"\n      ],\n      \"infers\": [\n        \"bound = fn (q R+, c, d R, n N: q < 1) R{(((q ^ n) * c) + ((d * (1 - (q ^ n))) / (1 - q)))}\"\n      ]\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"thm bound_zero:\\n    ? forall q R+, c, d R:\\n        q < 1\\n        =>:\\n            bound(q, c, d, 0) = c\\n    (1 - q) != 0\",\n      \"proof_method\": {\n        \"type\": \"definition\",\n        \"rule_name\": \"Define theorem\",\n        \"message\": \"Record a theorem\"\n      },\n      \"stores\": [\n        \"forall q R+, c, d R:\\n    q < 1\\n    =>:\\n        bound(q, c, d, 0) = c\"\n      ],\n      \"infers\": []\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"thm bound_step:\\n    ? forall q R+, c, d R, n N:\\n        q < 1\\n        =>:\\n            bound(q, c, d, (n + 1)) = ((q * bound(q, c, d, n)) + d)\\n    (1 - q) != 0\\n    have t R+ = (q ^ n)\\n    (q ^ (n + 1)) = ((q ^ n) * (q ^ 1)) = (t * q)\\n    (((t * q) * c) + ((d * (1 - (t * q))) / (1 - q))) = ((q * ((t * c) + ((d * (1 - t)) / (1 - q)))) + d)\\n    bound(q, c, d, (n + 1)) = ((q * ((t * c) + ((d * (1 - t)) / (1 - q)))) + d) = ((q * bound(q, c, d, n)) + d)\",\n      \"proof_method\": {\n        \"type\": \"definition\",\n        \"rule_name\": \"Define theorem\",\n        \"message\": \"Record a theorem\"\n      },\n      \"stores\": [\n        \"forall q R+, c, d R, n N:\\n    q < 1\\n    =>:\\n        bound(q, c, d, (n + 1)) = ((q * bound(q, c, d, n)) + d)\"\n      ],\n      \"infers\": []\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"thm affine_recurrence_bound:\\n    ? forall err fn (idx N) R, q R+, d R, n N:\\n        q < 1\\n        forall j N:\\n            err((j + 1)) <= ((q * err(j)) + d)\\n        =>:\\n            err(n) <= bound(q, err(0), d, n)\\n    by induc n from 0:\\n        ? err(n) <= bound(q, err(0), d, n)\\n        ? from n = 0:\\n            by thm bound_zero(q, err(0), d) => bound(q, err(0), d, 0) = err(0)\\n        ? induc:\\n            err((n + 1)) <= ((q * err(n)) + d) <= ((q * bound(q, err(0), d, n)) + d) = bound(q, err(0), d, (n + 1))\",\n      \"proof_method\": {\n        \"type\": \"definition\",\n        \"rule_name\": \"Define theorem\",\n        \"message\": \"Record a theorem\"\n      },\n      \"stores\": [\n        \"forall err fn (idx N) R, q R+, d R, n N:\\n    q < 1\\n    forall j N:\\n        err((j + 1)) <= ((q * err(j)) + d)\\n    =>:\\n        err(n) <= bound(q, err(0), d, n)\"\n      ],\n      \"infers\": []\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"thm noiseless_affine_bound:\\n    ? forall err fn (idx N) R, q R+, n N:\\n        q < 1\\n        forall j N:\\n            err((j + 1)) <= (q * err(j))\\n        =>:\\n            err(n) <= ((q ^ n) * err(0))\\n    claim:\\n        ? forall j N:\\n            err((j + 1)) <= ((q * err(j)) + 0)\\n        ((q * err(j)) + 0) = (q * err(j))\\n    (1 - q) != 0\\n    bound(q, err(0), 0, n) = (((q ^ n) * err(0)) + ((0 * (1 - (q ^ n))) / (1 - q))) = (((q ^ n) * err(0)) + 0) = ((q ^ n) * err(0))\",\n      \"proof_method\": {\n        \"type\": \"definition\",\n        \"rule_name\": \"Define theorem\",\n        \"message\": \"Record a theorem\"\n      },\n      \"stores\": [\n        \"forall err fn (idx N) R, q R+, n N:\\n    q < 1\\n    forall j N:\\n        err((j + 1)) <= (q * err(j))\\n    =>:\\n        err(n) <= ((q ^ n) * err(0))\"\n      ],\n      \"infers\": []\n    }\n  ],\n  \"errors\": [],\n  \"session_terminated\": false,\n  \"termination\": null\n}\n",
+      "stderr": "",
+      "passed": true,
+      "name": "measure:03_perturbed_geometric:2",
+      "language": "litex"
+    },
+    {
+      "command": [
+        "{original_experiment}/.runtime/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "{original_experiment}/litex/01_parametric_newton.lit"
+      ],
+      "cwd": "{repository_root}",
+      "exit": 0,
+      "seconds": 0.19108133390545845,
+      "stdout": "{\n  \"kind\": \"run\",\n  \"run_result\": \"success\",\n  \"target\": \"file\",\n  \"path\": \"{original_experiment}/litex/01_parametric_newton.lit\",\n  \"detail\": \"normal\",\n  \"language\": \"en\",\n  \"statement_results\": [\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"have fn newton(a R+, x R+) = ((x + (a / x)) / 2)\",\n      \"proof_method\": {\n        \"type\": \"define_fn\",\n        \"rule_name\": \"Have function equal\",\n        \"message\": \"Define a named function equal to an anonymous function\"\n      },\n      \"stores\": [\n        \"newton $in fn (a R+, x R+) R\"\n      ],\n      \"infers\": [\n        \"newton = fn (a R+, x R+) R{((x + (a / x)) / 2)}\"\n      ]\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"thm newton_positive:\\n    ? forall a, x R+:\\n        newton(a, x) > 0\\n    (a / x) > 0\\n    (x + (a / x)) > 0\",\n      \"proof_method\": {\n        \"type\": \"definition\",\n        \"rule_name\": \"Define theorem\",\n        \"message\": \"Record a theorem\"\n      },\n      \"stores\": [\n        \"forall a, x R+:\\n    newton(a, x) > 0\"\n      ],\n      \"infers\": []\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"thm newton_residual_identity:\\n    ? forall a, x R+:\\n        ((4 * (x ^ 2)) * ((newton(a, x) ^ 2) - a)) = (((x ^ 2) - a) ^ 2)\",\n      \"proof_method\": {\n        \"type\": \"definition\",\n        \"rule_name\": \"Define theorem\",\n        \"message\": \"Record a theorem\"\n      },\n      \"stores\": [\n        \"forall a, x R+:\\n    ((4 * (x ^ 2)) * ((newton(a, x) ^ 2) - a)) = (((x ^ 2) - a) ^ 2)\"\n      ],\n      \"infers\": []\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"thm newton_above_root:\\n    ? forall a, x R+:\\n        (newton(a, x) ^ 2) >= a\\n    (4 * (x ^ 2)) > 0\\n    ((newton(a, x) ^ 2) - a) = ((((x ^ 2) - a) ^ 2) / (4 * (x ^ 2))) >= 0\",\n      \"proof_method\": {\n        \"type\": \"definition\",\n        \"rule_name\": \"Define theorem\",\n        \"message\": \"Record a theorem\"\n      },\n      \"stores\": [\n        \"forall a, x R+:\\n    (newton(a, x) ^ 2) >= a\"\n      ],\n      \"infers\": []\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"newton(9, 4) = ((4 + (9 / 4)) / 2) = (25 / 8)\",\n      \"proof_method\": {\n        \"type\": \"compound_fact\",\n        \"rule_name\": \"Chain\",\n        \"message\": \"Verified as a chain fact (details omitted in Normal)\"\n      },\n      \"stores\": [\n        \"newton(9, 4) = ((4 + (9 / 4)) / 2) = (25 / 8)\",\n        \"newton(9, 4) = ((4 + (9 / 4)) / 2)\",\n        \"((4 + (9 / 4)) / 2) = (25 / 8)\"\n      ],\n      \"infers\": [\n        \"newton(9, 4) = (25 / 8)\"\n      ]\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"by thm newton_above_root(9, 4) => (newton(9, 4) ^ 2) >= 9\",\n      \"proof_method\": {\n        \"type\": \"by\",\n        \"rule_name\": \"By theorem\",\n        \"message\": \"Apply a recorded theorem\"\n      },\n      \"stores\": [\n        \"(newton(9, 4) ^ 2) >= 9\"\n      ],\n      \"infers\": []\n    }\n  ],\n  \"errors\": [],\n  \"session_terminated\": false,\n  \"termination\": null\n}\n",
+      "stderr": "",
+      "passed": true,
+      "name": "measure:01_parametric_newton:3",
+      "language": "litex"
+    },
+    {
+      "command": [
+        "{user_home}/.elan/toolchains/leanprover--lean4---v4.31.0/bin/lean",
+        "{original_experiment}/lean/01_parametric_newton.lean"
+      ],
+      "cwd": "{repository_root}",
+      "exit": 0,
+      "seconds": 67.6591736250557,
+      "stdout": "{original_experiment}/lean/01_parametric_newton.lean:17:27: warning: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice\n\nNote: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`\n'ParametricNewton.newton_positive' depends on axioms: [propext, Classical.choice, Quot.sound]\n'ParametricNewton.newton_residual_identity' depends on axioms: [propext, Classical.choice, Quot.sound]\n'ParametricNewton.newton_above_root' depends on axioms: [propext, Classical.choice, Quot.sound]\n",
+      "stderr": "",
+      "passed": true,
+      "name": "measure:01_parametric_newton:3",
+      "language": "lean"
+    },
+    {
+      "command": [
+        "{original_experiment}/.runtime/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "{original_experiment}/litex/02_quadratic_descent.lit"
+      ],
+      "cwd": "{repository_root}",
+      "exit": 0,
+      "seconds": 2.952232874929905,
+      "stdout": "{\n  \"kind\": \"run\",\n  \"run_result\": \"success\",\n  \"target\": \"file\",\n  \"path\": \"{original_experiment}/litex/02_quadratic_descent.lit\",\n  \"detail\": \"normal\",\n  \"language\": \"en\",\n  \"statement_results\": [\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"have fn energy(a R+, b, x R) = ((a * ((x - b) ^ 2)) / 2)\",\n      \"proof_method\": {\n        \"type\": \"define_fn\",\n        \"rule_name\": \"Have function equal\",\n        \"message\": \"Define a named function equal to an anonymous function\"\n      },\n      \"stores\": [\n        \"energy $in fn (a R+, b, x R) R\"\n      ],\n      \"infers\": [\n        \"energy = fn (a R+, b, x R) R{((a * ((x - b) ^ 2)) / 2)}\"\n      ]\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"have fn gradient_step(a R+, b, eta, x R) = (x - ((eta * a) * (x - b)))\",\n      \"proof_method\": {\n        \"type\": \"define_fn\",\n        \"rule_name\": \"Have function equal\",\n        \"message\": \"Define a named function equal to an anonymous function\"\n      },\n      \"stores\": [\n        \"gradient_step $in fn (a R+, b, eta, x R) R\"\n      ],\n      \"infers\": [\n        \"gradient_step = fn (a R+, b, eta, x R) R{(x - ((eta * a) * (x - b)))}\"\n      ]\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"thm gradient_error_identity:\\n    ? forall a R+, b, eta, x R:\\n        (gradient_step(a, b, eta, x) - b) = ((1 - (eta * a)) * (x - b))\",\n      \"proof_method\": {\n        \"type\": \"definition\",\n        \"rule_name\": \"Define theorem\",\n        \"message\": \"Record a theorem\"\n      },\n      \"stores\": [\n        \"forall a R+, b, eta, x R:\\n    (gradient_step(a, b, eta, x) - b) = ((1 - (eta * a)) * (x - b))\"\n      ],\n      \"infers\": []\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"thm gradient_drop_identity:\\n    ? forall a R+, b, eta, x R:\\n        (energy(a, b, x) - energy(a, b, gradient_step(a, b, eta, x))) = ((((eta * (a ^ 2)) * (2 - (eta * a))) * ((x - b) ^ 2)) / 2)\\n    energy(a, b, gradient_step(a, b, eta, x)) = ((a * ((gradient_step(a, b, eta, x) - b) ^ 2)) / 2) = ((a * (((1 - (eta * a)) * (x - b)) ^ 2)) / 2)\\n    (energy(a, b, x) - energy(a, b, gradient_step(a, b, eta, x))) = (((a * ((x - b) ^ 2)) / 2) - ((a * (((1 - (eta * a)) * (x - b)) ^ 2)) / 2)) = ((((eta * (a ^ 2)) * (2 - (eta * a))) * ((x - b) ^ 2)) / 2)\",\n      \"proof_method\": {\n        \"type\": \"definition\",\n        \"rule_name\": \"Define theorem\",\n        \"message\": \"Record a theorem\"\n      },\n      \"stores\": [\n        \"forall a R+, b, eta, x R:\\n    (energy(a, b, x) - energy(a, b, gradient_step(a, b, eta, x))) = ((((eta * (a ^ 2)) * (2 - (eta * a))) * ((x - b) ^ 2)) / 2)\"\n      ],\n      \"infers\": []\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"thm gradient_descent:\\n    ? forall a R+, b, eta, x R:\\n        eta > 0\\n        (eta * a) < 2\\n        =>:\\n            energy(a, b, gradient_step(a, b, eta, x)) <= energy(a, b, x)\\n    (eta * (a ^ 2)) > 0\\n    ((eta * (a ^ 2)) * (2 - (eta * a))) >= 0\\n    (((eta * (a ^ 2)) * (2 - (eta * a))) * ((x - b) ^ 2)) >= 0\\n    by thm gradient_drop_identity(a, b, eta, x) => (energy(a, b, x) - energy(a, b, gradient_step(a, b, eta, x))) = ((((eta * (a ^ 2)) * (2 - (eta * a))) * ((x - b) ^ 2)) / 2)\\n    (energy(a, b, x) - energy(a, b, gradient_step(a, b, eta, x))) >= 0\",\n      \"proof_method\": {\n        \"type\": \"definition\",\n        \"rule_name\": \"Define theorem\",\n        \"message\": \"Record a theorem\"\n      },\n      \"stores\": [\n        \"forall a R+, b, eta, x R:\\n    eta > 0\\n    (eta * a) < 2\\n    =>:\\n        energy(a, b, gradient_step(a, b, eta, x)) <= energy(a, b, x)\"\n      ],\n      \"infers\": []\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"thm gradient_strict_descent:\\n    ? forall a R+, b, eta, x R:\\n        eta > 0\\n        (eta * a) < 2\\n        x != b\\n        =>:\\n            energy(a, b, gradient_step(a, b, eta, x)) < energy(a, b, x)\\n    (x - b) != 0\\n    (eta * (a ^ 2)) > 0\\n    ((eta * (a ^ 2)) * (2 - (eta * a))) > 0\\n    (((eta * (a ^ 2)) * (2 - (eta * a))) * ((x - b) ^ 2)) > 0\\n    by thm gradient_drop_identity(a, b, eta, x) => (energy(a, b, x) - energy(a, b, gradient_step(a, b, eta, x))) = ((((eta * (a ^ 2)) * (2 - (eta * a))) * ((x - b) ^ 2)) / 2)\\n    (energy(a, b, x) - energy(a, b, gradient_step(a, b, eta, x))) > 0\",\n      \"proof_method\": {\n        \"type\": \"definition\",\n        \"rule_name\": \"Define theorem\",\n        \"message\": \"Record a theorem\"\n      },\n      \"stores\": [\n        \"forall a R+, b, eta, x R:\\n    eta > 0\\n    (eta * a) < 2\\n    x != b\\n    =>:\\n        energy(a, b, gradient_step(a, b, eta, x)) < energy(a, b, x)\"\n      ],\n      \"infers\": []\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"by thm gradient_strict_descent(2, 3, (1 / 4), 5) => energy(2, 3, gradient_step(2, 3, (1 / 4), 5)) < energy(2, 3, 5)\",\n      \"proof_method\": {\n        \"type\": \"by\",\n        \"rule_name\": \"By theorem\",\n        \"message\": \"Apply a recorded theorem\"\n      },\n      \"stores\": [\n        \"energy(2, 3, gradient_step(2, 3, (1 / 4), 5)) < energy(2, 3, 5)\"\n      ],\n      \"infers\": []\n    }\n  ],\n  \"errors\": [],\n  \"session_terminated\": false,\n  \"termination\": null\n}\n",
+      "stderr": "",
+      "passed": true,
+      "name": "measure:02_quadratic_descent:3",
+      "language": "litex"
+    },
+    {
+      "command": [
+        "{user_home}/.elan/toolchains/leanprover--lean4---v4.31.0/bin/lean",
+        "{original_experiment}/lean/02_quadratic_descent.lean"
+      ],
+      "cwd": "{repository_root}",
+      "exit": 0,
+      "seconds": 21.303137000184506,
+      "stdout": "'QuadraticDescent.gradient_error_identity' depends on axioms: [propext, Classical.choice, Quot.sound]\n'QuadraticDescent.gradient_drop_identity' depends on axioms: [propext, Classical.choice, Quot.sound]\n'QuadraticDescent.gradient_descent' depends on axioms: [propext, Classical.choice, Quot.sound]\n'QuadraticDescent.gradient_strict_descent' depends on axioms: [propext, Classical.choice, Quot.sound]\n",
+      "stderr": "",
+      "passed": true,
+      "name": "measure:02_quadratic_descent:3",
+      "language": "lean"
+    },
+    {
+      "command": [
+        "{original_experiment}/.runtime/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "{original_experiment}/litex/03_perturbed_geometric.lit"
+      ],
+      "cwd": "{repository_root}",
+      "exit": 0,
+      "seconds": 1.3518199170939624,
+      "stdout": "{\n  \"kind\": \"run\",\n  \"run_result\": \"success\",\n  \"target\": \"file\",\n  \"path\": \"{original_experiment}/litex/03_perturbed_geometric.lit\",\n  \"detail\": \"normal\",\n  \"language\": \"en\",\n  \"statement_results\": [\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"forall q R:\\n    q < 1\\n    =>:\\n        (1 - q) > 0\\n        (1 - q) != 0\",\n      \"proof_method\": {\n        \"type\": \"compound_fact\",\n        \"rule_name\": \"Universal\",\n        \"message\": \"Verified as a forall fact (details omitted in Normal)\"\n      },\n      \"stores\": [\n        \"forall q R:\\n    q < 1\\n    =>:\\n        (1 - q) > 0\\n        (1 - q) != 0\"\n      ],\n      \"infers\": []\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"have fn bound(q R+, c, d R, n N: q < 1) = (((q ^ n) * c) + ((d * (1 - (q ^ n))) / (1 - q)))\",\n      \"proof_method\": {\n        \"type\": \"define_fn\",\n        \"rule_name\": \"Have function equal\",\n        \"message\": \"Define a named function equal to an anonymous function\"\n      },\n      \"stores\": [\n        \"bound $in fn (q R+, c, d R, n N: q < 1) R\"\n      ],\n      \"infers\": [\n        \"bound = fn (q R+, c, d R, n N: q < 1) R{(((q ^ n) * c) + ((d * (1 - (q ^ n))) / (1 - q)))}\"\n      ]\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"thm bound_zero:\\n    ? forall q R+, c, d R:\\n        q < 1\\n        =>:\\n            bound(q, c, d, 0) = c\\n    (1 - q) != 0\",\n      \"proof_method\": {\n        \"type\": \"definition\",\n        \"rule_name\": \"Define theorem\",\n        \"message\": \"Record a theorem\"\n      },\n      \"stores\": [\n        \"forall q R+, c, d R:\\n    q < 1\\n    =>:\\n        bound(q, c, d, 0) = c\"\n      ],\n      \"infers\": []\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"thm bound_step:\\n    ? forall q R+, c, d R, n N:\\n        q < 1\\n        =>:\\n            bound(q, c, d, (n + 1)) = ((q * bound(q, c, d, n)) + d)\\n    (1 - q) != 0\\n    have t R+ = (q ^ n)\\n    (q ^ (n + 1)) = ((q ^ n) * (q ^ 1)) = (t * q)\\n    (((t * q) * c) + ((d * (1 - (t * q))) / (1 - q))) = ((q * ((t * c) + ((d * (1 - t)) / (1 - q)))) + d)\\n    bound(q, c, d, (n + 1)) = ((q * ((t * c) + ((d * (1 - t)) / (1 - q)))) + d) = ((q * bound(q, c, d, n)) + d)\",\n      \"proof_method\": {\n        \"type\": \"definition\",\n        \"rule_name\": \"Define theorem\",\n        \"message\": \"Record a theorem\"\n      },\n      \"stores\": [\n        \"forall q R+, c, d R, n N:\\n    q < 1\\n    =>:\\n        bound(q, c, d, (n + 1)) = ((q * bound(q, c, d, n)) + d)\"\n      ],\n      \"infers\": []\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"thm affine_recurrence_bound:\\n    ? forall err fn (idx N) R, q R+, d R, n N:\\n        q < 1\\n        forall j N:\\n            err((j + 1)) <= ((q * err(j)) + d)\\n        =>:\\n            err(n) <= bound(q, err(0), d, n)\\n    by induc n from 0:\\n        ? err(n) <= bound(q, err(0), d, n)\\n        ? from n = 0:\\n            by thm bound_zero(q, err(0), d) => bound(q, err(0), d, 0) = err(0)\\n        ? induc:\\n            err((n + 1)) <= ((q * err(n)) + d) <= ((q * bound(q, err(0), d, n)) + d) = bound(q, err(0), d, (n + 1))\",\n      \"proof_method\": {\n        \"type\": \"definition\",\n        \"rule_name\": \"Define theorem\",\n        \"message\": \"Record a theorem\"\n      },\n      \"stores\": [\n        \"forall err fn (idx N) R, q R+, d R, n N:\\n    q < 1\\n    forall j N:\\n        err((j + 1)) <= ((q * err(j)) + d)\\n    =>:\\n        err(n) <= bound(q, err(0), d, n)\"\n      ],\n      \"infers\": []\n    },\n    {\n      \"statement_result\": \"accepted\",\n      \"statement\": \"thm noiseless_affine_bound:\\n    ? forall err fn (idx N) R, q R+, n N:\\n        q < 1\\n        forall j N:\\n            err((j + 1)) <= (q * err(j))\\n        =>:\\n            err(n) <= ((q ^ n) * err(0))\\n    claim:\\n        ? forall j N:\\n            err((j + 1)) <= ((q * err(j)) + 0)\\n        ((q * err(j)) + 0) = (q * err(j))\\n    (1 - q) != 0\\n    bound(q, err(0), 0, n) = (((q ^ n) * err(0)) + ((0 * (1 - (q ^ n))) / (1 - q))) = (((q ^ n) * err(0)) + 0) = ((q ^ n) * err(0))\",\n      \"proof_method\": {\n        \"type\": \"definition\",\n        \"rule_name\": \"Define theorem\",\n        \"message\": \"Record a theorem\"\n      },\n      \"stores\": [\n        \"forall err fn (idx N) R, q R+, n N:\\n    q < 1\\n    forall j N:\\n        err((j + 1)) <= (q * err(j))\\n    =>:\\n        err(n) <= ((q ^ n) * err(0))\"\n      ],\n      \"infers\": []\n    }\n  ],\n  \"errors\": [],\n  \"session_terminated\": false,\n  \"termination\": null\n}\n",
+      "stderr": "",
+      "passed": true,
+      "name": "measure:03_perturbed_geometric:3",
+      "language": "litex"
+    },
+    {
+      "command": [
+        "{user_home}/.elan/toolchains/leanprover--lean4---v4.31.0/bin/lean",
+        "{original_experiment}/lean/03_perturbed_geometric.lean"
+      ],
+      "cwd": "{repository_root}",
+      "exit": 0,
+      "seconds": 17.1298963339068,
+      "stdout": "{original_experiment}/lean/03_perturbed_geometric.lean:19:20: warning: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice\n\nNote: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`\n'PerturbedGeometric.bound_zero' depends on axioms: [propext, Classical.choice, Quot.sound]\n'PerturbedGeometric.bound_step' depends on axioms: [propext, Classical.choice, Quot.sound]\n'PerturbedGeometric.affine_recurrence_bound' depends on axioms: [propext, Classical.choice, Quot.sound]\n'PerturbedGeometric.noiseless_affine_bound' depends on axioms: [propext, Classical.choice, Quot.sound]\n",
+      "stderr": "",
+      "passed": true,
+      "name": "measure:03_perturbed_geometric:3",
+      "language": "lean"
+    }
+  ]
+}

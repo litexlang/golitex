@@ -143,6 +143,7 @@ pub fn exec_eval_stmt(
             rewritten_object,
             cited_equal_fact_ids,
             evaluated_object,
+            matrix_scalar_evaluations: active_calls.matrix_scalar_evaluations,
             aggregate_evaluations: active_calls.aggregate_evaluations,
             function_evaluations: active_calls.function_evaluations,
             algo_evaluations: active_calls.algo_evaluations,

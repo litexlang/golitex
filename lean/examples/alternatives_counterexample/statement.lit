@@ -1,0 +1,4 @@
+# Zero refutes either pair of the proposed simultaneous equalities.
+witness exist x {0} st {x != 1 or x != 2, x != 3 or x != 4} from 0
+not forall x {0}:
+    x = 1 and x = 2 or x = 3 and x = 4

@@ -1,0 +1,4 @@
+# Substitute two known values inside an arithmetic expression to prove its bound.
+have a R = 2
+have b R = 3
+a * a + b <= 7

@@ -1,0 +1,38 @@
+# Check square identities and binary alternatives over displayed finite domains.
+# Before: by for and by enumerate finite_set verified in Litex but Lean rejected By.
+# Now: eliminate the complete displayed list and replay each original assignment.
+# Boundary: independent domains; integer ranges and assignment products have separate examples.
+# Gate: litex -strict -lean -f lean/examples/finite_square_values/statement.lit
+by for:
+    ? forall enumerated_square {0, 1, 2}:
+        enumerated_square * enumerated_square = enumerated_square ^ 2
+    enumerated_square * enumerated_square = enumerated_square ^ 2
+
+by enumerate finite_set:
+    ? forall enumerated_binary {0, 1}:
+        enumerated_binary = 0 or enumerated_binary = 1
+    enumerated_binary = 0 or enumerated_binary = 1
+
+by for:
+    ? forall enumerated_guarded {0, 1}:
+        enumerated_guarded != 0
+        =>:
+            enumerated_guarded = 1
+    enumerated_guarded = 1
+
+by for:
+    ? forall empty_enumerated {}:
+        empty_enumerated = empty_enumerated
+    empty_enumerated = empty_enumerated
+
+thm binary_nonzero_by_local_enumeration:
+    ? forall binary_input {0, 1}:
+        binary_input != 0
+        =>:
+            binary_input = 1
+    by for:
+        ? forall local_binary {0, 1}:
+            local_binary != 0
+            =>:
+                local_binary = 1
+        local_binary = 1

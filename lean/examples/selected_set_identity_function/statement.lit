@@ -1,0 +1,11 @@
+# Select the identity on an arbitrary set, without assuming the set is inhabited.
+have A set
+thm unique_copy:
+    ? forall element A:
+        exist! other A st {other = element}
+    witness exist! other A st {other = element} from element
+have fn selected by exist!:
+    ? forall input A:
+        exist! output A st {output = input}
+forall input A:
+    selected(input) = input

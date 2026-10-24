@@ -1,15 +1,15 @@
 # A point on a line satisfies its determinant equation.
 have fn vec(A, B cart(R, R)) cart(R, R) = (B(1) - A(1), B(2) - A(2))
 
-have fn det(u, v cart(R, R)) R = u(1) * v(2) - u(2) * v(1)
+have fn planar_det(u, v cart(R, R)) R = u(1) * v(2) - u(2) * v(1)
 
-have fn line_through_points(a, b cart(R, R): a != b) power_set(cart(R, R)) = {p cart(R, R): det(vec(a, p), vec(a, b)) = 0}
+have fn line_through_points(a, b cart(R, R): a != b) power_set(cart(R, R)) = {p cart(R, R): planar_det(vec(a, p), vec(a, b)) = 0}
 
 thm line_member_coordinate:
     ? forall a, b, p cart(R, R):
         a != b
         p $in line_through_points(a,b)
         =>:
-            det(vec(a,p),vec(a,b)) = 0
-    line_through_points(a,b) = {r cart(R,R): det(vec(a,r),vec(a,b))=0}
+            planar_det(vec(a,p),vec(a,b)) = 0
+    line_through_points(a,b) = {r cart(R,R): planar_det(vec(a,r),vec(a,b))=0}
     p $in line_through_points(a,b)

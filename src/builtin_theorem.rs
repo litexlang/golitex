@@ -4,6 +4,62 @@ use std::fmt;
 /// runtime rather than by a source `thm`/`axiom` declaration.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum BuiltinTheoremId {
+    MatrixApplyIdentity,
+    MatrixInnerProductAdjoint,
+    MatrixRankFactorizationExists,
+    MatrixAddCommutative,
+    MatrixAddAssociative,
+    MatrixAddZero,
+    MatrixSubSelf,
+    MatrixScaleOne,
+    MatrixScaleZero,
+    MatrixScaleDistributive,
+    MatrixMulAssociative,
+    MatrixMulDistributiveLeft,
+    MatrixMulDistributiveRight,
+    MatrixMulIdentity,
+    MatrixMulZero,
+    MatrixApplyCompose,
+    MatrixTransposeMul,
+    MatrixAdjointMul,
+    MatrixTraceLinearity,
+    MatrixTraceCyclic,
+    MatrixPowerZero,
+    MatrixPowerSuccessor,
+    MatrixPowerAdd,
+    MatrixDetIdentity,
+    MatrixDetTranspose,
+    MatrixDetAdjoint,
+    MatrixDetMul,
+    MatrixDetLaplaceRow,
+    MatrixDetLaplaceColumn,
+    MatrixDetUpperTriangular,
+    MatrixDetLowerTriangular,
+    MatrixAdjugateIdentity,
+    MatrixInvertibleFromCandidate,
+    MatrixInverseFromCandidate,
+    MatrixInverseLaws,
+    MatrixRankBounds,
+    MatrixRankZero,
+    MatrixRankIdentity,
+    MatrixRankFromFactorization,
+    MatrixRankTranspose,
+    MatrixRankAdjoint,
+    MatrixRankProduct,
+    MatrixRankInvertible,
+    InnerProductConjugateSymmetry,
+    InnerProductLinearRight,
+    InnerProductPositive,
+    InnerProductCauchySchwarz,
+    EuclideanNormSquare,
+    EuclideanNormZero,
+    EuclideanNormScale,
+    EuclideanNormTriangle,
+    FrobeniusNormSquare,
+    FrobeniusNormZero,
+    FrobeniusNormScale,
+    FrobeniusNormTriangle,
+
     AntiderivativeCompose,
     RiemannIntegralSubstitution,
 
@@ -378,6 +434,62 @@ pub enum BuiltinTheoremId {
 impl BuiltinTheoremId {
     pub fn from_name(name: &str) -> Option<Self> {
         Some(match name {
+            "matrix_apply_identity" => Self::MatrixApplyIdentity,
+            "matrix_inner_product_adjoint" => Self::MatrixInnerProductAdjoint,
+            "matrix_rank_factorization_exists" => Self::MatrixRankFactorizationExists,
+            "matrix_add_commutative" => Self::MatrixAddCommutative,
+            "matrix_add_associative" => Self::MatrixAddAssociative,
+            "matrix_add_zero" => Self::MatrixAddZero,
+            "matrix_sub_self" => Self::MatrixSubSelf,
+            "matrix_scale_one" => Self::MatrixScaleOne,
+            "matrix_scale_zero" => Self::MatrixScaleZero,
+            "matrix_scale_distributive" => Self::MatrixScaleDistributive,
+            "matrix_mul_associative" => Self::MatrixMulAssociative,
+            "matrix_mul_distributive_left" => Self::MatrixMulDistributiveLeft,
+            "matrix_mul_distributive_right" => Self::MatrixMulDistributiveRight,
+            "matrix_mul_identity" => Self::MatrixMulIdentity,
+            "matrix_mul_zero" => Self::MatrixMulZero,
+            "matrix_apply_compose" => Self::MatrixApplyCompose,
+            "matrix_transpose_mul" => Self::MatrixTransposeMul,
+            "matrix_adjoint_mul" => Self::MatrixAdjointMul,
+            "matrix_trace_linearity" => Self::MatrixTraceLinearity,
+            "matrix_trace_cyclic" => Self::MatrixTraceCyclic,
+            "matrix_power_zero" => Self::MatrixPowerZero,
+            "matrix_power_successor" => Self::MatrixPowerSuccessor,
+            "matrix_power_add" => Self::MatrixPowerAdd,
+            "matrix_det_identity" => Self::MatrixDetIdentity,
+            "matrix_det_transpose" => Self::MatrixDetTranspose,
+            "matrix_det_adjoint" => Self::MatrixDetAdjoint,
+            "matrix_det_mul" => Self::MatrixDetMul,
+            "matrix_det_laplace_row" => Self::MatrixDetLaplaceRow,
+            "matrix_det_laplace_column" => Self::MatrixDetLaplaceColumn,
+            "matrix_det_upper_triangular" => Self::MatrixDetUpperTriangular,
+            "matrix_det_lower_triangular" => Self::MatrixDetLowerTriangular,
+            "matrix_adjugate_identity" => Self::MatrixAdjugateIdentity,
+            "matrix_invertible_from_candidate" => Self::MatrixInvertibleFromCandidate,
+            "matrix_inverse_from_candidate" => Self::MatrixInverseFromCandidate,
+            "matrix_inverse_laws" => Self::MatrixInverseLaws,
+            "matrix_rank_bounds" => Self::MatrixRankBounds,
+            "matrix_rank_zero" => Self::MatrixRankZero,
+            "matrix_rank_identity" => Self::MatrixRankIdentity,
+            "matrix_rank_from_factorization" => Self::MatrixRankFromFactorization,
+            "matrix_rank_transpose" => Self::MatrixRankTranspose,
+            "matrix_rank_adjoint" => Self::MatrixRankAdjoint,
+            "matrix_rank_product" => Self::MatrixRankProduct,
+            "matrix_rank_invertible" => Self::MatrixRankInvertible,
+            "inner_product_conjugate_symmetry" => Self::InnerProductConjugateSymmetry,
+            "inner_product_linear_right" => Self::InnerProductLinearRight,
+            "inner_product_positive" => Self::InnerProductPositive,
+            "inner_product_cauchy_schwarz" => Self::InnerProductCauchySchwarz,
+            "euclidean_norm_square" => Self::EuclideanNormSquare,
+            "euclidean_norm_zero" => Self::EuclideanNormZero,
+            "euclidean_norm_scale" => Self::EuclideanNormScale,
+            "euclidean_norm_triangle" => Self::EuclideanNormTriangle,
+            "frobenius_norm_square" => Self::FrobeniusNormSquare,
+            "frobenius_norm_zero" => Self::FrobeniusNormZero,
+            "frobenius_norm_scale" => Self::FrobeniusNormScale,
+            "frobenius_norm_triangle" => Self::FrobeniusNormTriangle,
+
             "antiderivative_compose" => Self::AntiderivativeCompose,
             "riemann_integral_substitution" => Self::RiemannIntegralSubstitution,
             "antiderivative_from_definition" => Self::AntiderivativeFromDefinition,
@@ -763,6 +875,62 @@ impl BuiltinTheoremId {
 
     pub const fn as_str(self) -> &'static str {
         match self {
+            Self::MatrixApplyIdentity => "matrix_apply_identity",
+            Self::MatrixInnerProductAdjoint => "matrix_inner_product_adjoint",
+            Self::MatrixRankFactorizationExists => "matrix_rank_factorization_exists",
+            Self::MatrixAddCommutative => "matrix_add_commutative",
+            Self::MatrixAddAssociative => "matrix_add_associative",
+            Self::MatrixAddZero => "matrix_add_zero",
+            Self::MatrixSubSelf => "matrix_sub_self",
+            Self::MatrixScaleOne => "matrix_scale_one",
+            Self::MatrixScaleZero => "matrix_scale_zero",
+            Self::MatrixScaleDistributive => "matrix_scale_distributive",
+            Self::MatrixMulAssociative => "matrix_mul_associative",
+            Self::MatrixMulDistributiveLeft => "matrix_mul_distributive_left",
+            Self::MatrixMulDistributiveRight => "matrix_mul_distributive_right",
+            Self::MatrixMulIdentity => "matrix_mul_identity",
+            Self::MatrixMulZero => "matrix_mul_zero",
+            Self::MatrixApplyCompose => "matrix_apply_compose",
+            Self::MatrixTransposeMul => "matrix_transpose_mul",
+            Self::MatrixAdjointMul => "matrix_adjoint_mul",
+            Self::MatrixTraceLinearity => "matrix_trace_linearity",
+            Self::MatrixTraceCyclic => "matrix_trace_cyclic",
+            Self::MatrixPowerZero => "matrix_power_zero",
+            Self::MatrixPowerSuccessor => "matrix_power_successor",
+            Self::MatrixPowerAdd => "matrix_power_add",
+            Self::MatrixDetIdentity => "matrix_det_identity",
+            Self::MatrixDetTranspose => "matrix_det_transpose",
+            Self::MatrixDetAdjoint => "matrix_det_adjoint",
+            Self::MatrixDetMul => "matrix_det_mul",
+            Self::MatrixDetLaplaceRow => "matrix_det_laplace_row",
+            Self::MatrixDetLaplaceColumn => "matrix_det_laplace_column",
+            Self::MatrixDetUpperTriangular => "matrix_det_upper_triangular",
+            Self::MatrixDetLowerTriangular => "matrix_det_lower_triangular",
+            Self::MatrixAdjugateIdentity => "matrix_adjugate_identity",
+            Self::MatrixInvertibleFromCandidate => "matrix_invertible_from_candidate",
+            Self::MatrixInverseFromCandidate => "matrix_inverse_from_candidate",
+            Self::MatrixInverseLaws => "matrix_inverse_laws",
+            Self::MatrixRankBounds => "matrix_rank_bounds",
+            Self::MatrixRankZero => "matrix_rank_zero",
+            Self::MatrixRankIdentity => "matrix_rank_identity",
+            Self::MatrixRankFromFactorization => "matrix_rank_from_factorization",
+            Self::MatrixRankTranspose => "matrix_rank_transpose",
+            Self::MatrixRankAdjoint => "matrix_rank_adjoint",
+            Self::MatrixRankProduct => "matrix_rank_product",
+            Self::MatrixRankInvertible => "matrix_rank_invertible",
+            Self::InnerProductConjugateSymmetry => "inner_product_conjugate_symmetry",
+            Self::InnerProductLinearRight => "inner_product_linear_right",
+            Self::InnerProductPositive => "inner_product_positive",
+            Self::InnerProductCauchySchwarz => "inner_product_cauchy_schwarz",
+            Self::EuclideanNormSquare => "euclidean_norm_square",
+            Self::EuclideanNormZero => "euclidean_norm_zero",
+            Self::EuclideanNormScale => "euclidean_norm_scale",
+            Self::EuclideanNormTriangle => "euclidean_norm_triangle",
+            Self::FrobeniusNormSquare => "frobenius_norm_square",
+            Self::FrobeniusNormZero => "frobenius_norm_zero",
+            Self::FrobeniusNormScale => "frobenius_norm_scale",
+            Self::FrobeniusNormTriangle => "frobenius_norm_triangle",
+
             Self::AntiderivativeCompose => "antiderivative_compose",
             Self::RiemannIntegralSubstitution => "riemann_integral_substitution",
             Self::AntiderivativeFromDefinition => "antiderivative_from_definition",
@@ -1154,6 +1322,62 @@ impl fmt::Display for BuiltinTheoremId {
 impl BuiltinTheoremId {
     pub fn arity(self) -> usize {
         match self {
+            Self::MatrixApplyIdentity => 2,
+            Self::MatrixInnerProductAdjoint => 5,
+            Self::MatrixRankFactorizationExists => 3,
+            Self::MatrixAddCommutative => 4,
+            Self::MatrixAddAssociative => 5,
+            Self::MatrixAddZero => 3,
+            Self::MatrixSubSelf => 3,
+            Self::MatrixScaleOne => 3,
+            Self::MatrixScaleZero => 3,
+            Self::MatrixScaleDistributive => 5,
+            Self::MatrixMulAssociative => 7,
+            Self::MatrixMulDistributiveLeft => 6,
+            Self::MatrixMulDistributiveRight => 6,
+            Self::MatrixMulIdentity => 3,
+            Self::MatrixMulZero => 4,
+            Self::MatrixApplyCompose => 6,
+            Self::MatrixTransposeMul => 5,
+            Self::MatrixAdjointMul => 5,
+            Self::MatrixTraceLinearity => 4,
+            Self::MatrixTraceCyclic => 4,
+            Self::MatrixPowerZero => 2,
+            Self::MatrixPowerSuccessor => 3,
+            Self::MatrixPowerAdd => 4,
+            Self::MatrixDetIdentity => 1,
+            Self::MatrixDetTranspose => 2,
+            Self::MatrixDetAdjoint => 2,
+            Self::MatrixDetMul => 3,
+            Self::MatrixDetLaplaceRow => 3,
+            Self::MatrixDetLaplaceColumn => 3,
+            Self::MatrixDetUpperTriangular => 2,
+            Self::MatrixDetLowerTriangular => 2,
+            Self::MatrixAdjugateIdentity => 2,
+            Self::MatrixInvertibleFromCandidate => 3,
+            Self::MatrixInverseFromCandidate => 3,
+            Self::MatrixInverseLaws => 2,
+            Self::MatrixRankBounds => 3,
+            Self::MatrixRankZero => 2,
+            Self::MatrixRankIdentity => 1,
+            Self::MatrixRankFromFactorization => 8,
+            Self::MatrixRankTranspose => 3,
+            Self::MatrixRankAdjoint => 3,
+            Self::MatrixRankProduct => 5,
+            Self::MatrixRankInvertible => 2,
+            Self::InnerProductConjugateSymmetry => 3,
+            Self::InnerProductLinearRight => 6,
+            Self::InnerProductPositive => 2,
+            Self::InnerProductCauchySchwarz => 3,
+            Self::EuclideanNormSquare => 2,
+            Self::EuclideanNormZero => 2,
+            Self::EuclideanNormScale => 3,
+            Self::EuclideanNormTriangle => 3,
+            Self::FrobeniusNormSquare => 3,
+            Self::FrobeniusNormZero => 3,
+            Self::FrobeniusNormScale => 4,
+            Self::FrobeniusNormTriangle => 4,
+
             Self::AntiderivativeCompose => 8,
             Self::RiemannIntegralSubstitution => 8,
             Self::AntiderivativeFromDefinition => 3,
@@ -1521,5 +1745,68 @@ pub fn builtin_certificate_arity(name: &str) -> Option<usize> {
         "is_darboux_enclosure" => Some(7),
         "is_real_least_upper_bound" | "is_real_greatest_lower_bound" => Some(2),
         _ => None,
+    }
+}
+
+impl BuiltinTheoremId {
+    pub const fn is_matrix(self) -> bool {
+        matches!(
+            self,
+            Self::MatrixApplyIdentity
+                | Self::MatrixInnerProductAdjoint
+                | Self::MatrixRankFactorizationExists
+                | Self::MatrixAddCommutative
+                | Self::MatrixAddAssociative
+                | Self::MatrixAddZero
+                | Self::MatrixSubSelf
+                | Self::MatrixScaleOne
+                | Self::MatrixScaleZero
+                | Self::MatrixScaleDistributive
+                | Self::MatrixMulAssociative
+                | Self::MatrixMulDistributiveLeft
+                | Self::MatrixMulDistributiveRight
+                | Self::MatrixMulIdentity
+                | Self::MatrixMulZero
+                | Self::MatrixApplyCompose
+                | Self::MatrixTransposeMul
+                | Self::MatrixAdjointMul
+                | Self::MatrixTraceLinearity
+                | Self::MatrixTraceCyclic
+                | Self::MatrixPowerZero
+                | Self::MatrixPowerSuccessor
+                | Self::MatrixPowerAdd
+                | Self::MatrixDetIdentity
+                | Self::MatrixDetTranspose
+                | Self::MatrixDetAdjoint
+                | Self::MatrixDetMul
+                | Self::MatrixDetLaplaceRow
+                | Self::MatrixDetLaplaceColumn
+                | Self::MatrixDetUpperTriangular
+                | Self::MatrixDetLowerTriangular
+                | Self::MatrixAdjugateIdentity
+                | Self::MatrixInvertibleFromCandidate
+                | Self::MatrixInverseFromCandidate
+                | Self::MatrixInverseLaws
+                | Self::MatrixRankBounds
+                | Self::MatrixRankZero
+                | Self::MatrixRankIdentity
+                | Self::MatrixRankFromFactorization
+                | Self::MatrixRankTranspose
+                | Self::MatrixRankAdjoint
+                | Self::MatrixRankProduct
+                | Self::MatrixRankInvertible
+                | Self::InnerProductConjugateSymmetry
+                | Self::InnerProductLinearRight
+                | Self::InnerProductPositive
+                | Self::InnerProductCauchySchwarz
+                | Self::EuclideanNormSquare
+                | Self::EuclideanNormZero
+                | Self::EuclideanNormScale
+                | Self::EuclideanNormTriangle
+                | Self::FrobeniusNormSquare
+                | Self::FrobeniusNormZero
+                | Self::FrobeniusNormScale
+                | Self::FrobeniusNormTriangle
+        )
     }
 }

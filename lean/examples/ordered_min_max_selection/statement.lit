@@ -1,0 +1,16 @@
+# Select either operand of a real minimum or maximum using the known weak order.
+forall a, b R:
+    a <= b
+    =>:
+        min(a, b) = a
+        min(b, a) = a
+        max(a, b) = b
+        max(b, a) = b
+
+forall a, b R:
+    a <= b
+    =>:
+        a = min(a, b)
+        a = min(b, a)
+        b = max(a, b)
+        b = max(b, a)

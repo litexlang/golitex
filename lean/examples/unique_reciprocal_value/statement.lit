@@ -1,0 +1,6 @@
+# A nonzero real has one specified reciprocal value, which can be obtained by unique existence.
+have a R*
+witness exist! x R st {x = 1 / a} from 1 / a
+exist! y R st {y = 1 / a}
+obtain b from exist! x R st {x = 1 / a}
+b = 1 / a

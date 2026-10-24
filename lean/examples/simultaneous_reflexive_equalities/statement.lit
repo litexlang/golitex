@@ -1,0 +1,45 @@
+# Two real numbers each equal themselves; prove the conjunction by contradiction.
+# Before: the same source verified, but Lean compilation rejected By/AtomicNegation.
+# thm both_reflexive:
+#     ? forall a, b R:
+#         a = a and b = b
+#     by contra:
+#         ? a = a and b = b
+#         impossible a = a and b = b
+# Now: the compiler replays the classified disjunction as the reverse assumption.
+# Boundary: quantified negation needs its own result consumer.
+# Gate: litex -strict -lean -f lean/examples/simultaneous_reflexive_equalities/statement.lit
+thm both_reflexive:
+    ? forall a, b R:
+        a = a and b = b
+    by contra:
+        ? a = a and b = b
+        impossible a = a and b = b
+
+thm excluded_equality:
+    ? forall a R:
+        a = a or a != a
+    by contra:
+        ? a = a or a != a
+        impossible a = a or a != a
+
+thm reflexive_chain:
+    ? forall a R:
+        a = a = a
+    by contra:
+        ? a = a = a
+        impossible a = a = a
+
+thm distributed_reflexivity:
+    ? forall a R:
+        a = a and a = a or a != a and a != a
+    by contra:
+        ? a = a and a = a or a != a and a != a
+        impossible a = a and a = a or a != a and a != a
+
+thm nonnegative_pair:
+    ? forall a, b R:
+        a >= a and b >= b
+    by contra:
+        ? a >= a and b >= b
+        impossible a >= a and b >= b

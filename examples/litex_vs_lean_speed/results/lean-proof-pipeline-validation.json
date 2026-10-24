@@ -1,0 +1,41 @@
+{
+  "date": "2026-10-24",
+  "scope": "Proof pipeline explanation; no timing samples or new Litex/Lean speed claim.",
+  "lean_version": "Lean (version 4.31.0, arm64-apple-darwin24.6.0, commit 68218e876d2a38b1985b8590fff244a83c321783, Release)",
+  "source": "sources/lean-proof-pipeline/OnePlusOne.lean",
+  "source_sha256": "0fceab9490cc9cbf7540e30166e787b918ded11ca2d4cae1b7451e61bd4d24bc",
+  "output": "results/lean-proof-pipeline-output.txt",
+  "output_sha256": "e4707a97b4b86db876ecf449cd9d2d4715876b02352404da34bf58677c1fc6c3",
+  "command": [
+    "lean",
+    "examples/litex_vs_lean_speed/sources/lean-proof-pipeline/OnePlusOne.lean"
+  ],
+  "positive_exit_code": 0,
+  "positive_stderr": "",
+  "negative_control": {
+    "source": "-- Expected rejection: rfl cannot identify these different natural numbers.\ntheorem wrong : (1 : Nat) + 1 = 3 := by rfl\n",
+    "exit_code": 1,
+    "stdout": "{scratch}/OnePlusOneFalse.lean:2:40: error: Tactic `rfl` failed: The left-hand side\n  1 + 1\nis not definitionally equal to the right-hand side\n  3\n\n⊢ 1 + 1 = 3\n",
+    "stderr": "",
+    "failure_stage": "rfl tactic rejects the goal during elaboration; not a direct kernel-rejection probe."
+  },
+  "checks": {
+    "positive_exit_zero": true,
+    "positive_stderr_empty": true,
+    "observed_refl": true,
+    "observed_lambda": true,
+    "observed_explicit_refl_two": true,
+    "observed_explicit_instances": true,
+    "raw_lambda_and_pi": true,
+    "three_axiom_free_reports": true,
+    "negative_rejected": true
+  },
+  "pseudocode_boundary": "Simplified core terms, inference/checking pseudocode and Peano reductions in the explanation are pedagogical, not compiler traces. Real pp.all and Expr outputs are preserved separately.",
+  "references": [
+    "https://lean-lang.org/doc/reference/latest/Elaboration-and-Compilation/",
+    "https://lean-lang.org/doc/reference/latest/Tactic-Proofs/",
+    "https://lean-lang.org/doc/reference/latest/Basic-Types/Natural-Numbers/",
+    "https://lean-lang.org/theorem_proving_in_lean4/Propositions-and-Proofs/",
+    "https://github.com/leanprover/lean4/blob/v4.31.0/src/Init/Prelude.lean"
+  ]
+}

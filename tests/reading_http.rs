@@ -381,3 +381,35 @@ fn server_strict_policy_cannot_be_weakened_by_an_upload() {
         JsonValue::Bool(true)
     ));
 }
+
+#[test]
+fn uploaded_titles_follow_their_source_and_invalidate_the_cache() {
+    let server = LocalReader::start(true);
+    let labels = r#"{"kind":"reading_titles","sources":{"chapter.lit":{"zh":"一个等式","en":"An equality"}}}"#;
+    let request = body(
+        vec![("chapter.lit", "1 = 1\n"), ("reading-titles.json", labels)],
+        None,
+    );
+    let first = server.build(&request);
+    assert_eq!(first.0, 200, "{}", first.1);
+    let document = JsonValue::parse(&first.1).unwrap();
+    assert_eq!(
+        document.field("sources").as_array().unwrap()[0]
+            .field("titles")
+            .field("zh")
+            .as_str()
+            .unwrap(),
+        "一个等式"
+    );
+    let changed = server.build(&request.replace("一个等式", "等式检查"));
+    assert_eq!(changed.0, 200);
+    assert_ne!(
+        JsonValue::parse(&changed.1).unwrap().field("bundle_id"),
+        document.field("bundle_id")
+    );
+    let refused = server.build(&body(
+        vec![("chapter.lit", "1 = 1\n"), ("other.json", labels)],
+        None,
+    ));
+    assert_eq!(refused.0, 400, "{}", refused.1);
+}

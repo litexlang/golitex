@@ -1,0 +1,10 @@
+# A nonzero real has a unique reciprocal value; instantiate the guarded theorem automatically.
+thm unique_reciprocal:
+    ? forall seed R:
+        seed != 0
+        =>:
+            exist! x R st {x = 1 / seed}
+    witness exist! x R st {x = 1 / seed} from 1 / seed
+exist! y R st {y = 1 / 2}
+obtain a from exist! z R st {z = 1 / 2}
+a = 1 / 2

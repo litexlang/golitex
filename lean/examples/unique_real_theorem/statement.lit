@@ -1,0 +1,10 @@
+# Save unique existence as a theorem, reuse it in a claim, then obtain its witness.
+thm unique_zero:
+    ? exist! x R st {x = 0}
+    witness exist! x R st {x = 0} from 0
+by thm unique_zero
+claim:
+    ? exist! y R st {y = 0}
+    by thm unique_zero
+obtain a from exist! z R st {z = 0}
+a = 0

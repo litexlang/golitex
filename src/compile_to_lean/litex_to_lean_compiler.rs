@@ -8,7 +8,9 @@ use crate::execute::execute_by_stmt::{
 };
 use crate::execute::execute_fact_stmt::verify_and_fact::VerifyAndFactResult;
 use crate::execute::execute_fact_stmt::verify_chain_fact::VerifyChainFactResult;
-use crate::execute::execute_proof_block_stmt::{ExecClaimStmtResult, ExecProofBlockStmtResult};
+use crate::execute::execute_proof_block_stmt::{
+    ExecClaimStmtResult, ExecProofBlockStmtResult, ExecSketchStmtResult,
+};
 use crate::execute::execute_witness_stmt::{
     ExecWitnessAtomicFactStmtResult, ExecWitnessExistFactStmtResult, ExecWitnessStmtResult,
 };
@@ -100,6 +102,19 @@ impl LitexToLeanCompiler {
 
 fn object_uses_functions(object: &Obj) -> bool {
     match object {
+        Obj::IntegerOperator(IntegerOperator::Factorial(p)) => object_uses_functions(&p.arg),
+        Obj::IntegerOperator(IntegerOperator::Gcd(p)) => {
+            object_uses_functions(&p.left) || object_uses_functions(&p.right)
+        }
+        Obj::IntegerOperator(IntegerOperator::Lcm(p)) => {
+            object_uses_functions(&p.left) || object_uses_functions(&p.right)
+        }
+        Obj::IntegerOperator(IntegerOperator::Mod(p)) => {
+            object_uses_functions(&p.left) || object_uses_functions(&p.right)
+        }
+        Obj::IntegerOperator(IntegerOperator::Quot(p)) => {
+            object_uses_functions(&p.left) || object_uses_functions(&p.right)
+        }
         Obj::FnObj(_) | Obj::FunctionSpace(_) | Obj::ProductShape(_) => true,
         Obj::SetFormer(SetFormer::ListSet(set)) => {
             set.list.iter().any(|item| object_uses_functions(item))
@@ -111,6 +126,12 @@ fn object_uses_functions(object: &Obj) -> bool {
                         fact.clone(),
                     ))
                 })
+        }
+        Obj::SetFormer(SetFormer::Range(r)) => {
+            object_uses_functions(&r.start) || object_uses_functions(&r.end)
+        }
+        Obj::SetFormer(SetFormer::ClosedRange(r)) => {
+            object_uses_functions(&r.start) || object_uses_functions(&r.end)
         }
         Obj::SetFormer(SetFormer::FiniteSeqSet(_) | SetFormer::SeqSet(_)) => true,
         Obj::SetOperator(SetOperator::PowerSet(set)) => object_uses_functions(&set.set),
@@ -132,26 +153,46 @@ fn object_uses_functions(object: &Obj) -> bool {
             }
             ArithmeticOperator::Neg(x) => object_uses_functions(&x.arg),
             ArithmeticOperator::Abs(x) => object_uses_functions(&x.arg),
+            ArithmeticOperator::Min(x) => {
+                object_uses_functions(&x.left) || object_uses_functions(&x.right)
+            }
+            ArithmeticOperator::Sign(x) => object_uses_functions(&x.arg),
+            ArithmeticOperator::Floor(x) => object_uses_functions(&x.arg),
+            ArithmeticOperator::Ceil(x) => object_uses_functions(&x.arg),
+            ArithmeticOperator::Max(x) => {
+                object_uses_functions(&x.left) || object_uses_functions(&x.right)
+            }
             ArithmeticOperator::Pow(x) => {
                 object_uses_functions(&x.base) || object_uses_functions(&x.exponent)
             }
-            _ => false,
         },
         _ => false,
     }
 }
 
 fn fact_uses_functions(fact: &Fact) -> bool {
+    // Multi-variable uniqueness is checked as equality of complete tuples,
+    // including when no tuple constructor occurs in the user's body clauses.
+    if let Fact::ExistUniqueFact(source) = fact {
+        if source.typed_parameters.ordered_param_ids().len() > 1 {
+            return true;
+        }
+    }
     match fact {
+        Fact::NotForall(fact) => {
+            fact.typed_parameters.groups.iter().any(|g| matches!(&g.param_type, ParamType::Obj(o) if object_uses_functions(o)))
+                || fact.dom_facts.iter().chain(&fact.then_facts).any(|f|
+                    fact_uses_functions(&crate::instantiate::quantifier_free_fact_to_fact(f.clone())))
+        }
         Fact::ForallFactWithIff(fact) => {
             fact_uses_functions(&Fact::ForallFact(fact.forall_fact.clone()))
                 || fact.iff_facts.iter().any(|clause| fact_uses_functions(&clause.clone().into()))
         }
-        Fact::AtomicFact(fact) => atomic_fact_args_ref(fact)
+        Fact::AtomicFact(fact) => crate::compile_to_lean::compile_mapping_properties::mapping_parts(fact).is_some() || atomic_fact_args_ref(fact)
             .into_iter()
             .any(object_uses_functions),
         Fact::AndFact(fact) => fact.facts.iter().any(|fact| {
-            atomic_fact_args_ref(fact)
+            crate::compile_to_lean::compile_mapping_properties::mapping_parts(fact).is_some() || atomic_fact_args_ref(fact)
                 .into_iter()
                 .any(object_uses_functions)
         }),
@@ -172,11 +213,11 @@ fn fact_uses_functions(fact: &Fact) -> bool {
                 matches!(&group.param_type, ParamType::Obj(carrier) if object_uses_functions(carrier))
             }) || fact.dom_facts.iter().any(fact_uses_functions)
                 || fact.then_facts.iter().any(|fact| match fact {
-                    ExistOrAndChainAtomicFact::AtomicFact(fact) => atomic_fact_args_ref(fact)
+                    ExistOrAndChainAtomicFact::AtomicFact(fact) => crate::compile_to_lean::compile_mapping_properties::mapping_parts(fact).is_some() || atomic_fact_args_ref(fact)
                         .into_iter()
                         .any(object_uses_functions),
                     ExistOrAndChainAtomicFact::AndFact(fact) => fact.facts.iter().any(|fact| {
-                        atomic_fact_args_ref(fact)
+                        crate::compile_to_lean::compile_mapping_properties::mapping_parts(fact).is_some() || atomic_fact_args_ref(fact)
                             .into_iter()
                             .any(object_uses_functions)
                     }),
@@ -186,19 +227,45 @@ fn fact_uses_functions(fact: &Fact) -> bool {
                     ExistOrAndChainAtomicFact::OrFact(fact) => {
                         fact_uses_functions(&Fact::OrFact(fact.clone()))
                     }
+                    ExistOrAndChainAtomicFact::ExistUniqueFact(fact) => {
+                        fact_uses_functions(&Fact::ExistUniqueFact(fact.clone()))
+                    }
                     ExistOrAndChainAtomicFact::ExistFact(fact)
-                    | ExistOrAndChainAtomicFact::ExistUniqueFact(fact)
                     | ExistOrAndChainAtomicFact::NotExistFact(fact) => {
                         fact_uses_functions(&Fact::ExistFact(fact.clone()))
                     }
                 })
         }
-        _ => false,
     }
 }
 
 fn statement_uses_functions(statement: &ExecStmtResult) -> bool {
+    if let Some((_, assignments, store)) = super::source_position::enumeration_statement(statement)
+    {
+        if let StoreFactResult::ForallFact(f) = &store.store {
+            if fact_uses_functions(&Fact::ForallFact(f.fact.clone())) {
+                return true;
+            }
+        }
+        return assignments.iter().any(|p| match &p.outcome {
+            crate::execute::execute_by_stmt::EnumerateAssignmentOutcome::Proved {
+                proof_steps,
+                ..
+            } => proof_steps.iter().any(statement_uses_functions),
+            _ => false,
+        });
+    }
     match statement {
+        ExecStmtResult::ReleaseAndExpand(ExecReleaseAndExpandStmtResult::ExpandRange(crate::execute::execute_by_stmt::ExecExpandRangeStmtResult::Success(p))) => verified_subject(&p.membership).as_ref().is_some_and(fact_uses_functions),
+        ExecStmtResult::ProofBlock(ExecProofBlockStmtResult::Sketch(ExecSketchStmtResult::Success(p))) => p.proof_steps.iter().any(statement_uses_functions),
+        ExecStmtResult::By(ExecByStmtResult::FnExtension(_)) => true,
+        ExecStmtResult::By(ExecByStmtResult::Extension(crate::execute::execute_by_stmt::ExecByExtensionStmtResult::Success(proof))) => {
+            verified_subject(&proof.left_to_right).as_ref().is_some_and(fact_uses_functions)
+                || proof.proof_steps.iter().any(statement_uses_functions)
+        }
+        ExecStmtResult::Register(result) =>
+            super::compile_register_stmt_result::registration_proof(result).ok()
+                .and_then(verified_subject).as_ref().is_some_and(fact_uses_functions),
         ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
             ExecDefineObjStmtResult::HaveObjByExistFacts(crate::execute::ExecHaveObjByExistFactsStmtResult::Success(p)),
         )) => fact_uses_functions(&crate::ast::fact::exist_shaped_fact_to_fact(&p.verify_exist.fact)),
@@ -215,6 +282,8 @@ fn statement_uses_functions(statement: &ExecStmtResult) -> bool {
             fact_uses_functions(&proof.goal)
                 || fact_uses_functions(&proof.reverse_assumption)
                 || proof.proof_steps.iter().any(statement_uses_functions)
+                || verified_subject(&proof.closing.impossible).as_ref().is_some_and(fact_uses_functions)
+                || verified_subject(&proof.closing.negated_impossible).as_ref().is_some_and(fact_uses_functions)
         }
 
         ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
@@ -246,7 +315,8 @@ fn statement_uses_functions(statement: &ExecStmtResult) -> bool {
                     .any(statement_uses_functions)
         }
         ExecStmtResult::Definition(
-            ExecDefinitionStmtResult::HaveFnEqual(_) | ExecDefinitionStmtResult::HaveFnByInduc(_),
+            ExecDefinitionStmtResult::HaveFnEqual(_) | ExecDefinitionStmtResult::HaveFnEqualCaseByCase(_) | ExecDefinitionStmtResult::HaveFnByInduc(_)
+            | ExecDefinitionStmtResult::HaveFnByForallExistUnique(_),
         ) => true,
         ExecStmtResult::Fact(ExecFactStmtResult::Success(proof)) => {
             verified_subject(&proof.verify_result)
@@ -292,9 +362,28 @@ fn statement_uses_functions(statement: &ExecStmtResult) -> bool {
 
 fn object_uses_sets(object: &Obj) -> bool {
     match object {
-        Obj::StandardSet(StandardSet::RPos | StandardSet::NPos) => true,
+        Obj::IntegerOperator(IntegerOperator::Factorial(_)) => true, // Intrinsic codomain is N+.
+        Obj::IntegerOperator(IntegerOperator::Gcd(_)) => true,       // Intrinsic codomain is N+.
+        Obj::IntegerOperator(IntegerOperator::Lcm(p)) => {
+            object_uses_sets(&p.left) || object_uses_sets(&p.right)
+        }
+        Obj::IntegerOperator(IntegerOperator::Mod(p)) => {
+            object_uses_sets(&p.left) || object_uses_sets(&p.right)
+        }
+        Obj::IntegerOperator(IntegerOperator::Quot(_)) => true,
+        Obj::StandardSet(set)
+            if !matches!(
+                set,
+                StandardSet::N | StandardSet::Z | StandardSet::Q | StandardSet::R | StandardSet::C
+            ) =>
+        {
+            true
+        }
         Obj::SetFormer(
-            SetFormer::ListSet(_) | SetFormer::SetBuilder(_) | SetFormer::ClosedRange(_),
+            SetFormer::ListSet(_)
+            | SetFormer::SetBuilder(_)
+            | SetFormer::Range(_)
+            | SetFormer::ClosedRange(_),
         ) => true,
         Obj::SetOperator(SetOperator::Union(_) | SetOperator::PowerSet(_)) => true,
         Obj::ArithmeticOperator(operator) => match operator {
@@ -302,12 +391,16 @@ fn object_uses_sets(object: &Obj) -> bool {
             ArithmeticOperator::Sub(x) => object_uses_sets(&x.left) || object_uses_sets(&x.right),
             ArithmeticOperator::Mul(x) => object_uses_sets(&x.left) || object_uses_sets(&x.right),
             ArithmeticOperator::Div(x) => object_uses_sets(&x.left) || object_uses_sets(&x.right),
+            ArithmeticOperator::Min(x) => object_uses_sets(&x.left) || object_uses_sets(&x.right),
+            ArithmeticOperator::Sign(x) => object_uses_sets(&x.arg),
+            ArithmeticOperator::Floor(x) => object_uses_sets(&x.arg),
+            ArithmeticOperator::Ceil(x) => object_uses_sets(&x.arg),
+            ArithmeticOperator::Max(x) => object_uses_sets(&x.left) || object_uses_sets(&x.right),
             ArithmeticOperator::Neg(x) => object_uses_sets(&x.arg),
             ArithmeticOperator::Abs(x) => object_uses_sets(&x.arg),
             ArithmeticOperator::Pow(x) => {
                 object_uses_sets(&x.base) || object_uses_sets(&x.exponent)
             }
-            _ => false,
         },
         _ => false,
     }
@@ -315,6 +408,11 @@ fn object_uses_sets(object: &Obj) -> bool {
 
 fn fact_uses_sets(fact: &Fact) -> bool {
     match fact {
+        Fact::NotForall(fact) => {
+            fact.typed_parameters.groups.iter().any(|g| matches!(&g.param_type, ParamType::Obj(o) if object_uses_sets(o)))
+                || fact.dom_facts.iter().chain(&fact.then_facts).any(|f|
+                    fact_uses_sets(&crate::instantiate::quantifier_free_fact_to_fact(f.clone())))
+        }
         Fact::ForallFactWithIff(fact) => {
             fact_uses_sets(&Fact::ForallFact(fact.forall_fact.clone()))
                 || fact.iff_facts.iter().any(|clause| fact_uses_sets(&clause.clone().into()))
@@ -361,7 +459,6 @@ fn fact_uses_sets(fact: &Fact) -> bool {
                     }
                 })
         }
-        _ => false,
     }
 }
 
@@ -370,6 +467,12 @@ fn statement_uses_sets(statement: &ExecStmtResult) -> bool {
         return true;
     }
     match statement {
+        ExecStmtResult::ReleaseAndExpand(ExecReleaseAndExpandStmtResult::ExpandRange(crate::execute::execute_by_stmt::ExecExpandRangeStmtResult::Success(_))) => true,
+        ExecStmtResult::ProofBlock(ExecProofBlockStmtResult::Sketch(ExecSketchStmtResult::Success(p))) => p.proof_steps.iter().any(statement_uses_sets),
+        ExecStmtResult::By(ExecByStmtResult::Extension(_) | ExecByStmtResult::FnExtension(_) | ExecByStmtResult::For(_) | ExecByStmtResult::EnumerateFiniteSet(_)) => true,
+        ExecStmtResult::Register(result) =>
+            super::compile_register_stmt_result::registration_proof(result).ok()
+                .and_then(verified_subject).as_ref().is_some_and(fact_uses_sets),
         ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
             ExecDefineObjStmtResult::HaveObjByExistFacts(crate::execute::ExecHaveObjByExistFactsStmtResult::Success(p)),
         )) => fact_uses_sets(&crate::ast::fact::exist_shaped_fact_to_fact(&p.verify_exist.fact)),
@@ -399,6 +502,8 @@ fn statement_uses_sets(statement: &ExecStmtResult) -> bool {
                 || proof.proof_steps.iter().any(statement_uses_sets)
                 || verify_has_set_inference(&proof.closing.impossible)
                 || verify_has_set_inference(&proof.closing.negated_impossible)
+                || verified_subject(&proof.closing.impossible).as_ref().is_some_and(fact_uses_sets)
+                || verified_subject(&proof.closing.negated_impossible).as_ref().is_some_and(fact_uses_sets)
                 || store_has_set_inference(&proof.stored)
         }
 
@@ -556,6 +661,9 @@ fn verify_has_set_inference(proof: &VerifyFactResult) -> bool {
 
 fn statement_has_set_inference(statement: &ExecStmtResult) -> bool {
     match statement {
+        ExecStmtResult::ProofBlock(ExecProofBlockStmtResult::Sketch(
+            ExecSketchStmtResult::Success(p),
+        )) => p.proof_steps.iter().any(statement_has_set_inference),
         ExecStmtResult::Witness(ExecWitnessStmtResult::WitnessAtomicFact(
             ExecWitnessAtomicFactStmtResult::Success(proof),
         )) => {
@@ -642,6 +750,22 @@ fn statement_has_set_inference(statement: &ExecStmtResult) -> bool {
                 || matches!(&proof.body, crate::execute::execute_proof_block_stmt::ExecClaimBodyProof::Forall(body) if domains_have_set_inference(&body.assumed_dom_facts))
         }
         ExecStmtResult::By(ExecByStmtResult::Induc(ExecByInducStmtResult::Success(proof))) => {
+            let (base, step) = match &proof.body {
+                ByInducBodySuccess::Unstructured { base, step }
+                | ByInducBodySuccess::Structured { base, step } => (base, step),
+            };
+            proof.goals.iter().any(fact_uses_sets)
+                || store_has_set_inference(&proof.goal_domain.store_and_infer)
+                || [base, step].iter().any(|case| {
+                    domains_have_set_inference(&case.assumptions)
+                        || case.proof_steps.iter().any(statement_uses_sets)
+                        || case.goals_verified.iter().any(verify_has_set_inference)
+                })
+                || store_has_set_inference(&proof.stored)
+        }
+        ExecStmtResult::By(ExecByStmtResult::StrongInduc(
+            crate::execute::execute_by_stmt::ExecByStrongInducStmtResult::Success(proof),
+        )) => {
             let (base, step) = match &proof.body {
                 ByInducBodySuccess::Unstructured { base, step }
                 | ByInducBodySuccess::Structured { base, step } => (base, step),
