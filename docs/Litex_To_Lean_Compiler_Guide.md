@@ -1878,9 +1878,9 @@ variants remain outside these checks.
 Coverage refers to implemented and checked constructions and proof routes;
 it does not mean every Litex proof in this mathematical area can be compiled.
 Absolute value, symbolic natural powers and selected disjunctions also have
-bounded replay and local Lean checks. Whole-file and native acceptance of the
-complete recursive Newton estimate remains unfinished; see the
-[Newton example status](examples/litex_to_lean/newton_residual/README.md#paused-recursive-experiment).
+bounded replay and local Lean checks. The recursive Newton estimate has a
+checked generated Lean proof; its native all-index interface remains unfinished.
+See the [Newton example status](examples/litex_to_lean/newton_residual/README.md#recursive-residual-bound).
 
 Start with the [complete add-zero and Adapter example](examples/litex_to_lean/add_zero/README.md),
 then follow the [rational inverse-map walkthrough](#two-rational-maps-from-definitions-to-a-native-equivalence).

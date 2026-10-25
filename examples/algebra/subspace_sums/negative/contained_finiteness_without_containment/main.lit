@@ -1,0 +1,8 @@
+thm contained_finiteness_without_containment:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,U,H power_set(V):
+        $Algebra::vector_space::is_subspace(K,field,V,space,U)
+        $Algebra::vector_space::is_subspace(K,field,V,space,H)
+        $Algebra::basis::is_finite_dimensional(K,field,U,\Algebra::subspace::restricted_space<K,field,V,space,U>)
+        =>:
+            $Algebra::basis::is_finite_dimensional(K,field,H,\Algebra::subspace::restricted_space<K,field,V,space,H>)
+    by thm Algebra::subspace_sums::subspace_inside_finite_subspace_is_finite(K,field,V,space,U,H) => $Algebra::basis::is_finite_dimensional(K,field,H,\Algebra::subspace::restricted_space<K,field,V,space,H>)

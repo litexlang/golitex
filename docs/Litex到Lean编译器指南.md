@@ -1077,8 +1077,8 @@ Adapter 导出普通 Lean／Mathlib 定理。
 | 定义与证明 | 具体谓词、顶层抽象谓词、全称与条件命题、等式链、部分合取、命名定理及调用、局部对象、`let`、`claim` 和 `sketch`。 | [抽象性质](../lean/examples/abstract_property_transport/)、[谓词与等式替换](../lean/examples/concrete_predicate_equality_transport/)、[定理返回与调用](../lean/examples/named_compound_theorem_returns/)、[局部对象](../lean/examples/local_witness_additive_identity/)、[claim 与正数值域](../lean/examples/newton_positive_update/) |
 
 这里的覆盖指已实现并检查过的构造和证明路线，并不意味着该领域内任意 Litex 证明都能编译。
-绝对值、符号自然幂和部分析取也已有受限规则的编译及局部 Lean 检查；完整递归 Newton
-估计的整文件与原生接口验收仍未完成，状态见 [Newton 示例说明](examples/litex_to_lean/newton_residual/README.md#paused-recursive-experiment)。
+绝对值、符号自然幂和部分析取也已有受限规则的编译及局部 Lean 检查；递归 Newton
+估计的生成 Lean 证明已通过检查，原生全指标接口仍未完成，状态见 [Newton 示例说明](examples/litex_to_lean/newton_residual/README.md#recursive-residual-bound)。
 
 可以先读[加零的完整编译与 Adapter 示例](examples/litex_to_lean/add_zero/README.md)，
 再看[有理函数互逆的完整流程](#两个有理函数从定义到原生等价)。

@@ -1,6 +1,8 @@
 # Algebra: groups, fields and vector spaces
 
-This package exports `group`, `field`, `vector_space`, `finite_span`, `basis`, `dependence`, `span_reduction`, `basis_existence`, `exchange`, `basis_comparison`, `basis_extension` and `dimension`. It provides shared
+This package exports `group`, `field`, `vector_space`, `finite_span`, `basis`, `dependence`, `span_reduction`, `basis_existence`, `exchange`, `basis_comparison`, `basis_extension`, `dimension`, `subspace`, `finite_decomposition`,
+`linear_dimension`, `linear_criteria`, `coordinate_maps`, `direct_sum` and
+`subspace_sums`. It provides shared
 group, field and vector-space definitions and checked source theorems for
 finite combinations, bases, dependence, removal, basis existence and single-step
 exchange, invariant finite basis length, ordered basis extension and guarded
@@ -1087,6 +1089,78 @@ explicit overlapping-summand negation is proved separately in the plane caller.
 Two narrow draft trusts in rank/nullity dimension identification were removed
 in strict review using the common-basis dimension theorem. The maintained
 source has no trust, user axiom, new native Obj/Fact, BT, strategy, parser,
-AST/runtime or compiler change. Finiteness of the ambient space from two finite summands, the general
-Grassmann formula, external direct sums, complement existence, representation
-matrices and further operator theory remain separate work.
+AST/runtime or compiler change. Finite-summand finiteness and the general
+Grassmann formula are supplied by subspace_sums below. External direct sums,
+complement existence, representation matrices and further operator theory
+remain separate work.
+
+
+## Finite subspace sums and Grassmann dimension
+
+The subspace_sums export adds 21 named source theorems. It reuses
+\direct_sum::subspace_sum<K,F,V,X,U,W>, intersect(U,W), inherited restricted
+spaces and finite_dimension; it adds no value family or public predicate.
+The field and ambient space remain arbitrary, and the core results never
+assume that the ambient V is finite dimensional.
+
+| Theorems | Content |
+| --- | --- |
+| intersection_is_subspace | The intersection of supplied subspaces is a subspace. |
+| concatenation_in_ambient, concatenation_span_contains_parts, generators_span_subspace_sum | Transport a concatenated list between supplied carriers; its span contains the two spans and equals their subspace sum. |
+| finite_summands_have_finite_sum, finite_summands_spanning_ambient_are_finite | Two finite inherited subspaces have a finite sum; if their sum is V, V is finite dimensional. |
+| bounded_independence_is_finite_dimensional | A natural upper bound on all independent-list lengths gives a finite spanning list. |
+| subspace_inside_finite_subspace_is_finite, finite_summand_has_finite_intersection | A contained subspace is finite; only one finite summand is needed for a finite intersection. |
+| subspace_sum_monotone, subspace_sum_of_contained | Sum respects containment and reduces to the larger supplied summand. |
+| intersection_extension_tail_spans_sum, intersection_extension_tail_is_independent | A basis-extension tail supplies the span and independence steps used by Grassmann. Empty lists and tails are allowed. |
+| finite_sum_and_intersection | Establish both inherited finite-dimensional domains from the two supplied finite summands. |
+| grassmann_dimension | dim(U)+dim(W)=dim(U+W)+dim(U∩W). |
+| subspace_dimension_le_containing_subspace, intersection_dimension_bounds, sum_dimension_bounds | Containment bounds dimension; dim(U∩W) is at most each summand dimension, and each summand dimension is at most dim(U+W), which is at most dim(U)+dim(W). |
+| finite_dimension_numeric_carriers | An existing selected finite dimension is in N, R and C. |
+| trivial_intersection_dimension_adds, dimension_additivity_has_trivial_intersection | Dimension additivity is equivalent to U∩W being the zero subspace. |
+
+Selected dimensions require explicit finite-dimensional evidence for each
+actual inherited space. For Grassmann, first prove the two supplied subspace
+facts, call intersection_is_subspace and direct_sum::subspace_sum_is_subspace,
+then release finite_sum_and_intersection. The dimension theorem retains those
+four subspace facts and four finite-dimensional domains in its header.
+sum_dimension_bounds additionally requires the two summand dimensions to be
+in R; call finite_dimension_numeric_carriers for those inherited spaces when
+this numerical typing is not already explicit.
+
+The complete isolated example below uses the std import alias Algebra, as
+configured in [intersection/litex.config](../../examples/algebra/subspace_sums/intersection/litex.config).
+It assumes only the first summand is finite, and does not assume finite V:
+
+```litex
+thm consume_finite_summand_has_finite_intersection:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,U,W power_set(V):
+        $Algebra::vector_space::is_subspace(K,field,V,space,U)
+        $Algebra::vector_space::is_subspace(K,field,V,space,W)
+        $Algebra::vector_space::is_subspace(K,field,V,space,intersect(U,W))
+        $Algebra::basis::is_finite_dimensional(K,field,U,\Algebra::subspace::restricted_space<K,field,V,space,U>)
+        =>:
+            $Algebra::basis::is_finite_dimensional(K,field,intersect(U,W),\Algebra::subspace::restricted_space<K,field,V,space,intersect(U,W)>)
+    by thm Algebra::subspace_sums::finite_summand_has_finite_intersection(K,field,V,space,U,W) => $Algebra::basis::is_finite_dimensional(K,field,intersect(U,W),\Algebra::subspace::restricted_space<K,field,V,space,intersect(U,W)>)
+```
+
+The [plane and boundary consumer](../../examples/algebra/subspace_sums/main.lit)
+checks a repeated axis with dimensions 1+1=1+1 and two distinct axes with
+1+1=2+0. It also checks two zero summands, and full/zero summands in both
+orders. [Generic contracts](../../examples/algebra/subspace_sums/contracts.lit)
+call every named theorem over arbitrary fields and spaces.
+
+Run python3 examples/algebra/subspace_sums/check.py --binary /path/to/litex
+for strict source, concrete, generic and isolated README checks, 19 controls
+that reject only their final statement, both actual installed std layouts,
+and complete std/WiX payload and component-reference agreement. Four controls
+remove selected-dimension finiteness evidence: the current first reported
+well-definedness obligation can be nonemptiness of that selected carrier.
+The other controls remove a required mathematical premise or assert a wrong
+concrete dimension. A verification rejection is not a proof of negation.
+
+There is no trust, user axiom, native Obj/Fact/BT, strategy, reserved operation
+name, overload, Rust or compiler change. One proof-local predicate records
+which independent-list lengths exist in the bounded-length argument. These
+source proofs do not choose a complement or canonical basis. External direct
+sums, complement existence, matrix representations and operator theory remain
+separate work; no Litex-to-Lean certification is claimed here.

@@ -11,7 +11,7 @@
 
 [English README](../README.md) ·
 [官网](https://litexlang.com) ·
-[Litex 的缘起与构建思路](Litex的缘起与构建思路.md)
+[Litex 中文蓝图](Litex中文蓝图.md)
 </div>
 
 <a id="litex-的目标"></a>
@@ -188,7 +188,7 @@ Litex 仍是实验性 beta 项目。验证器、内置与推断规则、数学�
 
 我通过建造自己能用的东西、检视它做了什么、让每个答案暴露下一个问题，来探索这些想法。我希望更多使用数学的人，也能书写、理解和贡献机器可检查的数学。
 
-[《Litex 的缘起与构建思路》](Litex的缘起与构建思路.md)（[English](Motivation_and_Construction_Thinking_Behind_Litex.md)）更完整地展开了这条设计路线。[蓝图](Litex中文蓝图.md)（[English](Litex_Blueprint.md)）讨论更广的项目方向与证据。欢迎带来难例、边界情形和建设性反馈。
+[蓝图](Litex中文蓝图.md)（[English](Litex_Blueprint.md)）讨论更广的项目方向与证据。欢迎带来难例、边界情形和建设性反馈。
 
 特别感谢 Wei Lin、Siqi Sun、Peng Sun、Chenxuan Huang、Yan Lu、Sheng Xu、Keyao Zhu 与 Zhaoxuan Hong 的支持与建议。
 

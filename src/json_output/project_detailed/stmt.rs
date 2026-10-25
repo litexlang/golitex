@@ -234,6 +234,20 @@ fn project_definition(def: &ExecDefinitionStmtResult, runtime: &Runtime) -> Json
                     ("kind", string("def_template")),
                     ("statement", string(s.statement.readable_string())),
                     (
+                        "introduced_params",
+                        super::verify::project_introduced_params(&s.introduced_params, runtime),
+                    ),
+                    (
+                        "assumed_dom_facts",
+                        JsonValue::Array(
+                            s.assumed_dom_facts
+                                .iter()
+                                .map(|dom| super::verify::project_assume_dom(dom, runtime))
+                                .collect(),
+                        ),
+                    ),
+                    ("body", project_stmt_detailed(&s.body, runtime)),
+                    (
                         "definition_facts",
                         JsonValue::Array(
                             s.definition_facts

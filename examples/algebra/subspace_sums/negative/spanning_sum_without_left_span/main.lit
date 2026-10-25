@@ -1,0 +1,8 @@
+thm spanning_sum_without_left_span:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,U,W power_set(V),m,n N,left finite_seq(V,m),right finite_seq(V,n):
+        $Algebra::vector_space::is_subspace(K,field,V,space,U)
+        $Algebra::vector_space::is_subspace(K,field,V,space,W)
+        \Algebra::finite_span::span<K,field,V,space,n,right> =W
+        =>:
+            \Algebra::finite_span::span<K,field,V,space,m+n,\Algebra::finite_decomposition::concatenate_lists<V,m,n,left,right>> =\Algebra::direct_sum::subspace_sum<K,field,V,space,U,W>
+    by thm Algebra::subspace_sums::generators_span_subspace_sum(K,field,V,space,U,W,m,n,left,right) => \Algebra::finite_span::span<K,field,V,space,m+n,\Algebra::finite_decomposition::concatenate_lists<V,m,n,left,right>> =\Algebra::direct_sum::subspace_sum<K,field,V,space,U,W>

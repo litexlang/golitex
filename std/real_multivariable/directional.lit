@@ -1,0 +1,93 @@
+# Directional derivatives of real scalar functions on the full coordinate space.
+# v is used as supplied; no normalization. Candidate proof precedes selection.
+
+template<n N+>:
+    have fn directional_section(f fn(x cart_n(R,n)) R,p,v cart_n(R,n)) fn(t R) R=fn(t R) R {f(fn(k closed_range(1,n)) R {p(k)+t*v(k)})}
+
+prop has_directional_derivative_at(n N+,f fn(x cart_n(R,n)) R,p,v cart_n(R,n),L R):
+    $has_derivative_at(\directional_section<n>(f,p,v),0,L)
+
+prop is_directionally_differentiable_at(n N+,f fn(x cart_n(R,n)) R,p,v cart_n(R,n)):
+    $is_differentiable_at(\directional_section<n>(f,p,v),0)
+
+template<n N+>:
+    have fn directional_derivative_at(f fn(x cart_n(R,n)) R,p,v cart_n(R,n): $is_differentiable_at(\directional_section<n>(f,p,v),0)) R=derivative(\directional_section<n>(f,p,v),0)
+
+thm directional_derivative_unique:
+    ? forall n N+,f fn(x cart_n(R,n)) R,p,v cart_n(R,n),A,B R:
+        $has_directional_derivative_at(n,f,p,v,A)
+        $has_directional_derivative_at(n,f,p,v,B)
+        =>:
+            A=B
+    $has_derivative_at(\directional_section<n>(f,p,v),0,A)
+    $has_derivative_at(\directional_section<n>(f,p,v),0,B)
+    by thm fn_derivative_at_unique(\directional_section<n>(f,p,v),0,A,B)
+
+thm directional_candidate_differentiable:
+    ? forall n N+,f fn(x cart_n(R,n)) R,p,v cart_n(R,n),L R:
+        $has_directional_derivative_at(n,f,p,v,L)
+        =>:
+            $is_differentiable_at(\directional_section<n>(f,p,v),0)
+    $has_derivative_at(\directional_section<n>(f,p,v),0,L)
+    by thm fn_derivative_at_exists(\directional_section<n>(f,p,v),0,L)
+
+thm directional_derivative_value:
+    ? forall n N+,f fn(x cart_n(R,n)) R,p,v cart_n(R,n),L R:
+        $has_directional_derivative_at(n,f,p,v,L)
+        =>:
+            \directional_derivative_at<n>(f,p,v)=L
+    by thm directional_candidate_differentiable(n,f,p,v,L)
+    \directional_derivative_at<n>(f,p,v)=derivative(\directional_section<n>(f,p,v),0)=L
+
+thm directional_candidate_property:
+    ? forall n N+,f fn(x cart_n(R,n)) R,p,v cart_n(R,n),L R:
+        $has_directional_derivative_at(n,f,p,v,L)
+        =>:
+            $is_directionally_differentiable_at(n,f,p,v)
+    by thm directional_candidate_differentiable(n,f,p,v,L)
+    by def $is_directionally_differentiable_at(n,f,p,v)
+
+thm directional_differentiability_native:
+    ? forall n N+,f fn(x cart_n(R,n)) R,p,v cart_n(R,n):
+        $is_directionally_differentiable_at(n,f,p,v)
+        =>:
+            $is_differentiable_at(\directional_section<n>(f,p,v),0)
+
+thm directional_derivative_selected:
+    ? forall n N+,f fn(x cart_n(R,n)) R,p,v cart_n(R,n):
+        $is_differentiable_at(\directional_section<n>(f,p,v),0)
+        =>:
+            $has_directional_derivative_at(n,f,p,v,\directional_derivative_at<n>(f,p,v))
+    by thm fn_derivative_at_selected(\directional_section<n>(f,p,v),0)
+    \directional_derivative_at<n>(f,p,v)=derivative(\directional_section<n>(f,p,v),0)
+    $has_derivative_at(\directional_section<n>(f,p,v),0,\directional_derivative_at<n>(f,p,v))
+    by def $has_directional_derivative_at(n,f,p,v,\directional_derivative_at<n>(f,p,v))
+
+thm directional_section_formula:
+    ? forall n N+,f fn(x cart_n(R,n)) R,p,v cart_n(R,n):
+        \directional_section<n>(f,p,v)=fn(t R) R {f(fn(k closed_range(1,n)) R {p(k)+t*v(k)})}
+
+thm directional_from_gradient:
+    ? forall n N+,f fn(x cart_n(R,n)) R,p,v,g cart_n(R,n):
+        $is_multi_differentiable_at(f,p,n)
+        $has_gradient_at(f,p,n,g)
+        =>:
+            $has_directional_derivative_at(n,f,p,v,inner_product(g,v,n))
+    inner_product(g,v,n) $in R
+    by thm differentiable_gradient_along_line(f,p,v,n,g)
+    by thm directional_section_formula(n,f,p,v)
+    $has_derivative_at(\directional_section<n>(f,p,v),0,inner_product(g,v,n))
+    by def $has_directional_derivative_at(n,f,p,v,inner_product(g,v,n))
+
+thm directional_from_differential:
+    ? forall n N+,f fn(x cart_n(R,n)) R,p,v cart_n(R,n),A matrix(R,1,n):
+        $has_scalar_differential_at(f,p,n,A)
+        =>:
+            $has_directional_derivative_at(n,f,p,v,matrix_apply(A,v,1,n)(1))
+    matrix_apply(A,v,1,n) $in cart_n(R,1)
+    matrix_apply(A,v,1,n)(1) $in R
+    by thm scalar_differential_along_line(f,p,v,n,A)
+    by thm directional_section_formula(n,f,p,v)
+    $has_derivative_at(\directional_section<n>(f,p,v),0,matrix_apply(A,v,1,n)(1))
+    by def $has_directional_derivative_at(n,f,p,v,matrix_apply(A,v,1,n)(1))
+

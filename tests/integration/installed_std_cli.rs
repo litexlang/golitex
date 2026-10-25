@@ -6,14 +6,24 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output, Stdio};
 use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::{Mutex, MutexGuard};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 static NEXT_FIXTURE: AtomicU64 = AtomicU64::new(0);
+static INSTALLATION_LOCK: Mutex<()> = Mutex::new(());
 
-struct Installation(PathBuf);
+struct Installation {
+    root: PathBuf,
+    _guard: MutexGuard<'static, ()>,
+}
 
 impl Installation {
     fn new() -> Self {
+        // A concurrent fork can inherit a copied executable's writable descriptor
+        // until exec. Keep copies and launches exclusive for the fixture's lifetime.
+        let guard = INSTALLATION_LOCK
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
         let unique = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .unwrap()
@@ -34,11 +44,14 @@ impl Installation {
             "[import std]\nbasics\n[export]\nmain = \"./main.lit\"\n",
         )
         .unwrap();
-        Self(root)
+        Self {
+            root,
+            _guard: guard,
+        }
     }
 
     fn install(&self, binary_directory: &str, std_directory: &str) -> PathBuf {
-        let directory = self.0.join(binary_directory);
+        let directory = self.root.join(binary_directory);
         fs::create_dir_all(&directory).unwrap();
         let name = if cfg!(windows) { "litex.exe" } else { "litex" };
         let binary = directory.join(name);
@@ -48,7 +61,7 @@ impl Installation {
     }
 
     fn write_std(&self, directory: &str, version: i32) {
-        let basics = self.0.join(directory).join("basics");
+        let basics = self.root.join(directory).join("basics");
         fs::create_dir_all(&basics).unwrap();
         fs::write(
             basics.join("litex.config"),
@@ -67,7 +80,7 @@ impl Installation {
         command
             .args(["-lang", "en", "-strict"])
             .args(arguments)
-            .current_dir(self.0.join("project"))
+            .current_dir(self.root.join("project"))
             .env_remove("LITEX_STD_PATH");
         if let Some(path) = std {
             command.env("LITEX_STD_PATH", path);
@@ -78,7 +91,7 @@ impl Installation {
 
 impl Drop for Installation {
     fn drop(&mut self) {
-        let _ = fs::remove_dir_all(&self.0);
+        let _ = fs::remove_dir_all(&self.root);
     }
 }
 
@@ -136,13 +149,13 @@ fn explicit_std_override_and_local_project_std_keep_precedence() {
     let installation = Installation::new();
     let executable = installation.install("install", "install/std");
     installation.write_std("override", 2);
-    let override_path = installation.0.join("override");
+    let override_path = installation.root.join("override");
     assert_run(
         &installation.run(&executable, &["-f", "main.lit"], Some(&override_path)),
         false,
     );
     fs::write(
-        installation.0.join("project/main.lit"),
+        installation.root.join("project/main.lit"),
         "basics:::version = 2\n",
     )
     .unwrap();
@@ -150,14 +163,14 @@ fn explicit_std_override_and_local_project_std_keep_precedence() {
         &installation.run(&executable, &["-f", "main.lit"], Some(&override_path)),
         true,
     );
-    let invalid = installation.0.join("absent");
+    let invalid = installation.root.join("absent");
     assert_run(
         &installation.run(&executable, &["-f", "main.lit"], Some(&invalid)),
         false,
     );
     installation.write_std("project/std", 3);
     fs::write(
-        installation.0.join("project/main.lit"),
+        installation.root.join("project/main.lit"),
         "basics:::version = 3\n",
     )
     .unwrap();
@@ -172,7 +185,7 @@ fn bundled_std_does_not_implicitly_import_its_declarations() {
     let installation = Installation::new();
     let executable = installation.install("install", "install/std");
     fs::write(
-        installation.0.join("project/litex.config"),
+        installation.root.join("project/litex.config"),
         "[export]\nmain = \"./main.lit\"\n",
     )
     .unwrap();
@@ -190,7 +203,7 @@ fn repl_and_continued_file_session_can_use_bundled_std() {
         let mut child = Command::new(&executable)
             .args(["-lang", "en", "-strict"])
             .args(arguments)
-            .current_dir(installation.0.join("project"))
+            .current_dir(installation.root.join("project"))
             .env_remove("LITEX_STD_PATH")
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
@@ -223,7 +236,7 @@ fn installed_std_follows_the_real_executable_through_a_symlink() {
     let installation = Installation::new();
     let executable =
         installation.install("cellar/litex/version/bin", "cellar/litex/version/bin/std");
-    let symlink = installation.0.join("litex-link");
+    let symlink = installation.root.join("litex-link");
     std::os::unix::fs::symlink(executable, &symlink).unwrap();
     assert_run(&installation.run(&symlink, &["-f", "main.lit"], None), true);
 }

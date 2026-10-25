@@ -1,0 +1,6 @@
+thm intersection_without_right_subspace:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,U,W power_set(V):
+        $Algebra::vector_space::is_subspace(K,field,V,space,U)
+        =>:
+            $Algebra::vector_space::is_subspace(K,field,V,space,intersect(U,W))
+    by thm Algebra::subspace_sums::intersection_is_subspace(K,field,V,space,U,W) => $Algebra::vector_space::is_subspace(K,field,V,space,intersect(U,W))

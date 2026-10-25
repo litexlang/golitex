@@ -493,3 +493,47 @@ both fixed by T and killed by T, so it is zero. This converse needs neither
 finite dimension nor a selected complement. The public reconstruction law
 uses left/right_projection, both V->V; raw tuple-coordinate ambient typing
 remains a source-local step and is not an imported public contract.
+
+
+## Finite subspace sums and the Grassmann formula
+
+The subspace_sums export uses the existing six-parameter subspace_sum value
+and native intersect. It introduces source theorems, not a new selected sum,
+intersection, complement, dimension, predicate or scalar/vector overload.
+For supplied subspaces U/W of an arbitrary ambient VectorSpace, finite
+inherited dimensions imply finite inherited dimensions of U+W and U∩W.
+Only one summand needs to be finite for its intersection with any subspace
+to be finite. If both finite summands span V, V is finite dimensional.
+
+The construction proceeds forward from finite generators. Concatenation
+spans U+W. Bounded independent-list lengths imply finite dimension, so a
+subspace contained in a finite subspace is finite without assuming finite V.
+For Grassmann, choose a basis of U∩W, extend it to a basis of W, and append
+only the extension tail to a basis of U. Span and coefficient uniqueness
+prove that the new list is a basis of U+W, including empty lists and tails.
+This gives dim(U)+dim(W)=dim(U+W)+dim(U∩W). All bases are proof-local.
+
+The source signatures keep subspace facts for U/W/intersection/sum and the
+four selected-dimension finiteness domains explicit. First establish the
+intersection/sum subspace facts, then release finite_sum_and_intersection.
+Calling a selected dimension without its finite-dimensional evidence is
+outside its domain. sum_dimension_bounds additionally states that dim(U)
+and dim(W) are real numbers: these are numerical typing premises, discharged
+by finite_dimension_numeric_carriers, not additional mathematical finiteness
+assumptions. Generic imported contracts exercise these exact headers.
+
+The representative call order, after the four subspace facts and finite U/W
+have been established, is shown below. The complete binder domains and
+executable use are in examples/algebra/subspace_sums/contracts.lit.
+
+<!-- litex:skip-test -->
+```litex
+release thm Algebra::subspace_sums::finite_sum_and_intersection(K,field,V,space,U,W)
+release thm Algebra::subspace_sums::grassmann_dimension(K,field,V,space,U,W)
+```
+
+Downstream results bound intersection and sum dimensions, and characterize
+dimension additivity by trivial intersection. This supports finite-dimensional
+subspace calculations before choosing coordinates or complements. It does
+not construct external direct sums, choose a complement, represent an
+operator by a matrix or certify Litex-to-Lean support.

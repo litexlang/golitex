@@ -10,7 +10,20 @@ impl LitexToLeanCompiler {
         position: &SourcePosition<'_>,
         index: usize,
     ) -> Result<String, LeanCompileError> {
-        self.compile_statement_in_scope(result, position, index, false)
+        let assumptions = self.closed_assumption_binders(result, position)?;
+        let compiled = self.compile_statement_in_scope(result, position, index, false)?;
+        Ok(if assumptions.is_empty() {
+            compiled
+        } else {
+            format!(
+                "{}\n\n{compiled}",
+                assumptions
+                    .into_iter()
+                    .map(|b| format!("variable {b}"))
+                    .collect::<Vec<_>>()
+                    .join("\n")
+            )
+        })
     }
 
     pub(in crate::compile_to_lean) fn compile_statement_in_scope(

@@ -22,14 +22,14 @@
           <Component Id="StdComp_algebra_coordinate_maps.lit" Guid="*">
             <File Id="StdFile_algebra_coordinate_maps.lit" Source="std\algebra\coordinate_maps.lit" KeyPath="yes" />
           </Component>
-          <Component Id="StdComp_algebra_direct_sum.lit" Guid="*">
-            <File Id="StdFile_algebra_direct_sum.lit" Source="std\algebra\direct_sum.lit" KeyPath="yes" />
-          </Component>
           <Component Id="StdComp_algebra_dependence.lit" Guid="*">
             <File Id="StdFile_algebra_dependence.lit" Source="std\algebra\dependence.lit" KeyPath="yes" />
           </Component>
           <Component Id="StdComp_algebra_dimension.lit" Guid="*">
             <File Id="StdFile_algebra_dimension.lit" Source="std\algebra\dimension.lit" KeyPath="yes" />
+          </Component>
+          <Component Id="StdComp_algebra_direct_sum.lit" Guid="*">
+            <File Id="StdFile_algebra_direct_sum.lit" Source="std\algebra\direct_sum.lit" KeyPath="yes" />
           </Component>
           <Component Id="StdComp_algebra_exchange.lit" Guid="*">
             <File Id="StdFile_algebra_exchange.lit" Source="std\algebra\exchange.lit" KeyPath="yes" />
@@ -63,6 +63,9 @@
           </Component>
           <Component Id="StdComp_algebra_subspace.lit" Guid="*">
             <File Id="StdFile_algebra_subspace.lit" Source="std\algebra\subspace.lit" KeyPath="yes" />
+          </Component>
+          <Component Id="StdComp_algebra_subspace_sums.lit" Guid="*">
+            <File Id="StdFile_algebra_subspace_sums.lit" Source="std\algebra\subspace_sums.lit" KeyPath="yes" />
           </Component>
           <Component Id="StdComp_algebra_vector_space.lit" Guid="*">
             <File Id="StdFile_algebra_vector_space.lit" Source="std\algebra\vector_space.lit" KeyPath="yes" />
@@ -100,6 +103,9 @@
           <Component Id="StdComp_real_multivariable_README.md" Guid="*">
             <File Id="StdFile_real_multivariable_README.md" Source="std\real_multivariable\README.md" KeyPath="yes" />
           </Component>
+          <Component Id="StdComp_real_multivariable_directional.lit" Guid="*">
+            <File Id="StdFile_real_multivariable_directional.lit" Source="std\real_multivariable\directional.lit" KeyPath="yes" />
+          </Component>
           <Component Id="StdComp_real_multivariable_litex.config" Guid="*">
             <File Id="StdFile_real_multivariable_litex.config" Source="std\real_multivariable\litex.config" KeyPath="yes" />
           </Component>
@@ -133,9 +139,9 @@
       <ComponentRef Id="StdComp_algebra_basis_existence.lit" />
       <ComponentRef Id="StdComp_algebra_basis_extension.lit" />
       <ComponentRef Id="StdComp_algebra_coordinate_maps.lit" />
-      <ComponentRef Id="StdComp_algebra_direct_sum.lit" />
       <ComponentRef Id="StdComp_algebra_dependence.lit" />
       <ComponentRef Id="StdComp_algebra_dimension.lit" />
+      <ComponentRef Id="StdComp_algebra_direct_sum.lit" />
       <ComponentRef Id="StdComp_algebra_exchange.lit" />
       <ComponentRef Id="StdComp_algebra_field.lit" />
       <ComponentRef Id="StdComp_algebra_finite_decomposition.lit" />
@@ -147,6 +153,7 @@
       <ComponentRef Id="StdComp_algebra_math_collections.md" />
       <ComponentRef Id="StdComp_algebra_span_reduction.lit" />
       <ComponentRef Id="StdComp_algebra_subspace.lit" />
+      <ComponentRef Id="StdComp_algebra_subspace_sums.lit" />
       <ComponentRef Id="StdComp_algebra_vector_space.lit" />
       <ComponentRef Id="StdComp_basics_README.md" />
       <ComponentRef Id="StdComp_basics_litex.config" />
@@ -157,6 +164,7 @@
       <ComponentRef Id="StdComp_matrix_main.lit" />
       <ComponentRef Id="StdComp_matrix_math_collections.md" />
       <ComponentRef Id="StdComp_real_multivariable_README.md" />
+      <ComponentRef Id="StdComp_real_multivariable_directional.lit" />
       <ComponentRef Id="StdComp_real_multivariable_litex.config" />
       <ComponentRef Id="StdComp_real_multivariable_main.lit" />
       <ComponentRef Id="StdComp_real_series_README.md" />

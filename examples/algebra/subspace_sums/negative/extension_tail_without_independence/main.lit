@@ -1,0 +1,14 @@
+thm extension_tail_without_independence:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,U,W power_set(V),k,m,n N,prefix finite_seq(V,k),u finite_seq(V,m),tail finite_seq(V,n):
+        $Algebra::vector_space::is_subspace(K,field,V,space,U)
+        $Algebra::vector_space::is_subspace(K,field,V,space,W)
+        \Algebra::finite_span::span<K,field,V,space,k,prefix> =intersect(U,W)
+        \Algebra::finite_span::span<K,field,V,space,m,u> =U
+        $Algebra::basis::is_linearly_independent(K,field,V,space,m,u)
+        forall j N+:
+            j<=n
+            =>:
+                tail(j) $in W
+        =>:
+            $Algebra::basis::is_linearly_independent(K,field,V,space,m+n,\Algebra::finite_decomposition::concatenate_lists<V,m,n,u,tail>)
+    by thm Algebra::subspace_sums::intersection_extension_tail_is_independent(K,field,V,space,U,W,k,m,n,prefix,u,tail) => $Algebra::basis::is_linearly_independent(K,field,V,space,m+n,\Algebra::finite_decomposition::concatenate_lists<V,m,n,u,tail>)

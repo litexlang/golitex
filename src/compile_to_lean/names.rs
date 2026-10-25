@@ -44,6 +44,10 @@ impl LitexToLeanCompiler {
         }
         fn statement(result: &ExecStmtResult, out: &mut Vec<IdentifierId>) {
             match result {
+                ExecStmtResult::Definition(ExecDefinitionStmtResult::DefTemplate(crate::execute::ExecDefTemplateStmtResult::Success(p))) => {
+                    out.extend(p.statement.template_arg_def.ordered_param_ids());
+                    statement(&p.body, out);
+                }
                 ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(ExecDefineObjStmtResult::HaveByReplacementAxiom(
                     crate::execute::ExecHaveByReplacementAxiomStmtResult::Success(p)))) => {
                     for store in [&p.introduction, &p.elimination] {
@@ -53,6 +57,9 @@ impl LitexToLeanCompiler {
 
                 ExecStmtResult::Trust(_) | ExecStmtResult::Definition(ExecDefinitionStmtResult::Axiom(_)) => {
                     for (fact, _, _) in super::compile_assumption_stmt_result::assumption_stages(result) { parameters(&fact, out); }
+                    if let Some((groups, _)) = super::source_position::context_parameter_parts(result) {
+                        out.extend(groups.iter().flat_map(|g| g.params.iter().map(|p| p.id)));
+                    }
                 }
                 ExecStmtResult::Definition(ExecDefinitionStmtResult::DefStruct(crate::execute::ExecDefStructStmtResult::Success(p))) => {
                     out.extend(p.statement.fields.iter().map(|field| field.binding.id));
@@ -236,9 +243,9 @@ impl LitexToLeanCompiler {
             })
             .collect::<Vec<_>>();
         for (run, index, statement, before) in position.context_statements() {
-            if let Some(proof) = super::source_position::ordinary_have(statement) {
+            if super::source_position::context_parameter_parts(statement).is_some() {
                 let mut parameters = Vec::new();
-                super::source_position::append_have_parameters(proof, before, &mut parameters);
+                super::source_position::append_have_parameters(statement, before, &mut parameters);
                 for (parameter, set, fact_id) in parameters {
                     let id = parameter.id.value();
                     let fact_id = fact_id.value();
@@ -255,6 +262,7 @@ impl LitexToLeanCompiler {
             let prior =
                 SourcePosition::new(None, super::source_position::SourceOwner::Run(run), index);
             binders.extend(self.assumption_binders(statement, before, &prior)?);
+            binders.extend(self.closed_assumption_binders(statement, &prior)?);
         }
         Ok(if binders.is_empty() {
             String::new()
@@ -313,6 +321,7 @@ impl LitexToLeanCompiler {
             text.split(|character: char| !character.is_ascii_alphanumeric() && character != '_')
                 .filter(|token| {
                     token.starts_with("h_")
+                        || token.starts_with("_value_i")
                         || token.starts_with("_object_i")
                         || token.starts_with("_object_w")
                         || token.starts_with("_object_h")
@@ -744,6 +753,11 @@ impl LitexToLeanCompiler {
         object: &Obj,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
+        if let Obj::InstantiatedTemplateObj(instance) = object {
+            if let Some(term) = self.template_self_reference(instance, position)? {
+                return Ok(term);
+            }
+        }
         if let Some(number) = position.enumeration_literal(object) {
             return Ok(format!(
                 "(Litex.number (M := M) {})",

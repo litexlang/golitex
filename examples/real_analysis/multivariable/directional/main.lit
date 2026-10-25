@@ -1,0 +1,43 @@
+# D_v f(p): full real coordinate space, direction supplied without normalization.
+# Run: target/release/litex -strict -lang en -f examples/real_analysis/multivariable/directional/main.lit
+# Previously unavailable native bridge (no registered schema before M4b):
+# by thm differentiable_gradient_along_line(bowl,(1,2),(3,-1),2,(2,4))
+# The source theorem below wraps that native bridge with the directional prop.
+# Boundary: selecting before a candidate/existence proof is rejected (Rust/CLI controls).
+
+have fn bowl(x cart_n(R,2)) R=x(1)^2+x(2)^2
+
+$has_gradient_at(bowl,(1,2),2,(2,4))
+
+$is_multi_differentiable_at(bowl,(1,2),2)
+
+by thm vectors::directional::directional_from_gradient(2,bowl,(1,2),(3,-1),(2,4))
+
+inner_product((2,4),(3,-1),2)=2
+
+$vectors::directional::has_directional_derivative_at(2,bowl,(1,2),(3,-1),2)
+
+by thm vectors::directional::directional_candidate_differentiable(2,bowl,(1,2),(3,-1),2)
+
+by thm vectors::directional::directional_derivative_value(2,bowl,(1,2),(3,-1),2)
+
+\vectors::directional::directional_derivative_at<2>(bowl,(1,2),(3,-1))=2
+
+by thm vectors::directional::directional_from_gradient(2,bowl,(1,2),(0,0),(2,4))
+
+inner_product((2,4),(0,0),2)=0
+
+$vectors::directional::has_directional_derivative_at(2,bowl,(1,2),(0,0),0)
+
+by thm vectors::directional::directional_from_gradient(2,bowl,(1,2),(6,-2),(2,4))
+
+inner_product((2,4),(6,-2),2)=4
+
+$vectors::directional::has_directional_derivative_at(2,bowl,(1,2),(6,-2),4)
+
+# The full differential gives the same directional construction.
+have fn row_derivative(row closed_range(1,1),col closed_range(1,2)) R=(2,4)(col)
+$has_scalar_differential_at(bowl,(1,2),2,row_derivative)
+by thm vectors::directional::directional_from_differential(2,bowl,(1,2),(1,1),row_derivative)
+matrix_apply(row_derivative,(1,1),1,2)(1)=6
+$vectors::directional::has_directional_derivative_at(2,bowl,(1,2),(1,1),6)

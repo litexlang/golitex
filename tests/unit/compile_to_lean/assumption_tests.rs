@@ -113,9 +113,11 @@ fn zorn_replays_the_original_poset_obligations() {
 }
 
 #[test]
-fn local_trust_is_not_silently_hoisted() {
+fn local_trust_requires_an_explicit_closed_assumption() {
     let (run, compiler) = execute("claim:\n    ? 1 = 2\n    trust 1 = 2\n");
-    assert!(compiler.compile_run(&run, "unclosed_assumption").is_err());
+    let lean = compiler.compile_run(&run, "closed_assumption").unwrap();
+    assert!(lean.contains("variable (h_"));
+    assert!(!lean.contains("axiom ") && !lean.contains("sorry"));
 }
 
 fn choice_release_mut(
@@ -203,4 +205,168 @@ fn zorn_rejects_reordered_poset_obligations() {
             .route,
         "Zorn/ObligationSubject"
     );
+}
+
+#[test]
+fn trust_have_replays_nonzero_guard_and_parameter_inferences() {
+    let (run, compiler) = execute("trust have denominator R:\n    denominator != 0\n1 / denominator = 1 / denominator\ndenominator $in C\n");
+    let lean = compiler.compile_run(&run, "assumed_denominator").unwrap();
+    assert!(lean.contains("variable {_Host_i"));
+    assert!(lean.contains("Litex.div"));
+    assert!(!lean.contains("axiom ") && !lean.contains("sorry"));
+    assert_eq!(
+        lean,
+        compiler.compile_run(&run, "assumed_denominator").unwrap()
+    );
+}
+
+#[test]
+fn trust_have_can_introduce_dependent_set_members() {
+    let (run, compiler) = execute("trust have A set, a A\na $in A\n$is_set(a)\n");
+    compiler.compile_run(&run, "assumed_member").unwrap();
+}
+
+#[test]
+fn trust_have_requires_parameter_and_body_evidence() {
+    let (mut run, compiler) = execute("trust have a R:\n    a > 0\na >= 0\n");
+    let ExecStmtResult::Trust(crate::execute::ExecTrustBoundaryStmtResult::TrustHaveStmt(
+        crate::execute::ExecTrustHaveStmtResult::Success(p),
+    )) = &mut run.statement_results[0]
+    else {
+        panic!()
+    };
+    p.param_type_well_defined.clear();
+    assert!(compiler.compile_run(&run, "missing_parameter_wd").is_err());
+}
+
+#[test]
+fn local_trust_closes_real_parameter_and_is_citable_later() {
+    let (run, compiler) =
+        execute("claim:\n    ? forall x R:\n        x >= 0\n    trust x > 0\n0 >= 0\n");
+    let lean = compiler.compile_run(&run, "closed_positive").unwrap();
+    assert!(lean.contains("variable (h_") && lean.contains("(∀"));
+}
+
+#[test]
+fn template_alias_replays_body_and_definition_publication() {
+    let (run, compiler) = super::execute(
+        r"template<S set>:
+    have carrier_copy set = S
+\carrier_copy<R> = R
+",
+    );
+    let lean = compiler.compile_run(&run, "carrier_copy").unwrap();
+    assert!(lean.contains("noncomputable def _template_i"));
+    assert!(!lean.contains("axiom ") && !lean.contains("sorry"));
+}
+
+#[test]
+fn template_alias_replays_argument_and_nonzero_checks() {
+    let (run, compiler) = super::execute(
+        r"template<x R, y R: y != 0,>:
+    have quotient R = x / y
+\quotient<6, 2> = 3
+",
+    );
+    compiler.compile_run(&run, "guarded_quotient").unwrap();
+}
+
+#[test]
+fn template_alias_requires_the_original_publication_link() {
+    let (mut run, compiler) = super::execute(
+        r"template<S set>:
+    have carrier_copy set = S
+\carrier_copy<R> = R
+",
+    );
+    let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefTemplate(
+        crate::execute::ExecDefTemplateStmtResult::Success(p),
+    )) = &mut run.statement_results[0]
+    else {
+        panic!()
+    };
+    p.definition_facts[0].source_fact_id = FactId::new(999_999);
+    assert!(compiler
+        .compile_run(&run, "missing_template_source")
+        .is_err());
+}
+
+#[test]
+fn local_assumption_rejects_an_uncaptured_witness_closure() {
+    let (run, compiler) = execute("sketch:\n    have x R\n    trust x > 0\n");
+    assert!(compiler.compile_run(&run, "local_witness").is_err());
+}
+
+#[test]
+fn local_assumption_rejects_missing_original_body_wd() {
+    let (mut run, compiler) = execute("claim:\n    ? 1 = 2\n    trust 1 = 2\n");
+    let ExecStmtResult::ProofBlock(
+        crate::execute::execute_proof_block_stmt::ExecProofBlockStmtResult::Claim(
+            crate::execute::execute_proof_block_stmt::ExecClaimStmtResult::Success(p),
+        ),
+    ) = &mut run.statement_results[0]
+    else {
+        panic!()
+    };
+    let crate::execute::execute_proof_block_stmt::ExecClaimBodyProof::NonForall(b) = &mut p.body
+    else {
+        panic!()
+    };
+    let ExecStmtResult::Trust(crate::execute::ExecTrustBoundaryStmtResult::TrustStmt(
+        crate::execute::ExecTrustStmtResult::Success(p),
+    )) = &mut b.proof_steps[0]
+    else {
+        panic!()
+    };
+    p.facts_well_defined.clear();
+    assert!(compiler.compile_run(&run, "missing_local_wd").is_err());
+}
+
+#[test]
+fn template_instance_rejects_missing_nonzero_obligation() {
+    let (mut run, compiler) = super::execute(include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/lean/examples/template_guarded_quotient/statement.lit"
+    )));
+    let ExecStmtResult::Fact(ExecFactStmtResult::Success(fact)) = &mut run.statement_results[1]
+    else {
+        panic!()
+    };
+    let VerifyFactResult::Equality(result) = &mut fact.verify_result else {
+        panic!()
+    };
+    let VerifyEqualityResult::Success(p) = result.as_mut() else {
+        panic!()
+    };
+    let ObjWellDefinedProof::ByDef {
+        proof: ObjWellDefinedProofByDef::InstantiatedTemplateObj(p),
+        ..
+    } = &mut p.well_defined_proof.left
+    else {
+        panic!()
+    };
+    p.requirement_fact_verified.pop();
+    assert!(compiler
+        .compile_run(&run, "missing_template_guard")
+        .is_err());
+}
+
+#[test]
+fn template_function_body_remains_an_explicit_boundary() {
+    let (run, compiler) = super::execute("template<S set>:\n    have fn f(x R) R = x\n");
+    assert_eq!(
+        compiler
+            .compile_run(&run, "template_function")
+            .unwrap_err()
+            .route,
+        "Template/Body"
+    );
+}
+
+#[test]
+fn local_quantified_trust_remains_an_explicit_boundary() {
+    let (run, compiler) = execute("claim:\n    ? forall x R:\n        x = 0\n    trust:\n        forall y R:\n            y = 0\n");
+    assert!(compiler
+        .compile_run(&run, "local_quantified_trust")
+        .is_err());
 }

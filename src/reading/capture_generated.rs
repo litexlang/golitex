@@ -3544,7 +3544,7 @@ let output = match value {
 crate::execute::ExecDefTemplateStmtSuccessResult { statement: f0, introduced_params: f1, assumed_dom_facts: f2, body: f3, local_env: f4, definition_facts: f5 } => {
 let saved_scope = capture.enter_scope();
 capture.index_environment(f4, runtime);
-let fields = vec![("statement", { capture.source_snapshot_depth += 1; let value = capture_ast__stmt__DefTemplateStmt(f0, capture, runtime); capture.source_snapshot_depth -= 1; value }), ("introduced_params", capture_execute__introduce_typed_parameters__IntroduceTypedParametersResult(f1, capture, runtime)), ("assumed_dom_facts", JsonValue::Array((f2).iter().map(|item| capture_execute__execute_def_template_stmt__exec_def_template_stmt__AssumedTemplateDomFactResult(item, capture, runtime)).collect())), ("body", capture_execute__execute_def_template_stmt__exec_def_template_stmt__ExecTemplateDefBodyResult(f3, capture, runtime)), ("local_env", capture.environment(f4, runtime)), ("definition_facts", JsonValue::Array((f5).iter().map(|item| capture_execute__execute_def_template_stmt__store_template_definition_facts__StoreTemplateDefinitionFactResult(item, capture, runtime)).collect()))];
+let fields = vec![("statement", { capture.source_snapshot_depth += 1; let value = capture_ast__stmt__DefTemplateStmt(f0, capture, runtime); capture.source_snapshot_depth -= 1; value }), ("introduced_params", capture_execute__introduce_typed_parameters__IntroduceTypedParametersResult(f1, capture, runtime)), ("assumed_dom_facts", JsonValue::Array((f2).iter().map(|item| capture_execute__execute_fact_stmt__verify_forall_fact__result__AssumeDomFactResult(item, capture, runtime)).collect())), ("body", capture_execute__exec_stmt_result__ExecStmtResult(f3, capture, runtime)), ("local_env", capture.environment(f4, runtime)), ("definition_facts", JsonValue::Array((f5).iter().map(|item| capture_execute__execute_def_template_stmt__store_template_definition_facts__StoreTemplateDefinitionFactResult(item, capture, runtime)).collect()))];
 let mut output = node("ExecDefTemplateStmtSuccessResult", "", fields);
 capture.leave_scope(saved_scope);
 output
@@ -7806,78 +7806,6 @@ output
 capture.intern_evidence(output)
 }
 
-pub(super) fn capture_execute__execute_def_template_stmt__exec_def_template_stmt__AssumedTemplateDomFactResult(value: &crate::execute::AssumedTemplateDomFactResult, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::AssumedTemplateDomFactResult { well_defined: f0, store_and_infer: f1 } => {
-let fields = vec![("well_defined", capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FactWellDefinedProof(f0, capture, runtime)), ("store_and_infer", capture_store_fact_and_infer__store_fact_and_infer_result__store_and_infer_result__StoreFactAndInferResult(f1, capture, runtime))];
-let mut output = node("AssumedTemplateDomFactResult", "", fields);
-output
-},
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_def_template_stmt__exec_def_template_stmt__ExecTemplateDefBodyResult(value: &crate::execute::ExecTemplateDefBodyResult, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::ExecTemplateDefBodyResult::HaveObjInNonemptySet(f0) => {
-let fields = vec![("0", capture_execute__execute_have_obj_in_nonempty_set_stmt__ExecHaveObjInNonemptySetStmtSuccessResult(f0, capture, runtime))];
-let mut output = node("ExecTemplateDefBodyResult", "HaveObjInNonemptySet", fields);
-output
-},
-crate::execute::ExecTemplateDefBodyResult::HaveObjEqual(f0) => {
-let fields = vec![("0", capture_execute__execute_have_obj_equal_stmt__ExecHaveObjEqualStmtSuccessResult(f0, capture, runtime))];
-let mut output = node("ExecTemplateDefBodyResult", "HaveObjEqual", fields);
-output
-},
-crate::execute::ExecTemplateDefBodyResult::HaveObjByExistFacts(f0) => {
-let fields = vec![("0", capture_execute__execute_have_obj_by_exist_facts_stmt__ExecHaveObjByExistFactsStmtSuccessResult(f0, capture, runtime))];
-let mut output = node("ExecTemplateDefBodyResult", "HaveObjByExistFacts", fields);
-output
-},
-crate::execute::ExecTemplateDefBodyResult::HaveByReplacementAxiom(f0) => {
-let fields = vec![("0", capture_execute__execute_have_by_replacement_axiom_stmt__ExecHaveByReplacementAxiomStmtSuccessResult(f0, capture, runtime))];
-let mut output = node("ExecTemplateDefBodyResult", "HaveByReplacementAxiom", fields);
-output
-},
-crate::execute::ExecTemplateDefBodyResult::ObtainObjFromExistFact(f0) => {
-let fields = vec![("0", capture_execute__execute_obtain_obj_from_exist_fact_stmt__ExecObtainObjFromExistFactStmtSuccessResult(f0, capture, runtime))];
-let mut output = node("ExecTemplateDefBodyResult", "ObtainObjFromExistFact", fields);
-output
-},
-crate::execute::ExecTemplateDefBodyResult::ObtainObjFromAtomicFact(f0) => {
-let fields = vec![("0", capture_execute__execute_obtain_obj_from_atomic_fact_stmt__ExecObtainObjFromAtomicFactStmtSuccessResult(f0, capture, runtime))];
-let mut output = node("ExecTemplateDefBodyResult", "ObtainObjFromAtomicFact", fields);
-output
-},
-crate::execute::ExecTemplateDefBodyResult::HaveFnEqual(f0) => {
-let fields = vec![("0", capture_execute__execute_have_fn_equal_stmt__ExecHaveFnEqualStmtSuccessResult(f0, capture, runtime))];
-let mut output = node("ExecTemplateDefBodyResult", "HaveFnEqual", fields);
-output
-},
-crate::execute::ExecTemplateDefBodyResult::HaveFnEqualCaseByCase(f0) => {
-let fields = vec![("0", capture_execute__execute_have_fn_equal_case_by_case_stmt__ExecHaveFnEqualCaseByCaseStmtSuccessResult(f0, capture, runtime))];
-let mut output = node("ExecTemplateDefBodyResult", "HaveFnEqualCaseByCase", fields);
-output
-},
-crate::execute::ExecTemplateDefBodyResult::HaveFnByForallExistUnique(f0) => {
-let fields = vec![("0", capture_execute__execute_have_fn_by_forall_exist_unique_stmt__ExecHaveFnByForallExistUniqueStmtSuccessResult(f0, capture, runtime))];
-let mut output = node("ExecTemplateDefBodyResult", "HaveFnByForallExistUnique", fields);
-output
-},
-crate::execute::ExecTemplateDefBodyResult::HaveFnByInduc(f0) => {
-let fields = vec![("0", capture_execute__execute_have_fn_by_induc_stmt__ExecHaveFnByInducStmtSuccessResult(f0, capture, runtime))];
-let mut output = node("ExecTemplateDefBodyResult", "HaveFnByInduc", fields);
-output
-},
-crate::execute::ExecTemplateDefBodyResult::TrustHave(f0) => {
-let fields = vec![("0", capture_execute__execute_unsafe_stmt__exec_trust_have_stmt__ExecTrustHaveStmtSuccessResult(f0, capture, runtime))];
-let mut output = node("ExecTemplateDefBodyResult", "TrustHave", fields);
-output
-},
-};
-capture.intern_evidence(output)
-}
-
 pub(super) fn capture_execute__execute_def_template_stmt__store_template_definition_facts__StoreTemplateDefinitionFactResult(value: &crate::execute::execute_def_template_stmt::StoreTemplateDefinitionFactResult, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_def_template_stmt::StoreTemplateDefinitionFactResult { source_fact_id: f0, store_and_infer: f1 } => {
@@ -8441,6 +8369,20 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_builtin_theorem__BuiltinTheoremId(value: &crate::builtin_theorem::BuiltinTheoremId, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
+crate::builtin_theorem::BuiltinTheoremId::ScalarDifferentialAlongLine => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::ScalarDifferentialAlongLine");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "ScalarDifferentialAlongLine", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "ScalarDifferentialAlongLine", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::DifferentiableGradientAlongLine => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::DifferentiableGradientAlongLine");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "DifferentiableGradientAlongLine", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "DifferentiableGradientAlongLine", ""); }
+output
+},
 crate::builtin_theorem::BuiltinTheoremId::MultiContinuousAtCompose => {
 let rule_id = Some("builtin_theorem.BuiltinTheoremId::MultiContinuousAtCompose");
 let fields = vec![];

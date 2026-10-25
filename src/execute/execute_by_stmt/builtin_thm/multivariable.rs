@@ -168,6 +168,79 @@ fn same_domain(
     req.extend(more);
     Ok(true)
 }
+// D_v f(p) = Df(p)v; the gradient formula additionally requires total differentiability.
+// v is used as supplied, including zero, without unit normalization.
+fn directional_line(
+    rt: &mut Runtime,
+    id: BuiltinTheoremId,
+    args: &[Obj],
+) -> RuntimeResult<Result<(Vec<Fact>, Vec<Fact>), String>> {
+    let f = &args[0];
+    let p = &args[1];
+    let v = &args[2];
+    let n = &args[3];
+    let a = &args[4];
+    let from_gradient = id == BuiltinTheoremId::DifferentiableGradientAlongLine;
+    let premise = relation(
+        if from_gradient {
+            "has_gradient_at"
+        } else {
+            "has_scalar_differential_at"
+        },
+        &[f.clone(), p.clone(), n.clone(), a.clone()],
+    );
+    let Some((domain, mut req)) = context(rt, &premise)? else {
+        return Ok(Err(
+            "requires a complete real scalar function with exact coordinate dimension".into(),
+        ));
+    };
+    if !domain.signature.dom_facts.is_empty() {
+        return Ok(Err(
+            "along-line theorems currently require the full guard-free coordinate space".into(),
+        ));
+    }
+    req.push(member(rt, v.clone(), vector(n.clone())));
+    req.push(relation_fact(rt, premise));
+    if from_gradient {
+        req.push(relation_fact(
+            rt,
+            relation(
+                "is_multi_differentiable_at",
+                &[f.clone(), p.clone(), n.clone()],
+            ),
+        ));
+    }
+    let t = rt.fresh_internal_param();
+    let k = rt.fresh_internal_param();
+    let ik = identifier(&k);
+    let path = anonymous(
+        vec![(k, indices(n.clone()))],
+        real(),
+        add_objs(
+            apply(p, vec![ik.clone()]),
+            mul_objs(identifier(&t), apply(v, vec![ik])),
+        ),
+    );
+    let section = anonymous(vec![(t, real())], real(), apply(f, vec![path]));
+    let value = if from_gradient {
+        Obj::MatrixOperator(MatrixOperator::InnerProduct(FiniteInnerProduct {
+            left: Box::new(a.clone()),
+            right: Box::new(v.clone()),
+            dimension: Box::new(n.clone()),
+        }))
+    } else {
+        let product = Obj::MatrixOperator(MatrixOperator::Apply(MatrixApply {
+            matrix: Box::new(a.clone()),
+            vector: Box::new(v.clone()),
+            rows: Box::new(number(1)),
+            cols: Box::new(n.clone()),
+        }));
+        apply(&product, vec![number(1)])
+    };
+    let conclusion = rt.derivative_candidate(section, number(0), value).into();
+    Ok(Ok((req, vec![conclusion])))
+}
+
 fn function_equation(
     rt: &mut Runtime,
     output: &Obj,
@@ -230,6 +303,12 @@ pub(super) fn prepare(
     args: &[Obj],
 ) -> RuntimeResult<Result<(Vec<Fact>, Vec<Fact>), String>> {
     use BuiltinTheoremId::*;
+    if matches!(
+        id,
+        ScalarDifferentialAlongLine | DifferentiableGradientAlongLine
+    ) {
+        return directional_line(rt, id, args);
+    }
     if matches!(
         id,
         MultiContinuousAtCompose

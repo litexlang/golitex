@@ -24892,6 +24892,13 @@
     "labels": {}
   },
   {
+    "id": "builtin_theorem.BuiltinTheoremId::DifferentiableGradientAlongLine",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "DifferentiableGradientAlongLine",
+    "labels": {}
+  },
+  {
     "id": "builtin_theorem.BuiltinTheoremId::DivergenceAtExists",
     "category": "builtin_theorem",
     "family": "BuiltinTheoremId",
@@ -27619,6 +27626,13 @@
     "category": "builtin_theorem",
     "family": "BuiltinTheoremId",
     "variant": "RiemannIntegralZero",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::ScalarDifferentialAlongLine",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "ScalarDifferentialAlongLine",
     "labels": {}
   },
   {

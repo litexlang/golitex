@@ -2425,9 +2425,7 @@ fn template_have_fn_by_induc_object_definition_unfold() {
 
 #[test]
 fn template_have_fn_by_exist_wires_body() {
-    use crate::execute::execute_def_template_stmt::{
-        ExecDefTemplateStmtResult, ExecTemplateDefBodyResult,
-    };
+    use crate::execute::execute_def_template_stmt::ExecDefTemplateStmtResult;
     use crate::execute::ExecDefinitionStmtResult;
     use crate::execute::ExecStmtResult;
 
@@ -2451,8 +2449,10 @@ fn template_have_fn_by_exist_wires_body() {
         )) => {
             assert!(
                 matches!(
-                    ok.body,
-                    ExecTemplateDefBodyResult::HaveFnByForallExistUnique(_)
+                    ok.body.as_ref(),
+                    ExecStmtResult::Definition(
+                        ExecDefinitionStmtResult::HaveFnByForallExistUnique(_)
+                    )
                 ),
                 "template body must be HaveFnByForallExistUnique"
             );

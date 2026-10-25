@@ -44,8 +44,10 @@ impl LitexToLeanCompiler {
             ExecDefinitionStmtResult::DefStruct(result) => {
                 self.compile_struct_statement(result, position, index, local)
             }
-            ExecDefinitionStmtResult::DefTemplate(_)
-            | ExecDefinitionStmtResult::DefAlgoByCases(_)
+            ExecDefinitionStmtResult::DefTemplate(result) => {
+                self.compile_template_statement(result, position, local)
+            }
+            ExecDefinitionStmtResult::DefAlgoByCases(_)
             | ExecDefinitionStmtResult::DefAlgoByInduc(_)
             | ExecDefinitionStmtResult::Axiom(_)
             | ExecDefinitionStmtResult::DefStrategy(_) => {

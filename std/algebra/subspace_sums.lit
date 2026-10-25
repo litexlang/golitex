@@ -1,0 +1,679 @@
+# Finite subspace sums, intersections and Grassmann dimension.
+# The ambient space need not be finite dimensional.
+
+thm intersection_is_subspace:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,U,W power_set(V):
+        $vector_space::is_subspace(K,field,V,space,U)
+        $vector_space::is_subspace(K,field,V,space,W)
+        =>:
+            $vector_space::is_subspace(K,field,V,space,intersect(U,W))
+    space.zero $in intersect(U,W)
+    claim:
+        ? forall x,y V:
+            x $in intersect(U,W)
+            y $in intersect(U,W)
+            =>:
+                space.add(x,y) $in intersect(U,W)
+        x $in U
+        x $in W
+        y $in U
+        y $in W
+        space.add(x,y) $in U
+        space.add(x,y) $in W
+    claim:
+        ? forall a K,x V:
+            x $in intersect(U,W)
+            =>:
+                space.smul(a,x) $in intersect(U,W)
+        x $in U
+        x $in W
+        space.smul(a,x) $in U
+        space.smul(a,x) $in W
+    by def $vector_space::is_subspace(K,field,V,space,intersect(U,W))
+
+thm concatenation_in_ambient:
+    ? forall U,V nonempty_set,m,n N,left finite_seq(U,m),right finite_seq(U,n):
+        left $in finite_seq(V,m)
+        right $in finite_seq(V,n)
+        =>:
+            \finite_decomposition::concatenate_lists<U,m,n,left,right> = \finite_decomposition::concatenate_lists<V,m,n,left,right>
+    by fn_extension:
+        ? \finite_decomposition::concatenate_lists<U,m,n,left,right> = \finite_decomposition::concatenate_lists<V,m,n,left,right>
+        claim:
+            ? forall j closed_range(1,m+n):
+                \finite_decomposition::concatenate_lists<U,m,n,left,right>(j)=\finite_decomposition::concatenate_lists<V,m,n,left,right>(j)
+            j $in N+
+            j<=m+n
+            by cases:
+                ? \finite_decomposition::concatenate_lists<U,m,n,left,right>(j)=\finite_decomposition::concatenate_lists<V,m,n,left,right>(j)
+                case j<=m:
+                    j $in closed_range(1,m)
+                    \finite_decomposition::concatenate_lists<U,m,n,left,right>(j)=left(j)
+                    \finite_decomposition::concatenate_lists<V,m,n,left,right>(j)=left(j)
+                case j>m:
+                    j $in Z
+                    j-m $in Z
+                    j-m>0
+                    j-m>=1
+                    j-m<=(m+n)-m=n
+                    j-m $in closed_range(1,n)
+                    \finite_decomposition::concatenate_lists<U,m,n,left,right>(j)=right(j-m)
+                    \finite_decomposition::concatenate_lists<V,m,n,left,right>(j)=right(j-m)
+
+thm concatenation_span_contains_parts:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,m,n N,left finite_seq(V,m),right finite_seq(V,n):
+        \finite_span::span<K,field,V,space,m,left> $subset \finite_span::span<K,field,V,space,m+n,\finite_decomposition::concatenate_lists<V,m,n,left,right>>
+        \finite_span::span<K,field,V,space,n,right> $subset \finite_span::span<K,field,V,space,m+n,\finite_decomposition::concatenate_lists<V,m,n,left,right>>
+    claim:
+        ? forall j N+:
+            j<=m
+            =>:
+                left(j) $in \finite_span::span<K,field,V,space,m+n,\finite_decomposition::concatenate_lists<V,m,n,left,right>>
+        j $in closed_range(1,m)
+        j $in Z
+        1<=j<=m<=m+n
+        j<=m+n
+        j $in closed_range(1,m+n)
+        \finite_decomposition::concatenate_lists<V,m,n,left,right>(j)=left(j)
+        by thm span_reduction::span_contains_generator(K,field,V,space,m+n,\finite_decomposition::concatenate_lists<V,m,n,left,right>,j) => \finite_decomposition::concatenate_lists<V,m,n,left,right>(j) $in \finite_span::span<K,field,V,space,m+n,\finite_decomposition::concatenate_lists<V,m,n,left,right>>
+    by thm span_reduction::span_inclusion_from_generators(K,field,V,space,m,left,m+n,\finite_decomposition::concatenate_lists<V,m,n,left,right>) => \finite_span::span<K,field,V,space,m,left> $subset \finite_span::span<K,field,V,space,m+n,\finite_decomposition::concatenate_lists<V,m,n,left,right>>
+    claim:
+        ? forall j N+:
+            j<=n
+            =>:
+                right(j) $in \finite_span::span<K,field,V,space,m+n,\finite_decomposition::concatenate_lists<V,m,n,left,right>>
+        j $in closed_range(1,n)
+        j $in Z
+        m+j $in Z
+        1<=j<=n
+        1<=m+j<=m+n
+        m+j $in closed_range(1,m+n)
+        m+j>m
+        (m+j)-m=j
+        \finite_decomposition::concatenate_lists<V,m,n,left,right>(m+j)=right((m+j)-m)=right(j)
+        by thm span_reduction::span_contains_generator(K,field,V,space,m+n,\finite_decomposition::concatenate_lists<V,m,n,left,right>,m+j) => \finite_decomposition::concatenate_lists<V,m,n,left,right>(m+j) $in \finite_span::span<K,field,V,space,m+n,\finite_decomposition::concatenate_lists<V,m,n,left,right>>
+    by thm span_reduction::span_inclusion_from_generators(K,field,V,space,n,right,m+n,\finite_decomposition::concatenate_lists<V,m,n,left,right>) => \finite_span::span<K,field,V,space,n,right> $subset \finite_span::span<K,field,V,space,m+n,\finite_decomposition::concatenate_lists<V,m,n,left,right>>
+
+thm generators_span_subspace_sum:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,U,W power_set(V),m,n N,left finite_seq(V,m),right finite_seq(V,n):
+        $vector_space::is_subspace(K,field,V,space,U)
+        $vector_space::is_subspace(K,field,V,space,W)
+        \finite_span::span<K,field,V,space,m,left> =U
+        \finite_span::span<K,field,V,space,n,right> =W
+        =>:
+            \finite_span::span<K,field,V,space,m+n,\finite_decomposition::concatenate_lists<V,m,n,left,right>> =\direct_sum::subspace_sum<K,field,V,space,U,W>
+    release thm concatenation_span_contains_parts(K,field,V,space,m,n,left,right)
+    by thm finite_span::span_is_subspace(K,field,V,space,m+n,\finite_decomposition::concatenate_lists<V,m,n,left,right>) => $vector_space::is_subspace(K,field,V,space,\finite_span::span<K,field,V,space,m+n,\finite_decomposition::concatenate_lists<V,m,n,left,right>>)
+    U $subset \finite_span::span<K,field,V,space,m+n,\finite_decomposition::concatenate_lists<V,m,n,left,right>>
+    W $subset \finite_span::span<K,field,V,space,m+n,\finite_decomposition::concatenate_lists<V,m,n,left,right>>
+    by thm direct_sum::subspace_sum_is_least(K,field,V,space,U,W,\finite_span::span<K,field,V,space,m+n,\finite_decomposition::concatenate_lists<V,m,n,left,right>>) => \direct_sum::subspace_sum<K,field,V,space,U,W> $subset \finite_span::span<K,field,V,space,m+n,\finite_decomposition::concatenate_lists<V,m,n,left,right>>
+    release thm direct_sum::subspace_sum_contains_summands(K,field,V,space,U,W)
+    by thm direct_sum::subspace_sum_is_subspace(K,field,V,space,U,W) => $vector_space::is_subspace(K,field,V,space,\direct_sum::subspace_sum<K,field,V,space,U,W>)
+    claim:
+        ? forall j N+:
+            j<=m+n
+            =>:
+                \finite_decomposition::concatenate_lists<V,m,n,left,right>(j) $in \direct_sum::subspace_sum<K,field,V,space,U,W>
+        j $in closed_range(1,m+n)
+        by cases:
+            ? \finite_decomposition::concatenate_lists<V,m,n,left,right>(j) $in \direct_sum::subspace_sum<K,field,V,space,U,W>
+            case j<=m:
+                by thm span_reduction::span_contains_generator(K,field,V,space,m,left,j) => left(j) $in \finite_span::span<K,field,V,space,m,left>
+                left(j) $in U
+                \finite_decomposition::concatenate_lists<V,m,n,left,right>(j)=left(j)
+            case j>m:
+                j $in Z
+                j-m $in Z
+                j-m>0
+                j-m>=1
+                j-m<=(m+n)-m=n
+                j-m $in closed_range(1,n)
+                by thm span_reduction::span_contains_generator(K,field,V,space,n,right,j-m) => right(j-m) $in \finite_span::span<K,field,V,space,n,right>
+                right(j-m) $in W
+                \finite_decomposition::concatenate_lists<V,m,n,left,right>(j)=right(j-m)
+    by thm span_reduction::span_subset_subspace(K,field,V,space,m+n,\finite_decomposition::concatenate_lists<V,m,n,left,right>,\direct_sum::subspace_sum<K,field,V,space,U,W>) => \finite_span::span<K,field,V,space,m+n,\finite_decomposition::concatenate_lists<V,m,n,left,right>> $subset \direct_sum::subspace_sum<K,field,V,space,U,W>
+    by extension \finite_span::span<K,field,V,space,m+n,\finite_decomposition::concatenate_lists<V,m,n,left,right>> =\direct_sum::subspace_sum<K,field,V,space,U,W>
+
+thm finite_summands_have_finite_sum:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,U,W power_set(V):
+        $vector_space::is_subspace(K,field,V,space,U)
+        $vector_space::is_subspace(K,field,V,space,W)
+        $vector_space::is_subspace(K,field,V,space,\direct_sum::subspace_sum<K,field,V,space,U,W>)
+        $basis::is_finite_dimensional(K,field,U,\subspace::restricted_space<K,field,V,space,U>)
+        $basis::is_finite_dimensional(K,field,W,\subspace::restricted_space<K,field,V,space,W>)
+        =>:
+            $basis::is_finite_dimensional(K,field,\direct_sum::subspace_sum<K,field,V,space,U,W>,\subspace::restricted_space<K,field,V,space,\direct_sum::subspace_sum<K,field,V,space,U,W>>)
+    by thm subspace::subspace_is_nonempty(K,field,V,space,\direct_sum::subspace_sum<K,field,V,space,U,W>) => $is_nonempty_set(\direct_sum::subspace_sum<K,field,V,space,U,W>)
+    by thm subspace::restricted_space_is_vector_space(K,field,V,space,\direct_sum::subspace_sum<K,field,V,space,U,W>) => \subspace::restricted_space<K,field,V,space,\direct_sum::subspace_sum<K,field,V,space,U,W>> $in &vector_space::VectorSpace<K,field,\direct_sum::subspace_sum<K,field,V,space,U,W>>
+    obtain m,left from $basis::is_finite_dimensional(K,field,U,\subspace::restricted_space<K,field,V,space,U>)
+    obtain n,right from $basis::is_finite_dimensional(K,field,W,\subspace::restricted_space<K,field,V,space,W>)
+    by thm subspace::sequence_in_ambient(V,U,m,left) => left $in finite_seq(V,m)
+    by thm subspace::sequence_in_ambient(V,W,n,right) => right $in finite_seq(V,n)
+    \finite_span::span<K,field,U,\subspace::restricted_space<K,field,V,space,U>,m,left> =U
+    \finite_span::span<K,field,W,\subspace::restricted_space<K,field,V,space,W>,n,right> =W
+    by thm subspace::subspace_span_equals_ambient(K,field,V,space,U,m,left) => \finite_span::span<K,field,U,\subspace::restricted_space<K,field,V,space,U>,m,left> =\finite_span::span<K,field,V,space,m,left>
+    by thm subspace::subspace_span_equals_ambient(K,field,V,space,W,n,right) => \finite_span::span<K,field,W,\subspace::restricted_space<K,field,V,space,W>,n,right> =\finite_span::span<K,field,V,space,n,right>
+    \finite_span::span<K,field,V,space,m,left> =U
+    \finite_span::span<K,field,V,space,n,right> =W
+    by thm generators_span_subspace_sum(K,field,V,space,U,W,m,n,left,right) => \finite_span::span<K,field,V,space,m+n,\finite_decomposition::concatenate_lists<V,m,n,left,right>> =\direct_sum::subspace_sum<K,field,V,space,U,W>
+    claim:
+        ? forall j closed_range(1,m+n):
+            \finite_decomposition::concatenate_lists<V,m,n,left,right>(j) $in \direct_sum::subspace_sum<K,field,V,space,U,W>
+        j $in N+
+        by thm span_reduction::span_contains_generator(K,field,V,space,m+n,\finite_decomposition::concatenate_lists<V,m,n,left,right>,j) => \finite_decomposition::concatenate_lists<V,m,n,left,right>(j) $in \finite_span::span<K,field,V,space,m+n,\finite_decomposition::concatenate_lists<V,m,n,left,right>>
+    release thm fn_set_member(\finite_decomposition::concatenate_lists<V,m,n,left,right>,finite_seq(\direct_sum::subspace_sum<K,field,V,space,U,W>,m+n))
+    by thm subspace::subspace_span_equals_ambient(K,field,V,space,\direct_sum::subspace_sum<K,field,V,space,U,W>,m+n,\finite_decomposition::concatenate_lists<V,m,n,left,right>) => \finite_span::span<K,field,\direct_sum::subspace_sum<K,field,V,space,U,W>,\subspace::restricted_space<K,field,V,space,\direct_sum::subspace_sum<K,field,V,space,U,W>>,m+n,\finite_decomposition::concatenate_lists<V,m,n,left,right>> =\finite_span::span<K,field,V,space,m+n,\finite_decomposition::concatenate_lists<V,m,n,left,right>>
+    \finite_span::span<K,field,\direct_sum::subspace_sum<K,field,V,space,U,W>,\subspace::restricted_space<K,field,V,space,\direct_sum::subspace_sum<K,field,V,space,U,W>>,m+n,\finite_decomposition::concatenate_lists<V,m,n,left,right>> =\direct_sum::subspace_sum<K,field,V,space,U,W>
+    by def $finite_span::spans(K,field,\direct_sum::subspace_sum<K,field,V,space,U,W>,\subspace::restricted_space<K,field,V,space,\direct_sum::subspace_sum<K,field,V,space,U,W>>,m+n,\finite_decomposition::concatenate_lists<V,m,n,left,right>)
+    witness $basis::is_finite_dimensional(K,field,\direct_sum::subspace_sum<K,field,V,space,U,W>,\subspace::restricted_space<K,field,V,space,\direct_sum::subspace_sum<K,field,V,space,U,W>>) from m+n,\finite_decomposition::concatenate_lists<V,m,n,left,right>
+
+thm finite_summands_spanning_ambient_are_finite:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,U,W power_set(V):
+        $vector_space::is_subspace(K,field,V,space,U)
+        $vector_space::is_subspace(K,field,V,space,W)
+        $vector_space::is_subspace(K,field,V,space,\direct_sum::subspace_sum<K,field,V,space,U,W>)
+        $basis::is_finite_dimensional(K,field,U,\subspace::restricted_space<K,field,V,space,U>)
+        $basis::is_finite_dimensional(K,field,W,\subspace::restricted_space<K,field,V,space,W>)
+        \direct_sum::subspace_sum<K,field,V,space,U,W> =V
+        =>:
+            $basis::is_finite_dimensional(K,field,V,space)
+    obtain m,left from $basis::is_finite_dimensional(K,field,U,\subspace::restricted_space<K,field,V,space,U>)
+    obtain n,right from $basis::is_finite_dimensional(K,field,W,\subspace::restricted_space<K,field,V,space,W>)
+    by thm subspace::sequence_in_ambient(V,U,m,left) => left $in finite_seq(V,m)
+    by thm subspace::sequence_in_ambient(V,W,n,right) => right $in finite_seq(V,n)
+    by thm subspace::subspace_span_equals_ambient(K,field,V,space,U,m,left) => \finite_span::span<K,field,U,\subspace::restricted_space<K,field,V,space,U>,m,left> =\finite_span::span<K,field,V,space,m,left>
+    by thm subspace::subspace_span_equals_ambient(K,field,V,space,W,n,right) => \finite_span::span<K,field,W,\subspace::restricted_space<K,field,V,space,W>,n,right> =\finite_span::span<K,field,V,space,n,right>
+    \finite_span::span<K,field,V,space,m,left> =U
+    \finite_span::span<K,field,V,space,n,right> =W
+    by thm generators_span_subspace_sum(K,field,V,space,U,W,m,n,left,right) => \finite_span::span<K,field,V,space,m+n,\finite_decomposition::concatenate_lists<V,m,n,left,right>> =\direct_sum::subspace_sum<K,field,V,space,U,W>
+    \finite_span::span<K,field,V,space,m+n,\finite_decomposition::concatenate_lists<V,m,n,left,right>> =\direct_sum::subspace_sum<K,field,V,space,U,W> =V
+    by def $finite_span::spans(K,field,V,space,m+n,\finite_decomposition::concatenate_lists<V,m,n,left,right>)
+    witness $basis::is_finite_dimensional(K,field,V,space) from m+n,\finite_decomposition::concatenate_lists<V,m,n,left,right>
+
+thm bounded_independence_is_finite_dimensional:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,bound N:
+        forall n N,vectors finite_seq(V,n):
+            $basis::is_linearly_independent(K,field,V,space,n,vectors)
+            =>:
+                n<=bound
+        =>:
+            $basis::is_finite_dimensional(K,field,V,space)
+    prop has_independent_length(n N):
+        exist vectors finite_seq(V,n) st {$basis::is_linearly_independent(K,field,V,space,n,vectors)}
+    have lengths finite_set={n closed_range(0,bound): $has_independent_length(n)}
+    have empty finite_seq(V,0)=tuple()
+    by thm dependence::empty_list_is_independent(K,field,V,space,empty) => $basis::is_linearly_independent(K,field,V,space,0,empty)
+    witness $has_independent_length(0) from empty
+    0 $in closed_range(0,bound)
+    0 $in lengths
+    witness $is_nonempty_set(lengths) from 0
+    lengths $subset closed_range(0,bound)
+    closed_range(0,bound) $subset R
+    lengths $subset R
+    finite_set_max(lengths) $in lengths
+    finite_set_max(lengths) $in closed_range(0,bound)
+    finite_set_max(lengths) $in Z
+    finite_set_max(lengths)>=0
+    finite_set_max(lengths) $in N
+    have m N=finite_set_max(lengths)
+    m $in lengths
+    obtain vectors from $has_independent_length(m)
+    claim:
+        ? forall x V:
+            x $in \finite_span::span<K,field,V,space,m,vectors>
+        by contra:
+            ? x $in \finite_span::span<K,field,V,space,m,vectors>
+            have appended finite_seq(V,m+1)=\basis_extension::append_vector<V,m,vectors,x>
+            by thm basis_extension::append_outside_span_is_independent(K,field,V,space,m,vectors,x) => $basis::is_linearly_independent(K,field,V,space,m+1,\basis_extension::append_vector<V,m,vectors,x>)
+            m+1<=bound
+            m+1 $in closed_range(0,bound)
+            witness $has_independent_length(m+1) from appended
+            m+1 $in lengths
+            m+1<=finite_set_max(lengths)=m
+            m+1>m
+            impossible m+1<=m
+    by extension \finite_span::span<K,field,V,space,m,vectors> =V
+    by def $finite_span::spans(K,field,V,space,m,vectors)
+    witness $basis::is_finite_dimensional(K,field,V,space) from m,vectors
+
+thm subspace_inside_finite_subspace_is_finite:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,U,H power_set(V):
+        $vector_space::is_subspace(K,field,V,space,U)
+        $vector_space::is_subspace(K,field,V,space,H)
+        H $subset U
+        $basis::is_finite_dimensional(K,field,U,\subspace::restricted_space<K,field,V,space,U>)
+        =>:
+            $basis::is_finite_dimensional(K,field,H,\subspace::restricted_space<K,field,V,space,H>)
+    by thm subspace::subspace_is_nonempty(K,field,V,space,H) => $is_nonempty_set(H)
+    by thm subspace::restricted_space_is_vector_space(K,field,V,space,H) => \subspace::restricted_space<K,field,V,space,H> $in &vector_space::VectorSpace<K,field,H>
+    have bound N=\dimension::finite_dimension<K,field,U>(\subspace::restricted_space<K,field,V,space,U>)
+    claim:
+        ? forall n N,vectors finite_seq(H,n):
+            $basis::is_linearly_independent(K,field,H,\subspace::restricted_space<K,field,V,space,H>,n,vectors)
+            =>:
+                n<=bound
+        by thm subspace::sequence_in_ambient(V,H,n,vectors) => vectors $in finite_seq(V,n)
+        claim:
+            ? forall j closed_range(1,n):
+                vectors(j) $in U
+            vectors(j) $in H
+        release thm fn_set_member(vectors,finite_seq(U,n))
+        by thm subspace::subspace_independent_is_ambient_independent(K,field,V,space,H,n,vectors) => $basis::is_linearly_independent(K,field,V,space,n,vectors)
+        by thm subspace::ambient_independent_is_subspace_independent(K,field,V,space,U,n,vectors) => $basis::is_linearly_independent(K,field,U,\subspace::restricted_space<K,field,V,space,U>,n,vectors)
+        by thm dimension::independent_length_le_dimension(K,field,U,\subspace::restricted_space<K,field,V,space,U>,n,vectors) => n<=\dimension::finite_dimension<K,field,U>(\subspace::restricted_space<K,field,V,space,U>)
+    by thm bounded_independence_is_finite_dimensional(K,field,H,\subspace::restricted_space<K,field,V,space,H>,bound) => $basis::is_finite_dimensional(K,field,H,\subspace::restricted_space<K,field,V,space,H>)
+
+thm finite_summand_has_finite_intersection:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,U,W power_set(V):
+        $vector_space::is_subspace(K,field,V,space,U)
+        $vector_space::is_subspace(K,field,V,space,W)
+        $vector_space::is_subspace(K,field,V,space,intersect(U,W))
+        $basis::is_finite_dimensional(K,field,U,\subspace::restricted_space<K,field,V,space,U>)
+        =>:
+            $basis::is_finite_dimensional(K,field,intersect(U,W),\subspace::restricted_space<K,field,V,space,intersect(U,W)>)
+
+thm subspace_sum_monotone:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,U,W,H,J power_set(V):
+        $vector_space::is_subspace(K,field,V,space,U)
+        $vector_space::is_subspace(K,field,V,space,W)
+        $vector_space::is_subspace(K,field,V,space,H)
+        $vector_space::is_subspace(K,field,V,space,J)
+        U $subset H
+        W $subset J
+        =>:
+            \direct_sum::subspace_sum<K,field,V,space,U,W> $subset \direct_sum::subspace_sum<K,field,V,space,H,J>
+    by thm direct_sum::subspace_sum_is_subspace(K,field,V,space,H,J) => $vector_space::is_subspace(K,field,V,space,\direct_sum::subspace_sum<K,field,V,space,H,J>)
+    release thm direct_sum::subspace_sum_contains_summands(K,field,V,space,H,J)
+    U $subset \direct_sum::subspace_sum<K,field,V,space,H,J>
+    W $subset \direct_sum::subspace_sum<K,field,V,space,H,J>
+    by thm direct_sum::subspace_sum_is_least(K,field,V,space,U,W,\direct_sum::subspace_sum<K,field,V,space,H,J>) => \direct_sum::subspace_sum<K,field,V,space,U,W> $subset \direct_sum::subspace_sum<K,field,V,space,H,J>
+
+thm subspace_sum_of_contained:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,U,W power_set(V):
+        $vector_space::is_subspace(K,field,V,space,U)
+        $vector_space::is_subspace(K,field,V,space,W)
+        U $subset W
+        =>:
+            \direct_sum::subspace_sum<K,field,V,space,U,W> =W
+    by thm direct_sum::subspace_sum_is_least(K,field,V,space,U,W,W) => \direct_sum::subspace_sum<K,field,V,space,U,W> $subset W
+    release thm direct_sum::subspace_sum_contains_summands(K,field,V,space,U,W)
+    by extension \direct_sum::subspace_sum<K,field,V,space,U,W> =W
+
+thm intersection_extension_tail_spans_sum:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,U,W power_set(V),k,m,n N,prefix finite_seq(V,k),u finite_seq(V,m),tail finite_seq(V,n):
+        $vector_space::is_subspace(K,field,V,space,U)
+        $vector_space::is_subspace(K,field,V,space,W)
+        \finite_span::span<K,field,V,space,m,u> =U
+        \finite_span::span<K,field,V,space,k,prefix> =intersect(U,W)
+        \finite_span::span<K,field,V,space,k+n,\finite_decomposition::concatenate_lists<V,k,n,prefix,tail>> =W
+        forall j N+:
+            j<=n
+            =>:
+                tail(j) $in W
+        =>:
+            \finite_span::span<K,field,V,space,m+n,\finite_decomposition::concatenate_lists<V,m,n,u,tail>> =\direct_sum::subspace_sum<K,field,V,space,U,W>
+    release thm concatenation_span_contains_parts(K,field,V,space,m,n,u,tail)
+    U $subset \finite_span::span<K,field,V,space,m+n,\finite_decomposition::concatenate_lists<V,m,n,u,tail>>
+    by thm finite_span::span_is_subspace(K,field,V,space,m+n,\finite_decomposition::concatenate_lists<V,m,n,u,tail>) => $vector_space::is_subspace(K,field,V,space,\finite_span::span<K,field,V,space,m+n,\finite_decomposition::concatenate_lists<V,m,n,u,tail>>)
+    by thm finite_span::span_is_subspace(K,field,V,space,n,tail) => $vector_space::is_subspace(K,field,V,space,\finite_span::span<K,field,V,space,n,tail>)
+    claim:
+        ? forall j N+:
+            j<=k+n
+            =>:
+                \finite_decomposition::concatenate_lists<V,k,n,prefix,tail>(j) $in \finite_span::span<K,field,V,space,m+n,\finite_decomposition::concatenate_lists<V,m,n,u,tail>>
+        j $in closed_range(1,k+n)
+        by cases:
+            ? \finite_decomposition::concatenate_lists<V,k,n,prefix,tail>(j) $in \finite_span::span<K,field,V,space,m+n,\finite_decomposition::concatenate_lists<V,m,n,u,tail>>
+            case j<=k:
+                j $in closed_range(1,k)
+                by thm span_reduction::span_contains_generator(K,field,V,space,k,prefix,j) => prefix(j) $in \finite_span::span<K,field,V,space,k,prefix>
+                prefix(j) $in intersect(U,W)
+                prefix(j) $in U
+                prefix(j) $in \finite_span::span<K,field,V,space,m+n,\finite_decomposition::concatenate_lists<V,m,n,u,tail>>
+                \finite_decomposition::concatenate_lists<V,k,n,prefix,tail>(j)=prefix(j)
+            case j>k:
+                j $in Z
+                j-k $in Z
+                j-k>0
+                j-k>=1
+                j-k<=(k+n)-k=n
+                j-k $in closed_range(1,n)
+                by thm span_reduction::span_contains_generator(K,field,V,space,n,tail,j-k) => tail(j-k) $in \finite_span::span<K,field,V,space,n,tail>
+                \finite_decomposition::concatenate_lists<V,k,n,prefix,tail>(j)=tail(j-k)
+    by thm span_reduction::span_subset_subspace(K,field,V,space,k+n,\finite_decomposition::concatenate_lists<V,k,n,prefix,tail>,\finite_span::span<K,field,V,space,m+n,\finite_decomposition::concatenate_lists<V,m,n,u,tail>>) => \finite_span::span<K,field,V,space,k+n,\finite_decomposition::concatenate_lists<V,k,n,prefix,tail>> $subset \finite_span::span<K,field,V,space,m+n,\finite_decomposition::concatenate_lists<V,m,n,u,tail>>
+    W $subset \finite_span::span<K,field,V,space,m+n,\finite_decomposition::concatenate_lists<V,m,n,u,tail>>
+    by thm direct_sum::subspace_sum_is_least(K,field,V,space,U,W,\finite_span::span<K,field,V,space,m+n,\finite_decomposition::concatenate_lists<V,m,n,u,tail>>) => \direct_sum::subspace_sum<K,field,V,space,U,W> $subset \finite_span::span<K,field,V,space,m+n,\finite_decomposition::concatenate_lists<V,m,n,u,tail>>
+    by thm span_reduction::span_subset_subspace(K,field,V,space,n,tail,W) => \finite_span::span<K,field,V,space,n,tail> $subset W
+    by thm generators_span_subspace_sum(K,field,V,space,U,\finite_span::span<K,field,V,space,n,tail>,m,n,u,tail) => \finite_span::span<K,field,V,space,m+n,\finite_decomposition::concatenate_lists<V,m,n,u,tail>> =\direct_sum::subspace_sum<K,field,V,space,U,\finite_span::span<K,field,V,space,n,tail>>
+    U $subset U
+    by thm subspace_sum_monotone(K,field,V,space,U,\finite_span::span<K,field,V,space,n,tail>,U,W) => \direct_sum::subspace_sum<K,field,V,space,U,\finite_span::span<K,field,V,space,n,tail>> $subset \direct_sum::subspace_sum<K,field,V,space,U,W>
+    \finite_span::span<K,field,V,space,m+n,\finite_decomposition::concatenate_lists<V,m,n,u,tail>> $subset \direct_sum::subspace_sum<K,field,V,space,U,W>
+    by extension \finite_span::span<K,field,V,space,m+n,\finite_decomposition::concatenate_lists<V,m,n,u,tail>> =\direct_sum::subspace_sum<K,field,V,space,U,W>
+
+thm intersection_extension_tail_is_independent:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,U,W power_set(V),k,m,n N,prefix finite_seq(V,k),u finite_seq(V,m),tail finite_seq(V,n):
+        $vector_space::is_subspace(K,field,V,space,U)
+        $vector_space::is_subspace(K,field,V,space,W)
+        \finite_span::span<K,field,V,space,k,prefix> =intersect(U,W)
+        \finite_span::span<K,field,V,space,m,u> =U
+        $basis::is_linearly_independent(K,field,V,space,m,u)
+        $basis::is_linearly_independent(K,field,V,space,k+n,\finite_decomposition::concatenate_lists<V,k,n,prefix,tail>)
+        forall j N+:
+            j<=n
+            =>:
+                tail(j) $in W
+        =>:
+            $basis::is_linearly_independent(K,field,V,space,m+n,\finite_decomposition::concatenate_lists<V,m,n,u,tail>)
+    claim:
+        ? forall c finite_seq(K,m+n):
+            $finite_span::has_linear_combination_value(K,field,V,space,m+n,c,\finite_decomposition::concatenate_lists<V,m,n,u,tail>,space.zero)
+            =>:
+                $basis::has_only_zero_coefficients(K,field,m+n,c)
+        release thm finite_decomposition::list_splits_at_length(K,m,n,c)
+        obtain cu,ct from exist left finite_seq(K,m),right finite_seq(K,n) st {c=\finite_decomposition::concatenate_lists<K,m,n,left,right>}
+        obtain sums from $finite_span::has_linear_combination_value(K,field,V,space,m+n,c,\finite_decomposition::concatenate_lists<V,m,n,u,tail>,space.zero)
+        by thm finite_span::partial_sum_determines_combination(K,field,V,space,m+n,c,\finite_decomposition::concatenate_lists<V,m,n,u,tail>,sums) => \finite_span::linear_combination<K,field,V,space,m+n>(c,\finite_decomposition::concatenate_lists<V,m,n,u,tail>)=sums(m+n)
+        by thm finite_decomposition::concatenated_linear_combination(K,field,V,space,m,n,cu,ct,u,tail) => \finite_span::linear_combination<K,field,V,space,m+n>(\finite_decomposition::concatenate_lists<K,m,n,cu,ct>,\finite_decomposition::concatenate_lists<V,m,n,u,tail>)=space.add(\finite_span::linear_combination<K,field,V,space,m>(cu,u),\finite_span::linear_combination<K,field,V,space,n>(ct,tail))
+        space.add(\finite_span::linear_combination<K,field,V,space,m>(cu,u),\finite_span::linear_combination<K,field,V,space,n>(ct,tail))=space.zero
+        release thm finite_span::linear_combination_has_value(K,field,V,space,m,cu,u)
+        witness $finite_span::is_linear_combination(K,field,V,space,m,\finite_span::linear_combination<K,field,V,space,m>(cu,u),u) from cu
+        \finite_span::linear_combination<K,field,V,space,m>(cu,u) $in \finite_span::span<K,field,V,space,m,u>
+        \finite_span::linear_combination<K,field,V,space,m>(cu,u) $in U
+        space.zero $in U
+        by thm exchange::subspace_additive_cancellation(K,field,V,space,U,\finite_span::linear_combination<K,field,V,space,m>(cu,u),\finite_span::linear_combination<K,field,V,space,n>(ct,tail)) => \finite_span::linear_combination<K,field,V,space,n>(ct,tail) $in U
+        release thm finite_span::linear_combination_has_value(K,field,V,space,n,ct,tail)
+        by thm span_reduction::linear_combination_in_subspace(K,field,V,space,n,ct,tail,\finite_span::linear_combination<K,field,V,space,n>(ct,tail),W) => \finite_span::linear_combination<K,field,V,space,n>(ct,tail) $in W
+        \finite_span::linear_combination<K,field,V,space,n>(ct,tail) $in intersect(U,W)
+        \finite_span::linear_combination<K,field,V,space,n>(ct,tail) $in \finite_span::span<K,field,V,space,k,prefix>
+        obtain ci from $finite_span::is_linear_combination(K,field,V,space,k,\finite_span::linear_combination<K,field,V,space,n>(ct,tail),prefix)
+        obtain partial from $finite_span::has_linear_combination_value(K,field,V,space,k,ci,prefix,\finite_span::linear_combination<K,field,V,space,n>(ct,tail))
+        by thm finite_span::partial_sum_determines_combination(K,field,V,space,k,ci,prefix,partial) => \finite_span::linear_combination<K,field,V,space,k>(ci,prefix)=partial(k)
+        \finite_span::linear_combination<K,field,V,space,k>(ci,prefix)=\finite_span::linear_combination<K,field,V,space,n>(ct,tail)
+        by thm finite_span::zero_coefficients_carrier(K,field,k) => \finite_span::zero_coefficients<K,field,k> $in finite_seq(K,k)
+        by thm finite_span::zero_coefficients_carrier(K,field,n) => \finite_span::zero_coefficients<K,field,n> $in finite_seq(K,n)
+        by thm finite_span::linear_combination_zero_coefficients(K,field,V,space,k,prefix) => \finite_span::linear_combination<K,field,V,space,k>(\finite_span::zero_coefficients<K,field,k>,prefix)=space.zero
+        by thm finite_span::linear_combination_zero_coefficients(K,field,V,space,n,tail) => \finite_span::linear_combination<K,field,V,space,n>(\finite_span::zero_coefficients<K,field,n>,tail)=space.zero
+        by thm finite_decomposition::concatenated_linear_combination(K,field,V,space,k,n,\finite_span::zero_coefficients<K,field,k>,ct,prefix,tail) => \finite_span::linear_combination<K,field,V,space,k+n>(\finite_decomposition::concatenate_lists<K,k,n,\finite_span::zero_coefficients<K,field,k>,ct>,\finite_decomposition::concatenate_lists<V,k,n,prefix,tail>)=space.add(\finite_span::linear_combination<K,field,V,space,k>(\finite_span::zero_coefficients<K,field,k>,prefix),\finite_span::linear_combination<K,field,V,space,n>(ct,tail))
+        by thm finite_decomposition::concatenated_linear_combination(K,field,V,space,k,n,ci,\finite_span::zero_coefficients<K,field,n>,prefix,tail) => \finite_span::linear_combination<K,field,V,space,k+n>(\finite_decomposition::concatenate_lists<K,k,n,ci,\finite_span::zero_coefficients<K,field,n>>,\finite_decomposition::concatenate_lists<V,k,n,prefix,tail>)=space.add(\finite_span::linear_combination<K,field,V,space,k>(ci,prefix),\finite_span::linear_combination<K,field,V,space,n>(\finite_span::zero_coefficients<K,field,n>,tail))
+        space.add(\finite_span::linear_combination<K,field,V,space,k>(ci,prefix),space.zero)=space.add(space.zero,\finite_span::linear_combination<K,field,V,space,k>(ci,prefix))=\finite_span::linear_combination<K,field,V,space,k>(ci,prefix)
+        \finite_span::linear_combination<K,field,V,space,k+n>(\finite_decomposition::concatenate_lists<K,k,n,\finite_span::zero_coefficients<K,field,k>,ct>,\finite_decomposition::concatenate_lists<V,k,n,prefix,tail>)=space.add(space.zero,\finite_span::linear_combination<K,field,V,space,n>(ct,tail))=\finite_span::linear_combination<K,field,V,space,n>(ct,tail)
+        \finite_span::linear_combination<K,field,V,space,k+n>(\finite_decomposition::concatenate_lists<K,k,n,ci,\finite_span::zero_coefficients<K,field,n>>,\finite_decomposition::concatenate_lists<V,k,n,prefix,tail>)=space.add(\finite_span::linear_combination<K,field,V,space,k>(ci,prefix),space.zero)=\finite_span::linear_combination<K,field,V,space,k>(ci,prefix)=\finite_span::linear_combination<K,field,V,space,n>(ct,tail)
+        \finite_span::linear_combination<K,field,V,space,k+n>(\finite_decomposition::concatenate_lists<K,k,n,\finite_span::zero_coefficients<K,field,k>,ct>,\finite_decomposition::concatenate_lists<V,k,n,prefix,tail>)=\finite_span::linear_combination<K,field,V,space,k+n>(\finite_decomposition::concatenate_lists<K,k,n,ci,\finite_span::zero_coefficients<K,field,n>>,\finite_decomposition::concatenate_lists<V,k,n,prefix,tail>)
+        by thm basis::independent_combination_coefficients_unique(K,field,V,space,k+n,\finite_decomposition::concatenate_lists<V,k,n,prefix,tail>,\finite_decomposition::concatenate_lists<K,k,n,\finite_span::zero_coefficients<K,field,k>,ct>,\finite_decomposition::concatenate_lists<K,k,n,ci,\finite_span::zero_coefficients<K,field,n>>) => \finite_decomposition::concatenate_lists<K,k,n,\finite_span::zero_coefficients<K,field,k>,ct> =\finite_decomposition::concatenate_lists<K,k,n,ci,\finite_span::zero_coefficients<K,field,n>>
+        claim:
+            ? forall j N+:
+                j<=n
+                =>:
+                    ct(j)=field.zero
+            j $in closed_range(1,n)
+            j $in Z
+            k+j $in Z
+            1<=k+j<=k+n
+            k+j $in closed_range(1,k+n)
+            k+j>k
+            (k+j)-k=j
+            \finite_decomposition::concatenate_lists<K,k,n,\finite_span::zero_coefficients<K,field,k>,ct>(k+j)=ct((k+j)-k)=ct(j)
+            \finite_decomposition::concatenate_lists<K,k,n,ci,\finite_span::zero_coefficients<K,field,n>>(k+j)=\finite_span::zero_coefficients<K,field,n>((k+j)-k)=\finite_span::zero_coefficients<K,field,n>(j)
+            by thm finite_span::zero_coefficients_entry(K,field,n,\finite_span::zero_coefficients<K,field,n>,j) => \finite_span::zero_coefficients<K,field,n>(j)=field.zero
+            ct(j)=\finite_decomposition::concatenate_lists<K,k,n,\finite_span::zero_coefficients<K,field,k>,ct>(k+j)=\finite_decomposition::concatenate_lists<K,k,n,ci,\finite_span::zero_coefficients<K,field,n>>(k+j)=\finite_span::zero_coefficients<K,field,n>(j)=field.zero
+        by def $basis::has_only_zero_coefficients(K,field,n,ct)
+        by fn_extension:
+            ? ct=\finite_span::zero_coefficients<K,field,n>
+            claim:
+                ? forall j closed_range(1,n):
+                    ct(j)=\finite_span::zero_coefficients<K,field,n>(j)
+                j $in N+
+                j<=n
+                by thm finite_span::zero_coefficients_entry(K,field,n,\finite_span::zero_coefficients<K,field,n>,j) => \finite_span::zero_coefficients<K,field,n>(j)=field.zero
+        \finite_span::linear_combination<K,field,V,space,n>(ct,tail)=\finite_span::linear_combination<K,field,V,space,n>(\finite_span::zero_coefficients<K,field,n>,tail)=space.zero
+        space.add(\finite_span::linear_combination<K,field,V,space,m>(cu,u),space.zero)=space.add(space.zero,\finite_span::linear_combination<K,field,V,space,m>(cu,u))=\finite_span::linear_combination<K,field,V,space,m>(cu,u)
+        \finite_span::linear_combination<K,field,V,space,m>(cu,u)=space.add(\finite_span::linear_combination<K,field,V,space,m>(cu,u),space.zero)=space.add(\finite_span::linear_combination<K,field,V,space,m>(cu,u),\finite_span::linear_combination<K,field,V,space,n>(ct,tail))=space.zero
+        $finite_span::has_linear_combination_value(K,field,V,space,m,cu,u,space.zero)
+        $basis::has_only_zero_coefficients(K,field,m,cu)
+        claim:
+            ? forall j N+:
+                j<=m+n
+                =>:
+                    c(j)=field.zero
+            j $in closed_range(1,m+n)
+            by cases:
+                ? c(j)=field.zero
+                case j<=m:
+                    j $in closed_range(1,m)
+                    c(j)=\finite_decomposition::concatenate_lists<K,m,n,cu,ct>(j)=cu(j)=field.zero
+                case j>m:
+                    j $in Z
+                    j-m $in Z
+                    j-m>0
+                    j-m>=1
+                    j-m<=(m+n)-m=n
+                    j-m $in closed_range(1,n)
+                    c(j)=\finite_decomposition::concatenate_lists<K,m,n,cu,ct>(j)=ct(j-m)=field.zero
+        by def $basis::has_only_zero_coefficients(K,field,m+n,c)
+    by def $basis::is_linearly_independent(K,field,V,space,m+n,\finite_decomposition::concatenate_lists<V,m,n,u,tail>)
+
+thm grassmann_dimension:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,U,W power_set(V):
+        $vector_space::is_subspace(K,field,V,space,U)
+        $vector_space::is_subspace(K,field,V,space,W)
+        $vector_space::is_subspace(K,field,V,space,intersect(U,W))
+        $vector_space::is_subspace(K,field,V,space,\direct_sum::subspace_sum<K,field,V,space,U,W>)
+        $basis::is_finite_dimensional(K,field,U,\subspace::restricted_space<K,field,V,space,U>)
+        $basis::is_finite_dimensional(K,field,W,\subspace::restricted_space<K,field,V,space,W>)
+        $basis::is_finite_dimensional(K,field,intersect(U,W),\subspace::restricted_space<K,field,V,space,intersect(U,W)>)
+        $basis::is_finite_dimensional(K,field,\direct_sum::subspace_sum<K,field,V,space,U,W>,\subspace::restricted_space<K,field,V,space,\direct_sum::subspace_sum<K,field,V,space,U,W>>)
+        =>:
+            \dimension::finite_dimension<K,field,U>(\subspace::restricted_space<K,field,V,space,U>)+\dimension::finite_dimension<K,field,W>(\subspace::restricted_space<K,field,V,space,W>)=\dimension::finite_dimension<K,field,\direct_sum::subspace_sum<K,field,V,space,U,W>>(\subspace::restricted_space<K,field,V,space,\direct_sum::subspace_sum<K,field,V,space,U,W>>)+\dimension::finite_dimension<K,field,intersect(U,W)>(\subspace::restricted_space<K,field,V,space,intersect(U,W)>)
+    by thm subspace::subspace_is_nonempty(K,field,V,space,U) => $is_nonempty_set(U)
+    by thm subspace::restricted_space_is_vector_space(K,field,V,space,U) => \subspace::restricted_space<K,field,V,space,U> $in &vector_space::VectorSpace<K,field,U>
+    by thm subspace::subspace_is_nonempty(K,field,V,space,W) => $is_nonempty_set(W)
+    by thm subspace::restricted_space_is_vector_space(K,field,V,space,W) => \subspace::restricted_space<K,field,V,space,W> $in &vector_space::VectorSpace<K,field,W>
+    by thm subspace::subspace_is_nonempty(K,field,V,space,intersect(U,W)) => $is_nonempty_set(intersect(U,W))
+    by thm subspace::restricted_space_is_vector_space(K,field,V,space,intersect(U,W)) => \subspace::restricted_space<K,field,V,space,intersect(U,W)> $in &vector_space::VectorSpace<K,field,intersect(U,W)>
+    by thm subspace::subspace_is_nonempty(K,field,V,space,\direct_sum::subspace_sum<K,field,V,space,U,W>) => $is_nonempty_set(\direct_sum::subspace_sum<K,field,V,space,U,W>)
+    by thm subspace::restricted_space_is_vector_space(K,field,V,space,\direct_sum::subspace_sum<K,field,V,space,U,W>) => \subspace::restricted_space<K,field,V,space,\direct_sum::subspace_sum<K,field,V,space,U,W>> $in &vector_space::VectorSpace<K,field,\direct_sum::subspace_sum<K,field,V,space,U,W>>
+    release thm basis_existence::finite_dimensional_has_basis(K,field,intersect(U,W),\subspace::restricted_space<K,field,V,space,intersect(U,W)>)
+    obtain k,prefix from exist length N,chosen finite_seq(intersect(U,W),length) st {$basis::is_basis(K,field,intersect(U,W),\subspace::restricted_space<K,field,V,space,intersect(U,W)>,length,chosen)}
+    release thm basis_existence::finite_dimensional_has_basis(K,field,U,\subspace::restricted_space<K,field,V,space,U>)
+    obtain m,u from exist length N,chosen finite_seq(U,length) st {$basis::is_basis(K,field,U,\subspace::restricted_space<K,field,V,space,U>,length,chosen)}
+    by thm subspace::sequence_in_ambient(V,intersect(U,W),k,prefix) => prefix $in finite_seq(V,k)
+    by thm subspace::sequence_in_ambient(V,U,m,u) => u $in finite_seq(V,m)
+    claim:
+        ? forall j closed_range(1,k):
+            prefix(j) $in W
+        prefix(j) $in intersect(U,W)
+    release thm fn_set_member(prefix,finite_seq(W,k))
+    by thm subspace::subspace_independent_is_ambient_independent(K,field,V,space,intersect(U,W),k,prefix) => $basis::is_linearly_independent(K,field,V,space,k,prefix)
+    by thm subspace::ambient_independent_is_subspace_independent(K,field,V,space,W,k,prefix) => $basis::is_linearly_independent(K,field,W,\subspace::restricted_space<K,field,V,space,W>,k,prefix)
+    release thm basis_extension::independent_list_extends_to_basis(K,field,W,\subspace::restricted_space<K,field,V,space,W>,k,prefix)
+    obtain r,full from exist length N,chosen finite_seq(W,length) st {$basis::is_basis(K,field,W,\subspace::restricted_space<K,field,V,space,W>,length,chosen),$basis::is_prefix_of_length(W,length,k,chosen,prefix)}
+    k<=r
+    r-k>=0
+    r-k $in N
+    have n N=r-k
+    k+n=k+(r-k)=r
+    finite_seq(W,r)=finite_seq(W,k+n)
+    $basis::is_prefix_of_length(W,k+n,k,full,prefix)
+    release thm finite_decomposition::prefix_has_concatenation_decomposition(W,k,n,full,prefix)
+    obtain tail from exist suffix finite_seq(W,n) st {full=\finite_decomposition::concatenate_lists<W,k,n,prefix,suffix>}
+    by thm subspace::sequence_in_ambient(V,W,n,tail) => tail $in finite_seq(V,n)
+    by thm subspace::sequence_in_ambient(V,W,k+n,full) => full $in finite_seq(V,k+n)
+    by thm concatenation_in_ambient(W,V,k,n,prefix,tail) => \finite_decomposition::concatenate_lists<W,k,n,prefix,tail> =\finite_decomposition::concatenate_lists<V,k,n,prefix,tail>
+    full=\finite_decomposition::concatenate_lists<V,k,n,prefix,tail>
+    by thm subspace::subspace_independent_is_ambient_independent(K,field,V,space,W,k+n,full) => $basis::is_linearly_independent(K,field,V,space,k+n,full)
+    $basis::is_linearly_independent(K,field,V,space,k+n,\finite_decomposition::concatenate_lists<V,k,n,prefix,tail>)
+    by thm subspace::subspace_independent_is_ambient_independent(K,field,V,space,U,m,u) => $basis::is_linearly_independent(K,field,V,space,m,u)
+    $finite_span::spans(K,field,U,\subspace::restricted_space<K,field,V,space,U>,m,u)
+    $finite_span::spans(K,field,intersect(U,W),\subspace::restricted_space<K,field,V,space,intersect(U,W)>,k,prefix)
+    $basis::is_basis(K,field,W,\subspace::restricted_space<K,field,V,space,W>,k+n,\finite_decomposition::concatenate_lists<V,k,n,prefix,tail>)
+    $finite_span::spans(K,field,W,\subspace::restricted_space<K,field,V,space,W>,k+n,\finite_decomposition::concatenate_lists<V,k,n,prefix,tail>)
+    \finite_span::span<K,field,U,\subspace::restricted_space<K,field,V,space,U>,m,u> =U
+    \finite_span::span<K,field,intersect(U,W),\subspace::restricted_space<K,field,V,space,intersect(U,W)>,k,prefix> =intersect(U,W)
+    \finite_span::span<K,field,W,\subspace::restricted_space<K,field,V,space,W>,k+n,\finite_decomposition::concatenate_lists<V,k,n,prefix,tail>> =W
+    by thm subspace::subspace_span_equals_ambient(K,field,V,space,U,m,u) => \finite_span::span<K,field,U,\subspace::restricted_space<K,field,V,space,U>,m,u> =\finite_span::span<K,field,V,space,m,u>
+    by thm subspace::subspace_span_equals_ambient(K,field,V,space,intersect(U,W),k,prefix) => \finite_span::span<K,field,intersect(U,W),\subspace::restricted_space<K,field,V,space,intersect(U,W)>,k,prefix> =\finite_span::span<K,field,V,space,k,prefix>
+    by thm subspace::subspace_span_equals_ambient(K,field,V,space,W,k+n,\finite_decomposition::concatenate_lists<V,k,n,prefix,tail>) => \finite_span::span<K,field,W,\subspace::restricted_space<K,field,V,space,W>,k+n,\finite_decomposition::concatenate_lists<V,k,n,prefix,tail>> =\finite_span::span<K,field,V,space,k+n,\finite_decomposition::concatenate_lists<V,k,n,prefix,tail>>
+    \finite_span::span<K,field,V,space,m,u> =U
+    \finite_span::span<K,field,V,space,k,prefix> =intersect(U,W)
+    \finite_span::span<K,field,V,space,k+n,\finite_decomposition::concatenate_lists<V,k,n,prefix,tail>> =W
+    forall j N+:
+        j<=n
+        =>:
+            tail(j) $in W
+    by thm intersection_extension_tail_spans_sum(K,field,V,space,U,W,k,m,n,prefix,u,tail) => \finite_span::span<K,field,V,space,m+n,\finite_decomposition::concatenate_lists<V,m,n,u,tail>> =\direct_sum::subspace_sum<K,field,V,space,U,W>
+    by thm intersection_extension_tail_is_independent(K,field,V,space,U,W,k,m,n,prefix,u,tail) => $basis::is_linearly_independent(K,field,V,space,m+n,\finite_decomposition::concatenate_lists<V,m,n,u,tail>)
+    claim:
+        ? forall j closed_range(1,m+n):
+            \finite_decomposition::concatenate_lists<V,m,n,u,tail>(j) $in \direct_sum::subspace_sum<K,field,V,space,U,W>
+        j $in N+
+        by thm span_reduction::span_contains_generator(K,field,V,space,m+n,\finite_decomposition::concatenate_lists<V,m,n,u,tail>,j) => \finite_decomposition::concatenate_lists<V,m,n,u,tail>(j) $in \finite_span::span<K,field,V,space,m+n,\finite_decomposition::concatenate_lists<V,m,n,u,tail>>
+    release thm fn_set_member(\finite_decomposition::concatenate_lists<V,m,n,u,tail>,finite_seq(\direct_sum::subspace_sum<K,field,V,space,U,W>,m+n))
+    by thm subspace::ambient_independent_is_subspace_independent(K,field,V,space,\direct_sum::subspace_sum<K,field,V,space,U,W>,m+n,\finite_decomposition::concatenate_lists<V,m,n,u,tail>) => $basis::is_linearly_independent(K,field,\direct_sum::subspace_sum<K,field,V,space,U,W>,\subspace::restricted_space<K,field,V,space,\direct_sum::subspace_sum<K,field,V,space,U,W>>,m+n,\finite_decomposition::concatenate_lists<V,m,n,u,tail>)
+    by thm subspace::subspace_span_equals_ambient(K,field,V,space,\direct_sum::subspace_sum<K,field,V,space,U,W>,m+n,\finite_decomposition::concatenate_lists<V,m,n,u,tail>) => \finite_span::span<K,field,\direct_sum::subspace_sum<K,field,V,space,U,W>,\subspace::restricted_space<K,field,V,space,\direct_sum::subspace_sum<K,field,V,space,U,W>>,m+n,\finite_decomposition::concatenate_lists<V,m,n,u,tail>> =\finite_span::span<K,field,V,space,m+n,\finite_decomposition::concatenate_lists<V,m,n,u,tail>>
+    \finite_span::span<K,field,\direct_sum::subspace_sum<K,field,V,space,U,W>,\subspace::restricted_space<K,field,V,space,\direct_sum::subspace_sum<K,field,V,space,U,W>>,m+n,\finite_decomposition::concatenate_lists<V,m,n,u,tail>> =\direct_sum::subspace_sum<K,field,V,space,U,W>
+    by def $finite_span::spans(K,field,\direct_sum::subspace_sum<K,field,V,space,U,W>,\subspace::restricted_space<K,field,V,space,\direct_sum::subspace_sum<K,field,V,space,U,W>>,m+n,\finite_decomposition::concatenate_lists<V,m,n,u,tail>)
+    by def $basis::is_basis(K,field,\direct_sum::subspace_sum<K,field,V,space,U,W>,\subspace::restricted_space<K,field,V,space,\direct_sum::subspace_sum<K,field,V,space,U,W>>,m+n,\finite_decomposition::concatenate_lists<V,m,n,u,tail>)
+    by thm dimension::finite_dimension_of_basis(K,field,U,\subspace::restricted_space<K,field,V,space,U>,m,u) => \dimension::finite_dimension<K,field,U>(\subspace::restricted_space<K,field,V,space,U>)=m
+    by thm dimension::finite_dimension_of_basis(K,field,intersect(U,W),\subspace::restricted_space<K,field,V,space,intersect(U,W)>,k,prefix) => \dimension::finite_dimension<K,field,intersect(U,W)>(\subspace::restricted_space<K,field,V,space,intersect(U,W)>)=k
+    by thm dimension::finite_dimension_of_basis(K,field,W,\subspace::restricted_space<K,field,V,space,W>,k+n,full) => \dimension::finite_dimension<K,field,W>(\subspace::restricted_space<K,field,V,space,W>)=k+n
+    by thm dimension::finite_dimension_of_basis(K,field,\direct_sum::subspace_sum<K,field,V,space,U,W>,\subspace::restricted_space<K,field,V,space,\direct_sum::subspace_sum<K,field,V,space,U,W>>,m+n,\finite_decomposition::concatenate_lists<V,m,n,u,tail>) => \dimension::finite_dimension<K,field,\direct_sum::subspace_sum<K,field,V,space,U,W>>(\subspace::restricted_space<K,field,V,space,\direct_sum::subspace_sum<K,field,V,space,U,W>>)=m+n
+    \dimension::finite_dimension<K,field,U>(\subspace::restricted_space<K,field,V,space,U>)+\dimension::finite_dimension<K,field,W>(\subspace::restricted_space<K,field,V,space,W>)=m+(k+n)=(m+n)+k=\dimension::finite_dimension<K,field,\direct_sum::subspace_sum<K,field,V,space,U,W>>(\subspace::restricted_space<K,field,V,space,\direct_sum::subspace_sum<K,field,V,space,U,W>>)+\dimension::finite_dimension<K,field,intersect(U,W)>(\subspace::restricted_space<K,field,V,space,intersect(U,W)>)
+
+thm finite_sum_and_intersection:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,U,W power_set(V):
+        $vector_space::is_subspace(K,field,V,space,U)
+        $vector_space::is_subspace(K,field,V,space,W)
+        $vector_space::is_subspace(K,field,V,space,intersect(U,W))
+        $vector_space::is_subspace(K,field,V,space,\direct_sum::subspace_sum<K,field,V,space,U,W>)
+        $basis::is_finite_dimensional(K,field,U,\subspace::restricted_space<K,field,V,space,U>)
+        $basis::is_finite_dimensional(K,field,W,\subspace::restricted_space<K,field,V,space,W>)
+        =>:
+            $basis::is_finite_dimensional(K,field,\direct_sum::subspace_sum<K,field,V,space,U,W>,\subspace::restricted_space<K,field,V,space,\direct_sum::subspace_sum<K,field,V,space,U,W>>)
+            $basis::is_finite_dimensional(K,field,intersect(U,W),\subspace::restricted_space<K,field,V,space,intersect(U,W)>)
+
+thm subspace_dimension_le_containing_subspace:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,U,H power_set(V):
+        $vector_space::is_subspace(K,field,V,space,U)
+        $vector_space::is_subspace(K,field,V,space,H)
+        H $subset U
+        $basis::is_finite_dimensional(K,field,U,\subspace::restricted_space<K,field,V,space,U>)
+        $basis::is_finite_dimensional(K,field,H,\subspace::restricted_space<K,field,V,space,H>)
+        =>:
+            \dimension::finite_dimension<K,field,H>(\subspace::restricted_space<K,field,V,space,H>)<=\dimension::finite_dimension<K,field,U>(\subspace::restricted_space<K,field,V,space,U>)
+    by thm subspace::subspace_is_nonempty(K,field,V,space,H) => $is_nonempty_set(H)
+    by thm subspace::restricted_space_is_vector_space(K,field,V,space,H) => \subspace::restricted_space<K,field,V,space,H> $in &vector_space::VectorSpace<K,field,H>
+    release thm basis_existence::finite_dimensional_has_basis(K,field,H,\subspace::restricted_space<K,field,V,space,H>)
+    obtain n,vectors from exist length N,chosen finite_seq(H,length) st {$basis::is_basis(K,field,H,\subspace::restricted_space<K,field,V,space,H>,length,chosen)}
+    by thm subspace::sequence_in_ambient(V,H,n,vectors) => vectors $in finite_seq(V,n)
+    claim:
+        ? forall j closed_range(1,n):
+            vectors(j) $in U
+        vectors(j) $in H
+    release thm fn_set_member(vectors,finite_seq(U,n))
+    by thm subspace::subspace_independent_is_ambient_independent(K,field,V,space,H,n,vectors) => $basis::is_linearly_independent(K,field,V,space,n,vectors)
+    by thm subspace::ambient_independent_is_subspace_independent(K,field,V,space,U,n,vectors) => $basis::is_linearly_independent(K,field,U,\subspace::restricted_space<K,field,V,space,U>,n,vectors)
+    by thm dimension::independent_length_le_dimension(K,field,U,\subspace::restricted_space<K,field,V,space,U>,n,vectors) => n<=\dimension::finite_dimension<K,field,U>(\subspace::restricted_space<K,field,V,space,U>)
+    by thm dimension::finite_dimension_of_basis(K,field,H,\subspace::restricted_space<K,field,V,space,H>,n,vectors) => \dimension::finite_dimension<K,field,H>(\subspace::restricted_space<K,field,V,space,H>)=n
+
+thm intersection_dimension_bounds:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,U,W power_set(V):
+        $vector_space::is_subspace(K,field,V,space,U)
+        $vector_space::is_subspace(K,field,V,space,W)
+        $vector_space::is_subspace(K,field,V,space,intersect(U,W))
+        $vector_space::is_subspace(K,field,V,space,\direct_sum::subspace_sum<K,field,V,space,U,W>)
+        $basis::is_finite_dimensional(K,field,U,\subspace::restricted_space<K,field,V,space,U>)
+        $basis::is_finite_dimensional(K,field,W,\subspace::restricted_space<K,field,V,space,W>)
+        $basis::is_finite_dimensional(K,field,intersect(U,W),\subspace::restricted_space<K,field,V,space,intersect(U,W)>)
+        $basis::is_finite_dimensional(K,field,\direct_sum::subspace_sum<K,field,V,space,U,W>,\subspace::restricted_space<K,field,V,space,\direct_sum::subspace_sum<K,field,V,space,U,W>>)
+        =>:
+            \dimension::finite_dimension<K,field,intersect(U,W)>(\subspace::restricted_space<K,field,V,space,intersect(U,W)>)<=\dimension::finite_dimension<K,field,U>(\subspace::restricted_space<K,field,V,space,U>)
+            \dimension::finite_dimension<K,field,intersect(U,W)>(\subspace::restricted_space<K,field,V,space,intersect(U,W)>)<=\dimension::finite_dimension<K,field,W>(\subspace::restricted_space<K,field,V,space,W>)
+
+thm finite_dimension_numeric_carriers:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>:
+        $basis::is_finite_dimensional(K,field,V,space)
+        =>:
+            \dimension::finite_dimension<K,field,V>(space) $in N
+            \dimension::finite_dimension<K,field,V>(space) $in R
+            \dimension::finite_dimension<K,field,V>(space) $in C
+
+thm sum_dimension_bounds:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,U,W power_set(V):
+        $vector_space::is_subspace(K,field,V,space,U)
+        $vector_space::is_subspace(K,field,V,space,W)
+        $vector_space::is_subspace(K,field,V,space,intersect(U,W))
+        $vector_space::is_subspace(K,field,V,space,\direct_sum::subspace_sum<K,field,V,space,U,W>)
+        $basis::is_finite_dimensional(K,field,U,\subspace::restricted_space<K,field,V,space,U>)
+        $basis::is_finite_dimensional(K,field,W,\subspace::restricted_space<K,field,V,space,W>)
+        $basis::is_finite_dimensional(K,field,intersect(U,W),\subspace::restricted_space<K,field,V,space,intersect(U,W)>)
+        $basis::is_finite_dimensional(K,field,\direct_sum::subspace_sum<K,field,V,space,U,W>,\subspace::restricted_space<K,field,V,space,\direct_sum::subspace_sum<K,field,V,space,U,W>>)
+        \dimension::finite_dimension<K,field,U>(\subspace::restricted_space<K,field,V,space,U>) $in R
+        \dimension::finite_dimension<K,field,W>(\subspace::restricted_space<K,field,V,space,W>) $in R
+        =>:
+            \dimension::finite_dimension<K,field,U>(\subspace::restricted_space<K,field,V,space,U>)<=\dimension::finite_dimension<K,field,\direct_sum::subspace_sum<K,field,V,space,U,W>>(\subspace::restricted_space<K,field,V,space,\direct_sum::subspace_sum<K,field,V,space,U,W>>)
+            \dimension::finite_dimension<K,field,W>(\subspace::restricted_space<K,field,V,space,W>)<=\dimension::finite_dimension<K,field,\direct_sum::subspace_sum<K,field,V,space,U,W>>(\subspace::restricted_space<K,field,V,space,\direct_sum::subspace_sum<K,field,V,space,U,W>>)
+            \dimension::finite_dimension<K,field,\direct_sum::subspace_sum<K,field,V,space,U,W>>(\subspace::restricted_space<K,field,V,space,\direct_sum::subspace_sum<K,field,V,space,U,W>>)<=\dimension::finite_dimension<K,field,U>(\subspace::restricted_space<K,field,V,space,U>)+\dimension::finite_dimension<K,field,W>(\subspace::restricted_space<K,field,V,space,W>)
+    release thm direct_sum::subspace_sum_contains_summands(K,field,V,space,U,W)
+    by thm subspace_dimension_le_containing_subspace(K,field,V,space,\direct_sum::subspace_sum<K,field,V,space,U,W>,U) => \dimension::finite_dimension<K,field,U>(\subspace::restricted_space<K,field,V,space,U>)<=\dimension::finite_dimension<K,field,\direct_sum::subspace_sum<K,field,V,space,U,W>>(\subspace::restricted_space<K,field,V,space,\direct_sum::subspace_sum<K,field,V,space,U,W>>)
+    by thm subspace_dimension_le_containing_subspace(K,field,V,space,\direct_sum::subspace_sum<K,field,V,space,U,W>,W) => \dimension::finite_dimension<K,field,W>(\subspace::restricted_space<K,field,V,space,W>)<=\dimension::finite_dimension<K,field,\direct_sum::subspace_sum<K,field,V,space,U,W>>(\subspace::restricted_space<K,field,V,space,\direct_sum::subspace_sum<K,field,V,space,U,W>>)
+    by thm grassmann_dimension(K,field,V,space,U,W) => \dimension::finite_dimension<K,field,U>(\subspace::restricted_space<K,field,V,space,U>)+\dimension::finite_dimension<K,field,W>(\subspace::restricted_space<K,field,V,space,W>)=\dimension::finite_dimension<K,field,\direct_sum::subspace_sum<K,field,V,space,U,W>>(\subspace::restricted_space<K,field,V,space,\direct_sum::subspace_sum<K,field,V,space,U,W>>)+\dimension::finite_dimension<K,field,intersect(U,W)>(\subspace::restricted_space<K,field,V,space,intersect(U,W)>)
+    have a N=\dimension::finite_dimension<K,field,U>(\subspace::restricted_space<K,field,V,space,U>)
+    have b N=\dimension::finite_dimension<K,field,W>(\subspace::restricted_space<K,field,V,space,W>)
+    have c N=\dimension::finite_dimension<K,field,\direct_sum::subspace_sum<K,field,V,space,U,W>>(\subspace::restricted_space<K,field,V,space,\direct_sum::subspace_sum<K,field,V,space,U,W>>)
+    have d N=\dimension::finite_dimension<K,field,intersect(U,W)>(\subspace::restricted_space<K,field,V,space,intersect(U,W)>)
+    a+b=\dimension::finite_dimension<K,field,U>(\subspace::restricted_space<K,field,V,space,U>)+\dimension::finite_dimension<K,field,W>(\subspace::restricted_space<K,field,V,space,W>)
+    c+d=\dimension::finite_dimension<K,field,\direct_sum::subspace_sum<K,field,V,space,U,W>>(\subspace::restricted_space<K,field,V,space,\direct_sum::subspace_sum<K,field,V,space,U,W>>)+\dimension::finite_dimension<K,field,intersect(U,W)>(\subspace::restricted_space<K,field,V,space,intersect(U,W)>)
+    a+b=c+d
+    d>=0
+    c<=a+b
+    \dimension::finite_dimension<K,field,\direct_sum::subspace_sum<K,field,V,space,U,W>>(\subspace::restricted_space<K,field,V,space,\direct_sum::subspace_sum<K,field,V,space,U,W>>)<=\dimension::finite_dimension<K,field,U>(\subspace::restricted_space<K,field,V,space,U>)+\dimension::finite_dimension<K,field,W>(\subspace::restricted_space<K,field,V,space,W>)
+
+thm trivial_intersection_dimension_adds:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,U,W power_set(V):
+        $vector_space::is_subspace(K,field,V,space,U)
+        $vector_space::is_subspace(K,field,V,space,W)
+        $vector_space::is_subspace(K,field,V,space,intersect(U,W))
+        $vector_space::is_subspace(K,field,V,space,\direct_sum::subspace_sum<K,field,V,space,U,W>)
+        $basis::is_finite_dimensional(K,field,U,\subspace::restricted_space<K,field,V,space,U>)
+        $basis::is_finite_dimensional(K,field,W,\subspace::restricted_space<K,field,V,space,W>)
+        $basis::is_finite_dimensional(K,field,intersect(U,W),\subspace::restricted_space<K,field,V,space,intersect(U,W)>)
+        $basis::is_finite_dimensional(K,field,\direct_sum::subspace_sum<K,field,V,space,U,W>,\subspace::restricted_space<K,field,V,space,\direct_sum::subspace_sum<K,field,V,space,U,W>>)
+        intersect(U,W)={space.zero}
+        =>:
+            \dimension::finite_dimension<K,field,U>(\subspace::restricted_space<K,field,V,space,U>)+\dimension::finite_dimension<K,field,W>(\subspace::restricted_space<K,field,V,space,W>)=\dimension::finite_dimension<K,field,\direct_sum::subspace_sum<K,field,V,space,U,W>>(\subspace::restricted_space<K,field,V,space,\direct_sum::subspace_sum<K,field,V,space,U,W>>)
+    release struct def \subspace::restricted_space<K,field,V,space,intersect(U,W)>
+    \subspace::restricted_space<K,field,V,space,intersect(U,W)>.zero=space.zero
+    intersect(U,W) ={\subspace::restricted_space<K,field,V,space,intersect(U,W)>.zero}
+    by thm linear_criteria::zero_space_has_zero_dimension(K,field,intersect(U,W),\subspace::restricted_space<K,field,V,space,intersect(U,W)>) => \dimension::finite_dimension<K,field,intersect(U,W)>(\subspace::restricted_space<K,field,V,space,intersect(U,W)>)=0
+    by thm grassmann_dimension(K,field,V,space,U,W) => \dimension::finite_dimension<K,field,U>(\subspace::restricted_space<K,field,V,space,U>)+\dimension::finite_dimension<K,field,W>(\subspace::restricted_space<K,field,V,space,W>)=\dimension::finite_dimension<K,field,\direct_sum::subspace_sum<K,field,V,space,U,W>>(\subspace::restricted_space<K,field,V,space,\direct_sum::subspace_sum<K,field,V,space,U,W>>)+\dimension::finite_dimension<K,field,intersect(U,W)>(\subspace::restricted_space<K,field,V,space,intersect(U,W)>)
+    \dimension::finite_dimension<K,field,U>(\subspace::restricted_space<K,field,V,space,U>)+\dimension::finite_dimension<K,field,W>(\subspace::restricted_space<K,field,V,space,W>)=\dimension::finite_dimension<K,field,\direct_sum::subspace_sum<K,field,V,space,U,W>>(\subspace::restricted_space<K,field,V,space,\direct_sum::subspace_sum<K,field,V,space,U,W>>)
+
+thm dimension_additivity_has_trivial_intersection:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,U,W power_set(V):
+        $vector_space::is_subspace(K,field,V,space,U)
+        $vector_space::is_subspace(K,field,V,space,W)
+        $vector_space::is_subspace(K,field,V,space,intersect(U,W))
+        $vector_space::is_subspace(K,field,V,space,\direct_sum::subspace_sum<K,field,V,space,U,W>)
+        $basis::is_finite_dimensional(K,field,U,\subspace::restricted_space<K,field,V,space,U>)
+        $basis::is_finite_dimensional(K,field,W,\subspace::restricted_space<K,field,V,space,W>)
+        $basis::is_finite_dimensional(K,field,intersect(U,W),\subspace::restricted_space<K,field,V,space,intersect(U,W)>)
+        $basis::is_finite_dimensional(K,field,\direct_sum::subspace_sum<K,field,V,space,U,W>,\subspace::restricted_space<K,field,V,space,\direct_sum::subspace_sum<K,field,V,space,U,W>>)
+        \dimension::finite_dimension<K,field,U>(\subspace::restricted_space<K,field,V,space,U>)+\dimension::finite_dimension<K,field,W>(\subspace::restricted_space<K,field,V,space,W>)=\dimension::finite_dimension<K,field,\direct_sum::subspace_sum<K,field,V,space,U,W>>(\subspace::restricted_space<K,field,V,space,\direct_sum::subspace_sum<K,field,V,space,U,W>>)
+        =>:
+            intersect(U,W)={space.zero}
+    by thm grassmann_dimension(K,field,V,space,U,W) => \dimension::finite_dimension<K,field,U>(\subspace::restricted_space<K,field,V,space,U>)+\dimension::finite_dimension<K,field,W>(\subspace::restricted_space<K,field,V,space,W>)=\dimension::finite_dimension<K,field,\direct_sum::subspace_sum<K,field,V,space,U,W>>(\subspace::restricted_space<K,field,V,space,\direct_sum::subspace_sum<K,field,V,space,U,W>>)+\dimension::finite_dimension<K,field,intersect(U,W)>(\subspace::restricted_space<K,field,V,space,intersect(U,W)>)
+    have a N=\dimension::finite_dimension<K,field,U>(\subspace::restricted_space<K,field,V,space,U>)
+    have b N=\dimension::finite_dimension<K,field,W>(\subspace::restricted_space<K,field,V,space,W>)
+    have c N=\dimension::finite_dimension<K,field,\direct_sum::subspace_sum<K,field,V,space,U,W>>(\subspace::restricted_space<K,field,V,space,\direct_sum::subspace_sum<K,field,V,space,U,W>>)
+    have d N=\dimension::finite_dimension<K,field,intersect(U,W)>(\subspace::restricted_space<K,field,V,space,intersect(U,W)>)
+    a+b=\dimension::finite_dimension<K,field,U>(\subspace::restricted_space<K,field,V,space,U>)+\dimension::finite_dimension<K,field,W>(\subspace::restricted_space<K,field,V,space,W>)
+    c+d=\dimension::finite_dimension<K,field,\direct_sum::subspace_sum<K,field,V,space,U,W>>(\subspace::restricted_space<K,field,V,space,\direct_sum::subspace_sum<K,field,V,space,U,W>>)+\dimension::finite_dimension<K,field,intersect(U,W)>(\subspace::restricted_space<K,field,V,space,intersect(U,W)>)
+    a+b=c+d
+    a+b=c
+    c+d=c
+    d=(c+d)-c=c-c=0
+    \dimension::finite_dimension<K,field,intersect(U,W)>(\subspace::restricted_space<K,field,V,space,intersect(U,W)>)=0
+    by thm linear_criteria::zero_dimension_is_zero_space(K,field,intersect(U,W),\subspace::restricted_space<K,field,V,space,intersect(U,W)>) => intersect(U,W) ={\subspace::restricted_space<K,field,V,space,intersect(U,W)>.zero}
+    release struct def \subspace::restricted_space<K,field,V,space,intersect(U,W)>
+    \subspace::restricted_space<K,field,V,space,intersect(U,W)>.zero=space.zero
+    intersect(U,W) ={space.zero}

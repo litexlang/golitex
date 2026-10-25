@@ -840,6 +840,7 @@ pub(super) fn validate_statement_capture(
         return Ok(());
     }
     let matches = match (source, result) {
+        (Stmt::Trust(crate::ast::stmt::TrustBoundaryStmt::TrustStmt(s)), ExecStmtResult::Trust(crate::execute::ExecTrustBoundaryStmtResult::TrustStmt(crate::execute::ExecTrustStmtResult::Success(p)))) => s == &p.statement,
         (Stmt::By(ByStmt::ByFnExtensionStmt(stmt)), ExecStmtResult::By(ExecByStmtResult::FnExtension(
             crate::execute::execute_by_stmt::ExecByFnExtensionStmtResult::Success(proof)))) => {
             matches!(&proof.stored.store, StoreFactResult::AtomicFact(s) if matches!(&s.fact, AtomicFact::EqualFact(f)
