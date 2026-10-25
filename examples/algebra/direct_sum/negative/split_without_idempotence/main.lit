@@ -1,0 +1,6 @@
+thm split_without_idempotence:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,T fn(v V) V:
+        $Algebra::vector_space::is_linear_map(K,field,V,space,V,space,T)
+        =>:
+            $Algebra::direct_sum::is_internal_direct_sum(K,field,V,space,fn_range(T),preimage(T,space.zero))
+    by thm Algebra::direct_sum::linear_idempotent_splits_space(K,field,V,space,T) => $Algebra::direct_sum::is_internal_direct_sum(K,field,V,space,fn_range(T),preimage(T,space.zero))

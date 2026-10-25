@@ -401,9 +401,11 @@ fn function_composition_durable_examples_and_lean_boundary() {
     .unwrap();
     let error = crate::run::run_command(command)
         .err()
-        .expect("native composition Lean replay is unsupported");
+        .expect("the full example still has unsupported Lean constructor evidence");
     assert!(
-        error.to_string().contains("WD/FunctionSpace/Composition"),
+        error
+            .to_string()
+            .contains("Equality/MatchingOneArgByOne/Constructor"),
         "{error}"
     );
 }

@@ -1,0 +1,112 @@
+release obj def model::real_inv
+
+release obj def model::real_add
+
+release obj def model::real_neg
+
+release obj def model::real_mul
+
+release obj def model::plane_add
+
+release obj def model::plane_smul
+
+release obj def model::e1
+
+release obj def model::e2
+
+release obj def model::real_field
+
+release obj def model::real_plane
+
+release obj def model::standard_basis
+
+release struct def model::real_field
+
+release struct def model::real_plane
+
+release thm model::standard_plane_basis()
+
+by thm Algebra::basis::basis_is_finite_dimensional(R,model::real_field,R × R,model::real_plane,2,model::standard_basis) => $Algebra::basis::is_finite_dimensional(R,model::real_field,R × R,model::real_plane)
+
+release thm Algebra::direct_sum::direct_sum_with_zero(R,model::real_field,R × R,model::real_plane)
+
+release thm Algebra::direct_sum::projections_carrier(R,model::real_field,R × R,model::real_plane,R × R,{model::real_plane.zero})
+
+release thm Algebra::direct_sum::projections_carrier(R,model::real_field,R × R,model::real_plane,{model::real_plane.zero},R × R)
+
+release thm Algebra::direct_sum::projections_of_pair(R,model::real_field,R × R,model::real_plane,R × R,{model::real_plane.zero},(3,4),model::real_plane.zero)
+
+model::real_plane.add((3,4),model::real_plane.zero)=model::real_plane.add(model::real_plane.zero,(3,4))=(3,4)
+
+\Algebra::direct_sum::left_projection<R,model::real_field,R × R,model::real_plane,R × R,{model::real_plane.zero}>((3,4))=(3,4)
+
+\Algebra::direct_sum::right_projection<R,model::real_field,R × R,model::real_plane,R × R,{model::real_plane.zero}>((3,4))=model::real_plane.zero
+
+release thm Algebra::direct_sum::projections_of_pair(R,model::real_field,R × R,model::real_plane,{model::real_plane.zero},R × R,model::real_plane.zero,(3,4))
+
+model::real_plane.add(model::real_plane.zero,(3,4))=(3,4)
+
+\Algebra::direct_sum::left_projection<R,model::real_field,R × R,model::real_plane,{model::real_plane.zero},R × R>((3,4))=model::real_plane.zero
+
+\Algebra::direct_sum::right_projection<R,model::real_field,R × R,model::real_plane,{model::real_plane.zero},R × R>((3,4))=(3,4)
+
+release thm Algebra::direct_sum::projections_are_linear(R,model::real_field,R × R,model::real_plane,R × R,{model::real_plane.zero})
+
+release thm Algebra::direct_sum::projections_are_complementary(R,model::real_field,R × R,model::real_plane,R × R,{model::real_plane.zero},(3,4))
+
+release thm Algebra::direct_sum::finite_direct_sum_summands(R,model::real_field,R × R,model::real_plane,R × R,{model::real_plane.zero})
+
+release thm Algebra::direct_sum::direct_sum_dimension(R,model::real_field,R × R,model::real_plane,R × R,{model::real_plane.zero})
+
+have zero_subset power_set(R × R)={model::real_plane.zero}
+
+by thm Algebra::subspace::zero_is_subspace(R,model::real_field,R × R,model::real_plane) => $Algebra::vector_space::is_subspace(R,model::real_field,R × R,model::real_plane,{model::real_plane.zero})
+
+by thm Algebra::subspace::subspace_is_nonempty(R,model::real_field,R × R,model::real_plane,zero_subset) => $is_nonempty_set(zero_subset)
+
+by thm Algebra::subspace::restricted_space_is_vector_space(R,model::real_field,R × R,model::real_plane,zero_subset) => \Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset> $in &Algebra::vector_space::VectorSpace<R,model::real_field,zero_subset>
+
+release struct def \Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>
+
+release thm Algebra::direct_sum::direct_sum_with_zero(R,model::real_field,zero_subset,\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>)
+
+\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>.zero=model::real_plane.zero
+
+zero_subset={\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>.zero}
+
+by thm Algebra::subspace::ambient_is_subspace(R,model::real_field,zero_subset,\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>) => $Algebra::vector_space::is_subspace(R,model::real_field,zero_subset,\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>,zero_subset)
+
+release thm Algebra::direct_sum::subspace_sum_contains_summands(R,model::real_field,zero_subset,\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>,zero_subset,zero_subset)
+
+by extension \Algebra::direct_sum::subspace_sum<R,model::real_field,zero_subset,\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>,zero_subset,zero_subset> =zero_subset
+
+intersect(zero_subset,zero_subset)=zero_subset={\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>.zero}
+
+by def $Algebra::direct_sum::is_internal_direct_sum(R,model::real_field,zero_subset,\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>,zero_subset,zero_subset)
+
+release thm Algebra::direct_sum::projections_of_pair(R,model::real_field,zero_subset,\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>,zero_subset,zero_subset,\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>.zero,\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>.zero)
+
+\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>.add(\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>.zero,\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>.zero)=\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>.zero
+
+\Algebra::direct_sum::left_projection<R,model::real_field,zero_subset,\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>,zero_subset,zero_subset>(\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>.zero)=\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>.zero
+
+\Algebra::direct_sum::right_projection<R,model::real_field,zero_subset,\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>,zero_subset,zero_subset>(\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>.zero)=\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>.zero
+
+release thm Algebra::direct_sum::projections_are_linear(R,model::real_field,zero_subset,\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>,zero_subset,zero_subset)
+
+release thm Algebra::direct_sum::projections_are_complementary(R,model::real_field,zero_subset,\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>,zero_subset,zero_subset,\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>.zero)
+
+by thm Algebra::vector_space::identity_linear(R,model::real_field,R × R,model::real_plane) => $Algebra::vector_space::is_linear_map(R,model::real_field,R × R,model::real_plane,R × R,model::real_plane,\Algebra::vector_space::identity<R × R>)
+
+forall v R × R:
+    \Algebra::vector_space::identity<R × R>(\Algebra::vector_space::identity<R × R>(v))=\Algebra::vector_space::identity<R × R>(v)
+
+release thm Algebra::direct_sum::linear_idempotent_splits_space(R,model::real_field,R × R,model::real_plane,\Algebra::vector_space::identity<R × R>)
+
+by thm Algebra::subspace::finite_dimensional_subspace_is_finite_dimensional(R,model::real_field,R × R,model::real_plane,zero_subset) => $Algebra::basis::is_finite_dimensional(R,model::real_field,zero_subset,\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>)
+
+by thm Algebra::linear_criteria::zero_space_has_zero_dimension(R,model::real_field,zero_subset,\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>) => \Algebra::dimension::finite_dimension<R,model::real_field,zero_subset>(\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>)=0
+
+release thm Algebra::direct_sum::finite_direct_sum_summands(R,model::real_field,zero_subset,\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>,zero_subset,zero_subset)
+
+release thm Algebra::direct_sum::direct_sum_dimension(R,model::real_field,zero_subset,\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>,zero_subset,zero_subset)

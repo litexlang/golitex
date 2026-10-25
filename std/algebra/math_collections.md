@@ -442,3 +442,54 @@ subspaces, finite dimension and the set-level inverse are reused. Plane
 repeated-image and two-basis examples, a zero-to-plane map and zero-dimensional
 isomorphism exercise the construction domains. Matrix representation and
 direct sums remain separate developments.
+
+
+## Internal direct sums and complementary projections
+
+A sum vector is the sum of one member of each supplied subset. The guarded
+subspace_sum value collects these vectors for two actual subspaces of the
+same supplied ambient VectorSpace. Closure follows by regrouping addition
+and distributing scalar multiplication. Both summands embed into the sum;
+any subspace containing both contains the sum. No finite basis is involved.
+
+is_internal_direct_sum(K,F,V,X,U,W) means both subsets are subspaces, their
+sum is V and their intersection is {X.zero}. This is an internal direct sum
+inside a supplied ambient space. It neither constructs an external product
+space nor chooses a complement for an arbitrary subspace. Both zero-summand
+orders are allowed. Trivial intersection gives uniqueness of components by
+additive inverses and cancellation; full sum gives existence. Conversely,
+unique existence of a pair for every vector implies full sum and trivial
+intersection.
+
+sum_decomposition<K,F,V,X,U,W>(v) selects the unique pair in U × W after
+that evidence. left_projection and right_projection are the two components,
+viewed as V->V maps. All four value families have six fixed template slots;
+subspace_sum is a set value, the other three take one ordinary vector. The
+pair is selected only after uniqueness, and neither projection requires
+finite dimension or an inner product. They reconstruct the vector, are
+linear, fix their own summand, annihilate the other, are idempotent and have
+mutually zero composites. Their images/kernels are respectively U/W and W/U.
+
+For finite ambient dimension, the inherited-subspace theorem supplies finite
+dimension of both summands. direct_sum_dimension consumes those explicit
+selected-value domains and proves dim(U)+dim(W)=dim(V) by applying rank-nullity
+to the left projection. Equal subspaces have equal inherited dimension via
+a common basis, so the proof does not require equality of two separately
+instantiated inherited struct objects. A single theorem header which uses
+those selected dimensions without their domain facts is not currently an
+accepted surface; callers first release finite_direct_sum_summands.
+
+The plane consumer checks axes and an oblique decomposition using the
+diagonal plus the vertical axis. Zero/full and singleton boundaries check
+that no positive dimension or nonzero summand is assumed. Overlapping or
+nonspanning summands do not license a selected decomposition. External direct
+sums, arbitrary complement selection, representation matrices and further
+operator theory remain separate developments.
+
+A linear idempotent supplies its own split: range/kernel are subspaces, every
+v decomposes as T(v) plus the sum of v with an additive inverse of T(v), and
+T(T(v))=T(v) puts that second part in the kernel. An intersection member is
+both fixed by T and killed by T, so it is zero. This converse needs neither
+finite dimension nor a selected complement. The public reconstruction law
+uses left/right_projection, both V->V; raw tuple-coordinate ambient typing
+remains a source-local step and is not an imported public contract.

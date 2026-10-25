@@ -1,0 +1,9 @@
+thm uniqueness_without_equal_sums:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,U,W power_set(V),u,p U,w,q W:
+        $Algebra::vector_space::is_subspace(K,field,V,space,U)
+        $Algebra::vector_space::is_subspace(K,field,V,space,W)
+        intersect(U,W)={space.zero}
+        =>:
+            u=p
+            w=q
+    release thm Algebra::direct_sum::sum_components_unique(K,field,V,space,U,W,u,p,w,q)

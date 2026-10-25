@@ -1,0 +1,266 @@
+release obj def model::real_inv
+
+release obj def model::real_add
+
+release obj def model::real_neg
+
+release obj def model::real_mul
+
+release obj def model::plane_add
+
+release obj def model::plane_smul
+
+release obj def model::e1
+
+release obj def model::e2
+
+release obj def model::real_field
+
+release obj def model::real_plane
+
+release obj def model::standard_basis
+
+release struct def model::real_field
+
+release struct def model::real_plane
+
+release thm model::standard_plane_basis()
+
+by thm Algebra::basis::basis_is_finite_dimensional(R,model::real_field,R × R,model::real_plane,2,model::standard_basis) => $Algebra::basis::is_finite_dimensional(R,model::real_field,R × R,model::real_plane)
+
+have horizontal power_set(R × R)={p R × R: p(2)=0}
+
+claim:
+    ? $Algebra::vector_space::is_subspace(R,model::real_field,R × R,model::real_plane,horizontal)
+    model::real_plane.zero=(0,0)
+    model::real_plane.zero $in horizontal
+    claim:
+        ? forall u,v R × R:
+            u $in horizontal
+            v $in horizontal
+            =>:
+                model::real_plane.add(u,v) $in horizontal
+        model::real_plane.add(u,v)=model::plane_add(u,v)=(u(1)+v(1),u(2)+v(2))
+        model::real_plane.add(u,v)(1)=u(1)+v(1)
+        model::real_plane.add(u,v)(2)=u(2)+v(2)
+        model::real_plane.add(u,v)(2)=u(2)+v(2)=0
+    claim:
+        ? forall a R,v R × R:
+            v $in horizontal
+            =>:
+                model::real_plane.smul(a,v) $in horizontal
+        model::real_plane.smul(a,v)=model::plane_smul(a,v)=(a*v(1),a*v(2))
+        model::real_plane.smul(a,v)(1)=a*v(1)
+        model::real_plane.smul(a,v)(2)=a*v(2)
+        model::real_plane.smul(a,v)(2)=a*v(2)=0
+    by def $Algebra::vector_space::is_subspace(R,model::real_field,R × R,model::real_plane,horizontal)
+
+have vertical power_set(R × R)={p R × R: p(1)=0}
+
+claim:
+    ? $Algebra::vector_space::is_subspace(R,model::real_field,R × R,model::real_plane,vertical)
+    model::real_plane.zero=(0,0)
+    model::real_plane.zero $in vertical
+    claim:
+        ? forall u,v R × R:
+            u $in vertical
+            v $in vertical
+            =>:
+                model::real_plane.add(u,v) $in vertical
+        model::real_plane.add(u,v)=model::plane_add(u,v)=(u(1)+v(1),u(2)+v(2))
+        model::real_plane.add(u,v)(1)=u(1)+v(1)
+        model::real_plane.add(u,v)(2)=u(2)+v(2)
+        model::real_plane.add(u,v)(1)=u(1)+v(1)=0
+    claim:
+        ? forall a R,v R × R:
+            v $in vertical
+            =>:
+                model::real_plane.smul(a,v) $in vertical
+        model::real_plane.smul(a,v)=model::plane_smul(a,v)=(a*v(1),a*v(2))
+        model::real_plane.smul(a,v)(1)=a*v(1)
+        model::real_plane.smul(a,v)(2)=a*v(2)
+        model::real_plane.smul(a,v)(1)=a*v(1)=0
+    by def $Algebra::vector_space::is_subspace(R,model::real_field,R × R,model::real_plane,vertical)
+
+have diagonal power_set(R × R)={p R × R: p(1)=p(2)}
+
+claim:
+    ? $Algebra::vector_space::is_subspace(R,model::real_field,R × R,model::real_plane,diagonal)
+    model::real_plane.zero=(0,0)
+    model::real_plane.zero(1)=0
+    model::real_plane.zero(2)=0
+    model::real_plane.zero $in diagonal
+    claim:
+        ? forall u,v R × R:
+            u $in diagonal
+            v $in diagonal
+            =>:
+                model::real_plane.add(u,v) $in diagonal
+        model::real_plane.add(u,v)=model::plane_add(u,v)=(u(1)+v(1),u(2)+v(2))
+        model::real_plane.add(u,v)(1)=u(1)+v(1)
+        model::real_plane.add(u,v)(2)=u(2)+v(2)
+        u(1)=u(2)
+        v(1)=v(2)
+        u(1)+v(1)=u(2)+v(2)
+        model::real_plane.add(u,v)(1)=model::real_plane.add(u,v)(2)
+    claim:
+        ? forall a R,v R × R:
+            v $in diagonal
+            =>:
+                model::real_plane.smul(a,v) $in diagonal
+        model::real_plane.smul(a,v)=model::plane_smul(a,v)=(a*v(1),a*v(2))
+        model::real_plane.smul(a,v)(1)=a*v(1)
+        model::real_plane.smul(a,v)(2)=a*v(2)
+        v(1)=v(2)
+        a*v(1)=a*v(2)
+        model::real_plane.smul(a,v)(1)=model::real_plane.smul(a,v)(2)
+    by def $Algebra::vector_space::is_subspace(R,model::real_field,R × R,model::real_plane,diagonal)
+
+claim:
+    ? \Algebra::direct_sum::subspace_sum<R,model::real_field,R × R,model::real_plane,horizontal,vertical> =R × R
+    claim:
+        ? forall p R × R:
+            p $in \Algebra::direct_sum::subspace_sum<R,model::real_field,R × R,model::real_plane,horizontal,vertical>
+        have l horizontal=(p(1),0)
+        have r vertical=(0,p(2))
+        l(1)=p(1)
+        r(1)=0
+        l(1)+r(1)=p(1)
+        l(2)+r(2)=p(2)
+        model::real_plane.add(l,r)=model::plane_add(l,r)=(l(1)+r(1),l(2)+r(2))=(p(1),p(2))=p
+        by thm Algebra::direct_sum::subspace_sum_contains_pair(R,model::real_field,R × R,model::real_plane,horizontal,vertical,l,r) => model::real_plane.add(l,r) $in \Algebra::direct_sum::subspace_sum<R,model::real_field,R × R,model::real_plane,horizontal,vertical>
+    by extension \Algebra::direct_sum::subspace_sum<R,model::real_field,R × R,model::real_plane,horizontal,vertical> =R × R
+
+claim:
+    ? intersect(horizontal,vertical)={model::real_plane.zero}
+    claim:
+        ? forall p intersect(horizontal,vertical):
+            p $in {model::real_plane.zero}
+        p $in horizontal
+        p $in vertical
+        p(1)=0
+        p(2)=0
+        p=(p(1),p(2))=(0,0)=model::real_plane.zero
+    forall p {model::real_plane.zero}:
+        p $in intersect(horizontal,vertical)
+    by extension intersect(horizontal,vertical)={model::real_plane.zero}
+
+by def $Algebra::direct_sum::is_internal_direct_sum(R,model::real_field,R × R,model::real_plane,horizontal,vertical)
+
+release thm Algebra::direct_sum::projections_carrier(R,model::real_field,R × R,model::real_plane,horizontal,vertical)
+
+release thm Algebra::direct_sum::projections_are_linear(R,model::real_field,R × R,model::real_plane,horizontal,vertical)
+
+(3,0) $in horizontal
+
+(0,4) $in vertical
+
+model::real_plane.add((3,0),(0,4))=model::plane_add((3,0),(0,4))=((3,0)(1)+(0,4)(1),(3,0)(2)+(0,4)(2))=(3,4)
+
+release thm Algebra::direct_sum::projections_of_pair(R,model::real_field,R × R,model::real_plane,horizontal,vertical,(3,0),(0,4))
+
+\Algebra::direct_sum::left_projection<R,model::real_field,R × R,model::real_plane,horizontal,vertical>((3,4))=(3,0)
+
+\Algebra::direct_sum::right_projection<R,model::real_field,R × R,model::real_plane,horizontal,vertical>((3,4))=(0,4)
+
+by thm Algebra::direct_sum::sum_decomposition_of_pair(R,model::real_field,R × R,model::real_plane,horizontal,vertical,(3,0),(0,4)) => \Algebra::direct_sum::sum_decomposition<R,model::real_field,R × R,model::real_plane,horizontal,vertical>(model::real_plane.add((3,0),(0,4)))=((3,0),(0,4))
+
+\Algebra::direct_sum::sum_decomposition<R,model::real_field,R × R,model::real_plane,horizontal,vertical>((3,4))=((3,0),(0,4))
+
+release thm Algebra::direct_sum::projections_are_complementary(R,model::real_field,R × R,model::real_plane,horizontal,vertical,(3,4))
+
+release thm Algebra::direct_sum::left_projection_range_kernel(R,model::real_field,R × R,model::real_plane,horizontal,vertical)
+
+release thm Algebra::direct_sum::right_projection_range_kernel(R,model::real_field,R × R,model::real_plane,horizontal,vertical)
+
+release thm Algebra::direct_sum::finite_direct_sum_summands(R,model::real_field,R × R,model::real_plane,horizontal,vertical)
+
+release thm Algebra::direct_sum::direct_sum_dimension(R,model::real_field,R × R,model::real_plane,horizontal,vertical)
+
+claim:
+    ? \Algebra::direct_sum::subspace_sum<R,model::real_field,R × R,model::real_plane,diagonal,vertical> =R × R
+    claim:
+        ? forall p R × R:
+            p $in \Algebra::direct_sum::subspace_sum<R,model::real_field,R × R,model::real_plane,diagonal,vertical>
+        (p(1),p(1))(1)=p(1)
+        (p(1),p(1))(2)=p(1)
+        have l diagonal=(p(1),p(1))
+        have r vertical=(0,p(2)-p(1))
+        l(1)=p(1)
+        r(1)=0
+        l(1)+r(1)=p(1)
+        l(2)=p(1)
+        r(2)=p(2)-p(1)
+        l(2)+r(2)=p(1)+(p(2)-p(1))=p(2)
+        model::real_plane.add(l,r)=model::plane_add(l,r)=(l(1)+r(1),l(2)+r(2))=(p(1),p(2))=p
+        by thm Algebra::direct_sum::subspace_sum_contains_pair(R,model::real_field,R × R,model::real_plane,diagonal,vertical,l,r) => model::real_plane.add(l,r) $in \Algebra::direct_sum::subspace_sum<R,model::real_field,R × R,model::real_plane,diagonal,vertical>
+    by extension \Algebra::direct_sum::subspace_sum<R,model::real_field,R × R,model::real_plane,diagonal,vertical> =R × R
+
+claim:
+    ? intersect(diagonal,vertical)={model::real_plane.zero}
+    claim:
+        ? forall p intersect(diagonal,vertical):
+            p $in {model::real_plane.zero}
+        p $in diagonal
+        p $in vertical
+        p(1)=0
+        p(2)=0
+        p=(p(1),p(2))=(0,0)=model::real_plane.zero
+    forall p {model::real_plane.zero}:
+        p $in intersect(diagonal,vertical)
+    by extension intersect(diagonal,vertical)={model::real_plane.zero}
+
+by def $Algebra::direct_sum::is_internal_direct_sum(R,model::real_field,R × R,model::real_plane,diagonal,vertical)
+
+release thm Algebra::direct_sum::projections_carrier(R,model::real_field,R × R,model::real_plane,diagonal,vertical)
+
+release thm Algebra::direct_sum::projections_are_linear(R,model::real_field,R × R,model::real_plane,diagonal,vertical)
+
+(3,3)(1)=3
+
+(3,3)(2)=3
+
+(3,3) $in diagonal
+
+(0,1) $in vertical
+
+(3,3)(1)+(0,1)(1)=3+0=3
+
+(3,3)(2)+(0,1)(2)=3+1=4
+
+model::real_plane.add((3,3),(0,1))=model::plane_add((3,3),(0,1))=((3,3)(1)+(0,1)(1),(3,3)(2)+(0,1)(2))=(3,4)
+
+release thm Algebra::direct_sum::projections_of_pair(R,model::real_field,R × R,model::real_plane,diagonal,vertical,(3,3),(0,1))
+
+\Algebra::direct_sum::left_projection<R,model::real_field,R × R,model::real_plane,diagonal,vertical>((3,4))=(3,3)
+
+\Algebra::direct_sum::right_projection<R,model::real_field,R × R,model::real_plane,diagonal,vertical>((3,4))=(0,1)
+
+by thm Algebra::direct_sum::sum_decomposition_of_pair(R,model::real_field,R × R,model::real_plane,diagonal,vertical,(3,3),(0,1)) => \Algebra::direct_sum::sum_decomposition<R,model::real_field,R × R,model::real_plane,diagonal,vertical>(model::real_plane.add((3,3),(0,1)))=((3,3),(0,1))
+
+\Algebra::direct_sum::sum_decomposition<R,model::real_field,R × R,model::real_plane,diagonal,vertical>((3,4))=((3,3),(0,1))
+
+release thm Algebra::direct_sum::projections_are_complementary(R,model::real_field,R × R,model::real_plane,diagonal,vertical,(3,4))
+
+release thm Algebra::direct_sum::left_projection_range_kernel(R,model::real_field,R × R,model::real_plane,diagonal,vertical)
+
+release thm Algebra::direct_sum::right_projection_range_kernel(R,model::real_field,R × R,model::real_plane,diagonal,vertical)
+
+release thm Algebra::direct_sum::finite_direct_sum_summands(R,model::real_field,R × R,model::real_plane,diagonal,vertical)
+
+release thm Algebra::direct_sum::direct_sum_dimension(R,model::real_field,R × R,model::real_plane,diagonal,vertical)
+
+by contra:
+    ? not $Algebra::direct_sum::is_internal_direct_sum(R,model::real_field,R × R,model::real_plane,horizontal,horizontal)
+    $Algebra::direct_sum::is_internal_direct_sum(R,model::real_field,R × R,model::real_plane,horizontal,horizontal)
+    intersect(horizontal,horizontal)={model::real_plane.zero}
+    (1,0) $in horizontal
+    (1,0) $in intersect(horizontal,horizontal)
+    (1,0) $in {model::real_plane.zero}
+    (1,0)=model::real_plane.zero=(0,0)
+    (1,0)(1)=1
+    (0,0)(1)=0
+    (1,0)(1)=(0,0)(1)
+    impossible 1=0
+
+\Algebra::direct_sum::left_projection<R,model::real_field,R × R,model::real_plane,diagonal,vertical>((3,4))=(3,0)

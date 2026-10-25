@@ -16,7 +16,28 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[2]
 BINARY = ROOT / 'target/release/litex'
 POSITIVES = [ROOT/'std/algebra/coordinate_maps.lit', HERE/'main.lit', HERE/'contracts.lit', HERE/'boundaries/main.lit', HERE/'isomorphism/main.lit']
-NEGATIVES = {'map_without_source_basis': None, 'map_wrong_image_length': None, 'coordinates_without_basis': None, 'unit_index_zero': None, 'unit_index_above_length': None, 'unit_application_zero': None, 'unit_empty_index': None, 'unit_wrong_value': None, 'uniqueness_without_linearity': None, 'uniqueness_without_agreement': None, 'maps_equal_without_agreement': None, 'bijection_without_target_basis': None, 'round_trip_without_target_basis': None, 'basis_image_without_bijection': None, 'isomorphism_without_equal_dimensions': None, 'isomorphism_without_target_finiteness': None, 'repeated_images_wrong_value': None, 'repeated_images_have_no_inverse': None, 'basis_inverse_wrong_value': None, 'unequal_dimensions_no_bijection': None}
+NEGATIVES = {
+    'map_without_source_basis': 'goal_well_defined',
+    'map_wrong_image_length': 'goal_well_defined',
+    'coordinates_without_basis': 'goal_well_defined',
+    'unit_index_zero': 'goal_well_defined',
+    'unit_index_above_length': 'goal_well_defined',
+    'unit_application_zero': 'goal_well_defined',
+    'unit_empty_index': 'goal_well_defined',
+    'unit_wrong_value': 'conclusion',
+    'uniqueness_without_linearity': 'premise',
+    'uniqueness_without_agreement': 'premise',
+    'maps_equal_without_agreement': 'premise',
+    'bijection_without_target_basis': 'premise',
+    'round_trip_without_target_basis': 'goal_well_defined',
+    'basis_image_without_bijection': 'premise',
+    'isomorphism_without_equal_dimensions': 'premise',
+    'isomorphism_without_target_finiteness': 'premise',
+    'repeated_images_wrong_value': 'search_proof',
+    'repeated_images_have_no_inverse': 'well_defined',
+    'basis_inverse_wrong_value': 'search_proof',
+    'unequal_dimensions_no_bijection': 'search_proof',
+}
 RECORDS = []
 OUTPUT_DIR = None
 LOCK = threading.Lock()

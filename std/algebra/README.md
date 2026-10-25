@@ -991,7 +991,7 @@ The [zero-dimensional consumer](../../examples/algebra/coordinate_maps/boundarie
 uses the inherited zero subspace over the same real field. An empty image list
 constructs the linear map into the whole plane, and that map is not surjective.
 Two empty bases give a zero-space isomorphism. Equal-dimension existence works
-at dimension0, while a linear bijection from dimension0 to dimension2 is
+at dimension 0, while a linear bijection from dimension 0 to dimension2 is
 explicitly ruled out.
 
 Run python3 examples/algebra/coordinate_maps/check.py --binary /path/to/litex
@@ -1003,5 +1003,90 @@ rejection alone is not a theorem of logical negation.
 No new public/proof-local prop, native Obj/Fact, BT, rule, strategy, parser,
 AST/runtime, overload or compiler change is introduced. One narrow draft trust
 in the selected-inverse identification is discharged by explicitly using
-injectivity; the maintained source is strict and trust-free. Direct sums,
-representation matrices and further operator/spectral theory remain open.
+injectivity; the maintained source is strict and trust-free. Internal direct
+sums are supplied by the next export below; representation matrices and
+further operator/spectral theory remain open.
+
+
+## Internal direct sums and projections
+
+The direct_sum export works with supplied subspaces U/W of the same supplied
+ambient VectorSpace X over K/F. It does not require an inner product, a chosen
+basis, finite dimension or nonzero summands.
+
+| Value or relation | Exact role |
+| --- | --- |
+| is_sum_vector(K,F,V,X,U,W,v) | There exist u in U and w in W with X.add(u,w)=v. U/W are subsets of V; no subspace premise is built into this candidate relation. |
+| \direct_sum::subspace_sum<K,F,V,X,U,W> | A power_set(V) value collecting sum vectors. Its six template parameters require both actual subspace facts. |
+| is_internal_direct_sum(K,F,V,X,U,W) | Both supplied subsets are subspaces, their sum is V, and intersect(U,W)={X.zero}. |
+| \direct_sum::sum_decomposition<K,F,V,X,U,W>(v) | The unique pair in U × W adding to v, selected after internal-direct-sum evidence. |
+| \direct_sum::left_projection<K,F,V,X,U,W>(v), \direct_sum::right_projection<K,F,V,X,U,W>(v) | The selected components as V->V maps. Their values belong to U/W respectively. |
+
+All four value families have six fixed template parameters. The sum is a set
+value; the other three are functions with exactly one ordinary source-vector
+argument. Whole function values and application have the same contract, with
+no argument-count/type dispatch. No complement is selected for an arbitrary
+subspace. This is an internal direct sum inside V; external product-space
+construction remains separate.
+
+| Theorems | Checked mathematical content |
+| --- | --- |
+| subspace_sum_contains_pair, subspace_sum_contains_summands | A sum belongs to the constructed set, and both summands are contained in it. |
+| subspace_sum_is_subspace, subspace_sum_is_least, subspace_sum_commutes | Closure, least containing subspace and commutativity. |
+| internal_direct_sum_commutes, direct_sum_with_zero | Either summand order is allowed; V plus its zero subspace works, including singleton V. |
+| sum_components_unique | Trivial intersection makes two equal sums have equal components; full spanning and finite dimension are unnecessary. |
+| direct_sum_decomposition_exists_unique, unique_decomposition_gives_direct_sum | Internal direct sum is equivalent to unique existence of a decomposition pair for every vector. |
+| sum_decomposition_of_pair | Decomposing X.add(u,w) returns (u,w). |
+| projections_carrier, projections_reconstruct, projections_of_pair | Complete function carriers, exact summand membership, reconstruction and prescribed component values. |
+| projections_add, projections_smul, projections_are_linear | Both projections preserve addition and scalar multiplication. |
+| projections_on_summands, projections_are_complementary | Fix their own summand, kill the other, are idempotent and have zero mutual composites. |
+| left_projection_range_kernel, right_projection_range_kernel | The left image/kernel are U/W; the right image/kernel are W/U. |
+| finite_direct_sum_summands | Finite ambient dimension implies finite inherited dimension of both summands. |
+| equal_subspaces_have_equal_dimension | Equal finite subspaces of the same ambient space have equal inherited dimension, proved using a common basis. |
+| direct_sum_dimension | dim(U)+dim(W)=dim(V), with ambient and both inherited finite-dimensional value domains explicit. First call finite_direct_sum_summands when only ambient finiteness is supplied. |
+| linear_idempotent_splits_space | A supplied linear endomorphism T with T(T(v))=T(v) splits V into fn_range(T) and preimage(T,X.zero), without any finite-dimensional premise. |
+
+These are 25 named source theorems. The mathematical source has 33 statements,
+four source value families and two public predicates. Two source-local
+universal facts handle raw selected-pair typing/reconstruction; the public
+reconstruction theorem uses the V->V projection values. A raw selected tuple
+coordinate need not be accepted directly as an ambient-operation argument
+in a generic imported header. The projection interface avoids that unsupported
+header shape while exposing the same vector identity.
+
+This is the complete isolated consumer, using the std import alias Algebra:
+
+```litex
+thm consume_linear_idempotent_splits_space:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,T fn(v V) V:
+        $Algebra::vector_space::is_linear_map(K,field,V,space,V,space,T)
+        forall v V:
+            T(T(v))=T(v)
+        =>:
+            $Algebra::direct_sum::is_internal_direct_sum(K,field,V,space,fn_range(T),preimage(T,space.zero))
+    by thm Algebra::direct_sum::linear_idempotent_splits_space(K,field,V,space,T) => $Algebra::direct_sum::is_internal_direct_sum(K,field,V,space,fn_range(T),preimage(T,space.zero))
+```
+
+The [plane consumer](../../examples/algebra/direct_sum/main.lit) checks
+(3,4)=(3,0)+(0,4) for the axes. For the diagonal plus vertical axis it checks
+the oblique decomposition(3,4)=(3,3)+(0,1), along with linearity, selected
+pairs, idempotence, images, kernels and the dimension formula. It proves
+that two repeated horizontal summands are not a direct sum. The
+[boundary consumer](../../examples/algebra/direct_sum/boundaries/main.lit)
+checks full/zero summands in both orders and an inherited singleton space,
+including dimension 0. The identity endomorphism exercises the idempotent
+converse. The [contracts](../../examples/algebra/direct_sum/contracts.lit)
+call every named source theorem over arbitrary supplied fields/spaces.
+
+Run python3 examples/algebra/direct_sum/check.py --binary /path/to/litex for
+strict source/caller checks, twenty final-statement controls, actual installed
+std discovery in both layouts and complete std/WiX payload/component-reference
+agreement. Rejection means a proof/domain obligation was not established; the
+explicit overlapping-summand negation is proved separately in the plane caller.
+
+Two narrow draft trusts in rank/nullity dimension identification were removed
+in strict review using the common-basis dimension theorem. The maintained
+source has no trust, user axiom, new native Obj/Fact, BT, strategy, parser,
+AST/runtime or compiler change. Finiteness of the ambient space from two finite summands, the general
+Grassmann formula, external direct sums, complement existence, representation
+matrices and further operator theory remain separate work.
