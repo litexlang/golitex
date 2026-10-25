@@ -10,6 +10,5 @@ mod tests;
 pub use store_template_definition_facts::StoreTemplateDefinitionFactResult;
 
 pub use exec_def_template_stmt::{
-    AssumedTemplateDomFactResult, ExecDefTemplateStmtFailed, ExecDefTemplateStmtResult,
-    ExecDefTemplateStmtSuccessResult, ExecTemplateDefBodyResult,
+    ExecDefTemplateStmtFailed, ExecDefTemplateStmtResult, ExecDefTemplateStmtSuccessResult,
 };

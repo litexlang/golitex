@@ -130,8 +130,7 @@ pub use execute_def_struct_stmt::{
     ExecDefStructStmtSuccessResult,
 };
 pub use execute_def_template_stmt::{
-    AssumedTemplateDomFactResult, ExecDefTemplateStmtFailed, ExecDefTemplateStmtResult,
-    ExecDefTemplateStmtSuccessResult, ExecTemplateDefBodyResult,
+    ExecDefTemplateStmtFailed, ExecDefTemplateStmtResult, ExecDefTemplateStmtSuccessResult,
 };
 pub use execute_def_thm_stmt::{
     ExecDefThmBodyProof, ExecDefThmForallProof, ExecDefThmNonForallProof, ExecDefThmStmtFailed,

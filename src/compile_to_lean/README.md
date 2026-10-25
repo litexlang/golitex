@@ -630,8 +630,29 @@ or invented premise to fill unsupported evidence.
 Top-level source `trust` and user `axiom` compile to explicit `h_<FactId>`
 hypotheses. Later declarations receive those hypotheses as parameters, and a
 named axiom can be cited, released or used by `by thm`. Their original WD and
-inference stages are still checked. These source files require non-strict mode;
-local trust closures and `trust have` are not yet supported.
+inference stages are still checked. These source files require non-strict mode.
+Top-level `trust have` similarly introduces certified objects and their membership
+and body facts as explicit parameters. Local trust in `claim`, named theorems
+and `sketch` is closed over the original enclosing binders and premises. For
+example, trusting `x > 0` inside a theorem about admissible real `x` adds the
+hypothesis that every admissible real is positive. The conclusion stays unchanged,
+and later theorem calls pass that hypothesis by its original FactId. Closure
+hypotheses range over semantic objects so calls work across host universes.
+Local trust after witness extraction, local `trust have` and locally trusted
+universal statements remain rejected until their closure/citation paths are
+supported.
+
+`template` retains `body: Box<ExecStmtResult>` and compiles its body through the
+ordinary statement dispatcher. The current body slice is a single `have … = …`
+object definition, including set aliases and guarded numeric expressions. Original
+header WD and premises parameterize the generated object; instance WD supplies
+the recorded arguments and guard proofs. Each published definition fact cites its
+retained `source_fact_id`. Detailed JSON exposes the header evidence, ordinary
+body result and publication links. Function, choice/witness and trust-have template
+bodies remain explicit unsupported branches. See the
+[guarded quotient](../../lean/examples/template_guarded_quotient/statement.lit)
+and [local assumption](../../lean/examples/admissible_reals_assumption/statement.lit)
+pairs.
 
 Foundation statements use proved Core laws. `regularity` requires an optional
 `RegularitySemantics` instance, supplied for the ZF model. Replacement constructs

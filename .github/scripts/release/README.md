@@ -85,6 +85,13 @@ installation. Tag pushes use the exact Cargo version without leading `v` and
 perform publishing only after the required jobs succeed. This manual run is
 the validation path for a proposed release, not a substitute for executing it.
 
+`installed_std_cli` holds a mutex for each installation fixture's lifetime,
+including copying, child-process execution and cleanup. This prevents parallel
+fork/exec from inheriting another fixture's writable executable descriptor and
+causing a transient Linux `ETXTBSY` at launch (Rust issue
+[114554](https://github.com/rust-lang/rust/issues/114554)). All layout, symlink,
+precedence and failure assertions still run; launch errors remain test failures.
+
 Local quality gates:
 
 ```bash

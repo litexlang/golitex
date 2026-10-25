@@ -1,0 +1,10 @@
+# Assuming every admissible real is positive, reuse a theorem that it is nonnegative.
+abstract_prop admissible(x)
+thm nonnegative_admissible:
+    ? forall x R:
+        $admissible(x)
+        =>:
+            x >= 0
+    trust x > 0
+trust $admissible(2)
+by thm nonnegative_admissible(2) => 2 >= 0

@@ -1,0 +1,13 @@
+thm trivial_intersection_without_additivity:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,U,W power_set(V):
+        $Algebra::vector_space::is_subspace(K,field,V,space,U)
+        $Algebra::vector_space::is_subspace(K,field,V,space,W)
+        $Algebra::vector_space::is_subspace(K,field,V,space,intersect(U,W))
+        $Algebra::vector_space::is_subspace(K,field,V,space,\Algebra::direct_sum::subspace_sum<K,field,V,space,U,W>)
+        $Algebra::basis::is_finite_dimensional(K,field,U,\Algebra::subspace::restricted_space<K,field,V,space,U>)
+        $Algebra::basis::is_finite_dimensional(K,field,W,\Algebra::subspace::restricted_space<K,field,V,space,W>)
+        $Algebra::basis::is_finite_dimensional(K,field,intersect(U,W),\Algebra::subspace::restricted_space<K,field,V,space,intersect(U,W)>)
+        $Algebra::basis::is_finite_dimensional(K,field,\Algebra::direct_sum::subspace_sum<K,field,V,space,U,W>,\Algebra::subspace::restricted_space<K,field,V,space,\Algebra::direct_sum::subspace_sum<K,field,V,space,U,W>>)
+        =>:
+            intersect(U,W)={space.zero}
+    by thm Algebra::subspace_sums::dimension_additivity_has_trivial_intersection(K,field,V,space,U,W) => intersect(U,W)={space.zero}

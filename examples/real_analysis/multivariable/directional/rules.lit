@@ -1,0 +1,24 @@
+# Opaque functions and symbolic positive dimension: no polynomial shortcut.
+
+thm full_differential_supplies_directional_candidate:
+    ? forall n N+,f fn(x cart_n(R,n)) R,p,v cart_n(R,n),A matrix(R,1,n):
+        $has_scalar_differential_at(f,p,n,A)
+        =>:
+            $vectors::directional::has_directional_derivative_at(n,f,p,v,matrix_apply(A,v,1,n)(1))
+    by thm vectors::directional::directional_from_differential(n,f,p,v,A)
+
+thm differentiability_and_gradient_supply_directional_candidate:
+    ? forall n N+,f fn(x cart_n(R,n)) R,p,v,g cart_n(R,n):
+        $is_multi_differentiable_at(f,p,n)
+        $has_gradient_at(f,p,n,g)
+        =>:
+            $vectors::directional::has_directional_derivative_at(n,f,p,v,inner_product(g,v,n))
+    by thm vectors::directional::directional_from_gradient(n,f,p,v,g)
+
+thm candidate_with_existence_releases_selected_directional_value:
+    ? forall n N+,f fn(x cart_n(R,n)) R,p,v cart_n(R,n),L R:
+        $vectors::directional::has_directional_derivative_at(n,f,p,v,L)
+        $is_differentiable_at(\vectors::directional::directional_section<n>(f,p,v),0)
+        =>:
+            \vectors::directional::directional_derivative_at<n>(f,p,v)=L
+    by thm vectors::directional::directional_derivative_value(n,f,p,v,L)

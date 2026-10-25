@@ -10079,12 +10079,6 @@ forall f fn(x R) R, x0,L R:
         fn_lim(f,x0) $in R
 ```
 
-### Native elementary operation additions
-
-See [Native elementary operations](native-elementary-operators.md) for `conj`,
-`sec`, `csc`, `sinh`, `cosh`, `tanh`, `coth`, `sech`, `csch`, and `set_diff`,
-including domains, builtin relationships, strict examples and compiler boundaries.
-
 ### Native real trigonometry (beta preview)
 
 The expressions remain symbolic, while common exact identities verify:

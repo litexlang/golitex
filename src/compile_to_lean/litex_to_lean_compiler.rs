@@ -264,6 +264,12 @@ fn fact_uses_functions(fact: &Fact) -> bool {
 }
 
 fn statement_uses_functions(statement: &ExecStmtResult) -> bool {
+    if let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefTemplate(
+        crate::execute::ExecDefTemplateStmtResult::Success(p),
+    )) = statement
+    {
+        return statement_uses_functions(&p.body);
+    }
     if statement_uses_choice(statement) {
         return true;
     }
@@ -499,6 +505,12 @@ fn fact_uses_sets(fact: &Fact) -> bool {
 }
 
 fn statement_uses_sets(statement: &ExecStmtResult) -> bool {
+    if let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefTemplate(
+        crate::execute::ExecDefTemplateStmtResult::Success(p),
+    )) = statement
+    {
+        return statement_uses_sets(&p.body);
+    }
     if statement_has_set_inference(statement) {
         return true;
     }
@@ -845,6 +857,12 @@ fn statement_has_set_inference(statement: &ExecStmtResult) -> bool {
 }
 
 fn statement_uses_regularity(statement: &ExecStmtResult) -> bool {
+    if let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefTemplate(
+        crate::execute::ExecDefTemplateStmtResult::Success(p),
+    )) = statement
+    {
+        return statement_uses_regularity(&p.body);
+    }
     if super::compile_release_regularity_result::regularity_statement(statement).is_some() {
         return true;
     }
@@ -867,6 +885,12 @@ fn statement_uses_regularity(statement: &ExecStmtResult) -> bool {
 }
 
 fn statement_uses_choice(statement: &ExecStmtResult) -> bool {
+    if let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefTemplate(
+        crate::execute::ExecDefTemplateStmtResult::Success(p),
+    )) = statement
+    {
+        return statement_uses_choice(&p.body);
+    }
     if super::compile_release_choice_result::choice_statement(statement).is_some() {
         return true;
     }

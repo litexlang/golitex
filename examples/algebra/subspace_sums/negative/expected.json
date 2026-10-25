@@ -1,0 +1,21 @@
+{
+  "grassmann_without_left_finiteness": "goal_well_defined",
+  "grassmann_without_right_finiteness": "goal_well_defined",
+  "grassmann_without_intersection_finiteness": "goal_well_defined",
+  "grassmann_without_sum_finiteness": "goal_well_defined",
+  "finite_sum_without_left_finiteness": "premise",
+  "finite_sum_without_right_finiteness": "premise",
+  "intersection_without_finite_summand": "premise",
+  "contained_finiteness_without_containment": "premise",
+  "dimension_bound_without_containment": "premise",
+  "finite_ambient_without_spanning": "premise",
+  "additivity_without_trivial_intersection": "premise",
+  "trivial_intersection_without_additivity": "premise",
+  "intersection_without_right_subspace": "premise",
+  "spanning_sum_without_left_span": "premise",
+  "extension_tail_without_independence": "premise",
+  "overlap_wrong_sum_dimension": "search_proof",
+  "overlap_wrong_intersection_dimension": "search_proof",
+  "disjoint_wrong_sum_dimension": "search_proof",
+  "disjoint_wrong_intersection_dimension": "search_proof"
+}

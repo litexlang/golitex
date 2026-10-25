@@ -133,6 +133,7 @@ impl LitexToLeanCompiler {
             }
             ObjWellDefinedProof::ByDef { obj, proof } => {
                 let term = match (obj, proof) {
+                    (Obj::InstantiatedTemplateObj(instance), ObjWellDefinedProofByDef::InstantiatedTemplateObj(evidence)) => self.compile_template_wd(instance, evidence, position)?,
                     (Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(object)), ObjWellDefinedProofByDef::Structish(crate::execute::execute_fact_stmt::well_defined_results::verify_obj::StructishObjWellDefinedProofByDef::FieldAccess(evidence))) => self.compile_struct_field_wd(object, evidence, position)?,
                     (Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(object)), ObjWellDefinedProofByDef::Structish(crate::execute::execute_fact_stmt::well_defined_results::verify_obj::StructishObjWellDefinedProofByDef::StructObj(evidence))) => self.compile_struct_wd(object, evidence, position)?,
                     (

@@ -1,5 +1,79 @@
 use crate::prelude::*;
 
+#[test]
+fn directional_derivative_explicit_bridges_and_provenance() {
+    let mut rt = runtime();
+    check(&mut rt, "have fn bowl(x cart_n(R,2)) R=x(1)^2+x(2)^2", true);
+    check(&mut rt, "$is_multi_differentiable_at(bowl,(1,2),2)", true);
+    check(&mut rt, "$has_gradient_at(bowl,(1,2),2,(2,4))", true);
+    let run = check(
+        &mut rt,
+        "by thm differentiable_gradient_along_line(bowl,(1,2),(3,-1),2,(2,4))",
+        true,
+    );
+    let json = crate::json_output::project_run_detailed(&run, &rt, "directional", None).stringify();
+    assert!(
+        json.contains("differentiable_gradient_along_line"),
+        "{json}"
+    );
+    assert!(json.contains("inner_product"), "{json}");
+    check(&mut rt, "$has_derivative_at(fn(t R) R {bowl(fn(k closed_range(1,2)) R {(1,2)(k)+t*(3,-1)(k)})},0,inner_product((2,4),(3,-1),2))", true);
+    check(&mut rt, "inner_product((2,4),(3,-1),2)=2", true);
+    let run = check(&mut rt, "by thm scalar_differential_along_line(bowl,(1,2),(3,-1),2,fn(row closed_range(1,1),col closed_range(1,2)) R {(2,4)(col)})", true);
+    let json = crate::json_output::project_run_detailed(&run, &rt, "directional", None).stringify();
+    assert!(json.contains("scalar_differential_along_line"), "{json}");
+    assert!(json.contains("matrix_apply"), "{json}");
+}
+
+#[test]
+fn directional_derivative_opaque_premises_and_missing_differentiability() {
+    let mut rt = runtime();
+    check(&mut rt, "thm gradient_direction:\n    ? forall n N+,f fn(x cart_n(R,n)) R,p,v,g cart_n(R,n),L R:\n        $is_multi_differentiable_at(f,p,n)\n        $has_gradient_at(f,p,n,g)\n        inner_product(g,v,n)=L\n        =>:\n            $has_derivative_at(fn(t R) R {f(fn(k closed_range(1,n)) R {p(k)+t*v(k)})},0,L)\n    inner_product(g,v,n) $in R\n    by thm differentiable_gradient_along_line(f,p,v,n,g)", true);
+    check(&mut rt, "thm unsupported_gradient_only_direction:\n    ? forall n N+,f fn(x cart_n(R,n)) R,p,v,g cart_n(R,n),L R:\n        $has_gradient_at(f,p,n,g)\n        inner_product(g,v,n)=L\n        =>:\n            $has_derivative_at(fn(t R) R {f(fn(k closed_range(1,n)) R {p(k)+t*v(k)})},0,L)\n    inner_product(g,v,n) $in R\n    by thm differentiable_gradient_along_line(f,p,v,n,g)", false);
+    check(&mut rt, "0=0", true);
+}
+
+#[test]
+fn directional_derivative_full_domain_and_dimension_boundaries() {
+    let mut rt = runtime();
+    check(
+        &mut rt,
+        "have fn guarded(x cart_n(R,2): x(1)>=0) R=x(1)^2+x(2)^2",
+        true,
+    );
+    check(
+        &mut rt,
+        "by thm differentiable_gradient_along_line(guarded,(1,2),(3,-1),2,(2,4))",
+        false,
+    );
+    check(
+        &mut rt,
+        "have fn exact(x fn(k closed_range(1,2)) R) R=x(1)^2+x(2)^2",
+        true,
+    );
+    check(
+        &mut rt,
+        "by thm differentiable_gradient_along_line(exact,(1,2),(3,-1),2,(2,4))",
+        true,
+    );
+    check(
+        &mut rt,
+        "by thm differentiable_gradient_along_line(exact,(1,2),(3,-1,0),2,(2,4))",
+        false,
+    );
+    check(
+        &mut rt,
+        "by thm differentiable_gradient_along_line(exact,(1,2),(3,-1),3,(2,4))",
+        false,
+    );
+    check(
+        &mut rt,
+        "by thm scalar_differential_along_line(exact,(1,2),(3,-1),2,identity_matrix(2))",
+        false,
+    );
+    check(&mut rt, "0=0", true);
+}
+
 fn runtime() -> Runtime {
     Runtime::new(LaunchCommand::Eval {
         code: String::new(),

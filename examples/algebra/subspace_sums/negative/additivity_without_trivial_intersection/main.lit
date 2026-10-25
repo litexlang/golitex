@@ -1,0 +1,13 @@
+thm additivity_without_trivial_intersection:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,U,W power_set(V):
+        $Algebra::vector_space::is_subspace(K,field,V,space,U)
+        $Algebra::vector_space::is_subspace(K,field,V,space,W)
+        $Algebra::vector_space::is_subspace(K,field,V,space,intersect(U,W))
+        $Algebra::vector_space::is_subspace(K,field,V,space,\Algebra::direct_sum::subspace_sum<K,field,V,space,U,W>)
+        $Algebra::basis::is_finite_dimensional(K,field,U,\Algebra::subspace::restricted_space<K,field,V,space,U>)
+        $Algebra::basis::is_finite_dimensional(K,field,W,\Algebra::subspace::restricted_space<K,field,V,space,W>)
+        $Algebra::basis::is_finite_dimensional(K,field,intersect(U,W),\Algebra::subspace::restricted_space<K,field,V,space,intersect(U,W)>)
+        $Algebra::basis::is_finite_dimensional(K,field,\Algebra::direct_sum::subspace_sum<K,field,V,space,U,W>,\Algebra::subspace::restricted_space<K,field,V,space,\Algebra::direct_sum::subspace_sum<K,field,V,space,U,W>>)
+        =>:
+            \Algebra::dimension::finite_dimension<K,field,U>(\Algebra::subspace::restricted_space<K,field,V,space,U>)+\Algebra::dimension::finite_dimension<K,field,W>(\Algebra::subspace::restricted_space<K,field,V,space,W>)=\Algebra::dimension::finite_dimension<K,field,\Algebra::direct_sum::subspace_sum<K,field,V,space,U,W>>(\Algebra::subspace::restricted_space<K,field,V,space,\Algebra::direct_sum::subspace_sum<K,field,V,space,U,W>>)
+    by thm Algebra::subspace_sums::trivial_intersection_dimension_adds(K,field,V,space,U,W) => \Algebra::dimension::finite_dimension<K,field,U>(\Algebra::subspace::restricted_space<K,field,V,space,U>)+\Algebra::dimension::finite_dimension<K,field,W>(\Algebra::subspace::restricted_space<K,field,V,space,W>)=\Algebra::dimension::finite_dimension<K,field,\Algebra::direct_sum::subspace_sum<K,field,V,space,U,W>>(\Algebra::subspace::restricted_space<K,field,V,space,\Algebra::direct_sum::subspace_sum<K,field,V,space,U,W>>)

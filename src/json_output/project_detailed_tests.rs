@@ -404,3 +404,35 @@ fn detailed_register_preserves_actual_failure_stage_in_both_languages() {
         }
     }
 }
+
+#[test]
+fn template_detailed_body_reuses_statement_projection() {
+    let mut runtime = runtime_en();
+    let result = exec_one(
+        &mut runtime,
+        "template<S set>:\n    have carrier_copy set = S",
+    );
+    let crate::execute::ExecStmtResult::Definition(
+        crate::execute::ExecDefinitionStmtResult::DefTemplate(
+            crate::execute::ExecDefTemplateStmtResult::Success(p),
+        ),
+    ) = &result
+    else {
+        panic!("successful template")
+    };
+    let json = project_stmt_detailed(&result, &runtime);
+    assert_eq!(
+        obj_field(&json, "body"),
+        &project_stmt_detailed(&p.body, &runtime)
+    );
+    assert!(obj_field(&json, "introduced_params").as_object().is_ok());
+    assert!(obj_field(&json, "assumed_dom_facts")
+        .as_array()
+        .unwrap()
+        .is_empty());
+    assert!(!obj_field(&json, "definition_facts")
+        .as_array()
+        .unwrap()
+        .is_empty());
+    assert!(json_has_no_local_env(&json));
+}

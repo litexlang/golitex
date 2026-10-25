@@ -1,3 +1,4 @@
+use super::compile_assumption_stmt_result::{trust_have, assumption_start};
 use super::piecewise_evidence::PiecewiseEvidence;
 use crate::ast::stmt::DefAbstractPropStmt;
 use crate::execute::{ExecHaveFnEqualCaseByCaseStmtResult, ExecHaveFnEqualCaseByCaseStmtSuccessResult};
@@ -88,6 +89,7 @@ pub(super) enum SourceOwner<'a> {
     Completion(&'a SourcePosition<'a>),
     SetBuilder(&'a SetBuilder, &'a SetBuilderObjWellDefinedProof),
     Named(&'a ExecDefThmStmtSuccess),
+    Template(&'a crate::execute::ExecDefTemplateStmtSuccessResult),
     Claim(&'a ExecClaimStmtSuccess),
     Sketch(&'a ExecSketchStmtSuccess),
     Choice(&'a crate::execute::execute_by_stmt::ExecReleaseAxiomOfChoiceStmtSuccess),
@@ -548,8 +550,8 @@ impl<'a> SourcePosition<'a> {
         while let Some(current) = position {
             if let SourceOwner::Run(run) = current.owner {
                 for statement in run.statement_results.iter().take(current.before) {
-                    if let Some(proof) = ordinary_have(statement) {
-                        append_have_parameters(proof, usize::MAX, &mut parameters);
+                    if context_parameter_parts(statement).is_some() {
+                        append_have_parameters(statement, usize::MAX, &mut parameters);
                     }
                 }
                 break;
@@ -570,8 +572,8 @@ impl<'a> SourcePosition<'a> {
                     }
                 }
                 if enclosing.is_some_and(|p| matches!(p.owner, SourceOwner::Run(_))) {
-                    if let Some(proof) = ordinary_have(statement) {
-                        append_have_parameters(proof, current.before, &mut parameters);
+                    if context_parameter_parts(statement).is_some() {
+                        append_have_parameters(statement, current.before, &mut parameters);
                     }
                 }
             }
@@ -617,11 +619,14 @@ impl<'a> SourcePosition<'a> {
             .into_iter()
             .flat_map(|(_, _, statement, before)| {
                 let stages = super::compile_assumption_stmt_result::assumption_stages(statement);
-                let count = before.saturating_sub(stages.len());
+                let count = before.saturating_sub(assumption_start(statement) + stages.len());
                 stages
                     .into_iter()
                     .take(count)
                     .map(|(fact, _, _)| fact.fact_id())
+                    .chain(super::compile_local_assumptions::local_assumption_ids(
+                        statement,
+                    ))
                     .collect::<Vec<_>>()
             })
             .collect()
@@ -711,7 +716,7 @@ impl<'a> SourcePosition<'a> {
                 | SourceOwner::KnownForall(_)
                 | SourceOwner::Call(_)
                 | SourceOwner::ThmRelease(_)
-                | SourceOwner::HaveEqualType(_) => return true,
+                | SourceOwner::HaveEqualType(_) | SourceOwner::Template(_) => return true,
                 SourceOwner::Piecewise(_) | SourceOwner::RecursiveFunction(_)
                 | SourceOwner::RecursiveCase(_)
                 | SourceOwner::RecursiveDisjoint(_) => return true,
@@ -752,7 +757,22 @@ impl<'a> SourcePosition<'a> {
                     if site.is_local() {
                         reference
                     } else {
-                        site.context_application(&reference)
+                        let mut reference = site.context_application(&reference);
+                        if let SourceOwner::Run(run) = site.owner {
+                            let ids = super::compile_local_assumptions::local_assumption_ids(
+                                &run.statement_results[site.before],
+                            );
+                            if !ids.is_empty() {
+                                reference = format!(
+                                    "({reference} {})",
+                                    ids.iter()
+                                        .map(|id| format!("(h_{0} := h_{0})", id.value()))
+                                        .collect::<Vec<_>>()
+                                        .join(" ")
+                                );
+                            }
+                        }
+                        reference
                     },
                 ))
             }
@@ -940,6 +960,47 @@ impl<'a> SourcePosition<'a> {
             position = current.parent;
         }
         Err(LeanCompileError::unsupported("Struct/Producer"))
+    }
+
+    pub fn visible_template(
+        &self,
+        name: &AtomicName,
+    ) -> Result<
+        (
+            &'a crate::execute::ExecDefTemplateStmtSuccessResult,
+            Self,
+            usize,
+        ),
+        LeanCompileError,
+    > {
+        let AtomicName::Plain { name } = name else {
+            return Err(LeanCompileError::unsupported(
+                "Template/QualifiedDeclaration",
+            ));
+        };
+        let mut cursor = Some(self);
+        while let Some(scope) = cursor {
+            if let SourceOwner::Run(run) = scope.owner {
+                for (index, statement) in run
+                    .statement_results
+                    .iter()
+                    .take(scope.before)
+                    .enumerate()
+                    .rev()
+                {
+                    if let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefTemplate(
+                        crate::execute::ExecDefTemplateStmtResult::Success(p),
+                    )) = statement
+                    {
+                        if &p.statement.template_name == name {
+                            return Ok((p, Self::new(None, SourceOwner::Run(run), index), index));
+                        }
+                    }
+                }
+            }
+            cursor = scope.parent;
+        }
+        Err(LeanCompileError::unsupported("Template/Producer"))
     }
 
     pub fn visible_prop(
@@ -1342,6 +1403,7 @@ impl<'a> SourcePosition<'a> {
             }
             let env = match current.owner {
                 SourceOwner::Named(p) => Some(p.local_env.as_ref()),
+                SourceOwner::Template(p) => Some(p.local_env.as_ref()),
                 SourceOwner::Claim(p) => Some(p.local_env.as_ref()),
                 SourceOwner::Sketch(p) => Some(p.local_env.as_ref()),
                 SourceOwner::RangeExpansion(p) => Some(p.local_env.as_ref()),
@@ -1407,6 +1469,7 @@ impl<'a> SourcePosition<'a> {
         while let Some(current) = position {
             let env = match current.owner {
                 SourceOwner::Named(p) => Some(p.local_env.as_ref()),
+                SourceOwner::Template(p) => Some(p.local_env.as_ref()),
                 SourceOwner::Claim(p) => Some(p.local_env.as_ref()),
                 SourceOwner::Sketch(p) => Some(p.local_env.as_ref()),
                 SourceOwner::RangeExpansion(p) => Some(p.local_env.as_ref()),
@@ -1550,7 +1613,7 @@ impl<'a> SourcePosition<'a> {
                 if witness_statement(statement).is_some()
                     || nonempty_witness_statement(statement).is_some()
                     || obtain_parts(statement).is_some()
-                    || ordinary_have(statement).is_some()
+                    || context_parameter_parts(statement).is_some()
                     || matches!(
                         statement,
                         ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
@@ -3186,13 +3249,31 @@ impl<'a> SourcePosition<'a> {
     }
 }
 
+pub(super) fn context_parameter_parts(
+    statement: &ExecStmtResult,
+) -> Option<(&[TypedParameterGroup], &StoreHaveObjAndInferResult)> {
+    if let Some(p) = ordinary_have(statement) {
+        Some((&p.statement.param_def.groups, &p.store_and_infer_result))
+    } else {
+        trust_have(statement).map(|p| {
+            (
+                p.statement.param_def.groups.as_slice(),
+                &p.defined_param_store_and_infer,
+            )
+        })
+    }
+}
+
 pub(super) fn append_have_parameters<'a>(
-    proof: &'a ExecHaveObjInNonemptySetStmtSuccessResult,
+    statement: &'a ExecStmtResult,
     before: usize,
     out: &mut Vec<(&'a BoundName, Option<&'a Obj>, FactId)>,
 ) {
+    let Some((groups, stores)) = context_parameter_parts(statement) else {
+        return;
+    };
     let mut index = 0;
-    for group in &proof.statement.param_def.groups {
+    for group in groups {
         for parameter in &group.params {
             if index >= before {
                 return;
@@ -3205,11 +3286,7 @@ pub(super) fn append_have_parameters<'a>(
                     continue;
                 }
             };
-            if let Some(store) = proof
-                .store_and_infer_result
-                .store_and_infer_results
-                .get(index)
-            {
+            if let Some(store) = stores.store_and_infer_results.get(index) {
                 out.push((parameter, carrier, store.primary_fact_id()));
             }
             index += 1;
@@ -3220,9 +3297,9 @@ pub(super) fn append_have_parameters<'a>(
 fn context_arguments_before(run: &RunLitexCodeResult, before: usize) -> Vec<String> {
     let mut arguments = Vec::new();
     for statement in run.statement_results.iter().take(before) {
-        if let Some(proof) = ordinary_have(statement) {
+        if context_parameter_parts(statement).is_some() {
             let mut parameters = Vec::new();
-            append_have_parameters(proof, usize::MAX, &mut parameters);
+            append_have_parameters(statement, usize::MAX, &mut parameters);
             for (parameter, _, fact_id) in parameters {
                 let id = parameter.id.value();
                 arguments.extend([
@@ -3349,6 +3426,10 @@ fn nonempty_witness_statement(
 
 fn local_steps(owner: SourceOwner<'_>) -> Option<(&[ExecStmtResult], usize)> {
     match owner {
+        SourceOwner::Template(p) => Some((
+            std::slice::from_ref(p.body.as_ref()),
+            p.statement.template_arg_def.ordered_param_ids().len() + p.assumed_dom_facts.len(),
+        )),
         SourceOwner::Sketch(p) => Some((&p.proof_steps, 0)),
         SourceOwner::Choice(p) => Some((&p.proof_steps, 0)),
         SourceOwner::Zorn(p) => Some((&p.proof_steps, 0)),
@@ -3497,13 +3578,8 @@ fn parameter_in_statement(
     before: usize,
     id: IdentifierId,
 ) -> Option<(&BoundName, Option<&Obj>, &StoreFactAndInferResult)> {
-    if let Some(have) = ordinary_have(statement) {
-        return parameter_from_groups(
-            &have.statement.param_def.groups,
-            &have.store_and_infer_result.store_and_infer_results,
-            before,
-            id,
-        );
+    if let Some((groups, stores)) = context_parameter_parts(statement) {
+        return parameter_from_groups(groups, &stores.store_and_infer_results, before, id);
     }
     let (names, stores) = obtain_parts(statement)?;
     let (index, name) = names.iter().enumerate().find(|(_, name)| name.id == id)?;
@@ -3651,6 +3727,12 @@ fn parameter_in_owner<'a>(
                 .introduced_params
                 .defined_params
                 .store_and_infer_results,
+            position.before,
+            id,
+        ),
+        SourceOwner::Template(p) => parameter_from_groups(
+            &p.statement.template_arg_def.groups,
+            &p.introduced_params.defined_params.store_and_infer_results,
             position.before,
             id,
         ),
@@ -4230,10 +4312,26 @@ fn statement_reference(
             &name,
             &context_arguments_before(run, index),
             &abstract_arguments_before(run, index),
-            &hypotheses_before(run, index),
+            &hypotheses_before(run, index)
+                .into_iter()
+                .chain(super::compile_local_assumptions::local_assumption_ids(
+                    statement,
+                ))
+                .collect::<Vec<_>>(),
         ),
         None => name,
     };
+    if let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefTemplate(
+        crate::execute::ExecDefTemplateStmtResult::Success(p),
+    )) = statement
+    {
+        for published in p.definition_facts.iter().take(before) {
+            if let Some(reference) = stored_reference(&published.store_and_infer, id, actual)? {
+                return Ok(Some(global_reference(reference)));
+            }
+        }
+        return Ok(None);
+    }
     if let Some(p) = super::compile_release_choice_result::choice_statement(statement) {
         return if before > 3 {
             Ok(stored_reference(&p.stored, id, actual)?.map(global_reference))
@@ -4272,10 +4370,65 @@ fn statement_reference(
         }
         return Ok(None);
     }
+    if let Some(p) = trust_have(statement) {
+        for (i, store) in p
+            .defined_param_store_and_infer
+            .store_and_infer_results
+            .iter()
+            .take(before)
+            .enumerate()
+        {
+            if let Some(reference) = stored_reference(store, id, actual)? {
+                if store.primary_fact_id() == id {
+                    return Ok(Some(reference));
+                }
+                return Ok(Some(match top {
+                    Some((run, index)) => {
+                        let mut arguments = context_arguments_before(run, index);
+                        let mut parameters = Vec::new();
+                        append_have_parameters(statement, i + 1, &mut parameters);
+                        for (p, _, fact_id) in parameters {
+                            let n = p.id.value();
+                            arguments.extend([
+                                format!("_Host_i{n}"),
+                                format!("_rep_i{n}"),
+                                format!("_value_i{n}"),
+                                format!("h_{}", fact_id.value()),
+                            ]);
+                        }
+                        application(
+                            &reference,
+                            &arguments,
+                            &abstract_arguments_before(run, index),
+                            &hypotheses_before(run, index),
+                        )
+                    }
+                    None => reference,
+                }));
+            }
+        }
+        if before >= assumption_start(statement) {
+            for layer in p.auto_opened_struct_layers.iter().flatten() {
+                for store in &layer.store_and_infer {
+                    if let Some(reference) = stored_reference(store, id, actual)? {
+                        return Ok(Some(match top {
+                            Some((run, index)) => application(
+                                &reference,
+                                &context_arguments_before(run, index + 1),
+                                &abstract_arguments_before(run, index),
+                                &hypotheses_before(run, index),
+                            ),
+                            None => reference,
+                        }));
+                    }
+                }
+            }
+        }
+    }
     let assumptions = super::compile_assumption_stmt_result::assumption_stages(statement);
     for (j, (_, _, store)) in assumptions
         .iter()
-        .take(before.saturating_sub(assumptions.len()))
+        .take(before.saturating_sub(assumption_start(statement) + assumptions.len()))
         .enumerate()
     {
         if let Some(reference) = stored_reference(store, id, actual)? {
@@ -4293,7 +4446,10 @@ fn statement_reference(
                     );
                     application(
                         &reference,
-                        &context_arguments_before(run, index),
+                        &context_arguments_before(
+                            run,
+                            index + usize::from(trust_have(statement).is_some()),
+                        ),
                         &abstract_arguments_before(run, index),
                         &hypotheses,
                     )
@@ -4774,7 +4930,7 @@ fn statement_reference(
                             }
                         }
                         let mut parameters = Vec::new();
-                        append_have_parameters(p, prefix, &mut parameters);
+                        append_have_parameters(statement, prefix, &mut parameters);
                         for (parameter, _, fact_id) in parameters {
                             let number = parameter.id.value();
                             arguments.extend([
@@ -5376,6 +5532,25 @@ fn fact_reference_in_owner(
             }
             Ok(None)
         }
+        SourceOwner::Template(p) => {
+            if let Some(reference) = header_reference(
+                &p.statement.template_arg_def.groups,
+                &p.introduced_params,
+                &p.assumed_dom_facts,
+                position.before,
+                id,
+                actual,
+            )? {
+                return Ok(Some(reference));
+            }
+            let head =
+                p.statement.template_arg_def.ordered_param_ids().len() + p.assumed_dom_facts.len();
+            if position.before > head {
+                statement_reference(&p.body, id, actual, None, usize::MAX)
+            } else {
+                Ok(None)
+            }
+        }
         SourceOwner::StructHeader(p) => {
             if let Some(introduced) = &p.introduced_params {
                 for store in introduced
@@ -5952,6 +6127,7 @@ fn same_source_owner(left: SourceOwner<'_>, right: SourceOwner<'_>) -> bool {
             std::ptr::eq(a, b) && std::ptr::eq(pa, pb)
         }
         (SourceOwner::Named(a), SourceOwner::Named(b)) => std::ptr::eq(a, b),
+        (SourceOwner::Template(a), SourceOwner::Template(b)) => std::ptr::eq(a, b),
         (SourceOwner::Claim(a), SourceOwner::Claim(b)) => std::ptr::eq(a, b),
         (SourceOwner::Sketch(a), SourceOwner::Sketch(b)) => std::ptr::eq(a, b),
         (SourceOwner::RangeExpansion(a), SourceOwner::RangeExpansion(b)) => std::ptr::eq(a, b),
@@ -8002,6 +8178,27 @@ fn visit_owner<T>(
                 }
             }
         }
+        SourceOwner::Template(proof) => {
+            let head = proof.statement.template_arg_def.ordered_param_ids().len()
+                + proof.assumed_dom_facts.len();
+            if position.before > head {
+                let prior = SourcePosition {
+                    before: head,
+                    ..*position
+                };
+                if let Some(value) = visit_statement(&proof.body, usize::MAX, &prior, wd, verify)? {
+                    return Ok(Some(value));
+                }
+            }
+            return visit_header(
+                &proof.statement.template_arg_def.groups,
+                &proof.introduced_params,
+                &proof.assumed_dom_facts,
+                position,
+                wd,
+                verify,
+            );
+        }
         SourceOwner::StructHeader(proof) => {
             if let (Some((parameters, _)), Some(introduced)) = (
                 &proof.statement.param_def_with_dom,
@@ -8819,14 +9016,18 @@ fn visit_statement<T>(
     }
     let assumptions = super::compile_assumption_stmt_result::assumption_stages(statement);
     for (index, (_, formation, store)) in assumptions.iter().enumerate().rev() {
-        if let Some(value) =
-            visit_store_stage(store, assumptions.len() + index, &completed, wd, verify)?
-        {
+        if let Some(value) = visit_store_stage(
+            store,
+            assumption_start(statement) + assumptions.len() + index,
+            &completed,
+            wd,
+            verify,
+        )? {
             return Ok(Some(value));
         }
-        if before > index {
+        if before > assumption_start(statement) + index {
             let prior = SourcePosition {
-                before: index,
+                before: assumption_start(statement) + index,
                 ..position
             };
             let formed =
@@ -8835,6 +9036,59 @@ fn visit_statement<T>(
                 return Ok(Some(value));
             }
         }
+    }
+    if let Some(p) = trust_have(statement) {
+        let count = parameter_count(&p.statement.param_def.groups);
+        if before > count {
+            let scope = SourcePosition::new(
+                Some(&completed),
+                SourceOwner::StructLayers(p.auto_opened_struct_layers.as_deref().unwrap_or(&[])),
+                usize::MAX,
+            );
+            if let Some(value) = visit_owner(&scope, wd, verify)? {
+                return Ok(Some(value));
+            }
+        }
+        for (i, store) in p
+            .defined_param_store_and_infer
+            .store_and_infer_results
+            .iter()
+            .take(before)
+            .enumerate()
+            .rev()
+        {
+            let prior = SourcePosition {
+                before: i + 1,
+                ..position
+            };
+            let scope =
+                SourcePosition::new(Some(&prior), SourceOwner::PropInference(store), usize::MAX);
+            if let Some(value) = visit_owner(&scope, wd, verify)? {
+                return Ok(Some(value));
+            }
+        }
+        let mut offset = 0;
+        for (group, captured) in p
+            .statement
+            .param_def
+            .groups
+            .iter()
+            .zip(&p.param_type_well_defined)
+        {
+            if offset < before {
+                let prior = SourcePosition {
+                    before: offset,
+                    ..position
+                };
+                let scope =
+                    SourcePosition::new(Some(&prior), SourceOwner::ParamTypeWD(captured), 1);
+                if let Some(value) = visit_owner(&scope, wd, verify)? {
+                    return Ok(Some(value));
+                }
+            }
+            offset += group.params.len();
+        }
+        return Ok(None);
     }
     if let Some(proof) = nonempty_witness_statement(statement) {
         if let Some(value) =

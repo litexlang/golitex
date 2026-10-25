@@ -153,8 +153,8 @@ impl LitexToLeanCompiler {
             EqualitySearchProofByObjectDefinition::ByIdentifier(_) => Err(
                 LeanCompileError::unsupported("FunctionDefinition/Identifier"),
             ),
-            EqualitySearchProofByObjectDefinition::ByTemplate(_) => {
-                Err(LeanCompileError::unsupported("FunctionDefinition/Template"))
+            EqualitySearchProofByObjectDefinition::ByTemplate(proof) => {
+                self.compile_template_equality(fact, proof, position)
             }
         }
     }

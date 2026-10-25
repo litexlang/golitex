@@ -1,0 +1,4 @@
+# Copy an arbitrary set through a template and instantiate it at R.
+template<S set>:
+    have carrier_copy set = S
+\carrier_copy<R> = R

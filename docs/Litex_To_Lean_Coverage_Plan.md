@@ -2287,10 +2287,52 @@ files are approximately 1–17 KB; their 20 exported theorems use only `propext`
 tests**, including missing and reordered obligation evidence. Four existing
 predicate, theorem and structure examples are checked alongside this batch.
 
-Current boundaries: local trust closures, `trust have`, quantified-iff assumptions,
-local replacement declarations and template specialization remain unfinished.
-A standalone family-union construction is not yet a separately accepted entrypoint;
-its checked use here is inside choice's function signature. Template's body-result
-interface is awaiting the maintainer's choice between a complete `ExecStmtResult`
-and a borrowed adapter for the existing success enum. The older statement-count
-audit above predates this increment.
+At this checkpoint, local trust closures, `trust have` and template specialization
+were pending. The continuation below adds bounded consumers for them. Quantified-iff
+assumptions and local replacement declarations remain unsupported. A standalone
+family-union construction is not yet a separately accepted entrypoint; its checked
+use here is inside choice's function signature. The older statement-count audit
+above predates these increments.
+
+
+### Template aliases and scoped assumptions (2026-10-25)
+
+| Source | Generated interface | Checked pair |
+| --- | --- | --- |
+| `trust have denominator R: denominator != 0` | Object, real membership and nonzero fact are explicit parameters; reciprocal WD cites those facts. | [Nonzero denominator](../lean/examples/assumed_nonzero_denominator/statement.lit) / [Lean](../lean/examples/assumed_nonzero_denominator/statement.lean) |
+| `trust have A set, a A` | Dependent object parameters retain their original membership FactIds. | [Set member](../lean/examples/assumed_set_member/statement.lit) / [Lean](../lean/examples/assumed_set_member/statement.lean) |
+| `trust x > 0` inside a theorem with premise `$admissible(x)` | An explicit hypothesis states that every admissible real is positive. The theorem conclusion is unchanged; `by thm` passes the hypothesis. | [Admissible reals](../lean/examples/admissible_reals_assumption/statement.lit) / [Lean](../lean/examples/admissible_reals_assumption/statement.lean) |
+| `template<S set>: have carrier_copy set = S` | A parameterized semantic object plus the original published sethood and equality facts. | [Carrier copy](../lean/examples/template_carrier_copy/statement.lit) / [Lean](../lean/examples/template_carrier_copy/statement.lean) |
+| `template<x R, y R: y != 0,>: have quotient R = x / y` | Each instance consumes the recorded argument WD, membership and nonzero proofs; unfolding replays the original residual equality. | [Guarded quotient](../lean/examples/template_guarded_quotient/statement.lit) / [Lean](../lean/examples/template_guarded_quotient/statement.lean) |
+
+Template results now hold `Box<ExecStmtResult>` instead of a separate success-only
+body enum. Parameter/domain stages and local environments retain their original
+execution order. Domain assumptions reuse `AssumeDomFactResult`. Detailed JSON
+includes `introduced_params`, `assumed_dom_facts`, the ordinary `body` projection
+and the existing publication links. The parser, AST, Runtime storage and proof
+search are unchanged.
+
+Closure hypotheses quantify over `Litex.Obj M.Value`; a generic source object is
+passed through its certified denotation. This keeps membership as a proposition
+and allows a theorem to be instantiated at another host universe. No new Core
+axiom or semantic class is needed.
+
+The five new pairs pass source verification, independent-run byte comparison and
+real Lean checking. The two template examples use strict source mode; the three
+assumption examples use non-strict mode. Outputs are approximately 1.4–7.3 KB.
+All 13 exported theorem audits contain only `propext`, `Classical.choice` and
+`Quot.sound`. Core is unchanged from the preceding checked foundation increment.
+
+The final batch also rechecks six existing assumption, theorem, structure and
+foundation pairs: **11 pairs and 46 exported theorem audits pass**. Existing
+generated files are unchanged. Rust checks pass **1132 compiler tests**, **82
+template-related tests** and **13 statement-boundary tests**; these filters overlap
+and are not a combined distinct-test count. The final CLI build also succeeds.
+
+Current boundaries: template bodies are single typed object aliases. Function,
+existential-choice and trust-have template bodies, local template declarations
+and template-as-carrier inference are not covered by this increment. Local trust
+supports the replayed claim/theorem/sketch block family; local `trust have`,
+closures after local witness extraction, other proof-control families and locally
+trusted universal statements remain rejected. These boundaries reject the whole
+Lean artifact rather than omitting a source step.

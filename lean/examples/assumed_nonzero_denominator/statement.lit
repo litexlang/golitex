@@ -1,0 +1,5 @@
+# A real denominator assumed nonzero has a well-defined reciprocal. Uses trust.
+trust have denominator R:
+    denominator != 0
+1 / denominator = 1 / denominator
+denominator $in C

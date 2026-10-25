@@ -254,7 +254,9 @@ fn prepare_contract(
     }
     let a = args[0].clone();
     let result = match id {
-        MultiContinuousAtCompose
+        ScalarDifferentialAlongLine
+        | DifferentiableGradientAlongLine
+        | MultiContinuousAtCompose
         | VectorContinuousAtCompose
         | MultiLimitAtCompose
         | VectorLimitAtCompose => unreachable!("Euclidean family dispatched above"),

@@ -1,0 +1,4 @@
+# A two-argument quotient template retains the nonzero denominator condition.
+template<x R, y R: y != 0,>:
+    have quotient R = x / y
+\quotient<6, 2> = 3

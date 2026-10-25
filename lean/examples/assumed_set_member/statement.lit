@@ -1,0 +1,4 @@
+# An assumed member of an arbitrary set is itself a set. Uses trust.
+trust have A set, a A
+a $in A
+$is_set(a)

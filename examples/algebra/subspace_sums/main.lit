@@ -1,0 +1,355 @@
+# Overlap, disjoint sums and zero/full boundaries.
+
+release obj def model::real_inv
+
+release obj def model::real_add
+
+release obj def model::real_neg
+
+release obj def model::real_mul
+
+release obj def model::plane_add
+
+release obj def model::plane_smul
+
+release obj def model::e1
+
+release obj def model::e2
+
+release obj def model::real_field
+
+release obj def model::real_plane
+
+release obj def model::standard_basis
+
+release struct def model::real_field
+
+release struct def model::real_plane
+
+release thm model::standard_plane_basis()
+
+by thm Algebra::basis::basis_is_finite_dimensional(R,model::real_field,R × R,model::real_plane,2,model::standard_basis) => $Algebra::basis::is_finite_dimensional(R,model::real_field,R × R,model::real_plane)
+
+by thm Algebra::dimension::finite_dimension_of_basis(R,model::real_field,R × R,model::real_plane,2,model::standard_basis) => \Algebra::dimension::finite_dimension<R,model::real_field,R × R>(model::real_plane)=2
+
+have axis power_set(R × R)={p R × R: p(2)=0}
+
+claim:
+    ? $Algebra::vector_space::is_subspace(R,model::real_field,R × R,model::real_plane,axis)
+    model::real_plane.zero=(0,0)
+    model::real_plane.zero(2)=0
+    claim:
+        ? forall u,v R × R:
+            u $in axis
+            v $in axis
+            =>:
+                model::real_plane.add(u,v) $in axis
+        model::real_plane.add(u,v)=model::plane_add(u,v)=(u(1)+v(1),u(2)+v(2))
+        model::real_plane.add(u,v)(2)=u(2)+v(2)=0
+    claim:
+        ? forall a R,v R × R:
+            v $in axis
+            =>:
+                model::real_plane.smul(a,v) $in axis
+        model::real_plane.smul(a,v)=model::plane_smul(a,v)=(a*v(1),a*v(2))
+        model::real_plane.smul(a,v)(2)=a*v(2)=0
+    by def $Algebra::vector_space::is_subspace(R,model::real_field,R × R,model::real_plane,axis)
+
+by thm Algebra::subspace::subspace_is_nonempty(R,model::real_field,R × R,model::real_plane,axis) => $is_nonempty_set(axis)
+
+by thm Algebra::subspace::restricted_space_is_vector_space(R,model::real_field,R × R,model::real_plane,axis) => \Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,axis> $in &Algebra::vector_space::VectorSpace<R,model::real_field,axis>
+
+have axis_space &Algebra::vector_space::VectorSpace<R,model::real_field,axis> = \Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,axis>
+
+by thm Algebra::subspace::finite_dimensional_subspace_is_finite_dimensional(R,model::real_field,R × R,model::real_plane,axis) => $Algebra::basis::is_finite_dimensional(R,model::real_field,axis,\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,axis>)
+
+by thm Algebra::subspace::subspace_dimension_le_ambient(R,model::real_field,R × R,model::real_plane,axis) => \Algebra::dimension::finite_dimension<R,model::real_field,axis>(\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,axis>)<=\Algebra::dimension::finite_dimension<R,model::real_field,R × R>(model::real_plane)
+
+model::e1 $in axis
+
+have axis_basis finite_seq(axis,1)=(model::e1,)
+
+claim:
+    ? $Algebra::basis::is_linearly_independent(R,model::real_field,R × R,model::real_plane,1,axis_basis)
+    claim:
+        ? forall c finite_seq(R,1):
+            $Algebra::finite_span::has_linear_combination_value(R,model::real_field,R × R,model::real_plane,1,c,axis_basis,model::real_plane.zero)
+            =>:
+                $Algebra::basis::has_only_zero_coefficients(R,model::real_field,1,c)
+        obtain sums from $Algebra::finite_span::has_linear_combination_value(R,model::real_field,R × R,model::real_plane,1,c,axis_basis,model::real_plane.zero)
+        sums(0)=model::real_plane.zero
+        axis_basis(1)=model::e1
+        c(1) $in R
+        have term R × R=model::real_plane.smul(c(1),axis_basis(1))
+        model::real_plane.add(model::real_plane.zero,term)=term
+        sums(1)=model::real_plane.add(sums(0),model::real_plane.smul(c(1),axis_basis(1)))=model::real_plane.add(model::real_plane.zero,term)=term
+        model::e1(1)=1
+        model::e1(2)=0
+        axis_basis(1) $in R × R
+        term=model::real_plane.smul(c(1),axis_basis(1))=model::plane_smul(c(1),axis_basis(1))=model::plane_smul(c(1),model::e1)=(c(1)*model::e1(1),c(1)*model::e1(2))=(c(1)*1,c(1)*0)=(c(1),0)
+        sums(1)=model::real_plane.zero=(0,0)
+        sums(1)(1)=0
+        term(1)=c(1)
+        c(1)=0=model::real_field.zero
+        claim:
+            ? forall j N+:
+                j<=1
+                =>:
+                    c(j)=model::real_field.zero
+            j=1
+            c(j)=c(1)=model::real_field.zero
+        by def $Algebra::basis::has_only_zero_coefficients(R,model::real_field,1,c)
+    by def $Algebra::basis::is_linearly_independent(R,model::real_field,R × R,model::real_plane,1,axis_basis)
+
+by thm Algebra::subspace::ambient_independent_is_subspace_independent(R,model::real_field,R × R,model::real_plane,axis,1,axis_basis) => $Algebra::basis::is_linearly_independent(R,model::real_field,axis,\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,axis>,1,axis_basis)
+
+claim:
+    ? \Algebra::finite_span::span<R,model::real_field,R × R,model::real_plane,1,axis_basis> = axis
+    claim:
+        ? forall j N+:
+            j<=1
+            =>:
+                axis_basis(j) $in axis
+        j=1
+    by thm Algebra::span_reduction::span_subset_subspace(R,model::real_field,R × R,model::real_plane,1,axis_basis,axis) => \Algebra::finite_span::span<R,model::real_field,R × R,model::real_plane,1,axis_basis> $subset axis
+    claim:
+        ? forall p axis:
+            p $in \Algebra::finite_span::span<R,model::real_field,R × R,model::real_plane,1,axis_basis>
+        have c finite_seq(R,1)=(p(1),)
+        claim:
+            ? forall idx N+:
+                idx<=1
+                idx!=1
+                =>:
+                    c(idx)=model::real_field.zero
+            by contra:
+                ? c(idx)=model::real_field.zero
+                idx=1
+                impossible idx!=1
+        by thm Algebra::finite_span::single_coefficient_linear_combination(R,model::real_field,R × R,model::real_plane,1,c,axis_basis,1) => \Algebra::finite_span::linear_combination<R,model::real_field,R × R,model::real_plane,1>(c,axis_basis)=model::real_plane.smul(c(1),axis_basis(1))
+        c(1)=p(1)
+        axis_basis(1)=model::e1
+        c(1) $in R
+        p(1) $in R
+        axis_basis(1) $in R × R
+        model::e1(1)=1
+        model::e1(2)=0
+        model::real_plane.smul(c(1),axis_basis(1))=model::plane_smul(c(1),axis_basis(1))=model::plane_smul(p(1),model::e1)=(p(1)*model::e1(1),p(1)*model::e1(2))=(p(1)*1,p(1)*0)=(p(1),0)=(p(1),p(2))=p
+        release thm Algebra::finite_span::linear_combination_has_value(R,model::real_field,R × R,model::real_plane,1,c,axis_basis)
+        witness $Algebra::finite_span::is_linear_combination(R,model::real_field,R × R,model::real_plane,1,p,axis_basis) from c
+    by extension \Algebra::finite_span::span<R,model::real_field,R × R,model::real_plane,1,axis_basis> = axis
+
+by thm Algebra::subspace::subspace_span_equals_ambient(R,model::real_field,R × R,model::real_plane,axis,1,axis_basis) => \Algebra::finite_span::span<R,model::real_field,axis,\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,axis>,1,axis_basis> = \Algebra::finite_span::span<R,model::real_field,R × R,model::real_plane,1,axis_basis>
+
+by def $Algebra::finite_span::spans(R,model::real_field,axis,\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,axis>,1,axis_basis)
+
+by def $Algebra::basis::is_basis(R,model::real_field,axis,\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,axis>,1,axis_basis)
+
+by thm Algebra::dimension::finite_dimension_of_basis(R,model::real_field,axis,\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,axis>,1,axis_basis) => \Algebra::dimension::finite_dimension<R,model::real_field,axis>(\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,axis>)=1
+
+have vertical power_set(R × R)={p R × R: p(1)=0}
+
+claim:
+    ? $Algebra::vector_space::is_subspace(R,model::real_field,R × R,model::real_plane,vertical)
+    model::real_plane.zero=(0,0)
+    model::real_plane.zero $in vertical
+    claim:
+        ? forall u,v R × R:
+            u $in vertical
+            v $in vertical
+            =>:
+                model::real_plane.add(u,v) $in vertical
+        model::real_plane.add(u,v)=model::plane_add(u,v)=(u(1)+v(1),u(2)+v(2))
+        model::real_plane.add(u,v)(1)=u(1)+v(1)
+        model::real_plane.add(u,v)(2)=u(2)+v(2)
+        model::real_plane.add(u,v)(1)=u(1)+v(1)=0
+    claim:
+        ? forall a R,v R × R:
+            v $in vertical
+            =>:
+                model::real_plane.smul(a,v) $in vertical
+        model::real_plane.smul(a,v)=model::plane_smul(a,v)=(a*v(1),a*v(2))
+        model::real_plane.smul(a,v)(1)=a*v(1)
+        model::real_plane.smul(a,v)(2)=a*v(2)
+        model::real_plane.smul(a,v)(1)=a*v(1)=0
+    by def $Algebra::vector_space::is_subspace(R,model::real_field,R × R,model::real_plane,vertical)
+
+by thm Algebra::subspace::finite_dimensional_subspace_is_finite_dimensional(R,model::real_field,R × R,model::real_plane,vertical) => $Algebra::basis::is_finite_dimensional(R,model::real_field,vertical,\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,vertical>)
+
+claim:
+    ? \Algebra::direct_sum::subspace_sum<R,model::real_field,R × R,model::real_plane,axis,vertical> =R × R
+    claim:
+        ? forall p R × R:
+            p $in \Algebra::direct_sum::subspace_sum<R,model::real_field,R × R,model::real_plane,axis,vertical>
+        have l axis=(p(1),0)
+        have r vertical=(0,p(2))
+        l(1)=p(1)
+        r(1)=0
+        l(1)+r(1)=p(1)
+        l(2)+r(2)=p(2)
+        model::real_plane.add(l,r)=model::plane_add(l,r)=(l(1)+r(1),l(2)+r(2))=(p(1),p(2))=p
+        by thm Algebra::direct_sum::subspace_sum_contains_pair(R,model::real_field,R × R,model::real_plane,axis,vertical,l,r) => model::real_plane.add(l,r) $in \Algebra::direct_sum::subspace_sum<R,model::real_field,R × R,model::real_plane,axis,vertical>
+    by extension \Algebra::direct_sum::subspace_sum<R,model::real_field,R × R,model::real_plane,axis,vertical> =R × R
+
+claim:
+    ? intersect(axis,vertical)={model::real_plane.zero}
+    claim:
+        ? forall p intersect(axis,vertical):
+            p $in {model::real_plane.zero}
+        p $in axis
+        p $in vertical
+        p(1)=0
+        p(2)=0
+        p=(p(1),p(2))=(0,0)=model::real_plane.zero
+    forall p {model::real_plane.zero}:
+        p $in intersect(axis,vertical)
+    by extension intersect(axis,vertical)={model::real_plane.zero}
+
+by thm Algebra::subspace_sums::intersection_is_subspace(R,model::real_field,R × R,model::real_plane,axis,vertical) => $Algebra::vector_space::is_subspace(R,model::real_field,R × R,model::real_plane,intersect(axis,vertical))
+
+by thm Algebra::direct_sum::subspace_sum_is_subspace(R,model::real_field,R × R,model::real_plane,axis,vertical) => $Algebra::vector_space::is_subspace(R,model::real_field,R × R,model::real_plane,\Algebra::direct_sum::subspace_sum<R,model::real_field,R × R,model::real_plane,axis,vertical>)
+
+release thm Algebra::subspace_sums::finite_sum_and_intersection(R,model::real_field,R × R,model::real_plane,axis,vertical)
+
+by thm Algebra::linear_criteria::whole_subspace_dimension_equals_ambient(R,model::real_field,R × R,model::real_plane,\Algebra::direct_sum::subspace_sum<R,model::real_field,R × R,model::real_plane,axis,vertical>) => \Algebra::dimension::finite_dimension<R,model::real_field,\Algebra::direct_sum::subspace_sum<R,model::real_field,R × R,model::real_plane,axis,vertical>>(\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,\Algebra::direct_sum::subspace_sum<R,model::real_field,R × R,model::real_plane,axis,vertical>>)=\Algebra::dimension::finite_dimension<R,model::real_field,R × R>(model::real_plane)
+
+release struct def \Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,intersect(axis,vertical)>
+
+\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,intersect(axis,vertical)>.zero=model::real_plane.zero
+
+intersect(axis,vertical)={\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,intersect(axis,vertical)>.zero}
+
+by thm Algebra::linear_criteria::zero_space_has_zero_dimension(R,model::real_field,intersect(axis,vertical),\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,intersect(axis,vertical)>) => \Algebra::dimension::finite_dimension<R,model::real_field,intersect(axis,vertical)>(\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,intersect(axis,vertical)>)=0
+
+release thm Algebra::subspace_sums::grassmann_dimension(R,model::real_field,R × R,model::real_plane,axis,vertical)
+
+have vertical_dimension N=\Algebra::dimension::finite_dimension<R,model::real_field,vertical>(\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,vertical>)
+
+1+vertical_dimension=\Algebra::dimension::finite_dimension<R,model::real_field,axis>(\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,axis>)+\Algebra::dimension::finite_dimension<R,model::real_field,vertical>(\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,vertical>)=\Algebra::dimension::finite_dimension<R,model::real_field,\Algebra::direct_sum::subspace_sum<R,model::real_field,R × R,model::real_plane,axis,vertical>>(\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,\Algebra::direct_sum::subspace_sum<R,model::real_field,R × R,model::real_plane,axis,vertical>>)+\Algebra::dimension::finite_dimension<R,model::real_field,intersect(axis,vertical)>(\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,intersect(axis,vertical)>)=2+0=2
+
+vertical_dimension=(1+vertical_dimension)-1=2-1=1
+
+\Algebra::dimension::finite_dimension<R,model::real_field,vertical>(\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,vertical>)=vertical_dimension=1
+
+release thm Algebra::subspace_sums::intersection_dimension_bounds(R,model::real_field,R × R,model::real_plane,axis,vertical)
+
+release thm Algebra::subspace_sums::sum_dimension_bounds(R,model::real_field,R × R,model::real_plane,axis,vertical)
+
+release thm Algebra::subspace_sums::trivial_intersection_dimension_adds(R,model::real_field,R × R,model::real_plane,axis,vertical)
+
+release thm Algebra::subspace_sums::dimension_additivity_has_trivial_intersection(R,model::real_field,R × R,model::real_plane,axis,vertical)
+
+by thm Algebra::subspace_sums::subspace_sum_of_contained(R,model::real_field,R × R,model::real_plane,axis,axis) => \Algebra::direct_sum::subspace_sum<R,model::real_field,R × R,model::real_plane,axis,axis> =axis
+
+intersect(axis,axis)=axis
+
+by thm Algebra::subspace_sums::intersection_is_subspace(R,model::real_field,R × R,model::real_plane,axis,axis) => $Algebra::vector_space::is_subspace(R,model::real_field,R × R,model::real_plane,intersect(axis,axis))
+
+by thm Algebra::direct_sum::subspace_sum_is_subspace(R,model::real_field,R × R,model::real_plane,axis,axis) => $Algebra::vector_space::is_subspace(R,model::real_field,R × R,model::real_plane,\Algebra::direct_sum::subspace_sum<R,model::real_field,R × R,model::real_plane,axis,axis>)
+
+release thm Algebra::subspace_sums::finite_sum_and_intersection(R,model::real_field,R × R,model::real_plane,axis,axis)
+
+by thm Algebra::direct_sum::equal_subspaces_have_equal_dimension(R,model::real_field,R × R,model::real_plane,\Algebra::direct_sum::subspace_sum<R,model::real_field,R × R,model::real_plane,axis,axis>,axis) => \Algebra::dimension::finite_dimension<R,model::real_field,\Algebra::direct_sum::subspace_sum<R,model::real_field,R × R,model::real_plane,axis,axis>>(\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,\Algebra::direct_sum::subspace_sum<R,model::real_field,R × R,model::real_plane,axis,axis>>)=\Algebra::dimension::finite_dimension<R,model::real_field,axis>(\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,axis>)
+
+by thm Algebra::direct_sum::equal_subspaces_have_equal_dimension(R,model::real_field,R × R,model::real_plane,intersect(axis,axis),axis) => \Algebra::dimension::finite_dimension<R,model::real_field,intersect(axis,axis)>(\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,intersect(axis,axis)>)=\Algebra::dimension::finite_dimension<R,model::real_field,axis>(\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,axis>)
+
+\Algebra::dimension::finite_dimension<R,model::real_field,\Algebra::direct_sum::subspace_sum<R,model::real_field,R × R,model::real_plane,axis,axis>>(\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,\Algebra::direct_sum::subspace_sum<R,model::real_field,R × R,model::real_plane,axis,axis>>)=1
+
+\Algebra::dimension::finite_dimension<R,model::real_field,intersect(axis,axis)>(\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,intersect(axis,axis)>)=1
+
+release thm Algebra::subspace_sums::grassmann_dimension(R,model::real_field,R × R,model::real_plane,axis,axis)
+
+release thm Algebra::subspace_sums::sum_dimension_bounds(R,model::real_field,R × R,model::real_plane,axis,axis)
+
+release thm Algebra::subspace_sums::intersection_dimension_bounds(R,model::real_field,R × R,model::real_plane,axis,axis)
+
+\Algebra::dimension::finite_dimension<R,model::real_field,axis>(\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,axis>)+\Algebra::dimension::finite_dimension<R,model::real_field,axis>(\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,axis>)=2
+
+\Algebra::dimension::finite_dimension<R,model::real_field,\Algebra::direct_sum::subspace_sum<R,model::real_field,R × R,model::real_plane,axis,axis>>(\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,\Algebra::direct_sum::subspace_sum<R,model::real_field,R × R,model::real_plane,axis,axis>>)=1
+
+by thm Algebra::subspace::ambient_is_subspace(R,model::real_field,R × R,model::real_plane) => $Algebra::vector_space::is_subspace(R,model::real_field,R × R,model::real_plane,R × R)
+
+by thm Algebra::subspace::zero_is_subspace(R,model::real_field,R × R,model::real_plane) => $Algebra::vector_space::is_subspace(R,model::real_field,R × R,model::real_plane,{model::real_plane.zero})
+
+by thm Algebra::subspace::finite_dimensional_subspace_is_finite_dimensional(R,model::real_field,R × R,model::real_plane,{model::real_plane.zero}) => $Algebra::basis::is_finite_dimensional(R,model::real_field,{model::real_plane.zero},\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,{model::real_plane.zero}>)
+
+by thm Algebra::subspace::restricted_space_is_vector_space(R,model::real_field,R × R,model::real_plane,R × R) => \Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,R × R> $in &Algebra::vector_space::VectorSpace<R,model::real_field,R × R>
+
+by thm Algebra::subspace::finite_dimensional_subspace_is_finite_dimensional(R,model::real_field,R × R,model::real_plane,R × R) => $Algebra::basis::is_finite_dimensional(R,model::real_field,R × R,\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,R × R>)
+
+by thm Algebra::subspace_sums::finite_dimension_numeric_carriers(R,model::real_field,R × R,\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,R × R>) => \Algebra::dimension::finite_dimension<R,model::real_field,R × R>(\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,R × R>) $in R
+
+by thm Algebra::subspace_sums::intersection_is_subspace(R,model::real_field,R × R,model::real_plane,{model::real_plane.zero},{model::real_plane.zero}) => $Algebra::vector_space::is_subspace(R,model::real_field,R × R,model::real_plane,intersect({model::real_plane.zero},{model::real_plane.zero}))
+
+by thm Algebra::direct_sum::subspace_sum_is_subspace(R,model::real_field,R × R,model::real_plane,{model::real_plane.zero},{model::real_plane.zero}) => $Algebra::vector_space::is_subspace(R,model::real_field,R × R,model::real_plane,\Algebra::direct_sum::subspace_sum<R,model::real_field,R × R,model::real_plane,{model::real_plane.zero},{model::real_plane.zero}>)
+
+release thm Algebra::subspace_sums::finite_sum_and_intersection(R,model::real_field,R × R,model::real_plane,{model::real_plane.zero},{model::real_plane.zero})
+
+release thm Algebra::subspace_sums::grassmann_dimension(R,model::real_field,R × R,model::real_plane,{model::real_plane.zero},{model::real_plane.zero})
+
+by thm Algebra::subspace_sums::finite_dimension_numeric_carriers(R,model::real_field,{model::real_plane.zero},\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,{model::real_plane.zero}>) => \Algebra::dimension::finite_dimension<R,model::real_field,{model::real_plane.zero}>(\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,{model::real_plane.zero}>) $in R
+
+release thm Algebra::subspace_sums::sum_dimension_bounds(R,model::real_field,R × R,model::real_plane,{model::real_plane.zero},{model::real_plane.zero})
+
+release thm Algebra::subspace_sums::intersection_dimension_bounds(R,model::real_field,R × R,model::real_plane,{model::real_plane.zero},{model::real_plane.zero})
+
+intersect({model::real_plane.zero},{model::real_plane.zero})={model::real_plane.zero}
+
+release thm Algebra::subspace_sums::trivial_intersection_dimension_adds(R,model::real_field,R × R,model::real_plane,{model::real_plane.zero},{model::real_plane.zero})
+
+release thm Algebra::subspace_sums::dimension_additivity_has_trivial_intersection(R,model::real_field,R × R,model::real_plane,{model::real_plane.zero},{model::real_plane.zero})
+
+by thm Algebra::subspace_sums::subspace_sum_of_contained(R,model::real_field,R × R,model::real_plane,{model::real_plane.zero},{model::real_plane.zero}) => \Algebra::direct_sum::subspace_sum<R,model::real_field,R × R,model::real_plane,{model::real_plane.zero},{model::real_plane.zero}> ={model::real_plane.zero}
+
+by thm Algebra::subspace_sums::intersection_is_subspace(R,model::real_field,R × R,model::real_plane,R × R,{model::real_plane.zero}) => $Algebra::vector_space::is_subspace(R,model::real_field,R × R,model::real_plane,intersect(R × R,{model::real_plane.zero}))
+
+by thm Algebra::direct_sum::subspace_sum_is_subspace(R,model::real_field,R × R,model::real_plane,R × R,{model::real_plane.zero}) => $Algebra::vector_space::is_subspace(R,model::real_field,R × R,model::real_plane,\Algebra::direct_sum::subspace_sum<R,model::real_field,R × R,model::real_plane,R × R,{model::real_plane.zero}>)
+
+release thm Algebra::subspace_sums::finite_sum_and_intersection(R,model::real_field,R × R,model::real_plane,R × R,{model::real_plane.zero})
+
+release thm Algebra::subspace_sums::grassmann_dimension(R,model::real_field,R × R,model::real_plane,R × R,{model::real_plane.zero})
+
+release thm Algebra::subspace_sums::sum_dimension_bounds(R,model::real_field,R × R,model::real_plane,R × R,{model::real_plane.zero})
+
+release thm Algebra::subspace_sums::intersection_dimension_bounds(R,model::real_field,R × R,model::real_plane,R × R,{model::real_plane.zero})
+
+claim:
+    ? intersect(R × R,{model::real_plane.zero})={model::real_plane.zero}
+    claim:
+        ? forall v intersect(R × R,{model::real_plane.zero}):
+            v $in {model::real_plane.zero}
+        v $in {model::real_plane.zero}
+    claim:
+        ? forall v {model::real_plane.zero}:
+            v $in intersect(R × R,{model::real_plane.zero})
+        v $in R × R
+        v $in intersect(R × R,{model::real_plane.zero})
+    by extension intersect(R × R,{model::real_plane.zero})={model::real_plane.zero}
+
+release thm Algebra::subspace_sums::trivial_intersection_dimension_adds(R,model::real_field,R × R,model::real_plane,R × R,{model::real_plane.zero})
+
+release thm Algebra::subspace_sums::dimension_additivity_has_trivial_intersection(R,model::real_field,R × R,model::real_plane,R × R,{model::real_plane.zero})
+
+by thm Algebra::subspace_sums::intersection_is_subspace(R,model::real_field,R × R,model::real_plane,{model::real_plane.zero},R × R) => $Algebra::vector_space::is_subspace(R,model::real_field,R × R,model::real_plane,intersect({model::real_plane.zero},R × R))
+
+by thm Algebra::direct_sum::subspace_sum_is_subspace(R,model::real_field,R × R,model::real_plane,{model::real_plane.zero},R × R) => $Algebra::vector_space::is_subspace(R,model::real_field,R × R,model::real_plane,\Algebra::direct_sum::subspace_sum<R,model::real_field,R × R,model::real_plane,{model::real_plane.zero},R × R>)
+
+release thm Algebra::subspace_sums::finite_sum_and_intersection(R,model::real_field,R × R,model::real_plane,{model::real_plane.zero},R × R)
+
+release thm Algebra::subspace_sums::grassmann_dimension(R,model::real_field,R × R,model::real_plane,{model::real_plane.zero},R × R)
+
+release thm Algebra::subspace_sums::sum_dimension_bounds(R,model::real_field,R × R,model::real_plane,{model::real_plane.zero},R × R)
+
+release thm Algebra::subspace_sums::intersection_dimension_bounds(R,model::real_field,R × R,model::real_plane,{model::real_plane.zero},R × R)
+
+intersect({model::real_plane.zero},R × R)={model::real_plane.zero}
+
+release thm Algebra::subspace_sums::trivial_intersection_dimension_adds(R,model::real_field,R × R,model::real_plane,{model::real_plane.zero},R × R)
+
+release thm Algebra::subspace_sums::dimension_additivity_has_trivial_intersection(R,model::real_field,R × R,model::real_plane,{model::real_plane.zero},R × R)
+
+release struct def \Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,{model::real_plane.zero}>
+
+\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,{model::real_plane.zero}>.zero=model::real_plane.zero
+
+by thm Algebra::linear_criteria::zero_space_has_zero_dimension(R,model::real_field,{model::real_plane.zero},\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,{model::real_plane.zero}>) => \Algebra::dimension::finite_dimension<R,model::real_field,{model::real_plane.zero}>(\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,{model::real_plane.zero}>)=0

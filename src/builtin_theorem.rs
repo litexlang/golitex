@@ -4,6 +4,8 @@ use std::fmt;
 /// runtime rather than by a source `thm`/`axiom` declaration.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum BuiltinTheoremId {
+    ScalarDifferentialAlongLine,
+    DifferentiableGradientAlongLine,
     MultiContinuousAtCompose,
     VectorContinuousAtCompose,
     MultiLimitAtCompose,
@@ -549,6 +551,8 @@ pub enum BuiltinTheoremId {
 impl BuiltinTheoremId {
     pub fn from_name(name: &str) -> Option<Self> {
         Some(match name {
+            "scalar_differential_along_line" => Self::ScalarDifferentialAlongLine,
+            "differentiable_gradient_along_line" => Self::DifferentiableGradientAlongLine,
             "multi_continuous_at_compose" => Self::MultiContinuousAtCompose,
             "vector_continuous_at_compose" => Self::VectorContinuousAtCompose,
             "multi_limit_at_compose" => Self::MultiLimitAtCompose,
@@ -1107,6 +1111,8 @@ impl BuiltinTheoremId {
 
     pub const fn as_str(self) -> &'static str {
         match self {
+            Self::ScalarDifferentialAlongLine => "scalar_differential_along_line",
+            Self::DifferentiableGradientAlongLine => "differentiable_gradient_along_line",
             Self::MultiContinuousAtCompose => "multi_continuous_at_compose",
             Self::VectorContinuousAtCompose => "vector_continuous_at_compose",
             Self::MultiLimitAtCompose => "multi_limit_at_compose",
@@ -1671,6 +1677,7 @@ impl fmt::Display for BuiltinTheoremId {
 impl BuiltinTheoremId {
     pub fn arity(self) -> usize {
         match self {
+            Self::ScalarDifferentialAlongLine | Self::DifferentiableGradientAlongLine => 5,
             Self::MultiContinuousAtCompose => 5,
             Self::VectorContinuousAtCompose => 7,
             Self::MultiLimitAtCompose => 6,
@@ -2279,7 +2286,9 @@ impl BuiltinTheoremId {
     pub(crate) fn is_multivariable(self) -> bool {
         matches!(
             self,
-            Self::MultiContinuousAtCompose
+            Self::ScalarDifferentialAlongLine
+                | Self::DifferentiableGradientAlongLine
+                | Self::MultiContinuousAtCompose
                 | Self::VectorContinuousAtCompose
                 | Self::MultiLimitAtCompose
                 | Self::VectorLimitAtCompose

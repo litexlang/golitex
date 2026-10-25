@@ -141,7 +141,11 @@ impl LitexToLeanCompiler {
             );
             for (offset, (fact, wd, _)) in stages
                 .iter()
-                .take(before.saturating_sub(stages.len()))
+                .take(before.saturating_sub(
+                    crate::compile_to_lean::compile_assumption_stmt_result::assumption_start(
+                        statement,
+                    ) + stages.len(),
+                ))
                 .enumerate()
             {
                 if fact.fact_id() != id {
@@ -152,7 +156,9 @@ impl LitexToLeanCompiler {
                     let before = SourcePosition::new(
                         Some(&prior),
                         SourceOwner::Statement(statement),
-                        offset,
+                        crate::compile_to_lean::compile_assumption_stmt_result::assumption_start(
+                            statement,
+                        ) + offset,
                     );
                     return self.compile_canonical_forall_citation(fact, wd, reference, &before);
                 }

@@ -1,11 +1,20 @@
 //! Publish successful body stores, retaining template domains and source evidence.
 
-use super::ExecTemplateDefBodyResult;
 use crate::ast::fact::{exist_shaped_fact_to_fact, ExistOrAndChainAtomicFact, Fact, ForallFact};
 use crate::ast::obj::{IdentifierObj, InstantiatedTemplateObj, Obj};
 use crate::ast::stmt::DefTemplateStmt;
 use crate::exec_env::ExecEnv;
+use crate::execute::{
+    ExecHaveByReplacementAxiomStmtResult, ExecHaveFnByForallExistUniqueStmtResult,
+    ExecHaveFnByInducStmtResult, ExecTrustBoundaryStmtResult, ExecTrustHaveStmtResult,
+};
+use crate::execute::{
+    ExecHaveFnEqualCaseByCaseStmtResult, ExecHaveFnEqualStmtResult,
+    ExecHaveObjByExistFactsStmtResult, ExecObtainObjFromAtomicFactStmtResult,
+    ExecObtainObjFromExistFactStmtResult,
+};
 use crate::instantiate::quantifier_free_fact_to_fact;
+use crate::prelude::*;
 use crate::runtime::{FactId, IdentifierId, Runtime, RuntimeError, RuntimeResult};
 use crate::store_fact_and_infer::StoreFactAndInferResult;
 use std::collections::{HashMap, HashSet};
@@ -30,11 +39,11 @@ impl Runtime {
     pub(super) fn store_template_definition_facts(
         &mut self,
         template: &DefTemplateStmt,
-        body: &ExecTemplateDefBodyResult,
+        body: &ExecStmtResult,
         local_env: &ExecEnv,
         verify_state: crate::execute::execute_fact_stmt::VerifyState,
     ) -> RuntimeResult<Vec<StoreTemplateDefinitionFactResult>> {
-        let (binding_id, source_ids) = definition_binding_and_fact_ids(body);
+        let (binding_id, source_ids) = definition_binding_and_fact_ids(body)?;
         let args = template
             .template_arg_def
             .groups
@@ -144,53 +153,86 @@ impl Runtime {
 }
 
 fn definition_binding_and_fact_ids(
-    body: &ExecTemplateDefBodyResult,
-) -> (IdentifierId, Vec<FactId>) {
-    match body {
-        ExecTemplateDefBodyResult::HaveObjInNonemptySet(result) => (
+    body: &ExecStmtResult,
+) -> RuntimeResult<(IdentifierId, Vec<FactId>)> {
+    Ok(match body {
+        ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
+            ExecDefineObjStmtResult::HaveObjInNonemptySet(
+                ExecHaveObjInNonemptySetStmtResult::Success(result),
+            ),
+        )) => (
             result.statement.param_def.ordered_param_ids()[0],
             result.store_and_infer_result.stored_fact_ids.clone(),
         ),
-        ExecTemplateDefBodyResult::HaveObjEqual(result) => (
+        ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
+            ExecDefineObjStmtResult::HaveObjEqual(ExecHaveObjEqualStmtResult::Success(result)),
+        )) => (
             result.statement.param_def.ordered_param_ids()[0],
             result.store_and_infer_result.stored_fact_ids.clone(),
         ),
-        ExecTemplateDefBodyResult::HaveObjByExistFacts(result) => (
+        ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
+            ExecDefineObjStmtResult::HaveObjByExistFacts(
+                ExecHaveObjByExistFactsStmtResult::Success(result),
+            ),
+        )) => (
             result.statement.param_def.ordered_param_ids()[0],
             result.store_and_infer_result.stored_fact_ids.clone(),
         ),
-        ExecTemplateDefBodyResult::HaveByReplacementAxiom(result) => {
-            (result.statement.name.id, result.stored_fact_ids.clone())
-        }
-        ExecTemplateDefBodyResult::ObtainObjFromExistFact(result) => (
+        ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
+            ExecDefineObjStmtResult::HaveByReplacementAxiom(
+                ExecHaveByReplacementAxiomStmtResult::Success(result),
+            ),
+        )) => (result.statement.name.id, result.stored_fact_ids.clone()),
+        ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
+            ExecDefineObjStmtResult::ObtainObjFromExistFact(
+                ExecObtainObjFromExistFactStmtResult::Success(result),
+            ),
+        )) => (
             result.statement.equal_tos[0].id,
             result.store_and_infer_result.stored_fact_ids.clone(),
         ),
-        ExecTemplateDefBodyResult::ObtainObjFromAtomicFact(result) => (
+        ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
+            ExecDefineObjStmtResult::ObtainObjFromAtomicFact(
+                ExecObtainObjFromAtomicFactStmtResult::Success(result),
+            ),
+        )) => (
             result.statement.equal_tos[0].id,
             result.store_and_infer_result.stored_fact_ids.clone(),
         ),
-        ExecTemplateDefBodyResult::HaveFnEqual(result) => (
+        ExecStmtResult::Definition(ExecDefinitionStmtResult::HaveFnEqual(
+            ExecHaveFnEqualStmtResult::Success(result),
+        )) => (
             result.statement.name.id,
             result.store_and_infer_result.stored_fact_ids.clone(),
         ),
-        ExecTemplateDefBodyResult::HaveFnEqualCaseByCase(result) => (
+        ExecStmtResult::Definition(ExecDefinitionStmtResult::HaveFnEqualCaseByCase(
+            ExecHaveFnEqualCaseByCaseStmtResult::Success(result),
+        )) => (
             result.statement.name.id,
             result.store_and_infer_result.stored_fact_ids.clone(),
         ),
-        ExecTemplateDefBodyResult::HaveFnByForallExistUnique(result) => {
-            (result.statement.name.id, result.stored_fact_ids.clone())
-        }
-        ExecTemplateDefBodyResult::HaveFnByInduc(result) => (
+        ExecStmtResult::Definition(ExecDefinitionStmtResult::HaveFnByForallExistUnique(
+            ExecHaveFnByForallExistUniqueStmtResult::Success(result),
+        )) => (result.statement.name.id, result.stored_fact_ids.clone()),
+        ExecStmtResult::Definition(ExecDefinitionStmtResult::HaveFnByInduc(
+            ExecHaveFnByInducStmtResult::Success(result),
+        )) => (
             result.statement.name.id,
             result.store_and_infer_result.stored_fact_ids.clone(),
         ),
-        ExecTemplateDefBodyResult::TrustHave(result) => {
+        ExecStmtResult::Trust(ExecTrustBoundaryStmtResult::TrustHaveStmt(
+            ExecTrustHaveStmtResult::Success(result),
+        )) => {
             let mut ids = result.defined_param_store_and_infer.stored_fact_ids.clone();
             for stored in &result.body_store_and_infer_results {
                 ids.extend(stored.stored_fact_ids());
             }
             (result.statement.param_def.ordered_param_ids()[0], ids)
         }
-    }
+        _ => {
+            return Err(RuntimeError::InternalBug(
+                "template body is not a successful defining statement".into(),
+            ))
+        }
+    })
 }
