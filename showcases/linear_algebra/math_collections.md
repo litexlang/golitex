@@ -6,6 +6,13 @@ establish the structures in which that question makes sense, and then develop
 span, independence, bases, finite combination algebra, and linear maps. The
 real plane connects the abstract definitions to examples throughout.
 
+`std/algebra` owns the shared `field`, `vector_space`, `finite_span` and `basis` exports.
+The lecture imports their structures, relations, function constructions and
+generic theorems through `Algebra`; it retains concrete instances and coordinate developments. Shared basis
+relations and length-two dependence proofs now have one std owner. The selected-combination property and zero
+coefficient carrier are explicitly cited where later proofs consume them.
+Kernel and range continue to use native sets, with no new selector or trust.
+
 ## Vectors, scalars, and operations
 
 The real plane is $\mathbb{R}^2 = \mathbb{R} \times \mathbb{R}$.
@@ -79,8 +86,11 @@ independence makes them unique. The notes prove the standard expansion and
 `has_basis_length(..., n)` expresses the existence of a basis with length `n`.
 The plane has such a basis with length two, and has no basis of length one
 (so the concrete dimension picture is already pinned between these bounds).
-Defining a general dimension still requires that every finite-dimensional
-space has a basis and that any two bases have equal length.
+The shared basis_existence/basis_comparison exports now prove finite basis
+existence and equal finite basis lengths. The dimension export selects a
+natural value only after finite-dimensional evidence, and basis_extension
+retains an independent list as an ordered prefix. These shared results are
+exercised by the separate dimension_extension consumer.
 
 Ordered-list relations `is_prefix_of_length` and `is_list_with_index_removed`
 support the dependence lemma. Linear dependence is the negation of

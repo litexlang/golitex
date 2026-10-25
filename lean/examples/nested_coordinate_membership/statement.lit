@@ -1,0 +1,12 @@
+# A coordinate pair together with a natural tag forms a nested structure.
+struct CoordinatePair:
+    x R
+    y R
+
+(1, 2) $in &CoordinatePair
+
+struct TaggedCoordinates:
+    coordinates &CoordinatePair
+    tag N
+
+((1, 2), 3) $in &TaggedCoordinates

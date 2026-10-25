@@ -30,6 +30,10 @@ pub enum ExecHaveByReplacementAxiomStmtFailed {
 pub struct ExecHaveByReplacementAxiomStmtSuccessResult {
     pub statement: HaveByReplacementAxiomStmt,
     pub source_wd: VerifyObjWellDefinedResult,
+    pub uniqueness_fact_id: crate::runtime::FactId,
+    pub defined_params: crate::execute::StoreHaveObjAndInferResult,
+    pub introduction: crate::store_fact_and_infer::StoreFactAndInferResult,
+    pub elimination: crate::store_fact_and_infer::StoreFactAndInferResult,
     pub stored_fact_ids: Vec<crate::runtime::FactId>,
 }
 
@@ -78,13 +82,15 @@ impl Runtime {
             ));
         }
 
-        if !self.known_replacement_uniqueness(&stmt.prop_name, &stmt.source_set) {
+        let Some(uniqueness_fact_id) =
+            self.known_replacement_uniqueness(&stmt.prop_name, &stmt.source_set)
+        else {
             return Ok(ExecHaveByReplacementAxiomStmtResult::Failed(
                 ExecHaveByReplacementAxiomStmtFailed::UniquenessMissing(format!(
                     "replacement_axiom: prop {prop_ir}, set {source_ir} needs uniqueness of `{prop_ir}` over `{source_ir}`: forall x {source_ir}, y, y2 set: ${prop_ir}(x, y) ${prop_ir}(x, y2) => y = y2"
                 )),
             ));
-        }
+        };
 
         let param_def = TypedParameterList {
             groups: vec![TypedParameterGroup {
@@ -111,26 +117,26 @@ impl Runtime {
         let img = Obj::Identifier(IdentifierObj::from_bound_name(&stmt.name));
         let intro = self.replacement_intro_forall(stmt, &img);
         let elim = self.replacement_elim_forall(stmt, &img);
-        let mut stored_fact_ids = store.stored_fact_ids;
-        stored_fact_ids.extend(
-            self.store_fact_and_infer(
-                &Fact::ForallFact(intro),
-                crate::execute::execute_fact_stmt::VerifyState::top_level(),
-            )?
-            .stored_fact_ids(),
-        );
-        stored_fact_ids.extend(
-            self.store_fact_and_infer(
-                &Fact::ForallFact(elim),
-                crate::execute::execute_fact_stmt::VerifyState::top_level(),
-            )?
-            .stored_fact_ids(),
-        );
+        let introduction = self.store_fact_and_infer(
+            &Fact::ForallFact(intro),
+            crate::execute::execute_fact_stmt::VerifyState::top_level(),
+        )?;
+        let elimination = self.store_fact_and_infer(
+            &Fact::ForallFact(elim),
+            crate::execute::execute_fact_stmt::VerifyState::top_level(),
+        )?;
+        let mut stored_fact_ids = store.stored_fact_ids.clone();
+        stored_fact_ids.extend(introduction.stored_fact_ids());
+        stored_fact_ids.extend(elimination.stored_fact_ids());
 
         Ok(ExecHaveByReplacementAxiomStmtResult::Success(
             ExecHaveByReplacementAxiomStmtSuccessResult {
                 statement: stmt.clone(),
                 source_wd,
+                uniqueness_fact_id,
+                defined_params: store,
+                introduction,
+                elimination,
                 stored_fact_ids,
             },
         ))
@@ -149,7 +155,11 @@ impl Runtime {
         ))
     }
 
-    fn known_replacement_uniqueness(&self, prop_name: &AtomicName, source_set: &Obj) -> bool {
+    fn known_replacement_uniqueness(
+        &self,
+        prop_name: &AtomicName,
+        source_set: &Obj,
+    ) -> Option<crate::runtime::FactId> {
         for env in self.execution_environments_stack.iter().rev() {
             for cite in env
                 .facts
@@ -162,11 +172,11 @@ impl Runtime {
                     continue;
                 };
                 if forall_is_replacement_uniqueness(forall, prop_name, source_set) {
-                    return true;
+                    return Some(cite.fact_id);
                 }
             }
         }
-        false
+        None
     }
 
     // forall x A, y set: $P(x,y) => y $in Img
@@ -257,7 +267,7 @@ impl Runtime {
     }
 }
 
-fn forall_is_replacement_uniqueness(
+pub(crate) fn forall_is_replacement_uniqueness(
     forall: &ForallFact,
     prop_name: &AtomicName,
     source_set: &Obj,

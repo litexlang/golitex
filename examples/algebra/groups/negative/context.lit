@@ -1,0 +1,30 @@
+# Valid integer group and supplied maps for rejection controls.
+
+have fn add(x,y Z) Z=x+y
+
+have fn neg(x Z) Z=-x
+
+forall x,y,z Z:
+    add(add(x,y),z)=add(x,add(y,z))
+
+forall x Z:
+    add(0,x)=x
+    add(x,0)=x
+    add(neg(x),x)=0
+    add(x,neg(x))=0
+
+have integers &Algebra::group::Group<Z> = (add,0,neg)
+
+have fn zero_map(x Z) Z=0
+
+have fn shift(x Z) Z=x+1
+
+thm zero_is_homomorphism:
+    ? $Algebra::group::is_homomorphism(Z,integers,Z,integers,zero_map)
+    claim:
+        ? forall x,y Z:
+            zero_map(integers.mul(x,y))=integers.mul(zero_map(x),zero_map(y))
+        zero_map(x)=0
+        zero_map(y)=0
+        integers.mul(zero_map(x),zero_map(y))=add(0,0)=0
+    by def $Algebra::group::is_homomorphism(Z,integers,Z,integers,zero_map)

@@ -1,0 +1,8 @@
+thm maps_equal_without_agreement:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,field,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,field,W>,n N,u finite_seq(V,n),T,S fn(v V) W:
+        $Algebra::basis::is_basis(K,field,V,source,n,u)
+        $Algebra::vector_space::is_linear_map(K,field,V,source,W,target,T)
+        $Algebra::vector_space::is_linear_map(K,field,V,source,W,target,S)
+        =>:
+            T=S
+    by thm Algebra::coordinate_maps::linear_maps_equal_on_basis(K,field,V,source,W,target,n,u,T,S) => T=S

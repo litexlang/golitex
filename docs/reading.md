@@ -24,9 +24,10 @@ For example `+` accepts complex operands; `/` requires a nonzero divisor;
 own source help. Builtins outside this catalogue keep available generic help;
 the reader does not guess missing signatures.
 
-The viewer is read-only: it has no inline code editor or hover diagnostic
-markers. The native preview can open `.lit` files and report failed verification
-or parse diagnostics, including available source positions. A rejected fact
+The live reader supports draft editing and explicit checking; see Editing and
+checking below. Rejected proof statements are marked red. The native preview
+can also open `.lit` files and report failed verification or parse diagnostics,
+including available source positions. A rejected fact
 such as `1 = 2` and a parse error such as an undefined name remain distinct.
 Static hosting opens previously exported reading JSON, without verification.
 
@@ -128,23 +129,26 @@ retain ordinary source rendering and builtin-set help from resolved identities.
 its definitions and object declaration:
 
 ```text
-by def $reading_outer(reading_value)  → reading_value $in R · $reading_inner(reading_value)
+by def $reading_outer(reading_value)
 $reading_inner(reading_value)
 ```
 
-The arrow and following results are compact grey annotations on the producing
-statement's source line, not inserted Litex source or extra display rows.
-Long lines scroll horizontally within the source pane. Each result retains
-its fact ID, including the ID cited by a later statement. Clicking a result
+The producing line carries one compact grey **Inferred** button with a result
+count; result text stays hidden until clicked. Its anchored popup lists the
+actual published results, without inserting source text or extra source rows.
+Click the button again, click outside, or press Escape to close it; Escape
+returns focus to the button. Long results wrap inside the scrollable popup.
+Each result retains its fact ID, including the ID cited by a later statement.
+Clicking a result
 or later citation shows the actual seed and inference basis, and selects the
-producer in source. Annotations show only inferred facts actually published
+producer in source. Buttons expose only inferred facts actually published
 by that statement in its own execution scope. Parameter
 assumptions and other temporary inferences used to check a `prop` definition
-stay in the proof evidence; they do not become annotations on the definition.
-An executed nested proof statement can have its own local output annotations;
+stay in the proof evidence; they do not become result buttons on the definition.
+An executed nested proof statement can have its own local result button;
 these remain local to that statement's scope.
 
-Inline results omit origin prose. Selecting one shows the complete predicate
+Popup results omit origin prose. Selecting one shows the complete predicate
 equivalence retained for its actual producer, highlighting the selected domain
 or condition. Compact named definition links open the definition's mathematical
 view. Failures, trust and local assumptions remain explicit. The default pane
@@ -373,7 +377,7 @@ execution service. Do not point a visitor's browser at your development
 machine's `127.0.0.1` URL. Static embedding needs no execution endpoint.
 
 Current upload limits are 512 source/config files, 8 MiB combined source,
-16 MiB request body, and 120 seconds / 128 MiB output per child build. A server
+16 MiB request body, and 300 seconds / 256 MiB output per child build. A server
 started with `-strict` cannot be weakened by a request. Missing dependencies
 and incomplete source are reported; they are not silently replaced.
 
@@ -441,3 +445,45 @@ id `reading-example-groups`; this is host navigation metadata, separate from
 proof JSON. Cross-page links retain the current locale using `?lang=zh|en`.
 The gallery versions its shared asset URLs to prevent cached old scripts from
 hiding freshly added navigation. Existing exports without groups still work.
+
+
+## Editing and checking
+
+When a checking host is available, every example opens directly in one IDE
+surface: editable source, semantic colors, line numbers and quiet grey inference
+buttons. Checked tokens retain their resolved hover cards; Ctrl/Cmd+click opens
+their existing definition/language help, and popup results remain clickable.
+There is no Edit/Read mode switch. Tab insertion and indented newlines are supported.
+Use **Check** or Cmd/Ctrl+Enter to submit it. Any input immediately invalidates
+the old verification badge, inferred results and mathematical detail. A response
+is applied only if the submitted draft revision and document are still current.
+Checks execute the selected file with its real ordered project prefix. Later
+chapters retain only editable source and say Chapter not checked; they never
+reuse old proof evidence. Failed checks keep the draft and show the verifier's
+actual diagnostics. **Restore original** restores this page's initial text; run Check again to verify it.
+Drafts stay in this page's memory and do not write to the original file.
+
+The shared component accepts optional `onCheck({changes,sourcePath,locale})`,
+which returns a complete fresh reading document. `getProjectSnapshot()` loads
+the source contents and recorded configurations when a host needs them. The
+supplied shell reconstructs closed, single-configuration projects in original
+export order and preserves strict checking. Nested/external module dependencies
+are explicitly rejected by this initial editor bridge. After an input, old inferred facts and semantic hover are cleared immediately;
+the draft uses lexical colors until checking returns fresh evidence. Source
+selection updates the mathematical pane without replacing the input or losing
+the caret. Editor scroll and selection are retained through navigation/checks.
+
+Static exports stay read-only unless their host supplies a checking endpoint.
+For the local gallery, run the native reader and same-origin proxy separately:
+
+```sh
+target/release/litex -reading -strict -no-browser -port 49186
+python3 examples/reading/serve_gallery.py /path/to/exported-gallery --port 49187
+```
+
+The proxy injects an opt-in endpoint into served HTML and forwards builds to
+the existing native loopback service; it does not execute proofs itself or
+modify exported source. This is a local development server. Check output is
+bounded to 256 MiB, with a 300-second child-build timeout for large chapter
+prefixes. Source/request/concurrency policies are otherwise
+unchanged. Published websites still provide their own checking service.

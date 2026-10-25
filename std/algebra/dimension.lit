@@ -1,0 +1,70 @@
+# Finite dimension from uniquely determined basis length.
+
+claim:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>:
+        $basis::is_finite_dimensional(K,field,V,space)
+        =>:
+            exist! n N st {$basis::has_basis_length(K,field,V,space,n)}
+    release thm basis_comparison::finite_dimensional_has_unique_basis_length(K,field,V,space)
+
+template<K nonempty_set,field &field::Field<K>,V nonempty_set>:
+    have fn finite_dimension by exist!:
+        ? forall space &vector_space::VectorSpace<K,field,V>:
+            $basis::is_finite_dimensional(K,field,V,space)
+            =>:
+                exist! n N st {$basis::has_basis_length(K,field,V,space,n)}
+
+thm finite_dimension_has_basis_length:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>:
+        $basis::is_finite_dimensional(K,field,V,space)
+        =>:
+            $basis::has_basis_length(K,field,V,space,\finite_dimension<K,field,V>(space))
+
+thm finite_dimension_of_basis:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,n N,vectors finite_seq(V,n):
+        $basis::is_finite_dimensional(K,field,V,space)
+        $basis::is_basis(K,field,V,space,n,vectors)
+        =>:
+            \finite_dimension<K,field,V>(space)=n
+    witness $basis::has_basis_length(K,field,V,space,n) from vectors
+    by thm basis_comparison::basis_length_unique(K,field,V,space,\finite_dimension<K,field,V>(space),n) => \finite_dimension<K,field,V>(space)=n
+
+thm independent_length_le_dimension:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,m N,vectors finite_seq(V,m):
+        $basis::is_finite_dimensional(K,field,V,space)
+        $basis::is_linearly_independent(K,field,V,space,m,vectors)
+        =>:
+            m<=\finite_dimension<K,field,V>(space)
+    obtain known_basis from $basis::has_basis_length(K,field,V,space,\finite_dimension<K,field,V>(space))
+    by thm basis_comparison::independent_spanning_length_bound(K,field,V,space,m,vectors,\finite_dimension<K,field,V>(space),known_basis) => m<=\finite_dimension<K,field,V>(space)
+
+thm dimension_le_spanning_length:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,n N,vectors finite_seq(V,n):
+        $basis::is_finite_dimensional(K,field,V,space)
+        $finite_span::spans(K,field,V,space,n,vectors)
+        =>:
+            \finite_dimension<K,field,V>(space)<=n
+    obtain known_basis from $basis::has_basis_length(K,field,V,space,\finite_dimension<K,field,V>(space))
+    by thm basis_comparison::independent_spanning_length_bound(K,field,V,space,\finite_dimension<K,field,V>(space),known_basis,n,vectors) => \finite_dimension<K,field,V>(space)<=n
+
+thm independent_dimension_list_is_basis:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,n N,vectors finite_seq(V,n):
+        $basis::is_finite_dimensional(K,field,V,space)
+        $basis::is_linearly_independent(K,field,V,space,n,vectors)
+        n=\finite_dimension<K,field,V>(space)
+        =>:
+            $basis::is_basis(K,field,V,space,n,vectors)
+    $basis::has_basis_length(K,field,V,space,n)
+    by thm basis_extension::independent_list_with_basis_length_spans(K,field,V,space,n,vectors) => $finite_span::spans(K,field,V,space,n,vectors)
+    by def $basis::is_basis(K,field,V,space,n,vectors)
+
+thm spanning_dimension_list_is_basis:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,n N,vectors finite_seq(V,n):
+        $basis::is_finite_dimensional(K,field,V,space)
+        $finite_span::spans(K,field,V,space,n,vectors)
+        n=\finite_dimension<K,field,V>(space)
+        =>:
+            $basis::is_basis(K,field,V,space,n,vectors)
+    $basis::has_basis_length(K,field,V,space,n)
+    by thm basis_extension::spanning_list_with_basis_length_is_independent(K,field,V,space,n,vectors) => $basis::is_linearly_independent(K,field,V,space,n,vectors)
+    by def $basis::is_basis(K,field,V,space,n,vectors)

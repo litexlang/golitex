@@ -1,0 +1,5 @@
+# Two shifts on the positive real numbers have the same graph, although their guards are written differently.
+forall x R: x > 0 => 0 < x
+have fn domain_pos_shift(x R: x > 0) R = x + 1
+have fn domain_pos_shift_alt(y R: 0 < y) R = 1 + y
+by fn_extension domain_pos_shift = domain_pos_shift_alt

@@ -1,0 +1,12 @@
+# All three coordinates agree through two ordered singleton dependencies.
+struct RepeatedTriple:
+    x R
+    y {x}
+    z {y}
+
+1 $in {1}
+(1, 1, 1) $in &RepeatedTriple
+forall p &RepeatedTriple:
+    p.y = p.x
+    p.z = p.y
+    p.z = p.x

@@ -1,0 +1,310 @@
+# Independent and spanning list lengths; uniqueness of finite basis length.
+
+thm independent_vector_outside_prefix_span:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,m N,vectors finite_seq(V,m),p N,prefix finite_seq(V,p):
+        $basis::is_linearly_independent(K,field,V,space,m,vectors)
+        $basis::is_prefix_of_length(V,m,p,vectors,prefix)
+        p<m
+        =>:
+            not vectors(p+1) $in \finite_span::span<K,field,V,space,p,prefix>
+    by contra:
+        ? not vectors(p+1) $in \finite_span::span<K,field,V,space,p,prefix>
+        have k closed_range(1,m)=p+1
+        obtain prefix_coefficients from $finite_span::is_linear_combination(K,field,V,space,p,vectors(p+1),prefix)
+        obtain prefix_sums from $finite_span::has_linear_combination_value(K,field,V,space,p,prefix_coefficients,prefix,vectors(p+1))
+        have fn extended_coefficients(idx closed_range(1,m)) K by cases:
+            case idx<=p: prefix_coefficients(idx)
+            case idx>p: field.zero
+        release thm exchange::replacement_list_exists(K,m,extended_coefficients,k,field.neg(field.one))
+        obtain coefficients from exist result finite_seq(K,m) st {$exchange::is_list_with_index_replaced(K,m,extended_coefficients,k,field.neg(field.one),result)}
+        have fn sums(idx closed_range(0,m)) V by cases:
+            case idx<=p: prefix_sums(idx)
+            case idx>p: space.zero
+        sums(0)=prefix_sums(0)=space.zero
+        vectors(k) $in V
+        field.add(field.one,field.neg(field.one))=field.zero
+        space.smul(field.one,vectors(k))=vectors(k)
+        space.smul(field.neg(field.one),vectors(k)) $in V
+        by thm vector_space::zero_scalar_times_vector(K,field,V,space,vectors(k)) => space.smul(field.zero,vectors(k))=space.zero
+        space.add(vectors(k),space.smul(field.neg(field.one),vectors(k)))=space.add(space.smul(field.one,vectors(k)),space.smul(field.neg(field.one),vectors(k)))=space.smul(field.add(field.one,field.neg(field.one)),vectors(k))=space.smul(field.zero,vectors(k))=space.zero
+        k=p+1>p
+        claim:
+            ? forall j N+:
+                j<=m
+                =>:
+                    sums(j)=space.add(sums(j-1),space.smul(coefficients(j),vectors(j)))
+            j $in closed_range(1,m)
+            j $in closed_range(0,m)
+            j-1 $in closed_range(0,m)
+            coefficients(j) $in K
+            vectors(j) $in V
+            sums(j-1) $in V
+            space.smul(coefficients(j),vectors(j)) $in V
+            by cases:
+                ? sums(j)=space.add(sums(j-1),space.smul(coefficients(j),vectors(j)))
+                case j<k:
+                    j<p+1
+                    j<=p
+                    j!=k
+                    j-1<=p
+                    coefficients(j)=extended_coefficients(j)=prefix_coefficients(j)
+                    prefix(j)=vectors(j)
+                    sums(j)=prefix_sums(j)
+                    sums(j-1)=prefix_sums(j-1)
+                    prefix_coefficients(j) $in K
+                    prefix(j) $in V
+                    prefix_sums(j-1) $in V
+                    space.smul(coefficients(j),vectors(j))=space.smul(prefix_coefficients(j),prefix(j))
+                    sums(j)=prefix_sums(j)=space.add(prefix_sums(j-1),space.smul(prefix_coefficients(j),prefix(j)))=space.add(sums(j-1),space.smul(coefficients(j),vectors(j)))
+                case j=k:
+                    j=p+1
+                    j>p
+                    j-1=p
+                    coefficients(j)=coefficients(k)=field.neg(field.one)
+                    vectors(j)=vectors(k)
+                    p $in closed_range(0,m)
+                    sums(p)=prefix_sums(p)
+                    sums(j-1)=sums(p)=prefix_sums(p)=vectors(p+1)=vectors(k)
+                    sums(j)=space.zero
+                    space.smul(coefficients(j),vectors(j))=space.smul(field.neg(field.one),vectors(k))
+                    space.add(sums(j-1),space.smul(coefficients(j),vectors(j)))=space.add(vectors(k),space.smul(field.neg(field.one),vectors(k)))=space.zero=sums(j)
+                case j>k:
+                    j!=k
+                    j>p
+                    j-1>=k>p
+                    j-1>p
+                    coefficients(j)=extended_coefficients(j)=field.zero
+                    sums(j-1)=space.zero
+                    sums(j)=space.zero
+                    by thm vector_space::zero_scalar_times_vector(K,field,V,space,vectors(j)) => space.smul(field.zero,vectors(j))=space.zero
+                    space.smul(coefficients(j),vectors(j))=space.smul(field.zero,vectors(j))=space.zero
+                    space.add(sums(j-1),space.smul(coefficients(j),vectors(j)))=space.add(space.zero,space.zero)=space.zero=sums(j)
+        by def $finite_span::is_partial_sum(K,field,V,space,m,coefficients,vectors,sums)
+        m>p
+        sums(m)=space.zero
+        witness $finite_span::has_linear_combination_value(K,field,V,space,m,coefficients,vectors,space.zero) from sums
+        $basis::has_only_zero_coefficients(K,field,m,coefficients)
+        coefficients(k)=field.zero
+        coefficients(k)=field.neg(field.one)
+        field.add(field.one,field.neg(field.one))=field.add(field.one,field.zero)=field.add(field.zero,field.one)=field.one
+        impossible field.zero=field.one
+
+thm independent_list_in_span_length_bound:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,m N,independent finite_seq(V,m),n N,generators finite_seq(V,n):
+        $basis::is_linearly_independent(K,field,V,space,m,independent)
+        forall j N+:
+            j<=m
+            =>:
+                independent(j) $in \finite_span::span<K,field,V,space,n,generators>
+        =>:
+            m<=n
+    prop is_prefix_embedded(length N,positions finite_seq(closed_range(1,n),length),current finite_seq(V,n)):
+        length<=m
+        $injective(closed_range(1,length),closed_range(1,n),positions)
+        \finite_span::span<K,field,V,space,n,current> = \finite_span::span<K,field,V,space,n,generators>
+        forall j N+:
+            j<=length
+            =>:
+                current(positions(j))=independent(j)
+    prop has_prefix_exchange(length N):
+        forall:
+            length<=m
+            =>:
+                exist positions finite_seq(closed_range(1,n),length),current finite_seq(V,n) st {$is_prefix_embedded(length,positions,current)}
+    by induc length from 0:
+        ? $has_prefix_exchange(length)
+        ? from length=0:
+            claim:
+                ? forall:
+                    0<=m
+                    =>:
+                        exist positions finite_seq(closed_range(1,n),0),current finite_seq(V,n) st {$is_prefix_embedded(0,positions,current)}
+                have positions finite_seq(closed_range(1,n),0)=tuple()
+                by def $injective(closed_range(1,0),closed_range(1,n),positions)
+                claim:
+                    ? forall j N+:
+                        j<=0
+                        =>:
+                            generators(positions(j))=independent(j)
+                    by contra:
+                        ? generators(positions(j))=independent(j)
+                        j>0
+                        impossible j>0
+                by def $is_prefix_embedded(0,positions,generators)
+                witness exist selected_positions finite_seq(closed_range(1,n),0),current finite_seq(V,n) st {$is_prefix_embedded(0,selected_positions,current)} from positions,generators
+            by def $has_prefix_exchange(0)
+        ? induc:
+            length $in N
+            length+1 $in N+
+            claim:
+                ? forall:
+                    length+1<=m
+                    =>:
+                        exist positions finite_seq(closed_range(1,n),length+1),current finite_seq(V,n) st {$is_prefix_embedded(length+1,positions,current)}
+                length<length+1<=m
+                length<=m
+                obtain positions,current from exist old_positions finite_seq(closed_range(1,n),length),old_current finite_seq(V,n) st {$is_prefix_embedded(length,old_positions,old_current)}
+                $injective(closed_range(1,length),closed_range(1,n),positions)
+                release thm basis::prefix_exists(V,m,length,independent)
+                obtain prefix from exist p finite_seq(V,length) st {$basis::is_prefix_of_length(V,m,length,independent,p)}
+                length<m
+                release thm independent_vector_outside_prefix_span(K,field,V,space,m,independent,length,prefix)
+                length+1 $in N+
+                independent(length+1) $in \finite_span::span<K,field,V,space,n,generators>
+                \finite_span::span<K,field,V,space,n,current> = \finite_span::span<K,field,V,space,n,generators>
+                independent(length+1) $in \finite_span::span<K,field,V,space,n,current>
+                obtain coefficients from $finite_span::is_linear_combination(K,field,V,space,n,independent(length+1),current)
+                by thm finite_span::span_is_subspace(K,field,V,space,length,prefix) => $vector_space::is_subspace(K,field,V,space,\finite_span::span<K,field,V,space,length,prefix>)
+                release thm exchange::combination_outside_subspace_has_nonzero_term(K,field,V,space,n,coefficients,current,independent(length+1),\finite_span::span<K,field,V,space,length,prefix>)
+                obtain k from exist idx closed_range(1,n) st {coefficients(idx)!=field.zero,not current(idx) $in \finite_span::span<K,field,V,space,length,prefix>}
+                claim:
+                    ? forall j N+:
+                        j<=length
+                        =>:
+                            positions(j)!=k
+                    j $in closed_range(1,length)
+                    positions(j) $in closed_range(1,n)
+                    current(positions(j))=independent(j)=prefix(j)
+                    by thm span_reduction::span_contains_generator(K,field,V,space,length,prefix,j) => prefix(j) $in \finite_span::span<K,field,V,space,length,prefix>
+                    by contra:
+                        ? positions(j)!=k
+                        current(positions(j))=current(k)
+                        impossible current(k) $in \finite_span::span<K,field,V,space,length,prefix>
+                release thm exchange::replacement_list_exists(V,n,current,k,independent(length+1))
+                obtain replaced from exist result finite_seq(V,n) st {$exchange::is_list_with_index_replaced(V,n,current,k,independent(length+1),result)}
+                by thm exchange::exchange_by_nonzero_coefficient(K,field,V,space,n,coefficients,current,independent(length+1),k,replaced) => \finite_span::span<K,field,V,space,n,current> = \finite_span::span<K,field,V,space,n,replaced>
+                have fn appended(j closed_range(1,length+1)) closed_range(1,n) by cases:
+                    case j<=length: positions(j)
+                    case j>length: k
+                claim:
+                    ? forall a,b closed_range(1,length+1):
+                        appended(a)=appended(b)
+                        =>:
+                            a=b
+                    a $in N+
+                    b $in N+
+                    by cases:
+                        ? a=b
+                        case a<=length:
+                            a $in closed_range(1,length)
+                            appended(a)=positions(a)
+                            by cases:
+                                ? a=b
+                                case b<=length:
+                                    b $in closed_range(1,length)
+                                    appended(b)=positions(b)
+                                    positions(a)=positions(b)
+                                case b>length:
+                                    appended(b)=k
+                                    by contra:
+                                        ? a=b
+                                        positions(a)=k
+                                        impossible positions(a)=k
+                        case a>length:
+                            appended(a)=k
+                            by cases:
+                                ? a=b
+                                case b<=length:
+                                    b $in closed_range(1,length)
+                                    appended(b)=positions(b)
+                                    by contra:
+                                        ? a=b
+                                        positions(b)=k
+                                        impossible positions(b)=k
+                                case b>length:
+                                    a>=length+1
+                                    b>=length+1
+                                    a=length+1=b
+                by def $injective(closed_range(1,length+1),closed_range(1,n),appended)
+                claim:
+                    ? forall j N+:
+                        j<=length+1
+                        =>:
+                            replaced(appended(j))=independent(j)
+                    j $in closed_range(1,length+1)
+                    appended(j) $in closed_range(1,n)
+                    by cases:
+                        ? replaced(appended(j))=independent(j)
+                        case j<=length:
+                            j $in closed_range(1,length)
+                            positions(j) $in closed_range(1,n)
+                            positions(j)!=k
+                            appended(j)=positions(j)
+                            replaced(positions(j))=current(positions(j))=independent(j)
+                        case j>length:
+                            j>=length+1
+                            j=length+1
+                            appended(j)=k
+                            replaced(k)=independent(length+1)
+                            replaced(appended(j))=replaced(k)=independent(length+1)=independent(j)
+                by def $is_prefix_embedded(length+1,appended,replaced)
+                witness exist new_positions finite_seq(closed_range(1,n),length+1),new_current finite_seq(V,n) st {$is_prefix_embedded(length+1,new_positions,new_current)} from appended,replaced
+            by def $has_prefix_exchange(length+1)
+    $has_prefix_exchange(m)
+    obtain positions,current from exist selected_positions finite_seq(closed_range(1,n),m),selected_current finite_seq(V,n) st {$is_prefix_embedded(m,selected_positions,selected_current)}
+    by cases:
+        ? m<=n
+        case m=0:
+            m=0<=n
+        case m!=0:
+            by contra:
+                ? m>0
+                m<=0
+                m=0
+                impossible m!=0
+            1 $in closed_range(1,m)
+            positions(1) $in closed_range(1,n)
+            1<=positions(1)<=n
+            1<=n
+            $is_finite_set(closed_range(1,m))
+            $is_finite_set(closed_range(1,n))
+            fn_range(positions) $subset closed_range(1,n)
+            $is_finite_set(fn_range(positions))
+            finite_set_size(closed_range(1,m))=m-1+1=m
+            finite_set_size(closed_range(1,n))=n-1+1=n
+            finite_set_size(fn_range(positions))=finite_set_size(closed_range(1,m))
+            finite_set_size(fn_range(positions))<=finite_set_size(closed_range(1,n))
+
+thm independent_spanning_length_bound:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,m N,independent finite_seq(V,m),n N,generators finite_seq(V,n):
+        $basis::is_linearly_independent(K,field,V,space,m,independent)
+        $finite_span::spans(K,field,V,space,n,generators)
+        =>:
+            m<=n
+    by thm independent_list_in_span_length_bound(K,field,V,space,m,independent,n,generators) => m<=n
+
+thm finite_bases_have_equal_length:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,m N,first finite_seq(V,m),n N,second finite_seq(V,n):
+        $basis::is_basis(K,field,V,space,m,first)
+        $basis::is_basis(K,field,V,space,n,second)
+        =>:
+            m=n
+    by thm independent_spanning_length_bound(K,field,V,space,m,first,n,second) => m<=n
+    by thm independent_spanning_length_bound(K,field,V,space,n,second,m,first) => n<=m
+
+thm basis_length_unique:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,m,n N:
+        $basis::has_basis_length(K,field,V,space,m)
+        $basis::has_basis_length(K,field,V,space,n)
+        =>:
+            m=n
+    obtain first from $basis::has_basis_length(K,field,V,space,m)
+    obtain second from $basis::has_basis_length(K,field,V,space,n)
+    by thm finite_bases_have_equal_length(K,field,V,space,m,first,n,second) => m=n
+
+thm finite_dimensional_has_unique_basis_length:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>:
+        $basis::is_finite_dimensional(K,field,V,space)
+        =>:
+            exist! n N st {$basis::has_basis_length(K,field,V,space,n)}
+    release thm basis_existence::finite_dimensional_has_basis(K,field,V,space)
+    obtain n,vectors from exist length N,selected finite_seq(V,length) st {$basis::is_basis(K,field,V,space,length,selected)}
+    witness $basis::has_basis_length(K,field,V,space,n) from vectors
+    claim:
+        ? forall a,b N:
+            $basis::has_basis_length(K,field,V,space,a)
+            $basis::has_basis_length(K,field,V,space,b)
+            =>:
+                a=b
+        by thm basis_length_unique(K,field,V,space,a,b) => a=b
+    witness exist! length N st {$basis::has_basis_length(K,field,V,space,length)} from n

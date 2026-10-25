@@ -66,13 +66,12 @@ theorem h_4 {_Host_i1 : Type v1} [_rep_i1 : Litex.Representation M _Host_i1] (_v
   )
 
 noncomputable def _object_i12 {_Host_i1 : Type v1} [_rep_i1 : Litex.Representation M _Host_i1] (_value_i1 : Litex.Obj (M := M) _Host_i1) (h_1 : Litex.IsSet _value_i1) := (show Litex.Obj (M := M) (Litex.SelectedFn M) from by
-  let _selected_signature := ((show Litex.Obj (M := M) (Litex.FunctionSignature M) from (by
-  have _checked_header : ∀ (_raw_i10 : M.Value), M.mem _raw_i10 (Litex.denote _value_i1) → ((fun (_raw_i10 : M.Value) => True) _raw_i10) → True := by
+  let _selected_signature := ((show Litex.Obj (M := M) (Litex.FunctionSignature M) from (let _checked_header : ∀ (_raw_i10 : M.Value), M.mem _raw_i10 (Litex.denote _value_i1) → ((fun (_raw_i10 : M.Value) => True) _raw_i10) → True := (by
     intro _raw_i10 h_65 _
     let _value_i10 := Litex.semanticObject (M := M) _raw_i10 (M.member_isSet h_65)
     have h_65 : Litex.In _value_i10 _value_i1 := h_65
-    exact True.intro
-  exact Litex.fnSet (Litex.FunctionSignature.withGuard (M := M) (Litex.denote _value_i1) (Litex.denote _value_i1) (Litex.isSet _value_i1) (Litex.isSet _value_i1) (fun (_litex_input : M.Value) => (fun (_raw_i10 : M.Value) => True) _litex_input))))).val
+    exact True.intro);
+  Litex.fnSet (let _litex_output := _value_i1; Litex.FunctionSignature.withGuard (M := M) (Litex.denote _value_i1) (Litex.denote _litex_output) (Litex.isSet _value_i1) (Litex.isSet _litex_output) (fun (_litex_input : M.Value) => (fun (_raw_i10 : M.Value) => True) _litex_input))))).val
   have _selected_pointwise : ∀ (_raw_i10 : M.Value), M.mem _raw_i10 (Litex.denote _value_i1) → ((fun (_raw_i10 : M.Value) => True) _raw_i10) → ∃! _selected_output : M.Value, M.mem _selected_output (Litex.denote _value_i1) ∧ ((_selected_output = _raw_i10)) := (by
     intro _raw_i10 h_65 _
     let _value_i10 := Litex.semanticObject (M := M) _raw_i10 (M.member_isSet h_65)
@@ -124,14 +123,14 @@ theorem h_77 {_Host_i1 : Type v1} [_rep_i1 : Litex.Representation M _Host_i1] (_
       )
   )
 
-theorem h_79 {_Host_i1 : Type v1} [_rep_i1 : Litex.Representation M _Host_i1] (_value_i1 : Litex.Obj (M := M) _Host_i1) (h_1 : Litex.IsSet _value_i1) : ∀ {_Host_i14 : Type v14} [_rep_i14 : Litex.Representation M _Host_i14] (_value_i14 : Litex.Obj (M := M) _Host_i14) (h_81 : Litex.In _value_i14 _value_i1), Litex.Same (let _litex_call_arg_0 := _value_i14;
-Litex.callOnDomain _value_i1 _value_i1 (fun (_litex_input : M.Value) => (fun (_raw_i10 : M.Value) => True) _litex_input) (_object_i12 (M := M) (_Host_i1 := _Host_i1) (_rep_i1 := _rep_i1) _value_i1 h_1) _litex_call_arg_0 (h_66 (M := M) (_Host_i1 := _Host_i1) (_rep_i1 := _rep_i1) _value_i1 h_1) h_81 True.intro) _value_i14 :=
+theorem h_79 {_Host_i1 : Type v1} [_rep_i1 : Litex.Representation M _Host_i1] (_value_i1 : Litex.Obj (M := M) _Host_i1) (h_1 : Litex.IsSet _value_i1) : ∀ {_Host_i14 : Type v14} [_rep_i14 : Litex.Representation M _Host_i14] (_value_i14 : Litex.Obj (M := M) _Host_i14) (h_83 : Litex.In _value_i14 _value_i1), Litex.Same (let _litex_call_arg_0 := _value_i14;
+Litex.callOnDomain _value_i1 _value_i1 (fun (_litex_input : M.Value) => (fun (_raw_i10 : M.Value) => True) _litex_input) (_object_i12 (M := M) (_Host_i1 := _Host_i1) (_rep_i1 := _rep_i1) _value_i1 h_1) _litex_call_arg_0 (h_66 (M := M) (_Host_i1 := _Host_i1) (_rep_i1 := _rep_i1) _value_i1 h_1) h_83 True.intro) _value_i14 :=
   (by
     litex_complete =>
       exact (
         (by
-          intro _Host_i14 _rep_i14 _value_i14 h_81
-          exact ((h_68 (M := M) (_Host_i1 := _Host_i1) (_rep_i1 := _rep_i1) _value_i1 h_1) _value_i14 h_81)
+          intro _Host_i14 _rep_i14 _value_i14 h_83
+          exact ((h_68 (M := M) (_Host_i1 := _Host_i1) (_rep_i1 := _rep_i1) _value_i1 h_1) _value_i14 h_83)
         )
       )
   )

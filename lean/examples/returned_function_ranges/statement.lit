@@ -1,0 +1,9 @@
+# A real-indexed family returns a real function; each returned function has a set of values.
+forall provider fn(t R) fn(x R) R:
+    $is_set(fn_range(provider(1)))
+
+forall provider fn(t R: t != 0) fn(x R: x != 0) R:
+    $is_set(fn_range(provider(2)))
+
+forall provider fn(t R) fn(x R) R, a R:
+    $is_set(fn_range(provider(a + 1)))

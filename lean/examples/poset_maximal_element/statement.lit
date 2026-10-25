@@ -1,0 +1,53 @@
+# A nonempty partially ordered set whose chains have upper bounds has a maximal element.
+have S set
+abstract_prop leq(x, y)
+prop upper_bound(c power_set(S), u S):
+    forall x c:
+        $leq(x, u)
+prop maximal(m S):
+    forall x S:
+        $leq(m, x)
+        =>:
+            x = m
+
+claim:
+    ? forall:
+        $is_nonempty_set(S)
+        forall x S:
+            $leq(x, x)
+        forall x, y, z S:
+            $leq(x, y)
+            $leq(y, z)
+            =>:
+                $leq(x, z)
+        forall x, y S:
+            $leq(x, y)
+            $leq(y, x)
+            =>:
+                x = y
+        forall c power_set(S):
+            forall x, y c:
+                $leq(x, y) or $leq(y, x)
+            =>:
+                exist u S st {$upper_bound(c, u)}
+        =>:
+            exist m S st {$maximal(m)}
+    release zorn_lemma: set S, prop leq, prop upper_bound, prop maximal:
+        $is_nonempty_set(S)
+        forall x S:
+            $leq(x, x)
+        forall x, y, z S:
+            $leq(x, y)
+            $leq(y, z)
+            =>:
+                $leq(x, z)
+        forall x, y S:
+            $leq(x, y)
+            $leq(y, x)
+            =>:
+                x = y
+        forall c power_set(S):
+            forall x, y c:
+                $leq(x, y) or $leq(y, x)
+            =>:
+                exist u S st {$upper_bound(c, u)}

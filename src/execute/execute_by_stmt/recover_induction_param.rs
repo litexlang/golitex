@@ -57,6 +57,19 @@ fn induction_bound_from_obj(
         return (found == name).then(|| crate::ast::names::BoundName::new(*id, found.clone()));
     }
     let children: Vec<&Obj> = match obj {
+        Obj::LimitOperator(crate::ast::obj::LimitOperator::MultivariableScalar(_))
+        | Obj::LimitOperator(crate::ast::obj::LimitOperator::MultivariableVector(_))
+        | Obj::DerivativeOperator(crate::ast::obj::DerivativeOperator::Partial(_))
+        | Obj::DerivativeOperator(crate::ast::obj::DerivativeOperator::ScalarDifferential(_))
+        | Obj::DerivativeOperator(crate::ast::obj::DerivativeOperator::TotalDifferential(_))
+        | Obj::DerivativeOperator(crate::ast::obj::DerivativeOperator::Gradient(_))
+        | Obj::DerivativeOperator(crate::ast::obj::DerivativeOperator::Jacobian(_))
+        | Obj::DerivativeOperator(crate::ast::obj::DerivativeOperator::Hessian(_))
+        | Obj::DerivativeOperator(crate::ast::obj::DerivativeOperator::Divergence(_))
+        | Obj::DerivativeOperator(crate::ast::obj::DerivativeOperator::Curl(_))
+        | Obj::DerivativeOperator(crate::ast::obj::DerivativeOperator::Laplacian(_)) => {
+            obj.multivariable_selector_args().unwrap()
+        }
         Obj::MatrixOperator(value) => value.operand_refs(),
         Obj::SetFormer(SetFormer::MatrixSet(value)) => vec![&value.set, &value.rows, &value.cols],
         Obj::IntegralOperator(IntegralOperator::Riemann(a)) => {

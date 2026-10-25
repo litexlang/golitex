@@ -1,4 +1,4 @@
-use super::helper::{proof_verify_state, store_goal_fact, verify_goal_fact};
+use super::helper::{proof_verify_state, store_goal_fact_with_wd, verify_goal_fact};
 use super::result::{
     ExecReleaseZornLemmaStmtFailed, ExecReleaseZornLemmaStmtResult, ExecReleaseZornLemmaStmtSuccess,
 };
@@ -54,8 +54,11 @@ pub fn exec_release_zorn_lemma_stmt(
                     result: proof,
                 }));
             }
-            let _ = store_goal_fact(rt, obligation)?;
-            obligation_proofs.push(proof);
+            let stored = store_goal_fact_with_wd(rt, obligation)?;
+            obligation_proofs.push(super::result::VerifiedReleaseObligation {
+                verified: proof,
+                stored,
+            });
         }
         Ok(Ok((proof_steps, obligation_proofs)))
     })?;
@@ -71,7 +74,7 @@ pub fn exec_release_zorn_lemma_stmt(
     // Example stores: exist m S st { $is_maximal(m) }.
     let maximal_fact =
         zorn_maximal_exist(runtime, &stmt.set, &stmt.maximal_prop_name, &stmt.line_file);
-    let stored = match store_goal_fact(runtime, &maximal_fact)? {
+    let (stored_wd, stored) = match store_goal_fact_with_wd(runtime, &maximal_fact)? {
         Ok(s) => s,
         Err(msg) => {
             return Ok(ExecReleaseZornLemmaStmtResult::Failed(
@@ -82,10 +85,12 @@ pub fn exec_release_zorn_lemma_stmt(
 
     Ok(ExecReleaseZornLemmaStmtResult::Success(
         ExecReleaseZornLemmaStmtSuccess {
+            statement: stmt.clone(),
             set_wd,
             proof_steps,
             obligations: obligation_proofs,
             local_env,
+            stored_wd,
             stored,
         },
     ))

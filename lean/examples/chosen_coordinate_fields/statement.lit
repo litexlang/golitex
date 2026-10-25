@@ -1,0 +1,10 @@
+# Choose two coordinate pairs and use their real fields.
+struct CoordinatePair:
+    x R
+    y R
+
+witness $is_nonempty_set(&CoordinatePair) from (1, 2)
+have p, q &CoordinatePair
+p.x $in R
+q.y $in R
+p.x + q.y = q.y + p.x

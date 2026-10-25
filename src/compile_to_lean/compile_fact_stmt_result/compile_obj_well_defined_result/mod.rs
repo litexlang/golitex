@@ -14,6 +14,7 @@ pub(in crate::compile_to_lean) mod compile_integer_division;
 mod compile_obj_well_defined_result;
 mod compile_product_shape;
 mod compile_returned_cart_call;
+mod compile_returned_fn_call;
 pub(in crate::compile_to_lean) mod compile_rounding;
 mod compile_set_former;
 mod compile_set_operator;

@@ -1045,3 +1045,91 @@ impl From<crate::ast::obj::MatrixSet> for crate::ast::obj::Obj {
         Self::SetFormer(crate::ast::obj::SetFormer::MatrixSet(value))
     }
 }
+
+impl From<crate::ast::obj::MultivariableScalarLimit> for crate::ast::obj::Obj {
+    fn from(x: crate::ast::obj::MultivariableScalarLimit) -> Self {
+        Self::LimitOperator(crate::ast::obj::LimitOperator::MultivariableScalar(x))
+    }
+}
+
+impl From<crate::ast::obj::MultivariableVectorLimit> for crate::ast::obj::Obj {
+    fn from(x: crate::ast::obj::MultivariableVectorLimit) -> Self {
+        Self::LimitOperator(crate::ast::obj::LimitOperator::MultivariableVector(x))
+    }
+}
+
+impl From<crate::ast::obj::PartialDerivativeAt> for crate::ast::obj::Obj {
+    fn from(x: crate::ast::obj::PartialDerivativeAt) -> Self {
+        Self::DerivativeOperator(crate::ast::obj::DerivativeOperator::Partial(x))
+    }
+}
+
+impl From<crate::ast::obj::ScalarDifferentialAt> for crate::ast::obj::Obj {
+    fn from(x: crate::ast::obj::ScalarDifferentialAt) -> Self {
+        Self::DerivativeOperator(crate::ast::obj::DerivativeOperator::ScalarDifferential(x))
+    }
+}
+
+impl From<crate::ast::obj::TotalDifferentialAt> for crate::ast::obj::Obj {
+    fn from(x: crate::ast::obj::TotalDifferentialAt) -> Self {
+        Self::DerivativeOperator(crate::ast::obj::DerivativeOperator::TotalDifferential(x))
+    }
+}
+
+impl From<crate::ast::obj::GradientAt> for crate::ast::obj::Obj {
+    fn from(x: crate::ast::obj::GradientAt) -> Self {
+        Self::DerivativeOperator(crate::ast::obj::DerivativeOperator::Gradient(x))
+    }
+}
+
+impl From<crate::ast::obj::JacobianAt> for crate::ast::obj::Obj {
+    fn from(x: crate::ast::obj::JacobianAt) -> Self {
+        Self::DerivativeOperator(crate::ast::obj::DerivativeOperator::Jacobian(x))
+    }
+}
+
+impl From<crate::ast::obj::HessianAt> for crate::ast::obj::Obj {
+    fn from(x: crate::ast::obj::HessianAt) -> Self {
+        Self::DerivativeOperator(crate::ast::obj::DerivativeOperator::Hessian(x))
+    }
+}
+
+impl From<crate::ast::obj::DivergenceAt> for crate::ast::obj::Obj {
+    fn from(x: crate::ast::obj::DivergenceAt) -> Self {
+        Self::DerivativeOperator(crate::ast::obj::DerivativeOperator::Divergence(x))
+    }
+}
+
+impl From<crate::ast::obj::CurlAt> for crate::ast::obj::Obj {
+    fn from(x: crate::ast::obj::CurlAt) -> Self {
+        Self::DerivativeOperator(crate::ast::obj::DerivativeOperator::Curl(x))
+    }
+}
+
+impl From<crate::ast::obj::LaplacianAt> for crate::ast::obj::Obj {
+    fn from(x: crate::ast::obj::LaplacianAt) -> Self {
+        Self::DerivativeOperator(crate::ast::obj::DerivativeOperator::Laplacian(x))
+    }
+}
+
+impl From<crate::ast::fact::MultivariableAnalysisFact> for AtomicFact {
+    fn from(x: crate::ast::fact::MultivariableAnalysisFact) -> Self {
+        Self::MultivariableAnalysisFact(x)
+    }
+}
+impl From<crate::ast::fact::MultivariableAnalysisFact> for Fact {
+    fn from(x: crate::ast::fact::MultivariableAnalysisFact) -> Self {
+        AtomicFact::from(x).into()
+    }
+}
+
+impl From<crate::ast::fact::NotMultivariableAnalysisFact> for AtomicFact {
+    fn from(x: crate::ast::fact::NotMultivariableAnalysisFact) -> Self {
+        Self::NotMultivariableAnalysisFact(x)
+    }
+}
+impl From<crate::ast::fact::NotMultivariableAnalysisFact> for Fact {
+    fn from(x: crate::ast::fact::NotMultivariableAnalysisFact) -> Self {
+        AtomicFact::from(x).into()
+    }
+}

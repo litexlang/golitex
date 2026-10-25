@@ -1,0 +1,11 @@
+# A pair records a member-set of A and an element of that member-set.
+struct ElementPair<A set>:
+    x A
+    y x
+
+{1} $in {{1}}
+1 $in {1}
+({1}, 1) $in &ElementPair<{{1}}>
+forall A set, p &ElementPair<A>:
+    p.x $in A
+    p.y $in p.x

@@ -1,0 +1,56 @@
+# Exact contracts over arbitrary supplied fields and vector spaces.
+
+claim:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,n N,coefficients finite_seq(K,n),vectors finite_seq(V,n),x V,U power_set(V):
+        $Algebra::vector_space::is_subspace(K,field,V,space,U)
+        forall j N+:
+            j<=n
+            =>:
+                vectors(j) $in U
+        $Algebra::finite_span::has_linear_combination_value(K,field,V,space,n,coefficients,vectors,x)
+        =>:
+            x $in U
+    by thm Algebra::span_reduction::linear_combination_in_subspace(K,field,V,space,n,coefficients,vectors,x,U) => x $in U
+
+claim:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,n N,vectors finite_seq(V,n),j N+:
+        j<=n
+        =>:
+            vectors(j) $in \Algebra::finite_span::span<K,field,V,space,n,vectors>
+    by thm Algebra::span_reduction::span_contains_generator(K,field,V,space,n,vectors,j) => vectors(j) $in \Algebra::finite_span::span<K,field,V,space,n,vectors>
+
+claim:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,n N,vectors finite_seq(V,n),U power_set(V):
+        $Algebra::vector_space::is_subspace(K,field,V,space,U)
+        forall j N+:
+            j<=n
+            =>:
+                vectors(j) $in U
+        =>:
+            \Algebra::finite_span::span<K,field,V,space,n,vectors> $subset U
+    by thm Algebra::span_reduction::span_subset_subspace(K,field,V,space,n,vectors,U) => \Algebra::finite_span::span<K,field,V,space,n,vectors> $subset U
+
+claim:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,n N,vectors finite_seq(V,n),m N,other finite_seq(V,m):
+        forall j N+:
+            j<=n
+            =>:
+                vectors(j) $in \Algebra::finite_span::span<K,field,V,space,m,other>
+        =>:
+            \Algebra::finite_span::span<K,field,V,space,n,vectors> $subset \Algebra::finite_span::span<K,field,V,space,m,other>
+    by thm Algebra::span_reduction::span_inclusion_from_generators(K,field,V,space,n,vectors,m,other) => \Algebra::finite_span::span<K,field,V,space,n,vectors> $subset \Algebra::finite_span::span<K,field,V,space,m,other>
+
+claim:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,n N+,vectors finite_seq(V,n),k N+,reduced finite_seq(V,n-1):
+        $Algebra::basis::is_list_with_index_removed(V,n,vectors,k,reduced)
+        vectors(k) $in \Algebra::finite_span::span<K,field,V,space,n-1,reduced>
+        =>:
+            \Algebra::finite_span::span<K,field,V,space,n,vectors> = \Algebra::finite_span::span<K,field,V,space,n-1,reduced>
+    by thm Algebra::span_reduction::remove_redundant_vector_preserves_span(K,field,V,space,n,vectors,k,reduced) => \Algebra::finite_span::span<K,field,V,space,n,vectors> = \Algebra::finite_span::span<K,field,V,space,n-1,reduced>
+
+claim:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,n N+,vectors finite_seq(V,n):
+        $Algebra::basis::is_linearly_dependent(K,field,V,space,n,vectors)
+        =>:
+            exist k N+,reduced finite_seq(V,n-1) st {$Algebra::basis::is_list_with_index_removed(V,n,vectors,k,reduced),\Algebra::finite_span::span<K,field,V,space,n,vectors> = \Algebra::finite_span::span<K,field,V,space,n-1,reduced>}
+    release thm Algebra::span_reduction::dependent_list_has_span_preserving_removal(K,field,V,space,n,vectors)

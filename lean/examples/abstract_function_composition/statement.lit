@@ -1,0 +1,3 @@
+# Composition of arbitrary real functions evaluates as the two successive calls.
+forall comp_f fn(t R) R, comp_g fn(t R) R, comp_x R:
+    (comp_f ∘ comp_g)(comp_x)=comp_f(comp_g(comp_x))

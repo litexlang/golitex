@@ -109,6 +109,7 @@ impl LitexToLeanCompiler {
         let application = self.compile_builtin_function_membership(
             member,
             &proof.domain,
+            "(by rfl)",
             &rule.requirements,
             &references,
             &formed,

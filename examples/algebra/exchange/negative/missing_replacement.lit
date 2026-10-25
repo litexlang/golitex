@@ -1,0 +1,9 @@
+# Expected rejection at the omitted mathematical premise.
+
+claim:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,n N,coefficients finite_seq(K,n),vectors finite_seq(V,n),value V,k closed_range(1,n),replaced finite_seq(V,n):
+        $Algebra::finite_span::has_linear_combination_value(K,field,V,space,n,coefficients,vectors,value)
+        coefficients(k)!=field.zero
+        =>:
+            \Algebra::finite_span::span<K,field,V,space,n,vectors> = \Algebra::finite_span::span<K,field,V,space,n,replaced>
+    release thm Algebra::exchange::exchange_by_nonzero_coefficient(K,field,V,space,n,coefficients,vectors,value,k,replaced)

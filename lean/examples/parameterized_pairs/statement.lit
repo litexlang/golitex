@@ -1,0 +1,9 @@
+# A pair over any set has both coordinates in that set.
+struct Pair<A set>:
+    x A
+    y A
+
+(1, 2) $in &Pair<R>
+forall A set, p &Pair<A>:
+    p.x $in A
+    p.y $in A

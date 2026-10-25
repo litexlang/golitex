@@ -1,0 +1,142 @@
+have fn plane_add(u, v R × R) R × R = (u(1) + v(1), u(2) + v(2))
+
+have fn plane_smul(a R, v R × R) R × R = (a * v(1), a * v(2))
+
+(1 + 3, 2 + 4) = (4, 6)
+
+(3 * 1, 3 * 2) = (3, 6)
+
+(3 * 1 + 4 * 0, 3 * 0 + 4 * 1) = (3, 4)
+
+have e1 R × R = (1, 0)
+
+have e2 R × R = (0, 1)
+
+have repeated_directions finite_seq(R × R, 2) = (e1, e1)
+
+repeated_directions(1) = repeated_directions(2)
+
+have empty_directions finite_seq(R × R, 0) = tuple()
+
+
+have fn real_inv(x R: x != 0) R = 1 / x
+
+have fn real_add(x, y R) R = x + y
+
+have fn real_neg(x R) R = -x
+
+have fn real_mul(x, y R) R = x * y
+
+forall x, y, z R:
+    real_add(real_add(x, y), z) = real_add(x, real_add(y, z))
+    real_mul(real_mul(x, y), z) = real_mul(x, real_mul(y, z))
+    real_mul(x, real_add(y, z)) = real_add(real_mul(x, y), real_mul(x, z))
+
+forall x, y R:
+    real_add(x, y) = real_add(y, x)
+    real_mul(x, y) = real_mul(y, x)
+
+forall x R:
+    real_add(0, x) = x
+    real_add(x, real_neg(x)) = 0
+    real_mul(1, x) = x
+
+forall x R:
+    x != 0
+    =>:
+        real_mul(x, real_inv(x)) = 1
+
+release thm struct_member((0, 1, real_add, real_neg, real_mul, real_inv), &Algebra::field::Field<R>)
+
+have real_field &Algebra::field::Field<R> = (0, 1, real_add, real_neg, real_mul, real_inv)
+
+
+claim:
+    ? forall x, y, z R × R:
+        plane_add(plane_add(x, y), z) = plane_add(x, plane_add(y, z))
+    plane_add(x, y) = (x(1) + y(1), x(2) + y(2))
+    plane_add(x, y)(1) = x(1) + y(1)
+    plane_add(x, y)(2) = x(2) + y(2)
+    plane_add(plane_add(x, y), z) = (plane_add(x, y)(1) + z(1), plane_add(x, y)(2) + z(2)) = ((x(1) + y(1)) + z(1), (x(2) + y(2)) + z(2))
+    plane_add(y, z) = (y(1) + z(1), y(2) + z(2))
+    plane_add(y, z)(1) = y(1) + z(1)
+    plane_add(y, z)(2) = y(2) + z(2)
+    plane_add(x, plane_add(y, z)) = (x(1) + plane_add(y, z)(1), x(2) + plane_add(y, z)(2)) = (x(1) + (y(1) + z(1)), x(2) + (y(2) + z(2)))
+    plane_add(plane_add(x, y), z) = ((x(1) + y(1)) + z(1), (x(2) + y(2)) + z(2)) = (x(1) + (y(1) + z(1)), x(2) + (y(2) + z(2))) = plane_add(x, plane_add(y, z))
+
+claim:
+    ? forall x, y R × R:
+        plane_add(x, y) = plane_add(y, x)
+    plane_add(x, y) = (x(1) + y(1), x(2) + y(2)) = (y(1) + x(1), y(2) + x(2)) = plane_add(y, x)
+
+claim:
+    ? forall x R × R:
+        plane_add((0, 0), x) = x
+        exist inverse_x R × R st {plane_add(x, inverse_x) = (0, 0)}
+    plane_add((0, 0), x) = (x(1), x(2)) = x
+    have inverse_x R × R = (0 - x(1), 0 - x(2))
+    inverse_x(1) = 0 - x(1)
+    inverse_x(2) = 0 - x(2)
+    x(1) + inverse_x(1) = x(1) + (0 - x(1)) = 0
+    x(2) + inverse_x(2) = x(2) + (0 - x(2)) = 0
+    plane_add(x, inverse_x) = (x(1) + inverse_x(1), x(2) + inverse_x(2)) = (0, 0)
+    witness exist inverse_x2 R × R st {plane_add(x, inverse_x2) = (0, 0)} from inverse_x
+
+claim:
+    ? forall a, b R, x R × R:
+        plane_smul(real_field.mul(a, b), x) = plane_smul(a, plane_smul(b, x))
+        plane_smul(real_field.add(a, b), x) = plane_add(plane_smul(a, x), plane_smul(b, x))
+    real_field.mul = real_mul
+    real_field.add = real_add
+    real_field.mul(a, b) = real_mul(a, b) = a * b
+    real_field.add(a, b) = real_add(a, b) = a + b
+    plane_smul(b, x) = (b * x(1), b * x(2))
+    plane_smul(b, x)(1) = b * x(1)
+    plane_smul(b, x)(2) = b * x(2)
+    plane_smul(a, plane_smul(b, x)) = (a * plane_smul(b, x)(1), a * plane_smul(b, x)(2)) = (a * (b * x(1)), a * (b * x(2)))
+    plane_smul(real_field.mul(a, b), x) = plane_smul(a * b, x)
+    plane_smul(a * b, x) = ((a * b) * x(1), (a * b) * x(2))
+    plane_smul(real_field.mul(a, b), x) = ((a * b) * x(1), (a * b) * x(2)) = (a * (b * x(1)), a * (b * x(2))) = plane_smul(a, plane_smul(b, x))
+    plane_smul(a, x) = (a * x(1), a * x(2))
+    plane_smul(a, x)(1) = a * x(1)
+    plane_smul(a, x)(2) = a * x(2)
+    plane_smul(b, x) = (b * x(1), b * x(2))
+    plane_add(plane_smul(a, x), plane_smul(b, x)) = (plane_smul(a, x)(1) + plane_smul(b, x)(1), plane_smul(a, x)(2) + plane_smul(b, x)(2)) = (a * x(1) + b * x(1), a * x(2) + b * x(2))
+    plane_smul(real_field.add(a, b), x) = plane_smul(a + b, x)
+    plane_smul(a + b, x) = ((a + b) * x(1), (a + b) * x(2))
+    plane_smul(real_field.add(a, b), x) = ((a + b) * x(1), (a + b) * x(2)) = (a * x(1) + b * x(1), a * x(2) + b * x(2)) = plane_add(plane_smul(a, x), plane_smul(b, x))
+
+claim:
+    ? forall a R, x, y R × R:
+        plane_smul(a, plane_add(x, y)) = plane_add(plane_smul(a, x), plane_smul(a, y))
+    plane_add(x, y) = (x(1) + y(1), x(2) + y(2))
+    plane_add(x, y)(1) = x(1) + y(1)
+    plane_add(x, y)(2) = x(2) + y(2)
+    plane_smul(a, plane_add(x, y)) = (a * plane_add(x, y)(1), a * plane_add(x, y)(2)) = (a * (x(1) + y(1)), a * (x(2) + y(2)))
+    plane_smul(a, x) = (a * x(1), a * x(2))
+    plane_smul(a, y) = (a * y(1), a * y(2))
+    plane_smul(a, x)(1) = a * x(1)
+    plane_smul(a, x)(2) = a * x(2)
+    plane_smul(a, y)(1) = a * y(1)
+    plane_smul(a, y)(2) = a * y(2)
+    plane_add(plane_smul(a, x), plane_smul(a, y)) = (plane_smul(a, x)(1) + plane_smul(a, y)(1), plane_smul(a, x)(2) + plane_smul(a, y)(2))
+    plane_smul(a, x)(1) + plane_smul(a, y)(1) = a * x(1) + a * y(1)
+    plane_smul(a, x)(2) + plane_smul(a, y)(2) = a * x(2) + a * y(2)
+    (plane_smul(a, x)(1) + plane_smul(a, y)(1), plane_smul(a, x)(2) + plane_smul(a, y)(2)) = (a * x(1) + a * y(1), a * x(2) + a * y(2))
+    plane_add(plane_smul(a, x), plane_smul(a, y)) = (a * x(1) + a * y(1), a * x(2) + a * y(2))
+    plane_smul(a, plane_add(x, y)) = (a * (x(1) + y(1)), a * (x(2) + y(2))) = (a * x(1) + a * y(1), a * x(2) + a * y(2)) = plane_add(plane_smul(a, x), plane_smul(a, y))
+
+claim:
+    ? forall x R × R:
+        plane_smul(real_field.one, x) = x
+    real_field.one = 1
+    x = (x(1), x(2))
+    plane_smul(real_field.one, x) = plane_smul(1, x)
+    plane_smul(1, x) = (1 * x(1), 1 * x(2)) = (x(1), x(2))
+    plane_smul(real_field.one, x) = (x(1), x(2)) = x
+
+(0, 0) $in R × R
+
+release thm struct_member(((0, 0), plane_add, plane_smul), &Algebra::vector_space::VectorSpace<R, real_field, R × R>)
+
+have real_plane &Algebra::vector_space::VectorSpace<R, real_field, R × R> = ((0, 0), plane_add, plane_smul)

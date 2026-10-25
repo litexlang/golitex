@@ -14,6 +14,7 @@ pub(crate) mod function_signature_selection;
 mod helper;
 pub(crate) mod known_tuple;
 pub(crate) mod matrix_operations;
+pub(crate) mod multivariable;
 pub(crate) mod native_matrix;
 mod negate_quantifier_free_conjunction;
 pub(crate) mod pointwise_continuity;

@@ -1,0 +1,107 @@
+# Empty lists: zero space to plane and zero-space isomorphisms.
+
+release obj def model::real_inv
+
+release obj def model::real_add
+
+release obj def model::real_neg
+
+release obj def model::real_mul
+
+release obj def model::plane_add
+
+release obj def model::plane_smul
+
+release obj def model::e1
+
+release obj def model::e2
+
+release obj def model::real_field
+
+release obj def model::real_plane
+
+release obj def model::standard_basis
+
+release struct def model::real_field
+
+release struct def model::real_plane
+
+release thm model::standard_plane_basis()
+
+by thm Algebra::basis::basis_is_finite_dimensional(R,model::real_field,R × R,model::real_plane,2,model::standard_basis) => $Algebra::basis::is_finite_dimensional(R,model::real_field,R × R,model::real_plane)
+
+by thm Algebra::dimension::finite_dimension_of_basis(R,model::real_field,R × R,model::real_plane,2,model::standard_basis) => \Algebra::dimension::finite_dimension<R,model::real_field,R × R>(model::real_plane)=2
+
+have zero_subset power_set(R × R)={model::real_plane.zero}
+
+by thm Algebra::subspace::zero_is_subspace(R,model::real_field,R × R,model::real_plane) => $Algebra::vector_space::is_subspace(R,model::real_field,R × R,model::real_plane,{model::real_plane.zero})
+
+$Algebra::vector_space::is_subspace(R,model::real_field,R × R,model::real_plane,zero_subset)
+
+by thm Algebra::subspace::subspace_is_nonempty(R,model::real_field,R × R,model::real_plane,zero_subset) => $is_nonempty_set(zero_subset)
+
+by thm Algebra::subspace::restricted_space_is_vector_space(R,model::real_field,R × R,model::real_plane,zero_subset) => \Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset> $in &Algebra::vector_space::VectorSpace<R,model::real_field,zero_subset>
+
+have empty_source finite_seq(zero_subset,0)=tuple()
+
+have empty_images finite_seq(R × R,0)=tuple()
+
+by thm Algebra::linear_criteria::empty_span_is_zero(R,model::real_field,zero_subset,\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>,empty_source) => \Algebra::finite_span::span<R,model::real_field,zero_subset,\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>,0,empty_source> ={\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>.zero}
+
+\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>.zero=model::real_plane.zero
+
+\Algebra::finite_span::span<R,model::real_field,zero_subset,\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>,0,empty_source> ={\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>.zero}={model::real_plane.zero}=zero_subset
+
+by def $Algebra::finite_span::spans(R,model::real_field,zero_subset,\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>,0,empty_source)
+
+by thm Algebra::dependence::empty_list_is_independent(R,model::real_field,zero_subset,\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>,empty_source) => $Algebra::basis::is_linearly_independent(R,model::real_field,zero_subset,\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>,0,empty_source)
+
+by def $Algebra::basis::is_basis(R,model::real_field,zero_subset,\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>,0,empty_source)
+
+by thm Algebra::basis::basis_is_finite_dimensional(R,model::real_field,zero_subset,\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>,0,empty_source) => $Algebra::basis::is_finite_dimensional(R,model::real_field,zero_subset,\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>)
+
+by thm Algebra::dimension::finite_dimension_of_basis(R,model::real_field,zero_subset,\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>,0,empty_source) => \Algebra::dimension::finite_dimension<R,model::real_field,zero_subset>(\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>)=0
+
+by thm Algebra::coordinate_maps::linear_map_from_basis_carrier(R,model::real_field,zero_subset,\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>,R × R,model::real_plane,0,empty_source,empty_images) => \Algebra::coordinate_maps::linear_map_from_basis<R,model::real_field,zero_subset,\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>,R × R,model::real_plane,0,empty_source,empty_images> $in fn(x zero_subset) R × R
+
+by thm Algebra::coordinate_maps::linear_map_from_basis_is_linear(R,model::real_field,zero_subset,\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>,R × R,model::real_plane,0,empty_source,empty_images) => $Algebra::vector_space::is_linear_map(R,model::real_field,zero_subset,\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>,R × R,model::real_plane,\Algebra::coordinate_maps::linear_map_from_basis<R,model::real_field,zero_subset,\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>,R × R,model::real_plane,0,empty_source,empty_images>)
+
+by thm Algebra::vector_space::linear_map_zero(R,model::real_field,zero_subset,\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>,R × R,model::real_plane,\Algebra::coordinate_maps::linear_map_from_basis<R,model::real_field,zero_subset,\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>,R × R,model::real_plane,0,empty_source,empty_images>) => \Algebra::coordinate_maps::linear_map_from_basis<R,model::real_field,zero_subset,\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>,R × R,model::real_plane,0,empty_source,empty_images>(\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>.zero)=model::real_plane.zero
+
+\Algebra::coordinate_maps::linear_map_from_basis<R,model::real_field,zero_subset,\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>,R × R,model::real_plane,0,empty_source,empty_images>(model::real_plane.zero)=\Algebra::coordinate_maps::linear_map_from_basis<R,model::real_field,zero_subset,\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>,R × R,model::real_plane,0,empty_source,empty_images>(\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>.zero)=model::real_plane.zero
+
+release tuple def model::e1
+
+model::real_plane.zero=(0,0)
+
+claim:
+    ? not $surjective(zero_subset,R × R,\Algebra::coordinate_maps::linear_map_from_basis<R,model::real_field,zero_subset,\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>,R × R,model::real_plane,0,empty_source,empty_images>)
+    by contra:
+        ? not $surjective(zero_subset,R × R,\Algebra::coordinate_maps::linear_map_from_basis<R,model::real_field,zero_subset,\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>,R × R,model::real_plane,0,empty_source,empty_images>)
+        obtain x from exist v zero_subset st {model::e1=\Algebra::coordinate_maps::linear_map_from_basis<R,model::real_field,zero_subset,\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>,R × R,model::real_plane,0,empty_source,empty_images>(v)}
+        x $in {model::real_plane.zero}
+        x=model::real_plane.zero
+        model::e1=\Algebra::coordinate_maps::linear_map_from_basis<R,model::real_field,zero_subset,\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>,R × R,model::real_plane,0,empty_source,empty_images>(x)=\Algebra::coordinate_maps::linear_map_from_basis<R,model::real_field,zero_subset,\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>,R × R,model::real_plane,0,empty_source,empty_images>(model::real_plane.zero)=model::real_plane.zero
+        model::e1(1)=1
+        model::real_plane.zero(1)=(0,0)(1)=0
+        1=model::e1(1)=model::real_plane.zero(1)=0
+        impossible 1=0
+
+by thm Algebra::coordinate_maps::basis_maps_are_bijective(R,model::real_field,zero_subset,\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>,zero_subset,\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>,0,empty_source,empty_source) => $bijective(zero_subset,zero_subset,\Algebra::coordinate_maps::linear_map_from_basis<R,model::real_field,zero_subset,\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>,zero_subset,\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>,0,empty_source,empty_source>)
+
+by thm Algebra::coordinate_maps::basis_maps_round_trip(R,model::real_field,zero_subset,\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>,zero_subset,\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>,0,empty_source,empty_source,model::real_plane.zero) => \Algebra::coordinate_maps::linear_map_from_basis<R,model::real_field,zero_subset,\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>,zero_subset,\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>,0,empty_source,empty_source>(\Algebra::coordinate_maps::linear_map_from_basis<R,model::real_field,zero_subset,\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>,zero_subset,\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>,0,empty_source,empty_source>(model::real_plane.zero))=model::real_plane.zero
+
+by thm Algebra::coordinate_maps::basis_map_inverse(R,model::real_field,zero_subset,\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>,zero_subset,\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>,0,empty_source,empty_source) => \Algebra::linear_criteria::inverse_bijection<zero_subset,zero_subset,\Algebra::coordinate_maps::linear_map_from_basis<R,model::real_field,zero_subset,\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>,zero_subset,\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>,0,empty_source,empty_source>> = \Algebra::coordinate_maps::linear_map_from_basis<R,model::real_field,zero_subset,\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>,zero_subset,\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>,0,empty_source,empty_source>
+
+release thm Algebra::coordinate_maps::equal_finite_dimensions_have_linear_bijection(R,model::real_field,zero_subset,\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>,zero_subset,\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>)
+
+claim:
+    ? not exist T fn(v zero_subset) R × R st {$Algebra::vector_space::is_linear_map(R,model::real_field,zero_subset,\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>,R × R,model::real_plane,T),$bijective(zero_subset,R × R,T)}
+    by contra:
+        ? not exist T fn(v zero_subset) R × R st {$Algebra::vector_space::is_linear_map(R,model::real_field,zero_subset,\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>,R × R,model::real_plane,T),$bijective(zero_subset,R × R,T)}
+        obtain T from exist T fn(v zero_subset) R × R st {$Algebra::vector_space::is_linear_map(R,model::real_field,zero_subset,\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>,R × R,model::real_plane,T),$bijective(zero_subset,R × R,T)}
+        by thm Algebra::linear_criteria::bijective_preserves_dimension(R,model::real_field,zero_subset,\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>,R × R,model::real_plane,T) => \Algebra::dimension::finite_dimension<R,model::real_field,zero_subset>(\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>)=\Algebra::dimension::finite_dimension<R,model::real_field,R × R>(model::real_plane)
+        0=\Algebra::dimension::finite_dimension<R,model::real_field,zero_subset>(\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>)=\Algebra::dimension::finite_dimension<R,model::real_field,R × R>(model::real_plane)=2
+        impossible 0=2
+
+exist T fn(v zero_subset) R × R st {$Algebra::vector_space::is_linear_map(R,model::real_field,zero_subset,\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,zero_subset>,R × R,model::real_plane,T),$bijective(zero_subset,R × R,T)}

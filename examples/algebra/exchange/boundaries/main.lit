@@ -1,0 +1,87 @@
+# Zero-valued exchange with a nonzero coefficient; empty combinations.
+
+release obj def model::real_inv
+
+release obj def model::real_add
+
+release obj def model::real_neg
+
+release obj def model::real_mul
+
+release obj def model::plane_add
+
+release obj def model::plane_smul
+
+release obj def model::e1
+
+release obj def model::e2
+
+release obj def model::real_field
+
+release obj def model::real_plane
+
+release struct def model::real_field
+
+release struct def model::real_plane
+
+have zero_vectors finite_seq(R × R,1)=tuple(model::real_plane.zero)
+
+have zero_coefficients finite_seq(R,1)=tuple(model::real_field.one)
+
+claim:
+    ? forall j N+:
+        j<=1
+        j!=1
+        =>:
+            zero_coefficients(j)=model::real_field.zero
+    by contra:
+        ? zero_coefficients(j)=model::real_field.zero
+        j $in closed_range(1,1)
+        expand: j $in closed_range(1,1)
+        j=1
+        impossible j=1
+
+by thm Algebra::finite_span::single_coefficient_linear_combination(R,model::real_field,R × R,model::real_plane,1,zero_coefficients,zero_vectors,1) => \Algebra::finite_span::linear_combination<R,model::real_field,R × R,model::real_plane,1>(zero_coefficients,zero_vectors)=model::real_plane.smul(zero_coefficients(1),zero_vectors(1))
+
+zero_coefficients(1)=model::real_field.one
+
+zero_vectors(1)=model::real_plane.zero
+
+model::real_field.one $in R
+
+model::real_plane.zero $in R × R
+
+model::real_plane.smul(zero_coefficients(1),zero_vectors(1))=model::real_plane.smul(model::real_field.one,model::real_plane.zero)=model::real_plane.zero
+
+by thm Algebra::finite_span::linear_combination_has_value(R,model::real_field,R × R,model::real_plane,1,zero_coefficients,zero_vectors) => $Algebra::finite_span::has_linear_combination_value(R,model::real_field,R × R,model::real_plane,1,zero_coefficients,zero_vectors,\Algebra::finite_span::linear_combination<R,model::real_field,R × R,model::real_plane,1>(zero_coefficients,zero_vectors))
+
+forall j closed_range(1,1):
+    j!=1
+    =>:
+        zero_vectors(j)=zero_vectors(j)
+
+by def $Algebra::exchange::is_list_with_index_replaced(R × R,1,zero_vectors,1,model::real_plane.zero,zero_vectors)
+
+by thm Algebra::exchange::exchange_by_nonzero_coefficient(R,model::real_field,R × R,model::real_plane,1,zero_coefficients,zero_vectors,model::real_plane.zero,1,zero_vectors) => \Algebra::finite_span::span<R,model::real_field,R × R,model::real_plane,1,zero_vectors> = \Algebra::finite_span::span<R,model::real_field,R × R,model::real_plane,1,zero_vectors>
+
+have empty_vectors finite_seq(R × R,0)=tuple()
+
+have empty_coefficients finite_seq(R,0)=tuple()
+
+by thm Algebra::finite_span::empty_linear_combination(R,model::real_field,R × R,model::real_plane,empty_coefficients,empty_vectors) => \Algebra::finite_span::linear_combination<R,model::real_field,R × R,model::real_plane,0>(empty_coefficients,empty_vectors)=model::real_plane.zero
+
+by thm Algebra::finite_span::linear_combination_has_value(R,model::real_field,R × R,model::real_plane,0,empty_coefficients,empty_vectors) => $Algebra::finite_span::has_linear_combination_value(R,model::real_field,R × R,model::real_plane,0,empty_coefficients,empty_vectors,\Algebra::finite_span::linear_combination<R,model::real_field,R × R,model::real_plane,0>(empty_coefficients,empty_vectors))
+
+by thm Algebra::finite_span::span_is_subspace(R,model::real_field,R × R,model::real_plane,0,empty_vectors) => $Algebra::vector_space::is_subspace(R,model::real_field,R × R,model::real_plane,\Algebra::finite_span::span<R,model::real_field,R × R,model::real_plane,0,empty_vectors>)
+
+claim:
+    ? forall j N+:
+        j<=0
+        =>:
+            model::real_plane.smul(empty_coefficients(j),empty_vectors(j)) $in \Algebra::finite_span::span<R,model::real_field,R × R,model::real_plane,0,empty_vectors>
+    by contra:
+        ? model::real_plane.smul(empty_coefficients(j),empty_vectors(j)) $in \Algebra::finite_span::span<R,model::real_field,R × R,model::real_plane,0,empty_vectors>
+        j>0
+        impossible j>0
+
+by thm Algebra::span_reduction::weighted_combination_in_subspace(R,model::real_field,R × R,model::real_plane,0,empty_coefficients,empty_vectors,model::real_plane.zero,\Algebra::finite_span::span<R,model::real_field,R × R,model::real_plane,0,empty_vectors>) => model::real_plane.zero $in \Algebra::finite_span::span<R,model::real_field,R × R,model::real_plane,0,empty_vectors>

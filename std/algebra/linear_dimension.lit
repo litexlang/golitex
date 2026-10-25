@@ -1,0 +1,336 @@
+# Finite image/kernel dimensions and rank-nullity over a supplied field.
+
+thm function_range_carrier:
+    ? forall V,W nonempty_set,T fn(v V) W:
+        fn_range(T) $in power_set(W)
+
+thm function_range_is_nonempty:
+    ? forall V,W nonempty_set,T fn(v V) W:
+        $is_nonempty_set(fn_range(T))
+    have x V
+    witness $is_nonempty_set(fn_range(T)) from T(x)
+
+forall V,W nonempty_set,T fn(v V) W,y W:
+    preimage(T,y) $in power_set(V)
+
+thm linear_kernel_is_nonempty:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,source &vector_space::VectorSpace<K,field,V>,W nonempty_set,target &vector_space::VectorSpace<K,field,W>,T fn(v V) W:
+        $vector_space::is_linear_map(K,field,V,source,W,target,T)
+        =>:
+            $is_nonempty_set(preimage(T,target.zero))
+    by thm vector_space::linear_map_zero(K,field,V,source,W,target,T) => T(source.zero)=target.zero
+    witness $is_nonempty_set(preimage(T,target.zero)) from source.zero
+
+claim:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,source &vector_space::VectorSpace<K,field,V>,W nonempty_set,target &vector_space::VectorSpace<K,field,W>,T fn(v V) W:
+        $vector_space::is_linear_map(K,field,V,source,W,target,T)
+        =>:
+            $vector_space::is_subspace(K,field,V,source,preimage(T,target.zero))
+    by thm vector_space::kernel_is_subspace(K,field,V,source,W,target,T) => $vector_space::is_subspace(K,field,V,source,preimage(T,target.zero))
+
+claim:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,source &vector_space::VectorSpace<K,field,V>,W nonempty_set,target &vector_space::VectorSpace<K,field,W>,T fn(v V) W:
+        $vector_space::is_linear_map(K,field,V,source,W,target,T)
+        =>:
+            $vector_space::is_subspace(K,field,W,target,fn_range(T))
+    by thm vector_space::range_is_subspace(K,field,V,source,W,target,T) => $vector_space::is_subspace(K,field,W,target,fn_range(T))
+
+thm linear_kernel_space_carrier:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,source &vector_space::VectorSpace<K,field,V>,W nonempty_set,target &vector_space::VectorSpace<K,field,W>,T fn(v V) W:
+        $vector_space::is_linear_map(K,field,V,source,W,target,T)
+        =>:
+            \subspace::restricted_space<K,field,V,source,preimage(T,target.zero)> $in &vector_space::VectorSpace<K,field,preimage(T,target.zero)>
+    by thm subspace::restricted_space_is_vector_space(K,field,V,source,preimage(T,target.zero)) => \subspace::restricted_space<K,field,V,source,preimage(T,target.zero)> $in &vector_space::VectorSpace<K,field,preimage(T,target.zero)>
+
+thm linear_image_space_carrier:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,source &vector_space::VectorSpace<K,field,V>,W nonempty_set,target &vector_space::VectorSpace<K,field,W>,T fn(v V) W:
+        $vector_space::is_linear_map(K,field,V,source,W,target,T)
+        =>:
+            \subspace::restricted_space<K,field,W,target,fn_range(T)> $in &vector_space::VectorSpace<K,field,fn_range(T)>
+    by thm subspace::restricted_space_is_vector_space(K,field,W,target,fn_range(T)) => \subspace::restricted_space<K,field,W,target,fn_range(T)> $in &vector_space::VectorSpace<K,field,fn_range(T)>
+
+thm mapped_list_in_range:
+    ? forall V,W nonempty_set,T fn(v V) W,n N,vectors finite_seq(V,n):
+        \finite_span::map_vectors<V,W,n>(T,vectors) $in finite_seq(fn_range(T),n)
+    claim:
+        ? forall j closed_range(1,n):
+            \finite_span::map_vectors<V,W,n>(T,vectors)(j) $in fn_range(T)
+        vectors(j) $in V
+        \finite_span::map_vectors<V,W,n>(T,vectors)(j)=T(vectors(j))
+        T(vectors(j)) $in fn_range(T)
+    release thm fn_set_member(\finite_span::map_vectors<V,W,n>(T,vectors),finite_seq(fn_range(T),n))
+
+thm spanning_list_maps_onto_image:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,source &vector_space::VectorSpace<K,field,V>,W nonempty_set,target &vector_space::VectorSpace<K,field,W>,T fn(v V) W,n N,vectors finite_seq(V,n):
+        $vector_space::is_linear_map(K,field,V,source,W,target,T)
+        $finite_span::spans(K,field,V,source,n,vectors)
+        =>:
+            $finite_span::spans(K,field,fn_range(T),\subspace::restricted_space<K,field,W,target,fn_range(T)>,n,\finite_span::map_vectors<V,W,n>(T,vectors))
+    by thm mapped_list_in_range(V,W,T,n,vectors) => \finite_span::map_vectors<V,W,n>(T,vectors) $in finite_seq(fn_range(T),n)
+    claim:
+        ? forall j N+:
+            j<=n
+            =>:
+                \finite_span::map_vectors<V,W,n>(T,vectors)(j) $in fn_range(T)
+        j $in closed_range(1,n)
+        vectors(j) $in V
+        \finite_span::map_vectors<V,W,n>(T,vectors)(j)=T(vectors(j))
+        T(vectors(j)) $in fn_range(T)
+    by thm span_reduction::span_subset_subspace(K,field,W,target,n,\finite_span::map_vectors<V,W,n>(T,vectors),fn_range(T)) => \finite_span::span<K,field,W,target,n,\finite_span::map_vectors<V,W,n>(T,vectors)> $subset fn_range(T)
+    claim:
+        ? forall y fn_range(T):
+            y $in \finite_span::span<K,field,W,target,n,\finite_span::map_vectors<V,W,n>(T,vectors)>
+        have by fn_preimage: x from y $in fn_range(T)
+        x $in \finite_span::span<K,field,V,source,n,vectors>
+        obtain c from $finite_span::is_linear_combination(K,field,V,source,n,x,vectors)
+        obtain sums from $finite_span::has_linear_combination_value(K,field,V,source,n,c,vectors,x)
+        by thm finite_span::partial_sum_determines_combination(K,field,V,source,n,c,vectors,sums) => \finite_span::linear_combination<K,field,V,source,n>(c,vectors)=sums(n)
+        by thm finite_span::linear_map_preserves_combination(K,field,V,source,W,target,T,n,c,vectors) => T(\finite_span::linear_combination<K,field,V,source,n>(c,vectors))=\finite_span::linear_combination<K,field,W,target,n>(c,\finite_span::map_vectors<V,W,n>(T,vectors))
+        \finite_span::linear_combination<K,field,V,source,n>(c,vectors) $in V
+        T(\finite_span::linear_combination<K,field,V,source,n>(c,vectors))=T(x)=y
+        release thm finite_span::linear_combination_has_value(K,field,W,target,n,c,\finite_span::map_vectors<V,W,n>(T,vectors))
+        witness $finite_span::is_linear_combination(K,field,W,target,n,y,\finite_span::map_vectors<V,W,n>(T,vectors)) from c
+    by extension \finite_span::span<K,field,W,target,n,\finite_span::map_vectors<V,W,n>(T,vectors)> = fn_range(T)
+    by thm subspace::subspace_span_equals_ambient(K,field,W,target,fn_range(T),n,\finite_span::map_vectors<V,W,n>(T,vectors)) => \finite_span::span<K,field,fn_range(T),\subspace::restricted_space<K,field,W,target,fn_range(T)>,n,\finite_span::map_vectors<V,W,n>(T,vectors)> = \finite_span::span<K,field,W,target,n,\finite_span::map_vectors<V,W,n>(T,vectors)>
+    by def $finite_span::spans(K,field,fn_range(T),\subspace::restricted_space<K,field,W,target,fn_range(T)>,n,\finite_span::map_vectors<V,W,n>(T,vectors))
+
+thm finite_source_has_finite_image:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,source &vector_space::VectorSpace<K,field,V>,W nonempty_set,target &vector_space::VectorSpace<K,field,W>,T fn(v V) W:
+        $basis::is_finite_dimensional(K,field,V,source)
+        $vector_space::is_linear_map(K,field,V,source,W,target,T)
+        =>:
+            $basis::is_finite_dimensional(K,field,fn_range(T),\subspace::restricted_space<K,field,W,target,fn_range(T)>)
+    obtain n,vectors from $basis::is_finite_dimensional(K,field,V,source)
+    by thm mapped_list_in_range(V,W,T,n,vectors) => \finite_span::map_vectors<V,W,n>(T,vectors) $in finite_seq(fn_range(T),n)
+    by thm spanning_list_maps_onto_image(K,field,V,source,W,target,T,n,vectors) => $finite_span::spans(K,field,fn_range(T),\subspace::restricted_space<K,field,W,target,fn_range(T)>,n,\finite_span::map_vectors<V,W,n>(T,vectors))
+    witness $basis::is_finite_dimensional(K,field,fn_range(T),\subspace::restricted_space<K,field,W,target,fn_range(T)>) from n,\finite_span::map_vectors<V,W,n>(T,vectors)
+
+thm finite_source_has_finite_kernel:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,source &vector_space::VectorSpace<K,field,V>,W nonempty_set,target &vector_space::VectorSpace<K,field,W>,T fn(v V) W:
+        $basis::is_finite_dimensional(K,field,V,source)
+        $vector_space::is_linear_map(K,field,V,source,W,target,T)
+        =>:
+            $basis::is_finite_dimensional(K,field,preimage(T,target.zero),\subspace::restricted_space<K,field,V,source,preimage(T,target.zero)>)
+    by thm subspace::finite_dimensional_subspace_is_finite_dimensional(K,field,V,source,preimage(T,target.zero)) => $basis::is_finite_dimensional(K,field,preimage(T,target.zero),\subspace::restricted_space<K,field,V,source,preimage(T,target.zero)>)
+
+template<K nonempty_set,field &field::Field<K>,V nonempty_set,source &vector_space::VectorSpace<K,field,V>,W nonempty_set,target &vector_space::VectorSpace<K,field,W>>:
+    have fn linear_map_rank(T fn(v V) W: $vector_space::is_linear_map(K,field,V,source,W,target,T), $basis::is_finite_dimensional(K,field,fn_range(T),\subspace::restricted_space<K,field,W,target,fn_range(T)>)) N=\dimension::finite_dimension<K,field,fn_range(T)>(\subspace::restricted_space<K,field,W,target,fn_range(T)>)
+
+template<K nonempty_set,field &field::Field<K>,V nonempty_set,source &vector_space::VectorSpace<K,field,V>,W nonempty_set,target &vector_space::VectorSpace<K,field,W>>:
+    have fn linear_map_nullity(T fn(v V) W: $vector_space::is_linear_map(K,field,V,source,W,target,T), $basis::is_finite_dimensional(K,field,preimage(T,target.zero),\subspace::restricted_space<K,field,V,source,preimage(T,target.zero)>)) N=\dimension::finite_dimension<K,field,preimage(T,target.zero)>(\subspace::restricted_space<K,field,V,source,preimage(T,target.zero)>)
+
+thm kernel_prefix_tail_spans_image:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,source &vector_space::VectorSpace<K,field,V>,W nonempty_set,target &vector_space::VectorSpace<K,field,W>,T fn(v V) W,m,n N,prefix finite_seq(V,m),tail finite_seq(V,n):
+        $vector_space::is_linear_map(K,field,V,source,W,target,T)
+        $finite_span::spans(K,field,V,source,m+n,\finite_decomposition::concatenate_lists<V,m,n,prefix,tail>)
+        forall j N+:
+            j<=m
+            =>:
+                T(prefix(j))=target.zero
+        =>:
+            $finite_span::spans(K,field,fn_range(T),\subspace::restricted_space<K,field,W,target,fn_range(T)>,n,\finite_span::map_vectors<V,W,n>(T,tail))
+    by thm mapped_list_in_range(V,W,T,n,tail) => \finite_span::map_vectors<V,W,n>(T,tail) $in finite_seq(fn_range(T),n)
+    claim:
+        ? forall j N+:
+            j<=n
+            =>:
+                \finite_span::map_vectors<V,W,n>(T,tail)(j) $in fn_range(T)
+        j $in closed_range(1,n)
+        tail(j) $in V
+        \finite_span::map_vectors<V,W,n>(T,tail)(j)=T(tail(j))
+        T(tail(j)) $in fn_range(T)
+    by thm span_reduction::span_subset_subspace(K,field,W,target,n,\finite_span::map_vectors<V,W,n>(T,tail),fn_range(T)) => \finite_span::span<K,field,W,target,n,\finite_span::map_vectors<V,W,n>(T,tail)> $subset fn_range(T)
+    claim:
+        ? forall j N+:
+            j<=m
+            =>:
+                prefix(j) $in preimage(T,target.zero)
+        j $in closed_range(1,m)
+        T(prefix(j))=target.zero
+    claim:
+        ? forall y fn_range(T):
+            y $in \finite_span::span<K,field,W,target,n,\finite_span::map_vectors<V,W,n>(T,tail)>
+        have by fn_preimage: x from y $in fn_range(T)
+        x $in \finite_span::span<K,field,V,source,m+n,\finite_decomposition::concatenate_lists<V,m,n,prefix,tail>>
+        obtain c from $finite_span::is_linear_combination(K,field,V,source,m+n,x,\finite_decomposition::concatenate_lists<V,m,n,prefix,tail>)
+        obtain sums from $finite_span::has_linear_combination_value(K,field,V,source,m+n,c,\finite_decomposition::concatenate_lists<V,m,n,prefix,tail>,x)
+        by thm finite_span::partial_sum_determines_combination(K,field,V,source,m+n,c,\finite_decomposition::concatenate_lists<V,m,n,prefix,tail>,sums) => \finite_span::linear_combination<K,field,V,source,m+n>(c,\finite_decomposition::concatenate_lists<V,m,n,prefix,tail>)=sums(m+n)
+        release thm finite_decomposition::list_splits_at_length(K,m,n,c)
+        obtain a,d from exist left finite_seq(K,m),right finite_seq(K,n) st {c=\finite_decomposition::concatenate_lists<K,m,n,left,right>}
+        have p V=\finite_span::linear_combination<K,field,V,source,m>(a,prefix)
+        have q V=\finite_span::linear_combination<K,field,V,source,n>(d,tail)
+        by thm finite_span::linear_combination_has_value(K,field,V,source,m,a,prefix) => $finite_span::has_linear_combination_value(K,field,V,source,m,a,prefix,\finite_span::linear_combination<K,field,V,source,m>(a,prefix))
+        by thm span_reduction::linear_combination_in_subspace(K,field,V,source,m,a,prefix,p,preimage(T,target.zero)) => p $in preimage(T,target.zero)
+        by thm finite_decomposition::concatenated_linear_combination(K,field,V,source,m,n,a,d,prefix,tail) => \finite_span::linear_combination<K,field,V,source,m+n>(\finite_decomposition::concatenate_lists<K,m,n,a,d>,\finite_decomposition::concatenate_lists<V,m,n,prefix,tail>)=source.add(\finite_span::linear_combination<K,field,V,source,m>(a,prefix),\finite_span::linear_combination<K,field,V,source,n>(d,tail))
+        \finite_span::linear_combination<K,field,V,source,m+n>(c,\finite_decomposition::concatenate_lists<V,m,n,prefix,tail>)=\finite_span::linear_combination<K,field,V,source,m+n>(\finite_decomposition::concatenate_lists<K,m,n,a,d>,\finite_decomposition::concatenate_lists<V,m,n,prefix,tail>)=source.add(p,q)
+        x=source.add(p,q)
+        T(p)=target.zero
+        T(q) $in W
+        T(source.add(p,q))=target.add(T(p),T(q))=target.add(target.zero,T(q))=T(q)
+        T(x)=T(source.add(p,q))=T(q)=y
+        by thm finite_span::linear_map_preserves_combination(K,field,V,source,W,target,T,n,d,tail) => T(\finite_span::linear_combination<K,field,V,source,n>(d,tail))=\finite_span::linear_combination<K,field,W,target,n>(d,\finite_span::map_vectors<V,W,n>(T,tail))
+        T(q)=T(\finite_span::linear_combination<K,field,V,source,n>(d,tail))=\finite_span::linear_combination<K,field,W,target,n>(d,\finite_span::map_vectors<V,W,n>(T,tail))
+        by thm finite_span::linear_combination_has_value(K,field,W,target,n,d,\finite_span::map_vectors<V,W,n>(T,tail)) => $finite_span::has_linear_combination_value(K,field,W,target,n,d,\finite_span::map_vectors<V,W,n>(T,tail),\finite_span::linear_combination<K,field,W,target,n>(d,\finite_span::map_vectors<V,W,n>(T,tail)))
+        witness $finite_span::is_linear_combination(K,field,W,target,n,y,\finite_span::map_vectors<V,W,n>(T,tail)) from d
+    by extension \finite_span::span<K,field,W,target,n,\finite_span::map_vectors<V,W,n>(T,tail)> = fn_range(T)
+    by thm subspace::subspace_span_equals_ambient(K,field,W,target,fn_range(T),n,\finite_span::map_vectors<V,W,n>(T,tail)) => \finite_span::span<K,field,fn_range(T),\subspace::restricted_space<K,field,W,target,fn_range(T)>,n,\finite_span::map_vectors<V,W,n>(T,tail)> = \finite_span::span<K,field,W,target,n,\finite_span::map_vectors<V,W,n>(T,tail)>
+    by def $finite_span::spans(K,field,fn_range(T),\subspace::restricted_space<K,field,W,target,fn_range(T)>,n,\finite_span::map_vectors<V,W,n>(T,tail))
+
+thm kernel_in_prefix_span_makes_tail_image_independent:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,source &vector_space::VectorSpace<K,field,V>,W nonempty_set,target &vector_space::VectorSpace<K,field,W>,T fn(v V) W,m,n N,prefix finite_seq(V,m),tail finite_seq(V,n):
+        $vector_space::is_linear_map(K,field,V,source,W,target,T)
+        $basis::is_linearly_independent(K,field,V,source,m+n,\finite_decomposition::concatenate_lists<V,m,n,prefix,tail>)
+        preimage(T,target.zero) $subset \finite_span::span<K,field,V,source,m,prefix>
+        =>:
+            $basis::is_linearly_independent(K,field,W,target,n,\finite_span::map_vectors<V,W,n>(T,tail))
+    claim:
+        ? forall d finite_seq(K,n):
+            $finite_span::has_linear_combination_value(K,field,W,target,n,d,\finite_span::map_vectors<V,W,n>(T,tail),target.zero)
+            =>:
+                $basis::has_only_zero_coefficients(K,field,n,d)
+        obtain image_sums from $finite_span::has_linear_combination_value(K,field,W,target,n,d,\finite_span::map_vectors<V,W,n>(T,tail),target.zero)
+        by thm finite_span::partial_sum_determines_combination(K,field,W,target,n,d,\finite_span::map_vectors<V,W,n>(T,tail),image_sums) => \finite_span::linear_combination<K,field,W,target,n>(d,\finite_span::map_vectors<V,W,n>(T,tail))=image_sums(n)
+        have z V=\finite_span::linear_combination<K,field,V,source,n>(d,tail)
+        by thm finite_span::linear_map_preserves_combination(K,field,V,source,W,target,T,n,d,tail) => T(\finite_span::linear_combination<K,field,V,source,n>(d,tail))=\finite_span::linear_combination<K,field,W,target,n>(d,\finite_span::map_vectors<V,W,n>(T,tail))
+        T(z)=T(\finite_span::linear_combination<K,field,V,source,n>(d,tail))=\finite_span::linear_combination<K,field,W,target,n>(d,\finite_span::map_vectors<V,W,n>(T,tail))=target.zero
+        z $in preimage(T,target.zero)
+        z $in \finite_span::span<K,field,V,source,m,prefix>
+        obtain a from $finite_span::is_linear_combination(K,field,V,source,m,z,prefix)
+        obtain prefix_sums from $finite_span::has_linear_combination_value(K,field,V,source,m,a,prefix,z)
+        by thm finite_span::partial_sum_determines_combination(K,field,V,source,m,a,prefix,prefix_sums) => \finite_span::linear_combination<K,field,V,source,m>(a,prefix)=prefix_sums(m)
+        have negative_one K=field.neg(field.one)
+        have negative_a finite_seq(K,m)=\finite_span::smul_coefficients<K,field,m>(negative_one,a)
+        have negative_z V=source.smul(negative_one,z)
+        by thm finite_span::linear_combination_smul_coefficients(K,field,V,source,m,negative_one,a,prefix) => \finite_span::linear_combination<K,field,V,source,m>(\finite_span::smul_coefficients<K,field,m>(negative_one,a),prefix)=source.smul(negative_one,\finite_span::linear_combination<K,field,V,source,m>(a,prefix))
+        \finite_span::linear_combination<K,field,V,source,m>(negative_a,prefix)=\finite_span::linear_combination<K,field,V,source,m>(\finite_span::smul_coefficients<K,field,m>(negative_one,a),prefix)=source.smul(negative_one,\finite_span::linear_combination<K,field,V,source,m>(a,prefix))=source.smul(negative_one,z)=negative_z
+        field.add(negative_one,field.one)=field.add(field.one,field.neg(field.one))=field.zero
+        source.smul(field.one,z)=z
+        by thm vector_space::zero_scalar_times_vector(K,field,V,source,z) => source.smul(field.zero,z)=source.zero
+        source.add(negative_z,z)=source.add(source.smul(negative_one,z),source.smul(field.one,z))=source.smul(field.add(negative_one,field.one),z)=source.smul(field.zero,z)=source.zero
+        have c finite_seq(K,m+n)=\finite_decomposition::concatenate_lists<K,m,n,negative_a,d>
+        by thm finite_decomposition::concatenated_linear_combination(K,field,V,source,m,n,negative_a,d,prefix,tail) => \finite_span::linear_combination<K,field,V,source,m+n>(\finite_decomposition::concatenate_lists<K,m,n,negative_a,d>,\finite_decomposition::concatenate_lists<V,m,n,prefix,tail>)=source.add(\finite_span::linear_combination<K,field,V,source,m>(negative_a,prefix),\finite_span::linear_combination<K,field,V,source,n>(d,tail))
+        \finite_span::linear_combination<K,field,V,source,m+n>(c,\finite_decomposition::concatenate_lists<V,m,n,prefix,tail>)=\finite_span::linear_combination<K,field,V,source,m+n>(\finite_decomposition::concatenate_lists<K,m,n,negative_a,d>,\finite_decomposition::concatenate_lists<V,m,n,prefix,tail>)=source.add(negative_z,z)=source.zero
+        by thm finite_span::linear_combination_has_value(K,field,V,source,m+n,c,\finite_decomposition::concatenate_lists<V,m,n,prefix,tail>) => $finite_span::has_linear_combination_value(K,field,V,source,m+n,c,\finite_decomposition::concatenate_lists<V,m,n,prefix,tail>,\finite_span::linear_combination<K,field,V,source,m+n>(c,\finite_decomposition::concatenate_lists<V,m,n,prefix,tail>))
+        $finite_span::has_linear_combination_value(K,field,V,source,m+n,c,\finite_decomposition::concatenate_lists<V,m,n,prefix,tail>,source.zero)
+        $basis::has_only_zero_coefficients(K,field,m+n,c)
+        claim:
+            ? forall j N+:
+                j<=n
+                =>:
+                    d(j)=field.zero
+            j $in closed_range(1,n)
+            1<=j<=n
+            m+j $in Z
+            1<=m+j<=m+n
+            m+j $in closed_range(1,m+n)
+            m+j $in N+
+            m+j<=m+n
+            m+j>m
+            (m+j)-m=j
+            c(m+j)=\finite_decomposition::concatenate_lists<K,m,n,negative_a,d>(m+j)=d((m+j)-m)=d(j)
+            d(j)=c(m+j)=field.zero
+        by def $basis::has_only_zero_coefficients(K,field,n,d)
+    by def $basis::is_linearly_independent(K,field,W,target,n,\finite_span::map_vectors<V,W,n>(T,tail))
+
+thm finite_source_rank_carrier:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,source &vector_space::VectorSpace<K,field,V>,W nonempty_set,target &vector_space::VectorSpace<K,field,W>,T fn(v V) W:
+        $basis::is_finite_dimensional(K,field,V,source)
+        $vector_space::is_linear_map(K,field,V,source,W,target,T)
+        =>:
+            \linear_map_rank<K,field,V,source,W,target>(T) $in N
+            \linear_map_rank<K,field,V,source,W,target>(T) $in R
+            \linear_map_rank<K,field,V,source,W,target>(T) $in C
+    by thm finite_source_has_finite_image(K,field,V,source,W,target,T) => $basis::is_finite_dimensional(K,field,fn_range(T),\subspace::restricted_space<K,field,W,target,fn_range(T)>)
+
+thm finite_source_nullity_carrier:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,source &vector_space::VectorSpace<K,field,V>,W nonempty_set,target &vector_space::VectorSpace<K,field,W>,T fn(v V) W:
+        $basis::is_finite_dimensional(K,field,V,source)
+        $vector_space::is_linear_map(K,field,V,source,W,target,T)
+        =>:
+            \linear_map_nullity<K,field,V,source,W,target>(T) $in N
+            \linear_map_nullity<K,field,V,source,W,target>(T) $in R
+            \linear_map_nullity<K,field,V,source,W,target>(T) $in C
+    by thm finite_source_has_finite_kernel(K,field,V,source,W,target,T) => $basis::is_finite_dimensional(K,field,preimage(T,target.zero),\subspace::restricted_space<K,field,V,source,preimage(T,target.zero)>)
+
+thm rank_nullity:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,source &vector_space::VectorSpace<K,field,V>,W nonempty_set,target &vector_space::VectorSpace<K,field,W>,T fn(v V) W:
+        $basis::is_finite_dimensional(K,field,V,source)
+        $vector_space::is_linear_map(K,field,V,source,W,target,T)
+        =>:
+            \linear_map_rank<K,field,V,source,W,target>(T)+\linear_map_nullity<K,field,V,source,W,target>(T)=\dimension::finite_dimension<K,field,V>(source)
+    by thm linear_kernel_space_carrier(K,field,V,source,W,target,T) => \subspace::restricted_space<K,field,V,source,preimage(T,target.zero)> $in &vector_space::VectorSpace<K,field,preimage(T,target.zero)>
+    by thm linear_image_space_carrier(K,field,V,source,W,target,T) => \subspace::restricted_space<K,field,W,target,fn_range(T)> $in &vector_space::VectorSpace<K,field,fn_range(T)>
+    by thm finite_source_has_finite_kernel(K,field,V,source,W,target,T) => $basis::is_finite_dimensional(K,field,preimage(T,target.zero),\subspace::restricted_space<K,field,V,source,preimage(T,target.zero)>)
+    by thm finite_source_has_finite_image(K,field,V,source,W,target,T) => $basis::is_finite_dimensional(K,field,fn_range(T),\subspace::restricted_space<K,field,W,target,fn_range(T)>)
+    have m N=\dimension::finite_dimension<K,field,preimage(T,target.zero)>(\subspace::restricted_space<K,field,V,source,preimage(T,target.zero)>)
+    by thm dimension::finite_dimension_has_basis_length(K,field,preimage(T,target.zero),\subspace::restricted_space<K,field,V,source,preimage(T,target.zero)>) => $basis::has_basis_length(K,field,preimage(T,target.zero),\subspace::restricted_space<K,field,V,source,preimage(T,target.zero)>,\dimension::finite_dimension<K,field,preimage(T,target.zero)>(\subspace::restricted_space<K,field,V,source,preimage(T,target.zero)>))
+    obtain prefix from $basis::has_basis_length(K,field,preimage(T,target.zero),\subspace::restricted_space<K,field,V,source,preimage(T,target.zero)>,m)
+    by thm subspace::sequence_in_ambient(V,preimage(T,target.zero),m,prefix) => prefix $in finite_seq(V,m)
+    by thm subspace::subspace_independent_is_ambient_independent(K,field,V,source,preimage(T,target.zero),m,prefix) => $basis::is_linearly_independent(K,field,V,source,m,prefix)
+    release thm basis_extension::independent_list_extends_to_basis(K,field,V,source,m,prefix)
+    obtain q,full from exist length N,vectors finite_seq(V,length) st {$basis::is_basis(K,field,V,source,length,vectors),$basis::is_prefix_of_length(V,length,m,vectors,prefix)}
+    m<=q
+    q-m>=0
+    q-m $in N
+    have n N=q-m
+    m+n=m+(q-m)=q
+    finite_seq(V,q)=finite_seq(V,m+n)
+    $basis::is_prefix_of_length(V,m+n,m,full,prefix)
+    release thm finite_decomposition::prefix_has_concatenation_decomposition(V,m,n,full,prefix)
+    obtain tail from exist suffix finite_seq(V,n) st {full=\finite_decomposition::concatenate_lists<V,m,n,prefix,suffix>}
+    $basis::is_basis(K,field,V,source,m+n,\finite_decomposition::concatenate_lists<V,m,n,prefix,tail>)
+    $finite_span::spans(K,field,preimage(T,target.zero),\subspace::restricted_space<K,field,V,source,preimage(T,target.zero)>,m,prefix)
+    \finite_span::span<K,field,preimage(T,target.zero),\subspace::restricted_space<K,field,V,source,preimage(T,target.zero)>,m,prefix> = preimage(T,target.zero)
+    by thm subspace::subspace_span_equals_ambient(K,field,V,source,preimage(T,target.zero),m,prefix) => \finite_span::span<K,field,preimage(T,target.zero),\subspace::restricted_space<K,field,V,source,preimage(T,target.zero)>,m,prefix> = \finite_span::span<K,field,V,source,m,prefix>
+    \finite_span::span<K,field,V,source,m,prefix> = \finite_span::span<K,field,preimage(T,target.zero),\subspace::restricted_space<K,field,V,source,preimage(T,target.zero)>,m,prefix> = preimage(T,target.zero)
+    preimage(T,target.zero) $subset \finite_span::span<K,field,V,source,m,prefix>
+    claim:
+        ? forall j N+:
+            j<=m
+            =>:
+                T(prefix(j))=target.zero
+        j $in closed_range(1,m)
+        prefix(j) $in preimage(T,target.zero)
+    by thm mapped_list_in_range(V,W,T,n,tail) => \finite_span::map_vectors<V,W,n>(T,tail) $in finite_seq(fn_range(T),n)
+    by thm kernel_prefix_tail_spans_image(K,field,V,source,W,target,T,m,n,prefix,tail) => $finite_span::spans(K,field,fn_range(T),\subspace::restricted_space<K,field,W,target,fn_range(T)>,n,\finite_span::map_vectors<V,W,n>(T,tail))
+    by thm kernel_in_prefix_span_makes_tail_image_independent(K,field,V,source,W,target,T,m,n,prefix,tail) => $basis::is_linearly_independent(K,field,W,target,n,\finite_span::map_vectors<V,W,n>(T,tail))
+    by thm subspace::ambient_independent_is_subspace_independent(K,field,W,target,fn_range(T),n,\finite_span::map_vectors<V,W,n>(T,tail)) => $basis::is_linearly_independent(K,field,fn_range(T),\subspace::restricted_space<K,field,W,target,fn_range(T)>,n,\finite_span::map_vectors<V,W,n>(T,tail))
+    by def $basis::is_basis(K,field,fn_range(T),\subspace::restricted_space<K,field,W,target,fn_range(T)>,n,\finite_span::map_vectors<V,W,n>(T,tail))
+    by thm dimension::finite_dimension_of_basis(K,field,fn_range(T),\subspace::restricted_space<K,field,W,target,fn_range(T)>,n,\finite_span::map_vectors<V,W,n>(T,tail)) => \dimension::finite_dimension<K,field,fn_range(T)>(\subspace::restricted_space<K,field,W,target,fn_range(T)>)=n
+    by thm dimension::finite_dimension_of_basis(K,field,V,source,q,full) => \dimension::finite_dimension<K,field,V>(source)=q
+    \linear_map_rank<K,field,V,source,W,target>(T)=\dimension::finite_dimension<K,field,fn_range(T)>(\subspace::restricted_space<K,field,W,target,fn_range(T)>)=n
+    \linear_map_nullity<K,field,V,source,W,target>(T)=\dimension::finite_dimension<K,field,preimage(T,target.zero)>(\subspace::restricted_space<K,field,V,source,preimage(T,target.zero)>)=m
+    \linear_map_rank<K,field,V,source,W,target>(T)+\linear_map_nullity<K,field,V,source,W,target>(T)=n+m=m+n=q=\dimension::finite_dimension<K,field,V>(source)
+
+thm finite_target_has_finite_image:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,source &vector_space::VectorSpace<K,field,V>,W nonempty_set,target &vector_space::VectorSpace<K,field,W>,T fn(v V) W:
+        $basis::is_finite_dimensional(K,field,W,target)
+        $vector_space::is_linear_map(K,field,V,source,W,target,T)
+        =>:
+            $basis::is_finite_dimensional(K,field,fn_range(T),\subspace::restricted_space<K,field,W,target,fn_range(T)>)
+    by thm subspace::finite_dimensional_subspace_is_finite_dimensional(K,field,W,target,fn_range(T)) => $basis::is_finite_dimensional(K,field,fn_range(T),\subspace::restricted_space<K,field,W,target,fn_range(T)>)
+
+thm rank_le_source_dimension:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,source &vector_space::VectorSpace<K,field,V>,W nonempty_set,target &vector_space::VectorSpace<K,field,W>,T fn(v V) W:
+        $basis::is_finite_dimensional(K,field,V,source)
+        $vector_space::is_linear_map(K,field,V,source,W,target,T)
+        $basis::is_finite_dimensional(K,field,fn_range(T),\subspace::restricted_space<K,field,W,target,fn_range(T)>)
+        =>:
+            \linear_map_rank<K,field,V,source,W,target>(T)<=\dimension::finite_dimension<K,field,V>(source)
+    release thm basis_existence::finite_dimensional_has_basis(K,field,V,source)
+    obtain n,vectors from exist length N,selected finite_seq(V,length) st {$basis::is_basis(K,field,V,source,length,selected)}
+    by thm mapped_list_in_range(V,W,T,n,vectors) => \finite_span::map_vectors<V,W,n>(T,vectors) $in finite_seq(fn_range(T),n)
+    by thm spanning_list_maps_onto_image(K,field,V,source,W,target,T,n,vectors) => $finite_span::spans(K,field,fn_range(T),\subspace::restricted_space<K,field,W,target,fn_range(T)>,n,\finite_span::map_vectors<V,W,n>(T,vectors))
+    by thm dimension::dimension_le_spanning_length(K,field,fn_range(T),\subspace::restricted_space<K,field,W,target,fn_range(T)>,n,\finite_span::map_vectors<V,W,n>(T,vectors)) => \dimension::finite_dimension<K,field,fn_range(T)>(\subspace::restricted_space<K,field,W,target,fn_range(T)>)<=n
+    by thm dimension::finite_dimension_of_basis(K,field,V,source,n,vectors) => \dimension::finite_dimension<K,field,V>(source)=n
+    \linear_map_rank<K,field,V,source,W,target>(T)=\dimension::finite_dimension<K,field,fn_range(T)>(\subspace::restricted_space<K,field,W,target,fn_range(T)>)
+
+thm nullity_le_source_dimension:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,source &vector_space::VectorSpace<K,field,V>,W nonempty_set,target &vector_space::VectorSpace<K,field,W>,T fn(v V) W:
+        $basis::is_finite_dimensional(K,field,V,source)
+        $vector_space::is_linear_map(K,field,V,source,W,target,T)
+        $basis::is_finite_dimensional(K,field,preimage(T,target.zero),\subspace::restricted_space<K,field,V,source,preimage(T,target.zero)>)
+        =>:
+            \linear_map_nullity<K,field,V,source,W,target>(T)<=\dimension::finite_dimension<K,field,V>(source)
+    by thm subspace::subspace_dimension_le_ambient(K,field,V,source,preimage(T,target.zero)) => \dimension::finite_dimension<K,field,preimage(T,target.zero)>(\subspace::restricted_space<K,field,V,source,preimage(T,target.zero)>)<=\dimension::finite_dimension<K,field,V>(source)
+    \linear_map_nullity<K,field,V,source,W,target>(T)=\dimension::finite_dimension<K,field,preimage(T,target.zero)>(\subspace::restricted_space<K,field,V,source,preimage(T,target.zero)>)

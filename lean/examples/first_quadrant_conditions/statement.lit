@@ -1,0 +1,11 @@
+# Both coordinates of a first-quadrant point are strictly positive.
+struct FirstQuadrantPoint:
+    x R
+    y R
+    <=>:
+        x > 0 and y > 0
+
+(1, 2) $in &FirstQuadrantPoint
+forall p &FirstQuadrantPoint:
+    p.x > 0
+    p.y > 0

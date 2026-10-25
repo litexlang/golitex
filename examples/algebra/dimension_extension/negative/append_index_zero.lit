@@ -1,0 +1,2 @@
+forall V nonempty_set,m N,vectors finite_seq(V,m),x V:
+    \Algebra::basis_extension::append_vector<V,m,vectors,x>(0) $in V

@@ -1,0 +1,10 @@
+# A structure over a nonempty carrier retains its equality condition.
+struct NonemptyEqualPair<A nonempty_set>:
+    x A
+    y A
+    <=>:
+        x = y
+
+(1, 1) $in &NonemptyEqualPair<R>
+forall A nonempty_set, p &NonemptyEqualPair<A>:
+    p.x = p.y

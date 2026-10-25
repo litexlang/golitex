@@ -419,6 +419,41 @@ impl LitexToLeanCompiler {
                 &proof.proof_of_requirement_facts,
                 position,
             )?,
+            EqualFactSearchedProof::ByBuiltinRule(
+                rule @ (EqualitySearchProofByBuiltinRule::IntersectCommutative(_)
+                | EqualitySearchProofByBuiltinRule::UnionCommutative(_)
+                | EqualitySearchProofByBuiltinRule::IntersectIdempotent(_)
+                | EqualitySearchProofByBuiltinRule::UnionIdempotent(_)
+                | EqualitySearchProofByBuiltinRule::IntersectEmptyLeft(_)
+                | EqualitySearchProofByBuiltinRule::UnionEmptyLeft(_)
+                | EqualitySearchProofByBuiltinRule::IntersectEmptyRight(_)
+                | EqualitySearchProofByBuiltinRule::UnionEmptyRight(_)
+                | EqualitySearchProofByBuiltinRule::IntersectAssociative(_)
+                | EqualitySearchProofByBuiltinRule::UnionAssociative(_)
+                | EqualitySearchProofByBuiltinRule::IntersectUnionDistributive(_)),
+            ) => self.compile_set_identity(fact, rule, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(
+                EqualitySearchProofByBuiltinRule::IntersectFromSubset(proof),
+            ) => self.compile_intersect_from_subset(
+                fact,
+                &proof.proof_of_requirement_facts,
+                position,
+            )?,
+            EqualFactSearchedProof::ByBuiltinRule(
+                EqualitySearchProofByBuiltinRule::UnionOverIntersectDistributive(_),
+            ) => self.compile_union_over_intersection(fact, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(
+                rule @ (EqualitySearchProofByBuiltinRule::SetMinusSelfEmpty(_)
+                | EqualitySearchProofByBuiltinRule::SetMinusChainToUnion(_)
+                | EqualitySearchProofByBuiltinRule::SetMinusEmptyRight(_)
+                | EqualitySearchProofByBuiltinRule::SetMinusEmptyLeft(_)
+                | EqualitySearchProofByBuiltinRule::SetMinusUnionDeMorgan(_)
+                | EqualitySearchProofByBuiltinRule::SetMinusIntersectDeMorgan(_)
+                | EqualitySearchProofByBuiltinRule::IntersectSetMinusSelfEmpty(_)),
+            ) => self.compile_set_minus_identity(fact, rule, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(
+                EqualitySearchProofByBuiltinRule::Composition(p),
+            ) => self.compile_composition_equality(fact, p, position)?,
             EqualFactSearchedProof::ByBuiltinRule(_) => {
                 return Err(LeanCompileError::new(
                     "Equality/BuiltinRule",

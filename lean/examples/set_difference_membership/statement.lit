@@ -1,0 +1,15 @@
+# Introduce a difference member and recover membership, exclusion and singleton disequality.
+forall diff_member_A, diff_member_B set, diff_member_x R:
+    diff_member_x $in diff_member_A
+    not diff_member_x $in diff_member_B
+    =>:
+        diff_member_x $in set_minus(diff_member_A, diff_member_B)
+
+forall diff_proj_A, diff_proj_B set, diff_proj_x set_minus(diff_proj_A, diff_proj_B):
+    diff_proj_x $in diff_proj_A
+    not diff_proj_x $in diff_proj_B
+
+forall diff_single_A set, diff_single_b R, diff_single_x set_minus(diff_single_A, {diff_single_b}):
+    diff_single_x != diff_single_b
+    diff_single_x $in diff_single_A
+    not diff_single_x $in {diff_single_b}

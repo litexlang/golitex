@@ -556,6 +556,7 @@ pub struct CompleteFunctionDomainProof {
 }
 
 pub enum CompleteFunctionDomainSourceProof {
+    MultivariableSelector(MultivariableSelectorFunctionDomainProof),
     Matrix(Box<super::native_matrix::MatrixCallableProof>),
     FiniteFunction(Box<super::finite_function::FiniteFunctionSignatureProof>),
     Composition(Box<CompositionCallableProof>),
@@ -700,6 +701,30 @@ impl Runtime {
         function: &Obj,
         ctx: VerifyState,
     ) -> RuntimeResult<Vec<CompleteFunctionDomainProof>> {
+        if function.multivariable_selector_name().is_some() {
+            let relation = super::multivariable::helper::selector_relation(
+                function,
+                super::multivariable::helper::number(0),
+            )
+            .unwrap();
+            let carrier = super::multivariable::helper::value_carrier(&relation);
+            if let Some(signature) = self.function_space_signature(&carrier) {
+                if let VerifyObjWellDefinedResult::Success(proof) =
+                    self.verify_obj_well_definedness(function, ctx)?
+                {
+                    return Ok(vec![CompleteFunctionDomainProof {
+                        signature,
+                        source: CompleteFunctionDomainSourceProof::MultivariableSelector(
+                            MultivariableSelectorFunctionDomainProof {
+                                selector: function.clone(),
+                                well_defined: Box::new(proof),
+                            },
+                        ),
+                    }]);
+                }
+            }
+            return Ok(Vec::new());
+        }
         let mut domains: Vec<_> = self
             .finite_function_signatures(function)
             .into_iter()
@@ -1283,4 +1308,9 @@ pub(crate) fn function_application(
         head: Box::new(head),
         body: vec![arguments],
     }))
+}
+
+pub struct MultivariableSelectorFunctionDomainProof {
+    pub selector: Obj,
+    pub well_defined: Box<ObjWellDefinedProof>,
 }

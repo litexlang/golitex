@@ -1,0 +1,13 @@
+# Named coordinates agree with tuple coordinates and can be used in real arithmetic.
+struct CoordinatePair:
+    x R
+    y R
+
+forall p &CoordinatePair:
+    p.x = p(1)
+    p.y = p(2)
+
+forall p &CoordinatePair:
+    p.x $in R
+    p.y $in R
+    p.x + p.y = p.y + p.x

@@ -5,6 +5,13 @@ Done Right*, using the real plane as a running example. They show how familiar
 calculations lead to definitions, how concrete objects satisfy those definitions,
 and how the resulting facts support further mathematics.
 
+The shared field, vector-space, subspace, linear-map, finite-combination and
+span, independence and basis interfaces come from
+[std/algebra](../../std/algebra/README.md). This lecture retains the concrete
+instances and the concrete coordinate developments. Its checkout-local
+manifest imports `Algebra`, using explicit `Algebra::field` and
+`Algebra::vector_space`, `Algebra::finite_span` and `Algebra::basis` paths.
+
 Read [linear_algebra.lit](linear_algebra.lit) from beginning to end. The notes
 move from coordinate operations to vector spaces and subspaces, then through
 linear combinations, bases and unique coordinates, finite combination algebra
@@ -16,6 +23,7 @@ of that projection, and the Euclidean inner product on the plane.
 
 We begin with the two standard directions in the real plane:
 
+<!-- litex:skip-test -->
 ```litex
 have e1 R × R = (1, 0)
 have e2 R × R = (0, 1)
@@ -35,8 +43,8 @@ directions and an empty list.
 
 Coordinate addition and scalar multiplication suggest the vector space axioms.
 The notes construct the real field and the real plane as instances of `Field`
-and `VectorSpace`, checking their laws before proving that additive identities
-and inverses are unique. The coordinate axes then provide examples of subspaces.
+and `VectorSpace`, checking their laws. Shared source theorems establish
+uniqueness of additive identities and inverses. The coordinate axes then provide examples of subspaces.
 A translated line provides a counterexample, and the two axes give a unique
 decomposition of every plane vector.
 
@@ -46,13 +54,16 @@ The span of a list contains all vectors obtained by taking linear combinations
 of its entries. Once the linear combination relation has been defined, this
 mathematical description becomes a set definition:
 
+<!-- litex:skip-test -->
 ```litex
-template<K nonempty_set, field &Field<K>, V nonempty_set, space &VectorSpace<K, field, V>, n N, vectors finite_seq(V, n)>:
+# Shared definition in std/algebra/finite_span.lit:
+template<K nonempty_set, field &field::Field<K>, V nonempty_set, space &vector_space::VectorSpace<K, field, V>, n N, vectors finite_seq(V, n)>:
     have span power_set(V) = {x V: $is_linear_combination(K, field, V, space, n, x, vectors)}
 ```
 
-This excerpt uses the field, vector space, and linear combination definitions
-introduced earlier in the notes. It illustrates how a mathematical relation
+This definition excerpt uses the field/vector-space sibling exports and the
+linear-combination relation in the shared module. It is checked there; it is
+not a standalone consumer. It illustrates how a mathematical relation
 can define an object that later proofs use directly.
 
 The standard directions span the plane and are linearly independent, so they
@@ -86,9 +97,10 @@ standard directions.
 
 These are selected, connected lectures rather than a complete translation of
 *Linear Algebra Done Right*. The length-two dependence lemma and span-reduction
-for a redundant last vector are proved in general form. Equality of arbitrary
-basis lengths, a selected dimension function, matrices, and Gram–Schmidt remain
-for subsequent lectures.
+for a redundant last vector are proved in general form. The shared algebra
+package now also proves finite basis existence, invariant basis length and
+ordered basis extension, and supplies a guarded finite dimension value.
+General matrix representation and Gram–Schmidt remain for subsequent lectures.
 
 The source contains no `trust`, `axiom`, or `abstract_prop`.
 The inverse operation is defined only for nonzero scalars, and the same
@@ -98,3 +110,14 @@ standard expansion is reused in the proofs of spanning and independence.
 and the roles of the main interfaces. [litex.config](litex.config) exports the
 module as `linear_algebra`. For command-line usage, see the repository's
 [CLI documentation](../../docs/cli.md).
+
+
+The shared basis export now also proves coefficient uniqueness and representation
+existence/uniqueness for arbitrary finite supplied bases, and selects guarded
+`basis_coordinates`. Those general results are verified separately from this
+lecture's standard-plane coordinate calculation. The bounded dependence lemmas
+retain their length-two statements. The later shared dependence/exchange,
+basis_comparison, basis_extension and dimension exports supply the general
+finite results and a guarded dimension value. The
+[dimension/extension consumer](../../examples/algebra/dimension_extension/main.lit)
+computes the plane value 2 and extends (e1) while preserving its first entry.

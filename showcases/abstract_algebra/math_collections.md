@@ -5,6 +5,12 @@ the elements and operation change. Group laws lead to cancellation, subgroups,
 structure-preserving maps and their kernels. No particular textbook is being
 translated.
 
+The shared Group, five generic predicates, kernel template and twelve generic
+theorems are owned by [std/algebra](../../std/algebra/math_collections.md).
+The lecture imports them as `Algebra::group`; its integer operations, multiples
+construction and applications remain local. There is no second lecture-local
+Group declaration or duplicated general theorem family.
+
 ## Operations and groups
 
 `Group<A nonempty_set>` packages `mul`, `one` and `inv` with associativity,
@@ -37,8 +43,9 @@ on a map `fn(x A) B`. Preservation of identities and inverses must be proved;
 putting them in the definition would erase an important part of the argument.
 The existing map remains an ordinary function, not a parallel record.
 
-`kernel` is a template-valued subset `{x A: f(x) = H.one}`. Its carrier depends
-on the domain group, so a declaration family is appropriate. This is a set,
+`\Algebra::group::kernel<A,B,H,f>` is the subset `{x A: f(x) = H.one}`.
+Its carrier is the supplied domain `A`, so a declaration family is appropriate.
+The domain group's operations are not needed just to form this set. This is a set,
 not merely a predicate identifying candidate kernels. The kernel is a normal
 subgroup; a homomorphism is injective precisely when its kernel is trivial.
 The multiplication-by-two map and zero map on the integers connect these

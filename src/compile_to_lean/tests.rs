@@ -128,6 +128,9 @@ mod tuple_reconstruction_tests;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::AtomicExceptEqualityFactSearchProofByBuiltinRewrite;
 use crate::prelude::*;
 
+#[path = "../../tests/unit/compile_to_lean/assumption_tests.rs"]
+mod assumption_tests;
+
 fn execute(source: &str) -> (RunLitexCodeResult, LitexToLeanCompiler) {
     let command =
         parse_launch_command(&["-strict".to_string(), "-e".to_string(), source.to_string()])
@@ -3341,3 +3344,49 @@ mod enumeration_product_tests;
 
 #[path = "../../tests/unit/compile_to_lean/weak_additive_shift_tests.rs"]
 mod weak_additive_shift_tests;
+
+#[path = "../../tests/unit/compile_to_lean/numeric_bound_weakening_tests.rs"]
+mod numeric_bound_weakening_tests;
+
+#[path = "../../tests/unit/compile_to_lean/componentwise_additive_tests.rs"]
+mod componentwise_additive_tests;
+
+#[path = "../../tests/unit/compile_to_lean/subtraction_order_tests.rs"]
+mod subtraction_order_tests;
+
+#[path = "../../tests/unit/compile_to_lean/strict_order_chain_tests.rs"]
+mod strict_order_chain_tests;
+
+#[path = "../../tests/unit/compile_to_lean/intersection_tests.rs"]
+mod intersection_tests;
+
+#[path = "../../tests/unit/compile_to_lean/set_identity_tests.rs"]
+mod set_identity_tests;
+
+#[path = "../../tests/unit/compile_to_lean/set_difference_tests.rs"]
+mod set_difference_tests;
+
+#[path = "../../tests/unit/compile_to_lean/set_chain_tests.rs"]
+mod set_chain_tests;
+
+#[path = "../../tests/unit/compile_to_lean/function_preimage_tests.rs"]
+mod function_preimage_tests;
+
+#[path = "../../tests/unit/compile_to_lean/composition_tests.rs"]
+mod composition_tests;
+
+#[path = "../../tests/unit/compile_to_lean/returned_function_tests.rs"]
+mod returned_function_tests;
+
+#[path = "../../tests/unit/compile_to_lean/abstract_predicate_tests.rs"]
+mod abstract_predicate_tests;
+#[path = "../../tests/unit/compile_to_lean/captured_function_tests.rs"]
+mod captured_function_tests;
+#[path = "../../tests/unit/compile_to_lean/literal_function_tests.rs"]
+mod literal_function_tests;
+
+#[path = "../../tests/unit/compile_to_lean/struct_tests.rs"]
+mod struct_tests;
+
+#[path = "../../tests/unit/compile_to_lean/dependent_struct_tests.rs"]
+mod dependent_struct_tests;

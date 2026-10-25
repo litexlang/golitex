@@ -354,7 +354,7 @@ proof debt rather than repairing a verification route.
 | Tuples/sequences | `(a, b)`, `cart(R, R)`, `finite_seq(S,n)`, `seq(S)`; indices start at 1. `release tuple def t` publishes the exact finite-sequence membership and coordinates; `release cart def cart(A,B)` publishes the complete set definition. See [S52](Manual.md#s52-release-a-tuple-definition). |
 | Exact computation | `eval expression` checks domains and publishes the verified source/result equality. |
 | Real sequence limits | Prove `$has_seq_limit(a,L)` for `a seq(R)` (equivalently `fn(k N+) R`), then use `lim(a)=L`. WD consumes convergence evidence. |
-| Finite-point function limits | Prove `$has_limit_at(f,x0,L)`, including accumulation and epsilon-delta control on the actual guarded domain, then use `lim(f,x0)=L`. WD does not guess a limit; `f(x0)` need not be legal. |
+| Finite-point function limits | Prove `$has_limit_at(f,x0,L)`, including accumulation and epsilon-delta control on the actual guarded domain, then use `fn_lim(f,x0)=L`. WD does not guess a limit; `f(x0)` need not be legal. |
 
 Function parameter carriers and the return carrier use the enclosing scope;
 they cannot refer to that signature's own parameters. Guards and the body can.

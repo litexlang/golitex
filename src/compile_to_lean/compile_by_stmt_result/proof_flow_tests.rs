@@ -628,6 +628,172 @@ fn a_case_cannot_cite_another_branch_assumption() {
 }
 
 #[test]
+fn function_extensionality_replays_both_domain_inclusion_proofs() {
+    use crate::execute::execute_fact_stmt::function_domain::FunctionDomainComparisonProof;
+    let (run, compiler) = checked(include_str!(
+        "../../../lean/examples/equal_positive_shifts/statement.lit"
+    ));
+    let ExecStmtResult::By(ExecByStmtResult::FnExtension(
+        crate::execute::execute_by_stmt::ExecByFnExtensionStmtResult::Success(p),
+    )) = &run.statement_results[3]
+    else {
+        panic!("extension");
+    };
+    assert!(matches!(
+        p.domain_match.comparison,
+        FunctionDomainComparisonProof::MutualInclusion { .. }
+    ));
+    let lean = compiler.compile_run(&run, "equal_positive_shifts").unwrap();
+    assert!(lean.contains("Litex.SetSemantics.ext"));
+    assert_eq!(
+        lean,
+        compiler.compile_run(&run, "equal_positive_shifts").unwrap()
+    );
+}
+
+#[test]
+fn function_extensionality_rejects_corrupt_domain_inclusions() {
+    use crate::execute::execute_fact_stmt::function_domain::FunctionDomainComparisonProof;
+    for mutation in 0..4 {
+        let (mut run, compiler) = checked(include_str!(
+            "../../../lean/examples/equal_positive_shifts/statement.lit"
+        ));
+        let ExecStmtResult::By(ExecByStmtResult::FnExtension(
+            crate::execute::execute_by_stmt::ExecByFnExtensionStmtResult::Success(p),
+        )) = &mut run.statement_results[3]
+        else {
+            panic!();
+        };
+        let FunctionDomainComparisonProof::MutualInclusion {
+            forward,
+            forward_proof,
+            reverse,
+            reverse_proof,
+        } = &mut p.domain_match.comparison
+        else {
+            panic!();
+        };
+        match mutation {
+            0 => {
+                std::mem::swap(forward, reverse);
+                std::mem::swap(forward_proof, reverse_proof);
+            }
+            1 => std::mem::swap(forward_proof, reverse_proof),
+            2 => {
+                let Fact::ForallFact(f) = forward else {
+                    panic!();
+                };
+                f.then_facts.pop();
+            }
+            3 => p.domain_match.comparison = FunctionDomainComparisonProof::AlphaEquivalent,
+            _ => unreachable!(),
+        }
+        assert!(
+            compiler.compile_run(&run, "bad_domains").is_err(),
+            "mutation {mutation}"
+        );
+    }
+}
+
+#[test]
+fn function_extensionality_domain_facts_remain_local_to_its_proof() {
+    use crate::execute::execute_fact_stmt::function_domain::FunctionDomainComparisonProof;
+    let (run, compiler) = checked(include_str!(
+        "../../../lean/examples/equal_positive_shifts/statement.lit"
+    ));
+    let ExecStmtResult::By(ExecByStmtResult::FnExtension(
+        crate::execute::execute_by_stmt::ExecByFnExtensionStmtResult::Success(p),
+    )) = &run.statement_results[3]
+    else {
+        panic!();
+    };
+    let FunctionDomainComparisonProof::MutualInclusion {
+        forward, reverse, ..
+    } = &p.domain_match.comparison
+    else {
+        panic!();
+    };
+    let root = SourcePosition::new(None, SourceOwner::Run(&run), 4);
+    let caller = SourcePosition::new(
+        Some(&root),
+        SourceOwner::Statement(&run.statement_results[3]),
+        2,
+    );
+    let local = SourcePosition::new(Some(&caller), SourceOwner::FnExtension(p), 0);
+    for fact in [forward, reverse] {
+        assert_eq!(
+            compiler
+                .cited_fact_reference(fact.fact_id(), &local)
+                .unwrap()
+                .1,
+            format!("h_{}", fact.fact_id().value())
+        );
+        assert!(compiler
+            .cited_fact_reference(fact.fact_id(), &root)
+            .is_err());
+    }
+}
+
+#[test]
+fn function_extensionality_replays_binary_and_positive_inputs() {
+    let (run, compiler) = checked(include_str!(
+        "../../../lean/examples/equal_binary_sums/statement.lit"
+    ));
+    let lean = compiler.compile_run(&run, "binary_extension").unwrap();
+    assert!(lean.contains("Litex.FiniteFunction.reconstruct"));
+    assert!(lean.contains("Litex.positiveReal_members"));
+}
+
+#[test]
+fn function_extensionality_replays_binary_guard_inclusions_with_distinct_return_bounds() {
+    let (run, compiler) = checked(include_str!(
+        "../../../lean/examples/equal_guarded_quotients/statement.lit"
+    ));
+    let lean = compiler.compile_run(&run, "guarded_quotients").unwrap();
+    assert!(lean.contains("Litex.SetSemantics.ext"));
+    assert!(lean.contains("Litex.FiniteFunction.reconstruct"));
+}
+
+#[test]
+fn function_extensionality_rejects_reordered_pointwise_arguments() {
+    let (mut run, compiler) = checked(include_str!(
+        "../../../lean/examples/equal_binary_sums/statement.lit"
+    ));
+    let ExecStmtResult::By(ExecByStmtResult::FnExtension(
+        crate::execute::execute_by_stmt::ExecByFnExtensionStmtResult::Success(p),
+    )) = &mut run.statement_results[2]
+    else {
+        panic!();
+    };
+    let VerifyFactResult::ForallFact(p) = &mut p.pointwise_proof else {
+        panic!();
+    };
+    let VerifyForallFactResult::Success(VerifyForallFactProof::ByLocalIntroduction(p)) = p.as_mut()
+    else {
+        panic!();
+    };
+    p.fact.typed_parameters.groups[0].params.swap(0, 1);
+    assert!(compiler.compile_run(&run, "bad_parameter_order").is_err());
+}
+
+#[test]
+fn function_extensionality_does_not_identify_a_function_with_a_restriction() {
+    let source = "have fn all(x R) R = x\nhave fn positive(x R: x > 0) R = x\nby fn_extension all = positive\n";
+    let command = LaunchCommand::Eval {
+        code: String::new(),
+        session: false,
+        strict: true,
+        language: OutputLanguage::English,
+    };
+    let mut runtime = Runtime::new(command);
+    let run = runtime.run_litex_code(source).unwrap();
+    assert!(!run.success);
+    assert!(LitexToLeanCompiler::new(runtime)
+        .compile_run(&run, "unequal_domains")
+        .is_err());
+}
+
+#[test]
 fn function_extensionality_replays_complete_domains_and_the_original_pointwise_forall() {
     let (result, compiler) = checked(include_str!(
         "../../../lean/examples/equal_shift_functions/statement.lit"
@@ -866,8 +1032,8 @@ fn proof_adapters_keep_their_declared_domain_boundaries() {
             "Induction/ZeroLowerBoundAndGoals",
         ),
         (
-            "have fn f(x,y R) R=x+y\nhave fn g(x,y R) R=y+x\nby fn_extension f=g\n",
-            "FnExtension/OneParameter",
+            "have fn f(x,y,z R) R=x+y+z\nhave fn g(a,b,c R) R=c+b+a\nby fn_extension f=g\n",
+            "FnExtension/Arity",
         ),
         (
             "by for:\n    ? forall n {0,1}, m {n}:\n        m=m\n    m=m\n",

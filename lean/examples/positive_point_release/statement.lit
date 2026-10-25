@@ -1,0 +1,11 @@
+# A named positive point retains its defining inequality after explicit release.
+struct PositivePoint:
+    x R
+    y R
+    <=>:
+        x > 0
+
+have p &PositivePoint = (2, 3)
+release struct def p
+p.x > 0
+p.x = 2

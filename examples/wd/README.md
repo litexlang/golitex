@@ -8,13 +8,16 @@ argument WD by its recorded ID within one candidate check. Membership and guard
 proofs remain required; failed candidates keep their evidence in a separate scope.
 
 [Finite-point function limits](real_function_limit_at.lit) prove the actual
-punctured approach and epsilon-delta condition before selecting `lim(f,x0)`.
+punctured approach and epsilon-delta condition before selecting `fn_lim(f,x0)`.
 [Common proofs](real_function_limit_common_proofs.lit),
 [endpoint domains](real_function_limit_endpoints.lit), and
 [existence/congruence](real_function_limit_interfaces.lit) cover downstream
 use. WD consumes proved convergence, including before cancellation by zero.
 The theorem fixtures are in `../stmt_nodes/release_and_expand/builtin_thm/`;
 matching `real_function_limit_*.lit` controls are in `../wd_negative/`.
+[Distinct limit names](function_limit_distinct_name.lit) keeps sequence `lim(a)`
+and finite-point function `fn_lim(f,x0)` separate; the old two-argument `lim`
+is rejected.
 
 [Returned sequence applications](sequence_return_application.lit) check each
 call layer of finite_seq, seq and aliased function-space returns, retaining

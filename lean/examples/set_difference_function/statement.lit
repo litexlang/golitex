@@ -1,0 +1,6 @@
+# Define the real line with one element removed, expand its formula and use membership.
+have fn difference_without(a R) power_set(R) = set_minus(R, {a})
+
+difference_without(0) = set_minus(R, {0})
+
+1 $in difference_without(0)

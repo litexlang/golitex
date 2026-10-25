@@ -1,0 +1,107 @@
+{
+  "created": "2026-10-24",
+  "language": "English prose with ordinary mathematical notation",
+  "provenance": "Retrospective illustrative baselines written after the formal benchmark sources. These were not the original inputs to formalization. Each text is shared by every Litex/Lean route for that case; it must not be tuned to improve a reported factor.",
+  "entries": {
+    "new-round/sqrt_two_irrational": {
+      "scope": "statement and parity proof",
+      "text": "sqrt(2) is irrational. Otherwise write sqrt(2) = p/q in lowest terms, with p an integer and q a positive integer. Squaring gives p^2 = 2q^2, so p is even. Write p = 2k; then q^2 = 2k^2, so q is even too. This contradicts gcd(p,q) = 1."
+    },
+    "new-round/set_union_inter_distrib": {
+      "scope": "statement and library-law justification",
+      "text": "For subsets A, B, D of the reals, A ∪ (B ∩ D) = (A ∪ B) ∩ (A ∪ D), by the distributive law for sets."
+    },
+    "new-round/set_diff_union": {
+      "scope": "statement and elementwise proof",
+      "text": "For subsets A, B, D of the reals, A ∖ (B ∪ D) = (A ∖ B) ∩ (A ∖ D): membership on either side means belonging to A and to neither B nor D."
+    },
+    "new-round/set_inter_monotone": {
+      "scope": "statement and elementwise proof",
+      "text": "For subsets A, B, D of the reals, if A ⊆ B then A ∩ D ⊆ B ∩ D. An element of A ∩ D belongs to B and D."
+    },
+    "new-round/function_mem_range": {
+      "scope": "statement and witness",
+      "text": "For f : R → R and x ∈ R, f(x) belongs to the range of f, with witness x."
+    },
+    "new-round/integer_division_decomposition": {
+      "scope": "statement and library-law justification",
+      "text": "For an integer a and a positive integer d, a = d⌊a/d⌋ + (a mod d), by quotient-remainder decomposition."
+    },
+    "new-round/integer_divisibility": {
+      "scope": "statement and witness",
+      "text": "For integers a and c with c ≠ 0, c divides ac, since ac = ca."
+    },
+    "new-round/finite_cardinality": {
+      "scope": "statement and finite calculation",
+      "text": "The set {1,2,3} has three elements, by counting its distinct entries."
+    },
+    "new-round/powerset_cardinality": {
+      "scope": "statement and counting argument",
+      "text": "A finite set A of natural numbers has 2^|A| subsets: for each element independently choose whether to include it."
+    },
+    "new-round/factorial_positive": {
+      "scope": "statement and library-law justification",
+      "text": "For every natural number n, n! > 0, by positivity of the factorial."
+    },
+    "new-round/derivative_square_at_three": {
+      "scope": "statement and calculation",
+      "text": "For f(x) = x^2 on R, f'(3) = 6, since f'(x) = 2x and 2·3 = 6."
+    },
+    "new-round/pair_reconstruction": {
+      "scope": "statement and pair law",
+      "text": "Every pair p ∈ R × R equals the pair of its first and second coordinates, by the pair reconstruction law."
+    },
+    "new-round/continuity_square_at_three": {
+      "scope": "statement and library-law justification",
+      "text": "The function x ↦ x^2 on R is continuous at 3, by continuity of powers."
+    },
+    "multi-step/sum_sq_zero": {
+      "scope": "statement and proof",
+      "text": "For real x,y, if x^2+y^2 = 0 then x = y = 0: both squares are nonnegative, so each square is zero."
+    },
+    "multi-step/positive_ratio": {
+      "scope": "statement and proof",
+      "text": "For a positive real x, x+1 > 0, hence x/(x+1) > 0 by positivity of the numerator and denominator."
+    },
+    "multi-step/mul_cancel": {
+      "scope": "statement and proof",
+      "text": "For real x,y, if 2x = 2y then x = y, by cancelling the nonzero factor 2."
+    },
+    "multi-step/sq_plus_one_pos": {
+      "scope": "statement and proof",
+      "text": "For every real x, x^2+1 > 0, because x^2 ≥ 0 and 1 > 0."
+    },
+    "multi-step/sum_sq_ge_two_mul": {
+      "scope": "statement and proof",
+      "text": "For real x,y, x^2+y^2 ≥ 2xy, since 0 ≤ (x-y)^2 = x^2+y^2-2xy."
+    },
+    "multi-step/even_witness_above": {
+      "scope": "statement and witness proof",
+      "text": "For every positive integer n there is a positive even integer m > n. Take m = 2n; it is positive, exceeds n, and is divisible by 2."
+    },
+    "multi-step/nat_succ_lt_two_mul": {
+      "scope": "statement and proof",
+      "text": "Every positive integer n satisfies 2n > n, since 2n-n = n > 0."
+    },
+    "statement-forms/prop_definition_witness": {
+      "scope": "definition and witness; Lean unfolds the predicate",
+      "text": "An integer a is odd if a = 2t+1 for some integer t. The number 7 is odd, with witness t = 3."
+    },
+    "statement-forms/odd_shift": {
+      "scope": "definition, statement and witness proof; Lean unfolds the predicate",
+      "text": "An integer a is odd if a = 2t+1 for some integer t. If an integer n is odd, write n = 2k+1. Then 3n+2 = 3(2k+1)+2 = 2(3k+2)+1, so 3n+2 is odd with witness 3k+2."
+    },
+    "statement-forms/reciprocal_tends_to_zero": {
+      "scope": "sequence definition, statement and proof; Lean inlines the sequence",
+      "text": "Let a(n) = 1/n for positive integers n. For every real ε > 0 there is a positive integer n with a(n) < ε. By the Archimedean property choose n > 1/ε; then a(n) = 1/n < ε."
+    },
+    "statement-forms/set_union_subset_eq": {
+      "scope": "statement and elementwise proof",
+      "text": "For subsets A,B of the reals, if A ⊆ B then A ∪ B = B. Every element of A or B belongs to B, and every element of B belongs to A ∪ B."
+    },
+    "declarations/guarded_function": {
+      "scope": "definition and use",
+      "text": "For nonzero real x define bench_recip(x) = 1/x. Then bench_recip(2) = 1/2 by substitution."
+    }
+  }
+}

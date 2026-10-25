@@ -1,0 +1,5 @@
+# Reordered nonzero conditions describe the same complete domains, and real outputs can also be viewed as complex outputs.
+have fn membership_shift(x R: x != 0, x != 1) R = x + 1
+release thm fn_set_member(membership_shift, fn(y R: y != 1, y != 0) C)
+have fn membership_quotient(x, y R: y != 0, x != 0) R = x / y
+by thm fn_set_member(membership_quotient, fn(a, b R: a != 0, b != 0) C) => membership_quotient $in fn(a, b R: a != 0, b != 0) C

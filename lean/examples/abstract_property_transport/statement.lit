@@ -1,0 +1,22 @@
+# An arbitrary property transfers between equal real objects.
+abstract_prop marked(x)
+forall a, b R:
+    a = b
+    $marked(a)
+    =>:
+        $marked(b)
+
+thm marked_equal:
+    ? forall a, b R:
+        a = b
+        $marked(a)
+        =>:
+            $marked(b)
+    $marked(b)
+
+thm marked_add_zero:
+    ? forall a R:
+        $marked(a)
+        =>:
+            $marked(a + 0)
+    by thm marked_equal(a, a + 0) => $marked(a + 0)

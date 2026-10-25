@@ -1,0 +1,17 @@
+# Use set identities in reverse, including conditional intersection simplification.
+forall laws_rev_A, laws_rev_B, laws_rev_C set:
+    laws_rev_A = intersect(laws_rev_A, laws_rev_A)
+    {} = intersect(laws_rev_A, {})
+    {} = intersect({}, laws_rev_A)
+    intersect(laws_rev_A, intersect(laws_rev_B, laws_rev_C)) = intersect(intersect(laws_rev_A, laws_rev_B), laws_rev_C)
+    laws_rev_A = union(laws_rev_A, laws_rev_A)
+    laws_rev_A = union(laws_rev_A, {})
+    laws_rev_A = union({}, laws_rev_A)
+    union(laws_rev_A, union(laws_rev_B, laws_rev_C)) = union(union(laws_rev_A, laws_rev_B), laws_rev_C)
+    union(intersect(laws_rev_A, laws_rev_B), intersect(laws_rev_A, laws_rev_C)) = intersect(laws_rev_A, union(laws_rev_B, laws_rev_C))
+
+forall laws_rev_s_A, laws_rev_s_B set:
+    laws_rev_s_A $subset laws_rev_s_B
+    =>:
+        laws_rev_s_A = intersect(laws_rev_s_A, laws_rev_s_B)
+        laws_rev_s_A = intersect(laws_rev_s_B, laws_rev_s_A)

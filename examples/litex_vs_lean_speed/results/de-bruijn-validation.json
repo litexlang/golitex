@@ -1,0 +1,70 @@
+{
+  "date": "2026-10-24",
+  "scope": "L0 size reporting and documentation only; mathematical sources, timing inputs, proof routes and environments unchanged.",
+  "command": {
+    "argv": [
+      "python3",
+      "examples/litex_vs_lean_speed/harness/de_bruijn.py",
+      "--check"
+    ],
+    "exit": 0
+  },
+  "independent_audit": {
+    "informal_baselines": 25,
+    "source_matched_pairs": 23,
+    "source_drift_pairs_withheld": 2,
+    "formal_source_character_counts_and_hashes_checked": 53,
+    "raw_timing_rows_checked": 2928,
+    "warm_timing_rows_checked": 2832,
+    "generated_table_rows": 24,
+    "readme_mirror_rows": 24,
+    "types_guide_rows": 4,
+    "local_file_links_resolved": 135,
+    "existing_table_timing_and_source_cells_unchanged": true
+  },
+  "boundary_checks": {
+    "unknown_baseline_renders_dashes": true,
+    "both_real_drift_controls_render_dashes": true,
+    "empty_informal_baseline_rejected": true,
+    "zero_denominator_rejected": true,
+    "check_and_write_executed_with_process_launches_forbidden": true,
+    "repeat_regeneration_byte_identical": true
+  },
+  "test_scope": "No new prover runs or measurements: source/case checks, recomputation from saved raw samples, all added cells, hashes, links and CLI behavior were audited. No claim that retrospective prose was an original formalization input.",
+  "artifact_sha256": {
+    "harness/de_bruijn.py": "403f29879e3775376e32708571e75ef46ce6712726c816acf7a344e94bb14075",
+    "harness/bench.py": "d29347ee49723990e9b4fa6aa106649f1f99edc23f876c771e48f6f4160a6865",
+    "cases/informal-baselines.json": "304ac549801b8c44f289f06169f5a238ffd1b544f267cf0724c2efde76ce8c60",
+    "results/de-bruijn-factors.json": "e1772198108c7a5317ba9f61bf8520e75c7a8c9b57a666d39df68b3c9ec86ea2",
+    "results/new-round.md": "66d07cc893958fb281b2e70d724a54aac9603e7e42ecde0c26506d6c49ce8784",
+    "results/multi-step.md": "d99a66d8114041381a439343f89a3d8a70cd6eb71401ab81a7c394d1e1c95e32",
+    "results/statement-forms.md": "8d7d735a495346ba2b542db38ef201f24a14c34aaa76b148df59d8d685d2020c",
+    "README.md": "46605cd99d7b2a945a990bc1dfed88ca64a230b39f4e6eb2689e4c0b6d64cb59",
+    "types-and-objects.md": "3cc0e4271597efa8aa4e96315ee336d82673794d26d2a5a901b6af94c36a7610",
+    "sources/README.md": "52027697d8252895b91175793ec01cfd069dbf5e43b599900c2dda9a3ab83327"
+  },
+  "presentation_refresh": {
+    "date": "2026-10-24",
+    "user_requirement": "Remove ordinary-math, Litex and Lean character-count columns; retain explicitly labeled de Bruijn factors, checking times and speedup.",
+    "expression_columns": [
+      "Litex de Bruijn factor",
+      "Lean de Bruijn factor"
+    ],
+    "runtime_columns": [
+      "Litex checking time in ms",
+      "Lean checking time in ms",
+      "Litex speedup = Lean time / Litex time"
+    ],
+    "result_rows_checked": 24,
+    "readme_mirror_rows_checked": 24,
+    "types_guide_rows_checked": 4,
+    "worked_examples_checked": 2,
+    "prior_factors_counts_timings_methods_sources_preserved": true,
+    "old_speed_only_table_headers_name_time_or_speedup": true,
+    "protected_math_baseline_and_timing_input_hashes_unchanged": true,
+    "public_cli_check_write_check_without_process_launches": "passed; repeat regeneration byte-identical",
+    "missing_baselines_and_both_drift_controls_withhold_both_factors": true,
+    "three_character_count_columns_removed_from_all_eight_comparison_tables": true,
+    "underlying_character_counts_retained_in_json": true
+  }
+}

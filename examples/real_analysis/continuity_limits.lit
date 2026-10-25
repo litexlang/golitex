@@ -13,5 +13,5 @@ release thm fn_limit_at_real_accumulation(3)
 by def $is_real_accumulation_at(R,3)
 release thm fn_continuous_at_to_limit(square,3)
 square(3)=9
-lim(square,3)=9
-lim(square,3)+2=11
+fn_lim(square,3)=9
+fn_lim(square,3)+2=11

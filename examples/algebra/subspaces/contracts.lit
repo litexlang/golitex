@@ -1,0 +1,121 @@
+# Imported source theorem and construction contracts.
+
+claim:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,U power_set(V):
+        $Algebra::vector_space::is_subspace(K,field,V,space,U)
+        =>:
+            $is_nonempty_set(U)
+    by thm Algebra::subspace::subspace_is_nonempty(K,field,V,space,U) => $is_nonempty_set(U)
+
+claim:
+    ? forall V nonempty_set,U power_set(V),n N,vectors finite_seq(U,n):
+        vectors $in finite_seq(V,n)
+    by thm Algebra::subspace::sequence_in_ambient(V,U,n,vectors) => vectors $in finite_seq(V,n)
+
+claim:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,U power_set(V):
+        $Algebra::vector_space::is_subspace(K,field,V,space,U)
+        =>:
+            \Algebra::subspace::restricted_space<K,field,V,space,U> $in &Algebra::vector_space::VectorSpace<K,field,U>
+    by thm Algebra::subspace::restricted_space_is_vector_space(K,field,V,space,U) => \Algebra::subspace::restricted_space<K,field,V,space,U> $in &Algebra::vector_space::VectorSpace<K,field,U>
+
+thm consume_sequence_in_ambient:
+    ? forall V nonempty_set,U power_set(V),n N,vectors finite_seq(U,n):
+        vectors $in finite_seq(V,n)
+    by thm Algebra::subspace::sequence_in_ambient(V,U,n,vectors) => vectors $in finite_seq(V,n)
+
+thm consume_subspace_is_nonempty:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,U power_set(V):
+        $Algebra::vector_space::is_subspace(K,field,V,space,U)
+        =>:
+            $is_nonempty_set(U)
+    by thm Algebra::subspace::subspace_is_nonempty(K,field,V,space,U) => $is_nonempty_set(U)
+
+thm consume_subspace_inverse_exists:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,U power_set(V),x U:
+        $Algebra::vector_space::is_subspace(K,field,V,space,U)
+        =>:
+            exist y U st {space.add(x,y)=space.zero}
+    release thm Algebra::subspace::subspace_inverse_exists(K,field,V,space,U,x)
+
+thm consume_inclusion_is_linear:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,U power_set(V):
+        $Algebra::vector_space::is_subspace(K,field,V,space,U)
+        =>:
+            $Algebra::vector_space::is_linear_map(K,field,U,\Algebra::subspace::restricted_space<K,field,V,space,U>,V,space,\Algebra::subspace::inclusion<V,U>)
+    by thm Algebra::subspace::inclusion_is_linear(K,field,V,space,U) => $Algebra::vector_space::is_linear_map(K,field,U,\Algebra::subspace::restricted_space<K,field,V,space,U>,V,space,\Algebra::subspace::inclusion<V,U>)
+
+thm consume_subspace_combination_equals_ambient:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,U power_set(V),n N,coefficients finite_seq(K,n),vectors finite_seq(U,n):
+        $Algebra::vector_space::is_subspace(K,field,V,space,U)
+        =>:
+            \Algebra::finite_span::linear_combination<K,field,U,\Algebra::subspace::restricted_space<K,field,V,space,U>,n>(coefficients,vectors)=\Algebra::finite_span::linear_combination<K,field,V,space,n>(coefficients,vectors)
+    by thm Algebra::subspace::subspace_combination_equals_ambient(K,field,V,space,U,n,coefficients,vectors) => \Algebra::finite_span::linear_combination<K,field,U,\Algebra::subspace::restricted_space<K,field,V,space,U>,n>(coefficients,vectors)=\Algebra::finite_span::linear_combination<K,field,V,space,n>(coefficients,vectors)
+
+thm consume_subspace_independent_is_ambient_independent:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,U power_set(V),n N,vectors finite_seq(U,n):
+        $Algebra::vector_space::is_subspace(K,field,V,space,U)
+        $Algebra::basis::is_linearly_independent(K,field,U,\Algebra::subspace::restricted_space<K,field,V,space,U>,n,vectors)
+        =>:
+            $Algebra::basis::is_linearly_independent(K,field,V,space,n,vectors)
+    by thm Algebra::subspace::subspace_independent_is_ambient_independent(K,field,V,space,U,n,vectors) => $Algebra::basis::is_linearly_independent(K,field,V,space,n,vectors)
+
+thm consume_ambient_independent_is_subspace_independent:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,U power_set(V),n N,vectors finite_seq(U,n):
+        $Algebra::vector_space::is_subspace(K,field,V,space,U)
+        $Algebra::basis::is_linearly_independent(K,field,V,space,n,vectors)
+        =>:
+            $Algebra::basis::is_linearly_independent(K,field,U,\Algebra::subspace::restricted_space<K,field,V,space,U>,n,vectors)
+    by thm Algebra::subspace::ambient_independent_is_subspace_independent(K,field,V,space,U,n,vectors) => $Algebra::basis::is_linearly_independent(K,field,U,\Algebra::subspace::restricted_space<K,field,V,space,U>,n,vectors)
+
+thm consume_subspace_span_equals_ambient:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,U power_set(V),n N,vectors finite_seq(U,n):
+        $Algebra::vector_space::is_subspace(K,field,V,space,U)
+        =>:
+            \Algebra::finite_span::span<K,field,U,\Algebra::subspace::restricted_space<K,field,V,space,U>,n,vectors> = \Algebra::finite_span::span<K,field,V,space,n,vectors>
+    by thm Algebra::subspace::subspace_span_equals_ambient(K,field,V,space,U,n,vectors) => \Algebra::finite_span::span<K,field,U,\Algebra::subspace::restricted_space<K,field,V,space,U>,n,vectors> = \Algebra::finite_span::span<K,field,V,space,n,vectors>
+
+thm consume_finite_dimensional_subspace_is_finite_dimensional:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,U power_set(V):
+        $Algebra::vector_space::is_subspace(K,field,V,space,U)
+        $Algebra::basis::is_finite_dimensional(K,field,V,space)
+        =>:
+            $Algebra::basis::is_finite_dimensional(K,field,U,\Algebra::subspace::restricted_space<K,field,V,space,U>)
+    by thm Algebra::subspace::finite_dimensional_subspace_is_finite_dimensional(K,field,V,space,U) => $Algebra::basis::is_finite_dimensional(K,field,U,\Algebra::subspace::restricted_space<K,field,V,space,U>)
+
+thm consume_subspace_dimension_le_ambient:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,U power_set(V):
+        $Algebra::vector_space::is_subspace(K,field,V,space,U)
+        $Algebra::basis::is_finite_dimensional(K,field,V,space)
+        $Algebra::basis::is_finite_dimensional(K,field,U,\Algebra::subspace::restricted_space<K,field,V,space,U>)
+        =>:
+            \Algebra::dimension::finite_dimension<K,field,U>(\Algebra::subspace::restricted_space<K,field,V,space,U>)<=\Algebra::dimension::finite_dimension<K,field,V>(space)
+    by thm Algebra::subspace::subspace_dimension_le_ambient(K,field,V,space,U) => \Algebra::dimension::finite_dimension<K,field,U>(\Algebra::subspace::restricted_space<K,field,V,space,U>)<=\Algebra::dimension::finite_dimension<K,field,V>(space)
+
+thm consume_ambient_is_subspace:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>:
+        $Algebra::vector_space::is_subspace(K,field,V,space,V)
+    by thm Algebra::subspace::ambient_is_subspace(K,field,V,space) => $Algebra::vector_space::is_subspace(K,field,V,space,V)
+
+thm consume_zero_is_subspace:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>:
+        $Algebra::vector_space::is_subspace(K,field,V,space,{space.zero})
+    by thm Algebra::subspace::zero_is_subspace(K,field,V,space) => $Algebra::vector_space::is_subspace(K,field,V,space,{space.zero})
+
+forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,U power_set(V):
+    $Algebra::vector_space::is_subspace(K,field,V,space,U)
+    =>:
+        \Algebra::subspace::restricted_add<K,field,V,space,U> $in fn(u,v U) U
+
+forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,U power_set(V):
+    $Algebra::vector_space::is_subspace(K,field,V,space,U)
+    =>:
+        \Algebra::subspace::restricted_smul<K,field,V,space,U> $in fn(a K,v U) U
+
+forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,U power_set(V):
+    $Algebra::vector_space::is_subspace(K,field,V,space,U)
+    =>:
+        \Algebra::subspace::restricted_space<K,field,V,space,U> $in &Algebra::vector_space::VectorSpace<K,field,U>
+
+forall V nonempty_set,U power_set(V):
+    \Algebra::subspace::inclusion<V,U> $in fn(u U) V

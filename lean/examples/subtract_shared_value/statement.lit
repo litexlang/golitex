@@ -1,0 +1,15 @@
+# Subtracting the same real value preserves weak and strict inequalities.
+forall next_sub_a, next_sub_b, next_sub_c R:
+    next_sub_a <= next_sub_b
+    =>:
+        next_sub_a - next_sub_c <= next_sub_b - next_sub_c
+
+forall sub_strict_a, sub_strict_b, sub_strict_c R:
+    sub_strict_a < sub_strict_b
+    =>:
+        sub_strict_a - sub_strict_c < sub_strict_b - sub_strict_c
+
+forall nested_sub_a, nested_sub_b, nested_sub_c, nested_sub_d R:
+    nested_sub_a <= nested_sub_b
+    =>:
+        nested_sub_a - (nested_sub_c + nested_sub_d) <= nested_sub_b - (nested_sub_c + nested_sub_d)

@@ -9,13 +9,12 @@ variable {M : Litex.Semantics.{u}}
 set_option linter.unusedSectionVars false
 variable [_functionSemantics : Litex.FunctionSemantics M]
 
-theorem h_4 : ∀ {_Host_i1 : Type v1} [_rep_i1 : Litex.Representation M _Host_i1] (_value_i1 : Litex.Obj (M := M) _Host_i1) (h_36 : Litex.In _value_i1 (by
-  have _checked_header : ∀ (_raw_i2 : M.Value), M.mem _raw_i2 (M.standard Litex.StandardSetValue.real) → ((fun (_raw_i2 : M.Value) => True) _raw_i2) → True := by
+theorem h_4 : ∀ {_Host_i1 : Type v1} [_rep_i1 : Litex.Representation M _Host_i1] (_value_i1 : Litex.Obj (M := M) _Host_i1) (h_36 : Litex.In _value_i1 (let _checked_header : ∀ (_raw_i2 : M.Value), M.mem _raw_i2 (M.standard Litex.StandardSetValue.real) → ((fun (_raw_i2 : M.Value) => True) _raw_i2) → True := (by
     intro _raw_i2 h_35 _
     let _value_i2 := Litex.semanticObject (M := M) _raw_i2 (M.member_isSet h_35)
     have h_35 : Litex.In _value_i2 (Litex.R (M := M)) := h_35
-    exact True.intro
-  exact Litex.fnSet (Litex.FunctionSignature.one (M := M) Litex.StandardSetValue.real Litex.StandardSetValue.real (fun (_raw_i2 : M.Value) => True)))) {_Host_i3 : Type v3} [_rep_i3 : Litex.Representation M _Host_i3] (_value_i3 : Litex.Obj (M := M) _Host_i3) (h_37 : Litex.In _value_i3 (Litex.R (M := M))) {_Host_i4 : Type v4} [_rep_i4 : Litex.Representation M _Host_i4] (_value_i4 : Litex.Obj (M := M) _Host_i4) (h_38 : Litex.In _value_i4 (Litex.R (M := M))) (h_1 : (Litex.injectiveValue (Litex.denote (Litex.R (M := M))) (Litex.denote (Litex.R (M := M))) (Litex.denote _value_i1))) (h_2 : (by
+    exact True.intro);
+  Litex.fnSet (Litex.FunctionSignature.one (M := M) Litex.StandardSetValue.real Litex.StandardSetValue.real (fun (_raw_i2 : M.Value) => True)))) {_Host_i3 : Type v3} [_rep_i3 : Litex.Representation M _Host_i3] (_value_i3 : Litex.Obj (M := M) _Host_i3) (h_37 : Litex.In _value_i3 (Litex.R (M := M))) {_Host_i4 : Type v4} [_rep_i4 : Litex.Representation M _Host_i4] (_value_i4 : Litex.Obj (M := M) _Host_i4) (h_38 : Litex.In _value_i4 (Litex.R (M := M))) (h_1 : (Litex.injectiveValue (Litex.denote (Litex.R (M := M))) (Litex.denote (Litex.R (M := M))) (Litex.denote _value_i1))) (h_2 : (by
   let _equal_wd_1_0 := (Litex.call Litex.StandardSetValue.real Litex.StandardSetValue.real (fun (_raw_i2 : M.Value) => True) _value_i1 _value_i3 h_36 h_37 True.intro)
   let _equal_wd_1_1 := (Litex.call Litex.StandardSetValue.real Litex.StandardSetValue.real (fun (_raw_i2 : M.Value) => True) _value_i1 _value_i4 h_36 h_38 True.intro)
   exact Litex.Same _equal_wd_1_0 _equal_wd_1_1)), Litex.Same _value_i3 _value_i4 :=
@@ -56,13 +55,12 @@ theorem h_4 : ∀ {_Host_i1 : Type v1} [_rep_i1 : Litex.Representation M _Host_i
       )
   )
 
-theorem h_99 : ∀ {_Host_i9 : Type v9} [_rep_i9 : Litex.Representation M _Host_i9] (_value_i9 : Litex.Obj (M := M) _Host_i9) (h_131 : Litex.In _value_i9 (by
-  have _checked_header : ∀ (_raw_i10 : M.Value), M.mem _raw_i10 (M.standard Litex.StandardSetValue.real) → ((fun (_raw_i10 : M.Value) => True) _raw_i10) → True := by
+theorem h_99 : ∀ {_Host_i9 : Type v9} [_rep_i9 : Litex.Representation M _Host_i9] (_value_i9 : Litex.Obj (M := M) _Host_i9) (h_131 : Litex.In _value_i9 (let _checked_header : ∀ (_raw_i10 : M.Value), M.mem _raw_i10 (M.standard Litex.StandardSetValue.real) → ((fun (_raw_i10 : M.Value) => True) _raw_i10) → True := (by
     intro _raw_i10 h_130 _
     let _value_i10 := Litex.semanticObject (M := M) _raw_i10 (M.member_isSet h_130)
     have h_130 : Litex.In _value_i10 (Litex.R (M := M)) := h_130
-    exact True.intro
-  exact Litex.fnSet (Litex.FunctionSignature.one (M := M) Litex.StandardSetValue.real Litex.StandardSetValue.real (fun (_raw_i10 : M.Value) => True)))) {_Host_i11 : Type v11} [_rep_i11 : Litex.Representation M _Host_i11] (_value_i11 : Litex.Obj (M := M) _Host_i11) (h_132 : Litex.In _value_i11 (Litex.R (M := M))) (h_96 : (Litex.surjectiveValue (Litex.denote (Litex.R (M := M))) (Litex.denote (Litex.R (M := M))) (Litex.denote _value_i9))), ∃ (_value_i12 : Litex.Obj (M := M) M.Value), ∃ (h_148 : Litex.In _value_i12 (Litex.R (M := M))), Litex.Same _value_i11 (Litex.call Litex.StandardSetValue.real Litex.StandardSetValue.real (fun (_raw_i10 : M.Value) => True) _value_i9 _value_i12 h_131 h_148 True.intro) :=
+    exact True.intro);
+  Litex.fnSet (Litex.FunctionSignature.one (M := M) Litex.StandardSetValue.real Litex.StandardSetValue.real (fun (_raw_i10 : M.Value) => True)))) {_Host_i11 : Type v11} [_rep_i11 : Litex.Representation M _Host_i11] (_value_i11 : Litex.Obj (M := M) _Host_i11) (h_132 : Litex.In _value_i11 (Litex.R (M := M))) (h_96 : (Litex.surjectiveValue (Litex.denote (Litex.R (M := M))) (Litex.denote (Litex.R (M := M))) (Litex.denote _value_i9))), ∃ (_value_i12 : Litex.Obj (M := M) M.Value), ∃ (h_148 : Litex.In _value_i12 (Litex.R (M := M))), Litex.Same _value_i11 (Litex.call Litex.StandardSetValue.real Litex.StandardSetValue.real (fun (_raw_i10 : M.Value) => True) _value_i9 _value_i12 h_131 h_148 True.intro) :=
   (by
     litex_complete =>
       exact (
@@ -97,13 +95,12 @@ theorem h_99 : ∀ {_Host_i9 : Type v9} [_rep_i9 : Litex.Representation M _Host_
       )
   )
 
-theorem h_171 : ∀ {_Host_i17 : Type v17} [_rep_i17 : Litex.Representation M _Host_i17] (_value_i17 : Litex.Obj (M := M) _Host_i17) (h_173 : Litex.IsSet _value_i17) {_Host_i18 : Type v18} [_rep_i18 : Litex.Representation M _Host_i18] (_value_i18 : Litex.Obj (M := M) _Host_i18) (h_174 : Litex.IsSet _value_i18) {_Host_i19 : Type v19} [_rep_i19 : Litex.Representation M _Host_i19] (_value_i19 : Litex.Obj (M := M) _Host_i19) (h_176 : Litex.In _value_i19 (by
-  have _checked_header : ∀ (_raw_i20 : M.Value), M.mem _raw_i20 (Litex.denote _value_i17) → ((fun (_raw_i20 : M.Value) => True) _raw_i20) → True := by
+theorem h_171 : ∀ {_Host_i17 : Type v17} [_rep_i17 : Litex.Representation M _Host_i17] (_value_i17 : Litex.Obj (M := M) _Host_i17) (h_173 : Litex.IsSet _value_i17) {_Host_i18 : Type v18} [_rep_i18 : Litex.Representation M _Host_i18] (_value_i18 : Litex.Obj (M := M) _Host_i18) (h_174 : Litex.IsSet _value_i18) {_Host_i19 : Type v19} [_rep_i19 : Litex.Representation M _Host_i19] (_value_i19 : Litex.Obj (M := M) _Host_i19) (h_176 : Litex.In _value_i19 (let _checked_header : ∀ (_raw_i20 : M.Value), M.mem _raw_i20 (Litex.denote _value_i17) → ((fun (_raw_i20 : M.Value) => True) _raw_i20) → True := (by
     intro _raw_i20 h_175 _
     let _value_i20 := Litex.semanticObject (M := M) _raw_i20 (M.member_isSet h_175)
     have h_175 : Litex.In _value_i20 _value_i17 := h_175
-    exact True.intro
-  exact Litex.fnSet (Litex.FunctionSignature.withGuard (M := M) (Litex.denote _value_i17) (Litex.denote _value_i18) (Litex.isSet _value_i17) (Litex.isSet _value_i18) (fun (_litex_input : M.Value) => (fun (_raw_i20 : M.Value) => True) _litex_input)))) (h_168 : (Litex.bijectiveValue (Litex.denote _value_i17) (Litex.denote _value_i18) (Litex.denote _value_i19))), (((Litex.injectiveValue (Litex.denote _value_i17) (Litex.denote _value_i18) (Litex.denote _value_i19))) ∧ ((Litex.surjectiveValue (Litex.denote _value_i17) (Litex.denote _value_i18) (Litex.denote _value_i19)))) :=
+    exact True.intro);
+  Litex.fnSet (let _litex_output := _value_i18; Litex.FunctionSignature.withGuard (M := M) (Litex.denote _value_i17) (Litex.denote _litex_output) (Litex.isSet _value_i17) (Litex.isSet _litex_output) (fun (_litex_input : M.Value) => (fun (_raw_i20 : M.Value) => True) _litex_input)))) (h_168 : (Litex.bijectiveValue (Litex.denote _value_i17) (Litex.denote _value_i18) (Litex.denote _value_i19))), (((Litex.injectiveValue (Litex.denote _value_i17) (Litex.denote _value_i18) (Litex.denote _value_i19))) ∧ ((Litex.surjectiveValue (Litex.denote _value_i17) (Litex.denote _value_i18) (Litex.denote _value_i19)))) :=
   (by
     litex_complete =>
       exact (

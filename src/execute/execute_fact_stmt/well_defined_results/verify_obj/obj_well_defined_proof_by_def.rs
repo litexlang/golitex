@@ -185,6 +185,9 @@ impl IdentifierObjWellDefinedProof {
 // their own body. Templates may read a checked declaration after instance WD,
 // including nested checks where signature caching is disabled.
 pub enum FnObjDomainFnSetEvidence {
+    MultivariableSelector(
+        Box<crate::execute::execute_fact_stmt::function_domain::CompleteFunctionDomainProof>,
+    ),
     Matrix(Box<crate::execute::execute_fact_stmt::native_matrix::MatrixCallableProof>),
     FiniteFunction(
         Box<crate::execute::execute_fact_stmt::finite_function::FiniteFunctionSignatureProof>,
@@ -1500,6 +1503,8 @@ impl SymmetricDifferenceObjWellDefinedProof {
 }
 
 pub enum LimitOperatorObjWellDefinedProofByDef {
+    MultivariableScalar(crate::execute::execute_fact_stmt::multivariable::selector::MultivariableScalarLimitWellDefinedProof),
+    MultivariableVector(crate::execute::execute_fact_stmt::multivariable::selector::MultivariableVectorLimitWellDefinedProof),
     Function(FunctionLimitObjWellDefinedProof),
     Sequence(SequenceLimitObjWellDefinedProof),
     SequenceLimsup(SequenceLimsupObjWellDefinedProof),

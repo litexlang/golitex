@@ -1,0 +1,7 @@
+# Compare real differences while their shared operand keeps its complex carrier.
+forall domain_sub_a, domain_sub_b R, domain_sub_c C:
+    domain_sub_a <= domain_sub_b
+    domain_sub_a - domain_sub_c $in R
+    domain_sub_b - domain_sub_c $in R
+    =>:
+        domain_sub_a - domain_sub_c <= domain_sub_b - domain_sub_c

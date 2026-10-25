@@ -1,0 +1,6 @@
+claim:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,n N,vectors finite_seq(V,n):
+        $Algebra::basis::has_basis_length(K,field,V,space,n)
+        =>:
+            $Algebra::basis::is_linearly_independent(K,field,V,space,n,vectors)
+    release thm Algebra::basis_extension::spanning_list_with_basis_length_is_independent(K,field,V,space,n,vectors)

@@ -1,0 +1,7 @@
+# Commutativity gives equality of two binary sum functions, and doubling a positive input equals multiplication by two.
+have fn domain_sum(x, y R) R = x + y
+have fn domain_sum_alt(a, b R) R = b + a
+by fn_extension domain_sum = domain_sum_alt
+have fn domain_pos_double(x R+) R = x + x
+have fn domain_pos_double_alt(y R+) R = 2 * y
+by fn_extension domain_pos_double = domain_pos_double_alt

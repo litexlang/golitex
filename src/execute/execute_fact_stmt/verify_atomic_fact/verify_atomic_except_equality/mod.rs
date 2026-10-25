@@ -42,3 +42,5 @@ pub mod known_literal_tuple_numeric_coordinate;
 mod known_search_tests;
 
 pub(crate) use search_in_fact_proof::TemplateMembershipProof;
+
+pub(crate) mod known_real_array_return;

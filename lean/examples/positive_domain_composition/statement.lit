@@ -1,0 +1,4 @@
+# A composition retains the positive-real input domain of its inner function.
+have fn comp_square(t R) R = t^2
+have fn comp_positive(t R+) R = t+1
+compose(comp_square,comp_positive)(2)=9

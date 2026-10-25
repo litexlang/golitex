@@ -1,0 +1,8 @@
+# Regroup nested intersections using membership facts, then apply the theorem.
+thm reassociate_intersection_member:
+    ? forall assoc_inter_A, assoc_inter_B, assoc_inter_C set, assoc_inter_x intersect(intersect(assoc_inter_A, assoc_inter_B), assoc_inter_C):
+        assoc_inter_x $in intersect(assoc_inter_A, intersect(assoc_inter_B, assoc_inter_C))
+    assoc_inter_x $in intersect(assoc_inter_A, assoc_inter_B)
+    assoc_inter_x $in intersect(assoc_inter_A, intersect(assoc_inter_B, assoc_inter_C))
+
+by thm reassociate_intersection_member(R, C, C, 1) => 1 $in intersect(R, intersect(C, C))

@@ -1,0 +1,11 @@
+# A difference excludes removed elements and elements outside its base, and is a subset of its base.
+forall diff_right_A, diff_right_B set, diff_right_x diff_right_B:
+    not diff_right_x $in set_minus(diff_right_A, diff_right_B)
+
+forall diff_left_A, diff_left_B set, diff_left_x R:
+    not diff_left_x $in diff_left_A
+    =>:
+        not diff_left_x $in set_minus(diff_left_A, diff_left_B)
+
+forall diff_bound_A, diff_bound_B set:
+    set_minus(diff_bound_A, diff_bound_B) $subset diff_bound_A

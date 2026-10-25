@@ -1,0 +1,109 @@
+# Imported finite combinations, span closure and coefficient/map operations.
+
+have fn real_inv(x R: x != 0) R = 1 / x
+
+have fn real_add(x, y R) R = x + y
+
+have fn real_neg(x R) R = -x
+
+have fn real_mul(x, y R) R = x * y
+
+forall x, y, z R:
+    real_add(real_add(x, y), z) = real_add(x, real_add(y, z))
+    real_mul(real_mul(x, y), z) = real_mul(x, real_mul(y, z))
+    real_mul(x, real_add(y, z)) = real_add(real_mul(x, y), real_mul(x, z))
+
+forall x, y R:
+    real_add(x, y) = real_add(y, x)
+    real_mul(x, y) = real_mul(y, x)
+
+forall x R:
+    real_add(0, x) = x
+    real_add(x, real_neg(x)) = 0
+    real_mul(1, x) = x
+
+forall x R:
+    x != 0
+    =>:
+        real_mul(x, real_inv(x)) = 1
+
+release thm struct_member((0, 1, real_add, real_neg, real_mul, real_inv), &Algebra::field::Field<R>)
+
+have real_field &Algebra::field::Field<R> = (0, 1, real_add, real_neg, real_mul, real_inv)
+
+claim:
+    ? forall x R:
+        real_add(0,x)=x
+        exist y R st {real_add(x,y)=0}
+    real_add(0,x)=x
+    real_add(x,-x)=0
+    witness exist y R st {real_add(x,y)=0} from -x
+
+claim:
+    ? forall a,b,x R:
+        real_mul(real_field.mul(a,b),x)=real_mul(a,real_mul(b,x))
+        real_mul(real_field.add(a,b),x)=real_add(real_mul(a,x),real_mul(b,x))
+    real_field.mul=real_mul
+    real_field.add=real_add
+    real_field.mul(a,b)=real_mul(a,b)=a*b
+    real_field.add(a,b)=real_add(a,b)=a+b
+    real_mul(real_field.mul(a,b),x)=real_mul(a*b,x)=(a*b)*x=a*(b*x)=real_mul(a,real_mul(b,x))
+    real_mul(real_field.add(a,b),x)=real_mul(a+b,x)=(a+b)*x=a*x+b*x=real_add(real_mul(a,x),real_mul(b,x))
+
+forall a,x,y R:
+    real_mul(a,real_add(x,y))=real_add(real_mul(a,x),real_mul(a,y))
+
+claim:
+    ? forall x R:
+        real_mul(real_field.one,x)=x
+    real_field.one=1
+    real_mul(real_field.one,x)=real_mul(1,x)=1*x=x
+
+real_add $in fn(x,y R) R
+
+real_mul $in fn(a R,x R) R
+
+forall x,y,z R:
+    real_add(real_add(x,y),z)=real_add(x,real_add(y,z))
+
+forall x,y R:
+    real_add(x,y)=real_add(y,x)
+
+release thm struct_member((0,real_add,real_mul),&Algebra::vector_space::VectorSpace<R,real_field,R>)
+
+have scalars &Algebra::vector_space::VectorSpace<R,real_field,R> = (0,real_add,real_mul)
+
+have empty_coefficients finite_seq(R,0)=tuple()
+
+have empty_vectors finite_seq(R,0)=tuple()
+
+release thm Algebra::finite_span::empty_linear_combination(R,real_field,R,scalars,empty_coefficients,empty_vectors)
+
+release thm Algebra::finite_span::span_zero_member(R,real_field,R,scalars,0,empty_vectors)
+
+claim:
+    ? \Algebra::finite_span::span<R,real_field,R,scalars,0,empty_vectors> = {scalars.zero}
+    \Algebra::finite_span::span<R,real_field,R,scalars,0,empty_vectors> = {x R: $Algebra::finite_span::is_linear_combination(R,real_field,R,scalars,0,x,empty_vectors)}
+    claim:
+        ? forall x \Algebra::finite_span::span<R,real_field,R,scalars,0,empty_vectors>:
+            x $in {scalars.zero}
+        x $in {value R: $Algebra::finite_span::is_linear_combination(R,real_field,R,scalars,0,value,empty_vectors)}
+        $Algebra::finite_span::is_linear_combination(R,real_field,R,scalars,0,x,empty_vectors)
+        obtain c from $Algebra::finite_span::is_linear_combination(R,real_field,R,scalars,0,x,empty_vectors)
+        obtain empty_sums from $Algebra::finite_span::has_linear_combination_value(R,real_field,R,scalars,0,c,empty_vectors,x)
+        by thm Algebra::finite_span::partial_sum_determines_combination(R,real_field,R,scalars,0,c,empty_vectors,empty_sums) => \Algebra::finite_span::linear_combination<R,real_field,R,scalars,0>(c,empty_vectors)=empty_sums(0)
+        by thm Algebra::finite_span::empty_linear_combination(R,real_field,R,scalars,c,empty_vectors) => \Algebra::finite_span::linear_combination<R,real_field,R,scalars,0>(c,empty_vectors)=scalars.zero
+        x=empty_sums(0)=\Algebra::finite_span::linear_combination<R,real_field,R,scalars,0>(c,empty_vectors)=scalars.zero
+    forall x {scalars.zero}:
+        x $in \Algebra::finite_span::span<R,real_field,R,scalars,0,empty_vectors>
+    by extension \Algebra::finite_span::span<R,real_field,R,scalars,0,empty_vectors> = {scalars.zero}
+
+release thm Algebra::finite_span::span_is_subspace(R,real_field,R,scalars,0,empty_vectors)
+
+have repeated_vectors finite_seq(R,2)=(4,4)
+
+release thm Algebra::finite_span::span_is_subspace(R,real_field,R,scalars,2,repeated_vectors)
+
+release thm Algebra::finite_span::zero_coefficients_carrier(R,real_field,2)
+
+release thm Algebra::finite_span::linear_combination_zero_coefficients(R,real_field,R,scalars,2,repeated_vectors)

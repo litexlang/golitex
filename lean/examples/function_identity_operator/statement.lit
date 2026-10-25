@@ -1,0 +1,4 @@
+# An operator taking a real function and returning it unchanged is the identity on that function space.
+have fn keep_function(f fn(x R) R) fn(y R) R = f
+forall f fn(x R) R:
+    keep_function(f) = f

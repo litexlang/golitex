@@ -1,0 +1,8 @@
+# Expected rejection at the missing mathematical premise.
+
+claim:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,m N,first finite_seq(V,m),n N,second finite_seq(V,n):
+        $Algebra::basis::is_basis(K,field,V,space,n,second)
+        =>:
+            m=n
+    release thm Algebra::basis_comparison::finite_bases_have_equal_length(K,field,V,space,m,first,n,second)

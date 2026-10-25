@@ -1,0 +1,10 @@
+# Introduce membership in an intersection and recover each original membership.
+forall next_inter_A, next_inter_B set, next_inter_x R:
+    next_inter_x $in next_inter_A
+    next_inter_x $in next_inter_B
+    =>:
+        next_inter_x $in intersect(next_inter_A, next_inter_B)
+
+forall proj_inter_A, proj_inter_B set, proj_inter_x intersect(proj_inter_A, proj_inter_B):
+    proj_inter_x $in proj_inter_A
+    proj_inter_x $in proj_inter_B

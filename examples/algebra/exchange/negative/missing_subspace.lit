@@ -1,0 +1,9 @@
+# Expected rejection at the omitted mathematical premise.
+
+claim:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,U power_set(V),x,y V:
+        x $in U
+        space.add(x,y) $in U
+        =>:
+            y $in U
+    release thm Algebra::exchange::subspace_additive_cancellation(K,field,V,space,U,x,y)

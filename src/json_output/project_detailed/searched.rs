@@ -880,6 +880,10 @@ fn project_user_prop_def(proof: &UserDefinedPropDefinitionProof, runtime: &Runti
 
 fn project_builtin_prop_def(proof: &BuiltinPropDefinitionProof, runtime: &Runtime) -> JsonValue {
     let (kind, requirements, proofs) = match proof {
+        BuiltinPropDefinitionProof::MultivariableAnalysis(p) => {
+            let (facts, proofs) = p.requirements();
+            ("MultivariableAnalysis", facts, proofs)
+        }
         BuiltinPropDefinitionProof::RealSetBound(p) => (
             "RealSetBound",
             &p.requirement_facts,

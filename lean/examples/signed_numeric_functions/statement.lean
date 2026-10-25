@@ -9,7 +9,7 @@ variable {M : Litex.Semantics.{u}}
 set_option linter.unusedSectionVars false
 variable [_functionSemantics : Litex.FunctionSemantics M]
 
-noncomputable def _object_i1 := (Litex.formulaFnOn (Litex.FunctionSignature.withGuard (M := M) (Litex.denote (Litex.QStar (M := M))) (Litex.denote (Litex.Q (M := M))) (Litex.isSet (Litex.QStar (M := M))) (Litex.isSet (Litex.Q (M := M))) (fun (_litex_input : M.Value) => (fun (_raw_i2 : M.Value) => True) _litex_input)) (fun (_litex_input : M.Value) => (fun (_raw_i2 : M.Value) => (M.divValue (M.number (1 : ℂ)) _raw_i2)) _litex_input) (by
+noncomputable def _object_i1 := (Litex.formulaFnOn (let _litex_output := (Litex.Q (M := M)); Litex.FunctionSignature.withGuard (M := M) (Litex.denote (Litex.QStar (M := M))) (Litex.denote _litex_output) (Litex.isSet (Litex.QStar (M := M))) (Litex.isSet _litex_output) (fun (_litex_input : M.Value) => (fun (_raw_i2 : M.Value) => True) _litex_input)) (fun (_litex_input : M.Value) => (fun (_raw_i2 : M.Value) => (M.divValue (M.number (1 : ℂ)) _raw_i2)) _litex_input) (by
   have _litex_checked_return : ∀ (_raw_i2 : M.Value), M.mem _raw_i2 (Litex.denote (Litex.QStar (M := M))) → ((fun (_raw_i2 : M.Value) => True) _raw_i2) → M.mem ((fun (_raw_i2 : M.Value) => (M.divValue (M.number (1 : ℂ)) _raw_i2)) _raw_i2) (Litex.denote (Litex.Q (M := M))) := (by
     intro _raw_i2 h_14 _
     let _value_i2 := Litex.semanticObject (M := M) _raw_i2 (M.member_isSet h_14)
@@ -91,7 +91,7 @@ theorem h_85 : (by
       )
   )
 
-noncomputable def _object_i3 := (Litex.formulaFnOn (Litex.FunctionSignature.withGuard (M := M) (Litex.denote (Litex.ZNeg (M := M))) (Litex.denote (Litex.ZNeg (M := M))) (Litex.isSet (Litex.ZNeg (M := M))) (Litex.isSet (Litex.ZNeg (M := M))) (fun (_litex_input : M.Value) => (fun (_raw_i4 : M.Value) => True) _litex_input)) (fun (_litex_input : M.Value) => (fun (_raw_i4 : M.Value) => _raw_i4) _litex_input) (by
+noncomputable def _object_i3 := (Litex.formulaFnOn (let _litex_output := (Litex.ZNeg (M := M)); Litex.FunctionSignature.withGuard (M := M) (Litex.denote (Litex.ZNeg (M := M))) (Litex.denote _litex_output) (Litex.isSet (Litex.ZNeg (M := M))) (Litex.isSet _litex_output) (fun (_litex_input : M.Value) => (fun (_raw_i4 : M.Value) => True) _litex_input)) (fun (_litex_input : M.Value) => (fun (_raw_i4 : M.Value) => _raw_i4) _litex_input) (by
   have _litex_checked_return : ∀ (_raw_i4 : M.Value), M.mem _raw_i4 (Litex.denote (Litex.ZNeg (M := M))) → ((fun (_raw_i4 : M.Value) => True) _raw_i4) → M.mem ((fun (_raw_i4 : M.Value) => _raw_i4) _raw_i4) (Litex.denote (Litex.ZNeg (M := M))) := (by
     intro _raw_i4 h_295 _
     let _value_i4 := Litex.semanticObject (M := M) _raw_i4 (M.member_isSet h_295)
@@ -192,7 +192,7 @@ theorem h_554 : (by
       )
   )
 
-noncomputable def _object_i5 := (Litex.formulaFnOn (Litex.FunctionSignature.withGuard (M := M) (Litex.denote (Litex.CStar (M := M))) (Litex.denote (Litex.CStar (M := M))) (Litex.isSet (Litex.CStar (M := M))) (Litex.isSet (Litex.CStar (M := M))) (fun (_litex_input : M.Value) => (fun (_raw_i6 : M.Value) => True) _litex_input)) (fun (_litex_input : M.Value) => (fun (_raw_i6 : M.Value) => _raw_i6) _litex_input) (by
+noncomputable def _object_i5 := (Litex.formulaFnOn (let _litex_output := (Litex.CStar (M := M)); Litex.FunctionSignature.withGuard (M := M) (Litex.denote (Litex.CStar (M := M))) (Litex.denote _litex_output) (Litex.isSet (Litex.CStar (M := M))) (Litex.isSet _litex_output) (fun (_litex_input : M.Value) => (fun (_raw_i6 : M.Value) => True) _litex_input)) (fun (_litex_input : M.Value) => (fun (_raw_i6 : M.Value) => _raw_i6) _litex_input) (by
   have _litex_checked_return : ∀ (_raw_i6 : M.Value), M.mem _raw_i6 (Litex.denote (Litex.CStar (M := M))) → ((fun (_raw_i6 : M.Value) => True) _raw_i6) → M.mem ((fun (_raw_i6 : M.Value) => _raw_i6) _raw_i6) (Litex.denote (Litex.CStar (M := M))) := (by
     intro _raw_i6 h_781 _
     let _value_i6 := Litex.semanticObject (M := M) _raw_i6 (M.member_isSet h_781)

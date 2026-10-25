@@ -4,6 +4,13 @@ Inventory totals were measured on 2026-10-23. The dated checkpoints below
 record subsequent implementations and checks. Geo is outside this plan's
 acceptance targets.
 
+Against the original inventory, the checked compiler has entrypoints for
+**40/52 statement forms and 42/94 object constructors**. The latest extension
+(2026-10-25) adds ordered dependent fields to structures with set/nonempty-set/object
+header parameters and atomic, flat conjunction or chain conditions. It widens
+existing entrypoints; these totals do not recount later native-language additions.
+The dated sections record the boundaries and evidence.
+
 The current compiler already checks a useful combination of elementary
 algebra, inequalities, sets, formula functions and named proofs. The next goal
 is to expand this combination across the language by following its existing
@@ -14,7 +21,7 @@ statement, WD, verification and inference results.
 | Layer | Inventory | Existing compiler entrypoints | Remaining work |
 | --- | ---: | ---: | --- |
 | Statement forms | 52 | 37 at the checked coverage checkpoint | 15 forms remain outside that checkpoint; some require an explicit assumptions/model policy |
-| Object constructors | 94 | 35 | 59 constructors remain outside the checked WD construction routes |
+| Object constructors | 94 | 40 | 54 constructors remain outside the checked WD construction routes |
 | Standard number sets | 15 | 15 | All names represented; additional arithmetic proof routes remain |
 | Atomic fact variants | 72 | 18 proposition renderers | 54 variants lack a proposition renderer, before their proof routes can be replayed |
 | Explicit reserved theorem IDs | 364 | 5 Lean-checked adapters | 359 IDs remain; the four membership IDs work through both `release thm` and `by thm` |
@@ -59,12 +66,12 @@ transitive registration declarations; `by extension`, `by fn_extension`, `by str
 
 The [proof-command checkpoint](Litex_To_Lean_Proof_Commands.md) records the actual paired examples, 740 passing compiler tests, 100 Lean-checked declarations and each new adapter's domain boundaries, including finite-list membership, selected-disjunction and zero-product consumers. Later numeric checkpoints appear below.
 
-The checked 35 object entries comprise identifiers, calls, numeric literals,
+The checked 40 object entries comprise identifiers, calls, numeric literals,
 standard sets and the imaginary-unit literal; add/subtract/negate/multiply/divide/power/absolute value; square
-root; min/max/sign/floor/ceil; quotient/remainder/gcd/lcm/factorial; union/power set; finite enumeration/bounded builders/closed and half-open integer ranges/finite-sequence spaces;
-cartesian products/tuples; and function sets/anonymous functions/function ranges. A formula
-such as `f(g(x))` being supported does not imply support for the distinct
-`Composition` object constructor.
+root; min/max/sign/floor/ceil; quotient/remainder/gcd/lcm/factorial; union/intersection/set difference/power set; finite enumeration/bounded builders/closed and half-open integer ranges/finite-sequence spaces;
+cartesian products/tuples; and function sets/anonymous functions/function ranges/point and set preimages/composition.
+Composition construction, call expansion and fixed graph laws have separate
+checked examples; complete-domain comparisons retain the boundaries below.
 
 All 15 number sets are represented: `N`, `Z`, `Q`, `R`, `C`, `N+`, `Q+`,
 `R+`, `Z-`, `Q-`, `R-`, `Z*`, `Q*`, `R*`, and `C*`. Refined carriers use
@@ -74,10 +81,11 @@ The explicit adapters currently checked by Lean are
 `tuple_equal_from_coordinates` (theorem release, finite-coordinate boundary),
 `set_builder_member`, `defined_set_member`, `fn_set_member`, and
 `cart_member_from_coordinates` (release and selected invocation).
-Function membership currently accepts one/two-argument formula or cited
-functions with alpha-equivalent complete domains; Cartesian membership uses
-the retained finite-function shape. Other source/domain evidence variants still
-reject explicitly. This count does not include automatic arithmetic rules.
+Function membership currently accepts one/two-argument formula functions,
+cited functions and compositions, with alpha-equivalent or proved mutually
+included complete domains. Cartesian membership uses the retained finite-function
+shape; finite-source membership keeps its reviewed index-set contract. Other
+source/domain evidence variants still reject explicitly. This count does not include automatic arithmetic rules.
 
 Sources of the inventory:
 
@@ -927,10 +935,9 @@ replay and a source-valid nested-capture rejection. The compiler suite passes
 910 tests. Entry counts remained 35/52 statements and 34/94 objects; these are
 additional proof routes and domain cases of those entries.
 
-`have fn outer(x R) R = fn(y R) R {x + y}(1)` still rejects at
-`Function/BoundAnonymousCapture`. Its source verifies, but its literal
-constructor needs the original enclosing-binder instantiation; the compiler
-must not silently reuse it under a different raw binding.
+The nested-capture rejection at this checkpoint has since been resolved for
+fixed numeric signatures; see [immediate inner application](../lean/examples/nested_function_application/)
+and the captured-function checkpoint below.
 
 ### Local sketches, 2026-10-24
 
@@ -1072,11 +1079,312 @@ parameter and original membership FactId, fixing the former first-argument-only
 adapter.
 
 Dependent domains such as `forall x {0,1}, y {x}` still have an explicit compiler
-rejection. The accepted source proof of `x+y<=4` on `[0,3) × [1,3)` currently
-selects an unsupported builtin strategy; this increment does not replace that
-route with a different Lean proof. This extends existing statement routes; it
+rejection. The selected-strategy gap found for `x+y<=4` on `[0,3) × [1,3)`
+is covered by the weak additive-shift increment below. This extends existing statement routes; it
 does not change the preceding inventory baseline of **37/52 statement forms
 and 35/94 object constructors**.
+
+### Weak additive shifts and numeric bound weakening, 2026-10-24
+
+Eight more recorded order routes compile: four weak additive shift strategies
+and four numeric lower/upper-bound weakening builtins, for strict and weak
+goals. The rectangular sum proof selected `AddLeftNonpositiveShiftRight` in
+its zero-coordinate branches; one child selected `NumericUpperBoundWeakenLe`.
+Both now replay their original evidence.
+
+| Selected strategy | Core theorem |
+| --- | --- |
+| `AddRightNonnegativeShiftLeft` | `Litex.leAddOfLeOfNonneg` |
+| `AddRightNonnegativeShiftRight` | `Litex.leAddOfLeOfNonnegSwap` |
+| `AddLeftNonpositiveShiftLeft` | `Litex.addLeOfLeOfNonpos` |
+| `AddLeftNonpositiveShiftRight` | `Litex.addLeOfLeOfNonposSwap` |
+
+The strategy consumer validates the sum constructor, both ordered requirements,
+source subjects and comparison strength. Search-child visibility follows the
+recorded order. Numeric weakening resolves its exact cited `<` or `<=` fact,
+checks the unchanged variable and literal integer endpoints, then applies the
+existing denotation and order-transitivity laws. A strict goal requires either
+a strict source bound or a strict gap between endpoints. It neither searches
+for another fact nor strengthens a weak bound at the same endpoint.
+
+Eight source/generated pairs cover [additive lower bounds](../lean/examples/weak_additive_lower_bounds/),
+[additive upper bounds](../lean/examples/weak_additive_upper_bounds/),
+[numeric lower bounds](../lean/examples/weaken_numeric_lower_bounds/),
+[numeric upper bounds](../lean/examples/weaken_numeric_upper_bounds/),
+[a rectangular sum](../lean/examples/integer_rectangle_sum_bound/),
+[mixed finite domains](../lean/examples/mixed_finite_rectangle_sum_bound/),
+[three binary integers](../lean/examples/binary_cube_sum_bound/) and
+[a local enumeration with theorem reuse](../lean/examples/named_integer_rectangle_sum/).
+
+The compiler suite passes **950 tests**, including eight new tests for the
+selected variants, exact citations, altered requirements, signs, endpoints,
+child order and scope. All eight new pairs and three neighbors pass strict
+Litex execution, independent byte-identical regeneration and fresh Lean 4.31.0
+checks against the updated Core. Their 19 public declarations and four new
+Core theorems use only `propext`, `Classical.choice` and `Quot.sound`. Each direct
+additive example contains two universal statements and generates 3,449 bytes.
+No Runtime, AST or result-producer changes were needed.
+
+Componentwise addition was the next confirmed compiler gap at this checkpoint;
+the following increment closes its four recorded variants. General
+order-strategy coverage and nonliteral numeric weakening remain incomplete.
+
+### Adding two order bounds, 2026-10-24
+
+Four selected strategies now replay both original child proofs:
+
+| Selected strategy | Core theorem |
+| --- | --- |
+| `AddComponentwiseLessEqual` | `Litex.addLeAdd` |
+| `AddCrossedLessEqual` | `Litex.addLeAddSwap` |
+| `AddComponentwiseStrictLeft` | `Litex.addLtAddOfLtOfLe` |
+| `AddComponentwiseStrictRight` | `Litex.addLtAddOfLeOfLt` |
+
+For example, `a <= b` and `c <= d` yield `a + c <= b + d`.
+One strict premise yields a strict sum bound. The consumer validates both
+sum constructors, the exact ordered child subjects, addend pairing and each
+comparison's strength. It compiles children at their original source stages,
+then applies the selected law to the existing WD-bearing sum objects.
+Runtime, AST and result producers are unchanged; Core adds four proved laws.
+
+The three pairs cover [weak and crossed bounds](../lean/examples/componentwise_sum_bounds/),
+[strict/weak combinations](../lean/examples/mixed_strict_sum_bounds/) and
+[a two-step three-term bound followed by theorem reuse](../lean/examples/three_term_sum_bound/).
+Their generated files are 4,533, 4,551 and 43,884 bytes respectively.
+All three and three related existing pairs pass strict Litex execution,
+independent byte-identical generation and fresh Lean 4.31.0 checks. The twelve
+exported declarations and four new Core laws use only `propext`,
+`Classical.choice` and `Quot.sound`.
+
+The compiler suite passes **956 tests**, including six new tests for the four
+variants, composition, missing/reordered evidence, changed operand pairing or
+comparison strength, and future/sibling citations. This adds proof routes
+within existing statement and object families; it does not change the preceding
+entrypoint counts. Mixed strict crossed-pair strategies are not claimed.
+
+The next confirmed gap was subtracting a shared value; the following increment
+closes its four selected strategy routes.
+
+### Shared subtraction and strict order chains, 2026-10-24
+
+Four subtraction strategies now compile:
+
+| Selected strategy | Core theorem |
+| --- | --- |
+| `SubSharedSubtrahendLessEqual` | `Litex.subStructuralLeRight` |
+| `SubSharedMinuendLessEqual` | `Litex.subStructuralLeLeft` |
+| `SubSharedSubtrahendLess` | `Litex.subStructuralLtRight` |
+| `SubSharedMinuendLess` | `Litex.subStructuralLtLeft` |
+
+Each retains the original difference objects, their formation evidence and the
+single recorded order proof. The consumer checks the common operand and the
+reversed premise when the minuend is shared. Core uses real membership of the
+difference, so the common operand can keep its original complex carrier.
+Missing domain evidence, altered common operands or mismatched child subjects
+are rejected.
+
+The three-step difference example also exposed `LessTransitivity`. Its consumer
+resolves the exact two cited FactIds, validates the intermediate endpoint and
+both strictness flags, and applies existing `ltTrans`, `ltLeTrans` or `leLtTrans`.
+Two weak premises cannot supply this strict conclusion. No extra search is run.
+
+Five pairs cover [a shared subtrahend, including a compound expression](../lean/examples/subtract_shared_value/),
+[a shared minuend](../lean/examples/subtract_from_shared_value/),
+[real differences with a complex common operand](../lean/examples/real_difference_domains/),
+[the three-step theorem and its call](../lean/examples/ordered_difference_bound/) and
+[three strict-transitivity combinations](../lean/examples/strict_order_chains/).
+All five and three related existing pairs pass strict Litex, byte-identical
+regeneration and fresh Lean 4.31.0 checks. New generated files are 2,650–13,889
+bytes. The seventeen checked public declarations and four new Core laws use
+only `propext`, `Classical.choice` and `Quot.sound`.
+
+The compiler suite passes **966 tests**, including ten new tests covering the
+selected routes, domain evidence, citation scope, common operands, comparison
+strengths and theorem composition. Runtime, AST and result producers are
+unchanged. Statement/object entrypoint counts are unchanged.
+
+Binary intersection was the next confirmed object gap; the following increment
+adds its constructor, membership and subset routes.
+
+### Binary intersection, 2026-10-24
+
+`IntersectObj` retains the two original objects and denotes bounded separation
+of the first by membership in the second. Its representation uses existing
+`SetSemantics.sepValue`, `sep_members` and `sep_isSet`; the model interface has
+no new fields or assumptions. Constructor compilation consumes the two ordered
+child WD results. The compiler's existing traversal, parameter substitution and
+denotation-template cases now recognize this constructor.
+
+The checked proof paths are:
+
+- `IntersectMembership`, both builtin and strategy variants, replaying the two
+  original membership proofs in order through `inIntersect_iff`.
+- `IntersectBoth` inference, validating and publishing both captured membership
+  stores under distinct original FactIds for subsequent citations.
+- `IntersectSubsetLeft` and `IntersectSubsetRight`, plus
+  `IntersectSubsetFromLeftUpperBound` and `IntersectSubsetFromRightUpperBound`.
+- `SubsetOfIntersectFromBothBounds`, preserving both ordered subset proofs.
+
+Four pairs cover [membership and projections](../lean/examples/intersection_membership/),
+[five subset bounds](../lean/examples/intersection_subset_bounds/),
+[nested intersections and theorem reuse](../lean/examples/intersection_reassociation/),
+and [a named set, membership transport and sethood](../lean/examples/named_intersection/).
+All four and three related existing pairs pass strict Litex, independent
+byte-identical regeneration and fresh Lean 4.31.0 checks. New files are
+1,948–10,931 bytes. The 23 checked public declarations and six new Core laws
+use only `propext`, `Classical.choice` and `Quot.sound`.
+
+The compiler suite passes **976 tests**, including ten new tests for the
+selected routes, missing/reordered WD and proof children, changed subset
+subjects, future citations, projection order and reused FactIds. This increment
+does not edit Runtime, AST or result producers. Against the original inventory,
+coverage is **37/52 statement forms and 36/94 object constructors**.
+
+The nested example above proves a membership statement. The next increment
+adds the corresponding set-equality routes.
+
+### Union and intersection equalities, 2026-10-24
+
+Twelve original equality builtin variants now have consumers: union/intersection
+commutativity, idempotence, left/right empty-set laws and associativity;
+`IntersectUnionDistributive`; and `IntersectFromSubset`. The consumer validates
+the selected constructor, exact operands and orientation. It projects child
+objects from their existing WD producer. Conditional simplification consumes
+the one recorded subset proof at its original scope.
+
+Thirteen Core lemmas follow from existing separation/union membership laws
+and set extensionality, without new model fields or assumptions. Runtime,
+AST and result producers are unchanged by this increment.
+
+Five pairs cover [intersection identities](../lean/examples/set_intersection_identities/),
+[union identities](../lean/examples/set_union_identities/),
+[conditional intersection simplification](../lean/examples/intersection_from_subset/),
+[intersection distributed over union](../lean/examples/intersection_distributes_over_union/)
+and [reversed equalities](../lean/examples/set_identity_symmetry/).
+All five and three neighboring pairs pass strict source verification,
+independent byte-identical regeneration and fresh Lean 4.31.0 checks.
+New generated files are 2,305–12,161 bytes. Sixteen public declarations and
+the thirteen Core lemmas use only `propext`, `Classical.choice` and `Quot.sound`.
+
+The compiler suite passes **982 tests**, including six new tests covering all
+selected rules in both directions, both conditional operand positions, changed
+endpoints, a wrong selected rule, absent/extra/changed subset proofs and future
+citations. Statement/object counts remain **37/52 and 36/94**: this increment
+adds proof routes for existing constructors.
+
+The following increment adds the opposite distribution law and set difference.
+
+### Set difference and permuted distribution, 2026-10-24
+
+`SetMinusObj` retains both original objects and denotes separation of the base
+by nonmembership in the excluded set. Constructor compilation consumes both
+ordered child WD results. Membership consumes the recorded positive and negative
+children, in either the builtin or strategy result. The compiler emits the
+original `SetMinusSplit` stores: base membership, exclusion and, when the
+removed set is a singleton, disequality with its element. Their original FactIds
+remain available to subsequent proof steps.
+
+The checked proof routes also include exclusion from membership in the removed
+set or nonmembership in the base, `SetMinusSubsetLeft`, self/empty differences,
+both difference De Morgan laws and `IntersectSetMinusSelfEmpty`.
+`UnionOverIntersectDistributive` now validates the two distributed factors and
+composes the distribution, commutativity and congruence lemmas. Rust tests cover
+all 32 combinations of operand order and equality direction.
+
+Seven pairs cover [difference membership and projections](../lean/examples/set_difference_membership/),
+[exclusion and subset](../lean/examples/set_difference_exclusion/),
+[difference identities](../lean/examples/set_difference_identities/),
+[reversed identities](../lean/examples/set_difference_symmetry/),
+[named and nested difference theorems](../lean/examples/set_difference_theorem/),
+[a set-valued function](../lean/examples/set_difference_function/), and
+[permuted union distribution](../lean/examples/union_distributes_over_intersection/).
+All seven and three neighboring pairs pass strict Litex, independent
+byte-identical regeneration and fresh Lean 4.31.0 checks. New outputs are
+4,234–34,229 bytes. Thirty public declarations and thirteen new Core laws use
+only `propext`, `Classical.choice` and `Quot.sound`; the model gains no assumptions.
+
+The compiler suite passes **994 tests**, including twelve new tests for WD,
+ordered membership/strategy evidence, negative premises, inference identities,
+singleton capture, equality directions and distribution permutations. Runtime,
+AST and result producers are unchanged. Coverage is **37/52 statement forms
+and 37/94 object constructors** against the original inventory.
+
+One existing verifier boundary was exposed by this audit: it accepts
+`union(A, intersect(B, A)) = intersect(union(A, B), union(A, B))`.
+With `A = {}` and `B = {1}`, the left side is empty and the right side is `{1}`.
+The compiler rejects this mismatched-factor result with no Lean output; the
+upstream verifier matcher remains unchanged. The executable rejection is in
+[the distribution tests](../tests/unit/compile_to_lean/set_difference_tests.rs).
+
+The following increment closes the `SetMinusChainToUnion` gap identified here.
+
+### Set chains and containment, 2026-10-24
+
+`SetMinusChainToUnion` now compiles consecutive exclusions, including swapped
+union operands and reversed equality. Eight atomic builtin consumers add
+intersection/union nonmembership, subset transitivity, difference and power-set
+monotonicity, and union containment by common or componentwise bounds. Four
+strategy consumers carry upper bounds through unions, intersections and
+differences using their original requirements and ordered proof children.
+
+The componentwise union result omits syntactically reflexive pairs. The compiler
+checks the exact direct/crossed pairing and emits `subsetRefl` only for those
+pairs; all other pairs require their recorded proofs. Citation stages count
+actual children, including the zero-, one- and two-child cases. No Runtime,
+AST or result producer changes were needed.
+
+Seven new pairs cover [consecutive differences](../lean/examples/consecutive_set_difference/),
+[nonmembership](../lean/examples/set_operator_nonmembership/),
+[monotonicity](../lean/examples/set_containment_monotonicity/),
+[union bounds](../lean/examples/union_containment_bounds/),
+[nested containment](../lean/examples/nested_set_containment/),
+[a union-difference theorem](../lean/examples/union_difference_bound/) and
+[an exclusion theorem](../lean/examples/outside_union_intersection/).
+The two named theorems include subsequent calls.
+
+All seven and three neighboring pairs pass strict source verification,
+byte-identical regeneration and fresh Lean 4.31.0 checks. The new files are
+3,568–12,482 bytes. The compiler suite passes **1,004 tests**, including ten new
+tests for ordered/missing/changed premises, reflexive omissions and future
+citations. All 39 public declarations and twelve new Core laws audited use only
+`propext`, `Classical.choice` and `Quot.sound`. The semantic model gains no
+assumptions. Statement/object counts remain **37/52 and 37/94**; this batch
+extends proof routes within existing forms.
+
+### Point and set preimage objects, 2026-10-24
+
+`Preimage` and `PreimageSet` now compile their recorded operand WD, complete
+function signature and checked bounded construction. Membership strategies
+replay the ordered carrier, guard and output children. The named inference
+results export their original base membership, guards and output FactIds;
+the input-carrier subset rule uses the same complete-domain certificate.
+Unary inputs remain unary, and multiple inputs retain the Cartesian tuple.
+
+Core defines the set from the function graph and target. The chosen signature
+certifies formation without changing denotation. The compiler validates the
+captured builder's bound, parameter substitution, guards and output predicate;
+it does not search for a replacement signature or proof. Inferred call objects
+use the original membership evidence, with proof elimination confined to their
+WD proofs. Runtime, AST and result producers are unchanged.
+
+Four pairs cover [a guarded reciprocal](../lean/examples/guarded_reciprocal_preimages/),
+[a binary quotient](../lean/examples/binary_quotient_preimages/),
+[abstract functions](../lean/examples/abstract_function_preimages/) and
+[positive inputs](../lean/examples/positive_domain_preimages/).
+All four and three neighboring function/Cartesian pairs pass strict source,
+byte-identical regeneration and Lean 4.31.0. The new files are 18,133–81,143
+bytes. Unchanged bytes reused checks from this batch under the same Core and
+toolchain. All 52 exported declarations, four new Core theorems and two
+representation instances use only `propext`, `Classical.choice` and `Quot.sound`.
+
+The compiler regression passed **1,011 tests**. Seven focused tests cover the
+new sources and reject missing/reordered operands or children, changed bounds,
+guards or targets, invalid tuple equality, wrong seed IDs and reused inference
+IDs. The final local object-construction fix is checked again by this focused
+module and the generated binary example. Counts against the initial inventory
+are **37/52 statement forms and 39/94 object constructors**. Other complete-domain
+evidence variants and the separate `Composition` constructor remain outside
+this increment; native Adapter coverage has not been extended here.
 
 ## What can be a Lean wrapper
 
@@ -1394,6 +1702,524 @@ without drift. No Runtime, result-type or Core changes were needed. This increme
 documented first-order argument certificates; more general nested binder
 matching remains part of the unfinished logical work.
 
+### Strict function composition
+
+The five composition pairs cover a guarded two-input difference, shifted square,
+double reciprocal with a nonzero outer condition, arbitrary real-function
+parameters, and a positive-real inner domain. The compiler consumes original
+composition WD, selected complete interfaces, argument checks and beta steps.
+It does not replace the inner domain with a smaller compatible subset.
+`CompositionObj` denotes graph composition independently of its WD proofs;
+its Core laws follow from the existing function-graph interface.
+
+See [the first pair](../lean/examples/squared_gap_composition/) and
+[the compiler consumer](../src/compile_to_lean/compile_composition.rs).
+These source/generated pairs pass strict source checking, identical regeneration
+and Lean 4.31.0. Runtime, AST and result producers are unchanged.
+The batch passes 1,017 compiler tests and eight real Lean checks (five new pairs
+and three neighboring pairs). The 54 exported declarations, ten new Core laws
+and one representation instance use only `propext`, `Classical.choice` and
+`Quot.sound`. The new generated files occupy 41–97 KB. No native Adapter has
+been added in this increment.
+The statement count remains 37: this increment extends an object and the
+existing declaration/call/proof paths. Object coverage increases from 39 to 40.
+The next checkpoint below adds composition equality and range-subset
+certificates. Cross-representation domain transport and dependent input domains
+are not included in these checks.
+
+### Composition graph laws
+
+Three pairs replay the actual `CompositionAssociativity`, `CompositionLeftIdentity`,
+`CompositionRightIdentity`, `CompositionDefinition` and `CompositionRangeSubset`
+certificates: [formula functions](../lean/examples/composition_graph_laws/),
+[nonzero guards](../lean/examples/guarded_composition_identities/) and
+[arbitrary real functions](../lean/examples/abstract_composition_associativity/).
+The definition cases include two inputs and a wider verified return carrier.
+The Core laws follow from graph composition and extensionality; the compiler
+validates the original operands, equality paths, lambda body and complete-domain
+match. Source WD still certifies both sides before a fixed law is applied.
+
+Checks: 1,024 compiler tests pass. The three new pairs and three neighboring
+pairs pass strict source checking, identical regeneration and Lean 4.31.0.
+Identical new outputs reused their checks under the unchanged Core/toolchain.
+The 38 exported declarations and seven new Core laws use only `propext`,
+`Classical.choice` and `Quot.sound`. The new files occupy 103–327 KB.
+
+At this checkpoint right identity accepted only the alpha-equivalence branch.
+The subsequent complete-domain increment below adds recorded mutual inclusion.
+Dependent input domains and changes of packed-domain representation in composition
+construction remain unsupported. No Runtime, AST, result
+producer, model assumptions or native Adapter changes are part of this increment.
+Counts remain 37/52 statement forms and 40/94 object constructors.
+
+### Complete-domain comparisons and two-input function extensionality
+
+`FunctionDomainComparisonProof::MutualInclusion` now compiles its actual forward
+and reverse proofs. The consumer validates the quantified parameters, source
+conditions and target memberships/guards, preserves each FactId, and derives
+complete-domain equality with the existing set-extensionality law. Right
+composition identity and `by fn_extension` share this consumer. The latter's
+inclusion facts remain visible only inside its original proof scope.
+
+`by fn_extension` also accepts two nondependent parameters and `R+` parameters.
+The existing domain decomposition supplies the original memberships and guards;
+tuple reconstruction transports the recorded pointwise equality to the original
+input. Return bounds remain separate from graph equality.
+
+Four new canonical pairs:
+
+- [Positive shifts](../lean/examples/equal_positive_shifts/): different written
+  positivity conditions, with the source's explicit order fact.
+- [Reordered exclusions](../lean/examples/reordered_function_domains/): right
+  identity and function extensionality with two reordered nonzero conditions.
+- [Binary sums](../lean/examples/equal_binary_sums/): two inputs and positive-input
+  doubling.
+- [Guarded quotients](../lean/examples/equal_guarded_quotients/): two inputs,
+  division WD, reordered guards, and different verified return bounds.
+
+All 1,032 compiler tests pass, including eight new tests. The four new pairs and
+three neighbors pass strict Litex, identical regeneration and Lean 4.31.0. Identical checked bytes reuse evidence under the unchanged Core
+and toolchain; changed outputs receive fresh checks. The 60 exported declarations
+use only `propext`, `Classical.choice` and `Quot.sound`. New generated files occupy
+23–60 KB. No Core, Runtime, AST, result-producer or model-assumption changes.
+
+Counts remain 37/52 statement forms and 40/94 object constructors: this increment
+widens existing statement/result routes. More than two inputs to `by fn_extension`,
+dependent domains and unimplemented complete-domain sources still reject.
+At this checkpoint function-set membership still required alpha-equivalence;
+the next increment below connects it to the same domain comparison consumer.
+These consumers replay successful native certificates; automatic discovery of
+domain equivalences is unchanged.
+
+### Function-set membership with equivalent complete domains
+
+Both `release thm fn_set_member(...)` and selected `by thm fn_set_member(...)`
+now replay the recorded mutual-inclusion domain comparison before their original
+return requirements. The graph's complete input domain is preserved while the
+return bound may change using the checked pointwise proof. The source membership
+consumer is shared with function extensionality and composition; duplicated
+formula/citation branches and an unused generated target binding were removed.
+
+Four additional pairs cover [reordered guards](../lean/examples/reordered_function_membership/),
+[positive-real domains in both representations](../lean/examples/positive_function_membership/),
+[cited arbitrary functions](../lean/examples/abstract_function_membership_domains/)
+and [composed quotients](../lean/examples/composed_quotient_membership/).
+The last consumes `CompleteFunctionDomainSourceProof::Composition`; no function
+body is reconstructed from the environment. The original return proof and all
+call WD remain required.
+
+All 1,038 compiler tests pass, including six new tests. The four new pairs and
+three neighbors pass strict source, identical regeneration and fresh Lean 4.31.0
+checks. All 44 exported declarations use only `propext`, `Classical.choice` and
+`Quot.sound`. New generated files occupy 35–118 KB. Controls reject swapped
+inclusions, a forged alpha-equivalence result, future return citations and a
+smaller domain substituted for the complete domain.
+
+No Core, Runtime, AST, result-producer or model-assumption changes were required.
+Counts remain 37/52 statement forms and 40/94 objects: existing theorem invocation
+routes now cover more function sources and domain comparisons. Finite-source
+membership retains its separate index-set/alpha-equivalence contract. General
+dependent domains and unimplemented complete-domain source variants remain outside
+this increment.
+
+
+### Returned functions: calls, ranges and preimages (2026-10-24)
+
+Function parameters with fixed function-valued returns now support successive
+calls. Each layer replays its original arguments, membership proofs and guards;
+two- and three-layer cases, two-input calls, nonzero guards and `R+` domains are
+checked in [returned function values](../lean/examples/returned_function_values/).
+`ApplicationReturn` also supplies the shared complete-domain consumer with its
+original signature citation and scoped applicability evidence. This enables
+[returned ranges](../lean/examples/returned_function_ranges/),
+[returned preimages](../lean/examples/returned_function_preimages/) and
+[a named membership theorem](../lean/examples/returned_function_membership/).
+
+All **1,045 compiler tests** pass, including seven new tests. The four new pairs
+and 58 related pairs have checked Lean 4.31.0 artifacts; unchanged hashes reused
+this batch's earlier checks. The 421 exported theorems use only `propext`,
+`Classical.choice` and `Quot.sound`. Independent native verification selected
+different proofs on two existing examples; the final gate additionally checked
+both outputs where that variation recurred. Deterministic replay tests use the
+same typed result.
+
+No Runtime, AST, result-producer, Core or model-law change was required. Counts
+remain 37/52 statement forms and 40/94 objects. Dependent return signatures
+and complete-domain recovery after several call layers remain pending.
+
+### Constructed returned functions and function parameters (2026-10-24)
+
+Three additional source/generated pairs pass strict Litex execution and Lean
+4.31.0:
+
+- [Anonymous function signatures](../lean/examples/literal_function_signatures/):
+  membership in the declared function space, with renamed binders and unary or
+  binary nonzero guards.
+- [A returned shift](../lean/examples/selected_shift_function/): `have fn` returns
+  a new anonymous function; `let`, explicit signature membership, range
+  construction and equality substitution lead to `chosen_shift(2) = 3`.
+- [The identity operator on functions](../lean/examples/function_identity_operator/):
+  a function-valued parameter is returned unchanged, with a universal equality.
+
+The new builtin consumer validates the entire declared signature, then uses
+`Litex.formulaFnInFnSet` for the original checked constructor. Return-set alpha
+equality reuses the existing identity consumer. Function-set values retain a
+proof-valued header `let` and expose their constructor directly for elaboration
+inside other signatures. Runtime, AST, result capture, Core and model laws are
+unchanged. All **1,050 compiler tests** pass, including five new tests covering
+the selected route, replay determinism and rejection of altered carriers,
+guards, subjects or missing constructor WD.
+
+The three new pairs and 44 affected existing pairs have checked Lean artifacts.
+The final audit covers 313 exported theorems, using only `propext`,
+`Classical.choice` and `Quot.sound`. Both observed outputs were checked for the
+two existing sources whose independent native runs selected different proofs.
+
+Statement/Obj constructor counts remain 37/52 and 40/94; these changes extend
+the proof routes and combinations of existing constructors. Outer-parameter
+capture was added in the following checkpoint.
+
+### Captured numeric functions (2026-10-24)
+
+The source `have fn shifted_by(t R) fn(x R) R = fn(x R) R {x + t}` now compiles,
+including `shifted_by(t)(2) = 2 + t` for arbitrary real `t`. Four pairs cover
+[real and positive shifts](../lean/examples/captured_shift_functions/),
+[division with outer or inner nonzero conditions](../lean/examples/captured_division_functions/),
+[two inner arguments](../lean/examples/captured_binary_functions/), and
+[immediate application](../lean/examples/nested_function_application/).
+They pass strict Litex and Lean 4.31.0; generated files occupy 13–66 KB.
+
+The raw graph interpretation combines the original lexical parameter IDs.
+Constructor WD and return membership still consume their original proofs.
+Beta validation substitutes free outer IDs while preserving inner binders,
+carriers and guards. Subsequent call groups must match `continued_body` exactly;
+their equality follows by congruence. The single-step builtin rewrite retains
+its requirement that no continuation be inserted. Runtime, AST, result capture,
+Core and model laws are unchanged.
+
+All **1,056 compiler tests** pass, including six new tests for replay,
+signature/body/binder corruption, missing guards and changed continuation
+arguments. The four new pairs and 68 related pairs have checked Lean artifacts;
+the audit covers 509 exported theorems with only `propext`, `Classical.choice`
+and `Quot.sound`. Unchanged generated bytes reuse their pinned checks.
+
+This covers fixed numeric signatures. Dependent carrier sets and additional
+complete-domain recovery routes remain pending. The native search did not prove
+`positive_shift(t)(1) = 1 + t` in the attempted `R+` universal; the checked example
+records its positive-real membership, while the real-valued shift separately
+checks the universal evaluation equality. No native proof-search change was made.
+
+### Top-level abstract predicates (2026-10-24)
+
+`abstract_prop` now compiles as an arbitrary predicate parameter over `M.Value`
+denotations. A `(Fin n → M.Value) → Prop` parameter preserves source arity,
+including zero. It supplies no truth instance or definition to unfold. Semantic
+equality transports both positive and negated properties by Lean congruence.
+
+Five new source/generated pairs cover [property transport and named theorem calls](../lean/examples/abstract_property_transport/),
+[binary relations and negation](../lean/examples/abstract_relation_transport/),
+[function guards](../lean/examples/abstract_function_guard/),
+[nullary propositions](../lean/examples/abstract_proposition_identity/) and
+[interleaved object/predicate declarations](../lean/examples/abstract_property_context/).
+All five pass strict Litex verification and Lean 4.31.0; generated files range
+from 874 to 12,776 bytes.
+
+The compiler resolves declarations from their original visible source prefix,
+checks predicate identity and arity, and retains argument WD and exact fact
+citations. Exported declarations receive their original predicate parameters
+before existing object context arguments. Abstract predicates cannot acquire
+concrete-definition inference results. Runtime, AST, result producers, Core and
+model laws are unchanged; no compiler registry is added.
+
+All **1,063 compiler tests** pass, including seven new tests for deterministic
+replay and rejected missing/changed signatures, WD, declarations and inference
+results. The final batch checks the five new and ten related source/generated
+pairs; ten identical artifacts reuse their pinned Lean checks. The audit of
+54 exported theorems finds only `propext`, `Classical.choice` and `Quot.sound`.
+
+Statement coverage advances to **38/52 forms**; object coverage remains
+**40/94 constructors**, within the documented boundaries of each route. Local
+and qualified abstract declarations remain unsupported. This batch adds no
+native Adapter interface and does not change source `trust` or axiom policy.
+
+### Independent structure fields (2026-10-25)
+
+Top-level structures with independent fields and no header parameters or
+defining conditions now compile. Their carriers use the existing Cartesian
+set representation; source instances retain generic host representations.
+The declaration checks field WD and its local parameter inferences. Structure
+membership consumes the original ordered tuple-field proofs or the complete
+Cartesian membership, as selected by `StructObjMembership`.
+
+Quantified structure parameters replay their automatically opened layer:
+Cartesian membership, field/coordinate equalities, field memberships and
+inferences, all under their original FactIds. Direct field access uses a
+certified coordinate call. Rational normalization can consume a field as a
+scalar only when its original field WD and a released numeric membership
+supply the observation.
+
+Five checked pairs cover [coordinate-pair membership](../lean/examples/coordinate_pair_membership/),
+[field equalities and arithmetic](../lean/examples/coordinate_pair_fields/),
+[mixed real/natural fields](../lean/examples/indexed_point_fields/),
+[an arbitrary ambient carrier](../lean/examples/arbitrary_carrier_pairs/) and
+[nested tuple membership](../lean/examples/nested_coordinate_membership/).
+The nested example proves the inner membership explicitly before the outer
+membership cites it. All five pass strict Litex and Lean 4.31.0, with generated
+files between 3,745 and 26,317 bytes.
+
+All **1,073 compiler tests** pass, including ten new tests for original result
+replay, field WD/binder/order validation, missing or altered membership and
+auto-open evidence, future release citations and nonnumeric field rejection.
+The final batch covers five new and fourteen related pairs; fifteen identical
+artifacts reuse their pinned checks. The audit of 116 exported theorems finds
+only `propext`, `Classical.choice` and `Quot.sound`. Runtime, AST, result producers,
+Core and model laws are unchanged.
+
+Coverage advances to **39/52 statement forms and 42/94 object constructors**,
+within this slice. Structure header parameters, dependent fields, `<=>`
+conditions, nested field paths and local/qualified declarations remain to be
+compiled. This checkpoint left ordinary structure bindings and explicit release
+for the next increment, described below. No native Adapter interface is added
+by this checkpoint.
+
+### Structure bindings and explicit release (2026-10-25)
+
+Independent-field structures now support `have p &CoordinatePair`,
+`have origin &CoordinatePair = (0, 0)` and `release struct def p`, both at
+file scope and inside supported proof blocks. The six new pairs are:
+
+| Example | Checked route |
+| --- | --- |
+| [Chosen coordinate fields](../lean/examples/chosen_coordinate_fields/) | Witness nonemptiness, introduce two objects, cite real field memberships and add their coordinates |
+| [The origin](../lean/examples/origin_coordinate_fields/) | Typed tuple alias, field/coordinate bridges and equality-class proofs of zero coordinates |
+| [Explicit coordinate release](../lean/examples/released_coordinate_fields/) | Verify the receiver's membership, then publish the original ordered field stores |
+| [Two-pair addition](../lean/examples/coordinate_pair_addition/) | Quantify two structure parameters and preserve their auto-open order |
+| [Local coordinate objects](../lean/examples/local_coordinate_objects/) | Local choice, explicit release and a local typed alias inside a discarded sketch |
+| [Coordinate field theorem](../lean/examples/coordinate_field_theorem/) | Replay structure release inside a named universal theorem |
+
+Ordinary `have` consumes the captured nonempty proof. Typed aliases replay both
+the temporary type preflight and the actual value/member checks. The preflight
+is applied to those checked values, so its host universe is determined without
+exporting its temporary facts. All actual membership, bridge and inference
+stores retain their FactIds. Multiple layers use a borrowed ordered prefix;
+parameter inferences cannot cite layers that have not yet been opened.
+
+The batch adds seven compiler tests for result replay, missing/reordered layers,
+altered subjects, separate preflight evidence and future fact/constructor
+citations. All 1,080 compiler tests pass. Six new plus ten related source/generated
+pairs pass strict Litex and Lean 4.31.0; unchanged generated bytes reuse their
+pinned checks. The audit of 86 exported theorems finds only `propext`,
+`Classical.choice` and `Quot.sound`. New files are 13–31 KB. Runtime, AST,
+result producers, Core and model laws are unchanged. No project axioms or proof
+holes are introduced.
+
+Coverage reaches **40/52 statement forms and 42/94 object constructors** within
+the documented slices. Field access and release currently require directly
+declared structure parameters or typed aliases. Header parameters, dependent
+fields, `<=>` conditions, nested field paths, function-call receivers and
+local/qualified structure definitions remain separate work. The next semantic
+increment is constrained carriers: membership must retain the defining
+conditions and opening must release proofs of those conditions.
+
+### Structures with defining conditions (2026-10-25)
+
+Independent-field structures now retain supported `<=>` conditions. The carrier
+is a bounded `Litex.setBuilder` over the Cartesian product. Membership consumes
+the recorded field/carrier proofs and every condition proof. Automatic opening
+and `release struct def` project the conditions under their original FactIds.
+The original published universal laws retain their parameters, domains and IDs.
+
+Condition WD follows source order: the denominator's nonzero fact can certify
+a quotient in the next condition. Flat conjunction and chain projections are
+available to subsequent conditions; private field assumptions stay inside the
+declaration's formation check. Numeric field expressions reuse the existing
+field constructors and released membership evidence.
+
+| Example | Checked route |
+| --- | --- |
+| [Positive points](../lean/examples/positive_point_conditions/) | Literal membership, quantified condition release, and membership of an arbitrary Cartesian pair with a positive first coordinate |
+| [Explicit positive-point release](../lean/examples/positive_point_release/) | Typed alias, explicit release and subsequent inequality/equality citations |
+| [Positive ratios](../lean/examples/positive_ratio_conditions/) | Earlier nonzero condition supplies later division WD |
+| [Ordered coordinates](../lean/examples/ordered_coordinate_conditions/) | Chain conditions retain their component facts |
+| [First-quadrant points](../lean/examples/first_quadrant_conditions/) | Flat conjunction conditions retain both inequalities |
+| [Chosen positive points](../lean/examples/chosen_positive_points/) | Nonempty witness, global/local choice, local typed alias and release |
+| [Equal coordinates](../lean/examples/equal_coordinate_conditions/) | Equality conditions survive membership and opening |
+
+All **1,087 compiler tests** pass, including seven new tests for deterministic
+replay, missing/reordered conditions, membership obligations, release stores,
+private/future citations, publication shape and invalid members. The seven new
+pairs pass strict Litex, independent-run generation comparison and fresh Lean
+4.31.0 checks with warnings treated as errors. Sixteen related pairs regenerate
+unchanged and reuse their exact-byte Lean checks under the same Core/toolchain.
+The audit of **151 exported theorems** finds only `propext`, `Classical.choice`
+and `Quot.sound`. New generated files are 12–42 KB.
+
+Runtime, AST, result producers, `Litex.lean` and model laws are unchanged.
+This broadens existing entries, so the count stays **40/52 statement forms and
+42/94 object constructors**. Conditions are limited to supported atomic, flat
+conjunction and chain facts. Header parameters, dependent fields, quantified
+conditions, nested field paths, function-call receivers and local/qualified
+structure definitions remain unsupported. Header parameters and dependent
+field carriers are the next structure increment.
+
+### Parameterized structure families (2026-10-25)
+
+Structure headers now accept set and object parameters. Later header parameters
+may depend on earlier ones, as in `A set, a A`. Declaration compilation replays
+their original introductions in a borrowed header scope. A specialized carrier
+consumes the original ordered argument WD and instantiated type proofs;
+membership, field release and published universal laws retain those arguments.
+Field carriers remain independent of other fields but may use header parameters.
+
+| Example | Checked route |
+| --- | --- |
+| [Parameterized pairs](../lean/examples/parameterized_pairs/) | Literal specialization to R and field membership over an arbitrary set |
+| [Parameterized equal pairs](../lean/examples/parameterized_equal_pairs/) | A defining equality survives generic specialization and release |
+| [Threshold points](../lean/examples/threshold_points/) | A real header parameter remains in the defining inequality |
+| [Designated coordinates](../lean/examples/designated_coordinate_pairs/) | A later header parameter belongs to the earlier set; the first field equals that parameter |
+| [Chosen parameterized pairs](../lean/examples/chosen_parameterized_pairs/) | Nonempty witness, ordinary have, global release and local typed alias/release |
+
+All **1,093 compiler tests** pass. Six new tests cover deterministic replay,
+missing/reordered introductions, missing/reordered argument WD and type proofs,
+private/future header facts, published-law binders and premises, and an invalid
+natural-number pair. Each new pair passed strict Litex, independent-run output
+comparison and a fresh Lean 4.31.0 check. The final batch regenerates five new
+and 23 related pairs identically, reusing the checked bytes under the same Core
+and toolchain. The audit of **187 exported theorems** finds only `propext`,
+`Classical.choice` and `Quot.sound`. New output sizes are 9–32 KB.
+
+No Runtime, Env, AST, result-producer, Core or model-law change was needed.
+Entry counts remain **40/52 statements and 42/94 objects**. Nonempty/finite-set
+header kinds, fields depending on other fields, quantified defining conditions,
+nested field paths, function-call receivers and local/qualified declarations
+remain outside this slice. Dependent field carriers are next.
+
+### Nonempty-set parameters and optional indexed unions (2026-10-25)
+
+Structure headers, universal facts and named theorems now accept
+`A nonempty_set`. The binder remains a generic certified object plus its
+original `Litex.IsNonempty` FactId. Specialization and `by thm` consume the
+recorded nonempty proof; sethood cannot substitute for it. Whole-forall reuse
+preserves the binder kind and original citation under parameter renaming.
+
+| Source/generated pair | Checked behavior |
+| --- | --- |
+| [Nonempty pairs](../lean/examples/nonempty_parameterized_pairs/) | Literal and generic specialization, coordinate membership, sethood and nonempty facts, whole-forall reuse |
+| [Nonempty equal pairs](../lean/examples/nonempty_equal_pairs/) | A defining equality survives the nonempty header and field release |
+| [Nonempty Cartesian product](../lean/examples/nonempty_cartesian_theorem/) | The selected product strategy consumes each factor's nonempty fact; a named theorem is reused with R and C |
+
+All **1,099 compiler tests** pass, including six new tests for positive replay,
+wrong/missing kind capture, missing nonempty evidence, sethood or wrong-subject
+substitution, private/future facts, empty arguments and the finite-kind boundary.
+All **31 source/generated pairs** in this batch passed strict Litex,
+independent-run byte comparison and fresh Lean 4.31.0 checks under the updated
+Core. The **199 exported theorem** audit finds only `propext`, `Classical.choice`
+and `Quot.sound`. The three new generated files are 3,954–13,469 bytes; the
+28 previous generated files are unchanged.
+
+The maintainer selected a separate optional `IndexedUnionSemantics M` interface
+for dependent carriers. Core now includes its indexed-union operation,
+membership/sethood laws and a proved instance for the existing ZF model.
+`SetSemantics` and existing generated theorem assumptions are unchanged.
+Local handwritten checks cover empty indices, singleton fibers and dependent
+coordinate pairs; these establish semantic feasibility, not compiler coverage.
+
+Entry counts stay **40/52 statements and 42/94 objects**. No Runtime, Env, AST
+or result-producer changes were needed. Dependent field replay is next; finite
+binder kinds, standalone `have A nonempty_set`, quantified structure conditions,
+nested field paths, function-call field receivers and local/qualified structure
+definitions remain outside this slice.
+
+### Ordered dependent structure fields (2026-10-25)
+
+Field carriers can now refer to earlier fields. The compiler consumes the
+declaration's original WD, parameter stores and inferences in order, emitting
+a certified `Litex.DependentFields` family. `Litex.dependentCart` denotes its
+valid flat tuples. This route uses the optional `IndexedUnionSemantics M`
+interface selected in the preceding checkpoint; existing `SetSemantics`
+implementations do not acquire a new field.
+
+| Source/generated pair | Checked behavior |
+| --- | --- |
+| [Repeated coordinates](../lean/examples/repeated_coordinate_fields/) | `x R; y {x}`, literal membership, field release and equality |
+| [Member pairs](../lean/examples/member_coordinate_pairs/) | `x A; y x`, generic set parameters and nested finite-set arguments |
+| [Three coordinates](../lean/examples/repeated_coordinate_triples/) | Three ordered fields and equality propagation |
+| [Positive repeated coordinates](../lean/examples/positive_repeated_coordinates/) | A dependent carrier restricted by a defining condition |
+| [Equal coordinates from a Cartesian pair](../lean/examples/equal_coordinates_membership/) | Nonliteral Cartesian membership from the recorded complete-domain and coordinate proofs, followed by structure membership |
+| [Reciprocal coordinates](../lean/examples/reciprocal_coordinate_fields/) | `x R+; y {1 / x}`, retained sign/nonzero inferences and division WD |
+| [Chosen repeated coordinates](../lean/examples/chosen_repeated_coordinates/) | Nonempty witness, `have`, explicit release and a local typed alias |
+
+Release reuses certified field carriers. Numbered source coordinates connect
+to finite indices through one proved certificate per declaration. Later fields
+can reference the objects produced by earlier parameter inferences; a singleton
+membership inference retains the constructor subjects of its resulting equality.
+Original FactIds and declaration-local boundaries are preserved. No Runtime,
+Env, AST or result-producer changes were needed.
+
+All **1,107 compiler tests** pass, including eight dependent-field tests for
+successful replay, field/inference visibility, wrong or missing formation,
+reordered membership evidence, altered release subjects, unequal singleton
+coordinates and corrupted nonliteral Cartesian certificates.
+All **38 related source/generated pairs** pass strict Litex verification,
+independent-run byte comparison and fresh Lean 4.31.0 checks with the current
+Core. The **256 exported theorem** audit finds only `propext`,
+`Classical.choice` and `Quot.sound`. The seven new generated files contain
+17,936–41,672 bytes; the previous 31 generated files are byte-for-byte unchanged.
+Core checks also cover an empty first carrier and an empty
+later fiber; neither produces a tuple.
+
+At least two fields are required, with dependencies pointing backward.
+Finite-set header kinds, quantified conditions, nested field paths,
+function-call field receivers and local/qualified structure definitions remain
+outside this slice. These seven examples establish this dependent-field route,
+not unrestricted dependent structures or coverage of all field constructors.
+
+### Remaining statement entrypoints: current audit (2026-10-25)
+
+Re-expanding the current `Stmt` enums gives **52 leaf forms**. The compiler
+dispatches 40 to consumers and directly rejects the following 12. This counts
+entrypoints; supported consumers still have restrictions on objects, evidence
+variants, parameter kinds and local declarations.
+
+| Still rejected | Forms | Planned connection |
+| --- | ---: | --- |
+| `eval expression` | 1 | Replay source WD, cited equalities, computation evidence and the published result equality |
+| `algo ... by cases`, `algo ... by induc` | 2 | Consume the retained `define_fn` result through the corresponding function-definition compiler, then connect checked evaluation paths |
+| `strategy name:` | 1 | Compile its checked universal proof and replay subsequent `ByKnownStrategy` applications |
+| `template<parameters>:` | 1 | Preserve template arguments and guards, then consume the actual specialized definition result |
+| `have by replacement_axiom` | 1 | Prove the image-set bridge and consume the original relation/functionality and membership evidence |
+| `release regularity_axiom`, `release axiom_of_choice`, `release zorn_lemma` | 3 | Supply proved model bridges for each foundation contract and replay its checked premises |
+| `trust`, `trust have`, `axiom` | 3 | Keep rejected in the verified profile; any future assumptions profile must expose the assumptions in its Lean interface |
+
+The next implementation batch should connect **`eval` and `algo`**. Start with
+exact closed arithmetic such as `eval (1 + 2)^2`, then retained equality
+citations such as `have a R = 10; eval a + 1`, then the existing piecewise and
+decreasing-recursive algorithm examples. A later assertion of the computed
+equality must cite the original published FactId. Each stage needs a generated
+Lean pair and rejection checks for changed values, missing WD/citations and
+out-of-scope results. Aggregate, matrix and other evaluation families require
+their own recorded-certificate adapters; an `eval` entrypoint does not cover
+them automatically.
+
+After that, connect `strategy` declaration and application together. Its current
+result retains goal WD, body results, conclusion proofs and a local environment,
+but not the declaration or ordered parameter/premise introductions. Inspect and
+retain that original producer evidence before adding the consumer; do not
+reconstruct it from the final environment. Templates and the four foundation
+statements follow as separate batches with their own semantic contracts.
+
+Existing-entrypoint extensions remain separate: `have A nonempty_set`, finite-set
+parameter kinds, local declarations, and structure receivers such as nested
+field access. They do not add new rows to the 52-form count.
+
+Audit anchors: [statement enums](../src/ast/stmt.rs),
+[statement dispatch](../src/compile_to_lean/compile_stmt_result.rs),
+[definition dispatch](../src/compile_to_lean/compile_definition_stmt_result.rs),
+[object declarations](../src/compile_to_lean/compile_define_obj_stmt_result.rs),
+[releases](../src/compile_to_lean/compile_release_and_expand_result.rs),
+[eval results](../src/execute/execute_eval_stmt/result.rs) and
+[strategy results](../src/execute/execute_def_strategy_stmt/exec_def_strategy_stmt.rs).
+
 ### Per-route checks
 
 Each tracked route needs:
@@ -1417,3 +2243,54 @@ necessary evidence, identify that exact producer gap before widening the task.
 The coverage ledger must distinguish planned, rendered, replayed, Lean-checked
 and native-consumer-checked routes. No unsupported route is to become `sorry`
 or an invented axiom merely to complete the inventory.
+
+
+### Explicit assumptions and foundation releases (2026-10-25)
+
+This increment adds these paths:
+
+| Source | Generated interface | Example |
+| --- | --- | --- |
+| Top-level `trust` | Explicit `h_<FactId>` hypotheses, with original WD and inferred stores | [Positive bound](../lean/examples/assumed_positive_bound/statement.lit) |
+| User `axiom` | An explicit universal hypothesis, usable by direct citation, `release thm` and `by thm` | [Predicate instances](../lean/examples/assumed_predicate_instances/statement.lit) |
+| `release regularity_axiom(A)` | `Litex.regularity`, using the recorded nonempty proof and publication WD | [Singleton regularity](../lean/examples/regularity_singleton/statement.lit) |
+| `have by replacement_axiom` | `Litex.replacement`, consuming the exact recorded uniqueness citation; introduction and elimination keep their FactIds | [Identity image](../lean/examples/identity_replacement/statement.lit) |
+| `release axiom_of_choice` | `Litex.choiceForIdentity`, constructing a graph from the recorded nonempty-family proof | [Family choice](../lean/examples/nonempty_family_choice/statement.lit) |
+| `release zorn_lemma` | `Litex.zornMaximal`, replaying nonemptiness, the order laws and chain upper bounds | [Maximal element](../lean/examples/poset_maximal_element/statement.lit) |
+
+The two assumption examples intentionally run without `-strict`. Their generated
+theorems state the assumptions as parameters; they do not introduce Lean axioms.
+A universal hypothesis quantifies over `Litex.Obj M.Value`. Its citation bridge
+accepts arbitrary certified host objects through their denotations, avoiding a
+fixed host-universe restriction on hypotheses.
+
+Regularity requires the optional `RegularitySemantics M`, with its ZF instance
+proved from Mathlib's regularity theorem. Replacement reuses
+`IndexedUnionSemantics M`: bounded separation, singleton images and indexed union
+construct the image of a possibly partial functional relation. It requires
+uniqueness, not totality. Choice uses `FunctionSemantics M` and
+`IndexedUnionSemantics M`; Zorn uses `SetSemantics M` and Mathlib's theorem on
+bounded chains. Both releases retain each obligation's verification followed by
+its original WD/store result, and the final conclusion's WD. Local proof facts
+remain inside the release block.
+
+`objectAtLevel` represents a certified semantic value in a singleton host type.
+It lets these bridges apply local universal premises whose host universe is
+already fixed. Its denotation is definitionally the original value; it adds no
+model law or axiom. Concrete predicate definitions may contain a universal body,
+as used by the upper-bound and maximal-element predicates in the Zorn example.
+
+The six pairs pass source verification, independent-run regeneration and real
+Lean checking. The four foundation examples use strict source mode. Generated
+files are approximately 1–17 KB; their 20 exported theorems use only `propext`,
+`Classical.choice` and `Quot.sound`. The compiler regression has **1120 passing
+tests**, including missing and reordered obligation evidence. Four existing
+predicate, theorem and structure examples are checked alongside this batch.
+
+Current boundaries: local trust closures, `trust have`, quantified-iff assumptions,
+local replacement declarations and template specialization remain unfinished.
+A standalone family-union construction is not yet a separately accepted entrypoint;
+its checked use here is inside choice's function signature. Template's body-result
+interface is awaiting the maintainer's choice between a complete `ExecStmtResult`
+and a borrowed adapter for the existing success enum. The older statement-count
+audit above predates this increment.

@@ -1,0 +1,3 @@
+# Distribute intersection over union for three arbitrary sets.
+forall laws_d_A, laws_d_B, laws_d_C set:
+    intersect(laws_d_A, union(laws_d_B, laws_d_C)) = union(intersect(laws_d_A, laws_d_B), intersect(laws_d_A, laws_d_C))

@@ -1,0 +1,3 @@
+# A nonempty singleton has a member disjoint from the singleton.
+release regularity_axiom({1})
+exist x {1} st {intersect(x, {1}) = {}}

@@ -1,0 +1,53 @@
+# Exact imported contracts over arbitrary supplied fields and vector spaces.
+
+claim:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,n N+,coefficients finite_seq(K,n):
+        not $Algebra::basis::has_only_zero_coefficients(K,field,n,coefficients)
+        =>:
+            exist k N+ st {$Algebra::basis::is_largest_nonzero_coefficient_index(K,field,n,coefficients,k)}
+    release thm Algebra::dependence::largest_nonzero_index_exists(K,field,n,coefficients)
+
+claim:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,vectors finite_seq(V,0):
+        $Algebra::basis::is_linearly_independent(K,field,V,space,0,vectors)
+    release thm Algebra::dependence::empty_list_is_independent(K,field,V,space,vectors)
+
+claim:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,n N,coefficients finite_seq(K,n),vectors finite_seq(V,n),sums fn(j closed_range(0,n)) V,m N,prefix_coefficients finite_seq(K,m),prefix_vectors finite_seq(V,m),prefix_sums fn(j closed_range(0,m)) V:
+        m<=n
+        $Algebra::finite_span::is_partial_sum(K,field,V,space,n,coefficients,vectors,sums)
+        $Algebra::basis::is_prefix_of_length(K,n,m,coefficients,prefix_coefficients)
+        $Algebra::basis::is_prefix_of_length(V,n,m,vectors,prefix_vectors)
+        forall j closed_range(0,m):
+            prefix_sums(j)=sums(j)
+        =>:
+            $Algebra::finite_span::is_partial_sum(K,field,V,space,m,prefix_coefficients,prefix_vectors,prefix_sums)
+    release thm Algebra::dependence::partial_sum_prefix(K,field,V,space,n,coefficients,vectors,sums,m,prefix_coefficients,prefix_vectors,prefix_sums)
+
+claim:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,n N,coefficients finite_seq(K,n),vectors finite_seq(V,n),sums fn(j closed_range(0,n)) V,k N:
+        k<=n
+        $Algebra::finite_span::is_partial_sum(K,field,V,space,n,coefficients,vectors,sums)
+        forall j N+:
+            j<=n
+            j>k
+            =>:
+                coefficients(j)=field.zero
+        =>:
+            sums(n)=sums(k)
+    release thm Algebra::dependence::partial_sum_zero_tail(K,field,V,space,n,coefficients,vectors,sums,k)
+
+claim:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,a K,previous,v V:
+        a!=field.zero
+        space.add(previous,space.smul(a,v))=space.zero
+        =>:
+            v=space.smul(field.neg(field.inv(a)),previous)
+    release thm Algebra::dependence::vector_zero_sum_solve(K,field,V,space,a,previous,v)
+
+claim:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,n N,vectors finite_seq(V,n):
+        $Algebra::basis::is_linearly_dependent(K,field,V,space,n,vectors)
+        =>:
+            exist k N+,m N,prefix finite_seq(V,m) st {k<=n,m=k-1,$Algebra::basis::is_prefix_of_length(V,n,m,vectors,prefix),vectors(k) $in \Algebra::finite_span::span<K,field,V,space,m,prefix>}
+    release thm Algebra::dependence::dependence_lemma(K,field,V,space,n,vectors)

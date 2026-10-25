@@ -1,0 +1,10 @@
+# Use a guarded abstract function's original input interface to form and bound its fibers.
+forall fiber_f fn(x R: x != 0) R, fiber_a, fiber_b R:
+    fiber_a != 0
+    fiber_f(fiber_a) = fiber_b
+    =>:
+        fiber_a $in preimage(fiber_f, fiber_b)
+
+forall fiber_g fn(x R: x != 0) R, fiber_y R:
+    preimage(fiber_g, fiber_y) $subset R
+

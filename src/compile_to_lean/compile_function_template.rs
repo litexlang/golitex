@@ -15,7 +15,7 @@ impl LitexToLeanCompiler {
             let output = self.compile_object_reference(&signature.ret_set, position)?;
             let guard = self.compile_function_packed_guard_template(signature, position)?;
             return Ok(format!(
-                "(Litex.FunctionSignature.withGuard (M := M) {domain} (Litex.denote {output}) {domain_set} (Litex.isSet {output}) {guard})"
+                "(let _litex_output := {output}; Litex.FunctionSignature.withGuard (M := M) {domain} (Litex.denote _litex_output) {domain_set} (Litex.isSet _litex_output) {guard})"
             ));
         }
         let domains = self.compile_function_domains(signature, position)?;
@@ -395,6 +395,19 @@ impl LitexToLeanCompiler {
         signature: &FnSet,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
+        self.compile_function_guard_template_bound(
+            signature,
+            position,
+            &function_raw_bindings(signature),
+        )
+    }
+
+    pub(super) fn compile_function_guard_template_bound(
+        &self,
+        signature: &FnSet,
+        position: &SourcePosition<'_>,
+        bindings: &HashMap<IdentifierId, String>,
+    ) -> Result<String, LeanCompileError> {
         if Self::function_uses_numeric_interface(signature) {
             self.compile_function_domains(signature, position)?;
         }
@@ -416,10 +429,10 @@ impl LitexToLeanCompiler {
             })
             .collect::<Vec<_>>();
         for fact in &signature.dom_facts {
-            guards.push(self.compile_function_raw_clause(
+            guards.push(self.compile_function_raw_predicate(
                 &function_guard_fact(fact)?,
-                signature,
                 position,
+                bindings,
             )?);
         }
         let guard = guards
@@ -550,9 +563,21 @@ impl LitexToLeanCompiler {
                 // the bound member. Its witness changes no object denotation.
                 Ok(format!("(Litex.SetSemantics.sepValue (M := M) {bound} (fun ({variable} : M.Value) => ∃ (_ : M.mem {variable} {bound}), {predicate}))"))
             }
+            Obj::SetOperator(SetOperator::FamilyUnion(value)) => Ok(format!(
+                "(Litex.IndexedUnionSemantics.indexedUnionValue (M := M) {} id)",
+                expression(&value.left)?
+            )),
             Obj::SetOperator(SetOperator::PowerSet(value)) => Ok(format!(
                 "(Litex.SetSemantics.powerValue (M := M) {})",
                 expression(&value.set)?
+            )),
+            Obj::SetOperator(SetOperator::SetMinus(value)) => Ok(format!(
+                "(Litex.SetSemantics.sepValue (M := M) {} (fun _difference_element : M.Value => ¬ M.mem _difference_element {}))",
+                expression(&value.left)?, expression(&value.right)?
+            )),
+            Obj::SetOperator(SetOperator::Intersect(value)) => Ok(format!(
+                "(Litex.SetSemantics.sepValue (M := M) {} (fun _intersection_element : M.Value => M.mem _intersection_element {}))",
+                expression(&value.left)?, expression(&value.right)?
             )),
             Obj::SetOperator(SetOperator::Union(value)) => Ok(format!(
                 "(Litex.SetSemantics.unionValue (M := M) {} {})",
@@ -661,9 +686,9 @@ impl LitexToLeanCompiler {
                 "(Litex.FunctionSemantics.rangeValue {})",
                 expression(&r.function)?
             )),
-            Obj::FunctionSpace(FunctionSpace::AnonymousFn(_)) => {
-                // Reuse the literal's original certified constructor. A raw
-                // binder substitution must not silently change its capture.
+            Obj::FunctionSpace(FunctionSpace::AnonymousFn(function)) => {
+                // A captured literal needs lexical raw bindings for its graph
+                // value; unchanged literals reuse their certified constructor.
                 let mut free = std::collections::HashSet::new();
                 crate::instantiate::collect_free_plain_ids(
                     object,
@@ -671,15 +696,17 @@ impl LitexToLeanCompiler {
                     &mut free,
                 );
                 if free.iter().any(|id| bindings.contains_key(id)) {
-                    return Err(LeanCompileError::unsupported(
-                        "Function/BoundAnonymousCapture",
-                    ));
+                    return self.compile_function_literal_value(function, position, bindings);
                 }
                 Ok(format!(
                     "(Litex.denote {})",
                     self.compile_object_reference(object, position)?
                 ))
             }
+            Obj::FunctionSpace(FunctionSpace::Composition(c)) => Ok(format!(
+                "(Litex.FunctionSemantics.compositionValue (M := M) {} {})",
+                expression(&c.outer)?, expression(&c.inner)?,
+            )),
             Obj::FnObj(application) => {
                 if application.body.is_empty()
                     || application
@@ -753,7 +780,7 @@ impl LitexToLeanCompiler {
         position.with_visible_alias(object, &mut |_, value, result, producer| {
             self.compile_wd(success_object_wd(result, value)?, producer)?;
             self.validate_formula_head_producer(value, producer)
-        })?.ok_or_else(|| LeanCompileError::new("Function/BodyCallProducer", "The raw call must cite an original function parameter, formula constructor or its RHS/let alias."))
+        })?.ok_or_else(|| LeanCompileError::new("Function/BodyCallProducer", &format!("The raw call head `{}` must cite an original function parameter, formula constructor or its RHS/let alias.", object.readable_string())))
     }
 
     pub(in crate::compile_to_lean) fn compile_function_raw_clause(
@@ -806,6 +833,48 @@ impl LitexToLeanCompiler {
                     .rev()
                     .reduce(|tail, head| format!("(({head}) ∨ ({tail}))"))
                     .ok_or_else(|| LeanCompileError::unsupported("Function/EmptyCompoundClause"));
+            }
+            Fact::ForallFact(fact) => {
+                let mut bound = bindings.clone();
+                let mut prefix = Vec::new();
+                for group in &fact.typed_parameters.groups {
+                    for parameter in &group.params {
+                        let value = format!("_raw_i{}", parameter.id.value());
+                        let carrier = match &group.param_type {
+                            ParamType::Obj(s) => format!(
+                                "M.mem {value} {}",
+                                self.compile_function_raw_expression_bound(s, position, &bound)?
+                            ),
+                            ParamType::Set(_) => format!("M.isSet {value}"),
+                            _ => {
+                                return Err(LeanCompileError::unsupported(
+                                    "Forall/RawParameterKind",
+                                ))
+                            }
+                        };
+                        prefix.push(format!("∀ ({value} : M.Value), {carrier} → "));
+                        bound.insert(parameter.id, value);
+                    }
+                }
+                for premise in &fact.dom_facts {
+                    prefix.push(format!(
+                        "({}) → ",
+                        self.compile_function_raw_predicate(premise, position, &bound)?
+                    ));
+                }
+                let conclusions = fact
+                    .then_facts
+                    .iter()
+                    .map(|f| {
+                        self.compile_function_raw_predicate(&f.clone().into(), position, &bound)
+                    })
+                    .collect::<Result<Vec<_>, _>>()?;
+                let body = conclusions
+                    .into_iter()
+                    .rev()
+                    .reduce(|tail, head| format!("({head}) ∧ ({tail})"))
+                    .unwrap_or_else(|| "True".into());
+                return Ok(format!("({}{body})", prefix.join("")));
             }
             Fact::ExistFact(fact) => {
                 return self.compile_exist_raw_predicate(fact, position, bindings)
@@ -863,6 +932,14 @@ impl LitexToLeanCompiler {
         arguments: &[String],
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
+        if matches!(fact, AtomicFact::NotNormalAtomicFact(_)) {
+            let positive = crate::ast::fact::negate_atomic_fact(fact, fact.fact_id())
+                .ok_or_else(|| LeanCompileError::unsupported("Function/RawNegation"))?;
+            return Ok(format!(
+                "(¬ ({}))",
+                self.compile_atomic_raw_proposition(&positive, arguments, position)?
+            ));
+        }
         if arguments.len() != atomic_fact_args_ref(fact).len() {
             return Err(LeanCompileError::new(
                 "AtomicRaw/Arity",
@@ -913,6 +990,13 @@ impl LitexToLeanCompiler {
                 )
             }
             AtomicFact::NormalAtomicFact(normal) => {
+                if let Some(proposition) = self.compile_abstract_predicate_proposition(
+                    &normal.predicate,
+                    arguments,
+                    position,
+                )? {
+                    return Ok(proposition);
+                }
                 let (definition, producer, _) = position.visible_prop(&normal.predicate)?;
                 let parameters = definition
                     .statement

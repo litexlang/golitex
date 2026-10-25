@@ -9,7 +9,7 @@ variable {M : Litex.Semantics.{u}}
 set_option linter.unusedSectionVars false
 variable [_functionSemantics : Litex.FunctionSemantics M]
 
-noncomputable def _object_i1 := (Litex.formulaFnOn (Litex.FunctionSignature.withGuard (M := M) (Litex.denote (Litex.QStar (M := M))) (Litex.denote (Litex.QStar (M := M))) (Litex.isSet (Litex.QStar (M := M))) (Litex.isSet (Litex.QStar (M := M))) (fun (_litex_input : M.Value) => (fun (_raw_i2 : M.Value) => True) _litex_input)) (fun (_litex_input : M.Value) => (fun (_raw_i2 : M.Value) => (M.divValue (M.number (1 : ℂ)) _raw_i2)) _litex_input) (by
+noncomputable def _object_i1 := (Litex.formulaFnOn (let _litex_output := (Litex.QStar (M := M)); Litex.FunctionSignature.withGuard (M := M) (Litex.denote (Litex.QStar (M := M))) (Litex.denote _litex_output) (Litex.isSet (Litex.QStar (M := M))) (Litex.isSet _litex_output) (fun (_litex_input : M.Value) => (fun (_raw_i2 : M.Value) => True) _litex_input)) (fun (_litex_input : M.Value) => (fun (_raw_i2 : M.Value) => (M.divValue (M.number (1 : ℂ)) _raw_i2)) _litex_input) (by
   have _litex_checked_return : ∀ (_raw_i2 : M.Value), M.mem _raw_i2 (Litex.denote (Litex.QStar (M := M))) → ((fun (_raw_i2 : M.Value) => True) _raw_i2) → M.mem ((fun (_raw_i2 : M.Value) => (M.divValue (M.number (1 : ℂ)) _raw_i2)) _raw_i2) (Litex.denote (Litex.QStar (M := M))) := (by
     intro _raw_i2 h_14 _
     let _value_i2 := Litex.semanticObject (M := M) _raw_i2 (M.member_isSet h_14)

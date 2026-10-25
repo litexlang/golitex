@@ -8,6 +8,7 @@ import Mathlib.Tactic.FinCases
 import Mathlib.Tactic.NormNum.GCD
 import Mathlib.Tactic.NormNum.NatFactorial
 import Mathlib.SetTheory.ZFC.Ordinal
+import Mathlib.Order.Zorn
 
 /-! Litex object semantics, certified constructors, and native numeric bridges.
 
@@ -2238,6 +2239,18 @@ instance semanticValueRepresentation (M : Semantics.{u}) : Representation M M.Va
 def semanticObject {M : Semantics.{u}} (x : M.Value) (hx : M.isSet x) :
     Obj (M := M) M.Value := ⟨x, hx⟩
 
+/-- A singleton host carrier may represent a certified semantic value at any level. -/
+structure ValueAtLevel {M : Semantics.{u}} (value : M.Value) (certified : M.isSet value) : Type v where
+
+instance valueAtLevelRepresentation {M : Semantics.{u}} (value : M.Value) (certified : M.isSet value) :
+    Representation M (ValueAtLevel.{u,v} value certified) where
+  wd _ := True
+  denote _ := value
+  wd_isSet _ := certified
+
+def objectAtLevel {M : Semantics.{u}} (value : M.Value) (certified : M.isSet value) :
+    Obj (M := M) (ValueAtLevel.{u,v} value certified) := ⟨⟨⟩, True.intro⟩
+
 theorem semanticObject_denote {M : Semantics.{u}} (x : M.Value) (hx : M.isSet x) :
     denote (semanticObject x hx) = x := rfl
 
@@ -2392,6 +2405,108 @@ noncomputable instance numericSetSemantics : SetSemantics NumericModel.model whe
       fun h => ZFSet.mem_powerset.mpr h.2⟩
   power_isSet _ _ := True.intro
   ext _ _ _ _ := ZFSet.ext
+
+/-- Optional indexed unions for dependent carriers. This does not strengthen
+`SetSemantics`: a model supplies this interface when such constructions are used.
+The index domain is a set, never a collection of all semantic values. -/
+class IndexedUnionSemantics (M : Semantics.{u}) where
+  indexedUnionValue : M.Value → (M.Value → M.Value) → M.Value
+  indexedUnion_members : ∀ A B x, M.mem x (indexedUnionValue A B) ↔
+    ∃ a, M.mem a A ∧ M.mem x (B a)
+  indexedUnion_isSet : ∀ A B, M.isSet A →
+    (∀ a, M.mem a A → M.isSet (B a)) → M.isSet (indexedUnionValue A B)
+
+noncomputable instance numericIndexedUnionSemantics :
+    IndexedUnionSemantics NumericModel.model where
+  indexedUnionValue := fun (A : ZFSet.{0}) (B : ZFSet.{0} → ZFSet.{0}) =>
+    ZFSet.iUnion (fun a : A => B a.val)
+  indexedUnion_members := fun (A : ZFSet.{0}) (B : ZFSet.{0} → ZFSet.{0}) (x : ZFSet.{0}) => by
+    change x ∈ ZFSet.iUnion (fun a : A => B a.val) ↔ ∃ a, a ∈ A ∧ x ∈ B a
+    constructor
+    · intro h
+      obtain ⟨a, ha⟩ := ZFSet.mem_iUnion.mp h
+      exact ⟨a.val, a.property, ha⟩
+    · rintro ⟨a, ha, hx⟩
+      exact ZFSet.mem_iUnion.mpr ⟨⟨a, ha⟩, hx⟩
+  indexedUnion_isSet _ _ _ _ := True.intro
+
+private noncomputable def replacementChoice {M : Semantics.{u}} [S : SetSemantics M]
+    (P : M.Value → M.Value → Prop) (x : M.Value) : M.Value := by
+  classical
+  exact if h : ∃ y, M.isSet y ∧ P x y then Classical.choose h else S.emptyValue
+
+private theorem replacementChoice_spec {M : Semantics.{u}} [SetSemantics M]
+    (P : M.Value → M.Value → Prop) (x : M.Value) (h : ∃ y, M.isSet y ∧ P x y) :
+    M.isSet (replacementChoice P x) ∧ P x (replacementChoice P x) := by
+  rw [replacementChoice, dif_pos h]
+  exact Classical.choose_spec h
+
+structure ReplacementObj {M : Semantics.{u}} (α : Type v) [Representation M α] where
+  domain : Obj (M := M) α
+  relation : M.Value → M.Value → Prop
+
+private noncomputable def replacementValue {M : Semantics.{u}}
+    [S : SetSemantics M] [I : IndexedUnionSemantics M]
+    (D : M.Value) (P : M.Value → M.Value → Prop) : M.Value :=
+  I.indexedUnionValue (S.sepValue D (fun x => ∃ y, M.isSet y ∧ P x y))
+    (fun x => S.insertValue (replacementChoice P x) S.emptyValue)
+
+private theorem replacementValue_isSet {M : Semantics.{u}}
+    [S : SetSemantics M] [I : IndexedUnionSemantics M]
+    (D : M.Value) (P : M.Value → M.Value → Prop) (hD : M.isSet D) :
+    M.isSet (replacementValue D P) := by
+  apply I.indexedUnion_isSet _ _ (S.sep_isSet _ _ hD)
+  intro x hx
+  have exists_y := ((S.sep_members _ _ _).mp hx).2
+  exact S.insert_isSet _ _ (replacementChoice_spec P x exists_y).1 S.empty_isSet
+
+noncomputable instance replacementRepresentation {M : Semantics.{u}}
+    [SetSemantics M] [IndexedUnionSemantics M]
+    {α : Type v} [Representation M α] : Representation M (ReplacementObj (M := M) α) where
+  wd p := ∀ x, M.mem x (denote p.domain) → ∀ y z,
+    M.isSet y → p.relation x y → M.isSet z → p.relation x z → y = z
+  denote p := replacementValue (denote p.domain) p.relation
+  wd_isSet {p} _ := replacementValue_isSet _ _ (isSet p.domain)
+
+noncomputable def replacement {M : Semantics.{u}} [SetSemantics M] [IndexedUnionSemantics M]
+    {α : Type v} [Representation M α] (D : Obj (M := M) α)
+    (P : M.Value → M.Value → Prop)
+    (h : ∀ x, M.mem x (denote D) → ∀ y z, M.isSet y → P x y → M.isSet z → P x z → y = z) :
+    Obj (M := M) (ReplacementObj (M := M) α) := ⟨⟨D, P⟩, h⟩
+
+theorem replacement_members {M : Semantics.{u}} [S : SetSemantics M] [I : IndexedUnionSemantics M]
+    {α : Type v} [Representation M α] (p : Obj (M := M) (ReplacementObj (M := M) α))
+    (y : M.Value) : M.mem y (denote p) ↔
+      ∃ x, M.mem x (denote p.val.domain) ∧ M.isSet y ∧ p.val.relation x y := by
+  change M.mem y (replacementValue _ _) ↔ _
+  rw [replacementValue, I.indexedUnion_members]
+  constructor
+  · rintro ⟨x, hx, hy⟩
+    obtain ⟨hxD, hex⟩ := (S.sep_members _ _ _).mp hx
+    rcases (S.insert_members _ _ _).mp hy with hy | hy
+    · subst y
+      exact ⟨x, hxD, replacementChoice_spec _ _ hex⟩
+    · exact False.elim (S.empty_members _ hy)
+  · rintro ⟨x, hxD, hy, hP⟩
+    have hex : ∃ z, M.isSet z ∧ p.val.relation x z := ⟨y, hy, hP⟩
+    have hc := replacementChoice_spec p.val.relation x hex
+    refine ⟨x, (S.sep_members _ _ _).mpr ⟨hxD, hex⟩, ?_⟩
+    apply (S.insert_members _ _ _).mpr
+    exact Or.inl (p.wd x hxD y _ hy hP hc.1 hc.2)
+
+theorem replacementIntro {M : Semantics.{u}} [SetSemantics M] [IndexedUnionSemantics M]
+    {α : Type v} {β : Type w} {γ : Type x}
+    [Representation M α] [Representation M β] [Representation M γ]
+    (p : Obj (M := M) (ReplacementObj (M := M) α)) (x : Obj (M := M) β) (y : Obj (M := M) γ)
+    (hx : In x p.val.domain) (hP : p.val.relation (denote x) (denote y)) : In y p :=
+  (replacement_members p (denote y)).mpr ⟨denote x, hx, isSet y, hP⟩
+
+theorem replacementElim {M : Semantics.{u}} [SetSemantics M] [IndexedUnionSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β]
+    (p : Obj (M := M) (ReplacementObj (M := M) α)) (y : Obj (M := M) β) (hy : In y p) :
+    ∃ x : Obj (M := M) M.Value, ∃ (_ : In x p.val.domain), p.val.relation (denote x) (denote y) := by
+  obtain ⟨x, hx, _, hP⟩ := (replacement_members p (denote y)).mp hy
+  exact ⟨semanticObject x (M.member_isSet hx), hx, hP⟩
 
 /-- Positivity is a faithful real denotation witness, including its carrier. -/
 def positiveRealPredicate {M : Semantics.{u}} (x : M.Value) : Prop :=
@@ -2878,6 +2993,11 @@ def insert {M : Semantics.{u}} [SetSemantics M]
     {α : Type v} {β : Type w} [Representation M α] [Representation M β]
     (a : Obj (M := M) α) (A : Obj (M := M) β) (h : ¬ In a A) :
     Obj (M := M) (InsertObj (M := M) α β) := ⟨⟨a, A⟩, h⟩
+
+theorem insertNonempty {M : Semantics.{u}} [S : SetSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β]
+    (s : Obj (M := M) (InsertObj (M := M) α β)) : IsNonempty s :=
+  ⟨denote s.val.element, (S.insert_members _ _ _).mpr (Or.inl rfl)⟩
 
 theorem notInEmpty {M : Semantics.{u}} [S : SetSemantics M]
     {α : Type v} [Representation M α] (a : Obj (M := M) α) :
@@ -3598,6 +3718,201 @@ theorem tupleInCart {M : Semantics.{u}} [FunctionSemantics M] {n : ℕ}
     (h : ∀ i, M.mem (t.val.values i) (c.val.factors i)) : In t c :=
   FiniteFunction.tuple_inCart _ _ h
 
+
+/-- An ordered finite family of field carriers. Each tail can depend only on
+members selected for the preceding fields. -/
+inductive DependentFields (M : Semantics.{u}) : ℕ → Type u where
+  | nil : DependentFields M 0
+  | cons {n : ℕ} (carrier : M.Value) (rest : M.Value → DependentFields M n) :
+      DependentFields M (n + 1)
+
+namespace DependentFields
+
+variable {M : Semantics.{u}}
+
+def WellFormed : {n : ℕ} → DependentFields M n → Prop
+  | _, .nil => True
+  | _, .cons A rest => M.isSet A ∧ ∀ x, M.mem x A → WellFormed (rest x)
+
+def Accepts : {n : ℕ} → DependentFields M n → (Fin n → M.Value) → Prop
+  | _, .nil, _ => True
+  | _, .cons A rest, v => M.mem (v 0) A ∧ Accepts (rest (v 0)) (Fin.tail v)
+
+def factors : {n : ℕ} → DependentFields M n → (Fin n → M.Value) → Fin n → M.Value
+  | _, .nil, _ => fun i => Fin.elim0 i
+  | _, .cons A rest, v => Fin.cons A (factors (rest (v 0)) (Fin.tail v))
+
+theorem accepts_iff {n : ℕ} (t : DependentFields M n) (v : Fin n → M.Value) :
+    t.Accepts v ↔ ∀ i, M.mem (v i) (t.factors v i) := by
+  induction t with
+  | nil => exact ⟨fun _ i => Fin.elim0 i, fun _ => True.intro⟩
+  | cons A rest ih =>
+    constructor
+    · rintro ⟨h, hs⟩ i
+      exact Fin.cases h (fun j => (ih (v 0) (Fin.tail v)).mp hs j) i
+    · intro h
+      exact ⟨h 0, (ih (v 0) (Fin.tail v)).mpr (fun j => h j.succ)⟩
+
+theorem factors_isSet {n : ℕ} (t : DependentFields M n) (ht : t.WellFormed)
+    (v : Fin n → M.Value) (hv : t.Accepts v) : ∀ i, M.isSet (t.factors v i) := by
+  induction t with
+  | nil => exact fun i => Fin.elim0 i
+  | cons A rest ih =>
+    exact Fin.cases ht.1 (ih (v 0) (ht.2 _ hv.1) (Fin.tail v) hv.2)
+
+variable [F : FunctionSemantics M] [I : IndexedUnionSemantics M]
+
+/-- Enumerate a finite telescope using set-indexed unions. The callback keeps
+the existing flat tuple graph representation, including for more than two fields. -/
+noncomputable def collect : {n : ℕ} → DependentFields M n →
+    ((Fin n → M.Value) → M.Value) → M.Value
+  | _, .nil, emit => F.insertValue (emit (fun i => Fin.elim0 i)) F.emptyValue
+  | _, .cons A rest, emit => I.indexedUnionValue A
+      (fun x => collect (rest x) (fun v => emit (Fin.cons x v)))
+
+theorem collect_members {n : ℕ} (t : DependentFields M n) :
+    ∀ (emit : (Fin n → M.Value) → M.Value) (p : M.Value),
+      M.mem p (t.collect emit) ↔ ∃ v, t.Accepts v ∧ p = emit v := by
+  induction t with
+  | nil =>
+    intro emit p
+    constructor
+    · intro hp
+      rcases (F.insert_members _ _ _).mp hp with hp | hp
+      · exact ⟨fun i => Fin.elim0 i, True.intro, hp⟩
+      · exact (F.empty_members p hp).elim
+    · rintro ⟨v, _, hp⟩
+      have hv : v = (fun i : Fin 0 => Fin.elim0 i) := by funext i; exact Fin.elim0 i
+      subst v
+      exact (F.insert_members _ _ _).mpr (Or.inl hp)
+  | cons A rest ih =>
+    intro emit p
+    change M.mem p (I.indexedUnionValue A _) ↔ _
+    rw [I.indexedUnion_members]
+    constructor
+    · rintro ⟨x, hx, hp⟩
+      obtain ⟨v, hv, hp⟩ := (ih x _ p).mp hp
+      refine ⟨Fin.cons x v, ?_, hp⟩
+      simpa only [Accepts, Fin.cons_zero, Fin.tail_cons] using And.intro hx hv
+    · rintro ⟨v, hv, hp⟩
+      refine ⟨v 0, hv.1, (ih (v 0) _ p).mpr ⟨Fin.tail v, hv.2, ?_⟩⟩
+      simpa only [Fin.cons_self_tail] using hp
+
+theorem collect_isSet {n : ℕ} (t : DependentFields M n) (ht : t.WellFormed)
+    (emit : (Fin n → M.Value) → M.Value)
+    (he : ∀ v, t.Accepts v → M.isSet (emit v)) : M.isSet (t.collect emit) := by
+  induction t with
+  | nil => exact F.insert_isSet _ _ (he _ True.intro) F.empty_isSet
+  | cons A rest ih =>
+    apply I.indexedUnion_isSet _ _ ht.1
+    intro x hx
+    apply ih x (ht.2 x hx)
+    intro v hv
+    apply he (Fin.cons x v)
+    simpa only [Accepts, Fin.cons_zero, Fin.tail_cons] using And.intro hx hv
+
+noncomputable def value {n : ℕ} (t : DependentFields M n) : M.Value :=
+  t.collect FiniteFunction.tupleValue
+
+theorem value_isSet {n : ℕ} (t : DependentFields M n) (ht : t.WellFormed) :
+    M.isSet t.value :=
+  t.collect_isSet ht _ (fun v _ => FiniteFunction.tuple_isSet v)
+
+def coordinates {n : ℕ} (p : M.Value) : Fin n → M.Value :=
+  fun i => F.callValue p (FiniteFunction.index i)
+
+/-- Source coordinate literals and canonical finite indices have the same values.
+The compiler supplies this finite certificate once for each dependent structure. -/
+def numberedCoordinates {n : ℕ} (p : M.Value) (indices : Fin n → ℂ) : Fin n → M.Value :=
+  fun i => F.callValue p (M.number (indices i))
+
+omit I in
+theorem numberedCoordinates_eq {n : ℕ} (p : M.Value) (indices : Fin n → ℂ)
+    (hi : ∀ i, indices i = ((i.val + 1 : ℕ) : ℂ)) :
+    numberedCoordinates p indices = coordinates p := by
+  funext i
+  change F.callValue p (M.number (indices i)) = _
+  rw [hi i]
+  rfl
+
+omit I in
+theorem coordinates_tuple {n : ℕ} (v : Fin n → M.Value) :
+    coordinates (FiniteFunction.tupleValue v) = v := by
+  funext i
+  exact FiniteFunction.call_tuple v i
+
+theorem members_iff_cart {n : ℕ} (t : DependentFields M n) (p : M.Value) :
+    M.mem p t.value ↔
+      M.mem p (FiniteFunction.cartValue (t.factors (coordinates p))) := by
+  constructor
+  · intro hp
+    obtain ⟨v, hv, rfl⟩ := (t.collect_members _ _).mp hp
+    rw [coordinates_tuple]
+    exact FiniteFunction.tuple_inCart v _ ((t.accepts_iff v).mp hv)
+  · intro hp
+    exact (t.collect_members _ _).mpr ⟨coordinates p,
+      (t.accepts_iff _).mpr (FiniteFunction.coordinate_mem hp),
+      FiniteFunction.reconstruct hp⟩
+
+end DependentFields
+
+structure DependentCartObj (M : Semantics.{u}) (n : ℕ) where
+  fields : DependentFields M n
+
+noncomputable instance dependentCartRepresentation {M : Semantics.{u}}
+    [FunctionSemantics M] [IndexedUnionSemantics M] {n : ℕ} :
+    Representation M (DependentCartObj M n) where
+  wd c := c.fields.WellFormed
+  denote c := c.fields.value
+  wd_isSet {c} h := c.fields.value_isSet h
+
+def dependentCart {M : Semantics.{u}} [FunctionSemantics M] [IndexedUnionSemantics M]
+    {n : ℕ} (t : DependentFields M n) (ht : t.WellFormed) :
+    Obj (M := M) (DependentCartObj M n) := ⟨⟨t⟩, ht⟩
+
+theorem tupleInDependentCart {M : Semantics.{u}} [FunctionSemantics M]
+    [IndexedUnionSemantics M] {n : ℕ} (t : Obj (M := M) (TupleObj M n))
+    (c : Obj (M := M) (DependentCartObj M n)) (h : c.val.fields.Accepts t.val.values) :
+    In t c :=
+  (c.val.fields.collect_members _ _).mpr ⟨t.val.values, h, rfl⟩
+
+theorem inDependentCart_iff {M : Semantics.{u}} [FunctionSemantics M]
+    [IndexedUnionSemantics M] {n : ℕ} {α : Type v} [Representation M α]
+    (p : Obj (M := M) α) (c : Obj (M := M) (DependentCartObj M n))
+    (indices : Fin n → ℂ) (hi : ∀ i, indices i = ((i.val + 1 : ℕ) : ℂ)) :
+    In p c ↔ M.mem (denote p) (FiniteFunction.cartValue
+      (c.val.fields.factors (DependentFields.numberedCoordinates (denote p) indices))) := by
+  rw [DependentFields.numberedCoordinates_eq _ _ hi]
+  exact c.val.fields.members_iff_cart (denote p)
+
+def dependentCartAt {M : Semantics.{u}} [FunctionSemantics M]
+    [IndexedUnionSemantics M] {n : ℕ} {α : Type v} [Representation M α]
+    (p : Obj (M := M) α) (c : Obj (M := M) (DependentCartObj M n))
+    (indices : Fin n → ℂ) (hi : ∀ i, indices i = ((i.val + 1 : ℕ) : ℂ)) (h : In p c) :
+    Obj (M := M) (CartObj M n) :=
+  cart (c.val.fields.factors (DependentFields.numberedCoordinates (denote p) indices))
+    (c.val.fields.factors_isSet c.wd _ ((c.val.fields.accepts_iff _).mpr
+      (by
+        rw [DependentFields.numberedCoordinates_eq _ _ hi]
+        exact FiniteFunction.coordinate_mem ((c.val.fields.members_iff_cart (denote p)).mp h))))
+
+theorem inDependentCartAt {M : Semantics.{u}} [FunctionSemantics M]
+    [IndexedUnionSemantics M] {n : ℕ} {α : Type v} [Representation M α]
+    (p : Obj (M := M) α) (c : Obj (M := M) (DependentCartObj M n))
+    (indices : Fin n → ℂ) (hi : ∀ i, indices i = ((i.val + 1 : ℕ) : ℂ)) (h : In p c) :
+    In p (dependentCartAt p c indices hi h) :=
+  (inDependentCart_iff p c indices hi).mp h
+
+/-- Reuse a carrier whose formation was checked by the structure declaration.
+This is a projection of that certified family, not a fresh source constructor. -/
+def dependentFieldCarrier {M : Semantics.{u}} [FunctionSemantics M]
+    [IndexedUnionSemantics M] {n : ℕ} {α : Type v} [Representation M α]
+    (p : Obj (M := M) α) (c : Obj (M := M) (DependentCartObj M n))
+    (indices : Fin n → ℂ) (hi : ∀ i, indices i = ((i.val + 1 : ℕ) : ℂ)) (h : In p c)
+    (i : Fin n) : Obj (M := M) M.Value :=
+  let bound := dependentCartAt p c indices hi h
+  semanticObject (bound.val.factors i) (bound.wd i)
+
 theorem tuple_coordinate_mem {M : Semantics.{u}} [FunctionSemantics M] {n : ℕ}
     (t : Obj (M := M) (TupleObj M n)) (c : Obj (M := M) (CartObj M n))
     (h : In t c) (i : Fin n) : M.mem (t.val.values i) (c.val.factors i) := by
@@ -4221,6 +4536,112 @@ def formulaFnOn {M : Semantics.{u}} [FunctionSemantics M]
     (signature : FunctionSignature M) (body : M.Value → M.Value)
     (hReturn : ∀ x, M.mem x signature.domain → M.mem (body x) signature.output) :
     Obj (M := M) (FormulaFn M) := ⟨⟨signature, body⟩, hReturn⟩
+
+structure FamilyUnionObj {M : Semantics.{u}} (α : Type v) [Representation M α] where
+  family : Obj (M := M) α
+
+instance familyUnionRepresentation {M : Semantics.{u}} [I : IndexedUnionSemantics M]
+    {α : Type v} [Representation M α] : Representation M (FamilyUnionObj (M := M) α) where
+  wd _ := True
+  denote p := I.indexedUnionValue (denote p.family) id
+  wd_isSet {p} _ := I.indexedUnion_isSet _ _ (isSet p.family) (fun _ h => M.member_isSet h)
+
+def familyUnion {M : Semantics.{u}} [IndexedUnionSemantics M]
+    {α : Type v} [Representation M α] (A : Obj (M := M) α) :
+    Obj (M := M) (FamilyUnionObj (M := M) α) := ⟨⟨A⟩, True.intro⟩
+
+theorem familyUnion_members {M : Semantics.{u}} [I : IndexedUnionSemantics M]
+    {α : Type v} [Representation M α] (A : Obj (M := M) α) (x : M.Value) :
+    M.mem x (denote (familyUnion A)) ↔ ∃ a, M.mem a (denote A) ∧ M.mem x a :=
+  I.indexedUnion_members _ _ _
+
+def IsChoiceFunctionFor {M : Semantics.{u}} [F : FunctionSemantics M]
+    {α : Type v} {β : Type w} {γ : Type x} {δ : Type t}
+    [Representation M α] [Representation M β] [Representation M γ] [Representation M δ]
+    (index : Obj (M := M) α) (_set : Obj (M := M) β)
+    (family : Obj (M := M) γ) (choice : Obj (M := M) δ) : Prop :=
+  ∀ x, M.mem x (denote index) →
+    M.mem (F.callValue (denote choice) x) (F.callValue (denote family) x)
+
+theorem choiceForIdentity {M : Semantics.{u}} [F : FunctionSemantics M] [IndexedUnionSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β]
+    (S : Obj (M := M) α) (g : Obj (M := M) β)
+    (hg : ∀ x, M.mem x (denote S) → F.callValue (denote g) x = x)
+    (hS : ∀ a : Obj (M := M) M.Value, In a S → IsNonempty a) :
+    ∃ f : Obj (M := M) M.Value,
+      ∃ (_ : In f (fnSet (FunctionSignature.withGuard (denote S) (denote (familyUnion S))
+        (isSet S) (isSet (familyUnion S)) (fun _ => True)))), IsChoiceFunctionFor S S g f := by
+  classical
+  let select := fun x : M.Value => if h : ∃ y, M.mem y x then Classical.choose h else F.emptyValue
+  have selected : ∀ x, M.mem x (denote S) → M.mem (select x) x := by
+    intro x hx
+    have h := hS (semanticObject x (M.member_isSet hx)) hx
+    change ∃ y, M.mem y x at h
+    dsimp only [select]
+    rw [dif_pos h]
+    exact Classical.choose_spec h
+  have hreturn : ∀ x, M.mem x (denote S) → M.mem (select x) (denote (familyUnion S)) := by
+    intro x hx
+    exact (familyUnion_members S _).mpr ⟨x, hx, selected x hx⟩
+  let D := F.sepValue (denote S) (fun _ => True)
+  have hreturnD : ∀ x, M.mem x D → M.mem (select x) (denote (familyUnion S)) := by
+    intro x hx
+    exact hreturn x ((F.sep_members _ _ _).mp hx).1
+  let value := F.graphValue D (denote (familyUnion S)) select
+  have hvalue := FunctionSemantics.graph_inFnSet _ _ _ hreturnD
+  let f := semanticObject value (M.member_isSet hvalue)
+  refine ⟨f, hvalue, ?_⟩
+  intro x hx
+  change M.mem (F.callValue value x) (F.callValue (denote g) x)
+  have hxD : M.mem x D := (F.sep_members _ _ _).mpr ⟨hx, True.intro⟩
+  rw [hg x hx, FunctionSemantics.call_graphValue _ _ _ hreturnD x hxD]
+  exact selected x hx
+
+theorem formulaIdentityCall {M : Semantics.{u}} [F : FunctionSemantics M]
+    (g : Obj (M := M) (FormulaFn M)) (hg : ∀ x, g.val.bodyValue x = x)
+    (x : M.Value) (hx : M.mem x g.val.signature.domain) : F.callValue (denote g) x = x :=
+  (FunctionSemantics.call_graphValue _ _ _ g.wd x hx).trans (hg x)
+
+
+theorem zornMaximal {M : Semantics.{u}} [F : SetSemantics M]
+    {α : Type v} [Representation M α] (S : Obj (M := M) α) (r : M.Value → M.Value → Prop)
+    (hrefl : ∀ x, M.mem x (denote S) → r x x)
+    (htrans : ∀ x y z, M.mem x (denote S) → M.mem y (denote S) → M.mem z (denote S) → r x y → r y z → r x z)
+    (hanti : ∀ x y, M.mem x (denote S) → M.mem y (denote S) → r x y → r y x → x = y)
+    (hbound : ∀ c : Obj (M := M) M.Value, In c (powerSet S) →
+      (∀ x y, M.mem x (denote c) → M.mem y (denote c) → r x y ∨ r y x) →
+      ∃ b, M.mem b (denote S) ∧ ∀ x, M.mem x (denote c) → r x b) :
+    ∃ m : Obj (M := M) M.Value, ∃ (_ : In m S),
+      ∀ x, M.mem x (denote S) → r (denote m) x → x = denote m := by
+  classical
+  let A := {x : M.Value // M.mem x (denote S)}
+  have bounded : ∀ c : Set A, IsChain (fun x y : A => r x.val y.val) c →
+      ∃ b : A, ∀ a ∈ c, r a.val b.val := by
+    intro c hc
+    let C := F.sepValue (denote S) (fun x => ∃ hx, (⟨x, hx⟩ : A) ∈ c)
+    let Cobj := semanticObject C (F.sep_isSet _ _ (isSet S))
+    have cmem : In Cobj (powerSet S) := by
+      apply (F.power_members _ _).mpr
+      exact ⟨isSet Cobj, fun x hx => ((F.sep_members _ _ _).mp hx).1⟩
+    obtain ⟨b, hb, hub⟩ := hbound Cobj cmem (by
+      intro x y hx hy
+      obtain ⟨hxS, hxC⟩ := (F.sep_members _ _ _).mp hx
+      obtain ⟨hyS, hyC⟩ := (F.sep_members _ _ _).mp hy
+      obtain ⟨_, hxC⟩ := hxC
+      obtain ⟨_, hyC⟩ := hyC
+      by_cases heq : x = y
+      · exact Or.inl (heq ▸ hrefl x hxS)
+      · exact hc hxC hyC (fun h => heq (congrArg Subtype.val h)))
+    refine ⟨⟨b, hb⟩, ?_⟩
+    intro a ha
+    apply hub a.val
+    exact (F.sep_members _ _ _).mpr ⟨a.property, a.property, ha⟩
+  obtain ⟨m, hm⟩ := exists_maximal_of_chains_bounded bounded
+    (fun {a b c : A} hab hbc => htrans a.val b.val c.val a.property b.property c.property hab hbc)
+  refine ⟨semanticObject m.val (M.member_isSet m.property), m.property, ?_⟩
+  intro x hx hmx
+  exact hanti x m.val hx m.property (hm ⟨x, hx⟩ hmx) hmx
+
 
 structure CallOnObj {M : Semantics.{u}} (α : Type v) (β : Type w)
     [Representation M α] [Representation M β] where
@@ -6274,5 +6695,928 @@ theorem addLeOfLeOfNonposSwap {M : Semantics.{u}}
   refine ⟨x' + y', a', ?_, ha', le_trans (add_le_of_nonpos_left (hz0 ▸ hxz)) hya⟩
   change M.addValue (denote p.val.left) (denote p.val.right) = _
   rw [hx', hy', M.add_numbers, Complex.ofReal_add]
+
+theorem addLeAdd {M : Semantics.{u}}
+    {α : Type v} {β : Type w} {γ : Type x} {δ : Type*}
+    [Representation M α] [Representation M β] [Representation M γ] [Representation M δ]
+    (p : Obj (M := M) (AddObj (M := M) α β))
+    (q : Obj (M := M) (AddObj (M := M) γ δ))
+    (h₁ : Le p.val.left q.val.left) (h₂ : Le p.val.right q.val.right) : Le p q := by
+  obtain ⟨a, b, ha, hb, hab⟩ := h₁
+  obtain ⟨c, d, hc, hd, hcd⟩ := h₂
+  refine ⟨a + c, b + d, ?_, ?_, add_le_add hab hcd⟩
+  · change M.addValue (denote p.val.left) (denote p.val.right) = _
+    rw [ha, hc, M.add_numbers, Complex.ofReal_add]
+  · change M.addValue (denote q.val.left) (denote q.val.right) = _
+    rw [hb, hd, M.add_numbers, Complex.ofReal_add]
+
+theorem addLeAddSwap {M : Semantics.{u}}
+    {α : Type v} {β : Type w} {γ : Type x} {δ : Type*}
+    [Representation M α] [Representation M β] [Representation M γ] [Representation M δ]
+    (p : Obj (M := M) (AddObj (M := M) α β))
+    (q : Obj (M := M) (AddObj (M := M) γ δ))
+    (h₁ : Le p.val.left q.val.right) (h₂ : Le p.val.right q.val.left) : Le p q := by
+  obtain ⟨a, b, ha, hb, hab⟩ := h₁
+  obtain ⟨c, d, hc, hd, hcd⟩ := h₂
+  refine ⟨a + c, d + b, ?_, ?_, ?_⟩
+  · change M.addValue (denote p.val.left) (denote p.val.right) = _
+    rw [ha, hc, M.add_numbers, Complex.ofReal_add]
+  · change M.addValue (denote q.val.left) (denote q.val.right) = _
+    rw [hd, hb, M.add_numbers, Complex.ofReal_add]
+  · simpa only [add_comm b d] using add_le_add hab hcd
+
+theorem addLtAddOfLtOfLe {M : Semantics.{u}}
+    {α : Type v} {β : Type w} {γ : Type x} {δ : Type*}
+    [Representation M α] [Representation M β] [Representation M γ] [Representation M δ]
+    (p : Obj (M := M) (AddObj (M := M) α β))
+    (q : Obj (M := M) (AddObj (M := M) γ δ))
+    (h₁ : Lt p.val.left q.val.left) (h₂ : Le p.val.right q.val.right) : Lt p q := by
+  obtain ⟨a, b, ha, hb, hab⟩ := h₁
+  obtain ⟨c, d, hc, hd, hcd⟩ := h₂
+  refine ⟨a + c, b + d, ?_, ?_, add_lt_add_of_lt_of_le hab hcd⟩
+  · change M.addValue (denote p.val.left) (denote p.val.right) = _
+    rw [ha, hc, M.add_numbers, Complex.ofReal_add]
+  · change M.addValue (denote q.val.left) (denote q.val.right) = _
+    rw [hb, hd, M.add_numbers, Complex.ofReal_add]
+
+theorem addLtAddOfLeOfLt {M : Semantics.{u}}
+    {α : Type v} {β : Type w} {γ : Type x} {δ : Type*}
+    [Representation M α] [Representation M β] [Representation M γ] [Representation M δ]
+    (p : Obj (M := M) (AddObj (M := M) α β))
+    (q : Obj (M := M) (AddObj (M := M) γ δ))
+    (h₁ : Le p.val.left q.val.left) (h₂ : Lt p.val.right q.val.right) : Lt p q := by
+  obtain ⟨a, b, ha, hb, hab⟩ := h₁
+  obtain ⟨c, d, hc, hd, hcd⟩ := h₂
+  refine ⟨a + c, b + d, ?_, ?_, add_lt_add_of_le_of_lt hab hcd⟩
+  · change M.addValue (denote p.val.left) (denote p.val.right) = _
+    rw [ha, hc, M.add_numbers, Complex.ofReal_add]
+  · change M.addValue (denote q.val.left) (denote q.val.right) = _
+    rw [hb, hd, M.add_numbers, Complex.ofReal_add]
+
+theorem subStructuralLeRight {M : Semantics.{u}} {α β γ δ : Type*}
+    [Representation M α] [Representation M β] [Representation M γ] [Representation M δ]
+    (lhs : Obj (M := M) (SubObj (M := M) α β))
+    (rhs : Obj (M := M) (SubObj (M := M) γ δ))
+    (hDiff : In lhs R) (hOrder : Le lhs.val.left rhs.val.left)
+    (hSame : Same lhs.val.right rhs.val.right) : Le lhs rhs := by
+  obtain ⟨r, hr⟩ := (M.real_members _).mp hDiff
+  obtain ⟨a, b, ha, hb, hab⟩ := hOrder
+  obtain ⟨z, hz⟩ := (M.complex_members _).mp lhs.wd.2
+  have hdiff : (a : ℂ) - z = (r : ℂ) := by
+    apply M.number_injective
+    change M.subValue (denote lhs.val.left) (denote lhs.val.right) = _ at hr
+    simpa only [hz, ha, M.sub_numbers] using hr
+  have hc : denote lhs.val.right = M.number ((a - r : ℝ) : ℂ) := by
+    rw [hz, Complex.ofReal_sub]
+    exact congrArg M.number (by
+      calc z = (a : ℂ) - ((a : ℂ) - z) := (sub_sub_cancel _ _).symm
+           _ = (a : ℂ) - (r : ℂ) := congrArg (fun t : ℂ => (a : ℂ) - t) hdiff)
+  refine NativeBridge.leOfDenoteReal lhs rhs (a - (a - r)) (b - (a - r)) ?_ ?_ (sub_le_sub_right hab (a - r))
+  · change M.subValue (denote lhs.val.left) (denote lhs.val.right) = _
+    simp only [hc, ha, M.sub_numbers, Complex.ofReal_sub]
+  · change M.subValue (denote rhs.val.left) (denote rhs.val.right) = _
+    simp only [hSame.symm.trans hc, hb, M.sub_numbers, Complex.ofReal_sub]
+
+theorem subStructuralLeLeft {M : Semantics.{u}} {α β γ δ : Type*}
+    [Representation M α] [Representation M β] [Representation M γ] [Representation M δ]
+    (lhs : Obj (M := M) (SubObj (M := M) α β))
+    (rhs : Obj (M := M) (SubObj (M := M) γ δ))
+    (hDiff : In lhs R) (hOrder : Le rhs.val.right lhs.val.right)
+    (hSame : Same lhs.val.left rhs.val.left) : Le lhs rhs := by
+  obtain ⟨r, hr⟩ := (M.real_members _).mp hDiff
+  obtain ⟨a, b, ha, hb, hab⟩ := hOrder
+  obtain ⟨z, hz⟩ := (M.complex_members _).mp lhs.wd.1
+  have hdiff : z - (b : ℂ) = (r : ℂ) := by
+    apply M.number_injective
+    change M.subValue (denote lhs.val.left) (denote lhs.val.right) = _ at hr
+    simpa only [hz, hb, M.sub_numbers] using hr
+  have hc : denote lhs.val.left = M.number ((r + b : ℝ) : ℂ) := by
+    rw [hz, Complex.ofReal_add]
+    exact congrArg M.number (sub_eq_iff_eq_add.mp hdiff)
+  refine NativeBridge.leOfDenoteReal lhs rhs ((r + b) - b) ((r + b) - a) ?_ ?_ (sub_le_sub_left hab (r + b))
+  · change M.subValue (denote lhs.val.left) (denote lhs.val.right) = _
+    simp only [hc, hb, M.sub_numbers, Complex.ofReal_sub]
+  · change M.subValue (denote rhs.val.left) (denote rhs.val.right) = _
+    simp only [hSame.symm.trans hc, ha, M.sub_numbers, Complex.ofReal_sub]
+
+theorem subStructuralLtRight {M : Semantics.{u}} {α β γ δ : Type*}
+    [Representation M α] [Representation M β] [Representation M γ] [Representation M δ]
+    (lhs : Obj (M := M) (SubObj (M := M) α β))
+    (rhs : Obj (M := M) (SubObj (M := M) γ δ))
+    (hDiff : In lhs R) (hOrder : Lt lhs.val.left rhs.val.left)
+    (hSame : Same lhs.val.right rhs.val.right) : Lt lhs rhs := by
+  obtain ⟨r, hr⟩ := (M.real_members _).mp hDiff
+  obtain ⟨a, b, ha, hb, hab⟩ := hOrder
+  obtain ⟨z, hz⟩ := (M.complex_members _).mp lhs.wd.2
+  have hdiff : (a : ℂ) - z = (r : ℂ) := by
+    apply M.number_injective
+    change M.subValue (denote lhs.val.left) (denote lhs.val.right) = _ at hr
+    simpa only [hz, ha, M.sub_numbers] using hr
+  have hc : denote lhs.val.right = M.number ((a - r : ℝ) : ℂ) := by
+    rw [hz, Complex.ofReal_sub]
+    exact congrArg M.number (by
+      calc z = (a : ℂ) - ((a : ℂ) - z) := (sub_sub_cancel _ _).symm
+           _ = (a : ℂ) - (r : ℂ) := congrArg (fun t : ℂ => (a : ℂ) - t) hdiff)
+  refine NativeBridge.ltOfDenoteReal lhs rhs (a - (a - r)) (b - (a - r)) ?_ ?_ (sub_lt_sub_right hab (a - r))
+  · change M.subValue (denote lhs.val.left) (denote lhs.val.right) = _
+    simp only [hc, ha, M.sub_numbers, Complex.ofReal_sub]
+  · change M.subValue (denote rhs.val.left) (denote rhs.val.right) = _
+    simp only [hSame.symm.trans hc, hb, M.sub_numbers, Complex.ofReal_sub]
+
+theorem subStructuralLtLeft {M : Semantics.{u}} {α β γ δ : Type*}
+    [Representation M α] [Representation M β] [Representation M γ] [Representation M δ]
+    (lhs : Obj (M := M) (SubObj (M := M) α β))
+    (rhs : Obj (M := M) (SubObj (M := M) γ δ))
+    (hDiff : In lhs R) (hOrder : Lt rhs.val.right lhs.val.right)
+    (hSame : Same lhs.val.left rhs.val.left) : Lt lhs rhs := by
+  obtain ⟨r, hr⟩ := (M.real_members _).mp hDiff
+  obtain ⟨a, b, ha, hb, hab⟩ := hOrder
+  obtain ⟨z, hz⟩ := (M.complex_members _).mp lhs.wd.1
+  have hdiff : z - (b : ℂ) = (r : ℂ) := by
+    apply M.number_injective
+    change M.subValue (denote lhs.val.left) (denote lhs.val.right) = _ at hr
+    simpa only [hz, hb, M.sub_numbers] using hr
+  have hc : denote lhs.val.left = M.number ((r + b : ℝ) : ℂ) := by
+    rw [hz, Complex.ofReal_add]
+    exact congrArg M.number (sub_eq_iff_eq_add.mp hdiff)
+  refine NativeBridge.ltOfDenoteReal lhs rhs ((r + b) - b) ((r + b) - a) ?_ ?_ (sub_lt_sub_left hab (r + b))
+  · change M.subValue (denote lhs.val.left) (denote lhs.val.right) = _
+    simp only [hc, hb, M.sub_numbers, Complex.ofReal_sub]
+  · change M.subValue (denote rhs.val.left) (denote rhs.val.right) = _
+    simp only [hSame.symm.trans hc, ha, M.sub_numbers, Complex.ofReal_sub]
+
+structure IntersectObj {M : Semantics.{u}} (α : Type v) (β : Type w)
+    [Representation M α] [Representation M β] where
+  left : Obj (M := M) α
+  right : Obj (M := M) β
+
+instance intersectRepresentation {M : Semantics.{u}} [S : SetSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β] :
+    Representation M (IntersectObj (M := M) α β) where
+  wd _ := True
+  denote p := S.sepValue (denote p.left) (fun x => M.mem x (denote p.right))
+  wd_isSet {p} _ := S.sep_isSet _ _ (isSet p.left)
+
+def intersect {M : Semantics.{u}} [SetSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β]
+    (A : Obj (M := M) α) (B : Obj (M := M) β) :
+    Obj (M := M) (IntersectObj (M := M) α β) := ⟨⟨A, B⟩, True.intro⟩
+
+theorem inIntersect_iff {M : Semantics.{u}} [S : SetSemantics M]
+    {α : Type v} {β : Type w} {γ : Type x}
+    [Representation M α] [Representation M β] [Representation M γ]
+    (a : Obj (M := M) α) (A : Obj (M := M) β) (B : Obj (M := M) γ) :
+    In a (intersect A B) ↔ In a A ∧ In a B := S.sep_members _ _ _
+
+/-- Optional foundation law; the ZF interpretation proves this below. -/
+class RegularitySemantics (M : Semantics.{u}) where
+  regularity : ∀ A, M.isSet A → (∃ x, M.mem x A) →
+    ∃ x, M.mem x A ∧ ∀ y, M.mem y x → ¬ M.mem y A
+
+noncomputable instance numericRegularitySemantics : RegularitySemantics NumericModel.model where
+  regularity := fun (A : ZFSet.{0}) _ h => by
+    change (∃ x : ZFSet.{0}, x ∈ A) at h
+    change ∃ x : ZFSet.{0}, x ∈ A ∧ ∀ y : ZFSet.{0}, y ∈ x → ¬ y ∈ A
+    have hA : A ≠ (∅ : ZFSet.{0}) := by
+      rintro rfl
+      obtain ⟨x, hx⟩ := h
+      exact ZFSet.notMem_empty x hx
+    obtain ⟨x, hx, disjoint⟩ := ZFSet.regularity A hA
+    refine ⟨x, hx, ?_⟩
+    intro y hy hAy
+    have hm : y ∈ A ∩ x := ZFSet.mem_inter.mpr ⟨hAy, hy⟩
+    rw [disjoint] at hm
+    exact ZFSet.notMem_empty y hm
+
+theorem regularity {M : Semantics.{u}} [S : SetSemantics M] [R : RegularitySemantics M]
+    {α : Type v} [Representation M α] (A : Obj (M := M) α) (hA : IsNonempty A) :
+    ∃ x : Obj (M := M) M.Value, ∃ (_ : In x A), Same (intersect x A) emptySet := by
+  obtain ⟨x, hx, disjoint⟩ := R.regularity (denote A) (isSet A) hA
+  let a := semanticObject x (M.member_isSet hx)
+  refine ⟨a, hx, ?_⟩
+  apply S.ext _ _ (isSet (intersect a A)) (isSet emptySet)
+  intro y
+  constructor
+  · intro hy
+    obtain ⟨hya, hyA⟩ := (S.sep_members _ _ _).mp hy
+    exact False.elim (disjoint y hya hyA)
+  · intro hy
+    exact False.elim (S.empty_members y hy)
+
+theorem intersectSubsetLeft {M : Semantics.{u}} [S : SetSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β]
+    (A : Obj (M := M) α) (B : Obj (M := M) β) : Subset (intersect A B) A :=
+  fun x h => ((S.sep_members _ _ x).mp h).1
+
+theorem intersectSubsetRight {M : Semantics.{u}} [S : SetSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β]
+    (A : Obj (M := M) α) (B : Obj (M := M) β) : Subset (intersect A B) B :=
+  fun x h => ((S.sep_members _ _ x).mp h).2
+
+theorem intersectSubsetOfLeft {M : Semantics.{u}} [S : SetSemantics M]
+    {α : Type v} {β : Type w} {γ : Type x}
+    [Representation M α] [Representation M β] [Representation M γ]
+    (A : Obj (M := M) α) (B : Obj (M := M) β) (D : Obj (M := M) γ)
+    (hAD : Subset A D) : Subset (intersect A B) D :=
+  fun x h => hAD x ((S.sep_members _ _ x).mp h).1
+
+theorem intersectSubsetOfRight {M : Semantics.{u}} [S : SetSemantics M]
+    {α : Type v} {β : Type w} {γ : Type x}
+    [Representation M α] [Representation M β] [Representation M γ]
+    (A : Obj (M := M) α) (B : Obj (M := M) β) (D : Obj (M := M) γ)
+    (hBD : Subset B D) : Subset (intersect A B) D :=
+  fun x h => hBD x ((S.sep_members _ _ x).mp h).2
+
+theorem subsetIntersect {M : Semantics.{u}} [S : SetSemantics M]
+    {α : Type v} {β : Type w} {γ : Type x}
+    [Representation M α] [Representation M β] [Representation M γ]
+    (D : Obj (M := M) γ) (A : Obj (M := M) α) (B : Obj (M := M) β)
+    (hDA : Subset D A) (hDB : Subset D B) : Subset D (intersect A B) :=
+  fun x h => (S.sep_members _ _ x).mpr ⟨hDA x h, hDB x h⟩
+
+theorem intersectComm {M : Semantics.{u}} [S : SetSemantics M]
+    {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (A : Obj (M := M) α) (B : Obj (M := M) β) : Same (intersect A B) (intersect B A) := by
+  apply S.ext _ _ (isSet _) (isSet _)
+  intro z
+  change M.mem z (S.sepValue (denote A) (fun t => M.mem t (denote B))) ↔ M.mem z (S.sepValue (denote B) (fun t => M.mem t (denote A)))
+  simp only [S.sep_members, and_comm]
+
+theorem intersectIdem {M : Semantics.{u}} [S : SetSemantics M]
+    {α : Type v}
+    [Representation M α]
+    (A : Obj (M := M) α) : Same (intersect A A) A := by
+  apply S.ext _ _ (isSet _) (isSet _)
+  intro z
+  change M.mem z (S.sepValue (denote A) (fun t => M.mem t (denote A))) ↔ M.mem z (denote A)
+  simp only [S.sep_members, and_self]
+
+theorem intersectEmptyRight {M : Semantics.{u}} [S : SetSemantics M]
+    {α : Type v}
+    [Representation M α]
+    (A : Obj (M := M) α) : Same (intersect A (emptySet (M := M))) (emptySet (M := M)) := by
+  apply S.ext _ _ (isSet _) (isSet _)
+  intro z
+  change M.mem z (S.sepValue (denote A) (fun t => M.mem t S.emptyValue)) ↔ M.mem z S.emptyValue
+  simp only [S.sep_members, S.empty_members, and_false]
+
+theorem intersectEmptyLeft {M : Semantics.{u}} [S : SetSemantics M]
+    {α : Type v}
+    [Representation M α]
+    (A : Obj (M := M) α) : Same (intersect (emptySet (M := M)) A) (emptySet (M := M)) := by
+  apply S.ext _ _ (isSet _) (isSet _)
+  intro z
+  change M.mem z (S.sepValue S.emptyValue (fun t => M.mem t (denote A))) ↔ M.mem z S.emptyValue
+  simp only [S.sep_members, S.empty_members, false_and]
+
+theorem intersectAssoc {M : Semantics.{u}} [S : SetSemantics M]
+    {α : Type v} {β : Type w} {γ : Type x}
+    [Representation M α] [Representation M β] [Representation M γ]
+    (A : Obj (M := M) α) (B : Obj (M := M) β) (C : Obj (M := M) γ) : Same (intersect (intersect A B) C) (intersect A (intersect B C)) := by
+  apply S.ext _ _ (isSet _) (isSet _)
+  intro z
+  change M.mem z (S.sepValue (S.sepValue (denote A) (fun t => M.mem t (denote B))) (fun t => M.mem t (denote C))) ↔ M.mem z (S.sepValue (denote A) (fun t => M.mem t (S.sepValue (denote B) (fun t => M.mem t (denote C)))))
+  simp only [S.sep_members, and_assoc]
+
+theorem unionComm {M : Semantics.{u}} [S : SetSemantics M]
+    {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (A : Obj (M := M) α) (B : Obj (M := M) β) : Same (union A B) (union B A) := by
+  apply S.ext _ _ (isSet _) (isSet _)
+  intro z
+  change M.mem z (S.unionValue (denote A) (denote B)) ↔ M.mem z (S.unionValue (denote B) (denote A))
+  simp only [S.union_members, or_comm]
+
+theorem unionIdem {M : Semantics.{u}} [S : SetSemantics M]
+    {α : Type v}
+    [Representation M α]
+    (A : Obj (M := M) α) : Same (union A A) A := by
+  apply S.ext _ _ (isSet _) (isSet _)
+  intro z
+  change M.mem z (S.unionValue (denote A) (denote A)) ↔ M.mem z (denote A)
+  simp only [S.union_members, or_self]
+
+theorem unionEmptyRight {M : Semantics.{u}} [S : SetSemantics M]
+    {α : Type v}
+    [Representation M α]
+    (A : Obj (M := M) α) : Same (union A (emptySet (M := M))) A := by
+  apply S.ext _ _ (isSet _) (isSet _)
+  intro z
+  change M.mem z (S.unionValue (denote A) S.emptyValue) ↔ M.mem z (denote A)
+  simp only [S.union_members, S.empty_members, or_false]
+
+theorem unionEmptyLeft {M : Semantics.{u}} [S : SetSemantics M]
+    {α : Type v}
+    [Representation M α]
+    (A : Obj (M := M) α) : Same (union (emptySet (M := M)) A) A := by
+  apply S.ext _ _ (isSet _) (isSet _)
+  intro z
+  change M.mem z (S.unionValue S.emptyValue (denote A)) ↔ M.mem z (denote A)
+  simp only [S.union_members, S.empty_members, false_or]
+
+theorem unionAssoc {M : Semantics.{u}} [S : SetSemantics M]
+    {α : Type v} {β : Type w} {γ : Type x}
+    [Representation M α] [Representation M β] [Representation M γ]
+    (A : Obj (M := M) α) (B : Obj (M := M) β) (C : Obj (M := M) γ) : Same (union (union A B) C) (union A (union B C)) := by
+  apply S.ext _ _ (isSet _) (isSet _)
+  intro z
+  change M.mem z (S.unionValue (S.unionValue (denote A) (denote B)) (denote C)) ↔ M.mem z (S.unionValue (denote A) (S.unionValue (denote B) (denote C)))
+  simp only [S.union_members, or_assoc]
+
+theorem intersectUnionDistrib {M : Semantics.{u}} [S : SetSemantics M]
+    {α : Type v} {β : Type w} {γ : Type x}
+    [Representation M α] [Representation M β] [Representation M γ]
+    (A : Obj (M := M) α) (B : Obj (M := M) β) (C : Obj (M := M) γ) : Same (intersect A (union B C)) (union (intersect A B) (intersect A C)) := by
+  apply S.ext _ _ (isSet _) (isSet _)
+  intro z
+  change M.mem z (S.sepValue (denote A) (fun t => M.mem t (S.unionValue (denote B) (denote C)))) ↔ M.mem z (S.unionValue (S.sepValue (denote A) (fun t => M.mem t (denote B))) (S.sepValue (denote A) (fun t => M.mem t (denote C))))
+  simp only [S.sep_members, S.union_members, and_or_left]
+
+theorem intersectOfSubsetLeft {M : Semantics.{u}} [S : SetSemantics M]
+    {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (A : Obj (M := M) α) (B : Obj (M := M) β) (h : Subset A B) : Same (intersect A B) A :=
+  setExt _ _ (intersectSubsetLeft A B)
+    (subsetIntersect A A B (subsetRefl A) h)
+
+theorem intersectOfSubsetRight {M : Semantics.{u}} [S : SetSemantics M]
+    {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (A : Obj (M := M) α) (B : Obj (M := M) β) (h : Subset B A) : Same (intersect A B) B :=
+  setExt _ _ (intersectSubsetRight A B)
+    (subsetIntersect B A B h (subsetRefl B))
+
+theorem intersectCongr {M : Semantics.{u}} [S : SetSemantics M]
+    {α : Type v} {β : Type w} {γ : Type x} {δ : Type*}
+    [Representation M α] [Representation M β] [Representation M γ] [Representation M δ]
+    (A : Obj (M := M) α) (B : Obj (M := M) β)
+    (D : Obj (M := M) γ) (E : Obj (M := M) δ)
+    (hAD : Same A D) (hBE : Same B E) : Same (intersect A B) (intersect D E) := by
+  change S.sepValue (denote A) (fun t => M.mem t (denote B)) =
+    S.sepValue (denote D) (fun t => M.mem t (denote E))
+  rw [hAD, hBE]
+
+theorem unionIntersectDistrib {M : Semantics.{u}} [S : SetSemantics M]
+    {α : Type v} {β : Type w} {γ : Type x}
+    [Representation M α] [Representation M β] [Representation M γ]
+    (A : Obj (M := M) α) (B : Obj (M := M) β) (D : Obj (M := M) γ) :
+    Same (union A (intersect B D)) (intersect (union A B) (union A D)) := by
+  apply S.ext _ _ (isSet _) (isSet _)
+  intro z
+  change M.mem z (S.unionValue (denote A) (S.sepValue (denote B) (fun t => M.mem t (denote D)))) ↔
+    M.mem z (S.sepValue (S.unionValue (denote A) (denote B)) (fun t => M.mem t (S.unionValue (denote A) (denote D))))
+  simp only [S.sep_members, S.union_members, or_and_left]
+
+structure SetMinusObj {M : Semantics.{u}} (α : Type v) (β : Type w)
+    [Representation M α] [Representation M β] where
+  left : Obj (M := M) α
+  right : Obj (M := M) β
+
+instance setMinusRepresentation {M : Semantics.{u}} [S : SetSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β] :
+    Representation M (SetMinusObj (M := M) α β) where
+  wd _ := True
+  denote p := S.sepValue (denote p.left) (fun t => ¬ M.mem t (denote p.right))
+  wd_isSet {p} _ := S.sep_isSet _ _ (isSet p.left)
+
+def setMinus {M : Semantics.{u}} [SetSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β]
+    (A : Obj (M := M) α) (B : Obj (M := M) β) :
+    Obj (M := M) (SetMinusObj (M := M) α β) := ⟨⟨A, B⟩, True.intro⟩
+
+theorem inSetMinus_iff {M : Semantics.{u}} [S : SetSemantics M]
+    {α : Type v} {β : Type w} {γ : Type x}
+    [Representation M α] [Representation M β] [Representation M γ]
+    (a : Obj (M := M) α) (A : Obj (M := M) β) (B : Obj (M := M) γ) :
+    In a (setMinus A B) ↔ In a A ∧ ¬ In a B := S.sep_members _ _ _
+
+theorem setMinusSubsetLeft {M : Semantics.{u}} [S : SetSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β]
+    (A : Obj (M := M) α) (B : Obj (M := M) β) : Subset (setMinus A B) A :=
+  fun z h => ((S.sep_members _ _ z).mp h).1
+
+theorem notInSetMinusOfRight {M : Semantics.{u}} [SetSemantics M]
+    {α : Type v} {β : Type w} {γ : Type x}
+    [Representation M α] [Representation M β] [Representation M γ]
+    (a : Obj (M := M) α) (A : Obj (M := M) β) (B : Obj (M := M) γ)
+    (h : In a B) : ¬ In a (setMinus A B) :=
+  fun hx => ((inSetMinus_iff a A B).mp hx).2 h
+
+theorem notInSetMinusOfLeft {M : Semantics.{u}} [SetSemantics M]
+    {α : Type v} {β : Type w} {γ : Type x}
+    [Representation M α] [Representation M β] [Representation M γ]
+    (a : Obj (M := M) α) (A : Obj (M := M) β) (B : Obj (M := M) γ)
+    (h : ¬ In a A) : ¬ In a (setMinus A B) :=
+  fun hx => h ((inSetMinus_iff a A B).mp hx).1
+
+theorem setMinusSelf {M : Semantics.{u}} [S : SetSemantics M]
+    {α : Type v}
+    [Representation M α]
+    (A : Obj (M := M) α) : Same (setMinus A A) (emptySet (M := M)) := by
+  apply S.ext _ _ (isSet _) (isSet _)
+  intro z
+  change M.mem z (S.sepValue (denote A) (fun t => ¬ M.mem t (denote A))) ↔ M.mem z S.emptyValue
+  simp only [S.sep_members, S.empty_members, and_not_self]
+
+theorem setMinusEmptyRight {M : Semantics.{u}} [S : SetSemantics M]
+    {α : Type v}
+    [Representation M α]
+    (A : Obj (M := M) α) : Same (setMinus A (emptySet (M := M))) A := by
+  apply S.ext _ _ (isSet _) (isSet _)
+  intro z
+  change M.mem z (S.sepValue (denote A) (fun t => ¬ M.mem t S.emptyValue)) ↔ M.mem z (denote A)
+  simp only [S.sep_members, S.empty_members, not_false_eq_true, and_true]
+
+theorem setMinusEmptyLeft {M : Semantics.{u}} [S : SetSemantics M]
+    {α : Type v}
+    [Representation M α]
+    (A : Obj (M := M) α) : Same (setMinus (emptySet (M := M)) A) (emptySet (M := M)) := by
+  apply S.ext _ _ (isSet _) (isSet _)
+  intro z
+  change M.mem z (S.sepValue S.emptyValue (fun t => ¬ M.mem t (denote A))) ↔ M.mem z S.emptyValue
+  simp only [S.sep_members, S.empty_members, false_and]
+
+theorem setMinusUnion {M : Semantics.{u}} [S : SetSemantics M]
+    {α : Type v} {β : Type w} {γ : Type x}
+    [Representation M α] [Representation M β] [Representation M γ]
+    (A : Obj (M := M) α) (B : Obj (M := M) β) (D : Obj (M := M) γ) : Same (setMinus A (union B D)) (intersect (setMinus A B) (setMinus A D)) := by
+  apply S.ext _ _ (isSet _) (isSet _)
+  intro z
+  change M.mem z (S.sepValue (denote A) (fun t => ¬ M.mem t (S.unionValue (denote B) (denote D)))) ↔ M.mem z (S.sepValue (S.sepValue (denote A) (fun t => ¬ M.mem t (denote B))) (fun t => M.mem t (S.sepValue (denote A) (fun t => ¬ M.mem t (denote D)))))
+  simp only [S.sep_members, S.union_members, not_or]
+  constructor
+  · intro h; exact ⟨⟨h.1, h.2.1⟩, ⟨h.1, h.2.2⟩⟩
+  · intro h; exact ⟨h.1.1, h.1.2, h.2.2⟩
+
+theorem setMinusIntersect {M : Semantics.{u}} [S : SetSemantics M]
+    {α : Type v} {β : Type w} {γ : Type x}
+    [Representation M α] [Representation M β] [Representation M γ]
+    (A : Obj (M := M) α) (B : Obj (M := M) β) (D : Obj (M := M) γ) : Same (setMinus A (intersect B D)) (union (setMinus A B) (setMinus A D)) := by
+  apply S.ext _ _ (isSet _) (isSet _)
+  intro z
+  change M.mem z (S.sepValue (denote A) (fun t => ¬ M.mem t (S.sepValue (denote B) (fun t => M.mem t (denote D))))) ↔ M.mem z (S.unionValue (S.sepValue (denote A) (fun t => ¬ M.mem t (denote B))) (S.sepValue (denote A) (fun t => ¬ M.mem t (denote D))))
+  simp only [S.sep_members, S.union_members, not_and_or, and_or_left]
+
+theorem intersectSetMinusEmpty {M : Semantics.{u}} [S : SetSemantics M]
+    {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (A : Obj (M := M) α) (B : Obj (M := M) β) : Same (intersect A (setMinus B A)) (emptySet (M := M)) := by
+  apply S.ext _ _ (isSet _) (isSet _)
+  intro z
+  change M.mem z (S.sepValue (denote A) (fun t => M.mem t (S.sepValue (denote B) (fun t => ¬ M.mem t (denote A))))) ↔ M.mem z S.emptyValue
+  simp only [S.sep_members, S.empty_members]
+  exact ⟨fun h => h.2.2 h.1, False.elim⟩
+
+theorem setMinusIntersectEmpty {M : Semantics.{u}} [S : SetSemantics M]
+    {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (A : Obj (M := M) α) (B : Obj (M := M) β) : Same (intersect (setMinus B A) A) (emptySet (M := M)) := by
+  apply S.ext _ _ (isSet _) (isSet _)
+  intro z
+  change M.mem z (S.sepValue (S.sepValue (denote B) (fun t => ¬ M.mem t (denote A))) (fun t => M.mem t (denote A))) ↔ M.mem z S.emptyValue
+  simp only [S.sep_members, S.empty_members]
+  exact ⟨fun h => h.1.2 h.2, False.elim⟩
+
+theorem setMinusChain {M : Semantics.{u}} [S : SetSemantics M]
+    {α : Type v} {β : Type w} {γ : Type x}
+    [Representation M α] [Representation M β] [Representation M γ]
+    (A : Obj (M := M) α) (B : Obj (M := M) β) (D : Obj (M := M) γ) :
+    Same (setMinus (setMinus A B) D) (setMinus A (union B D)) := by
+  apply S.ext _ _ (isSet _) (isSet _)
+  intro z
+  change M.mem z (S.sepValue (S.sepValue (denote A) (fun t => ¬ M.mem t (denote B))) (fun t => ¬ M.mem t (denote D))) ↔
+    M.mem z (S.sepValue (denote A) (fun t => ¬ M.mem t (S.unionValue (denote B) (denote D))))
+  simp only [S.sep_members, S.union_members, not_or, and_assoc]
+
+theorem setMinusChainSwap {M : Semantics.{u}} [S : SetSemantics M]
+    {α : Type v} {β : Type w} {γ : Type x}
+    [Representation M α] [Representation M β] [Representation M γ]
+    (A : Obj (M := M) α) (B : Obj (M := M) β) (D : Obj (M := M) γ) :
+    Same (setMinus (setMinus A B) D) (setMinus A (union D B)) := by
+  apply S.ext _ _ (isSet _) (isSet _)
+  intro z
+  change M.mem z (S.sepValue (S.sepValue (denote A) (fun t => ¬ M.mem t (denote B))) (fun t => ¬ M.mem t (denote D))) ↔
+    M.mem z (S.sepValue (denote A) (fun t => ¬ M.mem t (S.unionValue (denote D) (denote B))))
+  simp only [S.sep_members, S.union_members, not_or]
+  exact ⟨fun h => ⟨h.1.1, h.2, h.1.2⟩, fun h => ⟨⟨h.1, h.2.2⟩, h.2.1⟩⟩
+
+theorem notInIntersectOfLeft {M : Semantics.{u}} [SetSemantics M]
+    {α : Type v} {β : Type w} {γ : Type x}
+    [Representation M α] [Representation M β] [Representation M γ]
+    (a : Obj (M := M) α) (A : Obj (M := M) β) (B : Obj (M := M) γ)
+    (h : ¬ In a A) : ¬ In a (intersect A B) :=
+  fun hx => h ((inIntersect_iff a A B).mp hx).1
+
+theorem notInIntersectOfRight {M : Semantics.{u}} [SetSemantics M]
+    {α : Type v} {β : Type w} {γ : Type x}
+    [Representation M α] [Representation M β] [Representation M γ]
+    (a : Obj (M := M) α) (A : Obj (M := M) β) (B : Obj (M := M) γ)
+    (h : ¬ In a B) : ¬ In a (intersect A B) :=
+  fun hx => h ((inIntersect_iff a A B).mp hx).2
+
+theorem notInUnion {M : Semantics.{u}} [SetSemantics M]
+    {α : Type v} {β : Type w} {γ : Type x}
+    [Representation M α] [Representation M β] [Representation M γ]
+    (a : Obj (M := M) α) (A : Obj (M := M) β) (B : Obj (M := M) γ)
+    (hA : ¬ In a A) (hB : ¬ In a B) : ¬ In a (union A B) :=
+  fun hx => ((inUnion_iff a A B).mp hx).elim hA hB
+
+theorem subsetTrans {M : Semantics.{u}}
+    {α : Type v} {β : Type w} {γ : Type x}
+    [Representation M α] [Representation M β] [Representation M γ]
+    (A : Obj (M := M) α) (B : Obj (M := M) β) (D : Obj (M := M) γ)
+    (hAB : Subset A B) (hBD : Subset B D) : Subset A D :=
+  fun z hz => hBD z (hAB z hz)
+
+theorem unionSubsetOfBoth {M : Semantics.{u}} [S : SetSemantics M]
+    {α : Type v} {β : Type w} {γ : Type x}
+    [Representation M α] [Representation M β] [Representation M γ]
+    (A : Obj (M := M) α) (B : Obj (M := M) β) (D : Obj (M := M) γ)
+    (hAD : Subset A D) (hBD : Subset B D) : Subset (union A B) D :=
+  fun z hz => ((S.union_members _ _ z).mp hz).elim (hAD z) (hBD z)
+
+theorem unionMono {M : Semantics.{u}} [S : SetSemantics M]
+    {α : Type v} {β : Type w} {γ : Type x} {δ : Type*}
+    [Representation M α] [Representation M β] [Representation M γ] [Representation M δ]
+    (A : Obj (M := M) α) (B : Obj (M := M) β)
+    (D : Obj (M := M) γ) (E : Obj (M := M) δ)
+    (hAD : Subset A D) (hBE : Subset B E) : Subset (union A B) (union D E) :=
+  fun z hz => (S.union_members _ _ z).mpr (((S.union_members _ _ z).mp hz).elim
+    (fun h => Or.inl (hAD z h)) (fun h => Or.inr (hBE z h)))
+
+theorem unionMonoSwap {M : Semantics.{u}} [S : SetSemantics M]
+    {α : Type v} {β : Type w} {γ : Type x} {δ : Type*}
+    [Representation M α] [Representation M β] [Representation M γ] [Representation M δ]
+    (A : Obj (M := M) α) (B : Obj (M := M) β)
+    (D : Obj (M := M) γ) (E : Obj (M := M) δ)
+    (hAE : Subset A E) (hBD : Subset B D) : Subset (union A B) (union D E) :=
+  fun z hz => (S.union_members _ _ z).mpr (((S.union_members _ _ z).mp hz).elim
+    (fun h => Or.inr (hAE z h)) (fun h => Or.inl (hBD z h)))
+
+theorem powerSetMono {M : Semantics.{u}} [S : SetSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β]
+    (A : Obj (M := M) α) (B : Obj (M := M) β)
+    (hAB : Subset A B) : Subset (powerSet A) (powerSet B) := by
+  intro z hz
+  obtain ⟨hs, hsub⟩ := (S.power_members _ z).mp hz
+  exact (S.power_members _ z).mpr ⟨hs, fun t ht => hAB t (hsub t ht)⟩
+
+theorem setMinusMono {M : Semantics.{u}} [S : SetSemantics M]
+    {α : Type v} {β : Type w} {γ : Type x}
+    [Representation M α] [Representation M β] [Representation M γ]
+    (A : Obj (M := M) α) (B : Obj (M := M) β) (D : Obj (M := M) γ)
+    (hAB : Subset A B) : Subset (setMinus A D) (setMinus B D) :=
+  fun z hz => (S.sep_members _ _ z).mpr
+    ⟨hAB z ((S.sep_members _ _ z).mp hz).1, ((S.sep_members _ _ z).mp hz).2⟩
+
+theorem setMinusSubsetOfLeft {M : Semantics.{u}} [SetSemantics M]
+    {α : Type v} {β : Type w} {γ : Type x}
+    [Representation M α] [Representation M β] [Representation M γ]
+    (A : Obj (M := M) α) (B : Obj (M := M) β) (D : Obj (M := M) γ)
+    (hAD : Subset A D) : Subset (setMinus A B) D :=
+  subsetTrans _ A D (setMinusSubsetLeft A B) hAD
+
+namespace FunctionSemantics
+variable {M : Semantics.{u}} [F : FunctionSemantics M]
+
+/-- Input selection depends on the graph and predicate, not on a signature witness. -/
+def IsPreimage (f : M.Value) (P : M.Value → Prop) (r : M.Value) : Prop :=
+  M.isSet r ∧ ∀ x, M.mem x r ↔ ∃ y, M.mem (F.pairValue x y) f ∧ P y
+
+noncomputable def preimageValue (f : M.Value) (P : M.Value → Prop) : M.Value :=
+  by classical exact if h : ∃ r, IsPreimage f P r then Classical.choose h else F.emptyValue
+
+theorem preimage_spec {D B f : M.Value} (P : M.Value → Prop) (hD : M.isSet D)
+    (hf : M.mem f (F.fnSetValue D B)) : IsPreimage f P (preimageValue f P) := by
+  have exists_preimage : ∃ r, IsPreimage f P r := by
+    refine ⟨F.sepValue D (fun x => P (F.callValue f x)), F.sep_isSet _ _ hD, ?_⟩
+    intro x
+    rw [F.sep_members]
+    constructor
+    · rintro ⟨hx, hp⟩
+      exact ⟨F.callValue f x, F.call_graph D B f x ((F.fnSet_members D B f).mp hf) hx, hp⟩
+    · rintro ⟨y, hy, hp⟩
+      obtain ⟨hx, eq⟩ := FiniteFunction.graph_pair_value ((F.fnSet_members D B f).mp hf) hy
+      exact ⟨hx, eq ▸ hp⟩
+  simpa only [preimageValue, dif_pos exists_preimage] using Classical.choose_spec exists_preimage
+
+theorem preimage_mem_iff {D B f x : M.Value} (P : M.Value → Prop) (hD : M.isSet D)
+    (hf : M.mem f (F.fnSetValue D B)) :
+    M.mem x (preimageValue f P) ↔ M.mem x D ∧ P (F.callValue f x) := by
+  rw [(preimage_spec P hD hf).2 x]
+  constructor
+  · rintro ⟨y, hy, hp⟩
+    obtain ⟨hx, eq⟩ := FiniteFunction.graph_pair_value ((F.fnSet_members D B f).mp hf) hy
+    exact ⟨hx, eq ▸ hp⟩
+  · rintro ⟨hx, hp⟩
+    exact ⟨F.callValue f x, F.call_graph D B f x ((F.fnSet_members D B f).mp hf) hx, hp⟩
+end FunctionSemantics
+
+structure PointPreimageObj {M : Semantics.{u}} (α : Type v) (β : Type w)
+    [Representation M α] [Representation M β] where
+  function : Obj (M := M) α
+  target : Obj (M := M) β
+
+noncomputable instance preimageRepresentation {M : Semantics.{u}} [F : FunctionSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β] :
+    Representation M (PointPreimageObj (M := M) α β) where
+  wd p := ∃ s : FunctionSignature M, In p.function (fnSet s)
+  denote p := FunctionSemantics.preimageValue (denote p.function) (fun y => y = denote p.target)
+  wd_isSet {p} h := by
+    obtain ⟨s, hs⟩ := h
+    exact (FunctionSemantics.preimage_spec (fun y => y = denote p.target) s.domain_isSet hs).1
+
+noncomputable def preimage {M : Semantics.{u}} [FunctionSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β]
+    (f : Obj (M := M) α) (target : Obj (M := M) β)
+    (s : FunctionSignature M) (hf : In f (fnSet s)) :
+    Obj (M := M) (PointPreimageObj (M := M) α β) := ⟨⟨f, target⟩, ⟨s, hf⟩⟩
+
+theorem preimageMembers {M : Semantics.{u}} [F : FunctionSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β]
+    (p : Obj (M := M) (PointPreimageObj (M := M) α β))
+    (s : FunctionSignature M) (hf : In p.val.function (fnSet s)) (x : M.Value) :
+    M.mem x (denote p) ↔ M.mem x s.domain ∧
+      F.callValue (denote p.val.function) x = denote p.val.target :=
+  FunctionSemantics.preimage_mem_iff _ s.domain_isSet hf
+
+structure SetPreimageObj {M : Semantics.{u}} (α : Type v) (β : Type w)
+    [Representation M α] [Representation M β] where
+  function : Obj (M := M) α
+  target : Obj (M := M) β
+
+noncomputable instance preimageSetRepresentation {M : Semantics.{u}} [F : FunctionSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β] :
+    Representation M (SetPreimageObj (M := M) α β) where
+  wd p := ∃ s : FunctionSignature M, In p.function (fnSet s)
+  denote p := FunctionSemantics.preimageValue (denote p.function) (fun y => M.mem y (denote p.target))
+  wd_isSet {p} h := by
+    obtain ⟨s, hs⟩ := h
+    exact (FunctionSemantics.preimage_spec (fun y => M.mem y (denote p.target)) s.domain_isSet hs).1
+
+noncomputable def preimageSet {M : Semantics.{u}} [FunctionSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β]
+    (f : Obj (M := M) α) (target : Obj (M := M) β)
+    (s : FunctionSignature M) (hf : In f (fnSet s)) :
+    Obj (M := M) (SetPreimageObj (M := M) α β) := ⟨⟨f, target⟩, ⟨s, hf⟩⟩
+
+theorem preimageSetMembers {M : Semantics.{u}} [F : FunctionSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β]
+    (p : Obj (M := M) (SetPreimageObj (M := M) α β))
+    (s : FunctionSignature M) (hf : In p.val.function (fnSet s)) (x : M.Value) :
+    M.mem x (denote p) ↔ M.mem x s.domain ∧
+      M.mem (F.callValue (denote p.val.function) x) (denote p.val.target) :=
+  FunctionSemantics.preimage_mem_iff _ s.domain_isSet hf
+
+namespace FunctionSemantics
+variable {M : Semantics.{u}} [F : FunctionSemantics M]
+
+/-- Complete presentations of one graph have the same input members. -/
+theorem domain_mem_iff {f D B E C x : M.Value}
+    (hf : M.mem f (F.fnSetValue D B)) (hg : M.mem f (F.fnSetValue E C)) :
+    M.mem x D ↔ M.mem x E := by
+  constructor
+  · intro hx
+    exact (FiniteFunction.graph_pair_value ((F.fnSet_members _ _ _).mp hg)
+      (F.call_graph _ _ _ _ ((F.fnSet_members _ _ _).mp hf) hx)).1
+  · intro hx
+    exact (FiniteFunction.graph_pair_value ((F.fnSet_members _ _ _).mp hf)
+      (F.call_graph _ _ _ _ ((F.fnSet_members _ _ _).mp hg) hx)).1
+
+/-- Graph composition mentions only its operands, never a signature witness. -/
+def IsComposition (f g r : M.Value) : Prop :=
+  M.isSet r ∧ ∀ edge, M.mem edge r ↔
+    ∃ x y z, M.mem (F.pairValue x y) g ∧ M.mem (F.pairValue y z) f ∧ edge = F.pairValue x z
+
+noncomputable def compositionValue (f g : M.Value) : M.Value := by
+  classical
+  exact if h : ∃ r, IsComposition f g r then Classical.choose h else F.emptyValue
+
+theorem composition_graph_spec {f g D E B C : M.Value}
+    (hf : M.mem f (F.fnSetValue E C)) (hg : M.mem g (F.fnSetValue D B))
+    (hc : ∀ x, M.mem x D → M.mem (F.callValue g x) E) :
+    IsComposition f g (F.graphValue D C (fun x => F.callValue f (F.callValue g x))) := by
+  have hreturn : ∀ x, M.mem x D → M.mem (F.callValue f (F.callValue g x)) C :=
+    fun x hx => call_mem _ _ _ _ hf (hc x hx)
+  refine ⟨M.member_isSet (graph_inFnSet _ _ _ hreturn), ?_⟩
+  intro edge
+  constructor
+  · intro he
+    obtain ⟨x, hx, z, _, heq, hz⟩ := (F.graph_members _ _ _ _).mp he
+    refine ⟨x, F.callValue g x, z, F.call_graph _ _ _ _ ((F.fnSet_members _ _ _).mp hg) hx, ?_, heq⟩
+    rw [hz]
+    exact F.call_graph _ _ _ _ ((F.fnSet_members _ _ _).mp hf) (hc x hx)
+  · rintro ⟨x, y, z, hxy, hyz, rfl⟩
+    obtain ⟨hx, hy⟩ := FiniteFunction.graph_pair_value ((F.fnSet_members _ _ _).mp hg) hxy
+    obtain ⟨_, hz⟩ := FiniteFunction.graph_pair_value ((F.fnSet_members _ _ _).mp hf) hyz
+    apply (pair_mem_graph _ _ _ _ _).mpr
+    refine ⟨hx, ?_, ?_⟩
+    · rw [hz, hy]
+      exact hreturn x hx
+    · rw [hz, hy]
+
+theorem composition_spec {f g D E B C : M.Value}
+    (hf : M.mem f (F.fnSetValue E C)) (hg : M.mem g (F.fnSetValue D B))
+    (hc : ∀ x, M.mem x D → M.mem (F.callValue g x) E) :
+    IsComposition f g (compositionValue f g) := by
+  have h : ∃ r, IsComposition f g r := ⟨_, composition_graph_spec hf hg hc⟩
+  simpa only [compositionValue, dif_pos h] using Classical.choose_spec h
+
+theorem composition_eq_graph {f g D E B C : M.Value}
+    (hf : M.mem f (F.fnSetValue E C)) (hg : M.mem g (F.fnSetValue D B))
+    (hc : ∀ x, M.mem x D → M.mem (F.callValue g x) E) :
+    compositionValue f g = F.graphValue D C (fun x => F.callValue f (F.callValue g x)) := by
+  have hs := composition_spec hf hg hc
+  have ht := composition_graph_spec hf hg hc
+  exact F.ext _ _ hs.1 ht.1 (fun p => (hs.2 p).trans (ht.2 p).symm)
+
+end FunctionSemantics
+
+structure CompositionObj {M : Semantics.{u}} (α : Type v) (β : Type w)
+    [Representation M α] [Representation M β] where
+  outer : Obj (M := M) α
+  inner : Obj (M := M) β
+
+noncomputable instance compositionRepresentation {M : Semantics.{u}} [F : FunctionSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β] :
+    Representation M (CompositionObj (M := M) α β) where
+  wd c := ∃ s t : FunctionSignature M, In c.outer (fnSet s) ∧ In c.inner (fnSet t) ∧
+    ∀ x, M.mem x t.domain → M.mem (F.callValue (denote c.inner) x) s.domain
+  denote c := FunctionSemantics.compositionValue (denote c.outer) (denote c.inner)
+  wd_isSet {c} h := by
+    obtain ⟨s, t, hf, hg, hc⟩ := h
+    exact (FunctionSemantics.composition_spec hf hg hc).1
+
+noncomputable def compose {M : Semantics.{u}} [F : FunctionSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β]
+    (f : Obj (M := M) α) (g : Obj (M := M) β) (s t : FunctionSignature M)
+    (hf : In f (fnSet s)) (hg : In g (fnSet t))
+    (hc : ∀ x, M.mem x t.domain → M.mem (F.callValue (denote g) x) s.domain) :
+    Obj (M := M) (CompositionObj (M := M) α β) := ⟨⟨f, g⟩, ⟨s, t, hf, hg, hc⟩⟩
+
+/-- A cached composition remains compatible under any checked complete interfaces. -/
+theorem composeCompatible {M : Semantics.{u}} [F : FunctionSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β]
+    (c : Obj (M := M) (CompositionObj (M := M) α β)) (s t : FunctionSignature M)
+    (hf : In c.val.outer (fnSet s)) (hg : In c.val.inner (fnSet t)) :
+    ∀ x, M.mem x t.domain → M.mem (F.callValue (denote c.val.inner) x) s.domain := by
+  obtain ⟨s₀, t₀, hf₀, hg₀, hc₀⟩ := c.wd
+  intro x hx
+  exact (FunctionSemantics.domain_mem_iff hf₀ hf).mp
+    (hc₀ x ((FunctionSemantics.domain_mem_iff hg hg₀).mp hx))
+
+theorem composeGraph {M : Semantics.{u}} [F : FunctionSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β]
+    (c : Obj (M := M) (CompositionObj (M := M) α β)) (s t : FunctionSignature M)
+    (hf : In c.val.outer (fnSet s)) (hg : In c.val.inner (fnSet t)) :
+    denote c = F.graphValue t.domain s.output
+      (fun x => F.callValue (denote c.val.outer) (F.callValue (denote c.val.inner) x)) :=
+  FunctionSemantics.composition_eq_graph hf hg (composeCompatible c s t hf hg)
+
+theorem composeInFnSet {M : Semantics.{u}} [F : FunctionSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β]
+    (c : Obj (M := M) (CompositionObj (M := M) α β)) (s t : FunctionSignature M)
+    (hf : In c.val.outer (fnSet s)) (hg : In c.val.inner (fnSet t)) :
+    In c (fnSet (FunctionSignature.ofDomain t.domain s.output t.domain_isSet s.output_isSet)) := by
+  change M.mem (denote c) (F.fnSetValue t.domain s.output)
+  rw [composeGraph c s t hf hg]
+  exact FunctionSemantics.graph_inFnSet _ _ _ (fun x hx =>
+    FunctionSemantics.call_mem _ _ _ _ hf (composeCompatible c s t hf hg x hx))
+
+theorem composeCall {M : Semantics.{u}} [F : FunctionSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β]
+    (c : Obj (M := M) (CompositionObj (M := M) α β)) (s t : FunctionSignature M)
+    (hf : In c.val.outer (fnSet s)) (hg : In c.val.inner (fnSet t))
+    (x : M.Value) (hx : M.mem x t.domain) :
+    F.callValue (denote c) x = F.callValue (denote c.val.outer) (F.callValue (denote c.val.inner) x) := by
+  rw [composeGraph c s t hf hg]
+  exact FunctionSemantics.call_graphValue _ _ _ (fun a ha =>
+    FunctionSemantics.call_mem _ _ _ _ hf (composeCompatible c s t hf hg a ha)) _ hx
+
+theorem callInputInDomain {M : Semantics.{u}} [F : FunctionSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β]
+    (c : Obj (M := M) (CallObj (M := M) α β)) (s : FunctionSignature M)
+    (hf : In c.val.function (fnSet s)) : M.mem (denote c.val.argument) s.domain :=
+  (FunctionSemantics.domain_mem_iff c.wd.1 hf).mp
+    ((FunctionSignature.oneTarget_domain _ _ _ _ _).mpr c.wd.2)
+
+theorem callOnInputInDomain {M : Semantics.{u}} [F : FunctionSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β]
+    (c : Obj (M := M) (CallOnObj (M := M) α β)) (s : FunctionSignature M)
+    (hf : In c.val.function (fnSet s)) : M.mem (denote c.val.argument) s.domain :=
+  (FunctionSemantics.domain_mem_iff c.wd.1 hf).mp c.wd.2
+
+
+namespace FunctionSemantics
+variable {M : Semantics.{u}} [F : FunctionSemantics M]
+
+theorem composition_pair_iff {f g c x z : M.Value} (hc : IsComposition f g c) :
+    M.mem (F.pairValue x z) c ↔ ∃ y, M.mem (F.pairValue x y) g ∧ M.mem (F.pairValue y z) f := by
+  constructor
+  · intro h
+    obtain ⟨a, y, b, hay, hyb, heq⟩ := (hc.2 _).mp h
+    obtain ⟨rfl, rfl⟩ := F.pair_injective heq
+    exact ⟨y, hay, hyb⟩
+  · rintro ⟨y, hxy, hyz⟩
+    exact (hc.2 _).mpr ⟨x, y, z, hxy, hyz, rfl⟩
+
+theorem composition_associative {f g h fg gh left right : M.Value}
+    (hfg : IsComposition f g fg) (hgh : IsComposition g h gh)
+    (hl : IsComposition fg h left) (hr : IsComposition f gh right) : left = right := by
+  apply F.ext _ _ hl.1 hr.1
+  intro edge
+  constructor
+  · intro he
+    obtain ⟨x, y, z, hxy, hyz, rfl⟩ := (hl.2 edge).mp he
+    obtain ⟨a, hya, haz⟩ := (composition_pair_iff hfg).mp hyz
+    exact (hr.2 _).mpr ⟨x, a, z, (composition_pair_iff hgh).mpr ⟨y, hxy, hya⟩, haz, rfl⟩
+  · intro he
+    obtain ⟨x, a, z, hxa, haz, rfl⟩ := (hr.2 edge).mp he
+    obtain ⟨y, hxy, hya⟩ := (composition_pair_iff hgh).mp hxa
+    exact (hl.2 _).mpr ⟨x, y, z, hxy, (composition_pair_iff hfg).mpr ⟨a, hya, haz⟩, rfl⟩
+
+end FunctionSemantics
+
+theorem composeSpec {M : Semantics.{u}} [FunctionSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β]
+    (c : Obj (M := M) (CompositionObj (M := M) α β)) :
+    FunctionSemantics.IsComposition (denote c.val.outer) (denote c.val.inner) (denote c) := by
+  obtain ⟨s, t, hf, hg, hc⟩ := c.wd
+  exact FunctionSemantics.composition_spec hf hg hc
+
+theorem composeLeftIdentity {M : Semantics.{u}} [F : FunctionSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β]
+    (c : Obj (M := M) (CompositionObj (M := M) α β))
+    (identity : Obj (M := M) (FormulaFn M)) (heq : Same c.val.outer identity)
+    (hbody : ∀ x, identity.val.bodyValue x = x) : Same c c.val.inner := by
+  obtain ⟨s, t, hf, hg, hc⟩ := c.wd
+  have hi : In c.val.outer (fnSet identity.val.signature) := by
+    change M.mem (denote c.val.outer) _
+    rw [heq]
+    exact formulaFnInFnSet identity
+  apply functionExtOnDomain c c.val.inner
+    (FunctionSignature.ofDomain t.domain s.output t.domain_isSet s.output_isSet) t
+    (composeInFnSet c s t hf hg) hg rfl
+  intro x hx
+  rw [composeCall c s t hf hg x hx, heq]
+  exact (FunctionSemantics.call_graphValue _ _ _ identity.wd _
+    ((FunctionSemantics.domain_mem_iff hf hi).mp (hc x hx))).trans (hbody _)
+
+theorem composeRightIdentity {M : Semantics.{u}} [F : FunctionSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β]
+    (c : Obj (M := M) (CompositionObj (M := M) α β))
+    (identity : Obj (M := M) (FormulaFn M)) (heq : Same c.val.inner identity)
+    (hbody : ∀ x, identity.val.bodyValue x = x)
+    (s : FunctionSignature M) (hf : In c.val.outer (fnSet s))
+    (hD : s.domain = identity.val.signature.domain) : Same c c.val.outer := by
+  obtain ⟨s₀, t, hf₀, hg, hc⟩ := c.wd
+  have hi : In c.val.inner (fnSet identity.val.signature) := by
+    change M.mem (denote c.val.inner) _
+    rw [heq]
+    exact formulaFnInFnSet identity
+  have hdomain : t.domain = identity.val.signature.domain :=
+    F.ext _ _ t.domain_isSet identity.val.signature.domain_isSet
+      (fun x => FunctionSemantics.domain_mem_iff hg hi)
+  apply functionExtOnDomain c c.val.outer
+    (FunctionSignature.ofDomain t.domain s₀.output t.domain_isSet s₀.output_isSet) s
+    (composeInFnSet c s₀ t hf₀ hg) hf (hdomain.trans hD.symm)
+  intro x hx
+  rw [composeCall c s₀ t hf₀ hg x hx, heq]
+  exact congrArg (F.callValue (denote c.val.outer))
+    ((FunctionSemantics.call_graphValue _ _ _ identity.wd _ (hdomain ▸ hx)).trans (hbody x))
+
+theorem composeEqFormula {M : Semantics.{u}} [F : FunctionSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β]
+    (c : Obj (M := M) (CompositionObj (M := M) α β))
+    (f : Obj (M := M) (FormulaFn M)) (s t : FunctionSignature M)
+    (hf : In c.val.outer (fnSet s)) (hg : In c.val.inner (fnSet t))
+    (hD : t.domain = f.val.signature.domain)
+    (hbody : ∀ x, M.mem x t.domain → f.val.bodyValue x =
+      F.callValue (denote c.val.outer) (F.callValue (denote c.val.inner) x)) : Same c f := by
+  apply functionExtOnDomain c f
+    (FunctionSignature.ofDomain t.domain s.output t.domain_isSet s.output_isSet)
+    f.val.signature (composeInFnSet c s t hf hg) (formulaFnInFnSet f) hD
+  intro x hx
+  rw [composeCall c s t hf hg x hx]
+  exact ((FunctionSemantics.call_graphValue _ _ _ f.wd _ (hD ▸ hx)).trans (hbody x hx)).symm
+
+theorem composeRangeSubset {M : Semantics.{u}} [F : FunctionSemantics M]
+    {α : Type v} {β : Type w} {γ : Type x} {δ : Type y}
+    [Representation M α] [Representation M β] [Representation M γ] [Representation M δ]
+    (c : Obj (M := M) (CompositionObj (M := M) α β))
+    (r : Obj (M := M) (FunctionRange (M := M) γ))
+    (q : Obj (M := M) (FunctionRange (M := M) δ))
+    (hr : Same r.val.function c) (hq : Same q.val.function c.val.outer) : Subset r q := by
+  obtain ⟨s, t, hf, hg, hc⟩ := c.wd
+  intro z hz
+  change M.mem z (FunctionSemantics.rangeValue (denote q.val.function))
+  change M.mem z (FunctionSemantics.rangeValue (denote r.val.function)) at hz
+  rw [hr] at hz
+  rw [hq]
+  obtain ⟨a, ha, rfl⟩ := (FunctionSemantics.range_mem_iff s.output_isSet
+    (composeInFnSet c s t hf hg)).mp hz
+  exact (FunctionSemantics.range_mem_iff s.output_isSet hf).mpr
+    ⟨F.callValue (denote c.val.inner) a, hc a ha, composeCall c s t hf hg a ha⟩
 
 end Litex

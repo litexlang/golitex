@@ -1,0 +1,149 @@
+# Imported field/vector-space foundations on the real scalar line.
+# Before: the vector-space and zero-kernel proofs belonged to the lecture.
+# Now: genuine linearity and a computed kernel supply the imported injectivity theorem.
+# Boundary: affine maps, missing kernel premises and inverse-at-zero are rejected.
+# Run: LITEX_STD_PATH="$PWD/std" target/release/litex -lang en -strict -f examples/algebra/vector_spaces/main.lit
+
+
+have fn real_inv(x R: x != 0) R = 1 / x
+
+have fn real_add(x, y R) R = x + y
+
+have fn real_neg(x R) R = -x
+
+have fn real_mul(x, y R) R = x * y
+
+forall x, y, z R:
+    real_add(real_add(x, y), z) = real_add(x, real_add(y, z))
+    real_mul(real_mul(x, y), z) = real_mul(x, real_mul(y, z))
+    real_mul(x, real_add(y, z)) = real_add(real_mul(x, y), real_mul(x, z))
+
+forall x, y R:
+    real_add(x, y) = real_add(y, x)
+    real_mul(x, y) = real_mul(y, x)
+
+forall x R:
+    real_add(0, x) = x
+    real_add(x, real_neg(x)) = 0
+    real_mul(1, x) = x
+
+forall x R:
+    x != 0
+    =>:
+        real_mul(x, real_inv(x)) = 1
+
+release thm struct_member((0, 1, real_add, real_neg, real_mul, real_inv), &Algebra::field::Field<R>)
+
+have real_field &Algebra::field::Field<R> = (0, 1, real_add, real_neg, real_mul, real_inv)
+
+claim:
+    ? forall x R:
+        real_add(0,x)=x
+        exist y R st {real_add(x,y)=0}
+    real_add(0,x)=x
+    real_add(x,-x)=0
+    witness exist y R st {real_add(x,y)=0} from -x
+
+claim:
+    ? forall a,b,x R:
+        real_mul(real_field.mul(a,b),x)=real_mul(a,real_mul(b,x))
+        real_mul(real_field.add(a,b),x)=real_add(real_mul(a,x),real_mul(b,x))
+    real_field.mul=real_mul
+    real_field.add=real_add
+    real_field.mul(a,b)=real_mul(a,b)=a*b
+    real_field.add(a,b)=real_add(a,b)=a+b
+    real_mul(real_field.mul(a,b),x)=real_mul(a*b,x)=(a*b)*x=a*(b*x)=real_mul(a,real_mul(b,x))
+    real_mul(real_field.add(a,b),x)=real_mul(a+b,x)=(a+b)*x=a*x+b*x=real_add(real_mul(a,x),real_mul(b,x))
+
+forall a,x,y R:
+    real_mul(a,real_add(x,y))=real_add(real_mul(a,x),real_mul(a,y))
+
+claim:
+    ? forall x R:
+        real_mul(real_field.one,x)=x
+    real_field.one=1
+    real_mul(real_field.one,x)=real_mul(1,x)=1*x=x
+
+real_add $in fn(x,y R) R
+
+real_mul $in fn(a R,x R) R
+
+forall x,y,z R:
+    real_add(real_add(x,y),z)=real_add(x,real_add(y,z))
+
+forall x,y R:
+    real_add(x,y)=real_add(y,x)
+
+release thm struct_member((0,real_add,real_mul),&Algebra::vector_space::VectorSpace<R,real_field,R>)
+
+have scalars &Algebra::vector_space::VectorSpace<R,real_field,R> = (0,real_add,real_mul)
+
+by thm Algebra::vector_space::additive_identity_unique(R,real_field,R,scalars,0) => 0=scalars.zero
+
+release thm Algebra::vector_space::additive_inverse_exists_unique(R,real_field,R,scalars,3)
+
+by thm Algebra::vector_space::zero_scalar_times_vector(R,real_field,R,scalars,7) => scalars.smul(real_field.zero,7)=scalars.zero
+
+by thm Algebra::vector_space::scalar_times_zero(R,real_field,R,scalars,2) => scalars.smul(2,scalars.zero)=scalars.zero
+
+real_field.zero=0
+
+2 != real_field.zero
+
+real_field.inv=real_inv
+
+real_field.inv(2)=real_inv(2)=1/2
+
+have fn double(x R) R=2*x
+
+claim:
+    ? $Algebra::vector_space::is_linear_map(R,real_field,R,scalars,R,scalars,double)
+    claim:
+        ? forall x,y R:
+            double(scalars.add(x,y))=scalars.add(double(x),double(y))
+        scalars.add(x,y)=real_add(x,y)=x+y
+        double(scalars.add(x,y))=2*(x+y)
+        double(x)=2*x
+        double(y)=2*y
+        scalars.add(double(x),double(y))=real_add(double(x),double(y))=real_add(2*x,2*y)=2*x+2*y=2*(x+y)
+    claim:
+        ? forall a,x R:
+            double(scalars.smul(a,x))=scalars.smul(a,double(x))
+        scalars.smul(a,x)=real_mul(a,x)=a*x
+        double(scalars.smul(a,x))=2*(a*x)
+        double(x)=2*x
+        scalars.smul(a,double(x))=real_mul(a,double(x))=real_mul(a,2*x)=a*(2*x)=2*(a*x)
+    by def $Algebra::vector_space::is_linear_map(R,real_field,R,scalars,R,scalars,double)
+
+by thm Algebra::vector_space::linear_map_zero(R,real_field,R,scalars,R,scalars,double) => double(scalars.zero)=scalars.zero
+
+release thm Algebra::vector_space::identity_linear(R,real_field,R,scalars)
+
+release thm Algebra::vector_space::zero_map_linear(R,real_field,R,scalars,R,scalars)
+
+release thm Algebra::vector_space::composition_linear(R,real_field,R,scalars,R,scalars,R,scalars,double,double)
+
+\Algebra::vector_space::map_compose<R,R,R>(double,double)(3)=12
+
+by thm Algebra::vector_space::kernel_is_subspace(R,real_field,R,scalars,R,scalars,double) => $Algebra::vector_space::is_subspace(R,real_field,R,scalars,preimage(double,scalars.zero))
+
+by thm Algebra::vector_space::range_is_subspace(R,real_field,R,scalars,R,scalars,double) => $Algebra::vector_space::is_subspace(R,real_field,R,scalars,fn_range(double))
+
+claim:
+    ? preimage(double,scalars.zero)={scalars.zero}
+    scalars.zero=0
+    claim:
+        ? forall x preimage(double,scalars.zero):
+            x $in {scalars.zero}
+        2*x=double(x)=scalars.zero=0
+        x=0/2=0
+    claim:
+        ? forall x {scalars.zero}:
+            x $in preimage(double,scalars.zero)
+        x=scalars.zero=0
+        double(x)=2*x=0=scalars.zero
+    by extension preimage(double,scalars.zero)={scalars.zero}
+
+by thm Algebra::vector_space::zero_kernel_is_injective(R,real_field,R,scalars,R,scalars,double) => $injective(R,R,double)
+
+by thm Algebra::vector_space::injective_has_zero_kernel(R,real_field,R,scalars,R,scalars,double) => preimage(double,scalars.zero)={scalars.zero}

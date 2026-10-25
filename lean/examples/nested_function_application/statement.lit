@@ -1,0 +1,4 @@
+# Apply an inner function that captures its enclosing real parameter.
+have fn captured_apply_one(t R) R = fn(x R) R {x + t}(1)
+forall t R:
+    captured_apply_one(t) = 1 + t

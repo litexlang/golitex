@@ -1,0 +1,10 @@
+# A designated pair remembers a value from its parameter set as its first coordinate.
+struct DesignatedPair<A set, a A>:
+    x A
+    y A
+    <=>:
+        x = a
+
+(2, 3) $in &DesignatedPair<R, 2>
+forall A set, a A, p &DesignatedPair<A, a>:
+    p.x = a

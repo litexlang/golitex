@@ -1,0 +1,7 @@
+# Distribute union over intersection, including operand permutations and reversed equality.
+forall dist_u_A, dist_u_B, dist_u_D set:
+    union(dist_u_A, intersect(dist_u_B, dist_u_D)) = intersect(union(dist_u_A, dist_u_B), union(dist_u_A, dist_u_D))
+    union(intersect(dist_u_B, dist_u_D), dist_u_A) = intersect(union(dist_u_D, dist_u_A), union(dist_u_A, dist_u_B))
+
+forall dist_ur_A, dist_ur_B, dist_ur_D set:
+    intersect(union(dist_ur_B, dist_ur_A), union(dist_ur_D, dist_ur_A)) = union(intersect(dist_ur_B, dist_ur_D), dist_ur_A)

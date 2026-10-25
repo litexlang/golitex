@@ -1,0 +1,511 @@
+have fn plane_add(u, v R × R) R × R = (u(1) + v(1), u(2) + v(2))
+
+have fn plane_smul(a R, v R × R) R × R = (a * v(1), a * v(2))
+
+(1 + 3, 2 + 4) = (4, 6)
+
+(3 * 1, 3 * 2) = (3, 6)
+
+(3 * 1 + 4 * 0, 3 * 0 + 4 * 1) = (3, 4)
+
+have e1 R × R = (1, 0)
+
+have e2 R × R = (0, 1)
+
+have repeated_directions finite_seq(R × R, 2) = (e1, e1)
+
+repeated_directions(1) = repeated_directions(2)
+
+have empty_directions finite_seq(R × R, 0) = tuple()
+
+
+have fn real_inv(x R: x != 0) R = 1 / x
+
+have fn real_add(x, y R) R = x + y
+
+have fn real_neg(x R) R = -x
+
+have fn real_mul(x, y R) R = x * y
+
+forall x, y, z R:
+    real_add(real_add(x, y), z) = real_add(x, real_add(y, z))
+    real_mul(real_mul(x, y), z) = real_mul(x, real_mul(y, z))
+    real_mul(x, real_add(y, z)) = real_add(real_mul(x, y), real_mul(x, z))
+
+forall x, y R:
+    real_add(x, y) = real_add(y, x)
+    real_mul(x, y) = real_mul(y, x)
+
+forall x R:
+    real_add(0, x) = x
+    real_add(x, real_neg(x)) = 0
+    real_mul(1, x) = x
+
+forall x R:
+    x != 0
+    =>:
+        real_mul(x, real_inv(x)) = 1
+
+release thm struct_member((0, 1, real_add, real_neg, real_mul, real_inv), &Algebra::field::Field<R>)
+
+have real_field &Algebra::field::Field<R> = (0, 1, real_add, real_neg, real_mul, real_inv)
+
+
+claim:
+    ? forall x, y, z R × R:
+        plane_add(plane_add(x, y), z) = plane_add(x, plane_add(y, z))
+    plane_add(x, y) = (x(1) + y(1), x(2) + y(2))
+    plane_add(x, y)(1) = x(1) + y(1)
+    plane_add(x, y)(2) = x(2) + y(2)
+    plane_add(plane_add(x, y), z) = (plane_add(x, y)(1) + z(1), plane_add(x, y)(2) + z(2)) = ((x(1) + y(1)) + z(1), (x(2) + y(2)) + z(2))
+    plane_add(y, z) = (y(1) + z(1), y(2) + z(2))
+    plane_add(y, z)(1) = y(1) + z(1)
+    plane_add(y, z)(2) = y(2) + z(2)
+    plane_add(x, plane_add(y, z)) = (x(1) + plane_add(y, z)(1), x(2) + plane_add(y, z)(2)) = (x(1) + (y(1) + z(1)), x(2) + (y(2) + z(2)))
+    plane_add(plane_add(x, y), z) = ((x(1) + y(1)) + z(1), (x(2) + y(2)) + z(2)) = (x(1) + (y(1) + z(1)), x(2) + (y(2) + z(2))) = plane_add(x, plane_add(y, z))
+
+claim:
+    ? forall x, y R × R:
+        plane_add(x, y) = plane_add(y, x)
+    plane_add(x, y) = (x(1) + y(1), x(2) + y(2)) = (y(1) + x(1), y(2) + x(2)) = plane_add(y, x)
+
+claim:
+    ? forall x R × R:
+        plane_add((0, 0), x) = x
+        exist inverse_x R × R st {plane_add(x, inverse_x) = (0, 0)}
+    plane_add((0, 0), x) = (x(1), x(2)) = x
+    have inverse_x R × R = (0 - x(1), 0 - x(2))
+    inverse_x(1) = 0 - x(1)
+    inverse_x(2) = 0 - x(2)
+    x(1) + inverse_x(1) = x(1) + (0 - x(1)) = 0
+    x(2) + inverse_x(2) = x(2) + (0 - x(2)) = 0
+    plane_add(x, inverse_x) = (x(1) + inverse_x(1), x(2) + inverse_x(2)) = (0, 0)
+    witness exist inverse_x2 R × R st {plane_add(x, inverse_x2) = (0, 0)} from inverse_x
+
+claim:
+    ? forall a, b R, x R × R:
+        plane_smul(real_field.mul(a, b), x) = plane_smul(a, plane_smul(b, x))
+        plane_smul(real_field.add(a, b), x) = plane_add(plane_smul(a, x), plane_smul(b, x))
+    real_field.mul = real_mul
+    real_field.add = real_add
+    real_field.mul(a, b) = real_mul(a, b) = a * b
+    real_field.add(a, b) = real_add(a, b) = a + b
+    plane_smul(b, x) = (b * x(1), b * x(2))
+    plane_smul(b, x)(1) = b * x(1)
+    plane_smul(b, x)(2) = b * x(2)
+    plane_smul(a, plane_smul(b, x)) = (a * plane_smul(b, x)(1), a * plane_smul(b, x)(2)) = (a * (b * x(1)), a * (b * x(2)))
+    plane_smul(real_field.mul(a, b), x) = plane_smul(a * b, x)
+    plane_smul(a * b, x) = ((a * b) * x(1), (a * b) * x(2))
+    plane_smul(real_field.mul(a, b), x) = ((a * b) * x(1), (a * b) * x(2)) = (a * (b * x(1)), a * (b * x(2))) = plane_smul(a, plane_smul(b, x))
+    plane_smul(a, x) = (a * x(1), a * x(2))
+    plane_smul(a, x)(1) = a * x(1)
+    plane_smul(a, x)(2) = a * x(2)
+    plane_smul(b, x) = (b * x(1), b * x(2))
+    plane_add(plane_smul(a, x), plane_smul(b, x)) = (plane_smul(a, x)(1) + plane_smul(b, x)(1), plane_smul(a, x)(2) + plane_smul(b, x)(2)) = (a * x(1) + b * x(1), a * x(2) + b * x(2))
+    plane_smul(real_field.add(a, b), x) = plane_smul(a + b, x)
+    plane_smul(a + b, x) = ((a + b) * x(1), (a + b) * x(2))
+    plane_smul(real_field.add(a, b), x) = ((a + b) * x(1), (a + b) * x(2)) = (a * x(1) + b * x(1), a * x(2) + b * x(2)) = plane_add(plane_smul(a, x), plane_smul(b, x))
+
+claim:
+    ? forall a R, x, y R × R:
+        plane_smul(a, plane_add(x, y)) = plane_add(plane_smul(a, x), plane_smul(a, y))
+    plane_add(x, y) = (x(1) + y(1), x(2) + y(2))
+    plane_add(x, y)(1) = x(1) + y(1)
+    plane_add(x, y)(2) = x(2) + y(2)
+    plane_smul(a, plane_add(x, y)) = (a * plane_add(x, y)(1), a * plane_add(x, y)(2)) = (a * (x(1) + y(1)), a * (x(2) + y(2)))
+    plane_smul(a, x) = (a * x(1), a * x(2))
+    plane_smul(a, y) = (a * y(1), a * y(2))
+    plane_smul(a, x)(1) = a * x(1)
+    plane_smul(a, x)(2) = a * x(2)
+    plane_smul(a, y)(1) = a * y(1)
+    plane_smul(a, y)(2) = a * y(2)
+    plane_add(plane_smul(a, x), plane_smul(a, y)) = (plane_smul(a, x)(1) + plane_smul(a, y)(1), plane_smul(a, x)(2) + plane_smul(a, y)(2))
+    plane_smul(a, x)(1) + plane_smul(a, y)(1) = a * x(1) + a * y(1)
+    plane_smul(a, x)(2) + plane_smul(a, y)(2) = a * x(2) + a * y(2)
+    (plane_smul(a, x)(1) + plane_smul(a, y)(1), plane_smul(a, x)(2) + plane_smul(a, y)(2)) = (a * x(1) + a * y(1), a * x(2) + a * y(2))
+    plane_add(plane_smul(a, x), plane_smul(a, y)) = (a * x(1) + a * y(1), a * x(2) + a * y(2))
+    plane_smul(a, plane_add(x, y)) = (a * (x(1) + y(1)), a * (x(2) + y(2))) = (a * x(1) + a * y(1), a * x(2) + a * y(2)) = plane_add(plane_smul(a, x), plane_smul(a, y))
+
+claim:
+    ? forall x R × R:
+        plane_smul(real_field.one, x) = x
+    real_field.one = 1
+    x = (x(1), x(2))
+    plane_smul(real_field.one, x) = plane_smul(1, x)
+    plane_smul(1, x) = (1 * x(1), 1 * x(2)) = (x(1), x(2))
+    plane_smul(real_field.one, x) = (x(1), x(2)) = x
+
+(0, 0) $in R × R
+
+release thm struct_member(((0, 0), plane_add, plane_smul), &Algebra::vector_space::VectorSpace<R, real_field, R × R>)
+
+have real_plane &Algebra::vector_space::VectorSpace<R, real_field, R × R> = ((0, 0), plane_add, plane_smul)
+
+claim:
+    ? forall u, v R × R:
+        plane_add(u, v)(1) = u(1) + v(1)
+        plane_add(u, v)(2) = u(2) + v(2)
+    plane_add(u, v) = (u(1) + v(1), u(2) + v(2))
+
+claim:
+    ? forall a R, v R × R:
+        plane_smul(a, v)(1) = a * v(1)
+        plane_smul(a, v)(2) = a * v(2)
+    plane_smul(a, v) = (a * v(1), a * v(2))
+
+
+
+have fn pointwise_add(f, g fn(t R) R) fn(t R) R = fn(t R) R {f(t) + g(t)}
+
+have fn pointwise_smul(a R, f fn(t R) R) fn(t R) R = fn(t R) R {a * f(t)}
+
+have fn square(t R) R = t * t
+
+pointwise_add(square, square)(3) = 18
+
+pointwise_smul(2, square)(3) = 18
+
+
+have x_axis power_set(R × R) = {p R × R: p(2) = 0}
+
+have y_axis power_set(R × R) = {p R × R: p(1) = 0}
+
+e1 $in x_axis
+
+e2 $in y_axis
+
+by contra:
+    ? not (1, 1) $in x_axis
+    (1, 1) $in x_axis
+    (1, 1)(2) = 0
+    (1, 1)(2) = 1
+    impossible 1 = 0
+
+claim:
+    ? $Algebra::vector_space::is_subspace(R, real_field, R × R, real_plane, x_axis)
+    real_plane.zero = (0, 0)
+    real_plane.add = plane_add
+    real_plane.smul = plane_smul
+    real_plane.zero $in x_axis
+    claim:
+        ? forall u, v R × R:
+            u $in x_axis
+            v $in x_axis
+            =>:
+                real_plane.add(u, v) $in x_axis
+        real_plane.add(u, v)(2) = plane_add(u, v)(2) = u(2) + v(2) = 0
+    claim:
+        ? forall a R, v R × R:
+            v $in x_axis
+            =>:
+                real_plane.smul(a, v) $in x_axis
+        real_plane.smul(a, v)(2) = plane_smul(a, v)(2) = a * v(2) = 0
+    by def $Algebra::vector_space::is_subspace(R, real_field, R × R, real_plane, x_axis)
+
+claim:
+    ? $Algebra::vector_space::is_subspace(R, real_field, R × R, real_plane, y_axis)
+    real_plane.zero = (0, 0)
+    real_plane.add = plane_add
+    real_plane.smul = plane_smul
+    real_plane.zero $in y_axis
+    claim:
+        ? forall u, v R × R:
+            u $in y_axis
+            v $in y_axis
+            =>:
+                real_plane.add(u, v) $in y_axis
+        real_plane.add(u, v)(1) = plane_add(u, v)(1) = u(1) + v(1) = 0
+    claim:
+        ? forall a R, v R × R:
+            v $in y_axis
+            =>:
+                real_plane.smul(a, v) $in y_axis
+        real_plane.smul(a, v)(1) = plane_smul(a, v)(1) = a * v(1) = 0
+    by def $Algebra::vector_space::is_subspace(R, real_field, R × R, real_plane, y_axis)
+
+have shifted_line power_set(R × R) = {p R × R: p(2) = 1}
+
+by contra:
+    ? not (0, 0) $in shifted_line
+    (0, 0) $in shifted_line
+    (0, 0)(2) = 1
+    (0, 0)(2) = 0
+    impossible 0 = 1
+
+by contra:
+    ? not $Algebra::vector_space::is_subspace(R, real_field, R × R, real_plane, shifted_line)
+    $Algebra::vector_space::is_subspace(R, real_field, R × R, real_plane, shifted_line)
+    real_plane.zero $in shifted_line
+    real_plane.zero = (0, 0)
+    impossible (0, 0) $in shifted_line
+
+claim:
+    ? forall p R × R:
+        exist horizontal, vertical R × R st {horizontal $in x_axis, vertical $in y_axis, p = plane_add(horizontal, vertical)}
+    have horizontal R × R = (p(1), 0)
+    have vertical R × R = (0, p(2))
+    horizontal(2) = 0
+    vertical(1) = 0
+    horizontal $in x_axis
+    vertical $in y_axis
+    horizontal(1) = p(1)
+    vertical(2) = p(2)
+    p = (p(1), p(2))
+    horizontal(1) + vertical(1) = p(1) + 0 = p(1)
+    horizontal(2) + vertical(2) = 0 + p(2) = p(2)
+    plane_add(horizontal, vertical) = (horizontal(1) + vertical(1), horizontal(2) + vertical(2)) = (p(1), p(2)) = p
+    witness exist h, v R × R st {h $in x_axis, v $in y_axis, p = plane_add(h, v)} from horizontal, vertical
+
+thm axis_decomposition_unique:
+    ? forall left, right, left_again, right_again R × R:
+        left $in x_axis
+        left_again $in x_axis
+        right $in y_axis
+        right_again $in y_axis
+        plane_add(left, right) = plane_add(left_again, right_again)
+        =>:
+            left = left_again
+            right = right_again
+    left(2) = 0
+    left_again(2) = 0
+    right(1) = 0
+    right_again(1) = 0
+    plane_add(left, right)(1) = left(1) + right(1) = left(1)
+    plane_add(left_again, right_again)(1) = left_again(1) + right_again(1) = left_again(1)
+    plane_add(left, right)(2) = left(2) + right(2) = right(2)
+    plane_add(left_again, right_again)(2) = left_again(2) + right_again(2) = right_again(2)
+    left(1) = plane_add(left, right)(1) = plane_add(left_again, right_again)(1) = left_again(1)
+    right(2) = plane_add(left, right)(2) = plane_add(left_again, right_again)(2) = right_again(2)
+    left = (left(1), left(2)) = (left_again(1), left_again(2)) = left_again
+    right = (right(1), right(2)) = (right_again(1), right_again(2)) = right_again
+
+
+
+
+claim:
+    ? forall prefix_index closed_range(0, 2):
+        prefix_index = 0 or prefix_index = 1 or prefix_index = 2
+    by for:
+        ? forall enum_index closed_range(0, 2):
+            enum_index = 0 or enum_index = 1 or enum_index = 2
+        enum_index = 0 or enum_index = 1 or enum_index = 2
+
+have fn two_term_partial_sum(coefficients finite_seq(R, 2), vectors finite_seq(R × R, 2), k closed_range(0, 2)) R × R by cases:
+    case k = 0: (0, 0)
+    case k = 1: plane_smul(coefficients(1), vectors(1))
+    case k = 2: plane_add(plane_smul(coefficients(1), vectors(1)), plane_smul(coefficients(2), vectors(2)))
+
+thm two_term_combination_exists:
+    ? forall coefficients finite_seq(R, 2), vectors finite_seq(R × R, 2):
+        $Algebra::finite_span::has_linear_combination_value(R, real_field, R × R, real_plane, 2, coefficients, vectors, plane_add(plane_smul(coefficients(1), vectors(1)), plane_smul(coefficients(2), vectors(2))))
+    release struct def real_plane
+    real_plane.add = plane_add
+    real_plane.smul = plane_smul
+    have first_term R × R = plane_smul(coefficients(1), vectors(1))
+    real_plane.smul(coefficients(1), vectors(1)) = first_term
+    real_plane.add(real_plane.zero, first_term) = first_term
+    have second_term R × R = plane_smul(coefficients(2), vectors(2))
+    real_plane.smul(coefficients(2), vectors(2)) = second_term
+    have fn sums(k closed_range(0, 2)) R × R = two_term_partial_sum(coefficients, vectors, k)
+    sums(1) = two_term_partial_sum(coefficients, vectors, 1)
+    two_term_partial_sum(coefficients, vectors, 1) = plane_smul(coefficients(1), vectors(1))
+    sums(1) = plane_smul(coefficients(1), vectors(1))
+    sums(2) = two_term_partial_sum(coefficients, vectors, 2)
+    two_term_partial_sum(coefficients, vectors, 2) = plane_add(plane_smul(coefficients(1), vectors(1)), plane_smul(coefficients(2), vectors(2)))
+    sums(2) = plane_add(plane_smul(coefficients(1), vectors(1)), plane_smul(coefficients(2), vectors(2)))
+    sums(0) = two_term_partial_sum(coefficients, vectors, 0)
+    two_term_partial_sum(coefficients, vectors, 0) = (0, 0)
+    real_plane.zero = (0, 0)
+    sums(0) = (0, 0) = real_plane.zero
+    claim:
+        ? forall k N+:
+            k <= 2
+            =>:
+                sums(k) = real_plane.add(sums(k - 1), real_plane.smul(coefficients(k), vectors(k)))
+        k $in closed_range(1, 2)
+        expand: k $in closed_range(1, 2)
+        k = 1 or k = 2
+        by cases:
+            ? sums(k) = real_plane.add(sums(k - 1), real_plane.smul(coefficients(k), vectors(k)))
+            case k = 1:
+                k - 1 = 0
+                sums(k) = sums(1) = plane_smul(coefficients(1), vectors(1))
+                sums(k - 1) = sums(0) = real_plane.zero
+                real_plane.smul(coefficients(k), vectors(k)) = real_plane.smul(coefficients(1), vectors(1)) = first_term
+                real_plane.add(sums(k - 1), real_plane.smul(coefficients(k), vectors(k))) = real_plane.add(real_plane.zero, first_term) = first_term = plane_smul(coefficients(1), vectors(1))
+            case k = 2:
+                k - 1 = 1
+                sums(1) = plane_smul(coefficients(1), vectors(1))
+                sums(k - 1) = sums(1) = first_term
+                real_plane.smul(coefficients(k), vectors(k)) = real_plane.smul(coefficients(2), vectors(2)) = second_term
+                sums(k - 1) $in R × R
+                real_plane.smul(coefficients(k), vectors(k)) $in R × R
+                plane_add(first_term, second_term) = real_plane.add(first_term, second_term)
+                sums(k) = sums(2) = plane_add(plane_smul(coefficients(1), vectors(1)), plane_smul(coefficients(2), vectors(2))) = plane_add(first_term, second_term) = real_plane.add(first_term, second_term) = real_plane.add(sums(k - 1), real_plane.smul(coefficients(k), vectors(k)))
+    by def $Algebra::finite_span::is_partial_sum(R, real_field, R × R, real_plane, 2, coefficients, vectors, sums)
+    sums(2) = plane_add(plane_smul(coefficients(1), vectors(1)), plane_smul(coefficients(2), vectors(2)))
+    witness exist partial fn(k closed_range(0, 2)) R × R st {$Algebra::finite_span::is_partial_sum(R, real_field, R × R, real_plane, 2, coefficients, vectors, partial), plane_add(plane_smul(coefficients(1), vectors(1)), plane_smul(coefficients(2), vectors(2))) = partial(2)} from sums
+    by def $Algebra::finite_span::has_linear_combination_value(R, real_field, R × R, real_plane, 2, coefficients, vectors, plane_add(plane_smul(coefficients(1), vectors(1)), plane_smul(coefficients(2), vectors(2))))
+
+thm two_term_combination_value:
+    ? forall coefficients finite_seq(R, 2), vectors finite_seq(R × R, 2), value R × R:
+        $Algebra::finite_span::has_linear_combination_value(R, real_field, R × R, real_plane, 2, coefficients, vectors, value)
+        =>:
+            value = plane_add(plane_smul(coefficients(1), vectors(1)), plane_smul(coefficients(2), vectors(2)))
+    release struct def real_plane
+    real_plane.add = plane_add
+    real_plane.smul = plane_smul
+    obtain sums from $Algebra::finite_span::has_linear_combination_value(R, real_field, R × R, real_plane, 2, coefficients, vectors, value)
+    by def $Algebra::finite_span::is_partial_sum(R, real_field, R × R, real_plane, 2, coefficients, vectors, sums)
+    sums(0) = real_plane.zero
+    sums(1) = real_plane.add(sums(0), real_plane.smul(coefficients(1), vectors(1))) = real_plane.smul(coefficients(1), vectors(1))
+    have first_term R × R = real_plane.smul(coefficients(1), vectors(1))
+    have second_term R × R = real_plane.smul(coefficients(2), vectors(2))
+    sums(1) = first_term
+    first_term = plane_smul(coefficients(1), vectors(1))
+    second_term = plane_smul(coefficients(2), vectors(2))
+    sums(2) = real_plane.add(sums(1), real_plane.smul(coefficients(2), vectors(2)))
+    real_plane.add(first_term, second_term) = plane_add(first_term, second_term)
+    sums(2) = real_plane.add(sums(1), real_plane.smul(coefficients(2), vectors(2))) = real_plane.add(first_term, second_term) = plane_add(first_term, second_term)
+    value = sums(2) = real_plane.add(sums(1), real_plane.smul(coefficients(2), vectors(2))) = plane_add(plane_smul(coefficients(1), vectors(1)), plane_smul(coefficients(2), vectors(2)))
+
+release tuple def e1
+
+release tuple def e2
+
+thm standard_expansion:
+    ? forall a, b R:
+        plane_add(plane_smul(a, e1), plane_smul(b, e2)) = (a, b)
+    have horizontal R × R = plane_smul(a, e1)
+    have vertical R × R = plane_smul(b, e2)
+    a * e1(1) = a
+    a * e1(2) = 0
+    b * e2(1) = 0
+    b * e2(2) = b
+    horizontal = (a * e1(1), a * e1(2)) = (a, 0)
+    vertical = (b * e2(1), b * e2(2)) = (0, b)
+    horizontal(1) + vertical(1) = a + 0 = a
+    horizontal(2) + vertical(2) = 0 + b = b
+    plane_add(horizontal, vertical) = (horizontal(1) + vertical(1), horizontal(2) + vertical(2)) = (a, b)
+    plane_add(plane_smul(a, e1), plane_smul(b, e2)) = plane_add(horizontal, vertical) = (a, b)
+
+
+
+have standard_basis finite_seq(R × R, 2) = (e1, e2)
+
+standard_basis(1) = (1, 0)
+
+standard_basis(2) = (0, 1)
+
+claim:
+    ? forall v R × R:
+        v $in \Algebra::finite_span::span<R, real_field, R × R, real_plane, 2, standard_basis>
+    have S power_set(R × R) = {x R × R: $Algebra::finite_span::is_linear_combination(R, real_field, R × R, real_plane, 2, x, standard_basis)}
+    release obj def S
+    \Algebra::finite_span::span<R, real_field, R × R, real_plane, 2, standard_basis> = {x R × R: $Algebra::finite_span::is_linear_combination(R, real_field, R × R, real_plane, 2, x, standard_basis)}
+    \Algebra::finite_span::span<R, real_field, R × R, real_plane, 2, standard_basis> = S
+    have coefficients finite_seq(R, 2) = (v(1), v(2))
+    coefficients(1) = v(1)
+    coefficients(2) = v(2)
+    standard_basis(1) = e1
+    standard_basis(2) = e2
+    release thm standard_expansion(v(1), v(2))
+    plane_smul(coefficients(1), standard_basis(1)) = plane_smul(v(1), e1)
+    plane_smul(coefficients(2), standard_basis(2)) = plane_smul(v(2), e2)
+    plane_add(plane_smul(coefficients(1), standard_basis(1)), plane_smul(coefficients(2), standard_basis(2))) = plane_add(plane_smul(v(1), e1), plane_smul(v(2), e2)) = (v(1), v(2)) = v
+    release thm two_term_combination_exists(coefficients, standard_basis)
+    witness exist scalars finite_seq(R, 2) st {$Algebra::finite_span::has_linear_combination_value(R, real_field, R × R, real_plane, 2, scalars, standard_basis, v)} from coefficients
+    by def $Algebra::finite_span::is_linear_combination(R, real_field, R × R, real_plane, 2, v, standard_basis)
+    v $in S
+    v $in \Algebra::finite_span::span<R, real_field, R × R, real_plane, 2, standard_basis>
+
+\Algebra::finite_span::span<R, real_field, R × R, real_plane, 2, standard_basis> $subset R × R
+
+by def R × R $subset \Algebra::finite_span::span<R, real_field, R × R, real_plane, 2, standard_basis>
+
+by extension:
+    ? \Algebra::finite_span::span<R, real_field, R × R, real_plane, 2, standard_basis> = R × R
+    forall v \Algebra::finite_span::span<R, real_field, R × R, real_plane, 2, standard_basis>:
+        v $in R × R
+    forall v R × R:
+        v $in \Algebra::finite_span::span<R, real_field, R × R, real_plane, 2, standard_basis>
+
+by def $Algebra::finite_span::spans(R, real_field, R × R, real_plane, 2, standard_basis)
+
+(3, 4) $in \Algebra::finite_span::span<R, real_field, R × R, real_plane, 2, standard_basis>
+
+
+
+claim:
+    ? $Algebra::basis::is_linearly_independent(R, real_field, R × R, real_plane, 2, standard_basis)
+    claim:
+        ? forall coefficients finite_seq(R, 2):
+            $Algebra::finite_span::has_linear_combination_value(R, real_field, R × R, real_plane, 2, coefficients, standard_basis, real_plane.zero)
+            =>:
+                $Algebra::basis::has_only_zero_coefficients(R, real_field, 2, coefficients)
+        release thm two_term_combination_value(coefficients, standard_basis, real_plane.zero)
+        release thm standard_expansion(coefficients(1), coefficients(2))
+        standard_basis(1) = e1
+        standard_basis(2) = e2
+        plane_smul(coefficients(1), standard_basis(1)) = plane_smul(coefficients(1), e1)
+        plane_smul(coefficients(2), standard_basis(2)) = plane_smul(coefficients(2), e2)
+        plane_add(plane_smul(coefficients(1), standard_basis(1)), plane_smul(coefficients(2), standard_basis(2))) = plane_add(plane_smul(coefficients(1), e1), plane_smul(coefficients(2), e2)) = (coefficients(1), coefficients(2)) = coefficients
+        real_plane.zero = (0, 0)
+        coefficients = real_plane.zero = (0, 0)
+        coefficients(1) = 0
+        coefficients(2) = 0
+        claim:
+            ? forall k N+:
+                k <= 2
+                =>:
+                    coefficients(k) = real_field.zero
+            k $in closed_range(1, 2)
+            expand: k $in closed_range(1, 2)
+            by cases:
+                ? coefficients(k) = real_field.zero
+                case k = 1:
+                    coefficients(k) = coefficients(1) = 0 = real_field.zero
+                case k = 2:
+                    coefficients(k) = coefficients(2) = 0 = real_field.zero
+        by def $Algebra::basis::has_only_zero_coefficients(R, real_field, 2, coefficients)
+    by def $Algebra::basis::is_linearly_independent(R, real_field, R × R, real_plane, 2, standard_basis)
+
+by contra:
+    ? not $Algebra::basis::is_linearly_independent(R, real_field, R × R, real_plane, 2, repeated_directions)
+    $Algebra::basis::is_linearly_independent(R, real_field, R × R, real_plane, 2, repeated_directions)
+    have coefficients finite_seq(R, 2) = (1, -1)
+    repeated_directions(1) = e1
+    repeated_directions(2) = e1
+    have forward R × R = plane_smul(1, e1)
+    have backward R × R = plane_smul(-1, e1)
+    1 * e1(1) = 1
+    1 * e1(2) = 0
+    -1 * e1(1) = -1
+    -1 * e1(2) = 0
+    forward = (1 * e1(1), 1 * e1(2)) = (1, 0)
+    backward = (-1 * e1(1), -1 * e1(2)) = (-1, 0)
+    forward(1) = 1
+    backward(1) = -1
+    forward(2) = 0
+    backward(2) = 0
+    forward(1) + backward(1) = 1 + (-1) = 0
+    forward(2) + backward(2) = 0 + 0 = 0
+    plane_add(forward, backward) = (forward(1) + backward(1), forward(2) + backward(2)) = (0, 0) = real_plane.zero
+    plane_smul(coefficients(1), repeated_directions(1)) = plane_smul(1, e1) = forward
+    plane_smul(coefficients(2), repeated_directions(2)) = plane_smul(-1, e1) = backward
+    plane_smul(coefficients(1), repeated_directions(1)) $in R × R
+    plane_smul(coefficients(2), repeated_directions(2)) $in R × R
+    plane_add(plane_smul(coefficients(1), repeated_directions(1)), plane_smul(coefficients(2), repeated_directions(2))) = plane_add(forward, backward) = real_plane.zero
+    release thm two_term_combination_exists(coefficients, repeated_directions)
+    $Algebra::finite_span::has_linear_combination_value(R, real_field, R × R, real_plane, 2, coefficients, repeated_directions, real_plane.zero)
+    $Algebra::basis::has_only_zero_coefficients(R, real_field, 2, coefficients)
+    coefficients(1) = real_field.zero = 0
+    coefficients(1) = 1
+    impossible 1 = 0
+
+
+by def $Algebra::basis::is_basis(R, real_field, R × R, real_plane, 2, standard_basis)
+
+thm standard_plane_basis:
+    ? forall:
+        $Algebra::basis::is_basis(R,real_field,R × R,real_plane,2,standard_basis)

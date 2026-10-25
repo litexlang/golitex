@@ -24,6 +24,7 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<AtomicExceptEqualityFactSearchProofByBuiltinRule>> {
         match fact {
+            AtomicFact::MultivariableAnalysisFact(_) | AtomicFact::NotMultivariableAnalysisFact(_) => Ok(None),
             AtomicFact::HasRiemannIntegralFact(_) | AtomicFact::NotHasRiemannIntegralFact(_) | AtomicFact::FunctionRiemannIntegrableFact(_) | AtomicFact::NotFunctionRiemannIntegrableFact(_) |
             AtomicFact::HasDerivativeAtFact(_) | AtomicFact::NotHasDerivativeAtFact(_) | AtomicFact::FunctionDifferentiableAtFact(_) | AtomicFact::NotFunctionDifferentiableAtFact(_) | AtomicFact::RealSetBoundFact(_) | AtomicFact::NotRealSetBoundFact(_) | AtomicFact::RealSetBoundedFact(_) | AtomicFact::NotRealSetBoundedFact(_) | AtomicFact::SequenceAnalysisFact(_) | AtomicFact::NotSequenceAnalysisFact(_) | AtomicFact::RealAccumulationFact(_) | AtomicFact::NotRealAccumulationFact(_) | AtomicFact::FunctionContinuousAtFact(_) | AtomicFact::NotFunctionContinuousAtFact(_) | AtomicFact::FunctionContinuousFact(_) | AtomicFact::NotFunctionContinuousFact(_) | AtomicFact::FunctionLipschitzFact(_) | AtomicFact::NotFunctionLipschitzFact(_) => Ok(None),
             AtomicFact::HasSequenceLimsupFact(_) | AtomicFact::HasSequenceLiminfFact(_) | AtomicFact::HasSequenceLimitFact(_) | AtomicFact::NotHasSequenceLimsupFact(_) | AtomicFact::NotHasSequenceLiminfFact(_) | AtomicFact::NotHasSequenceLimitFact(_) | AtomicFact::HasFunctionLimitFact(_) | AtomicFact::NotHasFunctionLimitFact(_) => Ok(None),

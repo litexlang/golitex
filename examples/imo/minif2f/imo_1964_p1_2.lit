@@ -1,0 +1,78 @@
+prop divides_N(a N, b N):
+    exist k N st {b = a * k}
+have fn integer_quotient by exist!:
+    ? forall a Z, d N+:
+        exist! q Z st {a = d * q + a % d}
+claim:
+    ? forall n N:
+        exist q N st {n = 3 * q + n % 3}
+    3 $in N+
+    n $in Z
+    have z Z = integer_quotient(n, 3)
+    n = 3 * integer_quotient(n, 3) + n % 3
+    3 * integer_quotient(n, 3) + n % 3 = 3 * z + n % 3
+    claim:
+        ? 0 <= z
+        by contra:
+            ? 0 <= z
+            z < 0
+            z <= -1
+            n % 3 $in Z
+            n % 3 < 3
+            n % 3 <= 2
+            3 * z + n % 3 <= 3 * (-1) + 2 = -1 < 0
+            n < 0
+            impossible n >= 0
+    z $in N
+    have q N = z
+    n = 3 * z + n % 3 = 3 * q + n % 3
+    witness exist q0 N st {n = 3 * q0 + n % 3} from q:
+        n = 3 * q + n % 3
+claim:
+    ? forall k N:
+        2^(3*k)%7=1 and 2^(3*k+1)%7=2 and 2^(3*k+2)%7=4
+    by induc k from 0:
+        ? 2^(3*k)%7=1 and 2^(3*k+1)%7=2 and 2^(3*k+2)%7=4
+        ? from k=0:
+            2^(3*0)%7=1
+            2^(3*0+1)%7=2
+            2^(3*0+2)%7=4
+        ? induc:
+            3*(k+1)=3*k+3
+            2^(3*k+3)=2^(3*k)*2^3
+            2^(3*(k+1))%7=(2^(3*k)*2^3)%7=((2^(3*k)%7)*(2^3%7))%7=(1*1)%7=1
+            3*(k+1)+1=(3*k+1)+3
+            2^((3*k+1)+3)=2^(3*k+1)*2^3
+            2^(3*(k+1)+1)%7=(2^(3*k+1)*2^3)%7=((2^(3*k+1)%7)*(2^3%7))%7=(2*1)%7=2
+            3*(k+1)+2=(3*k+2)+3
+            2^((3*k+2)+3)=2^(3*k+2)*2^3
+            2^(3*(k+1)+2)%7=(2^(3*k+2)*2^3)%7=((2^(3*k+2)%7)*(2^3%7))%7=(4*1)%7=4
+
+claim:
+    ? forall n N:
+        not $divides_N(7, 2^n + 1)
+    by contra:
+        ? not $divides_N(7, 2^n + 1)
+        $divides_N(7, 2^n + 1)
+        obtain j from exist j N st {2^n + 1 = 7 * j}
+        2^n + 1 = 7 * j + 0
+        (2^n + 1) % 7 = 0
+        obtain q from exist q N st {n = 3 * q + n % 3}
+        claim:
+            ? (2^n + 1) % 7 != 0
+            n % 3 = 0 or n % 3 = 1 or n % 3 = 2
+            by cases:
+                ? (2^n + 1) % 7 != 0
+                case n % 3 = 0:
+                    n = 3 * q + n % 3 = 3 * q
+                    2^n % 7 = 2^(3 * q) % 7 = 1
+                    (2^n + 1) % 7 = ((2^n % 7) + (1 % 7)) % 7 = (1 + 1) % 7 = 2 != 0
+                case n % 3 = 1:
+                    n = 3 * q + n % 3 = 3 * q + 1
+                    2^n % 7 = 2^(3 * q + 1) % 7 = 2
+                    (2^n + 1) % 7 = ((2^n % 7) + (1 % 7)) % 7 = (2 + 1) % 7 = 3 != 0
+                case n % 3 = 2:
+                    n = 3 * q + n % 3 = 3 * q + 2
+                    2^n % 7 = 2^(3 * q + 2) % 7 = 4
+                    (2^n + 1) % 7 = ((2^n % 7) + (1 % 7)) % 7 = (4 + 1) % 7 = 5 != 0
+        impossible (2^n + 1) % 7 = 0

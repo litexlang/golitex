@@ -1,0 +1,764 @@
+{
+  "collected_on": "2026-10-25",
+  "problem_count": 26,
+  "solution_package_count": 30,
+  "entries": [
+    {
+      "id": "imo_1983_p6",
+      "category": "inequalities",
+      "path": "inequalities/imo_1983_p6.lit",
+      "mode": "file",
+      "files": [
+        "inequalities/imo_1983_p6.lit"
+      ],
+      "command": [
+        "target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "examples/imo/inequalities/imo_1983_p6.lit"
+      ],
+      "source_sha256": {
+        "inequalities/imo_1983_p6.lit": "8466d930f10af1cf3cb0ae07838ec7d24bea73b513d499939785867413443551"
+      },
+      "verification_status": "pass",
+      "historical_evidence": "inequalities/verification-2026-10-11.json"
+    },
+    {
+      "id": "imo_1995_p2",
+      "category": "inequalities",
+      "path": "inequalities/imo_1995_p2.lit",
+      "mode": "file",
+      "files": [
+        "inequalities/imo_1995_p2.lit"
+      ],
+      "command": [
+        "target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "examples/imo/inequalities/imo_1995_p2.lit"
+      ],
+      "source_sha256": {
+        "inequalities/imo_1995_p2.lit": "cdb75693e7a8eef6270b5299fbffa6aa9aa37c863e1cb071f52c1403fdaf71ef"
+      },
+      "verification_status": "pass",
+      "historical_evidence": "inequalities/verification-2026-10-11.json"
+    },
+    {
+      "id": "imo_2001_p2",
+      "category": "inequalities",
+      "path": "inequalities/imo_2001_p2.lit",
+      "mode": "file",
+      "files": [
+        "inequalities/imo_2001_p2.lit"
+      ],
+      "command": [
+        "target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "examples/imo/inequalities/imo_2001_p2.lit"
+      ],
+      "source_sha256": {
+        "inequalities/imo_2001_p2.lit": "ac21d7379d1feefdc1e612c36e330b4de08e05f5815158f848d79b478b36cf41"
+      },
+      "verification_status": "pass",
+      "historical_evidence": "inequalities/verification-2026-10-11.json"
+    },
+    {
+      "id": "imo_2005_p3",
+      "category": "inequalities",
+      "path": "inequalities/imo_2005_p3.lit",
+      "mode": "file",
+      "files": [
+        "inequalities/imo_2005_p3.lit"
+      ],
+      "command": [
+        "target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "examples/imo/inequalities/imo_2005_p3.lit"
+      ],
+      "source_sha256": {
+        "inequalities/imo_2005_p3.lit": "ef1a997fc6351211ebd97d15673d703f7bae5b33a56748736bf51fae8c40d0e4"
+      },
+      "verification_status": "pass",
+      "historical_evidence": "inequalities/verification-2026-10-11.json"
+    },
+    {
+      "id": "imo_2006_p3",
+      "category": "inequalities",
+      "path": "inequalities/imo_2006_p3.lit",
+      "mode": "file",
+      "files": [
+        "inequalities/imo_2006_p3.lit"
+      ],
+      "command": [
+        "target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "examples/imo/inequalities/imo_2006_p3.lit"
+      ],
+      "source_sha256": {
+        "inequalities/imo_2006_p3.lit": "15b4ca5f265cce1f0430a3245c240909e97c1100913dfae3ac7580cd9146d9cc"
+      },
+      "verification_status": "pass",
+      "historical_evidence": "inequalities/verification-2026-10-11.json"
+    },
+    {
+      "id": "imo_1960_p3",
+      "category": "geometry",
+      "variant": "Solution-1",
+      "original_collection_id": 1,
+      "path": "geometry/imo_1960_p3/Solution-1/solution.lit",
+      "mode": "file",
+      "package": "geometry/imo_1960_p3/Solution-1",
+      "files": [
+        "geometry/imo_1960_p3/Solution-1/geo_definitions.lit",
+        "geometry/imo_1960_p3/Solution-1/predicate.lit",
+        "geometry/imo_1960_p3/Solution-1/solution.lit",
+        "geometry/imo_1960_p3/Solution-1/theorem.lit",
+        "geometry/imo_1960_p3/Solution-1/litex.config"
+      ],
+      "command": [
+        "target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "examples/imo/geometry/imo_1960_p3/Solution-1/solution.lit"
+      ],
+      "source_sha256": {
+        "geometry/imo_1960_p3/Solution-1/geo_definitions.lit": "1202c487bb0deeef99d51dfa2e6f3d4b7e57321a0683c2b7c026809ee5936b73",
+        "geometry/imo_1960_p3/Solution-1/predicate.lit": "90445fcbb6cb7057b118ed1a2665fbe4d14c1693510a171b751b296191bd18e7",
+        "geometry/imo_1960_p3/Solution-1/solution.lit": "3fea19a6add77cd369999ddb3b79b7c42a736a5afd68a54ce74f17e9588647c8",
+        "geometry/imo_1960_p3/Solution-1/theorem.lit": "18a1fa9336b75fd7ffb4c5e4b03af6eafa9aa5b00dff4722f5d6eb80dcb5866b",
+        "geometry/imo_1960_p3/Solution-1/litex.config": "94378a1e561836d0bcc65ca868f4fed8c5f691f42242e892472d2ed6d7c6edad"
+      },
+      "verification_status": "pass",
+      "historical_evidence": "../../showcases/verification_runs/2026-10-14-showcase-repair.md"
+    },
+    {
+      "id": "imo_1960_p3",
+      "category": "geometry",
+      "variant": "Solution-2",
+      "original_collection_id": 1,
+      "path": "geometry/imo_1960_p3/Solution-2/solution.lit",
+      "mode": "file",
+      "package": "geometry/imo_1960_p3/Solution-2",
+      "files": [
+        "geometry/imo_1960_p3/Solution-2/geo_definitions.lit",
+        "geometry/imo_1960_p3/Solution-2/predicate.lit",
+        "geometry/imo_1960_p3/Solution-2/solution.lit",
+        "geometry/imo_1960_p3/Solution-2/theorem.lit",
+        "geometry/imo_1960_p3/Solution-2/litex.config"
+      ],
+      "command": [
+        "target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "examples/imo/geometry/imo_1960_p3/Solution-2/solution.lit"
+      ],
+      "source_sha256": {
+        "geometry/imo_1960_p3/Solution-2/geo_definitions.lit": "1202c487bb0deeef99d51dfa2e6f3d4b7e57321a0683c2b7c026809ee5936b73",
+        "geometry/imo_1960_p3/Solution-2/predicate.lit": "106ad55caba9f6941c27fad6c44d80ab93ea1db54174048b09cbca9c99cf6ff5",
+        "geometry/imo_1960_p3/Solution-2/solution.lit": "33a8e2835e67ef2b455ad593b9cf10e0ebfa3520ad80f50cce4ad06d47852f82",
+        "geometry/imo_1960_p3/Solution-2/theorem.lit": "55cb439397732f43db258b042f996e34361203f66c5cc5667b6c1daafb7560e4",
+        "geometry/imo_1960_p3/Solution-2/litex.config": "94378a1e561836d0bcc65ca868f4fed8c5f691f42242e892472d2ed6d7c6edad"
+      },
+      "verification_status": "not_rerun",
+      "historical_evidence": "../../showcases/verification_runs/2026-10-14-showcase-repair.md"
+    },
+    {
+      "id": "imo_1960_p6",
+      "category": "geometry",
+      "variant": "Solution-1",
+      "original_collection_id": 2,
+      "path": "geometry/imo_1960_p6/Solution-1/solution_part_b.lit",
+      "mode": "file",
+      "package": "geometry/imo_1960_p6/Solution-1",
+      "files": [
+        "geometry/imo_1960_p6/Solution-1/predicate.lit",
+        "geometry/imo_1960_p6/Solution-1/solution_part_a.lit",
+        "geometry/imo_1960_p6/Solution-1/solution_part_b.lit",
+        "geometry/imo_1960_p6/Solution-1/theorem.lit",
+        "geometry/imo_1960_p6/Solution-1/litex.config"
+      ],
+      "command": [
+        "target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "examples/imo/geometry/imo_1960_p6/Solution-1/solution_part_b.lit"
+      ],
+      "source_sha256": {
+        "geometry/imo_1960_p6/Solution-1/predicate.lit": "7d4c6154b3a60f5dc3a092ffcfc1c6eabb8d6ddd864442eca493d9ba5aeb994b",
+        "geometry/imo_1960_p6/Solution-1/solution_part_a.lit": "0b61e6ba92663fe73656916cd3d9b143b592ebe9640434a2532d345db6fb1981",
+        "geometry/imo_1960_p6/Solution-1/solution_part_b.lit": "601894ce71de38cd3ef6aa49657124ae725fd3bb117c5c3d2a109cd4ae3a4389",
+        "geometry/imo_1960_p6/Solution-1/theorem.lit": "3d10eb0a01d057d86c1d9cbe186eda297eb84a93d33a92c98610518b967d3a1e",
+        "geometry/imo_1960_p6/Solution-1/litex.config": "6454662734f05f7f1d405435178d3f49f0c87e1221fc1334d740b52611772b35"
+      },
+      "verification_status": "not_rerun",
+      "historical_evidence": "../../showcases/verification_runs/2026-10-14-showcase-repair.md"
+    },
+    {
+      "id": "imo_1960_p6",
+      "category": "geometry",
+      "variant": "Solution-2",
+      "original_collection_id": 2,
+      "path": "geometry/imo_1960_p6/Solution-2/solution_part_a.lit",
+      "mode": "file",
+      "package": "geometry/imo_1960_p6/Solution-2",
+      "files": [
+        "geometry/imo_1960_p6/Solution-2/predicate.lit",
+        "geometry/imo_1960_p6/Solution-2/solution_part_a.lit",
+        "geometry/imo_1960_p6/Solution-2/theorem.lit",
+        "geometry/imo_1960_p6/Solution-2/litex.config"
+      ],
+      "command": [
+        "target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "examples/imo/geometry/imo_1960_p6/Solution-2/solution_part_a.lit"
+      ],
+      "source_sha256": {
+        "geometry/imo_1960_p6/Solution-2/predicate.lit": "87505122922c509fde4faff0c5a6e828613567e08c371d1b64dc962faa87c5ef",
+        "geometry/imo_1960_p6/Solution-2/solution_part_a.lit": "bfce7eda459402aef1c9cc2b6fbc9c20ef5bfe0844e7f14f2c74795f93a00f68",
+        "geometry/imo_1960_p6/Solution-2/theorem.lit": "6c67575458c46ba03256563381e336c1a21703fb07fcbee9840fd98233fc9961",
+        "geometry/imo_1960_p6/Solution-2/litex.config": "af950d2f4aaec298fc37e59949079f80fa0bee8b02f11f182fcc217ae0126a9e"
+      },
+      "verification_status": "not_rerun",
+      "historical_evidence": "../../showcases/verification_runs/2026-10-14-showcase-repair.md"
+    },
+    {
+      "id": "imo_1961_p4",
+      "category": "geometry",
+      "variant": ".",
+      "original_collection_id": 3,
+      "path": "geometry/imo_1961_p4/solution.lit",
+      "mode": "file",
+      "package": "geometry/imo_1961_p4",
+      "files": [
+        "geometry/imo_1961_p4/solution.lit",
+        "geometry/imo_1961_p4/litex.config"
+      ],
+      "command": [
+        "target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "examples/imo/geometry/imo_1961_p4/solution.lit"
+      ],
+      "source_sha256": {
+        "geometry/imo_1961_p4/solution.lit": "e9772a94c7ad23eef9b729c472bb190058b2dae0475e70c781cdbe5d692aa392",
+        "geometry/imo_1961_p4/litex.config": "8079085630fc31203913aff020235e35d41600f199a42f67bdf20f9b1aa8cd2d"
+      },
+      "verification_status": "not_rerun",
+      "historical_evidence": "../../showcases/verification_runs/2026-10-14-showcase-repair.md"
+    },
+    {
+      "id": "imo_1961_p5",
+      "category": "geometry",
+      "variant": ".",
+      "original_collection_id": 4,
+      "path": "geometry/imo_1961_p5/solution.lit",
+      "mode": "file",
+      "package": "geometry/imo_1961_p5",
+      "files": [
+        "geometry/imo_1961_p5/solution.lit",
+        "geometry/imo_1961_p5/litex.config"
+      ],
+      "command": [
+        "target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "examples/imo/geometry/imo_1961_p5/solution.lit"
+      ],
+      "source_sha256": {
+        "geometry/imo_1961_p5/solution.lit": "dbb06c9f32aae116337c7167a8e2b6e8d9e5f6889041d5e6545e8a81313585d3",
+        "geometry/imo_1961_p5/litex.config": "451d6fece213e27da7833478612dc97389483cb59a4f317318f302040a3218c6"
+      },
+      "verification_status": "not_rerun",
+      "historical_evidence": "../../showcases/verification_runs/2026-10-14-showcase-repair.md"
+    },
+    {
+      "id": "imo_1962_p6",
+      "category": "geometry",
+      "variant": "Solution-1",
+      "original_collection_id": 5,
+      "path": "geometry/imo_1962_p6/Solution-1/solution.lit",
+      "mode": "file",
+      "package": "geometry/imo_1962_p6/Solution-1",
+      "files": [
+        "geometry/imo_1962_p6/Solution-1/solution.lit",
+        "geometry/imo_1962_p6/Solution-1/litex.config"
+      ],
+      "command": [
+        "target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "examples/imo/geometry/imo_1962_p6/Solution-1/solution.lit"
+      ],
+      "source_sha256": {
+        "geometry/imo_1962_p6/Solution-1/solution.lit": "abeae52d0e44b8584dfc53f3d81f5c09b9d78cdca99c8d3b0c710308174a67d5",
+        "geometry/imo_1962_p6/Solution-1/litex.config": "451d6fece213e27da7833478612dc97389483cb59a4f317318f302040a3218c6"
+      },
+      "verification_status": "not_rerun",
+      "historical_evidence": "../../showcases/verification_runs/2026-10-14-showcase-repair.md"
+    },
+    {
+      "id": "imo_1962_p6",
+      "category": "geometry",
+      "variant": "Solution-2",
+      "original_collection_id": 5,
+      "path": "geometry/imo_1962_p6/Solution-2/solution.lit",
+      "mode": "file",
+      "package": "geometry/imo_1962_p6/Solution-2",
+      "files": [
+        "geometry/imo_1962_p6/Solution-2/solution.lit",
+        "geometry/imo_1962_p6/Solution-2/litex.config"
+      ],
+      "command": [
+        "target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "examples/imo/geometry/imo_1962_p6/Solution-2/solution.lit"
+      ],
+      "source_sha256": {
+        "geometry/imo_1962_p6/Solution-2/solution.lit": "0cf1d4eee1031adbd86a1e7142390baabe4807db295c40db3063c373c91f585c",
+        "geometry/imo_1962_p6/Solution-2/litex.config": "451d6fece213e27da7833478612dc97389483cb59a4f317318f302040a3218c6"
+      },
+      "verification_status": "not_rerun",
+      "historical_evidence": "../../showcases/verification_runs/2026-10-14-showcase-repair.md"
+    },
+    {
+      "id": "imo_1963_p3",
+      "category": "geometry",
+      "variant": ".",
+      "original_collection_id": 7,
+      "path": "geometry/imo_1963_p3/solution.lit",
+      "mode": "file",
+      "package": "geometry/imo_1963_p3",
+      "files": [
+        "geometry/imo_1963_p3/solution.lit",
+        "geometry/imo_1963_p3/litex.config"
+      ],
+      "command": [
+        "target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "examples/imo/geometry/imo_1963_p3/solution.lit"
+      ],
+      "source_sha256": {
+        "geometry/imo_1963_p3/solution.lit": "30eb64d4da13b8073af4922ee5bae64d5572578f142b2f3652e37b8b054d2520",
+        "geometry/imo_1963_p3/litex.config": "451d6fece213e27da7833478612dc97389483cb59a4f317318f302040a3218c6"
+      },
+      "verification_status": "not_rerun",
+      "historical_evidence": "../../showcases/verification_runs/2026-10-14-showcase-repair.md"
+    },
+    {
+      "id": "imo_1966_p6",
+      "category": "geometry",
+      "variant": ".",
+      "original_collection_id": 12,
+      "path": "geometry/imo_1966_p6/solution.lit",
+      "mode": "file",
+      "package": "geometry/imo_1966_p6",
+      "files": [
+        "geometry/imo_1966_p6/solution.lit",
+        "geometry/imo_1966_p6/litex.config"
+      ],
+      "command": [
+        "target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "examples/imo/geometry/imo_1966_p6/solution.lit"
+      ],
+      "source_sha256": {
+        "geometry/imo_1966_p6/solution.lit": "5aafe004109c25a1eae78e2338f1bc6926659c7a5012930582e36a39632caa18",
+        "geometry/imo_1966_p6/litex.config": "451d6fece213e27da7833478612dc97389483cb59a4f317318f302040a3218c6"
+      },
+      "verification_status": "pass",
+      "historical_evidence": "../../showcases/verification_runs/2026-10-14-showcase-repair.md"
+    },
+    {
+      "id": "imo_1967_p1",
+      "category": "geometry",
+      "variant": ".",
+      "original_collection_id": 13,
+      "path": "geometry/imo_1967_p1/solution.lit",
+      "mode": "file",
+      "package": "geometry/imo_1967_p1",
+      "files": [
+        "geometry/imo_1967_p1/solution.lit",
+        "geometry/imo_1967_p1/litex.config"
+      ],
+      "command": [
+        "target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "examples/imo/geometry/imo_1967_p1/solution.lit"
+      ],
+      "source_sha256": {
+        "geometry/imo_1967_p1/solution.lit": "18a4d4e136b829437c91c082089b8e9abe463bc192d6aa3799b088467d7ee87e",
+        "geometry/imo_1967_p1/litex.config": "451d6fece213e27da7833478612dc97389483cb59a4f317318f302040a3218c6"
+      },
+      "verification_status": "not_rerun",
+      "historical_evidence": "../../showcases/verification_runs/2026-10-14-showcase-repair.md"
+    },
+    {
+      "id": "imo_1968_p1",
+      "category": "geometry",
+      "variant": ".",
+      "original_collection_id": 15,
+      "path": "geometry/imo_1968_p1/solution.lit",
+      "mode": "file",
+      "package": "geometry/imo_1968_p1",
+      "files": [
+        "geometry/imo_1968_p1/solution.lit",
+        "geometry/imo_1968_p1/litex.config"
+      ],
+      "command": [
+        "target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "examples/imo/geometry/imo_1968_p1/solution.lit"
+      ],
+      "source_sha256": {
+        "geometry/imo_1968_p1/solution.lit": "037953d95d3095fdf61d9f4d20b153568d2527f316bd77da81d9bc4c6e72fdc1",
+        "geometry/imo_1968_p1/litex.config": "451d6fece213e27da7833478612dc97389483cb59a4f317318f302040a3218c6"
+      },
+      "verification_status": "not_rerun",
+      "historical_evidence": "../../showcases/verification_runs/2026-10-14-showcase-repair.md"
+    },
+    {
+      "id": "imo_1969_p4",
+      "category": "geometry",
+      "variant": ".",
+      "original_collection_id": 17,
+      "path": "geometry/imo_1969_p4/solution.lit",
+      "mode": "file",
+      "package": "geometry/imo_1969_p4",
+      "files": [
+        "geometry/imo_1969_p4/solution.lit",
+        "geometry/imo_1969_p4/litex.config"
+      ],
+      "command": [
+        "target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "examples/imo/geometry/imo_1969_p4/solution.lit"
+      ],
+      "source_sha256": {
+        "geometry/imo_1969_p4/solution.lit": "838f12230f11f8b2cbc2ef69c6a364565a1c520fef12422fd69372685e08a463",
+        "geometry/imo_1969_p4/litex.config": "451d6fece213e27da7833478612dc97389483cb59a4f317318f302040a3218c6"
+      },
+      "verification_status": "not_rerun",
+      "historical_evidence": "../../showcases/verification_runs/2026-10-14-showcase-repair.md"
+    },
+    {
+      "id": "imo_1970_p1",
+      "category": "geometry",
+      "variant": ".",
+      "original_collection_id": 18,
+      "path": "geometry/imo_1970_p1/solution.lit",
+      "mode": "file",
+      "package": "geometry/imo_1970_p1",
+      "files": [
+        "geometry/imo_1970_p1/solution.lit",
+        "geometry/imo_1970_p1/litex.config"
+      ],
+      "command": [
+        "target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "examples/imo/geometry/imo_1970_p1/solution.lit"
+      ],
+      "source_sha256": {
+        "geometry/imo_1970_p1/solution.lit": "1bddd924a569031bab16813788d1d55951f4680ab9e53d918f1bec4797ba914f",
+        "geometry/imo_1970_p1/litex.config": "451d6fece213e27da7833478612dc97389483cb59a4f317318f302040a3218c6"
+      },
+      "verification_status": "not_rerun",
+      "historical_evidence": "../../showcases/verification_runs/2026-10-14-showcase-repair.md"
+    },
+    {
+      "id": "imo_1970_p6",
+      "category": "geometry",
+      "variant": ".",
+      "original_collection_id": 20,
+      "path": "geometry/imo_1970_p6/solution.lit",
+      "mode": "file",
+      "package": "geometry/imo_1970_p6",
+      "files": [
+        "geometry/imo_1970_p6/solution.lit",
+        "geometry/imo_1970_p6/litex.config"
+      ],
+      "command": [
+        "target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "examples/imo/geometry/imo_1970_p6/solution.lit"
+      ],
+      "source_sha256": {
+        "geometry/imo_1970_p6/solution.lit": "0dab2aa414baaa2918fc47b8c9d59bc62098be1b3fad7a9f43108854954e4a8e",
+        "geometry/imo_1970_p6/litex.config": "451d6fece213e27da7833478612dc97389483cb59a4f317318f302040a3218c6"
+      },
+      "verification_status": "not_rerun",
+      "historical_evidence": "../../showcases/verification_runs/2026-10-14-showcase-repair.md"
+    },
+    {
+      "id": "imo_1972_p5",
+      "category": "functional_equations",
+      "path": "functional_equations/imo_1972_p5.lit",
+      "mode": "file",
+      "files": [
+        "functional_equations/imo_1972_p5.lit"
+      ],
+      "command": [
+        "target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "examples/imo/functional_equations/imo_1972_p5.lit"
+      ],
+      "source_sha256": {
+        "functional_equations/imo_1972_p5.lit": "c530941963d7f11fac4d371d4e5f0114626385e964f19b3db5399b4349687cd0"
+      },
+      "verification_status": "fail"
+    },
+    {
+      "id": "imo_1959_p1",
+      "variant": "imo_1959_p1",
+      "category": "minif2f",
+      "path": "minif2f/imo_1959_p1.lit",
+      "mode": "file",
+      "files": [
+        "minif2f/imo_1959_p1.lit"
+      ],
+      "command": [
+        "target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "examples/imo/minif2f/imo_1959_p1.lit"
+      ],
+      "source_sha256": {
+        "minif2f/imo_1959_p1.lit": "b7aed0c260f233eea9d37b08ec567af849dfc38eac274e318d50611c6f22ebad"
+      },
+      "verification_status": "fail"
+    },
+    {
+      "id": "imo_1960_p2",
+      "variant": "imo_1960_p2",
+      "category": "minif2f",
+      "path": "minif2f/imo_1960_p2.lit",
+      "mode": "file",
+      "files": [
+        "minif2f/imo_1960_p2.lit"
+      ],
+      "command": [
+        "target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "examples/imo/minif2f/imo_1960_p2.lit"
+      ],
+      "source_sha256": {
+        "minif2f/imo_1960_p2.lit": "f6dc64388c19bf627c03bf7830707ebe5ddc39cf33b74ea73efcc372e0482f81"
+      },
+      "verification_status": "fail"
+    },
+    {
+      "id": "imo_1961_p1",
+      "variant": "imo_1961_p1",
+      "category": "minif2f",
+      "path": "minif2f/imo_1961_p1.lit",
+      "mode": "file",
+      "files": [
+        "minif2f/imo_1961_p1.lit"
+      ],
+      "command": [
+        "target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "examples/imo/minif2f/imo_1961_p1.lit"
+      ],
+      "source_sha256": {
+        "minif2f/imo_1961_p1.lit": "c23af7835ff7053dba0c411b801a720a97f46a7b0346e2920d703b5d4ff53113"
+      },
+      "verification_status": "fail"
+    },
+    {
+      "id": "imo_1962_p2",
+      "variant": "imo_1962_p2",
+      "category": "minif2f",
+      "path": "minif2f/imo_1962_p2.lit",
+      "mode": "file",
+      "files": [
+        "minif2f/imo_1962_p2.lit"
+      ],
+      "command": [
+        "target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "examples/imo/minif2f/imo_1962_p2.lit"
+      ],
+      "source_sha256": {
+        "minif2f/imo_1962_p2.lit": "ec99a270e2b1bb26338119962f911bb997fb3410b57aa70b2af90cec62a85f55"
+      },
+      "verification_status": "fail"
+    },
+    {
+      "id": "imo_1964_p1",
+      "variant": "imo_1964_p1_1",
+      "category": "minif2f",
+      "path": "minif2f/imo_1964_p1_1.lit",
+      "mode": "file",
+      "files": [
+        "minif2f/imo_1964_p1_1.lit"
+      ],
+      "command": [
+        "target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "examples/imo/minif2f/imo_1964_p1_1.lit"
+      ],
+      "source_sha256": {
+        "minif2f/imo_1964_p1_1.lit": "8c0553d14761fa549393c3b6ec33af20da3ed6b68f597eed229c05b96a6d02f4"
+      },
+      "verification_status": "fail"
+    },
+    {
+      "id": "imo_1964_p1",
+      "variant": "imo_1964_p1_2",
+      "category": "minif2f",
+      "path": "minif2f/imo_1964_p1_2.lit",
+      "mode": "file",
+      "files": [
+        "minif2f/imo_1964_p1_2.lit"
+      ],
+      "command": [
+        "target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "examples/imo/minif2f/imo_1964_p1_2.lit"
+      ],
+      "source_sha256": {
+        "minif2f/imo_1964_p1_2.lit": "c0064b7985dc20e002a27b2b6e62d10f86b82d781b6fe7fd57246ed43cc7d665"
+      },
+      "verification_status": "fail"
+    },
+    {
+      "id": "imo_1964_p2",
+      "variant": "imo_1964_p2",
+      "category": "minif2f",
+      "path": "minif2f/imo_1964_p2.lit",
+      "mode": "file",
+      "files": [
+        "minif2f/imo_1964_p2.lit"
+      ],
+      "command": [
+        "target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "examples/imo/minif2f/imo_1964_p2.lit"
+      ],
+      "source_sha256": {
+        "minif2f/imo_1964_p2.lit": "b604f7f5280deb50dee57e62b10c0bc8b1b758b053d7a52c85ea8f0725b302df"
+      },
+      "verification_status": "pass"
+    },
+    {
+      "id": "imo_1966_p5",
+      "variant": "imo_1966_p5",
+      "category": "minif2f",
+      "path": "minif2f/imo_1966_p5.lit",
+      "mode": "file",
+      "files": [
+        "minif2f/imo_1966_p5.lit"
+      ],
+      "command": [
+        "target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "examples/imo/minif2f/imo_1966_p5.lit"
+      ],
+      "source_sha256": {
+        "minif2f/imo_1966_p5.lit": "9d0d88f33c54414946947b0779fcf03aaf0a80b0a85bd63f14c65e187773d249"
+      },
+      "verification_status": "fail"
+    },
+    {
+      "id": "imo_1973_p3",
+      "variant": "imo_1973_p3",
+      "category": "minif2f",
+      "path": "minif2f/imo_1973_p3.lit",
+      "mode": "file",
+      "files": [
+        "minif2f/imo_1973_p3.lit"
+      ],
+      "command": [
+        "target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "examples/imo/minif2f/imo_1973_p3.lit"
+      ],
+      "source_sha256": {
+        "minif2f/imo_1973_p3.lit": "3f76b838d5c2df3b86b9ab99056b7524b3e1a03a06739d2fea9939c34e09d968"
+      },
+      "verification_status": "pass"
+    }
+  ],
+  "note": "Source collection counts include dataset statement variants and preserved proofs requiring migration. They are not a count of complete currently verified contest solutions."
+}

@@ -1,0 +1,4 @@
+# Squaring a quotient of nonzero reals gives a complex-valued function on the same two-input domain.
+have fn membership_square(x R) R = x ^ 2
+have fn membership_quotient(x, y R: y != 0, x != 0) R = x / y
+release thm fn_set_member(membership_square ∘ membership_quotient, fn(a, b R: a != 0, b != 0) C)

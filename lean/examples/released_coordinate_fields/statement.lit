@@ -1,0 +1,10 @@
+# Explicitly open a coordinate pair and check both field carriers.
+struct CoordinatePair:
+    x R
+    y R
+
+witness $is_nonempty_set(&CoordinatePair) from (1, 2)
+have p &CoordinatePair
+release struct def p
+p.x $in R
+p.y $in R

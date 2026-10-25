@@ -171,6 +171,8 @@ fn collect_free_plain_ids_in_atomic(
 
 fn atomic_fact_obj_args(atomic: &AtomicFact) -> Vec<&Obj> {
     match atomic {
+        AtomicFact::MultivariableAnalysisFact(f) => f.relation.argument_refs(),
+        AtomicFact::NotMultivariableAnalysisFact(f) => f.relation.argument_refs(),
         AtomicFact::HasRiemannIntegralFact(f) => vec![&f.function, &f.lower, &f.upper, &f.value],
         AtomicFact::NotHasRiemannIntegralFact(f) => vec![&f.function, &f.lower, &f.upper, &f.value],
         AtomicFact::FunctionRiemannIntegrableFact(f) => vec![&f.function, &f.lower, &f.upper],

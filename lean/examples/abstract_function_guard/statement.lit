@@ -1,0 +1,7 @@
+# A shift restricted by an arbitrary property can be evaluated when that property holds.
+abstract_prop enabled(x)
+have fn allowed_shift(x R: $enabled(x)) R = x + 1
+forall x R:
+    $enabled(x)
+    =>:
+        allowed_shift(x) = x + 1

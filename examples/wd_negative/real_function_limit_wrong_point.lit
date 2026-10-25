@@ -4,4 +4,4 @@
 have fn wrong_point_function(x R) R=23
 release thm fn_limit_at_real_accumulation(0)
 release thm fn_limit_at_constant(wrong_point_function,0,23)
-lim(wrong_point_function,1)=23
+fn_lim(wrong_point_function,1)=23

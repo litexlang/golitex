@@ -1,0 +1,18 @@
+# Chain two real inequalities, retaining a strict step in either position.
+forall chain_strict_a, chain_strict_b, chain_strict_c R:
+    chain_strict_a < chain_strict_b
+    chain_strict_b < chain_strict_c
+    =>:
+        chain_strict_a < chain_strict_c
+
+forall chain_left_a, chain_left_b, chain_left_c R:
+    chain_left_a < chain_left_b
+    chain_left_b <= chain_left_c
+    =>:
+        chain_left_a < chain_left_c
+
+forall chain_right_a, chain_right_b, chain_right_c R:
+    chain_right_a <= chain_right_b
+    chain_right_b < chain_right_c
+    =>:
+        chain_right_a < chain_right_c

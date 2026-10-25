@@ -9,7 +9,7 @@ use crate::ast::obj::{
 use crate::rational_expression::exact_rational::EvalRational;
 use crate::runtime::{Runtime, RuntimeResult};
 
-pub(super) fn evaluate_finite_object(
+pub(crate) fn evaluate_finite_object(
     runtime: &mut Runtime,
     obj: &Obj,
     depth: usize,

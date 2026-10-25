@@ -1,0 +1,6 @@
+# Reordering the exclusions 0 and 1 preserves the domain, so composing with its identity preserves the function.
+have fn domain_two_gaps(x R: x != 0, x != 1) R = x + 1
+have fn domain_two_gaps_id(y R: y != 1, y != 0) R = y
+domain_two_gaps ∘ domain_two_gaps_id = domain_two_gaps
+have fn domain_two_gaps_alt(y R: y != 1, y != 0) C = 1 + y
+by fn_extension domain_two_gaps = domain_two_gaps_alt

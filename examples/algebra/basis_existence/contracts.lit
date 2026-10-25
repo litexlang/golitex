@@ -1,0 +1,22 @@
+# Arbitrary-carrier contracts; finite basis existence does not choose a dimension.
+
+claim:
+    ? forall V nonempty_set,n N+,vectors finite_seq(V,n),k N+,reduced finite_seq(V,n-1):
+        $Algebra::basis::is_list_with_index_removed(V,n,vectors,k,reduced)
+        =>:
+            fn_range(reduced) $subset fn_range(vectors)
+    by thm Algebra::basis_existence::removed_list_range_subset(V,n,vectors,k,reduced) => fn_range(reduced) $subset fn_range(vectors)
+
+claim:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,n N,vectors finite_seq(V,n):
+        $Algebra::finite_span::spans(K,field,V,space,n,vectors)
+        =>:
+            exist m N,selected finite_seq(V,m) st {m<=n,$Algebra::basis::is_basis(K,field,V,space,m,selected),fn_range(selected) $subset fn_range(vectors)}
+    release thm Algebra::basis_existence::spanning_list_has_basis_of_bounded_length(K,field,V,space,n,vectors)
+
+claim:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>:
+        $Algebra::basis::is_finite_dimensional(K,field,V,space)
+        =>:
+            exist n N,selected finite_seq(V,n) st {$Algebra::basis::is_basis(K,field,V,space,n,selected)}
+    release thm Algebra::basis_existence::finite_dimensional_has_basis(K,field,V,space)

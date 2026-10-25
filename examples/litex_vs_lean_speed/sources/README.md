@@ -31,3 +31,8 @@
 `lean-proof-pipeline/` 只需 `import Lean`，可直接用 Lean 4.31.0 运行；它的输出用于解释证明检查流程，不纳入计时统计。
 
 `quantitative-iteration/` 的历史完整进程记录另见主 README，原始输入的哈希与这里的六份副本一致；不要与不含启动/导入的检查路径样本合并统计。
+
+三个生成批次及带条件倒数的共同非形式化数学文本位于
+[`cases/informal-baselines.json`](../cases/informal-baselines.json)。它们是补写的英文回溯基线；
+德布鲁因因子的[计数记录](../results/de-bruijn-factors.json)包含完整源码长度与哈希，
+两条源码已偏离计时用例定义的记录不附加因子。详见[计量口径](../README.md#de-bruijn-factor)。

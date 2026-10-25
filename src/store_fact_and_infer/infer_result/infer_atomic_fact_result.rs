@@ -109,6 +109,8 @@ impl InferFunctionLipschitzFactResult {
 pub enum InferNotFunctionLipschitzFactResult {}
 
 pub enum InferAtomicFactResult {
+    MultivariableAnalysisFact(Vec<InferMultivariableAnalysisFactResult>),
+    NotMultivariableAnalysisFact(Vec<InferNotMultivariableAnalysisFactResult>),
     HasRiemannIntegralFact(Vec<InferHasRiemannIntegralFactResult>),
     NotHasRiemannIntegralFact(Vec<InferNotHasRiemannIntegralFactResult>),
     FunctionRiemannIntegrableFact(Vec<InferFunctionRiemannIntegrableFactResult>),
@@ -186,6 +188,10 @@ pub enum InferAtomicFactResult {
 impl InferAtomicFactResult {
     pub fn stored_conclusions(&self) -> Vec<&StoreInferredFactResult> {
         match self {
+            Self::MultivariableAnalysisFact(rules) => {
+                rules.iter().flat_map(|r| r.stored_conclusions()).collect()
+            }
+            Self::NotMultivariableAnalysisFact(_) => Vec::new(),
             Self::RealSetBoundFact(rules) => {
                 rules.iter().flat_map(|r| r.stored_conclusions()).collect()
             }
@@ -481,3 +487,19 @@ impl InferFunctionRiemannIntegrableFactResult {
     }
 }
 pub enum InferNotFunctionRiemannIntegrableFactResult {}
+
+pub enum InferMultivariableAnalysisFactResult {
+    Definition(InferMultivariableAnalysisDefinitionResult),
+}
+pub struct InferMultivariableAnalysisDefinitionResult {
+    pub source_fact_id: FactId,
+    pub derived: Vec<StoreInferredFactResult>,
+}
+impl InferMultivariableAnalysisFactResult {
+    pub fn stored_conclusions(&self) -> Vec<&StoreInferredFactResult> {
+        match self {
+            Self::Definition(p) => p.derived.iter().collect(),
+        }
+    }
+}
+pub enum InferNotMultivariableAnalysisFactResult {}

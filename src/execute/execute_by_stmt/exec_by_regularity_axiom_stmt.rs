@@ -1,4 +1,4 @@
-use super::helper::{proof_verify_state, store_goal_fact, verify_goal_fact};
+use super::helper::{proof_verify_state, store_goal_fact_with_wd, verify_goal_fact};
 use super::result::{
     ExecReleaseRegularityAxiomStmtFailed, ExecReleaseRegularityAxiomStmtResult,
     ExecReleaseRegularityAxiomStmtSuccess,
@@ -41,7 +41,7 @@ pub fn exec_release_regularity_axiom_stmt(
     // disjoint from A. Example: release regularity_axiom(A) stores
     // exist x A st {intersect(x, A) = {}}.
     let regularity_fact = regularity_axiom_exist_fact(runtime, &stmt.set, &stmt.line_file);
-    let stored = match store_goal_fact(runtime, &regularity_fact)? {
+    let (stored_wd, stored) = match store_goal_fact_with_wd(runtime, &regularity_fact)? {
         Ok(s) => s,
         Err(msg) => {
             return Ok(ExecReleaseRegularityAxiomStmtResult::Failed(
@@ -54,6 +54,7 @@ pub fn exec_release_regularity_axiom_stmt(
         ExecReleaseRegularityAxiomStmtSuccess {
             set_wd,
             nonempty: nonempty_proof,
+            stored_wd,
             stored,
         },
     ))

@@ -51,7 +51,7 @@ pub use result::{
     ExecReleaseThmStmtSuccess, ExecReleaseZornLemmaStmtFailed, ExecReleaseZornLemmaStmtResult,
     ExecReleaseZornLemmaStmtSuccess, RealSequenceCompletenessProof, ResolvedTheoremCallee,
     SequenceExtremaCompletenessProof, SequenceLiminfBoundedProof, SequenceLimsupBoundedProof,
-    TheoremDerivationProof,
+    TheoremDerivationProof, VerifiedReleaseObligation,
 };
 pub(crate) use result::{ByContradictionClosingFailed, ExecByContraStmtFailed};
 // Existing failure IR consumed by the crate's Normal/Detailed JSON projection.

@@ -1,0 +1,5 @@
+# A two-input sum captures an offset supplied by its enclosing function.
+have fn translated_sum(t R) fn(x, y R) R = fn(x, y R) R {x + y + t}
+forall t, a, b R:
+    translated_sum(t) = fn(x, y R) R {x + y + t}
+    translated_sum(t)(a, b) = a + b + t

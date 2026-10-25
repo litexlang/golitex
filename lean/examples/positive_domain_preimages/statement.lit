@@ -1,0 +1,13 @@
+# A fiber retains the positive-real input restriction.
+have fn fiber_positive(x R+) R = x + 1
+
+fiber_positive(2) = 3
+
+2 $in preimage(fiber_positive, 3)
+
+forall fiber_pos preimage(fiber_positive, 3):
+    fiber_pos $in R+
+    fiber_positive(fiber_pos) = 3
+
+preimage(fiber_positive, 3) $subset R+
+

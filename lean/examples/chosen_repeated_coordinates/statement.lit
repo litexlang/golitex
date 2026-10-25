@@ -1,0 +1,14 @@
+# Choose an equal-coordinate pair, release its fields, and construct a local pair.
+struct RepeatedCoordinate:
+    x R
+    y {x}
+
+1 $in {1}
+witness $is_nonempty_set(&RepeatedCoordinate) from (1, 1)
+have p &RepeatedCoordinate
+release struct def p
+p.y = p.x
+
+sketch:
+    have local_pair &RepeatedCoordinate = (1, 1)
+    local_pair.y = local_pair.x

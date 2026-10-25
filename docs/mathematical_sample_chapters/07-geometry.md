@@ -118,7 +118,7 @@ or prove a general straightedge-and-compass construction theorem.
 ## A further worked result from IMO geometry
 
 Coordinates also organize the area argument in the repository's
-[IMO 1966 Problem 6 development](../../showcases/2D_Geometry/IMO/problem_12/solution.lit).
+[IMO 1966 Problem 6 development](../../examples/imo/geometry/imo_1966_p6/solution.lit).
 Let $K,L,M$ lie strictly inside the sides $BC,CA,AB$ of a nondegenerate
 triangle. We will show that at least one corner triangle $AML,BKM,CLK$
 has at most one quarter of the area of $ABC$.

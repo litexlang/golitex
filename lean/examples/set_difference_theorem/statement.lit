@@ -1,0 +1,19 @@
+# Prove and reuse the rule for keeping an element outside the excluded set.
+thm remove_excluded_set:
+    ? forall remove_A, remove_B set, remove_x remove_A:
+        not remove_x $in remove_B
+        =>:
+            remove_x $in set_minus(remove_A, remove_B)
+    remove_x $in set_minus(remove_A, remove_B)
+
+by thm remove_excluded_set(R, {0}, 1) => 1 $in set_minus(R, {0})
+
+thm remove_two_excluded_sets:
+    ? forall remove_two_A, remove_two_B, remove_two_D set, remove_two_x remove_two_A:
+        not remove_two_x $in remove_two_B
+        not remove_two_x $in remove_two_D
+        =>:
+            remove_two_x $in set_minus(set_minus(remove_two_A, remove_two_B), remove_two_D)
+    remove_two_x $in set_minus(set_minus(remove_two_A, remove_two_B), remove_two_D)
+
+by thm remove_two_excluded_sets(R, {0}, {2}, 1) => 1 $in set_minus(set_minus(R, {0}), {2})

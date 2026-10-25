@@ -122,6 +122,10 @@ pub(super) fn project_structural_membership(
 fn intrinsic_name(rule: &IntrinsicCodomain) -> &'static str {
     use IntrinsicCodomain::*;
     match rule {
+        MultivariableScalarLimit => "lim_multi_at",
+        PartialDerivative => "partial_derivative",
+        MultivariableDivergence => "divergence",
+        MultivariableLaplacian => "laplacian",
         MatrixDeterminant => "MatrixDeterminant",
         MatrixTrace => "MatrixTrace",
         MatrixRank => "MatrixRank",

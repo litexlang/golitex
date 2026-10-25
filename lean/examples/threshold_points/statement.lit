@@ -1,0 +1,10 @@
+# A point above a real threshold retains that parameter in its defining inequality.
+struct Above<b R>:
+    x R
+    y R
+    <=>:
+        x > b
+
+(2, 3) $in &Above<1>
+forall b R, p &Above<b>:
+    p.x > b

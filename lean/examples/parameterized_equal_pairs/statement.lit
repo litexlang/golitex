@@ -1,0 +1,10 @@
+# Diagonal pairs over any set preserve equality of their coordinates.
+struct EqualPair<A set>:
+    x A
+    y A
+    <=>:
+        x = y
+
+(1, 1) $in &EqualPair<R>
+forall A set, p &EqualPair<A>:
+    p.x = p.y

@@ -1,0 +1,9 @@
+# Select a shift function, name it, record its domain, and apply it.
+have fn selected_shift(t R) fn(x R) R = fn(x R) R {x + 1}
+let chosen_shift = selected_shift(0)
+chosen_shift $in fn(x R) R
+chosen_shift(2) $in R
+$is_set(fn_range(chosen_shift))
+selected_shift(0) = fn(x R) R {x + 1}
+chosen_shift = fn(x R) R {x + 1}
+chosen_shift(2) = 3

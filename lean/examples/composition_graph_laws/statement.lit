@@ -1,0 +1,12 @@
+# Composition preserves function graphs under reassociation and identity; its range lies in the outer range.
+have fn comp_square(t R) R = t^2
+have fn comp_shift(t R) R = t+1
+have fn comp_gap(x,y R: x<y) R = y-x
+(comp_square ∘ comp_shift) ∘ comp_shift = comp_square ∘ (comp_shift ∘ comp_shift)
+have fn comp_id(t R) R = t
+comp_id ∘ comp_gap = comp_gap
+comp_shift ∘ comp_id = comp_shift
+fn_range(comp_square ∘ comp_gap) $subset fn_range(comp_square)
+comp_square ∘ comp_shift = fn(t R) R {comp_square(comp_shift(t))}
+comp_square ∘ comp_shift = fn(t R) C {comp_square(comp_shift(t))}
+comp_square ∘ comp_gap = fn(a,b R: a<b) R {comp_square(comp_gap(a,b))}

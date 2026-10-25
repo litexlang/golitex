@@ -122,6 +122,7 @@ impl LitexToLeanCompiler {
                 position,
             ),
             (AtomicFact::NormalAtomicFact(_), AtomicFact::NormalAtomicFact(_))
+            | (AtomicFact::NotNormalAtomicFact(_), AtomicFact::NotNormalAtomicFact(_))
             | (AtomicFact::IsNonemptySetFact(_), AtomicFact::IsNonemptySetFact(_)) => self
                 .compile_raw_known_atomic_transport(
                     cited,

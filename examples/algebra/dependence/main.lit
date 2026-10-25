@@ -1,0 +1,186 @@
+# Imported dependence for the length-three list (1,2,3).
+# Coefficients (1,1,-1) have partial sums 0,1,3,0.
+
+have fn real_inv(x R: x != 0) R = 1 / x
+
+have fn real_add(x, y R) R = x + y
+
+have fn real_neg(x R) R = -x
+
+have fn real_mul(x, y R) R = x * y
+
+forall x, y, z R:
+    real_add(real_add(x, y), z) = real_add(x, real_add(y, z))
+    real_mul(real_mul(x, y), z) = real_mul(x, real_mul(y, z))
+    real_mul(x, real_add(y, z)) = real_add(real_mul(x, y), real_mul(x, z))
+
+forall x, y R:
+    real_add(x, y) = real_add(y, x)
+    real_mul(x, y) = real_mul(y, x)
+
+forall x R:
+    real_add(0, x) = x
+    real_add(x, real_neg(x)) = 0
+    real_mul(1, x) = x
+
+forall x R:
+    x != 0
+    =>:
+        real_mul(x, real_inv(x)) = 1
+
+release thm struct_member((0, 1, real_add, real_neg, real_mul, real_inv), &Algebra::field::Field<R>)
+
+have real_field &Algebra::field::Field<R> = (0, 1, real_add, real_neg, real_mul, real_inv)
+
+claim:
+    ? forall x R:
+        real_add(0,x)=x
+        exist y R st {real_add(x,y)=0}
+    real_add(0,x)=x
+    real_add(x,-x)=0
+    witness exist y R st {real_add(x,y)=0} from -x
+
+claim:
+    ? forall a,b,x R:
+        real_mul(real_field.mul(a,b),x)=real_mul(a,real_mul(b,x))
+        real_mul(real_field.add(a,b),x)=real_add(real_mul(a,x),real_mul(b,x))
+    real_field.mul=real_mul
+    real_field.add=real_add
+    real_field.mul(a,b)=real_mul(a,b)=a*b
+    real_field.add(a,b)=real_add(a,b)=a+b
+    real_mul(real_field.mul(a,b),x)=real_mul(a*b,x)=(a*b)*x=a*(b*x)=real_mul(a,real_mul(b,x))
+    real_mul(real_field.add(a,b),x)=real_mul(a+b,x)=(a+b)*x=a*x+b*x=real_add(real_mul(a,x),real_mul(b,x))
+
+forall a,x,y R:
+    real_mul(a,real_add(x,y))=real_add(real_mul(a,x),real_mul(a,y))
+
+claim:
+    ? forall x R:
+        real_mul(real_field.one,x)=x
+    real_field.one=1
+    real_mul(real_field.one,x)=real_mul(1,x)=1*x=x
+
+real_add $in fn(x,y R) R
+
+real_mul $in fn(a R,x R) R
+
+forall x,y,z R:
+    real_add(real_add(x,y),z)=real_add(x,real_add(y,z))
+
+forall x,y R:
+    real_add(x,y)=real_add(y,x)
+
+release thm struct_member((0,real_add,real_mul),&Algebra::vector_space::VectorSpace<R,real_field,R>)
+
+have scalars &Algebra::vector_space::VectorSpace<R,real_field,R> = (0,real_add,real_mul)
+
+have vectors finite_seq(R,3)=(1,2,3)
+
+have coefficients finite_seq(R,3)=(1,1,-1)
+
+claim:
+    ? forall j closed_range(0,3):
+        j=0 or j=1 or j=2 or j=3
+    by for:
+        ? forall k closed_range(0,3):
+            k=0 or k=1 or k=2 or k=3
+        k=0 or k=1 or k=2 or k=3
+
+have fn sums(j closed_range(0,3)) R by cases:
+    case j=0: 0
+    case j=1: 1
+    case j=2: 3
+    case j=3: 0
+
+scalars.zero=0
+
+scalars.add=real_add
+
+scalars.smul=real_mul
+
+real_field.zero=0
+
+sums(0)=0=scalars.zero
+
+coefficients(1)=1
+
+coefficients(2)=1
+
+coefficients(3)=-1
+
+vectors(1)=1
+
+vectors(2)=2
+
+vectors(3)=3
+
+sums(1)=1
+
+sums(2)=3
+
+sums(3)=0
+
+claim:
+    ? forall k N+:
+        k<=3
+        =>:
+            sums(k)=scalars.add(sums(k-1),scalars.smul(coefficients(k),vectors(k)))
+    k $in closed_range(1,3)
+    expand: k $in closed_range(1,3)
+    k=1 or k=2 or k=3
+    by cases:
+        ? sums(k)=scalars.add(sums(k-1),scalars.smul(coefficients(k),vectors(k)))
+        case k=1:
+            k-1=0
+            coefficients(k)=1
+            vectors(k)=1
+            sums(k-1)=0
+            scalars.smul(coefficients(k),vectors(k))=real_mul(1,1)=1
+            scalars.add(sums(k-1),scalars.smul(coefficients(k),vectors(k)))=real_add(0,1)=1=sums(k)
+        case k=2:
+            k-1=1
+            coefficients(k)=1
+            vectors(k)=2
+            sums(k-1)=1
+            scalars.smul(coefficients(k),vectors(k))=real_mul(1,2)=2
+            scalars.add(sums(k-1),scalars.smul(coefficients(k),vectors(k)))=real_add(1,2)=3=sums(k)
+        case k=3:
+            k-1=2
+            coefficients(k)=-1
+            vectors(k)=3
+            sums(k-1)=3
+            scalars.smul(coefficients(k),vectors(k))=real_mul(-1,3)=-3
+            scalars.add(sums(k-1),scalars.smul(coefficients(k),vectors(k)))=real_add(3,-3)=0=sums(k)
+
+
+by def $Algebra::finite_span::is_partial_sum(R,real_field,R,scalars,3,coefficients,vectors,sums)
+
+sums(3)=0=scalars.zero
+
+claim:
+    ? $Algebra::finite_span::has_linear_combination_value(R,real_field,R,scalars,3,coefficients,vectors,scalars.zero)
+    witness exist s fn(k closed_range(0,3)) R st {$Algebra::finite_span::is_partial_sum(R,real_field,R,scalars,3,coefficients,vectors,s),scalars.zero=s(3)} from sums
+    by def $Algebra::finite_span::has_linear_combination_value(R,real_field,R,scalars,3,coefficients,vectors,scalars.zero)
+
+claim:
+    ? not $Algebra::basis::has_only_zero_coefficients(R,real_field,3,coefficients)
+    by contra:
+        ? not $Algebra::basis::has_only_zero_coefficients(R,real_field,3,coefficients)
+        coefficients(1)=real_field.zero
+        coefficients(1)=1
+        real_field.zero=0
+        impossible 1=0
+
+claim:
+    ? $Algebra::basis::is_linearly_dependent(R,real_field,R,scalars,3,vectors)
+    by contra:
+        ? not $Algebra::basis::is_linearly_independent(R,real_field,R,scalars,3,vectors)
+        $Algebra::basis::has_only_zero_coefficients(R,real_field,3,coefficients)
+        impossible not $Algebra::basis::has_only_zero_coefficients(R,real_field,3,coefficients)
+    by def $Algebra::basis::is_linearly_dependent(R,real_field,R,scalars,3,vectors)
+
+release thm Algebra::dependence::largest_nonzero_index_exists(R,real_field,3,coefficients)
+
+release thm Algebra::dependence::dependence_lemma(R,real_field,R,scalars,3,vectors)
+
+obtain k,m,prefix from exist selected_k N+,selected_m N,selected_prefix finite_seq(R,selected_m) st {selected_k<=3,selected_m=selected_k-1,$Algebra::basis::is_prefix_of_length(R,3,selected_m,vectors,selected_prefix),vectors(selected_k) $in \Algebra::finite_span::span<R,real_field,R,scalars,selected_m,selected_prefix>}

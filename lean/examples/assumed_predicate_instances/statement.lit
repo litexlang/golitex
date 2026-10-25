@@ -1,0 +1,8 @@
+# Instantiate an explicitly assumed universal property, directly and by its name.
+abstract_prop marked(x)
+axiom all_marked:
+    ? forall x R:
+        $marked(x)
+$marked(0)
+release thm all_marked(0)
+by thm all_marked(1) => $marked(1)

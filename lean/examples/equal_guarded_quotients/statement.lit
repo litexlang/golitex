@@ -1,0 +1,4 @@
+# On pairs of nonzero reals, division equals multiplication by the reciprocal; guard order and return bounds do not change the graph.
+have fn domain_quotient(x, y R: y != 0, x != 0) R = x / y
+have fn domain_quotient_alt(a, b R: a != 0, b != 0) C = a * (1 / b)
+by fn_extension domain_quotient = domain_quotient_alt

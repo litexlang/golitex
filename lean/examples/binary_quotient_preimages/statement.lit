@@ -1,0 +1,16 @@
+# Point and set fibers of a quotient retain both input coordinates and the nonzero divisor.
+have fn fiber_divide(a, b R: b != 0) R = a / b
+
+fiber_divide(6, 2) = 3
+
+(6, 2) $in preimage(fiber_divide, 3)
+
+(6, 2) $in preimage_set(fiber_divide, {3, 4})
+
+forall fiber_pair preimage(fiber_divide, 3):
+    fiber_pair $in cart(R, R)
+    fiber_pair(2) != 0
+    fiber_divide(fiber_pair(1), fiber_pair(2)) = 3
+
+preimage_set(fiber_divide, {3, 4}) $subset cart(R, R)
+

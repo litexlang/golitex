@@ -1,0 +1,8 @@
+# Expected rejection at the missing mathematical premise.
+
+claim:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,m N,independent finite_seq(V,m),n N,generators finite_seq(V,n):
+        $Algebra::basis::is_linearly_independent(K,field,V,space,m,independent)
+        =>:
+            m<=n
+    release thm Algebra::basis_comparison::independent_spanning_length_bound(K,field,V,space,m,independent,n,generators)

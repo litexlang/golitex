@@ -105,6 +105,13 @@ pub(super) fn validate_arithmetic_expression(object: &Obj) -> Result<(), LeanCom
             // argument domains are not polynomial normalization obligations.
             Ok(())
         }
+        Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(field))
+            if field.fields.len() == 1 =>
+        {
+            // The recorded field WD and its released numeric membership must
+            // supply the scalar observation; the field stays an opaque leaf.
+            Ok(())
+        }
         Obj::ExpLogOperator(ExpLogOperator::Sqrt(_)) => {
             // Rational normalization treats the original square root as one
             // scalar leaf. Its observer consumes the argument WD, real
@@ -1041,6 +1048,21 @@ pub(super) fn validate_statement_capture(
             }
         }
         (
+            Stmt::ReleaseAndExpand(ReleaseAndExpandStmt::ReleaseAxiomOfChoiceStmt(stmt)),
+            ExecStmtResult::ReleaseAndExpand(crate::execute::ExecReleaseAndExpandStmtResult::AxiomOfChoice(
+                crate::execute::execute_by_stmt::ExecReleaseAxiomOfChoiceStmtResult::Success(p))),
+        ) => stmt == &p.statement && validate_captured_steps(&stmt.proof, &p.proof_steps)?,
+        (
+            Stmt::ReleaseAndExpand(ReleaseAndExpandStmt::ReleaseZornLemmaStmt(stmt)),
+            ExecStmtResult::ReleaseAndExpand(crate::execute::ExecReleaseAndExpandStmtResult::ZornLemma(
+                crate::execute::execute_by_stmt::ExecReleaseZornLemmaStmtResult::Success(p))),
+        ) => stmt == &p.statement && validate_captured_steps(&stmt.proof, &p.proof_steps)?,
+        (
+            Stmt::ReleaseAndExpand(ReleaseAndExpandStmt::ReleaseRegularityAxiomStmt(stmt)),
+            ExecStmtResult::ReleaseAndExpand(crate::execute::ExecReleaseAndExpandStmtResult::RegularityAxiom(
+                crate::execute::execute_by_stmt::ExecReleaseRegularityAxiomStmtResult::Success(p))),
+        ) => matches!(verified_subject(&p.nonempty), Some(Fact::AtomicFact(AtomicFact::IsNonemptySetFact(f))) if f.set.ir() == stmt.set.ir()),
+        (
             Stmt::ReleaseAndExpand(ReleaseAndExpandStmt::ExpandRangeStmt(stmt)),
             ExecStmtResult::ReleaseAndExpand(crate::execute::ExecReleaseAndExpandStmtResult::ExpandRange(
                 crate::execute::execute_by_stmt::ExecExpandRangeStmtResult::Success(p),
@@ -1063,6 +1085,12 @@ pub(super) fn validate_statement_capture(
             Stmt::ReleaseAndExpand(ReleaseAndExpandStmt::ReleaseTupleDefStmt(stmt)),
             ExecStmtResult::ReleaseAndExpand(crate::execute::ExecReleaseAndExpandStmtResult::TupleDef(
                 crate::execute::execute_release_tuple_def_stmt::ExecReleaseTupleDefStmtResult::Success(p),
+            )),
+        ) => stmt == &p.statement,
+        (
+            Stmt::ReleaseAndExpand(ReleaseAndExpandStmt::ReleaseStructDefStmt(stmt)),
+            ExecStmtResult::ReleaseAndExpand(crate::execute::ExecReleaseAndExpandStmtResult::StructDef(
+                crate::execute::ExecReleaseStructDefStmtResult::Success(p),
             )),
         ) => stmt == &p.statement,
         (
@@ -1245,6 +1273,17 @@ pub(super) fn instantiated_object_matches(
         }
     }
     match (expected, actual) {
+        (
+            Obj::FunctionSpace(FunctionSpace::FnSet(expected)),
+            Obj::FunctionSpace(FunctionSpace::FnSet(actual)),
+        ) => instantiated_function_signature(expected, actual, substitution).is_some(),
+        (
+            Obj::FunctionSpace(FunctionSpace::AnonymousFn(expected)),
+            Obj::FunctionSpace(FunctionSpace::AnonymousFn(actual)),
+        ) => instantiated_function_signature(&expected.body, &actual.body, substitution)
+            .is_some_and(|scoped| {
+                instantiated_object_matches(&expected.equal_to, &actual.equal_to, &scoped)
+            }),
         (Obj::SetFormer(SetFormer::ListSet(a)), Obj::SetFormer(SetFormer::ListSet(b))) => {
             a.list.len() == b.list.len()
                 && a.list
@@ -1258,6 +1297,20 @@ pub(super) fn instantiated_object_matches(
         ) => {
             instantiated_object_matches(&a.set, &b.set, substitution)
                 && instantiated_object_matches(&a.n, &b.n, substitution)
+        }
+        (
+            Obj::SetOperator(SetOperator::SetMinus(a)),
+            Obj::SetOperator(SetOperator::SetMinus(b)),
+        ) => {
+            instantiated_object_matches(&a.left, &b.left, substitution)
+                && instantiated_object_matches(&a.right, &b.right, substitution)
+        }
+        (
+            Obj::SetOperator(SetOperator::Intersect(a)),
+            Obj::SetOperator(SetOperator::Intersect(b)),
+        ) => {
+            instantiated_object_matches(&a.left, &b.left, substitution)
+                && instantiated_object_matches(&a.right, &b.right, substitution)
         }
         (Obj::SetOperator(SetOperator::Union(a)), Obj::SetOperator(SetOperator::Union(b))) => {
             instantiated_object_matches(&a.left, &b.left, substitution)
@@ -1464,6 +1517,53 @@ pub(super) fn instantiated_object_matches(
     }
 }
 
+/// Runtime::inst_fn_set preserves local binder IDs and shadows them in every
+/// carrier, guard and body. Only the free outer IDs are substituted.
+fn instantiated_function_signature(
+    expected: &FnSet,
+    actual: &FnSet,
+    substitution: &HashMap<IdentifierId, Obj>,
+) -> Option<HashMap<IdentifierId, Obj>> {
+    let old = &expected.set_bound_parameters.groups;
+    let new = &actual.set_bound_parameters.groups;
+    if old.len() != new.len() || expected.dom_facts.len() != actual.dom_facts.len() {
+        return None;
+    }
+    let mut scoped = substitution.clone();
+    let mut local = HashSet::new();
+    for (old, new) in old.iter().zip(new) {
+        if old.params.len() != new.params.len() {
+            return None;
+        }
+        for (old, new) in old.params.iter().zip(&new.params) {
+            if old.id != new.id || !local.insert(old.id) {
+                return None;
+            }
+            scoped.remove(&old.id);
+        }
+    }
+    if !old
+        .iter()
+        .zip(new)
+        .all(|(a, b)| instantiated_object_matches(&a.param_type, &b.param_type, &scoped))
+        || !instantiated_object_matches(&expected.ret_set, &actual.ret_set, &scoped)
+        || !expected
+            .dom_facts
+            .iter()
+            .zip(&actual.dom_facts)
+            .all(|(a, b)| {
+                instantiated_fact_matches(
+                    &crate::instantiate::quantifier_free_fact_to_fact(a.clone()),
+                    &crate::instantiate::quantifier_free_fact_to_fact(b.clone()),
+                    &scoped,
+                )
+            })
+    {
+        return None;
+    }
+    Some(scoped)
+}
+
 fn function_head_object_for_match(head: &FnObjHead) -> Obj {
     match head {
         FnObjHead::Identifier(value) => Obj::Identifier(value.clone()),
@@ -1501,7 +1601,8 @@ pub(super) fn quantified_parameter_substitution(
                 (ParamType::Obj(a), ParamType::Obj(b)) => {
                     instantiated_object_matches(a, b, &scoped)
                 }
-                (ParamType::Set(_), ParamType::Set(_)) => true,
+                (ParamType::Set(_), ParamType::Set(_))
+                | (ParamType::NonemptySet(_), ParamType::NonemptySet(_)) => true,
                 _ => false,
             }
         {
@@ -1527,6 +1628,29 @@ pub(super) fn instantiated_fact_matches(
     substitution: &HashMap<IdentifierId, Obj>,
 ) -> bool {
     match (expected, actual) {
+        (Fact::ForallFact(expected), Fact::ForallFact(actual)) => {
+            let Some(scoped) = quantified_parameter_substitution(
+                &expected.typed_parameters,
+                &actual.typed_parameters,
+                substitution,
+            ) else {
+                return false;
+            };
+            expected.dom_facts.len() == actual.dom_facts.len()
+                && expected.then_facts.len() == actual.then_facts.len()
+                && expected
+                    .dom_facts
+                    .iter()
+                    .zip(&actual.dom_facts)
+                    .all(|(a, b)| instantiated_fact_matches(a, b, &scoped))
+                && expected
+                    .then_facts
+                    .iter()
+                    .zip(&actual.then_facts)
+                    .all(|(a, b)| {
+                        instantiated_fact_matches(&a.clone().into(), &b.clone().into(), &scoped)
+                    })
+        }
         (Fact::NotForall(expected), Fact::NotForall(actual)) => {
             let Some(scoped) = quantified_parameter_substitution(
                 &expected.typed_parameters,

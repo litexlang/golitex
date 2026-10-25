@@ -1,0 +1,14 @@
+# Choose a real pair from a parameterized carrier, and release global/local fields.
+struct Pair<A set>:
+    x A
+    y A
+
+witness $is_nonempty_set(&Pair<R>) from (1, 2)
+have chosen_generic_pair &Pair<R>
+release struct def chosen_generic_pair
+chosen_generic_pair.x $in R
+
+sketch:
+    have local_generic_pair &Pair<R> = (1, 2)
+    release struct def local_generic_pair
+    local_generic_pair.x = 1

@@ -1,0 +1,190 @@
+# Explicit algebra, composition and component laws for opaque functions.
+
+thm example_second_partial_to_function:
+    ? forall f,g fn(x cart_n(R,2)) R,p cart_n(R,2),L R:
+        forall q cart_n(R,2):
+            $has_partial_derivative_at(f,q,2,1,g(q))
+        $has_second_partial_derivative_at(f,p,2,1,2,L)
+        =>:
+            $has_partial_derivative_at(g,p,2,2,L)
+    release thm second_partial_at_to_function(f,g,p,2,1,2,L)
+
+thm example_schwarz_with_neighbourhood:
+    ? forall f,a,b fn(x cart_n(R,2)) R,p cart_n(R,2):
+        forall q cart_n(R,2):
+            $has_second_partial_derivative_at(f,q,2,1,2,a(q))
+            $has_second_partial_derivative_at(f,q,2,2,1,b(q))
+        $is_multi_continuous_at(a,p,2)
+        $is_multi_continuous_at(b,p,2)
+        =>:
+            a(p)=b(p)
+    witness exist radius R+ st {{q cart_n(R,2): euclidean_norm(fn(k closed_range(1,2)) R {q(k)-p(k)},2)<radius} $subset cart_n(R,2)} from 1
+    release thm second_partial_at_swap_continuous(f,a,b,p,2,1,2,cart_n(R,2))
+# Run: target/release/litex -strict -lang en -f examples/real_analysis/multivariable/rules.lit
+
+thm example_curl_gradient_with_symmetric_hessian:
+    ? forall f fn(x cart_n(R,3)) R,G fn(x cart_n(R,3)) cart_n(R,3),p cart_n(R,3),H matrix(R,3,3):
+        forall q cart_n(R,3):
+            $has_gradient_at(f,q,3,G(q))
+        $has_hessian_at(f,p,3,H)
+        H=transpose(H,3,3)
+        =>:
+            $has_curl_at(G,p,(0,0,0))
+    release thm curl_gradient_at_symmetric(f,G,p,H)
+
+thm example_divergence_curl_with_symmetric_hessians:
+    ? forall F,rotated fn(x cart_n(R,3)) cart_n(R,3),p cart_n(R,3),H1,H2,H3 matrix(R,3,3):
+        forall q cart_n(R,3):
+            $has_curl_at(F,q,rotated(q))
+        $has_hessian_at(fn(x cart_n(R,3)) R {F(x)(1)},p,3,H1)
+        $has_hessian_at(fn(x cart_n(R,3)) R {F(x)(2)},p,3,H2)
+        $has_hessian_at(fn(x cart_n(R,3)) R {F(x)(3)},p,3,H3)
+        H1=transpose(H1,3,3)
+        H2=transpose(H2,3,3)
+        H3=transpose(H3,3,3)
+        =>:
+            $has_divergence_at(rotated,p,3,0)
+    release thm divergence_curl_at_symmetric(F,rotated,p,H1,H2,H3)
+
+thm example_scalar_continuous_composition:
+    ? forall f fn(x cart_n(R,2)) R,g fn(y R) R,p cart_n(R,2):
+        $is_multi_continuous_at(f,p,2)
+        $is_continuous_at(g,f(p))
+        =>:
+            $is_multi_continuous_at(fn(x cart_n(R,2)) R {g(f(x))},p,2)
+    release thm multi_continuous_at_compose(f,g,fn(x cart_n(R,2)) R {g(f(x))},p,2)
+
+thm example_scalar_limit_composition:
+    ? forall f fn(x cart_n(R,2)) R,g fn(y R) R,p cart_n(R,2),A R:
+        $has_multi_limit_at(f,p,2,A)
+        $is_continuous_at(g,A)
+        =>:
+            $has_multi_limit_at(fn(x cart_n(R,2)) R {g(f(x))},p,2,g(A))
+    release thm multi_limit_at_compose(f,g,fn(x cart_n(R,2)) R {g(f(x))},p,2,A)
+
+thm example_vector_continuous_composition:
+    ? forall F fn(x cart_n(R,2)) cart_n(R,3),G fn(y cart_n(R,3)) cart_n(R,4),p cart_n(R,2):
+        $is_vector_continuous_at(F,p,2,3)
+        $is_vector_continuous_at(G,F(p),3,4)
+        =>:
+            $is_vector_continuous_at(fn(x cart_n(R,2)) cart_n(R,4) {G(F(x))},p,2,4)
+    release thm vector_continuous_at_compose(F,G,fn(x cart_n(R,2)) cart_n(R,4) {G(F(x))},p,2,3,4)
+
+thm example_vector_limit_composition:
+    ? forall F fn(x cart_n(R,2)) cart_n(R,3),G fn(y cart_n(R,3)) cart_n(R,4),p cart_n(R,2),A cart_n(R,3):
+        $has_vector_limit_at(F,p,2,3,A)
+        $is_vector_continuous_at(G,A,3,4)
+        =>:
+            $has_vector_limit_at(fn(x cart_n(R,2)) cart_n(R,4) {G(F(x))},p,2,4,G(A))
+    release thm vector_limit_at_compose(F,G,fn(x cart_n(R,2)) cart_n(R,4) {G(F(x))},p,2,3,4,A)
+
+thm partial_product_example:
+    ? forall f,g fn(x cart_n(R,2)) R,p cart_n(R,2),A,B R:
+        $has_partial_derivative_at(f,p,2,1,A)
+        $has_partial_derivative_at(g,p,2,1,B)
+        =>:
+            $has_partial_derivative_at(fn(x cart_n(R,2)) R {f(x)*g(x)},p,2,1,A*g(p)+f(p)*B)
+    release thm partial_at_multiply(f,g,fn(x cart_n(R,2)) R {f(x)*g(x)},p,2,1,A,B)
+
+thm example_multi_limit_add:
+    ? forall f,g fn(x cart_n(R,2)) R,p cart_n(R,2),A,B R:
+        $has_multi_limit_at(f,p,2,A)
+        $has_multi_limit_at(g,p,2,B)
+        =>:
+            $has_multi_limit_at(fn(x cart_n(R,2)) R {f(x)+g(x)},p,2,A+B)
+    release thm multi_limit_at_add(f,g,fn(x cart_n(R,2)) R {f(x)+g(x)},p,2,A,B)
+
+thm example_multi_continuous_add:
+    ? forall f,g fn(x cart_n(R,2)) R,p cart_n(R,2):
+        $is_multi_continuous_at(f,p,2)
+        $is_multi_continuous_at(g,p,2)
+        =>:
+            $is_multi_continuous_at(fn(x cart_n(R,2)) R {f(x)+g(x)},p,2)
+    release thm multi_continuous_at_add(f,g,fn(x cart_n(R,2)) R {f(x)+g(x)},p,2)
+
+thm example_multi_limit_subtract:
+    ? forall f,g fn(x cart_n(R,2)) R,p cart_n(R,2),A,B R:
+        $has_multi_limit_at(f,p,2,A)
+        $has_multi_limit_at(g,p,2,B)
+        =>:
+            $has_multi_limit_at(fn(x cart_n(R,2)) R {f(x)-g(x)},p,2,A-B)
+    release thm multi_limit_at_subtract(f,g,fn(x cart_n(R,2)) R {f(x)-g(x)},p,2,A,B)
+
+thm example_multi_continuous_subtract:
+    ? forall f,g fn(x cart_n(R,2)) R,p cart_n(R,2):
+        $is_multi_continuous_at(f,p,2)
+        $is_multi_continuous_at(g,p,2)
+        =>:
+            $is_multi_continuous_at(fn(x cart_n(R,2)) R {f(x)-g(x)},p,2)
+    release thm multi_continuous_at_subtract(f,g,fn(x cart_n(R,2)) R {f(x)-g(x)},p,2)
+
+thm example_multi_limit_multiply:
+    ? forall f,g fn(x cart_n(R,2)) R,p cart_n(R,2),A,B R:
+        $has_multi_limit_at(f,p,2,A)
+        $has_multi_limit_at(g,p,2,B)
+        =>:
+            $has_multi_limit_at(fn(x cart_n(R,2)) R {f(x)*g(x)},p,2,A*B)
+    release thm multi_limit_at_multiply(f,g,fn(x cart_n(R,2)) R {f(x)*g(x)},p,2,A,B)
+
+thm example_multi_continuous_multiply:
+    ? forall f,g fn(x cart_n(R,2)) R,p cart_n(R,2):
+        $is_multi_continuous_at(f,p,2)
+        $is_multi_continuous_at(g,p,2)
+        =>:
+            $is_multi_continuous_at(fn(x cart_n(R,2)) R {f(x)*g(x)},p,2)
+    release thm multi_continuous_at_multiply(f,g,fn(x cart_n(R,2)) R {f(x)*g(x)},p,2)
+
+thm example_partial_sum:
+    ? forall f,g fn(x cart_n(R,2)) R,p cart_n(R,2),A,B R:
+        $has_partial_derivative_at(f,p,2,1,A)
+        $has_partial_derivative_at(g,p,2,1,B)
+        =>:
+            $has_partial_derivative_at(fn(x cart_n(R,2)) R {f(x)+g(x)},p,2,1,A+B)
+    release thm partial_at_add(f,g,fn(x cart_n(R,2)) R {f(x)+g(x)},p,2,1,A,B)
+
+thm example_total_implies_jacobian:
+    ? forall F fn(x cart_n(R,2)) cart_n(R,3),p cart_n(R,2),A matrix(R,3,2):
+        $has_total_derivative_at(F,p,2,3,A)
+        =>:
+            $has_jacobian_at(F,p,2,3,A)
+    release thm total_derivative_at_jacobian(F,p,2,3,A)
+
+thm example_opaque_second_partial:
+    ? forall f,g fn(x cart_n(R,2)) R,p cart_n(R,2),L R:
+        forall q cart_n(R,2):
+            $has_partial_derivative_at(f,q,2,1,g(q))
+        $has_partial_derivative_at(g,p,2,2,L)
+        =>:
+            $has_second_partial_derivative_at(f,p,2,1,2,L)
+    release thm second_partial_at_from_function(f,g,p,2,1,2,L)
+
+thm example_total_chain:
+    ? forall F fn(x cart_n(R,2)) cart_n(R,3),G fn(y cart_n(R,3)) cart_n(R,4),p cart_n(R,2),A matrix(R,3,2),B matrix(R,4,3):
+        $has_total_derivative_at(F,p,2,3,A)
+        $has_total_derivative_at(G,F(p),3,4,B)
+        =>:
+            $has_total_derivative_at(fn(x cart_n(R,2)) cart_n(R,4) {G(F(x))},p,2,4,matrix_mul(B,A,4,3,2))
+    release thm total_derivative_at_compose(F,G,fn(x cart_n(R,2)) cart_n(R,4) {G(F(x))},p,2,3,4,A,B)
+
+thm example_scalar_chain:
+    ? forall f fn(x cart_n(R,2)) R,g fn(y R) R,p cart_n(R,2),A matrix(R,1,2),b R:
+        $has_scalar_differential_at(f,p,2,A)
+        $has_derivative_at(g,f(p),b)
+        =>:
+            $has_scalar_differential_at(fn(x cart_n(R,2)) R {g(f(x))},p,2,matrix_scale(b,A,1,2))
+    release thm scalar_differential_at_compose(f,g,fn(x cart_n(R,2)) R {g(f(x))},p,2,A,b)
+
+thm example_divergence_trace:
+    ? forall F fn(x cart_n(R,2)) cart_n(R,2),p cart_n(R,2),A matrix(R,2,2):
+        $has_jacobian_at(F,p,2,2,A)
+        =>:
+            $has_divergence_at(F,p,2,trace(A,2))
+    release thm jacobian_at_divergence(F,p,2,A)
+
+thm example_laplacian_trace:
+    ? forall f fn(x cart_n(R,2)) R,p cart_n(R,2),A matrix(R,2,2):
+        $has_hessian_at(f,p,2,A)
+        =>:
+            $has_laplacian_at(f,p,2,trace(A,2))
+    release thm hessian_at_laplacian(f,p,2,A)
+

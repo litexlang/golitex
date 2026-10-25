@@ -1,0 +1,12 @@
+# A division function captures a nonzero denominator and retains its domain proof.
+have fn divide_by(t R: t != 0) fn(x R) R = fn(x R) R {x / t}
+forall t R:
+    t != 0
+    =>:
+        divide_by(t) = fn(x R) R {x / t}
+        divide_by(t)(2) = 2 / t
+
+have fn divided_into(t R) fn(x R: x != 0) R = fn(x R: x != 0) R {t / x}
+forall t R:
+    divided_into(t) = fn(x R: x != 0) R {t / x}
+    divided_into(t)(2) = t / 2

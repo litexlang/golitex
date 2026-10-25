@@ -11,6 +11,7 @@ pub(super) fn project_atomic_builtin_strategy(
     runtime: &Runtime,
 ) -> JsonValue {
     match proof {
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::MultivariableAnalysis(p)=>super::multivariable::strategy(p,runtime),
         AtomicExceptEqualityFactSearchProofByBuiltinStrategy::PointwiseDerivative(p) => super::pointwise_derivative::project(p,runtime),
         AtomicExceptEqualityFactSearchProofByBuiltinStrategy::PointwiseContinuity(p) => super::pointwise_continuity::project_pointwise_continuity(p,runtime),
         AtomicExceptEqualityFactSearchProofByBuiltinStrategy::SymDiffMembershipLeft(p) => object_for(runtime, vec![
@@ -127,6 +128,11 @@ pub(super) fn project_atomic_builtin_strategy(
         AtomicExceptEqualityFactSearchProofByBuiltinStrategy::AddComponentwiseLessEqual(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("AddComponentwiseLessEqual")),
+            ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::AddDoubleUpperBound(p) => object_for(runtime, vec![
+            ("type", string("builtin_strategy")),
+            ("strategy", string("AddDoubleUpperBound")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
         AtomicExceptEqualityFactSearchProofByBuiltinStrategy::AddCrossedLessEqual(p) => object_for(runtime, vec![

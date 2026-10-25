@@ -151,6 +151,201 @@ fn cart_membership_theorem_preserves_the_complete_finite_domain() {
 }
 
 #[test]
+fn function_membership_replays_both_inclusions_for_release_and_selected_calls() {
+    use crate::execute::execute_by_stmt::BuiltinFunctionDomainProof;
+    use crate::execute::execute_fact_stmt::function_domain::FunctionDomainComparisonProof;
+    let (run, compiler) = super::execute(include_str!(
+        "../../../../lean/examples/reordered_function_membership/statement.lit"
+    ));
+    for index in [1, 3] {
+        let domain = match &run.statement_results[index] {
+            ExecStmtResult::ReleaseAndExpand(ExecReleaseAndExpandStmtResult::Thm(
+                ExecReleaseThmStmtResult::Success(p),
+            )) => &p.function_domain,
+            ExecStmtResult::By(ExecByStmtResult::Thm(ExecByThmStmtResult::Success(p))) => {
+                &p.function_domain
+            }
+            _ => panic!("membership invocation"),
+        };
+        assert!(
+            matches!(domain, Some(BuiltinFunctionDomainProof::Membership(p)) if matches!(p.comparison,FunctionDomainComparisonProof::MutualInclusion{..}))
+        );
+    }
+    let lean = compiler
+        .compile_run(&run, "reordered_function_membership")
+        .unwrap();
+    assert!(lean.contains("Litex.SetSemantics.ext"));
+    assert!(lean.contains("Litex.FunctionSemantics.fnSet_of_returns"));
+    assert_eq!(
+        lean,
+        compiler
+            .compile_run(&run, "reordered_function_membership")
+            .unwrap()
+    );
+}
+
+#[test]
+fn function_membership_replays_positive_domains_and_abstract_citations() {
+    for source in [
+        include_str!("../../../../lean/examples/positive_function_membership/statement.lit"),
+        include_str!(
+            "../../../../lean/examples/abstract_function_membership_domains/statement.lit"
+        ),
+    ] {
+        let (run, compiler) = super::execute(source);
+        let lean = compiler
+            .compile_run(&run, "equivalent_function_domains")
+            .unwrap();
+        assert!(lean.contains("Litex.SetSemantics.ext"));
+        assert!(lean.contains("Litex.FunctionSemantics.fnSet_of_returns"));
+    }
+}
+
+#[test]
+fn function_membership_rejects_swapped_inclusions_and_forged_alpha_comparisons() {
+    use crate::execute::execute_by_stmt::BuiltinFunctionDomainProof;
+    use crate::execute::execute_fact_stmt::function_domain::FunctionDomainComparisonProof;
+    for index in [1, 3] {
+        for mutation in 0..3 {
+            let (mut run, compiler) = super::execute(include_str!(
+                "../../../../lean/examples/reordered_function_membership/statement.lit"
+            ));
+            let domain = match &mut run.statement_results[index] {
+                ExecStmtResult::ReleaseAndExpand(ExecReleaseAndExpandStmtResult::Thm(
+                    ExecReleaseThmStmtResult::Success(p),
+                )) => &mut p.function_domain,
+                ExecStmtResult::By(ExecByStmtResult::Thm(ExecByThmStmtResult::Success(p))) => {
+                    &mut p.function_domain
+                }
+                _ => panic!(),
+            };
+            let Some(BuiltinFunctionDomainProof::Membership(p)) = domain else {
+                panic!()
+            };
+            let FunctionDomainComparisonProof::MutualInclusion {
+                forward,
+                forward_proof,
+                reverse,
+                reverse_proof,
+            } = &mut p.comparison
+            else {
+                panic!()
+            };
+            match mutation {
+                0 => {
+                    std::mem::swap(forward, reverse);
+                    std::mem::swap(forward_proof, reverse_proof);
+                }
+                1 => std::mem::swap(forward_proof, reverse_proof),
+                2 => p.comparison = FunctionDomainComparisonProof::AlphaEquivalent,
+                _ => unreachable!(),
+            }
+            assert!(
+                compiler
+                    .compile_run(&run, "invalid_function_domain")
+                    .is_err(),
+                "index {index}, mutation {mutation}"
+            );
+        }
+    }
+}
+
+#[test]
+fn function_membership_domain_comparison_cannot_cite_later_return_proofs() {
+    use crate::execute::execute_by_stmt::BuiltinFunctionDomainProof;
+    let (run, compiler) = super::execute(include_str!(
+        "../../../../lean/examples/reordered_function_membership/statement.lit"
+    ));
+    for index in [1, 3] {
+        let (owner, domain, id) = match &run.statement_results[index] {
+            ExecStmtResult::ReleaseAndExpand(ExecReleaseAndExpandStmtResult::Thm(
+                ExecReleaseThmStmtResult::Success(p),
+            )) => (
+                SourceOwner::ThmRelease(p),
+                &p.function_domain,
+                p.dom_stores[0].primary_fact_id(),
+            ),
+            ExecStmtResult::By(ExecByStmtResult::Thm(ExecByThmStmtResult::Success(p))) => (
+                SourceOwner::Call(p),
+                &p.function_domain,
+                p.dom_stores[0].primary_fact_id(),
+            ),
+            _ => panic!(),
+        };
+        let Some(BuiltinFunctionDomainProof::Membership(domain)) = domain else {
+            panic!()
+        };
+        let root = SourcePosition::new(None, SourceOwner::Run(&run), index);
+        let stmt = SourcePosition::new(
+            Some(&root),
+            SourceOwner::Statement(&run.statement_results[index]),
+            0,
+        );
+        let invocation = SourcePosition::new(Some(&stmt), owner, 0);
+        let comparison =
+            SourcePosition::new(Some(&invocation), SourceOwner::FunctionDomainWD(domain), 0);
+        for stage in 0..2 {
+            let prior = comparison.function_domain_comparison_prior(stage).unwrap();
+            assert!(compiler.cited_fact_reference(id, &prior).is_err());
+        }
+        let after = SourcePosition {
+            before: 1,
+            ..invocation
+        };
+        assert!(compiler.cited_fact_reference(id, &after).is_ok());
+    }
+}
+
+#[test]
+fn function_membership_does_not_erase_part_of_a_functions_domain() {
+    let source = "have fn f(x R) R = x\nrelease thm fn_set_member(f,fn(y R: y > 0) C)\n";
+    let mut runtime = Runtime::new(LaunchCommand::Eval {
+        code: String::new(),
+        session: false,
+        strict: true,
+        language: OutputLanguage::English,
+    });
+    let run = runtime.run_litex_code(source).unwrap();
+    assert!(!run.success);
+    assert!(crate::compile_to_lean::LitexToLeanCompiler::new(runtime)
+        .compile_run(&run, "restricted_domain")
+        .is_err());
+}
+
+#[test]
+fn function_membership_replays_complete_composition_domains() {
+    use crate::execute::execute_by_stmt::BuiltinFunctionDomainProof;
+    use crate::execute::execute_fact_stmt::function_domain::{
+        CompleteFunctionDomainSourceProof, FunctionDomainComparisonProof,
+    };
+    let (run, compiler) = super::execute(include_str!(
+        "../../../../lean/examples/composed_quotient_membership/statement.lit"
+    ));
+    let ExecStmtResult::ReleaseAndExpand(ExecReleaseAndExpandStmtResult::Thm(
+        ExecReleaseThmStmtResult::Success(p),
+    )) = &run.statement_results[2]
+    else {
+        panic!()
+    };
+    let Some(BuiltinFunctionDomainProof::Membership(domain)) = &p.function_domain else {
+        panic!()
+    };
+    assert!(matches!(
+        domain.source.source,
+        CompleteFunctionDomainSourceProof::Composition(_)
+    ));
+    assert!(matches!(
+        domain.comparison,
+        FunctionDomainComparisonProof::MutualInclusion { .. }
+    ));
+    let lean = compiler
+        .compile_run(&run, "composed_quotient_member")
+        .unwrap();
+    assert!(lean.contains("Litex.composeInFnSet"));
+    assert!(lean.contains("Litex.FunctionSemantics.fnSet_of_returns"));
+}
+
+#[test]
 fn function_membership_replays_original_guards_and_return_forall() {
     let source =
         include_str!("../../../../lean/examples/function_membership_theorem/statement.lit");

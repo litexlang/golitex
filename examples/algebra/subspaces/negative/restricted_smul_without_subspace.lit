@@ -1,0 +1,23 @@
+claim:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,U power_set(V):
+        $Algebra::vector_space::is_subspace(K,field,V,space,U)
+        =>:
+            $is_nonempty_set(U)
+    by thm Algebra::subspace::subspace_is_nonempty(K,field,V,space,U) => $is_nonempty_set(U)
+
+claim:
+    ? forall V nonempty_set,U power_set(V),n N,vectors finite_seq(U,n):
+        vectors $in finite_seq(V,n)
+    by thm Algebra::subspace::sequence_in_ambient(V,U,n,vectors) => vectors $in finite_seq(V,n)
+
+claim:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,U power_set(V):
+        $Algebra::vector_space::is_subspace(K,field,V,space,U)
+        =>:
+            \Algebra::subspace::restricted_space<K,field,V,space,U> $in &Algebra::vector_space::VectorSpace<K,field,U>
+    by thm Algebra::subspace::restricted_space_is_vector_space(K,field,V,space,U) => \Algebra::subspace::restricted_space<K,field,V,space,U> $in &Algebra::vector_space::VectorSpace<K,field,U>
+
+forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,U power_set(V):
+    $is_nonempty_set(U)
+    =>:
+        \Algebra::subspace::restricted_smul<K,field,V,space,U> $in fn(a K,v U) U

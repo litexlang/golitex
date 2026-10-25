@@ -78,6 +78,7 @@ impl LitexToLeanCompiler {
                 ))
             }
         };
+        let mut domain_equality = "(by rfl)".to_string();
         let domain_complete = if let Some(domain) = domain {
             ensure_object(&arguments[0], &domain.function_wd)?;
             ensure_object(
@@ -91,7 +92,18 @@ impl LitexToLeanCompiler {
             let target = self.compile_wd(&domain.target_wd, &formed)?;
             definitions.push(format!("let _membership_function := {function}"));
             definitions.push(format!("let _membership_target := {target}"));
-            Some(SourcePosition { before: 2, ..prior })
+            let before = if builtin.theorem == BuiltinTheoremId::FunctionSetMember {
+                // Domain comparisons precede every return obligation in the
+                // native theorem invocation. Keep later stores out of ancestry.
+                let (comparisons, equality) =
+                    self.compile_function_domain_match(domain, position)?;
+                definitions.extend(comparisons);
+                domain_equality = equality;
+                usize::MAX
+            } else {
+                2
+            };
+            Some(SourcePosition { before, ..prior })
         } else {
             None
         };
@@ -168,10 +180,12 @@ impl LitexToLeanCompiler {
                     &builtin.requirements,
                     &references,
                     &formation,
+                    domain_complete.as_ref().unwrap(),
                 )?,
             BuiltinTheoremId::FunctionSetMember => self.compile_builtin_function_membership(
                 member,
                 domain.unwrap(),
+                &domain_equality,
                 &builtin.requirements,
                 &references,
                 &formation,

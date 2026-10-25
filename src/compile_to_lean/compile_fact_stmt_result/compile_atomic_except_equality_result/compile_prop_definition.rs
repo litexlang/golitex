@@ -169,6 +169,19 @@ impl LitexToLeanCompiler {
         normal: &NormalAtomicFact,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
+        if position.visible_abstract_prop(&normal.predicate).is_some() {
+            let arguments = normal
+                .body
+                .iter()
+                .map(|object| {
+                    self.compile_object_reference(object, position)
+                        .map(|term| format!("(Litex.denote {term})"))
+                })
+                .collect::<Result<Vec<_>, _>>()?;
+            return self
+                .compile_abstract_predicate_proposition(&normal.predicate, &arguments, position)?
+                .ok_or_else(|| LeanCompileError::unsupported("AbstractProp/Producer"));
+        }
         let (declaration, declaration_position, index) =
             position.visible_prop(&normal.predicate)?;
         self.prop_argument_substitution(declaration, normal)?;
@@ -306,6 +319,15 @@ impl LitexToLeanCompiler {
             Fact::AtomicFact(AtomicFact::NormalAtomicFact(normal)) => normal,
             _ => return Ok(Vec::new()),
         };
+        if position.visible_abstract_prop(&normal.predicate).is_some() {
+            return if rules.is_empty() {
+                Ok(Vec::new())
+            } else {
+                Err(LeanCompileError::unsupported(
+                    "AbstractProp/UnexpectedInference",
+                ))
+            };
+        }
         let (declaration, _, _) = position.visible_prop(&normal.predicate)?;
         let substitution = self.prop_argument_substitution(declaration, normal)?;
         let parameters = declaration
@@ -355,6 +377,7 @@ impl LitexToLeanCompiler {
                 let fact = match &derived.store {
                     StoreFactResult::AtomicFact(fact) => Fact::AtomicFact(fact.fact.clone()),
                     StoreFactResult::AndFact(fact) => Fact::AndFact(fact.fact.clone()),
+                    StoreFactResult::ForallFact(fact) => Fact::ForallFact(fact.fact.clone()),
                     StoreFactResult::ChainFact(fact) => Fact::ChainFact(fact.fact.clone()),
                     StoreFactResult::ExistShapedFact(stored) => match &stored.fact {
                         ExistShapedFact::Exist(fact) => Fact::ExistFact(fact.clone()),
@@ -401,7 +424,12 @@ impl LitexToLeanCompiler {
                     ));
                 }
                 self.validate_store(&derived.store, &fact)?;
-                if position.is_local() && matches!(fact, Fact::AtomicFact(_) | Fact::ExistFact(_)) {
+                if position.is_local()
+                    && matches!(
+                        fact,
+                        Fact::AtomicFact(_) | Fact::ExistFact(_) | Fact::ForallFact(_)
+                    )
+                {
                     // The checked predicate already determines this projection's
                     // type, including constructors certified in its declaration.
                     // Do not demand a second, instantiated WD run just to print it.

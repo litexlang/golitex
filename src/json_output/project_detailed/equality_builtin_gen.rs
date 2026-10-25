@@ -149,6 +149,33 @@ pub(super) fn project_equality_builtin_rule(
                 ],
             )
         }
+        EqualitySearchProofByBuiltinRule::Multivariable(p) => {
+            use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_multivariable::MultivariableEqualityProof as P;
+            let premises = match p {
+                P::SelectedComponent(p) => vec![
+                    super::searched::project_known_premise(&p.candidate, runtime),
+                    super::searched::project_known_equality_path(&p.candidate_value_equal, runtime),
+                    super::multivariable::reduction(&p.reduction, runtime),
+                    super::verify::project_verify_fact(&p.value_equality, runtime),
+                ],
+                P::SelectedValue(p) => vec![
+                    super::searched::project_known_premise(&p.candidate, runtime),
+                    super::searched::project_equal_searched(&p.value_equality, runtime),
+                ],
+                P::Uniqueness(p) => vec![
+                    super::searched::project_known_premise(&p.left, runtime),
+                    super::searched::project_known_premise(&p.right, runtime),
+                ],
+            };
+            object_for(
+                runtime,
+                vec![
+                    ("type", string("builtin_rule")),
+                    ("rule", string(p.rule_id())),
+                    ("premises", JsonValue::Array(premises)),
+                ],
+            )
+        }
         EqualitySearchProofByBuiltinRule::FunctionLimit(p) => {
             use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_function_limit::FunctionLimitEqualityProof as P;
             let premises = match p {

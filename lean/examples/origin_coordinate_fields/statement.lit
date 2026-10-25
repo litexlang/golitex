@@ -1,0 +1,8 @@
+# Name the origin as a coordinate pair and recover its zero coordinates.
+struct CoordinatePair:
+    x R
+    y R
+
+have origin &CoordinatePair = (0, 0)
+origin.x = 0
+origin.y = 0

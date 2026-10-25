@@ -15,6 +15,7 @@ mod compile_known_special_property;
 mod compile_natural_power_laws;
 mod compile_order_antisymmetry;
 mod compile_positive_power_zero;
+mod compile_set_identities;
 mod compile_sign_identities;
 mod compile_sqrt_square;
 mod compile_zero_product;
@@ -25,3 +26,7 @@ mod known_special_property_tests;
 mod compile_subtraction_from_addition;
 
 pub(in crate::compile_to_lean) use compile_cartesian_definition::validate_cart_definition;
+
+mod compile_composition_equality;
+mod compile_set_minus_identities;
+mod compile_union_distribution;

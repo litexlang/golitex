@@ -1,0 +1,12 @@
+# Construct coordinate pairs inside a local proof without exporting the objects.
+struct CoordinatePair:
+    x R
+    y R
+
+witness $is_nonempty_set(&CoordinatePair) from (1, 2)
+sketch:
+    have temporary_coordinates &CoordinatePair
+    release struct def temporary_coordinates
+    temporary_coordinates.x $in R
+    have local_origin &CoordinatePair = (0, 0)
+    local_origin.x = 0

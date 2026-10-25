@@ -1,0 +1,18 @@
+# Coordinates of a pair belong to its arbitrary nonempty carrier.
+struct NonemptyPair<A nonempty_set>:
+    x A
+    y A
+
+(1, 2) $in &NonemptyPair<R>
+forall A nonempty_set, p &NonemptyPair<A>:
+    $is_nonempty_set(A)
+    p.x $in A
+    p.y $in A
+
+forall A nonempty_set:
+    $is_set(A)
+    $is_nonempty_set(A)
+
+forall B nonempty_set:
+    $is_set(B)
+    $is_nonempty_set(B)

@@ -24,6 +24,10 @@ Each side is timed on its own checking path:
 Neither side includes process startup, imports, or JSON/console rendering.
 These are concrete comparisons of two checking paths, not a general ranking of
 the two languages.
+
+Tables also report character-based de Bruijn factors where a shared informal
+baseline exists and the published source matches the timing-case definition.
+See de_bruijn.py for the independent size audit and retrospective-source scope.
 """
 
 import argparse
@@ -36,6 +40,8 @@ import shutil
 import statistics
 import subprocess
 import sys
+
+from de_bruijn import TABLE_NOTE, factor_cells
 
 HERE = Path(__file__).resolve().parent
 BENCH = HERE.parent
@@ -320,8 +326,8 @@ def summarise(rows):
 def markdown(cases, summary):
     """Summary table; full per-case sources live next to it as files."""
     out = [
-        "| 领域 | 用例 | Litex (ms) | Lean (ms) | Lean÷Litex | Lean 最快路线 | 源码 |",
-        "| --- | --- | ---: | ---: | ---: | --- | --- |",
+        "| 领域 | 用例 | 表达：Litex 德布鲁因因子 DF* ↓ | 表达：Lean 德布鲁因因子 DF* ↓ | 速度：Litex 耗时 (ms) ↓ | 速度：Lean 耗时 (ms) ↓ | 速度：Litex 加速比（Lean 耗时÷Litex 耗时）↑ | Lean 最快路线 | 源码 |",
+        "| --- | --- | ---: | ---: | ---: | ---: | ---: | --- | --- |",
     ]
     for c in cases:
         lit = summary.get(f"litex/{c['id']}")
@@ -337,13 +343,17 @@ def markdown(cases, summary):
         lit_ms = lit["median_ms"] if lit else float("nan")
         lean_ms = best[1]["median_ms"] if best else float("nan")
         ratio = lean_ms / lit_ms if lit and best else float("nan")
+        factor_columns = factor_cells(
+            SOURCES.name, c, SOURCES / f'{c["id"]}.lit',
+            SOURCES / f'{slug(c["id"], best[0])}.lean', best[0],
+        )
         out.append(
-            f"| {c['domain']} | {c['label']} | {lit_ms:.3f} | {lean_ms:.3f} "
-            f"| **{ratio:.2f}×** | `{best[0]}` "
+            f"| {c['domain']} | {c['label']} | {' | '.join(factor_columns)} "
+            f"| {lit_ms:.3f} | {lean_ms:.3f} | **{ratio:.2f}×** | `{best[0]}` "
             f"| [litex](../sources/{SOURCES.name}/{c['id']}.lit) · "
             f"[lean](../sources/{SOURCES.name}/{slug(c['id'], best[0])}.lean) |"
         )
-    return "\n".join(out)
+    return "\n".join(out) + "\n\n" + TABLE_NOTE
 
 
 def environment():

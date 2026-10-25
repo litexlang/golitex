@@ -2,6 +2,7 @@
 # Before (unsupported two-argument native limit):
 # have fn f(x R: x != 0) R = x^2/x
 # lim(f,0)=0
+# Historical spelling above is retired; current calls use fn_lim(f,0).
 # Now: the complete accumulation and epsilon-delta proofs below precede lim use.
 # Boundary: f(0) and selected-value use without convergence remain rejected.
 # Run: target/release/litex -strict -lang en -f examples/wd/real_function_limit_at.lit
@@ -35,11 +36,11 @@ claim:
 
 by def $has_limit_at(f,0,0)
 
-lim(f,0)=0
+fn_lim(f,0)=0
 
-lim(f,0)+2=2
+fn_lim(f,0)+2=2
 
-lim(f,0) $in R
+fn_lim(f,0) $in R
 
 by contra:
     ? not $has_limit_at(f,0,1)

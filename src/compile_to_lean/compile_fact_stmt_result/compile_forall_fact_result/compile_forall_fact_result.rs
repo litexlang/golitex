@@ -98,6 +98,8 @@ impl LitexToLeanCompiler {
         }
         for ((_, source), (_, target)) in source_parameters.iter().zip(&target_parameters) {
             match (source, target) {
+                (ParamType::Set(_), ParamType::Set(_))
+                | (ParamType::NonemptySet(_), ParamType::NonemptySet(_)) => {}
                 (ParamType::Obj(source), ParamType::Obj(target))
                     if instantiated_object_matches(source, target, &substitution) => {}
                 (ParamType::Obj(_), ParamType::Obj(_)) => {
@@ -304,9 +306,7 @@ impl LitexToLeanCompiler {
                 "Duplicate source parameter identity.",
             ));
         }
-        if introduced.param_type_well_defined.len() != groups.len()
-            || introduced.auto_opened_struct_layers.is_some()
-        {
+        if introduced.param_type_well_defined.len() != groups.len() {
             return Err(LeanCompileError::new(
                 "Forall/Parameters",
                 "Parameter evidence does not match the supported plain groups.",
@@ -331,11 +331,21 @@ impl LitexToLeanCompiler {
                 ..*position
             };
             let position = &group_position;
-            if matches!(&group.param_type, ParamType::Set(_)) {
-                if !matches!(wd, ParamTypeWellDefinedProof::Set) {
+            if matches!(
+                &group.param_type,
+                ParamType::Set(_) | ParamType::NonemptySet(_)
+            ) {
+                if !matches!(
+                    (&group.param_type, wd),
+                    (ParamType::Set(_), ParamTypeWellDefinedProof::Set)
+                        | (
+                            ParamType::NonemptySet(_),
+                            ParamTypeWellDefinedProof::NonemptySet
+                        )
+                ) {
                     return Err(LeanCompileError::new(
                         "Forall/SetKindWD",
-                        "A set-kind binder requires its actual kind evidence.",
+                        "A set-kind binder requires evidence for its exact declared kind.",
                     ));
                 }
                 for parameter in &group.params {
@@ -343,8 +353,12 @@ impl LitexToLeanCompiler {
                         before: offset + 1,
                         ..*position
                     };
-                    let (new_binders, new_arguments) =
-                        self.introduce_set_parameter(parameter, &stores[offset], &introduced)?;
+                    let (new_binders, new_arguments) = self.introduce_set_kind_parameter(
+                        parameter,
+                        &group.param_type,
+                        &stores[offset],
+                        &introduced,
+                    )?;
                     binders.extend(new_binders);
                     introductions.extend(new_arguments);
                     offset += 1;
@@ -392,15 +406,36 @@ impl LitexToLeanCompiler {
                     self.fact_proposition(&fact, &carrier_position)?,
                     format!("h_{}", stores[offset].primary_fact_id().value()),
                 );
+                // Parameters and their inferences precede automatic opening.
+                let unopened = SourcePosition::new(
+                    Some(&carrier_position),
+                    SourceOwner::StructLayers(
+                        introduced
+                            .auto_opened_struct_layers
+                            .as_deref()
+                            .unwrap_or(&[]),
+                    ),
+                    0,
+                );
                 definitions.extend(self.compile_parameter_inferences(
                     &stores[offset],
                     &fact,
                     &member,
-                    &carrier_position,
+                    &unopened,
                 )?);
                 offset += 1;
             }
         }
+        let complete = SourcePosition {
+            before: expected_count,
+            ..*position
+        };
+        definitions.extend(self.compile_auto_struct_layers(
+            groups,
+            stores,
+            introduced.auto_opened_struct_layers.as_deref(),
+            &complete,
+        )?);
         if assumed.len() != domains.len() {
             return Err(LeanCompileError::new(
                 "Forall/Domain",

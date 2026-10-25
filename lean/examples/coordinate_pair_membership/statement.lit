@@ -1,0 +1,9 @@
+# Real coordinate pairs belong to their named Cartesian carrier.
+struct CoordinatePair:
+    x R
+    y R
+
+(1, 2) $in &CoordinatePair
+
+forall p cart(R, R):
+    p $in &CoordinatePair

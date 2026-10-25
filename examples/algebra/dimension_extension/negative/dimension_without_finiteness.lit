@@ -1,0 +1,2 @@
+forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>:
+    \Algebra::dimension::finite_dimension<K,field,V>(space) $in N

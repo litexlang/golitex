@@ -1,0 +1,5 @@
+# A selected real-valued function can also be viewed as complex-valued on its full real domain.
+thm returned_function_widen:
+    ? forall provider fn(t R) fn(x R) R:
+        provider(1) $in fn(x R) C
+    by thm fn_set_member(provider(1), fn(x R) C) => provider(1) $in fn(x R) C

@@ -1,0 +1,6 @@
+# Intersecting comparable sets returns the smaller set, in either operand order.
+forall laws_s_A, laws_s_B set:
+    laws_s_A $subset laws_s_B
+    =>:
+        intersect(laws_s_A, laws_s_B) = laws_s_A
+        intersect(laws_s_B, laws_s_A) = laws_s_A

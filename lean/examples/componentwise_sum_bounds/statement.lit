@@ -1,0 +1,12 @@
+# Add two real upper bounds, including crossed pairs of addends.
+forall sum_a, sum_b, sum_c, sum_d R:
+    sum_a <= sum_b
+    sum_c <= sum_d
+    =>:
+        sum_a + sum_c <= sum_b + sum_d
+
+forall sum_a, sum_b, sum_c, sum_d R:
+    sum_a <= sum_d
+    sum_c <= sum_b
+    =>:
+        sum_a + sum_c <= sum_b + sum_d

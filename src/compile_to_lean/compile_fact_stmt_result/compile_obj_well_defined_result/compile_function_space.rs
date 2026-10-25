@@ -19,9 +19,30 @@ impl LitexToLeanCompiler {
             (FunctionSpace::FnRange(range), FunctionSpaceObjWellDefinedProofByDef::FnRange(wd)) => {
                 self.compile_function_range_wd(range, wd, position)
             }
-            (FunctionSpace::Composition(_), _) => Err(LeanCompileError::unsupported(
-                "WD/FunctionSpace/Composition",
-            )),
+            (
+                FunctionSpace::Preimage(value),
+                FunctionSpaceObjWellDefinedProofByDef::Preimage(wd),
+            ) => self.compile_preimage_wd(
+                &value.clone().into(),
+                &wd.child_obj_well_defined,
+                &wd.requirement_fact_verified,
+                &wd.construction,
+                position,
+            ),
+            (
+                FunctionSpace::PreimageSet(value),
+                FunctionSpaceObjWellDefinedProofByDef::PreimageSet(wd),
+            ) => self.compile_preimage_wd(
+                &value.clone().into(),
+                &wd.child_obj_well_defined,
+                &wd.requirement_fact_verified,
+                &wd.construction,
+                position,
+            ),
+            (
+                FunctionSpace::Composition(value),
+                FunctionSpaceObjWellDefinedProofByDef::Composition(proof),
+            ) => self.compile_composition_wd(value, proof, position),
             (FunctionSpace::FnSet(signature), FunctionSpaceObjWellDefinedProofByDef::FnSet(wd)) => {
                 self.compile_function_set_wd(signature, wd, position)
             }
@@ -65,7 +86,7 @@ impl LitexToLeanCompiler {
         let checked_header = self.compile_function_raw_header(signature, &completed_return)?;
         let signature = self.compile_fn_signature(signature, &completed_return)?;
         Ok(format!(
-            "(by\n  have _checked_header : {checked_header} := by\n    {}\n    exact True.intro\n  exact Litex.fnSet {signature})",
+            "(let _checked_header : {checked_header} := (by\n    {}\n    exact True.intro);\n  Litex.fnSet {signature})",
             head.replace('\n', "\n    ")
         ))
     }

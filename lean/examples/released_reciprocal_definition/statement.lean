@@ -43,8 +43,7 @@ theorem h_93 : Litex.Same (_object_i1 (M := M)) (_object_i1 (M := M)) :=
       )
   )
 
-theorem h_94 : Litex.In (_object_i1 (M := M)) (by
-  have _checked_header : ∀ (_raw_i2 : M.Value), M.mem _raw_i2 (M.standard Litex.StandardSetValue.real) → ((fun (_raw_i2 : M.Value) => (¬ (_raw_i2 = (M.number (0 : ℂ))))) _raw_i2) → True := by
+theorem h_94 : Litex.In (_object_i1 (M := M)) (let _checked_header : ∀ (_raw_i2 : M.Value), M.mem _raw_i2 (M.standard Litex.StandardSetValue.real) → ((fun (_raw_i2 : M.Value) => (¬ (_raw_i2 = (M.number (0 : ℂ))))) _raw_i2) → True := (by
     intro _raw_i2 h_91 h_1
     let _value_i2 := Litex.semanticObject (M := M) _raw_i2 (M.member_isSet h_91)
     have h_91 : Litex.In _value_i2 (Litex.R (M := M)) := h_91
@@ -57,8 +56,8 @@ theorem h_94 : Litex.In (_object_i1 (M := M)) (by
               exact h_1)
           )
       )
-    exact True.intro
-  exact Litex.fnSet (Litex.FunctionSignature.one (M := M) Litex.StandardSetValue.real Litex.StandardSetValue.real (fun (_raw_i2 : M.Value) => (¬ (_raw_i2 = (M.number (0 : ℂ))))))) :=
+    exact True.intro);
+  Litex.fnSet (Litex.FunctionSignature.one (M := M) Litex.StandardSetValue.real Litex.StandardSetValue.real (fun (_raw_i2 : M.Value) => (¬ (_raw_i2 = (M.number (0 : ℂ))))))) :=
   (by
     litex_complete =>
       exact (

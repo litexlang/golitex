@@ -1,6 +1,10 @@
 # Litex Examples
 
-Phase-oriented acceptance tree for the current Litex pipeline (`src/`).
+Mathematical examples and the phase-oriented acceptance tree for the current
+Litex pipeline (`src/`).
+
+[Collected IMO proofs](imo/README.md) brings together inequalities, geometry,
+functional equations and the existing miniF2F IMO proof variants.
 
 > **When extending or repairing an example, use one `-session` and keep its
 > accepted context after an ordinary failure. Do not rerun the whole file after
@@ -12,6 +16,7 @@ Phase-oriented acceptance tree for the current Litex pipeline (`src/`).
 
 ```text
 examples/
+  imo/                 collected IMO problems, solutions and verification status
   proof_nodes/          verify / searched_proof tracers
   stmt_nodes/           exec_stmt arms
   wd/  wd_negative/     well-definedness positives / must-fail

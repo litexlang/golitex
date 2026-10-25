@@ -1,0 +1,9 @@
+# Use the set-difference identities in the opposite equality direction.
+forall diff_rev_A, diff_rev_B, diff_rev_D set:
+    {} = set_minus(diff_rev_A, diff_rev_A)
+    diff_rev_A = set_minus(diff_rev_A, {})
+    {} = set_minus({}, diff_rev_A)
+    intersect(set_minus(diff_rev_A, diff_rev_B), set_minus(diff_rev_A, diff_rev_D)) = set_minus(diff_rev_A, union(diff_rev_B, diff_rev_D))
+    union(set_minus(diff_rev_A, diff_rev_B), set_minus(diff_rev_A, diff_rev_D)) = set_minus(diff_rev_A, intersect(diff_rev_B, diff_rev_D))
+    {} = intersect(diff_rev_A, set_minus(diff_rev_B, diff_rev_A))
+    {} = intersect(set_minus(diff_rev_B, diff_rev_A), diff_rev_A)

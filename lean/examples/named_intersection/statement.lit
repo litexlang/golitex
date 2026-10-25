@@ -1,0 +1,4 @@
+# Name an intersection, transport membership through its definition, and check sethood.
+have saved_intersection set = intersect(R, C)
+1 $in saved_intersection
+$is_set(intersect(R, C))

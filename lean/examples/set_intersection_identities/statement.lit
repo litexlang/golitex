@@ -1,0 +1,7 @@
+# Simplify and regroup intersections of arbitrary sets.
+forall laws_i_A, laws_i_B, laws_i_C set:
+    intersect(laws_i_A, laws_i_B) = intersect(laws_i_B, laws_i_A)
+    intersect(laws_i_A, laws_i_A) = laws_i_A
+    intersect(laws_i_A, {}) = {}
+    intersect({}, laws_i_A) = {}
+    intersect(intersect(laws_i_A, laws_i_B), laws_i_C) = intersect(laws_i_A, intersect(laws_i_B, laws_i_C))

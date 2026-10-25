@@ -4,4 +4,4 @@
 have fn constant_example_function(x R) R=3
 release thm fn_limit_at_real_accumulation(0)
 release thm fn_limit_at_constant(constant_example_function,0,3)
-lim(constant_example_function,0)=3
+fn_lim(constant_example_function,0)=3

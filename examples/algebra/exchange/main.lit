@@ -1,0 +1,134 @@
+# Replace e1 by e1+e2 in a real-plane generating list.
+
+release obj def model::real_inv
+
+release obj def model::real_add
+
+release obj def model::real_neg
+
+release obj def model::real_mul
+
+release obj def model::plane_add
+
+release obj def model::plane_smul
+
+release obj def model::e1
+
+release obj def model::e2
+
+release obj def model::real_field
+
+release obj def model::real_plane
+
+release struct def model::real_field
+
+release struct def model::real_plane
+
+have vectors finite_seq(R × R,2)=(model::e1,model::e2)
+
+have coefficients finite_seq(R,2)=(1,1)
+
+have value R × R=(1,1)
+
+have replaced finite_seq(R × R,2)=(value,model::e2)
+
+by for:
+    ? forall idx closed_range(0,2):
+        idx=0 or idx=1 or idx=2
+    idx=0 or idx=1 or idx=2
+
+have fn sums(idx closed_range(0,2)) R × R by cases:
+    case idx=0: (0,0)
+    case idx=1: model::e1
+    case idx=2: value
+
+by for:
+    ? forall idx closed_range(1,2):
+        idx=1 or idx=2
+    idx=1 or idx=2
+
+claim:
+    ? forall j N+:
+        j<=2
+        =>:
+            sums(j)=model::real_plane.add(sums(j-1),model::real_plane.smul(coefficients(j),vectors(j)))
+    j $in closed_range(1,2)
+    j=1 or j=2
+    coefficients(j) $in R
+    vectors(j) $in R × R
+    sums(j-1) $in R × R
+    model::real_field.one=1
+    model::real_plane.zero=(0,0)
+    model::real_plane.add=model::plane_add
+    by cases:
+        ? sums(j)=model::real_plane.add(sums(j-1),model::real_plane.smul(coefficients(j),vectors(j)))
+        case j=1:
+            sums(j-1)=(0,0)=model::real_plane.zero
+            coefficients(1)=1
+            coefficients(j)=coefficients(1)=1=model::real_field.one
+            vectors(j)=vectors(1)=model::e1
+            sums(j)=model::e1
+            model::real_plane.smul(coefficients(j),vectors(j))=model::real_plane.smul(model::real_field.one,vectors(j))=vectors(j)
+            model::real_plane.add(sums(j-1),model::real_plane.smul(coefficients(j),vectors(j)))=model::real_plane.add(model::real_plane.zero,vectors(j))=vectors(j)=sums(j)
+        case j=2:
+            j-1=1
+            sums(1)=model::e1
+            sums(j-1)=sums(1)=model::e1
+            coefficients(2)=1
+            coefficients(j)=coefficients(2)=1=model::real_field.one
+            vectors(j)=vectors(2)=model::e2
+            sums(j)=value
+            model::real_plane.smul(coefficients(j),vectors(j))=model::real_plane.smul(model::real_field.one,vectors(j))=vectors(j)=model::e2
+            model::e1(1)=1
+            model::e1(2)=0
+            model::e2(1)=0
+            model::e2(2)=1
+            model::plane_add(model::e1,model::e2)=(model::e1(1)+model::e2(1),model::e1(2)+model::e2(2))=(1,1)=value
+            model::real_plane.add(sums(j-1),model::real_plane.smul(coefficients(j),vectors(j)))=model::plane_add(model::e1,model::e2)=value
+
+sums(0)=(0,0)=model::real_plane.zero
+
+sums(2)=value
+
+replaced(1)=value
+
+coefficients(1)=1!=0=model::real_field.zero
+
+by def $Algebra::finite_span::is_partial_sum(R,model::real_field,R × R,model::real_plane,2,coefficients,vectors,sums)
+
+witness $Algebra::finite_span::has_linear_combination_value(R,model::real_field,R × R,model::real_plane,2,coefficients,vectors,value) from sums
+
+claim:
+    ? forall j closed_range(1,2):
+        j!=1
+        =>:
+            replaced(j)=vectors(j)
+    j=1 or j=2
+    by cases:
+        ? replaced(j)=vectors(j)
+        case j=1:
+            by contra:
+                ? replaced(j)=vectors(j)
+                impossible j=1
+        case j=2:
+            replaced(2)=model::e2
+            vectors(2)=model::e2
+            replaced(j)=replaced(2)=model::e2=vectors(2)=vectors(j)
+
+by def $Algebra::exchange::is_list_with_index_replaced(R × R,2,vectors,1,value,replaced)
+
+by thm Algebra::exchange::exchange_by_nonzero_coefficient(R,model::real_field,R × R,model::real_plane,2,coefficients,vectors,value,1,replaced) => \Algebra::finite_span::span<R,model::real_field,R × R,model::real_plane,2,vectors> = \Algebra::finite_span::span<R,model::real_field,R × R,model::real_plane,2,replaced>
+
+witness $Algebra::finite_span::is_linear_combination(R,model::real_field,R × R,model::real_plane,2,value,vectors) from coefficients
+
+by contra:
+    ? value!=model::real_plane.zero
+    value(1)=1
+    model::real_plane.zero=(0,0)
+    model::real_plane.zero(1)=0
+    value(1)=model::real_plane.zero(1)
+    impossible 1=0
+
+release thm Algebra::exchange::nonzero_span_member_can_replace_generator(R,model::real_field,R × R,model::real_plane,2,vectors,value)
+
+obtain k,another from exist idx closed_range(1,2),result finite_seq(R × R,2) st {$Algebra::exchange::is_list_with_index_replaced(R × R,2,vectors,idx,value,result),\Algebra::finite_span::span<R,model::real_field,R × R,model::real_plane,2,vectors> = \Algebra::finite_span::span<R,model::real_field,R × R,model::real_plane,2,result>}

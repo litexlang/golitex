@@ -66,6 +66,7 @@ impl LitexToLeanCompiler {
                     | Fact::ChainFact(_)
                     | Fact::OrFact(_)
                     | Fact::ExistFact(_)
+                    | Fact::ForallFact(_)
             ) {
                 return Err(LeanCompileError::unsupported("Prop/CompoundClause"));
             }

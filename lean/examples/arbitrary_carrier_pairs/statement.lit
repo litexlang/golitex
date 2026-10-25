@@ -1,0 +1,9 @@
+# Two elements of any ambient set form an instance of its pair structure.
+have coordinate_carrier set
+
+struct CarrierPair:
+    first coordinate_carrier
+    second coordinate_carrier
+
+forall a, b coordinate_carrier:
+    (a, b) $in &CarrierPair

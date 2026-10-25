@@ -1,0 +1,17 @@
+# Choose positive points globally and locally, retaining their defining inequality.
+struct PositivePoint:
+    x R
+    y R
+    <=>:
+        x > 0
+
+witness $is_nonempty_set(&PositivePoint) from (2, 3)
+have chosen_positive_point &PositivePoint
+chosen_positive_point.x > 0
+
+sketch:
+    have temporary_positive_point &PositivePoint
+    release struct def temporary_positive_point
+    temporary_positive_point.x > 0
+    have local_positive_point &PositivePoint = (2, 3)
+    local_positive_point.x > 0

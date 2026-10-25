@@ -1,0 +1,28 @@
+# Bound a union by a common superset or by direct/crossed component inclusions, retaining reflexive factors.
+forall bound_union_A, bound_union_B, bound_union_D set:
+    bound_union_A $subset bound_union_D
+    bound_union_B $subset bound_union_D
+    =>:
+        union(bound_union_A, bound_union_B) $subset bound_union_D
+
+forall mono_union_A, mono_union_B, mono_union_D, mono_union_E set:
+    mono_union_A $subset mono_union_D
+    mono_union_B $subset mono_union_E
+    =>:
+        union(mono_union_A, mono_union_B) $subset union(mono_union_D, mono_union_E)
+        union(mono_union_A, mono_union_B) $subset union(mono_union_E, mono_union_D)
+
+forall refl_first_A, refl_first_B, refl_first_D set:
+    refl_first_A $subset refl_first_B
+    =>:
+        union(refl_first_D, refl_first_A) $subset union(refl_first_D, refl_first_B)
+        union(refl_first_D, refl_first_A) $subset union(refl_first_B, refl_first_D)
+
+forall refl_second_A, refl_second_B, refl_second_D set:
+    refl_second_A $subset refl_second_B
+    =>:
+        union(refl_second_A, refl_second_D) $subset union(refl_second_B, refl_second_D)
+        union(refl_second_A, refl_second_D) $subset union(refl_second_D, refl_second_B)
+
+forall refl_both_A, refl_both_B set:
+    union(refl_both_A, refl_both_B) $subset union(refl_both_B, refl_both_A)

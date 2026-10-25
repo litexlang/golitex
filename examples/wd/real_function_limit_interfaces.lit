@@ -4,13 +4,13 @@
 forall D power_set(R), af fn(x D) R, p,L R:
     $has_limit_at(af,p,L)
     =>:
-        lim(af,p)=L
-        lim(af,p) $in R
+        fn_lim(af,p)=L
+        fn_lim(af,p) $in R
 
 forall af fn(x R) R, p R:
     exist L R st {$has_limit_at(af,p,L)}
     =>:
-        lim(af,p) $in R
+        fn_lim(af,p) $in R
 
 have fn after_limit(y R) R=y+1
 
@@ -18,13 +18,13 @@ claim:
     ? forall af fn(x R) R, p,L R:
         $has_limit_at(af,p,L)
         =>:
-            after_limit(lim(af,p))=L+1
-    lim(af,p)=L
-    after_limit(lim(af,p))=lim(af,p)+1=L+1
+            after_limit(fn_lim(af,p))=L+1
+    fn_lim(af,p)=L
+    after_limit(fn_lim(af,p))=fn_lim(af,p)+1=L+1
 
 forall af,ag fn(x R) R, p,q,L R:
     af=ag
     p=q
     $has_limit_at(af,p,L)
     =>:
-        lim(af,p)=lim(ag,q)
+        fn_lim(af,p)=fn_lim(ag,q)

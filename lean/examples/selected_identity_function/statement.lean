@@ -64,13 +64,12 @@ theorem h_3 : ∀ {_Host_i1 : Type v1} [_rep_i1 : Litex.Representation M _Host_i
   )
 
 noncomputable def _object_i11 := (show Litex.Obj (M := M) (Litex.SelectedFn M) from by
-  let _selected_signature := ((show Litex.Obj (M := M) (Litex.FunctionSignature M) from (by
-  have _checked_header : ∀ (_raw_i9 : M.Value), M.mem _raw_i9 (M.standard Litex.StandardSetValue.real) → ((fun (_raw_i9 : M.Value) => True) _raw_i9) → True := by
+  let _selected_signature := ((show Litex.Obj (M := M) (Litex.FunctionSignature M) from (let _checked_header : ∀ (_raw_i9 : M.Value), M.mem _raw_i9 (M.standard Litex.StandardSetValue.real) → ((fun (_raw_i9 : M.Value) => True) _raw_i9) → True := (by
     intro _raw_i9 h_64 _
     let _value_i9 := Litex.semanticObject (M := M) _raw_i9 (M.member_isSet h_64)
     have h_64 : Litex.In _value_i9 (Litex.R (M := M)) := h_64
-    exact True.intro
-  exact Litex.fnSet (Litex.FunctionSignature.one (M := M) Litex.StandardSetValue.real Litex.StandardSetValue.real (fun (_raw_i9 : M.Value) => True))))).val
+    exact True.intro);
+  Litex.fnSet (Litex.FunctionSignature.one (M := M) Litex.StandardSetValue.real Litex.StandardSetValue.real (fun (_raw_i9 : M.Value) => True))))).val
   have _selected_pointwise : ∀ (_raw_i9 : M.Value), M.mem _raw_i9 (M.standard Litex.StandardSetValue.real) → ((fun (_raw_i9 : M.Value) => True) _raw_i9) → ∃! _selected_output : M.Value, M.mem _selected_output (Litex.denote (Litex.R (M := M))) ∧ ((_selected_output = _raw_i9)) := (by
     intro _raw_i9 h_64 _
     let _value_i9 := Litex.semanticObject (M := M) _raw_i9 (M.member_isSet h_64)

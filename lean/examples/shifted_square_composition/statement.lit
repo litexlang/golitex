@@ -1,0 +1,6 @@
+# Squaring after adding one gives nine at input two.
+have fn comp_square(t R) R = t^2
+have fn comp_shift(t R) R = t+1
+have comp_shift_square fn(t R) R = comp_square ∘ comp_shift
+comp_shift_square(2)=9
+(comp_square ∘ comp_shift)(2) $in R

@@ -25,6 +25,11 @@ impl Runtime {
         fact: &AtomicFact,
         ctx: VerifyState,
     ) -> RuntimeResult<Option<AtomicExceptEqualityFactSearchProofByBuiltinStrategy>> {
+        if let Some(proof) = self.search_multivariable_strategy(fact, ctx)? {
+            return Ok(Some(
+                AtomicExceptEqualityFactSearchProofByBuiltinStrategy::MultivariableAnalysis(proof),
+            ));
+        }
         if let Some(proof) = self.search_pointwise_continuity_strategy(fact, ctx)? {
             return Ok(Some(
                 AtomicExceptEqualityFactSearchProofByBuiltinStrategy::PointwiseContinuity(proof),
@@ -131,6 +136,9 @@ impl Runtime {
             return Ok(Some(
                 AtomicExceptEqualityFactSearchProofByBuiltinStrategy::AddCrossedLessEqual(proof),
             ));
+        }
+        if let Some(proof) = self.search_add_double_upper_bound_strategy(fact, ctx)? {
+            return Ok(Some(proof.into()));
         }
         if let Some(proof) = self.search_sub_shared_subtrahend_less_equal_strategy(fact, ctx)? {
             return Ok(Some(

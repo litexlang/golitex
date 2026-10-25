@@ -1,0 +1,10 @@
+# Enlarging a base enlarges its difference by a fixed set and its power set.
+forall mono_diff_A, mono_diff_B, mono_diff_D set:
+    mono_diff_A $subset mono_diff_B
+    =>:
+        set_minus(mono_diff_A, mono_diff_D) $subset set_minus(mono_diff_B, mono_diff_D)
+
+forall mono_power_A, mono_power_B set:
+    mono_power_A $subset mono_power_B
+    =>:
+        power_set(mono_power_A) $subset power_set(mono_power_B)

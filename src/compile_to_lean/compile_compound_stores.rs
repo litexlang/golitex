@@ -218,6 +218,12 @@ impl LitexToLeanCompiler {
             ));
         };
         let family_matches = match infer {
+            InferAtomicFactResult::MultivariableAnalysisFact(_) => {
+                matches!(atomic, AtomicFact::MultivariableAnalysisFact(_))
+            }
+            InferAtomicFactResult::NotMultivariableAnalysisFact(_) => {
+                matches!(atomic, AtomicFact::NotMultivariableAnalysisFact(_))
+            }
             InferAtomicFactResult::RealSetBoundFact(_) => {
                 matches!(atomic, AtomicFact::RealSetBoundFact(_))
             }
@@ -409,6 +415,10 @@ impl LitexToLeanCompiler {
             ));
         }
         match infer {
+            InferAtomicFactResult::MultivariableAnalysisFact(_)
+            | InferAtomicFactResult::NotMultivariableAnalysisFact(_) => Err(
+                LeanCompileError::unsupported("Inference/MultivariableAnalysis"),
+            ),
             InferAtomicFactResult::RealSetBoundFact(_) => {
                 Err(LeanCompileError::unsupported("Inference/RealAnalysis"))
             }
@@ -499,6 +509,30 @@ impl LitexToLeanCompiler {
                         ..*position
                     };
                     match rule {
+                        InferInFactResult::Preimage(p) => {
+                            declarations.extend(self.compile_preimage_inference(
+                                false,
+                                p.source_fact_id,
+                                &p.source_equal,
+                                &p.construction,
+                                &p.derived,
+                                seed,
+                                compiled,
+                                &prior,
+                            )?)
+                        }
+                        InferInFactResult::PreimageSet(p) => {
+                            declarations.extend(self.compile_preimage_inference(
+                                true,
+                                p.source_fact_id,
+                                &p.source_equal,
+                                &p.construction,
+                                &p.derived,
+                                seed,
+                                compiled,
+                                &prior,
+                            )?)
+                        }
                         InferInFactResult::Template(_) => {
                             return Err(LeanCompileError::unsupported(
                                 "Inference/TemplateMembership",
@@ -557,6 +591,16 @@ impl LitexToLeanCompiler {
                                 &prior,
                             )?);
                         }
+                        InferInFactResult::SetMinusSplit(proof) => {
+                            declarations.extend(
+                                self.compile_set_minus_inference(proof, seed, compiled, &prior)?,
+                            );
+                        }
+                        InferInFactResult::IntersectBoth(proof) => {
+                            declarations.extend(
+                                self.compile_intersection_inference(proof, seed, compiled, &prior)?,
+                            );
+                        }
                         InferInFactResult::UnionOr(proof) => {
                             let AtomicFact::InFact(member) = atomic else {
                                 unreachable!()
@@ -601,6 +645,8 @@ impl LitexToLeanCompiler {
                     if matches!(
                         rule,
                         InferInFactResult::SetBuilder(_)
+                            | InferInFactResult::Preimage(_)
+                            | InferInFactResult::PreimageSet(_)
                             | InferInFactResult::SignedStandardSetSign(_)
                             | InferInFactResult::CartCoordinates(_)
                             | InferInFactResult::FnRange(_)
@@ -608,6 +654,8 @@ impl LitexToLeanCompiler {
                             | InferInFactResult::Range(_)
                             | InferInFactResult::ClosedRange(_)
                             | InferInFactResult::UnionOr(_)
+                            | InferInFactResult::IntersectBoth(_)
+                            | InferInFactResult::SetMinusSplit(_)
                             | InferInFactResult::ListSetSingletonEqual(_)
                     ) {
                         completed += rule.stored_conclusions().len();
@@ -702,14 +750,14 @@ impl LitexToLeanCompiler {
         }
         let fact = Fact::AtomicFact(stored.fact.clone());
         self.validate_store(store, &fact)?;
-        let receiver = self.compile_object_reference(&member.element, position)?;
-        let element = self.compile_object_reference(element, position)?;
-        let term = format!("(by\n  have _member : M.mem (Litex.denote {receiver}) (Litex.SetSemantics.insertValue (Litex.denote {element}) (Litex.SetSemantics.emptyValue (M := M))) := {}\n  exact ((Litex.SetSemantics.insert_members _ _ _).mp _member).elim (fun h => h) (fun h => False.elim (Litex.SetSemantics.empty_members _ h)))",compiled.1);
         let formed = SourcePosition::new(
             Some(position),
             SourceOwner::InferredStore(store),
             usize::MAX,
         );
+        let receiver = self.compile_object_reference(&member.element, &formed)?;
+        let element = self.compile_object_reference(element, &formed)?;
+        let term = format!("(by\n  have _member : M.mem (Litex.denote {receiver}) (Litex.SetSemantics.insertValue (Litex.denote {element}) (Litex.SetSemantics.emptyValue (M := M))) := {}\n  exact ((Litex.SetSemantics.insert_members _ _ _).mp _member).elim (fun h => h) (fun h => False.elim (Litex.SetSemantics.empty_members _ h)))",compiled.1);
         Ok(vec![self.emit_internal_fact(
             &fact,
             &(format!("Litex.Same {receiver} {element}"), term),

@@ -706,6 +706,23 @@ fn project_define_obj(def: &ExecDefineObjStmtResult, runtime: &Runtime) -> JsonV
                     ("statement_result", statement_result_value(true)),
                     ("kind", string("have_by_replacement_axiom")),
                     ("statement", string(s.statement.readable_string())),
+                    ("source_wd", project_verify_obj_wd(&s.source_wd, runtime)),
+                    (
+                        "uniqueness",
+                        super::store::fact_id_entry(runtime, s.uniqueness_fact_id),
+                    ),
+                    (
+                        "defined_params",
+                        project_have_store_and_infer(&s.defined_params, runtime),
+                    ),
+                    (
+                        "introduction",
+                        project_store_and_infer(&s.introduction, runtime),
+                    ),
+                    (
+                        "elimination",
+                        project_store_and_infer(&s.elimination, runtime),
+                    ),
                     (
                         "store_and_infer",
                         project_have_store_ids(&s.stored_fact_ids, runtime),
@@ -1932,7 +1949,42 @@ fn project_release_zorn_lemma(
                             .collect(),
                     ),
                 ),
-                ("obligations", project_verify_facts(&s.obligations, runtime)),
+                (
+                    "obligations",
+                    JsonValue::Array(
+                        s.obligations
+                            .iter()
+                            .map(|o| {
+                                object_for(
+                                    runtime,
+                                    vec![
+                                        ("verified", project_verify_fact(&o.verified, runtime)),
+                                        (
+                                            "stored",
+                                            match &o.stored {
+                                                Ok((wd, store)) => object_for(
+                                                    runtime,
+                                                    vec![
+                                                        (
+                                                            "well_defined",
+                                                            project_fact_wd_proof(wd, runtime),
+                                                        ),
+                                                        (
+                                                            "store_and_infer",
+                                                            project_store_and_infer(store, runtime),
+                                                        ),
+                                                    ],
+                                                ),
+                                                Err(error) => string(error),
+                                            },
+                                        ),
+                                    ],
+                                )
+                            })
+                            .collect(),
+                    ),
+                ),
+                ("stored_wd", project_fact_wd_proof(&s.stored_wd, runtime)),
                 ("stored", project_store_and_infer(&s.stored, runtime)),
             ],
         ),
@@ -2006,7 +2058,42 @@ fn project_release_axiom_of_choice(
                             .collect(),
                     ),
                 ),
-                ("obligations", project_verify_facts(&s.obligations, runtime)),
+                (
+                    "obligations",
+                    JsonValue::Array(
+                        s.obligations
+                            .iter()
+                            .map(|o| {
+                                object_for(
+                                    runtime,
+                                    vec![
+                                        ("verified", project_verify_fact(&o.verified, runtime)),
+                                        (
+                                            "stored",
+                                            match &o.stored {
+                                                Ok((wd, store)) => object_for(
+                                                    runtime,
+                                                    vec![
+                                                        (
+                                                            "well_defined",
+                                                            project_fact_wd_proof(wd, runtime),
+                                                        ),
+                                                        (
+                                                            "store_and_infer",
+                                                            project_store_and_infer(store, runtime),
+                                                        ),
+                                                    ],
+                                                ),
+                                                Err(error) => string(error),
+                                            },
+                                        ),
+                                    ],
+                                )
+                            })
+                            .collect(),
+                    ),
+                ),
+                ("stored_wd", project_fact_wd_proof(&s.stored_wd, runtime)),
                 ("stored", project_store_and_infer(&s.stored, runtime)),
             ],
         ),
@@ -2071,6 +2158,7 @@ fn project_release_regularity_axiom(
                 ("kind", string("release_regularity_axiom")),
                 ("set_wd", project_verify_obj_wd(&s.set_wd, runtime)),
                 ("nonempty", project_verify_fact(&s.nonempty, runtime)),
+                ("stored_wd", project_fact_wd_proof(&s.stored_wd, runtime)),
                 ("stored", project_store_and_infer(&s.stored, runtime)),
             ],
         ),

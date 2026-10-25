@@ -1,0 +1,9 @@
+# Expected rejection at the omitted mathematical premise.
+
+claim:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,U power_set(V),a K,x V:
+        $Algebra::vector_space::is_subspace(K,field,V,space,U)
+        space.smul(a,x) $in U
+        =>:
+            x $in U
+    release thm Algebra::exchange::subspace_nonzero_scalar_cancellation(K,field,V,space,U,a,x)

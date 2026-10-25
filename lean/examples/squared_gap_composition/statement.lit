@@ -1,0 +1,15 @@
+# Square a positive gap by composing two functions, retaining the gap's complete ordered domain.
+
+have fn comp_square(t R) R = t^2
+
+have fn comp_gap(x,y R: x<y) R = y-x
+
+have comp_h fn(x,y R: x<y) R = comp_square ∘ comp_gap
+
+comp_h(1,3)=4
+
+compose(comp_square,comp_gap)(1,3)=4
+
+(comp_square ∘ comp_gap)(1,3)=comp_square(comp_gap(1,3))
+
+comp_h(2,5)=9

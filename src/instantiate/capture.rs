@@ -55,6 +55,21 @@ pub fn collect_free_plain_ids(
     out: &mut HashSet<IdentifierId>,
 ) {
     match obj {
+        Obj::LimitOperator(crate::ast::obj::LimitOperator::MultivariableScalar(_))
+        | Obj::LimitOperator(crate::ast::obj::LimitOperator::MultivariableVector(_))
+        | Obj::DerivativeOperator(crate::ast::obj::DerivativeOperator::Partial(_))
+        | Obj::DerivativeOperator(crate::ast::obj::DerivativeOperator::ScalarDifferential(_))
+        | Obj::DerivativeOperator(crate::ast::obj::DerivativeOperator::TotalDifferential(_))
+        | Obj::DerivativeOperator(crate::ast::obj::DerivativeOperator::Gradient(_))
+        | Obj::DerivativeOperator(crate::ast::obj::DerivativeOperator::Jacobian(_))
+        | Obj::DerivativeOperator(crate::ast::obj::DerivativeOperator::Hessian(_))
+        | Obj::DerivativeOperator(crate::ast::obj::DerivativeOperator::Divergence(_))
+        | Obj::DerivativeOperator(crate::ast::obj::DerivativeOperator::Curl(_))
+        | Obj::DerivativeOperator(crate::ast::obj::DerivativeOperator::Laplacian(_)) => {
+            for arg in obj.multivariable_selector_args().unwrap() {
+                collect_free_plain_ids(arg, bound, out);
+            }
+        }
         Obj::MatrixOperator(value) => {
             for arg in value.operand_refs() {
                 collect_free_plain_ids(arg, bound, out);

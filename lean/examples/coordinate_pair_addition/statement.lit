@@ -1,0 +1,7 @@
+# Real coordinates of any two pairs commute under addition.
+struct CoordinatePair:
+    x R
+    y R
+
+forall p, q &CoordinatePair:
+    p.x + q.y = q.y + p.x

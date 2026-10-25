@@ -1,0 +1,4 @@
+# Applying reciprocal twice to two returns two; both calls require nonzero inputs.
+have fn comp_recip(t R: t != 0) R = 1/t
+have comp_inv_twice fn(t R: t != 0) R = comp_recip ∘ comp_recip
+comp_inv_twice(2)=2

@@ -1,0 +1,6 @@
+# A proposition with no arguments implies itself without being asserted true.
+abstract_prop signal()
+forall:
+    $signal()
+    =>:
+        $signal()

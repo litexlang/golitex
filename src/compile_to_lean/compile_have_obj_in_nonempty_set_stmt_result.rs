@@ -27,9 +27,7 @@ impl LitexToLeanCompiler {
         position: &SourcePosition<'_>,
         local: bool,
     ) -> Result<String, LeanCompileError> {
-        if proof.auto_opened_struct_layers.is_some()
-            || proof.groups.len() != proof.statement.param_def.groups.len()
-        {
+        if proof.groups.len() != proof.statement.param_def.groups.len() {
             return Err(LeanCompileError::unsupported("Have/ContextProfile"));
         }
         let aggregate: Vec<_> = proof
@@ -241,6 +239,16 @@ impl LitexToLeanCompiler {
                 )?);
             }
         }
+        let complete = SourcePosition {
+            before: introduced_count,
+            ..*position
+        };
+        declarations.extend(self.compile_auto_struct_layers(
+            &proof.statement.param_def.groups,
+            &proof.store_and_infer_result.store_and_infer_results,
+            proof.auto_opened_struct_layers.as_deref(),
+            &complete,
+        )?);
         Ok(declarations.join("\n\n"))
     }
 }

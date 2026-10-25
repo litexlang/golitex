@@ -1,0 +1,20 @@
+# An intersection lies in either factor and inherits their upper and lower bounds.
+forall subset_inter_A, subset_inter_B set:
+    intersect(subset_inter_A, subset_inter_B) $subset subset_inter_A
+    intersect(subset_inter_A, subset_inter_B) $subset subset_inter_B
+
+forall upper_inter_A, upper_inter_B, upper_inter_D set:
+    upper_inter_A $subset upper_inter_D
+    =>:
+        intersect(upper_inter_A, upper_inter_B) $subset upper_inter_D
+
+forall right_upper_inter_A, right_upper_inter_B, right_upper_inter_D set:
+    right_upper_inter_B $subset right_upper_inter_D
+    =>:
+        intersect(right_upper_inter_A, right_upper_inter_B) $subset right_upper_inter_D
+
+forall lower_inter_A, lower_inter_B, lower_inter_D set:
+    lower_inter_D $subset lower_inter_A
+    lower_inter_D $subset lower_inter_B
+    =>:
+        lower_inter_D $subset intersect(lower_inter_A, lower_inter_B)

@@ -132,10 +132,158 @@ nonnegative_rationals $subset nonnegative_reals
 当前切片支持平坦原子筛选条件、平坦 And／数值比较链及已支持的具体谓词，
 按实际记录的成员、subset、binder 与有序 WD 子证明重放。有限集合保留完整的
 两两不等证据；成员可经实际 subset 证明用于实数序的 WD。
-一般析取筛选、nonempty/finite 参数种类、无界理解、幂集／像与存在式集合选择
+一般析取筛选、finite_set 参数、独立的 `have A nonempty_set`、无界理解、幂集／像与存在式集合选择
 仍在编译边界外，不会被变成公理。
 
+## 字段互不依赖的结构
+
+```litex
+struct CoordinatePair:
+    x R
+    y R
+
+forall p &CoordinatePair:
+    p.x = p(1)
+    p.y = p(2)
+```
+
+`&CoordinatePair` 编译成已有的笛卡尔积集合封装；`p` 仍是带成员前提的通用对象。
+字段名对应有限函数的坐标，`p.x` 使用这个成员证明构造 `Litex.cartCall`。
+编译器按原来的 FactId 输出自动展开得到的笛卡尔积成员事实、字段等式和字段成员事实。
+[完整例子](../lean/examples/coordinate_pair_fields/)还使用两个坐标做实数运算。
+
+字段可以属于不同的集合，见[带自然数编号的点](../lean/examples/indexed_point_fields/)；
+也可以使用[先前声明的任意集合](../lean/examples/arbitrary_carrier_pairs/)。
+[嵌套元组成员例子](../lean/examples/nested_coordinate_membership/)先证明内层坐标对的成员关系，
+再让外层结构引用它。
+
+普通对象声明、给定值的声明和显式展开也使用同一套表示：
+
+```litex
+witness $is_nonempty_set(&CoordinatePair) from (1, 2)
+have p &CoordinatePair
+release struct def p
+p.x $in R
+
+have origin &CoordinatePair = (0, 0)
+origin.x = 0
+```
+
+第一种声明消费 result 中的非空证明；第二种分别检查类型预检、值的 WD 和成员证明，
+再输出对象别名及字段事实。展开保留原 FactId，多个参数按原顺序展开。
+可以查看[任取坐标对](../lean/examples/chosen_coordinate_fields/)、
+[原点](../lean/examples/origin_coordinate_fields/)、
+[显式展开](../lean/examples/released_coordinate_fields/)、
+[局部声明](../lean/examples/local_coordinate_objects/)、
+[定理内展开](../lean/examples/coordinate_field_theorem/)和
+[两个坐标对的运算](../lean/examples/coordinate_pair_addition/)。
+`<=>` 条件会保留在结构的成员关系里：
+
+```litex
+struct PositivePoint:
+    x R
+    y R
+    <=>:
+        x > 0
+
+(2, 3) $in &PositivePoint
+forall p &PositivePoint:
+    p.x > 0
+```
+
+生成的集合用 `Litex.setBuilder` 限制笛卡尔积。证明成员关系时，需要字段成员证明和
+定义条件的证明；展开结构时，再按原 FactId 取出这些事实。[正坐标点例子](../lean/examples/positive_point_conditions/)
+也检查任意笛卡尔积对象在第一坐标为正时属于这个结构。
+[普通与局部声明](../lean/examples/chosen_positive_points/)和
+[显式展开](../lean/examples/positive_point_release/)都保留条件。
+
+条件按顺序检查。[正数比值](../lean/examples/positive_ratio_conditions/)先给出
+`denominator != 0`，下一条 `numerator / denominator > 0` 的除法 WD 就引用它。
+另有[等式](../lean/examples/equal_coordinate_conditions/)、
+[合取](../lean/examples/first_quadrant_conditions/)和
+[链式条件](../lean/examples/ordered_coordinate_conditions/)的生成例子。
+定义发布的全称事实仍用原来的参数和 FactId；这部分复用已有集合构造定理，没有增加模型假设。
+
+结构头参数可以定义一族集合：
+
+```litex
+struct Pair<A set>:
+    x A
+    y A
+
+forall A set, p &Pair<A>:
+    p.x $in A
+    p.y $in A
+```
+
+`A` 仍是通用对象，`$is_set(A)` 仍是事实。生成的 Lean 定义接收这个对象和集合事实；
+实例化时消费原 result 中的参数 WD 和类型证明。[通用坐标对](../lean/examples/parameterized_pairs/)
+和[带等式条件的坐标对](../lean/examples/parameterized_equal_pairs/)都接受任意集合参数。
+参数也可以是条件里的[实数阈值](../lean/examples/threshold_points/)，或者像
+`A set, a A` 这样让后一个参数依赖前一个，见[指定第一坐标](../lean/examples/designated_coordinate_pairs/)。
+[全局／局部声明和展开](../lean/examples/chosen_parameterized_pairs/)保留实例化后的字段事实。
+
+结构头、`forall` 和命名定理也支持 `A nonempty_set`：`A` 仍是通用对象，
+非空性仍是原 FactId 对应的 `Litex.IsNonempty A` 假设，不会自动选择集合里的元素。
+实例化时必须提供实际的非空证明。例子包括[非空集合上的坐标对](../lean/examples/nonempty_parameterized_pairs/)、
+[带等式条件的坐标对](../lean/examples/nonempty_equal_pairs/)和
+[笛卡尔积非空定理及调用](../lean/examples/nonempty_cartesian_theorem/)。
+
+后面的字段也可以依赖前面的字段：
+
+```litex
+struct RepeatedCoordinate:
+    x R
+    y {x}
+
+forall p &RepeatedCoordinate:
+    p.y $in {p.x}
+    p.y = p.x
+```
+
+[这个例子的生成文件](../lean/examples/repeated_coordinate_fields/)用
+`Litex.DependentFields` 表示按顺序依赖的字段集合，逐项重放声明时的 WD、
+参数引入及其推导。`Litex.dependentCart` 收集满足这些成员条件的元组，
+仍然使用原来的平坦元组表示。`p` 保留自己的通用对象表示；展开结构时，
+编译器按原 FactId 输出笛卡尔积成员、字段等式和字段成员事实。
+
+这条路线使用可选的 `IndexedUnionSemantics M`，其按集合索引的并集规律
+已由现有 ZF 模型证明。只有声明依赖字段的生成文件需要这个额外接口；
+`SetSemantics` 的定义不变。
+
+更多已检查的例子包括：[集合的元素及该元素的成员](../lean/examples/member_coordinate_pairs/)
+（`x A; y x`）、[三个依赖字段](../lean/examples/repeated_coordinate_triples/)、
+[带正数条件的结构](../lean/examples/positive_repeated_coordinates/)、
+[从已有笛卡尔积成员推出结构成员](../lean/examples/equal_coordinates_membership/)，
+以及 [have、显式展开和局部别名](../lean/examples/chosen_repeated_coordinates/)。
+[倒数字段](../lean/examples/reciprocal_coordinate_fields/)使用 `x R+; y {1 / x}`：
+第一字段已有的非零推导为第二字段提供除法 WD，展开时引用声明已经证明的字段集合。
+
+这一范围要求至少两个字段，字段依赖只能指向前面的字段。字段访问和展开的对象
+必须是直接声明的结构参数或给定值的别名。条件限于已支持的原子事实、扁平合取
+和链式事实。有限集合参数种类、量化条件、嵌套字段路径、函数调用结果和
+局部／限定名的结构定义仍未接入。
+
 ## 公式函数与具体谓词
+
+顶层 `abstract_prop` 也可以编译。例如，下面的证明把一个性质从对象传给与它相等的对象：
+
+```litex
+abstract_prop marked(x)
+forall a, b R:
+    a = b
+    $marked(a)
+    =>:
+        $marked(b)
+```
+
+声明编译成谓词参数 `(abstract_prop_1 : (Fin 1 → M.Value) → Prop)`，
+调用把对象的语义值传给它。证明消费原来的相等证据和性质引用；声明本身不证明任何实例。
+可查看[源码与生成的证明](../lean/examples/abstract_property_transport/)、
+[二元关系及其否定](../lean/examples/abstract_relation_transport/)、
+[零参数命题](../lean/examples/abstract_proposition_identity/)和
+[抽象性质作为函数条件](../lean/examples/abstract_function_guard/)。
+局部和带模块限定名的抽象声明尚不支持。
 
 [带保护条件的倒数](../lean/examples/guarded_real_reciprocal/statement.lit)用普通非零要求定义公式：
 
@@ -716,9 +864,8 @@ Lean 4.31.0 检查，生成文件约 9–55 KB。
 成员事实，然后按原 FactId 发布条件。这四组补充例子均通过严格 Litex、相同输出
 再生成和 Lean 4.31.0，生成文件约 15–95 KB，没有修改 Core 语义或 result 生产过程。
 
-依赖型输入域和其他完整定义域证据分支仍待接入。嵌套匿名函数捕获外层函数参数的
-情况，例如 `have fn outer(x R) R = fn(y R) R {x + y}(1)`，目前明确拒绝编译；
-需要让原来的函数构造随着外层参数一起实例化。
+依赖型输入域和其他完整定义域证据分支仍待接入。固定数域上的嵌套匿名函数
+现在可以捕获外层参数，见[定义后立即调用内层函数](../lean/examples/nested_function_application/)。
 
 `sketch:` 会检查块内全部语句，然后丢弃这个局部作用域。编译器把原来的子结果放进
 私有 Lean 证明块，保留外部引用和原 WD 编号，块内事实不会成为块外的源码事实。
@@ -774,6 +921,147 @@ by for:
 组合按源码顺序排列，最后一个参数变化最快；编译器检查全部赋值，总数上限为 1,024。
 任一域为空时直接关闭证明。依赖前面参数的枚举域仍未接入。
 
+不等式还覆盖四种加法规则：加上非负项保留下界，加上非正项保留上界，加数左右互换也支持。
+可看[加法下界](../lean/examples/weak_additive_lower_bounds/)和
+[加法上界](../lean/examples/weak_additive_upper_bounds/)。放宽数值界限时，编译器引用原来的
+FactId，检查整数端点及严格性，再使用传递性。例如 `x < 4` 或 `x <= 4` 都可以推出
+`x < 6`；可看[数值下界](../lean/examples/weaken_numeric_lower_bounds/)和
+[数值上界](../lean/examples/weaken_numeric_upper_bounds/)。这些规则也能用于
+[枚举中的和式上界](../lean/examples/integer_rectangle_sum_bound/)及
+[命名定理](../lean/examples/named_integer_rectangle_sum/)。
+
+两条不等式也能相加：由 `a <= b` 和 `c <= d` 得到 `a + c <= b + d`，
+其中任一条换成严格不等式，就得到严格的和式上界。弱不等式还支持加数交叉配对。
+可看[两项求和](../lean/examples/componentwise_sum_bounds/)、
+[严格与非严格界混合](../lean/examples/mixed_strict_sum_bounds/)和
+[分两步合并三项并调用定理](../lean/examples/three_term_sum_bound/)。
+编译器保留 result 中的两条原始证据、配对位置和严格性。
+
+减法支持由 `a <= b` 得到 `a-c <= b-c`，以及 `c-b <= c-a`，也支持严格不等式。
+可看[共同减数](../lean/examples/subtract_shared_value/)和
+[共同被减数](../lean/examples/subtract_from_shared_value/)。
+[差为实数的例子](../lean/examples/real_difference_domains/)中，共同项声明属于 `C`，
+比较使用两个差属于 `R` 的事实，保留共同项原来的表示。
+[严格传递性](../lean/examples/strict_order_chains/)引用两条原有界限；
+[三步差值估计](../lean/examples/ordered_difference_bound/)把减法、传递性和定理调用组合起来。
+
+二元交集 `intersect(A, B)` 支持构造、成员引入、两侧成员推论和包含关系。
+可看[成员事实](../lean/examples/intersection_membership/)、
+[包含关系](../lean/examples/intersection_subset_bounds/)、
+[命名交集](../lean/examples/named_intersection/)及
+[嵌套交集与定理调用](../lean/examples/intersection_reassociation/)。
+Lean 表示复用已有的有界集合构造；推出的两条成员事实保留原来的 FactId。
+
+集合等式还支持交集、并集的交换律、结合律、幂等律和空集规则，
+以及[交集对并集的分配律](../lean/examples/intersection_distributes_over_union/)、
+[根据包含前提化简交集](../lean/examples/intersection_from_subset/)。
+可看[交集等式](../lean/examples/set_intersection_identities/)、
+[并集等式](../lean/examples/set_union_identities/)和
+[等式反写](../lean/examples/set_identity_symmetry/)。
+每个选中的 builtin 对应一个已证明的 Lean 定理；有条件的化简引用原来的包含关系证明。
+
+差集 `set_minus(A, B)` 支持[成员及其推论](../lean/examples/set_difference_membership/)、
+[排除与包含关系](../lean/examples/set_difference_exclusion/)、
+[空集化简和德摩根律](../lean/examples/set_difference_identities/)。
+这些规则可以用于[嵌套差集的命名定理](../lean/examples/set_difference_theorem/)
+和[返回集合的函数](../lean/examples/set_difference_function/)。
+[并集对交集的分配律](../lean/examples/union_distributes_over_intersection/)也支持因子换序和等式反写。
+
+[连续作差](../lean/examples/consecutive_set_difference/)可以合并为排除一个并集。
+包含关系支持[差集和幂集的单调性](../lean/examples/set_containment_monotonicity/)、
+[并集的上界](../lean/examples/union_containment_bounds/)、
+[嵌套集合运算及包含关系传递](../lean/examples/nested_set_containment/)。
+[不属于集合的事实](../lean/examples/set_operator_nonmembership/)也可以沿交集、并集传递。
+这些步骤组合成了[并集作差的包含定理](../lean/examples/union_difference_bound/)
+和[交并集排除定理](../lean/examples/outside_union_intersection/)，两个例子都包含后续定理调用。
+
+集合对象 `preimage(f, y)` 和 `preimage_set(f, Y)` 也已接入：分别表示输出等于
+`y`、输出属于 `Y` 的合法输入，保留原来的输入集合及非零等条件。成员事实可以推出
+这些条件和输出事实，后续语句引用原 FactId；也支持原像集包含于输入集合。
+双参数输入使用原来的笛卡尔积元组表示。可看[倒数函数的原像集](../lean/examples/guarded_reciprocal_preimages/)、
+[双参数商函数](../lean/examples/binary_quotient_preimages/)、
+[抽象函数](../lean/examples/abstract_function_preimages/)及
+[正实数定义域](../lean/examples/positive_domain_preimages/)。四组源码、实际生成文件均通过
+严格 Litex、相同输出再生成和 Lean 4.31.0 检查，生成文件为 18–81 KB。
+Core 从已有的分离和函数图性质证明所需定理；本批没有修改 Runtime、AST 或 result 生产过程。
+
+函数对象 `compose(f, g)` / `f ∘ g` 也已接入。它保留 `g` 的完整定义域，
+构造时证明每个合法输入的 `g` 值都满足 `f` 的输入条件。编译器支持构造、函数集合
+成员事实、调用、输出成员事实，以及 result 记录的复合展开步骤。可看
+[差的平方](../lean/examples/squared_gap_composition/)、
+[平移后平方](../lean/examples/shifted_square_composition/)、
+[两次倒数](../lean/examples/double_reciprocal_composition/)、
+[任意实函数](../lean/examples/abstract_function_composition/)和
+[正实数输入域](../lean/examples/positive_domain_composition/)。五组源码与生成文件均通过
+严格 Litex 和 Lean 4.31.0 检查。[函数图等式](../lean/examples/composition_graph_laws/)
+还覆盖结合律、左右单位律、复合等于展开函数，以及复合值域包含于外层函数值域。
+展开函数可以具有更宽的已验证返回集合。[非零定义域的单位律](../lean/examples/guarded_composition_identities/)
+保留完整定义域条件，[抽象结合律](../lean/examples/abstract_composition_associativity/)接受任意实函数参数。
+这三组也通过了实际 Lean 检查。定义域匹配还支持 result 记录的双向包含证明：
+编译器核对参数、成员条件和前提，引用原 FactId，再用集合外延性得到定义域相等。
+右单位律和 `by fn_extension` 共用这一过程；后者的定义域事实保留在原局部作用域中。
+可看[正数上的平移](../lean/examples/equal_positive_shifts/)和
+[重排定义域条件](../lean/examples/reordered_function_domains/)。
+`by fn_extension` 还支持两个参数和 `R+` 输入，见
+[双参数求和](../lean/examples/equal_binary_sums/)和
+[带非零条件的商](../lean/examples/equal_guarded_quotients/)。
+超过两个参数、依赖前面参数的输入集合，以及其他尚未接入的完整定义域证据仍会拒绝。
+复合函数构造对输入打包表示切换的限制仍然保留。
+
+`release thm fn_set_member(...)` 和选取结论的 `by thm fn_set_member(...)`
+也会先编译定义域双向包含，再编译原有的返回值证明。例子包括
+[重排条件](../lean/examples/reordered_function_membership/)、
+[`R+` 与显式正数条件](../lean/examples/positive_function_membership/)、
+[任意函数参数](../lean/examples/abstract_function_membership_domains/)和
+[复合函数](../lean/examples/composed_quotient_membership/)。
+这里保留函数的完整定义域；要限制到较小定义域，仍须构造相应的限制函数。
+
+
+函数参数还可以返回另一个函数，调用时逐层保留参数和定义域证明：
+
+```litex
+forall provider fn(t R: t != 0) fn(x, y R: y != 0) R:
+    provider(2)(3, 4) $in R
+```
+
+[连续调用](../lean/examples/returned_function_values/)包含两层和三层调用；
+返回的函数还可以[取值域](../lean/examples/returned_function_ranges/)、
+[取原像](../lean/examples/returned_function_preimages/)，以及通过
+[命名定理把实数返回值看作复数返回值](../lean/examples/returned_function_membership/)。
+这四组均通过严格 Litex 和 Lean 4.31.0 检查。编译器直接读取 `ApplicationReturn`
+里的签名引用、参数 WD、条件证明及局部 WD ID，再调用已有的 Lean 语义定理。
+目前返回签名是固定的；依赖返回类型，以及多层调用后再恢复完整定义域的路线还没接入。
+
+`have fn` 还可以构造返回的函数，或者接收并返回一个函数参数：
+
+```litex
+have fn selected_shift(t R) fn(x R) R = fn(x R) R {x + 1}
+have fn keep_function(f fn(x R) R) fn(y R) R = f
+forall f fn(x R) R:
+    keep_function(f) = f
+```
+
+[返回平移函数的例子](../lean/examples/selected_shift_function/)还给结果起别名、记录函数签名，
+并证明 `chosen_shift(2) = 3`；[函数上的恒等算子](../lean/examples/function_identity_operator/)
+验证了函数参数和函数返回值。[匿名函数的成员证明](../lean/examples/literal_function_signatures/)
+支持参数改名，同时保留输入集合、返回集合及一／两个参数的非零条件。
+这三组均通过严格 Litex 和 Lean 4.31.0 检查，复用已有语义和原始 WD 证据。
+返回的数值函数还可以捕获外层参数：
+
+```litex
+have fn shifted_by(t R) fn(x R) R = fn(x R) R {x + t}
+forall t R:
+    shifted_by(t) = fn(x R) R {x + t}
+    shifted_by(t)(2) = 2 + t
+```
+
+[平移函数](../lean/examples/captured_shift_functions/)还包含正实数成员事实；
+[除法函数](../lean/examples/captured_division_functions/)分别检查外层和内层的非零条件；
+[双参数函数](../lean/examples/captured_binary_functions/)检查两个输入与捕获值一起参与计算。
+加上[内层函数立即调用](../lean/examples/nested_function_application/)，四组均通过严格 Litex
+和 Lean 4.31.0。编译器保留原始 WD 和参数 ID，按结果重放替换及后续调用，
+没有修改 Runtime 或增加语义公理。依赖参数的输入／返回集合仍待接入。
+
 **Litex 已经在一个明确的数学子集上打通了从源码证明、编译生成 Lean 到 Lean 复核的流程：
 标准数域上的初等代数与不等式，配上基础集合、带定义域的函数和可复用定理。**
 这些能力可以组合使用，处理带任意参数、前提和中间步骤的证明；已有案例还通过手写
@@ -785,7 +1073,8 @@ Adapter 导出普通 Lean／Mathlib 定理。
 | 运算与关系 | 精确分数与有限小数、四则、多项式与有理式恒等式、消去律；部分固定整数幂和实数不等式规则。 | [精确分数与小数](../lean/examples/exact_fractions_and_decimals/)、[平方差](../lean/examples/real_difference_of_squares/)、[消去律](../lean/examples/multiplicative_cancellation/)、[平方非负](../lean/examples/real_squares_nonnegative/) |
 | 集合 | 任意集合参数、空集、有限枚举、有界集合构造，以及成员、子集和相关推理。 | [任意集合](../lean/examples/arbitrary_set_laws/)、[有限集合](../lean/examples/finite_natural_set/)、[闭单位区间](../lean/examples/closed_unit_interval/) |
 | 函数 | 一个或两个数值参数的公式函数，显式定义域条件、求值与组合；已有互逆和单射的完整案例。 | [带条件的双参数函数](../lean/examples/two_argument_shifted_quotient/)、[函数组合](../lean/examples/composed_real_formula/)、[有理函数的互逆与单射](../lean/examples/rational_inverse_maps/) |
-| 定义与证明 | 具体谓词、全称与条件命题、等式链、部分合取、命名定理及调用、局部对象、`let`、`claim` 和 `sketch`。 | [谓词与等式替换](../lean/examples/concrete_predicate_equality_transport/)、[定理返回与调用](../lean/examples/named_compound_theorem_returns/)、[局部对象](../lean/examples/local_witness_additive_identity/)、[claim 与正数值域](../lean/examples/newton_positive_update/) |
+| 结构 | 顶层集合／非空集合／对象参数、独立字段，原子／扁平合取／链式定义条件，元组成员关系、量化与声明对象、给定值的别名、显式展开、直接字段访问与数值字段运算；支持任意集合及嵌套元组实例。 | [通用坐标对](../lean/examples/parameterized_pairs/)、[指定第一坐标](../lean/examples/designated_coordinate_pairs/)、[正坐标点](../lean/examples/positive_point_conditions/)、[带非零条件的比值](../lean/examples/positive_ratio_conditions/) |
+| 定义与证明 | 具体谓词、顶层抽象谓词、全称与条件命题、等式链、部分合取、命名定理及调用、局部对象、`let`、`claim` 和 `sketch`。 | [抽象性质](../lean/examples/abstract_property_transport/)、[谓词与等式替换](../lean/examples/concrete_predicate_equality_transport/)、[定理返回与调用](../lean/examples/named_compound_theorem_returns/)、[局部对象](../lean/examples/local_witness_additive_identity/)、[claim 与正数值域](../lean/examples/newton_positive_update/) |
 
 这里的覆盖指已实现并检查过的构造和证明路线，并不意味着该领域内任意 Litex 证明都能编译。
 绝对值、符号自然幂和部分析取也已有受限规则的编译及局部 Lean 检查；完整递归 Newton

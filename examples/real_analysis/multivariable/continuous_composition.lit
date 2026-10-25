@@ -1,0 +1,21 @@
+# Continuity also handles functions that are not differentiable at the point.
+# Prove the candidate before using lim_multi_at; composition uses explicit BTs.
+have fn coordinate_map(x cart_n(R,2)) R=x(1)
+
+have fn absolute_outer(t R) R=abs(t)
+
+have fn absolute_coordinate(x cart_n(R,2)) R=absolute_outer(coordinate_map(x))
+
+$has_multi_limit_at(coordinate_map,(0,0),2,0)
+
+$is_multi_continuous_at(coordinate_map,(0,0),2)
+
+$is_continuous_at(absolute_outer,0)
+
+release thm multi_continuous_at_compose(coordinate_map,absolute_outer,absolute_coordinate,(0,0),2)
+
+release thm multi_limit_at_compose(coordinate_map,absolute_outer,absolute_coordinate,(0,0),2,0)
+
+absolute_outer(0)=0
+
+lim_multi_at(absolute_coordinate,(0,0),2)=0

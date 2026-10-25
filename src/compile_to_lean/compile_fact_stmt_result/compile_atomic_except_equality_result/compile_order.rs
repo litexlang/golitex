@@ -231,6 +231,24 @@ impl LitexToLeanCompiler {
             (
                 AtomicFact::LessFact(_),
                 AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(
+                    LessFactSearchProofByBuiltinRule::LessTransitivity(p),
+                ),
+            ) => self.compile_strict_order_transitivity(goal, p, position),
+            (
+                AtomicFact::LessFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(
+                    LessFactSearchProofByBuiltinRule::NumericLowerBoundWeakenLt(p),
+                ),
+            ) => self.compile_numeric_bound_weaken(goal, p.cite_fact_id, false, true, position),
+            (
+                AtomicFact::LessFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(
+                    LessFactSearchProofByBuiltinRule::NumericUpperBoundWeakenLt(p),
+                ),
+            ) => self.compile_numeric_bound_weaken(goal, p.cite_fact_id, true, true, position),
+            (
+                AtomicFact::LessFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(
                     LessFactSearchProofByBuiltinRule::ModRemainderStrictUpperBound(p),
                 ),
             ) => self.compile_mod_bound(
@@ -286,6 +304,12 @@ impl LitexToLeanCompiler {
                     ),
                 LessEqualFactSearchProofByBuiltinRule::OrderReflexivity(p) => {
                     self.compile_order_reflexivity(goal, &p.repeated_object, position)
+                }
+                LessEqualFactSearchProofByBuiltinRule::NumericLowerBoundWeakenLe(p) => {
+                    self.compile_numeric_bound_weaken(goal, p.cite_fact_id, false, false, position)
+                }
+                LessEqualFactSearchProofByBuiltinRule::NumericUpperBoundWeakenLe(p) => {
+                    self.compile_numeric_bound_weaken(goal, p.cite_fact_id, true, false, position)
                 }
                 LessEqualFactSearchProofByBuiltinRule::NumericLowerBoundFromStrictPredecessorLe(
                     p,

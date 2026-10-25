@@ -1,0 +1,7 @@
+# Simplify and regroup unions of arbitrary sets.
+forall laws_u_A, laws_u_B, laws_u_C set:
+    union(laws_u_A, laws_u_B) = union(laws_u_B, laws_u_A)
+    union(laws_u_A, laws_u_A) = laws_u_A
+    union(laws_u_A, {}) = laws_u_A
+    union({}, laws_u_A) = laws_u_A
+    union(union(laws_u_A, laws_u_B), laws_u_C) = union(laws_u_A, union(laws_u_B, laws_u_C))

@@ -1,0 +1,12 @@
+# Evaluate a real function returned by a real-indexed family.
+forall provider fn(t R) fn(x R) R:
+    provider(1)(2) $in R
+
+forall provider fn(t R: t != 0) fn(x, y R: y != 0) R:
+    provider(2)(3, 4) $in R
+
+forall provider fn(t R) fn(x R) fn(y R) R:
+    provider(1)(2)(3) $in R
+
+forall provider fn(t R) fn(x R+) R:
+    provider(1)(2) $in R

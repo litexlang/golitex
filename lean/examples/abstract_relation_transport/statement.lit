@@ -1,0 +1,13 @@
+# An arbitrary binary relation and its negation respect equality in both arguments.
+abstract_prop related(x, y)
+forall a, b R:
+    a = b
+    $related(a, a)
+    =>:
+        $related(b, a)
+        $related(b, b)
+forall a, b R:
+    a = b
+    not $related(a, a)
+    =>:
+        not $related(b, b)

@@ -10,8 +10,7 @@ set_option linter.unusedSectionVars false
 variable [_functionSemantics : Litex.FunctionSemantics M]
 
 noncomputable def _object_i1 := (show Litex.Obj (M := M) (Litex.PiecewiseFn M) from by
-  let _signature := ((show Litex.Obj (M := M) (Litex.FunctionSignature M) from (by
-    have _checked_header : ∀ (_raw_i2 : M.Value), M.mem _raw_i2 (M.standard Litex.StandardSetValue.real) → ((fun (_raw_i2 : M.Value) => (¬ (_raw_i2 = (M.number (0 : ℂ))))) _raw_i2) → True := by
+  let _signature := ((show Litex.Obj (M := M) (Litex.FunctionSignature M) from (let _checked_header : ∀ (_raw_i2 : M.Value), M.mem _raw_i2 (M.standard Litex.StandardSetValue.real) → ((fun (_raw_i2 : M.Value) => (¬ (_raw_i2 = (M.number (0 : ℂ))))) _raw_i2) → True := (by
       intro _raw_i2 h_4 h_1
       let _value_i2 := Litex.semanticObject (M := M) _raw_i2 (M.member_isSet h_4)
       have h_4 : Litex.In _value_i2 (Litex.R (M := M)) := h_4
@@ -24,8 +23,8 @@ noncomputable def _object_i1 := (show Litex.Obj (M := M) (Litex.PiecewiseFn M) f
                 exact h_1)
             )
         )
-      exact True.intro
-    exact Litex.fnSet (Litex.FunctionSignature.one (M := M) Litex.StandardSetValue.real Litex.StandardSetValue.real (fun (_raw_i2 : M.Value) => (¬ (_raw_i2 = (M.number (0 : ℂ))))))))).val
+      exact True.intro);
+    Litex.fnSet (Litex.FunctionSignature.one (M := M) Litex.StandardSetValue.real Litex.StandardSetValue.real (fun (_raw_i2 : M.Value) => (¬ (_raw_i2 = (M.number (0 : ℂ))))))))).val
   let _branch_0 := (⟨(fun (_input : M.Value) => (∃ (_r _s : ℝ), (M.number (0 : ℂ)) = M.number (_r : ℂ) ∧ _input = M.number (_s : ℂ) ∧ _r < _s)), (fun (_input : M.Value) => (M.divValue (M.number (1 : ℂ)) _input))⟩ : Litex.FunctionBranch M)
   let _branch_1 := (⟨(fun (_input : M.Value) => (∃ (_r _s : ℝ), _input = M.number (_r : ℂ) ∧ (M.number (0 : ℂ)) = M.number (_s : ℂ) ∧ _r ≤ _s)), (fun (_input : M.Value) => (M.divValue (M.negValue (M.number (1 : ℂ))) _input))⟩ : Litex.FunctionBranch M)
   have _coverage : ∀ (_raw_i2 : M.Value), M.mem _raw_i2 (M.standard Litex.StandardSetValue.real) → ((fun (_raw_i2 : M.Value) => (¬ (_raw_i2 = (M.number (0 : ℂ))))) _raw_i2) → (((∃ (_r _s : ℝ), (M.number (0 : ℂ)) = M.number (_r : ℂ) ∧ _raw_i2 = M.number (_s : ℂ) ∧ _r < _s)) ∨ ((∃ (_r _s : ℝ), _raw_i2 = M.number (_r : ℂ) ∧ (M.number (0 : ℂ)) = M.number (_s : ℂ) ∧ _r ≤ _s))) := (by

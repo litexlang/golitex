@@ -1,0 +1,9 @@
+# Simplify empty differences and distribute removal over unions and intersections.
+forall diff_law_A, diff_law_B, diff_law_D set:
+    set_minus(diff_law_A, diff_law_A) = {}
+    set_minus(diff_law_A, {}) = diff_law_A
+    set_minus({}, diff_law_A) = {}
+    set_minus(diff_law_A, union(diff_law_B, diff_law_D)) = intersect(set_minus(diff_law_A, diff_law_B), set_minus(diff_law_A, diff_law_D))
+    set_minus(diff_law_A, intersect(diff_law_B, diff_law_D)) = union(set_minus(diff_law_A, diff_law_B), set_minus(diff_law_A, diff_law_D))
+    intersect(diff_law_A, set_minus(diff_law_B, diff_law_A)) = {}
+    intersect(set_minus(diff_law_B, diff_law_A), diff_law_A) = {}

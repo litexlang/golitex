@@ -1,0 +1,16 @@
+# A nonmember of either factor is outside an intersection; a nonmember of both is outside their union.
+forall absent_left_A, absent_left_B set, absent_left_x R:
+    not absent_left_x $in absent_left_A
+    =>:
+        not absent_left_x $in intersect(absent_left_A, absent_left_B)
+
+forall absent_right_A, absent_right_B set, absent_right_x R:
+    not absent_right_x $in absent_right_B
+    =>:
+        not absent_right_x $in intersect(absent_right_A, absent_right_B)
+
+forall absent_union_A, absent_union_B set, absent_union_x R:
+    not absent_union_x $in absent_union_A
+    not absent_union_x $in absent_union_B
+    =>:
+        not absent_union_x $in union(absent_union_A, absent_union_B)

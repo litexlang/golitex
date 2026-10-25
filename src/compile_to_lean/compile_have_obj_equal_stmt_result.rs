@@ -35,8 +35,6 @@ impl LitexToLeanCompiler {
             || count != proof.equal_to_well_defined.len()
             || count != proof.membership_checks.len()
             || proof.type_preflight.param_type_well_defined.len() != groups.len()
-            || proof.type_preflight.auto_opened_struct_layers.is_some()
-            || proof.auto_opened_struct_layers.is_some()
         {
             return Err(LeanCompileError::new(
                 "HaveEqual/Stages",
@@ -124,6 +122,42 @@ impl LitexToLeanCompiler {
             }
         }
         let mut declarations = Vec::new();
+        if proof.type_preflight.auto_opened_struct_layers.is_some()
+            || proof.auto_opened_struct_layers.is_some()
+        {
+            let (binders, introductions, mut checks) = self.compile_quantified_head(
+                &proof.statement.param_def,
+                &[],
+                &proof.type_preflight,
+                &[],
+                &type_position,
+            )?;
+            checks.push("exact True.intro".into());
+            // Apply the original hypothetical preflight to the checked values.
+            // This constrains its host universes even in a discarded local block;
+            // none of its private binders or facts are exported as alias evidence.
+            let arguments = values
+                .iter()
+                .zip(&members)
+                .map(|(value, member)| format!("{value} {}", member.1))
+                .collect::<Vec<_>>()
+                .join(" ");
+            let body = format!(
+                "True :=\n  ((show ∀ {}, True from by\n    intro {}\n    {}\n  ) {arguments})",
+                binders.join(" "),
+                introductions.join(" "),
+                checks.join("\n").replace('\n', "\n    ")
+            );
+            let name = format!("_have_type_checks_i{}", parameters[0].id.value());
+            declarations.push(if local {
+                format!("have {name} : {body}")
+            } else {
+                format!(
+                    "include M in\ntheorem {name}{} : {body}",
+                    self.context_header(position)?
+                )
+            });
+        }
         for (index, parameter) in parameters.iter().enumerate() {
             let alias_position = SourcePosition {
                 before: 2 * count + index + 1,
@@ -199,6 +233,16 @@ impl LitexToLeanCompiler {
             );
             declarations.push(self.emit_internal_fact(&equal, &equal_proof, position)?);
         }
+        let complete = SourcePosition {
+            before: 3 * count,
+            ..*position
+        };
+        declarations.extend(self.compile_auto_struct_layers(
+            groups,
+            &stores[..count],
+            proof.auto_opened_struct_layers.as_deref(),
+            &complete,
+        )?);
         Ok(declarations.join("\n"))
     }
 }

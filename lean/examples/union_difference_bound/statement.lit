@@ -1,0 +1,11 @@
+# Prove that a union followed by an exclusion stays in a common superset, then reuse the theorem.
+thm union_difference_bound:
+    ? forall bound_thm_A, bound_thm_B, bound_thm_D, bound_thm_E set:
+        bound_thm_A $subset bound_thm_E
+        bound_thm_B $subset bound_thm_E
+        =>:
+            set_minus(union(bound_thm_A, bound_thm_B), bound_thm_D) $subset bound_thm_E
+    union(bound_thm_A, bound_thm_B) $subset bound_thm_E
+    set_minus(union(bound_thm_A, bound_thm_B), bound_thm_D) $subset bound_thm_E
+
+by thm union_difference_bound(Q, Z, {0}, R) => set_minus(union(Q, Z), {0}) $subset R

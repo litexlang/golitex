@@ -135,6 +135,29 @@ impl LitexToLeanCompiler {
         reference: String,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
+        for (run, index, statement, before) in position.context_statements() {
+            let stages = crate::compile_to_lean::compile_assumption_stmt_result::assumption_stages(
+                statement,
+            );
+            for (offset, (fact, wd, _)) in stages
+                .iter()
+                .take(before.saturating_sub(stages.len()))
+                .enumerate()
+            {
+                if fact.fact_id() != id {
+                    continue;
+                }
+                if let (Fact::ForallFact(fact), FactWellDefinedProof::ForallFact(wd)) = (fact, wd) {
+                    let prior = SourcePosition::new(None, SourceOwner::Run(run), index);
+                    let before = SourcePosition::new(
+                        Some(&prior),
+                        SourceOwner::Statement(statement),
+                        offset,
+                    );
+                    return self.compile_canonical_forall_citation(fact, wd, reference, &before);
+                }
+            }
+        }
         let mut cursor = Some(position);
         while let Some(owner) = cursor {
             if let SourceOwner::Contra(proof) = owner.owner {
@@ -148,47 +171,54 @@ impl LitexToLeanCompiler {
                             before: 0,
                             ..*owner
                         };
-                        let scope = SourcePosition::new(
-                            Some(&before_assumption),
-                            SourceOwner::ForallWD(fact, wd),
-                            0,
-                        );
-                        let (binders, _, definitions) = self.compile_forall_head(
+                        return self.compile_canonical_forall_citation(
                             fact,
-                            &wd.introduced_params,
-                            &wd.assumed_dom_facts,
-                            &scope,
-                        )?;
-                        let mut arguments = Vec::new();
-                        for (parameter, store) in fact
-                            .typed_parameters
-                            .ordered_param_ids()
-                            .iter()
-                            .zip(&wd.introduced_params.defined_params.store_and_infer_results)
-                        {
-                            let value = format!("_value_i{}", parameter.value());
-                            arguments.push(format!("(Litex.semanticObject (Litex.denote {value}) (Litex.isSet {value}))"));
-                            arguments.push(format!("h_{}", store.primary_fact_id().value()));
-                        }
-                        arguments.extend(
-                            fact.dom_facts
-                                .iter()
-                                .map(|f| format!("h_{}", f.fact_id().value())),
+                            wd,
+                            reference,
+                            &before_assumption,
                         );
-                        let mut steps = definitions;
-                        steps.push(format!("exact {reference} {}", arguments.join(" ")));
-                        let proposition =
-                            self.compile_forall_formation(fact, wd, &before_assumption)?;
-                        return Ok(format!(
-                            "(show {proposition} from (fun {} => by\n  {}))",
-                            binders.join(" "),
-                            steps.join("\n").replace('\n', "\n  ")
-                        ));
                     }
                 }
             }
             cursor = owner.parent;
         }
         Ok(reference)
+    }
+    fn compile_canonical_forall_citation(
+        &self,
+        fact: &ForallFact,
+        wd: &ForallFactWellDefinedProof,
+        reference: String,
+        before: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        let term = SourcePosition::new(Some(before), SourceOwner::Term, 0);
+        let scope = SourcePosition::new(Some(&term), SourceOwner::ForallWD(fact, wd), 0);
+        let (binders, _, mut definitions) =
+            self.compile_forall_head(fact, &wd.introduced_params, &wd.assumed_dom_facts, &scope)?;
+        let mut arguments = Vec::new();
+        for (parameter, store) in fact
+            .typed_parameters
+            .ordered_param_ids()
+            .iter()
+            .zip(&wd.introduced_params.defined_params.store_and_infer_results)
+        {
+            let value = format!("_value_i{}", parameter.value());
+            arguments.push(format!(
+                "(Litex.semanticObject (Litex.denote {value}) (Litex.isSet {value}))"
+            ));
+            arguments.push(format!("h_{}", store.primary_fact_id().value()));
+        }
+        arguments.extend(
+            fact.dom_facts
+                .iter()
+                .map(|f| format!("h_{}", f.fact_id().value())),
+        );
+        definitions.push(format!("exact {reference} {}", arguments.join(" ")));
+        let proposition = self.compile_forall_formation(fact, wd, &term)?;
+        Ok(format!(
+            "(show {proposition} from (fun {} => by\n  {}))",
+            binders.join(" "),
+            definitions.join("\n").replace('\n', "\n  ")
+        ))
     }
 }

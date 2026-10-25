@@ -1,0 +1,10 @@
+# A shift function captures its chosen offset, and evaluation preserves that offset.
+have fn shifted_by(t R) fn(x R) R = fn(x R) R {x + t}
+forall t R:
+    shifted_by(t) = fn(x R) R {x + t}
+    shifted_by(t)(2) = 2 + t
+
+have fn positive_shift(t R+) fn(x R+) R+ = fn(x R+) R+ {x + t}
+forall t R+:
+    positive_shift(t) $in fn(x R+) R+
+    positive_shift(t)(1) $in R+

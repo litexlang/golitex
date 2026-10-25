@@ -107,7 +107,7 @@ theorem h_119 : ∀ {_Host_i6 : Type v6} [_rep_i6 : Litex.Representation M _Host
                   let _equal_wd_1_1 := _object_w13;
                   (show Litex.Same _equal_wd_1_0 _equal_wd_1_1 from (show (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i3 (M := M))) (Litex.denote _value_i7)) = (M.powValue (Litex.denote _value_i7) (M.number (2 : ℂ))) from by
                     have _litex_residual : (M.powValue (Litex.denote _value_i7) (M.number (2 : ℂ))) = (M.powValue (Litex.denote _value_i7) (M.number (2 : ℂ))) := (show @Eq M.Value _ _ from Eq.refl _)
-                    exact ((((Eq.refl (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i3 (M := M))) (Litex.denote _value_i7)))).trans (by
+                    exact ((((Eq.refl (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i3 (M := M))) (Litex.denote _value_i7)))).trans (show (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i3 (M := M))) (Litex.denote _value_i7)) = (M.powValue (Litex.denote _value_i7) (M.number (2 : ℂ))) from by
                     let _litex_original := _equal_wd_1_0
                     let _litex_literal := (let _wd_1_0 := (_object_i3 (M := M));
                     let _wd_1_1 := _value_i7;

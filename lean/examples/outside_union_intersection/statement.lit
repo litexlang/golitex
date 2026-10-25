@@ -1,0 +1,14 @@
+# Combine two exclusions, carry the result into an intersection, then apply the named theorem.
+thm outside_union_intersection:
+    ? forall outside_thm_A, outside_thm_B, outside_thm_D set, outside_thm_x R:
+        not outside_thm_x $in outside_thm_A
+        not outside_thm_x $in outside_thm_B
+        =>:
+            not outside_thm_x $in intersect(union(outside_thm_A, outside_thm_B), outside_thm_D)
+    not outside_thm_x $in union(outside_thm_A, outside_thm_B)
+    not outside_thm_x $in intersect(union(outside_thm_A, outside_thm_B), outside_thm_D)
+
+by thm outside_union_intersection({0}, {2}, R, 1)
+
+not 1 $in intersect(union({0}, {2}), R)
+

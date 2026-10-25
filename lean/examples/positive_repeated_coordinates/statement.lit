@@ -1,0 +1,12 @@
+# A positive first coordinate and a dependent equal coordinate retain both laws.
+struct PositiveRepeatedCoordinate:
+    x R
+    y {x}
+    <=>:
+        x > 0
+
+1 $in {1}
+(1, 1) $in &PositiveRepeatedCoordinate
+forall p &PositiveRepeatedCoordinate:
+    p.x > 0
+    p.y = p.x

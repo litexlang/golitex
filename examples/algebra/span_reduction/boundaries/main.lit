@@ -1,0 +1,78 @@
+# The singleton zero vector can be removed, leaving the empty span.
+
+release obj def context::real_inv
+
+release obj def context::real_add
+
+release obj def context::real_neg
+
+release obj def context::real_mul
+
+release obj def context::real_field
+
+release obj def context::scalars
+
+release obj def context::zero_vector
+
+release obj def context::one_coefficient
+
+release obj def context::zero_sums
+
+release struct def context::real_field
+
+release struct def context::scalars
+
+by thm Algebra::finite_span::span_zero_member(R,context::real_field,R,context::scalars,0,tuple()) => context::scalars.zero $in \Algebra::finite_span::span<R,context::real_field,R,context::scalars,0,tuple()>
+
+finite_seq(R,1-1)=finite_seq(R,0)
+
+tuple() $in finite_seq(R,0)
+
+tuple() $in finite_seq(R,1-1)
+
+claim:
+    ? $Algebra::basis::is_list_with_index_removed(R,1,context::zero_vector,1,tuple())
+    claim:
+        ? forall j N+:
+            j<1
+            j<=0
+            =>:
+                tuple()(j)=context::zero_vector(j)
+        by contra:
+            ? tuple()(j)=context::zero_vector(j)
+            j>0
+            impossible j<=0
+    claim:
+        ? forall j N+:
+            1<=j
+            j<1
+            j<=0
+            =>:
+                tuple()(j)=context::zero_vector(j+1)
+        by contra:
+            ? tuple()(j)=context::zero_vector(j+1)
+            j>0
+            impossible j<=0
+    by def $Algebra::basis::is_list_with_index_removed(R,1,context::zero_vector,1,tuple())
+
+claim:
+    ? context::zero_vector(1) $in \Algebra::finite_span::span<R,context::real_field,R,context::scalars,0,tuple()>
+    context::zero_vector(1)=0=context::scalars.zero
+
+by thm Algebra::span_reduction::remove_redundant_vector_preserves_span(R,context::real_field,R,context::scalars,1,context::zero_vector,1,tuple()) => \Algebra::finite_span::span<R,context::real_field,R,context::scalars,1,context::zero_vector> = \Algebra::finite_span::span<R,context::real_field,R,context::scalars,1-1,tuple()>
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,X &Algebra::vector_space::VectorSpace<K,F,V>,U power_set(V):
+        $Algebra::vector_space::is_subspace(K,F,V,X,U)
+        =>:
+            \Algebra::finite_span::span<K,F,V,X,0,tuple()> $subset U
+    claim:
+        ? forall j N+:
+            j<=0
+            =>:
+                tuple()(j) $in U
+        by contra:
+            ? tuple()(j) $in U
+            j>0
+            impossible j<=0
+    by thm Algebra::span_reduction::span_subset_subspace(K,F,V,X,0,tuple(),U) => \Algebra::finite_span::span<K,F,V,X,0,tuple()> $subset U

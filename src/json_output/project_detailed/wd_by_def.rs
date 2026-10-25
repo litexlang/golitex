@@ -44,6 +44,17 @@ pub(super) fn project_obj_wd_by_def(
     runtime: &Runtime,
 ) -> JsonValue {
     match proof {
+        ObjWellDefinedProofByDef::LimitOperator(LimitOperatorObjWellDefinedProofByDef::MultivariableScalar(p)) => super::multivariable::object_wd(&p.stages,runtime),
+        ObjWellDefinedProofByDef::LimitOperator(LimitOperatorObjWellDefinedProofByDef::MultivariableVector(p)) => super::multivariable::object_wd(&p.stages,runtime),
+        ObjWellDefinedProofByDef::DerivativeOperator(crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof::Partial(p)) => super::multivariable::object_wd(&p.stages,runtime),
+        ObjWellDefinedProofByDef::DerivativeOperator(crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof::ScalarDifferential(p)) => super::multivariable::object_wd(&p.stages,runtime),
+        ObjWellDefinedProofByDef::DerivativeOperator(crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof::TotalDifferential(p)) => super::multivariable::object_wd(&p.stages,runtime),
+        ObjWellDefinedProofByDef::DerivativeOperator(crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof::Gradient(p)) => super::multivariable::object_wd(&p.stages,runtime),
+        ObjWellDefinedProofByDef::DerivativeOperator(crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof::Jacobian(p)) => super::multivariable::object_wd(&p.stages,runtime),
+        ObjWellDefinedProofByDef::DerivativeOperator(crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof::Hessian(p)) => super::multivariable::object_wd(&p.stages,runtime),
+        ObjWellDefinedProofByDef::DerivativeOperator(crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof::Divergence(p)) => super::multivariable::object_wd(&p.stages,runtime),
+        ObjWellDefinedProofByDef::DerivativeOperator(crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof::Curl(p)) => super::multivariable::object_wd(&p.stages,runtime),
+        ObjWellDefinedProofByDef::DerivativeOperator(crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof::Laplacian(p)) => super::multivariable::object_wd(&p.stages,runtime),
         ObjWellDefinedProofByDef::MatrixOperator(MatrixOperatorObjWellDefinedProofByDef::Add(p)) => project_common_by_def(obj,"MatrixOperator","Add",&p.child_obj_well_defined,&p.requirement_fact_verified,runtime),
         ObjWellDefinedProofByDef::MatrixOperator(MatrixOperatorObjWellDefinedProofByDef::Subtract(p)) => project_common_by_def(obj,"MatrixOperator","Subtract",&p.child_obj_well_defined,&p.requirement_fact_verified,runtime),
         ObjWellDefinedProofByDef::MatrixOperator(MatrixOperatorObjWellDefinedProofByDef::Scale(p)) => project_common_by_def(obj,"MatrixOperator","Scale",&p.child_obj_well_defined,&p.requirement_fact_verified,runtime),
@@ -431,6 +442,7 @@ pub(super) fn project_obj_wd_by_def(
             }
             if let Some(domain) = &p.domain_fn_set {
                 let d = match domain {
+                    FnObjDomainFnSetEvidence::MultivariableSelector(p)=>super::function_domain::project_source(p,runtime),
                     FnObjDomainFnSetEvidence::Matrix(p) => super::native_matrix::callable(p, runtime),
                     FnObjDomainFnSetEvidence::Composition(p) => {
                         super::composition::callable(p, runtime)

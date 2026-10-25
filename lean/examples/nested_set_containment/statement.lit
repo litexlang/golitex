@@ -1,0 +1,25 @@
+# Compose upper bounds through nested unions, intersections, differences and subset chains.
+forall nested_union_A, nested_union_B, nested_union_D, nested_union_E set:
+    nested_union_A $subset nested_union_E
+    nested_union_B $subset nested_union_E
+    nested_union_D $subset nested_union_E
+    =>:
+        union(union(nested_union_A, nested_union_B), nested_union_D) $subset nested_union_E
+
+forall nested_inter_A, nested_inter_B, nested_inter_D, nested_inter_E set:
+    nested_inter_A $subset nested_inter_E
+    nested_inter_B $subset nested_inter_E
+    =>:
+        intersect(union(nested_inter_A, nested_inter_B), nested_inter_D) $subset nested_inter_E
+        intersect(nested_inter_D, union(nested_inter_A, nested_inter_B)) $subset nested_inter_E
+
+forall bound_diff_A, bound_diff_B, bound_diff_D set:
+    bound_diff_A $subset bound_diff_D
+    =>:
+        set_minus(bound_diff_A, bound_diff_B) $subset bound_diff_D
+
+forall chain_subset_A, chain_subset_B, chain_subset_D set:
+    chain_subset_A $subset chain_subset_B
+    chain_subset_B $subset chain_subset_D
+    =>:
+        chain_subset_A $subset chain_subset_D

@@ -1,0 +1,11 @@
+# A real pair with equal coordinates belongs to the dependent structure.
+struct RepeatedCoordinate:
+    x R
+    y {x}
+
+forall p cart(R, R):
+    p(2) = p(1)
+    =>:
+        p(2) $in {p(1)}
+        p $in cart(R, {p(1)})
+        p $in &RepeatedCoordinate

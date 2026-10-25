@@ -1,0 +1,130 @@
+# Exact imported contracts; arbitrary images and no candidate map in existence.
+
+thm consume_basis_coordinates_reconstruct:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,n N,vectors finite_seq(V,n),x V:
+        $Algebra::basis::is_basis(K,field,V,space,n,vectors)
+        =>:
+            \Algebra::finite_span::linear_combination<K,field,V,space,n>(\Algebra::basis::basis_coordinates<K,field,V,space,n,vectors>(x),vectors)=x
+    by thm Algebra::coordinate_maps::basis_coordinates_reconstruct(K,field,V,space,n,vectors,x) => \Algebra::finite_span::linear_combination<K,field,V,space,n>(\Algebra::basis::basis_coordinates<K,field,V,space,n,vectors>(x),vectors)=x
+
+thm consume_basis_coordinates_add:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,n N,vectors finite_seq(V,n),x,y V:
+        $Algebra::basis::is_basis(K,field,V,space,n,vectors)
+        =>:
+            \Algebra::basis::basis_coordinates<K,field,V,space,n,vectors>(space.add(x,y))=\Algebra::finite_span::add_coefficients<K,field,n>(\Algebra::basis::basis_coordinates<K,field,V,space,n,vectors>(x),\Algebra::basis::basis_coordinates<K,field,V,space,n,vectors>(y))
+    by thm Algebra::coordinate_maps::basis_coordinates_add(K,field,V,space,n,vectors,x,y) => \Algebra::basis::basis_coordinates<K,field,V,space,n,vectors>(space.add(x,y))=\Algebra::finite_span::add_coefficients<K,field,n>(\Algebra::basis::basis_coordinates<K,field,V,space,n,vectors>(x),\Algebra::basis::basis_coordinates<K,field,V,space,n,vectors>(y))
+
+thm consume_basis_coordinates_smul:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,n N,vectors finite_seq(V,n),a K,x V:
+        $Algebra::basis::is_basis(K,field,V,space,n,vectors)
+        =>:
+            \Algebra::basis::basis_coordinates<K,field,V,space,n,vectors>(space.smul(a,x))=\Algebra::finite_span::smul_coefficients<K,field,n>(a,\Algebra::basis::basis_coordinates<K,field,V,space,n,vectors>(x))
+    by thm Algebra::coordinate_maps::basis_coordinates_smul(K,field,V,space,n,vectors,a,x) => \Algebra::basis::basis_coordinates<K,field,V,space,n,vectors>(space.smul(a,x))=\Algebra::finite_span::smul_coefficients<K,field,n>(a,\Algebra::basis::basis_coordinates<K,field,V,space,n,vectors>(x))
+
+thm consume_unit_coefficients_carrier:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,n N,j closed_range(1,n):
+        \Algebra::coordinate_maps::unit_coefficients<K,field,n,j> $in finite_seq(K,n)
+    by thm Algebra::coordinate_maps::unit_coefficients_carrier(K,field,n,j) => \Algebra::coordinate_maps::unit_coefficients<K,field,n,j> $in finite_seq(K,n)
+
+thm consume_unit_linear_combination:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,n N,vectors finite_seq(V,n),j closed_range(1,n):
+        \Algebra::finite_span::linear_combination<K,field,V,space,n>(\Algebra::coordinate_maps::unit_coefficients<K,field,n,j>,vectors)=vectors(j)
+    by thm Algebra::coordinate_maps::unit_linear_combination(K,field,V,space,n,vectors,j) => \Algebra::finite_span::linear_combination<K,field,V,space,n>(\Algebra::coordinate_maps::unit_coefficients<K,field,n,j>,vectors)=vectors(j)
+
+thm consume_basis_coordinates_of_entry:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,n N,vectors finite_seq(V,n),j closed_range(1,n):
+        $Algebra::basis::is_basis(K,field,V,space,n,vectors)
+        =>:
+            \Algebra::basis::basis_coordinates<K,field,V,space,n,vectors>(vectors(j))=\Algebra::coordinate_maps::unit_coefficients<K,field,n,j>
+    by thm Algebra::coordinate_maps::basis_coordinates_of_entry(K,field,V,space,n,vectors,j) => \Algebra::basis::basis_coordinates<K,field,V,space,n,vectors>(vectors(j))=\Algebra::coordinate_maps::unit_coefficients<K,field,n,j>
+
+thm consume_linear_map_from_basis_carrier:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,field,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,field,W>,n N,u finite_seq(V,n),w finite_seq(W,n):
+        $Algebra::basis::is_basis(K,field,V,source,n,u)
+        =>:
+            \Algebra::coordinate_maps::linear_map_from_basis<K,field,V,source,W,target,n,u,w> $in fn(x V) W
+    by thm Algebra::coordinate_maps::linear_map_from_basis_carrier(K,field,V,source,W,target,n,u,w) => \Algebra::coordinate_maps::linear_map_from_basis<K,field,V,source,W,target,n,u,w> $in fn(x V) W
+
+thm consume_linear_map_from_basis_is_linear:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,field,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,field,W>,n N,u finite_seq(V,n),w finite_seq(W,n):
+        $Algebra::basis::is_basis(K,field,V,source,n,u)
+        =>:
+            $Algebra::vector_space::is_linear_map(K,field,V,source,W,target,\Algebra::coordinate_maps::linear_map_from_basis<K,field,V,source,W,target,n,u,w>)
+    by thm Algebra::coordinate_maps::linear_map_from_basis_is_linear(K,field,V,source,W,target,n,u,w) => $Algebra::vector_space::is_linear_map(K,field,V,source,W,target,\Algebra::coordinate_maps::linear_map_from_basis<K,field,V,source,W,target,n,u,w>)
+
+thm consume_linear_map_from_basis_entry:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,field,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,field,W>,n N,u finite_seq(V,n),w finite_seq(W,n),j closed_range(1,n):
+        $Algebra::basis::is_basis(K,field,V,source,n,u)
+        =>:
+            \Algebra::coordinate_maps::linear_map_from_basis<K,field,V,source,W,target,n,u,w>(u(j))=w(j)
+    by thm Algebra::coordinate_maps::linear_map_from_basis_entry(K,field,V,source,W,target,n,u,w,j) => \Algebra::coordinate_maps::linear_map_from_basis<K,field,V,source,W,target,n,u,w>(u(j))=w(j)
+
+thm consume_linear_map_agreeing_on_basis_is_extension:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,field,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,field,W>,n N,u finite_seq(V,n),w finite_seq(W,n),T fn(v V) W:
+        $Algebra::basis::is_basis(K,field,V,source,n,u)
+        $Algebra::vector_space::is_linear_map(K,field,V,source,W,target,T)
+        forall j closed_range(1,n):
+            T(u(j))=w(j)
+        =>:
+            T=\Algebra::coordinate_maps::linear_map_from_basis<K,field,V,source,W,target,n,u,w>
+    by thm Algebra::coordinate_maps::linear_map_agreeing_on_basis_is_extension(K,field,V,source,W,target,n,u,w,T) => T=\Algebra::coordinate_maps::linear_map_from_basis<K,field,V,source,W,target,n,u,w>
+
+thm consume_basis_maps_round_trip:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,field,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,field,W>,n N,u finite_seq(V,n),w finite_seq(W,n),x V:
+        $Algebra::basis::is_basis(K,field,V,source,n,u)
+        $Algebra::basis::is_basis(K,field,W,target,n,w)
+        =>:
+            \Algebra::coordinate_maps::linear_map_from_basis<K,field,W,target,V,source,n,w,u>(\Algebra::coordinate_maps::linear_map_from_basis<K,field,V,source,W,target,n,u,w>(x))=x
+    by thm Algebra::coordinate_maps::basis_maps_round_trip(K,field,V,source,W,target,n,u,w,x) => \Algebra::coordinate_maps::linear_map_from_basis<K,field,W,target,V,source,n,w,u>(\Algebra::coordinate_maps::linear_map_from_basis<K,field,V,source,W,target,n,u,w>(x))=x
+
+thm consume_basis_maps_are_bijective:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,field,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,field,W>,n N,u finite_seq(V,n),w finite_seq(W,n):
+        $Algebra::basis::is_basis(K,field,V,source,n,u)
+        $Algebra::basis::is_basis(K,field,W,target,n,w)
+        =>:
+            $bijective(V,W,\Algebra::coordinate_maps::linear_map_from_basis<K,field,V,source,W,target,n,u,w>)
+    by thm Algebra::coordinate_maps::basis_maps_are_bijective(K,field,V,source,W,target,n,u,w) => $bijective(V,W,\Algebra::coordinate_maps::linear_map_from_basis<K,field,V,source,W,target,n,u,w>)
+
+thm consume_basis_map_inverse:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,field,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,field,W>,n N,u finite_seq(V,n),w finite_seq(W,n):
+        $Algebra::basis::is_basis(K,field,V,source,n,u)
+        $Algebra::basis::is_basis(K,field,W,target,n,w)
+        =>:
+            \Algebra::linear_criteria::inverse_bijection<V,W,\Algebra::coordinate_maps::linear_map_from_basis<K,field,V,source,W,target,n,u,w>> = \Algebra::coordinate_maps::linear_map_from_basis<K,field,W,target,V,source,n,w,u>
+    by thm Algebra::coordinate_maps::basis_map_inverse(K,field,V,source,W,target,n,u,w) => \Algebra::linear_criteria::inverse_bijection<V,W,\Algebra::coordinate_maps::linear_map_from_basis<K,field,V,source,W,target,n,u,w>> = \Algebra::coordinate_maps::linear_map_from_basis<K,field,W,target,V,source,n,w,u>
+
+thm consume_equal_finite_dimensions_have_linear_bijection:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,field,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,field,W>:
+        $Algebra::basis::is_finite_dimensional(K,field,V,source)
+        $Algebra::basis::is_finite_dimensional(K,field,W,target)
+        \Algebra::dimension::finite_dimension<K,field,V>(source)=\Algebra::dimension::finite_dimension<K,field,W>(target)
+        =>:
+            exist T fn(v V) W st {$Algebra::vector_space::is_linear_map(K,field,V,source,W,target,T),$bijective(V,W,T)}
+    release thm Algebra::coordinate_maps::equal_finite_dimensions_have_linear_bijection(K,field,V,source,W,target)
+
+thm consume_linear_map_from_basis_on_combination:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,field,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,field,W>,n N,u finite_seq(V,n),w finite_seq(W,n),c finite_seq(K,n):
+        $Algebra::basis::is_basis(K,field,V,source,n,u)
+        =>:
+            \Algebra::coordinate_maps::linear_map_from_basis<K,field,V,source,W,target,n,u,w>(\Algebra::finite_span::linear_combination<K,field,V,source,n>(c,u))=\Algebra::finite_span::linear_combination<K,field,W,target,n>(c,w)
+    by thm Algebra::coordinate_maps::linear_map_from_basis_on_combination(K,field,V,source,W,target,n,u,w,c) => \Algebra::coordinate_maps::linear_map_from_basis<K,field,V,source,W,target,n,u,w>(\Algebra::finite_span::linear_combination<K,field,V,source,n>(c,u))=\Algebra::finite_span::linear_combination<K,field,W,target,n>(c,w)
+
+thm consume_linear_maps_equal_on_basis:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,field,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,field,W>,n N,u finite_seq(V,n),T,S fn(v V) W:
+        $Algebra::basis::is_basis(K,field,V,source,n,u)
+        $Algebra::vector_space::is_linear_map(K,field,V,source,W,target,T)
+        $Algebra::vector_space::is_linear_map(K,field,V,source,W,target,S)
+        forall j closed_range(1,n):
+            T(u(j))=S(u(j))
+        =>:
+            T=S
+    by thm Algebra::coordinate_maps::linear_maps_equal_on_basis(K,field,V,source,W,target,n,u,T,S) => T=S
+
+thm consume_linear_bijection_maps_basis_to_basis:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,field,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,field,W>,n N,u finite_seq(V,n),T fn(v V) W:
+        $Algebra::basis::is_basis(K,field,V,source,n,u)
+        $Algebra::vector_space::is_linear_map(K,field,V,source,W,target,T)
+        $bijective(V,W,T)
+        =>:
+            $Algebra::basis::is_basis(K,field,W,target,n,\Algebra::finite_span::map_vectors<V,W,n>(T,u))
+    by thm Algebra::coordinate_maps::linear_bijection_maps_basis_to_basis(K,field,V,source,W,target,n,u,T) => $Algebra::basis::is_basis(K,field,W,target,n,\Algebra::finite_span::map_vectors<V,W,n>(T,u))

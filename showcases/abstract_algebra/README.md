@@ -10,6 +10,12 @@ The central Litex idea is that a structure packages operations and laws,
 while later proofs use those laws to establish new facts. The same interface
 supports both abstract arguments and concrete integer examples.
 
+The group structure, subgroup and homomorphism predicates, kernel construction
+and twelve general theorems come from [std/algebra](../../std/algebra/README.md).
+The lecture imports that package as `Algebra` and retains the integer examples
+and the theorem about multiples. Read the library's
+[group.lit](../../std/algebra/group.lit) for the shared proofs.
+
 ## From addition to group laws
 
 The notes begin with two operations and a calculation:
@@ -35,7 +41,7 @@ fail because the inverse of `1` is missing.
 ## From homomorphisms to kernels
 
 A homomorphism is required to preserve only the group operation. The
-following is the complete definition, using the preceding `Group` interface:
+following is the definition in the library's own `group` export:
 
 <!-- litex:skip-test -->
 ```litex
@@ -57,8 +63,8 @@ excerpt using the notes' earlier declarations:
 
 <!-- litex:skip-test -->
 ```litex
-\kernel<Z, Z, integers, double> = {0}
-\kernel<Z, Z, integers, zero_map> = Z
+\Algebra::group::kernel<Z, Z, integers, double> = {0}
+\Algebra::group::kernel<Z, Z, integers, zero_map> = Z
 ```
 
 Doubling preserves addition and loses no information. The zero map also
@@ -71,10 +77,10 @@ because it does not preserve the identity.
 | Sections | Mathematical progression |
 |---|---|
 | 1.1 | Integer operations; groups; an abelian concrete instance |
-| 1.2 | Identity and inverse uniqueness; left and right cancellation; unique equation solutions |
+| Shared library | Identity and inverse uniqueness; left and right cancellation; unique equation solutions |
 | 1.3 | Subgroups; integer multiples; a nonnegative-integer counterexample; intersections |
 | 2.1 | Homomorphisms; preservation of identity and inverse; doubling and translation |
-| 2.2 | Kernel subsets; normal subgroups; normality in abelian groups; general kernel normality |
+| 2.2 and shared library | Kernel subsets; normal subgroups; normality in abelian groups; general kernel normality |
 | 2.3 | Trivial kernels and injectivity in both directions; doubling and zero-map kernels |
 
 These are original, selected lectures, not a textbook translation or a

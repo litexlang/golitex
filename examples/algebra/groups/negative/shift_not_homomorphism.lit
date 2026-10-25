@@ -1,0 +1,9 @@
+# Must reject only the final statement; see ../README.md.
+release obj def context::add
+release obj def context::neg
+release obj def context::integers
+release struct def context::integers
+release obj def context::zero_map
+release obj def context::shift
+
+by thm Algebra::group::homomorphism_identity(Z,context::integers,Z,context::integers,context::shift) => context::shift(context::integers.one)=context::integers.one

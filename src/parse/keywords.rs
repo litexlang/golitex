@@ -29,6 +29,7 @@ pub const FOR: &str = "for";
 pub const TUPLE: &str = "tuple";
 pub const CART: &str = "cart";
 pub const LIM: &str = "lim";
+pub const FN_LIM: &str = "fn_lim";
 pub const HAS_SEQ_LIMIT: &str = "has_seq_limit";
 pub const HAS_LIMIT_LEFT: &str = "has_limit_left";
 pub const HAS_LIMIT_RIGHT: &str = "has_limit_right";
@@ -244,7 +245,18 @@ pub fn is_comparison_str(atom_name: &str) -> bool {
 pub(super) fn is_reserved_object_name(name: &str) -> bool {
     matches!(
         name,
-        "integral"
+        "lim_multi_at"
+            | "lim_vector_at"
+            | "partial_derivative"
+            | "scalar_differential"
+            | "differential"
+            | "gradient_at"
+            | "jacobian"
+            | "hessian"
+            | "divergence"
+            | "curl"
+            | "laplacian"
+            | "integral"
             | "derivative"
             | I
             | E
@@ -351,6 +363,7 @@ pub(super) fn is_reserved_object_name(name: &str) -> bool {
             | FROBENIUS_NORM
             | SEQ
             | LIM
+            | FN_LIM
             | LIM_LEFT
             | LIMSUP
             | SUP

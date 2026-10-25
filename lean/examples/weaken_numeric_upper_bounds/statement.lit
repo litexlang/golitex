@@ -1,0 +1,12 @@
+# Weaken strict and weak numeric upper bounds, preserving the comparison strength needed.
+forall x R:
+    x < 4
+    =>:
+        x <= 6
+        x < 6
+
+forall x R:
+    x <= 4
+    =>:
+        x <= 6
+        x < 6

@@ -26,7 +26,10 @@ impl LitexToLeanCompiler {
             {
                 return self.compile_numeric_observation(object, position);
             }
-            Obj::FnObj(_) => return self.compile_numeric_observation(object, position),
+            Obj::FnObj(_)
+            | Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(_)) => {
+                return self.compile_numeric_observation(object, position);
+            }
             Obj::ArithmeticOperator(ArithmeticOperator::Pow(power)) => {
                 let (arguments, n) = self.inferred_nat_power_arguments(power, position)?;
                 let base = self.compile_inferred_numeric_observation(&power.base, position)?;
@@ -96,8 +99,34 @@ impl LitexToLeanCompiler {
         object: &Obj,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
+        if let Some(carrier) = self.compile_released_struct_carrier(object, position)? {
+            return Ok(carrier);
+        }
         match object {
             Obj::StandardSet(set) => standard_term(set),
+            Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(access)) => {
+                self.compile_struct_field_reference(access, position)
+            }
+            Obj::ProductShape(ProductShape::Cart(cart)) => {
+                let factors = cart
+                    .args
+                    .iter()
+                    .map(|factor| self.compile_object_reference(factor, position))
+                    .collect::<Result<Vec<_>, _>>()?;
+                let values = factors
+                    .iter()
+                    .map(|factor| format!("Litex.denote {factor}"))
+                    .collect::<Vec<_>>();
+                let sets = factors
+                    .iter()
+                    .map(|factor| format!("Litex.isSet {factor}"))
+                    .collect::<Vec<_>>();
+                Ok(format!(
+                    "(Litex.cart (M := M) ![{}] {})",
+                    values.join(", "),
+                    finite_vector_proof(&sets)
+                ))
+            }
             _ => self
                 .compile_inferred_numeric_obj(object, position)
                 .map(|p| p.0),
@@ -135,7 +164,8 @@ impl LitexToLeanCompiler {
                     format!("(Litex.negInC {a} {ha})"),
                 ));
             }
-            Obj::Identifier(_) => {
+            Obj::Identifier(_)
+            | Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(_)) => {
                 let term = self.compile_object_reference(object, position)?;
                 let (_, _, member, _) = self.compile_numeric_observation(object, position)?;
                 return Ok((term, member));
@@ -148,6 +178,11 @@ impl LitexToLeanCompiler {
                 } else if let Some(term) = position.with_visible_inferred_subject_filter(
                     object,
                     &mut |store, producer| {
+                        if let Some((term, _)) =
+                            self.compile_preimage_inferred_subject(object, store, producer)?
+                        {
+                            return Ok(Some(term));
+                        }
                         self.compile_cart_inferred_subject(object, store, producer)
                     },
                 )? {
@@ -164,7 +199,15 @@ impl LitexToLeanCompiler {
                 let (_, _, member, _) = self.compile_numeric_observation(object, position)?;
                 return Ok((term, member));
             }
-            _ => return Err(LeanCompileError::unsupported("Inference/ObjectConstructor")),
+            _ => {
+                return Err(LeanCompileError::new(
+                    "Inference/ObjectConstructor",
+                    &format!(
+                        "No recorded inference constructor supports `{}`.",
+                        object.readable_string()
+                    ),
+                ))
+            }
         };
         let (a, ha) = self.compile_inferred_numeric_obj(left, position)?;
         let (b, hb) = self.compile_inferred_numeric_obj(right, position)?;

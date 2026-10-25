@@ -1,0 +1,12 @@
+# Bound a difference in three steps and apply the resulting theorem.
+thm ordered_difference_bound:
+    ? forall diff_a, diff_b, diff_c, diff_d R:
+        diff_a < diff_b
+        diff_c <= diff_d
+        =>:
+            diff_a - diff_d < diff_b - diff_c
+    diff_a - diff_d < diff_b - diff_d
+    diff_b - diff_d <= diff_b - diff_c
+    diff_a - diff_d < diff_b - diff_c
+
+by thm ordered_difference_bound(1, 2, 3, 4) => 1 - 4 < 2 - 3

@@ -63,25 +63,13 @@ impl LitexToLeanCompiler {
                 &source_position,
             )?
         } else {
-            let declaration = match &proof.callee {
-                ResolvedTheoremCallee::UserTheorem(declaration) => declaration,
-                _ => return Err(LeanCompileError::unsupported("ByThm/Callee")),
-            };
-            let source_name = match &proof.call.name {
-                AtomicName::Plain { name } => name,
-                _ => return Err(LeanCompileError::unsupported("ByThm/QualifiedCallee")),
-            };
-            let (registered, declaration_position, _) = position.visible_theorem(source_name)?;
-            if registered != declaration
-                || source_name != &declaration.name
-                || proof.builtin.is_some()
-                || proof.function_domain.is_some()
-            {
-                return Err(LeanCompileError::new(
-                    "ByThm/Callee",
-                    "The resolved declaration differs from the cited compiled theorem.",
-                ));
+            if proof.builtin.is_some() || proof.function_domain.is_some() {
+                return Err(LeanCompileError::unsupported("ByThm/Callee"));
             }
+            let (registered, reference) =
+                position.user_callee_reference(&proof.call.name, &proof.callee)?;
+            let reference =
+                self.compile_local_forall_citation(registered.fact_id(), reference, position)?;
             let (definitions, application, returned_facts) = self.compile_user_theorem_instance(
                 &proof.call,
                 &proof.type_proofs,
@@ -90,8 +78,8 @@ impl LitexToLeanCompiler {
                 &proof.dom_stores,
                 &proof.conclusions_wd,
                 &proof.returned_conclusions,
-                registered,
-                &declaration_position,
+                &registered,
+                reference,
                 &source_position,
             )?;
             self.compile_by_theorem_selection(
@@ -225,8 +213,8 @@ impl LitexToLeanCompiler {
         dom_stores: &[StoreFactAndInferResult],
         conclusions_wd: &[FactWellDefinedProof],
         returned_conclusions: &[StoreFactAndInferResult],
-        registered: &DefThmStmt,
-        declaration_position: &SourcePosition<'_>,
+        registered: &Fact,
+        reference: String,
         position: &SourcePosition<'_>,
     ) -> Result<(Vec<String>, String, Vec<Fact>), LeanCompileError> {
         let mut substitution = HashMap::new();
@@ -238,7 +226,7 @@ impl LitexToLeanCompiler {
         }
         let mut application_arguments = Vec::new();
         let mut definitions = Vec::new();
-        let (domains, conclusions) = match (&registered.fact, &call.arguments) {
+        let (domains, conclusions) = match (registered, &call.arguments) {
             (Fact::ForallFact(fact), TheoremCallArguments::Parenthesized(args)) => {
                 let parameters: Vec<_> = fact
                     .typed_parameters
@@ -270,6 +258,10 @@ impl LitexToLeanCompiler {
                                     && instantiated_object_matches(set, &f.set, &substitution) => {}
                             (ParamType::Set(_), Fact::AtomicFact(AtomicFact::IsSetFact(f)))
                                 if f.set.ir() == arg.ir() => {}
+                            (
+                                ParamType::NonemptySet(_),
+                                Fact::AtomicFact(AtomicFact::IsNonemptySetFact(f)),
+                            ) if f.set.ir() == arg.ir() => {}
                             _ => {
                                 return Err(LeanCompileError::new(
                                     "ByThm/TypeProof",
@@ -340,7 +332,7 @@ impl LitexToLeanCompiler {
                 | Fact::ExistUniqueFact(_)
                 | Fact::NotForall(_),
                 TheoremCallArguments::Bare,
-            ) if type_proofs.is_empty() => (Vec::new(), vec![registered.fact.clone()]),
+            ) if type_proofs.is_empty() => (Vec::new(), vec![registered.clone()]),
             _ => return Err(LeanCompileError::unsupported("ByThm/CallShape")),
         };
         if domains.len() != dom_proofs.len()
@@ -380,12 +372,6 @@ impl LitexToLeanCompiler {
             definitions
                 .extend(self.compile_stored_inferences(stored, &subject, &reference, &published)?);
         }
-        let name = format!("h_{}", registered.fact.fact_id().value());
-        let reference = if declaration_position.is_local() {
-            name
-        } else {
-            self.context_application(&name, declaration_position)
-        };
         let application = if application_arguments.is_empty() {
             reference
         } else {

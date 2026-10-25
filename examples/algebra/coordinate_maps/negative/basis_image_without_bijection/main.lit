@@ -1,0 +1,7 @@
+thm basis_image_without_bijection:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,field,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,field,W>,n N,u finite_seq(V,n),T fn(v V) W:
+        $Algebra::basis::is_basis(K,field,V,source,n,u)
+        $Algebra::vector_space::is_linear_map(K,field,V,source,W,target,T)
+        =>:
+            $Algebra::basis::is_basis(K,field,W,target,n,\Algebra::finite_span::map_vectors<V,W,n>(T,u))
+    by thm Algebra::coordinate_maps::linear_bijection_maps_basis_to_basis(K,field,V,source,W,target,n,u,T) => $Algebra::basis::is_basis(K,field,W,target,n,\Algebra::finite_span::map_vectors<V,W,n>(T,u))

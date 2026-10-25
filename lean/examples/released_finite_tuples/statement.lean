@@ -21,15 +21,41 @@ let _wd_1_1 := (Litex.number (M := M) (0 : ℂ));
       exact (
         (by
           let _membership_function := (Litex.tuple (M := M) ![] (fun i => Fin.elim0 i))
-          let _membership_target := (by
-            have _checked_header : ∀ (_raw_i1 : M.Value), M.mem _raw_i1 (Litex.denote (Litex.closedRange (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (0 : ℂ)) (Litex.NativeBridge.numberInZOfEq (M := M) (1 : ℂ) (1 : ℤ) (by norm_num)) (Litex.NativeBridge.numberInZOfEq (M := M) (0 : ℂ) (0 : ℤ) (by norm_num)))) → ((fun (_raw_i1 : M.Value) => True) _raw_i1) → True := by
+          let _membership_target := (let _checked_header : ∀ (_raw_i1 : M.Value), M.mem _raw_i1 (Litex.denote (Litex.closedRange (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (0 : ℂ)) (Litex.NativeBridge.numberInZOfEq (M := M) (1 : ℂ) (1 : ℤ) (by norm_num)) (Litex.NativeBridge.numberInZOfEq (M := M) (0 : ℂ) (0 : ℤ) (by norm_num)))) → ((fun (_raw_i1 : M.Value) => True) _raw_i1) → True := (by
               intro _raw_i1 h_3 _
               let _value_i1 := Litex.semanticObject (M := M) _raw_i1 (M.member_isSet h_3)
               have h_3 : Litex.In _value_i1 (Litex.closedRange (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (0 : ℂ)) (Litex.NativeBridge.numberInZOfEq (M := M) (1 : ℂ) (1 : ℤ) (by norm_num)) (Litex.NativeBridge.numberInZOfEq (M := M) (0 : ℂ) (0 : ℤ) (by norm_num))) := h_3
-              exact True.intro
-            exact Litex.fnSet (Litex.FunctionSignature.withGuard (M := M) (Litex.denote (Litex.closedRange (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (0 : ℂ)) (Litex.NativeBridge.numberInZOfEq (M := M) (1 : ℂ) (1 : ℤ) (by norm_num)) (Litex.NativeBridge.numberInZOfEq (M := M) (0 : ℂ) (0 : ℤ) (by norm_num)))) (Litex.denote (let _setTail_0 := Litex.emptySet (M := M);
-            _setTail_0)) (Litex.isSet (Litex.closedRange (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (0 : ℂ)) (Litex.NativeBridge.numberInZOfEq (M := M) (1 : ℂ) (1 : ℤ) (by norm_num)) (Litex.NativeBridge.numberInZOfEq (M := M) (0 : ℂ) (0 : ℤ) (by norm_num)))) (Litex.isSet (let _setTail_0 := Litex.emptySet (M := M);
-            _setTail_0)) (fun (_litex_input : M.Value) => (fun (_raw_i1 : M.Value) => True) _litex_input)))
+              have h_4 : Litex.In _value_i1 (Litex.Z (M := M)) :=
+                (by
+                  litex_checked_step =>
+                    exact (
+                      (Litex.inClosedRangeBounds (Litex.closedRange (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (0 : ℂ)) (Litex.NativeBridge.numberInZOfEq (M := M) (1 : ℂ) (1 : ℤ) (by norm_num)) (Litex.NativeBridge.numberInZOfEq (M := M) (0 : ℂ) (0 : ℤ) (by norm_num))) _value_i1 h_3).1
+                    )
+                )
+              have h_5 : Litex.Le (Litex.number (M := M) (1 : ℂ)) _value_i1 :=
+                (by
+                  litex_checked_step =>
+                    exact (
+                      (Litex.inClosedRangeBounds (Litex.closedRange (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (0 : ℂ)) (Litex.NativeBridge.numberInZOfEq (M := M) (1 : ℂ) (1 : ℤ) (by norm_num)) (Litex.NativeBridge.numberInZOfEq (M := M) (0 : ℂ) (0 : ℤ) (by norm_num))) _value_i1 h_3).2.1
+                    )
+                )
+              have h_6 : Litex.Le _value_i1 (Litex.number (M := M) (0 : ℂ)) :=
+                (by
+                  litex_checked_step =>
+                    exact (
+                      (Litex.inClosedRangeBounds (Litex.closedRange (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (0 : ℂ)) (Litex.NativeBridge.numberInZOfEq (M := M) (1 : ℂ) (1 : ℤ) (by norm_num)) (Litex.NativeBridge.numberInZOfEq (M := M) (0 : ℂ) (0 : ℤ) (by norm_num))) _value_i1 h_3).2.2
+                    )
+                )
+              have h_7 : Litex.In _value_i1 (Litex.NPos (M := M)) :=
+                (by
+                  litex_checked_step =>
+                    exact (
+                      (Litex.inClosedRangePositive (Litex.closedRange (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (0 : ℂ)) (Litex.NativeBridge.numberInZOfEq (M := M) (1 : ℂ) (1 : ℤ) (by norm_num)) (Litex.NativeBridge.numberInZOfEq (M := M) (0 : ℂ) (0 : ℤ) (by norm_num))) _value_i1 (1 : ℤ) (((Litex.NativeBridge.denoteNumber (M := M) (1 : ℂ))).trans (congrArg M.number (by norm_num : (1 : ℂ) = ((1 : ℤ) : ℂ)))) (by norm_num) h_3)
+                    )
+                )
+              exact True.intro);
+            Litex.fnSet (let _litex_output := (let _setTail_0 := Litex.emptySet (M := M);
+            _setTail_0); Litex.FunctionSignature.withGuard (M := M) (Litex.denote (Litex.closedRange (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (0 : ℂ)) (Litex.NativeBridge.numberInZOfEq (M := M) (1 : ℂ) (1 : ℤ) (by norm_num)) (Litex.NativeBridge.numberInZOfEq (M := M) (0 : ℂ) (0 : ℤ) (by norm_num)))) (Litex.denote _litex_output) (Litex.isSet (Litex.closedRange (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (0 : ℂ)) (Litex.NativeBridge.numberInZOfEq (M := M) (1 : ℂ) (1 : ℤ) (by norm_num)) (Litex.NativeBridge.numberInZOfEq (M := M) (0 : ℂ) (0 : ℤ) (by norm_num)))) (Litex.isSet _litex_output) (fun (_litex_input : M.Value) => (fun (_raw_i1 : M.Value) => True) _litex_input)))
           exact (by
           let _source_cart := (Litex.tupleSingletonCart (Litex.tuple (M := M) ![] (fun i => Fin.elim0 i)))
           have _source_member : Litex.In _membership_function _source_cart := (by
@@ -154,21 +180,55 @@ let _wd_1_1 := (Litex.number (M := M) (1 : ℂ));
       exact (
         (by
           let _membership_function := (Litex.tuple (M := M) ![Litex.denote (Litex.number (M := M) (7 : ℂ))] (Fin.cases (Litex.isSet (Litex.number (M := M) (7 : ℂ))) (fun i => Fin.elim0 i)))
-          let _membership_target := (by
-            have _checked_header : ∀ (_raw_i5 : M.Value), M.mem _raw_i5 (Litex.denote (Litex.closedRange (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (1 : ℂ)) (Litex.NativeBridge.numberInZOfEq (M := M) (1 : ℂ) (1 : ℤ) (by norm_num)) (Litex.NativeBridge.numberInZOfEq (M := M) (1 : ℂ) (1 : ℤ) (by norm_num)))) → ((fun (_raw_i5 : M.Value) => True) _raw_i5) → True := by
+          let _membership_target := (let _checked_header : ∀ (_raw_i5 : M.Value), M.mem _raw_i5 (Litex.denote (Litex.closedRange (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (1 : ℂ)) (Litex.NativeBridge.numberInZOfEq (M := M) (1 : ℂ) (1 : ℤ) (by norm_num)) (Litex.NativeBridge.numberInZOfEq (M := M) (1 : ℂ) (1 : ℤ) (by norm_num)))) → ((fun (_raw_i5 : M.Value) => True) _raw_i5) → True := (by
               intro _raw_i5 h_36 _
               let _value_i5 := Litex.semanticObject (M := M) _raw_i5 (M.member_isSet h_36)
               have h_36 : Litex.In _value_i5 (Litex.closedRange (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (1 : ℂ)) (Litex.NativeBridge.numberInZOfEq (M := M) (1 : ℂ) (1 : ℤ) (by norm_num)) (Litex.NativeBridge.numberInZOfEq (M := M) (1 : ℂ) (1 : ℤ) (by norm_num))) := h_36
-              exact True.intro
-            exact Litex.fnSet (Litex.FunctionSignature.withGuard (M := M) (Litex.denote (Litex.closedRange (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (1 : ℂ)) (Litex.NativeBridge.numberInZOfEq (M := M) (1 : ℂ) (1 : ℤ) (by norm_num)) (Litex.NativeBridge.numberInZOfEq (M := M) (1 : ℂ) (1 : ℤ) (by norm_num)))) (Litex.denote (let _setElement_0 := (Litex.number (M := M) (7 : ℂ));
+              have h_37 : Litex.In _value_i5 (Litex.Z (M := M)) :=
+                (by
+                  litex_checked_step =>
+                    exact (
+                      (Litex.inClosedRangeBounds (Litex.closedRange (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (1 : ℂ)) (Litex.NativeBridge.numberInZOfEq (M := M) (1 : ℂ) (1 : ℤ) (by norm_num)) (Litex.NativeBridge.numberInZOfEq (M := M) (1 : ℂ) (1 : ℤ) (by norm_num))) _value_i5 h_36).1
+                    )
+                )
+              have h_38 : Litex.Le (Litex.number (M := M) (1 : ℂ)) _value_i5 :=
+                (by
+                  litex_checked_step =>
+                    exact (
+                      (Litex.inClosedRangeBounds (Litex.closedRange (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (1 : ℂ)) (Litex.NativeBridge.numberInZOfEq (M := M) (1 : ℂ) (1 : ℤ) (by norm_num)) (Litex.NativeBridge.numberInZOfEq (M := M) (1 : ℂ) (1 : ℤ) (by norm_num))) _value_i5 h_36).2.1
+                    )
+                )
+              have h_39 : Litex.Le _value_i5 (Litex.number (M := M) (1 : ℂ)) :=
+                (by
+                  litex_checked_step =>
+                    exact (
+                      (Litex.inClosedRangeBounds (Litex.closedRange (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (1 : ℂ)) (Litex.NativeBridge.numberInZOfEq (M := M) (1 : ℂ) (1 : ℤ) (by norm_num)) (Litex.NativeBridge.numberInZOfEq (M := M) (1 : ℂ) (1 : ℤ) (by norm_num))) _value_i5 h_36).2.2
+                    )
+                )
+              have h_40 : Litex.In _value_i5 (Litex.NPos (M := M)) :=
+                (by
+                  litex_checked_step =>
+                    exact (
+                      (Litex.inClosedRangePositive (Litex.closedRange (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (1 : ℂ)) (Litex.NativeBridge.numberInZOfEq (M := M) (1 : ℂ) (1 : ℤ) (by norm_num)) (Litex.NativeBridge.numberInZOfEq (M := M) (1 : ℂ) (1 : ℤ) (by norm_num))) _value_i5 (1 : ℤ) (((Litex.NativeBridge.denoteNumber (M := M) (1 : ℂ))).trans (congrArg M.number (by norm_num : (1 : ℂ) = ((1 : ℤ) : ℂ)))) (by norm_num) h_36)
+                    )
+                )
+              have h_41 : Litex.Same _value_i5 (Litex.number (M := M) (1 : ℂ)) :=
+                (by
+                  litex_checked_step =>
+                    exact (
+                      (by
+                        obtain ⟨k, hk, hlo, hhi⟩ := Litex.inClosedRangeInteger (Litex.closedRange (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (1 : ℂ)) (Litex.NativeBridge.numberInZOfEq (M := M) (1 : ℂ) (1 : ℤ) (by norm_num)) (Litex.NativeBridge.numberInZOfEq (M := M) (1 : ℂ) (1 : ℤ) (by norm_num))) _value_i5 (1 : ℤ) (1 : ℤ) (((Litex.NativeBridge.denoteNumber (M := M) (1 : ℂ))).trans (congrArg M.number (by norm_num : (1 : ℂ) = ((1 : ℤ) : ℂ)))) (((Litex.NativeBridge.denoteNumber (M := M) (1 : ℂ))).trans (congrArg M.number (by norm_num : (1 : ℂ) = ((1 : ℤ) : ℂ)))) h_36
+                        have heq : k = (1 : ℤ) := by omega
+                        exact hk.trans ((congrArg M.number (by norm_num [heq] : (k : ℂ) = (1 : ℂ))).trans ((Litex.NativeBridge.denoteNumber (M := M) (1 : ℂ))).symm)
+                      )
+                    )
+                )
+              exact True.intro);
+            Litex.fnSet (let _litex_output := (let _setElement_0 := (Litex.number (M := M) (7 : ℂ));
             let _setTail_1 := Litex.emptySet (M := M);
             let _setFresh_0 : ¬ Litex.In _setElement_0 _setTail_1 := (Litex.notInEmpty _setElement_0);
             let _setTail_0 := Litex.insert _setElement_0 _setTail_1 _setFresh_0;
-            _setTail_0)) (Litex.isSet (Litex.closedRange (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (1 : ℂ)) (Litex.NativeBridge.numberInZOfEq (M := M) (1 : ℂ) (1 : ℤ) (by norm_num)) (Litex.NativeBridge.numberInZOfEq (M := M) (1 : ℂ) (1 : ℤ) (by norm_num)))) (Litex.isSet (let _setElement_0 := (Litex.number (M := M) (7 : ℂ));
-            let _setTail_1 := Litex.emptySet (M := M);
-            let _setFresh_0 : ¬ Litex.In _setElement_0 _setTail_1 := (Litex.notInEmpty _setElement_0);
-            let _setTail_0 := Litex.insert _setElement_0 _setTail_1 _setFresh_0;
-            _setTail_0)) (fun (_litex_input : M.Value) => (fun (_raw_i5 : M.Value) => True) _litex_input)))
+            _setTail_0); Litex.FunctionSignature.withGuard (M := M) (Litex.denote (Litex.closedRange (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (1 : ℂ)) (Litex.NativeBridge.numberInZOfEq (M := M) (1 : ℂ) (1 : ℤ) (by norm_num)) (Litex.NativeBridge.numberInZOfEq (M := M) (1 : ℂ) (1 : ℤ) (by norm_num)))) (Litex.denote _litex_output) (Litex.isSet (Litex.closedRange (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (1 : ℂ)) (Litex.NativeBridge.numberInZOfEq (M := M) (1 : ℂ) (1 : ℤ) (by norm_num)) (Litex.NativeBridge.numberInZOfEq (M := M) (1 : ℂ) (1 : ℤ) (by norm_num)))) (Litex.isSet _litex_output) (fun (_litex_input : M.Value) => (fun (_raw_i5 : M.Value) => True) _litex_input)))
           have h_43 : (by
             let _atomic_wd_1_1 := (let _setElement_0 := (Litex.number (M := M) (7 : ℂ));
               let _setTail_1 := Litex.emptySet (M := M);
@@ -436,13 +496,40 @@ let _wd_1_1 := (Litex.number (M := M) (2 : ℂ));
       exact (
         (by
           let _membership_function := (Litex.tuple (M := M) ![Litex.denote (Litex.R (M := M)), Litex.denote (Litex.number (M := M) (1 : ℂ))] (Fin.cases (Litex.isSet (Litex.R (M := M))) (Fin.cases (Litex.isSet (Litex.number (M := M) (1 : ℂ))) (fun i => Fin.elim0 i))))
-          let _membership_target := (by
-            have _checked_header : ∀ (_raw_i10 : M.Value), M.mem _raw_i10 (Litex.denote (Litex.closedRange (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (2 : ℂ)) (Litex.NativeBridge.numberInZOfEq (M := M) (1 : ℂ) (1 : ℤ) (by norm_num)) (Litex.NativeBridge.numberInZOfEq (M := M) (2 : ℂ) (2 : ℤ) (by norm_num)))) → ((fun (_raw_i10 : M.Value) => True) _raw_i10) → True := by
+          let _membership_target := (let _checked_header : ∀ (_raw_i10 : M.Value), M.mem _raw_i10 (Litex.denote (Litex.closedRange (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (2 : ℂ)) (Litex.NativeBridge.numberInZOfEq (M := M) (1 : ℂ) (1 : ℤ) (by norm_num)) (Litex.NativeBridge.numberInZOfEq (M := M) (2 : ℂ) (2 : ℤ) (by norm_num)))) → ((fun (_raw_i10 : M.Value) => True) _raw_i10) → True := (by
               intro _raw_i10 h_157 _
               let _value_i10 := Litex.semanticObject (M := M) _raw_i10 (M.member_isSet h_157)
               have h_157 : Litex.In _value_i10 (Litex.closedRange (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (2 : ℂ)) (Litex.NativeBridge.numberInZOfEq (M := M) (1 : ℂ) (1 : ℤ) (by norm_num)) (Litex.NativeBridge.numberInZOfEq (M := M) (2 : ℂ) (2 : ℤ) (by norm_num))) := h_157
-              exact True.intro
-            exact Litex.fnSet (Litex.FunctionSignature.withGuard (M := M) (Litex.denote (Litex.closedRange (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (2 : ℂ)) (Litex.NativeBridge.numberInZOfEq (M := M) (1 : ℂ) (1 : ℤ) (by norm_num)) (Litex.NativeBridge.numberInZOfEq (M := M) (2 : ℂ) (2 : ℤ) (by norm_num)))) (Litex.denote (let _wd_1_0 := (let _setElement_0 := (Litex.R (M := M));
+              have h_158 : Litex.In _value_i10 (Litex.Z (M := M)) :=
+                (by
+                  litex_checked_step =>
+                    exact (
+                      (Litex.inClosedRangeBounds (Litex.closedRange (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (2 : ℂ)) (Litex.NativeBridge.numberInZOfEq (M := M) (1 : ℂ) (1 : ℤ) (by norm_num)) (Litex.NativeBridge.numberInZOfEq (M := M) (2 : ℂ) (2 : ℤ) (by norm_num))) _value_i10 h_157).1
+                    )
+                )
+              have h_159 : Litex.Le (Litex.number (M := M) (1 : ℂ)) _value_i10 :=
+                (by
+                  litex_checked_step =>
+                    exact (
+                      (Litex.inClosedRangeBounds (Litex.closedRange (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (2 : ℂ)) (Litex.NativeBridge.numberInZOfEq (M := M) (1 : ℂ) (1 : ℤ) (by norm_num)) (Litex.NativeBridge.numberInZOfEq (M := M) (2 : ℂ) (2 : ℤ) (by norm_num))) _value_i10 h_157).2.1
+                    )
+                )
+              have h_160 : Litex.Le _value_i10 (Litex.number (M := M) (2 : ℂ)) :=
+                (by
+                  litex_checked_step =>
+                    exact (
+                      (Litex.inClosedRangeBounds (Litex.closedRange (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (2 : ℂ)) (Litex.NativeBridge.numberInZOfEq (M := M) (1 : ℂ) (1 : ℤ) (by norm_num)) (Litex.NativeBridge.numberInZOfEq (M := M) (2 : ℂ) (2 : ℤ) (by norm_num))) _value_i10 h_157).2.2
+                    )
+                )
+              have h_161 : Litex.In _value_i10 (Litex.NPos (M := M)) :=
+                (by
+                  litex_checked_step =>
+                    exact (
+                      (Litex.inClosedRangePositive (Litex.closedRange (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (2 : ℂ)) (Litex.NativeBridge.numberInZOfEq (M := M) (1 : ℂ) (1 : ℤ) (by norm_num)) (Litex.NativeBridge.numberInZOfEq (M := M) (2 : ℂ) (2 : ℤ) (by norm_num))) _value_i10 (1 : ℤ) (((Litex.NativeBridge.denoteNumber (M := M) (1 : ℂ))).trans (congrArg M.number (by norm_num : (1 : ℂ) = ((1 : ℤ) : ℂ)))) (by norm_num) h_157)
+                    )
+                )
+              exact True.intro);
+            Litex.fnSet (let _litex_output := (let _wd_1_0 := (let _setElement_0 := (Litex.R (M := M));
             let _setTail_1 := Litex.emptySet (M := M);
             let _setFresh_0 : ¬ Litex.In _setElement_0 _setTail_1 := (Litex.notInEmpty _setElement_0);
             let _setTail_0 := Litex.insert _setElement_0 _setTail_1 _setFresh_0;
@@ -452,17 +539,7 @@ let _wd_1_1 := (Litex.number (M := M) (2 : ℂ));
             let _setFresh_0 : ¬ Litex.In _setElement_0 _setTail_1 := (Litex.notInEmpty _setElement_0);
             let _setTail_0 := Litex.insert _setElement_0 _setTail_1 _setFresh_0;
             _setTail_0);
-          (Litex.union _wd_1_0 _wd_1_1))) (Litex.isSet (Litex.closedRange (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (2 : ℂ)) (Litex.NativeBridge.numberInZOfEq (M := M) (1 : ℂ) (1 : ℤ) (by norm_num)) (Litex.NativeBridge.numberInZOfEq (M := M) (2 : ℂ) (2 : ℤ) (by norm_num)))) (Litex.isSet (let _wd_1_0 := (let _setElement_0 := (Litex.R (M := M));
-            let _setTail_1 := Litex.emptySet (M := M);
-            let _setFresh_0 : ¬ Litex.In _setElement_0 _setTail_1 := (Litex.notInEmpty _setElement_0);
-            let _setTail_0 := Litex.insert _setElement_0 _setTail_1 _setFresh_0;
-            _setTail_0);
-          let _wd_1_1 := (let _setElement_0 := (Litex.number (M := M) (1 : ℂ));
-            let _setTail_1 := Litex.emptySet (M := M);
-            let _setFresh_0 : ¬ Litex.In _setElement_0 _setTail_1 := (Litex.notInEmpty _setElement_0);
-            let _setTail_0 := Litex.insert _setElement_0 _setTail_1 _setFresh_0;
-            _setTail_0);
-          (Litex.union _wd_1_0 _wd_1_1))) (fun (_litex_input : M.Value) => (fun (_raw_i10 : M.Value) => True) _litex_input)))
+          (Litex.union _wd_1_0 _wd_1_1)); Litex.FunctionSignature.withGuard (M := M) (Litex.denote (Litex.closedRange (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (2 : ℂ)) (Litex.NativeBridge.numberInZOfEq (M := M) (1 : ℂ) (1 : ℤ) (by norm_num)) (Litex.NativeBridge.numberInZOfEq (M := M) (2 : ℂ) (2 : ℤ) (by norm_num)))) (Litex.denote _litex_output) (Litex.isSet (Litex.closedRange (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (2 : ℂ)) (Litex.NativeBridge.numberInZOfEq (M := M) (1 : ℂ) (1 : ℤ) (by norm_num)) (Litex.NativeBridge.numberInZOfEq (M := M) (2 : ℂ) (2 : ℤ) (by norm_num)))) (Litex.isSet _litex_output) (fun (_litex_input : M.Value) => (fun (_raw_i10 : M.Value) => True) _litex_input)))
           have h_163 : (by
             let _atomic_wd_1_1 := (let _wd_1_0 := (let _setElement_0 := (Litex.R (M := M));
               let _setTail_1 := Litex.emptySet (M := M);

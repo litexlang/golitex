@@ -1,0 +1,23 @@
+# Tracer: distinct sequence and finite-point function limit names.
+# Before (accepted overloaded spelling, now rejected):
+# have fn c(x R) R=3
+# release thm fn_limit_at_real_accumulation(0)
+# release thm fn_limit_at_constant(c,0,3)
+# lim(c,0)=3
+# Former behavior: lim selected a different operation by argument count.
+# fn_lim(c,0)=3 was previously rejected as an unknown function.
+# Now: first prove the candidate, then select with the fixed two-argument name.
+have fn c(x R) R=3
+release thm fn_limit_at_real_accumulation(0)
+release thm fn_limit_at_constant(c,0,3)
+fn_lim(c,0)=3
+fn_lim(c,0)+2=5
+
+# The fixed one-argument sequence interface is preserved.
+have fn a(k N+) R=3
+release thm seq_limit_constant(a,3)
+lim(a)=3
+
+# Boundary: lim(c,0), fn_lim(c), and fn_lim(c,0) without convergence fail.
+# Evidence: target/release/litex -strict -lang en -f examples/wd/function_limit_distinct_name.lit
+# Rust: tests/unit/execute/function_limit/tests.rs (distinct names, WD, recovery).

@@ -1,0 +1,10 @@
+# A real coordinate and a natural index retain their distinct carriers.
+struct IndexedPoint:
+    coordinate R
+    index N
+
+forall p &IndexedPoint:
+    p.coordinate $in R
+    p.index $in N
+    p.coordinate = p(1)
+    p.index = p(2)

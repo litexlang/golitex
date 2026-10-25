@@ -1,0 +1,199 @@
+# Groups, subgroups and homomorphism kernels.
+# Multiplication need not be commutative; the trivial group is allowed.
+
+struct Group<A nonempty_set>:
+    mul fn(x, y A) A
+    one A
+    inv fn(x A) A
+    <=>:
+        forall x, y, z A:
+            mul(mul(x, y), z) = mul(x, mul(y, z))
+        forall x A:
+            mul(one, x) = x
+            mul(x, one) = x
+            mul(inv(x), x) = one
+            mul(x, inv(x)) = one
+
+prop is_abelian(A nonempty_set, G &Group<A>):
+    forall x, y A:
+        G.mul(x, y) = G.mul(y, x)
+
+thm identity_unique:
+    ? forall A nonempty_set, G &Group<A>, identity_candidate A:
+        forall x A:
+            G.mul(identity_candidate, x) = x
+        =>:
+            identity_candidate = G.one
+    identity_candidate = G.mul(identity_candidate, G.one) = G.one
+
+thm inverse_unique:
+    ? forall A nonempty_set, G &Group<A>, a, b A:
+        G.mul(b, a) = G.one
+        =>:
+            b = G.inv(a)
+    G.mul(a, G.inv(a)) = G.one
+    b = G.mul(b, G.one) = G.mul(b, G.mul(a, G.inv(a))) = G.mul(G.mul(b, a), G.inv(a)) = G.mul(G.one, G.inv(a)) = G.inv(a)
+
+thm left_cancel:
+    ? forall A nonempty_set, G &Group<A>, a, b, c A:
+        G.mul(a, b) = G.mul(a, c)
+        =>:
+            b = c
+    G.mul(G.inv(a), a) = G.one
+    b = G.mul(G.one, b) = G.mul(G.mul(G.inv(a), a), b) = G.mul(G.inv(a), G.mul(a, b)) = G.mul(G.inv(a), G.mul(a, c)) = G.mul(G.mul(G.inv(a), a), c) = G.mul(G.one, c) = c
+
+thm right_cancel:
+    ? forall A nonempty_set, G &Group<A>, a, b, c A:
+        G.mul(b, a) = G.mul(c, a)
+        =>:
+            b = c
+    G.mul(a, G.inv(a)) = G.one
+    b = G.mul(b, G.one) = G.mul(b, G.mul(a, G.inv(a))) = G.mul(G.mul(b, a), G.inv(a)) = G.mul(G.mul(c, a), G.inv(a)) = G.mul(c, G.mul(a, G.inv(a))) = G.mul(c, G.one) = c
+
+thm left_equation_unique:
+    ? forall A nonempty_set, G &Group<A>, a, b A:
+        exist! x A st {G.mul(a, x) = b}
+    G.mul(a, G.inv(a)) = G.one
+    G.mul(a, G.mul(G.inv(a), b)) = G.mul(G.mul(a, G.inv(a)), b) = G.mul(G.one, b) = b
+    claim:
+        ? forall x, y A:
+            G.mul(a, x) = b
+            G.mul(a, y) = b
+            =>:
+                x = y
+        by thm left_cancel(A, G, a, x, y) => x = y
+    witness exist! x A st {G.mul(a, x) = b} from G.mul(G.inv(a), b)
+
+prop is_subgroup(A nonempty_set, G &Group<A>, S power_set(A)):
+    G.one $in S
+    forall x, y S:
+        G.mul(x, y) $in S
+    forall x S:
+        G.inv(x) $in S
+
+thm subgroup_intersection:
+    ? forall A nonempty_set, G &Group<A>, S, T power_set(A):
+        $is_subgroup(A, G, S)
+        $is_subgroup(A, G, T)
+        =>:
+            $is_subgroup(A, G, intersect(S, T))
+    claim:
+        ? forall x, y intersect(S, T):
+            G.mul(x, y) $in intersect(S, T)
+        G.mul(x, y) $in S
+        G.mul(x, y) $in T
+    claim:
+        ? forall x intersect(S, T):
+            G.inv(x) $in intersect(S, T)
+        G.inv(x) $in S
+        G.inv(x) $in T
+    by def $is_subgroup(A, G, intersect(S, T))
+
+prop is_homomorphism(A nonempty_set, G &Group<A>, B nonempty_set, H &Group<B>, f fn(x A) B):
+    forall x, y A:
+        f(G.mul(x, y)) = H.mul(f(x), f(y))
+
+thm homomorphism_identity:
+    ? forall A nonempty_set, G &Group<A>, B nonempty_set, H &Group<B>, f fn(x A) B:
+        $is_homomorphism(A, G, B, H, f)
+        =>:
+            f(G.one) = H.one
+    G.mul(G.one, G.one) = G.one
+    H.mul(f(G.one), f(G.one)) = f(G.mul(G.one, G.one)) = f(G.one) = H.mul(f(G.one), H.one)
+    by thm left_cancel(B, H, f(G.one), f(G.one), H.one) => f(G.one) = H.one
+
+thm homomorphism_inverse:
+    ? forall A nonempty_set, G &Group<A>, B nonempty_set, H &Group<B>, f fn(x A) B, x A:
+        $is_homomorphism(A, G, B, H, f)
+        =>:
+            f(G.inv(x)) = H.inv(f(x))
+    by thm homomorphism_identity(A, G, B, H, f) => f(G.one) = H.one
+    G.mul(G.inv(x), x) = G.one
+    H.mul(f(G.inv(x)), f(x)) = f(G.mul(G.inv(x), x)) = f(G.one) = H.one
+    by thm inverse_unique(B, H, f(x), f(G.inv(x))) => f(G.inv(x)) = H.inv(f(x))
+
+template<A nonempty_set, B nonempty_set, H &Group<B>, f fn(x A) B>:
+    have kernel power_set(A) = {x A: f(x) = H.one}
+
+prop is_normal_subgroup(A nonempty_set, G &Group<A>, S power_set(A)):
+    $is_subgroup(A, G, S)
+    forall a A, s S:
+        G.mul(G.mul(a, s), G.inv(a)) $in S
+
+thm abelian_subgroups_are_normal:
+    ? forall A nonempty_set, G &Group<A>, S power_set(A):
+        $is_abelian(A, G)
+        $is_subgroup(A, G, S)
+        =>:
+            $is_normal_subgroup(A, G, S)
+    claim:
+        ? forall a A, s S:
+            G.mul(G.mul(a, s), G.inv(a)) $in S
+        G.mul(a, G.inv(a)) = G.one
+        G.mul(a, s) = G.mul(s, a)
+        G.mul(G.mul(a, s), G.inv(a)) = G.mul(G.mul(s, a), G.inv(a)) = G.mul(s, G.mul(a, G.inv(a))) = G.mul(s, G.one) = s
+    by def $is_normal_subgroup(A, G, S)
+
+thm kernel_is_normal:
+    ? forall A nonempty_set, G &Group<A>, B nonempty_set, H &Group<B>, f fn(x A) B:
+        $is_homomorphism(A, G, B, H, f)
+        =>:
+            $is_normal_subgroup(A, G, \kernel<A, B, H, f>)
+    \kernel<A, B, H, f> = {x A: f(x) = H.one}
+    \kernel<A, B, H, f> $subset A
+    by thm homomorphism_identity(A, G, B, H, f) => f(G.one) = H.one
+    release thm set_builder_member(G.one, {x A: f(x) = H.one})
+    claim:
+        ? forall x, y \kernel<A, B, H, f>:
+            G.mul(x, y) $in \kernel<A, B, H, f>
+        f(G.mul(x, y)) = H.mul(f(x), f(y)) = H.mul(H.one, H.one) = H.one
+        release thm set_builder_member(G.mul(x, y), {z A: f(z) = H.one})
+    claim:
+        ? forall x \kernel<A, B, H, f>:
+            G.inv(x) $in \kernel<A, B, H, f>
+        by thm inverse_unique(B, H, H.one, H.one) => H.one = H.inv(H.one)
+        by thm homomorphism_inverse(A, G, B, H, f, x) => f(G.inv(x)) = H.inv(f(x))
+        f(G.inv(x)) = H.inv(f(x)) = H.inv(H.one) = H.one
+        release thm set_builder_member(G.inv(x), {z A: f(z) = H.one})
+    by def $is_subgroup(A, G, \kernel<A, B, H, f>)
+    claim:
+        ? forall a A, s \kernel<A, B, H, f>:
+            G.mul(G.mul(a, s), G.inv(a)) $in \kernel<A, B, H, f>
+        f(G.mul(a, s)) = H.mul(f(a), f(s)) = H.mul(f(a), H.one) = f(a)
+        by thm homomorphism_inverse(A, G, B, H, f, a) => f(G.inv(a)) = H.inv(f(a))
+        f(G.mul(G.mul(a, s), G.inv(a))) = H.mul(f(G.mul(a, s)), f(G.inv(a))) = H.mul(f(a), f(G.inv(a))) = H.mul(f(a), H.inv(f(a))) = H.one
+        release thm set_builder_member(G.mul(G.mul(a, s), G.inv(a)), {z A: f(z) = H.one})
+    by def $is_normal_subgroup(A, G, \kernel<A, B, H, f>)
+
+prop has_trivial_kernel(A nonempty_set, G &Group<A>, B nonempty_set, H &Group<B>, f fn(x A) B):
+    forall x A:
+        f(x) = H.one
+        =>:
+            x = G.one
+
+thm trivial_kernel_implies_injective:
+    ? forall A nonempty_set, G &Group<A>, B nonempty_set, H &Group<B>, f fn(x A) B:
+        $is_homomorphism(A, G, B, H, f)
+        $has_trivial_kernel(A, G, B, H, f)
+        =>:
+            $injective(A, B, f)
+    claim:
+        ? forall x, y A:
+            f(x) = f(y)
+            =>:
+                x = y
+        by thm homomorphism_inverse(A, G, B, H, f, y) => f(G.inv(y)) = H.inv(f(y))
+        f(G.mul(G.inv(y), x)) = H.mul(f(G.inv(y)), f(x)) = H.mul(H.inv(f(y)), f(x)) = H.mul(H.inv(f(y)), f(y)) = H.one
+        G.mul(G.inv(y), x) = G.one
+        G.mul(G.inv(y), y) = G.one
+        by thm left_cancel(A, G, G.inv(y), x, y) => x = y
+    by def $injective(A, B, f)
+
+thm injective_implies_trivial_kernel:
+    ? forall A nonempty_set, G &Group<A>, B nonempty_set, H &Group<B>, f fn(x A) B:
+        $is_homomorphism(A, G, B, H, f)
+        $injective(A, B, f)
+        =>:
+            $has_trivial_kernel(A, G, B, H, f)
+    by thm homomorphism_identity(A, G, B, H, f) => f(G.one) = H.one
+    by def $has_trivial_kernel(A, G, B, H, f)

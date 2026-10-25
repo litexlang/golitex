@@ -540,6 +540,7 @@ fn checked_application_domain(proof: &ObjWellDefinedProof) -> Option<&FnSet> {
         return None;
     };
     match proof.domain_fn_set.as_ref()? {
+        FnObjDomainFnSetEvidence::MultivariableSelector(source) => Some(&source.signature),
         FnObjDomainFnSetEvidence::Matrix(source) => Some(&source.function.body),
         FnObjDomainFnSetEvidence::Composition(source) => Some(&source.function.body),
         FnObjDomainFnSetEvidence::FiniteFunction(source) => Some(&source.signature),

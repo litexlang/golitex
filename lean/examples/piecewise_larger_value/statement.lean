@@ -10,15 +10,14 @@ set_option linter.unusedSectionVars false
 variable [_functionSemantics : Litex.FunctionSemantics M]
 
 noncomputable def _object_i1 := (show Litex.Obj (M := M) (Litex.PiecewiseFn M) from by
-  let _signature := ((show Litex.Obj (M := M) (Litex.FunctionSignature M) from (by
-    have _checked_header : ∀ (_raw_i2 : M.Value) (_raw_i3 : M.Value), M.mem _raw_i2 (M.standard Litex.StandardSetValue.real) → M.mem _raw_i3 (M.standard Litex.StandardSetValue.real) → ((fun (_raw_i2 : M.Value) (_raw_i3 : M.Value) => True) _raw_i2 _raw_i3) → True := by
+  let _signature := ((show Litex.Obj (M := M) (Litex.FunctionSignature M) from (let _checked_header : ∀ (_raw_i2 : M.Value) (_raw_i3 : M.Value), M.mem _raw_i2 (M.standard Litex.StandardSetValue.real) → M.mem _raw_i3 (M.standard Litex.StandardSetValue.real) → ((fun (_raw_i2 : M.Value) (_raw_i3 : M.Value) => True) _raw_i2 _raw_i3) → True := (by
       intro _raw_i2 _raw_i3 h_3 h_4 _
       let _value_i2 := Litex.semanticObject (M := M) _raw_i2 (M.member_isSet h_3)
       have h_3 : Litex.In _value_i2 (Litex.R (M := M)) := h_3
       let _value_i3 := Litex.semanticObject (M := M) _raw_i3 (M.member_isSet h_4)
       have h_4 : Litex.In _value_i3 (Litex.R (M := M)) := h_4
-      exact True.intro
-    exact Litex.fnSet (Litex.FunctionSignature.two (M := M) Litex.StandardSetValue.real Litex.StandardSetValue.real Litex.StandardSetValue.real (fun (_raw_i2 : M.Value) (_raw_i3 : M.Value) => True))))).val
+      exact True.intro);
+    Litex.fnSet (Litex.FunctionSignature.two (M := M) Litex.StandardSetValue.real Litex.StandardSetValue.real Litex.StandardSetValue.real (fun (_raw_i2 : M.Value) (_raw_i3 : M.Value) => True))))).val
   let _branch_0 := (⟨(fun (_input : M.Value) => (∃ (_r _s : ℝ), (Litex.FunctionSemantics.callValue (M := M) _input (M.number (2 : ℂ))) = M.number (_r : ℂ) ∧ (Litex.FunctionSemantics.callValue (M := M) _input (M.number (1 : ℂ))) = M.number (_s : ℂ) ∧ _r ≤ _s)), (fun (_input : M.Value) => (Litex.FunctionSemantics.callValue (M := M) _input (M.number (1 : ℂ))))⟩ : Litex.FunctionBranch M)
   let _branch_1 := (⟨(fun (_input : M.Value) => (∃ (_r _s : ℝ), (Litex.FunctionSemantics.callValue (M := M) _input (M.number (1 : ℂ))) = M.number (_r : ℂ) ∧ (Litex.FunctionSemantics.callValue (M := M) _input (M.number (2 : ℂ))) = M.number (_s : ℂ) ∧ _r < _s)), (fun (_input : M.Value) => (Litex.FunctionSemantics.callValue (M := M) _input (M.number (2 : ℂ))))⟩ : Litex.FunctionBranch M)
   have _coverage : ∀ (_raw_i2 : M.Value) (_raw_i3 : M.Value), M.mem _raw_i2 (M.standard Litex.StandardSetValue.real) → M.mem _raw_i3 (M.standard Litex.StandardSetValue.real) → ((fun (_raw_i2 : M.Value) (_raw_i3 : M.Value) => True) _raw_i2 _raw_i3) → (((∃ (_r _s : ℝ), _raw_i3 = M.number (_r : ℂ) ∧ _raw_i2 = M.number (_s : ℂ) ∧ _r ≤ _s)) ∨ ((∃ (_r _s : ℝ), _raw_i2 = M.number (_r : ℂ) ∧ _raw_i3 = M.number (_s : ℂ) ∧ _r < _s))) := (by

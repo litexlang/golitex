@@ -1,0 +1,4 @@
+# Under the explicit assumption a > 0, conclude a >= 0. This example uses trust.
+have a R
+trust a > 0
+a >= 0

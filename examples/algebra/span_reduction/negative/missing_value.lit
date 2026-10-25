@@ -1,0 +1,23 @@
+# Only the final statement must be rejected.
+release obj def context::real_inv
+release obj def context::real_add
+release obj def context::real_neg
+release obj def context::real_mul
+release obj def context::real_field
+release obj def context::scalars
+release obj def context::vectors
+release obj def context::coefficients
+release obj def context::sums
+release struct def context::real_field
+release struct def context::scalars
+
+claim:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,n N,coefficients finite_seq(K,n),vectors finite_seq(V,n),x V,U power_set(V):
+        $Algebra::vector_space::is_subspace(K,field,V,space,U)
+        forall j N+:
+            j<=n
+            =>:
+                vectors(j) $in U
+        =>:
+            x $in U
+    release thm Algebra::span_reduction::linear_combination_in_subspace(K,field,V,space,n,coefficients,vectors,x,U)

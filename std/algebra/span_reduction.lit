@@ -1,0 +1,195 @@
+# Finite linear combinations and subspace generation.
+
+thm weighted_combination_in_subspace:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,n N,coefficients finite_seq(K,n),vectors finite_seq(V,n),x V,U power_set(V):
+        $vector_space::is_subspace(K,field,V,space,U)
+        forall j N+:
+            j<=n
+            =>:
+                space.smul(coefficients(j),vectors(j)) $in U
+        $finite_span::has_linear_combination_value(K,field,V,space,n,coefficients,vectors,x)
+        =>:
+            x $in U
+    obtain sums from $finite_span::has_linear_combination_value(K,field,V,space,n,coefficients,vectors,x)
+    have fn extended(t N) V by cases:
+        case t<=n: sums(t)
+        case t>n: space.zero
+    by induc t from 0:
+        ? extended(t) $in U
+        ? from t=0:
+            extended(0)=sums(0)=space.zero
+        ? induc:
+            by cases:
+                ? extended(t+1) $in U
+                case t+1<=n:
+                    t<=t+1<=n
+                    t $in closed_range(0,n)
+                    have j N+=t+1
+                    j<=n
+                    j-1=t
+                    sums(j-1)=sums(t)=extended(t)
+                    sums(j-1) $in U
+                    sums(j-1) $in V
+                    space.smul(coefficients(j),vectors(j)) $in U
+                    space.smul(coefficients(j),vectors(j)) $in V
+                    space.add(sums(j-1),space.smul(coefficients(j),vectors(j))) $in U
+                    sums(j)=space.add(sums(j-1),space.smul(coefficients(j),vectors(j)))
+                    extended(t+1)=sums(j)
+                case t+1>n:
+                    extended(t+1)=space.zero
+    x=sums(n)=extended(n)
+
+thm linear_combination_in_subspace:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,n N,coefficients finite_seq(K,n),vectors finite_seq(V,n),x V,U power_set(V):
+        $vector_space::is_subspace(K,field,V,space,U)
+        forall j N+:
+            j<=n
+            =>:
+                vectors(j) $in U
+        $finite_span::has_linear_combination_value(K,field,V,space,n,coefficients,vectors,x)
+        =>:
+            x $in U
+    claim:
+        ? forall j N+:
+            j<=n
+            =>:
+                space.smul(coefficients(j),vectors(j)) $in U
+        coefficients(j) $in K
+        vectors(j) $in V
+        vectors(j) $in U
+    by thm weighted_combination_in_subspace(K,field,V,space,n,coefficients,vectors,x,U) => x $in U
+
+thm span_contains_generator:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,n N,vectors finite_seq(V,n),j N+:
+        j<=n
+        =>:
+            vectors(j) $in \finite_span::span<K,field,V,space,n,vectors>
+    have fn coefficients(idx closed_range(1,n)) K by cases:
+        case idx=j: field.one
+        case idx!=j: field.zero
+    claim:
+        ? forall idx N+:
+            idx<=n
+            idx!=j
+            =>:
+                coefficients(idx)=field.zero
+        idx $in closed_range(1,n)
+        coefficients(idx)=field.zero
+    j $in closed_range(1,n)
+    coefficients(j)=field.one
+    coefficients(j) $in K
+    field.one $in K
+    vectors(j) $in V
+    by thm finite_span::single_coefficient_linear_combination(K,field,V,space,n,coefficients,vectors,j) => \finite_span::linear_combination<K,field,V,space,n>(coefficients,vectors)=space.smul(coefficients(j),vectors(j))
+    space.smul(coefficients(j),vectors(j))=space.smul(field.one,vectors(j))=vectors(j)
+    by thm finite_span::linear_combination_has_value(K,field,V,space,n,coefficients,vectors) => $finite_span::has_linear_combination_value(K,field,V,space,n,coefficients,vectors,\finite_span::linear_combination<K,field,V,space,n>(coefficients,vectors))
+    witness $finite_span::is_linear_combination(K,field,V,space,n,vectors(j),vectors) from coefficients
+    \finite_span::span<K,field,V,space,n,vectors> = {x V: $finite_span::is_linear_combination(K,field,V,space,n,x,vectors)}
+    vectors(j) $in {x V: $finite_span::is_linear_combination(K,field,V,space,n,x,vectors)}
+
+thm span_subset_subspace:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,n N,vectors finite_seq(V,n),U power_set(V):
+        $vector_space::is_subspace(K,field,V,space,U)
+        forall j N+:
+            j<=n
+            =>:
+                vectors(j) $in U
+        =>:
+            \finite_span::span<K,field,V,space,n,vectors> $subset U
+    claim:
+        ? forall x \finite_span::span<K,field,V,space,n,vectors>:
+            x $in U
+        obtain coefficients from $finite_span::is_linear_combination(K,field,V,space,n,x,vectors)
+        by thm linear_combination_in_subspace(K,field,V,space,n,coefficients,vectors,x,U) => x $in U
+
+thm span_inclusion_from_generators:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,n N,vectors finite_seq(V,n),m N,other finite_seq(V,m):
+        forall j N+:
+            j<=n
+            =>:
+                vectors(j) $in \finite_span::span<K,field,V,space,m,other>
+        =>:
+            \finite_span::span<K,field,V,space,n,vectors> $subset \finite_span::span<K,field,V,space,m,other>
+    by thm finite_span::span_is_subspace(K,field,V,space,m,other) => $vector_space::is_subspace(K,field,V,space,\finite_span::span<K,field,V,space,m,other>)
+    by thm span_subset_subspace(K,field,V,space,n,vectors,\finite_span::span<K,field,V,space,m,other>) => \finite_span::span<K,field,V,space,n,vectors> $subset \finite_span::span<K,field,V,space,m,other>
+
+thm remove_redundant_vector_preserves_span:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,n N+,vectors finite_seq(V,n),k N+,reduced finite_seq(V,n-1):
+        $basis::is_list_with_index_removed(V,n,vectors,k,reduced)
+        vectors(k) $in \finite_span::span<K,field,V,space,n-1,reduced>
+        =>:
+            \finite_span::span<K,field,V,space,n,vectors> = \finite_span::span<K,field,V,space,n-1,reduced>
+    let whole = \finite_span::span<K,field,V,space,n,vectors>
+    let rest = \finite_span::span<K,field,V,space,n-1,reduced>
+    claim:
+        ? forall j N+:
+            j<=n-1
+            =>:
+                reduced(j) $in whole
+        by cases:
+            ? reduced(j) $in whole
+            case j<k:
+                j<=n
+                reduced(j)=vectors(j)
+                by thm span_contains_generator(K,field,V,space,n,vectors,j) => vectors(j) $in \finite_span::span<K,field,V,space,n,vectors>
+            case j>=k:
+                j<=n-1<n
+                j<n
+                j+1<=n
+                j+1 $in N+
+                reduced(j)=vectors(j+1)
+                by thm span_contains_generator(K,field,V,space,n,vectors,j+1) => vectors(j+1) $in \finite_span::span<K,field,V,space,n,vectors>
+    by thm span_inclusion_from_generators(K,field,V,space,n-1,reduced,n,vectors) => \finite_span::span<K,field,V,space,n-1,reduced> $subset \finite_span::span<K,field,V,space,n,vectors>
+    claim:
+        ? forall j N+:
+            j<=n
+            =>:
+                vectors(j) $in rest
+        by cases:
+            ? vectors(j) $in rest
+            case j<k:
+                j<k<=n
+                j<n
+                j<=n-1
+                reduced(j)=vectors(j)
+                by thm span_contains_generator(K,field,V,space,n-1,reduced,j) => reduced(j) $in \finite_span::span<K,field,V,space,n-1,reduced>
+            case j=k:
+                vectors(j)=vectors(k)
+            case j>k:
+                j-1 $in N
+                j-1>=k>=1
+                j-1>=1>0
+                j-1 $in N+
+                j-1<n
+                j-1<=n-1
+                k<=j-1
+                (j-1)+1=j
+                reduced(j-1)=vectors((j-1)+1)=vectors(j)
+                by thm span_contains_generator(K,field,V,space,n-1,reduced,j-1) => reduced(j-1) $in \finite_span::span<K,field,V,space,n-1,reduced>
+    by thm span_inclusion_from_generators(K,field,V,space,n,vectors,n-1,reduced) => \finite_span::span<K,field,V,space,n,vectors> $subset \finite_span::span<K,field,V,space,n-1,reduced>
+    by extension whole = rest
+
+thm dependent_list_has_span_preserving_removal:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,n N+,vectors finite_seq(V,n):
+        $basis::is_linearly_dependent(K,field,V,space,n,vectors)
+        =>:
+            exist k N+,reduced finite_seq(V,n-1) st {$basis::is_list_with_index_removed(V,n,vectors,k,reduced),\finite_span::span<K,field,V,space,n,vectors> = \finite_span::span<K,field,V,space,n-1,reduced>}
+    release thm dependence::dependence_lemma(K,field,V,space,n,vectors)
+    obtain k,m,prefix from exist selected_k N+,selected_m N,selected_prefix finite_seq(V,selected_m) st {selected_k<=n,selected_m=selected_k-1,$basis::is_prefix_of_length(V,n,selected_m,vectors,selected_prefix),vectors(selected_k) $in \finite_span::span<K,field,V,space,selected_m,selected_prefix>}
+    release thm basis::remove_index_exists(V,n,vectors,k)
+    obtain reduced from exist r finite_seq(V,n-1) st {$basis::is_list_with_index_removed(V,n,vectors,k,r)}
+    claim:
+        ? forall j N+:
+            j<=m
+            =>:
+                prefix(j) $in \finite_span::span<K,field,V,space,n-1,reduced>
+        j<=m=k-1<k
+        j<k
+        j<k<=n
+        j<n
+        j<=n-1
+        prefix(j)=vectors(j)=reduced(j)
+        by thm span_contains_generator(K,field,V,space,n-1,reduced,j) => reduced(j) $in \finite_span::span<K,field,V,space,n-1,reduced>
+    by thm span_inclusion_from_generators(K,field,V,space,m,prefix,n-1,reduced) => \finite_span::span<K,field,V,space,m,prefix> $subset \finite_span::span<K,field,V,space,n-1,reduced>
+    by thm remove_redundant_vector_preserves_span(K,field,V,space,n,vectors,k,reduced) => \finite_span::span<K,field,V,space,n,vectors> = \finite_span::span<K,field,V,space,n-1,reduced>
+    witness exist selected_k N+,selected_reduced finite_seq(V,n-1) st {$basis::is_list_with_index_removed(V,n,vectors,selected_k,selected_reduced),\finite_span::span<K,field,V,space,n,vectors> = \finite_span::span<K,field,V,space,n-1,selected_reduced>} from k,reduced

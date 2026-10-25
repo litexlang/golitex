@@ -1,0 +1,10 @@
+# Subtracting ordered values from a shared real value reverses their order.
+forall sub_left_a, sub_left_b, sub_left_c R:
+    sub_left_a <= sub_left_b
+    =>:
+        sub_left_c - sub_left_b <= sub_left_c - sub_left_a
+
+forall sub_left_strict_a, sub_left_strict_b, sub_left_strict_c R:
+    sub_left_strict_a < sub_left_strict_b
+    =>:
+        sub_left_strict_c - sub_left_strict_b < sub_left_strict_c - sub_left_strict_a

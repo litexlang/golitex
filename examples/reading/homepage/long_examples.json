@@ -178,7 +178,7 @@
     },
     {
       "source": {
-        "path": "showcases/2D_Geometry/IMO/problem_12/solution.lit",
+        "path": "examples/imo/geometry/imo_1966_p6/solution.lit",
         "sha256": "6baad86c017ba4f6fac7154b81806acfcde0b37fe54d651cb8dc512b04cb382e",
         "start_line": 1,
         "end_line": 332,

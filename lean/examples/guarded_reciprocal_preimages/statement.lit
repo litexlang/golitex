@@ -1,0 +1,21 @@
+# Point and set fibers preserve the reciprocal's complete nonzero domain.
+have fn fiber_recip(x R: x != 0) R = 1 / x
+
+fiber_recip(2) = 1 / 2
+
+2 $in preimage(fiber_recip, 1 / 2)
+
+2 $in preimage_set(fiber_recip, {1 / 2})
+
+forall fiber_x preimage(fiber_recip, 1 / 2):
+    fiber_x $in R
+    fiber_x != 0
+    fiber_recip(fiber_x) = 1 / 2
+
+forall fiber_y preimage_set(fiber_recip, {1 / 2}):
+    fiber_y $in R
+    fiber_y != 0
+    fiber_recip(fiber_y) $in {1 / 2}
+
+preimage(fiber_recip, 1 / 2) $subset R
+

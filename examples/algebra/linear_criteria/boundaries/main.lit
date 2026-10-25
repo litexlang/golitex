@@ -1,0 +1,70 @@
+# Zero-dimensional vector spaces and the empty bijection.
+
+release obj def context::real_inv
+
+release obj def context::real_add
+
+release obj def context::real_neg
+
+release obj def context::real_mul
+
+release obj def context::real_field
+
+release obj def context::zero_add
+
+release obj def context::zero_smul
+
+release obj def context::zero_space
+
+release obj def context::empty_basis
+
+by thm Algebra::linear_criteria::empty_span_is_zero(R,context::real_field,{0},context::zero_space,context::empty_basis) => \Algebra::finite_span::span<R,context::real_field,{0},context::zero_space,0,context::empty_basis> ={context::zero_space.zero}
+
+context::zero_space.zero=0
+
+\Algebra::finite_span::span<R,context::real_field,{0},context::zero_space,0,context::empty_basis> ={context::zero_space.zero}={0}
+
+by def $Algebra::finite_span::spans(R,context::real_field,{0},context::zero_space,0,context::empty_basis)
+
+by thm Algebra::dependence::empty_list_is_independent(R,context::real_field,{0},context::zero_space,context::empty_basis) => $Algebra::basis::is_linearly_independent(R,context::real_field,{0},context::zero_space,0,context::empty_basis)
+
+by def $Algebra::basis::is_basis(R,context::real_field,{0},context::zero_space,0,context::empty_basis)
+
+by thm Algebra::basis::basis_is_finite_dimensional(R,context::real_field,{0},context::zero_space,0,context::empty_basis) => $Algebra::basis::is_finite_dimensional(R,context::real_field,{0},context::zero_space)
+
+by thm Algebra::linear_criteria::zero_space_has_zero_dimension(R,context::real_field,{0},context::zero_space) => \Algebra::dimension::finite_dimension<R,context::real_field,{0}>(context::zero_space)=0
+
+by thm Algebra::linear_criteria::zero_dimension_is_zero_space(R,context::real_field,{0},context::zero_space) => {0}={context::zero_space.zero}
+
+by thm Algebra::vector_space::identity_linear(R,context::real_field,{0},context::zero_space) => $Algebra::vector_space::is_linear_map(R,context::real_field,{0},context::zero_space,{0},context::zero_space,\Algebra::vector_space::identity<{0}>)
+
+by def $injective({0},{0},\Algebra::vector_space::identity<{0}>)
+
+by thm Algebra::linear_criteria::equal_dimension_injective_is_bijective(R,context::real_field,{0},context::zero_space,{0},context::zero_space,\Algebra::vector_space::identity<{0}>) => $bijective({0},{0},\Algebra::vector_space::identity<{0}>)
+
+by thm Algebra::linear_criteria::inverse_bijection_left_identity({0},{0},\Algebra::vector_space::identity<{0}>,0) => \Algebra::linear_criteria::inverse_bijection<{0},{0},\Algebra::vector_space::identity<{0}>>(\Algebra::vector_space::identity<{0}>(0))=0
+
+\Algebra::vector_space::identity<{0}>(0)=0
+
+\Algebra::linear_criteria::inverse_bijection<{0},{0},\Algebra::vector_space::identity<{0}>>(0)=\Algebra::linear_criteria::inverse_bijection<{0},{0},\Algebra::vector_space::identity<{0}>>(\Algebra::vector_space::identity<{0}>(0))=0
+
+have fn empty_map(x {}) {}=x
+
+by def $injective({},{},empty_map)
+
+claim:
+    ? forall y {}:
+        exist x {} st {y=empty_map(x)}
+    witness exist x {} st {y=empty_map(x)} from y
+
+by def $surjective({},{},empty_map)
+
+by def $bijective({},{},empty_map)
+
+\Algebra::linear_criteria::inverse_bijection<{},{},empty_map> $in fn(y {}) {}
+
+by thm Algebra::linear_criteria::inverse_bijection_is_bijective({},{},empty_map) => $bijective({},{},\Algebra::linear_criteria::inverse_bijection<{},{},empty_map>)
+
+by thm Algebra::linear_criteria::surjective_has_full_range({},{},empty_map) => fn_range(empty_map)={}
+
+by thm Algebra::linear_criteria::full_range_is_surjective({},{},empty_map) => $surjective({},{},empty_map)

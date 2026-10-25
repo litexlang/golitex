@@ -1,0 +1,97 @@
+# Real finite-dimensional coordinate and distance constructions.
+# Native analysis operators are separate; these definitions use ordinary fn.
+
+template<n N+>:
+    have real_zero_vector cart_n(R,n)=fn(k closed_range(1,n)) R {0}
+
+template<n N+>:
+    have fn real_vector_add(u,v cart_n(R,n)) cart_n(R,n)=fn(k closed_range(1,n)) R {u(k)+v(k)}
+
+template<n N+>:
+    have fn real_vector_sub(u,v cart_n(R,n)) cart_n(R,n)=fn(k closed_range(1,n)) R {u(k)-v(k)}
+
+template<n N+>:
+    have fn real_vector_scale(a R,u cart_n(R,n)) cart_n(R,n)=fn(k closed_range(1,n)) R {a*u(k)}
+
+template<n N+>:
+    have fn real_euclidean_distance(p,q cart_n(R,n)) R=euclidean_norm(\real_vector_sub<n>(p,q),n)
+
+template<n N+>:
+    have fn real_coordinate_path(p cart_n(R,n),axis closed_range(1,n),t R) cart_n(R,n)=fn(k closed_range(1,n)) R {p(k)+(t-p(axis))*identity_matrix(n)(k,axis)}
+
+template<n N+>:
+    have fn real_linear_path(p,v cart_n(R,n),t R) cart_n(R,n)=fn(k closed_range(1,n)) R {p(k)+t*v(k)}
+
+prop is_real_euclidean_interior(n N+,D power_set(cart_n(R,n)),p cart_n(R,n)):
+    p $in D
+    exist radius R+ st {{x cart_n(R,n): \real_euclidean_distance<n>(x,p)<radius} $subset D}
+
+prop is_real_euclidean_accumulation_point(n N+,D power_set(cart_n(R,n)),p cart_n(R,n)):
+    forall radius R+:
+        exist x D st {0<\real_euclidean_distance<n>(x,p) and \real_euclidean_distance<n>(x,p)<radius}
+
+thm real_vector_add_component:
+    ? forall n N+,u,v cart_n(R,n),k closed_range(1,n):
+        \real_vector_add<n>(u,v)(k)=u(k)+v(k)
+
+thm real_vector_sub_component:
+    ? forall n N+,u,v cart_n(R,n),k closed_range(1,n):
+        \real_vector_sub<n>(u,v)(k)=u(k)-v(k)
+
+thm real_vector_scale_component:
+    ? forall n N+,a R,u cart_n(R,n),k closed_range(1,n):
+        \real_vector_scale<n>(a,u)(k)=a*u(k)
+
+thm real_coordinate_path_at_base:
+    ? forall n N+,p cart_n(R,n),axis closed_range(1,n):
+        \real_coordinate_path<n>(p,axis,p(axis))=p
+    by fn_extension \real_coordinate_path<n>(p,axis,p(axis))=p
+
+thm real_coordinate_path_selected_component:
+    ? forall n N+,p cart_n(R,n),axis closed_range(1,n),t R:
+        \real_coordinate_path<n>(p,axis,t)(axis)=t
+    identity_matrix(n)(axis,axis)=1
+    \real_coordinate_path<n>(p,axis,t)(axis)=p(axis)+(t-p(axis))*identity_matrix(n)(axis,axis)=t
+
+thm real_vector_add_commutative:
+    ? forall n N+,u,v cart_n(R,n):
+        \real_vector_add<n>(u,v)=\real_vector_add<n>(v,u)
+    by fn_extension \real_vector_add<n>(u,v)=\real_vector_add<n>(v,u)
+
+thm real_linear_path_component:
+    ? forall n N+,p,v cart_n(R,n),t R,k closed_range(1,n):
+        \real_linear_path<n>(p,v,t)(k)=p(k)+t*v(k)
+
+thm real_euclidean_full_space_interior:
+    ? forall n N+,p cart_n(R,n):
+        $is_real_euclidean_interior(n,cart_n(R,n),p)
+    witness exist radius R+ st {{x cart_n(R,n): \real_euclidean_distance<n>(x,p)<radius} $subset cart_n(R,n)} from 1
+    by def $is_real_euclidean_interior(n,cart_n(R,n),p)
+
+thm real_vector_sub_self:
+    ? forall n N+,u cart_n(R,n):
+        \real_vector_sub<n>(u,u)=\real_zero_vector<n>
+    \real_zero_vector<n> = fn(k closed_range(1,n)) R {0}
+    by fn_extension \real_vector_sub<n>(u,u)=fn(k closed_range(1,n)) R {0}
+
+
+thm real_coordinate_path_other_component:
+    ? forall n N+,p cart_n(R,n),axis,k closed_range(1,n),t R:
+        k!=axis
+        =>:
+            \real_coordinate_path<n>(p,axis,t)(k)=p(k)
+    claim:
+        ? forall z intersect({k},{axis}):
+            z $in {}
+        by contra:
+            ? z $in {}
+            z $in {k}
+            z $in {axis}
+            z=k
+            z=axis
+            k=z=axis
+            impossible k=axis
+    by extension intersect({k},{axis})={}
+    finite_set_size(intersect({k},{axis}))=finite_set_size({})=0
+    identity_matrix(n)(k,axis)=finite_set_size(intersect({k},{axis}))=0
+    \real_coordinate_path<n>(p,axis,t)(k)=p(k)+(t-p(axis))*identity_matrix(n)(k,axis)=p(k)

@@ -1,0 +1,3 @@
+thm coordinates_without_basis:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,n N,vectors finite_seq(V,n),x V:
+        \Algebra::finite_span::linear_combination<K,field,V,space,n>(\Algebra::basis::basis_coordinates<K,field,V,space,n,vectors>(x),vectors)=x

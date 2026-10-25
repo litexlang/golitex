@@ -1,0 +1,7 @@
+thm uniqueness_without_agreement:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,field,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,field,W>,n N,u finite_seq(V,n),w finite_seq(W,n),T fn(v V) W:
+        $Algebra::basis::is_basis(K,field,V,source,n,u)
+        $Algebra::vector_space::is_linear_map(K,field,V,source,W,target,T)
+        =>:
+            T=\Algebra::coordinate_maps::linear_map_from_basis<K,field,V,source,W,target,n,u,w>
+    by thm Algebra::coordinate_maps::linear_map_agreeing_on_basis_is_extension(K,field,V,source,W,target,n,u,w,T) => T=\Algebra::coordinate_maps::linear_map_from_basis<K,field,V,source,W,target,n,u,w>

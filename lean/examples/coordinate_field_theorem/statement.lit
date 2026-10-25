@@ -1,0 +1,10 @@
+# Prove that the first coordinate is real by explicitly opening the pair.
+struct CoordinatePair:
+    x R
+    y R
+
+thm coordinate_first_real:
+    ? forall p &CoordinatePair:
+        p.x $in R
+    release struct def p
+    p.x $in R

@@ -1,0 +1,5 @@
+# The reciprocal has a right identity on the nonzero reals, and composition cannot enlarge its range.
+have fn comp_recip(t R: t != 0) R = 1/t
+have fn comp_id_nz(t R: t != 0) R = t
+comp_recip ∘ comp_id_nz = comp_recip
+fn_range(comp_recip ∘ comp_recip) $subset fn_range(comp_recip)

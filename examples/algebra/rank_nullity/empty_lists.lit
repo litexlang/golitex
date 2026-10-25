@@ -1,0 +1,31 @@
+# Empty pieces and boundary entries are part of the concatenation contract.
+
+have fn empty(j closed_range(1,0)) R=0
+
+have fn singleton(j closed_range(1,1)) R=3
+
+have fn second(j closed_range(1,1)) R=5
+
+by thm Algebra::finite_decomposition::concatenate_lists_carrier(R,0,0,empty,empty) => \Algebra::finite_decomposition::concatenate_lists<R,0,0,empty,empty> $in finite_seq(R,0+0)
+
+by thm Algebra::finite_decomposition::concatenate_lists_carrier(R,0,1,empty,singleton) => \Algebra::finite_decomposition::concatenate_lists<R,0,1,empty,singleton> $in finite_seq(R,0+1)
+
+\Algebra::finite_decomposition::concatenate_lists<R,0,1,empty,singleton>(1)=singleton(1)=3
+
+\Algebra::finite_decomposition::concatenate_lists<R,1,0,singleton,empty>(1)=singleton(1)=3
+
+\Algebra::finite_decomposition::concatenate_lists<R,1,1,singleton,second>(1)=singleton(1)=3
+
+\Algebra::finite_decomposition::concatenate_lists<R,1,1,singleton,second>(2)=second(2-1)=second(1)=5
+
+finite_seq(R,0)=finite_seq(R,0+0)
+
+finite_seq(R,1)=finite_seq(R,0+1)
+
+finite_seq(R,1)=finite_seq(R,1+0)
+
+release thm Algebra::finite_decomposition::list_splits_at_length(R,0,0,empty)
+
+release thm Algebra::finite_decomposition::list_splits_at_length(R,0,1,singleton)
+
+release thm Algebra::finite_decomposition::list_splits_at_length(R,1,0,singleton)

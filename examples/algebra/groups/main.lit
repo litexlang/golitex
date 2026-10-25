@@ -1,0 +1,135 @@
+# Imported group theory: cancellation, subgroups, homomorphisms and kernels.
+# Before: Group and the generic proofs were lecture-local declarations.
+# thm left_cancel:
+#     ? forall A nonempty_set, G &Group<A>, a,b,c A:
+#         G.mul(a,b)=G.mul(a,c)
+#         =>:
+#             b=c
+# Now: all twelve theorem interfaces below come from std/algebra.
+# Boundary: the negative fixtures reject false premises and commutativity.
+# Run: LITEX_STD_PATH="$PWD/std" target/release/litex -lang en -strict -f examples/algebra/groups/main.lit
+
+have fn add(x,y Z) Z=x+y
+
+have fn neg(x Z) Z=-x
+
+forall x,y,z Z:
+    add(add(x,y),z)=add(x,add(y,z))
+
+forall x Z:
+    add(0,x)=x
+    add(x,0)=x
+    add(neg(x),x)=0
+    add(x,neg(x))=0
+
+have integers &Algebra::group::Group<Z> = (add,0,neg)
+
+by thm Algebra::group::identity_unique(Z,integers,0) => 0=integers.one
+
+by thm Algebra::group::inverse_unique(Z,integers,3,-3) => -3=integers.inv(3)
+
+thm imported_left_cancel:
+    ? forall a,b,c Z:
+        integers.mul(a,b)=integers.mul(a,c)
+        =>:
+            b=c
+    by thm Algebra::group::left_cancel(Z,integers,a,b,c) => b=c
+
+thm imported_right_cancel:
+    ? forall a,b,c Z:
+        integers.mul(b,a)=integers.mul(c,a)
+        =>:
+            b=c
+    by thm Algebra::group::right_cancel(Z,integers,a,b,c) => b=c
+
+release thm Algebra::group::left_equation_unique(Z,integers,3,7)
+
+by def $Algebra::group::is_subgroup(Z,integers,Z)
+
+claim:
+    ? $Algebra::group::is_subgroup(Z,integers,{0})
+    forall x,y {0}:
+        x=0
+        y=0
+        integers.mul(x,y)=add(x,y)=add(0,0)=0
+        integers.mul(x,y) $in {0}
+    forall x {0}:
+        x=0
+        integers.inv(x)=neg(x)=neg(0)=0
+        integers.inv(x) $in {0}
+    by def $Algebra::group::is_subgroup(Z,integers,{0})
+
+by thm Algebra::group::subgroup_intersection(Z,integers,Z,{0}) => $Algebra::group::is_subgroup(Z,integers,intersect(Z,{0}))
+
+by def $Algebra::group::is_abelian(Z,integers)
+
+by thm Algebra::group::abelian_subgroups_are_normal(Z,integers,{0}) => $Algebra::group::is_normal_subgroup(Z,integers,{0})
+
+have fn double(x Z) Z=2*x
+
+claim:
+    ? $Algebra::group::is_homomorphism(Z,integers,Z,integers,double)
+    claim:
+        ? forall x,y Z:
+            double(integers.mul(x,y))=integers.mul(double(x),double(y))
+        integers.mul(x,y)=add(x,y)=x+y
+        double(integers.mul(x,y))=2*integers.mul(x,y)=2*(x+y)
+        double(x)=2*x
+        double(y)=2*y
+        integers.mul(double(x),double(y))=add(double(x),double(y))=double(x)+double(y)=2*x+2*y=2*(x+y)
+    by def $Algebra::group::is_homomorphism(Z,integers,Z,integers,double)
+
+by thm Algebra::group::homomorphism_identity(Z,integers,Z,integers,double) => double(integers.one)=integers.one
+
+by thm Algebra::group::homomorphism_inverse(Z,integers,Z,integers,double,3) => double(integers.inv(3))=integers.inv(double(3))
+
+claim:
+    ? $Algebra::group::has_trivial_kernel(Z,integers,Z,integers,double)
+    claim:
+        ? forall x Z:
+            double(x)=integers.one
+            =>:
+                x=integers.one
+        2*x=double(x)=integers.one=0
+        x=0/2=0
+    by def $Algebra::group::has_trivial_kernel(Z,integers,Z,integers,double)
+
+by thm Algebra::group::trivial_kernel_implies_injective(Z,integers,Z,integers,double) => $injective(Z,Z,double)
+
+by thm Algebra::group::injective_implies_trivial_kernel(Z,integers,Z,integers,double) => $Algebra::group::has_trivial_kernel(Z,integers,Z,integers,double)
+
+by thm Algebra::group::kernel_is_normal(Z,integers,Z,integers,double) => $Algebra::group::is_normal_subgroup(Z,integers,\Algebra::group::kernel<Z,Z,integers,double>)
+
+0 $in \Algebra::group::kernel<Z,Z,integers,double>
+
+have fn trivial_mul(x,y {0}) {0}=0
+
+have fn trivial_inv(x {0}) {0}=0
+
+trivial_mul $in fn(x,y {0}) {0}
+
+trivial_inv $in fn(x {0}) {0}
+
+by enumerate finite_set:
+    ? forall x,y,z {0}:
+        trivial_mul(trivial_mul(x,y),z)=trivial_mul(x,trivial_mul(y,z))
+    trivial_mul(trivial_mul(x,y),z)=trivial_mul(x,trivial_mul(y,z))
+
+by enumerate finite_set:
+    ? forall x {0}:
+        trivial_mul(0,x)=x
+        trivial_mul(x,0)=x
+        trivial_mul(trivial_inv(x),x)=0
+        trivial_mul(x,trivial_inv(x))=0
+    trivial_mul(0,x)=x
+    trivial_mul(x,0)=x
+    trivial_mul(trivial_inv(x),x)=0
+    trivial_mul(x,trivial_inv(x))=0
+
+release thm struct_member((trivial_mul,0,trivial_inv),&Algebra::group::Group<{0}>)
+
+have trivial &Algebra::group::Group<{0}> = (trivial_mul,0,trivial_inv)
+
+by def $Algebra::group::is_abelian({0},trivial)
+
+release thm Algebra::group::left_equation_unique({0},trivial,0,0)

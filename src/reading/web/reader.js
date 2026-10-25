@@ -11,6 +11,8 @@
   Object.assign(copy.zh,{declarations:"采用的定义与定理",trust:"假设与公理",trustUsed:"这条推导依赖以下显式假设或公理。"});
   Object.assign(copy.en,{inferred:"Inferred fact",inferredFacts:"Facts inferred here",inferredFrom:"Inferred from",producer:"Source statement"});
   Object.assign(copy.zh,{inferred:"推导事实",inferredFacts:"本句推导出的事实",inferredFrom:"由此推导",producer:"产生它的原语句"});
+  Object.assign(copy.en,{inferredCount:"Inferred {count}",closeInferences:"Close inferred facts"});
+  Object.assign(copy.zh,{inferredCount:"推导 {count}",closeInferences:"收起推导结果"});
   Object.assign(copy.en,{inferenceBasis:"Inference basis",fromNamedDefinition:"From definition {name}",fromDefinition:"From the definition",fromNamedParamType:"From {name}'s parameter types",fromParamType:"From parameter types",fromRule:"By rule {name}",originUnavailable:"Inference origin unavailable",batchRules:"Rules used in this inference batch"});
   Object.assign(copy.zh,{inferenceBasis:"推导依据",fromNamedDefinition:"由定义 {name} 展开",fromDefinition:"由定义展开",fromNamedParamType:"由 {name} 的参数类型推出",fromParamType:"由参数类型推出",fromRule:"由规则 {name} 推出",originUnavailable:"推导来源尚未细分",batchRules:"本批推导使用的规则"});
   Object.assign(copy.en,{parameterTypeRecord:"Parameter type record",definitionResult:"Definition expansion",parameterTypeHint:"This records the argument's type, as specified by the definition.",definitionResultHint:"Unfolding the definition gives this fact.",inferenceSources:"Source statements",sourceStatement:"Original statement",inferenceSeed:"Facts involved",parameterTypesRule:"Parameter types",definitionExpansionRule:"Unfold a definition"});
@@ -352,6 +354,79 @@
   ]
 };
 
+  // Authored reference cards describe builtin contracts, not the inferred type
+  // of a hovered expression. Set-kind inputs are never a universal set domain.
+  const setOperatorHelp={
+    union:["union(A, B)","A、B 是集合；结果是集合 A ∪ B。","A and B are sets; the result is the set A ∪ B.","并集：包含属于 A 或属于 B 的元素。","Union: elements belonging to A or B.","1 $in union({1}, {2})"],
+    intersect:["intersect(A, B)","A、B 是集合；结果是集合 A ∩ B。","A and B are sets; the result is the set A ∩ B.","交集：只包含同时属于 A 和 B 的元素。","Intersection: elements belonging to both A and B.","2 $in intersect({1, 2}, {2, 3})"],
+    set_minus:["set_minus(A, B)","A、B 是集合；结果是 A 的子集。","A and B are sets; the result is a subset of A.","差集：包含属于 A 但不属于 B 的元素。","Relative complement: elements in A but not in B.","1 $in set_minus({1, 2}, {2})"],
+    power_set:["power_set(A)","A 是集合；结果是由 A 的所有子集组成的集合。","A is a set; the result is the set of all subsets of A.","幂集：它的每个元素都是 A 的一个子集。","Power set: each of its elements is a subset of A.","power_set({1}) = {{}, {1}}"],
+    family_union:["family_union(F)","F 是集合族（每个元素都是集合）；结果是集合。","F is a set of sets; the result is a set.","集合族的并：包含至少属于 F 中一个集合的元素。","Union of a family: elements in at least one member of F.","family_union({{1, 2}}) = {1, 2}"],
+    family_intersect:["family_intersect(F)","F 是非空集合族（每个元素都是集合）；结果是集合。","F is a nonempty set of sets; the result is a set.","集合族的交：包含属于 F 中每一个集合的元素。","Intersection of a family: elements in every member of F.","$is_set(family_intersect({{1}}))"],
+    index_union:["index_union(I, X, A)","I 是非空集合，X 是集合；A ∈ fn(k I) power_set(X)；结果是 X 的子集。","I is a nonempty set and X is a set; A ∈ fn(k I) power_set(X); the result is a subset of X.","指标并集：把每个 k ∈ I 对应的集合 A(k) 合并。","Indexed union: combine A(k) for every k ∈ I.","let U = index_union({1}, N, fn(k {1}) power_set(N) {{2}})"],
+    index_intersect:["index_intersect(I, X, A)","I 是非空集合，X 是集合；A ∈ fn(k I) power_set(X)；结果是 X 的子集。","I is a nonempty set and X is a set; A ∈ fn(k I) power_set(X); the result is a subset of X.","指标交集：取 X 中属于每个 A(k) 的元素；Litex 要求 I 非空。","Indexed intersection: elements of X in every A(k); Litex requires nonempty I.","let J = index_intersect({1}, N, fn(k {1}) power_set(N) {{2}})"]
+  };
+  // Alternate builtin spellings share documentation only, never public APIs.
+  setOperatorHelp.set_diff=setOperatorHelp.set_minus;
+  setOperatorHelp["∪"]=setOperatorHelp.union;setOperatorHelp["∩"]=setOperatorHelp.intersect;
+  Object.assign(builtinObjectHelp,{
+    arccot:["arccot(x)","x ∈ ℝ → (0, π)","反余切，取 (0, π) 中的主值，单位为弧度。","Principal inverse cotangent in (0, π), in radians.","arccot(0) = pi / 2"],
+    sec:["sec(x)","x ∈ ℝ; cos(x) ≠ 0 → ℝ","正割，等于 1 / cos(x)。","Secant, equal to 1 / cos(x).","sec(0) = 1"],
+    csc:["csc(x)","x ∈ ℝ; sin(x) ≠ 0 → ℝ","余割，等于 1 / sin(x)。","Cosecant, equal to 1 / sin(x).","csc(pi / 2) = 1"],
+    sinh:["sinh(x)","x ∈ ℝ → ℝ","双曲正弦，等于 (exp(x) - exp(-x)) / 2。","Hyperbolic sine: (exp(x) - exp(-x)) / 2.","sinh(0) = 0"],
+    cosh:["cosh(x)","x ∈ ℝ → [1, ∞)","双曲余弦，等于 (exp(x) + exp(-x)) / 2。","Hyperbolic cosine: (exp(x) + exp(-x)) / 2.","cosh(0) = 1"],
+    tanh:["tanh(x)","x ∈ ℝ → (-1, 1)","双曲正切，等于 sinh(x) / cosh(x)。","Hyperbolic tangent: sinh(x) / cosh(x).","tanh(0) = 0"],
+    coth:["coth(x)","x ∈ ℝ; x ≠ 0 → ℝ","双曲余切，等于 cosh(x) / sinh(x)；零处无定义。","Hyperbolic cotangent: cosh(x) / sinh(x); undefined at zero.","coth(1) = cosh(1) / sinh(1)"],
+    sech:["sech(x)","x ∈ ℝ → (0, 1]","双曲正割，等于 1 / cosh(x)。","Hyperbolic secant: 1 / cosh(x).","sech(0) = 1"],
+    csch:["csch(x)","x ∈ ℝ; x ≠ 0 → ℝ","双曲余割，等于 1 / sinh(x)；零处无定义。","Hyperbolic cosecant: 1 / sinh(x); undefined at zero.","csch(1) = 1 / sinh(1)"]
+  });
+  const keywordReference={
+    prop:{
+      syntax:"prop name(x A):\n    condition",
+      zh:["谓词定义","定义带类型参数的谓词。","对声明域内的参数，谓词成立等价于定义体中的全部条件同时成立。定义本身不证明任何具体实例。"],
+      en:["Predicate definition","Define a predicate with typed parameters.","For arguments in the declared domains, the predicate holds exactly when all conditions in its definition hold. The definition proves no particular instance."],
+      example:"prop nonnegative(x R):\n    x >= 0\n\nby def $nonnegative(3)",
+      walkthrough:{
+        zh:[
+          ["参数类型","x 是形式参数，R 将它的取值范围限定为实数集。实例中的实参必须属于该集合。"],
+          ["谓词","nonnegative(x) 是关于实数 x 的命题，表示 x 非负；它不是返回一个数值的函数。"],
+          ["定义条件","本例的定义体只有 x >= 0 一个条件。因此，对每个实数 x，有以下等价关系；若定义体有多个条件，则要求它们同时成立。","\\forall x\\in\\mathbb{R},\\quad \\operatorname{nonnegative}(x)\\iff x\\ge 0","∀ x ∈ ℝ: nonnegative(x) ⇔ x ≥ 0"],
+          ["定义与实例","这条定义没有断言所有实数都非负，也没有证明某个具体实数非负。例如，nonnegative(-2) 不成立，因为 -2 < 0。"],
+          ["按定义证明","最后一行 by def $nonnegative(3) 将实参 3 代入 x。验证 3 ∈ ℝ 和 3 ≥ 0 后，建立事实 $nonnegative(3)，后续证明可以引用这一事实。"]
+        ],
+        en:[
+          ["Typed parameter","x is a formal parameter whose domain R is the set of real numbers. An actual argument must belong to this set."],
+          ["Predicate","nonnegative(x) is a proposition about a real number x: x is nonnegative. It is not a function returning a numerical value."],
+          ["Defining condition","The definition has one condition, x >= 0. Thus the following equivalence holds for every real x. With several defining conditions, all must hold.","\\forall x\\in\\mathbb{R},\\quad \\operatorname{nonnegative}(x)\\iff x\\ge 0","∀ x ∈ ℝ: nonnegative(x) ⇔ x ≥ 0"],
+          ["Definition and instance","This declaration neither asserts that every real number is nonnegative nor proves a particular real number nonnegative. For example, nonnegative(-2) does not hold because -2 < 0."],
+          ["Proof by definition","The last line, by def $nonnegative(3), substitutes the actual argument 3 for x. Verifying 3 ∈ ℝ and 3 ≥ 0 establishes $nonnegative(3), which later proofs may cite."]
+        ]
+      }
+    },
+    "by def":{
+      syntax:"by def $name(arguments)",
+      zh:["按定义证明","按谓词定义证明一个实例。","将实参代入定义，在参数类型要求满足的前提下证明全部定义条件；成功后得到对应的谓词事实。"],
+      en:["Proof by definition","Prove an instance using its predicate definition.","Substitute the actual arguments, establish their declared types and prove every defining condition. Success establishes the corresponding predicate fact."],
+      example:"prop nonnegative(x R):\n    x >= 0\n\nby def $nonnegative(3)",
+      walkthrough:{
+        zh:[
+          ["代入实参","nonnegative 的形式参数是 x，本次实参是 3。代入后，定义体的 x >= 0 成为 3 >= 0。"],
+          ["验证类型与条件","声明要求 x ∈ ℝ，因此先验证 3 ∈ ℝ；随后验证唯一的定义条件 3 ≥ 0。若定义有多个条件，每个条件都需要成立。"],
+          ["得到实例事实","这些要求均得到验证后，by def 建立 $nonnegative(3)，供后续证明引用。它证明的是这个实例，不是所有实数都非负。"]
+        ],
+        en:[
+          ["Substitute the argument","The formal parameter of nonnegative is x; the actual argument is 3. Substitution turns the defining condition x >= 0 into 3 >= 0."],
+          ["Verify the type and condition","The declaration requires x ∈ ℝ, so verify 3 ∈ ℝ and then the single defining condition 3 ≥ 0. If the definition contains several conditions, every condition must hold."],
+          ["Establish the instance","Once these requirements are established, by def establishes $nonnegative(3) for later citation. It proves this instance, not that every real number is nonnegative."]
+        ]
+      }
+    },
+    forall:{syntax:"forall x A:\n    condition",zh:["全称量词 ∀","说明指定集合中的每一个对象都满足某个条件。","在块内 x 是任意一个 A 中的对象。证明不能依赖 x 的某个特殊取值；x 的这个绑定只在本量词范围内有效。"],en:["Universal quantifier ∀","State a condition for every object in a given set.","Inside the block, x is an arbitrary member of A, not a chosen special value. Its binding is scoped to this quantifier."],example:"forall x R:\n    x = x"},
+    claim:{syntax:"claim:\n    ? goal\n    proof",zh:["声明并证明","把要证明的目标和它的证明放在同一个块里。","? 标出目标。块内可以补充中间步骤；只有目标被证明后，承诺的结论才交给后文使用。"],en:["State and prove","Place a goal and its proof in one block.","? marks the goal. Intermediate steps can be added inside; the promised conclusion becomes available after it is established."],example:"claim:\n    ? 1 = 1\n    1 = 1"},
+    "have fn":{syntax:"have fn f(x A) B = expression",zh:["定义函数","给出参数的范围，以及每个参数对应的函数值。","输入 x 属于 A；表达式的值必须属于 B。以后可以用 f(x) 引用这个值。"],en:["Function definition","Specify an input domain and the value assigned to each argument.","Input x belongs to A and the expression must belong to B. Later expressions may refer to this value as f(x)."],example:"have fn double(x R) R = 2 * x"},
+    "by contra":{syntax:"by contra:\n    ? goal\n    proof",zh:["反证法","假设目标不成立，再推出矛盾，从而证明目标。","否定目标得到的假设只供当前证明使用。必须真正推出矛盾，不能只重复目标。"],en:["Proof by contradiction","Assume the negation of the goal and derive a contradiction.","The negated goal is local to this proof. A contradiction must be established, rather than merely repeating the goal."],example:"by contra:\n    ? not 1 = 2\n    impossible 1 = 2"}
+  };
+
   function mountReadingReader(root, options) {
     options=options||{};
     let bundle=options.document||{sources:[],statements:[],rules:[]};
@@ -367,7 +442,114 @@
     let referencesBySource,declarationsBySource,symbolRoles,symbolDefinitions,symbolBindings,symbolParameters,displayNames;
     let rulePage=0,activeRule=null;
     let rulebookState={query:"",usedOnly:true,open:false,category:"all"};
-    let destroyed=false,tokenHelp=null;
+    let destroyed=false,tokenHelp=null,inferencePopover=null;
+    const drafts=new Map(),originals=new Map(),idePositions=new Map(),tokenHelpOpeners=new WeakMap();
+    let restoreIdeFocus=false;
+    let revision=0,checkedRevision=0,checking=false,editError="";
+    const editText=(zh,en)=>lang()==="zh"?zh:en;
+    function pending(){return revision!==checkedRevision;}
+    function draftContent(source){return drafts.get(source.path)??source.content??"";}
+    async function checkDraft(){
+      if(checking||!options.onCheck)return;
+      const epoch=generation,submitted=revision,path=sources.get(state.source)?.path,cursor=idePositions.get(sources.get(state.source)?.path)?.start;checking=true;editError="";
+      const control=root.querySelector(".lr-check");if(control)control.disabled=true;
+      detailPane.replaceChildren(element("p","lr-loading",editText("正在检查…","Checking…")));
+      try{
+        const result=await options.onCheck({changes:Object.fromEntries(drafts),sourcePath:path,locale:lang()});
+        if(destroyed||epoch!==generation||submitted!==revision)return;
+        api.update(result,{preserveDrafts:true});checkedRevision=submitted;
+        const selected=[...sources.values()].find(source=>source.path===path);
+        if(selected){
+          const line=String(selected.content||"").slice(0,cursor??0).split("\n").length,entries=statementsBySource.get(selected.id)||[];
+          const target=entries.find(value=>value.status==="rejected")||entries.filter(value=>value.line<=line).sort((a,b)=>b.line-a.line)[0]||initialStatement(selected.id);
+          state.source=selected.id;state.statement=target?.id||null;state.focusLine=target?.line||line;
+        }
+      }catch(error){if(!destroyed&&epoch===generation&&submitted===revision)editError=error.message;}
+      finally{checking=false;if(!destroyed)render();}
+    }
+    function renderEditor(source,sourcePane,header){
+      if(!originals.has(source.path))originals.set(source.path,source.content||"");
+      const check=button(editText("检查","Check"),"lr-button lr-check",checkDraft);check.disabled=checking;
+      const restore=button(editText("恢复原文","Restore original"),"lr-button",()=>{drafts.set(source.path,originals.get(source.path));revision++;editError="";render();});
+      header.append(check,restore);
+      const editor=element("div","lr-ide"),canvas=element("div","lr-ide-canvas"),input=element("textarea","lr-editor-input lr-ide-input");
+      input.dataset.sourcePath=source.path;input.value=draftContent(source);input.spellcheck=false;input.wrap="off";input.setAttribute("aria-label",editText("Litex 编辑器","Litex editor"));input.setAttribute("autocapitalize","off");input.setAttribute("autocomplete","off");input.setAttribute("autocorrect","off");
+      codePane.classList.add("lr-ide-code");codePane.scrollTop=0;codePane.scrollLeft=0;
+      canvas.append(codePane,input);editor.append(canvas);sourcePane.append(editor,element("div","lr-editor-hint",editText("直接输入 · ⌘ / Ctrl + Enter 检查 · 悬浮查看定义","Type here · ⌘ / Ctrl + Enter to check · Hover for definitions")));
+      const drawDraft=()=>{
+        codePane.replaceChildren();
+        // Unchecked text receives lexical colors only, never old symbol identities.
+        for(const [i,line] of input.value.split("\n").entries()){
+          const row=element("div","lr-code-row"),number=element("span","lr-line-number",String(i+1)),code=element("code","lr-source-code");
+          row.dataset.line=String(i+1);
+          for(const token of line.match(/#[^\n]*|\b[0-9]+(?:\.[0-9]+)?\b|[A-Za-z_][A-Za-z_0-9]*|[^A-Za-z_0-9#]+|./g)||[]){
+            const role=token.startsWith("#")?"comment":lexicalKinds.get(token)||(/^\d/.test(token)?"number":"identifier");code.append(element("span","lr-syntax-"+role,token));
+          }
+          if(!line)code.append(document.createTextNode(" "));row.append(number,code);codePane.append(row);
+        }
+      };
+      const remember=()=>idePositions.set(source.path,{start:input.selectionStart,end:input.selectionEnd,top:editor.scrollTop,left:editor.scrollLeft});
+      editor.addEventListener("scroll",remember);input.addEventListener("select",remember);
+      const changed=()=>{drafts.set(source.path,input.value);revision++;editError="";hideTokenHelp();drawDraft();remember();invalidateEvidence();};
+      input.addEventListener("input",changed);
+      // The input owns typing; semantic hover resolves against the real checked
+      // tokens underneath it, using their existing help callbacks and FactIds.
+      const underneath=event=>{
+        input.style.pointerEvents="none";const target=document.elementFromPoint(event.clientX,event.clientY);input.style.pointerEvents="";
+        return target&&codePane.contains(target)?target:null;
+      };
+      input.addEventListener("pointermove",event=>{
+        if(pending()||source.editor_unchecked){hideTokenHelp();return;}
+        const token=underneath(event)?.closest(".lr-token,[data-syntax]");
+        const show=token&&tokenHelpOpeners.get(token);if(show)show();else hideTokenHelp();
+      });
+      input.addEventListener("pointerleave",hideTokenHelp);
+      input.addEventListener("pointerdown",event=>{
+        if(pending())return;
+        const target=underneath(event),action=target?.closest(".lr-inference-toggle,.lr-reference-count");
+        const token=target?.closest(".lr-token,[data-keyword]");
+        if(action||((event.ctrlKey||event.metaKey)&&token)){event.preventDefault();event.stopPropagation();remember();(action||token).click();}
+      });
+      const inspectCaret=(keyword=null)=>{
+        remember();if(pending()||source.editor_unchecked)return;
+        const before=input.value.slice(0,input.selectionStart),line=before.split("\n").length,start=before.lastIndexOf("\n")+1;
+        const owner=owningStatement(source.id,line,new TextEncoder().encode(input.value.slice(0,start)).length);
+        if(state.statement===owner?.id&&state.focusLine===line&&!state.fact&&!state.symbol&&(state.keyword||null)===keyword)return;
+        closeInferences();state={source:source.id,statement:owner?.id||null,focusLine:line,symbol:null,fact:null,wd:null,keyword};
+        const cited=new Set(array(owner?.cited_fact_ids)),premiseLines=new Set([...cited].map(id=>factLocation(facts.get(id))).filter(value=>value.sourceId===source.id).map(value=>value.line));
+        for(const row of codePane.querySelectorAll(".lr-code-row")){const number=Number(row.dataset.line);row.classList.toggle("lr-selected",number===line);row.classList.toggle("lr-premise",number!==line&&premiseLines.has(number));}
+        for(const toggle of codePane.querySelectorAll(".lr-inference-toggle")){toggle.classList.remove("lr-inferred-selected");toggle.classList.toggle("lr-inferred-premise",JSON.parse(toggle.dataset.facts).some(id=>cited.has(id)));}
+        codePane.querySelectorAll(".lr-symbol-selected,.lr-reference-selected").forEach(node=>node.classList.remove("lr-symbol-selected","lr-reference-selected"));
+        root.querySelector(".lr-inspector-title").textContent=keyword?editText("参考说明","Reference"):t("mathematicalMeaning");const presentation=statementPresentation(owner);root.querySelector(".lr-type-label").textContent=keyword||presentation.syntax||presentation.title;
+        detailPane.replaceChildren();renderInspectorContents();
+        if(options.onNavigate)options.onNavigate({...state},{bundle_id:bundle.bundle_id||null});
+      };
+      input.addEventListener("click",event=>{if(!underneath(event)?.closest(".lr-inference-toggle,.lr-reference-count"))inspectCaret(underneath(event)?.closest("[data-keyword]")?.dataset.keyword||null);});input.addEventListener("keyup",event=>{if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight","Home","End"].includes(event.key))inspectCaret();});
+      input.addEventListener("keydown",event=>{
+        if(event.isComposing)return;
+        if(event.key==="Escape"){hideTokenHelp();return;}
+        if((event.metaKey||event.ctrlKey)&&event.key==="Enter"){event.preventDefault();remember();checkDraft();}
+        else if(event.key==="Tab"){event.preventDefault();input.setRangeText("    ",input.selectionStart,input.selectionEnd,"end");changed();}
+        else if(event.key==="Enter"){
+          const before=input.value.slice(0,input.selectionStart),line=before.slice(before.lastIndexOf("\n")+1),indent=line.match(/^ */)[0]+(line.trimEnd().endsWith(":")?"    ":"");
+          event.preventDefault();input.setRangeText("\n"+indent,input.selectionStart,input.selectionEnd,"end");changed();
+        }
+      });
+      if(pending()||source.editor_unchecked)drawDraft();
+      const line=Math.max(1,state.focusLine||1),offset=input.value.split("\n").slice(0,line-1).reduce((sum,text)=>sum+text.length+1,0),position=idePositions.get(source.path);
+      input.setSelectionRange(Math.min(position?.start??offset,input.value.length),Math.min(position?.end??offset,input.value.length));
+      editor.scrollTop=position?.top??Math.max(0,(line-4)*24);editor.scrollLeft=position?.left??0;
+      if(restoreIdeFocus)input.focus({preventScroll:true});
+    }
+    function invalidateEvidence(){
+      closeInferences();
+      root.querySelectorAll(".lr-inline-inferences,.lr-definition-references,.lr-diagnostics").forEach(node=>node.remove());
+      root.querySelectorAll(".lr-book-heading .lr-badge,.lr-book-heading .lr-origin-note").forEach(node=>node.remove());
+      const heading=root.querySelector(".lr-book-heading");
+      if(heading&&!heading.querySelector(".lr-pending"))heading.append(element("span","lr-pending",editText("待检查","Not checked")));
+      const typeLabel=root.querySelector(".lr-type-label");if(typeLabel)typeLabel.textContent=editText("草稿","Draft");
+      if(detailPane)detailPane.replaceChildren(element("p","lr-empty-note",editText("源码已修改，检查后显示新的数学含义和证明依据。","Source changed. Check it to see fresh mathematical meaning and proof grounds.")));
+    }
     function lang(){return locale.startsWith("zh")?"zh":"en";}
     function t(key){return copy[lang()][key]||key;}
     function sourceTitle(source){
@@ -515,6 +697,7 @@
       return {line:content.slice(0,start).split("\n").length,before:content.slice(lineStart,start),token:content.slice(start,end),after:content.slice(end,lineEnd)};
     }
     function openReferences(symbolId,sourceId,opener){
+      closeInferences();
       root.querySelector(".lr-references-dialog")?.remove();
       const dialog=element("dialog","lr-references-dialog"),name=symbols.get(symbolId)?.name||"",uses=referenceUses(symbolId,sourceId),title=t("referenceFor").replace("{name}",name);
       dialog.setAttribute("aria-label",title);const header=element("div","lr-help-heading"),close=button(t("closeReferences"),"lr-math-link",()=>dialog.close());header.append(element("strong",null,title),close);dialog.append(header,element("p","lr-reference-summary",t("currentFileReferences").replace("{count}",uses.length)),element("p","lr-empty-note",t("referenceHelp")));
@@ -524,6 +707,34 @@
         const snippet=element("code");snippet.append(document.createTextNode(location.before),element("mark",null,location.token),document.createTextNode(location.after));link.append(element("span","lr-reference-line",t("referenceLine").replace("{line}",location.line)),snippet);dialog.append(link);
       }
       dialog.addEventListener("close",()=>{dialog.remove();if(opener.isConnected)opener.focus();});dialog.addEventListener("click",event=>{if(event.target===dialog){const box=dialog.getBoundingClientRect();if(event.clientX<box.left||event.clientX>box.right||event.clientY<box.top||event.clientY>box.bottom)dialog.close();}});root.append(dialog);dialog.showModal();close.focus();
+    }
+    function closeInferences(restoreFocus=false){
+      if(!inferencePopover)return;
+      const {node,owner}=inferencePopover;inferencePopover=null;node.remove();owner.setAttribute("aria-expanded","false");owner.removeAttribute("aria-controls");
+      if(restoreFocus&&owner.isConnected)owner.focus({preventScroll:true});
+    }
+    function positionInferences(){
+      if(!inferencePopover)return;
+      const {node,owner}=inferencePopover,box=owner.getBoundingClientRect(),view=document.documentElement,pane=(owner.closest(".lr-ide")||codePane).getBoundingClientRect();
+      if(!owner.isConnected||box.bottom<Math.max(0,pane.top)||box.top>Math.min(view.clientHeight,pane.bottom)){closeInferences();return;}
+      const bounds=node.getBoundingClientRect();
+      node.style.left=Math.max(8,Math.min(box.left,view.clientWidth-bounds.width-8))+"px";
+      node.style.top=Math.max(8,box.bottom+8+bounds.height<=view.clientHeight?box.bottom+8:box.top-bounds.height-8)+"px";
+    }
+    function openInferences(ids,sourceId,owner){
+      const same=inferencePopover?.owner===owner;closeInferences();if(same)return;hideTokenHelp();
+      const panel=element("div","lr-inference-popover"),id="lr-inferences-"+Math.random().toString(36).slice(2),heading=element("div","lr-inference-heading");
+      panel.id=id;panel.setAttribute("role","dialog");panel.setAttribute("aria-label",t("inferredFacts"));
+      const close=button("×","lr-inference-close",()=>closeInferences(true));close.setAttribute("aria-label",t("closeInferences"));
+      heading.append(element("strong",null,t("inferredFacts")+" · "+ids.length),close);panel.append(heading);
+      for(const factId of ids){
+        const fact=facts.get(factId),result=button(displayText(fact.text,sourceId),"lr-inferred-result",()=>selectFact(factId));
+        result.dataset.fact=factId;result.setAttribute("aria-label",t("inferred")+" "+displayText(fact.text,sourceId));
+        if(factId===state.fact)result.classList.add("lr-inferred-selected");
+        panel.append(result);
+      }
+      owner.setAttribute("aria-expanded","true");owner.setAttribute("aria-controls",id);root.append(panel);inferencePopover={node:panel,owner};positionInferences();
+      panel.querySelector(".lr-inferred-result")?.focus({preventScroll:true});
     }
     function factInferences(id){return array(facts.get(id)?.inference_ids).map(key=>inferences.get(key)).filter(Boolean);}
     function statementInferredFacts(statement){const published=new Set(array(statement?.produced_fact_ids));return array(statement?.inferred_fact_ids).filter(id=>published.has(id));}
@@ -594,9 +805,11 @@
     }
     function predicateIntro(model,sourceId){
       const intro=element("div","lr-iff-intro");
-      intro.append(latexFormula(model.latex?.subject,false,sourceId)||formula(model.subject,sourceId),latexFormula("\\Longleftrightarrow",false)||element("span","lr-equivalence-operator","⇔"));
+      intro.append(latexFormula(model.latex?.subject,false,sourceId)||formula(model.subject,sourceId));
       const conditions=element("div","lr-predicate-conditions");
-      detailPane.append(intro,conditions);return conditions;
+      const body=element("div","lr-iff-body");
+      body.append(latexFormula("\\Longleftrightarrow",false)||element("span","lr-equivalence-operator","⇔"),conditions);
+      detailPane.append(intro,body);return conditions;
     }
     function mathFact(value,id,sourceId){
       if(!facts.has(id))return formula(value,sourceId);
@@ -645,16 +858,47 @@
       target.append(guide);
     }
 
+    function referenceCard(name){
+      const zh=lang()==="zh",own=(table)=>Object.prototype.hasOwnProperty.call(table,name)?table[name]:null,set=own(setOperatorHelp),builtin=own(builtinObjectHelp),keyword=own(keywordReference);
+      if(set)return {kind:zh?"集合运算符":"Set operator",syntax:set[0],summary:set[zh?3:4],input:set[zh?1:2],example:set[5]};
+      if(builtin)return {kind:zh?"函数":"Function",syntax:builtin[0],summary:builtin[zh?2:3],input:builtin[1],example:builtin[4]};
+      if(keyword){const text=keyword[zh?"zh":"en"];return {kind:text[0],syntax:keyword.syntax,summary:text[1],notes:text[2],example:keyword.example,walkthrough:keyword.walkthrough?.[zh?"zh":"en"]};}
+      return null;
+    }
+    function appendReference(target,card,compact=false){
+      target.append(element("small","lr-reference-kind",card.kind),element("p","lr-reference-summary",card.summary),element("pre","lr-reference-syntax",card.syntax));
+      if(card.input)target.append(element("small",null,lang()==="zh"?"输入与结果":"Inputs and result"),element("div","lr-builtin-domain",card.input));
+      if(card.notes)target.append(element("p","lr-reference-notes",card.notes));
+      if(card.example)target.append(element("small",null,lang()==="zh"?"例子":"Example"),element("pre","lr-reference-example",card.example));
+      if(card.walkthrough){
+        if(compact)target.append(element("small","lr-reference-hint",lang()==="zh"?"点击关键词查看例子的逐项解释。":"Click the keyword for a point-by-point explanation."));
+        else{
+          const explanation=element("dl","lr-reference-walkthrough");
+          for(const [title,text,latex,plain] of card.walkthrough){
+            const body=element("dd");body.append(element("p",null,text));
+            if(latex)body.append(latexFormula(latex,true)||element("div","lr-formula",plain||latex));
+            explanation.append(element("dt",null,title),body);
+          }
+          target.append(explanation);
+        }
+      }
+    }
+    function renderInspectorContents(){if(state.keyword&&referenceCard(state.keyword))appendReference(detailPane,referenceCard(state.keyword));else if(state.keyword==="prop")renderPropGuide(detailPane);else if(state.keyword){detailPane.append(element("p","lr-keyword-meaning",syntaxPhrases[state.keyword]?.[lang()==="zh"?0:1]||syntaxHelp[state.keyword]?.[lang()==="zh"?0:1]||t("typeUnavailable")));}else if(state.symbol)renderSymbol();else if(state.wd)renderWellDefinedness();else if(state.fact)renderFact();else if(!state.statement&&state.focusLine)renderSourceLine();else renderStatement();}
+
     function render(){
       if(destroyed)return;
-      hideTokenHelp();root.replaceChildren();root.classList.add("lr-root");
+      const previousInput=root.querySelector(".lr-ide-input"),previousEditor=root.querySelector(".lr-ide");
+      restoreIdeFocus=previousInput===document.activeElement;
+      if(previousInput&&previousEditor)idePositions.set(previousInput.dataset.sourcePath,{start:previousInput.selectionStart,end:previousInput.selectionEnd,top:previousEditor.scrollTop,left:previousEditor.scrollLeft});
+      closeInferences();hideTokenHelp();root.replaceChildren();root.classList.add("lr-root");
       const toolbar=element("div","lr-toolbar");
       const titleBlock=element("div","lr-title-block");const heading=element("div","lr-book-heading");titleBlock.append(heading);toolbar.append(titleBlock);
       const actions=element("div","lr-toolbar-actions");
       const back=button("←","lr-button lr-back",async()=>{const previous=history.pop();if(previous&&!await navigate(previous,false))history.push(previous);});back.setAttribute("aria-label",t("back"));if(history.length)actions.append(back);
       const source=sources.get(state.source);
       heading.append(element("h1","lr-book-title",sourceTitle(source)));
-      if(sources.size)heading.append(badge(bundle.run_result==="success"?t("verified"):t("failed"),bundle.run_result!=="success"));
+      if(source?.editor_unchecked)heading.append(element("span","lr-pending",editText("本章待检查","Chapter not checked")));
+      else if(sources.size)heading.append(badge(bundle.run_result==="success"?t("verified"):t("failed"),bundle.run_result!=="success"));
       const trustCount=array(bundle.trust_summary?.user_assumptions).length+array(bundle.trust_summary?.axioms).length;if(trustCount)heading.append(element("span","lr-origin-note",t("trust")+" · "+trustCount));
       const records=element("details","lr-records lr-reading-help"),recordsSummary=element("summary",null,t("readingHelp")),recordPanel=element("div","lr-record-panel"),recordActions=element("div","lr-record-actions");
       records.append(recordsSummary,recordPanel);
@@ -671,16 +915,19 @@
       if(array(bundle.diagnostics).length){const diagnostics=element("div","lr-diagnostics");diagnostics.setAttribute("role","status");for(const diagnostic of bundle.diagnostics)diagnostics.append(element("div",null,diagnostic.message||diagnostic.kind));root.append(diagnostics);}
       if(!sources.size){const empty=element("section","lr-empty");const mark=element("div","lr-empty-mark","∀");mark.setAttribute("aria-hidden","true");empty.append(mark,element("h2",null,t("empty")),element("p",null,t("emptyHint")));root.append(empty,footer);return;}
       const layout=element("div","lr-layout");
-      const sourcePane=element("section","lr-source-pane");const header=element("div","lr-pane-header");header.append(element("span",null,t("source")));
+      const sourcePane=element("section","lr-source-pane");const header=element("div","lr-pane-header");header.append(element("span",null,options.onCheck?editText("编辑器","Editor"):t("source")));
       codePane=element("div","lr-code");sourcePane.append(header,codePane);
       const presentation=statementPresentation(statements.get(state.statement)),selectedFact=facts.get(state.fact);
       const typeTitle=state.keyword?state.keyword:state.symbol?t("concepts"):state.wd?t("wellDefined"):state.fact?t(factInferences(state.fact).length?"inferred":selectedFact?.role==="verified"?"verifiedFact":selectedFact?.role||"fact"):presentation.title;
       const syntax=state.keyword||state.symbol||state.wd||state.fact?typeTitle:presentation.syntax||typeTitle;
       const details=element("section","lr-details"),inspectorHeader=element("div","lr-pane-header lr-inspector-header");
-      inspectorHeader.append(element("span","lr-inspector-title",state.keyword==="prop"?t("propGuideTitle"):state.keyword?t("typeHelp"):t("mathematicalMeaning")),element("span","lr-type-label",syntax));details.append(inspectorHeader);
+      inspectorHeader.append(element("span","lr-inspector-title",state.keyword?editText("参考说明","Reference"):t("mathematicalMeaning")),element("span","lr-type-label",syntax));details.append(inspectorHeader);
       details.addEventListener("keydown",async event=>{if(event.key==="Escape"&&state.keyword){event.preventDefault();const keyword=state.keyword,line=state.focusLine;await selectStatement(state.statement,line);root.querySelector('.lr-code-row[data-line="'+line+'"] [data-keyword="'+keyword+'"]')?.focus();}});
       detailPane=element("div","lr-detail-body");detailPane.setAttribute("aria-live","polite");details.append(detailPane);layout.append(sourcePane,details);root.append(layout,footer);
-      renderCode();if(state.keyword==="prop")renderPropGuide(detailPane);else if(state.keyword){detailPane.append(element("p","lr-keyword-meaning",syntaxPhrases[state.keyword]?.[lang()==="zh"?0:1]||syntaxHelp[state.keyword]?.[lang()==="zh"?0:1]||t("typeUnavailable")));}else if(state.symbol)renderSymbol();else if(state.wd)renderWellDefinedness();else if(state.fact)renderFact();else if(!state.statement&&state.focusLine)renderSourceLine();else renderStatement();
+      renderCode();renderInspectorContents();
+      if(options.onCheck){renderEditor(source,sourcePane,header);if(pending())invalidateEvidence();
+        if(checking)detailPane.replaceChildren(element("p","lr-loading",editText("正在检查…","Checking…")));
+        if(editError)detailPane.replaceChildren(element("p","lr-diagnostics",editError));}
     }
 
     function owningStatement(sourceId,line,offset){
@@ -751,6 +998,7 @@
     function renderSourceLine(){detailPane.append(element("p","lr-empty-note",t("noStatement")));}
 
     function hideTokenHelp(){if(tokenHelp){tokenHelp.node.remove();tokenHelp.owner.removeAttribute("aria-describedby");tokenHelp=null;}}
+    function positionOverlays(){positionTokenHelp();positionInferences();}
     function positionTokenHelp(){
       if(!tokenHelp)return;const box=tokenHelp.owner.getBoundingClientRect(),tip=tokenHelp.node,rect=tip.getBoundingClientRect(),view=document.documentElement;
       if(box.bottom<0||box.top>view.clientHeight){hideTokenHelp();return;}
@@ -763,7 +1011,7 @@
         if(tokenHelp?.owner===token)return;hideTokenHelp();
         const tip=element("div","lr-token-help"),id="lr-token-help-"+Math.random().toString(36).slice(2);tip.id=id;tip.setAttribute("role","tooltip");
         tip.append(element("strong",null,heading),element("span",null,meaning));
-        if(builtin){tip.append(element("code","lr-builtin-signature",builtin[0]),element("small",null,lang()==="zh"?"定义域 → 值域":"Domain → Range"),element("div","lr-builtin-domain",builtin[1]),element("small",null,lang()==="zh"?"例子":"Example"),element("code","lr-builtin-example",builtin[4]));}
+        const reference=!symbolId&&referenceCard(heading);if(reference){tip.replaceChildren(element("strong",null,heading));appendReference(tip,reference,true);}
         root.append(tip);token.setAttribute("aria-describedby",id);tokenHelp={node:tip,owner:token};
         if(symbolId){
           const declaration=symbolDefinitions.get(symbolId),info=element("div","lr-symbol-info");tip.append(info);
@@ -781,6 +1029,7 @@
         }
         positionTokenHelp();
       }
+      tokenHelpOpeners.set(token,show);
       token.addEventListener("mouseenter",show);token.addEventListener("focus",show);
       token.addEventListener("mouseleave",hideTokenHelp);token.addEventListener("blur",hideTokenHelp);
       token.addEventListener("keydown",event=>{if(event.key==="Escape")hideTokenHelp();});
@@ -815,7 +1064,7 @@
       for(let i=0;i<lines.length;i++){
         const lineNumber=i+1,line=lines[i],lineEnd=lineStart+line.length;
         const owning=owningStatement(source.id,lineNumber,lineByteStart);
-        const row=element("div","lr-code-row");row.dataset.line=String(lineNumber);if(owning)row.dataset.statement=owning.id;
+        const row=element("div","lr-code-row");row.dataset.line=String(lineNumber);if(owning)row.dataset.statement=owning.id;if(owning?.status==="rejected")row.classList.add("lr-rejected");
         if(state.focusLine?lineNumber===state.focusLine:owning?.id===state.statement)row.classList.add("lr-selected");else if(premiseLines.has(lineNumber))row.classList.add("lr-premise");
         const number=button(String(lineNumber),"lr-line-number",()=>selectLine(owning,lineNumber));number.disabled=!owning;number.setAttribute("aria-label",t("sourceLine")+" "+lineNumber);row.append(number);
         const lineContent=element("div","lr-code-content"),code=element("code","lr-source-code");let cursor=lineStart;
@@ -830,9 +1079,9 @@
           appendTrivia(code,content.slice(cursor,occurrence.start));
           const spelling=content.slice(occurrence.start,occurrence.end);
           if(!occurrence.symbol_id){
-            const role=(syntaxPhrases[occurrence.text]?"keyword":lexicalKinds.get(occurrence.text))||(/^\d+(?:\.\d+)?$/.test(occurrence.text)?"number":"identifier"),token=element("span","lr-syntax-"+role,spelling);token.dataset.syntax=role;
-            const builtin=builtinObjectHelp[occurrence.text],help=builtin?.[lang()==="zh"?2:3]||(syntaxPhrases[occurrence.text]|| (Object.prototype.hasOwnProperty.call(syntaxHelp,occurrence.text)?syntaxHelp[occurrence.text]:syntaxRoleHelp[role]))?.[lang()==="zh"?0:1];
-            if(help){token.tabIndex=0;attachTokenHelp(token,spelling,help,null,builtin);if(syntaxPhrases[occurrence.text]||(role==="keyword"&&syntaxHelp[occurrence.text])){token.setAttribute("role","button");token.dataset.keyword=occurrence.text;token.setAttribute("aria-expanded",String(state.keyword===occurrence.text&&state.focusLine===lineNumber));const open=async()=>{if(state.keyword===occurrence.text&&state.focusLine===lineNumber){await selectStatement(owning?.id,lineNumber);root.querySelector('.lr-code-row[data-line="'+lineNumber+'"] [data-keyword="'+occurrence.text+'"]')?.focus();}else{await navigate({keyword:occurrence.text,statement:owning?.id||null,symbol:null,fact:null,wd:null,focusLine:lineNumber});detailPane.tabIndex=-1;detailPane.focus({preventScroll:true});}};token.addEventListener("click",event=>{event.stopPropagation();open();});token.addEventListener("keydown",event=>{if(["Enter"," "].includes(event.key)){event.preventDefault();open();}});}}code.append(token);cursor=occurrence.end;continue;
+            const role=(setOperatorHelp[occurrence.text]?"operator":syntaxPhrases[occurrence.text]?"keyword":lexicalKinds.get(occurrence.text))||(/^\d+(?:\.\d+)?$/.test(occurrence.text)?"number":"identifier"),token=element("span","lr-syntax-"+role,spelling);token.dataset.syntax=role;
+            const builtin=builtinObjectHelp[occurrence.text],reference=referenceCard(occurrence.text),help=reference?.summary||builtin?.[lang()==="zh"?2:3]||(syntaxPhrases[occurrence.text]|| (Object.prototype.hasOwnProperty.call(syntaxHelp,occurrence.text)?syntaxHelp[occurrence.text]:syntaxRoleHelp[role]))?.[lang()==="zh"?0:1];
+            if(help){token.tabIndex=0;attachTokenHelp(token,spelling,help,null,builtin);if(reference||syntaxPhrases[occurrence.text]||(role==="keyword"&&syntaxHelp[occurrence.text])){token.setAttribute("role","button");token.dataset.keyword=occurrence.text;token.setAttribute("aria-expanded",String(state.keyword===occurrence.text&&state.focusLine===lineNumber));const open=async()=>{if(state.keyword===occurrence.text&&state.focusLine===lineNumber){await selectStatement(owning?.id,lineNumber);root.querySelector('.lr-code-row[data-line="'+lineNumber+'"] [data-keyword="'+occurrence.text+'"]')?.focus();}else{await navigate({keyword:occurrence.text,statement:owning?.id||null,symbol:null,fact:null,wd:null,focusLine:lineNumber});detailPane.tabIndex=-1;detailPane.focus({preventScroll:true});}};token.addEventListener("click",event=>{event.stopPropagation();open();});token.addEventListener("keydown",event=>{if(["Enter"," "].includes(event.key)){event.preventDefault();open();}});}}code.append(token);cursor=occurrence.end;continue;
           }
           const role=symbolRoles.get(occurrence.symbol_id)||"object",token=button(spelling,"lr-token lr-syntax-"+role,event=>{event.stopPropagation();selectSymbol(occurrence.symbol_id);});token.dataset.symbol=occurrence.symbol_id;token.dataset.syntax=role;
           const builtinMeaning=symbolHelp(occurrence.symbol_id),meaning=builtinMeaning||syntaxRoleHelp[role]?.[lang()==="zh"?0:1];if(builtinMeaning)token.classList.add("lr-builtin-symbol");if(meaning)attachTokenHelp(token,spelling,meaning,occurrence.symbol_id);
@@ -846,13 +1095,10 @@
         const inferredIds=[...new Set(inferredAt.get(lineNumber)||[])];
         if(inferredIds.length){
           const results=element("span","lr-inline-inferences");results.setAttribute("role","group");results.setAttribute("aria-label",t("inferredFacts"));
-          const arrow=element("span","lr-inferred-arrow","→");arrow.setAttribute("aria-hidden","true");results.append(arrow);
-          for(const id of inferredIds){
-            const fact=facts.get(id);const inferred=button(displayText(fact.text,source.id),"lr-inferred-result",()=>selectFact(id));inferred.dataset.fact=id;inferred.setAttribute("aria-label",t("inferred")+" "+displayText(fact.text,source.id));
-            if(results.childElementCount>1){const separator=element("span","lr-inferred-separator","·");separator.setAttribute("aria-hidden","true");results.append(separator);}
-            if(id===state.fact)inferred.classList.add("lr-inferred-selected");else if(citations.includes(id))inferred.classList.add("lr-inferred-premise");
-            results.append(inferred);
-          }
+          const toggle=button(t("inferredCount").replace("{count}",inferredIds.length),"lr-inference-toggle",()=>openInferences(inferredIds,source.id,toggle));
+          toggle.dataset.facts=JSON.stringify(inferredIds);toggle.setAttribute("aria-expanded","false");toggle.setAttribute("aria-haspopup","dialog");
+          if(inferredIds.includes(state.fact))toggle.classList.add("lr-inferred-selected");else if(inferredIds.some(id=>citations.includes(id)))toggle.classList.add("lr-inferred-premise");
+          results.append(toggle);
           lineContent.append(results);
         }
         row.append(lineContent);codePane.append(row);lineStart=lineEnd+1;lineByteStart+=encoder.encode(line).length+1;
@@ -991,21 +1237,32 @@
     }
     function showRule(id){activeRule=id;rulebookState={query:id,usedOnly:false,open:true,category:"all"};rulebook.open=true;ruleSearch.value=id;usedOnly.checked=false;rulebook.querySelector("select").value="all";rulePage=0;renderRules();rulebook.scrollIntoView({block:"nearest",behavior:"smooth"});}
 
-    const dismissPanels=event=>{const records=root.querySelector(".lr-records");if(records?.open&&!records.contains(event.target))records.open=false;const menu=root.querySelector(".lr-book-nav");if(menu?.open&&!menu.contains(event.target))menu.open=false;};
+    const dismissPanels=event=>{if(inferencePopover&&!inferencePopover.node.contains(event.target)&&!inferencePopover.owner.contains(event.target))closeInferences();const records=root.querySelector(".lr-records");if(records?.open&&!records.contains(event.target))records.open=false;const menu=root.querySelector(".lr-book-nav");if(menu?.open&&!menu.contains(event.target))menu.open=false;};
+    const dismissInferences=event=>{if(event.key==="Escape"&&inferencePopover){event.preventDefault();event.stopPropagation();closeInferences(true);}};
     document.addEventListener("pointerdown",dismissPanels);
-    window.addEventListener("scroll",positionTokenHelp,true);
-    window.addEventListener("resize",positionTokenHelp);
+    root.addEventListener("keydown",dismissInferences);
+    window.addEventListener("scroll",positionOverlays,true);
+    window.addEventListener("resize",positionOverlays);
     index();render();
-    return {
-      update(document){if(document.kind==="reading_manifest")throw new Error("Use LitexReading.open for a manifest");generation++;navigationSerial++;bookSerial++;loader=null;allOccurrencesLoaded=true;bookIndex=null;bookQuery="";bookOpen=null;operationStatus="";bundle=document;history=[];state={source:null,statement:null,symbol:null,fact:null,wd:null,focusLine:null};activeRule=null;rulePage=0;rulebookState={query:"",usedOnly:true,open:false,category:"all"};index();render();if(options.onNavigate)options.onNavigate({...state},{bundle_id:bundle.bundle_id||null});},
+    const api = {
+      update(document,settings={}){if(!settings.preserveDrafts){drafts.clear();originals.clear();revision=0;checkedRevision=0;idePositions.clear();editError="";}if(document.kind==="reading_manifest")throw new Error("Use LitexReading.open for a manifest");generation++;navigationSerial++;bookSerial++;loader=null;allOccurrencesLoaded=true;bookIndex=null;bookQuery="";bookOpen=null;operationStatus="";bundle=document;history=[];state={source:null,statement:null,symbol:null,fact:null,wd:null,focusLine:null};activeRule=null;rulePage=0;rulebookState={query:"",usedOnly:true,open:false,category:"all"};index();render();if(options.onNavigate)options.onNavigate({...state},{bundle_id:bundle.bundle_id||null});},
       setLanguage(value){locale=value;render();},
       selectStatement(id){return statements.has(id)?selectStatement(id):false;},
       selectFact(id){return facts.has(id)?selectFact(id):false;},
       selectWellDefinedness(id){return wellDefinedness.has(id)?selectWellDefinedness(id):false;},
       getSelection(){return {...state};},
       getBundleId(){return bundle.bundle_id||null;},
-      destroy(){hideTokenHelp();window.removeEventListener("scroll",positionTokenHelp,true);window.removeEventListener("resize",positionTokenHelp);destroyed=true;generation++;navigationSerial++;bookSerial++;document.removeEventListener("pointerdown",dismissPanels);root.replaceChildren();}
+      async getProjectSnapshot(){
+        const snapshotSources=[];
+        for(const source of sources.values()){
+          if(typeof source.content==="string")snapshotSources.push({...source});
+          else if(loader){const chunk=await loader.loadSource(source.id);snapshotSources.push({...source,...chunk.sources.find(item=>item.id===source.id)});}
+        }
+        return {sources:snapshotSources,configurations:bundle.configurations||[],strict:bundle.execution_policy?.strict===true};
+      },
+      destroy(){closeInferences();hideTokenHelp();window.removeEventListener("scroll",positionOverlays,true);window.removeEventListener("resize",positionOverlays);destroyed=true;generation++;navigationSerial++;bookSerial++;document.removeEventListener("pointerdown",dismissPanels);root.removeEventListener("keydown",dismissInferences);root.replaceChildren();}
     };
+    return api;
   }
   function mergeReadingChunk(bundle,part){
     for(const key of ["sources","statements","facts","inferences","well_definedness","evidence_nodes","occurrences"]){

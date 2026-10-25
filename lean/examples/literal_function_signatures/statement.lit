@@ -1,0 +1,4 @@
+# Shifts and guarded quotients belong to their declared function spaces, independently of binder names.
+fn(x R) R {x + 1} $in fn(y R) R
+fn(x R: x != 0) R {1 / x} $in fn(y R: y != 0) R
+fn(x, y R: y != 0) R {x / y} $in fn(a, b R: b != 0) R

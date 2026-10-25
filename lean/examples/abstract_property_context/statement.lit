@@ -1,0 +1,23 @@
+# A guarded shift preserves its ambient offset when further objects and predicates are introduced.
+have ambient_offset R
+abstract_prop accepted_at(x)
+have fn offset_when_accepted(x R: $accepted_at(x)) R = x + ambient_offset
+abstract_prop another_mark(x)
+have ambient_endpoint R
+forall x R:
+    $accepted_at(x)
+    =>:
+        offset_when_accepted(x) = x + ambient_offset
+forall x R:
+    $another_mark(x)
+    =>:
+        $another_mark(x)
+
+prop accepted_positive(x R):
+    x > 0
+    $accepted_at(x)
+forall x R:
+    $accepted_positive(x)
+    =>:
+        $accepted_at(x)
+        x > 0

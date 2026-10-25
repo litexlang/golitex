@@ -1,0 +1,11 @@
+# An ordered coordinate pair has a positive first coordinate below the second.
+struct OrderedCoordinates:
+    x R
+    y R
+    <=>:
+        0 < x < y
+
+(1, 2) $in &OrderedCoordinates
+forall p &OrderedCoordinates:
+    p.x > 0
+    p.x < p.y

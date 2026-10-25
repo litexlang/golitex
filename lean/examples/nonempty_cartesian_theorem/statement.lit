@@ -1,0 +1,7 @@
+# The Cartesian product of two nonempty sets is nonempty; reuse the theorem.
+thm nonempty_pair_carrier:
+    ? forall A, B nonempty_set:
+        $is_nonempty_set(cart(A, B))
+    $is_nonempty_set(cart(A, B))
+
+by thm nonempty_pair_carrier(R, C) => $is_nonempty_set(cart(R, C))

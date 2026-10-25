@@ -1,0 +1,5 @@
+# Any real-valued function on the reals excluding 0 and 1 is complex-valued on that same domain, regardless of guard order.
+thm membership_abstract_widen:
+    ? forall f fn(x R: x != 0, x != 1) R:
+        f $in fn(y R: y != 1, y != 0) C
+    by thm fn_set_member(f, fn(y R: y != 1, y != 0) C) => f $in fn(y R: y != 1, y != 0) C

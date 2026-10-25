@@ -1,0 +1,10 @@
+# A point on the diagonal retains equality of its coordinates.
+struct EqualCoordinates:
+    x R
+    y R
+    <=>:
+        x = y
+
+(2, 2) $in &EqualCoordinates
+forall p &EqualCoordinates:
+    p.x = p.y

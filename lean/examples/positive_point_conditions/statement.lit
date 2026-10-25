@@ -1,0 +1,15 @@
+# A positive point has real coordinates and a strictly positive first coordinate.
+struct PositivePoint:
+    x R
+    y R
+    <=>:
+        x > 0
+
+(2, 3) $in &PositivePoint
+forall p &PositivePoint:
+    p.x > 0
+
+forall p cart(R, R):
+    p(1) > 0
+    =>:
+        p $in &PositivePoint

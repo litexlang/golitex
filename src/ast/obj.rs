@@ -1561,6 +1561,8 @@ impl Infimum {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum LimitOperator {
+    MultivariableScalar(MultivariableScalarLimit),
+    MultivariableVector(MultivariableVectorLimit),
     Sequence(SequenceLimit),
     SequenceLimsup(SequenceLimsup),
     SequenceLiminf(SequenceLiminf),
@@ -1652,7 +1654,7 @@ impl LimitApproach {
     }
     pub fn value_name(&self) -> &'static str {
         match self {
-            Self::AtPoint(_) => "lim",
+            Self::AtPoint(_) => "fn_lim",
             Self::FromLeft(_) => "lim_left",
             Self::FromRight(_) => "lim_right",
             Self::AtPositiveInfinity => "lim_pos_inf",
@@ -1696,6 +1698,15 @@ impl FunctionLimit {
 /// Finite real derivative selected only from proved candidate/existence.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum DerivativeOperator {
+    Partial(PartialDerivativeAt),
+    ScalarDifferential(ScalarDifferentialAt),
+    TotalDifferential(TotalDifferentialAt),
+    Gradient(GradientAt),
+    Jacobian(JacobianAt),
+    Hessian(HessianAt),
+    Divergence(DivergenceAt),
+    Curl(CurlAt),
+    Laplacian(LaplacianAt),
     AtPoint(DerivativeAt),
 }
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -1729,5 +1740,315 @@ impl RiemannIntegral {
             lower: Box::new(lower),
             upper: Box::new(upper),
         }
+    }
+}
+
+// Standard real Euclidean analysis selectors; fields approved 2026-10-25.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct MultivariableScalarLimit {
+    pub function: Box<Obj>,
+    pub point: Box<Obj>,
+    pub dimension: Box<Obj>,
+}
+impl MultivariableScalarLimit {
+    pub fn new(function: Obj, point: Obj, dimension: Obj) -> Self {
+        Self {
+            function: Box::new(function),
+            point: Box::new(point),
+            dimension: Box::new(dimension),
+        }
+    }
+}
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct MultivariableVectorLimit {
+    pub function: Box<Obj>,
+    pub point: Box<Obj>,
+    pub input_dimension: Box<Obj>,
+    pub output_dimension: Box<Obj>,
+}
+impl MultivariableVectorLimit {
+    pub fn new(function: Obj, point: Obj, input_dimension: Obj, output_dimension: Obj) -> Self {
+        Self {
+            function: Box::new(function),
+            point: Box::new(point),
+            input_dimension: Box::new(input_dimension),
+            output_dimension: Box::new(output_dimension),
+        }
+    }
+}
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct PartialDerivativeAt {
+    pub function: Box<Obj>,
+    pub point: Box<Obj>,
+    pub dimension: Box<Obj>,
+    pub coordinate: Box<Obj>,
+}
+impl PartialDerivativeAt {
+    pub fn new(function: Obj, point: Obj, dimension: Obj, coordinate: Obj) -> Self {
+        Self {
+            function: Box::new(function),
+            point: Box::new(point),
+            dimension: Box::new(dimension),
+            coordinate: Box::new(coordinate),
+        }
+    }
+}
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ScalarDifferentialAt {
+    pub function: Box<Obj>,
+    pub point: Box<Obj>,
+    pub dimension: Box<Obj>,
+}
+impl ScalarDifferentialAt {
+    pub fn new(function: Obj, point: Obj, dimension: Obj) -> Self {
+        Self {
+            function: Box::new(function),
+            point: Box::new(point),
+            dimension: Box::new(dimension),
+        }
+    }
+}
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct TotalDifferentialAt {
+    pub function: Box<Obj>,
+    pub point: Box<Obj>,
+    pub input_dimension: Box<Obj>,
+    pub output_dimension: Box<Obj>,
+}
+impl TotalDifferentialAt {
+    pub fn new(function: Obj, point: Obj, input_dimension: Obj, output_dimension: Obj) -> Self {
+        Self {
+            function: Box::new(function),
+            point: Box::new(point),
+            input_dimension: Box::new(input_dimension),
+            output_dimension: Box::new(output_dimension),
+        }
+    }
+}
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct GradientAt {
+    pub function: Box<Obj>,
+    pub point: Box<Obj>,
+    pub dimension: Box<Obj>,
+}
+impl GradientAt {
+    pub fn new(function: Obj, point: Obj, dimension: Obj) -> Self {
+        Self {
+            function: Box::new(function),
+            point: Box::new(point),
+            dimension: Box::new(dimension),
+        }
+    }
+}
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct JacobianAt {
+    pub function: Box<Obj>,
+    pub point: Box<Obj>,
+    pub input_dimension: Box<Obj>,
+    pub output_dimension: Box<Obj>,
+}
+impl JacobianAt {
+    pub fn new(function: Obj, point: Obj, input_dimension: Obj, output_dimension: Obj) -> Self {
+        Self {
+            function: Box::new(function),
+            point: Box::new(point),
+            input_dimension: Box::new(input_dimension),
+            output_dimension: Box::new(output_dimension),
+        }
+    }
+}
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct HessianAt {
+    pub function: Box<Obj>,
+    pub point: Box<Obj>,
+    pub dimension: Box<Obj>,
+}
+impl HessianAt {
+    pub fn new(function: Obj, point: Obj, dimension: Obj) -> Self {
+        Self {
+            function: Box::new(function),
+            point: Box::new(point),
+            dimension: Box::new(dimension),
+        }
+    }
+}
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct DivergenceAt {
+    pub function: Box<Obj>,
+    pub point: Box<Obj>,
+    pub dimension: Box<Obj>,
+}
+impl DivergenceAt {
+    pub fn new(function: Obj, point: Obj, dimension: Obj) -> Self {
+        Self {
+            function: Box::new(function),
+            point: Box::new(point),
+            dimension: Box::new(dimension),
+        }
+    }
+}
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct CurlAt {
+    pub function: Box<Obj>,
+    pub point: Box<Obj>,
+}
+impl CurlAt {
+    pub fn new(function: Obj, point: Obj) -> Self {
+        Self {
+            function: Box::new(function),
+            point: Box::new(point),
+        }
+    }
+}
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct LaplacianAt {
+    pub function: Box<Obj>,
+    pub point: Box<Obj>,
+    pub dimension: Box<Obj>,
+}
+impl LaplacianAt {
+    pub fn new(function: Obj, point: Obj, dimension: Obj) -> Self {
+        Self {
+            function: Box::new(function),
+            point: Box::new(point),
+            dimension: Box::new(dimension),
+        }
+    }
+}
+
+impl Obj {
+    pub fn multivariable_selector_name(&self) -> Option<&'static str> {
+        match self {
+            Obj::LimitOperator(LimitOperator::MultivariableScalar(_)) => Some("lim_multi_at"),
+            Obj::LimitOperator(LimitOperator::MultivariableVector(_)) => Some("lim_vector_at"),
+            Obj::DerivativeOperator(DerivativeOperator::Partial(_)) => Some("partial_derivative"),
+            Obj::DerivativeOperator(DerivativeOperator::ScalarDifferential(_)) => {
+                Some("scalar_differential")
+            }
+            Obj::DerivativeOperator(DerivativeOperator::TotalDifferential(_)) => {
+                Some("differential")
+            }
+            Obj::DerivativeOperator(DerivativeOperator::Gradient(_)) => Some("gradient_at"),
+            Obj::DerivativeOperator(DerivativeOperator::Jacobian(_)) => Some("jacobian"),
+            Obj::DerivativeOperator(DerivativeOperator::Hessian(_)) => Some("hessian"),
+            Obj::DerivativeOperator(DerivativeOperator::Divergence(_)) => Some("divergence"),
+            Obj::DerivativeOperator(DerivativeOperator::Curl(_)) => Some("curl"),
+            Obj::DerivativeOperator(DerivativeOperator::Laplacian(_)) => Some("laplacian"),
+            _ => None,
+        }
+    }
+    pub fn multivariable_selector_args(&self) -> Option<Vec<&Obj>> {
+        Some(match self {
+            Obj::LimitOperator(LimitOperator::MultivariableScalar(x)) => {
+                vec![&*x.function, &*x.point, &*x.dimension]
+            }
+            Obj::LimitOperator(LimitOperator::MultivariableVector(x)) => vec![
+                &*x.function,
+                &*x.point,
+                &*x.input_dimension,
+                &*x.output_dimension,
+            ],
+            Obj::DerivativeOperator(DerivativeOperator::Partial(x)) => {
+                vec![&*x.function, &*x.point, &*x.dimension, &*x.coordinate]
+            }
+            Obj::DerivativeOperator(DerivativeOperator::ScalarDifferential(x)) => {
+                vec![&*x.function, &*x.point, &*x.dimension]
+            }
+            Obj::DerivativeOperator(DerivativeOperator::TotalDifferential(x)) => vec![
+                &*x.function,
+                &*x.point,
+                &*x.input_dimension,
+                &*x.output_dimension,
+            ],
+            Obj::DerivativeOperator(DerivativeOperator::Gradient(x)) => {
+                vec![&*x.function, &*x.point, &*x.dimension]
+            }
+            Obj::DerivativeOperator(DerivativeOperator::Jacobian(x)) => vec![
+                &*x.function,
+                &*x.point,
+                &*x.input_dimension,
+                &*x.output_dimension,
+            ],
+            Obj::DerivativeOperator(DerivativeOperator::Hessian(x)) => {
+                vec![&*x.function, &*x.point, &*x.dimension]
+            }
+            Obj::DerivativeOperator(DerivativeOperator::Divergence(x)) => {
+                vec![&*x.function, &*x.point, &*x.dimension]
+            }
+            Obj::DerivativeOperator(DerivativeOperator::Curl(x)) => vec![&*x.function, &*x.point],
+            Obj::DerivativeOperator(DerivativeOperator::Laplacian(x)) => {
+                vec![&*x.function, &*x.point, &*x.dimension]
+            }
+            _ => return None,
+        })
+    }
+    pub fn multivariable_selector_arity(name: &str) -> Option<usize> {
+        match name {
+            "lim_multi_at" => Some(3),
+            "lim_vector_at" => Some(4),
+            "partial_derivative" => Some(4),
+            "scalar_differential" => Some(3),
+            "differential" => Some(4),
+            "gradient_at" => Some(3),
+            "jacobian" => Some(4),
+            "hessian" => Some(3),
+            "divergence" => Some(3),
+            "curl" => Some(2),
+            "laplacian" => Some(3),
+            _ => None,
+        }
+    }
+    pub fn from_multivariable_selector(name: &str, args: &[Obj]) -> Option<Self> {
+        Some(match name {
+            "lim_multi_at" if args.len() == 3 => {
+                MultivariableScalarLimit::new(args[0].clone(), args[1].clone(), args[2].clone())
+                    .into()
+            }
+            "lim_vector_at" if args.len() == 4 => MultivariableVectorLimit::new(
+                args[0].clone(),
+                args[1].clone(),
+                args[2].clone(),
+                args[3].clone(),
+            )
+            .into(),
+            "partial_derivative" if args.len() == 4 => PartialDerivativeAt::new(
+                args[0].clone(),
+                args[1].clone(),
+                args[2].clone(),
+                args[3].clone(),
+            )
+            .into(),
+            "scalar_differential" if args.len() == 3 => {
+                ScalarDifferentialAt::new(args[0].clone(), args[1].clone(), args[2].clone()).into()
+            }
+            "differential" if args.len() == 4 => TotalDifferentialAt::new(
+                args[0].clone(),
+                args[1].clone(),
+                args[2].clone(),
+                args[3].clone(),
+            )
+            .into(),
+            "gradient_at" if args.len() == 3 => {
+                GradientAt::new(args[0].clone(), args[1].clone(), args[2].clone()).into()
+            }
+            "jacobian" if args.len() == 4 => JacobianAt::new(
+                args[0].clone(),
+                args[1].clone(),
+                args[2].clone(),
+                args[3].clone(),
+            )
+            .into(),
+            "hessian" if args.len() == 3 => {
+                HessianAt::new(args[0].clone(), args[1].clone(), args[2].clone()).into()
+            }
+            "divergence" if args.len() == 3 => {
+                DivergenceAt::new(args[0].clone(), args[1].clone(), args[2].clone()).into()
+            }
+            "curl" if args.len() == 2 => CurlAt::new(args[0].clone(), args[1].clone()).into(),
+            "laplacian" if args.len() == 3 => {
+                LaplacianAt::new(args[0].clone(), args[1].clone(), args[2].clone()).into()
+            }
+            _ => return None,
+        })
     }
 }

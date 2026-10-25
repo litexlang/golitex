@@ -1,0 +1,41 @@
+# Native real multivariable calculus. Every selector follows a candidate proof.
+# Before this feature, these native forms were unsupported:
+# $has_gradient_at(bowl,(1,2),2,(2,4))
+# gradient_at(bowl,(1,2),2)(2)=4
+# Boundary: missing proofs, wrong dimensions, out-of-range coordinates and
+# partials-only claims of total differentiability are rejected by focused tests.
+# Run: target/release/litex -strict -lang en -f examples/real_analysis/multivariable/main.lit
+
+have fn bowl(x cart_n(R,2)) R=x(1)^2+x(2)^2
+$has_multi_limit_at(bowl,(1,2),2,5)
+lim_multi_at(bowl,(1,2),2)=5
+$is_multi_continuous_at(bowl,(1,2),2)
+$has_partial_derivative_at(bowl,(1,2),2,1,2)
+partial_derivative(bowl,(1,2),2,1)=2
+$has_gradient_at(bowl,(1,2),2,(2,4))
+gradient_at(bowl,(1,2),2)(2)=4
+$has_scalar_differential_at(bowl,(1,2),2,fn(row closed_range(1,1),col closed_range(1,2)) R {(2,4)(col)})
+scalar_differential(bowl,(1,2),2)(1,1)=2
+$is_multi_differentiable_at(bowl,(1,2),2)
+$has_second_partial_derivative_at(bowl,(1,2),2,1,2,0)
+$has_hessian_at(bowl,(1,2),2,fn(row closed_range(1,2),col closed_range(1,2)) R {2*identity_matrix(2)(row,col)})
+hessian(bowl,(1,2),2)(1,2)=0
+$has_laplacian_at(bowl,(1,2),2,4)
+laplacian(bowl,(1,2),2)=4
+have fn field(x cart_n(R,3)) cart_n(R,3)=(x(1),x(2),x(3))
+$has_vector_limit_at(field,(1,2,3),3,3,(1,2,3))
+lim_vector_at(field,(1,2,3),3,3)(2)=2
+$is_vector_continuous_at(field,(1,2,3),3,3)
+$has_total_derivative_at(field,(1,2,3),3,3,identity_matrix(3))
+differential(field,(1,2,3),3,3)(2,2)=1
+$is_vector_differentiable_at(field,(1,2,3),3,3)
+$has_jacobian_at(field,(1,2,3),3,3,identity_matrix(3))
+jacobian(field,(1,2,3),3,3)(1,2)=0
+$has_divergence_at(field,(1,2,3),3,3)
+divergence(field,(1,2,3),3)=3
+$has_curl_at(field,(1,2,3),(0,0,0))
+curl(field,(1,2,3))(1)=0
+have fn oscillation(x cart_n(R,2)) R=sin(x(1)*x(2))
+$has_partial_derivative_at(oscillation,(0,2),2,1,2)
+$has_second_partial_derivative_at(oscillation,(0,2),2,1,2,1)
+

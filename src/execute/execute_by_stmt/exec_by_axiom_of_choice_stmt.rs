@@ -1,4 +1,4 @@
-use super::helper::{proof_verify_state, store_goal_fact, verify_goal_fact};
+use super::helper::{proof_verify_state, store_goal_fact_with_wd, verify_goal_fact};
 use super::result::{
     ExecReleaseAxiomOfChoiceStmtFailed, ExecReleaseAxiomOfChoiceStmtResult,
     ExecReleaseAxiomOfChoiceStmtSuccess,
@@ -45,8 +45,11 @@ pub fn exec_release_axiom_of_choice_stmt(
                     result: proof,
                 }));
             }
-            let _ = store_goal_fact(rt, obligation)?;
-            obligation_proofs.push(proof);
+            let stored = store_goal_fact_with_wd(rt, obligation)?;
+            obligation_proofs.push(super::result::VerifiedReleaseObligation {
+                verified: proof,
+                stored,
+            });
         }
         Ok(Ok((proof_steps, obligation_proofs)))
     })?;
@@ -61,7 +64,7 @@ pub fn exec_release_axiom_of_choice_stmt(
     // Trusted AC step. Selection stays atomic:
     // exist f fn(A S) family_union(S) st { $is_choice_function_for(S, S, fn(A S) S {A}, f) }.
     let choice_fact = ac_exist_fact(runtime, &stmt.family, &stmt.line_file);
-    let stored = match store_goal_fact(runtime, &choice_fact)? {
+    let (stored_wd, stored) = match store_goal_fact_with_wd(runtime, &choice_fact)? {
         Ok(s) => s,
         Err(msg) => {
             return Ok(ExecReleaseAxiomOfChoiceStmtResult::Failed(
@@ -72,10 +75,12 @@ pub fn exec_release_axiom_of_choice_stmt(
 
     Ok(ExecReleaseAxiomOfChoiceStmtResult::Success(
         ExecReleaseAxiomOfChoiceStmtSuccess {
+            statement: stmt.clone(),
             family_wd,
             proof_steps,
             obligations: obligation_proofs,
             local_env,
+            stored_wd,
             stored,
         },
     ))

@@ -12,6 +12,35 @@ impl LitexToLeanCompiler {
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
         match rule {
+            NotInFactSearchProofByBuiltinRule::NonMembershipOfSetMinusFromRight(p) => self
+                .compile_set_minus_nonmembership(fact, &p.right_membership_proof, true, position),
+            NotInFactSearchProofByBuiltinRule::NonMembershipOfSetMinusFromLeft(p) => self
+                .compile_set_minus_nonmembership(
+                    fact,
+                    &p.left_non_membership_proof,
+                    false,
+                    position,
+                ),
+            NotInFactSearchProofByBuiltinRule::NonMembershipOfIntersectFromLeft(p) => self
+                .compile_intersection_nonmembership(
+                    fact,
+                    &p.left_non_membership_proof,
+                    true,
+                    position,
+                ),
+            NotInFactSearchProofByBuiltinRule::NonMembershipOfIntersectFromRight(p) => self
+                .compile_intersection_nonmembership(
+                    fact,
+                    &p.right_non_membership_proof,
+                    false,
+                    position,
+                ),
+            NotInFactSearchProofByBuiltinRule::NonMembershipOfUnion(p) => self
+                .compile_union_nonmembership(
+                    fact,
+                    [&p.left_non_membership_proof, &p.right_non_membership_proof],
+                    position,
+                ),
             NotInFactSearchProofByBuiltinRule::ClosedNumericNonMembership(p) => {
                 self.compile_closed_numeric_nonmembership(fact, &p.normal, position)
             }

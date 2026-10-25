@@ -13,6 +13,7 @@ impl LitexToLeanCompiler {
         &self,
         member: &InFact,
         domain: &FunctionDomainMatchProof,
+        domain_equality: &str,
         requirements: &[Fact],
         references: &[String],
         position: &SourcePosition<'_>,
@@ -27,18 +28,21 @@ impl LitexToLeanCompiler {
             }
             _ => member.set.ir() == target_obj.ir(),
         };
-        if !target_matches
-            || !matches!(
-                domain.comparison,
-                FunctionDomainComparisonProof::AlphaEquivalent
-            )
-            || !function_domains_alpha_equal(source, target)
-        {
+        if !target_matches {
             return Err(LeanCompileError::unsupported(
                 "FunctionTheorem/CompleteDomain",
             ));
         }
         if let CompleteFunctionDomainSourceProof::FiniteFunction(finite) = &domain.source.source {
+            if !matches!(
+                domain.comparison,
+                FunctionDomainComparisonProof::AlphaEquivalent
+            ) || !function_domains_alpha_equal(source, target)
+            {
+                return Err(LeanCompileError::unsupported(
+                    "FiniteMembership/CompleteDomain",
+                ));
+            }
             return self.compile_finite_function_membership(
                 member,
                 domain,
@@ -49,58 +53,8 @@ impl LitexToLeanCompiler {
             );
         }
         let source_signature = self.compile_fn_signature(source, position)?;
-        let source_member = match &domain.source.source {
-            CompleteFunctionDomainSourceProof::AnonymousFunction {
-                function,
-                subject_equal,
-            } => {
-                if function.body.ir() != source.ir() {
-                    return Err(LeanCompileError::unsupported(
-                        "FunctionTheorem/SourceSignature",
-                    ));
-                }
-                let literal = Obj::FunctionSpace(FunctionSpace::AnonymousFn(function.clone()));
-                let object = self.compile_object_reference(&literal, position)?;
-                let same =
-                    self.compile_equality_path(&member.element, &literal, subject_equal, position)?;
-                format!("(Litex.inOfSame {object} _membership_function (Litex.fnSet {source_signature}) (Litex.fnSet {source_signature}) ({same}).symm (Litex.sameRefl _) (Litex.formulaFnInFnSet {object}))")
-            }
-            CompleteFunctionDomainSourceProof::Membership {
-                membership,
-                subject_equal,
-                carrier_equal,
-            } => {
-                let (cited, citation) = self.cited_fact_reference(membership.fact_id, position)?;
-                if cited != &Fact::AtomicFact(AtomicFact::InFact(membership.clone()))
-                    || cited != &self.resolve_fact(membership.fact_id, position)?
-                {
-                    return Err(LeanCompileError::unsupported(
-                        "FunctionTheorem/MembershipCitation",
-                    ));
-                }
-                let obj = self.compile_object_reference(&membership.element, position)?;
-                let carrier = self.compile_object_reference(&membership.set, position)?;
-                let same = self.compile_equality_path(
-                    &member.element,
-                    &membership.element,
-                    subject_equal,
-                    position,
-                )?;
-                let source_obj = Obj::FunctionSpace(FunctionSpace::FnSet(source.clone()));
-                let carrier_same = self.compile_equality_path(
-                    &membership.set,
-                    &source_obj,
-                    carrier_equal,
-                    position,
-                )?;
-                format!("(Litex.inOfSame {obj} _membership_function {carrier} (Litex.fnSet {source_signature}) ({same}).symm {carrier_same} {citation})")
-            }
-            _ => {
-                return Err(LeanCompileError::unsupported(
-                    "FunctionTheorem/CompleteDomainSource",
-                ))
-            }
-        };
+        let source_member =
+            self.compile_complete_domain_member(&member.element, &domain.source, position)?;
         let body = self.compile_function_return_forall(
             &member.element,
             target,
@@ -108,8 +62,7 @@ impl LitexToLeanCompiler {
             references,
             position,
         )?;
-        let target_term = self.compile_object_reference(&member.set, position)?;
-        Ok(format!("(by\n  let _source_signature := {source_signature}\n  have _source_member : Litex.In _membership_function (Litex.fnSet _source_signature) := {source_member}\n  have _same_domain : _source_signature.domain = _membership_target.val.domain := rfl\n  let _target := {target_term}\n  change M.mem (Litex.denote _membership_function) (Litex.FunctionSemantics.fnSetValue _membership_target.val.domain _membership_target.val.output)\n  have _source_graph : M.mem (Litex.denote _membership_function) (Litex.FunctionSemantics.fnSetValue _source_signature.domain _source_signature.output) := _source_member\n  rw [_same_domain] at _source_graph\n  apply Litex.FunctionSemantics.fnSet_of_returns _source_graph\n  {})", body.replace('\n', "\n  ")))
+        Ok(format!("(by\n  let _source_signature := {source_signature}\n  have _source_member : Litex.In _membership_function (Litex.fnSet _source_signature) := {source_member}\n  have _same_domain : _source_signature.domain = _membership_target.val.domain := {domain_equality}\n  change M.mem (Litex.denote _membership_function) (Litex.FunctionSemantics.fnSetValue _membership_target.val.domain _membership_target.val.output)\n  have _source_graph : M.mem (Litex.denote _membership_function) (Litex.FunctionSemantics.fnSetValue _source_signature.domain _source_signature.output) := _source_member\n  rw [_same_domain] at _source_graph\n  apply Litex.FunctionSemantics.fnSet_of_returns _source_graph\n  {})", body.replace('\n', "\n  ")))
     }
 
     pub(in crate::compile_to_lean) fn compile_function_return_forall(

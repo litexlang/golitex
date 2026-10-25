@@ -1,0 +1,5 @@
+# R+ and real inputs with an explicit positivity condition describe the same function domain.
+have fn membership_positive(x R+) R = x + 1
+release thm fn_set_member(membership_positive, fn(y R: y > 0) C)
+have fn membership_guarded_positive(x R: x > 0) R = x + 1
+release thm fn_set_member(membership_guarded_positive, fn(y R+) C)

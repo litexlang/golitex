@@ -1,0 +1,224 @@
+# Projection, zero map, and identity on the imported real plane.
+
+release obj def model::real_inv
+
+release obj def model::real_add
+
+release obj def model::real_neg
+
+release obj def model::real_mul
+
+release obj def model::plane_add
+
+release obj def model::plane_smul
+
+release obj def model::e1
+
+release obj def model::e2
+
+release obj def model::real_field
+
+release obj def model::real_plane
+
+release obj def model::standard_basis
+
+release struct def model::real_field
+
+release struct def model::real_plane
+
+release thm model::standard_plane_basis()
+
+by thm Algebra::basis::basis_is_finite_dimensional(R,model::real_field,R × R,model::real_plane,2,model::standard_basis) => $Algebra::basis::is_finite_dimensional(R,model::real_field,R × R,model::real_plane)
+
+by thm Algebra::dimension::finite_dimension_of_basis(R,model::real_field,R × R,model::real_plane,2,model::standard_basis) => \Algebra::dimension::finite_dimension<R,model::real_field,R × R>(model::real_plane)=2
+
+release obj def context::projection
+
+release obj def context::axis
+
+release obj def context::axis_basis
+
+release thm context::projection_axis_facts()
+
+by thm Algebra::linear_dimension::function_range_carrier(R × R,R × R,context::projection) => fn_range(context::projection) $in power_set(R × R)
+
+by thm Algebra::linear_dimension::function_range_is_nonempty(R × R,R × R,context::projection) => $is_nonempty_set(fn_range(context::projection))
+
+by thm Algebra::vector_space::range_is_subspace(R,model::real_field,R × R,model::real_plane,R × R,model::real_plane,context::projection) => $Algebra::vector_space::is_subspace(R,model::real_field,R × R,model::real_plane,fn_range(context::projection))
+
+by thm Algebra::linear_dimension::linear_image_space_carrier(R,model::real_field,R × R,model::real_plane,R × R,model::real_plane,context::projection) => \Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,fn_range(context::projection)> $in &Algebra::vector_space::VectorSpace<R,model::real_field,fn_range(context::projection)>
+
+by thm Algebra::linear_dimension::finite_source_has_finite_image(R,model::real_field,R × R,model::real_plane,R × R,model::real_plane,context::projection) => $Algebra::basis::is_finite_dimensional(R,model::real_field,fn_range(context::projection),\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,fn_range(context::projection)>)
+
+claim:
+    ? fn_range(context::projection)=context::axis
+    claim:
+        ? forall y fn_range(context::projection):
+            y $in context::axis
+        have by fn_preimage: x from y $in fn_range(context::projection)
+        y $in R × R
+        y=context::projection(x)=(x(1),0)
+        y(2)=0
+    claim:
+        ? forall y context::axis:
+            y $in fn_range(context::projection)
+        y $in R × R
+        y(2)=0
+        context::projection(y)=(y(1),0)=(y(1),y(2))=y
+        context::projection(y) $in fn_range(context::projection)
+    by extension fn_range(context::projection)=context::axis
+
+claim:
+    ? forall j closed_range(1,1):
+        context::axis_basis(j) $in fn_range(context::projection)
+    j=1
+    context::axis_basis(j)=context::axis_basis(1)=model::e1
+    context::projection(model::e1) $in fn_range(context::projection)
+
+release thm fn_set_member(context::axis_basis,finite_seq(fn_range(context::projection),1))
+
+by thm Algebra::subspace::ambient_independent_is_subspace_independent(R,model::real_field,R × R,model::real_plane,fn_range(context::projection),1,context::axis_basis) => $Algebra::basis::is_linearly_independent(R,model::real_field,fn_range(context::projection),\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,fn_range(context::projection)>,1,context::axis_basis)
+
+by thm Algebra::subspace::subspace_span_equals_ambient(R,model::real_field,R × R,model::real_plane,fn_range(context::projection),1,context::axis_basis) => \Algebra::finite_span::span<R,model::real_field,fn_range(context::projection),\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,fn_range(context::projection)>,1,context::axis_basis> = \Algebra::finite_span::span<R,model::real_field,R × R,model::real_plane,1,context::axis_basis>
+
+\Algebra::finite_span::span<R,model::real_field,fn_range(context::projection),\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,fn_range(context::projection)>,1,context::axis_basis> = \Algebra::finite_span::span<R,model::real_field,R × R,model::real_plane,1,context::axis_basis> = context::axis = fn_range(context::projection)
+
+by def $Algebra::finite_span::spans(R,model::real_field,fn_range(context::projection),\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,fn_range(context::projection)>,1,context::axis_basis)
+
+by def $Algebra::basis::is_basis(R,model::real_field,fn_range(context::projection),\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,fn_range(context::projection)>,1,context::axis_basis)
+
+by thm Algebra::dimension::finite_dimension_of_basis(R,model::real_field,fn_range(context::projection),\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,fn_range(context::projection)>,1,context::axis_basis) => \Algebra::dimension::finite_dimension<R,model::real_field,fn_range(context::projection)>(\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,fn_range(context::projection)>)=1
+
+\Algebra::linear_dimension::linear_map_rank<R,model::real_field,R × R,model::real_plane,R × R,model::real_plane>(context::projection)=\Algebra::dimension::finite_dimension<R,model::real_field,fn_range(context::projection)>(\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,fn_range(context::projection)>)=1
+
+by thm Algebra::vector_space::kernel_is_subspace(R,model::real_field,R × R,model::real_plane,R × R,model::real_plane,context::projection) => $Algebra::vector_space::is_subspace(R,model::real_field,R × R,model::real_plane,preimage(context::projection,model::real_plane.zero))
+
+by thm Algebra::linear_dimension::linear_kernel_is_nonempty(R,model::real_field,R × R,model::real_plane,R × R,model::real_plane,context::projection) => $is_nonempty_set(preimage(context::projection,model::real_plane.zero))
+
+by thm Algebra::linear_dimension::linear_kernel_space_carrier(R,model::real_field,R × R,model::real_plane,R × R,model::real_plane,context::projection) => \Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,preimage(context::projection,model::real_plane.zero)> $in &Algebra::vector_space::VectorSpace<R,model::real_field,preimage(context::projection,model::real_plane.zero)>
+
+by thm Algebra::linear_dimension::finite_source_has_finite_kernel(R,model::real_field,R × R,model::real_plane,R × R,model::real_plane,context::projection) => $Algebra::basis::is_finite_dimensional(R,model::real_field,preimage(context::projection,model::real_plane.zero),\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,preimage(context::projection,model::real_plane.zero)>)
+
+release thm Algebra::linear_dimension::finite_source_rank_carrier(R,model::real_field,R × R,model::real_plane,R × R,model::real_plane,context::projection)
+
+release thm Algebra::linear_dimension::finite_source_nullity_carrier(R,model::real_field,R × R,model::real_plane,R × R,model::real_plane,context::projection)
+
+by thm Algebra::linear_dimension::rank_nullity(R,model::real_field,R × R,model::real_plane,R × R,model::real_plane,context::projection) => \Algebra::linear_dimension::linear_map_rank<R,model::real_field,R × R,model::real_plane,R × R,model::real_plane>(context::projection)+\Algebra::linear_dimension::linear_map_nullity<R,model::real_field,R × R,model::real_plane,R × R,model::real_plane>(context::projection)=\Algebra::dimension::finite_dimension<R,model::real_field,R × R>(model::real_plane)
+
+\Algebra::linear_dimension::linear_map_rank<R,model::real_field,R × R,model::real_plane,R × R,model::real_plane>(context::projection)+\Algebra::linear_dimension::linear_map_nullity<R,model::real_field,R × R,model::real_plane,R × R,model::real_plane>(context::projection)=1+\Algebra::linear_dimension::linear_map_nullity<R,model::real_field,R × R,model::real_plane,R × R,model::real_plane>(context::projection)=2
+
+\Algebra::linear_dimension::linear_map_nullity<R,model::real_field,R × R,model::real_plane,R × R,model::real_plane>(context::projection)=2-1=1
+
+by thm Algebra::vector_space::zero_map_linear(R,model::real_field,R × R,model::real_plane,R × R,model::real_plane) => $Algebra::vector_space::is_linear_map(R,model::real_field,R × R,model::real_plane,R × R,model::real_plane,\Algebra::vector_space::zero_map<R × R,R × R,model::real_plane.zero>)
+
+by thm Algebra::linear_dimension::function_range_carrier(R × R,R × R,\Algebra::vector_space::zero_map<R × R,R × R,model::real_plane.zero>) => fn_range(\Algebra::vector_space::zero_map<R × R,R × R,model::real_plane.zero>) $in power_set(R × R)
+
+by thm Algebra::linear_dimension::function_range_is_nonempty(R × R,R × R,\Algebra::vector_space::zero_map<R × R,R × R,model::real_plane.zero>) => $is_nonempty_set(fn_range(\Algebra::vector_space::zero_map<R × R,R × R,model::real_plane.zero>))
+
+by thm Algebra::vector_space::range_is_subspace(R,model::real_field,R × R,model::real_plane,R × R,model::real_plane,\Algebra::vector_space::zero_map<R × R,R × R,model::real_plane.zero>) => $Algebra::vector_space::is_subspace(R,model::real_field,R × R,model::real_plane,fn_range(\Algebra::vector_space::zero_map<R × R,R × R,model::real_plane.zero>))
+
+by thm Algebra::linear_dimension::linear_image_space_carrier(R,model::real_field,R × R,model::real_plane,R × R,model::real_plane,\Algebra::vector_space::zero_map<R × R,R × R,model::real_plane.zero>) => \Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,fn_range(\Algebra::vector_space::zero_map<R × R,R × R,model::real_plane.zero>)> $in &Algebra::vector_space::VectorSpace<R,model::real_field,fn_range(\Algebra::vector_space::zero_map<R × R,R × R,model::real_plane.zero>)>
+
+by thm Algebra::linear_dimension::finite_source_has_finite_image(R,model::real_field,R × R,model::real_plane,R × R,model::real_plane,\Algebra::vector_space::zero_map<R × R,R × R,model::real_plane.zero>) => $Algebra::basis::is_finite_dimensional(R,model::real_field,fn_range(\Algebra::vector_space::zero_map<R × R,R × R,model::real_plane.zero>),\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,fn_range(\Algebra::vector_space::zero_map<R × R,R × R,model::real_plane.zero>)>)
+
+release struct def \Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,fn_range(\Algebra::vector_space::zero_map<R × R,R × R,model::real_plane.zero>)>
+
+have empty_zero_image finite_seq(fn_range(\Algebra::vector_space::zero_map<R × R,R × R,model::real_plane.zero>),0)=tuple()
+
+by thm Algebra::dependence::empty_list_is_independent(R,model::real_field,fn_range(\Algebra::vector_space::zero_map<R × R,R × R,model::real_plane.zero>),\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,fn_range(\Algebra::vector_space::zero_map<R × R,R × R,model::real_plane.zero>)>,empty_zero_image) => $Algebra::basis::is_linearly_independent(R,model::real_field,fn_range(\Algebra::vector_space::zero_map<R × R,R × R,model::real_plane.zero>),\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,fn_range(\Algebra::vector_space::zero_map<R × R,R × R,model::real_plane.zero>)>,0,empty_zero_image)
+
+by thm Algebra::finite_span::span_zero_member(R,model::real_field,fn_range(\Algebra::vector_space::zero_map<R × R,R × R,model::real_plane.zero>),\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,fn_range(\Algebra::vector_space::zero_map<R × R,R × R,model::real_plane.zero>)>,0,empty_zero_image) => \Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,fn_range(\Algebra::vector_space::zero_map<R × R,R × R,model::real_plane.zero>)>.zero $in \Algebra::finite_span::span<R,model::real_field,fn_range(\Algebra::vector_space::zero_map<R × R,R × R,model::real_plane.zero>),\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,fn_range(\Algebra::vector_space::zero_map<R × R,R × R,model::real_plane.zero>)>,0,empty_zero_image>
+
+claim:
+    ? \Algebra::finite_span::span<R,model::real_field,fn_range(\Algebra::vector_space::zero_map<R × R,R × R,model::real_plane.zero>),\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,fn_range(\Algebra::vector_space::zero_map<R × R,R × R,model::real_plane.zero>)>,0,empty_zero_image> = fn_range(\Algebra::vector_space::zero_map<R × R,R × R,model::real_plane.zero>)
+    \Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,fn_range(\Algebra::vector_space::zero_map<R × R,R × R,model::real_plane.zero>)>.zero=model::real_plane.zero
+    \Algebra::finite_span::span<R,model::real_field,fn_range(\Algebra::vector_space::zero_map<R × R,R × R,model::real_plane.zero>),\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,fn_range(\Algebra::vector_space::zero_map<R × R,R × R,model::real_plane.zero>)>,0,empty_zero_image> = {y fn_range(\Algebra::vector_space::zero_map<R × R,R × R,model::real_plane.zero>): $Algebra::finite_span::is_linear_combination(R,model::real_field,fn_range(\Algebra::vector_space::zero_map<R × R,R × R,model::real_plane.zero>),\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,fn_range(\Algebra::vector_space::zero_map<R × R,R × R,model::real_plane.zero>)>,0,y,empty_zero_image)}
+    claim:
+        ? forall y fn_range(\Algebra::vector_space::zero_map<R × R,R × R,model::real_plane.zero>):
+            y $in \Algebra::finite_span::span<R,model::real_field,fn_range(\Algebra::vector_space::zero_map<R × R,R × R,model::real_plane.zero>),\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,fn_range(\Algebra::vector_space::zero_map<R × R,R × R,model::real_plane.zero>)>,0,empty_zero_image>
+        have by fn_preimage: x from y $in fn_range(\Algebra::vector_space::zero_map<R × R,R × R,model::real_plane.zero>)
+        y=\Algebra::vector_space::zero_map<R × R,R × R,model::real_plane.zero>(x)=model::real_plane.zero=\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,fn_range(\Algebra::vector_space::zero_map<R × R,R × R,model::real_plane.zero>)>.zero
+    by extension \Algebra::finite_span::span<R,model::real_field,fn_range(\Algebra::vector_space::zero_map<R × R,R × R,model::real_plane.zero>),\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,fn_range(\Algebra::vector_space::zero_map<R × R,R × R,model::real_plane.zero>)>,0,empty_zero_image> = fn_range(\Algebra::vector_space::zero_map<R × R,R × R,model::real_plane.zero>)
+
+by def $Algebra::finite_span::spans(R,model::real_field,fn_range(\Algebra::vector_space::zero_map<R × R,R × R,model::real_plane.zero>),\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,fn_range(\Algebra::vector_space::zero_map<R × R,R × R,model::real_plane.zero>)>,0,empty_zero_image)
+
+by def $Algebra::basis::is_basis(R,model::real_field,fn_range(\Algebra::vector_space::zero_map<R × R,R × R,model::real_plane.zero>),\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,fn_range(\Algebra::vector_space::zero_map<R × R,R × R,model::real_plane.zero>)>,0,empty_zero_image)
+
+by thm Algebra::dimension::finite_dimension_of_basis(R,model::real_field,fn_range(\Algebra::vector_space::zero_map<R × R,R × R,model::real_plane.zero>),\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,fn_range(\Algebra::vector_space::zero_map<R × R,R × R,model::real_plane.zero>)>,0,empty_zero_image) => \Algebra::dimension::finite_dimension<R,model::real_field,fn_range(\Algebra::vector_space::zero_map<R × R,R × R,model::real_plane.zero>)>(\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,fn_range(\Algebra::vector_space::zero_map<R × R,R × R,model::real_plane.zero>)>)=0
+
+\Algebra::linear_dimension::linear_map_rank<R,model::real_field,R × R,model::real_plane,R × R,model::real_plane>(\Algebra::vector_space::zero_map<R × R,R × R,model::real_plane.zero>)=\Algebra::dimension::finite_dimension<R,model::real_field,fn_range(\Algebra::vector_space::zero_map<R × R,R × R,model::real_plane.zero>)>(\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,fn_range(\Algebra::vector_space::zero_map<R × R,R × R,model::real_plane.zero>)>)=0
+
+by thm Algebra::vector_space::kernel_is_subspace(R,model::real_field,R × R,model::real_plane,R × R,model::real_plane,\Algebra::vector_space::zero_map<R × R,R × R,model::real_plane.zero>) => $Algebra::vector_space::is_subspace(R,model::real_field,R × R,model::real_plane,preimage(\Algebra::vector_space::zero_map<R × R,R × R,model::real_plane.zero>,model::real_plane.zero))
+
+by thm Algebra::linear_dimension::linear_kernel_is_nonempty(R,model::real_field,R × R,model::real_plane,R × R,model::real_plane,\Algebra::vector_space::zero_map<R × R,R × R,model::real_plane.zero>) => $is_nonempty_set(preimage(\Algebra::vector_space::zero_map<R × R,R × R,model::real_plane.zero>,model::real_plane.zero))
+
+by thm Algebra::linear_dimension::linear_kernel_space_carrier(R,model::real_field,R × R,model::real_plane,R × R,model::real_plane,\Algebra::vector_space::zero_map<R × R,R × R,model::real_plane.zero>) => \Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,preimage(\Algebra::vector_space::zero_map<R × R,R × R,model::real_plane.zero>,model::real_plane.zero)> $in &Algebra::vector_space::VectorSpace<R,model::real_field,preimage(\Algebra::vector_space::zero_map<R × R,R × R,model::real_plane.zero>,model::real_plane.zero)>
+
+by thm Algebra::linear_dimension::finite_source_has_finite_kernel(R,model::real_field,R × R,model::real_plane,R × R,model::real_plane,\Algebra::vector_space::zero_map<R × R,R × R,model::real_plane.zero>) => $Algebra::basis::is_finite_dimensional(R,model::real_field,preimage(\Algebra::vector_space::zero_map<R × R,R × R,model::real_plane.zero>,model::real_plane.zero),\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,preimage(\Algebra::vector_space::zero_map<R × R,R × R,model::real_plane.zero>,model::real_plane.zero)>)
+
+release thm Algebra::linear_dimension::finite_source_nullity_carrier(R,model::real_field,R × R,model::real_plane,R × R,model::real_plane,\Algebra::vector_space::zero_map<R × R,R × R,model::real_plane.zero>)
+
+by thm Algebra::linear_dimension::rank_nullity(R,model::real_field,R × R,model::real_plane,R × R,model::real_plane,\Algebra::vector_space::zero_map<R × R,R × R,model::real_plane.zero>) => \Algebra::linear_dimension::linear_map_rank<R,model::real_field,R × R,model::real_plane,R × R,model::real_plane>(\Algebra::vector_space::zero_map<R × R,R × R,model::real_plane.zero>)+\Algebra::linear_dimension::linear_map_nullity<R,model::real_field,R × R,model::real_plane,R × R,model::real_plane>(\Algebra::vector_space::zero_map<R × R,R × R,model::real_plane.zero>)=\Algebra::dimension::finite_dimension<R,model::real_field,R × R>(model::real_plane)
+
+\Algebra::linear_dimension::linear_map_rank<R,model::real_field,R × R,model::real_plane,R × R,model::real_plane>(\Algebra::vector_space::zero_map<R × R,R × R,model::real_plane.zero>)+\Algebra::linear_dimension::linear_map_nullity<R,model::real_field,R × R,model::real_plane,R × R,model::real_plane>(\Algebra::vector_space::zero_map<R × R,R × R,model::real_plane.zero>)=0+\Algebra::linear_dimension::linear_map_nullity<R,model::real_field,R × R,model::real_plane,R × R,model::real_plane>(\Algebra::vector_space::zero_map<R × R,R × R,model::real_plane.zero>)=2
+
+\Algebra::linear_dimension::linear_map_nullity<R,model::real_field,R × R,model::real_plane,R × R,model::real_plane>(\Algebra::vector_space::zero_map<R × R,R × R,model::real_plane.zero>)=2
+
+by thm Algebra::vector_space::identity_linear(R,model::real_field,R × R,model::real_plane) => $Algebra::vector_space::is_linear_map(R,model::real_field,R × R,model::real_plane,R × R,model::real_plane,\Algebra::vector_space::identity<R × R>)
+
+by thm Algebra::vector_space::kernel_is_subspace(R,model::real_field,R × R,model::real_plane,R × R,model::real_plane,\Algebra::vector_space::identity<R × R>) => $Algebra::vector_space::is_subspace(R,model::real_field,R × R,model::real_plane,preimage(\Algebra::vector_space::identity<R × R>,model::real_plane.zero))
+
+by thm Algebra::linear_dimension::linear_kernel_is_nonempty(R,model::real_field,R × R,model::real_plane,R × R,model::real_plane,\Algebra::vector_space::identity<R × R>) => $is_nonempty_set(preimage(\Algebra::vector_space::identity<R × R>,model::real_plane.zero))
+
+by thm Algebra::linear_dimension::linear_kernel_space_carrier(R,model::real_field,R × R,model::real_plane,R × R,model::real_plane,\Algebra::vector_space::identity<R × R>) => \Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,preimage(\Algebra::vector_space::identity<R × R>,model::real_plane.zero)> $in &Algebra::vector_space::VectorSpace<R,model::real_field,preimage(\Algebra::vector_space::identity<R × R>,model::real_plane.zero)>
+
+by thm Algebra::linear_dimension::finite_source_has_finite_kernel(R,model::real_field,R × R,model::real_plane,R × R,model::real_plane,\Algebra::vector_space::identity<R × R>) => $Algebra::basis::is_finite_dimensional(R,model::real_field,preimage(\Algebra::vector_space::identity<R × R>,model::real_plane.zero),\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,preimage(\Algebra::vector_space::identity<R × R>,model::real_plane.zero)>)
+
+release struct def \Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,preimage(\Algebra::vector_space::identity<R × R>,model::real_plane.zero)>
+
+have empty_identity_kernel finite_seq(preimage(\Algebra::vector_space::identity<R × R>,model::real_plane.zero),0)=tuple()
+
+by thm Algebra::dependence::empty_list_is_independent(R,model::real_field,preimage(\Algebra::vector_space::identity<R × R>,model::real_plane.zero),\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,preimage(\Algebra::vector_space::identity<R × R>,model::real_plane.zero)>,empty_identity_kernel) => $Algebra::basis::is_linearly_independent(R,model::real_field,preimage(\Algebra::vector_space::identity<R × R>,model::real_plane.zero),\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,preimage(\Algebra::vector_space::identity<R × R>,model::real_plane.zero)>,0,empty_identity_kernel)
+
+by thm Algebra::finite_span::span_zero_member(R,model::real_field,preimage(\Algebra::vector_space::identity<R × R>,model::real_plane.zero),\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,preimage(\Algebra::vector_space::identity<R × R>,model::real_plane.zero)>,0,empty_identity_kernel) => \Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,preimage(\Algebra::vector_space::identity<R × R>,model::real_plane.zero)>.zero $in \Algebra::finite_span::span<R,model::real_field,preimage(\Algebra::vector_space::identity<R × R>,model::real_plane.zero),\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,preimage(\Algebra::vector_space::identity<R × R>,model::real_plane.zero)>,0,empty_identity_kernel>
+
+claim:
+    ? \Algebra::finite_span::span<R,model::real_field,preimage(\Algebra::vector_space::identity<R × R>,model::real_plane.zero),\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,preimage(\Algebra::vector_space::identity<R × R>,model::real_plane.zero)>,0,empty_identity_kernel> = preimage(\Algebra::vector_space::identity<R × R>,model::real_plane.zero)
+    \Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,preimage(\Algebra::vector_space::identity<R × R>,model::real_plane.zero)>.zero=model::real_plane.zero
+    \Algebra::finite_span::span<R,model::real_field,preimage(\Algebra::vector_space::identity<R × R>,model::real_plane.zero),\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,preimage(\Algebra::vector_space::identity<R × R>,model::real_plane.zero)>,0,empty_identity_kernel> = {y preimage(\Algebra::vector_space::identity<R × R>,model::real_plane.zero): $Algebra::finite_span::is_linear_combination(R,model::real_field,preimage(\Algebra::vector_space::identity<R × R>,model::real_plane.zero),\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,preimage(\Algebra::vector_space::identity<R × R>,model::real_plane.zero)>,0,y,empty_identity_kernel)}
+    claim:
+        ? forall y preimage(\Algebra::vector_space::identity<R × R>,model::real_plane.zero):
+            y $in \Algebra::finite_span::span<R,model::real_field,preimage(\Algebra::vector_space::identity<R × R>,model::real_plane.zero),\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,preimage(\Algebra::vector_space::identity<R × R>,model::real_plane.zero)>,0,empty_identity_kernel>
+        y $in R × R
+        \Algebra::vector_space::identity<R × R>(y)=y
+        \Algebra::vector_space::identity<R × R>(y)=model::real_plane.zero
+        y=model::real_plane.zero=\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,preimage(\Algebra::vector_space::identity<R × R>,model::real_plane.zero)>.zero
+    by extension \Algebra::finite_span::span<R,model::real_field,preimage(\Algebra::vector_space::identity<R × R>,model::real_plane.zero),\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,preimage(\Algebra::vector_space::identity<R × R>,model::real_plane.zero)>,0,empty_identity_kernel> = preimage(\Algebra::vector_space::identity<R × R>,model::real_plane.zero)
+
+by def $Algebra::finite_span::spans(R,model::real_field,preimage(\Algebra::vector_space::identity<R × R>,model::real_plane.zero),\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,preimage(\Algebra::vector_space::identity<R × R>,model::real_plane.zero)>,0,empty_identity_kernel)
+
+by def $Algebra::basis::is_basis(R,model::real_field,preimage(\Algebra::vector_space::identity<R × R>,model::real_plane.zero),\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,preimage(\Algebra::vector_space::identity<R × R>,model::real_plane.zero)>,0,empty_identity_kernel)
+
+by thm Algebra::dimension::finite_dimension_of_basis(R,model::real_field,preimage(\Algebra::vector_space::identity<R × R>,model::real_plane.zero),\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,preimage(\Algebra::vector_space::identity<R × R>,model::real_plane.zero)>,0,empty_identity_kernel) => \Algebra::dimension::finite_dimension<R,model::real_field,preimage(\Algebra::vector_space::identity<R × R>,model::real_plane.zero)>(\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,preimage(\Algebra::vector_space::identity<R × R>,model::real_plane.zero)>)=0
+
+\Algebra::linear_dimension::linear_map_nullity<R,model::real_field,R × R,model::real_plane,R × R,model::real_plane>(\Algebra::vector_space::identity<R × R>)=\Algebra::dimension::finite_dimension<R,model::real_field,preimage(\Algebra::vector_space::identity<R × R>,model::real_plane.zero)>(\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,preimage(\Algebra::vector_space::identity<R × R>,model::real_plane.zero)>)=0
+
+by thm Algebra::linear_dimension::function_range_carrier(R × R,R × R,\Algebra::vector_space::identity<R × R>) => fn_range(\Algebra::vector_space::identity<R × R>) $in power_set(R × R)
+
+by thm Algebra::linear_dimension::function_range_is_nonempty(R × R,R × R,\Algebra::vector_space::identity<R × R>) => $is_nonempty_set(fn_range(\Algebra::vector_space::identity<R × R>))
+
+by thm Algebra::vector_space::range_is_subspace(R,model::real_field,R × R,model::real_plane,R × R,model::real_plane,\Algebra::vector_space::identity<R × R>) => $Algebra::vector_space::is_subspace(R,model::real_field,R × R,model::real_plane,fn_range(\Algebra::vector_space::identity<R × R>))
+
+by thm Algebra::linear_dimension::linear_image_space_carrier(R,model::real_field,R × R,model::real_plane,R × R,model::real_plane,\Algebra::vector_space::identity<R × R>) => \Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,fn_range(\Algebra::vector_space::identity<R × R>)> $in &Algebra::vector_space::VectorSpace<R,model::real_field,fn_range(\Algebra::vector_space::identity<R × R>)>
+
+by thm Algebra::linear_dimension::finite_source_has_finite_image(R,model::real_field,R × R,model::real_plane,R × R,model::real_plane,\Algebra::vector_space::identity<R × R>) => $Algebra::basis::is_finite_dimensional(R,model::real_field,fn_range(\Algebra::vector_space::identity<R × R>),\Algebra::subspace::restricted_space<R,model::real_field,R × R,model::real_plane,fn_range(\Algebra::vector_space::identity<R × R>)>)
+
+release thm Algebra::linear_dimension::finite_source_rank_carrier(R,model::real_field,R × R,model::real_plane,R × R,model::real_plane,\Algebra::vector_space::identity<R × R>)
+
+by thm Algebra::linear_dimension::rank_nullity(R,model::real_field,R × R,model::real_plane,R × R,model::real_plane,\Algebra::vector_space::identity<R × R>) => \Algebra::linear_dimension::linear_map_rank<R,model::real_field,R × R,model::real_plane,R × R,model::real_plane>(\Algebra::vector_space::identity<R × R>)+\Algebra::linear_dimension::linear_map_nullity<R,model::real_field,R × R,model::real_plane,R × R,model::real_plane>(\Algebra::vector_space::identity<R × R>)=\Algebra::dimension::finite_dimension<R,model::real_field,R × R>(model::real_plane)
+
+\Algebra::linear_dimension::linear_map_rank<R,model::real_field,R × R,model::real_plane,R × R,model::real_plane>(\Algebra::vector_space::identity<R × R>)+\Algebra::linear_dimension::linear_map_nullity<R,model::real_field,R × R,model::real_plane,R × R,model::real_plane>(\Algebra::vector_space::identity<R × R>)=\Algebra::linear_dimension::linear_map_rank<R,model::real_field,R × R,model::real_plane,R × R,model::real_plane>(\Algebra::vector_space::identity<R × R>)+0=2
+
+\Algebra::linear_dimension::linear_map_rank<R,model::real_field,R × R,model::real_plane,R × R,model::real_plane>(\Algebra::vector_space::identity<R × R>)=2
+
+$injective(R × R,R × R,context::projection)

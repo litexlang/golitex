@@ -1,0 +1,12 @@
+# A positive ratio requires its denominator to be nonzero before division is formed.
+struct PositiveRatio:
+    numerator R
+    denominator R
+    <=>:
+        denominator != 0
+        numerator / denominator > 0
+
+(2, 1) $in &PositiveRatio
+forall p &PositiveRatio:
+    p.denominator != 0
+    p.numerator / p.denominator > 0

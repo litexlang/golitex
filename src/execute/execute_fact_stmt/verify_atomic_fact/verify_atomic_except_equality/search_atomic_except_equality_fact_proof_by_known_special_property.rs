@@ -25,6 +25,27 @@ impl AtomicExceptEqualityFactSearchProofByKnownSpecialProperty {
     pub fn cite_property_fact_id(&self) -> Option<FactId> {
         match self {
             Self::InFact(
+                InFactSearchProofByKnownSpecialProperty::DeclaredNumericSequenceCarrier(_),
+            ) => None,
+            Self::InFact(
+                InFactSearchProofByKnownSpecialProperty::RealMatrixApplicationCodomain(_),
+            ) => None,
+            Self::InFact(
+                InFactSearchProofByKnownSpecialProperty::UniformTupleCoordinateCarrier(p),
+            ) => p.tuple.tuple_equal.path.first().map(|edge| edge.2),
+            Self::InFact(InFactSearchProofByKnownSpecialProperty::KnownFunctionInExactCarrier(
+                p,
+            )) => p.membership.cite_fact_id(),
+            Self::InFact(
+                InFactSearchProofByKnownSpecialProperty::DeclaredFunctionInExactCarrier(p),
+            ) => p.subject_equal.path.first().map(|e| e.2),
+            Self::InFact(
+                InFactSearchProofByKnownSpecialProperty::MultivariableSelectorInCarrier(_)
+                | InFactSearchProofByKnownSpecialProperty::MultivariableSelectorApplicationInCodomain(
+                    _,
+                ),
+            ) => None,
+            Self::InFact(
                 InFactSearchProofByKnownSpecialProperty::FiniteTupleInStandardFunctionSpace(p),
             ) => p.source.tuple_equal.path.first().map(|edge| edge.2),
             Self::InFact(InFactSearchProofByKnownSpecialProperty::KnownSubsetMembership(p)) => {
@@ -84,6 +105,13 @@ impl AtomicExceptEqualityFactSearchProofByKnownSpecialProperty {
 }
 
 pub enum InFactSearchProofByKnownSpecialProperty {
+    DeclaredNumericSequenceCarrier(super::known_real_array_return::DeclaredNumericSequenceCarrierProof),
+    RealMatrixApplicationCodomain(super::known_real_array_return::RealMatrixApplicationCodomainProof),
+    UniformTupleCoordinateCarrier(super::known_literal_tuple_numeric_coordinate::UniformTupleCoordinateCarrierProof),
+    KnownFunctionInExactCarrier(KnownFunctionInExactCarrierProof),
+    DeclaredFunctionInExactCarrier(DeclaredFunctionInExactCarrierProof),
+    MultivariableSelectorInCarrier(MultivariableSelectorInCarrierProof),
+    MultivariableSelectorApplicationInCodomain(MultivariableSelectorApplicationInCodomainProof),
     FiniteTupleInStandardFunctionSpace(FiniteTupleInStandardFunctionSpaceProof),
     KnownSubsetMembership(crate::execute::execute_fact_stmt::verify_atomic_fact::structural_membership_proof::KnownSubsetMembershipProof),
     PositiveRealFromKnownStrictOrder(PositiveRealFromKnownStrictOrderProof),
@@ -254,6 +282,8 @@ impl Runtime {
         restricted_carriers: bool,
     ) -> Option<AtomicExceptEqualityFactSearchProofByKnownSpecialProperty> {
         match fact {
+            AtomicFact::MultivariableAnalysisFact(_)
+            | AtomicFact::NotMultivariableAnalysisFact(_) => None,
             AtomicFact::HasRiemannIntegralFact(_)
             | AtomicFact::NotHasRiemannIntegralFact(_)
             | AtomicFact::FunctionRiemannIntegrableFact(_)
@@ -358,6 +388,114 @@ impl Runtime {
             return Some(
                 InFactSearchProofByKnownSpecialProperty::LiteralTupleNumericCoordinate(proof),
             );
+        }
+        // Exact function constructions expose their declared carrier after parent WD.
+        if let Some(r) = crate::execute::execute_fact_stmt::multivariable::helper::selector_relation(
+            &fact.element,
+            crate::execute::execute_fact_stmt::multivariable::helper::number(0),
+        ) {
+            let carrier =
+                crate::execute::execute_fact_stmt::multivariable::helper::value_carrier(&r);
+            if self.function_space_signature(&carrier).is_some() {
+                if let Some(carrier_match) =
+                    self.lookup_exact_property_obj_equality(&carrier, &fact.set)
+                {
+                    return Some(
+                        InFactSearchProofByKnownSpecialProperty::MultivariableSelectorInCarrier(
+                            MultivariableSelectorInCarrierProof {
+                                selector: fact.element.clone(),
+                                declared_carrier: carrier,
+                                carrier_match: Box::new(carrier_match),
+                            },
+                        ),
+                    );
+                }
+            }
+        }
+        // Preserve the established full-search literal/function membership
+        // rule and its Lean constructor evidence. Exact FnSet signature readers
+        // only fill restricted WD premises; matrix carriers are native arrays.
+        if (restricted_carriers
+            || matches!(
+                fact.set,
+                Obj::SetFormer(crate::ast::obj::SetFormer::MatrixSet(_))
+            ))
+            && matches!(
+                fact.set,
+                Obj::SetFormer(crate::ast::obj::SetFormer::MatrixSet(_))
+                    | Obj::FunctionSpace(FunctionSpace::FnSet(_))
+            )
+        {
+            let target = self.function_space_signature(&fact.set)?;
+            for property in self.known_function_signature_properties_of(&fact.element) {
+                let Some(signature) = property.function_signature() else {
+                    continue;
+                };
+                let normalized_signature = split_exact_function_groups(&signature);
+                let target_signature = split_exact_function_groups(&target);
+                let comparison = EqualFact {
+                    fact_id: self.global_ids.allocate_fact_id(),
+                    left: Obj::FunctionSpace(FunctionSpace::FnSet(normalized_signature.clone())),
+                    right: Obj::FunctionSpace(FunctionSpace::FnSet(target_signature.clone())),
+                    line_file: None,
+                };
+                let Some(signature_match) =
+                    search_equal_fact_proof_by_they_are_the_same(&comparison)
+                else {
+                    continue;
+                };
+                let query = AtomicFact::InFact(InFact {
+                    fact_id: self.global_ids.allocate_fact_id(),
+                    element: fact.element.clone(),
+                    set: Obj::FunctionSpace(FunctionSpace::FnSet(signature)),
+                    line_file: None,
+                });
+                if let Some(membership) = self.lookup_known_atomic_premise(query) {
+                    return Some(
+                        InFactSearchProofByKnownSpecialProperty::KnownFunctionInExactCarrier(
+                            KnownFunctionInExactCarrierProof {
+                                membership,
+                                normalized_signature,
+                                target_signature,
+                                signature_match: Box::new(signature_match.into()),
+                            },
+                        ),
+                    );
+                }
+            }
+            for (literal, path) in self.exact_property_object_values_of_shapes(
+                &fact.element,
+                &[EqualToObjShape::AnonymousFn],
+            ) {
+                let Obj::FunctionSpace(FunctionSpace::AnonymousFn(function)) = literal else {
+                    continue;
+                };
+                let comparison = EqualFact {
+                    fact_id: self.global_ids.allocate_fact_id(),
+                    left: Obj::FunctionSpace(FunctionSpace::FnSet(split_exact_function_groups(
+                        &function.body,
+                    ))),
+                    right: Obj::FunctionSpace(FunctionSpace::FnSet(split_exact_function_groups(
+                        &target,
+                    ))),
+                    line_file: None,
+                };
+                if let Some(signature_match) =
+                    search_equal_fact_proof_by_they_are_the_same(&comparison)
+                {
+                    return Some(
+                        InFactSearchProofByKnownSpecialProperty::DeclaredFunctionInExactCarrier(
+                            DeclaredFunctionInExactCarrierProof {
+                                normalized_signature: split_exact_function_groups(&function.body),
+                                target_signature: split_exact_function_groups(&target),
+                                declared_signature: function.body,
+                                subject_equal: KnownEqualityPathProof::new(path),
+                                signature_match: Box::new(signature_match.into()),
+                            },
+                        ),
+                    );
+                }
+            }
         }
         // x in A and an already stored A subset B license x in B directly.
         // Reuse the existing cite-only carrier rule for arbitrary B; no inferred
@@ -557,6 +695,12 @@ impl Runtime {
                 InFactSearchProofByKnownSpecialProperty::FnApplicationInStandardSuperset(proof),
             );
         }
+        // Function-value carrier rules precede the application-only dispatch.
+        if let Some(proof) = self.declared_numeric_sequence_carrier(fact) {
+            return Some(
+                InFactSearchProofByKnownSpecialProperty::DeclaredNumericSequenceCarrier(proof),
+            );
+        }
         let Obj::FnObj(application) = &fact.element else {
             return None;
         };
@@ -696,6 +840,19 @@ impl Runtime {
                 );
             }
         };
+        if let Some(r) = crate::execute::execute_fact_stmt::multivariable::helper::selector_relation(
+            &head,
+            crate::execute::execute_fact_stmt::multivariable::helper::number(0),
+        ) {
+            let carrier =
+                crate::execute::execute_fact_stmt::multivariable::helper::value_carrier(&r);
+            if let Some(signature) = self.function_space_signature(&carrier) {
+                let applied_return_set = self.applied_fn_set_return_set(application, &signature)?;
+                let return_set_match =
+                    self.lookup_exact_property_obj_equality(&applied_return_set, &fact.set)?;
+                return Some(InFactSearchProofByKnownSpecialProperty::MultivariableSelectorApplicationInCodomain(MultivariableSelectorApplicationInCodomainProof {selector:head,declared_signature:signature,applied_return_set,return_set_match:Box::new(return_set_match)}));
+            }
+        }
         let properties = self.known_function_signature_properties_of(&head);
         for property in properties {
             let Some(signature) = property.function_signature() else {
@@ -813,6 +970,18 @@ impl Runtime {
                 );
             }
         }
+        if restricted_carriers {
+            if let Some(proof) = self.known_real_matrix_application_codomain(fact) {
+                return Some(
+                    InFactSearchProofByKnownSpecialProperty::RealMatrixApplicationCodomain(proof),
+                );
+            }
+            if let Some(proof) = self.known_uniform_tuple_coordinate_carrier(fact) {
+                return Some(
+                    InFactSearchProofByKnownSpecialProperty::UniformTupleCoordinateCarrier(proof),
+                );
+            }
+        }
         None
     }
 
@@ -856,7 +1025,7 @@ impl Runtime {
     // Structural finite-function carrier: lookup a checked tuple, compare its
     // exact I_n domain, then prove each coordinate using Direct carriers only.
     // No verifier recursion, domain restriction, or truth permission reset.
-    fn finite_tuple_in_standard_function_space(
+    pub(super) fn finite_tuple_in_standard_function_space(
         &mut self,
         fact: &InFact,
     ) -> Option<FiniteTupleInStandardFunctionSpaceProof> {
@@ -1031,4 +1200,47 @@ impl PositiveRealFromKnownStrictOrderProof {
     pub fn new(positive_order: AtomicExceptEqualityFactKnownProof) -> Self {
         Self { positive_order }
     }
+}
+
+pub struct DeclaredFunctionInExactCarrierProof {
+    pub normalized_signature: FnSet,
+    pub target_signature: FnSet,
+    pub declared_signature: FnSet,
+    pub subject_equal: KnownEqualityPathProof,
+    pub signature_match: Box<EqualFactSearchedProof>,
+}
+pub struct MultivariableSelectorInCarrierProof {
+    pub selector: Obj,
+    pub declared_carrier: Obj,
+    pub carrier_match: Box<EqualFactSearchedProof>,
+}
+pub struct MultivariableSelectorApplicationInCodomainProof {
+    pub selector: Obj,
+    pub declared_signature: FnSet,
+    pub applied_return_set: Obj,
+    pub return_set_match: Box<EqualFactSearchedProof>,
+}
+
+// Parameter grouping is syntax for the same ordered multi-argument function.
+// Preserve every carrier, guard and return type; only split shared type groups.
+fn split_exact_function_groups(signature: &FnSet) -> FnSet {
+    let mut result = signature.clone();
+    let mut groups = Vec::new();
+    for group in &signature.set_bound_parameters.groups {
+        for parameter in &group.params {
+            groups.push(crate::ast::param::SetBoundParameterGroup {
+                params: vec![parameter.clone()],
+                param_type: group.param_type.clone(),
+            });
+        }
+    }
+    result.set_bound_parameters.groups = groups;
+    result
+}
+
+pub struct KnownFunctionInExactCarrierProof {
+    pub membership: AtomicExceptEqualityFactKnownProof,
+    pub normalized_signature: FnSet,
+    pub target_signature: FnSet,
+    pub signature_match: Box<EqualFactSearchedProof>,
 }

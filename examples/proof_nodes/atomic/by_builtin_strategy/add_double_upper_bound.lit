@@ -1,0 +1,24 @@
+# Tracer: AddDoubleUpperBound.
+# Before: the direct normalized target missed the two-addend decomposition.
+# forall a,b,M R:
+#     a<=M
+#     b<=M
+#     =>:
+#         a+b<=2*M
+# Now: verify both original summand bounds under the existing strategy budget.
+# Boundary: either missing bound, a false coefficient, or strictness must fail.
+# Gate: target/release/litex -lang en -strict -f examples/proof_nodes/atomic/by_builtin_strategy/add_double_upper_bound.lit
+forall a,b,M R:
+    a<=M
+    b<=M
+    =>:
+        a+b<=2*M
+        a+b<=M*2
+        a+b<=(6/3)*M
+
+forall a,b,M R:
+    M<0
+    a<=M
+    b<=M
+    =>:
+        a+b<=2*M

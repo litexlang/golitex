@@ -38,6 +38,17 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<Result<BuiltinPropDefinitionProof, DefinitionProofFailed>> {
         match fact {
+            AtomicFact::MultivariableAnalysisFact(f) => {
+                let Some(clauses) =
+                    self.multivariable_defining_clauses(&f.relation, verify_state)?
+                else {
+                    return Ok(Err(DefinitionProofFailed::Unavailable));
+                };
+                match self.verify_definition_requirements(clauses,verify_state)? {
+                    Ok((facts,proofs))=>Ok(Ok(BuiltinPropDefinitionProof::MultivariableAnalysis(crate::execute::execute_fact_stmt::multivariable::definition::definition_proof(&f.relation,facts,proofs)))),
+                    Err(failure)=>Ok(Err(failure)),
+                }
+            }
             AtomicFact::HasRiemannIntegralFact(_) => {
                 let Some(clauses) = self.riemann_integral_defining_clauses(fact, verify_state)?
                 else {

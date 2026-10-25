@@ -1,0 +1,39 @@
+# Guarded dimension and ordered basis extension.
+
+release obj def context::real_inv
+
+release obj def context::real_add
+
+release obj def context::real_neg
+
+release obj def context::real_mul
+
+release obj def context::real_field
+
+release obj def context::scalars
+
+release obj def context::unit_basis
+
+release struct def context::real_field
+
+release struct def context::scalars
+
+release thm context::real_unit_is_basis
+
+by thm Algebra::basis::basis_is_finite_dimensional(R,context::real_field,R,context::scalars,1,context::unit_basis) => $Algebra::basis::is_finite_dimensional(R,context::real_field,R,context::scalars)
+
+by thm Algebra::dimension::finite_dimension_of_basis(R,context::real_field,R,context::scalars,1,context::unit_basis) => \Algebra::dimension::finite_dimension<R,context::real_field,R>(context::scalars)=1
+
+have empty finite_seq(R,0)=tuple()
+
+by thm Algebra::dependence::empty_list_is_independent(R,context::real_field,R,context::scalars,empty) => $Algebra::basis::is_linearly_independent(R,context::real_field,R,context::scalars,0,empty)
+
+release thm Algebra::basis_extension::independent_list_extends_to_basis(R,context::real_field,R,context::scalars,0,empty)
+
+obtain n,extended from exist length N,selected finite_seq(R,length) st {$Algebra::basis::is_basis(R,context::real_field,R,context::scalars,length,selected),$Algebra::basis::is_prefix_of_length(R,length,0,selected,empty)}
+
+by thm Algebra::dimension::finite_dimension_of_basis(R,context::real_field,R,context::scalars,n,extended) => \Algebra::dimension::finite_dimension<R,context::real_field,R>(context::scalars)=n
+
+n=1
+
+release thm Algebra::basis::basis_representation_exists_unique(R,context::real_field,R,context::scalars,n,extended,7)

@@ -1,0 +1,140 @@
+# Empty-list independence and the dependent singleton zero vector.
+
+have fn real_inv(x R: x != 0) R = 1 / x
+
+have fn real_add(x, y R) R = x + y
+
+have fn real_neg(x R) R = -x
+
+have fn real_mul(x, y R) R = x * y
+
+forall x, y, z R:
+    real_add(real_add(x, y), z) = real_add(x, real_add(y, z))
+    real_mul(real_mul(x, y), z) = real_mul(x, real_mul(y, z))
+    real_mul(x, real_add(y, z)) = real_add(real_mul(x, y), real_mul(x, z))
+
+forall x, y R:
+    real_add(x, y) = real_add(y, x)
+    real_mul(x, y) = real_mul(y, x)
+
+forall x R:
+    real_add(0, x) = x
+    real_add(x, real_neg(x)) = 0
+    real_mul(1, x) = x
+
+forall x R:
+    x != 0
+    =>:
+        real_mul(x, real_inv(x)) = 1
+
+release thm struct_member((0, 1, real_add, real_neg, real_mul, real_inv), &Algebra::field::Field<R>)
+
+have real_field &Algebra::field::Field<R> = (0, 1, real_add, real_neg, real_mul, real_inv)
+
+claim:
+    ? forall x R:
+        real_add(0,x)=x
+        exist y R st {real_add(x,y)=0}
+    real_add(0,x)=x
+    real_add(x,-x)=0
+    witness exist y R st {real_add(x,y)=0} from -x
+
+claim:
+    ? forall a,b,x R:
+        real_mul(real_field.mul(a,b),x)=real_mul(a,real_mul(b,x))
+        real_mul(real_field.add(a,b),x)=real_add(real_mul(a,x),real_mul(b,x))
+    real_field.mul=real_mul
+    real_field.add=real_add
+    real_field.mul(a,b)=real_mul(a,b)=a*b
+    real_field.add(a,b)=real_add(a,b)=a+b
+    real_mul(real_field.mul(a,b),x)=real_mul(a*b,x)=(a*b)*x=a*(b*x)=real_mul(a,real_mul(b,x))
+    real_mul(real_field.add(a,b),x)=real_mul(a+b,x)=(a+b)*x=a*x+b*x=real_add(real_mul(a,x),real_mul(b,x))
+
+forall a,x,y R:
+    real_mul(a,real_add(x,y))=real_add(real_mul(a,x),real_mul(a,y))
+
+claim:
+    ? forall x R:
+        real_mul(real_field.one,x)=x
+    real_field.one=1
+    real_mul(real_field.one,x)=real_mul(1,x)=1*x=x
+
+real_add $in fn(x,y R) R
+
+real_mul $in fn(a R,x R) R
+
+forall x,y,z R:
+    real_add(real_add(x,y),z)=real_add(x,real_add(y,z))
+
+forall x,y R:
+    real_add(x,y)=real_add(y,x)
+
+release thm struct_member((0,real_add,real_mul),&Algebra::vector_space::VectorSpace<R,real_field,R>)
+
+have scalars &Algebra::vector_space::VectorSpace<R,real_field,R> = (0,real_add,real_mul)
+
+release thm Algebra::dependence::empty_list_is_independent(R,real_field,R,scalars,tuple())
+
+have zero_vector finite_seq(R,1)=fn(j closed_range(1,1)) R {0}
+
+have one_coefficient finite_seq(R,1)=fn(j closed_range(1,1)) R {1}
+
+have fn zero_sums(j closed_range(0,1)) R=0
+
+claim:
+    ? $Algebra::finite_span::has_linear_combination_value(R,real_field,R,scalars,1,one_coefficient,zero_vector,scalars.zero)
+    scalars.zero=0
+    scalars.add=real_add
+    scalars.smul=real_mul
+    zero_sums(0)=0=scalars.zero
+    claim:
+        ? forall k N+:
+            k<=1
+            =>:
+                zero_sums(k)=scalars.add(zero_sums(k-1),scalars.smul(one_coefficient(k),zero_vector(k)))
+        k $in closed_range(1,1)
+        expand: k $in closed_range(1,1)
+        k=1
+        one_coefficient(k)=1
+        zero_vector(k)=0
+        zero_sums(k-1)=0
+        scalars.smul(one_coefficient(k),zero_vector(k))=real_mul(1,0)=0
+        scalars.add(zero_sums(k-1),scalars.smul(one_coefficient(k),zero_vector(k)))=real_add(0,0)=0=zero_sums(k)
+    by def $Algebra::finite_span::is_partial_sum(R,real_field,R,scalars,1,one_coefficient,zero_vector,zero_sums)
+    zero_sums(1)=0=scalars.zero
+    witness exist s fn(k closed_range(0,1)) R st {$Algebra::finite_span::is_partial_sum(R,real_field,R,scalars,1,one_coefficient,zero_vector,s),scalars.zero=s(1)} from zero_sums
+    by def $Algebra::finite_span::has_linear_combination_value(R,real_field,R,scalars,1,one_coefficient,zero_vector,scalars.zero)
+
+claim:
+    ? not $Algebra::basis::has_only_zero_coefficients(R,real_field,1,one_coefficient)
+    real_field.zero=0
+    by contra:
+        ? not $Algebra::basis::has_only_zero_coefficients(R,real_field,1,one_coefficient)
+        one_coefficient(1)=real_field.zero
+        one_coefficient(1)=1
+        real_field.zero=0
+        impossible 1=0
+
+claim:
+    ? $Algebra::basis::is_linearly_dependent(R,real_field,R,scalars,1,zero_vector)
+    by contra:
+        ? not $Algebra::basis::is_linearly_independent(R,real_field,R,scalars,1,zero_vector)
+        $Algebra::basis::has_only_zero_coefficients(R,real_field,1,one_coefficient)
+        impossible not $Algebra::basis::has_only_zero_coefficients(R,real_field,1,one_coefficient)
+    by def $Algebra::basis::is_linearly_dependent(R,real_field,R,scalars,1,zero_vector)
+
+release thm Algebra::dependence::dependence_lemma(R,real_field,R,scalars,1,zero_vector)
+
+real_field.zero=0
+
+2!=real_field.zero
+
+claim:
+    ? 3=scalars.smul(real_field.neg(real_field.inv(2)),-6)
+    real_field.zero=0
+    scalars.zero=0
+    scalars.smul=real_mul
+    scalars.add=real_add
+    scalars.smul(2,3)=real_mul(2,3)=6
+    scalars.add(-6,scalars.smul(2,3))=real_add(-6,6)=0=scalars.zero
+    release thm Algebra::dependence::vector_zero_sum_solve(R,real_field,R,scalars,2,-6,3)

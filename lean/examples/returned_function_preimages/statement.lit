@@ -1,0 +1,3 @@
+# The zeros of a function selected from a real-indexed family form a set.
+forall provider fn(t R) fn(x R) R:
+    $is_set(preimage(provider(1), 0))

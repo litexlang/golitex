@@ -1,0 +1,13 @@
+# The identity relation on {1, 2} defines an image set by replacement.
+prop identity_relation(x, y set):
+    y = x
+forall x {1, 2}, y, z set:
+    $identity_relation(x, y)
+    $identity_relation(x, z)
+    =>:
+        y = z
+have by replacement_axiom: Image from prop identity_relation, set {1, 2}
+$is_set(Image)
+$identity_relation(1, 1)
+1 $in Image
+exist x {1, 2} st {$identity_relation(x, 1)}

@@ -1,0 +1,3 @@
+# Reassociate three arbitrary real functions without changing their graph.
+forall cf fn(t R) R, cg fn(t R) R, ch fn(t R) R:
+    (cf ∘ cg) ∘ ch = cf ∘ (cg ∘ ch)

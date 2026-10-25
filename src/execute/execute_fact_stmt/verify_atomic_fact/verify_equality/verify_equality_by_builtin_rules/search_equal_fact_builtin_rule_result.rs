@@ -132,6 +132,7 @@ pub enum EqualitySearchProofByBuiltinRule {
     RiemannIntegralSelectedValue(super::by_riemann_integral::RiemannIntegralSelectedValueProof),
     DerivativeSelectedValue(super::by_derivative::DerivativeSelectedValueProof),
     FunctionLimit(super::by_function_limit::FunctionLimitEqualityProof),
+    Multivariable(super::by_multivariable::MultivariableEqualityProof),
     DvdZeroRemainder(super::by_dvd_zero_remainder::DvdZeroRemainderProof),
     SymmetricDifference(super::by_symmetric_difference::SymmetricDifferenceEqualityProof),
     Conjugation(super::by_conjugation::ConjugationEqualityProof),

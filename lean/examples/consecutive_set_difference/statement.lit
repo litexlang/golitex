@@ -1,0 +1,8 @@
+# Combine successive set exclusions, with either union order and equality direction.
+forall exclude_chain_A, exclude_chain_B, exclude_chain_D set:
+    set_minus(set_minus(exclude_chain_A, exclude_chain_B), exclude_chain_D) = set_minus(exclude_chain_A, union(exclude_chain_B, exclude_chain_D))
+    set_minus(set_minus(exclude_chain_A, exclude_chain_B), exclude_chain_D) = set_minus(exclude_chain_A, union(exclude_chain_D, exclude_chain_B))
+
+forall exclude_rev_A, exclude_rev_B, exclude_rev_D set:
+    set_minus(exclude_rev_A, union(exclude_rev_B, exclude_rev_D)) = set_minus(set_minus(exclude_rev_A, exclude_rev_B), exclude_rev_D)
+    set_minus(exclude_rev_A, union(exclude_rev_D, exclude_rev_B)) = set_minus(set_minus(exclude_rev_A, exclude_rev_B), exclude_rev_D)

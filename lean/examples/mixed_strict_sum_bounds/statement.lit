@@ -1,0 +1,12 @@
+# Adding a strict bound and a weak bound gives a strict bound on the sum.
+forall sum_a, sum_b, sum_c, sum_d R:
+    sum_a < sum_b
+    sum_c <= sum_d
+    =>:
+        sum_a + sum_c < sum_b + sum_d
+
+forall sum_right_a, sum_right_b, sum_right_c, sum_right_d R:
+    sum_right_a <= sum_right_b
+    sum_right_c < sum_right_d
+    =>:
+        sum_right_a + sum_right_c < sum_right_b + sum_right_d

@@ -1,0 +1,10 @@
+# The second coordinate belongs to the singleton of the first, so they are equal.
+struct RepeatedCoordinate:
+    x R
+    y {x}
+
+1 $in {1}
+(1, 1) $in &RepeatedCoordinate
+forall p &RepeatedCoordinate:
+    p.y $in {p.x}
+    p.y = p.x

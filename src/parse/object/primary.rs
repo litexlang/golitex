@@ -424,6 +424,14 @@ fn try_parse_keyword_primary(
     tb: &mut TokenBlock,
     token: &str,
 ) -> RuntimeResult<Option<Obj>> {
+    if let Some(arity) = Obj::multivariable_selector_arity(token) {
+        tb.advance()?;
+        let args = parse_obj_list_paren(rt, tb)?;
+        if args.len() != arity {
+            return Err(tb.parse_error(format!("`{token}` expects exactly {arity} arguments")));
+        }
+        return Ok(Obj::from_multivariable_selector(token, &args));
+    }
     match token {
         ABS => Ok(Some(parse_unary_keyword(rt, tb, ABS, |arg| {
             Obj::ArithmeticOperator(ArithmeticOperator::Abs(Abs { arg: Box::new(arg) }))
@@ -1042,20 +1050,27 @@ fn try_parse_keyword_primary(
         crate::parse::keywords::LIM => {
             tb.advance()?;
             let mut args = parse_obj_list_paren(rt, tb)?;
-            match args.len() {
-                1 => Ok(Some(
-                    crate::ast::obj::SequenceLimit::new(args.remove(0)).into(),
-                )),
-                2 => {
-                    let point = args.pop().unwrap();
-                    Ok(Some(
-                        crate::ast::obj::FunctionLimit::new(args.pop().unwrap(), point).into(),
-                    ))
-                }
-                _ => Err(tb.parse_error(
-                    "`lim` expects 1 sequence argument or 2 function/point arguments",
-                )),
+            if args.len() != 1 {
+                return Err(tb.parse_error(
+                    "`lim` expects exactly 1 sequence argument; use `fn_lim(f, x0)` for a finite-point function limit",
+                ));
             }
+            Ok(Some(
+                crate::ast::obj::SequenceLimit::new(args.pop().unwrap()).into(),
+            ))
+        }
+        crate::parse::keywords::FN_LIM => {
+            tb.advance()?;
+            let mut args = parse_obj_list_paren(rt, tb)?;
+            if args.len() != 2 {
+                return Err(tb.parse_error(
+                    "`fn_lim` expects exactly 2 arguments: a function and a finite point",
+                ));
+            }
+            let point = args.pop().unwrap();
+            Ok(Some(
+                crate::ast::obj::FunctionLimit::new(args.pop().unwrap(), point).into(),
+            ))
         }
         // Infinite sequences in S. Example: `seq(R)`.
         SEQ => Ok(Some(parse_unary_keyword(rt, tb, SEQ, |set| {

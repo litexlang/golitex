@@ -484,6 +484,8 @@ pub struct FailToVerifyCschObjWellDefined(pub FailToVerifyObjWellDefinedByDefCom
 pub struct FailToVerifySymmetricDifferenceObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
 
 pub enum FailToVerifyLimitOperatorObjWellDefinedResult {
+    MultivariableScalar(crate::execute::execute_fact_stmt::multivariable::selector::MultivariableScalarLimitWellDefinedFailure),
+    MultivariableVector(crate::execute::execute_fact_stmt::multivariable::selector::MultivariableVectorLimitWellDefinedFailure),
     Function(FailToVerifyFunctionLimitObjWellDefined),
     Sequence(FailToVerifySequenceLimitObjWellDefined),
     SequenceLimsup(FailToVerifySequenceLimsupObjWellDefined),
