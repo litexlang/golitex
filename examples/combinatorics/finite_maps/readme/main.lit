@@ -1,0 +1,8 @@
+have fn readme_fold(x {0, 1, 2}) {0, 1} by cases:
+    case x = 0: 0
+    case x = 1: 1
+    case x = 2: 0
+
+release thm comb:::pigeonhole_collision({0, 1, 2}, {0, 1}, readme_fold)
+
+exist x, y {0, 1, 2} st {x != y, readme_fold(x) = readme_fold(y)}

@@ -1,0 +1,6 @@
+thm equal_size_injection_missing_injectivity:
+    ? forall X, Y finite_set, f fn(x X) Y:
+        finite_set_size(X) = finite_set_size(Y)
+        =>:
+            $bijective(X, Y, f)
+    release thm comb:::equal_size_injection_is_bijective(X,Y,f)

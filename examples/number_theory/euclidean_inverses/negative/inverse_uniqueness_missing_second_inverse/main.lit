@@ -1,0 +1,6 @@
+thm inverse_uniqueness_missing_second_inverse:
+    ? forall a, u, v Z, m N+:
+        $nt:::is_modular_inverse(a, u, m)
+        =>:
+            $nt:::is_congruent_mod(u, v, m)
+    release thm nt:::modular_inverse_unique(a,u,v,m)

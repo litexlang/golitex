@@ -38,6 +38,30 @@ fn project_common_by_def(
     )
 }
 
+fn project_scalar_aggregate_by_def(
+    obj: &Obj,
+    family: &str,
+    kind: &str,
+    children: &[Box<ObjWellDefinedProof>],
+    requirements: &[crate::execute::execute_fact_stmt::VerifyFactResult],
+    selected: &Option<
+        crate::execute::execute_fact_stmt::function_signature_selection::FunctionSignatureSelection,
+    >,
+    runtime: &Runtime,
+) -> JsonValue {
+    let mut result = project_common_by_def(obj, family, kind, children, requirements, runtime);
+    if let JsonValue::Object(fields) = &mut result {
+        fields.insert(
+            "signature_selection".into(),
+            selected
+                .as_ref()
+                .map(|s| super::store::project_signature_selection(s, runtime))
+                .unwrap_or(JsonValue::Null),
+        );
+    }
+    result
+}
+
 pub(super) fn project_obj_wd_by_def(
     obj: &Obj,
     proof: &ObjWellDefinedProofByDef,
@@ -762,22 +786,24 @@ pub(super) fn project_obj_wd_by_def(
         ),
         ObjWellDefinedProofByDef::IteratedOperator(
             IteratedOperatorObjWellDefinedProofByDef::Product(p),
-        ) => project_common_by_def(
+        ) => project_scalar_aggregate_by_def(
             obj,
             "IteratedOperator",
             "Product",
             &p.child_obj_well_defined,
             &p.requirement_fact_verified,
+            &p.signature_selection,
             runtime,
         ),
         ObjWellDefinedProofByDef::IteratedOperator(
             IteratedOperatorObjWellDefinedProofByDef::ProductOfFiniteSet(p),
-        ) => project_common_by_def(
+        ) => project_scalar_aggregate_by_def(
             obj,
             "IteratedOperator",
             "ProductOfFiniteSet",
             &p.child_obj_well_defined,
             &p.requirement_fact_verified,
+            &p.signature_selection,
             runtime,
         ),
         ObjWellDefinedProofByDef::IteratedOperator(
@@ -792,22 +818,24 @@ pub(super) fn project_obj_wd_by_def(
         ),
         ObjWellDefinedProofByDef::IteratedOperator(
             IteratedOperatorObjWellDefinedProofByDef::Sum(p),
-        ) => project_common_by_def(
+        ) => project_scalar_aggregate_by_def(
             obj,
             "IteratedOperator",
             "Sum",
             &p.child_obj_well_defined,
             &p.requirement_fact_verified,
+            &p.signature_selection,
             runtime,
         ),
         ObjWellDefinedProofByDef::IteratedOperator(
             IteratedOperatorObjWellDefinedProofByDef::SumOfFiniteSet(p),
-        ) => project_common_by_def(
+        ) => project_scalar_aggregate_by_def(
             obj,
             "IteratedOperator",
             "SumOfFiniteSet",
             &p.child_obj_well_defined,
             &p.requirement_fact_verified,
+            &p.signature_selection,
             runtime,
         ),
         ObjWellDefinedProofByDef::Literal(LiteralObjWellDefinedProofByDef::EulerNumber(p)) => {

@@ -418,6 +418,9 @@ impl LitexToLeanCompiler {
                     member.element.ir() == argument.ir()
                         && instantiated_object_matches(set, &member.set, &substitution)
                 }
+                (ParamType::FiniteSet(_), Fact::AtomicFact(AtomicFact::IsFiniteSetFact(set))) => {
+                    set.set.ir() == argument.ir()
+                }
                 (ParamType::Set(_), Fact::AtomicFact(AtomicFact::IsSetFact(set))) => {
                     set.set.ir() == argument.ir()
                 }
@@ -1003,6 +1006,7 @@ fn replace_atomic_arguments(fact: &mut AtomicFact, args: &[Obj]) -> Result<(), L
             f.set = args[1].clone();
         }
         AtomicFact::IsSetFact(f) => f.set = args[0].clone(),
+        AtomicFact::IsFiniteSetFact(f) => f.set = args[0].clone(),
         AtomicFact::NormalAtomicFact(f) => f.body.clone_from_slice(args),
         _ => {
             return Err(LeanCompileError::unsupported(

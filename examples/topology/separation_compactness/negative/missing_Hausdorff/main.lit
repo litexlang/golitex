@@ -1,0 +1,4 @@
+thm missing_Hausdorff:
+    ? forall A set, space &top:::TopologicalSpace<A>:
+        $top:::is_T1(A, space)
+    release thm top:::Hausdorff_implies_T1(A, space)

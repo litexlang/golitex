@@ -1,0 +1,4 @@
+thm inverse_missing_bezout_identity:
+    ? forall a, u, v Z, m N+:
+        $nt:::is_modular_inverse(a, u, m)
+    release thm nt:::modular_inverse_from_bezout(a,u,v,m)

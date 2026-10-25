@@ -1,0 +1,6 @@
+thm partition_missing_cover:
+    ? forall X, A, B finite_set:
+        intersect(A, B) = {}
+        =>:
+            finite_set_size(X) = finite_set_size(A) + finite_set_size(B)
+    release thm comb:::disjoint_partition_size(X,A,B)

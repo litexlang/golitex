@@ -402,6 +402,41 @@ impl LitexToLeanCompiler {
     ) -> Result<(String, String, String, Option<EvalRational>), LeanCompileError> {
         match wd {
             ObjWellDefinedProof::ByDef {
+                obj: Obj::ComplexOperator(_),
+                proof: ObjWellDefinedProofByDef::ComplexOperator(_),
+            } => self.numeric_complex_wd(wd, position),
+            ObjWellDefinedProof::ByDef {
+                obj:
+                    Obj::TrigOperator(
+                        TrigOperator::Sin(_) | TrigOperator::Cos(_) | TrigOperator::Tan(_),
+                    ),
+                proof: ObjWellDefinedProofByDef::TrigOperator(_),
+            } => self.numeric_trig_wd(wd, position),
+            ObjWellDefinedProof::ByDef {
+                obj:
+                    Obj::ExpLogOperator(
+                        ExpLogOperator::Exp(_) | ExpLogOperator::Ln(_) | ExpLogOperator::Log(_),
+                    ),
+                proof: ObjWellDefinedProofByDef::ExpLogOperator(_),
+            } => self.numeric_exp_log_wd(wd, position),
+            ObjWellDefinedProof::ByDef {
+                obj,
+                proof: ObjWellDefinedProofByDef::Literal(_),
+            } if native_real_constant(obj).is_some() => {
+                self.compile_wd(wd, position)?;
+                let value = format!("({} : ℂ)", native_real_constant(obj).unwrap());
+                Ok((
+                    value.clone(),
+                    format!("(Litex.NativeBridge.denoteNumber (M := M) {value})"),
+                    format!("(Litex.numberInC (M := M) {value})"),
+                    None,
+                ))
+            }
+            ObjWellDefinedProof::ByDef {
+                obj: Obj::FiniteSetStat(_),
+                proof: ObjWellDefinedProofByDef::FiniteSetStat(_),
+            } => self.numeric_finite_stat_wd(wd, position),
+            ObjWellDefinedProof::ByDef {
                 obj: object @ Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(_)),
                 ..
             } => {

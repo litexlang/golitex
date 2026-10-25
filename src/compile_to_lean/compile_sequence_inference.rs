@@ -2,18 +2,15 @@ use crate::compile_to_lean::source_position::{SourceOwner, SourcePosition};
 use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
 use crate::prelude::*;
 use crate::store_fact_and_infer::{
-    InferAtomicFactResult, InferInFactFiniteSeqExpandResult, InferInFactResult, InferResult,
+    InferAtomicFactResult, InferInFactResult, InferResult, StoreInferredFactResult,
 };
 
 impl LitexToLeanCompiler {
-    fn validate_finite_seq_inference(
+    fn validate_sequence_inference(
         &self,
         source: &InFact,
         store: &StoreFactResult,
     ) -> Result<(), LeanCompileError> {
-        let Obj::SetFormer(SetFormer::FiniteSeqSet(sequence)) = &source.set else {
-            return Err(LeanCompileError::unsupported("FiniteSeq/InferenceSource"));
-        };
         let StoreFactResult::AtomicFact(stored) = store else {
             return Err(LeanCompileError::unsupported("FiniteSeq/InferenceStore"));
         };
@@ -30,13 +27,22 @@ impl LitexToLeanCompiler {
                 "FiniteSeq/InferenceSignature",
             ));
         };
-        Self::validate_finite_seq_signature(sequence, signature)?;
+        match &source.set {
+            Obj::SetFormer(SetFormer::FiniteSeqSet(sequence)) => {
+                Self::validate_finite_seq_signature(sequence, signature)?
+            }
+            Obj::SetFormer(SetFormer::SeqSet(sequence)) => {
+                Self::validate_seq_signature(sequence, signature)?
+            }
+            _ => return Err(LeanCompileError::unsupported("Sequence/InferenceSource")),
+        }
+
         self.validate_store(store, &Fact::AtomicFact(stored.fact.clone()))
     }
 
-    pub(in crate::compile_to_lean) fn compile_finite_seq_inference(
+    pub(in crate::compile_to_lean) fn compile_sequence_inference(
         &self,
-        proof: &InferInFactFiniteSeqExpandResult,
+        derived: &StoreInferredFactResult,
         seed: &Fact,
         compiled: &(String, String),
         position: &SourcePosition<'_>,
@@ -44,14 +50,25 @@ impl LitexToLeanCompiler {
         let Fact::AtomicFact(AtomicFact::InFact(source)) = seed else {
             return Err(LeanCompileError::unsupported("FiniteSeq/InferenceSource"));
         };
-        let store = &proof.derived.store;
-        self.validate_finite_seq_inference(source, store)?;
+        let store = &derived.store;
+        self.validate_sequence_inference(source, store)?;
         let fact = self.resolve_fact(store.primary_fact_id(), position)?;
         self.validate_store(store, &fact)?;
         let carrier = self.compile_object_reference(&source.set, position)?;
         let receiver = self.compile_object_reference(&source.element, position)?;
         let name = format!("_object_h{}", store.primary_fact_id().value());
-        let constructor = format!("(Litex.fnSet (Litex.finiteSeqSignature {carrier}))");
+        let (signature, equality) = match &source.set {
+            Obj::SetFormer(SetFormer::FiniteSeqSet(_)) => (
+                format!("(Litex.finiteSeqSignature {carrier})"),
+                "finiteSeq_eq_fnSet",
+            ),
+            Obj::SetFormer(SetFormer::SeqSet(_)) => (
+                format!("(Litex.seqSignature {carrier}.val.carrier)"),
+                "seqSet_eq_fnSet",
+            ),
+            _ => return Err(LeanCompileError::unsupported("Sequence/InferenceSource")),
+        };
+        let constructor = format!("(Litex.fnSet {signature})");
         let declaration = if position.is_local() {
             format!("let {name} := {constructor}")
         } else {
@@ -65,7 +82,7 @@ impl LitexToLeanCompiler {
         } else {
             self.context_application(&name, position)
         };
-        let term = format!("(Litex.inOfSame {receiver} {receiver} {carrier} {reference} (Litex.sameRefl {receiver}) (Litex.finiteSeq_eq_fnSet {carrier}) {})", compiled.1);
+        let term = format!("(Litex.inOfSame {receiver} {receiver} {carrier} {reference} (Litex.sameRefl {receiver}) (Litex.{equality} {carrier}) {})", compiled.1);
         let formed = SourcePosition::new(
             Some(position),
             SourceOwner::InferredStore(store),
@@ -80,7 +97,7 @@ impl LitexToLeanCompiler {
 
     /// Reuse only the function-set constructor belonging to this exact stored
     /// expansion. Its source sequence already carries the formation evidence.
-    pub(in crate::compile_to_lean) fn compile_finite_seq_inferred_subject(
+    pub(in crate::compile_to_lean) fn compile_sequence_inferred_subject(
         &self,
         object: &Obj,
         store: &StoreFactResult,
@@ -116,17 +133,16 @@ impl LitexToLeanCompiler {
             };
             if let Some((source, rules)) = inference {
                 for rule in rules {
-                    let InferInFactResult::FiniteSeqExpand(proof) = rule else {
-                        continue;
+                    let captured = match rule {
+                        InferInFactResult::FiniteSeqExpand(proof) => &proof.derived,
+                        InferInFactResult::SeqExpand(proof) => &proof.derived,
+                        _ => continue,
                     };
-                    if proof.derived.primary_fact_id() != store.primary_fact_id() {
+                    if captured.primary_fact_id() != store.primary_fact_id() {
                         continue;
                     }
-                    self.validate_finite_seq_inference(source, store)?;
-                    self.validate_store(
-                        &proof.derived.store,
-                        &Fact::AtomicFact(stored.fact.clone()),
-                    )?;
+                    self.validate_sequence_inference(source, store)?;
+                    self.validate_store(&captured.store, &Fact::AtomicFact(stored.fact.clone()))?;
                     let name = format!("_object_h{}", store.primary_fact_id().value());
                     return Ok(Some(if cursor.is_local() {
                         name

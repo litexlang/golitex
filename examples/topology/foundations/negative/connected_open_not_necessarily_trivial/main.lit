@@ -1,0 +1,6 @@
+thm connected_open_not_necessarily_trivial:
+    ? forall A set, space &top:::TopologicalSpace<A>, U space.opens:
+        $top:::is_connected(A, space)
+        =>:
+            U = {} or U = space.carrier
+    release thm top:::connected_implies_only_trivial_clopen(A, space, U)

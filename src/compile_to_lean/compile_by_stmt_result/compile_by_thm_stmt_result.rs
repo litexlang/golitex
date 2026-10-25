@@ -256,6 +256,10 @@ impl LitexToLeanCompiler {
                             (ParamType::Obj(set), Fact::AtomicFact(AtomicFact::InFact(f)))
                                 if f.element.ir() == arg.ir()
                                     && instantiated_object_matches(set, &f.set, &substitution) => {}
+                            (
+                                ParamType::FiniteSet(_),
+                                Fact::AtomicFact(AtomicFact::IsFiniteSetFact(f)),
+                            ) if f.set.ir() == arg.ir() => {}
                             (ParamType::Set(_), Fact::AtomicFact(AtomicFact::IsSetFact(f)))
                                 if f.set.ir() == arg.ir() => {}
                             (

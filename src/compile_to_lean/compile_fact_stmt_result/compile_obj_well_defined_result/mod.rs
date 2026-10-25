@@ -24,3 +24,15 @@ mod compile_sqrt;
 pub(in crate::compile_to_lean) use compile_finite_function::{
     finite_call_parts, validate_finite_signature,
 };
+
+mod compile_finite_aggregate;
+mod compile_finite_set_stat;
+mod compile_range_aggregate;
+mod compile_real_interval;
+mod compile_seq;
+
+mod compile_exp_log;
+
+pub(in crate::compile_to_lean) mod compile_trig;
+
+pub(in crate::compile_to_lean) mod compile_complex;

@@ -19,6 +19,7 @@ mod compile_positive_order_strategy;
 mod compile_power_order;
 mod compile_prop_definition;
 mod compile_real_arithmetic_closure;
+mod compile_real_intervals;
 mod compile_refined_arithmetic_closure;
 mod compile_selected_order;
 mod compile_set_builder_projections;
@@ -34,3 +35,5 @@ mod compile_subset_bounds;
 mod compile_subset_definition;
 mod compile_subtraction_order;
 mod compile_union_subset_componentwise;
+
+mod compile_exp_log;

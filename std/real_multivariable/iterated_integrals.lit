@@ -1,0 +1,367 @@
+# Ordered rectangular iterated real integrals. Source-only, using unary Riemann laws.
+# Distinct operation names fix the inner-then-outer order. No Fubini identity.
+
+template<a,b,c,d R>:
+    have real_closed_rectangle power_set(cart_n(R,2))={p cart_n(R,2): a<=p(1),p(1)<=b,c<=p(2),p(2)<=d}
+
+thm real_closed_rectangle_pair:
+    ? forall a,b,c,d R,x '[a,b],y '[c,d]:
+        (x,y) $in \real_closed_rectangle<a,b,c,d>
+    x>=a
+    x<=b
+    y>=c
+    y<=d
+    (x,y)(1)=x
+    (x,y)(2)=y
+    \real_closed_rectangle<a,b,c,d> = {p cart_n(R,2): a<=p(1),p(1)<=b,c<=p(2),p(2)<=d}
+    (x,y) $in {p cart_n(R,2): a<=p(1),p(1)<=b,c<=p(2),p(2)<=d}
+
+thm real_closed_rectangle_sorted_pair:
+    ? forall a R,b {t R:a<=t},c R,d {t R:c<=t},x '[min(a,b),max(a,b)],y '[min(c,d),max(c,d)]:
+        (x,y) $in \real_closed_rectangle<a,b,c,d>
+    a<=b
+    c<=d
+    min(a,b)=a
+    max(a,b)=b
+    min(c,d)=c
+    max(c,d)=d
+    x>=a
+    x<=b
+    y>=c
+    y<=d
+    x $in '[a,b]
+    y $in '[c,d]
+    release thm real_closed_rectangle_pair(a,b,c,d,x,y)
+
+template<a R,b {t R:a<=t},c R,d {t R:c<=t}>:
+    have fn rectangle_y_integrand(f fn(p \real_closed_rectangle<a,b,c,d>) R,x '[min(a,b),max(a,b)]) fn(y '[min(c,d),max(c,d)]) R=fn(y '[min(c,d),max(c,d)]) R {f((x,y))}
+
+prop has_y_section_integrals(a R,b {t R:a<=t},c R,d {t R:c<=t},f fn(p \real_closed_rectangle<a,b,c,d>) R,g fn(x '[min(a,b),max(a,b)]) R):
+    forall x '[min(a,b),max(a,b)]:
+        $has_riemann_integral(\rectangle_y_integrand<a,b,c,d>(f,x),c,d,g(x))
+
+prop has_iterated_integral_y_then_x(a R,b {t R:a<=t},c R,d {t R:c<=t},f fn(p \real_closed_rectangle<a,b,c,d>) R,L R):
+    exist g fn(x '[min(a,b),max(a,b)]) R st {$has_y_section_integrals(a,b,c,d,f,g) and $has_riemann_integral(g,a,b,L)}
+
+prop is_iterated_integrable_y_then_x(a R,b {t R:a<=t},c R,d {t R:c<=t},f fn(p \real_closed_rectangle<a,b,c,d>) R):
+    exist L R st {$has_iterated_integral_y_then_x(a,b,c,d,f,L)}
+
+template<a R,b {t R:a<=t},c R,d {t R:c<=t}>:
+    have fn rectangle_x_integrand(f fn(p \real_closed_rectangle<a,b,c,d>) R,y '[min(c,d),max(c,d)]) fn(x '[min(a,b),max(a,b)]) R=fn(x '[min(a,b),max(a,b)]) R {f((x,y))}
+
+prop has_x_section_integrals(a R,b {t R:a<=t},c R,d {t R:c<=t},f fn(p \real_closed_rectangle<a,b,c,d>) R,g fn(y '[min(c,d),max(c,d)]) R):
+    forall y '[min(c,d),max(c,d)]:
+        $has_riemann_integral(\rectangle_x_integrand<a,b,c,d>(f,y),a,b,g(y))
+
+prop has_iterated_integral_x_then_y(a R,b {t R:a<=t},c R,d {t R:c<=t},f fn(p \real_closed_rectangle<a,b,c,d>) R,L R):
+    exist g fn(y '[min(c,d),max(c,d)]) R st {$has_x_section_integrals(a,b,c,d,f,g) and $has_riemann_integral(g,c,d,L)}
+
+prop is_iterated_integrable_x_then_y(a R,b {t R:a<=t},c R,d {t R:c<=t},f fn(p \real_closed_rectangle<a,b,c,d>) R):
+    exist L R st {$has_iterated_integral_x_then_y(a,b,c,d,f,L)}
+
+thm y_section_integrals_unique:
+    ? forall a R,b {t R:a<=t},c R,d {t R:c<=t},f fn(p \real_closed_rectangle<a,b,c,d>) R,g,h fn(x '[min(a,b),max(a,b)]) R,x '[min(a,b),max(a,b)]:
+        $has_y_section_integrals(a,b,c,d,f,g)
+        $has_y_section_integrals(a,b,c,d,f,h)
+        =>:
+            g(x)=h(x)
+    $has_riemann_integral(\rectangle_y_integrand<a,b,c,d>(f,x),c,d,g(x))
+    $has_riemann_integral(\rectangle_y_integrand<a,b,c,d>(f,x),c,d,h(x))
+    release thm riemann_integral_unique(\rectangle_y_integrand<a,b,c,d>(f,x),c,d,g(x),h(x))
+
+thm iterated_integral_y_then_x_unique:
+    ? forall a R,b {t R:a<=t},c R,d {t R:c<=t},f fn(p \real_closed_rectangle<a,b,c,d>) R,A,B R:
+        $has_iterated_integral_y_then_x(a,b,c,d,f,A)
+        $has_iterated_integral_y_then_x(a,b,c,d,f,B)
+        =>:
+            A=B
+    obtain g from $has_iterated_integral_y_then_x(a,b,c,d,f,A)
+    obtain h from $has_iterated_integral_y_then_x(a,b,c,d,f,B)
+    claim:
+        ? forall x '[min(a,b),max(a,b)]:
+            g(x)=h(x)
+        release thm y_section_integrals_unique(a,b,c,d,f,g,h,x)
+    release thm riemann_integral_extensional(g,h,a,b,A)
+    release thm riemann_integral_unique(h,a,b,A,B)
+
+thm iterated_integral_y_then_x_from_profile:
+    ? forall a R,b {t R:a<=t},c R,d {t R:c<=t},f fn(p \real_closed_rectangle<a,b,c,d>) R,g fn(x '[min(a,b),max(a,b)]) R,L R:
+        $has_y_section_integrals(a,b,c,d,f,g)
+        $has_riemann_integral(g,a,b,L)
+        =>:
+            $has_iterated_integral_y_then_x(a,b,c,d,f,L)
+    witness $has_iterated_integral_y_then_x(a,b,c,d,f,L) from g
+
+thm iterated_integral_y_then_x_integrable:
+    ? forall a R,b {t R:a<=t},c R,d {t R:c<=t},f fn(p \real_closed_rectangle<a,b,c,d>) R,L R:
+        $has_iterated_integral_y_then_x(a,b,c,d,f,L)
+        =>:
+            $is_iterated_integrable_y_then_x(a,b,c,d,f)
+    witness $is_iterated_integrable_y_then_x(a,b,c,d,f) from L
+
+thm iterated_integral_y_then_x_exists_unique:
+    ? forall a R,b {t R:a<=t},c R,d {t R:c<=t},f fn(p \real_closed_rectangle<a,b,c,d>) R:
+        $is_iterated_integrable_y_then_x(a,b,c,d,f)
+        =>:
+            exist! L R st {$has_iterated_integral_y_then_x(a,b,c,d,f,L)}
+    obtain L from $is_iterated_integrable_y_then_x(a,b,c,d,f)
+    claim:
+        ? forall A,B R:
+            $has_iterated_integral_y_then_x(a,b,c,d,f,A)
+            $has_iterated_integral_y_then_x(a,b,c,d,f,B)
+            =>:
+                A=B
+        release thm iterated_integral_y_then_x_unique(a,b,c,d,f,A,B)
+    witness exist! value R st {$has_iterated_integral_y_then_x(a,b,c,d,f,value)} from L
+
+template<a R,b {t R:a<=t},c R,d {t R:c<=t}>:
+    have fn iterated_integral_y_then_x by exist!:
+        ? forall f fn(p \real_closed_rectangle<a,b,c,d>) R:
+            $is_iterated_integrable_y_then_x(a,b,c,d,f)
+            =>:
+                exist! L R st {$has_iterated_integral_y_then_x(a,b,c,d,f,L)}
+
+thm iterated_integral_y_then_x_value:
+    ? forall a R,b {t R:a<=t},c R,d {t R:c<=t},f fn(p \real_closed_rectangle<a,b,c,d>) R,L R:
+        $has_iterated_integral_y_then_x(a,b,c,d,f,L)
+        $is_iterated_integrable_y_then_x(a,b,c,d,f)
+        =>:
+            \iterated_integral_y_then_x<a,b,c,d>(f)=L
+    $has_iterated_integral_y_then_x(a,b,c,d,f,\iterated_integral_y_then_x<a,b,c,d>(f))
+    release thm iterated_integral_y_then_x_unique(a,b,c,d,f,\iterated_integral_y_then_x<a,b,c,d>(f),L)
+
+thm x_section_integrals_unique:
+    ? forall a R,b {t R:a<=t},c R,d {t R:c<=t},f fn(p \real_closed_rectangle<a,b,c,d>) R,g,h fn(y '[min(c,d),max(c,d)]) R,y '[min(c,d),max(c,d)]:
+        $has_x_section_integrals(a,b,c,d,f,g)
+        $has_x_section_integrals(a,b,c,d,f,h)
+        =>:
+            g(y)=h(y)
+    $has_riemann_integral(\rectangle_x_integrand<a,b,c,d>(f,y),a,b,g(y))
+    $has_riemann_integral(\rectangle_x_integrand<a,b,c,d>(f,y),a,b,h(y))
+    release thm riemann_integral_unique(\rectangle_x_integrand<a,b,c,d>(f,y),a,b,g(y),h(y))
+
+thm iterated_integral_x_then_y_unique:
+    ? forall a R,b {t R:a<=t},c R,d {t R:c<=t},f fn(p \real_closed_rectangle<a,b,c,d>) R,A,B R:
+        $has_iterated_integral_x_then_y(a,b,c,d,f,A)
+        $has_iterated_integral_x_then_y(a,b,c,d,f,B)
+        =>:
+            A=B
+    obtain g from $has_iterated_integral_x_then_y(a,b,c,d,f,A)
+    obtain h from $has_iterated_integral_x_then_y(a,b,c,d,f,B)
+    claim:
+        ? forall y '[min(c,d),max(c,d)]:
+            g(y)=h(y)
+        release thm x_section_integrals_unique(a,b,c,d,f,g,h,y)
+    release thm riemann_integral_extensional(g,h,c,d,A)
+    release thm riemann_integral_unique(h,c,d,A,B)
+
+thm iterated_integral_x_then_y_from_profile:
+    ? forall a R,b {t R:a<=t},c R,d {t R:c<=t},f fn(p \real_closed_rectangle<a,b,c,d>) R,g fn(y '[min(c,d),max(c,d)]) R,L R:
+        $has_x_section_integrals(a,b,c,d,f,g)
+        $has_riemann_integral(g,c,d,L)
+        =>:
+            $has_iterated_integral_x_then_y(a,b,c,d,f,L)
+    witness $has_iterated_integral_x_then_y(a,b,c,d,f,L) from g
+
+thm iterated_integral_x_then_y_integrable:
+    ? forall a R,b {t R:a<=t},c R,d {t R:c<=t},f fn(p \real_closed_rectangle<a,b,c,d>) R,L R:
+        $has_iterated_integral_x_then_y(a,b,c,d,f,L)
+        =>:
+            $is_iterated_integrable_x_then_y(a,b,c,d,f)
+    witness $is_iterated_integrable_x_then_y(a,b,c,d,f) from L
+
+thm iterated_integral_x_then_y_exists_unique:
+    ? forall a R,b {t R:a<=t},c R,d {t R:c<=t},f fn(p \real_closed_rectangle<a,b,c,d>) R:
+        $is_iterated_integrable_x_then_y(a,b,c,d,f)
+        =>:
+            exist! L R st {$has_iterated_integral_x_then_y(a,b,c,d,f,L)}
+    obtain L from $is_iterated_integrable_x_then_y(a,b,c,d,f)
+    claim:
+        ? forall A,B R:
+            $has_iterated_integral_x_then_y(a,b,c,d,f,A)
+            $has_iterated_integral_x_then_y(a,b,c,d,f,B)
+            =>:
+                A=B
+        release thm iterated_integral_x_then_y_unique(a,b,c,d,f,A,B)
+    witness exist! value R st {$has_iterated_integral_x_then_y(a,b,c,d,f,value)} from L
+
+template<a R,b {t R:a<=t},c R,d {t R:c<=t}>:
+    have fn iterated_integral_x_then_y by exist!:
+        ? forall f fn(p \real_closed_rectangle<a,b,c,d>) R:
+            $is_iterated_integrable_x_then_y(a,b,c,d,f)
+            =>:
+                exist! L R st {$has_iterated_integral_x_then_y(a,b,c,d,f,L)}
+
+thm iterated_integral_x_then_y_value:
+    ? forall a R,b {t R:a<=t},c R,d {t R:c<=t},f fn(p \real_closed_rectangle<a,b,c,d>) R,L R:
+        $has_iterated_integral_x_then_y(a,b,c,d,f,L)
+        $is_iterated_integrable_x_then_y(a,b,c,d,f)
+        =>:
+            \iterated_integral_x_then_y<a,b,c,d>(f)=L
+    $has_iterated_integral_x_then_y(a,b,c,d,f,\iterated_integral_x_then_y<a,b,c,d>(f))
+    release thm iterated_integral_x_then_y_unique(a,b,c,d,f,\iterated_integral_x_then_y<a,b,c,d>(f),L)
+
+thm rectangle_y_integrand_value:
+    ? forall a R,b {t R:a<=t},c R,d {t R:c<=t},f fn(p \real_closed_rectangle<a,b,c,d>) R,x '[min(a,b),max(a,b)],y '[min(c,d),max(c,d)]:
+        \rectangle_y_integrand<a,b,c,d>(f,x)(y)=f((x,y))
+
+thm rectangle_x_integrand_value:
+    ? forall a R,b {t R:a<=t},c R,d {t R:c<=t},f fn(p \real_closed_rectangle<a,b,c,d>) R,x '[min(a,b),max(a,b)],y '[min(c,d),max(c,d)]:
+        \rectangle_x_integrand<a,b,c,d>(f,y)(x)=f((x,y))
+
+thm iterated_integral_y_then_x_constant:
+    ? forall a R,b {t R:a<=t},c R,d {t R:c<=t},f fn(p \real_closed_rectangle<a,b,c,d>) R,k R:
+        forall p \real_closed_rectangle<a,b,c,d>:
+            f(p)=k
+        =>:
+            $has_iterated_integral_y_then_x(a,b,c,d,f,(k*(d-c))*(b-a))
+    have fn g(x '[min(a,b),max(a,b)]) R=k*(d-c)
+    claim:
+        ? forall x '[min(a,b),max(a,b)]:
+            $has_riemann_integral(\rectangle_y_integrand<a,b,c,d>(f,x),c,d,g(x))
+        claim:
+            ? forall y '[min(c,d),max(c,d)]:
+                \rectangle_y_integrand<a,b,c,d>(f,x)(y)=k
+            release thm real_closed_rectangle_sorted_pair(a,b,c,d,x,y)
+            f((x,y))=k
+            release thm rectangle_y_integrand_value(a,b,c,d,f,x,y)
+        release thm riemann_integral_constant(\rectangle_y_integrand<a,b,c,d>(f,x),c,d,k)
+        g(x)=k*(d-c)
+    by def $has_y_section_integrals(a,b,c,d,f,g)
+    release thm riemann_integral_constant(g,a,b,k*(d-c))
+    release thm iterated_integral_y_then_x_from_profile(a,b,c,d,f,g,(k*(d-c))*(b-a))
+
+thm iterated_integral_x_then_y_constant:
+    ? forall a R,b {t R:a<=t},c R,d {t R:c<=t},f fn(p \real_closed_rectangle<a,b,c,d>) R,k R:
+        forall p \real_closed_rectangle<a,b,c,d>:
+            f(p)=k
+        =>:
+            $has_iterated_integral_x_then_y(a,b,c,d,f,(k*(b-a))*(d-c))
+    have fn g(y '[min(c,d),max(c,d)]) R=k*(b-a)
+    claim:
+        ? forall y '[min(c,d),max(c,d)]:
+            $has_riemann_integral(\rectangle_x_integrand<a,b,c,d>(f,y),a,b,g(y))
+        claim:
+            ? forall x '[min(a,b),max(a,b)]:
+                \rectangle_x_integrand<a,b,c,d>(f,y)(x)=k
+            release thm real_closed_rectangle_sorted_pair(a,b,c,d,x,y)
+            f((x,y))=k
+            release thm rectangle_x_integrand_value(a,b,c,d,f,x,y)
+        release thm riemann_integral_constant(\rectangle_x_integrand<a,b,c,d>(f,y),a,b,k)
+        g(y)=k*(b-a)
+    by def $has_x_section_integrals(a,b,c,d,f,g)
+    release thm riemann_integral_constant(g,c,d,k*(b-a))
+    release thm iterated_integral_x_then_y_from_profile(a,b,c,d,f,g,(k*(b-a))*(d-c))
+
+thm iterated_integral_y_then_x_add:
+    ? forall a R,b {t R:a<=t},c R,d {t R:c<=t},f,g,h fn(p \real_closed_rectangle<a,b,c,d>) R,A,B R:
+        $has_iterated_integral_y_then_x(a,b,c,d,f,A)
+        $has_iterated_integral_y_then_x(a,b,c,d,g,B)
+        forall p \real_closed_rectangle<a,b,c,d>:
+            h(p)=f(p)+g(p)
+        =>:
+            $has_iterated_integral_y_then_x(a,b,c,d,h,A+B)
+    obtain u from $has_iterated_integral_y_then_x(a,b,c,d,f,A)
+    obtain v from $has_iterated_integral_y_then_x(a,b,c,d,g,B)
+    have fn w(x '[min(a,b),max(a,b)]) R=u(x)+v(x)
+    claim:
+        ? forall x '[min(a,b),max(a,b)]:
+            $has_riemann_integral(\rectangle_y_integrand<a,b,c,d>(h,x),c,d,w(x))
+        $has_riemann_integral(\rectangle_y_integrand<a,b,c,d>(f,x),c,d,u(x))
+        $has_riemann_integral(\rectangle_y_integrand<a,b,c,d>(g,x),c,d,v(x))
+        claim:
+            ? forall y '[min(c,d),max(c,d)]:
+                \rectangle_y_integrand<a,b,c,d>(h,x)(y)=\rectangle_y_integrand<a,b,c,d>(f,x)(y)+\rectangle_y_integrand<a,b,c,d>(g,x)(y)
+            release thm real_closed_rectangle_sorted_pair(a,b,c,d,x,y)
+            h((x,y))=f((x,y))+g((x,y))
+            release thm rectangle_y_integrand_value(a,b,c,d,f,x,y)
+            release thm rectangle_y_integrand_value(a,b,c,d,g,x,y)
+            release thm rectangle_y_integrand_value(a,b,c,d,h,x,y)
+        release thm riemann_integral_add(\rectangle_y_integrand<a,b,c,d>(f,x),\rectangle_y_integrand<a,b,c,d>(g,x),\rectangle_y_integrand<a,b,c,d>(h,x),c,d,u(x),v(x))
+        w(x)=u(x)+v(x)
+    by def $has_y_section_integrals(a,b,c,d,h,w)
+    release thm riemann_integral_add(u,v,w,a,b,A,B)
+    release thm iterated_integral_y_then_x_from_profile(a,b,c,d,h,w,A+B)
+
+thm iterated_integral_x_then_y_add:
+    ? forall a R,b {t R:a<=t},c R,d {t R:c<=t},f,g,h fn(p \real_closed_rectangle<a,b,c,d>) R,A,B R:
+        $has_iterated_integral_x_then_y(a,b,c,d,f,A)
+        $has_iterated_integral_x_then_y(a,b,c,d,g,B)
+        forall p \real_closed_rectangle<a,b,c,d>:
+            h(p)=f(p)+g(p)
+        =>:
+            $has_iterated_integral_x_then_y(a,b,c,d,h,A+B)
+    obtain u from $has_iterated_integral_x_then_y(a,b,c,d,f,A)
+    obtain v from $has_iterated_integral_x_then_y(a,b,c,d,g,B)
+    have fn w(y '[min(c,d),max(c,d)]) R=u(y)+v(y)
+    claim:
+        ? forall y '[min(c,d),max(c,d)]:
+            $has_riemann_integral(\rectangle_x_integrand<a,b,c,d>(h,y),a,b,w(y))
+        $has_riemann_integral(\rectangle_x_integrand<a,b,c,d>(f,y),a,b,u(y))
+        $has_riemann_integral(\rectangle_x_integrand<a,b,c,d>(g,y),a,b,v(y))
+        claim:
+            ? forall x '[min(a,b),max(a,b)]:
+                \rectangle_x_integrand<a,b,c,d>(h,y)(x)=\rectangle_x_integrand<a,b,c,d>(f,y)(x)+\rectangle_x_integrand<a,b,c,d>(g,y)(x)
+            release thm real_closed_rectangle_sorted_pair(a,b,c,d,x,y)
+            h((x,y))=f((x,y))+g((x,y))
+            release thm rectangle_x_integrand_value(a,b,c,d,f,x,y)
+            release thm rectangle_x_integrand_value(a,b,c,d,g,x,y)
+            release thm rectangle_x_integrand_value(a,b,c,d,h,x,y)
+        release thm riemann_integral_add(\rectangle_x_integrand<a,b,c,d>(f,y),\rectangle_x_integrand<a,b,c,d>(g,y),\rectangle_x_integrand<a,b,c,d>(h,y),a,b,u(y),v(y))
+        w(y)=u(y)+v(y)
+    by def $has_x_section_integrals(a,b,c,d,h,w)
+    release thm riemann_integral_add(u,v,w,c,d,A,B)
+    release thm iterated_integral_x_then_y_from_profile(a,b,c,d,h,w,A+B)
+
+thm iterated_integral_y_then_x_scale:
+    ? forall a R,b {t R:a<=t},c R,d {t R:c<=t},f,h fn(p \real_closed_rectangle<a,b,c,d>) R,k,A R:
+        $has_iterated_integral_y_then_x(a,b,c,d,f,A)
+        forall p \real_closed_rectangle<a,b,c,d>:
+            h(p)=k*f(p)
+        =>:
+            $has_iterated_integral_y_then_x(a,b,c,d,h,k*A)
+    obtain u from $has_iterated_integral_y_then_x(a,b,c,d,f,A)
+    have fn w(x '[min(a,b),max(a,b)]) R=k*u(x)
+    claim:
+        ? forall x '[min(a,b),max(a,b)]:
+            $has_riemann_integral(\rectangle_y_integrand<a,b,c,d>(h,x),c,d,w(x))
+        $has_riemann_integral(\rectangle_y_integrand<a,b,c,d>(f,x),c,d,u(x))
+        claim:
+            ? forall y '[min(c,d),max(c,d)]:
+                \rectangle_y_integrand<a,b,c,d>(h,x)(y)=k*\rectangle_y_integrand<a,b,c,d>(f,x)(y)
+            release thm real_closed_rectangle_sorted_pair(a,b,c,d,x,y)
+            h((x,y))=k*f((x,y))
+            release thm rectangle_y_integrand_value(a,b,c,d,f,x,y)
+            release thm rectangle_y_integrand_value(a,b,c,d,h,x,y)
+        release thm riemann_integral_scale(\rectangle_y_integrand<a,b,c,d>(f,x),\rectangle_y_integrand<a,b,c,d>(h,x),c,d,k,u(x))
+        w(x)=k*u(x)
+    by def $has_y_section_integrals(a,b,c,d,h,w)
+    release thm riemann_integral_scale(u,w,a,b,k,A)
+    release thm iterated_integral_y_then_x_from_profile(a,b,c,d,h,w,k*A)
+
+thm iterated_integral_x_then_y_scale:
+    ? forall a R,b {t R:a<=t},c R,d {t R:c<=t},f,h fn(p \real_closed_rectangle<a,b,c,d>) R,k,A R:
+        $has_iterated_integral_x_then_y(a,b,c,d,f,A)
+        forall p \real_closed_rectangle<a,b,c,d>:
+            h(p)=k*f(p)
+        =>:
+            $has_iterated_integral_x_then_y(a,b,c,d,h,k*A)
+    obtain u from $has_iterated_integral_x_then_y(a,b,c,d,f,A)
+    have fn w(y '[min(c,d),max(c,d)]) R=k*u(y)
+    claim:
+        ? forall y '[min(c,d),max(c,d)]:
+            $has_riemann_integral(\rectangle_x_integrand<a,b,c,d>(h,y),a,b,w(y))
+        $has_riemann_integral(\rectangle_x_integrand<a,b,c,d>(f,y),a,b,u(y))
+        claim:
+            ? forall x '[min(a,b),max(a,b)]:
+                \rectangle_x_integrand<a,b,c,d>(h,y)(x)=k*\rectangle_x_integrand<a,b,c,d>(f,y)(x)
+            release thm real_closed_rectangle_sorted_pair(a,b,c,d,x,y)
+            h((x,y))=k*f((x,y))
+            release thm rectangle_x_integrand_value(a,b,c,d,f,x,y)
+            release thm rectangle_x_integrand_value(a,b,c,d,h,x,y)
+        release thm riemann_integral_scale(\rectangle_x_integrand<a,b,c,d>(f,y),\rectangle_x_integrand<a,b,c,d>(h,y),a,b,k,u(y))
+        w(y)=k*u(y)
+    by def $has_x_section_integrals(a,b,c,d,h,w)
+    release thm riemann_integral_scale(u,w,c,d,k,A)
+    release thm iterated_integral_x_then_y_from_profile(a,b,c,d,h,w,k*A)
+

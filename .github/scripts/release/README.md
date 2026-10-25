@@ -101,6 +101,12 @@ cargo test --release --all-targets --locked
 cargo package --list --allow-dirty --locked --offline
 ```
 
+The `reading_http` suite requires real loopback sockets. Its early-rejection
+regression sends 64 KiB request bodies and checks complete HTTP error responses,
+including their declared byte lengths. Run it repeatedly before release when
+changing the reader's connection lifecycle; a single successful run can miss
+packet-timing failures. Connection resets and truncated responses remain failures.
+
 Run the registered real-Lean gates too before release. Cargo test names
 alone do not establish their execution. Local textbook projects under `scripts/`
 are optional and are not release prerequisites. Run them only when the user

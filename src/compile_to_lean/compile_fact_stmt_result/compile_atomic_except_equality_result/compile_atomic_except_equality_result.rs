@@ -103,6 +103,14 @@ impl LitexToLeanCompiler {
                     self.compile_known_atomic(proof, &success.fact, position)?
                 }
                 AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(rule) => match rule {
+                    AtomicExceptEqualityFactSearchProofByBuiltinRule::IsFiniteSetFact(rule) => {
+                        use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::is_finite_set::IsFiniteSetFactSearchProofByBuiltinRule;
+                        let AtomicFact::IsFiniteSetFact(fact) = &success.fact else { return Err(LeanCompileError::unsupported("FiniteSet/FactSubject")); };
+                        match rule {
+                            IsFiniteSetFactSearchProofByBuiltinRule::ListSet(_) => self.compile_list_finite(&fact.set, position)?,
+                            _ => return Err(LeanCompileError::unsupported("FiniteSet/Rule")),
+                        }
+                    },
                     AtomicExceptEqualityFactSearchProofByBuiltinRule::IsSetFact(
                         IsSetFactSearchProofByBuiltinRule::AlwaysTrue(_),
                     ) => match &success.fact {
@@ -139,9 +147,13 @@ impl LitexToLeanCompiler {
                             format!("(Litex.standardNonempty (M := M) Litex.StandardSetValue.{})", standard_value_constructor(&p.target_set)?)
                         }
                     },
+                    AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_equal::NotEqualFactSearchProofByBuiltinRule::PeriodicTrigNonzero(p)) => self.compile_periodic_trig_nonzero(&success.fact,p,position)?,
                     rule @ (AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(_) | AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterFact(_) | AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(_) | AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterEqualFact(_) | AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(_)) => self.compile_order_builtin(&success.fact, rule, position)?,
                     AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(rule) => match &success.fact {
                         AtomicFact::InFact(fact) => match rule {
+                            InFactSearchProofByBuiltinRule::IntervalMembership(p) => self.compile_real_interval_member(fact,&[&p.in_real_proof,&p.lower_bound_proof,&p.upper_bound_proof],position)?,
+                            InFactSearchProofByBuiltinRule::OneSideInfinityIntervalMembership(p) => self.compile_real_interval_member(fact,&[&p.in_real_proof,&p.endpoint_bound_proof],position)?,
+                            InFactSearchProofByBuiltinRule::NativeConstantMembership(p) => self.compile_native_constant_member(fact, &p.kind, position)?,
                             InFactSearchProofByBuiltinRule::AnonymousFnInDeclaredFnSet(_) => self.compile_literal_function_member(fact, position)?,
                             InFactSearchProofByBuiltinRule::CompositionApplicationInCodomain(p) => self.compile_composition_output(fact,p,position)?,
                             InFactSearchProofByBuiltinRule::CompositionInFunctionSet(p) => {
@@ -158,6 +170,9 @@ impl LitexToLeanCompiler {
                             crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule::ComplexArithmeticClosure(_) => self.compile_complex_arithmetic_closure(fact, position)?,
                             InFactSearchProofByBuiltinRule::RealPower(_) | InFactSearchProofByBuiltinRule::RealOperandArithmeticClosure(_) | InFactSearchProofByBuiltinRule::RealArithmeticConstructorClosure(_) => self.compile_real_arithmetic_membership(fact, rule, position)?,
                             InFactSearchProofByBuiltinRule::PredecessorFromPositiveNatural(p) => self.compile_natural_predecessor(fact, &p.in_natural_proof, &p.positive_proof, position)?,
+                            InFactSearchProofByBuiltinRule::FiniteSetMaxMember(p) => self.compile_finite_extremum_member(fact, true, &p.set_equal, position)?,
+                            InFactSearchProofByBuiltinRule::AggregateScalarCodomain(p) => self.compile_scalar_aggregate_member(fact, p, position)?,
+                            InFactSearchProofByBuiltinRule::FiniteSetMinMember(p) => self.compile_finite_extremum_member(fact, false, &p.set_equal, position)?,
                             InFactSearchProofByBuiltinRule::FiniteSetSubsetMembership(_) | InFactSearchProofByBuiltinRule::ListSetElementMembership(_) | InFactSearchProofByBuiltinRule::SetBuilderMembership(_) => self.compile_set_membership_rule(fact, rule, position)?,
                             InFactSearchProofByBuiltinRule::StructObjMembership(p) => self.compile_struct_membership(fact, p, position)?,
                             InFactSearchProofByBuiltinRule::CartMembership(p) => self.compile_cart_membership(fact, &p.domain, None, &p.proof_of_requirement_facts, position)?,
@@ -188,6 +203,12 @@ impl LitexToLeanCompiler {
                 },
                 AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::PreimageMembership(p)) => self.compile_preimage_membership(&success.fact, false, &p.construction, &p.input_view, &p.requirement_facts, &p.proof_of_requirement_facts, position)?,
                 AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::PreimageSetMembership(p)) => self.compile_preimage_membership(&success.fact, true, &p.construction, &p.input_view, &p.requirement_facts, &p.proof_of_requirement_facts, position)?,
+                AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::IntervalMembership(p)) => {
+                    let AtomicFact::InFact(fact)=&success.fact else{return Err(LeanCompileError::unsupported("RealInterval/StrategySubject"))};
+                    if p.requirement_facts.len()!=p.proof_of_requirement_facts.len(){return Err(LeanCompileError::unsupported("RealInterval/StrategyStages"))}
+                    for (fact,proof) in p.requirement_facts.iter().zip(&p.proof_of_requirement_facts){if &source_subject(proof)?!=fact{return Err(LeanCompileError::unsupported("RealInterval/StrategyPremise"))}}
+                    self.compile_real_interval_member(fact,&p.proof_of_requirement_facts.iter().collect::<Vec<_>>(),position)?
+                },
                 AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::NonzeroProduct(proof)) =>
                     self.compile_nonzero_product(&success.fact, &proof.requirement_facts, &proof.proof_of_requirement_facts, position)?,
                 AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::SubNonnegativeFromZero(proof)) =>

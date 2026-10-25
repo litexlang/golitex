@@ -1,0 +1,137 @@
+# Ordered iterated integrals of x*y on [0,1] x [0,2].
+# Run: target/release/litex -strict -lang en -f examples/real_analysis/multivariable/iterated_integrals/main.lit
+# Each order is proved separately; this is not an invocation of Fubini.
+# Before existence, this selected-value use is rejected (executable negative controls):
+# \analysis::iterated_integrals::iterated_integral_y_then_x<0,1,0,2>(product_on_rectangle)=1
+
+have fn product_on_rectangle(p cart_n(R,2): p $in \analysis::iterated_integrals::real_closed_rectangle<0,1,0,2>) R=p(1)*p(2)
+
+product_on_rectangle $in fn(p \analysis::iterated_integrals::real_closed_rectangle<0,1,0,2>) R
+
+'[min(0,2),max(0,2)] = '[0,2]
+
+'[0,2] $subset '[min(0,2),max(0,2)]
+
+'[min(0,1),max(0,1)] = '[0,1]
+
+'[0,1] $subset '[min(0,1),max(0,1)]
+
+have fn y_integrals(x '[min(0,1),max(0,1)]) R=2*x
+
+claim:
+    ? forall x '[min(0,1),max(0,1)]:
+        $has_riemann_integral(\analysis::iterated_integrals::rectangle_y_integrand<0,1,0,2>(product_on_rectangle,x),0,2,y_integrals(x))
+    have fn identity_y(y '[min(0,2),max(0,2)]) R=y
+    release thm riemann_integral_power(identity_y,0,2,1)
+    claim:
+        ? forall y '[0,2]:
+            \analysis::iterated_integrals::rectangle_y_integrand<0,1,0,2>(product_on_rectangle,x)(y)=x*identity_y(y)
+        release thm analysis::iterated_integrals::real_closed_rectangle_sorted_pair(0,1,0,2,x,y)
+        release thm analysis::iterated_integrals::rectangle_y_integrand_value(0,1,0,2,product_on_rectangle,x,y)
+        product_on_rectangle((x,y))=x*y
+    release thm riemann_integral_scale(identity_y,\analysis::iterated_integrals::rectangle_y_integrand<0,1,0,2>(product_on_rectangle,x),0,2,x,2)
+    y_integrals(x)=x*2
+
+by def $analysis::iterated_integrals::has_y_section_integrals(0,1,0,2,product_on_rectangle,y_integrals)
+
+have fn identity_outer_x(x '[min(0,1),max(0,1)]) R=x
+
+release thm riemann_integral_power(identity_outer_x,0,1,1)
+
+release thm riemann_integral_scale(identity_outer_x,y_integrals,0,1,2,1/2)
+
+release thm analysis::iterated_integrals::iterated_integral_y_then_x_from_profile(0,1,0,2,product_on_rectangle,y_integrals,1)
+
+release thm analysis::iterated_integrals::iterated_integral_y_then_x_integrable(0,1,0,2,product_on_rectangle,1)
+
+release thm analysis::iterated_integrals::iterated_integral_y_then_x_value(0,1,0,2,product_on_rectangle,1)
+
+\analysis::iterated_integrals::iterated_integral_y_then_x<0,1,0,2>(product_on_rectangle)=1
+
+have fn x_integrals(y '[min(0,2),max(0,2)]) R=y/2
+
+claim:
+    ? forall y '[min(0,2),max(0,2)]:
+        $has_riemann_integral(\analysis::iterated_integrals::rectangle_x_integrand<0,1,0,2>(product_on_rectangle,y),0,1,x_integrals(y))
+    have fn identity_inner_x(x '[min(0,1),max(0,1)]) R=x
+    release thm riemann_integral_power(identity_inner_x,0,1,1)
+    claim:
+        ? forall x '[0,1]:
+            \analysis::iterated_integrals::rectangle_x_integrand<0,1,0,2>(product_on_rectangle,y)(x)=y*identity_inner_x(x)
+        release thm analysis::iterated_integrals::real_closed_rectangle_sorted_pair(0,1,0,2,x,y)
+        release thm analysis::iterated_integrals::rectangle_x_integrand_value(0,1,0,2,product_on_rectangle,x,y)
+        product_on_rectangle((x,y))=x*y=y*identity_inner_x(x)
+    release thm riemann_integral_scale(identity_inner_x,\analysis::iterated_integrals::rectangle_x_integrand<0,1,0,2>(product_on_rectangle,y),0,1,y,1/2)
+    x_integrals(y)=y*(1/2)
+
+by def $analysis::iterated_integrals::has_x_section_integrals(0,1,0,2,product_on_rectangle,x_integrals)
+
+have fn identity_outer_y(y '[min(0,2),max(0,2)]) R=y
+
+release thm riemann_integral_power(identity_outer_y,0,2,1)
+
+release thm riemann_integral_scale(identity_outer_y,x_integrals,0,2,1/2,2)
+
+release thm analysis::iterated_integrals::iterated_integral_x_then_y_from_profile(0,1,0,2,product_on_rectangle,x_integrals,1)
+
+release thm analysis::iterated_integrals::iterated_integral_x_then_y_integrable(0,1,0,2,product_on_rectangle,1)
+
+release thm analysis::iterated_integrals::iterated_integral_x_then_y_value(0,1,0,2,product_on_rectangle,1)
+
+\analysis::iterated_integrals::iterated_integral_x_then_y<0,1,0,2>(product_on_rectangle)=1
+
+# Constants, linearity for both orders, and a zero-width rectangle.
+have fn constant_on_rectangle(p \analysis::iterated_integrals::real_closed_rectangle<0,1,0,2>) R=7
+
+release thm analysis::iterated_integrals::iterated_integral_y_then_x_constant(0,1,0,2,constant_on_rectangle,7)
+
+release thm analysis::iterated_integrals::iterated_integral_y_then_x_integrable(0,1,0,2,constant_on_rectangle,14)
+
+release thm analysis::iterated_integrals::iterated_integral_y_then_x_value(0,1,0,2,constant_on_rectangle,14)
+
+\analysis::iterated_integrals::iterated_integral_y_then_x<0,1,0,2>(constant_on_rectangle)=14
+
+release thm analysis::iterated_integrals::iterated_integral_x_then_y_constant(0,1,0,2,constant_on_rectangle,7)
+
+release thm analysis::iterated_integrals::iterated_integral_x_then_y_integrable(0,1,0,2,constant_on_rectangle,14)
+
+release thm analysis::iterated_integrals::iterated_integral_x_then_y_value(0,1,0,2,constant_on_rectangle,14)
+
+\analysis::iterated_integrals::iterated_integral_x_then_y<0,1,0,2>(constant_on_rectangle)=14
+
+have fn scaled_product(p \analysis::iterated_integrals::real_closed_rectangle<0,1,0,2>) R=3*product_on_rectangle(p)
+
+forall p \analysis::iterated_integrals::real_closed_rectangle<0,1,0,2>:
+    scaled_product(p)=3*product_on_rectangle(p)
+
+release thm analysis::iterated_integrals::iterated_integral_y_then_x_scale(0,1,0,2,product_on_rectangle,scaled_product,3,1)
+
+release thm analysis::iterated_integrals::iterated_integral_x_then_y_scale(0,1,0,2,product_on_rectangle,scaled_product,3,1)
+
+have fn sum_product(p \analysis::iterated_integrals::real_closed_rectangle<0,1,0,2>) R=product_on_rectangle(p)+scaled_product(p)
+
+forall p \analysis::iterated_integrals::real_closed_rectangle<0,1,0,2>:
+    sum_product(p)=product_on_rectangle(p)+scaled_product(p)
+
+release thm analysis::iterated_integrals::iterated_integral_y_then_x_add(0,1,0,2,product_on_rectangle,scaled_product,sum_product,1,3)
+
+release thm analysis::iterated_integrals::iterated_integral_x_then_y_add(0,1,0,2,product_on_rectangle,scaled_product,sum_product,1,3)
+
+release thm analysis::iterated_integrals::iterated_integral_y_then_x_integrable(0,1,0,2,sum_product,4)
+
+release thm analysis::iterated_integrals::iterated_integral_y_then_x_value(0,1,0,2,sum_product,4)
+
+\analysis::iterated_integrals::iterated_integral_y_then_x<0,1,0,2>(sum_product)=4
+
+have fn degenerate_constant(p \analysis::iterated_integrals::real_closed_rectangle<0,0,0,2>) R=7
+
+release thm analysis::iterated_integrals::iterated_integral_y_then_x_constant(0,0,0,2,degenerate_constant,7)
+
+release thm analysis::iterated_integrals::iterated_integral_y_then_x_integrable(0,0,0,2,degenerate_constant,0)
+
+release thm analysis::iterated_integrals::iterated_integral_y_then_x_value(0,0,0,2,degenerate_constant,0)
+
+\analysis::iterated_integrals::iterated_integral_y_then_x<0,0,0,2>(degenerate_constant)=0
+
+
+

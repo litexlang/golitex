@@ -1,0 +1,7 @@
+# The setup passes; only the final statement must fail.
+thm missing_combination_premise:
+    ? forall a, b, x, y Z, d Z*:
+        $dvd(a, d)
+        =>:
+            $dvd(a * x + b * y, d)
+    release thm nt:::divisibility_linear_combination(a, b, x, y, d)

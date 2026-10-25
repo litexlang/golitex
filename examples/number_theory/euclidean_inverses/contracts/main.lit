@@ -1,0 +1,69 @@
+thm consume_gcd_add_multiple:
+    ? forall a Z, b Z*, k Z:
+        gcd(a + k * b, b) = gcd(a, b)
+    release thm nt:::gcd_add_multiple(a,b,k)
+
+thm consume_congruence_gcd_invariant:
+    ? forall a, c Z, m N+:
+        $nt:::is_congruent_mod(a, c, m)
+        =>:
+            gcd(a, m) = gcd(c, m)
+    release thm nt:::congruence_gcd_invariant(a,c,m)
+
+thm consume_gcd_euclidean_step:
+    ? forall a Z, b N+:
+        gcd(a, b) = gcd(b, a % b)
+    release thm nt:::gcd_euclidean_step(a,b)
+
+thm consume_linear_equation_necessary_divisibility:
+    ? forall a Z, b Z*, c, x, y Z:
+        a * x + b * y = c
+        =>:
+            $dvd(c, gcd(a, b))
+    release thm nt:::linear_equation_necessary_divisibility(a,b,c,x,y)
+
+thm consume_linear_equation_from_bezout:
+    ? forall a, b, u, v, c Z, d N+:
+        a * u + b * v = d
+        $dvd(c, d)
+        =>:
+            exist x, y Z st {a * x + b * y = c}
+    release thm nt:::linear_equation_from_bezout(a,b,u,v,c,d)
+
+thm consume_modular_inverse_from_bezout:
+    ? forall a, u, v Z, m N+:
+        a * u + m * v = 1
+        =>:
+            $nt:::is_modular_inverse(a, u, m)
+    release thm nt:::modular_inverse_from_bezout(a,u,v,m)
+
+thm consume_modular_inverse_cancels:
+    ? forall a, b, c, u Z, m N+:
+        $nt:::is_modular_inverse(a, u, m)
+        $nt:::is_congruent_mod(a * b, a * c, m)
+        =>:
+            $nt:::is_congruent_mod(b, c, m)
+    release thm nt:::modular_inverse_cancels(a,b,c,u,m)
+
+thm consume_modular_linear_equation_solution:
+    ? forall a, b, u Z, m N+:
+        $nt:::is_modular_inverse(a, u, m)
+        =>:
+            $nt:::is_congruent_mod(a * (u * b), b, m)
+    release thm nt:::modular_linear_equation_solution(a,b,u,m)
+
+thm consume_modular_linear_equation_unique:
+    ? forall a, b, u, x Z, m N+:
+        $nt:::is_modular_inverse(a, u, m)
+        $nt:::is_congruent_mod(a * x, b, m)
+        =>:
+            $nt:::is_congruent_mod(x, u * b, m)
+    release thm nt:::modular_linear_equation_unique(a,b,u,x,m)
+
+thm consume_modular_inverse_unique:
+    ? forall a, u, v Z, m N+:
+        $nt:::is_modular_inverse(a, u, m)
+        $nt:::is_modular_inverse(a, v, m)
+        =>:
+            $nt:::is_congruent_mod(u, v, m)
+    release thm nt:::modular_inverse_unique(a,u,v,m)

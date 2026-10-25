@@ -1,0 +1,78 @@
+have points set = {0, 1}
+
+0 $in points
+
+1 $in points
+
+release thm top:::discrete_topology_laws(points)
+
+have fine &top:::TopologicalSpace<points> = (points, power_set(points))
+
+fine.carrier = points
+
+fine.opens = power_set(points)
+
+power_set(fine.carrier) = power_set(points) = fine.opens
+
+release thm top:::discrete_is_Hausdorff(points, fine)
+
+$top:::is_Hausdorff(points, fine)
+
+release thm top:::Hausdorff_implies_T1(points, fine)
+
+release thm top:::T1_implies_T0(points, fine)
+
+$top:::is_T0(points, fine)
+
+release thm top:::Hausdorff_implies_closed_singletons(points, fine, 0)
+
+$top:::is_closed(points, fine, {0})
+
+claim:
+    ? forall x fine.carrier:
+        $top:::is_closed(points, fine, {x})
+    release thm top:::T1_implies_closed_singletons(points, fine, x)
+
+release thm top:::closed_singletons_imply_T1(points, fine)
+
+release thm top:::two_point_subset_of_Hausdorff_is_closed(points, fine, 0, 1)
+
+release thm top:::two_point_subset_of_Hausdorff_is_closed(points, fine, 0, 0)
+
+release thm top:::finite_subsets_are_compact(points, fine, points)
+
+$top:::is_compact_subset(points, fine, points)
+
+by def $top:::is_compact_space(points, fine)
+
+release thm top:::empty_is_compact(points, fine)
+
+release thm top:::singleton_is_compact(points, fine, 0)
+
+release thm top:::singleton_is_compact(points, fine, 1)
+
+release thm top:::union_of_compact_subsets_is_compact(points, fine, {0}, {1})
+
+have target_points set = {7}
+
+7 $in target_points
+
+release thm top:::discrete_topology_laws(target_points)
+
+have target_space &top:::TopologicalSpace<target_points> = (target_points, power_set(target_points))
+
+target_space.carrier = target_points
+
+target_space.opens = power_set(target_points)
+
+have fn collapse(x points) target_points = 7
+
+collapse(0) = 7
+
+collapse(1) = 7
+
+release thm fn_set_member(collapse, fn(x fine.carrier) target_space.carrier)
+
+release thm top:::maps_from_discrete_are_continuous(points, target_points, fine, target_space, collapse)
+
+\top:::restricted_map<fine.carrier, target_space.carrier, collapse, {0}>(1) = 7

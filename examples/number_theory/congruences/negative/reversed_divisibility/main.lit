@@ -1,0 +1,2 @@
+# The setup passes; only the final statement must fail.
+$dvd(3, 12)

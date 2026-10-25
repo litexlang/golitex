@@ -4,12 +4,14 @@ Inventory totals were measured on 2026-10-23. The dated checkpoints below
 record subsequent implementations and checks. Geo is outside this plan's
 acceptance targets.
 
-Against the original inventory, the checked compiler has entrypoints for
-**40/52 statement forms and 42/94 object constructors**. The latest extension
-(2026-10-25) adds ordered dependent fields to structures with set/nonempty-set/object
-header parameters and atomic, flat conjunction or chain conditions. It widens
-existing entrypoints; these totals do not recount later native-language additions.
-The dated sections record the boundaries and evidence.
+The [current object inventory](#current-object-inventory-2026-10-25) recounts
+later native-language additions; the original denominator of 94 below is historical.
+
+The dependent-structure checkpoint reached **40/52 statement forms and 42/94
+object constructors** against the original inventory. It added ordered dependent
+fields to structures with set/nonempty-set/object header parameters and atomic,
+flat conjunction or chain conditions. Later additions and their checked
+boundaries appear in the dated sections below.
 
 The current compiler already checks a useful combination of elementary
 algebra, inequalities, sets, formula functions and named proofs. The next goal
@@ -2336,3 +2338,401 @@ supports the replayed claim/theorem/sketch block family; local `trust have`,
 closures after local witness extraction, other proof-control families and locally
 trusted universal statements remain rejected. These boundaries reject the whole
 Lean artifact rather than omitting a source step.
+
+### Current object inventory, 2026-10-25
+
+The current AST has **128 object constructor leaves**, using the same counting
+method as the original inventory: operation-family variants are separate entries;
+`Identifier`, `StandardSet`, calls and template instances each count once.
+There are **66 constructor entrypoints**, including the finite-set statistics,
+aggregates, intervals/sequences, exponential/logarithmic objects, sin/cos/tan and
+complex observations checked below, and **62 without a WD construction consumer**:
+
+| Missing family | Source objects / AST variants | Count |
+| --- | --- | ---: |
+| General folds | `reduce`, `finite_set_reduce` | 2 |
+| Trigonometric and hyperbolic functions | `Cot`, `Sec`, `Csc`, `Arcsin`, `Arccos`, `Arctan`, `Arccot`, and all 6 `HyperbolicOperator` variants | 13 |
+| Set families | `SymmetricDifference`, `FamilyIntersect`, `IndexUnion`, `IndexIntersect`, `IndexCart` | 5 |
+| Real analysis | Supremum/infimum, six limit selectors, ten derivative operators, Riemann integral | 19 |
+| Matrices and finite-dimensional operations | `MatrixSet` and all 22 `MatrixOperator` variants | 23 |
+
+This measures constructor dispatch, not complete proof-rule coverage. For example,
+`range`, `closed_range`, `finite_seq`, real intervals/rays and `seq` have consumers. All four `ExpLogOperator` constructors now have consumers. `family_union` is supported. The optional `IndexedUnionSemantics` used by
+dependent structures does not yet compile the source `index_union(I, X, A)` object.
+Function/template objects also retain the signature, body and scope boundaries
+described in their checkpoints.
+
+### Finite-set cardinality and extrema, 2026-10-25
+
+These statements now compile through their original WD and selected calculation
+or extremum-selection result:
+
+```litex
+finite_set_size({1, 2}) = 2
+finite_set_max({1 / 3, 1 / 2}) = 1 / 2
+```
+
+The objects carry finiteness evidence. Maximum and minimum also carry the
+original nonempty and real-subset proofs. Core defines cardinality from semantic
+membership and extrema from the real representatives of members; denotations
+are independent of these proofs. The bridge laws are proved from the existing
+semantic interfaces and Mathlib, without new model fields or project axioms.
+
+| Checked use | Source and generated Lean |
+| --- | --- |
+| Empty/nonempty cardinality and nested arithmetic | [Finite collection cardinality](../lean/examples/finite_collection_cardinality/) |
+| Maximum/minimum selection, including exact fractions | [Finite collection extrema](../lean/examples/finite_collection_extrema/) |
+| Arbitrary finite-set cardinality in N and nonnegativity | [Cardinality bounds](../lean/examples/finite_set_size_bounds/) |
+| Minimum/maximum bounds and extremum membership for arbitrary finite real sets | [Finite real-set bounds](../lean/examples/finite_real_set_bounds/) |
+| `finite_set` theorem parameters and a selected theorem call | [Cardinality theorem](../lean/examples/finite_cardinality_theorem/) |
+
+All five pairs pass strict source verification, independent-run regeneration and
+Lean 4.31.0. The final batch also checks three existing min/max, finite-sequence
+and template pairs. Four unchanged outputs reuse their earlier checks against
+the identical Core/toolchain; the other four receive fresh Lean checks. All 28
+exported theorem audits use only `propext`, `Classical.choice` and `Quot.sound`.
+The compiler suite passes **1143 tests**, including 11 finite-statistics tests
+covering altered selections, missing/reordered WD, empty extrema and nonreal
+inputs. New outputs are 2.0–39.4 KB. No AST, Runtime or result-producer change
+was needed.
+
+Current boundaries: automatic finiteness replay accepts finite enumerations and
+existing cited finite facts; other finiteness rules remain unsupported. These
+statistics are not yet supported as formula-function bodies, and `finite_set`
+structure headers remain rejected. Range and finite-set sums/products are
+covered by the following checkpoints; general folds remain unsupported.
+
+### Integer-range sums and products, 2026-10-25
+
+The compiler now replays these finite calculations:
+
+```litex
+sum(1, 3, fn(x Z) Z {x}) = 6
+sum(-2, 2, fn(x Z) Z {x * x}) = 10
+product(1, 3, fn(x Z) Z {x}) = 6
+```
+
+`RangeAggregateObj` retains the original certified endpoints and function. Its
+WD contains integer endpoint membership, endpoint order, the selected function
+membership, output inclusion in C and domain coverage. Its denotation uses
+Mathlib's finite sum/product over `Finset.Icc`; the function remains a Litex
+object. Numeric observations depend on the fixed denotation, not on the WD proof.
+All added Core laws are proved from the existing semantic interfaces.
+
+The original aggregate WD results now retain `signature_selection`, including
+the exact FactId for a named function's selected membership. Detailed JSON and
+reading capture retain it too. This is a local result-capture change: AST shapes,
+runtime storage, candidate order and verification behavior are unchanged.
+Finite-set sum/product results also retain this field; their consumers are
+covered by the following checkpoint.
+
+For `AggregateCalculation`, the compiler consumes the recorded index range,
+checked applications, function-equality citations, substituted bodies, term
+values and accumulated values. It emits one checked call calculation per term
+and a finite fold. It rejects missing or inconsistent evidence.
+
+| Checked use | Source and generated Lean |
+| --- | --- |
+| Integer sums and negative indices | [Integer-range sums](../lean/examples/integer_range_sums/) |
+| Integer products | [Integer-range products](../lean/examples/integer_range_products/) |
+| Exact rational terms | [Rational sum](../lean/examples/rational_range_sum/) |
+| Named function reused in a sum and a product | [Named aggregates](../lean/examples/named_range_aggregates/) |
+| Arbitrary real-valued functions and symbolic endpoints | [Scalar closure](../lean/examples/range_scalar_closure/) |
+
+All five pairs pass strict source verification, independent-run regeneration
+and Lean 4.31.0. After the shared call-denotation update below, their generated
+files are 6.3–30.7 KB.
+The compiler suite passes **1149 tests**, including six aggregate tests with
+original FactId/JSON checks, rejected domains and altered-evidence controls.
+The batch also checks three neighboring range, finite-cardinality and returned
+function examples. All 17 exported theorem audits use only `propext`,
+`Classical.choice` and `Quot.sound`. The five aggregate outputs reuse their
+just-completed checks against identical bytes, Core and toolchain; the three
+neighboring pairs receive fresh Lean checks.
+
+Current constructor boundary: an ordered closed integer range and an unguarded
+unary function whose input is Z, Q, R or C. The generic output-closure consumer
+accepts standard numeric output sets. Direct calculation currently accepts
+closed scalar bodies built from numbers, addition, subtraction, multiplication,
+division and negation. Folds, additional domain guards,
+natural-only input domains, nested aggregates, algorithm iterands, matrix terms
+and additional rewrite/evaluation stages remain rejected. This is constructor
+and selected-rule coverage, not support for every theorem about sums/products.
+
+### Finite-set sums and products, 2026-10-25
+
+The same calculation replay now supports finite-set aggregates, including a
+named set and a named function:
+
+```litex
+have finite_aggregate_set set = {2, 4, 7}
+have fn aggregate_successor(x Z) Z = x + 1
+finite_set_sum(finite_aggregate_set, aggregate_successor) = 16
+finite_set_product(finite_aggregate_set, aggregate_successor) = 120
+```
+
+`FiniteAggregateObj` retains the certified set and function, selected signature
+and numeric input carrier. Its WD consumes the original finiteness, input-subset,
+output-subset and function-membership proofs. Denotation folds over semantic
+members, independently of these proofs. The empty sum is zero and the empty
+product is one. Core's calculation bridge proves that a recorded enumeration
+has exactly those members before folding the checked function calls.
+
+The compiler replays the existing set-equality path, enumeration order, call WD,
+substituted bodies and accumulated values. Finite-set aliases also use a newly
+supported `IsFiniteSet` equality-transport branch, consuming the original cited
+equalities. No runtime or result-producer changes were needed in this increment.
+
+| Checked use | Source and generated Lean |
+| --- | --- |
+| Empty and nonempty integer sums | [Finite collection sums](../lean/examples/finite_collection_sums/) |
+| Empty and nonempty integer products | [Finite collection products](../lean/examples/finite_collection_products/) |
+| Exact rational inputs and outputs | [Rational aggregates](../lean/examples/finite_rational_aggregates/) |
+| Named set and function, with original equality citations | [Named finite aggregates](../lean/examples/named_finite_aggregates/) |
+| Arbitrary finite real sets and arbitrary real-valued functions | [Finite aggregate closure](../lean/examples/finite_aggregate_closure/) |
+
+All five pairs pass strict source verification, independent-run regeneration and
+Lean 4.31.0. Their generated outputs are 6.3–43.5 KB.
+The compiler suite passes **1154 tests**, including 11 aggregate tests covering
+missing WD, changed enumerations and accumulated values, lost/duplicated equality
+citations and unsupported guards. The final checks include four affected
+integer-range examples, for nine pairs in total. All 21 exported theorem audits
+use only `propext`, `Classical.choice` and `Quot.sound`. Two outputs reuse their
+just-completed checks against identical bytes, Core and toolchain; the other
+seven receive fresh Lean checks. Shared call replay now transports the actual
+argument denotation explicitly, including rational arguments.
+
+Current boundary: unguarded unary numeric functions and standard numeric output
+closure. Concrete calculations consume list-set enumerations with exact rational
+elements and closed scalar bodies; set aliases may use their recorded equality
+paths. Range-shaped enumerations, additional numeric rewrite stages, guards,
+nested aggregates, algorithm iterands and general folds remain unsupported.
+Generic constructor/output closure does not require an enumerated literal set.
+
+### Real intervals, rays and sequence spaces, 2026-10-25
+
+The compiler now constructs bounded real intervals, real rays and `seq(S)`,
+including arbitrary endpoints and carriers:
+
+```litex
+forall a, b, x R:
+    a < x
+    x <= b
+    =>:
+        x $in '(a, b]
+
+forall A set, s seq(A), n N+:
+    s(n) $in A
+```
+
+Interval and ray objects own their certified endpoints and consume the original
+real-membership WD. Their denotations are bounded separation from R. Endpoint
+order is not a formation requirement: reversed intervals remain legal sets.
+Membership, open-endpoint/outside exclusion, inclusion in R and inferred endpoint
+bounds replay the selected results and retain their original FactIds.
+
+`seq(S)` owns its certified carrier. Its denotation is the function space from
+N+ to S, with indices starting at 1. The compiler proves the recorded equality
+with `fn(k N+) S` in either orientation. A sequence-member expansion emits the
+original function-membership fact; subsequent calls cite it. Finite and infinite
+sequences share that emission code while validating their distinct source rules.
+No AST, Runtime or result-producer change was needed for this increment. Core
+uses the existing set/function semantic interfaces without new model fields or
+project axioms.
+
+| Checked use | Source and generated Lean |
+| --- | --- |
+| Four bounded interval shapes, endpoints and reversed-interval sethood | [Interval endpoints](../lean/examples/real_interval_endpoints/) |
+| Four real ray shapes, endpoints and exclusion | [Ray endpoints](../lean/examples/real_ray_endpoints/) |
+| Original real-membership and bound facts for arbitrary elements | [Interval bounds](../lean/examples/real_interval_bounds/) |
+| Membership and exclusion from symbolic bounds | [Symbolic membership](../lean/examples/real_interval_membership/) |
+| Arbitrary carriers, aliases, nested sequence spaces and function-space equality | [Sequence spaces](../lean/examples/infinite_sequence_spaces/) |
+| Calls into arbitrary carriers at positive-natural indices | [Sequence values](../lean/examples/infinite_sequence_values/) |
+
+All six pairs pass strict source verification, independent-run regeneration and
+Lean 4.31.0. Their outputs are 5.9–20.7 KB. The compiler suite passes **1162 tests**,
+including eight interval/sequence tests. Controls reject missing/reordered WD,
+reversed bound evidence, altered stored subjects/FactIds, a changed sequence
+index domain or result carrier, and a mismatched expansion rule. Open endpoints,
+nonreal interval endpoints and sequence calls at zero remain rejected.
+The final batch checks ten pairs, including the existing finite-sequence spaces,
+finite-sequence coordinates, integer-range bounds and set-builder unit interval.
+Six unchanged outputs reuse the checks just completed against identical Core,
+bytes and toolchain; the four neighboring pairs receive fresh Lean checks.
+All 76 exported theorem audits use only `propext`, `Classical.choice` and
+`Quot.sound`.
+
+This covers construction and the listed proof routes. General interval algebra,
+additional sequence membership rules, convergence and limit selectors remain
+outside this increment.
+
+### Constants, exponential and logarithmic objects, 2026-10-25
+
+These source statements now compile with their original WD and proof results:
+
+```litex
+forall x R:
+    ln(exp(x)) = x
+
+log(8, 4) = 2 / 3
+
+have fn exponential_value(x R) R+ = exp(x)
+have fn natural_logarithm_value(x R+) R = ln(x)
+forall x R:
+    natural_logarithm_value(exponential_value(x)) = x
+```
+
+`e` and `pi` use native numeric payloads, denoting Mathlib's `Real.exp 1` and
+`Real.pi`. `ExpObj`, `LnObj` and `LogObj` own their certified arguments. Exponential
+WD requires R membership; logarithm WD requires R+ membership. The two-argument
+logarithm retains both real memberships, both positivity proofs and the original
+base-not-one proof. Its denotation is `Real.log argument / Real.log base` through
+the existing numeric embedding. None of these denotations depends on the chosen
+WD proof, and no new semantic model fields or project axioms were added.
+
+The consumers replay intrinsic codomain proofs, exp/ln inverse identities,
+`e = exp(1)`, `ln(e) = 1`, and logarithms of one or the base. Basic log rules retain
+the original above-one, below-one or positive-nonunit evidence. Closed values
+are checked against the original calculation result. An exact rational logarithm
+p/q additionally checks `argument^q = base^p` in Lean, then applies proved log
+laws; it does not use floating-point approximations. Arithmetic normalization
+may treat these defined scalar values as opaque leaves. Formula functions keep
+their Litex representations and replay the recorded parameter substitution and
+function expansions.
+
+| Checked use | Source and generated Lean |
+| --- | --- |
+| Symbolic exp/ln inverse identities | [Inverse identities](../lean/examples/exponential_logarithm_inverse/) |
+| Positive e and pi; their exp/ln identities | [Mathematical constants](../lean/examples/positive_mathematical_constants/) |
+| Arbitrary positive nonunit bases and positive arguments | [Real log output](../lean/examples/logarithm_real_output/) |
+| Exact values, including `log(8,4)=2/3` and a base below one | [Exact values](../lean/examples/exponential_logarithm_values/) |
+| Three original base-guard routes | [Unit identities](../lean/examples/logarithm_unit_identities/) |
+| Formula functions, composition and scalar arithmetic | [Functions](../lean/examples/exponential_logarithm_functions/) |
+
+All six pairs pass strict source verification, independent-run regeneration and
+Lean 4.31.0. Generated outputs are 3.6–31.3 KB. Six focused Rust tests cover
+missing/swapped WD, wrong carriers or nonunit evidence, a missing inverse premise,
+changed calculation results and rejected source domains. The compiler regression
+passes **1168 tests**. The final Lean batch checks nine pairs, including existing
+square-root, nested-call and range-sum neighbors; three identical outputs reuse
+checks from this increment and six receive fresh checks. All 42 exported theorem
+audits use only `propext`, `Classical.choice` and `Quot.sound`.
+
+This increment does not cover every exp/log proof rule. General exp/log algebra,
+monotonicity and injectivity routes, real-exponent laws and further analytic rules
+still require their own result consumers. `ln(0)`, a unit or negative logarithm
+base, and `exp(i)` remain outside the source domains. AST, Runtime and result
+producer contracts are unchanged.
+
+### Sine, cosine and tangent, 2026-10-25
+
+These statements compile through their original WD and selected proof results:
+
+```litex
+forall x R:
+    sin(x)^2 + cos(x)^2 = 1
+
+forall x R:
+    cos(x) != 0
+    =>:
+        tan(x) = sin(x) / cos(x)
+
+sin(13 * pi / 6) = 1 / 2
+tan(pi / 6) = sqrt(3) / 3
+```
+
+`SinObj`, `CosObj` and `TanObj` own their arguments. Sine and cosine retain the
+real-membership proof; tangent also retains the original cosine-nonzero proof.
+Their fixed denotations wrap Mathlib's real trigonometric functions. The source
+result selects each value or identity adapter; the compiler does not search for
+a different proof. All new Core bridge theorems are proved, with no new semantic
+model fields, project axioms, AST fields, Runtime changes or result changes.
+
+The periodic-value consumer validates the captured pi coefficient and recorded
+value. It currently accepts closed rational coefficients: it checks the integer
+period and quadrant reduction in Lean and uses the standard exact-angle table
+at 0, pi/6, pi/4, pi/3 and pi/2. The related nonzero consumer supplies tangent WD
+at supported angles. Exact rational radicands can now expose their native
+`Real.sqrt` denotation; they remain exact radicals. Symbolic square roots keep
+their existing representation. Generated headers include the set interface when
+native constants' intrinsic R+ evidence is used inside an expression.
+
+| Checked use | Source and generated Lean |
+| --- | --- |
+| Zero, pi and half-pi values | [Special values](../lean/examples/trigonometric_special_values/) |
+| Integer periods, all quadrants, negative angles and radicals | [Periodic values](../lean/examples/trigonometric_periodic_values/) |
+| Arbitrary real arguments and tangent's domain | [Real output](../lean/examples/trigonometric_real_output/) |
+| Symbolic sine-square plus cosine-square identity | [Pythagorean identity](../lean/examples/trigonometric_pythagorean/) |
+| Tangent as a quotient, with its original nonzero premise | [Tangent quotient](../lean/examples/tangent_quotient/) |
+| Named functions, nested calls, guarded tangent and scalar arithmetic | [Formula functions](../lean/examples/trigonometric_functions/) |
+
+All six pairs pass strict source verification, independent-run regeneration and
+Lean 4.31.0 with warnings treated as errors. Generated outputs are 3.0–58.4 KB.
+The batch checks nine pairs including square-root and exp/log neighbors, with
+43 exported theorem audits using only `propext`, `Classical.choice` and
+`Quot.sound`. Six identical files reuse successful checks from the same batch;
+three receive fresh final checks. The compiler regression passes **1173 tests**,
+including rejection tests for missing or altered WD, wrong nonzero subjects,
+changed period coefficients/values, complex arguments and tangent poles. Final
+exact-angle renderer corrections are checked on the actual generated Lean.
+
+This increment does not cover symbolic integer-period certificates, arbitrary
+trigonometric identities or inequalities, inverse trigonometric functions,
+reciprocal trigonometric functions or hyperbolic functions. Existing formula
+function arity and scope boundaries still apply. Unsupported routes reject the
+whole compilation artifact.
+
+### Complex conjugation, coordinates and modulus, 2026-10-25
+
+These source statements compile with their original execution evidence:
+
+```litex
+re(i) = 0
+img(i) = 1
+C_abs(3 + 4*i) = 5
+
+forall z C:
+    re(z) + img(z)*i = z
+    conj(conj(z)) = z
+    C_abs(z) >= 0
+```
+
+`ConjugateObj`, `RealPartObj`, `ImaginaryPartObj` and `ComplexAbsObj` own the
+argument and its C-membership proof. Their fixed denotations wrap native complex
+conjugation, real/imaginary projection and norm. Conjugation returns a complex
+object; coordinates and modulus return real objects. No new model fields,
+project axioms, AST fields, Runtime behavior or result fields are required.
+
+Consumers replay exact closed calculations, intrinsic codomains, coordinate
+reconstruction, conjugation involution and coordinate/modulus laws, conjugation
+of sums/products, and modulus nonnegativity/multiplicativity. Exact modulus
+calculations check the squared norm and the nonnegative root in Lean, including
+rational coordinates. Formula functions retain the original Litex objects and
+consume recorded substitutions and expansions.
+
+| Checked use | Source and generated Lean |
+| --- | --- |
+| Exact coordinates, conjugate and modulus, including rational coordinates | [Complex values](../lean/examples/complex_observation_values/) |
+| Output carriers for arbitrary complex inputs | [Codomains](../lean/examples/complex_observation_codomain/) |
+| Reconstruction from real and imaginary parts | [Coordinate reconstruction](../lean/examples/complex_coordinate_reconstruction/) |
+| Involution, coordinate/modulus preservation and addition/multiplication | [Conjugation laws](../lean/examples/complex_conjugation_laws/) |
+| Nonnegative and multiplicative modulus | [Modulus laws](../lean/examples/complex_modulus_laws/) |
+| Coordinate/modulus functions and nested conjugation calls | [Formula functions](../lean/examples/complex_observation_functions/) |
+
+All six pairs pass strict source verification, independent-run regeneration and
+Lean 4.31.0 with warnings treated as errors. New generated outputs are 3.0–21.7 KB.
+The final batch covers nine pairs, including complex rotation, complex polynomial
+and trigonometric-function neighbors. Four identical files reuse successful
+checks from the same batch; five receive fresh checks. All 33 exported theorem
+audits use only `propext`, `Classical.choice` and `Quot.sound`. The compiler
+regression passes **1177 tests**. Five final focused tests cover the example
+sources, missing/altered WD, changed calculation values, rejected set arguments
+and a mismatched conjugation rule; these overlap the regression. Final numeric
+rendering and the fractional-coordinate example are also checked on actual
+generated Lean.
+
+Constructor coverage does not imply every complex proof route is supported.
+Modulus radical-value certificates, the general coordinate formula for modulus,
+coordinate quotient rules, real-specific conjugation and natural-power rules,
+and further complex inequality rules still need consumers. Existing formula
+function arity and scope boundaries remain in place.

@@ -560,10 +560,49 @@ impl LitexToLeanCompiler {
                                 self.compile_range_inference(proof, seed, compiled, &prior)?,
                             );
                         }
+                        InferInFactResult::SeqExpand(proof) => {
+                            if !matches!(seed, Fact::AtomicFact(AtomicFact::InFact(f))
+                                if matches!(&f.set, Obj::SetFormer(SetFormer::SeqSet(_))))
+                            {
+                                return Err(LeanCompileError::unsupported("Seq/InferenceSource"));
+                            }
+                            declarations.extend(self.compile_sequence_inference(
+                                &proof.derived,
+                                seed,
+                                compiled,
+                                &prior,
+                            )?);
+                        }
                         InferInFactResult::FiniteSeqExpand(proof) => {
-                            declarations.extend(
-                                self.compile_finite_seq_inference(proof, seed, compiled, &prior)?,
-                            );
+                            if !matches!(seed, Fact::AtomicFact(AtomicFact::InFact(f))
+                                if matches!(&f.set, Obj::SetFormer(SetFormer::FiniteSeqSet(_))))
+                            {
+                                return Err(LeanCompileError::unsupported(
+                                    "FiniteSeq/InferenceSource",
+                                ));
+                            }
+                            declarations.extend(self.compile_sequence_inference(
+                                &proof.derived,
+                                seed,
+                                compiled,
+                                &prior,
+                            )?);
+                        }
+                        InferInFactResult::RealInterval(p) => {
+                            declarations.extend(self.compile_real_interval_inference(
+                                &[&p.real_membership, &p.lower_bound, &p.upper_bound],
+                                seed,
+                                compiled,
+                                &prior,
+                            )?);
+                        }
+                        InferInFactResult::OneSideRealInterval(p) => {
+                            declarations.extend(self.compile_real_interval_inference(
+                                &[&p.real_membership, &p.bound],
+                                seed,
+                                compiled,
+                                &prior,
+                            )?);
                         }
                         InferInFactResult::Range(proof) => {
                             declarations.extend(self.compile_integer_interval_inference(
@@ -650,6 +689,9 @@ impl LitexToLeanCompiler {
                             | InferInFactResult::SignedStandardSetSign(_)
                             | InferInFactResult::CartCoordinates(_)
                             | InferInFactResult::FnRange(_)
+                            | InferInFactResult::RealInterval(_)
+                            | InferInFactResult::OneSideRealInterval(_)
+                            | InferInFactResult::SeqExpand(_)
                             | InferInFactResult::FiniteSeqExpand(_)
                             | InferInFactResult::Range(_)
                             | InferInFactResult::ClosedRange(_)

@@ -99,7 +99,8 @@ impl LitexToLeanCompiler {
         for ((_, source), (_, target)) in source_parameters.iter().zip(&target_parameters) {
             match (source, target) {
                 (ParamType::Set(_), ParamType::Set(_))
-                | (ParamType::NonemptySet(_), ParamType::NonemptySet(_)) => {}
+                | (ParamType::NonemptySet(_), ParamType::NonemptySet(_))
+                | (ParamType::FiniteSet(_), ParamType::FiniteSet(_)) => {}
                 (ParamType::Obj(source), ParamType::Obj(target))
                     if instantiated_object_matches(source, target, &substitution) => {}
                 (ParamType::Obj(_), ParamType::Obj(_)) => {
@@ -333,11 +334,15 @@ impl LitexToLeanCompiler {
             let position = &group_position;
             if matches!(
                 &group.param_type,
-                ParamType::Set(_) | ParamType::NonemptySet(_)
+                ParamType::Set(_) | ParamType::NonemptySet(_) | ParamType::FiniteSet(_)
             ) {
                 if !matches!(
                     (&group.param_type, wd),
                     (ParamType::Set(_), ParamTypeWellDefinedProof::Set)
+                        | (
+                            ParamType::FiniteSet(_),
+                            ParamTypeWellDefinedProof::FiniteSet
+                        )
                         | (
                             ParamType::NonemptySet(_),
                             ParamTypeWellDefinedProof::NonemptySet

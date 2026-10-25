@@ -1,3 +1,4 @@
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_scalar_identities::ScalarIdentityBuiltinRuleProof;
 use crate::compile_to_lean::helper::*;
 use crate::compile_to_lean::source_position::{SourcePosition, SourceOwner};
 use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
@@ -163,12 +164,19 @@ impl LitexToLeanCompiler {
             EqualFactSearchedProof::ByTheyAreTheSame(
                 proof @ TheyAreTheSameProof::SameFreeParamShape(_),
             ) => self.compile_identity(&fact.left, &fact.right, proof, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::TrigComplexIdentity(crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_trig_complex_identities::TrigComplexIdentityProof::PeriodicTrig(p))) => self.compile_periodic_trig(fact, p, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::PythagoreanIdentity(_)) => self.compile_trig_identity(fact, false, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::TanQuotientDefinition(_)) => self.compile_trig_identity(fact, true, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::TrigComplexIdentity(crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_trig_complex_identities::TrigComplexIdentityProof::ComplexReconstruction)) => self.compile_complex_reconstruction(fact, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::Conjugation(p)) => self.compile_conjugate_identity(fact, p, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::TrigComplexIdentity(crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_trig_complex_identities::TrigComplexIdentityProof::ComplexModulusProduct)) => self.compile_complex_modulus_product(fact,position)?,
             EqualFactSearchedProof::ByClosedCalculation(proof) => {
                 self.compile_closed_equality(fact, proof, position)?
             }
             EqualFactSearchedProof::ByKnownSpecialProperty(proof) => {
                 self.compile_equality_known_special_property(fact, proof, position)?
             }
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::ScalarIdentity(p @ (ScalarIdentityBuiltinRuleProof::FiniteSetMaxSelection(_) | ScalarIdentityBuiltinRuleProof::FiniteSetMinSelection(_)))) => self.compile_finite_extremum_selection(fact, p, position)?,
             EqualFactSearchedProof::ByBuiltinRule(
                 EqualitySearchProofByBuiltinRule::AbsNonnegEqualsSelf(proof),
             ) => self.compile_abs_nonnegative_identity(fact, proof, position)?,
@@ -454,6 +462,14 @@ impl LitexToLeanCompiler {
             EqualFactSearchedProof::ByBuiltinRule(
                 EqualitySearchProofByBuiltinRule::Composition(p),
             ) => self.compile_composition_equality(fact, p, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::AggregateCalculation(proof)) => self.compile_aggregate_calculation(fact, proof, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::SeqEqualsFnOnNPos(_)) => self.compile_seq_equality(fact, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::LnOfExp(_)) => self.compile_exp_ln_inverse(fact, false, &[], position)?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::ExpOfLn(p)) => self.compile_exp_ln_inverse(fact, true, &p.proof_of_requirement_facts, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::EulerEqualsExpOne(_)) => self.compile_euler_identity(fact, false, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::LnOfEuler(_)) => self.compile_euler_identity(fact, true, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::LogOfOne(p)) => self.compile_log_basic_identity(fact, false, &p.proof_of_requirement_facts, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::LogBaseSelf(p)) => self.compile_log_basic_identity(fact, true, &p.proof_of_requirement_facts, position)?,
             EqualFactSearchedProof::ByBuiltinRule(_) => {
                 return Err(LeanCompileError::new(
                     "Equality/BuiltinRule",

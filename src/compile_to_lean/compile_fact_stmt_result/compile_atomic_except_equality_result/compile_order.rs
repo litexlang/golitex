@@ -229,6 +229,44 @@ impl LitexToLeanCompiler {
     ) -> Result<String, LeanCompileError> {
         match (goal, rule) {
             (
+                _,
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(
+                    LessEqualFactSearchProofByBuiltinRule::FiniteSetMaxMemberLe(p),
+                ),
+            ) => self.compile_finite_extremum_bound(goal, true, &p.member_proof, position),
+            (
+                _,
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(
+                    LessEqualFactSearchProofByBuiltinRule::FiniteSetMinMemberLe(p),
+                ),
+            ) => self.compile_finite_extremum_bound(goal, false, &p.member_proof, position),
+
+            (
+                _,
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterEqualFact(
+                    GreaterEqualFactSearchProofByBuiltinRule::ComplexModulusNonnegative,
+                ),
+            )
+            | (
+                _,
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(
+                    LessEqualFactSearchProofByBuiltinRule::ComplexModulusNonnegative,
+                ),
+            ) => self.compile_complex_modulus_nonnegative(goal, position),
+            (
+                _,
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterEqualFact(
+                    GreaterEqualFactSearchProofByBuiltinRule::FiniteSetSizeNonnegative(p),
+                ),
+            ) => self.compile_finite_size_nonnegative(goal, &p.finite_proof, position),
+            (
+                _,
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(
+                    LessEqualFactSearchProofByBuiltinRule::FiniteSetSizeNonnegativeLe(p),
+                ),
+            ) => self.compile_finite_size_nonnegative(goal, &p.finite_proof, position),
+
+            (
                 AtomicFact::LessFact(_),
                 AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(
                     LessFactSearchProofByBuiltinRule::LessTransitivity(p),

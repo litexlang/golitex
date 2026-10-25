@@ -1,0 +1,6 @@
+thm partition_missing_disjointness:
+    ? forall X, A, B finite_set:
+        union(A, B) = X
+        =>:
+            finite_set_size(X) = finite_set_size(A) + finite_set_size(B)
+    release thm comb:::disjoint_partition_size(X,A,B)

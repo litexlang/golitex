@@ -1,0 +1,276 @@
+have points set = {0, 1}
+
+0 $in points
+
+1 $in points
+
+release thm top:::discrete_topology_laws(points)
+
+have fine &top:::TopologicalSpace<points> = (points, power_set(points))
+
+fine.carrier = points
+
+fine.opens = power_set(points)
+
+power_set(fine.carrier) = power_set(points) = fine.opens
+
+release thm top:::discrete_is_Hausdorff(points, fine)
+
+$top:::is_Hausdorff(points, fine)
+
+release thm top:::Hausdorff_implies_T1(points, fine)
+
+release thm top:::T1_implies_T0(points, fine)
+
+$top:::is_T0(points, fine)
+
+release thm top:::Hausdorff_implies_closed_singletons(points, fine, 0)
+
+$top:::is_closed(points, fine, {0})
+
+claim:
+    ? forall x fine.carrier:
+        $top:::is_closed(points, fine, {x})
+    release thm top:::T1_implies_closed_singletons(points, fine, x)
+
+release thm top:::closed_singletons_imply_T1(points, fine)
+
+release thm top:::two_point_subset_of_Hausdorff_is_closed(points, fine, 0, 1)
+
+release thm top:::two_point_subset_of_Hausdorff_is_closed(points, fine, 0, 0)
+
+release thm top:::finite_subsets_are_compact(points, fine, points)
+
+$top:::is_compact_subset(points, fine, points)
+
+by def $top:::is_compact_space(points, fine)
+
+release thm top:::empty_is_compact(points, fine)
+
+release thm top:::singleton_is_compact(points, fine, 0)
+
+release thm top:::singleton_is_compact(points, fine, 1)
+
+release thm top:::union_of_compact_subsets_is_compact(points, fine, {0}, {1})
+
+have target_points set = {7}
+
+7 $in target_points
+
+release thm top:::discrete_topology_laws(target_points)
+
+have target_space &top:::TopologicalSpace<target_points> = (target_points, power_set(target_points))
+
+target_space.carrier = target_points
+
+target_space.opens = power_set(target_points)
+
+have fn collapse(x points) target_points = 7
+
+collapse(0) = 7
+
+collapse(1) = 7
+
+release thm fn_set_member(collapse, fn(x fine.carrier) target_space.carrier)
+
+release thm top:::maps_from_discrete_are_continuous(points, target_points, fine, target_space, collapse)
+
+release thm top:::continuous_image_of_compact_is_compact(points, target_points, fine, target_space, collapse, {0})
+
+$top:::is_compact_subset(target_points, target_space, fn_range(\top:::restricted_map<fine.carrier, target_space.carrier, collapse, {0}>))
+
+release thm fn_set_member(\top:::restricted_map<fine.carrier, target_space.carrier, collapse, {0}>, fn(x {0}) target_space.carrier)
+
+by extension:
+    ? fn_range(\top:::restricted_map<fine.carrier, target_space.carrier, collapse, {0}>) = {7}
+    claim:
+        ? forall y fn_range(\top:::restricted_map<fine.carrier, target_space.carrier, collapse, {0}>):
+            y $in {7}
+        have by fn_preimage: x from y $in fn_range(\top:::restricted_map<fine.carrier, target_space.carrier, collapse, {0}>)
+        y = \top:::restricted_map<fine.carrier, target_space.carrier, collapse, {0}>(x) = collapse(x) = 7
+    claim:
+        ? forall y {7}:
+            y $in fn_range(\top:::restricted_map<fine.carrier, target_space.carrier, collapse, {0}>)
+        y = 7
+        \top:::restricted_map<fine.carrier, target_space.carrier, collapse, {0}>(0) = collapse(0) = 7
+
+$top:::is_compact_subset(target_points, target_space, {7})
+
+claim:
+    ? forall y target_space.carrier:
+        exist x fine.carrier st {y = collapse(x)}
+    y $in {7}
+    y = 7
+    witness exist x fine.carrier st {y = collapse(x)} from 0
+
+by def $surjective(fine.carrier, target_space.carrier, collapse)
+
+release thm top:::continuous_surjection_preserves_compactness(points, target_points, fine, target_space, collapse)
+
+$top:::is_compact_space(target_points, target_space)
+
+release thm top:::identity_is_homeomorphism(points, fine)
+
+release thm top:::homeomorphism_preserves_Hausdorff(points, points, fine, fine, \top:::identity_map<fine.carrier>, \top:::identity_map<fine.carrier>)
+
+release thm top:::homeomorphism_preserves_compactness(points, points, fine, fine, \top:::identity_map<fine.carrier>, \top:::identity_map<fine.carrier>)
+
+release thm top:::indiscrete_topology_laws(R)
+
+have coarse_real &top:::TopologicalSpace<R> = (R, union({{}}, {R}))
+
+coarse_real.carrier = R
+
+coarse_real.opens = union({{}}, {R})
+
+claim:
+    ? forall U coarse_real.opens:
+        U = {} or U = coarse_real.carrier
+    U $in union({{}}, {R})
+    U $in {{}} or U $in {R}
+    by cases:
+        ? U = {} or U = coarse_real.carrier
+        case U $in {{}}:
+            U = {}
+        case U $in {R}:
+            U = R
+
+by def $top:::has_only_trivial_opens(R, coarse_real)
+
+release thm top:::trivial_open_space_is_compact(R, coarse_real)
+
+$top:::is_compact_space(R, coarse_real)
+
+not $is_finite_set(R)
+
+release thm top:::trivial_opens_with_distinct_points_not_T0(R, coarse_real, 0, 1)
+
+not $top:::is_T0(R, coarse_real)
+
+by contra:
+    ? not $top:::is_Hausdorff(R, coarse_real)
+    release thm top:::Hausdorff_implies_T0(R, coarse_real)
+    impossible $top:::is_T0(R, coarse_real)
+
+release thm top:::discrete_topology_laws({})
+
+have empty_space &top:::TopologicalSpace<{}> = ({}, power_set({}))
+
+empty_space.carrier = {}
+
+empty_space.opens = power_set({})
+
+power_set(empty_space.carrier) = power_set({}) = empty_space.opens
+
+release thm top:::discrete_is_Hausdorff({}, empty_space)
+
+release thm top:::finite_subsets_are_compact({}, empty_space, {})
+
+by def $top:::is_compact_space({}, empty_space)
+
+release thm fn_set_member(\top:::restricted_map<fine.carrier, target_space.carrier, collapse, {}>, fn(x {}) target_space.carrier)
+
+by extension:
+    ? fn_range(\top:::restricted_map<fine.carrier, target_space.carrier, collapse, {}>) = {}
+    claim:
+        ? forall y fn_range(\top:::restricted_map<fine.carrier, target_space.carrier, collapse, {}>):
+            y $in {}
+        have by fn_preimage: x from y $in fn_range(\top:::restricted_map<fine.carrier, target_space.carrier, collapse, {}>)
+        by contra:
+            ? y $in {}
+            impossible x $in {}
+
+release thm top:::continuous_image_of_compact_is_compact(points, target_points, fine, target_space, collapse, {})
+
+release thm top:::discrete_topology_laws(R)
+
+have fine_real &top:::TopologicalSpace<R> = (R, power_set(R))
+
+fine_real.carrier = R
+
+fine_real.opens = power_set(R)
+
+have fn singleton_cover(x R) fine_real.opens = {x}
+
+claim:
+    ? R $subset family_union(fn_range(singleton_cover))
+    claim:
+        ? forall x R:
+            x $in family_union(fn_range(singleton_cover))
+        x $in {x}
+        singleton_cover(x) = {x}
+        {x} $in fn_range(singleton_cover)
+        witness exist U fn_range(singleton_cover) st {x $in U} from {x}
+    by def R $subset family_union(fn_range(singleton_cover))
+
+by contra:
+    ? not $top:::is_compact_space(R, fine_real)
+    $top:::is_compact_subset(R, fine_real, R)
+    obtain J from exist J power_set(R) st {$is_finite_set(J), R $subset family_union(fn_range(\top:::restricted_map<R, fine_real.opens, singleton_cover, J>))}
+    release thm fn_set_member(\top:::restricted_map<R, fine_real.opens, singleton_cover, J>, fn(x J) fine_real.opens)
+    by extension:
+        ? family_union(fn_range(\top:::restricted_map<R, fine_real.opens, singleton_cover, J>)) = J
+        claim:
+            ? forall x family_union(fn_range(\top:::restricted_map<R, fine_real.opens, singleton_cover, J>)):
+                x $in J
+            obtain U from exist U fn_range(\top:::restricted_map<R, fine_real.opens, singleton_cover, J>) st {x $in U}
+            have by fn_preimage: index from U $in fn_range(\top:::restricted_map<R, fine_real.opens, singleton_cover, J>)
+            \top:::restricted_map<R, fine_real.opens, singleton_cover, J>(index) = singleton_cover(index) = {index}
+            U = \top:::restricted_map<R, fine_real.opens, singleton_cover, J>(index) = {index}
+            x $in {index}
+            x = index
+        claim:
+            ? forall x J:
+                x $in family_union(fn_range(\top:::restricted_map<R, fine_real.opens, singleton_cover, J>))
+            \top:::restricted_map<R, fine_real.opens, singleton_cover, J>(x) = singleton_cover(x) = {x}
+            {x} $in fn_range(\top:::restricted_map<R, fine_real.opens, singleton_cover, J>)
+            witness exist U fn_range(\top:::restricted_map<R, fine_real.opens, singleton_cover, J>) st {x $in U} from {x}
+    R $subset J
+    $is_finite_set(R)
+    impossible not $is_finite_set(R)
+
+points $subset R
+
+release struct def fine
+
+points $in power_set(R)
+
+power_set(points) $in power_set(power_set(points))
+
+{} $in power_set(points)
+
+points $in power_set(points)
+
+forall U, V power_set(points):
+    intersect(U, V) $in power_set(points)
+
+claim:
+    ? forall family power_set(power_set(points)):
+        family $subset power_set(points)
+        =>:
+            family_union(family) $in power_set(points)
+    claim:
+        ? forall x family_union(family):
+            x $in points
+        obtain U from exist V family st {x $in V}
+        U $in power_set(points)
+        U $subset points
+    by def family_union(family) $subset points
+
+release thm struct_member((points, power_set(points)), &top:::TopologicalSpace<R>)
+
+have sparse_space &top:::TopologicalSpace<R> = (points, power_set(points))
+
+sparse_space.carrier = points
+
+sparse_space.opens = power_set(points)
+
+power_set(sparse_space.carrier) = power_set(points) = sparse_space.opens
+
+release thm top:::discrete_is_Hausdorff(R, sparse_space)
+
+release thm top:::finite_subsets_are_compact(R, sparse_space, points)
+
+by def $top:::is_compact_space(R, sparse_space)
+
+release thm top:::Hausdorff_implies_closed_singletons(R, sparse_space, 2)

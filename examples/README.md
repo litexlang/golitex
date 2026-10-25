@@ -25,6 +25,9 @@ examples/
   tokenize/             tokenizer / Unicode input surface
   module_manager/       -r / -f / litex.config mount
   real_analysis/series/ imported real series source library and rejection controls
+  number_theory/congruences/ imported integer congruence library and rejection controls
+  topology/foundations/ imported topology, continuous maps and connectedness
+  topology/separation_compactness/ separation axioms and general finite-subcover compactness
   agent_session_demo/    Python driver for persistent-Session authoring
   knowledge_base/       persist / restore goldens
   litex_vs_lean_speed/  Litex / Lean checking-time comparisons and harness
@@ -66,6 +69,21 @@ Ordered real series:
   finite support and finite-prefix corrections. The geometric sum is proved
   before it is selected; eight independent controls check nearby invalid uses.
 
+Elementary number theory:
+
+- [Imported congruences](number_theory/congruences/README.md): native divisibility,
+  equivalence and arithmetic laws, remainder reduction, positive divisor moduli,
+  generic callers and controls for invalid domains and cancellation.
+
+General topology:
+
+- [Imported foundations](topology/foundations/README.md): arbitrary and empty
+  spaces, continuity and closed preimages, homeomorphisms, connectedness and
+  clopen sets, with independent contracts and missing-premise controls.
+- [Separation and compactness](topology/separation_compactness/README.md):
+  T0/T1/Hausdorff, compact finite subsets and continuous images, infinite
+  compact/noncompact examples, exact restriction domains and their controls.
+
 Finite-point real function limit tracers:
 
 - [Explicit punctured epsilon-delta proof, then selected-value use](wd/real_function_limit_at.lit): `x^2/x` at zero without calling the function at zero.
@@ -96,3 +114,7 @@ Standalone regression examples:
 - [Object-definition equalities](object_definition_equalities.lit).
 - [Template-defined type interfaces](stmt_nodes/definition/template_type_interfaces.lit).
 - [Inverse trigonometric principal intervals](inverse_trig_principal_intervals.lit).
+
+- [Euclidean gcd transformations and supplied modular inverses](number_theory/euclidean_inverses/README.md): strict generic/source callers, guarded cancellation, linear congruences,20 semantic controls and installed std imports.
+
+- [Finite maps and counting](combinatorics/finite_maps/README.md): pigeonhole witnesses, equal-size bijection criteria, empty sets, independent contracts and installed std imports.

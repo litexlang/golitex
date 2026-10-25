@@ -85,6 +85,20 @@
             <File Id="StdFile_basics_math_collections.md" Source="std\basics\math_collections.md" KeyPath="yes" />
           </Component>
         </Directory>
+        <Directory Id="StdDir_combinatorics" Name="combinatorics">
+          <Component Id="StdComp_combinatorics_README.md" Guid="*">
+            <File Id="StdFile_combinatorics_README.md" Source="std\combinatorics\README.md" KeyPath="yes" />
+          </Component>
+          <Component Id="StdComp_combinatorics_litex.config" Guid="*">
+            <File Id="StdFile_combinatorics_litex.config" Source="std\combinatorics\litex.config" KeyPath="yes" />
+          </Component>
+          <Component Id="StdComp_combinatorics_main.lit" Guid="*">
+            <File Id="StdFile_combinatorics_main.lit" Source="std\combinatorics\main.lit" KeyPath="yes" />
+          </Component>
+          <Component Id="StdComp_combinatorics_math_collections.md" Guid="*">
+            <File Id="StdFile_combinatorics_math_collections.md" Source="std\combinatorics\math_collections.md" KeyPath="yes" />
+          </Component>
+        </Directory>
         <Directory Id="StdDir_matrix" Name="matrix">
           <Component Id="StdComp_matrix_README.md" Guid="*">
             <File Id="StdFile_matrix_README.md" Source="std\matrix\README.md" KeyPath="yes" />
@@ -99,12 +113,29 @@
             <File Id="StdFile_matrix_math_collections.md" Source="std\matrix\math_collections.md" KeyPath="yes" />
           </Component>
         </Directory>
+        <Directory Id="StdDir_number_theory" Name="number_theory">
+          <Component Id="StdComp_number_theory_README.md" Guid="*">
+            <File Id="StdFile_number_theory_README.md" Source="std\number_theory\README.md" KeyPath="yes" />
+          </Component>
+          <Component Id="StdComp_number_theory_litex.config" Guid="*">
+            <File Id="StdFile_number_theory_litex.config" Source="std\number_theory\litex.config" KeyPath="yes" />
+          </Component>
+          <Component Id="StdComp_number_theory_main.lit" Guid="*">
+            <File Id="StdFile_number_theory_main.lit" Source="std\number_theory\main.lit" KeyPath="yes" />
+          </Component>
+          <Component Id="StdComp_number_theory_math_collections.md" Guid="*">
+            <File Id="StdFile_number_theory_math_collections.md" Source="std\number_theory\math_collections.md" KeyPath="yes" />
+          </Component>
+        </Directory>
         <Directory Id="StdDir_real_multivariable" Name="real_multivariable">
           <Component Id="StdComp_real_multivariable_README.md" Guid="*">
             <File Id="StdFile_real_multivariable_README.md" Source="std\real_multivariable\README.md" KeyPath="yes" />
           </Component>
           <Component Id="StdComp_real_multivariable_directional.lit" Guid="*">
             <File Id="StdFile_real_multivariable_directional.lit" Source="std\real_multivariable\directional.lit" KeyPath="yes" />
+          </Component>
+          <Component Id="StdComp_real_multivariable_iterated_integrals.lit" Guid="*">
+            <File Id="StdFile_real_multivariable_iterated_integrals.lit" Source="std\real_multivariable\iterated_integrals.lit" KeyPath="yes" />
           </Component>
           <Component Id="StdComp_real_multivariable_litex.config" Guid="*">
             <File Id="StdFile_real_multivariable_litex.config" Source="std\real_multivariable\litex.config" KeyPath="yes" />
@@ -125,6 +156,20 @@
           </Component>
           <Component Id="StdComp_real_series_math_collections.md" Guid="*">
             <File Id="StdFile_real_series_math_collections.md" Source="std\real_series\math_collections.md" KeyPath="yes" />
+          </Component>
+        </Directory>
+        <Directory Id="StdDir_topology" Name="topology">
+          <Component Id="StdComp_topology_README.md" Guid="*">
+            <File Id="StdFile_topology_README.md" Source="std\topology\README.md" KeyPath="yes" />
+          </Component>
+          <Component Id="StdComp_topology_litex.config" Guid="*">
+            <File Id="StdFile_topology_litex.config" Source="std\topology\litex.config" KeyPath="yes" />
+          </Component>
+          <Component Id="StdComp_topology_main.lit" Guid="*">
+            <File Id="StdFile_topology_main.lit" Source="std\topology\main.lit" KeyPath="yes" />
+          </Component>
+          <Component Id="StdComp_topology_math_collections.md" Guid="*">
+            <File Id="StdFile_topology_math_collections.md" Source="std\topology\math_collections.md" KeyPath="yes" />
           </Component>
         </Directory>
       </Directory>
@@ -159,18 +204,31 @@
       <ComponentRef Id="StdComp_basics_litex.config" />
       <ComponentRef Id="StdComp_basics_main.lit" />
       <ComponentRef Id="StdComp_basics_math_collections.md" />
+      <ComponentRef Id="StdComp_combinatorics_README.md" />
+      <ComponentRef Id="StdComp_combinatorics_litex.config" />
+      <ComponentRef Id="StdComp_combinatorics_main.lit" />
+      <ComponentRef Id="StdComp_combinatorics_math_collections.md" />
       <ComponentRef Id="StdComp_matrix_README.md" />
       <ComponentRef Id="StdComp_matrix_litex.config" />
       <ComponentRef Id="StdComp_matrix_main.lit" />
       <ComponentRef Id="StdComp_matrix_math_collections.md" />
+      <ComponentRef Id="StdComp_number_theory_README.md" />
+      <ComponentRef Id="StdComp_number_theory_litex.config" />
+      <ComponentRef Id="StdComp_number_theory_main.lit" />
+      <ComponentRef Id="StdComp_number_theory_math_collections.md" />
       <ComponentRef Id="StdComp_real_multivariable_README.md" />
       <ComponentRef Id="StdComp_real_multivariable_directional.lit" />
+      <ComponentRef Id="StdComp_real_multivariable_iterated_integrals.lit" />
       <ComponentRef Id="StdComp_real_multivariable_litex.config" />
       <ComponentRef Id="StdComp_real_multivariable_main.lit" />
       <ComponentRef Id="StdComp_real_series_README.md" />
       <ComponentRef Id="StdComp_real_series_litex.config" />
       <ComponentRef Id="StdComp_real_series_main.lit" />
       <ComponentRef Id="StdComp_real_series_math_collections.md" />
+      <ComponentRef Id="StdComp_topology_README.md" />
+      <ComponentRef Id="StdComp_topology_litex.config" />
+      <ComponentRef Id="StdComp_topology_main.lit" />
+      <ComponentRef Id="StdComp_topology_math_collections.md" />
     </ComponentGroup>
   </Fragment>
 </Wix>

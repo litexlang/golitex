@@ -3,193 +3,412 @@
 
 # Litex
 
-### Write math, get formalized code: because the math already is.
+### The Python of Formal Language
 
-**读音：** Litex 读作 /ˈliːtɛk/（“里泰克”），不是“赖泰克”。
+**读音：** /ˈliːtɛk/（“里泰克”）。
 
 由沈嘉辰创建和维护。
 
-[English README](../README.md) ·
-[官网](https://litexlang.com) ·
-[Litex 中文蓝图](Litex中文蓝图.md)
+[官网与在线试用](https://litexlang.com) · [GitHub](https://github.com/litexlang/golitex)
 </div>
 
-<a id="litex-的目标"></a>
+数学书写本身蕴含逻辑结构，但要让机器检查，往往还需将其翻译成另一种形式化语言。Litex 通过在上下文事实与内置规则中搜索证明依据，让熟悉的数学表达直接接受检查。初步实验报告的德布鲁因因子接近 1，部分案例的检查速度达到 Lean 的 10–100 倍。其验证记录支持交互式阅读、书写与修正，并在初步 AI 智能体实验中展现出潜力。它还能将支持的证明编译到 Lean，作为前端语言，为后续独立复核提供途径。
 
-## 数学本身能不能就是形式化语言？
+<a id="readme-comparisons"></a>
 
-从小我们就知道，数学是一种严格的语言：引入对象，给出定义，陈述事实，并为每一步找到依据。我开始构建 Litex，就是出于一个问题：**能不能让这些数学直接被机器检查，只添加足够使含义精确的结构和约束？**
+## 熟悉的表达，熟悉的数学
 
-在 Litex 中，下面就是一段完整的形式化源码：
+同样的数学，用 Litex 和 Lean 分别这样书写。点击例子可查看文末的完整代码。
 
-```litex
-1 + 1 = 2
-```
+| 数学表达 | Litex | Lean（使用 `import Mathlib`） |
+| --- | --- | --- |
+| [自然数算术：1 + 1 = 2](#readme-example-nat_mathlib) | `1 + 1 = 2` | `example : (1 : Nat) + 1 = 2 := by rfl` |
+| [任取正实数，推出它不等于零](#readme-example-positive_nonzero) | `forall x R: x > 0 => x != 0` | `example (x : ℝ) (hx : x > 0) : x ≠ 0 := by` |
+|  |  | `  exact ne_of_gt hx` |
+| [存在平方为 4 的实数；取 2 为见证](#readme-example-square_witness) | `witness exist w R st {w^2 = 4} from 2` | `example : ∃ w : ℝ, w ^ 2 = 4 := by` |
+|  |  | `  refine ⟨2, ?_⟩` |
+|  |  | `  norm_num` |
+| [定义并调用非零实数上的倒数函数](#readme-example-guarded_reciprocal) | `have fn reciprocal(x R: x != 0) R = 1 / x` | `noncomputable def reciprocal (x : {y : ℝ // y ≠ 0}) : ℝ :=` |
+|  | `reciprocal(2) = 1 / 2` | `  (x : ℝ)⁻¹` |
+|  |  |  |
+|  |  | `example : reciprocal ⟨2, by norm_num⟩ = (2 : ℝ)⁻¹ := by` |
+|  |  | `  simp [reciprocal]` |
 
-检查器直接读取这条数学陈述。复杂的论证还需要定义、条件和证明步骤，但目标始终一样：写下你要表达的数学，让语言检查其中的推理。
+### 表达长度与检查速度
 
-这个想法决定了 Litex 怎样构建：选什么数学对象和含义，怎样设计语法，怎样实现验证器，以及返回怎样的解释。下面这些选择，就是这样一步步长出来的。
+德布鲁因因子越小，表达越简短；耗时以毫秒计，加速比越大，表示 Litex 检查越快。
 
-<a id="familiar-mathematics"></a>
-<a id="mathematical-objects"></a>
+| 数学任务 | Litex 德布鲁因因子 ↓ | Lean 德布鲁因因子 ↓ | Litex（毫秒）↓ | Lean（毫秒）↓ | Litex 加速比 ↑ |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| [对数：log₂8 = 3](#readme-example-log_2_8) | 0.48 | 5.95 | 0.064 | 13.992 | **217.0×** |
+| [数论：1000000007 是素数](#readme-example-prime_1000000007) | 0.55 | 1.33 | 0.027 | 4.029 | **147.2×** |
+| [集合论：正实数集合非空](#readme-example-witness_nonempty_positive) | 0.54 | 1.07 | 0.084 | 6.439 | **76.9×** |
+| [定义并调用“正实数非零”定理](#readme-example-named_theorem) | 1.43 | 2.33 | 0.158 | 8.018 | **50.7×** |
+| [定义开区间谓词并验证成员](#readme-example-predicate) | 0.88 | 1.52 | 0.189 | 8.223 | **43.4×** |
+| [自然数算术：1 + 1 = 2](#readme-example-nat_mathlib) | 1.00 | 5.20 | 0.037 | 1.361 | **36.7×** |
+| [全称命题：两个正实数之和为正](#readme-example-forall_add_pos) | 0.57 | 1.34 | 0.392 | 10.487 | **26.7×** |
+| [平方函数在 3 处的导数为 6](#readme-example-derivative_square_at_three) | 0.51 | 1.34 | 1.464 | 29.945 | **20.5×** |
 
-## 先决定要表达怎样的数学
+## 为什么构建 Litex
 
-第一个问题是语言的数学基础。我选择集合论：集合、元素、函数与关系，本来就是许多人从中学到工作都在使用的数学词汇。属于也是一条数学事实：`1 $in N` 和 `1 $in R`，说的是同一个数与不同集合的关系。
+**数学本身能不能就是形式化语言？** 数学书写已经在引入对象、给出定义、陈述前提与论证结论。我希望保留这种对应，只加入足以让机器严格检查的结构。
 
-熟悉的符号，还应该带着熟悉的数学含义。看看这三个表达式：
+我希望 Litex 成为形式化数学中的 Python：写法熟悉、约定少，语言替用户承担必要的底层工作。AI 产生的候选推理越多，我们用什么语言理解、检查和传递数学知识，就越重要。
 
-| 表达式 | 通常的教科书约定 | Lean / Mathlib | Litex |
-| --- | --- | --- | --- |
-| 除以零 | `1 / 0` 没有定义。 | `(1 : ℝ) / 0 = 0` | 拒绝 `1 / 0 = 0`：分母必须非零。 |
-| 自然数减去更大的数 | 在整数算术中，`1 - 2 = -1`。 | `(1 : Nat) - 2 = 0` | `1 - 2 = -1`，结果属于 `Z`。 |
-| 负数的实数平方根 | `-1` 没有实数平方根。 | `Real.sqrt (-1) = 0` | 拒绝 `sqrt(-1) = 0`：输入必须非负。 |
+## 从数学语言到可检查的知识
 
-Lean/Mathlib 对[除法](https://leanprover-community.github.io/mathlib4_docs/Mathlib/Algebra/GroupWithZero/Basic.html#div_zero)、[自然数减法](https://lean-lang.org/doc/reference/latest/Basic-Types/Natural-Numbers/#Nat.sub)和[实数平方根](https://leanprover-community.github.io/mathlib4_docs/Mathlib/Analysis/Real/Sqrt.html#Real.sqrt_eq_zero_of_nonpos)有意采用了这些约定。在 Lean 中改用 `Int`，也有 `(1 : Int) - 2 = -1`。形式化检查器按照给定的定义检查；作者仍然需要知道，这些定义是否表达了原本想说的数学。
-
-我希望 Litex 把通常的数学含义，以及使用它们需要满足的条件，放进默认的书写体验里。比如，倒数的非零条件就属于它的定义：
+**数学基础。** Litex 使用集合、元素、函数与关系。常见运算带着明确的使用条件：`1 - 2 = -1`，而 `1 / 0` 因无定义被拒绝。函数可以直接把必要条件放进定义域：
 
 ```litex
 have fn reciprocal(x R: x != 0) R = 1 / x
 reciprocal(2) = 1 / 2
 ```
 
-每次使用这个函数，都要检查 `x != 0`。要保留通常的除法含义，语言就需要检查它的定义域。
+`reciprocal(0)` 会被拒绝，因为参数不满足非零条件。
 
-<a id="direct-facts"></a>
+**语法。** 类似 Python 的缩进组织作用域与推理。开头的全称陈述中，`x R` 引入实数，`x > 0` 是前提，`x != 0` 是待检查的结论。较长的证明仍需作者给出数学路线，包括中间事实、见证、归纳或分情形。
 
-## 让数学陈述成为语法
-
-数学词汇就位后，下一个问题是怎样写下来。Litex 用类似 Python 的缩进组织数学语句。“对任意两个非负实数，它们的和也是非负的”，可以写成：
-
-```litex
-forall x, y R:
-    x >= 0
-    y >= 0
-    =>:
-        x + y >= 0
-```
-
-先引入对象，再写前提，最后写结论。`=>:` 前是条件，后面的陈述需要被检查。
-
-定义也用同样的数学词汇。把正实数收集成一个集合，再检查二属于它：
-
-```litex
-have positive_reals set = {x R: x > 0}
-2 $in positive_reals
-```
-
-定义到原点的距离，建立非负性，再用它计算：
-
-```litex
-have fn distance_from_zero(x R) R = |x|
-
-forall x R:
-    distance_from_zero(x) = |x| >= 0
-
-distance_from_zero(-3) = distance_from_zero(3) = 3
-```
-
-同样的写法可以延伸到集合之间的关系。下面两段代码都陈述了交集保持包含关系：
-
-<table>
-<thead><tr><th>Litex</th><th>Lean / Mathlib（手写）</th></tr></thead>
-<tbody><tr>
-<td valign="top"><pre><code>forall s, t, u set:
-    s $subset t
-    =&gt;:
-        intersect(s, u) $subset intersect(t, u)</code></pre></td>
-<td valign="top"><pre><code>import Mathlib
-example {α : Type*} (s t u : Set α) (h : s ⊆ t) :
-    s ∩ u ⊆ t ∩ u := by
-  intro x hx
-  exact ⟨h hx.1, hx.2⟩</code></pre></td>
-</tr></tbody>
-</table>
-
-Litex 用内置的集合规则直接检查这个蕴含。结论也可以写成符号形式 `s ∩ u ⊆ t ∩ u`。语言使用有明确约束的形式化语法，让数学语句和源码尽量直接对应；符号输入见[记号指南](Litex手册.md#unicode-mathematical-input-aliases-preview)。
-
-这个选择把“下一条数学事实”放到了证明书写的中心。右边展示的是 Lean 常见的 tactic 写法，Lean 也支持其他证明风格与自动化。较长的 Litex 论证仍然需要作者给出数学路线：中间事实、见证或分情形。验证器检查它支持的局部连接。
-
-<a id="knowledge-workflow"></a>
-
-## 围绕下一条事实构建验证器
-
-要让这样的语法工作，验证器就需要回答：**给定当前的数学上下文，这条陈述凭什么成立？**
-
-```litex
-have a R = 2
-a + 1 = 3
-```
-
-第一行引入 `a`，记录 `a $in R` 和 `a = 2`。第二行就能使用这些知识。检查通过后，`a + 1 = 3` 又成为后续步骤可用的事实。源码向下书写，数学上下文也随之生长。
-
-我最早的实现思路很简单：匹配与代换。找到相关的已知事实，与当前陈述匹配，再检查代换和条件。它后来发展成结构化的事实查找、有界递归验证、内置数学规则，以及显式的证明步骤。
-
-**把常见的数学表达一步步解析、组织成机器可识别、可存储、可调用的数学知识，是整个 Litex 项目的核心。** 难点在于让这条链路始终保留数学含义：识别陈述中的对象和事实，检查定义域与前提，保留作用域和成立依据，再让后续推理能够找到这些知识，并在满足条件时正确使用。
-
-我把这里的存储与查找想成一个专为数学推理设计的数据库。它的设计必须和解析、表示、验证共同工作，让上一步建立的事实成为下一步能够使用的知识。直接书写数学的体验，就建立在这些环节协同工作的基础上。[源码阅读指南](../src/README.md)沿着 `a + 1 = 3` 展示了实际实现。
-
-## 把检查依据放进输出
-
-我还希望看见一句话为什么被接受，它建立了什么，以及失败的步骤停在哪里。回到 `1 + 1 = 2`，运行 `litex -lang en -e '1 + 1 = 2'` 会得到 JSON，其中这条陈述的结果是：
+**语义。** 每条陈述都需要先满足良定义性，再从当前上下文获得证明依据。检查器用 JSON 返回判定、依据与存入的事实。例如，`1 + 1 = 2` 的英文输出节选为：
 
 ```json
 {
   "statement_result": "accepted",
   "statement": "(1 + 1) = 2",
-  "proof_method": {
-    "type": "by_closed_calculation",
-    "rule_name": "Closed calculation",
-    "message": "Exact evaluation of closed expressions without proof search"
-  },
-  "stores": [
-    "(1 + 1) = 2"
-  ],
-  "infers": []
+  "proof_method": { "type": "by_closed_calculation" },
+  "stores": ["(1 + 1) = 2"]
 }
 ```
 
-源码陈述数学，输出报告检查方法、存入的事实，以及推断出的事实。这里的依据是一次精确的封闭表达式计算。换成 `1 / 0 = 0`，拒绝结果则会指出良定义性检查，以及无法满足的条件 `0 != 0`。
+换成 `1 / 0 = 0`，输出会指出无法满足的条件 `0 != 0`。反馈支持包括中文在内的十种语言；使用 `-lang zh` 切换为中文。
 
-语法、语义和输出由此连在一起：我说了什么，它是什么意思，它凭什么能被接受？Normal JSON 是验证过程的摘要，完整依赖并不都在其中。[命令行参考](Litex命令行参考.md#json-output-contract)说明了输出契约；加上 `-lang zh` 等选项，也可以用中文等语言阅读反馈。
+**架构：证明作为搜索。** 看这两行：
 
-<a id="human-ai-feedback"></a>
-<a id="work-with-people-and-ai-through-feedback"></a>
-<a id="independent-lean-rechecking-is-a-goal"></a>
-<a id="lean-rechecking"></a>
+```litex
+let a = 1
+a + 2 = 3
+```
 
-## 从验证记录继续往前走
+第一行存下 `a = 1`。第二行成为查询：找到这条等式，代入得到 `1 + 2 = 3`，再完成计算。通过检查的 `a + 2 = 3` 又成为后续步骤可使用的知识。
 
-当源码和检查结果一起留下来，就有了可以继续构建的东西。
+Litex 把数学特化的事实数据库、有界局部搜索与几百条内置规则结合起来。上下文提供事实，规则把事实连接起来，计算也是其中一种检查方法。搜索没有找到依据，只表示当前步骤未被证明，不等于证明了它的否定。
 
-人或 AI agent 可以提出一步，读取反馈，再修改。在同一个持久 `-session` 中，普通的拒绝会保留此前接受的知识：引入 `have a R = 2` 后，即使 `a = 3` 被拒绝，`a + 1 = 3` 仍然可以检查。书写时保持这个 Session；具体流程与重启边界见[智能体指南](Litex智能体指南.md)。我希望围绕这种交互构建一个有能力的数学 agent。
+## 让同一份数学连接更多工具
 
-验证结果也提供了通往 Lean 的桥梁。实验性的 `litex -lean -f <独立文件>` 编译器，利用源码和类型化的验证结果，沿受支持的路线生成 Lean 陈述与证明。Lean 随后可以独立检查这些生成证明。可以对照阅读[源码与生成文件](../lean/examples/)，以及一个[完整的 Mathlib 适配例子](../showcases/litex_to_lean_adapter/README.md)。覆盖范围与忠实翻译，需要逐条路线建立；生成和 Lean 检查是两个步骤。[编译器指南](Litex到Lean编译器指南.md)说明了当前支持。
+实验性的 `litex -lean -f proof.lit` 编译器可以生成 Lean 陈述和证明，交给 Lean 内核独立检查，让用户用 Litex 书写数学，并在支持的范围内接入 Lean 生态。
 
-我也看到了用定义、事实和解释构建知识图谱、交互式数学教材的可能。这些是我希望继续探索的方向。现有工具已经提供 [JSON 输出](Litex命令行参考.md#json-output-contract)和 [LaTeX 导出](../src/compile_to_latex/README.md)；LaTeX 导出对解析后的源码排版，不执行验证。
+同一份源码与验证记录还可以用于：
+
+- **交互式教材：** `litex -reading -f proof.lit` 打开源码，支持查看定义、参数范围与证明引用，并可编辑、检查。
+- **LaTeX：** `litex -latex -f proof.lit` 将数学定义和陈述排版为文档。
+- **C 与 Python：** 实验性的代码提取可以把支持的计算定义转成可运行的程序。
+
+## 与 AI 一起构建数学
+
+人或智能体可以提出一步，读取反馈，修正后继续。保持同一个 Session，普通拒绝后仍能使用此前接受的定义和事实。
+
+在包含 **165 项数学任务** 的平面几何建库实验中，`deepseek-chat` 取得了以下结果：
+
+| 自动建库运行 | Litex | Lean |
+| --- | ---: | ---: |
+| 总耗时 | **14.3 分钟** | **177.5 分钟** |
+
+这次实验中，Litex 的建库速度约为 Lean 的 **12.4 倍**。其他工程包括智能体书写的 IMO 几何证明，以及证明技巧、代数、分析和几何等教材。
 
 ## 试用 Litex
 
-可以直接使用[在线 playground](https://litexlang.com)，或在 macOS / Linux 上用 Homebrew 安装：
+可以在官网在线试用，也可以在 macOS / Linux 上用 Homebrew 安装：
 
 ```bash
 brew install litexlang/tap/litex
 litex -e '1 + 1 = 2'
 ```
 
-其他平台与检出构建见[安装指南](安装Litex.md)。开始书写可以读[手册](Litex手册.md)与[短例子](../examples/README.md)，也可以从 [showcase 集合](../showcases/README.md)阅读一段数学发展。
+Windows 已安装 Scoop 和 Git 时运行：
 
-Litex 仍是实验性 beta 项目。验证器、内置与推断规则、数学基础都属于当前信任基础；用户书写的 `trust` 和 `axiom` 会增加假设。`-strict` 拒绝已执行的用户假设，包括导入依赖中的假设，但仍保留固定数学基础。详见[信任与严格模式](Litex手册.md#trust-and-strict-mode)。
+```powershell
+scoop bucket add litex https://github.com/litexlang/scoop-litex
+scoop install litex
+```
+
+把附录中任意一个完整的 Litex 例子保存为 `proof.lit`，运行 `litex -strict -f proof.lit`。交互书写时运行：
+
+```bash
+litex -strict -session -e 'let a = 1'
+```
+
+输入 `a = 2` 会被拒绝，接着输入 `a + 2 = 3`，仍能使用保留的上下文通过检查。书写时保持这个 Session，将接受的源码保存下来，在阶段完成时单独检查文件。`litex -help` 可查看命令。
+
+Litex 仍处于 beta 阶段。`-strict` 拒绝用户书写的 `trust` 和 `axiom`；验证仍依赖 Litex 的检查器与数学基础。
 
 ## 关于
 
-我是沈嘉辰（Jiachen Shen），复旦大学数学博士生，也是 Litex 的创建者。Lean 让我看到数学与编程可以在真实语言中相遇；Litex 则来自我想继续探索的一件事：这样的语言，能在多大程度上贴近我们书写和理解数学的方式？
+我是沈嘉辰（Jiachen Shen），复旦大学数学博士生。我希望 Litex 让更多人能够书写可检查的数学，也理解其中的定义、条件与推理。欢迎交流与反馈：litexlang@outlook.com。
 
-我通过建造自己能用的东西、检视它做了什么、让每个答案暴露下一个问题，来探索这些想法。我希望更多使用数学的人，也能书写、理解和贡献机器可检查的数学。
+特别感谢 Wei Lin、Siqi Sun、Peng Sun、Chenxuan Huang、Yan Lu、Sheng Xu、Keyao Zhu 与 Zhaoxuan Hong 的支持和建议。
 
-[蓝图](Litex中文蓝图.md)（[English](Litex_Blueprint.md)）讨论更广的项目方向与证据。欢迎带来难例、边界情形和建设性反馈。
+以 Apache License 2.0 发布。
 
-特别感谢 Wei Lin、Siqi Sun、Peng Sun、Chenxuan Huang、Yan Lu、Sheng Xu、Keyao Zhu 与 Zhaoxuan Hong 的支持与建议。
+## 附录：完整例子
 
-Litex 以 [Apache License 2.0](../LICENSE) 发布。更多中文资料见[中文文档索引](中文文档索引.md)。
+每个例子可独立运行；点击标题展开 Litex 与 Lean 的完整代码。
+
+<details id="readme-example-nat_mathlib">
+<summary>1. 自然数算术：1 + 1 = 2</summary>
+
+**Litex**
+
+```litex
+1 + 1 = 2
+```
+
+**Lean**
+
+```lean
+import Mathlib
+
+example : (1 : Nat) + 1 = 2 := by rfl
+```
+
+[返回对比表](#readme-comparisons)
+
+</details>
+
+<details id="readme-example-positive_nonzero">
+<summary>2. 任取正实数，推出它不等于零</summary>
+
+**Litex**
+
+```litex
+forall x R:
+    x > 0
+    =>:
+        x != 0
+```
+
+**Lean**
+
+```lean
+import Mathlib
+
+example (x : ℝ) (hx : x > 0) : x ≠ 0 := by
+  exact ne_of_gt hx
+```
+
+[返回对比表](#readme-comparisons)
+
+</details>
+
+<details id="readme-example-square_witness">
+<summary>3. 存在平方为 4 的实数；取 2 为见证</summary>
+
+**Litex**
+
+```litex
+witness exist w R st {w^2 = 4} from 2
+```
+
+**Lean**
+
+```lean
+import Mathlib
+
+example : ∃ w : ℝ, w ^ 2 = 4 := by
+  refine ⟨2, ?_⟩
+  norm_num
+```
+
+[返回对比表](#readme-comparisons)
+
+</details>
+
+<details id="readme-example-guarded_reciprocal">
+<summary>4. 定义并调用非零实数上的倒数函数</summary>
+
+**Litex**
+
+```litex
+have fn reciprocal(x R: x != 0) R = 1 / x
+reciprocal(2) = 1 / 2
+```
+
+**Lean**
+
+```lean
+import Mathlib
+
+noncomputable def reciprocal (x : {y : ℝ // y ≠ 0}) : ℝ :=
+  (x : ℝ)⁻¹
+
+example : reciprocal ⟨2, by norm_num⟩ = (2 : ℝ)⁻¹ := by
+  simp [reciprocal]
+```
+
+[返回对比表](#readme-comparisons)
+
+</details>
+
+<details id="readme-example-log_2_8">
+<summary>5. 对数：log₂8 = 3</summary>
+
+**Litex**
+
+```litex
+log(2,8)=3
+```
+
+**Lean**
+
+```lean
+import Mathlib
+
+example : Real.logb 2 8=3 := by
+  rw [show (8:Real)=2^3 by norm_num, Real.logb_pow]
+  rw [Real.logb_self_eq_one (by norm_num : (1:Real)<2)]
+  norm_num
+```
+
+[返回对比表](#readme-comparisons)
+
+</details>
+
+<details id="readme-example-prime_1000000007">
+<summary>6. 数论：1000000007 是素数</summary>
+
+**Litex**
+
+```litex
+$prime(1000000007)
+```
+
+**Lean**
+
+```lean
+import Mathlib
+
+example : Nat.Prime 1000000007 := by native_decide
+```
+
+[返回对比表](#readme-comparisons)
+
+</details>
+
+<details id="readme-example-witness_nonempty_positive">
+<summary>7. 集合论：正实数集合非空</summary>
+
+**Litex**
+
+```litex
+witness $is_nonempty_set({x R:x>0}) from 1
+```
+
+**Lean**
+
+```lean
+import Mathlib
+
+example : Set.Nonempty {x : Real | 0 < x} := ⟨(1 : Real), (show (0 : Real) < 1 from zero_lt_one)⟩
+```
+
+[返回对比表](#readme-comparisons)
+
+</details>
+
+<details id="readme-example-named_theorem">
+<summary>8. 定义并调用“正实数非零”定理</summary>
+
+**Litex**
+
+```litex
+thm bench_positive_is_nonzero:
+    ? forall x R:
+        x>0
+        =>:
+            x!=0
+release thm bench_positive_is_nonzero(3)
+```
+
+**Lean**
+
+```lean
+import Mathlib
+
+theorem bench_positive_is_nonzero : ∀ x : Real, 0 < x → x ≠ 0 := by
+  intro x hx
+  exact ne_of_gt hx
+theorem bench_use : (3 : Real) ≠ 0 := bench_positive_is_nonzero 3 (by norm_num)
+```
+
+[返回对比表](#readme-comparisons)
+
+</details>
+
+<details id="readme-example-predicate">
+<summary>9. 定义开区间谓词并验证成员</summary>
+
+**Litex**
+
+```litex
+prop bench_in_open(x,a,b R):
+    a<x
+    x<b
+by def $bench_in_open(1,0,2)
+```
+
+**Lean**
+
+```lean
+import Mathlib
+
+def bench_in_open (x a b : Real) : Prop := a < x ∧ x < b
+theorem bench_use : bench_in_open 1 0 2 := by norm_num [bench_in_open]
+```
+
+[返回对比表](#readme-comparisons)
+
+</details>
+
+<details id="readme-example-forall_add_pos">
+<summary>10. 全称命题：两个正实数之和为正</summary>
+
+**Litex**
+
+```litex
+forall x,y R:
+    x > 0
+    y > 0
+    =>:
+        x+y > 0
+```
+
+**Lean**
+
+```lean
+import Mathlib
+
+theorem bench : ∀ x y : Real, 0 < x → 0 < y → 0 < x+y := fun x y hx hy => add_pos hx hy
+```
+
+[返回对比表](#readme-comparisons)
+
+</details>
+
+<details id="readme-example-derivative_square_at_three">
+<summary>11. 平方函数在 3 处的导数为 6</summary>
+
+**Litex**
+
+```litex
+$has_derivative_at(fn(t R) R {t^2},3,6)
+```
+
+**Lean**
+
+```lean
+import Mathlib
+
+theorem bench : HasDerivAt (fun t : Real => t ^ 2) 6 3 := by have h := hasDerivAt_pow 2 (3 : Real); norm_num at h; exact h
+```
+
+[返回对比表](#readme-comparisons)
+
+</details>

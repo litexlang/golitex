@@ -1,0 +1,6 @@
+thm surjection_missing_equal_size:
+    ? forall X, Y finite_set, f fn(x X) Y:
+        $surjective(X, Y, f)
+        =>:
+            $bijective(X, Y, f)
+    release thm comb:::equal_size_surjection_is_bijective(X,Y,f)

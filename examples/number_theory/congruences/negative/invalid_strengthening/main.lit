@@ -1,0 +1,4 @@
+# The setup passes; only the final statement must fail.
+by def $nt:::is_congruent_mod(1, 4, 3)
+
+by def $nt:::is_congruent_mod(1, 4, 6)

@@ -1,0 +1,88 @@
+# Generic imported contracts over the full declared domains.
+
+thm consume_divisibility_transitive:
+    ? forall a Z, b, d Z*:
+        $dvd(a, b)
+        $dvd(b, d)
+        =>:
+            $dvd(a, d)
+    release thm nt:::divisibility_transitive(a, b, d)
+
+thm consume_divisibility_linear_combination:
+    ? forall a, b, x, y Z, d Z*:
+        $dvd(a, d)
+        $dvd(b, d)
+        =>:
+            $dvd(a * x + b * y, d)
+    release thm nt:::divisibility_linear_combination(a, b, x, y, d)
+
+thm consume_congruence_reflexive:
+    ? forall a Z, m N+:
+        $nt:::is_congruent_mod(a, a, m)
+    release thm nt:::congruence_reflexive(a, m)
+
+thm consume_congruence_symmetric:
+    ? forall a, b Z, m N+:
+        $nt:::is_congruent_mod(a, b, m)
+        =>:
+            $nt:::is_congruent_mod(b, a, m)
+    release thm nt:::congruence_symmetric(a, b, m)
+
+thm consume_congruence_transitive:
+    ? forall a, b, c Z, m N+:
+        $nt:::is_congruent_mod(a, b, m)
+        $nt:::is_congruent_mod(b, c, m)
+        =>:
+            $nt:::is_congruent_mod(a, c, m)
+    release thm nt:::congruence_transitive(a, b, c, m)
+
+thm consume_congruence_add:
+    ? forall a, b, c, d Z, m N+:
+        $nt:::is_congruent_mod(a, b, m)
+        $nt:::is_congruent_mod(c, d, m)
+        =>:
+            $nt:::is_congruent_mod(a + c, b + d, m)
+    release thm nt:::congruence_add(a, b, c, d, m)
+
+thm consume_congruence_subtract:
+    ? forall a, b, c, d Z, m N+:
+        $nt:::is_congruent_mod(a, b, m)
+        $nt:::is_congruent_mod(c, d, m)
+        =>:
+            $nt:::is_congruent_mod(a - c, b - d, m)
+    release thm nt:::congruence_subtract(a, b, c, d, m)
+
+thm consume_congruence_multiply:
+    ? forall a, b, c, d Z, m N+:
+        $nt:::is_congruent_mod(a, b, m)
+        $nt:::is_congruent_mod(c, d, m)
+        =>:
+            $nt:::is_congruent_mod(a * c, b * d, m)
+    release thm nt:::congruence_multiply(a, b, c, d, m)
+
+thm consume_congruence_scale:
+    ? forall a, b, t Z, m N+:
+        $nt:::is_congruent_mod(a, b, m)
+        =>:
+            $nt:::is_congruent_mod(t * a, t * b, m)
+    release thm nt:::congruence_scale(a, b, t, m)
+
+thm consume_congruence_negate:
+    ? forall a, b Z, m N+:
+        $nt:::is_congruent_mod(a, b, m)
+        =>:
+            $nt:::is_congruent_mod(-a, -b, m)
+    release thm nt:::congruence_negate(a, b, m)
+
+thm consume_congruence_remainder:
+    ? forall a Z, m N+:
+        $nt:::is_congruent_mod(a, a % m, m)
+    release thm nt:::congruence_remainder(a, m)
+
+thm consume_congruence_modulus_divisor:
+    ? forall a, b Z, m, n N+:
+        $nt:::is_congruent_mod(a, b, n)
+        $dvd(n, m)
+        =>:
+            $nt:::is_congruent_mod(a, b, m)
+    release thm nt:::congruence_modulus_divisor(a, b, m, n)

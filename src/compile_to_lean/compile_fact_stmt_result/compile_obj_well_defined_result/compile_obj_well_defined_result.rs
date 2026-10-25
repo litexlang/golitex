@@ -1,7 +1,9 @@
 use crate::compile_to_lean::helper::*;
 use crate::compile_to_lean::source_position::{arithmetic_stages, SourceOwner, SourcePosition};
 use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
+use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ComplexOperatorObjWellDefinedProofByDef;
 use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IntegerOperatorObjWellDefinedProofByDef;
+use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::TrigOperatorObjWellDefinedProofByDef;
 use crate::prelude::*;
 
 impl LitexToLeanCompiler {
@@ -133,6 +135,9 @@ impl LitexToLeanCompiler {
             }
             ObjWellDefinedProof::ByDef { obj, proof } => {
                 let term = match (obj, proof) {
+                    (Obj::IteratedOperator(object @ (IteratedOperator::SumOfFiniteSet(_) | IteratedOperator::ProductOfFiniteSet(_))), ObjWellDefinedProofByDef::IteratedOperator(evidence)) => self.compile_finite_aggregate_wd(object, evidence, position)?,
+                    (Obj::IteratedOperator(object), ObjWellDefinedProofByDef::IteratedOperator(evidence)) => self.compile_range_aggregate_wd(object, evidence, position)?,
+                    (Obj::FiniteSetStat(object), ObjWellDefinedProofByDef::FiniteSetStat(evidence)) => self.compile_finite_stat_wd(object, evidence, position)?,
                     (Obj::InstantiatedTemplateObj(instance), ObjWellDefinedProofByDef::InstantiatedTemplateObj(evidence)) => self.compile_template_wd(instance, evidence, position)?,
                     (Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(object)), ObjWellDefinedProofByDef::Structish(crate::execute::execute_fact_stmt::well_defined_results::verify_obj::StructishObjWellDefinedProofByDef::FieldAccess(evidence))) => self.compile_struct_field_wd(object, evidence, position)?,
                     (Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(object)), ObjWellDefinedProofByDef::Structish(crate::execute::execute_fact_stmt::well_defined_results::verify_obj::StructishObjWellDefinedProofByDef::StructObj(evidence))) => self.compile_struct_wd(object, evidence, position)?,
@@ -166,6 +171,18 @@ impl LitexToLeanCompiler {
                             LiteralObjWellDefinedProofByDef::ImaginaryUnit(_),
                         ),
                     ) => "(Litex.number (M := M) Complex.I)".into(),
+                    (Obj::ComplexOperator(ComplexOperator::Conjugate(x)), ObjWellDefinedProofByDef::ComplexOperator(ComplexOperatorObjWellDefinedProofByDef::Conjugate(p))) => self.compile_complex_wd(&x.arg, "conj", &p.child_obj_well_defined, &p.requirement_fact_verified, position)?,
+                    (Obj::ComplexOperator(ComplexOperator::RealPart(x)), ObjWellDefinedProofByDef::ComplexOperator(ComplexOperatorObjWellDefinedProofByDef::RealPart(p))) => self.compile_complex_wd(&x.arg, "re", &p.child_obj_well_defined, &p.requirement_fact_verified, position)?,
+                    (Obj::ComplexOperator(ComplexOperator::ImaginaryPart(x)), ObjWellDefinedProofByDef::ComplexOperator(ComplexOperatorObjWellDefinedProofByDef::ImaginaryPart(p))) => self.compile_complex_wd(&x.arg, "img", &p.child_obj_well_defined, &p.requirement_fact_verified, position)?,
+                    (Obj::ComplexOperator(ComplexOperator::ComplexAbs(x)), ObjWellDefinedProofByDef::ComplexOperator(ComplexOperatorObjWellDefinedProofByDef::ComplexAbs(p))) => self.compile_complex_wd(&x.arg, "complexAbs", &p.child_obj_well_defined, &p.requirement_fact_verified, position)?,
+                    (Obj::TrigOperator(TrigOperator::Sin(x)), ObjWellDefinedProofByDef::TrigOperator(TrigOperatorObjWellDefinedProofByDef::Sin(p))) => self.compile_trig_wd(&x.arg, "Sin", &p.child_obj_well_defined, &p.requirement_fact_verified, position)?,
+                    (Obj::TrigOperator(TrigOperator::Cos(x)), ObjWellDefinedProofByDef::TrigOperator(TrigOperatorObjWellDefinedProofByDef::Cos(p))) => self.compile_trig_wd(&x.arg, "Cos", &p.child_obj_well_defined, &p.requirement_fact_verified, position)?,
+                    (Obj::TrigOperator(TrigOperator::Tan(x)), ObjWellDefinedProofByDef::TrigOperator(TrigOperatorObjWellDefinedProofByDef::Tan(p))) => self.compile_trig_wd(&x.arg, "Tan", &p.child_obj_well_defined, &p.requirement_fact_verified, position)?,
+                    (Obj::Literal(Literal::EulerNumber(_)), ObjWellDefinedProofByDef::Literal(LiteralObjWellDefinedProofByDef::EulerNumber(_))) => "(Litex.number (M := M) ((Real.exp 1 : ℝ) : ℂ))".into(),
+                    (Obj::Literal(Literal::Pi(_)), ObjWellDefinedProofByDef::Literal(LiteralObjWellDefinedProofByDef::Pi(_))) => "(Litex.number (M := M) (Real.pi : ℂ))".into(),
+                    (Obj::ExpLogOperator(ExpLogOperator::Exp(x)), ObjWellDefinedProofByDef::ExpLogOperator(ExpLogOperatorObjWellDefinedProofByDef::Exp(p))) => self.compile_exp_ln_wd(&x.arg, false, &p.child_obj_well_defined, &p.requirement_fact_verified, position)?,
+                    (Obj::ExpLogOperator(ExpLogOperator::Ln(x)), ObjWellDefinedProofByDef::ExpLogOperator(ExpLogOperatorObjWellDefinedProofByDef::Ln(p))) => self.compile_exp_ln_wd(&x.arg, true, &p.child_obj_well_defined, &p.requirement_fact_verified, position)?,
+                    (Obj::ExpLogOperator(ExpLogOperator::Log(x)), ObjWellDefinedProofByDef::ExpLogOperator(ExpLogOperatorObjWellDefinedProofByDef::Log(p))) => self.compile_log_wd(x, &p.child_obj_well_defined, &p.requirement_fact_verified, position)?,
                     (Obj::StandardSet(set), ObjWellDefinedProofByDef::StandardSet(_)) => {
                         standard_term(set)?
                     }

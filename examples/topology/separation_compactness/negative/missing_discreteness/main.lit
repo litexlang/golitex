@@ -1,0 +1,4 @@
+thm missing_discreteness:
+    ? forall A set, space &top:::TopologicalSpace<A>:
+        $top:::is_Hausdorff(A, space)
+    release thm top:::discrete_is_Hausdorff(A, space)

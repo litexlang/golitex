@@ -499,6 +499,8 @@ impl LitexToLeanCompiler {
                 Ok(format!("(M.number {})", number_literal(number, "ℂ")?))
             }
             Obj::Literal(Literal::ImaginaryUnit(_)) => Ok("(M.number Complex.I)".into()),
+            Obj::Literal(Literal::EulerNumber(_)) => Ok("(M.number ((Real.exp 1 : ℝ) : ℂ))".into()),
+            Obj::Literal(Literal::Pi(_)) => Ok("(M.number (Real.pi : ℂ))".into()),
             Obj::StandardSet(StandardSet::RPos) => Ok("(Litex.positiveReal (M := M))".into()),
             Obj::StandardSet(set)
                 if *set == StandardSet::NPos || numeric_refinement(set).is_some() =>
@@ -584,6 +586,16 @@ impl LitexToLeanCompiler {
                 expression(&value.left)?,
                 expression(&value.right)?
             )),
+            Obj::ComplexOperator(ComplexOperator::Conjugate(p)) => Ok(format!("(Litex.complexUnaryValue (M := M) (fun z : ℂ => star z) {})",expression(&p.arg)?)),
+            Obj::ComplexOperator(ComplexOperator::RealPart(p)) => Ok(format!("(Litex.complexUnaryValue (M := M) (fun z : ℂ => (z.re : ℂ)) {})",expression(&p.arg)?)),
+            Obj::ComplexOperator(ComplexOperator::ImaginaryPart(p)) => Ok(format!("(Litex.complexUnaryValue (M := M) (fun z : ℂ => (z.im : ℂ)) {})",expression(&p.arg)?)),
+            Obj::ComplexOperator(ComplexOperator::ComplexAbs(p)) => Ok(format!("(Litex.complexUnaryValue (M := M) (fun z : ℂ => (‖z‖ : ℂ)) {})",expression(&p.arg)?)),
+            Obj::TrigOperator(TrigOperator::Sin(p)) => Ok(format!("(Litex.realUnaryValue (M := M) Real.sin {})", expression(&p.arg)?)),
+            Obj::TrigOperator(TrigOperator::Cos(p)) => Ok(format!("(Litex.realUnaryValue (M := M) Real.cos {})", expression(&p.arg)?)),
+            Obj::TrigOperator(TrigOperator::Tan(p)) => Ok(format!("(Litex.realUnaryValue (M := M) Real.tan {})", expression(&p.arg)?)),
+            Obj::ExpLogOperator(ExpLogOperator::Exp(p)) => Ok(format!("(Litex.realUnaryValue (M := M) Real.exp {})", expression(&p.arg)?)),
+            Obj::ExpLogOperator(ExpLogOperator::Ln(p)) => Ok(format!("(Litex.realUnaryValue (M := M) Real.log {})", expression(&p.arg)?)),
+            Obj::ExpLogOperator(ExpLogOperator::Log(p)) => Ok(format!("(M.divValue (Litex.realUnaryValue (M := M) Real.log {}) (Litex.realUnaryValue (M := M) Real.log {}))", expression(&p.arg)?, expression(&p.base)?)),
             Obj::ExpLogOperator(ExpLogOperator::Sqrt(value)) => Ok(format!(
                 "(Litex.sqrtValue (M := M) {})",
                 expression(&value.arg)?
@@ -952,6 +964,9 @@ impl LitexToLeanCompiler {
             AtomicFact::InFact(_) => format!("(M.mem {} {})", arguments[0], arguments[1]),
             AtomicFact::NotInFact(_) => format!("(¬ M.mem {} {})", arguments[0], arguments[1]),
             AtomicFact::IsSetFact(_) => format!("(M.isSet {})", arguments[0]),
+            AtomicFact::IsFiniteSetFact(_) => {
+                format!("(Litex.memberSet (M := M) {}).Finite", arguments[0])
+            }
             AtomicFact::IsNonemptySetFact(_) => {
                 format!("(∃ _member : M.Value, M.mem _member {})", arguments[0])
             }
