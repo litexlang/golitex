@@ -51,7 +51,7 @@ fn infinity_proof_consuming_selection_direction_and_recovery() {
         check(&mut rt, &format!("lim_{side}(c)=3"), true);
         check(&mut rt, &format!("lim_{side}(c)+2=5"), true);
         check(&mut rt, &format!("lim_{side}(c)=4"), false);
-        check(&mut rt, "lim(c,0)=3", false);
+        check(&mut rt, "fn_lim(c,0)=3", false);
     }
 }
 #[test]

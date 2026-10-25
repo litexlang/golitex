@@ -20,6 +20,7 @@ pub enum ExecAxiomStmtResult {
 }
 
 pub struct ExecAxiomStmtSuccess {
+    pub statement: AxiomStmt,
     pub goal_wd: VerifyFactWellDefinedResult,
     pub stored: StoreFactAndInferResult,
 }
@@ -69,6 +70,7 @@ pub fn exec_axiom_stmt(
     };
 
     Ok(ExecAxiomStmtResult::Success(ExecAxiomStmtSuccess {
+        statement: stmt.clone(),
         goal_wd,
         stored,
     }))

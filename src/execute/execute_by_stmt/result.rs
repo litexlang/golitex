@@ -663,10 +663,11 @@ pub enum ExecReleaseRegularityAxiomStmtResult {
     Failed(ExecReleaseRegularityAxiomStmtFailed),
 }
 
-// Stage order: set_wd → nonempty → stored (trusted regularity conclusion).
+// Stage order: set_wd → nonempty → stored_wd → stored.
 pub struct ExecReleaseRegularityAxiomStmtSuccess {
     pub set_wd: VerifyObjWellDefinedResult,
     pub nonempty: VerifyFactResult,
+    pub stored_wd: FactWellDefinedProof,
     pub stored: StoreFactAndInferResult,
 }
 
@@ -682,17 +683,25 @@ impl ExecReleaseRegularityAxiomStmtResult {
     }
 }
 
+/// Original verify → formation/store stages, including a store failure ignored by the executor.
+pub struct VerifiedReleaseObligation {
+    pub verified: VerifyFactResult,
+    pub stored: Result<(FactWellDefinedProof, StoreFactAndInferResult), String>,
+}
+
 pub enum ExecReleaseAxiomOfChoiceStmtResult {
     Success(ExecReleaseAxiomOfChoiceStmtSuccess),
     Failed(ExecReleaseAxiomOfChoiceStmtFailed),
 }
 
-// Stage order: family_wd → proof_steps → obligations → local_env → stored.
+// Stage order: family_wd → local proof_steps → obligation verify/WD/store pairs → stored_wd → stored.
 pub struct ExecReleaseAxiomOfChoiceStmtSuccess {
+    pub statement: crate::ast::stmt::ReleaseAxiomOfChoiceStmt,
     pub family_wd: VerifyObjWellDefinedResult,
     pub proof_steps: Vec<ExecStmtResult>,
-    pub obligations: Vec<VerifyFactResult>,
+    pub obligations: Vec<VerifiedReleaseObligation>,
     pub local_env: Box<ExecEnv>,
+    pub stored_wd: FactWellDefinedProof,
     pub stored: StoreFactAndInferResult,
 }
 
@@ -717,12 +726,14 @@ pub enum ExecReleaseZornLemmaStmtResult {
     Failed(ExecReleaseZornLemmaStmtFailed),
 }
 
-// Stage order: set_wd → prop interface checks → proof_steps → obligations → local_env → stored.
+// Stage order: set_wd → prop interface checks → local proof_steps → obligation verify/WD/store pairs → stored_wd → stored.
 pub struct ExecReleaseZornLemmaStmtSuccess {
+    pub statement: crate::ast::stmt::ReleaseZornLemmaStmt,
     pub set_wd: VerifyObjWellDefinedResult,
     pub proof_steps: Vec<ExecStmtResult>,
-    pub obligations: Vec<VerifyFactResult>,
+    pub obligations: Vec<VerifiedReleaseObligation>,
     pub local_env: Box<ExecEnv>,
+    pub stored_wd: FactWellDefinedProof,
     pub stored: StoreFactAndInferResult,
 }
 

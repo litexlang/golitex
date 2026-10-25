@@ -1,0 +1,3 @@
+thm unit_empty_index:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>:
+        \Algebra::coordinate_maps::unit_coefficients<K,field,0,1> $in finite_seq(K,0)

@@ -35,6 +35,20 @@ pub(super) fn atomic_fact_with_args(
         }};
     }
     Some(match fact {
+        AtomicFact::MultivariableAnalysisFact(f) => crate::ast::fact::MultivariableAnalysisFact {
+            fact_id,
+            relation: f.relation.with_arguments(&args),
+            line_file: f.line_file.clone(),
+        }
+        .into(),
+        AtomicFact::NotMultivariableAnalysisFact(f) => {
+            crate::ast::fact::NotMultivariableAnalysisFact {
+                fact_id,
+                relation: f.relation.with_arguments(&args),
+                line_file: f.line_file.clone(),
+            }
+            .into()
+        }
         AtomicFact::HasRiemannIntegralFact(f) => {
             let mut args = args.into_iter();
             crate::ast::fact::HasRiemannIntegralFact {

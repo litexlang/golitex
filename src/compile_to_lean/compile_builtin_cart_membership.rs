@@ -18,6 +18,7 @@ impl LitexToLeanCompiler {
         requirements: &[Fact],
         references: &[String],
         position: &SourcePosition<'_>,
+        domain_position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
         let Some(Fact::AtomicFact(AtomicFact::EqualFact(definition))) = requirements.first() else {
             return Err(LeanCompileError::unsupported("CartTheorem/CarrierEquality"));
@@ -61,7 +62,7 @@ impl LitexToLeanCompiler {
             return Err(LeanCompileError::unsupported("CartTheorem/TargetFactors"));
         }
         let (source_cart, source_member) =
-            self.compile_cart_shape_member(&member.element, &finite.source, position)?;
+            self.compile_cart_shape_member(&member.element, &finite.source, domain_position)?;
         let target_cart = self.compile_object_reference(&definition.right, position)?;
         let target = self.compile_object_reference(&member.set, position)?;
         let mut coordinates = Vec::new();

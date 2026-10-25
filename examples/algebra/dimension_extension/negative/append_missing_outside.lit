@@ -1,0 +1,6 @@
+claim:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,m N,vectors finite_seq(V,m),x V:
+        $Algebra::basis::is_linearly_independent(K,field,V,space,m,vectors)
+        =>:
+            $Algebra::basis::is_linearly_independent(K,field,V,space,m+1,\Algebra::basis_extension::append_vector<V,m,vectors,x>)
+    release thm Algebra::basis_extension::append_outside_span_is_independent(K,field,V,space,m,vectors,x)

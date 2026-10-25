@@ -28,6 +28,27 @@ impl Runtime {
         param_to_arg_map: &HashMap<IdentifierId, Obj>,
     ) -> Result<Obj, InstError> {
         match obj {
+            Obj::LimitOperator(crate::ast::obj::LimitOperator::MultivariableScalar(_))
+            | Obj::LimitOperator(crate::ast::obj::LimitOperator::MultivariableVector(_))
+            | Obj::DerivativeOperator(crate::ast::obj::DerivativeOperator::Partial(_))
+            | Obj::DerivativeOperator(crate::ast::obj::DerivativeOperator::ScalarDifferential(_))
+            | Obj::DerivativeOperator(crate::ast::obj::DerivativeOperator::TotalDifferential(_))
+            | Obj::DerivativeOperator(crate::ast::obj::DerivativeOperator::Gradient(_))
+            | Obj::DerivativeOperator(crate::ast::obj::DerivativeOperator::Jacobian(_))
+            | Obj::DerivativeOperator(crate::ast::obj::DerivativeOperator::Hessian(_))
+            | Obj::DerivativeOperator(crate::ast::obj::DerivativeOperator::Divergence(_))
+            | Obj::DerivativeOperator(crate::ast::obj::DerivativeOperator::Curl(_))
+            | Obj::DerivativeOperator(crate::ast::obj::DerivativeOperator::Laplacian(_)) => {
+                let mut args = Vec::new();
+                for arg in obj.multivariable_selector_args().unwrap() {
+                    args.push(self.inst_obj_rec(arg, param_to_arg_map)?);
+                }
+                Ok(Obj::from_multivariable_selector(
+                    obj.multivariable_selector_name().unwrap(),
+                    &args,
+                )
+                .unwrap())
+            }
             Obj::MatrixOperator(value) => value
                 .try_map_operands(|arg| self.inst_obj_rec(arg, param_to_arg_map))
                 .map(Obj::MatrixOperator),

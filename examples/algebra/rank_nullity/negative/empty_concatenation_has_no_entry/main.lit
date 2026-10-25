@@ -1,0 +1,7 @@
+have fn empty(j closed_range(1,0)) R=0
+
+have fn singleton(j closed_range(1,1)) R=3
+
+have fn second(j closed_range(1,1)) R=5
+
+\Algebra::finite_decomposition::concatenate_lists<R,0,0,empty,empty>(1) $in R

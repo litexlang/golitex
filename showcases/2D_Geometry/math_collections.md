@@ -5,7 +5,8 @@
 This library models Euclidean plane geometry with real coordinate pairs.
 `geo_definitions.lit` provides the vocabulary; `geo.lit` repeats that vocabulary
 and supplies theorems. Keep their definition prefixes identical. The IMO
-packages are independent developments with local definitions.
+packages are independent developments with local definitions, maintained under
+[examples/imo/geometry](../../examples/imo/geometry/README.md).
 
 ## Modeling conventions and mathematical spine
 

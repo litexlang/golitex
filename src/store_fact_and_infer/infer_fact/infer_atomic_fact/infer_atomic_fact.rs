@@ -8,6 +8,19 @@ impl Runtime {
         state: VerifyState,
     ) -> RuntimeResult<InferAtomicFactResult> {
         match fact {
+            AtomicFact::MultivariableAnalysisFact(f) => {
+                Ok(InferAtomicFactResult::MultivariableAnalysisFact(vec![
+                    InferMultivariableAnalysisFactResult::Definition(
+                        InferMultivariableAnalysisDefinitionResult {
+                            source_fact_id: f.fact_id,
+                            derived: self.store_multivariable_definition(f, state)?,
+                        },
+                    ),
+                ]))
+            }
+            AtomicFact::NotMultivariableAnalysisFact(_) => Ok(
+                InferAtomicFactResult::NotMultivariableAnalysisFact(Vec::new()),
+            ),
             AtomicFact::HasRiemannIntegralFact(f) => {
                 Ok(InferAtomicFactResult::HasRiemannIntegralFact(vec![
                     InferHasRiemannIntegralFactResult::Definition(

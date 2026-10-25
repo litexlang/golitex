@@ -56,6 +56,18 @@ impl LitexToLeanCompiler {
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
         match (rule, &fact.set) {
+            (InFactSearchProofByBuiltinRule::SetMinusMembership(p), _) => self
+                .compile_set_minus_membership(
+                    fact,
+                    [&p.left_membership_proof, &p.right_non_membership_proof],
+                    position,
+                ),
+            (InFactSearchProofByBuiltinRule::IntersectMembership(proof), _) => self
+                .compile_intersection_membership(
+                    fact,
+                    [&proof.left_membership_proof, &proof.right_membership_proof],
+                    position,
+                ),
             (
                 InFactSearchProofByBuiltinRule::PowerSetMembership(proof),
                 Obj::SetOperator(SetOperator::PowerSet(power)),

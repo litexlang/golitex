@@ -1,0 +1,179 @@
+# Finite list concatenation, splitting and linear-combination decomposition.
+# Checked source derivations; exact proof-consuming value domains.
+
+claim:
+    ? forall m,n N,j closed_range(1,m+n):
+        j>m
+        =>:
+            j-m $in closed_range(1,n)
+    j $in Z
+    j-m $in Z
+    j-m>0
+    j-m>=1
+    j<=m+n
+    j-m<=(m+n)-m=n
+    j-m $in closed_range(1,n)
+
+claim:
+    ? forall m,n N,j closed_range(1,n):
+        m+j $in closed_range(1,m+n)
+    1<=j<=n
+    m+j $in Z
+    1<=m+j<=m+n
+    m+j $in closed_range(1,m+n)
+
+template<S nonempty_set,m N,n N,left finite_seq(S,m),right finite_seq(S,n)>:
+    have fn concatenate_lists(j closed_range(1,m+n)) S by cases:
+        case j<=m: left(j)
+        case j>m: right(j-m)
+
+thm concatenate_lists_carrier:
+    ? forall S nonempty_set,m,n N,left finite_seq(S,m),right finite_seq(S,n):
+        \concatenate_lists<S,m,n,left,right> $in finite_seq(S,m+n)
+
+thm prefix_has_concatenation_decomposition:
+    ? forall S nonempty_set,m,n N,full finite_seq(S,m+n),prefix finite_seq(S,m):
+        $basis::is_prefix_of_length(S,m+n,m,full,prefix)
+        =>:
+            exist tail finite_seq(S,n) st {full=\concatenate_lists<S,m,n,prefix,tail>}
+    have fn tail(j closed_range(1,n)) S=full(m+j)
+    by fn_extension:
+        ? full=\concatenate_lists<S,m,n,prefix,tail>
+        claim:
+            ? forall j closed_range(1,m+n):
+                full(j)=\concatenate_lists<S,m,n,prefix,tail>(j)
+            j $in N+
+            j<=m+n
+            by cases:
+                ? full(j)=\concatenate_lists<S,m,n,prefix,tail>(j)
+                case j<=m:
+                    prefix(j)=full(j)
+                    \concatenate_lists<S,m,n,prefix,tail>(j)=prefix(j)
+                case j>m:
+                    j-m $in closed_range(1,n)
+                    m+(j-m)=j
+                    tail(j-m)=full(m+(j-m))=full(j)
+                    \concatenate_lists<S,m,n,prefix,tail>(j)=tail(j-m)=full(j)
+    witness exist suffix finite_seq(S,n) st {full=\concatenate_lists<S,m,n,prefix,suffix>} from tail
+
+thm list_splits_at_length:
+    ? forall S nonempty_set,m,n N,full finite_seq(S,m+n):
+        exist left finite_seq(S,m),right finite_seq(S,n) st {full=\concatenate_lists<S,m,n,left,right>}
+    m<=m+n
+    release thm basis::prefix_exists(S,m+n,m,full)
+    obtain left from exist selected finite_seq(S,m) st {$basis::is_prefix_of_length(S,m+n,m,full,selected)}
+    release thm prefix_has_concatenation_decomposition(S,m,n,full,left)
+    obtain right from exist suffix finite_seq(S,n) st {full=\concatenate_lists<S,m,n,left,suffix>}
+    witness exist prefix finite_seq(S,m),suffix finite_seq(S,n) st {full=\concatenate_lists<S,m,n,prefix,suffix>} from left,right
+
+thm concatenated_linear_combination:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,m,n N,left_coefficients finite_seq(K,m),right_coefficients finite_seq(K,n),left finite_seq(V,m),right finite_seq(V,n):
+        \finite_span::linear_combination<K,field,V,space,m+n>(\concatenate_lists<K,m,n,left_coefficients,right_coefficients>,\concatenate_lists<V,m,n,left,right>)=space.add(\finite_span::linear_combination<K,field,V,space,m>(left_coefficients,left),\finite_span::linear_combination<K,field,V,space,n>(right_coefficients,right))
+    by thm finite_span::linear_combination_has_value(K,field,V,space,m,left_coefficients,left) => $finite_span::has_linear_combination_value(K,field,V,space,m,left_coefficients,left,\finite_span::linear_combination<K,field,V,space,m>(left_coefficients,left))
+    by thm finite_span::linear_combination_has_value(K,field,V,space,n,right_coefficients,right) => $finite_span::has_linear_combination_value(K,field,V,space,n,right_coefficients,right,\finite_span::linear_combination<K,field,V,space,n>(right_coefficients,right))
+    obtain prefix_sums from $finite_span::has_linear_combination_value(K,field,V,space,m,left_coefficients,left,\finite_span::linear_combination<K,field,V,space,m>(left_coefficients,left))
+    obtain suffix_sums from $finite_span::has_linear_combination_value(K,field,V,space,n,right_coefficients,right,\finite_span::linear_combination<K,field,V,space,n>(right_coefficients,right))
+    claim:
+        ? forall j closed_range(0,m+n):
+            j<=m
+            =>:
+                j $in closed_range(0,m)
+        j $in Z
+        j>=0
+        j $in closed_range(0,m)
+    claim:
+        ? forall j closed_range(0,m+n):
+            j>m
+            =>:
+                j-m $in closed_range(0,n)
+        j $in Z
+        j-m $in Z
+        j<=m+n
+        j-m<=(m+n)-m=n
+        j-m>0
+        j-m>=0
+        j-m $in closed_range(0,n)
+    have fn sums(j closed_range(0,m+n)) V by cases:
+        case j<=m: prefix_sums(j)
+        case j>m: space.add(prefix_sums(m),suffix_sums(j-m))
+    claim:
+        ? forall j closed_range(m,m+n):
+            j-m $in closed_range(0,n)
+        j $in Z
+        j-m $in Z
+        j>=m
+        j<=m+n
+        j-m>=0
+        j-m<=(m+n)-m=n
+        j-m $in closed_range(0,n)
+    claim:
+        ? forall j closed_range(m,m+n):
+            sums(j)=space.add(prefix_sums(m),suffix_sums(j-m))
+        j-m $in closed_range(0,n)
+        by cases:
+            ? sums(j)=space.add(prefix_sums(m),suffix_sums(j-m))
+            case j=m:
+                j<=m
+                j $in closed_range(0,m+n)
+                j $in closed_range(0,m)
+                j-m=0
+                suffix_sums(j-m)=suffix_sums(0)=space.zero
+                space.add(prefix_sums(m),space.zero)=space.add(space.zero,prefix_sums(m))=prefix_sums(m)
+                sums(j)=prefix_sums(j)=prefix_sums(m)=space.add(prefix_sums(m),suffix_sums(j-m))
+            case j!=m:
+                j>=m
+                by contra:
+                    ? j>m
+                    j<=m
+                    j=m
+                    impossible j!=m
+                j $in closed_range(0,m+n)
+                sums(j)=space.add(prefix_sums(m),suffix_sums(j-m))
+    sums(0)=prefix_sums(0)=space.zero
+    claim:
+        ? forall j N+:
+            j<=m+n
+            =>:
+                sums(j)=space.add(sums(j-1),space.smul(\concatenate_lists<K,m,n,left_coefficients,right_coefficients>(j),\concatenate_lists<V,m,n,left,right>(j)))
+        j $in closed_range(1,m+n)
+        j $in closed_range(0,m+n)
+        j-1 $in closed_range(0,m+n)
+        by cases:
+            ? sums(j)=space.add(sums(j-1),space.smul(\concatenate_lists<K,m,n,left_coefficients,right_coefficients>(j),\concatenate_lists<V,m,n,left,right>(j)))
+            case j<=m:
+                j $in closed_range(1,m)
+                j-1 $in closed_range(0,m)
+                j-1<=m
+                \concatenate_lists<K,m,n,left_coefficients,right_coefficients>(j)=left_coefficients(j)
+                \concatenate_lists<V,m,n,left,right>(j)=left(j)
+                sums(j)=prefix_sums(j)
+                sums(j-1)=prefix_sums(j-1)
+                left_coefficients(j) $in K
+                left(j) $in V
+                space.smul(left_coefficients(j),left(j)) $in V
+                sums(j)=prefix_sums(j)=space.add(prefix_sums(j-1),space.smul(left_coefficients(j),left(j)))=space.add(sums(j-1),space.smul(\concatenate_lists<K,m,n,left_coefficients,right_coefficients>(j),\concatenate_lists<V,m,n,left,right>(j)))
+            case j>m:
+                j-m $in closed_range(1,n)
+                j-m $in N+
+                j-m<=n
+                (j-1)-m=(j-m)-1
+                j-1>=m
+                j-1 $in closed_range(m,m+n)
+                sums(j-1)=space.add(prefix_sums(m),suffix_sums((j-1)-m))
+                suffix_sums((j-1)-m)=suffix_sums((j-m)-1)
+                \concatenate_lists<K,m,n,left_coefficients,right_coefficients>(j)=right_coefficients(j-m)
+                \concatenate_lists<V,m,n,left,right>(j)=right(j-m)
+                right_coefficients(j-m) $in K
+                right(j-m) $in V
+                space.smul(right_coefficients(j-m),right(j-m)) $in V
+                suffix_sums(j-m)=space.add(suffix_sums((j-m)-1),space.smul(right_coefficients(j-m),right(j-m)))
+                sums(j)=space.add(prefix_sums(m),suffix_sums(j-m))=space.add(prefix_sums(m),space.add(suffix_sums((j-m)-1),space.smul(right_coefficients(j-m),right(j-m))))=space.add(space.add(prefix_sums(m),suffix_sums((j-m)-1)),space.smul(right_coefficients(j-m),right(j-m)))
+                space.add(prefix_sums(m),suffix_sums((j-m)-1))=sums(j-1)
+                space.add(sums(j-1),space.smul(right_coefficients(j-m),right(j-m)))=space.add(sums(j-1),space.smul(\concatenate_lists<K,m,n,left_coefficients,right_coefficients>(j),\concatenate_lists<V,m,n,left,right>(j)))
+    by def $finite_span::is_partial_sum(K,field,V,space,m+n,\concatenate_lists<K,m,n,left_coefficients,right_coefficients>,\concatenate_lists<V,m,n,left,right>,sums)
+    by thm finite_span::partial_sum_determines_combination(K,field,V,space,m+n,\concatenate_lists<K,m,n,left_coefficients,right_coefficients>,\concatenate_lists<V,m,n,left,right>,sums) => \finite_span::linear_combination<K,field,V,space,m+n>(\concatenate_lists<K,m,n,left_coefficients,right_coefficients>,\concatenate_lists<V,m,n,left,right>)=sums(m+n)
+    m+n $in closed_range(m,m+n)
+    (m+n)-m=n
+    sums(m+n)=space.add(prefix_sums(m),suffix_sums(n))
+    prefix_sums(m)=\finite_span::linear_combination<K,field,V,space,m>(left_coefficients,left)
+    suffix_sums(n)=\finite_span::linear_combination<K,field,V,space,n>(right_coefficients,right)

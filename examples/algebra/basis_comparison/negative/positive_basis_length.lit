@@ -1,0 +1,6 @@
+claim:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>:
+        $Algebra::basis::is_finite_dimensional(K,field,V,space)
+        =>:
+            exist! n N+ st {$Algebra::basis::has_basis_length(K,field,V,space,n)}
+    release thm Algebra::basis_comparison::finite_dimensional_has_unique_basis_length(K,field,V,space)

@@ -1,0 +1,318 @@
+# Inherited vector spaces, combination transport and finite-dimensional subspaces.
+# Guarded source constructions over the supplied ambient operations.
+
+thm subspace_is_nonempty:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,U power_set(V):
+        $vector_space::is_subspace(K,field,V,space,U)
+        =>:
+            $is_nonempty_set(U)
+    witness $is_nonempty_set(U) from space.zero
+
+template<K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,U power_set(V): $vector_space::is_subspace(K,field,V,space,U)>:
+    have fn restricted_add(u,v U) U=space.add(u,v)
+
+template<K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,U power_set(V): $vector_space::is_subspace(K,field,V,space,U)>:
+    have fn restricted_smul(a K,v U) U=space.smul(a,v)
+
+thm subspace_inverse_exists:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,U power_set(V),x U:
+        $vector_space::is_subspace(K,field,V,space,U)
+        =>:
+            exist y U st {space.add(x,y)=space.zero}
+    obtain y from exist v V st {space.add(x,v)=space.zero}
+    by thm exchange::subspace_additive_cancellation(K,field,V,space,U,x,y) => y $in U
+    witness exist v U st {space.add(x,v)=space.zero} from y
+
+claim:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,U power_set(V):
+        $vector_space::is_subspace(K,field,V,space,U)
+        =>:
+            (space.zero,\restricted_add<K,field,V,space,U>,\restricted_smul<K,field,V,space,U>) $in &vector_space::VectorSpace<K,field,U>
+    U $subset V
+    claim:
+        ? forall x,y,z U:
+            \restricted_add<K,field,V,space,U>(\restricted_add<K,field,V,space,U>(x,y),z)=\restricted_add<K,field,V,space,U>(x,\restricted_add<K,field,V,space,U>(y,z))
+        x $in V
+        y $in V
+        z $in V
+        \restricted_add<K,field,V,space,U>(x,y)=space.add(x,y)
+        \restricted_add<K,field,V,space,U>(x,y) $in V
+        space.add(x,y) $in V
+        \restricted_add<K,field,V,space,U>(y,z)=space.add(y,z)
+        \restricted_add<K,field,V,space,U>(y,z) $in V
+        space.add(y,z) $in V
+        \restricted_add<K,field,V,space,U>(\restricted_add<K,field,V,space,U>(x,y),z)=space.add(\restricted_add<K,field,V,space,U>(x,y),z)=space.add(space.add(x,y),z)=space.add(x,space.add(y,z))=space.add(x,\restricted_add<K,field,V,space,U>(y,z))=\restricted_add<K,field,V,space,U>(x,\restricted_add<K,field,V,space,U>(y,z))
+    claim:
+        ? forall x,y U:
+            \restricted_add<K,field,V,space,U>(x,y)=\restricted_add<K,field,V,space,U>(y,x)
+        x $in V
+        y $in V
+        \restricted_add<K,field,V,space,U>(x,y)=space.add(x,y)=space.add(y,x)=\restricted_add<K,field,V,space,U>(y,x)
+    claim:
+        ? forall x U:
+            \restricted_add<K,field,V,space,U>(space.zero,x)=x
+            exist y U st {\restricted_add<K,field,V,space,U>(x,y)=space.zero}
+        x $in V
+        \restricted_add<K,field,V,space,U>(space.zero,x)=space.add(space.zero,x)=x
+        release thm subspace_inverse_exists(K,field,V,space,U,x)
+        obtain y from exist v U st {space.add(x,v)=space.zero}
+        witness exist v U st {\restricted_add<K,field,V,space,U>(x,v)=space.zero} from y
+    claim:
+        ? forall a,b K,x U:
+            \restricted_smul<K,field,V,space,U>(field.mul(a,b),x)=\restricted_smul<K,field,V,space,U>(a,\restricted_smul<K,field,V,space,U>(b,x))
+            \restricted_smul<K,field,V,space,U>(field.add(a,b),x)=\restricted_add<K,field,V,space,U>(\restricted_smul<K,field,V,space,U>(a,x),\restricted_smul<K,field,V,space,U>(b,x))
+        x $in V
+        \restricted_smul<K,field,V,space,U>(a,x)=space.smul(a,x)
+        \restricted_smul<K,field,V,space,U>(a,x) $in V
+        space.smul(a,x) $in V
+        \restricted_smul<K,field,V,space,U>(b,x)=space.smul(b,x)
+        \restricted_smul<K,field,V,space,U>(b,x) $in V
+        space.smul(b,x) $in V
+        \restricted_smul<K,field,V,space,U>(field.mul(a,b),x)=space.smul(field.mul(a,b),x)=space.smul(a,space.smul(b,x))=space.smul(a,\restricted_smul<K,field,V,space,U>(b,x))=\restricted_smul<K,field,V,space,U>(a,\restricted_smul<K,field,V,space,U>(b,x))
+        \restricted_smul<K,field,V,space,U>(field.add(a,b),x)=space.smul(field.add(a,b),x)=space.add(space.smul(a,x),space.smul(b,x))=space.add(\restricted_smul<K,field,V,space,U>(a,x),\restricted_smul<K,field,V,space,U>(b,x))=\restricted_add<K,field,V,space,U>(\restricted_smul<K,field,V,space,U>(a,x),\restricted_smul<K,field,V,space,U>(b,x))
+    claim:
+        ? forall a K,x,y U:
+            \restricted_smul<K,field,V,space,U>(a,\restricted_add<K,field,V,space,U>(x,y))=\restricted_add<K,field,V,space,U>(\restricted_smul<K,field,V,space,U>(a,x),\restricted_smul<K,field,V,space,U>(a,y))
+        x $in V
+        y $in V
+        \restricted_add<K,field,V,space,U>(x,y)=space.add(x,y)
+        \restricted_add<K,field,V,space,U>(x,y) $in V
+        space.add(x,y) $in V
+        \restricted_smul<K,field,V,space,U>(a,x)=space.smul(a,x)
+        \restricted_smul<K,field,V,space,U>(a,x) $in V
+        space.smul(a,x) $in V
+        \restricted_smul<K,field,V,space,U>(a,y)=space.smul(a,y)
+        \restricted_smul<K,field,V,space,U>(a,y) $in V
+        space.smul(a,y) $in V
+        \restricted_smul<K,field,V,space,U>(a,\restricted_add<K,field,V,space,U>(x,y))=space.smul(a,\restricted_add<K,field,V,space,U>(x,y))=space.smul(a,space.add(x,y))=space.add(space.smul(a,x),space.smul(a,y))=space.add(\restricted_smul<K,field,V,space,U>(a,x),\restricted_smul<K,field,V,space,U>(a,y))=\restricted_add<K,field,V,space,U>(\restricted_smul<K,field,V,space,U>(a,x),\restricted_smul<K,field,V,space,U>(a,y))
+    claim:
+        ? forall x U:
+            \restricted_smul<K,field,V,space,U>(field.one,x)=x
+        x $in V
+        \restricted_smul<K,field,V,space,U>(field.one,x)=space.smul(field.one,x)=x
+    release thm struct_member((space.zero,\restricted_add<K,field,V,space,U>,\restricted_smul<K,field,V,space,U>),&vector_space::VectorSpace<K,field,U>)
+
+template<K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,U power_set(V): $vector_space::is_subspace(K,field,V,space,U)>:
+    have restricted_space &vector_space::VectorSpace<K,field,U> =(space.zero,\restricted_add<K,field,V,space,U>,\restricted_smul<K,field,V,space,U>)
+
+template<V nonempty_set,U power_set(V)>:
+    have fn inclusion(u U) V=u
+
+thm inclusion_is_linear:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,U power_set(V):
+        $vector_space::is_subspace(K,field,V,space,U)
+        =>:
+            $vector_space::is_linear_map(K,field,U,\restricted_space<K,field,V,space,U>,V,space,\inclusion<V,U>)
+    release struct def \restricted_space<K,field,V,space,U>
+    claim:
+        ? forall u,v U:
+            \inclusion<V,U>(\restricted_space<K,field,V,space,U>.add(u,v))=space.add(\inclusion<V,U>(u),\inclusion<V,U>(v))
+        \restricted_space<K,field,V,space,U>.add=\restricted_add<K,field,V,space,U>
+        \restricted_space<K,field,V,space,U>.add(u,v)=\restricted_add<K,field,V,space,U>(u,v)=space.add(u,v)
+        space.add(u,v) $in U
+        \inclusion<V,U>(\restricted_space<K,field,V,space,U>.add(u,v))=space.add(u,v)
+        \inclusion<V,U>(u)=u
+        \inclusion<V,U>(v)=v
+    claim:
+        ? forall a K,v U:
+            \inclusion<V,U>(\restricted_space<K,field,V,space,U>.smul(a,v))=space.smul(a,\inclusion<V,U>(v))
+        \restricted_space<K,field,V,space,U>.smul=\restricted_smul<K,field,V,space,U>
+        \restricted_space<K,field,V,space,U>.smul(a,v)=\restricted_smul<K,field,V,space,U>(a,v)=space.smul(a,v)
+        space.smul(a,v) $in U
+        \inclusion<V,U>(\restricted_space<K,field,V,space,U>.smul(a,v))=space.smul(a,v)
+        \inclusion<V,U>(v)=v
+    by def $vector_space::is_linear_map(K,field,U,\restricted_space<K,field,V,space,U>,V,space,\inclusion<V,U>)
+
+thm sequence_in_ambient:
+    ? forall V nonempty_set,U power_set(V),n N,vectors finite_seq(U,n):
+        vectors $in finite_seq(V,n)
+    U $subset V
+    forall j closed_range(1,n):
+        vectors(j) $in V
+    release thm fn_set_member(vectors,finite_seq(V,n))
+
+thm subspace_combination_equals_ambient:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,U power_set(V),n N,coefficients finite_seq(K,n),vectors finite_seq(U,n):
+        $vector_space::is_subspace(K,field,V,space,U)
+        =>:
+            \finite_span::linear_combination<K,field,U,\restricted_space<K,field,V,space,U>,n>(coefficients,vectors)=\finite_span::linear_combination<K,field,V,space,n>(coefficients,vectors)
+    by thm inclusion_is_linear(K,field,V,space,U) => $vector_space::is_linear_map(K,field,U,\restricted_space<K,field,V,space,U>,V,space,\inclusion<V,U>)
+    have mapped finite_seq(V,n)=\finite_span::map_vectors<U,V,n>(\inclusion<V,U>,vectors)
+    by fn_extension:
+        ? mapped=vectors
+        claim:
+            ? forall j closed_range(1,n):
+                mapped(j)=vectors(j)
+            vectors(j) $in U
+            mapped(j)=\finite_span::map_vectors<U,V,n>(\inclusion<V,U>,vectors)(j)=\inclusion<V,U>(vectors(j))=vectors(j)
+    by thm finite_span::linear_map_preserves_combination(K,field,U,\restricted_space<K,field,V,space,U>,V,space,\inclusion<V,U>,n,coefficients,vectors) => \inclusion<V,U>(\finite_span::linear_combination<K,field,U,\restricted_space<K,field,V,space,U>,n>(coefficients,vectors))=\finite_span::linear_combination<K,field,V,space,n>(coefficients,\finite_span::map_vectors<U,V,n>(\inclusion<V,U>,vectors))
+    \finite_span::linear_combination<K,field,U,\restricted_space<K,field,V,space,U>,n>(coefficients,vectors) $in U
+    \inclusion<V,U>(\finite_span::linear_combination<K,field,U,\restricted_space<K,field,V,space,U>,n>(coefficients,vectors))=\finite_span::linear_combination<K,field,U,\restricted_space<K,field,V,space,U>,n>(coefficients,vectors)
+    \finite_span::map_vectors<U,V,n>(\inclusion<V,U>,vectors)=mapped=vectors
+    \finite_span::linear_combination<K,field,V,space,n>(coefficients,\finite_span::map_vectors<U,V,n>(\inclusion<V,U>,vectors))=\finite_span::linear_combination<K,field,V,space,n>(coefficients,vectors)
+
+thm subspace_independent_is_ambient_independent:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,U power_set(V),n N,vectors finite_seq(U,n):
+        $vector_space::is_subspace(K,field,V,space,U)
+        $basis::is_linearly_independent(K,field,U,\restricted_space<K,field,V,space,U>,n,vectors)
+        =>:
+            $basis::is_linearly_independent(K,field,V,space,n,vectors)
+    release struct def \restricted_space<K,field,V,space,U>
+    claim:
+        ? forall coefficients finite_seq(K,n):
+            $finite_span::has_linear_combination_value(K,field,V,space,n,coefficients,vectors,space.zero)
+            =>:
+                $basis::has_only_zero_coefficients(K,field,n,coefficients)
+        obtain sums from $finite_span::has_linear_combination_value(K,field,V,space,n,coefficients,vectors,space.zero)
+        by thm finite_span::partial_sum_determines_combination(K,field,V,space,n,coefficients,vectors,sums) => \finite_span::linear_combination<K,field,V,space,n>(coefficients,vectors)=sums(n)
+        by thm subspace_combination_equals_ambient(K,field,V,space,U,n,coefficients,vectors) => \finite_span::linear_combination<K,field,U,\restricted_space<K,field,V,space,U>,n>(coefficients,vectors)=\finite_span::linear_combination<K,field,V,space,n>(coefficients,vectors)
+        release thm finite_span::linear_combination_has_value(K,field,U,\restricted_space<K,field,V,space,U>,n,coefficients,vectors)
+        sums(n)=space.zero=\restricted_space<K,field,V,space,U>.zero
+        $finite_span::has_linear_combination_value(K,field,U,\restricted_space<K,field,V,space,U>,n,coefficients,vectors,\restricted_space<K,field,V,space,U>.zero)
+    by def $basis::is_linearly_independent(K,field,V,space,n,vectors)
+
+thm ambient_independent_is_subspace_independent:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,U power_set(V),n N,vectors finite_seq(U,n):
+        $vector_space::is_subspace(K,field,V,space,U)
+        $basis::is_linearly_independent(K,field,V,space,n,vectors)
+        =>:
+            $basis::is_linearly_independent(K,field,U,\restricted_space<K,field,V,space,U>,n,vectors)
+    release struct def \restricted_space<K,field,V,space,U>
+    claim:
+        ? forall coefficients finite_seq(K,n):
+            $finite_span::has_linear_combination_value(K,field,U,\restricted_space<K,field,V,space,U>,n,coefficients,vectors,\restricted_space<K,field,V,space,U>.zero)
+            =>:
+                $basis::has_only_zero_coefficients(K,field,n,coefficients)
+        obtain sums from $finite_span::has_linear_combination_value(K,field,U,\restricted_space<K,field,V,space,U>,n,coefficients,vectors,\restricted_space<K,field,V,space,U>.zero)
+        by thm finite_span::partial_sum_determines_combination(K,field,U,\restricted_space<K,field,V,space,U>,n,coefficients,vectors,sums) => \finite_span::linear_combination<K,field,U,\restricted_space<K,field,V,space,U>,n>(coefficients,vectors)=sums(n)
+        by thm subspace_combination_equals_ambient(K,field,V,space,U,n,coefficients,vectors) => \finite_span::linear_combination<K,field,U,\restricted_space<K,field,V,space,U>,n>(coefficients,vectors)=\finite_span::linear_combination<K,field,V,space,n>(coefficients,vectors)
+        release thm finite_span::linear_combination_has_value(K,field,V,space,n,coefficients,vectors)
+        sums(n)=\restricted_space<K,field,V,space,U>.zero=space.zero
+        $finite_span::has_linear_combination_value(K,field,V,space,n,coefficients,vectors,space.zero)
+    by def $basis::is_linearly_independent(K,field,U,\restricted_space<K,field,V,space,U>,n,vectors)
+
+thm subspace_span_equals_ambient:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,U power_set(V),n N,vectors finite_seq(U,n):
+        $vector_space::is_subspace(K,field,V,space,U)
+        =>:
+            \finite_span::span<K,field,U,\restricted_space<K,field,V,space,U>,n,vectors> = \finite_span::span<K,field,V,space,n,vectors>
+    \finite_span::span<K,field,U,\restricted_space<K,field,V,space,U>,n,vectors> = {value U: $finite_span::is_linear_combination(K,field,U,\restricted_space<K,field,V,space,U>,n,value,vectors)}
+    \finite_span::span<K,field,V,space,n,vectors> = {value V: $finite_span::is_linear_combination(K,field,V,space,n,value,vectors)}
+    have inside power_set(U)=\finite_span::span<K,field,U,\restricted_space<K,field,V,space,U>,n,vectors>
+    have outside power_set(V)=\finite_span::span<K,field,V,space,n,vectors>
+    U $subset V
+    claim:
+        ? forall x inside:
+            x $in outside
+        obtain coefficients from $finite_span::is_linear_combination(K,field,U,\restricted_space<K,field,V,space,U>,n,x,vectors)
+        obtain sums from $finite_span::has_linear_combination_value(K,field,U,\restricted_space<K,field,V,space,U>,n,coefficients,vectors,x)
+        by thm finite_span::partial_sum_determines_combination(K,field,U,\restricted_space<K,field,V,space,U>,n,coefficients,vectors,sums) => \finite_span::linear_combination<K,field,U,\restricted_space<K,field,V,space,U>,n>(coefficients,vectors)=sums(n)
+        by thm subspace_combination_equals_ambient(K,field,V,space,U,n,coefficients,vectors) => \finite_span::linear_combination<K,field,U,\restricted_space<K,field,V,space,U>,n>(coefficients,vectors)=\finite_span::linear_combination<K,field,V,space,n>(coefficients,vectors)
+        sums(n)=x
+        release thm finite_span::linear_combination_has_value(K,field,V,space,n,coefficients,vectors)
+        witness $finite_span::is_linear_combination(K,field,V,space,n,x,vectors) from coefficients
+    claim:
+        ? forall x outside:
+            x $in inside
+        obtain coefficients from $finite_span::is_linear_combination(K,field,V,space,n,x,vectors)
+        obtain sums from $finite_span::has_linear_combination_value(K,field,V,space,n,coefficients,vectors,x)
+        by thm finite_span::partial_sum_determines_combination(K,field,V,space,n,coefficients,vectors,sums) => \finite_span::linear_combination<K,field,V,space,n>(coefficients,vectors)=sums(n)
+        by thm subspace_combination_equals_ambient(K,field,V,space,U,n,coefficients,vectors) => \finite_span::linear_combination<K,field,U,\restricted_space<K,field,V,space,U>,n>(coefficients,vectors)=\finite_span::linear_combination<K,field,V,space,n>(coefficients,vectors)
+        \finite_span::linear_combination<K,field,U,\restricted_space<K,field,V,space,U>,n>(coefficients,vectors) $in U
+        x=sums(n)=\finite_span::linear_combination<K,field,V,space,n>(coefficients,vectors)=\finite_span::linear_combination<K,field,U,\restricted_space<K,field,V,space,U>,n>(coefficients,vectors)
+        x $in U
+        release thm finite_span::linear_combination_has_value(K,field,U,\restricted_space<K,field,V,space,U>,n,coefficients,vectors)
+        witness $finite_span::is_linear_combination(K,field,U,\restricted_space<K,field,V,space,U>,n,x,vectors) from coefficients
+    by extension inside = outside
+
+thm finite_dimensional_subspace_is_finite_dimensional:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,U power_set(V):
+        $vector_space::is_subspace(K,field,V,space,U)
+        $basis::is_finite_dimensional(K,field,V,space)
+        =>:
+            $basis::is_finite_dimensional(K,field,U,\restricted_space<K,field,V,space,U>)
+    have bound N=\dimension::finite_dimension<K,field,V>(space)
+    prop has_independent_length(n N):
+        exist vectors finite_seq(U,n) st {$basis::is_linearly_independent(K,field,U,\restricted_space<K,field,V,space,U>,n,vectors)}
+    have lengths finite_set={n closed_range(0,bound): $has_independent_length(n)}
+    have empty finite_seq(U,0)=tuple()
+    by thm dependence::empty_list_is_independent(K,field,U,\restricted_space<K,field,V,space,U>,empty) => $basis::is_linearly_independent(K,field,U,\restricted_space<K,field,V,space,U>,0,empty)
+    witness $has_independent_length(0) from empty
+    0 $in closed_range(0,bound)
+    0 $in lengths
+    witness $is_nonempty_set(lengths) from 0
+    lengths $subset closed_range(0,bound)
+    closed_range(0,bound) $subset R
+    lengths $subset R
+    finite_set_max(lengths) $in lengths
+    finite_set_max(lengths) $in closed_range(0,bound)
+    finite_set_max(lengths) $in Z
+    finite_set_max(lengths)>=0
+    finite_set_max(lengths) $in N
+    have m N=finite_set_max(lengths)
+    m $in lengths
+    obtain vectors from $has_independent_length(m)
+    claim:
+        ? forall x U:
+            x $in \finite_span::span<K,field,U,\restricted_space<K,field,V,space,U>,m,vectors>
+        by contra:
+            ? x $in \finite_span::span<K,field,U,\restricted_space<K,field,V,space,U>,m,vectors>
+            have appended finite_seq(U,m+1)=\basis_extension::append_vector<U,m,vectors,x>
+            by thm basis_extension::append_outside_span_is_independent(K,field,U,\restricted_space<K,field,V,space,U>,m,vectors,x) => $basis::is_linearly_independent(K,field,U,\restricted_space<K,field,V,space,U>,m+1,\basis_extension::append_vector<U,m,vectors,x>)
+            by thm subspace_independent_is_ambient_independent(K,field,V,space,U,m+1,appended) => $basis::is_linearly_independent(K,field,V,space,m+1,appended)
+            by thm dimension::independent_length_le_dimension(K,field,V,space,m+1,appended) => m+1<=\dimension::finite_dimension<K,field,V>(space)
+            m+1 $in closed_range(0,bound)
+            witness $has_independent_length(m+1) from appended
+            m+1 $in lengths
+            m+1<=finite_set_max(lengths)=m
+            m+1>m
+            impossible m+1<=m
+    by extension \finite_span::span<K,field,U,\restricted_space<K,field,V,space,U>,m,vectors> = U
+    by def $finite_span::spans(K,field,U,\restricted_space<K,field,V,space,U>,m,vectors)
+    witness $basis::is_finite_dimensional(K,field,U,\restricted_space<K,field,V,space,U>) from m,vectors
+
+thm subspace_dimension_le_ambient:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,U power_set(V):
+        $vector_space::is_subspace(K,field,V,space,U)
+        $basis::is_finite_dimensional(K,field,V,space)
+        $basis::is_finite_dimensional(K,field,U,\restricted_space<K,field,V,space,U>)
+        =>:
+            \dimension::finite_dimension<K,field,U>(\restricted_space<K,field,V,space,U>)<=\dimension::finite_dimension<K,field,V>(space)
+    by thm finite_dimensional_subspace_is_finite_dimensional(K,field,V,space,U) => $basis::is_finite_dimensional(K,field,U,\restricted_space<K,field,V,space,U>)
+    by thm dimension::finite_dimension_has_basis_length(K,field,U,\restricted_space<K,field,V,space,U>) => $basis::has_basis_length(K,field,U,\restricted_space<K,field,V,space,U>,\dimension::finite_dimension<K,field,U>(\restricted_space<K,field,V,space,U>))
+    obtain vectors from $basis::has_basis_length(K,field,U,\restricted_space<K,field,V,space,U>,\dimension::finite_dimension<K,field,U>(\restricted_space<K,field,V,space,U>))
+    by thm subspace_independent_is_ambient_independent(K,field,V,space,U,\dimension::finite_dimension<K,field,U>(\restricted_space<K,field,V,space,U>),vectors) => $basis::is_linearly_independent(K,field,V,space,\dimension::finite_dimension<K,field,U>(\restricted_space<K,field,V,space,U>),vectors)
+    by thm dimension::independent_length_le_dimension(K,field,V,space,\dimension::finite_dimension<K,field,U>(\restricted_space<K,field,V,space,U>),vectors) => \dimension::finite_dimension<K,field,U>(\restricted_space<K,field,V,space,U>)<=\dimension::finite_dimension<K,field,V>(space)
+
+thm ambient_is_subspace:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>:
+        $vector_space::is_subspace(K,field,V,space,V)
+    by def $vector_space::is_subspace(K,field,V,space,V)
+
+thm zero_is_subspace:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>:
+        $vector_space::is_subspace(K,field,V,space,{space.zero})
+    claim:
+        ? forall a K,v V:
+            v $in {space.zero}
+            =>:
+                space.smul(a,v) $in {space.zero}
+        v=space.zero
+        by thm vector_space::scalar_times_zero(K,field,V,space,a) => space.smul(a,space.zero)=space.zero
+        space.smul(a,v)=space.smul(a,space.zero)=space.zero
+    claim:
+        ? forall u,v V:
+            u $in {space.zero}
+            v $in {space.zero}
+            =>:
+                space.add(u,v) $in {space.zero}
+        u=space.zero
+        v=space.zero
+        space.add(u,v)=space.add(space.zero,space.zero)=space.zero
+    by def $vector_space::is_subspace(K,field,V,space,{space.zero})
+
+thm restricted_space_is_vector_space:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,U power_set(V):
+        $vector_space::is_subspace(K,field,V,space,U)
+        =>:
+            \restricted_space<K,field,V,space,U> $in &vector_space::VectorSpace<K,field,U>

@@ -1,0 +1,112 @@
+# The singleton vector space over the real field is allowed.
+
+
+have fn real_inv(x R: x != 0) R = 1 / x
+
+have fn real_add(x, y R) R = x + y
+
+have fn real_neg(x R) R = -x
+
+have fn real_mul(x, y R) R = x * y
+
+forall x, y, z R:
+    real_add(real_add(x, y), z) = real_add(x, real_add(y, z))
+    real_mul(real_mul(x, y), z) = real_mul(x, real_mul(y, z))
+    real_mul(x, real_add(y, z)) = real_add(real_mul(x, y), real_mul(x, z))
+
+forall x, y R:
+    real_add(x, y) = real_add(y, x)
+    real_mul(x, y) = real_mul(y, x)
+
+forall x R:
+    real_add(0, x) = x
+    real_add(x, real_neg(x)) = 0
+    real_mul(1, x) = x
+
+forall x R:
+    x != 0
+    =>:
+        real_mul(x, real_inv(x)) = 1
+
+release thm struct_member((0, 1, real_add, real_neg, real_mul, real_inv), &Algebra::field::Field<R>)
+
+have real_field &Algebra::field::Field<R> = (0, 1, real_add, real_neg, real_mul, real_inv)
+
+have fn zero_add(x,y {0}) {0}=0
+
+have fn zero_smul(a R,x {0}) {0}=0
+
+zero_add $in fn(x,y {0}) {0}
+
+zero_smul $in fn(a R,x {0}) {0}
+
+claim:
+    ? forall x,y,z {0}:
+        zero_add(zero_add(x,y),z)=zero_add(x,zero_add(y,z))
+    x=0
+    y=0
+    z=0
+    zero_add(zero_add(x,y),z)=0=zero_add(x,zero_add(y,z))
+
+claim:
+    ? forall x,y {0}:
+        zero_add(x,y)=zero_add(y,x)
+    x=0
+    y=0
+    zero_add(x,y)=0=zero_add(y,x)
+
+claim:
+    ? forall x {0}:
+        zero_add(0,x)=x
+        exist y {0} st {zero_add(x,y)=0}
+    x=0
+    zero_add(0,x)=x
+    zero_add(x,0)=0
+    witness exist y {0} st {zero_add(x,y)=0} from 0
+
+claim:
+    ? forall a,b R,x {0}:
+        zero_smul(real_field.mul(a,b),x)=zero_smul(a,zero_smul(b,x))
+        zero_smul(real_field.add(a,b),x)=zero_add(zero_smul(a,x),zero_smul(b,x))
+    zero_smul(real_field.mul(a,b),x)=0
+    zero_smul(real_field.add(a,b),x)=0
+    zero_smul(b,x)=0
+    zero_smul(a,zero_smul(b,x))=0
+    zero_add(zero_smul(a,x),zero_smul(b,x))=0
+
+forall a R,x,y {0}:
+    zero_smul(a,zero_add(x,y))=zero_add(zero_smul(a,x),zero_smul(a,y))
+
+claim:
+    ? forall x {0}:
+        zero_smul(real_field.one,x)=x
+    x=0
+    zero_smul(real_field.one,x)=0=x
+
+real_field.mul=real_mul
+
+real_field.add=real_add
+
+real_field.one=1
+
+real_field.zero=0
+
+0 $in {0}
+
+release thm struct_member((0,zero_add,zero_smul),&Algebra::vector_space::VectorSpace<R,real_field,{0}>)
+
+have zero_space &Algebra::vector_space::VectorSpace<R,real_field,{0}> = (0,zero_add,zero_smul)
+
+release thm Algebra::vector_space::identity_linear(R,real_field,{0},zero_space)
+
+release thm Algebra::vector_space::zero_map_linear(R,real_field,{0},zero_space,{0},zero_space)
+
+by def $injective({0},{0},\Algebra::vector_space::identity<{0}>)
+
+release thm Algebra::vector_space::injective_has_zero_kernel(R,real_field,{0},zero_space,{0},zero_space,\Algebra::vector_space::identity<{0}>)
+
+release thm Algebra::vector_space::zero_kernel_is_injective(R,real_field,{0},zero_space,{0},zero_space,\Algebra::vector_space::identity<{0}>)
+
+release thm Algebra::vector_space::kernel_is_subspace(R,real_field,{0},zero_space,{0},zero_space,\Algebra::vector_space::zero_map<{0},{0},zero_space.zero>)
+
+release thm Algebra::vector_space::range_is_subspace(R,real_field,{0},zero_space,{0},zero_space,\Algebra::vector_space::zero_map<{0},{0},zero_space.zero>)

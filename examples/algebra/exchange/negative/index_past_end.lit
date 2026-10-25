@@ -1,0 +1,4 @@
+claim:
+    ? forall V nonempty_set,n N,v finite_seq(V,n),value V:
+        exist w finite_seq(V,n) st {w=w}
+    release thm Algebra::exchange::replacement_list_exists(V,n,v,n+1,value)

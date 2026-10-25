@@ -29,6 +29,6 @@ lim_right(sided_square,0)=0
 
 by thm fn_limit_from_sides(sided_square,0,0) => $has_limit_at(sided_square,0,0)
 
-lim(sided_square,0)=0
+fn_lim(sided_square,0)=0
 
-lim(sided_square,0)+2=2
+fn_lim(sided_square,0)+2=2

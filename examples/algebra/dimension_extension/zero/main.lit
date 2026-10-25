@@ -1,0 +1,55 @@
+# Guarded dimension and ordered basis extension.
+
+release obj def context::real_inv
+
+release obj def context::real_add
+
+release obj def context::real_neg
+
+release obj def context::real_mul
+
+release obj def context::real_field
+
+release obj def context::zero_add
+
+release obj def context::zero_smul
+
+release obj def context::zero_space
+
+release obj def context::empty_basis
+
+release struct def context::real_field
+
+release struct def context::zero_space
+
+by thm Algebra::finite_span::span_zero_member(R,context::real_field,{0},context::zero_space,0,context::empty_basis) => context::zero_space.zero $in \Algebra::finite_span::span<R,context::real_field,{0},context::zero_space,0,context::empty_basis>
+
+claim:
+    ? $Algebra::finite_span::spans(R,context::real_field,{0},context::zero_space,0,context::empty_basis)
+    context::zero_space.zero=0
+    claim:
+        ? forall x {0}:
+            x $in \Algebra::finite_span::span<R,context::real_field,{0},context::zero_space,0,context::empty_basis>
+        x=0=context::zero_space.zero
+    forall x \Algebra::finite_span::span<R,context::real_field,{0},context::zero_space,0,context::empty_basis>:
+        x $in {0}
+    by extension \Algebra::finite_span::span<R,context::real_field,{0},context::zero_space,0,context::empty_basis> = {0}
+    by def $Algebra::finite_span::spans(R,context::real_field,{0},context::zero_space,0,context::empty_basis)
+
+by thm Algebra::dependence::empty_list_is_independent(R,context::real_field,{0},context::zero_space,context::empty_basis) => $Algebra::basis::is_linearly_independent(R,context::real_field,{0},context::zero_space,0,context::empty_basis)
+
+by def $Algebra::basis::is_basis(R,context::real_field,{0},context::zero_space,0,context::empty_basis)
+
+by thm Algebra::basis::basis_is_finite_dimensional(R,context::real_field,{0},context::zero_space,0,context::empty_basis) => $Algebra::basis::is_finite_dimensional(R,context::real_field,{0},context::zero_space)
+
+by thm Algebra::dimension::finite_dimension_of_basis(R,context::real_field,{0},context::zero_space,0,context::empty_basis) => \Algebra::dimension::finite_dimension<R,context::real_field,{0}>(context::zero_space)=0
+
+release thm Algebra::basis_extension::independent_list_extends_to_basis(R,context::real_field,{0},context::zero_space,0,context::empty_basis)
+
+obtain n,extended from exist length N,selected finite_seq({0},length) st {$Algebra::basis::is_basis(R,context::real_field,{0},context::zero_space,length,selected),$Algebra::basis::is_prefix_of_length({0},length,0,selected,context::empty_basis)}
+
+by thm Algebra::dimension::finite_dimension_of_basis(R,context::real_field,{0},context::zero_space,n,extended) => \Algebra::dimension::finite_dimension<R,context::real_field,{0}>(context::zero_space)=n
+
+n=0
+
+release thm Algebra::basis::basis_representation_exists_unique(R,context::real_field,{0},context::zero_space,n,extended,0)

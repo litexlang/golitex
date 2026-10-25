@@ -255,3 +255,5 @@ mod exact_rational_powers;
 mod tuple_cart_object_call_tests;
 
 pub(crate) use execute_have_obj_in_nonempty_set_stmt::HaveObjInNonemptySetGroupResult;
+
+pub(crate) use execute_have_by_replacement_axiom_stmt::forall_is_replacement_uniqueness;

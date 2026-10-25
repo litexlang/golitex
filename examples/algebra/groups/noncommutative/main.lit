@@ -1,0 +1,135 @@
+# A noncommutative real Heisenberg group.
+# The third coordinate distinguishes the two generator products.
+# Run: LITEX_STD_PATH="$PWD/std" target/release/litex -lang en -strict -f examples/algebra/groups/noncommutative/main.lit
+
+have fn multiply(u,v cart_n(R,3)) cart_n(R,3)=(u(1)+v(1),u(2)+v(2),u(3)+v(3)+u(1)*v(2))
+
+have fn inverse(u cart_n(R,3)) cart_n(R,3)=(-u(1),-u(2),u(1)*u(2)-u(3))
+
+claim:
+    ? forall u,v,w cart_n(R,3):
+        multiply(multiply(u,v),w)=multiply(u,multiply(v,w))
+    multiply(u,v)(1)=u(1)+v(1)
+    multiply(u,v)(2)=u(2)+v(2)
+    multiply(u,v)(3)=u(3)+v(3)+u(1)*v(2)
+    multiply(v,w)(1)=v(1)+w(1)
+    multiply(v,w)(2)=v(2)+w(2)
+    multiply(v,w)(3)=v(3)+w(3)+v(1)*w(2)
+    multiply(u,v)(1)+w(1)=u(1)+v(1)+w(1)
+    multiply(u,v)(2)+w(2)=u(2)+v(2)+w(2)
+    multiply(u,v)(3)+w(3)+multiply(u,v)(1)*w(2)=u(3)+v(3)+u(1)*v(2)+w(3)+(u(1)+v(1))*w(2)
+    u(1)+multiply(v,w)(1)=u(1)+(v(1)+w(1))
+    u(2)+multiply(v,w)(2)=u(2)+(v(2)+w(2))
+    u(3)+multiply(v,w)(3)+u(1)*multiply(v,w)(2)=u(3)+(v(3)+w(3)+v(1)*w(2))+u(1)*(v(2)+w(2))
+    multiply(multiply(u,v),w)=(multiply(u,v)(1)+w(1),multiply(u,v)(2)+w(2),multiply(u,v)(3)+w(3)+multiply(u,v)(1)*w(2))=(u(1)+v(1)+w(1),u(2)+v(2)+w(2),u(3)+v(3)+u(1)*v(2)+w(3)+(u(1)+v(1))*w(2))=(u(1)+(v(1)+w(1)),u(2)+(v(2)+w(2)),u(3)+(v(3)+w(3)+v(1)*w(2))+u(1)*(v(2)+w(2)))=(u(1)+multiply(v,w)(1),u(2)+multiply(v,w)(2),u(3)+multiply(v,w)(3)+u(1)*multiply(v,w)(2))=multiply(u,multiply(v,w))
+
+claim:
+    ? forall u cart_n(R,3):
+        multiply((0,0,0),u)=u
+        multiply(u,(0,0,0))=u
+        multiply(inverse(u),u)=(0,0,0)
+        multiply(u,inverse(u))=(0,0,0)
+    release tuple def (0,0,0)
+    multiply((0,0,0),u)(1)=(0,0,0)(1)+u(1)=0+u(1)=u(1)
+    multiply((0,0,0),u)(2)=(0,0,0)(2)+u(2)=0+u(2)=u(2)
+    multiply((0,0,0),u)(3)=(0,0,0)(3)+u(3)+(0,0,0)(1)*u(2)=0+u(3)+0*u(2)=u(3)
+    by enumerate finite_set:
+        ? forall k closed_range(1,3):
+            multiply((0,0,0),u)(k)=u(k)
+        k>=1
+    by thm tuple_equal_from_coordinates(multiply((0,0,0),u),u) => multiply((0,0,0),u)=u
+    multiply(u,(0,0,0))(1)=u(1)+(0,0,0)(1)=u(1)+0=u(1)
+    multiply(u,(0,0,0))(2)=u(2)+(0,0,0)(2)=u(2)+0=u(2)
+    multiply(u,(0,0,0))(3)=u(3)+(0,0,0)(3)+u(1)*(0,0,0)(2)=u(3)+0+u(1)*0=u(3)
+    by enumerate finite_set:
+        ? forall k closed_range(1,3):
+            multiply(u,(0,0,0))(k)=u(k)
+        k>=1
+    by thm tuple_equal_from_coordinates(multiply(u,(0,0,0)),u) => multiply(u,(0,0,0))=u
+    inverse(u)(1)=-u(1)
+    inverse(u)(2)=-u(2)
+    inverse(u)(3)=u(1)*u(2)-u(3)
+    multiply(inverse(u),u)(1)=inverse(u)(1)+u(1)=-u(1)+u(1)=0
+    multiply(inverse(u),u)(2)=inverse(u)(2)+u(2)=-u(2)+u(2)=0
+    multiply(inverse(u),u)(3)=inverse(u)(3)+u(3)+inverse(u)(1)*u(2)=u(1)*u(2)-u(3)+u(3)+(-u(1))*u(2)=0
+    by enumerate finite_set:
+        ? forall k closed_range(1,3):
+            multiply(inverse(u),u)(k)=(0,0,0)(k)
+        k>=1
+    by thm tuple_equal_from_coordinates(multiply(inverse(u),u),(0,0,0)) => multiply(inverse(u),u)=(0,0,0)
+    multiply(u,inverse(u))(1)=u(1)+inverse(u)(1)=u(1)+(-u(1))=0
+    multiply(u,inverse(u))(2)=u(2)+inverse(u)(2)=u(2)+(-u(2))=0
+    multiply(u,inverse(u))(3)=u(3)+inverse(u)(3)+u(1)*inverse(u)(2)=u(3)+(u(1)*u(2)-u(3))+u(1)*(-u(2))=0
+    by enumerate finite_set:
+        ? forall k closed_range(1,3):
+            multiply(u,inverse(u))(k)=(0,0,0)(k)
+        k>=1
+    by thm tuple_equal_from_coordinates(multiply(u,inverse(u)),(0,0,0)) => multiply(u,inverse(u))=(0,0,0)
+
+multiply $in fn(u,v cart_n(R,3)) cart_n(R,3)
+
+inverse $in fn(u cart_n(R,3)) cart_n(R,3)
+
+(0,0,0) $in cart_n(R,3)
+
+have heisenberg &Algebra::group::Group<cart_n(R,3)> = (multiply,(0,0,0),inverse)
+
+heisenberg.mul=multiply
+
+heisenberg.one=(0,0,0)
+
+have east cart_n(R,3)=(1,0,0)
+
+have north cart_n(R,3)=(0,1,0)
+
+east(1)=1 and east(2)=0 and east(3)=0
+
+north(1)=0 and north(2)=1 and north(3)=0
+
+claim:
+    ? heisenberg.mul(east,north)(3)=1
+    east(3)+north(3)=0
+    east(1)*north(2)=1
+    heisenberg.mul(east,north)(3)=multiply(east,north)(3)=east(3)+north(3)+east(1)*north(2)=0+1=1
+
+claim:
+    ? heisenberg.mul(north,east)(3)=0
+    north(3)+east(3)=0
+    north(1)*east(2)=0
+    heisenberg.mul(north,east)(3)=multiply(north,east)(3)=north(3)+east(3)+north(1)*east(2)=0+0=0
+
+have fn central_coordinate(u cart_n(R,3)) R=u(3)
+
+central_coordinate(heisenberg.mul(east,north))=heisenberg.mul(east,north)(3)=1
+
+central_coordinate(heisenberg.mul(north,east))=heisenberg.mul(north,east)(3)=0
+
+by contra:
+    ? heisenberg.mul(east,north)!=heisenberg.mul(north,east)
+    central_coordinate(heisenberg.mul(east,north))=central_coordinate(heisenberg.mul(north,east))
+    impossible 1=0
+
+by contra:
+    ? not $Algebra::group::is_abelian(cart_n(R,3),heisenberg)
+    impossible heisenberg.mul(east,north)=heisenberg.mul(north,east)
+
+thm noncommutative_left_cancel:
+    ? forall a,b,c cart_n(R,3):
+        heisenberg.mul(a,b)=heisenberg.mul(a,c)
+        =>:
+            b=c
+    by thm Algebra::group::left_cancel(cart_n(R,3),heisenberg,a,b,c) => b=c
+
+have fn zero_projection(u cart_n(R,3)) cart_n(R,3)=(0,0,0)
+
+claim:
+    ? $Algebra::group::is_homomorphism(cart_n(R,3),heisenberg,cart_n(R,3),heisenberg,zero_projection)
+    claim:
+        ? forall u,v cart_n(R,3):
+            zero_projection(heisenberg.mul(u,v))=heisenberg.mul(zero_projection(u),zero_projection(v))
+        zero_projection(u)=(0,0,0)=heisenberg.one
+        zero_projection(v)=(0,0,0)=heisenberg.one
+        zero_projection(heisenberg.mul(u,v))=(0,0,0)=heisenberg.one=heisenberg.mul(heisenberg.one,heisenberg.one)=heisenberg.mul(zero_projection(u),zero_projection(v))
+    by def $Algebra::group::is_homomorphism(cart_n(R,3),heisenberg,cart_n(R,3),heisenberg,zero_projection)
+
+by thm Algebra::group::kernel_is_normal(cart_n(R,3),heisenberg,cart_n(R,3),heisenberg,zero_projection) => $Algebra::group::is_normal_subgroup(cart_n(R,3),heisenberg,\Algebra::group::kernel<cart_n(R,3),cart_n(R,3),heisenberg,zero_projection>)

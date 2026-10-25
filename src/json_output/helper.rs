@@ -164,6 +164,8 @@ pub(crate) fn fact_source_line(fact: &Fact) -> Option<&SourceLine> {
 
 fn atomic_source_line(fact: &AtomicFact) -> Option<&SourceLine> {
     match fact {
+        AtomicFact::MultivariableAnalysisFact(f) => f.line_file.as_ref(),
+        AtomicFact::NotMultivariableAnalysisFact(f) => f.line_file.as_ref(),
         AtomicFact::NormalAtomicFact(f) => f.line_file.as_ref(),
         AtomicFact::NotNormalAtomicFact(f) => f.line_file.as_ref(),
         AtomicFact::EqualFact(f) => f.line_file.as_ref(),

@@ -27,3 +27,5 @@ mod sequence_extrema;
 pub(crate) mod derive_sequence_extrema_bounded;
 
 mod matrices;
+
+mod multivariable;

@@ -1,0 +1,7 @@
+claim:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,n N,vectors finite_seq(V,n):
+        $Algebra::basis::is_finite_dimensional(K,field,V,space)
+        $Algebra::finite_span::spans(K,field,V,space,n,vectors)
+        =>:
+            $Algebra::basis::is_basis(K,field,V,space,n,vectors)
+    release thm Algebra::dimension::spanning_dimension_list_is_basis(K,field,V,space,n,vectors)

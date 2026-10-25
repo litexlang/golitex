@@ -1,0 +1,15 @@
+# Only the final statement must be rejected.
+release obj def context::real_inv
+release obj def context::real_add
+release obj def context::real_neg
+release obj def context::real_mul
+release obj def context::real_field
+release obj def context::scalars
+release obj def context::unit_basis
+release struct def context::real_field
+release struct def context::scalars
+
+claim:
+    ? forall V nonempty_set,n N+,vectors finite_seq(V,n),k N+,reduced finite_seq(V,n-1):
+        fn_range(reduced) $subset fn_range(vectors)
+    by thm Algebra::basis_existence::removed_list_range_subset(V,n,vectors,k,reduced) => fn_range(reduced) $subset fn_range(vectors)

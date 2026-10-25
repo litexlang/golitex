@@ -21,3 +21,5 @@ pub(in crate::execute) use exec_eval_stmt::exec_eval_stmt;
 pub use result::{
     ExecCommandStmtResult, ExecEvalStmtFailed, ExecEvalStmtResult, ExecEvalStmtSuccess,
 };
+
+pub(crate) use evaluate_finite_objects::evaluate_finite_object;

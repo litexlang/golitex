@@ -65,7 +65,7 @@ conditions. Facts in local proofs retain their own scopes.
 | [09-linear-algebra.lit](09-linear-algebra.lit) | 741 lines. Coordinate operations → vector spaces and subspaces → linear combinations → span and independence → basis and unique standard coordinates. | [Linear algebra lecture, through §2.4](../../../showcases/linear_algebra/linear_algebra.lit) |
 | [10-topology.lit](10-topology.lit) | 489 lines. Discrete and indiscrete two-point spaces → preimages and continuity → a continuous bijection with discontinuous inverse → swap homeomorphism. | [Topology lecture, Chapters1–2](../../../showcases/topology/topology.lit) |
 | [11-finite-probability.lit](11-finite-probability.lit) | 154 lines. Probability vectors → expectation and variance → least squares → conditional probability and a Bayes calculation. | [Finite probability showcase](../../../showcases/math_concepts_in_litex/8_probability_and_statistics_in_nutshell/main.lit) |
-| [12-geometry-imo1966.lit](12-geometry-imo1966.lit) | 338 lines. Coordinate/segment definitions → determinant ratios → the IMO1966P6 quarter-area bound. | [Complete geometry solution](../../../showcases/2D_Geometry/IMO/problem_12/solution.lit) |
+| [12-geometry-imo1966.lit](12-geometry-imo1966.lit) | 338 lines. Coordinate/segment definitions → determinant ratios → the IMO1966P6 quarter-area bound. | [Complete geometry solution](../../imo/geometry/imo_1966_p6/solution.lit) |
 
 For a longer reading session, begin with number theory. Follow `divides_by`
 from its definition to the Diophantine result using its reference badge; the

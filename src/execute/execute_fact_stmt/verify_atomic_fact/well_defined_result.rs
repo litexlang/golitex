@@ -60,6 +60,7 @@ pub struct AtomicFactWellDefinedProof {
 // Reusing a checked proposition also reuses its predicate-domain evidence.
 // Arguments and the visible signature are still checked before this dispatch.
 pub enum PredicateDomainProof {
+    MultivariableAnalysis(MultivariableAnalysisPredicateDomainProof),
     SequenceAnalysis(SequenceAnalysisPredicateDomainProof),
     FunctionAnalysis(FunctionAnalysisPredicateDomainProof),
     FunctionLimit(FunctionLimitPredicateDomainProof),
@@ -138,4 +139,10 @@ pub enum FunctionLimitApproachRealProof {
     Finite(Box<VerifyFactResult>),
     AtPositiveInfinity,
     AtNegativeInfinity,
+}
+
+pub struct MultivariableAnalysisPredicateDomainProof {
+    pub function_domain:
+        Box<crate::execute::execute_fact_stmt::function_domain::CompleteFunctionDomainProof>,
+    pub requirements: Vec<PredicateDomainWellDefinedProof>,
 }

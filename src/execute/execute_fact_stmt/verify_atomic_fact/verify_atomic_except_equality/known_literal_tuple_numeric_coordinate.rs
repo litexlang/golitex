@@ -50,3 +50,49 @@ impl Runtime {
         None
     }
 }
+
+pub struct UniformTupleCoordinateCarrierProof {
+    pub tuple:KnownTupleValueProof,
+    pub index:Obj,
+    pub carrier:StandardSet,
+    pub coordinates:Vec<crate::execute::execute_fact_stmt::verify_atomic_fact::structural_membership_proof::StructuralMembershipProof>,
+}
+impl Runtime {
+    // After application WD, an unknown valid index selects one of these exact
+    // tuple entries. Pure structural carrier evidence for every entry suffices;
+    // no new premise search or inference is opened inside a binder.
+    pub(super) fn known_uniform_tuple_coordinate_carrier(
+        &mut self,
+        fact: &InFact,
+    ) -> Option<UniformTupleCoordinateCarrierProof> {
+        let Obj::StandardSet(carrier) = &fact.set else {
+            return None;
+        };
+        let Obj::FnObj(call) = &fact.element else {
+            return None;
+        };
+        let receiver = self.finite_function_application_receiver(call)?;
+        for tuple in self.known_literal_tuple_candidates(&receiver) {
+            if tuple.value.args.is_empty() {
+                continue;
+            }
+            let mut coordinates = Vec::new();
+            for entry in &tuple.value.args {
+                let Some(proof) = self.search_structural_membership(entry, carrier) else {
+                    coordinates.clear();
+                    break;
+                };
+                coordinates.push(proof);
+            }
+            if coordinates.len() == tuple.value.args.len() {
+                return Some(UniformTupleCoordinateCarrierProof {
+                    tuple,
+                    index: *call.body.last()?[0].clone(),
+                    carrier: carrier.clone(),
+                    coordinates,
+                });
+            }
+        }
+        None
+    }
+}

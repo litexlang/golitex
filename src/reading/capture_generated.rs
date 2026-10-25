@@ -1565,6 +1565,20 @@ capture.intern_evidence(output)
 pub(super) fn capture_ast__fact__atomic__AtomicFact(value: &crate::ast::fact::AtomicFact, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 capture.subject_depth += 1;
 let output = match value {
+crate::ast::fact::AtomicFact::MultivariableAnalysisFact(f0) => {
+let fields = vec![("0", capture_ast__fact__atomic__MultivariableAnalysisFact(f0, capture, runtime))];
+let mut output = node("AtomicFact", "MultivariableAnalysisFact", fields);
+if let JsonValue::Object(fields) = &mut output { fields.insert("text".into(), JsonValue::String(value.readable_string())); }
+capture.subject(&value.clone().into(), runtime);
+output
+},
+crate::ast::fact::AtomicFact::NotMultivariableAnalysisFact(f0) => {
+let fields = vec![("0", capture_ast__fact__atomic__NotMultivariableAnalysisFact(f0, capture, runtime))];
+let mut output = node("AtomicFact", "NotMultivariableAnalysisFact", fields);
+if let JsonValue::Object(fields) = &mut output { fields.insert("text".into(), JsonValue::String(value.readable_string())); }
+capture.subject(&value.clone().into(), runtime);
+output
+},
 crate::ast::fact::AtomicFact::HasRiemannIntegralFact(f0) => {
 let fields = vec![("0", capture_ast__fact__atomic__HasRiemannIntegralFact(f0, capture, runtime))];
 let mut output = node("AtomicFact", "HasRiemannIntegralFact", fields);
@@ -3736,8 +3750,8 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_axiom_stmt__exec_axiom_stmt__ExecAxiomStmtSuccess(value: &crate::execute::ExecAxiomStmtSuccess, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::ExecAxiomStmtSuccess { goal_wd: f0, stored: f1 } => {
-let fields = vec![("goal_wd", capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__VerifyFactWellDefinedResult(f0, capture, runtime)), ("stored", capture_store_fact_and_infer__store_fact_and_infer_result__store_and_infer_result__StoreFactAndInferResult(f1, capture, runtime))];
+crate::execute::ExecAxiomStmtSuccess { statement: f0, goal_wd: f1, stored: f2 } => {
+let fields = vec![("statement", { capture.source_snapshot_depth += 1; let value = capture_ast__stmt__AxiomStmt(f0, capture, runtime); capture.source_snapshot_depth -= 1; value }), ("goal_wd", capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__VerifyFactWellDefinedResult(f1, capture, runtime)), ("stored", capture_store_fact_and_infer__store_fact_and_infer_result__store_and_infer_result__StoreFactAndInferResult(f2, capture, runtime))];
 let mut output = node("ExecAxiomStmtSuccess", "", fields);
 output
 },
@@ -4921,10 +4935,10 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_by_stmt__result__ExecReleaseZornLemmaStmtSuccess(value: &crate::execute::execute_by_stmt::ExecReleaseZornLemmaStmtSuccess, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_by_stmt::ExecReleaseZornLemmaStmtSuccess { set_wd: f0, proof_steps: f1, obligations: f2, local_env: f3, stored: f4 } => {
+crate::execute::execute_by_stmt::ExecReleaseZornLemmaStmtSuccess { statement: f0, set_wd: f1, proof_steps: f2, obligations: f3, local_env: f4, stored_wd: f5, stored: f6 } => {
 let saved_scope = capture.enter_scope();
-capture.index_environment(f3, runtime);
-let fields = vec![("set_wd", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__VerifyObjWellDefinedResult(f0, capture, runtime)), ("proof_steps", capture.proof_steps("ExecReleaseZornLemmaStmtSuccess", f1, runtime)), ("obligations", JsonValue::Array((f2).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect())), ("local_env", capture.environment(f3, runtime)), ("stored", capture_store_fact_and_infer__store_fact_and_infer_result__store_and_infer_result__StoreFactAndInferResult(f4, capture, runtime))];
+capture.index_environment(f4, runtime);
+let fields = vec![("statement", { capture.source_snapshot_depth += 1; let value = capture_ast__stmt__ReleaseZornLemmaStmt(f0, capture, runtime); capture.source_snapshot_depth -= 1; value }), ("set_wd", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__VerifyObjWellDefinedResult(f1, capture, runtime)), ("proof_steps", capture.proof_steps("ExecReleaseZornLemmaStmtSuccess", f2, runtime)), ("obligations", JsonValue::Array((f3).iter().map(|item| capture_execute__execute_by_stmt__result__VerifiedReleaseObligation(item, capture, runtime)).collect())), ("local_env", capture.environment(f4, runtime)), ("stored_wd", capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FactWellDefinedProof(f5, capture, runtime)), ("stored", capture_store_fact_and_infer__store_fact_and_infer_result__store_and_infer_result__StoreFactAndInferResult(f6, capture, runtime))];
 let mut output = node("ExecReleaseZornLemmaStmtSuccess", "", fields);
 capture.leave_scope(saved_scope);
 output
@@ -4966,10 +4980,10 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_by_stmt__result__ExecReleaseAxiomOfChoiceStmtSuccess(value: &crate::execute::execute_by_stmt::ExecReleaseAxiomOfChoiceStmtSuccess, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_by_stmt::ExecReleaseAxiomOfChoiceStmtSuccess { family_wd: f0, proof_steps: f1, obligations: f2, local_env: f3, stored: f4 } => {
+crate::execute::execute_by_stmt::ExecReleaseAxiomOfChoiceStmtSuccess { statement: f0, family_wd: f1, proof_steps: f2, obligations: f3, local_env: f4, stored_wd: f5, stored: f6 } => {
 let saved_scope = capture.enter_scope();
-capture.index_environment(f3, runtime);
-let fields = vec![("family_wd", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__VerifyObjWellDefinedResult(f0, capture, runtime)), ("proof_steps", capture.proof_steps("ExecReleaseAxiomOfChoiceStmtSuccess", f1, runtime)), ("obligations", JsonValue::Array((f2).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect())), ("local_env", capture.environment(f3, runtime)), ("stored", capture_store_fact_and_infer__store_fact_and_infer_result__store_and_infer_result__StoreFactAndInferResult(f4, capture, runtime))];
+capture.index_environment(f4, runtime);
+let fields = vec![("statement", { capture.source_snapshot_depth += 1; let value = capture_ast__stmt__ReleaseAxiomOfChoiceStmt(f0, capture, runtime); capture.source_snapshot_depth -= 1; value }), ("family_wd", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__VerifyObjWellDefinedResult(f1, capture, runtime)), ("proof_steps", capture.proof_steps("ExecReleaseAxiomOfChoiceStmtSuccess", f2, runtime)), ("obligations", JsonValue::Array((f3).iter().map(|item| capture_execute__execute_by_stmt__result__VerifiedReleaseObligation(item, capture, runtime)).collect())), ("local_env", capture.environment(f4, runtime)), ("stored_wd", capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FactWellDefinedProof(f5, capture, runtime)), ("stored", capture_store_fact_and_infer__store_fact_and_infer_result__store_and_infer_result__StoreFactAndInferResult(f6, capture, runtime))];
 let mut output = node("ExecReleaseAxiomOfChoiceStmtSuccess", "", fields);
 capture.leave_scope(saved_scope);
 output
@@ -5006,8 +5020,8 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_by_stmt__result__ExecReleaseRegularityAxiomStmtSuccess(value: &crate::execute::execute_by_stmt::ExecReleaseRegularityAxiomStmtSuccess, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_by_stmt::ExecReleaseRegularityAxiomStmtSuccess { set_wd: f0, nonempty: f1, stored: f2 } => {
-let fields = vec![("set_wd", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__VerifyObjWellDefinedResult(f0, capture, runtime)), ("nonempty", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f1, capture, runtime)), ("stored", capture_store_fact_and_infer__store_fact_and_infer_result__store_and_infer_result__StoreFactAndInferResult(f2, capture, runtime))];
+crate::execute::execute_by_stmt::ExecReleaseRegularityAxiomStmtSuccess { set_wd: f0, nonempty: f1, stored_wd: f2, stored: f3 } => {
+let fields = vec![("set_wd", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__VerifyObjWellDefinedResult(f0, capture, runtime)), ("nonempty", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f1, capture, runtime)), ("stored_wd", capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FactWellDefinedProof(f2, capture, runtime)), ("stored", capture_store_fact_and_infer__store_fact_and_infer_result__store_and_infer_result__StoreFactAndInferResult(f3, capture, runtime))];
 let mut output = node("ExecReleaseRegularityAxiomStmtSuccess", "", fields);
 output
 },
@@ -5175,6 +5189,36 @@ let mut output = node("ExecEvalStmtFailed", "AggregateRangeOverflow", fields);
 output
 },
 };
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_ast__fact__atomic__MultivariableAnalysisFact(value: &crate::ast::fact::MultivariableAnalysisFact, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+capture.subject_depth += 1;
+let output = match value {
+crate::ast::fact::MultivariableAnalysisFact { fact_id: f0, relation: f1, line_file: f2 } => {
+let saved_location = f2.as_ref().map(|line| capture.enter_location(line));
+let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("relation", capture_ast__fact__atomic__MultivariableAnalysisRelation(f1, capture, runtime)), ("line_file", match (f2).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
+let mut output = node("MultivariableAnalysisFact", "", fields);
+if let Some(location) = saved_location { capture.leave_location(location); }
+output
+},
+};
+capture.subject_depth -= 1;
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_ast__fact__atomic__NotMultivariableAnalysisFact(value: &crate::ast::fact::NotMultivariableAnalysisFact, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+capture.subject_depth += 1;
+let output = match value {
+crate::ast::fact::NotMultivariableAnalysisFact { fact_id: f0, relation: f1, line_file: f2 } => {
+let saved_location = f2.as_ref().map(|line| capture.enter_location(line));
+let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("relation", capture_ast__fact__atomic__MultivariableAnalysisRelation(f1, capture, runtime)), ("line_file", match (f2).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
+let mut output = node("NotMultivariableAnalysisFact", "", fields);
+if let Some(location) = saved_location { capture.leave_location(location); }
+output
+},
+};
+capture.subject_depth -= 1;
 capture.intern_evidence(output)
 }
 
@@ -7477,8 +7521,8 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_have_by_replacement_axiom_stmt__ExecHaveByReplacementAxiomStmtSuccessResult(value: &crate::execute::ExecHaveByReplacementAxiomStmtSuccessResult, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::ExecHaveByReplacementAxiomStmtSuccessResult { statement: f0, source_wd: f1, stored_fact_ids: f2 } => {
-let fields = vec![("statement", { capture.source_snapshot_depth += 1; let value = capture_ast__stmt__HaveByReplacementAxiomStmt(f0, capture, runtime); capture.source_snapshot_depth -= 1; value }), ("source_wd", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__VerifyObjWellDefinedResult(f1, capture, runtime)), ("stored_fact_ids", { capture.subject_depth += 1; let value = JsonValue::Array((f2).iter().map(|item| capture.fact_reference(item, runtime)).collect()); capture.subject_depth -= 1; value })];
+crate::execute::ExecHaveByReplacementAxiomStmtSuccessResult { statement: f0, source_wd: f1, uniqueness_fact_id: f2, defined_params: f3, introduction: f4, elimination: f5, stored_fact_ids: f6 } => {
+let fields = vec![("statement", { capture.source_snapshot_depth += 1; let value = capture_ast__stmt__HaveByReplacementAxiomStmt(f0, capture, runtime); capture.source_snapshot_depth -= 1; value }), ("source_wd", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__VerifyObjWellDefinedResult(f1, capture, runtime)), ("uniqueness_fact_id", capture.fact_reference(f2, runtime)), ("defined_params", capture_execute__execute_have_obj_in_nonempty_set_stmt__StoreHaveObjAndInferResult(f3, capture, runtime)), ("introduction", capture_store_fact_and_infer__store_fact_and_infer_result__store_and_infer_result__StoreFactAndInferResult(f4, capture, runtime)), ("elimination", capture_store_fact_and_infer__store_fact_and_infer_result__store_and_infer_result__StoreFactAndInferResult(f5, capture, runtime)), ("stored_fact_ids", { capture.subject_depth += 1; let value = JsonValue::Array((f6).iter().map(|item| capture.fact_reference(item, runtime)).collect()); capture.subject_depth -= 1; value })];
 let mut output = node("ExecHaveByReplacementAxiomStmtSuccessResult", "", fields);
 output
 },
@@ -8397,6 +8441,790 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_builtin_theorem__BuiltinTheoremId(value: &crate::builtin_theorem::BuiltinTheoremId, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
+crate::builtin_theorem::BuiltinTheoremId::MultiContinuousAtCompose => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::MultiContinuousAtCompose");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "MultiContinuousAtCompose", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "MultiContinuousAtCompose", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::VectorContinuousAtCompose => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::VectorContinuousAtCompose");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "VectorContinuousAtCompose", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "VectorContinuousAtCompose", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::MultiLimitAtCompose => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::MultiLimitAtCompose");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "MultiLimitAtCompose", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "MultiLimitAtCompose", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::VectorLimitAtCompose => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::VectorLimitAtCompose");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "VectorLimitAtCompose", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "VectorLimitAtCompose", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::SecondPartialAtToFunction => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::SecondPartialAtToFunction");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "SecondPartialAtToFunction", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "SecondPartialAtToFunction", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::CurlGradientAtSymmetric => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::CurlGradientAtSymmetric");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "CurlGradientAtSymmetric", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "CurlGradientAtSymmetric", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::DivergenceCurlAtSymmetric => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::DivergenceCurlAtSymmetric");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "DivergenceCurlAtSymmetric", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "DivergenceCurlAtSymmetric", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::MultiLimitAtFromDefinition => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::MultiLimitAtFromDefinition");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "MultiLimitAtFromDefinition", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "MultiLimitAtFromDefinition", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::MultiLimitAtToDefinition => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::MultiLimitAtToDefinition");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "MultiLimitAtToDefinition", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "MultiLimitAtToDefinition", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::MultiLimitAtUnique => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::MultiLimitAtUnique");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "MultiLimitAtUnique", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "MultiLimitAtUnique", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::MultiLimitAtExists => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::MultiLimitAtExists");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "MultiLimitAtExists", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "MultiLimitAtExists", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::MultiLimitAtSelected => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::MultiLimitAtSelected");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "MultiLimitAtSelected", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "MultiLimitAtSelected", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::VectorLimitAtFromDefinition => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::VectorLimitAtFromDefinition");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "VectorLimitAtFromDefinition", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "VectorLimitAtFromDefinition", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::VectorLimitAtToDefinition => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::VectorLimitAtToDefinition");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "VectorLimitAtToDefinition", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "VectorLimitAtToDefinition", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::VectorLimitAtUnique => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::VectorLimitAtUnique");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "VectorLimitAtUnique", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "VectorLimitAtUnique", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::VectorLimitAtExists => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::VectorLimitAtExists");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "VectorLimitAtExists", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "VectorLimitAtExists", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::VectorLimitAtSelected => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::VectorLimitAtSelected");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "VectorLimitAtSelected", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "VectorLimitAtSelected", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::PartialAtFromDefinition => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::PartialAtFromDefinition");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "PartialAtFromDefinition", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "PartialAtFromDefinition", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::PartialAtToDefinition => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::PartialAtToDefinition");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "PartialAtToDefinition", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "PartialAtToDefinition", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::PartialAtUnique => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::PartialAtUnique");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "PartialAtUnique", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "PartialAtUnique", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::PartialAtExists => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::PartialAtExists");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "PartialAtExists", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "PartialAtExists", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::PartialAtSelected => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::PartialAtSelected");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "PartialAtSelected", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "PartialAtSelected", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::SecondPartialAtFromDefinition => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::SecondPartialAtFromDefinition");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "SecondPartialAtFromDefinition", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "SecondPartialAtFromDefinition", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::SecondPartialAtToDefinition => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::SecondPartialAtToDefinition");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "SecondPartialAtToDefinition", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "SecondPartialAtToDefinition", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::SecondPartialAtUnique => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::SecondPartialAtUnique");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "SecondPartialAtUnique", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "SecondPartialAtUnique", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::SecondPartialAtExists => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::SecondPartialAtExists");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "SecondPartialAtExists", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "SecondPartialAtExists", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::ScalarDifferentialAtFromDefinition => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::ScalarDifferentialAtFromDefinition");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "ScalarDifferentialAtFromDefinition", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "ScalarDifferentialAtFromDefinition", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::ScalarDifferentialAtToDefinition => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::ScalarDifferentialAtToDefinition");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "ScalarDifferentialAtToDefinition", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "ScalarDifferentialAtToDefinition", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::ScalarDifferentialAtUnique => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::ScalarDifferentialAtUnique");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "ScalarDifferentialAtUnique", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "ScalarDifferentialAtUnique", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::ScalarDifferentialAtExists => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::ScalarDifferentialAtExists");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "ScalarDifferentialAtExists", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "ScalarDifferentialAtExists", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::ScalarDifferentialAtSelected => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::ScalarDifferentialAtSelected");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "ScalarDifferentialAtSelected", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "ScalarDifferentialAtSelected", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::TotalDerivativeAtFromDefinition => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::TotalDerivativeAtFromDefinition");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "TotalDerivativeAtFromDefinition", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "TotalDerivativeAtFromDefinition", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::TotalDerivativeAtToDefinition => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::TotalDerivativeAtToDefinition");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "TotalDerivativeAtToDefinition", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "TotalDerivativeAtToDefinition", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::TotalDerivativeAtUnique => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::TotalDerivativeAtUnique");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "TotalDerivativeAtUnique", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "TotalDerivativeAtUnique", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::TotalDerivativeAtExists => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::TotalDerivativeAtExists");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "TotalDerivativeAtExists", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "TotalDerivativeAtExists", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::TotalDerivativeAtSelected => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::TotalDerivativeAtSelected");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "TotalDerivativeAtSelected", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "TotalDerivativeAtSelected", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::GradientAtFromDefinition => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::GradientAtFromDefinition");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "GradientAtFromDefinition", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "GradientAtFromDefinition", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::GradientAtToDefinition => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::GradientAtToDefinition");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "GradientAtToDefinition", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "GradientAtToDefinition", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::GradientAtUnique => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::GradientAtUnique");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "GradientAtUnique", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "GradientAtUnique", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::GradientAtExists => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::GradientAtExists");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "GradientAtExists", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "GradientAtExists", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::GradientAtSelected => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::GradientAtSelected");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "GradientAtSelected", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "GradientAtSelected", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::JacobianAtFromDefinition => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::JacobianAtFromDefinition");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "JacobianAtFromDefinition", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "JacobianAtFromDefinition", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::JacobianAtToDefinition => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::JacobianAtToDefinition");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "JacobianAtToDefinition", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "JacobianAtToDefinition", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::JacobianAtUnique => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::JacobianAtUnique");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "JacobianAtUnique", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "JacobianAtUnique", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::JacobianAtExists => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::JacobianAtExists");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "JacobianAtExists", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "JacobianAtExists", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::JacobianAtSelected => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::JacobianAtSelected");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "JacobianAtSelected", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "JacobianAtSelected", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::HessianAtFromDefinition => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::HessianAtFromDefinition");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "HessianAtFromDefinition", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "HessianAtFromDefinition", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::HessianAtToDefinition => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::HessianAtToDefinition");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "HessianAtToDefinition", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "HessianAtToDefinition", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::HessianAtUnique => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::HessianAtUnique");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "HessianAtUnique", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "HessianAtUnique", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::HessianAtExists => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::HessianAtExists");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "HessianAtExists", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "HessianAtExists", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::HessianAtSelected => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::HessianAtSelected");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "HessianAtSelected", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "HessianAtSelected", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::DivergenceAtFromDefinition => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::DivergenceAtFromDefinition");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "DivergenceAtFromDefinition", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "DivergenceAtFromDefinition", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::DivergenceAtToDefinition => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::DivergenceAtToDefinition");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "DivergenceAtToDefinition", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "DivergenceAtToDefinition", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::DivergenceAtUnique => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::DivergenceAtUnique");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "DivergenceAtUnique", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "DivergenceAtUnique", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::DivergenceAtExists => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::DivergenceAtExists");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "DivergenceAtExists", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "DivergenceAtExists", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::DivergenceAtSelected => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::DivergenceAtSelected");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "DivergenceAtSelected", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "DivergenceAtSelected", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::CurlAtFromDefinition => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::CurlAtFromDefinition");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "CurlAtFromDefinition", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "CurlAtFromDefinition", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::CurlAtToDefinition => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::CurlAtToDefinition");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "CurlAtToDefinition", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "CurlAtToDefinition", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::CurlAtUnique => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::CurlAtUnique");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "CurlAtUnique", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "CurlAtUnique", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::CurlAtExists => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::CurlAtExists");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "CurlAtExists", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "CurlAtExists", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::CurlAtSelected => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::CurlAtSelected");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "CurlAtSelected", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "CurlAtSelected", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::LaplacianAtFromDefinition => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::LaplacianAtFromDefinition");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "LaplacianAtFromDefinition", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "LaplacianAtFromDefinition", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::LaplacianAtToDefinition => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::LaplacianAtToDefinition");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "LaplacianAtToDefinition", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "LaplacianAtToDefinition", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::LaplacianAtUnique => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::LaplacianAtUnique");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "LaplacianAtUnique", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "LaplacianAtUnique", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::LaplacianAtExists => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::LaplacianAtExists");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "LaplacianAtExists", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "LaplacianAtExists", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::LaplacianAtSelected => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::LaplacianAtSelected");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "LaplacianAtSelected", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "LaplacianAtSelected", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::MultiContinuousAtFromDefinition => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::MultiContinuousAtFromDefinition");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "MultiContinuousAtFromDefinition", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "MultiContinuousAtFromDefinition", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::MultiContinuousAtToDefinition => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::MultiContinuousAtToDefinition");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "MultiContinuousAtToDefinition", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "MultiContinuousAtToDefinition", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::VectorContinuousAtFromDefinition => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::VectorContinuousAtFromDefinition");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "VectorContinuousAtFromDefinition", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "VectorContinuousAtFromDefinition", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::VectorContinuousAtToDefinition => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::VectorContinuousAtToDefinition");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "VectorContinuousAtToDefinition", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "VectorContinuousAtToDefinition", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::MultiDifferentiableAtFromDefinition => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::MultiDifferentiableAtFromDefinition");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "MultiDifferentiableAtFromDefinition", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "MultiDifferentiableAtFromDefinition", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::MultiDifferentiableAtToDefinition => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::MultiDifferentiableAtToDefinition");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "MultiDifferentiableAtToDefinition", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "MultiDifferentiableAtToDefinition", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::VectorDifferentiableAtFromDefinition => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::VectorDifferentiableAtFromDefinition");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "VectorDifferentiableAtFromDefinition", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "VectorDifferentiableAtFromDefinition", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::VectorDifferentiableAtToDefinition => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::VectorDifferentiableAtToDefinition");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "VectorDifferentiableAtToDefinition", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "VectorDifferentiableAtToDefinition", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::MultiLimitAtAdd => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::MultiLimitAtAdd");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "MultiLimitAtAdd", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "MultiLimitAtAdd", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::MultiLimitAtSubtract => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::MultiLimitAtSubtract");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "MultiLimitAtSubtract", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "MultiLimitAtSubtract", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::MultiLimitAtMultiply => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::MultiLimitAtMultiply");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "MultiLimitAtMultiply", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "MultiLimitAtMultiply", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::MultiLimitAtDivide => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::MultiLimitAtDivide");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "MultiLimitAtDivide", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "MultiLimitAtDivide", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::MultiContinuousAtAdd => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::MultiContinuousAtAdd");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "MultiContinuousAtAdd", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "MultiContinuousAtAdd", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::MultiContinuousAtSubtract => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::MultiContinuousAtSubtract");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "MultiContinuousAtSubtract", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "MultiContinuousAtSubtract", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::MultiContinuousAtMultiply => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::MultiContinuousAtMultiply");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "MultiContinuousAtMultiply", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "MultiContinuousAtMultiply", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::MultiContinuousAtDivide => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::MultiContinuousAtDivide");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "MultiContinuousAtDivide", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "MultiContinuousAtDivide", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::PartialAtAdd => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::PartialAtAdd");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "PartialAtAdd", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "PartialAtAdd", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::PartialAtSubtract => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::PartialAtSubtract");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "PartialAtSubtract", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "PartialAtSubtract", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::PartialAtMultiply => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::PartialAtMultiply");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "PartialAtMultiply", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "PartialAtMultiply", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::PartialAtDivide => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::PartialAtDivide");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "PartialAtDivide", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "PartialAtDivide", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::ScalarDifferentialAtAdd => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::ScalarDifferentialAtAdd");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "ScalarDifferentialAtAdd", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "ScalarDifferentialAtAdd", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::ScalarDifferentialAtSubtract => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::ScalarDifferentialAtSubtract");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "ScalarDifferentialAtSubtract", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "ScalarDifferentialAtSubtract", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::ScalarDifferentialAtMultiply => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::ScalarDifferentialAtMultiply");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "ScalarDifferentialAtMultiply", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "ScalarDifferentialAtMultiply", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::ScalarDifferentialAtDivide => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::ScalarDifferentialAtDivide");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "ScalarDifferentialAtDivide", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "ScalarDifferentialAtDivide", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::ScalarDifferentialAtContinuous => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::ScalarDifferentialAtContinuous");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "ScalarDifferentialAtContinuous", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "ScalarDifferentialAtContinuous", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::TotalDerivativeAtContinuous => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::TotalDerivativeAtContinuous");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "TotalDerivativeAtContinuous", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "TotalDerivativeAtContinuous", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::ScalarDifferentialAtGradient => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::ScalarDifferentialAtGradient");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "ScalarDifferentialAtGradient", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "ScalarDifferentialAtGradient", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::ScalarDifferentialAtPartial => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::ScalarDifferentialAtPartial");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "ScalarDifferentialAtPartial", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "ScalarDifferentialAtPartial", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::TotalDerivativeAtJacobian => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::TotalDerivativeAtJacobian");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "TotalDerivativeAtJacobian", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "TotalDerivativeAtJacobian", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::JacobianAtDivergence => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::JacobianAtDivergence");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "JacobianAtDivergence", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "JacobianAtDivergence", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::JacobianAtCurl => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::JacobianAtCurl");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "JacobianAtCurl", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "JacobianAtCurl", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::HessianAtLaplacian => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::HessianAtLaplacian");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "HessianAtLaplacian", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "HessianAtLaplacian", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::MultiContinuousAtLimit => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::MultiContinuousAtLimit");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "MultiContinuousAtLimit", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "MultiContinuousAtLimit", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::MultiLimitAtContinuous => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::MultiLimitAtContinuous");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "MultiLimitAtContinuous", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "MultiLimitAtContinuous", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::VectorContinuousAtLimit => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::VectorContinuousAtLimit");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "VectorContinuousAtLimit", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "VectorContinuousAtLimit", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::VectorLimitAtContinuous => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::VectorLimitAtContinuous");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "VectorLimitAtContinuous", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "VectorLimitAtContinuous", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::TotalDerivativeAtCompose => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::TotalDerivativeAtCompose");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "TotalDerivativeAtCompose", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "TotalDerivativeAtCompose", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::ScalarDifferentialAtCompose => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::ScalarDifferentialAtCompose");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "ScalarDifferentialAtCompose", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "ScalarDifferentialAtCompose", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::SecondPartialAtFromFunction => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::SecondPartialAtFromFunction");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "SecondPartialAtFromFunction", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "SecondPartialAtFromFunction", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::SecondPartialAtSwapContinuous => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::SecondPartialAtSwapContinuous");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "SecondPartialAtSwapContinuous", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "SecondPartialAtSwapContinuous", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::VectorLimitAtAdd => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::VectorLimitAtAdd");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "VectorLimitAtAdd", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "VectorLimitAtAdd", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::VectorLimitAtSubtract => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::VectorLimitAtSubtract");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "VectorLimitAtSubtract", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "VectorLimitAtSubtract", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::TotalDerivativeAtAdd => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::TotalDerivativeAtAdd");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "TotalDerivativeAtAdd", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "TotalDerivativeAtAdd", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::TotalDerivativeAtSubtract => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::TotalDerivativeAtSubtract");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "TotalDerivativeAtSubtract", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "TotalDerivativeAtSubtract", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::VectorContinuousAtAdd => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::VectorContinuousAtAdd");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "VectorContinuousAtAdd", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "VectorContinuousAtAdd", ""); }
+output
+},
+crate::builtin_theorem::BuiltinTheoremId::VectorContinuousAtSubtract => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::VectorContinuousAtSubtract");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "VectorContinuousAtSubtract", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "VectorContinuousAtSubtract", ""); }
+output
+},
 crate::builtin_theorem::BuiltinTheoremId::MatrixApplyIdentity => {
 let rule_id = Some("builtin_theorem.BuiltinTheoremId::MatrixApplyIdentity");
 let fields = vec![];
@@ -11512,6 +12340,17 @@ output
 capture.intern_evidence(output)
 }
 
+pub(super) fn capture_execute__execute_by_stmt__result__VerifiedReleaseObligation(value: &crate::execute::execute_by_stmt::VerifiedReleaseObligation, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_by_stmt::VerifiedReleaseObligation { verified: f0, stored: f1 } => {
+let fields = vec![("verified", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f0, capture, runtime)), ("stored", match f1 { Ok(item) => node("Result", "Ok", vec![("value", JsonValue::Array(vec![capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FactWellDefinedProof(&(item).0, capture, runtime), capture_store_fact_and_infer__store_fact_and_infer_result__store_and_infer_result__StoreFactAndInferResult(&(item).1, capture, runtime)]))]), Err(item) => node("Result", "Err", vec![("value", JsonValue::String((item).to_string()))]) })];
+let mut output = node("VerifiedReleaseObligation", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
 pub(super) fn capture_execute__execute_proof_block_stmt__result__ExecClaimBodyProof(value: &crate::execute::execute_proof_block_stmt::ExecClaimBodyProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_proof_block_stmt::ExecClaimBodyProof::NonForall(f0) => {
@@ -11626,6 +12465,94 @@ let mut output = node("VerifyEqualFactWellDefinedResult", "Failed", fields);
 output
 },
 };
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_ast__fact__atomic__MultivariableAnalysisRelation(value: &crate::ast::fact::MultivariableAnalysisRelation, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+capture.subject_depth += 1;
+let output = match value {
+crate::ast::fact::MultivariableAnalysisRelation::ScalarLimit(f0) => {
+let fields = vec![("0", capture_ast__fact__atomic__ScalarMultivariableLimitRelation(f0, capture, runtime))];
+let mut output = node("MultivariableAnalysisRelation", "ScalarLimit", fields);
+output
+},
+crate::ast::fact::MultivariableAnalysisRelation::VectorLimit(f0) => {
+let fields = vec![("0", capture_ast__fact__atomic__VectorMultivariableLimitRelation(f0, capture, runtime))];
+let mut output = node("MultivariableAnalysisRelation", "VectorLimit", fields);
+output
+},
+crate::ast::fact::MultivariableAnalysisRelation::ScalarContinuousAt(f0) => {
+let fields = vec![("0", capture_ast__fact__atomic__ScalarMultivariableContinuousAtRelation(f0, capture, runtime))];
+let mut output = node("MultivariableAnalysisRelation", "ScalarContinuousAt", fields);
+output
+},
+crate::ast::fact::MultivariableAnalysisRelation::VectorContinuousAt(f0) => {
+let fields = vec![("0", capture_ast__fact__atomic__VectorMultivariableContinuousAtRelation(f0, capture, runtime))];
+let mut output = node("MultivariableAnalysisRelation", "VectorContinuousAt", fields);
+output
+},
+crate::ast::fact::MultivariableAnalysisRelation::PartialDerivativeAt(f0) => {
+let fields = vec![("0", capture_ast__fact__atomic__PartialDerivativeAtRelation(f0, capture, runtime))];
+let mut output = node("MultivariableAnalysisRelation", "PartialDerivativeAt", fields);
+output
+},
+crate::ast::fact::MultivariableAnalysisRelation::SecondPartialDerivativeAt(f0) => {
+let fields = vec![("0", capture_ast__fact__atomic__SecondPartialDerivativeAtRelation(f0, capture, runtime))];
+let mut output = node("MultivariableAnalysisRelation", "SecondPartialDerivativeAt", fields);
+output
+},
+crate::ast::fact::MultivariableAnalysisRelation::ScalarDifferentialAt(f0) => {
+let fields = vec![("0", capture_ast__fact__atomic__ScalarDifferentialAtRelation(f0, capture, runtime))];
+let mut output = node("MultivariableAnalysisRelation", "ScalarDifferentialAt", fields);
+output
+},
+crate::ast::fact::MultivariableAnalysisRelation::TotalDerivativeAt(f0) => {
+let fields = vec![("0", capture_ast__fact__atomic__TotalDerivativeAtRelation(f0, capture, runtime))];
+let mut output = node("MultivariableAnalysisRelation", "TotalDerivativeAt", fields);
+output
+},
+crate::ast::fact::MultivariableAnalysisRelation::ScalarDifferentiableAt(f0) => {
+let fields = vec![("0", capture_ast__fact__atomic__ScalarMultivariableDifferentiableAtRelation(f0, capture, runtime))];
+let mut output = node("MultivariableAnalysisRelation", "ScalarDifferentiableAt", fields);
+output
+},
+crate::ast::fact::MultivariableAnalysisRelation::TotalDifferentiableAt(f0) => {
+let fields = vec![("0", capture_ast__fact__atomic__VectorMultivariableDifferentiableAtRelation(f0, capture, runtime))];
+let mut output = node("MultivariableAnalysisRelation", "TotalDifferentiableAt", fields);
+output
+},
+crate::ast::fact::MultivariableAnalysisRelation::GradientAt(f0) => {
+let fields = vec![("0", capture_ast__fact__atomic__GradientAtRelation(f0, capture, runtime))];
+let mut output = node("MultivariableAnalysisRelation", "GradientAt", fields);
+output
+},
+crate::ast::fact::MultivariableAnalysisRelation::JacobianAt(f0) => {
+let fields = vec![("0", capture_ast__fact__atomic__JacobianAtRelation(f0, capture, runtime))];
+let mut output = node("MultivariableAnalysisRelation", "JacobianAt", fields);
+output
+},
+crate::ast::fact::MultivariableAnalysisRelation::HessianAt(f0) => {
+let fields = vec![("0", capture_ast__fact__atomic__HessianAtRelation(f0, capture, runtime))];
+let mut output = node("MultivariableAnalysisRelation", "HessianAt", fields);
+output
+},
+crate::ast::fact::MultivariableAnalysisRelation::DivergenceAt(f0) => {
+let fields = vec![("0", capture_ast__fact__atomic__DivergenceAtRelation(f0, capture, runtime))];
+let mut output = node("MultivariableAnalysisRelation", "DivergenceAt", fields);
+output
+},
+crate::ast::fact::MultivariableAnalysisRelation::CurlAt(f0) => {
+let fields = vec![("0", capture_ast__fact__atomic__CurlAtRelation(f0, capture, runtime))];
+let mut output = node("MultivariableAnalysisRelation", "CurlAt", fields);
+output
+},
+crate::ast::fact::MultivariableAnalysisRelation::LaplacianAt(f0) => {
+let fields = vec![("0", capture_ast__fact__atomic__LaplacianAtRelation(f0, capture, runtime))];
+let mut output = node("MultivariableAnalysisRelation", "LaplacianAt", fields);
+output
+},
+};
+capture.subject_depth -= 1;
 capture.intern_evidence(output)
 }
 
@@ -11962,6 +12889,51 @@ capture.intern_evidence(output)
 pub(super) fn capture_ast__obj__DerivativeOperator(value: &crate::ast::obj::DerivativeOperator, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 capture.subject_depth += 1;
 let output = match value {
+crate::ast::obj::DerivativeOperator::Partial(f0) => {
+let fields = vec![("0", capture_ast__obj__PartialDerivativeAt(f0, capture, runtime))];
+let mut output = node("DerivativeOperator", "Partial", fields);
+output
+},
+crate::ast::obj::DerivativeOperator::ScalarDifferential(f0) => {
+let fields = vec![("0", capture_ast__obj__ScalarDifferentialAt(f0, capture, runtime))];
+let mut output = node("DerivativeOperator", "ScalarDifferential", fields);
+output
+},
+crate::ast::obj::DerivativeOperator::TotalDifferential(f0) => {
+let fields = vec![("0", capture_ast__obj__TotalDifferentialAt(f0, capture, runtime))];
+let mut output = node("DerivativeOperator", "TotalDifferential", fields);
+output
+},
+crate::ast::obj::DerivativeOperator::Gradient(f0) => {
+let fields = vec![("0", capture_ast__obj__GradientAt(f0, capture, runtime))];
+let mut output = node("DerivativeOperator", "Gradient", fields);
+output
+},
+crate::ast::obj::DerivativeOperator::Jacobian(f0) => {
+let fields = vec![("0", capture_ast__obj__JacobianAt(f0, capture, runtime))];
+let mut output = node("DerivativeOperator", "Jacobian", fields);
+output
+},
+crate::ast::obj::DerivativeOperator::Hessian(f0) => {
+let fields = vec![("0", capture_ast__obj__HessianAt(f0, capture, runtime))];
+let mut output = node("DerivativeOperator", "Hessian", fields);
+output
+},
+crate::ast::obj::DerivativeOperator::Divergence(f0) => {
+let fields = vec![("0", capture_ast__obj__DivergenceAt(f0, capture, runtime))];
+let mut output = node("DerivativeOperator", "Divergence", fields);
+output
+},
+crate::ast::obj::DerivativeOperator::Curl(f0) => {
+let fields = vec![("0", capture_ast__obj__CurlAt(f0, capture, runtime))];
+let mut output = node("DerivativeOperator", "Curl", fields);
+output
+},
+crate::ast::obj::DerivativeOperator::Laplacian(f0) => {
+let fields = vec![("0", capture_ast__obj__LaplacianAt(f0, capture, runtime))];
+let mut output = node("DerivativeOperator", "Laplacian", fields);
+output
+},
 crate::ast::obj::DerivativeOperator::AtPoint(f0) => {
 let fields = vec![("0", capture_ast__obj__DerivativeAt(f0, capture, runtime))];
 let mut output = node("DerivativeOperator", "AtPoint", fields);
@@ -12213,6 +13185,16 @@ capture.intern_evidence(output)
 pub(super) fn capture_ast__obj__LimitOperator(value: &crate::ast::obj::LimitOperator, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 capture.subject_depth += 1;
 let output = match value {
+crate::ast::obj::LimitOperator::MultivariableScalar(f0) => {
+let fields = vec![("0", capture_ast__obj__MultivariableScalarLimit(f0, capture, runtime))];
+let mut output = node("LimitOperator", "MultivariableScalar", fields);
+output
+},
+crate::ast::obj::LimitOperator::MultivariableVector(f0) => {
+let fields = vec![("0", capture_ast__obj__MultivariableVectorLimit(f0, capture, runtime))];
+let mut output = node("LimitOperator", "MultivariableVector", fields);
+output
+},
 crate::ast::obj::LimitOperator::Sequence(f0) => {
 let fields = vec![("0", capture_ast__obj__SequenceLimit(f0, capture, runtime))];
 let mut output = node("LimitOperator", "Sequence", fields);
@@ -12718,6 +13700,20 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_store_fact_and_infer__infer_result__infer_atomic_fact_result__InferAtomicFactResult(value: &crate::store_fact_and_infer::InferAtomicFactResult, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
+crate::store_fact_and_infer::InferAtomicFactResult::MultivariableAnalysisFact(f0) => {
+let rule_id = None;
+let fields = vec![("0", JsonValue::Array((f0).iter().map(|item| capture_store_fact_and_infer__infer_result__infer_atomic_fact_result__InferMultivariableAnalysisFactResult(item, capture, runtime)).collect()))];
+let mut output = node("InferAtomicFactResult", "MultivariableAnalysisFact", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "MultivariableAnalysisFact", ""); }
+output
+},
+crate::store_fact_and_infer::InferAtomicFactResult::NotMultivariableAnalysisFact(f0) => {
+let rule_id = None;
+let fields = vec![("0", JsonValue::Array((f0).iter().map(|item| capture_store_fact_and_infer__infer_result__infer_atomic_fact_result__InferNotMultivariableAnalysisFactResult(item, capture, runtime)).collect()))];
+let mut output = node("InferAtomicFactResult", "NotMultivariableAnalysisFact", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "NotMultivariableAnalysisFact", ""); }
+output
+},
 crate::store_fact_and_infer::InferAtomicFactResult::HasRiemannIntegralFact(f0) => {
 let rule_id = None;
 let fields = vec![("0", JsonValue::Array((f0).iter().map(|item| capture_store_fact_and_infer__infer_result__infer_atomic_fact_result__InferHasRiemannIntegralFactResult(item, capture, runtime)).collect()))];
@@ -14007,6 +15003,11 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__function_domain__CompleteFunctionDomainSourceProof(value: &crate::execute::execute_fact_stmt::function_domain::CompleteFunctionDomainSourceProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
+crate::execute::execute_fact_stmt::function_domain::CompleteFunctionDomainSourceProof::MultivariableSelector(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__function_domain__MultivariableSelectorFunctionDomainProof(f0, capture, runtime))];
+let mut output = node("CompleteFunctionDomainSourceProof", "MultivariableSelector", fields);
+output
+},
 crate::execute::execute_fact_stmt::function_domain::CompleteFunctionDomainSourceProof::Matrix(f0) => {
 let fields = vec![("0", capture_execute__execute_fact_stmt__native_matrix__MatrixCallableProof(f0, capture, runtime))];
 let mut output = node("CompleteFunctionDomainSourceProof", "Matrix", fields);
@@ -14475,6 +15476,214 @@ output
 capture.intern_evidence(output)
 }
 
+pub(super) fn capture_ast__fact__atomic__ScalarMultivariableLimitRelation(value: &crate::ast::fact::ScalarMultivariableLimitRelation, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+capture.subject_depth += 1;
+let output = match value {
+crate::ast::fact::ScalarMultivariableLimitRelation { function: f0, point: f1, dimension: f2, value: f3 } => {
+let fields = vec![("function", capture_ast__obj__Obj(f0, capture, runtime)), ("point", capture_ast__obj__Obj(f1, capture, runtime)), ("dimension", capture_ast__obj__Obj(f2, capture, runtime)), ("value", capture_ast__obj__Obj(f3, capture, runtime))];
+let mut output = node("ScalarMultivariableLimitRelation", "", fields);
+output
+},
+};
+capture.subject_depth -= 1;
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_ast__fact__atomic__VectorMultivariableLimitRelation(value: &crate::ast::fact::VectorMultivariableLimitRelation, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+capture.subject_depth += 1;
+let output = match value {
+crate::ast::fact::VectorMultivariableLimitRelation { function: f0, point: f1, input_dimension: f2, output_dimension: f3, value: f4 } => {
+let fields = vec![("function", capture_ast__obj__Obj(f0, capture, runtime)), ("point", capture_ast__obj__Obj(f1, capture, runtime)), ("input_dimension", capture_ast__obj__Obj(f2, capture, runtime)), ("output_dimension", capture_ast__obj__Obj(f3, capture, runtime)), ("value", capture_ast__obj__Obj(f4, capture, runtime))];
+let mut output = node("VectorMultivariableLimitRelation", "", fields);
+output
+},
+};
+capture.subject_depth -= 1;
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_ast__fact__atomic__ScalarMultivariableContinuousAtRelation(value: &crate::ast::fact::ScalarMultivariableContinuousAtRelation, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+capture.subject_depth += 1;
+let output = match value {
+crate::ast::fact::ScalarMultivariableContinuousAtRelation { function: f0, point: f1, dimension: f2 } => {
+let fields = vec![("function", capture_ast__obj__Obj(f0, capture, runtime)), ("point", capture_ast__obj__Obj(f1, capture, runtime)), ("dimension", capture_ast__obj__Obj(f2, capture, runtime))];
+let mut output = node("ScalarMultivariableContinuousAtRelation", "", fields);
+output
+},
+};
+capture.subject_depth -= 1;
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_ast__fact__atomic__VectorMultivariableContinuousAtRelation(value: &crate::ast::fact::VectorMultivariableContinuousAtRelation, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+capture.subject_depth += 1;
+let output = match value {
+crate::ast::fact::VectorMultivariableContinuousAtRelation { function: f0, point: f1, input_dimension: f2, output_dimension: f3 } => {
+let fields = vec![("function", capture_ast__obj__Obj(f0, capture, runtime)), ("point", capture_ast__obj__Obj(f1, capture, runtime)), ("input_dimension", capture_ast__obj__Obj(f2, capture, runtime)), ("output_dimension", capture_ast__obj__Obj(f3, capture, runtime))];
+let mut output = node("VectorMultivariableContinuousAtRelation", "", fields);
+output
+},
+};
+capture.subject_depth -= 1;
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_ast__fact__atomic__PartialDerivativeAtRelation(value: &crate::ast::fact::PartialDerivativeAtRelation, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+capture.subject_depth += 1;
+let output = match value {
+crate::ast::fact::PartialDerivativeAtRelation { function: f0, point: f1, dimension: f2, coordinate: f3, value: f4 } => {
+let fields = vec![("function", capture_ast__obj__Obj(f0, capture, runtime)), ("point", capture_ast__obj__Obj(f1, capture, runtime)), ("dimension", capture_ast__obj__Obj(f2, capture, runtime)), ("coordinate", capture_ast__obj__Obj(f3, capture, runtime)), ("value", capture_ast__obj__Obj(f4, capture, runtime))];
+let mut output = node("PartialDerivativeAtRelation", "", fields);
+output
+},
+};
+capture.subject_depth -= 1;
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_ast__fact__atomic__SecondPartialDerivativeAtRelation(value: &crate::ast::fact::SecondPartialDerivativeAtRelation, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+capture.subject_depth += 1;
+let output = match value {
+crate::ast::fact::SecondPartialDerivativeAtRelation { function: f0, point: f1, dimension: f2, first_coordinate: f3, second_coordinate: f4, value: f5 } => {
+let fields = vec![("function", capture_ast__obj__Obj(f0, capture, runtime)), ("point", capture_ast__obj__Obj(f1, capture, runtime)), ("dimension", capture_ast__obj__Obj(f2, capture, runtime)), ("first_coordinate", capture_ast__obj__Obj(f3, capture, runtime)), ("second_coordinate", capture_ast__obj__Obj(f4, capture, runtime)), ("value", capture_ast__obj__Obj(f5, capture, runtime))];
+let mut output = node("SecondPartialDerivativeAtRelation", "", fields);
+output
+},
+};
+capture.subject_depth -= 1;
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_ast__fact__atomic__ScalarDifferentialAtRelation(value: &crate::ast::fact::ScalarDifferentialAtRelation, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+capture.subject_depth += 1;
+let output = match value {
+crate::ast::fact::ScalarDifferentialAtRelation { function: f0, point: f1, dimension: f2, value: f3 } => {
+let fields = vec![("function", capture_ast__obj__Obj(f0, capture, runtime)), ("point", capture_ast__obj__Obj(f1, capture, runtime)), ("dimension", capture_ast__obj__Obj(f2, capture, runtime)), ("value", capture_ast__obj__Obj(f3, capture, runtime))];
+let mut output = node("ScalarDifferentialAtRelation", "", fields);
+output
+},
+};
+capture.subject_depth -= 1;
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_ast__fact__atomic__TotalDerivativeAtRelation(value: &crate::ast::fact::TotalDerivativeAtRelation, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+capture.subject_depth += 1;
+let output = match value {
+crate::ast::fact::TotalDerivativeAtRelation { function: f0, point: f1, input_dimension: f2, output_dimension: f3, value: f4 } => {
+let fields = vec![("function", capture_ast__obj__Obj(f0, capture, runtime)), ("point", capture_ast__obj__Obj(f1, capture, runtime)), ("input_dimension", capture_ast__obj__Obj(f2, capture, runtime)), ("output_dimension", capture_ast__obj__Obj(f3, capture, runtime)), ("value", capture_ast__obj__Obj(f4, capture, runtime))];
+let mut output = node("TotalDerivativeAtRelation", "", fields);
+output
+},
+};
+capture.subject_depth -= 1;
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_ast__fact__atomic__ScalarMultivariableDifferentiableAtRelation(value: &crate::ast::fact::ScalarMultivariableDifferentiableAtRelation, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+capture.subject_depth += 1;
+let output = match value {
+crate::ast::fact::ScalarMultivariableDifferentiableAtRelation { function: f0, point: f1, dimension: f2 } => {
+let fields = vec![("function", capture_ast__obj__Obj(f0, capture, runtime)), ("point", capture_ast__obj__Obj(f1, capture, runtime)), ("dimension", capture_ast__obj__Obj(f2, capture, runtime))];
+let mut output = node("ScalarMultivariableDifferentiableAtRelation", "", fields);
+output
+},
+};
+capture.subject_depth -= 1;
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_ast__fact__atomic__VectorMultivariableDifferentiableAtRelation(value: &crate::ast::fact::VectorMultivariableDifferentiableAtRelation, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+capture.subject_depth += 1;
+let output = match value {
+crate::ast::fact::VectorMultivariableDifferentiableAtRelation { function: f0, point: f1, input_dimension: f2, output_dimension: f3 } => {
+let fields = vec![("function", capture_ast__obj__Obj(f0, capture, runtime)), ("point", capture_ast__obj__Obj(f1, capture, runtime)), ("input_dimension", capture_ast__obj__Obj(f2, capture, runtime)), ("output_dimension", capture_ast__obj__Obj(f3, capture, runtime))];
+let mut output = node("VectorMultivariableDifferentiableAtRelation", "", fields);
+output
+},
+};
+capture.subject_depth -= 1;
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_ast__fact__atomic__GradientAtRelation(value: &crate::ast::fact::GradientAtRelation, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+capture.subject_depth += 1;
+let output = match value {
+crate::ast::fact::GradientAtRelation { function: f0, point: f1, dimension: f2, value: f3 } => {
+let fields = vec![("function", capture_ast__obj__Obj(f0, capture, runtime)), ("point", capture_ast__obj__Obj(f1, capture, runtime)), ("dimension", capture_ast__obj__Obj(f2, capture, runtime)), ("value", capture_ast__obj__Obj(f3, capture, runtime))];
+let mut output = node("GradientAtRelation", "", fields);
+output
+},
+};
+capture.subject_depth -= 1;
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_ast__fact__atomic__JacobianAtRelation(value: &crate::ast::fact::JacobianAtRelation, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+capture.subject_depth += 1;
+let output = match value {
+crate::ast::fact::JacobianAtRelation { function: f0, point: f1, input_dimension: f2, output_dimension: f3, value: f4 } => {
+let fields = vec![("function", capture_ast__obj__Obj(f0, capture, runtime)), ("point", capture_ast__obj__Obj(f1, capture, runtime)), ("input_dimension", capture_ast__obj__Obj(f2, capture, runtime)), ("output_dimension", capture_ast__obj__Obj(f3, capture, runtime)), ("value", capture_ast__obj__Obj(f4, capture, runtime))];
+let mut output = node("JacobianAtRelation", "", fields);
+output
+},
+};
+capture.subject_depth -= 1;
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_ast__fact__atomic__HessianAtRelation(value: &crate::ast::fact::HessianAtRelation, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+capture.subject_depth += 1;
+let output = match value {
+crate::ast::fact::HessianAtRelation { function: f0, point: f1, dimension: f2, value: f3 } => {
+let fields = vec![("function", capture_ast__obj__Obj(f0, capture, runtime)), ("point", capture_ast__obj__Obj(f1, capture, runtime)), ("dimension", capture_ast__obj__Obj(f2, capture, runtime)), ("value", capture_ast__obj__Obj(f3, capture, runtime))];
+let mut output = node("HessianAtRelation", "", fields);
+output
+},
+};
+capture.subject_depth -= 1;
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_ast__fact__atomic__DivergenceAtRelation(value: &crate::ast::fact::DivergenceAtRelation, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+capture.subject_depth += 1;
+let output = match value {
+crate::ast::fact::DivergenceAtRelation { function: f0, point: f1, dimension: f2, value: f3 } => {
+let fields = vec![("function", capture_ast__obj__Obj(f0, capture, runtime)), ("point", capture_ast__obj__Obj(f1, capture, runtime)), ("dimension", capture_ast__obj__Obj(f2, capture, runtime)), ("value", capture_ast__obj__Obj(f3, capture, runtime))];
+let mut output = node("DivergenceAtRelation", "", fields);
+output
+},
+};
+capture.subject_depth -= 1;
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_ast__fact__atomic__CurlAtRelation(value: &crate::ast::fact::CurlAtRelation, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+capture.subject_depth += 1;
+let output = match value {
+crate::ast::fact::CurlAtRelation { function: f0, point: f1, value: f2 } => {
+let fields = vec![("function", capture_ast__obj__Obj(f0, capture, runtime)), ("point", capture_ast__obj__Obj(f1, capture, runtime)), ("value", capture_ast__obj__Obj(f2, capture, runtime))];
+let mut output = node("CurlAtRelation", "", fields);
+output
+},
+};
+capture.subject_depth -= 1;
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_ast__fact__atomic__LaplacianAtRelation(value: &crate::ast::fact::LaplacianAtRelation, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+capture.subject_depth += 1;
+let output = match value {
+crate::ast::fact::LaplacianAtRelation { function: f0, point: f1, dimension: f2, value: f3 } => {
+let fields = vec![("function", capture_ast__obj__Obj(f0, capture, runtime)), ("point", capture_ast__obj__Obj(f1, capture, runtime)), ("dimension", capture_ast__obj__Obj(f2, capture, runtime)), ("value", capture_ast__obj__Obj(f3, capture, runtime))];
+let mut output = node("LaplacianAtRelation", "", fields);
+output
+},
+};
+capture.subject_depth -= 1;
+capture.intern_evidence(output)
+}
+
 pub(super) fn capture_ast__obj__Determinant(value: &crate::ast::obj::Determinant, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 capture.subject_depth += 1;
 let output = match value {
@@ -14793,6 +16002,123 @@ let output = match value {
 crate::ast::obj::RiemannIntegral { function: f0, lower: f1, upper: f2 } => {
 let fields = vec![("function", capture_ast__obj__Obj(f0, capture, runtime)), ("lower", capture_ast__obj__Obj(f1, capture, runtime)), ("upper", capture_ast__obj__Obj(f2, capture, runtime))];
 let mut output = node("RiemannIntegral", "", fields);
+output
+},
+};
+capture.subject_depth -= 1;
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_ast__obj__PartialDerivativeAt(value: &crate::ast::obj::PartialDerivativeAt, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+capture.subject_depth += 1;
+let output = match value {
+crate::ast::obj::PartialDerivativeAt { function: f0, point: f1, dimension: f2, coordinate: f3 } => {
+let fields = vec![("function", capture_ast__obj__Obj(f0, capture, runtime)), ("point", capture_ast__obj__Obj(f1, capture, runtime)), ("dimension", capture_ast__obj__Obj(f2, capture, runtime)), ("coordinate", capture_ast__obj__Obj(f3, capture, runtime))];
+let mut output = node("PartialDerivativeAt", "", fields);
+output
+},
+};
+capture.subject_depth -= 1;
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_ast__obj__ScalarDifferentialAt(value: &crate::ast::obj::ScalarDifferentialAt, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+capture.subject_depth += 1;
+let output = match value {
+crate::ast::obj::ScalarDifferentialAt { function: f0, point: f1, dimension: f2 } => {
+let fields = vec![("function", capture_ast__obj__Obj(f0, capture, runtime)), ("point", capture_ast__obj__Obj(f1, capture, runtime)), ("dimension", capture_ast__obj__Obj(f2, capture, runtime))];
+let mut output = node("ScalarDifferentialAt", "", fields);
+output
+},
+};
+capture.subject_depth -= 1;
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_ast__obj__TotalDifferentialAt(value: &crate::ast::obj::TotalDifferentialAt, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+capture.subject_depth += 1;
+let output = match value {
+crate::ast::obj::TotalDifferentialAt { function: f0, point: f1, input_dimension: f2, output_dimension: f3 } => {
+let fields = vec![("function", capture_ast__obj__Obj(f0, capture, runtime)), ("point", capture_ast__obj__Obj(f1, capture, runtime)), ("input_dimension", capture_ast__obj__Obj(f2, capture, runtime)), ("output_dimension", capture_ast__obj__Obj(f3, capture, runtime))];
+let mut output = node("TotalDifferentialAt", "", fields);
+output
+},
+};
+capture.subject_depth -= 1;
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_ast__obj__GradientAt(value: &crate::ast::obj::GradientAt, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+capture.subject_depth += 1;
+let output = match value {
+crate::ast::obj::GradientAt { function: f0, point: f1, dimension: f2 } => {
+let fields = vec![("function", capture_ast__obj__Obj(f0, capture, runtime)), ("point", capture_ast__obj__Obj(f1, capture, runtime)), ("dimension", capture_ast__obj__Obj(f2, capture, runtime))];
+let mut output = node("GradientAt", "", fields);
+output
+},
+};
+capture.subject_depth -= 1;
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_ast__obj__JacobianAt(value: &crate::ast::obj::JacobianAt, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+capture.subject_depth += 1;
+let output = match value {
+crate::ast::obj::JacobianAt { function: f0, point: f1, input_dimension: f2, output_dimension: f3 } => {
+let fields = vec![("function", capture_ast__obj__Obj(f0, capture, runtime)), ("point", capture_ast__obj__Obj(f1, capture, runtime)), ("input_dimension", capture_ast__obj__Obj(f2, capture, runtime)), ("output_dimension", capture_ast__obj__Obj(f3, capture, runtime))];
+let mut output = node("JacobianAt", "", fields);
+output
+},
+};
+capture.subject_depth -= 1;
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_ast__obj__HessianAt(value: &crate::ast::obj::HessianAt, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+capture.subject_depth += 1;
+let output = match value {
+crate::ast::obj::HessianAt { function: f0, point: f1, dimension: f2 } => {
+let fields = vec![("function", capture_ast__obj__Obj(f0, capture, runtime)), ("point", capture_ast__obj__Obj(f1, capture, runtime)), ("dimension", capture_ast__obj__Obj(f2, capture, runtime))];
+let mut output = node("HessianAt", "", fields);
+output
+},
+};
+capture.subject_depth -= 1;
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_ast__obj__DivergenceAt(value: &crate::ast::obj::DivergenceAt, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+capture.subject_depth += 1;
+let output = match value {
+crate::ast::obj::DivergenceAt { function: f0, point: f1, dimension: f2 } => {
+let fields = vec![("function", capture_ast__obj__Obj(f0, capture, runtime)), ("point", capture_ast__obj__Obj(f1, capture, runtime)), ("dimension", capture_ast__obj__Obj(f2, capture, runtime))];
+let mut output = node("DivergenceAt", "", fields);
+output
+},
+};
+capture.subject_depth -= 1;
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_ast__obj__CurlAt(value: &crate::ast::obj::CurlAt, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+capture.subject_depth += 1;
+let output = match value {
+crate::ast::obj::CurlAt { function: f0, point: f1 } => {
+let fields = vec![("function", capture_ast__obj__Obj(f0, capture, runtime)), ("point", capture_ast__obj__Obj(f1, capture, runtime))];
+let mut output = node("CurlAt", "", fields);
+output
+},
+};
+capture.subject_depth -= 1;
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_ast__obj__LaplacianAt(value: &crate::ast::obj::LaplacianAt, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+capture.subject_depth += 1;
+let output = match value {
+crate::ast::obj::LaplacianAt { function: f0, point: f1, dimension: f2 } => {
+let fields = vec![("function", capture_ast__obj__Obj(f0, capture, runtime)), ("point", capture_ast__obj__Obj(f1, capture, runtime)), ("dimension", capture_ast__obj__Obj(f2, capture, runtime))];
+let mut output = node("LaplacianAt", "", fields);
 output
 },
 };
@@ -15320,6 +16646,32 @@ let output = match value {
 crate::ast::obj::Csch { arg: f0 } => {
 let fields = vec![("arg", capture_ast__obj__Obj(f0, capture, runtime))];
 let mut output = node("Csch", "", fields);
+output
+},
+};
+capture.subject_depth -= 1;
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_ast__obj__MultivariableScalarLimit(value: &crate::ast::obj::MultivariableScalarLimit, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+capture.subject_depth += 1;
+let output = match value {
+crate::ast::obj::MultivariableScalarLimit { function: f0, point: f1, dimension: f2 } => {
+let fields = vec![("function", capture_ast__obj__Obj(f0, capture, runtime)), ("point", capture_ast__obj__Obj(f1, capture, runtime)), ("dimension", capture_ast__obj__Obj(f2, capture, runtime))];
+let mut output = node("MultivariableScalarLimit", "", fields);
+output
+},
+};
+capture.subject_depth -= 1;
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_ast__obj__MultivariableVectorLimit(value: &crate::ast::obj::MultivariableVectorLimit, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+capture.subject_depth += 1;
+let output = match value {
+crate::ast::obj::MultivariableVectorLimit { function: f0, point: f1, input_dimension: f2, output_dimension: f3 } => {
+let fields = vec![("function", capture_ast__obj__Obj(f0, capture, runtime)), ("point", capture_ast__obj__Obj(f1, capture, runtime)), ("input_dimension", capture_ast__obj__Obj(f2, capture, runtime)), ("output_dimension", capture_ast__obj__Obj(f3, capture, runtime))];
+let mut output = node("MultivariableVectorLimit", "", fields);
 output
 },
 };
@@ -15963,6 +17315,21 @@ output
 };
 capture.intern_evidence(output)
 }
+
+pub(super) fn capture_store_fact_and_infer__infer_result__infer_atomic_fact_result__InferMultivariableAnalysisFactResult(value: &crate::store_fact_and_infer::InferMultivariableAnalysisFactResult, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::store_fact_and_infer::InferMultivariableAnalysisFactResult::Definition(f0) => {
+let rule_id = Some("infer.InferMultivariableAnalysisFactResult::Definition");
+let fields = vec![("0", capture_store_fact_and_infer__infer_result__infer_atomic_fact_result__InferMultivariableAnalysisDefinitionResult(f0, capture, runtime))];
+let mut output = node("InferMultivariableAnalysisFactResult", "Definition", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "Definition", ""); }
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_store_fact_and_infer__infer_result__infer_atomic_fact_result__InferNotMultivariableAnalysisFactResult(value: &crate::store_fact_and_infer::InferNotMultivariableAnalysisFactResult, _capture: &mut Capture, _runtime: &Runtime) -> JsonValue { match *value {} }
 
 pub(super) fn capture_store_fact_and_infer__infer_result__infer_atomic_fact_result__InferHasRiemannIntegralFactResult(value: &crate::store_fact_and_infer::InferHasRiemannIntegralFactResult, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
@@ -16801,6 +18168,13 @@ crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::Equality
 let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::FunctionLimit");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_function_limit__FunctionLimitEqualityProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "FunctionLimit", fields);
+if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::Multivariable(f0) => {
+let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::Multivariable");
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_multivariable__MultivariableEqualityProof(f0, capture, runtime))];
+let mut output = node("EqualitySearchProofByBuiltinRule", "Multivariable", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
 output
 },
@@ -18526,6 +19900,11 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__PredicateDomainProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainProof::MultivariableAnalysis(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__MultivariableAnalysisPredicateDomainProof(f0, capture, runtime))];
+let mut output = node("PredicateDomainProof", "MultivariableAnalysis", fields);
+output
+},
 crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainProof::SequenceAnalysis(f0) => {
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__SequenceAnalysisPredicateDomainProof(f0, capture, runtime))];
 let mut output = node("PredicateDomainProof", "SequenceAnalysis", fields);
@@ -18981,6 +20360,11 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_strategy__result__AtomicExceptEqualityFactSearchProofByBuiltinStrategy(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::AtomicExceptEqualityFactSearchProofByBuiltinStrategy, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::AtomicExceptEqualityFactSearchProofByBuiltinStrategy::MultivariableAnalysis(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__strategy__MultivariableStrategyProof(f0, capture, runtime))];
+let mut output = node("AtomicExceptEqualityFactSearchProofByBuiltinStrategy", "MultivariableAnalysis", fields);
+output
+},
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::AtomicExceptEqualityFactSearchProofByBuiltinStrategy::PointwiseDerivative(f0) => {
 let fields = vec![("0", capture_execute__execute_fact_stmt__pointwise_derivative__PointwiseDerivativeProof(f0, capture, runtime))];
 let mut output = node("AtomicExceptEqualityFactSearchProofByBuiltinStrategy", "PointwiseDerivative", fields);
@@ -19094,6 +20478,11 @@ output
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::AtomicExceptEqualityFactSearchProofByBuiltinStrategy::AddCrossedLessEqual(f0) => {
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_strategy__result__AddCrossedLessEqualStrategySingleStep(f0, capture, runtime))];
 let mut output = node("AtomicExceptEqualityFactSearchProofByBuiltinStrategy", "AddCrossedLessEqual", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::AtomicExceptEqualityFactSearchProofByBuiltinStrategy::AddDoubleUpperBound(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_strategy__result__AddDoubleUpperBoundStrategySingleStep(f0, capture, runtime))];
+let mut output = node("AtomicExceptEqualityFactSearchProofByBuiltinStrategy", "AddDoubleUpperBound", fields);
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::AtomicExceptEqualityFactSearchProofByBuiltinStrategy::SubSharedSubtrahendLessEqual(f0) => {
@@ -20082,6 +21471,51 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__function_derivative__DerivativeOperatorWellDefinedFailure(value: &crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedFailure, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
+crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedFailure::Partial(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__selector__PartialDerivativeAtWellDefinedFailure(f0, capture, runtime))];
+let mut output = node("DerivativeOperatorWellDefinedFailure", "Partial", fields);
+output
+},
+crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedFailure::ScalarDifferential(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__selector__ScalarDifferentialAtWellDefinedFailure(f0, capture, runtime))];
+let mut output = node("DerivativeOperatorWellDefinedFailure", "ScalarDifferential", fields);
+output
+},
+crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedFailure::TotalDifferential(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__selector__TotalDifferentialAtWellDefinedFailure(f0, capture, runtime))];
+let mut output = node("DerivativeOperatorWellDefinedFailure", "TotalDifferential", fields);
+output
+},
+crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedFailure::Gradient(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__selector__GradientAtWellDefinedFailure(f0, capture, runtime))];
+let mut output = node("DerivativeOperatorWellDefinedFailure", "Gradient", fields);
+output
+},
+crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedFailure::Jacobian(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__selector__JacobianAtWellDefinedFailure(f0, capture, runtime))];
+let mut output = node("DerivativeOperatorWellDefinedFailure", "Jacobian", fields);
+output
+},
+crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedFailure::Hessian(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__selector__HessianAtWellDefinedFailure(f0, capture, runtime))];
+let mut output = node("DerivativeOperatorWellDefinedFailure", "Hessian", fields);
+output
+},
+crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedFailure::Divergence(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__selector__DivergenceAtWellDefinedFailure(f0, capture, runtime))];
+let mut output = node("DerivativeOperatorWellDefinedFailure", "Divergence", fields);
+output
+},
+crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedFailure::Curl(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__selector__CurlAtWellDefinedFailure(f0, capture, runtime))];
+let mut output = node("DerivativeOperatorWellDefinedFailure", "Curl", fields);
+output
+},
+crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedFailure::Laplacian(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__selector__LaplacianAtWellDefinedFailure(f0, capture, runtime))];
+let mut output = node("DerivativeOperatorWellDefinedFailure", "Laplacian", fields);
+output
+},
 crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedFailure::AtPoint(f0) => {
 let fields = vec![("0", capture_execute__execute_fact_stmt__function_derivative__DerivativeAtWellDefinedFailure(f0, capture, runtime))];
 let mut output = node("DerivativeOperatorWellDefinedFailure", "AtPoint", fields);
@@ -20109,6 +21543,16 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyLimitOperatorObjWellDefinedResult(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FailToVerifyLimitOperatorObjWellDefinedResult, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FailToVerifyLimitOperatorObjWellDefinedResult::MultivariableScalar(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__selector__MultivariableScalarLimitWellDefinedFailure(f0, capture, runtime))];
+let mut output = node("FailToVerifyLimitOperatorObjWellDefinedResult", "MultivariableScalar", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FailToVerifyLimitOperatorObjWellDefinedResult::MultivariableVector(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__selector__MultivariableVectorLimitWellDefinedFailure(f0, capture, runtime))];
+let mut output = node("FailToVerifyLimitOperatorObjWellDefinedResult", "MultivariableVector", fields);
+output
+},
 crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FailToVerifyLimitOperatorObjWellDefinedResult::Function(f0) => {
 let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyFunctionLimitObjWellDefined(f0, capture, runtime))];
 let mut output = node("FailToVerifyLimitOperatorObjWellDefinedResult", "Function", fields);
@@ -20707,6 +22151,17 @@ output
 capture.intern_evidence(output)
 }
 
+pub(super) fn capture_execute__execute_fact_stmt__function_domain__MultivariableSelectorFunctionDomainProof(value: &crate::execute::execute_fact_stmt::function_domain::MultivariableSelectorFunctionDomainProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::function_domain::MultivariableSelectorFunctionDomainProof { selector: f0, well_defined: f1 } => {
+let fields = vec![("selector", capture_ast__obj__Obj(f0, capture, runtime)), ("well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(f1, capture, runtime))];
+let mut output = node("MultivariableSelectorFunctionDomainProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
 pub(super) fn capture_execute__execute_fact_stmt__native_matrix__MatrixCallableProof(value: &crate::execute::execute_fact_stmt::native_matrix::MatrixCallableProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::native_matrix::MatrixCallableProof { operator: f0, function_equal: f1, well_defined: f2, scalar_carrier: f3, function: f4 } => {
@@ -20742,6 +22197,11 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FnObjDomainFnSetEvidence(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnObjDomainFnSetEvidence, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnObjDomainFnSetEvidence::MultivariableSelector(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__function_domain__CompleteFunctionDomainProof(f0, capture, runtime))];
+let mut output = node("FnObjDomainFnSetEvidence", "MultivariableSelector", fields);
+output
+},
 crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnObjDomainFnSetEvidence::Matrix(f0) => {
 let fields = vec![("0", capture_execute__execute_fact_stmt__native_matrix__MatrixCallableProof(f0, capture, runtime))];
 let mut output = node("FnObjDomainFnSetEvidence", "Matrix", fields);
@@ -21050,6 +22510,51 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__function_derivative__DerivativeOperatorWellDefinedProof(value: &crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
+crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof::Partial(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__selector__PartialDerivativeAtWellDefinedProof(f0, capture, runtime))];
+let mut output = node("DerivativeOperatorWellDefinedProof", "Partial", fields);
+output
+},
+crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof::ScalarDifferential(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__selector__ScalarDifferentialAtWellDefinedProof(f0, capture, runtime))];
+let mut output = node("DerivativeOperatorWellDefinedProof", "ScalarDifferential", fields);
+output
+},
+crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof::TotalDifferential(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__selector__TotalDifferentialAtWellDefinedProof(f0, capture, runtime))];
+let mut output = node("DerivativeOperatorWellDefinedProof", "TotalDifferential", fields);
+output
+},
+crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof::Gradient(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__selector__GradientAtWellDefinedProof(f0, capture, runtime))];
+let mut output = node("DerivativeOperatorWellDefinedProof", "Gradient", fields);
+output
+},
+crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof::Jacobian(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__selector__JacobianAtWellDefinedProof(f0, capture, runtime))];
+let mut output = node("DerivativeOperatorWellDefinedProof", "Jacobian", fields);
+output
+},
+crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof::Hessian(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__selector__HessianAtWellDefinedProof(f0, capture, runtime))];
+let mut output = node("DerivativeOperatorWellDefinedProof", "Hessian", fields);
+output
+},
+crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof::Divergence(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__selector__DivergenceAtWellDefinedProof(f0, capture, runtime))];
+let mut output = node("DerivativeOperatorWellDefinedProof", "Divergence", fields);
+output
+},
+crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof::Curl(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__selector__CurlAtWellDefinedProof(f0, capture, runtime))];
+let mut output = node("DerivativeOperatorWellDefinedProof", "Curl", fields);
+output
+},
+crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof::Laplacian(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__selector__LaplacianAtWellDefinedProof(f0, capture, runtime))];
+let mut output = node("DerivativeOperatorWellDefinedProof", "Laplacian", fields);
+output
+},
 crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof::AtPoint(f0) => {
 let fields = vec![("0", capture_execute__execute_fact_stmt__function_derivative__DerivativeAtWellDefinedProof(f0, capture, runtime))];
 let mut output = node("DerivativeOperatorWellDefinedProof", "AtPoint", fields);
@@ -21077,6 +22582,16 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__LimitOperatorObjWellDefinedProofByDef(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::LimitOperatorObjWellDefinedProofByDef, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::LimitOperatorObjWellDefinedProofByDef::MultivariableScalar(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__selector__MultivariableScalarLimitWellDefinedProof(f0, capture, runtime))];
+let mut output = node("LimitOperatorObjWellDefinedProofByDef", "MultivariableScalar", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::LimitOperatorObjWellDefinedProofByDef::MultivariableVector(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__selector__MultivariableVectorLimitWellDefinedProof(f0, capture, runtime))];
+let mut output = node("LimitOperatorObjWellDefinedProofByDef", "MultivariableVector", fields);
+output
+},
 crate::execute::execute_fact_stmt::well_defined_results::verify_obj::LimitOperatorObjWellDefinedProofByDef::Function(f0) => {
 let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FunctionLimitObjWellDefinedProof(f0, capture, runtime))];
 let mut output = node("LimitOperatorObjWellDefinedProofByDef", "Function", fields);
@@ -21734,6 +23249,17 @@ output
 },
 };
 capture.subject_depth -= 1;
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_store_fact_and_infer__infer_result__infer_atomic_fact_result__InferMultivariableAnalysisDefinitionResult(value: &crate::store_fact_and_infer::InferMultivariableAnalysisDefinitionResult, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::store_fact_and_infer::InferMultivariableAnalysisDefinitionResult { source_fact_id: f0, derived: f1 } => {
+let fields = vec![("source_fact_id", capture.fact_reference(f0, runtime)), ("derived", JsonValue::Array((f1).iter().map(|item| capture_store_fact_and_infer__store_fact_and_infer_result__store_inferred_fact_result__StoreInferredFactResult(item, capture, runtime)).collect()))];
+let mut output = node("InferMultivariableAnalysisDefinitionResult", "", fields);
+output
+},
+};
 capture.intern_evidence(output)
 }
 
@@ -22599,6 +24125,27 @@ output
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_function_limit::FunctionLimitEqualityProof::Uniqueness(f0) => {
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_function_limit__FunctionLimitUniquenessProof(f0, capture, runtime))];
 let mut output = node("FunctionLimitEqualityProof", "Uniqueness", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_multivariable__MultivariableEqualityProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_multivariable::MultivariableEqualityProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_multivariable::MultivariableEqualityProof::SelectedValue(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_multivariable__MultivariableSelectedValueProof(f0, capture, runtime))];
+let mut output = node("MultivariableEqualityProof", "SelectedValue", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_multivariable::MultivariableEqualityProof::SelectedComponent(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_multivariable__MultivariableSelectedComponentProof(f0, capture, runtime))];
+let mut output = node("MultivariableEqualityProof", "SelectedComponent", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_multivariable::MultivariableEqualityProof::Uniqueness(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_multivariable__MultivariableCandidateUniquenessProof(f0, capture, runtime))];
+let mut output = node("MultivariableEqualityProof", "Uniqueness", fields);
 output
 },
 };
@@ -26149,6 +27696,17 @@ output
 capture.intern_evidence(output)
 }
 
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__MultivariableAnalysisPredicateDomainProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::MultivariableAnalysisPredicateDomainProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::MultivariableAnalysisPredicateDomainProof { function_domain: f0, requirements: f1 } => {
+let fields = vec![("function_domain", capture_execute__execute_fact_stmt__function_domain__CompleteFunctionDomainProof(f0, capture, runtime)), ("requirements", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__PredicateDomainWellDefinedProof(item, capture, runtime)).collect()))];
+let mut output = node("MultivariableAnalysisPredicateDomainProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__SequenceAnalysisPredicateDomainProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::SequenceAnalysisPredicateDomainProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::SequenceAnalysisPredicateDomainProof { sequence_source: f0 } => {
@@ -26330,6 +27888,41 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_known_special_property__InFactSearchProofByKnownSpecialProperty(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_known_special_property::InFactSearchProofByKnownSpecialProperty, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_known_special_property::InFactSearchProofByKnownSpecialProperty::DeclaredNumericSequenceCarrier(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__known_real_array_return__DeclaredNumericSequenceCarrierProof(f0, capture, runtime))];
+let mut output = node("InFactSearchProofByKnownSpecialProperty", "DeclaredNumericSequenceCarrier", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_known_special_property::InFactSearchProofByKnownSpecialProperty::RealMatrixApplicationCodomain(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__known_real_array_return__RealMatrixApplicationCodomainProof(f0, capture, runtime))];
+let mut output = node("InFactSearchProofByKnownSpecialProperty", "RealMatrixApplicationCodomain", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_known_special_property::InFactSearchProofByKnownSpecialProperty::UniformTupleCoordinateCarrier(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__known_literal_tuple_numeric_coordinate__UniformTupleCoordinateCarrierProof(f0, capture, runtime))];
+let mut output = node("InFactSearchProofByKnownSpecialProperty", "UniformTupleCoordinateCarrier", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_known_special_property::InFactSearchProofByKnownSpecialProperty::KnownFunctionInExactCarrier(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_known_special_property__KnownFunctionInExactCarrierProof(f0, capture, runtime))];
+let mut output = node("InFactSearchProofByKnownSpecialProperty", "KnownFunctionInExactCarrier", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_known_special_property::InFactSearchProofByKnownSpecialProperty::DeclaredFunctionInExactCarrier(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_known_special_property__DeclaredFunctionInExactCarrierProof(f0, capture, runtime))];
+let mut output = node("InFactSearchProofByKnownSpecialProperty", "DeclaredFunctionInExactCarrier", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_known_special_property::InFactSearchProofByKnownSpecialProperty::MultivariableSelectorInCarrier(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_known_special_property__MultivariableSelectorInCarrierProof(f0, capture, runtime))];
+let mut output = node("InFactSearchProofByKnownSpecialProperty", "MultivariableSelectorInCarrier", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_known_special_property::InFactSearchProofByKnownSpecialProperty::MultivariableSelectorApplicationInCodomain(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_known_special_property__MultivariableSelectorApplicationInCodomainProof(f0, capture, runtime))];
+let mut output = node("InFactSearchProofByKnownSpecialProperty", "MultivariableSelectorApplicationInCodomain", fields);
+output
+},
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_known_special_property::InFactSearchProofByKnownSpecialProperty::FiniteTupleInStandardFunctionSpace(f0) => {
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_known_special_property__FiniteTupleInStandardFunctionSpaceProof(f0, capture, runtime))];
 let mut output = node("InFactSearchProofByKnownSpecialProperty", "FiniteTupleInStandardFunctionSpace", fields);
@@ -29387,6 +30980,92 @@ pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_ato
 
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__search_atomic_except_equality_fact_proof_by_builtin_rule_result__NotIsChoiceFunctionForFactSearchProofByBuiltinRule(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::search_atomic_except_equality_fact_proof_by_builtin_rule_result::NotIsChoiceFunctionForFactSearchProofByBuiltinRule, _capture: &mut Capture, _runtime: &Runtime) -> JsonValue { match *value {} }
 
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__strategy__MultivariableStrategyProof(value: &crate::execute::execute_fact_stmt::multivariable::strategy::MultivariableStrategyProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::strategy::MultivariableStrategyProof::ScalarLimit(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__strategy__ScalarLimitStrategyProof(f0, capture, runtime))];
+let mut output = node("MultivariableStrategyProof", "ScalarLimit", fields);
+output
+},
+crate::execute::execute_fact_stmt::multivariable::strategy::MultivariableStrategyProof::VectorLimit(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__strategy__VectorLimitStrategyProof(f0, capture, runtime))];
+let mut output = node("MultivariableStrategyProof", "VectorLimit", fields);
+output
+},
+crate::execute::execute_fact_stmt::multivariable::strategy::MultivariableStrategyProof::ScalarContinuousAt(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__strategy__ScalarContinuousAtStrategyProof(f0, capture, runtime))];
+let mut output = node("MultivariableStrategyProof", "ScalarContinuousAt", fields);
+output
+},
+crate::execute::execute_fact_stmt::multivariable::strategy::MultivariableStrategyProof::VectorContinuousAt(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__strategy__VectorContinuousAtStrategyProof(f0, capture, runtime))];
+let mut output = node("MultivariableStrategyProof", "VectorContinuousAt", fields);
+output
+},
+crate::execute::execute_fact_stmt::multivariable::strategy::MultivariableStrategyProof::PartialDerivativeAt(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__strategy__PartialDerivativeAtStrategyProof(f0, capture, runtime))];
+let mut output = node("MultivariableStrategyProof", "PartialDerivativeAt", fields);
+output
+},
+crate::execute::execute_fact_stmt::multivariable::strategy::MultivariableStrategyProof::SecondPartialDerivativeAt(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__strategy__SecondPartialDerivativeAtStrategyProof(f0, capture, runtime))];
+let mut output = node("MultivariableStrategyProof", "SecondPartialDerivativeAt", fields);
+output
+},
+crate::execute::execute_fact_stmt::multivariable::strategy::MultivariableStrategyProof::ScalarDifferentialAt(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__strategy__ScalarDifferentialAtStrategyProof(f0, capture, runtime))];
+let mut output = node("MultivariableStrategyProof", "ScalarDifferentialAt", fields);
+output
+},
+crate::execute::execute_fact_stmt::multivariable::strategy::MultivariableStrategyProof::TotalDerivativeAt(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__strategy__TotalDerivativeAtStrategyProof(f0, capture, runtime))];
+let mut output = node("MultivariableStrategyProof", "TotalDerivativeAt", fields);
+output
+},
+crate::execute::execute_fact_stmt::multivariable::strategy::MultivariableStrategyProof::ScalarDifferentiableAt(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__strategy__ScalarDifferentiableAtStrategyProof(f0, capture, runtime))];
+let mut output = node("MultivariableStrategyProof", "ScalarDifferentiableAt", fields);
+output
+},
+crate::execute::execute_fact_stmt::multivariable::strategy::MultivariableStrategyProof::TotalDifferentiableAt(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__strategy__TotalDifferentiableAtStrategyProof(f0, capture, runtime))];
+let mut output = node("MultivariableStrategyProof", "TotalDifferentiableAt", fields);
+output
+},
+crate::execute::execute_fact_stmt::multivariable::strategy::MultivariableStrategyProof::GradientAt(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__strategy__GradientAtStrategyProof(f0, capture, runtime))];
+let mut output = node("MultivariableStrategyProof", "GradientAt", fields);
+output
+},
+crate::execute::execute_fact_stmt::multivariable::strategy::MultivariableStrategyProof::JacobianAt(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__strategy__JacobianAtStrategyProof(f0, capture, runtime))];
+let mut output = node("MultivariableStrategyProof", "JacobianAt", fields);
+output
+},
+crate::execute::execute_fact_stmt::multivariable::strategy::MultivariableStrategyProof::HessianAt(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__strategy__HessianAtStrategyProof(f0, capture, runtime))];
+let mut output = node("MultivariableStrategyProof", "HessianAt", fields);
+output
+},
+crate::execute::execute_fact_stmt::multivariable::strategy::MultivariableStrategyProof::DivergenceAt(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__strategy__DivergenceAtStrategyProof(f0, capture, runtime))];
+let mut output = node("MultivariableStrategyProof", "DivergenceAt", fields);
+output
+},
+crate::execute::execute_fact_stmt::multivariable::strategy::MultivariableStrategyProof::CurlAt(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__strategy__CurlAtStrategyProof(f0, capture, runtime))];
+let mut output = node("MultivariableStrategyProof", "CurlAt", fields);
+output
+},
+crate::execute::execute_fact_stmt::multivariable::strategy::MultivariableStrategyProof::LaplacianAt(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__strategy__LaplacianAtStrategyProof(f0, capture, runtime))];
+let mut output = node("MultivariableStrategyProof", "LaplacianAt", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
 pub(super) fn capture_execute__execute_fact_stmt__pointwise_derivative__PointwiseDerivativeProof(value: &crate::execute::execute_fact_stmt::pointwise_derivative::PointwiseDerivativeProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::pointwise_derivative::PointwiseDerivativeProof { function: f0, point: f1, domain: f2, body: f3, body_equal: f4, body_well_defined: f5, interior: f6, expression: f7, conclusion: f8 } => {
@@ -29634,6 +31313,17 @@ let output = match value {
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::AddCrossedLessEqualStrategySingleStep { requirement_facts: f0, proof_of_requirement_facts: f1 } => {
 let fields = vec![("requirement_facts", JsonValue::Array((f0).iter().map(|item| capture_ast__fact__fact__Fact(item, capture, runtime)).collect())), ("proof_of_requirement_facts", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
 let mut output = node("AddCrossedLessEqualStrategySingleStep", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_strategy__result__AddDoubleUpperBoundStrategySingleStep(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::AddDoubleUpperBoundStrategySingleStep, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::AddDoubleUpperBoundStrategySingleStep { requirement_facts: f0, proof_of_requirement_facts: f1 } => {
+let fields = vec![("requirement_facts", JsonValue::Array((f0).iter().map(|item| capture_ast__fact__fact__Fact(item, capture, runtime)).collect())), ("proof_of_requirement_facts", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("AddDoubleUpperBoundStrategySingleStep", "", fields);
 output
 },
 };
@@ -30830,6 +32520,11 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__result__BuiltinPropDefinitionProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::BuiltinPropDefinitionProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::BuiltinPropDefinitionProof::MultivariableAnalysis(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__definition__MultivariableDefinitionProof(f0, capture, runtime))];
+let mut output = node("BuiltinPropDefinitionProof", "MultivariableAnalysis", fields);
+output
+},
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::BuiltinPropDefinitionProof::HasRiemannIntegral(f0) => {
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__result__BuiltinHasRiemannIntegralDefinitionProof(f0, capture, runtime))];
 let mut output = node("BuiltinPropDefinitionProof", "HasRiemannIntegral", fields);
@@ -31598,6 +33293,105 @@ output
 capture.intern_evidence(output)
 }
 
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__selector__PartialDerivativeAtWellDefinedFailure(value: &crate::execute::execute_fact_stmt::multivariable::selector::PartialDerivativeAtWellDefinedFailure, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::selector::PartialDerivativeAtWellDefinedFailure { stage: f0 } => {
+let fields = vec![("stage", capture_execute__execute_fact_stmt__multivariable__selector__MultivariableSelectorFailureStage(f0, capture, runtime))];
+let mut output = node("PartialDerivativeAtWellDefinedFailure", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__selector__ScalarDifferentialAtWellDefinedFailure(value: &crate::execute::execute_fact_stmt::multivariable::selector::ScalarDifferentialAtWellDefinedFailure, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::selector::ScalarDifferentialAtWellDefinedFailure { stage: f0 } => {
+let fields = vec![("stage", capture_execute__execute_fact_stmt__multivariable__selector__MultivariableSelectorFailureStage(f0, capture, runtime))];
+let mut output = node("ScalarDifferentialAtWellDefinedFailure", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__selector__TotalDifferentialAtWellDefinedFailure(value: &crate::execute::execute_fact_stmt::multivariable::selector::TotalDifferentialAtWellDefinedFailure, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::selector::TotalDifferentialAtWellDefinedFailure { stage: f0 } => {
+let fields = vec![("stage", capture_execute__execute_fact_stmt__multivariable__selector__MultivariableSelectorFailureStage(f0, capture, runtime))];
+let mut output = node("TotalDifferentialAtWellDefinedFailure", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__selector__GradientAtWellDefinedFailure(value: &crate::execute::execute_fact_stmt::multivariable::selector::GradientAtWellDefinedFailure, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::selector::GradientAtWellDefinedFailure { stage: f0 } => {
+let fields = vec![("stage", capture_execute__execute_fact_stmt__multivariable__selector__MultivariableSelectorFailureStage(f0, capture, runtime))];
+let mut output = node("GradientAtWellDefinedFailure", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__selector__JacobianAtWellDefinedFailure(value: &crate::execute::execute_fact_stmt::multivariable::selector::JacobianAtWellDefinedFailure, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::selector::JacobianAtWellDefinedFailure { stage: f0 } => {
+let fields = vec![("stage", capture_execute__execute_fact_stmt__multivariable__selector__MultivariableSelectorFailureStage(f0, capture, runtime))];
+let mut output = node("JacobianAtWellDefinedFailure", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__selector__HessianAtWellDefinedFailure(value: &crate::execute::execute_fact_stmt::multivariable::selector::HessianAtWellDefinedFailure, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::selector::HessianAtWellDefinedFailure { stage: f0 } => {
+let fields = vec![("stage", capture_execute__execute_fact_stmt__multivariable__selector__MultivariableSelectorFailureStage(f0, capture, runtime))];
+let mut output = node("HessianAtWellDefinedFailure", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__selector__DivergenceAtWellDefinedFailure(value: &crate::execute::execute_fact_stmt::multivariable::selector::DivergenceAtWellDefinedFailure, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::selector::DivergenceAtWellDefinedFailure { stage: f0 } => {
+let fields = vec![("stage", capture_execute__execute_fact_stmt__multivariable__selector__MultivariableSelectorFailureStage(f0, capture, runtime))];
+let mut output = node("DivergenceAtWellDefinedFailure", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__selector__CurlAtWellDefinedFailure(value: &crate::execute::execute_fact_stmt::multivariable::selector::CurlAtWellDefinedFailure, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::selector::CurlAtWellDefinedFailure { stage: f0 } => {
+let fields = vec![("stage", capture_execute__execute_fact_stmt__multivariable__selector__MultivariableSelectorFailureStage(f0, capture, runtime))];
+let mut output = node("CurlAtWellDefinedFailure", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__selector__LaplacianAtWellDefinedFailure(value: &crate::execute::execute_fact_stmt::multivariable::selector::LaplacianAtWellDefinedFailure, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::selector::LaplacianAtWellDefinedFailure { stage: f0 } => {
+let fields = vec![("stage", capture_execute__execute_fact_stmt__multivariable__selector__MultivariableSelectorFailureStage(f0, capture, runtime))];
+let mut output = node("LaplacianAtWellDefinedFailure", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
 pub(super) fn capture_execute__execute_fact_stmt__function_derivative__DerivativeAtWellDefinedFailure(value: &crate::execute::execute_fact_stmt::function_derivative::DerivativeAtWellDefinedFailure, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::function_derivative::DerivativeAtWellDefinedFailure { obj: f0, stage: f1 } => {
@@ -31625,6 +33419,28 @@ let output = match value {
 crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FailToVerifyInfimumObjWellDefined { obj: f0, result: f1 } => {
 let fields = vec![("obj", capture_ast__obj__Obj(f0, capture, runtime)), ("result", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f1, capture, runtime))];
 let mut output = node("FailToVerifyInfimumObjWellDefined", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__selector__MultivariableScalarLimitWellDefinedFailure(value: &crate::execute::execute_fact_stmt::multivariable::selector::MultivariableScalarLimitWellDefinedFailure, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::selector::MultivariableScalarLimitWellDefinedFailure { stage: f0 } => {
+let fields = vec![("stage", capture_execute__execute_fact_stmt__multivariable__selector__MultivariableSelectorFailureStage(f0, capture, runtime))];
+let mut output = node("MultivariableScalarLimitWellDefinedFailure", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__selector__MultivariableVectorLimitWellDefinedFailure(value: &crate::execute::execute_fact_stmt::multivariable::selector::MultivariableVectorLimitWellDefinedFailure, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::selector::MultivariableVectorLimitWellDefinedFailure { stage: f0 } => {
+let fields = vec![("stage", capture_execute__execute_fact_stmt__multivariable__selector__MultivariableSelectorFailureStage(f0, capture, runtime))];
+let mut output = node("MultivariableVectorLimitWellDefinedFailure", "", fields);
 output
 },
 };
@@ -33081,6 +34897,105 @@ output
 capture.intern_evidence(output)
 }
 
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__selector__PartialDerivativeAtWellDefinedProof(value: &crate::execute::execute_fact_stmt::multivariable::selector::PartialDerivativeAtWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::selector::PartialDerivativeAtWellDefinedProof { stages: f0 } => {
+let fields = vec![("stages", capture_execute__execute_fact_stmt__multivariable__selector__MultivariableSelectorWellDefinedStages(f0, capture, runtime))];
+let mut output = node("PartialDerivativeAtWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__selector__ScalarDifferentialAtWellDefinedProof(value: &crate::execute::execute_fact_stmt::multivariable::selector::ScalarDifferentialAtWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::selector::ScalarDifferentialAtWellDefinedProof { stages: f0 } => {
+let fields = vec![("stages", capture_execute__execute_fact_stmt__multivariable__selector__MultivariableSelectorWellDefinedStages(f0, capture, runtime))];
+let mut output = node("ScalarDifferentialAtWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__selector__TotalDifferentialAtWellDefinedProof(value: &crate::execute::execute_fact_stmt::multivariable::selector::TotalDifferentialAtWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::selector::TotalDifferentialAtWellDefinedProof { stages: f0 } => {
+let fields = vec![("stages", capture_execute__execute_fact_stmt__multivariable__selector__MultivariableSelectorWellDefinedStages(f0, capture, runtime))];
+let mut output = node("TotalDifferentialAtWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__selector__GradientAtWellDefinedProof(value: &crate::execute::execute_fact_stmt::multivariable::selector::GradientAtWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::selector::GradientAtWellDefinedProof { stages: f0 } => {
+let fields = vec![("stages", capture_execute__execute_fact_stmt__multivariable__selector__MultivariableSelectorWellDefinedStages(f0, capture, runtime))];
+let mut output = node("GradientAtWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__selector__JacobianAtWellDefinedProof(value: &crate::execute::execute_fact_stmt::multivariable::selector::JacobianAtWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::selector::JacobianAtWellDefinedProof { stages: f0 } => {
+let fields = vec![("stages", capture_execute__execute_fact_stmt__multivariable__selector__MultivariableSelectorWellDefinedStages(f0, capture, runtime))];
+let mut output = node("JacobianAtWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__selector__HessianAtWellDefinedProof(value: &crate::execute::execute_fact_stmt::multivariable::selector::HessianAtWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::selector::HessianAtWellDefinedProof { stages: f0 } => {
+let fields = vec![("stages", capture_execute__execute_fact_stmt__multivariable__selector__MultivariableSelectorWellDefinedStages(f0, capture, runtime))];
+let mut output = node("HessianAtWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__selector__DivergenceAtWellDefinedProof(value: &crate::execute::execute_fact_stmt::multivariable::selector::DivergenceAtWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::selector::DivergenceAtWellDefinedProof { stages: f0 } => {
+let fields = vec![("stages", capture_execute__execute_fact_stmt__multivariable__selector__MultivariableSelectorWellDefinedStages(f0, capture, runtime))];
+let mut output = node("DivergenceAtWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__selector__CurlAtWellDefinedProof(value: &crate::execute::execute_fact_stmt::multivariable::selector::CurlAtWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::selector::CurlAtWellDefinedProof { stages: f0 } => {
+let fields = vec![("stages", capture_execute__execute_fact_stmt__multivariable__selector__MultivariableSelectorWellDefinedStages(f0, capture, runtime))];
+let mut output = node("CurlAtWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__selector__LaplacianAtWellDefinedProof(value: &crate::execute::execute_fact_stmt::multivariable::selector::LaplacianAtWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::selector::LaplacianAtWellDefinedProof { stages: f0 } => {
+let fields = vec![("stages", capture_execute__execute_fact_stmt__multivariable__selector__MultivariableSelectorWellDefinedStages(f0, capture, runtime))];
+let mut output = node("LaplacianAtWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
 pub(super) fn capture_execute__execute_fact_stmt__function_derivative__DerivativeAtWellDefinedProof(value: &crate::execute::execute_fact_stmt::function_derivative::DerivativeAtWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::function_derivative::DerivativeAtWellDefinedProof { function_wd: f0, point_wd: f1, domain: f2, point_in_domain: f3, convergence: f4 } => {
@@ -33108,6 +35023,28 @@ let output = match value {
 crate::execute::execute_fact_stmt::well_defined_results::verify_obj::InfimumObjWellDefinedProof { set_wd: f0, real_set: f1, selection: f2 } => {
 let fields = vec![("set_wd", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(f0, capture, runtime)), ("real_set", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f1, capture, runtime)), ("selection", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f2, capture, runtime))];
 let mut output = node("InfimumObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__selector__MultivariableScalarLimitWellDefinedProof(value: &crate::execute::execute_fact_stmt::multivariable::selector::MultivariableScalarLimitWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::selector::MultivariableScalarLimitWellDefinedProof { stages: f0 } => {
+let fields = vec![("stages", capture_execute__execute_fact_stmt__multivariable__selector__MultivariableSelectorWellDefinedStages(f0, capture, runtime))];
+let mut output = node("MultivariableScalarLimitWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__selector__MultivariableVectorLimitWellDefinedProof(value: &crate::execute::execute_fact_stmt::multivariable::selector::MultivariableVectorLimitWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::selector::MultivariableVectorLimitWellDefinedProof { stages: f0 } => {
+let fields = vec![("stages", capture_execute__execute_fact_stmt__multivariable__selector__MultivariableSelectorWellDefinedStages(f0, capture, runtime))];
+let mut output = node("MultivariableVectorLimitWellDefinedProof", "", fields);
 output
 },
 };
@@ -34389,6 +36326,39 @@ let output = match value {
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_function_limit::FunctionLimitUniquenessProof { left: f0, right: f1 } => {
 let fields = vec![("left", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__result__AtomicExceptEqualityFactKnownProof(f0, capture, runtime)), ("right", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__result__AtomicExceptEqualityFactKnownProof(f1, capture, runtime))];
 let mut output = node("FunctionLimitUniquenessProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_multivariable__MultivariableSelectedValueProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_multivariable::MultivariableSelectedValueProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_multivariable::MultivariableSelectedValueProof { candidate: f0, value_equality: f1 } => {
+let fields = vec![("candidate", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__result__AtomicExceptEqualityFactKnownProof(f0, capture, runtime)), ("value_equality", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__EqualFactSearchedProof(f1, capture, runtime))];
+let mut output = node("MultivariableSelectedValueProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_multivariable__MultivariableSelectedComponentProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_multivariable::MultivariableSelectedComponentProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_multivariable::MultivariableSelectedComponentProof { candidate: f0, candidate_value_equal: f1, reduction: f2, value_equality: f3 } => {
+let fields = vec![("candidate", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__result__AtomicExceptEqualityFactKnownProof(f0, capture, runtime)), ("candidate_value_equal", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__KnownEqualityPathProof(f1, capture, runtime)), ("reduction", capture_execute__execute_fact_stmt__multivariable__expression__MultivariableReductionProof(f2, capture, runtime)), ("value_equality", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f3, capture, runtime))];
+let mut output = node("MultivariableSelectedComponentProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_multivariable__MultivariableCandidateUniquenessProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_multivariable::MultivariableCandidateUniquenessProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_multivariable::MultivariableCandidateUniquenessProof { left: f0, right: f1 } => {
+let fields = vec![("left", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__result__AtomicExceptEqualityFactKnownProof(f0, capture, runtime)), ("right", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__result__AtomicExceptEqualityFactKnownProof(f1, capture, runtime))];
+let mut output = node("MultivariableCandidateUniquenessProof", "", fields);
 output
 },
 };
@@ -36357,6 +38327,26 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__structural_membership_proof__IntrinsicCodomain(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::structural_membership_proof::IntrinsicCodomain, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::structural_membership_proof::IntrinsicCodomain::MultivariableScalarLimit => {
+let fields = vec![];
+let mut output = node("IntrinsicCodomain", "MultivariableScalarLimit", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::structural_membership_proof::IntrinsicCodomain::PartialDerivative => {
+let fields = vec![];
+let mut output = node("IntrinsicCodomain", "PartialDerivative", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::structural_membership_proof::IntrinsicCodomain::MultivariableDivergence => {
+let fields = vec![];
+let mut output = node("IntrinsicCodomain", "MultivariableDivergence", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::structural_membership_proof::IntrinsicCodomain::MultivariableLaplacian => {
+let fields = vec![];
+let mut output = node("IntrinsicCodomain", "MultivariableLaplacian", fields);
+output
+},
 crate::execute::execute_fact_stmt::verify_atomic_fact::structural_membership_proof::IntrinsicCodomain::MatrixDeterminant => {
 let fields = vec![];
 let mut output = node("IntrinsicCodomain", "MatrixDeterminant", fields);
@@ -36672,6 +38662,83 @@ output
 crate::execute::execute_fact_stmt::verify_atomic_fact::closed_calculation_proof::ClosedScalarValue::ExactComplex { real: f0, imaginary: f1 } => {
 let fields = vec![("real", JsonValue::String((f0).to_obj().readable_string())), ("imaginary", JsonValue::String((f1).to_obj().readable_string()))];
 let mut output = node("ClosedScalarValue", "ExactComplex", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__known_real_array_return__DeclaredNumericSequenceCarrierProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::known_real_array_return::DeclaredNumericSequenceCarrierProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::known_real_array_return::DeclaredNumericSequenceCarrierProof { declared_signature: f0, target_signature: f1, widened_signature: f2, source_return: f3, target_return: f4, signature_match: f5 } => {
+let fields = vec![("declared_signature", capture_ast__obj__FnSet(f0, capture, runtime)), ("target_signature", capture_ast__obj__FnSet(f1, capture, runtime)), ("widened_signature", capture_ast__obj__FnSet(f2, capture, runtime)), ("source_return", capture.standard_set(f3, runtime)), ("target_return", capture.standard_set(f4, runtime)), ("signature_match", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__EqualFactSearchedProof(f5, capture, runtime))];
+let mut output = node("DeclaredNumericSequenceCarrierProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__known_real_array_return__RealMatrixApplicationCodomainProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::known_real_array_return::RealMatrixApplicationCodomainProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::known_real_array_return::RealMatrixApplicationCodomainProof { array: f0, applied_return: f1 } => {
+let fields = vec![("array", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__known_real_array_return__RealNativeArrayCarrierProof(f0, capture, runtime)), ("applied_return", capture_ast__obj__Obj(f1, capture, runtime))];
+let mut output = node("RealMatrixApplicationCodomainProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__known_literal_tuple_numeric_coordinate__UniformTupleCoordinateCarrierProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::known_literal_tuple_numeric_coordinate::UniformTupleCoordinateCarrierProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::known_literal_tuple_numeric_coordinate::UniformTupleCoordinateCarrierProof { tuple: f0, index: f1, carrier: f2, coordinates: f3 } => {
+let fields = vec![("tuple", capture_execute__execute_fact_stmt__known_tuple__KnownTupleValueProof(f0, capture, runtime)), ("index", capture_ast__obj__Obj(f1, capture, runtime)), ("carrier", capture.standard_set(f2, runtime)), ("coordinates", JsonValue::Array((f3).iter().map(|item| capture_execute__execute_fact_stmt__verify_atomic_fact__structural_membership_proof__StructuralMembershipProof(item, capture, runtime)).collect()))];
+let mut output = node("UniformTupleCoordinateCarrierProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_known_special_property__KnownFunctionInExactCarrierProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_known_special_property::KnownFunctionInExactCarrierProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_known_special_property::KnownFunctionInExactCarrierProof { membership: f0, normalized_signature: f1, target_signature: f2, signature_match: f3 } => {
+let fields = vec![("membership", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__result__AtomicExceptEqualityFactKnownProof(f0, capture, runtime)), ("normalized_signature", capture_ast__obj__FnSet(f1, capture, runtime)), ("target_signature", capture_ast__obj__FnSet(f2, capture, runtime)), ("signature_match", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__EqualFactSearchedProof(f3, capture, runtime))];
+let mut output = node("KnownFunctionInExactCarrierProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_known_special_property__DeclaredFunctionInExactCarrierProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_known_special_property::DeclaredFunctionInExactCarrierProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_known_special_property::DeclaredFunctionInExactCarrierProof { normalized_signature: f0, target_signature: f1, declared_signature: f2, subject_equal: f3, signature_match: f4 } => {
+let fields = vec![("normalized_signature", capture_ast__obj__FnSet(f0, capture, runtime)), ("target_signature", capture_ast__obj__FnSet(f1, capture, runtime)), ("declared_signature", capture_ast__obj__FnSet(f2, capture, runtime)), ("subject_equal", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__KnownEqualityPathProof(f3, capture, runtime)), ("signature_match", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__EqualFactSearchedProof(f4, capture, runtime))];
+let mut output = node("DeclaredFunctionInExactCarrierProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_known_special_property__MultivariableSelectorInCarrierProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_known_special_property::MultivariableSelectorInCarrierProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_known_special_property::MultivariableSelectorInCarrierProof { selector: f0, declared_carrier: f1, carrier_match: f2 } => {
+let fields = vec![("selector", capture_ast__obj__Obj(f0, capture, runtime)), ("declared_carrier", capture_ast__obj__Obj(f1, capture, runtime)), ("carrier_match", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__EqualFactSearchedProof(f2, capture, runtime))];
+let mut output = node("MultivariableSelectorInCarrierProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_known_special_property__MultivariableSelectorApplicationInCodomainProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_known_special_property::MultivariableSelectorApplicationInCodomainProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_known_special_property::MultivariableSelectorApplicationInCodomainProof { selector: f0, declared_signature: f1, applied_return_set: f2, return_set_match: f3 } => {
+let fields = vec![("selector", capture_ast__obj__Obj(f0, capture, runtime)), ("declared_signature", capture_ast__obj__FnSet(f1, capture, runtime)), ("applied_return_set", capture_ast__obj__Obj(f2, capture, runtime)), ("return_set_match", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__EqualFactSearchedProof(f3, capture, runtime))];
+let mut output = node("MultivariableSelectorApplicationInCodomainProof", "", fields);
 output
 },
 };
@@ -41136,6 +43203,182 @@ output
 capture.intern_evidence(output)
 }
 
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__strategy__ScalarLimitStrategyProof(value: &crate::execute::execute_fact_stmt::multivariable::strategy::ScalarLimitStrategyProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::strategy::ScalarLimitStrategyProof { stages: f0 } => {
+let fields = vec![("stages", capture_execute__execute_fact_stmt__multivariable__strategy__SmoothMultivariableStages(f0, capture, runtime))];
+let mut output = node("ScalarLimitStrategyProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__strategy__VectorLimitStrategyProof(value: &crate::execute::execute_fact_stmt::multivariable::strategy::VectorLimitStrategyProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::strategy::VectorLimitStrategyProof { stages: f0 } => {
+let fields = vec![("stages", capture_execute__execute_fact_stmt__multivariable__strategy__SmoothMultivariableStages(f0, capture, runtime))];
+let mut output = node("VectorLimitStrategyProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__strategy__ScalarContinuousAtStrategyProof(value: &crate::execute::execute_fact_stmt::multivariable::strategy::ScalarContinuousAtStrategyProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::strategy::ScalarContinuousAtStrategyProof { stages: f0 } => {
+let fields = vec![("stages", capture_execute__execute_fact_stmt__multivariable__strategy__SmoothMultivariableStages(f0, capture, runtime))];
+let mut output = node("ScalarContinuousAtStrategyProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__strategy__VectorContinuousAtStrategyProof(value: &crate::execute::execute_fact_stmt::multivariable::strategy::VectorContinuousAtStrategyProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::strategy::VectorContinuousAtStrategyProof { stages: f0 } => {
+let fields = vec![("stages", capture_execute__execute_fact_stmt__multivariable__strategy__SmoothMultivariableStages(f0, capture, runtime))];
+let mut output = node("VectorContinuousAtStrategyProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__strategy__PartialDerivativeAtStrategyProof(value: &crate::execute::execute_fact_stmt::multivariable::strategy::PartialDerivativeAtStrategyProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::strategy::PartialDerivativeAtStrategyProof { stages: f0 } => {
+let fields = vec![("stages", capture_execute__execute_fact_stmt__multivariable__strategy__SmoothMultivariableStages(f0, capture, runtime))];
+let mut output = node("PartialDerivativeAtStrategyProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__strategy__SecondPartialDerivativeAtStrategyProof(value: &crate::execute::execute_fact_stmt::multivariable::strategy::SecondPartialDerivativeAtStrategyProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::strategy::SecondPartialDerivativeAtStrategyProof { stages: f0 } => {
+let fields = vec![("stages", capture_execute__execute_fact_stmt__multivariable__strategy__SmoothMultivariableStages(f0, capture, runtime))];
+let mut output = node("SecondPartialDerivativeAtStrategyProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__strategy__ScalarDifferentialAtStrategyProof(value: &crate::execute::execute_fact_stmt::multivariable::strategy::ScalarDifferentialAtStrategyProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::strategy::ScalarDifferentialAtStrategyProof { stages: f0 } => {
+let fields = vec![("stages", capture_execute__execute_fact_stmt__multivariable__strategy__SmoothMultivariableStages(f0, capture, runtime))];
+let mut output = node("ScalarDifferentialAtStrategyProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__strategy__TotalDerivativeAtStrategyProof(value: &crate::execute::execute_fact_stmt::multivariable::strategy::TotalDerivativeAtStrategyProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::strategy::TotalDerivativeAtStrategyProof { stages: f0 } => {
+let fields = vec![("stages", capture_execute__execute_fact_stmt__multivariable__strategy__SmoothMultivariableStages(f0, capture, runtime))];
+let mut output = node("TotalDerivativeAtStrategyProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__strategy__ScalarDifferentiableAtStrategyProof(value: &crate::execute::execute_fact_stmt::multivariable::strategy::ScalarDifferentiableAtStrategyProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::strategy::ScalarDifferentiableAtStrategyProof { stages: f0 } => {
+let fields = vec![("stages", capture_execute__execute_fact_stmt__multivariable__strategy__SmoothMultivariableStages(f0, capture, runtime))];
+let mut output = node("ScalarDifferentiableAtStrategyProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__strategy__TotalDifferentiableAtStrategyProof(value: &crate::execute::execute_fact_stmt::multivariable::strategy::TotalDifferentiableAtStrategyProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::strategy::TotalDifferentiableAtStrategyProof { stages: f0 } => {
+let fields = vec![("stages", capture_execute__execute_fact_stmt__multivariable__strategy__SmoothMultivariableStages(f0, capture, runtime))];
+let mut output = node("TotalDifferentiableAtStrategyProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__strategy__GradientAtStrategyProof(value: &crate::execute::execute_fact_stmt::multivariable::strategy::GradientAtStrategyProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::strategy::GradientAtStrategyProof { stages: f0 } => {
+let fields = vec![("stages", capture_execute__execute_fact_stmt__multivariable__strategy__SmoothMultivariableStages(f0, capture, runtime))];
+let mut output = node("GradientAtStrategyProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__strategy__JacobianAtStrategyProof(value: &crate::execute::execute_fact_stmt::multivariable::strategy::JacobianAtStrategyProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::strategy::JacobianAtStrategyProof { stages: f0 } => {
+let fields = vec![("stages", capture_execute__execute_fact_stmt__multivariable__strategy__SmoothMultivariableStages(f0, capture, runtime))];
+let mut output = node("JacobianAtStrategyProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__strategy__HessianAtStrategyProof(value: &crate::execute::execute_fact_stmt::multivariable::strategy::HessianAtStrategyProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::strategy::HessianAtStrategyProof { stages: f0 } => {
+let fields = vec![("stages", capture_execute__execute_fact_stmt__multivariable__strategy__SmoothMultivariableStages(f0, capture, runtime))];
+let mut output = node("HessianAtStrategyProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__strategy__DivergenceAtStrategyProof(value: &crate::execute::execute_fact_stmt::multivariable::strategy::DivergenceAtStrategyProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::strategy::DivergenceAtStrategyProof { stages: f0 } => {
+let fields = vec![("stages", capture_execute__execute_fact_stmt__multivariable__strategy__SmoothMultivariableStages(f0, capture, runtime))];
+let mut output = node("DivergenceAtStrategyProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__strategy__CurlAtStrategyProof(value: &crate::execute::execute_fact_stmt::multivariable::strategy::CurlAtStrategyProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::strategy::CurlAtStrategyProof { stages: f0 } => {
+let fields = vec![("stages", capture_execute__execute_fact_stmt__multivariable__strategy__SmoothMultivariableStages(f0, capture, runtime))];
+let mut output = node("CurlAtStrategyProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__strategy__LaplacianAtStrategyProof(value: &crate::execute::execute_fact_stmt::multivariable::strategy::LaplacianAtStrategyProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::strategy::LaplacianAtStrategyProof { stages: f0 } => {
+let fields = vec![("stages", capture_execute__execute_fact_stmt__multivariable__strategy__SmoothMultivariableStages(f0, capture, runtime))];
+let mut output = node("LaplacianAtStrategyProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
 pub(super) fn capture_execute__execute_fact_stmt__pointwise_derivative__PointInteriorProof(value: &crate::execute::execute_fact_stmt::pointwise_derivative::PointInteriorProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::pointwise_derivative::PointInteriorProof::Known { condition: f0, proof: f1 } => {
@@ -41283,6 +43526,92 @@ output
 crate::execute::execute_fact_stmt::function_domain::FunctionSpaceNonemptyProof::ConstantFunction { signature: f0, return_nonempty: f1 } => {
 let fields = vec![("signature", capture_ast__obj__FnSet(f0, capture, runtime)), ("return_nonempty", capture_execute__execute_fact_stmt__function_domain__FunctionSpaceNonemptyProof(f1, capture, runtime))];
 let mut output = node("FunctionSpaceNonemptyProof", "ConstantFunction", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__definition__MultivariableDefinitionProof(value: &crate::execute::execute_fact_stmt::multivariable::definition::MultivariableDefinitionProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::definition::MultivariableDefinitionProof::ScalarLimit(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__definition__ScalarMultivariableLimitRelationDefinitionProof(f0, capture, runtime))];
+let mut output = node("MultivariableDefinitionProof", "ScalarLimit", fields);
+output
+},
+crate::execute::execute_fact_stmt::multivariable::definition::MultivariableDefinitionProof::VectorLimit(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__definition__VectorMultivariableLimitRelationDefinitionProof(f0, capture, runtime))];
+let mut output = node("MultivariableDefinitionProof", "VectorLimit", fields);
+output
+},
+crate::execute::execute_fact_stmt::multivariable::definition::MultivariableDefinitionProof::ScalarContinuousAt(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__definition__ScalarMultivariableContinuousAtRelationDefinitionProof(f0, capture, runtime))];
+let mut output = node("MultivariableDefinitionProof", "ScalarContinuousAt", fields);
+output
+},
+crate::execute::execute_fact_stmt::multivariable::definition::MultivariableDefinitionProof::VectorContinuousAt(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__definition__VectorMultivariableContinuousAtRelationDefinitionProof(f0, capture, runtime))];
+let mut output = node("MultivariableDefinitionProof", "VectorContinuousAt", fields);
+output
+},
+crate::execute::execute_fact_stmt::multivariable::definition::MultivariableDefinitionProof::PartialDerivativeAt(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__definition__PartialDerivativeAtRelationDefinitionProof(f0, capture, runtime))];
+let mut output = node("MultivariableDefinitionProof", "PartialDerivativeAt", fields);
+output
+},
+crate::execute::execute_fact_stmt::multivariable::definition::MultivariableDefinitionProof::SecondPartialDerivativeAt(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__definition__SecondPartialDerivativeAtRelationDefinitionProof(f0, capture, runtime))];
+let mut output = node("MultivariableDefinitionProof", "SecondPartialDerivativeAt", fields);
+output
+},
+crate::execute::execute_fact_stmt::multivariable::definition::MultivariableDefinitionProof::ScalarDifferentialAt(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__definition__ScalarDifferentialAtRelationDefinitionProof(f0, capture, runtime))];
+let mut output = node("MultivariableDefinitionProof", "ScalarDifferentialAt", fields);
+output
+},
+crate::execute::execute_fact_stmt::multivariable::definition::MultivariableDefinitionProof::TotalDerivativeAt(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__definition__TotalDerivativeAtRelationDefinitionProof(f0, capture, runtime))];
+let mut output = node("MultivariableDefinitionProof", "TotalDerivativeAt", fields);
+output
+},
+crate::execute::execute_fact_stmt::multivariable::definition::MultivariableDefinitionProof::ScalarDifferentiableAt(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__definition__ScalarMultivariableDifferentiableAtRelationDefinitionProof(f0, capture, runtime))];
+let mut output = node("MultivariableDefinitionProof", "ScalarDifferentiableAt", fields);
+output
+},
+crate::execute::execute_fact_stmt::multivariable::definition::MultivariableDefinitionProof::TotalDifferentiableAt(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__definition__VectorMultivariableDifferentiableAtRelationDefinitionProof(f0, capture, runtime))];
+let mut output = node("MultivariableDefinitionProof", "TotalDifferentiableAt", fields);
+output
+},
+crate::execute::execute_fact_stmt::multivariable::definition::MultivariableDefinitionProof::GradientAt(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__definition__GradientAtRelationDefinitionProof(f0, capture, runtime))];
+let mut output = node("MultivariableDefinitionProof", "GradientAt", fields);
+output
+},
+crate::execute::execute_fact_stmt::multivariable::definition::MultivariableDefinitionProof::JacobianAt(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__definition__JacobianAtRelationDefinitionProof(f0, capture, runtime))];
+let mut output = node("MultivariableDefinitionProof", "JacobianAt", fields);
+output
+},
+crate::execute::execute_fact_stmt::multivariable::definition::MultivariableDefinitionProof::HessianAt(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__definition__HessianAtRelationDefinitionProof(f0, capture, runtime))];
+let mut output = node("MultivariableDefinitionProof", "HessianAt", fields);
+output
+},
+crate::execute::execute_fact_stmt::multivariable::definition::MultivariableDefinitionProof::DivergenceAt(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__definition__DivergenceAtRelationDefinitionProof(f0, capture, runtime))];
+let mut output = node("MultivariableDefinitionProof", "DivergenceAt", fields);
+output
+},
+crate::execute::execute_fact_stmt::multivariable::definition::MultivariableDefinitionProof::CurlAt(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__definition__CurlAtRelationDefinitionProof(f0, capture, runtime))];
+let mut output = node("MultivariableDefinitionProof", "CurlAt", fields);
+output
+},
+crate::execute::execute_fact_stmt::multivariable::definition::MultivariableDefinitionProof::LaplacianAt(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__definition__LaplacianAtRelationDefinitionProof(f0, capture, runtime))];
+let mut output = node("MultivariableDefinitionProof", "LaplacianAt", fields);
 output
 },
 };
@@ -41780,6 +44109,32 @@ output
 capture.intern_evidence(output)
 }
 
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__selector__MultivariableSelectorFailureStage(value: &crate::execute::execute_fact_stmt::multivariable::selector::MultivariableSelectorFailureStage, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::selector::MultivariableSelectorFailureStage::Argument(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyObjWellDefinedResult(f0, capture, runtime))];
+let mut output = node("MultivariableSelectorFailureStage", "Argument", fields);
+output
+},
+crate::execute::execute_fact_stmt::multivariable::selector::MultivariableSelectorFailureStage::FunctionDomain => {
+let fields = vec![];
+let mut output = node("MultivariableSelectorFailureStage", "FunctionDomain", fields);
+output
+},
+crate::execute::execute_fact_stmt::multivariable::selector::MultivariableSelectorFailureStage::Domain { requirement: f0, proof: f1 } => {
+let fields = vec![("requirement", capture_ast__fact__fact__Fact(f0, capture, runtime)), ("proof", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f1, capture, runtime))];
+let mut output = node("MultivariableSelectorFailureStage", "Domain", fields);
+output
+},
+crate::execute::execute_fact_stmt::multivariable::selector::MultivariableSelectorFailureStage::Selection { requirement: f0, proof: f1 } => {
+let fields = vec![("requirement", capture_ast__fact__fact__Fact(f0, capture, runtime)), ("proof", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f1, capture, runtime))];
+let mut output = node("MultivariableSelectorFailureStage", "Selection", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
 pub(super) fn capture_execute__execute_fact_stmt__function_derivative__DerivativeWellDefinedFailureStage(value: &crate::execute::execute_fact_stmt::function_derivative::DerivativeWellDefinedFailureStage, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::function_derivative::DerivativeWellDefinedFailureStage::Domain => {
@@ -41891,6 +44246,17 @@ output
 crate::execute::execute_fact_stmt::riemann_integral::RiemannIntegralSelectionProof::Existence { fact: f0, proof: f1 } => {
 let fields = vec![("fact", capture_ast__fact__fact__Fact(f0, capture, runtime)), ("proof", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f1, capture, runtime))];
 let mut output = node("RiemannIntegralSelectionProof", "Existence", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__selector__MultivariableSelectorWellDefinedStages(value: &crate::execute::execute_fact_stmt::multivariable::selector::MultivariableSelectorWellDefinedStages, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::selector::MultivariableSelectorWellDefinedStages { argument_well_defined: f0, function_domain: f1, domains: f2, selection: f3 } => {
+let fields = vec![("argument_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("function_domain", capture_execute__execute_fact_stmt__function_domain__CompleteFunctionDomainProof(f1, capture, runtime)), ("domains", JsonValue::Array((f2).iter().map(|item| capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__PredicateDomainWellDefinedProof(item, capture, runtime)).collect())), ("selection", capture_execute__execute_fact_stmt__multivariable__selector__MultivariableSelectorSelectionProof(f3, capture, runtime))];
+let mut output = node("MultivariableSelectorWellDefinedStages", "", fields);
 output
 },
 };
@@ -42080,6 +44446,17 @@ output
 crate::execute::execute_fact_stmt::known_tuple::KnownFunctionTupleApplicability::TemplateDefinition { instance: f0, signature: f1, alternative_signatures: f2, alternative_template_signatures: f3 } => {
 let fields = vec![("instance", capture_ast__obj__InstantiatedTemplateObj(f0, capture, runtime)), ("signature", capture_ast__obj__FnSet(f1, capture, runtime)), ("alternative_signatures", JsonValue::Array((f2).iter().map(|item| capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_known_special_property__SignatureMatchProof(item, capture, runtime)).collect())), ("alternative_template_signatures", JsonValue::Array((f3).iter().map(|item| capture_execute__execute_fact_stmt__known_tuple__KnownTemplateSignatureMatchProof(item, capture, runtime)).collect()))];
 let mut output = node("KnownFunctionTupleApplicability", "TemplateDefinition", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__expression__MultivariableReductionProof(value: &crate::execute::execute_fact_stmt::multivariable::expression::MultivariableReductionProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::expression::MultivariableReductionProof { source: f0, result: f1, steps: f2 } => {
+let fields = vec![("source", capture_ast__obj__Obj(f0, capture, runtime)), ("result", capture_ast__obj__Obj(f1, capture, runtime)), ("steps", JsonValue::Array((f2).iter().map(|item| capture_execute__execute_fact_stmt__multivariable__expression__MultivariableReductionStep(item, capture, runtime)).collect()))];
+let mut output = node("MultivariableReductionProof", "", fields);
 output
 },
 };
@@ -42351,6 +44728,17 @@ output
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::by_fn_application::normalize_function_body::FunctionBodySourceProof::Template { instance: f0, instantiated_function: f1, function_equal: f2 } => {
 let fields = vec![("instance", capture_ast__obj__Obj(f0, capture, runtime)), ("instantiated_function", capture_ast__obj__AnonymousFn(f1, capture, runtime)), ("function_equal", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__KnownEqualityPathProof(f2, capture, runtime))];
 let mut output = node("FunctionBodySourceProof", "Template", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__known_real_array_return__RealNativeArrayCarrierProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::known_real_array_return::RealNativeArrayCarrierProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::known_real_array_return::RealNativeArrayCarrierProof { operator: f0, signature: f1, real_operands: f2 } => {
+let fields = vec![("operator", capture_ast__obj__MatrixOperator(f0, capture, runtime)), ("signature", capture_ast__obj__FnSet(f1, capture, runtime)), ("real_operands", JsonValue::Array((f2).iter().map(|item| capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__known_real_array_return__DeclaredRealOperandProof(item, capture, runtime)).collect()))];
+let mut output = node("RealNativeArrayCarrierProof", "", fields);
 output
 },
 };
@@ -42734,6 +45122,17 @@ output
 capture.intern_evidence(output)
 }
 
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__strategy__SmoothMultivariableStages(value: &crate::execute::execute_fact_stmt::multivariable::strategy::SmoothMultivariableStages, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::strategy::SmoothMultivariableStages { relation: f0, function_domain: f1, body: f2, body_equal: f3, body_well_defined: f4, geometry: f5, coordinates: f6, conclusion_equalities: f7 } => {
+let fields = vec![("relation", capture_ast__fact__atomic__MultivariableAnalysisRelation(f0, capture, runtime)), ("function_domain", capture_execute__execute_fact_stmt__function_domain__CompleteFunctionDomainProof(f1, capture, runtime)), ("body", capture_ast__obj__AnonymousFn(f2, capture, runtime)), ("body_equal", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__KnownEqualityPathProof(f3, capture, runtime)), ("body_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(f4, capture, runtime)), ("geometry", capture_execute__execute_fact_stmt__multivariable__strategy__MultivariableInteriorProof(f5, capture, runtime)), ("coordinates", JsonValue::Array((f6).iter().map(|item| capture_execute__execute_fact_stmt__multivariable__strategy__MultivariableCoordinateProof(item, capture, runtime)).collect())), ("conclusion_equalities", JsonValue::Array((f7).iter().map(|item| capture_execute__execute_fact_stmt__multivariable__strategy__MultivariableReducedEqualityProof(item, capture, runtime)).collect()))];
+let mut output = node("SmoothMultivariableStages", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
 pub(super) fn capture_execute__execute_fact_stmt__pointwise_derivative__InteriorGuardProof(value: &crate::execute::execute_fact_stmt::pointwise_derivative::InteriorGuardProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::pointwise_derivative::InteriorGuardProof { guard: f0, point_fact: f1, point_proof: f2, operands: f3 } => {
@@ -42862,6 +45261,182 @@ output
 capture.intern_evidence(output)
 }
 
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__definition__ScalarMultivariableLimitRelationDefinitionProof(value: &crate::execute::execute_fact_stmt::multivariable::definition::ScalarMultivariableLimitRelationDefinitionProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::definition::ScalarMultivariableLimitRelationDefinitionProof { requirement_facts: f0, proof_of_requirement_facts: f1 } => {
+let fields = vec![("requirement_facts", JsonValue::Array((f0).iter().map(|item| capture_ast__fact__fact__Fact(item, capture, runtime)).collect())), ("proof_of_requirement_facts", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("ScalarMultivariableLimitRelationDefinitionProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__definition__VectorMultivariableLimitRelationDefinitionProof(value: &crate::execute::execute_fact_stmt::multivariable::definition::VectorMultivariableLimitRelationDefinitionProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::definition::VectorMultivariableLimitRelationDefinitionProof { requirement_facts: f0, proof_of_requirement_facts: f1 } => {
+let fields = vec![("requirement_facts", JsonValue::Array((f0).iter().map(|item| capture_ast__fact__fact__Fact(item, capture, runtime)).collect())), ("proof_of_requirement_facts", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("VectorMultivariableLimitRelationDefinitionProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__definition__ScalarMultivariableContinuousAtRelationDefinitionProof(value: &crate::execute::execute_fact_stmt::multivariable::definition::ScalarMultivariableContinuousAtRelationDefinitionProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::definition::ScalarMultivariableContinuousAtRelationDefinitionProof { requirement_facts: f0, proof_of_requirement_facts: f1 } => {
+let fields = vec![("requirement_facts", JsonValue::Array((f0).iter().map(|item| capture_ast__fact__fact__Fact(item, capture, runtime)).collect())), ("proof_of_requirement_facts", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("ScalarMultivariableContinuousAtRelationDefinitionProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__definition__VectorMultivariableContinuousAtRelationDefinitionProof(value: &crate::execute::execute_fact_stmt::multivariable::definition::VectorMultivariableContinuousAtRelationDefinitionProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::definition::VectorMultivariableContinuousAtRelationDefinitionProof { requirement_facts: f0, proof_of_requirement_facts: f1 } => {
+let fields = vec![("requirement_facts", JsonValue::Array((f0).iter().map(|item| capture_ast__fact__fact__Fact(item, capture, runtime)).collect())), ("proof_of_requirement_facts", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("VectorMultivariableContinuousAtRelationDefinitionProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__definition__PartialDerivativeAtRelationDefinitionProof(value: &crate::execute::execute_fact_stmt::multivariable::definition::PartialDerivativeAtRelationDefinitionProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::definition::PartialDerivativeAtRelationDefinitionProof { requirement_facts: f0, proof_of_requirement_facts: f1 } => {
+let fields = vec![("requirement_facts", JsonValue::Array((f0).iter().map(|item| capture_ast__fact__fact__Fact(item, capture, runtime)).collect())), ("proof_of_requirement_facts", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("PartialDerivativeAtRelationDefinitionProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__definition__SecondPartialDerivativeAtRelationDefinitionProof(value: &crate::execute::execute_fact_stmt::multivariable::definition::SecondPartialDerivativeAtRelationDefinitionProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::definition::SecondPartialDerivativeAtRelationDefinitionProof { requirement_facts: f0, proof_of_requirement_facts: f1 } => {
+let fields = vec![("requirement_facts", JsonValue::Array((f0).iter().map(|item| capture_ast__fact__fact__Fact(item, capture, runtime)).collect())), ("proof_of_requirement_facts", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("SecondPartialDerivativeAtRelationDefinitionProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__definition__ScalarDifferentialAtRelationDefinitionProof(value: &crate::execute::execute_fact_stmt::multivariable::definition::ScalarDifferentialAtRelationDefinitionProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::definition::ScalarDifferentialAtRelationDefinitionProof { requirement_facts: f0, proof_of_requirement_facts: f1 } => {
+let fields = vec![("requirement_facts", JsonValue::Array((f0).iter().map(|item| capture_ast__fact__fact__Fact(item, capture, runtime)).collect())), ("proof_of_requirement_facts", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("ScalarDifferentialAtRelationDefinitionProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__definition__TotalDerivativeAtRelationDefinitionProof(value: &crate::execute::execute_fact_stmt::multivariable::definition::TotalDerivativeAtRelationDefinitionProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::definition::TotalDerivativeAtRelationDefinitionProof { requirement_facts: f0, proof_of_requirement_facts: f1 } => {
+let fields = vec![("requirement_facts", JsonValue::Array((f0).iter().map(|item| capture_ast__fact__fact__Fact(item, capture, runtime)).collect())), ("proof_of_requirement_facts", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("TotalDerivativeAtRelationDefinitionProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__definition__ScalarMultivariableDifferentiableAtRelationDefinitionProof(value: &crate::execute::execute_fact_stmt::multivariable::definition::ScalarMultivariableDifferentiableAtRelationDefinitionProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::definition::ScalarMultivariableDifferentiableAtRelationDefinitionProof { requirement_facts: f0, proof_of_requirement_facts: f1 } => {
+let fields = vec![("requirement_facts", JsonValue::Array((f0).iter().map(|item| capture_ast__fact__fact__Fact(item, capture, runtime)).collect())), ("proof_of_requirement_facts", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("ScalarMultivariableDifferentiableAtRelationDefinitionProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__definition__VectorMultivariableDifferentiableAtRelationDefinitionProof(value: &crate::execute::execute_fact_stmt::multivariable::definition::VectorMultivariableDifferentiableAtRelationDefinitionProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::definition::VectorMultivariableDifferentiableAtRelationDefinitionProof { requirement_facts: f0, proof_of_requirement_facts: f1 } => {
+let fields = vec![("requirement_facts", JsonValue::Array((f0).iter().map(|item| capture_ast__fact__fact__Fact(item, capture, runtime)).collect())), ("proof_of_requirement_facts", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("VectorMultivariableDifferentiableAtRelationDefinitionProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__definition__GradientAtRelationDefinitionProof(value: &crate::execute::execute_fact_stmt::multivariable::definition::GradientAtRelationDefinitionProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::definition::GradientAtRelationDefinitionProof { requirement_facts: f0, proof_of_requirement_facts: f1 } => {
+let fields = vec![("requirement_facts", JsonValue::Array((f0).iter().map(|item| capture_ast__fact__fact__Fact(item, capture, runtime)).collect())), ("proof_of_requirement_facts", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("GradientAtRelationDefinitionProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__definition__JacobianAtRelationDefinitionProof(value: &crate::execute::execute_fact_stmt::multivariable::definition::JacobianAtRelationDefinitionProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::definition::JacobianAtRelationDefinitionProof { requirement_facts: f0, proof_of_requirement_facts: f1 } => {
+let fields = vec![("requirement_facts", JsonValue::Array((f0).iter().map(|item| capture_ast__fact__fact__Fact(item, capture, runtime)).collect())), ("proof_of_requirement_facts", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("JacobianAtRelationDefinitionProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__definition__HessianAtRelationDefinitionProof(value: &crate::execute::execute_fact_stmt::multivariable::definition::HessianAtRelationDefinitionProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::definition::HessianAtRelationDefinitionProof { requirement_facts: f0, proof_of_requirement_facts: f1 } => {
+let fields = vec![("requirement_facts", JsonValue::Array((f0).iter().map(|item| capture_ast__fact__fact__Fact(item, capture, runtime)).collect())), ("proof_of_requirement_facts", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("HessianAtRelationDefinitionProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__definition__DivergenceAtRelationDefinitionProof(value: &crate::execute::execute_fact_stmt::multivariable::definition::DivergenceAtRelationDefinitionProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::definition::DivergenceAtRelationDefinitionProof { requirement_facts: f0, proof_of_requirement_facts: f1 } => {
+let fields = vec![("requirement_facts", JsonValue::Array((f0).iter().map(|item| capture_ast__fact__fact__Fact(item, capture, runtime)).collect())), ("proof_of_requirement_facts", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("DivergenceAtRelationDefinitionProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__definition__CurlAtRelationDefinitionProof(value: &crate::execute::execute_fact_stmt::multivariable::definition::CurlAtRelationDefinitionProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::definition::CurlAtRelationDefinitionProof { requirement_facts: f0, proof_of_requirement_facts: f1 } => {
+let fields = vec![("requirement_facts", JsonValue::Array((f0).iter().map(|item| capture_ast__fact__fact__Fact(item, capture, runtime)).collect())), ("proof_of_requirement_facts", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("CurlAtRelationDefinitionProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__definition__LaplacianAtRelationDefinitionProof(value: &crate::execute::execute_fact_stmt::multivariable::definition::LaplacianAtRelationDefinitionProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::definition::LaplacianAtRelationDefinitionProof { requirement_facts: f0, proof_of_requirement_facts: f1 } => {
+let fields = vec![("requirement_facts", JsonValue::Array((f0).iter().map(|item| capture_ast__fact__fact__Fact(item, capture, runtime)).collect())), ("proof_of_requirement_facts", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("LaplacianAtRelationDefinitionProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
 pub(super) fn capture_execute__execute_fact_stmt__matrix_operations__MatrixRealCoordinatesProof(value: &crate::execute::execute_fact_stmt::matrix_operations::MatrixRealCoordinatesProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::matrix_operations::MatrixRealCoordinatesProof { source: f0, coordinates: f1 } => {
@@ -42878,6 +45453,22 @@ let output = match value {
 crate::execute::execute_fact_stmt::function_domain::FunctionCallDomainsAlphaMatchProof { layers: f0 } => {
 let fields = vec![("layers", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__function_domain__FunctionCallLayerDomainsAlphaMatchProof(item, capture, runtime)).collect()))];
 let mut output = node("FunctionCallDomainsAlphaMatchProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__selector__MultivariableSelectorSelectionProof(value: &crate::execute::execute_fact_stmt::multivariable::selector::MultivariableSelectorSelectionProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::selector::MultivariableSelectorSelectionProof::Candidate(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__result__AtomicExceptEqualityFactKnownProof(f0, capture, runtime))];
+let mut output = node("MultivariableSelectorSelectionProof", "Candidate", fields);
+output
+},
+crate::execute::execute_fact_stmt::multivariable::selector::MultivariableSelectorSelectionProof::Existence { fact: f0, proof: f1 } => {
+let fields = vec![("fact", capture_ast__fact__fact__Fact(f0, capture, runtime)), ("proof", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f1, capture, runtime))];
+let mut output = node("MultivariableSelectorSelectionProof", "Existence", fields);
 output
 },
 };
@@ -42920,6 +45511,42 @@ let output = match value {
 crate::execute::execute_fact_stmt::known_tuple::KnownTemplateSignatureMatchProof { function_equal: f0, instance: f1, signature_match: f2 } => {
 let fields = vec![("function_equal", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__KnownEqualityPathProof(f0, capture, runtime)), ("instance", capture_ast__obj__InstantiatedTemplateObj(f1, capture, runtime)), ("signature_match", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__EqualFactSearchedProof(f2, capture, runtime))];
 let mut output = node("KnownTemplateSignatureMatchProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__expression__MultivariableReductionStep(value: &crate::execute::execute_fact_stmt::multivariable::expression::MultivariableReductionStep, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::expression::MultivariableReductionStep::ExactRational { source: f0, value: f1 } => {
+let fields = vec![("source", capture_ast__obj__Obj(f0, capture, runtime)), ("value", capture_ast__obj__Obj(f1, capture, runtime))];
+let mut output = node("MultivariableReductionStep", "ExactRational", fields);
+output
+},
+crate::execute::execute_fact_stmt::multivariable::expression::MultivariableReductionStep::PeriodicTrig { source: f0, proof: f1 } => {
+let fields = vec![("source", capture_ast__obj__Obj(f0, capture, runtime)), ("proof", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_periodic_trig__PeriodicTrigBuiltinRuleProof(f1, capture, runtime))];
+let mut output = node("MultivariableReductionStep", "PeriodicTrig", fields);
+output
+},
+crate::execute::execute_fact_stmt::multivariable::expression::MultivariableReductionStep::NativeMatrixBeta { source: f0, arguments: f1 } => {
+let fields = vec![("source", capture_execute__execute_fact_stmt__native_matrix__MatrixCallableProof(f0, capture, runtime)), ("arguments", JsonValue::Array((f1).iter().map(|item| capture_ast__obj__Obj(item, capture, runtime)).collect()))];
+let mut output = node("MultivariableReductionStep", "NativeMatrixBeta", fields);
+output
+},
+crate::execute::execute_fact_stmt::multivariable::expression::MultivariableReductionStep::FiniteSetEvaluation { source: f0, left: f1, right: f2, value: f3 } => {
+let fields = vec![("source", capture_ast__obj__Obj(f0, capture, runtime)), ("left", JsonValue::String((f1).to_obj().readable_string())), ("right", JsonValue::String((f2).to_obj().readable_string())), ("value", capture_ast__obj__Obj(f3, capture, runtime))];
+let mut output = node("MultivariableReductionStep", "FiniteSetEvaluation", fields);
+output
+},
+crate::execute::execute_fact_stmt::multivariable::expression::MultivariableReductionStep::AnonymousBeta { function: f0, arguments: f1 } => {
+let fields = vec![("function", capture_ast__obj__AnonymousFn(f0, capture, runtime)), ("arguments", JsonValue::Array((f1).iter().map(|item| capture_ast__obj__Obj(item, capture, runtime)).collect()))];
+let mut output = node("MultivariableReductionStep", "AnonymousBeta", fields);
+output
+},
+crate::execute::execute_fact_stmt::multivariable::expression::MultivariableReductionStep::TupleProjection { tuple: f0, index: f1 } => {
+let fields = vec![("tuple", capture_ast__obj__Tuple(f0, capture, runtime)), ("index", JsonValue::String((f1).to_string()))];
+let mut output = node("MultivariableReductionStep", "TupleProjection", fields);
 output
 },
 };
@@ -43076,6 +45703,17 @@ output
 capture.intern_evidence(output)
 }
 
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__known_real_array_return__DeclaredRealOperandProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::known_real_array_return::DeclaredRealOperandProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::known_real_array_return::DeclaredRealOperandProof { requirement: f0, source: f1 } => {
+let fields = vec![("requirement", capture_ast__fact__atomic__InFact(f0, capture, runtime)), ("source", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__known_real_array_return__DeclaredRealOperandSource(f1, capture, runtime))];
+let mut output = node("DeclaredRealOperandProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__closed_subtraction_bound__BoundDirection(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::closed_subtraction_bound::BoundDirection, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::closed_subtraction_bound::BoundDirection::Lower => {
@@ -43168,6 +45806,54 @@ let output = match value {
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::RealArithmeticConstructorTerminalProof { fact: f0, searched_proof: f1 } => {
 let fields = vec![("fact", capture_ast__fact__atomic__InFact(f0, capture, runtime)), ("searched_proof", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__result__AtomicExceptEqualityFactSearchedProof(f1, capture, runtime))];
 let mut output = node("RealArithmeticConstructorTerminalProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__strategy__MultivariableInteriorProof(value: &crate::execute::execute_fact_stmt::multivariable::strategy::MultivariableInteriorProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::strategy::MultivariableInteriorProof::ExactFiniteFunctionSpace { source: f0, target: f1, signature_equal: f2, point_member: f3 } => {
+let fields = vec![("source", capture_ast__obj__FnSet(f0, capture, runtime)), ("target", capture_ast__obj__FnSet(f1, capture, runtime)), ("signature_equal", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__EqualFactSearchedProof(f2, capture, runtime)), ("point_member", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f3, capture, runtime))];
+let mut output = node("MultivariableInteriorProof", "ExactFiniteFunctionSpace", fields);
+output
+},
+crate::execute::execute_fact_stmt::multivariable::strategy::MultivariableInteriorProof::OpenGuards { domain: f0, base: f1, guards: f2 } => {
+let fields = vec![("domain", capture_ast__obj__Obj(f0, capture, runtime)), ("base", capture_execute__execute_fact_stmt__multivariable__strategy__MultivariableInteriorProof(f1, capture, runtime)), ("guards", JsonValue::Array((f2).iter().map(|item| capture_execute__execute_fact_stmt__multivariable__strategy__MultivariableOpenGuardProof(item, capture, runtime)).collect()))];
+let mut output = node("MultivariableInteriorProof", "OpenGuards", fields);
+output
+},
+crate::execute::execute_fact_stmt::multivariable::strategy::MultivariableInteriorProof::FullEuclideanSpace { domain_equal: f0, point_member: f1 } => {
+let fields = vec![("domain_equal", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__EqualFactSearchedProof(f0, capture, runtime)), ("point_member", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f1, capture, runtime))];
+let mut output = node("MultivariableInteriorProof", "FullEuclideanSpace", fields);
+output
+},
+crate::execute::execute_fact_stmt::multivariable::strategy::MultivariableInteriorProof::Known { condition: f0, proof: f1 } => {
+let fields = vec![("condition", capture_ast__fact__fact__Fact(f0, capture, runtime)), ("proof", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f1, capture, runtime))];
+let mut output = node("MultivariableInteriorProof", "Known", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__strategy__MultivariableCoordinateProof(value: &crate::execute::execute_fact_stmt::multivariable::strategy::MultivariableCoordinateProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::strategy::MultivariableCoordinateProof { row: f0, first_axis: f1, second_axis: f2, reduction: f3, first: f4, second: f5 } => {
+let fields = vec![("row", JsonValue::String((f0).to_string())), ("first_axis", capture_ast__obj__Obj(f1, capture, runtime)), ("second_axis", match (f2).as_ref() { Some(item) => capture_ast__obj__Obj(item, capture, runtime), None => JsonValue::Null }), ("reduction", capture_execute__execute_fact_stmt__multivariable__expression__MultivariableReductionProof(f3, capture, runtime)), ("first", capture_execute__execute_fact_stmt__multivariable__expression__SmoothCoordinateExpressionProof(f4, capture, runtime)), ("second", match (f5).as_ref() { Some(item) => capture_execute__execute_fact_stmt__multivariable__expression__SmoothCoordinateExpressionProof(item, capture, runtime), None => JsonValue::Null })];
+let mut output = node("MultivariableCoordinateProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__strategy__MultivariableReducedEqualityProof(value: &crate::execute::execute_fact_stmt::multivariable::strategy::MultivariableReducedEqualityProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::strategy::MultivariableReducedEqualityProof { target_reduction: f0, equality: f1 } => {
+let fields = vec![("target_reduction", capture_execute__execute_fact_stmt__multivariable__expression__MultivariableReductionProof(f0, capture, runtime)), ("equality", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f1, capture, runtime))];
+let mut output = node("MultivariableReducedEqualityProof", "", fields);
 output
 },
 };
@@ -43297,6 +45983,42 @@ output
 capture.intern_evidence(output)
 }
 
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__known_real_array_return__DeclaredRealOperandSource(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::known_real_array_return::DeclaredRealOperandSource, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::known_real_array_return::DeclaredRealOperandSource::Known(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__result__AtomicExceptEqualityFactKnownProof(f0, capture, runtime))];
+let mut output = node("DeclaredRealOperandSource", "Known", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::known_real_array_return::DeclaredRealOperandSource::Structural(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_membership_proof__StructuralMembershipProof(f0, capture, runtime))];
+let mut output = node("DeclaredRealOperandSource", "Structural", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::known_real_array_return::DeclaredRealOperandSource::Special(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_known_special_property__InFactSearchProofByKnownSpecialProperty(f0, capture, runtime))];
+let mut output = node("DeclaredRealOperandSource", "Special", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::known_real_array_return::DeclaredRealOperandSource::NativeArray(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__known_real_array_return__RealNativeArrayCarrierProof(f0, capture, runtime))];
+let mut output = node("DeclaredRealOperandSource", "NativeArray", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::known_real_array_return::DeclaredRealOperandSource::NativeApplication(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__known_real_array_return__RealMatrixApplicationCodomainProof(f0, capture, runtime))];
+let mut output = node("DeclaredRealOperandSource", "NativeApplication", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::known_real_array_return::DeclaredRealOperandSource::RealArithmetic(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__known_real_array_return__DeclaredRealArithmeticProof(f0, capture, runtime))];
+let mut output = node("DeclaredRealOperandSource", "RealArithmetic", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
 pub(super) fn capture_execute__execute_fact_stmt__matrix_operations__MatrixScalarCarrierProof(value: &crate::execute::execute_fact_stmt::matrix_operations::MatrixScalarCarrierProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::matrix_operations::MatrixScalarCarrierProof::StandardSubset => {
@@ -43307,6 +46029,28 @@ output
 crate::execute::execute_fact_stmt::matrix_operations::MatrixScalarCarrierProof::RealInputs(f0) => {
 let fields = vec![("0", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__matrix_operations__MatrixRealOperandProof(item, capture, runtime)).collect()))];
 let mut output = node("MatrixScalarCarrierProof", "RealInputs", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__strategy__MultivariableOpenGuardProof(value: &crate::execute::execute_fact_stmt::multivariable::strategy::MultivariableOpenGuardProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::strategy::MultivariableOpenGuardProof { guard: f0, operands: f1, point_condition: f2, point_proof: f3 } => {
+let fields = vec![("guard", capture_ast__fact__atomic__AtomicFact(f0, capture, runtime)), ("operands", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__multivariable__expression__SmoothCoordinateExpressionProof(item, capture, runtime)).collect())), ("point_condition", capture_ast__fact__fact__Fact(f2, capture, runtime)), ("point_proof", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f3, capture, runtime))];
+let mut output = node("MultivariableOpenGuardProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__expression__SmoothCoordinateExpressionProof(value: &crate::execute::execute_fact_stmt::multivariable::expression::SmoothCoordinateExpressionProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::expression::SmoothCoordinateExpressionProof { expression: f0, value: f1, value_source_well_defined: f2, value_reduction: f3, value_real: f4, derivative_expression: f5, derivative_value: f6, derivative_source_well_defined: f7, derivative_reduction: f8, derivative_real: f9, constructor: f10 } => {
+let fields = vec![("expression", capture_ast__obj__Obj(f0, capture, runtime)), ("value", capture_ast__obj__Obj(f1, capture, runtime)), ("value_source_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(f2, capture, runtime)), ("value_reduction", capture_execute__execute_fact_stmt__multivariable__expression__MultivariableReductionProof(f3, capture, runtime)), ("value_real", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f4, capture, runtime)), ("derivative_expression", capture_ast__obj__Obj(f5, capture, runtime)), ("derivative_value", capture_ast__obj__Obj(f6, capture, runtime)), ("derivative_source_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(f7, capture, runtime)), ("derivative_reduction", capture_execute__execute_fact_stmt__multivariable__expression__MultivariableReductionProof(f8, capture, runtime)), ("derivative_real", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f9, capture, runtime)), ("constructor", capture_execute__execute_fact_stmt__multivariable__expression__SmoothCoordinateConstructorProof(f10, capture, runtime))];
+let mut output = node("SmoothCoordinateExpressionProof", "", fields);
 output
 },
 };
@@ -43329,6 +46073,68 @@ let output = match value {
 crate::execute::execute_fact_stmt::native_matrix::MatrixResidualBetaExpansion { application_well_defined: f0, source: f1, body: f2 } => {
 let fields = vec![("application_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(f0, capture, runtime)), ("source", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__by_object_definition__by_fn_application__by_parent_checked_beta__ParentCheckedBetaFunctionBody(f1, capture, runtime)), ("body", capture_ast__obj__Obj(f2, capture, runtime))];
 let mut output = node("MatrixResidualBetaExpansion", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__known_real_array_return__DeclaredRealArithmeticProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::known_real_array_return::DeclaredRealArithmeticProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::known_real_array_return::DeclaredRealArithmeticProof { expression: f0, operands: f1 } => {
+let fields = vec![("expression", capture_ast__obj__Obj(f0, capture, runtime)), ("operands", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__known_real_array_return__DeclaredRealOperandProof(item, capture, runtime)).collect()))];
+let mut output = node("DeclaredRealArithmeticProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__expression__SmoothCoordinateConstructorProof(value: &crate::execute::execute_fact_stmt::multivariable::expression::SmoothCoordinateConstructorProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::expression::SmoothCoordinateConstructorProof::Constant => {
+let fields = vec![];
+let mut output = node("SmoothCoordinateConstructorProof", "Constant", fields);
+output
+},
+crate::execute::execute_fact_stmt::multivariable::expression::SmoothCoordinateConstructorProof::Coordinate { index: f0, index_member: f1, axis_comparison: f2 } => {
+let fields = vec![("index", capture_ast__obj__Obj(f0, capture, runtime)), ("index_member", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f1, capture, runtime)), ("axis_comparison", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f2, capture, runtime))];
+let mut output = node("SmoothCoordinateConstructorProof", "Coordinate", fields);
+output
+},
+crate::execute::execute_fact_stmt::multivariable::expression::SmoothCoordinateConstructorProof::Neg { argument: f0 } => {
+let fields = vec![("argument", capture_execute__execute_fact_stmt__multivariable__expression__SmoothCoordinateExpressionProof(f0, capture, runtime))];
+let mut output = node("SmoothCoordinateConstructorProof", "Neg", fields);
+output
+},
+crate::execute::execute_fact_stmt::multivariable::expression::SmoothCoordinateConstructorProof::Add { left: f0, right: f1 } => {
+let fields = vec![("left", capture_execute__execute_fact_stmt__multivariable__expression__SmoothCoordinateExpressionProof(f0, capture, runtime)), ("right", capture_execute__execute_fact_stmt__multivariable__expression__SmoothCoordinateExpressionProof(f1, capture, runtime))];
+let mut output = node("SmoothCoordinateConstructorProof", "Add", fields);
+output
+},
+crate::execute::execute_fact_stmt::multivariable::expression::SmoothCoordinateConstructorProof::Subtract { left: f0, right: f1 } => {
+let fields = vec![("left", capture_execute__execute_fact_stmt__multivariable__expression__SmoothCoordinateExpressionProof(f0, capture, runtime)), ("right", capture_execute__execute_fact_stmt__multivariable__expression__SmoothCoordinateExpressionProof(f1, capture, runtime))];
+let mut output = node("SmoothCoordinateConstructorProof", "Subtract", fields);
+output
+},
+crate::execute::execute_fact_stmt::multivariable::expression::SmoothCoordinateConstructorProof::Multiply { left: f0, right: f1 } => {
+let fields = vec![("left", capture_execute__execute_fact_stmt__multivariable__expression__SmoothCoordinateExpressionProof(f0, capture, runtime)), ("right", capture_execute__execute_fact_stmt__multivariable__expression__SmoothCoordinateExpressionProof(f1, capture, runtime))];
+let mut output = node("SmoothCoordinateConstructorProof", "Multiply", fields);
+output
+},
+crate::execute::execute_fact_stmt::multivariable::expression::SmoothCoordinateConstructorProof::Divide { left: f0, right: f1, nonzero: f2 } => {
+let fields = vec![("left", capture_execute__execute_fact_stmt__multivariable__expression__SmoothCoordinateExpressionProof(f0, capture, runtime)), ("right", capture_execute__execute_fact_stmt__multivariable__expression__SmoothCoordinateExpressionProof(f1, capture, runtime)), ("nonzero", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f2, capture, runtime))];
+let mut output = node("SmoothCoordinateConstructorProof", "Divide", fields);
+output
+},
+crate::execute::execute_fact_stmt::multivariable::expression::SmoothCoordinateConstructorProof::NaturalPower { base: f0, exponent_natural: f1 } => {
+let fields = vec![("base", capture_execute__execute_fact_stmt__multivariable__expression__SmoothCoordinateExpressionProof(f0, capture, runtime)), ("exponent_natural", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f1, capture, runtime))];
+let mut output = node("SmoothCoordinateConstructorProof", "NaturalPower", fields);
+output
+},
+crate::execute::execute_fact_stmt::multivariable::expression::SmoothCoordinateConstructorProof::Elementary { kind: f0, argument: f1, domain: f2 } => {
+let fields = vec![("kind", capture_execute__execute_fact_stmt__pointwise_elementary__ElementaryRealFunction(f0, capture, runtime)), ("argument", capture_execute__execute_fact_stmt__multivariable__expression__SmoothCoordinateExpressionProof(f1, capture, runtime)), ("domain", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f2, capture, runtime))];
+let mut output = node("SmoothCoordinateConstructorProof", "Elementary", fields);
 output
 },
 };

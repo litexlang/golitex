@@ -182,7 +182,13 @@ impl LitexToLeanCompiler {
         {
             return Ok(observation);
         }
+        if let Some(observation) = self.numeric_preimage_call(object, position)? {
+            return Ok(observation);
+        }
         if let Some(observation) = self.numeric_inferred_coordinate(object, position)? {
+            return Ok(observation);
+        }
+        if let Some(observation) = self.numeric_struct_field(object, position)? {
             return Ok(observation);
         }
         if !matches!(object, Obj::Identifier(_)) {
@@ -296,6 +302,42 @@ impl LitexToLeanCompiler {
         Err(LeanCompileError::new("Arithmetic/NumericEvidence", &format!("No preceding original constructor or checked C-membership certificate supplies the observation of {}.", object.ir())))
     }
 
+    fn numeric_struct_field(
+        &self,
+        object: &Obj,
+        position: &SourcePosition<'_>,
+    ) -> Result<Option<(String, String, String, Option<EvalRational>)>, LeanCompileError> {
+        if !matches!(
+            object,
+            Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(_))
+        ) {
+            return Ok(None);
+        }
+        position.with_visible_inferred_subject_filter(object, &mut |store, producer| {
+            let StoreFactResult::AtomicFact(stored) = store else {
+                return Ok(None);
+            };
+            let AtomicFact::InFact(member) = &stored.fact else {
+                return Ok(None);
+            };
+            if member.element.ir() != object.ir() {
+                return Ok(None);
+            }
+            let (actual, reference) = producer.visible_fact(stored.fact_id, &self.runtime)?;
+            if actual != &Fact::AtomicFact(stored.fact.clone()) {
+                return Err(LeanCompileError::unsupported(
+                    "StructField/MembershipSubject",
+                ));
+            }
+            let Some(complex) =
+                self.parameter_complex_membership(object, &member.set, &reference, producer)?
+            else {
+                return Ok(None);
+            };
+            self.numeric_member(object, &complex, producer).map(Some)
+        })
+    }
+
     fn numeric_inferred_coordinate(
         &self,
         object: &Obj,
@@ -359,6 +401,15 @@ impl LitexToLeanCompiler {
         position: &SourcePosition<'_>,
     ) -> Result<(String, String, String, Option<EvalRational>), LeanCompileError> {
         match wd {
+            ObjWellDefinedProof::ByDef {
+                obj: object @ Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(_)),
+                ..
+            } => {
+                self.compile_wd(wd, position)?;
+                self.numeric_struct_field(object, position)?
+                    .ok_or_else(|| LeanCompileError::unsupported("StructField/NumericMembership"))
+            }
+
             ObjWellDefinedProof::ByKnown { obj, .. } => {
                 self.compile_numeric_observation(obj, position)
             }

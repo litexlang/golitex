@@ -15,7 +15,7 @@ pub struct FunctionLimitUniquenessProof {
     pub right: AtomicExceptEqualityFactKnownProof,
 }
 impl Runtime {
-    // lim(f,x0)=L consumes a stored candidate at this exact point.
+    // fn_lim(f,x0)=L consumes a stored candidate at this exact point.
     pub(super) fn search_function_limit_equality(
         &mut self,
         fact: &EqualFact,

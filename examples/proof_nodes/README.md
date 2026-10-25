@@ -19,6 +19,13 @@ distances such as `|x - y|`. The function spelling `abs(x)` remains supported.
 The [triangle inequality](atomic/by_builtin_rule/less_equal_abs_triangle_inequality.lit)
 shows the ordinary bar notation using the same builtin rule.
 
+The [closed-coefficient product rule](equal/by_builtin_rule/abs_product_closed_coefficient.lit)
+checks `abs(-3*x)=3*abs(x)` directly, using exact rational evaluation and the
+ordinary real-domain checks. The
+[common sum bound strategy](atomic/by_builtin_strategy/add_double_upper_bound.lit)
+checks `a+b<=2*M` from both `a<=M` and `b<=M`, including negative `M`.
+Detailed evidence retains both bound proofs. These routes have no Lean replay adapter.
+
 ## Acceptance
 
 ```bash

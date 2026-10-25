@@ -1,0 +1,82 @@
+# name: imo_1966_p5
+# informal_prefix:
+# /-- Solve the system of equations
+#
+# $|a_1 - a_2| x_2 +|a_1 - a_3| x_3 +|a_1 - a_4| x_4 = 1\\ |a_2 - a_1| x_1 +|a_2 - a_3| x_3 +|a_2 - a_4| x_4 = 1\\ |a_3 - a_1| x_1 +|a_3 - a_2| x_2 +|a_3-a_4|x_4= 1\\ |a_4 - a_1| x_1 +|a_4 - a_2| x_2 +|a_4 - a_3| x_3 = 1$
+#
+# where $a_1, a_2, a_3, a_4$ are four different real numbers.-/
+# formal_statement:
+# theorem imo_1966_p5 (x a : ℕ → ℝ) (h₀ : a 1 ≠ a 2) (h₁ : a 1 ≠ a 3) (h₂ : a 1 ≠ a 4)
+#   (h₃ : a 2 ≠ a 3) (h₄ : a 2 ≠ a 4) (h₅ : a 3 ≠ a 4) (h₆ : a 1 > a 2) (h₇ : a 2 > a 3)
+#   (h₈ : a 3 > a 4)
+#   (h₉ : abs (a 1 - a 2) * x 2 + abs (a 1 - a 3) * x 3 + abs (a 1 - a 4) * x 4 = 1)
+#   (h₁₀ : abs (a 2 - a 1) * x 1 + abs (a 2 - a 3) * x 3 + abs (a 2 - a 4) * x 4 = 1)
+#   (h₁₁ : abs (a 3 - a 1) * x 1 + abs (a 3 - a 2) * x 2 + abs (a 3 - a 4) * x 4 = 1)
+#   (h₁₂ : abs (a 4 - a 1) * x 1 + abs (a 4 - a 2) * x 2 + abs (a 4 - a 3) * x 3 = 1) :
+#   x 2 = 0 ∧ x 3 = 0 ∧ x 1 = 1 / abs (a 1 - a 4) ∧ x 4 = 1 / abs (a 1 - a 4) := by
+
+# Natural-language proof: the strict order fixes the sign of every difference,
+# so all absolute values can be removed.  Subtracting consecutive equations
+# gives three products of a positive adjacent gap with a linear expression in
+# x.  Cancel the gaps, subtract the resulting linear relations to get
+# x(2)=x(3)=0, and substitute those values in the first and fourth equations.
+claim:
+  ? forall x, a fn(index N) R:
+    a(1) != a(2)
+    a(1) != a(3)
+    a(1) != a(4)
+    a(2) != a(3)
+    a(2) != a(4)
+    a(3) != a(4)
+    a(1) > a(2)
+    a(2) > a(3)
+    a(3) > a(4)
+    abs(a(1) - a(2)) * x(2) + abs(a(1) - a(3)) * x(3) + abs(a(1) - a(4)) * x(4) = 1
+    abs(a(2) - a(1)) * x(1) + abs(a(2) - a(3)) * x(3) + abs(a(2) - a(4)) * x(4) = 1
+    abs(a(3) - a(1)) * x(1) + abs(a(3) - a(2)) * x(2) + abs(a(3) - a(4)) * x(4) = 1
+    abs(a(4) - a(1)) * x(1) + abs(a(4) - a(2)) * x(2) + abs(a(4) - a(3)) * x(3) = 1
+    =>:
+        x(2) = 0 and x(3) = 0 and abs(a(1) - a(4)) * x(1) = 1 and abs(a(1) - a(4)) * x(4) = 1
+  a(1) > a(3)
+  a(2) > a(4)
+  a(1) > a(4)
+  0 < a(1) - a(2)
+  0 < a(2) - a(3)
+  0 < a(3) - a(4)
+  0 < a(1) - a(3)
+  0 < a(2) - a(4)
+  0 < a(1) - a(4)
+  abs(a(1) - a(2)) = a(1) - a(2)
+  abs(a(1) - a(3)) = a(1) - a(3)
+  abs(a(1) - a(4)) = a(1) - a(4)
+  abs(a(2) - a(1)) = a(1) - a(2)
+  abs(a(2) - a(3)) = a(2) - a(3)
+  abs(a(2) - a(4)) = a(2) - a(4)
+  abs(a(3) - a(1)) = a(1) - a(3)
+  abs(a(3) - a(2)) = a(2) - a(3)
+  abs(a(3) - a(4)) = a(3) - a(4)
+  abs(a(4) - a(1)) = a(1) - a(4)
+  abs(a(4) - a(2)) = a(2) - a(4)
+  abs(a(4) - a(3)) = a(3) - a(4)
+  (a(1) - a(2)) * x(2) + (a(1) - a(3)) * x(3) + (a(1) - a(4)) * x(4) = 1
+  (a(1) - a(2)) * x(1) + (a(2) - a(3)) * x(3) + (a(2) - a(4)) * x(4) = 1
+  (a(1) - a(3)) * x(1) + (a(2) - a(3)) * x(2) + (a(3) - a(4)) * x(4) = 1
+  (a(1) - a(4)) * x(1) + (a(2) - a(4)) * x(2) + (a(3) - a(4)) * x(3) = 1
+  (a(1) - a(2)) * (-x(1) + x(2) + x(3) + x(4)) = ((a(1) - a(2)) * x(2) + (a(1) - a(3)) * x(3) + (a(1) - a(4)) * x(4)) - ((a(1) - a(2)) * x(1) + (a(2) - a(3)) * x(3) + (a(2) - a(4)) * x(4)) = 1 - 1 = 0
+  -x(1) + x(2) + x(3) + x(4) = 0
+  (a(2) - a(3)) * (-x(1) - x(2) + x(3) + x(4)) = ((a(1) - a(2)) * x(1) + (a(2) - a(3)) * x(3) + (a(2) - a(4)) * x(4)) - ((a(1) - a(3)) * x(1) + (a(2) - a(3)) * x(2) + (a(3) - a(4)) * x(4)) = 1 - 1 = 0
+  -x(1) - x(2) + x(3) + x(4) = 0
+  2 * x(2) = (-x(1) + x(2) + x(3) + x(4)) - (-x(1) - x(2) + x(3) + x(4)) = 0 - 0 = 0
+  x(2) = 0
+  (a(3) - a(4)) * (-x(1) - x(2) - x(3) + x(4)) = ((a(1) - a(3)) * x(1) + (a(2) - a(3)) * x(2) + (a(3) - a(4)) * x(4)) - ((a(1) - a(4)) * x(1) + (a(2) - a(4)) * x(2) + (a(3) - a(4)) * x(3)) = 1 - 1 = 0
+  -x(1) - x(2) - x(3) + x(4) = 0
+  2 * x(3) = (-x(1) + x(2) + x(3) + x(4)) - (-x(1) - x(2) - x(3) + x(4)) - 2 * x(2) = 0 - 0 - 0 = 0
+  x(3) = 0
+  (a(1) - a(2)) * x(2) = 0
+  (a(1) - a(3)) * x(3) = 0
+  (a(2) - a(4)) * x(2) = 0
+  (a(3) - a(4)) * x(3) = 0
+  (a(1) - a(4)) * x(4) = 0 + 0 + (a(1) - a(4)) * x(4) = (a(1) - a(2)) * x(2) + (a(1) - a(3)) * x(3) + (a(1) - a(4)) * x(4) = 1
+  (a(1) - a(4)) * x(1) = (a(1) - a(4)) * x(1) + 0 + 0 = (a(1) - a(4)) * x(1) + (a(2) - a(4)) * x(2) + (a(3) - a(4)) * x(3) = 1
+  abs(a(1) - a(4)) * x(1) = (a(1) - a(4)) * x(1) = 1
+  abs(a(1) - a(4)) * x(4) = (a(1) - a(4)) * x(4) = 1

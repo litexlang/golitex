@@ -55,8 +55,9 @@ coordinate or scalar model.
 
 | Collection | Problems | Scope |
 | --- | --- | --- |
-| [IMO inequalities](imo_inequalities/README.md) | Polynomial and radical inequalities, equality cases and optimal constants | Five official problems with five standalone proofs. |
-| [IMO geometry](2D_Geometry/README.md#imo-examples) | Triangle and circle configurations, constructions, inequalities and incidence counting | Twelve problems with fifteen solution packages. The README distinguishes full configurations from scalar and normalized variants. |
+| [All IMO proofs](../examples/imo/README.md) | Inequalities, geometry, functional equations and miniF2F variants | Combined index with exact statement scope and current verification status. |
+| [IMO inequalities](../examples/imo/inequalities/README.md) | Polynomial and radical inequalities, equality cases and optimal constants | Five official problems with five standalone proofs. |
+| [IMO geometry](../examples/imo/geometry/README.md) | Triangle and circle configurations, constructions, inequalities and incidence counting | Twelve problems with fifteen solution packages. The README distinguishes full configurations from scalar and normalized variants. |
 
 ## Mathematical theory libraries
 
@@ -65,7 +66,7 @@ need a definition or lemma for another proof rather than a prescribed lesson seq
 
 | Collection | Mathematical interface | Scope |
 | --- | --- | --- |
-| [Plane geometry library](2D_Geometry/README.md#library-entrypoints) | Coordinate pairs, vectors, dot products and determinants → lines, circles and triangle lemmas | Definitions-only and complete-library entrypoints. The same collection also contains the separately listed IMO solutions. |
+| [Plane geometry library](2D_Geometry/README.md#library-entrypoints) | Coordinate pairs, vectors, dot products and determinants → lines, circles and triangle lemmas | Definitions-only and complete-library entrypoints. The IMO solutions are collected separately under `examples/imo/`. |
 
 ## Features and applications
 

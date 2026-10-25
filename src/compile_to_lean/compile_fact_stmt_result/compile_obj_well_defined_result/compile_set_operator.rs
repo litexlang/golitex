@@ -13,6 +13,15 @@ impl LitexToLeanCompiler {
     ) -> Result<String, LeanCompileError> {
         let (constructor, children, requirements, subjects): (_, _, _, Vec<&Obj>) =
             match (object, proof) {
+                (
+                    SetOperator::FamilyUnion(value),
+                    SetOperatorObjWellDefinedProofByDef::FamilyUnion(wd),
+                ) => (
+                    "familyUnion",
+                    &wd.child_obj_well_defined,
+                    &wd.requirement_fact_verified,
+                    vec![value.left.as_ref()],
+                ),
                 (SetOperator::Union(value), SetOperatorObjWellDefinedProofByDef::Union(wd)) => (
                     "union",
                     &wd.child_obj_well_defined,
@@ -28,7 +37,32 @@ impl LitexToLeanCompiler {
                     &wd.requirement_fact_verified,
                     vec![value.set.as_ref()],
                 ),
-                (SetOperator::Union(_) | SetOperator::PowerSet(_), _) => {
+                (
+                    SetOperator::Intersect(value),
+                    SetOperatorObjWellDefinedProofByDef::Intersect(wd),
+                ) => (
+                    "intersect",
+                    &wd.child_obj_well_defined,
+                    &wd.requirement_fact_verified,
+                    vec![value.left.as_ref(), value.right.as_ref()],
+                ),
+                (
+                    SetOperator::SetMinus(value),
+                    SetOperatorObjWellDefinedProofByDef::SetMinus(wd),
+                ) => (
+                    "setMinus",
+                    &wd.child_obj_well_defined,
+                    &wd.requirement_fact_verified,
+                    vec![value.left.as_ref(), value.right.as_ref()],
+                ),
+                (
+                    SetOperator::FamilyUnion(_)
+                    | SetOperator::Union(_)
+                    | SetOperator::Intersect(_)
+                    | SetOperator::SetMinus(_)
+                    | SetOperator::PowerSet(_),
+                    _,
+                ) => {
                     return Err(LeanCompileError::new(
                         "SetOperator/Constructor",
                         "Set operator evidence belongs to another source constructor.",

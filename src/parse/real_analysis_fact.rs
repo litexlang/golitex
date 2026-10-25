@@ -26,7 +26,7 @@ pub(crate) fn real_analysis_fact_arity(name: &str) -> Option<usize> {
         "has_derivative_at" => Some(3),
         "is_differentiable_at" => Some(2),
         "is_lipschitz" => Some(2),
-        _ => None,
+        _ => MultivariableAnalysisRelation::predicate_arity(name),
     }
 }
 
@@ -51,6 +51,23 @@ impl Runtime {
         }
         let fact_id = self.global_ids.allocate_fact_id();
         let line_file = Some(line_file.clone());
+        if let Some(relation) = MultivariableAnalysisRelation::from_name(name, args) {
+            return Ok(Some(if positive {
+                MultivariableAnalysisFact {
+                    fact_id,
+                    relation,
+                    line_file,
+                }
+                .into()
+            } else {
+                NotMultivariableAnalysisFact {
+                    fact_id,
+                    relation,
+                    line_file,
+                }
+                .into()
+            }));
+        }
         let result = match name {
             "is_real_upper_bound" | "is_real_lower_bound" => {
                 let direction = match name {

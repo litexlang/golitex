@@ -1,0 +1,12 @@
+# Only the final statement must be rejected.
+release obj def context::real_inv
+release obj def context::real_add
+release obj def context::real_neg
+release obj def context::real_mul
+release obj def context::real_field
+release obj def context::scalars
+release obj def context::unit_basis
+release struct def context::real_field
+release struct def context::scalars
+
+context::unit_basis(2)=0

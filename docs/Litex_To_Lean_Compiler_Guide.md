@@ -207,10 +207,180 @@ bodies and expose ordinary ZFSet, Set Complex and Set Real statements.
 
 This slice supports atomic and flat And/chain filters and supported concrete
 predicates, with the exact recorded membership/subset routes. General compound logic,
-nonempty/finite binder kinds, unbounded comprehension and existence-based
+finite binder kinds, standalone `have A nonempty_set`, unbounded comprehension and existence-based
 set selection are outside this compiler profile. They do not become axioms.
 
+## Structures and field dependencies
+
+```litex
+struct CoordinatePair:
+    x R
+    y R
+
+forall p &CoordinatePair:
+    p.x = p(1)
+    p.y = p(2)
+```
+
+`&CoordinatePair` compiles to the existing Cartesian set wrapper. The parameter
+`p` remains a generic certified object with a membership premise. Its field
+names select coordinates of the finite function; `p.x` uses `Litex.cartCall`
+with that premise. The compiler replays the automatically opened Cartesian
+membership, field equalities and field memberships under their original IDs.
+The [full example](../lean/examples/coordinate_pair_fields/) also uses both
+coordinates in real arithmetic.
+
+Fields may use distinct carriers, as in an [indexed point](../lean/examples/indexed_point_fields/),
+or a [previously declared arbitrary set](../lean/examples/arbitrary_carrier_pairs/).
+[Nested tuple membership](../lean/examples/nested_coordinate_membership/)
+first proves the inner pair's membership and then cites it for the outer
+structure. These are independent field carriers.
+
+The same representation supports named objects and explicit opening:
+
+```litex
+witness $is_nonempty_set(&CoordinatePair) from (1, 2)
+have p &CoordinatePair
+release struct def p
+p.x $in R
+
+have origin &CoordinatePair = (0, 0)
+origin.x = 0
+```
+
+The first declaration consumes its actual nonempty proof. The second checks
+the original type preflight, value WD and membership before emitting the alias
+and its field facts. Original FactIds are retained throughout.
+See [chosen pairs](../lean/examples/chosen_coordinate_fields/),
+[the origin](../lean/examples/origin_coordinate_fields/),
+[explicit release](../lean/examples/released_coordinate_fields/),
+[local declarations](../lean/examples/local_coordinate_objects/) and
+[a theorem using release](../lean/examples/coordinate_field_theorem/).
+[Two-pair arithmetic](../lean/examples/coordinate_pair_addition/) also exercises
+ordered automatic opening of multiple parameters.
+Defining conditions restrict the Cartesian carrier:
+
+```litex
+struct PositivePoint:
+    x R
+    y R
+    <=>:
+        x > 0
+
+(2, 3) $in &PositivePoint
+forall p &PositivePoint:
+    p.x > 0
+```
+
+The generated carrier uses `Litex.setBuilder`. Membership supplies the field
+memberships and defining inequality; opening the structure projects those
+proofs under their original FactIds. The [positive-point pair](../lean/examples/positive_point_conditions/)
+also proves membership of an arbitrary Cartesian pair from a positive first
+coordinate. [Ordinary and local choice](../lean/examples/chosen_positive_points/)
+and [explicit release](../lean/examples/positive_point_release/) retain the condition.
+
+Conditions are checked in order. In the [positive-ratio pair](../lean/examples/positive_ratio_conditions/),
+`denominator != 0` supplies WD for the following `numerator / denominator > 0`.
+[Equality](../lean/examples/equal_coordinate_conditions/),
+[flat conjunction](../lean/examples/first_quadrant_conditions/) and
+[chain conditions](../lean/examples/ordered_coordinate_conditions/) have paired examples.
+The compiler uses existing set-builder laws and preserves the original
+published universal laws; no additional semantic assumption is introduced.
+
+Header parameters define reusable carrier families:
+
+```litex
+struct Pair<A set>:
+    x A
+    y A
+
+forall A set, p &Pair<A>:
+    p.x $in A
+    p.y $in A
+```
+
+`A` remains a certified generic object with an ordinary sethood fact. The
+generated family takes that object and proof; specialization consumes the
+recorded argument WD and type proofs. It does not specialize the declaration
+to a native numeric host type. The [generic pair](../lean/examples/parameterized_pairs/)
+and [parameterized diagonal](../lean/examples/parameterized_equal_pairs/) demonstrate
+arbitrary set arguments. A [real threshold](../lean/examples/threshold_points/)
+can occur in a condition, and [a designated coordinate](../lean/examples/designated_coordinate_pairs/)
+uses `A set, a A`: later header parameters can depend on earlier ones.
+[Global/local declarations and release](../lean/examples/chosen_parameterized_pairs/)
+preserve the instantiated fields.
+
+`A nonempty_set` is also accepted in structure headers and universal/theorem
+parameters. It becomes a generic object plus its original `Litex.IsNonempty`
+fact, without choosing an element. Specialization requires an actual proof of
+nonemptiness. See [nonempty pairs](../lean/examples/nonempty_parameterized_pairs/),
+[their defining equality](../lean/examples/nonempty_equal_pairs/) and
+[a reusable theorem on nonempty Cartesian products](../lean/examples/nonempty_cartesian_theorem/).
+
+Later fields can depend on earlier ones:
+
+```litex
+struct RepeatedCoordinate:
+    x R
+    y {x}
+
+forall p &RepeatedCoordinate:
+    p.y $in {p.x}
+    p.y = p.x
+```
+
+The [generated pair](../lean/examples/repeated_coordinate_fields/) represents
+the carrier as a `Litex.DependentFields` family. Its formation proof consumes
+the original field WD and parameter inferences in declaration order.
+`Litex.dependentCart` collects exactly the flat tuples satisfying those field
+memberships. The object `p` retains its generic representation and ordinary
+membership premise. Opening it produces the original Cartesian and field facts
+under their recorded FactIds.
+
+This construction requires the optional `IndexedUnionSemantics M` interface,
+whose set-indexed union laws are proved for the existing ZF-based `NumericModel`.
+The compiler adds that requirement to files declaring dependent fields.
+Independent structures keep their existing `SetSemantics`/`FunctionSemantics`
+requirements. No project axiom is added.
+
+The same route handles [a member of a member](../lean/examples/member_coordinate_pairs/)
+(`x A; y x`), [three dependent fields](../lean/examples/repeated_coordinate_triples/),
+[a positive defining condition](../lean/examples/positive_repeated_coordinates/),
+[membership from an existing Cartesian pair](../lean/examples/equal_coordinates_membership/)
+and [choice, explicit release and local aliases](../lean/examples/chosen_repeated_coordinates/).
+In [the reciprocal example](../lean/examples/reciprocal_coordinate_fields/),
+`x R+; y {1 / x}` uses the first field's stored nonzero inference to construct
+the second carrier. Released carriers reuse the declaration's formation proof.
+
+The slice requires at least two fields. Field dependencies must point backward
+in declaration order. Finite-set header kinds, quantified conditions, nested
+field paths, function-call receivers and local/qualified structure definitions
+remain outside this slice. Field access and release use directly declared
+structure parameters or typed aliases.
+
 ## Formula functions and concrete predicates
+
+Top-level abstract predicates also compile. This source preserves a property
+when an object is replaced by an equal one:
+
+```litex
+abstract_prop marked(x)
+forall a, b R:
+    a = b
+    $marked(a)
+    =>:
+        $marked(b)
+```
+
+The declaration becomes a parameter
+`(abstract_prop_1 : (Fin 1 → M.Value) → Prop)`; each call applies it to the
+argument's denotation. The proof uses the recorded equality and property
+citation. No truth is assumed merely by declaring the predicate.
+See the [source and generated proof](../lean/examples/abstract_property_transport/),
+[binary relation and negation](../lean/examples/abstract_relation_transport/),
+[nullary proposition](../lean/examples/abstract_proposition_identity/) and
+[abstract function guard](../lean/examples/abstract_function_guard/).
+Local and qualified abstract declarations remain unsupported.
 
 The [guarded reciprocal](../lean/examples/guarded_real_reciprocal/statement.lit)
 defines a formula with an ordinary nonzero requirement:
@@ -1175,7 +1345,8 @@ examples also expose ordinary Lean/Mathlib theorems through handwritten adapters
 | Operations and relations | Exact fractions and finite decimals, four arithmetic operations, polynomial and rational identities, cancellation; selected fixed integer powers and real inequalities. | [Fractions and decimals](../lean/examples/exact_fractions_and_decimals/), [difference of squares](../lean/examples/real_difference_of_squares/), [cancellation](../lean/examples/multiplicative_cancellation/), [nonnegative squares](../lean/examples/real_squares_nonnegative/) |
 | Sets | Arbitrary set parameters, empty sets, finite enumerations, bounded set builders, membership, subsets and associated reasoning. | [Arbitrary sets](../lean/examples/arbitrary_set_laws/), [finite sets](../lean/examples/finite_natural_set/), [closed unit interval](../lean/examples/closed_unit_interval/) |
 | Functions | Formula functions with one or two numeric parameters, explicit domain conditions, evaluation and composition; complete inverse and injectivity examples. | [Guarded two-argument function](../lean/examples/two_argument_shifted_quotient/), [composition](../lean/examples/composed_real_formula/), [rational inverse maps](../lean/examples/rational_inverse_maps/) |
-| Definitions and proofs | Concrete predicates, universal and conditional facts, equality chains, selected conjunctions, named theorems and calls, local objects, `let`, `claim` and `sketch`. | [Predicate equality transport](../lean/examples/concrete_predicate_equality_transport/), [theorem returns and calls](../lean/examples/named_compound_theorem_returns/), [local objects](../lean/examples/local_witness_additive_identity/), [claim and positive return domain](../lean/examples/newton_positive_update/) |
+| Structures | Top-level set/nonempty-set/object header parameters, independent or ordered dependent fields, atomic/flat conjunction/chain conditions, tuple membership, quantified and declared objects, typed aliases, explicit release, direct field access and numeric field arithmetic; arbitrary carriers and nested tuple instances. | [Generic pairs](../lean/examples/parameterized_pairs/), [dependent coordinates](../lean/examples/repeated_coordinate_fields/), [member pairs](../lean/examples/member_coordinate_pairs/), [reciprocal fields](../lean/examples/reciprocal_coordinate_fields/), [positive points](../lean/examples/positive_point_conditions/) |
+| Definitions and proofs | Concrete predicates, top-level abstract predicates, universal and conditional facts, equality chains, selected conjunctions, named theorems and calls, local objects, `let`, `claim` and `sketch`. | [Abstract properties](../lean/examples/abstract_property_transport/), [predicate equality transport](../lean/examples/concrete_predicate_equality_transport/), [theorem returns and calls](../lean/examples/named_compound_theorem_returns/), [local objects](../lean/examples/local_witness_additive_identity/), [claim and positive return domain](../lean/examples/newton_positive_update/) |
 
 `sketch:` checks its body in a discarded scope. The compiler replays every child
 result inside a private Lean proof block, retaining outer citations and original
@@ -1184,6 +1355,73 @@ WD IDs. It publishes no source facts from that block. See [local arithmetic](../
 [theorem citations](../lean/examples/sketch_in_named_theorem/),
 [tuple coordinates](../lean/examples/local_tuple_sketch/) and
 [finite-set membership](../lean/examples/local_finite_set_sketch/).
+
+Order replay also covers four weak additive shifts: a nonnegative addend
+preserves a lower bound, and a nonpositive addend preserves an upper bound,
+with either ordering of the addends. See [lower bounds](../lean/examples/weak_additive_lower_bounds/)
+and [upper bounds](../lean/examples/weak_additive_upper_bounds/). Numeric weakening
+cites an earlier bound with literal integer endpoints and preserves the required
+strictness: `x < 4` or `x <= 4` can supply `x < 6`. See
+[numeric lower bounds](../lean/examples/weaken_numeric_lower_bounds/) and
+[numeric upper bounds](../lean/examples/weaken_numeric_upper_bounds/).
+These rules combine in [finite enumeration](../lean/examples/integer_rectangle_sum_bound/)
+and [a reusable theorem](../lean/examples/named_integer_rectangle_sum/).
+
+Two inequalities can also be added: `a <= b` and `c <= d` give
+`a + c <= b + d`; a strict premise in either position gives a strict sum
+bound. Weak bounds support crossed addend pairs too. See
+[weak sum bounds](../lean/examples/componentwise_sum_bounds/),
+[mixed strict bounds](../lean/examples/mixed_strict_sum_bounds/) and
+[a two-step theorem with reuse](../lean/examples/three_term_sum_bound/).
+The compiler retains both original child proofs and their comparison strengths.
+
+Subtraction preserves `a <= b` as `a-c <= b-c`, and reverses the order
+when the minuend is shared: `c-b <= c-a`. Both have strict variants. See
+[a shared subtrahend](../lean/examples/subtract_shared_value/) and
+[a shared minuend](../lean/examples/subtract_from_shared_value/).
+The [real-difference example](../lean/examples/real_difference_domains/) keeps
+the shared operand in its original complex carrier and uses explicit real
+membership of the differences. [Strict order chains](../lean/examples/strict_order_chains/)
+replay both cited bounds, with at least one strict step. The
+[three-step difference theorem](../lean/examples/ordered_difference_bound/)
+combines these rules and applies the exported theorem.
+
+Binary intersection supports construction, membership from both factors,
+membership projections, and subset bounds. See
+[membership in both directions](../lean/examples/intersection_membership/),
+[subset bounds](../lean/examples/intersection_subset_bounds/),
+[a named intersection](../lean/examples/named_intersection/) and
+[nested intersections with theorem reuse](../lean/examples/intersection_reassociation/).
+Its Lean representation uses existing bounded separation; no additional model
+law is required. The compiler keeps the two inferred memberships' original IDs.
+
+Set equality also covers union/intersection commutativity, associativity,
+idempotence and empty-set laws, [intersection distributed over union](../lean/examples/intersection_distributes_over_union/),
+and [intersection simplified by a subset premise](../lean/examples/intersection_from_subset/).
+See the [intersection laws](../lean/examples/set_intersection_identities/),
+[union laws](../lean/examples/set_union_identities/) and
+[reversed equalities](../lean/examples/set_identity_symmetry/).
+Each selected builtin calls its proved semantic law; conditional simplification
+consumes the original subset proof.
+
+`set_minus(A, B)` supports [membership and its stored consequences](../lean/examples/set_difference_membership/),
+[exclusion and containment](../lean/examples/set_difference_exclusion/), and
+[self/empty differences and De Morgan identities](../lean/examples/set_difference_identities/).
+These compose in [nested named theorems](../lean/examples/set_difference_theorem/)
+and [set-valued functions](../lean/examples/set_difference_function/).
+[Union over intersection](../lean/examples/union_distributes_over_intersection/)
+also accepts the recorded operand permutations and either equality direction.
+
+[Consecutive exclusions](../lean/examples/consecutive_set_difference/) combine
+two differences into exclusion of a union. Containment supports
+[difference and power-set monotonicity](../lean/examples/set_containment_monotonicity/),
+[union bounds](../lean/examples/union_containment_bounds/), and
+[nested operators and subset chains](../lean/examples/nested_set_containment/).
+[Nonmembership](../lean/examples/set_operator_nonmembership/) propagates through
+intersection and union. These steps compose in the named
+[union-difference bound](../lean/examples/union_difference_bound/) and
+[exclusion theorem](../lean/examples/outside_union_intersection/), each followed
+by a source theorem call.
 
 Finite integer intervals support `expand:` as well:
 
@@ -1534,11 +1772,108 @@ membership, then exports the original condition FactIds. These four additional
 pairs pass strict Litex, identical regeneration and Lean 4.31.0; their generated
 files occupy 15–95 KB. Core semantics and result producers are unchanged.
 
-Dependent input domains and other complete-domain evidence variants remain
-outside these checks. A nested anonymous function that captures a raw enclosing
-function parameter, such as `have fn outer(x R) R = fn(y R) R {x + y}(1)`, still
-rejects explicitly: its original constructor must be instantiated along with the
-outer binder before that route can be compiled.
+The set objects `preimage(f, y)` and `preimage_set(f, Y)` also compile. They
+contain the legal inputs whose output equals `y` or belongs to `Y`, retaining
+all input carriers and guards. Membership supplies those original conditions
+and the output fact under their recorded FactIds; containment in the original
+input carrier is supported. Multiple inputs are packed into a Cartesian tuple.
+See [guarded reciprocal fibers](../lean/examples/guarded_reciprocal_preimages/),
+[two-input quotient fibers](../lean/examples/binary_quotient_preimages/),
+[abstract functions](../lean/examples/abstract_function_preimages/) and
+[positive input domains](../lean/examples/positive_domain_preimages/).
+All four pairs pass strict Litex, identical regeneration and Lean 4.31.0.
+Their generated files occupy 18–81 KB. The Core laws follow from existing
+separation and function-graph semantics; this increment changes no Runtime,
+AST or result producers.
+
+The function object `compose(f, g)` / `f ∘ g` retains `g`'s complete domain
+and checks that its output satisfies `f`'s input conditions. Replay covers
+construction, complete function membership, calls, output membership and the
+recorded beta steps. See [squared differences](../lean/examples/squared_gap_composition/),
+[shifted squares](../lean/examples/shifted_square_composition/),
+[double reciprocal](../lean/examples/double_reciprocal_composition/),
+[abstract functions](../lean/examples/abstract_function_composition/) and
+[positive input domains](../lean/examples/positive_domain_composition/).
+All five source/generated pairs pass strict Litex and Lean 4.31.0. The
+[graph-law pair](../lean/examples/composition_graph_laws/) additionally checks
+associativity, identity, equality to the defining lambda (including a wider
+verified return carrier), and containment in the outer function's range.
+[Guarded identities](../lean/examples/guarded_composition_identities/) retain
+the nonzero input condition; [abstract associativity](../lean/examples/abstract_composition_associativity/)
+uses arbitrary real-function parameters. These three pairs also pass actual
+Lean checks. Complete-domain matching also consumes the recorded forward and
+reverse inclusion proofs. They establish domain equality by set extensionality;
+the compiler keeps their exact FactIds and local scope. This supports both right
+identity and `by fn_extension` with differently written domains. See
+[positive shifts](../lean/examples/equal_positive_shifts/) and
+[reordered domain conditions](../lean/examples/reordered_function_domains/).
+`by fn_extension` also accepts two inputs and `R+` inputs: see
+[binary sums](../lean/examples/equal_binary_sums/) and
+[guarded quotient formulas](../lean/examples/equal_guarded_quotients/).
+It still rejects more than two inputs. Composition construction retains its
+separate restriction on changing the packed-domain representation.
+
+`release thm fn_set_member(...)` and selected `by thm fn_set_member(...)`
+also consume the recorded domain inclusions before the original return proofs.
+They cover [reordered guards](../lean/examples/reordered_function_membership/),
+[`R+` versus an explicit positive-real domain](../lean/examples/positive_function_membership/),
+[cited arbitrary functions](../lean/examples/abstract_function_membership_domains/),
+and [composition as the function source](../lean/examples/composed_quotient_membership/).
+Domain equality preserves the whole graph; it does not restrict an existing
+function to fewer inputs.
+
+
+A function parameter can return another function. Each application consumes its
+own captured argument and guard proofs:
+
+```litex
+forall provider fn(t R: t != 0) fn(x, y R: y != 0) R:
+    provider(2)(3, 4) $in R
+```
+
+The [generated calls](../lean/examples/returned_function_values/) include two and
+three layers. Their returned functions also support [range construction](../lean/examples/returned_function_ranges/),
+[preimage construction](../lean/examples/returned_function_preimages/) and
+[a named theorem widening real outputs to complex outputs](../lean/examples/returned_function_membership/).
+The shared consumer reads `ApplicationReturn` directly, including its local WD
+IDs; `FunctionSemantics.call_mem` proves membership from the recorded domain.
+These four pairs pass strict Litex execution and Lean 4.31.0. Return signatures
+are fixed; complete-domain recovery after several call layers remains pending.
+
+Definitions can construct a returned function or take a function as input:
+
+```litex
+have fn selected_shift(t R) fn(x R) R = fn(x R) R {x + 1}
+have fn keep_function(f fn(x R) R) fn(y R) R = f
+forall f fn(x R) R:
+    keep_function(f) = f
+```
+
+The [returned shift](../lean/examples/selected_shift_function/) also names the
+result, records its signature and proves `chosen_shift(2) = 3`. The
+[identity operator](../lean/examples/function_identity_operator/) checks the
+function-valued input and output. [Anonymous function membership](../lean/examples/literal_function_signatures/)
+preserves unary and binary nonzero guards while allowing binder renaming.
+All three pairs pass strict Litex execution and Lean 4.31.0; they reuse the
+existing function semantics and original constructor WD.
+
+Returned numeric functions can also capture an enclosing parameter:
+
+```litex
+have fn shifted_by(t R) fn(x R) R = fn(x R) R {x + t}
+forall t R:
+    shifted_by(t) = fn(x R) R {x + t}
+    shifted_by(t)(2) = 2 + t
+```
+
+The [shift example](../lean/examples/captured_shift_functions/) also checks
+positive-real membership. Further pairs cover [outer and inner nonzero guards](../lean/examples/captured_division_functions/),
+[two inner parameters](../lean/examples/captured_binary_functions/) and
+[immediate application of a captured function](../lean/examples/nested_function_application/).
+All four pass strict Litex and Lean 4.31.0. The compiler retains the original
+WD proofs and parameter IDs; it replays the recorded beta steps and later
+argument groups. Dependent carrier sets and other complete-domain evidence
+variants remain outside these checks.
 
 Coverage refers to implemented and checked constructions and proof routes;
 it does not mean every Litex proof in this mathematical area can be compiled.

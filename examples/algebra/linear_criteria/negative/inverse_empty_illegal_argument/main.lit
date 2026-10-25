@@ -1,0 +1,22 @@
+have fn empty_map(x {}) {}=x
+
+by def $injective({},{},empty_map)
+
+claim:
+    ? forall y {}:
+        exist x {} st {y=empty_map(x)}
+    witness exist x {} st {y=empty_map(x)} from y
+
+by def $surjective({},{},empty_map)
+
+by def $bijective({},{},empty_map)
+
+\Algebra::linear_criteria::inverse_bijection<{},{},empty_map> $in fn(y {}) {}
+
+by thm Algebra::linear_criteria::inverse_bijection_is_bijective({},{},empty_map) => $bijective({},{},\Algebra::linear_criteria::inverse_bijection<{},{},empty_map>)
+
+by thm Algebra::linear_criteria::surjective_has_full_range({},{},empty_map) => fn_range(empty_map)={}
+
+by thm Algebra::linear_criteria::full_range_is_surjective({},{},empty_map) => $surjective({},{},empty_map)
+
+\Algebra::linear_criteria::inverse_bijection<{},{},empty_map>(0) $in {}

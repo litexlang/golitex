@@ -1,0 +1,147 @@
+# Arbitrary images, a noninjective extension, and two-basis isomorphisms.
+
+release obj def model::real_inv
+
+release obj def model::real_add
+
+release obj def model::real_neg
+
+release obj def model::real_mul
+
+release obj def model::plane_add
+
+release obj def model::plane_smul
+
+release obj def model::e1
+
+release obj def model::e2
+
+release obj def model::real_field
+
+release obj def model::real_plane
+
+release obj def model::standard_basis
+
+release struct def model::real_field
+
+release struct def model::real_plane
+
+release thm model::standard_plane_basis()
+
+by thm Algebra::basis::basis_is_finite_dimensional(R,model::real_field,R × R,model::real_plane,2,model::standard_basis) => $Algebra::basis::is_finite_dimensional(R,model::real_field,R × R,model::real_plane)
+
+by thm Algebra::dimension::finite_dimension_of_basis(R,model::real_field,R × R,model::real_plane,2,model::standard_basis) => \Algebra::dimension::finite_dimension<R,model::real_field,R × R>(model::real_plane)=2
+
+release obj def context::swap
+
+release thm context::coordinate_swap_isomorphism()
+
+have repeated_images finite_seq(R × R,2)=(model::e1,model::e1)
+
+have c finite_seq(R,2)=(3,4)
+
+by thm Algebra::coordinate_maps::linear_map_from_basis_carrier(R,model::real_field,R × R,model::real_plane,R × R,model::real_plane,2,model::standard_basis,repeated_images) => \Algebra::coordinate_maps::linear_map_from_basis<R,model::real_field,R × R,model::real_plane,R × R,model::real_plane,2,model::standard_basis,repeated_images> $in fn(x R × R) R × R
+
+by thm Algebra::coordinate_maps::linear_map_from_basis_is_linear(R,model::real_field,R × R,model::real_plane,R × R,model::real_plane,2,model::standard_basis,repeated_images) => $Algebra::vector_space::is_linear_map(R,model::real_field,R × R,model::real_plane,R × R,model::real_plane,\Algebra::coordinate_maps::linear_map_from_basis<R,model::real_field,R × R,model::real_plane,R × R,model::real_plane,2,model::standard_basis,repeated_images>)
+
+by thm Algebra::coordinate_maps::linear_map_from_basis_entry(R,model::real_field,R × R,model::real_plane,R × R,model::real_plane,2,model::standard_basis,repeated_images,1) => \Algebra::coordinate_maps::linear_map_from_basis<R,model::real_field,R × R,model::real_plane,R × R,model::real_plane,2,model::standard_basis,repeated_images>(model::standard_basis(1))=repeated_images(1)
+
+by thm Algebra::coordinate_maps::linear_map_from_basis_entry(R,model::real_field,R × R,model::real_plane,R × R,model::real_plane,2,model::standard_basis,repeated_images,2) => \Algebra::coordinate_maps::linear_map_from_basis<R,model::real_field,R × R,model::real_plane,R × R,model::real_plane,2,model::standard_basis,repeated_images>(model::standard_basis(2))=repeated_images(2)
+
+by thm Algebra::finite_span::linear_combination_has_value(R,model::real_field,R × R,model::real_plane,2,c,model::standard_basis) => $Algebra::finite_span::has_linear_combination_value(R,model::real_field,R × R,model::real_plane,2,c,model::standard_basis,\Algebra::finite_span::linear_combination<R,model::real_field,R × R,model::real_plane,2>(c,model::standard_basis))
+
+by thm model::two_term_combination_value(c,model::standard_basis,\Algebra::finite_span::linear_combination<R,model::real_field,R × R,model::real_plane,2>(c,model::standard_basis)) => \Algebra::finite_span::linear_combination<R,model::real_field,R × R,model::real_plane,2>(c,model::standard_basis)=model::plane_add(model::plane_smul(c(1),model::standard_basis(1)),model::plane_smul(c(2),model::standard_basis(2)))
+
+c(1)=3
+
+c(2)=4
+
+model::standard_basis(1)=model::e1
+
+model::standard_basis(2)=model::e2
+
+by thm model::standard_expansion(3,4) => model::plane_add(model::plane_smul(3,model::e1),model::plane_smul(4,model::e2))=(3,4)
+
+\Algebra::finite_span::linear_combination<R,model::real_field,R × R,model::real_plane,2>(c,model::standard_basis)=model::plane_add(model::plane_smul(c(1),model::standard_basis(1)),model::plane_smul(c(2),model::standard_basis(2)))=model::plane_add(model::plane_smul(3,model::e1),model::plane_smul(4,model::e2))=(3,4)
+
+by thm Algebra::basis::basis_coordinates_of_combination(R,model::real_field,R × R,model::real_plane,2,model::standard_basis,c) => \Algebra::basis::basis_coordinates<R,model::real_field,R × R,model::real_plane,2,model::standard_basis>(\Algebra::finite_span::linear_combination<R,model::real_field,R × R,model::real_plane,2>(c,model::standard_basis))=c
+
+by thm Algebra::coordinate_maps::linear_map_from_basis_on_combination(R,model::real_field,R × R,model::real_plane,R × R,model::real_plane,2,model::standard_basis,repeated_images,c) => \Algebra::coordinate_maps::linear_map_from_basis<R,model::real_field,R × R,model::real_plane,R × R,model::real_plane,2,model::standard_basis,repeated_images>(\Algebra::finite_span::linear_combination<R,model::real_field,R × R,model::real_plane,2>(c,model::standard_basis))=\Algebra::finite_span::linear_combination<R,model::real_field,R × R,model::real_plane,2>(c,repeated_images)
+
+by thm Algebra::finite_span::linear_combination_has_value(R,model::real_field,R × R,model::real_plane,2,c,repeated_images) => $Algebra::finite_span::has_linear_combination_value(R,model::real_field,R × R,model::real_plane,2,c,repeated_images,\Algebra::finite_span::linear_combination<R,model::real_field,R × R,model::real_plane,2>(c,repeated_images))
+
+by thm model::two_term_combination_value(c,repeated_images,\Algebra::finite_span::linear_combination<R,model::real_field,R × R,model::real_plane,2>(c,repeated_images)) => \Algebra::finite_span::linear_combination<R,model::real_field,R × R,model::real_plane,2>(c,repeated_images)=model::plane_add(model::plane_smul(c(1),repeated_images(1)),model::plane_smul(c(2),repeated_images(2)))
+
+repeated_images(1)=model::e1
+
+repeated_images(2)=model::e1
+
+release tuple def model::e1
+
+release tuple def model::e2
+
+model::plane_smul(3,model::e1)=(3*model::e1(1),3*model::e1(2))=(3*1,3*0)=(3,0)
+
+model::plane_smul(4,model::e1)=(4*model::e1(1),4*model::e1(2))=(4*1,4*0)=(4,0)
+
+(3,0)(1)+(4,0)(1)=3+4=7
+
+(3,0)(2)+(4,0)(2)=0+0=0
+
+model::plane_add((3,0),(4,0))=((3,0)(1)+(4,0)(1),(3,0)(2)+(4,0)(2))=(7,0)
+
+\Algebra::finite_span::linear_combination<R,model::real_field,R × R,model::real_plane,2>(c,repeated_images)=model::plane_add(model::plane_smul(c(1),repeated_images(1)),model::plane_smul(c(2),repeated_images(2)))=model::plane_add(model::plane_smul(3,model::e1),model::plane_smul(4,model::e1))=model::plane_add((3,0),(4,0))=(7,0)
+
+\Algebra::coordinate_maps::linear_map_from_basis<R,model::real_field,R × R,model::real_plane,R × R,model::real_plane,2,model::standard_basis,repeated_images>((3,4))=\Algebra::coordinate_maps::linear_map_from_basis<R,model::real_field,R × R,model::real_plane,R × R,model::real_plane,2,model::standard_basis,repeated_images>(\Algebra::finite_span::linear_combination<R,model::real_field,R × R,model::real_plane,2>(c,model::standard_basis))=\Algebra::finite_span::linear_combination<R,model::real_field,R × R,model::real_plane,2>(c,repeated_images)=(7,0)
+
+claim:
+    ? not $injective(R × R,R × R,\Algebra::coordinate_maps::linear_map_from_basis<R,model::real_field,R × R,model::real_plane,R × R,model::real_plane,2,model::standard_basis,repeated_images>)
+    by contra:
+        ? not $injective(R × R,R × R,\Algebra::coordinate_maps::linear_map_from_basis<R,model::real_field,R × R,model::real_plane,R × R,model::real_plane,2,model::standard_basis,repeated_images>)
+        \Algebra::coordinate_maps::linear_map_from_basis<R,model::real_field,R × R,model::real_plane,R × R,model::real_plane,2,model::standard_basis,repeated_images>(model::e1)=\Algebra::coordinate_maps::linear_map_from_basis<R,model::real_field,R × R,model::real_plane,R × R,model::real_plane,2,model::standard_basis,repeated_images>(model::standard_basis(1))=repeated_images(1)=model::e1
+        \Algebra::coordinate_maps::linear_map_from_basis<R,model::real_field,R × R,model::real_plane,R × R,model::real_plane,2,model::standard_basis,repeated_images>(model::e2)=\Algebra::coordinate_maps::linear_map_from_basis<R,model::real_field,R × R,model::real_plane,R × R,model::real_plane,2,model::standard_basis,repeated_images>(model::standard_basis(2))=repeated_images(2)=model::e1
+        \Algebra::coordinate_maps::linear_map_from_basis<R,model::real_field,R × R,model::real_plane,R × R,model::real_plane,2,model::standard_basis,repeated_images>(model::e1)=\Algebra::coordinate_maps::linear_map_from_basis<R,model::real_field,R × R,model::real_plane,R × R,model::real_plane,2,model::standard_basis,repeated_images>(model::e2)
+        model::e1=model::e2
+        model::e1(1)=1
+        model::e2(1)=0
+        1=model::e1(1)=model::e2(1)=0
+        impossible 1=0
+
+have swap_images finite_seq(R × R,2)=\Algebra::finite_span::map_vectors<R × R,R × R,2>(context::swap,model::standard_basis)
+
+by thm Algebra::coordinate_maps::linear_bijection_maps_basis_to_basis(R,model::real_field,R × R,model::real_plane,R × R,model::real_plane,2,model::standard_basis,context::swap) => $Algebra::basis::is_basis(R,model::real_field,R × R,model::real_plane,2,\Algebra::finite_span::map_vectors<R × R,R × R,2>(context::swap,model::standard_basis))
+
+$Algebra::basis::is_basis(R,model::real_field,R × R,model::real_plane,2,swap_images)
+
+by thm Algebra::coordinate_maps::linear_map_from_basis_is_linear(R,model::real_field,R × R,model::real_plane,R × R,model::real_plane,2,model::standard_basis,swap_images) => $Algebra::vector_space::is_linear_map(R,model::real_field,R × R,model::real_plane,R × R,model::real_plane,\Algebra::coordinate_maps::linear_map_from_basis<R,model::real_field,R × R,model::real_plane,R × R,model::real_plane,2,model::standard_basis,swap_images>)
+
+by thm Algebra::coordinate_maps::basis_maps_are_bijective(R,model::real_field,R × R,model::real_plane,R × R,model::real_plane,2,model::standard_basis,swap_images) => $bijective(R × R,R × R,\Algebra::coordinate_maps::linear_map_from_basis<R,model::real_field,R × R,model::real_plane,R × R,model::real_plane,2,model::standard_basis,swap_images>)
+
+claim:
+    ? forall j closed_range(1,2):
+        context::swap(model::standard_basis(j))=swap_images(j)
+    swap_images(j)=\Algebra::finite_span::map_vectors<R × R,R × R,2>(context::swap,model::standard_basis)(j)=context::swap(model::standard_basis(j))
+
+by thm Algebra::coordinate_maps::linear_map_agreeing_on_basis_is_extension(R,model::real_field,R × R,model::real_plane,R × R,model::real_plane,2,model::standard_basis,swap_images,context::swap) => context::swap=\Algebra::coordinate_maps::linear_map_from_basis<R,model::real_field,R × R,model::real_plane,R × R,model::real_plane,2,model::standard_basis,swap_images>
+
+\Algebra::coordinate_maps::linear_map_from_basis<R,model::real_field,R × R,model::real_plane,R × R,model::real_plane,2,model::standard_basis,swap_images>((3,4))=context::swap((3,4))=(4,3)
+
+by thm Algebra::coordinate_maps::basis_maps_round_trip(R,model::real_field,R × R,model::real_plane,R × R,model::real_plane,2,model::standard_basis,swap_images,(3,4)) => \Algebra::coordinate_maps::linear_map_from_basis<R,model::real_field,R × R,model::real_plane,R × R,model::real_plane,2,swap_images,model::standard_basis>(\Algebra::coordinate_maps::linear_map_from_basis<R,model::real_field,R × R,model::real_plane,R × R,model::real_plane,2,model::standard_basis,swap_images>((3,4)))=(3,4)
+
+$injective(R × R,R × R,\Algebra::coordinate_maps::linear_map_from_basis<R,model::real_field,R × R,model::real_plane,R × R,model::real_plane,2,model::standard_basis,swap_images>)
+
+by thm Algebra::linear_criteria::inverse_bijection_right_identity(R × R,R × R,\Algebra::coordinate_maps::linear_map_from_basis<R,model::real_field,R × R,model::real_plane,R × R,model::real_plane,2,model::standard_basis,swap_images>,(4,3)) => \Algebra::coordinate_maps::linear_map_from_basis<R,model::real_field,R × R,model::real_plane,R × R,model::real_plane,2,model::standard_basis,swap_images>(\Algebra::linear_criteria::inverse_bijection<R × R,R × R,\Algebra::coordinate_maps::linear_map_from_basis<R,model::real_field,R × R,model::real_plane,R × R,model::real_plane,2,model::standard_basis,swap_images>>((4,3)))=(4,3)
+
+\Algebra::linear_criteria::inverse_bijection<R × R,R × R,\Algebra::coordinate_maps::linear_map_from_basis<R,model::real_field,R × R,model::real_plane,R × R,model::real_plane,2,model::standard_basis,swap_images>>((4,3)) $in R × R
+
+\Algebra::coordinate_maps::linear_map_from_basis<R,model::real_field,R × R,model::real_plane,R × R,model::real_plane,2,model::standard_basis,swap_images>(\Algebra::linear_criteria::inverse_bijection<R × R,R × R,\Algebra::coordinate_maps::linear_map_from_basis<R,model::real_field,R × R,model::real_plane,R × R,model::real_plane,2,model::standard_basis,swap_images>>((4,3)))=(4,3)=\Algebra::coordinate_maps::linear_map_from_basis<R,model::real_field,R × R,model::real_plane,R × R,model::real_plane,2,model::standard_basis,swap_images>((3,4))
+
+\Algebra::linear_criteria::inverse_bijection<R × R,R × R,\Algebra::coordinate_maps::linear_map_from_basis<R,model::real_field,R × R,model::real_plane,R × R,model::real_plane,2,model::standard_basis,swap_images>>((4,3))=(3,4)
+
+by thm Algebra::coordinate_maps::basis_map_inverse(R,model::real_field,R × R,model::real_plane,R × R,model::real_plane,2,model::standard_basis,swap_images) => \Algebra::linear_criteria::inverse_bijection<R × R,R × R,\Algebra::coordinate_maps::linear_map_from_basis<R,model::real_field,R × R,model::real_plane,R × R,model::real_plane,2,model::standard_basis,swap_images>> = \Algebra::coordinate_maps::linear_map_from_basis<R,model::real_field,R × R,model::real_plane,R × R,model::real_plane,2,swap_images,model::standard_basis>
+
+release thm Algebra::coordinate_maps::equal_finite_dimensions_have_linear_bijection(R,model::real_field,R × R,model::real_plane,R × R,model::real_plane)
+
+obtain selected from exist T fn(v R × R) R × R st {$Algebra::vector_space::is_linear_map(R,model::real_field,R × R,model::real_plane,R × R,model::real_plane,T),$bijective(R × R,R × R,T)}
+
+\Algebra::coordinate_maps::linear_map_from_basis<R,model::real_field,R × R,model::real_plane,R × R,model::real_plane,2,model::standard_basis,repeated_images>((3,4))=(3,4)

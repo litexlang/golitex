@@ -1,0 +1,19 @@
+# Must reject only the final statement; see ../README.md.
+release obj def context::real_inv
+release obj def context::real_add
+release obj def context::real_neg
+release obj def context::real_mul
+release obj def context::real_field
+release obj def context::scalars
+release obj def context::coefficients
+release obj def context::vectors
+release obj def context::sums
+release obj def context::shift
+release obj def context::bad_start
+release obj def context::bad_step
+release struct def context::real_field
+release struct def context::scalars
+
+release thm Algebra::finite_span::zero_coefficients_carrier(R,context::real_field,2)
+
+\Algebra::finite_span::zero_coefficients<R,context::real_field,2>(0)=0

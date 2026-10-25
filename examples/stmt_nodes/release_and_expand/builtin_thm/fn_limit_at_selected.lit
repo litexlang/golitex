@@ -5,5 +5,5 @@ thm fn_limit_at_selected_example:
     ? forall fa fn(x R) R,x0,A R:
         exist L R st {$has_limit_at(fa,x0,L)}
         =>:
-            $has_limit_at(fa,x0,lim(fa,x0))
+            $has_limit_at(fa,x0,fn_lim(fa,x0))
     release thm fn_limit_at_selected(fa,x0)

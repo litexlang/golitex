@@ -36,9 +36,12 @@ dependencies. The local service listens only on `127.0.0.1`.
 
 The viewer follows the typography and palette of `../litex-webpage`: a light
 background, green controls, blue current statements, green cited facts and
-purple concepts. A selected `prop` shows its full predicate application followed by ⇔. On the
-next line, an indented block contains every argument type and all complete
-defining conditions, without prose or a separate domain heading. This is the
+purple concepts. A selected `prop` shows its full predicate application, then
+⇔ beside a grouped block containing every argument type and all complete
+defining conditions. Short clauses share a row, with each conjunction kept
+with its following clause; longer formulas retain their mathematical layout.
+Repeated instantiated conditions retain their separate fact links. There is
+no prose or separate domain heading. This is the
 reading form of the declared typed interface; quantified conditions retain
 their whole scope. Click the source keyword `prop` for the
 purpose/semantics guide and its checked short example. Source keyword help
@@ -121,11 +124,13 @@ failure leaves plain source; older bundles retain resolved-set help without
 inventing lexical boundaries. This is language help, not mathematical proof
 evidence. Occurrence highlighting uses resolved identities and reports mapping coverage per statement. Typed proof
 payloads and retained local scopes are exported. Actual store/infer outputs
-link seed facts to derived fact IDs; the reader displays compact grey results
-beside the producing statement on the same source line, excluding temporary
+link seed facts to derived fact IDs; the reader displays one compact grey count
+button beside each producing statement on the same source line, excluding temporary
 definition/parameter-checking assumptions, and can follow a later citation
-back to an inferred fact. These inline results omit origin prose and do not
-add display rows; long source lines scroll horizontally within the source pane.
+back to an inferred fact. Clicking the button opens an anchored popup containing
+the actual results; clicking it again, clicking outside or pressing Escape
+closes the popup. Escape restores button focus. Result text wraps within the
+popup and stays hidden by default; the source gains no display rows.
 Selecting an inferred output shows the producing predicate's complete
 mathematical equivalence when retained, highlighting the selected domain or
 condition. Named definition links lead to that definition's mathematical view.
@@ -224,9 +229,13 @@ in `execute_fact_stmt/well_defined_results/verify_obj/scalar.rs` and object
 semantics in `ast/obj.rs`. They are language-reference documentation, not
 expression inference. The 31 illustrative equalities were checked together
 with strict release CLI verification (2026-10-24). Missing entries retain
-generic help; resolved user symbols take precedence. The viewer has no inline
-editor or diagnostic hover markers; live file opening still returns failures
-and source diagnostics through the existing reading service.
+generic help; resolved user symbols take precedence. With a checking host, all examples now open directly in the shared editable IDE
+with grey inference buttons and resolved hover, using the same reading service. Changed text immediately clears old verification/evidence from
+the view; rejected statements are marked red after checking. Pending draft coloring is lexical only; semantic hover and real inferred
+FactIds return after checking. There is no separate reading/editing mode. Static
+exports need a host checking callback or endpoint to enable editing. See
+[Editing and checking](../../docs/reading.md#editing-and-checking) for the
+callback, single-configuration project scope and local gallery proxy.
 
 Optional host-authored `exampleGroups` add bilingual links to independent
 reading bundles in the existing Examples menu. `includeSources: true` merges
@@ -236,3 +245,34 @@ optional JSON script `reading-example-groups`; only relative directory links
 are rendered, and locale is propagated across navigation. This does not extend
 the proof schema or merge failure bundles into a successful collection. See
 `examples/reading/homepage/export_gallery.py` for the reproducible builder.
+
+### Stable inspector and reference cards
+
+The inspector has a viewport-scaled fixed height, independent of the selected
+statement. Its content scrolls internally, including long proof grounds. The
+editor remains editable when a source token is clicked to inspect its help.
+
+Authored builtin reference cards are shared by hover and click. Numeric cards
+state input restrictions and results (for example `+` takes two complex numbers
+and returns a complex number). Set operators such as `union`, `intersect`,
+`set_minus`, `power_set` and family/indexed variants are explicitly labeled
+**Set operator**. Their inputs are set-kind requirements, never a fabricated
+universal set domain. Indexed union/intersection require nonempty indices in
+the current verifier. These cards describe builtin contracts, not an inferred
+type of the selected expression; resolved user declarations keep their own help.
+
+Detailed keyword cards currently cover `prop`, `by def`, `forall`, `claim`,
+`have fn` and `by contra`: summary, syntax, behavior/restrictions and a runnable
+example. Other existing keyword hints remain concise. Numeric cards cover
+arithmetic, real elementary/trigonometric/hyperbolic functions, integer
+operations and complex parts/modulus; this is not exhaustive builtin coverage.
+The format borrows summary-plus-detail from Python PEP 257 and the synopsis,
+parameters/results and examples structure from Linux man-pages(7).
+
+The `prop` and `by def` cards explain the shared `nonnegative(x R)` example
+point by point. The expanded reference distinguishes formal parameter type,
+predicate meaning, the complete defining equivalence, declaration versus
+instance, and proof by substitution. Its equivalence is rendered with the
+shared local math renderer, with complete text fallback. Hover retains the
+compact reference and example, linking the reader to the full explanation by
+clicking the source keyword. Detailed content scrolls inside the fixed panel.

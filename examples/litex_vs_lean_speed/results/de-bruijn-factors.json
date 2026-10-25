@@ -1,0 +1,541 @@
+{
+  "metric": "retrospective normalized-character de Bruijn factor (DF*)",
+  "formula": "formal_characters / informal_characters; lower is shorter",
+  "provenance": "Retrospective illustrative baselines written after the formal benchmark sources. These were not the original inputs to formalization. Each text is shared by every Litex/Lean route for that case; it must not be tuned to improve a reported factor.",
+  "language": "English prose with ordinary mathematical notation",
+  "counting_rule": "Count Unicode code points after removing all whitespace. For formal sources also exclude full lines starting (after stripping) with #, --, import followed by a space, or set_option followed by a space. Include declarations, names, statements and proofs; exclude library/builtin implementations on both sides. This is not a byte-count or gzip-compressed factor.",
+  "source_boundary": "Counts use the published standalone sources and check their correspondence to the saved case definitions. The older timing cohorts have no time-of-run source hashes; this audit does not retroactively establish such hashes.",
+  "inputs_sha256": {
+    "cases/informal-baselines.json": "304ac549801b8c44f289f06169f5a238ffd1b544f267cf0724c2efde76ce8c60",
+    "harness/de_bruijn.py": "403f29879e3775376e32708571e75ef46ce6712726c816acf7a344e94bb14075",
+    "harness/bench.py": "d29347ee49723990e9b4fa6aa106649f1f99edc23f876c771e48f6f4160a6865",
+    "cases/new-round.json": "00116905a271ece8aa8e8992a2dd8a6f8bf121de4ef4e3ad78922f8d6ca1bc44",
+    "results/new-round-summary.json": "25ee880930a19d76dcef3bc7fc5794447f1736f1816597ce44c931002312a7d6",
+    "results/new-round-raw.json": "b94964f9b266aa70cc1894572eefd844dab574f36f1aa273a605dc9a88d6cd44",
+    "cases/multi-step.json": "f4d1cece2b11a9ec6a28e00c6e29b9a6f937c156840f93fade5f4eaf8a085d11",
+    "results/multi-step-summary.json": "8575e91dd870ba46e95abf211db2e91caeca321e5008fa43045f767454e0e4a9",
+    "results/multi-step-raw.json": "644e82d579ee55fca039764ba2c3ba9a109c91f22aee8c23775b26959b34c767",
+    "cases/statement-forms.json": "23b0d71cf86cd934dfd08a13b9ac1c1eb2c74769b1fae866735f21e937cf2068",
+    "results/statement-forms-summary.json": "886863632b2b5f1f05285b47b86da19a2f8be369b81a651dd445e3c61d6fe3d7",
+    "results/statement-forms-raw.json": "6b9157dd52e0cc5a8f32323eaffc1cbafdf96d683b21f286504c0794a87afb9e"
+  },
+  "entries": {
+    "new-round/sqrt_two_irrational": {
+      "scope": "statement and parity proof",
+      "text": "sqrt(2) is irrational. Otherwise write sqrt(2) = p/q in lowest terms, with p an integer and q a positive integer. Squaring gives p^2 = 2q^2, so p is even. Write p = 2k; then q^2 = 2k^2, so q is even too. This contradicts gcd(p,q) = 1.",
+      "informal_characters": 188,
+      "litex": {
+        "path": "sources/new-round/sqrt_two_irrational.lit",
+        "sha256": "f1bf3bb0f02cbaa63436bb7e06cd5f5e92a5c67b4b876e016ec5ec328e0f0c62",
+        "characters": 326,
+        "de_bruijn_factor": 1.7340425531914894
+      },
+      "lean": {
+        "scratch": {
+          "path": "sources/new-round/sqrt_two_irrational__scratch.lean",
+          "sha256": "9185cb6a4915b2ec9ce9bb1df798a2cf1907f52053624628c2e7b43eff1ef3aa",
+          "characters": 923,
+          "de_bruijn_factor": 4.909574468085107
+        }
+      },
+      "timing_summary": "results/new-round-summary.json"
+    },
+    "new-round/set_union_inter_distrib": {
+      "scope": "statement and library-law justification",
+      "text": "For subsets A, B, D of the reals, A ∪ (B ∩ D) = (A ∪ B) ∩ (A ∪ D), by the distributive law for sets.",
+      "informal_characters": 74,
+      "litex": {
+        "path": "sources/new-round/set_union_inter_distrib.lit",
+        "sha256": "124a96e2a11ca5eeed525a0752e3df6f676d8d141a89cc7467adfeabaddfeddc",
+        "characters": 80,
+        "de_bruijn_factor": 1.0810810810810811
+      },
+      "lean": {
+        "lemma": {
+          "path": "sources/new-round/set_union_inter_distrib__lemma.lean",
+          "sha256": "671d55bab21f5c30a290fdc3e7faf271699ba40fac273923ef16a51364033b9e",
+          "characters": 81,
+          "de_bruijn_factor": 1.0945945945945945
+        },
+        "ext_simp": {
+          "path": "sources/new-round/set_union_inter_distrib__ext_simp.lean",
+          "sha256": "628d8b985e194231bb5e8e34d2d77e6871e12d5a8cbf7bb28df667a9bf00e67c",
+          "characters": 101,
+          "de_bruijn_factor": 1.364864864864865
+        }
+      },
+      "timing_summary": "results/new-round-summary.json"
+    },
+    "new-round/set_diff_union": {
+      "scope": "statement and elementwise proof",
+      "text": "For subsets A, B, D of the reals, A ∖ (B ∪ D) = (A ∖ B) ∩ (A ∖ D): membership on either side means belonging to A and to neither B nor D.",
+      "informal_characters": 103,
+      "litex": {
+        "path": "sources/new-round/set_diff_union.lit",
+        "sha256": "dca44d997ac5039f6a9e048625bf44cb5b3365a93b4afef1fb097117ba08ea9b",
+        "characters": 88,
+        "de_bruijn_factor": 0.8543689320388349
+      },
+      "lean": {
+        "ext_simp": {
+          "path": "sources/new-round/set_diff_union__ext_simp.lean",
+          "sha256": "b99cd7a79c8501f838d89435d6d6038d0946831961939366f1dc1cc4d45d9944",
+          "characters": 119,
+          "de_bruijn_factor": 1.1553398058252426
+        }
+      },
+      "timing_summary": "results/new-round-summary.json"
+    },
+    "new-round/set_inter_monotone": {
+      "scope": "statement and elementwise proof",
+      "text": "For subsets A, B, D of the reals, if A ⊆ B then A ∩ D ⊆ B ∩ D. An element of A ∩ D belongs to B and D.",
+      "informal_characters": 72,
+      "litex": {
+        "path": "sources/new-round/set_inter_monotone.lit",
+        "sha256": "5f023f6a2b46b457870656335dbdabe26f896f1b9b9881cfc1890d89e92a60c9",
+        "characters": 71,
+        "de_bruijn_factor": 0.9861111111111112
+      },
+      "lean": {
+        "lemma": {
+          "path": "sources/new-round/set_inter_monotone__lemma.lean",
+          "sha256": "fe9ca2c78ebc9c7ccbbe20e891ed6a949bfd76aa388444a54239c6f554d2efea",
+          "characters": 72,
+          "de_bruijn_factor": 1.0
+        },
+        "term": {
+          "path": "sources/new-round/set_inter_monotone__term.lean",
+          "sha256": "a2b34450380419cb6c8de03e51b9dd156857caccebe609d2f5f160cd3644ab17",
+          "characters": 58,
+          "de_bruijn_factor": 0.8055555555555556
+        }
+      },
+      "timing_summary": "results/new-round-summary.json"
+    },
+    "new-round/function_mem_range": {
+      "scope": "statement and witness",
+      "text": "For f : R → R and x ∈ R, f(x) belongs to the range of f, with witness x.",
+      "informal_characters": 53,
+      "litex": {
+        "path": "sources/new-round/function_mem_range.lit",
+        "sha256": "2a7410a636049bd7dd2bece9ccbf09a42812eb92e649336757256f8b8dac76a0",
+        "characters": 36,
+        "de_bruijn_factor": 0.6792452830188679
+      },
+      "lean": {
+        "lemma": {
+          "path": "sources/new-round/function_mem_range__lemma.lean",
+          "sha256": "e5562157ecb7c58c41d3e7e0da3ae1d4c0de420503c0f09b392a3683f84e3f22",
+          "characters": 72,
+          "de_bruijn_factor": 1.3584905660377358
+        }
+      },
+      "timing_summary": "results/new-round-summary.json"
+    },
+    "new-round/integer_division_decomposition": {
+      "scope": "statement and library-law justification",
+      "text": "For an integer a and a positive integer d, a = d⌊a/d⌋ + (a mod d), by quotient-remainder decomposition.",
+      "informal_characters": 85,
+      "litex": {
+        "path": "sources/new-round/integer_division_decomposition.lit",
+        "sha256": "f6aaca6b8179188e261cde30921af67fd609d2935dca74541a8a86641452e4fa",
+        "characters": 30,
+        "de_bruijn_factor": 0.35294117647058826
+      },
+      "lean": {
+        "lemma": {
+          "path": "sources/new-round/integer_division_decomposition__lemma.lean",
+          "sha256": "aa3a4898b483f39ff7db5ee51191ae2c2725827ce52787dd8dba0d0f08f66782",
+          "characters": 105,
+          "de_bruijn_factor": 1.2352941176470589
+        }
+      },
+      "timing_summary": "results/new-round-summary.json"
+    },
+    "new-round/integer_divisibility": {
+      "scope": "statement and witness",
+      "text": "For integers a and c with c ≠ 0, c divides ac, since ac = ca.",
+      "informal_characters": 46,
+      "litex": {
+        "path": "sources/new-round/integer_divisibility.lit",
+        "sha256": "b3ad2758aa5c01759a4f1755ec583a9b0de66c5909a5fe80195e2fa7cf464894",
+        "characters": 24,
+        "de_bruijn_factor": 0.5217391304347826
+      },
+      "lean": {
+        "lemma": {
+          "path": "sources/new-round/integer_divisibility__lemma.lean",
+          "sha256": "4d5fa24a94be8a42c6af3c358dbc52660ffff80b5847b8d3a71aeece9445e21a",
+          "characters": 57,
+          "de_bruijn_factor": 1.2391304347826086
+        }
+      },
+      "timing_summary": "results/new-round-summary.json"
+    },
+    "new-round/finite_cardinality": {
+      "scope": "statement and finite calculation",
+      "text": "The set {1,2,3} has three elements, by counting its distinct entries.",
+      "informal_characters": 59,
+      "litex": {
+        "path": "sources/new-round/finite_cardinality.lit",
+        "sha256": "761ca56d0e949a276e88d5587124278805dddf8834824cef480659f7eaa463cc",
+        "characters": 26,
+        "de_bruijn_factor": 0.4406779661016949
+      },
+      "lean": {
+        "decide": {
+          "path": "sources/new-round/finite_cardinality__decide.lean",
+          "sha256": "e770749ce9ef5b0e0d1c0017b1ae408909605cda33f0799f1348c2f75f7eaf8c",
+          "characters": 44,
+          "de_bruijn_factor": 0.7457627118644068
+        },
+        "norm_num": {
+          "path": "sources/new-round/finite_cardinality__norm_num.lean",
+          "sha256": "aa7e9a602b97f4a01dc344b8a02f6d829c0ade895883e97ab15d670c167310dd",
+          "characters": 46,
+          "de_bruijn_factor": 0.7796610169491526
+        }
+      },
+      "timing_summary": "results/new-round-summary.json"
+    },
+    "new-round/powerset_cardinality": {
+      "scope": "statement and counting argument",
+      "text": "A finite set A of natural numbers has 2^|A| subsets: for each element independently choose whether to include it.",
+      "informal_characters": 95,
+      "litex": {
+        "path": "sources/new-round/powerset_cardinality.lit",
+        "sha256": "f9c64448b4fb6d9b2800e3784bdff2c8113cf987e8c7eae40d41ae320e6ab69e",
+        "characters": 80,
+        "de_bruijn_factor": 0.8421052631578947
+      },
+      "lean": {
+        "lemma": {
+          "path": "sources/new-round/powerset_cardinality__lemma.lean",
+          "sha256": "bfa149116b1fa83707b0047f1ff4ec6a9a40e166da4a7921c67cd9baafa7335c",
+          "characters": 74,
+          "de_bruijn_factor": 0.7789473684210526
+        }
+      },
+      "timing_summary": "results/new-round-summary.json"
+    },
+    "new-round/factorial_positive": {
+      "scope": "statement and library-law justification",
+      "text": "For every natural number n, n! > 0, by positivity of the factorial.",
+      "informal_characters": 55,
+      "litex": {
+        "path": "sources/new-round/factorial_positive.lit",
+        "sha256": "6314ba1379b34356780a2b2a62da5d1c79bcd73d1b55c819aa9576c443f4a377",
+        "characters": 23,
+        "de_bruijn_factor": 0.41818181818181815
+      },
+      "lean": {
+        "lemma": {
+          "path": "sources/new-round/factorial_positive__lemma.lean",
+          "sha256": "f4f1b5e7c9585cea07e6cd726c5bdc3ca51e9912d109ffed0a11bb0737348960",
+          "characters": 54,
+          "de_bruijn_factor": 0.9818181818181818
+        }
+      },
+      "timing_summary": "results/new-round-summary.json"
+    },
+    "new-round/derivative_square_at_three": {
+      "scope": "statement and calculation",
+      "text": "For f(x) = x^2 on R, f'(3) = 6, since f'(x) = 2x and 2·3 = 6.",
+      "informal_characters": 45,
+      "litex": {
+        "path": "sources/new-round/derivative_square_at_three.lit",
+        "sha256": "18b5eaa7becb01dc754a33017fa5961cfef7bcfbe1865b258f8f75abe4ce60bb",
+        "characters": 36,
+        "de_bruijn_factor": 0.8
+      },
+      "lean": {
+        "chain": {
+          "path": "sources/new-round/derivative_square_at_three__chain.lean",
+          "sha256": "3e7d2b022e980b84dd310cdb3a72537bc0b05507f8acdfb54b5d9a502aec4f71",
+          "characters": 138,
+          "de_bruijn_factor": 3.066666666666667
+        }
+      },
+      "timing_summary": "results/new-round-summary.json"
+    },
+    "new-round/pair_reconstruction": {
+      "scope": "statement and pair law",
+      "text": "Every pair p ∈ R × R equals the pair of its first and second coordinates, by the pair reconstruction law.",
+      "informal_characters": 85,
+      "litex": {
+        "path": "sources/new-round/pair_reconstruction.lit",
+        "sha256": "7406f8e706d804ead73e451b9e485843b3ff0801320ed400abd58bbb239a8b9e",
+        "characters": 30,
+        "de_bruijn_factor": 0.35294117647058826
+      },
+      "lean": {
+        "term": {
+          "path": "sources/new-round/pair_reconstruction__term.lean",
+          "sha256": "df713621cfc940ca494e478990ee2351c1ff46fa99859c2946c0797799713d76",
+          "characters": 43,
+          "de_bruijn_factor": 0.5058823529411764
+        },
+        "lemma": {
+          "path": "sources/new-round/pair_reconstruction__lemma.lean",
+          "sha256": "00d57ecad5eb9a95bd92ffaed57e263c5150955baf9a5c0cb6419e7375e041a2",
+          "characters": 57,
+          "de_bruijn_factor": 0.6705882352941176
+        }
+      },
+      "timing_summary": "results/new-round-summary.json"
+    },
+    "new-round/continuity_square_at_three": {
+      "scope": "statement and library-law justification",
+      "text": "The function x ↦ x^2 on R is continuous at 3, by continuity of powers.",
+      "informal_characters": 56,
+      "litex": {
+        "path": "sources/new-round/continuity_square_at_three.lit",
+        "sha256": "4e0ef29d7c587c2bfab213d0e5d0bbbdd090598d5489e7a2abc4e6f4dae02a55",
+        "characters": 33,
+        "de_bruijn_factor": 0.5892857142857143
+      },
+      "lean": {
+        "lemma": {
+          "path": "sources/new-round/continuity_square_at_three__lemma.lean",
+          "sha256": "0a9b948bea04e4fc7160ed9d8b8f1fdd74d456c64c623d8ee0c9e4011cb108aa",
+          "characters": 64,
+          "de_bruijn_factor": 1.1428571428571428
+        }
+      },
+      "timing_summary": "results/new-round-summary.json"
+    },
+    "multi-step/sum_sq_zero": {
+      "scope": "statement and proof",
+      "text": "For real x,y, if x^2+y^2 = 0 then x = y = 0: both squares are nonnegative, so each square is zero.",
+      "informal_characters": 77,
+      "litex": {
+        "path": "sources/multi-step/sum_sq_zero.lit",
+        "sha256": "759cfedfd845115498e2064577d65260349fd51ff4ceb443bd919f8a01387568",
+        "characters": 32,
+        "de_bruijn_factor": 0.4155844155844156
+      },
+      "lean": {
+        "nlinarith": {
+          "path": "sources/multi-step/sum_sq_zero__nlinarith.lean",
+          "sha256": "6d07930edc51914d7dc3c643b534acd9c63ef09eab09dc89e64b72f8d647d2c1",
+          "characters": 92,
+          "de_bruijn_factor": 1.1948051948051948
+        }
+      },
+      "timing_summary": "results/multi-step-summary.json"
+    },
+    "multi-step/positive_ratio": {
+      "scope": "statement and proof",
+      "text": "For a positive real x, x+1 > 0, hence x/(x+1) > 0 by positivity of the numerator and denominator.",
+      "informal_characters": 79,
+      "litex": {
+        "path": "sources/multi-step/positive_ratio.lit",
+        "sha256": "360fe4e68febbfc5cd7dfeaadd5ea4c9b53f3872a36ce725259eac79ac85e3ef",
+        "characters": 29,
+        "de_bruijn_factor": 0.3670886075949367
+      },
+      "lean": {
+        "div_pos": {
+          "path": "sources/multi-step/positive_ratio__div_pos.lean",
+          "sha256": "947c0326d808b8fe2ac6f0456ecd02b48a659b6ef47cde54b5b4b475e1d67756",
+          "characters": 88,
+          "de_bruijn_factor": 1.1139240506329113
+        }
+      },
+      "timing_summary": "results/multi-step-summary.json"
+    },
+    "multi-step/mul_cancel": {
+      "scope": "statement and proof",
+      "text": "For real x,y, if 2x = 2y then x = y, by cancelling the nonzero factor 2.",
+      "informal_characters": 56,
+      "litex": {
+        "path": "sources/multi-step/mul_cancel.lit",
+        "sha256": "44c3924058e5994f478eba164ea04bbd1b41fa474d07b6272660f9b1c63e1316",
+        "characters": 24,
+        "de_bruijn_factor": 0.42857142857142855
+      },
+      "lean": {
+        "linarith": {
+          "path": "sources/multi-step/mul_cancel__linarith.lean",
+          "sha256": "40a242cefcf60248211960ef21944e28fa4493e384255a58530b3c9c5edf2a5c",
+          "characters": 49,
+          "de_bruijn_factor": 0.875
+        },
+        "cancel": {
+          "path": "sources/multi-step/mul_cancel__cancel.lean",
+          "sha256": "e5f318513bd87a2bb3ec0a1c013726fef1f07079b538a9e42d29fdc7ee8ae126",
+          "characters": 86,
+          "de_bruijn_factor": 1.5357142857142858
+        }
+      },
+      "timing_summary": "results/multi-step-summary.json"
+    },
+    "multi-step/sq_plus_one_pos": {
+      "scope": "statement and proof",
+      "text": "For every real x, x^2+1 > 0, because x^2 ≥ 0 and 1 > 0.",
+      "informal_characters": 41,
+      "litex": {
+        "path": "sources/multi-step/sq_plus_one_pos.lit",
+        "sha256": "53976d3072bb028be89ac66b71b4604255c8d3fb9d2e92177fca6dfc17353289",
+        "characters": 16,
+        "de_bruijn_factor": 0.3902439024390244
+      },
+      "lean": {
+        "positivity": {
+          "path": "sources/multi-step/sq_plus_one_pos__positivity.lean",
+          "sha256": "735c710f3200480cfa2eec66070022d4ad8769378f4b0d6adc75f4ac486fc942",
+          "characters": 44,
+          "de_bruijn_factor": 1.0731707317073171
+        },
+        "nlinarith": {
+          "path": "sources/multi-step/sq_plus_one_pos__nlinarith.lean",
+          "sha256": "62b433a32f06ab95d1929bbb4d3dfb52b7ddda89f02994de07002dacebde795f",
+          "characters": 55,
+          "de_bruijn_factor": 1.3414634146341464
+        }
+      },
+      "timing_summary": "results/multi-step-summary.json"
+    },
+    "multi-step/sum_sq_ge_two_mul": {
+      "scope": "statement and proof",
+      "text": "For real x,y, x^2+y^2 ≥ 2xy, since 0 ≤ (x-y)^2 = x^2+y^2-2xy.",
+      "informal_characters": 50,
+      "litex": {
+        "path": "sources/multi-step/sum_sq_ge_two_mul.lit",
+        "sha256": "fcc3ba0e9020651cce1d4cdc8e8abc5f705fec6adde0fe8b1a7b8a7f9cb5ce09",
+        "characters": 51,
+        "de_bruijn_factor": 1.02
+      },
+      "lean": {
+        "nlinarith": {
+          "path": "sources/multi-step/sum_sq_ge_two_mul__nlinarith.lean",
+          "sha256": "4072261fdf95b2055fa3cc5699344894fb2b57d11febbf306b9d2d5268cd59ec",
+          "characters": 67,
+          "de_bruijn_factor": 1.34
+        }
+      },
+      "timing_summary": "results/multi-step-summary.json"
+    },
+    "statement-forms/prop_definition_witness": {
+      "scope": "definition and witness; Lean unfolds the predicate",
+      "text": "An integer a is odd if a = 2t+1 for some integer t. The number 7 is odd, with witness t = 3.",
+      "informal_characters": 70,
+      "litex": {
+        "path": "sources/statement-forms/prop_definition_witness.lit",
+        "sha256": "353c44fd8e436ef0742db6208a8c7f25e32aa01c8e8438a4a1d4852525317100",
+        "characters": 49,
+        "de_bruijn_factor": 0.7
+      },
+      "lean": {
+        "term": {
+          "path": "sources/statement-forms/prop_definition_witness__term.lean",
+          "sha256": "948fde1c9e62ec0be0ead7a2aeb5b3f5dec039b6cb9f3acb3e8cfcdb8137f394",
+          "characters": 44,
+          "de_bruijn_factor": 0.6285714285714286
+        }
+      },
+      "timing_summary": "results/statement-forms-summary.json"
+    },
+    "statement-forms/odd_shift": {
+      "scope": "definition, statement and witness proof; Lean unfolds the predicate",
+      "text": "An integer a is odd if a = 2t+1 for some integer t. If an integer n is odd, write n = 2k+1. Then 3n+2 = 3(2k+1)+2 = 2(3k+2)+1, so 3n+2 is odd with witness 3k+2.",
+      "informal_characters": 125,
+      "litex": {
+        "path": "sources/statement-forms/odd_shift.lit",
+        "sha256": "25dbca16f630d72ad7995ac21499445724c7ae64f48e37b744d585b16e5124b8",
+        "characters": 142,
+        "de_bruijn_factor": 1.136
+      },
+      "lean": {
+        "rcases_omega": {
+          "path": "sources/statement-forms/odd_shift__rcases_omega.lean",
+          "sha256": "84aa893307b113689b9e021c50f6a84b7cc989177358e9e0f5c4c0f8443168a0",
+          "characters": 87,
+          "de_bruijn_factor": 0.696
+        }
+      },
+      "timing_summary": "results/statement-forms-summary.json"
+    },
+    "statement-forms/reciprocal_tends_to_zero": {
+      "scope": "sequence definition, statement and proof; Lean inlines the sequence",
+      "text": "Let a(n) = 1/n for positive integers n. For every real ε > 0 there is a positive integer n with a(n) < ε. By the Archimedean property choose n > 1/ε; then a(n) = 1/n < ε.",
+      "informal_characters": 133,
+      "litex": {
+        "path": "sources/statement-forms/reciprocal_tends_to_zero.lit",
+        "sha256": "ef4265025e19c446e56a22623f3d222de22a1fe834facd979d173c2b99a9b2d5",
+        "characters": 171,
+        "de_bruijn_factor": 1.2857142857142858
+      },
+      "lean": {
+        "archimedean": {
+          "path": "sources/statement-forms/reciprocal_tends_to_zero__archimedean.lean",
+          "sha256": "0e897e9c6ae95af1c8f83801c6fe2d1795d16251d8503ed0ce27f2b1e96cc095",
+          "characters": 126,
+          "de_bruijn_factor": 0.9473684210526315
+        }
+      },
+      "timing_summary": "results/statement-forms-summary.json"
+    },
+    "statement-forms/set_union_subset_eq": {
+      "scope": "statement and elementwise proof",
+      "text": "For subsets A,B of the reals, if A ⊆ B then A ∪ B = B. Every element of A or B belongs to B, and every element of B belongs to A ∪ B.",
+      "informal_characters": 99,
+      "litex": {
+        "path": "sources/statement-forms/set_union_subset_eq.lit",
+        "sha256": "32a7fee4dba5020db63e693af8fe4acf0473dc9fde2addc604e9b1be04b56be7",
+        "characters": 46,
+        "de_bruijn_factor": 0.46464646464646464
+      },
+      "lean": {
+        "ext_cases": {
+          "path": "sources/statement-forms/set_union_subset_eq__ext_cases.lean",
+          "sha256": "1fecc5d7ed919a0170d8d0cc510094a42ab403a7e4fe17eccb689bfe2d4e62c3",
+          "characters": 109,
+          "de_bruijn_factor": 1.101010101010101
+        },
+        "lemma": {
+          "path": "sources/statement-forms/set_union_subset_eq__lemma.lean",
+          "sha256": "d691db4b89b7baed1df0789a24472d4c8a5ec7d02f2842e0b9d9928cb8dde9bb",
+          "characters": 62,
+          "de_bruijn_factor": 0.6262626262626263
+        }
+      },
+      "timing_summary": "results/statement-forms-summary.json"
+    },
+    "declarations/guarded_function": {
+      "scope": "definition and use",
+      "text": "For nonzero real x define bench_recip(x) = 1/x. Then bench_recip(2) = 1/2 by substitution.",
+      "informal_characters": 77,
+      "litex": {
+        "path": "sources/declarations/guarded_function.lit",
+        "sha256": "5895edc060aa9a07c91f4159eda753fdbb779b7b35450d268f8e6b9f09cd5725",
+        "characters": 49,
+        "de_bruijn_factor": 0.6363636363636364
+      },
+      "lean": {
+        "paired": {
+          "path": "sources/declarations/guarded_function.lean",
+          "sha256": "56ea38f80d69a4a3598fd7c3c21db7e206649b1a036f895e8de0add44d8c7297",
+          "characters": 106,
+          "de_bruijn_factor": 1.3766233766233766
+        }
+      },
+      "timing_summary": null,
+      "timing_note": "The types guide has only a historical rounded timing aggregate for this pair; no new timing data or raw-sample validation is supplied here."
+    }
+  },
+  "excluded": {
+    "multi-step/even_witness_above": {
+      "reason": "Published source differs from saved timing-case definition; no factors attached to historical times.",
+      "drifted_sources": {
+        "sources/multi-step/even_witness_above.lit": "bfafaf5fc746e6de5b0de8e7493fd16beb5440908f4ec7c0110a2145e13fb3f9"
+      }
+    },
+    "multi-step/nat_succ_lt_two_mul": {
+      "reason": "Published source differs from saved timing-case definition; no factors attached to historical times.",
+      "drifted_sources": {
+        "sources/multi-step/nat_succ_lt_two_mul.lit": "0d1563a4c2751575bfd7346b2be4e8a188360e75aecab31bb516c8dea5eda574"
+      }
+    }
+  }
+}

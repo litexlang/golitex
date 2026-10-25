@@ -86,6 +86,20 @@ pub(super) fn project_atomic_wd_proof(
     };
     use crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainProof;
     let domain = match &proof.predicate_domain {
+        PredicateDomainProof::MultivariableAnalysis(p) => object_for(
+            runtime,
+            vec![
+                ("type", string("checked_real_multivariable_analysis")),
+                (
+                    "function_domain",
+                    super::function_domain::project_source(&p.function_domain, runtime),
+                ),
+                (
+                    "requirements",
+                    super::multivariable::requirements(&p.requirements, runtime),
+                ),
+            ],
+        ),
         PredicateDomainProof::SequenceAnalysis(p) => object_for(
             runtime,
             vec![

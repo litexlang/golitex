@@ -22,6 +22,71 @@ fn expression(
     let o = |x: &Obj| obj(x, modules, lang);
     let e = |x: &Obj, p| expression(x, modules, lang, p);
     let (text, precedence) = match value {
+        Obj::LimitOperator(LimitOperator::MultivariableScalar(x)) => (
+            format!("\\lim_{{x\\to {}}} {}(x)", o(&x.point)?, o(&x.function)?),
+            50,
+        ),
+        Obj::LimitOperator(LimitOperator::MultivariableVector(x)) => (
+            format!("\\lim_{{x\\to {}}} {}(x)", o(&x.point)?, o(&x.function)?),
+            50,
+        ),
+        Obj::DerivativeOperator(DerivativeOperator::Partial(x)) => (
+            format!(
+                "\\frac{{\\partial {}}}{{\\partial x_{{{}}}}}{}",
+                o(&x.function)?,
+                o(&x.coordinate)?,
+                parens(&o(&x.point)?)
+            ),
+            50,
+        ),
+        Obj::DerivativeOperator(DerivativeOperator::ScalarDifferential(x)) => (
+            format!("D{}{}", parens(&o(&x.function)?), parens(&o(&x.point)?)),
+            50,
+        ),
+        Obj::DerivativeOperator(DerivativeOperator::TotalDifferential(x)) => (
+            format!("D{}{}", parens(&o(&x.function)?), parens(&o(&x.point)?)),
+            50,
+        ),
+        Obj::DerivativeOperator(DerivativeOperator::Gradient(x)) => (
+            format!(
+                "\\nabla {}{}",
+                parens(&o(&x.function)?),
+                parens(&o(&x.point)?)
+            ),
+            50,
+        ),
+        Obj::DerivativeOperator(DerivativeOperator::Jacobian(x)) => (
+            format!("J_{{{}}}{}", o(&x.function)?, parens(&o(&x.point)?)),
+            50,
+        ),
+        Obj::DerivativeOperator(DerivativeOperator::Hessian(x)) => (
+            format!("H_{{{}}}{}", o(&x.function)?, parens(&o(&x.point)?)),
+            50,
+        ),
+        Obj::DerivativeOperator(DerivativeOperator::Divergence(x)) => (
+            format!(
+                "\\nabla\\cdot {}{}",
+                parens(&o(&x.function)?),
+                parens(&o(&x.point)?)
+            ),
+            50,
+        ),
+        Obj::DerivativeOperator(DerivativeOperator::Curl(x)) => (
+            format!(
+                "\\nabla\\times {}{}",
+                parens(&o(&x.function)?),
+                parens(&o(&x.point)?)
+            ),
+            50,
+        ),
+        Obj::DerivativeOperator(DerivativeOperator::Laplacian(x)) => (
+            format!(
+                "\\Delta {}{}",
+                parens(&o(&x.function)?),
+                parens(&o(&x.point)?)
+            ),
+            50,
+        ),
         Obj::MatrixOperator(value) => {
             let args = value
                 .operand_refs()

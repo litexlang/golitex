@@ -3,6 +3,68 @@
   <Fragment>
     <DirectoryRef Id="APPLICATIONFOLDER">
       <Directory Id="StandardLibrary" Name="std">
+        <Directory Id="StdDir_algebra" Name="algebra">
+          <Component Id="StdComp_algebra_README.md" Guid="*">
+            <File Id="StdFile_algebra_README.md" Source="std\algebra\README.md" KeyPath="yes" />
+          </Component>
+          <Component Id="StdComp_algebra_basis.lit" Guid="*">
+            <File Id="StdFile_algebra_basis.lit" Source="std\algebra\basis.lit" KeyPath="yes" />
+          </Component>
+          <Component Id="StdComp_algebra_basis_comparison.lit" Guid="*">
+            <File Id="StdFile_algebra_basis_comparison.lit" Source="std\algebra\basis_comparison.lit" KeyPath="yes" />
+          </Component>
+          <Component Id="StdComp_algebra_basis_existence.lit" Guid="*">
+            <File Id="StdFile_algebra_basis_existence.lit" Source="std\algebra\basis_existence.lit" KeyPath="yes" />
+          </Component>
+          <Component Id="StdComp_algebra_basis_extension.lit" Guid="*">
+            <File Id="StdFile_algebra_basis_extension.lit" Source="std\algebra\basis_extension.lit" KeyPath="yes" />
+          </Component>
+          <Component Id="StdComp_algebra_coordinate_maps.lit" Guid="*">
+            <File Id="StdFile_algebra_coordinate_maps.lit" Source="std\algebra\coordinate_maps.lit" KeyPath="yes" />
+          </Component>
+          <Component Id="StdComp_algebra_dependence.lit" Guid="*">
+            <File Id="StdFile_algebra_dependence.lit" Source="std\algebra\dependence.lit" KeyPath="yes" />
+          </Component>
+          <Component Id="StdComp_algebra_dimension.lit" Guid="*">
+            <File Id="StdFile_algebra_dimension.lit" Source="std\algebra\dimension.lit" KeyPath="yes" />
+          </Component>
+          <Component Id="StdComp_algebra_exchange.lit" Guid="*">
+            <File Id="StdFile_algebra_exchange.lit" Source="std\algebra\exchange.lit" KeyPath="yes" />
+          </Component>
+          <Component Id="StdComp_algebra_field.lit" Guid="*">
+            <File Id="StdFile_algebra_field.lit" Source="std\algebra\field.lit" KeyPath="yes" />
+          </Component>
+          <Component Id="StdComp_algebra_finite_decomposition.lit" Guid="*">
+            <File Id="StdFile_algebra_finite_decomposition.lit" Source="std\algebra\finite_decomposition.lit" KeyPath="yes" />
+          </Component>
+          <Component Id="StdComp_algebra_finite_span.lit" Guid="*">
+            <File Id="StdFile_algebra_finite_span.lit" Source="std\algebra\finite_span.lit" KeyPath="yes" />
+          </Component>
+          <Component Id="StdComp_algebra_group.lit" Guid="*">
+            <File Id="StdFile_algebra_group.lit" Source="std\algebra\group.lit" KeyPath="yes" />
+          </Component>
+          <Component Id="StdComp_algebra_linear_criteria.lit" Guid="*">
+            <File Id="StdFile_algebra_linear_criteria.lit" Source="std\algebra\linear_criteria.lit" KeyPath="yes" />
+          </Component>
+          <Component Id="StdComp_algebra_linear_dimension.lit" Guid="*">
+            <File Id="StdFile_algebra_linear_dimension.lit" Source="std\algebra\linear_dimension.lit" KeyPath="yes" />
+          </Component>
+          <Component Id="StdComp_algebra_litex.config" Guid="*">
+            <File Id="StdFile_algebra_litex.config" Source="std\algebra\litex.config" KeyPath="yes" />
+          </Component>
+          <Component Id="StdComp_algebra_math_collections.md" Guid="*">
+            <File Id="StdFile_algebra_math_collections.md" Source="std\algebra\math_collections.md" KeyPath="yes" />
+          </Component>
+          <Component Id="StdComp_algebra_span_reduction.lit" Guid="*">
+            <File Id="StdFile_algebra_span_reduction.lit" Source="std\algebra\span_reduction.lit" KeyPath="yes" />
+          </Component>
+          <Component Id="StdComp_algebra_subspace.lit" Guid="*">
+            <File Id="StdFile_algebra_subspace.lit" Source="std\algebra\subspace.lit" KeyPath="yes" />
+          </Component>
+          <Component Id="StdComp_algebra_vector_space.lit" Guid="*">
+            <File Id="StdFile_algebra_vector_space.lit" Source="std\algebra\vector_space.lit" KeyPath="yes" />
+          </Component>
+        </Directory>
         <Directory Id="StdDir_basics" Name="basics">
           <Component Id="StdComp_basics_README.md" Guid="*">
             <File Id="StdFile_basics_README.md" Source="std\basics\README.md" KeyPath="yes" />
@@ -17,16 +79,86 @@
             <File Id="StdFile_basics_math_collections.md" Source="std\basics\math_collections.md" KeyPath="yes" />
           </Component>
         </Directory>
+        <Directory Id="StdDir_matrix" Name="matrix">
+          <Component Id="StdComp_matrix_README.md" Guid="*">
+            <File Id="StdFile_matrix_README.md" Source="std\matrix\README.md" KeyPath="yes" />
+          </Component>
+          <Component Id="StdComp_matrix_litex.config" Guid="*">
+            <File Id="StdFile_matrix_litex.config" Source="std\matrix\litex.config" KeyPath="yes" />
+          </Component>
+          <Component Id="StdComp_matrix_main.lit" Guid="*">
+            <File Id="StdFile_matrix_main.lit" Source="std\matrix\main.lit" KeyPath="yes" />
+          </Component>
+          <Component Id="StdComp_matrix_math_collections.md" Guid="*">
+            <File Id="StdFile_matrix_math_collections.md" Source="std\matrix\math_collections.md" KeyPath="yes" />
+          </Component>
+        </Directory>
+        <Directory Id="StdDir_real_multivariable" Name="real_multivariable">
+          <Component Id="StdComp_real_multivariable_README.md" Guid="*">
+            <File Id="StdFile_real_multivariable_README.md" Source="std\real_multivariable\README.md" KeyPath="yes" />
+          </Component>
+          <Component Id="StdComp_real_multivariable_litex.config" Guid="*">
+            <File Id="StdFile_real_multivariable_litex.config" Source="std\real_multivariable\litex.config" KeyPath="yes" />
+          </Component>
+          <Component Id="StdComp_real_multivariable_main.lit" Guid="*">
+            <File Id="StdFile_real_multivariable_main.lit" Source="std\real_multivariable\main.lit" KeyPath="yes" />
+          </Component>
+        </Directory>
+        <Directory Id="StdDir_real_series" Name="real_series">
+          <Component Id="StdComp_real_series_README.md" Guid="*">
+            <File Id="StdFile_real_series_README.md" Source="std\real_series\README.md" KeyPath="yes" />
+          </Component>
+          <Component Id="StdComp_real_series_litex.config" Guid="*">
+            <File Id="StdFile_real_series_litex.config" Source="std\real_series\litex.config" KeyPath="yes" />
+          </Component>
+          <Component Id="StdComp_real_series_main.lit" Guid="*">
+            <File Id="StdFile_real_series_main.lit" Source="std\real_series\main.lit" KeyPath="yes" />
+          </Component>
+          <Component Id="StdComp_real_series_math_collections.md" Guid="*">
+            <File Id="StdFile_real_series_math_collections.md" Source="std\real_series\math_collections.md" KeyPath="yes" />
+          </Component>
+        </Directory>
       </Directory>
     </DirectoryRef>
   </Fragment>
 
   <Fragment>
     <ComponentGroup Id="LitexStd">
+      <ComponentRef Id="StdComp_algebra_README.md" />
+      <ComponentRef Id="StdComp_algebra_basis.lit" />
+      <ComponentRef Id="StdComp_algebra_basis_comparison.lit" />
+      <ComponentRef Id="StdComp_algebra_basis_existence.lit" />
+      <ComponentRef Id="StdComp_algebra_basis_extension.lit" />
+      <ComponentRef Id="StdComp_algebra_coordinate_maps.lit" />
+      <ComponentRef Id="StdComp_algebra_dependence.lit" />
+      <ComponentRef Id="StdComp_algebra_dimension.lit" />
+      <ComponentRef Id="StdComp_algebra_exchange.lit" />
+      <ComponentRef Id="StdComp_algebra_field.lit" />
+      <ComponentRef Id="StdComp_algebra_finite_decomposition.lit" />
+      <ComponentRef Id="StdComp_algebra_finite_span.lit" />
+      <ComponentRef Id="StdComp_algebra_group.lit" />
+      <ComponentRef Id="StdComp_algebra_linear_criteria.lit" />
+      <ComponentRef Id="StdComp_algebra_linear_dimension.lit" />
+      <ComponentRef Id="StdComp_algebra_litex.config" />
+      <ComponentRef Id="StdComp_algebra_math_collections.md" />
+      <ComponentRef Id="StdComp_algebra_span_reduction.lit" />
+      <ComponentRef Id="StdComp_algebra_subspace.lit" />
+      <ComponentRef Id="StdComp_algebra_vector_space.lit" />
       <ComponentRef Id="StdComp_basics_README.md" />
       <ComponentRef Id="StdComp_basics_litex.config" />
       <ComponentRef Id="StdComp_basics_main.lit" />
       <ComponentRef Id="StdComp_basics_math_collections.md" />
+      <ComponentRef Id="StdComp_matrix_README.md" />
+      <ComponentRef Id="StdComp_matrix_litex.config" />
+      <ComponentRef Id="StdComp_matrix_main.lit" />
+      <ComponentRef Id="StdComp_matrix_math_collections.md" />
+      <ComponentRef Id="StdComp_real_multivariable_README.md" />
+      <ComponentRef Id="StdComp_real_multivariable_litex.config" />
+      <ComponentRef Id="StdComp_real_multivariable_main.lit" />
+      <ComponentRef Id="StdComp_real_series_README.md" />
+      <ComponentRef Id="StdComp_real_series_litex.config" />
+      <ComponentRef Id="StdComp_real_series_main.lit" />
+      <ComponentRef Id="StdComp_real_series_math_collections.md" />
     </ComponentGroup>
   </Fragment>
 </Wix>

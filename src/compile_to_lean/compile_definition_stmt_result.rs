@@ -38,9 +38,13 @@ impl LitexToLeanCompiler {
             ExecDefinitionStmtResult::HaveFnEqualCaseByCase(result) => {
                 self.compile_have_fn_cases_statement(result, position, local)
             }
-            ExecDefinitionStmtResult::DefAbstractProp(_)
-            | ExecDefinitionStmtResult::DefStruct(_)
-            | ExecDefinitionStmtResult::DefTemplate(_)
+            ExecDefinitionStmtResult::DefAbstractProp(result) => {
+                self.compile_abstract_prop_statement(result, index, local)
+            }
+            ExecDefinitionStmtResult::DefStruct(result) => {
+                self.compile_struct_statement(result, position, index, local)
+            }
+            ExecDefinitionStmtResult::DefTemplate(_)
             | ExecDefinitionStmtResult::DefAlgoByCases(_)
             | ExecDefinitionStmtResult::DefAlgoByInduc(_)
             | ExecDefinitionStmtResult::Axiom(_)

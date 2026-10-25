@@ -1,0 +1,101 @@
+thm consume_concatenate_lists_carrier:
+    ? forall S nonempty_set,m,n N,left finite_seq(S,m),right finite_seq(S,n):
+        \Algebra::finite_decomposition::concatenate_lists<S,m,n,left,right> $in finite_seq(S,m+n)
+    by thm Algebra::finite_decomposition::concatenate_lists_carrier(S,m,n,left,right) => \Algebra::finite_decomposition::concatenate_lists<S,m,n,left,right> $in finite_seq(S,m+n)
+
+thm consume_function_range_carrier:
+    ? forall V,W nonempty_set,T fn(v V) W:
+        fn_range(T) $in power_set(W)
+    by thm Algebra::linear_dimension::function_range_carrier(V,W,T) => fn_range(T) $in power_set(W)
+
+thm consume_function_range_is_nonempty:
+    ? forall V,W nonempty_set,T fn(v V) W:
+        $is_nonempty_set(fn_range(T))
+    by thm Algebra::linear_dimension::function_range_is_nonempty(V,W,T) => $is_nonempty_set(fn_range(T))
+
+forall V,W nonempty_set,T fn(v V) W,y W:
+    preimage(T,y) $in power_set(V)
+
+thm consume_linear_kernel_is_nonempty:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,field,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,field,W>,T fn(v V) W:
+        $Algebra::vector_space::is_linear_map(K,field,V,source,W,target,T)
+        =>:
+            $is_nonempty_set(preimage(T,target.zero))
+    by thm Algebra::linear_dimension::linear_kernel_is_nonempty(K,field,V,source,W,target,T) => $is_nonempty_set(preimage(T,target.zero))
+
+claim:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,field,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,field,W>,T fn(v V) W:
+        $Algebra::vector_space::is_linear_map(K,field,V,source,W,target,T)
+        =>:
+            $Algebra::vector_space::is_subspace(K,field,V,source,preimage(T,target.zero))
+    by thm Algebra::vector_space::kernel_is_subspace(K,field,V,source,W,target,T) => $Algebra::vector_space::is_subspace(K,field,V,source,preimage(T,target.zero))
+
+claim:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,field,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,field,W>,T fn(v V) W:
+        $Algebra::vector_space::is_linear_map(K,field,V,source,W,target,T)
+        =>:
+            $Algebra::vector_space::is_subspace(K,field,W,target,fn_range(T))
+    by thm Algebra::vector_space::range_is_subspace(K,field,V,source,W,target,T) => $Algebra::vector_space::is_subspace(K,field,W,target,fn_range(T))
+
+thm consume_linear_kernel_space_carrier:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,field,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,field,W>,T fn(v V) W:
+        $Algebra::vector_space::is_linear_map(K,field,V,source,W,target,T)
+        =>:
+            \Algebra::subspace::restricted_space<K,field,V,source,preimage(T,target.zero)> $in &Algebra::vector_space::VectorSpace<K,field,preimage(T,target.zero)>
+    by thm Algebra::linear_dimension::linear_kernel_space_carrier(K,field,V,source,W,target,T) => \Algebra::subspace::restricted_space<K,field,V,source,preimage(T,target.zero)> $in &Algebra::vector_space::VectorSpace<K,field,preimage(T,target.zero)>
+
+thm consume_linear_image_space_carrier:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,field,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,field,W>,T fn(v V) W:
+        $Algebra::vector_space::is_linear_map(K,field,V,source,W,target,T)
+        =>:
+            \Algebra::subspace::restricted_space<K,field,W,target,fn_range(T)> $in &Algebra::vector_space::VectorSpace<K,field,fn_range(T)>
+    by thm Algebra::linear_dimension::linear_image_space_carrier(K,field,V,source,W,target,T) => \Algebra::subspace::restricted_space<K,field,W,target,fn_range(T)> $in &Algebra::vector_space::VectorSpace<K,field,fn_range(T)>
+
+thm consume_mapped_list_in_range:
+    ? forall V,W nonempty_set,T fn(v V) W,n N,vectors finite_seq(V,n):
+        \Algebra::finite_span::map_vectors<V,W,n>(T,vectors) $in finite_seq(fn_range(T),n)
+    by thm Algebra::linear_dimension::mapped_list_in_range(V,W,T,n,vectors) => \Algebra::finite_span::map_vectors<V,W,n>(T,vectors) $in finite_seq(fn_range(T),n)
+
+thm consume_finite_source_has_finite_image:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,field,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,field,W>,T fn(v V) W:
+        $Algebra::basis::is_finite_dimensional(K,field,V,source)
+        $Algebra::vector_space::is_linear_map(K,field,V,source,W,target,T)
+        =>:
+            $Algebra::basis::is_finite_dimensional(K,field,fn_range(T),\Algebra::subspace::restricted_space<K,field,W,target,fn_range(T)>)
+    by thm Algebra::linear_dimension::finite_source_has_finite_image(K,field,V,source,W,target,T) => $Algebra::basis::is_finite_dimensional(K,field,fn_range(T),\Algebra::subspace::restricted_space<K,field,W,target,fn_range(T)>)
+
+thm consume_finite_source_has_finite_kernel:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,field,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,field,W>,T fn(v V) W:
+        $Algebra::basis::is_finite_dimensional(K,field,V,source)
+        $Algebra::vector_space::is_linear_map(K,field,V,source,W,target,T)
+        =>:
+            $Algebra::basis::is_finite_dimensional(K,field,preimage(T,target.zero),\Algebra::subspace::restricted_space<K,field,V,source,preimage(T,target.zero)>)
+    by thm Algebra::linear_dimension::finite_source_has_finite_kernel(K,field,V,source,W,target,T) => $Algebra::basis::is_finite_dimensional(K,field,preimage(T,target.zero),\Algebra::subspace::restricted_space<K,field,V,source,preimage(T,target.zero)>)
+
+thm consume_finite_source_rank_carrier:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,field,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,field,W>,T fn(v V) W:
+        $Algebra::basis::is_finite_dimensional(K,field,V,source)
+        $Algebra::vector_space::is_linear_map(K,field,V,source,W,target,T)
+        =>:
+            \Algebra::linear_dimension::linear_map_rank<K,field,V,source,W,target>(T) $in N
+            \Algebra::linear_dimension::linear_map_rank<K,field,V,source,W,target>(T) $in R
+            \Algebra::linear_dimension::linear_map_rank<K,field,V,source,W,target>(T) $in C
+    release thm Algebra::linear_dimension::finite_source_rank_carrier(K,field,V,source,W,target,T)
+
+thm consume_finite_source_nullity_carrier:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,field,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,field,W>,T fn(v V) W:
+        $Algebra::basis::is_finite_dimensional(K,field,V,source)
+        $Algebra::vector_space::is_linear_map(K,field,V,source,W,target,T)
+        =>:
+            \Algebra::linear_dimension::linear_map_nullity<K,field,V,source,W,target>(T) $in N
+            \Algebra::linear_dimension::linear_map_nullity<K,field,V,source,W,target>(T) $in R
+            \Algebra::linear_dimension::linear_map_nullity<K,field,V,source,W,target>(T) $in C
+    release thm Algebra::linear_dimension::finite_source_nullity_carrier(K,field,V,source,W,target,T)
+
+thm kernel_in_prefix_span_makes_tail_image_independent:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,field,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,field,W>,T fn(v V) W,m,n N,prefix finite_seq(V,m),tail finite_seq(V,n):
+        $Algebra::vector_space::is_linear_map(K,field,V,source,W,target,T)
+        $Algebra::basis::is_linearly_independent(K,field,V,source,m+n,\Algebra::finite_decomposition::concatenate_lists<V,m,n,prefix,tail>)
+        =>:
+            $Algebra::basis::is_linearly_independent(K,field,W,target,n,\Algebra::finite_span::map_vectors<V,W,n>(T,tail))
+    by thm Algebra::linear_dimension::kernel_in_prefix_span_makes_tail_image_independent(K,field,V,source,W,target,T,m,n,prefix,tail) => $Algebra::basis::is_linearly_independent(K,field,W,target,n,\Algebra::finite_span::map_vectors<V,W,n>(T,tail))

@@ -1,0 +1,236 @@
+# Vector spaces and linear maps over a supplied field.
+# Derived source theorems; no additional assumptions or native rules.
+
+struct VectorSpace<K nonempty_set, field &field::Field<K>, V nonempty_set>:
+    zero V
+    add fn(x, y V) V
+    smul fn(a K, x V) V
+    <=>:
+        forall x, y, z V:
+            add(add(x, y), z) = add(x, add(y, z))
+        forall x, y V:
+            add(x, y) = add(y, x)
+        forall x V:
+            add(zero, x) = x
+            exist y V st {add(x, y) = zero}
+        forall a, b K, x V:
+            smul(field.mul(a, b), x) = smul(a, smul(b, x))
+            smul(field.add(a, b), x) = add(smul(a, x), smul(b, x))
+        forall a K, x, y V:
+            smul(a, add(x, y)) = add(smul(a, x), smul(a, y))
+        forall x V:
+            smul(field.one, x) = x
+
+thm additive_identity_unique:
+    ? forall K nonempty_set, field &field::Field<K>, V nonempty_set, space &VectorSpace<K, field, V>, identity_candidate V:
+        forall x V:
+            space.add(identity_candidate, x) = x
+        =>:
+            identity_candidate = space.zero
+    space.add(identity_candidate, space.zero) = space.zero
+    space.add(identity_candidate, space.zero) = space.add(space.zero, identity_candidate) = identity_candidate
+
+thm additive_inverse_exists_unique:
+    ? forall K nonempty_set, field &field::Field<K>, V nonempty_set, space &VectorSpace<K, field, V>, x V:
+        exist! y V st {space.add(x, y) = space.zero}
+    obtain y from exist y V st {space.add(x, y) = space.zero}
+    forall y1, y2 V:
+        space.add(x, y1) = space.zero
+        space.add(x, y2) = space.zero
+        =>:
+            space.add(y2, x) = space.add(x, y2) = space.zero
+            y1 = space.add(space.zero, y1) = space.add(space.add(y2, x), y1) = space.add(y2, space.add(x, y1)) = space.add(y2, space.zero) = space.add(space.zero, y2) = y2
+            y1 = y2
+    witness exist! y2 V st {space.add(x, y2) = space.zero} from y
+
+prop is_subspace(K nonempty_set, field &field::Field<K>, V nonempty_set, space &VectorSpace<K, field, V>, U power_set(V)):
+    space.zero $in U
+    forall u, v V:
+        u $in U
+        v $in U
+        =>:
+            space.add(u, v) $in U
+    forall a K, v V:
+        v $in U
+        =>:
+            space.smul(a, v) $in U
+
+thm zero_scalar_times_vector:
+    ? forall K nonempty_set, field &field::Field<K>, V nonempty_set, space &VectorSpace<K, field, V>, x V:
+        space.smul(field.zero, x) = space.zero
+    have p V = space.smul(field.zero, x)
+    field.add(field.zero, field.zero) = field.zero
+    space.smul(field.add(field.zero, field.zero), x) = space.add(space.smul(field.zero, x), space.smul(field.zero, x))
+    space.smul(field.add(field.zero, field.zero), x) = space.smul(field.zero, x) = p
+    space.add(p, p) = p
+    obtain inverse_p from exist inverse_p V st {space.add(p, inverse_p) = space.zero}
+    p = space.add(space.zero, p) = space.add(p, space.zero) = space.add(p, space.add(p, inverse_p)) = space.add(space.add(p, p), inverse_p) = space.add(p, inverse_p) = space.zero
+
+thm scalar_times_zero:
+    ? forall K nonempty_set, field &field::Field<K>, V nonempty_set, space &VectorSpace<K, field, V>, a K:
+        space.smul(a, space.zero) = space.zero
+    have z V = space.smul(a, space.zero)
+    space.add(space.zero, space.zero) = space.zero
+    space.add(z, z) = space.smul(a, space.add(space.zero, space.zero)) = space.smul(a, space.zero) = z
+    obtain inverse_z from exist inverse_z V st {space.add(z, inverse_z) = space.zero}
+    z = space.add(space.zero, z) = space.add(z, space.zero) = space.add(z, space.add(z, inverse_z)) = space.add(space.add(z, z), inverse_z) = space.add(z, inverse_z) = space.zero
+
+prop is_linear_map(K nonempty_set, field &field::Field<K>, V nonempty_set, source &VectorSpace<K, field, V>, W nonempty_set, target &VectorSpace<K, field, W>, T fn(x V) W):
+    forall u, v V:
+        T(source.add(u, v)) = target.add(T(u), T(v))
+    forall a K, v V:
+        T(source.smul(a, v)) = target.smul(a, T(v))
+
+thm linear_map_zero:
+    ? forall K nonempty_set, field &field::Field<K>, V nonempty_set, source &VectorSpace<K, field, V>, W nonempty_set, target &VectorSpace<K, field, W>, T fn(x V) W:
+        $is_linear_map(K, field, V, source, W, target, T)
+        =>:
+            T(source.zero) = target.zero
+    have z W = T(source.zero)
+    source.add(source.zero, source.zero) = source.zero
+    target.add(z, z) = T(source.add(source.zero, source.zero)) = T(source.zero) = z
+    obtain inverse_z from exist inverse_z W st {target.add(z, inverse_z) = target.zero}
+    z = target.add(target.zero, z) = target.add(z, target.zero) = target.add(z, target.add(z, inverse_z)) = target.add(target.add(z, z), inverse_z) = target.add(z, inverse_z) = target.zero
+
+template<V nonempty_set>:
+    have fn identity(v V) V = v
+
+thm identity_linear:
+    ? forall K nonempty_set, field &field::Field<K>, V nonempty_set, space &VectorSpace<K, field, V>:
+        $is_linear_map(K, field, V, space, V, space, \identity<V>)
+    by def $is_linear_map(K, field, V, space, V, space, \identity<V>)
+
+template<V nonempty_set, W nonempty_set, zero W>:
+    have fn zero_map(v V) W = zero
+
+thm zero_map_linear:
+    ? forall K nonempty_set, field &field::Field<K>, V nonempty_set, source &VectorSpace<K, field, V>, W nonempty_set, target &VectorSpace<K, field, W>:
+        $is_linear_map(K, field, V, source, W, target, \zero_map<V, W, target.zero>)
+    claim:
+        ? forall a K, v V:
+            \zero_map<V, W, target.zero>(source.smul(a, v)) = target.smul(a, \zero_map<V, W, target.zero>(v))
+        by thm scalar_times_zero(K, field, W, target, a) => target.smul(a, target.zero) = target.zero
+    claim:
+        ? forall u, v V:
+            \zero_map<V, W, target.zero>(source.add(u, v)) = target.add(\zero_map<V, W, target.zero>(u), \zero_map<V, W, target.zero>(v))
+        \zero_map<V, W, target.zero>(u) = target.zero
+        \zero_map<V, W, target.zero>(v) = target.zero
+        target.add(\zero_map<V, W, target.zero>(u), \zero_map<V, W, target.zero>(v)) = target.add(target.zero, target.zero) = target.zero
+    by def $is_linear_map(K, field, V, source, W, target, \zero_map<V, W, target.zero>)
+
+template<U nonempty_set, V nonempty_set, W nonempty_set>:
+    have fn map_compose(S fn(v V) W, T fn(u U) V) fn(u U) W = fn(u U) W {S(T(u))}
+
+thm composition_linear:
+    ? forall K nonempty_set, field &field::Field<K>, U nonempty_set, first &VectorSpace<K, field, U>, V nonempty_set, middle &VectorSpace<K, field, V>, W nonempty_set, last &VectorSpace<K, field, W>, T fn(u U) V, S fn(v V) W:
+        $is_linear_map(K, field, U, first, V, middle, T)
+        $is_linear_map(K, field, V, middle, W, last, S)
+        =>:
+            $is_linear_map(K, field, U, first, W, last, \map_compose<U, V, W>(S, T))
+    claim:
+        ? forall u, v U:
+            \map_compose<U, V, W>(S, T)(first.add(u, v)) = last.add(\map_compose<U, V, W>(S, T)(u), \map_compose<U, V, W>(S, T)(v))
+        \map_compose<U, V, W>(S, T)(u) = S(T(u))
+        \map_compose<U, V, W>(S, T)(v) = S(T(v))
+        T(first.add(u, v)) = middle.add(T(u), T(v))
+        \map_compose<U, V, W>(S, T)(first.add(u, v)) = S(T(first.add(u, v))) = S(middle.add(T(u), T(v))) = last.add(S(T(u)), S(T(v))) = last.add(\map_compose<U, V, W>(S, T)(u), \map_compose<U, V, W>(S, T)(v))
+    claim:
+        ? forall a K, v U:
+            \map_compose<U, V, W>(S, T)(first.smul(a, v)) = last.smul(a, \map_compose<U, V, W>(S, T)(v))
+        \map_compose<U, V, W>(S, T)(v) = S(T(v))
+        T(first.smul(a, v)) = middle.smul(a, T(v))
+        \map_compose<U, V, W>(S, T)(first.smul(a, v)) = S(T(first.smul(a, v))) = S(middle.smul(a, T(v))) = last.smul(a, S(T(v))) = last.smul(a, \map_compose<U, V, W>(S, T)(v))
+    by def $is_linear_map(K, field, U, first, W, last, \map_compose<U, V, W>(S, T))
+
+thm kernel_is_subspace:
+    ? forall K nonempty_set, field &field::Field<K>, V nonempty_set, source &VectorSpace<K, field, V>, W nonempty_set, target &VectorSpace<K, field, W>, T fn(x V) W:
+        $is_linear_map(K, field, V, source, W, target, T)
+        =>:
+            $is_subspace(K, field, V, source, preimage(T, target.zero))
+    by thm linear_map_zero(K, field, V, source, W, target, T) => T(source.zero) = target.zero
+    claim:
+        ? forall u, v V:
+            u $in preimage(T, target.zero)
+            v $in preimage(T, target.zero)
+            =>:
+                source.add(u, v) $in preimage(T, target.zero)
+        T(source.add(u, v)) = target.add(T(u), T(v)) = target.add(target.zero, target.zero) = target.zero
+    claim:
+        ? forall a K, v V:
+            v $in preimage(T, target.zero)
+            =>:
+                source.smul(a, v) $in preimage(T, target.zero)
+        by thm scalar_times_zero(K, field, W, target, a) => target.smul(a, target.zero) = target.zero
+        T(source.smul(a, v)) = target.smul(a, T(v)) = target.smul(a, target.zero) = target.zero
+    by def $is_subspace(K, field, V, source, preimage(T, target.zero))
+
+claim:
+    ? forall V nonempty_set, W nonempty_set, T fn(x V) W:
+        fn_range(T) $in power_set(W)
+    fn_range(T) $subset W
+
+thm range_is_subspace:
+    ? forall K nonempty_set, field &field::Field<K>, V nonempty_set, source &VectorSpace<K, field, V>, W nonempty_set, target &VectorSpace<K, field, W>, T fn(x V) W:
+        $is_linear_map(K, field, V, source, W, target, T)
+        =>:
+            $is_subspace(K, field, W, target, fn_range(T))
+    by thm linear_map_zero(K, field, V, source, W, target, T) => T(source.zero) = target.zero
+    T(source.zero) $in fn_range(T)
+    claim:
+        ? forall u, v W:
+            u $in fn_range(T)
+            v $in fn_range(T)
+            =>:
+                target.add(u, v) $in fn_range(T)
+        have by fn_preimage: x from u $in fn_range(T)
+        have by fn_preimage: y from v $in fn_range(T)
+        T(source.add(x, y)) = target.add(T(x), T(y)) = target.add(u, v)
+        T(source.add(x, y)) $in fn_range(T)
+    claim:
+        ? forall a K, v W:
+            v $in fn_range(T)
+            =>:
+                target.smul(a, v) $in fn_range(T)
+        have by fn_preimage: x from v $in fn_range(T)
+        T(source.smul(a, x)) = target.smul(a, T(x)) = target.smul(a, v)
+        T(source.smul(a, x)) $in fn_range(T)
+    by def $is_subspace(K, field, W, target, fn_range(T))
+
+thm injective_has_zero_kernel:
+    ? forall K nonempty_set, field &field::Field<K>, V nonempty_set, source &VectorSpace<K, field, V>, W nonempty_set, target &VectorSpace<K, field, W>, T fn(x V) W:
+        $is_linear_map(K, field, V, source, W, target, T)
+        $injective(V, W, T)
+        =>:
+            preimage(T, target.zero) = {source.zero}
+    by thm linear_map_zero(K, field, V, source, W, target, T) => T(source.zero) = target.zero
+    claim:
+        ? forall x preimage(T, target.zero):
+            x $in {source.zero}
+        T(x) = target.zero = T(source.zero)
+        x = source.zero
+    forall x {source.zero}:
+        x $in preimage(T, target.zero)
+    by extension preimage(T, target.zero) = {source.zero}
+
+thm zero_kernel_is_injective:
+    ? forall K nonempty_set, field &field::Field<K>, V nonempty_set, source &VectorSpace<K, field, V>, W nonempty_set, target &VectorSpace<K, field, W>, T fn(x V) W:
+        $is_linear_map(K, field, V, source, W, target, T)
+        preimage(T, target.zero) = {source.zero}
+        =>:
+            $injective(V, W, T)
+    by thm linear_map_zero(K, field, V, source, W, target, T) => T(source.zero) = target.zero
+    claim:
+        ? forall u, v V:
+            T(u) = T(v)
+            =>:
+                u = v
+        obtain inverse_v from exist inverse_v V st {source.add(v, inverse_v) = source.zero}
+        T(source.add(v, inverse_v)) = T(source.zero) = target.zero
+        target.add(T(v), T(inverse_v)) = T(source.add(v, inverse_v)) = target.zero
+        T(source.add(u, inverse_v)) = target.add(T(u), T(inverse_v)) = target.add(T(v), T(inverse_v)) = target.zero
+        source.add(u, inverse_v) $in preimage(T, target.zero)
+        source.add(u, inverse_v) $in {source.zero}
+        source.add(u, inverse_v) = source.zero
+        source.add(inverse_v, v) = source.add(v, inverse_v) = source.zero
+        u = source.add(source.zero, u) = source.add(u, source.zero) = source.add(u, source.add(inverse_v, v)) = source.add(source.add(u, inverse_v), v) = source.add(source.zero, v) = v
+    by def $injective(V, W, T)

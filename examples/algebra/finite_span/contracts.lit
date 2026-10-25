@@ -1,0 +1,183 @@
+# Imported finite combinations, span closure and coefficient/map operations.
+
+claim:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,n N:
+        \Algebra::finite_span::zero_coefficients<K,field,n> $in finite_seq(K,n)
+    release thm Algebra::finite_span::zero_coefficients_carrier(K,field,n)
+
+claim:
+    ? forall K nonempty_set, field &Algebra::field::Field<K>, V nonempty_set, space &Algebra::vector_space::VectorSpace<K, field, V>, n N, coefficients finite_seq(K, n), vectors finite_seq(V, n):
+        exist value V st {$Algebra::finite_span::has_linear_combination_value(K, field, V, space, n, coefficients, vectors, value)}
+    release thm Algebra::finite_span::linear_combination_exists(K,field,V,space,n,coefficients,vectors)
+
+claim:
+    ? forall K nonempty_set, field &Algebra::field::Field<K>, V nonempty_set, space &Algebra::vector_space::VectorSpace<K, field, V>, n N, coefficients finite_seq(K, n), vectors finite_seq(V, n):
+        exist! value V st {$Algebra::finite_span::has_linear_combination_value(K, field, V, space, n, coefficients, vectors, value)}
+    release thm Algebra::finite_span::linear_combination_exists_unique(K,field,V,space,n,coefficients,vectors)
+
+claim:
+    ? forall K nonempty_set, field &Algebra::field::Field<K>, V nonempty_set, space &Algebra::vector_space::VectorSpace<K, field, V>, n N, coefficients finite_seq(K, n), vectors finite_seq(V, n), sums fn(k closed_range(0, n)) V:
+        $Algebra::finite_span::is_partial_sum(K, field, V, space, n, coefficients, vectors, sums)
+        =>:
+            \Algebra::finite_span::linear_combination<K, field, V, space, n>(coefficients, vectors) = sums(n)
+    release thm Algebra::finite_span::partial_sum_determines_combination(K,field,V,space,n,coefficients,vectors,sums)
+
+claim:
+    ? forall K nonempty_set, field &Algebra::field::Field<K>, V nonempty_set, space &Algebra::vector_space::VectorSpace<K, field, V>, coefficients finite_seq(K, 0), vectors finite_seq(V, 0):
+        \Algebra::finite_span::linear_combination<K, field, V, space, 0>(coefficients, vectors) = space.zero
+    release thm Algebra::finite_span::empty_linear_combination(K,field,V,space,coefficients,vectors)
+
+claim:
+    ? forall K nonempty_set, field &Algebra::field::Field<K>, V nonempty_set, space &Algebra::vector_space::VectorSpace<K, field, V>, u, w, p, q V:
+        space.add(space.add(u, w), space.add(p, q)) = space.add(space.add(u, p), space.add(w, q))
+    release thm Algebra::finite_span::vector_add_regroup(K,field,V,space,u,w,p,q)
+
+claim:
+    ? forall K nonempty_set, field &Algebra::field::Field<K>, V nonempty_set, space &Algebra::vector_space::VectorSpace<K, field, V>, a K, current, previous, term V:
+        current = space.add(previous, term)
+        =>:
+            space.smul(a, current) = space.add(space.smul(a, previous), space.smul(a, term))
+    release thm Algebra::finite_span::scalar_partial_trace_step(K,field,V,space,a,current,previous,term)
+
+claim:
+    ? forall K nonempty_set, field &Algebra::field::Field<K>, n N, coefficients finite_seq(K, n), idx N+:
+        coefficients = \Algebra::finite_span::zero_coefficients<K, field, n>
+        idx <= n
+        =>:
+            coefficients(idx) = field.zero
+    release thm Algebra::finite_span::zero_coefficients_entry(K,field,n,coefficients,idx)
+
+claim:
+    ? forall K nonempty_set, field &Algebra::field::Field<K>, n N, left, right, result finite_seq(K, n), idx N+:
+        result = \Algebra::finite_span::add_coefficients<K, field, n>(left, right)
+        idx <= n
+        =>:
+            result(idx) = field.add(left(idx), right(idx))
+    release thm Algebra::finite_span::add_coefficients_entry(K,field,n,left,right,result,idx)
+
+claim:
+    ? forall K nonempty_set, field &Algebra::field::Field<K>, n N, coefficients, result finite_seq(K, n), idx N+:
+        result = \Algebra::finite_span::neg_coefficients<K, field, n>(coefficients)
+        idx <= n
+        =>:
+            result(idx) = field.neg(coefficients(idx))
+    release thm Algebra::finite_span::neg_coefficients_entry(K,field,n,coefficients,result,idx)
+
+claim:
+    ? forall K nonempty_set, field &Algebra::field::Field<K>, n N, a K, coefficients, result finite_seq(K, n), idx N+:
+        result = \Algebra::finite_span::smul_coefficients<K, field, n>(a, coefficients)
+        idx <= n
+        =>:
+            result(idx) = field.mul(a, coefficients(idx))
+    release thm Algebra::finite_span::smul_coefficients_entry(K,field,n,a,coefficients,result,idx)
+
+claim:
+    ? forall K nonempty_set, field &Algebra::field::Field<K>, V nonempty_set, space &Algebra::vector_space::VectorSpace<K, field, V>, n N, vectors finite_seq(V, n), coefficients finite_seq(K, n), k N+:
+        coefficients = \Algebra::finite_span::zero_coefficients<K, field, n>
+        k <= n
+        =>:
+            space.smul(coefficients(k), vectors(k)) = space.zero
+    release thm Algebra::finite_span::zero_coefficient_contribution(K,field,V,space,n,vectors,coefficients,k)
+
+claim:
+    ? forall K nonempty_set, field &Algebra::field::Field<K>, V nonempty_set, space &Algebra::vector_space::VectorSpace<K, field, V>, n N, vectors finite_seq(V, n):
+        $Algebra::finite_span::is_partial_sum(K, field, V, space, n, \Algebra::finite_span::zero_coefficients<K, field, n>, vectors, fn(k closed_range(0, n)) V {space.zero})
+    release thm Algebra::finite_span::zero_coefficients_is_partial_sum(K,field,V,space,n,vectors)
+
+claim:
+    ? forall K nonempty_set, field &Algebra::field::Field<K>, V nonempty_set, space &Algebra::vector_space::VectorSpace<K, field, V>, n N, vectors finite_seq(V, n):
+        $Algebra::finite_span::has_linear_combination_value(K, field, V, space, n, \Algebra::finite_span::zero_coefficients<K, field, n>, vectors, space.zero)
+    release thm Algebra::finite_span::zero_coefficients_has_zero_value(K,field,V,space,n,vectors)
+
+claim:
+    ? forall K nonempty_set, field &Algebra::field::Field<K>, V nonempty_set, space &Algebra::vector_space::VectorSpace<K, field, V>, n N, vectors finite_seq(V, n):
+        \Algebra::finite_span::linear_combination<K, field, V, space, n>(\Algebra::finite_span::zero_coefficients<K, field, n>, vectors) = space.zero
+    release thm Algebra::finite_span::linear_combination_zero_coefficients(K,field,V,space,n,vectors)
+
+claim:
+    ? forall K nonempty_set, field &Algebra::field::Field<K>, V nonempty_set, space &Algebra::vector_space::VectorSpace<K, field, V>, n N, left, right, result finite_seq(K, n), vectors finite_seq(V, n), k N+:
+        result = \Algebra::finite_span::add_coefficients<K, field, n>(left, right)
+        k <= n
+        =>:
+            space.smul(result(k), vectors(k)) = space.add(space.smul(left(k), vectors(k)), space.smul(right(k), vectors(k)))
+    release thm Algebra::finite_span::add_coefficient_contribution(K,field,V,space,n,left,right,result,vectors,k)
+
+claim:
+    ? forall K nonempty_set, field &Algebra::field::Field<K>, V nonempty_set, space &Algebra::vector_space::VectorSpace<K, field, V>, n N, left, right, result finite_seq(K, n), vectors finite_seq(V, n), trace1, trace2, result_trace fn(k closed_range(0, n)) V:
+        result = \Algebra::finite_span::add_coefficients<K, field, n>(left, right)
+        $Algebra::finite_span::is_partial_sum(K, field, V, space, n, left, vectors, trace1)
+        $Algebra::finite_span::is_partial_sum(K, field, V, space, n, right, vectors, trace2)
+        forall j closed_range(0, n):
+            result_trace(j) = space.add(trace1(j), trace2(j))
+        =>:
+            $Algebra::finite_span::is_partial_sum(K, field, V, space, n, result, vectors, result_trace)
+    release thm Algebra::finite_span::add_coefficients_is_partial_sum(K,field,V,space,n,left,right,result,vectors,trace1,trace2,result_trace)
+
+claim:
+    ? forall K nonempty_set, field &Algebra::field::Field<K>, V nonempty_set, space &Algebra::vector_space::VectorSpace<K, field, V>, n N, left, right finite_seq(K, n), vectors finite_seq(V, n):
+        \Algebra::finite_span::linear_combination<K, field, V, space, n>(\Algebra::finite_span::add_coefficients<K, field, n>(left, right), vectors) = space.add(\Algebra::finite_span::linear_combination<K, field, V, space, n>(left, vectors), \Algebra::finite_span::linear_combination<K, field, V, space, n>(right, vectors))
+    release thm Algebra::finite_span::linear_combination_add_coefficients(K,field,V,space,n,left,right,vectors)
+
+claim:
+    ? forall K nonempty_set, field &Algebra::field::Field<K>, V nonempty_set, space &Algebra::vector_space::VectorSpace<K, field, V>, n N, a K, coefficients, result finite_seq(K, n), vectors finite_seq(V, n), k N+:
+        result = \Algebra::finite_span::smul_coefficients<K, field, n>(a, coefficients)
+        k <= n
+        =>:
+            space.smul(result(k), vectors(k)) = space.smul(a, space.smul(coefficients(k), vectors(k)))
+    release thm Algebra::finite_span::smul_coefficient_contribution(K,field,V,space,n,a,coefficients,result,vectors,k)
+
+claim:
+    ? forall K nonempty_set, field &Algebra::field::Field<K>, V nonempty_set, space &Algebra::vector_space::VectorSpace<K, field, V>, n N, a K, coefficients, result finite_seq(K, n), vectors finite_seq(V, n), partial_sums fn(j closed_range(0, n)) V, k N+:
+        result = \Algebra::finite_span::smul_coefficients<K, field, n>(a, coefficients)
+        k <= n
+        partial_sums(k) = space.add(partial_sums(k - 1), space.smul(coefficients(k), vectors(k)))
+        =>:
+            space.smul(a, partial_sums(k)) = space.add(space.smul(a, partial_sums(k - 1)), space.smul(result(k), vectors(k)))
+    release thm Algebra::finite_span::smul_trace_step(K,field,V,space,n,a,coefficients,result,vectors,partial_sums,k)
+
+claim:
+    ? forall K nonempty_set, field &Algebra::field::Field<K>, V nonempty_set, space &Algebra::vector_space::VectorSpace<K, field, V>, n N, a K, coefficients, result finite_seq(K, n), vectors finite_seq(V, n), partial_sums, result_trace fn(k closed_range(0, n)) V:
+        result = \Algebra::finite_span::smul_coefficients<K, field, n>(a, coefficients)
+        $Algebra::finite_span::is_partial_sum(K, field, V, space, n, coefficients, vectors, partial_sums)
+        forall j closed_range(0, n):
+            result_trace(j) = space.smul(a, partial_sums(j))
+        =>:
+            $Algebra::finite_span::is_partial_sum(K, field, V, space, n, result, vectors, result_trace)
+    release thm Algebra::finite_span::smul_coefficients_is_partial_sum(K,field,V,space,n,a,coefficients,result,vectors,partial_sums,result_trace)
+
+claim:
+    ? forall K nonempty_set, field &Algebra::field::Field<K>, V nonempty_set, space &Algebra::vector_space::VectorSpace<K, field, V>, n N, a K, coefficients finite_seq(K, n), vectors finite_seq(V, n):
+        \Algebra::finite_span::linear_combination<K, field, V, space, n>(\Algebra::finite_span::smul_coefficients<K, field, n>(a, coefficients), vectors) = space.smul(a, \Algebra::finite_span::linear_combination<K, field, V, space, n>(coefficients, vectors))
+    release thm Algebra::finite_span::linear_combination_smul_coefficients(K,field,V,space,n,a,coefficients,vectors)
+
+claim:
+    ? forall K nonempty_set, field &Algebra::field::Field<K>, V nonempty_set, space &Algebra::vector_space::VectorSpace<K, field, V>, n N, vectors finite_seq(V, n):
+        space.zero $in \Algebra::finite_span::span<K, field, V, space, n, vectors>
+    release thm Algebra::finite_span::span_zero_member(K,field,V,space,n,vectors)
+
+claim:
+    ? forall K nonempty_set, field &Algebra::field::Field<K>, V nonempty_set, space &Algebra::vector_space::VectorSpace<K, field, V>, n N, vectors finite_seq(V, n), x, y \Algebra::finite_span::span<K, field, V, space, n, vectors>:
+        space.add(x, y) $in \Algebra::finite_span::span<K, field, V, space, n, vectors>
+    release thm Algebra::finite_span::span_add_closed(K,field,V,space,n,vectors,x,y)
+
+claim:
+    ? forall K nonempty_set, field &Algebra::field::Field<K>, V nonempty_set, space &Algebra::vector_space::VectorSpace<K, field, V>, n N, vectors finite_seq(V, n), a K, x \Algebra::finite_span::span<K, field, V, space, n, vectors>:
+        space.smul(a, x) $in \Algebra::finite_span::span<K, field, V, space, n, vectors>
+    release thm Algebra::finite_span::span_smul_closed(K,field,V,space,n,vectors,a,x)
+
+claim:
+    ? forall K nonempty_set, field &Algebra::field::Field<K>, V nonempty_set, space &Algebra::vector_space::VectorSpace<K, field, V>, n N, vectors finite_seq(V, n):
+        $Algebra::vector_space::is_subspace(K, field, V, space, \Algebra::finite_span::span<K, field, V, space, n, vectors>)
+    release thm Algebra::finite_span::span_is_subspace(K,field,V,space,n,vectors)
+
+claim:
+    ? forall K nonempty_set, field &Algebra::field::Field<K>, V nonempty_set, source &Algebra::vector_space::VectorSpace<K, field, V>, W nonempty_set, target &Algebra::vector_space::VectorSpace<K, field, W>, T fn(v V) W, n N, coefficients finite_seq(K, n), vectors finite_seq(V, n):
+        $Algebra::vector_space::is_linear_map(K, field, V, source, W, target, T)
+        =>:
+            T(\Algebra::finite_span::linear_combination<K, field, V, source, n>(coefficients, vectors)) = \Algebra::finite_span::linear_combination<K, field, W, target, n>(coefficients, \Algebra::finite_span::map_vectors<V, W, n>(T, vectors))
+    release thm Algebra::finite_span::linear_map_preserves_combination(K,field,V,source,W,target,T,n,coefficients,vectors)
+
+claim:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,n N,coefficients finite_seq(K,n),vectors finite_seq(V,n):
+        $Algebra::finite_span::has_linear_combination_value(K,field,V,space,n,coefficients,vectors,\Algebra::finite_span::linear_combination<K,field,V,space,n>(coefficients,vectors))
+    release thm Algebra::finite_span::linear_combination_has_value(K,field,V,space,n,coefficients,vectors)

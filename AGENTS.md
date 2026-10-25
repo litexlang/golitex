@@ -22,6 +22,24 @@ This inventory remains local-only under the scripts policy below.
 Apply `litex-math-feature-maintainer` for this workflow; its maintained local
 source is `scripts/litex_limit_designs/skills/litex-math-feature-maintainer/SKILL.md`.
 
+## Unambiguous public mathematical names
+
+The maintainer explicitly forbids conflicting public mathematical names.
+Each public operation name must have one fixed mathematical and parameter
+contract. Never use argument count or argument types to select between
+different operations, approaches, or scalar/vector contracts under one name.
+Shared LaTeX notation is not authorization for a shared Litex operation name.
+Check existing declarations and reserved names before proposing a new name.
+
+`lim(a)` is exclusively the one-argument real sequence selector.
+`fn_lim(f,x0)` is exclusively the two-argument finite-point unary real function
+selector. The former `lim(f,x0)` spelling is rejected, with no compatibility
+overload. Multivariable `lim` and scalar/vector `differential` overload proposals
+have been withdrawn. Track the verified naming contract and future distinct
+names in `scripts/litex_limit_designs/unambiguous-math-names.md`.
+This instruction overrides older skills/contracts that require preserving
+the overloaded spelling.
+
 ## Local-only scripts workspace
 
 The entire `scripts/` directory directly under this repository root is local-only.

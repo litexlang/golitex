@@ -266,6 +266,20 @@ impl LitexToLeanCompiler {
                 "The selected parent constructor certifies another application.",
             ));
         }
+        if let ParentCheckedBetaFunctionBody::Composition {
+            composition,
+            function_equal,
+        } = source
+        {
+            return self.compile_composition_beta(
+                application,
+                parent_wd,
+                composition,
+                function_equal,
+                expanded,
+                position,
+            );
+        }
         let actual_domain = match call_wd.domain_fn_set.as_ref() {
             Some(FnObjDomainFnSetEvidence::InFunctionSet { fn_set, .. })
             | Some(FnObjDomainFnSetEvidence::AnonymousLiteral { fn_set }) => fn_set,
@@ -441,9 +455,10 @@ impl LitexToLeanCompiler {
                 before: index,
                 ..normalization
             };
-            let (application, continued, beta, owner, before) = match expansion {
+            let (application, expanded, continued, beta, owner, before) = match expansion {
                 FunctionBodyExpansionProof::Anonymous(step) => (
                     &step.application,
+                    &step.expanded_body,
                     &step.continued_body,
                     self.compile_anonymous_function_expansion(step, &prior)?,
                     SourceOwner::FunctionExpansion(step),
@@ -451,15 +466,31 @@ impl LitexToLeanCompiler {
                 ),
                 FunctionBodyExpansionProof::FiniteCoordinate(step) => (
                     &step.application,
+                    &step.expanded_body,
                     &step.continued_body,
                     self.compile_finite_coordinate_expansion(step, &prior)?,
                     SourceOwner::FiniteExpansion(step),
                     1,
                 ),
-                FunctionBodyExpansionProof::Composition(_) => {
-                    return Err(LeanCompileError::unsupported(
-                        "FunctionDefinition/CompositionExpansion",
-                    ))
+                FunctionBodyExpansionProof::Composition(step) => {
+                    if step.expanded_body.ir() != step.continued_body.ir() {
+                        return Err(LeanCompileError::unsupported("Composition/Continuation"));
+                    }
+                    (
+                        &step.application,
+                        &step.expanded_body,
+                        &step.continued_body,
+                        self.compile_composition_beta(
+                            &step.application,
+                            &step.application_well_defined,
+                            &step.composition,
+                            &step.function_equal,
+                            &step.expanded_body,
+                            &prior,
+                        )?,
+                        SourceOwner::CompositionExpansion(step),
+                        1,
+                    )
                 }
             };
             let completed = SourcePosition {
@@ -470,6 +501,7 @@ impl LitexToLeanCompiler {
             let Some((next, embedded)) = self.embed_recorded_function_expansion(
                 &current,
                 application,
+                expanded,
                 continued,
                 &beta,
                 &completed,
@@ -512,10 +544,7 @@ impl LitexToLeanCompiler {
                 "Selected-body WD does not contain the checked anonymous function literal.",
             ));
         };
-        if application.body.len() != 1
-            || literal_application.body != application.body
-            || proof.continued_body.ir() != proof.expanded_body.ir()
-        {
+        if application.body.len() != 1 || literal_application.body != application.body {
             return Err(LeanCompileError::unsupported(
                 "FunctionDefinition/CurriedApplication",
             ));
@@ -679,6 +708,11 @@ impl LitexToLeanCompiler {
                     "(Litex.FiniteFunction.{constructor} (M := M) {vector})"
                 ))
             }
+            Obj::FunctionSpace(FunctionSpace::AnonymousFn(function)) => {
+                // A recorded beta substitution supplies a semantic endpoint,
+                // not a new source constructor with a second WD registration.
+                self.compile_function_literal_value(function, position, &HashMap::new())
+            }
             Obj::SetFormer(SetFormer::SetBuilder(_)) => {
                 // Beta compares semantic values. The selected literal and the
                 // equality endpoints retain their separately checked WD; this
@@ -742,11 +776,69 @@ impl LitexToLeanCompiler {
         current: &Obj,
         application: &Obj,
         replacement: &Obj,
+        continued: &Obj,
         beta: &str,
         position: &SourcePosition<'_>,
     ) -> Result<Option<(Obj, String)>, LeanCompileError> {
         if current.ir() == application.ir() {
+            if replacement.ir() != continued.ir() {
+                return Err(LeanCompileError::unsupported(
+                    "FunctionDefinition/Continuation",
+                ));
+            }
             return Ok(Some((replacement.clone(), beta.to_string())));
+        }
+        if let (Obj::FnObj(call), Obj::FnObj(prefix)) = (current, application) {
+            if prefix.body.len() == 1
+                && call.body.len() > 1
+                && call.head == prefix.head
+                && call.body[0] == prefix.body[0]
+            {
+                let Obj::FnObj(next) = continued else {
+                    return Err(LeanCompileError::unsupported(
+                        "FunctionDefinition/Continuation",
+                    ));
+                };
+                let (head_matches, prior_groups) = match replacement {
+                    Obj::FnObj(value) => (value.head == next.head, value.body.as_slice()),
+                    _ => (
+                        function_head_object(next.head.as_ref())?.ir() == replacement.ir(),
+                        &[][..],
+                    ),
+                };
+                if !head_matches
+                    || !prior_groups
+                        .iter()
+                        .chain(&call.body[1..])
+                        .eq(next.body.iter())
+                {
+                    return Err(LeanCompileError::unsupported(
+                        "FunctionDefinition/Continuation",
+                    ));
+                }
+                let mut equality = beta.to_string();
+                for group in &call.body[1..] {
+                    if !(1..=3).contains(&group.len()) {
+                        return Err(LeanCompileError::unsupported(
+                            "FunctionDefinition/Arguments",
+                        ));
+                    }
+                    let values = group
+                        .iter()
+                        .map(|x| self.compile_normalization_value(x, position))
+                        .collect::<Result<Vec<_>, _>>()?;
+                    let input = if values.len() == 1 {
+                        values[0].clone()
+                    } else {
+                        format!(
+                            "(Litex.FiniteFunction.tupleValue (M := M) ![{}])",
+                            values.join(", ")
+                        )
+                    };
+                    equality = format!("(congrArg (fun _f => Litex.FunctionSemantics.callValue (M := M) _f {input}) {equality})");
+                }
+                return Ok(Some((continued.clone(), equality)));
+            }
         }
         match current {
             Obj::ExpLogOperator(ExpLogOperator::Sqrt(value)) => {
@@ -754,6 +846,7 @@ impl LitexToLeanCompiler {
                     &value.arg,
                     application,
                     replacement,
+                    continued,
                     beta,
                     position,
                 )? {
@@ -777,6 +870,7 @@ impl LitexToLeanCompiler {
                         child,
                         application,
                         replacement,
+                        continued,
                         beta,
                         position,
                     )? {
@@ -809,6 +903,7 @@ impl LitexToLeanCompiler {
                         child,
                         application,
                         replacement,
+                        continued,
                         beta,
                         position,
                     )? {

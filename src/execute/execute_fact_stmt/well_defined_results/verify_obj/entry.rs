@@ -98,6 +98,9 @@ impl Runtime {
         if let Obj::IntegralOperator(crate::ast::obj::IntegralOperator::Riemann(value)) = obj {
             return self.verify_riemann_integral_well_definedness(value, verify_state);
         }
+        if obj.multivariable_selector_name().is_some() {
+            return self.verify_multivariable_selector_well_definedness(obj, verify_state);
+        }
         if let Obj::DerivativeOperator(crate::ast::obj::DerivativeOperator::AtPoint(value)) = obj {
             return self.verify_derivative_well_definedness(value, verify_state);
         }

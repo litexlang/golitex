@@ -8,6 +8,9 @@ use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::runtime::FactId;
 
 pub enum AtomicExceptEqualityFactSearchProofByBuiltinStrategy {
+    MultivariableAnalysis(
+        crate::execute::execute_fact_stmt::multivariable::strategy::MultivariableStrategyProof,
+    ),
     PointwiseDerivative(
         crate::execute::execute_fact_stmt::pointwise_derivative::PointwiseDerivativeProof,
     ),
@@ -37,6 +40,7 @@ pub enum AtomicExceptEqualityFactSearchProofByBuiltinStrategy {
     ProductNonnegativeBothNonpos(ProductNonnegativeBothNonposStrategySingleStep),
     AddComponentwiseLessEqual(AddComponentwiseLessEqualStrategySingleStep),
     AddCrossedLessEqual(AddCrossedLessEqualStrategySingleStep),
+    AddDoubleUpperBound(AddDoubleUpperBoundStrategySingleStep),
     SubSharedSubtrahendLessEqual(SubSharedSubtrahendLessEqualStrategySingleStep),
     SubSharedMinuendLessEqual(SubSharedMinuendLessEqualStrategySingleStep),
     DivSharedPositiveDenomLessEqual(DivSharedPositiveDenomLessEqualStrategySingleStep),
@@ -456,6 +460,33 @@ pub struct SubNonpositiveToZeroStrategySingleStep {
 pub struct SubNonnegativeFromZeroStrategySingleStep {
     pub requirement_facts: Vec<Fact>,
     pub proof_of_requirement_facts: Vec<VerifyFactResult>,
+}
+
+// Two checked upper bounds give a+b<=2*M, with no sign assumption on M.
+// Example: a<=M, b<=M => a+b<=2*M.
+pub struct AddDoubleUpperBoundStrategySingleStep {
+    pub requirement_facts: Vec<Fact>,
+    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
+}
+
+impl AddDoubleUpperBoundStrategySingleStep {
+    pub fn new(
+        requirement_facts: Vec<Fact>,
+        proof_of_requirement_facts: Vec<VerifyFactResult>,
+    ) -> Self {
+        Self {
+            requirement_facts,
+            proof_of_requirement_facts,
+        }
+    }
+}
+
+impl From<AddDoubleUpperBoundStrategySingleStep>
+    for AtomicExceptEqualityFactSearchProofByBuiltinStrategy
+{
+    fn from(proof: AddDoubleUpperBoundStrategySingleStep) -> Self {
+        Self::AddDoubleUpperBound(proof)
+    }
 }
 
 // Strategy: mul scale grow

@@ -277,8 +277,7 @@ fn range_followup_examples_replay_deterministically() {
 }
 
 #[test]
-fn raw_anonymous_capture_requires_its_original_instantiation() {
+fn raw_anonymous_capture_replays_its_original_instantiation() {
     let (run, compiler) = super::execute("have fn outer(x R) R = fn(y R) R {x + y}(1)\n");
-    let error = compiler.compile_run(&run, "bound_literal").unwrap_err();
-    assert_eq!(error.route, "Function/BoundAnonymousCapture");
+    compiler.compile_run(&run, "bound_literal").unwrap();
 }

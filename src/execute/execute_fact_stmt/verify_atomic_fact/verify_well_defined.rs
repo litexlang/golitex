@@ -115,6 +115,56 @@ impl Runtime {
                 },
             ));
         }
+        let multi_relation = match fact {
+            AtomicFact::MultivariableAnalysisFact(f) => Some(&f.relation),
+            AtomicFact::NotMultivariableAnalysisFact(f) => Some(&f.relation),
+            _ => None,
+        };
+        if let Some(relation) = multi_relation {
+            let Some((function_domain, requirements)) =
+                self.multivariable_domain_requirements(relation, verify_state)?
+            else {
+                return Ok(VerifyAtomicFactWellDefinedResult::Failed(
+                    FailToVerifyAtomicFactWellDefinedResult::RealAnalysisDomain {
+                        fact: fact.clone(),
+                        well_defined_of_each_parameter: succeeded_args,
+                    },
+                ));
+            };
+            let mut completed = Vec::new();
+            for requirement in requirements {
+                let result = self.verify_fact(&requirement, verify_state)?;
+                if result.is_failed() {
+                    return Ok(VerifyAtomicFactWellDefinedResult::Failed(
+                        FailToVerifyAtomicFactWellDefinedResult::Domain {
+                            well_defined_of_each_parameter: succeeded_args,
+                            predicate_signature,
+                            completed,
+                            requirement,
+                            result: Box::new(result),
+                        },
+                    ));
+                }
+                completed.push(
+                    super::well_defined_result::PredicateDomainWellDefinedProof {
+                        requirement,
+                        result: Box::new(result),
+                    },
+                );
+            }
+            return Ok(VerifyAtomicFactWellDefinedResult::Success(
+                AtomicFactWellDefinedProof {
+                    well_defined_of_each_parameter: succeeded_args,
+                    predicate_signature,
+                    predicate_domain: PredicateDomainProof::MultivariableAnalysis(
+                        super::well_defined_result::MultivariableAnalysisPredicateDomainProof {
+                            function_domain: Box::new(function_domain),
+                            requirements: completed,
+                        },
+                    ),
+                },
+            ));
+        }
         let analysis_sequence = match fact {
             AtomicFact::SequenceAnalysisFact(f) => Some(&f.sequence),
             AtomicFact::NotSequenceAnalysisFact(f) => Some(&f.sequence),
@@ -950,6 +1000,8 @@ impl Runtime {
 
 fn atomic_except_equality_fact_arg_objs(fact: &AtomicFact) -> Vec<&Obj> {
     match fact {
+        AtomicFact::MultivariableAnalysisFact(f) => f.relation.argument_refs(),
+        AtomicFact::NotMultivariableAnalysisFact(f) => f.relation.argument_refs(),
         AtomicFact::HasRiemannIntegralFact(f) => vec![&f.function, &f.lower, &f.upper, &f.value],
         AtomicFact::NotHasRiemannIntegralFact(f) => vec![&f.function, &f.lower, &f.upper, &f.value],
         AtomicFact::FunctionRiemannIntegrableFact(f) => vec![&f.function, &f.lower, &f.upper],

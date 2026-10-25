@@ -1,0 +1,101 @@
+# Valid field, scalar vector space, and complete maps for rejection controls.
+
+have fn real_inv(x R: x != 0) R = 1 / x
+
+have fn real_add(x, y R) R = x + y
+
+have fn real_neg(x R) R = -x
+
+have fn real_mul(x, y R) R = x * y
+
+forall x, y, z R:
+    real_add(real_add(x, y), z) = real_add(x, real_add(y, z))
+    real_mul(real_mul(x, y), z) = real_mul(x, real_mul(y, z))
+    real_mul(x, real_add(y, z)) = real_add(real_mul(x, y), real_mul(x, z))
+
+forall x, y R:
+    real_add(x, y) = real_add(y, x)
+    real_mul(x, y) = real_mul(y, x)
+
+forall x R:
+    real_add(0, x) = x
+    real_add(x, real_neg(x)) = 0
+    real_mul(1, x) = x
+
+forall x R:
+    x != 0
+    =>:
+        real_mul(x, real_inv(x)) = 1
+
+release thm struct_member((0, 1, real_add, real_neg, real_mul, real_inv), &Algebra::field::Field<R>)
+
+have real_field &Algebra::field::Field<R> = (0, 1, real_add, real_neg, real_mul, real_inv)
+
+claim:
+    ? forall x R:
+        real_add(0,x)=x
+        exist y R st {real_add(x,y)=0}
+    real_add(0,x)=x
+    real_add(x,-x)=0
+    witness exist y R st {real_add(x,y)=0} from -x
+
+claim:
+    ? forall a,b,x R:
+        real_mul(real_field.mul(a,b),x)=real_mul(a,real_mul(b,x))
+        real_mul(real_field.add(a,b),x)=real_add(real_mul(a,x),real_mul(b,x))
+    real_field.mul=real_mul
+    real_field.add=real_add
+    real_field.mul(a,b)=real_mul(a,b)=a*b
+    real_field.add(a,b)=real_add(a,b)=a+b
+    real_mul(real_field.mul(a,b),x)=real_mul(a*b,x)=(a*b)*x=a*(b*x)=real_mul(a,real_mul(b,x))
+    real_mul(real_field.add(a,b),x)=real_mul(a+b,x)=(a+b)*x=a*x+b*x=real_add(real_mul(a,x),real_mul(b,x))
+
+forall a,x,y R:
+    real_mul(a,real_add(x,y))=real_add(real_mul(a,x),real_mul(a,y))
+
+claim:
+    ? forall x R:
+        real_mul(real_field.one,x)=x
+    real_field.one=1
+    real_mul(real_field.one,x)=real_mul(1,x)=1*x=x
+
+real_add $in fn(x,y R) R
+
+real_mul $in fn(a R,x R) R
+
+forall x,y,z R:
+    real_add(real_add(x,y),z)=real_add(x,real_add(y,z))
+
+forall x,y R:
+    real_add(x,y)=real_add(y,x)
+
+release thm struct_member((0,real_add,real_mul),&Algebra::vector_space::VectorSpace<R,real_field,R>)
+
+have scalars &Algebra::vector_space::VectorSpace<R,real_field,R> = (0,real_add,real_mul)
+
+have fn constant_zero(x R) R=0
+
+have fn shift(x R) R=x+1
+
+have fn square(x R) R=x*x
+
+have fn bad_smul(a R,x R) R=0
+
+shift(0)=1
+
+square(0)=0
+
+thm zero_is_linear:
+    ? $Algebra::vector_space::is_linear_map(R,real_field,R,scalars,R,scalars,constant_zero)
+    claim:
+        ? forall x,y R:
+            constant_zero(scalars.add(x,y))=scalars.add(constant_zero(x),constant_zero(y))
+        constant_zero(x)=0
+        constant_zero(y)=0
+        scalars.add(constant_zero(x),constant_zero(y))=real_add(0,0)=0
+    claim:
+        ? forall a,x R:
+            constant_zero(scalars.smul(a,x))=scalars.smul(a,constant_zero(x))
+        constant_zero(x)=0
+        scalars.smul(a,constant_zero(x))=real_mul(a,0)=0
+    by def $Algebra::vector_space::is_linear_map(R,real_field,R,scalars,R,scalars,constant_zero)

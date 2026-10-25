@@ -7,7 +7,7 @@
 <!-- quantitative-iteration-table:start -->
 ## 定量迭代：完整进程耗时（秒）
 
-| 问题 | Litex 中位数（秒） | Lean 中位数（秒） | 比值（Lean ÷ Litex） |
+| 问题 | 速度：Litex 耗时中位数（秒）↓ | 速度：Lean 耗时中位数（秒）↓ | 速度：Litex 加速比（Lean 耗时÷Litex 耗时）↑ |
 | --- | ---: | ---: | ---: |
 | [参数化 Newton 单步](#iteration-parametric-newton) | 0.213 | 60.180 | 283.09× |
 | [二次函数梯度下降](#iteration-quadratic-descent) | 2.905 | 21.303 | 7.33× |
@@ -39,11 +39,39 @@ results/          原始样本、汇总、验证记录、环境快照
 - Lean：`#probe` 自定义命令用纳秒时钟包裹 `elabCommand`，`Elab.async=false` 让证明构造与内核检查同步；计时不含命令解析。
 - 这些是两条**检查路径**的对照，不是语言或内核的总体排名，也不是作者完成数学任务所需时间的同比缩短。
 
+<a id="de-bruijn-factor"></a>
+
+### 德布鲁因因子：形式化比普通数学多写多少
+
+**德布鲁因因子（de Bruijn factor）= 形式化文本长度 ÷ 非形式化数学文本长度**。因子越小，额外书写越少：1.5 表示长 50%，0.8 表示短 20%。它与检查速度分别列出，展示同一个用例的表达长度和运行耗时。[Wiedijk 原文](https://www.cs.ru.nl/~freek/factor/factor.pdf)讨论了这个比值，以及未压缩和压缩文件的不同计量方式。
+
+本页新增的 **DF\*** 沿用既有源码对比的有效字符口径：去掉空白、整行注释、导入、`set_option` 和 `#` 开头的验证指令，计 Unicode 字符；计入声明、名字、命题和证明，不展开两侧已载入的库或内置规则。非形式化文本只去掉空白。两侧共用同一份英文数学文本，包含对应的命题、条件和证明或计算说明。DF\* 是字符计量的变体，不是文献中的原始字节或 gzip 因子。
+
+例如商余分解的共同文本是：
+
+> For an integer a and a positive integer d, a = d⌊a/d⌋ + (a mod d), by quotient-remainder decomposition.
+
+**表格左侧的“表达”两列比较德布鲁因因子，右侧的“速度”三列比较运行耗时。**计算方向分别是：
+
+- **表达长度：**Litex 德布鲁因因子 = Litex 字符数 ÷ 普通数学字符数；Lean 德布鲁因因子 = Lean 字符数 ÷ 同一份普通数学字符数。两个因子都越小越简短。
+- **运行速度：**两个耗时都以毫秒计，越小越快；Litex 加速比 = Lean 耗时 ÷ Litex 耗时，越大表示 Litex 越快。
+
+| 用例 | 表达：Litex 德布鲁因因子 DF* ↓ | 表达：Lean 德布鲁因因子 DF* ↓ | 速度：Litex 耗时 (ms) ↓ | 速度：Lean 耗时 (ms) ↓ | 速度：Litex 加速比（Lean 耗时÷Litex 耗时）↑ |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 整数商余分解 | 0.35 | 1.24 | 1.135 | 3.341 | 2.94× |
+| √2 无理数完整证明 | 1.73 | 4.91 | 199.285 | 779.754 | 3.91× |
+
+例如第一行的两个因子是 **30÷85 = 0.35、105÷85 = 1.24**，加速比是 **3.341375÷1.135042 = 2.94×**；计算使用未舍入数据。这里的 Lean 路线沿用各表的既有计时选择，不另挑较长源码放大差距，也不代表最短可能写法。
+
+**这些是回溯示例**：[共同非形式化文本](cases/informal-baselines.json)是在已有形式化源码之后补写的，不是预先选定原文的翻译实验。因此不汇总成“Litex 的固定德布鲁因因子”，也不能据此直接推出更易读或更易写。分母的语言、记号和详细程度会影响数值；后续正式实验应先固定原文再独立形式化。现有结果也保留 Lean 更短的行，例如幂集基数、奇数谓词和互反序列。
+
+本次覆盖三个生成批次的 24 例及类型指南中的带条件倒数。两条多步用例的当前 `.lit` 已比计时用例定义增加了证明步骤，因子标为 **—**；其余旧批次尚未补齐共同原文。[逐例字符数、源码哈希与两条差异记录](results/de-bruijn-factors.json)可由 `python3 examples/litex_vs_lean_speed/harness/de_bruijn.py --check` 复核；`--write` 只从保存的数据重建长度记录和三张结果表，不重新测速。
+
 ## 总览
 
 下表只统计既有检查路径批次；完整进程的三组实验单独列在本页开头。
 
-| 领域 | 例数 | 倍率范围（Lean ÷ Litex） |
+| 领域 | 例数 | 运行速度：加速比范围（Lean 耗时÷Litex 耗时） |
 | --- | ---: | ---: |
 | 自然数算术与根式 | 2 | 14× – 37× |
 | 有限求和 | 4 | 3.5× – 7.3× |
@@ -71,14 +99,14 @@ results/          原始样本、汇总、验证记录、环境快照
 
 ### 1. 基础算术与根式（2026-10-22）
 
-| 数学语句 | Litex | Lean 最快 | 倍率 | Lean 路线 | 源码 |
+| 数学语句 | 速度：Litex 耗时 (ms) ↓ | 速度：Lean 最快耗时 (ms) ↓ | 速度：Litex 加速比（Lean 耗时÷Litex 耗时）↑ | Lean 路线 | 源码 |
 | --- | ---: | ---: | ---: | --- | --- |
 | `1 + 1 = 2`（Mathlib 已载入） | 0.037 | 1.361 | **36.66×** | `rfl` | [lit](sources/arithmetic/add.lit) · [lean](sources/arithmetic/mathlib_nat.lean) |
 | `sqrt(1) = 1` | 0.039 | 0.555 | **14.28×** | `Real.sqrt_one` | [lit](sources/arithmetic/sqrt.lit) · [lean](sources/arithmetic/sqrt_exact.lean) |
 
 ### 2. 有限求和与三角（2026-10-22）
 
-| 数学语句 | Litex | Lean 最快 | 倍率 | Lean 路线 | 源码 |
+| 数学语句 | 速度：Litex 耗时 (ms) ↓ | 速度：Lean 最快耗时 (ms) ↓ | 速度：Litex 加速比（Lean 耗时÷Litex 耗时）↑ | Lean 路线 | 源码 |
 | --- | ---: | ---: | ---: | --- | --- |
 | `sum(1,10,fn(k Z) Z {k}) = 55` | 1.623 | 5.622 | **3.46×** | `decide` | [lit](sources/sums/sum_id_10.lit) |
 | `sum(1,10,fn(k Z) Z {k^2}) = 385` | 2.224 | 8.266 | **3.72×** | `decide` | [lit](sources/sums/sum_sq_10.lit) |
@@ -92,7 +120,7 @@ results/          原始样本、汇总、验证记录、环境快照
 
 ### 3. 初等计算、数论与大数（2026-10-22）
 
-| 数学语句 | Litex | Lean 最快 | 倍率 | Lean 路线 | 源码 |
+| 数学语句 | 速度：Litex 耗时 (ms) ↓ | 速度：Lean 最快耗时 (ms) ↓ | 速度：Litex 加速比（Lean 耗时÷Litex 耗时）↑ | Lean 路线 | 源码 |
 | --- | ---: | ---: | ---: | --- | --- |
 | `log(2,8) = 3` | 0.064 | 13.992 | **217.01×** | 显式重写（`logb_pow` 等） | [lit](sources/elementary/log_2_8.lit) · [lean](sources/elementary/log_2_8_explicit.lean) |
 | `sqrt(2)*sqrt(8) = 4` | 0.240 | 7.077 | **29.50×** | `sqrt_mul` + `norm_num` | [lit](sources/elementary/radical_product.lit) |
@@ -108,7 +136,7 @@ results/          原始样本、汇总、验证记录、环境快照
 
 每例都测了 tactic、直接引理与简短证明项多条路线，下表取每题已测最快的 Lean 写法。“语句形状”指这条命题主要考的是哪种 Litex 语句。
 
-| 语句形状 | 数学语句 | Litex | Lean | 倍率 |
+| 语句形状 | 数学语句 | 速度：Litex 耗时 (ms) ↓ | 速度：Lean 耗时 (ms) ↓ | 速度：Litex 加速比（Lean 耗时÷Litex 耗时）↑ |
 | --- | --- | ---: | ---: | ---: |
 | 全称 + 加法保号 | 两正实数之和为正 | 0.394 | 9.305 | **23.60×** |
 | 全称 + 乘法保号 | 两正实数之积为正 | 0.408 | 4.986 | **12.23×** |
@@ -140,7 +168,7 @@ results/          原始样本、汇总、验证记录、环境快照
 
 整段程序（定义 + 使用，或完整证明块）的耗时：
 
-| 程序 | Litex | Lean | 倍率 | 源码 |
+| 程序 | 速度：Litex 耗时 (ms) ↓ | 速度：Lean 耗时 (ms) ↓ | 速度：Litex 加速比（Lean 耗时÷Litex 耗时）↑ | 源码 |
 | --- | ---: | ---: | ---: | --- |
 | 表达式函数：定义平方并计算 | 0.730 | 7.609 | **10.42×** | [lit](sources/declarations/expression_function.lit) · [lean](sources/declarations/expression_function.lean) |
 | 带定义域条件的倒数函数 | 1.823 | 8.583 | **4.71×** | [lit](sources/declarations/guarded_function.lit) · [lean](sources/declarations/guarded_function.lean) |
@@ -160,25 +188,25 @@ results/          原始样本、汇总、验证记录、环境快照
 
 这一轮补的是前五批没覆盖的领域：集合、函数、整数算术与整除、有限组合、微积分，以及一个“稍微大一点”的经典证明。用例定义在 `cases/new-round.json`，源码在 `sources/new-round/`，原始样本在 `results/new-round-raw.json`。
 
-| 领域 | 数学语句 | Litex 写法要点 | Lean 写法要点 | Litex | Lean | 倍率 |
-| --- | --- | --- | --- | ---: | ---: | ---: |
-| 经典大证明 | √2 不是有理数 | `by contra:` + 唯一既约分数 + 素数整除幂，推出 p、q 同为偶数 | 同五步：`Rat.num`/`Rat.den` 互素 + 奇偶性 + `Nat.Prime.dvd_of_dvd_pow` | 199.285 | 779.754 | **3.91×** |
-| 集合 | 并交分配律 | `union(A,intersect(B,D))=intersect(union(A,B),union(A,D))` | `Set.union_inter_distrib_left` | 0.286 | 1.380 | **4.83×** |
-| 集合 | 差集对并集的德摩根律 | `set_minus(A,union(B,D))=intersect(set_minus(A,B),set_minus(A,D))` | `ext` + `simp` + `tauto` | 0.279 | 22.842 | **81.96×** |
-| 集合 | 交集保持包含 | `A $subset B =>: intersect(A,D) $subset intersect(B,D)` | `Set.inter_subset_inter_left` | 0.934 | 1.500 | **1.61×** |
-| 函数 | 函数值属于值域 | `f(x) $in fn_range(f)` | `Set.mem_range_self` | 0.313 | 0.920 | **2.94×** |
-| 整数算术 | 整数除法的商余分解 | `a=d*quot(a,d)+a%d` | `Int.mul_ediv_add_emod` | 1.135 | 3.341 | **2.94×** |
-| 整除 | 整数乘积被其因子整除 | `$dvd(a*c,c)` | `dvd_mul_left` | 0.604 | 1.712 | **2.83×** |
-| 有限组合 | `{1,2,3}` 的元素个数 | `finite_set_size({1,2,3})=3` | `by decide` | 0.049 | 3.597 | **73.43×** |
-| 有限组合 | n 元集合有 2ⁿ 个子集 | `finite_set_size(power_set(A))=2^finite_set_size(A)` | `Finset.card_powerset` | 0.250 | 1.047 | **4.19×** |
-| 组合 | 自然数阶乘为正 | `factorial(n)>0` | `Nat.factorial_pos` | 0.165 | 0.582 | **3.54×** |
-| 微积分 | x² 在 3 处的导数为 6 | `$has_derivative_at(fn(t R) R {t^2},3,6)` | `hasDerivAt_pow` + `congr_deriv` + `norm_num` | 1.555 | 46.258 | **29.75×** |
-| 笛卡尔积 | 有序对的坐标重构 | `(p(1),p(2))=p` | `Prod.mk.eta` | 0.170 | 0.567 | **3.34×** |
-| 微积分 | x² 在 3 处连续 | `$is_continuous_at(fn(t R) R {t^2},3)` | `continuousAt_pow` | 0.377 | 8.986 | **23.83×** |
+| 领域 | 数学语句 | Litex 写法要点 | Lean 写法要点 | 表达：Litex 德布鲁因因子 DF* ↓ | 表达：Lean 德布鲁因因子 DF* ↓ | 速度：Litex 耗时 (ms) ↓ | 速度：Lean 耗时 (ms) ↓ | 速度：Litex 加速比（Lean 耗时÷Litex 耗时）↑ |
+| --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: |
+| 经典大证明 | √2 不是有理数 | `by contra:` + 唯一既约分数 + 素数整除幂，推出 p、q 同为偶数 | 同五步：`Rat.num`/`Rat.den` 互素 + 奇偶性 + `Nat.Prime.dvd_of_dvd_pow` | 1.73 | 4.91 | 199.285 | 779.754 | **3.91×** |
+| 集合 | 并交分配律 | `union(A,intersect(B,D))=intersect(union(A,B),union(A,D))` | `Set.union_inter_distrib_left` | 1.08 | 1.09 | 0.286 | 1.380 | **4.83×** |
+| 集合 | 差集对并集的德摩根律 | `set_minus(A,union(B,D))=intersect(set_minus(A,B),set_minus(A,D))` | `ext` + `simp` + `tauto` | 0.85 | 1.16 | 0.279 | 22.842 | **81.96×** |
+| 集合 | 交集保持包含 | `A $subset B =>: intersect(A,D) $subset intersect(B,D)` | `Set.inter_subset_inter_left` | 0.99 | 1.00 | 0.934 | 1.500 | **1.61×** |
+| 函数 | 函数值属于值域 | `f(x) $in fn_range(f)` | `Set.mem_range_self` | 0.68 | 1.36 | 0.313 | 0.920 | **2.94×** |
+| 整数算术 | 整数除法的商余分解 | `a=d*quot(a,d)+a%d` | `Int.mul_ediv_add_emod` | 0.35 | 1.24 | 1.135 | 3.341 | **2.94×** |
+| 整除 | 整数乘积被其因子整除 | `$dvd(a*c,c)` | `dvd_mul_left` | 0.52 | 1.24 | 0.604 | 1.712 | **2.83×** |
+| 有限组合 | `{1,2,3}` 的元素个数 | `finite_set_size({1,2,3})=3` | `by decide` | 0.44 | 0.75 | 0.049 | 3.597 | **73.43×** |
+| 有限组合 | n 元集合有 2ⁿ 个子集 | `finite_set_size(power_set(A))=2^finite_set_size(A)` | `Finset.card_powerset` | 0.84 | 0.78 | 0.250 | 1.047 | **4.19×** |
+| 组合 | 自然数阶乘为正 | `factorial(n)>0` | `Nat.factorial_pos` | 0.42 | 0.98 | 0.165 | 0.582 | **3.54×** |
+| 微积分 | x² 在 3 处的导数为 6 | `$has_derivative_at(fn(t R) R {t^2},3,6)` | `hasDerivAt_pow` + `congr_deriv` + `norm_num` | 0.80 | 3.07 | 1.555 | 46.258 | **29.75×** |
+| 笛卡尔积 | 有序对的坐标重构 | `(p(1),p(2))=p` | `Prod.mk.eta` | 0.35 | 0.67 | 0.170 | 0.567 | **3.34×** |
+| 微积分 | x² 在 3 处连续 | `$is_continuous_at(fn(t R) R {t^2},3)` | `continuousAt_pow` | 0.59 | 1.14 | 0.377 | 8.986 | **23.83×** |
 
 同一个命题在 Lean 侧换写法，差别可能很大，所以每条备选路线都单独测了：
 
-| 用例 | Lean 路线 | 写法提要 | Lean (ms) | 倍率 |
+| 用例 | Lean 路线 | 写法提要 | 速度：Lean 耗时 (ms) ↓ | 速度：Litex 加速比（Lean 耗时÷Litex 耗时）↑ |
 | --- | --- | --- | ---: | ---: |
 | 并交分配律 | `lemma`（主表口径） | 引用与目标同形的 Mathlib 引理 | 1.380 | 4.83× |
 | 并交分配律 | `ext_simp` | `ext x` + `simp` + `tauto` 自己拆集合 | 34.521 | 120.85× |
@@ -274,21 +302,21 @@ example : Irrational (Real.sqrt 2) := by
 
 上一轮的教训是：Lean 一侧引用一条与目标同形的定理，不算“更快”。这一轮专门挑 Lean 没有同形定理、必须自己推几步的命题：用例在 `cases/multi-step.json`，源码在 `sources/multi-step/`，每条备选 Lean 路线都单独计时。
 
-| 领域 | 数学语句 | Litex 写法 | Lean 写法 | Litex | Lean | 倍率 |
-| --- | --- | --- | --- | ---: | ---: | ---: |
-| 不等式 | 平方和为零则两数都为零 | `x^2+y^2=0 =>: x=0 and y=0` | `constructor <;> nlinarith [sq_nonneg x, sq_nonneg y]` | 0.685 | 209.744 | **306.11×** |
-| 不等式 | 正数的 `x/(x+1)` 为正 | 先证 `x+1 > 0`，再证 `x/(x+1) > 0` | `have h1 : 0 < x+1 := by linarith`；`div_pos hx h1` | 0.949 | 29.170 | **30.75×** |
-| 代数 | 等式两边同乘 2 的消去 | `2*x = 2*y =>: x = y` | `mul_left_cancel₀ (by norm_num) h` | 0.335 | 10.726 | **32.01×** |
-| 不等式 | 实数的平方加一为正 | `x^2 + 1 > 0` | `positivity` | 2.189 | 17.404 | **7.95×** |
-| 不等式 | `x² + y² ≥ 2xy` | `(x-y)^2 >= 0` → 展开 → `x^2+y^2 >= 2*x*y` | `nlinarith [sq_nonneg (x-y)]` | 52.271 | 87.954 | **1.68×** |
-| 存在构造 | 任意正整数之上都有偶数 | `witness … from 2*n`，再证整除与大于 | `⟨2*n, by omega, by omega, ⟨n, by ring⟩⟩` | 4.426 | 34.877 | **7.88×** |
-| 算术 | 正整数小于它的两倍 | `2*n > n` | `omega` | 0.885 | 14.761 | **16.69×** |
+| 领域 | 数学语句 | Litex 写法 | Lean 写法 | 表达：Litex 德布鲁因因子 DF* ↓ | 表达：Lean 德布鲁因因子 DF* ↓ | 速度：Litex 耗时 (ms) ↓ | 速度：Lean 耗时 (ms) ↓ | 速度：Litex 加速比（Lean 耗时÷Litex 耗时）↑ |
+| --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: |
+| 不等式 | 平方和为零则两数都为零 | `x^2+y^2=0 =>: x=0 and y=0` | `constructor <;> nlinarith [sq_nonneg x, sq_nonneg y]` | 0.42 | 1.19 | 0.685 | 209.744 | **306.11×** |
+| 不等式 | 正数的 `x/(x+1)` 为正 | 先证 `x+1 > 0`，再证 `x/(x+1) > 0` | `have h1 : 0 < x+1 := by linarith`；`div_pos hx h1` | 0.37 | 1.11 | 0.949 | 29.170 | **30.75×** |
+| 代数 | 等式两边同乘 2 的消去 | `2*x = 2*y =>: x = y` | `mul_left_cancel₀ (by norm_num) h` | 0.43 | 1.54 | 0.335 | 10.726 | **32.01×** |
+| 不等式 | 实数的平方加一为正 | `x^2 + 1 > 0` | `positivity` | 0.39 | 1.07 | 2.189 | 17.404 | **7.95×** |
+| 不等式 | `x² + y² ≥ 2xy` | `(x-y)^2 >= 0` → 展开 → `x^2+y^2 >= 2*x*y` | `nlinarith [sq_nonneg (x-y)]` | 1.02 | 1.34 | 52.271 | 87.954 | **1.68×** |
+| 存在构造 | 任意正整数之上都有偶数 | `witness … from 2*n`，再证整除与大于 | `⟨2*n, by omega, by omega, ⟨n, by ring⟩⟩` | — | — | 4.426 | 34.877 | **7.88×** |
+| 算术 | 正整数小于它的两倍 | `2*n > n` | `omega` | — | — | 0.885 | 14.761 | **16.69×** |
 
 每条用例的完整源码在 `sources/multi-step/`：`<id>.lit` 与 `<id>__<method>.lean`。
 
 同一命题的其它 Lean 路线（主表用最快的）：
 
-| 用例 | Lean 路线 | Lean (ms) | 倍率 |
+| 用例 | Lean 路线 | 速度：Lean 耗时 (ms) ↓ | 速度：Litex 加速比（Lean 耗时÷Litex 耗时）↑ |
 | --- | --- | ---: | ---: |
 | 等式两边同乘 2 的消去 | `linarith` | 37.737 | 112.63× |
 | 等式两边同乘 2 的消去 | `mul_left_cancel₀`（主表） | 10.726 | 32.01× |
@@ -318,12 +346,12 @@ example : Irrational (Real.sqrt 2) := by
 
 前两轮比的都是“事实语句”（`forall … =>: …` 这类）。这一轮换成别的语句形式和 showcases 里的小问题：自定义谓词的定义加见证、从自定义谓词里取见证再推理、ε-N 风格的极限小问题（来自 `showcases/Functions_and_Change/reciprocal.lit`），以及集合相等（Litex 的三种等式义务之一）。用例在 `cases/statement-forms.json`，源码在 `sources/statement-forms/`。
 
-| 语句形式 | 小问题 | Litex 写法 | Lean 写法 | Litex | Lean | 倍率 |
-| --- | --- | --- | --- | ---: | ---: | ---: |
-| 谓词定义 + 见证 | 自定义奇数谓词，见证 7 是奇数 | `prop odd(a Z): exist t Z st {a = 2*t+1}`；`witness $odd(7) from 3` | `∃ t : Int, (7:Int) = 2*t + 1`；`⟨3, by norm_num⟩` | 0.521 | 4.575 | **8.77×** |
-| 自定义谓词推理 | 奇数乘 3 加 2 还是奇数 | `obtain k from $odd(n)`；`witness $odd(3*n+2) from 3*k+2:` + 等式链 | `rintro n ⟨k, hk⟩`；`⟨3*k + 2, by omega⟩` | 6.810 | 36.353 | **5.34×** |
-| 极限风格（ε-N） | 互反序列 `1/n` 可以任意小 | 定义 `a(n)=1/n`，两行具体计算，再 `claim ? forall ε R+: exist n N+ st {a(n) < ε}` | `obtain ⟨n, hn⟩ := exists_nat_one_div_lt hε`；取 `n+1` | 9.553 | 35.269 | **3.69×** |
-| 集合相等的义务 | `A ⊆ B` 时 `A ∪ B = B` | `forall A,B power_set(R): A $subset B =>: union(A,B) = B` | `ext x` + 两个方向，或 `Set.union_eq_right.mpr h` | 0.186 | 1.217 | **6.53×** |
+| 语句形式 | 小问题 | Litex 写法 | Lean 写法 | 表达：Litex 德布鲁因因子 DF* ↓ | 表达：Lean 德布鲁因因子 DF* ↓ | 速度：Litex 耗时 (ms) ↓ | 速度：Lean 耗时 (ms) ↓ | 速度：Litex 加速比（Lean 耗时÷Litex 耗时）↑ |
+| --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: |
+| 谓词定义 + 见证 | 自定义奇数谓词，见证 7 是奇数 | `prop odd(a Z): exist t Z st {a = 2*t+1}`；`witness $odd(7) from 3` | `∃ t : Int, (7:Int) = 2*t + 1`；`⟨3, by norm_num⟩` | 0.70 | 0.63 | 0.521 | 4.575 | **8.77×** |
+| 自定义谓词推理 | 奇数乘 3 加 2 还是奇数 | `obtain k from $odd(n)`；`witness $odd(3*n+2) from 3*k+2:` + 等式链 | `rintro n ⟨k, hk⟩`；`⟨3*k + 2, by omega⟩` | 1.14 | 0.70 | 6.810 | 36.353 | **5.34×** |
+| 极限风格（ε-N） | 互反序列 `1/n` 可以任意小 | 定义 `a(n)=1/n`，两行具体计算，再 `claim ? forall ε R+: exist n N+ st {a(n) < ε}` | `obtain ⟨n, hn⟩ := exists_nat_one_div_lt hε`；取 `n+1` | 1.29 | 0.95 | 9.553 | 35.269 | **3.69×** |
+| 集合相等的义务 | `A ⊆ B` 时 `A ∪ B = B` | `forall A,B power_set(R): A $subset B =>: union(A,B) = B` | `ext x` + 两个方向，或 `Set.union_eq_right.mpr h` | 0.46 | 0.63 | 0.186 | 1.217 | **6.53×** |
 
 三条口径说明：
 
@@ -356,7 +384,7 @@ example : Irrational (Real.sqrt 2) := by
 
 | 方向 | 为什么值得测 | 预计难点 |
 | --- | --- | --- |
-| 极限与积分（连续性本轮已覆盖） | 分析是 Litex 原生重点，Mathlib 的分析证明通常很长，是“大例子”的首选 | 本轮试过 `lim(fn(t R) R {t^2},3)=9`：Litex 在良定义阶段就拒绝，必须先给出“3 是实数聚点”和“连续蕴含极限”两步。所以极限只能按整段程序比较，不能当裸语句比 |
+| 极限与积分（连续性本轮已覆盖） | 分析是 Litex 原生重点，Mathlib 的分析证明通常很长，是“大例子”的首选 | 原测试使用旧写法 `lim(fn(t R) R {t^2},3)=9`（现写作 `fn_lim(fn(t R) R {t^2},3)=9`）：Litex 在良定义阶段就拒绝，必须先给出“3 是实数聚点”和“连续蕴含极限”两步。所以极限只能按整段程序比较，不能当裸语句比 |
 | 强归纳、最小反例（S43） | 与普通归纳（4.01×）对照能看出差别 | Litex 的归纳作用域写法需要先确定固定模式 |
 | 函数原像、替换像（S09、S10） | 前像/像是 Litex 的独立语句形状 | Lean 侧要选 `Set.image`/`Set.preimage` 的对应写法 |
 | 集合外延性、函数外延性（S45、S46） | 会直接对上“自由函数相等”这一 Lean 的强项 | Litex 需要完整的定义域条件，写法较长 |

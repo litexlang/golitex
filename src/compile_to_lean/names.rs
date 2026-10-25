@@ -1,5 +1,5 @@
 use crate::compile_to_lean::helper::*;
-use crate::compile_to_lean::source_position::SourcePosition;
+use crate::compile_to_lean::source_position::{SourceOwner, SourcePosition};
 use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
 use crate::execute::execute_proof_block_stmt::{
     ExecClaimStmtResult, ExecProofBlockStmtResult, ExecSketchStmtResult,
@@ -44,6 +44,19 @@ impl LitexToLeanCompiler {
         }
         fn statement(result: &ExecStmtResult, out: &mut Vec<IdentifierId>) {
             match result {
+                ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(ExecDefineObjStmtResult::HaveByReplacementAxiom(
+                    crate::execute::ExecHaveByReplacementAxiomStmtResult::Success(p)))) => {
+                    for store in [&p.introduction, &p.elimination] {
+                        if let StoreFactResult::ForallFact(f) = &store.store { parameters(&Fact::ForallFact(f.fact.clone()), out); }
+                    }
+                }
+
+                ExecStmtResult::Trust(_) | ExecStmtResult::Definition(ExecDefinitionStmtResult::Axiom(_)) => {
+                    for (fact, _, _) in super::compile_assumption_stmt_result::assumption_stages(result) { parameters(&fact, out); }
+                }
+                ExecStmtResult::Definition(ExecDefinitionStmtResult::DefStruct(crate::execute::ExecDefStructStmtResult::Success(p))) => {
+                    out.extend(p.statement.fields.iter().map(|field| field.binding.id));
+                }
                 ExecStmtResult::ProofBlock(ExecProofBlockStmtResult::Sketch(ExecSketchStmtResult::Success(p))) => {
                     for step in &p.proof_steps { statement(step, out); }
                 }
@@ -212,15 +225,37 @@ impl LitexToLeanCompiler {
         &self,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
-        let binders = position.context_parameters().into_iter().map(|(parameter, set, fact_id)| {
-            let id = parameter.id.value();
-            let fact_id = fact_id.value();
-            let proposition = match set {
-                Some(set) => format!("Litex.In _value_i{id} {}", self.compile_object_reference(set, position)?),
-                None => format!("Litex.IsSet _value_i{id}"),
-            };
-            Ok(format!("{{_Host_i{id} : Type v{id}}} [_rep_i{id} : Litex.Representation M _Host_i{id}] (_value_i{id} : Litex.Obj (M := M) _Host_i{id}) (h_{fact_id} : {proposition})"))
-        }).collect::<Result<Vec<_>, LeanCompileError>>()?;
+        let mut binders = position
+            .context_abstract_props()
+            .into_iter()
+            .map(|(declaration, index)| {
+                format!(
+                    "(abstract_prop_{index} : (Fin {} → M.Value) → Prop)",
+                    declaration.params.len()
+                )
+            })
+            .collect::<Vec<_>>();
+        for (run, index, statement, before) in position.context_statements() {
+            if let Some(proof) = super::source_position::ordinary_have(statement) {
+                let mut parameters = Vec::new();
+                super::source_position::append_have_parameters(proof, before, &mut parameters);
+                for (parameter, set, fact_id) in parameters {
+                    let id = parameter.id.value();
+                    let fact_id = fact_id.value();
+                    let proposition = match set {
+                        Some(set) => format!(
+                            "Litex.In _value_i{id} {}",
+                            self.compile_object_reference(set, position)?
+                        ),
+                        None => format!("Litex.IsSet _value_i{id}"),
+                    };
+                    binders.push(format!("{{_Host_i{id} : Type v{id}}} [_rep_i{id} : Litex.Representation M _Host_i{id}] (_value_i{id} : Litex.Obj (M := M) _Host_i{id}) (h_{fact_id} : {proposition})"));
+                }
+            }
+            let prior =
+                SourcePosition::new(None, super::source_position::SourceOwner::Run(run), index);
+            binders.extend(self.assumption_binders(statement, before, &prior)?);
+        }
         Ok(if binders.is_empty() {
             String::new()
         } else {
@@ -411,26 +446,49 @@ impl LitexToLeanCompiler {
         Ok((vec![format!("{{{host} : Type {universe}}} [{instance} : Litex.Representation M {host}] ({value} : Litex.Obj (M := M) {host})"), format!("({hypothesis} : {proposition})")], vec![host, instance, value, hypothesis]))
     }
 
-    pub(in crate::compile_to_lean) fn introduce_set_parameter(
+    pub(in crate::compile_to_lean) fn introduce_set_kind_parameter(
         &self,
         parameter: &BoundName,
+        kind: &ParamType,
         store: &StoreFactAndInferResult,
         position: &SourcePosition<'_>,
     ) -> Result<(Vec<String>, Vec<String>), LeanCompileError> {
         let fact = self.resolve_fact(store.primary_fact_id(), position)?;
         let object = Obj::Identifier(IdentifierObj::from_bound_name(parameter));
-        if !matches!(&fact, Fact::AtomicFact(AtomicFact::IsSetFact(f)) if f.set.ir() == object.ir())
+        let predicate = match (kind, &fact) {
+            (ParamType::Set(_), Fact::AtomicFact(AtomicFact::IsSetFact(f)))
+                if f.set.ir() == object.ir() =>
+            {
+                "Litex.IsSet"
+            }
+            (ParamType::NonemptySet(_), Fact::AtomicFact(AtomicFact::IsNonemptySetFact(f)))
+                if f.set.ir() == object.ir() =>
+            {
+                "Litex.IsNonempty"
+            }
+            _ => {
+                return Err(LeanCompileError::new(
+                    "Parameters/SetKindSubject",
+                    "The original store must match the declared set kind and parameter.",
+                ))
+            }
+        };
+        if !matches!(&store.infer, Some(crate::store_fact_and_infer::InferResult::AtomicFact(infer))
+            if matches!((kind, infer),
+                (ParamType::Set(_), crate::store_fact_and_infer::InferAtomicFactResult::IsSetFact(r)) if r.is_empty())
+                || matches!((kind, infer),
+                (ParamType::NonemptySet(_), crate::store_fact_and_infer::InferAtomicFactResult::IsNonemptySetFact(r)) if r.is_empty()))
         {
             return Err(LeanCompileError::new(
-                "Parameters/SetSubject",
-                "The set-kind parameter has another original sethood store.",
+                "Parameters/SetKindInference",
+                "A set-kind parameter must retain its original empty inference stage.",
             ));
         }
         self.validate_store(&store.store, &fact)?;
         let id = parameter.id.value();
         let name = format!("h_{}", fact.fact_id().value());
         let universe = position.parameter_universe(parameter.id);
-        let binders = vec![format!("{{_Host_i{id} : Type {universe}}} [_rep_i{id} : Litex.Representation M _Host_i{id}] (_value_i{id} : Litex.Obj (M := M) _Host_i{id})"), format!("({name} : Litex.IsSet _value_i{id})")];
+        let binders = vec![format!("{{_Host_i{id} : Type {universe}}} [_rep_i{id} : Litex.Representation M _Host_i{id}] (_value_i{id} : Litex.Obj (M := M) _Host_i{id})"), format!("({name} : {predicate} _value_i{id})")];
         Ok((
             binders,
             vec![
@@ -497,6 +555,16 @@ impl LitexToLeanCompiler {
             )),
             Fact::NotExistFact(fact) => {
                 Ok(format!("¬ ({})", self.exist_proposition(fact, position)?))
+            }
+            Fact::ForallFact(fact) => {
+                let mut cursor = Some(position);
+                while let Some(p) = cursor {
+                    if let SourceOwner::FactWD(FactWellDefinedProof::ForallFact(wd)) = p.owner {
+                        return self.compile_canonical_forall_formation(fact, wd, position);
+                    }
+                    cursor = p.parent;
+                }
+                Err(LeanCompileError::unsupported("Forall/FormationOwner"))
             }
             Fact::NotForall(fact) => self.not_forall_proposition(fact, position),
             _ => Err(LeanCompileError::unsupported("Declaration/CompoundFact")),
@@ -567,6 +635,20 @@ impl LitexToLeanCompiler {
                 self.compile_object_reference(&f.right, position)?,
                 self.compile_object_reference(&f.left, position)?
             )),
+            AtomicFact::IsChoiceFunctionForFact(f) => Ok(format!(
+                "Litex.IsChoiceFunctionFor {} {} {} {}",
+                self.compile_object_reference(&f.index, position)?,
+                self.compile_object_reference(&f.set, position)?,
+                self.compile_object_reference(&f.family, position)?,
+                self.compile_object_reference(&f.choice, position)?
+            )),
+            AtomicFact::NotIsChoiceFunctionForFact(f) => Ok(format!(
+                "¬ Litex.IsChoiceFunctionFor {} {} {} {}",
+                self.compile_object_reference(&f.index, position)?,
+                self.compile_object_reference(&f.set, position)?,
+                self.compile_object_reference(&f.family, position)?,
+                self.compile_object_reference(&f.choice, position)?
+            )),
             AtomicFact::IsNonemptySetFact(f) => Ok(format!(
                 "Litex.IsNonempty {}",
                 self.compile_object_reference(&f.set, position)?
@@ -603,6 +685,8 @@ impl LitexToLeanCompiler {
             | AtomicFact::NotHasRiemannIntegralFact(_)
             | AtomicFact::FunctionRiemannIntegrableFact(_)
             | AtomicFact::NotFunctionRiemannIntegrableFact(_)
+            | AtomicFact::MultivariableAnalysisFact(_)
+            | AtomicFact::NotMultivariableAnalysisFact(_)
             | AtomicFact::HasDerivativeAtFact(_)
             | AtomicFact::NotHasDerivativeAtFact(_)
             | AtomicFact::FunctionDifferentiableAtFact(_)
@@ -638,7 +722,6 @@ impl LitexToLeanCompiler {
             | AtomicFact::InjectiveFact(_)
             | AtomicFact::SurjectiveFact(_)
             | AtomicFact::BijectiveFact(_)
-            | AtomicFact::IsChoiceFunctionForFact(_)
             | AtomicFact::NotIsSetFact(_)
             | AtomicFact::NotIsNonemptySetFact(_)
             | AtomicFact::NotIsFiniteSetFact(_)
@@ -650,8 +733,7 @@ impl LitexToLeanCompiler {
             | AtomicFact::NotDvdFact(_)
             | AtomicFact::NotInjectiveFact(_)
             | AtomicFact::NotSurjectiveFact(_)
-            | AtomicFact::NotBijectiveFact(_)
-            | AtomicFact::NotIsChoiceFunctionForFact(_) => {
+            | AtomicFact::NotBijectiveFact(_) => {
                 Err(LeanCompileError::unsupported("Atomic/PropositionFamily"))
             }
         }
@@ -687,6 +769,10 @@ impl LitexToLeanCompiler {
             return Ok(term);
         }
         if let Obj::Identifier(IdentifierObj::Plain { id, .. }) = object {
+            if let Some((_, producer)) = position.visible_replacement(*id) {
+                return Ok(self.context_application(&format!("_object_i{}", id.value()), &producer));
+            }
+
             if let Ok((_, producer)) = position.visible_piecewise_function(id) {
                 return Ok(self.context_application(&format!("_object_i{}", id.value()), &producer));
             }
@@ -712,6 +798,15 @@ impl LitexToLeanCompiler {
             }
             return self.compile_parameter_reference(*id, position);
         }
+        if let Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(access)) = object {
+            return self.compile_struct_field_reference(access, position);
+        }
+        if let Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(carrier)) = object {
+            return self.compile_struct_reference(carrier, position);
+        }
+        if let Some(carrier) = self.compile_released_struct_carrier(object, position)? {
+            return Ok(carrier);
+        }
         if let Some(term) = self.compile_recursive_signature_reference(object, position)? {
             return Ok(term);
         }
@@ -734,7 +829,15 @@ impl LitexToLeanCompiler {
         }
         if let Some(term) =
             position.with_visible_inferred_subject(object, &mut |store, producer| {
+                if let Some(carrier) = self.compile_released_struct_carrier(object, producer)? {
+                    return Ok(carrier);
+                }
                 if let Some(term) = self.compile_cart_inferred_subject(object, store, producer)? {
+                    return Ok(term);
+                }
+                if let Some((term, _)) =
+                    self.compile_preimage_inferred_subject(object, store, producer)?
+                {
                     return Ok(term);
                 }
                 if let Some(term) =

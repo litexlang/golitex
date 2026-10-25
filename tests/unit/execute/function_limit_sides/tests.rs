@@ -62,7 +62,7 @@ fn side_limits_proof_before_selection_and_recovery() {
         check(&mut rt, &format!("0*lim_{side}(c,0)=0"), true);
         check(&mut rt, &format!("lim_{side}(c,0)=4"), false);
         check(&mut rt, &format!("lim_{side}(c,1)=3"), false);
-        check(&mut rt, "lim(c,0)=3", false);
+        check(&mut rt, "fn_lim(c,0)=3", false);
         check(&mut rt, "c(2)=3", true);
     }
 }

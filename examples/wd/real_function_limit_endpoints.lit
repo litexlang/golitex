@@ -14,4 +14,4 @@ claim:
 
 release thm fn_limit_at_identity(positive_identity_endpoint,0)
 
-lim(positive_identity_endpoint,0)=0
+fn_lim(positive_identity_endpoint,0)=0

@@ -1,0 +1,11 @@
+# Must reject only the final statement; see ../README.md.
+release obj def context::add
+release obj def context::neg
+release obj def context::integers
+release struct def context::integers
+release obj def context::zero_map
+release obj def context::shift
+
+thm every_group_commutes:
+    ? forall A nonempty_set,G &Algebra::group::Group<A>,a,b A:
+        G.mul(a,b)=G.mul(b,a)

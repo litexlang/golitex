@@ -39,6 +39,8 @@ impl Fact {
 impl AtomicFact {
     pub fn ir(&self) -> FactIR {
         match self {
+            AtomicFact::MultivariableAnalysisFact(x) => x.ir(),
+            AtomicFact::NotMultivariableAnalysisFact(x) => x.ir(),
             AtomicFact::HasRiemannIntegralFact(x) => x.ir(),
             AtomicFact::NotHasRiemannIntegralFact(x) => x.ir(),
             AtomicFact::FunctionRiemannIntegrableFact(x) => x.ir(),
@@ -117,6 +119,8 @@ impl AtomicFact {
     pub fn display_string(&self) -> String {
         match self {
             AtomicFact::NormalAtomicFact(x) => x.display_string(),
+            AtomicFact::MultivariableAnalysisFact(x) => x.display_string(),
+            AtomicFact::NotMultivariableAnalysisFact(x) => x.display_string(),
             AtomicFact::HasRiemannIntegralFact(x) => x.display_string(),
             AtomicFact::NotHasRiemannIntegralFact(x) => x.display_string(),
             AtomicFact::FunctionRiemannIntegrableFact(x) => x.display_string(),
@@ -1381,6 +1385,40 @@ impl NotFunctionRiemannIntegrableFact {
         ]
         .join(", ");
         FactIR(format!("not $is_riemann_integrable({})", args))
+    }
+    impl_display_pair!();
+}
+
+impl MultivariableAnalysisFact {
+    pub fn ir(&self) -> FactIR {
+        let args: Vec<_> = self
+            .relation
+            .argument_refs()
+            .into_iter()
+            .map(|x| x.ir().to_string())
+            .collect();
+        FactIR(format!(
+            "${}({})",
+            self.relation.predicate_name(),
+            args.join(", ")
+        ))
+    }
+    impl_display_pair!();
+}
+
+impl NotMultivariableAnalysisFact {
+    pub fn ir(&self) -> FactIR {
+        let args: Vec<_> = self
+            .relation
+            .argument_refs()
+            .into_iter()
+            .map(|x| x.ir().to_string())
+            .collect();
+        FactIR(format!(
+            "not ${}({})",
+            self.relation.predicate_name(),
+            args.join(", ")
+        ))
     }
     impl_display_pair!();
 }

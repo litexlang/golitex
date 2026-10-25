@@ -44,7 +44,7 @@ release thm fn_limit_at_continuous_compose(punctured_inner,identity,continued,0,
 
 identity(0)=0
 
-lim(continued,0)=0
+fn_lim(continued,0)=0
 
 release thm fn_limit_at_identity(identity,0)
 
@@ -68,4 +68,4 @@ claim:
 
 release thm fn_limit_at_punctured_compose(punctured_inner,identity,continued_punctured,0,0,0)
 
-lim(continued_punctured,0)=0
+fn_lim(continued_punctured,0)=0

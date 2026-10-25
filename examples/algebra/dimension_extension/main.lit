@@ -1,0 +1,72 @@
+# Guarded dimension and ordered basis extension.
+
+release obj def model::real_inv
+
+release obj def model::real_add
+
+release obj def model::real_neg
+
+release obj def model::real_mul
+
+release obj def model::plane_add
+
+release obj def model::plane_smul
+
+release obj def model::e1
+
+release obj def model::e2
+
+release obj def model::real_field
+
+release obj def model::real_plane
+
+release obj def model::standard_basis
+
+release struct def model::real_field
+
+release struct def model::real_plane
+
+release thm model::standard_plane_basis()
+
+by thm Algebra::basis::basis_is_finite_dimensional(R,model::real_field,R × R,model::real_plane,2,model::standard_basis) => $Algebra::basis::is_finite_dimensional(R,model::real_field,R × R,model::real_plane)
+
+by thm Algebra::dimension::finite_dimension_of_basis(R,model::real_field,R × R,model::real_plane,2,model::standard_basis) => \Algebra::dimension::finite_dimension<R,model::real_field,R × R>(model::real_plane)=2
+
+have empty finite_seq(R × R,0)=tuple()
+
+by thm Algebra::dependence::empty_list_is_independent(R,model::real_field,R × R,model::real_plane,empty) => $Algebra::basis::is_linearly_independent(R,model::real_field,R × R,model::real_plane,0,empty)
+
+by contra:
+    ? not model::e1 $in \Algebra::finite_span::span<R,model::real_field,R × R,model::real_plane,0,empty>
+    obtain coefficients from $Algebra::finite_span::is_linear_combination(R,model::real_field,R × R,model::real_plane,0,model::e1,empty)
+    obtain sums from $Algebra::finite_span::has_linear_combination_value(R,model::real_field,R × R,model::real_plane,0,coefficients,empty,model::e1)
+    model::e1=sums(0)=model::real_plane.zero
+    model::e1(1)=1
+    model::real_plane.zero=(0,0)
+    model::real_plane.zero(1)=0
+    model::e1(1)=model::real_plane.zero(1)
+    impossible 1=0
+
+\Algebra::basis_extension::append_vector<R × R,0,empty,model::e1> $in finite_seq(R × R,0+1)
+
+finite_seq(R × R,0+1)=finite_seq(R × R,1)
+
+have original finite_seq(R × R,1)=\Algebra::basis_extension::append_vector<R × R,0,empty,model::e1>
+
+by thm Algebra::basis_extension::append_outside_span_is_independent(R,model::real_field,R × R,model::real_plane,0,empty,model::e1) => $Algebra::basis::is_linearly_independent(R,model::real_field,R × R,model::real_plane,0+1,\Algebra::basis_extension::append_vector<R × R,0,empty,model::e1>)
+
+release thm Algebra::basis_extension::independent_list_extends_to_basis(R,model::real_field,R × R,model::real_plane,1,original)
+
+obtain n,extended from exist length N,selected finite_seq(R × R,length) st {$Algebra::basis::is_basis(R,model::real_field,R × R,model::real_plane,length,selected),$Algebra::basis::is_prefix_of_length(R × R,length,1,selected,original)}
+
+by thm Algebra::dimension::finite_dimension_of_basis(R,model::real_field,R × R,model::real_plane,n,extended) => \Algebra::dimension::finite_dimension<R,model::real_field,R × R>(model::real_plane)=n
+
+n=2
+
+original(1)=\Algebra::basis_extension::append_vector<R × R,0,empty,model::e1>(1)=model::e1
+
+extended(1)=original(1)=model::e1
+
+release thm Algebra::basis::basis_representation_exists_unique(R,model::real_field,R × R,model::real_plane,n,extended,(3,4))
+
+by thm Algebra::dimension::independent_length_le_dimension(R,model::real_field,R × R,model::real_plane,1,original) => 1<=\Algebra::dimension::finite_dimension<R,model::real_field,R × R>(model::real_plane)

@@ -1,0 +1,17 @@
+# Tracer: AbsProduct with evaluated closed rational factors.
+# Before: these direct goals missed the literal abs(a)*abs(b) matcher.
+# forall x R:
+#     abs(2*x)=2*abs(x)
+# Now: the same absolute-value law evaluates symbol-free rational factors.
+# Boundary: symbolic factors need their absolute value; wrong signs and WD fail.
+# Gate: target/release/litex -lang en -strict -f examples/proof_nodes/equal/by_builtin_rule/abs_product_closed_coefficient.lit
+forall x R:
+    abs(2*x)=2*abs(x)
+    abs(-3*x)=3*abs(x)
+    abs(x*(-3/2))=(3/2)*abs(x)
+    abs((1+1)*x)=2*abs(x)
+    abs(2*x)=(1+1)*abs(x)
+    abs(x*2)=abs(x)*2
+
+forall f fn(t R) R, x R:
+    abs(-3*f(x))=3*abs(f(x))

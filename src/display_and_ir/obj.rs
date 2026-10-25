@@ -38,6 +38,33 @@ impl Obj {
                 s.push_str(LEFT_PAREN);
             }
             match o {
+                Obj::LimitOperator(crate::ast::obj::LimitOperator::MultivariableScalar(_))
+                | Obj::LimitOperator(crate::ast::obj::LimitOperator::MultivariableVector(_))
+                | Obj::DerivativeOperator(crate::ast::obj::DerivativeOperator::Partial(_))
+                | Obj::DerivativeOperator(
+                    crate::ast::obj::DerivativeOperator::ScalarDifferential(_),
+                )
+                | Obj::DerivativeOperator(
+                    crate::ast::obj::DerivativeOperator::TotalDifferential(_),
+                )
+                | Obj::DerivativeOperator(crate::ast::obj::DerivativeOperator::Gradient(_))
+                | Obj::DerivativeOperator(crate::ast::obj::DerivativeOperator::Jacobian(_))
+                | Obj::DerivativeOperator(crate::ast::obj::DerivativeOperator::Hessian(_))
+                | Obj::DerivativeOperator(crate::ast::obj::DerivativeOperator::Divergence(_))
+                | Obj::DerivativeOperator(crate::ast::obj::DerivativeOperator::Curl(_))
+                | Obj::DerivativeOperator(crate::ast::obj::DerivativeOperator::Laplacian(_)) => {
+                    let args: Vec<_> = o
+                        .multivariable_selector_args()
+                        .unwrap()
+                        .into_iter()
+                        .map(|x| x.ir().to_string())
+                        .collect();
+                    s.push_str(&format!(
+                        "{}({})",
+                        o.multivariable_selector_name().unwrap(),
+                        args.join(", ")
+                    ));
+                }
                 Obj::MatrixOperator(value) => {
                     let args: Vec<_> = value
                         .operand_refs()

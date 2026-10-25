@@ -1,0 +1,72 @@
+# Every basis extracted from redundant real generators has length one.
+
+release obj def context::real_inv
+
+release obj def context::real_add
+
+release obj def context::real_neg
+
+release obj def context::real_mul
+
+release obj def context::real_field
+
+release obj def context::scalars
+
+release obj def context::unit_basis
+
+release struct def context::real_field
+
+release struct def context::scalars
+
+release thm context::real_unit_is_basis
+
+have vectors finite_seq(R,3)=(1,2,3)
+
+claim:
+    ? forall j N+:
+        j<=1
+        =>:
+            context::unit_basis(j) $in \Algebra::finite_span::span<R,context::real_field,R,context::scalars,3,vectors>
+    j $in closed_range(1,1)
+    expand: j $in closed_range(1,1)
+    context::unit_basis(1)=1
+    vectors(1)=1
+    context::unit_basis(j)=context::unit_basis(1)=1=vectors(1)
+    by thm Algebra::span_reduction::span_contains_generator(R,context::real_field,R,context::scalars,3,vectors,1) => vectors(1) $in \Algebra::finite_span::span<R,context::real_field,R,context::scalars,3,vectors>
+
+by thm Algebra::span_reduction::span_inclusion_from_generators(R,context::real_field,R,context::scalars,1,context::unit_basis,3,vectors) => \Algebra::finite_span::span<R,context::real_field,R,context::scalars,1,context::unit_basis> $subset \Algebra::finite_span::span<R,context::real_field,R,context::scalars,3,vectors>
+
+claim:
+    ? $Algebra::finite_span::spans(R,context::real_field,R,context::scalars,3,vectors)
+    $Algebra::finite_span::spans(R,context::real_field,R,context::scalars,1,context::unit_basis)
+    \Algebra::finite_span::span<R,context::real_field,R,context::scalars,1,context::unit_basis> = R
+    \Algebra::finite_span::span<R,context::real_field,R,context::scalars,3,vectors> $subset R
+    R $subset \Algebra::finite_span::span<R,context::real_field,R,context::scalars,3,vectors>
+    by extension \Algebra::finite_span::span<R,context::real_field,R,context::scalars,3,vectors> = R
+    by def $Algebra::finite_span::spans(R,context::real_field,R,context::scalars,3,vectors)
+
+release thm Algebra::basis_existence::spanning_list_has_basis_of_bounded_length(R,context::real_field,R,context::scalars,3,vectors)
+
+obtain m,selected from exist b N,w finite_seq(R,b) st {b<=3,$Algebra::basis::is_basis(R,context::real_field,R,context::scalars,b,w),fn_range(w) $subset fn_range(vectors)}
+
+release thm Algebra::basis::basis_representation_exists_unique(R,context::real_field,R,context::scalars,m,selected,7)
+
+by thm Algebra::basis::basis_coordinates_has_value(R,context::real_field,R,context::scalars,m,selected,7) => $Algebra::finite_span::has_linear_combination_value(R,context::real_field,R,context::scalars,m,\Algebra::basis::basis_coordinates<R,context::real_field,R,context::scalars,m,selected>(7),selected,7)
+
+have coordinates finite_seq(R,m)=\Algebra::basis::basis_coordinates<R,context::real_field,R,context::scalars,m,selected>(7)
+
+by thm Algebra::basis::basis_is_finite_dimensional(R,context::real_field,R,context::scalars,m,selected) => $Algebra::basis::is_finite_dimensional(R,context::real_field,R,context::scalars)
+
+release thm Algebra::basis_existence::finite_dimensional_has_basis(R,context::real_field,R,context::scalars)
+
+by thm Algebra::basis_comparison::finite_bases_have_equal_length(R,context::real_field,R,context::scalars,m,selected,1,context::unit_basis) => m=1
+
+witness $Algebra::basis::has_basis_length(R,context::real_field,R,context::scalars,m) from selected
+
+witness $Algebra::basis::has_basis_length(R,context::real_field,R,context::scalars,1) from context::unit_basis
+
+release thm Algebra::basis_comparison::finite_dimensional_has_unique_basis_length(R,context::real_field,R,context::scalars)
+
+obtain unique_length from exist! length N st {$Algebra::basis::has_basis_length(R,context::real_field,R,context::scalars,length)}
+
+by thm Algebra::basis_comparison::basis_length_unique(R,context::real_field,R,context::scalars,unique_length,1) => unique_length=1

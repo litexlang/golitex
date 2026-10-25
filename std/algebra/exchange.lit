@@ -1,0 +1,214 @@
+# Exchange of a generator with a represented vector.
+
+prop is_list_with_index_replaced(V nonempty_set,n N,vectors finite_seq(V,n),k closed_range(1,n),value V,replaced finite_seq(V,n)):
+    replaced(k)=value
+    forall idx closed_range(1,n):
+        idx!=k
+        =>:
+            replaced(idx)=vectors(idx)
+
+thm replacement_list_exists:
+    ? forall V nonempty_set,n N,vectors finite_seq(V,n),k closed_range(1,n),value V:
+        exist replaced finite_seq(V,n) st {$is_list_with_index_replaced(V,n,vectors,k,value,replaced)}
+    have fn replaced(idx closed_range(1,n)) V by cases:
+        case idx=k: value
+        case idx!=k: vectors(idx)
+    by def $is_list_with_index_replaced(V,n,vectors,k,value,replaced)
+    witness exist result finite_seq(V,n) st {$is_list_with_index_replaced(V,n,vectors,k,value,result)} from replaced
+
+thm subspace_additive_cancellation:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,U power_set(V),x,y V:
+        $vector_space::is_subspace(K,field,V,space,U)
+        x $in U
+        space.add(x,y) $in U
+        =>:
+            y $in U
+    have a K=field.neg(field.one)
+    have z V=space.smul(a,x)
+    z $in U
+    field.add(a,field.one)=field.add(field.one,field.neg(field.one))=field.zero
+    by thm vector_space::zero_scalar_times_vector(K,field,V,space,x) => space.smul(field.zero,x)=space.zero
+    space.smul(field.one,x)=x
+    space.add(z,x)=space.add(space.smul(a,x),space.smul(field.one,x))=space.smul(field.add(a,field.one),x)=space.smul(field.zero,x)=space.zero
+    space.add(x,y) $in V
+    space.add(z,space.add(x,y)) $in U
+    y=space.add(space.zero,y)=space.add(space.add(z,x),y)=space.add(z,space.add(x,y))
+
+thm subspace_nonzero_scalar_cancellation:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,U power_set(V),a K,x V:
+        $vector_space::is_subspace(K,field,V,space,U)
+        a!=field.zero
+        space.smul(a,x) $in U
+        =>:
+            x $in U
+    have inverse K=field.inv(a)
+    have term V=space.smul(a,x)
+    space.smul(inverse,term) $in U
+    field.mul(inverse,a)=field.mul(a,field.inv(a))=field.one
+    space.smul(inverse,term)=space.smul(inverse,space.smul(a,x))=space.smul(field.mul(inverse,a),x)=space.smul(field.one,x)=x
+
+thm exchange_by_nonzero_coefficient:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,n N,coefficients finite_seq(K,n),vectors finite_seq(V,n),value V,k closed_range(1,n),replaced finite_seq(V,n):
+        $finite_span::has_linear_combination_value(K,field,V,space,n,coefficients,vectors,value)
+        coefficients(k)!=field.zero
+        $is_list_with_index_replaced(V,n,vectors,k,value,replaced)
+        =>:
+            \finite_span::span<K,field,V,space,n,vectors> = \finite_span::span<K,field,V,space,n,replaced>
+    let U=\finite_span::span<K,field,V,space,n,replaced>
+    by thm finite_span::span_is_subspace(K,field,V,space,n,replaced) => $vector_space::is_subspace(K,field,V,space,\finite_span::span<K,field,V,space,n,replaced>)
+    by thm span_reduction::span_contains_generator(K,field,V,space,n,replaced,k) => replaced(k) $in \finite_span::span<K,field,V,space,n,replaced>
+    have fn without(idx closed_range(1,n)) K by cases:
+        case idx=k: field.zero
+        case idx!=k: coefficients(idx)
+    have fn concentrated(idx closed_range(1,n)) K by cases:
+        case idx=k: coefficients(k)
+        case idx!=k: field.zero
+    claim:
+        ? forall j N+:
+            j<=n
+            =>:
+                space.smul(without(j),vectors(j)) $in U
+        j $in closed_range(1,n)
+        without(j) $in K
+        vectors(j) $in V
+        by cases:
+            ? space.smul(without(j),vectors(j)) $in U
+            case j=k:
+                without(j)=field.zero
+                by thm vector_space::zero_scalar_times_vector(K,field,V,space,vectors(j)) => space.smul(field.zero,vectors(j))=space.zero
+                space.smul(without(j),vectors(j))=space.smul(field.zero,vectors(j))=space.zero
+            case j!=k:
+                replaced(j)=vectors(j)
+                by thm span_reduction::span_contains_generator(K,field,V,space,n,replaced,j) => replaced(j) $in \finite_span::span<K,field,V,space,n,replaced>
+                vectors(j) $in U
+    have other_value V=\finite_span::linear_combination<K,field,V,space,n>(without,vectors)
+    by thm finite_span::linear_combination_has_value(K,field,V,space,n,without,vectors) => $finite_span::has_linear_combination_value(K,field,V,space,n,without,vectors,\finite_span::linear_combination<K,field,V,space,n>(without,vectors))
+    by thm span_reduction::weighted_combination_in_subspace(K,field,V,space,n,without,vectors,other_value,U) => other_value $in U
+    claim:
+        ? forall j N+:
+            j<=n
+            j!=k
+            =>:
+                concentrated(j)=field.zero
+        j $in closed_range(1,n)
+        concentrated(j)=field.zero
+    concentrated(k)=coefficients(k)
+    coefficients(k) $in K
+    vectors(k) $in V
+    have term V=space.smul(coefficients(k),vectors(k))
+    by thm finite_span::single_coefficient_linear_combination(K,field,V,space,n,concentrated,vectors,k) => \finite_span::linear_combination<K,field,V,space,n>(concentrated,vectors)=space.smul(concentrated(k),vectors(k))
+    space.smul(concentrated(k),vectors(k))=term
+    have combined finite_seq(K,n)=\finite_span::add_coefficients<K,field,n>(without,concentrated)
+    claim:
+        ? forall j closed_range(1,n):
+            combined(j)=coefficients(j)
+        j $in N+
+        j<=n
+        by thm finite_span::add_coefficients_entry(K,field,n,without,concentrated,combined,j) => combined(j)=field.add(without(j),concentrated(j))
+        coefficients(j) $in K
+        without(j) $in K
+        concentrated(j) $in K
+        by cases:
+            ? combined(j)=coefficients(j)
+            case j=k:
+                without(j)=field.zero
+                concentrated(j)=coefficients(k)=coefficients(j)
+                field.add(without(j),concentrated(j))=field.add(field.zero,coefficients(j))=coefficients(j)
+            case j!=k:
+                without(j)=coefficients(j)
+                concentrated(j)=field.zero
+                field.add(without(j),concentrated(j))=field.add(coefficients(j),field.zero)=field.add(field.zero,coefficients(j))=coefficients(j)
+    by fn_extension combined=coefficients
+    by thm finite_span::linear_combination_add_coefficients(K,field,V,space,n,without,concentrated,vectors) => \finite_span::linear_combination<K,field,V,space,n>(\finite_span::add_coefficients<K,field,n>(without,concentrated),vectors)=space.add(\finite_span::linear_combination<K,field,V,space,n>(without,vectors),\finite_span::linear_combination<K,field,V,space,n>(concentrated,vectors))
+    obtain sums from $finite_span::has_linear_combination_value(K,field,V,space,n,coefficients,vectors,value)
+    by thm finite_span::partial_sum_determines_combination(K,field,V,space,n,coefficients,vectors,sums) => \finite_span::linear_combination<K,field,V,space,n>(coefficients,vectors)=sums(n)
+    \finite_span::linear_combination<K,field,V,space,n>(combined,vectors)=\finite_span::linear_combination<K,field,V,space,n>(coefficients,vectors)=value
+    \finite_span::linear_combination<K,field,V,space,n>(combined,vectors)=\finite_span::linear_combination<K,field,V,space,n>(\finite_span::add_coefficients<K,field,n>(without,concentrated),vectors)
+    \finite_span::linear_combination<K,field,V,space,n>(concentrated,vectors) $in V
+    \finite_span::linear_combination<K,field,V,space,n>(without,vectors) $in V
+    value=space.add(\finite_span::linear_combination<K,field,V,space,n>(without,vectors),\finite_span::linear_combination<K,field,V,space,n>(concentrated,vectors))=space.add(other_value,term)
+    by thm subspace_additive_cancellation(K,field,V,space,U,other_value,term) => term $in U
+    by thm subspace_nonzero_scalar_cancellation(K,field,V,space,U,coefficients(k),vectors(k)) => vectors(k) $in U
+    claim:
+        ? forall j N+:
+            j<=n
+            =>:
+                vectors(j) $in U
+        by cases:
+            ? vectors(j) $in U
+            case j=k:
+                vectors(j)=vectors(k)
+            case j!=k:
+                j $in closed_range(1,n)
+                replaced(j)=vectors(j)
+                by thm span_reduction::span_contains_generator(K,field,V,space,n,replaced,j) => replaced(j) $in \finite_span::span<K,field,V,space,n,replaced>
+    by thm span_reduction::span_inclusion_from_generators(K,field,V,space,n,vectors,n,replaced) => \finite_span::span<K,field,V,space,n,vectors> $subset \finite_span::span<K,field,V,space,n,replaced>
+    witness $finite_span::is_linear_combination(K,field,V,space,n,value,vectors) from coefficients
+    value $in \finite_span::span<K,field,V,space,n,vectors>
+    claim:
+        ? forall j N+:
+            j<=n
+            =>:
+                replaced(j) $in \finite_span::span<K,field,V,space,n,vectors>
+        j $in closed_range(1,n)
+        by cases:
+            ? replaced(j) $in \finite_span::span<K,field,V,space,n,vectors>
+            case j=k:
+                replaced(j)=replaced(k)=value
+            case j!=k:
+                replaced(j)=vectors(j)
+                by thm span_reduction::span_contains_generator(K,field,V,space,n,vectors,j) => vectors(j) $in \finite_span::span<K,field,V,space,n,vectors>
+    by thm span_reduction::span_inclusion_from_generators(K,field,V,space,n,replaced,n,vectors) => \finite_span::span<K,field,V,space,n,replaced> $subset \finite_span::span<K,field,V,space,n,vectors>
+    by extension \finite_span::span<K,field,V,space,n,vectors> = U
+
+thm combination_outside_subspace_has_nonzero_term:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,n N,coefficients finite_seq(K,n),vectors finite_seq(V,n),value V,U power_set(V):
+        $vector_space::is_subspace(K,field,V,space,U)
+        $finite_span::has_linear_combination_value(K,field,V,space,n,coefficients,vectors,value)
+        not value $in U
+        =>:
+            exist k closed_range(1,n) st {coefficients(k)!=field.zero,not vectors(k) $in U}
+    by contra:
+        ? exist k closed_range(1,n) st {coefficients(k)!=field.zero,not vectors(k) $in U}
+        claim:
+            ? forall j N+:
+                j<=n
+                =>:
+                    space.smul(coefficients(j),vectors(j)) $in U
+            j $in closed_range(1,n)
+            coefficients(j) $in K
+            vectors(j) $in V
+            by cases:
+                ? space.smul(coefficients(j),vectors(j)) $in U
+                case coefficients(j)=field.zero:
+                    by thm vector_space::zero_scalar_times_vector(K,field,V,space,vectors(j)) => space.smul(field.zero,vectors(j))=space.zero
+                    space.smul(coefficients(j),vectors(j))=space.smul(field.zero,vectors(j))=space.zero
+                case coefficients(j)!=field.zero:
+                    by contra:
+                        ? vectors(j) $in U
+                        witness exist k closed_range(1,n) st {coefficients(k)!=field.zero,not vectors(k) $in U} from j
+                        impossible exist k closed_range(1,n) st {coefficients(k)!=field.zero,not vectors(k) $in U}
+        by thm span_reduction::weighted_combination_in_subspace(K,field,V,space,n,coefficients,vectors,value,U) => value $in U
+        impossible value $in U
+
+thm nonzero_span_member_can_replace_generator:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,n N,vectors finite_seq(V,n),value V:
+        value $in \finite_span::span<K,field,V,space,n,vectors>
+        value!=space.zero
+        =>:
+            exist k closed_range(1,n),replaced finite_seq(V,n) st {$is_list_with_index_replaced(V,n,vectors,k,value,replaced),\finite_span::span<K,field,V,space,n,vectors> = \finite_span::span<K,field,V,space,n,replaced>}
+    obtain coefficients from $finite_span::is_linear_combination(K,field,V,space,n,value,vectors)
+    have empty finite_seq(V,0)=tuple()
+    by thm finite_span::span_is_subspace(K,field,V,space,0,empty) => $vector_space::is_subspace(K,field,V,space,\finite_span::span<K,field,V,space,0,empty>)
+    by contra:
+        ? not value $in \finite_span::span<K,field,V,space,0,empty>
+        obtain empty_coefficients from $finite_span::is_linear_combination(K,field,V,space,0,value,empty)
+        obtain sums from $finite_span::has_linear_combination_value(K,field,V,space,0,empty_coefficients,empty,value)
+        value=sums(0)=space.zero
+        impossible value=space.zero
+    release thm combination_outside_subspace_has_nonzero_term(K,field,V,space,n,coefficients,vectors,value,\finite_span::span<K,field,V,space,0,empty>)
+    obtain k from exist idx closed_range(1,n) st {coefficients(idx)!=field.zero,not vectors(idx) $in \finite_span::span<K,field,V,space,0,empty>}
+    release thm replacement_list_exists(V,n,vectors,k,value)
+    obtain replaced from exist result finite_seq(V,n) st {$is_list_with_index_replaced(V,n,vectors,k,value,result)}
+    by thm exchange_by_nonzero_coefficient(K,field,V,space,n,coefficients,vectors,value,k,replaced) => \finite_span::span<K,field,V,space,n,vectors> = \finite_span::span<K,field,V,space,n,replaced>
+    witness exist idx closed_range(1,n),result finite_seq(V,n) st {$is_list_with_index_replaced(V,n,vectors,idx,value,result),\finite_span::span<K,field,V,space,n,vectors> = \finite_span::span<K,field,V,space,n,result>} from k,replaced

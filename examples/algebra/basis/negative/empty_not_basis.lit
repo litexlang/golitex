@@ -1,0 +1,14 @@
+# Must reject only the final statement; see ../README.md.
+release obj def context::real_inv
+release obj def context::real_add
+release obj def context::real_neg
+release obj def context::real_mul
+release obj def context::real_field
+release obj def context::scalars
+release obj def context::unit_basis
+release obj def context::real_single_coefficient
+release struct def context::real_field
+release struct def context::scalars
+release thm context::real_unit_is_basis
+
+\Algebra::basis::basis_coordinates<R,context::real_field,R,context::scalars,0,tuple()>(7)=tuple()

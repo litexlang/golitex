@@ -1,0 +1,26 @@
+# Fields with inversion defined only away from zero.
+
+struct Field<K nonempty_set>:
+    zero K
+    one K
+    add fn(x, y K) K
+    neg fn(x K) K
+    mul fn(x, y K) K
+    inv fn(x K: x != zero) K
+    <=>:
+        zero != one
+        forall x, y, z K:
+            add(add(x, y), z) = add(x, add(y, z))
+            mul(mul(x, y), z) = mul(x, mul(y, z))
+            mul(x, add(y, z)) = add(mul(x, y), mul(x, z))
+        forall x, y K:
+            add(x, y) = add(y, x)
+            mul(x, y) = mul(y, x)
+        forall x K:
+            add(zero, x) = x
+            add(x, neg(x)) = zero
+            mul(one, x) = x
+        forall x K:
+            x != zero
+            =>:
+                mul(x, inv(x)) = one

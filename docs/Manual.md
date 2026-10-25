@@ -2395,6 +2395,14 @@ $is_positive(2)
 
 **Nearest boundary.** An abstract_prop declaration is not an axiom proving $P(a). Strict mode allows the signature itself.
 
+**Lean compilation.** Top-level signatures compile to arbitrary predicate
+parameters over semantic object values. Calls preserve their argument WD;
+equality transports properties and their negations. Checked pairs cover
+[property transport and theorem calls](../lean/examples/abstract_property_transport/),
+[binary relations](../lean/examples/abstract_relation_transport/) and
+[function guards](../lean/examples/abstract_function_guard/). Local and qualified
+abstract declarations are not yet supported by the compiler.
+
 **Checked example.**
 
 ```litex
@@ -2421,6 +2429,40 @@ forall x R:
 **Execution and result.** Store the definition-owned carrier, field schema and laws. Direct bindings x &Struct open one outer layer; other expressions can use explicit release struct def.
 
 **Nearest boundary.** Declaring the carrier does not create an instance. Field WD is not a request to expose every nested struct law.
+
+**Lean compilation.** Top-level structures with at least two independent fields
+compile to Cartesian set objects, restricted by a bounded
+set builder when defining conditions are present.
+Checked pairs cover [tuple membership](../lean/examples/coordinate_pair_membership/),
+[quantified field access and arithmetic](../lean/examples/coordinate_pair_fields/),
+[ambient set carriers](../lean/examples/arbitrary_carrier_pairs/) and
+[nested tuple membership](../lean/examples/nested_coordinate_membership/).
+The same slice supports [ordinary structure bindings](../lean/examples/chosen_coordinate_fields/),
+[typed aliases](../lean/examples/origin_coordinate_fields/) and
+[explicit release](../lean/examples/released_coordinate_fields/), including
+[local objects](../lean/examples/local_coordinate_objects/).
+Defining conditions support existing atomic, flat conjunction and chain facts;
+membership proves them and release projects them under the original FactIds.
+See [positive points](../lean/examples/positive_point_conditions/) and
+[a ratio whose nonzero guard supplies division WD](../lean/examples/positive_ratio_conditions/).
+Field access and release currently use directly declared parameters or typed
+aliases. [Set/object header parameters](../lean/examples/parameterized_pairs/)
+specialize the carrier with their original WD and type proofs; later parameters
+may depend on earlier ones, as in [a designated coordinate](../lean/examples/designated_coordinate_pairs/).
+`A nonempty_set` is supported in structure, universal and named-theorem headers;
+the generated binder retains the original nonemptiness fact. See
+[nonempty pairs](../lean/examples/nonempty_parameterized_pairs/) and
+[the product theorem and its invocation](../lean/examples/nonempty_cartesian_theorem/).
+Field types may depend on those header parameters or earlier fields. Ordered
+dependent fields use a certified `Litex.DependentFields` family and the optional
+`IndexedUnionSemantics M` interface, implemented by the existing ZF model.
+See [equal coordinates](../lean/examples/repeated_coordinate_fields/),
+[a member of a member](../lean/examples/member_coordinate_pairs/) and
+[reciprocal fields with nonzero WD](../lean/examples/reciprocal_coordinate_fields/).
+Membership and release replay the original field obligations and FactIds.
+At least two fields are required. Self/forward dependencies, finite-set header
+kinds, quantified conditions, nested field paths, function-call receivers and
+local/qualified structure definitions remain unsupported by the compiler.
 
 **Checked example.**
 
@@ -4818,6 +4860,12 @@ For checked signs, parity and order recipes, see
 
 **Common native properties and proof routes.** |-x| = |x|; |x| >= 0; square/magnitude and signed-value rules.
 
+The product rule accepts an evaluated closed rational coefficient directly:
+`abs(-3*x)=3*abs(x)` and `abs((1+1)*x)=2*abs(x)` for real `x`.
+Both factor orders are supported, with the usual complete-expression WD checks.
+A symbolic coefficient still needs its absolute value or a separate sign proof.
+See the [closed-coefficient product tracer](../examples/proof_nodes/equal/by_builtin_rule/abs_product_closed_coefficient.lit).
+
 **Nearest boundary.** Use C_abs for a general complex value rather than silently treating i as real.
 
 **Checked example.**
@@ -6143,9 +6191,22 @@ LaTeX output uses `\circ` with parentheses preserving the expression tree.
 `compose` is now reserved. Rename user-defined functions or fields with that
 name, for example to `compose_on_R` or `compose_morphism`.
 
-Lean replay for this native object is currently unsupported and fails
-explicitly at `WD/FunctionSpace/Composition`. Restriction continues to use
-ordinary anonymous functions; no new restriction syntax is introduced.
+Lean replay covers composition construction, complete function membership,
+one/two-input numeric calls and their recorded beta expansions. Checked examples
+include [a guarded difference](../lean/examples/squared_gap_composition/),
+[double reciprocal](../lean/examples/double_reciprocal_composition/) and
+[arbitrary real functions](../lean/examples/abstract_function_composition/).
+The [composition graph laws](../lean/examples/composition_graph_laws/) also
+replay associativity, both identities, defining-lambda equality and range
+containment. Right identity consumes the original complete-domain comparison,
+including recorded mutual inclusions; [nonzero-domain identities](../lean/examples/guarded_composition_identities/)
+retain their guard. [Reordered exclusions](../lean/examples/reordered_function_domains/)
+exercise mutual inclusion. The same comparison supports `by fn_extension`, now
+including [two-input and positive-input functions](../lean/examples/equal_binary_sums/)
+and [guarded quotient formulas](../lean/examples/equal_guarded_quotients/).
+Composition construction still rejects changes of packed-domain representation.
+Restriction continues to use ordinary anonymous functions;
+no new restriction syntax is introduced.
 See the [strict tracer](../examples/wd/function_composition.lit) and
 [composition implementation](../src/execute/execute_fact_stmt/function_composition.rs).
 
@@ -7493,6 +7554,30 @@ obligations and native certificates remain distinct from user-written proof
 bodies and user trust. Passing strict mode does not erase that foundation.
 
 ### Function-space membership and a typed call alias
+
+Lean replay of `fn_set_member` supports alpha-equivalent domains and the recorded
+pair of domain-inclusion proofs. Both `release thm` and selected `by thm` calls
+retain the original return obligations. Checked pairs cover
+[reordered nonzero conditions](../lean/examples/reordered_function_membership/),
+[positive-real domains](../lean/examples/positive_function_membership/),
+[arbitrary function parameters](../lean/examples/abstract_function_membership_domains/)
+and [a composed quotient](../lean/examples/composed_quotient_membership/).
+
+
+The [returned-function example](../lean/examples/returned_function_membership/)
+also checks `fn_set_member` for a function obtained by a call. Its recorded
+application domain and return signature are replayed before widening the output
+set. [Chained calls](../lean/examples/returned_function_values/) retain each
+layer's argument and guard obligations.
+
+Compiler examples also cover [constructing a returned shift function](../lean/examples/selected_shift_function/),
+[an identity operator taking a function parameter](../lean/examples/function_identity_operator/),
+and [anonymous functions in their declared signatures](../lean/examples/literal_function_signatures/).
+With fixed numeric signatures, returned anonymous functions can
+[capture an outer parameter](../lean/examples/captured_shift_functions/), including
+[a nonzero denominator](../lean/examples/captured_division_functions/).
+Dependent input/return carrier sets remain outside this compiler coverage.
+
 
 The native membership call below verifies the same complete finite input
 domain while allowing the proved real return bound of an integer-valued
@@ -9979,16 +10064,19 @@ forall a seq(R), L R:
 
 `$has_limit_at(f,x0,L)` includes both nontrivial approach through the actual
 unary real domain and punctured epsilon-delta control. After a candidate or
-finite existence proof, `lim(f,x0)` selects the unique real value. The point
+finite existence proof, `fn_lim(f,x0)` selects the unique real value. The point
 need not belong to the domain; empty or isolated domains supply no vacuous
 limit. WD consumes proof and never discovers a limit from the function body.
+
+`lim(a)` is reserved for sequences and takes exactly one argument. The old
+`lim(f,x0)` form is rejected; use `fn_lim(f,x0)` with exactly two arguments.
 
 ```litex
 forall f fn(x R) R, x0,L R:
     $has_limit_at(f,x0,L)
     =>:
-        lim(f,x0) = L
-        lim(f,x0) $in R
+        fn_lim(f,x0) = L
+        fn_lim(f,x0) $in R
 ```
 
 ### Native elementary operation additions
@@ -10757,6 +10845,14 @@ alone never supplies an order. The order layer recognizes these contracts:
 | Roots, logarithms, and absolute value | `sqrt(x)` is nonnegative, and positive for positive `x`. A logarithm with base `>1` preserves strict order; a base strictly between `0` and `1` reverses it. Absolute value supplies direct, triangle, and reverse-triangle bounds, including `\|sum(...,f)\| <= sum(...,fn(index Z) R {\|f(index)\|})` and the analogous finite-set sum under the matching index/carrier facts. |
 | Finite aggregates and extrema | Pointwise weak/strict order on the relevant index set gives sum order. A nonnegative finite-set summand is at most the total. Finite-set extrema bound every member. Finite subset inclusion bounds cardinality, and union cardinality is at most the sum. |
 | Native ordered objects | Floor and ceiling preserve weak order but not strict order. `min` and `max` expose argument bounds and componentwise monotonicity. Native `exp`/`ln` and trigonometric order use the dedicated sections below; complex modulus uses the [complex scalar contract](#complex-scalars-beta-preview). |
+
+Two real upper bounds `a<=M` and `b<=M` also prove `a+b<=2*M` directly,
+including negative `M`. The bounded strategy accepts `M*2` and a closed
+rational expression equal to `2`, such as `(6/3)*M`, and retains both premise
+proofs. Its input shape is a two-term sum against twice their common bound;
+it does not normalize arbitrary linear expressions. See the
+[common sum bound tracer](../examples/proof_nodes/atomic/by_builtin_strategy/add_double_upper_bound.lit).
+This strategy and the absolute-value product rule currently have no Lean replay adapter.
 
 The positive-difference builtin consumes an already verified premise. It checks
 both strict spellings with fixed known-fact lookups and retains the premise's

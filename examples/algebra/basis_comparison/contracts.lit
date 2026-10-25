@@ -1,0 +1,52 @@
+# Imported arbitrary-field basis-comparison contracts.
+
+claim:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,m N,vectors finite_seq(V,m),p N,prefix finite_seq(V,p):
+        $Algebra::basis::is_linearly_independent(K,field,V,space,m,vectors)
+        $Algebra::basis::is_prefix_of_length(V,m,p,vectors,prefix)
+        p<m
+        =>:
+            not vectors(p+1) $in \Algebra::finite_span::span<K,field,V,space,p,prefix>
+    release thm Algebra::basis_comparison::independent_vector_outside_prefix_span(K,field,V,space,m,vectors,p,prefix)
+
+claim:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,m N,independent finite_seq(V,m),n N,generators finite_seq(V,n):
+        $Algebra::basis::is_linearly_independent(K,field,V,space,m,independent)
+        forall j N+:
+            j<=m
+            =>:
+                independent(j) $in \Algebra::finite_span::span<K,field,V,space,n,generators>
+        =>:
+            m<=n
+    by thm Algebra::basis_comparison::independent_list_in_span_length_bound(K,field,V,space,m,independent,n,generators) => m<=n
+
+claim:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,m N,independent finite_seq(V,m),n N,generators finite_seq(V,n):
+        $Algebra::basis::is_linearly_independent(K,field,V,space,m,independent)
+        $Algebra::finite_span::spans(K,field,V,space,n,generators)
+        =>:
+            m<=n
+    by thm Algebra::basis_comparison::independent_spanning_length_bound(K,field,V,space,m,independent,n,generators) => m<=n
+
+claim:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,m N,first finite_seq(V,m),n N,second finite_seq(V,n):
+        $Algebra::basis::is_basis(K,field,V,space,m,first)
+        $Algebra::basis::is_basis(K,field,V,space,n,second)
+        =>:
+            m=n
+    by thm Algebra::basis_comparison::finite_bases_have_equal_length(K,field,V,space,m,first,n,second) => m=n
+
+claim:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,m,n N:
+        $Algebra::basis::has_basis_length(K,field,V,space,m)
+        $Algebra::basis::has_basis_length(K,field,V,space,n)
+        =>:
+            m=n
+    by thm Algebra::basis_comparison::basis_length_unique(K,field,V,space,m,n) => m=n
+
+claim:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>:
+        $Algebra::basis::is_finite_dimensional(K,field,V,space)
+        =>:
+            exist! n N st {$Algebra::basis::has_basis_length(K,field,V,space,n)}
+    release thm Algebra::basis_comparison::finite_dimensional_has_unique_basis_length(K,field,V,space)

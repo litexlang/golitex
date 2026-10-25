@@ -1,0 +1,19 @@
+# Only the final statement must be rejected.
+release obj def context::real_inv
+release obj def context::real_add
+release obj def context::real_neg
+release obj def context::real_mul
+release obj def context::real_field
+release obj def context::scalars
+release obj def context::vectors
+release obj def context::coefficients
+release obj def context::sums
+release struct def context::real_field
+release struct def context::scalars
+
+claim:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,n N+,vectors finite_seq(V,n),k N+,reduced finite_seq(V,n-1):
+        $Algebra::basis::is_list_with_index_removed(V,n,vectors,k,reduced)
+        =>:
+            \Algebra::finite_span::span<K,field,V,space,n,vectors> = \Algebra::finite_span::span<K,field,V,space,n-1,reduced>
+    release thm Algebra::span_reduction::remove_redundant_vector_preserves_span(K,field,V,space,n,vectors,k,reduced)

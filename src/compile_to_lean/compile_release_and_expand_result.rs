@@ -13,6 +13,15 @@ impl LitexToLeanCompiler {
         index: usize,
         local: bool,
     ) -> Result<String, LeanCompileError> {
+        if let ExecReleaseAndExpandStmtResult::ZornLemma(result) = result {
+            return self.compile_zorn(result, position, index, local);
+        }
+        if let ExecReleaseAndExpandStmtResult::AxiomOfChoice(result) = result {
+            return self.compile_choice(result, position, index, local);
+        }
+        if let ExecReleaseAndExpandStmtResult::RegularityAxiom(result) = result {
+            return self.compile_regularity(result, position, index, local);
+        }
         if let ExecReleaseAndExpandStmtResult::ExpandRange(result) = result {
             return self.compile_expand_range_statement(result, position, index, local);
         }
@@ -21,6 +30,9 @@ impl LitexToLeanCompiler {
         }
         if let ExecReleaseAndExpandStmtResult::TupleDef(result) = result {
             return self.compile_release_tuple_definition(result, position, index, local);
+        }
+        if let ExecReleaseAndExpandStmtResult::StructDef(result) = result {
+            return self.compile_release_struct_definition(result, position);
         }
         if let ExecReleaseAndExpandStmtResult::CartDef(result) = result {
             return self.compile_release_cart_definition(result, position, index, local);
@@ -59,23 +71,13 @@ impl LitexToLeanCompiler {
                 };
                 (definitions, application, facts, None)
             } else {
-                let ResolvedTheoremCallee::UserTheorem(declaration) = &proof.callee else {
-                    return Err(LeanCompileError::unsupported("ReleaseThm/Callee"));
-                };
-                let AtomicName::Plain { name } = &proof.call.name else {
-                    return Err(LeanCompileError::unsupported("ReleaseThm/QualifiedCallee"));
-                };
-                let (registered, declaration_position, _) = position.visible_theorem(name)?;
-                if registered != declaration
-                    || name != &declaration.name
-                    || proof.builtin.is_some()
-                    || proof.function_domain.is_some()
-                {
-                    return Err(LeanCompileError::new(
-                        "ReleaseThm/CalleeCapture",
-                        "The captured callee must be the exact preceding compiled user theorem.",
-                    ));
+                if proof.builtin.is_some() || proof.function_domain.is_some() {
+                    return Err(LeanCompileError::unsupported("ReleaseThm/CalleeCapture"));
                 }
+                let (registered, reference) =
+                    position.user_callee_reference(&proof.call.name, &proof.callee)?;
+                let reference =
+                    self.compile_local_forall_citation(registered.fact_id(), reference, position)?;
                 if proof.stored_wd.len() != proof.stored.len() {
                     return Err(LeanCompileError::new(
                 "ReleaseThm/CallerStages",
@@ -90,16 +92,11 @@ impl LitexToLeanCompiler {
                     &proof.dom_stores,
                     &proof.conclusions_wd,
                     &proof.stored,
-                    registered,
-                    &declaration_position,
+                    &registered,
+                    reference,
                     &invocation,
                 )?;
-                (
-                    definitions,
-                    application,
-                    facts,
-                    Some(registered.fact.fact_id()),
-                )
+                (definitions, application, facts, Some(registered.fact_id()))
             };
         if proof.stored_wd.len() != facts.len() || proof.stored.len() != facts.len() {
             return Err(LeanCompileError::unsupported("ReleaseThm/CallerStages"));

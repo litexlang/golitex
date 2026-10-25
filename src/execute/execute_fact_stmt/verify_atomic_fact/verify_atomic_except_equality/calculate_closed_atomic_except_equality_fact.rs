@@ -11,6 +11,7 @@ pub fn calculate_closed_atomic_except_equality_fact(
     use NumberCompareResult::{Equal, Greater, Less};
 
     let proof = match fact {
+        MultivariableAnalysisFact(_) | NotMultivariableAnalysisFact(_) => return None,
         HasRiemannIntegralFact(_)
         | NotHasRiemannIntegralFact(_)
         | FunctionRiemannIntegrableFact(_)

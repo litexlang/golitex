@@ -5765,6 +5765,13 @@
     }
   },
   {
+    "id": "builtin.EqualitySearchProofByBuiltinRule::Multivariable",
+    "category": "builtin",
+    "family": "EqualitySearchProofByBuiltinRule",
+    "variant": "Multivariable",
+    "labels": {}
+  },
+  {
     "id": "builtin.EqualitySearchProofByBuiltinRule::NegativeIntegerPowerReciprocal",
     "category": "builtin",
     "family": "EqualitySearchProofByBuiltinRule",
@@ -24822,6 +24829,48 @@
     "labels": {}
   },
   {
+    "id": "builtin_theorem.BuiltinTheoremId::CurlAtExists",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "CurlAtExists",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::CurlAtFromDefinition",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "CurlAtFromDefinition",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::CurlAtSelected",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "CurlAtSelected",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::CurlAtToDefinition",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "CurlAtToDefinition",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::CurlAtUnique",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "CurlAtUnique",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::CurlGradientAtSymmetric",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "CurlGradientAtSymmetric",
+    "labels": {}
+  },
+  {
     "id": "builtin_theorem.BuiltinTheoremId::DarbouxEnclosureFromDefinition",
     "category": "builtin_theorem",
     "family": "BuiltinTheoremId",
@@ -24840,6 +24889,48 @@
     "category": "builtin_theorem",
     "family": "BuiltinTheoremId",
     "variant": "DefinedSetMember",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::DivergenceAtExists",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "DivergenceAtExists",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::DivergenceAtFromDefinition",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "DivergenceAtFromDefinition",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::DivergenceAtSelected",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "DivergenceAtSelected",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::DivergenceAtToDefinition",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "DivergenceAtToDefinition",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::DivergenceAtUnique",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "DivergenceAtUnique",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::DivergenceCurlAtSymmetric",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "DivergenceCurlAtSymmetric",
     "labels": {}
   },
   {
@@ -26488,6 +26579,83 @@
     "labels": {}
   },
   {
+    "id": "builtin_theorem.BuiltinTheoremId::GradientAtExists",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "GradientAtExists",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::GradientAtFromDefinition",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "GradientAtFromDefinition",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::GradientAtSelected",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "GradientAtSelected",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::GradientAtToDefinition",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "GradientAtToDefinition",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::GradientAtUnique",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "GradientAtUnique",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::HessianAtExists",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "HessianAtExists",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::HessianAtFromDefinition",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "HessianAtFromDefinition",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::HessianAtLaplacian",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "HessianAtLaplacian",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::HessianAtSelected",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "HessianAtSelected",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::HessianAtToDefinition",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "HessianAtToDefinition",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::HessianAtUnique",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "HessianAtUnique",
+    "labels": {}
+  },
+  {
     "id": "builtin_theorem.BuiltinTheoremId::IndexCartesianMember",
     "category": "builtin_theorem",
     "family": "BuiltinTheoremId",
@@ -26541,6 +26709,90 @@
     "category": "builtin_theorem",
     "family": "BuiltinTheoremId",
     "variant": "InnerProductPositive",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::JacobianAtCurl",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "JacobianAtCurl",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::JacobianAtDivergence",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "JacobianAtDivergence",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::JacobianAtExists",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "JacobianAtExists",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::JacobianAtFromDefinition",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "JacobianAtFromDefinition",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::JacobianAtSelected",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "JacobianAtSelected",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::JacobianAtToDefinition",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "JacobianAtToDefinition",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::JacobianAtUnique",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "JacobianAtUnique",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::LaplacianAtExists",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "LaplacianAtExists",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::LaplacianAtFromDefinition",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "LaplacianAtFromDefinition",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::LaplacianAtSelected",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "LaplacianAtSelected",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::LaplacianAtToDefinition",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "LaplacianAtToDefinition",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::LaplacianAtUnique",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "LaplacianAtUnique",
     "labels": {}
   },
   {
@@ -26842,6 +27094,216 @@
     "category": "builtin_theorem",
     "family": "BuiltinTheoremId",
     "variant": "MatrixTransposeMul",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::MultiContinuousAtAdd",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "MultiContinuousAtAdd",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::MultiContinuousAtCompose",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "MultiContinuousAtCompose",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::MultiContinuousAtDivide",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "MultiContinuousAtDivide",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::MultiContinuousAtFromDefinition",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "MultiContinuousAtFromDefinition",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::MultiContinuousAtLimit",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "MultiContinuousAtLimit",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::MultiContinuousAtMultiply",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "MultiContinuousAtMultiply",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::MultiContinuousAtSubtract",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "MultiContinuousAtSubtract",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::MultiContinuousAtToDefinition",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "MultiContinuousAtToDefinition",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::MultiDifferentiableAtFromDefinition",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "MultiDifferentiableAtFromDefinition",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::MultiDifferentiableAtToDefinition",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "MultiDifferentiableAtToDefinition",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::MultiLimitAtAdd",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "MultiLimitAtAdd",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::MultiLimitAtCompose",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "MultiLimitAtCompose",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::MultiLimitAtContinuous",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "MultiLimitAtContinuous",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::MultiLimitAtDivide",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "MultiLimitAtDivide",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::MultiLimitAtExists",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "MultiLimitAtExists",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::MultiLimitAtFromDefinition",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "MultiLimitAtFromDefinition",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::MultiLimitAtMultiply",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "MultiLimitAtMultiply",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::MultiLimitAtSelected",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "MultiLimitAtSelected",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::MultiLimitAtSubtract",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "MultiLimitAtSubtract",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::MultiLimitAtToDefinition",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "MultiLimitAtToDefinition",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::MultiLimitAtUnique",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "MultiLimitAtUnique",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::PartialAtAdd",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "PartialAtAdd",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::PartialAtDivide",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "PartialAtDivide",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::PartialAtExists",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "PartialAtExists",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::PartialAtFromDefinition",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "PartialAtFromDefinition",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::PartialAtMultiply",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "PartialAtMultiply",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::PartialAtSelected",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "PartialAtSelected",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::PartialAtSubtract",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "PartialAtSubtract",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::PartialAtToDefinition",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "PartialAtToDefinition",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::PartialAtUnique",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "PartialAtUnique",
     "labels": {}
   },
   {
@@ -27157,6 +27619,146 @@
     "category": "builtin_theorem",
     "family": "BuiltinTheoremId",
     "variant": "RiemannIntegralZero",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::ScalarDifferentialAtAdd",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "ScalarDifferentialAtAdd",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::ScalarDifferentialAtCompose",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "ScalarDifferentialAtCompose",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::ScalarDifferentialAtContinuous",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "ScalarDifferentialAtContinuous",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::ScalarDifferentialAtDivide",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "ScalarDifferentialAtDivide",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::ScalarDifferentialAtExists",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "ScalarDifferentialAtExists",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::ScalarDifferentialAtFromDefinition",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "ScalarDifferentialAtFromDefinition",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::ScalarDifferentialAtGradient",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "ScalarDifferentialAtGradient",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::ScalarDifferentialAtMultiply",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "ScalarDifferentialAtMultiply",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::ScalarDifferentialAtPartial",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "ScalarDifferentialAtPartial",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::ScalarDifferentialAtSelected",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "ScalarDifferentialAtSelected",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::ScalarDifferentialAtSubtract",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "ScalarDifferentialAtSubtract",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::ScalarDifferentialAtToDefinition",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "ScalarDifferentialAtToDefinition",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::ScalarDifferentialAtUnique",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "ScalarDifferentialAtUnique",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::SecondPartialAtExists",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "SecondPartialAtExists",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::SecondPartialAtFromDefinition",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "SecondPartialAtFromDefinition",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::SecondPartialAtFromFunction",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "SecondPartialAtFromFunction",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::SecondPartialAtSwapContinuous",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "SecondPartialAtSwapContinuous",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::SecondPartialAtToDefinition",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "SecondPartialAtToDefinition",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::SecondPartialAtToFunction",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "SecondPartialAtToFunction",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::SecondPartialAtUnique",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "SecondPartialAtUnique",
     "labels": {}
   },
   {
@@ -27685,10 +28287,199 @@
     "labels": {}
   },
   {
+    "id": "builtin_theorem.BuiltinTheoremId::TotalDerivativeAtAdd",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "TotalDerivativeAtAdd",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::TotalDerivativeAtCompose",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "TotalDerivativeAtCompose",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::TotalDerivativeAtContinuous",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "TotalDerivativeAtContinuous",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::TotalDerivativeAtExists",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "TotalDerivativeAtExists",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::TotalDerivativeAtFromDefinition",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "TotalDerivativeAtFromDefinition",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::TotalDerivativeAtJacobian",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "TotalDerivativeAtJacobian",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::TotalDerivativeAtSelected",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "TotalDerivativeAtSelected",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::TotalDerivativeAtSubtract",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "TotalDerivativeAtSubtract",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::TotalDerivativeAtToDefinition",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "TotalDerivativeAtToDefinition",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::TotalDerivativeAtUnique",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "TotalDerivativeAtUnique",
+    "labels": {}
+  },
+  {
     "id": "builtin_theorem.BuiltinTheoremId::TupleEqualFromCoordinates",
     "category": "builtin_theorem",
     "family": "BuiltinTheoremId",
     "variant": "TupleEqualFromCoordinates",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::VectorContinuousAtAdd",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "VectorContinuousAtAdd",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::VectorContinuousAtCompose",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "VectorContinuousAtCompose",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::VectorContinuousAtFromDefinition",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "VectorContinuousAtFromDefinition",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::VectorContinuousAtLimit",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "VectorContinuousAtLimit",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::VectorContinuousAtSubtract",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "VectorContinuousAtSubtract",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::VectorContinuousAtToDefinition",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "VectorContinuousAtToDefinition",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::VectorDifferentiableAtFromDefinition",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "VectorDifferentiableAtFromDefinition",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::VectorDifferentiableAtToDefinition",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "VectorDifferentiableAtToDefinition",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::VectorLimitAtAdd",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "VectorLimitAtAdd",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::VectorLimitAtCompose",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "VectorLimitAtCompose",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::VectorLimitAtContinuous",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "VectorLimitAtContinuous",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::VectorLimitAtExists",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "VectorLimitAtExists",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::VectorLimitAtFromDefinition",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "VectorLimitAtFromDefinition",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::VectorLimitAtSelected",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "VectorLimitAtSelected",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::VectorLimitAtSubtract",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "VectorLimitAtSubtract",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::VectorLimitAtToDefinition",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "VectorLimitAtToDefinition",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::VectorLimitAtUnique",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "VectorLimitAtUnique",
     "labels": {}
   },
   {
@@ -28046,6 +28837,13 @@
     "category": "infer",
     "family": "InferLessFactResult",
     "variant": "StrictLowerBoundPositive",
+    "labels": {}
+  },
+  {
+    "id": "infer.InferMultivariableAnalysisFactResult::Definition",
+    "category": "infer",
+    "family": "InferMultivariableAnalysisFactResult",
+    "variant": "Definition",
     "labels": {}
   },
   {

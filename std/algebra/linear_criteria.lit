@@ -1,0 +1,417 @@
+# Linear criteria over supplied fields and inverses of bijections, including empty sets.
+
+claim:
+    ? forall V,W nonempty_set,T fn(v V) W:
+        fn_range(T) $in power_set(W)
+    by thm linear_dimension::function_range_carrier(V,W,T) => fn_range(T) $in power_set(W)
+
+claim:
+    ? forall V,W nonempty_set,T fn(v V) W:
+        $is_nonempty_set(fn_range(T))
+    by thm linear_dimension::function_range_is_nonempty(V,W,T) => $is_nonempty_set(fn_range(T))
+
+forall V,W nonempty_set,T fn(v V) W,y W:
+    preimage(T,y) $in power_set(V)
+
+claim:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,source &vector_space::VectorSpace<K,field,V>,W nonempty_set,target &vector_space::VectorSpace<K,field,W>,T fn(v V) W:
+        $vector_space::is_linear_map(K,field,V,source,W,target,T)
+        =>:
+            $is_nonempty_set(preimage(T,target.zero))
+    by thm linear_dimension::linear_kernel_is_nonempty(K,field,V,source,W,target,T) => $is_nonempty_set(preimage(T,target.zero))
+
+claim:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,source &vector_space::VectorSpace<K,field,V>,W nonempty_set,target &vector_space::VectorSpace<K,field,W>,T fn(v V) W:
+        $vector_space::is_linear_map(K,field,V,source,W,target,T)
+        =>:
+            $vector_space::is_subspace(K,field,V,source,preimage(T,target.zero))
+    by thm vector_space::kernel_is_subspace(K,field,V,source,W,target,T) => $vector_space::is_subspace(K,field,V,source,preimage(T,target.zero))
+
+claim:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,source &vector_space::VectorSpace<K,field,V>,W nonempty_set,target &vector_space::VectorSpace<K,field,W>,T fn(v V) W:
+        $vector_space::is_linear_map(K,field,V,source,W,target,T)
+        =>:
+            $vector_space::is_subspace(K,field,W,target,fn_range(T))
+    by thm vector_space::range_is_subspace(K,field,V,source,W,target,T) => $vector_space::is_subspace(K,field,W,target,fn_range(T))
+
+claim:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,source &vector_space::VectorSpace<K,field,V>,W nonempty_set,target &vector_space::VectorSpace<K,field,W>,T fn(v V) W:
+        $vector_space::is_linear_map(K,field,V,source,W,target,T)
+        =>:
+            \subspace::restricted_space<K,field,V,source,preimage(T,target.zero)> $in &vector_space::VectorSpace<K,field,preimage(T,target.zero)>
+    by thm linear_dimension::linear_kernel_space_carrier(K,field,V,source,W,target,T) => \subspace::restricted_space<K,field,V,source,preimage(T,target.zero)> $in &vector_space::VectorSpace<K,field,preimage(T,target.zero)>
+
+claim:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,source &vector_space::VectorSpace<K,field,V>,W nonempty_set,target &vector_space::VectorSpace<K,field,W>,T fn(v V) W:
+        $vector_space::is_linear_map(K,field,V,source,W,target,T)
+        =>:
+            \subspace::restricted_space<K,field,W,target,fn_range(T)> $in &vector_space::VectorSpace<K,field,fn_range(T)>
+    by thm linear_dimension::linear_image_space_carrier(K,field,V,source,W,target,T) => \subspace::restricted_space<K,field,W,target,fn_range(T)> $in &vector_space::VectorSpace<K,field,fn_range(T)>
+
+claim:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,source &vector_space::VectorSpace<K,field,V>,W nonempty_set,target &vector_space::VectorSpace<K,field,W>,T fn(v V) W:
+        $basis::is_finite_dimensional(K,field,V,source)
+        $vector_space::is_linear_map(K,field,V,source,W,target,T)
+        =>:
+            $basis::is_finite_dimensional(K,field,fn_range(T),\subspace::restricted_space<K,field,W,target,fn_range(T)>)
+    by thm linear_dimension::finite_source_has_finite_image(K,field,V,source,W,target,T) => $basis::is_finite_dimensional(K,field,fn_range(T),\subspace::restricted_space<K,field,W,target,fn_range(T)>)
+
+claim:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,source &vector_space::VectorSpace<K,field,V>,W nonempty_set,target &vector_space::VectorSpace<K,field,W>,T fn(v V) W:
+        $basis::is_finite_dimensional(K,field,V,source)
+        $vector_space::is_linear_map(K,field,V,source,W,target,T)
+        =>:
+            $basis::is_finite_dimensional(K,field,preimage(T,target.zero),\subspace::restricted_space<K,field,V,source,preimage(T,target.zero)>)
+    by thm linear_dimension::finite_source_has_finite_kernel(K,field,V,source,W,target,T) => $basis::is_finite_dimensional(K,field,preimage(T,target.zero),\subspace::restricted_space<K,field,V,source,preimage(T,target.zero)>)
+
+claim:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,source &vector_space::VectorSpace<K,field,V>,W nonempty_set,target &vector_space::VectorSpace<K,field,W>,T fn(v V) W:
+        $basis::is_finite_dimensional(K,field,V,source)
+        $vector_space::is_linear_map(K,field,V,source,W,target,T)
+        =>:
+            \linear_dimension::linear_map_rank<K,field,V,source,W,target>(T) $in N
+            \linear_dimension::linear_map_rank<K,field,V,source,W,target>(T) $in R
+            \linear_dimension::linear_map_rank<K,field,V,source,W,target>(T) $in C
+    release thm linear_dimension::finite_source_rank_carrier(K,field,V,source,W,target,T)
+
+claim:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,source &vector_space::VectorSpace<K,field,V>,W nonempty_set,target &vector_space::VectorSpace<K,field,W>,T fn(v V) W:
+        $basis::is_finite_dimensional(K,field,V,source)
+        $vector_space::is_linear_map(K,field,V,source,W,target,T)
+        =>:
+            \linear_dimension::linear_map_nullity<K,field,V,source,W,target>(T) $in N
+            \linear_dimension::linear_map_nullity<K,field,V,source,W,target>(T) $in R
+            \linear_dimension::linear_map_nullity<K,field,V,source,W,target>(T) $in C
+    release thm linear_dimension::finite_source_nullity_carrier(K,field,V,source,W,target,T)
+
+claim:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,source &vector_space::VectorSpace<K,field,V>,W nonempty_set,target &vector_space::VectorSpace<K,field,W>,T fn(v V) W:
+        $basis::is_finite_dimensional(K,field,W,target)
+        $vector_space::is_linear_map(K,field,V,source,W,target,T)
+        =>:
+            $basis::is_finite_dimensional(K,field,fn_range(T),\subspace::restricted_space<K,field,W,target,fn_range(T)>)
+    by thm linear_dimension::finite_target_has_finite_image(K,field,V,source,W,target,T) => $basis::is_finite_dimensional(K,field,fn_range(T),\subspace::restricted_space<K,field,W,target,fn_range(T)>)
+
+claim:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,U power_set(V):
+        $vector_space::is_subspace(K,field,V,space,U)
+        =>:
+            $is_nonempty_set(U)
+    by thm subspace::subspace_is_nonempty(K,field,V,space,U) => $is_nonempty_set(U)
+
+claim:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,U power_set(V):
+        $vector_space::is_subspace(K,field,V,space,U)
+        =>:
+            \subspace::restricted_space<K,field,V,space,U> $in &vector_space::VectorSpace<K,field,U>
+    by thm subspace::restricted_space_is_vector_space(K,field,V,space,U) => \subspace::restricted_space<K,field,V,space,U> $in &vector_space::VectorSpace<K,field,U>
+
+thm empty_span_is_zero:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,vectors finite_seq(V,0):
+        \finite_span::span<K,field,V,space,0,vectors> ={space.zero}
+    claim:
+        ? forall x \finite_span::span<K,field,V,space,0,vectors>:
+            x $in {space.zero}
+        obtain c from $finite_span::is_linear_combination(K,field,V,space,0,x,vectors)
+        obtain sums from $finite_span::has_linear_combination_value(K,field,V,space,0,c,vectors,x)
+        x=sums(0)=space.zero
+    claim:
+        ? forall x {space.zero}:
+            x $in \finite_span::span<K,field,V,space,0,vectors>
+        by thm finite_span::span_zero_member(K,field,V,space,0,vectors) => space.zero $in \finite_span::span<K,field,V,space,0,vectors>
+        x=space.zero
+    by extension \finite_span::span<K,field,V,space,0,vectors> ={space.zero}
+
+thm zero_dimension_is_zero_space:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>:
+        $basis::is_finite_dimensional(K,field,V,space)
+        \dimension::finite_dimension<K,field,V>(space)=0
+        =>:
+            V={space.zero}
+    by thm dimension::finite_dimension_has_basis_length(K,field,V,space) => $basis::has_basis_length(K,field,V,space,\dimension::finite_dimension<K,field,V>(space))
+    $basis::has_basis_length(K,field,V,space,0)
+    obtain vectors from $basis::has_basis_length(K,field,V,space,0)
+    $finite_span::spans(K,field,V,space,0,vectors)
+    \finite_span::span<K,field,V,space,0,vectors> =V
+    by thm empty_span_is_zero(K,field,V,space,vectors) => \finite_span::span<K,field,V,space,0,vectors> ={space.zero}
+    V=\finite_span::span<K,field,V,space,0,vectors> ={space.zero}
+
+thm zero_space_has_zero_dimension:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>:
+        $basis::is_finite_dimensional(K,field,V,space)
+        V={space.zero}
+        =>:
+            \dimension::finite_dimension<K,field,V>(space)=0
+    have empty finite_seq(V,0)=tuple()
+    by thm empty_span_is_zero(K,field,V,space,empty) => \finite_span::span<K,field,V,space,0,empty> ={space.zero}
+    \finite_span::span<K,field,V,space,0,empty> ={space.zero}=V
+    by def $finite_span::spans(K,field,V,space,0,empty)
+    by thm dependence::empty_list_is_independent(K,field,V,space,empty) => $basis::is_linearly_independent(K,field,V,space,0,empty)
+    by def $basis::is_basis(K,field,V,space,0,empty)
+    by thm dimension::finite_dimension_of_basis(K,field,V,space,0,empty) => \dimension::finite_dimension<K,field,V>(space)=0
+
+thm equal_dimension_subspace_is_ambient:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,U power_set(V):
+        $vector_space::is_subspace(K,field,V,space,U)
+        $basis::is_finite_dimensional(K,field,V,space)
+        $basis::is_finite_dimensional(K,field,U,\subspace::restricted_space<K,field,V,space,U>)
+        \dimension::finite_dimension<K,field,U>(\subspace::restricted_space<K,field,V,space,U>)=\dimension::finite_dimension<K,field,V>(space)
+        =>:
+            U=V
+    have n N=\dimension::finite_dimension<K,field,V>(space)
+    by thm dimension::finite_dimension_has_basis_length(K,field,U,\subspace::restricted_space<K,field,V,space,U>) => $basis::has_basis_length(K,field,U,\subspace::restricted_space<K,field,V,space,U>,\dimension::finite_dimension<K,field,U>(\subspace::restricted_space<K,field,V,space,U>))
+    $basis::has_basis_length(K,field,U,\subspace::restricted_space<K,field,V,space,U>,n)
+    obtain vectors from $basis::has_basis_length(K,field,U,\subspace::restricted_space<K,field,V,space,U>,n)
+    by thm subspace::sequence_in_ambient(V,U,n,vectors) => vectors $in finite_seq(V,n)
+    by thm subspace::subspace_independent_is_ambient_independent(K,field,V,space,U,n,vectors) => $basis::is_linearly_independent(K,field,V,space,n,vectors)
+    by thm dimension::independent_dimension_list_is_basis(K,field,V,space,n,vectors) => $basis::is_basis(K,field,V,space,n,vectors)
+    $finite_span::spans(K,field,U,\subspace::restricted_space<K,field,V,space,U>,n,vectors)
+    \finite_span::span<K,field,U,\subspace::restricted_space<K,field,V,space,U>,n,vectors> =U
+    $finite_span::spans(K,field,V,space,n,vectors)
+    \finite_span::span<K,field,V,space,n,vectors> =V
+    by thm subspace::subspace_span_equals_ambient(K,field,V,space,U,n,vectors) => \finite_span::span<K,field,U,\subspace::restricted_space<K,field,V,space,U>,n,vectors> =\finite_span::span<K,field,V,space,n,vectors>
+    U=\finite_span::span<K,field,U,\subspace::restricted_space<K,field,V,space,U>,n,vectors> =\finite_span::span<K,field,V,space,n,vectors> =V
+
+thm whole_subspace_dimension_equals_ambient:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,U power_set(V):
+        $vector_space::is_subspace(K,field,V,space,U)
+        $basis::is_finite_dimensional(K,field,V,space)
+        $basis::is_finite_dimensional(K,field,U,\subspace::restricted_space<K,field,V,space,U>)
+        U=V
+        =>:
+            \dimension::finite_dimension<K,field,U>(\subspace::restricted_space<K,field,V,space,U>)=\dimension::finite_dimension<K,field,V>(space)
+    release thm basis_existence::finite_dimensional_has_basis(K,field,U,\subspace::restricted_space<K,field,V,space,U>)
+    obtain n,vectors from exist length N,selected finite_seq(U,length) st {$basis::is_basis(K,field,U,\subspace::restricted_space<K,field,V,space,U>,length,selected)}
+    by thm subspace::sequence_in_ambient(V,U,n,vectors) => vectors $in finite_seq(V,n)
+    by thm subspace::subspace_independent_is_ambient_independent(K,field,V,space,U,n,vectors) => $basis::is_linearly_independent(K,field,V,space,n,vectors)
+    $finite_span::spans(K,field,U,\subspace::restricted_space<K,field,V,space,U>,n,vectors)
+    \finite_span::span<K,field,U,\subspace::restricted_space<K,field,V,space,U>,n,vectors> =U
+    by thm subspace::subspace_span_equals_ambient(K,field,V,space,U,n,vectors) => \finite_span::span<K,field,U,\subspace::restricted_space<K,field,V,space,U>,n,vectors> =\finite_span::span<K,field,V,space,n,vectors>
+    \finite_span::span<K,field,V,space,n,vectors> =\finite_span::span<K,field,U,\subspace::restricted_space<K,field,V,space,U>,n,vectors> =U=V
+    by def $finite_span::spans(K,field,V,space,n,vectors)
+    by def $basis::is_basis(K,field,V,space,n,vectors)
+    by thm dimension::finite_dimension_of_basis(K,field,V,space,n,vectors) => \dimension::finite_dimension<K,field,V>(space)=n
+    by thm dimension::finite_dimension_of_basis(K,field,U,\subspace::restricted_space<K,field,V,space,U>,n,vectors) => \dimension::finite_dimension<K,field,U>(\subspace::restricted_space<K,field,V,space,U>)=n
+    \dimension::finite_dimension<K,field,U>(\subspace::restricted_space<K,field,V,space,U>)=n=\dimension::finite_dimension<K,field,V>(space)
+
+forall V,W set,T fn(v V) W,y W:
+    $bijective(V,W,T)
+    =>:
+        exist! x V st {T(x)=y}
+
+template<V,W set,T fn(v V) W: $bijective(V,W,T)>:
+    have fn inverse_bijection by exist!:
+        ? forall y W:
+            exist! x V st {T(x)=y}
+
+thm inverse_bijection_right_identity:
+    ? forall V,W set,T fn(v V) W,y W:
+        $bijective(V,W,T)
+        =>:
+            T(\inverse_bijection<V,W,T>(y))=y
+
+thm inverse_bijection_left_identity:
+    ? forall V,W set,T fn(v V) W,x V:
+        $bijective(V,W,T)
+        =>:
+            \inverse_bijection<V,W,T>(T(x))=x
+
+thm inverse_bijection_is_bijective:
+    ? forall V,W set,T fn(v V) W:
+        $bijective(V,W,T)
+        =>:
+            $bijective(W,V,\inverse_bijection<V,W,T>)
+    claim:
+        ? forall a,b W:
+            \inverse_bijection<V,W,T>(a)=\inverse_bijection<V,W,T>(b)
+            =>:
+                a=b
+        a=T(\inverse_bijection<V,W,T>(a))=T(\inverse_bijection<V,W,T>(b))=b
+    by def $injective(W,V,\inverse_bijection<V,W,T>)
+    claim:
+        ? forall x V:
+            exist y W st {x=\inverse_bijection<V,W,T>(y)}
+        by thm inverse_bijection_left_identity(V,W,T,x) => \inverse_bijection<V,W,T>(T(x))=x
+        witness exist y W st {x=\inverse_bijection<V,W,T>(y)} from T(x)
+    by def $surjective(W,V,\inverse_bijection<V,W,T>)
+    by def $bijective(W,V,\inverse_bijection<V,W,T>)
+
+thm inverse_bijection_is_linear:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,source &vector_space::VectorSpace<K,field,V>,W nonempty_set,target &vector_space::VectorSpace<K,field,W>,T fn(v V) W:
+        $vector_space::is_linear_map(K,field,V,source,W,target,T)
+        $bijective(V,W,T)
+        =>:
+            $vector_space::is_linear_map(K,field,W,target,V,source,\inverse_bijection<V,W,T>)
+    claim:
+        ? forall a,b W:
+            \inverse_bijection<V,W,T>(target.add(a,b))=source.add(\inverse_bijection<V,W,T>(a),\inverse_bijection<V,W,T>(b))
+        by thm inverse_bijection_right_identity(V,W,T,a) => T(\inverse_bijection<V,W,T>(a))=a
+        by thm inverse_bijection_right_identity(V,W,T,b) => T(\inverse_bijection<V,W,T>(b))=b
+        T(source.add(\inverse_bijection<V,W,T>(a),\inverse_bijection<V,W,T>(b)))=target.add(T(\inverse_bijection<V,W,T>(a)),T(\inverse_bijection<V,W,T>(b)))=target.add(a,b)
+        T(\inverse_bijection<V,W,T>(target.add(a,b)))=target.add(a,b)=T(source.add(\inverse_bijection<V,W,T>(a),\inverse_bijection<V,W,T>(b)))
+    claim:
+        ? forall c K,a W:
+            \inverse_bijection<V,W,T>(target.smul(c,a))=source.smul(c,\inverse_bijection<V,W,T>(a))
+        by thm inverse_bijection_right_identity(V,W,T,a) => T(\inverse_bijection<V,W,T>(a))=a
+        T(source.smul(c,\inverse_bijection<V,W,T>(a)))=target.smul(c,T(\inverse_bijection<V,W,T>(a)))=target.smul(c,a)
+        T(\inverse_bijection<V,W,T>(target.smul(c,a)))=target.smul(c,a)=T(source.smul(c,\inverse_bijection<V,W,T>(a)))
+    by def $vector_space::is_linear_map(K,field,W,target,V,source,\inverse_bijection<V,W,T>)
+
+thm zero_nullity_is_injective:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,source &vector_space::VectorSpace<K,field,V>,W nonempty_set,target &vector_space::VectorSpace<K,field,W>,T fn(v V) W:
+        $vector_space::is_linear_map(K,field,V,source,W,target,T)
+        $basis::is_finite_dimensional(K,field,preimage(T,target.zero),\subspace::restricted_space<K,field,V,source,preimage(T,target.zero)>)
+        \linear_dimension::linear_map_nullity<K,field,V,source,W,target>(T)=0
+        =>:
+            $injective(V,W,T)
+    \dimension::finite_dimension<K,field,preimage(T,target.zero)>(\subspace::restricted_space<K,field,V,source,preimage(T,target.zero)>)=\linear_dimension::linear_map_nullity<K,field,V,source,W,target>(T)=0
+    by thm zero_dimension_is_zero_space(K,field,preimage(T,target.zero),\subspace::restricted_space<K,field,V,source,preimage(T,target.zero)>) => preimage(T,target.zero)={\subspace::restricted_space<K,field,V,source,preimage(T,target.zero)>.zero}
+    \subspace::restricted_space<K,field,V,source,preimage(T,target.zero)>.zero=source.zero
+    preimage(T,target.zero)={\subspace::restricted_space<K,field,V,source,preimage(T,target.zero)>.zero}={source.zero}
+    by thm vector_space::zero_kernel_is_injective(K,field,V,source,W,target,T) => $injective(V,W,T)
+
+thm injective_has_zero_nullity:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,source &vector_space::VectorSpace<K,field,V>,W nonempty_set,target &vector_space::VectorSpace<K,field,W>,T fn(v V) W:
+        $vector_space::is_linear_map(K,field,V,source,W,target,T)
+        $basis::is_finite_dimensional(K,field,preimage(T,target.zero),\subspace::restricted_space<K,field,V,source,preimage(T,target.zero)>)
+        $injective(V,W,T)
+        =>:
+            \linear_dimension::linear_map_nullity<K,field,V,source,W,target>(T)=0
+    by thm vector_space::injective_has_zero_kernel(K,field,V,source,W,target,T) => preimage(T,target.zero)={source.zero}
+    \subspace::restricted_space<K,field,V,source,preimage(T,target.zero)>.zero=source.zero
+    preimage(T,target.zero)={source.zero}={\subspace::restricted_space<K,field,V,source,preimage(T,target.zero)>.zero}
+    by thm zero_space_has_zero_dimension(K,field,preimage(T,target.zero),\subspace::restricted_space<K,field,V,source,preimage(T,target.zero)>) => \dimension::finite_dimension<K,field,preimage(T,target.zero)>(\subspace::restricted_space<K,field,V,source,preimage(T,target.zero)>)=0
+    \linear_dimension::linear_map_nullity<K,field,V,source,W,target>(T)=\dimension::finite_dimension<K,field,preimage(T,target.zero)>(\subspace::restricted_space<K,field,V,source,preimage(T,target.zero)>)=0
+
+thm full_source_rank_is_injective:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,source &vector_space::VectorSpace<K,field,V>,W nonempty_set,target &vector_space::VectorSpace<K,field,W>,T fn(v V) W:
+        $basis::is_finite_dimensional(K,field,V,source)
+        $vector_space::is_linear_map(K,field,V,source,W,target,T)
+        \linear_dimension::linear_map_rank<K,field,V,source,W,target>(T)=\dimension::finite_dimension<K,field,V>(source)
+        =>:
+            $injective(V,W,T)
+    by thm linear_dimension::rank_nullity(K,field,V,source,W,target,T) => \linear_dimension::linear_map_rank<K,field,V,source,W,target>(T)+\linear_dimension::linear_map_nullity<K,field,V,source,W,target>(T)=\dimension::finite_dimension<K,field,V>(source)
+    \linear_dimension::linear_map_rank<K,field,V,source,W,target>(T)+\linear_dimension::linear_map_nullity<K,field,V,source,W,target>(T)=\dimension::finite_dimension<K,field,V>(source)
+    \linear_dimension::linear_map_nullity<K,field,V,source,W,target>(T)=\dimension::finite_dimension<K,field,V>(source)-\linear_dimension::linear_map_rank<K,field,V,source,W,target>(T)=0
+    by thm zero_nullity_is_injective(K,field,V,source,W,target,T) => $injective(V,W,T)
+
+thm injective_has_full_source_rank:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,source &vector_space::VectorSpace<K,field,V>,W nonempty_set,target &vector_space::VectorSpace<K,field,W>,T fn(v V) W:
+        $basis::is_finite_dimensional(K,field,V,source)
+        $vector_space::is_linear_map(K,field,V,source,W,target,T)
+        $injective(V,W,T)
+        =>:
+            \linear_dimension::linear_map_rank<K,field,V,source,W,target>(T)=\dimension::finite_dimension<K,field,V>(source)
+    by thm injective_has_zero_nullity(K,field,V,source,W,target,T) => \linear_dimension::linear_map_nullity<K,field,V,source,W,target>(T)=0
+    by thm linear_dimension::rank_nullity(K,field,V,source,W,target,T) => \linear_dimension::linear_map_rank<K,field,V,source,W,target>(T)+\linear_dimension::linear_map_nullity<K,field,V,source,W,target>(T)=\dimension::finite_dimension<K,field,V>(source)
+    \linear_dimension::linear_map_rank<K,field,V,source,W,target>(T)=\linear_dimension::linear_map_rank<K,field,V,source,W,target>(T)+0=\linear_dimension::linear_map_rank<K,field,V,source,W,target>(T)+\linear_dimension::linear_map_nullity<K,field,V,source,W,target>(T)=\dimension::finite_dimension<K,field,V>(source)
+
+thm surjective_has_full_range:
+    ? forall V,W set,T fn(v V) W:
+        $surjective(V,W,T)
+        =>:
+            fn_range(T)=W
+    claim:
+        ? forall y W:
+            y $in fn_range(T)
+        obtain x from exist v V st {y=T(v)}
+        T(x) $in fn_range(T)
+        y=T(x)
+    forall y fn_range(T):
+        y $in W
+    by extension fn_range(T)=W
+
+thm full_range_is_surjective:
+    ? forall V,W set,T fn(v V) W:
+        fn_range(T)=W
+        =>:
+            $surjective(V,W,T)
+
+thm surjective_has_full_target_rank:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,source &vector_space::VectorSpace<K,field,V>,W nonempty_set,target &vector_space::VectorSpace<K,field,W>,T fn(v V) W:
+        $basis::is_finite_dimensional(K,field,W,target)
+        $vector_space::is_linear_map(K,field,V,source,W,target,T)
+        $surjective(V,W,T)
+        =>:
+            \linear_dimension::linear_map_rank<K,field,V,source,W,target>(T)=\dimension::finite_dimension<K,field,W>(target)
+    by thm surjective_has_full_range(V,W,T) => fn_range(T)=W
+    by thm whole_subspace_dimension_equals_ambient(K,field,W,target,fn_range(T)) => \dimension::finite_dimension<K,field,fn_range(T)>(\subspace::restricted_space<K,field,W,target,fn_range(T)>)=\dimension::finite_dimension<K,field,W>(target)
+    \linear_dimension::linear_map_rank<K,field,V,source,W,target>(T)=\dimension::finite_dimension<K,field,fn_range(T)>(\subspace::restricted_space<K,field,W,target,fn_range(T)>)=\dimension::finite_dimension<K,field,W>(target)
+
+thm full_target_rank_is_surjective:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,source &vector_space::VectorSpace<K,field,V>,W nonempty_set,target &vector_space::VectorSpace<K,field,W>,T fn(v V) W:
+        $basis::is_finite_dimensional(K,field,W,target)
+        $vector_space::is_linear_map(K,field,V,source,W,target,T)
+        \linear_dimension::linear_map_rank<K,field,V,source,W,target>(T)=\dimension::finite_dimension<K,field,W>(target)
+        =>:
+            $surjective(V,W,T)
+    by thm linear_dimension::finite_target_has_finite_image(K,field,V,source,W,target,T) => $basis::is_finite_dimensional(K,field,fn_range(T),\subspace::restricted_space<K,field,W,target,fn_range(T)>)
+    \linear_dimension::linear_map_rank<K,field,V,source,W,target>(T)=\dimension::finite_dimension<K,field,fn_range(T)>(\subspace::restricted_space<K,field,W,target,fn_range(T)>)
+    \dimension::finite_dimension<K,field,fn_range(T)>(\subspace::restricted_space<K,field,W,target,fn_range(T)>)=\linear_dimension::linear_map_rank<K,field,V,source,W,target>(T)=\dimension::finite_dimension<K,field,W>(target)
+    by thm equal_dimension_subspace_is_ambient(K,field,W,target,fn_range(T)) => fn_range(T)=W
+    by thm full_range_is_surjective(V,W,T) => $surjective(V,W,T)
+
+thm injective_dimension_bound:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,source &vector_space::VectorSpace<K,field,V>,W nonempty_set,target &vector_space::VectorSpace<K,field,W>,T fn(v V) W:
+        $basis::is_finite_dimensional(K,field,V,source)
+        $basis::is_finite_dimensional(K,field,W,target)
+        $vector_space::is_linear_map(K,field,V,source,W,target,T)
+        $injective(V,W,T)
+        =>:
+            \dimension::finite_dimension<K,field,V>(source)<=\dimension::finite_dimension<K,field,W>(target)
+    by thm injective_has_full_source_rank(K,field,V,source,W,target,T) => \linear_dimension::linear_map_rank<K,field,V,source,W,target>(T)=\dimension::finite_dimension<K,field,V>(source)
+    by thm linear_dimension::finite_source_has_finite_image(K,field,V,source,W,target,T) => $basis::is_finite_dimensional(K,field,fn_range(T),\subspace::restricted_space<K,field,W,target,fn_range(T)>)
+    by thm subspace::subspace_dimension_le_ambient(K,field,W,target,fn_range(T)) => \dimension::finite_dimension<K,field,fn_range(T)>(\subspace::restricted_space<K,field,W,target,fn_range(T)>)<=\dimension::finite_dimension<K,field,W>(target)
+    \dimension::finite_dimension<K,field,V>(source)=\linear_dimension::linear_map_rank<K,field,V,source,W,target>(T)=\dimension::finite_dimension<K,field,fn_range(T)>(\subspace::restricted_space<K,field,W,target,fn_range(T)>)
+
+thm surjective_dimension_bound:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,source &vector_space::VectorSpace<K,field,V>,W nonempty_set,target &vector_space::VectorSpace<K,field,W>,T fn(v V) W:
+        $basis::is_finite_dimensional(K,field,V,source)
+        $basis::is_finite_dimensional(K,field,W,target)
+        $vector_space::is_linear_map(K,field,V,source,W,target,T)
+        $surjective(V,W,T)
+        =>:
+            \dimension::finite_dimension<K,field,W>(target)<=\dimension::finite_dimension<K,field,V>(source)
+    by thm surjective_has_full_target_rank(K,field,V,source,W,target,T) => \linear_dimension::linear_map_rank<K,field,V,source,W,target>(T)=\dimension::finite_dimension<K,field,W>(target)
+    by thm linear_dimension::rank_le_source_dimension(K,field,V,source,W,target,T) => \linear_dimension::linear_map_rank<K,field,V,source,W,target>(T)<=\dimension::finite_dimension<K,field,V>(source)
+    \dimension::finite_dimension<K,field,W>(target)=\linear_dimension::linear_map_rank<K,field,V,source,W,target>(T)
+
+thm equal_dimension_injective_is_bijective:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,source &vector_space::VectorSpace<K,field,V>,W nonempty_set,target &vector_space::VectorSpace<K,field,W>,T fn(v V) W:
+        $basis::is_finite_dimensional(K,field,V,source)
+        $basis::is_finite_dimensional(K,field,W,target)
+        $vector_space::is_linear_map(K,field,V,source,W,target,T)
+        \dimension::finite_dimension<K,field,V>(source)=\dimension::finite_dimension<K,field,W>(target)
+        $injective(V,W,T)
+        =>:
+            $bijective(V,W,T)
+    by thm injective_has_full_source_rank(K,field,V,source,W,target,T) => \linear_dimension::linear_map_rank<K,field,V,source,W,target>(T)=\dimension::finite_dimension<K,field,V>(source)
+    \linear_dimension::linear_map_rank<K,field,V,source,W,target>(T)=\dimension::finite_dimension<K,field,V>(source)=\dimension::finite_dimension<K,field,W>(target)
+    by thm full_target_rank_is_surjective(K,field,V,source,W,target,T) => $surjective(V,W,T)
+    by def $bijective(V,W,T)
+
+thm equal_dimension_surjective_is_bijective:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,source &vector_space::VectorSpace<K,field,V>,W nonempty_set,target &vector_space::VectorSpace<K,field,W>,T fn(v V) W:
+        $basis::is_finite_dimensional(K,field,V,source)
+        $basis::is_finite_dimensional(K,field,W,target)
+        $vector_space::is_linear_map(K,field,V,source,W,target,T)
+        \dimension::finite_dimension<K,field,V>(source)=\dimension::finite_dimension<K,field,W>(target)
+        $surjective(V,W,T)
+        =>:
+            $bijective(V,W,T)
+    by thm surjective_has_full_target_rank(K,field,V,source,W,target,T) => \linear_dimension::linear_map_rank<K,field,V,source,W,target>(T)=\dimension::finite_dimension<K,field,W>(target)
+    \linear_dimension::linear_map_rank<K,field,V,source,W,target>(T)=\dimension::finite_dimension<K,field,W>(target)=\dimension::finite_dimension<K,field,V>(source)
+    by thm full_source_rank_is_injective(K,field,V,source,W,target,T) => $injective(V,W,T)
+    by def $bijective(V,W,T)
+
+thm bijective_preserves_dimension:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,source &vector_space::VectorSpace<K,field,V>,W nonempty_set,target &vector_space::VectorSpace<K,field,W>,T fn(v V) W:
+        $basis::is_finite_dimensional(K,field,V,source)
+        $basis::is_finite_dimensional(K,field,W,target)
+        $vector_space::is_linear_map(K,field,V,source,W,target,T)
+        $bijective(V,W,T)
+        =>:
+            \dimension::finite_dimension<K,field,V>(source)=\dimension::finite_dimension<K,field,W>(target)
+    by thm injective_has_full_source_rank(K,field,V,source,W,target,T) => \linear_dimension::linear_map_rank<K,field,V,source,W,target>(T)=\dimension::finite_dimension<K,field,V>(source)
+    by thm surjective_has_full_target_rank(K,field,V,source,W,target,T) => \linear_dimension::linear_map_rank<K,field,V,source,W,target>(T)=\dimension::finite_dimension<K,field,W>(target)
+    \dimension::finite_dimension<K,field,V>(source)=\linear_dimension::linear_map_rank<K,field,V,source,W,target>(T)=\dimension::finite_dimension<K,field,W>(target)

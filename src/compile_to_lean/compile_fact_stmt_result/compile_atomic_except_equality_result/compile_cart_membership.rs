@@ -102,10 +102,43 @@ impl LitexToLeanCompiler {
             ));
         };
         validate_finite_signature(finite)?;
+        if !matches!(finite.source, KnownTupleShapeProof::TupleEquality(_)) {
+            // Replay the same complete-domain and coordinate certificate used by
+            // the explicit Cartesian-membership theorem, preserving each stage.
+            ensure_object(&fact.element, &domain.function_wd)?;
+            ensure_object(
+                &Obj::FunctionSpace(FunctionSpace::FnSet(domain.target.clone())),
+                &domain.target_wd,
+            )?;
+            let function =
+                self.compile_wd(&domain.function_wd, &position.atomic_search_prior(0)?)?;
+            let target = self.compile_wd(&domain.target_wd, &position.atomic_search_prior(1)?)?;
+            let requirements = proofs
+                .iter()
+                .map(source_subject)
+                .collect::<Result<Vec<_>, _>>()?;
+            let references = proofs
+                .iter()
+                .enumerate()
+                .map(|(index, proof)| {
+                    Ok(self
+                        .compile_verify(proof, &position.atomic_search_prior(index + 2)?)?
+                        .1)
+                })
+                .collect::<Result<Vec<_>, LeanCompileError>>()?;
+            let complete = position.atomic_search_prior(2 + proofs.len())?;
+            let member = self.compile_builtin_cart_membership(
+                fact,
+                domain,
+                &requirements,
+                &references,
+                &complete,
+                &position.atomic_search_prior(2)?,
+            )?;
+            return Ok(format!("(by\n  let _membership_function := {function}\n  let _membership_target := {target}\n  exact {member})"));
+        }
         let KnownTupleShapeProof::TupleEquality(tuple_source) = &finite.source else {
-            return Err(LeanCompileError::unsupported(
-                "CartMembership/NonliteralSource",
-            ));
+            unreachable!("nonliteral certificates were dispatched above")
         };
         let n = cart.args.len();
         if tuple_source.value.args.len() != n

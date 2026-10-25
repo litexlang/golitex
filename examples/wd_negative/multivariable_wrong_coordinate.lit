@@ -1,0 +1,3 @@
+# A two-dimensional function has no third coordinate partial.
+have fn polynomial(x cart_n(R,2)) R=x(1)^2+x(2)^2
+$has_partial_derivative_at(polynomial,(1,2),2,3,0)

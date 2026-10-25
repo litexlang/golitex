@@ -1,0 +1,63 @@
+# name: imo_1961_p1
+# informal_prefix:
+# /-- (''Hungary'')
+# Solve the system of equations:
+#
+# <center>
+# $
+# \begin{matrix}
+# \quad x + y + z \!\!\! &= a \; \, \\
+# x^2 +y^2+z^2 \!\!\! &=b^2 \\
+# \qquad \qquad xy \!\!\!  &= z^2
+# \end{matrix}
+# $
+# </center>
+#
+# where $a $ and $b $ are constants.  Give the conditions that $a $ and $b $ must satisfy so that $x, y, z $ (the solutions of the system) are distinct positive numbers.-/
+# formal_statement:
+# theorem imo_1961_p1 (x y z a b : ℝ) (h₀ : 0 < x ∧ 0 < y ∧ 0 < z) (h₁ : x ≠ y) (h₂ : y ≠ z)
+#   (h₃ : z ≠ x) (h₄ : x + y + z = a) (h₅ : x ^ 2 + y ^ 2 + z ^ 2 = b ^ 2) (h₆ : x * y = z ^ 2) :
+#   0 < a ∧ b ^ 2 < a ^ 2 ∧ a ^ 2 < 3 * b ^ 2 := by
+
+claim:
+    ? forall x, y, z, a, b R:
+        0 < x
+        0 < y
+        0 < z
+        x != y
+        y != z
+        z != x
+        x + y + z = a
+        x^2 + y^2 + z^2 = b^2
+        x * y = z^2
+        =>:
+            0 < a
+            b^2 < a^2
+            a^2 < 3 * b^2
+    0 < x + y
+    0 < x + y + z
+    a = x + y + z
+    0 < a
+    a^2 = (x + y + z)^2
+    b^2 = x^2 + y^2 + z^2
+    a^2 - b^2 = (x + y + z)^2 - (x^2 + y^2 + z^2) = 2 * (x * y + x * z + y * z)
+    0 < x * y
+    0 < x * z
+    0 < y * z
+    0 < x * y + x * z
+    0 < x * y + x * z + y * z
+    0 < 2 * (x * y + x * z + y * z)
+    0 < a^2 - b^2
+    b^2 < a^2
+    3 * b^2 - a^2 = 3 * (x^2 + y^2 + z^2) - (x + y + z)^2
+    3 * (x^2 + y^2 + z^2) - (x + y + z)^2 = (x - y)^2 + (y - z)^2 + (z - x)^2
+    3 * b^2 - a^2 = (x - y)^2 + (y - z)^2 + (z - x)^2
+    x - y != 0
+    (x - y)^2 != 0
+    0 <= (x - y)^2
+    (x - y)^2 > 0
+    0 <= (y - z)^2
+    0 <= (z - x)^2
+    0 < (x - y)^2 + (y - z)^2 + (z - x)^2
+    0 < 3 * b^2 - a^2
+    a^2 < 3 * b^2

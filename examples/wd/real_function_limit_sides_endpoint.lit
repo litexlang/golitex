@@ -35,4 +35,4 @@ claim:
         x<0
         impossible x<0
 
-lim(sided_endpoint,0)=0
+fn_lim(sided_endpoint,0)=0

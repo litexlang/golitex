@@ -12,6 +12,55 @@ impl LitexToLeanCompiler {
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
         match rule {
+            SubsetFactSearchProofByBuiltinRule::CompositionRangeSubset(p) => {
+                self.compile_composition_range_subset(fact, &p.callable, position)
+            }
+            SubsetFactSearchProofByBuiltinRule::FunctionPreimageSubsetOfInputCarrier(p) => {
+                self.compile_preimage_subset(fact, p, position)
+            }
+            SubsetFactSearchProofByBuiltinRule::SubsetSetMinusCommonRightMonotone(p) => {
+                self.compile_subset_monotone(fact, &p.left_operand_subset_proof, false, position)
+            }
+            SubsetFactSearchProofByBuiltinRule::SubsetPowerSetMonotone(p) => {
+                self.compile_subset_monotone(fact, &p.base_subset_proof, true, position)
+            }
+            SubsetFactSearchProofByBuiltinRule::SubsetTransitivity(p) => self
+                .compile_subset_transitivity(
+                    fact,
+                    [&p.left_to_middle_proof, &p.middle_to_right_proof],
+                    position,
+                ),
+            SubsetFactSearchProofByBuiltinRule::UnionSubsetFromBothOperands(p) => self
+                .compile_union_upper_bound(
+                    fact,
+                    [&p.left_operand_subset_proof, &p.right_operand_subset_proof],
+                    position,
+                ),
+            SubsetFactSearchProofByBuiltinRule::UnionSubsetFromComponentwise(p) => self
+                .compile_union_subset_componentwise(fact, &p.proof_of_requirement_facts, position),
+            SubsetFactSearchProofByBuiltinRule::SetMinusSubsetLeft(_) => {
+                self.compile_set_minus_subset_left(fact, position)
+            }
+            SubsetFactSearchProofByBuiltinRule::IntersectSubsetLeft(_) => {
+                self.compile_intersection_subset_operand(fact, true, position)
+            }
+            SubsetFactSearchProofByBuiltinRule::IntersectSubsetRight(_) => {
+                self.compile_intersection_subset_operand(fact, false, position)
+            }
+            SubsetFactSearchProofByBuiltinRule::IntersectSubsetFromLeftUpperBound(p) => self
+                .compile_intersection_subset_bound(
+                    fact,
+                    &p.left_operand_subset_proof,
+                    true,
+                    position,
+                ),
+            SubsetFactSearchProofByBuiltinRule::IntersectSubsetFromRightUpperBound(p) => self
+                .compile_intersection_subset_bound(
+                    fact,
+                    &p.right_operand_subset_proof,
+                    false,
+                    position,
+                ),
             SubsetFactSearchProofByBuiltinRule::StandardSetSubset(proof) => {
                 if fact.left != Obj::StandardSet(proof.left.clone())
                     || fact.right != Obj::StandardSet(proof.right.clone())

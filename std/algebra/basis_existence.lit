@@ -1,0 +1,89 @@
+# Finite spanning lists contain a bounded-length basis.
+# Basis existence does not select a unique basis or an invariant dimension.
+
+thm removed_list_range_subset:
+    ? forall V nonempty_set,n N+,vectors finite_seq(V,n),k N+,reduced finite_seq(V,n-1):
+        $basis::is_list_with_index_removed(V,n,vectors,k,reduced)
+        =>:
+            fn_range(reduced) $subset fn_range(vectors)
+    claim:
+        ? forall x fn_range(reduced):
+            x $in fn_range(vectors)
+        have by fn_preimage: idx from x $in fn_range(reduced)
+        idx $in N+
+        by cases:
+            ? x $in fn_range(vectors)
+            case idx<k:
+                idx<=n-1<n
+                idx $in closed_range(1,n)
+                reduced(idx)=vectors(idx)
+                vectors(idx) $in fn_range(vectors)
+                x=reduced(idx)=vectors(idx)
+            case idx>=k:
+                idx<=n-1<n
+                idx+1<=n
+                idx+1 $in closed_range(1,n)
+                reduced(idx)=vectors(idx+1)
+                vectors(idx+1) $in fn_range(vectors)
+                x=reduced(idx)=vectors(idx+1)
+
+thm spanning_list_has_basis_of_bounded_length:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,n N,vectors finite_seq(V,n):
+        $finite_span::spans(K,field,V,space,n,vectors)
+        =>:
+            exist m N,selected finite_seq(V,m) st {m<=n,$basis::is_basis(K,field,V,space,m,selected),fn_range(selected) $subset fn_range(vectors)}
+    prop is_basis_extractable_at_length(length N):
+        forall listed finite_seq(V,length):
+            $finite_span::spans(K,field,V,space,length,listed)
+            =>:
+                exist m N,selected finite_seq(V,m) st {m<=length,$basis::is_basis(K,field,V,space,m,selected),fn_range(selected) $subset fn_range(listed)}
+    by induc length from 0:
+        ? $is_basis_extractable_at_length(length)
+        ? from length=0:
+            claim:
+                ? forall listed finite_seq(V,0):
+                    $finite_span::spans(K,field,V,space,0,listed)
+                    =>:
+                        exist m N,selected finite_seq(V,m) st {m<=0,$basis::is_basis(K,field,V,space,m,selected),fn_range(selected) $subset fn_range(listed)}
+                by thm dependence::empty_list_is_independent(K,field,V,space,listed) => $basis::is_linearly_independent(K,field,V,space,0,listed)
+                by def $basis::is_basis(K,field,V,space,0,listed)
+                witness exist m N,selected finite_seq(V,m) st {m<=0,$basis::is_basis(K,field,V,space,m,selected),fn_range(selected) $subset fn_range(listed)} from 0,listed
+            by def $is_basis_extractable_at_length(0)
+        ? induc:
+            length $in N
+            length+1 $in N+
+            claim:
+                ? forall listed finite_seq(V,length+1):
+                    $finite_span::spans(K,field,V,space,length+1,listed)
+                    =>:
+                        exist m N,selected finite_seq(V,m) st {m<=length+1,$basis::is_basis(K,field,V,space,m,selected),fn_range(selected) $subset fn_range(listed)}
+                by cases:
+                    ? exist m N,selected finite_seq(V,m) st {m<=length+1,$basis::is_basis(K,field,V,space,m,selected),fn_range(selected) $subset fn_range(listed)}
+                    case $basis::is_linearly_independent(K,field,V,space,length+1,listed):
+                        by def $basis::is_basis(K,field,V,space,length+1,listed)
+                        witness exist m N,selected finite_seq(V,m) st {m<=length+1,$basis::is_basis(K,field,V,space,m,selected),fn_range(selected) $subset fn_range(listed)} from length+1,listed
+                    case not $basis::is_linearly_independent(K,field,V,space,length+1,listed):
+                        by def $basis::is_linearly_dependent(K,field,V,space,length+1,listed)
+                        release thm span_reduction::dependent_list_has_span_preserving_removal(K,field,V,space,length+1,listed)
+                        obtain k,reduced from exist selected_k N+,r finite_seq(V,(length+1)-1) st {$basis::is_list_with_index_removed(V,length+1,listed,selected_k,r),\finite_span::span<K,field,V,space,length+1,listed> = \finite_span::span<K,field,V,space,(length+1)-1,r>}
+                        (length+1)-1=length
+                        \finite_span::span<K,field,V,space,(length+1)-1,reduced> = \finite_span::span<K,field,V,space,length+1,listed> = V
+                        by def $finite_span::spans(K,field,V,space,(length+1)-1,reduced)
+                        $is_basis_extractable_at_length((length+1)-1)
+                        obtain m,selected from exist b N,w finite_seq(V,b) st {b<=(length+1)-1,$basis::is_basis(K,field,V,space,b,w),fn_range(w) $subset fn_range(reduced)}
+                        by thm removed_list_range_subset(V,length+1,listed,k,reduced) => fn_range(reduced) $subset fn_range(listed)
+                        m<=(length+1)-1=length<length+1
+                        witness exist b N,w finite_seq(V,b) st {b<=length+1,$basis::is_basis(K,field,V,space,b,w),fn_range(w) $subset fn_range(listed)} from m,selected
+            by def $is_basis_extractable_at_length(length+1)
+    $is_basis_extractable_at_length(n)
+
+thm finite_dimensional_has_basis:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>:
+        $basis::is_finite_dimensional(K,field,V,space)
+        =>:
+            exist n N,selected finite_seq(V,n) st {$basis::is_basis(K,field,V,space,n,selected)}
+    obtain n,vectors from $basis::is_finite_dimensional(K,field,V,space)
+    release thm spanning_list_has_basis_of_bounded_length(K,field,V,space,n,vectors)
+    obtain m,selected from exist b N,w finite_seq(V,b) st {b<=n,$basis::is_basis(K,field,V,space,b,w),fn_range(w) $subset fn_range(vectors)}
+    witness exist b N,w finite_seq(V,b) st {$basis::is_basis(K,field,V,space,b,w)} from m,selected
+

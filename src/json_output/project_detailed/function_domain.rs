@@ -243,6 +243,17 @@ pub(super) fn project_call_domains_alpha_match(
 
 pub(super) fn project_source(proof: &CompleteFunctionDomainProof, rt: &Runtime) -> JsonValue {
     let source = match &proof.source {
+        CompleteFunctionDomainSourceProof::MultivariableSelector(source) => object_for(
+            rt,
+            vec![
+                ("type", string("multivariable_selector")),
+                ("selector", string(source.selector.readable_string())),
+                (
+                    "well_defined",
+                    super::wd::project_obj_wd_proof(&source.well_defined, rt),
+                ),
+            ],
+        ),
         CompleteFunctionDomainSourceProof::Matrix(source) => {
             super::native_matrix::callable(source, rt)
         }
@@ -384,6 +395,7 @@ fn project_application_signature_source(
 ) -> JsonValue {
     use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnObjDomainFnSetEvidence::*;
     match source {
+        MultivariableSelector(source) => project_source(source, rt),
         Matrix(source) => super::native_matrix::callable(source, rt),
         Composition(source) => super::composition::callable(source, rt),
         FiniteFunction(source) => project_finite_function_source(source, rt),

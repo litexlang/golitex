@@ -1,0 +1,11 @@
+# Must reject only the final statement; see ../README.md.
+release obj def context::add
+release obj def context::neg
+release obj def context::integers
+release struct def context::integers
+release obj def context::zero_map
+release obj def context::shift
+
+by thm context::zero_is_homomorphism => $Algebra::group::is_homomorphism(Z,context::integers,Z,context::integers,context::zero_map)
+
+by thm Algebra::group::trivial_kernel_implies_injective(Z,context::integers,Z,context::integers,context::zero_map) => $injective(Z,Z,context::zero_map)

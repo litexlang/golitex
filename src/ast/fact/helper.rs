@@ -18,7 +18,8 @@ use std::collections::HashSet;
 pub fn atomic_fact_has_positive_polarity(fact: &AtomicFact) -> bool {
     !matches!(
         fact,
-        AtomicFact::NotHasRiemannIntegralFact(_)
+        AtomicFact::NotMultivariableAnalysisFact(_)
+            | AtomicFact::NotHasRiemannIntegralFact(_)
             | AtomicFact::NotFunctionRiemannIntegrableFact(_)
             | AtomicFact::NotHasDerivativeAtFact(_)
             | AtomicFact::NotFunctionDifferentiableAtFact(_)
@@ -59,6 +60,8 @@ pub fn atomic_fact_has_positive_polarity(fact: &AtomicFact) -> bool {
 
 pub fn atomic_fact_args_ref(fact: &AtomicFact) -> Vec<&Obj> {
     match fact {
+        AtomicFact::MultivariableAnalysisFact(f) => f.relation.argument_refs(),
+        AtomicFact::NotMultivariableAnalysisFact(f) => f.relation.argument_refs(),
         AtomicFact::HasRiemannIntegralFact(f) => vec![&f.function, &f.lower, &f.upper, &f.value],
         AtomicFact::NotHasRiemannIntegralFact(f) => vec![&f.function, &f.lower, &f.upper, &f.value],
         AtomicFact::FunctionRiemannIntegrableFact(f) => vec![&f.function, &f.lower, &f.upper],
@@ -286,6 +289,18 @@ pub fn negate_atomic_fact(fact: &AtomicFact, new_fact_id: FactId) -> Option<Atom
             function: f.function.clone(),
             lower: f.lower.clone(),
             upper: f.upper.clone(),
+            line_file: f.line_file.clone(),
+        }
+        .into(),
+        AtomicFact::MultivariableAnalysisFact(f) => super::NotMultivariableAnalysisFact {
+            fact_id: new_fact_id,
+            relation: f.relation.clone(),
+            line_file: f.line_file.clone(),
+        }
+        .into(),
+        AtomicFact::NotMultivariableAnalysisFact(f) => super::MultivariableAnalysisFact {
+            fact_id: new_fact_id,
+            relation: f.relation.clone(),
             line_file: f.line_file.clone(),
         }
         .into(),

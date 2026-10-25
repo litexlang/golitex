@@ -1,0 +1,17 @@
+# Only the final statement must be rejected.
+release obj def context::real_inv
+release obj def context::real_add
+release obj def context::real_neg
+release obj def context::real_mul
+release obj def context::real_field
+release obj def context::scalars
+release obj def context::unit_basis
+release struct def context::real_field
+release struct def context::scalars
+
+claim:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,n N,vectors finite_seq(V,n):
+        $Algebra::finite_span::spans(K,field,V,space,n,vectors)
+        =>:
+            exist m N,selected finite_seq(V,m) st {m<n,$Algebra::basis::is_basis(K,field,V,space,m,selected),fn_range(selected) $subset fn_range(vectors)}
+    release thm Algebra::basis_existence::spanning_list_has_basis_of_bounded_length(K,field,V,space,n,vectors)

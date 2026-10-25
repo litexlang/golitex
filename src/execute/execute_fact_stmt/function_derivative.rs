@@ -8,6 +8,15 @@ use crate::prelude::*;
 use crate::rational_expression::helper::{div_objs, sub_objs};
 
 pub enum DerivativeOperatorWellDefinedProof {
+    Partial(crate::execute::execute_fact_stmt::multivariable::selector::PartialDerivativeAtWellDefinedProof),
+    ScalarDifferential(crate::execute::execute_fact_stmt::multivariable::selector::ScalarDifferentialAtWellDefinedProof),
+    TotalDifferential(crate::execute::execute_fact_stmt::multivariable::selector::TotalDifferentialAtWellDefinedProof),
+    Gradient(crate::execute::execute_fact_stmt::multivariable::selector::GradientAtWellDefinedProof),
+    Jacobian(crate::execute::execute_fact_stmt::multivariable::selector::JacobianAtWellDefinedProof),
+    Hessian(crate::execute::execute_fact_stmt::multivariable::selector::HessianAtWellDefinedProof),
+    Divergence(crate::execute::execute_fact_stmt::multivariable::selector::DivergenceAtWellDefinedProof),
+    Curl(crate::execute::execute_fact_stmt::multivariable::selector::CurlAtWellDefinedProof),
+    Laplacian(crate::execute::execute_fact_stmt::multivariable::selector::LaplacianAtWellDefinedProof),
     AtPoint(DerivativeAtWellDefinedProof),
 }
 pub struct DerivativeAtWellDefinedProof {
@@ -25,6 +34,15 @@ pub enum DerivativeConvergenceProof {
     },
 }
 pub enum DerivativeOperatorWellDefinedFailure {
+    Partial(crate::execute::execute_fact_stmt::multivariable::selector::PartialDerivativeAtWellDefinedFailure),
+    ScalarDifferential(crate::execute::execute_fact_stmt::multivariable::selector::ScalarDifferentialAtWellDefinedFailure),
+    TotalDifferential(crate::execute::execute_fact_stmt::multivariable::selector::TotalDifferentialAtWellDefinedFailure),
+    Gradient(crate::execute::execute_fact_stmt::multivariable::selector::GradientAtWellDefinedFailure),
+    Jacobian(crate::execute::execute_fact_stmt::multivariable::selector::JacobianAtWellDefinedFailure),
+    Hessian(crate::execute::execute_fact_stmt::multivariable::selector::HessianAtWellDefinedFailure),
+    Divergence(crate::execute::execute_fact_stmt::multivariable::selector::DivergenceAtWellDefinedFailure),
+    Curl(crate::execute::execute_fact_stmt::multivariable::selector::CurlAtWellDefinedFailure),
+    Laplacian(crate::execute::execute_fact_stmt::multivariable::selector::LaplacianAtWellDefinedFailure),
     AtPoint(DerivativeAtWellDefinedFailure),
 }
 pub struct DerivativeAtWellDefinedFailure {

@@ -11,6 +11,7 @@ use crate::ast::obj::{
 };
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::execute::execute_fact_stmt::VerifyState;
+use crate::prelude::*;
 use crate::runtime::{Runtime, RuntimeResult};
 
 // --- power identities ---
@@ -59,6 +60,8 @@ pub struct SqrtQuotientBuiltinRuleProof {
 pub struct AbsOfNegationBuiltinRuleProof {}
 
 // Builtin AbsProduct: abs(a*b) = abs(a)*abs(b).
+// Closed rational factors may be evaluated, e.g. abs(-3*x)=3*abs(x).
+// This matcher reads no stored values and retains the enclosing equality WD.
 pub struct AbsProductBuiltinRuleProof {}
 
 // Builtin AbsSquare: abs(a^2) = a^2 for real a.
@@ -598,13 +601,7 @@ impl Runtime {
             (r2.as_ref(), r1.as_ref(), b.as_ref(), a.as_ref()),
         ];
         for (x, y, u, v) in pairs {
-            let Some(ax) = match_abs(x) else {
-                continue;
-            };
-            let Some(ay) = match_abs(y) else {
-                continue;
-            };
-            if ax.ir() == u.ir() && ay.ir() == v.ir() {
+            if abs_product_factor_matches(x, u) && abs_product_factor_matches(y, v) {
                 return Ok(Some(AbsProductBuiltinRuleProof {}));
             }
         }
@@ -1188,6 +1185,23 @@ fn two_obj() -> Obj {
     Obj::Literal(Literal::Number(Number {
         normalized_value: "2".to_string(),
     }))
+}
+
+fn abs_product_factor_matches(output: &Obj, input: &Obj) -> bool {
+    if match_abs(output).is_some_and(|arg| arg.ir() == input.ir()) {
+        return true;
+    }
+    let Some(input) = EvalRational::from_obj(input) else {
+        return false;
+    };
+    let (numerator, denominator) = input.parts();
+    let Some(magnitude) = numerator.checked_abs() else {
+        return false;
+    };
+    let Some(expected) = EvalRational::new(magnitude, denominator) else {
+        return false;
+    };
+    EvalRational::from_obj(output).is_some_and(|actual| actual == expected)
 }
 
 #[cfg(test)]

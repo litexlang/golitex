@@ -1,0 +1,19 @@
+# Must reject only the final statement; see ../README.md.
+release obj def context::real_inv
+release obj def context::real_add
+release obj def context::real_neg
+release obj def context::real_mul
+release obj def context::real_field
+release obj def context::scalars
+release obj def context::coefficients
+release obj def context::vectors
+release obj def context::sums
+release obj def context::shift
+release obj def context::bad_start
+release obj def context::bad_step
+release struct def context::real_field
+release struct def context::scalars
+
+release thm context::correct_combination_value
+
+\Algebra::finite_span::linear_combination<R,context::real_field,R,context::scalars,2>(context::coefficients,context::vectors)=15

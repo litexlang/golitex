@@ -1,0 +1,12 @@
+# Only the final statement must be rejected.
+release obj def context::real_inv
+release obj def context::real_add
+release obj def context::real_neg
+release obj def context::real_mul
+release obj def context::real_field
+release obj def context::scalars
+release obj def context::unit_basis
+release struct def context::real_field
+release struct def context::scalars
+
+by thm Algebra::basis_existence::removed_list_range_subset(R,3,(1,2,3),2,(1,2,3)) => fn_range((1,2,3)) $subset fn_range((1,2,3))

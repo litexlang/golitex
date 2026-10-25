@@ -5,6 +5,8 @@ use crate::runtime::FactId;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum AtomicFact {
+    MultivariableAnalysisFact(MultivariableAnalysisFact),
+    NotMultivariableAnalysisFact(NotMultivariableAnalysisFact),
     HasRiemannIntegralFact(HasRiemannIntegralFact),
     NotHasRiemannIntegralFact(NotHasRiemannIntegralFact),
     FunctionRiemannIntegrableFact(FunctionRiemannIntegrableFact),
@@ -424,6 +426,8 @@ pub struct NotIsChoiceFunctionForFact {
 impl AtomicFact {
     pub fn fact_id(&self) -> FactId {
         match self {
+            AtomicFact::MultivariableAnalysisFact(f) => f.fact_id,
+            AtomicFact::NotMultivariableAnalysisFact(f) => f.fact_id,
             AtomicFact::HasRiemannIntegralFact(f) => f.fact_id,
             AtomicFact::NotHasRiemannIntegralFact(f) => f.fact_id,
             AtomicFact::FunctionRiemannIntegrableFact(f) => f.fact_id,
@@ -507,6 +511,12 @@ impl AtomicFact {
             PRIME, PROPER_SUBSET, PROPER_SUPERSET, SUBSET, SUPERSET, SURJECTIVE,
         };
         match self {
+            AtomicFact::MultivariableAnalysisFact(f) => {
+                AtomicName::plain(f.relation.predicate_name().into())
+            }
+            AtomicFact::NotMultivariableAnalysisFact(f) => {
+                AtomicName::plain(f.relation.predicate_name().into())
+            }
             AtomicFact::HasRiemannIntegralFact(f) => AtomicName::plain(f.predicate_name().into()),
             AtomicFact::NotHasRiemannIntegralFact(f) => {
                 AtomicName::plain(f.predicate_name().into())
@@ -1104,5 +1114,398 @@ pub struct NotFunctionRiemannIntegrableFact {
 impl NotFunctionRiemannIntegrableFact {
     pub fn predicate_name(&self) -> &'static str {
         "is_riemann_integrable"
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct MultivariableAnalysisFact {
+    pub fact_id: FactId,
+    pub relation: MultivariableAnalysisRelation,
+    pub line_file: Option<SourceLine>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct NotMultivariableAnalysisFact {
+    pub fact_id: FactId,
+    pub relation: MultivariableAnalysisRelation,
+    pub line_file: Option<SourceLine>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum MultivariableAnalysisRelation {
+    ScalarLimit(ScalarMultivariableLimitRelation),
+    VectorLimit(VectorMultivariableLimitRelation),
+    ScalarContinuousAt(ScalarMultivariableContinuousAtRelation),
+    VectorContinuousAt(VectorMultivariableContinuousAtRelation),
+    PartialDerivativeAt(PartialDerivativeAtRelation),
+    SecondPartialDerivativeAt(SecondPartialDerivativeAtRelation),
+    ScalarDifferentialAt(ScalarDifferentialAtRelation),
+    TotalDerivativeAt(TotalDerivativeAtRelation),
+    ScalarDifferentiableAt(ScalarMultivariableDifferentiableAtRelation),
+    TotalDifferentiableAt(VectorMultivariableDifferentiableAtRelation),
+    GradientAt(GradientAtRelation),
+    JacobianAt(JacobianAtRelation),
+    HessianAt(HessianAtRelation),
+    DivergenceAt(DivergenceAtRelation),
+    CurlAt(CurlAtRelation),
+    LaplacianAt(LaplacianAtRelation),
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ScalarMultivariableLimitRelation {
+    pub function: Obj,
+    pub point: Obj,
+    pub dimension: Obj,
+    pub value: Obj,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct VectorMultivariableLimitRelation {
+    pub function: Obj,
+    pub point: Obj,
+    pub input_dimension: Obj,
+    pub output_dimension: Obj,
+    pub value: Obj,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ScalarMultivariableContinuousAtRelation {
+    pub function: Obj,
+    pub point: Obj,
+    pub dimension: Obj,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct VectorMultivariableContinuousAtRelation {
+    pub function: Obj,
+    pub point: Obj,
+    pub input_dimension: Obj,
+    pub output_dimension: Obj,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct PartialDerivativeAtRelation {
+    pub function: Obj,
+    pub point: Obj,
+    pub dimension: Obj,
+    pub coordinate: Obj,
+    pub value: Obj,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct SecondPartialDerivativeAtRelation {
+    pub function: Obj,
+    pub point: Obj,
+    pub dimension: Obj,
+    pub first_coordinate: Obj,
+    pub second_coordinate: Obj,
+    pub value: Obj,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ScalarDifferentialAtRelation {
+    pub function: Obj,
+    pub point: Obj,
+    pub dimension: Obj,
+    pub value: Obj,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct TotalDerivativeAtRelation {
+    pub function: Obj,
+    pub point: Obj,
+    pub input_dimension: Obj,
+    pub output_dimension: Obj,
+    pub value: Obj,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ScalarMultivariableDifferentiableAtRelation {
+    pub function: Obj,
+    pub point: Obj,
+    pub dimension: Obj,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct VectorMultivariableDifferentiableAtRelation {
+    pub function: Obj,
+    pub point: Obj,
+    pub input_dimension: Obj,
+    pub output_dimension: Obj,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct GradientAtRelation {
+    pub function: Obj,
+    pub point: Obj,
+    pub dimension: Obj,
+    pub value: Obj,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct JacobianAtRelation {
+    pub function: Obj,
+    pub point: Obj,
+    pub input_dimension: Obj,
+    pub output_dimension: Obj,
+    pub value: Obj,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct HessianAtRelation {
+    pub function: Obj,
+    pub point: Obj,
+    pub dimension: Obj,
+    pub value: Obj,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct DivergenceAtRelation {
+    pub function: Obj,
+    pub point: Obj,
+    pub dimension: Obj,
+    pub value: Obj,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct CurlAtRelation {
+    pub function: Obj,
+    pub point: Obj,
+    pub value: Obj,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct LaplacianAtRelation {
+    pub function: Obj,
+    pub point: Obj,
+    pub dimension: Obj,
+    pub value: Obj,
+}
+
+impl MultivariableAnalysisRelation {
+    pub fn predicate_name(&self) -> &'static str {
+        match self {
+            Self::ScalarLimit(_) => "has_multi_limit_at",
+            Self::VectorLimit(_) => "has_vector_limit_at",
+            Self::ScalarContinuousAt(_) => "is_multi_continuous_at",
+            Self::VectorContinuousAt(_) => "is_vector_continuous_at",
+            Self::PartialDerivativeAt(_) => "has_partial_derivative_at",
+            Self::SecondPartialDerivativeAt(_) => "has_second_partial_derivative_at",
+            Self::ScalarDifferentialAt(_) => "has_scalar_differential_at",
+            Self::TotalDerivativeAt(_) => "has_total_derivative_at",
+            Self::ScalarDifferentiableAt(_) => "is_multi_differentiable_at",
+            Self::TotalDifferentiableAt(_) => "is_vector_differentiable_at",
+            Self::GradientAt(_) => "has_gradient_at",
+            Self::JacobianAt(_) => "has_jacobian_at",
+            Self::HessianAt(_) => "has_hessian_at",
+            Self::DivergenceAt(_) => "has_divergence_at",
+            Self::CurlAt(_) => "has_curl_at",
+            Self::LaplacianAt(_) => "has_laplacian_at",
+        }
+    }
+    pub fn argument_refs(&self) -> Vec<&Obj> {
+        match self {
+            Self::ScalarLimit(x) => vec![&x.function, &x.point, &x.dimension, &x.value],
+            Self::VectorLimit(x) => vec![
+                &x.function,
+                &x.point,
+                &x.input_dimension,
+                &x.output_dimension,
+                &x.value,
+            ],
+            Self::ScalarContinuousAt(x) => vec![&x.function, &x.point, &x.dimension],
+            Self::VectorContinuousAt(x) => vec![
+                &x.function,
+                &x.point,
+                &x.input_dimension,
+                &x.output_dimension,
+            ],
+            Self::PartialDerivativeAt(x) => {
+                vec![&x.function, &x.point, &x.dimension, &x.coordinate, &x.value]
+            }
+            Self::SecondPartialDerivativeAt(x) => vec![
+                &x.function,
+                &x.point,
+                &x.dimension,
+                &x.first_coordinate,
+                &x.second_coordinate,
+                &x.value,
+            ],
+            Self::ScalarDifferentialAt(x) => vec![&x.function, &x.point, &x.dimension, &x.value],
+            Self::TotalDerivativeAt(x) => vec![
+                &x.function,
+                &x.point,
+                &x.input_dimension,
+                &x.output_dimension,
+                &x.value,
+            ],
+            Self::ScalarDifferentiableAt(x) => vec![&x.function, &x.point, &x.dimension],
+            Self::TotalDifferentiableAt(x) => vec![
+                &x.function,
+                &x.point,
+                &x.input_dimension,
+                &x.output_dimension,
+            ],
+            Self::GradientAt(x) => vec![&x.function, &x.point, &x.dimension, &x.value],
+            Self::JacobianAt(x) => vec![
+                &x.function,
+                &x.point,
+                &x.input_dimension,
+                &x.output_dimension,
+                &x.value,
+            ],
+            Self::HessianAt(x) => vec![&x.function, &x.point, &x.dimension, &x.value],
+            Self::DivergenceAt(x) => vec![&x.function, &x.point, &x.dimension, &x.value],
+            Self::CurlAt(x) => vec![&x.function, &x.point, &x.value],
+            Self::LaplacianAt(x) => vec![&x.function, &x.point, &x.dimension, &x.value],
+        }
+    }
+    pub fn from_name(name: &str, args: &[Obj]) -> Option<Self> {
+        Some(match name {
+            "has_multi_limit_at" if args.len() == 4 => {
+                Self::ScalarLimit(ScalarMultivariableLimitRelation {
+                    function: args[0].clone(),
+                    point: args[1].clone(),
+                    dimension: args[2].clone(),
+                    value: args[3].clone(),
+                })
+            }
+            "has_vector_limit_at" if args.len() == 5 => {
+                Self::VectorLimit(VectorMultivariableLimitRelation {
+                    function: args[0].clone(),
+                    point: args[1].clone(),
+                    input_dimension: args[2].clone(),
+                    output_dimension: args[3].clone(),
+                    value: args[4].clone(),
+                })
+            }
+            "is_multi_continuous_at" if args.len() == 3 => {
+                Self::ScalarContinuousAt(ScalarMultivariableContinuousAtRelation {
+                    function: args[0].clone(),
+                    point: args[1].clone(),
+                    dimension: args[2].clone(),
+                })
+            }
+            "is_vector_continuous_at" if args.len() == 4 => {
+                Self::VectorContinuousAt(VectorMultivariableContinuousAtRelation {
+                    function: args[0].clone(),
+                    point: args[1].clone(),
+                    input_dimension: args[2].clone(),
+                    output_dimension: args[3].clone(),
+                })
+            }
+            "has_partial_derivative_at" if args.len() == 5 => {
+                Self::PartialDerivativeAt(PartialDerivativeAtRelation {
+                    function: args[0].clone(),
+                    point: args[1].clone(),
+                    dimension: args[2].clone(),
+                    coordinate: args[3].clone(),
+                    value: args[4].clone(),
+                })
+            }
+            "has_second_partial_derivative_at" if args.len() == 6 => {
+                Self::SecondPartialDerivativeAt(SecondPartialDerivativeAtRelation {
+                    function: args[0].clone(),
+                    point: args[1].clone(),
+                    dimension: args[2].clone(),
+                    first_coordinate: args[3].clone(),
+                    second_coordinate: args[4].clone(),
+                    value: args[5].clone(),
+                })
+            }
+            "has_scalar_differential_at" if args.len() == 4 => {
+                Self::ScalarDifferentialAt(ScalarDifferentialAtRelation {
+                    function: args[0].clone(),
+                    point: args[1].clone(),
+                    dimension: args[2].clone(),
+                    value: args[3].clone(),
+                })
+            }
+            "has_total_derivative_at" if args.len() == 5 => {
+                Self::TotalDerivativeAt(TotalDerivativeAtRelation {
+                    function: args[0].clone(),
+                    point: args[1].clone(),
+                    input_dimension: args[2].clone(),
+                    output_dimension: args[3].clone(),
+                    value: args[4].clone(),
+                })
+            }
+            "is_multi_differentiable_at" if args.len() == 3 => {
+                Self::ScalarDifferentiableAt(ScalarMultivariableDifferentiableAtRelation {
+                    function: args[0].clone(),
+                    point: args[1].clone(),
+                    dimension: args[2].clone(),
+                })
+            }
+            "is_vector_differentiable_at" if args.len() == 4 => {
+                Self::TotalDifferentiableAt(VectorMultivariableDifferentiableAtRelation {
+                    function: args[0].clone(),
+                    point: args[1].clone(),
+                    input_dimension: args[2].clone(),
+                    output_dimension: args[3].clone(),
+                })
+            }
+            "has_gradient_at" if args.len() == 4 => Self::GradientAt(GradientAtRelation {
+                function: args[0].clone(),
+                point: args[1].clone(),
+                dimension: args[2].clone(),
+                value: args[3].clone(),
+            }),
+            "has_jacobian_at" if args.len() == 5 => Self::JacobianAt(JacobianAtRelation {
+                function: args[0].clone(),
+                point: args[1].clone(),
+                input_dimension: args[2].clone(),
+                output_dimension: args[3].clone(),
+                value: args[4].clone(),
+            }),
+            "has_hessian_at" if args.len() == 4 => Self::HessianAt(HessianAtRelation {
+                function: args[0].clone(),
+                point: args[1].clone(),
+                dimension: args[2].clone(),
+                value: args[3].clone(),
+            }),
+            "has_divergence_at" if args.len() == 4 => Self::DivergenceAt(DivergenceAtRelation {
+                function: args[0].clone(),
+                point: args[1].clone(),
+                dimension: args[2].clone(),
+                value: args[3].clone(),
+            }),
+            "has_curl_at" if args.len() == 3 => Self::CurlAt(CurlAtRelation {
+                function: args[0].clone(),
+                point: args[1].clone(),
+                value: args[2].clone(),
+            }),
+            "has_laplacian_at" if args.len() == 4 => Self::LaplacianAt(LaplacianAtRelation {
+                function: args[0].clone(),
+                point: args[1].clone(),
+                dimension: args[2].clone(),
+                value: args[3].clone(),
+            }),
+            _ => return None,
+        })
+    }
+    pub fn with_arguments(&self, args: &[Obj]) -> Self {
+        Self::from_name(self.predicate_name(), args).expect("same multivariable relation arity")
+    }
+    pub fn predicate_arity(name: &str) -> Option<usize> {
+        match name {
+            "has_multi_limit_at" => Some(4),
+            "has_vector_limit_at" => Some(5),
+            "is_multi_continuous_at" => Some(3),
+            "is_vector_continuous_at" => Some(4),
+            "has_partial_derivative_at" => Some(5),
+            "has_second_partial_derivative_at" => Some(6),
+            "has_scalar_differential_at" => Some(4),
+            "has_total_derivative_at" => Some(5),
+            "is_multi_differentiable_at" => Some(3),
+            "is_vector_differentiable_at" => Some(4),
+            "has_gradient_at" => Some(4),
+            "has_jacobian_at" => Some(5),
+            "has_hessian_at" => Some(4),
+            "has_divergence_at" => Some(4),
+            "has_curl_at" => Some(3),
+            "has_laplacian_at" => Some(4),
+            _ => None,
+        }
     }
 }

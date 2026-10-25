@@ -1,0 +1,3 @@
+thm unit_wrong_value:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>:
+        \Algebra::coordinate_maps::unit_coefficients<K,field,2,1>(2)=field.one

@@ -25,6 +25,30 @@ impl Runtime {
     ) -> Result<AtomicFact, InstError> {
         let fact_id = self.global_ids.allocate_fact_id();
         match atomic {
+            AtomicFact::MultivariableAnalysisFact(f) => {
+                let mut args = Vec::new();
+                for arg in f.relation.argument_refs() {
+                    args.push(self.inst_obj_rec(arg, param_to_arg_map)?);
+                }
+                Ok(crate::ast::fact::MultivariableAnalysisFact {
+                    fact_id,
+                    relation: f.relation.with_arguments(&args),
+                    line_file: f.line_file.clone(),
+                }
+                .into())
+            }
+            AtomicFact::NotMultivariableAnalysisFact(f) => {
+                let mut args = Vec::new();
+                for arg in f.relation.argument_refs() {
+                    args.push(self.inst_obj_rec(arg, param_to_arg_map)?);
+                }
+                Ok(crate::ast::fact::NotMultivariableAnalysisFact {
+                    fact_id,
+                    relation: f.relation.with_arguments(&args),
+                    line_file: f.line_file.clone(),
+                }
+                .into())
+            }
             AtomicFact::HasRiemannIntegralFact(f) => Ok(crate::ast::fact::HasRiemannIntegralFact {
                 fact_id,
                 function: self.inst_obj_rec(&f.function, param_to_arg_map)?,

@@ -24,6 +24,12 @@ impl Runtime {
                 EqualitySearchProofByBuiltinRule::DerivativeSelectedValue(proof),
             ));
         }
+        if let Some(proof) = self.search_multivariable_component_equality(fact, verify_state)? {
+            return Ok(Some(EqualitySearchProofByBuiltinRule::Multivariable(proof)));
+        }
+        if let Some(proof) = self.search_multivariable_selected_equality(fact) {
+            return Ok(Some(EqualitySearchProofByBuiltinRule::Multivariable(proof)));
+        }
         if let Some(proof) = self.search_function_limit_equality(fact) {
             return Ok(Some(EqualitySearchProofByBuiltinRule::FunctionLimit(proof)));
         }

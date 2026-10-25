@@ -1,0 +1,275 @@
+# Coordinate algebra and maps prescribed on bases over a supplied field.
+
+thm basis_coordinates_reconstruct:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,n N,vectors finite_seq(V,n),x V:
+        $basis::is_basis(K,field,V,space,n,vectors)
+        =>:
+            \finite_span::linear_combination<K,field,V,space,n>(\basis::basis_coordinates<K,field,V,space,n,vectors>(x),vectors)=x
+    by thm basis::basis_coordinates_has_value(K,field,V,space,n,vectors,x) => $finite_span::has_linear_combination_value(K,field,V,space,n,\basis::basis_coordinates<K,field,V,space,n,vectors>(x),vectors,x)
+    obtain sums from $finite_span::has_linear_combination_value(K,field,V,space,n,\basis::basis_coordinates<K,field,V,space,n,vectors>(x),vectors,x)
+    by thm finite_span::partial_sum_determines_combination(K,field,V,space,n,\basis::basis_coordinates<K,field,V,space,n,vectors>(x),vectors,sums) => \finite_span::linear_combination<K,field,V,space,n>(\basis::basis_coordinates<K,field,V,space,n,vectors>(x),vectors)=sums(n)
+    \finite_span::linear_combination<K,field,V,space,n>(\basis::basis_coordinates<K,field,V,space,n,vectors>(x),vectors)=sums(n)=x
+
+thm basis_coordinates_add:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,n N,vectors finite_seq(V,n),x,y V:
+        $basis::is_basis(K,field,V,space,n,vectors)
+        =>:
+            \basis::basis_coordinates<K,field,V,space,n,vectors>(space.add(x,y))=\finite_span::add_coefficients<K,field,n>(\basis::basis_coordinates<K,field,V,space,n,vectors>(x),\basis::basis_coordinates<K,field,V,space,n,vectors>(y))
+    by thm basis_coordinates_reconstruct(K,field,V,space,n,vectors,x) => \finite_span::linear_combination<K,field,V,space,n>(\basis::basis_coordinates<K,field,V,space,n,vectors>(x),vectors)=x
+    by thm basis_coordinates_reconstruct(K,field,V,space,n,vectors,y) => \finite_span::linear_combination<K,field,V,space,n>(\basis::basis_coordinates<K,field,V,space,n,vectors>(y),vectors)=y
+    by thm finite_span::linear_combination_add_coefficients(K,field,V,space,n,\basis::basis_coordinates<K,field,V,space,n,vectors>(x),\basis::basis_coordinates<K,field,V,space,n,vectors>(y),vectors) => \finite_span::linear_combination<K,field,V,space,n>(\finite_span::add_coefficients<K,field,n>(\basis::basis_coordinates<K,field,V,space,n,vectors>(x),\basis::basis_coordinates<K,field,V,space,n,vectors>(y)),vectors)=space.add(\finite_span::linear_combination<K,field,V,space,n>(\basis::basis_coordinates<K,field,V,space,n,vectors>(x),vectors),\finite_span::linear_combination<K,field,V,space,n>(\basis::basis_coordinates<K,field,V,space,n,vectors>(y),vectors))
+    \finite_span::linear_combination<K,field,V,space,n>(\finite_span::add_coefficients<K,field,n>(\basis::basis_coordinates<K,field,V,space,n,vectors>(x),\basis::basis_coordinates<K,field,V,space,n,vectors>(y)),vectors)=space.add(\finite_span::linear_combination<K,field,V,space,n>(\basis::basis_coordinates<K,field,V,space,n,vectors>(x),vectors),\finite_span::linear_combination<K,field,V,space,n>(\basis::basis_coordinates<K,field,V,space,n,vectors>(y),vectors))=space.add(x,y)
+    by thm basis::basis_coordinates_of_combination(K,field,V,space,n,vectors,\finite_span::add_coefficients<K,field,n>(\basis::basis_coordinates<K,field,V,space,n,vectors>(x),\basis::basis_coordinates<K,field,V,space,n,vectors>(y))) => \basis::basis_coordinates<K,field,V,space,n,vectors>(\finite_span::linear_combination<K,field,V,space,n>(\finite_span::add_coefficients<K,field,n>(\basis::basis_coordinates<K,field,V,space,n,vectors>(x),\basis::basis_coordinates<K,field,V,space,n,vectors>(y)),vectors))=\finite_span::add_coefficients<K,field,n>(\basis::basis_coordinates<K,field,V,space,n,vectors>(x),\basis::basis_coordinates<K,field,V,space,n,vectors>(y))
+    \basis::basis_coordinates<K,field,V,space,n,vectors>(space.add(x,y))=\basis::basis_coordinates<K,field,V,space,n,vectors>(\finite_span::linear_combination<K,field,V,space,n>(\finite_span::add_coefficients<K,field,n>(\basis::basis_coordinates<K,field,V,space,n,vectors>(x),\basis::basis_coordinates<K,field,V,space,n,vectors>(y)),vectors))=\finite_span::add_coefficients<K,field,n>(\basis::basis_coordinates<K,field,V,space,n,vectors>(x),\basis::basis_coordinates<K,field,V,space,n,vectors>(y))
+
+thm basis_coordinates_smul:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,n N,vectors finite_seq(V,n),a K,x V:
+        $basis::is_basis(K,field,V,space,n,vectors)
+        =>:
+            \basis::basis_coordinates<K,field,V,space,n,vectors>(space.smul(a,x))=\finite_span::smul_coefficients<K,field,n>(a,\basis::basis_coordinates<K,field,V,space,n,vectors>(x))
+    by thm basis_coordinates_reconstruct(K,field,V,space,n,vectors,x) => \finite_span::linear_combination<K,field,V,space,n>(\basis::basis_coordinates<K,field,V,space,n,vectors>(x),vectors)=x
+    by thm finite_span::linear_combination_smul_coefficients(K,field,V,space,n,a,\basis::basis_coordinates<K,field,V,space,n,vectors>(x),vectors) => \finite_span::linear_combination<K,field,V,space,n>(\finite_span::smul_coefficients<K,field,n>(a,\basis::basis_coordinates<K,field,V,space,n,vectors>(x)),vectors)=space.smul(a,\finite_span::linear_combination<K,field,V,space,n>(\basis::basis_coordinates<K,field,V,space,n,vectors>(x),vectors))
+    \finite_span::linear_combination<K,field,V,space,n>(\finite_span::smul_coefficients<K,field,n>(a,\basis::basis_coordinates<K,field,V,space,n,vectors>(x)),vectors)=space.smul(a,\finite_span::linear_combination<K,field,V,space,n>(\basis::basis_coordinates<K,field,V,space,n,vectors>(x),vectors))=space.smul(a,x)
+    by thm basis::basis_coordinates_of_combination(K,field,V,space,n,vectors,\finite_span::smul_coefficients<K,field,n>(a,\basis::basis_coordinates<K,field,V,space,n,vectors>(x))) => \basis::basis_coordinates<K,field,V,space,n,vectors>(\finite_span::linear_combination<K,field,V,space,n>(\finite_span::smul_coefficients<K,field,n>(a,\basis::basis_coordinates<K,field,V,space,n,vectors>(x)),vectors))=\finite_span::smul_coefficients<K,field,n>(a,\basis::basis_coordinates<K,field,V,space,n,vectors>(x))
+    \basis::basis_coordinates<K,field,V,space,n,vectors>(space.smul(a,x))=\basis::basis_coordinates<K,field,V,space,n,vectors>(\finite_span::linear_combination<K,field,V,space,n>(\finite_span::smul_coefficients<K,field,n>(a,\basis::basis_coordinates<K,field,V,space,n,vectors>(x)),vectors))=\finite_span::smul_coefficients<K,field,n>(a,\basis::basis_coordinates<K,field,V,space,n,vectors>(x))
+
+template<K nonempty_set,field &field::Field<K>,n N,j closed_range(1,n)>:
+    have fn unit_coefficients(k closed_range(1,n)) K by cases:
+        case k=j: field.one
+        case k!=j: field.zero
+
+thm unit_coefficients_carrier:
+    ? forall K nonempty_set,field &field::Field<K>,n N,j closed_range(1,n):
+        \unit_coefficients<K,field,n,j> $in finite_seq(K,n)
+
+thm unit_linear_combination:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,n N,vectors finite_seq(V,n),j closed_range(1,n):
+        \finite_span::linear_combination<K,field,V,space,n>(\unit_coefficients<K,field,n,j>,vectors)=vectors(j)
+    j $in N+
+    j<=n
+    claim:
+        ? forall idx N+:
+            idx<=n
+            idx!=j
+            =>:
+                \unit_coefficients<K,field,n,j>(idx)=field.zero
+        idx $in closed_range(1,n)
+    \unit_coefficients<K,field,n,j>(j)=field.one
+    by thm finite_span::single_coefficient_linear_combination(K,field,V,space,n,\unit_coefficients<K,field,n,j>,vectors,j) => \finite_span::linear_combination<K,field,V,space,n>(\unit_coefficients<K,field,n,j>,vectors)=space.smul(\unit_coefficients<K,field,n,j>(j),vectors(j))
+    vectors(j) $in V
+    \finite_span::linear_combination<K,field,V,space,n>(\unit_coefficients<K,field,n,j>,vectors)=space.smul(\unit_coefficients<K,field,n,j>(j),vectors(j))=space.smul(field.one,vectors(j))=vectors(j)
+
+thm basis_coordinates_of_entry:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,n N,vectors finite_seq(V,n),j closed_range(1,n):
+        $basis::is_basis(K,field,V,space,n,vectors)
+        =>:
+            \basis::basis_coordinates<K,field,V,space,n,vectors>(vectors(j))=\unit_coefficients<K,field,n,j>
+    by thm unit_linear_combination(K,field,V,space,n,vectors,j) => \finite_span::linear_combination<K,field,V,space,n>(\unit_coefficients<K,field,n,j>,vectors)=vectors(j)
+    by thm basis::basis_coordinates_of_combination(K,field,V,space,n,vectors,\unit_coefficients<K,field,n,j>) => \basis::basis_coordinates<K,field,V,space,n,vectors>(\finite_span::linear_combination<K,field,V,space,n>(\unit_coefficients<K,field,n,j>,vectors))=\unit_coefficients<K,field,n,j>
+    \basis::basis_coordinates<K,field,V,space,n,vectors>(vectors(j))=\basis::basis_coordinates<K,field,V,space,n,vectors>(\finite_span::linear_combination<K,field,V,space,n>(\unit_coefficients<K,field,n,j>,vectors))=\unit_coefficients<K,field,n,j>
+
+template<K nonempty_set,field &field::Field<K>,V nonempty_set,source &vector_space::VectorSpace<K,field,V>,W nonempty_set,target &vector_space::VectorSpace<K,field,W>,n N,u finite_seq(V,n),w finite_seq(W,n): $basis::is_basis(K,field,V,source,n,u)>:
+    have fn linear_map_from_basis(x V) W=\finite_span::linear_combination<K,field,W,target,n>(\basis::basis_coordinates<K,field,V,source,n,u>(x),w)
+
+thm linear_map_from_basis_carrier:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,source &vector_space::VectorSpace<K,field,V>,W nonempty_set,target &vector_space::VectorSpace<K,field,W>,n N,u finite_seq(V,n),w finite_seq(W,n):
+        $basis::is_basis(K,field,V,source,n,u)
+        =>:
+            \linear_map_from_basis<K,field,V,source,W,target,n,u,w> $in fn(x V) W
+
+thm linear_map_from_basis_is_linear:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,source &vector_space::VectorSpace<K,field,V>,W nonempty_set,target &vector_space::VectorSpace<K,field,W>,n N,u finite_seq(V,n),w finite_seq(W,n):
+        $basis::is_basis(K,field,V,source,n,u)
+        =>:
+            $vector_space::is_linear_map(K,field,V,source,W,target,\linear_map_from_basis<K,field,V,source,W,target,n,u,w>)
+    claim:
+        ? forall x,y V:
+            \linear_map_from_basis<K,field,V,source,W,target,n,u,w>(source.add(x,y))=target.add(\linear_map_from_basis<K,field,V,source,W,target,n,u,w>(x),\linear_map_from_basis<K,field,V,source,W,target,n,u,w>(y))
+        \linear_map_from_basis<K,field,V,source,W,target,n,u,w>(x)=\finite_span::linear_combination<K,field,W,target,n>(\basis::basis_coordinates<K,field,V,source,n,u>(x),w)
+        \linear_map_from_basis<K,field,V,source,W,target,n,u,w>(y)=\finite_span::linear_combination<K,field,W,target,n>(\basis::basis_coordinates<K,field,V,source,n,u>(y),w)
+        by thm basis_coordinates_add(K,field,V,source,n,u,x,y) => \basis::basis_coordinates<K,field,V,source,n,u>(source.add(x,y))=\finite_span::add_coefficients<K,field,n>(\basis::basis_coordinates<K,field,V,source,n,u>(x),\basis::basis_coordinates<K,field,V,source,n,u>(y))
+        by thm finite_span::linear_combination_add_coefficients(K,field,W,target,n,\basis::basis_coordinates<K,field,V,source,n,u>(x),\basis::basis_coordinates<K,field,V,source,n,u>(y),w) => \finite_span::linear_combination<K,field,W,target,n>(\finite_span::add_coefficients<K,field,n>(\basis::basis_coordinates<K,field,V,source,n,u>(x),\basis::basis_coordinates<K,field,V,source,n,u>(y)),w)=target.add(\finite_span::linear_combination<K,field,W,target,n>(\basis::basis_coordinates<K,field,V,source,n,u>(x),w),\finite_span::linear_combination<K,field,W,target,n>(\basis::basis_coordinates<K,field,V,source,n,u>(y),w))
+        \linear_map_from_basis<K,field,V,source,W,target,n,u,w>(source.add(x,y))=\finite_span::linear_combination<K,field,W,target,n>(\basis::basis_coordinates<K,field,V,source,n,u>(source.add(x,y)),w)=\finite_span::linear_combination<K,field,W,target,n>(\finite_span::add_coefficients<K,field,n>(\basis::basis_coordinates<K,field,V,source,n,u>(x),\basis::basis_coordinates<K,field,V,source,n,u>(y)),w)=target.add(\finite_span::linear_combination<K,field,W,target,n>(\basis::basis_coordinates<K,field,V,source,n,u>(x),w),\finite_span::linear_combination<K,field,W,target,n>(\basis::basis_coordinates<K,field,V,source,n,u>(y),w))=target.add(\linear_map_from_basis<K,field,V,source,W,target,n,u,w>(x),\linear_map_from_basis<K,field,V,source,W,target,n,u,w>(y))
+    claim:
+        ? forall a K,x V:
+            \linear_map_from_basis<K,field,V,source,W,target,n,u,w>(source.smul(a,x))=target.smul(a,\linear_map_from_basis<K,field,V,source,W,target,n,u,w>(x))
+        \linear_map_from_basis<K,field,V,source,W,target,n,u,w>(x)=\finite_span::linear_combination<K,field,W,target,n>(\basis::basis_coordinates<K,field,V,source,n,u>(x),w)
+        by thm basis_coordinates_smul(K,field,V,source,n,u,a,x) => \basis::basis_coordinates<K,field,V,source,n,u>(source.smul(a,x))=\finite_span::smul_coefficients<K,field,n>(a,\basis::basis_coordinates<K,field,V,source,n,u>(x))
+        by thm finite_span::linear_combination_smul_coefficients(K,field,W,target,n,a,\basis::basis_coordinates<K,field,V,source,n,u>(x),w) => \finite_span::linear_combination<K,field,W,target,n>(\finite_span::smul_coefficients<K,field,n>(a,\basis::basis_coordinates<K,field,V,source,n,u>(x)),w)=target.smul(a,\finite_span::linear_combination<K,field,W,target,n>(\basis::basis_coordinates<K,field,V,source,n,u>(x),w))
+        \linear_map_from_basis<K,field,V,source,W,target,n,u,w>(source.smul(a,x))=\finite_span::linear_combination<K,field,W,target,n>(\basis::basis_coordinates<K,field,V,source,n,u>(source.smul(a,x)),w)=\finite_span::linear_combination<K,field,W,target,n>(\finite_span::smul_coefficients<K,field,n>(a,\basis::basis_coordinates<K,field,V,source,n,u>(x)),w)=target.smul(a,\finite_span::linear_combination<K,field,W,target,n>(\basis::basis_coordinates<K,field,V,source,n,u>(x),w))=target.smul(a,\linear_map_from_basis<K,field,V,source,W,target,n,u,w>(x))
+    by def $vector_space::is_linear_map(K,field,V,source,W,target,\linear_map_from_basis<K,field,V,source,W,target,n,u,w>)
+
+thm linear_map_from_basis_entry:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,source &vector_space::VectorSpace<K,field,V>,W nonempty_set,target &vector_space::VectorSpace<K,field,W>,n N,u finite_seq(V,n),w finite_seq(W,n),j closed_range(1,n):
+        $basis::is_basis(K,field,V,source,n,u)
+        =>:
+            \linear_map_from_basis<K,field,V,source,W,target,n,u,w>(u(j))=w(j)
+    by thm basis_coordinates_of_entry(K,field,V,source,n,u,j) => \basis::basis_coordinates<K,field,V,source,n,u>(u(j))=\unit_coefficients<K,field,n,j>
+    by thm unit_linear_combination(K,field,W,target,n,w,j) => \finite_span::linear_combination<K,field,W,target,n>(\unit_coefficients<K,field,n,j>,w)=w(j)
+    \linear_map_from_basis<K,field,V,source,W,target,n,u,w>(u(j))=\finite_span::linear_combination<K,field,W,target,n>(\basis::basis_coordinates<K,field,V,source,n,u>(u(j)),w)=\finite_span::linear_combination<K,field,W,target,n>(\unit_coefficients<K,field,n,j>,w)=w(j)
+
+thm linear_map_agreeing_on_basis_is_extension:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,source &vector_space::VectorSpace<K,field,V>,W nonempty_set,target &vector_space::VectorSpace<K,field,W>,n N,u finite_seq(V,n),w finite_seq(W,n),T fn(v V) W:
+        $basis::is_basis(K,field,V,source,n,u)
+        $vector_space::is_linear_map(K,field,V,source,W,target,T)
+        forall j closed_range(1,n):
+            T(u(j))=w(j)
+        =>:
+            T=\linear_map_from_basis<K,field,V,source,W,target,n,u,w>
+    by fn_extension:
+        ? T=\linear_map_from_basis<K,field,V,source,W,target,n,u,w>
+        claim:
+            ? forall x V:
+                T(x)=\linear_map_from_basis<K,field,V,source,W,target,n,u,w>(x)
+            by thm basis_coordinates_reconstruct(K,field,V,source,n,u,x) => \finite_span::linear_combination<K,field,V,source,n>(\basis::basis_coordinates<K,field,V,source,n,u>(x),u)=x
+            by fn_extension:
+                ? \finite_span::map_vectors<V,W,n>(T,u)=w
+                claim:
+                    ? forall j closed_range(1,n):
+                        \finite_span::map_vectors<V,W,n>(T,u)(j)=w(j)
+                    \finite_span::map_vectors<V,W,n>(T,u)(j)=T(u(j))=w(j)
+            by thm finite_span::linear_map_preserves_combination(K,field,V,source,W,target,T,n,\basis::basis_coordinates<K,field,V,source,n,u>(x),u) => T(\finite_span::linear_combination<K,field,V,source,n>(\basis::basis_coordinates<K,field,V,source,n,u>(x),u))=\finite_span::linear_combination<K,field,W,target,n>(\basis::basis_coordinates<K,field,V,source,n,u>(x),\finite_span::map_vectors<V,W,n>(T,u))
+            T(x)=T(\finite_span::linear_combination<K,field,V,source,n>(\basis::basis_coordinates<K,field,V,source,n,u>(x),u))=\finite_span::linear_combination<K,field,W,target,n>(\basis::basis_coordinates<K,field,V,source,n,u>(x),\finite_span::map_vectors<V,W,n>(T,u))=\finite_span::linear_combination<K,field,W,target,n>(\basis::basis_coordinates<K,field,V,source,n,u>(x),w)=\linear_map_from_basis<K,field,V,source,W,target,n,u,w>(x)
+
+thm basis_maps_round_trip:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,source &vector_space::VectorSpace<K,field,V>,W nonempty_set,target &vector_space::VectorSpace<K,field,W>,n N,u finite_seq(V,n),w finite_seq(W,n),x V:
+        $basis::is_basis(K,field,V,source,n,u)
+        $basis::is_basis(K,field,W,target,n,w)
+        =>:
+            \linear_map_from_basis<K,field,W,target,V,source,n,w,u>(\linear_map_from_basis<K,field,V,source,W,target,n,u,w>(x))=x
+    by thm basis::basis_coordinates_of_combination(K,field,W,target,n,w,\basis::basis_coordinates<K,field,V,source,n,u>(x)) => \basis::basis_coordinates<K,field,W,target,n,w>(\finite_span::linear_combination<K,field,W,target,n>(\basis::basis_coordinates<K,field,V,source,n,u>(x),w))=\basis::basis_coordinates<K,field,V,source,n,u>(x)
+    \linear_map_from_basis<K,field,V,source,W,target,n,u,w>(x)=\finite_span::linear_combination<K,field,W,target,n>(\basis::basis_coordinates<K,field,V,source,n,u>(x),w)
+    \basis::basis_coordinates<K,field,W,target,n,w>(\linear_map_from_basis<K,field,V,source,W,target,n,u,w>(x))=\basis::basis_coordinates<K,field,W,target,n,w>(\finite_span::linear_combination<K,field,W,target,n>(\basis::basis_coordinates<K,field,V,source,n,u>(x),w))=\basis::basis_coordinates<K,field,V,source,n,u>(x)
+    by thm basis_coordinates_reconstruct(K,field,V,source,n,u,x) => \finite_span::linear_combination<K,field,V,source,n>(\basis::basis_coordinates<K,field,V,source,n,u>(x),u)=x
+    \linear_map_from_basis<K,field,W,target,V,source,n,w,u>(\linear_map_from_basis<K,field,V,source,W,target,n,u,w>(x))=\finite_span::linear_combination<K,field,V,source,n>(\basis::basis_coordinates<K,field,W,target,n,w>(\linear_map_from_basis<K,field,V,source,W,target,n,u,w>(x)),u)=\finite_span::linear_combination<K,field,V,source,n>(\basis::basis_coordinates<K,field,V,source,n,u>(x),u)=x
+
+thm basis_maps_are_bijective:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,source &vector_space::VectorSpace<K,field,V>,W nonempty_set,target &vector_space::VectorSpace<K,field,W>,n N,u finite_seq(V,n),w finite_seq(W,n):
+        $basis::is_basis(K,field,V,source,n,u)
+        $basis::is_basis(K,field,W,target,n,w)
+        =>:
+            $bijective(V,W,\linear_map_from_basis<K,field,V,source,W,target,n,u,w>)
+    claim:
+        ? forall x,y V:
+            \linear_map_from_basis<K,field,V,source,W,target,n,u,w>(x)=\linear_map_from_basis<K,field,V,source,W,target,n,u,w>(y)
+            =>:
+                x=y
+        by thm basis_maps_round_trip(K,field,V,source,W,target,n,u,w,x) => \linear_map_from_basis<K,field,W,target,V,source,n,w,u>(\linear_map_from_basis<K,field,V,source,W,target,n,u,w>(x))=x
+        by thm basis_maps_round_trip(K,field,V,source,W,target,n,u,w,y) => \linear_map_from_basis<K,field,W,target,V,source,n,w,u>(\linear_map_from_basis<K,field,V,source,W,target,n,u,w>(y))=y
+        x=\linear_map_from_basis<K,field,W,target,V,source,n,w,u>(\linear_map_from_basis<K,field,V,source,W,target,n,u,w>(x))=\linear_map_from_basis<K,field,W,target,V,source,n,w,u>(\linear_map_from_basis<K,field,V,source,W,target,n,u,w>(y))=y
+    by def $injective(V,W,\linear_map_from_basis<K,field,V,source,W,target,n,u,w>)
+    claim:
+        ? forall y W:
+            exist x V st {y=\linear_map_from_basis<K,field,V,source,W,target,n,u,w>(x)}
+        by thm basis_maps_round_trip(K,field,W,target,V,source,n,w,u,y) => \linear_map_from_basis<K,field,V,source,W,target,n,u,w>(\linear_map_from_basis<K,field,W,target,V,source,n,w,u>(y))=y
+        witness exist x V st {y=\linear_map_from_basis<K,field,V,source,W,target,n,u,w>(x)} from \linear_map_from_basis<K,field,W,target,V,source,n,w,u>(y)
+    by def $surjective(V,W,\linear_map_from_basis<K,field,V,source,W,target,n,u,w>)
+    by def $bijective(V,W,\linear_map_from_basis<K,field,V,source,W,target,n,u,w>)
+
+thm basis_map_inverse:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,source &vector_space::VectorSpace<K,field,V>,W nonempty_set,target &vector_space::VectorSpace<K,field,W>,n N,u finite_seq(V,n),w finite_seq(W,n):
+        $basis::is_basis(K,field,V,source,n,u)
+        $basis::is_basis(K,field,W,target,n,w)
+        =>:
+            \linear_criteria::inverse_bijection<V,W,\linear_map_from_basis<K,field,V,source,W,target,n,u,w>> = \linear_map_from_basis<K,field,W,target,V,source,n,w,u>
+    by thm basis_maps_are_bijective(K,field,V,source,W,target,n,u,w) => $bijective(V,W,\linear_map_from_basis<K,field,V,source,W,target,n,u,w>)
+    $injective(V,W,\linear_map_from_basis<K,field,V,source,W,target,n,u,w>)
+    by fn_extension:
+        ? \linear_criteria::inverse_bijection<V,W,\linear_map_from_basis<K,field,V,source,W,target,n,u,w>> = \linear_map_from_basis<K,field,W,target,V,source,n,w,u>
+        claim:
+            ? forall y W:
+                \linear_criteria::inverse_bijection<V,W,\linear_map_from_basis<K,field,V,source,W,target,n,u,w>>(y)=\linear_map_from_basis<K,field,W,target,V,source,n,w,u>(y)
+            by thm basis_maps_round_trip(K,field,W,target,V,source,n,w,u,y) => \linear_map_from_basis<K,field,V,source,W,target,n,u,w>(\linear_map_from_basis<K,field,W,target,V,source,n,w,u>(y))=y
+            by thm linear_criteria::inverse_bijection_right_identity(V,W,\linear_map_from_basis<K,field,V,source,W,target,n,u,w>,y) => \linear_map_from_basis<K,field,V,source,W,target,n,u,w>(\linear_criteria::inverse_bijection<V,W,\linear_map_from_basis<K,field,V,source,W,target,n,u,w>>(y))=y
+            \linear_map_from_basis<K,field,V,source,W,target,n,u,w>(\linear_criteria::inverse_bijection<V,W,\linear_map_from_basis<K,field,V,source,W,target,n,u,w>>(y))=y=\linear_map_from_basis<K,field,V,source,W,target,n,u,w>(\linear_map_from_basis<K,field,W,target,V,source,n,w,u>(y))
+
+thm equal_finite_dimensions_have_linear_bijection:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,source &vector_space::VectorSpace<K,field,V>,W nonempty_set,target &vector_space::VectorSpace<K,field,W>:
+        $basis::is_finite_dimensional(K,field,V,source)
+        $basis::is_finite_dimensional(K,field,W,target)
+        \dimension::finite_dimension<K,field,V>(source)=\dimension::finite_dimension<K,field,W>(target)
+        =>:
+            exist T fn(v V) W st {$vector_space::is_linear_map(K,field,V,source,W,target,T),$bijective(V,W,T)}
+    have n N=\dimension::finite_dimension<K,field,V>(source)
+    by thm dimension::finite_dimension_has_basis_length(K,field,V,source) => $basis::has_basis_length(K,field,V,source,\dimension::finite_dimension<K,field,V>(source))
+    $basis::has_basis_length(K,field,V,source,n)
+    obtain u from $basis::has_basis_length(K,field,V,source,n)
+    by thm dimension::finite_dimension_has_basis_length(K,field,W,target) => $basis::has_basis_length(K,field,W,target,\dimension::finite_dimension<K,field,W>(target))
+    $basis::has_basis_length(K,field,W,target,n)
+    obtain w from $basis::has_basis_length(K,field,W,target,n)
+    by thm linear_map_from_basis_carrier(K,field,V,source,W,target,n,u,w) => \linear_map_from_basis<K,field,V,source,W,target,n,u,w> $in fn(x V) W
+    by thm linear_map_from_basis_is_linear(K,field,V,source,W,target,n,u,w) => $vector_space::is_linear_map(K,field,V,source,W,target,\linear_map_from_basis<K,field,V,source,W,target,n,u,w>)
+    by thm basis_maps_are_bijective(K,field,V,source,W,target,n,u,w) => $bijective(V,W,\linear_map_from_basis<K,field,V,source,W,target,n,u,w>)
+    witness exist T fn(v V) W st {$vector_space::is_linear_map(K,field,V,source,W,target,T),$bijective(V,W,T)} from \linear_map_from_basis<K,field,V,source,W,target,n,u,w>
+
+thm linear_map_from_basis_on_combination:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,source &vector_space::VectorSpace<K,field,V>,W nonempty_set,target &vector_space::VectorSpace<K,field,W>,n N,u finite_seq(V,n),w finite_seq(W,n),c finite_seq(K,n):
+        $basis::is_basis(K,field,V,source,n,u)
+        =>:
+            \linear_map_from_basis<K,field,V,source,W,target,n,u,w>(\finite_span::linear_combination<K,field,V,source,n>(c,u))=\finite_span::linear_combination<K,field,W,target,n>(c,w)
+    by thm basis::basis_coordinates_of_combination(K,field,V,source,n,u,c) => \basis::basis_coordinates<K,field,V,source,n,u>(\finite_span::linear_combination<K,field,V,source,n>(c,u))=c
+    \linear_map_from_basis<K,field,V,source,W,target,n,u,w>(\finite_span::linear_combination<K,field,V,source,n>(c,u))=\finite_span::linear_combination<K,field,W,target,n>(\basis::basis_coordinates<K,field,V,source,n,u>(\finite_span::linear_combination<K,field,V,source,n>(c,u)),w)=\finite_span::linear_combination<K,field,W,target,n>(c,w)
+
+thm linear_maps_equal_on_basis:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,source &vector_space::VectorSpace<K,field,V>,W nonempty_set,target &vector_space::VectorSpace<K,field,W>,n N,u finite_seq(V,n),T,S fn(v V) W:
+        $basis::is_basis(K,field,V,source,n,u)
+        $vector_space::is_linear_map(K,field,V,source,W,target,T)
+        $vector_space::is_linear_map(K,field,V,source,W,target,S)
+        forall j closed_range(1,n):
+            T(u(j))=S(u(j))
+        =>:
+            T=S
+    claim:
+        ? forall j closed_range(1,n):
+            T(u(j))=\finite_span::map_vectors<V,W,n>(T,u)(j)
+        \finite_span::map_vectors<V,W,n>(T,u)(j)=T(u(j))
+    claim:
+        ? forall j closed_range(1,n):
+            S(u(j))=\finite_span::map_vectors<V,W,n>(T,u)(j)
+        S(u(j))=T(u(j))=\finite_span::map_vectors<V,W,n>(T,u)(j)
+    by thm linear_map_agreeing_on_basis_is_extension(K,field,V,source,W,target,n,u,\finite_span::map_vectors<V,W,n>(T,u),T) => T=\linear_map_from_basis<K,field,V,source,W,target,n,u,\finite_span::map_vectors<V,W,n>(T,u)>
+    by thm linear_map_agreeing_on_basis_is_extension(K,field,V,source,W,target,n,u,\finite_span::map_vectors<V,W,n>(T,u),S) => S=\linear_map_from_basis<K,field,V,source,W,target,n,u,\finite_span::map_vectors<V,W,n>(T,u)>
+    T=\linear_map_from_basis<K,field,V,source,W,target,n,u,\finite_span::map_vectors<V,W,n>(T,u)> =S
+
+thm linear_bijection_maps_basis_to_basis:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,source &vector_space::VectorSpace<K,field,V>,W nonempty_set,target &vector_space::VectorSpace<K,field,W>,n N,u finite_seq(V,n),T fn(v V) W:
+        $basis::is_basis(K,field,V,source,n,u)
+        $vector_space::is_linear_map(K,field,V,source,W,target,T)
+        $bijective(V,W,T)
+        =>:
+            $basis::is_basis(K,field,W,target,n,\finite_span::map_vectors<V,W,n>(T,u))
+    $injective(V,W,T)
+    $surjective(V,W,T)
+    $basis::is_linearly_independent(K,field,V,source,n,u)
+    claim:
+        ? forall c finite_seq(K,n):
+            $finite_span::has_linear_combination_value(K,field,W,target,n,c,\finite_span::map_vectors<V,W,n>(T,u),target.zero)
+            =>:
+                $basis::has_only_zero_coefficients(K,field,n,c)
+        obtain sums from $finite_span::has_linear_combination_value(K,field,W,target,n,c,\finite_span::map_vectors<V,W,n>(T,u),target.zero)
+        by thm finite_span::partial_sum_determines_combination(K,field,W,target,n,c,\finite_span::map_vectors<V,W,n>(T,u),sums) => \finite_span::linear_combination<K,field,W,target,n>(c,\finite_span::map_vectors<V,W,n>(T,u))=sums(n)
+        \finite_span::linear_combination<K,field,W,target,n>(c,\finite_span::map_vectors<V,W,n>(T,u))=sums(n)=target.zero
+        by thm finite_span::linear_map_preserves_combination(K,field,V,source,W,target,T,n,c,u) => T(\finite_span::linear_combination<K,field,V,source,n>(c,u))=\finite_span::linear_combination<K,field,W,target,n>(c,\finite_span::map_vectors<V,W,n>(T,u))
+        by thm vector_space::linear_map_zero(K,field,V,source,W,target,T) => T(source.zero)=target.zero
+        \finite_span::linear_combination<K,field,V,source,n>(c,u) $in V
+        T(\finite_span::linear_combination<K,field,V,source,n>(c,u))=\finite_span::linear_combination<K,field,W,target,n>(c,\finite_span::map_vectors<V,W,n>(T,u))=target.zero=T(source.zero)
+        \finite_span::linear_combination<K,field,V,source,n>(c,u)=source.zero
+        by thm finite_span::linear_combination_has_value(K,field,V,source,n,c,u) => $finite_span::has_linear_combination_value(K,field,V,source,n,c,u,\finite_span::linear_combination<K,field,V,source,n>(c,u))
+        $finite_span::has_linear_combination_value(K,field,V,source,n,c,u,source.zero)
+        $basis::has_only_zero_coefficients(K,field,n,c)
+    by def $basis::is_linearly_independent(K,field,W,target,n,\finite_span::map_vectors<V,W,n>(T,u))
+    claim:
+        ? forall y W:
+            y $in \finite_span::span<K,field,W,target,n,\finite_span::map_vectors<V,W,n>(T,u)>
+        obtain x from exist v V st {y=T(v)}
+        by thm basis_coordinates_reconstruct(K,field,V,source,n,u,x) => \finite_span::linear_combination<K,field,V,source,n>(\basis::basis_coordinates<K,field,V,source,n,u>(x),u)=x
+        by thm finite_span::linear_map_preserves_combination(K,field,V,source,W,target,T,n,\basis::basis_coordinates<K,field,V,source,n,u>(x),u) => T(\finite_span::linear_combination<K,field,V,source,n>(\basis::basis_coordinates<K,field,V,source,n,u>(x),u))=\finite_span::linear_combination<K,field,W,target,n>(\basis::basis_coordinates<K,field,V,source,n,u>(x),\finite_span::map_vectors<V,W,n>(T,u))
+        \finite_span::linear_combination<K,field,W,target,n>(\basis::basis_coordinates<K,field,V,source,n,u>(x),\finite_span::map_vectors<V,W,n>(T,u))=T(\finite_span::linear_combination<K,field,V,source,n>(\basis::basis_coordinates<K,field,V,source,n,u>(x),u))=T(x)=y
+        by thm finite_span::linear_combination_has_value(K,field,W,target,n,\basis::basis_coordinates<K,field,V,source,n,u>(x),\finite_span::map_vectors<V,W,n>(T,u)) => $finite_span::has_linear_combination_value(K,field,W,target,n,\basis::basis_coordinates<K,field,V,source,n,u>(x),\finite_span::map_vectors<V,W,n>(T,u),\finite_span::linear_combination<K,field,W,target,n>(\basis::basis_coordinates<K,field,V,source,n,u>(x),\finite_span::map_vectors<V,W,n>(T,u)))
+        $finite_span::has_linear_combination_value(K,field,W,target,n,\basis::basis_coordinates<K,field,V,source,n,u>(x),\finite_span::map_vectors<V,W,n>(T,u),y)
+        witness $finite_span::is_linear_combination(K,field,W,target,n,y,\finite_span::map_vectors<V,W,n>(T,u)) from \basis::basis_coordinates<K,field,V,source,n,u>(x)
+    forall y \finite_span::span<K,field,W,target,n,\finite_span::map_vectors<V,W,n>(T,u)>:
+        y $in W
+    by extension \finite_span::span<K,field,W,target,n,\finite_span::map_vectors<V,W,n>(T,u)> = W
+    by def $finite_span::spans(K,field,W,target,n,\finite_span::map_vectors<V,W,n>(T,u))
+    by def $basis::is_basis(K,field,W,target,n,\finite_span::map_vectors<V,W,n>(T,u))

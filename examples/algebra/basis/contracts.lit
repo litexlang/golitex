@@ -1,0 +1,89 @@
+# Independent imported basis and coordinate contracts.
+
+claim:
+    ? forall V nonempty_set, n N, m N, vectors finite_seq(V, n):
+        m <= n
+        =>:
+            exist prefix finite_seq(V, m) st {$Algebra::basis::is_prefix_of_length(V, n, m, vectors, prefix)}
+    release thm Algebra::basis::prefix_exists(V,n,m,vectors)
+
+claim:
+    ? forall V nonempty_set, n N+, vectors finite_seq(V, n), k N+:
+        k <= n
+        =>:
+            exist reduced finite_seq(V, n - 1) st {$Algebra::basis::is_list_with_index_removed(V, n, vectors, k, reduced)}
+    release thm Algebra::basis::remove_index_exists(V,n,vectors,k)
+
+claim:
+    ? forall K nonempty_set, field &Algebra::field::Field<K>, V nonempty_set, space &Algebra::vector_space::VectorSpace<K, field, V>, n N, vectors finite_seq(V, n):
+        $Algebra::basis::is_linearly_dependent(K, field, V, space, n, vectors)
+        =>:
+            $Algebra::basis::has_nontrivial_dependence_coefficients(K, field, V, space, n, vectors)
+    release thm Algebra::basis::dependent_has_nontrivial_coefficients(K,field,V,space,n,vectors)
+
+claim:
+    ? forall K nonempty_set, field &Algebra::field::Field<K>, coefficients finite_seq(K, 2):
+        not $Algebra::basis::has_only_zero_coefficients(K, field, 2, coefficients)
+        =>:
+            exist k N+ st {$Algebra::basis::is_largest_nonzero_coefficient_index(K, field, 2, coefficients, k)}
+    release thm Algebra::basis::largest_nonzero_index_length_two(K,field,coefficients)
+
+claim:
+    ? forall K nonempty_set, field &Algebra::field::Field<K>, V nonempty_set, space &Algebra::vector_space::VectorSpace<K, field, V>, vectors finite_seq(V, 2):
+        $Algebra::basis::is_linearly_dependent(K, field, V, space, 2, vectors)
+        =>:
+            exist k N+, m N, prefix finite_seq(V, m) st {k <= 2, m = k - 1, $Algebra::basis::is_prefix_of_length(V, 2, m, vectors, prefix), vectors(k) $in \Algebra::finite_span::span<K, field, V, space, m, prefix>}
+    release thm Algebra::basis::dependence_lemma_length_two(K,field,V,space,vectors)
+
+claim:
+    ? forall K nonempty_set, field &Algebra::field::Field<K>, V nonempty_set, space &Algebra::vector_space::VectorSpace<K, field, V>, vectors finite_seq(V, 2), prefix finite_seq(V, 1), x V:
+        $Algebra::basis::is_prefix_of_length(V, 2, 1, vectors, prefix)
+        vectors(2) $in \Algebra::finite_span::span<K, field, V, space, 1, prefix>
+        x $in \Algebra::finite_span::span<K, field, V, space, 2, vectors>
+        =>:
+            x $in \Algebra::finite_span::span<K, field, V, space, 1, prefix>
+    release thm Algebra::basis::span_of_dependent_pair_reduces(K,field,V,space,vectors,prefix,x)
+
+claim:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,n N,vectors finite_seq(V,n),left,right finite_seq(K,n):
+        $Algebra::basis::is_linearly_independent(K,field,V,space,n,vectors)
+        \Algebra::finite_span::linear_combination<K,field,V,space,n>(left,vectors)=\Algebra::finite_span::linear_combination<K,field,V,space,n>(right,vectors)
+        =>:
+            left=right
+    release thm Algebra::basis::independent_combination_coefficients_unique(K,field,V,space,n,vectors,left,right)
+
+claim:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,n N,vectors finite_seq(V,n),x V:
+        $Algebra::basis::is_basis(K,field,V,space,n,vectors)
+        =>:
+            exist! coefficients finite_seq(K,n) st {$Algebra::finite_span::has_linear_combination_value(K,field,V,space,n,coefficients,vectors,x)}
+    release thm Algebra::basis::basis_representation_exists_unique(K,field,V,space,n,vectors,x)
+
+claim:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,n N,vectors finite_seq(V,n),x V:
+        $Algebra::basis::is_basis(K,field,V,space,n,vectors)
+        =>:
+            $Algebra::finite_span::has_linear_combination_value(K,field,V,space,n,\Algebra::basis::basis_coordinates<K,field,V,space,n,vectors>(x),vectors,x)
+    release thm Algebra::basis::basis_coordinates_has_value(K,field,V,space,n,vectors,x)
+
+claim:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,n N,vectors finite_seq(V,n),x V,coefficients finite_seq(K,n):
+        $Algebra::basis::is_basis(K,field,V,space,n,vectors)
+        $Algebra::finite_span::has_linear_combination_value(K,field,V,space,n,coefficients,vectors,x)
+        =>:
+            coefficients=\Algebra::basis::basis_coordinates<K,field,V,space,n,vectors>(x)
+    release thm Algebra::basis::basis_coordinates_unique(K,field,V,space,n,vectors,x,coefficients)
+
+claim:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,n N,vectors finite_seq(V,n),coefficients finite_seq(K,n):
+        $Algebra::basis::is_basis(K,field,V,space,n,vectors)
+        =>:
+            \Algebra::basis::basis_coordinates<K,field,V,space,n,vectors>(\Algebra::finite_span::linear_combination<K,field,V,space,n>(coefficients,vectors))=coefficients
+    release thm Algebra::basis::basis_coordinates_of_combination(K,field,V,space,n,vectors,coefficients)
+
+claim:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,n N,vectors finite_seq(V,n):
+        $Algebra::basis::is_basis(K,field,V,space,n,vectors)
+        =>:
+            $Algebra::basis::is_finite_dimensional(K,field,V,space)
+    release thm Algebra::basis::basis_is_finite_dimensional(K,field,V,space,n,vectors)

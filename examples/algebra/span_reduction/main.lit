@@ -1,0 +1,314 @@
+# Span-preserving deletion at the middle, first and last index.
+# Concrete context is shared with the previous dependence consumer.
+
+release obj def context::real_inv
+
+release obj def context::real_add
+
+release obj def context::real_neg
+
+release obj def context::real_mul
+
+release obj def context::real_field
+
+release obj def context::scalars
+
+release obj def context::vectors
+
+release obj def context::coefficients
+
+release obj def context::sums
+
+release struct def context::real_field
+
+release struct def context::scalars
+
+have reduced finite_seq(R,2)=(1,3)
+
+have representation_coefficients finite_seq(R,2)=(2,0)
+
+claim:
+    ? forall j closed_range(0,2):
+        j=0 or j=1 or j=2
+    by for:
+        ? forall t closed_range(0,2):
+            t=0 or t=1 or t=2
+        t=0 or t=1 or t=2
+
+have fn reduced_sums(j closed_range(0,2)) R by cases:
+    case j=0: 0
+    case j=1: 2
+    case j=2: 2
+
+finite_seq(R,3-1)=finite_seq(R,2)
+
+reduced $in finite_seq(R,3-1)
+
+claim:
+    ? $Algebra::basis::is_list_with_index_removed(R,3,context::vectors,2,reduced)
+    reduced(1)=1
+    reduced(2)=3
+    context::vectors(1)=1
+    context::vectors(3)=3
+    claim:
+        ? forall j N+:
+            j<2
+            j<=2
+            =>:
+                reduced(j)=context::vectors(j)
+        j<=1
+        j $in closed_range(1,1)
+        expand: j $in closed_range(1,1)
+        reduced(j)=reduced(1)=1=context::vectors(1)=context::vectors(j)
+    claim:
+        ? forall j N+:
+            2<=j
+            j<3
+            j<=2
+            =>:
+                reduced(j)=context::vectors(j+1)
+        j $in closed_range(2,2)
+        expand: j $in closed_range(2,2)
+        j+1=3
+        reduced(j)=reduced(2)=3=context::vectors(3)=context::vectors(j+1)
+    by def $Algebra::basis::is_list_with_index_removed(R,3,context::vectors,2,reduced)
+
+claim:
+    ? context::vectors(2) $in \Algebra::finite_span::span<R,context::real_field,R,context::scalars,2,reduced>
+    context::scalars.zero=0
+    context::scalars.add=context::real_add
+    context::scalars.smul=context::real_mul
+    context::vectors(2)=2
+    representation_coefficients(1)=2
+    representation_coefficients(2)=0
+    reduced(1)=1
+    reduced(2)=3
+    reduced_sums(0)=0=context::scalars.zero
+    reduced_sums(1)=2
+    reduced_sums(2)=2
+    claim:
+        ? forall k N+:
+            k<=2
+            =>:
+                reduced_sums(k)=context::scalars.add(reduced_sums(k-1),context::scalars.smul(representation_coefficients(k),reduced(k)))
+        k $in closed_range(1,2)
+        expand: k $in closed_range(1,2)
+        k=1 or k=2
+        by cases:
+            ? reduced_sums(k)=context::scalars.add(reduced_sums(k-1),context::scalars.smul(representation_coefficients(k),reduced(k)))
+            case k=1:
+                k-1=0
+                reduced_sums(k-1)=0
+                representation_coefficients(k)=2
+                reduced(k)=1
+                context::scalars.smul(representation_coefficients(k),reduced(k))=context::real_mul(2,1)=2
+                context::scalars.add(reduced_sums(k-1),context::scalars.smul(representation_coefficients(k),reduced(k)))=context::real_add(0,2)=2=reduced_sums(k)
+            case k=2:
+                k-1=1
+                reduced_sums(k-1)=2
+                representation_coefficients(k)=0
+                reduced(k)=3
+                context::scalars.smul(representation_coefficients(k),reduced(k))=context::real_mul(0,3)=0
+                context::scalars.add(reduced_sums(k-1),context::scalars.smul(representation_coefficients(k),reduced(k)))=context::real_add(2,0)=2=reduced_sums(k)
+    by def $Algebra::finite_span::is_partial_sum(R,context::real_field,R,context::scalars,2,representation_coefficients,reduced,reduced_sums)
+    witness exist s fn(j closed_range(0,2)) R st {$Algebra::finite_span::is_partial_sum(R,context::real_field,R,context::scalars,2,representation_coefficients,reduced,s),context::vectors(2)=s(2)} from reduced_sums
+    by def $Algebra::finite_span::has_linear_combination_value(R,context::real_field,R,context::scalars,2,representation_coefficients,reduced,context::vectors(2))
+    witness exist c finite_seq(R,2) st {$Algebra::finite_span::has_linear_combination_value(R,context::real_field,R,context::scalars,2,c,reduced,context::vectors(2))} from representation_coefficients
+    by def $Algebra::finite_span::is_linear_combination(R,context::real_field,R,context::scalars,2,context::vectors(2),reduced)
+    \Algebra::finite_span::span<R,context::real_field,R,context::scalars,2,reduced> = {x R: $Algebra::finite_span::is_linear_combination(R,context::real_field,R,context::scalars,2,x,reduced)}
+    context::vectors(2) $in {x R: $Algebra::finite_span::is_linear_combination(R,context::real_field,R,context::scalars,2,x,reduced)}
+
+by thm Algebra::span_reduction::remove_redundant_vector_preserves_span(R,context::real_field,R,context::scalars,3,context::vectors,2,reduced) => \Algebra::finite_span::span<R,context::real_field,R,context::scalars,3,context::vectors> = \Algebra::finite_span::span<R,context::real_field,R,context::scalars,3-1,reduced>
+
+context::scalars.zero=0
+
+context::scalars.add=context::real_add
+
+context::scalars.smul=context::real_mul
+
+context::real_field.zero=0
+
+context::sums(0)=0=context::scalars.zero
+
+context::coefficients(1)=1
+
+context::coefficients(2)=1
+
+context::coefficients(3)=-1
+
+context::vectors(1)=1
+
+context::vectors(2)=2
+
+context::vectors(3)=3
+
+context::sums(1)=1
+
+context::sums(2)=3
+
+context::sums(3)=0
+
+claim:
+    ? forall k N+:
+        k<=3
+        =>:
+            context::sums(k)=context::scalars.add(context::sums(k-1),context::scalars.smul(context::coefficients(k),context::vectors(k)))
+    k $in closed_range(1,3)
+    expand: k $in closed_range(1,3)
+    k=1 or k=2 or k=3
+    by cases:
+        ? context::sums(k)=context::scalars.add(context::sums(k-1),context::scalars.smul(context::coefficients(k),context::vectors(k)))
+        case k=1:
+            k-1=0
+            context::coefficients(k)=1
+            context::vectors(k)=1
+            context::sums(k-1)=0
+            context::scalars.smul(context::coefficients(k),context::vectors(k))=context::real_mul(1,1)=1
+            context::scalars.add(context::sums(k-1),context::scalars.smul(context::coefficients(k),context::vectors(k)))=context::real_add(0,1)=1=context::sums(k)
+        case k=2:
+            k-1=1
+            context::coefficients(k)=1
+            context::vectors(k)=2
+            context::sums(k-1)=1
+            context::scalars.smul(context::coefficients(k),context::vectors(k))=context::real_mul(1,2)=2
+            context::scalars.add(context::sums(k-1),context::scalars.smul(context::coefficients(k),context::vectors(k)))=context::real_add(1,2)=3=context::sums(k)
+        case k=3:
+            k-1=2
+            context::coefficients(k)=-1
+            context::vectors(k)=3
+            context::sums(k-1)=3
+            context::scalars.smul(context::coefficients(k),context::vectors(k))=context::real_mul(-1,3)=-3
+            context::scalars.add(context::sums(k-1),context::scalars.smul(context::coefficients(k),context::vectors(k)))=context::real_add(3,-3)=0=context::sums(k)
+
+
+by def $Algebra::finite_span::is_partial_sum(R,context::real_field,R,context::scalars,3,context::coefficients,context::vectors,context::sums)
+
+context::sums(3)=0=context::scalars.zero
+
+claim:
+    ? $Algebra::finite_span::has_linear_combination_value(R,context::real_field,R,context::scalars,3,context::coefficients,context::vectors,context::scalars.zero)
+    witness exist s fn(k closed_range(0,3)) R st {$Algebra::finite_span::is_partial_sum(R,context::real_field,R,context::scalars,3,context::coefficients,context::vectors,s),context::scalars.zero=s(3)} from context::sums
+    by def $Algebra::finite_span::has_linear_combination_value(R,context::real_field,R,context::scalars,3,context::coefficients,context::vectors,context::scalars.zero)
+
+claim:
+    ? not $Algebra::basis::has_only_zero_coefficients(R,context::real_field,3,context::coefficients)
+    by contra:
+        ? not $Algebra::basis::has_only_zero_coefficients(R,context::real_field,3,context::coefficients)
+        context::coefficients(1)=context::real_field.zero
+        context::coefficients(1)=1
+        context::real_field.zero=0
+        impossible 1=0
+
+claim:
+    ? $Algebra::basis::is_linearly_dependent(R,context::real_field,R,context::scalars,3,context::vectors)
+    by contra:
+        ? not $Algebra::basis::is_linearly_independent(R,context::real_field,R,context::scalars,3,context::vectors)
+        $Algebra::basis::has_only_zero_coefficients(R,context::real_field,3,context::coefficients)
+        impossible not $Algebra::basis::has_only_zero_coefficients(R,context::real_field,3,context::coefficients)
+    by def $Algebra::basis::is_linearly_dependent(R,context::real_field,R,context::scalars,3,context::vectors)
+
+release thm Algebra::span_reduction::dependent_list_has_span_preserving_removal(R,context::real_field,R,context::scalars,3,context::vectors)
+
+obtain chosen_index,chosen_list from exist k N+,r finite_seq(R,3-1) st {$Algebra::basis::is_list_with_index_removed(R,3,context::vectors,k,r),\Algebra::finite_span::span<R,context::real_field,R,context::scalars,3,context::vectors> = \Algebra::finite_span::span<R,context::real_field,R,context::scalars,3-1,r>}
+
+have first_reduced finite_seq(R,2)=(2,3)
+
+first_reduced $in finite_seq(R,3-1)
+
+claim:
+    ? $Algebra::basis::is_list_with_index_removed(R,3,context::vectors,1,first_reduced)
+    first_reduced(1)=2
+    first_reduced(2)=3
+    context::vectors(1)=1
+    context::vectors(2)=2
+    context::vectors(3)=3
+    claim:
+        ? forall j N+:
+            j<1
+            j<=2
+            =>:
+                first_reduced(j)=context::vectors(j)
+        by contra:
+            ? first_reduced(j)=context::vectors(j)
+            j>=1
+            impossible j<1
+    claim:
+        ? forall j N+:
+            1<=j
+            j<3
+            j<=2
+            =>:
+                first_reduced(j)=context::vectors(j+1)
+        j $in closed_range(1,2)
+        expand: j $in closed_range(1,2)
+        j=1 or j=2
+        by cases:
+            ? first_reduced(j)=context::vectors(j+1)
+            case j=1:
+                j+1=2
+                first_reduced(j)=first_reduced(1)=2=context::vectors(2)=context::vectors(j+1)
+            case j=2:
+                j+1=3
+                first_reduced(j)=first_reduced(2)=3=context::vectors(3)=context::vectors(j+1)
+    by def $Algebra::basis::is_list_with_index_removed(R,3,context::vectors,1,first_reduced)
+
+by thm Algebra::span_reduction::span_contains_generator(R,context::real_field,R,context::scalars,2,first_reduced,1) => first_reduced(1) $in \Algebra::finite_span::span<R,context::real_field,R,context::scalars,2,first_reduced>
+
+by thm Algebra::finite_span::span_smul_closed(R,context::real_field,R,context::scalars,2,first_reduced,1/2,first_reduced(1)) => context::scalars.smul(1/2,first_reduced(1)) $in \Algebra::finite_span::span<R,context::real_field,R,context::scalars,2,first_reduced>
+
+claim:
+    ? context::vectors(1) $in \Algebra::finite_span::span<R,context::real_field,R,context::scalars,3-1,first_reduced>
+    first_reduced(1)=2
+    context::scalars.smul(1/2,first_reduced(1))=context::real_mul(1/2,2)=1=context::vectors(1)
+
+by thm Algebra::span_reduction::remove_redundant_vector_preserves_span(R,context::real_field,R,context::scalars,3,context::vectors,1,first_reduced) => \Algebra::finite_span::span<R,context::real_field,R,context::scalars,3,context::vectors> = \Algebra::finite_span::span<R,context::real_field,R,context::scalars,3-1,first_reduced>
+
+have last_reduced finite_seq(R,2)=(1,2)
+
+last_reduced $in finite_seq(R,3-1)
+
+claim:
+    ? $Algebra::basis::is_list_with_index_removed(R,3,context::vectors,3,last_reduced)
+    last_reduced(1)=1
+    last_reduced(2)=2
+    context::vectors(1)=1
+    context::vectors(2)=2
+    context::vectors(3)=3
+    claim:
+        ? forall j N+:
+            j<3
+            j<=2
+            =>:
+                last_reduced(j)=context::vectors(j)
+        j $in closed_range(1,2)
+        expand: j $in closed_range(1,2)
+        j=1 or j=2
+        by cases:
+            ? last_reduced(j)=context::vectors(j)
+            case j=1:
+                last_reduced(j)=last_reduced(1)=1=context::vectors(1)=context::vectors(j)
+            case j=2:
+                last_reduced(j)=last_reduced(2)=2=context::vectors(2)=context::vectors(j)
+    claim:
+        ? forall j N+:
+            3<=j
+            j<3
+            j<=2
+            =>:
+                last_reduced(j)=context::vectors(j+1)
+        by contra:
+            ? last_reduced(j)=context::vectors(j+1)
+            j>=3
+            impossible j<3
+    by def $Algebra::basis::is_list_with_index_removed(R,3,context::vectors,3,last_reduced)
+
+by thm Algebra::span_reduction::span_contains_generator(R,context::real_field,R,context::scalars,2,last_reduced,1) => last_reduced(1) $in \Algebra::finite_span::span<R,context::real_field,R,context::scalars,2,last_reduced>
+
+by thm Algebra::finite_span::span_smul_closed(R,context::real_field,R,context::scalars,2,last_reduced,3,last_reduced(1)) => context::scalars.smul(3,last_reduced(1)) $in \Algebra::finite_span::span<R,context::real_field,R,context::scalars,2,last_reduced>
+
+claim:
+    ? context::vectors(3) $in \Algebra::finite_span::span<R,context::real_field,R,context::scalars,3-1,last_reduced>
+    last_reduced(1)=1
+    context::scalars.smul(3,last_reduced(1))=context::real_mul(3,1)=3=context::vectors(3)
+
+by thm Algebra::span_reduction::remove_redundant_vector_preserves_span(R,context::real_field,R,context::scalars,3,context::vectors,3,last_reduced) => \Algebra::finite_span::span<R,context::real_field,R,context::scalars,3,context::vectors> = \Algebra::finite_span::span<R,context::real_field,R,context::scalars,3-1,last_reduced>

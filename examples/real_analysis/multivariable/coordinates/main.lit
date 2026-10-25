@@ -1,0 +1,8 @@
+# Imported ordinary Euclidean coordinate replacement.
+# Run: LITEX_STD_PATH="$PWD/std" target/release/litex -strict -lang en -f examples/real_analysis/multivariable/coordinates/main.lit
+
+release thm vectors:::real_coordinate_path_selected_component(2,(1,2),2,7)
+release thm vectors:::real_coordinate_path_other_component(2,(1,2),2,1,7)
+\vectors:::real_coordinate_path<2>((1,2),2,7)(1)=1
+\vectors:::real_coordinate_path<2>((1,2),2,7)(2)=7
+

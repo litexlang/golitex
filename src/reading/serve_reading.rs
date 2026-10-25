@@ -17,7 +17,7 @@ use super::upload_cache::{UploadBuild, UploadCache};
 
 const MAX_REQUEST: usize = 16 * 1024 * 1024;
 const MAX_SOURCE: usize = 8 * 1024 * 1024;
-const MAX_OUTPUT: u64 = 128 * 1024 * 1024;
+const MAX_OUTPUT: u64 = 256 * 1024 * 1024;
 static NEXT_UPLOAD: AtomicU64 = AtomicU64::new(0);
 
 pub fn serve_reading(
@@ -401,14 +401,14 @@ fn build_upload(body: &str, strict: bool, cache: &UploadCache) -> Result<UploadB
         if let Some(status) = child.try_wait().map_err(|error| error.to_string())? {
             break status;
         }
-        if started.elapsed() > Duration::from_secs(120)
+        if started.elapsed() > Duration::from_secs(300)
             || fs::metadata(&stdout_path)
                 .map(|meta| meta.len() > MAX_OUTPUT)
                 .unwrap_or(false)
         {
             let _ = child.kill();
             let _ = child.wait();
-            return Err("Reading build exceeded its 120-second or 128-MiB output limit".into());
+            return Err("Reading build exceeded its 300-second or 256-MiB output limit".into());
         }
         std::thread::sleep(Duration::from_millis(30));
     };

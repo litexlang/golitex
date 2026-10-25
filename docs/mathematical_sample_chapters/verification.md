@@ -17,7 +17,7 @@ also pass strict verification. The acceptance date is 2026-10-24.
 | Number theory | [Integer-equation slice](../../showcases/math_concepts_in_litex/3_number_theory/main.lit) | `is_gcd_certificate`, `six_is_gcd_certificate_for_84_and_30`, both Diophantine implications |
 | Probability | [Finite probability slice](../../showcases/math_concepts_in_litex/8_probability_and_statistics_in_nutshell/main.lit) | `expectation2_affine`, squared-error decomposition, `bayes_rule` |
 | Geometry | [Equilateral construction](../../showcases/math_concepts_in_litex/2_euclidean_geometry/main.lit) | `equilateral_vertex_distance_lemma`, `euclid_book1_proposition_1` |
-| Geometry extension | [IMO area bound](../../showcases/2D_Geometry/IMO/problem_12/solution.lit) | `cyclic_quarter_nested`, `bkm_det_factor`, `problem_12` |
+| Geometry extension | [IMO area bound](../../examples/imo/geometry/imo_1966_p6/solution.lit) | `cyclic_quarter_nested`, `bkm_det_factor`, `problem_12` |
 
 Each complete file was checked through its actual `-f` entry, including any
 configured prefix. Acceptance requires process exit `0` and a parsed Normal

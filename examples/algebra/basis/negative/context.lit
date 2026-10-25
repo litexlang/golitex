@@ -1,0 +1,208 @@
+# Independent imported basis and coordinate contracts.
+# Before: independence/basis interfaces and coordinate proofs were lecture-local.
+# thm standard_coordinates_unique:  # only the real-plane standard basis
+# Now: shared arbitrary-finite coefficient uniqueness justifies guarded coordinates.
+# Boundary: missing basis/independence/representation, wrong values and bounds reject.
+# Run: LITEX_STD_PATH="$PWD/std" target/release/litex -lang en -strict -f examples/algebra/basis/main.lit
+
+have fn real_inv(x R: x != 0) R = 1 / x
+
+have fn real_add(x, y R) R = x + y
+
+have fn real_neg(x R) R = -x
+
+have fn real_mul(x, y R) R = x * y
+
+forall x, y, z R:
+    real_add(real_add(x, y), z) = real_add(x, real_add(y, z))
+    real_mul(real_mul(x, y), z) = real_mul(x, real_mul(y, z))
+    real_mul(x, real_add(y, z)) = real_add(real_mul(x, y), real_mul(x, z))
+
+forall x, y R:
+    real_add(x, y) = real_add(y, x)
+    real_mul(x, y) = real_mul(y, x)
+
+forall x R:
+    real_add(0, x) = x
+    real_add(x, real_neg(x)) = 0
+    real_mul(1, x) = x
+
+forall x R:
+    x != 0
+    =>:
+        real_mul(x, real_inv(x)) = 1
+
+release thm struct_member((0, 1, real_add, real_neg, real_mul, real_inv), &Algebra::field::Field<R>)
+
+have real_field &Algebra::field::Field<R> = (0, 1, real_add, real_neg, real_mul, real_inv)
+
+claim:
+    ? forall x R:
+        real_add(0,x)=x
+        exist y R st {real_add(x,y)=0}
+    real_add(0,x)=x
+    real_add(x,-x)=0
+    witness exist y R st {real_add(x,y)=0} from -x
+
+claim:
+    ? forall a,b,x R:
+        real_mul(real_field.mul(a,b),x)=real_mul(a,real_mul(b,x))
+        real_mul(real_field.add(a,b),x)=real_add(real_mul(a,x),real_mul(b,x))
+    real_field.mul=real_mul
+    real_field.add=real_add
+    real_field.mul(a,b)=real_mul(a,b)=a*b
+    real_field.add(a,b)=real_add(a,b)=a+b
+    real_mul(real_field.mul(a,b),x)=real_mul(a*b,x)=(a*b)*x=a*(b*x)=real_mul(a,real_mul(b,x))
+    real_mul(real_field.add(a,b),x)=real_mul(a+b,x)=(a+b)*x=a*x+b*x=real_add(real_mul(a,x),real_mul(b,x))
+
+forall a,x,y R:
+    real_mul(a,real_add(x,y))=real_add(real_mul(a,x),real_mul(a,y))
+
+claim:
+    ? forall x R:
+        real_mul(real_field.one,x)=x
+    real_field.one=1
+    real_mul(real_field.one,x)=real_mul(1,x)=1*x=x
+
+real_add $in fn(x,y R) R
+
+real_mul $in fn(a R,x R) R
+
+forall x,y,z R:
+    real_add(real_add(x,y),z)=real_add(x,real_add(y,z))
+
+forall x,y R:
+    real_add(x,y)=real_add(y,x)
+
+release thm struct_member((0,real_add,real_mul),&Algebra::vector_space::VectorSpace<R,real_field,R>)
+
+have scalars &Algebra::vector_space::VectorSpace<R,real_field,R> = (0,real_add,real_mul)
+
+have unit_basis finite_seq(R,1)=fn(k closed_range(1,1)) R {1}
+
+have fn real_single_coefficient(x R) finite_seq(R,1)=fn(k closed_range(1,1)) R {x}
+
+thm real_single_combination_value:
+    ? forall coefficients finite_seq(R,1),value R:
+        $Algebra::finite_span::has_linear_combination_value(R,real_field,R,scalars,1,coefficients,unit_basis,value)
+        =>:
+            value=coefficients(1)
+    obtain sums from $Algebra::finite_span::has_linear_combination_value(R,real_field,R,scalars,1,coefficients,unit_basis,value)
+    unit_basis(1)=1
+    scalars.zero=0
+    scalars.add=real_add
+    scalars.smul=real_mul
+    sums(0)=scalars.zero=0
+    sums(1)=scalars.add(sums(0),scalars.smul(coefficients(1),unit_basis(1)))
+    scalars.smul(coefficients(1),unit_basis(1))=real_mul(coefficients(1),1)=coefficients(1)
+    sums(1)=scalars.add(0,coefficients(1))=real_add(0,coefficients(1))=coefficients(1)
+    value=sums(1)=coefficients(1)
+
+claim:
+    ? $Algebra::basis::is_linearly_independent(R,real_field,R,scalars,1,unit_basis)
+    real_field.zero=0
+    scalars.zero=0
+    claim:
+        ? forall coefficients finite_seq(R,1):
+            $Algebra::finite_span::has_linear_combination_value(R,real_field,R,scalars,1,coefficients,unit_basis,scalars.zero)
+            =>:
+                $Algebra::basis::has_only_zero_coefficients(R,real_field,1,coefficients)
+        release thm real_single_combination_value(coefficients,scalars.zero)
+        coefficients(1)=scalars.zero=0=real_field.zero
+        claim:
+            ? forall k N+:
+                k<=1
+                =>:
+                    coefficients(k)=real_field.zero
+            k $in closed_range(1,1)
+            expand: k $in closed_range(1,1)
+            k=1
+            coefficients(k)=coefficients(1)=real_field.zero
+        by def $Algebra::basis::has_only_zero_coefficients(R,real_field,1,coefficients)
+    by def $Algebra::basis::is_linearly_independent(R,real_field,R,scalars,1,unit_basis)
+
+thm real_unit_representation:
+    ? forall x R:
+        $Algebra::finite_span::has_linear_combination_value(R,real_field,R,scalars,1,real_single_coefficient(x),unit_basis,x)
+    have coefficients finite_seq(R,1)=real_single_coefficient(x)
+    coefficients(1)=real_single_coefficient(x)(1)=x
+    unit_basis(1)=1
+    claim:
+        ? forall k closed_range(0,1):
+            k=0 or k=1
+        by for:
+            ? forall j closed_range(0,1):
+                j=0 or j=1
+            j=0 or j=1
+    have fn sums(k closed_range(0,1)) R by cases:
+        case k=0: 0
+        case k=1: x
+    sums(0)=0=scalars.zero
+    sums(1)=x
+    claim:
+        ? forall k N+:
+            k<=1
+            =>:
+                sums(k)=scalars.add(sums(k-1),scalars.smul(coefficients(k),unit_basis(k)))
+        k $in closed_range(1,1)
+        expand: k $in closed_range(1,1)
+        k=1
+        k-1=0
+        coefficients(k)=x
+        unit_basis(k)=1
+        sums(k-1)=0
+        sums(k)=x
+        scalars.smul(coefficients(k),unit_basis(k))=real_mul(x,1)=x
+        scalars.add(sums(k-1),scalars.smul(coefficients(k),unit_basis(k)))=real_add(0,x)=x=sums(k)
+    by def $Algebra::finite_span::is_partial_sum(R,real_field,R,scalars,1,coefficients,unit_basis,sums)
+    witness exist partial_sums fn(k closed_range(0,1)) R st {$Algebra::finite_span::is_partial_sum(R,real_field,R,scalars,1,coefficients,unit_basis,partial_sums),x=partial_sums(1)} from sums
+    by def $Algebra::finite_span::has_linear_combination_value(R,real_field,R,scalars,1,coefficients,unit_basis,x)
+
+claim:
+    ? $Algebra::finite_span::spans(R,real_field,R,scalars,1,unit_basis)
+    \Algebra::finite_span::span<R,real_field,R,scalars,1,unit_basis> = {v R: $Algebra::finite_span::is_linear_combination(R,real_field,R,scalars,1,v,unit_basis)}
+    claim:
+        ? forall x R:
+            x $in \Algebra::finite_span::span<R,real_field,R,scalars,1,unit_basis>
+        release thm real_unit_representation(x)
+        witness exist c finite_seq(R,1) st {$Algebra::finite_span::has_linear_combination_value(R,real_field,R,scalars,1,c,unit_basis,x)} from real_single_coefficient(x)
+        by def $Algebra::finite_span::is_linear_combination(R,real_field,R,scalars,1,x,unit_basis)
+        x $in {v R: $Algebra::finite_span::is_linear_combination(R,real_field,R,scalars,1,v,unit_basis)}
+    forall x \Algebra::finite_span::span<R,real_field,R,scalars,1,unit_basis>:
+        x $in R
+    by extension \Algebra::finite_span::span<R,real_field,R,scalars,1,unit_basis> = R
+    by def $Algebra::finite_span::spans(R,real_field,R,scalars,1,unit_basis)
+
+thm real_unit_is_basis:
+    ? $Algebra::basis::is_basis(R,real_field,R,scalars,1,unit_basis)
+    by def $Algebra::basis::is_basis(R,real_field,R,scalars,1,unit_basis)
+
+release thm Algebra::basis::basis_is_finite_dimensional(R,real_field,R,scalars,1,unit_basis)
+
+release thm Algebra::basis::basis_representation_exists_unique(R,real_field,R,scalars,1,unit_basis,7)
+
+release thm Algebra::basis::basis_coordinates_has_value(R,real_field,R,scalars,1,unit_basis,7)
+
+release thm real_unit_representation(7)
+
+release thm Algebra::basis::basis_coordinates_unique(R,real_field,R,scalars,1,unit_basis,7,real_single_coefficient(7))
+
+have coordinate_list finite_seq(R,1)=\Algebra::basis::basis_coordinates<R,real_field,R,scalars,1,unit_basis>(7)
+
+have expected_coefficients finite_seq(R,1)=real_single_coefficient(7)
+
+forall x R:
+    real_single_coefficient(x)(1)=x
+
+expected_coefficients(1)=real_single_coefficient(7)(1)=7
+
+coordinate_list=expected_coefficients
+
+coordinate_list(1)=expected_coefficients(1)=7
+
+\Algebra::basis::basis_coordinates<R,real_field,R,scalars,1,unit_basis>(7)(1)=coordinate_list(1)=7
+
+release thm Algebra::basis::basis_coordinates_of_combination(R,real_field,R,scalars,1,unit_basis,real_single_coefficient(7))
+
+thm real_coordinate_seven:
+    ? \Algebra::basis::basis_coordinates<R,real_field,R,scalars,1,unit_basis>(7)(1)=7

@@ -1,0 +1,15 @@
+# Must reject only the final statement; see ../README.md.
+release obj def context::real_inv
+release obj def context::real_add
+release obj def context::real_neg
+release obj def context::real_mul
+release obj def context::real_field
+release obj def context::scalars
+release obj def context::constant_zero
+release obj def context::shift
+release obj def context::square
+release obj def context::bad_smul
+release struct def context::real_field
+release struct def context::scalars
+
+context::real_field.inv(0)=0

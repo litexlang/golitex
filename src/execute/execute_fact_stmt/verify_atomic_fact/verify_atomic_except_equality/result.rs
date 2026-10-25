@@ -151,6 +151,9 @@ pub struct BuiltinFunctionLipschitzDefinitionProof {
 }
 
 pub enum BuiltinPropDefinitionProof {
+    MultivariableAnalysis(
+        crate::execute::execute_fact_stmt::multivariable::definition::MultivariableDefinitionProof,
+    ),
     HasRiemannIntegral(BuiltinHasRiemannIntegralDefinitionProof),
     FunctionRiemannIntegrable(BuiltinFunctionRiemannIntegrableDefinitionProof),
     HasDerivativeAt(BuiltinHasDerivativeAtDefinitionProof),

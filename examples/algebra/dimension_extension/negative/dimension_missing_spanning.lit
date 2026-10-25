@@ -1,0 +1,6 @@
+claim:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,n N,vectors finite_seq(V,n):
+        $Algebra::basis::is_finite_dimensional(K,field,V,space)
+        =>:
+            \Algebra::dimension::finite_dimension<K,field,V>(space)<=n
+    release thm Algebra::dimension::dimension_le_spanning_length(K,field,V,space,n,vectors)

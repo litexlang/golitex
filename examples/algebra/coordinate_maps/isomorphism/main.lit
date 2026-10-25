@@ -1,0 +1,8 @@
+thm finite_dimensional_isomorphism_exists:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,field,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,field,W>:
+        $Algebra::basis::is_finite_dimensional(K,field,V,source)
+        $Algebra::basis::is_finite_dimensional(K,field,W,target)
+        \Algebra::dimension::finite_dimension<K,field,V>(source)=\Algebra::dimension::finite_dimension<K,field,W>(target)
+        =>:
+            exist T fn(v V) W st {$Algebra::vector_space::is_linear_map(K,field,V,source,W,target,T),$bijective(V,W,T)}
+    release thm Algebra::coordinate_maps::equal_finite_dimensions_have_linear_bijection(K,field,V,source,W,target)

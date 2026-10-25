@@ -1,0 +1,36 @@
+thm imo1972_p5:
+    ? forall f, g fn(x R) R, y R:
+        exist a R st {f(a) != 0}
+        forall x R:
+            abs(f(x)) <= 1
+        forall x, z R:
+            f(x + z) + f(x - z) = 2 * f(x) * g(z)
+        =>:
+            abs(g(y)) <= 1
+    obtain a from exist a R st {f(a) != 0}
+    have fn h(x R) R = abs(f(x))
+    witness $is_nonempty_set(fn_range(h)) from h(a)
+    claim:
+        ? forall t fn_range(h):
+            t <= 1
+        have by fn_preimage: x from t $in fn_range(h)
+        t = h(x) = abs(f(x)) <= 1
+    release thm real_least_upper_bound_exists(fn_range(h), 1)
+    obtain M from exist M R st {$is_real_least_upper_bound(fn_range(h), M)}
+    release thm real_least_upper_bound_upper_bound(fn_range(h), M)
+    0 < abs(f(a)) = h(a) <= M
+    by contra:
+        ? abs(g(y)) <= 1
+        1 < abs(g(y))
+        0 < 2 * abs(g(y))
+        claim:
+            ? forall t fn_range(h):
+                t <= M / abs(g(y))
+            have by fn_preimage: x from t $in fn_range(h)
+            h(x + y) <= M >= h(x - y)
+            f(x + y) + f(x - y) = 2 * f(x) * g(y)
+            abs(f(x)) * (2 * abs(g(y))) = abs(2 * f(x) * g(y)) = abs(f(x + y) + f(x - y)) <= abs(f(x + y)) + abs(f(x - y)) = h(x + y) + h(x - y) <= 2 * M
+            t = h(x) = abs(f(x)) <= (2 * M) / (2 * abs(g(y))) = M / abs(g(y))
+        release thm real_least_upper_bound_le_upper_bound(fn_range(h), M, M / abs(g(y)))
+        M / abs(g(y)) < M
+        impossible M <= M / abs(g(y))

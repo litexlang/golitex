@@ -270,6 +270,17 @@ pub(super) fn project_obj_wd_failure(
     rt: &Runtime,
 ) -> JsonValue {
     let projected = match f {
+        FailToVerifyObjWellDefinedResult::LimitOperator(FailToVerifyLimitOperatorObjWellDefinedResult::MultivariableScalar(p)) => super::multivariable::object_failure(&p.stage,rt),
+        FailToVerifyObjWellDefinedResult::LimitOperator(FailToVerifyLimitOperatorObjWellDefinedResult::MultivariableVector(p)) => super::multivariable::object_failure(&p.stage,rt),
+        FailToVerifyObjWellDefinedResult::DerivativeOperator(crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedFailure::Partial(p)) => super::multivariable::object_failure(&p.stage,rt),
+        FailToVerifyObjWellDefinedResult::DerivativeOperator(crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedFailure::ScalarDifferential(p)) => super::multivariable::object_failure(&p.stage,rt),
+        FailToVerifyObjWellDefinedResult::DerivativeOperator(crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedFailure::TotalDifferential(p)) => super::multivariable::object_failure(&p.stage,rt),
+        FailToVerifyObjWellDefinedResult::DerivativeOperator(crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedFailure::Gradient(p)) => super::multivariable::object_failure(&p.stage,rt),
+        FailToVerifyObjWellDefinedResult::DerivativeOperator(crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedFailure::Jacobian(p)) => super::multivariable::object_failure(&p.stage,rt),
+        FailToVerifyObjWellDefinedResult::DerivativeOperator(crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedFailure::Hessian(p)) => super::multivariable::object_failure(&p.stage,rt),
+        FailToVerifyObjWellDefinedResult::DerivativeOperator(crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedFailure::Divergence(p)) => super::multivariable::object_failure(&p.stage,rt),
+        FailToVerifyObjWellDefinedResult::DerivativeOperator(crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedFailure::Curl(p)) => super::multivariable::object_failure(&p.stage,rt),
+        FailToVerifyObjWellDefinedResult::DerivativeOperator(crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedFailure::Laplacian(p)) => super::multivariable::object_failure(&p.stage,rt),
         FailToVerifyObjWellDefinedResult::MatrixOperator(value) => match value {
             FailToVerifyMatrixOperatorObjWellDefinedResult::Determinant(p) => node(rt, "Determinant", None, common(&p.0, rt)),
             FailToVerifyMatrixOperatorObjWellDefinedResult::ZeroMatrix(p) => node(rt, "ZeroMatrix", None, common(&p.0, rt)),

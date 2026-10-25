@@ -199,6 +199,36 @@ impl Runtime {
                 Err(stages) => finite_domain_failure = Some(stages),
             }
         }
+        if head_obj.multivariable_selector_name().is_some() {
+            for source in self.complete_function_domains(&head_obj, verify_state)? {
+                match self.try_verify_fn_obj_against_fn_set(
+                    value,
+                    &source.signature,
+                    verify_state,
+                )? {
+                    Ok(stages) => {
+                        let (child_obj_well_defined, requirement_fact_verified, argument_scope) =
+                            stages.into_success_child_proofs();
+                        return Ok(VerifyObjWellDefinedResult::Success(
+                            ObjWellDefinedProof::ByDef {
+                                obj: root,
+                                proof: ObjWellDefinedProofByDef::FnObj(FnObjObjWellDefinedProof {
+                                    domain_fn_set: Some(
+                                        FnObjDomainFnSetEvidence::MultivariableSelector(Box::new(
+                                            source,
+                                        )),
+                                    ),
+                                    child_obj_well_defined,
+                                    requirement_fact_verified,
+                                    argument_scope,
+                                }),
+                            },
+                        ));
+                    }
+                    Err(stages) => finite_domain_failure = Some(stages),
+                }
+            }
+        }
         for source in self.matrix_callables(&head_obj, verify_state)? {
             match self.try_verify_fn_obj_against_fn_set(
                 value,

@@ -232,6 +232,7 @@ impl LitexToLeanCompiler {
             if step.application.ir() == original.ir() {
                 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::by_fn_application::normalize_function_body::FunctionBodySourceProof;
                 if step.expanded_body.ir() != rewritten.ir()
+                    || step.continued_body.ir() != rewritten.ir()
                     || !matches!(&step.function_body, FunctionBodySourceProof::KnownEquality(path) if path.path.len() == 1)
                 {
                     return Err(LeanCompileError::new("EqualityRewrite/Expansion", "The original call must unfold once from an exact head-to-anonymous-function equality."));

@@ -1,0 +1,9 @@
+# Expected rejection at the missing mathematical premise.
+
+claim:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,m N,vectors finite_seq(V,m),p N,prefix finite_seq(V,p):
+        $Algebra::basis::is_linearly_independent(K,field,V,space,m,vectors)
+        p<m
+        =>:
+            not vectors(p+1) $in \Algebra::finite_span::span<K,field,V,space,p,prefix>
+    release thm Algebra::basis_comparison::independent_vector_outside_prefix_span(K,field,V,space,m,vectors,p,prefix)

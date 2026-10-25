@@ -1,0 +1,50 @@
+# Arbitrary-field imported contracts.
+
+claim:
+    ? forall V nonempty_set,n N,vectors finite_seq(V,n),k closed_range(1,n),value V:
+        exist replaced finite_seq(V,n) st {$Algebra::exchange::is_list_with_index_replaced(V,n,vectors,k,value,replaced)}
+    release thm Algebra::exchange::replacement_list_exists(V,n,vectors,k,value)
+
+claim:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,U power_set(V),x,y V:
+        $Algebra::vector_space::is_subspace(K,field,V,space,U)
+        x $in U
+        space.add(x,y) $in U
+        =>:
+            y $in U
+    by thm Algebra::exchange::subspace_additive_cancellation(K,field,V,space,U,x,y) => y $in U
+
+claim:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,U power_set(V),a K,x V:
+        $Algebra::vector_space::is_subspace(K,field,V,space,U)
+        a!=field.zero
+        space.smul(a,x) $in U
+        =>:
+            x $in U
+    by thm Algebra::exchange::subspace_nonzero_scalar_cancellation(K,field,V,space,U,a,x) => x $in U
+
+claim:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,n N,coefficients finite_seq(K,n),vectors finite_seq(V,n),value V,k closed_range(1,n),replaced finite_seq(V,n):
+        $Algebra::finite_span::has_linear_combination_value(K,field,V,space,n,coefficients,vectors,value)
+        coefficients(k)!=field.zero
+        $Algebra::exchange::is_list_with_index_replaced(V,n,vectors,k,value,replaced)
+        =>:
+            \Algebra::finite_span::span<K,field,V,space,n,vectors> = \Algebra::finite_span::span<K,field,V,space,n,replaced>
+    by thm Algebra::exchange::exchange_by_nonzero_coefficient(K,field,V,space,n,coefficients,vectors,value,k,replaced) => \Algebra::finite_span::span<K,field,V,space,n,vectors> = \Algebra::finite_span::span<K,field,V,space,n,replaced>
+
+claim:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,n N,coefficients finite_seq(K,n),vectors finite_seq(V,n),value V,U power_set(V):
+        $Algebra::vector_space::is_subspace(K,field,V,space,U)
+        $Algebra::finite_span::has_linear_combination_value(K,field,V,space,n,coefficients,vectors,value)
+        not value $in U
+        =>:
+            exist k closed_range(1,n) st {coefficients(k)!=field.zero,not vectors(k) $in U}
+    release thm Algebra::exchange::combination_outside_subspace_has_nonzero_term(K,field,V,space,n,coefficients,vectors,value,U)
+
+claim:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,n N,vectors finite_seq(V,n),value V:
+        value $in \Algebra::finite_span::span<K,field,V,space,n,vectors>
+        value!=space.zero
+        =>:
+            exist k closed_range(1,n),replaced finite_seq(V,n) st {$Algebra::exchange::is_list_with_index_replaced(V,n,vectors,k,value,replaced),\Algebra::finite_span::span<K,field,V,space,n,vectors> = \Algebra::finite_span::span<K,field,V,space,n,replaced>}
+    release thm Algebra::exchange::nonzero_span_member_can_replace_generator(K,field,V,space,n,vectors,value)

@@ -1,0 +1,215 @@
+# Ordered finite basis extension.
+
+template<V nonempty_set,m N,vectors finite_seq(V,m),x V>:
+    have fn append_vector(j closed_range(1,m+1)) V by cases:
+        case j<=m: vectors(j)
+        case j>m: x
+
+thm append_outside_span_is_independent:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,m N,vectors finite_seq(V,m),x V:
+        $basis::is_linearly_independent(K,field,V,space,m,vectors)
+        not x $in \finite_span::span<K,field,V,space,m,vectors>
+        =>:
+            $basis::is_linearly_independent(K,field,V,space,m+1,\append_vector<V,m,vectors,x>)
+    claim:
+        ? forall coefficients finite_seq(K,m+1):
+            $finite_span::has_linear_combination_value(K,field,V,space,m+1,coefficients,\append_vector<V,m,vectors,x>,space.zero)
+            =>:
+                $basis::has_only_zero_coefficients(K,field,m+1,coefficients)
+        obtain sums from $finite_span::has_linear_combination_value(K,field,V,space,m+1,coefficients,\append_vector<V,m,vectors,x>,space.zero)
+        release thm basis::prefix_exists(K,m+1,m,coefficients)
+        obtain prefix_coefficients from exist selected finite_seq(K,m) st {$basis::is_prefix_of_length(K,m+1,m,coefficients,selected)}
+        have fn prefix_sums(j closed_range(0,m)) V=sums(j)
+        claim:
+            ? forall j N+:
+                j<=m
+                =>:
+                    vectors(j)=\append_vector<V,m,vectors,x>(j)
+            j $in closed_range(1,m+1)
+            vectors(j)=\append_vector<V,m,vectors,x>(j)
+        by def $basis::is_prefix_of_length(V,m+1,m,\append_vector<V,m,vectors,x>,vectors)
+        by thm dependence::partial_sum_prefix(K,field,V,space,m+1,coefficients,\append_vector<V,m,vectors,x>,sums,m,prefix_coefficients,vectors,prefix_sums) => $finite_span::is_partial_sum(K,field,V,space,m,prefix_coefficients,vectors,prefix_sums)
+        witness $finite_span::has_linear_combination_value(K,field,V,space,m,prefix_coefficients,vectors,prefix_sums(m)) from prefix_sums
+        witness $finite_span::is_linear_combination(K,field,V,space,m,prefix_sums(m),vectors) from prefix_coefficients
+        m+1 $in N+
+        m+1 $in closed_range(1,m+1)
+        m+1>m
+        \append_vector<V,m,vectors,x>(m+1)=x
+        coefficients(m+1) $in K
+        \append_vector<V,m,vectors,x>(m+1) $in V
+        sums(m) $in V
+        sums(m+1)=space.add(sums((m+1)-1),space.smul(coefficients(m+1),\append_vector<V,m,vectors,x>(m+1)))
+        (m+1)-1=m
+        m $in closed_range(0,m+1)
+        (m+1)-1 $in closed_range(0,m+1)
+        sums((m+1)-1)=sums(m)
+        sums((m+1)-1) $in V
+        space.smul(coefficients(m+1),\append_vector<V,m,vectors,x>(m+1)) $in V
+        sums(m+1)=space.add(sums(m),space.smul(coefficients(m+1),\append_vector<V,m,vectors,x>(m+1)))
+        space.smul(coefficients(m+1),\append_vector<V,m,vectors,x>(m+1))=space.smul(coefficients(m+1),x)
+        prefix_sums(m)=sums(m)
+        space.add(prefix_sums(m),space.smul(coefficients(m+1),x))=space.zero
+        by cases:
+            ? $basis::has_only_zero_coefficients(K,field,m+1,coefficients)
+            case coefficients(m+1)=field.zero:
+                by thm vector_space::zero_scalar_times_vector(K,field,V,space,x) => space.smul(field.zero,x)=space.zero
+                space.smul(coefficients(m+1),x)=space.smul(field.zero,x)=space.zero
+                prefix_sums(m)=space.add(space.zero,prefix_sums(m))=space.add(prefix_sums(m),space.zero)=space.add(prefix_sums(m),space.smul(coefficients(m+1),x))=space.zero
+                $basis::has_only_zero_coefficients(K,field,m,prefix_coefficients)
+                claim:
+                    ? forall j N+:
+                        j<=m+1
+                        =>:
+                            coefficients(j)=field.zero
+                    by cases:
+                        ? coefficients(j)=field.zero
+                        case j<=m:
+                            coefficients(j)=prefix_coefficients(j)=field.zero
+                        case j>m:
+                            j>=m+1
+                            j=m+1
+                            coefficients(j)=coefficients(m+1)=field.zero
+                by def $basis::has_only_zero_coefficients(K,field,m+1,coefficients)
+            case coefficients(m+1)!=field.zero:
+                by thm dependence::vector_zero_sum_solve(K,field,V,space,coefficients(m+1),prefix_sums(m),x) => x=space.smul(field.neg(field.inv(coefficients(m+1))),prefix_sums(m))
+                by thm finite_span::span_smul_closed(K,field,V,space,m,vectors,field.neg(field.inv(coefficients(m+1))),prefix_sums(m)) => space.smul(field.neg(field.inv(coefficients(m+1))),prefix_sums(m)) $in \finite_span::span<K,field,V,space,m,vectors>
+                by contra:
+                    ? $basis::has_only_zero_coefficients(K,field,m+1,coefficients)
+                    impossible x $in \finite_span::span<K,field,V,space,m,vectors>
+    by def $basis::is_linearly_independent(K,field,V,space,m+1,\append_vector<V,m,vectors,x>)
+
+thm independent_list_with_basis_length_spans:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,n N,vectors finite_seq(V,n):
+        $basis::has_basis_length(K,field,V,space,n)
+        $basis::is_linearly_independent(K,field,V,space,n,vectors)
+        =>:
+            $finite_span::spans(K,field,V,space,n,vectors)
+    obtain known_basis from $basis::has_basis_length(K,field,V,space,n)
+    claim:
+        ? forall x V:
+            x $in \finite_span::span<K,field,V,space,n,vectors>
+        by contra:
+            ? x $in \finite_span::span<K,field,V,space,n,vectors>
+            by thm append_outside_span_is_independent(K,field,V,space,n,vectors,x) => $basis::is_linearly_independent(K,field,V,space,n+1,\append_vector<V,n,vectors,x>)
+            by thm basis_comparison::independent_spanning_length_bound(K,field,V,space,n+1,\append_vector<V,n,vectors,x>,n,known_basis) => n+1<=n
+            n+1>n
+            impossible n+1<=n
+    by extension \finite_span::span<K,field,V,space,n,vectors> = V
+    by def $finite_span::spans(K,field,V,space,n,vectors)
+
+thm spanning_list_with_basis_length_is_independent:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,n N,vectors finite_seq(V,n):
+        $basis::has_basis_length(K,field,V,space,n)
+        $finite_span::spans(K,field,V,space,n,vectors)
+        =>:
+            $basis::is_linearly_independent(K,field,V,space,n,vectors)
+    obtain known_basis from $basis::has_basis_length(K,field,V,space,n)
+    by cases:
+        ? $basis::is_linearly_independent(K,field,V,space,n,vectors)
+        case n=0:
+            finite_seq(V,n)=finite_seq(V,0)
+            by thm dependence::empty_list_is_independent(K,field,V,space,vectors) => $basis::is_linearly_independent(K,field,V,space,0,vectors)
+        case n!=0:
+            by contra:
+                ? n>0
+                n<=0
+                n=0
+                impossible n!=0
+            n $in N+
+            by contra:
+                ? $basis::is_linearly_independent(K,field,V,space,n,vectors)
+                by def $basis::is_linearly_dependent(K,field,V,space,n,vectors)
+                release thm span_reduction::dependent_list_has_span_preserving_removal(K,field,V,space,n,vectors)
+                obtain k,reduced from exist idx N+,remaining finite_seq(V,n-1) st {$basis::is_list_with_index_removed(V,n,vectors,idx,remaining),\finite_span::span<K,field,V,space,n,vectors> = \finite_span::span<K,field,V,space,n-1,remaining>}
+                \finite_span::span<K,field,V,space,n-1,reduced> = \finite_span::span<K,field,V,space,n,vectors> = V
+                by def $finite_span::spans(K,field,V,space,n-1,reduced)
+                by thm basis_comparison::independent_spanning_length_bound(K,field,V,space,n,known_basis,n-1,reduced) => n<=n-1
+                n-1<n
+                impossible n<=n-1
+
+thm independent_list_extends_to_basis:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,m N,vectors finite_seq(V,m):
+        $basis::is_finite_dimensional(K,field,V,space)
+        $basis::is_linearly_independent(K,field,V,space,m,vectors)
+        =>:
+            exist r N,extended finite_seq(V,r) st {$basis::is_basis(K,field,V,space,r,extended),$basis::is_prefix_of_length(V,r,m,extended,vectors)}
+    release thm basis_existence::finite_dimensional_has_basis(K,field,V,space)
+    obtain n,known_basis from exist length N,selected finite_seq(V,length) st {$basis::is_basis(K,field,V,space,length,selected)}
+    witness $basis::has_basis_length(K,field,V,space,n) from known_basis
+    prop extends_at_deficit(remaining N):
+        forall length N,current finite_seq(V,length):
+            $basis::is_linearly_independent(K,field,V,space,length,current)
+            length+remaining=n
+            =>:
+                exist r N,extended finite_seq(V,r) st {r=n,$basis::is_basis(K,field,V,space,r,extended),$basis::is_prefix_of_length(V,r,length,extended,current)}
+    by induc deficit from 0:
+        ? $extends_at_deficit(deficit)
+        ? from deficit=0:
+            claim:
+                ? forall length N,current finite_seq(V,length):
+                    $basis::is_linearly_independent(K,field,V,space,length,current)
+                    length+0=n
+                    =>:
+                        exist r N,extended finite_seq(V,r) st {r=n,$basis::is_basis(K,field,V,space,r,extended),$basis::is_prefix_of_length(V,r,length,extended,current)}
+                length=n
+                $basis::has_basis_length(K,field,V,space,length)
+                by thm independent_list_with_basis_length_spans(K,field,V,space,length,current) => $finite_span::spans(K,field,V,space,length,current)
+                by def $basis::is_basis(K,field,V,space,length,current)
+                by def $basis::is_prefix_of_length(V,length,length,current,current)
+                witness exist r N,extended finite_seq(V,r) st {r=n,$basis::is_basis(K,field,V,space,r,extended),$basis::is_prefix_of_length(V,r,length,extended,current)} from length,current
+            by def $extends_at_deficit(0)
+        ? induc:
+            deficit $in N
+            claim:
+                ? forall length N,current finite_seq(V,length):
+                    $basis::is_linearly_independent(K,field,V,space,length,current)
+                    length+(deficit+1)=n
+                    =>:
+                        exist r N,extended finite_seq(V,r) st {r=n,$basis::is_basis(K,field,V,space,r,extended),$basis::is_prefix_of_length(V,r,length,extended,current)}
+                by cases:
+                    ? exist r N,extended finite_seq(V,r) st {r=n,$basis::is_basis(K,field,V,space,r,extended),$basis::is_prefix_of_length(V,r,length,extended,current)}
+                    case $finite_span::spans(K,field,V,space,length,current):
+                        by def $basis::is_basis(K,field,V,space,length,current)
+                        witness $basis::has_basis_length(K,field,V,space,length) from current
+                        by thm basis_comparison::basis_length_unique(K,field,V,space,length,n) => length=n
+                        by def $basis::is_prefix_of_length(V,length,length,current,current)
+                        witness exist r N,extended finite_seq(V,r) st {r=n,$basis::is_basis(K,field,V,space,r,extended),$basis::is_prefix_of_length(V,r,length,extended,current)} from length,current
+                    case not $finite_span::spans(K,field,V,space,length,current):
+                        by contra:
+                            ? exist x V st {not x $in \finite_span::span<K,field,V,space,length,current>}
+                            claim:
+                                ? forall x V:
+                                    x $in \finite_span::span<K,field,V,space,length,current>
+                                by contra:
+                                    ? x $in \finite_span::span<K,field,V,space,length,current>
+                                    witness exist value V st {not value $in \finite_span::span<K,field,V,space,length,current>} from x
+                                    impossible exist value V st {not value $in \finite_span::span<K,field,V,space,length,current>}
+                            by extension \finite_span::span<K,field,V,space,length,current> = V
+                            by def $finite_span::spans(K,field,V,space,length,current)
+                            impossible $finite_span::spans(K,field,V,space,length,current)
+                        obtain x from exist value V st {not value $in \finite_span::span<K,field,V,space,length,current>}
+                        have appended finite_seq(V,length+1)=\append_vector<V,length,current,x>
+                        by thm append_outside_span_is_independent(K,field,V,space,length,current,x) => $basis::is_linearly_independent(K,field,V,space,length+1,\append_vector<V,length,current,x>)
+                        (length+1)+deficit=length+(deficit+1)=n
+                        obtain r,extended from exist selected_length N,selected finite_seq(V,selected_length) st {selected_length=n,$basis::is_basis(K,field,V,space,selected_length,selected),$basis::is_prefix_of_length(V,selected_length,length+1,selected,appended)}
+                        length<=length+1<=r
+                        claim:
+                            ? forall j N+:
+                                j<=length
+                                =>:
+                                    extended(j)=current(j)
+                            j<=length<length+1
+                            j<=length+1
+                            j $in closed_range(1,length+1)
+                            appended(j)=\append_vector<V,length,current,x>(j)=current(j)
+                            extended(j)=appended(j)=current(j)
+                        by def $basis::is_prefix_of_length(V,r,length,extended,current)
+                        witness exist selected_length N,selected finite_seq(V,selected_length) st {selected_length=n,$basis::is_basis(K,field,V,space,selected_length,selected),$basis::is_prefix_of_length(V,selected_length,length,selected,current)} from r,extended
+            by def $extends_at_deficit(deficit+1)
+    by thm basis_comparison::independent_spanning_length_bound(K,field,V,space,m,vectors,n,known_basis) => m<=n
+    n-m>=0
+    n-m $in N
+    m+(n-m)=n
+    $extends_at_deficit(n-m)
+    obtain r,extended from exist selected_length N,selected finite_seq(V,selected_length) st {selected_length=n,$basis::is_basis(K,field,V,space,selected_length,selected),$basis::is_prefix_of_length(V,selected_length,m,selected,vectors)}
+    witness exist selected_length N,selected finite_seq(V,selected_length) st {$basis::is_basis(K,field,V,space,selected_length,selected),$basis::is_prefix_of_length(V,selected_length,m,selected,vectors)} from r,extended

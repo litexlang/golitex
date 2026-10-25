@@ -1,0 +1,14 @@
+# Only the final statement must be rejected.
+release obj def context::real_inv
+release obj def context::real_add
+release obj def context::real_neg
+release obj def context::real_mul
+release obj def context::real_field
+release obj def context::scalars
+release obj def context::vectors
+release obj def context::coefficients
+release obj def context::sums
+release struct def context::real_field
+release struct def context::scalars
+
+release thm Algebra::dependence::dependence_lemma(R,context::real_field,R,context::scalars,1,fn(j closed_range(1,1)) R {1})

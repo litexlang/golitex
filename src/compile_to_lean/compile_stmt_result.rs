@@ -26,6 +26,13 @@ impl LitexToLeanCompiler {
             before: 0,
         };
         let position = &source_position;
+        if matches!(
+            result,
+            ExecStmtResult::Trust(_)
+                | ExecStmtResult::Definition(ExecDefinitionStmtResult::Axiom(_))
+        ) {
+            return self.compile_assumption_statement(result, position, local);
+        }
         match result {
             ExecStmtResult::Fact(result) => {
                 self.compile_fact_statement(result, position, index, local)
@@ -36,7 +43,7 @@ impl LitexToLeanCompiler {
             ExecStmtResult::Witness(result) => {
                 self.compile_witness_statement(result, position, index, local)
             }
-            ExecStmtResult::Trust(_) => Err(LeanCompileError::unsupported("Trust")),
+            ExecStmtResult::Trust(_) => unreachable!(),
             ExecStmtResult::By(result) => self.compile_by_statement(result, position, index, local),
             ExecStmtResult::Register(result) => {
                 self.compile_register_statement(result, position, index, local)

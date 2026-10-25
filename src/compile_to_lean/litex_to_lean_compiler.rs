@@ -90,7 +90,22 @@ impl LitexToLeanCompiler {
         } else {
             ""
         };
-        let output = format!("import Litex\n\nset_option linter.unusedVariables false\n\nnamespace LitexCompiled.{artifact_namespace}\n\nuniverse {universes}\nvariable {{M : Litex.Semantics.{{u}}}}{sets}{functions}\n\n{}\nend LitexCompiled.{artifact_namespace}\n", declarations.join("\n\n"));
+        let indexed_unions = if result.statement_results.iter().any(|statement|
+            statement_uses_choice(statement) || super::compile_replacement_result::replacement_statement(statement).is_some() || matches!(statement, ExecStmtResult::Definition(ExecDefinitionStmtResult::DefStruct(
+                crate::execute::ExecDefStructStmtResult::Success(p)))
+                if super::compile_def_struct_stmt_result::has_dependent_fields(&p.statement))) {
+            "\nvariable [_indexedUnionSemantics : Litex.IndexedUnionSemantics M]"
+        } else { "" };
+        let regularity = if result
+            .statement_results
+            .iter()
+            .any(statement_uses_regularity)
+        {
+            "\nvariable [_regularitySemantics : Litex.RegularitySemantics M]"
+        } else {
+            ""
+        };
+        let output = format!("import Litex\n\nset_option linter.unusedVariables false\n\nnamespace LitexCompiled.{artifact_namespace}\n\nuniverse {universes}\nvariable {{M : Litex.Semantics.{{u}}}}{sets}{functions}{indexed_unions}{regularity}\n\n{}\nend LitexCompiled.{artifact_namespace}\n", declarations.join("\n\n"));
         Ok(output
             .lines()
             .map(str::trim_end)
@@ -115,7 +130,10 @@ fn object_uses_functions(object: &Obj) -> bool {
         Obj::IntegerOperator(IntegerOperator::Quot(p)) => {
             object_uses_functions(&p.left) || object_uses_functions(&p.right)
         }
-        Obj::FnObj(_) | Obj::FunctionSpace(_) | Obj::ProductShape(_) => true,
+        Obj::FnObj(_)
+        | Obj::FunctionSpace(_)
+        | Obj::ProductShape(_)
+        | Obj::StructAndFieldAccessObj(_) => true,
         Obj::SetFormer(SetFormer::ListSet(set)) => {
             set.list.iter().any(|item| object_uses_functions(item))
         }
@@ -135,6 +153,12 @@ fn object_uses_functions(object: &Obj) -> bool {
         }
         Obj::SetFormer(SetFormer::FiniteSeqSet(_) | SetFormer::SeqSet(_)) => true,
         Obj::SetOperator(SetOperator::PowerSet(set)) => object_uses_functions(&set.set),
+        Obj::SetOperator(SetOperator::SetMinus(set)) => {
+            object_uses_functions(&set.left) || object_uses_functions(&set.right)
+        }
+        Obj::SetOperator(SetOperator::Intersect(set)) => {
+            object_uses_functions(&set.left) || object_uses_functions(&set.right)
+        }
         Obj::SetOperator(SetOperator::Union(set)) => {
             object_uses_functions(&set.left) || object_uses_functions(&set.right)
         }
@@ -240,6 +264,9 @@ fn fact_uses_functions(fact: &Fact) -> bool {
 }
 
 fn statement_uses_functions(statement: &ExecStmtResult) -> bool {
+    if statement_uses_choice(statement) {
+        return true;
+    }
     if let Some((_, assignments, store)) = super::source_position::enumeration_statement(statement)
     {
         if let StoreFactResult::ForallFact(f) = &store.store {
@@ -256,6 +283,10 @@ fn statement_uses_functions(statement: &ExecStmtResult) -> bool {
         });
     }
     match statement {
+        ExecStmtResult::Trust(_) | ExecStmtResult::Definition(ExecDefinitionStmtResult::Axiom(_)) =>
+            super::compile_assumption_stmt_result::assumption_stages(statement).iter().any(|(fact, _, _store)| fact_uses_functions(fact)),
+
+        ExecStmtResult::Definition(ExecDefinitionStmtResult::DefStruct(_)) => true,
         ExecStmtResult::ReleaseAndExpand(ExecReleaseAndExpandStmtResult::ExpandRange(crate::execute::execute_by_stmt::ExecExpandRangeStmtResult::Success(p))) => verified_subject(&p.membership).as_ref().is_some_and(fact_uses_functions),
         ExecStmtResult::ProofBlock(ExecProofBlockStmtResult::Sketch(ExecSketchStmtResult::Success(p))) => p.proof_steps.iter().any(statement_uses_functions),
         ExecStmtResult::By(ExecByStmtResult::FnExtension(_)) => true,
@@ -385,7 +416,12 @@ fn object_uses_sets(object: &Obj) -> bool {
             | SetFormer::Range(_)
             | SetFormer::ClosedRange(_),
         ) => true,
-        Obj::SetOperator(SetOperator::Union(_) | SetOperator::PowerSet(_)) => true,
+        Obj::SetOperator(
+            SetOperator::Union(_)
+            | SetOperator::Intersect(_)
+            | SetOperator::SetMinus(_)
+            | SetOperator::PowerSet(_),
+        ) => true,
         Obj::ArithmeticOperator(operator) => match operator {
             ArithmeticOperator::Add(x) => object_uses_sets(&x.left) || object_uses_sets(&x.right),
             ArithmeticOperator::Sub(x) => object_uses_sets(&x.left) || object_uses_sets(&x.right),
@@ -467,6 +503,13 @@ fn statement_uses_sets(statement: &ExecStmtResult) -> bool {
         return true;
     }
     match statement {
+        ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(ExecDefineObjStmtResult::HaveByReplacementAxiom(_))) => true,
+
+        ExecStmtResult::ReleaseAndExpand(ExecReleaseAndExpandStmtResult::RegularityAxiom(_) | ExecReleaseAndExpandStmtResult::ZornLemma(_)) => true,
+
+        ExecStmtResult::Trust(_) | ExecStmtResult::Definition(ExecDefinitionStmtResult::Axiom(_)) =>
+            super::compile_assumption_stmt_result::assumption_stages(statement).iter().any(|(fact, _, store)| fact_uses_sets(fact) || store_has_set_inference(store)),
+
         ExecStmtResult::ReleaseAndExpand(ExecReleaseAndExpandStmtResult::ExpandRange(crate::execute::execute_by_stmt::ExecExpandRangeStmtResult::Success(_))) => true,
         ExecStmtResult::ProofBlock(ExecProofBlockStmtResult::Sketch(ExecSketchStmtResult::Success(p))) => p.proof_steps.iter().any(statement_uses_sets),
         ExecStmtResult::By(ExecByStmtResult::Extension(_) | ExecByStmtResult::FnExtension(_) | ExecByStmtResult::For(_) | ExecByStmtResult::EnumerateFiniteSet(_)) => true,
@@ -799,4 +842,48 @@ fn statement_has_set_inference(statement: &ExecStmtResult) -> bool {
             .any(store_has_set_inference),
         _ => false,
     }
+}
+
+fn statement_uses_regularity(statement: &ExecStmtResult) -> bool {
+    if super::compile_release_regularity_result::regularity_statement(statement).is_some() {
+        return true;
+    }
+    let steps = match statement {
+        ExecStmtResult::Definition(ExecDefinitionStmtResult::DefThm(
+            ExecDefThmStmtResult::Success(p),
+        )) => match &p.body {
+            ExecDefThmBodyProof::Forall(b) => &b.proof_steps,
+            ExecDefThmBodyProof::NonForall(b) => &b.proof_steps,
+        },
+        ExecStmtResult::ProofBlock(ExecProofBlockStmtResult::Sketch(
+            ExecSketchStmtResult::Success(p),
+        )) => &p.proof_steps,
+        ExecStmtResult::ProofBlock(ExecProofBlockStmtResult::Claim(
+            crate::execute::execute_proof_block_stmt::ExecClaimStmtResult::Success(p),
+        )) => p.body.proof_steps(),
+        _ => return false,
+    };
+    steps.iter().any(statement_uses_regularity)
+}
+
+fn statement_uses_choice(statement: &ExecStmtResult) -> bool {
+    if super::compile_release_choice_result::choice_statement(statement).is_some() {
+        return true;
+    }
+    let steps = match statement {
+        ExecStmtResult::Definition(ExecDefinitionStmtResult::DefThm(
+            ExecDefThmStmtResult::Success(p),
+        )) => match &p.body {
+            ExecDefThmBodyProof::Forall(b) => &b.proof_steps,
+            ExecDefThmBodyProof::NonForall(b) => &b.proof_steps,
+        },
+        ExecStmtResult::ProofBlock(ExecProofBlockStmtResult::Sketch(
+            ExecSketchStmtResult::Success(p),
+        )) => &p.proof_steps,
+        ExecStmtResult::ProofBlock(ExecProofBlockStmtResult::Claim(
+            crate::execute::execute_proof_block_stmt::ExecClaimStmtResult::Success(p),
+        )) => p.body.proof_steps(),
+        _ => return false,
+    };
+    steps.iter().any(statement_uses_choice)
 }

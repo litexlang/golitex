@@ -161,12 +161,25 @@ proofs, and names in the linked files. Library and builtin implementations
 are outside both source counts. These are counts of the existing pairs, not
 lower bounds on the shortest possible programs.
 
-| Existing source pair | Litex / Lean characters | Fewer characters in Litex | Litex / Lean checking time (ms) | Lean ÷ Litex |
-| --- | ---: | ---: | ---: | ---: |
-| sqrt(2), matched parity proof | 326 / 923 | 64.7% | 199.285 / 779.754 | 3.91× |
-| Integer quotient and remainder | 30 / 105 | 71.4% | 1.135 / 3.341 | 2.94× |
-| Guarded reciprocal, definition and call | 49 / 106 | 53.8% | 1.823 / 8.583 | 4.71× |
-| Three-element set cardinality | 26 / 44 | 40.9% | 0.049 / 3.597 | 73.43× |
+| Existing source pair | Expression: Litex de Bruijn factor DF* ↓ | Expression: Lean de Bruijn factor DF* ↓ | Expression: fewer characters in Litex | Runtime: Litex checking (ms) ↓ | Runtime: Lean checking (ms) ↓ | Runtime: Litex speedup (Lean time ÷ Litex time) ↑ |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| sqrt(2), matched parity proof | 1.73 | 4.91 | 64.7% | 199.285 | 779.754 | 3.91× |
+| Integer quotient and remainder | 0.35 | 1.24 | 71.4% | 1.135 | 3.341 | 2.94× |
+| Guarded reciprocal, definition and call | 0.64 | 1.38 | 53.8% | 1.823 | 8.583 | 4.71× |
+| Three-element set cardinality | 0.44 | 0.75 | 40.9% | 0.049 | 3.597 | 73.43× |
+
+The **Expression** columns compare text length: each language's de Bruijn
+factor DF* is its formal character count divided by the shared informal
+character count; lower is shorter. The **Runtime** columns compare checking
+time in milliseconds; lower is faster. Litex speedup is Lean checking time
+divided by Litex checking time; higher favors Litex. These are separate
+comparisons. The [English mathematical baselines](cases/informal-baselines.json)
+were written retrospectively, after the formal sources, and include the
+statement and proof, calculation, or definition/use shown by each example.
+These are illustrative normalized-character de Bruijn factors, not a
+translation study with preselected source texts or compressed-file factors.
+The [counting method and limits](README.md#de-bruijn-factor) and
+[reproducible size record](results/de-bruijn-factors.json) make that scope explicit.
 
 [Source counts, file hashes, and validation](results/type-object-source-counts.json)
 identify the exact source snapshots used for the size comparison. The four

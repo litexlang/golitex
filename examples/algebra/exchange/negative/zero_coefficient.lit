@@ -1,0 +1,62 @@
+# Expected rejection: index 2 has coefficient zero.
+
+release obj def model::real_inv
+
+release obj def model::real_add
+
+release obj def model::real_neg
+
+release obj def model::real_mul
+
+release obj def model::plane_add
+
+release obj def model::plane_smul
+
+release obj def model::e1
+
+release obj def model::e2
+
+release obj def model::real_field
+
+release obj def model::real_plane
+
+release struct def model::real_field
+
+release struct def model::real_plane
+
+have vectors finite_seq(R × R,2)=(model::e1,model::e2)
+
+have fn bad_coefficients(idx closed_range(1,2)) R by cases:
+    case idx=1: model::real_field.one
+    case idx!=1: model::real_field.zero
+
+claim:
+    ? forall j N+:
+        j<=2
+        j!=1
+        =>:
+            bad_coefficients(j)=model::real_field.zero
+    j $in closed_range(1,2)
+    bad_coefficients(j)=model::real_field.zero
+
+by thm Algebra::finite_span::single_coefficient_linear_combination(R,model::real_field,R × R,model::real_plane,2,bad_coefficients,vectors,1) => \Algebra::finite_span::linear_combination<R,model::real_field,R × R,model::real_plane,2>(bad_coefficients,vectors)=model::real_plane.smul(bad_coefficients(1),vectors(1))
+
+bad_coefficients(1)=model::real_field.one
+
+vectors(1)=model::e1
+
+model::real_field.one $in R
+
+vectors(1) $in R × R
+
+model::real_plane.smul(bad_coefficients(1),vectors(1))=model::real_plane.smul(model::real_field.one,vectors(1))=vectors(1)=model::e1
+
+by thm Algebra::finite_span::linear_combination_has_value(R,model::real_field,R × R,model::real_plane,2,bad_coefficients,vectors) => $Algebra::finite_span::has_linear_combination_value(R,model::real_field,R × R,model::real_plane,2,bad_coefficients,vectors,\Algebra::finite_span::linear_combination<R,model::real_field,R × R,model::real_plane,2>(bad_coefficients,vectors))
+
+release thm Algebra::exchange::replacement_list_exists(R × R,2,vectors,2,model::e1)
+
+obtain bad_replaced from exist result finite_seq(R × R,2) st {$Algebra::exchange::is_list_with_index_replaced(R × R,2,vectors,2,model::e1,result)}
+
+bad_coefficients(2)=model::real_field.zero
+
+by thm Algebra::exchange::exchange_by_nonzero_coefficient(R,model::real_field,R × R,model::real_plane,2,bad_coefficients,vectors,model::e1,2,bad_replaced) => \Algebra::finite_span::span<R,model::real_field,R × R,model::real_plane,2,vectors> = \Algebra::finite_span::span<R,model::real_field,R × R,model::real_plane,2,bad_replaced>

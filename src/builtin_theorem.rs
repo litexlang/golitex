@@ -4,6 +4,121 @@ use std::fmt;
 /// runtime rather than by a source `thm`/`axiom` declaration.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum BuiltinTheoremId {
+    MultiContinuousAtCompose,
+    VectorContinuousAtCompose,
+    MultiLimitAtCompose,
+    VectorLimitAtCompose,
+
+    SecondPartialAtToFunction,
+    CurlGradientAtSymmetric,
+    DivergenceCurlAtSymmetric,
+
+    MultiLimitAtFromDefinition,
+    MultiLimitAtToDefinition,
+    MultiLimitAtUnique,
+    MultiLimitAtExists,
+    MultiLimitAtSelected,
+    VectorLimitAtFromDefinition,
+    VectorLimitAtToDefinition,
+    VectorLimitAtUnique,
+    VectorLimitAtExists,
+    VectorLimitAtSelected,
+    PartialAtFromDefinition,
+    PartialAtToDefinition,
+    PartialAtUnique,
+    PartialAtExists,
+    PartialAtSelected,
+    SecondPartialAtFromDefinition,
+    SecondPartialAtToDefinition,
+    SecondPartialAtUnique,
+    SecondPartialAtExists,
+    ScalarDifferentialAtFromDefinition,
+    ScalarDifferentialAtToDefinition,
+    ScalarDifferentialAtUnique,
+    ScalarDifferentialAtExists,
+    ScalarDifferentialAtSelected,
+    TotalDerivativeAtFromDefinition,
+    TotalDerivativeAtToDefinition,
+    TotalDerivativeAtUnique,
+    TotalDerivativeAtExists,
+    TotalDerivativeAtSelected,
+    GradientAtFromDefinition,
+    GradientAtToDefinition,
+    GradientAtUnique,
+    GradientAtExists,
+    GradientAtSelected,
+    JacobianAtFromDefinition,
+    JacobianAtToDefinition,
+    JacobianAtUnique,
+    JacobianAtExists,
+    JacobianAtSelected,
+    HessianAtFromDefinition,
+    HessianAtToDefinition,
+    HessianAtUnique,
+    HessianAtExists,
+    HessianAtSelected,
+    DivergenceAtFromDefinition,
+    DivergenceAtToDefinition,
+    DivergenceAtUnique,
+    DivergenceAtExists,
+    DivergenceAtSelected,
+    CurlAtFromDefinition,
+    CurlAtToDefinition,
+    CurlAtUnique,
+    CurlAtExists,
+    CurlAtSelected,
+    LaplacianAtFromDefinition,
+    LaplacianAtToDefinition,
+    LaplacianAtUnique,
+    LaplacianAtExists,
+    LaplacianAtSelected,
+    MultiContinuousAtFromDefinition,
+    MultiContinuousAtToDefinition,
+    VectorContinuousAtFromDefinition,
+    VectorContinuousAtToDefinition,
+    MultiDifferentiableAtFromDefinition,
+    MultiDifferentiableAtToDefinition,
+    VectorDifferentiableAtFromDefinition,
+    VectorDifferentiableAtToDefinition,
+    MultiLimitAtAdd,
+    MultiLimitAtSubtract,
+    MultiLimitAtMultiply,
+    MultiLimitAtDivide,
+    MultiContinuousAtAdd,
+    MultiContinuousAtSubtract,
+    MultiContinuousAtMultiply,
+    MultiContinuousAtDivide,
+    PartialAtAdd,
+    PartialAtSubtract,
+    PartialAtMultiply,
+    PartialAtDivide,
+    ScalarDifferentialAtAdd,
+    ScalarDifferentialAtSubtract,
+    ScalarDifferentialAtMultiply,
+    ScalarDifferentialAtDivide,
+    ScalarDifferentialAtContinuous,
+    TotalDerivativeAtContinuous,
+    ScalarDifferentialAtGradient,
+    ScalarDifferentialAtPartial,
+    TotalDerivativeAtJacobian,
+    JacobianAtDivergence,
+    JacobianAtCurl,
+    HessianAtLaplacian,
+    MultiContinuousAtLimit,
+    MultiLimitAtContinuous,
+    VectorContinuousAtLimit,
+    VectorLimitAtContinuous,
+    TotalDerivativeAtCompose,
+    ScalarDifferentialAtCompose,
+    SecondPartialAtFromFunction,
+    SecondPartialAtSwapContinuous,
+    VectorLimitAtAdd,
+    VectorLimitAtSubtract,
+    TotalDerivativeAtAdd,
+    TotalDerivativeAtSubtract,
+    VectorContinuousAtAdd,
+    VectorContinuousAtSubtract,
+
     MatrixApplyIdentity,
     MatrixInnerProductAdjoint,
     MatrixRankFactorizationExists,
@@ -434,6 +549,123 @@ pub enum BuiltinTheoremId {
 impl BuiltinTheoremId {
     pub fn from_name(name: &str) -> Option<Self> {
         Some(match name {
+            "multi_continuous_at_compose" => Self::MultiContinuousAtCompose,
+            "vector_continuous_at_compose" => Self::VectorContinuousAtCompose,
+            "multi_limit_at_compose" => Self::MultiLimitAtCompose,
+            "vector_limit_at_compose" => Self::VectorLimitAtCompose,
+
+            "second_partial_at_to_function" => Self::SecondPartialAtToFunction,
+            "curl_gradient_at_symmetric" => Self::CurlGradientAtSymmetric,
+            "divergence_curl_at_symmetric" => Self::DivergenceCurlAtSymmetric,
+
+            "multi_limit_at_from_definition" => Self::MultiLimitAtFromDefinition,
+            "multi_limit_at_to_definition" => Self::MultiLimitAtToDefinition,
+            "multi_limit_at_unique" => Self::MultiLimitAtUnique,
+            "multi_limit_at_exists" => Self::MultiLimitAtExists,
+            "multi_limit_at_selected" => Self::MultiLimitAtSelected,
+            "vector_limit_at_from_definition" => Self::VectorLimitAtFromDefinition,
+            "vector_limit_at_to_definition" => Self::VectorLimitAtToDefinition,
+            "vector_limit_at_unique" => Self::VectorLimitAtUnique,
+            "vector_limit_at_exists" => Self::VectorLimitAtExists,
+            "vector_limit_at_selected" => Self::VectorLimitAtSelected,
+            "partial_at_from_definition" => Self::PartialAtFromDefinition,
+            "partial_at_to_definition" => Self::PartialAtToDefinition,
+            "partial_at_unique" => Self::PartialAtUnique,
+            "partial_at_exists" => Self::PartialAtExists,
+            "partial_at_selected" => Self::PartialAtSelected,
+            "second_partial_at_from_definition" => Self::SecondPartialAtFromDefinition,
+            "second_partial_at_to_definition" => Self::SecondPartialAtToDefinition,
+            "second_partial_at_unique" => Self::SecondPartialAtUnique,
+            "second_partial_at_exists" => Self::SecondPartialAtExists,
+            "scalar_differential_at_from_definition" => Self::ScalarDifferentialAtFromDefinition,
+            "scalar_differential_at_to_definition" => Self::ScalarDifferentialAtToDefinition,
+            "scalar_differential_at_unique" => Self::ScalarDifferentialAtUnique,
+            "scalar_differential_at_exists" => Self::ScalarDifferentialAtExists,
+            "scalar_differential_at_selected" => Self::ScalarDifferentialAtSelected,
+            "total_derivative_at_from_definition" => Self::TotalDerivativeAtFromDefinition,
+            "total_derivative_at_to_definition" => Self::TotalDerivativeAtToDefinition,
+            "total_derivative_at_unique" => Self::TotalDerivativeAtUnique,
+            "total_derivative_at_exists" => Self::TotalDerivativeAtExists,
+            "total_derivative_at_selected" => Self::TotalDerivativeAtSelected,
+            "gradient_at_from_definition" => Self::GradientAtFromDefinition,
+            "gradient_at_to_definition" => Self::GradientAtToDefinition,
+            "gradient_at_unique" => Self::GradientAtUnique,
+            "gradient_at_exists" => Self::GradientAtExists,
+            "gradient_at_selected" => Self::GradientAtSelected,
+            "jacobian_at_from_definition" => Self::JacobianAtFromDefinition,
+            "jacobian_at_to_definition" => Self::JacobianAtToDefinition,
+            "jacobian_at_unique" => Self::JacobianAtUnique,
+            "jacobian_at_exists" => Self::JacobianAtExists,
+            "jacobian_at_selected" => Self::JacobianAtSelected,
+            "hessian_at_from_definition" => Self::HessianAtFromDefinition,
+            "hessian_at_to_definition" => Self::HessianAtToDefinition,
+            "hessian_at_unique" => Self::HessianAtUnique,
+            "hessian_at_exists" => Self::HessianAtExists,
+            "hessian_at_selected" => Self::HessianAtSelected,
+            "divergence_at_from_definition" => Self::DivergenceAtFromDefinition,
+            "divergence_at_to_definition" => Self::DivergenceAtToDefinition,
+            "divergence_at_unique" => Self::DivergenceAtUnique,
+            "divergence_at_exists" => Self::DivergenceAtExists,
+            "divergence_at_selected" => Self::DivergenceAtSelected,
+            "curl_at_from_definition" => Self::CurlAtFromDefinition,
+            "curl_at_to_definition" => Self::CurlAtToDefinition,
+            "curl_at_unique" => Self::CurlAtUnique,
+            "curl_at_exists" => Self::CurlAtExists,
+            "curl_at_selected" => Self::CurlAtSelected,
+            "laplacian_at_from_definition" => Self::LaplacianAtFromDefinition,
+            "laplacian_at_to_definition" => Self::LaplacianAtToDefinition,
+            "laplacian_at_unique" => Self::LaplacianAtUnique,
+            "laplacian_at_exists" => Self::LaplacianAtExists,
+            "laplacian_at_selected" => Self::LaplacianAtSelected,
+            "multi_continuous_at_from_definition" => Self::MultiContinuousAtFromDefinition,
+            "multi_continuous_at_to_definition" => Self::MultiContinuousAtToDefinition,
+            "vector_continuous_at_from_definition" => Self::VectorContinuousAtFromDefinition,
+            "vector_continuous_at_to_definition" => Self::VectorContinuousAtToDefinition,
+            "multi_differentiable_at_from_definition" => Self::MultiDifferentiableAtFromDefinition,
+            "multi_differentiable_at_to_definition" => Self::MultiDifferentiableAtToDefinition,
+            "vector_differentiable_at_from_definition" => {
+                Self::VectorDifferentiableAtFromDefinition
+            }
+            "vector_differentiable_at_to_definition" => Self::VectorDifferentiableAtToDefinition,
+            "multi_limit_at_add" => Self::MultiLimitAtAdd,
+            "multi_limit_at_subtract" => Self::MultiLimitAtSubtract,
+            "multi_limit_at_multiply" => Self::MultiLimitAtMultiply,
+            "multi_limit_at_divide" => Self::MultiLimitAtDivide,
+            "multi_continuous_at_add" => Self::MultiContinuousAtAdd,
+            "multi_continuous_at_subtract" => Self::MultiContinuousAtSubtract,
+            "multi_continuous_at_multiply" => Self::MultiContinuousAtMultiply,
+            "multi_continuous_at_divide" => Self::MultiContinuousAtDivide,
+            "partial_at_add" => Self::PartialAtAdd,
+            "partial_at_subtract" => Self::PartialAtSubtract,
+            "partial_at_multiply" => Self::PartialAtMultiply,
+            "partial_at_divide" => Self::PartialAtDivide,
+            "scalar_differential_at_add" => Self::ScalarDifferentialAtAdd,
+            "scalar_differential_at_subtract" => Self::ScalarDifferentialAtSubtract,
+            "scalar_differential_at_multiply" => Self::ScalarDifferentialAtMultiply,
+            "scalar_differential_at_divide" => Self::ScalarDifferentialAtDivide,
+            "scalar_differential_at_continuous" => Self::ScalarDifferentialAtContinuous,
+            "total_derivative_at_continuous" => Self::TotalDerivativeAtContinuous,
+            "scalar_differential_at_gradient" => Self::ScalarDifferentialAtGradient,
+            "scalar_differential_at_partial" => Self::ScalarDifferentialAtPartial,
+            "total_derivative_at_jacobian" => Self::TotalDerivativeAtJacobian,
+            "jacobian_at_divergence" => Self::JacobianAtDivergence,
+            "jacobian_at_curl" => Self::JacobianAtCurl,
+            "hessian_at_laplacian" => Self::HessianAtLaplacian,
+            "multi_continuous_at_limit" => Self::MultiContinuousAtLimit,
+            "multi_limit_at_continuous" => Self::MultiLimitAtContinuous,
+            "vector_continuous_at_limit" => Self::VectorContinuousAtLimit,
+            "vector_limit_at_continuous" => Self::VectorLimitAtContinuous,
+            "total_derivative_at_compose" => Self::TotalDerivativeAtCompose,
+            "scalar_differential_at_compose" => Self::ScalarDifferentialAtCompose,
+            "second_partial_at_from_function" => Self::SecondPartialAtFromFunction,
+            "second_partial_at_swap_continuous" => Self::SecondPartialAtSwapContinuous,
+            "vector_limit_at_add" => Self::VectorLimitAtAdd,
+            "vector_limit_at_subtract" => Self::VectorLimitAtSubtract,
+            "total_derivative_at_add" => Self::TotalDerivativeAtAdd,
+            "total_derivative_at_subtract" => Self::TotalDerivativeAtSubtract,
+            "vector_continuous_at_add" => Self::VectorContinuousAtAdd,
+            "vector_continuous_at_subtract" => Self::VectorContinuousAtSubtract,
+
             "matrix_apply_identity" => Self::MatrixApplyIdentity,
             "matrix_inner_product_adjoint" => Self::MatrixInnerProductAdjoint,
             "matrix_rank_factorization_exists" => Self::MatrixRankFactorizationExists,
@@ -875,6 +1107,123 @@ impl BuiltinTheoremId {
 
     pub const fn as_str(self) -> &'static str {
         match self {
+            Self::MultiContinuousAtCompose => "multi_continuous_at_compose",
+            Self::VectorContinuousAtCompose => "vector_continuous_at_compose",
+            Self::MultiLimitAtCompose => "multi_limit_at_compose",
+            Self::VectorLimitAtCompose => "vector_limit_at_compose",
+
+            Self::SecondPartialAtToFunction => "second_partial_at_to_function",
+            Self::CurlGradientAtSymmetric => "curl_gradient_at_symmetric",
+            Self::DivergenceCurlAtSymmetric => "divergence_curl_at_symmetric",
+
+            Self::MultiLimitAtFromDefinition => "multi_limit_at_from_definition",
+            Self::MultiLimitAtToDefinition => "multi_limit_at_to_definition",
+            Self::MultiLimitAtUnique => "multi_limit_at_unique",
+            Self::MultiLimitAtExists => "multi_limit_at_exists",
+            Self::MultiLimitAtSelected => "multi_limit_at_selected",
+            Self::VectorLimitAtFromDefinition => "vector_limit_at_from_definition",
+            Self::VectorLimitAtToDefinition => "vector_limit_at_to_definition",
+            Self::VectorLimitAtUnique => "vector_limit_at_unique",
+            Self::VectorLimitAtExists => "vector_limit_at_exists",
+            Self::VectorLimitAtSelected => "vector_limit_at_selected",
+            Self::PartialAtFromDefinition => "partial_at_from_definition",
+            Self::PartialAtToDefinition => "partial_at_to_definition",
+            Self::PartialAtUnique => "partial_at_unique",
+            Self::PartialAtExists => "partial_at_exists",
+            Self::PartialAtSelected => "partial_at_selected",
+            Self::SecondPartialAtFromDefinition => "second_partial_at_from_definition",
+            Self::SecondPartialAtToDefinition => "second_partial_at_to_definition",
+            Self::SecondPartialAtUnique => "second_partial_at_unique",
+            Self::SecondPartialAtExists => "second_partial_at_exists",
+            Self::ScalarDifferentialAtFromDefinition => "scalar_differential_at_from_definition",
+            Self::ScalarDifferentialAtToDefinition => "scalar_differential_at_to_definition",
+            Self::ScalarDifferentialAtUnique => "scalar_differential_at_unique",
+            Self::ScalarDifferentialAtExists => "scalar_differential_at_exists",
+            Self::ScalarDifferentialAtSelected => "scalar_differential_at_selected",
+            Self::TotalDerivativeAtFromDefinition => "total_derivative_at_from_definition",
+            Self::TotalDerivativeAtToDefinition => "total_derivative_at_to_definition",
+            Self::TotalDerivativeAtUnique => "total_derivative_at_unique",
+            Self::TotalDerivativeAtExists => "total_derivative_at_exists",
+            Self::TotalDerivativeAtSelected => "total_derivative_at_selected",
+            Self::GradientAtFromDefinition => "gradient_at_from_definition",
+            Self::GradientAtToDefinition => "gradient_at_to_definition",
+            Self::GradientAtUnique => "gradient_at_unique",
+            Self::GradientAtExists => "gradient_at_exists",
+            Self::GradientAtSelected => "gradient_at_selected",
+            Self::JacobianAtFromDefinition => "jacobian_at_from_definition",
+            Self::JacobianAtToDefinition => "jacobian_at_to_definition",
+            Self::JacobianAtUnique => "jacobian_at_unique",
+            Self::JacobianAtExists => "jacobian_at_exists",
+            Self::JacobianAtSelected => "jacobian_at_selected",
+            Self::HessianAtFromDefinition => "hessian_at_from_definition",
+            Self::HessianAtToDefinition => "hessian_at_to_definition",
+            Self::HessianAtUnique => "hessian_at_unique",
+            Self::HessianAtExists => "hessian_at_exists",
+            Self::HessianAtSelected => "hessian_at_selected",
+            Self::DivergenceAtFromDefinition => "divergence_at_from_definition",
+            Self::DivergenceAtToDefinition => "divergence_at_to_definition",
+            Self::DivergenceAtUnique => "divergence_at_unique",
+            Self::DivergenceAtExists => "divergence_at_exists",
+            Self::DivergenceAtSelected => "divergence_at_selected",
+            Self::CurlAtFromDefinition => "curl_at_from_definition",
+            Self::CurlAtToDefinition => "curl_at_to_definition",
+            Self::CurlAtUnique => "curl_at_unique",
+            Self::CurlAtExists => "curl_at_exists",
+            Self::CurlAtSelected => "curl_at_selected",
+            Self::LaplacianAtFromDefinition => "laplacian_at_from_definition",
+            Self::LaplacianAtToDefinition => "laplacian_at_to_definition",
+            Self::LaplacianAtUnique => "laplacian_at_unique",
+            Self::LaplacianAtExists => "laplacian_at_exists",
+            Self::LaplacianAtSelected => "laplacian_at_selected",
+            Self::MultiContinuousAtFromDefinition => "multi_continuous_at_from_definition",
+            Self::MultiContinuousAtToDefinition => "multi_continuous_at_to_definition",
+            Self::VectorContinuousAtFromDefinition => "vector_continuous_at_from_definition",
+            Self::VectorContinuousAtToDefinition => "vector_continuous_at_to_definition",
+            Self::MultiDifferentiableAtFromDefinition => "multi_differentiable_at_from_definition",
+            Self::MultiDifferentiableAtToDefinition => "multi_differentiable_at_to_definition",
+            Self::VectorDifferentiableAtFromDefinition => {
+                "vector_differentiable_at_from_definition"
+            }
+            Self::VectorDifferentiableAtToDefinition => "vector_differentiable_at_to_definition",
+            Self::MultiLimitAtAdd => "multi_limit_at_add",
+            Self::MultiLimitAtSubtract => "multi_limit_at_subtract",
+            Self::MultiLimitAtMultiply => "multi_limit_at_multiply",
+            Self::MultiLimitAtDivide => "multi_limit_at_divide",
+            Self::MultiContinuousAtAdd => "multi_continuous_at_add",
+            Self::MultiContinuousAtSubtract => "multi_continuous_at_subtract",
+            Self::MultiContinuousAtMultiply => "multi_continuous_at_multiply",
+            Self::MultiContinuousAtDivide => "multi_continuous_at_divide",
+            Self::PartialAtAdd => "partial_at_add",
+            Self::PartialAtSubtract => "partial_at_subtract",
+            Self::PartialAtMultiply => "partial_at_multiply",
+            Self::PartialAtDivide => "partial_at_divide",
+            Self::ScalarDifferentialAtAdd => "scalar_differential_at_add",
+            Self::ScalarDifferentialAtSubtract => "scalar_differential_at_subtract",
+            Self::ScalarDifferentialAtMultiply => "scalar_differential_at_multiply",
+            Self::ScalarDifferentialAtDivide => "scalar_differential_at_divide",
+            Self::ScalarDifferentialAtContinuous => "scalar_differential_at_continuous",
+            Self::TotalDerivativeAtContinuous => "total_derivative_at_continuous",
+            Self::ScalarDifferentialAtGradient => "scalar_differential_at_gradient",
+            Self::ScalarDifferentialAtPartial => "scalar_differential_at_partial",
+            Self::TotalDerivativeAtJacobian => "total_derivative_at_jacobian",
+            Self::JacobianAtDivergence => "jacobian_at_divergence",
+            Self::JacobianAtCurl => "jacobian_at_curl",
+            Self::HessianAtLaplacian => "hessian_at_laplacian",
+            Self::MultiContinuousAtLimit => "multi_continuous_at_limit",
+            Self::MultiLimitAtContinuous => "multi_limit_at_continuous",
+            Self::VectorContinuousAtLimit => "vector_continuous_at_limit",
+            Self::VectorLimitAtContinuous => "vector_limit_at_continuous",
+            Self::TotalDerivativeAtCompose => "total_derivative_at_compose",
+            Self::ScalarDifferentialAtCompose => "scalar_differential_at_compose",
+            Self::SecondPartialAtFromFunction => "second_partial_at_from_function",
+            Self::SecondPartialAtSwapContinuous => "second_partial_at_swap_continuous",
+            Self::VectorLimitAtAdd => "vector_limit_at_add",
+            Self::VectorLimitAtSubtract => "vector_limit_at_subtract",
+            Self::TotalDerivativeAtAdd => "total_derivative_at_add",
+            Self::TotalDerivativeAtSubtract => "total_derivative_at_subtract",
+            Self::VectorContinuousAtAdd => "vector_continuous_at_add",
+            Self::VectorContinuousAtSubtract => "vector_continuous_at_subtract",
+
             Self::MatrixApplyIdentity => "matrix_apply_identity",
             Self::MatrixInnerProductAdjoint => "matrix_inner_product_adjoint",
             Self::MatrixRankFactorizationExists => "matrix_rank_factorization_exists",
@@ -1322,6 +1671,121 @@ impl fmt::Display for BuiltinTheoremId {
 impl BuiltinTheoremId {
     pub fn arity(self) -> usize {
         match self {
+            Self::MultiContinuousAtCompose => 5,
+            Self::VectorContinuousAtCompose => 7,
+            Self::MultiLimitAtCompose => 6,
+            Self::VectorLimitAtCompose => 8,
+
+            Self::SecondPartialAtToFunction => 7,
+            Self::CurlGradientAtSymmetric => 4,
+            Self::DivergenceCurlAtSymmetric => 6,
+
+            Self::MultiLimitAtFromDefinition => 4,
+            Self::MultiLimitAtToDefinition => 4,
+            Self::MultiLimitAtUnique => 5,
+            Self::MultiLimitAtExists => 4,
+            Self::MultiLimitAtSelected => 3,
+            Self::VectorLimitAtFromDefinition => 5,
+            Self::VectorLimitAtToDefinition => 5,
+            Self::VectorLimitAtUnique => 6,
+            Self::VectorLimitAtExists => 5,
+            Self::VectorLimitAtSelected => 4,
+            Self::PartialAtFromDefinition => 5,
+            Self::PartialAtToDefinition => 5,
+            Self::PartialAtUnique => 6,
+            Self::PartialAtExists => 5,
+            Self::PartialAtSelected => 4,
+            Self::SecondPartialAtFromDefinition => 6,
+            Self::SecondPartialAtToDefinition => 6,
+            Self::SecondPartialAtUnique => 7,
+            Self::SecondPartialAtExists => 6,
+            Self::ScalarDifferentialAtFromDefinition => 4,
+            Self::ScalarDifferentialAtToDefinition => 4,
+            Self::ScalarDifferentialAtUnique => 5,
+            Self::ScalarDifferentialAtExists => 4,
+            Self::ScalarDifferentialAtSelected => 3,
+            Self::TotalDerivativeAtFromDefinition => 5,
+            Self::TotalDerivativeAtToDefinition => 5,
+            Self::TotalDerivativeAtUnique => 6,
+            Self::TotalDerivativeAtExists => 5,
+            Self::TotalDerivativeAtSelected => 4,
+            Self::GradientAtFromDefinition => 4,
+            Self::GradientAtToDefinition => 4,
+            Self::GradientAtUnique => 5,
+            Self::GradientAtExists => 4,
+            Self::GradientAtSelected => 3,
+            Self::JacobianAtFromDefinition => 5,
+            Self::JacobianAtToDefinition => 5,
+            Self::JacobianAtUnique => 6,
+            Self::JacobianAtExists => 5,
+            Self::JacobianAtSelected => 4,
+            Self::HessianAtFromDefinition => 4,
+            Self::HessianAtToDefinition => 4,
+            Self::HessianAtUnique => 5,
+            Self::HessianAtExists => 4,
+            Self::HessianAtSelected => 3,
+            Self::DivergenceAtFromDefinition => 4,
+            Self::DivergenceAtToDefinition => 4,
+            Self::DivergenceAtUnique => 5,
+            Self::DivergenceAtExists => 4,
+            Self::DivergenceAtSelected => 3,
+            Self::CurlAtFromDefinition => 3,
+            Self::CurlAtToDefinition => 3,
+            Self::CurlAtUnique => 4,
+            Self::CurlAtExists => 3,
+            Self::CurlAtSelected => 2,
+            Self::LaplacianAtFromDefinition => 4,
+            Self::LaplacianAtToDefinition => 4,
+            Self::LaplacianAtUnique => 5,
+            Self::LaplacianAtExists => 4,
+            Self::LaplacianAtSelected => 3,
+            Self::MultiContinuousAtFromDefinition => 3,
+            Self::MultiContinuousAtToDefinition => 3,
+            Self::VectorContinuousAtFromDefinition => 4,
+            Self::VectorContinuousAtToDefinition => 4,
+            Self::MultiDifferentiableAtFromDefinition => 3,
+            Self::MultiDifferentiableAtToDefinition => 3,
+            Self::VectorDifferentiableAtFromDefinition => 4,
+            Self::VectorDifferentiableAtToDefinition => 4,
+            Self::MultiLimitAtAdd => 7,
+            Self::MultiLimitAtSubtract => 7,
+            Self::MultiLimitAtMultiply => 7,
+            Self::MultiLimitAtDivide => 7,
+            Self::MultiContinuousAtAdd => 5,
+            Self::MultiContinuousAtSubtract => 5,
+            Self::MultiContinuousAtMultiply => 5,
+            Self::MultiContinuousAtDivide => 5,
+            Self::PartialAtAdd => 8,
+            Self::PartialAtSubtract => 8,
+            Self::PartialAtMultiply => 8,
+            Self::PartialAtDivide => 8,
+            Self::ScalarDifferentialAtAdd => 7,
+            Self::ScalarDifferentialAtSubtract => 7,
+            Self::ScalarDifferentialAtMultiply => 7,
+            Self::ScalarDifferentialAtDivide => 7,
+            Self::ScalarDifferentialAtContinuous => 4,
+            Self::TotalDerivativeAtContinuous => 5,
+            Self::ScalarDifferentialAtGradient => 4,
+            Self::ScalarDifferentialAtPartial => 5,
+            Self::TotalDerivativeAtJacobian => 5,
+            Self::JacobianAtDivergence => 4,
+            Self::JacobianAtCurl => 3,
+            Self::HessianAtLaplacian => 4,
+            Self::MultiContinuousAtLimit => 3,
+            Self::MultiLimitAtContinuous => 4,
+            Self::VectorContinuousAtLimit => 4,
+            Self::VectorLimitAtContinuous => 5,
+            Self::TotalDerivativeAtCompose => 9,
+            Self::ScalarDifferentialAtCompose => 7,
+            Self::SecondPartialAtFromFunction => 7,
+            Self::SecondPartialAtSwapContinuous => 8,
+            Self::VectorLimitAtAdd => 8,
+            Self::VectorLimitAtSubtract => 8,
+            Self::TotalDerivativeAtAdd => 8,
+            Self::TotalDerivativeAtSubtract => 8,
+            Self::VectorContinuousAtAdd => 6,
+            Self::VectorContinuousAtSubtract => 6,
+
             Self::MatrixApplyIdentity => 2,
             Self::MatrixInnerProductAdjoint => 5,
             Self::MatrixRankFactorizationExists => 3,
@@ -1807,6 +2271,126 @@ impl BuiltinTheoremId {
                 | Self::FrobeniusNormZero
                 | Self::FrobeniusNormScale
                 | Self::FrobeniusNormTriangle
+        )
+    }
+}
+
+impl BuiltinTheoremId {
+    pub(crate) fn is_multivariable(self) -> bool {
+        matches!(
+            self,
+            Self::MultiContinuousAtCompose
+                | Self::VectorContinuousAtCompose
+                | Self::MultiLimitAtCompose
+                | Self::VectorLimitAtCompose
+                | Self::SecondPartialAtToFunction
+                | Self::CurlGradientAtSymmetric
+                | Self::DivergenceCurlAtSymmetric
+                | Self::MultiLimitAtFromDefinition
+                | Self::MultiLimitAtToDefinition
+                | Self::MultiLimitAtUnique
+                | Self::MultiLimitAtExists
+                | Self::MultiLimitAtSelected
+                | Self::VectorLimitAtFromDefinition
+                | Self::VectorLimitAtToDefinition
+                | Self::VectorLimitAtUnique
+                | Self::VectorLimitAtExists
+                | Self::VectorLimitAtSelected
+                | Self::PartialAtFromDefinition
+                | Self::PartialAtToDefinition
+                | Self::PartialAtUnique
+                | Self::PartialAtExists
+                | Self::PartialAtSelected
+                | Self::SecondPartialAtFromDefinition
+                | Self::SecondPartialAtToDefinition
+                | Self::SecondPartialAtUnique
+                | Self::SecondPartialAtExists
+                | Self::ScalarDifferentialAtFromDefinition
+                | Self::ScalarDifferentialAtToDefinition
+                | Self::ScalarDifferentialAtUnique
+                | Self::ScalarDifferentialAtExists
+                | Self::ScalarDifferentialAtSelected
+                | Self::TotalDerivativeAtFromDefinition
+                | Self::TotalDerivativeAtToDefinition
+                | Self::TotalDerivativeAtUnique
+                | Self::TotalDerivativeAtExists
+                | Self::TotalDerivativeAtSelected
+                | Self::GradientAtFromDefinition
+                | Self::GradientAtToDefinition
+                | Self::GradientAtUnique
+                | Self::GradientAtExists
+                | Self::GradientAtSelected
+                | Self::JacobianAtFromDefinition
+                | Self::JacobianAtToDefinition
+                | Self::JacobianAtUnique
+                | Self::JacobianAtExists
+                | Self::JacobianAtSelected
+                | Self::HessianAtFromDefinition
+                | Self::HessianAtToDefinition
+                | Self::HessianAtUnique
+                | Self::HessianAtExists
+                | Self::HessianAtSelected
+                | Self::DivergenceAtFromDefinition
+                | Self::DivergenceAtToDefinition
+                | Self::DivergenceAtUnique
+                | Self::DivergenceAtExists
+                | Self::DivergenceAtSelected
+                | Self::CurlAtFromDefinition
+                | Self::CurlAtToDefinition
+                | Self::CurlAtUnique
+                | Self::CurlAtExists
+                | Self::CurlAtSelected
+                | Self::LaplacianAtFromDefinition
+                | Self::LaplacianAtToDefinition
+                | Self::LaplacianAtUnique
+                | Self::LaplacianAtExists
+                | Self::LaplacianAtSelected
+                | Self::MultiContinuousAtFromDefinition
+                | Self::MultiContinuousAtToDefinition
+                | Self::VectorContinuousAtFromDefinition
+                | Self::VectorContinuousAtToDefinition
+                | Self::MultiDifferentiableAtFromDefinition
+                | Self::MultiDifferentiableAtToDefinition
+                | Self::VectorDifferentiableAtFromDefinition
+                | Self::VectorDifferentiableAtToDefinition
+                | Self::MultiLimitAtAdd
+                | Self::MultiLimitAtSubtract
+                | Self::MultiLimitAtMultiply
+                | Self::MultiLimitAtDivide
+                | Self::MultiContinuousAtAdd
+                | Self::MultiContinuousAtSubtract
+                | Self::MultiContinuousAtMultiply
+                | Self::MultiContinuousAtDivide
+                | Self::PartialAtAdd
+                | Self::PartialAtSubtract
+                | Self::PartialAtMultiply
+                | Self::PartialAtDivide
+                | Self::ScalarDifferentialAtAdd
+                | Self::ScalarDifferentialAtSubtract
+                | Self::ScalarDifferentialAtMultiply
+                | Self::ScalarDifferentialAtDivide
+                | Self::ScalarDifferentialAtContinuous
+                | Self::TotalDerivativeAtContinuous
+                | Self::ScalarDifferentialAtGradient
+                | Self::ScalarDifferentialAtPartial
+                | Self::TotalDerivativeAtJacobian
+                | Self::JacobianAtDivergence
+                | Self::JacobianAtCurl
+                | Self::HessianAtLaplacian
+                | Self::MultiContinuousAtLimit
+                | Self::MultiLimitAtContinuous
+                | Self::VectorContinuousAtLimit
+                | Self::VectorLimitAtContinuous
+                | Self::TotalDerivativeAtCompose
+                | Self::ScalarDifferentialAtCompose
+                | Self::SecondPartialAtFromFunction
+                | Self::SecondPartialAtSwapContinuous
+                | Self::VectorLimitAtAdd
+                | Self::VectorLimitAtSubtract
+                | Self::TotalDerivativeAtAdd
+                | Self::TotalDerivativeAtSubtract
+                | Self::VectorContinuousAtAdd
+                | Self::VectorContinuousAtSubtract
         )
     }
 }

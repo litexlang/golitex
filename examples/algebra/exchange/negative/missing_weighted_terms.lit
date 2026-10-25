@@ -1,0 +1,7 @@
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,X &Algebra::vector_space::VectorSpace<K,F,V>,n N,c finite_seq(K,n),v finite_seq(V,n),x V,U power_set(V):
+        $Algebra::vector_space::is_subspace(K,F,V,X,U)
+        $Algebra::finite_span::has_linear_combination_value(K,F,V,X,n,c,v,x)
+        =>:
+            x $in U
+    by thm Algebra::span_reduction::weighted_combination_in_subspace(K,F,V,X,n,c,v,x,U) => x $in U

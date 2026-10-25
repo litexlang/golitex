@@ -352,6 +352,13 @@ impl LitexToLeanCompiler {
         if goal.primary_fact_id() == body.primary_fact_id() {
             return Ok(Vec::new());
         }
+        if matches!(&body_fact, Fact::ForallFact(_)) {
+            return Ok(vec![format!(
+                "have h_{} := h_{}",
+                body.primary_fact_id().value(),
+                goal.primary_fact_id().value()
+            )]);
+        }
         let compiled = (
             self.fact_proposition(&body_fact, body_position)?,
             format!("h_{}", goal.primary_fact_id().value()),

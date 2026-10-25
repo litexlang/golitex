@@ -1,0 +1,61 @@
+# The singleton zero space has unique natural basis length zero.
+
+release obj def context::real_inv
+
+release obj def context::real_add
+
+release obj def context::real_neg
+
+release obj def context::real_mul
+
+release obj def context::real_field
+
+release obj def context::zero_add
+
+release obj def context::zero_smul
+
+release obj def context::zero_space
+
+release obj def context::empty_basis
+
+release struct def context::real_field
+
+release struct def context::zero_space
+
+by thm Algebra::finite_span::span_zero_member(R,context::real_field,{0},context::zero_space,0,context::empty_basis) => context::zero_space.zero $in \Algebra::finite_span::span<R,context::real_field,{0},context::zero_space,0,context::empty_basis>
+
+claim:
+    ? $Algebra::finite_span::spans(R,context::real_field,{0},context::zero_space,0,context::empty_basis)
+    context::zero_space.zero=0
+    claim:
+        ? forall x {0}:
+            x $in \Algebra::finite_span::span<R,context::real_field,{0},context::zero_space,0,context::empty_basis>
+        x=0=context::zero_space.zero
+    forall x \Algebra::finite_span::span<R,context::real_field,{0},context::zero_space,0,context::empty_basis>:
+        x $in {0}
+    by extension \Algebra::finite_span::span<R,context::real_field,{0},context::zero_space,0,context::empty_basis> = {0}
+    by def $Algebra::finite_span::spans(R,context::real_field,{0},context::zero_space,0,context::empty_basis)
+
+release thm Algebra::basis_existence::spanning_list_has_basis_of_bounded_length(R,context::real_field,{0},context::zero_space,0,context::empty_basis)
+
+obtain m,selected from exist b N,w finite_seq({0},b) st {b<=0,$Algebra::basis::is_basis(R,context::real_field,{0},context::zero_space,b,w),fn_range(w) $subset fn_range(context::empty_basis)}
+
+m=0
+
+release thm Algebra::basis::basis_representation_exists_unique(R,context::real_field,{0},context::zero_space,m,selected,0)
+
+by thm Algebra::basis::basis_is_finite_dimensional(R,context::real_field,{0},context::zero_space,m,selected) => $Algebra::basis::is_finite_dimensional(R,context::real_field,{0},context::zero_space)
+
+release thm Algebra::basis_existence::finite_dimensional_has_basis(R,context::real_field,{0},context::zero_space)
+
+by thm Algebra::basis_comparison::independent_spanning_length_bound(R,context::real_field,{0},context::zero_space,m,selected,0,context::empty_basis) => m<=0
+
+witness $Algebra::basis::has_basis_length(R,context::real_field,{0},context::zero_space,m) from selected
+
+release thm Algebra::basis_comparison::finite_dimensional_has_unique_basis_length(R,context::real_field,{0},context::zero_space)
+
+obtain unique_length from exist! length N st {$Algebra::basis::has_basis_length(R,context::real_field,{0},context::zero_space,length)}
+
+by thm Algebra::basis_comparison::basis_length_unique(R,context::real_field,{0},context::zero_space,unique_length,m) => unique_length=m
+
+unique_length=0

@@ -17,7 +17,7 @@ claim:
 
 release thm fn_limit_at_power(id_three,square_three,3,3,2)
 
-lim(square_three,3)=9
+fn_lim(square_three,3)=9
 
 have fn one_three(x R) R=1
 
@@ -34,7 +34,7 @@ claim:
 
 release thm fn_limit_at_add(square_three,one_three,numerator_three,3,9,1)
 
-lim(numerator_three,3)=10
+fn_lim(numerator_three,3)=10
 
 have fn two_three(x R) R=2
 
@@ -56,6 +56,6 @@ claim:
 
 release thm fn_limit_at_divide(numerator_three,two_three,rational_three,3,10,2)
 
-lim(rational_three,3)=5
+fn_lim(rational_three,3)=5
 
-lim(rational_three,3)+1=6
+fn_lim(rational_three,3)+1=6

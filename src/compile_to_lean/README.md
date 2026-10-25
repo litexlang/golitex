@@ -104,11 +104,270 @@ dispatches verification results. Their leaf files own the mathematical cases.
 For example, the [equality consumer](compile_fact_stmt_result/compile_equality_result/compile_equality_result.rs)
 first compiles the original left and right WD, then the selected equality proof.
 
+Top-level `abstract_prop` declarations compile as arbitrary predicate parameters.
+For example, `abstract_prop marked(x)` introduces
+`(abstract_prop_1 : (Fin 1 → M.Value) → Prop)`; `$marked(a)` applies it to
+`![Litex.denote a]`. The finite vector retains the declared arity, including
+zero. Since predicates act on denotations, `Litex.Same` transports both a
+property and its negation through ordinary Lean equality congruence.
+The declaration supplies no truth or defining clauses.
+
+The [abstract-predicate consumer](compile_def_abstract_prop_stmt_result.rs)
+checks the original signature and argument WD. Predicate parameters and their
+applications come from each declaration's original top-level source prefix,
+alongside existing object parameters; no registry is added. Stored evidence
+still uses `h_<FactId>`. Examples cover [equality transport and theorem calls](../../lean/examples/abstract_property_transport/),
+[function guards](../../lean/examples/abstract_function_guard/) and
+[mixed object/predicate contexts](../../lean/examples/abstract_property_context/).
+Local and qualified abstract declarations remain unsupported.
+
+Top-level structures with two or more independent fields use the existing Cartesian
+representation, restricted by a bounded set builder when `<=>` supplies
+conditions. `&CoordinatePair` is a set object;
+its members keep their generic host representations. Field names select the
+declaration's ordered coordinates, and a field access compiles to a certified
+`Litex.cartCall`. The [declaration consumer](compile_def_struct_stmt_result.rs)
+checks field WD and local parameter inferences before emitting the carrier.
+The [membership consumer](compile_struct_membership.rs) consumes either the
+literal tuple's ordered field proofs or the recorded complete Cartesian
+membership, followed by the recorded proofs of every defining condition.
+
+For quantified structure parameters, the [field consumer](compile_struct_fields.rs)
+replays automatic opening: Cartesian membership, field/coordinate equalities,
+then field memberships, defining conditions and their inferences, with the original FactIds.
+Numerical observation of a field cites a released numeric membership before
+the field can be used as a scalar in rational normalization. Examples cover
+[coordinate arithmetic](../../lean/examples/coordinate_pair_fields/),
+[distinct field carriers](../../lean/examples/indexed_point_fields/),
+[an ambient arbitrary set](../../lean/examples/arbitrary_carrier_pairs/) and
+[nested tuple membership](../../lean/examples/nested_coordinate_membership/).
+The same field consumer handles `have p &CoordinatePair`, typed aliases such as
+`have origin &CoordinatePair = (0, 0)`, and [explicit structure release](compile_release_struct_def_result.rs).
+Ordinary `have` consumes its recorded nonempty check. A typed alias checks its
+original hypothetical-parameter preflight separately, then emits the actual
+value, membership and field stores. The preflight is applied to the checked
+values so Lean can infer the host universes even inside a local block. Its
+private facts never escape into the value's proof. Layer-prefix cursors preserve the order of multiple structure
+parameters and reject references to later layers.
+
+See [chosen pairs](../../lean/examples/chosen_coordinate_fields/),
+[the origin](../../lean/examples/origin_coordinate_fields/),
+[explicit release](../../lean/examples/released_coordinate_fields/) and
+[local objects](../../lean/examples/local_coordinate_objects/).
+The [condition consumer](compile_struct_conditions.rs) checks condition WD in
+source order. Earlier conditions remain available to later constructors: in
+the [positive ratio](../../lean/examples/positive_ratio_conditions/), the
+nonzero denominator fact supplies the quotient's WD. Published universal laws
+retain their original parameter and FactIds. Membership and release use the
+proved `Litex.inSetBuilder_iff` bridge; they add no model laws.
+Examples also cover [positive points](../../lean/examples/positive_point_conditions/),
+[equal coordinates](../../lean/examples/equal_coordinate_conditions/),
+[chain conditions](../../lean/examples/ordered_coordinate_conditions/),
+[conjunctions](../../lean/examples/first_quadrant_conditions/) and
+[global/local choice](../../lean/examples/chosen_positive_points/).
+Conditions currently use supported atomic, flat conjunction and chain facts.
+Structure headers also support set, nonempty-set and object parameters, including later
+parameters typed by an earlier set. The [header consumer](compile_struct_header.rs)
+replays their original introductions, argument WD and instantiated type proofs.
+`struct Pair<A set>` becomes a Lean family with an object argument and its
+sethood proof. Membership, release and published laws substitute the actual
+arguments using source IDs. See [generic pairs](../../lean/examples/parameterized_pairs/),
+[parameterized equality](../../lean/examples/parameterized_equal_pairs/),
+[real thresholds](../../lean/examples/threshold_points/),
+[a designated element of a set](../../lean/examples/designated_coordinate_pairs/) and
+[global/local bindings](../../lean/examples/chosen_parameterized_pairs/).
+`A nonempty_set` passes the original `Litex.IsNonempty A` hypothesis. The
+shared quantified-head consumer preserves that kind in `forall`, named
+theorems and their explicit calls. See [nonempty pairs](../../lean/examples/nonempty_parameterized_pairs/),
+[their equality condition](../../lean/examples/nonempty_equal_pairs/) and
+[the nonempty product theorem](../../lean/examples/nonempty_cartesian_theorem/).
+Fields may also depend on earlier fields:
+
+```litex
+struct ElementPair<A set>:
+    x A
+    y x
+```
+
+The [dependent-field consumer](compile_dependent_struct.rs) emits an ordered
+`Litex.DependentFields` family and proves its formation from the declaration's
+original WD and parameter inferences. `Litex.dependentCart` collects its valid
+flat tuples using the optional `IndexedUnionSemantics M` interface. The existing
+ZF-based `NumericModel` implements this interface; `SetSemantics` is unchanged.
+Only files declaring dependent fields acquire the additional model requirement.
+
+Tuple membership replays each instantiated field obligation in order. Release
+projects the certified field carriers and publishes the original FactIds.
+Source numeric coordinates are connected to finite indices by one certificate
+per declaration. See [element pairs](../../lean/examples/member_coordinate_pairs/),
+[equal coordinates](../../lean/examples/repeated_coordinate_fields/),
+[three dependent coordinates](../../lean/examples/repeated_coordinate_triples/),
+[reciprocal WD](../../lean/examples/reciprocal_coordinate_fields/),
+[defining conditions](../../lean/examples/positive_repeated_coordinates/),
+[nonliteral membership](../../lean/examples/equal_coordinates_membership/) and
+[choice and local aliases](../../lean/examples/chosen_repeated_coordinates/).
+
+Structures require at least two fields. Self/forward field dependencies,
+finite-set header kinds, quantified conditions, nested field paths,
+function-call receivers and local/qualified structure definitions remain
+unsupported. Field access and release require a directly declared structure
+parameter or typed alias.
+
+The [additive-shift consumer](compile_fact_stmt_result/compile_atomic_except_equality_result/compile_additive_shift.rs)
+shows how a selected strategy becomes a Core theorem application. For
+`AddLeftNonpositiveShiftRight`, it checks and compiles the recorded proofs of
+`b <= r` and `a <= 0`, in that order, then applies
+`Litex.addLeOfLeOfNonposSwap` to the original sum object. The constructor keeps
+its own WD. [Upper-bound examples](../../lean/examples/weak_additive_upper_bounds/)
+show all these inputs in the generated Lean. The
+[numeric-bound consumer](compile_fact_stmt_result/compile_atomic_except_equality_result/compile_numeric_bound_weaken.rs)
+resolves the exact cited bound and checks its integer endpoint before applying
+order transitivity; it never searches for another bound.
+
+The [componentwise-addition consumer](compile_fact_stmt_result/compile_atomic_except_equality_result/compile_componentwise_additive_order.rs)
+replays two inequalities in their recorded order. It checks the addend pairing
+and each comparison's strictness, then applies `Litex.addLeAdd`,
+`addLeAddSwap`, `addLtAddOfLtOfLe` or `addLtAddOfLeOfLt` to the original sum
+objects. The [three-term bound](../../lean/examples/three_term_sum_bound/)
+combines two such steps and reuses the result through a named theorem.
+
+The [shared-subtraction consumer](compile_fact_stmt_result/compile_atomic_except_equality_result/compile_subtraction_order.rs)
+also retains the difference's real-domain evidence from formation. Its Core
+law consumes that evidence, the recorded order proof and the common operand's
+semantic equality. This works even when the common operand is declared in `C`
+and only its differences are known to lie in `R`.
+[Strict transitivity](compile_fact_stmt_result/compile_atomic_except_equality_result/compile_strict_order_transitivity.rs)
+resolves the two recorded FactIds and validates their endpoints and strictness
+flags before applying `ltTrans`, `ltLeTrans` or `leLtTrans`.
+
+The [preimage consumers](compile_function_preimage.rs) compile `preimage(f, y)`
+and `preimage_set(f, Y)` from the recorded complete function signature and
+bounded-construction WD. Membership, projections and input-carrier containment
+use `preimageMembers` / `preimageSetMembers`. Their Core representation depends
+only on the function graph and target; the signature supplies a proof of
+formation. Inferred calls retain the original input and domain evidence, with
+proof elimination confined to proof-valued bindings. See the
+[guarded reciprocal](../../lean/examples/guarded_reciprocal_preimages/) and
+[two-input quotient](../../lean/examples/binary_quotient_preimages/) pairs.
+
+The [composition consumer](compile_composition.rs) replays `compose(f, g)` / `f ∘ g`.
+`CompositionObj` stores the original two objects; its denotation is their graph
+composition. Its WD contains complete operand signatures and the universally
+checked compatibility of `g`'s output with `f`'s domain. The compiler consumes
+the recorded expanded lambda and body-call WD, then uses `composeInFnSet` and
+`composeCall` for membership and beta steps. Cached calls use the original WD
+and source equality paths; available constructor fields are referenced directly.
+No new Runtime state or result registry is involved. The checked examples include
+[a guarded two-input function](../../lean/examples/squared_gap_composition/),
+[a nonzero outer guard](../../lean/examples/double_reciprocal_composition/) and
+[arbitrary function parameters](../../lean/examples/abstract_function_composition/).
+The [composition-law consumer](compile_fact_stmt_result/compile_equality_result/compile_composition_equality.rs)
+also replays associativity, left/right identity and equality to the defining
+lambda. Right identity checks the captured complete-domain match, including
+guards. Range containment replays `CompositionRangeSubset`. See the
+[graph laws](../../lean/examples/composition_graph_laws/),
+[guarded identities](../../lean/examples/guarded_composition_identities/) and
+[abstract associativity](../../lean/examples/abstract_composition_associativity/).
+The [complete-domain consumer](compile_function_domain.rs) also replays the two
+inclusions retained in `FunctionDomainComparisonProof::MutualInclusion`. It
+validates their binders, memberships and guards, emits their original FactIds,
+and derives domain equality with the existing set-extensionality law. The same
+consumer serves right identity, `by fn_extension`, and `fn_set_member`; inclusion
+proofs retain their original local scope. No Runtime or result changes are needed.
+
+`by fn_extension` accepts one or two nondependent inputs, including `R+`. It
+unpacks the original complete domain, applies the recorded pointwise proof and
+transports along the proved tuple reconstruction. Examples include
+[differently written positive guards](../../lean/examples/equal_positive_shifts/),
+[reordered exclusions](../../lean/examples/reordered_function_domains/),
+[binary sums and positive inputs](../../lean/examples/equal_binary_sums/), and
+[guarded quotient formulas](../../lean/examples/equal_guarded_quotients/).
+Dependent domains, more than two inputs to `by fn_extension`, and unsupported
+complete-domain source variants still reject. Composition construction retains
+its separate restriction on changing the packed-domain representation.
+
+`fn_set_member` compiles these domain comparisons before the recorded return
+obligations, through both `release thm` and selected `by thm` calls. Its source
+signature uses the shared complete-domain consumer for formula functions,
+cited arbitrary functions and compositions; the finite-function path retains
+its separate index-set contract. Examples: [reordered guards](../../lean/examples/reordered_function_membership/),
+[positive domains](../../lean/examples/positive_function_membership/),
+[arbitrary functions](../../lean/examples/abstract_function_membership_domains/),
+and [a composed quotient](../../lean/examples/composed_quotient_membership/).
+
+
+Functions supplied as parameters may return another function with a fixed
+signature. The compiler now replays chained calls, including a separate domain
+check at each layer. `ApplicationReturn` supplies the original signature citation,
+argument WD, guards and local WD registrations to the shared complete-domain
+consumer. No replacement WD result is constructed. See [returned values](../../lean/examples/returned_function_values/),
+[ranges](../../lean/examples/returned_function_ranges/), [preimages](../../lean/examples/returned_function_preimages/)
+and [complex-valued membership](../../lean/examples/returned_function_membership/).
+These pairs exercise `forall`, named `thm` and selected `by thm` with returned
+functions. A `have fn` definition can also return a newly constructed anonymous
+function, or accept and return an existing
+function. See [a returned shift and its evaluation](../../lean/examples/selected_shift_function/)
+and [the identity operator on functions](../../lean/examples/function_identity_operator/).
+The `AnonymousFnInDeclaredFnSet` consumer checks the whole signature modulo
+binder renaming, including guards and the return set, then cites
+`Litex.formulaFnInFnSet` for the original WD-certified constructor. Its
+[signature examples](../../lean/examples/literal_function_signatures/) include
+unary and binary nonzero guards. Function-set objects are emitted as value
+expressions with a proof-valued header `let`, so nested signatures reduce during
+Lean elaboration.
+
+Nested numeric functions can capture enclosing parameters. The compiler
+interprets the original graph under the outer and inner parameter IDs while
+retaining the original constructor WD and return-membership proof. Recorded
+beta substitution preserves inner binders; remaining call groups are validated
+against `continued_body`, then transported through `callValue` by congruence.
+Examples cover [real and positive shifts](../../lean/examples/captured_shift_functions/),
+[division with outer or inner guards](../../lean/examples/captured_division_functions/),
+[a binary returned function](../../lean/examples/captured_binary_functions/) and
+[immediate inner application](../../lean/examples/nested_function_application/).
+Dependent carrier sets and complete-domain recovery after multiple call layers
+remain pending.
+
 The [sketch consumer](compile_sketch_stmt_result.rs) shows a branch with no
 exported conclusion. It compiles the original child results inside a private
 proof block, using their captured environment only to resolve exact citations.
 The block ends with `True.intro`; its facts and objects stay local. No new
 Core law or result fields are needed for this scope wrapper.
+
+Binary intersection uses the existing bounded-separation semantics.
+`IntersectObj` retains the two source objects; its denotation selects elements
+of the first that belong to the second. The
+[intersection consumer](compile_fact_stmt_result/compile_atomic_except_equality_result/compile_intersection.rs)
+replays ordered membership and subset evidence. Its
+[inference consumer](compile_intersection_inference.rs) publishes both recorded
+membership projections under their original FactIds, so later statements and
+theorem bodies can cite them. See [nested membership and theorem reuse](../../lean/examples/intersection_reassociation/).
+
+The [set-equality consumer](compile_fact_stmt_result/compile_equality_result/compile_set_identities.rs)
+dispatches the selected union/intersection identity to a proved Core law. It
+validates the constructor, operands and orientation, then projects children
+from the original formed object. Conditional intersection simplification
+compiles the recorded subset proof at its original scope. The compiler does
+not search for a different set identity or rebuild the children's WD.
+
+`SetMinusObj` also uses bounded separation, retaining the original two objects.
+The [difference consumer](compile_fact_stmt_result/compile_atomic_except_equality_result/compile_set_minus.rs)
+compiles membership and nonmembership children in their recorded order. Its
+[inference consumer](compile_set_minus_inference.rs) publishes base membership,
+exclusion, and an optional singleton disequality under the original FactIds.
+The [union-distribution consumer](compile_fact_stmt_result/compile_equality_result/compile_union_distribution.rs)
+checks each distributed factor before composing the distribution, commutativity
+and congruence laws; a source result is not accepted merely because it names a builtin.
+
+The [subset consumers](compile_fact_stmt_result/compile_atomic_except_equality_result/compile_subset_bounds.rs)
+replay transitivity, common upper bounds and monotonicity using the recorded
+child proofs at their original stages. The
+[componentwise union consumer](compile_fact_stmt_result/compile_atomic_except_equality_result/compile_union_subset_componentwise.rs)
+checks direct or crossed operand pairing against those children. The producer
+omits syntactically reflexive pairs; only those pairs emit `Litex.subsetRefl`.
+Child indices count actual proofs, so omitted pairs do not shift citation scopes.
+The [nonmembership consumer](compile_fact_stmt_result/compile_atomic_except_equality_result/compile_set_nonmembership.rs)
+likewise checks the element and each factor before applying its Core law.
 
 The [tuple-release consumer](compile_release_tuple_def_result.rs) is one complete
 example of this dispatch. It reads the existing finite shape and domain result,
@@ -367,6 +626,22 @@ the complete artifact. [LeanCompileError](lean_compile_error.rs) records the
 route and, for statement failures, the statement index. The compiler returns
 one complete source string or an error, without inserting an axiom, proof hole,
 or invented premise to fill unsupported evidence.
+
+Top-level source `trust` and user `axiom` compile to explicit `h_<FactId>`
+hypotheses. Later declarations receive those hypotheses as parameters, and a
+named axiom can be cited, released or used by `by thm`. Their original WD and
+inference stages are still checked. These source files require non-strict mode;
+local trust closures and `trust have` are not yet supported.
+
+Foundation statements use proved Core laws. `regularity` requires an optional
+`RegularitySemantics` instance, supplied for the ZF model. Replacement constructs
+a partial functional image using separation and `IndexedUnionSemantics`, with
+the exact recorded uniqueness citation. Choice constructs a function graph;
+Zorn applies Mathlib's bounded-chain theorem to the semantic members of a set.
+The choice and Zorn results retain each premise's verification and WD/store pair,
+so the compiler can reuse its FactId without repeating proof search. Their local
+proof blocks do not export helper facts. See the [six checked examples and current
+boundaries](../../docs/Litex_To_Lean_Coverage_Plan.md#explicit-assumptions-and-foundation-releases-2026-10-25).
 
 The current consumers cover selected numeric, set, formula-function, predicate,
 quantifier and theorem-reuse routes. Recursion is bounded to the reviewed unary

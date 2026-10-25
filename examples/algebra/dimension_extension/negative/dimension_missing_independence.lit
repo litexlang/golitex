@@ -1,0 +1,6 @@
+claim:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,m N,vectors finite_seq(V,m):
+        $Algebra::basis::is_finite_dimensional(K,field,V,space)
+        =>:
+            m<=\Algebra::dimension::finite_dimension<K,field,V>(space)
+    release thm Algebra::dimension::independent_length_le_dimension(K,field,V,space,m,vectors)

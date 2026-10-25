@@ -116,6 +116,13 @@ impl LitexToLeanCompiler {
                             ))
                         }
                     },
+                    AtomicExceptEqualityFactSearchProofByBuiltinRule::IsNonemptySetFact(IsNonemptySetFactSearchProofByBuiltinRule::LiteralListSetNonempty(_)) => {
+                        let AtomicFact::IsNonemptySetFact(f) = &success.fact else { return Err(LeanCompileError::unsupported("Nonempty/LiteralSubject")); };
+                        if !matches!(&f.set, Obj::SetFormer(SetFormer::ListSet(s)) if !s.list.is_empty()) {
+                            return Err(LeanCompileError::unsupported("Nonempty/LiteralShape"));
+                        }
+                        format!("(Litex.insertNonempty {})", self.compile_object_reference(&f.set, position)?)
+                    },
                     AtomicExceptEqualityFactSearchProofByBuiltinRule::IsNonemptySetFact(IsNonemptySetFactSearchProofByBuiltinRule::StandardSetNonempty(p)) => {
                         match &success.fact {
                             AtomicFact::IsNonemptySetFact(f) if f.set == Obj::StandardSet(p.target_set.clone()) => {},
@@ -135,13 +142,26 @@ impl LitexToLeanCompiler {
                     rule @ (AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(_) | AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterFact(_) | AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(_) | AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterEqualFact(_) | AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(_)) => self.compile_order_builtin(&success.fact, rule, position)?,
                     AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(rule) => match &success.fact {
                         AtomicFact::InFact(fact) => match rule {
+                            InFactSearchProofByBuiltinRule::AnonymousFnInDeclaredFnSet(_) => self.compile_literal_function_member(fact, position)?,
+                            InFactSearchProofByBuiltinRule::CompositionApplicationInCodomain(p) => self.compile_composition_output(fact,p,position)?,
+                            InFactSearchProofByBuiltinRule::CompositionInFunctionSet(p) => {
+                                let Obj::FunctionSpace(FunctionSpace::FnSet(target)) = &fact.set else {
+                                    return Err(LeanCompileError::unsupported("Composition/MembershipTarget"));
+                                };
+                                if !crate::execute::execute_fact_stmt::function_domain::function_domains_alpha_equal(&p.callable.function.body, target)
+                                    || p.callable.function.body.ret_set.ir() != target.ret_set.ir() {
+                                    return Err(LeanCompileError::unsupported("Composition/MembershipSignature"));
+                                }
+                                self.compile_composition_member(&fact.element, &p.callable, position)?
+                            }
                             InFactSearchProofByBuiltinRule::PositiveRealProduct(_) | InFactSearchProofByBuiltinRule::PositiveRealQuotient(_) | InFactSearchProofByBuiltinRule::NonzeroRationalProduct(_) | InFactSearchProofByBuiltinRule::NonzeroRationalQuotient(_) => self.compile_refined_arithmetic_closure(fact, rule, position)?,
                             crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule::ComplexArithmeticClosure(_) => self.compile_complex_arithmetic_closure(fact, position)?,
                             InFactSearchProofByBuiltinRule::RealPower(_) | InFactSearchProofByBuiltinRule::RealOperandArithmeticClosure(_) | InFactSearchProofByBuiltinRule::RealArithmeticConstructorClosure(_) => self.compile_real_arithmetic_membership(fact, rule, position)?,
                             InFactSearchProofByBuiltinRule::PredecessorFromPositiveNatural(p) => self.compile_natural_predecessor(fact, &p.in_natural_proof, &p.positive_proof, position)?,
                             InFactSearchProofByBuiltinRule::FiniteSetSubsetMembership(_) | InFactSearchProofByBuiltinRule::ListSetElementMembership(_) | InFactSearchProofByBuiltinRule::SetBuilderMembership(_) => self.compile_set_membership_rule(fact, rule, position)?,
+                            InFactSearchProofByBuiltinRule::StructObjMembership(p) => self.compile_struct_membership(fact, p, position)?,
                             InFactSearchProofByBuiltinRule::CartMembership(p) => self.compile_cart_membership(fact, &p.domain, None, &p.proof_of_requirement_facts, position)?,
-                            InFactSearchProofByBuiltinRule::PowerSetMembership(_) | InFactSearchProofByBuiltinRule::UnionMembershipFromLeft(_) | InFactSearchProofByBuiltinRule::UnionMembershipFromRight(_) => self.compile_set_operator_membership(fact, rule, position)?,
+                            InFactSearchProofByBuiltinRule::PowerSetMembership(_) | InFactSearchProofByBuiltinRule::SetMinusMembership(_) | InFactSearchProofByBuiltinRule::IntersectMembership(_) | InFactSearchProofByBuiltinRule::UnionMembershipFromLeft(_) | InFactSearchProofByBuiltinRule::UnionMembershipFromRight(_) => self.compile_set_operator_membership(fact, rule, position)?,
                             InFactSearchProofByBuiltinRule::AnonymousFnApplicationInFnRange(p) => self.compile_anonymous_call_in_range(fact, &p.function_equal, position)?,
                             _ => self.compile_fn_return_builtin(fact, rule, position)?,
                         },
@@ -166,6 +186,8 @@ impl LitexToLeanCompiler {
                     },
                     _ => return Err(LeanCompileError::new("FunctionReturn/Family", "A returned-membership rule has another source fact family.")),
                 },
+                AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::PreimageMembership(p)) => self.compile_preimage_membership(&success.fact, false, &p.construction, &p.input_view, &p.requirement_facts, &p.proof_of_requirement_facts, position)?,
+                AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::PreimageSetMembership(p)) => self.compile_preimage_membership(&success.fact, true, &p.construction, &p.input_view, &p.requirement_facts, &p.proof_of_requirement_facts, position)?,
                 AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::NonzeroProduct(proof)) =>
                     self.compile_nonzero_product(&success.fact, &proof.requirement_facts, &proof.proof_of_requirement_facts, position)?,
                 AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::SubNonnegativeFromZero(proof)) =>
@@ -196,10 +218,36 @@ impl LitexToLeanCompiler {
                     | AtomicExceptEqualityFactSearchProofByBuiltinStrategy::AddLeftNonpositiveShiftLeft(_)
                     | AtomicExceptEqualityFactSearchProofByBuiltinStrategy::AddLeftNonpositiveShiftRight(_)
                 )) => self.compile_weak_additive_shift(&success.fact, strategy, position)?,
+                AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(strategy @ (
+                    AtomicExceptEqualityFactSearchProofByBuiltinStrategy::AddComponentwiseLessEqual(_)
+                    | AtomicExceptEqualityFactSearchProofByBuiltinStrategy::AddCrossedLessEqual(_)
+                    | AtomicExceptEqualityFactSearchProofByBuiltinStrategy::AddComponentwiseStrictLeft(_)
+                    | AtomicExceptEqualityFactSearchProofByBuiltinStrategy::AddComponentwiseStrictRight(_)
+                )) => self.compile_componentwise_additive_order(&success.fact, strategy, position)?,
+                AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(strategy @ (
+                    AtomicExceptEqualityFactSearchProofByBuiltinStrategy::SubSharedSubtrahendLessEqual(_)
+                    | AtomicExceptEqualityFactSearchProofByBuiltinStrategy::SubSharedMinuendLessEqual(_)
+                    | AtomicExceptEqualityFactSearchProofByBuiltinStrategy::SubSharedSubtrahendLess(_)
+                    | AtomicExceptEqualityFactSearchProofByBuiltinStrategy::SubSharedMinuendLess(_)
+                )) => self.compile_shared_subtraction_order(&success.fact, strategy, position)?,
                 AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::AddRightStrictShiftLeftWeak(proof)) =>
                     self.compile_add_strict_shift(&success.fact, &proof.requirement_facts, &proof.proof_of_requirement_facts, position)?,
                 AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::CommonPositiveFactorLess(proof)) =>
                     self.compile_strict_mul_strategy(&success.fact, &proof.requirement_facts, &proof.proof_of_requirement_facts, position)?,
+                AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::UnionSubsetFromBothOperands(p)) =>
+                    self.compile_union_upper_bound_strategy(&success.fact, &p.requirement_facts, &p.proof_of_requirement_facts, position)?,
+                AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::SetMinusSubsetFromLeft(p)) =>
+                    self.compile_set_minus_upper_bound_strategy(&success.fact, &p.requirement_facts, &p.proof_of_requirement_facts, position)?,
+                AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::IntersectSubsetFromLeftOperand(p)) =>
+                    self.compile_intersection_subset_strategy(&success.fact, &p.requirement_facts, &p.proof_of_requirement_facts, true, position)?,
+                AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::IntersectSubsetFromRightOperand(p)) =>
+                    self.compile_intersection_subset_strategy(&success.fact, &p.requirement_facts, &p.proof_of_requirement_facts, false, position)?,
+                AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::SetMinusMembership(p)) =>
+                    self.compile_set_minus_membership_strategy(&success.fact, &p.requirement_facts, &p.proof_of_requirement_facts, position)?,
+                AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::IntersectMembership(p)) =>
+                    self.compile_intersection_membership_strategy(&success.fact, &p.requirement_facts, &p.proof_of_requirement_facts, position)?,
+                AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::SubsetOfIntersectFromBothBounds(p)) =>
+                    self.compile_subset_into_intersection(&success.fact, &p.requirement_facts, &p.proof_of_requirement_facts, position)?,
                 AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::UnionMembershipFromLeft(proof)) =>
                     self.compile_union_membership_strategy(&success.fact, &proof.requirement_facts, &proof.proof_of_requirement_facts, true, position)?,
                 AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::CartNonemptyFromAllFactors(proof)) =>

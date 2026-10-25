@@ -63,6 +63,9 @@ fn prepare_contract(
     args: &[Obj],
 ) -> RuntimeResult<Result<(Vec<Fact>, Vec<Fact>), String>> {
     use BuiltinTheoremId::*;
+    if id.is_multivariable() {
+        return super::multivariable::prepare(rt, id, args);
+    }
     if id.is_matrix() {
         return super::matrices::prepare_matrices(rt, id, args);
     }
@@ -251,6 +254,119 @@ fn prepare_contract(
     }
     let a = args[0].clone();
     let result = match id {
+        MultiContinuousAtCompose
+        | VectorContinuousAtCompose
+        | MultiLimitAtCompose
+        | VectorLimitAtCompose => unreachable!("Euclidean family dispatched above"),
+        SecondPartialAtToFunction | CurlGradientAtSymmetric | DivergenceCurlAtSymmetric => {
+            unreachable!("Euclidean family dispatched above")
+        }
+        MultiLimitAtFromDefinition
+        | MultiLimitAtToDefinition
+        | MultiLimitAtUnique
+        | MultiLimitAtExists
+        | MultiLimitAtSelected
+        | VectorLimitAtFromDefinition
+        | VectorLimitAtToDefinition
+        | VectorLimitAtUnique
+        | VectorLimitAtExists
+        | VectorLimitAtSelected
+        | PartialAtFromDefinition
+        | PartialAtToDefinition
+        | PartialAtUnique
+        | PartialAtExists
+        | PartialAtSelected
+        | SecondPartialAtFromDefinition
+        | SecondPartialAtToDefinition
+        | SecondPartialAtUnique
+        | SecondPartialAtExists
+        | ScalarDifferentialAtFromDefinition
+        | ScalarDifferentialAtToDefinition
+        | ScalarDifferentialAtUnique
+        | ScalarDifferentialAtExists
+        | ScalarDifferentialAtSelected
+        | TotalDerivativeAtFromDefinition
+        | TotalDerivativeAtToDefinition
+        | TotalDerivativeAtUnique
+        | TotalDerivativeAtExists
+        | TotalDerivativeAtSelected
+        | GradientAtFromDefinition
+        | GradientAtToDefinition
+        | GradientAtUnique
+        | GradientAtExists
+        | GradientAtSelected
+        | JacobianAtFromDefinition
+        | JacobianAtToDefinition
+        | JacobianAtUnique
+        | JacobianAtExists
+        | JacobianAtSelected
+        | HessianAtFromDefinition
+        | HessianAtToDefinition
+        | HessianAtUnique
+        | HessianAtExists
+        | HessianAtSelected
+        | DivergenceAtFromDefinition
+        | DivergenceAtToDefinition
+        | DivergenceAtUnique
+        | DivergenceAtExists
+        | DivergenceAtSelected
+        | CurlAtFromDefinition
+        | CurlAtToDefinition
+        | CurlAtUnique
+        | CurlAtExists
+        | CurlAtSelected
+        | LaplacianAtFromDefinition
+        | LaplacianAtToDefinition
+        | LaplacianAtUnique
+        | LaplacianAtExists
+        | LaplacianAtSelected
+        | MultiContinuousAtFromDefinition
+        | MultiContinuousAtToDefinition
+        | VectorContinuousAtFromDefinition
+        | VectorContinuousAtToDefinition
+        | MultiDifferentiableAtFromDefinition
+        | MultiDifferentiableAtToDefinition
+        | VectorDifferentiableAtFromDefinition
+        | VectorDifferentiableAtToDefinition
+        | MultiLimitAtAdd
+        | MultiLimitAtSubtract
+        | MultiLimitAtMultiply
+        | MultiLimitAtDivide
+        | MultiContinuousAtAdd
+        | MultiContinuousAtSubtract
+        | MultiContinuousAtMultiply
+        | MultiContinuousAtDivide
+        | PartialAtAdd
+        | PartialAtSubtract
+        | PartialAtMultiply
+        | PartialAtDivide
+        | ScalarDifferentialAtAdd
+        | ScalarDifferentialAtSubtract
+        | ScalarDifferentialAtMultiply
+        | ScalarDifferentialAtDivide
+        | ScalarDifferentialAtContinuous
+        | TotalDerivativeAtContinuous
+        | ScalarDifferentialAtGradient
+        | ScalarDifferentialAtPartial
+        | TotalDerivativeAtJacobian
+        | JacobianAtDivergence
+        | JacobianAtCurl
+        | HessianAtLaplacian
+        | MultiContinuousAtLimit
+        | MultiLimitAtContinuous
+        | VectorContinuousAtLimit
+        | VectorLimitAtContinuous
+        | TotalDerivativeAtCompose
+        | ScalarDifferentialAtCompose
+        | SecondPartialAtFromFunction
+        | SecondPartialAtSwapContinuous
+        | VectorLimitAtAdd
+        | VectorLimitAtSubtract
+        | TotalDerivativeAtAdd
+        | TotalDerivativeAtSubtract
+        | VectorContinuousAtAdd
+        | VectorContinuousAtSubtract => unreachable!("Euclidean theorem family dispatched above"),
+
         FnLimitLeftRealAccumulation
         | FnLimitLeftFromEpsilon
         | FnLimitLeftControl

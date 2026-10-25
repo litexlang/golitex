@@ -7,6 +7,7 @@ use crate::ast::obj::{
     SetOperator, StandardSet,
 };
 use crate::execute::execute_fact_stmt::verify_state::VerifyState;
+use crate::prelude::*;
 use crate::runtime::{Runtime, RuntimeResult};
 
 impl Runtime {
@@ -266,6 +267,45 @@ impl Runtime {
             requirement_facts,
             proof_of_requirement_facts,
         }))
+    }
+
+    pub(super) fn search_add_double_upper_bound_strategy(
+        &mut self,
+        fact: &AtomicFact,
+        ctx: VerifyState,
+    ) -> RuntimeResult<Option<AddDoubleUpperBoundStrategySingleStep>> {
+        // Addition preserves both weak bounds, even when the bound is negative.
+        // The numeral 2 counts the two addends; no symbolic factor is guessed.
+        let Some(le) = as_le(fact) else {
+            return Ok(None);
+        };
+        let (Some((a, b)), Some((left, right))) = (as_add(&le.left), as_mul(&le.right)) else {
+            return Ok(None);
+        };
+        let bound = if EvalRational::from_obj(&left).and_then(|value| value.to_i128_if_integer())
+            == Some(2)
+        {
+            right
+        } else if EvalRational::from_obj(&right).and_then(|value| value.to_i128_if_integer())
+            == Some(2)
+        {
+            left
+        } else {
+            return Ok(None);
+        };
+        let requirements = vec![
+            self.strategy_less_equal_fact(a, bound.clone(), le.line_file.clone()),
+            self.strategy_less_equal_fact(b, bound, le.line_file.clone()),
+        ];
+        let Some((requirement_facts, proof_of_requirement_facts)) =
+            self.verify_strategy_requirements(requirements, ctx)?
+        else {
+            return Ok(None);
+        };
+        Ok(Some(AddDoubleUpperBoundStrategySingleStep::new(
+            requirement_facts,
+            proof_of_requirement_facts,
+        )))
     }
 
     pub(super) fn search_sub_shared_subtrahend_less_equal_strategy(
@@ -844,6 +884,7 @@ fn as_abs(obj: &Obj) -> Option<Obj> {
         _ => None,
     }
 }
+
 fn pow_obj(base: Obj, exponent: Obj) -> Obj {
     Obj::ArithmeticOperator(ArithmeticOperator::Pow(Pow {
         base: Box::new(base),
@@ -868,3 +909,7 @@ fn finite_set_constructor_children(set: &Obj) -> Option<Vec<Obj>> {
         _ => None,
     }
 }
+
+#[cfg(test)]
+#[path = "../../../../../../tests/unit/execute/arithmetic_rule_composition.rs"]
+mod arithmetic_rule_composition_tests;

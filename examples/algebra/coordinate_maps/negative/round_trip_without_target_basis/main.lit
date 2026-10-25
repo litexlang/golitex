@@ -1,0 +1,6 @@
+thm round_trip_without_target_basis:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,field,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,field,W>,n N,u finite_seq(V,n),w finite_seq(W,n),x V:
+        $Algebra::basis::is_basis(K,field,V,source,n,u)
+        =>:
+            \Algebra::coordinate_maps::linear_map_from_basis<K,field,W,target,V,source,n,w,u>(\Algebra::coordinate_maps::linear_map_from_basis<K,field,V,source,W,target,n,u,w>(x))=x
+    by thm Algebra::coordinate_maps::basis_maps_round_trip(K,field,V,source,W,target,n,u,w,x) => \Algebra::coordinate_maps::linear_map_from_basis<K,field,W,target,V,source,n,w,u>(\Algebra::coordinate_maps::linear_map_from_basis<K,field,V,source,W,target,n,u,w>(x))=x

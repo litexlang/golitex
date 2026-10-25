@@ -1,0 +1,255 @@
+# Dependence in arbitrary finite vector lists over a supplied field.
+# A dependent list has a vector in the span of its preceding prefix.
+
+thm largest_nonzero_index_exists:
+    ? forall K nonempty_set,field &field::Field<K>,n N+,coefficients finite_seq(K,n):
+        not $basis::has_only_zero_coefficients(K,field,n,coefficients)
+        =>:
+            exist k N+ st {$basis::is_largest_nonzero_coefficient_index(K,field,n,coefficients,k)}
+    have support power_set(closed_range(1,n))={j closed_range(1,n): coefficients(j)!=field.zero}
+    support $subset closed_range(1,n)
+    closed_range(1,n) $subset R
+    support $subset R
+    release thm subset_of_finite_set_is_finite(support,closed_range(1,n))
+    claim:
+        ? support!={}
+        by contra:
+            ? support!={}
+            support={}
+            claim:
+                ? forall j N+:
+                    j<=n
+                    =>:
+                        coefficients(j)=field.zero
+                by contra:
+                    ? coefficients(j)=field.zero
+                    coefficients(j)!=field.zero
+                    j $in closed_range(1,n)
+                    j $in support
+                    j $in {}
+                    impossible j $in {}
+            by def $basis::has_only_zero_coefficients(K,field,n,coefficients)
+            impossible not $basis::has_only_zero_coefficients(K,field,n,coefficients)
+    claim:
+        ? $is_nonempty_set(support)
+        by contra:
+            ? $is_nonempty_set(support)
+            support={}
+            impossible support!={}
+    finite_set_max(support) $in support
+    finite_set_max(support) $in closed_range(1,n)
+    finite_set_max(support) $in N+
+    have k N+=finite_set_max(support)
+    k $in support
+    k $in {j closed_range(1,n): coefficients(j)!=field.zero}
+    coefficients(k)!=field.zero
+    k<=n
+    claim:
+        ? forall j N+:
+            j<=n
+            j>k
+            =>:
+                coefficients(j)=field.zero
+        by contra:
+            ? coefficients(j)=field.zero
+            coefficients(j)!=field.zero
+            j $in closed_range(1,n)
+            j $in support
+            j<=finite_set_max(support)=k
+            impossible j>k
+    by def $basis::is_largest_nonzero_coefficient_index(K,field,n,coefficients,k)
+    witness exist selected N+ st {$basis::is_largest_nonzero_coefficient_index(K,field,n,coefficients,selected)} from k
+
+thm empty_list_is_independent:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,vectors finite_seq(V,0):
+        $basis::is_linearly_independent(K,field,V,space,0,vectors)
+    claim:
+        ? forall coefficients finite_seq(K,0):
+            $finite_span::has_linear_combination_value(K,field,V,space,0,coefficients,vectors,space.zero)
+            =>:
+                $basis::has_only_zero_coefficients(K,field,0,coefficients)
+        claim:
+            ? forall k N+:
+                k<=0
+                =>:
+                    coefficients(k)=field.zero
+            by contra:
+                ? coefficients(k)=field.zero
+                k>0
+                k<=0
+                impossible k>0
+        by def $basis::has_only_zero_coefficients(K,field,0,coefficients)
+    by def $basis::is_linearly_independent(K,field,V,space,0,vectors)
+
+thm partial_sum_prefix:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,n N,coefficients finite_seq(K,n),vectors finite_seq(V,n),sums fn(j closed_range(0,n)) V,m N,prefix_coefficients finite_seq(K,m),prefix_vectors finite_seq(V,m),prefix_sums fn(j closed_range(0,m)) V:
+        m<=n
+        $finite_span::is_partial_sum(K,field,V,space,n,coefficients,vectors,sums)
+        $basis::is_prefix_of_length(K,n,m,coefficients,prefix_coefficients)
+        $basis::is_prefix_of_length(V,n,m,vectors,prefix_vectors)
+        forall j closed_range(0,m):
+            prefix_sums(j)=sums(j)
+        =>:
+            $finite_span::is_partial_sum(K,field,V,space,m,prefix_coefficients,prefix_vectors,prefix_sums)
+    0 $in closed_range(0,m)
+    prefix_sums(0)=sums(0)=space.zero
+    claim:
+        ? forall j N+:
+            j<=m
+            =>:
+                prefix_sums(j)=space.add(prefix_sums(j-1),space.smul(prefix_coefficients(j),prefix_vectors(j)))
+        j $in closed_range(1,n)
+        j $in closed_range(0,m)
+        j-1 $in closed_range(0,m)
+        prefix_coefficients(j)=coefficients(j)
+        prefix_vectors(j)=vectors(j)
+        prefix_sums(j)=sums(j)
+        prefix_sums(j-1)=sums(j-1)
+        space.smul(prefix_coefficients(j),prefix_vectors(j))=space.smul(coefficients(j),vectors(j))
+        sums(j)=space.add(sums(j-1),space.smul(coefficients(j),vectors(j)))
+        prefix_sums(j)=space.add(prefix_sums(j-1),space.smul(prefix_coefficients(j),prefix_vectors(j)))
+    by def $finite_span::is_partial_sum(K,field,V,space,m,prefix_coefficients,prefix_vectors,prefix_sums)
+
+thm partial_sum_zero_tail:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,n N,coefficients finite_seq(K,n),vectors finite_seq(V,n),sums fn(j closed_range(0,n)) V,k N:
+        k<=n
+        $finite_span::is_partial_sum(K,field,V,space,n,coefficients,vectors,sums)
+        forall j N+:
+            j<=n
+            j>k
+            =>:
+                coefficients(j)=field.zero
+        =>:
+            sums(n)=sums(k)
+    have fn capped(j N) V by cases:
+        case j<n: sums(j)
+        case j>=n: sums(n)
+    claim:
+        ? forall j closed_range(0,n):
+            capped(j)=sums(j)
+        by cases:
+            ? capped(j)=sums(j)
+            case j<n:
+                capped(j)=sums(j)
+            case j>=n:
+                j=n
+                capped(j)=sums(n)=sums(j)
+    by induc j from k:
+        ? capped(j)=sums(k)
+        ? from j=k:
+            k $in closed_range(0,n)
+            capped(k)=sums(k)
+        ? induc:
+            by cases:
+                ? capped(j+1)=sums(k)
+                case j<n:
+                    j+1<=n
+                    j $in closed_range(0,n)
+                    j+1 $in closed_range(0,n)
+                    have t N+=j+1
+                    t>k
+                    t<=n
+                    coefficients(t)=field.zero
+                    release thm vector_space::zero_scalar_times_vector(K,field,V,space,vectors(t))
+                    coefficients(t) $in K
+                    field.zero $in K
+                    vectors(t) $in V
+                    space.smul(coefficients(t),vectors(t))=space.smul(field.zero,vectors(t))=space.zero
+                    t-1=j
+                    sums(t)=space.add(sums(t-1),space.smul(coefficients(t),vectors(t)))=space.add(sums(j),space.zero)=space.add(space.zero,sums(j))=sums(j)
+                    capped(j+1)=sums(j+1)=sums(t)=sums(j)=capped(j)=sums(k)
+                case j>=n:
+                    j+1>=n
+                    capped(j)=sums(n)
+                    capped(j+1)=sums(n)=capped(j)=sums(k)
+    capped(n)=sums(k)
+    sums(n)=capped(n)=sums(k)
+
+thm vector_zero_sum_solve:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,a K,previous,v V:
+        a!=field.zero
+        space.add(previous,space.smul(a,v))=space.zero
+        =>:
+            v=space.smul(field.neg(field.inv(a)),previous)
+    have inverse K=field.inv(a)
+    have negative_inverse K=field.neg(inverse)
+    have scaled_previous V=space.smul(inverse,previous)
+    have candidate V=space.smul(negative_inverse,previous)
+    field.mul(inverse,a)=field.mul(a,inverse)=field.one
+    space.smul(inverse,space.smul(a,v))=space.smul(field.mul(inverse,a),v)=space.smul(field.one,v)=v
+    release thm vector_space::scalar_times_zero(K,field,V,space,inverse)
+    space.add(scaled_previous,v)=space.add(space.smul(inverse,previous),space.smul(inverse,space.smul(a,v)))=space.smul(inverse,space.add(previous,space.smul(a,v)))=space.smul(inverse,space.zero)=space.zero
+    field.add(inverse,negative_inverse)=field.zero
+    release thm vector_space::zero_scalar_times_vector(K,field,V,space,previous)
+    space.add(scaled_previous,candidate)=space.add(space.smul(inverse,previous),space.smul(negative_inverse,previous))=space.smul(field.add(inverse,negative_inverse),previous)=space.smul(field.zero,previous)=space.zero
+    release thm vector_space::additive_inverse_exists_unique(K,field,V,space,scaled_previous)
+    negative_inverse=field.neg(inverse)=field.neg(field.inv(a))
+    candidate=space.smul(negative_inverse,previous)=space.smul(field.neg(field.inv(a)),previous)
+    v=candidate=space.smul(field.neg(field.inv(a)),previous)
+
+thm dependence_lemma:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,n N,vectors finite_seq(V,n):
+        $basis::is_linearly_dependent(K,field,V,space,n,vectors)
+        =>:
+            exist k N+,m N,prefix finite_seq(V,m) st {k<=n,m=k-1,$basis::is_prefix_of_length(V,n,m,vectors,prefix),vectors(k) $in \finite_span::span<K,field,V,space,m,prefix>}
+    by cases:
+        ? exist k N+,m N,prefix finite_seq(V,m) st {k<=n,m=k-1,$basis::is_prefix_of_length(V,n,m,vectors,prefix),vectors(k) $in \finite_span::span<K,field,V,space,m,prefix>}
+        case n=0:
+            closed_range(1,n)=closed_range(1,0)
+            finite_seq(V,n)=finite_seq(V,0)
+            vectors $in finite_seq(V,0)
+            release thm empty_list_is_independent(K,field,V,space,vectors)
+            by contra:
+                ? exist k N+,m N,prefix finite_seq(V,m) st {k<=n,m=k-1,$basis::is_prefix_of_length(V,n,m,vectors,prefix),vectors(k) $in \finite_span::span<K,field,V,space,m,prefix>}
+                $basis::is_linearly_independent(K,field,V,space,n,vectors)
+                impossible not $basis::is_linearly_independent(K,field,V,space,n,vectors)
+        case n!=0:
+            claim:
+                ? n>0
+                by contra:
+                    ? n>0
+                    n<=0
+                    n=0
+                    impossible n!=0
+            n $in N+
+            release thm basis::dependent_has_nontrivial_coefficients(K,field,V,space,n,vectors)
+            obtain coefficients from $basis::has_nontrivial_dependence_coefficients(K,field,V,space,n,vectors)
+            release thm largest_nonzero_index_exists(K,field,n,coefficients)
+            obtain k from exist selected N+ st {$basis::is_largest_nonzero_coefficient_index(K,field,n,coefficients,selected)}
+            obtain sums from $finite_span::has_linear_combination_value(K,field,V,space,n,coefficients,vectors,space.zero)
+            release thm partial_sum_zero_tail(K,field,V,space,n,coefficients,vectors,sums,k)
+            sums(k)=sums(n)=space.zero
+            have m N=k-1
+            release thm basis::prefix_exists(V,n,m,vectors)
+            obtain prefix from exist p finite_seq(V,m) st {$basis::is_prefix_of_length(V,n,m,vectors,p)}
+            have fn prefix_coefficients(j closed_range(1,m)) K=coefficients(j)
+            claim:
+                ? forall j N+:
+                    j<=m
+                    =>:
+                        prefix_coefficients(j)=coefficients(j)
+                j $in closed_range(1,m)
+                j<=m<=n
+                j $in closed_range(1,n)
+                prefix_coefficients(j)=coefficients(j)
+            by def $basis::is_prefix_of_length(K,n,m,coefficients,prefix_coefficients)
+            have fn prefix_sums(j closed_range(0,m)) V=sums(j)
+            forall j closed_range(0,m):
+                prefix_sums(j)=sums(j)
+            release thm partial_sum_prefix(K,field,V,space,n,coefficients,vectors,sums,m,prefix_coefficients,prefix,prefix_sums)
+            release thm finite_span::partial_sum_determines_combination(K,field,V,space,m,prefix_coefficients,prefix,prefix_sums)
+            \finite_span::linear_combination<K,field,V,space,m>(prefix_coefficients,prefix)=(prefix_sums)(m)=sums(m)=sums(k-1)
+            sums(k)=space.add(sums(k-1),space.smul(coefficients(k),vectors(k)))
+            space.add(sums(k-1),space.smul(coefficients(k),vectors(k)))=sums(k)=space.zero
+            release thm vector_zero_sum_solve(K,field,V,space,coefficients(k),sums(k-1),vectors(k))
+            have scale K=field.neg(field.inv(coefficients(k)))
+            have scaled_coefficients finite_seq(K,m)=\finite_span::smul_coefficients<K,field,m>(scale,prefix_coefficients)
+            release thm finite_span::linear_combination_smul_coefficients(K,field,V,space,m,scale,prefix_coefficients,prefix)
+            \finite_span::linear_combination<K,field,V,space,m>(scaled_coefficients,prefix)=space.smul(scale,\finite_span::linear_combination<K,field,V,space,m>(prefix_coefficients,prefix))=space.smul(scale,sums(k-1))=vectors(k)
+            release thm finite_span::linear_combination_has_value(K,field,V,space,m,scaled_coefficients,prefix)
+            $finite_span::has_linear_combination_value(K,field,V,space,m,scaled_coefficients,prefix,vectors(k))
+            witness exist c finite_seq(K,m) st {$finite_span::has_linear_combination_value(K,field,V,space,m,c,prefix,vectors(k))} from scaled_coefficients
+            by def $finite_span::is_linear_combination(K,field,V,space,m,vectors(k),prefix)
+            \finite_span::span<K,field,V,space,m,prefix> = {x V: $finite_span::is_linear_combination(K,field,V,space,m,x,prefix)}
+            vectors(k) $in {x V: $finite_span::is_linear_combination(K,field,V,space,m,x,prefix)}
+            witness exist selected_k N+,selected_m N,selected_prefix finite_seq(V,selected_m) st {selected_k<=n,selected_m=selected_k-1,$basis::is_prefix_of_length(V,n,selected_m,vectors,selected_prefix),vectors(selected_k) $in \finite_span::span<K,field,V,space,selected_m,selected_prefix>} from k,m,prefix
