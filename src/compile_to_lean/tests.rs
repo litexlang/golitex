@@ -43,6 +43,8 @@ mod compound_theorem_returns_tests;
 mod concrete_predicate_transport_tests;
 #[path = "../../tests/unit/compile_to_lean/difference_zero/tests.rs"]
 mod difference_zero_tests;
+#[path = "../../tests/unit/compile_to_lean/exp_log_tests.rs"]
+mod exp_log_tests;
 #[path = "../../tests/unit/compile_to_lean/finite_cart_coordinates/tests.rs"]
 mod finite_cart_coordinates_tests;
 #[path = "../../tests/unit/compile_to_lean/finite_sequence_tests.rs"]
@@ -87,6 +89,8 @@ mod object_release_tests;
 mod order_complement_tests;
 #[path = "../../tests/unit/compile_to_lean/prop_object_sharing/tests.rs"]
 mod prop_object_sharing_tests;
+#[path = "../../tests/unit/compile_to_lean/real_interval_sequence_tests.rs"]
+mod real_interval_sequence_tests;
 #[path = "../../tests/unit/compile_to_lean/register/tests.rs"]
 mod register_tests;
 #[path = "../../tests/unit/compile_to_lean/rounding_tests.rs"]
@@ -337,9 +341,9 @@ fn selected_rational_route_uses_normalization_adapter() {
 
 #[test]
 fn unsupported_constructor_after_supported_prefix_rejects_complete_artifact() {
-    let (result, compiler) = execute("1 = 1\nforall a R:\n    sin(a) + 0 = sin(a)\n");
+    let (result, compiler) = execute("1 = 1\nforall a R:\n    arctan(a) + 0 = arctan(a)\n");
     let error = compile_run(&result, &compiler, "unsupported_trig")
-        .expect_err("trig denotation is outside the integer arithmetic adapter");
+        .expect_err("arctangent still has no WD consumer");
     assert_eq!(error.statement_index, Some(2));
     assert_eq!(error.route, "WD/TrigOperator");
 }
@@ -3390,3 +3394,9 @@ mod struct_tests;
 
 #[path = "../../tests/unit/compile_to_lean/dependent_struct_tests.rs"]
 mod dependent_struct_tests;
+
+#[path = "../../tests/unit/compile_to_lean/trig_tests.rs"]
+mod trig_tests;
+
+#[path = "../../tests/unit/compile_to_lean/complex_observation_tests.rs"]
+mod complex_observation_tests;

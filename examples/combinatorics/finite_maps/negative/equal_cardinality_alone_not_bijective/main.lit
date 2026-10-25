@@ -1,0 +1,5 @@
+have fn constant_map(x {0, 1}) {0, 1} = 0
+
+finite_set_size({0, 1}) = finite_set_size({0, 1})
+
+by def $bijective({0, 1}, {0, 1}, constant_map)

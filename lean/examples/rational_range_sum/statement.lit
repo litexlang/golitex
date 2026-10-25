@@ -1,0 +1,2 @@
+# Sum exact rational terms without decimal approximation.
+sum(1, 3, fn(x Z) Q {x / 2}) = 3

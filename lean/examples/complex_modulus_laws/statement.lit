@@ -1,0 +1,5 @@
+# The complex modulus is nonnegative and multiplicative.
+forall z C:
+    C_abs(z) >= 0
+forall z C, w C:
+    C_abs(z*w) = C_abs(z)*C_abs(w)

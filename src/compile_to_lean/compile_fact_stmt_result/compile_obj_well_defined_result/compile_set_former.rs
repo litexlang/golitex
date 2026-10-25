@@ -14,6 +14,16 @@ impl LitexToLeanCompiler {
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
         match (set, proof) {
+            (SetFormer::IntervalObj(s), SetFormerObjWellDefinedProofByDef::IntervalObj(p)) => {
+                self.compile_real_interval_wd(s, p, position)
+            }
+            (
+                SetFormer::OneSideInfinityIntervalObj(s),
+                SetFormerObjWellDefinedProofByDef::OneSideInfinityIntervalObj(p),
+            ) => self.compile_real_ray_wd(s, p, position),
+            (SetFormer::SeqSet(s), SetFormerObjWellDefinedProofByDef::SeqSet(p)) => {
+                self.compile_seq_wd(s, p, position)
+            }
             (SetFormer::ListSet(set), SetFormerObjWellDefinedProofByDef::ListSet(wd)) => {
                 self.compile_list_set_wd(set, wd, position)
             }
@@ -34,19 +44,16 @@ impl LitexToLeanCompiler {
                 | SetFormer::SetBuilder(_)
                 | SetFormer::Range(_)
                 | SetFormer::ClosedRange(_)
-                | SetFormer::FiniteSeqSet(_),
+                | SetFormer::FiniteSeqSet(_)
+                | SetFormer::SeqSet(_)
+                | SetFormer::OneSideInfinityIntervalObj(_)
+                | SetFormer::IntervalObj(_),
                 _,
             ) => Err(LeanCompileError::new(
                 "SetFormer/WDSubject",
                 "Set formation evidence has another constructor family.",
             )),
-            (
-                SetFormer::MatrixSet(_)
-                | SetFormer::SeqSet(_)
-                | SetFormer::OneSideInfinityIntervalObj(_)
-                | SetFormer::IntervalObj(_),
-                _,
-            ) => Err(LeanCompileError::unsupported("WD/SetFormer")),
+            (SetFormer::MatrixSet(_), _) => Err(LeanCompileError::unsupported("WD/SetFormer")),
         }
     }
 

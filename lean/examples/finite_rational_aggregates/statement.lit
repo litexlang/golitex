@@ -1,0 +1,3 @@
+# Sum and multiply a finite set of exact rational values.
+finite_set_sum({1 / 3, 1 / 2}, fn(x Q) Q {x}) = 5 / 6
+finite_set_product({1 / 3, 1 / 2}, fn(x Q) Q {x}) = 1 / 6

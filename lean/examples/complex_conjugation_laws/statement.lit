@@ -1,0 +1,9 @@
+# Conjugation is involutive and respects coordinates, modulus and arithmetic.
+forall z C:
+    conj(conj(z)) = z
+    re(conj(z)) = re(z)
+    img(conj(z)) = -img(z)
+    C_abs(conj(z)) = C_abs(z)
+forall z C, w C:
+    conj(z+w) = conj(z)+conj(w)
+    conj(z*w) = conj(z)*conj(w)

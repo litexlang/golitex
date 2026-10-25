@@ -1,0 +1,26 @@
+# Prove interval and ray membership or exclusion from symbolic endpoint bounds.
+forall a, b, x R:
+    a < x
+    x <= b
+    =>:
+        x $in '(a, b]
+
+forall a, x R:
+    a < x
+    =>:
+        x $in '(a,)
+
+forall a, x R:
+    x <= a
+    =>:
+        x $in '(,a]
+
+forall a, b, x R:
+    x < a
+    =>:
+        not x $in '[a, b]
+
+forall a, x R:
+    x <= a
+    =>:
+        not x $in '(a,)

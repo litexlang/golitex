@@ -186,24 +186,41 @@ impl Runtime {
     // Resolve a callable's FnSet: anonymous literal, bare name with InFunctionSet, or
     // identifier-headed empty application. Used by iterated / reduce WD.
     pub(in crate::execute) fn resolve_callable_fn_set(&mut self, function: &Obj) -> Option<FnSet> {
+        self.resolve_callable_fn_set_selection(function)
+            .map(|selection| selection.signature().clone())
+    }
+
+    pub(super) fn resolve_callable_fn_set_selection(
+        &mut self,
+        function: &Obj,
+    ) -> Option<
+        crate::execute::execute_fact_stmt::function_signature_selection::FunctionSignatureSelection,
+    > {
+        use crate::execute::execute_fact_stmt::function_signature_selection::FunctionSignatureSelection as Selection;
         match function {
-            Obj::FunctionSpace(FunctionSpace::AnonymousFn(anon)) => Some(anon.body.clone()),
+            Obj::FunctionSpace(FunctionSpace::AnonymousFn(anon)) => {
+                Some(Selection::AnonymousLiteral {
+                    signature: anon.body.clone(),
+                })
+            }
             Obj::FnObj(fo) if fo.body.is_empty() => match fo.head.as_ref() {
-                FnObjHead::Object(obj) => self.resolve_callable_fn_set(obj),
-                FnObjHead::AnonymousFnLiteral(a) => Some(a.body.clone()),
+                FnObjHead::Object(obj) => self.resolve_callable_fn_set_selection(obj),
+                FnObjHead::AnonymousFnLiteral(a) => Some(Selection::AnonymousLiteral {
+                    signature: a.body.clone(),
+                }),
                 FnObjHead::Identifier(id) => {
                     let head = Obj::Identifier(id.clone());
                     self.collect_in_function_set_candidates(&head)
                         .into_iter()
                         .next()
-                        .map(|(fs, _)| fs)
+                        .map(|(signature, fact_id)| Selection::Property { signature, fact_id })
                 }
                 FnObjHead::InstantiatedTemplateObj(inst) => {
                     let head = Obj::InstantiatedTemplateObj(inst.clone());
                     self.collect_in_function_set_candidates(&head)
                         .into_iter()
                         .next()
-                        .map(|(fs, _)| fs)
+                        .map(|(signature, fact_id)| Selection::Property { signature, fact_id })
                 }
                 FnObjHead::FieldAccess(access) => {
                     let head = Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(
@@ -213,13 +230,19 @@ impl Runtime {
                         .collect_in_function_set_candidates(&head)
                         .into_iter()
                         .next()
-                        .map(|(fs, _)| fs)
+                        .map(|(signature, fact_id)| Selection::Property { signature, fact_id })
                     {
                         return Some(fs);
                     }
                     match self.resolve_field_access_field_type(access)? {
-                        Obj::FunctionSpace(FunctionSpace::FnSet(fs)) => Some(fs),
-                        Obj::FunctionSpace(FunctionSpace::AnonymousFn(anon)) => Some(anon.body),
+                        Obj::FunctionSpace(FunctionSpace::FnSet(signature)) => {
+                            Some(Selection::DeclaredField { signature })
+                        }
+                        Obj::FunctionSpace(FunctionSpace::AnonymousFn(anon)) => {
+                            Some(Selection::DeclaredField {
+                                signature: anon.body,
+                            })
+                        }
                         _ => None,
                     }
                 }
@@ -228,7 +251,7 @@ impl Runtime {
                 .collect_in_function_set_candidates(function)
                 .into_iter()
                 .next()
-                .map(|(fs, _)| fs),
+                .map(|(signature, fact_id)| Selection::Property { signature, fact_id }),
         }
     }
 

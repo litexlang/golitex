@@ -1,0 +1,4 @@
+thm gcd_missing_congruence:
+    ? forall a, c Z, m N+:
+        gcd(a, m) = gcd(c, m)
+    release thm nt:::congruence_gcd_invariant(a,c,m)

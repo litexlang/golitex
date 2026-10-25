@@ -166,6 +166,7 @@ impl LitexToLeanCompiler {
             goal,
             AtomicFact::InFact(_)
                 | AtomicFact::IsSetFact(_)
+                | AtomicFact::IsFiniteSetFact(_)
                 | AtomicFact::NotEqualFact(_)
                 | AtomicFact::SubsetFact(_)
                 | AtomicFact::LessFact(_)
@@ -370,6 +371,10 @@ impl LitexToLeanCompiler {
                 arguments[0],
                 arguments[1],
                 compiled_child.1,
+            )),
+            (AtomicFact::IsFiniteSetFact(_), AtomicFact::IsFiniteSetFact(_)) => Ok(format!(
+                "(Eq.mp (congrArg (fun (_set : M.Value) => (Litex.memberSet _set).Finite) {}) {})",
+                arguments[0], compiled_child.1,
             )),
             (AtomicFact::IsSetFact(from), AtomicFact::IsSetFact(to)) => Ok(format!(
                 "(Litex.isSetOfSame {} {} {} {})",

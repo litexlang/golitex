@@ -16,11 +16,73 @@ use crate::ast::param::{
     ParamType, SetBoundParameterGroup, SetBoundParameterList, TypedParameterGroup,
     TypedParameterList,
 };
+use crate::execute::execute_fact_stmt::function_signature_selection::FunctionSignatureSelection;
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::execute::execute_fact_stmt::VerifyState;
 use crate::runtime::{Runtime, RuntimeResult};
 
+pub(super) struct ScalarAggregateWellDefinedStages {
+    pub common: ObjWellDefinedByDefCommonStages,
+    pub signature_selection: Option<FunctionSignatureSelection>,
+}
+
 impl Runtime {
+    pub(super) fn verify_scalar_aggregate_well_definedness(
+        &mut self,
+        obj: &Obj,
+        state: VerifyState,
+    ) -> RuntimeResult<super::entry::VerifyObjWellDefinedResult> {
+        use super::entry::{ObjWellDefinedProof, VerifyObjWellDefinedResult};
+        use super::obj_well_defined_proof_by_def::{
+            IteratedOperatorObjWellDefinedProofByDef as P, ObjWellDefinedProofByDef,
+        };
+        use crate::ast::obj::IteratedOperator as O;
+        let stages = match obj {
+            Obj::IteratedOperator(O::Sum(p)) => {
+                self.verify_sum_obj_well_definedness_by_def(p, state)?
+            }
+            Obj::IteratedOperator(O::Product(p)) => {
+                self.verify_product_obj_well_definedness_by_def(p, state)?
+            }
+            Obj::IteratedOperator(O::SumOfFiniteSet(p)) => {
+                self.verify_sum_of_finite_set_obj_well_definedness_by_def(p, state)?
+            }
+            Obj::IteratedOperator(O::ProductOfFiniteSet(p)) => {
+                self.verify_product_of_finite_set_obj_well_definedness_by_def(p, state)?
+            }
+            _ => unreachable!("four scalar aggregate entrypoints only"),
+        };
+        match super::wrap_obj_well_defined_by_def::finish_by_def(obj, stages.common) {
+            Err(reason) => Ok(VerifyObjWellDefinedResult::Failed {
+                obj: obj.clone(),
+                reason,
+            }),
+            Ok(mut proof) => {
+                match &mut proof {
+                    ObjWellDefinedProofByDef::IteratedOperator(P::Sum(p)) => {
+                        p.signature_selection = stages.signature_selection
+                    }
+                    ObjWellDefinedProofByDef::IteratedOperator(P::Product(p)) => {
+                        p.signature_selection = stages.signature_selection
+                    }
+                    ObjWellDefinedProofByDef::IteratedOperator(P::SumOfFiniteSet(p)) => {
+                        p.signature_selection = stages.signature_selection
+                    }
+                    ObjWellDefinedProofByDef::IteratedOperator(P::ProductOfFiniteSet(p)) => {
+                        p.signature_selection = stages.signature_selection
+                    }
+                    _ => unreachable!("matching aggregate proof"),
+                }
+                Ok(VerifyObjWellDefinedResult::Success(
+                    ObjWellDefinedProof::ByDef {
+                        obj: obj.clone(),
+                        proof,
+                    },
+                ))
+            }
+        }
+    }
+
     // sum(start, end, f): children, start/end ∈ Z, start <= end, f unary with ret ⊆ C,
     // and the closed index range covered by f's domain.
     // Example: `sum(1, 3, fn(x Z) Z {x})`.
@@ -28,7 +90,7 @@ impl Runtime {
         &mut self,
         value: &Sum,
         verify_state: VerifyState,
-    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
+    ) -> RuntimeResult<ScalarAggregateWellDefinedStages> {
         self.verify_range_iteration_obj_well_definedness_by_def(
             value.start.as_ref(),
             value.end.as_ref(),
@@ -42,7 +104,7 @@ impl Runtime {
         &mut self,
         value: &SumOfFiniteSet,
         verify_state: VerifyState,
-    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
+    ) -> RuntimeResult<ScalarAggregateWellDefinedStages> {
         self.verify_finite_aggregate_obj_well_definedness_by_def(
             value.set.as_ref(),
             value.func.as_ref(),
@@ -57,7 +119,7 @@ impl Runtime {
         &mut self,
         value: &Product,
         verify_state: VerifyState,
-    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
+    ) -> RuntimeResult<ScalarAggregateWellDefinedStages> {
         self.verify_range_iteration_obj_well_definedness_by_def(
             value.start.as_ref(),
             value.end.as_ref(),
@@ -71,7 +133,7 @@ impl Runtime {
         &mut self,
         value: &ProductOfFiniteSet,
         verify_state: VerifyState,
-    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
+    ) -> RuntimeResult<ScalarAggregateWellDefinedStages> {
         self.verify_finite_aggregate_obj_well_definedness_by_def(
             value.set.as_ref(),
             value.func.as_ref(),
@@ -304,7 +366,7 @@ impl Runtime {
         function: &Obj,
         operation: &str,
         verify_state: VerifyState,
-    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
+    ) -> RuntimeResult<ScalarAggregateWellDefinedStages> {
         let proof = self.verify_objs_as_children(&[start, end, function], verify_state.clone())?;
         let mut reqs = Vec::new();
         reqs.push(self.require_obj_in_standard_set(
@@ -330,7 +392,7 @@ impl Runtime {
             verify_state.clone(),
             format!("{operation}: cannot verify start <= end for the iteration range"),
         )?);
-        self.append_unary_scalar_iterand_requirements(
+        let signature_selection = self.append_unary_scalar_iterand_requirements(
             function,
             start,
             end,
@@ -338,7 +400,10 @@ impl Runtime {
             verify_state,
             &mut reqs,
         )?;
-        Ok(self.with_requirements(proof, reqs))
+        Ok(ScalarAggregateWellDefinedStages {
+            common: self.with_requirements(proof, reqs),
+            signature_selection,
+        })
     }
 
     fn verify_finite_aggregate_obj_well_definedness_by_def(
@@ -347,7 +412,7 @@ impl Runtime {
         function: &Obj,
         operation: &str,
         verify_state: VerifyState,
-    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
+    ) -> RuntimeResult<ScalarAggregateWellDefinedStages> {
         let proof =
             self.verify_binary_obj_well_definedness_by_def(set, function, verify_state.clone())?;
         let mut reqs = Vec::new();
@@ -356,7 +421,8 @@ impl Runtime {
             verify_state.clone(),
             format!("{operation}: set {} is not a finite set", set.ir()),
         )?);
-        match self.resolve_callable_fn_set(function) {
+        let signature_selection = self.resolve_callable_fn_set_selection(function);
+        match signature_selection.as_ref().map(|s| s.signature()) {
             Some(fn_set) => {
                 if set_bound_parameter_count(&fn_set.set_bound_parameters) != 1 {
                     reqs.push(self.require_callable_as_expected_unary(
@@ -415,7 +481,10 @@ impl Runtime {
                 )?);
             }
         }
-        Ok(self.with_requirements(proof, reqs))
+        Ok(ScalarAggregateWellDefinedStages {
+            common: self.with_requirements(proof, reqs),
+            signature_selection,
+        })
     }
 
     fn append_unary_scalar_iterand_requirements(
@@ -426,15 +495,16 @@ impl Runtime {
         operation: &str,
         verify_state: VerifyState,
         reqs: &mut Vec<VerifyFactResult>,
-    ) -> RuntimeResult<()> {
-        let Some(fn_set) = self.resolve_callable_fn_set(function) else {
+    ) -> RuntimeResult<Option<FunctionSignatureSelection>> {
+        let signature_selection = self.resolve_callable_fn_set_selection(function);
+        let Some(fn_set) = signature_selection.as_ref().map(|s| s.signature()) else {
             reqs.push(self.require_callable_as_expected_unary(
                 function,
                 &Obj::StandardSet(StandardSet::Z),
                 operation,
                 verify_state,
             )?);
-            return Ok(());
+            return Ok(signature_selection);
         };
         if set_bound_parameter_count(&fn_set.set_bound_parameters) != 1 {
             reqs.push(self.require_callable_as_expected_unary(
@@ -443,7 +513,7 @@ impl Runtime {
                 operation,
                 verify_state,
             )?);
-            return Ok(());
+            return Ok(signature_selection);
         }
         reqs.push(self.require_obj_subset_of_standard_set(
             fn_set.ret_set.as_ref(),
@@ -474,7 +544,7 @@ impl Runtime {
             verify_state,
             reqs,
         )?;
-        Ok(())
+        Ok(signature_selection)
     }
 
     // A callable's predicate domain must hold at every aggregate argument,

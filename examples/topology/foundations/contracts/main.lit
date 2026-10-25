@@ -1,0 +1,178 @@
+# Full-domain imported theorem calls; no concrete example prefix.
+
+thm consume_discrete_topology_laws:
+    ? forall X set:
+        (X, power_set(X)) $in &top:::TopologicalSpace<X>
+    release thm top:::discrete_topology_laws(X)
+
+thm consume_indiscrete_topology_laws:
+    ? forall X set:
+        (X, union({{}}, {X})) $in &top:::TopologicalSpace<X>
+    release thm top:::indiscrete_topology_laws(X)
+
+thm consume_empty_and_whole_are_closed:
+    ? forall A set, space &top:::TopologicalSpace<A>:
+        $top:::is_closed(A, space, {})
+        $top:::is_closed(A, space, space.carrier)
+    release thm top:::empty_and_whole_are_closed(A, space)
+
+thm consume_union_of_two_closed_is_closed:
+    ? forall Ambient set, space &top:::TopologicalSpace<Ambient>, F, G power_set(space.carrier):
+        $top:::is_closed(Ambient, space, F)
+        $top:::is_closed(Ambient, space, G)
+        =>:
+            $top:::is_closed(Ambient, space, union(F, G))
+    release thm top:::union_of_two_closed_is_closed(Ambient, space, F, G)
+
+thm consume_identity_preimage:
+    ? forall X set, U power_set(X):
+        preimage_set(\top:::identity_map<X>, U) = U
+    release thm top:::identity_preimage(X, U)
+
+thm consume_composition_preimage:
+    ? forall X, Y, Zeta set, f fn(x X) Y, g fn(y Y) Zeta, U power_set(Zeta):
+        preimage_set(compose(g, f), U) = preimage_set(f, preimage_set(g, U))
+    release thm top:::composition_preimage(X, Y, Zeta, f, g, U)
+
+thm consume_complement_preimage:
+    ? forall X, Y set, f fn(x X) Y, F power_set(Y):
+        preimage_set(f, set_minus(Y, F)) = set_minus(X, preimage_set(f, F))
+    release thm top:::complement_preimage(X, Y, f, F)
+
+thm consume_preimage_union:
+    ? forall X, Y set, f fn(x X) Y, U, V power_set(Y):
+        preimage_set(f, union(U, V)) = union(preimage_set(f, U), preimage_set(f, V))
+    release thm top:::preimage_union(X, Y, f, U, V)
+
+thm consume_preimage_intersect:
+    ? forall X, Y set, f fn(x X) Y, U, V power_set(Y):
+        preimage_set(f, intersect(U, V)) = intersect(preimage_set(f, U), preimage_set(f, V))
+    release thm top:::preimage_intersect(X, Y, f, U, V)
+
+thm consume_empty_preimage:
+    ? forall X, Y set, f fn(x X) Y:
+        preimage_set(f, {}) = {}
+    release thm top:::empty_preimage(X, Y, f)
+
+thm consume_whole_preimage:
+    ? forall X, Y set, f fn(x X) Y:
+        preimage_set(f, Y) = X
+    release thm top:::whole_preimage(X, Y, f)
+
+thm consume_surjective_empty_preimage:
+    ? forall X, Y set, f fn(x X) Y, U power_set(Y):
+        $surjective(X, Y, f)
+        preimage_set(f, U) = {}
+        =>:
+            U = {}
+    release thm top:::surjective_empty_preimage(X, Y, f, U)
+
+thm consume_identity_is_continuous:
+    ? forall A set, space &top:::TopologicalSpace<A>:
+        $top:::is_topologically_continuous(A, A, space, space, \top:::identity_map<space.carrier>)
+    release thm top:::identity_is_continuous(A, space)
+
+thm consume_continuous_composition:
+    ? forall A, B, D set, source &top:::TopologicalSpace<A>, middle &top:::TopologicalSpace<B>, target &top:::TopologicalSpace<D>, f fn(x source.carrier) middle.carrier, g fn(y middle.carrier) target.carrier:
+        $top:::is_topologically_continuous(A, B, source, middle, f)
+        $top:::is_topologically_continuous(B, D, middle, target, g)
+        =>:
+            $top:::is_topologically_continuous(A, D, source, target, compose(g, f))
+    release thm top:::continuous_composition(A, B, D, source, middle, target, f, g)
+
+thm consume_continuous_maps_have_closed_preimages:
+    ? forall A, B set, source &top:::TopologicalSpace<A>, target &top:::TopologicalSpace<B>, f fn(x source.carrier) target.carrier:
+        $top:::is_topologically_continuous(A, B, source, target, f)
+        =>:
+            $top:::has_closed_preimages(A, B, source, target, f)
+    release thm top:::continuous_maps_have_closed_preimages(A, B, source, target, f)
+
+thm consume_closed_preimages_imply_continuity:
+    ? forall A, B set, source &top:::TopologicalSpace<A>, target &top:::TopologicalSpace<B>, f fn(x source.carrier) target.carrier:
+        $top:::has_closed_preimages(A, B, source, target, f)
+        =>:
+            $top:::is_topologically_continuous(A, B, source, target, f)
+    release thm top:::closed_preimages_imply_continuity(A, B, source, target, f)
+
+thm consume_maps_from_discrete_are_continuous:
+    ? forall A, B set, source &top:::TopologicalSpace<A>, target &top:::TopologicalSpace<B>, f fn(x source.carrier) target.carrier:
+        source.opens = power_set(source.carrier)
+        =>:
+            $top:::is_topologically_continuous(A, B, source, target, f)
+    release thm top:::maps_from_discrete_are_continuous(A, B, source, target, f)
+
+thm consume_maps_to_indiscrete_are_continuous:
+    ? forall A, B set, source &top:::TopologicalSpace<A>, target &top:::TopologicalSpace<B>, f fn(x source.carrier) target.carrier:
+        target.opens = union({{}}, {target.carrier})
+        =>:
+            $top:::is_topologically_continuous(A, B, source, target, f)
+    release thm top:::maps_to_indiscrete_are_continuous(A, B, source, target, f)
+
+thm consume_homeomorphism_inverse:
+    ? forall A, B set, source &top:::TopologicalSpace<A>, target &top:::TopologicalSpace<B>, f fn(x source.carrier) target.carrier, g fn(y target.carrier) source.carrier:
+        $top:::is_homeomorphism(A, B, source, target, f, g)
+        =>:
+            $top:::is_homeomorphism(B, A, target, source, g, f)
+    release thm top:::homeomorphism_inverse(A, B, source, target, f, g)
+
+thm consume_identity_is_homeomorphism:
+    ? forall A set, space &top:::TopologicalSpace<A>:
+        $top:::is_homeomorphism(A, A, space, space, \top:::identity_map<space.carrier>, \top:::identity_map<space.carrier>)
+    release thm top:::identity_is_homeomorphism(A, space)
+
+thm consume_homeomorphism_is_bijective:
+    ? forall A, B set, source &top:::TopologicalSpace<A>, target &top:::TopologicalSpace<B>, f fn(x source.carrier) target.carrier, g fn(y target.carrier) source.carrier:
+        $top:::is_homeomorphism(A, B, source, target, f, g)
+        =>:
+            $bijective(source.carrier, target.carrier, f)
+    release thm top:::homeomorphism_is_bijective(A, B, source, target, f, g)
+
+thm consume_homeomorphism_composition:
+    ? forall A, B, D set, source &top:::TopologicalSpace<A>, middle &top:::TopologicalSpace<B>, target &top:::TopologicalSpace<D>, f fn(x source.carrier) middle.carrier, fi fn(y middle.carrier) source.carrier, g fn(y middle.carrier) target.carrier, gi fn(z target.carrier) middle.carrier:
+        $top:::is_homeomorphism(A, B, source, middle, f, fi)
+        $top:::is_homeomorphism(B, D, middle, target, g, gi)
+        =>:
+            $top:::is_homeomorphism(A, D, source, target, compose(g, f), compose(fi, gi))
+    release thm top:::homeomorphism_composition(A, B, D, source, middle, target, f, fi, g, gi)
+
+thm consume_empty_and_whole_are_clopen:
+    ? forall A set, space &top:::TopologicalSpace<A>:
+        $top:::is_clopen(A, space, {})
+        $top:::is_clopen(A, space, space.carrier)
+    release thm top:::empty_and_whole_are_clopen(A, space)
+
+thm consume_opens_only_trivial_implies_connected:
+    ? forall Ambient set, space &top:::TopologicalSpace<Ambient>:
+        $top:::has_only_trivial_opens(Ambient, space)
+        =>:
+            $top:::is_connected(Ambient, space)
+    release thm top:::opens_only_trivial_implies_connected(Ambient, space)
+
+thm consume_connected_implies_only_trivial_clopen:
+    ? forall Ambient set, space &top:::TopologicalSpace<Ambient>, F power_set(space.carrier):
+        $top:::is_connected(Ambient, space)
+        $top:::is_clopen(Ambient, space, F)
+        =>:
+            F = {} or F = space.carrier
+    release thm top:::connected_implies_only_trivial_clopen(Ambient, space, F)
+
+thm consume_only_trivial_clopen_implies_connected:
+    ? forall Ambient set, space &top:::TopologicalSpace<Ambient>:
+        $top:::has_only_trivial_clopen(Ambient, space)
+        =>:
+            $top:::is_connected(Ambient, space)
+    release thm top:::only_trivial_clopen_implies_connected(Ambient, space)
+
+thm consume_continuous_surjection_preserves_connectedness:
+    ? forall A, B set, source &top:::TopologicalSpace<A>, target &top:::TopologicalSpace<B>, f fn(x source.carrier) target.carrier:
+        $top:::is_connected(A, source)
+        $top:::is_topologically_continuous(A, B, source, target, f)
+        $surjective(source.carrier, target.carrier, f)
+        =>:
+            $top:::is_connected(B, target)
+    release thm top:::continuous_surjection_preserves_connectedness(A, B, source, target, f)
+
+thm consume_indiscrete_is_connected:
+    ? forall X set:
+        $top:::is_connected(X, \top:::indiscrete_space<X>)
+    release thm top:::indiscrete_is_connected(X)

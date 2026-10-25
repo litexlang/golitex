@@ -97,6 +97,20 @@ impl LitexToLeanCompiler {
                 Some(value),
             ));
         }
+        // Exact rational radicands can retain a native symbolic square root;
+        // its denotation follows from the same source WD, without rounding.
+        if let Some(argument) = EvalRational::from_obj(proof.child_obj_well_defined[0].obj()) {
+            let formed = SourcePosition::new(Some(position), SourceOwner::WD(wd), 3);
+            let child = self.numeric_wd(&proof.child_obj_well_defined[0], &formed)?;
+            let argument = exact_rational_literal(&argument, "ℝ")?;
+            let denotation = format!(
+                "({}).trans (congrArg M.number (by norm_num : {} = (({argument} : ℝ) : ℂ)))",
+                child.1, child.0
+            );
+            return Ok((format!("(Real.sqrt {argument} : ℂ)"),
+                format!("({setup}\nLitex.NativeBridge.denoteSqrt _litex_sqrt.val.arg _litex_sqrt.wd.1 _litex_sqrt.wd.2 {argument} ({denotation}))"),
+                format!("({setup}\n_litex_sqrt_member)"),None));
+        }
         Ok((
             format!("({setup}\nLitex.NativeBridge.asComplex _litex_sqrt _litex_sqrt_member)"),
             format!("({setup}\nLitex.NativeBridge.asComplex_spec _litex_sqrt _litex_sqrt_member)"),

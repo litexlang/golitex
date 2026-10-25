@@ -1,0 +1,8 @@
+# Sine and cosine are real; tangent retains its nonzero cosine condition.
+forall x R:
+    sin(x) $in R
+    cos(x) $in R
+forall x R:
+    cos(x) != 0
+    =>:
+        tan(x) $in R

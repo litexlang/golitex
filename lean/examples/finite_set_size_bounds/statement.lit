@@ -1,0 +1,6 @@
+# Every finite set has a natural, nonnegative cardinality.
+forall S set:
+    $is_finite_set(S)
+    =>:
+        finite_set_size(S) $in N
+        finite_set_size(S) >= 0

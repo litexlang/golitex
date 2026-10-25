@@ -470,6 +470,11 @@ impl LitexToLeanCompiler {
             {
                 "Litex.IsSet"
             }
+            (ParamType::FiniteSet(_), Fact::AtomicFact(AtomicFact::IsFiniteSetFact(f)))
+                if f.set.ir() == object.ir() =>
+            {
+                "Litex.IsFiniteSet"
+            }
             (ParamType::NonemptySet(_), Fact::AtomicFact(AtomicFact::IsNonemptySetFact(f)))
                 if f.set.ir() == object.ir() =>
             {
@@ -486,7 +491,8 @@ impl LitexToLeanCompiler {
             if matches!((kind, infer),
                 (ParamType::Set(_), crate::store_fact_and_infer::InferAtomicFactResult::IsSetFact(r)) if r.is_empty())
                 || matches!((kind, infer),
-                (ParamType::NonemptySet(_), crate::store_fact_and_infer::InferAtomicFactResult::IsNonemptySetFact(r)) if r.is_empty()))
+                (ParamType::NonemptySet(_), crate::store_fact_and_infer::InferAtomicFactResult::IsNonemptySetFact(r)) if r.is_empty())
+                || matches!((kind, infer), (ParamType::FiniteSet(_), crate::store_fact_and_infer::InferAtomicFactResult::IsFiniteSetFact(r)) if r.is_empty()))
         {
             return Err(LeanCompileError::new(
                 "Parameters/SetKindInference",
@@ -616,6 +622,10 @@ impl LitexToLeanCompiler {
                 self.compile_object_reference(&fact.left, position)?,
                 self.compile_object_reference(&fact.right, position)?
             )),
+            AtomicFact::IsFiniteSetFact(fact) => Ok(format!(
+                "Litex.IsFiniteSet {}",
+                self.compile_object_reference(&fact.set, position)?
+            )),
             AtomicFact::IsSetFact(fact) => Ok(format!(
                 "Litex.IsSet {}",
                 self.compile_object_reference(&fact.set, position)?
@@ -689,8 +699,7 @@ impl LitexToLeanCompiler {
                     .collect::<Result<Vec<_>, _>>()?;
                 self.compile_atomic_raw_proposition(fact, &arguments, position)
             }
-            AtomicFact::IsFiniteSetFact(_)
-            | AtomicFact::HasRiemannIntegralFact(_)
+            AtomicFact::HasRiemannIntegralFact(_)
             | AtomicFact::NotHasRiemannIntegralFact(_)
             | AtomicFact::FunctionRiemannIntegrableFact(_)
             | AtomicFact::NotFunctionRiemannIntegrableFact(_)
@@ -860,7 +869,7 @@ impl LitexToLeanCompiler {
                     return Ok(term);
                 }
                 if let Some(term) =
-                    self.compile_finite_seq_inferred_subject(object, store, producer)?
+                    self.compile_sequence_inferred_subject(object, store, producer)?
                 {
                     return Ok(term);
                 }

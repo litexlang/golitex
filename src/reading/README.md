@@ -150,6 +150,14 @@ registrations and their retained formation evidence are navigable. Whole-book
 exports load source/proof chapters, search and concept indexes on demand;
 complete JSON and a standalone offline page remain available. The loopback
 service caches identical successful closed-project uploads in bounded memory.
+
+HTTP responses include their exact byte length. After writing a response, the
+connection closes its write side before draining unread request bytes with a
+250 ms deadline and a 16 MiB limit. This lets early upload rejections deliver the complete
+error response without a TCP reset discarding it. No further request on that
+connection is processed. `tests/reading_http.rs` checks complete responses for
+rejected uploads with 64 KiB bodies, alongside normal uploads and strict policy.
+
 Rule descriptions are shown when authored metadata
 is available; a catalogue entry alone is not a complete mathematical rule
 specification. [DESIGN.md](DESIGN.md) records the full target and acceptance

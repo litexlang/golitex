@@ -24,7 +24,6 @@ mod compile_equality_inferences;
 mod compile_expand_range_stmt_result;
 mod compile_fact_stmt_result;
 mod compile_finite_function_membership;
-mod compile_finite_seq_inference;
 mod compile_function_domain;
 mod compile_function_template;
 mod compile_have_fn_by_exist_result;
@@ -57,6 +56,7 @@ mod compile_release_tuple_def_result;
 mod compile_replacement_result;
 mod compile_returned_function;
 mod compile_run;
+mod compile_sequence_inference;
 mod compile_set_minus_inference;
 mod compile_sketch_stmt_result;
 mod compile_stmt_result;
@@ -149,3 +149,11 @@ mod compile_composition;
 mod compile_release_choice_result;
 
 mod compile_release_zorn_result;
+
+#[cfg(test)]
+mod finite_set_stat_tests;
+
+#[cfg(test)]
+mod aggregate_tests;
+
+mod compile_real_interval_inference;

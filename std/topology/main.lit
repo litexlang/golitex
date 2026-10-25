@@ -1,0 +1,1206 @@
+# General topology with actual carriers, including empty spaces.
+# Native preimages and compose preserve the supplied complete domains.
+
+struct TopologicalSpace<Ambient set>:
+    carrier power_set(Ambient)
+    opens power_set(power_set(carrier))
+    <=>:
+        {} $in opens
+        carrier $in opens
+        forall U, V opens:
+            intersect(U, V) $in opens
+        forall family power_set(power_set(carrier)):
+            family $subset opens
+            =>:
+                family_union(family) $in opens
+
+thm discrete_topology_laws:
+    ? forall X set:
+        (X, power_set(X)) $in &TopologicalSpace<X>
+    claim:
+        ? forall family power_set(power_set(X)):
+            family $subset power_set(X)
+            =>:
+                family_union(family) $in power_set(X)
+        claim:
+            ? forall x family_union(family):
+                x $in X
+            obtain U from exist V family st {x $in V}
+            U $in power_set(X)
+            U $subset X
+        by def family_union(family) $subset X
+    X $in power_set(X)
+    power_set(X) $in power_set(power_set(X))
+    {} $in power_set(X)
+    forall U, V power_set(X):
+        intersect(U, V) $in power_set(X)
+    release thm struct_member((X, power_set(X)), &TopologicalSpace<X>)
+
+template<X set>:
+    have discrete_space &TopologicalSpace<X> = (X, power_set(X))
+
+thm indiscrete_topology_laws:
+    ? forall X set:
+        (X, union({{}}, {X})) $in &TopologicalSpace<X>
+    {} $in power_set(X)
+    X $in power_set(X)
+    {{}} $subset power_set(X)
+    {X} $subset power_set(X)
+    union({{}}, {X}) $subset power_set(X)
+    union({{}}, {X}) $in power_set(power_set(X))
+    claim:
+        ? forall U union({{}}, {X}):
+            U = {} or U = X
+        U $in {{}} or U $in {X}
+        by cases:
+            ? U = {} or U = X
+            case U $in {{}}:
+                U = {}
+            case U $in {X}:
+                U = X
+    claim:
+        ? forall U, V union({{}}, {X}):
+            intersect(U, V) $in union({{}}, {X})
+        U = {} or U = X
+        V $in power_set(X)
+        V $subset X
+        by cases:
+            ? intersect(U, V) $in union({{}}, {X})
+            case U = {}:
+                intersect(U, V) = intersect({}, V) = {}
+            case U = X:
+                intersect(U, V) = intersect(X, V) = V
+    claim:
+        ? forall family power_set(power_set(X)):
+            family $subset union({{}}, {X})
+            =>:
+                family_union(family) $in union({{}}, {X})
+        claim:
+            ? forall x family_union(family):
+                x $in X
+            obtain U from exist V family st {x $in V}
+            U $in power_set(X)
+            U $subset X
+        by def family_union(family) $subset X
+        by cases:
+            ? family_union(family) $in union({{}}, {X})
+            case X $in family:
+                X $subset family_union(family)
+                by extension family_union(family) = X
+            case not X $in family:
+                claim:
+                    ? forall U family:
+                        U = {}
+                    U $in union({{}}, {X})
+                    U = {} or U = X
+                    by cases:
+                        ? U = {}
+                        case U = {}:
+                            U = {}
+                        case U = X:
+                            impossible X $in family
+                by extension:
+                    ? family_union(family) = {}
+                    claim:
+                        ? forall x family_union(family):
+                            x $in {}
+                        obtain U from exist V family st {x $in V}
+                        U = {}
+                        x $in {}
+    {} $in union({{}}, {X})
+    X $in union({{}}, {X})
+    release thm struct_member((X, union({{}}, {X})), &TopologicalSpace<X>)
+
+template<X set>:
+    have indiscrete_space &TopologicalSpace<X> = (X, union({{}}, {X}))
+
+prop is_closed(Ambient set, space &TopologicalSpace<Ambient>, F power_set(space.carrier)):
+    set_minus(space.carrier, F) $in space.opens
+
+thm empty_and_whole_are_closed:
+    ? forall A set, space &TopologicalSpace<A>:
+        $is_closed(A, space, {})
+        $is_closed(A, space, space.carrier)
+    set_minus(space.carrier, {}) = space.carrier
+    set_minus(space.carrier, space.carrier) = {}
+    by def $is_closed(A, space, {})
+    by def $is_closed(A, space, space.carrier)
+
+thm union_of_two_closed_is_closed:
+    ? forall Ambient set, space &TopologicalSpace<Ambient>, F, G power_set(space.carrier):
+        $is_closed(Ambient, space, F)
+        $is_closed(Ambient, space, G)
+        =>:
+            $is_closed(Ambient, space, union(F, G))
+    set_minus(space.carrier, union(F, G)) = intersect(set_minus(space.carrier, F), set_minus(space.carrier, G))
+    by def $is_closed(Ambient, space, union(F, G))
+
+template<X set>:
+    have fn identity_map(x X) X = x
+
+thm identity_preimage:
+    ? forall X set, U power_set(X):
+        preimage_set(\identity_map<X>, U) = U
+    by extension:
+        ? preimage_set(\identity_map<X>, U) = U
+        claim:
+            ? forall x preimage_set(\identity_map<X>, U):
+                x $in U
+            \identity_map<X>(x) = x
+        claim:
+            ? forall x U:
+                x $in preimage_set(\identity_map<X>, U)
+            \identity_map<X>(x) = x
+
+thm composition_preimage:
+    ? forall X, Y, Zeta set, f fn(x X) Y, g fn(y Y) Zeta, U power_set(Zeta):
+        preimage_set(compose(g, f), U) = preimage_set(f, preimage_set(g, U))
+    by extension:
+        ? preimage_set(compose(g, f), U) = preimage_set(f, preimage_set(g, U))
+        claim:
+            ? forall x preimage_set(compose(g, f), U):
+                x $in preimage_set(f, preimage_set(g, U))
+            compose(g, f)(x) = g(f(x))
+            g(f(x)) $in U
+            f(x) $in preimage_set(g, U)
+        claim:
+            ? forall x preimage_set(f, preimage_set(g, U)):
+                x $in preimage_set(compose(g, f), U)
+            f(x) $in preimage_set(g, U)
+            g(f(x)) $in U
+            compose(g, f)(x) = g(f(x))
+
+thm complement_preimage:
+    ? forall X, Y set, f fn(x X) Y, F power_set(Y):
+        preimage_set(f, set_minus(Y, F)) = set_minus(X, preimage_set(f, F))
+    by extension:
+        ? preimage_set(f, set_minus(Y, F)) = set_minus(X, preimage_set(f, F))
+        claim:
+            ? forall x preimage_set(f, set_minus(Y, F)):
+                x $in set_minus(X, preimage_set(f, F))
+            f(x) $in set_minus(Y, F)
+            not f(x) $in F
+            by contra:
+                ? not x $in preimage_set(f, F)
+                f(x) $in F
+                impossible f(x) $in F
+        claim:
+            ? forall x set_minus(X, preimage_set(f, F)):
+                x $in preimage_set(f, set_minus(Y, F))
+            by contra:
+                ? not f(x) $in F
+                x $in preimage_set(f, F)
+                impossible x $in preimage_set(f, F)
+            f(x) $in set_minus(Y, F)
+
+thm preimage_union:
+    ? forall X, Y set, f fn(x X) Y, U, V power_set(Y):
+        preimage_set(f, union(U, V)) = union(preimage_set(f, U), preimage_set(f, V))
+    by extension:
+        ? preimage_set(f, union(U, V)) = union(preimage_set(f, U), preimage_set(f, V))
+        claim:
+            ? forall x preimage_set(f, union(U, V)):
+                x $in union(preimage_set(f, U), preimage_set(f, V))
+            f(x) $in union(U, V)
+            f(x) $in U or f(x) $in V
+            by cases:
+                ? x $in union(preimage_set(f, U), preimage_set(f, V))
+                case f(x) $in U:
+                    x $in preimage_set(f, U)
+                case f(x) $in V:
+                    x $in preimage_set(f, V)
+        claim:
+            ? forall x union(preimage_set(f, U), preimage_set(f, V)):
+                x $in preimage_set(f, union(U, V))
+            x $in preimage_set(f, U) or x $in preimage_set(f, V)
+            by cases:
+                ? x $in preimage_set(f, union(U, V))
+                case x $in preimage_set(f, U):
+                    f(x) $in U
+                case x $in preimage_set(f, V):
+                    f(x) $in V
+                    f(x) $in union(U, V)
+
+thm preimage_intersect:
+    ? forall X, Y set, f fn(x X) Y, U, V power_set(Y):
+        preimage_set(f, intersect(U, V)) = intersect(preimage_set(f, U), preimage_set(f, V))
+    by extension:
+        ? preimage_set(f, intersect(U, V)) = intersect(preimage_set(f, U), preimage_set(f, V))
+        claim:
+            ? forall x preimage_set(f, intersect(U, V)):
+                x $in intersect(preimage_set(f, U), preimage_set(f, V))
+            f(x) $in intersect(U, V)
+            f(x) $in U
+            f(x) $in V
+            x $in preimage_set(f, U)
+            x $in preimage_set(f, V)
+        claim:
+            ? forall x intersect(preimage_set(f, U), preimage_set(f, V)):
+                x $in preimage_set(f, intersect(U, V))
+            x $in preimage_set(f, U)
+            x $in preimage_set(f, V)
+            f(x) $in U
+            f(x) $in V
+            f(x) $in intersect(U, V)
+
+thm empty_preimage:
+    ? forall X, Y set, f fn(x X) Y:
+        preimage_set(f, {}) = {}
+    by extension:
+        ? preimage_set(f, {}) = {}
+        claim:
+            ? forall x preimage_set(f, {}):
+                x $in {}
+            by contra:
+                ? x $in {}
+                impossible f(x) $in {}
+
+thm whole_preimage:
+    ? forall X, Y set, f fn(x X) Y:
+        preimage_set(f, Y) = X
+    by extension:
+        ? preimage_set(f, Y) = X
+        claim:
+            ? forall x X:
+                x $in preimage_set(f, Y)
+            f(x) $in Y
+
+thm surjective_empty_preimage:
+    ? forall X, Y set, f fn(x X) Y, U power_set(Y):
+        $surjective(X, Y, f)
+        preimage_set(f, U) = {}
+        =>:
+            U = {}
+    by extension:
+        ? U = {}
+        claim:
+            ? forall y U:
+                y $in {}
+            y $in Y
+            obtain x from exist z X st {y = f(z)}
+            x $in preimage_set(f, U)
+            by contra:
+                ? y $in {}
+                impossible x $in {}
+        claim:
+            ? forall y {}:
+                y $in U
+            by contra:
+                ? y $in U
+                impossible y $in {}
+
+prop is_topologically_continuous(A, B set, source &TopologicalSpace<A>, target &TopologicalSpace<B>, f fn(x source.carrier) target.carrier):
+    forall U target.opens:
+        preimage_set(f, U) $in source.opens
+
+thm identity_is_continuous:
+    ? forall A set, space &TopologicalSpace<A>:
+        $is_topologically_continuous(A, A, space, space, \identity_map<space.carrier>)
+    claim:
+        ? forall U space.opens:
+            preimage_set(\identity_map<space.carrier>, U) $in space.opens
+        U $in power_set(space.carrier)
+        by thm identity_preimage(space.carrier, U) => preimage_set(\identity_map<space.carrier>, U) = U
+
+thm continuous_composition:
+    ? forall A, B, D set, source &TopologicalSpace<A>, middle &TopologicalSpace<B>, target &TopologicalSpace<D>, f fn(x source.carrier) middle.carrier, g fn(y middle.carrier) target.carrier:
+        $is_topologically_continuous(A, B, source, middle, f)
+        $is_topologically_continuous(B, D, middle, target, g)
+        =>:
+            $is_topologically_continuous(A, D, source, target, compose(g, f))
+    claim:
+        ? forall U target.opens:
+            preimage_set(compose(g, f), U) $in source.opens
+        U $in power_set(target.carrier)
+        preimage_set(g, U) $in middle.opens
+        preimage_set(f, preimage_set(g, U)) $in source.opens
+        by thm composition_preimage(source.carrier, middle.carrier, target.carrier, f, g, U) => preimage_set(compose(g, f), U) = preimage_set(f, preimage_set(g, U))
+
+prop has_closed_preimages(A, B set, source &TopologicalSpace<A>, target &TopologicalSpace<B>, f fn(x source.carrier) target.carrier):
+    forall F power_set(target.carrier):
+        $is_closed(B, target, F)
+        =>:
+            $is_closed(A, source, preimage_set(f, F))
+
+thm continuous_maps_have_closed_preimages:
+    ? forall A, B set, source &TopologicalSpace<A>, target &TopologicalSpace<B>, f fn(x source.carrier) target.carrier:
+        $is_topologically_continuous(A, B, source, target, f)
+        =>:
+            $has_closed_preimages(A, B, source, target, f)
+    claim:
+        ? forall F power_set(target.carrier):
+            $is_closed(B, target, F)
+            =>:
+                $is_closed(A, source, preimage_set(f, F))
+        preimage_set(f, set_minus(target.carrier, F)) $in source.opens
+        by thm complement_preimage(source.carrier, target.carrier, f, F) => preimage_set(f, set_minus(target.carrier, F)) = set_minus(source.carrier, preimage_set(f, F))
+        by def $is_closed(A, source, preimage_set(f, F))
+
+thm closed_preimages_imply_continuity:
+    ? forall A, B set, source &TopologicalSpace<A>, target &TopologicalSpace<B>, f fn(x source.carrier) target.carrier:
+        $has_closed_preimages(A, B, source, target, f)
+        =>:
+            $is_topologically_continuous(A, B, source, target, f)
+    claim:
+        ? forall U target.opens:
+            preimage_set(f, U) $in source.opens
+        U $in power_set(target.carrier)
+        set_minus(target.carrier, set_minus(target.carrier, U)) = U
+        by def $is_closed(B, target, set_minus(target.carrier, U))
+        $is_closed(A, source, preimage_set(f, set_minus(target.carrier, U)))
+        by thm complement_preimage(source.carrier, target.carrier, f, U) => preimage_set(f, set_minus(target.carrier, U)) = set_minus(source.carrier, preimage_set(f, U))
+        set_minus(source.carrier, preimage_set(f, set_minus(target.carrier, U))) $in source.opens
+        preimage_set(f, U) $subset source.carrier
+        set_minus(source.carrier, preimage_set(f, set_minus(target.carrier, U))) = set_minus(source.carrier, set_minus(source.carrier, preimage_set(f, U))) = preimage_set(f, U)
+
+thm maps_from_discrete_are_continuous:
+    ? forall A, B set, source &TopologicalSpace<A>, target &TopologicalSpace<B>, f fn(x source.carrier) target.carrier:
+        source.opens = power_set(source.carrier)
+        =>:
+            $is_topologically_continuous(A, B, source, target, f)
+    claim:
+        ? forall U target.opens:
+            preimage_set(f, U) $in source.opens
+        preimage_set(f, U) $in power_set(source.carrier)
+
+thm maps_to_indiscrete_are_continuous:
+    ? forall A, B set, source &TopologicalSpace<A>, target &TopologicalSpace<B>, f fn(x source.carrier) target.carrier:
+        target.opens = union({{}}, {target.carrier})
+        =>:
+            $is_topologically_continuous(A, B, source, target, f)
+    claim:
+        ? forall U target.opens:
+            preimage_set(f, U) $in source.opens
+        U $in union({{}}, {target.carrier})
+        U $in {{}} or U $in {target.carrier}
+        by cases:
+            ? preimage_set(f, U) $in source.opens
+            case U $in {{}}:
+                U = {}
+                release thm empty_preimage(source.carrier, target.carrier, f)
+                preimage_set(f, U) = preimage_set(f, {}) = {}
+            case U $in {target.carrier}:
+                U = target.carrier
+                release thm whole_preimage(source.carrier, target.carrier, f)
+                preimage_set(f, U) = preimage_set(f, target.carrier) = source.carrier
+
+prop is_homeomorphism(A, B set, source &TopologicalSpace<A>, target &TopologicalSpace<B>, f fn(x source.carrier) target.carrier, g fn(y target.carrier) source.carrier):
+    $is_topologically_continuous(A, B, source, target, f)
+    $is_topologically_continuous(B, A, target, source, g)
+    forall x source.carrier:
+        g(f(x)) = x
+    forall y target.carrier:
+        f(g(y)) = y
+
+thm homeomorphism_inverse:
+    ? forall A, B set, source &TopologicalSpace<A>, target &TopologicalSpace<B>, f fn(x source.carrier) target.carrier, g fn(y target.carrier) source.carrier:
+        $is_homeomorphism(A, B, source, target, f, g)
+        =>:
+            $is_homeomorphism(B, A, target, source, g, f)
+
+thm identity_is_homeomorphism:
+    ? forall A set, space &TopologicalSpace<A>:
+        $is_homeomorphism(A, A, space, space, \identity_map<space.carrier>, \identity_map<space.carrier>)
+    release thm identity_is_continuous(A, space)
+    by def $is_homeomorphism(A, A, space, space, \identity_map<space.carrier>, \identity_map<space.carrier>)
+
+thm homeomorphism_is_bijective:
+    ? forall A, B set, source &TopologicalSpace<A>, target &TopologicalSpace<B>, f fn(x source.carrier) target.carrier, g fn(y target.carrier) source.carrier:
+        $is_homeomorphism(A, B, source, target, f, g)
+        =>:
+            $bijective(source.carrier, target.carrier, f)
+    claim:
+        ? forall x, y source.carrier:
+            f(x) = f(y)
+            =>:
+                x = y
+        x = g(f(x)) = g(f(y)) = y
+    by def $injective(source.carrier, target.carrier, f)
+    claim:
+        ? forall y target.carrier:
+            exist x source.carrier st {y = f(x)}
+        witness exist x source.carrier st {y = f(x)} from g(y)
+    by def $surjective(source.carrier, target.carrier, f)
+
+thm homeomorphism_composition:
+    ? forall A, B, D set, source &TopologicalSpace<A>, middle &TopologicalSpace<B>, target &TopologicalSpace<D>, f fn(x source.carrier) middle.carrier, fi fn(y middle.carrier) source.carrier, g fn(y middle.carrier) target.carrier, gi fn(z target.carrier) middle.carrier:
+        $is_homeomorphism(A, B, source, middle, f, fi)
+        $is_homeomorphism(B, D, middle, target, g, gi)
+        =>:
+            $is_homeomorphism(A, D, source, target, compose(g, f), compose(fi, gi))
+    release thm continuous_composition(A, B, D, source, middle, target, f, g)
+    release thm continuous_composition(D, B, A, target, middle, source, gi, fi)
+    claim:
+        ? forall x source.carrier:
+            compose(fi, gi)(compose(g, f)(x)) = x
+        gi(g(f(x))) = f(x)
+        compose(fi, gi)(compose(g, f)(x)) = fi(gi(g(f(x)))) = fi(f(x)) = x
+    claim:
+        ? forall z target.carrier:
+            compose(g, f)(compose(fi, gi)(z)) = z
+        f(fi(gi(z))) = gi(z)
+        compose(g, f)(compose(fi, gi)(z)) = g(f(fi(gi(z)))) = g(gi(z)) = z
+
+prop is_connected(Ambient set, space &TopologicalSpace<Ambient>):
+    forall U, V space.opens:
+        union(U, V) = space.carrier
+        intersect(U, V) = {}
+        =>:
+            U = {} or V = {}
+
+prop is_clopen(Ambient set, space &TopologicalSpace<Ambient>, F power_set(space.carrier)):
+    F $in space.opens
+    $is_closed(Ambient, space, F)
+
+thm empty_and_whole_are_clopen:
+    ? forall A set, space &TopologicalSpace<A>:
+        $is_clopen(A, space, {})
+        $is_clopen(A, space, space.carrier)
+    release thm empty_and_whole_are_closed(A, space)
+    by def $is_clopen(A, space, {})
+
+prop has_only_trivial_opens(Ambient set, space &TopologicalSpace<Ambient>):
+    forall U space.opens:
+        U = {} or U = space.carrier
+
+thm opens_only_trivial_implies_connected:
+    ? forall Ambient set, space &TopologicalSpace<Ambient>:
+        $has_only_trivial_opens(Ambient, space)
+        =>:
+            $is_connected(Ambient, space)
+    claim:
+        ? forall U, V space.opens:
+            union(U, V) = space.carrier
+            intersect(U, V) = {}
+            =>:
+                U = {} or V = {}
+        U = {} or U = space.carrier
+        V $in power_set(space.carrier)
+        V $subset space.carrier
+        by cases:
+            ? U = {} or V = {}
+            case U = {}:
+                U = {}
+            case U = space.carrier:
+                intersect(U, V) = intersect(space.carrier, V) = V
+                V = {}
+
+thm connected_implies_only_trivial_clopen:
+    ? forall Ambient set, space &TopologicalSpace<Ambient>, F power_set(space.carrier):
+        $is_connected(Ambient, space)
+        $is_clopen(Ambient, space, F)
+        =>:
+            F = {} or F = space.carrier
+    F $in space.opens
+    $is_closed(Ambient, space, F)
+    set_minus(space.carrier, F) $in space.opens
+    by extension:
+        ? union(F, set_minus(space.carrier, F)) = space.carrier
+        claim:
+            ? forall x union(F, set_minus(space.carrier, F)):
+                x $in space.carrier
+            x $in F or x $in set_minus(space.carrier, F)
+            by cases:
+                ? x $in space.carrier
+                case x $in F:
+                    F $subset space.carrier
+                    x $in space.carrier
+                case x $in set_minus(space.carrier, F):
+                    x $in space.carrier
+        claim:
+            ? forall x space.carrier:
+                x $in union(F, set_minus(space.carrier, F))
+            x $in F or not x $in F
+            by cases:
+                ? x $in union(F, set_minus(space.carrier, F))
+                case x $in F:
+                    x $in union(F, set_minus(space.carrier, F))
+                case not x $in F:
+                    x $in set_minus(space.carrier, F)
+                    x $in union(F, set_minus(space.carrier, F))
+    by extension:
+        ? intersect(F, set_minus(space.carrier, F)) = {}
+        claim:
+            ? forall x intersect(F, set_minus(space.carrier, F)):
+                x $in {}
+            x $in F
+            x $in set_minus(space.carrier, F)
+            not x $in F
+            by contra:
+                ? x $in {}
+                impossible x $in F
+        claim:
+            ? forall x {}:
+                x $in intersect(F, set_minus(space.carrier, F))
+            by contra:
+                ? x $in intersect(F, set_minus(space.carrier, F))
+                impossible x $in {}
+    F = {} or set_minus(space.carrier, F) = {}
+    by cases:
+        ? F = {} or F = space.carrier
+        case F = {}:
+            F = {}
+        case set_minus(space.carrier, F) = {}:
+            by extension:
+                ? F = space.carrier
+                claim:
+                    ? forall x F:
+                        x $in space.carrier
+                    F $subset space.carrier
+                    x $in space.carrier
+                claim:
+                    ? forall x space.carrier:
+                        x $in F
+                    by contra:
+                        ? x $in F
+                        x $in set_minus(space.carrier, F)
+                        impossible x $in {}
+
+prop has_only_trivial_clopen(Ambient set, space &TopologicalSpace<Ambient>):
+    forall F power_set(space.carrier):
+        $is_clopen(Ambient, space, F)
+        =>:
+            F = {} or F = space.carrier
+
+thm only_trivial_clopen_implies_connected:
+    ? forall Ambient set, space &TopologicalSpace<Ambient>:
+        $has_only_trivial_clopen(Ambient, space)
+        =>:
+            $is_connected(Ambient, space)
+    claim:
+        ? forall U, V space.opens:
+            union(U, V) = space.carrier
+            intersect(U, V) = {}
+            =>:
+                U = {} or V = {}
+        U $in power_set(space.carrier)
+        by extension:
+            ? set_minus(space.carrier, U) = V
+            claim:
+                ? forall x set_minus(space.carrier, U):
+                    x $in V
+                not x $in U
+                x $in space.carrier
+                x $in union(U, V)
+                x $in U or x $in V
+                by cases:
+                    ? x $in V
+                    case x $in U:
+                        by contra:
+                            ? x $in V
+                            impossible not x $in U
+                    case x $in V:
+                        x $in V
+            claim:
+                ? forall x V:
+                    x $in set_minus(space.carrier, U)
+                x $in space.carrier
+                by contra:
+                    ? not x $in U
+                    x $in U
+                    x $in intersect(U, V)
+                    impossible x $in {}
+        by def $is_closed(Ambient, space, U)
+        by def $is_clopen(Ambient, space, U)
+        U = {} or U = space.carrier
+        V $in power_set(space.carrier)
+        V $subset space.carrier
+        by cases:
+            ? U = {} or V = {}
+            case U = {}:
+                U = {}
+            case U = space.carrier:
+                intersect(U, V) = intersect(space.carrier, V) = V
+                V = {}
+    by def $is_connected(Ambient, space)
+
+thm continuous_surjection_preserves_connectedness:
+    ? forall A, B set, source &TopologicalSpace<A>, target &TopologicalSpace<B>, f fn(x source.carrier) target.carrier:
+        $is_connected(A, source)
+        $is_topologically_continuous(A, B, source, target, f)
+        $surjective(source.carrier, target.carrier, f)
+        =>:
+            $is_connected(B, target)
+    claim:
+        ? forall U, V target.opens:
+            union(U, V) = target.carrier
+            intersect(U, V) = {}
+            =>:
+                U = {} or V = {}
+        preimage_set(f, U) $in source.opens
+        preimage_set(f, V) $in source.opens
+        release thm whole_preimage(source.carrier, target.carrier, f)
+        release thm empty_preimage(source.carrier, target.carrier, f)
+        release thm preimage_union(source.carrier, target.carrier, f, U, V)
+        preimage_set(f, union(U, V)) = preimage_set(f, target.carrier) = source.carrier
+        union(preimage_set(f, U), preimage_set(f, V)) = source.carrier
+        release thm preimage_intersect(source.carrier, target.carrier, f, U, V)
+        preimage_set(f, intersect(U, V)) = preimage_set(f, {}) = {}
+        intersect(preimage_set(f, U), preimage_set(f, V)) = {}
+        preimage_set(f, U) = {} or preimage_set(f, V) = {}
+        by cases:
+            ? U = {} or V = {}
+            case preimage_set(f, U) = {}:
+                by thm surjective_empty_preimage(source.carrier, target.carrier, f, U) => U = {}
+            case preimage_set(f, V) = {}:
+                by thm surjective_empty_preimage(source.carrier, target.carrier, f, V) => V = {}
+    by def $is_connected(B, target)
+
+thm indiscrete_is_connected:
+    ? forall X set:
+        $is_connected(X, \indiscrete_space<X>)
+    release struct def \indiscrete_space<X>
+    \indiscrete_space<X>.carrier = X
+    \indiscrete_space<X>.opens = union({{}}, {X})
+    claim:
+        ? forall U \indiscrete_space<X>.opens:
+            U = {} or U = \indiscrete_space<X>.carrier
+        U $in union({{}}, {X})
+        U $in {{}} or U $in {X}
+        by cases:
+            ? U = {} or U = \indiscrete_space<X>.carrier
+            case U $in {{}}:
+                U = {}
+            case U $in {X}:
+                U = X
+    by def $has_only_trivial_opens(X, \indiscrete_space<X>)
+    release thm opens_only_trivial_implies_connected(X, \indiscrete_space<X>)
+
+# Separation axioms and closed singletons.
+
+prop has_separating_open(A set, space &TopologicalSpace<A>, x, y space.carrier):
+    exist U space.opens st {x $in U, not y $in U}
+
+prop is_T0(A set, space &TopologicalSpace<A>):
+    forall x, y space.carrier:
+        x != y
+        =>:
+            $has_separating_open(A, space, x, y) or $has_separating_open(A, space, y, x)
+
+prop is_T1(A set, space &TopologicalSpace<A>):
+    forall x, y space.carrier:
+        x != y
+        =>:
+            $has_separating_open(A, space, x, y)
+
+prop is_Hausdorff(A set, space &TopologicalSpace<A>):
+    forall x, y space.carrier:
+        x != y
+        =>:
+            exist U, V space.opens st {x $in U, y $in V, intersect(U, V) = {}}
+
+thm Hausdorff_implies_T1:
+    ? forall A set, space &TopologicalSpace<A>:
+        $is_Hausdorff(A, space)
+        =>:
+            $is_T1(A, space)
+    claim:
+        ? forall x, y space.carrier:
+            x != y
+            =>:
+                $has_separating_open(A, space, x, y)
+        obtain U, V from exist U, V space.opens st {x $in U, y $in V, intersect(U, V) = {}}
+        by contra:
+            ? not y $in U
+            y $in intersect(U, V)
+            impossible y $in {}
+        witness $has_separating_open(A, space, x, y) from U
+
+thm T1_implies_T0:
+    ? forall A set, space &TopologicalSpace<A>:
+        $is_T1(A, space)
+        =>:
+            $is_T0(A, space)
+    claim:
+        ? forall x, y space.carrier:
+            x != y
+            =>:
+                $has_separating_open(A, space, x, y) or $has_separating_open(A, space, y, x)
+        $has_separating_open(A, space, x, y)
+
+thm Hausdorff_implies_T0:
+    ? forall A set, space &TopologicalSpace<A>:
+        $is_Hausdorff(A, space)
+        =>:
+            $is_T0(A, space)
+    release thm Hausdorff_implies_T1(A, space)
+    by thm T1_implies_T0(A, space) => $is_T0(A, space)
+
+thm T1_implies_closed_singletons:
+    ? forall Ambient set, space &TopologicalSpace<Ambient>, x space.carrier:
+        $is_T1(Ambient, space)
+        =>:
+            $is_closed(Ambient, space, {x})
+    {x} $subset space.carrier
+    {x} $in power_set(space.carrier)
+    have opens_avoiding_x power_set(space.opens) = {U space.opens: not x $in U}
+    opens_avoiding_x $subset space.opens
+    claim:
+        ? forall U opens_avoiding_x:
+            U $in power_set(space.carrier)
+        U $in space.opens
+        U $in power_set(space.carrier)
+    by def opens_avoiding_x $subset power_set(space.carrier)
+    opens_avoiding_x $in power_set(power_set(space.carrier))
+    family_union(opens_avoiding_x) $in space.opens
+    by extension:
+        ? set_minus(space.carrier, {x}) = family_union(opens_avoiding_x)
+        claim:
+            ? forall y set_minus(space.carrier, {x}):
+                y $in family_union(opens_avoiding_x)
+            not y $in {x}
+            y != x
+            $has_separating_open(Ambient, space, y, x)
+            obtain U from $has_separating_open(Ambient, space, y, x)
+            not x $in U
+            U $in opens_avoiding_x
+            y $in U
+            y $in family_union(opens_avoiding_x)
+        claim:
+            ? forall y family_union(opens_avoiding_x):
+                y $in set_minus(space.carrier, {x})
+            obtain U from exist W opens_avoiding_x st {y $in W}
+            U $in space.opens
+            U $in power_set(space.carrier)
+            U $subset space.carrier
+            y $in space.carrier
+            not x $in U
+            by contra:
+                ? not y $in {x}
+                y $in {x}
+                y = x
+                impossible not x $in U
+
+thm Hausdorff_implies_closed_singletons:
+    ? forall A set, space &TopologicalSpace<A>, x space.carrier:
+        $is_Hausdorff(A, space)
+        =>:
+            $is_closed(A, space, {x})
+    release thm Hausdorff_implies_T1(A, space)
+    by thm T1_implies_closed_singletons(A, space, x) => $is_closed(A, space, {x})
+
+thm closed_singletons_imply_T1:
+    ? forall A set, space &TopologicalSpace<A>:
+        forall x space.carrier:
+            $is_closed(A, space, {x})
+        =>:
+            $is_T1(A, space)
+    claim:
+        ? forall x, y space.carrier:
+            x != y
+            =>:
+                $has_separating_open(A, space, x, y)
+        $is_closed(A, space, {y})
+        set_minus(space.carrier, {y}) $in space.opens
+        x $in set_minus(space.carrier, {y})
+        by contra:
+            ? not y $in set_minus(space.carrier, {y})
+            impossible not y $in {y}
+        witness $has_separating_open(A, space, x, y) from set_minus(space.carrier, {y})
+    by def $is_T1(A, space)
+
+thm discrete_is_Hausdorff:
+    ? forall A set, space &TopologicalSpace<A>:
+        space.opens = power_set(space.carrier)
+        =>:
+            $is_Hausdorff(A, space)
+    claim:
+        ? forall x, y space.carrier:
+            x != y
+            =>:
+                exist U, V space.opens st {x $in U, y $in V, intersect(U, V) = {}}
+        {x} $in space.opens
+        {y} $in space.opens
+        by extension:
+            ? intersect({x}, {y}) = {}
+            claim:
+                ? forall z intersect({x}, {y}):
+                    z $in {}
+                z $in {x}
+                z $in {y}
+                x = z = y
+                by contra:
+                    ? z $in {}
+                    impossible x != y
+        witness exist U, V space.opens st {x $in U, y $in V, intersect(U, V) = {}} from {x}, {y}
+    by def $is_Hausdorff(A, space)
+
+thm two_point_subset_of_Hausdorff_is_closed:
+    ? forall A set, space &TopologicalSpace<A>, x, y space.carrier:
+        $is_Hausdorff(A, space)
+        =>:
+            $is_closed(A, space, union({x}, {y}))
+    release thm Hausdorff_implies_closed_singletons(A, space, x)
+    release thm Hausdorff_implies_closed_singletons(A, space, y)
+    by thm union_of_two_closed_is_closed(A, space, {x}, {y}) => $is_closed(A, space, union({x}, {y}))
+
+thm homeomorphism_preserves_Hausdorff:
+    ? forall A, B set, source &TopologicalSpace<A>, target &TopologicalSpace<B>, f fn(x source.carrier) target.carrier, g fn(y target.carrier) source.carrier:
+        $is_homeomorphism(A, B, source, target, f, g)
+        $is_Hausdorff(A, source)
+        =>:
+            $is_Hausdorff(B, target)
+    $is_topologically_continuous(B, A, target, source, g)
+    claim:
+        ? forall x, y target.carrier:
+            x != y
+            =>:
+                exist U, V target.opens st {x $in U, y $in V, intersect(U, V) = {}}
+        by contra:
+            ? g(x) != g(y)
+            x = f(g(x)) = f(g(y)) = y
+            impossible x != y
+        obtain U, V from exist U, V source.opens st {g(x) $in U, g(y) $in V, intersect(U, V) = {}}
+        preimage_set(g, U) $in target.opens
+        preimage_set(g, V) $in target.opens
+        release thm preimage_intersect(target.carrier, source.carrier, g, U, V)
+        release thm empty_preimage(target.carrier, source.carrier, g)
+        intersect(preimage_set(g, U), preimage_set(g, V)) = preimage_set(g, intersect(U, V)) = preimage_set(g, {}) = {}
+        witness exist left_open, right_open target.opens st {x $in left_open, y $in right_open, intersect(left_open, right_open) = {}} from preimage_set(g, U), preimage_set(g, V)
+    by def $is_Hausdorff(B, target)
+
+thm trivial_opens_with_distinct_points_not_T0:
+    ? forall A set, space &TopologicalSpace<A>, x, y space.carrier:
+        $has_only_trivial_opens(A, space)
+        x != y
+        =>:
+            not $is_T0(A, space)
+    claim:
+        ? forall a, b space.carrier:
+            not $has_separating_open(A, space, a, b)
+        by contra:
+            ? not $has_separating_open(A, space, a, b)
+            obtain U from $has_separating_open(A, space, a, b)
+            U = {} or U = space.carrier
+            claim:
+                ? a $in {}
+                by cases:
+                    ? a $in {}
+                    case U = {}:
+                        impossible a $in {}
+                    case U = space.carrier:
+                        impossible not b $in space.carrier
+            impossible a $in {}
+    by contra:
+        ? not $is_T0(A, space)
+        $has_separating_open(A, space, x, y) or $has_separating_open(A, space, y, x)
+        claim:
+            ? x $in {}
+            by cases:
+                ? x $in {}
+                case $has_separating_open(A, space, x, y):
+                    impossible $has_separating_open(A, space, x, y)
+                case $has_separating_open(A, space, y, x):
+                    impossible $has_separating_open(A, space, y, x)
+        impossible x $in {}
+
+# Compactness through arbitrary indexed open covers.
+
+template<X, Y set, f fn(x X) Y, K power_set(X)>:
+    have fn restricted_map(x K) Y = f(x)
+
+thm restriction_range_monotone:
+    ? forall X, Y set, f fn(x X) Y, K, L power_set(X):
+        K $subset L
+        =>:
+            fn_range(\restricted_map<X, Y, f, K>) $subset fn_range(\restricted_map<X, Y, f, L>)
+    release thm fn_set_member(\restricted_map<X, Y, f, K>, fn(x K) Y)
+    release thm fn_set_member(\restricted_map<X, Y, f, L>, fn(x L) Y)
+    claim:
+        ? forall y fn_range(\restricted_map<X, Y, f, K>):
+            y $in fn_range(\restricted_map<X, Y, f, L>)
+        have by fn_preimage: x from y $in fn_range(\restricted_map<X, Y, f, K>)
+        x $in L
+        \restricted_map<X, Y, f, K>(x) = f(x)
+        \restricted_map<X, Y, f, L>(x) = f(x)
+        y = \restricted_map<X, Y, f, K>(x) = f(x) = \restricted_map<X, Y, f, L>(x)
+    by def fn_range(\restricted_map<X, Y, f, K>) $subset fn_range(\restricted_map<X, Y, f, L>)
+
+prop is_compact_subset(A set, space &TopologicalSpace<A>, K power_set(space.carrier)):
+    forall Index set, cover fn(index Index) space.opens:
+        K $subset family_union(fn_range(cover))
+        =>:
+            exist J power_set(Index) st {$is_finite_set(J), K $subset family_union(fn_range(\restricted_map<Index, space.opens, cover, J>))}
+
+prop is_compact_space(A set, space &TopologicalSpace<A>):
+    $is_compact_subset(A, space, space.carrier)
+
+thm empty_is_compact:
+    ? forall A set, space &TopologicalSpace<A>:
+        $is_compact_subset(A, space, {})
+    claim:
+        ? forall Index set, cover fn(index Index) space.opens:
+            {} $subset family_union(fn_range(cover))
+            =>:
+                exist J power_set(Index) st {$is_finite_set(J), {} $subset family_union(fn_range(\restricted_map<Index, space.opens, cover, J>))}
+        witness exist J power_set(Index) st {$is_finite_set(J), {} $subset family_union(fn_range(\restricted_map<Index, space.opens, cover, J>))} from {}
+
+thm singleton_is_compact:
+    ? forall A set, space &TopologicalSpace<A>, x space.carrier:
+        $is_compact_subset(A, space, {x})
+    claim:
+        ? forall Index set, cover fn(index Index) space.opens:
+            {x} $subset family_union(fn_range(cover))
+            =>:
+                exist J power_set(Index) st {$is_finite_set(J), {x} $subset family_union(fn_range(\restricted_map<Index, space.opens, cover, J>))}
+        x $in {x}
+        x $in family_union(fn_range(cover))
+        obtain U from exist W fn_range(cover) st {x $in W}
+        have by fn_preimage: selected_index from U $in fn_range(cover)
+        have J power_set(Index) = {selected_index}
+        $is_finite_set(J)
+        selected_index $in J
+        release thm fn_set_member(\restricted_map<Index, space.opens, cover, J>, fn(index J) space.opens)
+        \restricted_map<Index, space.opens, cover, J>(selected_index) = cover(selected_index)
+        cover(selected_index) $in fn_range(\restricted_map<Index, space.opens, cover, J>)
+        x $in cover(selected_index)
+        claim:
+            ? forall z {x}:
+                z $in family_union(fn_range(\restricted_map<Index, space.opens, cover, J>))
+            z = x
+            witness exist W fn_range(\restricted_map<Index, space.opens, cover, J>) st {z $in W} from cover(selected_index)
+        by def {x} $subset family_union(fn_range(\restricted_map<Index, space.opens, cover, J>))
+        witness exist finite_indices power_set(Index) st {$is_finite_set(finite_indices), {x} $subset family_union(fn_range(\restricted_map<Index, space.opens, cover, finite_indices>))} from J
+    by def $is_compact_subset(A, space, {x})
+
+thm union_of_compact_subsets_is_compact:
+    ? forall A set, space &TopologicalSpace<A>, K, L power_set(space.carrier):
+        $is_compact_subset(A, space, K)
+        $is_compact_subset(A, space, L)
+        =>:
+            $is_compact_subset(A, space, union(K, L))
+    claim:
+        ? forall Index set, cover fn(index Index) space.opens:
+            union(K, L) $subset family_union(fn_range(cover))
+            =>:
+                exist J power_set(Index) st {$is_finite_set(J), union(K, L) $subset family_union(fn_range(\restricted_map<Index, space.opens, cover, J>))}
+        K $subset union(K, L)
+        L $subset union(K, L)
+        K $subset family_union(fn_range(cover))
+        L $subset family_union(fn_range(cover))
+        obtain J from exist S power_set(Index) st {$is_finite_set(S), K $subset family_union(fn_range(\restricted_map<Index, space.opens, cover, S>))}
+        obtain M from exist S power_set(Index) st {$is_finite_set(S), L $subset family_union(fn_range(\restricted_map<Index, space.opens, cover, S>))}
+        have whole_indices power_set(Index) = union(J, M)
+        $is_finite_set(whole_indices)
+        claim:
+            ? forall small power_set(Index):
+                small $subset whole_indices
+                =>:
+                    family_union(fn_range(\restricted_map<Index, space.opens, cover, small>)) $subset family_union(fn_range(\restricted_map<Index, space.opens, cover, whole_indices>))
+            release thm restriction_range_monotone(Index, space.opens, cover, small, whole_indices)
+            claim:
+                ? forall point family_union(fn_range(\restricted_map<Index, space.opens, cover, small>)):
+                    point $in family_union(fn_range(\restricted_map<Index, space.opens, cover, whole_indices>))
+                obtain U from exist V fn_range(\restricted_map<Index, space.opens, cover, small>) st {point $in V}
+                U $in fn_range(\restricted_map<Index, space.opens, cover, whole_indices>)
+                witness exist V fn_range(\restricted_map<Index, space.opens, cover, whole_indices>) st {point $in V} from U
+            by def family_union(fn_range(\restricted_map<Index, space.opens, cover, small>)) $subset family_union(fn_range(\restricted_map<Index, space.opens, cover, whole_indices>))
+        J $subset whole_indices
+        M $subset whole_indices
+        family_union(fn_range(\restricted_map<Index, space.opens, cover, J>)) $subset family_union(fn_range(\restricted_map<Index, space.opens, cover, whole_indices>))
+        family_union(fn_range(\restricted_map<Index, space.opens, cover, M>)) $subset family_union(fn_range(\restricted_map<Index, space.opens, cover, whole_indices>))
+        K $subset family_union(fn_range(\restricted_map<Index, space.opens, cover, whole_indices>))
+        L $subset family_union(fn_range(\restricted_map<Index, space.opens, cover, whole_indices>))
+        union(K, L) $subset family_union(fn_range(\restricted_map<Index, space.opens, cover, whole_indices>))
+        witness exist S power_set(Index) st {$is_finite_set(S), union(K, L) $subset family_union(fn_range(\restricted_map<Index, space.opens, cover, S>))} from whole_indices
+    by def $is_compact_subset(A, space, union(K, L))
+
+thm finite_subsets_are_compact:
+    ? forall A set, space &TopologicalSpace<A>, K power_set(space.carrier):
+        $is_finite_set(K)
+        =>:
+            $is_compact_subset(A, space, K)
+    prop compact_at_size(n N):
+        forall L power_set(space.carrier):
+            $is_finite_set(L)
+            finite_set_size(L) = n
+            =>:
+                $is_compact_subset(A, space, L)
+    by induc n from 0:
+        ? $compact_at_size(n)
+        ? from n = 0:
+            claim:
+                ? forall L power_set(space.carrier):
+                    $is_finite_set(L)
+                    finite_set_size(L) = 0
+                    =>:
+                        $is_compact_subset(A, space, L)
+                L = {}
+                release thm empty_is_compact(A, space)
+            by def $compact_at_size(0)
+        ? induc:
+            n $in N
+            claim:
+                ? forall L power_set(space.carrier):
+                    $is_finite_set(L)
+                    finite_set_size(L) = n + 1
+                    =>:
+                        $is_compact_subset(A, space, L)
+                by contra:
+                    ? $is_nonempty_set(L)
+                    L = {}
+                    finite_set_size(L) = finite_set_size({}) = 0
+                    finite_set_size(L) = 0 < n + 1
+                    impossible finite_set_size(L) = n + 1
+                have x L
+                have rest finite_set = set_minus(L, {x})
+                rest $subset L
+                L $subset space.carrier
+                rest $subset space.carrier
+                rest $in power_set(space.carrier)
+                {x} $subset L
+                intersect(L, {x}) = {x}
+                finite_set_size(rest) = finite_set_size(set_minus(L, {x})) = finite_set_size(L) - finite_set_size(intersect(L, {x})) = (n + 1) - finite_set_size({x}) = n
+                $is_compact_subset(A, space, rest)
+                release thm singleton_is_compact(A, space, x)
+                release thm union_of_compact_subsets_is_compact(A, space, rest, {x})
+                union(rest, {x}) = union({x}, rest) = union({x}, set_minus(L, {x})) = union({x}, L) = L
+            by def $compact_at_size(n + 1)
+    $compact_at_size(finite_set_size(K))
+
+thm continuous_image_of_compact_is_compact:
+    ? forall A, B set, source &TopologicalSpace<A>, target &TopologicalSpace<B>, f fn(x source.carrier) target.carrier, K power_set(source.carrier):
+        $is_topologically_continuous(A, B, source, target, f)
+        $is_compact_subset(A, source, K)
+        =>:
+            $is_compact_subset(B, target, fn_range(\restricted_map<source.carrier, target.carrier, f, K>))
+    release thm fn_set_member(\restricted_map<source.carrier, target.carrier, f, K>, fn(x K) target.carrier)
+    claim:
+        ? forall Index set, cover fn(index Index) target.opens:
+            fn_range(\restricted_map<source.carrier, target.carrier, f, K>) $subset family_union(fn_range(cover))
+            =>:
+                exist J power_set(Index) st {$is_finite_set(J), fn_range(\restricted_map<source.carrier, target.carrier, f, K>) $subset family_union(fn_range(\restricted_map<Index, target.opens, cover, J>))}
+        claim:
+            ? forall cover_index Index:
+                cover(cover_index) $in power_set(target.carrier)
+            cover(cover_index) $in target.opens
+            cover(cover_index) $in power_set(target.carrier)
+        have fn pullback_cover(index Index) source.opens = preimage_set(f, cover(index))
+        claim:
+            ? forall index Index:
+                preimage_set(f, cover(index)) $in source.opens
+            cover(index) $in target.opens
+            preimage_set(f, cover(index)) $in source.opens
+        claim:
+            ? K $subset family_union(fn_range(pullback_cover))
+            claim:
+                ? forall point K:
+                    point $in family_union(fn_range(pullback_cover))
+                \restricted_map<source.carrier, target.carrier, f, K>(point) = f(point)
+                f(point) $in fn_range(\restricted_map<source.carrier, target.carrier, f, K>)
+                f(point) $in family_union(fn_range(cover))
+                obtain target_open from exist source_target_open fn_range(cover) st {f(point) $in source_target_open}
+                have by fn_preimage: selected_index from target_open $in fn_range(cover)
+                target_open = cover(selected_index)
+                f(point) $in cover(selected_index)
+                point $in preimage_set(f, cover(selected_index))
+                point $in pullback_cover(selected_index)
+                pullback_cover(selected_index) $in fn_range(pullback_cover)
+                point $in family_union(fn_range(pullback_cover))
+            by def K $subset family_union(fn_range(pullback_cover))
+        obtain J from exist source_J power_set(Index) st {$is_finite_set(source_J), K $subset family_union(fn_range(\restricted_map<Index, source.opens, pullback_cover, source_J>))}
+        witness exist finite_indices power_set(Index) st {$is_finite_set(finite_indices), fn_range(\restricted_map<source.carrier, target.carrier, f, K>) $subset family_union(fn_range(\restricted_map<Index, target.opens, cover, finite_indices>))} from J:
+            release thm fn_set_member(\restricted_map<Index, source.opens, pullback_cover, J>, fn(index J) source.opens)
+            release thm fn_set_member(\restricted_map<Index, target.opens, cover, J>, fn(index J) target.opens)
+            claim:
+                ? fn_range(\restricted_map<source.carrier, target.carrier, f, K>) $subset family_union(fn_range(\restricted_map<Index, target.opens, cover, J>))
+                claim:
+                    ? forall image_point fn_range(\restricted_map<source.carrier, target.carrier, f, K>):
+                        image_point $in family_union(fn_range(\restricted_map<Index, target.opens, cover, J>))
+                    have by fn_preimage: source_point from image_point $in fn_range(\restricted_map<source.carrier, target.carrier, f, K>)
+                    source_point $in K
+                    \restricted_map<source.carrier, target.carrier, f, K>(source_point) = f(source_point)
+                    image_point = f(source_point)
+                    source_point $in family_union(fn_range(\restricted_map<Index, source.opens, pullback_cover, J>))
+                    obtain source_open from exist source_source_open fn_range(\restricted_map<Index, source.opens, pullback_cover, J>) st {source_point $in source_source_open}
+                    have by fn_preimage: selected_index from source_open $in fn_range(\restricted_map<Index, source.opens, pullback_cover, J>)
+                    selected_index $in J
+                    selected_index $in Index
+                    \restricted_map<Index, source.opens, pullback_cover, J>(selected_index) = pullback_cover(selected_index)
+                    source_open = pullback_cover(selected_index)
+                    source_point $in pullback_cover(selected_index)
+                    pullback_cover(selected_index) = preimage_set(f, cover(selected_index))
+                    source_point $in preimage_set(f, cover(selected_index))
+                    f(source_point) $in cover(selected_index)
+                    \restricted_map<Index, target.opens, cover, J>(selected_index) = cover(selected_index)
+                    cover(selected_index) $in fn_range(\restricted_map<Index, target.opens, cover, J>)
+                    image_point $in cover(selected_index)
+                    witness exist target_open fn_range(\restricted_map<Index, target.opens, cover, J>) st {image_point $in target_open} from cover(selected_index)
+                    image_point $in family_union(fn_range(\restricted_map<Index, target.opens, cover, J>))
+                by def fn_range(\restricted_map<source.carrier, target.carrier, f, K>) $subset family_union(fn_range(\restricted_map<Index, target.opens, cover, J>))
+    fn_range(\restricted_map<source.carrier, target.carrier, f, K>) $subset target.carrier
+    fn_range(\restricted_map<source.carrier, target.carrier, f, K>) $in power_set(target.carrier)
+    by def $is_compact_subset(B, target, fn_range(\restricted_map<source.carrier, target.carrier, f, K>))
+
+thm continuous_surjection_preserves_compactness:
+    ? forall A, B set, source &TopologicalSpace<A>, target &TopologicalSpace<B>, f fn(x source.carrier) target.carrier:
+        $is_compact_space(A, source)
+        $is_topologically_continuous(A, B, source, target, f)
+        $surjective(source.carrier, target.carrier, f)
+        =>:
+            $is_compact_space(B, target)
+    $is_compact_subset(A, source, source.carrier)
+    release thm continuous_image_of_compact_is_compact(A, B, source, target, f, source.carrier)
+    release thm fn_set_member(\restricted_map<source.carrier, target.carrier, f, source.carrier>, fn(x source.carrier) target.carrier)
+    by extension:
+        ? fn_range(\restricted_map<source.carrier, target.carrier, f, source.carrier>) = target.carrier
+        claim:
+            ? forall y target.carrier:
+                y $in fn_range(\restricted_map<source.carrier, target.carrier, f, source.carrier>)
+            obtain x from exist x source.carrier st {y = f(x)}
+            \restricted_map<source.carrier, target.carrier, f, source.carrier>(x) = f(x)
+            y = f(x) = \restricted_map<source.carrier, target.carrier, f, source.carrier>(x)
+    $is_compact_subset(B, target, target.carrier)
+    by def $is_compact_space(B, target)
+
+thm homeomorphism_preserves_compactness:
+    ? forall A, B set, source &TopologicalSpace<A>, target &TopologicalSpace<B>, f fn(x source.carrier) target.carrier, g fn(y target.carrier) source.carrier:
+        $is_homeomorphism(A, B, source, target, f, g)
+        $is_compact_space(A, source)
+        =>:
+            $is_compact_space(B, target)
+    release thm homeomorphism_is_bijective(A, B, source, target, f, g)
+    release thm continuous_surjection_preserves_compactness(A, B, source, target, f)
+
+thm trivial_open_space_is_compact:
+    ? forall A set, space &TopologicalSpace<A>:
+        $has_only_trivial_opens(A, space)
+        =>:
+            $is_compact_space(A, space)
+    claim:
+        ? forall Index set, cover fn(index Index) space.opens:
+            space.carrier $subset family_union(fn_range(cover))
+            =>:
+                exist J power_set(Index) st {$is_finite_set(J), space.carrier $subset family_union(fn_range(\restricted_map<Index, space.opens, cover, J>))}
+        by cases:
+            ? exist J power_set(Index) st {$is_finite_set(J), space.carrier $subset family_union(fn_range(\restricted_map<Index, space.opens, cover, J>))}
+            case space.carrier = {}:
+                witness exist J power_set(Index) st {$is_finite_set(J), space.carrier $subset family_union(fn_range(\restricted_map<Index, space.opens, cover, J>))} from {}
+            case space.carrier != {}:
+                by contra:
+                    ? $is_nonempty_set(space.carrier)
+                    space.carrier = {}
+                    impossible space.carrier != {}
+                have x space.carrier
+                x $in family_union(fn_range(cover))
+                obtain U from exist U fn_range(cover) st {x $in U}
+                have by fn_preimage: selected_index from U $in fn_range(cover)
+                cover(selected_index) $in space.opens
+                x $in cover(selected_index)
+                cover(selected_index) = {} or cover(selected_index) = space.carrier
+                by cases:
+                    ? exist J power_set(Index) st {$is_finite_set(J), space.carrier $subset family_union(fn_range(\restricted_map<Index, space.opens, cover, J>))}
+                    case cover(selected_index) = {}:
+                        impossible x $in {}
+                    case cover(selected_index) = space.carrier:
+                        have J power_set(Index) = {selected_index}
+                        $is_finite_set(J)
+                        selected_index $in J
+                        release thm fn_set_member(\restricted_map<Index, space.opens, cover, J>, fn(index J) space.opens)
+                        \restricted_map<Index, space.opens, cover, J>(selected_index) = cover(selected_index)
+                        cover(selected_index) $in fn_range(\restricted_map<Index, space.opens, cover, J>)
+                        cover(selected_index) $subset family_union(fn_range(\restricted_map<Index, space.opens, cover, J>))
+                        space.carrier $subset family_union(fn_range(\restricted_map<Index, space.opens, cover, J>))
+                        witness exist S power_set(Index) st {$is_finite_set(S), space.carrier $subset family_union(fn_range(\restricted_map<Index, space.opens, cover, S>))} from J
+    by def $is_compact_subset(A, space, space.carrier)
+    by def $is_compact_space(A, space)

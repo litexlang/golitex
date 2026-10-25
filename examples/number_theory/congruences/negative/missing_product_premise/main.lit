@@ -1,0 +1,7 @@
+# The setup passes; only the final statement must fail.
+thm missing_product_premise:
+    ? forall a, b, c, d Z, m N+:
+        $nt:::is_congruent_mod(a, b, m)
+        =>:
+            $nt:::is_congruent_mod(a * c, b * d, m)
+    release thm nt:::congruence_multiply(a, b, c, d, m)

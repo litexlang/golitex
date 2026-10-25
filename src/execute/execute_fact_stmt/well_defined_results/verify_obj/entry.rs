@@ -92,6 +92,18 @@ impl Runtime {
             return self.verify_identifier_obj_well_definedness(value, verify_state);
         }
 
+        if matches!(
+            obj,
+            Obj::IteratedOperator(
+                IteratedOperator::Sum(_)
+                    | IteratedOperator::Product(_)
+                    | IteratedOperator::SumOfFiniteSet(_)
+                    | IteratedOperator::ProductOfFiniteSet(_)
+            )
+        ) {
+            return self.verify_scalar_aggregate_well_definedness(obj, verify_state);
+        }
+
         if let Obj::BoundOperator(value) = obj {
             return self.verify_bound_operator_well_definedness(value, verify_state);
         }
@@ -438,18 +450,14 @@ impl Runtime {
             Obj::FunctionSpace(FunctionSpace::FnRange(_)) => {
                 unreachable!("FnRange WD uses verify_fn_range_obj_well_definedness")
             }
-            Obj::IteratedOperator(IteratedOperator::Sum(value)) => {
-                self.verify_sum_obj_well_definedness_by_def(value, verify_state)
-            }
-            Obj::IteratedOperator(IteratedOperator::SumOfFiniteSet(value)) => {
-                self.verify_sum_of_finite_set_obj_well_definedness_by_def(value, verify_state)
-            }
-            Obj::IteratedOperator(IteratedOperator::Product(value)) => {
-                self.verify_product_obj_well_definedness_by_def(value, verify_state)
-            }
-            Obj::IteratedOperator(IteratedOperator::ProductOfFiniteSet(value)) => {
-                self.verify_product_of_finite_set_obj_well_definedness_by_def(value, verify_state)
-            }
+            Obj::IteratedOperator(
+                IteratedOperator::Sum(_)
+                | IteratedOperator::SumOfFiniteSet(_)
+                | IteratedOperator::Product(_)
+                | IteratedOperator::ProductOfFiniteSet(_),
+            ) => unreachable!(
+                "scalar aggregates retain their selected signature in the dedicated pipeline"
+            ),
             Obj::IteratedOperator(IteratedOperator::Reduce(value)) => {
                 self.verify_reduce_obj_well_definedness_by_def(value, verify_state)
             }

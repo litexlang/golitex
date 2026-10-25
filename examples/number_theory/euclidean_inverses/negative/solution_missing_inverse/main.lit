@@ -1,0 +1,4 @@
+thm solution_missing_inverse:
+    ? forall a, b, u Z, m N+:
+        $nt:::is_congruent_mod(a * (u * b), b, m)
+    release thm nt:::modular_linear_equation_solution(a,b,u,m)

@@ -1,0 +1,7 @@
+thm whole_target_missing_continuity:
+    ? forall A, B set, source &top:::TopologicalSpace<A>, target &top:::TopologicalSpace<B>, f fn(x source.carrier) target.carrier:
+        $top:::is_compact_space(A, source)
+        $surjective(source.carrier, target.carrier, f)
+        =>:
+            $top:::is_compact_space(B, target)
+    release thm top:::continuous_surjection_preserves_compactness(A, B, source, target, f)

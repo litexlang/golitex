@@ -1,0 +1,163 @@
+have fn three_into_two(x {0, 1, 2}) {0, 1} by cases:
+    case x = 0: 0
+    case x = 1: 1
+    case x = 2: 0
+
+release thm comb:::pigeonhole_collision({0, 1, 2}, {0, 1}, three_into_two)
+
+obtain collided_left, collided_right from exist x, y {0, 1, 2} st {x != y, three_into_two(x) = three_into_two(y)}
+
+collided_left != collided_right
+
+three_into_two(collided_left) = three_into_two(collided_right)
+
+three_into_two(0) = 0 = three_into_two(2)
+
+{0, 1} $subset {0, 1, 2}
+
+claim:
+    ? forall y {0, 1}:
+        exist x {0, 1, 2} st {y = three_into_two(x)}
+    by cases:
+        ? exist x {0, 1, 2} st {y = three_into_two(x)}
+        case y = 0:
+            witness exist x {0, 1, 2} st {y = three_into_two(x)} from 0
+        case y = 1:
+            witness exist x {0, 1, 2} st {y = three_into_two(x)} from 1
+
+by def $surjective({0, 1, 2}, {0, 1}, three_into_two)
+
+release thm comb:::surjection_size_ge({0, 1, 2}, {0, 1}, three_into_two)
+
+release thm comb:::surjection_collision_strict_size({0, 1, 2}, {0, 1}, three_into_two, 0, 2)
+
+release thm comb:::remove_one_size({0, 1, 2}, 0)
+
+finite_set_size(set_minus({0, 1, 2}, {0})) = 2
+
+have fn inclusion_map(x {0, 1}) {0, 1, 2} = x
+
+claim:
+    ? forall x, y {0, 1}:
+        inclusion_map(x) = inclusion_map(y)
+        =>:
+            x = y
+    x = inclusion_map(x) = inclusion_map(y) = y
+
+by def $injective({0, 1}, {0, 1, 2}, inclusion_map)
+
+release thm comb:::injection_size_le({0, 1}, {0, 1, 2}, inclusion_map)
+
+release thm comb:::cardinality_gap_omits_value({0, 1}, {0, 1, 2}, inclusion_map)
+
+obtain omitted_point from exist y {0, 1, 2} st {not y $in fn_range(inclusion_map)}
+
+not omitted_point $in fn_range(inclusion_map)
+
+by contra:
+    ? not 2 $in fn_range(inclusion_map)
+    have by fn_preimage: original_point from 2 $in fn_range(inclusion_map)
+    inclusion_map(original_point) = original_point
+    original_point = 2
+    2 $in {0, 1}
+    impossible 2 $in {0, 1}
+
+have fn identity_three(x {0, 1, 2}) {0, 1, 2} = x
+
+claim:
+    ? forall x, y {0, 1, 2}:
+        identity_three(x) = identity_three(y)
+        =>:
+            x = y
+    x = identity_three(x) = identity_three(y) = y
+
+by def $injective({0, 1, 2}, {0, 1, 2}, identity_three)
+
+release thm comb:::equal_size_injection_is_bijective({0, 1, 2}, {0, 1, 2}, identity_three)
+
+have fn cycle_three(x {0, 1, 2}) {0, 1, 2} by cases:
+    case x = 0: 1
+    case x = 1: 2
+    case x = 2: 0
+
+claim:
+    ? forall y {0, 1, 2}:
+        exist x {0, 1, 2} st {y = cycle_three(x)}
+    by cases:
+        ? exist x {0, 1, 2} st {y = cycle_three(x)}
+        case y = 0:
+            witness exist x {0, 1, 2} st {y = cycle_three(x)} from 2
+        case y = 1:
+            witness exist x {0, 1, 2} st {y = cycle_three(x)} from 0
+        case y = 2:
+            witness exist x {0, 1, 2} st {y = cycle_three(x)} from 1
+
+by def $surjective({0, 1, 2}, {0, 1, 2}, cycle_three)
+
+release thm comb:::equal_size_surjection_is_bijective({0, 1, 2}, {0, 1, 2}, cycle_three)
+
+$injective({0, 1, 2}, {0, 1, 2}, cycle_three)
+
+release thm comb:::mutual_finite_injections_are_bijective({0, 1, 2}, {0, 1, 2}, identity_three, cycle_three)
+
+cycle_three(identity_three(0)) = cycle_three(0) = 1
+
+cycle_three(identity_three(0)) != 0
+
+by extension:
+    ? union({0}, {1, 2}) = {0, 1, 2}
+    {0} $subset {0, 1, 2}
+    {1, 2} $subset {0, 1, 2}
+    union({0}, {1, 2}) $subset {0, 1, 2}
+    0 $in union({0}, {1, 2})
+    1 $in union({0}, {1, 2})
+    2 $in union({0}, {1, 2})
+    {0, 1, 2} $subset union({0}, {1, 2})
+
+by extension:
+    ? intersect({0}, {1, 2}) = {}
+    claim:
+        ? forall x intersect({0}, {1, 2}):
+            x $in {}
+        by contra:
+            ? x $in {}
+            x $in {0}
+            x = 0
+            x $in {1, 2}
+            0 $in {1, 2}
+            impossible 0 $in {1, 2}
+
+release thm comb:::disjoint_partition_size({0, 1, 2}, {0}, {1, 2})
+
+release thm comb:::remove_one_size({0}, 0)
+
+finite_set_size(set_minus({0}, {0})) = 0
+
+have fn empty_map(x {}) {} = x
+
+by def $injective({}, {}, empty_map)
+
+claim:
+    ? forall y {}:
+        exist x {} st {y = empty_map(x)}
+    witness exist x {} st {y = empty_map(x)} from y
+
+by def $surjective({}, {}, empty_map)
+
+release thm comb:::equal_size_injection_is_bijective({}, {}, empty_map)
+
+release thm comb:::equal_size_surjection_is_bijective({}, {}, empty_map)
+
+release thm comb:::mutual_finite_injections_are_bijective({}, {}, empty_map, empty_map)
+
+release thm comb:::disjoint_partition_size({}, {}, {})
+
+have fn empty_to_point(x {}) {0} = 0
+
+release thm comb:::cardinality_gap_omits_value({}, {0}, empty_to_point)
+
+obtain missing_from_empty from exist y {0} st {not y $in fn_range(empty_to_point)}
+
+missing_from_empty = 0
+
+by def $bijective({0, 1, 2}, {0, 1}, three_into_two)

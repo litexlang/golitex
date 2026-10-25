@@ -1,0 +1,4 @@
+# Count distinct elements, including the empty collection.
+finite_set_size({1, 2}) = 2
+finite_set_size({}) = 0
+finite_set_size({1, 2, 3}) + 1 = 4

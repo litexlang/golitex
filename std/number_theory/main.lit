@@ -1,0 +1,222 @@
+# Divisibility uses the native dividend-first predicate $dvd(a, d).
+# Congruence has integer operands and a positive integer modulus.
+
+prop is_congruent_mod(a, b Z, modulus N+):
+    $dvd(a - b, modulus)
+
+thm divisibility_transitive:
+    ? forall a Z, b, d Z*:
+        $dvd(a, b)
+        $dvd(b, d)
+        =>:
+            $dvd(a, d)
+    obtain k from exist k Z st {a = k * b}
+    obtain l from exist l Z st {b = l * d}
+    a = k * b = k * (l * d) = (k * l) * d
+
+thm divisibility_linear_combination:
+    ? forall a, b, x, y Z, d Z*:
+        $dvd(a, d)
+        $dvd(b, d)
+        =>:
+            $dvd(a * x + b * y, d)
+    obtain k from exist k Z st {a = k * d}
+    obtain l from exist l Z st {b = l * d}
+    a * x + b * y = (k * d) * x + (l * d) * y = (k * x + l * y) * d
+
+thm congruence_reflexive:
+    ? forall a Z, m N+:
+        $is_congruent_mod(a, a, m)
+    a - a = 0 * m
+    by def $is_congruent_mod(a, a, m)
+
+thm congruence_symmetric:
+    ? forall a, b Z, m N+:
+        $is_congruent_mod(a, b, m)
+        =>:
+            $is_congruent_mod(b, a, m)
+    release thm divisibility_linear_combination(a - b, 0, -1, 0, m)
+    b - a = (a - b) * (-1) + 0 * 0
+
+thm congruence_transitive:
+    ? forall a, b, c Z, m N+:
+        $is_congruent_mod(a, b, m)
+        $is_congruent_mod(b, c, m)
+        =>:
+            $is_congruent_mod(a, c, m)
+    release thm divisibility_linear_combination(a - b, b - c, 1, 1, m)
+    a - c = (a - b) * 1 + (b - c) * 1
+
+thm congruence_add:
+    ? forall a, b, c, d Z, m N+:
+        $is_congruent_mod(a, b, m)
+        $is_congruent_mod(c, d, m)
+        =>:
+            $is_congruent_mod(a + c, b + d, m)
+    release thm divisibility_linear_combination(a - b, c - d, 1, 1, m)
+    (a + c) - (b + d) = (a - b) * 1 + (c - d) * 1
+
+thm congruence_subtract:
+    ? forall a, b, c, d Z, m N+:
+        $is_congruent_mod(a, b, m)
+        $is_congruent_mod(c, d, m)
+        =>:
+            $is_congruent_mod(a - c, b - d, m)
+    release thm divisibility_linear_combination(a - b, c - d, 1, -1, m)
+    (a - c) - (b - d) = (a - b) * 1 + (c - d) * (-1)
+
+thm congruence_multiply:
+    ? forall a, b, c, d Z, m N+:
+        $is_congruent_mod(a, b, m)
+        $is_congruent_mod(c, d, m)
+        =>:
+            $is_congruent_mod(a * c, b * d, m)
+    release thm divisibility_linear_combination(a - b, c - d, c, b, m)
+    a * c - b * d = (a - b) * c + (c - d) * b
+
+thm congruence_scale:
+    ? forall a, b, t Z, m N+:
+        $is_congruent_mod(a, b, m)
+        =>:
+            $is_congruent_mod(t * a, t * b, m)
+    release thm congruence_reflexive(t, m)
+    by thm congruence_multiply(t, t, a, b, m) => $is_congruent_mod(t * a, t * b, m)
+
+thm congruence_negate:
+    ? forall a, b Z, m N+:
+        $is_congruent_mod(a, b, m)
+        =>:
+            $is_congruent_mod(-a, -b, m)
+    release thm congruence_scale(a, b, -1, m)
+    -a = (-1) * a
+    -b = (-1) * b
+
+thm congruence_remainder:
+    ? forall a Z, m N+:
+        $is_congruent_mod(a, a % m, m)
+
+thm congruence_modulus_divisor:
+    ? forall a, b Z, m, n N+:
+        $is_congruent_mod(a, b, n)
+        $dvd(n, m)
+        =>:
+            $is_congruent_mod(a, b, m)
+    release thm divisibility_transitive(a - b, n, m)
+
+# Euclidean transformations and supplied modular inverses.
+
+thm gcd_add_multiple:
+    ? forall a Z, b Z*, k Z:
+        gcd(a + k * b, b) = gcd(a, b)
+    have original N+ = gcd(a, b)
+    have shifted N+ = gcd(a + k * b, b)
+    $dvd(a, original)
+    $dvd(b, original)
+    release thm divisibility_linear_combination(a, b, 1, k, original)
+    a + k * b = a * 1 + b * k
+    $dvd(a + k * b, original)
+    (a + k * b) % original = 0
+    b % original = 0
+    original <= gcd(a + k * b, b)
+    $dvd(a + k * b, shifted)
+    $dvd(b, shifted)
+    release thm divisibility_linear_combination(a + k * b, b, 1, -k, shifted)
+    a = (a + k * b) * 1 + b * (-k)
+    $dvd(a, shifted)
+    a % shifted = 0
+    b % shifted = 0
+    shifted <= gcd(a, b)
+    original <= shifted
+    shifted <= original
+
+thm congruence_gcd_invariant:
+    ? forall a, c Z, m N+:
+        $is_congruent_mod(a, c, m)
+        =>:
+            gcd(a, m) = gcd(c, m)
+    $dvd(a - c, m)
+    obtain k from exist k Z st {a - c = k * m}
+    a = (a - c) + c = k * m + c = c + k * m
+    release thm gcd_add_multiple(c, m, k)
+
+thm gcd_euclidean_step:
+    ? forall a Z, b N+:
+        gcd(a, b) = gcd(b, a % b)
+
+thm linear_equation_necessary_divisibility:
+    ? forall a Z, b Z*, c, x, y Z:
+        a * x + b * y = c
+        =>:
+            $dvd(c, gcd(a, b))
+    $dvd(a, gcd(a, b))
+    $dvd(b, gcd(a, b))
+    release thm divisibility_linear_combination(a, b, x, y, gcd(a, b))
+
+thm linear_equation_from_bezout:
+    ? forall a, b, u, v, c Z, d N+:
+        a * u + b * v = d
+        $dvd(c, d)
+        =>:
+            exist x, y Z st {a * x + b * y = c}
+    obtain k from exist k Z st {c = k * d}
+    a * (u * k) + b * (v * k) = (a * u + b * v) * k = d * k = k * d = c
+    witness exist x, y Z st {a * x + b * y = c} from u * k, v * k
+
+prop is_modular_inverse(a, u Z, modulus N+):
+    $is_congruent_mod(a * u, 1, modulus)
+
+thm modular_inverse_from_bezout:
+    ? forall a, u, v Z, m N+:
+        a * u + m * v = 1
+        =>:
+            $is_modular_inverse(a, u, m)
+    a * u - 1 = a * u - (a * u + m * v) = (-v) * m
+    $dvd(a * u - 1, m)
+    by def $is_congruent_mod(a * u, 1, m)
+    by def $is_modular_inverse(a, u, m)
+
+thm modular_inverse_cancels:
+    ? forall a, b, c, u Z, m N+:
+        $is_modular_inverse(a, u, m)
+        $is_congruent_mod(a * b, a * c, m)
+        =>:
+            $is_congruent_mod(b, c, m)
+    $is_congruent_mod(a * u, 1, m)
+    $dvd(a * u - 1, m)
+    $dvd(a * b - a * c, m)
+    release thm divisibility_linear_combination(a * b - a * c, a * u - 1, u, -(b - c), m)
+    b - c = (a * b - a * c) * u + (a * u - 1) * (-(b - c))
+    by def $is_congruent_mod(b, c, m)
+
+thm modular_linear_equation_solution:
+    ? forall a, b, u Z, m N+:
+        $is_modular_inverse(a, u, m)
+        =>:
+            $is_congruent_mod(a * (u * b), b, m)
+    $is_congruent_mod(a * u, 1, m)
+    release thm congruence_scale(a * u, 1, b, m)
+    a * (u * b) = b * (a * u)
+    b * 1 = b
+
+thm modular_linear_equation_unique:
+    ? forall a, b, u, x Z, m N+:
+        $is_modular_inverse(a, u, m)
+        $is_congruent_mod(a * x, b, m)
+        =>:
+            $is_congruent_mod(x, u * b, m)
+    release thm modular_linear_equation_solution(a, b, u, m)
+    release thm congruence_symmetric(a * (u * b), b, m)
+    release thm congruence_transitive(a * x, b, a * (u * b), m)
+    release thm modular_inverse_cancels(a, x, u * b, u, m)
+
+thm modular_inverse_unique:
+    ? forall a, u, v Z, m N+:
+        $is_modular_inverse(a, u, m)
+        $is_modular_inverse(a, v, m)
+        =>:
+            $is_congruent_mod(u, v, m)
+    $is_congruent_mod(a * u, 1, m)
+    $is_congruent_mod(a * v, 1, m)
+    release thm congruence_symmetric(a * v, 1, m)
+    release thm congruence_transitive(a * u, 1, a * v, m)
+    release thm modular_inverse_cancels(a, u, v, u, m)

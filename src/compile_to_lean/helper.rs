@@ -96,7 +96,7 @@ pub(super) fn validate_arithmetic_expression(object: &Obj) -> Result<(), LeanCom
     match object {
         Obj::Identifier(IdentifierObj::Plain { .. }) => Ok(()),
         Obj::Literal(Literal::Number(n)) => number_literal(n, "ℂ").map(|_| ()),
-        Obj::Literal(Literal::ImaginaryUnit(_)) => Ok(()),
+        Obj::Literal(Literal::ImaginaryUnit(_) | Literal::EulerNumber(_) | Literal::Pi(_)) => Ok(()),
         Obj::FnObj(call)
             if call.body.len() == 1 && !call.body[0].is_empty() =>
         {
@@ -112,6 +112,9 @@ pub(super) fn validate_arithmetic_expression(object: &Obj) -> Result<(), LeanCom
             // supply the scalar observation; the field stays an opaque leaf.
             Ok(())
         }
+        Obj::ComplexOperator(_) => Ok(()),
+        Obj::TrigOperator(TrigOperator::Sin(_) | TrigOperator::Cos(_) | TrigOperator::Tan(_)) => Ok(()),
+        Obj::ExpLogOperator(ExpLogOperator::Exp(_) | ExpLogOperator::Ln(_) | ExpLogOperator::Log(_)) => Ok(()),
         Obj::ExpLogOperator(ExpLogOperator::Sqrt(_)) => {
             // Rational normalization treats the original square root as one
             // scalar leaf. Its observer consumes the argument WD, real
@@ -395,6 +398,16 @@ pub(super) fn arithmetic_constructor_pairs<'a>(
 
 pub(super) fn arithmetic_operation_term(operation: &str) -> String {
     match operation {
+        "conjValue" => "(Litex.complexUnaryValue (M := M) (fun z : ℂ => star z))".into(),
+        "reValue" => "(Litex.complexUnaryValue (M := M) (fun z : ℂ => (z.re : ℂ)))".into(),
+        "imgValue" => "(Litex.complexUnaryValue (M := M) (fun z : ℂ => (z.im : ℂ)))".into(),
+        "complexAbsValue" => "(Litex.complexUnaryValue (M := M) (fun z : ℂ => (‖z‖ : ℂ)))".into(),
+        "sinValue" => "(Litex.realUnaryValue (M := M) Real.sin)".into(),
+        "cosValue" => "(Litex.realUnaryValue (M := M) Real.cos)".into(),
+        "tanValue" => "(Litex.realUnaryValue (M := M) Real.tan)".into(),
+        "expValue" => "(Litex.realUnaryValue (M := M) Real.exp)".into(),
+        "lnValue" => "(Litex.realUnaryValue (M := M) Real.log)".into(),
+        "logValue" => "(fun _base _arg => M.divValue (Litex.realUnaryValue (M := M) Real.log _arg) (Litex.realUnaryValue (M := M) Real.log _base))".into(),
         "absValue" | "sqrtValue" | "signValue" => format!("(Litex.{operation} (M := M))"),
         "minValue" => "(Litex.minMaxValue (M := M) false)".into(),
         "factorialValue" => "(Litex.factorialValue (M := M))".into(),
@@ -1461,6 +1474,18 @@ pub(super) fn instantiated_object_matches(
             Obj::IntegerOperator(IntegerOperator::Factorial(b)),
         ) => instantiated_object_matches(&a.arg, &b.arg, substitution),
         (
+            Obj::FiniteSetStat(FiniteSetStat::FiniteSetSize(a)),
+            Obj::FiniteSetStat(FiniteSetStat::FiniteSetSize(b)),
+        ) => instantiated_object_matches(&a.set, &b.set, substitution),
+        (
+            Obj::FiniteSetStat(FiniteSetStat::FiniteSetMax(a)),
+            Obj::FiniteSetStat(FiniteSetStat::FiniteSetMax(b)),
+        ) => instantiated_object_matches(&a.set, &b.set, substitution),
+        (
+            Obj::FiniteSetStat(FiniteSetStat::FiniteSetMin(a)),
+            Obj::FiniteSetStat(FiniteSetStat::FiniteSetMin(b)),
+        ) => instantiated_object_matches(&a.set, &b.set, substitution),
+        (
             Obj::IntegerOperator(IntegerOperator::Gcd(a)),
             Obj::IntegerOperator(IntegerOperator::Gcd(b)),
         ) => {
@@ -1509,6 +1534,46 @@ pub(super) fn instantiated_object_matches(
         ) => {
             instantiated_object_matches(&a.left, &b.left, substitution)
                 && instantiated_object_matches(&a.right, &b.right, substitution)
+        }
+        (
+            Obj::ComplexOperator(ComplexOperator::Conjugate(a)),
+            Obj::ComplexOperator(ComplexOperator::Conjugate(b)),
+        ) => instantiated_object_matches(&a.arg, &b.arg, substitution),
+        (
+            Obj::ComplexOperator(ComplexOperator::RealPart(a)),
+            Obj::ComplexOperator(ComplexOperator::RealPart(b)),
+        ) => instantiated_object_matches(&a.arg, &b.arg, substitution),
+        (
+            Obj::ComplexOperator(ComplexOperator::ImaginaryPart(a)),
+            Obj::ComplexOperator(ComplexOperator::ImaginaryPart(b)),
+        ) => instantiated_object_matches(&a.arg, &b.arg, substitution),
+        (
+            Obj::ComplexOperator(ComplexOperator::ComplexAbs(a)),
+            Obj::ComplexOperator(ComplexOperator::ComplexAbs(b)),
+        ) => instantiated_object_matches(&a.arg, &b.arg, substitution),
+        (Obj::TrigOperator(TrigOperator::Sin(a)), Obj::TrigOperator(TrigOperator::Sin(b))) => {
+            instantiated_object_matches(&a.arg, &b.arg, substitution)
+        }
+        (Obj::TrigOperator(TrigOperator::Cos(a)), Obj::TrigOperator(TrigOperator::Cos(b))) => {
+            instantiated_object_matches(&a.arg, &b.arg, substitution)
+        }
+        (Obj::TrigOperator(TrigOperator::Tan(a)), Obj::TrigOperator(TrigOperator::Tan(b))) => {
+            instantiated_object_matches(&a.arg, &b.arg, substitution)
+        }
+        (
+            Obj::ExpLogOperator(ExpLogOperator::Exp(a)),
+            Obj::ExpLogOperator(ExpLogOperator::Exp(b)),
+        ) => instantiated_object_matches(&a.arg, &b.arg, substitution),
+        (
+            Obj::ExpLogOperator(ExpLogOperator::Ln(a)),
+            Obj::ExpLogOperator(ExpLogOperator::Ln(b)),
+        ) => instantiated_object_matches(&a.arg, &b.arg, substitution),
+        (
+            Obj::ExpLogOperator(ExpLogOperator::Log(a)),
+            Obj::ExpLogOperator(ExpLogOperator::Log(b)),
+        ) => {
+            instantiated_object_matches(&a.base, &b.base, substitution)
+                && instantiated_object_matches(&a.arg, &b.arg, substitution)
         }
         (
             Obj::ExpLogOperator(ExpLogOperator::Sqrt(a)),
@@ -1893,5 +1958,44 @@ mod function_substitution_tests {
             &Obj::FnObj(actual),
             &substitution
         ));
+    }
+}
+
+pub(super) fn real_interval_parts(interval: &IntervalObj) -> (&Obj, &Obj, bool, bool) {
+    let (p, lc, rc) = match interval {
+        IntervalObj::LeftOpenRightOpen(p) => (p, false, false),
+        IntervalObj::LeftOpenRightClosed(p) => (p, false, true),
+        IntervalObj::LeftClosedRightOpen(p) => (p, true, false),
+        IntervalObj::LeftClosedRightClosed(p) => (p, true, true),
+    };
+    (&p.start, &p.end, lc, rc)
+}
+
+pub(super) fn real_ray_parts(ray: &OneSideInfinityIntervalObj) -> (&Obj, bool, bool) {
+    match ray {
+        OneSideInfinityIntervalObj::LowerOpen(p) => (&p.start, true, false),
+        OneSideInfinityIntervalObj::LowerClosed(p) => (&p.start, true, true),
+        OneSideInfinityIntervalObj::UpperOpen(p) => (&p.start, false, false),
+        OneSideInfinityIntervalObj::UpperClosed(p) => (&p.start, false, true),
+    }
+}
+
+pub(super) fn real_bound_subject(fact: &Fact, left: &Obj, right: &Obj, closed: bool) -> bool {
+    match fact {
+        Fact::AtomicFact(AtomicFact::LessEqualFact(f)) if closed => {
+            f.left.ir() == left.ir() && f.right.ir() == right.ir()
+        }
+        Fact::AtomicFact(AtomicFact::LessFact(f)) if !closed => {
+            f.left.ir() == left.ir() && f.right.ir() == right.ir()
+        }
+        _ => false,
+    }
+}
+
+pub(super) fn native_real_constant(object: &Obj) -> Option<&'static str> {
+    match object {
+        Obj::Literal(Literal::EulerNumber(_)) => Some("(Real.exp 1)"),
+        Obj::Literal(Literal::Pi(_)) => Some("Real.pi"),
+        _ => None,
     }
 }

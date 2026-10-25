@@ -1,0 +1,6 @@
+# Sums and products of arbitrary real-valued functions remain real.
+forall left_endpoint, right_endpoint Z, iterand fn(x R) R:
+    left_endpoint <= right_endpoint
+    =>:
+        sum(left_endpoint, right_endpoint, iterand) $in R
+        product(left_endpoint, right_endpoint, iterand) $in R

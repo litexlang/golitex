@@ -1,0 +1,6 @@
+# Exact coordinates, conjugation and modulus of complex numbers.
+re(i) = 0
+img(i) = 1
+conj(3 + 4*i) = 3 - 4*i
+C_abs(3 + 4*i) = 5
+C_abs(3/5 + 4/5*i) = 1

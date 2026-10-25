@@ -1,0 +1,17 @@
+{
+  "wrong_congruence": "definition_requirement",
+  "zero_modulus": "definition_requirement",
+  "negative_modulus": "definition_requirement",
+  "fractional_modulus": "definition_requirement",
+  "fractional_operand": "definition_requirement",
+  "zero_native_divisor": "well_defined",
+  "fractional_coefficient": "argument_type",
+  "reversed_divisibility": "search_proof",
+  "invalid_cancellation": "definition_requirement",
+  "invalid_strengthening": "definition_requirement",
+  "missing_product_premise": "premise",
+  "missing_transitive_premise": "premise",
+  "missing_combination_premise": "premise",
+  "missing_modulus_divisibility": "premise",
+  "unsupported_bodyless_theorem": "conclusion"
+}

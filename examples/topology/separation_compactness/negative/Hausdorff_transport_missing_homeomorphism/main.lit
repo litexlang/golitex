@@ -1,0 +1,6 @@
+thm Hausdorff_transport_missing_homeomorphism:
+    ? forall A, B set, source &top:::TopologicalSpace<A>, target &top:::TopologicalSpace<B>, f fn(x source.carrier) target.carrier, g fn(y target.carrier) source.carrier:
+        $top:::is_Hausdorff(A, source)
+        =>:
+            $top:::is_Hausdorff(B, target)
+    release thm top:::homeomorphism_preserves_Hausdorff(A, B, source, target, f, g)

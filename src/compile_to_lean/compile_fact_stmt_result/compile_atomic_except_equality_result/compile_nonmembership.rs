@@ -12,6 +12,12 @@ impl LitexToLeanCompiler {
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
         match rule {
+            NotInFactSearchProofByBuiltinRule::NonMembershipOfIntervalAtOpenEndpoint(p) => {
+                self.compile_real_interval_nonmember(fact, &p.endpoint_equal_proof, true, position)
+            }
+            NotInFactSearchProofByBuiltinRule::NonMembershipOfIntervalOutside(p) => {
+                self.compile_real_interval_nonmember(fact, &p.outside_order_proof, false, position)
+            }
             NotInFactSearchProofByBuiltinRule::NonMembershipOfSetMinusFromRight(p) => self
                 .compile_set_minus_nonmembership(fact, &p.right_membership_proof, true, position),
             NotInFactSearchProofByBuiltinRule::NonMembershipOfSetMinusFromLeft(p) => self
@@ -71,7 +77,6 @@ impl LitexToLeanCompiler {
                     self.compile_object_reference(&fact.set, position)?
                 ))
             }
-            _ => Err(LeanCompileError::unsupported("NotIn/BuiltinRule")),
         }
     }
 

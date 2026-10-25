@@ -29,6 +29,20 @@ pub(super) fn validate_struct(
     if source
         .param_def_with_dom
         .as_ref()
+        .is_some_and(|(parameters, _)| {
+            parameters.groups.iter().any(|group| {
+                !matches!(
+                    group.param_type,
+                    ParamType::Set(_) | ParamType::NonemptySet(_) | ParamType::Obj(_)
+                )
+            })
+        })
+    {
+        return Err(LeanCompileError::unsupported("Struct/HeaderKind"));
+    }
+    if source
+        .param_def_with_dom
+        .as_ref()
         .is_some_and(|(_, domains)| !domains.is_empty())
         || !proof.structure_domains.is_empty()
     {

@@ -1,0 +1,7 @@
+# Exact sine, cosine and tangent values in radians.
+sin(0) = 0
+cos(0) = 1
+tan(0) = 0
+sin(pi / 2) = 1
+sin(pi) = 0
+cos(pi) = -1

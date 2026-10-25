@@ -1,0 +1,6 @@
+# Euler's number and pi are positive real numbers.
+e $in R+
+pi $in R+
+
+ln(e) = 1
+e = exp(1)

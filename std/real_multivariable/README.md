@@ -75,3 +75,41 @@ property bridge, candidate value, and a selected-value candidate.
 There are no source axioms or trust statements. Restricted domains, vector-valued
 directional derivatives and general higher orders remain outside this export.
 See the [directional examples](../../examples/real_analysis/multivariable/directional/main.lit).
+
+The `iterated_integrals` export implements ordered rectangular real iterated
+integrals in source: five templates, six propositions and twenty-two proved
+theorems. `iterated_integral_y_then_x<a,b,c,d>(f)` integrates y on [c,d], then
+x on [a,b]. `iterated_integral_x_then_y<a,b,c,d>(f)` fixes the opposite order.
+Each name has four template parameters and one ordinary function argument.
+Require a<=b and c<=d; equal endpoints are supported. The actual function domain
+is `real_closed_rectangle<a,b,c,d>`, a subset of cart_n(R,2).
+
+`has_y_section_integrals(a,b,c,d,f,g)` supplies the integral of every y-section
+as g(x); the x-section proposition is separate. The corresponding
+`has_iterated_integral_y_then_x(a,b,c,d,f,L)` means that some such profile g
+has outer Riemann integral L. `is_iterated_integrable_y_then_x` asserts existence
+of L. The opposite order has its own candidate/existence propositions. Prove
+the candidate, release the integrable theorem, then the value theorem:
+
+```litex
+have fn constant_rectangle(p \vectors::iterated_integrals::real_closed_rectangle<0,1,0,2>) R=7
+release thm vectors::iterated_integrals::iterated_integral_y_then_x_constant(0,1,0,2,constant_rectangle,7)
+release thm vectors::iterated_integrals::iterated_integral_y_then_x_integrable(0,1,0,2,constant_rectangle,14)
+release thm vectors::iterated_integrals::iterated_integral_y_then_x_value(0,1,0,2,constant_rectangle,14)
+\vectors::iterated_integrals::iterated_integral_y_then_x<0,1,0,2>(constant_rectangle)=14
+```
+
+Section and profile functions use the native sorted-interval domain spelling
+`'[min(a,b),max(a,b)]` and `'[min(c,d),max(c,d)]`. Retain the explicit interval
+coverage and rectangle-membership steps in the
+[product example](../../examples/real_analysis/multivariable/iterated_integrals/main.lit).
+For a coordinate formula, that example declares the exact restriction with
+`p cart_n(R,2): p $in rectangle`, then checks its membership in the rectangle
+function space. A full-space function must be restricted explicitly.
+
+The source proves section/value uniqueness, unique selection, constants,
+addition and scalar multiplication for each order. It adds no native BT,
+automatic integration rule, source trust or axiom. The two product orders are
+proved independently. Independent multidimensional Riemann integration,
+automatic order exchange, Fubini, arbitrary regions and variable bounds are
+outside this export.

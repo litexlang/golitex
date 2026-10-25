@@ -1,0 +1,8 @@
+# Define coordinate, modulus and conjugate functions and use their values.
+have fn real_coordinate(z C) R = re(z)
+real_coordinate(3+4*i) = 3
+have fn complex_magnitude(z C) R = C_abs(z)
+complex_magnitude(3+4*i) = 5
+have fn conjugate_value(z C) C = conj(z)
+forall z C:
+    conjugate_value(conjugate_value(z)) = z

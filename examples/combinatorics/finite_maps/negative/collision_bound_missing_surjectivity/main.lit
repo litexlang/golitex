@@ -1,0 +1,7 @@
+thm collision_bound_missing_surjectivity:
+    ? forall X, Y finite_set, f fn(x X) Y, point, duplicate X:
+        point != duplicate
+        f(point) = f(duplicate)
+        =>:
+            finite_set_size(Y) < finite_set_size(X)
+    release thm comb:::surjection_collision_strict_size(X,Y,f,point,duplicate)

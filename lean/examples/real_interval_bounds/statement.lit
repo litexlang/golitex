@@ -1,0 +1,13 @@
+# Recover the original real-membership and endpoint bounds for arbitrary interval elements.
+forall a, b R, x '(a, b]:
+    x $in R
+    a < x
+    x <= b
+
+forall a R, x '[a,):
+    x $in R
+    a <= x
+
+forall a R, x '(,a):
+    x $in R
+    x < a

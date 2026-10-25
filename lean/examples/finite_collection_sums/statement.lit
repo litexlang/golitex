@@ -1,0 +1,3 @@
+# Sum the elements of empty and nonempty finite integer sets.
+finite_set_sum({}, fn(x Z) Z {x}) = 0
+finite_set_sum({1, 2, 3}, fn(x Z) Z {x}) = 6

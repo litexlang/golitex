@@ -1,0 +1,8 @@
+# Every element of a nonempty finite real set lies between its extrema.
+forall S finite_set, x S:
+    $is_nonempty_set(S)
+    S $subset R
+    =>:
+        finite_set_min(S) <= x
+        x <= finite_set_max(S)
+        finite_set_max(S) $in S

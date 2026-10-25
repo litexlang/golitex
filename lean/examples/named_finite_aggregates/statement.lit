@@ -1,0 +1,5 @@
+# Reuse a named finite set and a named function in a sum and product.
+have finite_aggregate_set set = {2, 4, 7}
+have fn aggregate_successor(x Z) Z = x + 1
+finite_set_sum(finite_aggregate_set, aggregate_successor) = 16
+finite_set_product(finite_aggregate_set, aggregate_successor) = 120

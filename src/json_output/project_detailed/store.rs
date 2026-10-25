@@ -758,6 +758,9 @@ pub(super) fn project_signature_selection(
         FunctionSignatureSelection::Property { fact_id, .. } => {
             fields.push(("source", fact_id_entry(runtime, *fact_id)))
         }
+        FunctionSignatureSelection::DeclaredField { .. } => {
+            fields.push(("source", string("declared_field")))
+        }
     }
     object_for(runtime, fields)
 }

@@ -1,0 +1,20 @@
+# Check membership and exclusion in all four real rays.
+0 $in '[0,)
+
+1 $in '(0,)
+
+0 $in '(,0]
+
+-1 $in '(,0)
+
+not 0 $in '(0,)
+
+not 0 $in '(,0)
+
+not -1 $in '[0,)
+
+not 1 $in '(,0]
+
+'[0,) $subset R
+
+'(,0) $subset R

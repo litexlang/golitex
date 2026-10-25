@@ -1,0 +1,3 @@
+by def $nt:::is_congruent_mod(17, 2, 5)
+release thm nt:::congruence_multiply(17, 2, 17, 2, 5)
+$nt:::is_congruent_mod(17 * 17, 2 * 2, 5)

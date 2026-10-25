@@ -1,0 +1,3 @@
+# Sum integer values over closed ranges, including negative indices.
+sum(1, 3, fn(x Z) Z {x}) = 6
+sum(-2, 2, fn(x Z) Z {x * x}) = 10

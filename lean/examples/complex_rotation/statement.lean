@@ -81,7 +81,7 @@ theorem h_46 : ∀ {_Host_i3 : Type v3} [_rep_i3 : Litex.Representation M _Host_
                   let _equal_wd_1_1 := _object_w18;
                   (show Litex.Same _equal_wd_1_0 _equal_wd_1_1 from (show (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i1 (M := M))) (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i1 (M := M))) (Litex.denote _value_i3))) = (M.mulValue (Litex.denote (Litex.number (M := M) Complex.I)) (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i1 (M := M))) (Litex.denote _value_i3))) from by
                     have _litex_residual : (M.mulValue (Litex.denote (Litex.number (M := M) Complex.I)) (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i1 (M := M))) (Litex.denote _value_i3))) = (M.mulValue (Litex.denote (Litex.number (M := M) Complex.I)) (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i1 (M := M))) (Litex.denote _value_i3))) := (show @Eq M.Value _ _ from Eq.refl _)
-                    exact ((((Eq.refl (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i1 (M := M))) (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i1 (M := M))) (Litex.denote _value_i3))))).trans (by
+                    exact ((((Eq.refl (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i1 (M := M))) (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i1 (M := M))) (Litex.denote _value_i3))))).trans (show (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i1 (M := M))) (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i1 (M := M))) (Litex.denote _value_i3))) = (M.mulValue (Litex.denote (Litex.number (M := M) Complex.I)) (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i1 (M := M))) (Litex.denote _value_i3))) from by
                     let _litex_original := _equal_wd_1_0
                     let _litex_literal := (let _wd_1_0 := (_object_i1 (M := M));
                     let _object_w16 := (_equal_wd_1_1).val.right;
@@ -111,7 +111,7 @@ theorem h_46 : ∀ {_Host_i3 : Type v3} [_rep_i3 : Litex.Representation M _Host_
                   let _equal_wd_1_1 := _object_w20;
                   (show Litex.Same _equal_wd_1_0 _equal_wd_1_1 from (show (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i1 (M := M))) (Litex.denote _value_i3)) = (M.mulValue (Litex.denote (Litex.number (M := M) Complex.I)) (Litex.denote _value_i3)) from by
                     have _litex_residual : (M.mulValue (Litex.denote (Litex.number (M := M) Complex.I)) (Litex.denote _value_i3)) = (M.mulValue (Litex.denote (Litex.number (M := M) Complex.I)) (Litex.denote _value_i3)) := (show @Eq M.Value _ _ from Eq.refl _)
-                    exact ((((Eq.refl (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i1 (M := M))) (Litex.denote _value_i3)))).trans (by
+                    exact ((((Eq.refl (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i1 (M := M))) (Litex.denote _value_i3)))).trans (show (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i1 (M := M))) (Litex.denote _value_i3)) = (M.mulValue (Litex.denote (Litex.number (M := M) Complex.I)) (Litex.denote _value_i3)) from by
                     let _litex_original := _equal_wd_1_0
                     let _litex_literal := (let _wd_1_0 := (_object_i1 (M := M));
                     let _wd_1_1 := _value_i3;

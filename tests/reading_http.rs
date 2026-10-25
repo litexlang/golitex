@@ -72,8 +72,22 @@ impl LocalReader {
         )
         .unwrap();
         let mut response = String::new();
-        stream.read_to_string(&mut response).unwrap();
+        stream
+            .read_to_string(&mut response)
+            .unwrap_or_else(|error| {
+                panic!(
+                    "{method} {path}: failed reading response after {} bytes: {error}",
+                    response.len()
+                )
+            });
         let (header, body) = response.split_once("\r\n\r\n").expect(&response);
+        let length = header
+            .lines()
+            .find_map(|line| line.strip_prefix("Content-Length: "))
+            .expect("response Content-Length")
+            .parse::<usize>()
+            .unwrap();
+        assert_eq!(body.len(), length, "{method} {path}: incomplete response");
         let status = header.split_whitespace().nth(1).unwrap().parse().unwrap();
         (status, body.into(), header.into())
     }
@@ -367,6 +381,59 @@ fn real_upload_preview_project_and_failure_boundaries() {
         413
     );
     assert_eq!(server.request("GET", "/unknown", "", "").0, 404);
+}
+
+#[test]
+fn early_rejected_uploads_deliver_complete_responses_before_closing() {
+    let server = LocalReader::start(false);
+    let body = "x".repeat(64 * 1024);
+    for (headers, length, status, message) in [
+        (
+            "Content-Type: text/plain\r\n",
+            "65536",
+            415,
+            "Use application/json",
+        ),
+        (
+            "Content-Type: application/json\r\nOrigin: https://example.com\r\n",
+            "65536",
+            403,
+            "Cross-origin builds are not allowed",
+        ),
+        (
+            "Content-Type: application/json\r\nContent-Length: 65536\r\n",
+            "65536",
+            400,
+            "Duplicate content length",
+        ),
+        (
+            "Content-Type: application/json\r\nTransfer-Encoding: chunked\r\n",
+            "65536",
+            400,
+            "Transfer encoding is not supported",
+        ),
+        (
+            "Content-Type: application/json\r\n",
+            "16777217",
+            413,
+            "Reading upload exceeds 16 MiB",
+        ),
+        (
+            "Content-Type: application/json\r\n",
+            "invalid",
+            400,
+            "Invalid content length",
+        ),
+    ] {
+        let headers = format!("{headers}Content-Length: {length}\r\n");
+        let response = server.request("POST", "/api/reading/build", &headers, &body);
+        assert_eq!(response.0, status, "{}", response.1);
+        assert!(response.1.contains(message), "{}", response.1);
+    }
+    assert_eq!(
+        server.request("GET", "/reading.manifest.json", "", "").0,
+        200
+    );
 }
 
 #[test]

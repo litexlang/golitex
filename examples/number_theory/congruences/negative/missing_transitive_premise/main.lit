@@ -1,0 +1,7 @@
+# The setup passes; only the final statement must fail.
+thm missing_transitive_premise:
+    ? forall a Z, b, d Z*:
+        $dvd(a, b)
+        =>:
+            $dvd(a, d)
+    release thm nt:::divisibility_transitive(a, b, d)

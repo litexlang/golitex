@@ -1,0 +1,6 @@
+# Real exponential and positive-real logarithm undo one another.
+forall x R:
+    ln(exp(x)) = x
+
+forall x R+:
+    exp(ln(x)) = x

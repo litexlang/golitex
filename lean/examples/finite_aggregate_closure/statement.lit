@@ -1,0 +1,6 @@
+# Sums and products of a real-valued function over any finite real set remain real.
+forall collection finite_set, iterand fn(x R) R:
+    collection $subset R
+    =>:
+        finite_set_sum(collection, iterand) $in R
+        finite_set_product(collection, iterand) $in R

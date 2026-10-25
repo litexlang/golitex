@@ -139,6 +139,9 @@ impl LitexToLeanCompiler {
                 }
                 Ok(member)
             }
+            FunctionSignatureSelection::DeclaredField { .. } => Err(LeanCompileError::unsupported(
+                "Function/SelectedFieldSignature",
+            )),
         }
     }
 

@@ -1,0 +1,5 @@
+# Reuse a theorem about the cardinality of an arbitrary finite set.
+thm cardinality_natural:
+    ? forall A finite_set => finite_set_size(A) $in N
+    finite_set_size(A) $in N
+by thm cardinality_natural({3, 5}) => finite_set_size({3, 5}) $in N

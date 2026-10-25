@@ -1,0 +1,22 @@
+{
+  "inverse_zero_modulus": "definition_requirement",
+  "gcd_add_multiple_zero_divisor": "argument_type",
+  "gcd_all_zero": "well_defined",
+  "gcd_euclidean_negative_divisor": "argument_type",
+  "inverse_noninteger_operand": "definition_requirement",
+  "false_inverse_witness": "definition_requirement",
+  "inverse_negative_modulus": "definition_requirement",
+  "cancellation_missing_inverse": "premise",
+  "cancellation_missing_product_congruence": "premise",
+  "inverse_missing_bezout_identity": "premise",
+  "diophantine_missing_divisibility": "premise",
+  "diophantine_missing_bezout_identity": "premise",
+  "necessary_divisibility_missing_equation": "premise",
+  "solution_missing_inverse": "premise",
+  "gcd_missing_congruence": "premise",
+  "uniqueness_missing_solution": "premise",
+  "inverse_uniqueness_missing_second_inverse": "premise",
+  "bezout_zero_divisor": "argument_type",
+  "inverse_not_unique_as_integer": "search_proof",
+  "nonunit_has_no_inverse": "search_proof"
+}

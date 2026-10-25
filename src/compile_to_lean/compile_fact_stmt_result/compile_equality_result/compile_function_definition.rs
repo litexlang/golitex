@@ -727,7 +727,15 @@ impl LitexToLeanCompiler {
                 "(Litex.absValue (M := M) {})",
                 self.compile_normalization_value(&value.arg, position)?
             )),
-            Obj::ArithmeticOperator(_) | Obj::IntegerOperator(_) => {
+            Obj::ArithmeticOperator(_)
+            | Obj::IntegerOperator(_)
+            | Obj::ComplexOperator(_)
+            | Obj::TrigOperator(
+                TrigOperator::Sin(_) | TrigOperator::Cos(_) | TrigOperator::Tan(_),
+            )
+            | Obj::ExpLogOperator(
+                ExpLogOperator::Exp(_) | ExpLogOperator::Ln(_) | ExpLogOperator::Log(_),
+            ) => {
                 let (operation, children) = normalization_operation_children(object)?;
                 let values = children
                     .into_iter()
@@ -859,7 +867,15 @@ impl LitexToLeanCompiler {
                 }
                 Ok(None)
             }
-            Obj::ArithmeticOperator(_) | Obj::IntegerOperator(_) => {
+            Obj::ArithmeticOperator(_)
+            | Obj::IntegerOperator(_)
+            | Obj::ComplexOperator(_)
+            | Obj::TrigOperator(
+                TrigOperator::Sin(_) | TrigOperator::Cos(_) | TrigOperator::Tan(_),
+            )
+            | Obj::ExpLogOperator(
+                ExpLogOperator::Exp(_) | ExpLogOperator::Ln(_) | ExpLogOperator::Log(_),
+            ) => {
                 let (operation, _) = normalization_operation_children(current)?;
                 let operation = arithmetic_operation_term(operation);
                 let mut rebuilt = current.clone();
@@ -925,7 +941,7 @@ impl LitexToLeanCompiler {
     }
 }
 
-fn function_head_object(head: &FnObjHead) -> Result<Obj, LeanCompileError> {
+pub(super) fn function_head_object(head: &FnObjHead) -> Result<Obj, LeanCompileError> {
     match head {
         FnObjHead::Identifier(head) => Ok(Obj::Identifier(head.clone())),
         FnObjHead::AnonymousFnLiteral(function) => Ok(Obj::FunctionSpace(
@@ -943,6 +959,18 @@ fn normalization_operation_children(
 ) -> Result<(&'static str, Vec<&Obj>), LeanCompileError> {
     match object {
         Obj::ArithmeticOperator(p) => normalization_arithmetic_children(p),
+        Obj::ComplexOperator(ComplexOperator::Conjugate(p)) => Ok(("conjValue", vec![&p.arg])),
+        Obj::ComplexOperator(ComplexOperator::RealPart(p)) => Ok(("reValue", vec![&p.arg])),
+        Obj::ComplexOperator(ComplexOperator::ImaginaryPart(p)) => Ok(("imgValue", vec![&p.arg])),
+        Obj::ComplexOperator(ComplexOperator::ComplexAbs(p)) => {
+            Ok(("complexAbsValue", vec![&p.arg]))
+        }
+        Obj::TrigOperator(TrigOperator::Sin(p)) => Ok(("sinValue", vec![&p.arg])),
+        Obj::TrigOperator(TrigOperator::Cos(p)) => Ok(("cosValue", vec![&p.arg])),
+        Obj::TrigOperator(TrigOperator::Tan(p)) => Ok(("tanValue", vec![&p.arg])),
+        Obj::ExpLogOperator(ExpLogOperator::Exp(p)) => Ok(("expValue", vec![&p.arg])),
+        Obj::ExpLogOperator(ExpLogOperator::Ln(p)) => Ok(("lnValue", vec![&p.arg])),
+        Obj::ExpLogOperator(ExpLogOperator::Log(p)) => Ok(("logValue", vec![&p.base, &p.arg])),
         Obj::IntegerOperator(IntegerOperator::Factorial(p)) => Ok(("factorialValue", vec![&p.arg])),
         Obj::IntegerOperator(IntegerOperator::Gcd(p)) => Ok(("gcdValue", vec![&p.left, &p.right])),
         Obj::IntegerOperator(IntegerOperator::Lcm(p)) => Ok(("lcmValue", vec![&p.left, &p.right])),
@@ -961,6 +989,16 @@ fn normalization_operation_children_mut(
 ) -> Result<Vec<&mut Box<Obj>>, LeanCompileError> {
     match object {
         Obj::ArithmeticOperator(p) => normalization_arithmetic_children_mut(p),
+        Obj::ExpLogOperator(ExpLogOperator::Exp(p)) => Ok(vec![&mut p.arg]),
+        Obj::ComplexOperator(ComplexOperator::Conjugate(p)) => Ok(vec![&mut p.arg]),
+        Obj::ComplexOperator(ComplexOperator::RealPart(p)) => Ok(vec![&mut p.arg]),
+        Obj::ComplexOperator(ComplexOperator::ImaginaryPart(p)) => Ok(vec![&mut p.arg]),
+        Obj::ComplexOperator(ComplexOperator::ComplexAbs(p)) => Ok(vec![&mut p.arg]),
+        Obj::TrigOperator(TrigOperator::Sin(p)) => Ok(vec![&mut p.arg]),
+        Obj::TrigOperator(TrigOperator::Cos(p)) => Ok(vec![&mut p.arg]),
+        Obj::TrigOperator(TrigOperator::Tan(p)) => Ok(vec![&mut p.arg]),
+        Obj::ExpLogOperator(ExpLogOperator::Ln(p)) => Ok(vec![&mut p.arg]),
+        Obj::ExpLogOperator(ExpLogOperator::Log(p)) => Ok(vec![&mut p.base, &mut p.arg]),
         Obj::IntegerOperator(IntegerOperator::Factorial(p)) => Ok(vec![&mut p.arg]),
         Obj::IntegerOperator(IntegerOperator::Gcd(p)) => Ok(vec![&mut p.left, &mut p.right]),
         Obj::IntegerOperator(IntegerOperator::Lcm(p)) => Ok(vec![&mut p.left, &mut p.right]),

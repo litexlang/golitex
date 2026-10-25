@@ -1,0 +1,55 @@
+have points set = {0, 1}
+
+0 $in points
+
+1 $in points
+
+{0} $subset points
+
+{1} $subset points
+
+release thm top:::discrete_topology_laws(points)
+
+release thm top:::indiscrete_topology_laws(points)
+
+\top:::discrete_space<points> = (points, power_set(points))
+
+\top:::indiscrete_space<points> = (points, union({{}}, {points}))
+
+have fine &top:::TopologicalSpace<points> = \top:::discrete_space<points>
+
+have coarse &top:::TopologicalSpace<points> = \top:::indiscrete_space<points>
+
+release struct def fine
+
+release struct def coarse
+
+fine = \top:::discrete_space<points> = (points, power_set(points))
+
+coarse = \top:::indiscrete_space<points> = (points, union({{}}, {points}))
+
+fine.carrier = points
+
+coarse.carrier = points
+
+fine.opens = power_set(points)
+
+coarse.opens = union({{}}, {points})
+
+have identity fn(x points) points = \top:::identity_map<points>
+
+release thm fn_set_member(identity, fn(x fine.carrier) coarse.carrier)
+
+power_set(fine.carrier) = power_set(points) = fine.opens
+
+release thm top:::maps_from_discrete_are_continuous(points, points, fine, coarse, identity)
+
+$top:::is_topologically_continuous(points, points, fine, coarse, identity)
+
+release thm top:::maps_to_indiscrete_are_continuous(points, points, fine, coarse, identity)
+
+release thm fn_set_member(identity, fn(x coarse.carrier) fine.carrier)
+
+{0} $in fine.opens
+
+by def $top:::is_closed(points, coarse, {0})

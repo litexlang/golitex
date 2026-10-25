@@ -1,0 +1,11 @@
+5 * 5 + 12 * (-2) = 1
+
+release thm nt:::modular_inverse_from_bezout(5, 5, -2, 12)
+
+$nt:::is_modular_inverse(5, 5, 12)
+
+by def $nt:::is_congruent_mod(5 * 7, 5 * 19, 12)
+
+release thm nt:::modular_inverse_cancels(5, 7, 19, 5, 12)
+
+$nt:::is_congruent_mod(7, 19, 12)

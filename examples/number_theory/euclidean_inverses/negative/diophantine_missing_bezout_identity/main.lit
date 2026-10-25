@@ -1,0 +1,6 @@
+thm diophantine_missing_bezout_identity:
+    ? forall a, b, u, v, c Z, d N+:
+        $dvd(c, d)
+        =>:
+            exist x, y Z st {a * x + b * y = c}
+    release thm nt:::linear_equation_from_bezout(a,b,u,v,c,d)

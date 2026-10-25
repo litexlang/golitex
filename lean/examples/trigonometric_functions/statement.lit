@@ -1,0 +1,9 @@
+# Define a sine function and evaluate it at zero.
+have fn sine_value(x R) R = sin(x)
+sine_value(0) = 0
+forall x R:
+    sine_value(sine_value(x)) = sin(sin(x))
+have fn tangent_value(x R: cos(x) != 0) R = tan(x)
+tangent_value(0) = 0
+forall x R:
+    sin(x) + 0 = sin(x)

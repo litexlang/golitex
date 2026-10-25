@@ -1,0 +1,4 @@
+# Reuse one named successor function in a finite sum and product.
+have fn aggregate_successor(x Z) Z = x + 1
+sum(1, 3, aggregate_successor) = 9
+product(1, 3, aggregate_successor) = 24

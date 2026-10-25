@@ -1,0 +1,12 @@
+# Define exponential/logarithmic functions, compose them, and reuse their scalar values.
+pi + pi = 2 * pi
+
+forall x R:
+    exp(x) + exp(x) = 2 * exp(x)
+
+have fn exponential_value(x R) R+ = exp(x)
+
+have fn natural_logarithm_value(x R+) R = ln(x)
+
+forall x R:
+    natural_logarithm_value(exponential_value(x)) = x

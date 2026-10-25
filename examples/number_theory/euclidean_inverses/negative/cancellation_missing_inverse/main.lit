@@ -1,0 +1,6 @@
+thm cancellation_missing_inverse:
+    ? forall a, b, c, u Z, m N+:
+        $nt:::is_congruent_mod(a * b, a * c, m)
+        =>:
+            $nt:::is_congruent_mod(b, c, m)
+    release thm nt:::modular_inverse_cancels(a,b,c,u,m)

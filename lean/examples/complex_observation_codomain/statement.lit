@@ -1,0 +1,6 @@
+# Complex conjugation stays complex; coordinates and modulus are real.
+forall z C:
+    conj(z) $in C
+    re(z) $in R
+    img(z) $in R
+    C_abs(z) $in R

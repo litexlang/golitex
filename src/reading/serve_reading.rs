@@ -1,7 +1,7 @@
 use crate::prelude::*;
 use std::fs::{self, File};
 use std::io::{Read, Write};
-use std::net::{TcpListener, TcpStream};
+use std::net::{Shutdown, TcpListener, TcpStream};
 use std::path::{Component, Path, PathBuf};
 use std::process::{Command, Stdio};
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -88,13 +88,53 @@ fn handle_connection(
 ) -> std::io::Result<()> {
     stream.set_read_timeout(Some(Duration::from_secs(10)))?;
     stream.set_write_timeout(Some(Duration::from_secs(30)))?;
+    handle_request(&mut stream, html, json, parts, origin, strict, cache)?;
+
+    // Keep unread request bytes from resetting an already-written response.
+    stream.shutdown(Shutdown::Write)?;
+    let deadline = Instant::now() + Duration::from_millis(250);
+    let mut remaining = MAX_REQUEST;
+    let mut chunk = [0; 4096];
+    while remaining > 0 {
+        let now = Instant::now();
+        if now >= deadline {
+            break;
+        }
+        stream.set_read_timeout(Some(deadline - now))?;
+        let limit = remaining.min(chunk.len());
+        match stream.read(&mut chunk[..limit]) {
+            Ok(0) => break,
+            Ok(count) => remaining -= count,
+            Err(error)
+                if matches!(
+                    error.kind(),
+                    std::io::ErrorKind::WouldBlock | std::io::ErrorKind::TimedOut
+                ) =>
+            {
+                break;
+            }
+            Err(error) => return Err(error),
+        }
+    }
+    Ok(())
+}
+
+fn handle_request(
+    stream: &mut TcpStream,
+    html: &str,
+    json: &str,
+    parts: &std::collections::BTreeMap<String, Arc<String>>,
+    origin: &str,
+    strict: bool,
+    cache: &UploadCache,
+) -> std::io::Result<()> {
     let mut bytes = Vec::new();
     let header_end = loop {
         if let Some(index) = bytes.windows(4).position(|part| part == b"\r\n\r\n") {
             break index + 4;
         }
         if bytes.len() >= 16 * 1024 {
-            return response(&mut stream, 431, "text/plain", "Request headers too large");
+            return response(stream, 431, "text/plain", "Request headers too large");
         }
         let mut chunk = [0; 4096];
         let count = stream.read(&mut chunk)?;
@@ -105,10 +145,10 @@ fn handle_connection(
     };
     let header = match std::str::from_utf8(&bytes[..header_end]) {
         Ok(header) => header.to_string(),
-        Err(_) => return response(&mut stream, 400, "text/plain", "Invalid request header"),
+        Err(_) => return response(stream, 400, "text/plain", "Invalid request header"),
     };
     if header_end > 16 * 1024 {
-        return response(&mut stream, 431, "text/plain", "Request headers too large");
+        return response(stream, 431, "text/plain", "Request headers too large");
     }
     let mut lines = header.split("\r\n");
     let mut request = lines.next().unwrap_or("").split_whitespace();
@@ -120,21 +160,21 @@ fn handle_connection(
     let mut host = "";
     for line in lines.filter(|line| !line.is_empty()) {
         let Some((name, value)) = line.split_once(':') else {
-            return response(&mut stream, 400, "text/plain", "Invalid header");
+            return response(stream, 400, "text/plain", "Invalid header");
         };
         match name.to_ascii_lowercase().as_str() {
             "content-length" => {
                 if length.is_some() {
-                    return response(&mut stream, 400, "text/plain", "Duplicate content length");
+                    return response(stream, 400, "text/plain", "Duplicate content length");
                 }
                 length = value.trim().parse::<usize>().ok();
                 if length.is_none() {
-                    return response(&mut stream, 400, "text/plain", "Invalid content length");
+                    return response(stream, 400, "text/plain", "Invalid content length");
                 }
             }
             "transfer-encoding" => {
                 return response(
-                    &mut stream,
+                    stream,
                     400,
                     "text/plain",
                     "Transfer encoding is not supported",
@@ -148,7 +188,7 @@ fn handle_connection(
     }
     if host != origin.trim_start_matches("http://") {
         return response(
-            &mut stream,
+            stream,
             403,
             "application/json",
             &error_json("Unexpected local server host"),
@@ -156,32 +196,23 @@ fn handle_connection(
     }
     if method == "GET" {
         if let Some(part) = parts.get(path.trim_start_matches('/')) {
-            return response(&mut stream, 200, "application/json; charset=utf-8", part);
+            return response(stream, 200, "application/json; charset=utf-8", part);
         }
         return match path {
-            "/" | "/index.html" => response(&mut stream, 200, "text/html; charset=utf-8", html),
-            "/reader.js" => response(
-                &mut stream,
-                200,
-                "text/javascript; charset=utf-8",
-                READER_JS,
-            ),
-            "/reader.css" => response(&mut stream, 200, "text/css; charset=utf-8", READER_CSS),
-            "/katex.min.js" => {
-                response(&mut stream, 200, "text/javascript; charset=utf-8", KATEX_JS)
-            }
-            "/katex.min.css" => response(&mut stream, 200, "text/css; charset=utf-8", KATEX_CSS),
-            "/katex.LICENSE" => {
-                response(&mut stream, 200, "text/plain; charset=utf-8", KATEX_LICENSE)
-            }
-            "/app.js" => response(&mut stream, 200, "text/javascript; charset=utf-8", APP_JS),
-            "/reading.json" => response(&mut stream, 200, "application/json; charset=utf-8", json),
-            _ => response(&mut stream, 404, "text/plain", "Not found"),
+            "/" | "/index.html" => response(stream, 200, "text/html; charset=utf-8", html),
+            "/reader.js" => response(stream, 200, "text/javascript; charset=utf-8", READER_JS),
+            "/reader.css" => response(stream, 200, "text/css; charset=utf-8", READER_CSS),
+            "/katex.min.js" => response(stream, 200, "text/javascript; charset=utf-8", KATEX_JS),
+            "/katex.min.css" => response(stream, 200, "text/css; charset=utf-8", KATEX_CSS),
+            "/katex.LICENSE" => response(stream, 200, "text/plain; charset=utf-8", KATEX_LICENSE),
+            "/app.js" => response(stream, 200, "text/javascript; charset=utf-8", APP_JS),
+            "/reading.json" => response(stream, 200, "application/json; charset=utf-8", json),
+            _ => response(stream, 404, "text/plain", "Not found"),
         };
     }
     if method != "POST" || path != "/api/reading/build" {
         return response(
-            &mut stream,
+            stream,
             405,
             "application/json",
             &error_json("Unsupported reading request"),
@@ -189,7 +220,7 @@ fn handle_connection(
     }
     if request_origin.is_some_and(|request_origin| request_origin != origin) {
         return response(
-            &mut stream,
+            stream,
             403,
             "application/json",
             &error_json("Cross-origin builds are not allowed"),
@@ -197,7 +228,7 @@ fn handle_connection(
     }
     if content_type.split(';').next() != Some("application/json") {
         return response(
-            &mut stream,
+            stream,
             415,
             "application/json",
             &error_json("Use application/json"),
@@ -205,7 +236,7 @@ fn handle_connection(
     }
     let Some(length) = length else {
         return response(
-            &mut stream,
+            stream,
             411,
             "application/json",
             &error_json("Content length is required"),
@@ -213,7 +244,7 @@ fn handle_connection(
     };
     if length > MAX_REQUEST {
         return response(
-            &mut stream,
+            stream,
             413,
             "application/json",
             &error_json("Reading upload exceeds 16 MiB"),
@@ -221,11 +252,11 @@ fn handle_connection(
     }
     let already = bytes.len() - header_end;
     if already < length {
-        Read::take(&mut stream, (length - already) as u64).read_to_end(&mut bytes)?;
+        Read::take(&mut *stream, (length - already) as u64).read_to_end(&mut bytes)?;
     }
     if bytes.len() < header_end + length {
         return response(
-            &mut stream,
+            stream,
             400,
             "application/json",
             &error_json("Incomplete request body"),
@@ -240,7 +271,7 @@ fn handle_connection(
             stream.write_all(build.json.as_bytes())
         }
         Err(error) => response(
-            &mut stream,
+            stream,
             400,
             "application/json; charset=utf-8",
             &error_json(&error),

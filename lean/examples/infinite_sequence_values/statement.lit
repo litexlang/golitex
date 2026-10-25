@@ -1,0 +1,6 @@
+# A sequence returns an element of its carrier at each positive-natural index.
+forall A set, s seq(A), n N+:
+    s(n) $in A
+
+forall s seq(R), n N+:
+    s(n) $in R

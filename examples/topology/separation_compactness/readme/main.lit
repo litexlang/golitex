@@ -1,0 +1,8 @@
+release thm top:::discrete_topology_laws({0, 1})
+have demo &top:::TopologicalSpace<{0, 1}> = ({0, 1}, power_set({0, 1}))
+demo.carrier = {0, 1}
+demo.opens = power_set({0, 1})
+power_set(demo.carrier) = power_set({0, 1}) = demo.opens
+release thm top:::discrete_is_Hausdorff({0, 1}, demo)
+release thm top:::finite_subsets_are_compact({0, 1}, demo, demo.carrier)
+by def $top:::is_compact_space({0, 1}, demo)

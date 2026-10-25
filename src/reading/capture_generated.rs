@@ -14619,6 +14619,11 @@ let fields = vec![("signature", capture_ast__obj__FnSet(f0, capture, runtime)), 
 let mut output = node("FunctionSignatureSelection", "Property", fields);
 output
 },
+crate::execute::execute_fact_stmt::function_signature_selection::FunctionSignatureSelection::DeclaredField { signature: f0 } => {
+let fields = vec![("signature", capture_ast__obj__FnSet(f0, capture, runtime))];
+let mut output = node("FunctionSignatureSelection", "DeclaredField", fields);
+output
+},
 };
 capture.intern_evidence(output)
 }
@@ -35840,8 +35845,8 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SumObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SumObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SumObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SumObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1, signature_selection: f2 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect())), ("signature_selection", match (f2).as_ref() { Some(item) => capture_execute__execute_fact_stmt__function_signature_selection__FunctionSignatureSelection(item, capture, runtime), None => JsonValue::Null })];
 let mut output = node("SumObjWellDefinedProof", "", fields);
 output
 },
@@ -35851,8 +35856,8 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SumOfFiniteSetObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SumOfFiniteSetObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SumOfFiniteSetObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SumOfFiniteSetObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1, signature_selection: f2 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect())), ("signature_selection", match (f2).as_ref() { Some(item) => capture_execute__execute_fact_stmt__function_signature_selection__FunctionSignatureSelection(item, capture, runtime), None => JsonValue::Null })];
 let mut output = node("SumOfFiniteSetObjWellDefinedProof", "", fields);
 output
 },
@@ -35862,8 +35867,8 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ProductObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ProductObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ProductObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ProductObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1, signature_selection: f2 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect())), ("signature_selection", match (f2).as_ref() { Some(item) => capture_execute__execute_fact_stmt__function_signature_selection__FunctionSignatureSelection(item, capture, runtime), None => JsonValue::Null })];
 let mut output = node("ProductObjWellDefinedProof", "", fields);
 output
 },
@@ -35873,8 +35878,8 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ProductOfFiniteSetObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ProductOfFiniteSetObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ProductOfFiniteSetObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ProductOfFiniteSetObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1, signature_selection: f2 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect())), ("signature_selection", match (f2).as_ref() { Some(item) => capture_execute__execute_fact_stmt__function_signature_selection__FunctionSignatureSelection(item, capture, runtime), None => JsonValue::Null })];
 let mut output = node("ProductOfFiniteSetObjWellDefinedProof", "", fields);
 output
 },

@@ -1,0 +1,11 @@
+# Reduce exact angles by integer periods, retaining rational and radical values.
+sin(13 * pi / 6) = 1 / 2
+cos(-pi / 3) = 1 / 2
+tan(9 * pi / 4) = 1
+sin(pi / 4) = sqrt(2) / 2
+tan(pi / 6) = sqrt(3) / 3
+sin(7*pi/6) = -1/2
+cos(2*pi/3) = -1/2
+tan(5*pi/6) = -sqrt(3)/3
+sin(-pi/4) = -sqrt(2)/2
+sin(3*pi/2) = -1

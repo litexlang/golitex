@@ -1,5 +1,6 @@
 mod compile_abs_identities;
 mod compile_add_zero_from_equalities;
+mod compile_aggregate_calculation;
 mod compile_builtin_rewrite;
 mod compile_calculation;
 mod compile_cartesian_definition;
@@ -28,5 +29,14 @@ mod compile_subtraction_from_addition;
 pub(in crate::compile_to_lean) use compile_cartesian_definition::validate_cart_definition;
 
 mod compile_composition_equality;
+mod compile_finite_aggregate_calculation;
 mod compile_set_minus_identities;
 mod compile_union_distribution;
+
+mod compile_seq;
+
+mod compile_exp_log;
+
+mod compile_trig;
+
+mod compile_complex_observations;

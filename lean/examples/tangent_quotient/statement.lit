@@ -1,0 +1,5 @@
+# Tangent is the sine/cosine quotient on its recorded domain.
+forall x R:
+    cos(x) != 0
+    =>:
+        tan(x) = sin(x) / cos(x)

@@ -1,0 +1,3 @@
+# The Pythagorean identity for an arbitrary real angle.
+forall x R:
+    sin(x)^2 + cos(x)^2 = 1

@@ -1,0 +1,5 @@
+# A logarithm of a positive argument in a positive nonunit base is real.
+forall a R+, x R+:
+    a != 1
+    =>:
+        log(a, x) $in R

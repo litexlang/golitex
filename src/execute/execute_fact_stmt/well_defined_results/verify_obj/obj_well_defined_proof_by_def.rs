@@ -1072,6 +1072,9 @@ impl FnRangeObjWellDefinedProof {
 pub struct SumObjWellDefinedProof {
     pub child_obj_well_defined: Vec<Box<ObjWellDefinedProof>>,
     pub requirement_fact_verified: Vec<VerifyFactResult>,
+    pub signature_selection: Option<
+        crate::execute::execute_fact_stmt::function_signature_selection::FunctionSignatureSelection,
+    >,
 }
 
 impl SumObjWellDefinedProof {
@@ -1081,6 +1084,7 @@ impl SumObjWellDefinedProof {
         Self {
             child_obj_well_defined,
             requirement_fact_verified,
+            signature_selection: None,
         }
     }
 }
@@ -1088,6 +1092,9 @@ impl SumObjWellDefinedProof {
 pub struct SumOfFiniteSetObjWellDefinedProof {
     pub child_obj_well_defined: Vec<Box<ObjWellDefinedProof>>,
     pub requirement_fact_verified: Vec<VerifyFactResult>,
+    pub signature_selection: Option<
+        crate::execute::execute_fact_stmt::function_signature_selection::FunctionSignatureSelection,
+    >,
 }
 
 impl SumOfFiniteSetObjWellDefinedProof {
@@ -1097,6 +1104,7 @@ impl SumOfFiniteSetObjWellDefinedProof {
         Self {
             child_obj_well_defined,
             requirement_fact_verified,
+            signature_selection: None,
         }
     }
 }
@@ -1104,6 +1112,9 @@ impl SumOfFiniteSetObjWellDefinedProof {
 pub struct ProductObjWellDefinedProof {
     pub child_obj_well_defined: Vec<Box<ObjWellDefinedProof>>,
     pub requirement_fact_verified: Vec<VerifyFactResult>,
+    pub signature_selection: Option<
+        crate::execute::execute_fact_stmt::function_signature_selection::FunctionSignatureSelection,
+    >,
 }
 
 impl ProductObjWellDefinedProof {
@@ -1113,6 +1124,7 @@ impl ProductObjWellDefinedProof {
         Self {
             child_obj_well_defined,
             requirement_fact_verified,
+            signature_selection: None,
         }
     }
 }
@@ -1120,6 +1132,9 @@ impl ProductObjWellDefinedProof {
 pub struct ProductOfFiniteSetObjWellDefinedProof {
     pub child_obj_well_defined: Vec<Box<ObjWellDefinedProof>>,
     pub requirement_fact_verified: Vec<VerifyFactResult>,
+    pub signature_selection: Option<
+        crate::execute::execute_fact_stmt::function_signature_selection::FunctionSignatureSelection,
+    >,
 }
 
 impl ProductOfFiniteSetObjWellDefinedProof {
@@ -1129,6 +1144,7 @@ impl ProductOfFiniteSetObjWellDefinedProof {
         Self {
             child_obj_well_defined,
             requirement_fact_verified,
+            signature_selection: None,
         }
     }
 }

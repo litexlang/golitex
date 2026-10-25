@@ -1,3 +1,5 @@
+use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ComplexOperatorObjWellDefinedProofByDef;
+use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::TrigOperatorObjWellDefinedProofByDef;
 use super::compile_assumption_stmt_result::{trust_have, assumption_start};
 use super::piecewise_evidence::PiecewiseEvidence;
 use crate::ast::stmt::DefAbstractPropStmt;
@@ -345,7 +347,22 @@ impl<'a> SourcePosition<'a> {
                     _ => None, // The original singleton/reversed Or may have been normalized.
                 };
             }
-            Obj::SetFormer(SetFormer::FiniteSeqSet(_)) => &[".1", ".2"],
+            Obj::SetFormer(SetFormer::FiniteSeqSet(_) | SetFormer::IntervalObj(_)) => &[".1", ".2"],
+            Obj::SetFormer(SetFormer::SeqSet(_) | SetFormer::OneSideInfinityIntervalObj(_)) => {
+                &[""]
+            }
+            Obj::FiniteSetStat(FiniteSetStat::FiniteSetSize(_)) => &[""],
+            Obj::IteratedOperator(
+                IteratedOperator::SumOfFiniteSet(_) | IteratedOperator::ProductOfFiniteSet(_),
+            ) if requirements.len() == 3 => &[".1", ".2.1", ".2.2.1"],
+            Obj::IteratedOperator(IteratedOperator::Sum(_) | IteratedOperator::Product(_))
+                if requirements.len() == 4 =>
+            {
+                &[".1", ".2.1", ".2.2.1", ".2.2.2.2.1"]
+            }
+            Obj::FiniteSetStat(FiniteSetStat::FiniteSetMax(_) | FiniteSetStat::FiniteSetMin(_)) => {
+                &[".1", ".2.1", ".2.2"]
+            }
             Obj::IntegerOperator(IntegerOperator::Factorial(_)) => &[""],
             Obj::IntegerOperator(IntegerOperator::Lcm(_)) => &[".1", ".2"],
             Obj::IntegerOperator(IntegerOperator::Quot(_)) => &[".1", ".2"],
@@ -368,6 +385,13 @@ impl<'a> SourcePosition<'a> {
                 | ArithmeticOperator::Ceil(_),
             ) => &[""],
             Obj::ExpLogOperator(ExpLogOperator::Sqrt(_)) => &[".1", ".2"],
+            Obj::ComplexOperator(_) => &[""],
+            Obj::TrigOperator(TrigOperator::Sin(_) | TrigOperator::Cos(_)) => &[""],
+            Obj::TrigOperator(TrigOperator::Tan(_)) => &[".1", ".2"],
+            Obj::ExpLogOperator(ExpLogOperator::Exp(_) | ExpLogOperator::Ln(_)) => &[""],
+            Obj::ExpLogOperator(ExpLogOperator::Log(_)) => {
+                &[".1", ".2.1", ".2.2.1", ".2.2.2.1", ".2.2.2.2"]
+            }
             _ => return None,
         };
         (fields.len() == requirements.len()).then(|| format!("({term}).wd{}", fields[index]))
@@ -2103,6 +2127,8 @@ impl<'a> SourcePosition<'a> {
                         if f.set.ir() == object.ir() => {}
                     (Fact::AtomicFact(AtomicFact::IsNonemptySetFact(f)), None)
                         if f.set.ir() == object.ir() => {}
+                    (Fact::AtomicFact(AtomicFact::IsFiniteSetFact(f)), None)
+                        if f.set.ir() == object.ir() => {}
                     _ => {
                         return Err(LeanCompileError::new(
                             "Parameters/Subject",
@@ -3399,8 +3425,7 @@ fn parameter_from_groups<'a>(
             if index < before && parameter.id == id {
                 let carrier = match &group.param_type {
                     ParamType::Obj(carrier) => Some(carrier),
-                    ParamType::Set(_) | ParamType::NonemptySet(_) => None,
-                    _ => return None,
+                    ParamType::Set(_) | ParamType::NonemptySet(_) | ParamType::FiniteSet(_) => None,
                 };
                 return stores
                     .get(index)
@@ -4136,6 +4161,9 @@ fn atomic_inference_stages(infer: &InferAtomicFactResult) -> Vec<&StoreInferredF
                 | InferInFactResult::SetMinusSplit(_)
                 | InferInFactResult::Preimage(_)
                 | InferInFactResult::PreimageSet(_)
+                | InferInFactResult::SeqExpand(_)
+                | InferInFactResult::RealInterval(_)
+                | InferInFactResult::OneSideRealInterval(_)
                 | InferInFactResult::FiniteSeqExpand(_)
                 | InferInFactResult::FnRange(_)
                 | InferInFactResult::ListSetSingletonEqual(_) => r.stored_conclusions(),
@@ -10830,6 +10858,16 @@ fn projected_wd_child<'a>(
                 &["function", "target"]
             }
             Obj::SetFormer(SetFormer::FiniteSeqSet(_)) => &["carrier", "length"],
+            Obj::SetFormer(SetFormer::SeqSet(_)) => &["carrier"],
+            Obj::SetFormer(SetFormer::IntervalObj(_)) => &["lower", "upper"],
+            Obj::SetFormer(SetFormer::OneSideInfinityIntervalObj(_)) => &["endpoint"],
+            Obj::FiniteSetStat(_) => &["set"],
+            Obj::IteratedOperator(IteratedOperator::Sum(_) | IteratedOperator::Product(_)) => {
+                &["first", "last", "function"]
+            }
+            Obj::IteratedOperator(
+                IteratedOperator::SumOfFiniteSet(_) | IteratedOperator::ProductOfFiniteSet(_),
+            ) => &["set", "function"],
             Obj::IntegerOperator(IntegerOperator::Factorial(_)) => &["arg"],
             Obj::IntegerOperator(
                 IntegerOperator::Mod(_)
@@ -10838,6 +10876,12 @@ fn projected_wd_child<'a>(
                 | IntegerOperator::Lcm(_),
             ) => &["left", "right"],
             Obj::ArithmeticOperator(ArithmeticOperator::Pow(_)) => &["base", "exponent"],
+            Obj::ComplexOperator(_) => &["arg"],
+            Obj::TrigOperator(
+                TrigOperator::Sin(_) | TrigOperator::Cos(_) | TrigOperator::Tan(_),
+            ) => &["arg"],
+            Obj::ExpLogOperator(ExpLogOperator::Exp(_) | ExpLogOperator::Ln(_)) => &["arg"],
+            Obj::ExpLogOperator(ExpLogOperator::Log(_)) => &["base", "arg"],
             Obj::ArithmeticOperator(
                 ArithmeticOperator::Neg(_)
                 | ArithmeticOperator::Abs(_)
@@ -10872,6 +10916,58 @@ pub(super) fn arithmetic_stages(
     proof: &ObjWellDefinedProof,
 ) -> Option<(&[Box<ObjWellDefinedProof>], &[VerifyFactResult])> {
     if let ObjWellDefinedProof::ByDef {
+        proof: ObjWellDefinedProofByDef::SetFormer(p),
+        ..
+    } = proof
+    {
+        match p {
+            SetFormerObjWellDefinedProofByDef::IntervalObj(p) => {
+                return Some((&p.child_obj_well_defined, &p.requirement_fact_verified));
+            }
+            SetFormerObjWellDefinedProofByDef::OneSideInfinityIntervalObj(p) => {
+                return Some((&p.child_obj_well_defined, &p.requirement_fact_verified));
+            }
+            SetFormerObjWellDefinedProofByDef::SeqSet(p) => {
+                return Some((&p.child_obj_well_defined, &p.requirement_fact_verified));
+            }
+            _ => (),
+        }
+    }
+    if let ObjWellDefinedProof::ByDef {
+        proof: ObjWellDefinedProofByDef::IteratedOperator(p),
+        ..
+    } = proof
+    {
+        use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IteratedOperatorObjWellDefinedProofByDef as P;
+        return match p {
+            P::Sum(p) => Some((&p.child_obj_well_defined, &p.requirement_fact_verified)),
+            P::SumOfFiniteSet(p) => Some((&p.child_obj_well_defined, &p.requirement_fact_verified)),
+            P::ProductOfFiniteSet(p) => {
+                Some((&p.child_obj_well_defined, &p.requirement_fact_verified))
+            }
+            P::Product(p) => Some((&p.child_obj_well_defined, &p.requirement_fact_verified)),
+            _ => None,
+        };
+    }
+    if let ObjWellDefinedProof::ByDef {
+        proof: ObjWellDefinedProofByDef::FiniteSetStat(p),
+        ..
+    } = proof
+    {
+        use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FiniteSetStatObjWellDefinedProofByDef;
+        return Some(match p {
+            FiniteSetStatObjWellDefinedProofByDef::FiniteSetSize(p) => {
+                (&p.child_obj_well_defined, &p.requirement_fact_verified)
+            }
+            FiniteSetStatObjWellDefinedProofByDef::FiniteSetMax(p) => {
+                (&p.child_obj_well_defined, &p.requirement_fact_verified)
+            }
+            FiniteSetStatObjWellDefinedProofByDef::FiniteSetMin(p) => {
+                (&p.child_obj_well_defined, &p.requirement_fact_verified)
+            }
+        });
+    }
+    if let ObjWellDefinedProof::ByDef {
         proof: ObjWellDefinedProofByDef::Structish(StructishObjWellDefinedProofByDef::StructObj(p)),
         ..
     } = proof
@@ -10900,6 +10996,62 @@ pub(super) fn arithmetic_stages(
     } = proof
     {
         return Some((&p.child_obj_well_defined, &p.requirement_fact_verified));
+    }
+    if let ObjWellDefinedProof::ByDef {
+        proof: ObjWellDefinedProofByDef::ComplexOperator(p),
+        ..
+    } = proof
+    {
+        return Some(match p {
+            ComplexOperatorObjWellDefinedProofByDef::Conjugate(p) => {
+                (&p.child_obj_well_defined, &p.requirement_fact_verified)
+            }
+            ComplexOperatorObjWellDefinedProofByDef::RealPart(p) => {
+                (&p.child_obj_well_defined, &p.requirement_fact_verified)
+            }
+            ComplexOperatorObjWellDefinedProofByDef::ImaginaryPart(p) => {
+                (&p.child_obj_well_defined, &p.requirement_fact_verified)
+            }
+            ComplexOperatorObjWellDefinedProofByDef::ComplexAbs(p) => {
+                (&p.child_obj_well_defined, &p.requirement_fact_verified)
+            }
+        });
+    }
+    if let ObjWellDefinedProof::ByDef {
+        proof: ObjWellDefinedProofByDef::TrigOperator(p),
+        ..
+    } = proof
+    {
+        match p {
+            TrigOperatorObjWellDefinedProofByDef::Sin(p) => {
+                return Some((&p.child_obj_well_defined, &p.requirement_fact_verified))
+            }
+            TrigOperatorObjWellDefinedProofByDef::Cos(p) => {
+                return Some((&p.child_obj_well_defined, &p.requirement_fact_verified))
+            }
+            TrigOperatorObjWellDefinedProofByDef::Tan(p) => {
+                return Some((&p.child_obj_well_defined, &p.requirement_fact_verified))
+            }
+            _ => {}
+        }
+    }
+    if let ObjWellDefinedProof::ByDef {
+        proof: ObjWellDefinedProofByDef::ExpLogOperator(p),
+        ..
+    } = proof
+    {
+        match p {
+            ExpLogOperatorObjWellDefinedProofByDef::Exp(p) => {
+                return Some((&p.child_obj_well_defined, &p.requirement_fact_verified))
+            }
+            ExpLogOperatorObjWellDefinedProofByDef::Ln(p) => {
+                return Some((&p.child_obj_well_defined, &p.requirement_fact_verified))
+            }
+            ExpLogOperatorObjWellDefinedProofByDef::Log(p) => {
+                return Some((&p.child_obj_well_defined, &p.requirement_fact_verified))
+            }
+            _ => (),
+        }
     }
     if let ObjWellDefinedProof::ByDef {
         proof:

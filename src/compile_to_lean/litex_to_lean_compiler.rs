@@ -117,6 +117,11 @@ impl LitexToLeanCompiler {
 
 fn object_uses_functions(object: &Obj) -> bool {
     match object {
+        Obj::IteratedOperator(_) => true,
+        Obj::FiniteSetStat(FiniteSetStat::FiniteSetSize(p)) => object_uses_functions(&p.set),
+        Obj::FiniteSetStat(FiniteSetStat::FiniteSetMax(p)) => object_uses_functions(&p.set),
+        Obj::FiniteSetStat(FiniteSetStat::FiniteSetMin(p)) => object_uses_functions(&p.set),
+
         Obj::IntegerOperator(IntegerOperator::Factorial(p)) => object_uses_functions(&p.arg),
         Obj::IntegerOperator(IntegerOperator::Gcd(p)) => {
             object_uses_functions(&p.left) || object_uses_functions(&p.right)
@@ -399,6 +404,26 @@ fn statement_uses_functions(statement: &ExecStmtResult) -> bool {
 
 fn object_uses_sets(object: &Obj) -> bool {
     match object {
+        // Native constants have intrinsic R+ membership; source WD may use that
+        // proof even when the enclosing source proposition mentions only R/C.
+        Obj::Literal(Literal::EulerNumber(_) | Literal::Pi(_)) => true,
+        Obj::ComplexOperator(ComplexOperator::Conjugate(p)) => object_uses_sets(&p.arg),
+        Obj::ComplexOperator(ComplexOperator::RealPart(p)) => object_uses_sets(&p.arg),
+        Obj::ComplexOperator(ComplexOperator::ImaginaryPart(p)) => object_uses_sets(&p.arg),
+        Obj::ComplexOperator(ComplexOperator::ComplexAbs(p)) => object_uses_sets(&p.arg),
+        Obj::TrigOperator(TrigOperator::Sin(p)) => object_uses_sets(&p.arg),
+        Obj::TrigOperator(TrigOperator::Cos(p)) => object_uses_sets(&p.arg),
+        Obj::TrigOperator(TrigOperator::Tan(p)) => object_uses_sets(&p.arg),
+        Obj::ExpLogOperator(ExpLogOperator::Exp(p)) => object_uses_sets(&p.arg),
+        Obj::ExpLogOperator(ExpLogOperator::Log(p)) => {
+            object_uses_sets(&p.base) || object_uses_sets(&p.arg)
+        }
+        Obj::ExpLogOperator(ExpLogOperator::Sqrt(p)) => object_uses_sets(&p.arg),
+        Obj::ExpLogOperator(ExpLogOperator::Ln(_)) => true,
+        Obj::IteratedOperator(_) => true,
+        Obj::FiniteSetStat(FiniteSetStat::FiniteSetSize(p)) => object_uses_sets(&p.set),
+        Obj::FiniteSetStat(FiniteSetStat::FiniteSetMax(p)) => object_uses_sets(&p.set),
+        Obj::FiniteSetStat(FiniteSetStat::FiniteSetMin(p)) => object_uses_sets(&p.set),
         Obj::IntegerOperator(IntegerOperator::Factorial(_)) => true, // Intrinsic codomain is N+.
         Obj::IntegerOperator(IntegerOperator::Gcd(_)) => true,       // Intrinsic codomain is N+.
         Obj::IntegerOperator(IntegerOperator::Lcm(p)) => {
@@ -420,7 +445,9 @@ fn object_uses_sets(object: &Obj) -> bool {
             SetFormer::ListSet(_)
             | SetFormer::SetBuilder(_)
             | SetFormer::Range(_)
-            | SetFormer::ClosedRange(_),
+            | SetFormer::ClosedRange(_)
+            | SetFormer::IntervalObj(_)
+            | SetFormer::OneSideInfinityIntervalObj(_),
         ) => true,
         Obj::SetOperator(
             SetOperator::Union(_)

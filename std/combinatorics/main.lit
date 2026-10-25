@@ -1,0 +1,160 @@
+# Finite maps and counting using native cardinality and mapping predicates.
+
+thm injection_size_le:
+    ? forall X, Y finite_set, f fn(x X) Y:
+        $injective(X, Y, f)
+        =>:
+            finite_set_size(X) <= finite_set_size(Y)
+    $is_finite_set(fn_range(f))
+    fn_range(f) $subset Y
+    finite_set_size(fn_range(f)) = finite_set_size(X)
+    finite_set_size(fn_range(f)) <= finite_set_size(Y)
+
+thm surjection_size_ge:
+    ? forall X, Y finite_set, f fn(x X) Y:
+        $surjective(X, Y, f)
+        =>:
+            finite_set_size(Y) <= finite_set_size(X)
+
+thm pigeonhole_collision:
+    ? forall X, Y finite_set, f fn(x X) Y:
+        finite_set_size(Y) < finite_set_size(X)
+        =>:
+            exist x, y X st {x != y, f(x) = f(y)}
+    by contra:
+        ? exist x, y X st {x != y, f(x) = f(y)}
+        claim:
+            ? forall x, y X:
+                f(x) = f(y)
+                =>:
+                    x = y
+            by contra:
+                ? x = y
+                witness exist left, right X st {left != right, f(left) = f(right)} from x, y
+                impossible exist left, right X st {left != right, f(left) = f(right)}
+        by def $injective(X, Y, f)
+        release thm injection_size_le(X, Y, f)
+        impossible finite_set_size(Y) < finite_set_size(X)
+
+thm cardinality_gap_omits_value:
+    ? forall X, Y finite_set, f fn(x X) Y:
+        finite_set_size(X) < finite_set_size(Y)
+        =>:
+            exist y Y st {not y $in fn_range(f)}
+    by contra:
+        ? exist y Y st {not y $in fn_range(f)}
+        claim:
+            ? forall y Y:
+                y $in fn_range(f)
+            by contra:
+                ? y $in fn_range(f)
+                witness exist omitted Y st {not omitted $in fn_range(f)} from y
+                impossible exist omitted Y st {not omitted $in fn_range(f)}
+        claim:
+            ? forall y Y:
+                exist x X st {y = f(x)}
+            have by fn_preimage: preimage_point from y $in fn_range(f)
+            witness exist x X st {y = f(x)} from preimage_point
+        by def $surjective(X, Y, f)
+        release thm surjection_size_ge(X, Y, f)
+        impossible finite_set_size(X) < finite_set_size(Y)
+
+thm equal_size_injection_is_bijective:
+    ? forall X, Y finite_set, f fn(x X) Y:
+        $injective(X, Y, f)
+        finite_set_size(X) = finite_set_size(Y)
+        =>:
+            $bijective(X, Y, f)
+    $is_finite_set(fn_range(f))
+    fn_range(f) $subset Y
+    finite_set_size(fn_range(f)) = finite_set_size(X) = finite_set_size(Y)
+    fn_range(f) = Y
+    claim:
+        ? forall y Y:
+            exist x X st {y = f(x)}
+        y $in fn_range(f)
+        have by fn_preimage: preimage_point from y $in fn_range(f)
+        witness exist x X st {y = f(x)} from preimage_point
+    by def $surjective(X, Y, f)
+    by def $bijective(X, Y, f)
+
+thm remove_one_size:
+    ? forall X finite_set, point X:
+        finite_set_size(set_minus(X, {point})) = finite_set_size(X) - 1
+    {point} $subset X
+    intersect(X, {point}) = {point}
+    finite_set_size(set_minus(X, {point})) = finite_set_size(X) - finite_set_size(intersect(X, {point})) = finite_set_size(X) - finite_set_size({point}) = finite_set_size(X) - 1
+
+thm surjection_collision_strict_size:
+    ? forall X, Y finite_set, f fn(x X) Y, point, duplicate X:
+        $surjective(X, Y, f)
+        point != duplicate
+        f(point) = f(duplicate)
+        =>:
+            finite_set_size(Y) < finite_set_size(X)
+    have remaining finite_set = set_minus(X, {point})
+    remaining $subset X
+    have fn reduced_map(x remaining) Y = f(x)
+    claim:
+        ? forall y Y:
+            exist x remaining st {y = reduced_map(x)}
+        obtain original from exist x X st {y = f(x)}
+        by cases:
+            ? exist x remaining st {y = reduced_map(x)}
+            case original = point:
+                duplicate != point
+                duplicate $in remaining
+                reduced_map(duplicate) = f(duplicate) = f(point) = f(original) = y
+                witness exist x remaining st {y = reduced_map(x)} from duplicate
+            case original != point:
+                original $in remaining
+                reduced_map(original) = f(original) = y
+                witness exist x remaining st {y = reduced_map(x)} from original
+    by def $surjective(remaining, Y, reduced_map)
+    release thm surjection_size_ge(remaining, Y, reduced_map)
+    release thm remove_one_size(X, point)
+    finite_set_size(remaining) = finite_set_size(X) - 1
+    finite_set_size(Y) <= finite_set_size(X) - 1
+    finite_set_size(X) - 1 < finite_set_size(X)
+    finite_set_size(Y) < finite_set_size(X)
+
+thm equal_size_surjection_is_bijective:
+    ? forall X, Y finite_set, f fn(x X) Y:
+        $surjective(X, Y, f)
+        finite_set_size(X) = finite_set_size(Y)
+        =>:
+            $bijective(X, Y, f)
+    claim:
+        ? forall point, duplicate X:
+            f(point) = f(duplicate)
+            =>:
+                point = duplicate
+        by contra:
+            ? point = duplicate
+            release thm surjection_collision_strict_size(X, Y, f, point, duplicate)
+            impossible finite_set_size(X) = finite_set_size(Y)
+    by def $injective(X, Y, f)
+    by def $bijective(X, Y, f)
+
+thm mutual_finite_injections_are_bijective:
+    ? forall X, Y finite_set, f fn(x X) Y, g fn(y Y) X:
+        $injective(X, Y, f)
+        $injective(Y, X, g)
+        =>:
+            finite_set_size(X) = finite_set_size(Y)
+            $bijective(X, Y, f)
+            $bijective(Y, X, g)
+    release thm injection_size_le(X, Y, f)
+    release thm injection_size_le(Y, X, g)
+    finite_set_size(X) = finite_set_size(Y)
+    release thm equal_size_injection_is_bijective(X, Y, f)
+    release thm equal_size_injection_is_bijective(Y, X, g)
+
+thm disjoint_partition_size:
+    ? forall X, A, B finite_set:
+        union(A, B) = X
+        intersect(A, B) = {}
+        =>:
+            finite_set_size(X) = finite_set_size(A) + finite_set_size(B)
+    finite_set_size(intersect(A, B)) = finite_set_size({}) = 0
+    finite_set_size(X) = finite_set_size(union(A, B)) = finite_set_size(A) + finite_set_size(B) - finite_set_size(intersect(A, B)) = finite_set_size(A) + finite_set_size(B)

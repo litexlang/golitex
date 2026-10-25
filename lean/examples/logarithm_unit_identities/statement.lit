@@ -1,0 +1,16 @@
+# Logarithms of one and of the base in an arbitrary positive nonunit base.
+forall a R+:
+    a != 1
+    =>:
+        log(a, 1) = 0
+        log(a, a) = 1
+
+forall a R+:
+    a > 1
+    =>:
+        log(a, a) = 1
+
+forall a R+:
+    a < 1
+    =>:
+        log(a, 1) = 0

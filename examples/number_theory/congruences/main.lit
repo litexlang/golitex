@@ -1,0 +1,92 @@
+# Tracer: shared positive-modulus congruence and multiplication.
+# Before (showcase-local definitions):
+# prop divides_by(d, n Z):
+#     exist k Z st {n = d * k}
+# prop congruent_mod(a, b, modulus Z):
+#     modulus > 0
+#     $divides_by(modulus, a - b)
+# Former limitation: these names belonged to the number-theory showcase;
+# no std/number_theory package supplied an imported congruence interface.
+# Now: litex.config imports std number_theory as nt, with native $dvd.
+# Boundary: positive integer moduli only; no unconditional cancellation.
+# Evidence: target/release/litex -strict -lang en -f examples/number_theory/congruences/main.lit
+# Source: std/number_theory/main.lit
+
+by def $nt:::is_congruent_mod(17, 2, 5)
+
+release thm nt:::congruence_multiply(17, 2, 17, 2, 5)
+
+$nt:::is_congruent_mod(17 * 17, 2 * 2, 5)
+
+$nt:::is_congruent_mod(289, 4, 5)
+
+release thm nt:::congruence_add(17, 2, 17, 2, 5)
+
+$nt:::is_congruent_mod(34, 4, 5)
+
+release thm nt:::congruence_subtract(17, 2, 17, 2, 5)
+
+$nt:::is_congruent_mod(0, 0, 5)
+
+release thm nt:::congruence_symmetric(17, 2, 5)
+
+$nt:::is_congruent_mod(2, 17, 5)
+
+release thm nt:::congruence_scale(17, 2, -3, 5)
+
+$nt:::is_congruent_mod(-51, -6, 5)
+
+release thm nt:::congruence_negate(17, 2, 5)
+
+$nt:::is_congruent_mod(-17, -2, 5)
+
+by def $nt:::is_congruent_mod(2, -3, 5)
+
+release thm nt:::congruence_transitive(17, 2, -3, 5)
+
+$nt:::is_congruent_mod(17, -3, 5)
+
+release thm nt:::congruence_remainder(-17, 5)
+
+$nt:::is_congruent_mod(-17, 3, 5)
+
+release thm nt:::congruence_reflexive(0, 7)
+
+by def $nt:::is_congruent_mod(0, 7, 7)
+
+by def $nt:::is_congruent_mod(-123, 456, 1)
+
+by def $nt:::is_congruent_mod(17, 2, 15)
+
+$dvd(15, 3)
+
+release thm nt:::congruence_modulus_divisor(17, 2, 3, 15)
+
+$nt:::is_congruent_mod(17, 2, 3)
+
+$dvd(0, -7)
+
+$dvd(84, -6)
+
+$dvd(-6, -3)
+
+release thm nt:::divisibility_transitive(84, -6, -3)
+
+$dvd(84, -3)
+
+$dvd(-84, -6)
+
+$dvd(30, -6)
+
+release thm nt:::divisibility_linear_combination(-84, 30, -1, 3, -6)
+
+$dvd(174, -6)
+
+by def $nt:::is_congruent_mod(2 * 1, 2 * 4, 6)
+
+by contra:
+    ? not $nt:::is_congruent_mod(1, 4, 6)
+    $dvd(1 - 4, 6)
+    (1 - 4) % 6 = 0
+    (1 - 4) % 6 = 3
+    impossible 3 = 0

@@ -1,0 +1,18 @@
+# Form sequence spaces on arbitrary sets and identify their positive-natural domain.
+have sequence_carrier set
+
+$is_set(seq(sequence_carrier))
+
+let infinite_sequences = seq(sequence_carrier)
+
+infinite_sequences = seq(sequence_carrier)
+
+$is_set(seq(infinite_sequences))
+
+seq(R) = fn(k N+) R
+
+forall A set:
+    seq(A) = fn(k N+) A
+
+forall A set:
+    fn(k N+) A = seq(A)
