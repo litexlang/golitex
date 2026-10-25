@@ -1,0 +1,9 @@
+thm least_without_containment:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,U,W power_set(V),H power_set(V):
+        $Algebra::vector_space::is_subspace(K,field,V,space,U)
+        $Algebra::vector_space::is_subspace(K,field,V,space,W)
+        $Algebra::vector_space::is_subspace(K,field,V,space,H)
+        U $subset H
+        =>:
+            \Algebra::direct_sum::subspace_sum<K,field,V,space,U,W> $subset H
+    by thm Algebra::direct_sum::subspace_sum_is_least(K,field,V,space,U,W,H) => \Algebra::direct_sum::subspace_sum<K,field,V,space,U,W> $subset H

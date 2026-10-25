@@ -145,17 +145,14 @@ fn add_zero_builtin_respects_binder_scope_and_complex_addition() {
 }
 
 #[test]
-fn add_zero_builtin_lean_replay_fails_closed() {
+fn add_zero_builtin_lean_replays_the_recorded_equalities() {
     let mut rt = runtime();
     let run = rt.run_litex_code("have a R=0\nhave b R\na+b=b").unwrap();
     assert!(run.success && run.session_error.is_none());
     let json = project_run_detailed(&run, &rt, "eval", None).stringify();
     assert!(json.contains("AddZeroLeftFromEqualities"), "{json}");
-    let error = litex::compile_to_lean::compile_run(&run, rt, "AddZeroUnsupported").unwrap_err();
-    assert!(
-        error.to_string().contains("Equality/BuiltinRule"),
-        "{error}"
-    );
+    let lean = litex::compile_to_lean::compile_run(&run, rt, "AddZeroFromEqualities").unwrap();
+    assert!(lean.contains("Litex.zeroAdd"), "{lean}");
 }
 
 #[test]

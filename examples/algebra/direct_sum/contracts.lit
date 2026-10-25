@@ -1,0 +1,216 @@
+thm consume_subspace_sum_contains_pair:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,U,W power_set(V),u U,w W:
+        $Algebra::vector_space::is_subspace(K,field,V,space,U)
+        $Algebra::vector_space::is_subspace(K,field,V,space,W)
+        =>:
+            space.add(u,w) $in \Algebra::direct_sum::subspace_sum<K,field,V,space,U,W>
+    by thm Algebra::direct_sum::subspace_sum_contains_pair(K,field,V,space,U,W,u,w) => space.add(u,w) $in \Algebra::direct_sum::subspace_sum<K,field,V,space,U,W>
+
+thm consume_subspace_sum_contains_summands:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,U,W power_set(V):
+        $Algebra::vector_space::is_subspace(K,field,V,space,U)
+        $Algebra::vector_space::is_subspace(K,field,V,space,W)
+        =>:
+            U $subset \Algebra::direct_sum::subspace_sum<K,field,V,space,U,W>
+            W $subset \Algebra::direct_sum::subspace_sum<K,field,V,space,U,W>
+    release thm Algebra::direct_sum::subspace_sum_contains_summands(K,field,V,space,U,W)
+
+thm consume_subspace_sum_is_subspace:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,U,W power_set(V):
+        $Algebra::vector_space::is_subspace(K,field,V,space,U)
+        $Algebra::vector_space::is_subspace(K,field,V,space,W)
+        =>:
+            $Algebra::vector_space::is_subspace(K,field,V,space,\Algebra::direct_sum::subspace_sum<K,field,V,space,U,W>)
+    by thm Algebra::direct_sum::subspace_sum_is_subspace(K,field,V,space,U,W) => $Algebra::vector_space::is_subspace(K,field,V,space,\Algebra::direct_sum::subspace_sum<K,field,V,space,U,W>)
+
+thm consume_subspace_sum_is_least:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,U,W power_set(V),H power_set(V):
+        $Algebra::vector_space::is_subspace(K,field,V,space,U)
+        $Algebra::vector_space::is_subspace(K,field,V,space,W)
+        $Algebra::vector_space::is_subspace(K,field,V,space,H)
+        U $subset H
+        W $subset H
+        =>:
+            \Algebra::direct_sum::subspace_sum<K,field,V,space,U,W> $subset H
+    by thm Algebra::direct_sum::subspace_sum_is_least(K,field,V,space,U,W,H) => \Algebra::direct_sum::subspace_sum<K,field,V,space,U,W> $subset H
+
+thm consume_subspace_sum_commutes:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,U,W power_set(V):
+        $Algebra::vector_space::is_subspace(K,field,V,space,U)
+        $Algebra::vector_space::is_subspace(K,field,V,space,W)
+        =>:
+            \Algebra::direct_sum::subspace_sum<K,field,V,space,U,W> =\Algebra::direct_sum::subspace_sum<K,field,V,space,W,U>
+    by thm Algebra::direct_sum::subspace_sum_commutes(K,field,V,space,U,W) => \Algebra::direct_sum::subspace_sum<K,field,V,space,U,W> =\Algebra::direct_sum::subspace_sum<K,field,V,space,W,U>
+
+thm consume_internal_direct_sum_commutes:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,U,W power_set(V):
+        $Algebra::direct_sum::is_internal_direct_sum(K,field,V,space,U,W)
+        =>:
+            $Algebra::direct_sum::is_internal_direct_sum(K,field,V,space,W,U)
+    by thm Algebra::direct_sum::internal_direct_sum_commutes(K,field,V,space,U,W) => $Algebra::direct_sum::is_internal_direct_sum(K,field,V,space,W,U)
+
+thm consume_sum_components_unique:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,U,W power_set(V),u,p U,w,q W:
+        $Algebra::vector_space::is_subspace(K,field,V,space,U)
+        $Algebra::vector_space::is_subspace(K,field,V,space,W)
+        intersect(U,W)={space.zero}
+        space.add(u,w)=space.add(p,q)
+        =>:
+            u=p
+            w=q
+    release thm Algebra::direct_sum::sum_components_unique(K,field,V,space,U,W,u,p,w,q)
+
+thm consume_direct_sum_decomposition_exists_unique:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,U,W power_set(V),v V:
+        $Algebra::direct_sum::is_internal_direct_sum(K,field,V,space,U,W)
+        =>:
+            exist! pair U × W st {space.add(pair(1),pair(2))=v}
+    release thm Algebra::direct_sum::direct_sum_decomposition_exists_unique(K,field,V,space,U,W,v)
+
+thm consume_sum_decomposition_of_pair:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,U,W power_set(V),u U,w W:
+        $Algebra::direct_sum::is_internal_direct_sum(K,field,V,space,U,W)
+        =>:
+            \Algebra::direct_sum::sum_decomposition<K,field,V,space,U,W>(space.add(u,w))=(u,w)
+    by thm Algebra::direct_sum::sum_decomposition_of_pair(K,field,V,space,U,W,u,w) => \Algebra::direct_sum::sum_decomposition<K,field,V,space,U,W>(space.add(u,w))=(u,w)
+
+thm consume_projections_reconstruct:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,U,W power_set(V),v V:
+        $Algebra::direct_sum::is_internal_direct_sum(K,field,V,space,U,W)
+        =>:
+            \Algebra::direct_sum::left_projection<K,field,V,space,U,W>(v) $in U
+            \Algebra::direct_sum::right_projection<K,field,V,space,U,W>(v) $in W
+            space.add(\Algebra::direct_sum::left_projection<K,field,V,space,U,W>(v),\Algebra::direct_sum::right_projection<K,field,V,space,U,W>(v))=v
+    release thm Algebra::direct_sum::projections_reconstruct(K,field,V,space,U,W,v)
+
+thm consume_projections_of_pair:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,U,W power_set(V),u U,w W:
+        $Algebra::direct_sum::is_internal_direct_sum(K,field,V,space,U,W)
+        =>:
+            \Algebra::direct_sum::left_projection<K,field,V,space,U,W>(space.add(u,w))=u
+            \Algebra::direct_sum::right_projection<K,field,V,space,U,W>(space.add(u,w))=w
+    release thm Algebra::direct_sum::projections_of_pair(K,field,V,space,U,W,u,w)
+
+thm consume_projections_add:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,U,W power_set(V),x,y V:
+        $Algebra::direct_sum::is_internal_direct_sum(K,field,V,space,U,W)
+        =>:
+            \Algebra::direct_sum::left_projection<K,field,V,space,U,W>(space.add(x,y))=space.add(\Algebra::direct_sum::left_projection<K,field,V,space,U,W>(x),\Algebra::direct_sum::left_projection<K,field,V,space,U,W>(y))
+            \Algebra::direct_sum::right_projection<K,field,V,space,U,W>(space.add(x,y))=space.add(\Algebra::direct_sum::right_projection<K,field,V,space,U,W>(x),\Algebra::direct_sum::right_projection<K,field,V,space,U,W>(y))
+    release thm Algebra::direct_sum::projections_add(K,field,V,space,U,W,x,y)
+
+thm consume_projections_smul:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,U,W power_set(V),a K,x V:
+        $Algebra::direct_sum::is_internal_direct_sum(K,field,V,space,U,W)
+        =>:
+            \Algebra::direct_sum::left_projection<K,field,V,space,U,W>(space.smul(a,x))=space.smul(a,\Algebra::direct_sum::left_projection<K,field,V,space,U,W>(x))
+            \Algebra::direct_sum::right_projection<K,field,V,space,U,W>(space.smul(a,x))=space.smul(a,\Algebra::direct_sum::right_projection<K,field,V,space,U,W>(x))
+    release thm Algebra::direct_sum::projections_smul(K,field,V,space,U,W,a,x)
+
+thm consume_projections_are_linear:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,U,W power_set(V):
+        $Algebra::direct_sum::is_internal_direct_sum(K,field,V,space,U,W)
+        =>:
+            $Algebra::vector_space::is_linear_map(K,field,V,space,V,space,\Algebra::direct_sum::left_projection<K,field,V,space,U,W>)
+            $Algebra::vector_space::is_linear_map(K,field,V,space,V,space,\Algebra::direct_sum::right_projection<K,field,V,space,U,W>)
+    release thm Algebra::direct_sum::projections_are_linear(K,field,V,space,U,W)
+
+thm consume_projections_on_summands:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,U,W power_set(V),u U,w W:
+        $Algebra::direct_sum::is_internal_direct_sum(K,field,V,space,U,W)
+        =>:
+            \Algebra::direct_sum::left_projection<K,field,V,space,U,W>(u)=u
+            \Algebra::direct_sum::right_projection<K,field,V,space,U,W>(u)=space.zero
+            \Algebra::direct_sum::left_projection<K,field,V,space,U,W>(w)=space.zero
+            \Algebra::direct_sum::right_projection<K,field,V,space,U,W>(w)=w
+    release thm Algebra::direct_sum::projections_on_summands(K,field,V,space,U,W,u,w)
+
+thm consume_projections_are_complementary:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,U,W power_set(V),v V:
+        $Algebra::direct_sum::is_internal_direct_sum(K,field,V,space,U,W)
+        =>:
+            \Algebra::direct_sum::left_projection<K,field,V,space,U,W>(\Algebra::direct_sum::left_projection<K,field,V,space,U,W>(v))=\Algebra::direct_sum::left_projection<K,field,V,space,U,W>(v)
+            \Algebra::direct_sum::right_projection<K,field,V,space,U,W>(\Algebra::direct_sum::right_projection<K,field,V,space,U,W>(v))=\Algebra::direct_sum::right_projection<K,field,V,space,U,W>(v)
+            \Algebra::direct_sum::left_projection<K,field,V,space,U,W>(\Algebra::direct_sum::right_projection<K,field,V,space,U,W>(v))=space.zero
+            \Algebra::direct_sum::right_projection<K,field,V,space,U,W>(\Algebra::direct_sum::left_projection<K,field,V,space,U,W>(v))=space.zero
+    release thm Algebra::direct_sum::projections_are_complementary(K,field,V,space,U,W,v)
+
+thm consume_left_projection_range_kernel:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,U,W power_set(V):
+        $Algebra::direct_sum::is_internal_direct_sum(K,field,V,space,U,W)
+        =>:
+            fn_range(\Algebra::direct_sum::left_projection<K,field,V,space,U,W>)=U
+            preimage(\Algebra::direct_sum::left_projection<K,field,V,space,U,W>,space.zero)=W
+    release thm Algebra::direct_sum::left_projection_range_kernel(K,field,V,space,U,W)
+
+thm consume_right_projection_range_kernel:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,U,W power_set(V):
+        $Algebra::direct_sum::is_internal_direct_sum(K,field,V,space,U,W)
+        =>:
+            fn_range(\Algebra::direct_sum::right_projection<K,field,V,space,U,W>)=W
+            preimage(\Algebra::direct_sum::right_projection<K,field,V,space,U,W>,space.zero)=U
+    release thm Algebra::direct_sum::right_projection_range_kernel(K,field,V,space,U,W)
+
+thm consume_direct_sum_with_zero:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>:
+        $Algebra::direct_sum::is_internal_direct_sum(K,field,V,space,V,{space.zero})
+        $Algebra::direct_sum::is_internal_direct_sum(K,field,V,space,{space.zero},V)
+    release thm Algebra::direct_sum::direct_sum_with_zero(K,field,V,space)
+
+thm consume_finite_direct_sum_summands:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,U,W power_set(V):
+        $Algebra::direct_sum::is_internal_direct_sum(K,field,V,space,U,W)
+        $Algebra::basis::is_finite_dimensional(K,field,V,space)
+        =>:
+            $Algebra::basis::is_finite_dimensional(K,field,U,\Algebra::subspace::restricted_space<K,field,V,space,U>)
+            $Algebra::basis::is_finite_dimensional(K,field,W,\Algebra::subspace::restricted_space<K,field,V,space,W>)
+    release thm Algebra::direct_sum::finite_direct_sum_summands(K,field,V,space,U,W)
+
+thm consume_unique_decomposition_gives_direct_sum:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,U,W power_set(V):
+        $Algebra::vector_space::is_subspace(K,field,V,space,U)
+        $Algebra::vector_space::is_subspace(K,field,V,space,W)
+        forall v V:
+            exist! pair U × W st {space.add(pair(1),pair(2))=v}
+        =>:
+            $Algebra::direct_sum::is_internal_direct_sum(K,field,V,space,U,W)
+    by thm Algebra::direct_sum::unique_decomposition_gives_direct_sum(K,field,V,space,U,W) => $Algebra::direct_sum::is_internal_direct_sum(K,field,V,space,U,W)
+
+thm consume_equal_subspaces_have_equal_dimension:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,U,W power_set(V):
+        $Algebra::vector_space::is_subspace(K,field,V,space,U)
+        $Algebra::vector_space::is_subspace(K,field,V,space,W)
+        $Algebra::basis::is_finite_dimensional(K,field,U,\Algebra::subspace::restricted_space<K,field,V,space,U>)
+        $Algebra::basis::is_finite_dimensional(K,field,W,\Algebra::subspace::restricted_space<K,field,V,space,W>)
+        U=W
+        =>:
+            \Algebra::dimension::finite_dimension<K,field,U>(\Algebra::subspace::restricted_space<K,field,V,space,U>)=\Algebra::dimension::finite_dimension<K,field,W>(\Algebra::subspace::restricted_space<K,field,V,space,W>)
+    by thm Algebra::direct_sum::equal_subspaces_have_equal_dimension(K,field,V,space,U,W) => \Algebra::dimension::finite_dimension<K,field,U>(\Algebra::subspace::restricted_space<K,field,V,space,U>)=\Algebra::dimension::finite_dimension<K,field,W>(\Algebra::subspace::restricted_space<K,field,V,space,W>)
+
+thm consume_projections_carrier:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,U,W power_set(V):
+        $Algebra::direct_sum::is_internal_direct_sum(K,field,V,space,U,W)
+        =>:
+            \Algebra::direct_sum::left_projection<K,field,V,space,U,W> $in fn(v V) V
+            \Algebra::direct_sum::right_projection<K,field,V,space,U,W> $in fn(v V) V
+            \Algebra::direct_sum::sum_decomposition<K,field,V,space,U,W> $in fn(v V) U × W
+    release thm Algebra::direct_sum::projections_carrier(K,field,V,space,U,W)
+
+thm consume_direct_sum_dimension:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,U,W power_set(V):
+        $Algebra::direct_sum::is_internal_direct_sum(K,field,V,space,U,W)
+        $Algebra::basis::is_finite_dimensional(K,field,V,space)
+        $Algebra::basis::is_finite_dimensional(K,field,U,\Algebra::subspace::restricted_space<K,field,V,space,U>)
+        $Algebra::basis::is_finite_dimensional(K,field,W,\Algebra::subspace::restricted_space<K,field,V,space,W>)
+        =>:
+            \Algebra::dimension::finite_dimension<K,field,U>(\Algebra::subspace::restricted_space<K,field,V,space,U>)+\Algebra::dimension::finite_dimension<K,field,W>(\Algebra::subspace::restricted_space<K,field,V,space,W>)=\Algebra::dimension::finite_dimension<K,field,V>(space)
+    by thm Algebra::direct_sum::direct_sum_dimension(K,field,V,space,U,W) => \Algebra::dimension::finite_dimension<K,field,U>(\Algebra::subspace::restricted_space<K,field,V,space,U>)+\Algebra::dimension::finite_dimension<K,field,W>(\Algebra::subspace::restricted_space<K,field,V,space,W>)=\Algebra::dimension::finite_dimension<K,field,V>(space)
+
+thm consume_linear_idempotent_splits_space:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,T fn(v V) V:
+        $Algebra::vector_space::is_linear_map(K,field,V,space,V,space,T)
+        forall v V:
+            T(T(v))=T(v)
+        =>:
+            $Algebra::direct_sum::is_internal_direct_sum(K,field,V,space,fn_range(T),preimage(T,space.zero))
+    by thm Algebra::direct_sum::linear_idempotent_splits_space(K,field,V,space,T) => $Algebra::direct_sum::is_internal_direct_sum(K,field,V,space,fn_range(T),preimage(T,space.zero))

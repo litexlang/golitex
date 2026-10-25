@@ -1,0 +1,5 @@
+thm sum_without_right_subspace:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,U,W power_set(V):
+        $Algebra::vector_space::is_subspace(K,field,V,space,U)
+        =>:
+            \Algebra::direct_sum::subspace_sum<K,field,V,space,U,W> $in power_set(V)

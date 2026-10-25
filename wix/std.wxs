@@ -22,6 +22,9 @@
           <Component Id="StdComp_algebra_coordinate_maps.lit" Guid="*">
             <File Id="StdFile_algebra_coordinate_maps.lit" Source="std\algebra\coordinate_maps.lit" KeyPath="yes" />
           </Component>
+          <Component Id="StdComp_algebra_direct_sum.lit" Guid="*">
+            <File Id="StdFile_algebra_direct_sum.lit" Source="std\algebra\direct_sum.lit" KeyPath="yes" />
+          </Component>
           <Component Id="StdComp_algebra_dependence.lit" Guid="*">
             <File Id="StdFile_algebra_dependence.lit" Source="std\algebra\dependence.lit" KeyPath="yes" />
           </Component>
@@ -130,6 +133,7 @@
       <ComponentRef Id="StdComp_algebra_basis_existence.lit" />
       <ComponentRef Id="StdComp_algebra_basis_extension.lit" />
       <ComponentRef Id="StdComp_algebra_coordinate_maps.lit" />
+      <ComponentRef Id="StdComp_algebra_direct_sum.lit" />
       <ComponentRef Id="StdComp_algebra_dependence.lit" />
       <ComponentRef Id="StdComp_algebra_dimension.lit" />
       <ComponentRef Id="StdComp_algebra_exchange.lit" />

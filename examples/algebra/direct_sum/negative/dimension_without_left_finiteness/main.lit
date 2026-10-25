@@ -1,0 +1,8 @@
+thm dimension_without_left_finiteness:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,U,W power_set(V):
+        $Algebra::direct_sum::is_internal_direct_sum(K,field,V,space,U,W)
+        $Algebra::basis::is_finite_dimensional(K,field,V,space)
+        $Algebra::basis::is_finite_dimensional(K,field,W,\Algebra::subspace::restricted_space<K,field,V,space,W>)
+        =>:
+            \Algebra::dimension::finite_dimension<K,field,U>(\Algebra::subspace::restricted_space<K,field,V,space,U>)+\Algebra::dimension::finite_dimension<K,field,W>(\Algebra::subspace::restricted_space<K,field,V,space,W>)=\Algebra::dimension::finite_dimension<K,field,V>(space)
+    by thm Algebra::direct_sum::direct_sum_dimension(K,field,V,space,U,W) => \Algebra::dimension::finite_dimension<K,field,U>(\Algebra::subspace::restricted_space<K,field,V,space,U>)+\Algebra::dimension::finite_dimension<K,field,W>(\Algebra::subspace::restricted_space<K,field,V,space,W>)=\Algebra::dimension::finite_dimension<K,field,V>(space)

@@ -1,0 +1,544 @@
+# Internal direct sums, unique decompositions and complementary projections.
+# Source proofs over supplied ambient operations; no canonical complement.
+
+prop is_sum_vector(K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,U,W power_set(V),v V):
+    exist u U,w W st {space.add(u,w)=v}
+
+template<K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,U,W power_set(V): $vector_space::is_subspace(K,field,V,space,U), $vector_space::is_subspace(K,field,V,space,W)>:
+    have subspace_sum power_set(V)={v V: $is_sum_vector(K,field,V,space,U,W,v)}
+
+thm subspace_sum_contains_pair:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,U,W power_set(V),u U,w W:
+        $vector_space::is_subspace(K,field,V,space,U)
+        $vector_space::is_subspace(K,field,V,space,W)
+        =>:
+            space.add(u,w) $in \subspace_sum<K,field,V,space,U,W>
+    witness $is_sum_vector(K,field,V,space,U,W,space.add(u,w)) from u,w
+
+thm subspace_sum_contains_summands:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,U,W power_set(V):
+        $vector_space::is_subspace(K,field,V,space,U)
+        $vector_space::is_subspace(K,field,V,space,W)
+        =>:
+            U $subset \subspace_sum<K,field,V,space,U,W>
+            W $subset \subspace_sum<K,field,V,space,U,W>
+    claim:
+        ? forall u U:
+            u $in \subspace_sum<K,field,V,space,U,W>
+        space.add(u,space.zero)=space.add(space.zero,u)=u
+        witness $is_sum_vector(K,field,V,space,U,W,u) from u,space.zero
+    claim:
+        ? forall w W:
+            w $in \subspace_sum<K,field,V,space,U,W>
+        space.add(space.zero,w)=w
+        witness $is_sum_vector(K,field,V,space,U,W,w) from space.zero,w
+    by def U $subset \subspace_sum<K,field,V,space,U,W>
+    by def W $subset \subspace_sum<K,field,V,space,U,W>
+
+thm subspace_sum_is_subspace:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,U,W power_set(V):
+        $vector_space::is_subspace(K,field,V,space,U)
+        $vector_space::is_subspace(K,field,V,space,W)
+        =>:
+            $vector_space::is_subspace(K,field,V,space,\subspace_sum<K,field,V,space,U,W>)
+    space.add(space.zero,space.zero)=space.zero
+    by thm subspace_sum_contains_pair(K,field,V,space,U,W,space.zero,space.zero) => space.add(space.zero,space.zero) $in \subspace_sum<K,field,V,space,U,W>
+    claim:
+        ? forall x,y V:
+            x $in \subspace_sum<K,field,V,space,U,W>
+            y $in \subspace_sum<K,field,V,space,U,W>
+            =>:
+                space.add(x,y) $in \subspace_sum<K,field,V,space,U,W>
+        obtain u,w from $is_sum_vector(K,field,V,space,U,W,x)
+        obtain p,q from $is_sum_vector(K,field,V,space,U,W,y)
+        space.add(u,p) $in U
+        space.add(w,q) $in W
+        space.add(w,space.add(p,q))=space.add(space.add(w,p),q)
+        space.add(w,p)=space.add(p,w)
+        space.add(space.add(p,w),q)=space.add(p,space.add(w,q))
+        space.add(x,y)=space.add(space.add(u,w),space.add(p,q))=space.add(u,space.add(w,space.add(p,q)))=space.add(u,space.add(space.add(w,p),q))=space.add(u,space.add(space.add(p,w),q))=space.add(u,space.add(p,space.add(w,q)))=space.add(space.add(u,p),space.add(w,q))
+        witness $is_sum_vector(K,field,V,space,U,W,space.add(x,y)) from space.add(u,p),space.add(w,q)
+    claim:
+        ? forall a K,x V:
+            x $in \subspace_sum<K,field,V,space,U,W>
+            =>:
+                space.smul(a,x) $in \subspace_sum<K,field,V,space,U,W>
+        obtain u,w from $is_sum_vector(K,field,V,space,U,W,x)
+        space.smul(a,u) $in U
+        space.smul(a,w) $in W
+        space.smul(a,x)=space.smul(a,space.add(u,w))=space.add(space.smul(a,u),space.smul(a,w))
+        witness $is_sum_vector(K,field,V,space,U,W,space.smul(a,x)) from space.smul(a,u),space.smul(a,w)
+    by def $vector_space::is_subspace(K,field,V,space,\subspace_sum<K,field,V,space,U,W>)
+
+thm subspace_sum_is_least:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,U,W power_set(V),H power_set(V):
+        $vector_space::is_subspace(K,field,V,space,U)
+        $vector_space::is_subspace(K,field,V,space,W)
+        $vector_space::is_subspace(K,field,V,space,H)
+        U $subset H
+        W $subset H
+        =>:
+            \subspace_sum<K,field,V,space,U,W> $subset H
+    claim:
+        ? forall x \subspace_sum<K,field,V,space,U,W>:
+            x $in H
+        obtain u,w from $is_sum_vector(K,field,V,space,U,W,x)
+        u $in H
+        w $in H
+        space.add(u,w) $in H
+    by def \subspace_sum<K,field,V,space,U,W> $subset H
+
+thm subspace_sum_commutes:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,U,W power_set(V):
+        $vector_space::is_subspace(K,field,V,space,U)
+        $vector_space::is_subspace(K,field,V,space,W)
+        =>:
+            \subspace_sum<K,field,V,space,U,W> =\subspace_sum<K,field,V,space,W,U>
+    claim:
+        ? forall x \subspace_sum<K,field,V,space,U,W>:
+            x $in \subspace_sum<K,field,V,space,W,U>
+        obtain u,w from $is_sum_vector(K,field,V,space,U,W,x)
+        space.add(w,u)=space.add(u,w)=x
+        witness $is_sum_vector(K,field,V,space,W,U,x) from w,u
+    claim:
+        ? forall x \subspace_sum<K,field,V,space,W,U>:
+            x $in \subspace_sum<K,field,V,space,U,W>
+        obtain w,u from $is_sum_vector(K,field,V,space,W,U,x)
+        space.add(u,w)=space.add(w,u)=x
+        witness $is_sum_vector(K,field,V,space,U,W,x) from u,w
+    by extension \subspace_sum<K,field,V,space,U,W> =\subspace_sum<K,field,V,space,W,U>
+
+prop is_internal_direct_sum(K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,U,W power_set(V)):
+    $vector_space::is_subspace(K,field,V,space,U)
+    $vector_space::is_subspace(K,field,V,space,W)
+    \subspace_sum<K,field,V,space,U,W> =V
+    intersect(U,W)={space.zero}
+
+thm internal_direct_sum_commutes:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,U,W power_set(V):
+        $is_internal_direct_sum(K,field,V,space,U,W)
+        =>:
+            $is_internal_direct_sum(K,field,V,space,W,U)
+    by thm subspace_sum_commutes(K,field,V,space,U,W) => \subspace_sum<K,field,V,space,U,W> =\subspace_sum<K,field,V,space,W,U>
+    intersect(W,U)=intersect(U,W)={space.zero}
+    by def $is_internal_direct_sum(K,field,V,space,W,U)
+
+thm sum_components_unique:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,U,W power_set(V),u,p U,w,q W:
+        $vector_space::is_subspace(K,field,V,space,U)
+        $vector_space::is_subspace(K,field,V,space,W)
+        intersect(U,W)={space.zero}
+        space.add(u,w)=space.add(p,q)
+        =>:
+            u=p
+            w=q
+    release thm subspace::subspace_inverse_exists(K,field,V,space,U,p)
+    obtain inverse from exist t U st {space.add(p,t)=space.zero}
+    have d V=space.add(u,inverse)
+    d $in U
+    space.add(inverse,w)=space.add(w,inverse)
+    space.add(q,inverse)=space.add(inverse,q)
+    space.add(d,w)=space.add(space.add(u,inverse),w)=space.add(u,space.add(inverse,w))=space.add(u,space.add(w,inverse))=space.add(space.add(u,w),inverse)=space.add(space.add(p,q),inverse)=space.add(p,space.add(q,inverse))=space.add(p,space.add(inverse,q))=space.add(space.add(p,inverse),q)=space.add(space.zero,q)=q
+    space.add(w,d)=space.add(d,w)=q
+    by thm exchange::subspace_additive_cancellation(K,field,V,space,W,w,d) => d $in W
+    d $in intersect(U,W)
+    d $in {space.zero}
+    d=space.zero
+    space.add(inverse,p)=space.add(p,inverse)=space.zero
+    space.add(u,space.zero)=space.add(space.zero,u)=u
+    u=space.add(u,space.zero)=space.add(u,space.add(inverse,p))=space.add(space.add(u,inverse),p)=space.add(d,p)=space.add(space.zero,p)=p
+    u=p
+    space.add(u,w)=space.add(p,w)
+    space.add(inverse,space.add(u,w))=space.add(inverse,space.add(p,w))=space.add(space.add(inverse,p),w)=space.add(space.zero,w)=w
+    space.add(inverse,space.add(p,q))=space.add(space.add(inverse,p),q)=space.add(space.zero,q)=q
+    w=q
+
+thm direct_sum_decomposition_exists_unique:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,U,W power_set(V),v V:
+        $is_internal_direct_sum(K,field,V,space,U,W)
+        =>:
+            exist! pair U × W st {space.add(pair(1),pair(2))=v}
+    v $in \subspace_sum<K,field,V,space,U,W>
+    obtain u,w from $is_sum_vector(K,field,V,space,U,W,v)
+    claim:
+        ? forall p,q U × W:
+            space.add(p(1),p(2))=v
+            space.add(q(1),q(2))=v
+            =>:
+                p=q
+        release thm sum_components_unique(K,field,V,space,U,W,p(1),q(1),p(2),q(2))
+        p=(p(1),p(2))=(q(1),q(2))=q
+    (u,w)(1)=u
+    (u,w)(2)=w
+    space.add((u,w)(1),(u,w)(2))=space.add(u,w)=v
+    witness exist! pair U × W st {space.add(pair(1),pair(2))=v} from (u,w)
+
+template<K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,U,W power_set(V): $is_internal_direct_sum(K,field,V,space,U,W)>:
+    have fn sum_decomposition by exist!:
+        ? forall v V:
+            exist! pair U × W st {space.add(pair(1),pair(2))=v}
+
+claim:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,U,W power_set(V),v V:
+        $is_internal_direct_sum(K,field,V,space,U,W)
+        =>:
+            \sum_decomposition<K,field,V,space,U,W>(v)(1) $in V
+            \sum_decomposition<K,field,V,space,U,W>(v)(2) $in V
+    have pair U × W=\sum_decomposition<K,field,V,space,U,W>(v)
+    pair(1) $in U
+    pair(2) $in W
+    U $subset V
+    W $subset V
+
+forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,U,W power_set(V),v V:
+    $is_internal_direct_sum(K,field,V,space,U,W)
+    =>:
+        \sum_decomposition<K,field,V,space,U,W>(v) $in U × W
+        space.add(\sum_decomposition<K,field,V,space,U,W>(v)(1),\sum_decomposition<K,field,V,space,U,W>(v)(2))=v
+
+thm sum_decomposition_of_pair:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,U,W power_set(V),u U,w W:
+        $is_internal_direct_sum(K,field,V,space,U,W)
+        =>:
+            \sum_decomposition<K,field,V,space,U,W>(space.add(u,w))=(u,w)
+    space.add(\sum_decomposition<K,field,V,space,U,W>(space.add(u,w))(1),\sum_decomposition<K,field,V,space,U,W>(space.add(u,w))(2))=space.add(u,w)
+    have p U × W=\sum_decomposition<K,field,V,space,U,W>(space.add(u,w))
+    p(1)=\sum_decomposition<K,field,V,space,U,W>(space.add(u,w))(1)
+    p(2)=\sum_decomposition<K,field,V,space,U,W>(space.add(u,w))(2)
+    space.add(p(1),p(2))=space.add(\sum_decomposition<K,field,V,space,U,W>(space.add(u,w))(1),\sum_decomposition<K,field,V,space,U,W>(space.add(u,w))(2))=space.add(u,w)
+    release thm sum_components_unique(K,field,V,space,U,W,p(1),u,p(2),w)
+    p=(p(1),p(2))=(u,w)
+
+template<K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,U,W power_set(V): $is_internal_direct_sum(K,field,V,space,U,W)>:
+    have fn left_projection(v V) V=\sum_decomposition<K,field,V,space,U,W>(v)(1)
+
+template<K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,U,W power_set(V): $is_internal_direct_sum(K,field,V,space,U,W)>:
+    have fn right_projection(v V) V=\sum_decomposition<K,field,V,space,U,W>(v)(2)
+
+thm projections_reconstruct:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,U,W power_set(V),v V:
+        $is_internal_direct_sum(K,field,V,space,U,W)
+        =>:
+            \left_projection<K,field,V,space,U,W>(v) $in U
+            \right_projection<K,field,V,space,U,W>(v) $in W
+            space.add(\left_projection<K,field,V,space,U,W>(v),\right_projection<K,field,V,space,U,W>(v))=v
+    \left_projection<K,field,V,space,U,W>(v)=\sum_decomposition<K,field,V,space,U,W>(v)(1)
+    \right_projection<K,field,V,space,U,W>(v)=\sum_decomposition<K,field,V,space,U,W>(v)(2)
+    \sum_decomposition<K,field,V,space,U,W>(v) $in U × W
+    \sum_decomposition<K,field,V,space,U,W>(v)(1) $in U
+    \sum_decomposition<K,field,V,space,U,W>(v)(2) $in W
+    space.add(\sum_decomposition<K,field,V,space,U,W>(v)(1),\sum_decomposition<K,field,V,space,U,W>(v)(2))=v
+
+thm projections_of_pair:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,U,W power_set(V),u U,w W:
+        $is_internal_direct_sum(K,field,V,space,U,W)
+        =>:
+            \left_projection<K,field,V,space,U,W>(space.add(u,w))=u
+            \right_projection<K,field,V,space,U,W>(space.add(u,w))=w
+    by thm sum_decomposition_of_pair(K,field,V,space,U,W,u,w) => \sum_decomposition<K,field,V,space,U,W>(space.add(u,w))=(u,w)
+    \left_projection<K,field,V,space,U,W>(space.add(u,w))=\sum_decomposition<K,field,V,space,U,W>(space.add(u,w))(1)=(u,w)(1)=u
+    \right_projection<K,field,V,space,U,W>(space.add(u,w))=\sum_decomposition<K,field,V,space,U,W>(space.add(u,w))(2)=(u,w)(2)=w
+
+thm projections_add:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,U,W power_set(V),x,y V:
+        $is_internal_direct_sum(K,field,V,space,U,W)
+        =>:
+            \left_projection<K,field,V,space,U,W>(space.add(x,y))=space.add(\left_projection<K,field,V,space,U,W>(x),\left_projection<K,field,V,space,U,W>(y))
+            \right_projection<K,field,V,space,U,W>(space.add(x,y))=space.add(\right_projection<K,field,V,space,U,W>(x),\right_projection<K,field,V,space,U,W>(y))
+    $vector_space::is_subspace(K,field,V,space,U)
+    $vector_space::is_subspace(K,field,V,space,W)
+    release thm projections_reconstruct(K,field,V,space,U,W,x)
+    release thm projections_reconstruct(K,field,V,space,U,W,y)
+    have u U=space.add(\left_projection<K,field,V,space,U,W>(x),\left_projection<K,field,V,space,U,W>(y))
+    have w W=space.add(\right_projection<K,field,V,space,U,W>(x),\right_projection<K,field,V,space,U,W>(y))
+    space.add(\right_projection<K,field,V,space,U,W>(x),space.add(\left_projection<K,field,V,space,U,W>(y),\right_projection<K,field,V,space,U,W>(y)))=space.add(space.add(\right_projection<K,field,V,space,U,W>(x),\left_projection<K,field,V,space,U,W>(y)),\right_projection<K,field,V,space,U,W>(y))
+    space.add(\right_projection<K,field,V,space,U,W>(x),\left_projection<K,field,V,space,U,W>(y))=space.add(\left_projection<K,field,V,space,U,W>(y),\right_projection<K,field,V,space,U,W>(x))
+    space.add(space.add(\left_projection<K,field,V,space,U,W>(y),\right_projection<K,field,V,space,U,W>(x)),\right_projection<K,field,V,space,U,W>(y))=space.add(\left_projection<K,field,V,space,U,W>(y),space.add(\right_projection<K,field,V,space,U,W>(x),\right_projection<K,field,V,space,U,W>(y)))
+    space.add(x,y)=space.add(space.add(\left_projection<K,field,V,space,U,W>(x),\right_projection<K,field,V,space,U,W>(x)),space.add(\left_projection<K,field,V,space,U,W>(y),\right_projection<K,field,V,space,U,W>(y)))=space.add(\left_projection<K,field,V,space,U,W>(x),space.add(\right_projection<K,field,V,space,U,W>(x),space.add(\left_projection<K,field,V,space,U,W>(y),\right_projection<K,field,V,space,U,W>(y))))=space.add(\left_projection<K,field,V,space,U,W>(x),space.add(space.add(\right_projection<K,field,V,space,U,W>(x),\left_projection<K,field,V,space,U,W>(y)),\right_projection<K,field,V,space,U,W>(y)))=space.add(\left_projection<K,field,V,space,U,W>(x),space.add(space.add(\left_projection<K,field,V,space,U,W>(y),\right_projection<K,field,V,space,U,W>(x)),\right_projection<K,field,V,space,U,W>(y)))=space.add(\left_projection<K,field,V,space,U,W>(x),space.add(\left_projection<K,field,V,space,U,W>(y),space.add(\right_projection<K,field,V,space,U,W>(x),\right_projection<K,field,V,space,U,W>(y))))=space.add(space.add(\left_projection<K,field,V,space,U,W>(x),\left_projection<K,field,V,space,U,W>(y)),space.add(\right_projection<K,field,V,space,U,W>(x),\right_projection<K,field,V,space,U,W>(y)))=space.add(u,w)
+    release thm projections_of_pair(K,field,V,space,U,W,u,w)
+
+thm projections_smul:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,U,W power_set(V),a K,x V:
+        $is_internal_direct_sum(K,field,V,space,U,W)
+        =>:
+            \left_projection<K,field,V,space,U,W>(space.smul(a,x))=space.smul(a,\left_projection<K,field,V,space,U,W>(x))
+            \right_projection<K,field,V,space,U,W>(space.smul(a,x))=space.smul(a,\right_projection<K,field,V,space,U,W>(x))
+    release thm projections_reconstruct(K,field,V,space,U,W,x)
+    $vector_space::is_subspace(K,field,V,space,U)
+    $vector_space::is_subspace(K,field,V,space,W)
+    have u U=space.smul(a,\left_projection<K,field,V,space,U,W>(x))
+    have w W=space.smul(a,\right_projection<K,field,V,space,U,W>(x))
+    space.smul(a,x)=space.smul(a,space.add(\left_projection<K,field,V,space,U,W>(x),\right_projection<K,field,V,space,U,W>(x)))=space.add(space.smul(a,\left_projection<K,field,V,space,U,W>(x)),space.smul(a,\right_projection<K,field,V,space,U,W>(x)))=space.add(u,w)
+    release thm projections_of_pair(K,field,V,space,U,W,u,w)
+
+thm projections_are_linear:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,U,W power_set(V):
+        $is_internal_direct_sum(K,field,V,space,U,W)
+        =>:
+            $vector_space::is_linear_map(K,field,V,space,V,space,\left_projection<K,field,V,space,U,W>)
+            $vector_space::is_linear_map(K,field,V,space,V,space,\right_projection<K,field,V,space,U,W>)
+    claim:
+        ? forall x,y V:
+            \left_projection<K,field,V,space,U,W>(space.add(x,y))=space.add(\left_projection<K,field,V,space,U,W>(x),\left_projection<K,field,V,space,U,W>(y))
+            \right_projection<K,field,V,space,U,W>(space.add(x,y))=space.add(\right_projection<K,field,V,space,U,W>(x),\right_projection<K,field,V,space,U,W>(y))
+        release thm projections_add(K,field,V,space,U,W,x,y)
+    claim:
+        ? forall a K,x V:
+            \left_projection<K,field,V,space,U,W>(space.smul(a,x))=space.smul(a,\left_projection<K,field,V,space,U,W>(x))
+            \right_projection<K,field,V,space,U,W>(space.smul(a,x))=space.smul(a,\right_projection<K,field,V,space,U,W>(x))
+        release thm projections_smul(K,field,V,space,U,W,a,x)
+    by def $vector_space::is_linear_map(K,field,V,space,V,space,\left_projection<K,field,V,space,U,W>)
+    by def $vector_space::is_linear_map(K,field,V,space,V,space,\right_projection<K,field,V,space,U,W>)
+
+thm projections_on_summands:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,U,W power_set(V),u U,w W:
+        $is_internal_direct_sum(K,field,V,space,U,W)
+        =>:
+            \left_projection<K,field,V,space,U,W>(u)=u
+            \right_projection<K,field,V,space,U,W>(u)=space.zero
+            \left_projection<K,field,V,space,U,W>(w)=space.zero
+            \right_projection<K,field,V,space,U,W>(w)=w
+    $vector_space::is_subspace(K,field,V,space,U)
+    $vector_space::is_subspace(K,field,V,space,W)
+    space.add(u,space.zero)=space.add(space.zero,u)=u
+    space.add(space.zero,w)=w
+    release thm projections_of_pair(K,field,V,space,U,W,u,space.zero)
+    release thm projections_of_pair(K,field,V,space,U,W,space.zero,w)
+
+thm projections_are_complementary:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,U,W power_set(V),v V:
+        $is_internal_direct_sum(K,field,V,space,U,W)
+        =>:
+            \left_projection<K,field,V,space,U,W>(\left_projection<K,field,V,space,U,W>(v))=\left_projection<K,field,V,space,U,W>(v)
+            \right_projection<K,field,V,space,U,W>(\right_projection<K,field,V,space,U,W>(v))=\right_projection<K,field,V,space,U,W>(v)
+            \left_projection<K,field,V,space,U,W>(\right_projection<K,field,V,space,U,W>(v))=space.zero
+            \right_projection<K,field,V,space,U,W>(\left_projection<K,field,V,space,U,W>(v))=space.zero
+    release thm projections_reconstruct(K,field,V,space,U,W,v)
+    release thm projections_on_summands(K,field,V,space,U,W,\left_projection<K,field,V,space,U,W>(v),\right_projection<K,field,V,space,U,W>(v))
+
+thm left_projection_range_kernel:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,U,W power_set(V):
+        $is_internal_direct_sum(K,field,V,space,U,W)
+        =>:
+            fn_range(\left_projection<K,field,V,space,U,W>)=U
+            preimage(\left_projection<K,field,V,space,U,W>,space.zero)=W
+    $vector_space::is_subspace(K,field,V,space,U)
+    $vector_space::is_subspace(K,field,V,space,W)
+    \left_projection<K,field,V,space,U,W> $in fn(v V) V
+    claim:
+        ? forall x fn_range(\left_projection<K,field,V,space,U,W>):
+            x $in U
+        have by fn_preimage: v from x $in fn_range(\left_projection<K,field,V,space,U,W>)
+        release thm projections_reconstruct(K,field,V,space,U,W,v)
+    claim:
+        ? forall u U:
+            u $in fn_range(\left_projection<K,field,V,space,U,W>)
+        release thm projections_on_summands(K,field,V,space,U,W,u,space.zero)
+        \left_projection<K,field,V,space,U,W>(u) $in fn_range(\left_projection<K,field,V,space,U,W>)
+    by extension fn_range(\left_projection<K,field,V,space,U,W>)=U
+    claim:
+        ? forall v preimage(\left_projection<K,field,V,space,U,W>,space.zero):
+            v $in W
+        release thm projections_reconstruct(K,field,V,space,U,W,v)
+        \left_projection<K,field,V,space,U,W>(v)=space.zero
+        v=space.add(\left_projection<K,field,V,space,U,W>(v),\right_projection<K,field,V,space,U,W>(v))=space.add(space.zero,\right_projection<K,field,V,space,U,W>(v))=\right_projection<K,field,V,space,U,W>(v)
+    claim:
+        ? forall w W:
+            w $in preimage(\left_projection<K,field,V,space,U,W>,space.zero)
+        release thm projections_on_summands(K,field,V,space,U,W,space.zero,w)
+    by extension preimage(\left_projection<K,field,V,space,U,W>,space.zero)=W
+
+thm right_projection_range_kernel:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,U,W power_set(V):
+        $is_internal_direct_sum(K,field,V,space,U,W)
+        =>:
+            fn_range(\right_projection<K,field,V,space,U,W>)=W
+            preimage(\right_projection<K,field,V,space,U,W>,space.zero)=U
+    $vector_space::is_subspace(K,field,V,space,U)
+    $vector_space::is_subspace(K,field,V,space,W)
+    \right_projection<K,field,V,space,U,W> $in fn(v V) V
+    claim:
+        ? forall x fn_range(\right_projection<K,field,V,space,U,W>):
+            x $in W
+        have by fn_preimage: v from x $in fn_range(\right_projection<K,field,V,space,U,W>)
+        release thm projections_reconstruct(K,field,V,space,U,W,v)
+    claim:
+        ? forall w W:
+            w $in fn_range(\right_projection<K,field,V,space,U,W>)
+        release thm projections_on_summands(K,field,V,space,U,W,space.zero,w)
+        \right_projection<K,field,V,space,U,W>(w) $in fn_range(\right_projection<K,field,V,space,U,W>)
+    by extension fn_range(\right_projection<K,field,V,space,U,W>)=W
+    claim:
+        ? forall v preimage(\right_projection<K,field,V,space,U,W>,space.zero):
+            v $in U
+        release thm projections_reconstruct(K,field,V,space,U,W,v)
+        \right_projection<K,field,V,space,U,W>(v)=space.zero
+        v=space.add(\left_projection<K,field,V,space,U,W>(v),\right_projection<K,field,V,space,U,W>(v))=space.add(\left_projection<K,field,V,space,U,W>(v),space.zero)=space.add(space.zero,\left_projection<K,field,V,space,U,W>(v))=\left_projection<K,field,V,space,U,W>(v)
+    claim:
+        ? forall u U:
+            u $in preimage(\right_projection<K,field,V,space,U,W>,space.zero)
+        release thm projections_on_summands(K,field,V,space,U,W,u,space.zero)
+    by extension preimage(\right_projection<K,field,V,space,U,W>,space.zero)=U
+
+thm direct_sum_with_zero:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>:
+        $is_internal_direct_sum(K,field,V,space,V,{space.zero})
+        $is_internal_direct_sum(K,field,V,space,{space.zero},V)
+    by thm subspace::ambient_is_subspace(K,field,V,space) => $vector_space::is_subspace(K,field,V,space,V)
+    by thm subspace::zero_is_subspace(K,field,V,space) => $vector_space::is_subspace(K,field,V,space,{space.zero})
+    release thm subspace_sum_contains_summands(K,field,V,space,V,{space.zero})
+    by extension \subspace_sum<K,field,V,space,V,{space.zero}> =V
+    forall x intersect(V,{space.zero}):
+        x $in {space.zero}
+    forall x {space.zero}:
+        x $in intersect(V,{space.zero})
+    by extension intersect(V,{space.zero})={space.zero}
+    by def $is_internal_direct_sum(K,field,V,space,V,{space.zero})
+    by thm internal_direct_sum_commutes(K,field,V,space,V,{space.zero}) => $is_internal_direct_sum(K,field,V,space,{space.zero},V)
+
+thm finite_direct_sum_summands:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,U,W power_set(V):
+        $is_internal_direct_sum(K,field,V,space,U,W)
+        $basis::is_finite_dimensional(K,field,V,space)
+        =>:
+            $basis::is_finite_dimensional(K,field,U,\subspace::restricted_space<K,field,V,space,U>)
+            $basis::is_finite_dimensional(K,field,W,\subspace::restricted_space<K,field,V,space,W>)
+    by thm subspace::finite_dimensional_subspace_is_finite_dimensional(K,field,V,space,U) => $basis::is_finite_dimensional(K,field,U,\subspace::restricted_space<K,field,V,space,U>)
+    by thm subspace::finite_dimensional_subspace_is_finite_dimensional(K,field,V,space,W) => $basis::is_finite_dimensional(K,field,W,\subspace::restricted_space<K,field,V,space,W>)
+
+thm unique_decomposition_gives_direct_sum:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,U,W power_set(V):
+        $vector_space::is_subspace(K,field,V,space,U)
+        $vector_space::is_subspace(K,field,V,space,W)
+        forall v V:
+            exist! pair U × W st {space.add(pair(1),pair(2))=v}
+        =>:
+            $is_internal_direct_sum(K,field,V,space,U,W)
+    claim:
+        ? forall v V:
+            v $in \subspace_sum<K,field,V,space,U,W>
+        obtain pair from exist! pair U × W st {space.add(pair(1),pair(2))=v}
+        witness $is_sum_vector(K,field,V,space,U,W,v) from pair(1),pair(2)
+    by extension \subspace_sum<K,field,V,space,U,W> =V
+    claim:
+        ? forall x intersect(U,W):
+            x $in {space.zero}
+        x $in U
+        x $in W
+        space.add(x,space.zero)=space.add(space.zero,x)=x
+        (x,space.zero) $in U × W
+        (space.zero,x) $in U × W
+        (x,space.zero)(1)=x
+        (x,space.zero)(2)=space.zero
+        (space.zero,x)(1)=space.zero
+        (space.zero,x)(2)=x
+        space.add((x,space.zero)(1),(x,space.zero)(2))=space.add(x,space.zero)=x
+        space.add((space.zero,x)(1),(space.zero,x)(2))=space.add(space.zero,x)=x
+        obtain selected from exist! pair U × W st {space.add(pair(1),pair(2))=x}
+        (x,space.zero)=(space.zero,x)
+        x=(x,space.zero)(1)=(space.zero,x)(1)=space.zero
+    space.zero $in intersect(U,W)
+    forall x {space.zero}:
+        x $in intersect(U,W)
+    by extension intersect(U,W)={space.zero}
+    by def $is_internal_direct_sum(K,field,V,space,U,W)
+
+thm equal_subspaces_have_equal_dimension:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,U,W power_set(V):
+        $vector_space::is_subspace(K,field,V,space,U)
+        $vector_space::is_subspace(K,field,V,space,W)
+        $basis::is_finite_dimensional(K,field,U,\subspace::restricted_space<K,field,V,space,U>)
+        $basis::is_finite_dimensional(K,field,W,\subspace::restricted_space<K,field,V,space,W>)
+        U=W
+        =>:
+            \dimension::finite_dimension<K,field,U>(\subspace::restricted_space<K,field,V,space,U>)=\dimension::finite_dimension<K,field,W>(\subspace::restricted_space<K,field,V,space,W>)
+    release thm basis_existence::finite_dimensional_has_basis(K,field,U,\subspace::restricted_space<K,field,V,space,U>)
+    obtain n,vectors from exist length N,selected finite_seq(U,length) st {$basis::is_basis(K,field,U,\subspace::restricted_space<K,field,V,space,U>,length,selected)}
+    by thm subspace::sequence_in_ambient(V,U,n,vectors) => vectors $in finite_seq(V,n)
+    vectors $in finite_seq(W,n)
+    by thm subspace::subspace_independent_is_ambient_independent(K,field,V,space,U,n,vectors) => $basis::is_linearly_independent(K,field,V,space,n,vectors)
+    by thm subspace::ambient_independent_is_subspace_independent(K,field,V,space,W,n,vectors) => $basis::is_linearly_independent(K,field,W,\subspace::restricted_space<K,field,V,space,W>,n,vectors)
+    $finite_span::spans(K,field,U,\subspace::restricted_space<K,field,V,space,U>,n,vectors)
+    \finite_span::span<K,field,U,\subspace::restricted_space<K,field,V,space,U>,n,vectors> =U
+    by thm subspace::subspace_span_equals_ambient(K,field,V,space,U,n,vectors) => \finite_span::span<K,field,U,\subspace::restricted_space<K,field,V,space,U>,n,vectors> =\finite_span::span<K,field,V,space,n,vectors>
+    \finite_span::span<K,field,V,space,n,vectors> =U=W
+    by thm subspace::subspace_span_equals_ambient(K,field,V,space,W,n,vectors) => \finite_span::span<K,field,W,\subspace::restricted_space<K,field,V,space,W>,n,vectors> =\finite_span::span<K,field,V,space,n,vectors>
+    \finite_span::span<K,field,W,\subspace::restricted_space<K,field,V,space,W>,n,vectors> =W
+    by def $finite_span::spans(K,field,W,\subspace::restricted_space<K,field,V,space,W>,n,vectors)
+    by def $basis::is_basis(K,field,W,\subspace::restricted_space<K,field,V,space,W>,n,vectors)
+    by thm dimension::finite_dimension_of_basis(K,field,U,\subspace::restricted_space<K,field,V,space,U>,n,vectors) => \dimension::finite_dimension<K,field,U>(\subspace::restricted_space<K,field,V,space,U>)=n
+    by thm dimension::finite_dimension_of_basis(K,field,W,\subspace::restricted_space<K,field,V,space,W>,n,vectors) => \dimension::finite_dimension<K,field,W>(\subspace::restricted_space<K,field,V,space,W>)=n
+    \dimension::finite_dimension<K,field,U>(\subspace::restricted_space<K,field,V,space,U>)=n=\dimension::finite_dimension<K,field,W>(\subspace::restricted_space<K,field,V,space,W>)
+
+thm projections_carrier:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,U,W power_set(V):
+        $is_internal_direct_sum(K,field,V,space,U,W)
+        =>:
+            \left_projection<K,field,V,space,U,W> $in fn(v V) V
+            \right_projection<K,field,V,space,U,W> $in fn(v V) V
+            \sum_decomposition<K,field,V,space,U,W> $in fn(v V) U × W
+
+thm direct_sum_dimension:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,U,W power_set(V):
+        $is_internal_direct_sum(K,field,V,space,U,W)
+        $basis::is_finite_dimensional(K,field,V,space)
+        $basis::is_finite_dimensional(K,field,U,\subspace::restricted_space<K,field,V,space,U>)
+        $basis::is_finite_dimensional(K,field,W,\subspace::restricted_space<K,field,V,space,W>)
+        =>:
+            \dimension::finite_dimension<K,field,U>(\subspace::restricted_space<K,field,V,space,U>)+\dimension::finite_dimension<K,field,W>(\subspace::restricted_space<K,field,V,space,W>)=\dimension::finite_dimension<K,field,V>(space)
+    release thm projections_are_linear(K,field,V,space,U,W)
+    release thm left_projection_range_kernel(K,field,V,space,U,W)
+    by thm linear_dimension::finite_source_rank_carrier(K,field,V,space,V,space,\left_projection<K,field,V,space,U,W>) => \linear_dimension::linear_map_rank<K,field,V,space,V,space>(\left_projection<K,field,V,space,U,W>) $in N
+    by thm linear_dimension::finite_source_nullity_carrier(K,field,V,space,V,space,\left_projection<K,field,V,space,U,W>) => \linear_dimension::linear_map_nullity<K,field,V,space,V,space>(\left_projection<K,field,V,space,U,W>) $in N
+    by thm linear_dimension::rank_nullity(K,field,V,space,V,space,\left_projection<K,field,V,space,U,W>) => \linear_dimension::linear_map_rank<K,field,V,space,V,space>(\left_projection<K,field,V,space,U,W>)+\linear_dimension::linear_map_nullity<K,field,V,space,V,space>(\left_projection<K,field,V,space,U,W>)=\dimension::finite_dimension<K,field,V>(space)
+    by thm linear_dimension::finite_source_has_finite_image(K,field,V,space,V,space,\left_projection<K,field,V,space,U,W>) => $basis::is_finite_dimensional(K,field,fn_range(\left_projection<K,field,V,space,U,W>),\subspace::restricted_space<K,field,V,space,fn_range(\left_projection<K,field,V,space,U,W>)>)
+    by thm linear_dimension::finite_source_has_finite_kernel(K,field,V,space,V,space,\left_projection<K,field,V,space,U,W>) => $basis::is_finite_dimensional(K,field,preimage(\left_projection<K,field,V,space,U,W>,space.zero),\subspace::restricted_space<K,field,V,space,preimage(\left_projection<K,field,V,space,U,W>,space.zero)>)
+    \linear_dimension::linear_map_rank<K,field,V,space,V,space>(\left_projection<K,field,V,space,U,W>)=\dimension::finite_dimension<K,field,fn_range(\left_projection<K,field,V,space,U,W>)>(\subspace::restricted_space<K,field,V,space,fn_range(\left_projection<K,field,V,space,U,W>)>)
+    \linear_dimension::linear_map_nullity<K,field,V,space,V,space>(\left_projection<K,field,V,space,U,W>)=\dimension::finite_dimension<K,field,preimage(\left_projection<K,field,V,space,U,W>,space.zero)>(\subspace::restricted_space<K,field,V,space,preimage(\left_projection<K,field,V,space,U,W>,space.zero)>)
+    by thm vector_space::range_is_subspace(K,field,V,space,V,space,\left_projection<K,field,V,space,U,W>) => $vector_space::is_subspace(K,field,V,space,fn_range(\left_projection<K,field,V,space,U,W>))
+    by thm vector_space::kernel_is_subspace(K,field,V,space,V,space,\left_projection<K,field,V,space,U,W>) => $vector_space::is_subspace(K,field,V,space,preimage(\left_projection<K,field,V,space,U,W>,space.zero))
+    by thm equal_subspaces_have_equal_dimension(K,field,V,space,fn_range(\left_projection<K,field,V,space,U,W>),U) => \dimension::finite_dimension<K,field,fn_range(\left_projection<K,field,V,space,U,W>)>(\subspace::restricted_space<K,field,V,space,fn_range(\left_projection<K,field,V,space,U,W>)>)=\dimension::finite_dimension<K,field,U>(\subspace::restricted_space<K,field,V,space,U>)
+    by thm equal_subspaces_have_equal_dimension(K,field,V,space,preimage(\left_projection<K,field,V,space,U,W>,space.zero),W) => \dimension::finite_dimension<K,field,preimage(\left_projection<K,field,V,space,U,W>,space.zero)>(\subspace::restricted_space<K,field,V,space,preimage(\left_projection<K,field,V,space,U,W>,space.zero)>)=\dimension::finite_dimension<K,field,W>(\subspace::restricted_space<K,field,V,space,W>)
+    \linear_dimension::linear_map_rank<K,field,V,space,V,space>(\left_projection<K,field,V,space,U,W>)=\dimension::finite_dimension<K,field,U>(\subspace::restricted_space<K,field,V,space,U>)
+    \linear_dimension::linear_map_nullity<K,field,V,space,V,space>(\left_projection<K,field,V,space,U,W>)=\dimension::finite_dimension<K,field,W>(\subspace::restricted_space<K,field,V,space,W>)
+
+thm linear_idempotent_splits_space:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,T fn(v V) V:
+        $vector_space::is_linear_map(K,field,V,space,V,space,T)
+        forall v V:
+            T(T(v))=T(v)
+        =>:
+            $is_internal_direct_sum(K,field,V,space,fn_range(T),preimage(T,space.zero))
+    by thm vector_space::range_is_subspace(K,field,V,space,V,space,T) => $vector_space::is_subspace(K,field,V,space,fn_range(T))
+    by thm vector_space::kernel_is_subspace(K,field,V,space,V,space,T) => $vector_space::is_subspace(K,field,V,space,preimage(T,space.zero))
+    by thm vector_space::linear_map_zero(K,field,V,space,V,space,T) => T(space.zero)=space.zero
+    claim:
+        ? forall v V:
+            v $in \subspace_sum<K,field,V,space,fn_range(T),preimage(T,space.zero)>
+        obtain inverse from exist z V st {space.add(T(v),z)=space.zero}
+        have k V=space.add(v,inverse)
+        T(space.add(T(v),inverse))=T(space.zero)=space.zero
+        T(T(v))=T(v)
+        space.add(T(v),T(inverse))=space.add(T(T(v)),T(inverse))=T(space.add(T(v),inverse))=space.zero
+        T(k)=T(space.add(v,inverse))=space.add(T(v),T(inverse))=space.zero
+        k $in preimage(T,space.zero)
+        T(v) $in fn_range(T)
+        space.add(T(v),v)=space.add(v,T(v))
+        space.add(v,space.zero)=space.add(space.zero,v)=v
+        space.add(T(v),k)=space.add(T(v),space.add(v,inverse))=space.add(space.add(T(v),v),inverse)=space.add(space.add(v,T(v)),inverse)=space.add(v,space.add(T(v),inverse))=space.add(v,space.zero)=v
+        witness $is_sum_vector(K,field,V,space,fn_range(T),preimage(T,space.zero),v) from T(v),k
+    by extension \subspace_sum<K,field,V,space,fn_range(T),preimage(T,space.zero)> =V
+    claim:
+        ? forall y intersect(fn_range(T),preimage(T,space.zero)):
+            y $in {space.zero}
+        y $in fn_range(T)
+        y $in preimage(T,space.zero)
+        have by fn_preimage: x from y $in fn_range(T)
+        T(x)=y
+        T(T(x))=T(x)
+        T(y)=space.zero
+        y=T(x)=T(T(x))=T(y)=space.zero
+    forall y {space.zero}:
+        y $in intersect(fn_range(T),preimage(T,space.zero))
+    by extension intersect(fn_range(T),preimage(T,space.zero))={space.zero}
+    by def $is_internal_direct_sum(K,field,V,space,fn_range(T),preimage(T,space.zero))

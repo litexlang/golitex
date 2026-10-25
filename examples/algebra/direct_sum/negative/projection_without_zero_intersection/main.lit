@@ -1,0 +1,7 @@
+thm projection_without_zero_intersection:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,U,W power_set(V),v V:
+        $Algebra::vector_space::is_subspace(K,field,V,space,U)
+        $Algebra::vector_space::is_subspace(K,field,V,space,W)
+        \Algebra::direct_sum::subspace_sum<K,field,V,space,U,W> =V
+        =>:
+            \Algebra::direct_sum::left_projection<K,field,V,space,U,W>(v)=\Algebra::direct_sum::left_projection<K,field,V,space,U,W>(v)

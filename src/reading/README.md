@@ -1,10 +1,16 @@
 # Interactive textbook reading
 
-This module is the home for turning Litex source and its verification evidence
-into an interactive textbook. A reader should be able to select a statement,
-inspect the grounds actually used to establish it, and follow those grounds
-back to facts, definitions and rules. Concept highlighting follows resolved
-symbol identity, separately from proof dependencies.
+**The source is the textbook and the primary reading interface.** Definitions,
+mathematical statements and proofs are expressed in Litex source, with inferred
+facts displayed beside the statements that produce them. Definitions, parameter
+domains and proof references are accessible by interacting with that source.
+Readers do not need to open a separate Info View to follow the mathematics.
+The explanation panel supplements this reading with optional detail; it is
+not a required second place to reconstruct the mathematical argument.
+
+This module connects the source to its actual verification evidence, so readers
+can follow citations back to facts, definitions and rules. Concept highlighting
+follows resolved symbol identity, separately from proof dependencies.
 
 ## Current status
 
