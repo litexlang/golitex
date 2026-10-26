@@ -9,6 +9,9 @@ on:
 env:
   CARGO_TERM_COLOR: always
   RUST_MIN_STACK: 8388608
+  # Includes rust-clippy b84f31e: memoize every visited type in the
+  # needless_collect analysis of recursive proof-result types.
+  LITEX_CLIPPY_TOOLCHAIN: nightly-2026-10-25
 
 jobs:
   check:
@@ -18,8 +21,6 @@ jobs:
       - uses: actions/checkout@v4
 
       - uses: dtolnay/rust-toolchain@stable
-        with:
-          components: clippy
 
       - uses: actions/cache@v4
         with:
@@ -29,8 +30,11 @@ jobs:
             target
           key: ${{ runner.os }}-cargo-${{ hashFiles('Cargo.lock') }}
 
+      - name: Install Clippy toolchain
+        run: rustup toolchain install "$LITEX_CLIPPY_TOOLCHAIN" --profile minimal --component clippy --no-self-update
+
       - name: Clippy
-        run: cargo clippy -- -A warnings
+        run: cargo "+$LITEX_CLIPPY_TOOLCHAIN" clippy -- -A warnings
 
       - name: Core tests
         run: |

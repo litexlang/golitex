@@ -1,4 +1,4 @@
 thm necessary_divisibility_missing_equation:
     ? forall a Z, b Z*, c, x, y Z:
         $dvd(c, gcd(a, b))
-    release thm nt:::linear_equation_necessary_divisibility(a,b,c,x,y)
+    release thm nt::linear_equation_necessary_divisibility(a,b,c,x,y)

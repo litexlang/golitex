@@ -3,4 +3,4 @@ thm diophantine_missing_divisibility:
         a * u + b * v = d
         =>:
             exist x, y Z st {a * x + b * y = c}
-    release thm nt:::linear_equation_from_bezout(a,b,u,v,c,d)
+    release thm nt::linear_equation_from_bezout(a,b,u,v,c,d)

@@ -1257,7 +1257,7 @@ fn parse_identifier_or_mod_or_standard_set(
             parts.push(next);
         }
         if parts.len() != 2 && parts.len() != 3 {
-            return Err(tb.parse_error("qualified name must be `a::b`, `a:::b`, or `a::b::c`"));
+            return Err(tb.parse_error("qualified name must be `a::b` or `a::b::c`"));
         }
         let key = rt.elaborate_name_parts(&parts).map_err(|err| match err {
             crate::runtime::RuntimeError::InternalBug(message) => tb.parse_error(message),

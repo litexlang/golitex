@@ -102,3 +102,7 @@ An invalid explicit override remains selected and fails normally at import.
 The [installed std fixture](../../examples/module_manager/installed_std/README.md)
 and `installed_std_cli` integration target exercise the lookup from external
 projects; module import/naming and verification contracts stay unchanged.
+
+After imports are mounted, every `[alias] C = Import::export` target is checked
+before source exports or cache restoration. Prefix aliases belong to the current
+package and resolve to the original declaration IDs; they never add exports.

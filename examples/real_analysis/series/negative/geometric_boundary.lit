@@ -1,4 +1,4 @@
 have fn boundary_geometric(k N+) R=1^k
 
-release thm series:::series_sum_geometric(boundary_geometric,1)
+release thm series::series_sum_geometric(boundary_geometric,1)
 

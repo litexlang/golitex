@@ -104,6 +104,9 @@ impl LitexToLeanCompiler {
     ) -> Result<String, LeanCompileError> {
         let (kind, argument) = trig_argument(object)
             .ok_or_else(|| LeanCompileError::unsupported("Trig/AngleSubject"))?;
+        if !matches!(kind, "Sin" | "Cos" | "Tan") {
+            return Err(LeanCompileError::unsupported("Trig/PeriodicOperation"));
+        }
         let c = EvalRational::from_obj(coefficient)
             .ok_or_else(|| LeanCompileError::unsupported("Trig/ClosedAngle"))?;
         let period = if kind == "Tan" { 1 } else { 2 };
@@ -221,7 +224,7 @@ impl LitexToLeanCompiler {
         Err(LeanCompileError::unsupported("Trig/IdentitySubject"))
     }
 
-    fn compile_trig_native_identity(
+    pub(in crate::compile_to_lean) fn compile_trig_native_identity(
         &self,
         fact: &EqualFact,
         tactic: &str,

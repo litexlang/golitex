@@ -716,13 +716,15 @@ impl LitexToLeanCompiler {
             | InferAtomicFactResult::BijectiveFact(_) => {
                 self.compile_mapping_inferences(infer, seed, compiled, position)
             }
+            InferAtomicFactResult::ProperSubsetFact(_)
+            | InferAtomicFactResult::ProperSupersetFact(_) => {
+                self.compile_proper_inclusion_inferences(infer, seed, compiled, position)
+            }
             InferAtomicFactResult::IsSetFact(_)
             | InferAtomicFactResult::IsNonemptySetFact(_)
             | InferAtomicFactResult::IsFiniteSetFact(_)
             | InferAtomicFactResult::SubsetFact(_)
             | InferAtomicFactResult::SupersetFact(_)
-            | InferAtomicFactResult::ProperSubsetFact(_)
-            | InferAtomicFactResult::ProperSupersetFact(_)
             | InferAtomicFactResult::PrimeFact(_)
             | InferAtomicFactResult::CoprimeFact(_)
             | InferAtomicFactResult::DvdFact(_)

@@ -1,0 +1,103 @@
+# Real right-handed three-dimensional cross product, imported from std.
+# Before: this source export and its named laws were unavailable.
+# vectors::cross_product::real_cross_product((1,0,0),(0,1,0))=(0,0,1)
+# Now: the active proof below publishes coordinates and applies the value law.
+# Boundary: real 3-vectors only; cross product is not associative.
+# Run: target/release/litex -strict -lang en -f examples/real_analysis/multivariable/cross_product/main.lit
+# Rejection controls: python3 examples/real_analysis/multivariable/cross_product/check.py
+
+release obj def vectors::cross_product::real_cross_product
+
+claim:
+    ? vectors::cross_product::real_cross_product((1,0,0),(0,1,0))=(0,0,1)
+    (1,0,0)(1)=1
+    (1,0,0)(2)=0
+    (1,0,0)(3)=0
+    (0,1,0)(1)=0
+    (0,1,0)(2)=1
+    (0,1,0)(3)=0
+    release thm vectors::cross_product::real_cross_product_value((1,0,0),(0,1,0),0,0,1)
+
+have e1 cart_n(R,3)=(1,0,0)
+
+have e2 cart_n(R,3)=(0,1,0)
+
+have e3 cart_n(R,3)=(0,0,1)
+
+e1(1)=1
+
+e1(2)=0
+
+e1(3)=0
+
+e2(1)=0
+
+e2(2)=1
+
+e2(3)=0
+
+e3(1)=0
+
+e3(2)=0
+
+e3(3)=1
+
+release thm vectors::cross_product::real_cross_product_value(e1,e2,0,0,1)
+
+vectors::cross_product::real_cross_product(e1,e2)=(0,0,1)
+
+release thm vectors::cross_product::real_cross_product_value(e2,e1,0,0,-1)
+
+vectors::cross_product::real_cross_product(e2,e1)=(0,0,-1)
+
+release thm vectors::cross_product::real_cross_product_value(e2,e3,1,0,0)
+
+vectors::cross_product::real_cross_product(e2,e3)=(1,0,0)
+
+have u,v,w cart_n(R,3)
+
+release thm vectors::cross_product::real_cross_product_self(u)
+
+release thm vectors::cross_product::real_cross_product_zero(u)
+
+release thm vectors::cross_product::real_cross_product_anticommutative(u,v)
+
+release thm vectors::cross_product::real_cross_product_add_left(u,v,w)
+
+release thm vectors::cross_product::real_cross_product_add_right(u,v,w)
+
+release thm vectors::cross_product::real_cross_product_scale_left(u,v,2)
+
+release thm vectors::cross_product::real_cross_product_scale_right(u,v,-3)
+
+release thm vectors::cross_product::real_cross_product_orthogonal(u,v)
+
+release thm vectors::cross_product::real_cross_product_lagrange(u,v)
+
+release thm vectors::cross_product::real_cross_product_norm_square(u,v)
+
+release thm vectors::cross_product::real_cross_product_vector_triple(u,v,w)
+
+have fn indexed(k closed_range(1,3)) R=k
+
+have fn constant(k closed_range(1,3)) R=1
+
+claim:
+    ? vectors::cross_product::real_cross_product(indexed,constant) = (-1,2,-1)
+    indexed(1)=1
+    constant(1)=1
+    indexed(2)=2
+    constant(2)=1
+    indexed(3)=3
+    constant(3)=1
+    release thm vectors::cross_product::real_cross_product_value(indexed,constant,-1,2,-1)
+
+claim:
+    ? inner_product(e1,vectors::cross_product::real_cross_product(e2,e3),3)=det(identity_matrix(3),3)
+    by for:
+        ? forall k closed_range(1,3):
+            identity_matrix(3)(k,1)=e1(k)
+            identity_matrix(3)(k,2)=e2(k)
+            identity_matrix(3)(k,3)=e3(k)
+        k $in closed_range(1,3)
+    release thm vectors::cross_product::real_cross_product_scalar_triple(e1,e2,e3,identity_matrix(3))

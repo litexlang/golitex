@@ -4,4 +4,4 @@ thm missing_transitive_premise:
         $dvd(a, b)
         =>:
             $dvd(a, d)
-    release thm nt:::divisibility_transitive(a, b, d)
+    release thm nt::divisibility_transitive(a, b, d)

@@ -1,6 +1,6 @@
 //! Parse `litex.config` into `LitexConfig` (data only).
 
-use super::litex_config::{LitexConfig, LitexConfigExport, LitexConfigImport};
+use super::litex_config::{LitexConfig, LitexConfigAlias, LitexConfigExport, LitexConfigImport};
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
@@ -14,6 +14,8 @@ pub fn parse_litex_config(
     let mut current: Option<Table> = None;
     let mut imports = Vec::new();
     let mut exports = Vec::new();
+    let mut aliases = Vec::new();
+    let mut alias_names = HashSet::new();
     let mut import_aliases = HashSet::new();
     let mut export_names = HashSet::new();
     let mut export_paths = HashSet::new();
@@ -30,6 +32,7 @@ pub fn parse_litex_config(
                 "[import]" => Table::Import,
                 "[import std]" => Table::ImportStd,
                 "[export]" => Table::Export,
+                "[alias]" => Table::Alias,
                 "[hierarchy]" | "[module]" => {
                     return Err(err(
                         line,
@@ -39,7 +42,7 @@ pub fn parse_litex_config(
                 _ => {
                     return Err(err(
                         line,
-                        "litex.config only supports [import], [import std], and [export]",
+                        "litex.config only supports [import], [import std], [export], and [alias]",
                     ));
                 }
             });
@@ -88,10 +91,33 @@ pub fn parse_litex_config(
                 }
                 exports.push(LitexConfigExport::new(name, path));
             }
+            Some(Table::Alias) => {
+                let Some((name, target)) = text.split_once('=') else {
+                    return Err(err(line, "[alias] expects `name = Import::export`"));
+                };
+                let name = name.trim().to_string();
+                check_alias(&name, line)?;
+                if !alias_names.insert(name.clone()) {
+                    return Err(err(line, &format!("duplicate namespace alias `{name}`")));
+                }
+                let parts = target.trim().split("::").map(str::trim).collect::<Vec<_>>();
+                if parts.len() != 2 {
+                    return Err(err(
+                        line,
+                        "[alias] target must be a direct `Import::export` path",
+                    ));
+                }
+                check_alias(parts[0], line)?;
+                check_alias(parts[1], line)?;
+                aliases.push((
+                    line,
+                    LitexConfigAlias::new(name, parts[0].into(), parts[1].into()),
+                ));
+            }
             None => {
                 return Err(err(
                     line,
-                    "declare [import], [import std], or [export] before values",
+                    "declare [import], [import std], [export], or [alias] before values",
                 ));
             }
         }
@@ -101,7 +127,25 @@ pub fn parse_litex_config(
         return Err("litex.config must contain a non-empty [export] table".to_string());
     }
 
-    Ok(LitexConfig { imports, exports })
+    for (line, alias) in &aliases {
+        if export_names.contains(&alias.name) {
+            return Err(err(
+                *line,
+                &format!(
+                    "namespace alias `{}` conflicts with a local export",
+                    alias.name
+                ),
+            ));
+        }
+        if !import_aliases.contains(&alias.import_alias) {
+            return Err(err(*line, &format!("namespace alias `{}` targets unknown import `{}`; alias chains are not supported", alias.name, alias.import_alias)));
+        }
+    }
+    let mut config = LitexConfig::new();
+    config.imports = imports;
+    config.exports = exports;
+    config.aliases = aliases.into_iter().map(|(_, alias)| alias).collect();
+    Ok(config)
 }
 
 #[derive(Clone, Copy)]
@@ -109,6 +153,7 @@ enum Table {
     Import,
     ImportStd,
     Export,
+    Alias,
 }
 
 fn parse_import_std_row(text: &str, line: usize) -> Result<(String, String), String> {

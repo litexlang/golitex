@@ -1,7 +1,7 @@
 # The setup passes; only the final statement must fail.
 thm missing_modulus_divisibility:
     ? forall a, b Z, m, n N+:
-        $nt:::is_congruent_mod(a, b, n)
+        $nt::is_congruent_mod(a, b, n)
         =>:
-            $nt:::is_congruent_mod(a, b, m)
-    release thm nt:::congruence_modulus_divisor(a, b, m, n)
+            $nt::is_congruent_mod(a, b, m)
+    release thm nt::congruence_modulus_divisor(a, b, m, n)

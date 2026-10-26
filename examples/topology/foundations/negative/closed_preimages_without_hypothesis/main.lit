@@ -1,4 +1,4 @@
 thm closed_preimages_without_hypothesis:
-    ? forall A, B set, source &top:::TopologicalSpace<A>, target &top:::TopologicalSpace<B>, f fn(x source.carrier) target.carrier:
-        $top:::is_topologically_continuous(A, B, source, target, f)
-    release thm top:::closed_preimages_imply_continuity(A, B, source, target, f)
+    ? forall A, B set, source &top::TopologicalSpace<A>, target &top::TopologicalSpace<B>, f fn(x source.carrier) target.carrier:
+        $top::is_topologically_continuous(A, B, source, target, f)
+    release thm top::closed_preimages_imply_continuity(A, B, source, target, f)

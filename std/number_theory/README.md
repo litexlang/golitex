@@ -17,9 +17,9 @@ nt = number_theory
 This complete excerpt is checked independently:
 
 ```litex
-by def $nt:::is_congruent_mod(17, 2, 5)
-release thm nt:::congruence_multiply(17, 2, 17, 2, 5)
-$nt:::is_congruent_mod(17 * 17, 2 * 2, 5)
+by def $nt::main::is_congruent_mod(17, 2, 5)
+release thm nt::main::congruence_multiply(17, 2, 17, 2, 5)
+$nt::main::is_congruent_mod(17 * 17, 2 * 2, 5)
 ```
 
 The [full example](../../examples/number_theory/congruences/main.lit) includes
@@ -37,7 +37,7 @@ Native `$dvd(a,d)` puts the dividend first and requires a in Z, d in Z*.
 Its divisor may be negative and its dividend may be zero. This package adds
 no second divisibility predicate and does not define zero-divisor divisibility.
 
-Names below are qualified as `nt:::name` in a caller. Unless stated otherwise,
+Names below are qualified as `nt::main::name` in a caller. Unless stated otherwise,
 all letters other than m,n are integers; m,n are positive integers.
 
 | Call | Premises and conclusion |
@@ -91,15 +91,15 @@ The following complete excerpt is checked independently:
 ```litex
 5 * 5 + 12 * (-2) = 1
 
-release thm nt:::modular_inverse_from_bezout(5, 5, -2, 12)
+release thm nt::main::modular_inverse_from_bezout(5, 5, -2, 12)
 
-$nt:::is_modular_inverse(5, 5, 12)
+$nt::main::is_modular_inverse(5, 5, 12)
 
-by def $nt:::is_congruent_mod(5 * 7, 5 * 19, 12)
+by def $nt::main::is_congruent_mod(5 * 7, 5 * 19, 12)
 
-release thm nt:::modular_inverse_cancels(5, 7, 19, 5, 12)
+release thm nt::main::modular_inverse_cancels(5, 7, 19, 5, 12)
 
-$nt:::is_congruent_mod(7, 19, 12)
+$nt::main::is_congruent_mod(7, 19, 12)
 ```
 
 [The new complete caller](../../examples/number_theory/euclidean_inverses/main.lit)

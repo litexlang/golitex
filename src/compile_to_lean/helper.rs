@@ -113,7 +113,7 @@ pub(super) fn validate_arithmetic_expression(object: &Obj) -> Result<(), LeanCom
             Ok(())
         }
         Obj::ComplexOperator(_) => Ok(()),
-        Obj::TrigOperator(TrigOperator::Sin(_) | TrigOperator::Cos(_) | TrigOperator::Tan(_)) => Ok(()),
+        Obj::TrigOperator(_) => Ok(()),
         Obj::ExpLogOperator(ExpLogOperator::Exp(_) | ExpLogOperator::Ln(_) | ExpLogOperator::Log(_)) => Ok(()),
         Obj::ExpLogOperator(ExpLogOperator::Sqrt(_)) => {
             // Rational normalization treats the original square root as one
@@ -405,6 +405,13 @@ pub(super) fn arithmetic_operation_term(operation: &str) -> String {
         "sinValue" => "(Litex.realUnaryValue (M := M) Real.sin)".into(),
         "cosValue" => "(Litex.realUnaryValue (M := M) Real.cos)".into(),
         "tanValue" => "(Litex.realUnaryValue (M := M) Real.tan)".into(),
+        "cotValue" => "(Litex.realUnaryValue (M := M) Litex.nativeCot)".into(),
+        "secValue" => "(Litex.realUnaryValue (M := M) Litex.nativeSec)".into(),
+        "cscValue" => "(Litex.realUnaryValue (M := M) Litex.nativeCsc)".into(),
+        "arcsinValue" => "(Litex.realUnaryValue (M := M) Real.arcsin)".into(),
+        "arccosValue" => "(Litex.realUnaryValue (M := M) Real.arccos)".into(),
+        "arctanValue" => "(Litex.realUnaryValue (M := M) Real.arctan)".into(),
+        "arccotValue" => "(Litex.realUnaryValue (M := M) Litex.nativeArccot)".into(),
         "expValue" => "(Litex.realUnaryValue (M := M) Real.exp)".into(),
         "lnValue" => "(Litex.realUnaryValue (M := M) Real.log)".into(),
         "logValue" => "(fun _base _arg => M.divValue (Litex.realUnaryValue (M := M) Real.log _arg) (Litex.realUnaryValue (M := M) Real.log _base))".into(),
@@ -1560,6 +1567,31 @@ pub(super) fn instantiated_object_matches(
         (Obj::TrigOperator(TrigOperator::Tan(a)), Obj::TrigOperator(TrigOperator::Tan(b))) => {
             instantiated_object_matches(&a.arg, &b.arg, substitution)
         }
+        (Obj::TrigOperator(TrigOperator::Cot(a)), Obj::TrigOperator(TrigOperator::Cot(b))) => {
+            instantiated_object_matches(&a.arg, &b.arg, substitution)
+        }
+        (Obj::TrigOperator(TrigOperator::Sec(a)), Obj::TrigOperator(TrigOperator::Sec(b))) => {
+            instantiated_object_matches(&a.arg, &b.arg, substitution)
+        }
+        (Obj::TrigOperator(TrigOperator::Csc(a)), Obj::TrigOperator(TrigOperator::Csc(b))) => {
+            instantiated_object_matches(&a.arg, &b.arg, substitution)
+        }
+        (
+            Obj::TrigOperator(TrigOperator::Arcsin(a)),
+            Obj::TrigOperator(TrigOperator::Arcsin(b)),
+        ) => instantiated_object_matches(&a.arg, &b.arg, substitution),
+        (
+            Obj::TrigOperator(TrigOperator::Arccos(a)),
+            Obj::TrigOperator(TrigOperator::Arccos(b)),
+        ) => instantiated_object_matches(&a.arg, &b.arg, substitution),
+        (
+            Obj::TrigOperator(TrigOperator::Arctan(a)),
+            Obj::TrigOperator(TrigOperator::Arctan(b)),
+        ) => instantiated_object_matches(&a.arg, &b.arg, substitution),
+        (
+            Obj::TrigOperator(TrigOperator::Arccot(a)),
+            Obj::TrigOperator(TrigOperator::Arccot(b)),
+        ) => instantiated_object_matches(&a.arg, &b.arg, substitution),
         (
             Obj::ExpLogOperator(ExpLogOperator::Exp(a)),
             Obj::ExpLogOperator(ExpLogOperator::Exp(b)),

@@ -539,7 +539,20 @@ Use `litex.config` to organize a module:
   packages under `[import std]` as either bare `N` or `Alias = StdName`;
 - keep import aliases unique across both import sections;
 - cite mounted packages and exports with canonical names, such as
-  `Algebra::chap1::name` or `basics:::name`.
+  `Algebra::chap1::name` or `basics::main::name`.
+
+Configure an optional namespace prefix explicitly:
+
+```ini
+[alias]
+C = Algebra::chap1
+```
+
+`C::name` and `Algebra::chap1::name` select the same declaration. Aliases are
+package-local, target real import/export paths, and cannot chain or collide
+with local export names. Duplicate aliases and unknown targets are rejected,
+including unused targets. An alias may share an import name. `:::` is removed;
+use the full path or this explicit alias. Single-export imports have no special syntax.
 
 `[export]` is an explicit selection list, not a directory inventory. Unlisted
 files are sidecars: discovery does not parse or execute them. Source-level

@@ -157,3 +157,5 @@ mod finite_set_stat_tests;
 mod aggregate_tests;
 
 mod compile_real_interval_inference;
+
+mod compile_basic_predicates;

@@ -3,4 +3,4 @@ thm injection_missing_equal_size:
         $injective(X, Y, f)
         =>:
             $bijective(X, Y, f)
-    release thm comb:::equal_size_injection_is_bijective(X,Y,f)
+    release thm comb::equal_size_injection_is_bijective(X,Y,f)

@@ -497,15 +497,48 @@ impl LitexToLeanCompiler {
                 ))
             }
             StructuralMembershipReason::Intrinsic(
-                kind @ (IntrinsicCodomain::Sin | IntrinsicCodomain::Cos | IntrinsicCodomain::Tan),
+                kind @ (IntrinsicCodomain::Sin
+                | IntrinsicCodomain::Cos
+                | IntrinsicCodomain::Tan
+                | IntrinsicCodomain::Cot
+                | IntrinsicCodomain::Sec
+                | IntrinsicCodomain::Csc
+                | IntrinsicCodomain::Arcsin
+                | IntrinsicCodomain::Arccos
+                | IntrinsicCodomain::Arctan
+                | IntrinsicCodomain::Arccot),
             ) => {
                 let law = match (kind, &proof.element) {
                     (IntrinsicCodomain::Sin, Obj::TrigOperator(TrigOperator::Sin(_))) => "sinInR",
                     (IntrinsicCodomain::Cos, Obj::TrigOperator(TrigOperator::Cos(_))) => "cosInR",
                     (IntrinsicCodomain::Tan, Obj::TrigOperator(TrigOperator::Tan(_))) => "tanInR",
+                    (IntrinsicCodomain::Cot, Obj::TrigOperator(TrigOperator::Cot(_))) => "cotInR",
+                    (IntrinsicCodomain::Sec, Obj::TrigOperator(TrigOperator::Sec(_))) => {
+                        "secInRStar"
+                    }
+                    (IntrinsicCodomain::Csc, Obj::TrigOperator(TrigOperator::Csc(_))) => {
+                        "cscInRStar"
+                    }
+                    (IntrinsicCodomain::Arcsin, Obj::TrigOperator(TrigOperator::Arcsin(_))) => {
+                        "arcsinInR"
+                    }
+                    (IntrinsicCodomain::Arccos, Obj::TrigOperator(TrigOperator::Arccos(_))) => {
+                        "arccosInR"
+                    }
+                    (IntrinsicCodomain::Arctan, Obj::TrigOperator(TrigOperator::Arctan(_))) => {
+                        "arctanInR"
+                    }
+                    (IntrinsicCodomain::Arccot, Obj::TrigOperator(TrigOperator::Arccot(_))) => {
+                        "arccotInR"
+                    }
                     _ => return Err(LeanCompileError::unsupported("Trig/CodomainSubject")),
                 };
-                if proof.set != StandardSet::R {
+                let carrier = if matches!(kind, IntrinsicCodomain::Sec | IntrinsicCodomain::Csc) {
+                    StandardSet::RStar
+                } else {
+                    StandardSet::R
+                };
+                if proof.set != carrier {
                     return Err(LeanCompileError::unsupported("Trig/CodomainCarrier"));
                 }
                 Ok(format!(

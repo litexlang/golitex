@@ -1,4 +1,4 @@
 thm injection_bound_missing_injectivity:
     ? forall X, Y finite_set, f fn(x X) Y:
         finite_set_size(X) <= finite_set_size(Y)
-    release thm comb:::injection_size_le(X,Y,f)
+    release thm comb::injection_size_le(X,Y,f)

@@ -699,6 +699,76 @@ impl LitexToLeanCompiler {
                     .collect::<Result<Vec<_>, _>>()?;
                 self.compile_atomic_raw_proposition(fact, &arguments, position)
             }
+            AtomicFact::SupersetFact(f) => Ok(format!(
+                "Litex.Superset {} {}",
+                self.compile_object_reference(&f.left, position)?,
+                self.compile_object_reference(&f.right, position)?
+            )),
+            AtomicFact::NotSupersetFact(f) => Ok(format!(
+                "¬ Litex.Superset {} {}",
+                self.compile_object_reference(&f.left, position)?,
+                self.compile_object_reference(&f.right, position)?
+            )),
+            AtomicFact::ProperSubsetFact(f) => Ok(format!(
+                "Litex.ProperSubset {} {}",
+                self.compile_object_reference(&f.left, position)?,
+                self.compile_object_reference(&f.right, position)?
+            )),
+            AtomicFact::NotProperSubsetFact(f) => Ok(format!(
+                "¬ Litex.ProperSubset {} {}",
+                self.compile_object_reference(&f.left, position)?,
+                self.compile_object_reference(&f.right, position)?
+            )),
+            AtomicFact::ProperSupersetFact(f) => Ok(format!(
+                "Litex.ProperSuperset {} {}",
+                self.compile_object_reference(&f.left, position)?,
+                self.compile_object_reference(&f.right, position)?
+            )),
+            AtomicFact::NotProperSupersetFact(f) => Ok(format!(
+                "¬ Litex.ProperSuperset {} {}",
+                self.compile_object_reference(&f.left, position)?,
+                self.compile_object_reference(&f.right, position)?
+            )),
+            AtomicFact::PrimeFact(f) => Ok(format!(
+                "Litex.Prime {}",
+                self.compile_object_reference(&f.value, position)?
+            )),
+            AtomicFact::NotPrimeFact(f) => Ok(format!(
+                "¬ Litex.Prime {}",
+                self.compile_object_reference(&f.value, position)?
+            )),
+            AtomicFact::CoprimeFact(f) => Ok(format!(
+                "Litex.Coprime {} {}",
+                self.compile_object_reference(&f.left, position)?,
+                self.compile_object_reference(&f.right, position)?
+            )),
+            AtomicFact::NotCoprimeFact(f) => Ok(format!(
+                "¬ Litex.Coprime {} {}",
+                self.compile_object_reference(&f.left, position)?,
+                self.compile_object_reference(&f.right, position)?
+            )),
+            AtomicFact::DvdFact(f) => Ok(format!(
+                "Litex.Dvd {} {}",
+                self.compile_object_reference(&f.left, position)?,
+                self.compile_object_reference(&f.right, position)?
+            )),
+            AtomicFact::NotDvdFact(f) => Ok(format!(
+                "¬ Litex.Dvd {} {}",
+                self.compile_object_reference(&f.left, position)?,
+                self.compile_object_reference(&f.right, position)?
+            )),
+            AtomicFact::NotIsSetFact(f) => Ok(format!(
+                "¬ Litex.IsSet {}",
+                self.compile_object_reference(&f.set, position)?
+            )),
+            AtomicFact::NotIsNonemptySetFact(f) => Ok(format!(
+                "¬ Litex.IsNonempty {}",
+                self.compile_object_reference(&f.set, position)?
+            )),
+            AtomicFact::NotIsFiniteSetFact(f) => Ok(format!(
+                "¬ Litex.IsFiniteSet {}",
+                self.compile_object_reference(&f.set, position)?
+            )),
             AtomicFact::HasRiemannIntegralFact(_)
             | AtomicFact::NotHasRiemannIntegralFact(_)
             | AtomicFact::FunctionRiemannIntegrableFact(_)
@@ -723,11 +793,6 @@ impl LitexToLeanCompiler {
             | AtomicFact::NotFunctionContinuousFact(_)
             | AtomicFact::FunctionLipschitzFact(_)
             | AtomicFact::NotFunctionLipschitzFact(_)
-            | AtomicFact::SupersetFact(_)
-            | AtomicFact::ProperSubsetFact(_)
-            | AtomicFact::ProperSupersetFact(_)
-            | AtomicFact::PrimeFact(_)
-            | AtomicFact::CoprimeFact(_)
             | AtomicFact::HasFunctionLimitFact(_)
             | AtomicFact::NotHasFunctionLimitFact(_)
             | AtomicFact::HasSequenceLimsupFact(_)
@@ -736,19 +801,9 @@ impl LitexToLeanCompiler {
             | AtomicFact::NotHasSequenceLimsupFact(_)
             | AtomicFact::NotHasSequenceLiminfFact(_)
             | AtomicFact::NotHasSequenceLimitFact(_)
-            | AtomicFact::DvdFact(_)
             | AtomicFact::InjectiveFact(_)
             | AtomicFact::SurjectiveFact(_)
             | AtomicFact::BijectiveFact(_)
-            | AtomicFact::NotIsSetFact(_)
-            | AtomicFact::NotIsNonemptySetFact(_)
-            | AtomicFact::NotIsFiniteSetFact(_)
-            | AtomicFact::NotSupersetFact(_)
-            | AtomicFact::NotProperSubsetFact(_)
-            | AtomicFact::NotProperSupersetFact(_)
-            | AtomicFact::NotPrimeFact(_)
-            | AtomicFact::NotCoprimeFact(_)
-            | AtomicFact::NotDvdFact(_)
             | AtomicFact::NotInjectiveFact(_)
             | AtomicFact::NotSurjectiveFact(_)
             | AtomicFact::NotBijectiveFact(_) => {

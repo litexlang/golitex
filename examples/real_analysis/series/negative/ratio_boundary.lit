@@ -9,5 +9,5 @@ claim:
     ratio_boundary_terms(k)=1
     abs(ratio_boundary_terms(k+1))=1=1*abs(ratio_boundary_terms(k))
 
-release thm series:::series_ratio_test(ratio_boundary_terms,1,1)
+release thm series::series_ratio_test(ratio_boundary_terms,1,1)
 

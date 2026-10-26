@@ -295,7 +295,7 @@ impl Runtime {
             .map_err(RuntimeError::InternalBug)
     }
 
-    /// Elaborate `a:::b` flatten sugar.
+    /// Reject removed `a:::b` syntax with a migration diagnostic.
     pub fn elaborate_flat_import(&self, alias: &str, name: String) -> RuntimeResult<AtomicName> {
         self.global_module_manager
             .elaborate_flat_import(alias, name)

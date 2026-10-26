@@ -1,0 +1,67 @@
+claim:
+    ? forall X, Y finite_set:
+        $is_finite_set(union(set_minus(X,Y),set_minus(Y,X)))
+    release thm comb::main::symmetric_difference_is_finite(X,Y)
+
+claim:
+    ? forall X, Y, Zeta finite_set:
+        $is_finite_set(union(union(X,Y),Zeta))
+        $is_finite_set(intersect(intersect(X,Y),Zeta))
+    release thm comb::main::three_set_union_intersection_are_finite(X,Y,Zeta)
+
+thm consume_union_size:
+    ? forall A, B finite_set:
+        finite_set_size(union(A,B)) = finite_set_size(A) + finite_set_size(B) - finite_set_size(intersect(A,B))
+    release thm comb::main::union_size(A,B)
+
+thm consume_subset_difference_size:
+    ? forall A, B finite_set:
+        B $subset A
+        =>:
+            finite_set_size(set_minus(A,B)) = finite_set_size(A) - finite_set_size(B)
+    release thm comb::main::subset_difference_size(A,B)
+
+thm consume_union_bound:
+    ? forall A, B finite_set:
+        finite_set_size(union(A,B)) <= finite_set_size(A) + finite_set_size(B)
+    release thm comb::main::union_bound(A,B)
+
+thm consume_subset_equal_cardinality:
+    ? forall A, B finite_set:
+        B $subset A
+        finite_set_size(B) = finite_set_size(A)
+        =>:
+            B = A
+    release thm comb::main::subset_equal_cardinality(A,B)
+
+thm consume_cartesian_product_size:
+    ? forall A, B finite_set:
+        finite_set_size(cart(A,B)) = finite_set_size(A) * finite_set_size(B)
+    release thm comb::main::cartesian_product_size(A,B)
+
+thm consume_power_set_size:
+    ? forall A finite_set:
+        finite_set_size(power_set(A)) = 2^finite_set_size(A)
+    release thm comb::main::power_set_size(A)
+
+thm consume_union_additivity_implies_disjoint:
+    ? forall A, B finite_set:
+        finite_set_size(union(A,B)) = finite_set_size(A) + finite_set_size(B)
+        =>:
+            intersect(A,B) = {}
+    release thm comb::main::union_additivity_implies_disjoint(A,B)
+
+thm consume_symmetric_difference_size:
+    ? forall A, B finite_set:
+        finite_set_size(union(set_minus(A,B),set_minus(B,A))) = finite_set_size(A) + finite_set_size(B) - 2*finite_set_size(intersect(A,B))
+    release thm comb::main::symmetric_difference_size(A,B)
+
+thm consume_three_set_inclusion_exclusion:
+    ? forall A, B, D finite_set:
+        finite_set_size(union(union(A,B),D)) = finite_set_size(A) + finite_set_size(B) + finite_set_size(D) - finite_set_size(intersect(A,B)) - finite_set_size(intersect(A,D)) - finite_set_size(intersect(B,D)) + finite_set_size(intersect(intersect(A,B),D))
+    release thm comb::main::three_set_inclusion_exclusion(A,B,D)
+
+thm consume_three_set_union_bound:
+    ? forall A, B, D finite_set:
+        finite_set_size(union(union(A,B),D)) <= finite_set_size(A) + finite_set_size(B) + finite_set_size(D)
+    release thm comb::main::three_set_union_bound(A,B,D)

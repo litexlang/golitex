@@ -1,4 +1,4 @@
 thm missing_T1:
-    ? forall Ambient set, space &top:::TopologicalSpace<Ambient>, x space.carrier:
-        $top:::is_closed(Ambient, space, {x})
-    release thm top:::T1_implies_closed_singletons(Ambient, space, x)
+    ? forall Ambient set, space &top::TopologicalSpace<Ambient>, x space.carrier:
+        $top::is_closed(Ambient, space, {x})
+    release thm top::T1_implies_closed_singletons(Ambient, space, x)

@@ -3,4 +3,4 @@ thm equal_size_surjection_missing_surjectivity:
         finite_set_size(X) = finite_set_size(Y)
         =>:
             $bijective(X, Y, f)
-    release thm comb:::equal_size_surjection_is_bijective(X,Y,f)
+    release thm comb::equal_size_surjection_is_bijective(X,Y,f)

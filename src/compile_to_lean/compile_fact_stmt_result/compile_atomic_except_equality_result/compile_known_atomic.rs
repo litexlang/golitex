@@ -121,16 +121,36 @@ impl LitexToLeanCompiler {
                 &registered.1,
                 position,
             ),
-            (AtomicFact::NormalAtomicFact(_), AtomicFact::NormalAtomicFact(_))
-            | (AtomicFact::NotNormalAtomicFact(_), AtomicFact::NotNormalAtomicFact(_))
-            | (AtomicFact::IsNonemptySetFact(_), AtomicFact::IsNonemptySetFact(_)) => self
-                .compile_raw_known_atomic_transport(
+            _ if matches!(
+                goal,
+                AtomicFact::NormalAtomicFact(_)
+                    | AtomicFact::NotNormalAtomicFact(_)
+                    | AtomicFact::IsNonemptySetFact(_)
+                    | AtomicFact::SupersetFact(_)
+                    | AtomicFact::NotSupersetFact(_)
+                    | AtomicFact::ProperSubsetFact(_)
+                    | AtomicFact::NotProperSubsetFact(_)
+                    | AtomicFact::ProperSupersetFact(_)
+                    | AtomicFact::NotProperSupersetFact(_)
+                    | AtomicFact::NotIsSetFact(_)
+                    | AtomicFact::NotIsNonemptySetFact(_)
+                    | AtomicFact::NotIsFiniteSetFact(_)
+                    | AtomicFact::PrimeFact(_)
+                    | AtomicFact::NotPrimeFact(_)
+                    | AtomicFact::CoprimeFact(_)
+                    | AtomicFact::NotCoprimeFact(_)
+                    | AtomicFact::DvdFact(_)
+                    | AtomicFact::NotDvdFact(_)
+            ) =>
+            {
+                self.compile_raw_known_atomic_transport(
                     cited,
                     goal,
                     &arguments,
                     &registered.1,
                     position,
-                ),
+                )
+            }
             _ => Err(LeanCompileError::unsupported(
                 "KnownAtomic/PredicateTransport",
             )),

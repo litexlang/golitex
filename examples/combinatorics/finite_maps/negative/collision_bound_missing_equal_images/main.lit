@@ -4,4 +4,4 @@ thm collision_bound_missing_equal_images:
         point != duplicate
         =>:
             finite_set_size(Y) < finite_set_size(X)
-    release thm comb:::surjection_collision_strict_size(X,Y,f,point,duplicate)
+    release thm comb::surjection_collision_strict_size(X,Y,f,point,duplicate)

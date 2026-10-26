@@ -1,1 +1,1 @@
-by def $nt:::is_modular_inverse(5, 5, 0)
+by def $nt::is_modular_inverse(5, 5, 0)

@@ -377,15 +377,30 @@ Important rules:
    After resolution `[import]` and `[import std]` are the same kind of
    import. Import aliases from both sections must be unique within that
    `litex.config`; separate packages may reuse an alias for their own paths.
-   An export name may reuse an import spelling: `a::b` is always a
-   current export, `a::b::c` is an import path, and `a:::b` is explicit
-   single-export sugar for `a::<sole_export>::b`.
+   An export name may reuse an import spelling. `a::b` selects a current
+   export unless `a` is a configured namespace alias; `a::b::c` selects a real import/export path.
 4. Canonical names follow the mount alias and export name, for example
-   `Algebra::chap1::name` or `basics:::name` when `basics` has one export.
+   `Algebra::chap1::name` or `basics::main::name`.
+
+**Preview: explicit namespace aliases.** In the current package's manifest:
+
+```ini
+[alias]
+C = Lib::facts
+```
+
+`C::v` resolves to exactly the same declaration as `Lib::facts::v`. This works
+for objects, functions, props, theorem calls, templates and struct carriers.
+The target must be a declared import and one of its real exports. Duplicate
+alias names, local export collisions, unknown targets and alias chains are
+rejected. An alias may reuse an import name, but is neither inherited by
+other packages nor exported as a new file. Adding other exports to `Lib` does
+not change this selection. `C` alone remains an ordinary unqualified name.
+`:::` has been removed; use a full path or configure an explicit alias.
+See [the runnable acceptance project](../examples/module_manager/namespace_aliases/README.md).
 
 Struct carriers accept these same paths: `&local::Pair`,
-`&Lib::facts::Tagged<R>` and, for an import with exactly one export,
-`&Lib:::Tagged<R>`. The full definition owner is retained for field types,
+`&Lib::facts::Tagged<R>` and configured aliases such as `&C::Tagged<R>`. The full definition owner is retained for field types,
 function returns and nested struct fields. Missing paths, wrong arguments
 and tuples outside the chosen carrier are rejected. See the runnable
 [qualified struct fixture](../examples/module_manager/qualified_struct_views/README.md).
@@ -2580,7 +2595,7 @@ known-`forall` matching. `axiom` remains universal-only and gives the same
 parenthesized call interface to a trusted fact without proving it.
 
 > **Preview:** theorem calls accept plain or qualified names
-> (`export::thm`, `Mod::export::thm`, `Mod:::thm`). Lookup uses the live Env
+> (`export::thm`, `Mod::export::thm`, `Mod::export::thm`). Lookup uses the live Env
 > stack for plain names and a finished export file's Env for qualified names —
 > the same path as `release obj def`. Fact search still does not merge another
 > module's ambient facts; only the named theorem definition is resolved.
@@ -3798,7 +3813,7 @@ by def $P(args)
 ```
 
 > **Preview:** `$P` may be plain or qualified
-> (`$export::P`, `$Mod::export::P`, `$Mod:::P`). Definition expansion looks up
+> (`$export::P`, `$Mod::export::P`, `$Mod::export::P`). Definition expansion looks up
 > the concrete `prop` in the live Env stack or in a finished export file's Env.
 > Ambient by-definition search and statement `by def` share this lookup. Other
 > modules' stored facts are still not searched automatically.
@@ -4027,7 +4042,7 @@ properties, and examples.
 | ID | Public form | Mathematical role | Example status |
 |---|---|---|---|
 | [O01](#o01-division) | `a / b` | Division | checked |
-| [O02](#o02-names-and-qualified-references) | `name; export::name; module::export::name; module:::name` | Names and qualified references | checked |
+| [O02](#o02-names-and-qualified-references) | `name; export::name; module::export::name; alias::name` | Names and qualified references | checked |
 | [O03](#o03-function-applications) | `f(arguments)` | Function applications | checked |
 | [O04](#o04-exact-numeric-literals) | `integer or decimal literal` | Exact numeric literals | checked |
 | [O05](#o05-imaginary-unit) | `i` | Imaginary unit | checked |
@@ -4230,7 +4245,7 @@ Membership and nonmembership of this closed quotient are checked in F01.
 
 ### O02. Names and qualified references
 
-**Public form:** `name; export::name; module::export::name; module:::name`.
+**Public form:** `name; export::name; module::export::name; alias::name`.
 
 **Mathematical function.** Refer to an introduced mathematical object or a visible exported definition. Qualified spelling changes lookup, not the object’s mathematical role.
 
@@ -9744,7 +9759,7 @@ template<S set, z S>:
 #### Instance ownership and automatic definition facts
 
 The name uses the ordinary module/export forms: `\export::name<args>`,
-`\Module::export::name<args>`, or `\Module:::name<args>` when the imported
+`\Module::export::name<args>`, or `\Module::export::name<args>` when the imported
 module has one export. These forms preserve the same canonical template owner;
 knowing an export name does not make a missing template valid. The configured
 [qualified-template example](../examples/module_manager/qualified_template_names/main.lit)

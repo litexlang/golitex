@@ -16,13 +16,13 @@ Add this beside your project's `[export]` table in litex.config:
 top = topology
 ```
 
-The package keeps one main export, preserving existing `top:::name` calls.
+The package exports `main`; use `top::main::name` or configure `[alias] top = top::main` for `top::name`.
 This complete excerpt is checked in an independent project:
 
 ```litex
-release thm top:::discrete_topology_laws({0, 1})
-have sample_space &top:::TopologicalSpace<{0, 1}> = ({0, 1}, power_set({0, 1}))
-release thm top:::identity_is_homeomorphism({0, 1}, sample_space)
+release thm top::main::discrete_topology_laws({0, 1})
+have sample_space &top::main::TopologicalSpace<{0, 1}> = ({0, 1}, power_set({0, 1}))
+release thm top::main::identity_is_homeomorphism({0, 1}, sample_space)
 ```
 
 The [foundations caller](../../examples/topology/foundations/main.lit)
@@ -56,7 +56,7 @@ intersection and arbitrary-union laws. Ambient only bounds the actual carrier.
 | `$is_compact_subset(A,space,K)` | Every arbitrary indexed open cover has a finite subcover of K |
 | `$is_compact_space(A,space)` | The actual carrier is compact |
 
-Names take the caller's `top:::` prefix. The two space families each have
+Names take the caller's `top::main::` prefix. The two space families each have
 one set template slot and no ordinary arguments. identity_map has one slot
 and one point argument. restricted_map has four slots X,Y,f,K and one point
 argument in K. It constructs a new complete input domain; f itself is not
@@ -87,14 +87,14 @@ continuity for homeomorphism.
 This independently checked excerpt constructs a compact Hausdorff finite space:
 
 ```litex
-release thm top:::discrete_topology_laws({0, 1})
-have demo &top:::TopologicalSpace<{0, 1}> = ({0, 1}, power_set({0, 1}))
+release thm top::main::discrete_topology_laws({0, 1})
+have demo &top::main::TopologicalSpace<{0, 1}> = ({0, 1}, power_set({0, 1}))
 demo.carrier = {0, 1}
 demo.opens = power_set({0, 1})
 power_set(demo.carrier) = power_set({0, 1}) = demo.opens
-release thm top:::discrete_is_Hausdorff({0, 1}, demo)
-release thm top:::finite_subsets_are_compact({0, 1}, demo, demo.carrier)
-by def $top:::is_compact_space({0, 1}, demo)
+release thm top::main::discrete_is_Hausdorff({0, 1}, demo)
+release thm top::main::finite_subsets_are_compact({0, 1}, demo, demo.carrier)
+by def $top::main::is_compact_space({0, 1}, demo)
 ```
 
 [The complete new caller](../../examples/topology/separation_compactness/main.lit)

@@ -593,6 +593,13 @@ impl LitexToLeanCompiler {
             Obj::TrigOperator(TrigOperator::Sin(p)) => Ok(format!("(Litex.realUnaryValue (M := M) Real.sin {})", expression(&p.arg)?)),
             Obj::TrigOperator(TrigOperator::Cos(p)) => Ok(format!("(Litex.realUnaryValue (M := M) Real.cos {})", expression(&p.arg)?)),
             Obj::TrigOperator(TrigOperator::Tan(p)) => Ok(format!("(Litex.realUnaryValue (M := M) Real.tan {})", expression(&p.arg)?)),
+            Obj::TrigOperator(TrigOperator::Cot(p)) => Ok(format!("(Litex.realUnaryValue (M := M) Litex.nativeCot {})", expression(&p.arg)?)),
+            Obj::TrigOperator(TrigOperator::Sec(p)) => Ok(format!("(Litex.realUnaryValue (M := M) Litex.nativeSec {})", expression(&p.arg)?)),
+            Obj::TrigOperator(TrigOperator::Csc(p)) => Ok(format!("(Litex.realUnaryValue (M := M) Litex.nativeCsc {})", expression(&p.arg)?)),
+            Obj::TrigOperator(TrigOperator::Arcsin(p)) => Ok(format!("(Litex.realUnaryValue (M := M) Real.arcsin {})", expression(&p.arg)?)),
+            Obj::TrigOperator(TrigOperator::Arccos(p)) => Ok(format!("(Litex.realUnaryValue (M := M) Real.arccos {})", expression(&p.arg)?)),
+            Obj::TrigOperator(TrigOperator::Arctan(p)) => Ok(format!("(Litex.realUnaryValue (M := M) Real.arctan {})", expression(&p.arg)?)),
+            Obj::TrigOperator(TrigOperator::Arccot(p)) => Ok(format!("(Litex.realUnaryValue (M := M) Litex.nativeArccot {})", expression(&p.arg)?)),
             Obj::ExpLogOperator(ExpLogOperator::Exp(p)) => Ok(format!("(Litex.realUnaryValue (M := M) Real.exp {})", expression(&p.arg)?)),
             Obj::ExpLogOperator(ExpLogOperator::Ln(p)) => Ok(format!("(Litex.realUnaryValue (M := M) Real.log {})", expression(&p.arg)?)),
             Obj::ExpLogOperator(ExpLogOperator::Log(p)) => Ok(format!("(M.divValue (Litex.realUnaryValue (M := M) Real.log {}) (Litex.realUnaryValue (M := M) Real.log {}))", expression(&p.arg)?, expression(&p.base)?)),
@@ -944,7 +951,19 @@ impl LitexToLeanCompiler {
         arguments: &[String],
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
-        if matches!(fact, AtomicFact::NotNormalAtomicFact(_)) {
+        if matches!(
+            fact,
+            AtomicFact::NotNormalAtomicFact(_)
+                | AtomicFact::NotSupersetFact(_)
+                | AtomicFact::NotProperSubsetFact(_)
+                | AtomicFact::NotProperSupersetFact(_)
+                | AtomicFact::NotIsSetFact(_)
+                | AtomicFact::NotIsNonemptySetFact(_)
+                | AtomicFact::NotIsFiniteSetFact(_)
+                | AtomicFact::NotPrimeFact(_)
+                | AtomicFact::NotCoprimeFact(_)
+                | AtomicFact::NotDvdFact(_)
+        ) {
             let positive = crate::ast::fact::negate_atomic_fact(fact, fact.fact_id())
                 .ok_or_else(|| LeanCompileError::unsupported("Function/RawNegation"))?;
             return Ok(format!(
@@ -974,6 +993,25 @@ impl LitexToLeanCompiler {
                 "(∀ _member : M.Value, M.mem _member {} → M.mem _member {})",
                 arguments[0], arguments[1]
             ),
+            AtomicFact::SupersetFact(_) => format!(
+                "(∀ _member : M.Value, M.mem _member {} → M.mem _member {})",
+                arguments[1], arguments[0]
+            ),
+            AtomicFact::ProperSubsetFact(_) => format!(
+                "((∀ _member : M.Value, M.mem _member {} → M.mem _member {}) ∧ {} ≠ {})",
+                arguments[0], arguments[1], arguments[0], arguments[1]
+            ),
+            AtomicFact::ProperSupersetFact(_) => format!(
+                "((∀ _member : M.Value, M.mem _member {} → M.mem _member {}) ∧ {} ≠ {})",
+                arguments[1], arguments[0], arguments[0], arguments[1]
+            ),
+            AtomicFact::PrimeFact(_) => format!("(Litex.PrimeValue M {})", arguments[0]),
+            AtomicFact::CoprimeFact(_) => {
+                format!("(Litex.CoprimeValue M {} {})", arguments[0], arguments[1])
+            }
+            AtomicFact::DvdFact(_) => {
+                format!("(Litex.DvdValue M {} {})", arguments[0], arguments[1])
+            }
             AtomicFact::LessFact(_)
             | AtomicFact::LessEqualFact(_)
             | AtomicFact::GreaterFact(_)

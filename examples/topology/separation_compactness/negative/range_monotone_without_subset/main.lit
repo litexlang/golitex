@@ -1,4 +1,4 @@
 thm range_monotone_without_subset:
     ? forall X, Y set, f fn(x X) Y, K, L power_set(X):
-        fn_range(\top:::restricted_map<X, Y, f, K>) $subset fn_range(\top:::restricted_map<X, Y, f, L>)
-    release thm top:::restriction_range_monotone(X, Y, f, K, L)
+        fn_range(\top::restricted_map<X, Y, f, K>) $subset fn_range(\top::restricted_map<X, Y, f, L>)
+    release thm top::restriction_range_monotone(X, Y, f, K, L)

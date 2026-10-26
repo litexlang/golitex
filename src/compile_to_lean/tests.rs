@@ -341,11 +341,11 @@ fn selected_rational_route_uses_normalization_adapter() {
 
 #[test]
 fn unsupported_constructor_after_supported_prefix_rejects_complete_artifact() {
-    let (result, compiler) = execute("1 = 1\nforall a R:\n    arctan(a) + 0 = arctan(a)\n");
+    let (result, compiler) = execute("1 = 1\nforall a R:\n    sinh(a) + 0 = sinh(a)\n");
     let error = compile_run(&result, &compiler, "unsupported_trig")
-        .expect_err("arctangent still has no WD consumer");
+        .expect_err("hyperbolic sine still has no WD consumer");
     assert_eq!(error.statement_index, Some(2));
-    assert_eq!(error.route, "WD/TrigOperator");
+    assert_eq!(error.route, "WD/HyperbolicOperator");
 }
 
 #[test]
@@ -3398,5 +3398,11 @@ mod dependent_struct_tests;
 #[path = "../../tests/unit/compile_to_lean/trig_tests.rs"]
 mod trig_tests;
 
+#[path = "../../tests/unit/compile_to_lean/inverse_trig_tests.rs"]
+mod inverse_trig_tests;
+
 #[path = "../../tests/unit/compile_to_lean/complex_observation_tests.rs"]
 mod complex_observation_tests;
+
+#[path = "../../tests/unit/compile_to_lean/basic_predicate_tests.rs"]
+mod basic_predicate_tests;

@@ -1,7 +1,7 @@
 thm connected_image_missing_surjectivity:
-    ? forall A, B set, source &top:::TopologicalSpace<A>, target &top:::TopologicalSpace<B>, f fn(x source.carrier) target.carrier:
-        $top:::is_connected(A, source)
-        $top:::is_topologically_continuous(A, B, source, target, f)
+    ? forall A, B set, source &top::TopologicalSpace<A>, target &top::TopologicalSpace<B>, f fn(x source.carrier) target.carrier:
+        $top::is_connected(A, source)
+        $top::is_topologically_continuous(A, B, source, target, f)
         =>:
-            $top:::is_connected(B, target)
-    release thm top:::continuous_surjection_preserves_connectedness(A, B, source, target, f)
+            $top::is_connected(B, target)
+    release thm top::continuous_surjection_preserves_connectedness(A, B, source, target, f)

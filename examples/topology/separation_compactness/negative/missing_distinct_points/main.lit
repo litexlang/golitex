@@ -1,6 +1,6 @@
 thm missing_distinct_points:
-    ? forall A set, space &top:::TopologicalSpace<A>, x, y space.carrier:
-        $top:::has_only_trivial_opens(A, space)
+    ? forall A set, space &top::TopologicalSpace<A>, x, y space.carrier:
+        $top::has_only_trivial_opens(A, space)
         =>:
-            not $top:::is_T0(A, space)
-    release thm top:::trivial_opens_with_distinct_points_not_T0(A, space, x, y)
+            not $top::is_T0(A, space)
+    release thm top::trivial_opens_with_distinct_points_not_T0(A, space, x, y)

@@ -5,4 +5,4 @@ thm mutual_missing_backward_injection:
             finite_set_size(X) = finite_set_size(Y)
             $bijective(X, Y, f)
             $bijective(Y, X, g)
-    release thm comb:::mutual_finite_injections_are_bijective(X,Y,f,g)
+    release thm comb::mutual_finite_injections_are_bijective(X,Y,f,g)

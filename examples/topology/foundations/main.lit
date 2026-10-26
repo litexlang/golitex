@@ -21,25 +21,25 @@ have points set = {0, 1}
 
 {1} $subset points
 
-release thm top:::discrete_topology_laws(points)
+release thm top::discrete_topology_laws(points)
 
-release thm top:::indiscrete_topology_laws(points)
+release thm top::indiscrete_topology_laws(points)
 
-\top:::discrete_space<points> = (points, power_set(points))
+\top::discrete_space<points> = (points, power_set(points))
 
-\top:::indiscrete_space<points> = (points, union({{}}, {points}))
+\top::indiscrete_space<points> = (points, union({{}}, {points}))
 
-have fine &top:::TopologicalSpace<points> = \top:::discrete_space<points>
+have fine &top::TopologicalSpace<points> = \top::discrete_space<points>
 
-have coarse &top:::TopologicalSpace<points> = \top:::indiscrete_space<points>
+have coarse &top::TopologicalSpace<points> = \top::indiscrete_space<points>
 
 release struct def fine
 
 release struct def coarse
 
-fine = \top:::discrete_space<points> = (points, power_set(points))
+fine = \top::discrete_space<points> = (points, power_set(points))
 
-coarse = \top:::indiscrete_space<points> = (points, union({{}}, {points}))
+coarse = \top::indiscrete_space<points> = (points, union({{}}, {points}))
 
 fine.carrier = points
 
@@ -49,25 +49,25 @@ fine.opens = power_set(points)
 
 coarse.opens = union({{}}, {points})
 
-have identity fn(x points) points = \top:::identity_map<points>
+have identity fn(x points) points = \top::identity_map<points>
 
 release thm fn_set_member(identity, fn(x fine.carrier) coarse.carrier)
 
 power_set(fine.carrier) = power_set(points) = fine.opens
 
-release thm top:::maps_from_discrete_are_continuous(points, points, fine, coarse, identity)
+release thm top::maps_from_discrete_are_continuous(points, points, fine, coarse, identity)
 
-$top:::is_topologically_continuous(points, points, fine, coarse, identity)
+$top::is_topologically_continuous(points, points, fine, coarse, identity)
 
-release thm top:::maps_to_indiscrete_are_continuous(points, points, fine, coarse, identity)
+release thm top::maps_to_indiscrete_are_continuous(points, points, fine, coarse, identity)
 
 release thm fn_set_member(identity, fn(x coarse.carrier) fine.carrier)
 
 {0} $in fine.opens
 
-release thm top:::identity_preimage(points, {0})
+release thm top::identity_preimage(points, {0})
 
-preimage_set(identity, {0}) = preimage_set(\top:::identity_map<points>, {0}) = {0}
+preimage_set(identity, {0}) = preimage_set(\top::identity_map<points>, {0}) = {0}
 
 {0} != {}
 
@@ -84,7 +84,7 @@ not {0} $in union({{}}, {points})
 not {0} $in coarse.opens
 
 by contra:
-    ? not $top:::is_topologically_continuous(points, points, coarse, fine, identity)
+    ? not $top::is_topologically_continuous(points, points, coarse, fine, identity)
     preimage_set(identity, {0}) $in coarse.opens
     impossible {0} $in coarse.opens
 
@@ -110,7 +110,7 @@ swap(1) = 0
 
 release thm fn_set_member(swap, fn(x fine.carrier) fine.carrier)
 
-release thm top:::maps_from_discrete_are_continuous(points, points, fine, fine, swap)
+release thm top::maps_from_discrete_are_continuous(points, points, fine, fine, swap)
 
 claim:
     ? forall x fine.carrier:
@@ -118,38 +118,38 @@ claim:
     swap(x) = 1 - x
     swap(swap(x)) = 1 - swap(x) = 1 - (1 - x) = x
 
-by def $top:::is_homeomorphism(points, points, fine, fine, swap, swap)
+by def $top::is_homeomorphism(points, points, fine, fine, swap, swap)
 
-release thm top:::homeomorphism_inverse(points, points, fine, fine, swap, swap)
+release thm top::homeomorphism_inverse(points, points, fine, fine, swap, swap)
 
-release thm top:::homeomorphism_is_bijective(points, points, fine, fine, swap, swap)
+release thm top::homeomorphism_is_bijective(points, points, fine, fine, swap, swap)
 
 $bijective(fine.carrier, fine.carrier, swap)
 
-release thm top:::homeomorphism_composition(points, points, points, fine, fine, fine, swap, swap, swap, swap)
+release thm top::homeomorphism_composition(points, points, points, fine, fine, fine, swap, swap, swap, swap)
 
-$top:::is_homeomorphism(points, points, fine, fine, compose(swap, swap), compose(swap, swap))
+$top::is_homeomorphism(points, points, fine, fine, compose(swap, swap), compose(swap, swap))
 
 compose(swap, swap)(0) = 0
 
 compose(swap, swap)(1) = 1
 
-release thm top:::indiscrete_is_connected(points)
+release thm top::indiscrete_is_connected(points)
 
-$top:::is_connected(points, coarse)
+$top::is_connected(points, coarse)
 
-release thm top:::empty_and_whole_are_clopen(points, coarse)
+release thm top::empty_and_whole_are_clopen(points, coarse)
 
 claim:
     ? forall F power_set(coarse.carrier):
-        $top:::is_clopen(points, coarse, F)
+        $top::is_clopen(points, coarse, F)
         =>:
             F = {} or F = coarse.carrier
-    release thm top:::connected_implies_only_trivial_clopen(points, coarse, F)
+    release thm top::connected_implies_only_trivial_clopen(points, coarse, F)
 
-by def $top:::has_only_trivial_clopen(points, coarse)
+by def $top::has_only_trivial_clopen(points, coarse)
 
-release thm top:::only_trivial_clopen_implies_connected(points, coarse)
+release thm top::only_trivial_clopen_implies_connected(points, coarse)
 
 {1} $in fine.opens
 
@@ -192,7 +192,7 @@ by extension:
 {1} != {}
 
 by contra:
-    ? not $top:::is_connected(points, fine)
+    ? not $top::is_connected(points, fine)
     {0} = {} or {1} = {}
     claim:
         ? 0 = 1
@@ -204,17 +204,17 @@ by contra:
                 impossible {1} = {}
     impossible 0 = 1
 
-release thm top:::discrete_topology_laws({})
+release thm top::discrete_topology_laws({})
 
-release thm top:::indiscrete_topology_laws({})
+release thm top::indiscrete_topology_laws({})
 
-\top:::discrete_space<{}> = ({}, power_set({}))
+\top::discrete_space<{}> = ({}, power_set({}))
 
-\top:::indiscrete_space<{}> = ({}, union({{}}, {{}}))
+\top::indiscrete_space<{}> = ({}, union({{}}, {{}}))
 
-have empty_fine &top:::TopologicalSpace<{}> = \top:::discrete_space<{}>
+have empty_fine &top::TopologicalSpace<{}> = \top::discrete_space<{}>
 
-have empty_coarse &top:::TopologicalSpace<{}> = \top:::indiscrete_space<{}>
+have empty_coarse &top::TopologicalSpace<{}> = \top::indiscrete_space<{}>
 
 release struct def empty_fine
 
@@ -228,10 +228,10 @@ empty_fine.carrier = {}
 
 empty_coarse.carrier = {}
 
-release thm top:::identity_is_homeomorphism({}, empty_fine)
+release thm top::identity_is_homeomorphism({}, empty_fine)
 
-release thm top:::indiscrete_is_connected({})
+release thm top::indiscrete_is_connected({})
 
-$top:::is_connected({}, empty_coarse)
+$top::is_connected({}, empty_coarse)
 
-release thm top:::empty_and_whole_are_closed({}, empty_fine)
+release thm top::empty_and_whole_are_closed({}, empty_fine)

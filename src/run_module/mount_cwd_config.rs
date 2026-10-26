@@ -61,6 +61,11 @@ pub fn mount_cwd_config(runtime: &mut Runtime) -> RuntimeResult<MountCwdConfigOu
         }
     }
 
+    runtime
+        .global_module_manager
+        .validate_alias_targets(&config)
+        .map_err(RuntimeError::InvalidArguments)?;
+
     for (export_file_id, export) in config.exports.iter().enumerate() {
         match run_export_file(
             runtime,

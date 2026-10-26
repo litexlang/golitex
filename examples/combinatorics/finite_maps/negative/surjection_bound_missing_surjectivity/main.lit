@@ -1,4 +1,4 @@
 thm surjection_bound_missing_surjectivity:
     ? forall X, Y finite_set, f fn(x X) Y:
         finite_set_size(Y) <= finite_set_size(X)
-    release thm comb:::surjection_size_ge(X,Y,f)
+    release thm comb::surjection_size_ge(X,Y,f)

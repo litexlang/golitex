@@ -1,6 +1,6 @@
 thm uniqueness_missing_solution:
     ? forall a, b, u, x Z, m N+:
-        $nt:::is_modular_inverse(a, u, m)
+        $nt::is_modular_inverse(a, u, m)
         =>:
-            $nt:::is_congruent_mod(x, u * b, m)
-    release thm nt:::modular_linear_equation_unique(a,b,u,x,m)
+            $nt::is_congruent_mod(x, u * b, m)
+    release thm nt::modular_linear_equation_unique(a,b,u,x,m)

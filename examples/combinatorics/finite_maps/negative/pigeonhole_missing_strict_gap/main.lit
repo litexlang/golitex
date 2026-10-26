@@ -1,4 +1,4 @@
 thm pigeonhole_missing_strict_gap:
     ? forall X, Y finite_set, f fn(x X) Y:
         exist x, y X st {x != y, f(x) = f(y)}
-    release thm comb:::pigeonhole_collision(X,Y,f)
+    release thm comb::pigeonhole_collision(X,Y,f)

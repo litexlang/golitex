@@ -1,12 +1,12 @@
 # Must reject only the final statement; see ../README.md.
-release obj def series:::partial_sum
-release obj def series:::partial_sums
-release obj def series:::series_sum
-release obj def series:::series_tail
+release obj def series::partial_sum
+release obj def series::partial_sums
+release obj def series::series_sum
+release obj def series::series_tail
 
 thm incorrect_zero_converse:
     ? forall a seq(R):
         $has_seq_limit(a,0)
         =>:
-            $series:::is_convergent_series(a)
+            $series::is_convergent_series(a)
 

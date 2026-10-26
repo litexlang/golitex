@@ -730,9 +730,7 @@ impl LitexToLeanCompiler {
             Obj::ArithmeticOperator(_)
             | Obj::IntegerOperator(_)
             | Obj::ComplexOperator(_)
-            | Obj::TrigOperator(
-                TrigOperator::Sin(_) | TrigOperator::Cos(_) | TrigOperator::Tan(_),
-            )
+            | Obj::TrigOperator(_)
             | Obj::ExpLogOperator(
                 ExpLogOperator::Exp(_) | ExpLogOperator::Ln(_) | ExpLogOperator::Log(_),
             ) => {
@@ -870,9 +868,7 @@ impl LitexToLeanCompiler {
             Obj::ArithmeticOperator(_)
             | Obj::IntegerOperator(_)
             | Obj::ComplexOperator(_)
-            | Obj::TrigOperator(
-                TrigOperator::Sin(_) | TrigOperator::Cos(_) | TrigOperator::Tan(_),
-            )
+            | Obj::TrigOperator(_)
             | Obj::ExpLogOperator(
                 ExpLogOperator::Exp(_) | ExpLogOperator::Ln(_) | ExpLogOperator::Log(_),
             ) => {
@@ -968,6 +964,13 @@ fn normalization_operation_children(
         Obj::TrigOperator(TrigOperator::Sin(p)) => Ok(("sinValue", vec![&p.arg])),
         Obj::TrigOperator(TrigOperator::Cos(p)) => Ok(("cosValue", vec![&p.arg])),
         Obj::TrigOperator(TrigOperator::Tan(p)) => Ok(("tanValue", vec![&p.arg])),
+        Obj::TrigOperator(TrigOperator::Cot(p)) => Ok(("cotValue", vec![&p.arg])),
+        Obj::TrigOperator(TrigOperator::Sec(p)) => Ok(("secValue", vec![&p.arg])),
+        Obj::TrigOperator(TrigOperator::Csc(p)) => Ok(("cscValue", vec![&p.arg])),
+        Obj::TrigOperator(TrigOperator::Arcsin(p)) => Ok(("arcsinValue", vec![&p.arg])),
+        Obj::TrigOperator(TrigOperator::Arccos(p)) => Ok(("arccosValue", vec![&p.arg])),
+        Obj::TrigOperator(TrigOperator::Arctan(p)) => Ok(("arctanValue", vec![&p.arg])),
+        Obj::TrigOperator(TrigOperator::Arccot(p)) => Ok(("arccotValue", vec![&p.arg])),
         Obj::ExpLogOperator(ExpLogOperator::Exp(p)) => Ok(("expValue", vec![&p.arg])),
         Obj::ExpLogOperator(ExpLogOperator::Ln(p)) => Ok(("lnValue", vec![&p.arg])),
         Obj::ExpLogOperator(ExpLogOperator::Log(p)) => Ok(("logValue", vec![&p.base, &p.arg])),
@@ -997,6 +1000,13 @@ fn normalization_operation_children_mut(
         Obj::TrigOperator(TrigOperator::Sin(p)) => Ok(vec![&mut p.arg]),
         Obj::TrigOperator(TrigOperator::Cos(p)) => Ok(vec![&mut p.arg]),
         Obj::TrigOperator(TrigOperator::Tan(p)) => Ok(vec![&mut p.arg]),
+        Obj::TrigOperator(TrigOperator::Cot(p)) => Ok(vec![&mut p.arg]),
+        Obj::TrigOperator(TrigOperator::Sec(p)) => Ok(vec![&mut p.arg]),
+        Obj::TrigOperator(TrigOperator::Csc(p)) => Ok(vec![&mut p.arg]),
+        Obj::TrigOperator(TrigOperator::Arcsin(p)) => Ok(vec![&mut p.arg]),
+        Obj::TrigOperator(TrigOperator::Arccos(p)) => Ok(vec![&mut p.arg]),
+        Obj::TrigOperator(TrigOperator::Arctan(p)) => Ok(vec![&mut p.arg]),
+        Obj::TrigOperator(TrigOperator::Arccot(p)) => Ok(vec![&mut p.arg]),
         Obj::ExpLogOperator(ExpLogOperator::Ln(p)) => Ok(vec![&mut p.arg]),
         Obj::ExpLogOperator(ExpLogOperator::Log(p)) => Ok(vec![&mut p.base, &mut p.arg]),
         Obj::IntegerOperator(IntegerOperator::Factorial(p)) => Ok(vec![&mut p.arg]),

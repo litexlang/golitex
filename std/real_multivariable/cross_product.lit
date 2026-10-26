@@ -1,0 +1,280 @@
+# Standard right-handed cross product on real three-vectors.
+# Ordinary source definitions and proofs; no new native operators.
+
+have fn real_cross_product(u,v cart_n(R,3)) cart_n(R,3)=(u(2)*v(3)-u(3)*v(2),u(3)*v(1)-u(1)*v(3),u(1)*v(2)-u(2)*v(1))
+
+thm real_cross_product_components:
+    ? forall u,v cart_n(R,3):
+        real_cross_product(u,v)(1)=u(2)*v(3)-u(3)*v(2)
+        real_cross_product(u,v)(2)=u(3)*v(1)-u(1)*v(3)
+        real_cross_product(u,v)(3)=u(1)*v(2)-u(2)*v(1)
+
+thm real_cross_product_value:
+    ? forall u,v cart_n(R,3),a,b,c R:
+        u(2)*v(3)-u(3)*v(2)=a
+        u(3)*v(1)-u(1)*v(3)=b
+        u(1)*v(2)-u(2)*v(1)=c
+        =>:
+            real_cross_product(u,v)=(a,b,c)
+    release thm real_cross_product_components(u,v)
+    real_cross_product(u,v)(1)=(u(2)*v(3)-u(3)*v(2))=a=(a,b,c)(1)
+    real_cross_product(u,v)(2)=(u(3)*v(1)-u(1)*v(3))=b=(a,b,c)(2)
+    real_cross_product(u,v)(3)=(u(1)*v(2)-u(2)*v(1))=c=(a,b,c)(3)
+    by for:
+        ? forall k closed_range(1,3):
+            real_cross_product(u,v)(k)=(a,b,c)(k)
+        k $in closed_range(1,3)
+    release thm tuple_equal_from_coordinates(real_cross_product(u,v),(a,b,c))
+
+thm real_cross_product_self:
+    ? forall u cart_n(R,3):
+        real_cross_product(u,u)=(0,0,0)
+
+thm real_cross_product_zero:
+    ? forall u cart_n(R,3):
+        real_cross_product(u,(0,0,0))=(0,0,0)
+        real_cross_product((0,0,0),u)=(0,0,0)
+    release tuple def (0,0,0)
+    release thm real_cross_product_value(u,(0,0,0),0,0,0)
+    release thm real_cross_product_value((0,0,0),u,0,0,0)
+
+thm real_cross_product_anticommutative:
+    ? forall u,v cart_n(R,3):
+        real_cross_product(u,v)=\main::real_vector_scale<3>(-1,real_cross_product(v,u))
+    release thm real_cross_product_components(u,v)
+    release thm real_cross_product_components(v,u)
+    release thm main::real_vector_scale_component(3,-1,real_cross_product(v,u),1)
+    release thm main::real_vector_scale_component(3,-1,real_cross_product(v,u),2)
+    release thm main::real_vector_scale_component(3,-1,real_cross_product(v,u),3)
+    real_cross_product(u,v)(1)=u(2)*v(3)-u(3)*v(2)=-(v(2)*u(3)-v(3)*u(2))=-real_cross_product(v,u)(1)=\main::real_vector_scale<3>(-1,real_cross_product(v,u))(1)
+    real_cross_product(u,v)(2)=u(3)*v(1)-u(1)*v(3)=-(v(3)*u(1)-v(1)*u(3))=-real_cross_product(v,u)(2)=\main::real_vector_scale<3>(-1,real_cross_product(v,u))(2)
+    real_cross_product(u,v)(3)=u(1)*v(2)-u(2)*v(1)=-(v(1)*u(2)-v(2)*u(1))=-real_cross_product(v,u)(3)=\main::real_vector_scale<3>(-1,real_cross_product(v,u))(3)
+    by for:
+        ? forall k closed_range(1,3):
+            real_cross_product(u,v)(k)=\main::real_vector_scale<3>(-1,real_cross_product(v,u))(k)
+        k $in closed_range(1,3)
+    release thm tuple_equal_from_coordinates(real_cross_product(u,v),\main::real_vector_scale<3>(-1,real_cross_product(v,u)))
+
+thm real_cross_product_add_left:
+    ? forall u,v,w cart_n(R,3):
+        real_cross_product(\main::real_vector_add<3>(u,v),w)=\main::real_vector_add<3>(real_cross_product(u,w),real_cross_product(v,w))
+    release thm main::real_vector_add_component(3,u,v,1)
+    release thm main::real_vector_add_component(3,u,v,2)
+    release thm main::real_vector_add_component(3,u,v,3)
+    real_cross_product(\main::real_vector_add<3>(u,v),w)(1)=(u(2)+v(2))*w(3)-(u(3)+v(3))*w(2)=(u(2)*w(3)-u(3)*w(2))+(v(2)*w(3)-v(3)*w(2))=real_cross_product(u,w)(1)+real_cross_product(v,w)(1)=\main::real_vector_add<3>(real_cross_product(u,w),real_cross_product(v,w))(1)
+    real_cross_product(\main::real_vector_add<3>(u,v),w)(2)=(u(3)+v(3))*w(1)-(u(1)+v(1))*w(3)=(u(3)*w(1)-u(1)*w(3))+(v(3)*w(1)-v(1)*w(3))=real_cross_product(u,w)(2)+real_cross_product(v,w)(2)=\main::real_vector_add<3>(real_cross_product(u,w),real_cross_product(v,w))(2)
+    real_cross_product(\main::real_vector_add<3>(u,v),w)(3)=(u(1)+v(1))*w(2)-(u(2)+v(2))*w(1)=(u(1)*w(2)-u(2)*w(1))+(v(1)*w(2)-v(2)*w(1))=real_cross_product(u,w)(3)+real_cross_product(v,w)(3)=\main::real_vector_add<3>(real_cross_product(u,w),real_cross_product(v,w))(3)
+    by for:
+        ? forall k closed_range(1,3):
+            real_cross_product(\main::real_vector_add<3>(u,v),w)(k)=\main::real_vector_add<3>(real_cross_product(u,w),real_cross_product(v,w))(k)
+        k $in closed_range(1,3)
+    release thm tuple_equal_from_coordinates(real_cross_product(\main::real_vector_add<3>(u,v),w),\main::real_vector_add<3>(real_cross_product(u,w),real_cross_product(v,w)))
+
+thm real_cross_product_add_right:
+    ? forall u,v,w cart_n(R,3):
+        real_cross_product(u,\main::real_vector_add<3>(v,w))=\main::real_vector_add<3>(real_cross_product(u,v),real_cross_product(u,w))
+    release thm main::real_vector_add_component(3,v,w,1)
+    release thm main::real_vector_add_component(3,v,w,2)
+    release thm main::real_vector_add_component(3,v,w,3)
+    real_cross_product(u,\main::real_vector_add<3>(v,w))(1)=u(2)*(v(3)+w(3))-u(3)*(v(2)+w(2))=(u(2)*v(3)-u(3)*v(2))+(u(2)*w(3)-u(3)*w(2))=real_cross_product(u,v)(1)+real_cross_product(u,w)(1)=\main::real_vector_add<3>(real_cross_product(u,v),real_cross_product(u,w))(1)
+    real_cross_product(u,\main::real_vector_add<3>(v,w))(2)=u(3)*(v(1)+w(1))-u(1)*(v(3)+w(3))=(u(3)*v(1)-u(1)*v(3))+(u(3)*w(1)-u(1)*w(3))=real_cross_product(u,v)(2)+real_cross_product(u,w)(2)=\main::real_vector_add<3>(real_cross_product(u,v),real_cross_product(u,w))(2)
+    real_cross_product(u,\main::real_vector_add<3>(v,w))(3)=u(1)*(v(2)+w(2))-u(2)*(v(1)+w(1))=(u(1)*v(2)-u(2)*v(1))+(u(1)*w(2)-u(2)*w(1))=real_cross_product(u,v)(3)+real_cross_product(u,w)(3)=\main::real_vector_add<3>(real_cross_product(u,v),real_cross_product(u,w))(3)
+    by for:
+        ? forall k closed_range(1,3):
+            real_cross_product(u,\main::real_vector_add<3>(v,w))(k)=\main::real_vector_add<3>(real_cross_product(u,v),real_cross_product(u,w))(k)
+        k $in closed_range(1,3)
+    release thm tuple_equal_from_coordinates(real_cross_product(u,\main::real_vector_add<3>(v,w)),\main::real_vector_add<3>(real_cross_product(u,v),real_cross_product(u,w)))
+
+thm real_cross_product_scale_left:
+    ? forall u,v cart_n(R,3),a R:
+        real_cross_product(\main::real_vector_scale<3>(a,u),v)=\main::real_vector_scale<3>(a,real_cross_product(u,v))
+    release thm main::real_vector_scale_component(3,a,u,1)
+    release thm main::real_vector_scale_component(3,a,u,2)
+    release thm main::real_vector_scale_component(3,a,u,3)
+    real_cross_product(\main::real_vector_scale<3>(a,u),v)(1)=(a*u(2))*v(3)-(a*u(3))*v(2)=a*(u(2)*v(3)-u(3)*v(2))=a*real_cross_product(u,v)(1)=\main::real_vector_scale<3>(a,real_cross_product(u,v))(1)
+    real_cross_product(\main::real_vector_scale<3>(a,u),v)(2)=(a*u(3))*v(1)-(a*u(1))*v(3)=a*(u(3)*v(1)-u(1)*v(3))=a*real_cross_product(u,v)(2)=\main::real_vector_scale<3>(a,real_cross_product(u,v))(2)
+    real_cross_product(\main::real_vector_scale<3>(a,u),v)(3)=(a*u(1))*v(2)-(a*u(2))*v(1)=a*(u(1)*v(2)-u(2)*v(1))=a*real_cross_product(u,v)(3)=\main::real_vector_scale<3>(a,real_cross_product(u,v))(3)
+    by for:
+        ? forall k closed_range(1,3):
+            real_cross_product(\main::real_vector_scale<3>(a,u),v)(k)=\main::real_vector_scale<3>(a,real_cross_product(u,v))(k)
+        k $in closed_range(1,3)
+    release thm tuple_equal_from_coordinates(real_cross_product(\main::real_vector_scale<3>(a,u),v),\main::real_vector_scale<3>(a,real_cross_product(u,v)))
+
+thm real_cross_product_scale_right:
+    ? forall u,v cart_n(R,3),a R:
+        real_cross_product(u,\main::real_vector_scale<3>(a,v))=\main::real_vector_scale<3>(a,real_cross_product(u,v))
+    release thm main::real_vector_scale_component(3,a,v,1)
+    release thm main::real_vector_scale_component(3,a,v,2)
+    release thm main::real_vector_scale_component(3,a,v,3)
+    real_cross_product(u,\main::real_vector_scale<3>(a,v))(1)=u(2)*(a*v(3))-u(3)*(a*v(2))=a*(u(2)*v(3)-u(3)*v(2))=a*real_cross_product(u,v)(1)=\main::real_vector_scale<3>(a,real_cross_product(u,v))(1)
+    real_cross_product(u,\main::real_vector_scale<3>(a,v))(2)=u(3)*(a*v(1))-u(1)*(a*v(3))=a*(u(3)*v(1)-u(1)*v(3))=a*real_cross_product(u,v)(2)=\main::real_vector_scale<3>(a,real_cross_product(u,v))(2)
+    real_cross_product(u,\main::real_vector_scale<3>(a,v))(3)=u(1)*(a*v(2))-u(2)*(a*v(1))=a*(u(1)*v(2)-u(2)*v(1))=a*real_cross_product(u,v)(3)=\main::real_vector_scale<3>(a,real_cross_product(u,v))(3)
+    by for:
+        ? forall k closed_range(1,3):
+            real_cross_product(u,\main::real_vector_scale<3>(a,v))(k)=\main::real_vector_scale<3>(a,real_cross_product(u,v))(k)
+        k $in closed_range(1,3)
+    release thm tuple_equal_from_coordinates(real_cross_product(u,\main::real_vector_scale<3>(a,v)),\main::real_vector_scale<3>(a,real_cross_product(u,v)))
+
+thm real_inner_product_three:
+    ? forall u,v cart_n(R,3):
+        inner_product(u,v,3)=u(1)*v(1)+u(2)*v(2)+u(3)*v(3)
+    have fn terms(k closed_range(1,3)) C=conj(u(k))*v(k)
+    inner_product(u,v,3)=finite_set_sum(closed_range(1,3),fn(k closed_range(1,3)) C {conj(u(k))*v(k)})
+    release thm finite_set_sum_substitution(finite_set_sum(closed_range(1,3),fn(k closed_range(1,3)) C {conj(u(k))*v(k)}),finite_set_sum(closed_range(1,3),terms))
+    finite_set_sum(closed_range(1,3),terms)=sum(1,3,terms)
+    claim:
+        ? closed_range(1,2) $subset closed_range(1,3)
+        by for:
+            ? forall k closed_range(1,2):
+                k $in closed_range(1,3)
+            k $in closed_range(1,2)
+    claim:
+        ? closed_range(1,1) $subset closed_range(1,3)
+        by for:
+            ? forall k closed_range(1,1):
+                k $in closed_range(1,3)
+            k $in closed_range(1,1)
+    sum(1,3,terms)=sum(1,2,terms)+terms(3)
+    sum(1,2,terms)=sum(1,1,terms)+terms(2)
+    sum(1,1,terms)=terms(1)
+    terms(1)=conj(u(1))*v(1)
+    terms(2)=conj(u(2))*v(2)
+    terms(3)=conj(u(3))*v(3)
+    u(1) $in R
+    u(2) $in R
+    u(3) $in R
+    conj(u(1))=u(1)
+    conj(u(2))=u(2)
+    conj(u(3))=u(3)
+    terms(1)=u(1)*v(1)
+    terms(2)=u(2)*v(2)
+    terms(3)=u(3)*v(3)
+    sum(1,3,terms)=(sum(1,1,terms)+terms(2))+terms(3)=(terms(1)+terms(2))+terms(3)=u(1)*v(1)+u(2)*v(2)+u(3)*v(3)
+
+thm real_cross_product_orthogonal:
+    ? forall u,v cart_n(R,3):
+        inner_product(real_cross_product(u,v),u,3)=0
+        inner_product(real_cross_product(u,v),v,3)=0
+    release thm real_cross_product_components(u,v)
+    release thm real_inner_product_three(real_cross_product(u,v),u)
+    real_cross_product(u,v)(1)*u(1)=(u(2)*v(3)-u(3)*v(2))*u(1)
+    real_cross_product(u,v)(2)*u(2)=(u(3)*v(1)-u(1)*v(3))*u(2)
+    real_cross_product(u,v)(3)*u(3)=(u(1)*v(2)-u(2)*v(1))*u(3)
+    real_cross_product(u,v)(1)*u(1)+real_cross_product(u,v)(2)*u(2)=(u(2)*v(3)-u(3)*v(2))*u(1)+(u(3)*v(1)-u(1)*v(3))*u(2)
+    inner_product(real_cross_product(u,v),u,3)=real_cross_product(u,v)(1)*u(1)+real_cross_product(u,v)(2)*u(2)+real_cross_product(u,v)(3)*u(3)=(u(2)*v(3)-u(3)*v(2))*u(1)+(u(3)*v(1)-u(1)*v(3))*u(2)+(u(1)*v(2)-u(2)*v(1))*u(3)=0
+    release thm real_inner_product_three(real_cross_product(u,v),v)
+    real_cross_product(u,v)(1)*v(1)=(u(2)*v(3)-u(3)*v(2))*v(1)
+    real_cross_product(u,v)(2)*v(2)=(u(3)*v(1)-u(1)*v(3))*v(2)
+    real_cross_product(u,v)(3)*v(3)=(u(1)*v(2)-u(2)*v(1))*v(3)
+    real_cross_product(u,v)(1)*v(1)+real_cross_product(u,v)(2)*v(2)=(u(2)*v(3)-u(3)*v(2))*v(1)+(u(3)*v(1)-u(1)*v(3))*v(2)
+    inner_product(real_cross_product(u,v),v,3)=real_cross_product(u,v)(1)*v(1)+real_cross_product(u,v)(2)*v(2)+real_cross_product(u,v)(3)*v(3)=(u(2)*v(3)-u(3)*v(2))*v(1)+(u(3)*v(1)-u(1)*v(3))*v(2)+(u(1)*v(2)-u(2)*v(1))*v(3)=0
+
+thm real_cross_product_lagrange:
+    ? forall u,v cart_n(R,3):
+        inner_product(real_cross_product(u,v),real_cross_product(u,v),3)=inner_product(u,u,3)*inner_product(v,v,3)-inner_product(u,v,3)^2
+    release thm real_cross_product_components(u,v)
+    release thm real_inner_product_three(real_cross_product(u,v),real_cross_product(u,v))
+    release thm real_inner_product_three(u,u)
+    release thm real_inner_product_three(v,v)
+    release thm real_inner_product_three(u,v)
+    real_cross_product(u,v)(1)^2=(u(2)*v(3)-u(3)*v(2))^2
+    real_cross_product(u,v)(2)^2=(u(3)*v(1)-u(1)*v(3))^2
+    real_cross_product(u,v)(3)^2=(u(1)*v(2)-u(2)*v(1))^2
+    real_cross_product(u,v)(1)^2+real_cross_product(u,v)(2)^2=(u(2)*v(3)-u(3)*v(2))^2+(u(3)*v(1)-u(1)*v(3))^2
+    inner_product(real_cross_product(u,v),real_cross_product(u,v),3)=real_cross_product(u,v)(1)^2+real_cross_product(u,v)(2)^2+real_cross_product(u,v)(3)^2=(u(2)*v(3)-u(3)*v(2))^2+(u(3)*v(1)-u(1)*v(3))^2+(u(1)*v(2)-u(2)*v(1))^2=(u(1)^2+u(2)^2+u(3)^2)*(v(1)^2+v(2)^2+v(3)^2)-(u(1)*v(1)+u(2)*v(2)+u(3)*v(3))^2
+    inner_product(u,u,3)=u(1)^2+u(2)^2+u(3)^2
+    inner_product(v,v,3)=v(1)^2+v(2)^2+v(3)^2
+    inner_product(real_cross_product(u,v),real_cross_product(u,v),3)=(u(1)^2+u(2)^2+u(3)^2)*(v(1)^2+v(2)^2+v(3)^2)-(u(1)*v(1)+u(2)*v(2)+u(3)*v(3))^2=inner_product(u,u,3)*inner_product(v,v,3)-inner_product(u,v,3)^2
+
+thm real_cross_product_norm_square:
+    ? forall u,v cart_n(R,3):
+        euclidean_norm(real_cross_product(u,v),3)^2=euclidean_norm(u,3)^2*euclidean_norm(v,3)^2-inner_product(u,v,3)^2
+    release thm real_cross_product_lagrange(u,v)
+    release thm euclidean_norm_square(real_cross_product(u,v),3)
+    release thm euclidean_norm_square(u,3)
+    release thm euclidean_norm_square(v,3)
+    inner_product(u,v,3) $in R
+    inner_product(u,u,3) $in R
+    inner_product(v,v,3) $in R
+    inner_product(u,u,3)*inner_product(v,v,3)=euclidean_norm(u,3)^2*euclidean_norm(v,3)^2
+    euclidean_norm(real_cross_product(u,v),3)^2=inner_product(real_cross_product(u,v),real_cross_product(u,v),3)=inner_product(u,u,3)*inner_product(v,v,3)-inner_product(u,v,3)^2=euclidean_norm(u,3)^2*euclidean_norm(v,3)^2-inner_product(u,v,3)^2
+
+thm real_cross_product_scalar_triple:
+    ? forall u,v,w cart_n(R,3),A matrix(R,3,3):
+        forall r closed_range(1,3):
+            A(r,1)=u(r)
+            A(r,2)=v(r)
+            A(r,3)=w(r)
+        =>:
+            inner_product(u,real_cross_product(v,w),3)=det(A,3)
+    release thm real_cross_product_components(v,w)
+    release thm real_inner_product_three(u,real_cross_product(v,w))
+    u(1)*real_cross_product(v,w)(1)=u(1)*(v(2)*w(3)-v(3)*w(2))
+    u(2)*real_cross_product(v,w)(2)=u(2)*(v(3)*w(1)-v(1)*w(3))
+    u(3)*real_cross_product(v,w)(3)=u(3)*(v(1)*w(2)-v(2)*w(1))
+    u(1)*real_cross_product(v,w)(1)+u(2)*real_cross_product(v,w)(2)=u(1)*(v(2)*w(3)-v(3)*w(2))+u(2)*(v(3)*w(1)-v(1)*w(3))
+    inner_product(u,real_cross_product(v,w),3)=u(1)*real_cross_product(v,w)(1)+u(2)*real_cross_product(v,w)(2)+u(3)*real_cross_product(v,w)(3)=u(1)*(v(2)*w(3)-v(3)*w(2))+u(2)*(v(3)*w(1)-v(1)*w(3))+u(3)*(v(1)*w(2)-v(2)*w(1))
+    det(A,3)=A(1,1)*(A(2,2)*A(3,3)-A(2,3)*A(3,2))-A(1,2)*(A(2,1)*A(3,3)-A(2,3)*A(3,1))+A(1,3)*(A(2,1)*A(3,2)-A(2,2)*A(3,1))
+    A(1,1)=u(1)
+    A(1,2)=v(1)
+    A(1,3)=w(1)
+    A(2,1)=u(2)
+    A(2,2)=v(2)
+    A(2,3)=w(2)
+    A(3,1)=u(3)
+    A(3,2)=v(3)
+    A(3,3)=w(3)
+    A(2,2)*A(3,3)=v(2)*w(3)
+    A(2,3)*A(3,2)=w(2)*v(3)
+    A(2,2)*A(3,3)-A(2,3)*A(3,2)=v(2)*w(3)-w(2)*v(3)
+    A(2,1)*A(3,3)=u(2)*w(3)
+    A(2,3)*A(3,1)=w(2)*u(3)
+    A(2,1)*A(3,3)-A(2,3)*A(3,1)=u(2)*w(3)-w(2)*u(3)
+    A(2,1)*A(3,2)=u(2)*v(3)
+    A(2,2)*A(3,1)=v(2)*u(3)
+    A(2,1)*A(3,2)-A(2,2)*A(3,1)=u(2)*v(3)-v(2)*u(3)
+    A(1,1)*(A(2,2)*A(3,3)-A(2,3)*A(3,2))=u(1)*(v(2)*w(3)-w(2)*v(3))
+    A(1,2)*(A(2,1)*A(3,3)-A(2,3)*A(3,1))=v(1)*(u(2)*w(3)-w(2)*u(3))
+    A(1,3)*(A(2,1)*A(3,2)-A(2,2)*A(3,1))=w(1)*(u(2)*v(3)-v(2)*u(3))
+    A(1,1)*(A(2,2)*A(3,3)-A(2,3)*A(3,2))-A(1,2)*(A(2,1)*A(3,3)-A(2,3)*A(3,1))=u(1)*(v(2)*w(3)-w(2)*v(3))-v(1)*(u(2)*w(3)-w(2)*u(3))
+    det(A,3)=u(1)*(v(2)*w(3)-w(2)*v(3))-v(1)*(u(2)*w(3)-w(2)*u(3))+w(1)*(u(2)*v(3)-v(2)*u(3))
+    det(A,3)=u(1)*(v(2)*w(3)-v(3)*w(2))+u(2)*(v(3)*w(1)-v(1)*w(3))+u(3)*(v(1)*w(2)-v(2)*w(1))
+
+thm real_cross_product_vector_triple:
+    ? forall u,v,w cart_n(R,3):
+        real_cross_product(u,real_cross_product(v,w))=\main::real_vector_sub<3>(\main::real_vector_scale<3>(inner_product(u,w,3),v),\main::real_vector_scale<3>(inner_product(u,v,3),w))
+    inner_product(u,w,3) $in R
+    inner_product(u,v,3) $in R
+    release thm real_cross_product_components(v,w)
+    release thm real_cross_product_components(u,real_cross_product(v,w))
+    release thm real_inner_product_three(u,w)
+    release thm real_inner_product_three(u,v)
+    release thm main::real_vector_scale_component(3,inner_product(u,w,3),v,1)
+    release thm main::real_vector_scale_component(3,inner_product(u,v,3),w,1)
+    release thm main::real_vector_sub_component(3,\main::real_vector_scale<3>(inner_product(u,w,3),v),\main::real_vector_scale<3>(inner_product(u,v,3),w),1)
+    release thm main::real_vector_scale_component(3,inner_product(u,w,3),v,2)
+    release thm main::real_vector_scale_component(3,inner_product(u,v,3),w,2)
+    release thm main::real_vector_sub_component(3,\main::real_vector_scale<3>(inner_product(u,w,3),v),\main::real_vector_scale<3>(inner_product(u,v,3),w),2)
+    release thm main::real_vector_scale_component(3,inner_product(u,w,3),v,3)
+    release thm main::real_vector_scale_component(3,inner_product(u,v,3),w,3)
+    release thm main::real_vector_sub_component(3,\main::real_vector_scale<3>(inner_product(u,w,3),v),\main::real_vector_scale<3>(inner_product(u,v,3),w),3)
+    u(2)*real_cross_product(v,w)(3)=u(2)*(v(1)*w(2)-v(2)*w(1))
+    u(3)*real_cross_product(v,w)(2)=u(3)*(v(3)*w(1)-v(1)*w(3))
+    inner_product(u,w,3)*v(1)=(u(1)*w(1)+u(2)*w(2)+u(3)*w(3))*v(1)
+    inner_product(u,v,3)*w(1)=(u(1)*v(1)+u(2)*v(2)+u(3)*v(3))*w(1)
+    real_cross_product(u,real_cross_product(v,w))(1)=u(2)*real_cross_product(v,w)(3)-u(3)*real_cross_product(v,w)(2)=u(2)*(v(1)*w(2)-v(2)*w(1))-u(3)*(v(3)*w(1)-v(1)*w(3))=(u(1)*w(1)+u(2)*w(2)+u(3)*w(3))*v(1)-(u(1)*v(1)+u(2)*v(2)+u(3)*v(3))*w(1)=inner_product(u,w,3)*v(1)-inner_product(u,v,3)*w(1)=\main::real_vector_sub<3>(\main::real_vector_scale<3>(inner_product(u,w,3),v),\main::real_vector_scale<3>(inner_product(u,v,3),w))(1)
+    u(3)*real_cross_product(v,w)(1)=u(3)*(v(2)*w(3)-v(3)*w(2))
+    u(1)*real_cross_product(v,w)(3)=u(1)*(v(1)*w(2)-v(2)*w(1))
+    inner_product(u,w,3)*v(2)=(u(1)*w(1)+u(2)*w(2)+u(3)*w(3))*v(2)
+    inner_product(u,v,3)*w(2)=(u(1)*v(1)+u(2)*v(2)+u(3)*v(3))*w(2)
+    real_cross_product(u,real_cross_product(v,w))(2)=u(3)*real_cross_product(v,w)(1)-u(1)*real_cross_product(v,w)(3)=u(3)*(v(2)*w(3)-v(3)*w(2))-u(1)*(v(1)*w(2)-v(2)*w(1))=(u(1)*w(1)+u(2)*w(2)+u(3)*w(3))*v(2)-(u(1)*v(1)+u(2)*v(2)+u(3)*v(3))*w(2)=inner_product(u,w,3)*v(2)-inner_product(u,v,3)*w(2)=\main::real_vector_sub<3>(\main::real_vector_scale<3>(inner_product(u,w,3),v),\main::real_vector_scale<3>(inner_product(u,v,3),w))(2)
+    u(1)*real_cross_product(v,w)(2)=u(1)*(v(3)*w(1)-v(1)*w(3))
+    u(2)*real_cross_product(v,w)(1)=u(2)*(v(2)*w(3)-v(3)*w(2))
+    inner_product(u,w,3)*v(3)=(u(1)*w(1)+u(2)*w(2)+u(3)*w(3))*v(3)
+    inner_product(u,v,3)*w(3)=(u(1)*v(1)+u(2)*v(2)+u(3)*v(3))*w(3)
+    real_cross_product(u,real_cross_product(v,w))(3)=u(1)*real_cross_product(v,w)(2)-u(2)*real_cross_product(v,w)(1)=u(1)*(v(3)*w(1)-v(1)*w(3))-u(2)*(v(2)*w(3)-v(3)*w(2))=(u(1)*w(1)+u(2)*w(2)+u(3)*w(3))*v(3)-(u(1)*v(1)+u(2)*v(2)+u(3)*v(3))*w(3)=inner_product(u,w,3)*v(3)-inner_product(u,v,3)*w(3)=\main::real_vector_sub<3>(\main::real_vector_scale<3>(inner_product(u,w,3),v),\main::real_vector_scale<3>(inner_product(u,v,3),w))(3)
+    by for:
+        ? forall k closed_range(1,3):
+            real_cross_product(u,real_cross_product(v,w))(k)=\main::real_vector_sub<3>(\main::real_vector_scale<3>(inner_product(u,w,3),v),\main::real_vector_scale<3>(inner_product(u,v,3),w))(k)
+        k $in closed_range(1,3)
+    release thm tuple_equal_from_coordinates(real_cross_product(u,real_cross_product(v,w)),\main::real_vector_sub<3>(\main::real_vector_scale<3>(inner_product(u,w,3),v),\main::real_vector_scale<3>(inner_product(u,v,3),w)))

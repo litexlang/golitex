@@ -16,5 +16,9 @@ mod parse_litex_config_tests;
 pub use export_file::ExportFileAndItsExecEnv;
 pub use global_module_manager::GlobalModuleManager;
 pub use imported_module::ImportedModule;
-pub use litex_config::{LitexConfig, LitexConfigExport, LitexConfigImport};
+pub use litex_config::{LitexConfig, LitexConfigAlias, LitexConfigExport, LitexConfigImport};
 pub use parse_litex_config::parse_litex_config;
+
+#[cfg(test)]
+#[path = "../../tests/unit/module_manager/namespace_aliases.rs"]
+mod namespace_alias_tests;

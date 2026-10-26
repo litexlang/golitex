@@ -9,5 +9,5 @@ claim:
     negative_q_terms(k)=0
     abs(negative_q_terms(k+1))=0=(-1/2)*abs(negative_q_terms(k))
 
-release thm series:::series_ratio_test(negative_q_terms,-1/2,1)
+release thm series::series_ratio_test(negative_q_terms,-1/2,1)
 

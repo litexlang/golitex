@@ -14,7 +14,7 @@ use crate::exec_env::known_fact_memory::ObjIR;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::EqualFactSearchedProofByEquivalenceClass;
 use crate::execute::execute_fact_stmt::VerifyState;
 use crate::runtime::{FactId, Runtime, RuntimeResult};
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 impl Runtime {
     // One class-search stage: first cite an existing path, then try one cheap
@@ -34,44 +34,45 @@ impl Runtime {
         // A parsed binder may have fresh IDs while denoting the same object.
         // Cite a visible generating equality with structural identities at
         // both endpoints; never rewrite graph keys or publish another edge.
-        let mut seen = HashSet::new();
-        for edges in adjacency.values() {
-            for (_, cited) in edges {
-                if !seen.insert(cited.fact_id) {
+        let mut citations: Vec<_> = adjacency
+            .values()
+            .flatten()
+            .map(|(_, cited)| cited)
+            .collect();
+        // Each generating equality occurs at both endpoints. Try each source
+        // once in creation order, independently of the snapshot's HashMap seed.
+        citations.sort_unstable_by_key(|cited| cited.fact_id.value());
+        citations.dedup_by_key(|cited| cited.fact_id);
+        for cited in citations {
+            for reversed in [false, true] {
+                let (left, right) = if reversed {
+                    (&cited.right, &cited.left)
+                } else {
+                    (&cited.left, &cited.right)
+                };
+                let mut identity = fact.clone();
+                identity.left = left.clone();
+                identity.right = fact.left.clone();
+                let Some(left_identity) = search_equal_fact_proof_by_they_are_the_same(&identity)
+                else {
                     continue;
-                }
-                for reversed in [false, true] {
-                    let (left, right) = if reversed {
-                        (&cited.right, &cited.left)
-                    } else {
-                        (&cited.left, &cited.right)
-                    };
-                    let mut identity = fact.clone();
-                    identity.left = left.clone();
-                    identity.right = fact.left.clone();
-                    let Some(left_identity) =
-                        search_equal_fact_proof_by_they_are_the_same(&identity)
-                    else {
-                        continue;
-                    };
-                    identity.left = right.clone();
-                    identity.right = fact.right.clone();
-                    let Some(right_identity) =
-                        search_equal_fact_proof_by_they_are_the_same(&identity)
-                    else {
-                        continue;
-                    };
-                    return Ok(Some(
-                        EqualFactSearchedProofByEquivalenceClass::AlphaEndpoints(
-                            KnownEqualityAlphaEndpointsProof {
-                                cited: cited.clone(),
-                                reversed,
-                                left_identity,
-                                right_identity,
-                            },
-                        ),
-                    ));
-                }
+                };
+                identity.left = right.clone();
+                identity.right = fact.right.clone();
+                let Some(right_identity) = search_equal_fact_proof_by_they_are_the_same(&identity)
+                else {
+                    continue;
+                };
+                return Ok(Some(
+                    EqualFactSearchedProofByEquivalenceClass::AlphaEndpoints(
+                        KnownEqualityAlphaEndpointsProof {
+                            cited: cited.clone(),
+                            reversed,
+                            left_identity,
+                            right_identity,
+                        },
+                    ),
+                ));
             }
         }
 

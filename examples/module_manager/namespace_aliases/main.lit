@@ -1,0 +1,22 @@
+# Tracer: explicit namespace aliases preserve canonical declaration identity.
+# Before: callers needed full import/export paths or single-export-only syntax.
+# C::value = Library::defs::value
+# Former behavior without [alias]: unknown export `C`.
+# Library:::value = 2
+# The former shorthand required exactly one export; it is now rejected.
+# Now: [alias] C = Library::defs and D = Library::other select distinct exports.
+# Boundary: alias chains, missing targets/symbols and removed ::: syntax reject.
+# Gate: target/release/litex -lang en -strict -f examples/module_manager/namespace_aliases/main.lit
+
+C::value = Library::defs::value
+release obj def C::value
+C::value = 2
+release obj def C::identity
+C::identity(3) = 3
+by def $C::positive(1)
+by thm C::add_zero(2) => 2 + 0 = 2
+\C::copied<R> = R
+have pair &C::Pair = (1, 2)
+pair.first $in R
+release obj def D::value
+D::value = 3

@@ -2,12 +2,12 @@ have fn negative_terms(k N+) R=-1
 
 have fn zero_majorant(k N+) R=0
 
-release thm series:::series_sum_zero(zero_majorant)
+release thm series::series_sum_zero(zero_majorant)
 
-release thm series:::series_sum_convergent(zero_majorant,0)
+release thm series::series_sum_convergent(zero_majorant,0)
 
 forall k N+:
     negative_terms(k)<=zero_majorant(k)
 
-release thm series:::series_comparison(negative_terms,zero_majorant)
+release thm series::series_comparison(negative_terms,zero_majorant)
 

@@ -1,4 +1,4 @@
 thm omitted_value_missing_strict_gap:
     ? forall X, Y finite_set, f fn(x X) Y:
         exist y Y st {not y $in fn_range(f)}
-    release thm comb:::cardinality_gap_omits_value(X,Y,f)
+    release thm comb::cardinality_gap_omits_value(X,Y,f)

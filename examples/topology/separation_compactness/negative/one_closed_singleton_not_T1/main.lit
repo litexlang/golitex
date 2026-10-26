@@ -1,6 +1,6 @@
 thm one_closed_singleton_not_T1:
-    ? forall A set, space &top:::TopologicalSpace<A>, x space.carrier:
-        $top:::is_closed(A, space, {x})
+    ? forall A set, space &top::TopologicalSpace<A>, x space.carrier:
+        $top::is_closed(A, space, {x})
         =>:
-            $top:::is_T1(A, space)
-    release thm top:::closed_singletons_imply_T1(A, space)
+            $top::is_T1(A, space)
+    release thm top::closed_singletons_imply_T1(A, space)

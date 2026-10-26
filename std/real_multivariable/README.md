@@ -5,6 +5,10 @@ library's main export adds seven templates, two propositions and ten checked
 theorems. Its directional export adds two templates, two propositions and nine
 checked source theorems.
 
+The `cross_product` export adds one ordinary function and fifteen proved source
+theorems for real three-dimensional cross products. It adds no native operator
+or builtin theorem.
+
 Configure the standard library import:
 
 ```ini
@@ -15,10 +19,10 @@ vectors = real_multivariable
 For example, replace the second coordinate of `(1,2)` with `7`:
 
 ```litex
-release thm vectors:::real_coordinate_path_selected_component(2,(1,2),2,7)
-release thm vectors:::real_coordinate_path_other_component(2,(1,2),2,1,7)
-\vectors:::real_coordinate_path<2>((1,2),2,7)(1)=1
-\vectors:::real_coordinate_path<2>((1,2),2,7)(2)=7
+release thm vectors::main::real_coordinate_path_selected_component(2,(1,2),2,7)
+release thm vectors::main::real_coordinate_path_other_component(2,(1,2),2,1,7)
+\vectors::main::real_coordinate_path<2>((1,2),2,7)(1)=1
+\vectors::main::real_coordinate_path<2>((1,2),2,7)(2)=7
 ```
 
 The templates are `real_zero_vector`, `real_vector_add`, `real_vector_sub`,
@@ -113,3 +117,33 @@ automatic integration rule, source trust or axiom. The two product orders are
 proved independently. Independent multidimensional Riemann integration,
 automatic order exchange, Fubini, arbitrary regions and variable bounds are
 outside this export.
+
+For a right-handed cross product u×v, use
+`vectors::cross_product::real_cross_product(u,v)`. Both inputs and the output
+belong to `cart_n(R,3)`, equivalently the complete function space
+`fn(k closed_range(1,3)) R`. The formula is
+`(u(2)*v(3)-u(3)*v(2),u(3)*v(1)-u(1)*v(3),u(1)*v(2)-u(2)*v(1))`.
+Zero vectors are valid. This is a total source function; it does not require
+a candidate/existence predicate, normalize its inputs or reuse the name `curl`.
+
+Release its ordinary definition with
+`release obj def vectors::cross_product::real_cross_product` when unfolding it
+in an imported caller. `real_cross_product_components(u,v)` exposes all three
+coordinate equations. `real_cross_product_value(u,v,a,b,c)` proves equality to
+`(a,b,c)` from the three scalar coordinate calculations. Concrete calculations
+may need the input coordinate equations first; the
+[complete example](../../examples/real_analysis/multivariable/cross_product/main.lit)
+shows those steps without relying on the existing mixed-tuple release gap.
+
+The source theorems prove self/zero products, anticommutativity, left/right
+addition and scalar multiplication, perpendicularity to both inputs, the
+Lagrange and Euclidean norm-square identities, and the vector triple-product
+formula u×(v×w)=〈u,w〉v−〈u,v〉w. `real_inner_product_three(u,v)` supplies the
+existing real inner product's three-coordinate expansion.
+`real_cross_product_scalar_triple(u,v,w,A)` proves
+`inner_product(u,real_cross_product(v,w),3)=det(A,3)` when the real 3×3 matrix A
+has columns u,v,w; these column equations are explicit premises.
+All theorem names above are in `vectors::cross_product`.
+The export has no trust or axioms. Cross products over C, arbitrary dimensions
+and associativity are not supplied. Ordinary JSON/source proof mechanisms are
+reused; no dedicated cross-product LaTeX notation or Lean replay is claimed.

@@ -1,6 +1,6 @@
 thm composition_missing_inner_continuity:
-    ? forall A, B, D set, source &top:::TopologicalSpace<A>, middle &top:::TopologicalSpace<B>, target &top:::TopologicalSpace<D>, f fn(x source.carrier) middle.carrier, g fn(y middle.carrier) target.carrier:
-        $top:::is_topologically_continuous(B, D, middle, target, g)
+    ? forall A, B, D set, source &top::TopologicalSpace<A>, middle &top::TopologicalSpace<B>, target &top::TopologicalSpace<D>, f fn(x source.carrier) middle.carrier, g fn(y middle.carrier) target.carrier:
+        $top::is_topologically_continuous(B, D, middle, target, g)
         =>:
-            $top:::is_topologically_continuous(A, D, source, target, compose(g, f))
-    release thm top:::continuous_composition(A, B, D, source, middle, target, f, g)
+            $top::is_topologically_continuous(A, D, source, target, compose(g, f))
+    release thm top::continuous_composition(A, B, D, source, middle, target, f, g)

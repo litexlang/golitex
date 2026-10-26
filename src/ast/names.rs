@@ -7,7 +7,7 @@
 //! - `global_mod_id` — index in **this run's** `GlobalModuleManager.imports`
 //!   (order fixed by the global mount table).
 //!
-//! Surface `a::b` / `a::b::c` / `a:::b` are elaborated via GlobalModuleManager.
+//! Surface `a::b` / `a::b::c` and config namespace aliases are elaborated via GlobalModuleManager.
 //! Definition-side store keys remain unqualified `PlainName`.
 //! Plain object/binder occurrences carry [`BoundName`] / `IdentifierId`.
 
@@ -57,7 +57,7 @@ pub enum AtomicName {
         name: PlainName,
     },
 
-    /// `a::b::c` or elaborated `a:::b` — reference into an **imported** module.
+    /// `a::b::c` or a configured namespace alias — reference into an **imported** module.
     ///
     /// - `global_mod_id` = index in `GlobalModuleManager.imports` (this run's
     ///   global table assigns the number; local alias `T`/`G` both map here).

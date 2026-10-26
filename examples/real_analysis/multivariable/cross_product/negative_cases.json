@@ -1,0 +1,47 @@
+[
+  {
+    "name": "wrong_dimension",
+    "source": "vectors::cross_product::real_cross_product((1,2),(3,4))=(0,0,0)",
+    "phase": "well_defined"
+  },
+  {
+    "name": "complex_input",
+    "source": "vectors::cross_product::real_cross_product((i,0,0),boundary_e2)=vectors::cross_product::real_cross_product((i,0,0),boundary_e2)",
+    "phase": "well_defined"
+  },
+  {
+    "name": "wrong_index_domain",
+    "source": "vectors::cross_product::real_cross_product(fn(k closed_range(0,2)) R {k},boundary_e1)=(0,0,0)",
+    "phase": "well_defined"
+  },
+  {
+    "name": "wrong_arity",
+    "source": "vectors::cross_product::real_cross_product(boundary_e1,boundary_e2,boundary_e3)=(0,0,0)",
+    "phase": "well_defined"
+  },
+  {
+    "name": "wrong_coordinate",
+    "source": "vectors::cross_product::real_cross_product(boundary_e1,boundary_e2)(4)=0",
+    "phase": "well_defined"
+  },
+  {
+    "name": "wrong_orientation",
+    "source": "vectors::cross_product::real_cross_product(boundary_e1,boundary_e2)=(0,0,-1)",
+    "phase": "search_proof"
+  },
+  {
+    "name": "wrong_value_premise",
+    "source": "release thm vectors::cross_product::real_cross_product_value(boundary_e1,boundary_e2,0,0,2)",
+    "phase": "premise"
+  },
+  {
+    "name": "wrong_matrix_columns",
+    "source": "release thm vectors::cross_product::real_cross_product_scalar_triple(boundary_e1,boundary_e2,boundary_e3,zero_matrix(3,3))",
+    "phase": "premise"
+  },
+  {
+    "name": "false_associativity",
+    "source": "vectors::cross_product::real_cross_product(vectors::cross_product::real_cross_product(boundary_e1,boundary_e2),boundary_e2)=vectors::cross_product::real_cross_product(boundary_e1,vectors::cross_product::real_cross_product(boundary_e2,boundary_e2))",
+    "phase": "search_proof"
+  }
+]

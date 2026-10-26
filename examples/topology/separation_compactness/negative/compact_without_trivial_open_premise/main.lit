@@ -1,4 +1,4 @@
 thm compact_without_trivial_open_premise:
-    ? forall A set, space &top:::TopologicalSpace<A>:
-        $top:::is_compact_space(A, space)
-    release thm top:::trivial_open_space_is_compact(A, space)
+    ? forall A set, space &top::TopologicalSpace<A>:
+        $top::is_compact_space(A, space)
+    release thm top::trivial_open_space_is_compact(A, space)

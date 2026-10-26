@@ -20,6 +20,30 @@ fn lean_cli_emits_the_complete_canonical_source_without_json_wrapping() {
 }
 
 #[test]
+fn lean_cli_replay_is_stable_across_processes() {
+    for example in [
+        "piecewise_total_reciprocal",
+        "selected_set_identity_function",
+        "local_cartesian_definition",
+    ] {
+        let path = format!("lean/examples/{example}/statement.lit");
+        let mut previous = None;
+        for _ in 0..8 {
+            let output = Command::new(env!("CARGO_BIN_EXE_litex"))
+                .args(["-strict", "-lean", "-f", &path])
+                .output()
+                .unwrap();
+            assert!(output.status.success(), "{path}: {output:?}");
+            assert!(output.stderr.is_empty(), "{path}: {output:?}");
+            if let Some(previous) = &previous {
+                assert!(previous == &output.stdout, "unstable Lean replay: {path}");
+            }
+            previous = Some(output.stdout);
+        }
+    }
+}
+
+#[test]
 fn lean_cli_failures_emit_only_phase_diagnostics() {
     for (path, message) in [
         (
@@ -28,7 +52,7 @@ fn lean_cli_failures_emit_only_phase_diagnostics() {
         ),
         (
             "tests/fixtures/compile_to_lean/unsupported_constructor.lit",
-            "phase=compile:",
+            "phase=compile: statement 2: Complex/ConjugationRuleOrSubject",
         ),
         (
             "tests/fixtures/compile_to_lean/missing.lit",
