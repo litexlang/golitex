@@ -1,0 +1,11 @@
+# Define inverse and reciprocal trigonometric functions with their domains and evaluate them.
+have fn principal_tangent(x R) R = arctan(x)
+principal_tangent(0) = 0
+forall x R:
+    principal_tangent(principal_tangent(x)) = arctan(arctan(x))
+
+have fn principal_sine(x R: -1 <= x, x <= 1) R = arcsin(x)
+principal_sine(0) = 0
+
+have fn reciprocal_cosine(x R: cos(x) != 0) R = sec(x)
+reciprocal_cosine(0) = 1

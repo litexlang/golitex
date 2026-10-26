@@ -386,8 +386,34 @@ impl<'a> SourcePosition<'a> {
             ) => &[""],
             Obj::ExpLogOperator(ExpLogOperator::Sqrt(_)) => &[".1", ".2"],
             Obj::ComplexOperator(_) => &[""],
-            Obj::TrigOperator(TrigOperator::Sin(_) | TrigOperator::Cos(_)) => &[""],
-            Obj::TrigOperator(TrigOperator::Tan(_)) => &[".1", ".2"],
+            Obj::TrigOperator(
+                TrigOperator::Sin(_)
+                | TrigOperator::Cos(_)
+                | TrigOperator::Arctan(_)
+                | TrigOperator::Arccot(_),
+            ) => &[""],
+            Obj::TrigOperator(TrigOperator::Arcsin(_) | TrigOperator::Arccos(_)) => {
+                return match index {
+                    0 => Some(format!("({term}).wd.1")),
+                    // The constructor normalizes -1; the source certificate
+                    // may instead mention an owned negation of 1.
+                    1 => None,
+                    2 => Some(format!("({term}).wd.2.2")),
+                    _ => None,
+                };
+            }
+            Obj::TrigOperator(
+                TrigOperator::Tan(_)
+                | TrigOperator::Cot(_)
+                | TrigOperator::Sec(_)
+                | TrigOperator::Csc(_),
+            ) => {
+                if requirements.len() == 1 {
+                    &[".1"]
+                } else {
+                    &[".1", ".2"]
+                }
+            }
             Obj::ExpLogOperator(ExpLogOperator::Exp(_) | ExpLogOperator::Ln(_)) => &[""],
             Obj::ExpLogOperator(ExpLogOperator::Log(_)) => {
                 &[".1", ".2.1", ".2.2.1", ".2.2.2.1", ".2.2.2.2"]
@@ -4191,13 +4217,17 @@ fn atomic_inference_stages(infer: &InferAtomicFactResult) -> Vec<&StoreInferredF
         InferAtomicFactResult::BijectiveFact(rules) => {
             rules.iter().flat_map(|r| r.stored_conclusions()).collect()
         }
+        InferAtomicFactResult::ProperSubsetFact(rules) => {
+            rules.iter().flat_map(|r| r.stored_conclusions()).collect()
+        }
+        InferAtomicFactResult::ProperSupersetFact(rules) => {
+            rules.iter().flat_map(|r| r.stored_conclusions()).collect()
+        }
         InferAtomicFactResult::IsSetFact(_)
         | InferAtomicFactResult::IsNonemptySetFact(_)
         | InferAtomicFactResult::IsFiniteSetFact(_)
         | InferAtomicFactResult::SubsetFact(_)
         | InferAtomicFactResult::SupersetFact(_)
-        | InferAtomicFactResult::ProperSubsetFact(_)
-        | InferAtomicFactResult::ProperSupersetFact(_)
         | InferAtomicFactResult::PrimeFact(_)
         | InferAtomicFactResult::CoprimeFact(_)
         | InferAtomicFactResult::DvdFact(_)
@@ -10325,6 +10355,9 @@ fn atomic_search_stages(
     };
     let mut stages = Vec::new();
     match &proof.searched_proof {
+        AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::ListSetSubsetFromMembers(p)) => {
+            stages.extend(p.proof_of_requirement_facts.iter().map(AtomicSearchStage::Verify));
+        }
         AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::PreimageMembership(p)) => {
             stages.push(AtomicSearchStage::WD(&p.construction.builder_well_defined));
             stages.extend(p.proof_of_requirement_facts.iter().map(AtomicSearchStage::Verify));
@@ -10337,6 +10370,13 @@ fn atomic_search_stages(
         AtomicExceptEqualityFactSearchedProof::ByDefinition(crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::AtomicExceptEqualityFactSearchProofByDefinition::BuiltinProp(p)) => {
             use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::BuiltinPropDefinitionProof;
             let children = match p {
+                BuiltinPropDefinitionProof::Subset(p) => &p.proof_of_requirement_facts,
+                BuiltinPropDefinitionProof::Superset(p) => &p.proof_of_requirement_facts,
+                BuiltinPropDefinitionProof::ProperSubset(p) => &p.proof_of_requirement_facts,
+                BuiltinPropDefinitionProof::ProperSuperset(p) => &p.proof_of_requirement_facts,
+                BuiltinPropDefinitionProof::Prime(p) => &p.proof_of_requirement_facts,
+                BuiltinPropDefinitionProof::Coprime(p) => &p.proof_of_requirement_facts,
+                BuiltinPropDefinitionProof::Dvd(p) => &p.proof_of_requirement_facts,
                 BuiltinPropDefinitionProof::Injective(p) => &p.proof_of_requirement_facts,
                 BuiltinPropDefinitionProof::Surjective(p) => &p.proof_of_requirement_facts,
                 BuiltinPropDefinitionProof::Bijective(p) => &p.proof_of_requirement_facts,
@@ -10877,9 +10917,7 @@ fn projected_wd_child<'a>(
             ) => &["left", "right"],
             Obj::ArithmeticOperator(ArithmeticOperator::Pow(_)) => &["base", "exponent"],
             Obj::ComplexOperator(_) => &["arg"],
-            Obj::TrigOperator(
-                TrigOperator::Sin(_) | TrigOperator::Cos(_) | TrigOperator::Tan(_),
-            ) => &["arg"],
+            Obj::TrigOperator(_) => &["arg"],
             Obj::ExpLogOperator(ExpLogOperator::Exp(_) | ExpLogOperator::Ln(_)) => &["arg"],
             Obj::ExpLogOperator(ExpLogOperator::Log(_)) => &["base", "arg"],
             Obj::ArithmeticOperator(
@@ -11032,7 +11070,27 @@ pub(super) fn arithmetic_stages(
             TrigOperatorObjWellDefinedProofByDef::Tan(p) => {
                 return Some((&p.child_obj_well_defined, &p.requirement_fact_verified))
             }
-            _ => {}
+            TrigOperatorObjWellDefinedProofByDef::Cot(p) => {
+                return Some((&p.child_obj_well_defined, &p.requirement_fact_verified))
+            }
+            TrigOperatorObjWellDefinedProofByDef::Sec(p) => {
+                return Some((&p.child_obj_well_defined, &p.requirement_fact_verified))
+            }
+            TrigOperatorObjWellDefinedProofByDef::Csc(p) => {
+                return Some((&p.child_obj_well_defined, &p.requirement_fact_verified))
+            }
+            TrigOperatorObjWellDefinedProofByDef::Arcsin(p) => {
+                return Some((&p.child_obj_well_defined, &p.requirement_fact_verified))
+            }
+            TrigOperatorObjWellDefinedProofByDef::Arccos(p) => {
+                return Some((&p.child_obj_well_defined, &p.requirement_fact_verified))
+            }
+            TrigOperatorObjWellDefinedProofByDef::Arctan(p) => {
+                return Some((&p.child_obj_well_defined, &p.requirement_fact_verified))
+            }
+            TrigOperatorObjWellDefinedProofByDef::Arccot(p) => {
+                return Some((&p.child_obj_well_defined, &p.requirement_fact_verified))
+            }
         }
     }
     if let ObjWellDefinedProof::ByDef {

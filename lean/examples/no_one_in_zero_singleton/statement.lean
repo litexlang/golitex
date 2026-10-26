@@ -28,9 +28,8 @@ theorem h_2 : ∀ {_Host_i1 : Type v1} [_rep_i1 : Litex.Representation M _Host_i
                     exact ((Litex.SetSemantics.insert_members _ _ _).mp _member).elim (fun h => h) (fun h => False.elim (Litex.SetSemantics.empty_members _ h)))
                 )
             )
-          have _enumerated_member : M.mem (Litex.denote _value_i1) (Litex.SetSemantics.insertValue (M.number (0 : ℂ)) (Litex.SetSemantics.emptyValue (M := M))) := h_4
           change (¬ ((Litex.denote _value_i1) = (M.number (1 : ℂ))))
-          exact (Or.elim ((Litex.SetSemantics.insert_members (M.number (0 : ℂ)) (Litex.SetSemantics.emptyValue (M := M)) (Litex.denote _value_i1)).mp _enumerated_member) (fun _enumerated_case => (by
+          exact (Or.elim ((Litex.SetSemantics.insert_members (M.number (0 : ℂ)) (Litex.SetSemantics.emptyValue (M := M)) (Litex.denote _value_i1)).mp h_4) (fun _enumerated_case => (by
             have h_6 : Litex.In _value_i1 (let _setElement_0 := (Litex.number (M := M) (0 : ℂ));
               let _setTail_1 := Litex.emptySet (M := M);
               let _setFresh_0 : ¬ Litex.In _setElement_0 _setTail_1 := (Litex.notInEmpty _setElement_0);

@@ -131,6 +131,9 @@
           <Component Id="StdComp_real_multivariable_README.md" Guid="*">
             <File Id="StdFile_real_multivariable_README.md" Source="std\real_multivariable\README.md" KeyPath="yes" />
           </Component>
+          <Component Id="StdComp_real_multivariable_cross_product.lit" Guid="*">
+            <File Id="StdFile_real_multivariable_cross_product.lit" Source="std\real_multivariable\cross_product.lit" KeyPath="yes" />
+          </Component>
           <Component Id="StdComp_real_multivariable_directional.lit" Guid="*">
             <File Id="StdFile_real_multivariable_directional.lit" Source="std\real_multivariable\directional.lit" KeyPath="yes" />
           </Component>
@@ -217,6 +220,7 @@
       <ComponentRef Id="StdComp_number_theory_main.lit" />
       <ComponentRef Id="StdComp_number_theory_math_collections.md" />
       <ComponentRef Id="StdComp_real_multivariable_README.md" />
+      <ComponentRef Id="StdComp_real_multivariable_cross_product.lit" />
       <ComponentRef Id="StdComp_real_multivariable_directional.lit" />
       <ComponentRef Id="StdComp_real_multivariable_iterated_integrals.lit" />
       <ComponentRef Id="StdComp_real_multivariable_litex.config" />

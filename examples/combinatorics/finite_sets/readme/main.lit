@@ -1,0 +1,7 @@
+release thm comb::main::three_set_union_intersection_are_finite({0,1,2},{2,3},{0,3})
+
+release thm comb::main::three_set_inclusion_exclusion({0,1,2},{2,3},{0,3})
+
+release thm comb::main::power_set_size({0,1,2})
+
+finite_set_size(power_set({0,1,2})) = 2^finite_set_size({0,1,2}) = 2^3 = 8

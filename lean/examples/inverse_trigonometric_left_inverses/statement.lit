@@ -1,0 +1,11 @@
+# Recover real inputs through the four principal inverse trigonometric functions.
+forall x R:
+    tan(arctan(x)) = x
+    cot(arccot(x)) = x
+
+forall x R:
+    -1 <= x
+    x <= 1
+    =>:
+        sin(arcsin(x)) = x
+        cos(arccos(x)) = x

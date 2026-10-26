@@ -1,2 +1,2 @@
 # The setup passes; only the final statement must fail.
-release thm nt:::divisibility_linear_combination(6, 12, 1 / 2, 0, 3)
+release thm nt::divisibility_linear_combination(6, 12, 1 / 2, 0, 3)

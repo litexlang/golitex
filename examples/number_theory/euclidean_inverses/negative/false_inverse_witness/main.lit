@@ -1,1 +1,1 @@
-by def $nt:::is_modular_inverse(2, 1, 6)
+by def $nt::is_modular_inverse(2, 1, 6)

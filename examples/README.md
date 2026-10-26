@@ -69,6 +69,13 @@ Ordered real series:
   finite support and finite-prefix corrections. The geometric sum is proved
   before it is selected; eight independent controls check nearby invalid uses.
 
+Real three-dimensional cross products:
+
+- [Imported cross-product example](real_analysis/multivariable/cross_product/README.md):
+  right-handed basis products, exact finite-function inputs, bilinearity,
+  perpendicularity, Lagrange/norm-square and triple-product laws, with nine
+  rejection controls and persistent-Session liveness after rejection.
+
 Elementary number theory:
 
 - [Imported congruences](number_theory/congruences/README.md): native divisibility,
@@ -118,3 +125,4 @@ Standalone regression examples:
 - [Euclidean gcd transformations and supplied modular inverses](number_theory/euclidean_inverses/README.md): strict generic/source callers, guarded cancellation, linear congruences,20 semantic controls and installed std imports.
 
 - [Finite maps and counting](combinatorics/finite_maps/README.md): pigeonhole witnesses, equal-size bijection criteria, empty sets, independent contracts and installed std imports.
+- [Finite-set inclusion-exclusion](combinatorics/finite_sets/README.md): overlapping unions, symmetric differences, products, powersets, empty boundaries and explicit imported finiteness evidence.

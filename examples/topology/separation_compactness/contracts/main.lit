@@ -1,145 +1,145 @@
 thm consume_Hausdorff_implies_T1:
-    ? forall A set, space &top:::TopologicalSpace<A>:
-        $top:::is_Hausdorff(A, space)
+    ? forall A set, space &top::TopologicalSpace<A>:
+        $top::is_Hausdorff(A, space)
         =>:
-            $top:::is_T1(A, space)
-    release thm top:::Hausdorff_implies_T1(A, space)
+            $top::is_T1(A, space)
+    release thm top::Hausdorff_implies_T1(A, space)
 
 thm consume_T1_implies_T0:
-    ? forall A set, space &top:::TopologicalSpace<A>:
-        $top:::is_T1(A, space)
+    ? forall A set, space &top::TopologicalSpace<A>:
+        $top::is_T1(A, space)
         =>:
-            $top:::is_T0(A, space)
-    release thm top:::T1_implies_T0(A, space)
+            $top::is_T0(A, space)
+    release thm top::T1_implies_T0(A, space)
 
 thm consume_Hausdorff_implies_T0:
-    ? forall A set, space &top:::TopologicalSpace<A>:
-        $top:::is_Hausdorff(A, space)
+    ? forall A set, space &top::TopologicalSpace<A>:
+        $top::is_Hausdorff(A, space)
         =>:
-            $top:::is_T0(A, space)
-    release thm top:::Hausdorff_implies_T0(A, space)
+            $top::is_T0(A, space)
+    release thm top::Hausdorff_implies_T0(A, space)
 
 thm consume_T1_implies_closed_singletons:
-    ? forall Ambient set, space &top:::TopologicalSpace<Ambient>, x space.carrier:
-        $top:::is_T1(Ambient, space)
+    ? forall Ambient set, space &top::TopologicalSpace<Ambient>, x space.carrier:
+        $top::is_T1(Ambient, space)
         =>:
-            $top:::is_closed(Ambient, space, {x})
-    release thm top:::T1_implies_closed_singletons(Ambient, space, x)
+            $top::is_closed(Ambient, space, {x})
+    release thm top::T1_implies_closed_singletons(Ambient, space, x)
 
 thm consume_Hausdorff_implies_closed_singletons:
-    ? forall A set, space &top:::TopologicalSpace<A>, x space.carrier:
-        $top:::is_Hausdorff(A, space)
+    ? forall A set, space &top::TopologicalSpace<A>, x space.carrier:
+        $top::is_Hausdorff(A, space)
         =>:
-            $top:::is_closed(A, space, {x})
-    release thm top:::Hausdorff_implies_closed_singletons(A, space, x)
+            $top::is_closed(A, space, {x})
+    release thm top::Hausdorff_implies_closed_singletons(A, space, x)
 
 thm consume_closed_singletons_imply_T1:
-    ? forall A set, space &top:::TopologicalSpace<A>:
+    ? forall A set, space &top::TopologicalSpace<A>:
         forall x space.carrier:
-            $top:::is_closed(A, space, {x})
+            $top::is_closed(A, space, {x})
         =>:
-            $top:::is_T1(A, space)
-    release thm top:::closed_singletons_imply_T1(A, space)
+            $top::is_T1(A, space)
+    release thm top::closed_singletons_imply_T1(A, space)
 
 thm consume_discrete_is_Hausdorff:
-    ? forall A set, space &top:::TopologicalSpace<A>:
+    ? forall A set, space &top::TopologicalSpace<A>:
         space.opens = power_set(space.carrier)
         =>:
-            $top:::is_Hausdorff(A, space)
-    release thm top:::discrete_is_Hausdorff(A, space)
+            $top::is_Hausdorff(A, space)
+    release thm top::discrete_is_Hausdorff(A, space)
 
 thm consume_two_point_subset_of_Hausdorff_is_closed:
-    ? forall A set, space &top:::TopologicalSpace<A>, x, y space.carrier:
-        $top:::is_Hausdorff(A, space)
+    ? forall A set, space &top::TopologicalSpace<A>, x, y space.carrier:
+        $top::is_Hausdorff(A, space)
         =>:
-            $top:::is_closed(A, space, union({x}, {y}))
-    release thm top:::two_point_subset_of_Hausdorff_is_closed(A, space, x, y)
+            $top::is_closed(A, space, union({x}, {y}))
+    release thm top::two_point_subset_of_Hausdorff_is_closed(A, space, x, y)
 
 thm consume_homeomorphism_preserves_Hausdorff:
-    ? forall A, B set, source &top:::TopologicalSpace<A>, target &top:::TopologicalSpace<B>, f fn(x source.carrier) target.carrier, g fn(y target.carrier) source.carrier:
-        $top:::is_homeomorphism(A, B, source, target, f, g)
-        $top:::is_Hausdorff(A, source)
+    ? forall A, B set, source &top::TopologicalSpace<A>, target &top::TopologicalSpace<B>, f fn(x source.carrier) target.carrier, g fn(y target.carrier) source.carrier:
+        $top::is_homeomorphism(A, B, source, target, f, g)
+        $top::is_Hausdorff(A, source)
         =>:
-            $top:::is_Hausdorff(B, target)
-    release thm top:::homeomorphism_preserves_Hausdorff(A, B, source, target, f, g)
+            $top::is_Hausdorff(B, target)
+    release thm top::homeomorphism_preserves_Hausdorff(A, B, source, target, f, g)
 
 thm consume_trivial_opens_with_distinct_points_not_T0:
-    ? forall A set, space &top:::TopologicalSpace<A>, x, y space.carrier:
-        $top:::has_only_trivial_opens(A, space)
+    ? forall A set, space &top::TopologicalSpace<A>, x, y space.carrier:
+        $top::has_only_trivial_opens(A, space)
         x != y
         =>:
-            not $top:::is_T0(A, space)
-    release thm top:::trivial_opens_with_distinct_points_not_T0(A, space, x, y)
+            not $top::is_T0(A, space)
+    release thm top::trivial_opens_with_distinct_points_not_T0(A, space, x, y)
 
 thm consume_restriction_range_monotone:
     ? forall X, Y set, f fn(x X) Y, K, L power_set(X):
         K $subset L
         =>:
-            fn_range(\top:::restricted_map<X, Y, f, K>) $subset fn_range(\top:::restricted_map<X, Y, f, L>)
-    release thm top:::restriction_range_monotone(X, Y, f, K, L)
+            fn_range(\top::restricted_map<X, Y, f, K>) $subset fn_range(\top::restricted_map<X, Y, f, L>)
+    release thm top::restriction_range_monotone(X, Y, f, K, L)
 
 thm consume_empty_is_compact:
-    ? forall A set, space &top:::TopologicalSpace<A>:
-        $top:::is_compact_subset(A, space, {})
-    release thm top:::empty_is_compact(A, space)
+    ? forall A set, space &top::TopologicalSpace<A>:
+        $top::is_compact_subset(A, space, {})
+    release thm top::empty_is_compact(A, space)
 
 thm consume_singleton_is_compact:
-    ? forall A set, space &top:::TopologicalSpace<A>, x space.carrier:
-        $top:::is_compact_subset(A, space, {x})
-    release thm top:::singleton_is_compact(A, space, x)
+    ? forall A set, space &top::TopologicalSpace<A>, x space.carrier:
+        $top::is_compact_subset(A, space, {x})
+    release thm top::singleton_is_compact(A, space, x)
 
 thm consume_union_of_compact_subsets_is_compact:
-    ? forall A set, space &top:::TopologicalSpace<A>, K, L power_set(space.carrier):
-        $top:::is_compact_subset(A, space, K)
-        $top:::is_compact_subset(A, space, L)
+    ? forall A set, space &top::TopologicalSpace<A>, K, L power_set(space.carrier):
+        $top::is_compact_subset(A, space, K)
+        $top::is_compact_subset(A, space, L)
         =>:
-            $top:::is_compact_subset(A, space, union(K, L))
-    release thm top:::union_of_compact_subsets_is_compact(A, space, K, L)
+            $top::is_compact_subset(A, space, union(K, L))
+    release thm top::union_of_compact_subsets_is_compact(A, space, K, L)
 
 thm consume_finite_subsets_are_compact:
-    ? forall A set, space &top:::TopologicalSpace<A>, K power_set(space.carrier):
+    ? forall A set, space &top::TopologicalSpace<A>, K power_set(space.carrier):
         $is_finite_set(K)
         =>:
-            $top:::is_compact_subset(A, space, K)
-    release thm top:::finite_subsets_are_compact(A, space, K)
+            $top::is_compact_subset(A, space, K)
+    release thm top::finite_subsets_are_compact(A, space, K)
 
 thm consume_continuous_image_of_compact_is_compact:
-    ? forall A, B set, source &top:::TopologicalSpace<A>, target &top:::TopologicalSpace<B>, f fn(x source.carrier) target.carrier, K power_set(source.carrier):
-        $top:::is_topologically_continuous(A, B, source, target, f)
-        $top:::is_compact_subset(A, source, K)
+    ? forall A, B set, source &top::TopologicalSpace<A>, target &top::TopologicalSpace<B>, f fn(x source.carrier) target.carrier, K power_set(source.carrier):
+        $top::is_topologically_continuous(A, B, source, target, f)
+        $top::is_compact_subset(A, source, K)
         =>:
-            $top:::is_compact_subset(B, target, fn_range(\top:::restricted_map<source.carrier, target.carrier, f, K>))
-    release thm top:::continuous_image_of_compact_is_compact(A, B, source, target, f, K)
+            $top::is_compact_subset(B, target, fn_range(\top::restricted_map<source.carrier, target.carrier, f, K>))
+    release thm top::continuous_image_of_compact_is_compact(A, B, source, target, f, K)
 
 thm consume_continuous_surjection_preserves_compactness:
-    ? forall A, B set, source &top:::TopologicalSpace<A>, target &top:::TopologicalSpace<B>, f fn(x source.carrier) target.carrier:
-        $top:::is_compact_space(A, source)
-        $top:::is_topologically_continuous(A, B, source, target, f)
+    ? forall A, B set, source &top::TopologicalSpace<A>, target &top::TopologicalSpace<B>, f fn(x source.carrier) target.carrier:
+        $top::is_compact_space(A, source)
+        $top::is_topologically_continuous(A, B, source, target, f)
         $surjective(source.carrier, target.carrier, f)
         =>:
-            $top:::is_compact_space(B, target)
-    release thm top:::continuous_surjection_preserves_compactness(A, B, source, target, f)
+            $top::is_compact_space(B, target)
+    release thm top::continuous_surjection_preserves_compactness(A, B, source, target, f)
 
 thm consume_homeomorphism_preserves_compactness:
-    ? forall A, B set, source &top:::TopologicalSpace<A>, target &top:::TopologicalSpace<B>, f fn(x source.carrier) target.carrier, g fn(y target.carrier) source.carrier:
-        $top:::is_homeomorphism(A, B, source, target, f, g)
-        $top:::is_compact_space(A, source)
+    ? forall A, B set, source &top::TopologicalSpace<A>, target &top::TopologicalSpace<B>, f fn(x source.carrier) target.carrier, g fn(y target.carrier) source.carrier:
+        $top::is_homeomorphism(A, B, source, target, f, g)
+        $top::is_compact_space(A, source)
         =>:
-            $top:::is_compact_space(B, target)
-    release thm top:::homeomorphism_preserves_compactness(A, B, source, target, f, g)
+            $top::is_compact_space(B, target)
+    release thm top::homeomorphism_preserves_compactness(A, B, source, target, f, g)
 
 thm consume_trivial_open_space_is_compact:
-    ? forall A set, space &top:::TopologicalSpace<A>:
-        $top:::has_only_trivial_opens(A, space)
+    ? forall A set, space &top::TopologicalSpace<A>:
+        $top::has_only_trivial_opens(A, space)
         =>:
-            $top:::is_compact_space(A, space)
-    release thm top:::trivial_open_space_is_compact(A, space)
+            $top::is_compact_space(A, space)
+    release thm top::trivial_open_space_is_compact(A, space)
 
 thm consume_restricted_map_type:
     ? forall X, Y set, f fn(x X) Y, K power_set(X):
-        \top:::restricted_map<X, Y, f, K> $in fn(x K) Y
-    release thm fn_set_member(\top:::restricted_map<X, Y, f, K>, fn(x K) Y)
+        \top::restricted_map<X, Y, f, K> $in fn(x K) Y
+    release thm fn_set_member(\top::restricted_map<X, Y, f, K>, fn(x K) Y)
 
 thm consume_restricted_map_value:
     ? forall X, Y set, f fn(x X) Y, K power_set(X), x K:
-        \top:::restricted_map<X, Y, f, K>(x) = f(x)
+        \top::restricted_map<X, Y, f, K>(x) = f(x)

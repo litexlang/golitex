@@ -1,4 +1,4 @@
 # The setup passes; only the final statement must fail.
 thm unsupported_bodyless_theorem:
     ? forall a, b Z, m N+:
-        $nt:::is_congruent_mod(a, b, m)
+        $nt::is_congruent_mod(a, b, m)

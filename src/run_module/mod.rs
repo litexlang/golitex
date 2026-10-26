@@ -34,3 +34,7 @@ pub use run_export_file::run_export_file;
 pub use run_file_with_config::{run_file_with_config, run_file_with_config_observed};
 pub use run_import_module::{run_import_module, RunImportModuleOutcome};
 pub use run_project::{run_project, run_project_observed};
+
+#[cfg(test)]
+#[path = "../../tests/unit/run_module/namespace_aliases.rs"]
+mod namespace_alias_tests;

@@ -4,4 +4,4 @@ thm missing_combination_premise:
         $dvd(a, d)
         =>:
             $dvd(a * x + b * y, d)
-    release thm nt:::divisibility_linear_combination(a, b, x, y, d)
+    release thm nt::divisibility_linear_combination(a, b, x, y, d)

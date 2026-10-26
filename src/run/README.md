@@ -129,7 +129,7 @@ When a config is non-empty:
 2. Run selected `[export]` `.lit` files (`run_export_file`), each in its own
    file `ExecEnv`, then record into `GlobalModuleManager`.
 3. Soft Failed during mount → `RunSessionError::FailToImport` (session stop).
-4. Cross-file cites use recorded envs + `::` / `:::` elaborate — not one merged
+4. Cross-file cites use recorded envs + `::` name resolution and config aliases — not one merged
    live `ExecEnv`.
 
 `[import std] Alias = Name` (or bare `N`) is path sugar to `<std_root>/Name`.

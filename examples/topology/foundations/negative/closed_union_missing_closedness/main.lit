@@ -1,6 +1,6 @@
 thm closed_union_missing_closedness:
-    ? forall Ambient set, space &top:::TopologicalSpace<Ambient>, F, G power_set(space.carrier):
-        $top:::is_closed(Ambient, space, F)
+    ? forall Ambient set, space &top::TopologicalSpace<Ambient>, F, G power_set(space.carrier):
+        $top::is_closed(Ambient, space, F)
         =>:
-            $top:::is_closed(Ambient, space, union(F, G))
-    release thm top:::union_of_two_closed_is_closed(Ambient, space, F, G)
+            $top::is_closed(Ambient, space, union(F, G))
+    release thm top::union_of_two_closed_is_closed(Ambient, space, F, G)

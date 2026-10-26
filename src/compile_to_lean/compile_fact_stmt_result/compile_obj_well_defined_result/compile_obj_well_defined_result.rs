@@ -178,6 +178,13 @@ impl LitexToLeanCompiler {
                     (Obj::TrigOperator(TrigOperator::Sin(x)), ObjWellDefinedProofByDef::TrigOperator(TrigOperatorObjWellDefinedProofByDef::Sin(p))) => self.compile_trig_wd(&x.arg, "Sin", &p.child_obj_well_defined, &p.requirement_fact_verified, position)?,
                     (Obj::TrigOperator(TrigOperator::Cos(x)), ObjWellDefinedProofByDef::TrigOperator(TrigOperatorObjWellDefinedProofByDef::Cos(p))) => self.compile_trig_wd(&x.arg, "Cos", &p.child_obj_well_defined, &p.requirement_fact_verified, position)?,
                     (Obj::TrigOperator(TrigOperator::Tan(x)), ObjWellDefinedProofByDef::TrigOperator(TrigOperatorObjWellDefinedProofByDef::Tan(p))) => self.compile_trig_wd(&x.arg, "Tan", &p.child_obj_well_defined, &p.requirement_fact_verified, position)?,
+                    (Obj::TrigOperator(TrigOperator::Cot(x)), ObjWellDefinedProofByDef::TrigOperator(TrigOperatorObjWellDefinedProofByDef::Cot(p))) => self.compile_trig_wd(&x.arg, "Cot", &p.child_obj_well_defined, &p.requirement_fact_verified, position)?,
+                    (Obj::TrigOperator(TrigOperator::Sec(x)), ObjWellDefinedProofByDef::TrigOperator(TrigOperatorObjWellDefinedProofByDef::Sec(p))) => self.compile_trig_wd(&x.arg, "Sec", &p.child_obj_well_defined, &p.requirement_fact_verified, position)?,
+                    (Obj::TrigOperator(TrigOperator::Csc(x)), ObjWellDefinedProofByDef::TrigOperator(TrigOperatorObjWellDefinedProofByDef::Csc(p))) => self.compile_trig_wd(&x.arg, "Csc", &p.child_obj_well_defined, &p.requirement_fact_verified, position)?,
+                    (Obj::TrigOperator(TrigOperator::Arcsin(x)), ObjWellDefinedProofByDef::TrigOperator(TrigOperatorObjWellDefinedProofByDef::Arcsin(p))) => self.compile_trig_wd(&x.arg, "Arcsin", &p.child_obj_well_defined, &p.requirement_fact_verified, position)?,
+                    (Obj::TrigOperator(TrigOperator::Arccos(x)), ObjWellDefinedProofByDef::TrigOperator(TrigOperatorObjWellDefinedProofByDef::Arccos(p))) => self.compile_trig_wd(&x.arg, "Arccos", &p.child_obj_well_defined, &p.requirement_fact_verified, position)?,
+                    (Obj::TrigOperator(TrigOperator::Arctan(x)), ObjWellDefinedProofByDef::TrigOperator(TrigOperatorObjWellDefinedProofByDef::Arctan(p))) => self.compile_trig_wd(&x.arg, "Arctan", &p.child_obj_well_defined, &p.requirement_fact_verified, position)?,
+                    (Obj::TrigOperator(TrigOperator::Arccot(x)), ObjWellDefinedProofByDef::TrigOperator(TrigOperatorObjWellDefinedProofByDef::Arccot(p))) => self.compile_trig_wd(&x.arg, "Arccot", &p.child_obj_well_defined, &p.requirement_fact_verified, position)?,
                     (Obj::Literal(Literal::EulerNumber(_)), ObjWellDefinedProofByDef::Literal(LiteralObjWellDefinedProofByDef::EulerNumber(_))) => "(Litex.number (M := M) ((Real.exp 1 : ℝ) : ℂ))".into(),
                     (Obj::Literal(Literal::Pi(_)), ObjWellDefinedProofByDef::Literal(LiteralObjWellDefinedProofByDef::Pi(_))) => "(Litex.number (M := M) (Real.pi : ℂ))".into(),
                     (Obj::ExpLogOperator(ExpLogOperator::Exp(x)), ObjWellDefinedProofByDef::ExpLogOperator(ExpLogOperatorObjWellDefinedProofByDef::Exp(p))) => self.compile_exp_ln_wd(&x.arg, false, &p.child_obj_well_defined, &p.requirement_fact_verified, position)?,
@@ -521,21 +528,27 @@ impl LitexToLeanCompiler {
             PredicateDomainProof::SequenceLimit(_) => {
                 return Err(LeanCompileError::unsupported("WD/SequenceLimitPredicate"))
             }
-            PredicateDomainProof::ByKnownZeroRemainder(_) => {
-                return Err(LeanCompileError::unsupported("WD/DvdKnownZeroRemainder"));
+            PredicateDomainProof::ByKnownZeroRemainder(p) => {
+                self.compile_known_dvd_zero(fact, p, position)?;
             }
             PredicateDomainProof::ByCheckedArguments(requirements) => {
-                if !matches!(
-                    fact,
-                    AtomicFact::LessFact(_)
-                        | AtomicFact::GreaterFact(_)
-                        | AtomicFact::LessEqualFact(_)
-                        | AtomicFact::GreaterEqualFact(_)
-                        | AtomicFact::NotLessFact(_)
-                        | AtomicFact::NotGreaterFact(_)
-                        | AtomicFact::NotLessEqualFact(_)
-                        | AtomicFact::NotGreaterEqualFact(_)
-                ) {
+                let numeric_domains =
+                    crate::compile_to_lean::compile_basic_predicates::numeric_predicate_domains(
+                        fact,
+                    );
+                if numeric_domains.is_none()
+                    && !matches!(
+                        fact,
+                        AtomicFact::LessFact(_)
+                            | AtomicFact::GreaterFact(_)
+                            | AtomicFact::LessEqualFact(_)
+                            | AtomicFact::GreaterEqualFact(_)
+                            | AtomicFact::NotLessFact(_)
+                            | AtomicFact::NotGreaterFact(_)
+                            | AtomicFact::NotLessEqualFact(_)
+                            | AtomicFact::NotGreaterEqualFact(_)
+                    )
+                {
                     return Err(LeanCompileError::unsupported(
                         "WD/CheckedArgumentPredicateDomain",
                     ));
@@ -546,11 +559,13 @@ impl LitexToLeanCompiler {
                         "Checked argument domains have another arity.",
                     ));
                 }
+                let carriers = numeric_domains.unwrap_or_else(|| vec![StandardSet::R; args.len()]);
                 for (index, requirement) in requirements.iter().enumerate() {
+                    let carrier = &carriers[index];
                     if requirement.argument_index != index
-                        || !matches!(&requirement.requirement, Fact::AtomicFact(AtomicFact::InFact(f)) if f.element == *args[index] && f.set == Obj::StandardSet(StandardSet::R))
+                        || !matches!(&requirement.requirement, Fact::AtomicFact(AtomicFact::InFact(f)) if f.element == *args[index] && f.set == Obj::StandardSet(carrier.clone()))
                         || requirement.membership.element != *args[index]
-                        || requirement.membership.set != StandardSet::R
+                        || &requirement.membership.set != carrier
                     {
                         return Err(LeanCompileError::new(
                             "WD/OrderRealDomain",
@@ -567,6 +582,15 @@ impl LitexToLeanCompiler {
                 }
             }
             PredicateDomainProof::ByRequirements(requirements) => {
+                if let Some(carriers) =
+                    crate::compile_to_lean::compile_basic_predicates::numeric_predicate_domains(
+                        fact,
+                    )
+                {
+                    if requirements.len() != carriers.len() || requirements.iter().zip(args.iter().zip(carriers)).any(|(r,(arg,carrier))| !matches!(&r.requirement, Fact::AtomicFact(AtomicFact::InFact(f)) if f.element.ir() == arg.ir() && f.set == Obj::StandardSet(carrier))) {
+                        return Err(LeanCompileError::unsupported("WD/NumberPredicateDomain"));
+                    }
+                }
                 self.validate_mapping_domain(
                     fact,
                     &requirements

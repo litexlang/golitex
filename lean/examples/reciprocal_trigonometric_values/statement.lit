@@ -1,0 +1,4 @@
+# Evaluate secant and cosecant at basic angles away from their poles.
+sec(0) = 1
+sec(pi) = -1
+csc(pi/2) = 1

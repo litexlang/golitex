@@ -1,0 +1,36 @@
+# Preserve primality, coprimality and dividend-first divisibility, including negations.
+forall a N:
+    $prime(a)
+    =>:
+        $prime(a)
+
+forall a N:
+    not $prime(a)
+    =>:
+        not $prime(a)
+
+forall a, b N:
+    $coprime(a,b)
+    =>:
+        $coprime(a,b)
+
+forall a, b N:
+    not $coprime(a,b)
+    =>:
+        not $coprime(a,b)
+
+forall a Z, b Z*:
+    $dvd(a,b)
+    =>:
+        $dvd(a,b)
+
+forall a Z, b Z*:
+    not $dvd(a,b)
+    =>:
+        not $dvd(a,b)
+
+forall a, b N:
+    $prime(a)
+    a = b
+    =>:
+        $prime(b)

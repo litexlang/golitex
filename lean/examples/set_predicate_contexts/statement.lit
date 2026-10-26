@@ -1,0 +1,46 @@
+# Preserve nine set predicate families as explicit premises and conclusions.
+# The not-is-set case tests an inconsistent premise; it does not assert its existence.
+forall A, B set:
+    A $superset B
+    =>:
+        A $superset B
+
+forall A, B set:
+    not A $superset B
+    =>:
+        not A $superset B
+
+forall A, B set:
+    A $proper_subset B
+    =>:
+        A $proper_subset B
+
+forall A, B set:
+    not A $proper_subset B
+    =>:
+        not A $proper_subset B
+
+forall A, B set:
+    A $proper_superset B
+    =>:
+        A $proper_superset B
+
+forall A, B set:
+    not A $proper_superset B
+    =>:
+        not A $proper_superset B
+
+forall A set:
+    not $is_set(A)
+    =>:
+        not $is_set(A)
+
+forall A set:
+    not $is_nonempty_set(A)
+    =>:
+        not $is_nonempty_set(A)
+
+forall A set:
+    not $is_finite_set(A)
+    =>:
+        not $is_finite_set(A)

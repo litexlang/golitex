@@ -1,0 +1,13 @@
+# Check small prime and coprime values, then reuse a named theorem.
+$prime(5)
+not $prime(9)
+$coprime(8,15)
+not $coprime(8,12)
+
+thm phase12_prime_identity:
+    ? forall a N:
+        $prime(a)
+        =>:
+            $prime(a)
+
+by thm phase12_prime_identity(5) => $prime(5)

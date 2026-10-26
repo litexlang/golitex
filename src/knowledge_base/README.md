@@ -73,6 +73,10 @@ treated as freshly checked by the repaired verifier. The fingerprint includes
 the ABI revision and old manifests are rejected, so imports rebuild once and
 then use the ordinary cache again. Runtime/Env state shapes are unchanged.
 
+ABI 10 retains the wire layout and forces source rechecking after removal of
+`:::` namespace syntax. Alias configuration bytes already participate in the
+fingerprint, so changing a prefix target invalidates dependent products.
+
 ABI 4 retains the wire layout and invalidates products checked with the former
 zero-based sequence identities or shape-only known-exist citations. Sequence
 indices now start at 1. Struct definitions with laws currently fall back to

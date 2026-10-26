@@ -157,7 +157,7 @@ fn qualified_struct_views_reject_unknown_or_malformed_paths_without_internal_bug
 }
 
 #[test]
-fn flattened_struct_view_still_requires_exactly_one_import_export() {
+fn aliased_struct_view_remains_valid_with_multiple_import_exports() {
     let root = fixture("flat");
     fs::write(
         root.join("library/litex.config"),
@@ -165,9 +165,9 @@ fn flattened_struct_view_still_requires_exactly_one_import_export() {
     )
     .unwrap();
     fs::write(root.join("library/extra.lit"), "0=0\n").unwrap();
-    let full_path = MAIN.replace("Lib:::Tagged", "Lib::facts::Tagged");
+    let full_path = MAIN.replace("Lib::Tagged", "Lib::facts::Tagged");
     checked_file(&root, &full_path, true);
-    checked_file(&root, MAIN, false);
+    checked_file(&root, MAIN, true);
     checked_file(&root, &full_path, true);
     fs::remove_dir_all(root).unwrap();
 }

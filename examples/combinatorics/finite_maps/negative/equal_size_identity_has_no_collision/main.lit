@@ -3,7 +3,7 @@ have fn three_into_two(x {0, 1, 2}) {0, 1} by cases:
     case x = 1: 1
     case x = 2: 0
 
-release thm comb:::pigeonhole_collision({0, 1, 2}, {0, 1}, three_into_two)
+release thm comb::pigeonhole_collision({0, 1, 2}, {0, 1}, three_into_two)
 
 obtain collided_left, collided_right from exist x, y {0, 1, 2} st {x != y, three_into_two(x) = three_into_two(y)}
 
@@ -27,11 +27,11 @@ claim:
 
 by def $surjective({0, 1, 2}, {0, 1}, three_into_two)
 
-release thm comb:::surjection_size_ge({0, 1, 2}, {0, 1}, three_into_two)
+release thm comb::surjection_size_ge({0, 1, 2}, {0, 1}, three_into_two)
 
-release thm comb:::surjection_collision_strict_size({0, 1, 2}, {0, 1}, three_into_two, 0, 2)
+release thm comb::surjection_collision_strict_size({0, 1, 2}, {0, 1}, three_into_two, 0, 2)
 
-release thm comb:::remove_one_size({0, 1, 2}, 0)
+release thm comb::remove_one_size({0, 1, 2}, 0)
 
 finite_set_size(set_minus({0, 1, 2}, {0})) = 2
 
@@ -46,9 +46,9 @@ claim:
 
 by def $injective({0, 1}, {0, 1, 2}, inclusion_map)
 
-release thm comb:::injection_size_le({0, 1}, {0, 1, 2}, inclusion_map)
+release thm comb::injection_size_le({0, 1}, {0, 1, 2}, inclusion_map)
 
-release thm comb:::cardinality_gap_omits_value({0, 1}, {0, 1, 2}, inclusion_map)
+release thm comb::cardinality_gap_omits_value({0, 1}, {0, 1, 2}, inclusion_map)
 
 obtain omitted_point from exist y {0, 1, 2} st {not y $in fn_range(inclusion_map)}
 
@@ -73,7 +73,7 @@ claim:
 
 by def $injective({0, 1, 2}, {0, 1, 2}, identity_three)
 
-release thm comb:::equal_size_injection_is_bijective({0, 1, 2}, {0, 1, 2}, identity_three)
+release thm comb::equal_size_injection_is_bijective({0, 1, 2}, {0, 1, 2}, identity_three)
 
 have fn cycle_three(x {0, 1, 2}) {0, 1, 2} by cases:
     case x = 0: 1
@@ -94,11 +94,11 @@ claim:
 
 by def $surjective({0, 1, 2}, {0, 1, 2}, cycle_three)
 
-release thm comb:::equal_size_surjection_is_bijective({0, 1, 2}, {0, 1, 2}, cycle_three)
+release thm comb::equal_size_surjection_is_bijective({0, 1, 2}, {0, 1, 2}, cycle_three)
 
 $injective({0, 1, 2}, {0, 1, 2}, cycle_three)
 
-release thm comb:::mutual_finite_injections_are_bijective({0, 1, 2}, {0, 1, 2}, identity_three, cycle_three)
+release thm comb::mutual_finite_injections_are_bijective({0, 1, 2}, {0, 1, 2}, identity_three, cycle_three)
 
 cycle_three(identity_three(0)) = cycle_three(0) = 1
 
@@ -127,9 +127,9 @@ by extension:
             0 $in {1, 2}
             impossible 0 $in {1, 2}
 
-release thm comb:::disjoint_partition_size({0, 1, 2}, {0}, {1, 2})
+release thm comb::disjoint_partition_size({0, 1, 2}, {0}, {1, 2})
 
-release thm comb:::remove_one_size({0}, 0)
+release thm comb::remove_one_size({0}, 0)
 
 finite_set_size(set_minus({0}, {0})) = 0
 
@@ -144,20 +144,20 @@ claim:
 
 by def $surjective({}, {}, empty_map)
 
-release thm comb:::equal_size_injection_is_bijective({}, {}, empty_map)
+release thm comb::equal_size_injection_is_bijective({}, {}, empty_map)
 
-release thm comb:::equal_size_surjection_is_bijective({}, {}, empty_map)
+release thm comb::equal_size_surjection_is_bijective({}, {}, empty_map)
 
-release thm comb:::mutual_finite_injections_are_bijective({}, {}, empty_map, empty_map)
+release thm comb::mutual_finite_injections_are_bijective({}, {}, empty_map, empty_map)
 
-release thm comb:::disjoint_partition_size({}, {}, {})
+release thm comb::disjoint_partition_size({}, {}, {})
 
 have fn empty_to_point(x {}) {0} = 0
 
-release thm comb:::cardinality_gap_omits_value({}, {0}, empty_to_point)
+release thm comb::cardinality_gap_omits_value({}, {0}, empty_to_point)
 
 obtain missing_from_empty from exist y {0} st {not y $in fn_range(empty_to_point)}
 
 missing_from_empty = 0
 
-release thm comb:::pigeonhole_collision({0, 1, 2}, {0, 1, 2}, identity_three)
+release thm comb::pigeonhole_collision({0, 1, 2}, {0, 1, 2}, identity_three)

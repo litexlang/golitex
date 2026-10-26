@@ -1,4 +1,4 @@
 thm finite_theorem_missing_finiteness:
-    ? forall A set, space &top:::TopologicalSpace<A>, K power_set(space.carrier):
-        $top:::is_compact_subset(A, space, K)
-    release thm top:::finite_subsets_are_compact(A, space, K)
+    ? forall A set, space &top::TopologicalSpace<A>, K power_set(space.carrier):
+        $top::is_compact_subset(A, space, K)
+    release thm top::finite_subsets_are_compact(A, space, K)

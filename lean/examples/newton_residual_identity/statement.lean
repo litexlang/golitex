@@ -131,7 +131,7 @@ theorem h_361 : ∀ {_Host_i4 : Type v4} [_rep_i4 : Litex.Representation M _Host
                 exact (
                   (let _equal_wd_1_0 := _object_w10;
                   let _equal_wd_1_1 := _object_w11;
-                  (show Litex.Same _equal_wd_1_0 _equal_wd_1_1 from (((congrArg₂ M.subValue (congrArg₂ M.powValue (by
+                  (show Litex.Same _equal_wd_1_0 _equal_wd_1_1 from (((congrArg₂ M.subValue (congrArg₂ M.powValue (show (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i1 (M := M))) (Litex.denote _value_i4)) = (M.divValue (M.addValue (Litex.denote _value_i4) (M.divValue (M.number (2 : ℂ)) (Litex.denote _value_i4))) (M.number (2 : ℂ))) from by
                     let _litex_original := ((_equal_wd_1_0).val.left).val.base
                     let _litex_literal := (let _wd_1_0 := (_object_i1 (M := M));
                     let _wd_1_1 := _value_i4;

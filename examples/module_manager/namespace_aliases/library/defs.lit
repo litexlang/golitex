@@ -1,0 +1,12 @@
+let value = 2
+have fn identity(x R) R = x
+prop positive(x R):
+    x > 0
+thm add_zero:
+    ? forall x R:
+        x + 0 = x
+struct Pair:
+    first R
+    second R
+template<S set>:
+    have copied set = S

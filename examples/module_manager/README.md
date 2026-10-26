@@ -8,12 +8,13 @@ and [launch flow](../../src/run/README.md).
 
 | Project | Contract |
 | --- | --- |
+| `namespace_aliases/` | Explicit `[alias] C = Library::defs`, canonical identity across name contexts, multiple exports and removed `:::` rejection. |
 | `installed_std/` | Real imported declaration, bundled std discovery, package layouts and symlink/override boundaries. |
 | `repo/` and `lib_pkg/` | Import a sibling module as `Lib`; use its qualified definitions and theorems. |
 | `export_order_repo/` | Import `A` before ordered root exports; preserve canonical module/export names. |
 | `trusted_template_prefix/` | Load an earlier checked generic template, then instantiate it from the later export. |
 | `import_alias_qualified_arithmetic/` | Qualified arithmetic using the `gf` import alias. |
-| `qualified_struct_views/` | Full and flattened qualified struct carriers, generic arguments, function returns and nested field types. |
+| `qualified_struct_views/` | Full and aliased qualified struct carriers, generic arguments, function returns and nested field types. |
 | `identifier_resolution/` | Distinct same-named exports and unknown-name rejection. |
 | `file_prefix/` | Selecting `a.lit` stops before the deliberately false `b.lit`. |
 | `file_extra/` | An unlisted `scratch.lit` requested with `-f` runs after all exports. It is not an export namespace. |
@@ -86,4 +87,4 @@ use source fallback until definitions-only KB products can restore the published
 foralls. Qualified carrier syntax such as `&L::base::RightZero<R>` uses the same canonical
 owner lookup as template names. The dedicated
 [qualified struct fixture](qualified_struct_views/README.md) verifies current-export,
-full import and single-export paths with their type and path rejection controls.
+full import and configured alias paths with their type and path rejection controls.

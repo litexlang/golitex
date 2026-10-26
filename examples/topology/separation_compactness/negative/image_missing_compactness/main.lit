@@ -1,6 +1,6 @@
 thm image_missing_compactness:
-    ? forall A, B set, source &top:::TopologicalSpace<A>, target &top:::TopologicalSpace<B>, f fn(x source.carrier) target.carrier, K power_set(source.carrier):
-        $top:::is_topologically_continuous(A, B, source, target, f)
+    ? forall A, B set, source &top::TopologicalSpace<A>, target &top::TopologicalSpace<B>, f fn(x source.carrier) target.carrier, K power_set(source.carrier):
+        $top::is_topologically_continuous(A, B, source, target, f)
         =>:
-            $top:::is_compact_subset(B, target, fn_range(\top:::restricted_map<source.carrier, target.carrier, f, K>))
-    release thm top:::continuous_image_of_compact_is_compact(A, B, source, target, f, K)
+            $top::is_compact_subset(B, target, fn_range(\top::restricted_map<source.carrier, target.carrier, f, K>))
+    release thm top::continuous_image_of_compact_is_compact(A, B, source, target, f, K)

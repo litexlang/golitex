@@ -1,0 +1,14 @@
+# Principal inverse values and reciprocal compositions stay in the real numbers.
+forall x R:
+    arctan(x) $in R
+    arccot(x) $in R
+    sec(arctan(x)) $in R
+    csc(arccot(x)) $in R
+    arctan(x) + 0 = arctan(x)
+
+forall x R:
+    -1 <= x
+    x <= 1
+    =>:
+        arcsin(x) $in R
+        arccos(x) $in R

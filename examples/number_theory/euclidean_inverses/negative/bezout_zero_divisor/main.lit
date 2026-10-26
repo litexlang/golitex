@@ -1,1 +1,1 @@
-release thm nt:::linear_equation_from_bezout(0, 0, 1, 1, 0, 0)
+release thm nt::linear_equation_from_bezout(0, 0, 1, 1, 0, 0)

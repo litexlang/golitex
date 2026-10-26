@@ -10,10 +10,10 @@ Struct / AST approval when coding.
 | `global_module_manager.rs` | `GlobalModuleManager`, `path_to_mod_id`, `current_mod_id`, record APIs |
 | `imported_module.rs` | `ImportedModule` |
 | `export_file.rs` | `ExportFileAndItsExecEnv` |
-| `litex_config.rs` | `LitexConfig` + import/export rows |
-| `parse_litex_config.rs` | parse `[import]` / `[import std]` / `[export]` |
+| `litex_config.rs` | `LitexConfig` + import/export/alias rows |
+| `parse_litex_config.rs` | parse `[import]` / `[import std]` / `[export]` / `[alias]` |
 | `mount.rs` | `set_root_config` / `ensure_imports_ready` / `mount_module` (no `.lit` run) |
-| `elaborate_name.rs` | `::` / `:::` → id-based `AtomicName` |
+| `elaborate_name.rs` | `::` and config aliases → id-based `AtomicName` |
 | `README.md` | this contract |
 
 `Runtime.global_module_manager` holds the single `GlobalModuleManager` for a
@@ -26,13 +26,18 @@ run. This package owns **tables + parse + mount APIs + name elaborate** only.
 | Form | Meaning after elaborate |
 |------|-------------------------|
 | `x` | local / current-module plain name |
-| `a::b` | current module export file `a`, symbol `b` → `WithExportFileId` at root; `WithModAndExportFileId` inside an import |
+| `a::b` without a configured namespace alias | current module export file `a`, symbol `b` → `WithExportFileId` at root; `WithModAndExportFileId` inside an import |
 | `a::b::c` | import alias `a` → global module, export `b`, symbol `c` → `WithModAndExportFileId` |
-| `a:::b` | flatten sugar only → sole export `F` → same as `a::F::b` |
+| `c::v` with `[alias] c = a::b` | same owner and symbol as `a::b::v` |
 
 - No `[hierarchy]`, no `submodule`, no config `flatten`.
 - Export name may equal an import alias; forms disambiguate.
 - Import aliases within one config must not collide with each other.
+- `[alias] c = a::b` selects a real import `a` and its real export `b`.
+  Aliases are package-local, cannot chain or collide with local export names,
+  and do not re-export declarations. An alias may reuse an import spelling.
+  All targets are checked after mounting imports, including unused aliases.
+- `:::` is removed; its token remains recognized only for a migration error.
 - Imports before exports. Deps of a module must already be on global before it runs.
 - Template instances use these same name forms after `\`, such as
   `\export::copied<R>` and `\Lib::defs::copied<R>`, preserving AtomicName ownership.
@@ -94,12 +99,13 @@ Used in `root_exports` and in each `ImportedModule.export_files_and_their_env`.
 
 ---
 
-### `LitexConfig` (config AST only; rows not separate public types)
+### `LitexConfig` (config data only)
 
 | Field | Type | Purpose |
 |-------|------|---------|
 | `imports` | `Vec<{ alias, path }>` | Resolved mounts: relative path or `<std_root>/<StdName>`. Bare `[import std] N` ⇒ `N = N`. |
 | `exports` | `Vec<{ name, path }>` | Ordered `.lit` only. |
+| `aliases` | `Vec<LitexConfigAlias>` | `{ name, import_alias, export_name }`; direct namespace prefixes only. |
 
 Root and every `ImportedModule` each own one.
 
@@ -137,11 +143,9 @@ a::b
   → export_file_id = index of export "a" in *current* LitexConfig.exports
   → AtomicName::WithExportFileId { export_file_id, name: b }
 
-a:::b
-  → alias a in current LitexConfig.imports → path
-  → global_mod_id = path_to_mod_id[path]          # must exist
-  → that ImportedModule must have exactly one export F
-  → same as a::F::b → WithModAndExportFileId { global_mod_id, export_file_id: 0, name: b }
+c::v with [alias] c = a::b
+  → resolve the real import a and its configured export b
+  → same AtomicName as a::b::v, independent of the number/order of other exports
 
 a::b::c
   → alias a → path → global_mod_id = path_to_mod_id[path]
@@ -156,9 +160,9 @@ a::b::c
 | Phase | Work |
 |-------|------|
 | **0** | ✅ `GlobalModuleManager` package; flatten `ImportedModule`; `path_to_mod_id`. |
-| **1** | ✅ Parse `LitexConfig` (`[import]` / `[import std]` / `[export]`). |
+| **1** | ✅ Parse `LitexConfig` (`[import]` / `[import std]` / `[export]` / `[alias]`). |
 | **2** | ✅ Mount + readiness **table** APIs (`mount_module` / `ensure_imports_ready`); no `.lit` execution. |
-| **3** | ✅ Id-based `AtomicName` + `::` / `:::` elaborate. |
+| **3** | ✅ Id-based `AtomicName` + `::` and explicit config aliases. |
 | **4** | ✅ Wire `-r` / `-f` / `-e` / REPL via `run_module` + `run` (see [`../run/README.md`](../run/README.md)). |
 
 ---

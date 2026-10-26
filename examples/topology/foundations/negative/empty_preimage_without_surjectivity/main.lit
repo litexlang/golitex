@@ -3,4 +3,4 @@ thm empty_preimage_without_surjectivity:
         preimage_set(f, U) = {}
         =>:
             U = {}
-    release thm top:::surjective_empty_preimage(X, Y, f, U)
+    release thm top::surjective_empty_preimage(X, Y, f, U)

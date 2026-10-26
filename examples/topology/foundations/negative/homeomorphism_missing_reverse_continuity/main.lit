@@ -1,10 +1,10 @@
 thm homeomorphism_missing_reverse_continuity:
-    ? forall A, B set, source &top:::TopologicalSpace<A>, target &top:::TopologicalSpace<B>, f fn(x source.carrier) target.carrier, g fn(y target.carrier) source.carrier:
-        $top:::is_topologically_continuous(A, B, source, target, f)
+    ? forall A, B set, source &top::TopologicalSpace<A>, target &top::TopologicalSpace<B>, f fn(x source.carrier) target.carrier, g fn(y target.carrier) source.carrier:
+        $top::is_topologically_continuous(A, B, source, target, f)
         forall x source.carrier:
             g(f(x)) = x
         forall y target.carrier:
             f(g(y)) = y
         =>:
-            $top:::is_homeomorphism(A, B, source, target, f, g)
-    by def $top:::is_homeomorphism(A, B, source, target, f, g)
+            $top::is_homeomorphism(A, B, source, target, f, g)
+    by def $top::is_homeomorphism(A, B, source, target, f, g)

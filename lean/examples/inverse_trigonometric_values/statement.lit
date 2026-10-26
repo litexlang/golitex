@@ -1,0 +1,9 @@
+# Evaluate principal inverse trigonometric functions at zero and the endpoints.
+arcsin(0) = 0
+arcsin(1) = pi/2
+arcsin(-1) = -pi/2
+arccos(1) = 0
+arccos(0) = pi/2
+arccos(-1) = pi
+arctan(0) = 0
+arccot(0) = pi/2

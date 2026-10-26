@@ -1,6 +1,6 @@
 thm union_missing_left_compactness:
-    ? forall A set, space &top:::TopologicalSpace<A>, K, L power_set(space.carrier):
-        $top:::is_compact_subset(A, space, L)
+    ? forall A set, space &top::TopologicalSpace<A>, K, L power_set(space.carrier):
+        $top::is_compact_subset(A, space, L)
         =>:
-            $top:::is_compact_subset(A, space, union(K, L))
-    release thm top:::union_of_compact_subsets_is_compact(A, space, K, L)
+            $top::is_compact_subset(A, space, union(K, L))
+    release thm top::union_of_compact_subsets_is_compact(A, space, K, L)

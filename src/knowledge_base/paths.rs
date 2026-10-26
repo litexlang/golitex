@@ -9,6 +9,7 @@ pub const DEFINITIONS_FILE_NAME: &str = "definitions.json";
 
 /// Litex KB compatibility revision. Bump for incompatible layout or verifier
 /// corrections that invalidate previously checked definition/theorem products.
+// Revision 10 rechecks source after removal of `:::` namespace syntax.
 // Revision 9 stores source paths together with publication identity.
 // Revision 8 rechecks products that still parsed retired tuple/cart shape
 // predicates, dimensions, projections or square-bracket object indexing.
@@ -18,7 +19,7 @@ pub const DEFINITIONS_FILE_NAME: &str = "definitions.json";
 // nonemptiness and unguarded constant-image rules. Revision 5 corrected weak
 // function-space membership and Cartesian dimensions. The wire format is
 // unchanged; old products must be checked again under all domain contracts.
-pub const KB_ABI: &str = "9";
+pub const KB_ABI: &str = "10";
 
 pub fn kb_dir(module_root: &Path) -> PathBuf {
     module_root.join(KB_DIR_NAME)

@@ -97,7 +97,10 @@ theorem h_40 : (by
             )
           exact (by
           let _atomic_wd_1_1 := (Litex.setBuilder (Litex.R (M := M)) (fun (_value_i3 : Litex.Obj (M := M) M.Value) (h_85 : Litex.In _value_i3 (Litex.R (M := M))) => Litex.Lt (Litex.number (M := M) (0 : ℂ)) _value_i3))
-          exact (Litex.inOfSame (Litex.number (M := M) (2 : ℂ)) (Litex.number (M := M) (2 : ℂ)) (Litex.setBuilder (Litex.R (M := M)) (fun (_value_i2 : Litex.Obj (M := M) M.Value) (h_62 : Litex.In _value_i2 (Litex.R (M := M))) => Litex.Lt (Litex.number (M := M) (0 : ℂ)) _value_i2)) _atomic_wd_1_1 (show @Eq M.Value _ _ from Eq.refl _) (show Litex.Same (Litex.setBuilder (Litex.R (M := M)) (fun (_value_i2 : Litex.Obj (M := M) M.Value) (h_62 : Litex.In _value_i2 (Litex.R (M := M))) => Litex.Lt (Litex.number (M := M) (0 : ℂ)) _value_i2)) _atomic_wd_1_1 from rfl) h_41))
+          exact (Litex.inOfSame (Litex.number (M := M) (2 : ℂ)) (Litex.number (M := M) (2 : ℂ)) (Litex.setBuilder (Litex.R (M := M)) (fun (_value_i2 : Litex.Obj (M := M) M.Value) (h_62 : Litex.In _value_i2 (Litex.R (M := M))) => Litex.Lt (Litex.number (M := M) (0 : ℂ)) _value_i2)) _atomic_wd_1_1 (show @Eq M.Value _ _ from Eq.refl _) (by
+            let _left := (Litex.setBuilder (Litex.R (M := M)) (fun (_value_i2 : Litex.Obj (M := M) M.Value) (h_62 : Litex.In _value_i2 (Litex.R (M := M))) => Litex.Lt (Litex.number (M := M) (0 : ℂ)) _value_i2))
+            let _right := _atomic_wd_1_1
+            exact (show Litex.Same _left _right from rfl)) h_41))
         )
       )
   )

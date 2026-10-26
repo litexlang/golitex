@@ -1,1 +1,1 @@
-release thm nt:::gcd_euclidean_step(7, -3)
+release thm nt::gcd_euclidean_step(7, -3)

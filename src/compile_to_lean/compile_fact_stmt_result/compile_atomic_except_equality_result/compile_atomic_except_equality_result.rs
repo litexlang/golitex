@@ -1,3 +1,4 @@
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::search_atomic_except_equality_fact_proof_by_builtin_rule_result::{PrimeFactSearchProofByBuiltinRule, NotPrimeFactSearchProofByBuiltinRule, CoprimeFactSearchProofByBuiltinRule, NotCoprimeFactSearchProofByBuiltinRule};
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule;
 use crate::compile_to_lean::helper::*;
 use crate::compile_to_lean::source_position::{SourceOwner, SourcePosition};
@@ -61,9 +62,7 @@ impl LitexToLeanCompiler {
                 AtomicExceptEqualityFactSearchedProof::ByTemplateMembership(_) => {
                     return Err(LeanCompileError::unsupported("Atomic/TemplateMembership"));
                 }
-                AtomicExceptEqualityFactSearchedProof::ByKnownZeroRemainder(_) => {
-                    return Err(LeanCompileError::unsupported("Atomic/KnownZeroRemainder"));
-                }
+                AtomicExceptEqualityFactSearchedProof::ByKnownZeroRemainder(p) => self.compile_known_dvd_zero(&success.fact, p, position)?,
                 AtomicExceptEqualityFactSearchedProof::ByStructuralMembership(proof) => {
                     match &success.fact {
                         AtomicFact::InFact(fact)
@@ -148,6 +147,7 @@ impl LitexToLeanCompiler {
                         }
                     },
                     AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_equal::NotEqualFactSearchProofByBuiltinRule::PeriodicTrigNonzero(p)) => self.compile_periodic_trig_nonzero(&success.fact,p,position)?,
+                    AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_equal::NotEqualFactSearchProofByBuiltinRule::ListSetDifferentLength(_)) => self.compile_list_distinct_lengths(&success.fact, position)?,
                     rule @ (AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(_) | AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterFact(_) | AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(_) | AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterEqualFact(_) | AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(_)) => self.compile_order_builtin(&success.fact, rule, position)?,
                     AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(rule) => match &success.fact {
                         AtomicFact::InFact(fact) => match rule {
@@ -191,6 +191,32 @@ impl LitexToLeanCompiler {
                         _ => return Err(LeanCompileError::unsupported("NotIn/FactFamily")),
                     },
                     rule @ (AtomicExceptEqualityFactSearchProofByBuiltinRule::NotGreaterFact(_) | AtomicExceptEqualityFactSearchProofByBuiltinRule::NotLessFact(_) | AtomicExceptEqualityFactSearchProofByBuiltinRule::NotGreaterEqualFact(_) | AtomicExceptEqualityFactSearchProofByBuiltinRule::NotLessEqualFact(_)) => self.compile_negative_order_builtin(&success.fact, rule, position)?,
+                    AtomicExceptEqualityFactSearchProofByBuiltinRule::PrimeFact(PrimeFactSearchProofByBuiltinRule::PrimeByComputation(p)) => self.compile_closed_number_predicate(&success.fact, &[&p.resolved_value], position)?,
+                    AtomicExceptEqualityFactSearchProofByBuiltinRule::NotPrimeFact(NotPrimeFactSearchProofByBuiltinRule::NotPrimeByComputation(p)) => self.compile_closed_number_predicate(&success.fact, &[&p.resolved_value], position)?,
+                    AtomicExceptEqualityFactSearchProofByBuiltinRule::CoprimeFact(CoprimeFactSearchProofByBuiltinRule::CoprimeByComputation(p)) => self.compile_closed_number_predicate(&success.fact, &[&p.left_resolved, &p.right_resolved], position)?,
+                    AtomicExceptEqualityFactSearchProofByBuiltinRule::NotCoprimeFact(NotCoprimeFactSearchProofByBuiltinRule::NotCoprimeByComputation(p)) => self.compile_closed_number_predicate(&success.fact, &[&p.left_resolved, &p.right_resolved], position)?,
+                    AtomicExceptEqualityFactSearchProofByBuiltinRule::NotIsNonemptySetFact(crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_is_nonempty_set::NotIsNonemptySetFactSearchProofByBuiltinRule::EmptyListSet(_)) => {
+                        let AtomicFact::NotIsNonemptySetFact(f) = &success.fact else {return Err(LeanCompileError::unsupported("Empty/Subject"))};
+                        if !matches!(&f.set, Obj::SetFormer(SetFormer::ListSet(s)) if s.list.is_empty()) {return Err(LeanCompileError::unsupported("Empty/Shape"))}
+                        "(Litex.emptyNotNonempty (M := M))".to_string()
+                    },
+                    AtomicExceptEqualityFactSearchProofByBuiltinRule::SupersetFact(rule) => {
+                        use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::superset::SupersetFactSearchProofByBuiltinRule;
+                        let AtomicFact::SupersetFact(f)=&success.fact else{return Err(LeanCompileError::unsupported("Superset/Subject"))};
+                        match rule {
+                            SupersetFactSearchProofByBuiltinRule::SupersetReflexivity(_) if f.left.ir()==f.right.ir() => format!("(Litex.subsetRefl {})", self.compile_object_reference(&f.left, position)?),
+                            SupersetFactSearchProofByBuiltinRule::StandardSetSuperset(p) if f.left==Obj::StandardSet(p.left.clone()) && f.right==Obj::StandardSet(p.right.clone()) => {
+                                let member=standard_inclusion_term(&p.right,&p.left,"_a","_ha")?;
+                                format!("(Litex.subsetOfForall {} {} (fun _a _ha => {member}))",standard_term(&p.right)?,standard_term(&p.left)?)
+                            },
+                            _=>return Err(LeanCompileError::unsupported("Superset/RuleSubject")),
+                        }
+                    },
+                    AtomicExceptEqualityFactSearchProofByBuiltinRule::NotIsFiniteSetFact(crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_is_finite_set::NotIsFiniteSetFactSearchProofByBuiltinRule::StandardInfiniteSet(_)) => {
+                        let AtomicFact::NotIsFiniteSetFact(f)=&success.fact else{return Err(LeanCompileError::unsupported("InfiniteSet/Subject"))};
+                        if f.set != Obj::StandardSet(StandardSet::N) {return Err(LeanCompileError::unsupported("InfiniteSet/Carrier"))}
+                        "(Litex.naturalNotFinite (M := M))".to_string()
+                    },
                     other => return Err(unsupported_atomic_builtin(other)),
                 },
                 AtomicExceptEqualityFactSearchedProof::ByKnownSpecialProperty(AtomicExceptEqualityFactSearchProofByKnownSpecialProperty::InFact(rule)) => match &success.fact {
@@ -200,6 +226,14 @@ impl LitexToLeanCompiler {
                         _ => self.compile_fn_return_rule(fact, rule, position)?,
                     },
                     _ => return Err(LeanCompileError::new("FunctionReturn/Family", "A returned-membership rule has another source fact family.")),
+                },
+                AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::ListSetSubsetFromMembers(p)) => {
+                    let AtomicFact::SubsetFact(f)=&success.fact else{return Err(LeanCompileError::unsupported("ListSubset/StrategySubject"))};
+                    if p.requirement_facts.len()!=p.proof_of_requirement_facts.len() {return Err(LeanCompileError::unsupported("ListSubset/StrategyArity"))}
+                    for (fact,proof) in p.requirement_facts.iter().zip(&p.proof_of_requirement_facts) {
+                        if source_subject(proof)? != *fact {return Err(LeanCompileError::unsupported("ListSubset/StrategyPremise"))}
+                    }
+                    self.compile_list_subset(f,&p.proof_of_requirement_facts,position)?
                 },
                 AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::PreimageMembership(p)) => self.compile_preimage_membership(&success.fact, false, &p.construction, &p.input_view, &p.requirement_facts, &p.proof_of_requirement_facts, position)?,
                 AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::PreimageSetMembership(p)) => self.compile_preimage_membership(&success.fact, true, &p.construction, &p.input_view, &p.requirement_facts, &p.proof_of_requirement_facts, position)?,

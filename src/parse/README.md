@@ -397,7 +397,14 @@ Builtin `$` atoms with dedicated AST:
 `=` `!=` `<` `>` `<=` `>=` `$in` `$subset` `$superset` `$is_set` `$is_nonempty_set` `$is_finite_set`
 (and their `not …` forms). Other `$names` → normal atomic (e.g. `$proper_subset`); binary normal atomics may also be written infix (`A $proper_subset B`).
 
-Qualified props: `$Mod::name`, `$Mod:::name`, `$a::b::c` (prefix only, not infix).
+Qualified props: `$Mod::name`, `$Mod::export::name`, `$a::b::c` (prefix only, not infix).
+
+A manifest `[alias] C = Mod::export` makes every `C::name` reference use the
+same module/export/symbol identity as `Mod::export::name`. This also applies to
+objects, theorem names, templates and struct carriers. Aliases are local to
+the current manifest and do not chain or become exports. Removed `:::` syntax
+is recognized only to report a migration error. Config validation is owned by
+`module_manager`; source parsing adds no alias AST node.
 
 ### Exist
 
@@ -478,7 +485,7 @@ Nested returns use `fn(x A) fn(y B) C`. Logical implication still uses `=>`.
 
 | Family | Examples |
 |---|---|
-| names | `a`, `Mod::name`, `Mod:::name`, `a::b::c` |
+| names | `a`, `Mod::name`, `Mod::export::name`, `a::b::c` |
 | numbers | `2`, `2.5` |
 | literals | `i`, `e`, `pi` |
 | standard sets | `N` `Z` `Q` `R` `C` `N+` `Z+` `Q+` `R+` `Z-` `Q-` `R-` `Z*` `Q*` `R*` `C*` |
@@ -495,7 +502,7 @@ Nested returns use `fn(x A) fn(y B) C`. Logical implication still uses `=>`.
 | fn space | `fn(x A) B`, `fn(x A: x > 0) B` |
 | anonymous fn | `fn(x R) R {x + 1}` |
 | apply / field / bang | `f(a)`, `f(a)(b)`, `obj(i)`, `obj.field`, postfix `n!` (= `factorial(n)`) |
-| struct view | `&Point`, `&Pair<R>`, `&Lib::facts::Pair`, `&Lib:::Tagged<R>` |
+| struct view | `&Point`, `&Pair<R>`, `&Lib::facts::Pair`, `&Lib::facts::Tagged<R>` |
 | template instance | `\Name<args>` (angles required) |
 | interval literals | `'[a,b]` `'(a,b)` `'[a,b)` `'(a,b]` ; rays `'(,a]` `'[a,)` … |
 | fn_range | `fn_range(f)` |

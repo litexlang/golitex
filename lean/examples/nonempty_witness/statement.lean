@@ -49,7 +49,10 @@ theorem h_33 : (by
           let _atomic_wd_1_0 := (_object_w9 (M := M))
           exact (show ((fun (_known_argument_0 : M.Value) => (∃ _member : M.Value, M.mem _member _known_argument_0)) (Litex.denote _atomic_wd_1_0)) from by
             have _known_citation : ((fun (_known_argument_0 : M.Value) => (∃ _member : M.Value, M.mem _member _known_argument_0)) (Litex.denote (Litex.setBuilder (Litex.R (M := M)) (fun (_value_i1 : Litex.Obj (M := M) M.Value) (h_3 : Litex.In _value_i1 (Litex.R (M := M))) => Litex.Lt (Litex.number (M := M) (0 : ℂ)) _value_i1)))) := (h_31 (M := M))
-            exact Eq.mp (((Eq.refl ((fun (_known_argument_0 : M.Value) => (∃ _member : M.Value, M.mem _member _known_argument_0)) (Litex.denote (Litex.setBuilder (Litex.R (M := M)) (fun (_value_i1 : Litex.Obj (M := M) M.Value) (h_3 : Litex.In _value_i1 (Litex.R (M := M))) => Litex.Lt (Litex.number (M := M) (0 : ℂ)) _value_i1)))))).trans (congrArg (fun (_known_value : M.Value) => ((fun (_known_argument_0 : M.Value) => (∃ _member : M.Value, M.mem _member _known_argument_0)) _known_value)) (show Litex.Same (Litex.setBuilder (Litex.R (M := M)) (fun (_value_i1 : Litex.Obj (M := M) M.Value) (h_3 : Litex.In _value_i1 (Litex.R (M := M))) => Litex.Lt (Litex.number (M := M) (0 : ℂ)) _value_i1)) _atomic_wd_1_0 from rfl))) _known_citation
+            exact Eq.mp (((Eq.refl ((fun (_known_argument_0 : M.Value) => (∃ _member : M.Value, M.mem _member _known_argument_0)) (Litex.denote (Litex.setBuilder (Litex.R (M := M)) (fun (_value_i1 : Litex.Obj (M := M) M.Value) (h_3 : Litex.In _value_i1 (Litex.R (M := M))) => Litex.Lt (Litex.number (M := M) (0 : ℂ)) _value_i1)))))).trans (congrArg (fun (_known_value : M.Value) => ((fun (_known_argument_0 : M.Value) => (∃ _member : M.Value, M.mem _member _known_argument_0)) _known_value)) (by
+            let _left := (Litex.setBuilder (Litex.R (M := M)) (fun (_value_i1 : Litex.Obj (M := M) M.Value) (h_3 : Litex.In _value_i1 (Litex.R (M := M))) => Litex.Lt (Litex.number (M := M) (0 : ℂ)) _value_i1))
+            let _right := _atomic_wd_1_0
+            exact (show Litex.Same _left _right from rfl)))) _known_citation
           ))
       )
   )
@@ -99,6 +102,16 @@ theorem h_46 : ∀ {_Host_i3 : Type v3} [_rep_i3 : Litex.Representation M _Host_
                               exact (by
                                 let _set := _atomic_wd_1_1
                                 exact ((Litex.inInsert_iff _value_i3 _set.val.element _set.val.tail _set.wd).mpr (Or.inl (show @Eq M.Value _ _ from Eq.refl _)))))
+                          )
+                      )
+
+                    have h_63 : Litex.Same _value_i3 _value_i3 :=
+                      (by
+                        litex_checked_step =>
+                          exact (
+                            (by
+                              have _member : M.mem (Litex.denote _value_i3) (Litex.SetSemantics.insertValue (Litex.denote _value_i3) (Litex.SetSemantics.emptyValue (M := M))) := h_47
+                              exact ((Litex.SetSemantics.insert_members _ _ _).mp _member).elim (fun h => h) (fun h => False.elim (Litex.SetSemantics.empty_members _ h)))
                           )
                       )
                     exact ⟨Litex.denote _value_i3, (by

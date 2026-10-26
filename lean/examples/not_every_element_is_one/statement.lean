@@ -32,6 +32,15 @@ theorem h_2 : ∃ (_value_i1 : Litex.Obj (M := M) M.Value), ∃ (h_3 : Litex.In 
             exact (by
               let _set := _atomic_wd_1_1
               exact ((Litex.inInsert_iff (Litex.number (M := M) (0 : ℂ)) _set.val.element _set.val.tail _set.wd).mpr (Or.inl (show @Eq M.Value _ _ from Eq.refl _)))))
+          have h_9 : Litex.Same _value_i1 (Litex.number (M := M) (0 : ℂ)) :=
+            (by
+              litex_checked_step =>
+                exact (
+                  (by
+                    have _member : M.mem (Litex.denote _value_i1) (Litex.SetSemantics.insertValue (Litex.denote (Litex.number (M := M) (0 : ℂ))) (Litex.SetSemantics.emptyValue (M := M))) := h_8
+                    exact ((Litex.SetSemantics.insert_members _ _ _).mp _member).elim (fun h => h) (fun h => False.elim (Litex.SetSemantics.empty_members _ h)))
+                )
+            )
           have h_10 : Litex.Same _value_i1 (Litex.number (M := M) (0 : ℂ)) := rfl
           have h_11 : ¬ Litex.Same (Litex.number (M := M) (0 : ℂ)) (Litex.number (M := M) (1 : ℂ)) := (Litex.NativeBridge.notSameOfDenoteNumber (Litex.number (M := M) (0 : ℂ)) (Litex.number (M := M) (1 : ℂ)) (0 : ℂ) (1 : ℂ) (Litex.NativeBridge.denoteNumber (M := M) (0 : ℂ)) (Litex.NativeBridge.denoteNumber (M := M) (1 : ℂ)) (by norm_num))
           exact ⟨_value_i1, h_8, h_11⟩

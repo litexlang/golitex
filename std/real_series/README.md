@@ -19,16 +19,16 @@ Imported source definitions are explicitly released in the caller. This
 checked example proves a candidate before using the selected value:
 
 ```litex
-release obj def series:::partial_sum
-release obj def series:::partial_sums
-release obj def series:::series_sum
-release obj def series:::series_tail
+release obj def series::main::partial_sum
+release obj def series::main::partial_sums
+release obj def series::main::series_sum
+release obj def series::main::series_tail
 
 have fn zero_terms(k N+) R=0
-release thm series:::series_sum_zero(zero_terms)
-release thm series:::series_sum_convergent(zero_terms,0)
-release thm series:::series_sum_value(zero_terms,0)
-series:::series_sum(zero_terms)=0
+release thm series::main::series_sum_zero(zero_terms)
+release thm series::main::series_sum_convergent(zero_terms,0)
+release thm series::main::series_sum_value(zero_terms,0)
+series::main::series_sum(zero_terms)=0
 ```
 
 Publish the convergence guard before calling a theorem whose conclusion
@@ -60,14 +60,14 @@ ordinary predicate negation; there are no dedicated series Fact variants.
 `series_sum` consumes convergence evidence. Even the zero sequence has no
 selected sum until that evidence is published.
 
-Release `series:::absolute_terms` and `series:::root_terms` with
+Release `series::main::absolute_terms` and `series::main::root_terms` with
 `release obj def` when using those constructions. The absolute and root maps
 are functions; their convergence properties are propositions. No infinite-sum
 AST or separate root-sequence AST is introduced.
 
 ## Theorems
 
-Names below are qualified as `series:::name` in a caller. Pointwise premises
+Names below are qualified as `series::main::name` in a caller. Pointwise premises
 range over every `k in N+`, unless a tail restriction is stated. Write
 `S(a,n)` for `partial_sum(a,n)` in this table only.
 

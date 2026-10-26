@@ -37,6 +37,7 @@ mod compile_seq;
 
 mod compile_exp_log;
 
+mod compile_inverse_trig;
 mod compile_trig;
 
 mod compile_complex_observations;

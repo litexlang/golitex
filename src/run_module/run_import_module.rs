@@ -111,6 +111,16 @@ pub fn run_import_module_observed(
         }
     }
 
+    if let Err(message) = runtime
+        .global_module_manager
+        .validate_alias_targets(&config)
+    {
+        running.remove(&key);
+        return Ok(RunImportModuleOutcome::SessionError(
+            RunSessionError::Runtime(crate::runtime::RuntimeError::InvalidArguments(message)),
+        ));
+    }
+
     // Config aliases are local to their package; the mount API takes a unique
     // global display label. Identity and alias resolution remain path-based.
     // Two packages may both import `Common = "./dep"` for different paths.

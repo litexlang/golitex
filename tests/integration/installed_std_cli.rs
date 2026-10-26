@@ -41,7 +41,7 @@ impl Installation {
         }
         fs::write(
             root.join("project/litex.config"),
-            "[import std]\nbasics\n[export]\nmain = \"./main.lit\"\n",
+            "[import std]\nbasics\n[alias]\nbasics = basics::main\n[export]\nmain = \"./main.lit\"\n",
         )
         .unwrap();
         Self {
@@ -132,13 +132,13 @@ fn bundled_std_is_discovered_in_all_package_layouts() {
         let executable = installation.install(binary, std);
         for arguments in [
             &["-f", "main.lit"][..],
-            &["-e", "basics:::version = 1"][..],
+            &["-e", "basics::version = 1"][..],
             &["-r", "."][..],
         ] {
             assert_run(&installation.run(&executable, arguments, None), true);
         }
         assert_run(
-            &installation.run(&executable, &["-e", "basics:::version = 2"], None),
+            &installation.run(&executable, &["-e", "basics::version = 2"], None),
             false,
         );
     }
@@ -156,7 +156,7 @@ fn explicit_std_override_and_local_project_std_keep_precedence() {
     );
     fs::write(
         installation.root.join("project/main.lit"),
-        "basics:::version = 2\n",
+        "basics::version = 2\n",
     )
     .unwrap();
     assert_run(
@@ -171,7 +171,7 @@ fn explicit_std_override_and_local_project_std_keep_precedence() {
     installation.write_std("project/std", 3);
     fs::write(
         installation.root.join("project/main.lit"),
-        "basics:::version = 3\n",
+        "basics::version = 3\n",
     )
     .unwrap();
     assert_run(
@@ -214,7 +214,7 @@ fn repl_and_continued_file_session_can_use_bundled_std() {
             .stdin
             .take()
             .unwrap()
-            .write_all(b"basics:::version = 1\nexit\n")
+            .write_all(b"basics::version = 1\nexit\n")
             .unwrap();
         let output = child.wait_with_output().unwrap();
         assert!(output.status.success(), "{output:?}");

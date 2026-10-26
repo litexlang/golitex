@@ -379,6 +379,36 @@ impl LitexToLeanCompiler {
         Ok(format!("(Eq.mp (congrArg (M.mem (Litex.denote {term})) {equality}) (Litex.finiteExtremumInSet {term}))"))
     }
 
+    pub(in crate::compile_to_lean) fn compile_list_distinct_lengths(
+        &self,
+        goal: &AtomicFact,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        let AtomicFact::NotEqualFact(goal) = goal else {
+            return Err(LeanCompileError::unsupported(
+                "ListSetDifferentLength/Subject",
+            ));
+        };
+        let (Obj::SetFormer(SetFormer::ListSet(left)), Obj::SetFormer(SetFormer::ListSet(right))) =
+            (&goal.left, &goal.right)
+        else {
+            return Err(LeanCompileError::unsupported(
+                "ListSetDifferentLength/Shape",
+            ));
+        };
+        let (left_len, right_len) = (left.list.len(), right.list.len());
+        if left_len == right_len {
+            return Err(LeanCompileError::unsupported(
+                "ListSetDifferentLength/EqualLengths",
+            ));
+        }
+        let left = self.compile_object_reference(&goal.left, position)?;
+        let right = self.compile_object_reference(&goal.right, position)?;
+        let (left_steps, _, left_card) = finite_list_certificate("_left", left_len, true);
+        let (right_steps, _, right_card) = finite_list_certificate("_right", right_len, true);
+        Ok(format!("(let _left := {left};\nlet _right := {right};\nhave _left_card : Litex.finiteCard (Litex.denote _left) = {left_len} := ({left_steps}\n{left_card});\nhave _right_card : Litex.finiteCard (Litex.denote _right) = {right_len} := ({right_steps}\n{right_card});\nfun h => (by decide : ({left_len} : ℕ) ≠ {right_len}) (_left_card.symm.trans ((congrArg (Litex.finiteCard (M := M)) h).trans _right_card)))"))
+    }
+
     pub(in crate::compile_to_lean) fn compile_finite_size_nonnegative(
         &self,
         goal: &AtomicFact,

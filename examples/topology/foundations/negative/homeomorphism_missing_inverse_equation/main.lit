@@ -1,9 +1,9 @@
 thm homeomorphism_missing_inverse_equation:
-    ? forall A, B set, source &top:::TopologicalSpace<A>, target &top:::TopologicalSpace<B>, f fn(x source.carrier) target.carrier, g fn(y target.carrier) source.carrier:
-        $top:::is_topologically_continuous(A, B, source, target, f)
-        $top:::is_topologically_continuous(B, A, target, source, g)
+    ? forall A, B set, source &top::TopologicalSpace<A>, target &top::TopologicalSpace<B>, f fn(x source.carrier) target.carrier, g fn(y target.carrier) source.carrier:
+        $top::is_topologically_continuous(A, B, source, target, f)
+        $top::is_topologically_continuous(B, A, target, source, g)
         forall x source.carrier:
             g(f(x)) = x
         =>:
-            $top:::is_homeomorphism(A, B, source, target, f, g)
-    by def $top:::is_homeomorphism(A, B, source, target, f, g)
+            $top::is_homeomorphism(A, B, source, target, f, g)
+    by def $top::is_homeomorphism(A, B, source, target, f, g)

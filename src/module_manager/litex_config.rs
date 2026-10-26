@@ -1,4 +1,4 @@
-//! Parsed `litex.config` (import / export only).
+//! Parsed `litex.config` imports, exports and namespace aliases.
 
 use std::path::PathBuf;
 
@@ -7,6 +7,25 @@ use std::path::PathBuf;
 pub struct LitexConfig {
     pub imports: Vec<LitexConfigImport>,
     pub exports: Vec<LitexConfigExport>,
+    pub aliases: Vec<LitexConfigAlias>,
+}
+
+/// One `[alias] name = import_alias::export_name` row; never an alias chain.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct LitexConfigAlias {
+    pub name: String,
+    pub import_alias: String,
+    pub export_name: String,
+}
+
+impl LitexConfigAlias {
+    pub fn new(name: String, import_alias: String, export_name: String) -> Self {
+        Self {
+            name,
+            import_alias,
+            export_name,
+        }
+    }
 }
 
 /// One `[import]` / `[import std]` row after path resolve.
@@ -28,6 +47,7 @@ impl LitexConfig {
         Self {
             imports: Vec::new(),
             exports: Vec::new(),
+            aliases: Vec::new(),
         }
     }
 }

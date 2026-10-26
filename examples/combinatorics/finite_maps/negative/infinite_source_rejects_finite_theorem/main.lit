@@ -1,1 +1,1 @@
-release thm comb:::pigeonhole_collision(N, {0}, fn(x N) {0} {0})
+release thm comb::pigeonhole_collision(N, {0}, fn(x N) {0} {0})

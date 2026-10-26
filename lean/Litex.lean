@@ -1,5 +1,7 @@
 import Mathlib.Analysis.SpecialFunctions.Log.Basic
 import Mathlib.Analysis.SpecialFunctions.Trigonometric.Basic
+import Mathlib.Analysis.SpecialFunctions.Trigonometric.Arctan
+import Mathlib.Analysis.SpecialFunctions.Trigonometric.Inverse
 import Mathlib.Data.Complex.Basic
 import Mathlib.Algebra.Order.Archimedean.Real.Basic
 import Mathlib.Analysis.Real.Sqrt
@@ -7,6 +9,7 @@ import Mathlib.Data.Real.Sign
 import Mathlib.Algebra.Order.Floor.Ring
 import Mathlib.Tactic.FieldSimp
 import Mathlib.Tactic.FinCases
+import Mathlib.Tactic.NormNum.Prime
 import Mathlib.Tactic.NormNum.GCD
 import Mathlib.Tactic.NormNum.NatFactorial
 import Mathlib.SetTheory.ZFC.Ordinal
@@ -8737,4 +8740,460 @@ theorem complexAbsInR {M : Semantics.{u}} {α : Type v} [Representation M α]
 
 theorem complexReconstruction (z : ℂ) : (z.re : ℂ) + (z.im : ℂ) * Complex.I = z :=
   Complex.re_add_im z
+end Litex
+
+namespace Litex
+
+noncomputable def nativeCot (x : ℝ) : ℝ := Real.cos x / Real.sin x
+noncomputable def nativeSec (x : ℝ) : ℝ := 1 / Real.cos x
+noncomputable def nativeCsc (x : ℝ) : ℝ := 1 / Real.sin x
+-- Litex uses the principal cotangent inverse in (0, pi).
+noncomputable def nativeArccot (x : ℝ) : ℝ := Real.pi / 2 - Real.arctan x
+
+theorem nativeCot_arccot (x : ℝ) : nativeCot (nativeArccot x) = x := by
+  rw [nativeCot, nativeArccot, Real.cos_pi_div_two_sub,
+    Real.sin_pi_div_two_sub, ← Real.tan_eq_sin_div_cos, Real.tan_arctan]
+
+theorem nativeArccot_pos (x : ℝ) : 0 < nativeArccot x :=
+  sub_pos.mpr (Real.arctan_lt_pi_div_two x)
+
+theorem nativeArccot_lt_pi (x : ℝ) : nativeArccot x < Real.pi := by
+  unfold nativeArccot
+  linarith [Real.neg_pi_div_two_lt_arctan x]
+
+theorem sin_nativeArccot_pos (x : ℝ) : 0 < Real.sin (nativeArccot x) := by
+  rw [nativeArccot, Real.sin_pi_div_two_sub]
+  exact Real.cos_arctan_pos x
+
+
+structure ArctanObj {M : Semantics.{u}} (α : Type v) [Representation M α] where
+  arg : Obj (M := M) α
+
+noncomputable instance arctanRepresentation {M : Semantics.{u}} {α : Type v}
+    [Representation M α] : Representation M (ArctanObj (M := M) α) where
+  wd a := In a.arg R
+  denote a := realUnaryValue Real.arctan (denote a.arg)
+  wd_isSet {a} h := by
+    obtain ⟨r, hr⟩ := (M.real_members _).mp h
+    exact M.member_isSet ((M.real_members _).mpr ⟨Real.arctan r, by
+      rw [hr, realUnaryValue_number]⟩)
+
+noncomputable def arctan {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (a : Obj (M := M) α) (ha : In a R) :
+    Obj (M := M) (ArctanObj (M := M) α) := ⟨⟨a⟩,ha⟩
+
+theorem denoteArctan {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (p : Obj (M := M) (ArctanObj (M := M) α)) (r : ℝ)
+    (hr : denote p.val.arg = M.number (r : ℂ)) :
+    denote p = M.number ((Real.arctan r : ℝ) : ℂ) := by
+  change realUnaryValue Real.arctan (denote p.val.arg) = _
+  rw [hr, realUnaryValue_number]
+
+theorem arctanInR {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (p : Obj (M := M) (ArctanObj (M := M) α)) : In p R :=
+  (M.real_members _).mpr ⟨Real.arctan (NativeBridge.asReal p.val.arg p.wd),
+    denoteArctan p _ (NativeBridge.asReal_spec p.val.arg p.wd)⟩
+
+
+structure ArccotObj {M : Semantics.{u}} (α : Type v) [Representation M α] where
+  arg : Obj (M := M) α
+
+noncomputable instance arccotRepresentation {M : Semantics.{u}} {α : Type v}
+    [Representation M α] : Representation M (ArccotObj (M := M) α) where
+  wd a := In a.arg R
+  denote a := realUnaryValue nativeArccot (denote a.arg)
+  wd_isSet {a} h := by
+    obtain ⟨r, hr⟩ := (M.real_members _).mp h
+    exact M.member_isSet ((M.real_members _).mpr ⟨nativeArccot r, by
+      rw [hr, realUnaryValue_number]⟩)
+
+noncomputable def arccot {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (a : Obj (M := M) α) (ha : In a R) :
+    Obj (M := M) (ArccotObj (M := M) α) := ⟨⟨a⟩,ha⟩
+
+theorem denoteArccot {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (p : Obj (M := M) (ArccotObj (M := M) α)) (r : ℝ)
+    (hr : denote p.val.arg = M.number (r : ℂ)) :
+    denote p = M.number ((nativeArccot r : ℝ) : ℂ) := by
+  change realUnaryValue nativeArccot (denote p.val.arg) = _
+  rw [hr, realUnaryValue_number]
+
+theorem arccotInR {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (p : Obj (M := M) (ArccotObj (M := M) α)) : In p R :=
+  (M.real_members _).mpr ⟨nativeArccot (NativeBridge.asReal p.val.arg p.wd),
+    denoteArccot p _ (NativeBridge.asReal_spec p.val.arg p.wd)⟩
+
+
+structure ArcsinObj {M : Semantics.{u}} (α : Type v) [Representation M α] where
+  arg : Obj (M := M) α
+
+noncomputable instance arcsinRepresentation {M : Semantics.{u}} {α : Type v}
+    [Representation M α] : Representation M (ArcsinObj (M := M) α) where
+  wd a := In a.arg R ∧ Le (number (-1)) a.arg ∧ Le a.arg (number 1)
+  denote a := realUnaryValue Real.arcsin (denote a.arg)
+  wd_isSet {a} h := by
+    obtain ⟨r, hr⟩ := (M.real_members _).mp h.1
+    exact M.member_isSet ((M.real_members _).mpr ⟨Real.arcsin r, by
+      rw [hr, realUnaryValue_number]⟩)
+
+noncomputable def arcsin {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (a : Obj (M := M) α) (ha : In a R) (hlo : Le (number (-1)) a) (hhi : Le a (number 1)) :
+    Obj (M := M) (ArcsinObj (M := M) α) := ⟨⟨a⟩,⟨ha,hlo,hhi⟩⟩
+
+theorem denoteArcsin {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (p : Obj (M := M) (ArcsinObj (M := M) α)) (r : ℝ)
+    (hr : denote p.val.arg = M.number (r : ℂ)) :
+    denote p = M.number ((Real.arcsin r : ℝ) : ℂ) := by
+  change realUnaryValue Real.arcsin (denote p.val.arg) = _
+  rw [hr, realUnaryValue_number]
+
+theorem arcsinInR {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (p : Obj (M := M) (ArcsinObj (M := M) α)) : In p R :=
+  (M.real_members _).mpr ⟨Real.arcsin (NativeBridge.asReal p.val.arg p.wd.1),
+    denoteArcsin p _ (NativeBridge.asReal_spec p.val.arg p.wd.1)⟩
+
+
+structure ArccosObj {M : Semantics.{u}} (α : Type v) [Representation M α] where
+  arg : Obj (M := M) α
+
+noncomputable instance arccosRepresentation {M : Semantics.{u}} {α : Type v}
+    [Representation M α] : Representation M (ArccosObj (M := M) α) where
+  wd a := In a.arg R ∧ Le (number (-1)) a.arg ∧ Le a.arg (number 1)
+  denote a := realUnaryValue Real.arccos (denote a.arg)
+  wd_isSet {a} h := by
+    obtain ⟨r, hr⟩ := (M.real_members _).mp h.1
+    exact M.member_isSet ((M.real_members _).mpr ⟨Real.arccos r, by
+      rw [hr, realUnaryValue_number]⟩)
+
+noncomputable def arccos {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (a : Obj (M := M) α) (ha : In a R) (hlo : Le (number (-1)) a) (hhi : Le a (number 1)) :
+    Obj (M := M) (ArccosObj (M := M) α) := ⟨⟨a⟩,⟨ha,hlo,hhi⟩⟩
+
+theorem denoteArccos {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (p : Obj (M := M) (ArccosObj (M := M) α)) (r : ℝ)
+    (hr : denote p.val.arg = M.number (r : ℂ)) :
+    denote p = M.number ((Real.arccos r : ℝ) : ℂ) := by
+  change realUnaryValue Real.arccos (denote p.val.arg) = _
+  rw [hr, realUnaryValue_number]
+
+theorem arccosInR {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (p : Obj (M := M) (ArccosObj (M := M) α)) : In p R :=
+  (M.real_members _).mpr ⟨Real.arccos (NativeBridge.asReal p.val.arg p.wd.1),
+    denoteArccos p _ (NativeBridge.asReal_spec p.val.arg p.wd.1)⟩
+
+
+structure CotObj {M : Semantics.{u}} (α : Type v) [Representation M α] where
+  arg : Obj (M := M) α
+
+noncomputable instance cotRepresentation {M : Semantics.{u}} {α : Type v}
+    [Representation M α] : Representation M (CotObj (M := M) α) where
+  wd a := In a.arg R ∧ realUnaryValue Real.sin (denote a.arg) ≠ M.number 0
+  denote a := realUnaryValue nativeCot (denote a.arg)
+  wd_isSet {a} h := by
+    obtain ⟨r, hr⟩ := (M.real_members _).mp h.1
+    exact M.member_isSet ((M.real_members _).mpr ⟨nativeCot r, by
+      rw [hr, realUnaryValue_number]⟩)
+
+noncomputable def cot {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (a : Obj (M := M) α) (ha : In a R) (hne : ¬ Same (sin a ha) (number 0)) :
+    Obj (M := M) (CotObj (M := M) α) := ⟨⟨a⟩,⟨ha,hne⟩⟩
+
+theorem denoteCot {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (p : Obj (M := M) (CotObj (M := M) α)) (r : ℝ)
+    (hr : denote p.val.arg = M.number (r : ℂ)) :
+    denote p = M.number ((nativeCot r : ℝ) : ℂ) := by
+  change realUnaryValue nativeCot (denote p.val.arg) = _
+  rw [hr, realUnaryValue_number]
+
+theorem cotInR {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (p : Obj (M := M) (CotObj (M := M) α)) : In p R :=
+  (M.real_members _).mpr ⟨nativeCot (NativeBridge.asReal p.val.arg p.wd.1),
+    denoteCot p _ (NativeBridge.asReal_spec p.val.arg p.wd.1)⟩
+
+
+structure SecObj {M : Semantics.{u}} (α : Type v) [Representation M α] where
+  arg : Obj (M := M) α
+
+noncomputable instance secRepresentation {M : Semantics.{u}} {α : Type v}
+    [Representation M α] : Representation M (SecObj (M := M) α) where
+  wd a := In a.arg R ∧ realUnaryValue Real.cos (denote a.arg) ≠ M.number 0
+  denote a := realUnaryValue nativeSec (denote a.arg)
+  wd_isSet {a} h := by
+    obtain ⟨r, hr⟩ := (M.real_members _).mp h.1
+    exact M.member_isSet ((M.real_members _).mpr ⟨nativeSec r, by
+      rw [hr, realUnaryValue_number]⟩)
+
+noncomputable def sec {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (a : Obj (M := M) α) (ha : In a R) (hne : ¬ Same (cos a ha) (number 0)) :
+    Obj (M := M) (SecObj (M := M) α) := ⟨⟨a⟩,⟨ha,hne⟩⟩
+
+theorem denoteSec {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (p : Obj (M := M) (SecObj (M := M) α)) (r : ℝ)
+    (hr : denote p.val.arg = M.number (r : ℂ)) :
+    denote p = M.number ((nativeSec r : ℝ) : ℂ) := by
+  change realUnaryValue nativeSec (denote p.val.arg) = _
+  rw [hr, realUnaryValue_number]
+
+theorem secInR {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (p : Obj (M := M) (SecObj (M := M) α)) : In p R :=
+  (M.real_members _).mpr ⟨nativeSec (NativeBridge.asReal p.val.arg p.wd.1),
+    denoteSec p _ (NativeBridge.asReal_spec p.val.arg p.wd.1)⟩
+
+
+structure CscObj {M : Semantics.{u}} (α : Type v) [Representation M α] where
+  arg : Obj (M := M) α
+
+noncomputable instance cscRepresentation {M : Semantics.{u}} {α : Type v}
+    [Representation M α] : Representation M (CscObj (M := M) α) where
+  wd a := In a.arg R ∧ realUnaryValue Real.sin (denote a.arg) ≠ M.number 0
+  denote a := realUnaryValue nativeCsc (denote a.arg)
+  wd_isSet {a} h := by
+    obtain ⟨r, hr⟩ := (M.real_members _).mp h.1
+    exact M.member_isSet ((M.real_members _).mpr ⟨nativeCsc r, by
+      rw [hr, realUnaryValue_number]⟩)
+
+noncomputable def csc {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (a : Obj (M := M) α) (ha : In a R) (hne : ¬ Same (sin a ha) (number 0)) :
+    Obj (M := M) (CscObj (M := M) α) := ⟨⟨a⟩,⟨ha,hne⟩⟩
+
+theorem denoteCsc {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (p : Obj (M := M) (CscObj (M := M) α)) (r : ℝ)
+    (hr : denote p.val.arg = M.number (r : ℂ)) :
+    denote p = M.number ((nativeCsc r : ℝ) : ℂ) := by
+  change realUnaryValue nativeCsc (denote p.val.arg) = _
+  rw [hr, realUnaryValue_number]
+
+theorem cscInR {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (p : Obj (M := M) (CscObj (M := M) α)) : In p R :=
+  (M.real_members _).mpr ⟨nativeCsc (NativeBridge.asReal p.val.arg p.wd.1),
+    denoteCsc p _ (NativeBridge.asReal_spec p.val.arg p.wd.1)⟩
+
+
+theorem cosArctanNonzero {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (p : Obj (M := M) (ArctanObj (M := M) α)) :
+    ¬ Same (cos p (arctanInR p)) (number 0) := by
+  let r := NativeBridge.asReal p.val.arg p.wd
+  have hr := NativeBridge.asReal_spec p.val.arg p.wd
+  change realUnaryValue Real.cos (denote p) ≠ M.number 0
+  rw [denoteArctan p r hr, realUnaryValue_number]
+  intro h
+  have hz : Real.cos (Real.arctan r) = 0 :=
+    Complex.ofReal_injective (M.number_injective h)
+  exact (Real.cos_arctan_pos r).ne' hz
+
+
+theorem sinArccotNonzero {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (p : Obj (M := M) (ArccotObj (M := M) α)) :
+    ¬ Same (sin p (arccotInR p)) (number 0) := by
+  let r := NativeBridge.asReal p.val.arg p.wd
+  have hr := NativeBridge.asReal_spec p.val.arg p.wd
+  change realUnaryValue Real.sin (denote p) ≠ M.number 0
+  rw [denoteArccot p r hr, realUnaryValue_number]
+  intro h
+  have hz : Real.sin (nativeArccot r) = 0 :=
+    Complex.ofReal_injective (M.number_injective h)
+  exact (sin_nativeArccot_pos r).ne' hz
+
+
+theorem sinArcsin {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (p : Obj (M := M) (ArcsinObj (M := M) α)) :
+    Same (sin p (arcsinInR p)) p.val.arg := by
+  let r := NativeBridge.asReal p.val.arg p.wd.1
+  have hr := NativeBridge.asReal_spec p.val.arg p.wd.1
+  have hlo : -1 ≤ r := (NativeBridge.le_iff_ofDenoteReal
+    (number (-1)) p.val.arg (-1) r (by
+      change M.number (-1) = M.number ((-1 : ℝ) : ℂ)
+      rw [Complex.ofReal_neg, Complex.ofReal_one]) hr).mp p.wd.2.1
+  have hhi : r ≤ 1 := (NativeBridge.le_iff_ofDenoteReal
+    p.val.arg (number 1) r 1 hr rfl).mp p.wd.2.2
+  change realUnaryValue Real.sin (denote p) = denote p.val.arg
+  rw [denoteArcsin p r hr, realUnaryValue_number, Real.sin_arcsin hlo hhi, hr]
+
+
+theorem cosArccos {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (p : Obj (M := M) (ArccosObj (M := M) α)) :
+    Same (cos p (arccosInR p)) p.val.arg := by
+  let r := NativeBridge.asReal p.val.arg p.wd.1
+  have hr := NativeBridge.asReal_spec p.val.arg p.wd.1
+  have hlo : -1 ≤ r := (NativeBridge.le_iff_ofDenoteReal
+    (number (-1)) p.val.arg (-1) r (by
+      change M.number (-1) = M.number ((-1 : ℝ) : ℂ)
+      rw [Complex.ofReal_neg, Complex.ofReal_one]) hr).mp p.wd.2.1
+  have hhi : r ≤ 1 := (NativeBridge.le_iff_ofDenoteReal
+    p.val.arg (number 1) r 1 hr rfl).mp p.wd.2.2
+  change realUnaryValue Real.cos (denote p) = denote p.val.arg
+  rw [denoteArccos p r hr, realUnaryValue_number, Real.cos_arccos hlo hhi, hr]
+
+
+theorem tanArctan {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (p : Obj (M := M) (ArctanObj (M := M) α)) :
+    Same (tan p (arctanInR p) (cosArctanNonzero p)) p.val.arg := by
+  let r := NativeBridge.asReal p.val.arg p.wd
+  have hr := NativeBridge.asReal_spec p.val.arg p.wd
+  change realUnaryValue Real.tan (denote p) = denote p.val.arg
+  rw [denoteArctan p r hr, realUnaryValue_number, Real.tan_arctan r, hr]
+
+
+theorem cotArccot {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (p : Obj (M := M) (ArccotObj (M := M) α)) :
+    Same (cot p (arccotInR p) (sinArccotNonzero p)) p.val.arg := by
+  let r := NativeBridge.asReal p.val.arg p.wd
+  have hr := NativeBridge.asReal_spec p.val.arg p.wd
+  change realUnaryValue nativeCot (denote p) = denote p.val.arg
+  rw [denoteArccot p r hr, realUnaryValue_number, nativeCot_arccot r, hr]
+
+end Litex
+
+namespace Litex
+
+theorem secNonzero {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (p : Obj (M := M) (SecObj (M := M) α)) : ¬ Same p (number 0) := by
+  let r := NativeBridge.asReal p.val.arg p.wd.1
+  have hr := NativeBridge.asReal_spec p.val.arg p.wd.1
+  have hd : Real.cos r ≠ 0 := by
+    intro h
+    apply p.wd.2
+    rw [hr, realUnaryValue_number, h, Complex.ofReal_zero]
+  change denote p ≠ M.number 0
+  rw [denoteSec p r hr]
+  intro h
+  have hz : 1 / Real.cos r = 0 := Complex.ofReal_injective (M.number_injective h)
+  exact (one_div_ne_zero hd) hz
+
+theorem secInRStar {M : Semantics.{u}} [SetSemantics M] {α : Type v} [Representation M α]
+    (p : Obj (M := M) (SecObj (M := M) α)) : In p RStar :=
+  inRStar_intro p (secInR p) (secNonzero p)
+
+theorem cscNonzero {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (p : Obj (M := M) (CscObj (M := M) α)) : ¬ Same p (number 0) := by
+  let r := NativeBridge.asReal p.val.arg p.wd.1
+  have hr := NativeBridge.asReal_spec p.val.arg p.wd.1
+  have hd : Real.sin r ≠ 0 := by
+    intro h
+    apply p.wd.2
+    rw [hr, realUnaryValue_number, h, Complex.ofReal_zero]
+  change denote p ≠ M.number 0
+  rw [denoteCsc p r hr]
+  intro h
+  have hz : 1 / Real.sin r = 0 := Complex.ofReal_injective (M.number_injective h)
+  exact (one_div_ne_zero hd) hz
+
+theorem cscInRStar {M : Semantics.{u}} [SetSemantics M] {α : Type v} [Representation M α]
+    (p : Obj (M := M) (CscObj (M := M) α)) : In p RStar :=
+  inRStar_intro p (cscInR p) (cscNonzero p)
+end Litex
+
+
+namespace Litex
+
+/-- Source proper inclusion uses semantic inequality, not host inequality. -/
+def Superset {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (A : Obj (M := M) α) (B : Obj (M := M) β) : Prop := Subset B A
+
+def ProperSubset {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (A : Obj (M := M) α) (B : Obj (M := M) β) : Prop := Subset A B ∧ ¬ Same A B
+
+def ProperSuperset {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (A : Obj (M := M) α) (B : Obj (M := M) β) : Prop := Subset B A ∧ ¬ Same A B
+
+/-- Numeric predicate meanings depend only on semantic denotation. -/
+def PrimeValue (M : Semantics.{u}) (a : M.Value) : Prop :=
+  ∃ n : ℕ, a = M.number (n : ℂ) ∧ Nat.Prime n
+
+def CoprimeValue (M : Semantics.{u}) (a b : M.Value) : Prop :=
+  ∃ m n : ℕ, a = M.number (m : ℂ) ∧ b = M.number (n : ℂ) ∧ Nat.Coprime m n
+
+/-- Litex puts the dividend first and requires a nonzero integer divisor. -/
+def DvdValue (M : Semantics.{u}) (a b : M.Value) : Prop :=
+  ∃ m n : ℤ, a = M.number (m : ℂ) ∧ b = M.number (n : ℂ) ∧ n ≠ 0 ∧ n ∣ m
+
+def Prime {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (a : Obj (M := M) α) : Prop := PrimeValue M (denote a)
+
+def Coprime {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (a : Obj (M := M) α) (b : Obj (M := M) β) : Prop := CoprimeValue M (denote a) (denote b)
+
+def Dvd {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (a : Obj (M := M) α) (b : Obj (M := M) β) : Prop := DvdValue M (denote a) (denote b)
+
+theorem prime_iff_of_denote {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (a : Obj (M := M) α) (n : ℕ) (ha : denote a = M.number (n : ℂ)) :
+    Prime a ↔ Nat.Prime n := by
+  constructor
+  · rintro ⟨m, hm, hp⟩
+    have h : m = n := by exact_mod_cast M.number_injective (hm.symm.trans ha)
+    exact h ▸ hp
+  · intro hp
+    exact ⟨n, ha, hp⟩
+
+theorem coprime_iff_of_denote {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (a : Obj (M := M) α) (b : Obj (M := M) β) (m n : ℕ)
+    (ha : denote a = M.number (m : ℂ)) (hb : denote b = M.number (n : ℂ)) :
+    Coprime a b ↔ Nat.Coprime m n := by
+  constructor
+  · rintro ⟨i, j, hi, hj, h⟩
+    have h₁ : i = m := by exact_mod_cast M.number_injective (hi.symm.trans ha)
+    have h₂ : j = n := by exact_mod_cast M.number_injective (hj.symm.trans hb)
+    exact h₁ ▸ h₂ ▸ h
+  · intro h
+    exact ⟨m, n, ha, hb, h⟩
+
+theorem dvd_iff_of_denote {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (a : Obj (M := M) α) (b : Obj (M := M) β) (m n : ℤ)
+    (ha : denote a = M.number (m : ℂ)) (hb : denote b = M.number (n : ℂ)) :
+    Dvd a b ↔ n ≠ 0 ∧ n ∣ m := by
+  constructor
+  · rintro ⟨i, j, hi, hj, h⟩
+    have h₁ : i = m := by exact_mod_cast M.number_injective (hi.symm.trans ha)
+    have h₂ : j = n := by exact_mod_cast M.number_injective (hj.symm.trans hb)
+    exact h₁ ▸ h₂ ▸ h
+  · rintro ⟨hn, h⟩
+    exact ⟨m, n, ha, hb, hn, h⟩
+
+theorem emptyNotNonempty {M : Semantics.{u}} [S : SetSemantics M] :
+    ¬ IsNonempty (emptySet (M := M)) := by
+  rintro ⟨x, hx⟩
+  exact S.empty_members x hx
+
+end Litex
+
+namespace Litex
+
+theorem dvdOfModZero {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (p : Obj (M := M) (ModObj (M := M) α β)) (h : Same p (number 0)) :
+    Dvd p.val.left p.val.right := by
+  obtain ⟨a, ha⟩ := (M.integer_members _).mp p.wd.1
+  obtain ⟨b, hb⟩ := (M.integer_members _).mp p.wd.2.1
+  have hb0 : b ≠ 0 := by
+    intro hzero
+    apply p.wd.2.2
+    change denote p.val.right = M.number 0
+    simpa only [hzero, Int.cast_zero] using hb
+  have hmod : a % b = 0 := by
+    have he : ((a % b : ℤ) : ℂ) = 0 := M.number_injective ((modDenoteInt p a b ha hb).symm.trans h)
+    exact_mod_cast he
+  exact ⟨a, b, ha, hb, hb0, Int.dvd_of_emod_eq_zero hmod⟩
+
+end Litex
+
+namespace Litex
+
+theorem naturalNotFinite {M : Semantics.{u}} : ¬ IsFiniteSet (N (M := M)) := by
+  have hi : Function.Injective (fun n : ℕ => M.number (n : ℂ)) := by
+    intro a b h
+    exact_mod_cast M.number_injective h
+  intro h
+  apply Set.infinite_range_of_injective hi
+  exact h.subset (by
+    rintro _ ⟨n, rfl⟩
+    exact (M.natural_members _).mpr ⟨n, rfl⟩)
+
 end Litex

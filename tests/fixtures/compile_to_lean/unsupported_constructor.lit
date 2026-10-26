@@ -1,4 +1,4 @@
-# Verification succeeds, but this constructor has no Lean replay adapter.
+# The prefix succeeds, but this conjugation identity has no Lean proof replay.
 1 = 1
-forall a R:
-    sin(a) + 0 = sin(a)
+forall z C:
+    conj(z) = re(z) - i * img(z)

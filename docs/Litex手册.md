@@ -279,10 +279,19 @@ chap3 = "./chapter03.lit"
 
 1. `[export]` 是有序，每个条目命名一个 `.lit` 文件。不允许导出子目录或嵌套配置节点。
 2. `[export]` 是显式选择列表，而不是完整的目录清单。未列出的文件和文件夹是 sidecar：发现不会在模块命名空间中解析、执行或公开它们。每个声明的导出路径必须为 exist 和点到 `.lit` 文件。
-3. `[import] Alias = path` 挂载另一个模块目录。    `[import std]` 接受裸名称 `N`（表示 `N = N`）或 `Alias = StdName`； `Alias` 下均为挂载 `<std_root>/<StdName>`。解析后`[import]`和`[import std]`是同一种导入。来自两个部分的导入别名在该 `litex.config` 中必须是唯一的；单独的包可以为其自己的路径重用别名。导出名称可以重复使用导入拼写：`a::b` 始终是当前导出，`a::b::c` 是导入路径，`a:::b` 是 `a::<sole_export>::b` 的显式单一导出糖。
-4. 规范名称遵循挂载别名和导出名称，例如，当 `basics` 有一个导出时，为 `Algebra::chap1::name` 或 `basics:::name`。
+3. `[import] Alias = path` 挂载另一个模块目录。    `[import std]` 接受裸名称 `N`（表示 `N = N`）或 `Alias = StdName`； `Alias` 下均为挂载 `<std_root>/<StdName>`。解析后`[import]`和`[import std]`是同一种导入。来自两个部分的导入别名在该 `litex.config` 中必须是唯一的；单独的包可以为其自己的路径重用别名。导出名称可以重复使用导入拼写。`a::b` 引用当前导出，或使用显式配置的命名空间别名；`a::b::c` 引用真实的导入与导出路径。
+4. 规范名称遵循挂载别名和导出名称，例如 `Algebra::chap1::name` 或 `basics::main::name`。
 
-struct 载体接受以下相同路径：`&local::Pair`、`&Lib::facts::Tagged<R>`，对于只有一个导出的导入，则接受 `&Lib:::Tagged<R>`。为字段类型、函数返回和嵌套 struct 字段保留完整的定义所有者。缺少路径、错误参数以及所选载体之外的元组是被拒绝。请参阅可运行的 [合格的 struct 夹具](../examples/module_manager/qualified_struct_views/README.md)。
+**预览：显式命名空间别名。** 在当前包的配置中声明：
+
+```ini
+[alias]
+C = Lib::facts
+```
+
+`C::v` 与 `Lib::facts::v` 解析到同一声明，适用于对象、函数、命题、定理、template 和 struct 载体。目标必须是真实导入及其真实导出；重复别名、与本地导出重名、目标不存在和别名串联均被拒绝。别名可以与导入同名，只在当前包内生效，不构成新的导出。增加其他导出不影响这条映射。单独的 `C` 仍是普通未限定名称。`:::` 已移除，请使用完整路径或配置显式别名。见[可运行验收项目](../examples/module_manager/namespace_aliases/README.md)。
+
+struct 载体接受以下相同路径：`&local::Pair`、`&Lib::facts::Tagged<R>`，以及配置别名后的 `&C::Tagged<R>`。为字段类型、函数返回和嵌套 struct 字段保留完整的定义所有者。缺少路径、错误参数以及所选载体之外的元组是被拒绝。请参阅可运行的 [合格的 struct 夹具](../examples/module_manager/qualified_struct_views/README.md)。
 
 跨模块引用始终使用规范限定名称。模块别名和符号是分开的，因此局部符号也可能是命名 `A`；字段选择（例如 `obj.b`）保留在字段命名空间中。导出在加载期间不可用，因此较早的文件无法引用较晚的导出。
 
@@ -2165,7 +2174,7 @@ release thm add_zero(2)
 
 `thm` 证明并命名了一种可重复使用的 `Fact`，使用与 `claim` 相同的目标形状。 WD 或证明执行之前的拒绝和根 `forall ... <=>:` 目标均具有 `goal_unsupported` 用户诊断；这不是内部错误。对于等价，将两个方向证明为单独的普通 `forall` 定理。请参阅 [定理-目标边界示踪剂](../examples/stmt_nodes/definition/def_thm_forall_iff_boundary.lit)。全称定理可用于显式定理调用和普通的已知 `forall` 匹配。 `axiom` 仍然仅适用于全称，并为受信任的事实提供相同的带括号的调用接口，而无需证明。
 
-> **预览：** 定理调用接受普通名称或限定名称 (`export::thm`、`Mod::export::thm`、`Mod:::thm`)。查找使用 live Env 堆栈作为普通名称，并使用完成的导出文件的 Env 作为限定名称 — 与 `release obj def` 的路径相同。事实搜索仍然没有合并另一个模块的外围事实；仅解决了命名定理定义问题。 `axiom` 的连线方式与 `thm` 相同，用于存储：成功 `axiom` 语句后，命名接口被存储，其 `forall` 进入外围已知事实（无证明） 主体）。 `release thm name(args)` 和 `by thm name(args) => fact` 解析公理名称以及定理名称。
+> **预览：** 定理调用接受普通名称或限定名称 (`export::thm`、`Mod::export::thm`、`Mod::export::thm`)。查找使用 live Env 堆栈作为普通名称，并使用完成的导出文件的 Env 作为限定名称 — 与 `release obj def` 的路径相同。事实搜索仍然没有合并另一个模块的外围事实；仅解决了命名定理定义问题。 `axiom` 的连线方式与 `thm` 相同，用于存储：成功 `axiom` 语句后，命名接口被存储，其 `forall` 进入外围已知事实（无证明） 主体）。 `release thm name(args)` 和 `by thm name(args) => fact` 解析公理名称以及定理名称。
 
 调用拼写记录是否正在发生实例化：
 
@@ -3366,7 +3375,7 @@ by def $P(args)
 ```
 
 
-> **预览：** `$P` 可以是无限定或限定形式（`$export::P`、`$Mod::export::P`、`$Mod:::P`）。定义展开在活动 Env 栈或已完成导出文件的 Env 中查找具体 `prop`。环境中的按定义搜索与语句 `by def` 共用该查找。其他模块存储的事实仍不自动搜索。 > 同一个 ByDefinition 阶段也展开有正式定义的**肯定内置谓词**，例如 `$subset` / `$superset` 展开为成员关系 forall；`$proper_subset` 展开为子集加不相等；还包括 `$injective` / `$surjective` / `$bijective`、`$prime` / `$coprime` / `$dvd`、`$is_choice_function_for`。这些内置谓词在内核 AST 中是**专门的 `AtomicFact` 变体**；`NormalAtomicFact` 仅用于用户定义的 `$prop(...)`。用户 `prop` 与内置谓词共用一个分支：先内置，再用户 `prop`。设计说明：`src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/by_definition_design.md`。`{1} $subset {1, 2}` 等有限列表集合包含使用相同 forall 定义，每项产生的成员关系义务都必须验证。
+> **预览：** `$P` 可以是无限定或限定形式（`$export::P`、`$Mod::export::P`、`$Mod::export::P`）。定义展开在活动 Env 栈或已完成导出文件的 Env 中查找具体 `prop`。环境中的按定义搜索与语句 `by def` 共用该查找。其他模块存储的事实仍不自动搜索。 > 同一个 ByDefinition 阶段也展开有正式定义的**肯定内置谓词**，例如 `$subset` / `$superset` 展开为成员关系 forall；`$proper_subset` 展开为子集加不相等；还包括 `$injective` / `$surjective` / `$bijective`、`$prime` / `$coprime` / `$dvd`、`$is_choice_function_for`。这些内置谓词在内核 AST 中是**专门的 `AtomicFact` 变体**；`NormalAtomicFact` 仅用于用户定义的 `$prop(...)`。用户 `prop` 与内置谓词共用一个分支：先内置，再用户 `prop`。设计说明：`src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/by_definition_design.md`。`{1} $subset {1, 2}` 等有限列表集合包含使用相同 forall 定义，每项产生的成员关系义务都必须验证。
 
 与普通原子验证不同，显式 `by def` 会重新检查定义，即使目标谓词已知。它仅接受一个肯定原子目标以及受支持的具体或官方内置定义。执行条目直接调用定义扩展；已知事实，计算、策略和重写不能取代这第一步。定义条款使用完整的普通验证器。算术比较，等式和 SetBuilder 成员关系在这个定义接口中没有条目，因此即使普通的事实验证，`by def 1 > 0` 和 `by def 1 $in {x R: x > 0}` 等请求也会失败。为了兼容，旧的 `by def:` 目标块仍然被接受。
 
@@ -3569,7 +3578,7 @@ t(2)=2
 |ID|公共形式|数学角色|状态示例|
 |---|---|---|---|
 |[O01](#o01-division)|`a / b`|除法|已检查|
-|[O02](#o02-names-and-qualified-references)|`name; export::name; module::export::name; module:::name`|名称与限定引用|已检查|
+|[O02](#o02-names-and-qualified-references)|`name; export::name; module::export::name; alias::name`|名称与限定引用|已检查|
 |[O03](#o03-function-applications)|`f(arguments)`|函数应用|已检查|
 |[O04](#o04-exact-numeric-literals)|`integer or decimal literal`|精确数值字面量|已检查|
 |[O05](#o05-imaginary-unit)|`i`|虚数单位|已检查|
@@ -3773,7 +3782,7 @@ a / b $in Z
 
 ### O02. 名称与限定引用
 
-**公共形式：** `name; export::name; module::export::name; module:::name`。
+**公共形式：** `name; export::name; module::export::name; alias::name`。
 
 **数学作用。** 引用已声明的数学对象或当前可见的导出定义。限定名用于定位定义，不改变对象的数学含义。
 
@@ -9061,7 +9070,7 @@ template<S set, z S>:
 
 #### 实例所有权与自动定义事实
 
-当导入的模块有一个导出时，该名称使用普通模块/导出形式：`\export::name<args>`、`\Module::export::name<args>` 或 `\Module:::name<args>`。这些形式保留相同的规范 template 所有者；知道导出名称并不会使丢失的 template 有效。配置的 [qualified-template 示例](../examples/module_manager/qualified_template_names/main.lit) 检查所有三个形式及其拒绝边界。
+当导入的模块有一个导出时，该名称使用普通模块/导出形式：`\export::name<args>`、`\Module::export::name<args>` 或 `\Module::export::name<args>`。这些形式保留相同的规范 template 所有者；知道导出名称并不会使丢失的 template 有效。配置的 [qualified-template 示例](../examples/module_manager/qualified_template_names/main.lit) 检查所有三个形式及其拒绝边界。
 
 诸如 `S set` 之类的 template 参数不是范围超过所有集合的集合的函数参数。主体在参数化上下文中检查一次。在 success 上，Litex 将其定义的名称替换为主体定义事实中的 `\name<parameters>`，并将它们存储在 template 的全称绑定变量和标头条件下。后来`\name<args>`保留其表面形式；普通的已知-`forall` 搜索可以实例化那些事实，并且现有的定义-展开路由仍然可用。
 

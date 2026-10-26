@@ -1,4 +1,4 @@
-//! Elaborate surface `::` / `:::` name parts into id-based `AtomicName`.
+//! Elaborate `::` paths and config aliases into id-based `AtomicName`.
 
 use crate::ast::names::AtomicName;
 
@@ -19,40 +19,55 @@ impl GlobalModuleManager {
         }
     }
 
-    /// `a:::b` flatten sugar: import alias `a` with exactly one export → that file + `b`.
+    /// Retained entry point solely for the removed-syntax diagnostic.
     pub fn elaborate_flat_import(&self, alias: &str, name: String) -> Result<AtomicName, String> {
-        let mod_id = self.mod_id_for_local_alias(alias)?;
-        let module = self
-            .imports
-            .get(mod_id)
-            .ok_or_else(|| format!("unknown mod_id {mod_id}"))?;
-        if module.litex_config.exports.len() != 1 {
-            return Err(format!(
-                "`{alias}:::…` requires imported module `{}` to have exactly one [export], found {}",
-                module.name,
-                module.litex_config.exports.len()
-            ));
+        Err(format!(
+            "`:::` has been removed: replace `{alias}:::{name}` with `{alias}::export::{name}`, or configure `[alias] short = {alias}::export` and use `short::{name}` (replace `export` with the actual export name)"
+        ))
+    }
+
+    /// Check every target after imports are mounted, including unused aliases and cache hits.
+    pub fn validate_alias_targets(&self, config: &LitexConfig) -> Result<(), String> {
+        for alias in &config.aliases {
+            let mod_id = self.mod_id_for_alias_in_config(config, &alias.import_alias)?;
+            self.file_id_in_mod(mod_id, &alias.export_name)
+                .map_err(|message| {
+                    format!(
+                        "namespace alias `{}` = {}::{}: {message}",
+                        alias.name, alias.import_alias, alias.export_name
+                    )
+                })?;
         }
-        Ok(AtomicName::WithModAndExportFileId {
-            global_mod_id: mod_id,
-            export_file_id: 0,
-            name,
-        })
+        Ok(())
     }
 
     /// Turn surface segments into `AtomicName`.
     ///
     /// - 1 segment: `Plain`
-    /// - 2 segments: current-module export `a` + name `b` → `WithExportFileId`
+    /// - 2 segments: configured namespace alias, otherwise current-module export
     /// - 3 segments: import alias `a` + export `b` + name `c` → `WithModAndExportFileId`
     ///
-    /// `a:::b` is handled by `elaborate_flat_import`, not this function.
+    /// Alias expansion never changes the declaration's module/file identity.
     pub fn elaborate_name_parts(&self, parts: &[String]) -> Result<AtomicName, String> {
         match parts.len() {
             1 => Ok(AtomicName::Plain {
                 name: parts[0].clone(),
             }),
             2 => {
+                if let Some(alias) = self
+                    .current_litex_config()?
+                    .aliases
+                    .iter()
+                    .find(|alias| alias.name == parts[0])
+                {
+                    let global_mod_id = self.mod_id_for_local_alias(&alias.import_alias)?;
+                    let export_file_id = self.file_id_in_mod(global_mod_id, &alias.export_name)?;
+                    return Ok(AtomicName::WithModAndExportFileId {
+                        global_mod_id,
+                        export_file_id,
+                        name: parts[1].clone(),
+                    });
+                }
                 let export_file_id = self.file_id_in_current(&parts[0])?;
                 match self.current_mod_id {
                     Some(global_mod_id) => Ok(AtomicName::WithModAndExportFileId {
@@ -75,7 +90,7 @@ impl GlobalModuleManager {
                     name: parts[2].clone(),
                 })
             }
-            _ => Err("qualified name must be `a::b`, `a:::b`, or `a::b::c`".to_string()),
+            _ => Err("qualified name must be `a::b` or `a::b::c`".to_string()),
         }
     }
 
@@ -101,6 +116,14 @@ impl GlobalModuleManager {
 
     fn mod_id_for_local_alias(&self, alias: &str) -> Result<usize, String> {
         let config = self.current_litex_config()?;
+        self.mod_id_for_alias_in_config(config, alias)
+    }
+
+    fn mod_id_for_alias_in_config(
+        &self,
+        config: &LitexConfig,
+        alias: &str,
+    ) -> Result<usize, String> {
         let path = config
             .imports
             .iter()

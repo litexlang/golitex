@@ -1,6 +1,6 @@
-release obj def series:::root_terms
+release obj def series::root_terms
 
 have fn missing_bound_terms(k N+) R=1
 
-release thm series:::series_root_test(missing_bound_terms,1/2,1)
+release thm series::series_root_test(missing_bound_terms,1/2,1)
 

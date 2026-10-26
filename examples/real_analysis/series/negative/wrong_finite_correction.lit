@@ -1,12 +1,12 @@
 # Must reject only the final statement; see ../README.md.
-release obj def series:::partial_sum
-release obj def series:::partial_sums
-release obj def series:::series_sum
-release obj def series:::series_tail
+release obj def series::partial_sum
+release obj def series::partial_sums
+release obj def series::series_sum
+release obj def series::series_tail
 
 have fn zero_terms(k N+) R=0
 
-release thm series:::series_sum_zero(zero_terms)
+release thm series::series_sum_zero(zero_terms)
 
 have fn spike(k N+) R by cases:
     case k=1: 3
@@ -20,15 +20,15 @@ claim:
     k!=1
     zero_terms(k)=0=spike(k)
 
-release thm series:::series_sum_eventually_equal(zero_terms,spike,0,1)
+release thm series::series_sum_eventually_equal(zero_terms,spike,0,1)
 
-series:::partial_sum(zero_terms,1)=0
+series::partial_sum(zero_terms,1)=0
 
-series:::partial_sum(spike,1)=spike(1)=3
+series::partial_sum(spike,1)=spike(1)=3
 
-(0-series:::partial_sum(zero_terms,1))+series:::partial_sum(spike,1)=3
+(0-series::partial_sum(zero_terms,1))+series::partial_sum(spike,1)=3
 
-$series:::has_series_sum(spike,3)
+$series::has_series_sum(spike,3)
 
-$series:::has_series_sum(spike,0)
+$series::has_series_sum(spike,0)
 

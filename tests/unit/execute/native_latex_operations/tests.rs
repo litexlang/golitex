@@ -199,7 +199,8 @@ fn native_latex_operations_latex_projection_and_lean_fail_closed() {
     ] {
         assert!(latex.contains(fragment), "{fragment}: {latex}");
     }
-    // A verified native theorem must not acquire an invented Lean proof.
+    // Complex WD and closed values replay, but the third statement's
+    // conjugation expansion must still fail without a supported Lean proof.
     let command = crate::launch_command::parse_launch_command(&[
         "-lean".into(),
         "-f".into(),
@@ -211,6 +212,11 @@ fn native_latex_operations_latex_projection_and_lean_fail_closed() {
     .unwrap();
     let error = crate::run::run_command(command)
         .err()
-        .expect("unsupported native Lean replay");
-    assert!(error.to_string().contains("WD/ComplexOperator"), "{error}");
+        .expect("conjugation expansion still has unsupported Lean evidence");
+    assert!(
+        error
+            .to_string()
+            .contains("phase=compile: statement 3: Complex/ConjugationRuleOrSubject"),
+        "{error}"
+    );
 }

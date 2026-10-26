@@ -1,0 +1,8 @@
+# Express secant, cosecant and cotangent as quotients where their denominators are nonzero.
+forall x R:
+    cos(x) != 0
+    sin(x) != 0
+    =>:
+        sec(x) = 1/cos(x)
+        csc(x) = 1/sin(x)
+        cot(x) = cos(x)/sin(x)

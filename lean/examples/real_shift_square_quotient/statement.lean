@@ -176,7 +176,7 @@ theorem h_56 : ∀ {_Host_i3 : Type v3} [_rep_i3 : Litex.Representation M _Host_
               have _recorded_power_exponent : Litex.In _litex_power.val.exponent (Litex.Z (M := M)) := _elaborated_power_exponent
               exact Litex.powStructuralInC _litex_power _recorded_power_base _recorded_power_exponent
             ) (Litex.mulInC (Litex.number (M := M) (6 : ℂ)) _value_i3 (Litex.numberInC (M := M) (6 : ℂ)) (M.real_subset_complex _ h_1597))) (Litex.numberInC (M := M) (9 : ℂ))))) (Litex.numberInC (M := M) (2 : ℂ)) (Litex.NativeBridge.notSameOfDenoteNumber _wd_1_1 (Litex.number (M := M) (0 : ℂ)) (2 : ℂ) (0 : ℂ) (Litex.NativeBridge.denoteNumber (M := M) (2 : ℂ)) (Litex.NativeBridge.denoteNumber (M := M) (0 : ℂ)) (by norm_num))));
-          (show Litex.Same _equal_wd_1_0 _equal_wd_1_1 from (((congrArg₂ M.divValue (congrArg M.negValue (congrArg₂ M.powValue (by
+          (show Litex.Same _equal_wd_1_0 _equal_wd_1_1 from (((congrArg₂ M.divValue (congrArg M.negValue (congrArg₂ M.powValue (show (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i1 (M := M))) (Litex.denote _value_i3)) = (M.addValue (Litex.denote _value_i3) (M.number (3 : ℂ))) from by
             let _litex_original := (((_equal_wd_1_0).val.left).val.arg).val.base
             let _litex_literal := (let _wd_1_0 := (_object_i1 (M := M));
             let _wd_1_1 := _value_i3;

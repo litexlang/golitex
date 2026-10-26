@@ -1,0 +1,14 @@
+claim:
+    ? forall X, Y finite_set:
+        $is_finite_set(union(set_minus(X,Y),set_minus(Y,X)))
+    release thm comb::main::symmetric_difference_is_finite(X,Y)
+
+claim:
+    ? forall X, Y, Zeta finite_set:
+        $is_finite_set(union(union(X,Y),Zeta))
+        $is_finite_set(intersect(intersect(X,Y),Zeta))
+    release thm comb::main::three_set_union_intersection_are_finite(X,Y,Zeta)
+
+release thm comb::main::power_set_size({})
+
+release thm comb::main::cartesian_product_size({0},Z)

@@ -1,0 +1,18 @@
+{
+  "difference_missing_subset": "premise",
+  "equal_cardinality_missing_subset": "premise",
+  "subset_missing_equal_cardinality": "premise",
+  "disjointness_missing_additivity": "premise",
+  "infinite_union_argument": "argument_type",
+  "infinite_powerset_argument": "argument_type",
+  "infinite_product_argument": "argument_type",
+  "overlap_without_correction": "search_proof",
+  "three_set_omits_triple_correction": "search_proof",
+  "three_set_adds_triple_twice": "search_proof",
+  "symmetric_difference_subtracts_once": "search_proof",
+  "product_uses_addition": "search_proof",
+  "empty_product_has_one_element": "search_proof",
+  "empty_powerset_has_zero_elements": "search_proof",
+  "powerset_counts_elements_only": "search_proof",
+  "equal_size_distinct_sets_are_equal": "search_proof"
+}

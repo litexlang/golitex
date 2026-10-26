@@ -80,7 +80,7 @@ fn run_project_cross_mod_release_thm_and_by_def() {
         "by def $Lib::base::above_zero(1)\n\n\
          release thm Lib::base::add_zero_right(2)\n\
          2 + 0 = 2\n\n\
-         by thm Lib:::add_zero_right(3) => 3 + 0 = 3\n",
+         by thm Lib::base::add_zero_right(3) => 3 + 0 = 3\n",
     );
 
     let result = run_project(LaunchCommand::Repository {
@@ -120,7 +120,7 @@ fn run_project_kb_cache_write_then_hit_cross_mod() {
         "by def $Lib::base::above_zero(1)\n\n\
          release thm Lib::base::add_zero_right(2)\n\
          2 + 0 = 2\n\n\
-         by thm Lib:::add_zero_right(3) => 3 + 0 = 3\n\n\
+         by thm Lib::base::add_zero_right(3) => 3 + 0 = 3\n\n\
          release obj def Lib::base::c\n\
          Lib::base::c = 1\n\n\
          release obj def Lib::base::id\n\

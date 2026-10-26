@@ -142,7 +142,7 @@ theorem h_187 : ∀ {_Host_i8 : Type v8} [_rep_i8 : Litex.Representation M _Host
                   let _equal_wd_1_1 := _object_w30;
                   (show Litex.Same _equal_wd_1_0 _equal_wd_1_1 from (show (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i3 (M := M))) (Litex.FiniteFunction.tupleValue (M := M) ![(M.addValue (Litex.denote _value_i8) (Litex.denote _value_i9)), (Litex.denote _value_i10)])) = (M.divValue (M.addValue (Litex.denote _value_i8) (Litex.denote _value_i9)) (M.addValue (Litex.denote _value_i10) (M.number (1 : ℂ)))) from by
                     have _litex_residual : (M.divValue (M.addValue (Litex.denote _value_i8) (Litex.denote _value_i9)) (M.addValue (Litex.denote _value_i10) (M.number (1 : ℂ)))) = (M.divValue (M.addValue (Litex.denote _value_i8) (Litex.denote _value_i9)) (M.addValue (Litex.denote _value_i10) (M.number (1 : ℂ)))) := (show @Eq M.Value _ _ from Eq.refl _)
-                    exact ((((Eq.refl (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i3 (M := M))) (Litex.FiniteFunction.tupleValue (M := M) ![(M.addValue (Litex.denote _value_i8) (Litex.denote _value_i9)), (Litex.denote _value_i10)])))).trans (by
+                    exact ((((Eq.refl (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i3 (M := M))) (Litex.FiniteFunction.tupleValue (M := M) ![(M.addValue (Litex.denote _value_i8) (Litex.denote _value_i9)), (Litex.denote _value_i10)])))).trans (show (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i3 (M := M))) (Litex.FiniteFunction.tupleValue (M := M) ![(M.addValue (Litex.denote _value_i8) (Litex.denote _value_i9)), (Litex.denote _value_i10)])) = (M.divValue (M.addValue (Litex.denote _value_i8) (Litex.denote _value_i9)) (M.addValue (Litex.denote _value_i10) (M.number (1 : ℂ)))) from by
                     let _litex_original := _equal_wd_1_0
                     let _litex_literal := (let _wd_1_0 := (_object_i3 (M := M));
                     let _object_w28 := (_equal_wd_1_1).val.left;
@@ -177,7 +177,7 @@ theorem h_187 : ∀ {_Host_i8 : Type v8} [_rep_i8 : Litex.Representation M _Host
                   let _equal_wd_1_1 := _object_w32;
                   (show Litex.Same _equal_wd_1_0 _equal_wd_1_1 from (show (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i3 (M := M))) (Litex.FiniteFunction.tupleValue (M := M) ![(Litex.denote _value_i8), (Litex.denote _value_i10)])) = (M.divValue (Litex.denote _value_i8) (M.addValue (Litex.denote _value_i10) (M.number (1 : ℂ)))) from by
                     have _litex_residual : (M.divValue (Litex.denote _value_i8) (M.addValue (Litex.denote _value_i10) (M.number (1 : ℂ)))) = (M.divValue (Litex.denote _value_i8) (M.addValue (Litex.denote _value_i10) (M.number (1 : ℂ)))) := (show @Eq M.Value _ _ from Eq.refl _)
-                    exact ((((Eq.refl (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i3 (M := M))) (Litex.FiniteFunction.tupleValue (M := M) ![(Litex.denote _value_i8), (Litex.denote _value_i10)])))).trans (by
+                    exact ((((Eq.refl (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i3 (M := M))) (Litex.FiniteFunction.tupleValue (M := M) ![(Litex.denote _value_i8), (Litex.denote _value_i10)])))).trans (show (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i3 (M := M))) (Litex.FiniteFunction.tupleValue (M := M) ![(Litex.denote _value_i8), (Litex.denote _value_i10)])) = (M.divValue (Litex.denote _value_i8) (M.addValue (Litex.denote _value_i10) (M.number (1 : ℂ)))) from by
                     let _litex_original := _equal_wd_1_0
                     let _litex_literal := (let _wd_1_0 := (_object_i3 (M := M));
                     let _wd_1_1 := _value_i8;
@@ -210,7 +210,7 @@ theorem h_187 : ∀ {_Host_i8 : Type v8} [_rep_i8 : Litex.Representation M _Host
                   let _equal_wd_1_1 := _object_w34;
                   (show Litex.Same _equal_wd_1_0 _equal_wd_1_1 from (show (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i3 (M := M))) (Litex.FiniteFunction.tupleValue (M := M) ![(Litex.denote _value_i9), (Litex.denote _value_i10)])) = (M.divValue (Litex.denote _value_i9) (M.addValue (Litex.denote _value_i10) (M.number (1 : ℂ)))) from by
                     have _litex_residual : (M.divValue (Litex.denote _value_i9) (M.addValue (Litex.denote _value_i10) (M.number (1 : ℂ)))) = (M.divValue (Litex.denote _value_i9) (M.addValue (Litex.denote _value_i10) (M.number (1 : ℂ)))) := (show @Eq M.Value _ _ from Eq.refl _)
-                    exact ((((Eq.refl (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i3 (M := M))) (Litex.FiniteFunction.tupleValue (M := M) ![(Litex.denote _value_i9), (Litex.denote _value_i10)])))).trans (by
+                    exact ((((Eq.refl (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i3 (M := M))) (Litex.FiniteFunction.tupleValue (M := M) ![(Litex.denote _value_i9), (Litex.denote _value_i10)])))).trans (show (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i3 (M := M))) (Litex.FiniteFunction.tupleValue (M := M) ![(Litex.denote _value_i9), (Litex.denote _value_i10)])) = (M.divValue (Litex.denote _value_i9) (M.addValue (Litex.denote _value_i10) (M.number (1 : ℂ)))) from by
                     let _litex_original := _equal_wd_1_0
                     let _litex_literal := (let _wd_1_0 := (_object_i3 (M := M));
                     let _wd_1_1 := _value_i9;
@@ -423,7 +423,7 @@ theorem h_7725 : (by
             let _atomic_wd_1_0 := _wd_1_1
             exact (h_7441 (M := M)))));
           (show Litex.Same _equal_wd_2_0 (Litex.number (M := M) (1 : ℂ)) from (Litex.NativeBridge.sameOfDenoteNumber _equal_wd_2_0 (Litex.number (M := M) (1 : ℂ)) ((2 : ℂ) / ((1 : ℂ) + (1 : ℂ))) (1 : ℂ) (Litex.NativeBridge.denoteDiv (Litex.number (M := M) (2 : ℂ)) (_equal_wd_2_0).val.right (_equal_wd_2_0).wd.1 (_equal_wd_2_0).wd.2.1 (_equal_wd_2_0).wd.2.2 _ _ (Litex.NativeBridge.denoteNumber (M := M) (2 : ℂ)) (Litex.NativeBridge.denoteAdd (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (1 : ℂ)) (Litex.numberInC (M := M) (1 : ℂ)) (Litex.numberInC (M := M) (1 : ℂ)) _ _ (Litex.NativeBridge.denoteNumber (M := M) (1 : ℂ)) (Litex.NativeBridge.denoteNumber (M := M) (1 : ℂ)))) (Litex.NativeBridge.denoteNumber (M := M) (1 : ℂ)) (by norm_num))))
-          exact ((((Eq.refl (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i3 (M := M))) (Litex.FiniteFunction.tupleValue (M := M) ![(M.number (2 : ℂ)), (M.number (1 : ℂ))])))).trans (by
+          exact ((((Eq.refl (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i3 (M := M))) (Litex.FiniteFunction.tupleValue (M := M) ![(M.number (2 : ℂ)), (M.number (1 : ℂ))])))).trans (show (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i3 (M := M))) (Litex.FiniteFunction.tupleValue (M := M) ![(M.number (2 : ℂ)), (M.number (1 : ℂ))])) = (M.divValue (M.number (2 : ℂ)) (M.addValue (M.number (1 : ℂ)) (M.number (1 : ℂ)))) from by
           let _litex_original := _equal_wd_1_0
           let _litex_literal := (let _wd_1_0 := (_object_i3 (M := M));
           let _wd_1_1 := (Litex.number (M := M) (2 : ℂ));
@@ -454,7 +454,7 @@ theorem h_7828 : (by
             let _atomic_wd_1_0 := _wd_1_1
             exact (h_7441 (M := M)))));
           (show Litex.Same _equal_wd_2_0 (Litex.number (M := M) (2 : ℂ)) from (Litex.NativeBridge.sameOfDenoteNumber _equal_wd_2_0 (Litex.number (M := M) (2 : ℂ)) ((4 : ℂ) / ((1 : ℂ) + (1 : ℂ))) (2 : ℂ) (Litex.NativeBridge.denoteDiv (Litex.number (M := M) (4 : ℂ)) (_equal_wd_2_0).val.right (_equal_wd_2_0).wd.1 (_equal_wd_2_0).wd.2.1 (_equal_wd_2_0).wd.2.2 _ _ (Litex.NativeBridge.denoteNumber (M := M) (4 : ℂ)) (Litex.NativeBridge.denoteAdd (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (1 : ℂ)) (Litex.numberInC (M := M) (1 : ℂ)) (Litex.numberInC (M := M) (1 : ℂ)) _ _ (Litex.NativeBridge.denoteNumber (M := M) (1 : ℂ)) (Litex.NativeBridge.denoteNumber (M := M) (1 : ℂ)))) (Litex.NativeBridge.denoteNumber (M := M) (2 : ℂ)) (by norm_num))))
-          exact ((((Eq.refl (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i3 (M := M))) (Litex.FiniteFunction.tupleValue (M := M) ![(M.number (4 : ℂ)), (M.number (1 : ℂ))])))).trans (by
+          exact ((((Eq.refl (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i3 (M := M))) (Litex.FiniteFunction.tupleValue (M := M) ![(M.number (4 : ℂ)), (M.number (1 : ℂ))])))).trans (show (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i3 (M := M))) (Litex.FiniteFunction.tupleValue (M := M) ![(M.number (4 : ℂ)), (M.number (1 : ℂ))])) = (M.divValue (M.number (4 : ℂ)) (M.addValue (M.number (1 : ℂ)) (M.number (1 : ℂ)))) from by
           let _litex_original := _equal_wd_1_0
           let _litex_literal := (let _wd_1_0 := (_object_i3 (M := M));
           let _wd_1_1 := (Litex.number (M := M) (4 : ℂ));

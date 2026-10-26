@@ -406,10 +406,7 @@ impl LitexToLeanCompiler {
                 proof: ObjWellDefinedProofByDef::ComplexOperator(_),
             } => self.numeric_complex_wd(wd, position),
             ObjWellDefinedProof::ByDef {
-                obj:
-                    Obj::TrigOperator(
-                        TrigOperator::Sin(_) | TrigOperator::Cos(_) | TrigOperator::Tan(_),
-                    ),
+                obj: Obj::TrigOperator(_),
                 proof: ObjWellDefinedProofByDef::TrigOperator(_),
             } => self.numeric_trig_wd(wd, position),
             ObjWellDefinedProof::ByDef {

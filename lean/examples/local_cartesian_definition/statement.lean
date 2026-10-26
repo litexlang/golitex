@@ -312,44 +312,8 @@ theorem h_4 : ∀ {_Host_i1 : Type v1} [_rep_i1 : Litex.Representation M _Host_i
               let _atomic_wd_1_1 := (Litex.closedRange (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (2 : ℂ)) (Litex.NativeBridge.numberInZOfEq (M := M) (1 : ℂ) (1 : ℤ) (by norm_num)) (Litex.NativeBridge.numberInZOfEq (M := M) (2 : ℂ) (2 : ℤ) (by norm_num)))
               exact (Litex.numberInClosedRangeOfEq (M := M) (1 : ℂ) (2 : ℂ) (2 : ℂ) (1 : ℤ) (2 : ℤ) (2 : ℤ) (by norm_num) (by norm_num) (by norm_num) (by norm_num) (by norm_num))) True.intro) _value_i2
           )));
-          (show Litex.Same _equal_wd_1_0 _equal_wd_1_1 from (((Litex.sameRefl _equal_wd_1_0)).symm.trans ((h_67).trans (by
-            let _left := (Litex.setBuilder (let _wd_1_0 := (Litex.union _value_i1 _value_i2);
-          let _wd_1_1 := (Litex.number (M := M) (2 : ℂ));
-          (Litex.finiteSeq _wd_1_0 _wd_1_1 (by
-            let _atomic_wd_1_0 := (Litex.union _value_i1 _value_i2)
-            exact (Litex.isSet _atomic_wd_1_0)) (Litex.NativeBridge.numberInNOfEq (M := M) (2 : ℂ) (2 : ℕ) (by norm_num)))) (fun (_value_i8 : Litex.Obj (M := M) M.Value) (h_78 : Litex.In _value_i8 (let _wd_1_0 := (Litex.union _value_i1 _value_i2);
-          let _wd_1_1 := (Litex.number (M := M) (2 : ℂ));
-          (Litex.finiteSeq _wd_1_0 _wd_1_1 (by
-            let _atomic_wd_1_0 := (Litex.union _value_i1 _value_i2)
-            exact (Litex.isSet _atomic_wd_1_0)) (Litex.NativeBridge.numberInNOfEq (M := M) (2 : ℂ) (2 : ℕ) (by norm_num))))) => (by
-            let _object_h79 := (Litex.fnSet (Litex.finiteSeqSignature (let _wd_1_0 := (Litex.union _value_i1 _value_i2);
-            let _wd_1_1 := (Litex.number (M := M) (2 : ℂ));
-            (Litex.finiteSeq _wd_1_0 _wd_1_1 (by
-              let _atomic_wd_1_0 := (Litex.union _value_i1 _value_i2)
-              exact (Litex.isSet _atomic_wd_1_0)) (Litex.NativeBridge.numberInNOfEq (M := M) (2 : ℂ) (2 : ℕ) (by norm_num))))))
-            have h_79 : Litex.In _value_i8 _object_h79 :=
-              (by
-                litex_checked_step =>
-                  exact (
-                    (Litex.inOfSame _value_i8 _value_i8 (let _wd_1_0 := (Litex.union _value_i1 _value_i2);
-                    let _wd_1_1 := (Litex.number (M := M) (2 : ℂ));
-                    (Litex.finiteSeq _wd_1_0 _wd_1_1 (by
-                      let _atomic_wd_1_0 := (Litex.union _value_i1 _value_i2)
-                      exact (Litex.isSet _atomic_wd_1_0)) (Litex.NativeBridge.numberInNOfEq (M := M) (2 : ℂ) (2 : ℕ) (by norm_num)))) _object_h79 (Litex.sameRefl _value_i8) (Litex.finiteSeq_eq_fnSet (let _wd_1_0 := (Litex.union _value_i1 _value_i2);
-                    let _wd_1_1 := (Litex.number (M := M) (2 : ℂ));
-                    (Litex.finiteSeq _wd_1_0 _wd_1_1 (by
-                      let _atomic_wd_1_0 := (Litex.union _value_i1 _value_i2)
-                      exact (Litex.isSet _atomic_wd_1_0)) (Litex.NativeBridge.numberInNOfEq (M := M) (2 : ℂ) (2 : ℕ) (by norm_num))))) h_78)
-                  )
-              )
-            exact ∃ (h_65 : Litex.In (let _litex_call_arg_0 := (Litex.number (M := M) (1 : ℂ));
-            Litex.callOnDomain (Litex.closedRange (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (2 : ℂ)) (Litex.NativeBridge.numberInZOfEq (M := M) (1 : ℂ) (1 : ℤ) (by norm_num)) (Litex.NativeBridge.numberInZOfEq (M := M) (2 : ℂ) (2 : ℤ) (by norm_num))) (Litex.union _value_i1 _value_i2) (fun (_litex_input : M.Value) => (fun (_raw_i9 : M.Value) => True) _litex_input) _value_i8 _litex_call_arg_0 h_79 (by
-              let _atomic_wd_1_1 := (Litex.closedRange (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (2 : ℂ)) (Litex.NativeBridge.numberInZOfEq (M := M) (1 : ℂ) (1 : ℤ) (by norm_num)) (Litex.NativeBridge.numberInZOfEq (M := M) (2 : ℂ) (2 : ℤ) (by norm_num)))
-              exact (Litex.numberInClosedRangeOfEq (M := M) (1 : ℂ) (2 : ℂ) (1 : ℂ) (1 : ℤ) (2 : ℤ) (1 : ℤ) (by norm_num) (by norm_num) (by norm_num) (by norm_num) (by norm_num))) True.intro) _value_i1), Litex.In (let _litex_call_arg_0 := (Litex.number (M := M) (2 : ℂ));
-            Litex.callOnDomain (Litex.closedRange (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (2 : ℂ)) (Litex.NativeBridge.numberInZOfEq (M := M) (1 : ℂ) (1 : ℤ) (by norm_num)) (Litex.NativeBridge.numberInZOfEq (M := M) (2 : ℂ) (2 : ℤ) (by norm_num))) (Litex.union _value_i1 _value_i2) (fun (_litex_input : M.Value) => (fun (_raw_i9 : M.Value) => True) _litex_input) _value_i8 _litex_call_arg_0 h_79 (by
-              let _atomic_wd_1_1 := (Litex.closedRange (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (2 : ℂ)) (Litex.NativeBridge.numberInZOfEq (M := M) (1 : ℂ) (1 : ℤ) (by norm_num)) (Litex.NativeBridge.numberInZOfEq (M := M) (2 : ℂ) (2 : ℤ) (by norm_num)))
-              exact (Litex.numberInClosedRangeOfEq (M := M) (1 : ℂ) (2 : ℂ) (2 : ℂ) (1 : ℤ) (2 : ℤ) (2 : ℤ) (by norm_num) (by norm_num) (by norm_num) (by norm_num) (by norm_num))) True.intro) _value_i2
-          )))
+          (show Litex.Same _equal_wd_1_0 _equal_wd_1_1 from (((Litex.sameRefl _equal_wd_1_0)).symm.trans ((h_7).trans (by
+            let _left := _object_w15
             let _right := _equal_wd_1_1
             exact (show Litex.Same _left _right from rfl))))))
         )

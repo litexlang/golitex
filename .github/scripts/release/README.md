@@ -101,6 +101,23 @@ cargo test --release --all-targets --locked
 cargo package --list --allow-dirty --locked --offline
 ```
 
+CI uses `nightly-2026-10-25` for Clippy, with stable retained for Core tests
+and release builds. Clippy 1.99 repeatedly traverses recursive proof-result
+types in `needless_collect`; the pinned snapshot includes the
+[upstream visited-type fix](https://github.com/rust-lang/rust-clippy/commit/b84f31e3bbc535bb2270aadf963d3913c3f3494e).
+Reproduce that full lint pass with:
+
+```bash
+rustup toolchain install nightly-2026-10-25 --profile minimal --component clippy --no-self-update
+cargo +nightly-2026-10-25 clippy -- -A warnings
+```
+
+The `compile_to_lean_cli` suite checks repeated fresh-process output for
+reused forall proofs and alpha-equivalent equality citations. These candidates
+use source FactId order, retaining inner-scope priority for forall reuse.
+The compile-failure fixture uses an unsupported conjugation identity after a
+supported prefix; supported sine expressions are covered as successful replay.
+
 The `reading_http` suite requires real loopback sockets. Its early-rejection
 regression sends 64 KiB request bodies and checks complete HTTP error responses,
 including their declared byte lengths. Run it repeatedly before release when

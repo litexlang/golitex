@@ -86,6 +86,11 @@ pub fn run_file_with_config_observed(
         }
     }
 
+    runtime
+        .global_module_manager
+        .validate_alias_targets(&config)
+        .map_err(RuntimeError::InvalidArguments)?;
+
     let export_limit = match export_index {
         Some(index) => index + 1,
         None => config.exports.len(),

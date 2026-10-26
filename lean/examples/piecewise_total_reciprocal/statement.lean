@@ -162,13 +162,13 @@ theorem h_216 : (by
       )
   )
 
-theorem h_243 : ∀ {_Host_i3 : Type v3} [_rep_i3 : Litex.Representation M _Host_i3] (_value_i3 : Litex.Obj (M := M) _Host_i3) (h_246 : Litex.In _value_i3 (Litex.R (M := M))) (h_241 : ¬ Litex.Same _value_i3 (Litex.number (M := M) (0 : ℂ))), Litex.Same (Litex.call Litex.StandardSetValue.real Litex.StandardSetValue.real (fun (_raw_i2 : M.Value) => True) (_object_i1 (M := M)) _value_i3 (h_63 (M := M)) h_246 True.intro) (Litex.div (Litex.number (M := M) (1 : ℂ)) _value_i3 (Litex.numberInC (M := M) (1 : ℂ)) (M.real_subset_complex _ h_246) h_241) :=
+theorem h_243 : ∀ {_Host_i3 : Type v3} [_rep_i3 : Litex.Representation M _Host_i3] (_value_i3 : Litex.Obj (M := M) _Host_i3) (h_247 : Litex.In _value_i3 (Litex.R (M := M))) (h_241 : ¬ Litex.Same _value_i3 (Litex.number (M := M) (0 : ℂ))), Litex.Same (Litex.call Litex.StandardSetValue.real Litex.StandardSetValue.real (fun (_raw_i2 : M.Value) => True) (_object_i1 (M := M)) _value_i3 (h_63 (M := M)) h_247 True.intro) (Litex.div (Litex.number (M := M) (1 : ℂ)) _value_i3 (Litex.numberInC (M := M) (1 : ℂ)) (M.real_subset_complex _ h_247) h_241) :=
   (by
     litex_complete =>
       exact (
         (by
-          intro _Host_i3 _rep_i3 _value_i3 h_246 h_241
-          exact ((h_67 (M := M)) _value_i3 h_246 h_241)
+          intro _Host_i3 _rep_i3 _value_i3 h_247 h_241
+          exact ((h_67 (M := M)) _value_i3 h_247 h_241)
         )
       )
   )

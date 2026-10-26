@@ -32,6 +32,15 @@ theorem h_7 : ∃ (_value_i1 : Litex.Obj (M := M) M.Value), ∃ (h_8 : Litex.In 
             exact (by
               let _set := _atomic_wd_1_1
               exact ((Litex.inInsert_iff (Litex.number (M := M) (0 : ℂ)) _set.val.element _set.val.tail _set.wd).mpr (Or.inl (show @Eq M.Value _ _ from Eq.refl _)))))
+          have h_14 : Litex.Same _value_i1 (Litex.number (M := M) (0 : ℂ)) :=
+            (by
+              litex_checked_step =>
+                exact (
+                  (by
+                    have _member : M.mem (Litex.denote _value_i1) (Litex.SetSemantics.insertValue (Litex.denote (Litex.number (M := M) (0 : ℂ))) (Litex.SetSemantics.emptyValue (M := M))) := h_13
+                    exact ((Litex.SetSemantics.insert_members _ _ _).mp _member).elim (fun h => h) (fun h => False.elim (Litex.SetSemantics.empty_members _ h)))
+                )
+            )
           have h_15 : Litex.Same _value_i1 (Litex.number (M := M) (0 : ℂ)) := rfl
           have h_18 : ((¬ Litex.Same (Litex.number (M := M) (0 : ℂ)) (Litex.number (M := M) (1 : ℂ))) ∨ (¬ Litex.Same (Litex.number (M := M) (0 : ℂ)) (Litex.number (M := M) (2 : ℂ)))) := (by
             classical
@@ -144,7 +153,7 @@ theorem h_107 : ∃ (_value_i2 : Litex.Obj (M := M) M.Value), ∃ (h_99 : Litex.
       exact (
         (by
           classical
-          have _counterexample : (∃ (_value_i2 : Litex.Obj (M := M) M.Value), ∃ (_ : M.mem (Litex.denote _value_i2) (Litex.SetSemantics.insertValue (M.number (0 : ℂ)) (Litex.SetSemantics.emptyValue (M := M)))), ∃ (h_96 : (((¬ ((Litex.denote _value_i2) = (M.number (1 : ℂ))))) ∨ ((¬ ((Litex.denote _value_i2) = (M.number (2 : ℂ))))))), (((¬ ((Litex.denote _value_i2) = (M.number (3 : ℂ))))) ∨ ((¬ ((Litex.denote _value_i2) = (M.number (4 : ℂ))))))) := by
+          have _counterexample : (∃ (_value_i2 : Litex.Obj (M := M) M.Value), ∃ (_ : M.mem (Litex.denote _value_i2) (Litex.SetSemantics.insertValue (M.number (0 : ℂ)) (Litex.SetSemantics.emptyValue (M := M)))), ∃ (h_105 : (((¬ ((Litex.denote _value_i2) = (M.number (1 : ℂ))))) ∨ ((¬ ((Litex.denote _value_i2) = (M.number (2 : ℂ))))))), (((¬ ((Litex.denote _value_i2) = (M.number (3 : ℂ))))) ∨ ((¬ ((Litex.denote _value_i2) = (M.number (4 : ℂ))))))) := by
             simpa only [not_forall, Classical.not_imp, not_and_or, not_or, not_not, and_or_left, or_and_right, and_assoc, or_assoc, exists_prop] using (h_91 (M := M))
           exact _counterexample)
       )

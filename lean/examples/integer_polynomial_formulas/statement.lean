@@ -157,7 +157,7 @@ theorem h_529 : (by
         (show Litex.Same _equal_wd_1_0 (Litex.number (M := M) (3 : ℂ)) from (show (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i1 (M := M))) (M.number (2 : ℂ))) = (M.number (3 : ℂ)) from by
           have _litex_residual : (M.addValue (M.number (2 : ℂ)) (M.number (1 : ℂ))) = (M.number (3 : ℂ)) := (let _equal_wd_2_0 := (Litex.add (Litex.number (M := M) (2 : ℂ)) (Litex.number (M := M) (1 : ℂ)) (Litex.numberInC (M := M) (2 : ℂ)) (Litex.numberInC (M := M) (1 : ℂ)));
           (show Litex.Same _equal_wd_2_0 (Litex.number (M := M) (3 : ℂ)) from (Litex.NativeBridge.sameOfDenoteNumber _equal_wd_2_0 (Litex.number (M := M) (3 : ℂ)) ((2 : ℂ) + (1 : ℂ)) (3 : ℂ) (Litex.NativeBridge.denoteAdd (Litex.number (M := M) (2 : ℂ)) (Litex.number (M := M) (1 : ℂ)) (_equal_wd_2_0).wd.1 (_equal_wd_2_0).wd.2 _ _ (Litex.NativeBridge.denoteNumber (M := M) (2 : ℂ)) (Litex.NativeBridge.denoteNumber (M := M) (1 : ℂ))) (Litex.NativeBridge.denoteNumber (M := M) (3 : ℂ)) (by norm_num))))
-          exact ((((Eq.refl (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i1 (M := M))) (M.number (2 : ℂ))))).trans (by
+          exact ((((Eq.refl (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i1 (M := M))) (M.number (2 : ℂ))))).trans (show (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i1 (M := M))) (M.number (2 : ℂ))) = (M.addValue (M.number (2 : ℂ)) (M.number (1 : ℂ))) from by
           let _litex_original := _equal_wd_1_0
           let _litex_literal := (let _wd_1_0 := (_object_i1 (M := M));
           let _wd_1_1 := (Litex.number (M := M) (2 : ℂ));
@@ -181,7 +181,7 @@ theorem h_619 : (by
         (show Litex.Same _equal_wd_1_0 (Litex.number (M := M) (3 : ℂ)) from (show (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i3 (M := M))) (Litex.FiniteFunction.tupleValue (M := M) ![(M.number (5 : ℂ)), (M.number (2 : ℂ))])) = (M.number (3 : ℂ)) from by
           have _litex_residual : (M.subValue (M.number (5 : ℂ)) (M.number (2 : ℂ))) = (M.number (3 : ℂ)) := (let _equal_wd_2_0 := (Litex.sub (Litex.number (M := M) (5 : ℂ)) (Litex.number (M := M) (2 : ℂ)) (Litex.numberInC (M := M) (5 : ℂ)) (Litex.numberInC (M := M) (2 : ℂ)));
           (show Litex.Same _equal_wd_2_0 (Litex.number (M := M) (3 : ℂ)) from (Litex.NativeBridge.sameOfDenoteNumber _equal_wd_2_0 (Litex.number (M := M) (3 : ℂ)) ((5 : ℂ) - (2 : ℂ)) (3 : ℂ) (Litex.NativeBridge.denoteSub (Litex.number (M := M) (5 : ℂ)) (Litex.number (M := M) (2 : ℂ)) (_equal_wd_2_0).wd.1 (_equal_wd_2_0).wd.2 _ _ (Litex.NativeBridge.denoteNumber (M := M) (5 : ℂ)) (Litex.NativeBridge.denoteNumber (M := M) (2 : ℂ))) (Litex.NativeBridge.denoteNumber (M := M) (3 : ℂ)) (by norm_num))))
-          exact ((((Eq.refl (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i3 (M := M))) (Litex.FiniteFunction.tupleValue (M := M) ![(M.number (5 : ℂ)), (M.number (2 : ℂ))])))).trans (by
+          exact ((((Eq.refl (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i3 (M := M))) (Litex.FiniteFunction.tupleValue (M := M) ![(M.number (5 : ℂ)), (M.number (2 : ℂ))])))).trans (show (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i3 (M := M))) (Litex.FiniteFunction.tupleValue (M := M) ![(M.number (5 : ℂ)), (M.number (2 : ℂ))])) = (M.subValue (M.number (5 : ℂ)) (M.number (2 : ℂ))) from by
           let _litex_original := _equal_wd_1_0
           let _litex_literal := (let _wd_1_0 := (_object_i3 (M := M));
           let _wd_1_1 := (Litex.number (M := M) (5 : ℂ));
@@ -219,7 +219,7 @@ theorem h_845 : (by
             exact (Litex.NativeBridge.inOfDenoteNumber _atomic_wd_1_0 (-2 : ℂ) (Litex.C (M := M)) (((Litex.NativeBridge.denoteNeg (Litex.number (M := M) (2 : ℂ)) (_atomic_wd_1_0).wd _ (Litex.NativeBridge.denoteNumber (M := M) (2 : ℂ)))).trans (congrArg M.number (by norm_num : (- (2 : ℂ)) = (-2 : ℂ)))) (Litex.numberInC (M := M) (-2 : ℂ)))) (Litex.numberInC (M := M) (3 : ℂ))));
           let _equal_wd_2_1 := _equal_wd_1_1;
           (show Litex.Same _equal_wd_2_0 _equal_wd_2_1 from (Litex.NativeBridge.sameOfDenoteNumber _equal_wd_2_0 _equal_wd_2_1 ((- (2 : ℂ)) * (3 : ℂ)) (- (6 : ℂ)) (Litex.NativeBridge.denoteMul (_equal_wd_2_0).val.left (Litex.number (M := M) (3 : ℂ)) (_equal_wd_2_0).wd.1 (_equal_wd_2_0).wd.2 _ _ (Litex.NativeBridge.denoteNeg (Litex.number (M := M) (2 : ℂ)) ((_equal_wd_2_0).val.left).wd _ (Litex.NativeBridge.denoteNumber (M := M) (2 : ℂ))) (Litex.NativeBridge.denoteNumber (M := M) (3 : ℂ))) (Litex.NativeBridge.denoteNeg (Litex.number (M := M) (6 : ℂ)) (_equal_wd_2_1).wd _ (Litex.NativeBridge.denoteNumber (M := M) (6 : ℂ))) (by norm_num))))
-          exact ((((Eq.refl (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i6 (M := M))) (Litex.FiniteFunction.tupleValue (M := M) ![(M.negValue (M.number (2 : ℂ))), (M.number (3 : ℂ))])))).trans (by
+          exact ((((Eq.refl (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i6 (M := M))) (Litex.FiniteFunction.tupleValue (M := M) ![(M.negValue (M.number (2 : ℂ))), (M.number (3 : ℂ))])))).trans (show (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i6 (M := M))) (Litex.FiniteFunction.tupleValue (M := M) ![(M.negValue (M.number (2 : ℂ))), (M.number (3 : ℂ))])) = (M.mulValue (M.negValue (M.number (2 : ℂ))) (M.number (3 : ℂ))) from by
           let _litex_original := _equal_wd_1_0
           let _litex_literal := (let _wd_1_0 := (_object_i6 (M := M));
           let _object_w32 := (_equal_wd_1_0).val.first;
@@ -249,7 +249,7 @@ theorem h_1479 : (by
         let _equal_wd_1_1 := (_object_w36 (M := M));
         (show Litex.Same _equal_wd_1_0 _equal_wd_1_1 from (show (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i9 (M := M))) (M.number (2 : ℂ))) = (M.negValue (M.number (2 : ℂ))) from by
           have _litex_residual : (M.negValue (M.number (2 : ℂ))) = (M.negValue (M.number (2 : ℂ))) := (show @Eq M.Value _ _ from Eq.refl _)
-          exact ((((Eq.refl (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i9 (M := M))) (M.number (2 : ℂ))))).trans (by
+          exact ((((Eq.refl (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i9 (M := M))) (M.number (2 : ℂ))))).trans (show (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i9 (M := M))) (M.number (2 : ℂ))) = (M.negValue (M.number (2 : ℂ))) from by
           let _litex_original := _equal_wd_1_0
           let _litex_literal := (let _wd_1_0 := (_object_i9 (M := M));
           let _wd_1_1 := (Litex.number (M := M) (2 : ℂ));
@@ -282,7 +282,7 @@ theorem h_1882 : (by
           (show Litex.Same _equal_wd_2_0 (Litex.number (M := M) (9 : ℂ)) from (Litex.NativeBridge.sameOfDenoteNumber _equal_wd_2_0 (Litex.number (M := M) (9 : ℂ)) ((- (3 : ℂ)) ^ (2 : ℕ)) (9 : ℂ) (Litex.NativeBridge.denotePowNatReal (_equal_wd_2_0).val.base (Litex.number (M := M) (2 : ℂ)) (2 : ℕ) (by
             let _atomic_wd_1_0 := (_equal_wd_2_0).val.base
             exact (Litex.NativeBridge.inOfDenoteNumber _atomic_wd_1_0 (- (3 : ℂ)) (Litex.R (M := M)) (Litex.NativeBridge.denoteNeg (Litex.number (M := M) (3 : ℂ)) (_atomic_wd_1_0).wd _ (Litex.NativeBridge.denoteNumber (M := M) (3 : ℂ))) (Litex.NativeBridge.numberInROfEq (- (3 : ℂ)) (-3 : ℝ) (by norm_num)))) (Litex.NativeBridge.numberInNOfEq (M := M) (2 : ℂ) (2 : ℕ) (by norm_num)) (Litex.NativeBridge.sameOfDenoteNumber (Litex.number (M := M) (2 : ℂ)) (Litex.number (M := M) ((2 : ℕ) : ℂ)) (2 : ℂ) ((2 : ℕ) : ℂ) (Litex.NativeBridge.denoteNumber (M := M) (2 : ℂ)) (Litex.NativeBridge.denoteNumber (M := M) ((2 : ℕ) : ℂ)) (by norm_num)) _ (Litex.NativeBridge.denoteNeg (Litex.number (M := M) (3 : ℂ)) ((_equal_wd_2_0).val.base).wd _ (Litex.NativeBridge.denoteNumber (M := M) (3 : ℂ)))) (Litex.NativeBridge.denoteNumber (M := M) (9 : ℂ)) (by norm_num))))
-          exact ((((Eq.refl (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i11 (M := M))) (M.negValue (M.number (3 : ℂ)))))).trans (by
+          exact ((((Eq.refl (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i11 (M := M))) (M.negValue (M.number (3 : ℂ)))))).trans (show (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i11 (M := M))) (M.negValue (M.number (3 : ℂ)))) = (M.powValue (M.negValue (M.number (3 : ℂ))) (M.number (2 : ℂ))) from by
           let _litex_original := _equal_wd_1_0
           let _litex_literal := (let _wd_1_0 := (_object_i11 (M := M));
           let _object_w41 := (_equal_wd_1_0).val.argument;

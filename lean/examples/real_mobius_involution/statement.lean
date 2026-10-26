@@ -153,7 +153,7 @@ theorem h_424 : ∀ {_Host_i6 : Type v6} [_rep_i6 : Litex.Representation M _Host
                   let _equal_wd_1_1 := _object_w20;
                   (show Litex.Same _equal_wd_1_0 _equal_wd_1_1 from (show (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i2 (M := M))) (Litex.denote _value_i6)) = (M.divValue (M.addValue (Litex.denote _value_i6) (M.number (1 : ℂ))) (M.subValue (Litex.denote _value_i6) (M.number (1 : ℂ)))) from by
                     have _litex_residual : (M.divValue (M.addValue (Litex.denote _value_i6) (M.number (1 : ℂ))) (M.subValue (Litex.denote _value_i6) (M.number (1 : ℂ)))) = (M.divValue (M.addValue (Litex.denote _value_i6) (M.number (1 : ℂ))) (M.subValue (Litex.denote _value_i6) (M.number (1 : ℂ)))) := (show @Eq M.Value _ _ from Eq.refl _)
-                    exact ((((Eq.refl (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i2 (M := M))) (Litex.denote _value_i6)))).trans (by
+                    exact ((((Eq.refl (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i2 (M := M))) (Litex.denote _value_i6)))).trans (show (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i2 (M := M))) (Litex.denote _value_i6)) = (M.divValue (M.addValue (Litex.denote _value_i6) (M.number (1 : ℂ))) (M.subValue (Litex.denote _value_i6) (M.number (1 : ℂ)))) from by
                     let _litex_original := _equal_wd_1_0
                     let _litex_literal := (let _wd_1_0 := (_object_i2 (M := M));
                     let _wd_1_1 := _value_i6;
@@ -187,7 +187,7 @@ theorem h_424 : ∀ {_Host_i6 : Type v6} [_rep_i6 : Litex.Representation M _Host
                 exact (
                   (let _equal_wd_1_0 := _object_w21;
                   let _equal_wd_1_1 := _object_w22;
-                  (show Litex.Same _equal_wd_1_0 _equal_wd_1_1 from (((congrArg₂ M.subValue (by
+                  (show Litex.Same _equal_wd_1_0 _equal_wd_1_1 from (((congrArg₂ M.subValue (show (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i2 (M := M))) (Litex.denote _value_i6)) = (M.divValue (M.addValue (Litex.denote _value_i6) (M.number (1 : ℂ))) (M.subValue (Litex.denote _value_i6) (M.number (1 : ℂ)))) from by
                     let _litex_original := _object_w19
                     let _litex_literal := (let _wd_1_0 := (_object_i2 (M := M));
                     let _wd_1_1 := _value_i6;
@@ -330,7 +330,7 @@ theorem h_3588 : ∀ {_Host_i8 : Type v8} [_rep_i8 : Litex.Representation M _Hos
                 exact (
                   (show (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i2 (M := M))) (Litex.denote _value_i8)) = (M.divValue (M.addValue (Litex.denote _value_i8) (M.number (1 : ℂ))) (M.subValue (Litex.denote _value_i8) (M.number (1 : ℂ)))) from by
                     have _litex_residual : (M.divValue (M.addValue (Litex.denote _value_i8) (M.number (1 : ℂ))) (M.subValue (Litex.denote _value_i8) (M.number (1 : ℂ)))) = (M.divValue (M.addValue (Litex.denote _value_i8) (M.number (1 : ℂ))) (M.subValue (Litex.denote _value_i8) (M.number (1 : ℂ)))) := (show @Eq M.Value _ _ from Eq.refl _)
-                    exact ((((Eq.refl (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i2 (M := M))) (Litex.denote _value_i8)))).trans (by
+                    exact ((((Eq.refl (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i2 (M := M))) (Litex.denote _value_i8)))).trans (show (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i2 (M := M))) (Litex.denote _value_i8)) = (M.divValue (M.addValue (Litex.denote _value_i8) (M.number (1 : ℂ))) (M.subValue (Litex.denote _value_i8) (M.number (1 : ℂ)))) from by
                     let _litex_original := _object_w31
                     let _litex_literal := (let _wd_1_0 := (_object_i2 (M := M));
                     let _wd_1_1 := _value_i8;
@@ -458,7 +458,7 @@ theorem h_3588 : ∀ {_Host_i8 : Type v8} [_rep_i8 : Litex.Representation M _Hos
                     let _equal_wd_1_1 := _chain_wd_3593_1;
                     (show Litex.Same _equal_wd_1_0 _equal_wd_1_1 from (show (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i2 (M := M))) (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i2 (M := M))) (Litex.denote _value_i8))) = (M.divValue (M.addValue (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i2 (M := M))) (Litex.denote _value_i8)) (M.number (1 : ℂ))) (M.subValue (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i2 (M := M))) (Litex.denote _value_i8)) (M.number (1 : ℂ)))) from by
                       have _litex_residual : (M.divValue (M.addValue (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i2 (M := M))) (Litex.denote _value_i8)) (M.number (1 : ℂ))) (M.subValue (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i2 (M := M))) (Litex.denote _value_i8)) (M.number (1 : ℂ)))) = (M.divValue (M.addValue (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i2 (M := M))) (Litex.denote _value_i8)) (M.number (1 : ℂ))) (M.subValue (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i2 (M := M))) (Litex.denote _value_i8)) (M.number (1 : ℂ)))) := (show @Eq M.Value _ _ from Eq.refl _)
-                      exact ((((Eq.refl (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i2 (M := M))) (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i2 (M := M))) (Litex.denote _value_i8))))).trans (by
+                      exact ((((Eq.refl (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i2 (M := M))) (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i2 (M := M))) (Litex.denote _value_i8))))).trans (show (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i2 (M := M))) (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i2 (M := M))) (Litex.denote _value_i8))) = (M.divValue (M.addValue (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i2 (M := M))) (Litex.denote _value_i8)) (M.number (1 : ℂ))) (M.subValue (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i2 (M := M))) (Litex.denote _value_i8)) (M.number (1 : ℂ)))) from by
                       let _litex_original := _equal_wd_1_0
                       let _litex_literal := (let _wd_1_0 := (_object_i2 (M := M));
                       let _wd_1_1 := _object_w31;

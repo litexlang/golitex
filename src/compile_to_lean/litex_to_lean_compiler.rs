@@ -414,6 +414,13 @@ fn object_uses_sets(object: &Obj) -> bool {
         Obj::TrigOperator(TrigOperator::Sin(p)) => object_uses_sets(&p.arg),
         Obj::TrigOperator(TrigOperator::Cos(p)) => object_uses_sets(&p.arg),
         Obj::TrigOperator(TrigOperator::Tan(p)) => object_uses_sets(&p.arg),
+        Obj::TrigOperator(TrigOperator::Cot(p)) => object_uses_sets(&p.arg),
+        // The source intrinsic codomain is R*, including when the goal asks for R.
+        Obj::TrigOperator(TrigOperator::Sec(_) | TrigOperator::Csc(_)) => true,
+        Obj::TrigOperator(TrigOperator::Arcsin(p)) => object_uses_sets(&p.arg),
+        Obj::TrigOperator(TrigOperator::Arccos(p)) => object_uses_sets(&p.arg),
+        Obj::TrigOperator(TrigOperator::Arctan(p)) => object_uses_sets(&p.arg),
+        Obj::TrigOperator(TrigOperator::Arccot(p)) => object_uses_sets(&p.arg),
         Obj::ExpLogOperator(ExpLogOperator::Exp(p)) => object_uses_sets(&p.arg),
         Obj::ExpLogOperator(ExpLogOperator::Log(p)) => {
             object_uses_sets(&p.base) || object_uses_sets(&p.arg)

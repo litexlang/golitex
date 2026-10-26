@@ -1,0 +1,11 @@
+# A zero integer remainder proves divisibility, with a nonzero divisor.
+15 % 3 = 0
+$dvd(15,3)
+
+thm phase12_remainder_zero:
+    ? forall a Z, b Z*:
+        a % b = 0
+        =>:
+            $dvd(a,b)
+
+by thm phase12_remainder_zero(15,3) => $dvd(15,3)

@@ -21,6 +21,10 @@ identities consume the stated symmetric Hessians and identities of fields.
 `continuous_composition.lit` proves continuity and a limit of `abs(x(1))` at
 the origin by composing a continuous unary function with a coordinate map.
 `coordinates/main.lit` imports the ordinary `std/real_multivariable` helpers.
+The [cross-product example](cross_product/README.md) imports the source real
+three-dimensional cross product and its algebra, orthogonality, norm and
+triple-product laws. It includes indexed-function inputs and rejection controls;
+this vector operation has a separate name and contract from `curl(F,p)`.
 
 Run each file with `target/release/litex -strict -lang en -f <file>`.
 Negative controls are `examples/wd_negative/multivariable_without_proof.lit`

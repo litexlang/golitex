@@ -73,6 +73,44 @@ impl LitexToLeanCompiler {
                 &p.proof_of_requirement_facts,
                 position,
             ),
+            (
+                AtomicFact::SupersetFact(f),
+                AtomicExceptEqualityFactSearchProofByDefinition::BuiltinProp(
+                    BuiltinPropDefinitionProof::Superset(p),
+                ),
+            ) => self.compile_subset_definition(
+                &SubsetFact {
+                    fact_id: f.fact_id,
+                    left: f.right.clone(),
+                    right: f.left.clone(),
+                    line_file: f.line_file.clone(),
+                },
+                &p.requirement_facts,
+                &p.proof_of_requirement_facts,
+                position,
+            ),
+            (
+                AtomicFact::ProperSubsetFact(_),
+                AtomicExceptEqualityFactSearchProofByDefinition::BuiltinProp(
+                    BuiltinPropDefinitionProof::ProperSubset(p),
+                ),
+            ) => self.compile_proper_inclusion_definition(
+                goal,
+                &p.requirement_facts,
+                &p.proof_of_requirement_facts,
+                position,
+            ),
+            (
+                AtomicFact::ProperSupersetFact(_),
+                AtomicExceptEqualityFactSearchProofByDefinition::BuiltinProp(
+                    BuiltinPropDefinitionProof::ProperSuperset(p),
+                ),
+            ) => self.compile_proper_inclusion_definition(
+                goal,
+                &p.requirement_facts,
+                &p.proof_of_requirement_facts,
+                position,
+            ),
             (_, AtomicExceptEqualityFactSearchProofByDefinition::BuiltinProp(_)) => {
                 Err(LeanCompileError::unsupported("Prop/BuiltinDefinition"))
             }

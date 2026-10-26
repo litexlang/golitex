@@ -3,28 +3,28 @@ thm consume_injection_size_le:
         $injective(X, Y, f)
         =>:
             finite_set_size(X) <= finite_set_size(Y)
-    release thm comb:::injection_size_le(X,Y,f)
+    release thm comb::injection_size_le(X,Y,f)
 
 thm consume_surjection_size_ge:
     ? forall X, Y finite_set, f fn(x X) Y:
         $surjective(X, Y, f)
         =>:
             finite_set_size(Y) <= finite_set_size(X)
-    release thm comb:::surjection_size_ge(X,Y,f)
+    release thm comb::surjection_size_ge(X,Y,f)
 
 thm consume_pigeonhole_collision:
     ? forall X, Y finite_set, f fn(x X) Y:
         finite_set_size(Y) < finite_set_size(X)
         =>:
             exist x, y X st {x != y, f(x) = f(y)}
-    release thm comb:::pigeonhole_collision(X,Y,f)
+    release thm comb::pigeonhole_collision(X,Y,f)
 
 thm consume_cardinality_gap_omits_value:
     ? forall X, Y finite_set, f fn(x X) Y:
         finite_set_size(X) < finite_set_size(Y)
         =>:
             exist y Y st {not y $in fn_range(f)}
-    release thm comb:::cardinality_gap_omits_value(X,Y,f)
+    release thm comb::cardinality_gap_omits_value(X,Y,f)
 
 thm consume_equal_size_injection_is_bijective:
     ? forall X, Y finite_set, f fn(x X) Y:
@@ -32,12 +32,12 @@ thm consume_equal_size_injection_is_bijective:
         finite_set_size(X) = finite_set_size(Y)
         =>:
             $bijective(X, Y, f)
-    release thm comb:::equal_size_injection_is_bijective(X,Y,f)
+    release thm comb::equal_size_injection_is_bijective(X,Y,f)
 
 thm consume_remove_one_size:
     ? forall X finite_set, point X:
         finite_set_size(set_minus(X, {point})) = finite_set_size(X) - 1
-    release thm comb:::remove_one_size(X,point)
+    release thm comb::remove_one_size(X,point)
 
 thm consume_surjection_collision_strict_size:
     ? forall X, Y finite_set, f fn(x X) Y, point, duplicate X:
@@ -46,7 +46,7 @@ thm consume_surjection_collision_strict_size:
         f(point) = f(duplicate)
         =>:
             finite_set_size(Y) < finite_set_size(X)
-    release thm comb:::surjection_collision_strict_size(X,Y,f,point,duplicate)
+    release thm comb::surjection_collision_strict_size(X,Y,f,point,duplicate)
 
 thm consume_equal_size_surjection_is_bijective:
     ? forall X, Y finite_set, f fn(x X) Y:
@@ -54,7 +54,7 @@ thm consume_equal_size_surjection_is_bijective:
         finite_set_size(X) = finite_set_size(Y)
         =>:
             $bijective(X, Y, f)
-    release thm comb:::equal_size_surjection_is_bijective(X,Y,f)
+    release thm comb::equal_size_surjection_is_bijective(X,Y,f)
 
 thm consume_mutual_finite_injections_are_bijective:
     ? forall X, Y finite_set, f fn(x X) Y, g fn(y Y) X:
@@ -64,7 +64,7 @@ thm consume_mutual_finite_injections_are_bijective:
             finite_set_size(X) = finite_set_size(Y)
             $bijective(X, Y, f)
             $bijective(Y, X, g)
-    release thm comb:::mutual_finite_injections_are_bijective(X,Y,f,g)
+    release thm comb::mutual_finite_injections_are_bijective(X,Y,f,g)
 
 thm consume_disjoint_partition_size:
     ? forall X, A, B finite_set:
@@ -72,4 +72,4 @@ thm consume_disjoint_partition_size:
         intersect(A, B) = {}
         =>:
             finite_set_size(X) = finite_set_size(A) + finite_set_size(B)
-    release thm comb:::disjoint_partition_size(X,A,B)
+    release thm comb::disjoint_partition_size(X,A,B)

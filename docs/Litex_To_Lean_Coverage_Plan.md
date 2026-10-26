@@ -1,5 +1,7 @@
 # Litex-to-Lean coverage plan
 
+For the latest source audit, see [remaining compiler coverage, 2026-10-26](#remaining-compiler-coverage-2026-10-26).
+
 Inventory totals were measured on 2026-10-23. The dated checkpoints below
 record subsequent implementations and checks. Geo is outside this plan's
 acceptance targets.
@@ -2344,14 +2346,15 @@ Lean artifact rather than omitting a source step.
 The current AST has **128 object constructor leaves**, using the same counting
 method as the original inventory: operation-family variants are separate entries;
 `Identifier`, `StandardSet`, calls and template instances each count once.
-There are **66 constructor entrypoints**, including the finite-set statistics,
-aggregates, intervals/sequences, exponential/logarithmic objects, sin/cos/tan and
-complex observations checked below, and **62 without a WD construction consumer**:
+There are **73 constructor entrypoints**, including the finite-set statistics,
+aggregates, intervals/sequences, exponential/logarithmic objects, all ten
+trigonometric constructors and complex observations checked below, and
+**55 without a WD construction consumer**:
 
 | Missing family | Source objects / AST variants | Count |
 | --- | --- | ---: |
 | General folds | `reduce`, `finite_set_reduce` | 2 |
-| Trigonometric and hyperbolic functions | `Cot`, `Sec`, `Csc`, `Arcsin`, `Arccos`, `Arctan`, `Arccot`, and all 6 `HyperbolicOperator` variants | 13 |
+| Hyperbolic functions | All 6 `HyperbolicOperator` variants | 6 |
 | Set families | `SymmetricDifference`, `FamilyIntersect`, `IndexUnion`, `IndexIntersect`, `IndexCart` | 5 |
 | Real analysis | Supremum/infimum, six limit selectors, ten derivative operators, Riemann integral | 19 |
 | Matrices and finite-dimensional operations | `MatrixSet` and all 22 `MatrixOperator` variants | 23 |
@@ -2736,3 +2739,258 @@ Modulus radical-value certificates, the general coordinate formula for modulus,
 coordinate quotient rules, real-specific conjugation and natural-power rules,
 and further complex inequality rules still need consumers. Existing formula
 function arity and scope boundaries remain in place.
+
+### Reciprocal and inverse trigonometric objects, 2026-10-25
+
+`cot`, `sec`, `csc`, `arcsin`, `arccos`, `arctan` and `arccot` now have owned
+Lean constructors. Each consumes its original argument WD and domain evidence:
+arcsine/arccosine require `-1 <= x <= 1`; secant requires nonzero cosine;
+cosecant/cotangent require nonzero sine. Arccotangent uses the existing source
+principal interval `(0, pi)`, represented by `Real.pi / 2 - Real.arctan x`.
+
+For `tan(arctan(x))` and `sec(arctan(x))`, the source WD omits an explicit
+cosine-nonzero requirement. A proved Core law supplies this guard from the
+owned arctangent. The corresponding sine law handles `cot(arccot(x))` and
+`csc(arccot(x))`. Secant/cosecant retain the source's intrinsic nonzero-real
+codomain, using the existing `SetSemantics` interface for `R*`.
+
+These examples compile through the selected source rules:
+
+```litex
+forall x R:
+    tan(arctan(x)) = x
+    cot(arccot(x)) = x
+
+have fn principal_sine(x R: -1 <= x, x <= 1) R = arcsin(x)
+principal_sine(0) = 0
+```
+
+The constructor's lower bound uses the numeric value `-1`. A source citation
+may instead refer to the owned negation of `1`; the compiler transports that
+original bound through its checked numeric denotation. It does not assume the
+two host representations are definitionally equal. No AST, result-producer,
+Runtime or model-field changes were needed.
+
+| Checked use | Source and generated Lean |
+| --- | --- |
+| Eight exact principal values | [Inverse values](../lean/examples/inverse_trigonometric_values/) |
+| Four left inverses on their domains | [Left inverses](../lean/examples/inverse_trigonometric_left_inverses/) |
+| Real codomains and guarded compositions | [Domains](../lean/examples/inverse_trigonometric_domains/) |
+| Secant, cosecant and cotangent quotient definitions | [Quotient definitions](../lean/examples/reciprocal_trigonometric_definitions/) |
+| Secant at zero/pi and cosecant at pi/2 | [Reciprocal values](../lean/examples/reciprocal_trigonometric_values/) |
+| Bounded formula functions and nested calls | [Formula functions](../lean/examples/inverse_trigonometric_functions/) |
+
+All six pairs pass strict source verification, actual CLI generation,
+byte-identical independent regeneration and Lean 4.31.0 with warnings treated
+as errors. Their generated files are 8.3–40.3 KB. The final batch includes three
+existing trig, complex-function and exact-number examples: nine pairs pass,
+with three unchanged checks reused from the same batch and six fresh checks.
+All 46 exported theorem audits use only `propext`, `Classical.choice` and
+`Quot.sound`. The compiler regression passes **1183 tests**, including five
+new tests for source replay, missing/altered WD, boundary subjects, invalid
+domains/poles and mismatched exact-value rules.
+
+This increment does not consume the four right-inverse rules, such as
+`arcsin(sin(x)) = x` on the principal interval. Cotangent periodic-value
+certificates (including `cot(pi/4) = 1`), further reciprocal identities and
+general trigonometric bound rules also remain unsupported. These routes reject
+the compilation artifact; constructor coverage does not imply rule coverage.
+
+## Compiler coverage baseline before phases 1–2, 2026-10-26
+
+This records the dispatcher audit before the Fact expansion below. It counts
+existing Litex features whose results the compiler could not yet consume at
+that checkpoint. Keep these baseline counts separate from later deliveries.
+
+| Layer | Baseline inventory | Missing compiler entrypoints |
+| --- | ---: | ---: |
+| Statement leaf forms | 52 | 4 |
+| Object constructor leaves | 128 | 55 |
+| Atomic fact variants | 74 | 47 lack proposition rendering |
+| Explicit reserved builtin theorem IDs | 533 | 528 |
+| Automatic equality builtin result variants | 233 | 140 lack dispatcher arms |
+| Builtin strategy result variants | 140 | 95 lack dispatcher arms: 5 equality, 90 non-equality |
+
+An entrypoint may still reject nested certificate variants, domains or scopes.
+These counts use different units and must not be combined into a completion
+percentage. The automatic non-equality inventory has 398 variant slots;
+references in helper and source-position code are insufficient to establish
+their support, so this audit does not assign them a completion count.
+
+### Statements and scope restrictions
+
+The four missing statement forms are algorithm definitions by cases, algorithm
+definitions by induction, user strategy definitions, and `eval`. See the
+[definition dispatcher](../src/compile_to_lean/compile_definition_stmt_result.rs)
+and [statement dispatcher](../src/compile_to_lean/compile_stmt_result.rs).
+
+`trust` and user `axiom` already enter through explicit assumptions. Replacement,
+regularity, choice and Zorn have consumers. They are not missing statement forms.
+
+Among forms with consumers, local template declarations, local piecewise
+functions, local recursively defined functions and local functions selected
+from unique existence remain rejected. The current object-template consumer
+accepts a single `have ... = ...` body. Recursive functions accept the checked
+unary natural-number zero/positive case shape with numeric return carrier;
+nested recursive case bodies are rejected. See
+[templates](../src/compile_to_lean/compile_template_stmt_result.rs),
+[piecewise functions](../src/compile_to_lean/compile_have_fn_cases_result.rs),
+[recursive functions](../src/compile_to_lean/compile_have_fn_by_induc_result.rs)
+and [selected functions](../src/compile_to_lean/compile_have_fn_by_exist_result.rs).
+
+### Objects without constructors
+
+| Group | Count | Missing constructors |
+| --- | ---: | --- |
+| General folds | 2 | `reduce`, `finite_set_reduce` |
+| Hyperbolic functions | 6 | `sinh`, `cosh`, `tanh`, `coth`, `sech`, `csch` |
+| Set operations | 5 | Symmetric difference, family intersection, indexed union/intersection/Cartesian product |
+| Analysis | 19 | Supremum/infimum; sequence, function and multivariable limits; limsup/liminf; derivatives and differential operators; Riemann integral |
+| Matrices and finite-dimensional operations | 23 | Matrix set plus determinant, zero/identity matrix, transpose/adjoint, trace, add/subtract/scale/multiply/apply/power/inverse/rank, minor/cofactor/adjugate/diagonal, outer/inner product and Euclidean/Frobenius norms |
+
+Analysis's 19 entries comprise 2 bounds, 6 limit constructors, 10 derivative
+constructors and 1 integral constructor. The derivative entries are partial,
+scalar differential, total differential, gradient, Jacobian, Hessian,
+divergence, curl, Laplacian and derivative at a point. These are AST constructor
+counts, rather than counts of mathematical theorems or all domain modes.
+
+### Fact expressions and proof replay
+
+All ten outer Fact shapes have consumers, including existence, unique
+existence, disjunction, conjunction and quantified statements. Of the 74
+atomic variants, 47 still lack proposition rendering:
+
+- Six number-theory variants: prime, coprime and divisibility, with their negations.
+- Nine set variants: superset, proper subset and proper superset with their
+  negations, plus negated set/nonempty-set/finite-set predicates.
+- Thirty-two analysis variants: real bounds/boundedness/accumulation, sequence
+  analysis and limits/limsup/liminf, function limits, continuity, Lipschitz
+  continuity, differentiability/derivatives, integrability/integrals and
+  multivariable analysis, including their negations.
+
+The renderer is [atomic_proposition](../src/compile_to_lean/names.rs); mapping
+predicates are handled by an earlier guard and must not be counted as missing.
+
+Three successful atomic search routes still reject unconditionally:
+`ByTemplateMembership`, `ByKnownZeroRemainder` and `ByKnownStrategy`. Analysis
+inference-result replay is also missing. See the
+[atomic dispatcher](../src/compile_to_lean/compile_fact_stmt_result/compile_atomic_except_equality_result/compile_atomic_except_equality_result.rs)
+and [inference consumers](../src/compile_to_lean/compile_compound_stores.rs).
+An unsupported inferred fact is not silently promoted to a Lean assumption.
+
+### Builtin theorem calls, rules and strategies
+
+Only five explicit builtin theorem IDs currently have consumers:
+`fn_set_member`, `set_builder_member`, `defined_set_member`,
+`cart_member_from_coordinates` and `tuple_equal_from_coordinates`.
+The other 528 reserved IDs need consumers. This does not count ordinary user
+theorems or automatic rules: those have separate replay paths.
+
+The 140 missing automatic equality dispatcher arms include analysis,
+hyperbolic functions, symmetric difference, general folds, several finite
+collection identities, logarithm/power identities, complex coordinate rules
+and all four inverse-trigonometric right inverses. Some arms that do exist
+also have unsupported nested certificates: for example, `cot` construction is
+supported but `cot(pi/4) = 1` selects the unsupported periodic-value route.
+The same mathematical equality may succeed through another supported route.
+
+The five missing equality strategies are `ComplexWithNonzeroPremises`,
+`CosZeroIntegerOffset`, `ExtremumEquality`,
+`FiniteSetProductPointwiseEquality` and `ModCongruence`. The 90 missing
+non-equality strategies include additional numeric carrier closure,
+sign-sensitive inequalities, finite/nonempty set propagation, function-space
+and set-builder membership, pointwise continuity/derivatives and multivariable
+analysis. A strategy being missing does not mean every fact in that domain
+fails: compilation follows the particular certificate returned by verification.
+
+A practical next batch is to finish more proof routes for existing objects
+and facts, followed by the missing set/number-theory expressions and folds.
+Analysis and matrix support each require their own constructors, predicates,
+WD consumers and theorem adapters; they should be delivered as separate batches.
+
+## Approved Fact and Obj implementation order, 2026-10-26
+
+The inventory table above is the recorded pre-implementation baseline. The
+following phases are planned work, not additional coverage claims. The user
+authorized phases 1 and 2 together; later phases remain queued.
+
+| Phase | Scope | Acceptance target |
+| --- | --- | --- |
+| 1. Basic set facts | Nine missing atomic variants: superset, proper subset/superset and their negations; negated sethood, nonemptiness and finiteness | Predicates in assumptions, conclusions, named theorems and citations; selected definition/basic proof routes |
+| 2. Number-theory facts | Prime, coprime, divisibility and their negations: six variants | Original numeric domains and WD, closed examples, generic assumptions and theorem references |
+| 3. Set objects | Symmetric difference, family intersection, indexed union/intersection/Cartesian product: five constructors | Construction, membership proofs and later citations |
+| 4. General folds | `reduce`, `finite_set_reduce` | Function arguments, initial values, call WD and basic unfolding |
+| 5. Hyperbolic objects | `sinh`, `cosh`, `tanh`, `coth`, `sech`, `csch` | Constructors, domains, basic values and defining identities |
+| 6. Matrix objects | Twenty-three constructors, delivered in smaller batches | Matrix sets/basic operations, then determinant/inverse/rank, then inner products/norms |
+| 7. Analysis facts and objects | Thirty-two atomic variants and nineteen constructors | Bounds/suprema, sequences, function limits/continuity, derivatives/integrals, then multivariable analysis |
+
+Each batch supplies semantic definitions and proved bridges in `lean/Litex.lean`,
+consumes the original WD and selected result evidence, and adds real generated
+source/Lean pairs. Add only the builtin rules and explicit theorem consumers
+needed by the batch's accepted scope. Rendering a predicate alone is not proof
+coverage. Run focused checks while implementing and the compiler regression
+once at the coherent batch checkpoint. Preserve the approved result-driven
+architecture and source FactId citations.
+
+## Phases 1–2: set and number-theory facts, 2026-10-26
+
+The compiler now renders all fifteen atomic variants in these two phases:
+superset, proper subset/superset, prime, coprime and divisibility, each with
+its negation, plus negated sethood, nonemptiness and finiteness. Atomic
+proposition coverage increases from 27/74 to 42/74; the remaining 32 variants
+are analysis predicates. This count describes proposition forms, not all
+possible proofs of those propositions.
+
+`Litex.Superset A B` means `Litex.Subset B A`. Proper inclusion combines
+inclusion with inequality of semantic denotations. The number-theory
+predicates are defined using `Nat.Prime`, `Nat.Coprime` and integer
+divisibility. They retain the source domains: natural numbers for prime and
+coprime, and an integer dividend with a nonzero integer divisor for `dvd`.
+In particular, `$dvd(a,b)` means **b divides a**. The proved bridges
+`prime_iff_of_denote`, `coprime_iff_of_denote` and `dvd_iff_of_denote` connect
+these predicates to ordinary Mathlib propositions. No new model axioms or
+runtime/result fields are required.
+
+Supported proof routes in this batch are:
+
+- Direct fact citations, named theorem use, and transport along the recorded
+  argument equalities for the fifteen new predicates.
+- Superset definition, reflexivity and standard-number-set inclusion;
+  proper inclusion from its definition, with the resulting subset and
+  inequality facts emitted under their original IDs.
+- Finite-list inclusion from the recorded member proofs, and unequal list
+  cardinalities from the existing certified set constructors.
+- Empty-set noninhabitation and infinitude of `N`.
+- Closed primality/coprimality computation, including negative results;
+  divisibility from a recorded zero-remainder proof, including arbitrary
+  integer parameters and nonzero-divisor WD.
+
+The generated examples are:
+
+| Example | Source | Generated Lean |
+| --- | --- | --- |
+| Nine set predicate interfaces | [Litex](../lean/examples/set_predicate_contexts/statement.lit) | [Lean](../lean/examples/set_predicate_contexts/statement.lean) |
+| Proper inclusion, derived citations and named theorem use | [Litex](../lean/examples/proper_set_relations/statement.lit) | [Lean](../lean/examples/proper_set_relations/statement.lean) |
+| Empty set and infinite natural numbers | [Litex](../lean/examples/negative_set_values/statement.lit) | [Lean](../lean/examples/negative_set_values/statement.lean) |
+| Six number-theory interfaces and equality transport | [Litex](../lean/examples/number_theory_predicate_contexts/statement.lit) | [Lean](../lean/examples/number_theory_predicate_contexts/statement.lean) |
+| Prime and coprime values, with named theorem reuse | [Litex](../lean/examples/number_theory_values/statement.lit) | [Lean](../lean/examples/number_theory_values/statement.lean) |
+| Zero remainder implies divisibility | [Litex](../lean/examples/integer_divisibility/statement.lit) | [Lean](../lean/examples/integer_divisibility/statement.lean) |
+
+The interface examples preserve assumptions and conclusions. In particular,
+the `not $is_set(A)` example assumes an inconsistent premise; it does not
+claim that such an object exists.
+
+Other selected proof routes remain separate work: number-theory `by def`
+expansions and their inferred consequences, additional set rules, and
+standard-set infinitude beyond `N`. A source proof selecting one of those
+unsupported routes is rejected. Phases 3–7 remain queued.
+
+Validation: `cargo test --lib compile_to_lean::tests` passed all 843 tests,
+including six new tests for these predicates, their examples and invalid
+evidence. All six source files passed strict execution, generated repeatable
+Lean output, and passed Lean 4.31.0 with Mathlib
+`fabf563a7c95a166b8d7b6efca11c8b4dc9d911f`. The 38 generated theorems were
+audited with `#print axioms`; the only dependencies were `propext`,
+`Classical.choice` and `Quot.sound`. Negative checks reject false claims,
+missing domains, altered computation results and a remainder certificate
+with the wrong divisor. These are local checks, not a CI claim.

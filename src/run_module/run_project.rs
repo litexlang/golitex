@@ -84,6 +84,11 @@ pub fn run_project_observed(
         }
     }
 
+    runtime
+        .global_module_manager
+        .validate_alias_targets(&root_config)
+        .map_err(RuntimeError::InvalidArguments)?;
+
     let export_count = root_config.exports.len();
     for (export_file_id, export) in root_config.exports.iter().enumerate() {
         let is_last = export_file_id + 1 == export_count;

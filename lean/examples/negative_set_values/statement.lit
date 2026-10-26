@@ -1,0 +1,3 @@
+# The empty set is not inhabited; the natural numbers are not finite.
+not $is_nonempty_set({})
+not $is_finite_set(N)

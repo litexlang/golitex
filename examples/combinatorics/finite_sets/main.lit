@@ -1,0 +1,257 @@
+# Tracer: three overlapping finite sets have union size4.
+# Before: std had finite-map counts and a disjoint partition theorem.
+# A sum without overlap correction counts this union as7.
+# Now: imported two/three-set inclusion-exclusion gives the alternating count.
+# Concrete intersection observations give 3+2+2-1-1-1+0=4.
+# A second example has nonempty triple intersection and keeps its +1 term.
+# Boundary: empty/identical/nested sets are supported; infinite cardinalities,
+# missing subset premises and omitted overlap corrections are rejected.
+# Explicit finiteness theorem calls transport compound domains across imports.
+# Evidence: python3 examples/combinatorics/finite_sets/check.py
+
+claim:
+    ? forall X, Y finite_set:
+        $is_finite_set(union(set_minus(X,Y),set_minus(Y,X)))
+    release thm comb::main::symmetric_difference_is_finite(X,Y)
+
+claim:
+    ? forall X, Y, Zeta finite_set:
+        $is_finite_set(union(union(X,Y),Zeta))
+        $is_finite_set(intersect(intersect(X,Y),Zeta))
+    release thm comb::main::three_set_union_intersection_are_finite(X,Y,Zeta)
+
+have A finite_set = {0,1,2}
+
+have B finite_set = {2,3}
+
+have D finite_set = {0,3}
+
+finite_set_size(A) = finite_set_size({0,1,2}) = 3
+
+finite_set_size(B) = finite_set_size({2,3}) = 2
+
+finite_set_size(D) = finite_set_size({0,3}) = 2
+
+by extension:
+    ? intersect(A,B) = {2}
+    claim:
+        ? forall x intersect(A,B):
+            x $in {2}
+        x $in B
+        x $in {2,3}
+        by cases:
+            ? x $in {2}
+            case x = 2:
+                x $in {2}
+            case x = 3:
+                by contra:
+                    ? x $in {2}
+                    x $in A
+                    x $in {0,1,2}
+                    3 $in {0,1,2}
+                    impossible 3 $in {0,1,2}
+    2 $in A
+    2 $in B
+    2 $in intersect(A,B)
+    {2} $subset intersect(A,B)
+
+finite_set_size(intersect(A,B)) = finite_set_size({2}) = 1
+
+by extension:
+    ? intersect(A,D) = {0}
+    claim:
+        ? forall x intersect(A,D):
+            x $in {0}
+        x $in D
+        x $in {0,3}
+        by cases:
+            ? x $in {0}
+            case x = 0:
+                x $in {0}
+            case x = 3:
+                by contra:
+                    ? x $in {0}
+                    x $in A
+                    x $in {0,1,2}
+                    3 $in {0,1,2}
+                    impossible 3 $in {0,1,2}
+    0 $in A
+    0 $in D
+    0 $in intersect(A,D)
+    {0} $subset intersect(A,D)
+
+finite_set_size(intersect(A,D)) = finite_set_size({0}) = 1
+
+by extension:
+    ? intersect(B,D) = {3}
+    claim:
+        ? forall x intersect(B,D):
+            x $in {3}
+        x $in D
+        x $in {0,3}
+        by cases:
+            ? x $in {3}
+            case x = 0:
+                by contra:
+                    ? x $in {3}
+                    x $in B
+                    x $in {2,3}
+                    0 $in {2,3}
+                    impossible 0 $in {2,3}
+            case x = 3:
+                x $in {3}
+    3 $in B
+    3 $in D
+    3 $in intersect(B,D)
+    {3} $subset intersect(B,D)
+
+finite_set_size(intersect(B,D)) = finite_set_size({3}) = 1
+
+by extension:
+    ? intersect(intersect(A,B),D) = {}
+    claim:
+        ? forall x intersect(intersect(A,B),D):
+            x $in {}
+        by contra:
+            ? x $in {}
+            x $in intersect(A,B)
+            x $in {2}
+            x = 2
+            x $in D
+            x $in {0,3}
+            2 $in {0,3}
+            impossible 2 $in {0,3}
+
+finite_set_size(intersect(intersect(A,B),D)) = finite_set_size({}) = 0
+
+release thm comb::main::union_size(A,B)
+
+finite_set_size(union(A,B)) = finite_set_size(A) + finite_set_size(B) - finite_set_size(intersect(A,B)) = 3+2-1 = 4
+
+release thm comb::main::three_set_inclusion_exclusion(A,B,D)
+
+finite_set_size(union(union(A,B),D)) = finite_set_size(A) + finite_set_size(B) + finite_set_size(D) - finite_set_size(intersect(A,B)) - finite_set_size(intersect(A,D)) - finite_set_size(intersect(B,D)) + finite_set_size(intersect(intersect(A,B),D)) = 3+2+2-1-1-1+0 = 4
+
+release thm comb::main::three_set_union_bound(A,B,D)
+
+release thm comb::main::union_bound(A,B)
+
+release thm comb::main::symmetric_difference_size(A,B)
+
+finite_set_size(union(set_minus(A,B),set_minus(B,A))) = finite_set_size(A) + finite_set_size(B) - 2*finite_set_size(intersect(A,B)) = 3+2-2*1 = 3
+
+release thm comb::main::subset_difference_size(A,{1,2})
+
+finite_set_size(set_minus(A,{1,2})) = finite_set_size(A) - finite_set_size({1,2}) = 3-2 = 1
+
+release thm comb::main::subset_difference_size(A,{})
+
+release thm comb::main::subset_equal_cardinality(A,{2,1,0})
+
+by extension:
+    ? union({0},{1,2}) = {0,1,2}
+    {0} $subset {0,1,2}
+    {1,2} $subset {0,1,2}
+    union({0},{1,2}) $subset {0,1,2}
+    0 $in union({0},{1,2})
+    1 $in union({0},{1,2})
+    2 $in union({0},{1,2})
+    {0,1,2} $subset union({0},{1,2})
+
+finite_set_size(union({0},{1,2})) = finite_set_size({0,1,2}) = 3 = 1+2 = finite_set_size({0}) + finite_set_size({1,2})
+
+release thm comb::main::union_additivity_implies_disjoint({0},{1,2})
+
+release thm comb::main::disjoint_partition_size({0,1,2},{0},{1,2})
+
+release thm comb::main::cartesian_product_size(A,B)
+
+finite_set_size(cart(A,B)) = finite_set_size(A)*finite_set_size(B) = 3*2 = 6
+
+release thm comb::main::power_set_size(A)
+
+finite_set_size(power_set(A)) = 2^finite_set_size(A) = 2^3 = 8
+
+release thm comb::main::three_set_inclusion_exclusion(A,A,A)
+
+union(A,A) = A
+
+union(union(A,A),A) = union(A,A) = A
+
+finite_set_size(union(union(A,A),A)) = finite_set_size(A) = 3
+
+release thm comb::main::three_set_inclusion_exclusion({0,1},{1,2},{1,3})
+
+by extension:
+    ? union(union({0,1},{1,2}),{1,3}) = {0,1,2,3}
+    {0,1} $subset {0,1,2,3}
+    {1,2} $subset {0,1,2,3}
+    union({0,1},{1,2}) $subset {0,1,2,3}
+    {1,3} $subset {0,1,2,3}
+    union(union({0,1},{1,2}),{1,3}) $subset {0,1,2,3}
+    0 $in union({0,1},{1,2})
+    2 $in union({0,1},{1,2})
+    0 $in union(union({0,1},{1,2}),{1,3})
+    1 $in union(union({0,1},{1,2}),{1,3})
+    2 $in union(union({0,1},{1,2}),{1,3})
+    3 $in union(union({0,1},{1,2}),{1,3})
+    {0,1,2,3} $subset union(union({0,1},{1,2}),{1,3})
+
+finite_set_size(union(union({0,1},{1,2}),{1,3})) = finite_set_size({0,1,2,3}) = 4
+
+by extension:
+    ? intersect(intersect({0,1},{1,2}),{1,3}) = {1}
+    claim:
+        ? forall x intersect(intersect({0,1},{1,2}),{1,3}):
+            x $in {1}
+        x $in intersect({0,1},{1,2})
+        x $in {0,1}
+        x $in {1,2}
+        by cases:
+            ? x $in {1}
+            case x = 0:
+                by contra:
+                    ? x $in {1}
+                    0 $in {1,2}
+                    impossible 0 $in {1,2}
+            case x = 1:
+                x $in {1}
+    1 $in intersect({0,1},{1,2})
+    1 $in intersect(intersect({0,1},{1,2}),{1,3})
+    {1} $subset intersect(intersect({0,1},{1,2}),{1,3})
+
+finite_set_size(intersect(intersect({0,1},{1,2}),{1,3})) = finite_set_size({1}) = 1
+
+release thm comb::main::symmetric_difference_size(A,A)
+
+intersect(A,A) = A
+
+finite_set_size(intersect(A,A)) = finite_set_size(A) = 3
+
+finite_set_size(union(set_minus(A,A),set_minus(A,A))) = finite_set_size(A) + finite_set_size(A) - 2*finite_set_size(intersect(A,A)) = 3+3-2*3 = 0
+
+release thm comb::main::union_size({},{})
+
+release thm comb::main::three_set_inclusion_exclusion({},{},{})
+
+release thm comb::main::subset_difference_size({},{})
+
+union({},{}) = {}
+
+finite_set_size(union({},{})) = finite_set_size({}) = 0 = 0+0 = finite_set_size({}) + finite_set_size({})
+
+release thm comb::main::union_additivity_implies_disjoint({},{})
+
+release thm comb::main::subset_equal_cardinality({},{})
+
+release thm comb::main::cartesian_product_size(A,{})
+
+finite_set_size(cart(A,{})) = finite_set_size(A)*finite_set_size({}) = 3*0 = 0
+
+release thm comb::main::power_set_size({})
+
+finite_set_size(power_set({})) = 2^finite_set_size({}) = 2^0 = 1
+
+release thm comb::main::symmetric_difference_size({},A)
+
+release thm comb::main::three_set_union_bound({},A,{})

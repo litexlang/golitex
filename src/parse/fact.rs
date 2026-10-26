@@ -821,7 +821,12 @@ impl Runtime {
         if tb.peek() == Some(MOD_FLAT_SIGN) {
             tb.advance()?;
             let next = tb.advance()?;
-            return self.elaborate_flat_import(&first, next);
+            return self
+                .elaborate_flat_import(&first, next)
+                .map_err(|err| match err {
+                    crate::runtime::RuntimeError::InternalBug(message) => tb.parse_error(message),
+                    other => other,
+                });
         }
         if tb.peek() != Some(MOD_SIGN) {
             // File-root defined props qualify; builtins / unknowns stay Plain.
@@ -836,7 +841,7 @@ impl Runtime {
         match parts.len() {
             2 | 3 => self.elaborate_name_parts(&parts),
             _ => Err(RuntimeParseError::new(
-                "qualified prop name must be `a::b`, `a:::b`, or `a::b::c`",
+                "qualified prop name must be `a::b` or `a::b::c`",
                 tb.line,
                 tb.source_path.clone(),
             )

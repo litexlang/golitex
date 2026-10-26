@@ -431,7 +431,7 @@ impl Runtime {
         Ok(TheoremCall { name, arguments })
     }
 
-    // `name`, `export::name`, `Mod::export::name`, or `Mod:::name`.
+    // `name`, `export::name`, or `Mod::export::name`.
     fn parse_theorem_call_name(&mut self, tb: &mut TokenBlock) -> RuntimeResult<AtomicName> {
         let first = tb
             .advance()
@@ -473,9 +473,7 @@ impl Runtime {
             parts.push(next);
         }
         if parts.len() != 2 && parts.len() != 3 {
-            return Err(
-                tb.parse_error("qualified theorem name must be `a::b`, `a:::b`, or `a::b::c`")
-            );
+            return Err(tb.parse_error("qualified theorem name must be `a::b` or `a::b::c`"));
         }
         self.elaborate_name_parts(&parts).map_err(|err| match err {
             crate::runtime::RuntimeError::InternalBug(message) => tb.parse_error(message),
