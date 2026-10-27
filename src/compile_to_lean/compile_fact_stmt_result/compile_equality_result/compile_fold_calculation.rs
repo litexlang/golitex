@@ -149,6 +149,14 @@ impl LitexToLeanCompiler {
                 "FoldCalculation/ExpansionRoute",
             ));
         };
+        if result.rewritten_body.ir() != expansion.expanded_body.ir()
+            || !result.cited_equal_fact_ids.is_empty()
+            || result.nested_function_evidence != (0..0)
+        {
+            return Err(LeanCompileError::unsupported(
+                "FoldCalculation/ApplicationStages",
+            ));
+        }
         let literal = expansion
             .function_equal
             .path

@@ -7,6 +7,10 @@ Litex pipeline (`src/`).
 diagram with editable journal-style figures: a checked object declaration builds
 the context, then staged proof search uses it to verify a new fact.
 
+[From checked evidence to Lean](lean_compilation/README.md) follows a real
+Detailed evidence tree into generated Lean and explains the semantic definitions
+and proved bridges supplied by `Litex.lean`, with an interactive view and figures.
+
 [Collected IMO proofs](imo/README.md) brings together inequalities, geometry,
 functional equations and the existing miniF2F IMO proof variants.
 
@@ -23,6 +27,7 @@ examples/
   imo/                 collected IMO problems, solutions and verification status
   proof_nodes/          verify / searched_proof tracers
   proof_search/         interactive proof-search explanation and static figures
+  lean_compilation/     evidence replay into Lean and the role of Litex.lean
   stmt_nodes/           exec_stmt arms
   wd/  wd_negative/     well-definedness positives / must-fail
   equal_negative/       equality must-fail probes

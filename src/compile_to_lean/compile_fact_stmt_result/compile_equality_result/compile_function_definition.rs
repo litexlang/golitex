@@ -255,7 +255,7 @@ impl LitexToLeanCompiler {
         self.compile_equality_search(fact, proof, position)
     }
 
-    pub(super) fn compile_parent_checked_function_body(
+    pub(in crate::compile_to_lean) fn compile_parent_checked_function_body(
         &self,
         application: &Obj,
         parent_wd: &ObjWellDefinedProof,
@@ -381,6 +381,55 @@ impl LitexToLeanCompiler {
                 ))
             }
         };
+        self.compile_checked_function_beta(
+            application,
+            parent_wd,
+            function,
+            known_path,
+            expanded,
+            position,
+        )
+    }
+
+    /// Shared elimination of an original checked call and its recorded formula.
+    /// Both equality beta and eval consume their own evidence through this law.
+    pub(in crate::compile_to_lean) fn compile_checked_function_beta(
+        &self,
+        application: &Obj,
+        parent_wd: &ObjWellDefinedProof,
+        function: &AnonymousFn,
+        known_path: Option<&KnownEqualityPathProof>,
+        expanded: &Obj,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        let Obj::FnObj(call) = application else {
+            return Err(LeanCompileError::unsupported(
+                "FunctionDefinition/ParentApplication",
+            ));
+        };
+        let ObjWellDefinedProof::ByDef {
+            obj,
+            proof: ObjWellDefinedProofByDef::FnObj(call_wd),
+        } = parent_wd
+        else {
+            return Err(LeanCompileError::unsupported(
+                "FunctionDefinition/ParentCallWD",
+            ));
+        };
+        if obj.ir() != application.ir() {
+            return Err(LeanCompileError::unsupported(
+                "FunctionDefinition/ParentCallWD",
+            ));
+        }
+        let actual_domain = match call_wd.domain_fn_set.as_ref() {
+            Some(FnObjDomainFnSetEvidence::InFunctionSet { fn_set, .. })
+            | Some(FnObjDomainFnSetEvidence::AnonymousLiteral { fn_set }) => fn_set,
+            _ => {
+                return Err(LeanCompileError::unsupported(
+                    "FunctionDefinition/ParentCallDomain",
+                ))
+            }
+        };
         if !function_domains_alpha_equal(&function.body, actual_domain)
             || call.body.len() != 1
             || !(1..=3).contains(&call.body[0].len())
@@ -455,7 +504,7 @@ impl LitexToLeanCompiler {
             (
                 "(Litex.FiniteFunction.pack2 (M := M) (Litex.denote _litex_original.val.first) (Litex.denote _litex_original.val.second))".to_string(),
                 format!("((Litex.FunctionSignature.{} {constructor_arguments} {guard} _ _).mpr _litex_original.wd.2)", if target { "twoTarget_domain" } else { "two_domain" }),
-                format!("(by change {body} (Litex.FiniteFunction.unpack2 (M := M) (Litex.FiniteFunction.pack2 (M := M) (Litex.denote _litex_original.val.first) (Litex.denote _litex_original.val.second))).1 (Litex.FiniteFunction.unpack2 (M := M) (Litex.FiniteFunction.pack2 (M := M) (Litex.denote _litex_original.val.first) (Litex.denote _litex_original.val.second))).2 = {endpoint}; simp only [Litex.FiniteFunction.unpack_pack2])"),
+                format!("(show _litex_formula.val.bodyValue (Litex.FiniteFunction.pack2 (M := M) (Litex.denote _litex_original.val.first) (Litex.denote _litex_original.val.second)) = {endpoint} from congrArg (fun (_pair : M.Value × M.Value) => {body} _pair.1 _pair.2) (Litex.FiniteFunction.unpack_pack2 (M := M) (Litex.denote _litex_original.val.first) (Litex.denote _litex_original.val.second)))"),
             )
         };
         Ok(format!("(show {application_value} = {endpoint} from by\n  let _litex_original := {actual}\n  let _litex_formula := {literal}\n  have _litex_head_eq : Litex.Same _litex_original.val.function _litex_formula := {head_equal}\n  have _litex_call_eq := congrArg (fun _f => Litex.FunctionSemantics.callValue (M := M) _f {argument}) _litex_head_eq\n  have _litex_beta := Litex.FunctionSemantics.call_graphValue _ _ _ _litex_formula.wd {argument} {domain_proof}\n  exact _litex_call_eq.trans (_litex_beta.trans {body_equality})\n)"))

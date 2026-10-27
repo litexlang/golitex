@@ -11,7 +11,7 @@ intersect and set_minus remain the event constructions. The forward proof
 spine is the actual disjoint split A=(A intersect B) union (A minus B), then
 finite additivity, complement/difference, monotonicity, probability bounds and
 inclusion-exclusion. Set extensionality proves both directions and a
-contradiction proves disjointness. The 68 exported source theorems are checked;
+contradiction proves disjointness. The 79 exported source theorems are checked;
 the source adds no strategies or reserved native theorem names. The kernel
 provides four bounded power-set closure cases.
 
@@ -31,8 +31,8 @@ positivity and finite union identity. The three formula laws are independently
 exported and generic, not numerical tests. No new counting function or
 unjustified integrality premise is introduced.
 
-Delivered source is80 top-level statements: one structure, one predicate,
-eight templates (six function families and two bundled values),68 theorems and
+Delivered source is91 top-level statements: one structure, one predicate,
+eight templates (six function families and two bundled values),79 theorems and
 two internal universal facts. The event and
 numeric closure exports let independent generic callers state the same
 compound goals without adding premises or strategies. They supply typing
@@ -82,7 +82,7 @@ The generated Lean pairs cover one-bound finite intersections and complement
 event typing, not the full probability structures. Complete probability Lean
 compilation remains future work.
 
-Downstream work remains covariance moment/bilinearity laws, distributions and statistical inference. Countable and measure
+Downstream work remains correlation, distributions and statistical inference. Countable and measure
 probability need their own concepts and are not implied by a finite carrier.
 
 Finite real observables are actual functions on the supplied sample carrier.
@@ -143,7 +143,8 @@ laws use pointwise beta/commutativity/square identities plus the existing
 expectation extensionality theorem. There are no native/Rust/Core/state or
 permission changes in this slice. Source77/65thms/eight templates;
 independent contracts68 and caller172 are the strict file-gate targets.
-Covariance product-moment/bilinearity, correlation and random-variable
+At that earlier checkpoint, covariance product-moment/bilinearity remained open;
+those laws are now delivered below. Correlation and random-variable
 independence/distributions remain later work; no zero-covariance independence
 converse is claimed. The prior matrix compiler failure is resolved by the
 focused refresh and separately reused phase6v1294-pass evidence.
@@ -153,6 +154,28 @@ with an actual supplied function and pointwise X(k)=c, then constructs literal
 constant-left/right samplers in the two4-argument interfaces. It derives E(X)=c,
 proves the centered product vanishes pointwise and reuses expectation vanishing
 and covariance symmetry. There is no constant certificate or new primitive.
-Source80/68thms/eight templates; contracts71, caller178,63 refusal controls are
-the final gate targets. Zero and negative constants remain valid, while missing
+At that earlier checkpoint, source80/68thms/eight templates, contracts71,
+caller178 and63 refusal controls were the final gate targets. Zero and negative constants remain valid, while missing
 pointwise relation and nonreal constants reject their exact theorem obligations.
+
+Covariance product moments follow by expanding (X-EX)(Y-EY), applying the
+already proved expectation linearity to its product/linear/constant terms, and
+normalizing the scalar result. The public value and sampler contracts are
+unchanged. Named-function helpers preserve the supplied pointwise relation;
+constructing a literal combination is a separate convenience interface.
+
+Left bilinearity follows by centering a supplied H=aX+bY and distributing its
+product with the centered third observable. Right bilinearity uses symmetry.
+Applying both sides to Cov(H,H), then self=variance and symmetry, gives
+Var(aX+bY)=a²Var(X)+2abCov(X,Y)+b²Var(Y). In particular a covariance-zero
+premise is required to remove the cross term. Event independence is a different
+relation and is not silently used to stand in for random-variable independence.
+The two-sided affine law also uses the existing constant-covariance theorem.
+
+These eleven additional source theorems require no new value, prop, builtin,
+strategy, trust or state. The resulting source has91 top-level statements and
+79 named theorems. No nonzero/positive coefficient premise is introduced;
+zero coefficients still require actual total real input functions. Generic
+import contracts and the correlated dice observable Y=2X+1 exercise the same
+interfaces. Measure probability, distributions, correlation and full probability
+Lean replay remain separate work.

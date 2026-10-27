@@ -1,0 +1,11 @@
+# Use a proved real value in a function body and in its call argument.
+have eval_offset R = 10
+have fn evaluated_offset(x R) R = eval_offset + x
+eval evaluated_offset(2)
+evaluated_offset(2) = 12
+eval evaluated_offset(3) + evaluated_offset(4)
+evaluated_offset(3) + evaluated_offset(4) = 27
+
+have fn evaluated_shift(x R) R = x + 1
+eval evaluated_shift(eval_offset)
+evaluated_shift(eval_offset) = 11

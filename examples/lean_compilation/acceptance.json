@@ -1,0 +1,75 @@
+{
+  "evidence": {
+    "date": "2026-10-27",
+    "source": "lean/examples/add_zero/statement.lit",
+    "generated": "lean/examples/add_zero/statement.lean",
+    "strict": true,
+    "source_success": true,
+    "same_result_compiled": true,
+    "canonical_byte_match": true,
+    "lean_kernel_checked": true,
+    "core_freshly_checked": true,
+    "lean_version": "Lean (version 4.31.0, arm64-apple-darwin24.6.0, commit 68218e876d2a38b1985b8590fff244a83c321783, Release)",
+    "mathlib_revision": "fabf563a7c95a166b8d7b6efca11c8b4dc9d911f",
+    "axioms": "'LitexCompiled.file_lean_x2f_examples_x2f_add_x5f_zero_x2f_statement_x2e_lit.h_2' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+    "source_sha256": "ae2533413411a4c2716acf86ce447947c1e29769fb82c891c8c45d3f6f889344",
+    "generated_sha256": "b724efb5e9f927878c4643c0e58e66e3597e6801902386d90034c5b2e2637201",
+    "core_sha256": "6cff65f2baf8446359b1b981a1324abe33de382dd63b8982c0ddbaa0b006b78e",
+    "binary_sha256": "37ae0848adea3ccd31dbabc685fea14c8a255363871d72254f288c342af9f57a",
+    "rust_library_sha256": "68c072b6c3cb8a2a9defb8c755497d94bbab0af2b7905b020a938fa3b244638c",
+    "detailed_sha256": "89c6403a097fd018fd575faf4fd25871d5d97da7bbc6ad0c47694704ab310941"
+  },
+  "boundary": "Detailed JSON is an inspection view; compilation consumes typed results plus completed Runtime. Native Adapter is a separate handwritten step.",
+  "assets": {
+    "index.html": "20fcd91e5b7c2ca49d170d8a2d667ac16b743e5bacc38e94dc49d12180ddcfa1",
+    "index.template.html": "f2c7d732ad7dad9985212355f296823677c50f3a8766448be396c0307a5b7858",
+    "viewer.js": "bd1937311dc6bccb0bac01986a5e3cdf2d11d8396464f7f0f18af5347c036e42",
+    "style.css": "6364f138e809dc64d9585147b06e398539a35b094dd440be517c6b6867ac579a",
+    "build.py": "26705c6bad2af3d23a5b12f3df71fe840fea201b4b21601f83033c94557e2882",
+    "export.cjs": "384529f77796c9590e947b1209a15c7bd32352228b3549b1bd4040799c8ec316",
+    "README.md": "8f00971802d2a7be58c1c1d295c84d14e14e90f753de732e9805deb86aeca6f6",
+    "trace.detailed.json": "89c6403a097fd018fd575faf4fd25871d5d97da7bbc6ad0c47694704ab310941",
+    "evidence.json": "0b438f68d6574a6b9321c6d9f277de8db364cda8e450354defdc8ee93ba8e4eb",
+    "lean-compilation.svg": "df4fe838f8bc493052533c330ecd8093abc2577cb49887fe9743842a7cf534d6",
+    "lean-compilation.zh.svg": "147c3bd49d8d16cbcbd0d39e87da3cb279a686a694e8052646b3fdc6e2e416e4"
+  },
+  "rendered_assets": {
+    "lean-compilation.svg": "df4fe838f8bc493052533c330ecd8093abc2577cb49887fe9743842a7cf534d6",
+    "lean-compilation.pdf": "afe7be4d30bc174d2319372ae48c154178e26d73deff952a06f42fab194ad495",
+    "lean-compilation.png": "8a49d6cd7b4902081259d485946362d971aa68498e90b384afd450515a51c5ea",
+    "lean-compilation.zh.svg": "147c3bd49d8d16cbcbd0d39e87da3cb279a686a694e8052646b3fdc6e2e416e4",
+    "lean-compilation.zh.pdf": "ad047bf392732dcc177869c02df9b97bc6c07554f03e70f89a9394e81f80c56a",
+    "lean-compilation.zh.png": "ad5594bdb81136e3f604e31d4c2dcc0b66b613eb80d679f3e82bdcdd398a7468"
+  },
+  "visual_review": {
+    "date": "2026-10-27",
+    "languages": [
+      "en",
+      "zh"
+    ],
+    "viewports": [
+      1440,
+      1100,
+      768,
+      720,
+      392,
+      320
+    ],
+    "steps": 8,
+    "linked_json_lean_semantics": true,
+    "keyboard": true,
+    "playback": true,
+    "offline": true,
+    "browser_errors": 0,
+    "text_outside_nodes": false,
+    "page_overflow": false,
+    "svg_markers_unique": true,
+    "pdf_pages_per_language": 1,
+    "pdf_text_extractable": true,
+    "pdf_render_inspected": true,
+    "png_pixels": [
+      4323,
+      3401
+    ]
+  }
+}

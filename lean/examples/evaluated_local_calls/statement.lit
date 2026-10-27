@@ -1,0 +1,10 @@
+# Evaluate a global function on a local real value; keep that value local.
+have fn evaluated_shift(x R) R = x + 1
+sketch:
+    have eval_local_arg R = 4
+    eval evaluated_shift(eval_local_arg)
+    evaluated_shift(eval_local_arg) = 5
+
+let eval_local_arg = 7
+eval evaluated_shift(eval_local_arg)
+evaluated_shift(eval_local_arg) = 8

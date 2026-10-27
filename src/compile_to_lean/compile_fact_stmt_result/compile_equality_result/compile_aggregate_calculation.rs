@@ -30,16 +30,62 @@ impl LitexToLeanCompiler {
                 "AggregateCalculation/NestedAggregates",
             ));
         };
-        if matches!(
-            evaluation,
-            AggregateEvaluationResult::SumOfFiniteSet(_)
-                | AggregateEvaluationResult::ProductOfFiniteSet(_)
-        ) {
-            return self.compile_finite_aggregate_calculation(fact, proof, position);
-        }
         if let AggregateEvaluationResult::Reduce(evaluation) = evaluation {
             return self.compile_range_fold_calculation(fact, proof, evaluation, position);
         }
+        let (source, (value, denotation)) = match evaluation {
+            AggregateEvaluationResult::Sum(p) => (
+                &p.source,
+                self.compile_range_aggregate_value(evaluation, position)?,
+            ),
+            AggregateEvaluationResult::Product(p) => (
+                &p.source,
+                self.compile_range_aggregate_value(evaluation, position)?,
+            ),
+            AggregateEvaluationResult::SumOfFiniteSet(p) => (
+                &p.source,
+                self.compile_finite_aggregate_value(evaluation, position)?,
+            ),
+            AggregateEvaluationResult::ProductOfFiniteSet(p) => (
+                &p.source,
+                self.compile_finite_aggregate_value(evaluation, position)?,
+            ),
+            _ => {
+                return Err(LeanCompileError::unsupported(
+                    "AggregateCalculation/FiniteSetOrFold",
+                ))
+            }
+        };
+        let (other, reversed) = if source == &fact.left {
+            (&fact.right, false)
+        } else if source == &fact.right {
+            (&fact.left, true)
+        } else {
+            return Err(LeanCompileError::unsupported("AggregateCalculation/Source"));
+        };
+        let other_number = self.compile_numeric_observation(other, position)?;
+        if EvalRational::from_obj(&proof.left_value).as_ref() != Some(&value)
+            || EvalRational::from_obj(&proof.right_value).as_ref() != Some(&value)
+            || other_number.3.as_ref() != Some(&value)
+        {
+            return Err(LeanCompileError::unsupported(
+                "AggregateCalculation/ResultValue",
+            ));
+        }
+        let output = exact_rational_literal(&value, "ℂ")?;
+        let equal = format!("(Litex.NativeBridge.sameOfDenoteNumber {} {} {output} {} {denotation} {} (by norm_num))", self.compile_object_reference(source, position)?, self.compile_object_reference(other, position)?, other_number.0, other_number.1);
+        Ok(if reversed {
+            format!("({equal}).symm")
+        } else {
+            equal
+        })
+    }
+
+    pub(in crate::compile_to_lean) fn compile_range_aggregate_value(
+        &self,
+        evaluation: &AggregateEvaluationResult,
+        position: &SourcePosition<'_>,
+    ) -> Result<(EvalRational, String), LeanCompileError> {
         let (source, bounds, terms, value, product) = match evaluation {
             AggregateEvaluationResult::Sum(p) => (&p.source, &p.bounds, &p.terms, &p.value, false),
             AggregateEvaluationResult::Product(p) => {
@@ -50,13 +96,6 @@ impl LitexToLeanCompiler {
                     "AggregateCalculation/FiniteSetOrFold",
                 ))
             }
-        };
-        let (other, recorded_value, reversed) = if source == &fact.left {
-            (&fact.right, &proof.left_value, false)
-        } else if source == &fact.right {
-            (&fact.left, &proof.right_value, true)
-        } else {
-            return Err(LeanCompileError::unsupported("AggregateCalculation/Source"));
         };
         let (first, last, function) = match source {
             Obj::IteratedOperator(IteratedOperator::Sum(p)) if !product => {
@@ -134,13 +173,7 @@ impl LitexToLeanCompiler {
             indices.push(format!("({index} : ℤ)"));
             facts.push(name);
         }
-        let other_number = self.compile_numeric_observation(other, position)?;
-        if EvalRational::from_obj(value).as_ref() != Some(&accumulated)
-            || EvalRational::from_obj(recorded_value).as_ref() != Some(&accumulated)
-            || EvalRational::from_obj(&proof.left_value)
-                != EvalRational::from_obj(&proof.right_value)
-            || other_number.3.as_ref() != Some(&accumulated)
-        {
+        if EvalRational::from_obj(value).as_ref() != Some(&accumulated) {
             return Err(LeanCompileError::unsupported(
                 "AggregateCalculation/ResultValue",
             ));
@@ -158,12 +191,7 @@ impl LitexToLeanCompiler {
             facts.join(", ")
         ));
         let denotation = format!("(by\n  {})", lines.join("\n").replace('\n', "\n  "));
-        let equal = format!("(Litex.NativeBridge.sameOfDenoteNumber {} {} {output} {} {denotation} {} (by norm_num))", self.compile_object_reference(source, position)?, self.compile_object_reference(other, position)?, other_number.0, other_number.1);
-        Ok(if reversed {
-            format!("({equal}).symm")
-        } else {
-            equal
-        })
+        Ok((accumulated, denotation))
     }
 
     pub(super) fn compile_aggregate_term(

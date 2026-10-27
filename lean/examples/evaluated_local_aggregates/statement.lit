@@ -1,0 +1,4 @@
+# Evaluate a sum and cite its result within the same local proof block.
+sketch:
+    eval sum(2, 4, fn(x Z) Z {x})
+    sum(2, 4, fn(x Z) Z {x}) = 9

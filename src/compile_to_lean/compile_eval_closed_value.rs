@@ -4,26 +4,76 @@ use super::{LeanCompileError, LitexToLeanCompiler};
 use crate::prelude::*;
 
 impl LitexToLeanCompiler {
-    /// Check the evaluator's exact scalar endpoint with numeric semantic laws.
-    /// This does not invoke the verifier or create a replacement Verify result.
+    /// Check the exact scalar endpoint with numeric semantic laws.
     pub(super) fn compile_eval_closed_value(
         &self,
         object: &Obj,
         position: &SourcePosition<'_>,
     ) -> Result<(EvalRational, String), LeanCompileError> {
-        let value = EvalRational::from_obj(object)
-            .ok_or_else(|| LeanCompileError::unsupported("Eval/ExactScalar"))?;
-        let literal = exact_rational_literal(&value, "ℂ")?;
+        let (value, proof, _) =
+            self.compile_eval_value(object, &[], &mut 0, &[], &mut 0, position)?;
+        Ok((value, proof))
+    }
+
+    /// Reverse traversal consumes the evaluator's postorder call records.
+    /// Returned citation IDs retain forward execution order.
+    pub(super) fn compile_eval_value(
+        &self,
+        object: &Obj,
+        evaluations: &[crate::execute::execute_eval_stmt::aggregate_evaluation_result::FunctionApplicationEvaluationResult],
+        remaining: &mut usize,
+        aggregates: &[crate::execute::execute_eval_stmt::aggregate_evaluation_result::AggregateEvaluationResult],
+        remaining_aggregates: &mut usize,
+        position: &SourcePosition<'_>,
+    ) -> Result<(EvalRational, String, Vec<FactId>), LeanCompileError> {
+        if matches!(object, Obj::FnObj(_)) {
+            return self.compile_eval_function_value(
+                object,
+                evaluations,
+                remaining,
+                aggregates,
+                remaining_aggregates,
+                position,
+            );
+        }
+        if matches!(object, Obj::IteratedOperator(_)) {
+            return self.compile_eval_aggregate_value(
+                object,
+                aggregates,
+                remaining_aggregates,
+                position,
+            );
+        }
         let raw = self.compile_normalization_value(object, position)?;
-        let proof = match object {
-            Obj::Literal(Literal::Number(n)) => format!(
-                "(congrArg M.number (show {} = {literal} from by norm_num))",
-                number_literal(n, "ℂ")?
-            ),
+        let (value, proof, cites) = match object {
+            Obj::Literal(Literal::Number(n)) => {
+                let value = EvalRational::from_obj(object)
+                    .ok_or_else(|| LeanCompileError::unsupported("Eval/ExactScalar"))?;
+                let literal = exact_rational_literal(&value, "ℂ")?;
+                (
+                    value,
+                    format!(
+                        "(congrArg M.number (show {} = {literal} from by norm_num))",
+                        number_literal(n, "ℂ")?
+                    ),
+                    vec![],
+                )
+            }
             Obj::ArithmeticOperator(ArithmeticOperator::Neg(n)) => {
-                let (a, p) = self.compile_eval_closed_value(&n.arg, position)?;
+                let (a, p, cites) = self.compile_eval_value(
+                    &n.arg,
+                    evaluations,
+                    remaining,
+                    aggregates,
+                    remaining_aggregates,
+                    position,
+                )?;
+                let value = EvalRational::new(0, 1)
+                    .unwrap()
+                    .sub(&a)
+                    .ok_or_else(|| LeanCompileError::unsupported("Eval/ExactScalar"))?;
                 let a = exact_rational_literal(&a, "ℂ")?;
-                format!("((congrArg M.negValue {p}).trans ((M.neg_numbers {a}).trans (congrArg M.number (by norm_num))))")
+                (value, format!("((congrArg M.negValue {p}).trans ((M.neg_numbers {a}).trans (congrArg M.number (by norm_num))))"), cites)
             }
             Obj::ArithmeticOperator(op) => {
                 let (a, b, name) = match op {
@@ -34,17 +84,36 @@ impl LitexToLeanCompiler {
                     ArithmeticOperator::Pow(p) => (&p.base, &p.exponent, "pow"),
                     _ => return Err(LeanCompileError::unsupported("Eval/ScalarOperator")),
                 };
-                let (av, ap) = self.compile_eval_closed_value(a, position)?;
-                let (bv, bp) = self.compile_eval_closed_value(b, position)?;
+                let (bv, bp, right_cites) = self.compile_eval_value(
+                    b,
+                    evaluations,
+                    remaining,
+                    aggregates,
+                    remaining_aggregates,
+                    position,
+                )?;
+                let (av, ap, mut cites) = self.compile_eval_value(
+                    a,
+                    evaluations,
+                    remaining,
+                    aggregates,
+                    remaining_aggregates,
+                    position,
+                )?;
+                cites.extend(right_cites);
+                let value = match name {
+                    "add" => av.add(&bv),
+                    "sub" => av.sub(&bv),
+                    "mul" => av.mul(&bv),
+                    "div" => av.div(&bv),
+                    "pow" => bv.to_i128_if_integer().and_then(|n| av.pow_integer(n)),
+                    _ => unreachable!(),
+                }
+                .ok_or_else(|| LeanCompileError::unsupported("Eval/ExactScalar"))?;
                 let al = exact_rational_literal(&av, "ℂ")?;
                 let bl = exact_rational_literal(&bv, "ℂ")?;
                 let law = match name {
-                    "div" => {
-                        if bv.is_zero() {
-                            return Err(LeanCompileError::unsupported("Eval/ZeroDivisor"));
-                        }
-                        format!("(M.div_numbers {al} {bl} (by norm_num))")
-                    }
+                    "div" => format!("(M.div_numbers {al} {bl} (by norm_num))"),
                     "pow" => {
                         let n = bv
                             .to_i128_if_integer()
@@ -52,21 +121,20 @@ impl LitexToLeanCompiler {
                         if n >= 0 {
                             format!("(M.pow_numbers_nat {al} {n})")
                         } else {
-                            if av.is_zero() {
-                                return Err(LeanCompileError::unsupported("Eval/ZeroPowerBase"));
-                            }
                             format!("(show M.powValue (M.number {al}) (M.number {bl}) = M.number ({al} ^ ({n} : ℤ)) from by simpa only [Int.cast_neg, Int.cast_ofNat] using M.pow_numbers_int {al} ({n}) (by norm_num))")
                         }
                     }
                     _ => format!("(M.{name}_numbers {al} {bl})"),
                 };
-                format!("((congrArg₂ M.{name}Value {ap} {bp}).trans ({law}.trans (congrArg M.number (by norm_num))))")
+                (value, format!("((congrArg₂ M.{name}Value {ap} {bp}).trans ({law}.trans (congrArg M.number (by norm_num))))"), cites)
             }
             _ => return Err(LeanCompileError::unsupported("Eval/ScalarOperator")),
         };
+        let literal = exact_rational_literal(&value, "ℂ")?;
         Ok((
             value,
             format!("(show {raw} = M.number {literal} from {proof})"),
+            cites,
         ))
     }
 

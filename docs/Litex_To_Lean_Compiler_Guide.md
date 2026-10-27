@@ -1373,9 +1373,16 @@ that result; a result inside `sketch:` stays local. See
 [exact arithmetic](../lean/examples/evaluated_arithmetic/),
 [previously proved values](../lean/examples/evaluated_numeric_citations/) and
 [local evaluation](../lean/examples/evaluated_local_facts/).
-Function, aggregate, matrix and algorithm evaluation certificates are not yet
-compiled by this `eval` consumer; other scalar operators also remain outside
-this increment.
+Numeric formula-function calls with one or two arguments also compile, including
+domain guards, previously proved numeric values inside the body, nested calls
+and local evaluation. The result retains each body rewrite and its exact
+citations; the compiler applies the existing function beta laws before checking
+the resulting arithmetic. See [formula calls](../lean/examples/evaluated_formula_calls/),
+[captured values](../lean/examples/evaluated_captured_values/),
+[nested calls](../lean/examples/evaluated_nested_calls/) and
+[local calls](../lean/examples/evaluated_local_calls/).
+Aggregate, matrix and algorithm evaluation, other scalar operators and general
+function-returning calls remain outside this checked `eval` slice.
 
 Order replay also covers four weak additive shifts: a nonnegative addend
 preserves a lower bound, and a nonpositive addend preserves an upper bound,

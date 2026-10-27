@@ -2,38 +2,26 @@ use crate::compile_to_lean::helper::*;
 use crate::compile_to_lean::source_position::SourcePosition;
 use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
 use crate::execute::execute_eval_stmt::aggregate_evaluation_result::AggregateEvaluationResult;
-use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::search_equal_fact_by_aggregate_calculation::AggregateCalculationBuiltinRuleProof;
 use crate::prelude::*;
 
 impl LitexToLeanCompiler {
-    pub(super) fn compile_finite_aggregate_calculation(
+    pub(in crate::compile_to_lean) fn compile_finite_aggregate_value(
         &self,
-        fact: &EqualFact,
-        proof: &AggregateCalculationBuiltinRuleProof,
+        evaluation: &AggregateEvaluationResult,
         position: &SourcePosition<'_>,
-    ) -> Result<String, LeanCompileError> {
-        let (source, enumeration, terms, value, product) =
-            match proof.aggregate_evaluations.as_slice() {
-                [AggregateEvaluationResult::SumOfFiniteSet(p)] => {
-                    (&p.source, &p.enumeration, &p.terms, &p.value, false)
-                }
-                [AggregateEvaluationResult::ProductOfFiniteSet(p)] => {
-                    (&p.source, &p.enumeration, &p.terms, &p.value, true)
-                }
-                _ => {
-                    return Err(LeanCompileError::unsupported(
-                        "FiniteAggregate/CalculationBranch",
-                    ))
-                }
-            };
-        let (other, reversed) = if source == &fact.left {
-            (&fact.right, false)
-        } else if source == &fact.right {
-            (&fact.left, true)
-        } else {
-            return Err(LeanCompileError::unsupported(
-                "FiniteAggregate/CalculationSource",
-            ));
+    ) -> Result<(EvalRational, String), LeanCompileError> {
+        let (source, enumeration, terms, value, product) = match evaluation {
+            AggregateEvaluationResult::SumOfFiniteSet(p) => {
+                (&p.source, &p.enumeration, &p.terms, &p.value, false)
+            }
+            AggregateEvaluationResult::ProductOfFiniteSet(p) => {
+                (&p.source, &p.enumeration, &p.terms, &p.value, true)
+            }
+            _ => {
+                return Err(LeanCompileError::unsupported(
+                    "FiniteAggregate/CalculationBranch",
+                ))
+            }
         };
         let (set, function) = match source {
             Obj::IteratedOperator(IteratedOperator::SumOfFiniteSet(p)) if !product => {
@@ -146,12 +134,7 @@ impl LitexToLeanCompiler {
             numbers.push(argument_number);
             term_facts.push(name);
         }
-        let other_number = self.compile_numeric_observation(other, position)?;
-        if EvalRational::from_obj(value).as_ref() != Some(&accumulated)
-            || EvalRational::from_obj(&proof.left_value).as_ref() != Some(&accumulated)
-            || EvalRational::from_obj(&proof.right_value).as_ref() != Some(&accumulated)
-            || other_number.3.as_ref() != Some(&accumulated)
-        {
+        if EvalRational::from_obj(value).as_ref() != Some(&accumulated) {
             return Err(LeanCompileError::unsupported("FiniteAggregate/ResultValue"));
         }
         lines.push(format!("have _members_{n} : ∀ x, M.mem x (Litex.denote _collection_tail_{n}) ↔ x ∈ ([] : List M.Value) := Litex.finiteMembersEmpty"));
@@ -176,11 +159,6 @@ impl LitexToLeanCompiler {
         normalization.extend(term_facts);
         lines.push(format!("· norm_num [{}]", normalization.join(", ")));
         let denotation = format!("(by\n  {})", lines.join("\n").replace('\n', "\n  "));
-        let equal = format!("(Litex.NativeBridge.sameOfDenoteNumber {source_term} {} {output} {} {denotation} {} (by norm_num))", self.compile_object_reference(other, position)?, other_number.0, other_number.1);
-        Ok(if reversed {
-            format!("({equal}).symm")
-        } else {
-            equal
-        })
+        Ok((accumulated, denotation))
     }
 }

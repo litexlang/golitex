@@ -439,3 +439,54 @@ release thm prob::main::finite_covariance_constant_right({0,1},point_mass,null_p
 have fn constant_sampler(k dice.carrier) R = 5
 
 release thm prob::main::finite_covariance_of_constant_left({1,2,3,4,5,6},dice,constant_sampler,dice_square,5)
+
+release thm prob::main::finite_covariance_product_moment({1,2,3,4,5,6},dice,dice_value,dice_value)
+
+have fn one_sampler(k dice.carrier) R = 1
+
+have fn shifted_double(k dice.carrier) R = 2*dice_value(k)+1
+
+release thm prob::main::finite_covariance_of_constant_left({1,2,3,4,5,6},dice,one_sampler,dice_value,1)
+
+release thm prob::main::finite_covariance_symmetric({1,2,3,4,5,6},dice,dice_value,one_sampler)
+
+forall k dice.carrier:
+    one_sampler(k) = 1
+    shifted_double(k) = 2*dice_value(k)+1
+    shifted_double(k) = 2*dice_value(k)+1*one_sampler(k)
+
+release thm prob::main::finite_covariance_of_linear_combination_right({1,2,3,4,5,6},dice,dice_value,dice_value,one_sampler,shifted_double,2,1)
+
+\prob::main::finite_covariance<{1,2,3,4,5,6},dice>(dice_value,shifted_double) = 2*\prob::main::finite_covariance<{1,2,3,4,5,6},dice>(dice_value,dice_value)+1*\prob::main::finite_covariance<{1,2,3,4,5,6},dice>(dice_value,one_sampler) = 2*(35/12)+1*0 = 35/6
+
+release thm prob::main::finite_variance_of_affine({1,2,3,4,5,6},dice,dice_value,shifted_double,2,1)
+
+\prob::main::finite_variance<{1,2,3,4,5,6},dice>(shifted_double) = 2^2*\prob::main::finite_variance<{1,2,3,4,5,6},dice>(dice_value) = 4*(35/12) = 35/3
+
+release thm prob::main::finite_variance_add({1,2,3,4,5,6},dice,dice_value,shifted_double)
+
+\prob::main::finite_variance<{1,2,3,4,5,6},dice>(fn(k dice.carrier) R {dice_value(k)+shifted_double(k)}) = \prob::main::finite_variance<{1,2,3,4,5,6},dice>(dice_value)+2*\prob::main::finite_covariance<{1,2,3,4,5,6},dice>(dice_value,shifted_double)+\prob::main::finite_variance<{1,2,3,4,5,6},dice>(shifted_double) = 35/12+2*(35/6)+35/3 = 105/4
+
+release thm prob::main::finite_variance_subtract({1,2,3,4,5,6},dice,dice_value,shifted_double)
+
+\prob::main::finite_variance<{1,2,3,4,5,6},dice>(fn(k dice.carrier) R {dice_value(k)-shifted_double(k)}) = \prob::main::finite_variance<{1,2,3,4,5,6},dice>(dice_value)-2*\prob::main::finite_covariance<{1,2,3,4,5,6},dice>(dice_value,shifted_double)+\prob::main::finite_variance<{1,2,3,4,5,6},dice>(shifted_double) = 35/12-2*(35/6)+35/3 = 35/12
+
+release thm prob::main::finite_covariance_linear_combination_left({1,2,3,4,5,6},dice,dice_value,dice_square,dice_value,-2,0)
+
+release thm prob::main::finite_covariance_linear_combination_right({1,2,3,4,5,6},dice,dice_value,dice_value,dice_square,0,-3)
+
+release thm prob::main::finite_variance_linear_combination({1,2,3,4,5,6},dice,dice_value,shifted_double,0,0)
+
+release thm prob::main::finite_covariance_affine({1,2,3,4,5,6},dice,dice_value,dice_value,-2,5,3,-7)
+
+release thm prob::main::finite_covariance_product_moment({0,1},point_mass,point_mass_value,null_perturbed_value)
+
+release thm prob::main::finite_variance_linear_combination({0,1},point_mass,point_mass_value,null_perturbed_value,-2,3)
+
+release thm prob::main::finite_covariance_affine({0,1},point_mass,point_mass_value,point_mass_value,0,7,-3,5)
+
+release thm prob::main::finite_covariance_constant_right({1,2,3,4,5,6},dice,dice_value,5)
+
+release thm prob::main::finite_variance_add_uncorrelated({1,2,3,4,5,6},dice,dice_value,fn(k dice.carrier) R {5})
+
+\prob::main::finite_covariance<{1,2,3,4,5,6},dice>(fn(k dice.carrier) R {(-2)*dice_value(k)+5},fn(k dice.carrier) R {3*dice_value(k)+(-7)}) = (-2)*3*\prob::main::finite_covariance<{1,2,3,4,5,6},dice>(dice_value,dice_value) = (-6)*(35/12) = -35/2

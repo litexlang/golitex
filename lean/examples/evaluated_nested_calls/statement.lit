@@ -1,0 +1,10 @@
+# Evaluate nested and repeated calls in their original execution order.
+have fn evaluated_shift(x R) R = x + 1
+eval evaluated_shift(evaluated_shift(2))
+evaluated_shift(evaluated_shift(2)) = 4
+eval evaluated_shift(2) + evaluated_shift(3)
+evaluated_shift(2) + evaluated_shift(3) = 7
+
+have fn evaluated_twice(x R) R = evaluated_shift(x) + evaluated_shift(x)
+eval evaluated_twice(2)
+evaluated_twice(2) = 6

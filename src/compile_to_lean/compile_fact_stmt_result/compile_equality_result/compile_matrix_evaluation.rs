@@ -123,7 +123,9 @@ impl LitexToLeanCompiler {
     fn compile_matrix_evaluated_expression(
         &self,
         expression: &Obj,
-        evaluations: &mut std::slice::Iter<'_, FunctionApplicationEvaluationResult>,
+        evaluations: &mut std::iter::Enumerate<
+            std::slice::Iter<'_, FunctionApplicationEvaluationResult>,
+        >,
         position: &SourcePosition<'_>,
     ) -> Result<(String, String, EvalRational), LeanCompileError> {
         if let Obj::Literal(Literal::Number(number)) = expression {
@@ -138,7 +140,7 @@ impl LitexToLeanCompiler {
             ));
         }
         if let Obj::FnObj(call) = expression {
-            let evidence = evaluations
+            let (index, evidence) = evaluations
                 .next()
                 .ok_or_else(|| LeanCompileError::unsupported("Matrix/ExactFunctionMissing"))?;
             if evidence.application.ir() != expression.ir() {
@@ -150,6 +152,12 @@ impl LitexToLeanCompiler {
                     "Matrix/ExactFunctionExpansion",
                 ));
             };
+            if evidence.rewritten_body.ir() != beta.expanded_body.ir()
+                || !evidence.cited_equal_fact_ids.is_empty()
+                || evidence.nested_function_evidence != (index..index)
+            {
+                return Err(LeanCompileError::unsupported("Matrix/ExactFunctionStages"));
+            }
             let ParentCheckedBetaFunctionBody::NativeMatrix(callable) = &beta.function_body else {
                 return Err(LeanCompileError::unsupported("Matrix/ExactFunctionSource"));
             };
@@ -245,7 +253,7 @@ impl LitexToLeanCompiler {
         {
             return Err(LeanCompileError::unsupported("Matrix/ExactScalarStages"));
         }
-        let mut evaluations = evaluation.function_evaluations.iter();
+        let mut evaluations = evaluation.function_evaluations.iter().enumerate();
         let (raw, left, x) =
             self.compile_matrix_evaluated_expression(expression, &mut evaluations, position)?;
         let (_, right, y) =

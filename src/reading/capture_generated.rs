@@ -12325,8 +12325,8 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_eval_stmt__aggregate_evaluation_result__FunctionApplicationEvaluationResult(value: &crate::execute::execute_eval_stmt::aggregate_evaluation_result::FunctionApplicationEvaluationResult, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_eval_stmt::aggregate_evaluation_result::FunctionApplicationEvaluationResult { application: f0, application_well_defined: f1, expansion: f2, value: f3 } => {
-let fields = vec![("application", capture_ast__obj__Obj(f0, capture, runtime)), ("application_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(f1, capture, runtime)), ("expansion", capture_execute__execute_eval_stmt__aggregate_evaluation_result__FunctionApplicationExpansionProof(f2, capture, runtime)), ("value", capture_ast__obj__Obj(f3, capture, runtime))];
+crate::execute::execute_eval_stmt::aggregate_evaluation_result::FunctionApplicationEvaluationResult { application: f0, application_well_defined: f1, expansion: f2, rewritten_body: f3, cited_equal_fact_ids: f4, nested_function_evidence: f5, value: f6 } => {
+let fields = vec![("application", capture_ast__obj__Obj(f0, capture, runtime)), ("application_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(f1, capture, runtime)), ("expansion", capture_execute__execute_eval_stmt__aggregate_evaluation_result__FunctionApplicationExpansionProof(f2, capture, runtime)), ("rewritten_body", capture_ast__obj__Obj(f3, capture, runtime)), ("cited_equal_fact_ids", JsonValue::Array((f4).iter().map(|item| capture.fact_reference(item, runtime)).collect())), ("nested_function_evidence", node("Range", "", vec![("start", JsonValue::String((f5).start.to_string())), ("end", JsonValue::String((f5).end.to_string()))])), ("value", capture_ast__obj__Obj(f6, capture, runtime))];
 let mut output = node("FunctionApplicationEvaluationResult", "", fields);
 output
 },

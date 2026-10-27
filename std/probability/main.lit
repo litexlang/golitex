@@ -1098,3 +1098,281 @@ thm finite_covariance_constant_right:
     release thm finite_covariance_symmetric(Omega,space,X,fn(k space.carrier) R {c})
     release thm finite_covariance_constant_left(Omega,space,X,c)
     \finite_covariance<Omega,space>(X,fn(k space.carrier) R {c}) = \finite_covariance<Omega,space>(fn(k space.carrier) R {c},X) = 0
+
+thm finite_covariance_product_moment:
+    ? forall Omega set,space &FiniteProbabilitySpace<Omega>,X,Y fn(k space.carrier) R:
+        \finite_covariance<Omega,space>(X,Y) = \finite_expectation<Omega,space>(fn(k space.carrier) R {X(k)*Y(k)})-\finite_expectation<Omega,space>(X)*\finite_expectation<Omega,space>(Y)
+    have ex R = \finite_expectation<Omega,space>(X)
+    have ey R = \finite_expectation<Omega,space>(Y)
+    have fn paired(k space.carrier) R = X(k)*Y(k)
+    have fn linear(k space.carrier) R = (-ey)*X(k)+(-ex)*Y(k)
+    have fn polynomial(k space.carrier) R = paired(k)+linear(k)
+    have fn constant(k space.carrier) R = ex*ey
+    have fn centered(k space.carrier) R = (X(k)-ex)*(Y(k)-ey)
+    claim:
+        ? forall k space.carrier:
+            linear(k) = (-ey)*X(k)+(-ex)*Y(k)
+            polynomial(k) = 1*paired(k)+1*linear(k)
+            centered(k) = 1*polynomial(k)+1*constant(k)
+        paired(k) = X(k)*Y(k)
+        linear(k) = (-ey)*X(k)+(-ex)*Y(k)
+        polynomial(k) = paired(k)+linear(k) = 1*paired(k)+1*linear(k)
+        centered(k) = (X(k)-ex)*(Y(k)-ey)
+        (X(k)-ex)*(Y(k)-ey) = X(k)*Y(k)+((-ey)*X(k)+(-ex)*Y(k))+ex*ey
+        X(k)*Y(k)+((-ey)*X(k)+(-ex)*Y(k))+ex*ey = polynomial(k)+constant(k) = 1*polynomial(k)+1*constant(k)
+    release thm finite_expectation_of_linear_combination(Omega,space,X,Y,linear,-ey,-ex)
+    release thm finite_expectation_of_linear_combination(Omega,space,paired,linear,polynomial,1,1)
+    release thm finite_expectation_of_linear_combination(Omega,space,polynomial,constant,centered,1,1)
+    release thm finite_expectation_of_constant(Omega,space,constant,ex*ey)
+    \finite_expectation<Omega,space>(linear) = (-ey)*\finite_expectation<Omega,space>(X)+(-ex)*\finite_expectation<Omega,space>(Y) = (-ey)*ex+(-ex)*ey = -2*ex*ey
+    \finite_expectation<Omega,space>(polynomial) = 1*\finite_expectation<Omega,space>(paired)+1*\finite_expectation<Omega,space>(linear) = \finite_expectation<Omega,space>(paired)+\finite_expectation<Omega,space>(linear) = \finite_expectation<Omega,space>(paired)+(-2*ex*ey) = \finite_expectation<Omega,space>(paired)-2*ex*ey
+    \finite_expectation<Omega,space>(centered) = 1*\finite_expectation<Omega,space>(polynomial)+1*\finite_expectation<Omega,space>(constant) = \finite_expectation<Omega,space>(polynomial)+\finite_expectation<Omega,space>(constant) = (\finite_expectation<Omega,space>(paired)-2*ex*ey)+ex*ey = \finite_expectation<Omega,space>(paired)-ex*ey
+    claim:
+        ? forall k space.carrier:
+            centered(k) = (fn(t space.carrier) R {(X(t)-\finite_expectation<Omega,space>(X))*(Y(t)-\finite_expectation<Omega,space>(Y))})(k)
+        centered(k) = (X(k)-ex)*(Y(k)-ey) = (X(k)-\finite_expectation<Omega,space>(X))*(Y(k)-\finite_expectation<Omega,space>(Y))
+        (fn(t space.carrier) R {(X(t)-\finite_expectation<Omega,space>(X))*(Y(t)-\finite_expectation<Omega,space>(Y))})(k) = (X(k)-\finite_expectation<Omega,space>(X))*(Y(k)-\finite_expectation<Omega,space>(Y))
+    release thm finite_expectation_extensional(Omega,space,centered,fn(k space.carrier) R {(X(k)-\finite_expectation<Omega,space>(X))*(Y(k)-\finite_expectation<Omega,space>(Y))})
+    release thm finite_expectation_extensional(Omega,space,paired,fn(k space.carrier) R {X(k)*Y(k)})
+    \finite_covariance<Omega,space>(X,Y) = \finite_expectation<Omega,space>(fn(k space.carrier) R {(X(k)-\finite_expectation<Omega,space>(X))*(Y(k)-\finite_expectation<Omega,space>(Y))}) = \finite_expectation<Omega,space>(centered) = \finite_expectation<Omega,space>(paired)-ex*ey
+    \finite_expectation<Omega,space>(paired) = \finite_expectation<Omega,space>(fn(k space.carrier) R {X(k)*Y(k)})
+    ex*ey = \finite_expectation<Omega,space>(X)*\finite_expectation<Omega,space>(Y)
+    thm subtract_equal_values:
+        ? forall v,w,s,t R:
+            v = w
+            s = t
+            =>:
+                v-s = w-t
+        v-s = w-s = w-t
+    release thm subtract_equal_values(\finite_expectation<Omega,space>(paired),\finite_expectation<Omega,space>(fn(k space.carrier) R {X(k)*Y(k)}),ex*ey,\finite_expectation<Omega,space>(X)*\finite_expectation<Omega,space>(Y))
+
+thm finite_covariance_of_linear_combination_left:
+    ? forall Omega set,space &FiniteProbabilitySpace<Omega>,X,Y,W,H fn(k space.carrier) R,a,b R:
+        forall k space.carrier:
+            H(k) = a*X(k)+b*Y(k)
+        =>:
+            \finite_covariance<Omega,space>(H,W) = a*\finite_covariance<Omega,space>(X,W)+b*\finite_covariance<Omega,space>(Y,W)
+    release thm finite_expectation_of_linear_combination(Omega,space,X,Y,H,a,b)
+    have fn cx(k space.carrier) R = (X(k)-\finite_expectation<Omega,space>(X))*(W(k)-\finite_expectation<Omega,space>(W))
+    have fn cy(k space.carrier) R = (Y(k)-\finite_expectation<Omega,space>(Y))*(W(k)-\finite_expectation<Omega,space>(W))
+    have fn ch(k space.carrier) R = (H(k)-\finite_expectation<Omega,space>(H))*(W(k)-\finite_expectation<Omega,space>(W))
+    claim:
+        ? forall k space.carrier:
+            ch(k) = a*cx(k)+b*cy(k)
+        H(k) = a*X(k)+b*Y(k)
+        \finite_expectation<Omega,space>(H) = a*\finite_expectation<Omega,space>(X)+b*\finite_expectation<Omega,space>(Y)
+        H(k)-\finite_expectation<Omega,space>(H) = (a*X(k)+b*Y(k))-(a*\finite_expectation<Omega,space>(X)+b*\finite_expectation<Omega,space>(Y)) = a*(X(k)-\finite_expectation<Omega,space>(X))+b*(Y(k)-\finite_expectation<Omega,space>(Y))
+        cx(k) = (X(k)-\finite_expectation<Omega,space>(X))*(W(k)-\finite_expectation<Omega,space>(W))
+        cy(k) = (Y(k)-\finite_expectation<Omega,space>(Y))*(W(k)-\finite_expectation<Omega,space>(W))
+        ch(k) = (H(k)-\finite_expectation<Omega,space>(H))*(W(k)-\finite_expectation<Omega,space>(W))
+        (H(k)-\finite_expectation<Omega,space>(H))*(W(k)-\finite_expectation<Omega,space>(W)) = (a*(X(k)-\finite_expectation<Omega,space>(X))+b*(Y(k)-\finite_expectation<Omega,space>(Y)))*(W(k)-\finite_expectation<Omega,space>(W))
+        (a*(X(k)-\finite_expectation<Omega,space>(X))+b*(Y(k)-\finite_expectation<Omega,space>(Y)))*(W(k)-\finite_expectation<Omega,space>(W)) = a*cx(k)+b*cy(k)
+    release thm finite_expectation_of_linear_combination(Omega,space,cx,cy,ch,a,b)
+    release thm finite_expectation_extensional(Omega,space,cx,fn(k space.carrier) R {(X(k)-\finite_expectation<Omega,space>(X))*(W(k)-\finite_expectation<Omega,space>(W))})
+    release thm finite_expectation_extensional(Omega,space,cy,fn(k space.carrier) R {(Y(k)-\finite_expectation<Omega,space>(Y))*(W(k)-\finite_expectation<Omega,space>(W))})
+    release thm finite_expectation_extensional(Omega,space,ch,fn(k space.carrier) R {(H(k)-\finite_expectation<Omega,space>(H))*(W(k)-\finite_expectation<Omega,space>(W))})
+    \finite_covariance<Omega,space>(X,W) = \finite_expectation<Omega,space>(fn(k space.carrier) R {(X(k)-\finite_expectation<Omega,space>(X))*(W(k)-\finite_expectation<Omega,space>(W))}) = \finite_expectation<Omega,space>(cx)
+    \finite_covariance<Omega,space>(Y,W) = \finite_expectation<Omega,space>(fn(k space.carrier) R {(Y(k)-\finite_expectation<Omega,space>(Y))*(W(k)-\finite_expectation<Omega,space>(W))}) = \finite_expectation<Omega,space>(cy)
+    \finite_covariance<Omega,space>(H,W) = \finite_expectation<Omega,space>(fn(k space.carrier) R {(H(k)-\finite_expectation<Omega,space>(H))*(W(k)-\finite_expectation<Omega,space>(W))}) = \finite_expectation<Omega,space>(ch) = a*\finite_expectation<Omega,space>(cx)+b*\finite_expectation<Omega,space>(cy)
+    a*\finite_expectation<Omega,space>(cx)+b*\finite_expectation<Omega,space>(cy) = a*\finite_covariance<Omega,space>(X,W)+b*\finite_covariance<Omega,space>(Y,W)
+
+thm finite_covariance_linear_combination_left:
+    ? forall Omega set,space &FiniteProbabilitySpace<Omega>,X,Y,W fn(k space.carrier) R,a,b R:
+        \finite_covariance<Omega,space>(fn(k space.carrier) R {a*X(k)+b*Y(k)},W) = a*\finite_covariance<Omega,space>(X,W)+b*\finite_covariance<Omega,space>(Y,W)
+    release thm finite_covariance_of_linear_combination_left(Omega,space,X,Y,W,fn(k space.carrier) R {a*X(k)+b*Y(k)},a,b)
+
+thm finite_covariance_of_linear_combination_right:
+    ? forall Omega set,space &FiniteProbabilitySpace<Omega>,X,Y,W,H fn(k space.carrier) R,a,b R:
+        forall k space.carrier:
+            H(k) = a*Y(k)+b*W(k)
+        =>:
+            \finite_covariance<Omega,space>(X,H) = a*\finite_covariance<Omega,space>(X,Y)+b*\finite_covariance<Omega,space>(X,W)
+    release thm finite_covariance_of_linear_combination_left(Omega,space,Y,W,X,H,a,b)
+    release thm finite_covariance_symmetric(Omega,space,X,H)
+    release thm finite_covariance_symmetric(Omega,space,X,Y)
+    release thm finite_covariance_symmetric(Omega,space,X,W)
+    \finite_covariance<Omega,space>(X,H) = \finite_covariance<Omega,space>(H,X) = a*\finite_covariance<Omega,space>(Y,X)+b*\finite_covariance<Omega,space>(W,X) = a*\finite_covariance<Omega,space>(X,Y)+b*\finite_covariance<Omega,space>(X,W)
+
+thm finite_covariance_linear_combination_right:
+    ? forall Omega set,space &FiniteProbabilitySpace<Omega>,X,Y,W fn(k space.carrier) R,a,b R:
+        \finite_covariance<Omega,space>(X,fn(k space.carrier) R {a*Y(k)+b*W(k)}) = a*\finite_covariance<Omega,space>(X,Y)+b*\finite_covariance<Omega,space>(X,W)
+    release thm finite_covariance_of_linear_combination_right(Omega,space,X,Y,W,fn(k space.carrier) R {a*Y(k)+b*W(k)},a,b)
+
+thm finite_variance_of_linear_combination:
+    ? forall Omega set,space &FiniteProbabilitySpace<Omega>,X,Y,H fn(k space.carrier) R,a,b R:
+        forall k space.carrier:
+            H(k) = a*X(k)+b*Y(k)
+        =>:
+            \finite_variance<Omega,space>(H) = a^2*\finite_variance<Omega,space>(X)+2*a*b*\finite_covariance<Omega,space>(X,Y)+b^2*\finite_variance<Omega,space>(Y)
+    release thm finite_covariance_of_linear_combination_left(Omega,space,X,Y,H,H,a,b)
+    release thm finite_covariance_of_linear_combination_right(Omega,space,X,X,Y,H,a,b)
+    release thm finite_covariance_of_linear_combination_right(Omega,space,Y,X,Y,H,a,b)
+    release thm finite_covariance_symmetric(Omega,space,X,Y)
+    release thm finite_covariance_self(Omega,space,X)
+    release thm finite_covariance_self(Omega,space,Y)
+    release thm finite_covariance_self(Omega,space,H)
+    \finite_covariance<Omega,space>(X,H) = a*\finite_covariance<Omega,space>(X,X)+b*\finite_covariance<Omega,space>(X,Y) = a*\finite_variance<Omega,space>(X)+b*\finite_covariance<Omega,space>(X,Y)
+    \finite_covariance<Omega,space>(Y,H) = a*\finite_covariance<Omega,space>(Y,X)+b*\finite_covariance<Omega,space>(Y,Y) = a*\finite_covariance<Omega,space>(X,Y)+b*\finite_variance<Omega,space>(Y)
+    \finite_variance<Omega,space>(H) = \finite_covariance<Omega,space>(H,H) = a*\finite_covariance<Omega,space>(X,H)+b*\finite_covariance<Omega,space>(Y,H)
+    a*\finite_covariance<Omega,space>(X,H)+b*\finite_covariance<Omega,space>(Y,H) = a*(a*\finite_variance<Omega,space>(X)+b*\finite_covariance<Omega,space>(X,Y))+b*(a*\finite_covariance<Omega,space>(X,Y)+b*\finite_variance<Omega,space>(Y))
+    a*(a*\finite_variance<Omega,space>(X)+b*\finite_covariance<Omega,space>(X,Y))+b*(a*\finite_covariance<Omega,space>(X,Y)+b*\finite_variance<Omega,space>(Y)) = a^2*\finite_variance<Omega,space>(X)+2*a*b*\finite_covariance<Omega,space>(X,Y)+b^2*\finite_variance<Omega,space>(Y)
+
+thm finite_variance_linear_combination:
+    ? forall Omega set,space &FiniteProbabilitySpace<Omega>,X,Y fn(k space.carrier) R,a,b R:
+        \finite_variance<Omega,space>(fn(k space.carrier) R {a*X(k)+b*Y(k)}) = a^2*\finite_variance<Omega,space>(X)+2*a*b*\finite_covariance<Omega,space>(X,Y)+b^2*\finite_variance<Omega,space>(Y)
+    release thm finite_variance_of_linear_combination(Omega,space,X,Y,fn(k space.carrier) R {a*X(k)+b*Y(k)},a,b)
+
+thm finite_variance_add:
+    ? forall Omega set,space &FiniteProbabilitySpace<Omega>,X,Y fn(k space.carrier) R:
+        \finite_variance<Omega,space>(fn(k space.carrier) R {X(k)+Y(k)}) = \finite_variance<Omega,space>(X)+2*\finite_covariance<Omega,space>(X,Y)+\finite_variance<Omega,space>(Y)
+    release thm finite_variance_of_linear_combination(Omega,space,X,Y,fn(k space.carrier) R {X(k)+Y(k)},1,1)
+    \finite_variance<Omega,space>(fn(k space.carrier) R {X(k)+Y(k)}) = 1^2*\finite_variance<Omega,space>(X)+2*1*1*\finite_covariance<Omega,space>(X,Y)+1^2*\finite_variance<Omega,space>(Y) = \finite_variance<Omega,space>(X)+2*\finite_covariance<Omega,space>(X,Y)+\finite_variance<Omega,space>(Y)
+
+thm finite_variance_subtract:
+    ? forall Omega set,space &FiniteProbabilitySpace<Omega>,X,Y fn(k space.carrier) R:
+        \finite_variance<Omega,space>(fn(k space.carrier) R {X(k)-Y(k)}) = \finite_variance<Omega,space>(X)-2*\finite_covariance<Omega,space>(X,Y)+\finite_variance<Omega,space>(Y)
+    release thm finite_variance_of_linear_combination(Omega,space,X,Y,fn(k space.carrier) R {X(k)-Y(k)},1,-1)
+    \finite_variance<Omega,space>(fn(k space.carrier) R {X(k)-Y(k)}) = 1^2*\finite_variance<Omega,space>(X)+2*1*(-1)*\finite_covariance<Omega,space>(X,Y)+(-1)^2*\finite_variance<Omega,space>(Y) = \finite_variance<Omega,space>(X)-2*\finite_covariance<Omega,space>(X,Y)+\finite_variance<Omega,space>(Y)
+
+thm finite_variance_add_uncorrelated:
+    ? forall Omega set,space &FiniteProbabilitySpace<Omega>,X,Y fn(k space.carrier) R:
+        \finite_covariance<Omega,space>(X,Y) = 0
+        =>:
+            \finite_variance<Omega,space>(fn(k space.carrier) R {X(k)+Y(k)}) = \finite_variance<Omega,space>(X)+\finite_variance<Omega,space>(Y)
+    release thm finite_variance_add(Omega,space,X,Y)
+    \finite_variance<Omega,space>(fn(k space.carrier) R {X(k)+Y(k)}) = \finite_variance<Omega,space>(X)+2*\finite_covariance<Omega,space>(X,Y)+\finite_variance<Omega,space>(Y) = \finite_variance<Omega,space>(X)+2*0+\finite_variance<Omega,space>(Y) = \finite_variance<Omega,space>(X)+\finite_variance<Omega,space>(Y)
+
+thm finite_covariance_affine:
+    ? forall Omega set,space &FiniteProbabilitySpace<Omega>,X,Y fn(k space.carrier) R,a,b,c,d R:
+        \finite_covariance<Omega,space>(fn(k space.carrier) R {a*X(k)+b},fn(k space.carrier) R {c*Y(k)+d}) = a*c*\finite_covariance<Omega,space>(X,Y)
+    have fn one(k space.carrier) R = 1
+    claim:
+        ? forall k space.carrier:
+            (fn(t space.carrier) R {a*X(t)+b})(k) = a*X(k)+b*one(k)
+            (fn(t space.carrier) R {c*Y(t)+d})(k) = c*Y(k)+d*one(k)
+        one(k) = 1
+        (fn(t space.carrier) R {a*X(t)+b})(k) = a*X(k)+b = a*X(k)+b*one(k)
+        (fn(t space.carrier) R {c*Y(t)+d})(k) = c*Y(k)+d = c*Y(k)+d*one(k)
+    release thm finite_covariance_of_constant_left(Omega,space,one,fn(k space.carrier) R {c*Y(k)+d},1)
+    release thm finite_covariance_of_constant_left(Omega,space,one,X,1)
+    release thm finite_covariance_symmetric(Omega,space,X,one)
+    release thm finite_covariance_of_linear_combination_right(Omega,space,X,Y,one,fn(k space.carrier) R {c*Y(k)+d},c,d)
+    release thm finite_covariance_of_linear_combination_left(Omega,space,X,one,fn(k space.carrier) R {c*Y(k)+d},fn(k space.carrier) R {a*X(k)+b},a,b)
+    \finite_covariance<Omega,space>(X,one) = \finite_covariance<Omega,space>(one,X) = 0
+    \finite_covariance<Omega,space>(X,fn(k space.carrier) R {c*Y(k)+d}) = c*\finite_covariance<Omega,space>(X,Y)+d*\finite_covariance<Omega,space>(X,one) = c*\finite_covariance<Omega,space>(X,Y)+d*0 = c*\finite_covariance<Omega,space>(X,Y)
+    thm linear_equal_values:
+        ? forall x,y,u,v,p,q R:
+            x = u
+            y = v
+            =>:
+                p*x+q*y = p*u+q*v
+        p*x+q*y = p*u+q*y = p*u+q*v
+    release thm linear_equal_values(\finite_covariance<Omega,space>(X,fn(k space.carrier) R {c*Y(k)+d}),\finite_covariance<Omega,space>(one,fn(k space.carrier) R {c*Y(k)+d}),c*\finite_covariance<Omega,space>(X,Y),0,a,b)
+    \finite_covariance<Omega,space>(fn(k space.carrier) R {a*X(k)+b},fn(k space.carrier) R {c*Y(k)+d}) = a*\finite_covariance<Omega,space>(X,fn(k space.carrier) R {c*Y(k)+d})+b*\finite_covariance<Omega,space>(one,fn(k space.carrier) R {c*Y(k)+d}) = a*(c*\finite_covariance<Omega,space>(X,Y))+b*0 = a*c*\finite_covariance<Omega,space>(X,Y)
+
+thm finite_covariance_square_bound:
+    ? forall Omega set,space &FiniteProbabilitySpace<Omega>,X,Y fn(k space.carrier) R:
+        \finite_covariance<Omega,space>(X,Y)^2 <= \finite_variance<Omega,space>(X)*\finite_variance<Omega,space>(Y)
+    thm quadratic_bound_local:
+        ? forall a,b,c R:
+            a >= 0
+            forall t R:
+                a*t^2+2*c*t+b >= 0
+            =>:
+                c^2 <= a*b
+        by cases:
+            ? c^2 <= a*b
+            case a=0:
+                claim:
+                    ? c=0
+                    by contra:
+                        ? c=0
+                        2*c != 0
+                        have u R = -(b+1)/(2*c)
+                        a*u^2+2*c*u+b >= 0
+                        2*c*u = 2*c*(-(b+1)/(2*c)) = -(b+1)
+                        a*u^2+2*c*u+b = 0*u^2+2*c*u+b = 2*c*u+b = -(b+1)+b = -1
+                        0 <= a*u^2+2*c*u+b = -1
+                        impossible 0<=-1
+                c^2 = 0^2 = 0 = a*b
+            case a!=0:
+                by contra:
+                    ? a>0
+                    a<=0
+                    a=0
+                    impossible a!=0
+                have u R = -c/a
+                a*u^2+2*c*u+b >= 0
+                0 <= a*(a*u^2+2*c*u+b)
+                a*u = a*(-c/a) = -c
+                a*(a*u^2+2*c*u+b) = (a*u)^2+2*c*(a*u)+a*b = (-c)^2+2*c*(-c)+a*b = a*b-c^2
+                0 <= a*b-c^2
+                c^2 <= a*b
+    release thm finite_variance_nonnegative(Omega,space,X)
+    claim:
+        ? forall t R:
+            \finite_variance<Omega,space>(X)*t^2+2*\finite_covariance<Omega,space>(X,Y)*t+\finite_variance<Omega,space>(Y) >= 0
+        release thm finite_variance_linear_combination(Omega,space,X,Y,t,1)
+        release thm finite_variance_nonnegative(Omega,space,fn(k space.carrier) R {t*X(k)+1*Y(k)})
+        0 <= \finite_variance<Omega,space>(fn(k space.carrier) R {t*X(k)+1*Y(k)}) = t^2*\finite_variance<Omega,space>(X)+2*t*1*\finite_covariance<Omega,space>(X,Y)+1^2*\finite_variance<Omega,space>(Y) = \finite_variance<Omega,space>(X)*t^2+2*\finite_covariance<Omega,space>(X,Y)*t+\finite_variance<Omega,space>(Y)
+    release thm quadratic_bound_local(\finite_variance<Omega,space>(X),\finite_variance<Omega,space>(Y),\finite_covariance<Omega,space>(X,Y))
+
+thm finite_covariance_zero_variance_left:
+    ? forall Omega set,space &FiniteProbabilitySpace<Omega>,X,Y fn(k space.carrier) R:
+        \finite_variance<Omega,space>(X) = 0
+        =>:
+            \finite_covariance<Omega,space>(X,Y) = 0
+    release thm finite_covariance_square_bound(Omega,space,X,Y)
+    0 <= \finite_covariance<Omega,space>(X,Y)^2 <= \finite_variance<Omega,space>(X)*\finite_variance<Omega,space>(Y) = 0*\finite_variance<Omega,space>(Y) = 0
+    \finite_covariance<Omega,space>(X,Y)^2 = 0
+
+thm finite_covariance_zero_variance_right:
+    ? forall Omega set,space &FiniteProbabilitySpace<Omega>,X,Y fn(k space.carrier) R:
+        \finite_variance<Omega,space>(Y) = 0
+        =>:
+            \finite_covariance<Omega,space>(X,Y) = 0
+    release thm finite_covariance_zero_variance_left(Omega,space,Y,X)
+    release thm finite_covariance_symmetric(Omega,space,X,Y)
+    \finite_covariance<Omega,space>(X,Y) = \finite_covariance<Omega,space>(Y,X) = 0
+
+thm finite_variance_parallelogram:
+    ? forall Omega set,space &FiniteProbabilitySpace<Omega>,X,Y fn(k space.carrier) R:
+        \finite_variance<Omega,space>(fn(k space.carrier) R {X(k)+Y(k)})+\finite_variance<Omega,space>(fn(k space.carrier) R {X(k)-Y(k)}) = 2*\finite_variance<Omega,space>(X)+2*\finite_variance<Omega,space>(Y)
+    release thm finite_variance_add(Omega,space,X,Y)
+    release thm finite_variance_subtract(Omega,space,X,Y)
+    thm complementary_values_sum:
+        ? forall p,q,a,b,c R:
+            p = a+2*c+b
+            q = a-2*c+b
+            =>:
+                p+q = 2*a+2*b
+        p+q = (a+2*c+b)+q = (a+2*c+b)+(a-2*c+b) = 2*a+2*b
+    release thm complementary_values_sum(\finite_variance<Omega,space>(fn(k space.carrier) R {X(k)+Y(k)}),\finite_variance<Omega,space>(fn(k space.carrier) R {X(k)-Y(k)}),\finite_variance<Omega,space>(X),\finite_variance<Omega,space>(Y),\finite_covariance<Omega,space>(X,Y))
+
+thm finite_variance_add_bound:
+    ? forall Omega set,space &FiniteProbabilitySpace<Omega>,X,Y fn(k space.carrier) R:
+        \finite_variance<Omega,space>(fn(k space.carrier) R {X(k)+Y(k)}) <= 2*\finite_variance<Omega,space>(X)+2*\finite_variance<Omega,space>(Y)
+    release thm finite_variance_parallelogram(Omega,space,X,Y)
+    release thm finite_variance_nonnegative(Omega,space,fn(k space.carrier) R {X(k)-Y(k)})
+    thm nonnegative_complement_bound:
+        ? forall u,v,w R:
+            u+v = w
+            v >= 0
+            =>:
+                u <= w
+        u = u+0 <= u+v = w
+    release thm nonnegative_complement_bound(\finite_variance<Omega,space>(fn(k space.carrier) R {X(k)+Y(k)}),\finite_variance<Omega,space>(fn(k space.carrier) R {X(k)-Y(k)}),2*\finite_variance<Omega,space>(X)+2*\finite_variance<Omega,space>(Y))
+
+thm finite_variance_subtract_bound:
+    ? forall Omega set,space &FiniteProbabilitySpace<Omega>,X,Y fn(k space.carrier) R:
+        \finite_variance<Omega,space>(fn(k space.carrier) R {X(k)-Y(k)}) <= 2*\finite_variance<Omega,space>(X)+2*\finite_variance<Omega,space>(Y)
+    release thm finite_variance_parallelogram(Omega,space,X,Y)
+    release thm finite_variance_nonnegative(Omega,space,fn(k space.carrier) R {X(k)+Y(k)})
+    thm nonnegative_complement_bound:
+        ? forall u,v,w R:
+            v+u = w
+            v >= 0
+            =>:
+                u <= w
+        u = u+0 <= u+v = v+u = w
+    release thm nonnegative_complement_bound(\finite_variance<Omega,space>(fn(k space.carrier) R {X(k)-Y(k)}),\finite_variance<Omega,space>(fn(k space.carrier) R {X(k)+Y(k)}),2*\finite_variance<Omega,space>(X)+2*\finite_variance<Omega,space>(Y))

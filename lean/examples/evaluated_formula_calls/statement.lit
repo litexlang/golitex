@@ -1,0 +1,8 @@
+# Evaluate a real shift and a guarded two-argument quotient, then cite the results.
+have fn evaluated_shift(x R) R = x + 1
+eval evaluated_shift(2)
+evaluated_shift(2) = 3
+
+have fn evaluated_ratio(x R, y R: y != 0) R = x / y
+eval evaluated_ratio(6,3)
+evaluated_ratio(6,3) = 2

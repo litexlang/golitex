@@ -102,6 +102,10 @@ pub struct FunctionApplicationEvaluationResult {
     pub application: Obj,
     pub application_well_defined: ObjWellDefinedProof,
     pub expansion: FunctionApplicationExpansionProof,
+    pub rewritten_body: Obj,
+    pub cited_equal_fact_ids: Vec<FactId>,
+    // Completed child calls in the enclosing postorder function-evaluation tape.
+    pub nested_function_evidence: std::ops::Range<usize>,
     pub value: Obj,
 }
 
