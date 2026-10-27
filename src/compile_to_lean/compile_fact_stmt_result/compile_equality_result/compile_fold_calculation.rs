@@ -1,30 +1,23 @@
+use super::compile_aggregate_calculation::closed_scalar_body;
+use super::compile_function_definition::function_head_object;
 use crate::compile_to_lean::helper::*;
 use crate::compile_to_lean::source_position::{SourceOwner, SourcePosition};
 use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
-use crate::execute::execute_eval_stmt::aggregate_evaluation_result::{FunctionApplicationEvaluationResult, FunctionApplicationExpansionProof, RangeReduceEvaluationResult};
-use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::search_equal_fact_by_aggregate_calculation::AggregateCalculationBuiltinRuleProof;
+use crate::execute::execute_eval_stmt::aggregate_evaluation_result::{
+    FunctionApplicationEvaluationResult, FunctionApplicationExpansionProof,
+    RangeReduceEvaluationResult, ReduceTermEvaluationResult,
+};
 use crate::prelude::*;
-use super::compile_aggregate_calculation::closed_scalar_body;
-use super::compile_function_definition::function_head_object;
 use std::collections::HashMap;
 
 impl LitexToLeanCompiler {
-    pub(super) fn compile_range_fold_calculation(
+    pub(in crate::compile_to_lean) fn compile_range_fold_value(
         &self,
-        fact: &EqualFact,
-        certificate: &AggregateCalculationBuiltinRuleProof,
         evidence: &RangeReduceEvaluationResult,
         position: &SourcePosition<'_>,
-    ) -> Result<String, LeanCompileError> {
+    ) -> Result<(EvalRational, String), LeanCompileError> {
         let Obj::IteratedOperator(IteratedOperator::Reduce(fold)) = &evidence.source else {
             return Err(LeanCompileError::unsupported("FoldCalculation/Source"));
-        };
-        let (other, reverse) = if fact.left == evidence.source {
-            (&fact.right, false)
-        } else if fact.right == evidence.source {
-            (&fact.left, true)
-        } else {
-            return Err(LeanCompileError::unsupported("FoldCalculation/Endpoint"));
         };
         let bounds = &evidence.bounds;
         if bounds.start.ir() != fold.start.ir()
@@ -36,7 +29,7 @@ impl LitexToLeanCompiler {
         let first = self.compile_numeric_observation(&fold.start, position)?;
         let last = self.compile_numeric_observation(&fold.end, position)?;
         let seed = self.compile_numeric_observation(&fold.seed, position)?;
-        let mut accumulated = EvalRational::from_obj(&evidence.seed)
+        let initial = EvalRational::from_obj(&evidence.seed)
             .ok_or_else(|| LeanCompileError::unsupported("FoldCalculation/SeedValue"))?;
         let count = bounds
             .end_integer
@@ -46,57 +39,41 @@ impl LitexToLeanCompiler {
         if first.3.as_ref().and_then(|n| n.to_i128_if_integer()) != Some(bounds.start_integer)
             || last.3.as_ref().and_then(|n| n.to_i128_if_integer()) != Some(bounds.end_integer)
             || count != Some(evidence.terms.len())
-            || seed.3.as_ref() != Some(&accumulated)
+            || seed.3.as_ref() != Some(&initial)
         {
             return Err(LeanCompileError::unsupported("FoldCalculation/Enumeration"));
         }
         let source = self.compile_object_reference(&evidence.source, position)?;
-        let seed_number = exact_rational_literal(&accumulated, "ℂ")?;
+        let seed_number = exact_rational_literal(&initial, "ℂ")?;
         let mut lines = vec![format!("let _fold := {source}"),
             format!("have _seed : Litex.denote _fold.val.seed = M.number {seed_number} := ({}).trans (congrArg M.number (by norm_num : {} = {seed_number}))", seed.1, seed.0)];
-        let mut indices = Vec::new();
+        let arguments = (0..evidence.terms.len())
+            .map(|i| {
+                bounds
+                    .start_integer
+                    .checked_add(i as i128)
+                    .and_then(|n| EvalRational::new(n, 1))
+                    .ok_or_else(|| LeanCompileError::unsupported("FoldCalculation/IndexOverflow"))
+            })
+            .collect::<Result<Vec<_>, _>>()?;
+        let (accumulated, steps) = self.compile_fold_steps(
+            &evidence.terms,
+            &fold.func,
+            &fold.op,
+            &initial,
+            &arguments,
+            position,
+        )?;
+        lines.extend(steps);
+        let indices = arguments
+            .iter()
+            .map(|n| format!("({} : ℤ)", n.to_i128_if_integer().unwrap()))
+            .collect::<Vec<_>>();
         let mut rewrites = vec!["_seed".to_string()];
-        for (i, term) in evidence.terms.iter().enumerate() {
-            let index = bounds
-                .start_integer
-                .checked_add(i as i128)
-                .ok_or_else(|| LeanCompileError::unsupported("FoldCalculation/IndexOverflow"))?;
-            let argument = EvalRational::from_obj(&term.argument)
-                .filter(|n| n.to_i128_if_integer() == Some(index))
-                .ok_or_else(|| LeanCompileError::unsupported("FoldCalculation/Argument"))?;
-            let term_value = EvalRational::from_obj(&term.term.value)
-                .ok_or_else(|| LeanCompileError::unsupported("FoldCalculation/TermValue"))?;
-            let step_value = EvalRational::from_obj(&term.operation.value)
-                .filter(|n| EvalRational::from_obj(&term.accumulated_value).as_ref() == Some(n))
-                .ok_or_else(|| LeanCompileError::unsupported("FoldCalculation/StepValue"))?;
-            let term_proof = self.compile_fold_application_calculation(
-                &term.term,
-                &fold.func,
-                &[&argument],
-                position,
-            )?;
-            let step_proof = self.compile_fold_application_calculation(
-                &term.operation,
-                &fold.op,
-                &[&accumulated, &term_value],
-                position,
-            )?;
-            let argument_number = exact_rational_literal(&argument, "ℂ")?;
-            let term_number = exact_rational_literal(&term_value, "ℂ")?;
-            let seed_number = exact_rational_literal(&accumulated, "ℂ")?;
-            let step_number = exact_rational_literal(&step_value, "ℂ")?;
-            lines.push(format!("have _term_{i} : Litex.FunctionSemantics.callValue (Litex.denote _fold.val.function) (M.number {argument_number}) = M.number {term_number} := {term_proof}"));
-            lines.push(format!("have _step_{i} : Litex.FunctionSemantics.callValue (Litex.denote _fold.val.operation) (Litex.FiniteFunction.pack2 (M.number {seed_number}) (M.number {term_number})) = M.number {step_number} := {step_proof}"));
+        for i in 0..evidence.terms.len() {
             rewrites.extend([format!("_term_{i}"), format!("_step_{i}")]);
-            indices.push(format!("({index} : ℤ)"));
-            accumulated = step_value;
         }
-        let other_number = self.compile_numeric_observation(other, position)?;
-        if EvalRational::from_obj(&evidence.value).as_ref() != Some(&accumulated)
-            || EvalRational::from_obj(&certificate.left_value).as_ref() != Some(&accumulated)
-            || EvalRational::from_obj(&certificate.right_value).as_ref() != Some(&accumulated)
-            || other_number.3.as_ref() != Some(&accumulated)
-        {
+        if EvalRational::from_obj(&evidence.value).as_ref() != Some(&accumulated) {
             return Err(LeanCompileError::unsupported("FoldCalculation/ResultValue"));
         }
         let a = bounds.start_integer;
@@ -112,12 +89,53 @@ impl LitexToLeanCompiler {
             rewrites.join(", ")
         ));
         let denotation = format!("(by\n  {})", lines.join("\n").replace('\n', "\n  "));
-        let equal = format!("(Litex.NativeBridge.sameOfDenoteNumber {source} {} {output} {} {denotation} {} (by norm_num))", self.compile_object_reference(other, position)?, other_number.0, other_number.1);
-        Ok(if reverse {
-            format!("({equal}).symm")
-        } else {
-            equal
-        })
+        Ok((accumulated, denotation))
+    }
+
+    pub(super) fn compile_fold_steps(
+        &self,
+        terms: &[ReduceTermEvaluationResult],
+        function: &Obj,
+        operation: &Obj,
+        initial: &EvalRational,
+        arguments: &[EvalRational],
+        position: &SourcePosition<'_>,
+    ) -> Result<(EvalRational, Vec<String>), LeanCompileError> {
+        if terms.len() != arguments.len() {
+            return Err(LeanCompileError::unsupported("FoldCalculation/Enumeration"));
+        }
+        let mut accumulated = initial.clone();
+        let mut lines = Vec::new();
+        for (i, (term, argument)) in terms.iter().zip(arguments).enumerate() {
+            if EvalRational::from_obj(&term.argument).as_ref() != Some(argument) {
+                return Err(LeanCompileError::unsupported("FoldCalculation/Argument"));
+            }
+            let term_value = EvalRational::from_obj(&term.term.value)
+                .ok_or_else(|| LeanCompileError::unsupported("FoldCalculation/TermValue"))?;
+            let step_value = EvalRational::from_obj(&term.operation.value)
+                .filter(|n| EvalRational::from_obj(&term.accumulated_value).as_ref() == Some(n))
+                .ok_or_else(|| LeanCompileError::unsupported("FoldCalculation/StepValue"))?;
+            let term_proof = self.compile_fold_application_calculation(
+                &term.term,
+                function,
+                &[argument],
+                position,
+            )?;
+            let step_proof = self.compile_fold_application_calculation(
+                &term.operation,
+                operation,
+                &[&accumulated, &term_value],
+                position,
+            )?;
+            let argument_number = exact_rational_literal(&argument, "ℂ")?;
+            let term_number = exact_rational_literal(&term_value, "ℂ")?;
+            let seed_number = exact_rational_literal(&accumulated, "ℂ")?;
+            let step_number = exact_rational_literal(&step_value, "ℂ")?;
+            lines.push(format!("have _term_{i} : Litex.FunctionSemantics.callValue (Litex.denote _fold.val.function) (M.number {argument_number}) = M.number {term_number} := {term_proof}"));
+            lines.push(format!("have _step_{i} : Litex.FunctionSemantics.callValue (Litex.denote _fold.val.operation) (Litex.FiniteFunction.pack2 (M.number {seed_number}) (M.number {term_number})) = M.number {step_number} := {step_proof}"));
+            accumulated = step_value;
+        }
+        Ok((accumulated, lines))
     }
 
     fn compile_fold_application_calculation(

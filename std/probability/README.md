@@ -1,8 +1,8 @@
 # Finite probability
 
-This strict source module contains FiniteProbabilitySpace, six function
+This strict source module contains FiniteProbabilitySpace, eight function
 families, uniform and Dirac bundled constructors, the independent_events
-predicate and 79 named theorems. There are
+predicate and 89 named theorems. There are
 two internal quantified closure facts. No trust, user axioms or abstract
 predicates are used. The source reuses bounded native power-set closure; no
 reserved theorem names are added.
@@ -85,6 +85,8 @@ Cov(X,X)=Var(X). It has no complex or measure-space overload.
 | Variance | finite_variance_formula, finite_variance_nonnegative, finite_variance_of_constant, finite_variance_constant, finite_variance_second_moment, finite_variance_of_affine, finite_variance_affine, finite_variance_scale, finite_variance_translate |
 | Covariance | finite_covariance_formula, finite_covariance_symmetric, finite_covariance_self, finite_covariance_of_constant_left, finite_covariance_constant_left, finite_covariance_constant_right |
 | Covariance moments and bilinearity | finite_covariance_product_moment, finite_covariance_of_linear_combination_left, finite_covariance_linear_combination_left, finite_covariance_of_linear_combination_right, finite_covariance_linear_combination_right, finite_covariance_affine |
+| Covariance square and zero cases | finite_covariance_square_bound, finite_covariance_zero_variance_left, finite_covariance_zero_variance_right |
+| Variance bounds | finite_variance_parallelogram, finite_variance_add_bound, finite_variance_subtract_bound |
 | Variance of combinations | finite_variance_of_linear_combination, finite_variance_linear_combination, finite_variance_add, finite_variance_subtract, finite_variance_add_uncorrelated |
 
 Difference requires B subset A; monotonicity requires A subset B. Bayes
@@ -134,11 +136,15 @@ full probability Lean compilation remain outside this delivered slice.
 ```bash
 target/release/litex -lang en -strict -f std/probability/main.lit
 python3 examples/probability/finite_events/check.py
+python3 examples/probability/tail_bounds/check.py --output-dir tmp/2026-10-27/tail-bounds-check
 ```
 
-The focused checker verifies source, every imported signature, isolated README,
-semantic/domain controls and archive/shared-data discovery. It does not certify
-a complete undergraduate probability course or a repository release.
+The finite_events checker retains the event/moment contracts and controls
+registered in that project. The dedicated tail_bounds checker covers the new
+event constructors and inequalities, independent generic/actual/README callers,
+its own refusal controls and both installed layouts. Their scopes and historical
+receipts are separate. Neither certifies a complete undergraduate probability
+course or a repository release.
 
 Known event memberships now directly support union/intersection/difference
 arguments in bounded WD checks. Union requires both events in the same
@@ -216,8 +222,82 @@ The actual dice caller uses Y=2X+1, obtaining Cov(X,Y)=35/6,
 Var(Y)=35/3, Var(X+Y)=105/4 and Var(X-Y)=35/12. It also exercises
 negative and zero coefficients and the Dirac space's null outcome.
 
-The final focused checker passes77 CLI checks: four positive projects,71
-final-statement refusal controls and both installed layouts. Source91, generic
+The earlier moment/bilinearity checkpoint passed77 CLI checks: four positive projects,71
+final-statement refusal controls and both installed layouts at source91/79thms. Generic
 contracts82 and actual caller202 statements pass; std/WiX has80 matching files
 and unique component references. These focused source and packaging checks do
 not imply full probability Lean support or release certification.
+
+## Covariance square and variance bounds
+
+The six covariance-bound interfaces take Omega,space,X,Y, with the same total-real sampler
+domains as finite_covariance. finite_covariance_square_bound proves
+Cov(X,Y)^2<=Var(X)Var(Y), including either zero variance; no positivity or
+independence premise is added. Its proof uses the nonnegative quadratic
+Var(tX+Y) and separates its zero leading coefficient before dividing.
+
+finite_covariance_zero_variance_left/right require Var(X)=0 / Var(Y)=0,
+respectively, and prove Cov(X,Y)=0. They do not assert everywhere constancy
+or independence. finite_variance_parallelogram proves
+Var(X+Y)+Var(X-Y)=2Var(X)+2Var(Y); finite_variance_add_bound and
+finite_variance_subtract_bound bound each variance by that nonnegative total.
+
+The dedicated examples/probability/covariance_bounds project has independent
+generic calls, an actual Bernoulli equality case and a nonconstant Dirac
+zero-variance observable. Run its check.py with --output-dir <task-output>
+for the focused strict, refusal and installed-layout checks.
+
+The covariance-bounds increment passes14 focused CLI checks: source97/85thms,
+six generic interfaces,90 actual example statements, the isolated README, eight
+final-statement refusal controls and both installed layouts. std/WiX still has80
+matching files/component references. The preceding77 checks describe their
+79-thm snapshot; they were not rerun as a claim about all85-thm consumers.
+
+## Finite tail events, Markov and Chebyshev
+
+The ordinary source functions finite_upper_tail_event<Omega,space>(X,a) and
+finite_deviation_tail_event<Omega,space>(X,a) have two template parameters and
+two ordinary arguments. Both return power_set(space.carrier), for complete
+real-valued X on that carrier and any real a. Their exact native set-builder
+bodies are respectively {k space.carrier:X(k)>=a} and
+{k space.carrier:abs(X(k)-EX)>=a}. Their threshold comparison includes equality.
+
+Four checked source theorems use a in R+:
+
+| Name and ordinary arity | Premises and conclusion |
+| --- | --- |
+| finite_markov_event_bound/5 | Omega,space,X,A,a; X>=0 on the whole carrier and X>=a on A imply P(A)<=EX/a. |
+| finite_chebyshev_event_bound/5 | Omega,space,X,A,a; abs(X-EX)>=a on A implies P(A)<=Var(X)/a^2. |
+| finite_markov_tail_bound/4 | Omega,space,X,a; global nonnegative X gives the bound on finite_upper_tail_event. |
+| finite_chebyshev_tail_bound/4 | Omega,space,X,a; the same variance bound on finite_deviation_tail_event, with signed X allowed. |
+
+Empty events, nonempty null events and variance0 remain legal. Nonpositive
+thresholds are legal for constructing an event, but refuse the inequality
+interfaces. Markov's nonnegativity is a pointwise whole-carrier condition; a
+nonnegative expectation alone does not replace it. No independence is assumed.
+
+The proof splits the carrier into an event and its complement, compares exact
+restricted weighted sums and uses singleton normalization. Chebyshev applies
+Markov to the nonnegative centered square. Private checked real/complex scalar
+transport introduces no public premise, trust, native rule or strategy.
+Named event-valued functions preserve the actual set builders while supplying
+a declared codomain for generic theorem headers; direct raw-set probability
+comparison headers are not covered by this acceptance.
+
+The dedicated examples/probability/tail_bounds caller checks a fair Bernoulli
+upper tail with probability1/2 and centered tail with probability1, both at
+attained bounds; a signed sampler; a nonempty Dirac null tail with probability0
+and variance0; empty supplied events and an empty native tail. Independent
+contracts and threshold/domain/pointwise/strictness refusals accompany it.
+Current source:103 statements,89 top-level thms,10 templates (eight function
+families and two bundled values), one structure, one predicate and two internal
+quantified closure facts. Earlier verification counts above remain records of
+their exact historical snapshots, not fresh claims about this increment.
+
+
+This tail increment passes20 focused CLI checks: strict source103/89thms,
+six generic contracts,117 actual statements, one isolated README statement,
+14 final-statement refusal controls and both installed layouts. The std payload
+and WiX have80 matching files and unique component references. The same ongoing
+task's pinned1.1.6-beta binary was used; this is not a test claim for concurrent
+compiler changes, the whole undergraduate library or a release.

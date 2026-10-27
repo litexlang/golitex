@@ -1,112 +1,112 @@
-# Litex / Lean 检查耗时对照
+# Litex / Lean checking-time comparisons
 
-本目录把到目前为止做过的 Litex / Lean 计时实验集中到一处：每一条用例在两侧写同一个数学命题，分别测量各自的检查路径，并保留可复现的源码、原始样本和环境快照。
+This directory collects the Litex / Lean timing experiments conducted so far. Each case states the same mathematics in both systems, measures their respective checking paths, and retains source files, raw samples and environment snapshots for reproduction.
 
-新增的[求和展开与算术上下文负载](search-and-expansion.md)批次包含 6 份完整 Litex 例子和 15 条 Lean 路线，比较展开/全上下文与直接 Lean 基线。本批保留全部结果，不采用下文既有批次“只收 Litex 更快”的筛选口径；检查路径耗时与完整进程耗时仍分开记录。
+The newer [summation expansion and arithmetic context-load batch](search-and-expansion.md) contains 6 complete Litex examples and 15 Lean routes, comparing expansion/full-context proofs with direct Lean baselines. It retains all results, without the older batches' Litex-faster-only filter. Checking-path and whole-process times remain separate.
 
 <!-- quantitative-iteration-table:start -->
-## 定量迭代：完整进程耗时（秒）
+## Quantitative iteration: whole-process time in seconds
 
-| 问题 | 速度：Litex 耗时中位数（秒）↓ | 速度：Lean 耗时中位数（秒）↓ | 速度：Litex 加速比（Lean 耗时÷Litex 耗时）↑ |
+| Problem | Litex median time (s) ↓ | Lean median time (s) ↓ | Whole-process ratio (Lean ÷ Litex) |
 | --- | ---: | ---: | ---: |
-| [参数化 Newton 单步](#iteration-parametric-newton) | 0.213 | 60.180 | 283.09× |
-| [二次函数梯度下降](#iteration-quadratic-descent) | 2.905 | 21.303 | 7.33× |
-| [含扰动的几何递推界](#iteration-perturbed-geometric) | 1.352 | 17.130 | 12.67× |
+| [Parametric Newton step](#iteration-parametric-newton) | 0.213 | 60.180 | 283.09× |
+| [Gradient descent on a quadratic](#iteration-quadratic-descent) | 2.905 | 21.303 | 7.33× |
+| [Perturbed geometric recurrence bound](#iteration-perturbed-geometric) | 1.352 | 17.130 | 12.67× |
 
-测量日期 2026-10-24，每侧每题 3 个样本，比值用未舍入中位数计算。这是启动新进程到完整文件检查结束的耗时，**包括 Lean 的 Mathlib 导入**。它与下方既有批次的不含启动/导入的毫秒表分开记录；比值不表示纯验证器或证明搜索加速比。
+Measured on 2026-10-24, with 3 samples per problem per system; ratios use unrounded medians. The interval runs from starting a fresh process to completing the file check, **including Lean's Mathlib import**. These results are separate from the older millisecond tables that exclude startup/imports. Their ratios do not measure isolated verifier or proof-search acceleration.
 
-[原始样本](results/quantitative-iteration-raw.json) · [汇总](results/quantitative-iteration-summary.json) · [环境与源码哈希](results/quantitative-iteration-environment.json) · [验证记录](results/quantitative-iteration-validation.json)。本批使用记录的 release 二进制；没有把源码搬到此路径后重新计时。
+[Raw samples](results/quantitative-iteration-raw.json) · [Summary](results/quantitative-iteration-summary.json) · [Environment and source hashes](results/quantitative-iteration-environment.json) · [Validation](results/quantitative-iteration-validation.json). This batch used the recorded release binaries; moving the source files here did not involve new timing runs.
 <!-- quantitative-iteration-table:end -->
 
-从真实证明项理解比较机制，见 [为什么Litex计算1+1=2比Lean快了30倍？截然不同的运行架构和对数学证明的理解的选择。](lean-proof-pipeline.md)：逐步展示源码、显式核心项、lambda 与内核的定义相等检查。这是解释实验，没有新增耗时数据，也不从 lambda calculus 本身推断性能。
+For an explanation through actual proof terms, see [Proof terms and the checking pipeline for 1 + 1 = 2](lean-proof-pipeline.md). It traces source, explicit core terms, lambda abstraction and the kernel's definitional-equality check. This explanatory experiment adds no timing data and does not infer performance from lambda calculus itself.
 
-聚焦类型与对象表达的四组对照，见 [Types, objects, and ordinary mathematical notation](types-and-objects.md)：跨数集推理、整数商余分解、带条件函数调用和有限集合计数，并列出各组源码长度与已有检查耗时。
+Four comparisons of types and object notation appear in [Types, objects, and ordinary mathematical notation](types-and-objects.md): reasoning across number sets, integer quotient-remainder decomposition, guarded function calls and finite-set counting. Each pairs source lengths with existing checking times.
 
-类型桥接是否解释速度差异，见 [What numeric type bridges cost in these examples](type-bridge-experiment.md)：同一 Lean 命题的转换标注、转换自动化与直接引理对照，并分项测量目标展开、证明构造和最终声明检查。本实验保留全部对照结果，不按哪一侧更快筛选。
+[What numeric type bridges cost in these examples](type-bridge-experiment.md) tests whether type bridging explains the timing differences. It compares explicit conversion annotations, conversion automation and direct lemmas for the same Lean statement, with separate measurements of target elaboration, proof construction and final declaration checking. It retains all controls, regardless of which system is faster.
 
 ```text
-cases/            本轮用例定义（JSON：Litex 源码、Lean 命题、每条 Lean 证明路线）
-sources/          每例的 Litex 与 Lean 源码，按批次与领域分目录
-harness/bench.py  重跑计时（validate / measure / all）
-results/          原始样本、汇总、验证记录、环境快照
+cases/            Case definitions (JSON: Litex source, Lean statement, Lean proof routes)
+sources/          Per-case Litex and Lean files, grouped by batch and domain
+harness/bench.py  Timing runner (validate / measure / all)
+results/          Raw samples, summaries, validation and environment snapshots
 ```
 
-## 怎么读这些数字
+## How to read the measurements
 
-- 既有检查路径表的单位为毫秒，数值为暖样本中位数；**倍率 = Lean ÷ Litex**，大于 1 表示 Litex 更快。
-- 这些检查路径批次的两侧都**不含**进程启动和 `import Mathlib`。完整的命令行耗时另有一套数量级更大的数字，不在这里混算。
-- Litex：release 构建，每个样本新建严格 `Runtime`；计时覆盖词法、解析、良定义性检查、验证、存储与证据构建。
-- Lean：`#probe` 自定义命令用纳秒时钟包裹 `elabCommand`，`Elab.async=false` 让证明构造与内核检查同步；计时不含命令解析。
-- 这些是两条**检查路径**的对照，不是语言或内核的总体排名，也不是作者完成数学任务所需时间的同比缩短。
+- The older checking-path tables report warm-sample medians in milliseconds. **Ratio = Lean ÷ Litex**; a value above 1 means Litex took less time.
+- Both sides of those checking-path batches **exclude** process startup and `import Mathlib`. Whole-command times are recorded separately and are not mixed into these tables.
+- Litex: release build, with a fresh strict `Runtime` for each sample. The interval covers tokenization, parsing, well-definedness checking, verification, storage and evidence construction.
+- Lean: a custom `#probe` command uses a nanosecond clock around `elabCommand`; `Elab.async=false` makes proof construction and kernel checking synchronous. Command parsing is outside the interval.
+- These compare two **checking paths**. They do not establish an overall language/kernel ranking or a proportional reduction in the time needed to finish a mathematical task.
 
 <a id="de-bruijn-factor"></a>
 
-### 德布鲁因因子：形式化比普通数学多写多少
+### De Bruijn factors: how much longer is the formal text?
 
-**德布鲁因因子（de Bruijn factor）= 形式化文本长度 ÷ 非形式化数学文本长度**。因子越小，额外书写越少：1.5 表示长 50%，0.8 表示短 20%。它与检查速度分别列出，展示同一个用例的表达长度和运行耗时。[Wiedijk 原文](https://www.cs.ru.nl/~freek/factor/factor.pdf)讨论了这个比值，以及未压缩和压缩文件的不同计量方式。
+**De Bruijn factor = formal-text length ÷ informal mathematical-text length.** Lower factors mean less additional text: 1.5 means 50% longer, and 0.8 means 20% shorter. Length and checking time are reported separately for the same case. [Wiedijk's paper](https://www.cs.ru.nl/~freek/factor/factor.pdf) discusses the ratio and different uncompressed/compressed file-size measures.
 
-本页新增的 **DF\*** 沿用既有源码对比的有效字符口径：去掉空白、整行注释、导入、`set_option` 和 `#` 开头的验证指令，计 Unicode 字符；计入声明、名字、命题和证明，不展开两侧已载入的库或内置规则。非形式化文本只去掉空白。两侧共用同一份英文数学文本，包含对应的命题、条件和证明或计算说明。DF\* 是字符计量的变体，不是文献中的原始字节或 gzip 因子。
+The **DF\*** variant here follows the existing source comparisons' character-counting method: remove whitespace, full-line comments, imports, `set_option` and validation directives starting with `#`, then count Unicode characters. Declarations, names, statements and proofs are included; loaded library/builtin implementations are excluded on both sides. Informal text loses only whitespace. Both systems share the same English mathematical text, including the statement, conditions and proof or calculation explanation. DF\* is a character-based variant, not the paper's original byte-count or gzip factor.
 
-例如商余分解的共同文本是：
+For example, the shared text for quotient-remainder decomposition is:
 
 > For an integer a and a positive integer d, a = d⌊a/d⌋ + (a mod d), by quotient-remainder decomposition.
 
-**表格左侧的“表达”两列比较德布鲁因因子，右侧的“速度”三列比较运行耗时。**计算方向分别是：
+**The two length columns on the left compare de Bruijn factors; the three timing columns on the right compare elapsed time.** Their directions are:
 
-- **表达长度：**Litex 德布鲁因因子 = Litex 字符数 ÷ 普通数学字符数；Lean 德布鲁因因子 = Lean 字符数 ÷ 同一份普通数学字符数。两个因子都越小越简短。
-- **运行速度：**两个耗时都以毫秒计，越小越快；Litex 加速比 = Lean 耗时 ÷ Litex 耗时，越大表示 Litex 越快。
+- **Length:** Litex factor = Litex characters ÷ informal mathematical characters; Lean factor = Lean characters ÷ the same informal mathematical characters. Lower is shorter on both sides.
+- **Time:** both times are milliseconds, with lower being faster. The Litex speedup ratio is Lean time ÷ Litex time; a higher ratio means a shorter Litex checking time.
 
-| 用例 | 表达：Litex 德布鲁因因子 DF* ↓ | 表达：Lean 德布鲁因因子 DF* ↓ | 速度：Litex 耗时 (ms) ↓ | 速度：Lean 耗时 (ms) ↓ | 速度：Litex 加速比（Lean 耗时÷Litex 耗时）↑ |
+| Case | Length: Litex DF* ↓ | Length: Lean DF* ↓ | Litex time (ms) ↓ | Lean time (ms) ↓ | Lean time ÷ Litex time |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| 整数商余分解 | 0.35 | 1.24 | 1.135 | 3.341 | 2.94× |
-| √2 无理数完整证明 | 1.73 | 4.91 | 199.285 | 779.754 | 3.91× |
+| Integer quotient-remainder decomposition | 0.35 | 1.24 | 1.135 | 3.341 | 2.94× |
+| Complete proof that √2 is irrational | 1.73 | 4.91 | 199.285 | 779.754 | 3.91× |
 
-例如第一行的两个因子是 **30÷85 = 0.35、105÷85 = 1.24**，加速比是 **3.341375÷1.135042 = 2.94×**；计算使用未舍入数据。这里的 Lean 路线沿用各表的既有计时选择，不另挑较长源码放大差距，也不代表最短可能写法。
+For the first row, the factors are **30÷85 = 0.35 and 105÷85 = 1.24**, and the timing ratio is **3.341375÷1.135042 = 2.94×**, using unrounded data. The Lean routes follow each table's existing timing selection. Longer Lean sources are not selected to enlarge the length difference, and the sources are not claimed to be the shortest possible.
 
-**这些是回溯示例**：[共同非形式化文本](cases/informal-baselines.json)是在已有形式化源码之后补写的，不是预先选定原文的翻译实验。因此不汇总成“Litex 的固定德布鲁因因子”，也不能据此直接推出更易读或更易写。分母的语言、记号和详细程度会影响数值；后续正式实验应先固定原文再独立形式化。现有结果也保留 Lean 更短的行，例如幂集基数、奇数谓词和互反序列。
+**These are retrospective examples.** The [shared informal texts](cases/informal-baselines.json) were written after the formal sources, rather than fixed before a translation experiment. They do not establish a fixed de Bruijn factor for Litex or directly measure readability or ease of writing. The denominator's language, notation and level of detail affect the result; a prospective study should fix the source text before independent formalization. The results retain cases where Lean is shorter, including power-set cardinality, the oddness predicate and the reciprocal sequence.
 
-本次覆盖三个生成批次的 24 例及类型指南中的带条件倒数。两条多步用例的当前 `.lit` 已比计时用例定义增加了证明步骤，因子标为 **—**；其余旧批次尚未补齐共同原文。[逐例字符数、源码哈希与两条差异记录](results/de-bruijn-factors.json)可由 `python3 examples/litex_vs_lean_speed/harness/de_bruijn.py --check` 复核；`--write` 只从保存的数据重建长度记录和三张结果表，不重新测速。
+This record covers 24 cases from three generated batches plus the guarded reciprocal in the types guide. Two multi-step `.lit` sources have acquired proof steps beyond their saved timing-case definitions, so their factors are **—**. The other older batches still lack shared informal baselines. The [per-case character counts, source hashes and two drift records](results/de-bruijn-factors.json) can be checked with `python3 examples/litex_vs_lean_speed/harness/de_bruijn.py --check`. `--write` rebuilds the length record and three result tables from saved data without rerunning timings.
 
-## 总览
+## Overview
 
-下表只统计既有检查路径批次；完整进程的三组实验单独列在本页开头。
+This table summarizes only the older checking-path batches. The three whole-process experiments are listed separately at the beginning of this page.
 
-| 领域 | 例数 | 运行速度：加速比范围（Lean 耗时÷Litex 耗时） |
+| Domain | Cases | Checking-time ratio range (Lean ÷ Litex) |
 | --- | ---: | ---: |
-| 自然数算术与根式 | 2 | 14× – 37× |
-| 有限求和 | 4 | 3.5× – 7.3× |
-| 三角 | 3 | 10× – 19× |
-| 初等计算：对数、根式、大数 | 5 | 7× – 217× |
-| 数论：素性与最大公因数 | 2 | 2.2× – 147× |
-| 量词、见证、唯一存在、存在消去 | 21 | 1.1× – 77× |
-| 定义与证明命令（函数、谓词、结构、反证、分类、归纳） | 9 | 4.0× – 51× |
-| 集合 | 3 | 1.6× – 82× |
-| 函数（值域） | 1 | 2.9× |
-| 整数算术与整除 | 2 | 2.8× – 2.9× |
-| 有限组合 | 2 | 4.2× – 73× |
-| 微积分（连续、导数） | 2 | 24× – 30× |
-| 经典大证明（√2 无理，两侧同步骤） | 1 | 3.9× |
-| 多步命题（第二轮：不等式/代数/算术/存在构造） | 7 | 1.7× – 306× |
-| 其它语句形式与 showcase 小问题（第三轮：谓词定义/见证/ε-N/集合相等） | 4 | 3.7× – 8.8× |
+| Natural-number arithmetic and radicals | 2 | 14× – 37× |
+| Finite sums | 4 | 3.5× – 7.3× |
+| Trigonometry | 3 | 10× – 19× |
+| Elementary calculations: logarithms, radicals, large numbers | 5 | 7× – 217× |
+| Number theory: primality and greatest common divisors | 2 | 2.2× – 147× |
+| Quantifiers, witnesses, unique existence, existence elimination | 21 | 1.1× – 77× |
+| Definitions and proof commands (functions, predicates, structures, contradiction, cases, induction) | 9 | 4.0× – 51× |
+| Sets | 3 | 1.6× – 82× |
+| Functions (range) | 1 | 2.9× |
+| Integer arithmetic and divisibility | 2 | 2.8× – 2.9× |
+| Finite combinatorics | 2 | 4.2× – 73× |
+| Calculus (continuity, derivatives) | 2 | 24× – 30× |
+| Classical proof (√2 irrational, same steps on both sides) | 1 | 3.9× |
+| Multi-step statements (second round: inequalities, algebra, arithmetic, existence construction) | 7 | 1.7× – 306× |
+| Other statement forms and small showcase problems (third round: predicate definitions, witnesses, ε-N, set equality) | 4 | 3.7× – 8.8× |
 
-**既有检查路径批次的收录口径：**只收 Litex 检查更快（倍率 > 1）的用例，倍率按两侧同一命题、同一工作量计算。Lean 更快的方向（函数外延相等靠定义归约、递归显式展开、直接引用一条已证完的大定理）未在这些旧批次中系统覆盖。另见[不筛选胜负的求和展开与上下文负载批次](search-and-expansion.md)，其中 Lean 的直接路线在六例中的五例上更快。
+**Selection in the older checking-path batches:** only cases where Litex checked faster (ratio > 1) were retained, comparing the same statement and workload. Directions favoring Lean, such as definitional reduction of function equality, explicit recursive expansion and direct reuse of a large proved theorem, were not systematically covered in those batches. The [unscreened summation/context-load batch](search-and-expansion.md) retains both directions; Lean's direct route was faster in five of its six cases.
 
 ---
 
-## 一、已有的五批实验
+## 1. The five earlier batches
 
-这五批的原始样本保存在本仓库的本地批次记录里（五个 `2026-10-22-*` / `2026-10-23-*` 目录）。这里发布的是每例的源码与汇总数字；这些数字是读取当时的记录，没有重新测量，环境见 `results/`。
+Raw samples for these five batches remain in local batch records (five `2026-10-22-*` / `2026-10-23-*` directories). This directory publishes per-case sources and aggregate results read from those records, without new measurements. Environment records are in `results/`.
 
-### 1. 基础算术与根式（2026-10-22）
+### 1.1 Basic arithmetic and radicals (2026-10-22)
 
-| 数学语句 | 速度：Litex 耗时 (ms) ↓ | 速度：Lean 最快耗时 (ms) ↓ | 速度：Litex 加速比（Lean 耗时÷Litex 耗时）↑ | Lean 路线 | 源码 |
+| Mathematical statement | Litex time (ms) ↓ | Fastest tested Lean time (ms) ↓ | Lean time ÷ Litex time | Lean route | Source |
 | --- | ---: | ---: | ---: | --- | --- |
-| `1 + 1 = 2`（Mathlib 已载入） | 0.037 | 1.361 | **36.66×** | `rfl` | [lit](sources/arithmetic/add.lit) · [lean](sources/arithmetic/mathlib_nat.lean) |
+| `1 + 1 = 2` (Mathlib already loaded) | 0.037 | 1.361 | **36.66×** | `rfl` | [lit](sources/arithmetic/add.lit) · [lean](sources/arithmetic/mathlib_nat.lean) |
 | `sqrt(1) = 1` | 0.039 | 0.555 | **14.28×** | `Real.sqrt_one` | [lit](sources/arithmetic/sqrt.lit) · [lean](sources/arithmetic/sqrt_exact.lean) |
 
-### 2. 有限求和与三角（2026-10-22）
+### 1.2 Finite sums and trigonometry (2026-10-22)
 
-| 数学语句 | 速度：Litex 耗时 (ms) ↓ | 速度：Lean 最快耗时 (ms) ↓ | 速度：Litex 加速比（Lean 耗时÷Litex 耗时）↑ | Lean 路线 | 源码 |
+| Mathematical statement | Litex time (ms) ↓ | Fastest tested Lean time (ms) ↓ | Lean time ÷ Litex time | Lean route | Source |
 | --- | ---: | ---: | ---: | --- | --- |
 | `sum(1,10,fn(k Z) Z {k}) = 55` | 1.623 | 5.622 | **3.46×** | `decide` | [lit](sources/sums/sum_id_10.lit) |
 | `sum(1,10,fn(k Z) Z {k^2}) = 385` | 2.224 | 8.266 | **3.72×** | `decide` | [lit](sources/sums/sum_sq_10.lit) |
@@ -116,116 +116,116 @@ results/          原始样本、汇总、验证记录、环境快照
 | `sin(pi) = 0` | 0.040 | 0.736 | **18.50×** | `Real.sin_pi` | [lit](sources/sums/sin_pi.lit) · [lean](sources/sums/sin_pi__exact.lean) |
 | `forall x R: sin(x)^2 + cos(x)^2 = 1` | 0.446 | 4.636 | **10.40×** | `fun x => Real.sin_sq_add_cos_sq x` | [lit](sources/sums/sin_identity.lit) · [lean](sources/sums/sin_identity__exact.lean) |
 
-有限求和是这批里倍率最低的一类：两边都在逐项求和，Litex 的优势来自没有证明项构造。
+Finite sums have some of this batch's smallest ratios. Both systems sum terms individually; Litex checks without constructing Lean proof terms. These timings do not isolate the contribution of that architectural difference.
 
-### 3. 初等计算、数论与大数（2026-10-22）
+### 1.3 Elementary calculations, number theory and large numbers (2026-10-22)
 
-| 数学语句 | 速度：Litex 耗时 (ms) ↓ | 速度：Lean 最快耗时 (ms) ↓ | 速度：Litex 加速比（Lean 耗时÷Litex 耗时）↑ | Lean 路线 | 源码 |
+| Mathematical statement | Litex time (ms) ↓ | Fastest tested Lean time (ms) ↓ | Lean time ÷ Litex time | Lean route | Source |
 | --- | ---: | ---: | ---: | --- | --- |
-| `log(2,8) = 3` | 0.064 | 13.992 | **217.01×** | 显式重写（`logb_pow` 等） | [lit](sources/elementary/log_2_8.lit) · [lean](sources/elementary/log_2_8_explicit.lean) |
+| `log(2,8) = 3` | 0.064 | 13.992 | **217.01×** | Explicit rewriting (`logb_pow`, etc.) | [lit](sources/elementary/log_2_8.lit) · [lean](sources/elementary/log_2_8_explicit.lean) |
 | `sqrt(2)*sqrt(8) = 4` | 0.240 | 7.077 | **29.50×** | `sqrt_mul` + `norm_num` | [lit](sources/elementary/radical_product.lit) |
 | `$prime(1000000007)` | 0.027 | 4.029 | **147.19×** | `native_decide` | [lit](sources/elementary/prime_1000000007.lit) · [lean](sources/elementary/prime_1000000007_native_decide.lean) |
-| `factorial(50) = 30…000`（精确值） | 0.107 | 2.501 | **23.41×** | `norm_num` | [lit](sources/elementary/factorial_50.lit) · [lean](sources/elementary/factorial_50_norm_num.lean) |
+| `factorial(50) = 30…000` (exact value) | 0.107 | 2.501 | **23.41×** | `norm_num` | [lit](sources/elementary/factorial_50.lit) · [lean](sources/elementary/factorial_50_norm_num.lean) |
 | `95800^4+217519^4+414560^4 = 422481^4` | 0.264 | 11.098 | **42.03×** | `rfl` | [lit](sources/elementary/fourth_power_eq.lit) · [lean](sources/elementary/fourth_power_eq_rfl.lean) |
 | `witness exist a,b,c,d N+ st {a^4+b^4+c^4=d^4} from …` | 2.094 | 14.718 | **7.03×** | `decide` | [lit](sources/elementary/fourth_power_witness.lit) |
 | `gcd(2178309,1346269) = 1` | 0.455 | 0.992 | **2.18×** | `rfl` | [lit](sources/elementary/gcd_2178309.lit) |
 
-素性一例的 Lean 路线用的是 `native_decide`：它在本机编译求值，`#print axioms` 会记录一条生成公理依赖。同一目标用 `norm_num` 需要 718 ms。表里取的是**已测最快**写法，所以这是对 Lean 有利的比较。
+The primality case uses `native_decide` in Lean: native compiled evaluation adds a generated axiom dependency reported by `#print axioms`. The same goal took 718 ms with `norm_num`. The table uses the **fastest tested** route, giving Lean the favorable measured comparison.
 
-### 4. 量词、见证、唯一存在与存在消去（2026-10-23，21 例）
+### 1.4 Quantifiers, witnesses, unique existence and existence elimination (2026-10-23; 21 cases)
 
-每例都测了 tactic、直接引理与简短证明项多条路线，下表取每题已测最快的 Lean 写法。“语句形状”指这条命题主要考的是哪种 Litex 语句。
+Each case tested several tactic, direct-lemma and compact proof-term routes. The table uses the fastest tested Lean route for each problem. The statement-form column identifies the main Litex construct exercised.
 
-| 语句形状 | 数学语句 | 速度：Litex 耗时 (ms) ↓ | 速度：Lean 耗时 (ms) ↓ | 速度：Litex 加速比（Lean 耗时÷Litex 耗时）↑ |
+| Statement form | Mathematical statement | Litex time (ms) ↓ | Lean time (ms) ↓ | Lean time ÷ Litex time |
 | --- | --- | ---: | ---: | ---: |
-| 全称 + 加法保号 | 两正实数之和为正 | 0.394 | 9.305 | **23.60×** |
-| 全称 + 乘法保号 | 两正实数之积为正 | 0.408 | 4.986 | **12.23×** |
-| 全称 + 传递 | 严格不等式的传递性 | 0.256 | 1.240 | **4.84×** |
-| 全称 + 不等式平移 | 不等式两边加上同一实数 | 0.469 | 9.537 | **20.33×** |
-| 全称 + 幂 | 任意实数的平方非负 | 0.597 | 13.491 | **22.60×** |
-| 全称 + 绝对值 | 绝对值三角不等式 | 5.261 | 7.338 | **1.39×** |
-| 全称 + 倒数 | 正实数的倒数为正 | 0.287 | 8.167 | **28.43×** |
-| 全称 + 除法 | 非零实数除以自身等于一 | 0.387 | 3.301 | **8.52×** |
-| 全称 + 反对称 | 双向弱不等式推出相等 | 0.287 | 1.217 | **4.24×** |
-| 全称 + 析取结论 | 零乘积推出一个因子为零 | 0.203 | 6.860 | **33.83×** |
-| 全称 + 多项式恒等式 | 平方展开式 | 1.589 | 15.006 | **9.44×** |
-| 全称 + 实例化 | 把全称函数性质用到 0 上 | 0.675 | 1.238 | **1.83×** |
-| 见证 | 实数平方等于四 | 0.512 | 4.789 | **9.36×** |
-| ∀∃ 构造 | 对每个实数构造更大的实数 | 1.071 | 1.384 | **1.29×** |
-| ∀∃ + 正性 | 给定正数构造更小的正数 | 1.628 | 10.215 | **6.28×** |
-| 唯一存在 | 每个实数有唯一加法逆元 | 1.422 | 3.795 | **2.67×** |
-| ∀∃ 双约束 | 构造和与差都给定的两个实数 | 3.219 | 21.098 | **6.56×** |
-| 存在消去 | 由平方根存在推出非负 | 4.148 | 14.026 | **3.38×** |
-| 存在消去 + 换尺度 | 提取平方根后构造四倍数平方根 | 9.502 | 14.557 | **1.53×** |
-| ∀∃ + 上界 | 为两个实数构造共同上界 | 1.745 | 1.871 | **1.07×** |
-| 非空集合见证 | 用见证证明正实数集合非空 | 0.084 | 6.439 | **76.88×** |
+| Universal + positivity of addition | The sum of two positive reals is positive | 0.394 | 9.305 | **23.60×** |
+| Universal + positivity of multiplication | The product of two positive reals is positive | 0.408 | 4.986 | **12.23×** |
+| Universal + transitivity | Transitivity of strict inequalities | 0.256 | 1.240 | **4.84×** |
+| Universal + inequality translation | Add the same real number to both sides | 0.469 | 9.537 | **20.33×** |
+| Universal + powers | Every real square is nonnegative | 0.597 | 13.491 | **22.60×** |
+| Universal + absolute value | The absolute-value triangle inequality | 5.261 | 7.338 | **1.39×** |
+| Universal + reciprocal | The reciprocal of a positive real is positive | 0.287 | 8.167 | **28.43×** |
+| Universal + division | A nonzero real divided by itself is one | 0.387 | 3.301 | **8.52×** |
+| Universal + antisymmetry | Opposite weak inequalities imply equality | 0.287 | 1.217 | **4.24×** |
+| Universal + disjunctive conclusion | A zero product has a zero factor | 0.203 | 6.860 | **33.83×** |
+| Universal + polynomial identity | Expanding a square | 1.589 | 15.006 | **9.44×** |
+| Universal + instantiation | Apply a universal function property at 0 | 0.675 | 1.238 | **1.83×** |
+| Witness | A real number whose square is four | 0.512 | 4.789 | **9.36×** |
+| ∀∃ construction | Construct a larger real for every real | 1.071 | 1.384 | **1.29×** |
+| ∀∃ + positivity | Construct a smaller positive real from a positive real | 1.628 | 10.215 | **6.28×** |
+| Unique existence | Every real has a unique additive inverse | 1.422 | 3.795 | **2.67×** |
+| ∀∃ with two constraints | Construct two reals with prescribed sum and difference | 3.219 | 21.098 | **6.56×** |
+| Existence elimination | Existence of a square root implies nonnegativity | 4.148 | 14.026 | **3.38×** |
+| Existence elimination + scaling | Extract a square root and construct one for four times the value | 9.502 | 14.557 | **1.53×** |
+| ∀∃ + upper bound | Construct a common upper bound for two reals | 1.745 | 1.871 | **1.07×** |
+| Nonempty-set witness | Prove the positive-real set is nonempty by a witness | 0.084 | 6.439 | **76.88×** |
 
-源码在 `sources/quantifiers/`：每例一个 `.lit`，每条 Lean 路线一个 `<id>_<method>.lean`。
+Sources are in `sources/quantifiers/`: one `.lit` per case and one `<id>_<method>.lean` per Lean route.
 
-这 21 例说明一个规律：**命题里需要的良定义性、作用域和规则越多，Litex 的优势越大**；当 Lean 有专门的一行引理（`lt_trans`、`le_antisymm`、`exists_gt`、`abs_add_le`）时，差距塌到 1–5 倍。
+In this selected batch, some larger ratios occur when a statement combines well-definedness, scope and several rules. With specialized one-line Lean lemmas such as `lt_trans`, `le_antisymm`, `exists_gt` and `abs_add_le`, the measured ratios are around 1–5. These observations do not isolate a general cause of the timing differences.
 
-### 5. 定义与证明命令（2026-10-23，10 个程序）
+### 1.5 Definitions and proof commands (2026-10-23; 10 programs screened)
 
-整段程序（定义 + 使用，或完整证明块）的耗时：
+Timings cover the complete program: definition plus use, or the full proof block.
 
-| 程序 | 速度：Litex 耗时 (ms) ↓ | 速度：Lean 耗时 (ms) ↓ | 速度：Litex 加速比（Lean 耗时÷Litex 耗时）↑ | 源码 |
+| Program | Litex time (ms) ↓ | Lean time (ms) ↓ | Lean time ÷ Litex time | Source |
 | --- | ---: | ---: | ---: | --- |
-| 表达式函数：定义平方并计算 | 0.730 | 7.609 | **10.42×** | [lit](sources/declarations/expression_function.lit) · [lean](sources/declarations/expression_function.lean) |
-| 带定义域条件的倒数函数 | 1.823 | 8.583 | **4.71×** | [lit](sources/declarations/guarded_function.lit) · [lean](sources/declarations/guarded_function.lean) |
-| 开区间谓词定义与使用 | 0.189 | 8.223 | **43.45×** | [lit](sources/declarations/predicate.lit) · [lean](sources/declarations/predicate.lean) |
-| 按正负分段定义绝对值 | 0.729 | 7.330 | **10.05×** | [lit](sources/declarations/piecewise_function.lit) · [lean](sources/declarations/piecewise_function.lean) |
-| 二维点结构、构造与字段访问 | 0.573 | 7.615 | **13.30×** | [lit](sources/declarations/structure.lit) · [lean](sources/declarations/structure.lean) |
-| 定义并调用“正实数非零”定理 | 0.158 | 8.018 | **50.74×** | [lit](sources/declarations/named_theorem.lit) · [lean](sources/declarations/named_theorem.lean) |
-| 反证：不存在平方等于 -1 的实数 | 4.127 | 49.472 | **11.99×** | [lit](sources/declarations/contradiction.lit) · [lean](sources/declarations/contradiction.lean) |
-| 分类讨论：绝对值等于原数或其相反数 | 0.757 | 10.576 | **13.97×** | [lit](sources/declarations/cases_proof.lit) · [lean](sources/declarations/cases_proof.lean) |
-| 归纳证明前 n 个正整数的求和公式 | 43.626 | 174.986 | **4.01×** | [lit](sources/declarations/induction_proof.lit) · [lean](sources/declarations/induction_proof.lean) |
+| Expression function: define a square and evaluate it | 0.730 | 7.609 | **10.42×** | [lit](sources/declarations/expression_function.lit) · [lean](sources/declarations/expression_function.lean) |
+| Reciprocal function with a domain condition | 1.823 | 8.583 | **4.71×** | [lit](sources/declarations/guarded_function.lit) · [lean](sources/declarations/guarded_function.lean) |
+| Define and use an open-interval predicate | 0.189 | 8.223 | **43.45×** | [lit](sources/declarations/predicate.lit) · [lean](sources/declarations/predicate.lean) |
+| Define absolute value by positive/negative branches | 0.729 | 7.330 | **10.05×** | [lit](sources/declarations/piecewise_function.lit) · [lean](sources/declarations/piecewise_function.lean) |
+| Two-dimensional point: structure, construction and field access | 0.573 | 7.615 | **13.30×** | [lit](sources/declarations/structure.lit) · [lean](sources/declarations/structure.lean) |
+| Define and call the theorem that positive reals are nonzero | 0.158 | 8.018 | **50.74×** | [lit](sources/declarations/named_theorem.lit) · [lean](sources/declarations/named_theorem.lean) |
+| Contradiction: no real has square -1 | 4.127 | 49.472 | **11.99×** | [lit](sources/declarations/contradiction.lit) · [lean](sources/declarations/contradiction.lean) |
+| Cases: absolute value equals the value or its negation | 0.757 | 10.576 | **13.97×** | [lit](sources/declarations/cases_proof.lit) · [lean](sources/declarations/cases_proof.lean) |
+| Induction: sum of the first n positive integers | 43.626 | 174.986 | **4.01×** | [lit](sources/declarations/induction_proof.lit) · [lean](sources/declarations/induction_proof.lean) |
 
-这批还分别测了“只声明定义”和“在已载入定义的新上下文中使用定义”两段，见 `results/selected-cases-2026-10-22-23.csv` 之外的原始记录。
+This batch also measured definition-only declarations and uses in fresh contexts with definitions already loaded. Those measurements are in the original records beyond `results/selected-cases-2026-10-22-23.csv`.
 
 ---
 
-## 二、本轮新增：更宽的领域（2026-10-23）
+## 2. Additional domains (2026-10-23)
 
-这一轮补的是前五批没覆盖的领域：集合、函数、整数算术与整除、有限组合、微积分，以及一个“稍微大一点”的经典证明。用例定义在 `cases/new-round.json`，源码在 `sources/new-round/`，原始样本在 `results/new-round-raw.json`。
+This round extends the first five batches to sets, functions, integer arithmetic and divisibility, finite combinatorics, calculus, and a longer classical proof. Cases are in `cases/new-round.json`, sources in `sources/new-round/`, and raw samples in `results/new-round-raw.json`.
 
-| 领域 | 数学语句 | Litex 写法要点 | Lean 写法要点 | 表达：Litex 德布鲁因因子 DF* ↓ | 表达：Lean 德布鲁因因子 DF* ↓ | 速度：Litex 耗时 (ms) ↓ | 速度：Lean 耗时 (ms) ↓ | 速度：Litex 加速比（Lean 耗时÷Litex 耗时）↑ |
+| Domain | Mathematical statement | Litex approach | Lean approach | Length: Litex DF* ↓ | Length: Lean DF* ↓ | Litex time (ms) ↓ | Lean time (ms) ↓ | Lean time ÷ Litex time |
 | --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| 经典大证明 | √2 不是有理数 | `by contra:` + 唯一既约分数 + 素数整除幂，推出 p、q 同为偶数 | 同五步：`Rat.num`/`Rat.den` 互素 + 奇偶性 + `Nat.Prime.dvd_of_dvd_pow` | 1.73 | 4.91 | 199.285 | 779.754 | **3.91×** |
-| 集合 | 并交分配律 | `union(A,intersect(B,D))=intersect(union(A,B),union(A,D))` | `Set.union_inter_distrib_left` | 1.08 | 1.09 | 0.286 | 1.380 | **4.83×** |
-| 集合 | 差集对并集的德摩根律 | `set_minus(A,union(B,D))=intersect(set_minus(A,B),set_minus(A,D))` | `ext` + `simp` + `tauto` | 0.85 | 1.16 | 0.279 | 22.842 | **81.96×** |
-| 集合 | 交集保持包含 | `A $subset B =>: intersect(A,D) $subset intersect(B,D)` | `Set.inter_subset_inter_left` | 0.99 | 1.00 | 0.934 | 1.500 | **1.61×** |
-| 函数 | 函数值属于值域 | `f(x) $in fn_range(f)` | `Set.mem_range_self` | 0.68 | 1.36 | 0.313 | 0.920 | **2.94×** |
-| 整数算术 | 整数除法的商余分解 | `a=d*quot(a,d)+a%d` | `Int.mul_ediv_add_emod` | 0.35 | 1.24 | 1.135 | 3.341 | **2.94×** |
-| 整除 | 整数乘积被其因子整除 | `$dvd(a*c,c)` | `dvd_mul_left` | 0.52 | 1.24 | 0.604 | 1.712 | **2.83×** |
-| 有限组合 | `{1,2,3}` 的元素个数 | `finite_set_size({1,2,3})=3` | `by decide` | 0.44 | 0.75 | 0.049 | 3.597 | **73.43×** |
-| 有限组合 | n 元集合有 2ⁿ 个子集 | `finite_set_size(power_set(A))=2^finite_set_size(A)` | `Finset.card_powerset` | 0.84 | 0.78 | 0.250 | 1.047 | **4.19×** |
-| 组合 | 自然数阶乘为正 | `factorial(n)>0` | `Nat.factorial_pos` | 0.42 | 0.98 | 0.165 | 0.582 | **3.54×** |
-| 微积分 | x² 在 3 处的导数为 6 | `$has_derivative_at(fn(t R) R {t^2},3,6)` | `hasDerivAt_pow` + `congr_deriv` + `norm_num` | 0.80 | 3.07 | 1.555 | 46.258 | **29.75×** |
-| 笛卡尔积 | 有序对的坐标重构 | `(p(1),p(2))=p` | `Prod.mk.eta` | 0.35 | 0.67 | 0.170 | 0.567 | **3.34×** |
-| 微积分 | x² 在 3 处连续 | `$is_continuous_at(fn(t R) R {t^2},3)` | `continuousAt_pow` | 0.59 | 1.14 | 0.377 | 8.986 | **23.83×** |
+| Classical proof | √2 is irrational | `by contra:` + unique reduced fraction + prime divisibility of powers, forcing p and q even | Same five steps: coprimality of `Rat.num`/`Rat.den`, parity, `Nat.Prime.dvd_of_dvd_pow` | 1.73 | 4.91 | 199.285 | 779.754 | **3.91×** |
+| Sets | Union distributes over intersection | `union(A,intersect(B,D))=intersect(union(A,B),union(A,D))` | `Set.union_inter_distrib_left` | 1.08 | 1.09 | 0.286 | 1.380 | **4.83×** |
+| Sets | De Morgan's law for difference from a union | `set_minus(A,union(B,D))=intersect(set_minus(A,B),set_minus(A,D))` | `ext` + `simp` + `tauto` | 0.85 | 1.16 | 0.279 | 22.842 | **81.96×** |
+| Sets | Intersection preserves inclusion | `A $subset B =>: intersect(A,D) $subset intersect(B,D)` | `Set.inter_subset_inter_left` | 0.99 | 1.00 | 0.934 | 1.500 | **1.61×** |
+| Functions | A function value belongs to the range | `f(x) $in fn_range(f)` | `Set.mem_range_self` | 0.68 | 1.36 | 0.313 | 0.920 | **2.94×** |
+| Integer arithmetic | Integer quotient-remainder decomposition | `a=d*quot(a,d)+a%d` | `Int.mul_ediv_add_emod` | 0.35 | 1.24 | 1.135 | 3.341 | **2.94×** |
+| Divisibility | An integer product is divisible by its factor | `$dvd(a*c,c)` | `dvd_mul_left` | 0.52 | 1.24 | 0.604 | 1.712 | **2.83×** |
+| Finite combinatorics | Cardinality of `{1,2,3}` | `finite_set_size({1,2,3})=3` | `by decide` | 0.44 | 0.75 | 0.049 | 3.597 | **73.43×** |
+| Finite combinatorics | An n-element set has 2ⁿ subsets | `finite_set_size(power_set(A))=2^finite_set_size(A)` | `Finset.card_powerset` | 0.84 | 0.78 | 0.250 | 1.047 | **4.19×** |
+| Combinatorics | A natural-number factorial is positive | `factorial(n)>0` | `Nat.factorial_pos` | 0.42 | 0.98 | 0.165 | 0.582 | **3.54×** |
+| Calculus | The derivative of x² at 3 is 6 | `$has_derivative_at(fn(t R) R {t^2},3,6)` | `hasDerivAt_pow` + `congr_deriv` + `norm_num` | 0.80 | 3.07 | 1.555 | 46.258 | **29.75×** |
+| Cartesian products | Reconstruct an ordered pair from its coordinates | `(p(1),p(2))=p` | `Prod.mk.eta` | 0.35 | 0.67 | 0.170 | 0.567 | **3.34×** |
+| Calculus | x² is continuous at 3 | `$is_continuous_at(fn(t R) R {t^2},3)` | `continuousAt_pow` | 0.59 | 1.14 | 0.377 | 8.986 | **23.83×** |
 
-同一个命题在 Lean 侧换写法，差别可能很大，所以每条备选路线都单独测了：
+Different Lean proofs of the same statement can have very different timings, so each alternative route was measured separately:
 
-| 用例 | Lean 路线 | 写法提要 | 速度：Lean 耗时 (ms) ↓ | 速度：Litex 加速比（Lean 耗时÷Litex 耗时）↑ |
+| Case | Lean route | Approach | Lean time (ms) ↓ | Lean time ÷ Litex time |
 | --- | --- | --- | ---: | ---: |
-| 并交分配律 | `lemma`（主表口径） | 引用与目标同形的 Mathlib 引理 | 1.380 | 4.83× |
-| 并交分配律 | `ext_simp` | `ext x` + `simp` + `tauto` 自己拆集合 | 34.521 | 120.85× |
-| 交集保持包含 | `lemma`（主表口径） | 引用与目标同形的 Mathlib 引理 | 1.500 | 1.61× |
-| 交集保持包含 | `term` | 直接给出证明项 | 2.053 | 2.20× |
-| 集合 {1,2,3} 的元素个数 | `decide`（主表口径） | `by decide` | 3.597 | 73.43× |
-| 集合 {1,2,3} 的元素个数 | `norm_num` | `by norm_num` | 19.045 | 388.83× |
-| 有序对的坐标重构 | `term` | 直接给出证明项 | 0.632 | 3.72× |
-| 有序对的坐标重构 | `lemma`（主表口径） | 引用与目标同形的 Mathlib 引理 | 0.567 | 3.34× |
+| Union distributes over intersection | `lemma` (main table) | Reuse a Mathlib lemma matching the goal | 1.380 | 4.83× |
+| Union distributes over intersection | `ext_simp` | Decompose the sets with `ext x` + `simp` + `tauto` | 34.521 | 120.85× |
+| Intersection preserves inclusion | `lemma` (main table) | Reuse a Mathlib lemma matching the goal | 1.500 | 1.61× |
+| Intersection preserves inclusion | `term` | Supply a proof term directly | 2.053 | 2.20× |
+| Cardinality of {1,2,3} | `decide` (main table) | `by decide` | 3.597 | 73.43× |
+| Cardinality of {1,2,3} | `norm_num` | `by norm_num` | 19.045 | 388.83× |
+| Reconstruct a pair from its coordinates | `term` | Supply a proof term directly | 0.632 | 3.72× |
+| Reconstruct a pair from its coordinates | `lemma` (main table) | Reuse a Mathlib lemma matching the goal | 0.567 | 3.34× |
 
-主表每行标注的路线写在该表的“Lean 最快路线”列里，`results/new-round.md` 也有同样一列。倍率一律用未舍入的中位数计算。
+The selected Lean routes are listed in the approach columns above and in the fastest-route column of `results/new-round.md`. All ratios use unrounded medians.
 
-每行都另有完整源码（每条 Lean 路线一个文件）：`sources/new-round/<id>.lit`、`sources/new-round/<id>__<method>.lean`。
+Each row has complete sources, with one file per Lean route: `sources/new-round/<id>.lit` and `sources/new-round/<id>__<method>.lean`.
 
-### √2 无理数：两侧按同一套步骤做完
+### √2 irrational: the same proof steps on both sides
 
-两边都做同样五步：反证设 √2 是有理数 → 取唯一既约分数 p/q（gcd(p,q)=1）→ 由 p² = 2q² 得 2 | p²，从而 p 是偶数 → 代回得 q² = 2(p/2)²，从而 q 也是偶数 → 与 gcd(p,q)=1 矛盾。Litex 用 `release thm` 取两条辅助定理（唯一既约分数、素数整除幂），Lean 侧对应 `Rat.reduced` 与 `Nat.Prime.dvd_of_dvd_pow`。
+Both sides follow five steps: assume √2 is rational; obtain its unique reduced fraction p/q with gcd(p,q)=1; derive p² = 2q², hence 2 | p² and p even; substitute to obtain q² = 2(p/2)², hence q even; contradict gcd(p,q)=1. Litex uses `release thm` for two supporting results (unique reduced fractions and prime divisibility of powers); Lean uses `Rat.reduced` and `Nat.Prime.dvd_of_dvd_pow`.
 
-Litex（199.285 ms）：
+Litex (199.285 ms):
 
 ```litex
 # sqrt(2) is not rational.
@@ -246,7 +246,7 @@ by contra:
     impossible 2 <= gcd(p, q) = 1
 ```
 
-Lean（779.754 ms，[源码](sources/new-round/sqrt_two_irrational__scratch.lean)）：
+Lean (779.754 ms; [source](sources/new-round/sqrt_two_irrational__scratch.lean)):
 
 ```lean
 import Mathlib
@@ -255,16 +255,16 @@ example : Irrational (Real.sqrt 2) := by
   rintro ⟨q, hq⟩
   have h2 : (q : Real) ^ 2 = 2 := by
     rw [hq, Real.sq_sqrt (by norm_num : (0 : Real) ≤ 2)]
-  -- 唯一既约分数：p = |num|, m = den, gcd p m = 1
+  -- Unique reduced fraction: p = |num|, m = den, gcd p m = 1
   set p : Nat := q.num.natAbs with hp
   set m : Nat := q.den with hm
   have hden : (m : Real) ≠ 0 := by
     have : (0 : Nat) < m := q.den_pos
     exact_mod_cast this.ne'
-  -- 把 (q : ℝ) = num / den 代入
+  -- Substitute (q : ℝ) = num / den
   have hqeq : (q : Real) = (q.num : Real) / (m : Real) := by
     rw [Rat.cast_def, hm]
-  -- p² = 2 m²（先把 ℤ 上的等式转成 ℕ）
+  -- p² = 2 m² (transfer the equality from ℤ to ℕ)
   have hnat : p ^ 2 = 2 * m ^ 2 := by
     have hreal : (q.num : Real) ^ 2 = 2 * (m : Real) ^ 2 := by
       rw [hqeq] at h2
@@ -279,169 +279,169 @@ example : Irrational (Real.sqrt 2) := by
         · rw [h, hp]; ring
       rw [← hnum, hint]
     exact_mod_cast habs
-  -- p 是偶数
+  -- p is even
   have hp2 : 2 ∣ p ^ 2 := ⟨m ^ 2, hnat⟩
   have hp_even : 2 ∣ p := Nat.Prime.dvd_of_dvd_pow Nat.prime_two hp2
-  -- 于是 q 也是偶数
+  -- Then the denominator m is even as well
   obtain ⟨k, hk⟩ := hp_even
   have hm2 : m ^ 2 = 2 * k ^ 2 := by
     rw [hk] at hnat
     nlinarith
   have hm2dvd : 2 ∣ m ^ 2 := ⟨k ^ 2, hm2⟩
   have hm_even : 2 ∣ m := Nat.Prime.dvd_of_dvd_pow Nat.prime_two hm2dvd
-  -- 与 gcd(p, m) = 1 矛盾
+  -- Contradiction with gcd(p, m) = 1
   have hcop : p.Coprime m := q.reduced
   have hgcd : 2 ∣ p.mgcd m := Nat.dvd_gcd ⟨k, hk⟩ hm_even
   rw [hcop] at hgcd
   omega
 ```
 
-这是两边同工作量的结果：**Litex 3.91×，绝对时间 199.285 ms，Lean 779.754 ms**。Lean 侧这个证明是本轮从零写的第一版，没有针对速度优化（`field_simp`、`nlinarith`、`exact_mod_cast` 都偏重），熟练的 Lean 用户很可能写得更快；如果后续有优化版本，应当在同一张表里替换。
+For these proofs with corresponding steps, the ratio is **3.91×: Litex 199.285 ms, Lean 779.754 ms**. The Lean proof was the first version written from scratch in this round and was not optimized for speed; `field_simp`, `nlinarith` and `exact_mod_cast` are substantial operations. A skilled Lean author may improve it; any optimized measured version should replace the entry in the same table.
 
-## 三、多步命题：Lean 没有现成定理可套（2026-10-23 第二轮）
+## 3. Multi-step statements without matching Lean theorems (2026-10-23, second round)
 
-上一轮的教训是：Lean 一侧引用一条与目标同形的定理，不算“更快”。这一轮专门挑 Lean 没有同形定理、必须自己推几步的命题：用例在 `cases/multi-step.json`，源码在 `sources/multi-step/`，每条备选 Lean 路线都单独计时。
+Direct reuse of a matching theorem is a different workload from deriving the result through several steps. This round selected statements for which no matching Lean theorem was used. Cases are in `cases/multi-step.json`, sources in `sources/multi-step/`, and each alternative Lean route was timed separately.
 
-| 领域 | 数学语句 | Litex 写法 | Lean 写法 | 表达：Litex 德布鲁因因子 DF* ↓ | 表达：Lean 德布鲁因因子 DF* ↓ | 速度：Litex 耗时 (ms) ↓ | 速度：Lean 耗时 (ms) ↓ | 速度：Litex 加速比（Lean 耗时÷Litex 耗时）↑ |
+| Domain | Mathematical statement | Litex approach | Lean approach | Length: Litex DF* ↓ | Length: Lean DF* ↓ | Litex time (ms) ↓ | Lean time (ms) ↓ | Lean time ÷ Litex time |
 | --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| 不等式 | 平方和为零则两数都为零 | `x^2+y^2=0 =>: x=0 and y=0` | `constructor <;> nlinarith [sq_nonneg x, sq_nonneg y]` | 0.42 | 1.19 | 0.685 | 209.744 | **306.11×** |
-| 不等式 | 正数的 `x/(x+1)` 为正 | 先证 `x+1 > 0`，再证 `x/(x+1) > 0` | `have h1 : 0 < x+1 := by linarith`；`div_pos hx h1` | 0.37 | 1.11 | 0.949 | 29.170 | **30.75×** |
-| 代数 | 等式两边同乘 2 的消去 | `2*x = 2*y =>: x = y` | `mul_left_cancel₀ (by norm_num) h` | 0.43 | 1.54 | 0.335 | 10.726 | **32.01×** |
-| 不等式 | 实数的平方加一为正 | `x^2 + 1 > 0` | `positivity` | 0.39 | 1.07 | 2.189 | 17.404 | **7.95×** |
-| 不等式 | `x² + y² ≥ 2xy` | `(x-y)^2 >= 0` → 展开 → `x^2+y^2 >= 2*x*y` | `nlinarith [sq_nonneg (x-y)]` | 1.02 | 1.34 | 52.271 | 87.954 | **1.68×** |
-| 存在构造 | 任意正整数之上都有偶数 | `witness … from 2*n`，再证整除与大于 | `⟨2*n, by omega, by omega, ⟨n, by ring⟩⟩` | — | — | 4.426 | 34.877 | **7.88×** |
-| 算术 | 正整数小于它的两倍 | `2*n > n` | `omega` | — | — | 0.885 | 14.761 | **16.69×** |
+| Inequalities | A sum of two squares is zero only if both values are zero | `x^2+y^2=0 =>: x=0 and y=0` | `constructor <;> nlinarith [sq_nonneg x, sq_nonneg y]` | 0.42 | 1.19 | 0.685 | 209.744 | **306.11×** |
+| Inequalities | `x/(x+1)` is positive for positive x | Prove `x+1 > 0`, then `x/(x+1) > 0` | `have h1 : 0 < x+1 := by linarith`; `div_pos hx h1` | 0.37 | 1.11 | 0.949 | 29.170 | **30.75×** |
+| Algebra | Cancel multiplication by 2 from an equality | `2*x = 2*y =>: x = y` | `mul_left_cancel₀ (by norm_num) h` | 0.43 | 1.54 | 0.335 | 10.726 | **32.01×** |
+| Inequalities | A real square plus one is positive | `x^2 + 1 > 0` | `positivity` | 0.39 | 1.07 | 2.189 | 17.404 | **7.95×** |
+| Inequalities | `x² + y² ≥ 2xy` | `(x-y)^2 >= 0` → expand → `x^2+y^2 >= 2*x*y` | `nlinarith [sq_nonneg (x-y)]` | 1.02 | 1.34 | 52.271 | 87.954 | **1.68×** |
+| Existence construction | An even integer above every positive integer | `witness … from 2*n`, then prove divisibility and the strict bound | `⟨2*n, by omega, by omega, ⟨n, by ring⟩⟩` | — | — | 4.426 | 34.877 | **7.88×** |
+| Arithmetic | A positive integer is smaller than its double | `2*n > n` | `omega` | — | — | 0.885 | 14.761 | **16.69×** |
 
-每条用例的完整源码在 `sources/multi-step/`：`<id>.lit` 与 `<id>__<method>.lean`。
+Complete sources are in `sources/multi-step/`: `<id>.lit` and `<id>__<method>.lean`.
 
-同一命题的其它 Lean 路线（主表用最快的）：
+Other Lean routes for the same statements (the main table uses the fastest):
 
-| 用例 | Lean 路线 | 速度：Lean 耗时 (ms) ↓ | 速度：Litex 加速比（Lean 耗时÷Litex 耗时）↑ |
+| Case | Lean route | Lean time (ms) ↓ | Lean time ÷ Litex time |
 | --- | --- | ---: | ---: |
-| 等式两边同乘 2 的消去 | `linarith` | 37.737 | 112.63× |
-| 等式两边同乘 2 的消去 | `mul_left_cancel₀`（主表） | 10.726 | 32.01× |
-| 实数的平方加一为正 | `positivity`（主表） | 17.404 | 7.95× |
-| 实数的平方加一为正 | `nlinarith` | 49.474 | 22.60× |
-| 正整数小于它的两倍 | `omega`（主表） | 14.761 | 16.69× |
-| 正整数小于它的两倍 | `nlinarith` | 63.217 | 71.47× |
+| Cancel multiplication by 2 from an equality | `linarith` | 37.737 | 112.63× |
+| Cancel multiplication by 2 from an equality | `mul_left_cancel₀` (main table) | 10.726 | 32.01× |
+| A real square plus one is positive | `positivity` (main table) | 17.404 | 7.95× |
+| A real square plus one is positive | `nlinarith` | 49.474 | 22.60× |
+| A positive integer is smaller than its double | `omega` (main table) | 14.761 | 16.69× |
+| A positive integer is smaller than its double | `nlinarith` | 63.217 | 71.47× |
 
-两条值得单独说明：
+One case deserves a closer look:
 
-- **`x² + y² ≥ 2xy` 只有 1.68×。** Litex 要走三步（母不等式、展开成 `x^2 + y^2 - 2*x*y >= 0`、移项），每步都要重新检查一遍；Lean 的 `nlinarith` 一次把三步一起做完。Litex 单条语句便宜，但“语句条数 × 每条成本”不一定便宜。
+- **`x² + y² ≥ 2xy` has a ratio of only 1.68×.** Litex takes three steps: the initial square inequality, expansion to `x^2 + y^2 - 2*x*y >= 0`, and rearrangement. Each step is checked separately; Lean's `nlinarith` handles all three together. A low cost per statement does not guarantee a low total cost when more statements are needed.
 
-这一轮还有几条想比但 Litex 侧没能通过自动验证的语句（保留下来当边界记录）：
+Some candidate statements failed automatic verification on the Litex side in this round and remain here as historical boundary records:
 
-| 想比的语句 | Litex 的结果 | 处理 |
+| Candidate statement | Litex result | Treatment |
 | --- | --- | --- |
-| `∀ a b c, a \| b → a \| (c*(b+a))` | 求和那一步过不去（`$dvd` 不能直接对和式合成） | 换成“两个偶数之积被 4 整除”，用 `obtain` 显式取见证 |
-| `∀ x, x^2 = x → x = 0 ∨ x = 1` | 证明搜索失败 | 未采用 |
-| `∀ x y, x*y = 1 → x ≠ 0` | 证明搜索失败 | 未采用 |
-| `∀ a, ∃ b, a = 2b ∨ a = 2b+1` | 证明搜索失败 | 未采用 |
+| `∀ a b c, a \| b → a \| (c*(b+a))` | The addition step failed (`$dvd` did not directly combine a sum) | Replaced by a product-of-two-even-numbers divisibility problem, with explicit witnesses obtained using `obtain` |
+| `∀ x, x^2 = x → x = 0 ∨ x = 1` | Proof search failed | Excluded |
+| `∀ x y, x*y = 1 → x ≠ 0` | Proof search failed | Excluded |
+| `∀ a, ∃ b, a = 2b ∨ a = 2b+1` | Proof search failed | Excluded |
 
-这些不是 Lean 更快，而是 Litex 现在自动证不出来；要让它们进表，得先补 Litex 的规则或把证明写成更长的显式步骤。写在这里是为了不让“选录”看起来像“全部”。
+These are failed Litex authoring attempts in the recorded batch, rather than measured Lean-faster cases. Including them would require a checkable proof, possibly with more explicit steps or additional verifier support. They are retained so the selected table is not mistaken for an exhaustive result set.
 
-这几例合起来说明：去掉“引用现成定理”这个因素之后，Litex 的倍率仍在 1.7×–306× 之间，取决于命题需要几条语句、以及 Lean 有没有便宜的一般 tactic 可套。
+In this selected batch without direct matching-theorem reuse, Litex's ratios range from 1.7× to 306×. The number of proof statements and the available general Lean tactics vary between cases.
 
-## 四、其它语句形式与小问题（2026-10-23 第三轮）
+## 4. Other statement forms and small problems (2026-10-23, third round)
 
-前两轮比的都是“事实语句”（`forall … =>: …` 这类）。这一轮换成别的语句形式和 showcases 里的小问题：自定义谓词的定义加见证、从自定义谓词里取见证再推理、ε-N 风格的极限小问题（来自 `showcases/Functions_and_Change/reciprocal.lit`），以及集合相等（Litex 的三种等式义务之一）。用例在 `cases/statement-forms.json`，源码在 `sources/statement-forms/`。
+The first two rounds focused on fact statements such as `forall … =>: …`. This round adds other statement forms and small showcase problems: defining a predicate and providing a witness, extracting a witness and reasoning from it, an ε-N limit-style problem from `showcases/Functions_and_Change/reciprocal.lit`, and set equality (one of Litex's three equality obligations). Cases are in `cases/statement-forms.json`, sources in `sources/statement-forms/`.
 
-| 语句形式 | 小问题 | Litex 写法 | Lean 写法 | 表达：Litex 德布鲁因因子 DF* ↓ | 表达：Lean 德布鲁因因子 DF* ↓ | 速度：Litex 耗时 (ms) ↓ | 速度：Lean 耗时 (ms) ↓ | 速度：Litex 加速比（Lean 耗时÷Litex 耗时）↑ |
+| Statement form | Problem | Litex approach | Lean approach | Length: Litex DF* ↓ | Length: Lean DF* ↓ | Litex time (ms) ↓ | Lean time (ms) ↓ | Lean time ÷ Litex time |
 | --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| 谓词定义 + 见证 | 自定义奇数谓词，见证 7 是奇数 | `prop odd(a Z): exist t Z st {a = 2*t+1}`；`witness $odd(7) from 3` | `∃ t : Int, (7:Int) = 2*t + 1`；`⟨3, by norm_num⟩` | 0.70 | 0.63 | 0.521 | 4.575 | **8.77×** |
-| 自定义谓词推理 | 奇数乘 3 加 2 还是奇数 | `obtain k from $odd(n)`；`witness $odd(3*n+2) from 3*k+2:` + 等式链 | `rintro n ⟨k, hk⟩`；`⟨3*k + 2, by omega⟩` | 1.14 | 0.70 | 6.810 | 36.353 | **5.34×** |
-| 极限风格（ε-N） | 互反序列 `1/n` 可以任意小 | 定义 `a(n)=1/n`，两行具体计算，再 `claim ? forall ε R+: exist n N+ st {a(n) < ε}` | `obtain ⟨n, hn⟩ := exists_nat_one_div_lt hε`；取 `n+1` | 1.29 | 0.95 | 9.553 | 35.269 | **3.69×** |
-| 集合相等的义务 | `A ⊆ B` 时 `A ∪ B = B` | `forall A,B power_set(R): A $subset B =>: union(A,B) = B` | `ext x` + 两个方向，或 `Set.union_eq_right.mpr h` | 0.46 | 0.63 | 0.186 | 1.217 | **6.53×** |
+| Predicate definition + witness | Define oddness and witness that 7 is odd | `prop odd(a Z): exist t Z st {a = 2*t+1}`; `witness $odd(7) from 3` | `∃ t : Int, (7:Int) = 2*t + 1`; `⟨3, by norm_num⟩` | 0.70 | 0.63 | 0.521 | 4.575 | **8.77×** |
+| Custom-predicate reasoning | Three times an odd number plus 2 is odd | `obtain k from $odd(n)`; `witness $odd(3*n+2) from 3*k+2:` + equality chain | `rintro n ⟨k, hk⟩`; `⟨3*k + 2, by omega⟩` | 1.14 | 0.70 | 6.810 | 36.353 | **5.34×** |
+| Limit-style reasoning (ε-N) | The reciprocal sequence `1/n` becomes arbitrarily small | Define `a(n)=1/n`, do two concrete calculations, then `claim ? forall ε R+: exist n N+ st {a(n) < ε}` | `obtain ⟨n, hn⟩ := exists_nat_one_div_lt hε`; take `n+1` | 1.29 | 0.95 | 9.553 | 35.269 | **3.69×** |
+| Set-equality obligation | `A ∪ B = B` when `A ⊆ B` | `forall A,B power_set(R): A $subset B =>: union(A,B) = B` | `ext x` in both directions, or `Set.union_eq_right.mpr h` | 0.46 | 0.63 | 0.186 | 1.217 | **6.53×** |
 
-三条口径说明：
+Three measurement details matter:
 
-- **定义算在谁头上不同。** Litex 的 `prop`/`have fn` 必须在会话里出现，所以定义计入 Litex 的时间；Lean 一侧是展开后的命题（谓词那例）或已载入的引理（极限那例）。也就是说这三例里 Litex 还多做了一步定义，仍然更快。
-- **集合相等那例有两种 Lean 写法**：自己 `ext` + 分两个方向是 2.321 ms（12.5×），引用 `Set.union_eq_right` 是 1.217 ms（6.53×）。主表用快的那个。
-- **这一轮从 showcases 里试了更多题目**：`The-Mechanics-of-Litex-Proof` 的奇偶分情形证明、`2D_Geometry` 的 SAS、`imo_inequalities` 的几道题，都没有达到收录口径（倍率不足 1，或两侧工作量不对等），未纳入本表。
+- **Definitions are charged differently.** Litex's `prop`/`have fn` must appear in its session, so their definitions are included in its timing. The Lean side uses an expanded statement for the predicate example or an already-loaded lemma for the limit example. In those three examples, Litex also performs a definition step and still has lower measured times.
+- **The set-equality case has two Lean routes:** `ext` with both directions takes 2.321 ms (12.5×), while `Set.union_eq_right` takes 1.217 ms (6.53×). The main table uses the faster route.
+- **More showcase problems were tried:** parity-by-cases from `The-Mechanics-of-Litex-Proof`, SAS from `2D_Geometry`, and problems from `imo_inequalities` did not meet the selection criteria (ratio below 1, or unequal workloads), so they are excluded.
 
-## 五、覆盖清单：Litex 的功能被覆盖到哪一步
+## 5. Historical coverage of the measured batches
 
-按 Litex 手册的语句词典（S01–S52）与对象词典（O01–O62）对照，**已经测过**的有：
+Against the Litex manual's statement dictionary (S01–S52) and object dictionary (O01–O62), the following features **were measured**:
 
-| Litex 功能 | 覆盖情况 |
+| Litex feature | Coverage |
 | --- | --- |
-| 原子事实、合取、析取、链式等式 | 已测（零因子、精确计算链、多项式恒等式） |
-| 全称事实、共享假设、`=>:` 作用域 | 已测（量词批 21 例） |
-| 存在、见证、唯一存在、存在消去（S35–S38） | 已测（含非空集合见证） |
-| 局部 `claim`、`obtain`、释放定理（S25、S33） | 已测（√2、存在消去、命名定理复用） |
-| 反证、分情形、归纳（S39、S40、S42） | 已测（各一例） |
-| 表达式函数、带定义域函数、分段、按情况（S01、S11、S21、S22） | 已测（收录 4 例；递归那例不符合收录口径） |
-| 具体谓词与 `by def`（S14） | 已测 |
-| 结构体与字段访问（S16） | 已测 |
-| 命名定理的声明与调用（S18） | 已测 |
-| 精确求值与封闭计算（S51） | 已测（算术、对数、阶乘、素性、根式） |
-| 集合运算：并、交、差、幂集、包含（O54–O59） | 已测（分配律、德摩根、单调、幂集基数） |
-| 函数：值域、复合、向函数本身的全称量化 | 已测 |
-| 有限求和、有限集合求和（S44 相关） | 已测（4 种求和） |
-| 三角、对数、指数、根式、阶乘、gcd、素性、连续性、导数 | 已测（各 1–3 例） |
+| Atomic facts, conjunction, disjunction, equality chains | Measured (zero products, exact calculation chains, polynomial identities) |
+| Universal facts, shared premises, `=>:` scopes | Measured (21 quantifier cases) |
+| Existence, witnesses, unique existence, existence elimination (S35–S38) | Measured (including a nonempty-set witness) |
+| Local `claim`, `obtain`, theorem release (S25, S33) | Measured (√2, existence elimination, named-theorem reuse) |
+| Contradiction, cases, induction (S39, S40, S42) | Measured (one case each) |
+| Expression functions, guarded functions, piecewise definitions, cases (S01, S11, S21, S22) | Measured (4 included cases; the recursive case did not meet selection criteria) |
+| Concrete predicates and `by def` (S14) | Measured |
+| Structures and field access (S16) | Measured |
+| Named-theorem declaration and use (S18) | Measured |
+| Exact evaluation and closed calculation (S51) | Measured (arithmetic, logarithms, factorials, primality, radicals) |
+| Set operations: union, intersection, difference, power sets, inclusion (O54–O59) | Measured (distributivity, De Morgan, monotonicity, power-set cardinality) |
+| Functions: range, composition, universal quantification over functions | Measured |
+| Finite sums and finite-set sums (related to S44) | Measured (4 forms of summation) |
+| Trigonometry, logarithms, exponentials, radicals, factorials, gcd, primality, continuity, derivatives | Measured (1–3 cases each) |
 
-**还没有覆盖**、值得下一轮测的：
+Directions **not covered in those batches**, suggested for later measurement:
 
-| 方向 | 为什么值得测 | 预计难点 |
+| Direction | Motivation | Expected difficulty |
 | --- | --- | --- |
-| 极限与积分（连续性本轮已覆盖） | 分析是 Litex 原生重点，Mathlib 的分析证明通常很长，是“大例子”的首选 | 原测试使用旧写法 `lim(fn(t R) R {t^2},3)=9`（现写作 `fn_lim(fn(t R) R {t^2},3)=9`）：Litex 在良定义阶段就拒绝，必须先给出“3 是实数聚点”和“连续蕴含极限”两步。所以极限只能按整段程序比较，不能当裸语句比 |
-| 强归纳、最小反例（S43） | 与普通归纳（4.01×）对照能看出差别 | Litex 的归纳作用域写法需要先确定固定模式 |
-| 函数原像、替换像（S09、S10） | 前像/像是 Litex 的独立语句形状 | Lean 侧要选 `Set.image`/`Set.preimage` 的对应写法 |
-| 集合外延性、函数外延性（S45、S46） | 会直接对上“自由函数相等”这一 Lean 的强项 | Litex 需要完整的定义域条件，写法较长 |
-| 模板声明族、可复用证明策略（S17、S20） | Litex 独有的复用机制，Lean 里对应 `variable`/`macro`/tactic | 对应关系不唯一，得先定“同一任务”的标准 |
-| 正则性注册：自反、对称、传递（S48–S50） | 自定义谓词的规则注册，Lean 里对应 `instance`/`simp` 引理 | 需要构造自定义谓词的最小例子 |
-| 信任、公理、选择、佐恩引理（S23、S24、S30–S32） | 能对照 Lean 的 `Classical.choice`/`propext` 公理依赖 | 属于信任边界问题，不只是速度 |
-| 多文件项目与 `-r` 加载（module_manager） | 真实数学库是分模块的 | 应比较“整库首次检查 + 增量检查”而不是单条语句 |
-| `-lean` 编译到 Lean 后的复核 | 这是 Litex 独有路径：生成 Lean 再由 Lean 复核 | 需要把“Litex 检查 + Lean 检查”合并计时 |
-| `-extractpython` / `-extractc` | 数值/算法抽取是 Litex 的另一条出口 | 与 Lean 的 `native_decide`、`#eval` 对照 |
-| `-latex` 与 reading 模式 | 面向读者/教材，不是检查速度 | 更适合做输出质量对照，而非计时 |
-| 不可验证输入的反馈（负例） | 对 AI/交互式工作流同样重要：拒绝一个错误步骤要多久、说清原因要多久 | 需要定义“诊断质量”的指标，不能只比毫秒 |
-| 大型定理库（AM-GM、Cauchy–Schwarz、几何库） | 才是“从零建库”的真实负载 | 两边都要从空的数学上下文写起，工作量以小时计 |
+| Limits and integrals (continuity was covered) | Analysis is a focus of native Litex interfaces; substantial proofs are useful comparison candidates | The original attempt used `lim(fn(t R) R {t^2},3)=9` (now `fn_lim(fn(t R) R {t^2},3)=9`). It failed Litex WD before proof checking; it needed the real accumulation-point condition at 3 and a continuity-to-limit step. Compare complete programs rather than a bare limit expression |
+| Strong induction and minimal counterexamples (S43) | Contrast with ordinary induction (4.01×) | Establish the exact Litex induction-scope pattern first |
+| Function preimages and replacement images (S09, S10) | Distinct Litex statement forms | Choose corresponding `Set.image`/`Set.preimage` encodings in Lean |
+| Set and function extensionality (S45, S46) | Compare with Lean's direct treatment of function equality | Litex needs the full domain conditions, which add source text |
+| Template declaration families and reusable proof strategies (S17, S20) | Compare reuse mechanisms with Lean `variable`/`macro`/tactics | Fix the same-task criterion before choosing one of several possible correspondences |
+| Reflexive, symmetric and transitive rule registration (S48–S50) | Compare custom-predicate rules with Lean `instance`/`simp` lemmas | Construct a minimal custom-predicate example |
+| Trust, axioms, choice and Zorn's lemma (S23, S24, S30–S32) | Compare with Lean's `Classical.choice`/`propext` dependencies | This concerns trust boundaries as well as time |
+| Multi-file projects and `-r` loading (module_manager) | Real mathematical libraries use modules | Compare an initial whole-library check and incremental checks |
+| `-lean` compilation and subsequent Lean rechecking | Measure the Litex-to-Lean path | Include both Litex checking and Lean checking in the total |
+| `-extractpython` / `-extractc` | Compare numerical/algorithmic extraction | Contrast with Lean's `native_decide` and `#eval` |
+| `-latex` and reading mode | Reader/textbook output | Compare output quality rather than checking speed |
+| Feedback for unverifiable input (negative cases) | Rejection latency and explanation quality matter in AI/interactive workflows | Define diagnostic-quality measures as well as milliseconds |
+| Large theorem libraries (AM-GM, Cauchy–Schwarz, geometry) | A library-building workload from scratch | Both systems need comparable initial mathematical contexts; authoring may take hours |
 
-一个原则：**只要 Lean 侧能用一行现成引理，Litex 就不会快**；Litex 的优势区间是“命题本身带着定义域、量词和多个推理动作，而 Lean 需要 tactic 或手工证明项去搭”。上表的覆盖清单也是按这个原则挑的。
+The coverage list was chosen to investigate statements combining domains, quantifiers and several reasoning steps, where Lean may need tactics or explicit proof terms. Direct one-line lemmas remain important controls; they do not determine which system is faster without measurement.
 
 ---
 
-## 六、复现
+## 6. Reproduction
 
-在仓库根目录：
+From the repository root:
 
 ```sh
 cargo build --release
-python3 examples/litex_vs_lean_speed/harness/bench.py validate   # 逐条验证两侧源码
-python3 examples/litex_vs_lean_speed/harness/bench.py measure    # 计时（约 2–3 分钟）
+python3 examples/litex_vs_lean_speed/harness/bench.py validate   # Validate both sides case by case
+python3 examples/litex_vs_lean_speed/harness/bench.py measure    # Measure timings (about 2–3 minutes)
 ```
 
-- `validate` 会把每个 Litex 文件交给 release 二进制跑一遍，并把每一条 Lean 路线编进一个 `#print axioms` 文件，确认没有 `sorryAx`。
-- `measure` 复用同样源码：Litex 侧编译一个链接 `liblitex.rlib` 的 Rust 计时器（每进程 30 个暖样本、三个进程），Lean 侧用 `#probe`（每进程 7 个暖样本、三个进程）。
-- Lean 环境通过 `showcases/litex_to_lean_adapter` 里的 `lake env` 取得 `LEAN_PATH`；没有该适配器项目时可以用 `LEAN_PATH` 环境变量直接指定。
-- 换用例：改 `cases/new-round.json`（或传 `--cases`），`validate` 会自动生成 `sources/<名字>/` 下的逐例源码。
+- `validate` runs each Litex file with the release executable and compiles every Lean route into a `#print axioms` file, checking that `sorryAx` is absent.
+- `measure` reuses the same sources. Litex compiles a Rust timer linked to `liblitex.rlib` (30 warm samples per process, three processes); Lean uses `#probe` (7 warm samples per process, three processes).
+- The Lean environment gets `LEAN_PATH` through `lake env` in `showcases/litex_to_lean_adapter`. Without that Adapter project, set the `LEAN_PATH` environment variable explicitly.
+- To change cases, edit `cases/new-round.json` (or pass `--cases`). `validate` generates per-case files under the configured `sources/` directory.
 
-## 七、这些数字不能说明什么
+## 7. What these measurements do not establish
 
-- 不是 Litex 与 Lean 的总体速度排名。用例是选录的，样本量、二进制快照和机器负载都不同；五批数据来自不同批次构建的二进制。
-- 不是内核归约速度的对照。Lean 侧含证明构造与同步内核检查，Litex 侧含解析、良定义性、验证与证据构建，两侧边界的定义不同。
-- 既有检查路径表不含用户完成数学任务的时间、编辑器增量检查、内存占用、启动与导入成本；本页新增的完整进程表包含启动与导入。
-- 每条 Lean 路线都取的是**本轮已测**写法，不构成 Lean 可能达到的下界；反过来，Litex 侧也没有为每个命题手写最优证明，它用的是内置规则与策略的默认搜索。
-- 第二轮那 7 条多步命题是按“Lean 没有同形定理”这一条标准挑的，不是系统枚举；换一批命题，倍率分布会变。第一、二轮的部分用例同样是为覆盖领域而选，不代表各领域的平均表现。
-- 既有检查路径批次只收录 Litex 更快的用例（倍率 > 1），所以从表里看不到 Litex 落后于 Lean 的方向；那些方向没有测量记录留在本目录里。
+- No overall speed ranking of Litex and Lean. Cases are selected, and sample counts, binary snapshots and machine loads differ. The five earlier batches used binaries built at different times.
+- No isolated kernel-reduction comparison. Lean includes proof construction and synchronous kernel checking; Litex includes parsing, WD, verification and evidence construction. Their interval definitions differ.
+- The older checking-path tables exclude mathematical authoring time, editor incremental checking, memory use, startup and imports. The newer whole-process table includes startup and imports.
+- Each Lean route is only the **tested route in that round**, not a lower bound on attainable Lean time. Litex also uses its default builtin-rule/strategy search rather than a hand-optimized proof for every statement.
+- The second round's 7 multi-step statements were selected without matching-theorem reuse, not systematically enumerated. A different collection may have a different ratio distribution. Other first/second-round cases were chosen for domain coverage and do not estimate domain averages.
+- The older checking-path batches retain only Litex-faster cases (ratio > 1), so those tables omit directions where Lean is faster. The newer unscreened batch linked above retains both directions.
 
 <!-- quantitative-iteration-code:start -->
-## 八、定量迭代实验：完整双版本代码
+## 8. Quantitative iteration: complete sources for both systems
 
-以下六个源文件与上述历史测量的输入逐字节相同。它们分别证明同一数学陈述；Litex 使用带条件函数，Lean 的结论限制在相同合法参数范围内。记录没有把底层函数在域外的不同约定当作相同机制。
+The six files below are byte-identical to the inputs of the historical measurements above. Each pair proves the same mathematical statement. Litex uses guarded functions; Lean's conclusions are restricted to the same valid parameters. The record does not equate their underlying out-of-domain conventions.
 
-数学设计和支持边界见 [math_collections.md](sources/quantitative-iteration/math_collections.md)。这里是单步公式与给定递推的证明，未声称已构造一般算法轨道或验证浮点舍入。
+See [math_collections.md](sources/quantitative-iteration/math_collections.md) for the mathematical design and support boundaries. These prove single-step formulas and bounds on supplied recurrences; they do not construct general algorithm trajectories or verify floating-point rounding.
 
 <a id="iteration-parametric-newton"></a>
 
-### 1. 参数化 Newton 单步
+### 8.1 Parametric Newton step
 
-任意 a>0、x>0 的正性、精确残差恒等式与更新后平方下界；在 a=9、x=4 上复用。
+Positivity, an exact residual identity and a post-update square lower bound for arbitrary a>0 and x>0, reused at a=9 and x=4.
 
 #### Litex
 
-[源码](sources/quantitative-iteration/litex/01_parametric_newton.lit)；完整进程样本（秒）：`0.216478, 0.212586, 0.191081`。
+[Source](sources/quantitative-iteration/litex/01_parametric_newton.lit); whole-process samples (s): `0.216478, 0.212586, 0.191081`.
 
 ```litex
 # Exact-real comparison experiment; see ../math_collections.md.
@@ -471,7 +471,7 @@ by thm newton_above_root(9, 4) => newton(9, 4)^2 >= 9
 
 #### Lean / Mathlib
 
-[源码](sources/quantitative-iteration/lean/01_parametric_newton.lean)；完整进程样本（秒）：`14.163907, 60.180296, 67.659174`。
+[Source](sources/quantitative-iteration/lean/01_parametric_newton.lean); whole-process samples (s): `14.163907, 60.180296, 67.659174`.
 
 ```lean
 import Mathlib
@@ -519,13 +519,13 @@ end ParametricNewton
 
 <a id="iteration-quadratic-descent"></a>
 
-### 2. 二次函数梯度下降
+### 8.2 Gradient descent on a quadratic
 
-一维正曲率二次函数的精确下降量、稳定步长下的不增性，以及离开最小点时的严格下降。
+The exact decrease for a one-dimensional positive-curvature quadratic, nonincrease under a stable step size, and strict decrease away from the minimizer.
 
 #### Litex
 
-[源码](sources/quantitative-iteration/litex/02_quadratic_descent.lit)；完整进程样本（秒）：`2.880947, 2.905032, 2.952233`。
+[Source](sources/quantitative-iteration/litex/02_quadratic_descent.lit); whole-process samples (s): `2.880947, 2.905032, 2.952233`.
 
 ```litex
 # Exact-real comparison experiment; see ../math_collections.md.
@@ -575,7 +575,7 @@ by thm gradient_strict_descent(2, 3, 1 / 4, 5) => energy(2, 3, gradient_step(2, 
 
 #### Lean / Mathlib
 
-[源码](sources/quantitative-iteration/lean/02_quadratic_descent.lean)；完整进程样本（秒）：`13.893024, 28.775592, 21.303137`。
+[Source](sources/quantitative-iteration/lean/02_quadratic_descent.lean); whole-process samples (s): `13.893024, 28.775592, 21.303137`.
 
 ```lean
 import Mathlib
@@ -631,13 +631,13 @@ end QuadraticDescent
 
 <a id="iteration-perturbed-geometric"></a>
 
-### 3. 含扰动的几何递推界
+### 8.3 Perturbed geometric recurrence bound
 
-从给定的自然数索引实数序列及递推不等式出发，证明闭式上界并复用于零扰动；扰动项可为任意实数。
+From a supplied real sequence indexed by natural numbers and a recurrence inequality, prove a closed-form upper bound and specialize it to zero perturbation. Perturbations may be arbitrary real numbers.
 
 #### Litex
 
-[源码](sources/quantitative-iteration/litex/03_perturbed_geometric.lit)；完整进程样本（秒）：`1.319137, 1.484209, 1.351820`。
+[Source](sources/quantitative-iteration/litex/03_perturbed_geometric.lit); whole-process samples (s): `1.319137, 1.484209, 1.351820`.
 
 ```litex
 # Exact-real comparison experiment; see ../math_collections.md.
@@ -699,7 +699,7 @@ thm noiseless_affine_bound:
 
 #### Lean / Mathlib
 
-[源码](sources/quantitative-iteration/lean/03_perturbed_geometric.lean)；完整进程样本（秒）：`13.798624, 36.547467, 17.129896`。
+[Source](sources/quantitative-iteration/lean/03_perturbed_geometric.lean); whole-process samples (s): `13.798624, 36.547467, 17.129896`.
 
 ```lean
 import Mathlib
@@ -751,9 +751,9 @@ end
 end PerturbedGeometric
 ```
 
-这一批的六次正例验证、十二次预期拒绝检查和十八次重复正例检查均符合预期。零输入、错误残差、过大步长、最小点处严格下降、q=1、遗漏噪声项的控制保留在原始记录中。负例 fixture、平台二进制和本地工作日志没有作为此处的正例源码发布。
+The recorded batch passed six positive validations, twelve expected-rejection checks and eighteen repeated positive checks. Controls for zero inputs, an incorrect residual, excessive step size, strict decrease at the minimizer, q=1, and a missing noise term remain in the raw records. Negative fixtures, platform binaries and local work logs are not published here as positive source examples.
 
-新副本可用 release Litex 的 `-strict -f <file>` 与配置好 Mathlib 的 `lake env lean <file>` 检查。既有 `harness/bench.py` 仍测其原来的检查路径用例，不将这三组完整进程记录混入旧的毫秒样本。
+The copies can be checked with release Litex's `-strict -f <file>` and a Mathlib-configured `lake env lean <file>`. The existing `harness/bench.py` continues to measure its original checking-path cases; these three whole-process records are not merged into the older millisecond samples.
 
-[搬入此目录后的路径验证](results/quantitative-iteration-promotion.json)：三份 Litex 副本另行通过记录版本二进制的严格检查；Lean 副本以相同源码哈希承接原先的成功检查，没有把路径验证冒充为新计时样本。
+[Validation after relocation](results/quantitative-iteration-promotion.json): the three Litex copies separately passed strict checks with the recorded binary. The Lean copies retain their earlier successful checks through identical source hashes; relocation checks are not presented as new timing samples.
 <!-- quantitative-iteration-code:end -->

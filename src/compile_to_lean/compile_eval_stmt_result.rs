@@ -96,9 +96,15 @@ impl LitexToLeanCompiler {
         let left = self.compile_object_reference(&p.source_object, &formed)?;
         let right = self.compile_object_reference(&p.evaluated_object, &formed)?;
         let ty = format!("Litex.Same {left} {right}");
-        let proof = format!(
-            "(show {ty} from ({rewritten}).trans (({calculation}).trans ({output_value}).symm))"
-        );
+        let input_value = self.compile_calculation_endpoint(
+            &p.source_object,
+            &value,
+            format!("({rewritten}).trans {calculation}"),
+            &formed,
+        )?;
+        let output_value =
+            self.compile_calculation_endpoint(&p.evaluated_object, &output, output_value, &formed)?;
+        let proof = format!("(show {ty} from ({input_value}).trans ({output_value}).symm)");
         let compiled = (
             Self::scope_equal_wd(ty.clone(), &bindings),
             Self::scope_equal_wd_proof(ty, proof, &bindings),
@@ -163,14 +169,33 @@ impl LitexToLeanCompiler {
         if hits.len() > 1 {
             return Err(LeanCompileError::unsupported("Eval/AmbiguousRewrite"));
         }
-        if let Some((id, _)) = hits.first() {
+        if let Some((id, equality)) = hits.first() {
             if crate::rational_expression::ClosedNumericExpr::try_from_obj(target).is_none() {
                 return Err(LeanCompileError::unsupported("Eval/NonNumericReplacement"));
             }
             if !used.contains(id) {
                 used.push(*id);
             }
-            return self.compile_registered_equality(*id, source, target, position);
+            let (original_source, original_target) = if equality.left.ir() == source.ir() {
+                (&equality.left, &equality.right)
+            } else {
+                (&equality.right, &equality.left)
+            };
+            let cited =
+                self.compile_registered_equality(*id, original_source, original_target, position)?;
+            if original_target == target {
+                return Ok(cited);
+            }
+            // Numeric rewriting may canonicalize unary negatives into signed
+            // numeral leaves. Cite the exact stored endpoint, then justify the
+            // changed representation with its original numeric observation.
+            let original = self.compile_numeric_observation(original_target, position)?;
+            let (value, target_value) = self.compile_eval_closed_value(target, position)?;
+            if original.3.as_ref() != Some(&value) {
+                return Err(LeanCompileError::unsupported("Eval/ReplacementValue"));
+            }
+            let literal = exact_rational_literal(&value, "ℂ")?;
+            return Ok(format!("(Eq.trans {cited} (Eq.trans (({}).trans (congrArg M.number (by norm_num : {} = {literal}))) (Eq.symm {target_value})))", original.1, original.0));
         }
         if let (Obj::FnObj(a), Obj::FnObj(b)) = (source, target) {
             if a.head != b.head

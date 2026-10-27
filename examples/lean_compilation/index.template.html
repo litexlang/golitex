@@ -6,7 +6,17 @@
   <title>Litex — from checked evidence to Lean</title>
   <link rel="stylesheet" href="style.css"><script src="viewer.js" defer></script>
 </head>
-<body><main>
+<body>
+<!-- TEMPLATE_ENTRY_START -->
+<section id="template-entry" role="status" style="max-width:720px;margin:64px auto;padding:28px;font-family:Arial,'PingFang SC',sans-serif;line-height:1.8;color:#20272b">
+  <h1 style="font-size:28px;font-weight:500">打开完整交互示例</h1>
+  <p>完整的图表、数学例子和代码已准备好，正在打开。</p>
+  <p><a href="index.html?lang=zh" style="display:inline-block;padding:10px 20px;background:#007c91;color:white;text-decoration:none;border-radius:3px">打开完整示例 →</a></p>
+  <p style="font-size:13px;color:#68747b">If the page does not open automatically, use the link above to open the complete example.</p>
+</section>
+<style>main { display: none; }</style>
+<!-- TEMPLATE_ENTRY_END -->
+<main>
   <header>
     <div><div class="eyebrow">LITEX / KNOWLEDGE THAT CAN BE REPLAYED</div>
       <h1 data-en="From checked evidence to Lean" data-zh="从已验证的证据，到 Lean 证明">From checked evidence to Lean</h1>
@@ -15,31 +25,50 @@
     <div class="language-group" role="group" aria-label="Language / 语言"><button id="language-en" type="button" aria-pressed="true">EN</button><button id="language-zh" type="button" aria-pressed="false">中文</button></div>
   </header>
 
+  <section class="math-example" aria-labelledby="math-example-title">
+    <div>
+      <div class="eyebrow" data-en="THE MATHEMATICAL EXAMPLE" data-zh="本页的数学例子">THE MATHEMATICAL EXAMPLE</div>
+      <h2 id="math-example-title" data-en="Adding zero leaves every complex number unchanged" data-zh="任意复数，加零以后不变">Adding zero leaves every complex number unchanged</h2>
+      <p class="math-proposition">∀ a ∈ ℂ, a + 0 = a</p>
+      <p class="math-explanation" data-en="C denotes the complex numbers. The following steps all follow the proof of this same statement." data-zh="C 表示复数集。下面所有步骤，都在追踪这同一个命题的证明。">C denotes the complex numbers. The following steps all follow the proof of this same statement.</p>
+    </div>
+    <div><h3 data-en="Its Litex source" data-zh="对应的 Litex 源码">Its Litex source</h3><pre id="example-source"></pre></div>
+  </section>
+
   <section class="walkthrough" aria-label="Evidence replay walkthrough">
-    <div class="walkthrough-heading"><div><span id="step-number">01 / 08</span><strong id="step-title"></strong></div>
+    <div class="walkthrough-heading"><div><span id="step-number">01 / 05</span><strong id="step-title"></strong></div>
       <div class="controls"><button id="previous" type="button" data-en="Previous" data-zh="上一步">Previous</button><button id="play" type="button" aria-pressed="false" data-en="Play" data-zh="播放">Play</button><button id="next" type="button" data-en="Next" data-zh="下一步">Next</button></div>
     </div>
     <div id="step-track" class="step-track" role="group" aria-label="Select a step"></div>
     <p id="step-description" aria-live="polite"></p>
   </section>
 
-  <ol class="pipeline" aria-label="Compilation pipeline">
-    <li><button type="button" data-step="0"><strong data-en="Litex source" data-zh="Litex 源码">Litex source</strong><span>forall a C: …</span></button></li>
-    <li><button type="button" data-step="1"><strong data-en="Execute + verify" data-zh="执行并验证">Execute + verify</strong><span>Runtime</span></button></li>
-    <li><button type="button" data-step="2"><strong data-en="Typed results" data-zh="结构化结果">Typed results</strong><span data-en="WD · selected proofs · IDs" data-zh="良定义 · 选中的证明 · ID">WD · selected proofs · IDs</span></button></li>
-    <li><button type="button" data-step="4"><strong data-en="Replay compiler" data-zh="证据重放编译器">Replay compiler</strong><span>compile_run(&amp;result, …)</span></button></li>
-    <li><button type="button" data-step="5"><strong data-en="Generated Lean" data-zh="生成 Lean 代码">Generated Lean</strong><span>import Litex</span></button></li>
-    <li><button type="button" data-step="7"><strong data-en="Lean check" data-zh="Lean 检查">Lean check</strong><span data-en="elaborate → kernel" data-zh="展开证明项 → 内核">elaborate → kernel</span></button></li>
-  </ol>
-  <aside class="json-note"><strong>Detailed JSON</strong><p data-en="A readable view of the same evidence. The current compiler consumes the typed Rust results directly, with the completed Runtime to resolve exact cited IDs. A saved JSON file alone is not its replay input." data-zh="同一份证据的可读展示。当前编译器直接读取 Rust 结构化结果，并通过已完成的 Runtime 解析被引用的准确事实 ID；保存的 JSON 文件本身还不是编译输入。">A readable view of the same evidence. The current compiler consumes the typed Rust results directly, with the completed Runtime to resolve exact cited IDs. A saved JSON file alone is not its replay input.</p></aside>
+  <section class="compilation-overview" aria-label="Compilation flow and checked evidence">
+    <nav class="pipeline-column" aria-labelledby="pipeline-title">
+      <h2 id="pipeline-title" data-en="Compilation flow" data-zh="编译流程">Compilation flow</h2>
+      <p class="overview-subtitle" data-en="From source to Lean checking" data-zh="从源码到 Lean 检查">From source to Lean checking</p>
+      <ol class="pipeline" aria-label="Compilation pipeline">
+    <li><button type="button" data-step="0"><strong data-en="Source + verification" data-zh="Litex 源码与验证">Source + verification</strong><span>forall a C: … · Runtime</span></button></li>
+    <li><button type="button" data-step="1"><strong data-en="Typed results" data-zh="结构化结果">Typed results</strong><span data-en="WD · selected proofs · IDs" data-zh="良定义 · 选中的证明 · ID">WD · selected proofs · IDs</span></button></li>
+    <li><button type="button" data-step="2"><strong data-en="Replay compiler" data-zh="证据重放编译器">Replay compiler</strong><span>compile_run(&amp;result, …)</span></button></li>
+    <li><button type="button" data-step="3"><strong data-en="Generated Lean" data-zh="生成 Lean 代码">Generated Lean</strong><span>import Litex</span></button></li>
+    <li><button type="button" data-step="4"><strong data-en="Lean check" data-zh="Lean 检查">Lean check</strong><span data-en="elaborate → kernel" data-zh="展开证明项 → 内核">elaborate → kernel</span></button></li>
+      </ol>
+    </nav>
 
   <figure>
     <div id="figure-en" class="figure-language"><!-- FIGURE_EN --></div>
     <div id="figure-zh" class="figure-language" hidden><!-- FIGURE_ZH --></div>
     <figcaption data-en="Select a node to connect a real evidence subtree, emitted code and semantic declaration. Code labels in the figure are abbreviated; the panes below contain the actual text." data-zh="点击节点，联动查看真实证据子树、生成代码和语义声明。图中的代码标签经过缩写，下方代码栏展示实际文本。">Select a node to connect a real evidence subtree, emitted code and semantic declaration. Code labels in the figure are abbreviated; the panes below contain the actual text.</figcaption>
   </figure>
+  </section>
+  <aside class="json-note"><strong>Detailed JSON</strong><p data-en="A readable view of the same evidence. The current compiler consumes the typed Rust results directly, with the completed Runtime to resolve exact cited IDs. A saved JSON file alone is not its replay input." data-zh="同一份证据的可读展示。当前编译器直接读取 Rust 结构化结果，并通过已完成的 Runtime 解析被引用的准确事实 ID；保存的 JSON 文件本身还不是编译输入。">A readable view of the same evidence. The current compiler consumes the typed Rust results directly, with the completed Runtime to resolve exact cited IDs. A saved JSON file alone is not its replay input.</p></aside>
 
   <section class="inspector" aria-labelledby="inspect-title">
+    <div class="math-context">
+      <div><span class="eyebrow" data-en="THE STATEMENT BEING TRACED" data-zh="当前追踪的数学命题">THE STATEMENT BEING TRACED</span><strong data-en="Adding zero leaves every complex number unchanged" data-zh="任意复数，加零以后不变">Adding zero leaves every complex number unchanged</strong><span class="math-proposition">∀ a ∈ ℂ, a + 0 = a</span></div>
+      <pre id="trace-source"></pre>
+    </div>
     <div class="inspector-heading"><div><div class="eyebrow" data-en="TRACE ONE CHECKED STEP" data-zh="追踪一个已检查的步骤">TRACE ONE CHECKED STEP</div><h2 id="inspect-title"></h2></div><p id="inspect-description" aria-live="polite"></p></div>
     <div class="code-panes">
       <div><h3 id="evidence-pane-title">1 · Detailed evidence</h3><code class="path-label" id="json-path"></code><pre id="json-code" tabindex="0"></pre></div>
@@ -49,7 +78,19 @@
     <details><summary data-en="Complete source and generated file" data-zh="完整源码与生成文件">Complete source and generated file</summary><div class="complete-source"><pre id="source-full" tabindex="0"></pre><pre id="lean-full" tabindex="0"></pre></div></details>
   </section>
 
-  <section class="interpretation"><h2 data-en="The role of Litex.lean" data-zh="Litex.lean 的作用">The role of Litex.lean</h2><p data-en="It defines the Lean meaning of Litex objects and facts, and proves the bridge laws used by generated terms. Obj keeps its value and WD evidence; membership remains a fact. The generated theorem retains an explicit M : Semantics interpretation, with its required laws." data-zh="它定义 Litex 对象与事实在 Lean 中的含义，并证明生成代码所使用的桥接规律。Obj 保留对象值与 WD 良定义证据，成员关系仍作为事实保留。生成定理显式保留 M : Semantics，要求该解释满足相应规律。">It defines the Lean meaning of Litex objects and facts, and proves the bridge laws used by generated terms. Obj keeps its value and WD evidence; membership remains a fact. The generated theorem retains an explicit M : Semantics interpretation, with its required laws.</p><p data-en="Here, a fixed ring! check proves the recorded rational-normalization equality on native observations; sameOfDenoteNumber transports it back to the same source objects. litex_complete and litex_checked_step close and package the supplied proofs, rejecting open goals." data-zh="本例在已记录的有理式归一化分支内，用固定的 ring! 检查数值观察得到的等式，再由 sameOfDenoteNumber 搬回原始对象。litex_complete 与 litex_checked_step 封装给定证明，检查所有目标已闭合。">Here, a fixed ring! check proves the recorded rational-normalization equality on native observations; sameOfDenoteNumber transports it back to the same source objects. litex_complete and litex_checked_step close and package the supplied proofs, rejecting open goals.</p></section>
+  <section class="interpretation" aria-labelledby="interpretation-title">
+    <h2 id="interpretation-title" data-en="The role of Litex.lean" data-zh="Litex.lean 的作用">The role of Litex.lean</h2>
+    <div class="interpretation-body">
+      <div class="interpretation-figure">
+        <div id="semantics-en"><!-- SEMANTICS_EN --></div>
+        <div id="semantics-zh" hidden><!-- SEMANTICS_ZH --></div>
+      </div>
+      <div class="interpretation-text">
+        <p data-en="It defines the Lean meaning of Litex objects and facts, and proves the bridge laws used by generated terms. Obj keeps its value and WD evidence; membership remains a fact. The generated theorem retains an explicit M : Semantics interpretation, with its required laws." data-zh="它定义 Litex 对象与事实在 Lean 中的含义，并证明生成代码所使用的桥接规律。Obj 保留对象值与 WD 良定义证据，成员关系仍作为事实保留。生成定理显式保留 M : Semantics，要求该解释满足相应规律。">It defines the Lean meaning of Litex objects and facts, and proves the bridge laws used by generated terms. Obj keeps its value and WD evidence; membership remains a fact. The generated theorem retains an explicit M : Semantics interpretation, with its required laws.</p>
+        <p data-en="Here, a fixed ring! check proves the recorded rational-normalization equality on native observations; sameOfDenoteNumber transports it back to the same source objects. litex_complete and litex_checked_step close and package the supplied proofs, rejecting open goals." data-zh="本例在已记录的有理式归一化分支内，用固定的 ring! 检查数值观察得到的等式，再由 sameOfDenoteNumber 搬回原始对象。litex_complete 与 litex_checked_step 封装给定证明，检查所有目标已闭合。">Here, a fixed ring! check proves the recorded rational-normalization equality on native observations; sameOfDenoteNumber transports it back to the same source objects. litex_complete and litex_checked_step close and package the supplied proofs, rejecting open goals.</p>
+      </div>
+    </div>
+  </section>
 
   <footer>
     <p data-en="The figure covers one verified route. Generating Lean and passing its kernel are separate checks. A handwritten Adapter can then expose an ordinary Lean/Mathlib theorem; that interface conversion is a further step." data-zh="图中展示一条已验证的路线。生成 Lean 与通过 Lean 内核是两个独立检查。之后可用手写 Adapter 暴露普通 Lean/Mathlib 定理，该接口转换是后续步骤。">The figure covers one verified route. Generating Lean and passing its kernel are separate checks. A handwritten Adapter can then expose an ordinary Lean/Mathlib theorem; that interface conversion is a further step.</p>

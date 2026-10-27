@@ -4327,3 +4327,100 @@ This does not add aggregate, matrix or algorithm eval, general function-returnin
 calls, or scalar operators outside the arithmetic slice. The executable boundary
 `have fn f(x R) R = abs(x); eval f(-3)` verifies in Litex but rejects at
 `Eval/ScalarOperator`, producing no partial Lean artifact.
+
+
+## Aggregate evaluation — 2026-10-27
+
+The command consumer now replays the existing range sum/product and finite-set
+sum/product results. For example:
+
+```litex
+eval sum(1, 3, fn(x Z) Z {x})
+sum(1, 3, fn(x Z) Z {x}) = 6
+```
+
+The aggregate calculation rule and command evaluation share denotation
+consumers. They check the original argument enumeration, application WD,
+function expansion, term values and accumulated values. Arithmetic expressions
+can contain several aggregates; an equality can contain aggregates on both
+sides. The compiler consumes their original evaluation records in order.
+No result fields, Runtime behavior, AST, Core laws or axioms changed.
+
+Five generated pairs cover [integer ranges](../lean/examples/evaluated_range_aggregates/),
+[empty and rational finite sets](../lean/examples/evaluated_finite_aggregates/),
+[arithmetic combinations](../lean/examples/evaluated_aggregate_arithmetic/),
+[named iterands and later calls](../lean/examples/evaluated_aggregate_calls/) and
+[local results](../lean/examples/evaluated_local_aggregates/). They export 22
+theorems; the local block exports none. Together with 18 related pairs, all 23
+pass strict source verification, identical regeneration and Lean 4.31.0 checks.
+The final batch runs 11 fresh Lean checks and reuses 12 identical artifacts with
+unchanged Core/toolchain. The 104-export axiom audit finds only `propext`,
+`Classical.choice` and `Quot.sound`.
+
+The current-library harness passes 43 canonical Rust tests, including five new
+aggregate tests. Controls reject missing, extra, reordered or wrong evaluation
+records, altered source WD and endpoints. The full Cargo test-crate limitation
+reported above remains. Local receipts: `eval-aggregates-accepted`,
+`eval-aggregates-focused`, `eval-aggregates-rejection` and
+`eval-aggregates-checkpoint` in the existing compiler workspace.
+
+This slice retains literal integer range bounds, enumerated numeric finite
+sets and closed scalar iterand bodies. Additional body rewrites, nested
+aggregates within iterands, and matrix/algorithm eval remain follow-ups.
+Fold evaluation is covered by the checkpoint below.
+The executable boundary below verifies in Litex but rejects during function-body
+compilation (`Function/BodyObject`), with zero generated Lean bytes:
+
+```litex
+eval sum(1, 2, fn(x Z) Z {sum(1, 2, fn(y Z) Z {x + y})})
+```
+
+
+## Fold evaluation — 2026-10-27
+
+`eval` and aggregate equality now share consumers for the original
+`RangeReduceEvaluationResult` and `FiniteSetReduceEvaluationResult`:
+
+```litex
+eval reduce(1,3,fn(k Z) Z{k},fn(a,b Z) Z{a-b},0)
+reduce(1,3,fn(k Z) Z{k},fn(a,b Z) Z{a-b},0) = -6
+
+eval finite_set_reduce({3,1,2},fn(k Z) Z{k},fn(a,b Z) Z{a+b},10)
+finite_set_reduce({3,1,2},fn(k Z) Z{k},fn(a,b Z) Z{a+b},10) = 16
+```
+
+Ordered folds retain ascending indices and the original seed. Finite folds
+validate the exact distinct enumeration and consume the original operation's
+commutativity and associativity WD proofs. Both validate each function call,
+accumulator transition and output value. Empty folds return their seed.
+The consumers reuse existing Core laws; no AST, Runtime, result fields or
+Core semantics changed.
+
+Seven source/generated pairs cover [ordered subtraction](../lean/examples/evaluated_range_folds/),
+[finite, empty and singleton folds](../lean/examples/evaluated_finite_folds/),
+[rational products](../lean/examples/evaluated_rational_fold/),
+[arithmetic combinations](../lean/examples/evaluated_fold_arithmetic/),
+[local scope](../lean/examples/evaluated_local_fold/),
+[named functions](../lean/examples/evaluated_named_fold/) and
+[bound-variable renaming](../lean/examples/fold_bound_names/).
+They export 22 theorems. All seven and 27 affected existing pairs pass strict
+source verification and independent identical generation. Lean 4.31.0 acceptance
+comprises 28 fresh checks and six reused checks of identical bytes with unchanged
+Core/toolchain. The combined 102-export audit finds only `propext`,
+`Classical.choice` and `Quot.sound`.
+
+The current-library harness passes 49 canonical Rust tests. The six new tests
+cover valid folds, changed outputs, missing constructor evidence, reordered
+computation records, changed operation bodies and standalone eval dependencies.
+Deleting or reordering the commutativity/associativity evidence is rejected.
+Subtraction as an unordered finite-fold operation fails source WD and produces
+no Lean output. The existing full Cargo test-crate fixture limitation remains.
+Local receipts: `eval-folds-new`, `eval-folds-related`, `eval-folds-range-related`, `eval-folds-focused`,
+`eval-folds-rejection` and `eval-folds-checkpoint` in the compiler workspace.
+
+This increment retains literal integer bounds, enumerated numeric sets and
+numeric formula bodies using four operations and negation. Additional body
+rewrites, nested function/aggregate evaluation inside fold bodies and other
+index domains remain separate work. Generated output still contains repeated
+WD terms: the six-statement finite-fold pair is 1,834,368 bytes. This checkpoint
+establishes correctness for these examples; output-size reduction is deferred.

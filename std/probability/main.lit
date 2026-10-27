@@ -1376,3 +1376,192 @@ thm finite_variance_subtract_bound:
                 u <= w
         u = u+0 <= u+v = v+u = w
     release thm nonnegative_complement_bound(\finite_variance<Omega,space>(fn(k space.carrier) R {X(k)-Y(k)}),\finite_variance<Omega,space>(fn(k space.carrier) R {X(k)+Y(k)}),2*\finite_variance<Omega,space>(X)+2*\finite_variance<Omega,space>(Y))
+
+thm finite_markov_event_bound:
+    ? forall Omega set,space &FiniteProbabilitySpace<Omega>,X fn(k space.carrier) R,A power_set(space.carrier),a R+:
+        forall k space.carrier:
+            X(k) >= 0
+        forall k A:
+            X(k) >= a
+        =>:
+            space.prob(A) <= \finite_expectation<Omega,space>(X)/a
+    A $subset space.carrier
+    have rest finite_set = set_minus(space.carrier,A)
+    rest $subset space.carrier
+    claim:
+        ? forall k A:
+            k $in space.carrier
+        k $in space.carrier
+    claim:
+        ? forall k rest:
+            k $in space.carrier
+        k $in space.carrier
+    have fn weight(k space.carrier) R = X(k)*space.prob({k})
+    have fn event_weight(k A) R = weight(k)
+    have fn rest_weight(k rest) R = weight(k)
+    claim:
+        ? forall k space.carrier:
+            weight(k) >= 0
+        X(k) >= 0
+        space.prob({k}) >= 0
+        weight(k) = X(k)*space.prob({k}) >= 0
+    claim:
+        ? forall k rest:
+            0 <= rest_weight(k)
+        k $in space.carrier
+        weight(k) >= 0
+        rest_weight(k) = weight(k) >= 0
+    release thm finite_set_sum_le_from_pointwise(finite_set_sum(rest,fn(k rest) R {0}),finite_set_sum(rest,rest_weight))
+    finite_set_sum(rest,fn(k rest) R {0}) = finite_set_size(rest)*0 = 0
+    finite_set_sum(rest,rest_weight) >= 0
+    by extension:
+        ? intersect(A,rest) = {}
+        claim:
+            ? forall k intersect(A,rest):
+                k $in {}
+            by contra:
+                ? k $in {}
+                k $in A
+                k $in rest
+                k $in set_minus(space.carrier,A)
+                not k $in A
+                impossible k $in A
+    union(A,rest) = union(A,set_minus(space.carrier,A)) = union(A,space.carrier) = space.carrier
+    finite_set_sum(union(A,rest),weight) = finite_set_sum(A,fn(k A) R {weight(k)})+finite_set_sum(rest,fn(k rest) R {weight(k)})
+    release thm finite_set_sum_substitution(finite_set_sum(A,fn(k A) R {weight(k)}),finite_set_sum(A,event_weight))
+    release thm finite_set_sum_substitution(finite_set_sum(rest,fn(k rest) R {weight(k)}),finite_set_sum(rest,rest_weight))
+    thm add_equal_values:
+        ? forall u,v,p,q C:
+            u = p
+            v = q
+            =>:
+                u+v = p+q
+        u+v = p+v = p+q
+    release thm add_equal_values(finite_set_sum(A,fn(k A) R {weight(k)}),finite_set_sum(rest,fn(k rest) R {weight(k)}),finite_set_sum(A,event_weight),finite_set_sum(rest,rest_weight))
+    finite_set_sum(union(A,rest),weight) = finite_set_sum(A,event_weight)+finite_set_sum(rest,rest_weight)
+    release thm finite_set_sum_substitution(finite_set_sum(space.carrier,fn(k space.carrier) R {X(k)*space.prob({k})}),finite_set_sum(space.carrier,weight))
+    \finite_expectation<Omega,space>(X) = finite_set_sum(space.carrier,fn(k space.carrier) R {X(k)*space.prob({k})}) = finite_set_sum(space.carrier,weight)
+    finite_set_sum(A,event_weight)+finite_set_sum(rest,rest_weight) = finite_set_sum(union(A,rest),weight) = finite_set_sum(space.carrier,weight) = \finite_expectation<Omega,space>(X)
+    thm nonnegative_complement_bound:
+        ? forall u,v,w R:
+            u+v = w
+            v >= 0
+            =>:
+                u <= w
+        u = u+0 <= u+v = w
+    release thm nonnegative_complement_bound(finite_set_sum(A,event_weight),finite_set_sum(rest,rest_weight),\finite_expectation<Omega,space>(X))
+    have fn atom(k space.carrier) R = space.prob({k})
+    have fn event_atom(k A) R = atom(k)
+    have fn lower(k A) R = a*event_atom(k)
+    claim:
+        ? forall k A:
+            lower(k) <= event_weight(k)
+        k $in space.carrier
+        X(k) >= a
+        space.prob({k}) >= 0
+        event_atom(k) = atom(k) = space.prob({k})
+        lower(k) = a*event_atom(k) = a*space.prob({k})
+        event_weight(k) = weight(k) = X(k)*space.prob({k})
+        lower(k) = a*space.prob({k}) <= X(k)*space.prob({k}) = event_weight(k)
+    release thm finite_set_sum_le_from_pointwise(finite_set_sum(A,lower),finite_set_sum(A,event_weight))
+    have fn complex_atom(k A) C = event_atom(k)
+    thm complex_finite_sum_scale:
+        ? forall T finite_set,c C,F fn(k T) C:
+            finite_set_sum(T,fn(k T) C {c*F(k)}) = c*finite_set_sum(T,F)
+    release thm complex_finite_sum_scale(A,a,complex_atom)
+    claim:
+        ? forall k A:
+            lower(k) = a*complex_atom(k)
+        complex_atom(k) = event_atom(k)
+        lower(k) = a*event_atom(k) = a*complex_atom(k)
+    release thm finite_set_sum_substitution(finite_set_sum(A,lower),finite_set_sum(A,fn(k A) C {a*complex_atom(k)}))
+    finite_set_sum(A,lower) = finite_set_sum(A,fn(k A) C {a*complex_atom(k)}) = a*finite_set_sum(A,complex_atom)
+    release thm finite_set_sum_substitution(finite_set_sum(A,complex_atom),finite_set_sum(A,atom))
+    release thm finite_set_sum_substitution(finite_set_sum(A,atom),finite_set_sum(A,fn(k space.carrier) R {space.prob({k})}))
+    release thm event_probability_from_singletons(Omega,space,A)
+    finite_set_sum(A,complex_atom) = finite_set_sum(A,atom) = finite_set_sum(A,fn(k space.carrier) R {space.prob({k})}) = space.prob(A)
+    thm scale_equal_values:
+        ? forall u,v,c C:
+            u = v
+            =>:
+                c*u = c*v
+    release thm scale_equal_values(finite_set_sum(A,complex_atom),space.prob(A),a)
+    finite_set_sum(A,lower) = a*finite_set_sum(A,complex_atom) = a*space.prob(A)
+    a*space.prob(A) = finite_set_sum(A,lower) <= finite_set_sum(A,event_weight) <= \finite_expectation<Omega,space>(X)
+    thm positive_quotient_bound:
+        ? forall p,bound_value R,t R+:
+            t*p <= bound_value
+            =>:
+                p <= bound_value/t
+        p = (t*p)/t <= bound_value/t
+    release thm positive_quotient_bound(space.prob(A),\finite_expectation<Omega,space>(X),a)
+
+thm finite_chebyshev_event_bound:
+    ? forall Omega set,space &FiniteProbabilitySpace<Omega>,X fn(k space.carrier) R,A power_set(space.carrier),a R+:
+        forall k A:
+            abs(X(k)-\finite_expectation<Omega,space>(X)) >= a
+        =>:
+            space.prob(A) <= \finite_variance<Omega,space>(X)/a^2
+    have fn squared(k space.carrier) R = (X(k)-\finite_expectation<Omega,space>(X))^2
+    claim:
+        ? forall k space.carrier:
+            squared(k) >= 0
+        (X(k)-\finite_expectation<Omega,space>(X)) $in R
+        squared(k) = (X(k)-\finite_expectation<Omega,space>(X))^2 >= 0
+    claim:
+        ? forall k A:
+            squared(k) >= a^2
+        k $in space.carrier
+        (X(k)-\finite_expectation<Omega,space>(X)) $in R
+        abs(X(k)-\finite_expectation<Omega,space>(X)) >= a > 0
+        abs(X(k)-\finite_expectation<Omega,space>(X))^2 >= a^2
+        (X(k)-\finite_expectation<Omega,space>(X))^2 = abs(X(k)-\finite_expectation<Omega,space>(X))^2
+        squared(k) = (X(k)-\finite_expectation<Omega,space>(X))^2 = abs(X(k)-\finite_expectation<Omega,space>(X))^2 >= a^2
+    a^2 $in R+
+    release thm finite_markov_event_bound(Omega,space,squared,A,a^2)
+    release thm finite_variance_formula(Omega,space,X)
+    release thm finite_expectation_extensional(Omega,space,squared,fn(k space.carrier) R {(X(k)-\finite_expectation<Omega,space>(X))^2})
+    \finite_expectation<Omega,space>(squared) = \finite_expectation<Omega,space>(fn(k space.carrier) R {(X(k)-\finite_expectation<Omega,space>(X))^2}) = \finite_variance<Omega,space>(X)
+    thm divided_equal_upper:
+        ? forall p,u,v R,t R+:
+            p <= u/t
+            u = v
+            =>:
+                p <= v/t
+        p <= u/t = v/t
+    release thm divided_equal_upper(space.prob(A),\finite_expectation<Omega,space>(squared),\finite_variance<Omega,space>(X),a^2)
+
+template<Omega set,space &FiniteProbabilitySpace<Omega>>:
+    have fn finite_upper_tail_event(X fn(k space.carrier) R,a R) power_set(space.carrier) = {k space.carrier:X(k)>=a}
+
+template<Omega set,space &FiniteProbabilitySpace<Omega>>:
+    have fn finite_deviation_tail_event(X fn(k space.carrier) R,a R) power_set(space.carrier) = {k space.carrier:abs(X(k)-\finite_expectation<Omega,space>(X))>=a}
+
+thm finite_markov_tail_bound:
+    ? forall Omega set,space &FiniteProbabilitySpace<Omega>,X fn(k space.carrier) R,a R+:
+        forall k space.carrier:
+            X(k) >= 0
+        =>:
+            space.prob(\finite_upper_tail_event<Omega,space>(X,a)) <= \finite_expectation<Omega,space>(X)/a
+    have A power_set(space.carrier) = {k space.carrier:X(k)>=a}
+    claim:
+        ? forall k A:
+            X(k) >= a
+        k $in {j space.carrier:X(j)>=a}
+        X(k) >= a
+    \finite_upper_tail_event<Omega,space>(X,a) = {k space.carrier:X(k)>=a} = A
+    release thm finite_markov_event_bound(Omega,space,X,A,a)
+    space.prob(\finite_upper_tail_event<Omega,space>(X,a)) = space.prob(A) <= \finite_expectation<Omega,space>(X)/a
+
+thm finite_chebyshev_tail_bound:
+    ? forall Omega set,space &FiniteProbabilitySpace<Omega>,X fn(k space.carrier) R,a R+:
+        space.prob(\finite_deviation_tail_event<Omega,space>(X,a)) <= \finite_variance<Omega,space>(X)/a^2
+    have A power_set(space.carrier) = {k space.carrier:abs(X(k)-\finite_expectation<Omega,space>(X))>=a}
+    claim:
+        ? forall k A:
+            abs(X(k)-\finite_expectation<Omega,space>(X)) >= a
+        k $in {j space.carrier:abs(X(j)-\finite_expectation<Omega,space>(X))>=a}
+        abs(X(k)-\finite_expectation<Omega,space>(X)) >= a
+    \finite_deviation_tail_event<Omega,space>(X,a) = {k space.carrier:abs(X(k)-\finite_expectation<Omega,space>(X))>=a} = A
+    release thm finite_chebyshev_event_bound(Omega,space,X,A,a)
+    space.prob(\finite_deviation_tail_event<Omega,space>(X,a)) = space.prob(A) <= \finite_variance<Omega,space>(X)/a^2

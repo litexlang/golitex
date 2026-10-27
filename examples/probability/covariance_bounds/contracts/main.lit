@@ -1,0 +1,33 @@
+thm consume_finite_covariance_square_bound:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,X,Y fn(k space.carrier) R:
+        \prob::main::finite_covariance<Omega,space>(X,Y)^2 <= \prob::main::finite_variance<Omega,space>(X)*\prob::main::finite_variance<Omega,space>(Y)
+    release thm prob::main::finite_covariance_square_bound(Omega,space,X,Y)
+
+thm consume_finite_covariance_zero_variance_left:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,X,Y fn(k space.carrier) R:
+        \prob::main::finite_variance<Omega,space>(X) = 0
+        =>:
+            \prob::main::finite_covariance<Omega,space>(X,Y) = 0
+    release thm prob::main::finite_covariance_zero_variance_left(Omega,space,X,Y)
+
+thm consume_finite_covariance_zero_variance_right:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,X,Y fn(k space.carrier) R:
+        \prob::main::finite_variance<Omega,space>(Y) = 0
+        =>:
+            \prob::main::finite_covariance<Omega,space>(X,Y) = 0
+    release thm prob::main::finite_covariance_zero_variance_right(Omega,space,X,Y)
+
+thm consume_finite_variance_parallelogram:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,X,Y fn(k space.carrier) R:
+        \prob::main::finite_variance<Omega,space>(fn(k space.carrier) R {X(k)+Y(k)})+\prob::main::finite_variance<Omega,space>(fn(k space.carrier) R {X(k)-Y(k)}) = 2*\prob::main::finite_variance<Omega,space>(X)+2*\prob::main::finite_variance<Omega,space>(Y)
+    release thm prob::main::finite_variance_parallelogram(Omega,space,X,Y)
+
+thm consume_finite_variance_add_bound:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,X,Y fn(k space.carrier) R:
+        \prob::main::finite_variance<Omega,space>(fn(k space.carrier) R {X(k)+Y(k)}) <= 2*\prob::main::finite_variance<Omega,space>(X)+2*\prob::main::finite_variance<Omega,space>(Y)
+    release thm prob::main::finite_variance_add_bound(Omega,space,X,Y)
+
+thm consume_finite_variance_subtract_bound:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,X,Y fn(k space.carrier) R:
+        \prob::main::finite_variance<Omega,space>(fn(k space.carrier) R {X(k)-Y(k)}) <= 2*\prob::main::finite_variance<Omega,space>(X)+2*\prob::main::finite_variance<Omega,space>(Y)
+    release thm prob::main::finite_variance_subtract_bound(Omega,space,X,Y)

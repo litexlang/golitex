@@ -100,7 +100,11 @@ impl LitexToLeanCompiler {
                         number_literal(number, "ℂ")?
                     ));
                 }
-                if let Some(term) = position.registered_wd_reference(obj, Some(*wd_id))? {
+                // The runtime key intentionally identifies a generated negative
+                // numeral with its parsed unary-negative form. A cached WD
+                // still names its original host constructor. Resolve that
+                // producer; numeric consumers bridge denotations explicitly.
+                if let Some(term) = position.registered_wd_reference(&recorded, Some(*wd_id))? {
                     return Ok(term);
                 }
                 // A beta expansion can cite the cached anonymous body of its

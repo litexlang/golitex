@@ -6,8 +6,16 @@ visible: the objects, construction conditions, selected proof and citations
 checked by Litex determine the emitted Lean terms.
 
 Open [the interactive view](index.html?lang=en), then select a node or advance
-the eight steps. The evidence subtree, generated code and semantic declaration
+the five stages. The top walkthrough and left flow share the same stage names,
+numbers and selection: source/verification, typed results, replay compiler,
+generated Lean, and Lean checking. Evidence nodes are selectable details within
+their owning stage. The evidence subtree, generated code and semantic declaration
 change together. The view includes all its data locally and needs no network.
+The complete viewer is `index.html`. Opening the editable `index.template.html`
+forwards to that viewer; a visible link remains available if scripts are disabled.
+The mathematical statement and its Litex source stay visible in the trace area,
+including the final Lean-check step; that step summarizes the same statement's
+checks and keeps the full technical receipt in the verification disclosure.
 The [definitions-and-proofs example](../proof_search/README.md) introduces the
 earlier verification stage.
 
@@ -91,7 +99,7 @@ shows that further step. It is not automatic output of this compiler demo.
 | Language | Editable vector | Print | 600-dpi raster |
 |---|---|---|---|
 | English | [SVG](lean-compilation.svg) | [PDF](lean-compilation.pdf) | [PNG](lean-compilation.png) |
-| 中文 | [SVG](lean-compilation.zh.svg) | [PDF](lean-compilation.zh.pdf) | [PNG](lean-compilation.zh.png) |
+| Chinese | [SVG](lean-compilation.zh.svg) | [PDF](lean-compilation.zh.pdf) | [PNG](lean-compilation.zh.png) |
 
 `build.py` regenerates both figures and the offline page from the checked
 snapshot, existing canonical source/generated pair and semantic-library excerpts:
@@ -113,20 +121,10 @@ semantic library and this generated pair were freshly kernel checked with
 Lean 4.31.0. The theorem's axiom audit reported only `propext`,
 `Classical.choice`, and `Quot.sound`; no proof holes were introduced.
 
-## 中文导读
+## Reading the trace
 
-这个例子回答三个连续的问题：**Litex 留下了什么依据？这些依据变成哪些
-Lean 代码？`Litex.lean` 为代码提供什么含义？** 点击节点，下方会联动显示
-真实的 Detailed 证据、实际生成代码，以及语义库中的相关声明。
-
-例子是“任意复数对象加零后不变”。实际结果走的是 `Calculation / rational`：
-成员关系 `f15` 对应 `h_15`，加法良定义证据进入 `Litex.add`，固定的 `ring!`
-检查数值等式，再由已经证明的桥接规律把等式搬回原始对象。
-
-JSON 是结构化结果的可读展示。当前编译器直接消费 Rust 中的结果对象，并从
-已完成的 Runtime 解析准确的事实引用；单独一个 JSON 文件还不足以重放。
-`Litex.lean` 定义对象、良定义性和事实的数学含义，并证明生成代码用到的
-桥接规律。生成定理显式保留解释参数 `M` 及其规律，最后由 Lean 独立检查。
-
-图中代码标签有所缩写，交互页代码栏展示原文。普通 Lean/Mathlib 接口可以
-通过后续手写 Adapter 得到，这与生成代码、内核检查分别属于不同步骤。
+The figure abbreviates code labels; the interactive code pane shows the
+excerpts in full. Selecting a node connects the actual Detailed evidence,
+emitted Lean code and relevant semantic-library declaration. The sections
+above explain how those three layers relate, including the separate Adapter
+step needed for an ordinary Lean/Mathlib interface.

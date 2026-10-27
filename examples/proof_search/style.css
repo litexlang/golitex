@@ -39,6 +39,29 @@ h1 { font-size: clamp(26px, 3.5vw, 40px); font-weight: 500; letter-spacing: -.03
 figure { margin: 30px 0 0; }
 .figure-phases { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 28px; }
 .proof-panels { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px; }
+.proof-route-guide h3 { font-size: 16px; font-weight: 600; margin: 17px 0 10px; }
+.proof-route-guide > p { font-size: 12px; line-height: 1.5; color: #68747b; margin: 0 0 12px; }
+.proof-replay { font-size: 12px; padding: 7px 9px; }
+.proof-route { list-style: none; margin: 18px 0 0; padding: 0; }
+.proof-route li { position: relative; padding-bottom: 20px; }
+.proof-route li:not(:last-child)::after { content: "↓"; position: absolute; left: 20px; bottom: 1px; color: #8b969c; font-size: 15px; }
+.proof-route li:last-child { padding-bottom: 0; }
+.proof-route button { display: block; width: 100%; padding: 10px 12px; text-align: left; border-radius: 2px; }
+.route-label { display: flex; gap: 10px; align-items: baseline; }
+.route-number { font-size: 10px; font-variant-numeric: tabular-nums; color: #68747b; }
+.route-title { font-size: 12px; font-weight: 500; }
+.route-formula { display: block; font-size: 14px; margin: 8px 0 5px; }
+.route-detail { display: block; font-size: 11px; color: #68747b; line-height: 1.5; }
+.proof-route button.is-complete { border-color: #a3c9d0; }
+.proof-route button[aria-pressed="true"] { color: #20272b; background: #f0f7f8; border-color: var(--teal); box-shadow: inset 3px 0 var(--teal); }
+.proof-route button[data-route-step="5"][aria-pressed="true"] { background: #fcf4ed; border-color: var(--orange); box-shadow: inset 3px 0 var(--orange); }
+.proof-tree .node, .proof-tree .edge { transition: opacity .2s; }
+.proof-tree .node.is-unreached { opacity: .23; }
+.proof-tree .edge.is-unreached { opacity: .1; }
+.proof-tree.is-searching .evidence { opacity: .1; }
+.proof-tree.is-returning .request { opacity: .15; }
+.pipeline-reference { border-top: 1px solid #d6dddf; padding-top: 14px; font-size: 12px; color: #68747b; }
+.pipeline-reference .figure-panel { max-width: 376px; margin: 16px auto 0; }
 .phase-heading { font-size: 16px; font-weight: 500; margin: 0 0 20px; padding-bottom: 14px; border-bottom: 1px solid #d6dddf; }
 [data-phase].is-current > .phase-heading { border-bottom-color: var(--teal); }
 .figure-panel svg, .figure-footer svg { display: block; width: 100%; height: auto; }
@@ -64,11 +87,15 @@ summary { cursor: pointer; }
 pre { white-space: pre-wrap; overflow-wrap: anywhere; color: #536169; font: 12px/1.65 "Courier New", monospace; }
 [hidden] { display: none !important; }
 @media (max-width: 990px) {
-  .figure-phases, .proof-panels { grid-template-columns: 1fr; gap: 30px; }
+  .figure-phases { grid-template-columns: 1fr; gap: 30px; }
   .figure-panel { width: 100%; max-width: 480px; margin: 0 auto; }
   .figure-footer { display: none; }
   .figure-footer-mobile { display: block; width: 100%; max-width: 480px; margin: 20px auto 0; }
   .figure-footer-mobile svg { display: block; width: 100%; height: auto; }
+}
+@media (max-width: 720px) {
+  .proof-panels { grid-template-columns: 1fr; gap: 30px; }
+  .proof-route-guide { width: 100%; max-width: 480px; margin: 0 auto; }
 }
 @media (max-width: 560px) {
   main { padding: 26px 18px 22px; }
@@ -81,5 +108,5 @@ pre { white-space: pre-wrap; overflow-wrap: anywhere; color: #536169; font: 12px
   .step-track button { min-height: 20px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .proof-figure .node .shape { transition: none; }
+  .proof-figure .node .shape, .proof-tree .node, .proof-tree .edge { transition: none; }
 }

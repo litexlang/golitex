@@ -2,7 +2,7 @@
   "engine": {
     "name": "Litex",
     "version": "1.1.6-beta",
-    "executable_id": "fnv1a64:538fd817601a9cb6"
+    "executable_id": "fnv1a64:c89ab4aea3094a85"
   },
   "run_result": "success",
   "strict": true,
@@ -34,13 +34,15 @@
   "assets": {
     "proof-search.svg": "e3761d1e4afce618da19c2fc3952f69ce5a25a563315bb92aae81fa75f881010",
     "proof-search.zh.svg": "8424073ac1eff101a77438ea176ebe128aafae930c232d0a0a63223dc3d42b1e",
-    "index.html": "0b9c47d968d9383a8b741b42b9c6c47f5907d40fe5e513c149ed9533cfa987b3",
-    "viewer.js": "f02c1357251c0cd4e983b271601481858ddc0ebb20e1ea96505622f1870e2696",
-    "style.css": "66020c1442029b5ff52ea8b8503fef85717712f9183213273cdd452875aef55c",
-    "build.py": "bdaca321b9c459bdd59d423ba2a0aa0d7ce6434550b34884095d8fb199172524",
-    "index.template.html": "0827b34239c1908712c31bd3fcb25fb21c6d8e8f6303a964e8fb22c182f45a55",
+    "proof-discovery.svg": "ba93ae295d12aa6583d6d48b7657f7f07d9c1beb913ba9afe738fe3f128b3cf1",
+    "proof-discovery.zh.svg": "a17884192009f179abefac341da6e085677396defc798ef6beb9ca7d481a452a",
+    "index.html": "6333bd2515b1e044ee3fe576033def3143d82bf395cda9bf65cc66c1f6589c76",
+    "viewer.js": "f0772238678ac451c935edeec5bcab82d08d827e7c41bcf686ce6f6c73aceebd",
+    "style.css": "e372d614b867d79db083b7e90823d7c497775794fa5d52fa61e8d5c2afc50d4b",
+    "build.py": "b142e51c998a78b76479daca0a6e3951f56a7db5acaf1df42f9efba348df2552",
+    "index.template.html": "dd92c2791d43395c5592cd04549157514388c8dcfee4308ad072cb71fca2616b",
     "export.cjs": "5834fee4e00ada848984dec8576a067def865496a9abcfa7d96b20ebe6b49181",
-    "README.md": "e9cd20c05bfa5e31debe4ec67c07382e2ee3ff8e13fb2ab473b066b6579a2f5e"
+    "README.md": "3859c3b002aef7263308ed8d40a46b63728902c7159d90e6e5e3c4b7720cde56"
   },
   "rendered_assets": {
     "proof-search.svg": "e3761d1e4afce618da19c2fc3952f69ce5a25a563315bb92aae81fa75f881010",
@@ -48,11 +50,15 @@
     "proof-search.png": "1793e3f1be04d5c5a8bb19a990c73b995b0454fb461cbc13d411b68ba9eeba87",
     "proof-search.zh.svg": "8424073ac1eff101a77438ea176ebe128aafae930c232d0a0a63223dc3d42b1e",
     "proof-search.zh.pdf": "1b265189711fb2f5fa5f2a9415a7273fff452afa7e0306d6af4cbbf73146e985",
-    "proof-search.zh.png": "d92eecce1766a7d0909ef6f6bf9815f4826109aed8f1c58983b9b0901c3f7bd0"
+    "proof-search.zh.png": "d92eecce1766a7d0909ef6f6bf9815f4826109aed8f1c58983b9b0901c3f7bd0",
+    "proof-discovery.png": "42822a03bb8fba52bf33117f2be52a18f0261800154dbcb75aae65d131b209af",
+    "proof-discovery.svg": "ba93ae295d12aa6583d6d48b7657f7f07d9c1beb913ba9afe738fe3f128b3cf1",
+    "proof-discovery.zh.png": "529e1775b517d9709aef3258a43a9ce52126abb287fe81518e26b20a4a70f747",
+    "proof-discovery.zh.svg": "a17884192009f179abefac341da6e085677396defc798ef6beb9ca7d481a452a"
   },
   "visual_review": {
     "date": "2026-10-27",
-    "scope": "definition/declaration and proof parts",
+    "scope": "Prior definition/proof overview review; unchanged overview assets only. Does not cover the current interactive revision.",
     "parts": 2,
     "steps": 9,
     "phase_navigation": true,
@@ -79,5 +85,46 @@
       4323,
       3235
     ]
+  },
+  "top_down_walkthrough": {
+    "date": "2026-10-27",
+    "shared_steps": [
+      3,
+      4,
+      5,
+      6,
+      7,
+      8
+    ],
+    "direction": "downward requirements, followed by upward evidence composition",
+    "controller_check": {
+      "date": "2026-10-27",
+      "method": "VM execution of the actual controller against a generated-HTML DOM fixture; no browser access",
+      "languages": [
+        "en",
+        "zh"
+      ],
+      "checks": 48,
+      "shared_step_navigation": true,
+      "tree_keyboard_navigation": true,
+      "downward_reachability": true,
+      "upward_composition": true,
+      "shared_playback": true,
+      "browser_visual_review": false
+    },
+    "independent_figure": {
+      "languages": [
+        "en",
+        "zh"
+      ],
+      "svg_text_editable": true,
+      "renderer": "librsvg rsvg-convert",
+      "png_pixels": [
+        4323,
+        3423
+      ],
+      "visually_inspected": true
+    },
+    "browser_review": "Origin permission was declined; no browser page was opened or rendered for this revision."
   }
 }

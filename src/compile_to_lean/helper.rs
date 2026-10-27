@@ -388,6 +388,21 @@ pub(super) fn arithmetic_constructor_pairs<'a>(
         (Obj::ArithmeticOperator(Abs(a)), Obj::ArithmeticOperator(Abs(b))) => {
             Some(("absValue", vec![(&a.arg, &b.arg)]))
         }
+        (Obj::ArithmeticOperator(Sign(a)), Obj::ArithmeticOperator(Sign(b))) => {
+            Some(("signValue", vec![(&a.arg, &b.arg)]))
+        }
+        (Obj::ArithmeticOperator(Floor(a)), Obj::ArithmeticOperator(Floor(b))) => {
+            Some(("floorValue", vec![(&a.arg, &b.arg)]))
+        }
+        (Obj::ArithmeticOperator(Ceil(a)), Obj::ArithmeticOperator(Ceil(b))) => {
+            Some(("ceilValue", vec![(&a.arg, &b.arg)]))
+        }
+        (Obj::ArithmeticOperator(Min(a)), Obj::ArithmeticOperator(Min(b))) => {
+            Some(("minValue", vec![(&a.left, &b.left), (&a.right, &b.right)]))
+        }
+        (Obj::ArithmeticOperator(Max(a)), Obj::ArithmeticOperator(Max(b))) => {
+            Some(("maxValue", vec![(&a.left, &b.left), (&a.right, &b.right)]))
+        }
         (
             Obj::ExpLogOperator(ExpLogOperator::Sqrt(a)),
             Obj::ExpLogOperator(ExpLogOperator::Sqrt(b)),

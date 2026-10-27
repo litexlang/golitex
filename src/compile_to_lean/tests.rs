@@ -3442,3 +3442,12 @@ mod eval_tests;
 
 #[path = "../../tests/unit/compile_to_lean/eval_function_tests.rs"]
 mod eval_function_tests;
+
+#[path = "../../tests/unit/compile_to_lean/eval_aggregate_tests.rs"]
+mod eval_aggregate_tests;
+
+#[path = "../../tests/unit/compile_to_lean/eval_fold_tests.rs"]
+mod eval_fold_tests;
+
+#[path = "../../tests/unit/compile_to_lean/eval_real_tests.rs"]
+mod eval_real_tests;

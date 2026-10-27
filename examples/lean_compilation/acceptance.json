@@ -21,13 +21,13 @@
   },
   "boundary": "Detailed JSON is an inspection view; compilation consumes typed results plus completed Runtime. Native Adapter is a separate handwritten step.",
   "assets": {
-    "index.html": "20fcd91e5b7c2ca49d170d8a2d667ac16b743e5bacc38e94dc49d12180ddcfa1",
-    "index.template.html": "f2c7d732ad7dad9985212355f296823677c50f3a8766448be396c0307a5b7858",
-    "viewer.js": "bd1937311dc6bccb0bac01986a5e3cdf2d11d8396464f7f0f18af5347c036e42",
-    "style.css": "6364f138e809dc64d9585147b06e398539a35b094dd440be517c6b6867ac579a",
-    "build.py": "26705c6bad2af3d23a5b12f3df71fe840fea201b4b21601f83033c94557e2882",
+    "index.html": "533ab0d70665efbfb03127ff5b34d94ed7285361783ce827ebb99977a69c6f96",
+    "index.template.html": "ed558bfe92afa7292c5a346d5ac7dd51c9513f4186095f1dc073b38c0b92039d",
+    "viewer.js": "b0f5f90f9f1077d4c0519a863a92b3b47eb6184942ec7fee16b4a735ec09c482",
+    "style.css": "3cd6c2d492def32a21d843d16781fd1979df16d1ada9b14933a8175109e95c2d",
+    "build.py": "377a90e6f878ab66061574015f7c428d4a096484b92dac79b5246fd1ec611171",
     "export.cjs": "384529f77796c9590e947b1209a15c7bd32352228b3549b1bd4040799c8ec316",
-    "README.md": "8f00971802d2a7be58c1c1d295c84d14e14e90f753de732e9805deb86aeca6f6",
+    "README.md": "e90a2e204b2a7b455ded7518e4d55e526a6b76a5b1103732c40b58ea961300dc",
     "trace.detailed.json": "89c6403a097fd018fd575faf4fd25871d5d97da7bbc6ad0c47694704ab310941",
     "evidence.json": "0b438f68d6574a6b9321c6d9f277de8db364cda8e450354defdc8ee93ba8e4eb",
     "lean-compilation.svg": "df4fe838f8bc493052533c330ecd8093abc2577cb49887fe9743842a7cf534d6",
@@ -55,7 +55,7 @@
       392,
       320
     ],
-    "steps": 8,
+    "steps": 5,
     "linked_json_lean_semantics": true,
     "keyboard": true,
     "playback": true,
@@ -70,6 +70,102 @@
     "png_pixels": [
       4323,
       3401
-    ]
+    ],
+    "semantic_panel_location": "interpretation-section",
+    "upper_figure_panels": [
+      "a",
+      "b"
+    ],
+    "role_layout": {
+      "desktop": "diagram beside prose",
+      "mobile": "stacked"
+    },
+    "compiler_evidence_reused": true
+  },
+  "mathematical_context_review": {
+    "date": "2026-10-27",
+    "browser": "Codex in-app browser",
+    "viewport": [
+      872,
+      863
+    ],
+    "languages": [
+      "en",
+      "zh"
+    ],
+    "statement": "forall a C:\n    a + 0 = a",
+    "source_at_start_and_in_inspector": true,
+    "final_step_identifies_same_statement": true,
+    "final_summary_uses_checked_receipt": true,
+    "full_technical_receipt_retained": true,
+    "document_overflow": false,
+    "static_assets_unchanged": true,
+    "compiler_and_lean_evidence_reused": true
+  },
+  "entrypoint_review": {
+    "date": "2026-10-27",
+    "template_forwarding": "actual viewer source checked in VM",
+    "query_and_hash_preserved": true,
+    "fallback_link_without_javascript": true,
+    "fallback_removed_from_generated_page": true,
+    "generated_http_preview_visibly_rendered": true,
+    "generated_preview_console_errors": 0,
+    "visible_upper_diagrams": 2,
+    "visible_semantic_diagram": 1,
+    "static_assets_unchanged": true
+  },
+  "pipeline_layout_review": {
+    "date": "2026-10-27",
+    "browser": "Codex in-app browser",
+    "viewport": [
+      872,
+      863
+    ],
+    "languages": [
+      "zh",
+      "en"
+    ],
+    "buttons": 5,
+    "orientation": "vertical",
+    "arrows": "down",
+    "parallel_columns": [
+      "compilation flow",
+      "checked evidence",
+      "selected-route replay"
+    ],
+    "button_selection_verified": "Calculation / rational",
+    "document_overflow": false,
+    "static_assets_unchanged": true,
+    "arrows_count": 4,
+    "merged_source_runtime": true,
+    "source_and_runtime_correspond_to_right_source_node": true,
+    "walkthrough_stages": 5,
+    "top_and_left_titles_match": true
+  },
+  "stage_sync_review": {
+    "date": "2026-10-27",
+    "browser": "Codex in-app browser",
+    "languages": [
+      "zh",
+      "en"
+    ],
+    "stages": [
+      "source and verification",
+      "typed results",
+      "replay compiler",
+      "generated Lean",
+      "Lean check"
+    ],
+    "top_overview_and_inspector_aligned": true,
+    "every_stage_has_right_hand_counterpart": true,
+    "next_and_previous_synchronized": true,
+    "playback_stops_at": "05 / 05",
+    "selection_and_keyboard_verified": true,
+    "semantic_details_belong_to_generated_Lean_stage": true,
+    "kernel_card_uses_actual_check_receipt": true,
+    "console_errors": 0,
+    "document_overflow": false,
+    "static_assets_unchanged": true,
+    "compiler_evidence_reused": true
   }
 }

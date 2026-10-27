@@ -213,11 +213,16 @@ def main():
               'bridge':core_excerpt('theorem sameOfDenoteNumber','/-- Equality eliminates'),
              }}
     template=(HERE/'index.template.html').read_text()
+    prefix,entry=template.split('<!-- TEMPLATE_ENTRY_START -->',1)
+    _,suffix=entry.split('<!-- TEMPLATE_ENTRY_END -->',1)
+    template=prefix+suffix
     for lang in LABELS:
         suffix='.zh' if lang=='zh' else ''
         (HERE/f'lean-compilation{suffix}.svg').write_text(svg(lang)+'\n')
-        markup=''.join(f'<div class="figure-panel">{svg(lang,p)}</div>' for p in 'abc')
+        check='<button class="kernel-check" type="button" data-step="4"><strong data-en="Lean check" data-zh="Lean 检查">Lean check</strong><span class="kernel-check-status"></span></button>'
+        markup=''.join(f'<div class="figure-panel">{svg(lang,p)}{check if p=="b" else ""}</div>' for p in 'ab')
         template=template.replace(f'<!-- FIGURE_{lang.upper()} -->',markup)
+        template=template.replace(f'<!-- SEMANTICS_{lang.upper()} -->',svg(lang,'c'))
     template=template.replace('<!-- DATA -->',json.dumps(payload,ensure_ascii=False).replace('<','\\u003c'))
     (HERE/'index.html').write_text(template)
     acceptance={'evidence':evidence,'boundary':'Detailed JSON is an inspection view; compilation consumes typed results plus completed Runtime. Native Adapter is a separate handwritten step.',

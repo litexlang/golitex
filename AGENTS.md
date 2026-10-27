@@ -9,6 +9,13 @@ definitions and facts. Never rerun from the beginning after adding a few new
 lines. It includes a checked comparison and the exact restart/replay boundary.
 Apply the `golitex-repository-policy` skill for the full repository working policy.
 
+## Comparison and experiment READMEs
+
+Write READMEs for comparisons, benchmarks, experiments and their supporting
+source directories in English. Use English for headings, prose, table labels,
+diagram labels and explanatory code comments. Preserve exact mathematical
+code, measurements and material scope qualifications when translating.
+
 ## Native mathematics inventory
 
 For every addition, change, or removal on the native mathematical Obj/prop

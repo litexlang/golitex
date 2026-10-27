@@ -21,7 +21,8 @@ impl LitexToLeanCompiler {
             AggregateEvaluationResult::Product(p) => &p.source,
             AggregateEvaluationResult::SumOfFiniteSet(p) => &p.source,
             AggregateEvaluationResult::ProductOfFiniteSet(p) => &p.source,
-            _ => return Err(LeanCompileError::unsupported("Eval/AggregateFamily")),
+            AggregateEvaluationResult::Reduce(p) => &p.source,
+            AggregateEvaluationResult::FiniteSetReduce(p) => &p.source,
         };
         if object.ir() != source.ir() {
             return Err(LeanCompileError::unsupported("Eval/AggregateOrder"));
@@ -29,6 +30,10 @@ impl LitexToLeanCompiler {
         let (value, proof) = match evidence {
             AggregateEvaluationResult::Sum(_) | AggregateEvaluationResult::Product(_) => {
                 self.compile_range_aggregate_value(evidence, position)?
+            }
+            AggregateEvaluationResult::Reduce(p) => self.compile_range_fold_value(p, position)?,
+            AggregateEvaluationResult::FiniteSetReduce(p) => {
+                self.compile_finite_fold_value(p, position)?
             }
             _ => self.compile_finite_aggregate_value(evidence, position)?,
         };

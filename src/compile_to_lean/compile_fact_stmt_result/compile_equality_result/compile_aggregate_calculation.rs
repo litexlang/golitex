@@ -25,60 +25,75 @@ impl LitexToLeanCompiler {
                 "AggregateCalculation/AdditionalStages",
             ));
         }
-        let [evaluation] = proof.aggregate_evaluations.as_slice() else {
-            return Err(LeanCompileError::unsupported(
-                "AggregateCalculation/NestedAggregates",
-            ));
-        };
-        if let AggregateEvaluationResult::Reduce(evaluation) = evaluation {
-            return self.compile_range_fold_calculation(fact, proof, evaluation, position);
-        }
-        let (source, (value, denotation)) = match evaluation {
-            AggregateEvaluationResult::Sum(p) => (
-                &p.source,
-                self.compile_range_aggregate_value(evaluation, position)?,
-            ),
-            AggregateEvaluationResult::Product(p) => (
-                &p.source,
-                self.compile_range_aggregate_value(evaluation, position)?,
-            ),
-            AggregateEvaluationResult::SumOfFiniteSet(p) => (
-                &p.source,
-                self.compile_finite_aggregate_value(evaluation, position)?,
-            ),
-            AggregateEvaluationResult::ProductOfFiniteSet(p) => (
-                &p.source,
-                self.compile_finite_aggregate_value(evaluation, position)?,
-            ),
-            _ => {
-                return Err(LeanCompileError::unsupported(
-                    "AggregateCalculation/FiniteSetOrFold",
-                ))
-            }
-        };
-        let (other, reversed) = if source == &fact.left {
-            (&fact.right, false)
-        } else if source == &fact.right {
-            (&fact.left, true)
-        } else {
-            return Err(LeanCompileError::unsupported("AggregateCalculation/Source"));
-        };
-        let other_number = self.compile_numeric_observation(other, position)?;
-        if EvalRational::from_obj(&proof.left_value).as_ref() != Some(&value)
-            || EvalRational::from_obj(&proof.right_value).as_ref() != Some(&value)
-            || other_number.3.as_ref() != Some(&value)
+        // The evaluator visits left then right, recording completed aggregates.
+        // Consume that original postorder backwards, as for command evaluation.
+        let mut remaining = proof.aggregate_evaluations.len();
+        let (right_value, right, right_cites) = self.compile_eval_value(
+            &proof.rewritten_right,
+            &[],
+            &mut 0,
+            &proof.aggregate_evaluations,
+            &mut remaining,
+            position,
+        )?;
+        let (left_value, left, left_cites) = self.compile_eval_value(
+            &proof.rewritten_left,
+            &[],
+            &mut 0,
+            &proof.aggregate_evaluations,
+            &mut remaining,
+            position,
+        )?;
+        if remaining != 0
+            || !left_cites.is_empty()
+            || !right_cites.is_empty()
+            || left_value != right_value
+            || EvalRational::from_obj(&proof.left_value).as_ref() != Some(&left_value)
+            || EvalRational::from_obj(&proof.right_value).as_ref() != Some(&right_value)
         {
             return Err(LeanCompileError::unsupported(
                 "AggregateCalculation/ResultValue",
             ));
         }
-        let output = exact_rational_literal(&value, "ℂ")?;
-        let equal = format!("(Litex.NativeBridge.sameOfDenoteNumber {} {} {output} {} {denotation} {} (by norm_num))", self.compile_object_reference(source, position)?, self.compile_object_reference(other, position)?, other_number.0, other_number.1);
-        Ok(if reversed {
-            format!("({equal}).symm")
-        } else {
-            equal
-        })
+        let left = self.compile_calculation_endpoint(&fact.left, &left_value, left, position)?;
+        let right =
+            self.compile_calculation_endpoint(&fact.right, &right_value, right, position)?;
+        Ok(format!(
+            "(show Litex.Same {} {} from ({left}).trans ({right}).symm)",
+            self.compile_object_reference(&fact.left, position)?,
+            self.compile_object_reference(&fact.right, position)?
+        ))
+    }
+
+    // A closed scalar endpoint can use a previously registered numeric WD
+    // representation (for example a stored -6 rather than a fresh neg(6)).
+    // Observe that original representation and check the same exact result.
+    pub(in crate::compile_to_lean) fn compile_calculation_endpoint(
+        &self,
+        object: &Obj,
+        value: &EvalRational,
+        raw_proof: String,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        if crate::rational_expression::ClosedNumericExpr::try_from_obj(object).is_none() {
+            // Cached numeric children may use a signed numeral where the
+            // source AST uses unary negation. Their denotations agree by the
+            // numeric embedding law, including below function applications.
+            let term = self.compile_object_reference(object, position)?;
+            let output = exact_rational_literal(value, "ℂ")?;
+            return Ok(format!("(show Litex.denote {term} = M.number {output} from by simpa only [M.neg_numbers] using {raw_proof})"));
+        }
+        let observation = self.compile_numeric_observation(object, position)?;
+        if observation.3.as_ref() != Some(value) {
+            return Err(LeanCompileError::unsupported(
+                "AggregateCalculation/EndpointValue",
+            ));
+        }
+        let output = exact_rational_literal(value, "ℂ")?;
+        Ok(format!(
+            "({}).trans (congrArg M.number (by norm_num : {} = {output}))",
+            observation.1, observation.0
+        ))
     }
 
     pub(in crate::compile_to_lean) fn compile_range_aggregate_value(

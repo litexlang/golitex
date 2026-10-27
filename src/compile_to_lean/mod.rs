@@ -26,6 +26,7 @@ mod compile_equality_inferences;
 mod compile_eval_aggregate_value;
 mod compile_eval_closed_value;
 mod compile_eval_function_value;
+mod compile_eval_real_value;
 mod compile_eval_stmt_result;
 mod compile_expand_range_stmt_result;
 mod compile_fact_stmt_result;

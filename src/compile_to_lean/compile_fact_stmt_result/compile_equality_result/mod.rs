@@ -44,6 +44,7 @@ mod compile_trig;
 mod compile_complex_observations;
 mod compile_fold_identity;
 
+mod compile_finite_fold_calculation;
 mod compile_fold_calculation;
 
 mod compile_hyperbolic;

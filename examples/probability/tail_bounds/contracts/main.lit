@@ -1,0 +1,38 @@
+thm markov_event_contract:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,X fn(k space.carrier) R,A power_set(space.carrier),a R+:
+        forall k space.carrier:
+            X(k) >= 0
+        forall k A:
+            X(k) >= a
+        =>:
+            space.prob(A) <= \prob::main::finite_expectation<Omega,space>(X)/a
+    release thm prob::main::finite_markov_event_bound(Omega,space,X,A,a)
+
+thm chebyshev_event_contract:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,X fn(k space.carrier) R,A power_set(space.carrier),a R+:
+        forall k A:
+            abs(X(k)-\prob::main::finite_expectation<Omega,space>(X)) >= a
+        =>:
+            space.prob(A) <= \prob::main::finite_variance<Omega,space>(X)/a^2
+    release thm prob::main::finite_chebyshev_event_bound(Omega,space,X,A,a)
+
+thm markov_tail_contract:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,X fn(k space.carrier) R,a R+:
+        forall k space.carrier:
+            X(k) >= 0
+        =>:
+            space.prob(\prob::main::finite_upper_tail_event<Omega,space>(X,a)) <= \prob::main::finite_expectation<Omega,space>(X)/a
+    release thm prob::main::finite_markov_tail_bound(Omega,space,X,a)
+
+thm chebyshev_tail_contract:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,X fn(k space.carrier) R,a R+:
+        space.prob(\prob::main::finite_deviation_tail_event<Omega,space>(X,a)) <= \prob::main::finite_variance<Omega,space>(X)/a^2
+    release thm prob::main::finite_chebyshev_tail_bound(Omega,space,X,a)
+
+thm upper_tail_definition_contract:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,X fn(k space.carrier) R,a R:
+        \prob::main::finite_upper_tail_event<Omega,space>(X,a) = {k space.carrier:X(k)>=a}
+
+thm deviation_tail_definition_contract:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,X fn(k space.carrier) R,a R:
+        \prob::main::finite_deviation_tail_event<Omega,space>(X,a) = {k space.carrier:abs(X(k)-\prob::main::finite_expectation<Omega,space>(X))>=a}

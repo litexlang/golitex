@@ -295,6 +295,9 @@ fn fact_uses_functions(fact: &Fact) -> bool {
 }
 
 fn statement_uses_functions(statement: &ExecStmtResult) -> bool {
+    if let Some(evaluation) = super::compile_eval_stmt_result::eval_statement(statement) {
+        return object_uses_functions(&evaluation.source_object);
+    }
     if let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefTemplate(
         crate::execute::ExecDefTemplateStmtResult::Success(p),
     )) = statement
@@ -578,6 +581,9 @@ fn fact_uses_sets(fact: &Fact) -> bool {
 }
 
 fn statement_uses_sets(statement: &ExecStmtResult) -> bool {
+    if let Some(evaluation) = super::compile_eval_stmt_result::eval_statement(statement) {
+        return object_uses_sets(&evaluation.source_object);
+    }
     if let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefTemplate(
         crate::execute::ExecDefTemplateStmtResult::Success(p),
     )) = statement

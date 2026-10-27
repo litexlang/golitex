@@ -4,7 +4,7 @@ main.lit constructs the six-outcome uniform probability space through the
 generic std constructor. It checks even1/2, evidence >3 with probability1/2,
 intersection1/3, and the actual conditional probability2/3. Its explicit tuple
 equation exposes the constructed fields in a registered module.
-contracts/main.lit independently imports all79 generic source theorem
+contracts/main.lit independently imports the original79 generic source theorem
 contracts and both bundled constructors, preceded by one proved numeric closure
 claim. readme/main.lit checks the isolated std README excerpt. No user trust,
 axioms or predicates with omitted definitions are introduced.
@@ -38,3 +38,6 @@ retains its cross term. Coefficient0 does not legalize an undefined sampler.
 
 The current suite contains71 refusal controls and77 CLI checks in total.
 Its generic contract project has82 top-level statements; the actual caller has202.
+
+The later covariance_bounds project independently exercises the six covariance
+square/zero/parallelogram/variance-bound interfaces added after that checkpoint.
