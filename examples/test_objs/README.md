@@ -38,9 +38,10 @@ This is an object corpus; statement and fact inventories remain in the existing
 
 The cases cover exact numeric values, carriers, precedence, signs, zero,
 endpoints, empty containers where legal, nested objects, binders, function
-arity/domain/codomain, struct fields, and identifier ownership. Most positive
-cases use independent `sketch:` scopes, whose facts and definitions do not
-escape to later cases. Rejections and unresolved positive cases are standalone
+arity/domain/codomain, struct fields, and identifier ownership. Fact-only positive cases are checked directly in file context. Cases that
+introduce local declarations retain `sketch:` scopes so their names and facts
+do not escape to later cases. Direct cases can reuse preceding facts; the
+2026-10-27 cleanup also checked every flattened case independently. Rejections and unresolved positive cases are standalone
 fixtures. No test uses `trust` to manufacture success.
 
 The approved numeric and aggregate repairs add exact decimal normalization,
@@ -176,7 +177,8 @@ corpus cannot prove the absence of all object bugs.
 
 P200 in `floor`, `ceil`, `tan`, `cot`, `gcd`, `finite_set_max` and
 `finite_set_min` covers their defining bounds, guarded quotients, Euclidean
-recursion and member bounds. Each case keeps its discarded sketch scope.
+recursion and member bounds. Fact-only cases are stated directly; local
+declarations retain their discarded sketch scope.
 The definition-rule acceptance record (historical task record; retired)
 contains the former failures and nearest rejected domains; the corresponding
 `coverage.json` entries include P200.

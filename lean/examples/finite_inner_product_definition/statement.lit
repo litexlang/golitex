@@ -1,0 +1,3 @@
+# The finite inner product conjugates its left vector before summing coordinate products.
+forall n N, v,w cart_n(C,n):
+    inner_product(v,w,n) = finite_set_sum(closed_range(1,n),fn(k closed_range(1,n)) C {conj(v(k))*w(k)})

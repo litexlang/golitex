@@ -1,0 +1,3 @@
+# The conjugate transpose is its swapped-entry conjugation formula.
+forall m, n N, A matrix(C,m,n):
+    conjugate_transpose(A,m,n) = fn(row closed_range(1,n),col closed_range(1,m)) C {conj(A(col,row))}

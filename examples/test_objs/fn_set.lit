@@ -1,6 +1,6 @@
 # AST: Obj::FunctionSpace::FnSet
 # Run: target/release/litex -f examples/test_objs/fn_set.lit
-# Cases use discarded sketch scopes; no cross-case facts.
+# Direct cases share file context; sketches isolate local declarations.
 
 # P01: $is_set(F)
 sketch:
@@ -28,9 +28,7 @@ sketch:
     \maps<R> = fn(x R) R
 
 # P05: fn(x R) R {x} $in fn(y R) R
-sketch:
-    fn(x R) R {x} $in fn(y R) R
+fn(x R) R {x} $in fn(y R) R
 
 # P06: fn(x, y R) R {x + y} $in fn(a, b R) R
-sketch:
-    fn(x, y R) R {x + y} $in fn(a, b R) R
+fn(x, y R) R {x + y} $in fn(a, b R) R

@@ -27,9 +27,148 @@ impl LitexToLeanCompiler {
                 "BuiltinMembership/Application",
             ));
         };
+        if matches!(
+            builtin.theorem,
+            BuiltinTheoremId::RealLeastUpperBoundFromDefinition
+                | BuiltinTheoremId::RealGreatestLowerBoundFromDefinition
+                | BuiltinTheoremId::RealLeastUpperBoundUpperBound
+                | BuiltinTheoremId::RealGreatestLowerBoundLowerBound
+                | BuiltinTheoremId::RealLeastUpperBoundUnique
+                | BuiltinTheoremId::RealGreatestLowerBoundUnique
+                | BuiltinTheoremId::RealLeastUpperBoundCrosses
+                | BuiltinTheoremId::RealGreatestLowerBoundCrosses
+                | BuiltinTheoremId::RealLeastUpperBoundExists
+                | BuiltinTheoremId::RealGreatestLowerBoundExists
+                | BuiltinTheoremId::RealMemberLeLeastUpperBound
+                | BuiltinTheoremId::RealGreatestLowerBoundLeMember
+                | BuiltinTheoremId::RealLeastUpperBoundLeUpperBound
+                | BuiltinTheoremId::RealLowerBoundLeGreatestLowerBound
+        ) {
+            return self.compile_builtin_extremum_certificate_theorem(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if matches!(
+            builtin.theorem,
+            BuiltinTheoremId::RealSupremumExists
+                | BuiltinTheoremId::RealInfimumExists
+                | BuiltinTheoremId::RealSupremumSelected
+                | BuiltinTheoremId::RealInfimumSelected
+        ) {
+            return self.compile_builtin_extremum_theorem(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if matches!(
+            builtin.theorem,
+            BuiltinTheoremId::MatrixPowerZero | BuiltinTheoremId::MatrixPowerSuccessor
+        ) {
+            return self.compile_builtin_matrix_power_theorem(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if matches!(
+            builtin.theorem,
+            BuiltinTheoremId::MatrixRankBounds
+                | BuiltinTheoremId::MatrixRankZero
+                | BuiltinTheoremId::MatrixRankIdentity
+        ) {
+            return self.compile_builtin_rank_theorem(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if matches!(
+            builtin.theorem,
+            BuiltinTheoremId::MatrixDetIdentity
+                | BuiltinTheoremId::MatrixDetTranspose
+                | BuiltinTheoremId::MatrixDetAdjoint
+        ) {
+            return self.compile_builtin_determinant_theorem(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if matches!(
+            builtin.theorem,
+            BuiltinTheoremId::EuclideanNormSquare | BuiltinTheoremId::FrobeniusNormSquare
+        ) {
+            return self.compile_builtin_norm_theorem(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if builtin.theorem == BuiltinTheoremId::FiniteSetReduceSingleton {
+            return self.compile_builtin_fold_theorem(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
         if !matches!(
             builtin.theorem,
             BuiltinTheoremId::SetBuilderMember
+                | BuiltinTheoremId::FamilyIntersectionMember
+                | BuiltinTheoremId::IndexedIntersectionMember
+                | BuiltinTheoremId::IndexCartesianMember
                 | BuiltinTheoremId::DefinedSetMember
                 | BuiltinTheoremId::CartesianMemberFromCoordinates
                 | BuiltinTheoremId::FunctionSetMember
@@ -71,7 +210,14 @@ impl LitexToLeanCompiler {
                 | BuiltinTheoremId::FunctionSetMember,
                 Some(BuiltinFunctionDomainProof::Membership(domain)),
             ) => Some(domain),
-            (BuiltinTheoremId::SetBuilderMember | BuiltinTheoremId::DefinedSetMember, None) => None,
+            (
+                BuiltinTheoremId::SetBuilderMember
+                | BuiltinTheoremId::FamilyIntersectionMember
+                | BuiltinTheoremId::DefinedSetMember
+                | BuiltinTheoremId::IndexedIntersectionMember
+                | BuiltinTheoremId::IndexCartesianMember,
+                None,
+            ) => None,
             _ => {
                 return Err(LeanCompileError::unsupported(
                     "BuiltinMembership/CompleteDomain",
@@ -154,6 +300,20 @@ impl LitexToLeanCompiler {
             usize::MAX,
         );
         let application = match builtin.theorem {
+            BuiltinTheoremId::FamilyIntersectionMember => self.compile_family_intersection_member(
+                member,
+                &builtin.requirements,
+                &references,
+                &formation,
+            )?,
+            BuiltinTheoremId::IndexedIntersectionMember
+            | BuiltinTheoremId::IndexCartesianMember => self.compile_indexed_member_theorem(
+                builtin.theorem,
+                member,
+                &builtin.requirements,
+                &references,
+                &formation,
+            )?,
             BuiltinTheoremId::SetBuilderMember => self.compile_builder_membership_evidence(
                 member,
                 &builtin.requirements,

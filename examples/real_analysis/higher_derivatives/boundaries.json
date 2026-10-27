@@ -1,0 +1,86 @@
+{
+  "setup": [
+    "have fn no_high_order(x R) R=x^4+1",
+    "have fn point_only(x R) R=x^2+7",
+    "$has_derivative_at(point_only,2,4)",
+    "have fn unary_boundary_vector_input(x cart_n(R,1)) R=x(1)",
+    "have fn unary_boundary_two_args(x R,y R) R=x+y"
+  ],
+  "cases": [
+    {
+      "name": "missing_high_order_candidate",
+      "source": "\\Calc::unary_higher_order::nth_derivative<R,3>(no_high_order,2) $in R",
+      "expected_category": "well_defined"
+    },
+    {
+      "name": "pointwise_first_not_second",
+      "source": "\\Calc::unary_higher_order::nth_derivative<R,2>(point_only,2) $in R",
+      "expected_category": "well_defined"
+    },
+    {
+      "name": "absolute_zero_first_unproved",
+      "source": "\\Calc::unary_higher_order::nth_derivative<R,1>(main::absolute,0) $in R",
+      "expected_category": "well_defined"
+    },
+    {
+      "name": "wrong_value",
+      "source": "\\Calc::unary_higher_order::nth_derivative<R,3>(main::cubic,2)=7",
+      "expected_category": "proof_search"
+    },
+    {
+      "name": "negative_order",
+      "source": "\\Calc::unary_higher_order::nth_derivative<R,-1>(main::cubic,2) $in R",
+      "expected_category": "well_defined"
+    },
+    {
+      "name": "point_outside_actual_domain",
+      "source": "\\Calc::unary_higher_order::nth_derivative<R+,1>(main::positive_cubic,0) $in R",
+      "expected_category": "well_defined"
+    },
+    {
+      "name": "vector_input_not_real",
+      "source": "\\Calc::unary_higher_order::nth_derivative<R,0>(unary_boundary_vector_input,1) $in R",
+      "expected_category": "well_defined"
+    },
+    {
+      "name": "two_inputs_not_unary",
+      "source": "\\Calc::unary_higher_order::nth_derivative<R,0>(unary_boundary_two_args,1) $in R",
+      "expected_category": "well_defined"
+    },
+    {
+      "name": "ordinary_arity",
+      "source": "\\Calc::unary_higher_order::nth_derivative<R,3>(main::cubic) $in R",
+      "expected_category": "well_defined"
+    },
+    {
+      "name": "template_arity",
+      "source": "\\Calc::unary_higher_order::nth_derivative<R,3,1>(main::cubic,2) $in R",
+      "expected_category": "well_defined"
+    },
+    {
+      "name": "wrong_candidate",
+      "source": "$Calc::unary_higher_order::has_nth_derivative_at(R,3,main::cubic,2,7)",
+      "expected_category": "proof_search"
+    },
+    {
+      "name": "actual_domain_cannot_be_widened",
+      "source": "\\Calc::unary_higher_order::nth_derivative<R,1>(main::positive_cubic,2) $in R",
+      "expected_category": "well_defined"
+    },
+    {
+      "name": "unary_order_above_candidate",
+      "source": "release thm Calc::unary_higher_order::nth_derivative_lower_order_exists(R,3,4,main::cubic,2,6)",
+      "expected_category": "proof_search"
+    },
+    {
+      "name": "unary_existence_does_not_choose_value",
+      "source": "\\Calc::unary_higher_order::nth_derivative<R,2>(main::cubic,2)=99",
+      "expected_category": "proof_search"
+    },
+    {
+      "name": "outer_zero_does_not_hide_missing_derivative",
+      "source": "0*\\Calc::unary_higher_order::nth_derivative<R,3>(no_high_order,2)=0",
+      "expected_category": "well_defined"
+    }
+  ]
+}

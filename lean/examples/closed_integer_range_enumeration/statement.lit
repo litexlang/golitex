@@ -1,0 +1,4 @@
+# Expand closed integer intervals, including an empty interval and reversed equality.
+closed_range(1,0) = {}
+closed_range(0,2) = {0,1,2}
+{4,5} = closed_range(4,5)

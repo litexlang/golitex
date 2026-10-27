@@ -111,6 +111,51 @@ impl LitexToLeanCompiler {
                 &p.proof_of_requirement_facts,
                 position,
             ),
+            (
+                AtomicFact::RealSetBoundFact(_),
+                AtomicExceptEqualityFactSearchProofByDefinition::BuiltinProp(
+                    BuiltinPropDefinitionProof::RealSetBound(p),
+                ),
+            ) => self.compile_real_bound_definition(
+                goal,
+                &p.requirement_facts,
+                &p.proof_of_requirement_facts,
+                position,
+            ),
+            (
+                AtomicFact::RealSetBoundedFact(_),
+                AtomicExceptEqualityFactSearchProofByDefinition::BuiltinProp(
+                    BuiltinPropDefinitionProof::RealSetBounded(p),
+                ),
+            ) => self.compile_real_bound_definition(
+                goal,
+                &p.requirement_facts,
+                &p.proof_of_requirement_facts,
+                position,
+            ),
+            (
+                AtomicFact::SequenceAnalysisFact(f),
+                AtomicExceptEqualityFactSearchProofByDefinition::BuiltinProp(
+                    BuiltinPropDefinitionProof::SequenceAnalysis(p),
+                ),
+            ) => self.compile_sequence_analysis_definition(
+                f,
+                &p.requirement_facts,
+                &p.proof_of_requirement_facts,
+                position,
+            ),
+            (
+                AtomicFact::HasSequenceLimitFact(f),
+                AtomicExceptEqualityFactSearchProofByDefinition::BuiltinProp(
+                    BuiltinPropDefinitionProof::SequenceLimit(p),
+                ),
+            ) => self.compile_sequence_epsilon_definition(
+                &f.sequence,
+                Some(&f.value),
+                &p.requirement_facts,
+                &p.proof_of_requirement_facts,
+                position,
+            ),
             (_, AtomicExceptEqualityFactSearchProofByDefinition::BuiltinProp(_)) => {
                 Err(LeanCompileError::unsupported("Prop/BuiltinDefinition"))
             }
@@ -207,6 +252,20 @@ impl LitexToLeanCompiler {
         normal: &NormalAtomicFact,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
+        if let Some(name) =
+            crate::compile_to_lean::compile_real_extrema::certificate_name(&normal.predicate)
+        {
+            if normal.body.len() != 2 {
+                return Err(LeanCompileError::unsupported(
+                    "RealExtremum/CertificateArity",
+                ));
+            }
+            return Ok(format!(
+                "(Litex.{name} {} {})",
+                self.compile_object_reference(&normal.body[0], position)?,
+                self.compile_object_reference(&normal.body[1], position)?
+            ));
+        }
         if position.visible_abstract_prop(&normal.predicate).is_some() {
             let arguments = normal
                 .body
@@ -357,6 +416,17 @@ impl LitexToLeanCompiler {
             Fact::AtomicFact(AtomicFact::NormalAtomicFact(normal)) => normal,
             _ => return Ok(Vec::new()),
         };
+        if crate::compile_to_lean::compile_real_extrema::certificate_name(&normal.predicate)
+            .is_some()
+        {
+            return if normal.body.len() == 2 && rules.is_empty() {
+                Ok(Vec::new())
+            } else {
+                Err(LeanCompileError::unsupported(
+                    "RealExtremum/UnexpectedInference",
+                ))
+            };
+        }
         if position.visible_abstract_prop(&normal.predicate).is_some() {
             return if rules.is_empty() {
                 Ok(Vec::new())

@@ -104,6 +104,15 @@ impl Runtime {
             return self.verify_scalar_aggregate_well_definedness(obj, verify_state);
         }
 
+        if matches!(
+            obj,
+            Obj::IteratedOperator(
+                IteratedOperator::Reduce(_) | IteratedOperator::FiniteSetReduce(_)
+            )
+        ) {
+            return self.verify_fold_well_definedness(obj, verify_state);
+        }
+
         if let Obj::BoundOperator(value) = obj {
             return self.verify_bound_operator_well_definedness(value, verify_state);
         }
@@ -458,11 +467,10 @@ impl Runtime {
             ) => unreachable!(
                 "scalar aggregates retain their selected signature in the dedicated pipeline"
             ),
-            Obj::IteratedOperator(IteratedOperator::Reduce(value)) => {
-                self.verify_reduce_obj_well_definedness_by_def(value, verify_state)
-            }
-            Obj::IteratedOperator(IteratedOperator::FiniteSetReduce(value)) => {
-                self.verify_finite_set_reduce_obj_well_definedness_by_def(value, verify_state)
+            Obj::IteratedOperator(
+                IteratedOperator::Reduce(_) | IteratedOperator::FiniteSetReduce(_),
+            ) => {
+                unreachable!("folds retain their selected signatures in the dedicated pipeline")
             }
             Obj::SetFormer(SetFormer::Range(value)) => {
                 self.verify_range_obj_well_definedness_by_def(value, verify_state)

@@ -59,7 +59,7 @@ theorem h_5 : ∀ {_Host_i1 : Type v1} [_rep_i1 : Litex.Representation M _Host_i
               litex_checked_step =>
                 exact (
                   (let _equal_wd_1_0 := _object_w2;
-                  (show Litex.Same _equal_wd_1_0 _value_i1 from (Litex.NativeBridge.sameOfDenoteNumber _equal_wd_1_0 _value_i1 (star ((star ((Litex.NativeBridge.asComplex _value_i1 h_18))))) (Litex.NativeBridge.asComplex _value_i1 h_18) (let _complex := _equal_wd_1_0; Litex.denoteConjugate _complex (star ((Litex.NativeBridge.asComplex _value_i1 h_18))) (let _complex := (_equal_wd_1_0).val.arg; Litex.denoteConjugate _complex (Litex.NativeBridge.asComplex _value_i1 h_18) (Litex.NativeBridge.asComplex_spec _value_i1 h_18))) (Litex.NativeBridge.asComplex_spec _value_i1 h_18) (by simp only [star_star]))))
+                  (show Litex.Same _equal_wd_1_0 _value_i1 from (Litex.NativeBridge.sameOfDenoteNumber _equal_wd_1_0 _value_i1 (star ((star ((Litex.NativeBridge.asComplex _value_i1 h_18))))) (Litex.NativeBridge.asComplex _value_i1 h_18) (let _complex := _equal_wd_1_0; Litex.denoteConjugate _complex (star ((Litex.NativeBridge.asComplex _value_i1 h_18))) (let _complex := (_equal_wd_1_0).val.arg; Litex.denoteConjugate _complex (Litex.NativeBridge.asComplex _value_i1 h_18) (Litex.NativeBridge.asComplex_spec _value_i1 h_18))) (Litex.NativeBridge.asComplex_spec _value_i1 h_18) (by exact star_star _))))
                 )
             )
           let _object_w3 := (let _wd_1_0 := (Litex.conj _value_i1 h_18);

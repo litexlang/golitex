@@ -1,0 +1,9 @@
+{
+  "cases": [
+    {
+      "name": "wrong_mixed_third_value",
+      "source": "\\Calc::unary_higher_order::nth_derivative<R,3>(mixed::mixed_zero,0)=6",
+      "expected_category": "proof_search"
+    }
+  ]
+}

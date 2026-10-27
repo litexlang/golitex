@@ -406,6 +406,10 @@ impl LitexToLeanCompiler {
                 proof: ObjWellDefinedProofByDef::ComplexOperator(_),
             } => self.numeric_complex_wd(wd, position),
             ObjWellDefinedProof::ByDef {
+                obj: Obj::HyperbolicOperator(_),
+                proof: ObjWellDefinedProofByDef::HyperbolicOperator(_),
+            } => self.numeric_hyperbolic_wd(wd, position),
+            ObjWellDefinedProof::ByDef {
                 obj: Obj::TrigOperator(_),
                 proof: ObjWellDefinedProofByDef::TrigOperator(_),
             } => self.numeric_trig_wd(wd, position),

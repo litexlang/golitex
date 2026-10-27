@@ -1,0 +1,5 @@
+# Function extensionality identifies a diagonal matrix with its complete coordinate formula.
+thm diagonal_formula_matrix:
+    ? forall dn N, dv cart_n(C,dn):
+        diagonal_matrix(dv,dn) = fn(row closed_range(1,dn),col closed_range(1,dn)) C {finite_set_size(intersect({row},{col}))*dv(row)}
+    by fn_extension diagonal_matrix(dv,dn) = fn(row closed_range(1,dn),col closed_range(1,dn)) C {finite_set_size(intersect({row},{col}))*dv(row)}

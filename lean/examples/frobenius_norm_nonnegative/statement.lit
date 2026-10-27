@@ -1,0 +1,8 @@
+# The squared-norm theorem proves that a complex matrix norm is nonnegative.
+thm checked_frobenius_norm_nonnegative:
+    ? forall m,n N, A matrix(C,m,n):
+        0 <= frobenius_norm(A,m,n)
+    release thm frobenius_norm_square(A,m,n)
+    0 <= frobenius_norm(A,m,n)
+
+by thm checked_frobenius_norm_nonnegative(0,2,zero_matrix(0,2)) => 0 <= frobenius_norm(zero_matrix(0,2),0,2)

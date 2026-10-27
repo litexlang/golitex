@@ -12,6 +12,9 @@ impl LitexToLeanCompiler {
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
         match rule {
+            SubsetFactSearchProofByBuiltinRule::FunctionRangeInCodomain(p) => {
+                self.compile_function_range_subset(fact, p, position)
+            }
             SubsetFactSearchProofByBuiltinRule::RealIntervalSubsetReal(_) => {
                 self.compile_real_interval_subset(fact, position)
             }

@@ -177,12 +177,7 @@ theorem h_2 : ∀ {_Host_i1 : Type v1} [_rep_i1 : Litex.Representation M _Host_i
                                 have h_13 : Litex.In _value_i3 (Litex.R (M := M)) := h_13
                                 exact True.intro);
                               Litex.fnSet (Litex.FunctionSignature.one (M := M) Litex.StandardSetValue.real Litex.StandardSetValue.real (fun (_raw_i3 : M.Value) => True))); Litex.FunctionSignature.withGuard (M := M) (Litex.denote (Litex.R (M := M))) (Litex.denote _litex_output) (Litex.isSet (Litex.R (M := M))) (Litex.isSet _litex_output) (fun (_litex_input : M.Value) => (fun (_raw_i2 : M.Value) => True) _litex_input)))) h_14)
-                              have _returned_input : M.mem (Litex.denote (Litex.number (M := M) (1 : ℂ))) _returned_signature.domain := (let _litex_output := (let _checked_header : ∀ (_raw_i3 : M.Value), M.mem _raw_i3 (M.standard Litex.StandardSetValue.real) → ((fun (_raw_i3 : M.Value) => True) _raw_i3) → True := (by
-                                intro _raw_i3 h_13 _
-                                let _value_i3 := Litex.semanticObject (M := M) _raw_i3 (M.member_isSet h_13)
-                                have h_13 : Litex.In _value_i3 (Litex.R (M := M)) := h_13
-                                exact True.intro);
-                              Litex.fnSet (Litex.FunctionSignature.one (M := M) Litex.StandardSetValue.real Litex.StandardSetValue.real (fun (_raw_i3 : M.Value) => True))); (Litex.FunctionSignature.withGuard_domain (Litex.denote (Litex.R (M := M))) (Litex.denote _litex_output) (Litex.isSet (Litex.R (M := M))) (Litex.isSet _litex_output) (fun (_litex_input : M.Value) => (fun (_raw_i2 : M.Value) => True) _litex_input) (Litex.denote (Litex.number (M := M) (1 : ℂ)))).mpr ⟨(Litex.NativeBridge.numberInROfEq (M := M) (1 : ℂ) (1 : ℝ) (by norm_num)), True.intro⟩)
+                              have _returned_input : M.mem (Litex.denote (Litex.number (M := M) (1 : ℂ))) _returned_signature.domain := ((Litex.SetSemantics.sep_members (M := M) (Litex.denote (Litex.R (M := M))) (fun (_litex_input : M.Value) => (fun (_raw_i2 : M.Value) => True) _litex_input) (Litex.denote (Litex.number (M := M) (1 : ℂ)))).mpr ⟨(Litex.NativeBridge.numberInROfEq (M := M) (1 : ℂ) (1 : ℝ) (by norm_num)), True.intro⟩)
                               have _returned_member : Litex.In (let _litex_call_arg_0 := (Litex.number (M := M) (1 : ℂ));
                             Litex.callOnDomain (Litex.R (M := M)) (let _checked_header : ∀ (_raw_i3 : M.Value), M.mem _raw_i3 (M.standard Litex.StandardSetValue.real) → ((fun (_raw_i3 : M.Value) => True) _raw_i3) → True := (by
                                 intro _raw_i3 h_13 _

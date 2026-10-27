@@ -1152,6 +1152,12 @@ impl ProductOfFiniteSetObjWellDefinedProof {
 pub struct ReduceObjWellDefinedProof {
     pub child_obj_well_defined: Vec<Box<ObjWellDefinedProof>>,
     pub requirement_fact_verified: Vec<VerifyFactResult>,
+    pub operation_signature_selection: Option<
+        crate::execute::execute_fact_stmt::function_signature_selection::FunctionSignatureSelection,
+    >,
+    pub iterand_signature_selection: Option<
+        crate::execute::execute_fact_stmt::function_signature_selection::FunctionSignatureSelection,
+    >,
 }
 
 impl ReduceObjWellDefinedProof {
@@ -1161,6 +1167,8 @@ impl ReduceObjWellDefinedProof {
         Self {
             child_obj_well_defined,
             requirement_fact_verified,
+            operation_signature_selection: None,
+            iterand_signature_selection: None,
         }
     }
 }
@@ -1168,6 +1176,12 @@ impl ReduceObjWellDefinedProof {
 pub struct FiniteSetReduceObjWellDefinedProof {
     pub child_obj_well_defined: Vec<Box<ObjWellDefinedProof>>,
     pub requirement_fact_verified: Vec<VerifyFactResult>,
+    pub operation_signature_selection: Option<
+        crate::execute::execute_fact_stmt::function_signature_selection::FunctionSignatureSelection,
+    >,
+    pub iterand_signature_selection: Option<
+        crate::execute::execute_fact_stmt::function_signature_selection::FunctionSignatureSelection,
+    >,
 }
 
 impl FiniteSetReduceObjWellDefinedProof {
@@ -1177,6 +1191,8 @@ impl FiniteSetReduceObjWellDefinedProof {
         Self {
             child_obj_well_defined,
             requirement_fact_verified,
+            operation_signature_selection: None,
+            iterand_signature_selection: None,
         }
     }
 }

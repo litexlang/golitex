@@ -1,0 +1,11 @@
+# A nonempty family may have an empty intersection.
+# Run: target/release/litex -strict -f examples/wd/family_intersection_nonempty.lit
+# Before: let invalid = family_intersect({}) passed WD without nonempty evidence.
+# Empty families are now rejected; {{}} is a nonempty family.
+let empty_member_family = {{}}
+let intersection = family_intersect(empty_member_family)
+$is_set(intersection)
+intersection = intersection
+
+forall F nonempty_set:
+    $is_set(family_intersect(F))

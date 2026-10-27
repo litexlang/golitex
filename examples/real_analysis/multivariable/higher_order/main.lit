@@ -1,0 +1,224 @@
+# Finite ordered partials: one vector input and explicit derivative evidence.
+# k=0 is point evaluation; tuple() and the complete empty function both work.
+
+have fn polynomial(x cart_n(R,2)) R=x(1)^2*x(2)^3
+
+have p cart_n(R,2)=(1,2)
+
+release thm Calc::higher_order::ordered_partial_zero(2,cart_n(R,2),polynomial,p,tuple())
+
+release thm Calc::higher_order::ordered_partial_candidate_exists(2,cart_n(R,2),0,polynomial,p,tuple(),polynomial(p))
+
+release thm Calc::higher_order::ordered_partial_value(2,cart_n(R,2),0,polynomial,p,tuple(),polynomial(p))
+
+\Calc::higher_order::ordered_partial<2,cart_n(R,2),0>(polynomial,p,tuple())=polynomial(p)=8
+
+have fn empty_path(j closed_range(1,0)) closed_range(1,2)=1
+
+empty_path $in finite_seq(closed_range(1,2),0)
+
+release thm Calc::higher_order::ordered_partial_zero(2,cart_n(R,2),polynomial,p,empty_path)
+
+release thm Calc::higher_order::ordered_partial_candidate_exists(2,cart_n(R,2),0,polynomial,p,empty_path,polynomial(p))
+
+release thm Calc::higher_order::ordered_partial_value(2,cart_n(R,2),0,polynomial,p,empty_path,polynomial(p))
+
+\Calc::higher_order::ordered_partial<2,cart_n(R,2),0>(polynomial,p,empty_path)=8
+
+$has_partial_derivative_at(polynomial,p,2,1,16)
+
+have fn first(x cart_n(R,2)) R=2*x(1)*x(2)^3
+
+have fn second(x cart_n(R,2)) R=2*x(2)^3
+
+have fn third(x cart_n(R,2)) R=6*x(2)^2
+
+by for:
+    ? forall j closed_range(0,3):
+        j=0 or j=1 or j=2 or j=3
+    j=0 or j=1 or j=2 or j=3
+
+have fn profiles(j closed_range(0,3)) fn(x cart_n(R,2)) R by cases:
+    case j=0: polynomial
+    case j=1: first
+    case j=2: second
+    case j=3: third
+
+have path finite_seq(closed_range(1,2),3)=(1,1,2)
+
+profiles(0)=polynomial
+
+profiles(1)=first
+
+profiles(2)=second
+
+profiles(3)=third
+
+path(1)=1
+
+path(2)=1
+
+path(3)=2
+
+by for:
+    ? forall j closed_range(1,3):
+        j=1 or j=2 or j=3
+    j=1 or j=2 or j=3
+
+claim:
+    ? forall j closed_range(1,3),x cart_n(R,2):
+        $has_partial_derivative_at(profiles(j-1),x,2,path(j),profiles(j)(x))
+    j=1 or j=2 or j=3
+    by cases:
+        ? $has_partial_derivative_at(profiles(j-1),x,2,path(j),profiles(j)(x))
+        case j=1:
+            j-1=0
+            profiles(j-1)=profiles(0)=polynomial
+            profiles(j)=profiles(1)=first
+            path(j)=path(1)=1
+            profiles(j)(x)=first(x)=2*x(1)*x(2)^3
+            $has_partial_derivative_at(polynomial,x,2,1,2*x(1)*x(2)^3)
+        case j=2:
+            j-1=1
+            profiles(j-1)=profiles(1)=first
+            profiles(j)=profiles(2)=second
+            path(j)=path(2)=1
+            profiles(j)(x)=second(x)=2*x(2)^3
+            $has_partial_derivative_at(first,x,2,1,2*x(2)^3)
+        case j=3:
+            j-1=2
+            profiles(j-1)=profiles(2)=second
+            profiles(j)=profiles(3)=third
+            path(j)=path(3)=2
+            profiles(j)(x)=third(x)=6*x(2)^2
+            $has_partial_derivative_at(second,x,2,2,6*x(2)^2)
+
+release thm Calc::higher_order::ordered_partial_from_global_profiles(2,3,profiles,p,path)
+
+profiles(0)=polynomial
+
+profiles(3)=third
+
+p(1)=1
+
+p(2)=2
+
+profiles(3)(p)=third(p)=24
+
+$Calc::higher_order::has_ordered_partial_at(2,cart_n(R,2),3,polynomial,p,path,24)
+
+release thm Calc::higher_order::ordered_partial_candidate_exists(2,cart_n(R,2),3,polynomial,p,path,24)
+
+release thm Calc::higher_order::ordered_partial_value(2,cart_n(R,2),3,polynomial,p,path,24)
+
+\Calc::higher_order::ordered_partial<2,cart_n(R,2),3>(polynomial,p,path)=24
+
+have fn full_path(j closed_range(1,3)) closed_range(1,2) by cases:
+    case j=1: 1
+    case j=2: 1
+    case j=3: 2
+
+full_path $in finite_seq(closed_range(1,2),3)
+
+claim:
+    ? forall j closed_range(1,3):
+        full_path(j)=path(j)
+    j=1 or j=2 or j=3
+    by cases:
+        ? full_path(j)=path(j)
+        case j=1:
+            full_path(j)=full_path(1)=1=path(1)=path(j)
+        case j=2:
+            full_path(j)=full_path(2)=1=path(2)=path(j)
+        case j=3:
+            full_path(j)=full_path(3)=2=path(3)=path(j)
+
+by fn_extension:
+    ? full_path=path
+    forall j closed_range(1,3):
+        full_path(j)=path(j)
+
+$Calc::higher_order::has_ordered_partial_at(2,cart_n(R,2),3,polynomial,p,full_path,24)
+
+release thm Calc::higher_order::ordered_partial_candidate_exists(2,cart_n(R,2),3,polynomial,p,full_path,24)
+
+release thm Calc::higher_order::ordered_partial_value(2,cart_n(R,2),3,polynomial,p,full_path,24)
+
+\Calc::higher_order::ordered_partial<2,cart_n(R,2),3>(polynomial,p,full_path)=24
+
+# Actual proper domain x(1)>0; full-space extension is not supplied.
+
+let local_domain={u cart_n(R,2):u(1)>0}
+
+local_domain $subset cart_n(R,2)
+
+claim:
+    ? forall x local_domain:
+        x $in cart_n(R,2)
+        x(1)>0
+    x $in {u cart_n(R,2):u(1)>0}
+
+claim:
+    ? forall x cart_n(R,2):
+        x(1)>0
+        =>:
+            x $in local_domain
+    x $in {u cart_n(R,2):u(1)>0}
+
+have fn one_path(j closed_range(1,1)) closed_range(1,2)=1
+
+one_path(1)=1
+
+have fn restricted_bowl(x cart_n(R,2):x(1)>0) R=x(1)^2+x(2)^2
+
+$has_partial_derivative_at(restricted_bowl,p,2,1,2)
+
+$has_partial_derivative_at(restricted_bowl,p,2,one_path(1),2)
+
+release thm Calc::higher_order::ordered_partial_one_from_native(2,local_domain,restricted_bowl,p,one_path,2)
+
+release thm Calc::higher_order::ordered_partial_candidate_exists(2,local_domain,1,restricted_bowl,p,one_path,2)
+
+release thm Calc::higher_order::ordered_partial_value(2,local_domain,1,restricted_bowl,p,one_path,2)
+
+\Calc::higher_order::ordered_partial<2,local_domain,1>(restricted_bowl,p,one_path)=2
+
+# Native second-order candidate, same explicit order.
+
+have second_path finite_seq(closed_range(1,2),2)=(1,1)
+
+$has_second_partial_derivative_at(polynomial,p,2,1,1,16)
+
+second_path(1)=1
+
+second_path(2)=1
+
+$has_second_partial_derivative_at(polynomial,p,2,second_path(1),second_path(2),16)
+
+# Candidate bridges in both directions, followed by proof-consuming selection.
+
+release thm Calc::higher_order::ordered_partial_two_from_native(2,cart_n(R,2),polynomial,p,second_path,16)
+
+release thm Calc::higher_order::ordered_partial_candidate_exists(2,cart_n(R,2),2,polynomial,p,second_path,16)
+
+release thm Calc::higher_order::ordered_partial_value(2,cart_n(R,2),2,polynomial,p,second_path,16)
+
+\Calc::higher_order::ordered_partial<2,cart_n(R,2),2>(polynomial,p,second_path)=16
+
+release thm Calc::higher_order::ordered_partial_two_to_native(2,cart_n(R,2),polynomial,p,second_path,16)
+
+# Explicit lower-order existence, preserving the actual finite certificate.
+
+claim:
+    ? forall j closed_range(1,1):
+        j $in closed_range(1,3)
+        =>:
+            one_path(j)=path(j)
+    j=1
+    one_path(j)=one_path(1)=1=path(1)=path(j)
+
+release thm Calc::higher_order::ordered_partial_prefix_exists(2,cart_n(R,2),3,1,polynomial,p,path,one_path,24)
+
+\Calc::higher_order::ordered_partial<2,cart_n(R,2),1>(polynomial,p,one_path) $in R
+
+release thm Calc::higher_order::ordered_partial_prefix_exists(2,cart_n(R,2),0,0,polynomial,p,tuple(),tuple(),8)

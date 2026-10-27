@@ -1,0 +1,38 @@
+# Equal real sequences and equal limit values preserve Cauchy, convergence and limit facts.
+forall a,b seq(R):
+    a = b
+    $is_seq_cauchy(a)
+    =>:
+        $is_seq_cauchy(b)
+
+forall a,b seq(R):
+    a = b
+    not $is_seq_cauchy(a)
+    =>:
+        not $is_seq_cauchy(b)
+
+forall a,b seq(R):
+    a = b
+    $is_seq_convergent(a)
+    =>:
+        $is_seq_convergent(b)
+
+forall a,b seq(R):
+    a = b
+    not $is_seq_convergent(a)
+    =>:
+        not $is_seq_convergent(b)
+
+forall a,b seq(R), L,K R:
+    a = b
+    L = K
+    $has_seq_limit(a,L)
+    =>:
+        $has_seq_limit(b,K)
+
+forall a,b seq(R), L,K R:
+    a = b
+    L = K
+    not $has_seq_limit(a,L)
+    =>:
+        not $has_seq_limit(b,K)

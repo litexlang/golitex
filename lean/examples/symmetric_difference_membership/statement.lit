@@ -1,0 +1,21 @@
+# Membership in the symmetric difference means belonging to exactly one set.
+forall A, B set, x A:
+    not x $in B
+    =>:
+        x $in set_diff(A,B)
+
+forall A, B set, x B:
+    not x $in A
+    =>:
+        x $in set_diff(A,B)
+
+forall A, B set, x A:
+    x $in B
+    =>:
+        not x $in set_diff(A,B)
+
+forall A, B set, x set:
+    not x $in A
+    not x $in B
+    =>:
+        not x $in set_diff(A,B)

@@ -1,0 +1,4 @@
+# Every integer interval is finite, including empty intervals with reversed endpoints.
+forall a,b Z:
+    $is_finite_set(closed_range(a,b))
+    $is_finite_set(range(a,b))

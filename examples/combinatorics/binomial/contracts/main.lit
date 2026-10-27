@@ -1,0 +1,74 @@
+release obj def comb::main::binomial_coefficient
+
+forall n,k N:
+    comb::main::binomial_coefficient(n,k) $in N
+
+forall n N:
+    comb::main::binomial_coefficient(n,0) = 1
+
+claim:
+    ? forall k N+:
+        comb::main::binomial_coefficient(0,k) = 0
+    k >= 1
+
+claim:
+    ? forall n N, k N+:
+        comb::main::binomial_coefficient(n+1,k) = comb::main::binomial_coefficient(n,k-1) + comb::main::binomial_coefficient(n,k)
+    n+1 >= 1
+    (n+1)-1 = n
+    k >= 1
+    comb::main::binomial_coefficient(n+1,k) = comb::main::binomial_coefficient(n,k-1) + comb::main::binomial_coefficient(n,k)
+
+thm consume_binomial_beyond_row_zero:
+    ? forall n, k N:
+        k > n
+        =>:
+            comb::main::binomial_coefficient(n,k) = 0
+    release thm comb::main::binomial_beyond_row_zero(n,k)
+
+thm consume_binomial_diagonal:
+    ? forall n N:
+        comb::main::binomial_coefficient(n,n) = 1
+    release thm comb::main::binomial_diagonal(n)
+
+thm consume_binomial_choose_one:
+    ? forall n N:
+        comb::main::binomial_coefficient(n,1) = n
+    release thm comb::main::binomial_choose_one(n)
+
+thm consume_binomial_choose_two:
+    ? forall n N:
+        comb::main::binomial_coefficient(n,2) = n*(n-1)/2
+    release thm comb::main::binomial_choose_two(n)
+
+thm consume_binomial_symmetry:
+    ? forall n, k N:
+        k <= n
+        =>:
+            comb::main::binomial_coefficient(n,k) = comb::main::binomial_coefficient(n,n-k)
+    release thm comb::main::binomial_symmetry(n,k)
+
+thm consume_binomial_penultimate:
+    ? forall n N+:
+        comb::main::binomial_coefficient(n,n-1) = n
+    release thm comb::main::binomial_penultimate(n)
+
+thm consume_binomial_positive:
+    ? forall n, k N:
+        k <= n
+        =>:
+            comb::main::binomial_coefficient(n,k) > 0
+    release thm comb::main::binomial_positive(n,k)
+
+thm consume_binomial_row_monotone:
+    ? forall n, k N:
+        comb::main::binomial_coefficient(n,k) <= comb::main::binomial_coefficient(n+1,k)
+    release thm comb::main::binomial_row_monotone(n,k)
+
+thm consume_binomial_row_strict:
+    ? forall n, k N:
+        k > 0
+        k <= n+1
+        =>:
+            comb::main::binomial_coefficient(n,k) < comb::main::binomial_coefficient(n+1,k)
+    release thm comb::main::binomial_row_strict(n,k)

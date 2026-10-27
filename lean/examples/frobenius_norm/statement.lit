@@ -1,0 +1,6 @@
+# A finite complex matrix has a real Frobenius norm.
+forall m,n N, A matrix(C,m,n):
+    frobenius_norm(A,m,n) $in R
+
+forall n N, A matrix(C,0,n):
+    frobenius_norm(A,0,n) $in R

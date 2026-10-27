@@ -1,0 +1,6 @@
+# Real matrix products and matrix-vector applications return real coordinates.
+forall m,k,n N, A matrix(R,m,k), B matrix(R,k,n), row closed_range(1,m), col closed_range(1,n):
+    matrix_mul(A,B,m,k,n)(row,col) $in R
+
+forall m,n N, A matrix(R,m,n), v cart_n(R,n), row closed_range(1,m):
+    matrix_apply(A,v,m,n)(row) $in R

@@ -1,6 +1,6 @@
 # Negative equality: family_intersect({}) = {} must NOT succeed.
 # Absolute empty ∩ is the universe class (vacuous membership), not {}.
-# Indexed operators now require a nonempty index; no empty-index replacement is allowed.
+# The family_intersect constructor now rejects the empty family during WD.
 # Run: litex -f examples/equal_negative/family_intersect_empty_equals_empty.lit
 # expect exit != 0
 

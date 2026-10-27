@@ -1,0 +1,8 @@
+# Membership in every fiber, inside the ambient set, gives indexed-intersection membership.
+thm phase3_intersection:
+    ? forall I nonempty_set, X set, A fn(k I) power_set(X), x X:
+        forall j I:
+            x $in A(j)
+        =>:
+            x $in index_intersect(I,X,A)
+    release thm index_intersect_member(x,index_intersect(I,X,A))

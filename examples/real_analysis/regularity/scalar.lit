@@ -1,0 +1,208 @@
+# One vector input: x1*x2 is C^2, with tested reversed ordered paths.
+
+have fn regularity_product(x cart_n(R,2)) R=x(1)*x(2)
+
+have fn regularity_first_coordinate(x cart_n(R,2)) R=x(1)
+
+have fn regularity_second_coordinate(x cart_n(R,2)) R=x(2)
+
+have fn regularity_vector_zero(x cart_n(R,2)) R=0
+
+have fn regularity_vector_one(x cart_n(R,2)) R=1
+
+claim:
+    ? forall p cart_n(R,2):
+        $has_partial_derivative_at(regularity_product,p,2,1,p(2))
+        $has_partial_derivative_at(regularity_product,p,2,2,p(1))
+        $is_multi_continuous_at(regularity_product,p,2)
+        $is_multi_continuous_at(regularity_first_coordinate,p,2)
+        $is_multi_continuous_at(regularity_second_coordinate,p,2)
+        $is_multi_continuous_at(regularity_vector_zero,p,2)
+        $is_multi_continuous_at(regularity_vector_one,p,2)
+    $has_partial_derivative_at(regularity_product,p,2,1,p(2))
+    $has_partial_derivative_at(regularity_product,p,2,2,p(1))
+    $is_multi_continuous_at(regularity_product,p,2)
+    $is_multi_continuous_at(regularity_first_coordinate,p,2)
+    $is_multi_continuous_at(regularity_second_coordinate,p,2)
+    $is_multi_continuous_at(regularity_vector_zero,p,2)
+    $is_multi_continuous_at(regularity_vector_one,p,2)
+
+by for:
+    ? forall axis closed_range(1,2):
+        axis=1 or axis=2
+    axis=1 or axis=2
+
+claim:
+    ? forall p cart_n(R,2):
+        p $in cart_n(R,2)
+        =>:
+            $Calc::main::is_real_euclidean_interior(2,cart_n(R,2),p)
+    release thm Calc::main::real_euclidean_full_space_interior(2,p)
+
+
+claim:
+    ? forall m closed_range(1,2),indices finite_seq(closed_range(1,2),m):
+        exist g fn(x cart_n(R,2)) R st {$Reg::main::is_continuous_ordered_partial_on(2,cart_n(R,2),m,regularity_product,indices,g)}
+    m=1 or m=2
+    by cases:
+        ? exist g fn(x cart_n(R,2)) R st {$Reg::main::is_continuous_ordered_partial_on(2,cart_n(R,2),m,regularity_product,indices,g)}
+        case m=1:
+            finite_seq(closed_range(1,2),m)=finite_seq(closed_range(1,2),1)
+            indices $in finite_seq(closed_range(1,2),1)
+            indices(1)=1 or indices(1)=2
+            by cases:
+                ? exist g fn(x cart_n(R,2)) R st {$Reg::main::is_continuous_ordered_partial_on(2,cart_n(R,2),m,regularity_product,indices,g)}
+                case indices(1)=1:
+                    claim:
+                        ? forall p cart_n(R,2):
+                            $Calc::higher_order::has_ordered_partial_at(2,cart_n(R,2),m,regularity_product,p,indices,regularity_second_coordinate(p))
+                        regularity_second_coordinate(p)=p(2)
+                        $has_partial_derivative_at(regularity_product,p,2,1,p(2))
+                        release thm Calc::higher_order::ordered_partial_one_from_native(2,cart_n(R,2),regularity_product,p,indices,p(2))
+                    claim:
+                        ? forall p cart_n(R,2):
+                            p $in cart_n(R,2)
+                            =>:
+                                $is_multi_continuous_at(regularity_second_coordinate,p,2)
+                        $is_multi_continuous_at(regularity_second_coordinate,p,2)
+                    by def $Reg::main::is_continuous_ordered_partial_on(2,cart_n(R,2),m,regularity_product,indices,regularity_second_coordinate)
+                    witness exist g fn(x cart_n(R,2)) R st {$Reg::main::is_continuous_ordered_partial_on(2,cart_n(R,2),m,regularity_product,indices,g)} from regularity_second_coordinate
+                case indices(1)=2:
+                    claim:
+                        ? forall p cart_n(R,2):
+                            $Calc::higher_order::has_ordered_partial_at(2,cart_n(R,2),m,regularity_product,p,indices,regularity_first_coordinate(p))
+                        regularity_first_coordinate(p)=p(1)
+                        $has_partial_derivative_at(regularity_product,p,2,2,p(1))
+                        release thm Calc::higher_order::ordered_partial_one_from_native(2,cart_n(R,2),regularity_product,p,indices,p(1))
+                    claim:
+                        ? forall p cart_n(R,2):
+                            p $in cart_n(R,2)
+                            =>:
+                                $is_multi_continuous_at(regularity_first_coordinate,p,2)
+                        $is_multi_continuous_at(regularity_first_coordinate,p,2)
+                    by def $Reg::main::is_continuous_ordered_partial_on(2,cart_n(R,2),m,regularity_product,indices,regularity_first_coordinate)
+                    witness exist g fn(x cart_n(R,2)) R st {$Reg::main::is_continuous_ordered_partial_on(2,cart_n(R,2),m,regularity_product,indices,g)} from regularity_first_coordinate
+        case m=2:
+            finite_seq(closed_range(1,2),m)=finite_seq(closed_range(1,2),2)
+            indices $in finite_seq(closed_range(1,2),2)
+            indices(1)=1 or indices(1)=2
+            indices(2)=1 or indices(2)=2
+            by cases:
+                ? exist g fn(x cart_n(R,2)) R st {$Reg::main::is_continuous_ordered_partial_on(2,cart_n(R,2),m,regularity_product,indices,g)}
+                case indices(1)=1:
+                    by cases:
+                        ? exist g fn(x cart_n(R,2)) R st {$Reg::main::is_continuous_ordered_partial_on(2,cart_n(R,2),m,regularity_product,indices,g)}
+                        case indices(2)=1:
+                            claim:
+                                ? forall p cart_n(R,2):
+                                    $Calc::higher_order::has_ordered_partial_at(2,cart_n(R,2),m,regularity_product,p,indices,regularity_vector_zero(p))
+                                regularity_vector_zero(p)=0
+                                $has_second_partial_derivative_at(regularity_product,p,2,1,1,0)
+                                release thm Calc::higher_order::ordered_partial_two_from_native(2,cart_n(R,2),regularity_product,p,indices,0)
+                            claim:
+                                ? forall p cart_n(R,2):
+                                    p $in cart_n(R,2)
+                                    =>:
+                                        $is_multi_continuous_at(regularity_vector_zero,p,2)
+                                $is_multi_continuous_at(regularity_vector_zero,p,2)
+                            by def $Reg::main::is_continuous_ordered_partial_on(2,cart_n(R,2),m,regularity_product,indices,regularity_vector_zero)
+                            witness exist g fn(x cart_n(R,2)) R st {$Reg::main::is_continuous_ordered_partial_on(2,cart_n(R,2),m,regularity_product,indices,g)} from regularity_vector_zero
+                        case indices(2)=2:
+                            claim:
+                                ? forall p cart_n(R,2):
+                                    $Calc::higher_order::has_ordered_partial_at(2,cart_n(R,2),m,regularity_product,p,indices,regularity_vector_one(p))
+                                regularity_vector_one(p)=1
+                                $has_second_partial_derivative_at(regularity_product,p,2,1,2,1)
+                                release thm Calc::higher_order::ordered_partial_two_from_native(2,cart_n(R,2),regularity_product,p,indices,1)
+                            claim:
+                                ? forall p cart_n(R,2):
+                                    p $in cart_n(R,2)
+                                    =>:
+                                        $is_multi_continuous_at(regularity_vector_one,p,2)
+                                $is_multi_continuous_at(regularity_vector_one,p,2)
+                            by def $Reg::main::is_continuous_ordered_partial_on(2,cart_n(R,2),m,regularity_product,indices,regularity_vector_one)
+                            witness exist g fn(x cart_n(R,2)) R st {$Reg::main::is_continuous_ordered_partial_on(2,cart_n(R,2),m,regularity_product,indices,g)} from regularity_vector_one
+                case indices(1)=2:
+                    by cases:
+                        ? exist g fn(x cart_n(R,2)) R st {$Reg::main::is_continuous_ordered_partial_on(2,cart_n(R,2),m,regularity_product,indices,g)}
+                        case indices(2)=1:
+                            claim:
+                                ? forall p cart_n(R,2):
+                                    $Calc::higher_order::has_ordered_partial_at(2,cart_n(R,2),m,regularity_product,p,indices,regularity_vector_one(p))
+                                regularity_vector_one(p)=1
+                                $has_second_partial_derivative_at(regularity_product,p,2,2,1,1)
+                                release thm Calc::higher_order::ordered_partial_two_from_native(2,cart_n(R,2),regularity_product,p,indices,1)
+                            claim:
+                                ? forall p cart_n(R,2):
+                                    p $in cart_n(R,2)
+                                    =>:
+                                        $is_multi_continuous_at(regularity_vector_one,p,2)
+                                $is_multi_continuous_at(regularity_vector_one,p,2)
+                            by def $Reg::main::is_continuous_ordered_partial_on(2,cart_n(R,2),m,regularity_product,indices,regularity_vector_one)
+                            witness exist g fn(x cart_n(R,2)) R st {$Reg::main::is_continuous_ordered_partial_on(2,cart_n(R,2),m,regularity_product,indices,g)} from regularity_vector_one
+                        case indices(2)=2:
+                            claim:
+                                ? forall p cart_n(R,2):
+                                    $Calc::higher_order::has_ordered_partial_at(2,cart_n(R,2),m,regularity_product,p,indices,regularity_vector_zero(p))
+                                regularity_vector_zero(p)=0
+                                $has_second_partial_derivative_at(regularity_product,p,2,2,2,0)
+                                release thm Calc::higher_order::ordered_partial_two_from_native(2,cart_n(R,2),regularity_product,p,indices,0)
+                            claim:
+                                ? forall p cart_n(R,2):
+                                    p $in cart_n(R,2)
+                                    =>:
+                                        $is_multi_continuous_at(regularity_vector_zero,p,2)
+                                $is_multi_continuous_at(regularity_vector_zero,p,2)
+                            by def $Reg::main::is_continuous_ordered_partial_on(2,cart_n(R,2),m,regularity_product,indices,regularity_vector_zero)
+                            witness exist g fn(x cart_n(R,2)) R st {$Reg::main::is_continuous_ordered_partial_on(2,cart_n(R,2),m,regularity_product,indices,g)} from regularity_vector_zero
+
+claim:
+    ? forall p cart_n(R,2):
+        p $in cart_n(R,2)
+        =>:
+            $is_multi_continuous_at(regularity_product,p,2)
+    $is_multi_continuous_at(regularity_product,p,2)
+
+release thm Reg::main::scalar_c_k_from_continuous_candidates(2,cart_n(R,2),2,regularity_product)
+
+$Reg::main::is_scalar_c_k_on_open(2,cart_n(R,2),2,regularity_product)
+
+have regularity_forward finite_seq(closed_range(1,2),2)=(1,2)
+
+have regularity_reverse finite_seq(closed_range(1,2),2)=(2,1)
+
+have regularity_point cart_n(R,2)=(3,4)
+
+regularity_forward(1)=1
+
+regularity_forward(2)=2
+
+regularity_reverse(1)=2
+
+regularity_reverse(2)=1
+
+$has_second_partial_derivative_at(regularity_product,regularity_point,2,1,2,1)
+
+$has_second_partial_derivative_at(regularity_product,regularity_point,2,2,1,1)
+
+release thm Calc::higher_order::ordered_partial_two_from_native(2,cart_n(R,2),regularity_product,regularity_point,regularity_forward,1)
+
+release thm Calc::higher_order::ordered_partial_two_from_native(2,cart_n(R,2),regularity_product,regularity_point,regularity_reverse,1)
+
+release thm Reg::main::ordered_second_partials_swap_c_two(2,cart_n(R,2),regularity_product,regularity_point,regularity_forward,regularity_reverse,1,1)
+
+release thm Calc::higher_order::ordered_partial_candidate_exists(2,cart_n(R,2),2,regularity_product,regularity_point,regularity_forward,1)
+
+release thm Calc::higher_order::ordered_partial_value(2,cart_n(R,2),2,regularity_product,regularity_point,regularity_forward,1)
+
+\Calc::higher_order::ordered_partial<2,cart_n(R,2),2>(regularity_product,regularity_point,regularity_forward)=1
+
+release thm Calc::higher_order::ordered_partial_candidate_exists(2,cart_n(R,2),2,regularity_product,regularity_point,regularity_reverse,1)
+
+release thm Calc::higher_order::ordered_partial_value(2,cart_n(R,2),2,regularity_product,regularity_point,regularity_reverse,1)
+
+\Calc::higher_order::ordered_partial<2,cart_n(R,2),2>(regularity_product,regularity_point,regularity_reverse)=1
+
+thm regularity_product_c_two:
+    ? $Reg::main::is_scalar_c_k_on_open(2,cart_n(R,2),2,regularity_product)
+    $Reg::main::is_scalar_c_k_on_open(2,cart_n(R,2),2,regularity_product)

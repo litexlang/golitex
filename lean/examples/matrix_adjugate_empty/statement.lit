@@ -1,0 +1,2 @@
+# The adjugate of a zero-order matrix remains a zero-order matrix.
+matrix_adjugate(zero_matrix(0,0),0) $in matrix(C,0,0)

@@ -8,6 +8,63 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_
 use crate::prelude::*;
 
 impl LitexToLeanCompiler {
+    pub(in crate::compile_to_lean) fn compile_sym_diff_membership(
+        &self,
+        goal: &AtomicFact,
+        requirements: &[Fact],
+        proofs: &[VerifyFactResult],
+        expected: [bool; 2],
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        let (element, set, positive) = match goal {
+            AtomicFact::InFact(p) => (&p.element, &p.set, true),
+            AtomicFact::NotInFact(p) => (&p.element, &p.set, false),
+            _ => return Err(LeanCompileError::unsupported("SymDiff/MemberFamily")),
+        };
+        let Obj::SetOperator(SetOperator::SymmetricDifference(pair)) = set else {
+            return Err(LeanCompileError::unsupported("SymDiff/MemberObject"));
+        };
+        if positive != (expected[0] != expected[1]) || requirements.len() != 2 || proofs.len() != 2
+        {
+            return Err(LeanCompileError::unsupported("SymDiff/MemberStages"));
+        }
+        let mut compiled = Vec::new();
+        for (i, (child, want)) in [pair.left.as_ref(), pair.right.as_ref()]
+            .into_iter()
+            .zip(expected)
+            .enumerate()
+        {
+            let subject = match &requirements[i] {
+                Fact::AtomicFact(AtomicFact::InFact(p)) if want => Some((&p.element, &p.set)),
+                Fact::AtomicFact(AtomicFact::NotInFact(p)) if !want => Some((&p.element, &p.set)),
+                _ => None,
+            };
+            if !subject.is_some_and(|(x, a)| x.ir() == element.ir() && a.ir() == child.ir())
+                || source_subject(&proofs[i])? != requirements[i]
+            {
+                return Err(LeanCompileError::unsupported("SymDiff/MemberPremise"));
+            }
+            compiled.push(
+                self.compile_verify(&proofs[i], &position.atomic_search_prior(i)?)?
+                    .1,
+            );
+        }
+        let law = match expected {
+            [true, false] => "inSymmetricDifferenceLeft",
+            [false, true] => "inSymmetricDifferenceRight",
+            [true, true] => "notInSymmetricDifferenceBoth",
+            [false, false] => "notInSymmetricDifferenceNeither",
+        };
+        let complete = position.atomic_search_prior(2)?;
+        Ok(format!(
+            "(Litex.{law} {} {} {} {})",
+            self.compile_object_reference(element, &complete)?,
+            self.compile_object_reference(set, &complete)?,
+            compiled[0],
+            compiled[1]
+        ))
+    }
+
     pub(in crate::compile_to_lean) fn compile_power_set_membership_strategy(
         &self,
         fact: &InFact,

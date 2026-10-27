@@ -1,0 +1,9 @@
+# Finite enumerations supply each guard; an empty fold makes no calls.
+forall f fn(k Z: k != 0) Z, op fn(a,b Z) Z, s Z:
+    forall a,b Z:
+        op(a,b) = op(b,a)
+    forall a,b,c Z:
+        op(op(a,b),c) = op(a,op(b,c))
+    =>:
+        finite_set_reduce({1,2},f,op,s) $in Z
+        finite_set_reduce({},f,op,s) = s

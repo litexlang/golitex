@@ -1,0 +1,3 @@
+# A real sequence's range lies in its declared real codomain.
+forall sequence_range_probe seq(R):
+    fn_range(sequence_range_probe) $subset R

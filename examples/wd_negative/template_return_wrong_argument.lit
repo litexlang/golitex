@@ -1,0 +1,4 @@
+template<S set>:
+    have fn real_identity(x R) R = x
+
+\real_identity<R>(i) $in C

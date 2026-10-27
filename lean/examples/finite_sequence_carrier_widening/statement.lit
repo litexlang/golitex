@@ -1,0 +1,3 @@
+# A real finite sequence is also a complex sequence with exactly the same domain.
+forall n N, a cart_n(R,n):
+    a $in cart_n(C,n)

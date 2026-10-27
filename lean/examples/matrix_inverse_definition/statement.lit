@@ -1,0 +1,5 @@
+# The inverse is the cofactor quotient function with its determinant guard.
+forall n N+, A matrix(C,n,n):
+    det(A,n) != 0
+    =>:
+        matrix_inverse(A,n) = fn(r closed_range(1,n), c closed_range(1,n)) C {matrix_cofactor(A,n,c,r) / det(A,n)}

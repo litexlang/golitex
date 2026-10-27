@@ -1,22 +1,18 @@
 # AST: Obj::TrigOperator::Cot
 # Run: target/release/litex -f examples/test_objs/cot.lit
-# Cases use discarded sketch scopes; no cross-case facts.
+# Direct cases share file context; sketches isolate local declarations.
 
 # P01: cot(pi / 2) = 0
-sketch:
-    cot(pi / 2) = 0
+cot(pi / 2) = 0
 
 # P04: cot(arccot(2)) = 2
-sketch:
-    cot(arccot(2)) = 2
+cot(arccot(2)) = 2
 
 # P02: exact numeric/periodic/modulus repair; original source retained in the dated journal
-sketch:
-    cot(pi / 4) = 1
+cot(pi / 4) = 1
 
 # P03: exact numeric/periodic/modulus repair; original source retained in the dated journal
-sketch:
-    cot(-pi / 4) = -1
+cot(-pi / 4) = -1
 
 # P91: exact numeric/periodic/modulus boundary
 sketch:
@@ -29,8 +25,7 @@ sketch:
     cot(pi / 6 - k * pi)=sqrt(3)
 
 # P200: Quotient definition with its nonzero denominator
-sketch:
-    forall x R:
-        sin(x)!=0
-        =>:
-            cot(x)=cos(x)/sin(x)
+forall x R:
+    sin(x)!=0
+    =>:
+        cot(x)=cos(x)/sin(x)

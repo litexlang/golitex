@@ -1,0 +1,14 @@
+# Relative complements are subsets of their left carriers, including in function domains.
+
+forall X set,p fn(E power_set(X)) R,B set:
+    p(set_minus(X,B)) > 0
+    =>:
+        p(set_minus(X,B)) > 0
+
+forall X set,B set:
+    set_minus(X,B) $in power_set(X)
+
+forall X,Y set,B set:
+    X = Y
+    =>:
+        set_minus(X,B) $in power_set(Y)

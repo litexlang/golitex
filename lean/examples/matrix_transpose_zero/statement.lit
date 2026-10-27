@@ -1,0 +1,3 @@
+# Transposition preserves zero entries on the swapped domain.
+forall m, n N, row closed_range(1,n), col closed_range(1,m):
+    transpose(zero_matrix(m,n),m,n)(row,col) = 0

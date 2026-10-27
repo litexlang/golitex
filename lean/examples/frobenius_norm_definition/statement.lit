@@ -1,0 +1,5 @@
+# Unfold the matrix norm with the original square-root WD premise.
+forall m,n N, A matrix(C,m,n):
+    0 <= finite_set_sum(closed_range(1,m),fn(r closed_range(1,m)) R {finite_set_sum(closed_range(1,n),fn(c closed_range(1,n)) R {C_abs(A(r,c))^2})})
+    =>:
+        frobenius_norm(A,m,n) = sqrt(finite_set_sum(closed_range(1,m),fn(r closed_range(1,m)) R {finite_set_sum(closed_range(1,n),fn(c closed_range(1,n)) R {C_abs(A(r,c))^2})}))

@@ -1,0 +1,4 @@
+# Zero and positive literal powers have the original square matrix domain.
+forall A matrix(C,2,2):
+    matrix_power(A,2,0) $in matrix(C,2,2)
+    matrix_power(A,2,2) $in matrix(C,2,2)

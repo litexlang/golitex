@@ -1,0 +1,3 @@
+# The adjugate is the formula function of transposed cofactors.
+forall n N+, A matrix(C,n,n):
+    matrix_adjugate(A,n) = fn(r closed_range(1,n), c closed_range(1,n)) C {matrix_cofactor(A,n,c,r)}

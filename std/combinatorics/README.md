@@ -2,8 +2,9 @@
 
 This strict source library derives finite-map counting, the pigeonhole
 principle, omitted values, equal-cardinality bijection criteria and finite-set
-inclusion-exclusion. It contains 22 named source theorems and two internal
-quantified closure facts, with no new values, predicates or counting operations.
+inclusion-exclusion, together with natural-valued binomial coefficients.
+It contains 31 named source theorems, one recursive function and two internal
+quantified closure facts, with no new predicates or native operations.
 Native finite_set_size and injective/surjective/bijective keep their contracts.
 There are no user axioms, trust blocks or new native rules.
 
@@ -99,10 +100,58 @@ alone does not make an arbitrary map bijective.
 
 The source reuses native image cardinality, inclusion bounds, strict-subset
 cardinality and finite difference/union rules. surjection_size_ge already
-closes by its native rule; these are named source results, not ten new kernel
-mechanisms. Binomial/Pascal constructions, general fiber sums, graphs,
+closes by its native rule. General fiber sums, graphs,
 recurrence solving and generating functions remain future work. The original
 discrete showcase is unchanged. No full course coverage is claimed.
+
+## Natural binomial coefficients
+
+`binomial_coefficient(n,k)` takes exactly two natural indices and returns a
+natural number. Natural indices include zero. The zero column is1; the zero
+row is0 at positive columns. Positive rows and columns follow the Pascal
+recursion, decreasing the row index. Entries with k>n are proved to be0.
+Negative or fractional indices are outside the function's domain.
+
+Release the imported definition before applying it or consuming the source
+theorems below. This is the existing explicit object-definition contract:
+
+```litex
+release obj def comb::main::binomial_coefficient
+release thm comb::main::binomial_choose_two(5)
+comb::main::binomial_coefficient(5,2) = 5*(5-1)/2 = 10
+release thm comb::main::binomial_symmetry(5,3)
+comb::main::binomial_coefficient(5,3) = comb::main::binomial_coefficient(5,5-3) = comb::main::binomial_coefficient(5,2) = 10
+comb::main::binomial_coefficient(0,0) = 1
+```
+
+Below, B abbreviates the function only in mathematical prose. The actual
+public name is binomial_coefficient.
+
+| Theorem | Natural-domain contract |
+| --- | --- |
+| `binomial_beyond_row_zero(n,k)` | k>n implies B(n,k)=0 |
+| `binomial_diagonal(n)` | B(n,n)=1 |
+| `binomial_choose_one(n)` | B(n,1)=n, including n=0 |
+| `binomial_choose_two(n)` | B(n,2)=n*(n-1)/2, including n=0 and1 |
+| `binomial_symmetry(n,k)` | k<=n implies B(n,k)=B(n,n-k) |
+| `binomial_penultimate(n)` | Positive natural n implies B(n,n-1)=n |
+| `binomial_positive(n,k)` | k<=n implies B(n,k)>0 |
+| `binomial_row_monotone(n,k)` | B(n,k)<=B(n+1,k) for all natural n,k |
+| `binomial_row_strict(n,k)` | k>0 and k<=n+1 imply B(n,k)<B(n+1,k) |
+
+The full Pascal relation B(n+1,k)=B(n,k-1)+B(n,k) is checked for every
+natural n and positive natural k in an independent imported consumer.
+It includes n=0, k=1 and columns above the row. Defining equations are used
+directly; no public evaluation or recurrence wrapper theorem is needed.
+The [actual caller](../../examples/combinatorics/binomial/main.lit) also checks
+the new diagonal's strict growth and equality of zero entries above the row.
+The [generic contracts](../../examples/combinatorics/binomial/contracts/main.lit)
+preserve every theorem's full domain and required hypotheses.
+
+The recursive natural construction establishes its stated numeric laws.
+The factorial formula, row sums, binomial theorem and interpretation as the
+cardinality of k-element subsets require separate proofs and remain outside
+this delivery.
 
 ## Verification
 
@@ -110,6 +159,7 @@ discrete showcase is unchanged. No full course coverage is claimed.
 target/release/litex -strict -lang en -f std/combinatorics/main.lit
 python3 examples/combinatorics/finite_maps/check.py
 python3 examples/combinatorics/finite_sets/check.py
+python3 examples/combinatorics/binomial/check.py
 ```
 
 The checker covers the strict source, 50 concrete statements, ten isolated
@@ -121,6 +171,12 @@ records the dependency spine and remaining scope.
 The finite-set checker adds 62 concrete statements, 12 generic contract/closure
 claims, a four-statement README excerpt and 16 final-only semantic controls.
 It also checks both installed layouts and the full std/WiX payload. The source
-has 24 statements: 22 named theorems and two internal closure facts. No general
-indexed inclusion-exclusion, binomial coefficient or probability library is
-claimed.
+now has 34 statements: 31 named theorems, one natural-valued function and two
+internal closure facts. General indexed inclusion-exclusion and the finite
+probability library remain unfinished.
+
+The binomial checker covers 39 concrete statements,14 independent generic
+statements, the six-statement README excerpt,21 final-only controls, both
+installed layouts and the same complete std/WiX payload. Its controls include
+omitting definition release separately from false mathematical claims and
+invalid indices. All source and callers pass strict verification.

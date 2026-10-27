@@ -1,0 +1,8 @@
+# The squared-norm theorem proves that a complex vector norm is nonnegative.
+thm checked_euclidean_norm_nonnegative:
+    ? forall n N, v cart_n(C,n):
+        0 <= euclidean_norm(v,n)
+    release thm euclidean_norm_square(v,n)
+    0 <= euclidean_norm(v,n)
+
+by thm checked_euclidean_norm_nonnegative(2,(1,i)) => 0 <= euclidean_norm((1,i),2)

@@ -1,0 +1,6 @@
+# Matrix and rank aliases retain their natural membership and cited identity value.
+let rank_named_matrix = identity_matrix(2)
+let named_matrix_rank = matrix_rank(rank_named_matrix,2,2)
+named_matrix_rank $in N
+release thm matrix_rank_identity(2)
+named_matrix_rank = 2

@@ -1,0 +1,17 @@
+# Two-sided boundedness supplies each one-sided bound and its witness.
+forall A set:
+    A $subset R
+    $is_real_bounded(A)
+    =>:
+        $is_real_bounded_above(A)
+        $is_real_bounded_below(A)
+forall A set:
+    A $subset R
+    $is_real_bounded_above(A)
+    =>:
+        exist upper R st {$is_real_upper_bound(A,upper)}
+forall A set:
+    A $subset R
+    $is_real_bounded_below(A)
+    =>:
+        exist lower R st {$is_real_lower_bound(A,lower)}

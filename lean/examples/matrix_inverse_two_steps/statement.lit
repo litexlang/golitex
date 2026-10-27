@@ -1,0 +1,7 @@
+# Compute a two-by-two inverse entry using its cofactor and the original determinant guard.
+forall A matrix(C,2,2):
+    det(A,2) != 0
+    =>:
+        matrix_inverse(A,2)(1,2) = matrix_cofactor(A,2,2,1) / det(A,2)
+        matrix_cofactor(A,2,2,1) = -A(1,2)
+        matrix_inverse(A,2)(1,2) = -A(1,2) / det(A,2)

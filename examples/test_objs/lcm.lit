@@ -1,32 +1,25 @@
 # AST: Obj::IntegerOperator::Lcm
 # Run: target/release/litex -f examples/test_objs/lcm.lit
-# Cases use discarded sketch scopes; no cross-case facts.
+# Cases are checked directly in file context.
 
 # P01: lcm(12, 18) = 36
-sketch:
-    lcm(12, 18) = 36
+lcm(12, 18) = 36
 
 # P02: lcm(12, -18) = 36
-sketch:
-    lcm(12, -18) = 36
+lcm(12, -18) = 36
 
 # P03: lcm(0, 0) = 0
-sketch:
-    lcm(0, 0) = 0
+lcm(0, 0) = 0
 
 # P04: lcm(0, -7) = 0
-sketch:
-    lcm(0, -7) = 0
+lcm(0, -7) = 0
 
 # P05: lcm(7, 13) = 91
-sketch:
-    lcm(7, 13) = 91
+lcm(7, 13) = 91
 
 # P06: lcm(a, b) = lcm(b, a)
-sketch:
-    forall a, b Z:
-        lcm(a, b) = lcm(b, a)
+forall a, b Z:
+    lcm(a, b) = lcm(b, a)
 
 # P121: closed exact elementary calculation
-sketch:
-    lcm((1/3)*6,8)=8
+lcm((1/3)*6,8)=8

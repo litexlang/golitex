@@ -1,0 +1,11 @@
+# Every member of the finite set satisfies the iterand's nonzero condition.
+forall S finite_set, f fn(k Z: k != 0) Z, op fn(a,b Z) Z, s Z:
+    S $subset Z
+    forall k S:
+        k != 0
+    forall a,b Z:
+        op(a,b) = op(b,a)
+    forall a,b,c Z:
+        op(op(a,b),c) = op(a,op(b,c))
+    =>:
+        finite_set_reduce(S,f,op,s) $in Z

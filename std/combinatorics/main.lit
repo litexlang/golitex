@@ -314,3 +314,229 @@ thm three_set_union_intersection_are_finite:
         $is_finite_set(intersect(intersect(X,Y),Zeta))
     $is_finite_set(union(X,Y))
     $is_finite_set(intersect(X,Y))
+
+
+have fn binomial_coefficient(n,k N) N by induc n from 0:
+    case k = 0: 1
+    case k >= 1:
+        case n = 0: 0
+        case n >= 1: binomial_coefficient(n-1,k-1) + binomial_coefficient(n-1,k)
+
+thm binomial_beyond_row_zero:
+    ? forall n, k N:
+        k > n
+        =>:
+            binomial_coefficient(n,k) = 0
+    prop row_zero(row N):
+        forall col N:
+            col > row
+            =>:
+                binomial_coefficient(row,col) = 0
+    by induc row from 0:
+        ? $row_zero(row)
+        ? from row = 0:
+            claim:
+                ? forall col N:
+                    col > 0
+                    =>:
+                        binomial_coefficient(0,col) = 0
+                col >= 1
+            by def $row_zero(0)
+        ? induc:
+            row $in N
+            row+1 >= 1
+            claim:
+                ? forall col N:
+                    col > row+1
+                    =>:
+                        binomial_coefficient(row+1,col) = 0
+                col >= 1
+                col-1 > (row+1)-1 = row
+                col-1 $in N
+                binomial_coefficient(row,col-1) = 0
+                col > row+1 > row
+                binomial_coefficient(row,col) = 0
+                binomial_coefficient(row+1,col) = binomial_coefficient(row,col-1) + binomial_coefficient(row,col) = 0+0 = 0
+            by def $row_zero(row+1)
+    $row_zero(n)
+
+thm binomial_diagonal:
+    ? forall n N:
+        binomial_coefficient(n,n) = 1
+    by induc n from 0:
+        ? binomial_coefficient(n,n) = 1
+        ? from n = 0:
+            binomial_coefficient(0,0) = 1
+        ? induc:
+            n $in N
+            n+1 >= 1
+            (n+1)-1 = n
+            release thm binomial_beyond_row_zero(n,n+1)
+            binomial_coefficient(n+1,n+1) = binomial_coefficient(n,n) + binomial_coefficient(n,n+1) = 1+0 = 1
+
+thm binomial_choose_one:
+    ? forall n N:
+        binomial_coefficient(n,1) = n
+    by induc n from 0:
+        ? binomial_coefficient(n,1) = n
+        ? from n = 0:
+            binomial_coefficient(0,1) = 0
+        ? induc:
+            n $in N
+            n+1 >= 1
+            (n+1)-1 = n
+            binomial_coefficient(n,0) = 1
+            binomial_coefficient(n+1,1) = binomial_coefficient(n,0) + binomial_coefficient(n,1) = 1+n = n+1
+
+thm binomial_choose_two:
+    ? forall n N:
+        binomial_coefficient(n,2) = n*(n-1)/2
+    by induc n from 0:
+        ? binomial_coefficient(n,2) = n*(n-1)/2
+        ? from n = 0:
+            binomial_coefficient(0,2) = 0 = 0*(0-1)/2
+        ? induc:
+            n $in N
+            n+1 >= 1
+            (n+1)-1 = n
+            release thm binomial_choose_one(n)
+            binomial_coefficient(n+1,2) = binomial_coefficient(n,1) + binomial_coefficient(n,2) = n + n*(n-1)/2 = (n+1)*((n+1)-1)/2
+
+thm binomial_symmetry:
+    ? forall n, k N:
+        k <= n
+        =>:
+            binomial_coefficient(n,k) = binomial_coefficient(n,n-k)
+    prop symmetric_row(row N):
+        forall col N:
+            col <= row
+            =>:
+                binomial_coefficient(row,col) = binomial_coefficient(row,row-col)
+    by induc row from 0:
+        ? $symmetric_row(row)
+        ? from row = 0:
+            claim:
+                ? forall col N:
+                    col <= 0
+                    =>:
+                        binomial_coefficient(0,col) = binomial_coefficient(0,0-col)
+                col = 0
+                0-col = 0
+            by def $symmetric_row(0)
+        ? induc:
+            row $in N
+            row+1 >= 1
+            (row+1)-1 = row
+            claim:
+                ? forall col N:
+                    col <= row+1
+                    =>:
+                        binomial_coefficient(row+1,col) = binomial_coefficient(row+1,row+1-col)
+                by cases:
+                    ? binomial_coefficient(row+1,col) = binomial_coefficient(row+1,row+1-col)
+                    case col = 0:
+                        row+1-col = row+1
+                        release thm binomial_diagonal(row+1)
+                        binomial_coefficient(row+1,col) = 1 = binomial_coefficient(row+1,row+1) = binomial_coefficient(row+1,row+1-col)
+                    case col >= 1:
+                        by cases:
+                            ? binomial_coefficient(row+1,col) = binomial_coefficient(row+1,row+1-col)
+                            case col = row+1:
+                                release thm binomial_diagonal(row+1)
+                                row+1-col = 0
+                                binomial_coefficient(row+1,col) = 1 = binomial_coefficient(row+1,0) = binomial_coefficient(row+1,row+1-col)
+                            case col < row+1:
+                                col <= row
+                                col-1 $in N
+                                col-1 <= row
+                                row+1-col > 0
+                                row+1-col >= 1
+                                row-(col-1) = row+1-col
+                                (row+1-col)-1 = row-col
+                                binomial_coefficient(row,col-1) = binomial_coefficient(row,row-(col-1)) = binomial_coefficient(row,row+1-col)
+                                binomial_coefficient(row,col) = binomial_coefficient(row,row-col) = binomial_coefficient(row,(row+1-col)-1)
+                                binomial_coefficient(row+1,col) = binomial_coefficient(row,col-1) + binomial_coefficient(row,col) = binomial_coefficient(row,row+1-col) + binomial_coefficient(row,(row+1-col)-1) = binomial_coefficient(row,(row+1-col)-1) + binomial_coefficient(row,row+1-col) = binomial_coefficient(row+1,row+1-col)
+            by def $symmetric_row(row+1)
+    $symmetric_row(n)
+
+thm binomial_penultimate:
+    ? forall n N+:
+        binomial_coefficient(n,n-1) = n
+    release thm binomial_symmetry(n,n-1)
+    release thm binomial_choose_one(n)
+    n-(n-1) = 1
+    binomial_coefficient(n,n-1) = binomial_coefficient(n,n-(n-1)) = binomial_coefficient(n,1) = n
+
+thm binomial_positive:
+    ? forall n, k N:
+        k <= n
+        =>:
+            binomial_coefficient(n,k) > 0
+    prop positive_row(row N):
+        forall col N:
+            col <= row
+            =>:
+                binomial_coefficient(row,col) > 0
+    by induc row from 0:
+        ? $positive_row(row)
+        ? from row = 0:
+            claim:
+                ? forall col N:
+                    col <= 0
+                    =>:
+                        binomial_coefficient(0,col) > 0
+                col = 0
+                binomial_coefficient(0,col) = 1 > 0
+            by def $positive_row(0)
+        ? induc:
+            row $in N
+            row+1 >= 1
+            (row+1)-1 = row
+            claim:
+                ? forall col N:
+                    col <= row+1
+                    =>:
+                        binomial_coefficient(row+1,col) > 0
+                by cases:
+                    ? binomial_coefficient(row+1,col) > 0
+                    case col = 0:
+                        binomial_coefficient(row+1,col) = 1 > 0
+                    case col >= 1:
+                        col-1 $in N
+                        col-1 <= (row+1)-1 = row
+                        binomial_coefficient(row,col-1) > 0
+                        binomial_coefficient(row,col) $in N
+                        binomial_coefficient(row,col) >= 0
+                        binomial_coefficient(row+1,col) = binomial_coefficient(row,col-1) + binomial_coefficient(row,col)
+                        binomial_coefficient(row,col-1) + binomial_coefficient(row,col) > 0
+            by def $positive_row(row+1)
+    $positive_row(n)
+
+thm binomial_row_monotone:
+    ? forall n, k N:
+        binomial_coefficient(n,k) <= binomial_coefficient(n+1,k)
+    n+1 >= 1
+    (n+1)-1 = n
+    by cases:
+        ? binomial_coefficient(n,k) <= binomial_coefficient(n+1,k)
+        case k = 0:
+            binomial_coefficient(n,k) = binomial_coefficient(n,0) = 1 = binomial_coefficient(n+1,0) = binomial_coefficient(n+1,k)
+        case k >= 1:
+            k-1 $in N
+            binomial_coefficient(n,k-1) $in N
+            binomial_coefficient(n+1,k) = binomial_coefficient(n,k-1) + binomial_coefficient(n,k)
+            binomial_coefficient(n,k) <= binomial_coefficient(n,k-1) + binomial_coefficient(n,k)
+
+thm binomial_row_strict:
+    ? forall n, k N:
+        k > 0
+        k <= n+1
+        =>:
+            binomial_coefficient(n,k) < binomial_coefficient(n+1,k)
+    k >= 1
+    n+1 >= 1
+    (n+1)-1 = n
+    k-1 $in N
+    release thm binomial_positive(n,k-1)
+    binomial_coefficient(n+1,k) = binomial_coefficient(n,k-1) + binomial_coefficient(n,k)
+    binomial_coefficient(n,k) < binomial_coefficient(n,k-1) + binomial_coefficient(n,k)

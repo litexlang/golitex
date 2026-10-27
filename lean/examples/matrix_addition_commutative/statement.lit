@@ -1,0 +1,5 @@
+# Matrix addition is commutative, proved for the complete function domain.
+thm entrywise_add_commutative:
+    ? forall mm, nn N, aa, bb matrix(C,mm,nn):
+        matrix_add(aa,bb,mm,nn) = matrix_add(bb,aa,mm,nn)
+    by fn_extension matrix_add(aa,bb,mm,nn) = matrix_add(bb,aa,mm,nn)

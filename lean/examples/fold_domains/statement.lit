@@ -1,0 +1,9 @@
+# Natural indices are covered; empty folds need no calls, even for guarded domains.
+forall f fn(k N) N, op fn(a,b N) N, s N:
+    reduce(1,3,f,op,s) $in N
+
+forall f fn(k N) N, op fn(a,b N) N, s N:
+    reduce(-1,-2,f,op,s) = s
+
+forall f fn(k Z: k != 0) Z, op fn(a,b Z) Z, s Z:
+    reduce(1,0,f,op,s) = s

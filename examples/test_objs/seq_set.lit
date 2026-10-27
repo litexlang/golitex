@@ -1,14 +1,12 @@
 # AST: Obj::SetFormer::SeqSet
 # Run: target/release/litex -f examples/test_objs/seq_set.lit
-# Cases use discarded sketch scopes; no cross-case facts.
+# Direct cases share file context; sketches isolate local declarations.
 
 # P01: seq(R) = fn(x N+) R
-sketch:
-    seq(R) = fn(x N+) R
+seq(R) = fn(x N+) R
 
 # P02: seq(N) = fn(x N+) N
-sketch:
-    seq(N) = fn(x N+) N
+seq(N) = fn(x N+) N
 
 # P05: $is_set(S)
 sketch:
@@ -16,14 +14,12 @@ sketch:
     $is_set(S)
 
 # P03: explicit checked proof; restored from seq_set-P03
-sketch:
-    forall x N+:
-        fn(y N+) N {y}(x) $in N
-    release thm fn_set_member(fn(y N+) N {y}, seq(N))
+forall x N+:
+    fn(y N+) N {y}(x) $in N
+release thm fn_set_member(fn(y N+) N {y}, seq(N))
 
 
 # P04: explicit checked proof; restored from seq_set-P04
-sketch:
-    forall x N+:
-        fn(y N+) R {0}(x) $in R
-    release thm fn_set_member(fn(y N+) R {0}, seq(R))
+forall x N+:
+    fn(y N+) R {0}(x) $in R
+release thm fn_set_member(fn(y N+) R {0}, seq(R))

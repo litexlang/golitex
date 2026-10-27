@@ -1,0 +1,11 @@
+# Even and odd hyperbolic identities, including the nonzero-input functions.
+forall x R:
+    sinh(-x) = -sinh(x)
+    cosh(-x) = cosh(x)
+    tanh(-x) = -tanh(x)
+    sech(-x) = sech(x)
+forall x R:
+    x != 0
+    =>:
+        coth(-x) = -coth(x)
+        csch(-x) = -csch(x)

@@ -1,0 +1,11 @@
+# Replay the selected nonzero rules and their original argument premises.
+forall x R:
+    cosh(x) != 0
+    sech(x) != 0
+forall x R:
+    x != 0
+    =>:
+        sinh(x) != 0
+        coth(x) != 0
+        csch(x) != 0
+        -x != 0

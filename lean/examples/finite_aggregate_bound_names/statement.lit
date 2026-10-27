@@ -1,0 +1,3 @@
+# Renaming a summand or factor's bound parameter does not change the aggregate.
+finite_set_sum({1,2},fn(x Z) Z {x}) = finite_set_sum({1,2},fn(y Z) Z {y})
+finite_set_product({1,2},fn(x Z) Z {x}) = finite_set_product({1,2},fn(y Z) Z {y})

@@ -22,6 +22,10 @@ impl LitexToLeanCompiler {
         let target = &domain.target;
         let target_obj = Obj::FunctionSpace(FunctionSpace::FnSet(target.clone()));
         let target_matches = match &member.set {
+            Obj::SetFormer(SetFormer::MatrixSet(matrix)) => {
+                Self::validate_matrix_signature(matrix, target)?;
+                true
+            }
             Obj::SetFormer(SetFormer::FiniteSeqSet(sequence)) => {
                 Self::validate_finite_seq_signature(sequence, target)?;
                 true
@@ -143,7 +147,9 @@ impl LitexToLeanCompiler {
             body.push("have _member_0 := _members".into());
         } else {
             body.push("obtain ⟨_raw_0, _member_0, _raw_1, _member_1, rfl⟩ := (Litex.FiniteFunction.cart2_members _ _ _).mp _members".into());
-            body.push("simp only [Litex.FiniteFunction.unpack_pack2] at _guard".into());
+            if guard_count > 0 {
+                body.push("simp only [Litex.FiniteFunction.unpack_pack2] at _guard".into());
+            }
         }
         let mut arguments = Vec::new();
         for (index, (parameter, _)) in parameters.iter().enumerate() {

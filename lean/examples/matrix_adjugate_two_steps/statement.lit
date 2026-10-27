@@ -1,0 +1,5 @@
+# Compute an off-diagonal adjugate entry through its cofactor, then cite the equalities.
+forall A matrix(C,2,2):
+    matrix_adjugate(A,2)(1,2) = matrix_cofactor(A,2,2,1)
+    matrix_cofactor(A,2,2,1) = -A(1,2)
+    matrix_adjugate(A,2)(1,2) = -A(1,2)

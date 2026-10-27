@@ -1,0 +1,6 @@
+# The conjugate transpose of a real matrix keeps real entries.
+forall m, n N, A matrix(R,m,n):
+    conjugate_transpose(A,m,n) $in matrix(R,n,m)
+
+forall m, n N, A matrix(R,m,n), row closed_range(1,n), col closed_range(1,m):
+    conjugate_transpose(A,m,n)(row,col) $in R

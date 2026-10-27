@@ -1,0 +1,41 @@
+# Tracer: an R-valued template packages its proved additive law.
+# Before: the final membership below failed at the inherited known-property ceiling.
+# claim:
+#     ? (0,\real_identity<R>) $in &RealAdditive
+#     \real_identity<R> $in fn(x R) R
+#     claim:
+#         ? forall x,y R:
+#             \real_identity<R>(x+y) = \real_identity<R>(x)+\real_identity<R>(y)
+#         \real_identity<R>(x+y) = x+y
+#         \real_identity<R>(x) = x
+#         \real_identity<R>(y) = y
+#     (0,\real_identity<R>) $in &RealAdditive
+# Now: the identical active claim checks; R-return evidence also licenses C.
+# Argument and guard WD, all applicable signatures, and the search ceiling stay checked.
+# Evidence: target/release/litex -lang en -strict -f examples/wd/template_standard_return.lit
+
+struct RealAdditive:
+    witness R
+    value fn(x R) R
+    <=>:
+        forall x,y R:
+            value(x+y) = value(x)+value(y)
+
+template<S set>:
+    have fn real_identity(x R) R = x
+
+claim:
+    ? (0,\real_identity<R>) $in &RealAdditive
+    \real_identity<R> $in fn(x R) R
+    claim:
+        ? forall x,y R:
+            \real_identity<R>(x+y) = \real_identity<R>(x)+\real_identity<R>(y)
+        \real_identity<R>(x+y) = x+y
+        \real_identity<R>(x) = x
+        \real_identity<R>(y) = y
+    (0,\real_identity<R>) $in &RealAdditive
+
+have wrapped &RealAdditive = (0,\real_identity<R>)
+
+forall x R:
+    wrapped.value(x) $in C

@@ -1,0 +1,8 @@
+# Zero-matrix entries are complex whether the recorded function carrier is real or complex.
+zero_matrix(4,4) $in fn(u closed_range(1,4), v closed_range(1,4)) R
+
+zero_matrix(4,4)(1,1) $in C
+
+zero_matrix(5,5) $in fn(u closed_range(1,5), v closed_range(1,5)) C
+
+zero_matrix(5,5)(1,1) $in C

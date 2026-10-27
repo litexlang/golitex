@@ -1,0 +1,10 @@
+# An intersection has finite cardinality whenever one of its two sets is finite.
+
+forall A finite_set,B set:
+    $is_finite_set(intersect(A,B))
+
+forall A set,B finite_set:
+    $is_finite_set(intersect(A,B))
+
+forall E set,point R:
+    finite_set_size(intersect(E,{point})) $in N

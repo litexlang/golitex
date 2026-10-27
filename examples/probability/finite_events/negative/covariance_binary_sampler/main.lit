@@ -1,0 +1,33 @@
+release thm prob::main::dirac_probability_laws({0,1},1)
+
+\prob::main::dirac_probability_space<{0,1},1> = ({0,1},\prob::main::dirac_event_probability<{0,1},1>)
+
+have mass &prob::main::FiniteProbabilitySpace<{0,1}> = \prob::main::dirac_probability_space<{0,1},1>
+
+mass = ({0,1},\prob::main::dirac_event_probability<{0,1},1>)
+
+mass.carrier = {0,1}
+
+mass.prob = \prob::main::dirac_event_probability<{0,1},1>
+
+release struct def mass
+
+mass.carrier $subset R
+
+0 $in mass.carrier
+
+1 $in mass.carrier
+
+have fn positive(k mass.carrier) R = 1
+
+have fn negative(k mass.carrier) R = -1
+
+have fn zero(k mass.carrier) R = 0
+
+have fn observed(k mass.carrier) R = k
+
+release thm prob::main::finite_variance_of_constant({0,1},mass,positive,1)
+
+release thm prob::main::finite_covariance_self({0,1},mass,positive)
+
+\prob::main::finite_covariance<{0,1},mass>(fn(j,k mass.carrier) R {j+k},positive) $in R

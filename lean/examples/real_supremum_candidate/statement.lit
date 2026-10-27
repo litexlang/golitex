@@ -1,0 +1,23 @@
+# A proved supremum candidate determines the selected value for an arbitrary real set.
+thm known_supremum_value:
+    ? forall A set, b R:
+        A $subset R
+        $is_real_least_upper_bound(A,b)
+        =>:
+            sup(A) = b
+
+thm reuse_supremum_value:
+    ? forall A set, b R:
+        A $subset R
+        $is_real_least_upper_bound(A,b)
+        =>:
+            b = sup(A)
+    by thm known_supremum_value(A,b) => sup(A) = b
+
+thm supremum_set_alias:
+    ? forall A,B set, b R:
+        A = B
+        A $subset R
+        $is_real_least_upper_bound(A,b)
+        =>:
+            sup(A) = sup(B)

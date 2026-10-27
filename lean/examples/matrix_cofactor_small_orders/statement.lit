@@ -1,0 +1,9 @@
+# The one-by-one cofactor is one; two-by-two cofactors alternate the signs of opposite entries.
+forall A matrix(C,1,1):
+    matrix_cofactor(A,1,1,1) = 1
+
+forall A matrix(C,2,2):
+    matrix_cofactor(A,2,1,1) = A(2,2)
+    matrix_cofactor(A,2,1,2) = -A(2,1)
+    matrix_cofactor(A,2,2,1) = -A(1,2)
+    matrix_cofactor(A,2,2,2) = A(1,1)

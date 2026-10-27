@@ -9,7 +9,7 @@
     "cases/informal-baselines.json": "304ac549801b8c44f289f06169f5a238ffd1b544f267cf0724c2efde76ce8c60",
     "harness/de_bruijn.py": "403f29879e3775376e32708571e75ef46ce6712726c816acf7a344e94bb14075",
     "harness/bench.py": "d29347ee49723990e9b4fa6aa106649f1f99edc23f876c771e48f6f4160a6865",
-    "cases/new-round.json": "00116905a271ece8aa8e8992a2dd8a6f8bf121de4ef4e3ad78922f8d6ca1bc44",
+    "cases/new-round.json": "551cd51e09623647475c81bb73e1c4254ade1221bebb3fe3ed61daf84ddfe7c3",
     "results/new-round-summary.json": "25ee880930a19d76dcef3bc7fc5794447f1736f1816597ce44c931002312a7d6",
     "results/new-round-raw.json": "b94964f9b266aa70cc1894572eefd844dab574f36f1aa273a605dc9a88d6cd44",
     "cases/multi-step.json": "f4d1cece2b11a9ec6a28e00c6e29b9a6f937c156840f93fade5f4eaf8a085d11",

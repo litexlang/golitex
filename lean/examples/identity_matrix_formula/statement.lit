@@ -1,0 +1,5 @@
+# Function extensionality identifies the identity matrix with its cardinality formula.
+thm identity_matrix_formula:
+    ? forall ni N:
+        identity_matrix(ni) = fn(row closed_range(1,ni),col closed_range(1,ni)) R {finite_set_size(intersect({row},{col}))}
+    by fn_extension identity_matrix(ni) = fn(row closed_range(1,ni),col closed_range(1,ni)) R {finite_set_size(intersect({row},{col}))}

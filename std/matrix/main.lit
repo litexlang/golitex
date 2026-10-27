@@ -276,3 +276,84 @@ thm solve_matrix_definition:
         =>:
             \solve_matrix<n>(mat,rhs)=matrix_apply(matrix_inverse(mat,n),rhs,n,n)
     \solve_matrix<n>(mat,rhs)=matrix_apply(matrix_inverse(mat,n),rhs,n,n)
+
+# Entrywise laws are source proofs from matrix formulas and function extensionality.
+# Set-kind binders preserve the established matrix-first argument order.
+thm matrix_add_commutative:
+    ? forall A,B set,m,n N:
+        A $in matrix(C,m,n)
+        B $in matrix(C,m,n)
+        =>:
+            matrix_add(A,B,m,n)=matrix_add(B,A,m,n)
+    by fn_extension matrix_add(A,B,m,n)=matrix_add(B,A,m,n)
+
+thm matrix_add_associative:
+    ? forall A,B,D set,m,n N:
+        A $in matrix(C,m,n)
+        B $in matrix(C,m,n)
+        D $in matrix(C,m,n)
+        =>:
+            matrix_add(matrix_add(A,B,m,n),D,m,n)=matrix_add(A,matrix_add(B,D,m,n),m,n)
+    forall r closed_range(1,m),c closed_range(1,n):
+        matrix_add(A,B,m,n)(r,c)=A(r,c)+B(r,c)
+        matrix_add(B,D,m,n)(r,c)=B(r,c)+D(r,c)
+        matrix_add(matrix_add(A,B,m,n),D,m,n)(r,c)=(A(r,c)+B(r,c))+D(r,c)
+        matrix_add(A,matrix_add(B,D,m,n),m,n)(r,c)=A(r,c)+(B(r,c)+D(r,c))
+        matrix_add(matrix_add(A,B,m,n),D,m,n)(r,c)=matrix_add(A,matrix_add(B,D,m,n),m,n)(r,c)
+    by fn_extension matrix_add(matrix_add(A,B,m,n),D,m,n)=matrix_add(A,matrix_add(B,D,m,n),m,n)
+
+thm matrix_add_zero:
+    ? forall A set,m,n N:
+        A $in matrix(C,m,n)
+        =>:
+            matrix_add(A,zero_matrix(m,n),m,n)=A
+            matrix_add(zero_matrix(m,n),A,m,n)=A
+    forall r closed_range(1,m),c closed_range(1,n):
+        zero_matrix(m,n)(r,c)=0
+        matrix_add(A,zero_matrix(m,n),m,n)(r,c)=A(r,c)+zero_matrix(m,n)(r,c)=A(r,c)
+        matrix_add(zero_matrix(m,n),A,m,n)(r,c)=zero_matrix(m,n)(r,c)+A(r,c)=A(r,c)
+        matrix_add(A,zero_matrix(m,n),m,n)(r,c)=A(r,c)
+        matrix_add(zero_matrix(m,n),A,m,n)(r,c)=A(r,c)
+    by fn_extension matrix_add(A,zero_matrix(m,n),m,n)=A
+    by fn_extension matrix_add(zero_matrix(m,n),A,m,n)=A
+
+thm matrix_sub_self:
+    ? forall A set,m,n N:
+        A $in matrix(C,m,n)
+        =>:
+            matrix_sub(A,A,m,n)=zero_matrix(m,n)
+    by fn_extension matrix_sub(A,A,m,n)=zero_matrix(m,n)
+
+thm matrix_scale_one:
+    ? forall A set,m,n N:
+        A $in matrix(C,m,n)
+        =>:
+            matrix_scale(1,A,m,n)=A
+    by fn_extension matrix_scale(1,A,m,n)=A
+
+thm matrix_scale_zero:
+    ? forall A set,m,n N:
+        A $in matrix(C,m,n)
+        =>:
+            matrix_scale(0,A,m,n)=zero_matrix(m,n)
+    by fn_extension matrix_scale(0,A,m,n)=zero_matrix(m,n)
+
+thm matrix_scale_distributive:
+    ? forall z C,A,B set,m,n N:
+        A $in matrix(C,m,n)
+        B $in matrix(C,m,n)
+        =>:
+            matrix_scale(z,matrix_add(A,B,m,n),m,n)=matrix_add(matrix_scale(z,A,m,n),matrix_scale(z,B,m,n),m,n)
+    let u=matrix_add(A,B,m,n)
+    let v=matrix_scale(z,A,m,n)
+    let w=matrix_scale(z,B,m,n)
+    forall r closed_range(1,m),c closed_range(1,n):
+        u(r,c)=A(r,c)+B(r,c)
+        v(r,c)=z*A(r,c)
+        w(r,c)=z*B(r,c)
+        matrix_scale(z,u,m,n)(r,c)=z*(A(r,c)+B(r,c))
+        matrix_add(v,w,m,n)(r,c)=z*A(r,c)+z*B(r,c)
+        matrix_scale(z,u,m,n)(r,c)=matrix_add(v,w,m,n)(r,c)
+    by fn_extension matrix_scale(z,u,m,n)=matrix_add(v,w,m,n)
+    matrix_scale(z,matrix_add(A,B,m,n),m,n)=matrix_scale(z,u,m,n)
+    matrix_add(v,w,m,n)=matrix_add(matrix_scale(z,A,m,n),matrix_scale(z,B,m,n),m,n)

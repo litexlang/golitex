@@ -1,0 +1,5 @@
+# Rank zero is valid for matrices with an empty row or column index set.
+release thm matrix_rank_zero(0,3)
+release thm matrix_rank_zero(3,0)
+release thm matrix_rank_zero(0,0)
+release thm matrix_rank_identity(0)

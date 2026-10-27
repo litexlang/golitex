@@ -1,0 +1,3 @@
+# The intersection of two finite sets is finite.
+forall A, B finite_set:
+    $is_finite_set(intersect(A,B))

@@ -1,0 +1,6 @@
+# Matrix addition and subtraction operate on the corresponding entries.
+forall m, n N, A, B matrix(C,m,n), row closed_range(1,m), col closed_range(1,n):
+    matrix_add(A,B,m,n)(row,col) = A(row,col) + B(row,col)
+
+forall m, n N, A, B matrix(C,m,n), row closed_range(1,m), col closed_range(1,n):
+    matrix_sub(A,B,m,n)(row,col) = A(row,col) - B(row,col)

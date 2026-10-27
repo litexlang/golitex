@@ -1,0 +1,59 @@
+{
+  "engine": {
+    "name": "Litex",
+    "version": "1.1.5-beta",
+    "executable_id": "fnv1a64:5814f98844b2dca8"
+  },
+  "run_result": "success",
+  "strict": true,
+  "example_sha256": "516d164a587c4c501230b43d504f97ef54f2b6e8621c630a733c2722c40b4ac5",
+  "source": "demo.lit",
+  "target": "0 <= ((x + 1) ^ 2)",
+  "context_fact_id": "f2",
+  "rule_ids": [
+    "builtin.LessEqualFactSearchProofByBuiltinRule::EvenPowNonnegative"
+  ],
+  "selected_premise": {
+    "search": "ByStructuralMembership",
+    "constructor": "Add",
+    "left": "Known",
+    "right": "Closed"
+  },
+  "boundary": "Curated successful proof projection; pipeline routes are source-audited, not a failed-candidate timeline.",
+  "assets": {
+    "proof-search.svg": "f677156915a4df910fd79e68d81abb5dd3358b614e89d5175f17e6b83408e2f2",
+    "proof-search.zh.svg": "7f0c66167183a1013d6ba51ffcb1f4725e4bc20e1ffe92558b5c77c9dff382f1",
+    "index.html": "bbd5106a253493dda24b39f21a96c05cf1cae28102dc818c794f0a65b86163b8",
+    "viewer.js": "7bad24126fe803e3318a9d56809155d8033469ed6c27df63ecc6eeb227f6eb1e",
+    "style.css": "099c6f07636db89e4c7d62590b25accf8f4d5366e66c079eb3a781a5a870d008",
+    "build.py": "af7af329a24242f556d63f8e0be8f42be9fb2d0db442295fd617ae7098380150",
+    "index.template.html": "62ad03ad41f145d30f3a5cb39f9c972dfdf0e688ad471401e017fa17a11270b6",
+    "export.cjs": "c76833bdf6c4d71fa067dfba1eac4df82d515aee4b075f9066da6f86f1d0e62e",
+    "README.md": "91c202767c6e62150cc9bfc20a59a0e41c9ffb0743e11374e09e5b37e2f92e94"
+  },
+  "rendered_assets": {
+    "proof-search.svg": "f677156915a4df910fd79e68d81abb5dd3358b614e89d5175f17e6b83408e2f2",
+    "proof-search.pdf": "37cb7dc73f44a3db119b337dafe818eb1a2af83e5a8e88824cad6f5e8aacf3ad",
+    "proof-search.png": "ee794be86abe251b0a7baa39c03fe848e19f8b673cf89bc7aecfb29611557461",
+    "proof-search.zh.svg": "7f0c66167183a1013d6ba51ffcb1f4725e4bc20e1ffe92558b5c77c9dff382f1",
+    "proof-search.zh.pdf": "00708be432432046358b22d3ef63c3f8aad57b77187c05656bee4979d236dfc2",
+    "proof-search.zh.png": "1661d7cf054a31dc0a6a22be9d19b1976a9596cd68c91e916a6f0b58b0d48835"
+  },
+  "visual_review": {
+    "date": "2026-10-27",
+    "scope": "real-number annotation and descriptions",
+    "languages": [
+      "en",
+      "zh"
+    ],
+    "viewports": [
+      1440,
+      320
+    ],
+    "annotation_present": true,
+    "node_description_updated": true,
+    "overlap_or_overflow": false,
+    "pdf_label_extractable": true,
+    "pdf_render_inspected": true
+  }
+}

@@ -1,0 +1,9 @@
+# A proved nonzero determinant certifies an inverse over the original scalar field.
+forall n N, A matrix(C,n,n):
+    det(A,n) != 0
+    =>:
+        matrix_inverse(A,n) $in matrix(C,n,n)
+forall n N, A matrix(R,n,n):
+    det(A,n) != 0
+    =>:
+        matrix_inverse(A,n) $in matrix(R,n,n)

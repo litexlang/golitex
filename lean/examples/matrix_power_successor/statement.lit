@@ -1,0 +1,5 @@
+# The next matrix power multiplies the preceding power by the same matrix.
+thm checked_matrix_power_successor:
+    ? forall n, p N, A matrix(C,n,n):
+        matrix_power(A,n,p+1) = matrix_mul(matrix_power(A,n,p),A,n,n,n)
+    release thm matrix_power_successor(A,n,p)

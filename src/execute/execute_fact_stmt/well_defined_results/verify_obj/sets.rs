@@ -77,7 +77,22 @@ impl Runtime {
         value: &FamilyIntersect,
         verify_state: VerifyState,
     ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
-        self.verify_unary_obj_well_definedness_by_def(value.left.as_ref(), verify_state)
+        let children = self
+            .verify_unary_obj_well_definedness_by_def(value.left.as_ref(), verify_state.clone())?;
+        if !children.is_fully_known() {
+            return Ok(children);
+        }
+        // Absolute intersection is set-valued only for a nonempty family.
+        // The family {{}} is nonempty even though its intersection is empty.
+        let nonempty = self.require_is_nonempty_set(
+            value.left.as_ref(),
+            verify_state,
+            format!(
+                "family_intersect: family {} must be nonempty",
+                value.left.ir()
+            ),
+        )?;
+        Ok(self.with_requirements(children, vec![nonempty]))
     }
     // index_union(I, X, A): children, `$is_set(I)`, `$is_set(X)`, then
     // `A $in fn(k I) power_set(X)`.

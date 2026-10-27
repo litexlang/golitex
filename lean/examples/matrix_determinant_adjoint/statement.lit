@@ -1,0 +1,5 @@
+# Conjugate transposition conjugates the determinant.
+thm checked_det_adjoint:
+    ? forall n N, A matrix(C,n,n):
+        det(conjugate_transpose(A,n,n),n) = conj(det(A,n))
+    release thm matrix_det_adjoint(A,n)

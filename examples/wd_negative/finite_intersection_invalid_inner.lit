@@ -1,0 +1,1 @@
+finite_set_size(intersect({1/0},{})) $in N

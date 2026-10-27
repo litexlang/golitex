@@ -1,0 +1,11 @@
+# Select real extrema inside functions whose domain contains a certified candidate.
+have fn certified_supremum(A power_set(R), b R: $is_real_least_upper_bound(A,b)) R = sup(A)
+have fn certified_infimum(A power_set(R), b R: $is_real_greatest_lower_bound(A,b)) R = inf(A)
+forall A power_set(R), b R:
+    $is_real_least_upper_bound(A,b)
+    =>:
+        certified_supremum(A,b) = b
+forall A power_set(R), b R:
+    $is_real_greatest_lower_bound(A,b)
+    =>:
+        certified_infimum(A,b) = b

@@ -1,0 +1,11 @@
+# Defining equations retain every real-input and denominator condition.
+forall x R:
+    sinh(x) = (exp(x)-exp(-x))/2
+    cosh(x) = (exp(x)+exp(-x))/2
+    tanh(x) = sinh(x)/cosh(x)
+    sech(x) = 1/cosh(x)
+forall x R:
+    x != 0
+    =>:
+        coth(x) = cosh(x)/sinh(x)
+        csch(x) = 1/sinh(x)

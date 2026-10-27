@@ -1,23 +1,18 @@
 # AST: Obj::Literal::Pi
 # Run: target/release/litex -f examples/test_objs/pi.lit
-# Cases use discarded sketch scopes; no cross-case facts.
+# Cases are checked directly in file context.
 
 # P01: pi $in R
-sketch:
-    pi $in R
+pi $in R
 
 # P02: pi > 0
-sketch:
-    pi > 0
+pi > 0
 
 # P03: sin(pi) = 0
-sketch:
-    sin(pi) = 0
+sin(pi) = 0
 
 # P04: cos(pi) = -1
-sketch:
-    cos(pi) = -1
+cos(pi) = -1
 
 # P05: pi + 0 = pi
-sketch:
-    pi + 0 = pi
+pi + 0 = pi

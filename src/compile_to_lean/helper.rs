@@ -113,7 +113,7 @@ pub(super) fn validate_arithmetic_expression(object: &Obj) -> Result<(), LeanCom
             Ok(())
         }
         Obj::ComplexOperator(_) => Ok(()),
-        Obj::TrigOperator(_) => Ok(()),
+        Obj::TrigOperator(_) | Obj::HyperbolicOperator(_) => Ok(()),
         Obj::ExpLogOperator(ExpLogOperator::Exp(_) | ExpLogOperator::Ln(_) | ExpLogOperator::Log(_)) => Ok(()),
         Obj::ExpLogOperator(ExpLogOperator::Sqrt(_)) => {
             // Rational normalization treats the original square root as one
@@ -402,6 +402,12 @@ pub(super) fn arithmetic_operation_term(operation: &str) -> String {
         "reValue" => "(Litex.complexUnaryValue (M := M) (fun z : ℂ => (z.re : ℂ)))".into(),
         "imgValue" => "(Litex.complexUnaryValue (M := M) (fun z : ℂ => (z.im : ℂ)))".into(),
         "complexAbsValue" => "(Litex.complexUnaryValue (M := M) (fun z : ℂ => (‖z‖ : ℂ)))".into(),
+        "sinhValue" => "(Litex.realUnaryValue (M := M) Real.sinh)".into(),
+        "coshValue" => "(Litex.realUnaryValue (M := M) Real.cosh)".into(),
+        "tanhValue" => "(Litex.realUnaryValue (M := M) Real.tanh)".into(),
+        "cothValue" => "(Litex.realUnaryValue (M := M) Litex.nativeCoth)".into(),
+        "sechValue" => "(Litex.realUnaryValue (M := M) Litex.nativeSech)".into(),
+        "cschValue" => "(Litex.realUnaryValue (M := M) Litex.nativeCsch)".into(),
         "sinValue" => "(Litex.realUnaryValue (M := M) Real.sin)".into(),
         "cosValue" => "(Litex.realUnaryValue (M := M) Real.cos)".into(),
         "tanValue" => "(Litex.realUnaryValue (M := M) Real.tan)".into(),
@@ -415,6 +421,7 @@ pub(super) fn arithmetic_operation_term(operation: &str) -> String {
         "expValue" => "(Litex.realUnaryValue (M := M) Real.exp)".into(),
         "lnValue" => "(Litex.realUnaryValue (M := M) Real.log)".into(),
         "logValue" => "(fun _base _arg => M.divValue (Litex.realUnaryValue (M := M) Real.log _arg) (Litex.realUnaryValue (M := M) Real.log _base))".into(),
+        "supremumValue" | "infimumValue" => format!("(Litex.{operation} (M := M))"),
         "absValue" | "sqrtValue" | "signValue" => format!("(Litex.{operation} (M := M))"),
         "minValue" => "(Litex.minMaxValue (M := M) false)".into(),
         "factorialValue" => "(Litex.factorialValue (M := M))".into(),
@@ -1305,12 +1312,218 @@ pub(super) fn instantiated_object_matches(
             .is_some_and(|scoped| {
                 instantiated_object_matches(&expected.equal_to, &actual.equal_to, &scoped)
             }),
+        (
+            Obj::FunctionSpace(FunctionSpace::PreimageSet(expected)),
+            Obj::FunctionSpace(FunctionSpace::PreimageSet(actual)),
+        ) => {
+            instantiated_object_matches(&expected.function, &actual.function, substitution)
+                && instantiated_object_matches(
+                    &expected.target_set,
+                    &actual.target_set,
+                    substitution,
+                )
+        }
         (Obj::SetFormer(SetFormer::ListSet(a)), Obj::SetFormer(SetFormer::ListSet(b))) => {
             a.list.len() == b.list.len()
                 && a.list
                     .iter()
                     .zip(&b.list)
                     .all(|(a, b)| instantiated_object_matches(a, b, substitution))
+        }
+        (
+            Obj::MatrixOperator(MatrixOperator::Add(a)),
+            Obj::MatrixOperator(MatrixOperator::Add(b)),
+        ) => {
+            instantiated_object_matches(&a.left, &b.left, substitution)
+                && instantiated_object_matches(&a.right, &b.right, substitution)
+                && instantiated_object_matches(&a.rows, &b.rows, substitution)
+                && instantiated_object_matches(&a.cols, &b.cols, substitution)
+        }
+        (
+            Obj::MatrixOperator(MatrixOperator::Subtract(a)),
+            Obj::MatrixOperator(MatrixOperator::Subtract(b)),
+        ) => {
+            instantiated_object_matches(&a.left, &b.left, substitution)
+                && instantiated_object_matches(&a.right, &b.right, substitution)
+                && instantiated_object_matches(&a.rows, &b.rows, substitution)
+                && instantiated_object_matches(&a.cols, &b.cols, substitution)
+        }
+        (
+            Obj::MatrixOperator(MatrixOperator::Scale(a)),
+            Obj::MatrixOperator(MatrixOperator::Scale(b)),
+        ) => {
+            instantiated_object_matches(&a.scalar, &b.scalar, substitution)
+                && instantiated_object_matches(&a.matrix, &b.matrix, substitution)
+                && instantiated_object_matches(&a.rows, &b.rows, substitution)
+                && instantiated_object_matches(&a.cols, &b.cols, substitution)
+        }
+        (
+            Obj::MatrixOperator(MatrixOperator::OuterProduct(a)),
+            Obj::MatrixOperator(MatrixOperator::OuterProduct(b)),
+        ) => {
+            instantiated_object_matches(&a.left, &b.left, substitution)
+                && instantiated_object_matches(&a.right, &b.right, substitution)
+                && instantiated_object_matches(&a.rows, &b.rows, substitution)
+                && instantiated_object_matches(&a.cols, &b.cols, substitution)
+        }
+        (
+            Obj::MatrixOperator(MatrixOperator::Apply(a)),
+            Obj::MatrixOperator(MatrixOperator::Apply(b)),
+        ) => {
+            instantiated_object_matches(&a.matrix, &b.matrix, substitution)
+                && instantiated_object_matches(&a.vector, &b.vector, substitution)
+                && instantiated_object_matches(&a.rows, &b.rows, substitution)
+                && instantiated_object_matches(&a.cols, &b.cols, substitution)
+        }
+        (
+            Obj::MatrixOperator(MatrixOperator::EuclideanNorm(a)),
+            Obj::MatrixOperator(MatrixOperator::EuclideanNorm(b)),
+        ) => {
+            instantiated_object_matches(&a.vector, &b.vector, substitution)
+                && instantiated_object_matches(&a.dimension, &b.dimension, substitution)
+        }
+        (
+            Obj::MatrixOperator(MatrixOperator::FrobeniusNorm(a)),
+            Obj::MatrixOperator(MatrixOperator::FrobeniusNorm(b)),
+        ) => {
+            instantiated_object_matches(&a.matrix, &b.matrix, substitution)
+                && instantiated_object_matches(&a.rows, &b.rows, substitution)
+                && instantiated_object_matches(&a.cols, &b.cols, substitution)
+        }
+        (
+            Obj::BoundOperator(BoundOperator::Supremum(a)),
+            Obj::BoundOperator(BoundOperator::Supremum(b)),
+        ) => instantiated_object_matches(&a.set, &b.set, substitution),
+        (
+            Obj::BoundOperator(BoundOperator::Infimum(a)),
+            Obj::BoundOperator(BoundOperator::Infimum(b)),
+        ) => instantiated_object_matches(&a.set, &b.set, substitution),
+        (
+            Obj::MatrixOperator(MatrixOperator::Rank(a)),
+            Obj::MatrixOperator(MatrixOperator::Rank(b)),
+        ) => {
+            instantiated_object_matches(&a.matrix, &b.matrix, substitution)
+                && instantiated_object_matches(&a.rows, &b.rows, substitution)
+                && instantiated_object_matches(&a.cols, &b.cols, substitution)
+        }
+        (
+            Obj::MatrixOperator(MatrixOperator::InnerProduct(a)),
+            Obj::MatrixOperator(MatrixOperator::InnerProduct(b)),
+        ) => {
+            instantiated_object_matches(&a.left, &b.left, substitution)
+                && instantiated_object_matches(&a.right, &b.right, substitution)
+                && instantiated_object_matches(&a.dimension, &b.dimension, substitution)
+        }
+        (
+            Obj::MatrixOperator(MatrixOperator::Multiply(a)),
+            Obj::MatrixOperator(MatrixOperator::Multiply(b)),
+        ) => {
+            instantiated_object_matches(&a.left, &b.left, substitution)
+                && instantiated_object_matches(&a.right, &b.right, substitution)
+                && instantiated_object_matches(&a.rows, &b.rows, substitution)
+                && instantiated_object_matches(&a.inner, &b.inner, substitution)
+                && instantiated_object_matches(&a.cols, &b.cols, substitution)
+        }
+        (
+            Obj::MatrixOperator(MatrixOperator::Minor(a)),
+            Obj::MatrixOperator(MatrixOperator::Minor(b)),
+        ) => {
+            instantiated_object_matches(&a.matrix, &b.matrix, substitution)
+                && instantiated_object_matches(&a.order, &b.order, substitution)
+                && instantiated_object_matches(&a.row, &b.row, substitution)
+                && instantiated_object_matches(&a.col, &b.col, substitution)
+        }
+        (
+            Obj::MatrixOperator(MatrixOperator::Cofactor(a)),
+            Obj::MatrixOperator(MatrixOperator::Cofactor(b)),
+        ) => {
+            instantiated_object_matches(&a.matrix, &b.matrix, substitution)
+                && instantiated_object_matches(&a.order, &b.order, substitution)
+                && instantiated_object_matches(&a.row, &b.row, substitution)
+                && instantiated_object_matches(&a.col, &b.col, substitution)
+        }
+        (
+            Obj::MatrixOperator(MatrixOperator::Power(a)),
+            Obj::MatrixOperator(MatrixOperator::Power(b)),
+        ) => {
+            instantiated_object_matches(&a.matrix, &b.matrix, substitution)
+                && instantiated_object_matches(&a.order, &b.order, substitution)
+                && instantiated_object_matches(&a.exponent, &b.exponent, substitution)
+        }
+        (
+            Obj::MatrixOperator(MatrixOperator::Determinant(a)),
+            Obj::MatrixOperator(MatrixOperator::Determinant(b)),
+        ) => {
+            instantiated_object_matches(&a.matrix, &b.matrix, substitution)
+                && instantiated_object_matches(&a.order, &b.order, substitution)
+        }
+        (
+            Obj::MatrixOperator(MatrixOperator::Trace(a)),
+            Obj::MatrixOperator(MatrixOperator::Trace(b)),
+        ) => {
+            instantiated_object_matches(&a.matrix, &b.matrix, substitution)
+                && instantiated_object_matches(&a.order, &b.order, substitution)
+        }
+        (
+            Obj::MatrixOperator(MatrixOperator::Diagonal(a)),
+            Obj::MatrixOperator(MatrixOperator::Diagonal(b)),
+        ) => {
+            instantiated_object_matches(&a.vector, &b.vector, substitution)
+                && instantiated_object_matches(&a.order, &b.order, substitution)
+        }
+        (
+            Obj::MatrixOperator(MatrixOperator::Adjugate(a)),
+            Obj::MatrixOperator(MatrixOperator::Adjugate(b)),
+        ) => {
+            instantiated_object_matches(&a.matrix, &b.matrix, substitution)
+                && instantiated_object_matches(&a.order, &b.order, substitution)
+        }
+        (
+            Obj::MatrixOperator(MatrixOperator::Inverse(a)),
+            Obj::MatrixOperator(MatrixOperator::Inverse(b)),
+        ) => {
+            instantiated_object_matches(&a.matrix, &b.matrix, substitution)
+                && instantiated_object_matches(&a.order, &b.order, substitution)
+        }
+        (
+            Obj::MatrixOperator(MatrixOperator::IdentityMatrix(a)),
+            Obj::MatrixOperator(MatrixOperator::IdentityMatrix(b)),
+        ) => instantiated_object_matches(&a.order, &b.order, substitution),
+        (
+            Obj::MatrixOperator(MatrixOperator::ZeroMatrix(a)),
+            Obj::MatrixOperator(MatrixOperator::ZeroMatrix(b)),
+        ) => {
+            instantiated_object_matches(&a.rows, &b.rows, substitution)
+                && instantiated_object_matches(&a.cols, &b.cols, substitution)
+        }
+        (
+            Obj::MatrixOperator(MatrixOperator::Transpose(a)),
+            Obj::MatrixOperator(MatrixOperator::Transpose(b)),
+        ) => {
+            instantiated_object_matches(&a.matrix, &b.matrix, substitution)
+                && instantiated_object_matches(&a.rows, &b.rows, substitution)
+                && instantiated_object_matches(&a.cols, &b.cols, substitution)
+        }
+        (
+            Obj::MatrixOperator(MatrixOperator::ConjugateTranspose(a)),
+            Obj::MatrixOperator(MatrixOperator::ConjugateTranspose(b)),
+        ) => {
+            instantiated_object_matches(&a.matrix, &b.matrix, substitution)
+                && instantiated_object_matches(&a.rows, &b.rows, substitution)
+                && instantiated_object_matches(&a.cols, &b.cols, substitution)
+        }
+        (Obj::SetFormer(SetFormer::Range(a)), Obj::SetFormer(SetFormer::Range(b))) => {
+            instantiated_object_matches(&a.start, &b.start, substitution)
+                && instantiated_object_matches(&a.end, &b.end, substitution)
+        }
+        (Obj::SetFormer(SetFormer::ClosedRange(a)), Obj::SetFormer(SetFormer::ClosedRange(b))) => {
+            instantiated_object_matches(&a.start, &b.start, substitution)
+                && instantiated_object_matches(&a.end, &b.end, substitution)
+        }
+        (Obj::SetFormer(SetFormer::MatrixSet(a)), Obj::SetFormer(SetFormer::MatrixSet(b))) => {
+            instantiated_object_matches(&a.set, &b.set, substitution)
+                && instantiated_object_matches(&a.rows, &b.rows, substitution)
+                && instantiated_object_matches(&a.cols, &b.cols, substitution)
         }
         (
             Obj::SetFormer(SetFormer::FiniteSeqSet(a)),
@@ -1333,18 +1546,88 @@ pub(super) fn instantiated_object_matches(
             instantiated_object_matches(&a.left, &b.left, substitution)
                 && instantiated_object_matches(&a.right, &b.right, substitution)
         }
+        (
+            Obj::SetOperator(SetOperator::SymmetricDifference(a)),
+            Obj::SetOperator(SetOperator::SymmetricDifference(b)),
+        ) => {
+            instantiated_object_matches(&a.left, &b.left, substitution)
+                && instantiated_object_matches(&a.right, &b.right, substitution)
+        }
+        (
+            Obj::SetOperator(SetOperator::FamilyIntersect(a)),
+            Obj::SetOperator(SetOperator::FamilyIntersect(b)),
+        ) => instantiated_object_matches(&a.left, &b.left, substitution),
+        (
+            Obj::SetOperator(SetOperator::FamilyUnion(a)),
+            Obj::SetOperator(SetOperator::FamilyUnion(b)),
+        ) => instantiated_object_matches(&a.left, &b.left, substitution),
+        (
+            Obj::SetOperator(SetOperator::PowerSet(a)),
+            Obj::SetOperator(SetOperator::PowerSet(b)),
+        ) => instantiated_object_matches(&a.set, &b.set, substitution),
+        (
+            Obj::IteratedOperator(IteratedOperator::SumOfFiniteSet(a)),
+            Obj::IteratedOperator(IteratedOperator::SumOfFiniteSet(b)),
+        ) => {
+            instantiated_object_matches(&a.set, &b.set, substitution)
+                && instantiated_object_matches(&a.func, &b.func, substitution)
+        }
+        (
+            Obj::IteratedOperator(IteratedOperator::ProductOfFiniteSet(a)),
+            Obj::IteratedOperator(IteratedOperator::ProductOfFiniteSet(b)),
+        ) => {
+            instantiated_object_matches(&a.set, &b.set, substitution)
+                && instantiated_object_matches(&a.func, &b.func, substitution)
+        }
+        (
+            Obj::IteratedOperator(IteratedOperator::Reduce(a)),
+            Obj::IteratedOperator(IteratedOperator::Reduce(b)),
+        ) => [&a.start, &a.end, &a.func, &a.op, &a.seed]
+            .into_iter()
+            .zip([&b.start, &b.end, &b.func, &b.op, &b.seed])
+            .all(|(a, b)| instantiated_object_matches(a, b, substitution)),
+        (
+            Obj::IteratedOperator(IteratedOperator::FiniteSetReduce(a)),
+            Obj::IteratedOperator(IteratedOperator::FiniteSetReduce(b)),
+        ) => [&a.set, &a.func, &a.op, &a.seed]
+            .into_iter()
+            .zip([&b.set, &b.func, &b.op, &b.seed])
+            .all(|(a, b)| instantiated_object_matches(a, b, substitution)),
+        (
+            Obj::SetOperator(SetOperator::IndexUnion(a)),
+            Obj::SetOperator(SetOperator::IndexUnion(b)),
+        ) => {
+            instantiated_object_matches(&a.index_set, &b.index_set, substitution)
+                && instantiated_object_matches(&a.ambient_set, &b.ambient_set, substitution)
+                && instantiated_object_matches(&a.family_fn, &b.family_fn, substitution)
+        }
+        (
+            Obj::SetOperator(SetOperator::IndexIntersect(a)),
+            Obj::SetOperator(SetOperator::IndexIntersect(b)),
+        ) => {
+            instantiated_object_matches(&a.index_set, &b.index_set, substitution)
+                && instantiated_object_matches(&a.ambient_set, &b.ambient_set, substitution)
+                && instantiated_object_matches(&a.family_fn, &b.family_fn, substitution)
+        }
+        (
+            Obj::SetOperator(SetOperator::IndexCart(a)),
+            Obj::SetOperator(SetOperator::IndexCart(b)),
+        ) => {
+            instantiated_object_matches(&a.index_set, &b.index_set, substitution)
+                && instantiated_object_matches(&a.family_set, &b.family_set, substitution)
+                && instantiated_object_matches(&a.family_fn, &b.family_fn, substitution)
+        }
         (Obj::SetOperator(SetOperator::Union(a)), Obj::SetOperator(SetOperator::Union(b))) => {
             instantiated_object_matches(&a.left, &b.left, substitution)
                 && instantiated_object_matches(&a.right, &b.right, substitution)
         }
         (
-            Obj::SetFormer(SetFormer::SetBuilder(expected)),
+            expected_object @ Obj::SetFormer(SetFormer::SetBuilder(expected)),
             Obj::SetFormer(SetFormer::SetBuilder(actual)),
         ) => {
-            // Match Runtime::inst_set_builder: the carrier is outside the
-            // binder, while body predicates retain and shadow its source ID.
-            if expected.param_binding.id != actual.param_binding.id
-                || expected.facts.len() != actual.facts.len()
+            // The carrier is outside the binder. Whole-fact reuse can also
+            // rename the body's binder, but cannot capture an outer reference.
+            if expected.facts.len() != actual.facts.len()
                 || !instantiated_object_matches(
                     &expected.param_set,
                     &actual.param_set,
@@ -1355,6 +1638,31 @@ pub(super) fn instantiated_object_matches(
             }
             let mut body_substitution = substitution.clone();
             body_substitution.remove(&expected.param_binding.id);
+            let mut free_ids = HashSet::new();
+            crate::instantiate::collect_free_plain_ids(
+                expected_object,
+                &HashSet::new(),
+                &mut free_ids,
+            );
+            for id in free_ids {
+                if let Some(argument) = body_substitution.get(&id) {
+                    let mut targets = HashSet::new();
+                    crate::instantiate::collect_free_plain_ids(
+                        argument,
+                        &HashSet::new(),
+                        &mut targets,
+                    );
+                    if targets.contains(&actual.param_binding.id) {
+                        return false;
+                    }
+                } else if id == actual.param_binding.id {
+                    return false;
+                }
+            }
+            body_substitution.insert(
+                expected.param_binding.id,
+                Obj::Identifier(IdentifierObj::from_bound_name(&actual.param_binding)),
+            );
             expected
                 .facts
                 .iter()
@@ -1557,6 +1865,30 @@ pub(super) fn instantiated_object_matches(
         (
             Obj::ComplexOperator(ComplexOperator::ComplexAbs(a)),
             Obj::ComplexOperator(ComplexOperator::ComplexAbs(b)),
+        ) => instantiated_object_matches(&a.arg, &b.arg, substitution),
+        (
+            Obj::HyperbolicOperator(HyperbolicOperator::Sinh(a)),
+            Obj::HyperbolicOperator(HyperbolicOperator::Sinh(b)),
+        ) => instantiated_object_matches(&a.arg, &b.arg, substitution),
+        (
+            Obj::HyperbolicOperator(HyperbolicOperator::Cosh(a)),
+            Obj::HyperbolicOperator(HyperbolicOperator::Cosh(b)),
+        ) => instantiated_object_matches(&a.arg, &b.arg, substitution),
+        (
+            Obj::HyperbolicOperator(HyperbolicOperator::Tanh(a)),
+            Obj::HyperbolicOperator(HyperbolicOperator::Tanh(b)),
+        ) => instantiated_object_matches(&a.arg, &b.arg, substitution),
+        (
+            Obj::HyperbolicOperator(HyperbolicOperator::Coth(a)),
+            Obj::HyperbolicOperator(HyperbolicOperator::Coth(b)),
+        ) => instantiated_object_matches(&a.arg, &b.arg, substitution),
+        (
+            Obj::HyperbolicOperator(HyperbolicOperator::Sech(a)),
+            Obj::HyperbolicOperator(HyperbolicOperator::Sech(b)),
+        ) => instantiated_object_matches(&a.arg, &b.arg, substitution),
+        (
+            Obj::HyperbolicOperator(HyperbolicOperator::Csch(a)),
+            Obj::HyperbolicOperator(HyperbolicOperator::Csch(b)),
         ) => instantiated_object_matches(&a.arg, &b.arg, substitution),
         (Obj::TrigOperator(TrigOperator::Sin(a)), Obj::TrigOperator(TrigOperator::Sin(b))) => {
             instantiated_object_matches(&a.arg, &b.arg, substitution)
@@ -2030,4 +2362,23 @@ pub(super) fn native_real_constant(object: &Obj) -> Option<&'static str> {
         Obj::Literal(Literal::Pi(_)) => Some("Real.pi"),
         _ => None,
     }
+}
+
+pub(super) fn fold_application(
+    operation: &Obj,
+    arguments: &[Obj],
+) -> Result<Obj, LeanCompileError> {
+    let (head, mut body) = match operation {
+        Obj::Identifier(id) => (FnObjHead::Identifier(id.clone()), vec![]),
+        Obj::FunctionSpace(FunctionSpace::AnonymousFn(f)) => {
+            (FnObjHead::AnonymousFnLiteral(Box::new(f.clone())), vec![])
+        }
+        Obj::FnObj(f) => (f.head.as_ref().clone(), f.body.clone()),
+        _ => return Err(LeanCompileError::unsupported("FiniteFold/OperationHead")),
+    };
+    body.push(arguments.iter().cloned().map(Box::new).collect());
+    Ok(Obj::FnObj(FnObj {
+        head: Box::new(head),
+        body,
+    }))
 }

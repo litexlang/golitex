@@ -1,0 +1,3 @@
+# A family returns a real coordinate function.
+forall maker fn(t R) fn(row closed_range(1,2),col closed_range(1,3)) R, t R:
+    transpose(maker(t),2,3) $in matrix(R,3,2)

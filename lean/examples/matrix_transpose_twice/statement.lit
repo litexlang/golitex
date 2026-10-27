@@ -1,0 +1,6 @@
+# Transposing twice restores each matrix coordinate.
+forall m, n N, A matrix(C,m,n), row closed_range(1,m), col closed_range(1,n):
+    transpose(transpose(A,m,n),n,m)(row,col) = A(row,col)
+
+forall m, n N, A matrix(R,m,n), row closed_range(1,m), col closed_range(1,n):
+    transpose(transpose(A,m,n),n,m)(row,col) = A(row,col)

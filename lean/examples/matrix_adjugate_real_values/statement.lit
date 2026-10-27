@@ -1,0 +1,3 @@
+# Every valid entry of the adjugate of a real square matrix is real.
+forall n N+, A matrix(R,n,n), r closed_range(1,n), c closed_range(1,n):
+    matrix_adjugate(A,n)(r,c) $in R

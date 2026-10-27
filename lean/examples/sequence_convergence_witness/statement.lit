@@ -1,0 +1,21 @@
+# A proved limit supplies convergence, and convergence retains a real limit witness.
+thm recorded_sequence_limit_implies_convergence:
+    ? forall seq_limit_a seq(R), seq_limit_L R:
+        $has_seq_limit(seq_limit_a,seq_limit_L)
+        =>:
+            $is_seq_convergent(seq_limit_a)
+    witness exist limit_witness R st {$has_seq_limit(seq_limit_a,limit_witness)} from seq_limit_L:
+        $has_seq_limit(seq_limit_a,seq_limit_L)
+    by def $is_seq_convergent(seq_limit_a)
+
+forall a seq(R):
+    $is_seq_convergent(a)
+    =>:
+        exist L R st {$has_seq_limit(a,L)}
+
+thm reused_sequence_limit_convergence:
+    ? forall reused_a seq(R), reused_L R:
+        $has_seq_limit(reused_a,reused_L)
+        =>:
+            $is_seq_convergent(reused_a)
+    by thm recorded_sequence_limit_implies_convergence(reused_a,reused_L) => $is_seq_convergent(reused_a)

@@ -1,0 +1,2 @@
+# A literal real vector determines a complete real diagonal matrix.
+diagonal_matrix((2,3),2) $in matrix(R,2,2)

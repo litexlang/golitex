@@ -40,6 +40,21 @@ impl LitexToLeanCompiler {
         children: &[VerifyFactResult],
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
+        if matches!(
+            (&fact.left, &fact.right),
+            (Obj::BoundOperator(_), Obj::BoundOperator(_))
+        ) {
+            return self.compile_real_extremum_congruence(fact, children, position);
+        }
+        if matches!(
+            (&fact.left, &fact.right),
+            (
+                Obj::MatrixOperator(MatrixOperator::Rank(_)),
+                Obj::MatrixOperator(MatrixOperator::Rank(_))
+            )
+        ) {
+            return self.compile_matrix_rank_congruence(fact, children, position);
+        }
         if let (
             Obj::ProductShape(ProductShape::Tuple(left)),
             Obj::ProductShape(ProductShape::Tuple(right)),
@@ -308,8 +323,35 @@ impl LitexToLeanCompiler {
                 let right = self.compile_object_reference(right, position)?;
                 Ok(format!("(by\n  let _left : Litex.Obj (M := M) (Litex.FormulaFn M) := {left}\n  let _right : Litex.Obj (M := M) (Litex.FormulaFn M) := {right}\n  exact (show Litex.Same _left _right from rfl))"))
             }
-            TheyAreTheSameProof::SameFreeParamShape(_) => {
-                Err(LeanCompileError::unsupported("Equality/SameFreeParamShape"))
+            TheyAreTheSameProof::SameFreeParamShape(SameFreeParamShapeProof::Compound(_)) => {
+                let supported = matches!(
+                    (left, right),
+                    (
+                        Obj::IteratedOperator(IteratedOperator::SumOfFiniteSet(_)),
+                        Obj::IteratedOperator(IteratedOperator::SumOfFiniteSet(_))
+                    ) | (
+                        Obj::IteratedOperator(IteratedOperator::ProductOfFiniteSet(_)),
+                        Obj::IteratedOperator(IteratedOperator::ProductOfFiniteSet(_))
+                    ) | (
+                        Obj::ProductShape(ProductShape::Cart(_)),
+                        Obj::ProductShape(ProductShape::Cart(_))
+                    ) | (
+                        Obj::ProductShape(ProductShape::Tuple(_)),
+                        Obj::ProductShape(ProductShape::Tuple(_))
+                    ) | (
+                        Obj::FunctionSpace(FunctionSpace::PreimageSet(_)),
+                        Obj::FunctionSpace(FunctionSpace::PreimageSet(_))
+                    ) | (
+                        Obj::ExpLogOperator(ExpLogOperator::Sqrt(_)),
+                        Obj::ExpLogOperator(ExpLogOperator::Sqrt(_))
+                    )
+                );
+                if !supported || !crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_they_are_the_same::helper::compound_objs_alpha_equal(left,right) {
+                    return Err(LeanCompileError::unsupported("Equality/FiniteAggregateAlphaSubject"));
+                }
+                let left = self.compile_object_reference(left, position)?;
+                let right = self.compile_object_reference(right, position)?;
+                Ok(format!("(by\n  let _left := {left}\n  let _right := {right}\n  exact (show Litex.Same _left _right from rfl))"))
             }
         }
     }

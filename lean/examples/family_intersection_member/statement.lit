@@ -1,0 +1,13 @@
+# Prove membership in every member of a nonempty family, then reuse the theorem.
+thm phase3_family_member:
+    ? forall F nonempty_set, x set:
+        forall A F:
+            x $in A
+        =>:
+            x $in family_intersect(F)
+    release thm family_intersect_member(x, family_intersect(F))
+
+$is_set(family_intersect({{}}))
+forall A {{1}}:
+    1 $in A
+by thm phase3_family_member({{1}},1) => 1 $in family_intersect({{1}})

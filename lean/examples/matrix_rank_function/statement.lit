@@ -1,0 +1,5 @@
+# Define a natural-valued rank function on rectangular complex matrices.
+have fn finite_matrix_rank(A matrix(C,2,3)) N = matrix_rank(A,2,3)
+finite_matrix_rank(zero_matrix(2,3)) = matrix_rank(zero_matrix(2,3),2,3)
+release thm matrix_rank_zero(2,3)
+finite_matrix_rank(zero_matrix(2,3)) = 0

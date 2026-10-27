@@ -1,0 +1,441 @@
+# Tracer: actual uniform probabilities on six outcomes.
+# The generic bundled constructor now supplies the complete finite probability space.
+# P(even)=1/2, P(>3)=1/2, P(even intersect >3)=1/3, P(even | >3)=2/3.
+# No probability laws or formula are assumed locally.
+# Evidence: target/release/litex -lang en -strict -f examples/probability/finite_events/main.lit
+
+{2,4,6} $subset {1,2,3,4,5,6}
+
+{2,4,6} $in power_set({1,2,3,4,5,6})
+
+{4,5,6} $subset {1,2,3,4,5,6}
+
+{4,5,6} $in power_set({1,2,3,4,5,6})
+
+intersect({2,4,6},{4,5,6}) $in power_set({1,2,3,4,5,6})
+
+\prob::main::uniform_event_probability<{1,2,3,4,5,6}>({2,4,6}) = 1/2
+
+by extension:
+    ? intersect({2,4,6},{4,5,6}) = {4,6}
+    by enumerate finite_set:
+        ? forall x {2,4,6}:
+            x $in {4,5,6}
+            =>:
+                x $in {4,6}
+        x $in {4,6}
+    claim:
+        ? forall x intersect({2,4,6},{4,5,6}):
+            x $in {4,6}
+        x $in {2,4,6}
+        x $in {4,5,6}
+    {4,6} $subset {2,4,6}
+    {4,6} $subset {4,5,6}
+    claim:
+        ? forall x {4,6}:
+            x $in intersect({2,4,6},{4,5,6})
+        x $in {2,4,6}
+        x $in {4,5,6}
+
+finite_set_size(intersect({2,4,6},{4,5,6})) = finite_set_size({4,6}) = 2
+
+\prob::main::uniform_event_probability<{1,2,3,4,5,6}>(intersect({2,4,6},{4,5,6})) = finite_set_size(intersect({2,4,6},{4,5,6})) / finite_set_size({1,2,3,4,5,6})
+
+finite_set_size({1,2,3,4,5,6}) = 6
+
+\prob::main::uniform_event_probability<{1,2,3,4,5,6}>(intersect({2,4,6},{4,5,6})) = finite_set_size(intersect({2,4,6},{4,5,6})) / finite_set_size({1,2,3,4,5,6}) = 2 / 6 = 1/3
+
+\prob::main::uniform_event_probability<{1,2,3,4,5,6}>({4,5,6}) = 1/2
+
+release thm prob::main::uniform_event_normalization({1,2,3,4,5,6})
+
+release thm prob::main::uniform_event_normalization({0})
+
+release thm prob::main::uniform_probability_laws({1,2,3,4,5,6})
+
+\prob::main::uniform_probability_space<{1,2,3,4,5,6}> = ({1,2,3,4,5,6},\prob::main::uniform_event_probability<{1,2,3,4,5,6}>)
+
+have dice &prob::main::FiniteProbabilitySpace<{1,2,3,4,5,6}> = \prob::main::uniform_probability_space<{1,2,3,4,5,6}>
+
+release struct def dice
+
+dice = ({1,2,3,4,5,6},\prob::main::uniform_event_probability<{1,2,3,4,5,6}>)
+
+dice.carrier = {1,2,3,4,5,6}
+
+dice.prob = \prob::main::uniform_event_probability<{1,2,3,4,5,6}>
+
+dice.prob({2,4,6}) = 1/2
+
+dice.prob({4,5,6}) = 1/2
+
+dice.prob(intersect({2,4,6},{4,5,6})) = 1/3
+
+\prob::main::conditional_event_probability<{1,2,3,4,5,6},dice>({2,4,6},{4,5,6}) = dice.prob(intersect({2,4,6},{4,5,6}))/dice.prob({4,5,6}) = (1/3)/(1/2) = 2/3
+
+# A genuine nonempty null event in the point mass at1.
+
+release thm prob::main::dirac_probability_laws({0,1},1)
+
+\prob::main::dirac_probability_space<{0,1},1> = ({0,1},\prob::main::dirac_event_probability<{0,1},1>)
+
+have point_mass &prob::main::FiniteProbabilitySpace<{0,1}> = \prob::main::dirac_probability_space<{0,1},1>
+
+point_mass = ({0,1},\prob::main::dirac_event_probability<{0,1},1>)
+
+point_mass.carrier = {0,1}
+
+point_mass.prob = \prob::main::dirac_event_probability<{0,1},1>
+
+{0} $subset {0,1}
+
+{0} $in power_set({0,1})
+
+{1} $subset {0,1}
+
+{1} $in power_set({0,1})
+
+release struct def point_mass
+
+release thm prob::main::dirac_event_excludes({0,1},1,{0})
+
+release thm prob::main::dirac_event_contains({0,1},1,{1})
+
+$is_nonempty_set({0})
+
+point_mass.prob({0}) = 0
+
+point_mass.prob({1}) = 1
+
+claim:
+    ? not 1 $in intersect({0},{1})
+    by contra:
+        ? not 1 $in intersect({0},{1})
+        1 $in {0}
+        impossible 1 $in {0}
+
+release thm prob::main::dirac_event_excludes({0,1},1,intersect({0},{1}))
+
+point_mass.prob(intersect({0},{1})) = \prob::main::dirac_event_probability<{0,1},1>(intersect({0},{1})) = 0
+
+\prob::main::conditional_event_probability<{0,1},point_mass>({0},{1}) = point_mass.prob(intersect({0},{1}))/point_mass.prob({1}) = 0
+
+by def $prob::main::independent_events({0,1},point_mass,{0},{1})
+
+{0,1} $in power_set(point_mass.carrier)
+
+point_mass.prob({1}) > 0
+
+release thm prob::main::null_event_independent({0,1},point_mass,{0},{0,1})
+
+release thm prob::main::independence_complement_right({0,1},point_mass,{0},{1})
+
+release thm prob::main::independence_complements({0,1},point_mass,{0},{1})
+
+release thm prob::main::conditional_event_monotone({0,1},point_mass,{0},{0,1},{1})
+
+# The two positive branches of the full conditional partition.
+
+{1,2,3} $subset {1,2,3,4,5,6}
+
+{1,2,3} $in power_set(dice.carrier)
+
+by extension:
+    ? set_minus(dice.carrier,{4,5,6}) = {1,2,3}
+    by enumerate finite_set:
+        ? forall x {1,2,3,4,5,6}:
+            not x $in {4,5,6}
+            =>:
+                x $in {1,2,3}
+        x $in {1,2,3}
+    claim:
+        ? forall x set_minus(dice.carrier,{4,5,6}):
+            x $in {1,2,3}
+        x $in dice.carrier
+        x $in {1,2,3,4,5,6}
+        not x $in {4,5,6}
+        x $in {1,2,3}
+    by enumerate finite_set:
+        ? forall x {1,2,3}:
+            not x $in {4,5,6}
+        not x $in {4,5,6}
+    claim:
+        ? forall x {1,2,3}:
+            x $in set_minus(dice.carrier,{4,5,6})
+        x $in {1,2,3,4,5,6}
+        x $in dice.carrier
+        not x $in {4,5,6}
+        x $in set_minus(dice.carrier,{4,5,6})
+
+dice.prob(set_minus(dice.carrier,{4,5,6})) = dice.prob({1,2,3}) = \prob::main::uniform_event_probability<{1,2,3,4,5,6}>({1,2,3}) = 1/2
+
+dice.prob({4,5,6}) > 0
+
+dice.prob(set_minus(dice.carrier,{4,5,6})) > 0
+
+release thm prob::main::total_probability_two_events({1,2,3,4,5,6},dice,{2,4,6},{4,5,6})
+
+\prob::main::conditional_event_probability<{1,2,3,4,5,6},dice>({2,4,6},set_minus(dice.carrier,{4,5,6}))*dice.prob(set_minus(dice.carrier,{4,5,6})) = (\prob::main::conditional_event_probability<{1,2,3,4,5,6},dice>({2,4,6},{4,5,6})*dice.prob({4,5,6}) + \prob::main::conditional_event_probability<{1,2,3,4,5,6},dice>({2,4,6},set_minus(dice.carrier,{4,5,6}))*dice.prob(set_minus(dice.carrier,{4,5,6}))) - \prob::main::conditional_event_probability<{1,2,3,4,5,6},dice>({2,4,6},{4,5,6})*dice.prob({4,5,6}) = dice.prob({2,4,6}) - \prob::main::conditional_event_probability<{1,2,3,4,5,6},dice>({2,4,6},{4,5,6})*dice.prob({4,5,6}) = 1/6
+
+\prob::main::conditional_event_probability<{1,2,3,4,5,6},dice>({2,4,6},set_minus(dice.carrier,{4,5,6})) = (\prob::main::conditional_event_probability<{1,2,3,4,5,6},dice>({2,4,6},set_minus(dice.carrier,{4,5,6}))*dice.prob(set_minus(dice.carrier,{4,5,6})))/dice.prob(set_minus(dice.carrier,{4,5,6})) = (1/6)/(1/2) = 1/3
+
+dice.prob({2,4,6}) = (2/3)*(1/2) + (1/3)*(1/2) = 1/2
+
+release thm prob::main::event_frechet_bounds({1,2,3,4,5,6},dice,{2,4,6},{4,5,6})
+
+release thm prob::main::whole_event_independent({0,1},point_mass,{0})
+
+by extension:
+    ? intersect({0},{1}) = {}
+    claim:
+        ? forall x intersect({0},{1}):
+            x $in {}
+        by contra:
+            ? x $in {}
+            x $in {0}
+            x $in {1}
+            x = 0
+            x = 1
+            impossible 0 = 1
+
+release thm prob::main::conditional_disjoint_events({0,1},point_mass,{0},{1})
+
+release thm prob::main::finite_expectation_zero({1,2,3,4,5,6},dice)
+
+release thm prob::main::finite_expectation_zero({0,1},point_mass)
+
+dice.carrier $subset R
+
+point_mass.carrier $subset R
+
+have fn dice_value(k dice.carrier) R = k
+
+have fn point_mass_value(k point_mass.carrier) R = k
+
+release thm prob::main::finite_expectation_formula({1,2,3,4,5,6},dice,dice_value)
+
+release thm prob::main::finite_expectation_formula({0,1},point_mass,point_mass_value)
+
+by enumerate finite_set:
+    ? forall k {1,2,3,4,5,6}:
+        k $in dice.carrier
+    k $in dice.carrier
+
+claim:
+    ? forall k dice.carrier:
+        dice.prob({k}) = 1/6
+    k $in {1,2,3,4,5,6}
+    {k} $in power_set({1,2,3,4,5,6})
+    \prob::main::uniform_event_probability<{1,2,3,4,5,6}>({k}) = finite_set_size({k})/finite_set_size({1,2,3,4,5,6}) = 1/6
+    dice.prob({k}) = \prob::main::uniform_event_probability<{1,2,3,4,5,6}>({k}) = 1/6
+
+have fn dice_weighted(k dice.carrier) R = dice_value(k)*dice.prob({k})
+
+have fn point_mass_weighted(k point_mass.carrier) R = point_mass_value(k)*point_mass.prob({k})
+
+release thm finite_set_sum_substitution(finite_set_sum(dice.carrier,fn(k dice.carrier) R {dice_value(k)*dice.prob({k})}),finite_set_sum(dice.carrier,dice_weighted))
+
+1 $in dice.carrier
+
+2 $in dice.carrier
+
+3 $in dice.carrier
+
+4 $in dice.carrier
+
+5 $in dice.carrier
+
+6 $in dice.carrier
+
+dice.prob({1}) = 1/6
+
+dice.prob({2}) = 1/6
+
+dice.prob({3}) = 1/6
+
+dice.prob({4}) = 1/6
+
+dice.prob({5}) = 1/6
+
+dice.prob({6}) = 1/6
+
+0 $in point_mass.carrier
+
+1 $in point_mass.carrier
+
+finite_set_sum(dice.carrier,dice_weighted) = finite_set_sum({1,2,3,4,5,6},dice_weighted) = dice_weighted(1)+dice_weighted(2)+dice_weighted(3)+dice_weighted(4)+dice_weighted(5)+dice_weighted(6)
+
+dice_weighted(1)+dice_weighted(2)+dice_weighted(3)+dice_weighted(4)+dice_weighted(5)+dice_weighted(6) = 1/6+2/6+3/6+4/6+5/6+6/6 = 7/2
+
+\prob::main::finite_expectation<{1,2,3,4,5,6},dice>(dice_value) = finite_set_sum(dice.carrier,fn(k dice.carrier) R {dice_value(k)*dice.prob({k})}) = finite_set_sum(dice.carrier,dice_weighted) = 7/2
+
+release thm finite_set_sum_substitution(finite_set_sum(point_mass.carrier,fn(k point_mass.carrier) R {point_mass_value(k)*point_mass.prob({k})}),finite_set_sum(point_mass.carrier,point_mass_weighted))
+
+finite_set_sum(point_mass.carrier,point_mass_weighted) = finite_set_sum({0,1},point_mass_weighted) = point_mass_weighted(0)+point_mass_weighted(1)
+
+point_mass_weighted(0)+point_mass_weighted(1) = 0*0+1*1 = 1
+
+\prob::main::finite_expectation<{0,1},point_mass>(point_mass_value) = finite_set_sum(point_mass.carrier,fn(k point_mass.carrier) R {point_mass_value(k)*point_mass.prob({k})}) = finite_set_sum(point_mass.carrier,point_mass_weighted) = 1
+
+have fn null_perturbed_value(k point_mass.carrier) R = 100-99*k
+
+have fn null_perturbed_weighted(k point_mass.carrier) R = null_perturbed_value(k)*point_mass.prob({k})
+
+release thm prob::main::finite_expectation_formula({0,1},point_mass,null_perturbed_value)
+
+release thm finite_set_sum_substitution(finite_set_sum(point_mass.carrier,fn(k point_mass.carrier) R {null_perturbed_value(k)*point_mass.prob({k})}),finite_set_sum(point_mass.carrier,null_perturbed_weighted))
+
+null_perturbed_value(0) = 100-99*0 = 100
+
+null_perturbed_value(1) = 100-99*1 = 1
+
+null_perturbed_weighted(0) = null_perturbed_value(0)*point_mass.prob({0}) = 100*0 = 0
+
+null_perturbed_weighted(1) = null_perturbed_value(1)*point_mass.prob({1}) = 1*1 = 1
+
+finite_set_sum(point_mass.carrier,null_perturbed_weighted) = finite_set_sum({0,1},null_perturbed_weighted) = null_perturbed_weighted(0)+null_perturbed_weighted(1) = 0+1 = 1
+
+\prob::main::finite_expectation<{0,1},point_mass>(null_perturbed_value) = finite_set_sum(point_mass.carrier,fn(k point_mass.carrier) R {null_perturbed_value(k)*point_mass.prob({k})}) = finite_set_sum(point_mass.carrier,null_perturbed_weighted) = 1
+
+release thm prob::main::finite_expectation_constant({0,1},point_mass,5)
+
+release thm prob::main::finite_expectation_constant({1,2,3,4,5,6},dice,5)
+
+release thm prob::main::finite_expectation_linear({1,2,3,4,5,6},dice,dice_value,dice_value,2,-3)
+
+\prob::main::finite_expectation<{1,2,3,4,5,6},dice>(fn(k dice.carrier) R {2*dice_value(k)+(-3)*dice_value(k)}) = 2*\prob::main::finite_expectation<{1,2,3,4,5,6},dice>(dice_value)+(-3)*\prob::main::finite_expectation<{1,2,3,4,5,6},dice>(dice_value) = 2*(7/2)+(-3)*(7/2) = -7/2
+
+release thm prob::main::finite_expectation_add({1,2,3,4,5,6},dice,dice_value,dice_value)
+
+\prob::main::finite_expectation<{1,2,3,4,5,6},dice>(fn(k dice.carrier) R {dice_value(k)+dice_value(k)}) = \prob::main::finite_expectation<{1,2,3,4,5,6},dice>(dice_value)+\prob::main::finite_expectation<{1,2,3,4,5,6},dice>(dice_value) = 7/2+7/2 = 7
+
+release thm prob::main::finite_expectation_scale({1,2,3,4,5,6},dice,dice_value,-2)
+
+\prob::main::finite_expectation<{1,2,3,4,5,6},dice>(fn(k dice.carrier) R {(-2)*dice_value(k)}) = (-2)*\prob::main::finite_expectation<{1,2,3,4,5,6},dice>(dice_value) = (-2)*(7/2) = -7
+
+release thm prob::main::finite_expectation_affine({1,2,3,4,5,6},dice,dice_value,2,-3)
+
+\prob::main::finite_expectation<{1,2,3,4,5,6},dice>(fn(k dice.carrier) R {2*dice_value(k)+(-3)}) = 2*\prob::main::finite_expectation<{1,2,3,4,5,6},dice>(dice_value)+(-3) = 2*(7/2)+(-3) = 4
+
+release thm prob::main::finite_expectation_subtract({0,1},point_mass,null_perturbed_value,point_mass_value)
+
+\prob::main::finite_expectation<{0,1},point_mass>(fn(k point_mass.carrier) R {null_perturbed_value(k)-point_mass_value(k)}) = \prob::main::finite_expectation<{0,1},point_mass>(null_perturbed_value)-\prob::main::finite_expectation<{0,1},point_mass>(point_mass_value) = 1-1 = 0
+
+release thm prob::main::finite_variance_constant({1,2,3,4,5,6},dice,5)
+
+release thm prob::main::finite_variance_constant({0,1},point_mass,5)
+
+have fn dice_square(k dice.carrier) R = dice_value(k)^2
+
+have fn dice_square_weighted(k dice.carrier) R = dice_square(k)*dice.prob({k})
+
+release thm prob::main::finite_expectation_formula({1,2,3,4,5,6},dice,dice_square)
+
+release thm finite_set_sum_substitution(finite_set_sum(dice.carrier,fn(k dice.carrier) R {dice_square(k)*dice.prob({k})}),finite_set_sum(dice.carrier,dice_square_weighted))
+
+finite_set_sum(dice.carrier,dice_square_weighted) = finite_set_sum({1,2,3,4,5,6},dice_square_weighted) = dice_square_weighted(1)+dice_square_weighted(2)+dice_square_weighted(3)+dice_square_weighted(4)+dice_square_weighted(5)+dice_square_weighted(6)
+
+dice_square_weighted(1)+dice_square_weighted(2)+dice_square_weighted(3)+dice_square_weighted(4)+dice_square_weighted(5)+dice_square_weighted(6) = 1/6+4/6+9/6+16/6+25/6+36/6 = 91/6
+
+\prob::main::finite_expectation<{1,2,3,4,5,6},dice>(dice_square) = finite_set_sum(dice.carrier,fn(k dice.carrier) R {dice_square(k)*dice.prob({k})}) = finite_set_sum(dice.carrier,dice_square_weighted) = 91/6
+
+release thm prob::main::finite_expectation_extensional({1,2,3,4,5,6},dice,dice_square,fn(k dice.carrier) R {dice_value(k)^2})
+
+release thm prob::main::finite_variance_second_moment({1,2,3,4,5,6},dice,dice_value)
+
+\prob::main::finite_expectation<{1,2,3,4,5,6},dice>(fn(k dice.carrier) R {dice_value(k)^2}) = \prob::main::finite_expectation<{1,2,3,4,5,6},dice>(dice_square) = 91/6
+
+\prob::main::finite_expectation<{1,2,3,4,5,6},dice>(dice_value)^2 = (7/2)^2 = 49/4
+
+have fn point_mass_square(k point_mass.carrier) R = point_mass_value(k)^2
+
+have fn point_mass_square_weighted(k point_mass.carrier) R = point_mass_square(k)*point_mass.prob({k})
+
+release thm prob::main::finite_expectation_formula({0,1},point_mass,point_mass_square)
+
+release thm finite_set_sum_substitution(finite_set_sum(point_mass.carrier,fn(k point_mass.carrier) R {point_mass_square(k)*point_mass.prob({k})}),finite_set_sum(point_mass.carrier,point_mass_square_weighted))
+
+release thm prob::main::finite_variance_nonnegative({1,2,3,4,5,6},dice,dice_value)
+
+release thm prob::main::finite_expectation_square_bound({1,2,3,4,5,6},dice,dice_value)
+
+thm variance_value_from_moments:
+    ? forall mean,second,result,a,b R:
+        result = second-mean^2
+        second = a
+        mean = b
+        =>:
+            result = a-b^2
+    result = second-mean^2 = a-mean^2 = a-b^2
+
+release thm variance_value_from_moments(\prob::main::finite_expectation<{1,2,3,4,5,6},dice>(dice_value),\prob::main::finite_expectation<{1,2,3,4,5,6},dice>(fn(k dice.carrier) R {dice_value(k)^2}),\prob::main::finite_variance<{1,2,3,4,5,6},dice>(dice_value),91/6,7/2)
+
+\prob::main::finite_variance<{1,2,3,4,5,6},dice>(dice_value) = 91/6-(7/2)^2 = 35/12
+
+point_mass_square(0) = point_mass_value(0)^2 = 0^2 = 0
+
+point_mass_square(1) = point_mass_value(1)^2 = 1^2 = 1
+
+point_mass_square_weighted(0) = point_mass_square(0)*point_mass.prob({0}) = 0*0 = 0
+
+point_mass_square_weighted(1) = point_mass_square(1)*point_mass.prob({1}) = 1*1 = 1
+
+finite_set_sum(point_mass.carrier,point_mass_square_weighted) = finite_set_sum({0,1},point_mass_square_weighted) = point_mass_square_weighted(0)+point_mass_square_weighted(1) = 0+1 = 1
+
+\prob::main::finite_expectation<{0,1},point_mass>(point_mass_square) = finite_set_sum(point_mass.carrier,fn(k point_mass.carrier) R {point_mass_square(k)*point_mass.prob({k})}) = finite_set_sum(point_mass.carrier,point_mass_square_weighted) = 1
+
+release thm prob::main::finite_expectation_extensional({0,1},point_mass,point_mass_square,fn(k point_mass.carrier) R {point_mass_value(k)^2})
+
+release thm prob::main::finite_variance_second_moment({0,1},point_mass,point_mass_value)
+
+\prob::main::finite_expectation<{0,1},point_mass>(fn(k point_mass.carrier) R {point_mass_value(k)^2}) = \prob::main::finite_expectation<{0,1},point_mass>(point_mass_square) = 1
+
+release thm variance_value_from_moments(\prob::main::finite_expectation<{0,1},point_mass>(point_mass_value),\prob::main::finite_expectation<{0,1},point_mass>(fn(k point_mass.carrier) R {point_mass_value(k)^2}),\prob::main::finite_variance<{0,1},point_mass>(point_mass_value),1,1)
+
+\prob::main::finite_variance<{0,1},point_mass>(point_mass_value) = 1-1^2 = 0
+
+release thm prob::main::finite_variance_affine({1,2,3,4,5,6},dice,dice_value,2,-3)
+
+\prob::main::finite_variance<{1,2,3,4,5,6},dice>(fn(k dice.carrier) R {2*dice_value(k)+(-3)}) = 2^2*\prob::main::finite_variance<{1,2,3,4,5,6},dice>(dice_value) = 4*(35/12) = 35/3
+
+release thm prob::main::finite_variance_scale({1,2,3,4,5,6},dice,dice_value,-2)
+
+\prob::main::finite_variance<{1,2,3,4,5,6},dice>(fn(k dice.carrier) R {(-2)*dice_value(k)}) = (-2)^2*\prob::main::finite_variance<{1,2,3,4,5,6},dice>(dice_value) = 4*(35/12) = 35/3
+
+release thm prob::main::finite_variance_translate({1,2,3,4,5,6},dice,dice_value,100)
+
+\prob::main::finite_variance<{1,2,3,4,5,6},dice>(fn(k dice.carrier) R {dice_value(k)+100}) = \prob::main::finite_variance<{1,2,3,4,5,6},dice>(dice_value) = 35/12
+
+release thm prob::main::finite_variance_affine({0,1},point_mass,point_mass_value,7,100)
+
+\prob::main::finite_variance<{0,1},point_mass>(fn(k point_mass.carrier) R {7*point_mass_value(k)+100}) = 7^2*\prob::main::finite_variance<{0,1},point_mass>(point_mass_value) = 49*0 = 0
+
+\prob::main::finite_covariance<{1,2,3,4,5,6},dice>(dice_value,dice_square) $in R
+
+release thm prob::main::finite_covariance_formula({1,2,3,4,5,6},dice,dice_value,dice_square)
+
+release thm prob::main::finite_covariance_symmetric({1,2,3,4,5,6},dice,dice_value,dice_square)
+
+release thm prob::main::finite_covariance_self({1,2,3,4,5,6},dice,dice_value)
+
+\prob::main::finite_covariance<{1,2,3,4,5,6},dice>(dice_value,dice_value) = \prob::main::finite_variance<{1,2,3,4,5,6},dice>(dice_value) = 35/12
+
+release thm prob::main::finite_covariance_self({0,1},point_mass,point_mass_value)
+
+\prob::main::finite_covariance<{0,1},point_mass>(point_mass_value,point_mass_value) = \prob::main::finite_variance<{0,1},point_mass>(point_mass_value) = 0
+
+release thm prob::main::finite_variance_affine({1,2,3,4,5,6},dice,dice_value,0,100)
+
+\prob::main::finite_variance<{1,2,3,4,5,6},dice>(fn(k dice.carrier) R {0*dice_value(k)+100}) = 0^2*\prob::main::finite_variance<{1,2,3,4,5,6},dice>(dice_value) = 0
+
+release thm prob::main::finite_covariance_constant_left({1,2,3,4,5,6},dice,dice_value,5)
+
+release thm prob::main::finite_covariance_constant_right({1,2,3,4,5,6},dice,dice_value,5)
+
+release thm prob::main::finite_covariance_constant_left({0,1},point_mass,point_mass_value,-3)
+
+release thm prob::main::finite_covariance_constant_right({0,1},point_mass,null_perturbed_value,0)
+
+have fn constant_sampler(k dice.carrier) R = 5
+
+release thm prob::main::finite_covariance_of_constant_left({1,2,3,4,5,6},dice,constant_sampler,dice_square,5)

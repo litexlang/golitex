@@ -1,0 +1,45 @@
+# Entrywise matrix laws are proved in std, using component formulas and
+# ordinary function extensionality. Their matrix-first argument order remains.
+# Before migration, a reserved native theorem supplied this conclusion:
+# release thm matrix_add_commutative(A,B,2,3)
+# Now import std/matrix and use its checked source theorem:
+# target/release/litex -strict -lang en -f examples/algebra/matrix_entrywise/main.lit
+
+have fn A(r closed_range(1,2),c closed_range(1,3)) R=r+c
+have fn B(r closed_range(1,2),c closed_range(1,3)) C=r-c+i
+release thm Matrix::main::matrix_add_commutative(A,B,2,3)
+matrix_add(A,B,2,3)=matrix_add(B,A,2,3)
+matrix_add(A,B,2,3)(1,2)=2+i
+
+# An ordinary imported caller verifies every contract at arbitrary dimensions.
+thm imported_entrywise_contract:
+    ? forall m,n N,left,right,third matrix(C,m,n),z C:
+        matrix_add(left,right,m,n)=matrix_add(right,left,m,n)
+        matrix_add(matrix_add(left,right,m,n),third,m,n)=matrix_add(left,matrix_add(right,third,m,n),m,n)
+        matrix_add(left,zero_matrix(m,n),m,n)=left
+        matrix_add(zero_matrix(m,n),left,m,n)=left
+        matrix_sub(left,left,m,n)=zero_matrix(m,n)
+        matrix_scale(1,left,m,n)=left
+        matrix_scale(0,left,m,n)=zero_matrix(m,n)
+        matrix_scale(z,matrix_add(left,right,m,n),m,n)=matrix_add(matrix_scale(z,left,m,n),matrix_scale(z,right,m,n),m,n)
+    release thm Matrix::main::matrix_add_commutative(left,right,m,n)
+    release thm Matrix::main::matrix_add_associative(left,right,third,m,n)
+    release thm Matrix::main::matrix_add_zero(left,m,n)
+    release thm Matrix::main::matrix_sub_self(left,m,n)
+    release thm Matrix::main::matrix_scale_one(left,m,n)
+    release thm Matrix::main::matrix_scale_zero(left,m,n)
+    release thm Matrix::main::matrix_scale_distributive(z,left,right,m,n)
+
+release thm imported_entrywise_contract(2,3,A,B,A,i)
+matrix_scale(i,matrix_add(A,B,2,3),2,3)(1,2)=-1+2*i
+
+# Empty row and column domains are legitimate complete matrix domains.
+release thm imported_entrywise_contract(0,3,zero_matrix(0,3),zero_matrix(0,3),zero_matrix(0,3),i)
+release thm imported_entrywise_contract(2,0,zero_matrix(2,0),zero_matrix(2,0),zero_matrix(2,0),i)
+release thm imported_entrywise_contract(0,0,zero_matrix(0,0),zero_matrix(0,0),zero_matrix(0,0),i)
+
+# Complete function values and matrix-space aliases use the same interfaces.
+have MatrixCarrier set=matrix(R,2,3)
+have aliased MatrixCarrier=A
+release thm Matrix::main::matrix_add_zero(aliased,2,3)
+release thm Matrix::main::matrix_scale_one(fn(r closed_range(1,2),c closed_range(1,3)) R {r+c},2,3)

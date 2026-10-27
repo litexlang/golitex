@@ -1,0 +1,5 @@
+# Each inverse entry is the transposed cofactor divided by the nonzero determinant.
+forall n N+, A matrix(C,n,n), r closed_range(1,n), c closed_range(1,n):
+    det(A,n) != 0
+    =>:
+        matrix_inverse(A,n)(r,c) = matrix_cofactor(A,n,c,r) / det(A,n)

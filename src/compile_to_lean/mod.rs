@@ -1,8 +1,10 @@
 mod compile_additive_inference;
 mod compile_assumption_stmt_result;
 mod compile_builtin_cart_membership;
+mod compile_builtin_fold_theorem;
 mod compile_builtin_function_membership;
 mod compile_builtin_membership_theorem;
+mod compile_builtin_norm_theorem;
 mod compile_builtin_tuple_theorem;
 mod compile_by_stmt_result;
 mod compile_callee_constructor;
@@ -23,6 +25,7 @@ mod compile_division_inference;
 mod compile_equality_inferences;
 mod compile_expand_range_stmt_result;
 mod compile_fact_stmt_result;
+mod compile_family_intersection_member;
 mod compile_finite_function_membership;
 mod compile_function_domain;
 mod compile_function_template;
@@ -32,6 +35,7 @@ mod compile_have_fn_equal_stmt_result;
 mod compile_have_obj_by_exist_facts_result;
 mod compile_have_obj_equal_stmt_result;
 mod compile_have_obj_in_nonempty_set_stmt_result;
+mod compile_indexed_set_membership;
 mod compile_inferred_obj;
 mod compile_integer_interval_inference;
 mod compile_intersection_inference;
@@ -159,3 +163,37 @@ mod aggregate_tests;
 mod compile_real_interval_inference;
 
 mod compile_basic_predicates;
+
+mod compile_matrix;
+
+mod compile_matrix_entrywise;
+
+mod compile_matrix_scale;
+
+mod compile_builtin_determinant_theorem;
+mod compile_builtin_matrix_power_theorem;
+mod compile_builtin_rank_theorem;
+mod compile_finite_inner_product;
+mod compile_matrix_adjugate;
+mod compile_matrix_apply;
+mod compile_matrix_cofactor;
+mod compile_matrix_determinant;
+mod compile_matrix_diagonal;
+mod compile_matrix_inverse;
+mod compile_matrix_minor;
+mod compile_matrix_multiply;
+mod compile_matrix_norm;
+mod compile_matrix_outer;
+mod compile_matrix_power;
+mod compile_matrix_rank;
+mod compile_matrix_square_scalar;
+mod compile_matrix_trace;
+
+mod compile_builtin_extremum_certificate_theorem;
+mod compile_builtin_extremum_theorem;
+mod compile_real_extrema;
+mod compile_real_set_bounds;
+mod compile_sequence_analysis;
+mod compile_sequence_epsilon;
+
+mod compile_power_set_inference;

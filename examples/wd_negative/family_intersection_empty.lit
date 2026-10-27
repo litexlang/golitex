@@ -1,0 +1,2 @@
+# Reject an absolute intersection without any member set.
+let invalid = family_intersect({})

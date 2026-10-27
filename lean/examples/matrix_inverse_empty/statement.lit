@@ -1,0 +1,4 @@
+# A zero-order determinant is one, so the empty square matrix has a well-defined inverse.
+det(zero_matrix(0,0),0) = 1
+det(zero_matrix(0,0),0) != 0
+matrix_inverse(zero_matrix(0,0),0) $in matrix(R,0,0)

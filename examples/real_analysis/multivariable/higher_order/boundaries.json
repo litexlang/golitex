@@ -1,0 +1,88 @@
+{
+  "setup": [
+    "have fn infinite_path(j N+) closed_range(1,2)=1",
+    "have fn unary(x R) R=x^2",
+    "have fn vector_valued(x cart_n(R,2)) cart_n(R,2)=x",
+    "have fn unproved_multi(x cart_n(R,2)) R=x(1)^4+x(2)^4",
+    "have fn pointwise_multi(x cart_n(R,2)) R=x(1)^3+x(2)^2",
+    "$has_partial_derivative_at(pointwise_multi,main::p,2,1,3)",
+    "have fn wrong_prefix(j closed_range(1,1)) closed_range(1,2)=2"
+  ],
+  "cases": [
+    {
+      "name": "pointwise_first_not_second_after_bridges",
+      "source": "\\Calc::higher_order::ordered_partial<2,cart_n(R,2),2>(pointwise_multi,main::p,(1,1)) $in R",
+      "expected_category": "well_defined"
+    },
+    {
+      "name": "different_order_no_automatic_exchange",
+      "source": "\\Calc::higher_order::ordered_partial<2,cart_n(R,2),3>(main::polynomial,main::p,(1,2,1)) $in R",
+      "expected_category": "well_defined"
+    },
+    {
+      "name": "wrong_value",
+      "source": "\\Calc::higher_order::ordered_partial<2,cart_n(R,2),3>(main::polynomial,main::p,main::path)=23",
+      "expected_category": "proof_search"
+    },
+    {
+      "name": "wrong_path_length",
+      "source": "\\Calc::higher_order::ordered_partial<2,cart_n(R,2),3>(main::polynomial,main::p,(1,1)) $in R",
+      "expected_category": "well_defined"
+    },
+    {
+      "name": "coordinate_zero",
+      "source": "\\Calc::higher_order::ordered_partial<2,cart_n(R,2),3>(main::polynomial,main::p,(1,0,2)) $in R",
+      "expected_category": "well_defined"
+    },
+    {
+      "name": "coordinate_outside_dimension",
+      "source": "\\Calc::higher_order::ordered_partial<2,cart_n(R,2),3>(main::polynomial,main::p,(1,3,2)) $in R",
+      "expected_category": "well_defined"
+    },
+    {
+      "name": "infinite_sequence_is_not_finite_path",
+      "source": "\\Calc::higher_order::ordered_partial<2,cart_n(R,2),3>(main::polynomial,main::p,infinite_path) $in R",
+      "expected_category": "well_defined"
+    },
+    {
+      "name": "real_is_not_one_vector",
+      "source": "\\Calc::higher_order::ordered_partial<1,cart_n(R,1),0>(unary,tuple(1),tuple()) $in R",
+      "expected_category": "well_defined"
+    },
+    {
+      "name": "scalar_output_required",
+      "source": "\\Calc::higher_order::ordered_partial<2,cart_n(R,2),0>(vector_valued,main::p,tuple()) $in R",
+      "expected_category": "well_defined"
+    },
+    {
+      "name": "point_outside_actual_domain",
+      "source": "\\Calc::higher_order::ordered_partial<2,main::local_domain,1>(main::restricted_bowl,(0,2),main::one_path) $in R",
+      "expected_category": "well_defined"
+    },
+    {
+      "name": "selector_ordinary_arity",
+      "source": "\\Calc::higher_order::ordered_partial<2,cart_n(R,2),3>(main::polynomial,main::p) $in R",
+      "expected_category": "well_defined"
+    },
+    {
+      "name": "missing_third_candidate",
+      "source": "\\Calc::higher_order::ordered_partial<2,cart_n(R,2),3>(unproved_multi,main::p,(1,1,2)) $in R",
+      "expected_category": "well_defined"
+    },
+    {
+      "name": "ordered_mismatched_prefix",
+      "source": "release thm Calc::higher_order::ordered_partial_prefix_exists(2,cart_n(R,2),3,1,main::polynomial,main::p,main::path,wrong_prefix,24)",
+      "expected_category": "proof_search"
+    },
+    {
+      "name": "ordered_prefix_longer_than_path",
+      "source": "release thm Calc::higher_order::ordered_partial_prefix_exists(2,cart_n(R,2),3,4,main::polynomial,main::p,main::path,main::path,24)",
+      "expected_category": "proof_search"
+    },
+    {
+      "name": "outer_zero_does_not_hide_missing_derivative",
+      "source": "0*\\Calc::higher_order::ordered_partial<2,cart_n(R,2),3>(unproved_multi,main::p,(1,1,2))=0",
+      "expected_category": "well_defined"
+    }
+  ]
+}

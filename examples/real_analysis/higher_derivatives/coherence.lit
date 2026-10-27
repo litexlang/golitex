@@ -1,0 +1,147 @@
+# A supplied third-order witness gives canonical lower derivative functions
+# on its actual intermediate domains, and those functions have the next candidates.
+
+release obj def main::cubic
+
+release obj def main::cubic_first
+
+release obj def main::cubic_second
+
+release obj def main::cubic_third
+
+release obj def main::unary_profiles
+
+by for:
+    ? forall j closed_range(0,3):
+        j=0 or j=1 or j=2 or j=3
+    j=0 or j=1 or j=2 or j=3
+
+by for:
+    ? forall j closed_range(1,3):
+        j=1 or j=2 or j=3
+    j=1 or j=2 or j=3
+
+claim:
+    ? forall j closed_range(1,3),x R:
+        j $in closed_range(0,3)
+        j-1 $in closed_range(0,3)
+        =>:
+            $has_derivative_at(main::unary_profiles(j-1),x,main::unary_profiles(j)(x))
+    j=1 or j=2 or j=3
+    by cases:
+        ? $has_derivative_at(main::unary_profiles(j-1),x,main::unary_profiles(j)(x))
+        case j=1:
+            j-1=0
+            main::unary_profiles(j-1)=main::unary_profiles(0)=main::cubic
+            main::unary_profiles(j)=main::unary_profiles(1)=main::cubic_first
+            main::unary_profiles(j)(x)=main::cubic_first(x)=3*x^2
+            release thm main::cubic_first_derivative(x)
+            $has_derivative_at(main::cubic,x,3*x^2)
+        case j=2:
+            j-1=1
+            main::unary_profiles(j-1)=main::unary_profiles(1)=main::cubic_first
+            main::unary_profiles(j)=main::unary_profiles(2)=main::cubic_second
+            main::unary_profiles(j)(x)=main::cubic_second(x)=6*x
+            release thm main::cubic_second_derivative(x)
+            $has_derivative_at(main::cubic_first,x,6*x)
+        case j=3:
+            j-1=2
+            main::unary_profiles(j-1)=main::unary_profiles(2)=main::cubic_second
+            main::unary_profiles(j)=main::unary_profiles(3)=main::cubic_third
+            main::unary_profiles(j)(x)=main::cubic_third(x)=6
+            release thm main::cubic_third_derivative(x)
+            $has_derivative_at(main::cubic_second,x,6)
+
+
+release thm Calc::unary_higher_order::nth_derivative_from_global_profiles(3,main::unary_profiles,2)
+
+main::unary_profiles(0)=main::cubic
+
+main::unary_profiles(3)=main::cubic_third
+
+main::unary_profiles(3)(2)=main::cubic_third(2)=6
+
+$Calc::unary_higher_order::has_nth_derivative_at(R,3,main::cubic,2,6)
+
+obtain proof_chain from $Calc::unary_higher_order::has_nth_derivative_at(R,3,main::cubic,2,6)
+
+release thm Calc::unary_higher_order::nth_derivative_chain_region_in_domain(R,3,main::cubic,proof_chain,1)
+
+release thm Calc::unary_higher_order::nth_derivative_chain_region_in_domain(R,3,main::cubic,proof_chain,2)
+
+let first_domain=proof_chain.regions(1)
+
+let second_domain=proof_chain.regions(2)
+
+release thm Calc::locality::finite_nested_regions_member(R,3,proof_chain.regions,2,1)
+
+release thm Calc::locality::finite_nested_regions_member(R,3,proof_chain.regions,2,2)
+
+release thm Calc::unary_higher_order::nth_derivative_lower_candidate(R,3,1,main::cubic,2,proof_chain)
+
+release thm Calc::unary_higher_order::nth_derivative_one_to_native(R,main::cubic,2,proof_chain.values(1,2))
+
+release thm main::cubic_first_derivative(2)
+
+release thm fn_derivative_at_unique(main::cubic,2,proof_chain.values(1,2),12)
+
+release thm Calc::unary_higher_order::nth_derivative_chain_exists_on(R,3,1,main::cubic,proof_chain,first_domain)
+
+have first_map fn(x first_domain) R=\Calc::unary_higher_order::nth_derivative_function<R,first_domain,1>(main::cubic)
+
+release thm Calc::unary_higher_order::nth_derivative_function_value(R,1,main::cubic,first_domain,2,12)
+
+first_map(2)=12
+
+claim:
+    ? forall x first_domain:
+        first_map(x)=main::cubic_first(x)
+    x $in R
+    x $in proof_chain.regions(1)
+    release thm Calc::unary_higher_order::nth_derivative_lower_candidate(R,3,1,main::cubic,x,proof_chain)
+    release thm Calc::unary_higher_order::nth_derivative_one_to_native(R,main::cubic,x,proof_chain.values(1,x))
+    release thm main::cubic_first_derivative(x)
+    release thm fn_derivative_at_unique(main::cubic,x,proof_chain.values(1,x),3*x^2)
+    release thm Calc::unary_higher_order::nth_derivative_function_value(R,1,main::cubic,first_domain,x,proof_chain.values(1,x))
+    first_map(x)=proof_chain.values(1,x)=3*x^2=main::cubic_first(x)
+
+proof_chain.regions(1+1)=proof_chain.regions(2)
+
+proof_chain.values(1+1,2)=proof_chain.values(2,2)
+
+release thm Calc::unary_higher_order::nth_derivative_function_successor(R,3,1,main::cubic,proof_chain,first_domain,2)
+
+$has_derivative_at(first_map,2,proof_chain.values(2,2))
+
+release thm main::cubic_second_derivative(2)
+
+claim:
+    ? forall x intersect(first_domain,R):
+        first_map(x)=main::cubic_first(x)
+    x $in first_domain
+
+release thm Calc::locality::real_derivatives_intersection_unique(first_domain,R,2,first_map,main::cubic_first,proof_chain.values(2,2),12)
+
+proof_chain.values(2,2)=12
+
+$has_derivative_at(first_map,2,12)
+
+release thm Calc::unary_higher_order::nth_derivative_chain_exists_on(R,3,2,main::cubic,proof_chain,second_domain)
+
+have second_map fn(x second_domain) R=\Calc::unary_higher_order::nth_derivative_function<R,second_domain,2>(main::cubic)
+
+release thm Calc::unary_higher_order::nth_derivative_lower_candidate(R,3,2,main::cubic,2,proof_chain)
+
+release thm Calc::unary_higher_order::nth_derivative_function_value(R,2,main::cubic,second_domain,2,12)
+
+second_map(2)=12
+
+proof_chain.regions(2+1)=proof_chain.regions(3)
+
+proof_chain.values(2+1,2)=proof_chain.values(3,2)
+
+release thm Calc::unary_higher_order::nth_derivative_function_successor(R,3,2,main::cubic,proof_chain,second_domain,2)
+
+proof_chain.values(3,2)=6
+
+$has_derivative_at(second_map,2,6)

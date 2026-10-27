@@ -141,6 +141,14 @@ impl LitexToLeanCompiler {
                     | AtomicFact::NotCoprimeFact(_)
                     | AtomicFact::DvdFact(_)
                     | AtomicFact::NotDvdFact(_)
+                    | AtomicFact::SequenceAnalysisFact(_)
+                    | AtomicFact::NotSequenceAnalysisFact(_)
+                    | AtomicFact::HasSequenceLimitFact(_)
+                    | AtomicFact::NotHasSequenceLimitFact(_)
+                    | AtomicFact::RealSetBoundFact(_)
+                    | AtomicFact::NotRealSetBoundFact(_)
+                    | AtomicFact::RealSetBoundedFact(_)
+                    | AtomicFact::NotRealSetBoundedFact(_)
             ) =>
             {
                 self.compile_raw_known_atomic_transport(

@@ -1,0 +1,1 @@
+set_minus({1/0},{}) $in power_set({1/0})

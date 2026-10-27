@@ -1,9 +1,0 @@
-# Tracer: `clear` is an ordinary definition name.
-#
-# Before: a bare `clear` statement reset the current user environment.
-# Now: there is no clear statement and the spelling is not reserved.
-# Boundary: the Rust regression test verifies that bare `clear` fails without
-# mutating definitions already present in the environment.
-# Evidence: this tracer is registered in the repository examples harness.
-have clear R = 1
-clear = 1

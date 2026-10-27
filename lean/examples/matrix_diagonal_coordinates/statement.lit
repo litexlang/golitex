@@ -1,0 +1,3 @@
+# Each diagonal-matrix entry is the singleton-intersection cardinality times the vector entry.
+forall n N, v cart_n(C,n), row closed_range(1,n), col closed_range(1,n):
+    diagonal_matrix(v,n)(row,col) = finite_set_size(intersect({row},{col}))*v(row)

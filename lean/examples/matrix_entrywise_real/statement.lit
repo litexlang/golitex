@@ -1,0 +1,6 @@
+# Entrywise operations on real matrices produce real coordinate values.
+forall m, n N, A, B matrix(R,m,n), row closed_range(1,m), col closed_range(1,n):
+    matrix_add(A,B,m,n)(row,col) $in R
+
+forall m, n N, A, B matrix(R,m,n), row closed_range(1,m), col closed_range(1,n):
+    matrix_sub(A,B,m,n)(row,col) $in R

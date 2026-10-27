@@ -1,0 +1,7 @@
+# The rank is at most either dimension; reuse the named bound on a rectangular matrix.
+thm checked_matrix_rank_bounds:
+    ? forall m,n N, A matrix(C,m,n):
+        matrix_rank(A,m,n) <= m
+        matrix_rank(A,m,n) <= n
+    release thm matrix_rank_bounds(A,m,n)
+by thm checked_matrix_rank_bounds(2,3,zero_matrix(2,3)) => matrix_rank(zero_matrix(2,3),2,3) <= 2

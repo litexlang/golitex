@@ -9188,55 +9188,6 @@ let mut output = node("BuiltinTheoremId", "MatrixRankFactorizationExists", field
 if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "MatrixRankFactorizationExists", ""); }
 output
 },
-crate::builtin_theorem::BuiltinTheoremId::MatrixAddCommutative => {
-let rule_id = Some("builtin_theorem.BuiltinTheoremId::MatrixAddCommutative");
-let fields = vec![];
-let mut output = node("BuiltinTheoremId", "MatrixAddCommutative", fields);
-if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "MatrixAddCommutative", ""); }
-output
-},
-crate::builtin_theorem::BuiltinTheoremId::MatrixAddAssociative => {
-let rule_id = Some("builtin_theorem.BuiltinTheoremId::MatrixAddAssociative");
-let fields = vec![];
-let mut output = node("BuiltinTheoremId", "MatrixAddAssociative", fields);
-if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "MatrixAddAssociative", ""); }
-output
-},
-crate::builtin_theorem::BuiltinTheoremId::MatrixAddZero => {
-let rule_id = Some("builtin_theorem.BuiltinTheoremId::MatrixAddZero");
-let fields = vec![];
-let mut output = node("BuiltinTheoremId", "MatrixAddZero", fields);
-if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "MatrixAddZero", ""); }
-output
-},
-crate::builtin_theorem::BuiltinTheoremId::MatrixSubSelf => {
-let rule_id = Some("builtin_theorem.BuiltinTheoremId::MatrixSubSelf");
-let fields = vec![];
-let mut output = node("BuiltinTheoremId", "MatrixSubSelf", fields);
-if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "MatrixSubSelf", ""); }
-output
-},
-crate::builtin_theorem::BuiltinTheoremId::MatrixScaleOne => {
-let rule_id = Some("builtin_theorem.BuiltinTheoremId::MatrixScaleOne");
-let fields = vec![];
-let mut output = node("BuiltinTheoremId", "MatrixScaleOne", fields);
-if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "MatrixScaleOne", ""); }
-output
-},
-crate::builtin_theorem::BuiltinTheoremId::MatrixScaleZero => {
-let rule_id = Some("builtin_theorem.BuiltinTheoremId::MatrixScaleZero");
-let fields = vec![];
-let mut output = node("BuiltinTheoremId", "MatrixScaleZero", fields);
-if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "MatrixScaleZero", ""); }
-output
-},
-crate::builtin_theorem::BuiltinTheoremId::MatrixScaleDistributive => {
-let rule_id = Some("builtin_theorem.BuiltinTheoremId::MatrixScaleDistributive");
-let fields = vec![];
-let mut output = node("BuiltinTheoremId", "MatrixScaleDistributive", fields);
-if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "MatrixScaleDistributive", ""); }
-output
-},
 crate::builtin_theorem::BuiltinTheoremId::MatrixMulAssociative => {
 let rule_id = Some("builtin_theorem.BuiltinTheoremId::MatrixMulAssociative");
 let fields = vec![];
@@ -20897,6 +20848,16 @@ let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__
 let mut output = node("AtomicExceptEqualityFactSearchProofByBuiltinStrategy", "IntersectFiniteFromBoth", fields);
 output
 },
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::AtomicExceptEqualityFactSearchProofByBuiltinStrategy::IntersectFiniteFromLeft(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_strategy__result__IntersectFiniteFromLeftStrategySingleStep(f0, capture, runtime))];
+let mut output = node("AtomicExceptEqualityFactSearchProofByBuiltinStrategy", "IntersectFiniteFromLeft", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::AtomicExceptEqualityFactSearchProofByBuiltinStrategy::IntersectFiniteFromRight(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_strategy__result__IntersectFiniteFromRightStrategySingleStep(f0, capture, runtime))];
+let mut output = node("AtomicExceptEqualityFactSearchProofByBuiltinStrategy", "IntersectFiniteFromRight", fields);
+output
+},
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::AtomicExceptEqualityFactSearchProofByBuiltinStrategy::SetMinusFiniteFromLeft(f0) => {
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_strategy__result__SetMinusFiniteFromLeftStrategySingleStep(f0, capture, runtime))];
 let mut output = node("AtomicExceptEqualityFactSearchProofByBuiltinStrategy", "SetMinusFiniteFromLeft", fields);
@@ -27835,6 +27796,36 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_known_special_property__InFactSearchProofByKnownSpecialProperty(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_known_special_property::InFactSearchProofByKnownSpecialProperty, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_known_special_property::InFactSearchProofByKnownSpecialProperty::UnionInPowerSet(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__known_power_set_closure__UnionInPowerSetProof(f0, capture, runtime))];
+let mut output = node("InFactSearchProofByKnownSpecialProperty", "UnionInPowerSet", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_known_special_property::InFactSearchProofByKnownSpecialProperty::IntersectInPowerSetFromLeft(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__known_power_set_closure__IntersectInPowerSetFromLeftProof(f0, capture, runtime))];
+let mut output = node("InFactSearchProofByKnownSpecialProperty", "IntersectInPowerSetFromLeft", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_known_special_property::InFactSearchProofByKnownSpecialProperty::IntersectInPowerSetFromRight(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__known_power_set_closure__IntersectInPowerSetFromRightProof(f0, capture, runtime))];
+let mut output = node("InFactSearchProofByKnownSpecialProperty", "IntersectInPowerSetFromRight", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_known_special_property::InFactSearchProofByKnownSpecialProperty::SetMinusInPowerSet(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__known_power_set_closure__SetMinusInPowerSetProof(f0, capture, runtime))];
+let mut output = node("InFactSearchProofByKnownSpecialProperty", "SetMinusInPowerSet", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_known_special_property::InFactSearchProofByKnownSpecialProperty::SetMinusInPowerSetOfLeft(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__known_power_set_closure__SetMinusInPowerSetOfLeftProof(f0, capture, runtime))];
+let mut output = node("InFactSearchProofByKnownSpecialProperty", "SetMinusInPowerSetOfLeft", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_known_special_property::InFactSearchProofByKnownSpecialProperty::ListSetInPowerSetFromMembers(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__known_power_set_closure__ListSetInPowerSetFromMembersProof(f0, capture, runtime))];
+let mut output = node("InFactSearchProofByKnownSpecialProperty", "ListSetInPowerSetFromMembers", fields);
+output
+},
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_known_special_property::InFactSearchProofByKnownSpecialProperty::DeclaredNumericSequenceCarrier(f0) => {
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__known_real_array_return__DeclaredNumericSequenceCarrierProof(f0, capture, runtime))];
 let mut output = node("InFactSearchProofByKnownSpecialProperty", "DeclaredNumericSequenceCarrier", fields);
@@ -27908,6 +27899,11 @@ output
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_known_special_property::InFactSearchProofByKnownSpecialProperty::TemplateApplicationInDeclaredCodomain(f0) => {
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_known_special_property__TemplateApplicationInDeclaredCodomainProof(f0, capture, runtime))];
 let mut output = node("InFactSearchProofByKnownSpecialProperty", "TemplateApplicationInDeclaredCodomain", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_known_special_property::InFactSearchProofByKnownSpecialProperty::TemplateApplicationInStandardSuperset(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__known_template_standard_return__TemplateApplicationInStandardSupersetProof(f0, capture, runtime))];
+let mut output = node("InFactSearchProofByKnownSpecialProperty", "TemplateApplicationInStandardSuperset", fields);
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_known_special_property::InFactSearchProofByKnownSpecialProperty::TemplateFunctionInDeclaredFnSet(f0) => {
@@ -32300,6 +32296,28 @@ output
 capture.intern_evidence(output)
 }
 
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_strategy__result__IntersectFiniteFromLeftStrategySingleStep(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::IntersectFiniteFromLeftStrategySingleStep, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::IntersectFiniteFromLeftStrategySingleStep { requirement_facts: f0, proof_of_requirement_facts: f1 } => {
+let fields = vec![("requirement_facts", JsonValue::Array((f0).iter().map(|item| capture_ast__fact__fact__Fact(item, capture, runtime)).collect())), ("proof_of_requirement_facts", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("IntersectFiniteFromLeftStrategySingleStep", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_strategy__result__IntersectFiniteFromRightStrategySingleStep(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::IntersectFiniteFromRightStrategySingleStep, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::IntersectFiniteFromRightStrategySingleStep { requirement_facts: f0, proof_of_requirement_facts: f1 } => {
+let fields = vec![("requirement_facts", JsonValue::Array((f0).iter().map(|item| capture_ast__fact__fact__Fact(item, capture, runtime)).collect())), ("proof_of_requirement_facts", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("IntersectFiniteFromRightStrategySingleStep", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_strategy__result__SetMinusFiniteFromLeftStrategySingleStep(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::SetMinusFiniteFromLeftStrategySingleStep, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::SetMinusFiniteFromLeftStrategySingleStep { requirement_facts: f0, proof_of_requirement_facts: f1 } => {
@@ -35889,8 +35907,8 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ReduceObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ReduceObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ReduceObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ReduceObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1, operation_signature_selection: f2, iterand_signature_selection: f3 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect())), ("operation_signature_selection", match (f2).as_ref() { Some(item) => capture_execute__execute_fact_stmt__function_signature_selection__FunctionSignatureSelection(item, capture, runtime), None => JsonValue::Null }), ("iterand_signature_selection", match (f3).as_ref() { Some(item) => capture_execute__execute_fact_stmt__function_signature_selection__FunctionSignatureSelection(item, capture, runtime), None => JsonValue::Null })];
 let mut output = node("ReduceObjWellDefinedProof", "", fields);
 output
 },
@@ -35900,8 +35918,8 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FiniteSetReduceObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FiniteSetReduceObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FiniteSetReduceObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FiniteSetReduceObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1, operation_signature_selection: f2, iterand_signature_selection: f3 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect())), ("operation_signature_selection", match (f2).as_ref() { Some(item) => capture_execute__execute_fact_stmt__function_signature_selection__FunctionSignatureSelection(item, capture, runtime), None => JsonValue::Null }), ("iterand_signature_selection", match (f3).as_ref() { Some(item) => capture_execute__execute_fact_stmt__function_signature_selection__FunctionSignatureSelection(item, capture, runtime), None => JsonValue::Null })];
 let mut output = node("FiniteSetReduceObjWellDefinedProof", "", fields);
 output
 },
@@ -38615,6 +38633,72 @@ output
 capture.intern_evidence(output)
 }
 
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__known_power_set_closure__UnionInPowerSetProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::known_power_set_closure::UnionInPowerSetProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::known_power_set_closure::UnionInPowerSetProof { left: f0, right: f1 } => {
+let fields = vec![("left", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__result__AtomicExceptEqualityFactKnownProof(f0, capture, runtime)), ("right", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__result__AtomicExceptEqualityFactKnownProof(f1, capture, runtime))];
+let mut output = node("UnionInPowerSetProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__known_power_set_closure__IntersectInPowerSetFromLeftProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::known_power_set_closure::IntersectInPowerSetFromLeftProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::known_power_set_closure::IntersectInPowerSetFromLeftProof { left: f0 } => {
+let fields = vec![("left", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__result__AtomicExceptEqualityFactKnownProof(f0, capture, runtime))];
+let mut output = node("IntersectInPowerSetFromLeftProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__known_power_set_closure__IntersectInPowerSetFromRightProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::known_power_set_closure::IntersectInPowerSetFromRightProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::known_power_set_closure::IntersectInPowerSetFromRightProof { right: f0 } => {
+let fields = vec![("right", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__result__AtomicExceptEqualityFactKnownProof(f0, capture, runtime))];
+let mut output = node("IntersectInPowerSetFromRightProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__known_power_set_closure__SetMinusInPowerSetProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::known_power_set_closure::SetMinusInPowerSetProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::known_power_set_closure::SetMinusInPowerSetProof { left: f0 } => {
+let fields = vec![("left", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__result__AtomicExceptEqualityFactKnownProof(f0, capture, runtime))];
+let mut output = node("SetMinusInPowerSetProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__known_power_set_closure__SetMinusInPowerSetOfLeftProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::known_power_set_closure::SetMinusInPowerSetOfLeftProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::known_power_set_closure::SetMinusInPowerSetOfLeftProof { left_equal_carrier: f0 } => {
+let fields = vec![("left_equal_carrier", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__KnownEqualityPathProof(f0, capture, runtime))];
+let mut output = node("SetMinusInPowerSetOfLeftProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__known_power_set_closure__ListSetInPowerSetFromMembersProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::known_power_set_closure::ListSetInPowerSetFromMembersProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::known_power_set_closure::ListSetInPowerSetFromMembersProof { members: f0 } => {
+let fields = vec![("members", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__result__AtomicExceptEqualityFactKnownProof(item, capture, runtime)).collect()))];
+let mut output = node("ListSetInPowerSetFromMembersProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__known_real_array_return__DeclaredNumericSequenceCarrierProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::known_real_array_return::DeclaredNumericSequenceCarrierProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::known_real_array_return::DeclaredNumericSequenceCarrierProof { declared_signature: f0, target_signature: f1, widened_signature: f2, source_return: f3, target_return: f4, signature_match: f5 } => {
@@ -38763,6 +38847,17 @@ let output = match value {
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_known_special_property::TemplateApplicationInDeclaredCodomainProof { instance: f0, function_equal: f1, declared_signature: f2, applied_return_set: f3, return_set_match: f4, alternative_signature_matches: f5, alternative_template_signature_matches: f6 } => {
 let fields = vec![("instance", capture_ast__obj__InstantiatedTemplateObj(f0, capture, runtime)), ("function_equal", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__KnownEqualityPathProof(f1, capture, runtime)), ("declared_signature", capture_ast__obj__FnSet(f2, capture, runtime)), ("applied_return_set", capture_ast__obj__Obj(f3, capture, runtime)), ("return_set_match", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__EqualFactSearchedProof(f4, capture, runtime)), ("alternative_signature_matches", JsonValue::Array((f5).iter().map(|item| capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_known_special_property__SignatureReturnMatchProof(item, capture, runtime)).collect())), ("alternative_template_signature_matches", JsonValue::Array((f6).iter().map(|item| capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_known_special_property__TemplateSignatureReturnMatchProof(item, capture, runtime)).collect()))];
 let mut output = node("TemplateApplicationInDeclaredCodomainProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__known_template_standard_return__TemplateApplicationInStandardSupersetProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::known_template_standard_return::TemplateApplicationInStandardSupersetProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::known_template_standard_return::TemplateApplicationInStandardSupersetProof { target_set: f0, declared_returns: f1, signature_returns: f2 } => {
+let fields = vec![("target_set", capture.standard_set(f0, runtime)), ("declared_returns", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__known_template_standard_return__DeclaredStandardReturnProof(item, capture, runtime)).collect())), ("signature_returns", JsonValue::Array((f2).iter().map(|item| capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__known_fn_standard_return__SignatureStandardReturnProof(item, capture, runtime)).collect()))];
+let mut output = node("TemplateApplicationInStandardSupersetProof", "", fields);
 output
 },
 };
@@ -44724,6 +44819,17 @@ let output = match value {
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_known_special_property::TemplateSignatureReturnMatchProof { instance: f0, function_equal: f1, return_set_match: f2 } => {
 let fields = vec![("instance", capture_ast__obj__InstantiatedTemplateObj(f0, capture, runtime)), ("function_equal", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__KnownEqualityPathProof(f1, capture, runtime)), ("return_set_match", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__EqualFactSearchedProof(f2, capture, runtime))];
 let mut output = node("TemplateSignatureReturnMatchProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__known_template_standard_return__DeclaredStandardReturnProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::known_template_standard_return::DeclaredStandardReturnProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::known_template_standard_return::DeclaredStandardReturnProof { function: f0, function_equal: f1, declared_signature: f2, source_set: f3 } => {
+let fields = vec![("function", capture_ast__obj__Obj(f0, capture, runtime)), ("function_equal", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__KnownEqualityPathProof(f1, capture, runtime)), ("declared_signature", capture_ast__obj__FnSet(f2, capture, runtime)), ("source_set", capture.standard_set(f3, runtime))];
+let mut output = node("DeclaredStandardReturnProof", "", fields);
 output
 },
 };

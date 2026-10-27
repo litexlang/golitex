@@ -1,3 +1,5 @@
+use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOperatorObjWellDefinedProofByDef;
+use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::HyperbolicOperatorObjWellDefinedProofByDef;
 use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ComplexOperatorObjWellDefinedProofByDef;
 use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::TrigOperatorObjWellDefinedProofByDef;
 use super::compile_assumption_stmt_result::{trust_have, assumption_start};
@@ -347,6 +349,39 @@ impl<'a> SourcePosition<'a> {
                     _ => None, // The original singleton/reversed Or may have been normalized.
                 };
             }
+            Obj::MatrixOperator(MatrixOperator::Add(_) | MatrixOperator::Subtract(_)) => {
+                &[".1", ".2.1", ".2.2.1", ".2.2.2"]
+            }
+            Obj::MatrixOperator(
+                MatrixOperator::InnerProduct(_)
+                | MatrixOperator::FrobeniusNorm(_)
+                | MatrixOperator::Power(_)
+                | MatrixOperator::Inverse(_)
+                | MatrixOperator::Rank(_),
+            ) => &[".1", ".2.1", ".2.2"],
+            Obj::MatrixOperator(MatrixOperator::EuclideanNorm(_)) => &[".1", ".2"],
+            Obj::MatrixOperator(
+                MatrixOperator::Multiply(_)
+                | MatrixOperator::Minor(_)
+                | MatrixOperator::Cofactor(_),
+            ) => &[".1", ".2.1", ".2.2.1", ".2.2.2.1", ".2.2.2.2"],
+            Obj::MatrixOperator(
+                MatrixOperator::Scale(_)
+                | MatrixOperator::OuterProduct(_)
+                | MatrixOperator::Apply(_),
+            ) => &[".1", ".2.1", ".2.2.1", ".2.2.2"],
+            Obj::MatrixOperator(
+                MatrixOperator::ZeroMatrix(_)
+                | MatrixOperator::Diagonal(_)
+                | MatrixOperator::Trace(_)
+                | MatrixOperator::Determinant(_)
+                | MatrixOperator::Adjugate(_),
+            ) => &[".1", ".2"],
+            Obj::MatrixOperator(MatrixOperator::IdentityMatrix(_)) => &[""],
+            Obj::MatrixOperator(
+                MatrixOperator::Transpose(_) | MatrixOperator::ConjugateTranspose(_),
+            ) => &[".1", ".2.1", ".2.2"],
+            Obj::SetFormer(SetFormer::MatrixSet(_)) => &[".1", ".2.1", ".2.2"],
             Obj::SetFormer(SetFormer::FiniteSeqSet(_) | SetFormer::IntervalObj(_)) => &[".1", ".2"],
             Obj::SetFormer(SetFormer::SeqSet(_) | SetFormer::OneSideInfinityIntervalObj(_)) => {
                 &[""]
@@ -386,6 +421,15 @@ impl<'a> SourcePosition<'a> {
             ) => &[""],
             Obj::ExpLogOperator(ExpLogOperator::Sqrt(_)) => &[".1", ".2"],
             Obj::ComplexOperator(_) => &[""],
+            Obj::HyperbolicOperator(
+                HyperbolicOperator::Sinh(_)
+                | HyperbolicOperator::Cosh(_)
+                | HyperbolicOperator::Tanh(_)
+                | HyperbolicOperator::Sech(_),
+            ) => &[""],
+            Obj::HyperbolicOperator(HyperbolicOperator::Coth(_) | HyperbolicOperator::Csch(_)) => {
+                &[".1", ".2"]
+            }
             Obj::TrigOperator(
                 TrigOperator::Sin(_)
                 | TrigOperator::Cos(_)
@@ -2233,7 +2277,6 @@ impl<'a> SourcePosition<'a> {
             &SourcePosition<'_>,
         ) -> Result<T, LeanCompileError>,
     ) -> Result<Option<T>, LeanCompileError> {
-        let object_ir = object.ir();
         visit_visible(
             self,
             object,
@@ -2242,7 +2285,7 @@ impl<'a> SourcePosition<'a> {
                 let SourceConstructor::Checked(proof) = evidence else {
                     return Ok(None);
                 };
-                if matches!(proof, ObjWellDefinedProof::ByDef { obj, .. } if obj.ir() == object_ir)
+                if matches!(proof, ObjWellDefinedProof::ByDef { obj, .. } if same_wd_subject(obj, object))
                 {
                     callback(proof, position).map(Some)
                 } else {
@@ -4180,6 +4223,7 @@ fn atomic_inference_stages(infer: &InferAtomicFactResult) -> Vec<&StoreInferredF
                     .collect::<Vec<_>>(),
                 InferInFactResult::SignedStandardSetSign(p) => p.derived.iter().collect(),
                 InferInFactResult::CartCoordinates(_)
+                | InferInFactResult::PowerSet(_)
                 | InferInFactResult::Range(_)
                 | InferInFactResult::ClosedRange(_)
                 | InferInFactResult::UnionOr(_)
@@ -4190,6 +4234,7 @@ fn atomic_inference_stages(infer: &InferAtomicFactResult) -> Vec<&StoreInferredF
                 | InferInFactResult::SeqExpand(_)
                 | InferInFactResult::RealInterval(_)
                 | InferInFactResult::OneSideRealInterval(_)
+                | InferInFactResult::MatrixExpand(_)
                 | InferInFactResult::FiniteSeqExpand(_)
                 | InferInFactResult::FnRange(_)
                 | InferInFactResult::ListSetSingletonEqual(_) => r.stored_conclusions(),
@@ -6012,6 +6057,17 @@ fn constructor_has_closed_leaf(evidence: SourceConstructor<'_>) -> bool {
     }
 }
 
+/// Reuse original construction evidence across local binder renaming only.
+/// The matcher checks free IDs and carriers; stage/scope checks remain below.
+fn same_wd_subject(source: &Obj, requested: &Obj) -> bool {
+    source.ir() == requested.ir()
+        || super::helper::instantiated_object_matches(
+            source,
+            requested,
+            &std::collections::HashMap::new(),
+        )
+}
+
 fn visit_visible<T>(
     start: &SourcePosition<'_>,
     object: &Obj,
@@ -6030,7 +6086,7 @@ fn visit_visible<T>(
     let object_ir = object.ir();
     let mut bounded_wd = |proof: SourceConstructor<'_>, producer: &SourcePosition<'_>| {
         let relevant = match proof {
-            SourceConstructor::Checked(proof) => proof.obj().ir() == object_ir,
+            SourceConstructor::Checked(proof) => same_wd_subject(proof.obj(), object),
             SourceConstructor::Inferred(store) => {
                 store.atomic_components().iter().any(|(_, fact)| {
                     atomic_fact_args_ref(fact)
@@ -7631,6 +7687,30 @@ fn visit_owner<T>(
                     }
                 }
             }
+            if let Some((child, real, selection)) = super::compile_real_extrema::bound_stages(proof)
+            {
+                for (index, requirement) in [real, selection].into_iter().enumerate().rev() {
+                    if position.before > index + 1 {
+                        let prior = SourcePosition {
+                            before: index + 1,
+                            ..*position
+                        };
+                        if let Some(value) = visit_complete_verify(requirement, &prior, wd, verify)?
+                        {
+                            return Ok(Some(value));
+                        }
+                    }
+                }
+                if position.before > 0 {
+                    let prior = SourcePosition {
+                        before: 0,
+                        ..*position
+                    };
+                    if let Some(value) = visit_complete_wd(child, &prior, wd, verify)? {
+                        return Ok(Some(value));
+                    }
+                }
+            }
             if let Some((children, requirements)) = arithmetic_stages(proof) {
                 for (index, requirement) in requirements
                     .iter()
@@ -7661,6 +7741,13 @@ fn visit_owner<T>(
                 ..
             } = proof
             {
+                if let Some(crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnObjDomainFnSetEvidence::Matrix(c)) = &p.domain_fn_set {
+                    if let crate::execute::execute_fact_stmt::native_matrix::MatrixCallableWellDefinedProof::Checked(root) = &c.well_defined {
+                        if let Some(parent) = position.parent {
+                            if let Some(value) = visit_complete_wd(root, parent, wd, verify)? { return Ok(Some(value)); }
+                        }
+                    }
+                }
                 if let Some(crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnObjDomainFnSetEvidence::Composition(c)) = &p.domain_fn_set {
                     if let crate::execute::execute_fact_stmt::function_composition::CompositionWellDefinedPremise::Checked(root) = &c.well_defined {
                         if let Some(parent) = position.parent {
@@ -10355,6 +10442,33 @@ fn atomic_search_stages(
     };
     let mut stages = Vec::new();
     match &proof.searched_proof {
+        AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(InFactSearchProofByBuiltinRule::IndexUnionMembershipFromIndex(p))) => {
+            stages.push(AtomicSearchStage::Verify(&p.element_in_fiber_proof));
+        }
+        AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::SymDiffMembershipLeft(p)) => {
+            stages.extend(p.proof_of_requirement_facts.iter().map(AtomicSearchStage::Verify));
+        }
+        AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::FunctionSetMembership(p)) => {
+            stages.extend(p.proof_of_requirement_facts.iter().map(AtomicSearchStage::Verify));
+        }
+        AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::IntersectFiniteFromBoth(p)) => {
+            stages.extend(p.proof_of_requirement_facts.iter().map(AtomicSearchStage::Verify));
+        }
+        AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::IntersectFiniteFromLeft(p)) => {
+            stages.extend(p.proof_of_requirement_facts.iter().map(AtomicSearchStage::Verify));
+        }
+        AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::IntersectFiniteFromRight(p)) => {
+            stages.extend(p.proof_of_requirement_facts.iter().map(AtomicSearchStage::Verify));
+        }
+        AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::SymDiffMembershipRight(p)) => {
+            stages.extend(p.proof_of_requirement_facts.iter().map(AtomicSearchStage::Verify));
+        }
+        AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::SymDiffNonmembershipBoth(p)) => {
+            stages.extend(p.proof_of_requirement_facts.iter().map(AtomicSearchStage::Verify));
+        }
+        AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::SymDiffNonmembershipNeither(p)) => {
+            stages.extend(p.proof_of_requirement_facts.iter().map(AtomicSearchStage::Verify));
+        }
         AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::ListSetSubsetFromMembers(p)) => {
             stages.extend(p.proof_of_requirement_facts.iter().map(AtomicSearchStage::Verify));
         }
@@ -10380,6 +10494,10 @@ fn atomic_search_stages(
                 BuiltinPropDefinitionProof::Injective(p) => &p.proof_of_requirement_facts,
                 BuiltinPropDefinitionProof::Surjective(p) => &p.proof_of_requirement_facts,
                 BuiltinPropDefinitionProof::Bijective(p) => &p.proof_of_requirement_facts,
+                BuiltinPropDefinitionProof::RealSetBound(p) => &p.proof_of_requirement_facts,
+                BuiltinPropDefinitionProof::RealSetBounded(p) => &p.proof_of_requirement_facts,
+                BuiltinPropDefinitionProof::SequenceAnalysis(p) => &p.proof_of_requirement_facts,
+                BuiltinPropDefinitionProof::SequenceLimit(p) => &p.proof_of_requirement_facts,
                 _ => return stages,
             };
             stages.extend(children.iter().map(AtomicSearchStage::Verify));
@@ -10822,6 +10940,15 @@ fn projected_wd_child<'a>(
             proof: ObjWellDefinedProofByDef::FnObj(call),
         } => {
             use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnObjDomainFnSetEvidence;
+            if let Some(FnObjDomainFnSetEvidence::Matrix(p)) = &call.domain_fn_set {
+                if p.function_equal.path.is_empty() {
+                    if let crate::execute::execute_fact_stmt::native_matrix::MatrixCallableWellDefinedProof::Checked(root) = &p.well_defined {
+                        let mut head = term.clone();
+                        for _ in &application.body { head = format!("({head}).val.function"); }
+                        if let Some(found) = projected_wd_child(root, head, matches) { return Some(found); }
+                    }
+                }
+            }
             if let Some(FnObjDomainFnSetEvidence::Composition(p)) = &call.domain_fn_set {
                 if p.function_equal.path.is_empty() {
                     if let crate::execute::execute_fact_stmt::function_composition::CompositionWellDefinedPremise::Checked(root) = &p.well_defined {
@@ -10837,6 +10964,11 @@ fn projected_wd_child<'a>(
             }
             match call.domain_fn_set.as_ref()? {
                 FnObjDomainFnSetEvidence::FiniteFunction(_) => &["function", "argument"],
+                FnObjDomainFnSetEvidence::Matrix(_)
+                    if application.body.len() == 1 && application.body[0].len() == 2 =>
+                {
+                    &["argument.val.first", "argument.val.second"]
+                }
                 FnObjDomainFnSetEvidence::Composition(p) if application.body.len() == 1 => {
                     match application.body[0].len() {
                         1 => &["argument"],
@@ -10898,10 +11030,48 @@ fn projected_wd_child<'a>(
                 &["function", "target"]
             }
             Obj::SetFormer(SetFormer::FiniteSeqSet(_)) => &["carrier", "length"],
+            Obj::MatrixOperator(
+                MatrixOperator::Add(_)
+                | MatrixOperator::Subtract(_)
+                | MatrixOperator::OuterProduct(_),
+            ) => &["left", "right", "rows", "cols"],
+            Obj::MatrixOperator(MatrixOperator::InnerProduct(_)) => &["left", "right", "dimension"],
+            Obj::MatrixOperator(MatrixOperator::EuclideanNorm(_)) => &["vector", "dimension"],
+            Obj::MatrixOperator(MatrixOperator::FrobeniusNorm(_) | MatrixOperator::Rank(_)) => {
+                &["matrix", "rows", "cols"]
+            }
+            Obj::MatrixOperator(MatrixOperator::Apply(_)) => &["matrix", "vector", "rows", "cols"],
+            Obj::MatrixOperator(MatrixOperator::Multiply(_)) => {
+                &["left", "right", "rows", "inner", "cols"]
+            }
+            Obj::MatrixOperator(MatrixOperator::Power(_)) => &["matrix", "order", "exponent"],
+            Obj::MatrixOperator(MatrixOperator::Minor(_) | MatrixOperator::Cofactor(_)) => {
+                &["matrix", "order", "row", "col"]
+            }
+            Obj::MatrixOperator(MatrixOperator::Scale(_)) => &["scalar", "matrix", "rows", "cols"],
+            Obj::MatrixOperator(MatrixOperator::Diagonal(_)) => &["vector", "order"],
+            Obj::MatrixOperator(
+                MatrixOperator::Trace(_)
+                | MatrixOperator::Determinant(_)
+                | MatrixOperator::Adjugate(_)
+                | MatrixOperator::Inverse(_),
+            ) => &["matrix", "order"],
+            Obj::MatrixOperator(MatrixOperator::ZeroMatrix(_)) => &["rows", "cols"],
+            Obj::MatrixOperator(MatrixOperator::IdentityMatrix(_)) => &["order"],
+            Obj::MatrixOperator(
+                MatrixOperator::Transpose(_) | MatrixOperator::ConjugateTranspose(_),
+            ) => &["matrix", "rows", "cols"],
+            Obj::SetFormer(SetFormer::MatrixSet(_)) => &["carrier", "rows", "cols"],
             Obj::SetFormer(SetFormer::SeqSet(_)) => &["carrier"],
             Obj::SetFormer(SetFormer::IntervalObj(_)) => &["lower", "upper"],
             Obj::SetFormer(SetFormer::OneSideInfinityIntervalObj(_)) => &["endpoint"],
             Obj::FiniteSetStat(_) => &["set"],
+            Obj::IteratedOperator(IteratedOperator::Reduce(_)) => {
+                &["first", "last", "function", "operation", "seed"]
+            }
+            Obj::IteratedOperator(IteratedOperator::FiniteSetReduce(_)) => {
+                &["set", "function", "operation", "seed"]
+            }
             Obj::IteratedOperator(IteratedOperator::Sum(_) | IteratedOperator::Product(_)) => {
                 &["first", "last", "function"]
             }
@@ -10917,7 +11087,7 @@ fn projected_wd_child<'a>(
             ) => &["left", "right"],
             Obj::ArithmeticOperator(ArithmeticOperator::Pow(_)) => &["base", "exponent"],
             Obj::ComplexOperator(_) => &["arg"],
-            Obj::TrigOperator(_) => &["arg"],
+            Obj::TrigOperator(_) | Obj::HyperbolicOperator(_) => &["arg"],
             Obj::ExpLogOperator(ExpLogOperator::Exp(_) | ExpLogOperator::Ln(_)) => &["arg"],
             Obj::ExpLogOperator(ExpLogOperator::Log(_)) => &["base", "arg"],
             Obj::ArithmeticOperator(
@@ -10984,7 +11154,10 @@ pub(super) fn arithmetic_stages(
                 Some((&p.child_obj_well_defined, &p.requirement_fact_verified))
             }
             P::Product(p) => Some((&p.child_obj_well_defined, &p.requirement_fact_verified)),
-            _ => None,
+            P::Reduce(p) => Some((&p.child_obj_well_defined, &p.requirement_fact_verified)),
+            P::FiniteSetReduce(p) => {
+                Some((&p.child_obj_well_defined, &p.requirement_fact_verified))
+            }
         };
     }
     if let ObjWellDefinedProof::ByDef {
@@ -11051,6 +11224,32 @@ pub(super) fn arithmetic_stages(
                 (&p.child_obj_well_defined, &p.requirement_fact_verified)
             }
             ComplexOperatorObjWellDefinedProofByDef::ComplexAbs(p) => {
+                (&p.child_obj_well_defined, &p.requirement_fact_verified)
+            }
+        });
+    }
+    if let ObjWellDefinedProof::ByDef {
+        proof: ObjWellDefinedProofByDef::HyperbolicOperator(p),
+        ..
+    } = proof
+    {
+        return Some(match p {
+            HyperbolicOperatorObjWellDefinedProofByDef::Sinh(p) => {
+                (&p.child_obj_well_defined, &p.requirement_fact_verified)
+            }
+            HyperbolicOperatorObjWellDefinedProofByDef::Cosh(p) => {
+                (&p.child_obj_well_defined, &p.requirement_fact_verified)
+            }
+            HyperbolicOperatorObjWellDefinedProofByDef::Tanh(p) => {
+                (&p.child_obj_well_defined, &p.requirement_fact_verified)
+            }
+            HyperbolicOperatorObjWellDefinedProofByDef::Coth(p) => {
+                (&p.child_obj_well_defined, &p.requirement_fact_verified)
+            }
+            HyperbolicOperatorObjWellDefinedProofByDef::Sech(p) => {
+                (&p.child_obj_well_defined, &p.requirement_fact_verified)
+            }
+            HyperbolicOperatorObjWellDefinedProofByDef::Csch(p) => {
                 (&p.child_obj_well_defined, &p.requirement_fact_verified)
             }
         });
@@ -11208,6 +11407,301 @@ pub(super) fn arithmetic_stages(
     if let ObjWellDefinedProof::ByDef {
         proof:
             ObjWellDefinedProofByDef::SetFormer(SetFormerObjWellDefinedProofByDef::FiniteSeqSet(proof)),
+        ..
+    } = proof
+    {
+        return Some((
+            &proof.child_obj_well_defined,
+            &proof.requirement_fact_verified,
+        ));
+    }
+    if let ObjWellDefinedProof::ByDef {
+        proof:
+            ObjWellDefinedProofByDef::SetFormer(SetFormerObjWellDefinedProofByDef::MatrixSet(proof)),
+        ..
+    } = proof
+    {
+        return Some((
+            &proof.child_obj_well_defined,
+            &proof.requirement_fact_verified,
+        ));
+    }
+    if let ObjWellDefinedProof::ByDef {
+        proof:
+            ObjWellDefinedProofByDef::MatrixOperator(MatrixOperatorObjWellDefinedProofByDef::Add(proof)),
+        ..
+    } = proof
+    {
+        return Some((
+            &proof.child_obj_well_defined,
+            &proof.requirement_fact_verified,
+        ));
+    }
+    if let ObjWellDefinedProof::ByDef {
+        proof:
+            ObjWellDefinedProofByDef::MatrixOperator(MatrixOperatorObjWellDefinedProofByDef::Subtract(
+                proof,
+            )),
+        ..
+    } = proof
+    {
+        return Some((
+            &proof.child_obj_well_defined,
+            &proof.requirement_fact_verified,
+        ));
+    }
+    if let ObjWellDefinedProof::ByDef {
+        proof:
+            ObjWellDefinedProofByDef::MatrixOperator(MatrixOperatorObjWellDefinedProofByDef::Scale(
+                proof,
+            )),
+        ..
+    } = proof
+    {
+        return Some((
+            &proof.child_obj_well_defined,
+            &proof.requirement_fact_verified,
+        ));
+    }
+    if let ObjWellDefinedProof::ByDef {
+        proof:
+            ObjWellDefinedProofByDef::MatrixOperator(
+                MatrixOperatorObjWellDefinedProofByDef::OuterProduct(proof),
+            ),
+        ..
+    } = proof
+    {
+        return Some((
+            &proof.child_obj_well_defined,
+            &proof.requirement_fact_verified,
+        ));
+    }
+    if let ObjWellDefinedProof::ByDef {
+        proof:
+            ObjWellDefinedProofByDef::MatrixOperator(MatrixOperatorObjWellDefinedProofByDef::Diagonal(
+                proof,
+            )),
+        ..
+    } = proof
+    {
+        return Some((
+            &proof.child_obj_well_defined,
+            &proof.requirement_fact_verified,
+        ));
+    }
+    if let ObjWellDefinedProof::ByDef {
+        proof:
+            ObjWellDefinedProofByDef::MatrixOperator(MatrixOperatorObjWellDefinedProofByDef::Adjugate(
+                proof,
+            )),
+        ..
+    } = proof
+    {
+        return Some((
+            &proof.child_obj_well_defined,
+            &proof.requirement_fact_verified,
+        ));
+    }
+    if let ObjWellDefinedProof::ByDef {
+        proof:
+            ObjWellDefinedProofByDef::MatrixOperator(MatrixOperatorObjWellDefinedProofByDef::Rank(
+                proof,
+            )),
+        ..
+    } = proof
+    {
+        return Some((
+            &proof.child_obj_well_defined,
+            &proof.requirement_fact_verified,
+        ));
+    }
+    if let ObjWellDefinedProof::ByDef {
+        proof:
+            ObjWellDefinedProofByDef::MatrixOperator(MatrixOperatorObjWellDefinedProofByDef::Inverse(
+                proof,
+            )),
+        ..
+    } = proof
+    {
+        return Some((
+            &proof.child_obj_well_defined,
+            &proof.requirement_fact_verified,
+        ));
+    }
+    if let ObjWellDefinedProof::ByDef {
+        proof:
+            ObjWellDefinedProofByDef::MatrixOperator(MatrixOperatorObjWellDefinedProofByDef::Minor(
+                proof,
+            )),
+        ..
+    } = proof
+    {
+        return Some((
+            &proof.child_obj_well_defined,
+            &proof.requirement_fact_verified,
+        ));
+    }
+    if let ObjWellDefinedProof::ByDef {
+        proof:
+            ObjWellDefinedProofByDef::MatrixOperator(MatrixOperatorObjWellDefinedProofByDef::Cofactor(
+                proof,
+            )),
+        ..
+    } = proof
+    {
+        return Some((
+            &proof.child_obj_well_defined,
+            &proof.requirement_fact_verified,
+        ));
+    }
+    if let ObjWellDefinedProof::ByDef {
+        proof:
+            ObjWellDefinedProofByDef::MatrixOperator(MatrixOperatorObjWellDefinedProofByDef::Power(
+                proof,
+            )),
+        ..
+    } = proof
+    {
+        return Some((
+            &proof.child_obj_well_defined,
+            &proof.requirement_fact_verified,
+        ));
+    }
+    if let ObjWellDefinedProof::ByDef {
+        proof:
+            ObjWellDefinedProofByDef::MatrixOperator(
+                MatrixOperatorObjWellDefinedProofByDef::Determinant(proof),
+            ),
+        ..
+    } = proof
+    {
+        return Some((
+            &proof.child_obj_well_defined,
+            &proof.requirement_fact_verified,
+        ));
+    }
+    if let ObjWellDefinedProof::ByDef {
+        proof:
+            ObjWellDefinedProofByDef::MatrixOperator(MatrixOperatorObjWellDefinedProofByDef::Trace(
+                proof,
+            )),
+        ..
+    } = proof
+    {
+        return Some((
+            &proof.child_obj_well_defined,
+            &proof.requirement_fact_verified,
+        ));
+    }
+    if let ObjWellDefinedProof::ByDef {
+        proof:
+            ObjWellDefinedProofByDef::MatrixOperator(MatrixOperatorObjWellDefinedProofByDef::Multiply(
+                proof,
+            )),
+        ..
+    } = proof
+    {
+        return Some((
+            &proof.child_obj_well_defined,
+            &proof.requirement_fact_verified,
+        ));
+    }
+    if let ObjWellDefinedProof::ByDef {
+        proof:
+            ObjWellDefinedProofByDef::MatrixOperator(MatrixOperatorObjWellDefinedProofByDef::Apply(
+                proof,
+            )),
+        ..
+    } = proof
+    {
+        return Some((
+            &proof.child_obj_well_defined,
+            &proof.requirement_fact_verified,
+        ));
+    }
+    if let ObjWellDefinedProof::ByDef {
+        proof:
+            ObjWellDefinedProofByDef::MatrixOperator(
+                MatrixOperatorObjWellDefinedProofByDef::EuclideanNorm(proof),
+            ),
+        ..
+    } = proof
+    {
+        return Some((
+            &proof.child_obj_well_defined,
+            &proof.requirement_fact_verified,
+        ));
+    }
+    if let ObjWellDefinedProof::ByDef {
+        proof:
+            ObjWellDefinedProofByDef::MatrixOperator(
+                MatrixOperatorObjWellDefinedProofByDef::FrobeniusNorm(proof),
+            ),
+        ..
+    } = proof
+    {
+        return Some((
+            &proof.child_obj_well_defined,
+            &proof.requirement_fact_verified,
+        ));
+    }
+    if let ObjWellDefinedProof::ByDef {
+        proof:
+            ObjWellDefinedProofByDef::MatrixOperator(
+                MatrixOperatorObjWellDefinedProofByDef::InnerProduct(proof),
+            ),
+        ..
+    } = proof
+    {
+        return Some((
+            &proof.child_obj_well_defined,
+            &proof.requirement_fact_verified,
+        ));
+    }
+    if let ObjWellDefinedProof::ByDef {
+        proof:
+            ObjWellDefinedProofByDef::MatrixOperator(
+                MatrixOperatorObjWellDefinedProofByDef::ZeroMatrix(proof),
+            ),
+        ..
+    } = proof
+    {
+        return Some((
+            &proof.child_obj_well_defined,
+            &proof.requirement_fact_verified,
+        ));
+    }
+    if let ObjWellDefinedProof::ByDef {
+        proof:
+            ObjWellDefinedProofByDef::MatrixOperator(
+                MatrixOperatorObjWellDefinedProofByDef::IdentityMatrix(proof),
+            ),
+        ..
+    } = proof
+    {
+        return Some((
+            &proof.child_obj_well_defined,
+            &proof.requirement_fact_verified,
+        ));
+    }
+    if let ObjWellDefinedProof::ByDef {
+        proof:
+            ObjWellDefinedProofByDef::MatrixOperator(MatrixOperatorObjWellDefinedProofByDef::Transpose(
+                proof,
+            )),
+        ..
+    } = proof
+    {
+        return Some((
+            &proof.child_obj_well_defined,
+            &proof.requirement_fact_verified,
+        ));
+    }
+    if let ObjWellDefinedProof::ByDef {
+        proof:
+            ObjWellDefinedProofByDef::MatrixOperator(
+                MatrixOperatorObjWellDefinedProofByDef::ConjugateTranspose(proof),
+            ),
         ..
     } = proof
     {
@@ -11955,6 +12449,12 @@ fn same_wd_constructor(left: &ObjWellDefinedProof, right: &ObjWellDefinedProof) 
         )
     {
         return true;
+    }
+    if let (Some((a, _, _)), Some((b, _, _))) = (
+        super::compile_real_extrema::bound_stages(left),
+        super::compile_real_extrema::bound_stages(right),
+    ) {
+        return same_wd_constructor(a, b);
     }
     match (left, right) {
         (

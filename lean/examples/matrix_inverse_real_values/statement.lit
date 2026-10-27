@@ -1,0 +1,5 @@
+# Every valid entry of an invertible real matrix's inverse is real.
+forall n N+, A matrix(R,n,n), r closed_range(1,n), c closed_range(1,n):
+    det(A,n) != 0
+    =>:
+        matrix_inverse(A,n)(r,c) $in R

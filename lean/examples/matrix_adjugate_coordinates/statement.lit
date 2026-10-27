@@ -1,0 +1,3 @@
+# Adjugate coordinates are cofactors with the row and column exchanged.
+forall n N+, A matrix(C,n,n), r closed_range(1,n), c closed_range(1,n):
+    matrix_adjugate(A,n)(r,c) = matrix_cofactor(A,n,c,r)

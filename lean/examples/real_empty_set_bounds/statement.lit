@@ -1,0 +1,8 @@
+# The empty set is bounded without a nonempty premise.
+by def $is_real_upper_bound({},0)
+by def $is_real_lower_bound({},0)
+witness exist upper R st {$is_real_upper_bound({},upper)} from 0
+witness exist lower R st {$is_real_lower_bound({},lower)} from 0
+by def $is_real_bounded({})
+$is_real_bounded_above({})
+$is_real_bounded_below({})

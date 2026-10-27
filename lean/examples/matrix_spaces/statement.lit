@@ -1,0 +1,4 @@
+# Matrix spaces retain arbitrary scalar carriers and natural dimensions, including zero.
+forall S set, m, n N:
+    $is_set(matrix(S,m,n))
+    matrix(S,m,n) = fn(row closed_range(1,m), col closed_range(1,n)) S

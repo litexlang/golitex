@@ -1,0 +1,6 @@
+# Finite complex inner products are complex; real input vectors give a real value.
+forall n N, v,w cart_n(C,n):
+    inner_product(v,w,n) $in C
+
+forall n N, v,w cart_n(R,n):
+    inner_product(v,w,n) $in R

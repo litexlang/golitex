@@ -1,0 +1,3 @@
+# A real-matrix-valued function returns real coordinates on the complete matrix domain.
+forall maker fn(t R) matrix(R,2,3), t R, row closed_range(1,2), col closed_range(1,3):
+    maker(t)(row,col) $in R

@@ -1,0 +1,3 @@
+# A formula function keeps hyperbolic objects in its body and evaluates at zero.
+have fn hyper_sum(x R) R = sinh(x) + cosh(x)
+hyper_sum(0) = 1

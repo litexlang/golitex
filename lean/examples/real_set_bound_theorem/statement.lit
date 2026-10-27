@@ -1,0 +1,15 @@
+# Every element of a real set lies below a recorded upper bound.
+thm checked_real_upper_bound:
+    ? forall A set, b R, x A:
+        A $subset R
+        $is_real_upper_bound(A,b)
+        =>:
+            x <= b
+    x <= b
+by def $is_real_upper_bound({2},2)
+by thm checked_real_upper_bound({2},2,2)
+forall A set, b R, x A:
+    A $subset R
+    $is_real_lower_bound(A,b)
+    =>:
+        b <= x

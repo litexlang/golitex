@@ -1,0 +1,2 @@
+# Literal real vectors also form a complete outer-product matrix.
+outer_product((2,3),(4,5),2,2) $in matrix(R,2,2)

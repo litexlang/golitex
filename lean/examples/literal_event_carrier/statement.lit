@@ -1,0 +1,19 @@
+# Literal-event bounds replay the original member facts and literal WD.
+
+forall X set,p fn(E power_set(X)) R,a X:
+    p({a}) > 0
+    =>:
+        p({a}) > 0
+
+forall X set,a X:
+    {a} $in power_set(X)
+
+forall X set,a,b X:
+    a != b
+    =>:
+        {a,b} $in power_set(X)
+
+forall X,Y set,a X:
+    X = Y
+    =>:
+        {a} $in power_set(Y)

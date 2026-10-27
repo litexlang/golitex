@@ -1,23 +1,18 @@
 # AST: Obj::StandardSet::Z
 # Run: target/release/litex -f examples/test_objs/standard_set_z.lit
-# Cases use discarded sketch scopes; no cross-case facts.
+# Cases are checked directly in file context.
 
 # P01: 0 $in Z
-sketch:
-    0 $in Z
+0 $in Z
 
 # P02: -3 $in Z
-sketch:
-    -3 $in Z
+-3 $in Z
 
 # P03: 2 + 1 $in Z
-sketch:
-    2 + 1 $in Z
+2 + 1 $in Z
 
 # P04: $is_set(Z)
-sketch:
-    $is_set(Z)
+$is_set(Z)
 
 # P05: Z $subset Q
-sketch:
-    Z $subset Q
+Z $subset Q

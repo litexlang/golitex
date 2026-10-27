@@ -1,0 +1,6 @@
+# The product of compatible rectangular complex or real matrices preserves its scalar field.
+forall m,k,n N, A matrix(C,m,k), B matrix(C,k,n):
+    matrix_mul(A,B,m,k,n) $in matrix(C,m,n)
+
+forall m,k,n N, A matrix(R,m,k), B matrix(R,k,n):
+    matrix_mul(A,B,m,k,n) $in matrix(R,m,n)

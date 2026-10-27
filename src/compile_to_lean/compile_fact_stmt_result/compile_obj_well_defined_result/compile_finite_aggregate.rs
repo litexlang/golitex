@@ -5,6 +5,25 @@ use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::Iterate
 use crate::prelude::*;
 
 impl LitexToLeanCompiler {
+    pub(in crate::compile_to_lean) fn finite_aggregate_uses_standard_input(
+        proof: &P,
+    ) -> Result<bool, LeanCompileError> {
+        let selected = match proof {
+            P::SumOfFiniteSet(p) => &p.signature_selection,
+            P::ProductOfFiniteSet(p) => &p.signature_selection,
+            _ => return Err(LeanCompileError::unsupported("FiniteAggregate/Constructor")),
+        };
+        let signature = selected
+            .as_ref()
+            .ok_or_else(|| LeanCompileError::unsupported("FiniteAggregate/SignatureCapture"))?
+            .signature();
+        let groups = &signature.set_bound_parameters.groups;
+        if groups.len() != 1 || groups[0].params.len() != 1 {
+            return Err(LeanCompileError::unsupported("FiniteAggregate/InputArity"));
+        }
+        Ok(matches!(groups[0].param_type.as_ref(), Obj::StandardSet(_)))
+    }
+
     pub(in crate::compile_to_lean) fn compile_finite_aggregate_wd(
         &self,
         object: &IteratedOperator,
@@ -40,12 +59,11 @@ impl LitexToLeanCompiler {
             .iter()
             .flat_map(|g| g.params.iter().map(move |_| g.param_type.as_ref()))
             .collect::<Vec<_>>();
-        let [Obj::StandardSet(input)] = parameters.as_slice() else {
+        let [input] = parameters.as_slice() else {
             return Err(LeanCompileError::unsupported(
                 "FiniteAggregate/InputCarrier",
             ));
         };
-        let input_name = standard_value_constructor(input)?;
         if !signature.dom_facts.is_empty() {
             return Err(LeanCompileError::unsupported(
                 "FiniteAggregate/DomainGuards",
@@ -55,7 +73,7 @@ impl LitexToLeanCompiler {
             return Err(LeanCompileError::unsupported("FiniteAggregate/Stages"));
         }
         if !matches!(source_subject(&requirements[0])?, Fact::AtomicFact(AtomicFact::IsFiniteSetFact(f)) if f.set.ir() == set.ir())
-            || !matches!(source_subject(&requirements[1])?, Fact::AtomicFact(AtomicFact::SubsetFact(f)) if f.left.ir() == set.ir() && f.right == Obj::StandardSet(input.clone()))
+            || !matches!(source_subject(&requirements[1])?, Fact::AtomicFact(AtomicFact::SubsetFact(f)) if f.left.ir() == set.ir() && f.right.ir() == input.ir())
             || !matches!(source_subject(&requirements[2])?, Fact::AtomicFact(AtomicFact::SubsetFact(f)) if f.left.ir() == signature.ret_set.ir() && f.right == Obj::StandardSet(StandardSet::C))
         {
             return Err(LeanCompileError::unsupported(
@@ -89,7 +107,23 @@ impl LitexToLeanCompiler {
                 },
             )?);
         }
-        let domain = format!("(fun x hx => (Litex.FunctionSignature.oneTarget_domain .{input_name} _ _ (fun _ => True) x).mpr ⟨hx, True.intro⟩)");
-        Ok(format!("(Litex.finiteAggregate {product} {} {} .{input_name} {signature_term} {} {} {} {member} {domain})", terms[0], terms[1], proofs[0], proofs[1], proofs[2]))
+        if let Obj::StandardSet(input) = input {
+            let input_name = standard_value_constructor(input)?;
+            let domain = format!(
+                "(fun x hx => (Litex.FunctionSignature.oneTarget_domain .{input_name} _ _ (fun _ => True) x).mpr ⟨hx, True.intro⟩)"
+            );
+            Ok(format!(
+                "(Litex.finiteAggregate {product} {} {} .{input_name} {signature_term} {} {} {} {member} {domain})",
+                terms[0], terms[1], proofs[0], proofs[1], proofs[2]
+            ))
+        } else {
+            let input = self.compile_object_reference(input, &formed)?;
+            let domain =
+                "(fun x hx => (Litex.SetSemantics.sep_members _ _ _).mpr ⟨hx, True.intro⟩)";
+            Ok(format!(
+                "(Litex.finiteAggregateOn {product} {} {} {input} {signature_term} {} {} {} {member} {domain})",
+                terms[0], terms[1], proofs[0], proofs[1], proofs[2]
+            ))
+        }
     }
 }

@@ -1,0 +1,5 @@
+# The four hyperbolic functions defined at zero have exact values.
+sinh(0) = 0
+cosh(0) = 1
+tanh(0) = 0
+sech(0) = 1

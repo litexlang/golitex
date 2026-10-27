@@ -83,7 +83,7 @@ def main():
             expected = gap["baseline"]["observed"] if args.baseline and gap else intended
             matches = observed == expected
             if kind == "positive" and observed == "accept":
-                # Each labeled independent sketch must actually have executed.
+                # Every labeled case must contribute an executed statement.
                 matches = matches and result["statements"] >= len(obj["positive_cases"])
             if args.baseline and gap and observed == "reject":
                 matches = matches and result["phase"] == gap["baseline"]["phase"]

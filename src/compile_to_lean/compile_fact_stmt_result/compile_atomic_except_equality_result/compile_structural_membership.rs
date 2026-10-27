@@ -321,6 +321,141 @@ impl LitexToLeanCompiler {
                 let term = self.compile_object_reference(&proof.element, position)?;
                 Ok(format!("(by\n  let _extremum := {term}\n  exact Litex.minMaxMember _extremum Litex.R _extremum.wd.1 _extremum.wd.2\n)"))
             }
+            StructuralMembershipReason::Intrinsic(
+                kind @ (IntrinsicCodomain::EuclideanNorm | IntrinsicCodomain::MatrixFrobeniusNorm),
+            ) => {
+                let euclidean = matches!(kind, IntrinsicCodomain::EuclideanNorm);
+                let (name, valid) = if euclidean {
+                    (
+                        "euclideanNormInR",
+                        matches!(
+                            &proof.element,
+                            Obj::MatrixOperator(MatrixOperator::EuclideanNorm(_))
+                        ),
+                    )
+                } else {
+                    (
+                        "frobeniusNormInR",
+                        matches!(
+                            &proof.element,
+                            Obj::MatrixOperator(MatrixOperator::FrobeniusNorm(_))
+                        ),
+                    )
+                };
+                if proof.set != StandardSet::R || !valid {
+                    return Err(LeanCompileError::unsupported(
+                        "StructuralMembership/NormSubject",
+                    ));
+                }
+                Ok(format!(
+                    "(Litex.{name} {})",
+                    self.compile_object_reference(&proof.element, position)?
+                ))
+            }
+            StructuralMembershipReason::Intrinsic(IntrinsicCodomain::FiniteInnerProduct) => {
+                if proof.set != StandardSet::C
+                    || !matches!(
+                        &proof.element,
+                        Obj::MatrixOperator(MatrixOperator::InnerProduct(_))
+                    )
+                {
+                    return Err(LeanCompileError::unsupported(
+                        "StructuralMembership/InnerProductSubject",
+                    ));
+                }
+                Ok(format!(
+                    "(Litex.finiteInnerProductInC {})",
+                    self.compile_object_reference(&proof.element, position)?
+                ))
+            }
+            StructuralMembershipReason::Intrinsic(IntrinsicCodomain::MatrixCofactor) => {
+                if proof.set != StandardSet::C
+                    || !matches!(
+                        &proof.element,
+                        Obj::MatrixOperator(MatrixOperator::Cofactor(_))
+                    )
+                {
+                    return Err(LeanCompileError::unsupported(
+                        "StructuralMembership/CofactorSubject",
+                    ));
+                }
+                Ok(format!(
+                    "(Litex.matrixCofactorInC {})",
+                    self.compile_object_reference(&proof.element, position)?
+                ))
+            }
+            StructuralMembershipReason::Intrinsic(
+                kind @ (IntrinsicCodomain::Supremum | IntrinsicCodomain::Infimum),
+            ) => {
+                let name = match (kind, &proof.element) {
+                    (
+                        IntrinsicCodomain::Supremum,
+                        Obj::BoundOperator(BoundOperator::Supremum(_)),
+                    ) => "supremum",
+                    (IntrinsicCodomain::Infimum, Obj::BoundOperator(BoundOperator::Infimum(_))) => {
+                        "infimum"
+                    }
+                    _ => {
+                        return Err(LeanCompileError::unsupported(
+                            "RealExtremum/MembershipSubject",
+                        ))
+                    }
+                };
+                if proof.set != StandardSet::R {
+                    return Err(LeanCompileError::unsupported(
+                        "RealExtremum/MembershipCarrier",
+                    ));
+                }
+                Ok(format!(
+                    "(Litex.{name}InR {})",
+                    self.compile_object_reference(&proof.element, position)?
+                ))
+            }
+            StructuralMembershipReason::Intrinsic(IntrinsicCodomain::MatrixRank) => {
+                if proof.set != StandardSet::N
+                    || !matches!(&proof.element, Obj::MatrixOperator(MatrixOperator::Rank(_)))
+                {
+                    return Err(LeanCompileError::unsupported(
+                        "StructuralMembership/RankSubject",
+                    ));
+                }
+                Ok(format!(
+                    "(Litex.matrixRankInN {})",
+                    self.compile_object_reference(&proof.element, position)?
+                ))
+            }
+            StructuralMembershipReason::Intrinsic(IntrinsicCodomain::MatrixDeterminant) => {
+                if proof.set != StandardSet::C
+                    || !matches!(
+                        &proof.element,
+                        Obj::MatrixOperator(MatrixOperator::Determinant(_))
+                    )
+                {
+                    return Err(LeanCompileError::unsupported(
+                        "StructuralMembership/DeterminantSubject",
+                    ));
+                }
+                Ok(format!(
+                    "(Litex.matrixDeterminantInC {})",
+                    self.compile_object_reference(&proof.element, position)?
+                ))
+            }
+            StructuralMembershipReason::Intrinsic(IntrinsicCodomain::MatrixTrace) => {
+                if proof.set != StandardSet::C
+                    || !matches!(
+                        &proof.element,
+                        Obj::MatrixOperator(MatrixOperator::Trace(_))
+                    )
+                {
+                    return Err(LeanCompileError::unsupported(
+                        "StructuralMembership/TraceSubject",
+                    ));
+                }
+                Ok(format!(
+                    "(Litex.matrixTraceInC {})",
+                    self.compile_object_reference(&proof.element, position)?
+                ))
+            }
             StructuralMembershipReason::Intrinsic(IntrinsicCodomain::Abs) => {
                 if proof.set != StandardSet::R
                     || !matches!(
@@ -490,6 +625,49 @@ impl LitexToLeanCompiler {
                 };
                 if proof.set != carrier {
                     return Err(LeanCompileError::unsupported("Complex/CodomainCarrier"));
+                }
+                Ok(format!(
+                    "(Litex.{law} {})",
+                    self.compile_object_reference(&proof.element, position)?
+                ))
+            }
+            StructuralMembershipReason::Intrinsic(
+                kind @ (IntrinsicCodomain::Sinh
+                | IntrinsicCodomain::Cosh
+                | IntrinsicCodomain::Tanh
+                | IntrinsicCodomain::Coth
+                | IntrinsicCodomain::Sech
+                | IntrinsicCodomain::Csch),
+            ) => {
+                let (law, carrier) = match (kind, &proof.element) {
+                    (
+                        IntrinsicCodomain::Sinh,
+                        Obj::HyperbolicOperator(HyperbolicOperator::Sinh(_)),
+                    ) => ("sinhInR", StandardSet::R),
+                    (
+                        IntrinsicCodomain::Cosh,
+                        Obj::HyperbolicOperator(HyperbolicOperator::Cosh(_)),
+                    ) => ("coshInRPos", StandardSet::RPos),
+                    (
+                        IntrinsicCodomain::Tanh,
+                        Obj::HyperbolicOperator(HyperbolicOperator::Tanh(_)),
+                    ) => ("tanhInR", StandardSet::R),
+                    (
+                        IntrinsicCodomain::Coth,
+                        Obj::HyperbolicOperator(HyperbolicOperator::Coth(_)),
+                    ) => ("cothInRStar", StandardSet::RStar),
+                    (
+                        IntrinsicCodomain::Sech,
+                        Obj::HyperbolicOperator(HyperbolicOperator::Sech(_)),
+                    ) => ("sechInRPos", StandardSet::RPos),
+                    (
+                        IntrinsicCodomain::Csch,
+                        Obj::HyperbolicOperator(HyperbolicOperator::Csch(_)),
+                    ) => ("cschInRStar", StandardSet::RStar),
+                    _ => return Err(LeanCompileError::unsupported("Hyperbolic/CodomainSubject")),
+                };
+                if proof.set != carrier {
+                    return Err(LeanCompileError::unsupported("Hyperbolic/CodomainCarrier"));
                 }
                 Ok(format!(
                     "(Litex.{law} {})",

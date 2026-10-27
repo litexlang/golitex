@@ -26,6 +26,16 @@ pub(super) struct ScalarAggregateWellDefinedStages {
     pub signature_selection: Option<FunctionSignatureSelection>,
 }
 
+pub(super) struct FoldSignatureSelections {
+    pub operation: Option<FunctionSignatureSelection>,
+    pub iterand: Option<FunctionSignatureSelection>,
+}
+
+pub(super) struct FoldWellDefinedStages {
+    pub common: ObjWellDefinedByDefCommonStages,
+    pub signatures: FoldSignatureSelections,
+}
+
 impl Runtime {
     pub(super) fn verify_scalar_aggregate_well_definedness(
         &mut self,
@@ -72,6 +82,52 @@ impl Runtime {
                         p.signature_selection = stages.signature_selection
                     }
                     _ => unreachable!("matching aggregate proof"),
+                }
+                Ok(VerifyObjWellDefinedResult::Success(
+                    ObjWellDefinedProof::ByDef {
+                        obj: obj.clone(),
+                        proof,
+                    },
+                ))
+            }
+        }
+    }
+
+    pub(super) fn verify_fold_well_definedness(
+        &mut self,
+        obj: &Obj,
+        state: VerifyState,
+    ) -> RuntimeResult<super::entry::VerifyObjWellDefinedResult> {
+        use super::entry::{ObjWellDefinedProof, VerifyObjWellDefinedResult};
+        use super::obj_well_defined_proof_by_def::{
+            IteratedOperatorObjWellDefinedProofByDef as P, ObjWellDefinedProofByDef,
+        };
+        use crate::ast::obj::IteratedOperator as O;
+        let stages = match obj {
+            Obj::IteratedOperator(O::Reduce(p)) => {
+                self.verify_reduce_obj_well_definedness_by_def(p, state)?
+            }
+            Obj::IteratedOperator(O::FiniteSetReduce(p)) => {
+                self.verify_finite_set_reduce_obj_well_definedness_by_def(p, state)?
+            }
+            _ => unreachable!("two fold constructors only"),
+        };
+        match super::wrap_obj_well_defined_by_def::finish_by_def(obj, stages.common) {
+            Err(reason) => Ok(VerifyObjWellDefinedResult::Failed {
+                obj: obj.clone(),
+                reason,
+            }),
+            Ok(mut proof) => {
+                match &mut proof {
+                    ObjWellDefinedProofByDef::IteratedOperator(P::Reduce(p)) => {
+                        p.operation_signature_selection = stages.signatures.operation;
+                        p.iterand_signature_selection = stages.signatures.iterand;
+                    }
+                    ObjWellDefinedProofByDef::IteratedOperator(P::FiniteSetReduce(p)) => {
+                        p.operation_signature_selection = stages.signatures.operation;
+                        p.iterand_signature_selection = stages.signatures.iterand;
+                    }
+                    _ => unreachable!("matching fold proof"),
                 }
                 Ok(VerifyObjWellDefinedResult::Success(
                     ObjWellDefinedProof::ByDef {
@@ -149,7 +205,7 @@ impl Runtime {
         &mut self,
         value: &Reduce,
         verify_state: VerifyState,
-    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
+    ) -> RuntimeResult<FoldWellDefinedStages> {
         let proof = self.verify_objs_as_children(
             &[
                 value.start.as_ref(),
@@ -173,22 +229,59 @@ impl Runtime {
             verify_state.clone(),
             format!("reduce end {} is not in Z", value.end.ir()),
         )?);
-        self.append_reduce_signature_requirements(
+        let signatures = self.append_reduce_signature_requirements(
             value.func.as_ref(),
             value.op.as_ref(),
             value.seed.as_ref(),
             "reduce",
-            verify_state,
+            verify_state.clone(),
             &mut reqs,
         )?;
-        Ok(self.with_requirements(proof, reqs))
+        if let Some(selection) = &signatures.iterand {
+            let signature = selection.signature();
+            if set_bound_parameter_count(&signature.set_bound_parameters) == 1 {
+                let carrier = &signature.set_bound_parameters.groups[0].param_type;
+                let empty = self
+                    .explicit_aggregate_predicate_arguments(AggregateIndexDomain::Range(
+                        &value.start,
+                        &value.end,
+                    ))
+                    .filter(|(arguments, _)| arguments.is_empty());
+                if let Some((_, endpoints)) = empty {
+                    // Preserve the exact endpoint calculations justifying that
+                    // this fold makes no calls, even for a restricted carrier.
+                    for endpoint in endpoints {
+                        reqs.push(self.verify_fact(&endpoint, verify_state.clone())?);
+                    }
+                } else {
+                    self.append_iteration_coverage_requirements(
+                        &value.start,
+                        &value.end,
+                        carrier,
+                        "reduce",
+                        verify_state.clone(),
+                        &mut reqs,
+                    )?;
+                }
+                self.append_aggregate_predicate_requirements(
+                    signature,
+                    AggregateIndexDomain::Range(&value.start, &value.end),
+                    verify_state,
+                    &mut reqs,
+                )?;
+            }
+        }
+        Ok(FoldWellDefinedStages {
+            common: self.with_requirements(proof, reqs),
+            signatures,
+        })
     }
 
     pub(super) fn verify_finite_set_reduce_obj_well_definedness_by_def(
         &mut self,
         value: &FiniteSetReduce,
         verify_state: VerifyState,
-    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
+    ) -> RuntimeResult<FoldWellDefinedStages> {
         let proof = self.verify_objs_as_children(
             &[
                 value.set.as_ref(),
@@ -207,7 +300,7 @@ impl Runtime {
                 value.set.ir()
             ),
         )?);
-        self.append_reduce_signature_requirements(
+        let signatures = self.append_reduce_signature_requirements(
             value.func.as_ref(),
             value.op.as_ref(),
             value.seed.as_ref(),
@@ -216,8 +309,8 @@ impl Runtime {
             &mut reqs,
         )?;
         // Enumeration-independent reduction requires both operation laws.
-        if let Some(signature) = self.resolve_callable_fn_set(value.op.as_ref()) {
-            if let Some(carrier) = homogeneous_binary_carrier(&signature) {
+        if let Some(selection) = &signatures.operation {
+            if let Some(carrier) = homogeneous_binary_carrier(selection.signature()) {
                 reqs.extend(self.unordered_fold_laws(
                     value.op.as_ref(),
                     &carrier,
@@ -227,7 +320,8 @@ impl Runtime {
         }
         // A finite fold applies f at every set element, so its declared domain
         // and predicates must cover the set (e.g. {1} is not covered by {2}).
-        if let Some(signature) = self.resolve_callable_fn_set(value.func.as_ref()) {
+        if let Some(selection) = &signatures.iterand {
+            let signature = selection.signature();
             if set_bound_parameter_count(&signature.set_bound_parameters) == 1 {
                 for group in &signature.set_bound_parameters.groups {
                     if group.params.is_empty() {
@@ -253,7 +347,10 @@ impl Runtime {
                 )?;
             }
         }
-        Ok(self.with_requirements(proof, reqs))
+        Ok(FoldWellDefinedStages {
+            common: self.with_requirements(proof, reqs),
+            signatures,
+        })
     }
 
     // range(start, end): children, then both endpoints $in Z.
@@ -810,31 +907,36 @@ impl Runtime {
         operation_name: &str,
         verify_state: VerifyState,
         reqs: &mut Vec<VerifyFactResult>,
-    ) -> RuntimeResult<()> {
-        let Some(op_set) = self.resolve_callable_fn_set(operation) else {
+    ) -> RuntimeResult<FoldSignatureSelections> {
+        let mut selected = FoldSignatureSelections {
+            operation: self.resolve_callable_fn_set_selection(operation),
+            iterand: None,
+        };
+        let Some(op_set) = selected.operation.as_ref().map(|s| s.signature()) else {
             reqs.push(self.require_callable_as_expected_binary_homogeneous(
                 operation,
                 operation_name,
                 verify_state,
             )?);
-            return Ok(());
+            return Ok(selected);
         };
-        let Some(carrier) = homogeneous_binary_carrier(&op_set) else {
+        let Some(carrier) = homogeneous_binary_carrier(op_set) else {
             reqs.push(self.require_callable_as_expected_binary_homogeneous(
                 operation,
                 operation_name,
                 verify_state,
             )?);
-            return Ok(());
+            return Ok(selected);
         };
-        let Some(iterand_set) = self.resolve_callable_fn_set(function) else {
+        selected.iterand = self.resolve_callable_fn_set_selection(function);
+        let Some(iterand_set) = selected.iterand.as_ref().map(|s| s.signature()) else {
             reqs.push(self.require_callable_as_expected_unary(
                 function,
                 &carrier,
                 operation_name,
                 verify_state,
             )?);
-            return Ok(());
+            return Ok(selected);
         };
         if set_bound_parameter_count(&iterand_set.set_bound_parameters) != 1
             || iterand_set.ret_set.ir() != carrier.ir()
@@ -845,7 +947,7 @@ impl Runtime {
                 operation_name,
                 verify_state.clone(),
             )?);
-            return Ok(());
+            return Ok(selected);
         }
         let seed_in = AtomicFact::InFact(InFact {
             fact_id: self.global_ids.allocate_fact_id(),
@@ -861,7 +963,7 @@ impl Runtime {
                 seed.ir()
             ),
         )?);
-        Ok(())
+        Ok(selected)
     }
 
     // Soft shape miss: require `function $in fn(__p Dom) C` (fails when not that signature).

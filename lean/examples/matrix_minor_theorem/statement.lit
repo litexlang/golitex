@@ -1,0 +1,7 @@
+# Reuse the coordinate formula for deleting the first row and column.
+thm checked_minor_bottom_right:
+    ? forall A matrix(C,2,2):
+        matrix_minor(A,2,1,1)(1,1) = A(2,2)
+    matrix_minor(A,2,1,1)(1,1) = A(2,2)
+
+by thm checked_minor_bottom_right(zero_matrix(2,2)) => matrix_minor(zero_matrix(2,2),2,1,1)(1,1) = zero_matrix(2,2)(2,2)

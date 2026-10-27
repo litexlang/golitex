@@ -1,0 +1,6 @@
+# A finite subset of any explicit function domain can be summed or multiplied.
+forall A finite_set, B set, f fn(x B) R:
+    A $subset B
+    =>:
+        finite_set_sum(A,f) $in R
+        finite_set_product(A,f) $in R

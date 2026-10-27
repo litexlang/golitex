@@ -1,0 +1,5 @@
+# Matrix rank is a natural number, with the usual numerical carrier inclusions.
+forall m,n N, A matrix(C,m,n):
+    matrix_rank(A,m,n) $in N
+forall m,n N, A matrix(R,m,n):
+    matrix_rank(A,m,n) $in C

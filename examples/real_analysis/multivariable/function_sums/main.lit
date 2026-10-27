@@ -1,0 +1,97 @@
+# A finite sum of real functions with one vector input.
+
+have fn first(x cart_n(R,2)) R=x(1)^2
+
+have fn second(x cart_n(R,2)) R=x(2)^3
+
+by for:
+    ? forall j closed_range(1,2):
+        j=1 or j=2
+    j=1 or j=2
+
+have fn terms(j closed_range(1,2)) fn(x cart_n(R,2)) R by cases:
+    case j=1: first
+    case j=2: second
+
+have point cart_n(R,2)=(1,2)
+
+point(1)=1
+
+point(2)=2
+
+have values finite_seq(R,2)=(2,0)
+
+claim:
+    ? forall j closed_range(1,2):
+        j<=2
+        =>:
+            $has_partial_derivative_at(terms(j),point,2,1,values(j))
+    j=1 or j=2
+    by cases:
+        ? $has_partial_derivative_at(terms(j),point,2,1,values(j))
+        case j=1:
+            terms(j)=terms(1)=first
+            values(j)=values(1)=2
+            $has_partial_derivative_at(first,point,2,1,2)
+        case j=2:
+            terms(j)=terms(2)=second
+            values(j)=values(2)=0
+            $has_partial_derivative_at(second,point,2,1,0)
+
+claim:
+    ? forall t {u R:abs(u)<1}:
+        t $in {u R:fn(coord closed_range(1,2)) R {point(coord)+u*identity_matrix(2)(coord,1)} $in cart_n(R,2)}
+    t $in R
+    fn(coord closed_range(1,2)) R {point(coord)+t*identity_matrix(2)(coord,1)} $in cart_n(R,2)
+    t $in {u R:fn(coord closed_range(1,2)) R {point(coord)+u*identity_matrix(2)(coord,1)} $in cart_n(R,2)}
+
+by def {t R:abs(t)<1} $subset {t R:fn(coord closed_range(1,2)) R {point(coord)+t*identity_matrix(2)(coord,1)} $in cart_n(R,2)}
+
+witness exist radius R+ st {{t R:abs(t)<radius} $subset {t R:fn(coord closed_range(1,2)) R {point(coord)+t*identity_matrix(2)(coord,1)} $in cart_n(R,2)}} from 1
+
+release thm MultiSums::main::scalar_function_prefix_partial(2,cart_n(R,2),2,terms,values,point,1,2)
+
+values(1)=2
+
+values(2)=0
+
+release thm Sums::main::finite_real_prefix_sum_zero(2,values)
+
+release thm Sums::main::finite_real_prefix_sum_successor(2,values,0)
+
+release thm Sums::main::finite_real_prefix_sum_index_equal(2,values,0+1,1)
+
+values(0+1)=2
+
+\Sums::main::finite_real_prefix_sum<2>(values,1)=\Sums::main::finite_real_prefix_sum<2>(values,0+1)=\Sums::main::finite_real_prefix_sum<2>(values,0)+values(0+1)=2
+
+release thm Sums::main::finite_real_prefix_sum_successor(2,values,1)
+
+release thm Sums::main::finite_real_prefix_sum_index_equal(2,values,1+1,2)
+
+values(1+1)=0
+
+\Sums::main::finite_real_prefix_sum<2>(values,2)=\Sums::main::finite_real_prefix_sum<2>(values,1+1)=\Sums::main::finite_real_prefix_sum<2>(values,1)+values(1+1)=2
+
+$has_partial_derivative_at(\MultiSums::main::scalar_function_prefix_sum<2,cart_n(R,2),2>(terms,2),point,2,1,2)
+
+claim:
+    ? forall j closed_range(1,2):
+        j<=2
+        =>:
+            $is_multi_continuous_at(terms(j),point,2)
+    j=1 or j=2
+    by cases:
+        ? $is_multi_continuous_at(terms(j),point,2)
+        case j=1:
+            terms(j)=terms(1)=first
+            $is_multi_continuous_at(first,point,2)
+        case j=2:
+            terms(j)=terms(2)=second
+            $is_multi_continuous_at(second,point,2)
+
+witness exist radius R+ st {{x cart_n(R,2):euclidean_norm(fn(coord closed_range(1,2)) R {x(coord)-point(coord)},2)<radius} $subset cart_n(R,2)} from 1
+
+release thm MultiSums::main::scalar_function_prefix_continuous_interior(2,cart_n(R,2),2,terms,point,2)
+
+$is_multi_continuous_at(\MultiSums::main::scalar_function_prefix_sum<2,cart_n(R,2),2>(terms,2),point,2)

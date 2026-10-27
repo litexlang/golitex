@@ -1,0 +1,6 @@
+# Name a zero matrix and its deleted-row/column matrix, then retain complex membership.
+let minor_source = zero_matrix(2,2)
+
+let named_minor = matrix_minor(minor_source,2,1,1)
+
+named_minor $in matrix(C,2-1,2-1)

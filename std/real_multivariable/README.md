@@ -147,3 +147,86 @@ All theorem names above are in `vectors::cross_product`.
 The export has no trust or axioms. Cross products over C, arbitrary dimensions
 and associativity are not supplied. Ordinary JSON/source proof mechanisms are
 reused; no dedicated cross-product LaTeX notation or Lean replay is claimed.
+
+The `higher_order` export defines ordered finite partial derivatives in source.
+A function takes one vector input; a path in
+`finite_seq(closed_range(1,n),k)` specifies the first-to-last coordinate order.
+The same complete `fn(j closed_range(1,k)) closed_range(1,n)` is accepted.
+Order zero is point evaluation and accepts `tuple()` or a complete empty function.
+
+The candidate is
+`has_ordered_partial_at(n,D,k,f,p,indices,L)`. Its certificate supplies actual
+nested domains and intermediate functions. Each derivative step uses the native
+two-sided coordinate definition on that intermediate function's actual domain.
+The proposition `is_ordered_partially_differentiable_at(n,D,k,f,p,indices)`
+asserts existence along this specified path. The source selector has three
+template parameters and three ordinary arguments:
+
+```litex
+\vectors::higher_order::ordered_partial<n,D,k>(f,p,indices)
+```
+
+Prove the candidate, release `ordered_partial_candidate_exists`, then release
+`ordered_partial_value` before using the selected value in a calculation.
+`ordered_partial_from_global_profiles` is a convenience theorem for a supplied
+zero-based finite family on the whole space, after proving every derivative step.
+It does not infer the family or differentiate in WD. Native one- and two-step
+bridges retain local domains. Paths are never sorted or exchanged automatically.
+See the [ordered higher-partial example](../../examples/real_analysis/multivariable/higher_order/main.lit).
+
+The independent `unary_higher_order` export handles `f^(k)(p)` for a unary real
+function on its actual domain D. It uses `NthDerivativeProfiles<k>` with nested
+real regions, the candidate `has_nth_derivative_at(D,k,f,p,L)`, and the existence
+property `is_n_times_differentiable_at(D,k,f,p)`. Its selector is
+`\vectors::unary_higher_order::nth_derivative<D,k>(f,p)`, with exactly two
+template parameters and two ordinary arguments. Prove a candidate, then release
+`nth_derivative_candidate_exists` and `nth_derivative_value`. Order zero returns
+f(p); the native first derivative and one-step candidate have both source
+bridges. `nth_derivative_from_global_profiles` accepts supplied full-real
+functions after the native derivative of each preceding function is proved.
+It does not identify real inputs with one-dimensional vectors.
+
+Both higher-order exports prove uniqueness by induction for arbitrary finite
+natural orders. They add no native Obj/Fact, reserved BT, automatic higher-order
+derivative strategy, source axiom or trust. Smoothness classes, exchange of mixed
+partials, alpha-count selectors and higher total multilinear derivatives remain
+outside these exports.
+
+`higher_order::ordered_partial_prefix_exists` proves existence for a supplied
+coordinate prefix of an already proved ordered candidate. Its parameters are
+`(n,D,k,m,f,p,indices,prefix,L)`, where 0<=m<=k and the prefix agrees with indices
+at each of its positions. `unary_higher_order::nth_derivative_lower_order_exists`
+has parameters `(D,k,m,f,p,L)` and derives the mth-order existence property from
+the supplied kth-order candidate. Both retain the actual nested domains. These
+are explicit source theorems; selector WD does not run them automatically.
+
+
+The valued restriction theorems `ordered_partial_prefix_candidate/9` and
+`nth_derivative_lower_candidate/6` take a supplied certificate and expose its
+intermediate value as a candidate. The old existence-only theorems reuse them.
+`ordered_partial_from_profiles_on/6` and `nth_derivative_from_profiles_on/4`
+accept supplied families on any common actual domain D; the existing global
+convenience interfaces reuse these proofs.
+
+The all-point existence props are
+`is_ordered_partially_differentiable_on(n,D,k,f,E,indices)` and
+`is_n_times_differentiable_on(D,k,f,E)`, where E⊆D. They guard the ordinary
+returned functions `ordered_partial_function<n,D,E,k>(f,indices)` (4+2) and
+`nth_derivative_function<D,E,k>(f)` (3+1), respectively. The actual returned
+domain is exactly E, including at order zero. Their `_selected` and `_value`
+theorems preserve the original candidate/existence/selection boundary.
+
+`ordered_partial_chain_region_in_domain/7` and
+`nth_derivative_chain_region_in_domain/5` expose that a certificate's region is
+a subset of D. `ordered_partial_chain_exists_on/9` and
+`nth_derivative_chain_exists_on/6` derive the matching all-point existence prop.
+`ordered_partial_function_successor/10` and
+`nth_derivative_function_successor/7` then prove the native next derivative of
+the selected prefix function on that actual preceding region. They consume a
+supplied chain and the matching on prop; they do not synthesize a chain in WD.
+The [unary coherence example](../../examples/real_analysis/higher_derivatives/coherence.lit)
+constructs first and second derivative functions on the actual witness regions.
+The successor theorems accept the current order m and a length-m prefix, then
+produce the (m+1)st candidate. This avoids asking a caller to treat a length-1
+path as a separately instantiated `finite_seq(...,2-1)`. The examples make the
+remaining ordinary region/value index equalities explicit.

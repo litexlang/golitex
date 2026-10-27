@@ -1,0 +1,35 @@
+{
+  "setup": [],
+  "cases": [
+    {
+      "id": "c_two_required",
+      "source": "claim:\n    ? forall f fn(x cart_n(R,2)) R,p cart_n(R,2),A,B R:\n        $Calc::higher_order::has_ordered_partial_at(2,cart_n(R,2),2,f,p,scalar::regularity_forward,A)\n        $Calc::higher_order::has_ordered_partial_at(2,cart_n(R,2),2,f,p,scalar::regularity_reverse,B)\n        =>:\n            A=B\n    release thm Reg::main::ordered_second_partials_swap_c_two(2,cart_n(R,2),f,p,scalar::regularity_forward,scalar::regularity_reverse,A,B)",
+      "expected_category": "proof_search"
+    },
+    {
+      "id": "c_zero_does_not_supply_schwarz",
+      "source": "claim:\n    ? forall f fn(x cart_n(R,2)) R,p cart_n(R,2),A,B R:\n        $Calc::higher_order::has_ordered_partial_at(2,cart_n(R,2),2,f,p,scalar::regularity_forward,A)\n        $Calc::higher_order::has_ordered_partial_at(2,cart_n(R,2),2,f,p,scalar::regularity_reverse,B)\n        $Reg::main::is_scalar_c_k_on_open(2,cart_n(R,2),0,f)\n        =>:\n            A=B\n    release thm Reg::main::ordered_second_partials_swap_c_two(2,cart_n(R,2),f,p,scalar::regularity_forward,scalar::regularity_reverse,A,B)",
+      "expected_category": "proof_search"
+    },
+    {
+      "id": "paths_must_be_reversed",
+      "source": "release thm Reg::main::ordered_second_partials_swap_c_two(2,cart_n(R,2),scalar::regularity_product,scalar::regularity_point,scalar::regularity_forward,scalar::regularity_forward,1,1)",
+      "expected_category": "proof_search"
+    },
+    {
+      "id": "candidate_value_not_guessed",
+      "source": "$Calc::higher_order::has_ordered_partial_at(2,cart_n(R,2),2,scalar::regularity_product,scalar::regularity_point,scalar::regularity_forward,9)",
+      "expected_category": "proof_search"
+    },
+    {
+      "id": "selected_value_not_guessed",
+      "source": "\\Calc::higher_order::ordered_partial<2,cart_n(R,2),2>(scalar::regularity_product,scalar::regularity_point,scalar::regularity_reverse)=9",
+      "expected_category": "proof_search"
+    },
+    {
+      "id": "c_two_does_not_choose_c_three",
+      "source": "$Reg::main::is_scalar_c_k_on_open(2,cart_n(R,2),3,scalar::regularity_product)",
+      "expected_category": "proof_search"
+    }
+  ]
+}

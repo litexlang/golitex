@@ -1,0 +1,7 @@
+# Prove the coordinate rule once and instantiate it at a zero matrix.
+thm transpose_entry:
+    ? forall mt, nt N, mat_t matrix(C,mt,nt), rt closed_range(1,nt), ct closed_range(1,mt):
+        transpose(mat_t,mt,nt)(rt,ct) = mat_t(ct,rt)
+    transpose(mat_t,mt,nt)(rt,ct) = mat_t(ct,rt)
+
+by thm transpose_entry(2,3,zero_matrix(2,3),3,2) => transpose(zero_matrix(2,3),2,3)(3,2) = zero_matrix(2,3)(2,3)

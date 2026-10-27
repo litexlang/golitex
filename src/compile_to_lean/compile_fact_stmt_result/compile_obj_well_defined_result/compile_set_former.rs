@@ -53,7 +53,10 @@ impl LitexToLeanCompiler {
                 "SetFormer/WDSubject",
                 "Set formation evidence has another constructor family.",
             )),
-            (SetFormer::MatrixSet(_), _) => Err(LeanCompileError::unsupported("WD/SetFormer")),
+            (SetFormer::MatrixSet(set), SetFormerObjWellDefinedProofByDef::MatrixSet(wd)) => {
+                self.compile_matrix_set_wd(set, wd, position)
+            }
+            (SetFormer::MatrixSet(_), _) => Err(LeanCompileError::unsupported("Matrix/WDSubject")),
         }
     }
 

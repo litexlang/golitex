@@ -1,0 +1,9 @@
+# Equal sets and equal real bounds preserve the upper-bound property.
+forall A,B set, b,c R:
+    A $subset R
+    B $subset R
+    A = B
+    b = c
+    $is_real_upper_bound(A,b)
+    =>:
+        $is_real_upper_bound(B,c)

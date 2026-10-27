@@ -1,0 +1,6 @@
+# Matrix and inverse aliases retain the proved nonzero determinant and complete signature.
+let inverse_input = identity_matrix(2)
+det(inverse_input,2) = 1
+det(inverse_input,2) != 0
+let named_inverse = matrix_inverse(inverse_input,2)
+named_inverse $in matrix(C,2,2)

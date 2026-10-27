@@ -36,6 +36,44 @@ fn check(rt: &mut Runtime, code: &str, expected: &[bool]) {
 }
 
 #[test]
+fn family_intersection_requires_nonempty_family_and_preserves_failed_scope() {
+    let mut rt = runtime();
+    check(&mut rt, "have unproved_family set", &[true]);
+    for source in [
+        "$is_set(family_intersect({}))",
+        "$is_set(family_intersect(unproved_family))",
+    ] {
+        let run = rt.run_litex_code(source).unwrap();
+        let ExecStmtResult::Fact(crate::execute::execute_fact_stmt::ExecFactStmtResult::Failed(
+            proof,
+        )) = &run.statement_results[0]
+        else {
+            panic!("expected a failed fact: {source}");
+        };
+        assert!(proof.is_wd_failed(), "failure must be WD, not proof search");
+        assert!(!run.success && run.session_error.is_none());
+    }
+    check(
+        &mut rt,
+        "let rejected_intersection = family_intersect({})",
+        &[false],
+    );
+    let missing = rt
+        .run_litex_code("rejected_intersection = rejected_intersection")
+        .unwrap();
+    assert!(!missing.success);
+    assert!(
+        format!("{:?}{:?}", missing.session_error, missing.input_error)
+            .contains("undefined name `rejected_intersection`")
+    );
+    check(
+        &mut rt,
+        include_str!("../../../../examples/wd/family_intersection_nonempty.lit"),
+        &[true, true, true, true, true],
+    );
+}
+
+#[test]
 fn finite_extrema_require_real_elements_and_discard_failed_bindings() {
     for operator in ["finite_set_max", "finite_set_min"] {
         let mut rt = runtime();
@@ -50,6 +88,23 @@ fn finite_extrema_require_real_elements_and_discard_failed_bindings() {
             &[false],
         );
         check(&mut rt, "0 = 1", &[false]);
+    }
+}
+
+#[test]
+fn ordered_fold_checks_each_argument_domain_and_retains_empty_ranges() {
+    for source in [
+        "$is_set(reduce(1,2,fn(k {1}) Z{k},fn(a,b Z) Z{a+b},0))",
+        "$is_set(reduce(0,1,fn(k Z: k != 0) Z{k},fn(a,b Z) Z{a+b},0))",
+    ] {
+        check(&mut runtime(), source, &[false]);
+    }
+    for source in [
+        "$is_set(reduce(1,3,fn(k Z) Z{k},fn(a,b Z) Z{a-b},0))",
+        "$is_set(reduce(-1,-2,fn(k N) N{k},fn(a,b N) N{a+b},0))",
+        "$is_set(reduce(1,0,fn(k Z: k != 0) Z{k},fn(a,b Z) Z{a+b},7))",
+    ] {
+        check(&mut runtime(), source, &[true]);
     }
 }
 

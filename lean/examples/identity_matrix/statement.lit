@@ -1,0 +1,5 @@
+# The identity matrix has real and complex matrix carriers.
+forall n N:
+    identity_matrix(n) $in matrix(R,n,n)
+
+identity_matrix(0) $in matrix(C,0,0)

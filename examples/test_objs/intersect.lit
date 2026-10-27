@@ -1,47 +1,41 @@
 # AST: Obj::SetOperator::Intersect
 # Run: target/release/litex -f examples/test_objs/intersect.lit
-# Cases use discarded sketch scopes; no cross-case facts.
+# Cases are checked directly in file context.
 
 # P01: intersect({1, 2}, {2, 3}) = {2}
-sketch:
-    by extension:
-        ? intersect({1, 2}, {2, 3}) = {2}
-        claim:
-            ? forall x intersect({1, 2}, {2, 3}):
+by extension:
+    ? intersect({1, 2}, {2, 3}) = {2}
+    claim:
+        ? forall x intersect({1, 2}, {2, 3}):
+            x $in {2}
+        x $in {1, 2}
+        x $in {2, 3}
+        x = 1 or x = 2
+        by cases:
+            ? x $in {2}
+            case x = 1:
+                1 $in {2, 3}
+                impossible 1 $in {2, 3}
+            case x = 2:
                 x $in {2}
-            x $in {1, 2}
-            x $in {2, 3}
-            x = 1 or x = 2
-            by cases:
-                ? x $in {2}
-                case x = 1:
-                    1 $in {2, 3}
-                    impossible 1 $in {2, 3}
-                case x = 2:
-                    x $in {2}
-        forall x {2}:
-            x $in intersect({1, 2}, {2, 3})
+    forall x {2}:
+        x $in intersect({1, 2}, {2, 3})
 
 # P02: intersect({}, {1}) = {}
-sketch:
-    intersect({}, {1}) = {}
+intersect({}, {1}) = {}
 
 # P03: intersect({1}, {1}) = {1}
-sketch:
-    intersect({1}, {1}) = {1}
+intersect({1}, {1}) = {1}
 
 # P04: 2 $in intersect({1, 2}, {2, 3})
-sketch:
-    2 $in intersect({1, 2}, {2, 3})
+2 $in intersect({1, 2}, {2, 3})
 
 # P05: not 1 $in intersect({1, 2}, {2, 3})
-sketch:
-    by contra:
-        ? not 1 $in intersect({1, 2}, {2, 3})
-        1 $in {2, 3}
-        impossible 1 $in {2, 3}
+by contra:
+    ? not 1 $in intersect({1, 2}, {2, 3})
+    1 $in {2, 3}
+    impossible 1 $in {2, 3}
 
 # P06: intersect(A, B) = intersect(B, A)
-sketch:
-    forall A, B set:
-        intersect(A, B) = intersect(B, A)
+forall A, B set:
+    intersect(A, B) = intersect(B, A)

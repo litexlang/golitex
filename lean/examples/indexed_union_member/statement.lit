@@ -1,0 +1,3 @@
+# A known index and membership in its fiber give membership in the indexed union.
+forall I nonempty_set, X set, A fn(k I) power_set(X), j I, x A(j):
+    x $in index_union(I,X,A)

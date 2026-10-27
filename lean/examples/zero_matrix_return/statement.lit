@@ -1,0 +1,4 @@
+# Valid components of the real zero-matrix constructor are real numbers.
+forall m, n N, row closed_range(1,m), col closed_range(1,n):
+    zero_matrix(m,n)(row,col) $in R
+zero_matrix(2,3)(1,2) $in R

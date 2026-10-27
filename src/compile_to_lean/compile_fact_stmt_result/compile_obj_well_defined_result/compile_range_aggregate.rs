@@ -159,7 +159,12 @@ impl LitexToLeanCompiler {
                     "RangeAggregate/MemberSignature",
                 ));
             }
-            Ok(())
+            match p {
+                P::SumOfFiniteSet(_) | P::ProductOfFiniteSet(_) => {
+                    Self::finite_aggregate_uses_standard_input(p)
+                }
+                _ => Ok(true),
+            }
         })?;
         if checked.is_none() {
             return Err(LeanCompileError::unsupported(
@@ -170,7 +175,13 @@ impl LitexToLeanCompiler {
         let law = match &fact.element {
             Obj::IteratedOperator(
                 IteratedOperator::SumOfFiniteSet(_) | IteratedOperator::ProductOfFiniteSet(_),
-            ) => "finiteAggregateMember",
+            ) => {
+                if checked == Some(true) {
+                    "finiteAggregateMember"
+                } else {
+                    "finiteAggregateOnMember"
+                }
+            }
             _ => "rangeAggregateMember",
         };
         let member = format!("(Litex.{law} {object} .{carrier} rfl)");

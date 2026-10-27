@@ -1,0 +1,3 @@
+# The trace is the finite sum of all diagonal entries on the complete index set.
+forall n N, A matrix(C,n,n):
+    trace(A,n) = finite_set_sum(closed_range(1,n),fn(k closed_range(1,n)) C {A(k,k)})

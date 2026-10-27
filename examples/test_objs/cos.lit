@@ -1,32 +1,26 @@
 # AST: Obj::TrigOperator::Cos
 # Run: target/release/litex -f examples/test_objs/cos.lit
-# Cases use discarded sketch scopes; no cross-case facts.
+# Direct cases share file context; sketches isolate local declarations.
 
 # P01: cos(0) = 1
-sketch:
-    cos(0) = 1
+cos(0) = 1
 
 # P02: cos(pi) = -1
-sketch:
-    cos(pi) = -1
+cos(pi) = -1
 
 # P03: cos(pi / 2) = 0
-sketch:
-    cos(pi / 2) = 0
+cos(pi / 2) = 0
 
 # P05: cos(x) $in R
-sketch:
-    forall x R:
-        cos(x) $in R
+forall x R:
+    cos(x) $in R
 
 # P06: recovered unchanged regression
-sketch:
-    forall x R:
-        cos(-x) = cos(x)
+forall x R:
+    cos(-x) = cos(x)
 
 # P04: exact numeric/periodic/modulus repair; original source retained in the dated journal
-sketch:
-    cos(-pi) = -1
+cos(-pi) = -1
 
 # P91: exact numeric/periodic/modulus boundary
 sketch:

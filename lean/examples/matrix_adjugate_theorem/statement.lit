@@ -1,0 +1,6 @@
+# Reuse the transposed-cofactor coordinate theorem on a concrete square matrix.
+thm checked_adjugate_coordinate:
+    ? forall n N+, A matrix(C,n,n), r closed_range(1,n), c closed_range(1,n):
+        matrix_adjugate(A,n)(r,c) = matrix_cofactor(A,n,c,r)
+    matrix_adjugate(A,n)(r,c) = matrix_cofactor(A,n,c,r)
+by thm checked_adjugate_coordinate(2,zero_matrix(2,2),1,2) => matrix_adjugate(zero_matrix(2,2),2)(1,2) = matrix_cofactor(zero_matrix(2,2),2,2,1)

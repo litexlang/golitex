@@ -1,0 +1,3 @@
+# Matrix scalar multiplication equals its whole formula function.
+forall m, n N, z C, A matrix(C,m,n):
+    matrix_scale(z,A,m,n) = fn(row closed_range(1,m),col closed_range(1,n)) C {z*A(row,col)}

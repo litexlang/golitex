@@ -990,6 +990,21 @@ removing 4,380 constructor ID arguments and 230 direct ID fields.
 
 Detailed `FnApplicationInStandardSuperset` evidence records `target_set` and `signature_returns`. Each return entry carries `source_set`, `cite_signature_fact_id`, and the actual `function_equal` path. This certifies numeric set inclusion; it does not manufacture a return-set equality proof. The enclosing fact result owns the application WD and domain evidence.
 
+Detailed `TemplateApplicationInStandardSuperset` additionally records `declared_returns`: each entry contains `function`, `declared_signature`, `source_set` and `function_equal`. Its stored `signature_returns` keep the same citation fields as above. The enclosing WD supplies actual arguments and template guards. Reading capture preserves these typed declaration and alias records; Lean explicitly refuses intrinsic template calls until their WD consumer is supported.
+
+Detailed `IntersectFiniteFromLeft` / `IntersectFiniteFromRight` records the
+single actual `requirement_facts` entry and its `proof_of_requirement_facts`
+result. Reading capture retains both fields. The side is part of the typed
+variant; the prior both-finite payload remains two-premise evidence. Lean
+replay validates the exact original operand and requirement before applying
+the corresponding proved one-bound intersection lemma.
+
+Detailed `SetMinusInPowerSetOfLeft` records `left_equal_carrier` as the actual
+known equality path, empty only for identity. Reading captures that path;
+Lean validates its ordered original citations and endpoint before using the
+existing subset and power-set semantic lemmas. Removing the path for distinct
+aliased carriers is rejected. No membership premise or equality is fabricated.
+
 Detailed `FnApplicationInCodomain` retains the selected signature citation and
 its actual `function_equal` path. Each alternative has either a checked
 `return_set_match` or `same_call_domains` evidence. The latter compares
@@ -1183,3 +1198,14 @@ JSON marks the entry `by_checked_argument_membership`, includes its
 actual requirement. The referenced argument WD remains in
 `well_defined_of_each_parameter`; this route adds no duplicate WD or cache ID.
 It is domain evidence, not a proof of the comparison's truth.
+
+Detailed UnionInPowerSet records left/right known membership proofs.
+IntersectInPowerSetFromLeft, IntersectInPowerSetFromRight and SetMinusInPowerSet
+record respectively left, right and left. Each child preserves fact and
+searched_proof with the original citation and equality transport. Reading
+capture traverses all four payloads. These are bounded known-property
+certificates, not a boolean assertion that an event is well-typed.
+
+ListSetInPowerSetFromMembers retains the queried atomic membership and exact
+proof payload for every literal element in source order. Detailed JSON and
+reading capture expose those members; no single citation replaces the payload.

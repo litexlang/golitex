@@ -1,0 +1,6 @@
+# Unfold symmetric difference and show that a set differs from itself nowhere.
+forall A set:
+    set_diff(A,A) = {}
+
+forall A, B set:
+    set_diff(A,B) = union(set_minus(A,B),set_minus(B,A))

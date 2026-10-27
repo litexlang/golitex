@@ -1,0 +1,4 @@
+forall X set,p fn(E power_set(X): 1 = 2) R,a X:
+    p({a}) > 0
+    =>:
+        p({a}) > 0

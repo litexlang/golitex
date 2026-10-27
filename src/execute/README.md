@@ -561,6 +561,24 @@ to own all WD evidence. See `execute_fact_stmt/README.md` and the maintained
 
 `FnApplicationInStandardSuperset` is a read-only KnownSpecialProperty leaf for stored function signatures after application WD. It checks all fully applied standard return carriers against the intrinsic numeric inclusion relation, preserving each exact-object signature FactId and direct equality certificate. It never searches domain premises or changes the WD cache. Nonstandard carriers and intrinsic template/field alternatives conservatively retain their existing producers. The dedicated tracer is `examples/proof_nodes/atomic/by_known_special_property/function_return_standard_superset.lit`.
 
+`TemplateApplicationInStandardSuperset` is the separate declaration-owned leaf for a checked template or alias, for example `\real_identity<R>(x) $in C` when the declaration returns R. Its `declared_returns` retain each function, signature, standard source set and equality path; `signature_returns` retain every applicable stored signature as well. All must lie in the target, with one strict inclusion. Argument/guard WD is unchanged; unknown intrinsic aliases and nonstandard returns decline without recursive proof search. This does not broaden the stored-signature leaf or its payload. See `examples/wd/template_standard_return.lit`; intrinsic template Lean WD remains unsupported.
+
+`IntersectFiniteFromLeft` and `IntersectFiniteFromRight` are distinct one-child
+strategies after the unchanged `IntersectFiniteFromBoth` branch. Finiteness of
+either operand bounds the intersection, e.g. `intersect(E,{point})` is finite
+for arbitrary E. Each result retains its actual requirement and verification
+result; the dispatcher supplies the existing capped child state. No operand
+finiteness is inferred, no union contract is widened, and inner WD remains
+mandatory. This also permits the literal std Dirac formula's declaration.
+
+`SetMinusInPowerSetOfLeft` is the dedicated fallback when the difference's
+actual left operand equals the target power-set carrier. It retains the
+identity/stored equality path and never reopens premise search. Existing
+`SetMinusInPowerSet` stored-membership evidence keeps priority. This resolves
+complement-event domains inside positive function guards and the full source
+total-probability theorem. Wrong carriers and independent function guards
+remain rejected; no AST/state/permission contract changed.
+
 The positive/nonnegative saved-difference bridges and four complementary
 negative/nonpositive bridges consume only read-only known premises after the
 parent verifies real operands. Ordinary subtraction tries one shape; a literal
@@ -716,3 +734,22 @@ This is an R1 branch extension with L3 producer/consumer checks. Reserving
 `compose` is a source compatibility change. Lean replay explicitly rejects
 this new constructor. See the [strict tracer](../../examples/wd/function_composition.lit)
 and `cargo test --release --lib function_composition`.
+
+## Known power-set operation closure
+
+UnionInPowerSet quotes both operand memberships into the same power_set(X).
+IntersectInPowerSetFromLeft/Right quote the selected bounded operand;
+SetMinusInPowerSet quotes the left operand. The leaf reads fixed known
+memberships only, retaining the queried fact, original FactId and argument
+transport evidence. It does not invoke verify, subset/forall search, change
+permissions or write a carrier fact/cache entry. The enclosing verification
+owns object WD. This permits a checked function on all subsets to occur at a
+compound event in a struct law under KnownSpecialProperty. Missing union
+operands and reversed difference bounds retain their refusals. Tracer:
+examples/wd/power_set_operation_closure.lit.
+
+Literal-event bounds use ListSetInPowerSetFromMembers at the existing known-property
+stage: each literal element must already have a queried membership proof in the
+same carrier (including its recorded equality transport). This does not reopen
+search. Literal construction still checks all inner WD and pairwise distinctness.
+The complete finite-expectation declaration is a regression consumer.

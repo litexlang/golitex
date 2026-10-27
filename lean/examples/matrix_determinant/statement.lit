@@ -1,0 +1,6 @@
+# Determinants of complex and real square matrices stay in their scalar fields.
+forall n N, A matrix(C,n,n):
+    det(A,n) $in C
+
+forall n N, A matrix(R,n,n):
+    det(A,n) $in R

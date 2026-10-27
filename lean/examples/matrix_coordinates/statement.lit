@@ -1,0 +1,3 @@
+# A matrix over any set returns an element of that set at every valid coordinate.
+forall S set, m, n N, A matrix(S,m,n), row closed_range(1,m), col closed_range(1,n):
+    A(row,col) $in S

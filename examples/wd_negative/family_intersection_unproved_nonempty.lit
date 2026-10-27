@@ -1,0 +1,3 @@
+# Being a set does not establish that a family has a member.
+have F set
+let invalid = family_intersect(F)

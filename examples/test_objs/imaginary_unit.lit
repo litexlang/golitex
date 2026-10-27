@@ -1,46 +1,37 @@
 # AST: Obj::Literal::ImaginaryUnit
 # Run: target/release/litex -f examples/test_objs/imaginary_unit.lit
-# Cases use discarded sketch scopes; no cross-case facts.
+# Cases are checked directly in file context.
 
 # P01: i $in C
-sketch:
-    i $in C
+i $in C
 
 # P02: i * i = -1
-sketch:
-    i * i = -1
+i * i = -1
 
 # P03: i^2 = -1
-sketch:
-    i^2 = -1
+i^2 = -1
 
 # P04: re(i) = 0
-sketch:
-    re(i) = 0
+re(i) = 0
 
 # P05: img(i) = 1
-sketch:
-    img(i) = 1
+img(i) = 1
 
 # P06: C_abs(i) = 1
-sketch:
-    C_abs(i) = 1
+C_abs(i) = 1
 
 # P101: imaginary-unit nonzero builtin
-sketch:
-    i != 0
-    0 != i
-    i $in C*
+i != 0
+0 != i
+i $in C*
 
 # P102: guarded imaginary inverse
-sketch:
-    i / i = 1
-    1 / i + i = 0
+i / i = 1
+1 / i + i = 0
 
 # P103: nonzero by contradiction with explicit substitution
-sketch:
-    by contra:
-        ? i != 0
-        i * i = -1
-        i * i = 0 * 0 = 0
-        impossible i * i != 0
+by contra:
+    ? i != 0
+    i * i = -1
+    i * i = 0 * 0 = 0
+    impossible i * i != 0

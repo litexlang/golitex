@@ -1,0 +1,7 @@
+# Every square matrix has identity as its zeroth power; reuse the named theorem.
+thm checked_matrix_power_zero:
+    ? forall n N, A matrix(C,n,n):
+        matrix_power(A,n,0) = identity_matrix(n)
+    release thm matrix_power_zero(A,n)
+
+by thm checked_matrix_power_zero(2,zero_matrix(2,2)) => matrix_power(zero_matrix(2,2),2,0) = identity_matrix(2)

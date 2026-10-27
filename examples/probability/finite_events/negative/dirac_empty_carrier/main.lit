@@ -1,0 +1,125 @@
+# Tracer: actual uniform probabilities on six outcomes.
+# The generic bundled constructor now supplies the complete finite probability space.
+# P(even)=1/2, P(>3)=1/2, P(even intersect >3)=1/3, P(even | >3)=2/3.
+# No probability laws or formula are assumed locally.
+# Evidence: target/release/litex -lang en -strict -f examples/probability/finite_events/main.lit
+
+{2,4,6} $subset {1,2,3,4,5,6}
+
+{2,4,6} $in power_set({1,2,3,4,5,6})
+
+{4,5,6} $subset {1,2,3,4,5,6}
+
+{4,5,6} $in power_set({1,2,3,4,5,6})
+
+intersect({2,4,6},{4,5,6}) $in power_set({1,2,3,4,5,6})
+
+\prob::main::uniform_event_probability<{1,2,3,4,5,6}>({2,4,6}) = 1/2
+
+by extension:
+    ? intersect({2,4,6},{4,5,6}) = {4,6}
+    by enumerate finite_set:
+        ? forall x {2,4,6}:
+            x $in {4,5,6}
+            =>:
+                x $in {4,6}
+        x $in {4,6}
+    claim:
+        ? forall x intersect({2,4,6},{4,5,6}):
+            x $in {4,6}
+        x $in {2,4,6}
+        x $in {4,5,6}
+    {4,6} $subset {2,4,6}
+    {4,6} $subset {4,5,6}
+    claim:
+        ? forall x {4,6}:
+            x $in intersect({2,4,6},{4,5,6})
+        x $in {2,4,6}
+        x $in {4,5,6}
+
+finite_set_size(intersect({2,4,6},{4,5,6})) = finite_set_size({4,6}) = 2
+
+\prob::main::uniform_event_probability<{1,2,3,4,5,6}>(intersect({2,4,6},{4,5,6})) = finite_set_size(intersect({2,4,6},{4,5,6})) / finite_set_size({1,2,3,4,5,6})
+
+finite_set_size({1,2,3,4,5,6}) = 6
+
+\prob::main::uniform_event_probability<{1,2,3,4,5,6}>(intersect({2,4,6},{4,5,6})) = finite_set_size(intersect({2,4,6},{4,5,6})) / finite_set_size({1,2,3,4,5,6}) = 2 / 6 = 1/3
+
+\prob::main::uniform_event_probability<{1,2,3,4,5,6}>({4,5,6}) = 1/2
+
+release thm prob::main::uniform_event_normalization({1,2,3,4,5,6})
+
+release thm prob::main::uniform_event_normalization({0})
+
+release thm prob::main::uniform_probability_laws({1,2,3,4,5,6})
+
+\prob::main::uniform_probability_space<{1,2,3,4,5,6}> = ({1,2,3,4,5,6},\prob::main::uniform_event_probability<{1,2,3,4,5,6}>)
+
+have dice &prob::main::FiniteProbabilitySpace<{1,2,3,4,5,6}> = \prob::main::uniform_probability_space<{1,2,3,4,5,6}>
+
+release struct def dice
+
+dice = ({1,2,3,4,5,6},\prob::main::uniform_event_probability<{1,2,3,4,5,6}>)
+
+dice.carrier = {1,2,3,4,5,6}
+
+dice.prob = \prob::main::uniform_event_probability<{1,2,3,4,5,6}>
+
+dice.prob({2,4,6}) = 1/2
+
+dice.prob({4,5,6}) = 1/2
+
+dice.prob(intersect({2,4,6},{4,5,6})) = 1/3
+
+\prob::main::conditional_event_probability<{1,2,3,4,5,6},dice>({2,4,6},{4,5,6}) = dice.prob(intersect({2,4,6},{4,5,6}))/dice.prob({4,5,6}) = (1/3)/(1/2) = 2/3
+
+# A genuine nonempty null event in the point mass at1.
+
+release thm prob::main::dirac_probability_laws({0,1},1)
+
+\prob::main::dirac_probability_space<{0,1},1> = ({0,1},\prob::main::dirac_event_probability<{0,1},1>)
+
+have point_mass &prob::main::FiniteProbabilitySpace<{0,1}> = \prob::main::dirac_probability_space<{0,1},1>
+
+point_mass = ({0,1},\prob::main::dirac_event_probability<{0,1},1>)
+
+point_mass.carrier = {0,1}
+
+point_mass.prob = \prob::main::dirac_event_probability<{0,1},1>
+
+{0} $subset {0,1}
+
+{0} $in power_set({0,1})
+
+{1} $subset {0,1}
+
+{1} $in power_set({0,1})
+
+release struct def point_mass
+
+release thm prob::main::dirac_event_excludes({0,1},1,{0})
+
+release thm prob::main::dirac_event_contains({0,1},1,{1})
+
+$is_nonempty_set({0})
+
+point_mass.prob({0}) = 0
+
+point_mass.prob({1}) = 1
+
+claim:
+    ? not 1 $in intersect({0},{1})
+    by contra:
+        ? not 1 $in intersect({0},{1})
+        1 $in {0}
+        impossible 1 $in {0}
+
+release thm prob::main::dirac_event_excludes({0,1},1,intersect({0},{1}))
+
+point_mass.prob(intersect({0},{1})) = \prob::main::dirac_event_probability<{0,1},1>(intersect({0},{1})) = 0
+
+\prob::main::conditional_event_probability<{0,1},point_mass>({0},{1}) = point_mass.prob(intersect({0},{1}))/point_mass.prob({1}) = 0
+
+by def $prob::main::independent_events({0,1},point_mass,{0},{1})
+
+\prob::main::dirac_probability_space<{},0> $in &prob::main::FiniteProbabilitySpace<{}>

@@ -19,6 +19,38 @@ A checkout-local project can instead use `[import]` with
 `Matrix = "../../std/matrix"`, adjusting the relative path for its location.
 Native operators work without an import.
 
+## Entrywise source theorems
+
+The following seven laws are ordinary proved source theorems. Import this
+package and call them with the qualified `Matrix::main::` name; their former
+bare builtin theorem names have been removed. Argument order is unchanged.
+
+| Source theorem call | Result |
+| --- | --- |
+| `matrix_add_commutative(A,B,m,n)` | A+B=B+A |
+| `matrix_add_associative(A,B,D,m,n)` | (A+B)+D=A+(B+D) |
+| `matrix_add_zero(A,m,n)` | Both A+0=A and 0+A=A |
+| `matrix_sub_self(A,m,n)` | A−A=0 |
+| `matrix_scale_one(A,m,n)` | 1A=A |
+| `matrix_scale_zero(A,m,n)` | 0A=0 |
+| `matrix_scale_distributive(z,A,B,m,n)` | z(A+B)=zA+zB |
+
+Here A/B/D have the same complete `matrix(C,m,n)` domain, z is complex,
+and m/n are naturals including zero. Real matrix inputs are also accepted.
+The proofs use entry formulas, scalar algebra and `by fn_extension`; they
+do not call native matrix theorem schemas. Set-kind binders followed by exact
+matrix-membership premises preserve the established matrix-first call order.
+
+```litex
+have fn A(r closed_range(1,2),c closed_range(1,3)) R=r+c
+have fn B(r closed_range(1,2),c closed_range(1,3)) C=r-c+i
+release thm Matrix::main::matrix_add_commutative(A,B,2,3)
+matrix_add(A,B,2,3)=matrix_add(B,A,2,3)
+```
+
+See the [imported entrywise examples](../../examples/algebra/matrix_entrywise/main.lit)
+for all seven laws at arbitrary dimensions and empty row/column domains.
+
 ## Native values
 
 Dimensions are natural numbers, including zero; indices start at one.
@@ -98,7 +130,8 @@ Orthogonal matrices are real; Hermitian and unitary matrices use C. Positive
 definiteness includes self-adjointness and tests every nonzero vector.
 An eigenpair requires a nonzero eigenvector.
 
-The fourteen checked source theorems establish inverse-candidate uniqueness,
+The twenty-one checked source theorems include these seven entrywise laws,
+and establish inverse-candidate uniqueness,
 nonsingularity and selection; the two directions of the determinant criterion;
 rank selection, uniqueness and existence; nonsingularity and inversion of
 unitary matrices; and correctness and uniqueness of the guarded square-system

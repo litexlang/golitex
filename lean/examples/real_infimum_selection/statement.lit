@@ -1,0 +1,7 @@
+# Construct and select the infimum of the real singleton {2}.
+by def $is_real_lower_bound({2},2)
+witness exist bound R st {$is_real_lower_bound({2},bound)} from 2
+by def $is_real_bounded_below({2})
+release thm real_infimum_exists({2})
+release thm real_infimum_selected({2})
+inf({2}) $in R

@@ -1,0 +1,3 @@
+# A double transpose retains the complete real matrix domain.
+forall m, n N, A matrix(R,m,n):
+    transpose(transpose(A,m,n),n,m) $in matrix(R,m,n)

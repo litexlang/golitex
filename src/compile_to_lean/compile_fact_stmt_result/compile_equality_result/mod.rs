@@ -4,6 +4,7 @@ mod compile_aggregate_calculation;
 mod compile_builtin_rewrite;
 mod compile_calculation;
 mod compile_cartesian_definition;
+mod compile_closed_range_literal;
 mod compile_complex_calculation;
 mod compile_congruence;
 mod compile_difference_zero;
@@ -41,3 +42,15 @@ mod compile_inverse_trig;
 mod compile_trig;
 
 mod compile_complex_observations;
+mod compile_fold_identity;
+
+mod compile_fold_calculation;
+
+mod compile_hyperbolic;
+
+mod compile_matrix;
+mod compile_matrix_reduction;
+
+mod compile_matrix_evaluation;
+
+mod compile_matrix_residual;

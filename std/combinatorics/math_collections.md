@@ -28,7 +28,7 @@ cardinality rules. The dependency graph is proof edges from native cardinality
 to bounds/deletion, from bounds to pigeonhole/omitted value, from image equality
 to injection-bijection, and from deletion+surjection to collision bound then
 surjection-bijection. No choice or existence of an arbitrary bijection is
-selected. The ten source proofs and full-domain imported use probes are checked in strict mode. Binomial/Pascal functions, general
+selected. The ten source proofs and full-domain imported use probes are checked in strict mode. General
 fiber sums, graphs, recurrence solving and generating functions remain future
 work. The original discrete showcase is preserved and not treated as a full
 course. No compiler/Lean or global release certification is implied.
@@ -72,3 +72,42 @@ All twelve added source results and the full-domain imported consumers pass
 strict verification. Native cardinality identities remain reused dependencies;
 no native Obj, Fact, reserved theorem, rule or strategy is added. The existing
 single main export and original finite-map source prefix are preserved.
+
+## Natural binomial coefficients
+
+The numeric construction is binomial_coefficient(n,k), with both indices
+natural and result natural. Row0 is1 at column0 and0 at positive columns;
+positive rows start at1 and positive columns follow the Pascal recursion on
+the previous row. Recursion decreases the first index, while both recursive
+column arguments remain natural. This is one callable mathematical value,
+not a proposition about a supplied candidate and not a rational factorial
+quotient whose integrality is deferred. The natural domain includes row0 and
+all columns above the diagonal. The zero-column branch is checked first, so
+its value is directly available at an arbitrary row without an extra
+evaluation theorem.
+
+The proof spine derives zero above the row and the diagonal, then the first
+two nonconstant columns, symmetry, positivity and monotonicity in the row
+index. Generalized row properties may be local induction invariants; they
+are not public law certificates. The representative use is B(5,2)=B(5,3)=10,
+alongside B(0,0)=1 and B(3,4)=0. Direct defining equations and the full
+positive-column Pascal relation is checked without evaluation-wrapper
+theorems. In particular, column1 must not inherit the showcase's extra r>1
+restriction.
+
+This design does not establish the factorial formula, binomial theorem,
+row-sum identities or the cardinality of k-element subsets. Those require
+separate proofs and consumers. The natural interface, nine source theorems and
+full-domain imported use probes pass strict verification. Imported use starts
+with release obj def on the actual function: imports expose definitions, while
+the explicit release supplies the callable membership and guarded equations
+needed by calls and theorem conclusions. An omitted release is a checked
+failure boundary; it is not evidence of a missing recursive-function kernel
+feature. No wrapper, extra caller premise, native rule or global strategy is
+introduced.
+
+Implementation order follows proof dependencies: above-row vanishing precedes
+the diagonal; the first column precedes the second; the diagonal supports
+symmetry, which supports penultimate entries; positivity supports strict row
+growth. Weak row growth follows directly from the natural codomain and the
+Pascal step. Local generalized row invariants stay inside three proof bodies.

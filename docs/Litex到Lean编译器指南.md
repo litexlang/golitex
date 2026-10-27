@@ -132,8 +132,10 @@ nonnegative_rationals $subset nonnegative_reals
 当前切片支持平坦原子筛选条件、平坦 And／数值比较链及已支持的具体谓词，
 按实际记录的成员、subset、binder 与有序 WD 子证明重放。有限集合保留完整的
 两两不等证据；成员可经实际 subset 证明用于实数序的 WD。
-一般析取筛选、finite_set 参数、独立的 `have A nonempty_set`、无界理解、幂集／像与存在式集合选择
-仍在编译边界外，不会被变成公理。
+这个有界 builder 切片尚不支持一般析取筛选、finite_set 参数、独立的
+`have A nonempty_set`、无界理解与存在式集合选择；未支持的路线不会被变成公理。
+这些限制只针对上述 builder 路线；其他集合操作已有各自支持的证据路线，
+如[差集和幂集的单调性](../lean/examples/set_containment_monotonicity/)。
 
 ## 字段互不依赖的结构
 

@@ -1,0 +1,65 @@
+# Reuse proved regularity through ordinary explicit module interfaces.
+
+release obj def Base::main::regularity_cubic
+
+release obj def Base::main::regularity_unary_constant
+
+release obj def Base::main::regularity_scalar_constant
+
+release obj def Base::scalar::regularity_product
+
+release thm Base::main::regularity_cubic_c_three
+
+release thm Base::main::regularity_unary_constant_smooth
+
+release thm Base::main::regularity_scalar_constant_smooth
+
+release thm Base::scalar::regularity_product_c_two
+
+have fn shifted_cubic(x R) R=Base::main::regularity_cubic(x)+2*Base::main::regularity_unary_constant(x)
+
+claim:
+    ? forall x R:
+        shifted_cubic(x)=1*Base::main::regularity_cubic(x)+2*Base::main::regularity_unary_constant(x)
+    shifted_cubic(x)=Base::main::regularity_cubic(x)+2*Base::main::regularity_unary_constant(x)
+
+$Reg::main::is_unary_c_k_on_open(R,3,Base::main::regularity_unary_constant)
+
+release thm RegLaws::main::unary_c_k_linear_combination(R,3,Base::main::regularity_cubic,Base::main::regularity_unary_constant,shifted_cubic,1,2)
+
+$Reg::main::is_unary_c_k_on_open(R,3,shifted_cubic)
+
+have fn smooth_unary_sum(x R) R=2*Base::main::regularity_unary_constant(x)+3*Base::main::regularity_unary_constant(x)
+
+claim:
+    ? forall x R:
+        smooth_unary_sum(x)=2*Base::main::regularity_unary_constant(x)+3*Base::main::regularity_unary_constant(x)
+    smooth_unary_sum(x)=2*Base::main::regularity_unary_constant(x)+3*Base::main::regularity_unary_constant(x)
+
+release thm RegLaws::main::unary_smooth_linear_combination(R,Base::main::regularity_unary_constant,Base::main::regularity_unary_constant,smooth_unary_sum,2,3)
+
+$Reg::main::is_unary_smooth_on_open(R,smooth_unary_sum)
+
+have fn shifted_product(x cart_n(R,2)) R=Base::scalar::regularity_product(x)-4*Base::main::regularity_scalar_constant(x)
+
+claim:
+    ? forall x cart_n(R,2):
+        shifted_product(x)=1*Base::scalar::regularity_product(x)+(-4)*Base::main::regularity_scalar_constant(x)
+    shifted_product(x)=Base::scalar::regularity_product(x)-4*Base::main::regularity_scalar_constant(x)
+
+$Reg::main::is_scalar_c_k_on_open(2,cart_n(R,2),2,Base::main::regularity_scalar_constant)
+
+release thm RegLaws::main::scalar_c_k_linear_combination(2,cart_n(R,2),2,Base::scalar::regularity_product,Base::main::regularity_scalar_constant,shifted_product,1,-4)
+
+$Reg::main::is_scalar_c_k_on_open(2,cart_n(R,2),2,shifted_product)
+
+have fn smooth_scalar_sum(x cart_n(R,2)) R=2*Base::main::regularity_scalar_constant(x)+3*Base::main::regularity_scalar_constant(x)
+
+claim:
+    ? forall x cart_n(R,2):
+        smooth_scalar_sum(x)=2*Base::main::regularity_scalar_constant(x)+3*Base::main::regularity_scalar_constant(x)
+    smooth_scalar_sum(x)=2*Base::main::regularity_scalar_constant(x)+3*Base::main::regularity_scalar_constant(x)
+
+release thm RegLaws::main::scalar_smooth_linear_combination(2,cart_n(R,2),Base::main::regularity_scalar_constant,Base::main::regularity_scalar_constant,smooth_scalar_sum,2,3)
+
+$Reg::main::is_scalar_smooth_on_open(2,cart_n(R,2),smooth_scalar_sum)

@@ -1,0 +1,3 @@
+# Each index of a concrete interval has a recorded nonzero proof.
+forall f fn(k Z: k != 0) Z, op fn(x,y Z) Z, s Z:
+    reduce(1,3,f,op,s) $in Z

@@ -1,0 +1,6 @@
+# Retain a cofactor value and its complex membership through object aliases.
+let cofactor_matrix = zero_matrix(2,2)
+
+let named_cofactor = matrix_cofactor(cofactor_matrix,2,1,2)
+
+named_cofactor $in C

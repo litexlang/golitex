@@ -1,0 +1,6 @@
+# Empty ordered and unordered folds return their original seed.
+forall s Z:
+    reduce(1,0,fn(k Z) Z{k},fn(a,b Z) Z{a-b},s) = s
+
+forall s Z:
+    finite_set_reduce({},fn(k Z) Z{k},fn(a,b Z) Z{a+b},s) = s

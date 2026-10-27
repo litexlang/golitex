@@ -1,0 +1,8 @@
+# A finite complex vector has a real Euclidean norm.
+forall n N, v cart_n(C,n):
+    euclidean_norm(v,n) $in R
+
+forall n N, v cart_n(C,n):
+    euclidean_norm(v,n) $in C
+forall v cart_n(C,0):
+    euclidean_norm(v,0) $in R

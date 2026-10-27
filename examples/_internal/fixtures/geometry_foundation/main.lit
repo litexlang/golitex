@@ -1,3 +1,0 @@
-have a R = 1
-have pair cart(R, R) = (3, 4)
-have ProductSet set = cart(R, R)

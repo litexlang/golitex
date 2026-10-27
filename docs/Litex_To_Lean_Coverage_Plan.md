@@ -2911,8 +2911,8 @@ WD consumers and theorem adapters; they should be delivered as separate batches.
 ## Approved Fact and Obj implementation order, 2026-10-26
 
 The inventory table above is the recorded pre-implementation baseline. The
-following phases are planned work, not additional coverage claims. The user
-authorized phases 1 and 2 together; later phases remain queued.
+following table records the approved order. Delivered checkpoints appear
+below; later phases are not counted as coverage before their checks finish.
 
 | Phase | Scope | Acceptance target |
 | --- | --- | --- |
@@ -2994,3 +2994,1226 @@ audited with `#print axioms`; the only dependencies were `propext`,
 `Classical.choice` and `Quot.sound`. Negative checks reject false claims,
 missing domains, altered computation results and a remainder certificate
 with the wrong divisor. These are local checks, not a CI claim.
+
+
+## Phase 3: set constructors, 2026-10-26
+
+This batch connects five existing source constructors: `set_diff(A,B)`,
+`family_intersect(F)`, `index_union(I,X,A)`, `index_intersect(I,X,A)` and
+`index_cart(I,S,g)`. Objects retain their child objects and WD evidence.
+The compiler validates and consumes the original results and fact citations.
+
+The family-intersection domain changed with the maintainer's approval:
+`family_intersect(F)` now requires `$is_nonempty_set(F)` during WD. The
+existing `requirement_fact_verified` field carries that proof; AST and result
+shapes are unchanged. Empty families and generic families without nonempty
+evidence fail WD. A nonempty family can have an empty intersection: `{{}}`
+is a valid family. The dedicated source gallery and both manuals reflect
+this restriction.
+
+Lean constructs the family intersection by separation inside the family
+union. Nonemptiness supplies a member set when proving the ordinary
+intersection membership characterization. This uses existing SetSemantics
+and the optional IndexedUnionSemantics, with their existing ZF model; no
+new axiom or model-class field is introduced.
+
+The indexed constructors preserve their source domains. Union/intersection
+require a nonempty index I, an ambient set X, and `A in fn(k I) power_set(X)`.
+The indexed product requires nonempty I and S and `g in fn(k I) S`; membership
+uses the captured function membership and choice-function certificate.
+
+Supported selected proof routes are:
+
+- The four symmetric-difference membership/nonmembership cases, the defining
+  union of two differences, and `set_diff(A,A) = {}`.
+- Indexed-union membership from the recorded index membership and fiber proof.
+- The existing two-argument explicit theorems `family_intersect_member`,
+  `index_intersect_member` and `index_cart_member`.
+- WD, sethood, ordinary references and structural theorem instantiation for
+  these constructors. The family-intersection example includes a named
+  theorem and its later application to a singleton family.
+
+`forallMembersOfRepresentations` bridges a source universal premise to
+semantic membership using a one-point host carrier. Its proved construction
+works even when the premise's host universe differs from the model's
+universe; generated source parameters keep their existing representations.
+
+| Example | Source | Generated Lean |
+| --- | --- | --- |
+| Four symmetric-difference membership cases | [Litex](../lean/examples/symmetric_difference_membership/statement.lit) | [Lean](../lean/examples/symmetric_difference_membership/statement.lean) |
+| Symmetric-difference identities | [Litex](../lean/examples/symmetric_difference_identities/statement.lit) | [Lean](../lean/examples/symmetric_difference_identities/statement.lean) |
+| Indexed-union membership | [Litex](../lean/examples/indexed_union_member/statement.lit) | [Lean](../lean/examples/indexed_union_member/statement.lean) |
+| Indexed-intersection membership | [Litex](../lean/examples/indexed_intersection_member/statement.lit) | [Lean](../lean/examples/indexed_intersection_member/statement.lean) |
+| Indexed-product membership | [Litex](../lean/examples/indexed_product_member/statement.lit) | [Lean](../lean/examples/indexed_product_member/statement.lean) |
+| Nonempty-family intersection and theorem reuse | [Litex](../lean/examples/family_intersection_member/statement.lit) | [Lean](../lean/examples/family_intersection_member/statement.lean) |
+
+Remaining routes include `family_intersect_member_facts`, general indexed-set
+algebra, symmetric-difference finite evaluation and further equality rules.
+Unsupported selected routes still reject compilation. Phases 4–7 remain
+queued.
+
+Validation: all six strict source/generated pairs passed Lean 4.31.0 with the
+same pinned Mathlib revision as phases 1–2. Regeneration was byte-identical;
+13 generated theorems passed axiom audits with only `propext`,
+`Classical.choice` and `Quot.sound`. Files range from 3,405 to 20,693 bytes.
+Seven affected source checks passed, including expected WD rejections and the
+existing family-intersection gallery. All 847 compiler tests and the dedicated
+Runtime WD/failed-scope regression passed. The rebuilt release CLI reproduced
+all six checked Lean files byte for byte.
+
+
+### Known power-set closure replay, 2026-10-26
+
+The four recorded KnownSpecialProperty routes UnionInPowerSet,
+IntersectInPowerSetFromLeft/Right and SetMinusInPowerSet replay their original
+membership citations through inPowerSet_iff and the existing proved subset
+laws. No new Lean axiom or semantic primitive is added. The consumer validates
+the source operator, both union operands and each child's exact power-set
+carrier; altered operands/carriers fail closed. The
+[mathematical source](../lean/examples/power_set_operation_closure/statement.lit)
+and its [generated target](../lean/examples/power_set_operation_closure/statement.lean)
+cover all four routes plus equality transport. Five actual Lean theorems pass
+Lean4.31.0 with pinned Mathlib, with only the permitted standard axioms. This
+does not add compilation support for the finite probability structure or its
+quantified probability laws.
+
+
+## Phase 4: general folds, 2026-10-26
+
+Both `reduce(a,b,f,op,seed)` and `finite_set_reduce(S,f,op,seed)` now have
+Lean object representations. They keep Litex function objects and membership
+facts: the return carrier can be an arbitrary set E. The binary operation
+must map E × E to E, with no additional explicit input conditions.
+
+`reduce` is a left fold over ascending, inclusive integer indices. A finite
+set fold uses a finite enumeration; its result is independent of that
+ordering by the captured commutative and associative laws. The permutation
+proof is proved in `Litex.lean`, without a new semantics axiom or class.
+
+The original WD results now retain both selected function signatures as
+`operation_signature_selection` and `iterand_signature_selection`, including
+existing fact citations. Detailed JSON exposes these two fields. Runtime
+ownership and the AST are unchanged. A local WD repair also checks the
+ordered iterand's domain at every index: the old acceptance of
+`reduce(1,2,fn(k {1}) Z{k},fn(a,b Z) Z{a+b},0)` is rejected. Empty intervals
+make no calls and remain valid with restricted or guarded iterands.
+
+The checked routes are:
+
+- Generic output membership, empty-fold identities, and later references.
+- Ordered index domains N, Z, Q, R and C; empty intervals with arbitrary
+  domains. Nonempty guarded intervals consume either each recorded concrete
+  condition or the original interval-wide universal proof.
+- Finite-set domain coverage, each guard in a finite enumeration, and a
+  universal guard over an arbitrary finite set. Empty sets need no guard
+  instances.
+- Ordered exact calculation, replaying every recorded unary and binary call,
+  its WD, function body and intermediate value.
+- The last-step rule for arbitrary integer endpoints, and the explicit
+  `finite_set_reduce_singleton` theorem.
+
+| Example | Source and generated Lean |
+| --- | --- |
+| Arbitrary return set | [Ordered](../lean/examples/ordered_fold_carrier/), [finite](../lean/examples/finite_fold_carrier/) |
+| Empty identities and restricted domains | [Empty folds](../lean/examples/fold_empty/), [index domains](../lean/examples/fold_domains/) |
+| Ordered subtraction calculation | [Calculation](../lean/examples/ordered_subtraction_fold/) |
+| Singleton theorem and last-step expansion | [Singleton](../lean/examples/finite_fold_singleton/), [last step](../lean/examples/ordered_fold_last_step/) |
+| Guarded symbolic and concrete intervals | [Symbolic](../lean/examples/ordered_fold_guarded/), [concrete](../lean/examples/ordered_fold_guarded_literal/) |
+| Guarded arbitrary and enumerated finite sets | [Arbitrary](../lean/examples/finite_fold_guarded/), [enumerated and empty](../lean/examples/finite_fold_guarded_literal/) |
+
+All eleven pairs passed strict source verification, byte-identical fresh
+regeneration and Lean 4.31.0 with the pinned Mathlib revision above. The
+fourteen exported theorems use only `propext`, `Classical.choice` and
+`Quot.sound`. The compiler regression passed 862 tests at this checkpoint;
+focused controls also reject missing or reordered guards, altered calculation
+steps and a changed last-step endpoint.
+
+Still outside this increment: nonempty ordered folds over other index sets,
+the specialized positive-real numeric-signature bridge, guarded binary
+operations, multi-element finite-fold calculation, and further fold BT rules.
+The two constructors are available through the routes above; this is not a
+claim that every native fold proof route compiles.
+
+
+## Phase 5: real hyperbolic functions, 2026-10-26
+
+`sinh`, `cosh`, `tanh`, `coth`, `sech` and `csch` retain their Litex object
+representations and original WD. All inputs are real; `coth` and `csch` also
+consume the recorded input-nonzero proof. Their intrinsic codomains remain
+R, R+, or R* as specified by the native language.
+
+The compiler replays all 28 variants of the existing hyperbolic equality-rule
+enum: six definitions, six parity laws, reciprocal identities, the square
+identities, exponential connections, addition and double-angle formulas.
+It also supports the recorded nonzero rules, zero values, function-body
+normalization and later fact references. Each selected rule validates its
+source subjects before citing the corresponding proved Core law.
+
+| Example | Source and generated Lean |
+| --- | --- |
+| All six domains and codomains | [Domains](../lean/examples/hyperbolic_domains/) |
+| Values at zero | [Zero values](../lean/examples/hyperbolic_zero_values/) |
+| Definitions through exp and quotients | [Definitions](../lean/examples/hyperbolic_definitions/) |
+| Odd and even functions | [Parity](../lean/examples/hyperbolic_parity/) |
+| Nonzero facts and guarded arguments | [Nonzero](../lean/examples/hyperbolic_nonzero/) |
+| A formula function using sinh and cosh | [Function](../lean/examples/hyperbolic_function/) |
+| Addition, double-angle and square identities | [Identities](../lean/examples/hyperbolic_identities/) |
+
+All seven pairs passed strict source verification, independent byte-identical
+regeneration and Lean 4.31.0 with the pinned Mathlib revision. The 18 exported
+theorems use only `propext`, `Classical.choice` and `Quot.sound`. All 868 compiler
+tests passed at this checkpoint. Focused controls reject missing or altered
+nonzero WD, a wrong rule tag and a changed equality conclusion.
+
+This increment does not add new Litex syntax, Runtime state, result fields or
+proof search. General hyperbolic inequalities, calculus, complex arguments and
+additional explicit `by thm` adapters are outside this checked slice.
+
+
+## Phase 6a: matrix spaces and zero matrices, 2026-10-26
+
+`matrix(S,m,n)` is represented as the existing finite two-argument function
+space. S remains an arbitrary source set; m and n remain source objects with
+natural-membership evidence, including zero. Indices run from 1 through each
+dimension. Matrix membership expands to the original recorded function
+signature, with its stored fact IDs and any carrier-equality citations.
+
+The checked slice includes matrix-space formation and its defining equality,
+generic coordinate membership, known or literal functions with the exact input
+domain, and matrix-space aliases. `zero_matrix(m,n)` has an owned representation
+with dimension WD. Its real/complex membership, constant-function definition,
+coordinate value, real-valued coordinates and aliases compile through their
+original result variants.
+
+| Example | Source and generated Lean |
+| --- | --- |
+| Matrix spaces and function-space equality | [Spaces](../lean/examples/matrix_spaces/) |
+| Coordinates over an arbitrary set S | [Coordinates](../lean/examples/matrix_coordinates/) |
+| Functions as matrices; a zero dimension | [Membership](../lean/examples/matrix_membership/) |
+| A named rectangular matrix space | [Alias](../lean/examples/matrix_alias/) |
+| Zero matrices and coordinate values | [Zero matrix](../lean/examples/zero_matrix/) |
+| Constant-function definition and an object alias | [Definition](../lean/examples/zero_matrix_definition/) |
+| Real-valued components | [Return carrier](../lean/examples/zero_matrix_return/) |
+
+The seven new pairs and three affected sequence/fold/composition pairs passed
+strict source verification, byte-identical regeneration and actual Lean4.31.0
+checking. Their 32 exported theorems use only `propext`, `Classical.choice` and
+`Quot.sound`. All 873 compiler tests passed. Mutation controls cover missing or
+reordered dimension WD, a wrong signature domain, an altered callable body
+and a changed component-reduction endpoint.
+
+This uses the existing `FunctionSemantics` interface, with no new model axiom,
+Runtime state or result field. The shared call compiler now makes the just-
+checked argument-domain constructors visible before packing the input; proving
+input membership no longer reconstructs an unrelated output carrier. Other
+matrix operators and broader residual-evaluation routes are subsequent batches.
+
+
+## Phase 6b: transposition, 2026-10-26
+
+Delivered `transpose(A,m,n)` with its original natural dimensions and complex
+matrix membership WD. The representation stores the original matrix and its
+shape; its graph reads the swapped coordinate. Captured real-input evidence
+preserves the real output bound. No Runtime or result-shape change was needed.
+
+Examples:
+
+- [`matrix_transpose`](../lean/examples/matrix_transpose/statement.lit): complex matrix membership.
+- [`matrix_transpose_coordinates`](../lean/examples/matrix_transpose_coordinates/statement.lit): `transpose(A,m,n)(row,col) = A(col,row)`.
+- [`matrix_transpose_real`](../lean/examples/matrix_transpose_real/statement.lit): real matrix membership and real coordinate return.
+- [`matrix_transpose_definition`](../lean/examples/matrix_transpose_definition/statement.lit): the complete formula function, for both R and C.
+
+The compiler validates the selected signature, swapped binder IDs, original
+input membership and component substitution before invoking the corresponding
+Core law. Function definitions use proved graph extensionality even when the
+source formula's real return bound differs from the constructor's complex bound.
+Each matrix call binds its constructor once and projects its interface; the
+real-transpose pair decreased from 226,121 to 83,977 generated bytes.
+
+Acceptance: all four new pairs and six affected existing pairs passed strict
+source execution, independent byte-identical generation and actual Lean
+checking. All 29 exported theorems passed the standard-axiom audit. The focused
+matrix module passed eight tests, including corrupt WD, body, input premise and
+substitution rejections; `cargo test --lib compile_to_lean::` passed 1,222 tests.
+Local receipts: `phase6b-final`, `phase6b-unit2`, `phase6b-compiler-regression`.
+
+Still unsupported here: nested native component reduction, real-returned-function
+carrier evidence, and the remaining matrix constructors. The implementation does
+not introduce an ordinary Mathlib Matrix adapter.
+
+
+## Phase 6c: nested matrix components and theorem calls, 2026-10-26
+
+The compiler now consumes `MatrixComponentReduction::NativeApplication` in
+recorded order, including each intermediate call's original WD and exact binder
+substitution. New pairs are
+[`matrix_transpose_twice`](../lean/examples/matrix_transpose_twice/statement.lit),
+[`matrix_transpose_zero`](../lean/examples/matrix_transpose_zero/statement.lit), and
+[`matrix_transpose_theorem`](../lean/examples/matrix_transpose_theorem/statement.lit).
+They cover real/complex coordinates after two transposes, transposed zero entries,
+and a named coordinate theorem instantiated at a concrete zero matrix.
+The theorem-call validator now substitutes original IDs through matrix objects
+and integer interval endpoints. Runtime and result shapes are unchanged.
+
+Six new/affected pairs passed strict source execution, byte-identical independent
+generation, actual Lean checking and 13 theorem audits. Nine focused matrix tests
+and 1,223 compiler-module tests passed. Receipts: `phase6c-final`, `phase6c-unit2`,
+`phase6c-compiler-regression`. The complex double-transpose coordinate proof alone
+is 24,055 bytes; the pair including its real variant is 159,466 bytes.
+
+The separate assertion that a double transpose belongs to a real matrix space
+currently selects an unsupported builtin strategy. That route remains deferred;
+its source probe is retained locally rather than listed as a delivered pair.
+
+
+## Phase 6d: conjugate transpose and complete involutions, 2026-10-26
+
+`conjugate_transpose(A,m,n)` now replays the original complex matrix WD,
+coordinate swap, conjugation and captured real-input evidence. The Core graph
+uses the same owned complex conjugation operation as ordinary Litex objects.
+`ConjugateArgument` reduction composes the recorded inner expansion with
+congruence. No Runtime, AST or result-shape changes were made.
+
+New pairs:
+
+- [`matrix_conjugate_transpose`](../lean/examples/matrix_conjugate_transpose/statement.lit)
+- [`matrix_conjugate_transpose_coordinates`](../lean/examples/matrix_conjugate_transpose_coordinates/statement.lit)
+- [`matrix_conjugate_transpose_real`](../lean/examples/matrix_conjugate_transpose_real/statement.lit)
+- [`matrix_conjugate_transpose_definition`](../lean/examples/matrix_conjugate_transpose_definition/statement.lit)
+- [`matrix_conjugate_transpose_nested`](../lean/examples/matrix_conjugate_transpose_nested/statement.lit)
+- [`matrix_conjugate_transpose_involution`](../lean/examples/matrix_conjugate_transpose_involution/statement.lit)
+- [`matrix_transpose_involution`](../lean/examples/matrix_transpose_involution/statement.lit)
+
+The last two are complete named theorems proved through the source
+`by fn_extension` flow. That consumer now keeps the recorded matrix carrier as
+the actual citation-path endpoint, then applies `matrixSet_eq_fnSet`. Conjugate
+involution cites Mathlib's `star_star` directly, including when its argument is
+a locally named matrix call. Equality-path errors now display the three actual
+endpoints to make producer/consumer mismatches diagnosable.
+
+Acceptance: 11 new/affected pairs, independent byte-identical generation,
+23 standard-axiom audits. The full compiler-module checkpoint passed 1,225 tests;
+the final conjugation fix passed all five complex-observation tests and actual
+Lean checks for both the matrix involution and existing conjugation laws.
+Eleven focused matrix tests include rejection of missing conjugation and
+changed conjugate-reduction endpoints. Receipt `phase6d-final` reuses only
+identical previously checked bytes with unchanged Core/toolchain; changed files
+were checked afresh. Remaining matrix constructors and RealReturnedFunction
+carrier evidence are still outside this increment.
+
+
+## Phase 6e: identity matrices and finite intersections, 2026-10-26
+
+`identity_matrix(n)` keeps the native definition: entry `(row,col)` is
+`finite_set_size(intersect({row},{col}))`. Its constructor consumes the original
+natural-order WD. Core proves the diagonal/off-diagonal cardinalities; closed
+entry compilation validates the captured exact-evaluation values and rejects
+additional uncaptured calculation stages. `IntersectFiniteFromBoth` now consumes
+both original finite-set premises. Parent-checked matrix beta uses the existing
+call WD; identical expanded endpoints use reflexivity without a second object
+constructor. No Runtime, AST or result-shape change was needed.
+
+New source/generated pairs:
+
+- [`identity_matrix`](../lean/examples/identity_matrix/statement.lit): real/complex matrix membership, including order zero.
+- [`identity_matrix_coordinates`](../lean/examples/identity_matrix_coordinates/statement.lit): the general singleton-intersection formula.
+- [`identity_matrix_values`](../lean/examples/identity_matrix_values/statement.lit): diagonal `1` and off-diagonal `0`.
+- [`identity_matrix_formula`](../lean/examples/identity_matrix_formula/statement.lit): a named whole-function theorem proved by `fn_extension`.
+- [`finite_intersection`](../lean/examples/finite_intersection/statement.lit): intersection of two finite sets.
+
+Eight new/affected pairs passed strict source execution, independent identical
+generation and real Lean checks; 14 exported theorems passed the standard-axiom
+audit. The compiler-module checkpoint passed 1,230 tests, including malformed
+order, body, exact-evaluation and finite-premise rejection. Receipts:
+`phase6e-final`, `phase6e-compiler-regression`. The function-formula example is
+234,312 bytes; the other new pairs are 1,477–17,255 bytes. Direct automatic
+whole-function identity expansion remains a native proof-search boundary;
+the delivered example uses its successful explicit extensionality route.
+
+
+## Phase 6f: pointwise matrix addition and subtraction, 2026-10-26
+
+`matrix_add(A,B,m,n)` and `matrix_sub(A,B,m,n)` now consume the original
+matrix and dimension WD, exact two-parameter body and real-operand certificates.
+The Core graph applies owned scalar addition/subtraction to corresponding
+entries. Matrix residuals also replay the captured left/right checked beta
+steps before citing their recorded scalar equality. Runtime and result shapes
+are unchanged.
+
+New pairs: [`matrix_addition`](../lean/examples/matrix_addition/statement.lit),
+[`matrix_subtraction`](../lean/examples/matrix_subtraction/statement.lit),
+[`matrix_entrywise_coordinates`](../lean/examples/matrix_entrywise_coordinates/statement.lit),
+[`matrix_entrywise_real`](../lean/examples/matrix_entrywise_real/statement.lit),
+[`matrix_entrywise_definition`](../lean/examples/matrix_entrywise_definition/statement.lit),
+and [`matrix_addition_commutative`](../lean/examples/matrix_addition_commutative/statement.lit).
+The last is a named whole-matrix theorem proved by source `fn_extension`.
+
+The batch passed 10 new/affected pairs and 17 theorem audits. The compiler-module
+checkpoint passed 1,232 tests. A subsequent signature-reference simplification
+passed four affected pairs and reduced the real-coordinate pair from 191,484
+to 184,302 bytes. It reuses the captured matrix signature and binds it once.
+Receipts: `phase6f-final`, `phase6f-compiler-regression`,
+`phase6f-signature-sharing`. Additional exact matrix evaluations, matrix
+multiplication and other matrix constructors remain separate work.
+
+
+## Phase 6g: matrix scalar multiplication, 2026-10-26
+
+`matrix_scale(z,A,m,n)` is now a Core graph with the original scalar, matrix,
+rows and columns. Constructor WD consumes `z in C`, both natural dimensions
+and the complete complex matrix domain, in the native result order. Real
+return evidence separately checks the matrix and scalar real-membership
+results. Coordinates and full formula equality reuse the checked matrix beta
+consumer. No Runtime, AST or result-shape change was needed.
+
+New pairs: [`matrix_scale`](../lean/examples/matrix_scale/statement.lit),
+[`matrix_scale_coordinates`](../lean/examples/matrix_scale_coordinates/statement.lit),
+[`matrix_scale_definition`](../lean/examples/matrix_scale_definition/statement.lit),
+and [`matrix_scale_one`](../lean/examples/matrix_scale_one/statement.lit).
+They cover complex/real domains, pointwise multiplication and the complete
+named theorem that multiplication by one preserves a matrix.
+
+Six new/affected pairs passed strict source, independent identical generation,
+real Lean checking and ten theorem audits (`phase6g-final`). The focused matrix
+suite passed 18 tests, including wrong scalar-domain order and changed scalar
+factor rejection (`phase6g-unit1`). The preceding compiler-wide checkpoint
+remains `phase6f-compiler-regression`; no new full-suite claim is made here.
+
+
+## Phase 6h: outer products and finite-vector carriers, 2026-10-26
+
+`outer_product(a,b,m,n)` now keeps both source vector functions and their
+complete finite domains. The graph multiplies `a(row)` by `b(col)`, with the
+original complex WD and separate real-vector membership evidence. The compiler
+also replays the existing function-set-membership strategy and the restricted
+literal-tuple carrier certificate. Empty-guard function proofs no longer emit
+a simplification step that has nothing to simplify. Runtime and result shapes
+are unchanged.
+
+New pairs:
+
+- [`matrix_outer_product`](../lean/examples/matrix_outer_product/statement.lit): real and complex matrix membership.
+- [`matrix_outer_coordinates`](../lean/examples/matrix_outer_coordinates/statement.lit): the coordinate formula.
+- [`matrix_outer_definition`](../lean/examples/matrix_outer_definition/statement.lit): whole-function equality.
+- [`matrix_outer_transpose`](../lean/examples/matrix_outer_transpose/statement.lit): transpose exchanges the two vectors.
+- [`finite_sequence_carrier_widening`](../lean/examples/finite_sequence_carrier_widening/statement.lit): real vectors are complex vectors.
+- [`finite_tuple_function_carrier`](../lean/examples/finite_tuple_function_carrier/statement.lit): literal tuples and aliases as finite functions.
+- [`matrix_outer_literal`](../lean/examples/matrix_outer_literal/statement.lit): outer product of literal real vectors.
+- [`matrix_transpose_twice_real`](../lean/examples/matrix_transpose_twice_real/statement.lit): the earlier real-domain blocker is resolved.
+
+Eleven new/affected pairs passed strict source execution, independent identical
+generation and actual Lean checking; 17 exported theorems passed the standard
+axiom audit (`phase6h-final`). Twenty existing matrix tests passed, followed by
+the corrected tuple-certificate rejection test (`phase6h-tuple-test2`). The last
+compiler-wide checkpoint is still phase6f; the next batch will refresh it.
+
+
+## Phase 6i: diagonal matrices, 2026-10-26
+
+`diagonal_matrix(v,n)` now compiles with its original natural order and full
+finite-vector domain. The entry definition remains
+`finite_set_size(intersect({row},{col})) * v(row)`. Core reuses the proved
+identity-entry cardinality and vector-call membership laws. The constructor,
+real/complex membership, coordinates and full function theorem consume existing
+results; Runtime, AST and result shapes are unchanged.
+
+New pairs: [`matrix_diagonal`](../lean/examples/matrix_diagonal/statement.lit),
+[`matrix_diagonal_coordinates`](../lean/examples/matrix_diagonal_coordinates/statement.lit),
+[`matrix_diagonal_formula`](../lean/examples/matrix_diagonal_formula/statement.lit),
+and [`matrix_diagonal_literal`](../lean/examples/matrix_diagonal_literal/statement.lit).
+The complete formula theorem uses the source's successful `fn_extension` route;
+automatic discovery of that whole equality is not claimed.
+
+All four pairs passed strict source execution, independent identical generation
+and real Lean checking, with six theorem audits (`phase6i-first`). The compiler
+module checkpoint passed 1,239 tests, including altered/missing diagonal WD,
+changed delta body and the phase6h tuple-certificate negatives
+(`phase6i-compiler-regression`). This checkpoint also covers phases6g–6h.
+
+
+## Phase 6j: returned matrices and finite vectors, 2026-10-26
+
+A function returning `matrix(S,m,n)` or `finite_seq(S,n)` can now be followed
+by a coordinate call. The compiler reads the original two call stages, outer
+guards and index memberships; it does not invent a normalized source function
+signature. Carrier equality follows the captured path to its actual wrapper,
+then uses the proved wrapper-to-function-space law. Transpose and conjugate
+transpose also consume `RealReturnedFunction` evidence.
+
+New pairs: [`returned_matrix_coordinates`](../lean/examples/returned_matrix_coordinates/statement.lit),
+[`returned_matrix_guarded`](../lean/examples/returned_matrix_guarded/statement.lit),
+[`returned_finite_sequence_values`](../lean/examples/returned_finite_sequence_values/statement.lit),
+[`returned_matrix_transpose`](../lean/examples/returned_matrix_transpose/statement.lit),
+and [`returned_matrix_function_transpose`](../lean/examples/returned_matrix_function_transpose/statement.lit).
+The coordinate examples include arbitrary dimensions, nonzero outer guards and
+real-to-complex return inclusion. This increment supports one outer call followed
+by one matrix/vector coordinate call; arbitrary deeper wrapper chains are not
+claimed.
+
+Eight new/affected pairs passed strict source, independent identical generation,
+actual Lean and 13 theorem audits (`phase6j-final`). Ten focused returned-function
+tests passed, including missing/swapped coordinates, altered real-return carrier
+and absent applicability evidence (`phase6j-unit3`). The last compiler-wide
+checkpoint is phase6i. Runtime, AST and result shapes are unchanged.
+
+
+## Phase 6k: finite aggregation on explicit domains, 2026-10-26
+
+`finite_set_sum` and `finite_set_product` now accept iterands defined on a
+bounded interval or an arbitrary explicit set. The original finite-set proof,
+subset relation, return inclusion and selected function signature remain in
+the constructor's WD. The generic representation shares the existing numerical
+fold meaning. The compiler also replays intrinsic `range`/`closed_range`
+finiteness and exact aggregate calls through their generic domain proof.
+
+New pairs: [`bounded_finite_aggregate_closure`](../lean/examples/bounded_finite_aggregate_closure/statement.lit),
+[`general_finite_aggregate_closure`](../lean/examples/general_finite_aggregate_closure/statement.lit),
+[`bounded_finite_aggregate_values`](../lean/examples/bounded_finite_aggregate_values/statement.lit),
+and [`integer_ranges_finite`](../lean/examples/integer_ranges_finite/statement.lit).
+Six new/affected pairs and 12 theorem audits passed actual Lean
+(`phase6k-second`); 13 aggregate tests passed, including altered bounded-domain
+signature rejection (`phase6k-unit`). No Runtime/AST/result change. Additional
+iterand guards and non-list exact enumeration remain outside this increment.
+
+
+## Phase 6l: matrix trace, 2026-10-26
+
+`trace(A,n)` now retains the original square-matrix WD and compiles its complex
+and real membership proofs and diagonal-sum definition. Finite sums/products
+also consume recorded alpha equality when only a bound parameter name changes;
+a changed iterand is rejected. No Runtime, AST or result change.
+
+New pairs: [`matrix_trace`](../lean/examples/matrix_trace/statement.lit),
+[`matrix_trace_definition`](../lean/examples/matrix_trace_definition/statement.lit),
+and [`finite_aggregate_bound_names`](../lean/examples/finite_aggregate_bound_names/statement.lit).
+All three passed strict source, independent identical generation and real Lean;
+five exported theorems passed the standard axiom audit (`phase6l-second`).
+The compiler module passed 1,247 tests (`phase6l-compiler-regression`), covering
+phases6j–6l and altered trace domain/body certificates. Numerical trace evaluation
+over integer intervals is not included.
+
+
+## Phases 6m–6o: matrix products, vector application and inner products, 2026-10-26
+
+`matrix_mul(A,B,m,k,n)` and `matrix_apply(A,v,m,n)` now compile their
+original compatible-dimension and operand-membership evidence. Their coordinate
+and whole-function definitions use the existing finite sum over the shared
+index range. Complex and real membership and later coordinate calls preserve
+the source's scalar carrier. Finite aggregates inside function bodies reuse the
+source's lexical parameter IDs and original function/aggregate WD.
+
+`inner_product(v,w,n)` means the finite sum of `conj(v(k)) * w(k)`; the
+left operand is conjugated. Core proves complex closure and real closure for
+real vectors, and the compiler consumes the original scalar-definition result.
+These increments add no Runtime, AST or result fields and no model axioms.
+
+| Example | Checked source and generated Lean |
+| --- | --- |
+| Matrix multiplication over R/C | [Source](../lean/examples/matrix_multiplication/statement.lit) · [Lean](../lean/examples/matrix_multiplication/statement.lean) |
+| Product coordinates | [Source](../lean/examples/matrix_multiplication_coordinates/statement.lit) · [Lean](../lean/examples/matrix_multiplication_coordinates/statement.lean) |
+| Whole matrix-product formula | [Source](../lean/examples/matrix_multiplication_definition/statement.lit) · [Lean](../lean/examples/matrix_multiplication_definition/statement.lean) |
+| Matrix applied to a vector | [Source](../lean/examples/matrix_vector_application/statement.lit) · [Lean](../lean/examples/matrix_vector_application/statement.lean) |
+| Vector coordinates | [Source](../lean/examples/matrix_vector_coordinates/statement.lit) · [Lean](../lean/examples/matrix_vector_coordinates/statement.lean) |
+| Whole matrix-vector formula | [Source](../lean/examples/matrix_vector_definition/statement.lit) · [Lean](../lean/examples/matrix_vector_definition/statement.lean) |
+| Finite inner-product carriers | [Source](../lean/examples/finite_inner_product/statement.lit) · [Lean](../lean/examples/finite_inner_product/statement.lean) |
+| Inner-product definition | [Source](../lean/examples/finite_inner_product_definition/statement.lit) · [Lean](../lean/examples/finite_inner_product_definition/statement.lean) |
+| Real coordinates after construction | [Source](../lean/examples/matrix_product_real_values/statement.lit) · [Lean](../lean/examples/matrix_product_real_values/statement.lean) |
+
+The final checkpoint passed 18 new/affected pairs with strict source execution
+and byte-identical independent generation. Fifteen received fresh Lean checks;
+three reused identical output already checked against the same Core and
+toolchain. All 27 exported theorems were audited with only `Classical.choice`,
+`Quot.sound` and `propext`. The compiler module passed 1,253 tests, including
+missing/reordered WD, changed summands/index ranges and removed left conjugation
+(`phase6o-final`, `phase6o-compiler-regression`).
+
+### Matrix constructor progress
+
+Eighteen of the planned 23 constructor families now have checked compilation:
+`matrix`, `zero_matrix`, `identity_matrix`, `transpose`, `conjugate_transpose`,
+`trace`, `matrix_add`, `matrix_sub`, `matrix_scale`, `matrix_mul`, `matrix_apply`,
+`diagonal_matrix`, `outer_product`, `inner_product`, `euclidean_norm` and
+`frobenius_norm`, `det` and `matrix_power`. Their supported proof
+routes are the examples and checkpoints above; this count does not cover every
+matrix builtin theorem or exact-evaluation certificate.
+
+Five constructor families remain: inverse, rank,
+minor, cofactor and adjugate. Matrix-native Mathlib adapters remain separate work.
+
+
+### Native template standard-return widening boundary
+
+The native `TemplateApplicationInStandardSuperset` route now retains actual
+numeric template return declarations, aliases and stored signatures after
+application WD. See `examples/wd/template_standard_return.lit`. It enables a
+bundled uniform probability source model, with the actual dice conditional2/3.
+Intrinsic function-template Lean replay remains unsupported: the before CLI
+already stops at `Template/Body`, and the new return consumer refuses
+`FunctionReturn/TemplateStandardSuperset` explicitly. This increment adds no
+Lean pair, axiom or mathematical semantics model. Existing named/anonymous
+function-return compilation and forged-evidence controls are preserved.
+
+### One-bound finite intersections,2026-10-27
+
+The generated [source](../lean/examples/finite_intersection_one_bound/statement.lit)
+and [Lean](../lean/examples/finite_intersection_one_bound/statement.lean) pair
+replay finiteness from either operand and cardinality WD for an arbitrary set
+intersected with a singleton. Each new strategy retains and validates its one
+actual operand premise; the existing both-finite consumer is unchanged.
+Missing/changed-side evidence is refused. All3 generated theorems pass Lean4.31.0
+with pinned Mathlib and only the standard allowed axioms; this certifies the
+finite-intersection slice, not the std Dirac probability structures.
+
+
+## Phase 6p: finite vector and matrix norms, 2026-10-26
+
+`euclidean_norm(v,n)` and `frobenius_norm(A,m,n)` now retain their natural
+dimensions and complex vector/matrix membership proofs. Their representations
+are the square roots of finite sums of squared complex magnitudes; zero
+dimensions remain legal. Core proves real closure, nonnegativity and the
+squared-norm identities. The compiler consumes the original WD and scalar
+result branches, including explicit `euclidean_norm_square` and
+`frobenius_norm_square` invocations and later named-theorem calls.
+
+| Example | Checked source and generated Lean |
+| --- | --- |
+| Euclidean norm, R/C membership and zero dimension | [Source](../lean/examples/euclidean_norm/statement.lit) · [Lean](../lean/examples/euclidean_norm/statement.lean) |
+| Frobenius norm and zero rows | [Source](../lean/examples/frobenius_norm/statement.lit) · [Lean](../lean/examples/frobenius_norm/statement.lean) |
+| Vector nonnegativity and theorem reuse | [Source](../lean/examples/euclidean_norm_nonnegative/statement.lit) · [Lean](../lean/examples/euclidean_norm_nonnegative/statement.lean) |
+| Matrix nonnegativity and theorem reuse | [Source](../lean/examples/frobenius_norm_nonnegative/statement.lit) · [Lean](../lean/examples/frobenius_norm_nonnegative/statement.lean) |
+| Vector norm definition | [Source](../lean/examples/euclidean_norm_definition/statement.lit) · [Lean](../lean/examples/euclidean_norm_definition/statement.lean) |
+| Matrix norm definition | [Source](../lean/examples/frobenius_norm_definition/statement.lit) · [Lean](../lean/examples/frobenius_norm_definition/statement.lean) |
+
+The two definition examples explicitly assume the nonnegative finite sum needed
+for the source `sqrt` WD. They check conditional unfolding; the separate
+nonnegativity examples prove the norm's sign without that premise. Arbitrary
+norm-value calculations and triangle/Cauchy–Schwarz rules are not part of this
+batch. No Runtime, AST, result fields or model axioms changed.
+
+Nine new/affected pairs passed strict source execution and byte-identical
+independent generation. A subsequent cache audit found that the compiled-Core
+metadata did not match the current Core hash. The current Core and all nine
+unchanged generated files then received fresh Lean checks; all 18 exports
+passed the standard axiom audit (`phase6p-current-core`). The local checker now
+rejects a mismatched Core cache before checking or reusing generated files. The compiler
+module passed 1,259 tests, including five focused norm tests for missing,
+reordered or changed evidence and invalid dimensions/carriers. Local receipts:
+`phase6p-final`, `phase6p-compiler-regression`.
+
+The definition proofs bind their expanded object once. This reduced the vector
+and matrix definition files from 296,303 to 247,433 bytes and from 937,704 to
+781,747 bytes respectively. These files are still larger than the 6–8 KB
+membership examples; the measurements do not claim a general output-size bound.
+
+## Phase 6q: determinant, 2026-10-27
+
+`det(A,n)` now retains the original natural-order and complex square-matrix WD.
+Its representation uses Mathlib `Matrix.det` after observing the matrix's
+complex entries; real input gives real output. The compiler replays the existing
+`matrix_det_identity`, `matrix_det_transpose` and `matrix_det_adjoint` theorem
+results, including their ordered requirements and subsequent named-theorem use.
+Zero-order determinant is one, as in the source semantics and Mathlib.
+
+| Example | Checked source and generated Lean |
+| --- | --- |
+| Complex and real determinant membership | [Source](../lean/examples/matrix_determinant/statement.lit) · [Lean](../lean/examples/matrix_determinant/statement.lean) |
+| Identity determinant and theorem reuse | [Source](../lean/examples/matrix_determinant_identity/statement.lit) · [Lean](../lean/examples/matrix_determinant_identity/statement.lean) |
+| Transpose determinant | [Source](../lean/examples/matrix_determinant_transpose/statement.lit) · [Lean](../lean/examples/matrix_determinant_transpose/statement.lean) |
+| Conjugate-transpose determinant | [Source](../lean/examples/matrix_determinant_adjoint/statement.lit) · [Lean](../lean/examples/matrix_determinant_adjoint/statement.lean) |
+| Zero-, one- and two-order definitions | [Source](../lean/examples/matrix_determinant_small_orders/statement.lit) · [Lean](../lean/examples/matrix_determinant_small_orders/statement.lean) |
+
+The definition consumer validates the recorded expansion and compiles its
+original residual proof. It currently accepts literal orders 0, 1 and 2;
+higher-order expansions and further determinant laws remain unsupported.
+Trace and determinant share their square-matrix WD consumer. No Runtime, AST,
+result fields or model axioms changed.
+
+Eight new/affected pairs passed strict source execution, independent identical
+generation and real Lean checks. The final checkpoint freshly checked the
+repaired small-order output and reused seven unchanged outputs already checked
+against the same Core and toolchain. All 13 exports passed the standard axiom
+audit. The compiler module passed 1,265 tests; four focused determinant tests
+include missing/reordered WD, changed theorem conclusions, changed expansions
+and invalid matrix domains. Local receipts: `phase6q-final`,
+`phase6q-compiler-regression`. The five new generated files are 10–47 KB each.
+
+## Phase 6r: natural matrix powers, 2026-10-27
+
+`matrix_power(A,n,p)` keeps its original three operands and WD proofs:
+`n,p ∈ N` and `A ∈ matrix(C,n,n)`. Core defines the value by natural recursion
+from the identity matrix, using the existing matrix multiplication at each
+successor. Its denotation is independent of the supplied WD proofs. Real
+matrices retain real output; zero dimensions and exponent zero remain legal.
+
+The compiler validates the original callable formula for literal zero,
+positive literals and symbolic exponents. For symbolic powers this includes
+the recorded fold's range, constant input function, multiplication order and
+identity seed. It replays `matrix_power_zero` and `matrix_power_successor`
+applications with their original requirements, stores and conclusion WD.
+
+| Example | Checked source and generated Lean |
+| --- | --- |
+| Natural powers over C and R | [Source](../lean/examples/matrix_power_membership/statement.lit) · [Lean](../lean/examples/matrix_power_membership/statement.lean) |
+| Zero and positive literal exponents | [Source](../lean/examples/matrix_power_literal/statement.lit) · [Lean](../lean/examples/matrix_power_literal/statement.lean) |
+| Zero-dimensional matrices | [Source](../lean/examples/matrix_power_empty/statement.lit) · [Lean](../lean/examples/matrix_power_empty/statement.lean) |
+| Zeroth power and named-theorem reuse | [Source](../lean/examples/matrix_power_zero/statement.lit) · [Lean](../lean/examples/matrix_power_zero/statement.lean) |
+| Successor power | [Source](../lean/examples/matrix_power_successor/statement.lit) · [Lean](../lean/examples/matrix_power_successor/statement.lean) |
+| Matrix and power aliases | [Source](../lean/examples/matrix_power_alias/statement.lit) · [Lean](../lean/examples/matrix_power_alias/statement.lean) |
+
+All six pairs passed strict source execution, independent identical generation
+and fresh Lean checks; their 11 exported theorems passed the standard axiom
+audit. Generated files are approximately 7–34 KB. No Runtime, AST, result field
+or model axiom changed. The power-addition theorem, coordinate evaluation,
+whole fold-definition equality and native Mathlib adapters remain separate
+coverage; validating a callable certificate does not compile all those routes.
+
+The batch checkpoint also checked three affected matrix pairs: nine pairs in
+total, with three fresh checks and six unchanged same-Core reuses at the final
+gate, and 16 audited exports. Compiler regression passed 1,270 tests; one stale
+set-difference route assertion was updated and passed a focused rerun. That
+existing source/generated pair was regenerated and independently checked in
+Lean as well. Receipts: `phase6r-final`, `phase6r-compiler-regression`,
+`phase6r-set-difference` and `phase6r-set-difference-test`.
+
+
+## Phase 6s: deleted-row/column matrices, 2026-10-27
+
+`matrix_minor(A,n,r,c)` retains all four source operands and the five ordered
+WD results: `n ∈ N+`, `r,c ∈ closed_range(1,n)`, `n ∈ N`, and
+`A ∈ matrix(C,n,n)`. Core interprets it as the original matrix evaluated at
+`k + floor((k+n-deleted)/n)` in each coordinate. Proved index bounds establish
+that these coordinates stay in range and omit the deleted row/column. The
+object's denotation remains independent of its WD proofs; no Runtime, AST,
+result shape or model axiom changed.
+
+| Example | Checked source and generated Lean |
+| --- | --- |
+| Complex and real matrix membership | [Source](../lean/examples/matrix_minor_membership/statement.lit) · [Lean](../lean/examples/matrix_minor_membership/statement.lean) |
+| Coordinates on either side of a deleted index | [Source](../lean/examples/matrix_minor_coordinates/statement.lit) · [Lean](../lean/examples/matrix_minor_coordinates/statement.lean) |
+| Deleting the only row and column | [Source](../lean/examples/matrix_minor_empty/statement.lit) · [Lean](../lean/examples/matrix_minor_empty/statement.lean) |
+| A coordinate theorem and its application | [Source](../lean/examples/matrix_minor_theorem/statement.lit) · [Lean](../lean/examples/matrix_minor_theorem/statement.lean) |
+| Matrix and minor aliases | [Source](../lean/examples/matrix_minor_alias/statement.lit) · [Lean](../lean/examples/matrix_minor_alias/statement.lean) |
+
+All five pairs passed strict source execution, independent identical generation,
+fresh Lean 4.31.0 checks and a 12-export axiom audit. Generated files range from
+9,518 to 199,285 bytes. The compiler regression passed all 1,275 tests. Negative
+checks reject missing/reordered WD, swapped row/column evidence, changed
+callable formulas, zero order, out-of-range indices and nonsquare input.
+The final affected-pair gate covered eight pairs and 18 exports: five unchanged
+same-Core reuses and three fresh checks, including the approved nonempty-family
+intersection example. Receipts: `phase6s-first`, `phase6s-final`, and
+`phase6s-compiler-regression` in the local compiler workspace.
+
+Standalone membership examples preserve the producer's `n-1` dimension form:
+for `n=1` this is `matrix(C,1-1,1-1)`. Simplified dimensions `0`/`1` needed
+additional context in the source verifier, and real closure through two aliases
+needed prior operand membership. These are recorded source boundaries. The
+general equality to a complete anonymous-function formula is also not delivered:
+its source WD cannot yet prove the floor-based shifted-index bound. Coordinate
+expansion is covered separately and consumes the successful recorded result.
+
+Matrix constructor entrypoints now stand at 19 of 23. Cofactor, adjugate,
+inverse and rank remain; this count does not imply coverage of every rule or a
+native Mathlib adapter for each constructor.
+
+
+## Phase 6t: cofactors and cited matrix returns, 2026-10-27
+
+`matrix_cofactor(A,n,r,c)` now has its own Lean representation. It retains the
+same four operands and five ordered WD requirements as `matrix_minor`:
+positive order, two valid deleted indices, natural order and square complex
+input. The two constructors share the compiler's WD consumer. Core defines the
+cofactor as the signed determinant of the deleted-row/column matrix, with the
+sign and dimension observed from the original numeric objects. WD proofs do
+not select the value. Complex and real membership are proved in Core.
+
+The compiler consumes both the native carrier result and the intrinsic
+complex-member certificate. For scalar definitions it validates and replays
+the producer's literal `1×1` and `2×2` expansions, including both negative
+entries; it retains the original residual proof. Aliases and a named theorem
+applied to a zero matrix are covered.
+
+That theorem application exposed another consumer gap: a call can have native
+matrix WD while its result cites a stored function signature. The compiler now
+checks their complete domains and consumes the cited membership for codomain
+or standard-set inclusion. Missing citations and altered domains are rejected.
+No Runtime, AST, result shape, model axiom or compiler state was added.
+
+| Example | Checked source and generated Lean |
+| --- | --- |
+| Cofactors over C and R | [Source](../lean/examples/matrix_cofactor_membership/statement.lit) · [Lean](../lean/examples/matrix_cofactor_membership/statement.lean) |
+| One-by-one and all four two-by-two cofactors | [Source](../lean/examples/matrix_cofactor_small_orders/statement.lit) · [Lean](../lean/examples/matrix_cofactor_small_orders/statement.lean) |
+| Named matrix and cofactor | [Source](../lean/examples/matrix_cofactor_alias/statement.lit) · [Lean](../lean/examples/matrix_cofactor_alias/statement.lean) |
+| Negative cofactor theorem and concrete application | [Source](../lean/examples/matrix_cofactor_theorem/statement.lit) · [Lean](../lean/examples/matrix_cofactor_theorem/statement.lean) |
+| Stored real/complex function carriers with native matrix WD | [Source](../lean/examples/matrix_cited_function_returns/statement.lit) · [Lean](../lean/examples/matrix_cited_function_returns/statement.lean) |
+
+All five pairs passed strict source execution, identical independent generation,
+fresh Lean 4.31.0 checks and a 13-export standard axiom audit. Files range from
+13,047 to 84,108 bytes. All 1,281 compiler tests passed. The final nine-pair gate
+included four fresh matrix/carrier checks and five unchanged same-Core reuses,
+with 21 audited exports. Local receipts: `phase6t-first`, `phase6t-final`,
+`phase6t-compiler-regression`, `phase6t-return-tests` and `phase6t-boundary`.
+
+The executable boundary uses a valid Litex `3×3` cofactor expansion: source
+verification succeeds, and compilation rejects `Matrix/CofactorExpansionOrder`
+without emitting a partial Lean artifact. Higher-order scalar expansions,
+general definition equality and native Mathlib adapters remain separate work.
+Matrix constructor entrypoints are now 20 of 23: adjugate, inverse and rank
+remain.
+
+
+## Phase 6u: adjugates, 2026-10-27
+
+`matrix_adjugate(A,n)` consumes the original two child WD results and two
+requirements: `n $in N` and `A $in matrix(C,n,n)`. Its Lean object denotes the
+function whose `(r,c)` entry is `matrix_cofactor(A,n,c,r)`. Core proves complex
+and real matrix membership. Zero order remains legal: positive order is derived
+only inside a coordinate proof, from a valid index in `closed_range(1,n)`.
+
+The compiler validates the original callable formula, including the exchanged
+indices and the complete scalar signature. It replays coordinate expansion,
+whole-function definition equality, aliases and named theorem applications.
+The cofactor's existing denotation is factored into a pure value function so
+bound formula parameters can use it; the old and new definitions are
+definitionally equal. No Runtime, AST, result shape or compiler state changed.
+
+| Example | Checked source and generated Lean |
+| --- | --- |
+| Complex and real square matrices | [Source](../lean/examples/matrix_adjugate_membership/statement.lit) · [Lean](../lean/examples/matrix_adjugate_membership/statement.lean) |
+| Real values at valid coordinates | [Source](../lean/examples/matrix_adjugate_real_values/statement.lit) · [Lean](../lean/examples/matrix_adjugate_real_values/statement.lean) |
+| Transposed cofactor coordinates | [Source](../lean/examples/matrix_adjugate_coordinates/statement.lit) · [Lean](../lean/examples/matrix_adjugate_coordinates/statement.lean) |
+| Zero-order adjugate | [Source](../lean/examples/matrix_adjugate_empty/statement.lit) · [Lean](../lean/examples/matrix_adjugate_empty/statement.lean) |
+| Complete formula function | [Source](../lean/examples/matrix_adjugate_definition/statement.lit) · [Lean](../lean/examples/matrix_adjugate_definition/statement.lean) |
+| Matrix and adjugate aliases | [Source](../lean/examples/matrix_adjugate_alias/statement.lit) · [Lean](../lean/examples/matrix_adjugate_alias/statement.lean) |
+| Named coordinate theorem and concrete application | [Source](../lean/examples/matrix_adjugate_theorem/statement.lit) · [Lean](../lean/examples/matrix_adjugate_theorem/statement.lean) |
+| Off-diagonal entry via a cofactor and cited equalities | [Source](../lean/examples/matrix_adjugate_two_steps/statement.lit) · [Lean](../lean/examples/matrix_adjugate_two_steps/statement.lean) |
+
+All eight pairs passed strict source execution, identical independent generation,
+fresh Lean 4.31.0 checks and a 14-export standard axiom audit. Generated files
+range from 3,501 to 77,553 bytes. Four focused Rust tests cover the successful
+routes and rejection of missing/reordered WD, an untransposed cofactor formula,
+missing or wrong real-carrier evidence, altered domains, negative dimensions,
+nonsquare inputs and invalid coordinates.
+
+The two-step example retains the intermediate cofactor equality because the
+single direct source goal `matrix_adjugate(A,2)(1,2) = -A(1,2)` did not verify.
+The valid explicit call `release thm matrix_adjugate_identity(zero_matrix(2,2),2)`
+is an executable unsupported boundary: compilation rejects its theorem contract
+and emits no partial Lean file. The adjugate multiplication identity and native
+Mathlib adapters are not delivered by this constructor batch.
+
+Matrix constructor entrypoints now stand at 21 of 23; inverse and rank remain.
+
+Batch verification: all 1,287 compiler tests passed. The affected-pair gate
+checked twelve pairs and 26 exports: seven unchanged same-Core reuses and five
+fresh checks (four cofactor pairs plus nonempty-family intersection). The eighth
+new pair, real coordinate membership, passed a separate fresh check and
+one-export axiom audit. Local receipts: `phase6u-first`, `phase6u-values`,
+`phase6u-final`, `phase6u-compiler-regression` and `phase6u-boundary`.
+
+
+## Phase 6v: guarded inverse matrices, 2026-10-27
+
+`matrix_inverse(A,n)` retains children `[A,n]` and the original ordered WD:
+`n $in N`, `A $in matrix(C,n,n)`, then `det(A,n) != 0`. Its graph has entry
+`matrix_cofactor(A,n,c,r) / det(A,n)`. Core derives complex and real matrix
+membership and coordinate values from the existing graph, cofactor, determinant
+and division laws. Zero order is allowed when its determinant is nonzero.
+
+For example, the following source compiles with the determinant condition
+carried into the inverse object:
+
+```litex
+forall n N+, A matrix(C,n,n), r closed_range(1,n), c closed_range(1,n):
+    det(A,n) != 0
+    =>:
+        matrix_inverse(A,n)(r,c) = matrix_cofactor(A,n,c,r) / det(A,n)
+```
+
+The compiler checks the transposed cofactor indices, denominator, complete
+function signature and original real-carrier evidence. It supports whole-function
+definition equality, aliases, named coordinate theorems and explicit two-step
+computations. No Runtime, AST, result shape or compiler state changed in this batch.
+
+| Example | Checked source and generated Lean |
+| --- | --- |
+| Complex and real inverse matrices | [Source](../lean/examples/matrix_inverse_membership/statement.lit) · [Lean](../lean/examples/matrix_inverse_membership/statement.lean) |
+| Coordinate quotient | [Source](../lean/examples/matrix_inverse_coordinates/statement.lit) · [Lean](../lean/examples/matrix_inverse_coordinates/statement.lean) |
+| Complete defining function | [Source](../lean/examples/matrix_inverse_definition/statement.lit) · [Lean](../lean/examples/matrix_inverse_definition/statement.lean) |
+| Real coordinate values | [Source](../lean/examples/matrix_inverse_real_values/statement.lit) · [Lean](../lean/examples/matrix_inverse_real_values/statement.lean) |
+| Zero-order inverse | [Source](../lean/examples/matrix_inverse_empty/statement.lit) · [Lean](../lean/examples/matrix_inverse_empty/statement.lean) |
+| Off-diagonal entry through a cofactor | [Source](../lean/examples/matrix_inverse_two_steps/statement.lit) · [Lean](../lean/examples/matrix_inverse_two_steps/statement.lean) |
+| Guarded theorem and concrete application | [Source](../lean/examples/matrix_inverse_theorem/statement.lit) · [Lean](../lean/examples/matrix_inverse_theorem/statement.lean) |
+| Matrix and inverse aliases | [Source](../lean/examples/matrix_inverse_alias/statement.lit) · [Lean](../lean/examples/matrix_inverse_alias/statement.lean) |
+
+Two original result branches were needed by these examples:
+
+- `ClosedRangeLiteralExpansion` now validates literal integer endpoints and the
+  exact ordered enumeration, including an empty interval. Its finite-list bound
+  remains the native rule's 1,024 entries. Lean checks the corresponding membership
+  equivalence by set extensionality. See [integer intervals](../lean/examples/closed_integer_range_enumeration/).
+  The native rule does not accept a parsed negative-expression endpoint such as
+  `closed_range(-1,1)`; this batch does not widen source search.
+- A small determinant's `ExactEvaluation` result now consumes the original ordered
+  function evaluations for identity/zero-matrix entries, their call WD and beta
+  expansions, then rational arithmetic. Missing, reordered or changed evaluations
+  are rejected. Other source kinds, nested scalar/aggregate evidence and extra
+  equality citations remain unsupported by this leaf. See [exact determinants](../lean/examples/matrix_determinant_exact/).
+
+All ten new source/generated pairs passed strict source execution, independent
+identical generation and actual Lean 4.31.0 checks; their 26 exports passed the
+standard axiom audit. Generated files range from 9,999 to 125,713 bytes. The final
+inverse/affected-pair gate checked ten pairs and 25 exports: four unchanged
+same-Core reuses and six fresh checks. The two consumer pairs were checked fresh
+in a separate six-export gate. All 1,294 compiler tests passed, including two
+focused interval tests and the 61-test matrix module. Local receipts are
+`phase6v-consumers`, `phase6v-inverse`, `phase6v-matrix-tests` and
+`phase6v-compiler-regression`.
+
+The valid source call `release thm matrix_inverse_laws(identity_matrix(2),2)`
+remains an executable unsupported boundary: after proving the nonzero determinant,
+compilation reaches that third statement, rejects `BuiltinMembership/Contract`,
+and emits no partial artifact. General inverse multiplication laws, higher-order
+scalar expansions and native Mathlib adapters are separate work. Matrix
+constructor entrypoints now stand at 22 of 23; `matrix_rank` remains.
+
+
+## Phase 6w: matrix rank, 2026-10-27
+
+`matrix_rank(A,m,n)` now wraps Mathlib's `Matrix.rank` on the existing finite
+complex-matrix observation. It preserves children `[A,m,n]` and WD
+`[m∈N,n∈N,A∈matrix(C,m,n)]`. Zero dimensions remain legal. The result is a
+Litex object with natural-number denotation; membership in larger standard
+number sets follows the original recorded inclusion evidence.
+
+Replay includes both direct matrix scalar membership and the separate intrinsic
+natural-codomain result used by comparisons and carrier widening. Three existing
+explicit theorem IDs are supported: `matrix_rank_bounds/3`, `matrix_rank_zero/2`
+and `matrix_rank_identity/1`. Their original requirements, stores and ordered
+conclusions are checked. Core proves row/column bounds, zero-matrix rank and
+identity-matrix rank from Mathlib. No Runtime, AST, result shape, model field or
+compiler state was added.
+
+```litex
+thm checked_matrix_rank_bounds:
+    ? forall m,n N, A matrix(C,m,n):
+        matrix_rank(A,m,n) <= m
+        matrix_rank(A,m,n) <= n
+    release thm matrix_rank_bounds(A,m,n)
+```
+
+Rank aliases consume the original three congruence children—matrix, rows,
+columns—rather than recomputing equality. The generated application explicitly
+fixes the `M.Value` domains of `congr`. Formula functions can return rank using
+the same pure denotation and captured natural-codomain proof.
+
+| Example | Checked source and generated Lean |
+| --- | --- |
+| Natural membership and standard number inclusion | [Source](../lean/examples/matrix_rank_membership/statement.lit) · [Lean](../lean/examples/matrix_rank_membership/statement.lean) |
+| Both dimension bounds and named theorem reuse | [Source](../lean/examples/matrix_rank_bounds/statement.lit) · [Lean](../lean/examples/matrix_rank_bounds/statement.lean) |
+| Rectangular zero matrices | [Source](../lean/examples/matrix_rank_zero/statement.lit) · [Lean](../lean/examples/matrix_rank_zero/statement.lean) |
+| Identity matrices | [Source](../lean/examples/matrix_rank_identity/statement.lit) · [Lean](../lean/examples/matrix_rank_identity/statement.lean) |
+| Empty row/column index sets | [Source](../lean/examples/matrix_rank_empty/statement.lit) · [Lean](../lean/examples/matrix_rank_empty/statement.lean) |
+| Matrix and rank aliases | [Source](../lean/examples/matrix_rank_alias/statement.lit) · [Lean](../lean/examples/matrix_rank_alias/statement.lean) |
+| A natural-valued function on matrices | [Source](../lean/examples/matrix_rank_function/statement.lit) · [Lean](../lean/examples/matrix_rank_function/statement.lean) |
+
+All seven pairs passed strict source execution, independent identical generation
+and actual Lean 4.31.0 checks. Their 23 generated theorem declarations occupy
+10,090–30,553 bytes per file. The first six successful files were retained while
+the alias elaboration failure was repaired and checked separately.
+The final related gate checked eleven pairs and audited 35 exported theorems:
+seven unchanged rank files reused their successful same-Core Lean checks; four
+related files were checked fresh. Only `Classical.choice`, `Quot.sound` and
+`propext` occurred in the axiom audit. All 1,299 compiler tests passed after the
+final alias repair. Local receipts are `phase6w-final` and
+`phase6w-compiler-final`.
+
+The valid source `release thm matrix_rank_transpose(identity_matrix(2),2,2)`
+remains unsupported: compilation rejects `BuiltinMembership/Contract` with zero
+stdout bytes. Further rank laws, factorizations and exact elimination certificates
+are separate proof routes. The original matrix-constructor inventory is now
+**23/23**; this count does not count all matrix theorems or proof strategies.
+
+
+## Phase 7a: real-set bounds and boundedness, 2026-10-27
+
+Four more atomic result variants are connected: `RealSetBoundFact`,
+`NotRealSetBoundFact`, `RealSetBoundedFact` and `NotRealSetBoundedFact`.
+They represent five source predicates and their negations:
+
+| Source predicate | Original WD | Meaning |
+| --- | --- | --- |
+| `$is_real_upper_bound(A,b)` | `A ⊆ R`, `b ∈ R` | Every member of `A` is at most `b` |
+| `$is_real_lower_bound(A,b)` | `A ⊆ R`, `b ∈ R` | Every member of `A` is at least `b` |
+| `$is_real_bounded_above(A)` | `A ⊆ R` | A real upper bound exists |
+| `$is_real_bounded_below(A)` | `A ⊆ R` | A real lower bound exists |
+| `$is_real_bounded(A)` | `A ⊆ R` | A lower bound and an upper bound exist |
+
+Negative predicates retain the same domains. No nonempty premise is added:
+the empty real set is bounded. Source verification, Runtime, AST and result
+shapes are unchanged.
+
+The compiler consumes the original definition children, in their recorded order:
+one universal inequality for a bound; lower then upper existence for two-sided
+boundedness. Definition inference retains each stored FactId, including the two
+one-sided projections. Assumptions, conclusions, negative fact citations,
+existential witness extraction, named theorem calls and equality transport all
+have generated examples. Missing/reordered domain or definition evidence and
+changed inference identities are rejected.
+
+Core boundedness uses the compiler's existing proof-dependent existential shape,
+`∃ b, ∃ h : In b R, ...`. The new `by def` examples also exposed a missing branch
+in semantic-dependency discovery: the existing scan now checks the verified
+`by def` subject and its inference results, so a literal set in that statement
+requests `SetSemantics`. No compiler state or replacement proof search was added.
+
+`realMemberSet M (denote A)` observes the source set as an ordinary `Set ℝ`.
+Four proved Core equivalences connect bounds and boundedness to Mathlib's
+`upperBounds`, `lowerBounds`, `BddAbove` and `BddBelow`, using the original
+real-set and real-bound premises. This is a proved semantic bridge; the batch
+does not automatically generate a native adapter or choose a concrete model.
+
+| Example | Checked source and generated Lean |
+| --- | --- |
+| All ten positive/negative predicate forms | [Source](../lean/examples/real_set_bound_citations/statement.lit) · [Lean](../lean/examples/real_set_bound_citations/statement.lean) |
+| Equal sets and equal bounds | [Source](../lean/examples/real_set_bound_citations/substitution.lit) · [Lean](../lean/examples/real_set_bound_citations/substitution.lean) |
+| A reusable upper-bound theorem and concrete call | [Source](../lean/examples/real_set_bound_theorem/statement.lit) · [Lean](../lean/examples/real_set_bound_theorem/statement.lean) |
+| Empty-set boundedness | [Source](../lean/examples/real_empty_set_bounds/statement.lit) · [Lean](../lean/examples/real_empty_set_bounds/statement.lean) |
+| Singleton bounds and witnesses | [Source](../lean/examples/real_singleton_bounds/statement.lit) · [Lean](../lean/examples/real_singleton_bounds/statement.lean) |
+| One-sided components and witness extraction | [Source](../lean/examples/real_set_bounded_components/statement.lit) · [Lean](../lean/examples/real_set_bounded_components/statement.lean) |
+
+All six new pairs passed strict source verification, independent identical
+generation and actual Lean 4.31.0 checks: 50 new exports, 4,045–19,533 bytes
+per file. The final related gate covers eight pairs and 56 exports, with seven
+unchanged same-Core Lean checks reused and the repaired theorem example checked
+fresh. All 1,306 compiler tests passed, including seven focused bounds tests.
+The generated exports and six new Core bridge laws use only `Classical.choice`,
+`Quot.sound` and `propext`. Local receipts: `phase7a-accepted`,
+`phase7a-compiler-accepted`, `phase7a-tests-set-dependency` and
+`RealBoundsBridgeAudit`.
+
+Supremum/infimum objects and their explicit theorem releases are next.
+`release thm real_supremum_exists({2})`, after its checked boundedness
+prerequisites, remains an executable boundary: source succeeds, compilation
+rejects statement 4 at `BuiltinMembership/Contract`, with no partial output.
+The native verifier also does not prove `by def $is_real_upper_bound({1,2},2)`
+without additional proof steps; this batch does not alter that search behavior.
+
+
+## Phase 7b: real supremum and infimum, 2026-10-27
+
+Two more constructors are connected: `sup(A)` and `inf(A)`. They consume the
+existing ordered set WD, real-subset proof and either a concrete extremal
+certificate or its existential proof. Runtime, AST and result shapes are
+unchanged. A constructor's denotation is independent of its WD proof.
+
+Core interprets the reserved predicates `is_real_least_upper_bound/2` and
+`is_real_greatest_lower_bound/2` using a nonempty real source set and Mathlib
+`IsLUB`/`IsGLB` on `realMemberSet`. Selection denotes the corresponding `sSup`
+or `sInf`. These predicates remain ordinary facts over generic source objects;
+no membership proof changes a parameter's host representation. This connects
+two reserved predicate names, not two additional `AtomicFact` variants.
+
+The four explicit theorem consumers are `real_supremum_exists/1`,
+`real_infimum_exists/1`, `real_supremum_selected/1` and
+`real_infimum_selected/1`. Each checks its original ID, arguments, ordered
+premises, stores and conclusion WD. Candidate-value equalities replay
+`RealBounds` and its exact known certificate and value-equality child.
+Congruence replays the recorded equality of the two source sets.
+
+Function bodies use the same pure denotation during recorded beta expansion.
+The function examples also exercise a newly connected existing inference:
+`A $in power_set(R)` stores `A $subset R` at its original FactId. The compiler
+now emits that projection with `inPowerSet_iff`, making it available to later
+WD instead of reconstructing it. This projection currently requires the
+recorded carrier to be a direct `power_set` constructor; other carrier
+resolution routes need their own evidence consumer.
+
+| Mathematical problem | Source | Generated Lean |
+| --- | --- | --- |
+| Select the supremum of `{2}` from boundedness | [Source](../lean/examples/real_supremum_selection/statement.lit) | [Lean](../lean/examples/real_supremum_selection/statement.lean) |
+| Select the infimum of `{2}` from boundedness | [Source](../lean/examples/real_infimum_selection/statement.lit) | [Lean](../lean/examples/real_infimum_selection/statement.lean) |
+| A known supremum candidate determines the value; reuse and aliases | [Source](../lean/examples/real_supremum_candidate/statement.lit) | [Lean](../lean/examples/real_supremum_candidate/statement.lean) |
+| The corresponding infimum laws | [Source](../lean/examples/real_infimum_candidate/statement.lit) | [Lean](../lean/examples/real_infimum_candidate/statement.lean) |
+| Select extrema inside guarded functions on real subsets | [Source](../lean/examples/real_extremum_functions/statement.lit) | [Lean](../lean/examples/real_extremum_functions/statement.lean) |
+
+At the phase 7b checkpoint, certificate introduction and projection were not
+connected. The following boundary is now covered by phase 7c below:
+
+```litex
+by def $is_real_upper_bound({2},2)
+release thm real_least_upper_bound_from_definition({2},2)
+sup({2}) = 2
+```
+
+Before phase 7c, this source verified but compilation rejected the second
+statement at `BuiltinMembership/Contract` with no partial file. Empty, unbounded and
+nonreal sets without valid selection evidence still fail source WD.
+
+Acceptance: five new strict source/generated pairs, 28 new theorem exports,
+8,403–27,651 bytes per file. The final related gate checks seven pairs and
+49 exports with independent identical regeneration and fresh Lean 4.31.0
+checks. All 1,311 compiler tests pass, including five focused tests covering
+changed theorem stages, swapped WD, malformed power-set projections and invalid
+source selection. Generated exports and the six Core extrema laws use only
+`Classical.choice`, `Quot.sound` and `propext`. Local receipts are
+`phase7b-final`, `phase7b-all-compiler`, `phase7b-focused-accepted`,
+`RealExtremaAudit` and `phase7b-boundary`.
+
+
+## Phase 7c: extremal-certificate theorem calls, 2026-10-27
+
+Fourteen existing theorem IDs now compile: seven upper/lower pairs for definition,
+bound projection, existence from an explicit bound, uniqueness, comparison with
+a member, comparison with another bound, and strict crossing witnesses.
+Together with phase 7b, all eighteen supremum/infimum theorem IDs in these two
+native contract families have consumers. This does not cover all real-analysis
+builtin theorems.
+
+```litex
+by def $is_real_upper_bound({2},2)
+release thm real_least_upper_bound_from_definition({2},2)
+sup({2}) = 2
+```
+
+This formerly rejected source now generates checked Lean. The complete
+[supremum example](../lean/examples/real_supremum_certificate_laws/statement.lit)
+and its [generated Lean](../lean/examples/real_supremum_certificate_laws/statement.lean)
+also identify a second candidate, compare it with a bound, extract a crossing
+member, and reuse a theorem over an arbitrary real set. The
+[infimum source](../lean/examples/real_infimum_certificate_laws/statement.lit) and
+[Lean](../lean/examples/real_infimum_certificate_laws/statement.lean) exercise
+the corresponding lower-bound contracts.
+
+The consumer validates each original theorem ID, argument list, ordered premise,
+quantifier carrier, comparison direction, stored FactId and conclusion WD.
+For nested extremality, the Core law's semantic bound is projected into the
+original source `forall` premise. Only the required fresh schema binder is
+specialized to the model universe; source object carriers remain generic.
+No Runtime, AST, result-shape or search changes were needed.
+
+Both new pairs pass strict Litex verification, independent identical generation
+and actual Lean 4.31.0 checks: 46 exported theorems, 76,045 and 71,039 bytes.
+The related gate checks seven pairs and 74 exports afresh. All 1,314 compiler
+tests pass, including the eight focused extrema tests. The generated exports
+and fourteen new Core laws use only `Classical.choice`, `Quot.sound` and
+`propext`. Receipts: `phase7c-accepted`, `RealExtremumCertificateAudit` and
+`phase7c-all-compiler` in the existing local compiler workspace.
+
+### Common remaining work
+
+| Order | Existing source capabilities still needing compiler work |
+| --- | --- |
+| Next analysis | `lim`, `limsup`, `liminf` and their recorded certificates. Phase 7d below covers monotonicity, boundedness, Cauchy, convergence and a specified real limit. |
+| Following | `fn_lim`, function continuity and Lipschitz facts; derivative and Riemann-integral facts and selectors |
+| Later analysis | Multivariable limits, partial/total derivatives, gradient/Jacobian/Hessian and related operators |
+| Statement follow-up | Local templates, local piecewise/recursive functions and local functions selected from unique existence |
+| Separate contracts | `algo by cases`, `algo by induc`, `strategy`, `eval` |
+
+At the phase 7c checkpoint, the original analysis inventory had 17 unconnected
+object constructors and 28 atomic variants without proposition rendering. Several mathematical properties
+share a variant, so these numbers do not count individual predicates. Existing
+object consumers can also lack specific equality/strategy/BT result branches.
+For example, `release thm real_archimedean_natural_upper_bound(3)` verifies in
+Litex but still rejects at `BuiltinMembership/Contract` with zero generated bytes;
+`phase7c-boundary.json` records this executable boundary.
+
+
+## Phase 7d: sequence monotonicity and boundedness, 2026-10-27
+
+Seven existing sequence properties now replay into Lean: nondecreasing,
+nonincreasing, strictly increasing, strictly decreasing, bounded above, bounded
+below and bounded. Their positive/negative citations, equality substitution,
+original definition clauses, named theorem reuse and inferred bound witnesses
+are covered. Indexing remains `N+`; the complete function signature must return
+`R` and have no additional guards.
+
+```litex
+have fn a(n N+) R = n
+by def $is_seq_nondecreasing(a)
+```
+
+See [monotonicity](../lean/examples/sequence_monotonicity/),
+[property citations](../lean/examples/sequence_property_citations/) and
+[range bounds](../lean/examples/sequence_range_bounds/). Their three statement
+pairs pass strict Litex, independent identical generation and actual Lean 4.31.0
+checking: 33 exported theorems and 49,192–65,679 bytes per generated file.
+
+The compiler reuses the signature already carried by `seq(R)` and its stored
+function-set expansion. Inferred ranges of function parameters use the exact
+original parameter membership. Negation's strict/weak order rules reuse their
+recorded reversed premises. Runtime, AST, result shapes and search are unchanged.
+
+The epsilon-tail follow-up below adds Cauchy/convergence definitions and a
+specified sequence limit. `lim`/`limsup`/`liminf` selectors and native Mathlib
+sequence adapters remain pending.
+The wider range inclusion `fn_range(a) $subset C` for `a seq(R)` also remains
+an unaccepted route: source verification succeeds, but compilation still
+requests a missing standalone `N+` constructor. The local
+`sequence_range_widening.lit` fixture preserves that boundary.
+
+The additional [declared-codomain example](../lean/examples/sequence_range_bounds/containment.lit)
+checks `fn_range(a) $subset R` directly. Its generated pair adds one export
+and passes Lean. The related gate covers eight pairs and 47 exports, with
+independent identical generation and standard axioms only; identical files
+reuse prior Lean checks under the same Core/toolchain. Seven focused Rust tests
+pass, including changed domains, reversed comparisons, altered inference IDs,
+reordered bound witnesses and changed range certificates.
+
+The normal Cargo test build is blocked by a missing tracked fixture:
+`examples/_internal/regression/lambda_alpha_equivalence.lit`. These seven tests
+were compiled from their canonical test module against the current library,
+using the repository's configured 64 MiB test-thread stack. No full compiler
+regression is claimed for this increment. Receipts: `phase7d-first-seven-accepted`,
+`phase7d-isolated-tests` and `phase7d-journal` in the local compiler workspace.
+
+### Phase 7d follow-up: Cauchy tails and specified limits, 2026-10-27
+
+The compiler now consumes `$is_seq_cauchy(a)`, `$is_seq_convergent(a)` and
+`$has_seq_limit(a,L)`, including their negations in citations and equality
+transport. The sequence must have the complete unary `N+ → R` signature without
+extra guards, and the specified limit must carry its original real-membership
+evidence. The public Litex interfaces and Runtime/result shapes are unchanged.
+
+For example, the [limit definition](../lean/examples/sequence_limit_definition/statement.lit)
+uses this premise to prove `$has_seq_limit(a,L)` through `by def`:
+
+```litex
+forall epsilon R+:
+    exist cutoff N+ st {{n N+: n >= cutoff} $subset preimage_set(a, {v R: abs(v-L) < epsilon})}
+```
+
+Core defines the tail, epsilon ball and limit predicate using the existing
+set/function semantics. The compiler checks the original binders, carriers,
+comparisons, preimage function and child proofs before emitting the bridge
+application. Cauchy uses pairs of tail indices. Its stored definition supplies
+the controlling-tail existence; convergence supplies a real limit witness.
+See the [Cauchy example](../lean/examples/sequence_cauchy_definition/),
+[convergence witness and theorem reuse](../lean/examples/sequence_convergence_witness/)
+and [positive/negative limit citations](../lean/examples/sequence_limit_citations/).
+
+Whole-forall reuse now matches nested set-builder binders and preimage sets.
+Visible WD constructors may be reused after local binder renaming, with free
+references, carriers and active scope boundaries retained. Recorded compound
+alpha-equality also covers Cartesian products, tuples and preimage sets. These
+changes consume original evidence; they do not introduce a search or WD store.
+
+All four new source/generated pairs pass strict Litex, independent identical
+generation and Lean 4.31.0: 12 exported theorems, 13,070–55,891 bytes per file.
+The related gate checks 12 pairs and 59 exports under the updated Core, with
+only `Classical.choice`, `Quot.sound` and `propext`. Fifteen canonical Rust tests
+pass through the current-library harness, including malformed epsilon clauses,
+wrong real-value evidence, missing inferences and changed forall citations.
+The full Cargo compiler suite remains unrun because of the missing fixture
+reported above. Receipts: `phase7d-epsilon-accepted`,
+`phase7d-epsilon-isolated-tests` and `phase7d-epsilon-journal` in the existing
+local compiler workspace.
+
+The shared binder/WD changes also pass the existing set-valued-function and
+compound-theorem-return pairs: two more pairs and seven exports, bringing this
+increment's focused Lean checks to 14 pairs and 66 exports.
+
+This does not yet compile `lim`, `limsup`, `liminf`, general limit BTs or a
+native Mathlib sequence adapter. Outside analysis, the next bounded statement
+increment is `eval` with exact arithmetic and original equality citations;
+local definitions, `strategy` and `algo` remain separate follow-ups.

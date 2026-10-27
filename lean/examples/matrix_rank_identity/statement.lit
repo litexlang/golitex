@@ -1,0 +1,6 @@
+# The identity matrix has rank equal to its order.
+thm checked_identity_matrix_rank:
+    ? forall n N:
+        matrix_rank(identity_matrix(n),n,n) = n
+    release thm matrix_rank_identity(n)
+by thm checked_identity_matrix_rank(3) => matrix_rank(identity_matrix(3),3,3) = 3

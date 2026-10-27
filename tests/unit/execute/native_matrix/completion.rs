@@ -20,6 +20,36 @@ fn accepted(rt: &mut Runtime, source: &str) {
 const MATRIX: &str = "have fn A(r closed_range(1,2),c closed_range(1,2)) R=r+c";
 
 #[test]
+fn entrywise_matrix_laws_are_source_proofs_after_native_bt_retirement() {
+    let retired = [
+        "matrix_add_commutative",
+        "matrix_add_associative",
+        "matrix_add_zero",
+        "matrix_sub_self",
+        "matrix_scale_one",
+        "matrix_scale_zero",
+        "matrix_scale_distributive",
+    ];
+    for name in retired {
+        assert!(crate::builtin_theorem::BuiltinTheoremId::from_name(name).is_none());
+        assert!(!crate::builtin_theorem::is_reserved_builtin_name(name));
+    }
+
+    // Check the actual std proofs without loading any other mathematical thm.
+    let source = std::fs::read_to_string(
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("std/matrix/main.lit"),
+    )
+    .unwrap();
+    let start = source.find("\nthm matrix_add_commutative:").unwrap();
+    let mut rt = runtime();
+    accepted(&mut rt, &source[start..]);
+    accepted(&mut rt, MATRIX);
+    accepted(&mut rt, "release thm matrix_add_zero(A,2,2)");
+    accepted(&mut rt, "matrix_add(A,zero_matrix(2,2),2,2)=A");
+    accepted(&mut rt, "matrix_add(zero_matrix(2,2),A,2,2)=A");
+}
+
+#[test]
 fn native_matrix_exact_evaluation_keeps_the_inherited_permission_ceiling() {
     use crate::execute::execute_eval_stmt::{evaluate_obj::evaluate_obj, helper::ActiveAlgoCalls};
     use crate::prelude::*;

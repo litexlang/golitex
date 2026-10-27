@@ -229,6 +229,18 @@ impl LitexToLeanCompiler {
     ) -> Result<String, LeanCompileError> {
         match (goal, rule) {
             (
+                AtomicFact::LessFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(
+                    LessFactSearchProofByBuiltinRule::NegationStrictOrder(p),
+                ),
+            ) => self.compile_negation_order(goal, &p.argument_order, position),
+            (
+                AtomicFact::LessEqualFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(
+                    LessEqualFactSearchProofByBuiltinRule::NegationWeakOrder(p),
+                ),
+            ) => self.compile_negation_order(goal, &p.argument_order, position),
+            (
                 _,
                 AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(
                     LessEqualFactSearchProofByBuiltinRule::FiniteSetMaxMemberLe(p),
@@ -687,6 +699,42 @@ impl LitexToLeanCompiler {
                 false,
                 position,
             ),
+            (
+                AtomicFact::NotEqualFact(fact),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(
+                    NotEqualFactSearchProofByBuiltinRule::NegationNonzero(p),
+                ),
+            ) => self.compile_negation_nonzero(fact, &p.argument_nonzero, position),
+            (
+                AtomicFact::NotEqualFact(fact),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(
+                    NotEqualFactSearchProofByBuiltinRule::CoshNonzero(_),
+                ),
+            ) => self.compile_hyperbolic_nonzero(fact, "Cosh", None, position),
+            (
+                AtomicFact::NotEqualFact(fact),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(
+                    NotEqualFactSearchProofByBuiltinRule::SechNonzero(_),
+                ),
+            ) => self.compile_hyperbolic_nonzero(fact, "Sech", None, position),
+            (
+                AtomicFact::NotEqualFact(fact),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(
+                    NotEqualFactSearchProofByBuiltinRule::CothNonzero(_),
+                ),
+            ) => self.compile_hyperbolic_nonzero(fact, "Coth", None, position),
+            (
+                AtomicFact::NotEqualFact(fact),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(
+                    NotEqualFactSearchProofByBuiltinRule::CschNonzero(_),
+                ),
+            ) => self.compile_hyperbolic_nonzero(fact, "Csch", None, position),
+            (
+                AtomicFact::NotEqualFact(fact),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(
+                    NotEqualFactSearchProofByBuiltinRule::SinhNonzeroFromArgument(p),
+                ),
+            ) => self.compile_hyperbolic_nonzero(fact, "Sinh", Some(&p.argument_nonzero), position),
             (
                 AtomicFact::NotEqualFact(goal),
                 AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(

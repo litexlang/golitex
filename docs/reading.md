@@ -2,8 +2,29 @@
 
 Reading exports the verification evidence of a Litex file or project. The
 same JavaScript reader uses that JSON in a local browser or a hosted webpage.
-Its source pane and explanation pane share statement IDs, fact IDs, semantic
-symbol identities and actual verifier citations.
+The source occupies the reading area without a standing explanation pane.
+Hover for semantic hints; click source, definitions or inferred facts for a
+contextual explanation beside the source. Close it with ×, Escape or an outside
+click; long content scrolls inside. These explanations share statement IDs,
+fact IDs, resolved symbol identities and actual verifier citations with the
+source. Switching examples or editing source closes old explanations.
+
+Theorem roles follow typed theorem-call records. A resolved builtin callee is
+labeled **Builtin theorem**, while a user theorem remains **Theorem**.
+`release thm` hover explains instantiation, verification of parameter domains
+and premises, and introduction of every resulting conclusion.
+
+Hover a fact predicate or the blank area of its source row to preview its proof.
+Focus the line number for keyboard access. Premises are clickable and highlighted
+in the source; the preview stays open while the pointer is inside it. It uses
+the selected primary fact's recorded evidence, including nested conclusions,
+rather than the citations of the whole enclosing proof. Parameter and expression
+conditions are available separately. A chain offers its recorded adjacent
+relations as individual steps. Hypotheses remain explicitly conditional, and
+unchecked edits immediately lose their old proof previews. Some proof forms
+still lack an authored explanation; missing evidence is never reconstructed
+from matching source text. The JSON supports this interaction without appearing
+as a separate output panel.
 
 For real mathematical examples, run
 `litex -reading -strict -lang zh -r examples/reading/homepage`.
@@ -470,7 +491,7 @@ supplied shell reconstructs closed, single-configuration projects in original
 export order and preserves strict checking. Nested/external module dependencies
 are explicitly rejected by this initial editor bridge. After an input, old inferred facts and semantic hover are cleared immediately;
 the draft uses lexical colors until checking returns fresh evidence. Source
-selection updates the mathematical pane without replacing the input or losing
+selection opens or updates the contextual explanation without replacing the input or losing
 the caret. Editor scroll and selection are retained through navigation/checks.
 
 Static exports stay read-only unless their host supplies a checking endpoint.

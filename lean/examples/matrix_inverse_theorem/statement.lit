@@ -1,0 +1,10 @@
+# A guarded inverse-coordinate theorem is instantiated with a proved nonzero determinant.
+thm checked_inverse_coordinate:
+    ? forall n N+, A matrix(C,n,n), r closed_range(1,n), c closed_range(1,n):
+        det(A,n) != 0
+        =>:
+            matrix_inverse(A,n)(r,c) = matrix_cofactor(A,n,c,r) / det(A,n)
+    matrix_inverse(A,n)(r,c) = matrix_cofactor(A,n,c,r) / det(A,n)
+det(identity_matrix(2),2) = 1
+det(identity_matrix(2),2) != 0
+by thm checked_inverse_coordinate(2,identity_matrix(2),1,2) => matrix_inverse(identity_matrix(2),2)(1,2) = matrix_cofactor(identity_matrix(2),2,2,1) / det(identity_matrix(2),2)

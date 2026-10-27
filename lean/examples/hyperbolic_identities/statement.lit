@@ -1,0 +1,22 @@
+# Hyperbolic addition, double-angle, square and reciprocal identities.
+forall x R:
+    1 = cosh(x)^2 - sinh(x)^2
+    cosh(x) + sinh(x) = exp(x)
+    exp(-x) = cosh(x) - sinh(x)
+    tanh(x)*cosh(x) = sinh(x)
+    sech(x)*cosh(x) = 1
+    tanh(x) = sinh(x)*sech(x)
+    1 - tanh(x)^2 = sech(x)^2
+    sinh(2*x) = 2*sinh(x)*cosh(x)
+    cosh(2*x) = cosh(x)^2 + sinh(x)^2
+forall x R:
+    x != 0
+    =>:
+        coth(x)*sinh(x) = cosh(x)
+        csch(x)*sinh(x) = 1
+        coth(x) = cosh(x)*csch(x)
+        tanh(x)*coth(x) = 1
+        coth(x)^2 - 1 = csch(x)^2
+forall x, y R:
+    sinh(x+y) = sinh(x)*cosh(y) + cosh(x)*sinh(y)
+    cosh(x+y) = cosh(x)*cosh(y) + sinh(x)*sinh(y)

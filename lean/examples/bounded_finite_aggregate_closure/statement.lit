@@ -1,0 +1,4 @@
+# Finite sums and products retain the value carrier of a function on the exact bounded index set.
+forall n N, f fn(k closed_range(1,n)) R:
+    finite_set_sum(closed_range(1,n),f) $in R
+    finite_set_product(closed_range(1,n),f) $in R

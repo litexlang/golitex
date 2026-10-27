@@ -1,3 +1,0 @@
-# Finite maximum selection awaits a first-class kernel object. This keeps the
-# experimental arithmetic interface visible without reintroducing a package.
-have euler_phi fn(a, b N+: $prime(b)) N

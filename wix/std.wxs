@@ -127,6 +127,48 @@
             <File Id="StdFile_number_theory_math_collections.md" Source="std\number_theory\math_collections.md" KeyPath="yes" />
           </Component>
         </Directory>
+        <Directory Id="StdDir_probability" Name="probability">
+          <Component Id="StdComp_probability_README.md" Guid="*">
+            <File Id="StdFile_probability_README.md" Source="std\probability\README.md" KeyPath="yes" />
+          </Component>
+          <Component Id="StdComp_probability_litex.config" Guid="*">
+            <File Id="StdFile_probability_litex.config" Source="std\probability\litex.config" KeyPath="yes" />
+          </Component>
+          <Component Id="StdComp_probability_main.lit" Guid="*">
+            <File Id="StdFile_probability_main.lit" Source="std\probability\main.lit" KeyPath="yes" />
+          </Component>
+          <Component Id="StdComp_probability_math_collections.md" Guid="*">
+            <File Id="StdFile_probability_math_collections.md" Source="std\probability\math_collections.md" KeyPath="yes" />
+          </Component>
+        </Directory>
+        <Directory Id="StdDir_real_function_sums" Name="real_function_sums">
+          <Component Id="StdComp_real_function_sums_README.md" Guid="*">
+            <File Id="StdFile_real_function_sums_README.md" Source="std\real_function_sums\README.md" KeyPath="yes" />
+          </Component>
+          <Component Id="StdComp_real_function_sums_litex.config" Guid="*">
+            <File Id="StdFile_real_function_sums_litex.config" Source="std\real_function_sums\litex.config" KeyPath="yes" />
+          </Component>
+          <Component Id="StdComp_real_function_sums_main.lit" Guid="*">
+            <File Id="StdFile_real_function_sums_main.lit" Source="std\real_function_sums\main.lit" KeyPath="yes" />
+          </Component>
+          <Component Id="StdComp_real_function_sums_math_collections.md" Guid="*">
+            <File Id="StdFile_real_function_sums_math_collections.md" Source="std\real_function_sums\math_collections.md" KeyPath="yes" />
+          </Component>
+        </Directory>
+        <Directory Id="StdDir_real_higher_order_laws" Name="real_higher_order_laws">
+          <Component Id="StdComp_real_higher_order_laws_README.md" Guid="*">
+            <File Id="StdFile_real_higher_order_laws_README.md" Source="std\real_higher_order_laws\README.md" KeyPath="yes" />
+          </Component>
+          <Component Id="StdComp_real_higher_order_laws_litex.config" Guid="*">
+            <File Id="StdFile_real_higher_order_laws_litex.config" Source="std\real_higher_order_laws\litex.config" KeyPath="yes" />
+          </Component>
+          <Component Id="StdComp_real_higher_order_laws_main.lit" Guid="*">
+            <File Id="StdFile_real_higher_order_laws_main.lit" Source="std\real_higher_order_laws\main.lit" KeyPath="yes" />
+          </Component>
+          <Component Id="StdComp_real_higher_order_laws_math_collections.md" Guid="*">
+            <File Id="StdFile_real_higher_order_laws_math_collections.md" Source="std\real_higher_order_laws\math_collections.md" KeyPath="yes" />
+          </Component>
+        </Directory>
         <Directory Id="StdDir_real_multivariable" Name="real_multivariable">
           <Component Id="StdComp_real_multivariable_README.md" Guid="*">
             <File Id="StdFile_real_multivariable_README.md" Source="std\real_multivariable\README.md" KeyPath="yes" />
@@ -137,14 +179,68 @@
           <Component Id="StdComp_real_multivariable_directional.lit" Guid="*">
             <File Id="StdFile_real_multivariable_directional.lit" Source="std\real_multivariable\directional.lit" KeyPath="yes" />
           </Component>
+          <Component Id="StdComp_real_multivariable_higher_order.lit" Guid="*">
+            <File Id="StdFile_real_multivariable_higher_order.lit" Source="std\real_multivariable\higher_order.lit" KeyPath="yes" />
+          </Component>
           <Component Id="StdComp_real_multivariable_iterated_integrals.lit" Guid="*">
             <File Id="StdFile_real_multivariable_iterated_integrals.lit" Source="std\real_multivariable\iterated_integrals.lit" KeyPath="yes" />
           </Component>
           <Component Id="StdComp_real_multivariable_litex.config" Guid="*">
             <File Id="StdFile_real_multivariable_litex.config" Source="std\real_multivariable\litex.config" KeyPath="yes" />
           </Component>
+          <Component Id="StdComp_real_multivariable_locality.lit" Guid="*">
+            <File Id="StdFile_real_multivariable_locality.lit" Source="std\real_multivariable\locality.lit" KeyPath="yes" />
+          </Component>
           <Component Id="StdComp_real_multivariable_main.lit" Guid="*">
             <File Id="StdFile_real_multivariable_main.lit" Source="std\real_multivariable\main.lit" KeyPath="yes" />
+          </Component>
+          <Component Id="StdComp_real_multivariable_math_collections.md" Guid="*">
+            <File Id="StdFile_real_multivariable_math_collections.md" Source="std\real_multivariable\math_collections.md" KeyPath="yes" />
+          </Component>
+          <Component Id="StdComp_real_multivariable_unary_higher_order.lit" Guid="*">
+            <File Id="StdFile_real_multivariable_unary_higher_order.lit" Source="std\real_multivariable\unary_higher_order.lit" KeyPath="yes" />
+          </Component>
+        </Directory>
+        <Directory Id="StdDir_real_regularity" Name="real_regularity">
+          <Component Id="StdComp_real_regularity_README.md" Guid="*">
+            <File Id="StdFile_real_regularity_README.md" Source="std\real_regularity\README.md" KeyPath="yes" />
+          </Component>
+          <Component Id="StdComp_real_regularity_litex.config" Guid="*">
+            <File Id="StdFile_real_regularity_litex.config" Source="std\real_regularity\litex.config" KeyPath="yes" />
+          </Component>
+          <Component Id="StdComp_real_regularity_main.lit" Guid="*">
+            <File Id="StdFile_real_regularity_main.lit" Source="std\real_regularity\main.lit" KeyPath="yes" />
+          </Component>
+          <Component Id="StdComp_real_regularity_math_collections.md" Guid="*">
+            <File Id="StdFile_real_regularity_math_collections.md" Source="std\real_regularity\math_collections.md" KeyPath="yes" />
+          </Component>
+        </Directory>
+        <Directory Id="StdDir_real_regularity_laws" Name="real_regularity_laws">
+          <Component Id="StdComp_real_regularity_laws_README.md" Guid="*">
+            <File Id="StdFile_real_regularity_laws_README.md" Source="std\real_regularity_laws\README.md" KeyPath="yes" />
+          </Component>
+          <Component Id="StdComp_real_regularity_laws_litex.config" Guid="*">
+            <File Id="StdFile_real_regularity_laws_litex.config" Source="std\real_regularity_laws\litex.config" KeyPath="yes" />
+          </Component>
+          <Component Id="StdComp_real_regularity_laws_main.lit" Guid="*">
+            <File Id="StdFile_real_regularity_laws_main.lit" Source="std\real_regularity_laws\main.lit" KeyPath="yes" />
+          </Component>
+          <Component Id="StdComp_real_regularity_laws_math_collections.md" Guid="*">
+            <File Id="StdFile_real_regularity_laws_math_collections.md" Source="std\real_regularity_laws\math_collections.md" KeyPath="yes" />
+          </Component>
+        </Directory>
+        <Directory Id="StdDir_real_scalar_function_sums" Name="real_scalar_function_sums">
+          <Component Id="StdComp_real_scalar_function_sums_README.md" Guid="*">
+            <File Id="StdFile_real_scalar_function_sums_README.md" Source="std\real_scalar_function_sums\README.md" KeyPath="yes" />
+          </Component>
+          <Component Id="StdComp_real_scalar_function_sums_litex.config" Guid="*">
+            <File Id="StdFile_real_scalar_function_sums_litex.config" Source="std\real_scalar_function_sums\litex.config" KeyPath="yes" />
+          </Component>
+          <Component Id="StdComp_real_scalar_function_sums_main.lit" Guid="*">
+            <File Id="StdFile_real_scalar_function_sums_main.lit" Source="std\real_scalar_function_sums\main.lit" KeyPath="yes" />
+          </Component>
+          <Component Id="StdComp_real_scalar_function_sums_math_collections.md" Guid="*">
+            <File Id="StdFile_real_scalar_function_sums_math_collections.md" Source="std\real_scalar_function_sums\math_collections.md" KeyPath="yes" />
           </Component>
         </Directory>
         <Directory Id="StdDir_real_series" Name="real_series">
@@ -219,12 +315,40 @@
       <ComponentRef Id="StdComp_number_theory_litex.config" />
       <ComponentRef Id="StdComp_number_theory_main.lit" />
       <ComponentRef Id="StdComp_number_theory_math_collections.md" />
+      <ComponentRef Id="StdComp_probability_README.md" />
+      <ComponentRef Id="StdComp_probability_litex.config" />
+      <ComponentRef Id="StdComp_probability_main.lit" />
+      <ComponentRef Id="StdComp_probability_math_collections.md" />
+      <ComponentRef Id="StdComp_real_function_sums_README.md" />
+      <ComponentRef Id="StdComp_real_function_sums_litex.config" />
+      <ComponentRef Id="StdComp_real_function_sums_main.lit" />
+      <ComponentRef Id="StdComp_real_function_sums_math_collections.md" />
+      <ComponentRef Id="StdComp_real_higher_order_laws_README.md" />
+      <ComponentRef Id="StdComp_real_higher_order_laws_litex.config" />
+      <ComponentRef Id="StdComp_real_higher_order_laws_main.lit" />
+      <ComponentRef Id="StdComp_real_higher_order_laws_math_collections.md" />
       <ComponentRef Id="StdComp_real_multivariable_README.md" />
       <ComponentRef Id="StdComp_real_multivariable_cross_product.lit" />
       <ComponentRef Id="StdComp_real_multivariable_directional.lit" />
+      <ComponentRef Id="StdComp_real_multivariable_higher_order.lit" />
       <ComponentRef Id="StdComp_real_multivariable_iterated_integrals.lit" />
       <ComponentRef Id="StdComp_real_multivariable_litex.config" />
+      <ComponentRef Id="StdComp_real_multivariable_locality.lit" />
       <ComponentRef Id="StdComp_real_multivariable_main.lit" />
+      <ComponentRef Id="StdComp_real_multivariable_math_collections.md" />
+      <ComponentRef Id="StdComp_real_multivariable_unary_higher_order.lit" />
+      <ComponentRef Id="StdComp_real_regularity_README.md" />
+      <ComponentRef Id="StdComp_real_regularity_litex.config" />
+      <ComponentRef Id="StdComp_real_regularity_main.lit" />
+      <ComponentRef Id="StdComp_real_regularity_math_collections.md" />
+      <ComponentRef Id="StdComp_real_regularity_laws_README.md" />
+      <ComponentRef Id="StdComp_real_regularity_laws_litex.config" />
+      <ComponentRef Id="StdComp_real_regularity_laws_main.lit" />
+      <ComponentRef Id="StdComp_real_regularity_laws_math_collections.md" />
+      <ComponentRef Id="StdComp_real_scalar_function_sums_README.md" />
+      <ComponentRef Id="StdComp_real_scalar_function_sums_litex.config" />
+      <ComponentRef Id="StdComp_real_scalar_function_sums_main.lit" />
+      <ComponentRef Id="StdComp_real_scalar_function_sums_math_collections.md" />
       <ComponentRef Id="StdComp_real_series_README.md" />
       <ComponentRef Id="StdComp_real_series_litex.config" />
       <ComponentRef Id="StdComp_real_series_main.lit" />

@@ -1,0 +1,5 @@
+# The outer function guard and both matrix-index conditions certify a nested call.
+forall m, n N, maker fn(t R: t != 0) matrix(R,m,n), t R, row closed_range(1,m), col closed_range(1,n):
+    t != 0
+    =>:
+        maker(t)(row,col) $in R

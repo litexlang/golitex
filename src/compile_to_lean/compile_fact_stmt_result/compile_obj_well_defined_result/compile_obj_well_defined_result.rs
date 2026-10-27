@@ -2,6 +2,7 @@ use crate::compile_to_lean::helper::*;
 use crate::compile_to_lean::source_position::{arithmetic_stages, SourceOwner, SourcePosition};
 use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
 use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ComplexOperatorObjWellDefinedProofByDef;
+use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::HyperbolicOperatorObjWellDefinedProofByDef;
 use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IntegerOperatorObjWellDefinedProofByDef;
 use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::TrigOperatorObjWellDefinedProofByDef;
 use crate::prelude::*;
@@ -135,7 +136,10 @@ impl LitexToLeanCompiler {
             }
             ObjWellDefinedProof::ByDef { obj, proof } => {
                 let term = match (obj, proof) {
+                    (Obj::BoundOperator(object), ObjWellDefinedProofByDef::BoundOperator(evidence)) => self.compile_real_extremum_wd(object, evidence, position)?,
                     (Obj::IteratedOperator(object @ (IteratedOperator::SumOfFiniteSet(_) | IteratedOperator::ProductOfFiniteSet(_))), ObjWellDefinedProofByDef::IteratedOperator(evidence)) => self.compile_finite_aggregate_wd(object, evidence, position)?,
+                    (Obj::IteratedOperator(IteratedOperator::Reduce(object)), ObjWellDefinedProofByDef::IteratedOperator(crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IteratedOperatorObjWellDefinedProofByDef::Reduce(evidence))) => self.compile_range_fold_wd(object, evidence, position)?,
+                    (Obj::IteratedOperator(IteratedOperator::FiniteSetReduce(object)), ObjWellDefinedProofByDef::IteratedOperator(crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IteratedOperatorObjWellDefinedProofByDef::FiniteSetReduce(evidence))) => self.compile_finite_fold_wd(object, evidence, position)?,
                     (Obj::IteratedOperator(object), ObjWellDefinedProofByDef::IteratedOperator(evidence)) => self.compile_range_aggregate_wd(object, evidence, position)?,
                     (Obj::FiniteSetStat(object), ObjWellDefinedProofByDef::FiniteSetStat(evidence)) => self.compile_finite_stat_wd(object, evidence, position)?,
                     (Obj::InstantiatedTemplateObj(instance), ObjWellDefinedProofByDef::InstantiatedTemplateObj(evidence)) => self.compile_template_wd(instance, evidence, position)?,
@@ -175,6 +179,13 @@ impl LitexToLeanCompiler {
                     (Obj::ComplexOperator(ComplexOperator::RealPart(x)), ObjWellDefinedProofByDef::ComplexOperator(ComplexOperatorObjWellDefinedProofByDef::RealPart(p))) => self.compile_complex_wd(&x.arg, "re", &p.child_obj_well_defined, &p.requirement_fact_verified, position)?,
                     (Obj::ComplexOperator(ComplexOperator::ImaginaryPart(x)), ObjWellDefinedProofByDef::ComplexOperator(ComplexOperatorObjWellDefinedProofByDef::ImaginaryPart(p))) => self.compile_complex_wd(&x.arg, "img", &p.child_obj_well_defined, &p.requirement_fact_verified, position)?,
                     (Obj::ComplexOperator(ComplexOperator::ComplexAbs(x)), ObjWellDefinedProofByDef::ComplexOperator(ComplexOperatorObjWellDefinedProofByDef::ComplexAbs(p))) => self.compile_complex_wd(&x.arg, "complexAbs", &p.child_obj_well_defined, &p.requirement_fact_verified, position)?,
+                    (Obj::MatrixOperator(operator), ObjWellDefinedProofByDef::MatrixOperator(proof)) => self.compile_matrix_operator_wd(operator, proof, position)?,
+                    (Obj::HyperbolicOperator(HyperbolicOperator::Sinh(x)), ObjWellDefinedProofByDef::HyperbolicOperator(HyperbolicOperatorObjWellDefinedProofByDef::Sinh(p))) => self.compile_hyperbolic_wd(&x.arg, "Sinh", &p.child_obj_well_defined, &p.requirement_fact_verified, position)?,
+                    (Obj::HyperbolicOperator(HyperbolicOperator::Cosh(x)), ObjWellDefinedProofByDef::HyperbolicOperator(HyperbolicOperatorObjWellDefinedProofByDef::Cosh(p))) => self.compile_hyperbolic_wd(&x.arg, "Cosh", &p.child_obj_well_defined, &p.requirement_fact_verified, position)?,
+                    (Obj::HyperbolicOperator(HyperbolicOperator::Tanh(x)), ObjWellDefinedProofByDef::HyperbolicOperator(HyperbolicOperatorObjWellDefinedProofByDef::Tanh(p))) => self.compile_hyperbolic_wd(&x.arg, "Tanh", &p.child_obj_well_defined, &p.requirement_fact_verified, position)?,
+                    (Obj::HyperbolicOperator(HyperbolicOperator::Coth(x)), ObjWellDefinedProofByDef::HyperbolicOperator(HyperbolicOperatorObjWellDefinedProofByDef::Coth(p))) => self.compile_hyperbolic_wd(&x.arg, "Coth", &p.child_obj_well_defined, &p.requirement_fact_verified, position)?,
+                    (Obj::HyperbolicOperator(HyperbolicOperator::Sech(x)), ObjWellDefinedProofByDef::HyperbolicOperator(HyperbolicOperatorObjWellDefinedProofByDef::Sech(p))) => self.compile_hyperbolic_wd(&x.arg, "Sech", &p.child_obj_well_defined, &p.requirement_fact_verified, position)?,
+                    (Obj::HyperbolicOperator(HyperbolicOperator::Csch(x)), ObjWellDefinedProofByDef::HyperbolicOperator(HyperbolicOperatorObjWellDefinedProofByDef::Csch(p))) => self.compile_hyperbolic_wd(&x.arg, "Csch", &p.child_obj_well_defined, &p.requirement_fact_verified, position)?,
                     (Obj::TrigOperator(TrigOperator::Sin(x)), ObjWellDefinedProofByDef::TrigOperator(TrigOperatorObjWellDefinedProofByDef::Sin(p))) => self.compile_trig_wd(&x.arg, "Sin", &p.child_obj_well_defined, &p.requirement_fact_verified, position)?,
                     (Obj::TrigOperator(TrigOperator::Cos(x)), ObjWellDefinedProofByDef::TrigOperator(TrigOperatorObjWellDefinedProofByDef::Cos(p))) => self.compile_trig_wd(&x.arg, "Cos", &p.child_obj_well_defined, &p.requirement_fact_verified, position)?,
                     (Obj::TrigOperator(TrigOperator::Tan(x)), ObjWellDefinedProofByDef::TrigOperator(TrigOperatorObjWellDefinedProofByDef::Tan(p))) => self.compile_trig_wd(&x.arg, "Tan", &p.child_obj_well_defined, &p.requirement_fact_verified, position)?,
@@ -490,15 +501,24 @@ impl LitexToLeanCompiler {
                     AtomicFact::NotNormalAtomicFact(f) => Some(&f.predicate),
                     _ => None,
                 };
-                if certificate.is_some_and(|name| {
-                    crate::builtin_theorem::builtin_certificate_arity(name.local_name()).is_some()
-                }) {
+                let supported_certificate = certificate.is_some_and(|name| {
+                    crate::compile_to_lean::compile_real_extrema::certificate_name(name).is_some()
+                        && args.len() == 2
+                });
+                if !supported_certificate
+                    && certificate.is_some_and(|name| {
+                        crate::builtin_theorem::builtin_certificate_arity(name.local_name())
+                            .is_some()
+                    })
+                {
                     return Err(LeanCompileError::unsupported("Prop/RealBoundCertificate"));
                 }
-                if matches!(
-                    fact,
-                    AtomicFact::NormalAtomicFact(_) | AtomicFact::NotNormalAtomicFact(_)
-                ) {
+                if !supported_certificate
+                    && matches!(
+                        fact,
+                        AtomicFact::NormalAtomicFact(_) | AtomicFact::NotNormalAtomicFact(_)
+                    )
+                {
                     return Err(LeanCompileError::new(
                         "Prop/SignatureFamily",
                         "A concrete source predicate cannot use a builtin predicate signature.",
@@ -518,15 +538,45 @@ impl LitexToLeanCompiler {
                     "WD/MultivariableAnalysisPredicate",
                 ))
             }
-            PredicateDomainProof::SequenceAnalysis(_)
-            | PredicateDomainProof::FunctionAnalysis(_) => {
+            PredicateDomainProof::SequenceAnalysis(p) => {
+                bindings.push(self.compile_sequence_analysis_domain(
+                    fact,
+                    &p.sequence_source,
+                    &SourcePosition {
+                        before: args.len(),
+                        ..*position
+                    },
+                )?);
+            }
+            PredicateDomainProof::FunctionAnalysis(_) => {
                 return Err(LeanCompileError::unsupported("WD/RealAnalysisPredicate"))
             }
             PredicateDomainProof::FunctionLimit(_) => {
                 return Err(LeanCompileError::unsupported("WD/FunctionLimitPredicate"))
             }
-            PredicateDomainProof::SequenceLimit(_) => {
-                return Err(LeanCompileError::unsupported("WD/SequenceLimitPredicate"))
+            PredicateDomainProof::SequenceLimit(p) => {
+                let (_, value, _) =
+                    crate::compile_to_lean::compile_sequence_epsilon::limit_parts(fact)
+                        .ok_or_else(|| {
+                            LeanCompileError::unsupported("SequenceLimit/DomainSubject")
+                        })?;
+                if p.value_real.element.ir() != value.ir() || p.value_real.set != StandardSet::R {
+                    return Err(LeanCompileError::unsupported("SequenceLimit/RealValue"));
+                }
+                let formed = SourcePosition {
+                    before: args.len(),
+                    ..*position
+                };
+                bindings.push(self.compile_sequence_analysis_domain(
+                    fact,
+                    &p.sequence_source,
+                    &formed,
+                )?);
+                let real = self.compile_structural(&p.value_real, &formed)?;
+                bindings.push(format!(
+                    "have _sequence_limit_real : Litex.In {} (Litex.R (M := M)) := {real}",
+                    self.compile_object_reference(value, &formed)?
+                ));
             }
             PredicateDomainProof::ByKnownZeroRemainder(p) => {
                 self.compile_known_dvd_zero(fact, p, position)?;
@@ -591,6 +641,13 @@ impl LitexToLeanCompiler {
                         return Err(LeanCompileError::unsupported("WD/NumberPredicateDomain"));
                     }
                 }
+                self.validate_real_bound_domain(
+                    fact,
+                    &requirements
+                        .iter()
+                        .map(|r| &r.requirement)
+                        .collect::<Vec<_>>(),
+                )?;
                 self.validate_mapping_domain(
                     fact,
                     &requirements

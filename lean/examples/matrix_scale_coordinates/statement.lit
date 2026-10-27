@@ -1,0 +1,6 @@
+# Scalar multiplication multiplies every matrix entry by the scalar.
+forall m, n N, z C, A matrix(C,m,n), row closed_range(1,m), col closed_range(1,n):
+    matrix_scale(z,A,m,n)(row,col) = z*A(row,col)
+
+forall m, n N, z R, A matrix(R,m,n), row closed_range(1,m), col closed_range(1,n):
+    matrix_scale(z,A,m,n)(row,col) $in R

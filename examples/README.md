@@ -3,6 +3,10 @@
 Mathematical examples and the phase-oriented acceptance tree for the current
 Litex pipeline (`src/`).
 
+[Proof as a search](proof_search/README.md) pairs an offline interactive diagram
+with editable journal-style figures: scoped mathematical context, staged
+verification, and the rule evidence behind one strictly checked fact.
+
 [Collected IMO proofs](imo/README.md) brings together inequalities, geometry,
 functional equations and the existing miniF2F IMO proof variants.
 
@@ -18,6 +22,7 @@ functional equations and the existing miniF2F IMO proof variants.
 examples/
   imo/                 collected IMO problems, solutions and verification status
   proof_nodes/          verify / searched_proof tracers
+  proof_search/         interactive proof-search explanation and static figures
   stmt_nodes/           exec_stmt arms
   wd/  wd_negative/     well-definedness positives / must-fail
   equal_negative/       equality must-fail probes
@@ -68,6 +73,28 @@ Ordered real series:
   candidate/convergence properties, guarded selected values, linearity, tails,
   finite support and finite-prefix corrections. The geometric sum is proved
   before it is selected; eight independent controls check nearby invalid uses.
+
+Ordered finite real derivatives:
+
+- [Ordered vector-coordinate partials](real_analysis/multivariable/higher_order/README.md):
+  zero order, explicit third-order polynomial profiles, equivalent complete
+  function paths, actual restricted domains and native first/second bridges.
+- [Unary real higher derivatives](real_analysis/higher_derivatives/README.md):
+  a separate real-input selector, zero/first/third orders and candidate-first
+  selection. Both suites have installed-layout refusal and Session liveness controls.
+
+- [Higher derivative source laws](real_analysis/higher_derivative_laws/README.md):
+  candidate-first finite-order linearity for independent unary profiles and
+  ordered vector-coordinate paths, with installed refusal/liveness controls.
+- [Finite regularity and smoothness](real_analysis/regularity/README.md):
+  actual-open-domain C^k, unary/vector constant smoothness and a C^2 mixed-partial
+  exchange example, preserving explicit candidates before numerical selection.
+
+- [Regularity source laws](real_analysis/regularity_laws/README.md): explicit
+  C^k and smoothness closure through imported definitions and named proofs.
+- [Finite unary function sums](real_analysis/function_sums/README.md) and
+  [one-vector function sums](real_analysis/multivariable/function_sums/README.md):
+  exact domains, used-prefix derivative candidates, empty sums and continuity.
 
 Real three-dimensional cross products:
 
@@ -126,3 +153,6 @@ Standalone regression examples:
 
 - [Finite maps and counting](combinatorics/finite_maps/README.md): pigeonhole witnesses, equal-size bijection criteria, empty sets, independent contracts and installed std imports.
 - [Finite-set inclusion-exclusion](combinatorics/finite_sets/README.md): overlapping unions, symmetric differences, products, powersets, empty boundaries and explicit imported finiteness evidence.
+- [Natural binomial coefficients](combinatorics/binomial/README.md): Pascal recursion, symmetry, column formulas, positivity, row order and full natural-domain boundaries.
+
+- [Finite event probability](probability/finite_events/README.md): generic event, conditional/Bayes and independence contracts, actual uniform event values and guarded boundaries. Bundled distribution constructors remain unfinished.

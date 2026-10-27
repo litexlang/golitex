@@ -1,14 +1,13 @@
 use crate::compile_to_lean::source_position::{SourceOwner, SourcePosition};
 use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
 use crate::prelude::*;
-use crate::store_fact_and_infer::{
-    InferAtomicFactResult, InferInFactResult, InferResult, StoreInferredFactResult,
-};
+use crate::store_fact_and_infer::{InferAtomicFactResult, InferInFactResult, InferResult};
 
 impl LitexToLeanCompiler {
     fn validate_sequence_inference(
         &self,
         source: &InFact,
+        carrier: &Obj,
         store: &StoreFactResult,
     ) -> Result<(), LeanCompileError> {
         let StoreFactResult::AtomicFact(stored) = store else {
@@ -27,9 +26,12 @@ impl LitexToLeanCompiler {
                 "FiniteSeq/InferenceSignature",
             ));
         };
-        match &source.set {
+        match carrier {
             Obj::SetFormer(SetFormer::FiniteSeqSet(sequence)) => {
                 Self::validate_finite_seq_signature(sequence, signature)?
+            }
+            Obj::SetFormer(SetFormer::MatrixSet(matrix)) => {
+                Self::validate_matrix_signature(matrix, signature)?
             }
             Obj::SetFormer(SetFormer::SeqSet(sequence)) => {
                 Self::validate_seq_signature(sequence, signature)?
@@ -42,7 +44,7 @@ impl LitexToLeanCompiler {
 
     pub(in crate::compile_to_lean) fn compile_sequence_inference(
         &self,
-        derived: &StoreInferredFactResult,
+        rule: &InferInFactResult,
         seed: &Fact,
         compiled: &(String, String),
         position: &SourcePosition<'_>,
@@ -50,17 +52,47 @@ impl LitexToLeanCompiler {
         let Fact::AtomicFact(AtomicFact::InFact(source)) = seed else {
             return Err(LeanCompileError::unsupported("FiniteSeq/InferenceSource"));
         };
+        let canonical;
+        let (derived, source_carrier, carrier_equal) = match rule {
+            InferInFactResult::FiniteSeqExpand(p)
+                if matches!(source.set, Obj::SetFormer(SetFormer::FiniteSeqSet(_))) =>
+            {
+                (&p.derived, &source.set, None)
+            }
+            InferInFactResult::SeqExpand(p)
+                if matches!(source.set, Obj::SetFormer(SetFormer::SeqSet(_))) =>
+            {
+                (&p.derived, &source.set, None)
+            }
+            InferInFactResult::MatrixExpand(p) if p.source_fact_id == source.fact_id => {
+                canonical = Obj::SetFormer(SetFormer::MatrixSet(p.matrix_space.clone()));
+                (&p.derived, &canonical, Some(&p.carrier_equal))
+            }
+            _ => {
+                return Err(LeanCompileError::unsupported(
+                    "FunctionSpace/InferenceSource",
+                ))
+            }
+        };
         let store = &derived.store;
-        self.validate_sequence_inference(source, store)?;
+        self.validate_sequence_inference(source, source_carrier, store)?;
         let fact = self.resolve_fact(store.primary_fact_id(), position)?;
         self.validate_store(store, &fact)?;
-        let carrier = self.compile_object_reference(&source.set, position)?;
+        let carrier = self.compile_object_reference(source_carrier, position)?;
+        let original_carrier = self.compile_object_reference(&source.set, position)?;
+        let source_same = carrier_equal
+            .map(|path| self.compile_equality_path(&source.set, source_carrier, path, position))
+            .transpose()?;
         let receiver = self.compile_object_reference(&source.element, position)?;
         let name = format!("_object_h{}", store.primary_fact_id().value());
-        let (signature, equality) = match &source.set {
+        let (signature, equality) = match source_carrier {
             Obj::SetFormer(SetFormer::FiniteSeqSet(_)) => (
                 format!("(Litex.finiteSeqSignature {carrier})"),
                 "finiteSeq_eq_fnSet",
+            ),
+            Obj::SetFormer(SetFormer::MatrixSet(_)) => (
+                format!("(Litex.matrixSignature {carrier})"),
+                "matrixSet_eq_fnSet",
             ),
             Obj::SetFormer(SetFormer::SeqSet(_)) => (
                 format!("(Litex.seqSignature {carrier}.val.carrier)"),
@@ -82,7 +114,13 @@ impl LitexToLeanCompiler {
         } else {
             self.context_application(&name, position)
         };
-        let term = format!("(Litex.inOfSame {receiver} {receiver} {carrier} {reference} (Litex.sameRefl {receiver}) (Litex.{equality} {carrier}) {})", compiled.1);
+        let carrier_same = format!("(Litex.{equality} {carrier})");
+        let carrier_same = if let Some(same) = source_same {
+            format!("({same}.trans {carrier_same})")
+        } else {
+            carrier_same
+        };
+        let term = format!("(Litex.inOfSame {receiver} {receiver} {original_carrier} {reference} (Litex.sameRefl {receiver}) {carrier_same} {})", compiled.1);
         let formed = SourcePosition::new(
             Some(position),
             SourceOwner::InferredStore(store),
@@ -135,13 +173,19 @@ impl LitexToLeanCompiler {
                 for rule in rules {
                     let captured = match rule {
                         InferInFactResult::FiniteSeqExpand(proof) => &proof.derived,
+                        InferInFactResult::MatrixExpand(proof) => &proof.derived,
                         InferInFactResult::SeqExpand(proof) => &proof.derived,
                         _ => continue,
                     };
                     if captured.primary_fact_id() != store.primary_fact_id() {
                         continue;
                     }
-                    self.validate_sequence_inference(source, store)?;
+                    let canonical = if let InferInFactResult::MatrixExpand(proof) = rule {
+                        Obj::SetFormer(SetFormer::MatrixSet(proof.matrix_space.clone()))
+                    } else {
+                        source.set.clone()
+                    };
+                    self.validate_sequence_inference(source, &canonical, store)?;
                     self.validate_store(&captured.store, &Fact::AtomicFact(stored.fact.clone()))?;
                     let name = format!("_object_h{}", store.primary_fact_id().value());
                     return Ok(Some(if cursor.is_local() {

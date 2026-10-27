@@ -1,0 +1,3 @@
+# Each output coordinate is the finite sum of the row-vector products.
+forall m,n N, A matrix(C,m,n), v cart_n(C,n), row closed_range(1,m):
+    matrix_apply(A,v,m,n)(row) = finite_set_sum(closed_range(1,n),fn(t closed_range(1,n)) C {A(row,t)*v(t)})

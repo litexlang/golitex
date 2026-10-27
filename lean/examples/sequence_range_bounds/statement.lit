@@ -1,0 +1,45 @@
+# A real sequence is bounded exactly when its range is bounded; retain both witnesses.
+thm sequence_range_bounded_above:
+    ? forall a seq(R):
+        $is_seq_bounded_above(a)
+        =>:
+            $is_real_bounded_above(fn_range(a))
+
+thm bounded_range_sequence_above:
+    ? forall a seq(R):
+        $is_real_bounded_above(fn_range(a))
+        =>:
+            $is_seq_bounded_above(a)
+
+thm sequence_range_bounded_below:
+    ? forall a seq(R):
+        $is_seq_bounded_below(a)
+        =>:
+            $is_real_bounded_below(fn_range(a))
+
+thm bounded_range_sequence_below:
+    ? forall a seq(R):
+        $is_real_bounded_below(fn_range(a))
+        =>:
+            $is_seq_bounded_below(a)
+
+thm sequence_range_bounded:
+    ? forall a seq(R):
+        $is_seq_bounded(a)
+        =>:
+            $is_real_bounded(fn_range(a))
+
+thm bounded_range_sequence:
+    ? forall a seq(R):
+        $is_real_bounded(fn_range(a))
+        =>:
+            $is_seq_bounded(a)
+
+forall a seq(R):
+    $is_seq_bounded(a)
+    =>:
+        $is_seq_bounded_above(a)
+        $is_seq_bounded_below(a)
+        exist u R st {$is_real_upper_bound(fn_range(a),u)}
+        exist l R st {$is_real_lower_bound(fn_range(a),l)}
+

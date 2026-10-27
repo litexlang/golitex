@@ -33,15 +33,11 @@ noncomputable def _object_i1 := (Litex.formulaFnOn (let _litex_output := (Litex.
         _setTail_0);
       (Litex.setMinus _wd_1_0 _wd_1_1))
       let _atomic_wd_1_1 := (Litex.powerSet (Litex.R (M := M)))
-      exact ((Litex.inPowerSet_iff _atomic_wd_1_0 (Litex.R (M := M))).mpr (by
-        let _atomic_wd_2_0 := (let _wd_1_0 := (Litex.R (M := M));
-        let _wd_1_1 := (let _setElement_0 := _value_i2;
-          let _setTail_1 := Litex.emptySet (M := M);
-          let _setFresh_0 : ¬ Litex.In _setElement_0 _setTail_1 := (Litex.notInEmpty _setElement_0);
-          let _setTail_0 := Litex.insert _setElement_0 _setTail_1 _setFresh_0;
-          _setTail_0);
-        (Litex.setMinus _wd_1_0 _wd_1_1))
-        exact (let _set := _atomic_wd_2_0; Litex.setMinusSubsetLeft _set.val.left _set.val.right)))))
+      exact ((Litex.inPowerSet_iff _atomic_wd_1_0 (Litex.R (M := M))).mpr (Litex.setMinusSubsetOfLeft (Litex.R (M := M)) (let _setElement_0 := _value_i2;
+        let _setTail_1 := Litex.emptySet (M := M);
+        let _setFresh_0 : ¬ Litex.In _setElement_0 _setTail_1 := (Litex.notInEmpty _setElement_0);
+        let _setTail_0 := Litex.insert _setElement_0 _setTail_1 _setFresh_0;
+        _setTail_0) (Litex.R (M := M)) (Litex.subsetOfSame (Litex.R (M := M)) (Litex.R (M := M)) (Litex.R (M := M)) (Litex.R (M := M)) rfl (show @Eq M.Value _ _ from Eq.refl _) (Litex.subsetRefl (Litex.R (M := M))))))))
   intro _litex_input _litex_domain
   obtain ⟨_litex_members, _litex_guard⟩ := (Litex.FunctionSignature.withGuard_domain (Litex.denote (Litex.R (M := M))) (Litex.denote (Litex.powerSet (Litex.R (M := M)))) (Litex.isSet (Litex.R (M := M))) (Litex.isSet (Litex.powerSet (Litex.R (M := M)))) (fun (_litex_input : M.Value) => (fun (_raw_i2 : M.Value) => True) _litex_input) _litex_input).mp _litex_domain
   exact _litex_checked_return _litex_input _litex_members _litex_guard))

@@ -1,0 +1,3 @@
+# An outer-product entry is the product of the two vector coordinates.
+forall m, n N, a cart_n(C,m), b cart_n(C,n), row closed_range(1,m), col closed_range(1,n):
+    outer_product(a,b,m,n)(row,col) = a(row)*b(col)

@@ -1,0 +1,4 @@
+# Literal tuples and tuple aliases are finite functions with their original carrier.
+(2,3) $in cart_n(R,2)
+let tuple_carrier_example = (4,5)
+tuple_carrier_example $in fn(k closed_range(1,2)) R

@@ -1,0 +1,3 @@
+# Natural matrix powers also preserve the zero-dimensional matrix space.
+forall p N, A matrix(C,0,0):
+    matrix_power(A,0,p) $in matrix(C,0,0)

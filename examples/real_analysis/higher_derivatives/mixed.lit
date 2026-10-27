@@ -1,0 +1,120 @@
+# Three derivatives of x^3+sin(x): ordinary source profiles and reused first-order laws.
+# The registered main export supplies the already proved cubic derivative steps.
+
+release obj def main::cubic
+release obj def main::cubic_first
+release obj def main::cubic_second
+
+# Case coverage is proved locally; earlier files do not publish unnamed facts.
+by for:
+    ? forall j closed_range(0,3):
+        j=0 or j=1 or j=2 or j=3
+    j=0 or j=1 or j=2 or j=3
+
+by for:
+    ? forall j closed_range(1,3):
+        j=1 or j=2 or j=3
+    j=1 or j=2 or j=3
+
+have fn trig_sine(x R) R=sin(x)
+
+have fn trig_cosine(x R) R=cos(x)
+
+have fn mixed_zero(x R) R=main::cubic(x)+trig_sine(x)
+
+have fn mixed_first(x R) R=main::cubic_first(x)+trig_cosine(x)
+
+have fn mixed_second(x R) R=main::cubic_second(x)-trig_sine(x)
+
+have fn mixed_third(x R) R=6-trig_cosine(x)
+
+claim:
+    ? forall x R:
+        $has_derivative_at(mixed_zero,x,mixed_first(x))
+    release thm fn_derivative_at_real_interior(x)
+    release thm main::cubic_first_derivative(x)
+    main::cubic_first(x)=3*x^2
+    $has_derivative_at(main::cubic,x,main::cubic_first(x))
+    release thm fn_derivative_at_sin(trig_sine,x)
+    trig_cosine(x)=cos(x)
+    $has_derivative_at(trig_sine,x,trig_cosine(x))
+    release thm fn_derivative_at_add(main::cubic,trig_sine,mixed_zero,x,main::cubic_first(x),trig_cosine(x))
+    mixed_first(x)=main::cubic_first(x)+trig_cosine(x)
+    $has_derivative_at(mixed_zero,x,mixed_first(x))
+
+claim:
+    ? forall x R:
+        $has_derivative_at(mixed_first,x,mixed_second(x))
+    release thm fn_derivative_at_real_interior(x)
+    release thm main::cubic_second_derivative(x)
+    main::cubic_second(x)=6*x
+    $has_derivative_at(main::cubic_first,x,main::cubic_second(x))
+    release thm fn_derivative_at_cos(trig_cosine,x)
+    trig_sine(x)=sin(x)
+    -trig_sine(x)=-sin(x)
+    $has_derivative_at(trig_cosine,x,-trig_sine(x))
+    release thm fn_derivative_at_add(main::cubic_first,trig_cosine,mixed_first,x,main::cubic_second(x),-trig_sine(x))
+    main::cubic_second(x)+(-trig_sine(x))=main::cubic_second(x)-trig_sine(x)=mixed_second(x)
+    $has_derivative_at(mixed_first,x,mixed_second(x))
+
+claim:
+    ? forall x R:
+        $has_derivative_at(mixed_second,x,mixed_third(x))
+    release thm fn_derivative_at_real_interior(x)
+    release thm main::cubic_third_derivative(x)
+    $has_derivative_at(main::cubic_second,x,6)
+    release thm fn_derivative_at_sin(trig_sine,x)
+    trig_cosine(x)=cos(x)
+    $has_derivative_at(trig_sine,x,trig_cosine(x))
+    release thm fn_derivative_at_subtract(main::cubic_second,trig_sine,mixed_second,x,6,trig_cosine(x))
+    mixed_third(x)=6-trig_cosine(x)
+    $has_derivative_at(mixed_second,x,mixed_third(x))
+
+have fn mixed_profiles(j closed_range(0,3)) fn(x R) R by cases:
+    case j=0: mixed_zero
+    case j=1: mixed_first
+    case j=2: mixed_second
+    case j=3: mixed_third
+
+claim:
+    ? forall j closed_range(1,3),x R:
+        j $in closed_range(0,3)
+        j-1 $in closed_range(0,3)
+        =>:
+            $has_derivative_at(mixed_profiles(j-1),x,mixed_profiles(j)(x))
+    j=1 or j=2 or j=3
+    by cases:
+        ? $has_derivative_at(mixed_profiles(j-1),x,mixed_profiles(j)(x))
+        case j=1:
+            j-1=0
+            mixed_profiles(j-1)=mixed_profiles(0)=mixed_zero
+            mixed_profiles(j)=mixed_profiles(1)=mixed_first
+            $has_derivative_at(mixed_zero,x,mixed_first(x))
+        case j=2:
+            j-1=1
+            mixed_profiles(j-1)=mixed_profiles(1)=mixed_first
+            mixed_profiles(j)=mixed_profiles(2)=mixed_second
+            $has_derivative_at(mixed_first,x,mixed_second(x))
+        case j=3:
+            j-1=2
+            mixed_profiles(j-1)=mixed_profiles(2)=mixed_second
+            mixed_profiles(j)=mixed_profiles(3)=mixed_third
+            $has_derivative_at(mixed_second,x,mixed_third(x))
+
+release thm Calc::unary_higher_order::nth_derivative_from_global_profiles(3,mixed_profiles,0)
+
+mixed_profiles(0)=mixed_zero
+
+mixed_profiles(3)=mixed_third
+
+trig_cosine(0)=cos(0)=1
+
+mixed_profiles(3)(0)=mixed_third(0)=6-trig_cosine(0)=5
+
+$Calc::unary_higher_order::has_nth_derivative_at(R,3,mixed_zero,0,5)
+
+release thm Calc::unary_higher_order::nth_derivative_candidate_exists(R,3,mixed_zero,0,5)
+
+release thm Calc::unary_higher_order::nth_derivative_value(R,3,mixed_zero,0,5)
+
+\Calc::unary_higher_order::nth_derivative<R,3>(mixed_zero,0)=5

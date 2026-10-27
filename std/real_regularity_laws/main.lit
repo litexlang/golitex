@@ -1,0 +1,211 @@
+# Source regularity closure under real linear combinations.
+
+thm unary_c_k_linear_combination:
+    ? forall D power_set(R),k N,f,g,h fn(x D) R,a,b R:
+        $Reg::main::is_unary_c_k_on_open(D,k,f)
+        $Reg::main::is_unary_c_k_on_open(D,k,g)
+        forall x D:
+            h(x)=a*f(x)+b*g(x)
+        =>:
+            $Reg::main::is_unary_c_k_on_open(D,k,h)
+    D $subset R
+    $is_set(D)
+    D $in power_set(D)
+    have fn scaled_f(x D) R=a*f(x)
+    have fn scaled_g(x D) R=b*g(x)
+    claim:
+        ? forall x D:
+            h(x)=scaled_f(x)+scaled_g(x)
+        scaled_f(x)=a*f(x)
+        scaled_g(x)=b*g(x)
+        h(x)=a*f(x)+b*g(x)=scaled_f(x)+scaled_g(x)
+    claim:
+        ? forall p R:
+            p $in D
+            =>:
+                $is_continuous_at(h,p)
+        $is_continuous_at(f,p)
+        $is_continuous_at(g,p)
+        release thm fn_continuous_at_scale(f,scaled_f,p,a)
+        release thm fn_continuous_at_scale(g,scaled_g,p,b)
+        release thm fn_continuous_at_add(scaled_f,scaled_g,h,p)
+    claim:
+        ? forall m closed_range(1,k):
+            $Calc::unary_higher_order::is_n_times_differentiable_on(D,m,h,D)
+        $Calc::unary_higher_order::is_n_times_differentiable_on(D,m,f,D)
+        $Calc::unary_higher_order::is_n_times_differentiable_on(D,m,g,D)
+        claim:
+            ? forall p D:
+                $Calc::unary_higher_order::is_n_times_differentiable_at(D,m,h,p)
+            release thm Calc::unary_higher_order::nth_derivative_function_selected(D,m,f,D,p)
+            release thm Calc::unary_higher_order::nth_derivative_function_selected(D,m,g,D,p)
+            release thm Higher::main::nth_derivative_linear_combination(D,m,f,g,h,p,a,b,\Calc::unary_higher_order::nth_derivative_function<D,D,m>(f)(p),\Calc::unary_higher_order::nth_derivative_function<D,D,m>(g)(p))
+            release thm Calc::unary_higher_order::nth_derivative_candidate_exists(D,m,h,p,a*\Calc::unary_higher_order::nth_derivative_function<D,D,m>(f)(p)+b*\Calc::unary_higher_order::nth_derivative_function<D,D,m>(g)(p))
+        by def $Calc::unary_higher_order::is_n_times_differentiable_on(D,m,h,D)
+    claim:
+        ? forall m closed_range(1,k),p R:
+            p $in D
+            $Calc::unary_higher_order::is_n_times_differentiable_on(D,m,h,D)
+            =>:
+                $is_continuous_at(\Calc::unary_higher_order::nth_derivative_function<D,D,m>(h),p)
+        $Calc::unary_higher_order::is_n_times_differentiable_on(D,m,f,D)
+        $Calc::unary_higher_order::is_n_times_differentiable_on(D,m,g,D)
+        claim:
+            ? forall x D:
+                \Calc::unary_higher_order::nth_derivative_function<D,D,m>(f)(x) $in C
+                \Calc::unary_higher_order::nth_derivative_function<D,D,m>(g)(x) $in C
+            \Calc::unary_higher_order::nth_derivative_function<D,D,m>(f)(x) $in C
+            \Calc::unary_higher_order::nth_derivative_function<D,D,m>(g)(x) $in C
+        have fn left(x D) R=a*\Calc::unary_higher_order::nth_derivative_function<D,D,m>(f)(x)
+        have fn right(x D) R=b*\Calc::unary_higher_order::nth_derivative_function<D,D,m>(g)(x)
+        have fn total(x D) R=left(x)+right(x)
+        by fn_extension:
+            ? \Calc::unary_higher_order::nth_derivative_function<D,D,m>(h)=total
+            claim:
+                ? forall x D:
+                    \Calc::unary_higher_order::nth_derivative_function<D,D,m>(h)(x)=total(x)
+                release thm Calc::unary_higher_order::nth_derivative_function_selected(D,m,f,D,x)
+                release thm Calc::unary_higher_order::nth_derivative_function_selected(D,m,g,D,x)
+                release thm Higher::main::nth_derivative_linear_combination(D,m,f,g,h,x,a,b,\Calc::unary_higher_order::nth_derivative_function<D,D,m>(f)(x),\Calc::unary_higher_order::nth_derivative_function<D,D,m>(g)(x))
+                release thm Calc::unary_higher_order::nth_derivative_function_value(D,m,h,D,x,a*\Calc::unary_higher_order::nth_derivative_function<D,D,m>(f)(x)+b*\Calc::unary_higher_order::nth_derivative_function<D,D,m>(g)(x))
+                left(x)=a*\Calc::unary_higher_order::nth_derivative_function<D,D,m>(f)(x)
+                right(x)=b*\Calc::unary_higher_order::nth_derivative_function<D,D,m>(g)(x)
+                total(x)=left(x)+right(x)=a*\Calc::unary_higher_order::nth_derivative_function<D,D,m>(f)(x)+b*\Calc::unary_higher_order::nth_derivative_function<D,D,m>(g)(x)
+        $is_continuous_at(\Calc::unary_higher_order::nth_derivative_function<D,D,m>(f),p)
+        $is_continuous_at(\Calc::unary_higher_order::nth_derivative_function<D,D,m>(g),p)
+        release thm fn_continuous_at_scale(\Calc::unary_higher_order::nth_derivative_function<D,D,m>(f),left,p,a)
+        release thm fn_continuous_at_scale(\Calc::unary_higher_order::nth_derivative_function<D,D,m>(g),right,p,b)
+        release thm fn_continuous_at_add(left,right,total,p)
+        $is_continuous_at(\Calc::unary_higher_order::nth_derivative_function<D,D,m>(h),p)
+    by def $Reg::main::is_unary_c_k_on_open(D,k,h)
+
+thm scalar_c_k_linear_combination:
+    ? forall n N+,D power_set(cart_n(R,n)),k N,f,g,h fn(x D) R,a,b R:
+        $Reg::main::is_scalar_c_k_on_open(n,D,k,f)
+        $Reg::main::is_scalar_c_k_on_open(n,D,k,g)
+        forall x D:
+            h(x)=a*f(x)+b*g(x)
+        =>:
+            $Reg::main::is_scalar_c_k_on_open(n,D,k,h)
+    D $subset cart_n(R,n)
+    $is_set(D)
+    D $in power_set(D)
+    have fn coefficient_a(x D) R=a
+    have fn coefficient_b(x D) R=b
+    have fn scaled_f(x D) R=a*f(x)
+    have fn scaled_g(x D) R=b*g(x)
+    claim:
+        ? forall x D:
+            h(x)=scaled_f(x)+scaled_g(x)
+            scaled_f(x)=coefficient_a(x)*f(x)
+            scaled_g(x)=coefficient_b(x)*g(x)
+        scaled_f(x)=a*f(x)
+        scaled_g(x)=b*g(x)
+        h(x)=a*f(x)+b*g(x)=scaled_f(x)+scaled_g(x)
+    claim:
+        ? forall p cart_n(R,n):
+            p $in D
+            =>:
+                $is_multi_continuous_at(h,p,n)
+        $is_multi_continuous_at(f,p,n)
+        $is_multi_continuous_at(g,p,n)
+        $Calc::main::is_real_euclidean_interior(n,D,p)
+        release thm Reg::main::real_euclidean_interior_native_neighborhood(n,D,p)
+        $is_multi_continuous_at(coefficient_a,p,n)
+        $is_multi_continuous_at(coefficient_b,p,n)
+        release thm multi_continuous_at_multiply(coefficient_a,f,scaled_f,p,n)
+        release thm multi_continuous_at_multiply(coefficient_b,g,scaled_g,p,n)
+        release thm multi_continuous_at_add(scaled_f,scaled_g,h,p,n)
+    claim:
+        ? forall m closed_range(1,k),indices finite_seq(closed_range(1,n),m):
+            $Calc::higher_order::is_ordered_partially_differentiable_on(n,D,m,h,D,indices)
+        $Calc::higher_order::is_ordered_partially_differentiable_on(n,D,m,f,D,indices)
+        $Calc::higher_order::is_ordered_partially_differentiable_on(n,D,m,g,D,indices)
+        claim:
+            ? forall p D:
+                $Calc::higher_order::is_ordered_partially_differentiable_at(n,D,m,h,p,indices)
+            release thm Calc::higher_order::ordered_partial_function_selected(n,D,m,f,D,indices,p)
+            release thm Calc::higher_order::ordered_partial_function_selected(n,D,m,g,D,indices,p)
+            release thm Higher::main::ordered_partial_linear_combination(n,D,m,f,g,h,p,indices,a,b,\Calc::higher_order::ordered_partial_function<n,D,D,m>(f,indices)(p),\Calc::higher_order::ordered_partial_function<n,D,D,m>(g,indices)(p))
+            release thm Calc::higher_order::ordered_partial_candidate_exists(n,D,m,h,p,indices,a*\Calc::higher_order::ordered_partial_function<n,D,D,m>(f,indices)(p)+b*\Calc::higher_order::ordered_partial_function<n,D,D,m>(g,indices)(p))
+        by def $Calc::higher_order::is_ordered_partially_differentiable_on(n,D,m,h,D,indices)
+    claim:
+        ? forall m closed_range(1,k),indices finite_seq(closed_range(1,n),m),p cart_n(R,n):
+            p $in D
+            $Calc::higher_order::is_ordered_partially_differentiable_on(n,D,m,h,D,indices)
+            =>:
+                $is_multi_continuous_at(\Calc::higher_order::ordered_partial_function<n,D,D,m>(h,indices),p,n)
+        $Calc::higher_order::is_ordered_partially_differentiable_on(n,D,m,f,D,indices)
+        $Calc::higher_order::is_ordered_partially_differentiable_on(n,D,m,g,D,indices)
+        claim:
+            ? forall x D:
+                \Calc::higher_order::ordered_partial_function<n,D,D,m>(f,indices)(x) $in C
+                \Calc::higher_order::ordered_partial_function<n,D,D,m>(g,indices)(x) $in C
+            \Calc::higher_order::ordered_partial_function<n,D,D,m>(f,indices)(x) $in C
+            \Calc::higher_order::ordered_partial_function<n,D,D,m>(g,indices)(x) $in C
+        have fn left(x D) R=a*\Calc::higher_order::ordered_partial_function<n,D,D,m>(f,indices)(x)
+        have fn right(x D) R=b*\Calc::higher_order::ordered_partial_function<n,D,D,m>(g,indices)(x)
+        have fn total(x D) R=left(x)+right(x)
+        claim:
+            ? forall x D:
+                left(x)=coefficient_a(x)*\Calc::higher_order::ordered_partial_function<n,D,D,m>(f,indices)(x)
+                right(x)=coefficient_b(x)*\Calc::higher_order::ordered_partial_function<n,D,D,m>(g,indices)(x)
+            coefficient_a(x)=a
+            coefficient_b(x)=b
+            left(x)=a*\Calc::higher_order::ordered_partial_function<n,D,D,m>(f,indices)(x)
+            right(x)=b*\Calc::higher_order::ordered_partial_function<n,D,D,m>(g,indices)(x)
+        by fn_extension:
+            ? \Calc::higher_order::ordered_partial_function<n,D,D,m>(h,indices)=total
+            claim:
+                ? forall x D:
+                    \Calc::higher_order::ordered_partial_function<n,D,D,m>(h,indices)(x)=total(x)
+                release thm Calc::higher_order::ordered_partial_function_selected(n,D,m,f,D,indices,x)
+                release thm Calc::higher_order::ordered_partial_function_selected(n,D,m,g,D,indices,x)
+                release thm Higher::main::ordered_partial_linear_combination(n,D,m,f,g,h,x,indices,a,b,\Calc::higher_order::ordered_partial_function<n,D,D,m>(f,indices)(x),\Calc::higher_order::ordered_partial_function<n,D,D,m>(g,indices)(x))
+                release thm Calc::higher_order::ordered_partial_function_value(n,D,m,h,D,indices,x,a*\Calc::higher_order::ordered_partial_function<n,D,D,m>(f,indices)(x)+b*\Calc::higher_order::ordered_partial_function<n,D,D,m>(g,indices)(x))
+                left(x)=a*\Calc::higher_order::ordered_partial_function<n,D,D,m>(f,indices)(x)
+                right(x)=b*\Calc::higher_order::ordered_partial_function<n,D,D,m>(g,indices)(x)
+                total(x)=left(x)+right(x)=a*\Calc::higher_order::ordered_partial_function<n,D,D,m>(f,indices)(x)+b*\Calc::higher_order::ordered_partial_function<n,D,D,m>(g,indices)(x)
+        $is_multi_continuous_at(\Calc::higher_order::ordered_partial_function<n,D,D,m>(f,indices),p,n)
+        $is_multi_continuous_at(\Calc::higher_order::ordered_partial_function<n,D,D,m>(g,indices),p,n)
+        $Calc::main::is_real_euclidean_interior(n,D,p)
+        release thm Reg::main::real_euclidean_interior_native_neighborhood(n,D,p)
+        $is_multi_continuous_at(coefficient_a,p,n)
+        $is_multi_continuous_at(coefficient_b,p,n)
+        release thm multi_continuous_at_multiply(coefficient_a,\Calc::higher_order::ordered_partial_function<n,D,D,m>(f,indices),left,p,n)
+        release thm multi_continuous_at_multiply(coefficient_b,\Calc::higher_order::ordered_partial_function<n,D,D,m>(g,indices),right,p,n)
+        release thm multi_continuous_at_add(left,right,total,p,n)
+        $is_multi_continuous_at(\Calc::higher_order::ordered_partial_function<n,D,D,m>(h,indices),p,n)
+    by def $Reg::main::is_scalar_c_k_on_open(n,D,k,h)
+
+thm unary_smooth_linear_combination:
+    ? forall D power_set(R),f,g,h fn(x D) R,a,b R:
+        $Reg::main::is_unary_smooth_on_open(D,f)
+        $Reg::main::is_unary_smooth_on_open(D,g)
+        forall x D:
+            h(x)=a*f(x)+b*g(x)
+        =>:
+            $Reg::main::is_unary_smooth_on_open(D,h)
+    claim:
+        ? forall k N:
+            $Reg::main::is_unary_c_k_on_open(D,k,h)
+        $Reg::main::is_unary_c_k_on_open(D,k,f)
+        $Reg::main::is_unary_c_k_on_open(D,k,g)
+        release thm unary_c_k_linear_combination(D,k,f,g,h,a,b)
+    by def $Reg::main::is_unary_smooth_on_open(D,h)
+
+thm scalar_smooth_linear_combination:
+    ? forall n N+,D power_set(cart_n(R,n)),f,g,h fn(x D) R,a,b R:
+        $Reg::main::is_scalar_smooth_on_open(n,D,f)
+        $Reg::main::is_scalar_smooth_on_open(n,D,g)
+        forall x D:
+            h(x)=a*f(x)+b*g(x)
+        =>:
+            $Reg::main::is_scalar_smooth_on_open(n,D,h)
+    claim:
+        ? forall k N:
+            $Reg::main::is_scalar_c_k_on_open(n,D,k,h)
+        $Reg::main::is_scalar_c_k_on_open(n,D,k,f)
+        $Reg::main::is_scalar_c_k_on_open(n,D,k,g)
+        release thm scalar_c_k_linear_combination(n,D,k,f,g,h,a,b)
+    by def $Reg::main::is_scalar_smooth_on_open(n,D,h)

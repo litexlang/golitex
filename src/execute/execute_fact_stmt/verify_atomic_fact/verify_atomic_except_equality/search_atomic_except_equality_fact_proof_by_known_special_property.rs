@@ -1,4 +1,10 @@
 use super::known_fn_standard_return::FnApplicationInStandardSupersetProof;
+use super::known_power_set_closure::{
+    IntersectInPowerSetFromLeftProof, IntersectInPowerSetFromRightProof,
+    ListSetInPowerSetFromMembersProof, SetMinusInPowerSetOfLeftProof, SetMinusInPowerSetProof,
+    UnionInPowerSetProof,
+};
+use super::known_template_standard_return::TemplateApplicationInStandardSupersetProof;
 use super::result::AtomicExceptEqualityFactKnownProof;
 use super::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::proper_subsets_in_membership_proof_order;
 use crate::ast::fact::{AtomicFact, EqualFact, InFact};
@@ -24,6 +30,24 @@ pub enum AtomicExceptEqualityFactSearchProofByKnownSpecialProperty {
 impl AtomicExceptEqualityFactSearchProofByKnownSpecialProperty {
     pub fn cite_property_fact_id(&self) -> Option<FactId> {
         match self {
+            Self::InFact(InFactSearchProofByKnownSpecialProperty::UnionInPowerSet(p)) => {
+                p.left.cite_fact_id()
+            }
+            Self::InFact(InFactSearchProofByKnownSpecialProperty::IntersectInPowerSetFromLeft(
+                p,
+            )) => p.left.cite_fact_id(),
+            Self::InFact(
+                InFactSearchProofByKnownSpecialProperty::IntersectInPowerSetFromRight(p),
+            ) => p.right.cite_fact_id(),
+            Self::InFact(InFactSearchProofByKnownSpecialProperty::SetMinusInPowerSet(p)) => {
+                p.left.cite_fact_id()
+            }
+            Self::InFact(InFactSearchProofByKnownSpecialProperty::SetMinusInPowerSetOfLeft(_)) => {
+                None
+            }
+            Self::InFact(
+                InFactSearchProofByKnownSpecialProperty::ListSetInPowerSetFromMembers(p),
+            ) => p.members.first().and_then(|m| m.cite_fact_id()),
             Self::InFact(
                 InFactSearchProofByKnownSpecialProperty::DeclaredNumericSequenceCarrier(_),
             ) => None,
@@ -67,6 +91,9 @@ impl AtomicExceptEqualityFactSearchProofByKnownSpecialProperty {
                 InFactSearchProofByKnownSpecialProperty::TemplateApplicationInDeclaredCodomain(_),
             ) => None,
             Self::InFact(
+                InFactSearchProofByKnownSpecialProperty::TemplateApplicationInStandardSuperset(_),
+            ) => None,
+            Self::InFact(
                 InFactSearchProofByKnownSpecialProperty::TemplateFunctionInDeclaredFnSet(_),
             ) => None,
             Self::InFact(InFactSearchProofByKnownSpecialProperty::AnonymousFnInFiniteSeq(_)) => {
@@ -105,6 +132,12 @@ impl AtomicExceptEqualityFactSearchProofByKnownSpecialProperty {
 }
 
 pub enum InFactSearchProofByKnownSpecialProperty {
+    UnionInPowerSet(UnionInPowerSetProof),
+    IntersectInPowerSetFromLeft(IntersectInPowerSetFromLeftProof),
+    IntersectInPowerSetFromRight(IntersectInPowerSetFromRightProof),
+    SetMinusInPowerSet(SetMinusInPowerSetProof),
+    SetMinusInPowerSetOfLeft(SetMinusInPowerSetOfLeftProof),
+    ListSetInPowerSetFromMembers(ListSetInPowerSetFromMembersProof),
     DeclaredNumericSequenceCarrier(super::known_real_array_return::DeclaredNumericSequenceCarrierProof),
     RealMatrixApplicationCodomain(super::known_real_array_return::RealMatrixApplicationCodomainProof),
     UniformTupleCoordinateCarrier(super::known_literal_tuple_numeric_coordinate::UniformTupleCoordinateCarrierProof),
@@ -120,6 +153,7 @@ pub enum InFactSearchProofByKnownSpecialProperty {
     AnonymousFnApplicationInCodomain(AnonymousFnApplicationInCodomainProof),
     FieldApplicationInDeclaredCodomain(FieldApplicationInDeclaredCodomainProof),
     TemplateApplicationInDeclaredCodomain(TemplateApplicationInDeclaredCodomainProof),
+    TemplateApplicationInStandardSuperset(TemplateApplicationInStandardSupersetProof),
     TemplateFunctionInDeclaredFnSet(TemplateFunctionInDeclaredFnSetProof),
     AnonymousFnInFiniteSeq(AnonymousFnInFiniteSeqProof),
     FieldInDeclaredSet(FieldInDeclaredSetProof),
@@ -505,6 +539,9 @@ impl Runtime {
         {
             return Some(InFactSearchProofByKnownSpecialProperty::KnownSubsetMembership(proof));
         }
+        if let Some(proof) = self.known_power_set_closure(fact) {
+            return Some(proof);
+        }
         // A stored strict real comparison already owns its endpoint domains.
         // This is a fixed refinement consumer, with no recursive proof search.
         if matches!(fact.set, Obj::StandardSet(StandardSet::RPos)) {
@@ -693,6 +730,13 @@ impl Runtime {
         if let Some(proof) = self.known_fn_application_standard_superset(fact) {
             return Some(
                 InFactSearchProofByKnownSpecialProperty::FnApplicationInStandardSuperset(proof),
+            );
+        }
+        if let Some(proof) = self.known_template_application_standard_superset(fact) {
+            return Some(
+                InFactSearchProofByKnownSpecialProperty::TemplateApplicationInStandardSuperset(
+                    proof,
+                ),
             );
         }
         // Function-value carrier rules precede the application-only dispatch.

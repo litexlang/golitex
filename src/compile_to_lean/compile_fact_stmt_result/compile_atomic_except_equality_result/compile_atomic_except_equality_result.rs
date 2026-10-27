@@ -107,6 +107,8 @@ impl LitexToLeanCompiler {
                         let AtomicFact::IsFiniteSetFact(fact) = &success.fact else { return Err(LeanCompileError::unsupported("FiniteSet/FactSubject")); };
                         match rule {
                             IsFiniteSetFactSearchProofByBuiltinRule::ListSet(_) => self.compile_list_finite(&fact.set, position)?,
+                            IsFiniteSetFactSearchProofByBuiltinRule::ClosedRange(_) if matches!(&fact.set,Obj::SetFormer(SetFormer::ClosedRange(_))) => format!("(Litex.closedRangeFinite {})",self.compile_object_reference(&fact.set,position)?),
+                            IsFiniteSetFactSearchProofByBuiltinRule::Range(_) if matches!(&fact.set,Obj::SetFormer(SetFormer::Range(_))) => format!("(Litex.rangeFinite {})",self.compile_object_reference(&fact.set,position)?),
                             _ => return Err(LeanCompileError::unsupported("FiniteSet/Rule")),
                         }
                     },
@@ -151,8 +153,10 @@ impl LitexToLeanCompiler {
                     rule @ (AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(_) | AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterFact(_) | AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(_) | AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterEqualFact(_) | AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(_)) => self.compile_order_builtin(&success.fact, rule, position)?,
                     AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(rule) => match &success.fact {
                         AtomicFact::InFact(fact) => match rule {
+                            InFactSearchProofByBuiltinRule::IndexUnionMembershipFromIndex(p) => self.compile_index_union_member(fact,p.cite_index_in_index_set_fact_id,&p.element_in_fiber_proof,position)?,
                             InFactSearchProofByBuiltinRule::IntervalMembership(p) => self.compile_real_interval_member(fact,&[&p.in_real_proof,&p.lower_bound_proof,&p.upper_bound_proof],position)?,
                             InFactSearchProofByBuiltinRule::OneSideInfinityIntervalMembership(p) => self.compile_real_interval_member(fact,&[&p.in_real_proof,&p.endpoint_bound_proof],position)?,
+                            InFactSearchProofByBuiltinRule::NativeMatrix(p) => self.compile_matrix_membership(fact, p, position)?,
                             InFactSearchProofByBuiltinRule::NativeConstantMembership(p) => self.compile_native_constant_member(fact, &p.kind, position)?,
                             InFactSearchProofByBuiltinRule::AnonymousFnInDeclaredFnSet(_) => self.compile_literal_function_member(fact, position)?,
                             InFactSearchProofByBuiltinRule::CompositionApplicationInCodomain(p) => self.compile_composition_output(fact,p,position)?,
@@ -172,6 +176,7 @@ impl LitexToLeanCompiler {
                             InFactSearchProofByBuiltinRule::PredecessorFromPositiveNatural(p) => self.compile_natural_predecessor(fact, &p.in_natural_proof, &p.positive_proof, position)?,
                             InFactSearchProofByBuiltinRule::FiniteSetMaxMember(p) => self.compile_finite_extremum_member(fact, true, &p.set_equal, position)?,
                             InFactSearchProofByBuiltinRule::AggregateScalarCodomain(p) => self.compile_scalar_aggregate_member(fact, p, position)?,
+                            InFactSearchProofByBuiltinRule::FoldScalarCodomain(p) => self.compile_fold_scalar_member(fact, p, position)?,
                             InFactSearchProofByBuiltinRule::FiniteSetMinMember(p) => self.compile_finite_extremum_member(fact, false, &p.set_equal, position)?,
                             InFactSearchProofByBuiltinRule::FiniteSetSubsetMembership(_) | InFactSearchProofByBuiltinRule::ListSetElementMembership(_) | InFactSearchProofByBuiltinRule::SetBuilderMembership(_) => self.compile_set_membership_rule(fact, rule, position)?,
                             InFactSearchProofByBuiltinRule::StructObjMembership(p) => self.compile_struct_membership(fact, p, position)?,
@@ -221,12 +226,27 @@ impl LitexToLeanCompiler {
                 },
                 AtomicExceptEqualityFactSearchedProof::ByKnownSpecialProperty(AtomicExceptEqualityFactSearchProofByKnownSpecialProperty::InFact(rule)) => match &success.fact {
                     AtomicFact::InFact(fact) => match rule {
+                        InFactSearchProofByKnownSpecialProperty::UnionInPowerSet(_)
+                        | InFactSearchProofByKnownSpecialProperty::IntersectInPowerSetFromLeft(_)
+                        | InFactSearchProofByKnownSpecialProperty::IntersectInPowerSetFromRight(_)
+                        | InFactSearchProofByKnownSpecialProperty::SetMinusInPowerSet(_)
+                        | InFactSearchProofByKnownSpecialProperty::SetMinusInPowerSetOfLeft(_) => self.compile_power_set_closure(fact, rule, position)?,
+                        InFactSearchProofByKnownSpecialProperty::ListSetInPowerSetFromMembers(_) => self.compile_power_set_closure(fact, rule, position)?,
                         InFactSearchProofByKnownSpecialProperty::FnApplicationInFnRange(proof) => self.compile_call_in_range(fact, proof, position)?,
+                        InFactSearchProofByKnownSpecialProperty::FoldInCarrier(proof) => self.compile_fold_carrier_member(fact, proof, position)?,
                         InFactSearchProofByKnownSpecialProperty::PositiveRealFromKnownStrictOrder(proof) => self.compile_positive_real_from_known_strict_order(fact, proof, position)?,
                         _ => self.compile_fn_return_rule(fact, rule, position)?,
                     },
                     _ => return Err(LeanCompileError::new("FunctionReturn/Family", "A returned-membership rule has another source fact family.")),
                 },
+                AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::FunctionSetMembership(p)) => self.compile_function_set_strategy(&success.fact,p,position)?,
+                AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::IntersectFiniteFromBoth(p)) => self.compile_finite_intersection(&success.fact,p,position)?,
+                AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::IntersectFiniteFromLeft(p)) => self.compile_finite_intersection_from_left(&success.fact,p,position)?,
+                AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::IntersectFiniteFromRight(p)) => self.compile_finite_intersection_from_right(&success.fact,p,position)?,
+                AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::SymDiffMembershipLeft(p)) => self.compile_sym_diff_membership(&success.fact, &p.requirement_facts, &p.proof_of_requirement_facts, [true, false], position)?,
+                AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::SymDiffMembershipRight(p)) => self.compile_sym_diff_membership(&success.fact, &p.requirement_facts, &p.proof_of_requirement_facts, [false, true], position)?,
+                AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::SymDiffNonmembershipBoth(p)) => self.compile_sym_diff_membership(&success.fact, &p.requirement_facts, &p.proof_of_requirement_facts, [true, true], position)?,
+                AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::SymDiffNonmembershipNeither(p)) => self.compile_sym_diff_membership(&success.fact, &p.requirement_facts, &p.proof_of_requirement_facts, [false, false], position)?,
                 AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::ListSetSubsetFromMembers(p)) => {
                     let AtomicFact::SubsetFact(f)=&success.fact else{return Err(LeanCompileError::unsupported("ListSubset/StrategySubject"))};
                     if p.requirement_facts.len()!=p.proof_of_requirement_facts.len() {return Err(LeanCompileError::unsupported("ListSubset/StrategyArity"))}

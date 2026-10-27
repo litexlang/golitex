@@ -258,3 +258,38 @@ reciprocal and rational limits before selection. The [linear rational example](r
 sequence's values, nonconvergence, nonadditivity and shift invariance.
 [Convergent sequences](sequence_extrema_convergent.lit) and
 [explicit bounded existence](sequence_extrema_bounded_existence.lit) exercise the corresponding BTs and proof-consuming WD.
+
+[Power-set operation closure](power_set_operation_closure.lit) packages an
+actual zero-valued additive function after proving its law. The same compound
+event call now remains typed during the bounded struct-membership check.
+The four wd_negative/power_set_* controls reject missing/reversed/different
+carrier evidence; ordinary failures preserve the Session. The mathematical
+closure and equality-transport slice also has a compiler-generated Lean pair.
+
+[Template standard return](template_standard_return.lit) packages an R-valued
+template's checked additive law and uses the result through a callable field.
+The declaration-owned known-property leaf widens all applicable standard
+returns by numeric inclusion, retaining aliases and stored signatures. The
+three wd_negative/template_return_* controls reject narrowing, a complex
+argument to a real function, and an unsatisfied template guard. Intrinsic
+template call compilation to Lean remains explicitly unsupported.
+
+[One-bound finite intersections](finite_intersection_one_bound.lit) checks
+that either finite operand bounds an intersection with an arbitrary set, and
+that its cardinality is well-defined. The unbounded intersection, one-bound
+union and invalid-inner-expression controls remain rejected. A generated
+Lean pair replays both one-premise rules and the cardinality WD.
+
+[Complement event carrier](complement_event_carrier.lit) keeps the same formerly
+rejected positive function guard active. A difference belongs to the power set
+of its actual left carrier, including a proved carrier alias. Wrong carriers,
+missing independent function guards and invalid inner expressions remain
+rejected. Its generated Lean pair checks the guard, identity and alias routes.
+
+[Literal event carrier](literal_event_carrier.lit) reuses each recorded point-in-carrier
+fact to type a finite literal as an event, including a proved carrier alias.
+Its function-guard tracer keeps argument WD, literal distinctness and independent
+function guards. The four wd_negative/literal_event_* controls and compiler
+member/order corruption tests cover those boundaries. The generated4-theorem pair passes real Lean and the standard axiom audit;
+the exact toolchain, Mathlib revision and Core snapshot are retained in its
+local acceptance record.

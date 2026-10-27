@@ -1,0 +1,3 @@
+# A left fold remains a set over any closed operation carrier.
+forall E set, f fn(k Z) E, op fn(a,b E) E, s E:
+    reduce(1,3,f,op,s) $in E

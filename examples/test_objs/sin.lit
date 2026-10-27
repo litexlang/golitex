@@ -1,32 +1,26 @@
 # AST: Obj::TrigOperator::Sin
 # Run: target/release/litex -f examples/test_objs/sin.lit
-# Cases use discarded sketch scopes; no cross-case facts.
+# Direct cases share file context; sketches isolate local declarations.
 
 # P01: sin(0) = 0
-sketch:
-    sin(0) = 0
+sin(0) = 0
 
 # P02: sin(pi) = 0
-sketch:
-    sin(pi) = 0
+sin(pi) = 0
 
 # P03: sin(pi / 2) = 1
-sketch:
-    sin(pi / 2) = 1
+sin(pi / 2) = 1
 
 # P05: sin(x) $in R
-sketch:
-    forall x R:
-        sin(x) $in R
+forall x R:
+    sin(x) $in R
 
 # P06: recovered unchanged regression
-sketch:
-    forall x R:
-        sin(-x) = -sin(x)
+forall x R:
+    sin(-x) = -sin(x)
 
 # P04: exact numeric/periodic/modulus repair; original source retained in the dated journal
-sketch:
-    sin(-pi / 2) = -1
+sin(-pi / 2) = -1
 
 # P91: exact numeric/periodic/modulus boundary
 sketch:

@@ -1,0 +1,6 @@
+# Cofactors of complex and real matrices remain in their respective scalar fields.
+forall n N+, A matrix(C,n,n), r, c closed_range(1,n):
+    matrix_cofactor(A,n,r,c) $in C
+
+forall n N+, A matrix(R,n,n), r, c closed_range(1,n):
+    matrix_cofactor(A,n,r,c) $in R

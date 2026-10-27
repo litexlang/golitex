@@ -1,0 +1,6 @@
+# A finite vector determines a square diagonal matrix over the same number field.
+forall n N, v cart_n(C,n):
+    diagonal_matrix(v,n) $in matrix(C,n,n)
+
+forall n N, v cart_n(R,n):
+    diagonal_matrix(v,n) $in matrix(R,n,n)

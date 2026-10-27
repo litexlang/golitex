@@ -1,0 +1,9 @@
+# Recover entries before and after the deleted row and column.
+forall A matrix(C,2,2):
+    matrix_minor(A,2,1,1)(1,1) = A(2,2)
+
+forall A matrix(C,3,3):
+    matrix_minor(A,3,2,1)(1,2) = A(1,3)
+
+forall A matrix(C,3,3):
+    matrix_minor(A,3,1,2)(2,1) = A(3,1)

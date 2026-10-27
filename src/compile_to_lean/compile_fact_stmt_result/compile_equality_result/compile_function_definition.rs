@@ -144,9 +144,9 @@ impl LitexToLeanCompiler {
                     }
                 }
             }
-            EqualitySearchProofByObjectDefinition::NativeMatrix(_) => Err(
-                LeanCompileError::unsupported("FunctionDefinition/NativeMatrix"),
-            ),
+            EqualitySearchProofByObjectDefinition::NativeMatrix(proof) => {
+                self.compile_matrix_equality(fact, proof, position)
+            }
             EqualitySearchProofByObjectDefinition::CartesianDefinition(proof) => {
                 self.compile_cartesian_definition(fact, proof, position)
             }
@@ -189,7 +189,7 @@ impl LitexToLeanCompiler {
                     &proof.expanded_body,
                     position,
                 )?;
-                let residual = self.compile_equality_search(
+                let residual = self.compile_parent_beta_residual(
                     &proof.residual_equal,
                     &proof.residual_proof,
                     position,
@@ -224,7 +224,7 @@ impl LitexToLeanCompiler {
                     &proof.right_expanded_body,
                     position,
                 )?;
-                let residual = self.compile_equality_search(
+                let residual = self.compile_parent_beta_residual(
                     &proof.residual_equal,
                     &proof.residual_proof,
                     position,
@@ -236,7 +236,26 @@ impl LitexToLeanCompiler {
         }
     }
 
-    fn compile_parent_checked_function_body(
+    // These endpoints are the recorded expansions of already checked parent
+    // calls. Identity needs their semantic values, not another WD constructor.
+    fn compile_parent_beta_residual(
+        &self,
+        fact: &EqualFact,
+        proof: &EqualFactSearchedProof,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        if matches!(
+            proof,
+            EqualFactSearchedProof::ByTheyAreTheSame(TheyAreTheSameProof::SameIr(_))
+        ) && fact.left == fact.right
+        {
+            let value = self.compile_normalization_value(&fact.left, position)?;
+            return Ok(format!("(Eq.refl {value})"));
+        }
+        self.compile_equality_search(fact, proof, position)
+    }
+
+    pub(super) fn compile_parent_checked_function_body(
         &self,
         application: &Obj,
         parent_wd: &ObjWellDefinedProof,
@@ -279,6 +298,20 @@ impl LitexToLeanCompiler {
                 expanded,
                 position,
             );
+        }
+        if let ParentCheckedBetaFunctionBody::NativeMatrix(callable) = source {
+            let actual = self.compile_wd(parent_wd, position)?;
+            let (value, step) = self.compile_matrix_component_step(
+                application,
+                "_matrix_beta_call",
+                callable,
+                expanded,
+                parent_wd,
+                position,
+            )?;
+            let input = self.compile_normalization_value(application, position)?;
+            let endpoint = self.compile_normalization_value(expanded, position)?;
+            return Ok(format!("(let _matrix_beta_call := {actual};\n  (show {input} = Litex.denote _matrix_beta_call from rfl).trans ({step}.trans (show {value} = {endpoint} from rfl)))"));
         }
         let actual_domain = match call_wd.domain_fn_set.as_ref() {
             Some(FnObjDomainFnSetEvidence::InFunctionSet { fn_set, .. })
@@ -713,7 +746,8 @@ impl LitexToLeanCompiler {
                 // not a new source constructor with a second WD registration.
                 self.compile_function_literal_value(function, position, &HashMap::new())
             }
-            Obj::SetFormer(SetFormer::SetBuilder(_)) => {
+            Obj::SetFormer(SetFormer::SetBuilder(_))
+            | Obj::FiniteSetStat(FiniteSetStat::FiniteSetSize(_)) => {
                 // Beta compares semantic values. The selected literal and the
                 // equality endpoints retain their separately checked WD; this
                 // internal substitution endpoint needs no second constructor.
@@ -731,6 +765,8 @@ impl LitexToLeanCompiler {
             | Obj::IntegerOperator(_)
             | Obj::ComplexOperator(_)
             | Obj::TrigOperator(_)
+            | Obj::HyperbolicOperator(_)
+            | Obj::BoundOperator(_)
             | Obj::ExpLogOperator(
                 ExpLogOperator::Exp(_) | ExpLogOperator::Ln(_) | ExpLogOperator::Log(_),
             ) => {
@@ -869,6 +905,8 @@ impl LitexToLeanCompiler {
             | Obj::IntegerOperator(_)
             | Obj::ComplexOperator(_)
             | Obj::TrigOperator(_)
+            | Obj::HyperbolicOperator(_)
+            | Obj::BoundOperator(_)
             | Obj::ExpLogOperator(
                 ExpLogOperator::Exp(_) | ExpLogOperator::Ln(_) | ExpLogOperator::Log(_),
             ) => {
@@ -954,6 +992,8 @@ fn normalization_operation_children(
     object: &Obj,
 ) -> Result<(&'static str, Vec<&Obj>), LeanCompileError> {
     match object {
+        Obj::BoundOperator(BoundOperator::Supremum(p)) => Ok(("supremumValue", vec![&p.set])),
+        Obj::BoundOperator(BoundOperator::Infimum(p)) => Ok(("infimumValue", vec![&p.set])),
         Obj::ArithmeticOperator(p) => normalization_arithmetic_children(p),
         Obj::ComplexOperator(ComplexOperator::Conjugate(p)) => Ok(("conjValue", vec![&p.arg])),
         Obj::ComplexOperator(ComplexOperator::RealPart(p)) => Ok(("reValue", vec![&p.arg])),
@@ -961,6 +1001,12 @@ fn normalization_operation_children(
         Obj::ComplexOperator(ComplexOperator::ComplexAbs(p)) => {
             Ok(("complexAbsValue", vec![&p.arg]))
         }
+        Obj::HyperbolicOperator(HyperbolicOperator::Sinh(p)) => Ok(("sinhValue", vec![&p.arg])),
+        Obj::HyperbolicOperator(HyperbolicOperator::Cosh(p)) => Ok(("coshValue", vec![&p.arg])),
+        Obj::HyperbolicOperator(HyperbolicOperator::Tanh(p)) => Ok(("tanhValue", vec![&p.arg])),
+        Obj::HyperbolicOperator(HyperbolicOperator::Coth(p)) => Ok(("cothValue", vec![&p.arg])),
+        Obj::HyperbolicOperator(HyperbolicOperator::Sech(p)) => Ok(("sechValue", vec![&p.arg])),
+        Obj::HyperbolicOperator(HyperbolicOperator::Csch(p)) => Ok(("cschValue", vec![&p.arg])),
         Obj::TrigOperator(TrigOperator::Sin(p)) => Ok(("sinValue", vec![&p.arg])),
         Obj::TrigOperator(TrigOperator::Cos(p)) => Ok(("cosValue", vec![&p.arg])),
         Obj::TrigOperator(TrigOperator::Tan(p)) => Ok(("tanValue", vec![&p.arg])),
@@ -991,12 +1037,20 @@ fn normalization_operation_children_mut(
     object: &mut Obj,
 ) -> Result<Vec<&mut Box<Obj>>, LeanCompileError> {
     match object {
+        Obj::BoundOperator(BoundOperator::Supremum(p)) => Ok(vec![&mut p.set]),
+        Obj::BoundOperator(BoundOperator::Infimum(p)) => Ok(vec![&mut p.set]),
         Obj::ArithmeticOperator(p) => normalization_arithmetic_children_mut(p),
         Obj::ExpLogOperator(ExpLogOperator::Exp(p)) => Ok(vec![&mut p.arg]),
         Obj::ComplexOperator(ComplexOperator::Conjugate(p)) => Ok(vec![&mut p.arg]),
         Obj::ComplexOperator(ComplexOperator::RealPart(p)) => Ok(vec![&mut p.arg]),
         Obj::ComplexOperator(ComplexOperator::ImaginaryPart(p)) => Ok(vec![&mut p.arg]),
         Obj::ComplexOperator(ComplexOperator::ComplexAbs(p)) => Ok(vec![&mut p.arg]),
+        Obj::HyperbolicOperator(HyperbolicOperator::Sinh(p)) => Ok(vec![&mut p.arg]),
+        Obj::HyperbolicOperator(HyperbolicOperator::Cosh(p)) => Ok(vec![&mut p.arg]),
+        Obj::HyperbolicOperator(HyperbolicOperator::Tanh(p)) => Ok(vec![&mut p.arg]),
+        Obj::HyperbolicOperator(HyperbolicOperator::Coth(p)) => Ok(vec![&mut p.arg]),
+        Obj::HyperbolicOperator(HyperbolicOperator::Sech(p)) => Ok(vec![&mut p.arg]),
+        Obj::HyperbolicOperator(HyperbolicOperator::Csch(p)) => Ok(vec![&mut p.arg]),
         Obj::TrigOperator(TrigOperator::Sin(p)) => Ok(vec![&mut p.arg]),
         Obj::TrigOperator(TrigOperator::Cos(p)) => Ok(vec![&mut p.arg]),
         Obj::TrigOperator(TrigOperator::Tan(p)) => Ok(vec![&mut p.arg]),

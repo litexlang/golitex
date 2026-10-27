@@ -1,0 +1,7 @@
+# The identity sequence increases and its negative decreases on positive natural indices.
+have fn analysis_increasing(n N+) R = n
+by def $is_seq_nondecreasing(analysis_increasing)
+by def $is_seq_strictly_increasing(analysis_increasing)
+have fn analysis_decreasing(n N+) R = -n
+by def $is_seq_nonincreasing(analysis_decreasing)
+by def $is_seq_strictly_decreasing(analysis_decreasing)

@@ -1,0 +1,85 @@
+# Equal real sequences share their monotonicity and boundedness properties, including negations.
+forall a,b seq(R):
+    a = b
+    $is_seq_nondecreasing(a)
+    =>:
+        $is_seq_nondecreasing(b)
+
+forall a,b seq(R):
+    a = b
+    not $is_seq_nondecreasing(a)
+    =>:
+        not $is_seq_nondecreasing(b)
+
+forall a,b seq(R):
+    a = b
+    $is_seq_nonincreasing(a)
+    =>:
+        $is_seq_nonincreasing(b)
+
+forall a,b seq(R):
+    a = b
+    not $is_seq_nonincreasing(a)
+    =>:
+        not $is_seq_nonincreasing(b)
+
+forall a,b seq(R):
+    a = b
+    $is_seq_strictly_increasing(a)
+    =>:
+        $is_seq_strictly_increasing(b)
+
+forall a,b seq(R):
+    a = b
+    not $is_seq_strictly_increasing(a)
+    =>:
+        not $is_seq_strictly_increasing(b)
+
+forall a,b seq(R):
+    a = b
+    $is_seq_strictly_decreasing(a)
+    =>:
+        $is_seq_strictly_decreasing(b)
+
+forall a,b seq(R):
+    a = b
+    not $is_seq_strictly_decreasing(a)
+    =>:
+        not $is_seq_strictly_decreasing(b)
+
+forall a,b seq(R):
+    a = b
+    $is_seq_bounded_above(a)
+    =>:
+        $is_seq_bounded_above(b)
+
+forall a,b seq(R):
+    a = b
+    not $is_seq_bounded_above(a)
+    =>:
+        not $is_seq_bounded_above(b)
+
+forall a,b seq(R):
+    a = b
+    $is_seq_bounded_below(a)
+    =>:
+        $is_seq_bounded_below(b)
+
+forall a,b seq(R):
+    a = b
+    not $is_seq_bounded_below(a)
+    =>:
+        not $is_seq_bounded_below(b)
+
+forall a,b seq(R):
+    a = b
+    $is_seq_bounded(a)
+    =>:
+        $is_seq_bounded(b)
+
+forall a,b seq(R):
+    a = b
+    not $is_seq_bounded(a)
+    =>:
+        not $is_seq_bounded(b)
+

@@ -1,0 +1,5 @@
+# A nonempty ordered fold performs its last call after folding the preceding indices.
+forall a,b Z, E set, f fn(k Z) E, op fn(x,y E) E, s E:
+    a <= b
+    =>:
+        reduce(a,b,f,op,s) = op(reduce(a,b-1,f,op,s),f(b))

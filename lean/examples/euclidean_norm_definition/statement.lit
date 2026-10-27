@@ -1,0 +1,5 @@
+# Unfold the norm after its squared-magnitude sum is known nonnegative.
+forall n N, v cart_n(C,n):
+    0 <= finite_set_sum(closed_range(1,n),fn(k closed_range(1,n)) R {C_abs(v(k))^2})
+    =>:
+        euclidean_norm(v,n) = sqrt(finite_set_sum(closed_range(1,n),fn(k closed_range(1,n)) R {C_abs(v(k))^2}))

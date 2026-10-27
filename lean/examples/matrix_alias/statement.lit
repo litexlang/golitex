@@ -1,0 +1,4 @@
+# A named matrix space keeps its original membership and coordinate domain facts.
+let Rect = matrix(R,2,3)
+forall matA Rect:
+    matA(1,2) $in R

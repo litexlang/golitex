@@ -5600,11 +5600,11 @@ family_union(power_set({1, 2})) = {1, 2}
 
 **Mathematical function.** The native family intersection.
 
-**Well-definedness and domain.** Child set objects must be WD. In Litex’s pure-set foundation, these constructors do not introduce a new universal host carrier.
+**Well-definedness and domain.** The family object must be WD, and `$is_nonempty_set(F)` must be proved. This requirement is recorded in the constructor result. The family `{{}}` is allowed: its sole member is the empty set.
 
 **Common native properties and proof routes.** A member belongs to every member set; quantified membership introduction uses a reserved theorem. The current checked example explicitly supplies the family-member universal rather than relying on literal intersection evaluation.
 
-**Nearest boundary.** Membership introduction and elimination can have different proof routes. The membership release takes the family_intersect object as its second argument, not the raw family. Absolute empty-family intersection has no writable universal-set interpretation here; the explicit set-valued membership/projection interfaces require a nonempty family and the factor obligations. Constructor WD alone does not supply those facts.
+**Nearest boundary.** Membership introduction and elimination can have different proof routes. The membership release takes the family_intersect object as its second argument, not the raw family. Absolute empty-family intersection has no universal-set interpretation here. `family_intersect({})` fails WD; a generic set parameter also needs a nonempty-family proof. The explicit membership interfaces retain their factor and membership obligations.
 
 **Checked example.**
 
@@ -6470,7 +6470,11 @@ finite_set_product({2, 3}, fn(k Z) Z {k}) = 6
 
 **Mathematical function.** Fold iterand values through a homogeneous binary operation and initial seed.
 
-**Well-definedness and domain.** Integer endpoints; f unary into T over the indices; op belongs to fn(x,y T) T; seed in T. All child objects are WD.
+**Well-definedness and domain.** Integer endpoints; `f` maps each index into `T`;
+`op` belongs to `fn(x,y T) T`; `seed` belongs to `T`. WD checks that the
+whole index interval lies in the declared domain of `f`, including its
+predicate conditions. A checked empty interval makes no calls and imposes
+no index-membership or predicate obligations. All child objects are WD.
 
 **Common native properties and proof routes.** A reversed empty range returns the seed; scalar addition folds can connect to sums.
 
@@ -9237,7 +9241,19 @@ edge. Ordinary equality and fact proving retain their own equality-path
 routes, so an author can prove and publish the needed endpoint before use.
 Default struct field views retain their definition-owned selection below.
 
-Stored function applications also have a bounded `FnApplicationInStandardSuperset` known-property leaf. After application WD, it compares every applicable stored signature's instantiated numeric return carrier with the target standard set. For example, an R-returning `f(a)` belongs to C. Every candidate must be contained in the target, and at least one inclusion must be strict; an exact-carrier query retains its existing producer. Evidence cites each signature and the known equality path connecting its subject to the applied head. This leaf opens no domain, equality, or general premise search. Nonstandard return carriers and heads with native template/field declarations are left to the existing routes, which own their declaration evidence.
+Stored function applications also have a bounded `FnApplicationInStandardSuperset` known-property leaf. After application WD, it compares every applicable stored signature's instantiated numeric return carrier with the target standard set. For example, an R-returning `f(a)` belongs to C. Every candidate must be contained in the target, and at least one inclusion must be strict; an exact-carrier query retains its existing producer. Evidence cites each signature and the known equality path connecting its subject to the applied head. This leaf opens no domain, equality, or general premise search. Nonstandard return carriers and heads with native template/field declarations are left to producers that own their declaration evidence.
+
+`TemplateApplicationInStandardSuperset` supplies the corresponding declaration evidence when the function or an equality alias is a checked template instance:
+
+```litex
+template<S set>:
+    have fn real_identity(x R) R = x
+
+forall x R:
+    \real_identity<R>(x) $in C
+```
+
+Application WD still checks every actual argument and template guard. This leaf compares fully applied direct standard return sets using the existing numeric inclusion relation. It retains every applicable template declaration, field/literal declaration alias, stored signature and equality path; all recorded returns must fit the target, with at least one strict inclusion. An unmodeled intrinsic alias (including a finite function, composition, matrix or returned call) makes this leaf decline. It does not search for new premises, prove `R = C`, accept narrowing from `C` to `R`, or bypass a template guard. The maintained struct-law tracer is `examples/wd/template_standard_return.lit`. Lean replay of these intrinsic template calls remains explicitly unsupported.
 
 **Entry:** [O03](#o03-function-applications).
 
@@ -10316,8 +10332,8 @@ For compatibility with the older family-object forms,
 **Settled empty-family intersection (absolute form):** mathematicians treat
 `⋂ ∅` without an ambient universe as the class of *everything* (vacuous
 `∀ A ∈ ∅. x ∈ A`), not as the empty set. Litex therefore does **not** prove
-`family_intersect({}) = {}`. Empty-index expressions such as `index_intersect({}, X, A)` are outside the current WD contract. `family_intersect({})` may still be a
-well-formed object expression; it simply has no “equals empty” builtin identity.
+`family_intersect({}) = {}`. Empty-index expressions such as `index_intersect({}, X, A)` are outside the current WD contract. `family_intersect({})` is rejected during WD, as is a generic family without a
+nonemptiness proof. A nonempty family may still have an empty intersection.
 
 Indexed-family algebra is handled by ordinary one-step builtin rules. Exact
 family transformations for singleton domains, family/domain monotonicity,
@@ -10551,7 +10567,7 @@ The declarative set schemas cover the following groups:
 | Intersection membership and containment | Membership in the intersection exposes membership in both operands. The intersection is a subset of each operand and of every known upper bound of either operand. A known `A $subset B` reduces `intersect(A,B)` to `A`, with the mirrored form for `B $subset A`. |
 | Union/intersection algebra | Both operations are commutative and associative; both are idempotent; union has `{}` as a two-sided identity; `intersect(A,union(B,C))` distributes to the union of the two intersections. |
 | Relative complement | Membership exposes membership in the left set and nonmembership in the right; every upper bound of `A` bounds `set_minus(A,B)`, and `A $subset C` gives `set_minus(A,B) $subset set_minus(C,B)`. The two relative De Morgan laws hold. The empty/self laws, `intersect(A,set_minus(B,A)) = {}`, `union(A,set_minus(B,A)) = union(A,B)`, and `set_minus(B,intersect(A,B)) = set_minus(B,A)` are recognized directly. If `B $subset A`, then removing `A \\ B` from `A` recovers `B` in either equality orientation. |
-| Finiteness and infiniteness | Union/intersection of finite sets is finite; removing anything from a finite left operand is finite; removing a finite set from an infinite set remains infinite. |
+| Finiteness and infiniteness | A union needs both operands finite; an intersection needs either operand finite. Removing anything from a finite left operand is finite; removing a finite set from an infinite set remains infinite. |
 | Nonemptiness | A nonempty union operand makes the union nonempty. `power_set(A)` is nonempty for every set `A`. |
 | Power set | `A $subset B` introduces both `A $in power_set(B)` and `power_set(A) $subset power_set(B)`; a finite base gives a finite power set. |
 
@@ -10559,6 +10575,14 @@ The declarative set schemas cover the following groups:
 > In particular `{x S: …} $subset S` is recognized, so
 > `have name power_set(S) = {x S: …}` type-checks. Storing `x $in power_set(B)`
 > also records `x $subset B`.
+
+> **Preview:** stored memberships `A $in power_set(X)` and
+> `B $in power_set(X)` directly license `union(A,B) $in power_set(X)`.
+> An intersection needs either operand in that same powerset; a relative
+> difference needs its left operand. These KnownSpecialProperty leaves quote
+> existing membership evidence during bounded argument and struct-law WD;
+> they do not reopen general subset or forall search. A missing union operand
+> or another carrier is not accepted. See the [strict struct-law tracer](../examples/wd/power_set_operation_closure.lit).
 | Empty set | `{}` is a subset of every set. |
 
 Representative set algebra and containment rules verify directly:
@@ -10658,6 +10682,42 @@ retains both its inclusion source and upper finite proof; it does not extend
 strategy permissions. The [inference tracer](../examples/infer/atomic/subset_finite_upper_bound.lit)
 shows the quantified `A set, B finite_set` case. Arbitrary inclusion chains
 still use the existing bounded strategy when no eager certificate is available.
+
+An intersection also inherits finiteness from either single operand:
+
+```litex
+forall A finite_set, B set:
+    $is_finite_set(intersect(A,B))
+
+forall A set, B finite_set:
+    $is_finite_set(intersect(A,B))
+
+forall E set, point R:
+    finite_set_size(intersect(E,{point})) $in N
+```
+
+The existing both-finite strategy keeps its priority and two-premise evidence.
+`IntersectFiniteFromLeft` and `IntersectFiniteFromRight` are separate structural
+strategies, each checking exactly its named operand's finiteness at the
+unchanged child ceiling. They do not make the other operand or a one-bound
+union finite, and do not bypass inner object WD. See the
+[one-bound tracer](../examples/wd/finite_intersection_one_bound.lit).
+
+Relative complements also have their own carrier bound:
+
+```litex
+forall X set, B set:
+    set_minus(X,B) $in power_set(X)
+```
+
+At `KnownSpecialProperty`, `SetMinusInPowerSetOfLeft` compares the actual left
+operand with the target power-set carrier using identity or a stored equality
+path. It runs only after the existing stored-left-membership case declines.
+No self-membership premise or higher-stage subset search is opened. Actual
+argument WD and other function guards still apply; an unrelated target carrier
+is not accepted. This makes `p(set_minus(X,B)) > 0` a well-defined possible
+premise for `p fn(E power_set(X)) R`. See the unchanged before/after guard in
+[complement event typing](../examples/wd/complement_event_carrier.lit).
 
 These rules retain the checked inclusion and cardinality premises. Equal
 cardinalities alone do not identify sets, and ordinary inclusion alone gives
@@ -12408,3 +12468,13 @@ and the [compiler guide](../src/compile_to_latex/README.md) for the complete
 input, typography and error contracts.
 
 The zero-base positive-real rule records the checked exponent membership as `ZeroToPositiveRealPower` evidence. `0^0=1` remains unchanged; nonpositive or untyped exponents do not use this rule. See [the strict tracer](../examples/proof_nodes/equal/by_builtin_rule/zero_to_positive_real_power.lit). This rule currently has no Lean replay; the compiler rejects its builtin evidence.
+
+
+Finite literal event arguments can use already recorded point-in-carrier facts
+at the bounded known-property stage: `{a1,...,an} in power_set(X)` retains a
+membership proof for each ai in X. Literal child WD and pairwise distinctness
+remain checked. This rule introduces no operation or theorem name; it also
+applies inside event-valued function guards. The maintained tracer is
+[`literal_event_carrier.lit`](../examples/wd/literal_event_carrier.lit).
+The finite real expectation source interface and its exact sampler domain are
+documented in [`std/probability`](../std/probability/README.md).

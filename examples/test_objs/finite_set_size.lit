@@ -1,36 +1,29 @@
 # AST: Obj::FiniteSetStat::FiniteSetSize
 # Run: target/release/litex -f examples/test_objs/finite_set_size.lit
-# Cases use discarded sketch scopes; no cross-case facts.
+# Cases are checked directly in file context.
 
 # P01: finite_set_size({}) = 0
-sketch:
-    finite_set_size({}) = 0
+finite_set_size({}) = 0
 
 # P02: finite_set_size({1}) = 1
-sketch:
-    finite_set_size({1}) = 1
+finite_set_size({1}) = 1
 
 # P03: finite_set_size({1, 2, 3}) = 3
-sketch:
-    finite_set_size({1, 2, 3}) = 3
+finite_set_size({1, 2, 3}) = 3
 
 # P04: finite_set_size({2, 1}) = 2
-sketch:
-    finite_set_size({2, 1}) = 2
+finite_set_size({2, 1}) = 2
 
 # P06: finite_set_size(range(1, 4)) = 3
-sketch:
-    finite_set_size(range(1, 4)) = 3
+finite_set_size(range(1, 4)) = 3
 
 # P07: finite_set_size(closed_range(1, 4)) = 4
-sketch:
-    finite_set_size(closed_range(1, 4)) = 4
+finite_set_size(closed_range(1, 4)) = 4
 
 # P05: explicit checked proof; restored from finite_set_size-P05
-sketch:
-    by contra:
-        ? {1} != {2}
-        1 $in {1}
-        1 $in {2}
-        impossible 1 $in {2}
-    finite_set_size({{1}, {2}}) = 2
+by contra:
+    ? {1} != {2}
+    1 $in {1}
+    1 $in {2}
+    impossible 1 $in {2}
+finite_set_size({{1}, {2}}) = 2

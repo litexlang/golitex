@@ -1,0 +1,9 @@
+# Every integer in the interval satisfies the iterand's nonzero condition.
+forall a,b Z, f fn(k Z: k != 0) Z, op fn(x,y Z) Z, s Z:
+    forall k Z:
+        a <= k
+        k <= b
+        =>:
+            k != 0
+    =>:
+        reduce(a,b,f,op,s) $in Z

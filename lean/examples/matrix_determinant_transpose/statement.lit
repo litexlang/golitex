@@ -1,0 +1,5 @@
+# Transposition preserves the determinant.
+thm checked_det_transpose:
+    ? forall n N, A matrix(C,n,n):
+        det(transpose(A,n,n),n) = det(A,n)
+    release thm matrix_det_transpose(A,n)

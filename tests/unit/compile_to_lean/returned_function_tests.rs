@@ -162,7 +162,9 @@ fn returned_domain_argument_scope_rejects_a_future_registered_producer() {
 #[test]
 fn returned_calls_cannot_skip_either_nonzero_guard() {
     for (outer, inner) in [("0", "2"), ("2", "0")] {
-        let source = format!("forall provider fn(t R: t != 0) fn(x R: x != 0) R:\n    provider({outer})({inner}) $in R\n");
+        let source = format!(
+            "forall provider fn(t R: t != 0) fn(x R: x != 0) R:\n    provider({outer})({inner}) $in R\n"
+        );
         let mut runtime = Runtime::new(LaunchCommand::Eval {
             code: String::new(),
             session: false,
@@ -185,4 +187,96 @@ fn returned_positive_domain_retains_membership_and_positivity() {
     assert!(lean.contains("Litex.FunctionSignature.one_domain"));
     assert!(lean.contains("Litex.inRPos_real"));
     assert!(lean.contains("Litex.positiveReal_members"));
+}
+
+#[test]
+fn returned_matrix_and_finite_sequence_calls_consume_original_stages() {
+    for source in [
+        include_str!("../../../lean/examples/returned_matrix_coordinates/statement.lit"),
+        include_str!("../../../lean/examples/returned_matrix_guarded/statement.lit"),
+        include_str!("../../../lean/examples/returned_finite_sequence_values/statement.lit"),
+        include_str!("../../../lean/examples/returned_matrix_transpose/statement.lit"),
+        include_str!("../../../lean/examples/returned_matrix_function_transpose/statement.lit"),
+    ] {
+        let (run, compiler) = super::execute(source);
+        compiler.compile_run(&run, "returned_arrays").unwrap();
+    }
+}
+
+#[test]
+fn returned_matrix_rejects_missing_or_swapped_index_evidence() {
+    for mutation in 0..4 {
+        let (mut run, compiler) = super::execute(include_str!(
+            "../../../lean/examples/returned_matrix_coordinates/statement.lit"
+        ));
+        compiler.compile_run(&run, "valid_matrix_call").unwrap();
+        let all = super::forall_proof_mut(&mut run.statement_results[0]);
+        let atom = super::atomic_proof_mut(&mut all.proved_then_facts[0].verify_result);
+        let ObjWellDefinedProof::ByDef {
+            proof: ObjWellDefinedProofByDef::FnObj(call),
+            ..
+        } = &mut atom.well_defined_proof.well_defined_of_each_parameter[0]
+        else {
+            panic!("returned matrix call WD")
+        };
+        match mutation {
+            0 => {
+                call.child_obj_well_defined.pop();
+            }
+            1 => {
+                call.requirement_fact_verified.pop();
+            }
+            2 => call.child_obj_well_defined.swap(1, 2),
+            3 => call.requirement_fact_verified.swap(1, 2),
+            _ => unreachable!(),
+        }
+        assert!(
+            compiler.compile_run(&run, "wrong_returned_matrix").is_err(),
+            "mutation {mutation}"
+        );
+    }
+}
+
+#[test]
+fn returned_matrix_transpose_rejects_changed_carrier_evidence() {
+    use crate::execute::execute_fact_stmt::native_matrix::{MatrixMembershipProof, MatrixFunctionScalarCarrierProof};
+    use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule;
+    for mutation in 0..2 {
+        let (mut run, compiler) = super::execute(include_str!(
+            "../../../lean/examples/returned_matrix_transpose/statement.lit"
+        ));
+        compiler
+            .compile_run(&run, "valid_returned_transpose")
+            .unwrap();
+        let all = super::forall_proof_mut(&mut run.statement_results[0]);
+        let atom = super::atomic_proof_mut(&mut all.proved_then_facts[0].verify_result);
+        let AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(
+            AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(
+                InFactSearchProofByBuiltinRule::NativeMatrix(MatrixMembershipProof::Function(p)),
+            ),
+        ) = &mut atom.searched_proof
+        else {
+            panic!("matrix membership")
+        };
+        let MatrixFunctionScalarCarrierProof::RealReturnedFunction(domain) =
+            &mut p.callable.scalar_carrier
+        else {
+            panic!("returned real carrier")
+        };
+        if mutation == 0 {
+            domain.signature.ret_set = Box::new(Obj::StandardSet(StandardSet::C));
+        } else {
+            let CompleteFunctionDomainSourceProof::ApplicationReturn {
+                application_requirements,
+                ..
+            } = &mut domain.source
+            else {
+                panic!("returned matrix source")
+            };
+            application_requirements.clear();
+        }
+        assert!(compiler
+            .compile_run(&run, "wrong_returned_transpose")
+            .is_err());
+    }
 }

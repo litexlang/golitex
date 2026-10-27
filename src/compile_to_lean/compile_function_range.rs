@@ -7,6 +7,86 @@ use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::{FnRang
 use crate::prelude::*;
 
 impl LitexToLeanCompiler {
+    pub(super) fn compile_function_range_subset(
+        &self,
+        goal: &SubsetFact,
+        proof: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::subset::FunctionRangeInCodomainProof,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::subset::FunctionRangeCodomainContainment;
+        let Obj::FunctionSpace(FunctionSpace::FnRange(range)) = &goal.left else {
+            return Err(LeanCompileError::unsupported("FnRange/SubsetSubject"));
+        };
+        let member =
+            self.compile_complete_domain_member(&range.function, &proof.source, position)?;
+        let formed = SourcePosition::new(
+            Some(position),
+            SourceOwner::CompleteDomainSource(&proof.source),
+            usize::MAX,
+        );
+        let signature = self.compile_complete_domain_signature(&proof.source, &formed)?;
+        let function = self.compile_object_reference(&range.function, &formed)?;
+        let output = self.compile_object_reference(&proof.source.signature.ret_set, &formed)?;
+        let target = self.compile_object_reference(&goal.right, &formed)?;
+        let range = self.compile_object_reference(&goal.left, &formed)?;
+        let step = match &proof.containment {
+            FunctionRangeCodomainContainment::Exact(equal) => {
+                let obligation = EqualFact {
+                    fact_id: goal.fact_id,
+                    left: *proof.source.signature.ret_set.clone(),
+                    right: goal.right.clone(),
+                    line_file: None,
+                };
+                let same = self.compile_equality_search(&obligation, equal, &formed)?;
+                format!("Litex.subsetOfSame {range} {output} {range} {target} (Litex.sameRefl {range}) {same} _range_subset")
+            }
+            FunctionRangeCodomainContainment::Subset(_) => {
+                return Err(LeanCompileError::unsupported("FnRange/CodomainWidening"));
+            }
+        };
+        Ok(format!("(by\n  have _range_function : Litex.In {function} (Litex.fnSet {signature}) := {member}\n  have _range_subset : Litex.Subset {range} {output} := fun _x _hx => Litex.FunctionSemantics.range_subset ({signature}).output_isSet _range_function _hx\n  exact {step})"))
+    }
+
+    /// A named inference may introduce the range before a separate range WD
+    /// result exists. An original function parameter already supplies its
+    /// carrier and exact membership citation; reuse that declaration evidence.
+    pub(super) fn compile_inferred_parameter_range(
+        &self,
+        range: &FnRange,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        let Obj::Identifier(IdentifierObj::Plain { id, .. }) = range.function.as_ref() else {
+            return Err(LeanCompileError::unsupported("FnRange/InferenceParameter"));
+        };
+        let (_, Some(carrier), fact_id, _) = position.visible_parameter(*id, &self.runtime)? else {
+            return Err(LeanCompileError::unsupported("FnRange/InferenceCarrier"));
+        };
+        let (source, member) = self.cited_fact_reference(fact_id, position)?;
+        if !matches!(source, Fact::AtomicFact(AtomicFact::InFact(f))
+            if f.element.ir() == range.function.ir() && f.set.ir() == carrier.ir())
+        {
+            return Err(LeanCompileError::unsupported("FnRange/InferenceMembership"));
+        }
+        let carrier_term = self.compile_object_reference(carrier, position)?;
+        let (signature, equality) = match carrier {
+            Obj::FunctionSpace(FunctionSpace::FnSet(_)) => (
+                format!("({carrier_term}).val"),
+                format!("(Litex.sameRefl {carrier_term})"),
+            ),
+            Obj::SetFormer(SetFormer::SeqSet(_)) => (
+                format!("(Litex.seqSignature ({carrier_term}).val.carrier)"),
+                format!("(Litex.seqSet_eq_fnSet {carrier_term})"),
+            ),
+            _ => {
+                return Err(LeanCompileError::unsupported(
+                    "FnRange/InferenceFunctionCarrier",
+                ))
+            }
+        };
+        let function = self.compile_object_reference(&range.function, position)?;
+        Ok(format!("(Litex.fnRange {function} {signature} (Litex.inOfSame {function} {function} {carrier_term} (Litex.fnSet {signature}) (Litex.sameRefl {function}) {equality} {member}))"))
+    }
+
     pub(super) fn compile_anonymous_call_in_range(
         &self,
         goal: &InFact,
@@ -106,10 +186,10 @@ impl LitexToLeanCompiler {
         let mut checks = Vec::new();
         for (i, domain) in p.function_domains.iter().enumerate() {
             let member = self.compile_complete_domain_member(&range.function, domain, &formed)?;
-            let signature = self.compile_fn_signature(&domain.signature, &formed)?;
+            let signature = self.compile_complete_domain_signature(domain, &formed)?;
             checks.push(format!("have _range_signature_{i} : Litex.In {function} (Litex.fnSet {signature}) := {member}"));
         }
-        let signature = self.compile_fn_signature(&p.function_domains[0].signature, &formed)?;
+        let signature = self.compile_complete_domain_signature(&p.function_domains[0], &formed)?;
         Ok(format!(
             "(by\n  {}\n  exact Litex.fnRange {function} {signature} _range_signature_0)",
             checks.join("\n  ")

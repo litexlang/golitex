@@ -1,0 +1,5 @@
+# Two transposes restore the entire matrix by function extensionality.
+thm transpose_involution:
+    ? forall mb, nb N, ab matrix(C,mb,nb):
+        transpose(transpose(ab,mb,nb),nb,mb) = ab
+    by fn_extension transpose(transpose(ab,mb,nb),nb,mb) = ab

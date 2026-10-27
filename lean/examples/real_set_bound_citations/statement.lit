@@ -1,0 +1,51 @@
+# Real-set bounds and their negations retain ordinary fact citations.
+forall A set, b R:
+    A $subset R
+    $is_real_upper_bound(A,b)
+    =>:
+        $is_real_upper_bound(A,b)
+forall A set, b R:
+    A $subset R
+    not $is_real_upper_bound(A,b)
+    =>:
+        not $is_real_upper_bound(A,b)
+forall A set, b R:
+    A $subset R
+    $is_real_lower_bound(A,b)
+    =>:
+        $is_real_lower_bound(A,b)
+forall A set, b R:
+    A $subset R
+    not $is_real_lower_bound(A,b)
+    =>:
+        not $is_real_lower_bound(A,b)
+forall A set:
+    A $subset R
+    $is_real_bounded_above(A)
+    =>:
+        $is_real_bounded_above(A)
+forall A set:
+    A $subset R
+    not $is_real_bounded_above(A)
+    =>:
+        not $is_real_bounded_above(A)
+forall A set:
+    A $subset R
+    $is_real_bounded_below(A)
+    =>:
+        $is_real_bounded_below(A)
+forall A set:
+    A $subset R
+    not $is_real_bounded_below(A)
+    =>:
+        not $is_real_bounded_below(A)
+forall A set:
+    A $subset R
+    $is_real_bounded(A)
+    =>:
+        $is_real_bounded(A)
+forall A set:
+    A $subset R
+    not $is_real_bounded(A)
+    =>:
+        not $is_real_bounded(A)

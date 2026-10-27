@@ -1,0 +1,8 @@
+# A finite-vector-valued function returns real values at every valid index.
+forall provider fn(t R) cart_n(R,3), t R, k closed_range(1,3):
+    provider(t)(k) $in R
+
+forall n N, provider fn(t R: t != 0) cart_n(R,n), t R, k closed_range(1,n):
+    t != 0
+    =>:
+        provider(t)(k) $in C

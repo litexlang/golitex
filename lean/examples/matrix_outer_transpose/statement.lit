@@ -1,0 +1,5 @@
+# Transposing an outer product exchanges its two vectors.
+thm outer_transpose:
+    ? forall mo, no N, aa cart_n(C,mo), bb cart_n(C,no):
+        transpose(outer_product(aa,bb,mo,no),mo,no) = outer_product(bb,aa,no,mo)
+    by fn_extension transpose(outer_product(aa,bb,mo,no),mo,no) = outer_product(bb,aa,no,mo)

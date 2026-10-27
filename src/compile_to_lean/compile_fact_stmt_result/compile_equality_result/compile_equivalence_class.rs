@@ -127,7 +127,12 @@ impl LitexToLeanCompiler {
         if current.ir() != right.ir() {
             return Err(LeanCompileError::new(
                 "Equality/PathEndpoint",
-                "The recorded equality path does not end at the requested endpoint.",
+                &format!(
+                    "The recorded equality path from `{}` ends at `{}`, not the requested `{}`.",
+                    left.readable_string(),
+                    current.readable_string(),
+                    right.readable_string()
+                ),
             ));
         }
         // A nonempty path starts with its actual first cited equality. An empty

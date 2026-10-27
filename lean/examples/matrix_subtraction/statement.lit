@@ -1,0 +1,6 @@
+# Subtraction preserves the real or complex finite matrix domain.
+forall m, n N, A, B matrix(C,m,n):
+    matrix_sub(A,B,m,n) $in matrix(C,m,n)
+
+forall m, n N, A, B matrix(R,m,n):
+    matrix_sub(A,B,m,n) $in matrix(R,m,n)

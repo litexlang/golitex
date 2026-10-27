@@ -90,7 +90,16 @@ impl LitexToLeanCompiler {
         } else {
             ""
         };
-        let indexed_unions = if result.statement_results.iter().any(|statement|
+        // These optional constructors can also occur inside a formula or a
+        // proof-local WD term. Inspect emitted qualified constants only for
+        // section dependencies; proof selection still uses typed results.
+        let emitted_indexed_union = declarations.iter().any(|declaration| {
+            declaration.contains("Litex.familyUnion")
+                || declaration.contains("Litex.familyIntersect")
+                || declaration.contains("Litex.IndexedUnionSemantics.")
+                || declaration.contains("Litex.indexCart")
+        });
+        let indexed_unions = if emitted_indexed_union || result.statement_results.iter().any(|statement|
             statement_uses_choice(statement) || super::compile_replacement_result::replacement_statement(statement).is_some() || matches!(statement, ExecStmtResult::Definition(ExecDefinitionStmtResult::DefStruct(
                 crate::execute::ExecDefStructStmtResult::Success(p)))
                 if super::compile_def_struct_stmt_result::has_dependent_fields(&p.statement))) {
@@ -135,6 +144,7 @@ fn object_uses_functions(object: &Obj) -> bool {
         Obj::IntegerOperator(IntegerOperator::Quot(p)) => {
             object_uses_functions(&p.left) || object_uses_functions(&p.right)
         }
+        Obj::MatrixOperator(_) => true,
         Obj::FnObj(_)
         | Obj::FunctionSpace(_)
         | Obj::ProductShape(_)
@@ -156,8 +166,15 @@ fn object_uses_functions(object: &Obj) -> bool {
         Obj::SetFormer(SetFormer::ClosedRange(r)) => {
             object_uses_functions(&r.start) || object_uses_functions(&r.end)
         }
-        Obj::SetFormer(SetFormer::FiniteSeqSet(_) | SetFormer::SeqSet(_)) => true,
+        Obj::SetFormer(
+            SetFormer::FiniteSeqSet(_) | SetFormer::SeqSet(_) | SetFormer::MatrixSet(_),
+        ) => true,
         Obj::SetOperator(SetOperator::PowerSet(set)) => object_uses_functions(&set.set),
+        Obj::SetOperator(
+            SetOperator::IndexUnion(_) | SetOperator::IndexIntersect(_) | SetOperator::IndexCart(_),
+        ) => true,
+        Obj::SetOperator(SetOperator::FamilyUnion(set)) => object_uses_functions(&set.left),
+        Obj::SetOperator(SetOperator::FamilyIntersect(set)) => object_uses_functions(&set.left),
         Obj::SetOperator(SetOperator::SetMinus(set)) => {
             object_uses_functions(&set.left) || object_uses_functions(&set.right)
         }
@@ -165,6 +182,9 @@ fn object_uses_functions(object: &Obj) -> bool {
             object_uses_functions(&set.left) || object_uses_functions(&set.right)
         }
         Obj::SetOperator(SetOperator::Union(set)) => {
+            object_uses_functions(&set.left) || object_uses_functions(&set.right)
+        }
+        Obj::SetOperator(SetOperator::SymmetricDifference(set)) => {
             object_uses_functions(&set.left) || object_uses_functions(&set.right)
         }
         Obj::ArithmeticOperator(operation) => match operation {
@@ -195,6 +215,12 @@ fn object_uses_functions(object: &Obj) -> bool {
                 object_uses_functions(&x.base) || object_uses_functions(&x.exponent)
             }
         },
+        Obj::HyperbolicOperator(HyperbolicOperator::Sinh(p)) => object_uses_functions(&p.arg),
+        Obj::HyperbolicOperator(HyperbolicOperator::Cosh(p)) => object_uses_functions(&p.arg),
+        Obj::HyperbolicOperator(HyperbolicOperator::Tanh(p)) => object_uses_functions(&p.arg),
+        Obj::HyperbolicOperator(HyperbolicOperator::Coth(p)) => object_uses_functions(&p.arg),
+        Obj::HyperbolicOperator(HyperbolicOperator::Sech(p)) => object_uses_functions(&p.arg),
+        Obj::HyperbolicOperator(HyperbolicOperator::Csch(p)) => object_uses_functions(&p.arg),
         _ => false,
     }
 }
@@ -404,6 +430,8 @@ fn statement_uses_functions(statement: &ExecStmtResult) -> bool {
 
 fn object_uses_sets(object: &Obj) -> bool {
     match object {
+        Obj::BoundOperator(BoundOperator::Supremum(p)) => object_uses_sets(&p.set),
+        Obj::BoundOperator(BoundOperator::Infimum(p)) => object_uses_sets(&p.set),
         // Native constants have intrinsic R+ membership; source WD may use that
         // proof even when the enclosing source proposition mentions only R/C.
         Obj::Literal(Literal::EulerNumber(_) | Literal::Pi(_)) => true,
@@ -411,6 +439,15 @@ fn object_uses_sets(object: &Obj) -> bool {
         Obj::ComplexOperator(ComplexOperator::RealPart(p)) => object_uses_sets(&p.arg),
         Obj::ComplexOperator(ComplexOperator::ImaginaryPart(p)) => object_uses_sets(&p.arg),
         Obj::ComplexOperator(ComplexOperator::ComplexAbs(p)) => object_uses_sets(&p.arg),
+        // These source codomains are refined sets, even in a later real-valued expression.
+        Obj::HyperbolicOperator(
+            HyperbolicOperator::Cosh(_)
+            | HyperbolicOperator::Coth(_)
+            | HyperbolicOperator::Sech(_)
+            | HyperbolicOperator::Csch(_),
+        ) => true,
+        Obj::HyperbolicOperator(HyperbolicOperator::Sinh(p)) => object_uses_sets(&p.arg),
+        Obj::HyperbolicOperator(HyperbolicOperator::Tanh(p)) => object_uses_sets(&p.arg),
         Obj::TrigOperator(TrigOperator::Sin(p)) => object_uses_sets(&p.arg),
         Obj::TrigOperator(TrigOperator::Cos(p)) => object_uses_sets(&p.arg),
         Obj::TrigOperator(TrigOperator::Tan(p)) => object_uses_sets(&p.arg),
@@ -458,6 +495,8 @@ fn object_uses_sets(object: &Obj) -> bool {
         ) => true,
         Obj::SetOperator(
             SetOperator::Union(_)
+            | SetOperator::FamilyIntersect(_)
+            | SetOperator::SymmetricDifference(_)
             | SetOperator::Intersect(_)
             | SetOperator::SetMinus(_)
             | SetOperator::PowerSet(_),
@@ -568,6 +607,11 @@ fn statement_uses_sets(statement: &ExecStmtResult) -> bool {
 
         ExecStmtResult::Witness(ExecWitnessStmtResult::WitnessNonemptySet(crate::execute::execute_witness_stmt::ExecWitnessNonemptySetStmtResult::Success(p))) =>
             object_uses_sets(&p.statement.set) || object_uses_sets(&p.statement.obj) || p.proof_steps.iter().any(statement_uses_sets),
+        ExecStmtResult::By(ExecByStmtResult::Def(ExecByDefStmtResult::Success(proof))) => {
+            verified_subject(&proof.proof).as_ref().is_some_and(fact_uses_sets)
+                || verify_has_set_inference(&proof.proof)
+                || store_has_set_inference(&proof.stored)
+        }
         ExecStmtResult::By(ExecByStmtResult::Thm(ExecByThmStmtResult::Success(proof))) => {
             proof.builtin.as_ref().is_some_and(|b| b.conclusions.iter().any(fact_uses_sets))
                 || verified_subject(&proof.selected_proof).as_ref().is_some_and(fact_uses_sets)

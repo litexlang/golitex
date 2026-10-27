@@ -1,0 +1,23 @@
+# A proved infimum candidate determines the selected value for an arbitrary real set.
+thm known_infimum_value:
+    ? forall A set, b R:
+        A $subset R
+        $is_real_greatest_lower_bound(A,b)
+        =>:
+            inf(A) = b
+
+thm reuse_infimum_value:
+    ? forall A set, b R:
+        A $subset R
+        $is_real_greatest_lower_bound(A,b)
+        =>:
+            b = inf(A)
+    by thm known_infimum_value(A,b) => inf(A) = b
+
+thm infimum_set_alias:
+    ? forall A,B set, b R:
+        A = B
+        A $subset R
+        $is_real_greatest_lower_bound(A,b)
+        =>:
+            inf(A) = inf(B)

@@ -1,0 +1,3 @@
+# Exact evaluation keeps the bounded domain of the summand and factor function.
+finite_set_sum({1,2,3},fn(k closed_range(1,3)) Z {k}) = 6
+finite_set_product({1,2,3},fn(k closed_range(1,3)) Z {k}) = 6

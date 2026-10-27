@@ -1,0 +1,11 @@
+# Hyperbolic functions retain their real, positive and nonzero codomains.
+forall x R:
+    sinh(x) $in R
+    cosh(x) $in R+
+    tanh(x) $in R
+    sech(x) $in R+
+forall x R:
+    x != 0
+    =>:
+        coth(x) $in R*
+        csch(x) $in R*

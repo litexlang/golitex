@@ -1,0 +1,6 @@
+# The trace of a complex or real square matrix lies in the corresponding number field.
+forall n N, A matrix(C,n,n):
+    trace(A,n) $in C
+
+forall n N, A matrix(R,n,n):
+    trace(A,n) $in R

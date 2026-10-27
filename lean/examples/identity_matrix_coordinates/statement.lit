@@ -1,0 +1,3 @@
+# Each identity entry is the size of the intersection of its coordinate singletons.
+forall n N, row closed_range(1,n), col closed_range(1,n):
+    identity_matrix(n)(row,col) = finite_set_size(intersect({row},{col}))

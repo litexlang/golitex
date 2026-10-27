@@ -1,0 +1,6 @@
+# Two finite vectors define a real or complex outer-product matrix.
+forall m, n N, a cart_n(C,m), b cart_n(C,n):
+    outer_product(a,b,m,n) $in matrix(C,m,n)
+
+forall m, n N, a cart_n(R,m), b cart_n(R,n):
+    outer_product(a,b,m,n) $in matrix(R,m,n)

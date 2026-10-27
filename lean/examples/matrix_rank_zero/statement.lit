@@ -1,0 +1,6 @@
+# A rectangular zero matrix has rank zero, including arbitrary natural dimensions.
+thm checked_zero_matrix_rank:
+    ? forall m,n N:
+        matrix_rank(zero_matrix(m,n),m,n) = 0
+    release thm matrix_rank_zero(m,n)
+by thm checked_zero_matrix_rank(2,3) => matrix_rank(zero_matrix(2,3),2,3) = 0

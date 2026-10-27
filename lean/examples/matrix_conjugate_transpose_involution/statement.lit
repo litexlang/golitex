@@ -1,0 +1,5 @@
+# Two conjugate transposes restore the entire matrix by function extensionality.
+thm conjugate_transpose_involution:
+    ? forall ma, na N, aa matrix(C,ma,na):
+        conjugate_transpose(conjugate_transpose(aa,ma,na),na,ma) = aa
+    by fn_extension conjugate_transpose(conjugate_transpose(aa,ma,na),na,ma) = aa

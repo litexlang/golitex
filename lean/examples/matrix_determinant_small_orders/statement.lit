@@ -1,0 +1,9 @@
+# Unfold the determinant in orders zero, one and two.
+forall A matrix(C,0,0):
+    det(A,0) = 1
+
+forall A matrix(C,1,1):
+    det(A,1) = A(1,1)
+
+forall A matrix(C,2,2):
+    det(A,2) = A(1,1)*A(2,2) - A(1,2)*A(2,1)

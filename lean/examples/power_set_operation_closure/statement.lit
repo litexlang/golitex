@@ -1,0 +1,19 @@
+# Union, intersection and relative difference preserve a supplied subset bound.
+# The final case transports the known subset through a supplied set equality.
+
+forall X set, A,B power_set(X):
+    union(A,B) $in power_set(X)
+
+forall X set, A power_set(X), B set:
+    intersect(A,B) $in power_set(X)
+
+forall X set, A set, B power_set(X):
+    intersect(A,B) $in power_set(X)
+
+forall X set, A power_set(X), B set:
+    set_minus(A,B) $in power_set(X)
+
+forall X set, A,B power_set(X), D set:
+    A = D
+    =>:
+        union(D,B) $in power_set(X)

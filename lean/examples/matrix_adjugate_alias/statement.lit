@@ -1,0 +1,4 @@
+# An alias retains the adjugate's complete matrix signature.
+let adjugate_input = zero_matrix(2,2)
+let named_adjugate = matrix_adjugate(adjugate_input,2)
+named_adjugate $in matrix(C,2,2)

@@ -1,0 +1,6 @@
+# Transposing a real matrix preserves its real scalar values.
+forall m, n N, A matrix(R,m,n):
+    transpose(A,m,n) $in matrix(R,n,m)
+
+forall m, n N, A matrix(R,m,n), row closed_range(1,n), col closed_range(1,m):
+    transpose(A,m,n)(row,col) $in R

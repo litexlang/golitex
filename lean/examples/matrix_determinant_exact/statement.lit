@@ -1,0 +1,4 @@
+# Evaluate small determinants using the recorded matrix-coordinate calculations.
+det(identity_matrix(2),2) = 1
+det(zero_matrix(2,2),2) = 0
+1 = det(identity_matrix(1),1)

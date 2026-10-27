@@ -1,0 +1,7 @@
+# The determinant of every finite identity matrix is one.
+thm checked_det_identity:
+    ? forall n N:
+        det(identity_matrix(n),n) = 1
+    release thm matrix_det_identity(n)
+
+by thm checked_det_identity(2) => det(identity_matrix(2),2) = 1

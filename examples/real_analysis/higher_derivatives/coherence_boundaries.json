@@ -1,0 +1,72 @@
+{
+  "scope": "Canonical derivative functions, exact actual domains, proof-consuming guards; one continued Session after coherence.lit. Every refusal is followed by 0=0.",
+  "setup": [
+    "have fn boundary_absolute(x R) R=abs(x)",
+    "claim:\n    ? forall x R:\n        $Calc::unary_higher_order::is_n_times_differentiable_at(R,0,boundary_absolute,x)\n    release thm Calc::unary_higher_order::nth_derivative_zero(R,boundary_absolute,x)\n    release thm Calc::unary_higher_order::nth_derivative_candidate_exists(R,0,boundary_absolute,x,boundary_absolute(x))",
+    "by def $Calc::unary_higher_order::is_n_times_differentiable_on(R,0,boundary_absolute,R)",
+    "release thm Calc::unary_higher_order::nth_derivative_zero(R,boundary_absolute,2)",
+    "boundary_absolute(2)=abs(2)=2",
+    "release thm Calc::unary_higher_order::nth_derivative_function_value(R,0,boundary_absolute,R,2,2)",
+    "\\Calc::unary_higher_order::nth_derivative_function<R,R,0>(boundary_absolute)(2)=2",
+    "have fn boundary_vector(x cart_n(R,1)) R=x(1)",
+    "have fn boundary_identity(x R) R=x",
+    "$has_derivative_at(boundary_identity,0,1)"
+  ],
+  "cases": [
+    {
+      "id": "pointwise_is_not_on",
+      "source": "\\Calc::unary_higher_order::nth_derivative_function<R,R,2>(main::cubic) $in fn(x R) R",
+      "expected_category": "well_defined"
+    },
+    {
+      "id": "order_zero_is_not_one",
+      "source": "\\Calc::unary_higher_order::nth_derivative_function<R,R,1>(boundary_absolute)(0) $in R",
+      "expected_category": "well_defined"
+    },
+    {
+      "id": "outer_zero_keeps_function_guard",
+      "source": "0*\\Calc::unary_higher_order::nth_derivative_function<R,R,1>(boundary_absolute)(0)=0",
+      "expected_category": "well_defined"
+    },
+    {
+      "id": "unknown_actual_domain_point",
+      "source": "coherence::first_map(0) $in R",
+      "expected_category": "well_defined"
+    },
+    {
+      "id": "known_function_wrong_value",
+      "source": "coherence::first_map(2)=99",
+      "expected_category": "proof_search"
+    },
+    {
+      "id": "known_function_wrong_successor",
+      "source": "$has_derivative_at(coherence::second_map,2,99)",
+      "expected_category": "proof_search"
+    },
+    {
+      "id": "function_template_arity",
+      "source": "\\Calc::unary_higher_order::nth_derivative_function<R,0>(boundary_absolute) $in fn(x R) R",
+      "expected_category": "well_defined"
+    },
+    {
+      "id": "unary_argument_stays_real",
+      "source": "\\Calc::unary_higher_order::nth_derivative_function<R,R,0>(boundary_absolute)(tuple(0)) $in R",
+      "expected_category": "well_defined"
+    },
+    {
+      "id": "vector_function_is_not_unary",
+      "source": "\\Calc::unary_higher_order::nth_derivative_function<R,R,0>(boundary_vector) $in fn(x R) R",
+      "expected_category": "well_defined"
+    },
+    {
+      "id": "unary_function_is_not_vector",
+      "source": "\\Calc::higher_order::ordered_partial_function<1,cart_n(R,1),cart_n(R,1),0>(boundary_absolute,tuple()) $in fn(x cart_n(R,1)) R",
+      "expected_category": "well_defined"
+    },
+    {
+      "id": "restriction_requires_neighborhood",
+      "source": "release thm Calc::locality::real_derivatives_restrict(R,{0},0,boundary_identity,fn(x {0}) R {0},1,1)",
+      "expected_category": "proof_search"
+    }
+  ]
+}

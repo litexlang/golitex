@@ -1,0 +1,7 @@
+# Reuse the negative off-diagonal cofactor formula on a concrete matrix.
+thm checked_cofactor_sign:
+    ? forall A matrix(C,2,2):
+        matrix_cofactor(A,2,1,2) = -A(2,1)
+    matrix_cofactor(A,2,1,2) = -A(2,1)
+
+by thm checked_cofactor_sign(zero_matrix(2,2)) => matrix_cofactor(zero_matrix(2,2),2,1,2) = -zero_matrix(2,2)(2,1)

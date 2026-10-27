@@ -1,0 +1,26 @@
+# Establish the infimum of {2}, identify any other candidate, and extract a crossing member.
+by def $is_real_lower_bound({2},2)
+release thm real_greatest_lower_bound_from_definition({2},2)
+inf({2}) = 2
+release thm real_greatest_lower_bound_lower_bound({2},2)
+by def $is_real_lower_bound({2},1)
+release thm real_greatest_lower_bound_exists({2},1)
+obtain lower_candidate_witness from exist u R st {$is_real_greatest_lower_bound({2},u)}
+release thm real_greatest_lower_bound_unique({2},lower_candidate_witness,2)
+lower_candidate_witness = 2
+release thm real_greatest_lower_bound_le_member({2},lower_candidate_witness,2)
+release thm real_lower_bound_le_greatest_lower_bound({2},lower_candidate_witness,1)
+release thm real_greatest_lower_bound_crosses({2},lower_candidate_witness,3)
+obtain lower_crossing_witness from exist x {2} st {x < 3}
+lower_crossing_witness < 3
+lower_crossing_witness = 2
+
+thm extremal_member_lower_bound:
+    ? forall A set, b R, x A:
+        A $subset R
+        $is_real_greatest_lower_bound(A,b)
+        =>:
+            b <= x
+    release thm real_greatest_lower_bound_le_member(A,b,x)
+
+by thm extremal_member_lower_bound({2},lower_candidate_witness,2) => lower_candidate_witness <= 2

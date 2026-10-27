@@ -1,0 +1,7 @@
+# A callable choice function belongs to the indexed product.
+thm phase3_product:
+    ? forall I nonempty_set, S nonempty_set, g fn(k I) S, f fn(k I) family_union(S):
+        $is_choice_function_for(I,S,g,f)
+        =>:
+            f $in index_cart(I,S,g)
+    release thm index_cart_member(f,index_cart(I,S,g))

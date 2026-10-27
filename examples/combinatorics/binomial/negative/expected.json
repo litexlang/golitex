@@ -1,0 +1,23 @@
+{
+  "negative_row": "well_defined",
+  "fractional_row": "well_defined",
+  "negative_column": "well_defined",
+  "fractional_column": "well_defined",
+  "missing_column": "well_defined",
+  "extra_argument": "well_defined",
+  "zero_zero_is_not_zero": "search_proof",
+  "one_one_is_not_zero": "search_proof",
+  "wrong_five_two": "search_proof",
+  "wrong_five_three": "search_proof",
+  "wrong_pascal_first_column": "search_proof",
+  "symmetry_missing_range": "premise",
+  "positivity_missing_range": "premise",
+  "strict_missing_positive_column": "premise",
+  "strict_missing_range": "premise",
+  "outside_zero_missing_gap": "premise",
+  "penultimate_zero_row": "argument_type",
+  "reversed_row_order": "search_proof",
+  "zero_column_is_not_strict": "search_proof",
+  "above_row_is_not_positive": "search_proof",
+  "function_missing_definition_release": "well_defined"
+}

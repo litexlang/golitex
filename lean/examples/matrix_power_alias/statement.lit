@@ -1,0 +1,4 @@
+# Name a matrix and its square, then retain the matrix membership through both aliases.
+let base_matrix = zero_matrix(2,2)
+let squared_matrix = matrix_power(base_matrix,2,2)
+squared_matrix $in matrix(C,2,2)

@@ -1,0 +1,3 @@
+# A rectangular matrix product equals the function of its finite row-column sums.
+forall m,k,n N, A matrix(C,m,k), B matrix(C,k,n):
+    matrix_mul(A,B,m,k,n) = fn(row closed_range(1,m),col closed_range(1,n)) C {finite_set_sum(closed_range(1,k),fn(t closed_range(1,k)) C {A(row,t)*B(t,col)})}

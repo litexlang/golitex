@@ -1,0 +1,6 @@
+# Addition and subtraction equal their full two-parameter formula functions.
+forall m, n N, A, B matrix(C,m,n):
+    matrix_add(A,B,m,n) = fn(row closed_range(1,m),col closed_range(1,n)) C {A(row,col)+B(row,col)}
+
+forall m, n N, A, B matrix(C,m,n):
+    matrix_sub(A,B,m,n) = fn(row closed_range(1,m),col closed_range(1,n)) C {A(row,col)-B(row,col)}

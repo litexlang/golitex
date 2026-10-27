@@ -1,0 +1,8 @@
+# Zero matrices retain natural dimensions and return zero at every valid coordinate.
+forall m, n N:
+    zero_matrix(m,n) $in matrix(R,m,n)
+    zero_matrix(m,n) $in matrix(C,m,n)
+forall m, n N, row closed_range(1,m), col closed_range(1,n):
+    zero_matrix(m,n)(row,col) = 0
+zero_matrix(0,3) $in matrix(R,0,3)
+zero_matrix(2,3)(1,2) = 0

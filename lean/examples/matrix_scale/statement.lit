@@ -1,0 +1,6 @@
+# Scalar multiplication preserves the complex or real matrix domain.
+forall m, n N, z C, A matrix(C,m,n):
+    matrix_scale(z,A,m,n) $in matrix(C,m,n)
+
+forall m, n N, z R, A matrix(R,m,n):
+    matrix_scale(z,A,m,n) $in matrix(R,m,n)
