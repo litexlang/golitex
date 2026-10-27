@@ -1,0 +1,5 @@
+# Evaluate an ordered subtraction fold; an empty range retains its seed.
+eval reduce(1,3,fn(k Z) Z{k},fn(a,b Z) Z{a-b},0)
+reduce(1,3,fn(k Z) Z{k},fn(a,b Z) Z{a-b},0) = -6
+eval reduce(2,1,fn(k Z) Z{k},fn(a,b Z) Z{a-b},7)
+reduce(2,1,fn(k Z) Z{k},fn(a,b Z) Z{a-b},7) = 7

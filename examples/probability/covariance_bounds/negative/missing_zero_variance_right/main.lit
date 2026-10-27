@@ -1,0 +1,81 @@
+release thm prob::main::uniform_probability_laws({0,1})
+
+\prob::main::uniform_probability_space<{0,1}> = ({0,1},\prob::main::uniform_event_probability<{0,1}>)
+
+have fair &prob::main::FiniteProbabilitySpace<{0,1}> = \prob::main::uniform_probability_space<{0,1}>
+
+release struct def fair
+
+fair = ({0,1},\prob::main::uniform_event_probability<{0,1}>)
+
+fair.carrier = {0,1}
+
+fair.prob = \prob::main::uniform_event_probability<{0,1}>
+
+fair.carrier $subset R
+
+0 $in fair.carrier
+
+1 $in fair.carrier
+
+fair.prob({0}) = \prob::main::uniform_event_probability<{0,1}>({0}) = 1/2
+
+fair.prob({1}) = \prob::main::uniform_event_probability<{0,1}>({1}) = 1/2
+
+have fn bit(k fair.carrier) R = k
+
+have fn weighted(k fair.carrier) R = bit(k)*fair.prob({k})
+
+weighted(0) = bit(0)*fair.prob({0}) = 0*(1/2) = 0
+
+weighted(1) = bit(1)*fair.prob({1}) = 1*(1/2) = 1/2
+
+release thm finite_set_sum_substitution(finite_set_sum(fair.carrier,fn(k fair.carrier) R {bit(k)*fair.prob({k})}),finite_set_sum(fair.carrier,weighted))
+
+finite_set_sum(fair.carrier,weighted) = finite_set_sum({0,1},weighted) = weighted(0)+weighted(1) = 1/2
+
+release thm prob::main::finite_expectation_formula({0,1},fair,bit)
+
+\prob::main::finite_expectation<{0,1},fair>(bit) = finite_set_sum(fair.carrier,fn(k fair.carrier) R {bit(k)*fair.prob({k})}) = finite_set_sum(fair.carrier,weighted) = 1/2
+
+bit(0) = 0
+
+bit(1) = 1
+
+by enumerate finite_set:
+    ? forall k {0,1}:
+        bit(k)^2 = bit(k)
+    bit(k) = k
+    k^2 = k
+    bit(k)^2 = k^2 = k = bit(k)
+
+have fn bit_square(k fair.carrier) R = bit(k)^2
+
+claim:
+    ? forall k fair.carrier:
+        bit_square(k) = bit(k)
+    k $in {0,1}
+    bit_square(k) = bit(k)^2 = bit(k)
+
+release thm prob::main::finite_expectation_extensional({0,1},fair,bit_square,bit)
+
+release thm prob::main::finite_expectation_extensional({0,1},fair,bit_square,fn(k fair.carrier) R {bit(k)^2})
+
+\prob::main::finite_expectation<{0,1},fair>(fn(k fair.carrier) R {bit(k)^2}) = \prob::main::finite_expectation<{0,1},fair>(bit) = 1/2
+
+release thm prob::main::finite_variance_second_moment({0,1},fair,bit)
+
+thm variance_from_moments:
+    ? forall mean,second,result,a,b R:
+        result = second-mean^2
+        second = a
+        mean = b
+        =>:
+            result = a-b^2
+    result = second-mean^2 = a-mean^2 = a-b^2
+
+release thm variance_from_moments(\prob::main::finite_expectation<{0,1},fair>(bit),\prob::main::finite_expectation<{0,1},fair>(fn(k fair.carrier) R {bit(k)^2}),\prob::main::finite_variance<{0,1},fair>(bit),1/2,1/2)
+
+\prob::main::finite_variance<{0,1},fair>(bit) = 1/2-(1/2)^2 = 1/4
+
+release thm prob::main::finite_covariance_zero_variance_right({0,1},fair,bit,bit)

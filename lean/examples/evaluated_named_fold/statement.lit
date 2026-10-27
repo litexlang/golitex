@@ -1,0 +1,5 @@
+# Fold a named successor function with named addition and an explicit seed.
+have fn evaluated_fold_successor(k Z) Z = k + 1
+have fn evaluated_fold_add(a,b Z) Z = a + b
+eval finite_set_reduce({1,2},evaluated_fold_successor,evaluated_fold_add,10)
+finite_set_reduce({1,2},evaluated_fold_successor,evaluated_fold_add,10) = 15

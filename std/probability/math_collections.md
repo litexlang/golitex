@@ -11,7 +11,7 @@ intersect and set_minus remain the event constructions. The forward proof
 spine is the actual disjoint split A=(A intersect B) union (A minus B), then
 finite additivity, complement/difference, monotonicity, probability bounds and
 inclusion-exclusion. Set extensionality proves both directions and a
-contradiction proves disjointness. The 79 exported source theorems are checked;
+contradiction proves disjointness. The 89 exported source theorems are checked;
 the source adds no strategies or reserved native theorem names. The kernel
 provides four bounded power-set closure cases.
 
@@ -31,8 +31,8 @@ positivity and finite union identity. The three formula laws are independently
 exported and generic, not numerical tests. No new counting function or
 unjustified integrality premise is introduced.
 
-Delivered source is91 top-level statements: one structure, one predicate,
-eight templates (six function families and two bundled values),79 theorems and
+Delivered source is103 top-level statements: one structure, one predicate,
+ten templates (eight function families and two bundled values),89 theorems and
 two internal universal facts. The event and
 numeric closure exports let independent generic callers state the same
 compound goals without adding premises or strategies. They supply typing
@@ -172,10 +172,52 @@ premise is required to remove the cross term. Event independence is a different
 relation and is not silently used to stand in for random-variable independence.
 The two-sided affine law also uses the existing constant-covariance theorem.
 
-These eleven additional source theorems require no new value, prop, builtin,
-strategy, trust or state. The resulting source has91 top-level statements and
+At the preceding checkpoint, these eleven additional source theorems required no new value, prop, builtin,
+strategy, trust or state. That checkpoint had91 top-level statements and
 79 named theorems. No nonzero/positive coefficient premise is introduced;
 zero coefficients still require actual total real input functions. Generic
 import contracts and the correlated dice observable Y=2X+1 exercise the same
 interfaces. Measure probability, distributions, correlation and full probability
 Lean replay remain separate work.
+
+The square bound adds a private scalar proof for an everywhere nonnegative
+quadratic a*t²+2*c*t+b, with a>=0. At a=0 a nonzero c would permit the value -1;
+at a>0 the value at -c/a gives c²<=a*b. Applying this to Var(tX+Y) proves the
+public covariance bound with no positive-variance restriction. The left/right
+zero-variance consequences use real square-zero inference and symmetry, not
+an everywhere-constant assertion.
+
+The parallelogram law cancels covariance in the sum and difference variance
+formulas. Each complementary variance is nonnegative, so both are bounded by
+2Var(X)+2Var(Y). These six source theorems add no value, prop, native BT,
+strategy or trust. Current source97/85thms keeps the same eight templates.
+The dedicated covariance_bounds consumer checks all six contracts, the
+Bernoulli equality/strictness boundary and the Dirac nonconstant null-outcome
+case. Correlation and probability tail inequalities remain downstream.
+
+
+Finite tail-event constructions and inequalities extend this source layer.
+finite_upper_tail_event<Omega,space>(X,a) and
+finite_deviation_tail_event<Omega,space>(X,a) return the actual carrier subsets
+with X>=a and abs(X-EX)>=a. Both have two template parameters and two ordinary
+arguments, accept real thresholds and declare power_set(space.carrier) as their
+codomain. They are set-valued functions, not predicates or new kernel objects.
+
+The forward proof uses the disjoint partition carrier=A union (carrier minus A).
+Nonnegative X and atom masses make the complement's weighted sum nonnegative;
+pointwise X>=a on A and singleton normalization give aP(A)<=EX. Positive a then
+permits division. This is finite_markov_event_bound/5. Applying it to the
+centered square yields finite_chebyshev_event_bound/5; the square's expectation
+is variance and its threshold is a^2. Signed X and variance0 remain allowed.
+The two arity4 tail wrappers use exactly these sets and their membership facts.
+No additional mathematical hypothesis is introduced to repair type checking.
+
+Exact real restrictions are built from a full-carrier weighted function before
+summing on an event/complement. Private complex sum-scaling and scalar equality
+transport keep the mathematical partition and comparison explicit. The public
+subsum prototype was not promoted. The generic raw-set probability-header WD
+miss remains recorded; named source event functions expose the same sets with
+an explicit codomain. Independent clean source replay excludes the scratch
+restriction probe and raw-tail typing fact. No trust, new prop/native/BT/search,
+AST/state or compiler changes occur. The dedicated tail_bounds consumer checks
+actual Bernoulli, signed and Dirac null events, empty events and threshold guards.

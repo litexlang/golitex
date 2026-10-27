@@ -7,7 +7,7 @@
       ["Definition: extend the context", "Register the name x with its declaration, record x ∈ ℝ with a source identity, and make the successful declaration available to later statements."],
       ["Proof: propose a new fact", "The declaration has established x ∈ ℝ. Now ask whether the new fact 0 ≤ (x + 1)² can be proved from that context."],
       ["Check well-definedness", "Before truth search, check objects, the predicate signature and its domains. Those checks can themselves require mathematical evidence."],
-      ["Select a builtin rule", "The selected order rule says that an even power of a real base is nonnegative. It requires evidence that x + 1 is real."],
+      ["Select a builtin rule", "Match the goal's shape: zero on the left, a power on the right, and the even literal exponent 2. Instantiate the even-real-power rule with u = x + 1. The remaining requirement is x + 1 ∈ ℝ."],
       ["Resolve the real-base premise", "Direct structural membership follows the addition expression. Both operand memberships must hold; it does not reopen unrestricted proof search."],
       ["Retrieve the leaf evidence", "The left operand cites x ∈ ℝ from the declaration. Membership of the numeral 1 in ℝ is established by closed calculation."],
       ["Assemble and publish", "Combine the child evidence into the rule proof. Only after the top-level fact is verified is it stored and passed to direct inference once; this example yields no additional inferred facts."],
@@ -18,7 +18,7 @@
       ["定义：扩展数学上下文", "登记名称 x 和它的声明，记录成员事实 x ∈ ℝ 及其来源。声明成功后，这些信息可供后续陈述使用。"],
       ["证明：提出待验证事实", "声明已建立 x ∈ ℝ。现在提出新的事实 0 ≤ (x + 1)²，询问能否从当前数学上下文找到证明。"],
       ["先检查良定义性", "在搜索真值证据之前，检查对象、谓词签名和适用域。这些检查本身也可能需要数学证据。"],
-      ["匹配内置规则", "本例选中的序关系规则是：实数的偶次幂非负。规则要求提供 x + 1 是实数的证据。"],
+      ["匹配内置规则", "先匹配目标的形状：左边是 0，右边是幂，指数 2 是偶数。把“实数的偶次幂非负”中的 u 对应到 x + 1，接下来要找的就变成：x + 1 ∈ ℝ。"],
       ["继续检查实数前提", "Direct 结构性成员检查沿加法表达式向下分解，要求两个操作数都是实数；它不会重新开启无限制搜索。"],
       ["找到叶子证据", "左边引用声明产生的 x ∈ ℝ；右边通过闭式计算确认数值 1 属于 ℝ。"],
       ["组合并存储证据", "将子证据组合为规则证明。顶层事实验证成功后才存储，并直接推导一次；本例没有额外的推导事实。"],
@@ -43,7 +43,7 @@
     rewrite: ["Final rewrite opportunity", "最后的改写机会", "A permitted final fallback tries supported replacements and checks the residual goal without reopening rewrite on that branch.", "允许的最后回退路径尝试支持的替换，再检查残余目标；该分支不会重新获得改写机会。", "VerifyState::after_rewrite"],
     miss: ["No proof found", "未找到证明", "A search miss does not prove the fact false and does not publish it as a known fact.", "搜索未命中，不表示命题为假，也不会将它发布为已知事实。", "ExecFactStmtResult::Failed"],
     proof: ["One successful route suffices", "一条成功路径即可", "The pipeline returns on a successful route. For this example the retained successful proof is the even-power builtin, with its checked real-base premise.", "管线在找到成功路径时返回。本例保留的是偶次幂非负规则及其已检查的实数底数前提。", evidence.rule_ids.join("\n")],
-    result: ["The assembled conclusion", "组合得到的结论", "The returned proof includes formation evidence and the selected truth proof. The figure shows the main mathematical dependency, while leaving routine WD details in the underlying record.", "返回的证明包含表达式形成证据和选中的真值证明。图中展示主要数学依赖，常规良定义性细节保留在底层记录中。", "VerifyAtomicExceptEqualityFactSuccess"],
+    result: ["From goal to checked conclusion", "从目标到已验证结论", "Start with this unproved goal. Follow its requirements downward; only after the leaves succeed can their evidence be composed into a proof of the conclusion. Routine formation checks remain in the underlying record.", "起初这是待证明的目标。沿依赖向下寻找条件，叶子都有依据后，才能向上组合成这个结论的证明。常规良定义性检查保留在底层记录中。", "VerifyAtomicExceptEqualityFactSuccess"],
     square: ["An order builtin", "序关系内置规则", "EvenPowNonnegative requires a checked real base. The displayed square is an instance of that rule; complex formation alone would not establish the required real-base condition.", "EvenPowNonnegative 要求已检查的实数底数。本例的平方是它的一个实例；仅有复数表达式合法性，不能替代实数底数条件。", evidence.rule_ids[0]],
     real: ["A membership obligation", "成员关系条件", "The order rule asks for x + 1 ∈ ℝ. The retained proof of this premise uses Direct structural membership.", "序关系规则需要 x + 1 ∈ ℝ；这一前提的实际保留证据来自 Direct 结构性成员检查。", "ByStructuralMembership"],
     add: ["Structural addition", "按加法结构分解", "Real addition closure combines the two smaller membership proofs. This is Direct structural traversal, not a recursive re-entry into the BuiltinRule dispatcher.", "实数加法封闭性组合两个更小的成员关系证明。这是 Direct 结构遍历，不是递归重新进入 BuiltinRule 分派器。", "StructuralMembershipReason::Add"],
@@ -58,6 +58,9 @@
   let selected = "declaration";
   const proofStart = 3;
   const lastStep = stages.en.length - 1;
+  const treeSteps = {result: 3, square: 5, real: 5, add: 6, x: 7, one: 7, lookup: 7, calculation: 7};
+  const treeReached = {result: 3, square: 5, real: 5, add: 6, x: 6, one: 6, lookup: 7, calculation: 7};
+  const treeCurrent = {3: ["result"], 4: ["result"], 5: ["square", "real"], 6: ["add", "x", "one"], 7: ["x", "one", "lookup", "calculation"], 8: Object.keys(treeSteps)};
   let timer = null;
   const track = document.getElementById("step-track");
   const play = document.getElementById("play");
@@ -99,11 +102,35 @@
       node.setAttribute("aria-label", item[language === "en" ? 0 : 1]);
       node.setAttribute("aria-pressed", String(node.dataset.node === selected));
     });
+    document.querySelectorAll("[data-route-step]").forEach(button => {
+      const index = Number(button.dataset.routeStep);
+      button.querySelector(".route-title").textContent = stages[language][index][0];
+      button.setAttribute("aria-pressed", String(index === step));
+      button.classList.toggle("is-complete", index < step);
+    });
+    document.querySelectorAll(".proof-tree").forEach(tree => {
+      const returning = step === lastStep;
+      tree.classList.toggle("is-searching", !returning);
+      tree.classList.toggle("is-returning", returning);
+      tree.querySelector("[data-tree-title]").textContent = language === "zh"
+        ? (returning ? "向上组合证明证据" : "向下寻找证明依据")
+        : (returning ? "Compose checked evidence" : "Follow proof requirements");
+      tree.querySelector("[data-tree-subtitle]").textContent = language === "zh"
+        ? (returning ? "↑ 两条叶子都有依据，才能返回结论" : "↓ 目标 → 规则前提 → 更小的条件")
+        : (returning ? "↑ Both leaves must succeed before returning" : "↓ Goal → rule premise → smaller requirements");
+      tree.querySelectorAll(".node").forEach(node => {
+        const key = node.dataset.node;
+        node.classList.toggle("is-unreached", step < treeReached[key]);
+        node.classList.toggle("is-current", (treeCurrent[step] || []).includes(key));
+      });
+      tree.querySelectorAll("[data-edge-step]").forEach(edge => edge.classList.toggle("is-unreached", step < Number(edge.dataset.edgeStep)));
+    });
     const item = info[selected];
     document.getElementById("selection-title").textContent = item[language === "en" ? 0 : 1];
     document.getElementById("selection-description").textContent = item[language === "en" ? 2 : 3];
     document.getElementById("selection-source").textContent = item[4];
     for (const format of ["svg","pdf","png"]) document.getElementById(`download-${format}`).href = `proof-search${language === "zh" ? ".zh" : ""}.${format}`;
+    document.getElementById("download-discovery").href = `proof-discovery${language === "zh" ? ".zh" : ""}.png`;
   }
 
   function setStep(value) {
@@ -121,7 +148,12 @@
   document.querySelectorAll(".node").forEach(node => {
     node.setAttribute("role", "button");
     node.setAttribute("tabindex", "0");
-    const select = () => { stop();selected = node.dataset.node;render(); };
+    const select = () => {
+      stop();
+      if (node.closest(".proof-tree")) setStep(treeSteps[node.dataset.node]);
+      selected = node.dataset.node;
+      render();
+    };
     node.addEventListener("click", select);
     node.addEventListener("keydown", event => { if(event.key === "Enter" || event.key === " "){event.preventDefault();select();} });
   });
@@ -129,15 +161,21 @@
   next.addEventListener("click", () => { stop();if(step<lastStep)setStep(step+1); });
   document.getElementById("phase-definition").addEventListener("click", () => { stop();setStep(0); });
   document.getElementById("phase-proof").addEventListener("click", () => { stop();setStep(proofStart); });
-  play.addEventListener("click", () => {
-    if(timer){stop();return;}
-    if(step === lastStep)setStep(0);
+  function startPlayback(from) {
+    stop();
+    setStep(from);
     timer = setInterval(() => { if(step<lastStep)setStep(step+1);if(step === lastStep)stop(); }, 2800);
     play.setAttribute("aria-pressed", "true");
     render();
+  }
+  play.addEventListener("click", () => {
+    if(timer){stop();return;}
+    startPlayback(step === lastStep ? 0 : step);
   });
+  document.querySelectorAll("[data-route-step]").forEach(button => button.addEventListener("click", () => { stop();setStep(Number(button.dataset.routeStep)); }));
+  document.querySelectorAll(".proof-replay").forEach(button => button.addEventListener("click", () => startPlayback(proofStart)));
   for (const lang of ["en","zh"]) document.getElementById(`language-${lang}`).addEventListener("click", () => { language = lang;render(); });
   document.addEventListener("visibilitychange", () => { if(document.hidden)stop(); });
   document.getElementById("verification-summary").textContent = JSON.stringify(evidence,null,2);
-  render();
+  setStep(new URLSearchParams(location.search).get("view") === "proof" ? proofStart : 0);
 })();

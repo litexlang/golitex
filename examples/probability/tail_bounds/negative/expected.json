@@ -1,0 +1,16 @@
+{
+  "markov_zero": "argument_type",
+  "markov_negative": "argument_type",
+  "chebyshev_zero": "argument_type",
+  "chebyshev_negative": "argument_type",
+  "missing_markov_nonnegative": "premise",
+  "missing_markov_event_threshold": "premise",
+  "missing_chebyshev_deviation": "premise",
+  "nonreal_sampler": "argument_type",
+  "wrong_sampler_domain": "argument_type",
+  "partial_sampler": "argument_type",
+  "outside_event": "argument_type",
+  "strict_markov_bound": "search_proof",
+  "strict_chebyshev_bound": "search_proof",
+  "nonempty_null_tail_positive": "search_proof"
+}

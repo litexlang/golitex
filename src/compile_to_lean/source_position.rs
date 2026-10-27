@@ -2558,7 +2558,12 @@ impl<'a> SourcePosition<'a> {
                                 if checked.obj() != object {
                                     return Err(LeanCompileError::new(
                                         "WD/HaveEqualRegistration",
-                                        "WD id refers to another declared value.",
+                                        &format!(
+                                            "WD id {} refers to declared `{}`, not requested `{}`.",
+                                            subject.wd_id.value(),
+                                            checked.obj().readable_string(),
+                                            object.readable_string()
+                                        ),
                                     ));
                                 }
                                 return Ok(Some(term));

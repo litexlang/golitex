@@ -1,0 +1,5 @@
+# Evaluate rounding inside a local proof block.
+sketch:
+    have real_eval_local R = -5/4
+    eval ceil(real_eval_local)
+    ceil(real_eval_local) = -1

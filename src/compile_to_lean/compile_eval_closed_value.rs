@@ -44,6 +44,26 @@ impl LitexToLeanCompiler {
                 position,
             );
         }
+        if matches!(
+            object,
+            Obj::ArithmeticOperator(
+                ArithmeticOperator::Abs(_)
+                    | ArithmeticOperator::Min(_)
+                    | ArithmeticOperator::Max(_)
+                    | ArithmeticOperator::Sign(_)
+                    | ArithmeticOperator::Floor(_)
+                    | ArithmeticOperator::Ceil(_)
+            )
+        ) {
+            return self.compile_eval_real_value(
+                object,
+                evaluations,
+                remaining,
+                aggregates,
+                remaining_aggregates,
+                position,
+            );
+        }
         let raw = self.compile_normalization_value(object, position)?;
         let (value, proof, cites) = match object {
             Obj::Literal(Literal::Number(n)) => {
@@ -167,6 +187,12 @@ impl LitexToLeanCompiler {
                 (vec![&p.base, &p.exponent], "pow")
             }
             Obj::ArithmeticOperator(ArithmeticOperator::Neg(p)) => (vec![&p.arg], "neg"),
+            Obj::ArithmeticOperator(ArithmeticOperator::Abs(p)) => (vec![&p.arg], "abs"),
+            Obj::ArithmeticOperator(ArithmeticOperator::Sign(p)) => (vec![&p.arg], "sign"),
+            Obj::ArithmeticOperator(ArithmeticOperator::Floor(p)) => (vec![&p.arg], "floor"),
+            Obj::ArithmeticOperator(ArithmeticOperator::Ceil(p)) => (vec![&p.arg], "ceil"),
+            Obj::ArithmeticOperator(ArithmeticOperator::Min(p)) => (vec![&p.left, &p.right], "min"),
+            Obj::ArithmeticOperator(ArithmeticOperator::Max(p)) => (vec![&p.left, &p.right], "max"),
             _ => return Ok(None),
         };
         use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ArithmeticOperatorObjWellDefinedProofByDef as WD;
@@ -178,6 +204,12 @@ impl LitexToLeanCompiler {
                 | ("div", WD::Div(_))
                 | ("neg", WD::Neg(_))
                 | ("pow", WD::Pow(_))
+                | ("abs", WD::Abs(_))
+                | ("sign", WD::Sign(_))
+                | ("floor", WD::Floor(_))
+                | ("ceil", WD::Ceil(_))
+                | ("min", WD::Min(_))
+                | ("max", WD::Max(_))
         ) {
             return Err(LeanCompileError::unsupported("Eval/WDConstructor"));
         }
@@ -200,13 +232,20 @@ impl LitexToLeanCompiler {
             let term = self.compile_wd(child, &prior)?;
             let (v, p) = self.compile_eval_closed_value(arg, &prior)?;
             let l = exact_rational_literal(&v, "ℂ")?;
-            members.push(format!("(Litex.NativeBridge.inOfDenoteNumber {term} {l} Litex.C {p} (Litex.numberInC {l}))"));
+            members.push(if matches!(name, "abs" | "sign" | "floor" | "ceil" | "min" | "max") {
+                let real = exact_rational_literal(&v, "ℝ")?;
+                format!("(Litex.NativeBridge.inOfDenoteNumber {term} {l} Litex.R {p} (Litex.NativeBridge.numberInROfEq {l} {real} (by norm_num)))")
+            } else {
+                format!("(Litex.NativeBridge.inOfDenoteNumber {term} {l} Litex.C {p} (Litex.numberInC {l}))")
+            });
             terms.push(term);
             values.push(v);
             denotes.push(p);
         }
         let term = match name {
-            "neg" => format!("(Litex.neg {} {})", terms[0], members[0]),
+            "neg" | "abs" | "sign" | "floor" | "ceil" => {
+                format!("(Litex.{name} {} {})", terms[0], members[0])
+            }
             "pow" => {
                 let n = values[1]
                     .to_i128_if_integer()

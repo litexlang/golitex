@@ -1,0 +1,10 @@
+{
+  "missing_zero_variance_left": "premise",
+  "missing_zero_variance_right": "premise",
+  "nonreal_sampler": "argument_type",
+  "wrong_sampler_domain": "argument_type",
+  "partial_sampler": "argument_type",
+  "strict_covariance_bound": "search_proof",
+  "variance_bound_missing_two": "search_proof",
+  "strict_variance_bound": "search_proof"
+}

@@ -105,14 +105,8 @@ theorem h_69 : (by
     litex_complete =>
       exact (
         (let _equal_wd_1_0 := (_object_w6 (M := M));
-        (show Litex.Same _equal_wd_1_0 (Litex.number (M := M) (16 : ℂ)) from (Litex.NativeBridge.sameOfDenoteNumber _equal_wd_1_0 (Litex.number (M := M) (16 : ℂ)) (16 : ℂ) (16 : ℂ) (by
+        (show Litex.Same _equal_wd_1_0 (Litex.number (M := M) (16 : ℂ)) from (show Litex.Same _equal_wd_1_0 (Litex.number (M := M) (16 : ℂ)) from ((show (Litex.denote _equal_wd_1_0) = M.number (16 : ℂ) from (by
           let _aggregate := _equal_wd_1_0
-          let _enumerated := (_object_i1 (M := M))
-          have _enumeration_same : Litex.Same _aggregate.val.set _enumerated := (h_10 (M := M))
-          let _collection_tail_0 := _enumerated
-          let _collection_tail_1 := _collection_tail_0.val.tail
-          let _collection_tail_2 := _collection_tail_1.val.tail
-          let _collection_tail_3 := _collection_tail_2.val.tail
           have _aggregate_term_0 : Litex.NativeBridge.complexValue (Litex.FunctionSemantics.callValue (Litex.denote _aggregate.val.function) (M.number (2 : ℂ))) = (3 : ℂ) := (congrArg (Litex.NativeBridge.complexValue (M := M)) (by
             let _call := (Litex.call Litex.StandardSetValue.integer Litex.StandardSetValue.integer (fun (_raw_i3 : M.Value) => True) (_object_i2 (M := M)) (Litex.number (M := M) (2 : ℂ)) (h_67 (M := M)) (Litex.NativeBridge.numberInZOfEq (M := M) (2 : ℂ) (2 : ℤ) (by norm_num)) True.intro)
             let _literal := (_object_i2 (M := M))
@@ -143,18 +137,24 @@ theorem h_69 : (by
             have _calculated : (M.addValue (M.number (7 : ℂ)) (M.number (1 : ℂ))) = M.number (8 : ℂ) := by norm_num [Litex.Semantics.add_numbers, Litex.Semantics.sub_numbers, Litex.Semantics.mul_numbers, Litex.Semantics.neg_numbers, Litex.Semantics.div_numbers]
             have _argument : Litex.denote _call.val.argument = M.number (7 : ℂ) := ((Litex.NativeBridge.denoteNumber (M := M) (7 : ℂ))).trans (congrArg M.number (by norm_num : (7 : ℂ) = (7 : ℂ)))
             exact (congrArg (fun x => Litex.FunctionSemantics.callValue (Litex.denote _call.val.function) x) _argument).symm.trans (_head_call.trans (_beta.trans (_body.trans _calculated))))).trans (Litex.NativeBridge.complexValue_number (8 : ℂ))
-          have _members_3 : ∀ x, M.mem x (Litex.denote _collection_tail_3) ↔ x ∈ ([] : List M.Value) := Litex.finiteMembersEmpty
-          have _number_2 : Litex.denote _collection_tail_2.val.element = M.number (7 : ℂ) := ((Litex.NativeBridge.denoteNumber (M := M) (7 : ℂ))).trans (congrArg M.number (by norm_num : (7 : ℂ) = (7 : ℂ)))
-          have _members_2 := Litex.finiteMembersInsert _collection_tail_2 (M.number (7 : ℂ)) [] _number_2 _members_3
-          have _number_1 : Litex.denote _collection_tail_1.val.element = M.number (4 : ℂ) := ((Litex.NativeBridge.denoteNumber (M := M) (4 : ℂ))).trans (congrArg M.number (by norm_num : (4 : ℂ) = (4 : ℂ)))
-          have _members_1 := Litex.finiteMembersInsert _collection_tail_1 (M.number (4 : ℂ)) [M.number (7 : ℂ)] _number_1 _members_2
-          have _number_0 : Litex.denote _collection_tail_0.val.element = M.number (2 : ℂ) := ((Litex.NativeBridge.denoteNumber (M := M) (2 : ℂ))).trans (congrArg M.number (by norm_num : (2 : ℂ) = (2 : ℂ)))
-          have _members_0 := Litex.finiteMembersInsert _collection_tail_0 (M.number (2 : ℂ)) [M.number (4 : ℂ), M.number (7 : ℂ)] _number_0 _members_1
           apply Litex.finiteAggregateListDenote _aggregate [(2 : ℂ), (4 : ℂ), (7 : ℂ)] (16 : ℂ)
-          · intro x
-            rw [_enumeration_same]
-            exact _members_0 x
-          · norm_num [List.toFinset_cons, List.toFinset_nil, _aggregate_term_0, _aggregate_term_1, _aggregate_term_2]) (Litex.NativeBridge.denoteNumber (M := M) (16 : ℂ)) (by norm_num))))
+          · exact (by
+            let _enumerated := (_object_i1 (M := M))
+            have _enumeration_same : Litex.Same (_object_i1 (M := M)) _enumerated := (h_10 (M := M))
+            let _collection_tail_0 := _enumerated
+            let _collection_tail_1 := _collection_tail_0.val.tail
+            let _collection_tail_2 := _collection_tail_1.val.tail
+            let _collection_tail_3 := _collection_tail_2.val.tail
+            have _members_3 : ∀ x, M.mem x (Litex.denote _collection_tail_3) ↔ x ∈ ([] : List M.Value) := Litex.finiteMembersEmpty
+            have _number_2 : Litex.denote _collection_tail_2.val.element = M.number (7 : ℂ) := ((Litex.NativeBridge.denoteNumber (M := M) (7 : ℂ))).trans (congrArg M.number (by norm_num : (7 : ℂ) = (7 : ℂ)))
+            have _members_2 := Litex.finiteMembersInsert _collection_tail_2 (M.number (7 : ℂ)) [] _number_2 _members_3
+            have _number_1 : Litex.denote _collection_tail_1.val.element = M.number (4 : ℂ) := ((Litex.NativeBridge.denoteNumber (M := M) (4 : ℂ))).trans (congrArg M.number (by norm_num : (4 : ℂ) = (4 : ℂ)))
+            have _members_1 := Litex.finiteMembersInsert _collection_tail_1 (M.number (4 : ℂ)) [M.number (7 : ℂ)] _number_1 _members_2
+            have _number_0 : Litex.denote _collection_tail_0.val.element = M.number (2 : ℂ) := ((Litex.NativeBridge.denoteNumber (M := M) (2 : ℂ))).trans (congrArg M.number (by norm_num : (2 : ℂ) = (2 : ℂ)))
+            have _members_0 := Litex.finiteMembersInsert _collection_tail_0 (M.number (2 : ℂ)) [M.number (4 : ℂ), M.number (7 : ℂ)] _number_0 _members_1
+            intro x
+            exact Eq.mpr (congrArg (fun _set => M.mem x _set ↔ x ∈ ([M.number (2 : ℂ), M.number (4 : ℂ), M.number (7 : ℂ)] : List M.Value)) _enumeration_same) (_members_0 x))
+          · norm_num [List.toFinset_cons, List.toFinset_nil, _aggregate_term_0, _aggregate_term_1, _aggregate_term_2]))).trans (((Litex.NativeBridge.denoteNumber (M := M) (16 : ℂ))).trans (congrArg M.number (by norm_num : (16 : ℂ) = (16 : ℂ)))).symm)))
       )
   )
 
@@ -181,14 +181,8 @@ theorem h_235 : (by
     litex_complete =>
       exact (
         (let _equal_wd_1_0 := (_object_w8 (M := M));
-        (show Litex.Same _equal_wd_1_0 (Litex.number (M := M) (120 : ℂ)) from (Litex.NativeBridge.sameOfDenoteNumber _equal_wd_1_0 (Litex.number (M := M) (120 : ℂ)) (120 : ℂ) (120 : ℂ) (by
+        (show Litex.Same _equal_wd_1_0 (Litex.number (M := M) (120 : ℂ)) from (show Litex.Same _equal_wd_1_0 (Litex.number (M := M) (120 : ℂ)) from ((show (Litex.denote _equal_wd_1_0) = M.number (120 : ℂ) from (by
           let _aggregate := _equal_wd_1_0
-          let _enumerated := (_object_i1 (M := M))
-          have _enumeration_same : Litex.Same _aggregate.val.set _enumerated := (h_10 (M := M))
-          let _collection_tail_0 := _enumerated
-          let _collection_tail_1 := _collection_tail_0.val.tail
-          let _collection_tail_2 := _collection_tail_1.val.tail
-          let _collection_tail_3 := _collection_tail_2.val.tail
           have _aggregate_term_0 : Litex.NativeBridge.complexValue (Litex.FunctionSemantics.callValue (Litex.denote _aggregate.val.function) (M.number (2 : ℂ))) = (3 : ℂ) := (congrArg (Litex.NativeBridge.complexValue (M := M)) (by
             let _call := (Litex.call Litex.StandardSetValue.integer Litex.StandardSetValue.integer (fun (_raw_i3 : M.Value) => True) (_object_i2 (M := M)) (Litex.number (M := M) (2 : ℂ)) (h_67 (M := M)) (Litex.NativeBridge.numberInZOfEq (M := M) (2 : ℂ) (2 : ℤ) (by norm_num)) True.intro)
             let _literal := (_object_i2 (M := M))
@@ -219,18 +213,24 @@ theorem h_235 : (by
             have _calculated : (M.addValue (M.number (7 : ℂ)) (M.number (1 : ℂ))) = M.number (8 : ℂ) := by norm_num [Litex.Semantics.add_numbers, Litex.Semantics.sub_numbers, Litex.Semantics.mul_numbers, Litex.Semantics.neg_numbers, Litex.Semantics.div_numbers]
             have _argument : Litex.denote _call.val.argument = M.number (7 : ℂ) := ((Litex.NativeBridge.denoteNumber (M := M) (7 : ℂ))).trans (congrArg M.number (by norm_num : (7 : ℂ) = (7 : ℂ)))
             exact (congrArg (fun x => Litex.FunctionSemantics.callValue (Litex.denote _call.val.function) x) _argument).symm.trans (_head_call.trans (_beta.trans (_body.trans _calculated))))).trans (Litex.NativeBridge.complexValue_number (8 : ℂ))
-          have _members_3 : ∀ x, M.mem x (Litex.denote _collection_tail_3) ↔ x ∈ ([] : List M.Value) := Litex.finiteMembersEmpty
-          have _number_2 : Litex.denote _collection_tail_2.val.element = M.number (7 : ℂ) := ((Litex.NativeBridge.denoteNumber (M := M) (7 : ℂ))).trans (congrArg M.number (by norm_num : (7 : ℂ) = (7 : ℂ)))
-          have _members_2 := Litex.finiteMembersInsert _collection_tail_2 (M.number (7 : ℂ)) [] _number_2 _members_3
-          have _number_1 : Litex.denote _collection_tail_1.val.element = M.number (4 : ℂ) := ((Litex.NativeBridge.denoteNumber (M := M) (4 : ℂ))).trans (congrArg M.number (by norm_num : (4 : ℂ) = (4 : ℂ)))
-          have _members_1 := Litex.finiteMembersInsert _collection_tail_1 (M.number (4 : ℂ)) [M.number (7 : ℂ)] _number_1 _members_2
-          have _number_0 : Litex.denote _collection_tail_0.val.element = M.number (2 : ℂ) := ((Litex.NativeBridge.denoteNumber (M := M) (2 : ℂ))).trans (congrArg M.number (by norm_num : (2 : ℂ) = (2 : ℂ)))
-          have _members_0 := Litex.finiteMembersInsert _collection_tail_0 (M.number (2 : ℂ)) [M.number (4 : ℂ), M.number (7 : ℂ)] _number_0 _members_1
           apply Litex.finiteAggregateListDenote _aggregate [(2 : ℂ), (4 : ℂ), (7 : ℂ)] (120 : ℂ)
-          · intro x
-            rw [_enumeration_same]
-            exact _members_0 x
-          · norm_num [List.toFinset_cons, List.toFinset_nil, _aggregate_term_0, _aggregate_term_1, _aggregate_term_2]) (Litex.NativeBridge.denoteNumber (M := M) (120 : ℂ)) (by norm_num))))
+          · exact (by
+            let _enumerated := (_object_i1 (M := M))
+            have _enumeration_same : Litex.Same (_object_i1 (M := M)) _enumerated := (h_10 (M := M))
+            let _collection_tail_0 := _enumerated
+            let _collection_tail_1 := _collection_tail_0.val.tail
+            let _collection_tail_2 := _collection_tail_1.val.tail
+            let _collection_tail_3 := _collection_tail_2.val.tail
+            have _members_3 : ∀ x, M.mem x (Litex.denote _collection_tail_3) ↔ x ∈ ([] : List M.Value) := Litex.finiteMembersEmpty
+            have _number_2 : Litex.denote _collection_tail_2.val.element = M.number (7 : ℂ) := ((Litex.NativeBridge.denoteNumber (M := M) (7 : ℂ))).trans (congrArg M.number (by norm_num : (7 : ℂ) = (7 : ℂ)))
+            have _members_2 := Litex.finiteMembersInsert _collection_tail_2 (M.number (7 : ℂ)) [] _number_2 _members_3
+            have _number_1 : Litex.denote _collection_tail_1.val.element = M.number (4 : ℂ) := ((Litex.NativeBridge.denoteNumber (M := M) (4 : ℂ))).trans (congrArg M.number (by norm_num : (4 : ℂ) = (4 : ℂ)))
+            have _members_1 := Litex.finiteMembersInsert _collection_tail_1 (M.number (4 : ℂ)) [M.number (7 : ℂ)] _number_1 _members_2
+            have _number_0 : Litex.denote _collection_tail_0.val.element = M.number (2 : ℂ) := ((Litex.NativeBridge.denoteNumber (M := M) (2 : ℂ))).trans (congrArg M.number (by norm_num : (2 : ℂ) = (2 : ℂ)))
+            have _members_0 := Litex.finiteMembersInsert _collection_tail_0 (M.number (2 : ℂ)) [M.number (4 : ℂ), M.number (7 : ℂ)] _number_0 _members_1
+            intro x
+            exact Eq.mpr (congrArg (fun _set => M.mem x _set ↔ x ∈ ([M.number (2 : ℂ), M.number (4 : ℂ), M.number (7 : ℂ)] : List M.Value)) _enumeration_same) (_members_0 x))
+          · norm_num [List.toFinset_cons, List.toFinset_nil, _aggregate_term_0, _aggregate_term_1, _aggregate_term_2]))).trans (((Litex.NativeBridge.denoteNumber (M := M) (120 : ℂ))).trans (congrArg M.number (by norm_num : (120 : ℂ) = (120 : ℂ)))).symm)))
       )
   )
 end LitexCompiled.file_lean_x2f_examples_x2f_named_x5f_finite_x5f_aggregates_x2f_statement_x2e_lit

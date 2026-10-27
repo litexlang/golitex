@@ -1,0 +1,4 @@
+thm chebyshev_for_any_real_observable:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,X fn(k space.carrier) R,a R+:
+        space.prob(\prob::main::finite_deviation_tail_event<Omega,space>(X,a)) <= \prob::main::finite_variance<Omega,space>(X)/a^2
+    release thm prob::main::finite_chebyshev_tail_bound(Omega,space,X,a)

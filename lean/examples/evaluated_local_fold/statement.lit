@@ -1,0 +1,4 @@
+# Evaluate and reuse an ordered fold inside a local proof block.
+sketch:
+    eval reduce(2,3,fn(k Z) Z{k},fn(a,b Z) Z{a-b},10)
+    reduce(2,3,fn(k Z) Z{k},fn(a,b Z) Z{a-b},10) = 5

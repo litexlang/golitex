@@ -1,14 +1,17 @@
-# 把 Litex 证明接入普通 Lean
+# Using Litex proofs in ordinary Lean
 
-这个 showcase 面向已经会写 Lean、希望复用 Litex 证明的用户。我们用一个带
-非零分母条件的实数恒等式，以及保持定义域的分式线性对合，走完源码、生成证明、表示转换和普通 Lean 调用。
-数学证明在 Litex 中完成；手写 Adapter 把它的接口转换成 Mathlib 的实数接口。
+This showcase is for Lean users who want to reuse Litex proofs. A real identity
+with a nonzero-denominator condition and a domain-preserving fractional-linear
+involution lead from source to generated proof, representation conversion and
+ordinary Lean use. Litex supplies the mathematical proof; a handwritten Adapter
+converts its interface to Mathlib's real-number interface.
 
-**这个例子展示互操作，不展示证明长度优势。** 普通 Mathlib 已有 `add_div`，
-完整对照见 [DirectLean.lean](DirectLean.lean)。下面也记录了已接通的 Möbius
-示例及其实际比较。
+**This example demonstrates interoperability, without establishing a proof-length
+advantage.** Mathlib already provides `add_div`; see the complete comparison in
+[DirectLean.lean](DirectLean.lean). The Möbius example below also records its
+working connection and direct comparison.
 
-先看最终交付的 [Final.lean](Final.lean)：
+Start with the delivered theorem in [Final.lean](Final.lean):
 
 ```lean
 theorem quotientDistributes (x y z : ℝ) (hz : z ≠ 0) :
@@ -16,20 +19,21 @@ theorem quotientDistributes (x y z : ℝ) (hz : z ≠ 0) :
   exact Adapter.quotientDistributes x y z hz
 ```
 
-这段声明位于 `LitexLeanExample` 命名空间。参数、前提和结论都是普通 Lean
-数学对象；使用者通过这个定理继续写证明。
+This declaration lives in the `LitexLeanExample` namespace. Its parameters,
+premises and conclusion are ordinary Lean mathematical objects, so a consumer
+can use the theorem in subsequent proofs.
 
 ```mermaid
 flowchart LR
-  S["source.lit · 数学陈述"] -->|编译器生成| G["Generated.lean · 证明重放"]
-  G -->|手写表示转换| A["Adapter.lean · 原生接口"]
-  A --> F["Final.lean · 普通定理"]
-  F -->|import Final| U["UseInYourProject.lean · 后续证明"]
+  S["source.lit · statement"] -->|compiler output| G["Generated.lean · proof replay"]
+  G -->|handwritten conversion| A["Adapter.lean · native interface"]
+  A --> F["Final.lean · ordinary theorem"]
+  F -->|import Final| U["UseInYourProject.lean · downstream proof"]
 ```
 
-## 1. 在 Litex 中给出数学陈述
+## 1. State the mathematics in Litex
 
-[source.lit](source.lit) 的完整内容是：
+The complete [source.lit](source.lit) is:
 
 ```litex
 # For a nonzero real denominator, division distributes over addition.
@@ -39,27 +43,32 @@ forall x,y,z R:
         (x+y)/z=x/z+y/z
 ```
 
-`x R` 引入对象和属于 `R` 的事实。`z != 0` 同时是定理的前提和除法构造的
-良定义依据。本例实际选中的是 `RationalWithNonzeroPremises`，即带非零前提的
-有理式规范化。编译器将这条路线放入 Generated；后面的 Adapter 只转换表示。
+`x R` introduces an object and its membership in `R`. The premise `z != 0`
+also establishes that division is well-defined. This example selects
+`RationalWithNonzeroPremises`: rational-expression normalization under nonzero
+premises. The compiler records that route in Generated; the later Adapter
+converts the representation.
 
-## 2. 看懂生成定理要什么
+## 2. Understand the generated theorem's inputs
 
-[Generated.lean](Generated.lean) 是实际编译输出，保持原样。它的导出定理名是
-`h_3`，所在命名空间由源码路径生成。这个名字来自原始 FactId。
+[Generated.lean](Generated.lean) is the actual compiler output and is kept
+unchanged. Its exported theorem is `h_3`, in a namespace generated from the
+source path. The theorem name comes from the original FactId.
 
-生成定理对三个 host 类型和数学解释 `M` 都保持泛化。每个参数是一个
-`Litex.Obj`，随后跟一个普通的成员事实；源码中的 `R` 没有被直接改写成
-Lean 的 `ℝ` 类型。其调用参数在本例中的对应关系如下：
+The generated theorem remains generic over three host types and a mathematical
+interpretation `M`. Each argument is a `Litex.Obj`, followed by an ordinary
+membership fact. The source set `R` is not directly replaced by Lean's type
+`ℝ`. This example supplies the arguments as follows:
 
-| 源码信息 | 生成签名 | Adapter 提供的值 |
+| Source information | Generated signature | Value supplied by Adapter |
 |---|---|---|
-| 对象 `x`、`y`、`z` | `_value_i1`、`_value_i2`、`_value_i3` | `a`、`b`、`c` |
-| 三个 `R` 成员事实 | `h_16`、`h_17`、`h_18` | `ha`、`hb`、`hc` |
+| Objects `x`, `y`, `z` | `_value_i1`, `_value_i2`, `_value_i3` | `a`, `b`, `c` |
+| Three `R` membership facts | `h_16`, `h_17`, `h_18` | `ha`, `hb`, `hc` |
 | `z != 0` | `h_1 : ¬ Litex.Same ...` | `h0` |
-| 整个全称事实 | `h_3` | `generated` 的证明来源 |
+| Complete universal fact | `h_3` | Proof source for `generated` |
 
-生成签名中的一个除法子项是下面这样，换行仅用于阅读：
+One division subterm in the generated signature looks like this, with line
+breaks added for readability:
 
 ```lean
 Litex.div _value_i1 _value_i3
@@ -68,15 +77,17 @@ Litex.div _value_i1 _value_i3
   h_1
 ```
 
-对象构造本身接收定义域和非零证明。运算的结果仍是认证对象；输出的等式是
-`Litex.Same`。成员事实、运算 WD 和数学等式各自保留了自己的作用。
+The object constructor itself receives domain and nonzero proofs. The result
+of an operation remains a certified object; its equality is `Litex.Same`.
+Membership, operation WD and mathematical equality retain distinct roles.
 
-## 3. 手写 Adapter：输入、调用、输出
+## 3. Write the Adapter: input, call, output
 
-[Adapter.lean](Adapter.lean) 的公开定理已经采用与 Final 相同的原生陈述。
-下面三步都在它的证明体内完成。
+The public theorem in [Adapter.lean](Adapter.lean) already has the same native
+statement as Final. The following three steps occur inside its proof body.
 
-第一步，选择已证明的数值解释，包装 Lean 实数，并构造成员事实：
+First, select a proved numeric interpretation, wrap a Lean real number, and
+construct its membership fact:
 
 ```lean
 let M := Litex.NumericModel.model
@@ -84,18 +95,20 @@ let a := Litex.number (M := M) (x : ℂ)
 have ha := Litex.NativeBridge.numberInR (M := M) x
 ```
 
-`M` 指定对象的数学解释；本例选择 Core 中已实现的数值模型。实数嵌入复数，
-再用 `Litex.number` 包装。这里的 host 是 `ℂ`，而 `ha` 说明这个对象表示一个
-实数。这是 Adapter 对当前原生输入的具体实例化，生成定理仍保持一般性。
+`M` fixes the objects' mathematical interpretation; this example selects the
+numeric model implemented in Core. A real number is embedded into the complex
+numbers and wrapped with `Litex.number`. The host here is `ℂ`, while `ha`
+certifies that the object represents a real number. This is the Adapter's
+instantiation for these native inputs; the generated theorem stays generic.
 
-前提也有对应转换：
+The premise has a corresponding conversion:
 
 ```lean
 have hzC : (z : ℂ) ≠ 0 := fun h => hz (Complex.ofReal_injective h)
 have h0 := Litex.NativeBridge.numberNonzero (M := M) (z : ℂ) hzC
 ```
 
-第二步，调用实际生成的定理：
+Second, call the actual generated theorem:
 
 ```lean
 have generated :=
@@ -103,30 +116,35 @@ have generated :=
     (M := M) a ha b hb c hc h0
 ```
 
-这一步取得恒等式的证明。后面的转换消费这个 `generated`，因此最终证明
-真正依赖 Litex 编译输出。
+This obtains a proof of the identity. The later conversion consumes this
+`generated` proof, so the final proof depends on the Litex compiler output.
 
-第三步，回到原生等式。Adapter 用 `change` 展开 `Same` 的指称等式，随后只用
-`M.add_numbers` 和 `M.div_numbers` 观察这次认证运算。最后经过两次单射性：
+Third, recover native equality. The Adapter uses `change` to unfold `Same`
+into equality of denotations, then observes the certified operations using
+only `M.add_numbers` and `M.div_numbers`. Two injectivity steps finish the
+conversion:
 
 ```text
 M.number A = M.number B
     ↓ M.number_injective
-A = B                       （复数等式）
-    ↓ Complex.ofReal_injective，配合保持加法、除法的嵌入规律
-实数等式
+A = B                       (complex equality)
+    ↓ Complex.ofReal_injective, with addition/division embedding laws
+Real equality
 ```
 
-完整代码中的 `simp only` 只使用这些已列出的表示规律。Adapter 没有再用
-`ring`、`field_simp` 或定理搜索证明商的分配律。
+The complete code's `simp only` uses only the representation laws listed here.
+The Adapter does not reprove the distributive identity using `ring`,
+`field_simp` or theorem search.
 
-`Same` 不能对任意表示直接当作 Lean 的 `=` 使用。本例先把两端观察为数值，
-再借助已证明的数值嵌入单射性取回原生等式。集合、函数需要各自的表示接口。
+For an arbitrary representation, `Same` cannot simply be used as Lean's `=`.
+This example first observes both sides numerically, then recovers native
+equality through the proved injectivity of the numeric embedding. Sets and
+functions require their own representation interfaces.
 
-## 4. 在普通 Lean 证明中使用
+## 4. Use the result in an ordinary Lean proof
 
-[UseInYourProject.lean](UseInYourProject.lean) 只导入 `Final`。它把同一个定理
-应用两次，得到三项求和版本：
+[UseInYourProject.lean](UseInYourProject.lean) imports only `Final`. It applies
+the same theorem twice to obtain the three-term sum identity:
 
 ```lean
 theorem threeTerms (x y t z : ℝ) (hz : z ≠ 0) :
@@ -138,11 +156,12 @@ theorem threeTerms (x y t z : ℝ) (hz : z ≠ 0) :
       rw [LitexLeanExample.quotientDistributes x y z hz]
 ```
 
-这个调用者不需要创建 Litex 对象、提供成员证明或直接引用 `h_3`。
+This consumer needs no Litex object construction, membership proofs or direct
+reference to `h_3`.
 
-## 和直接写 Lean 公平比较
+## Compare fairly with direct Lean
 
-同一恒等式在普通 Lean 中只需：
+The same identity in ordinary Lean needs only:
 
 ```lean
 theorem quotientDistributes (x y z : ℝ) :
@@ -150,13 +169,16 @@ theorem quotientDistributes (x y z : ℝ) :
   exact add_div x y z
 ```
 
-Lean 的除法是全函数，这条恒等式甚至不需要非零前提。Litex 的这个源程序
-要求分母非零以构造合法的除法对象，导出的接口保留这一条件。不能把生成证明
-的长度当作 Lean 作者原本必须手写的工作量；本例的手写 Adapter 也有实际成本。
+Lean division is total, so this identity does not even need a nonzero premise.
+The Litex source requires a nonzero denominator to construct a valid division
+object, and its exported interface preserves that condition. Generated proof
+length does not measure what a Lean author would otherwise have to write;
+the handwritten Adapter also has a real cost.
 
-我们还检查了分式线性变换 `f(x)=(x+1)/(x-1)`：对于 `x≠1`，证明 `f(x)≠1`
-及 `f(f(x))=x`。这个问题包含再次调用函数所需的定义域条件，但普通 Lean
-依然很简洁。[DirectLean.lean](DirectLean.lean) 中已通过检查的证明体是：
+We also checked the fractional-linear map `f(x)=(x+1)/(x-1)`: for `x≠1`, prove
+`f(x)≠1` and `f(f(x))=x`. This includes the domain condition needed to call the
+function again, yet ordinary Lean remains concise. The checked proof body in
+[DirectLean.lean](DirectLean.lean) is:
 
 ```lean
   unfold mobius
@@ -168,13 +190,15 @@ Lean 的除法是全函数，这条恒等式甚至不需要非零前提。Litex 
     ring
 ```
 
-对应的[完整 Litex 源码](../../lean/examples/real_mobius_involution/statement.lit)
-和[实际生成的 Lean](../../lean/examples/real_mobius_involution/statement.lean)
-现已通过严格验证、真实编译、文件一致性和固定版本的 Lean 检查。原先阻塞的
-差非零、商非零、差非零引用，以及 forall 对非等式原子结论和函数调用的匹配
-均已接通。源码保留原来的数学证明，没有增加 `trust`。
+The corresponding [complete Litex source](../../lean/examples/real_mobius_involution/statement.lit)
+and [actual generated Lean](../../lean/examples/real_mobius_involution/statement.lean)
+have passed strict verification, actual compilation, file-consistency checks
+and pinned-version Lean checking. The formerly blocked difference-nonzero,
+quotient-nonzero, difference-nonzero citation, and universal matching routes
+for non-equality atomic conclusions and function calls are connected. The
+source retains its mathematical proof without adding `trust`.
 
-源码中的关键定义域步骤是：
+The key domain step in the source is:
 
 ```litex
 forall x R:
@@ -183,7 +207,7 @@ forall x R:
         x - 1 != 0
 ```
 
-商非零步骤保留分子与分母两个子证明：
+The quotient-nonzero step retains separate numerator and denominator proofs:
 
 ```litex
 forall x R:
@@ -192,7 +216,8 @@ forall x R:
         2 / x != 0
 ```
 
-[Final.lean](Final.lean) 已提供普通实数接口，证明体调用 Adapter：
+[Final.lean](Final.lean) provides an ordinary real-number interface whose proof
+body calls Adapter:
 
 ```lean
 noncomputable def mobius (x : ℝ) : ℝ := (x + 1) / (x - 1)
@@ -202,24 +227,29 @@ theorem mobiusInvolution (x : ℝ) (hx : x ≠ 1) :
   simpa only [mobius] using Adapter.mobiusInvolution x hx
 ```
 
-Adapter 选择已有的 `Litex.NumericModel.model`，观察已认证的函数调用，并从
-生成的定义域保持定理和对合定理取得原生结论。普通 Lake 项目、Final 和后续
-调用均已通过；编译后的依赖审计确认这两个生成定理是实际证明依赖。原生定义
-使用 Lean 的实数除法；与 Litex 的受限函数对应的证明只在 `x != 1` 的前提下使用。
+The Adapter selects the existing `Litex.NumericModel.model`, observes certified
+function calls, and obtains native conclusions from the generated
+domain-preservation and involution theorems. The ordinary Lake project, Final
+and downstream uses have passed their checks; the compiled dependency audit
+confirms that both generated theorems are actual proof dependencies. The
+native definition uses Lean's real division. Its correspondence with the
+restricted Litex function is used under the premise `x != 1`.
 
-**这是第二个已接通的 Litex → Lean 示例；它仍没有证明作者代码更短。**
-直接 Lean 对照只有七句 tactic，当前 Litex 写法和手写 Adapter 也有成本。
-Mathlib 自带的
-[有理式与多项式自动化](https://leanprover-community.github.io/mathlib4_docs/Mathlib/Tactic/FieldSimp.html)
-应当保留在对照中。
+**This is the second connected Litex → Lean example; it does not establish that
+authors write less code.** The direct Lean comparison uses seven tactic
+statements, while the current Litex proof and handwritten Adapter also have
+costs. Mathlib's [rational-expression and polynomial automation](https://leanprover-community.github.io/mathlib4_docs/Mathlib/Tactic/FieldSimp.html)
+should remain in the comparison.
 
-## 运行与修改
+## Run and modify the example
 
-本例是完整仓库中的一个普通 Lake 项目。使用 Lean 4.31.0 和固定版本的
-Mathlib；[lakefile.toml](lakefile.toml) 从仓库的 `lean/` 导入 `Litex` Core。
-依赖配置没有本机路径或本地 scripts 依赖。
+This is an ordinary Lake project inside the complete repository. It uses Lean
+4.31.0 and a pinned Mathlib version; [lakefile.toml](lakefile.toml) imports
+Litex Core from the repository's `lean/` directory. The dependency configuration
+has no machine-specific paths or local scripts dependencies.
 
-安装 Litex 的方法见[CLI 文档](../../docs/cli.md)。在**仓库根目录**重新生成：
+See the [CLI documentation](../../docs/cli.md) for installation. Regenerate
+from the **repository root**:
 
 ```sh
 cargo build --release
@@ -228,7 +258,7 @@ target/release/litex -strict -lean -f showcases/litex_to_lean_adapter/source.lit
 target/release/litex -strict -lean -f lean/examples/real_mobius_involution/statement.lit > lean/examples/real_mobius_involution/statement.lean
 ```
 
-接着在这个 showcase 目录运行：
+Then run from this showcase directory:
 
 ```sh
 lake exe cache get
@@ -237,19 +267,23 @@ lake env lean -DwarningAsError=true Final.lean
 lake env lean -DwarningAsError=true UseInYourProject.lean
 ```
 
-修改自己的数学问题时，按以下顺序进行：
+For your own mathematical problem:
 
-1. 在 `.lit` 文件中给出陈述和证明，让 Litex 验证通过。
-2. 用实际编译器重新生成 Lean，查看新的导出签名、FactId 和前提。
-3. 在 Adapter 中逐项编码原生输入和前提，调用生成定理，再用已证明的观察
-   接口转换结论。生成文件由编译器维护。
-4. 在 Final 中写出用户需要的普通数学陈述，证明体调用 Adapter。
-5. 从只导入 Final 的文件测试后续证明。
+1. Write the statement and proof in a `.lit` file and have Litex verify it.
+2. Regenerate Lean with the actual compiler; inspect the new exported
+   signature, FactIds and premises.
+3. In Adapter, encode the native inputs and premises, call the generated
+   theorem, and convert its conclusion using proved observation interfaces.
+   The compiler owns the generated file.
+4. In Final, state the ordinary mathematics needed by users and call Adapter
+   in the proof body.
+5. Test downstream proofs from a file that imports only Final.
 
-向已有 Mathlib 项目接入时，先对齐本例的 Lean 4.31.0 和锁定的 Mathlib 版本
-（具体 commit 见 lakefile.toml），再保持本例的模块名，放入 `Generated.lean`、
-`Adapter.lean`、`Final.lean`，并把仓库的 `lean/Litex.lean` 作为 `Litex` 模块。
-例如，Core 和三个模块都放在项目根目录时，可以在 `lakefile.toml` 中增加：
+To connect this to an existing Mathlib project, first match Lean 4.31.0 and
+the pinned Mathlib version (the exact commit is in lakefile.toml). Keep the
+module names and include `Generated.lean`, `Adapter.lean`, `Final.lean`, and
+the repository's `lean/Litex.lean` as the `Litex` module. For example, when
+Core and the three modules are at the project root, add to `lakefile.toml`:
 
 ```toml
 [[lean_lib]]
@@ -262,19 +296,21 @@ roots = ["Final"]
 globs = ["Generated", "Adapter", "Final"]
 ```
 
-运行 `lake build LitexExample` 后，用户文件就可以 `import Final`。如果将手写
-文件移到自己的模块目录，应相应调整 Adapter、Final 和调用者的 import。
+After `lake build LitexExample`, user files can `import Final`. If you move
+the handwritten files into your own module directory, adjust the imports in
+Adapter, Final and its consumers accordingly.
 
-## 文件与范围
+## Files and scope
 
-| 文件 | 谁维护 | 读者在这里学什么 |
+| File | Maintainer | What it demonstrates |
 |---|---|---|
-| [source.lit](source.lit) | 数学作者 | 带定义域条件的数学陈述 |
-| [Generated.lean](Generated.lean) | Litex 编译器 | 实际证明接口、原 FactId 和 WD 参数 |
-| [Adapter.lean](Adapter.lean) | 接口作者 | 编码输入、调用生成证明、观察结论 |
-| [Final.lean](Final.lean) | Lean 库作者 | 纯 Mathlib 陈述和稳定的使用接口 |
-| [UseInYourProject.lean](UseInYourProject.lean) | Lean 使用者 | 在后续证明中复用普通定理 |
-| [DirectLean.lean](DirectLean.lean) | 对照作者 | 使用常见 Mathlib 接口直接证明，检验复杂度比较 |
+| [source.lit](source.lit) | Mathematical author | Statement with domain conditions |
+| [Generated.lean](Generated.lean) | Litex compiler | Actual proof interface, original FactIds and WD arguments |
+| [Adapter.lean](Adapter.lean) | Interface author | Encode inputs, call the generated proof, observe the conclusion |
+| [Final.lean](Final.lean) | Lean library author | Ordinary Mathlib statement and stable public interface |
+| [UseInYourProject.lean](UseInYourProject.lean) | Lean consumer | Reuse the ordinary theorem in later proofs |
+| [DirectLean.lean](DirectLean.lean) | Comparison author | Direct proof with common Mathlib interfaces for assessing complexity |
 
-本例使用数值模型上的手写 Adapter，保留源码的非零前提。
-源码、生成文件和四层证明的检查结果见 [verification.json](verification.json)。
+This example uses a handwritten Adapter over the numeric model and preserves
+the source's nonzero premise. See [verification.json](verification.json) for
+checks of the source, generated file and four proof layers.

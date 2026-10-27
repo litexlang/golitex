@@ -32,8 +32,11 @@ impl LitexToLeanCompiler {
                     self.compile_identity(left, &fact.left, &proof.left_identity, position)?;
                 let right_identity =
                     self.compile_identity(right, &fact.right, &proof.right_identity, position)?;
+                // Alpha proofs can be tactic terms. Supplying Eq's arguments
+                // gives them an expected equality type before elaboration;
+                // field notation on an untyped `(by ...)` does not.
                 Ok(format!(
-                    "(({left_identity}).symm.trans (({cited}).trans {right_identity}))"
+                    "(Eq.trans (Eq.symm {left_identity}) (Eq.trans {cited} {right_identity}))"
                 ))
             }
             EqualFactSearchedProofByEquivalenceClass::AlphaPaths(proof) => {
@@ -52,7 +55,7 @@ impl LitexToLeanCompiler {
                     position,
                 )?;
                 Ok(format!(
-                    "(({left_path}).trans (({identity}).trans {right_path}))"
+                    "(Eq.trans {left_path} (Eq.trans {identity} {right_path}))"
                 ))
             }
             EqualFactSearchedProofByEquivalenceClass::ViaPeers(proof) => {

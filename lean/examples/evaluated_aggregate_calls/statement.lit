@@ -1,0 +1,5 @@
+# Evaluate a named iterand over an integer range, then evaluate one of its calls.
+have fn evaluated_aggregate_next(x Z) Z = x + 1
+eval sum(1, 3, evaluated_aggregate_next)
+eval evaluated_aggregate_next(3)
+evaluated_aggregate_next(3) = 4

@@ -1,0 +1,4 @@
+thm covariance_square_example:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,X,Y fn(k space.carrier) R:
+        \prob::main::finite_covariance<Omega,space>(X,Y)^2 <= \prob::main::finite_variance<Omega,space>(X)*\prob::main::finite_variance<Omega,space>(Y)
+    release thm prob::main::finite_covariance_square_bound(Omega,space,X,Y)

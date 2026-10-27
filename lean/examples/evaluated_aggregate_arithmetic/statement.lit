@@ -1,3 +1,4 @@
 # Add an independently evaluated sum and product in one expression.
 eval sum(1, 4, fn(x Z) Z {x}) + product(1, 4, fn(x Z) Z {x})
 sum(1, 4, fn(x Z) Z {x}) + product(1, 4, fn(x Z) Z {x}) = 34
+sum(1,3,fn(x Z) Z {x}) = product(1,3,fn(x Z) Z {x})

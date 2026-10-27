@@ -1381,8 +1381,44 @@ the resulting arithmetic. See [formula calls](../lean/examples/evaluated_formula
 [captured values](../lean/examples/evaluated_captured_values/),
 [nested calls](../lean/examples/evaluated_nested_calls/) and
 [local calls](../lean/examples/evaluated_local_calls/).
-Aggregate, matrix and algorithm evaluation, other scalar operators and general
-function-returning calls remain outside this checked `eval` slice.
+Range and finite-set sums/products also compile through `eval`, using the same
+denotation proofs as the aggregate calculation rule. The compiler checks the
+recorded enumeration, each checked function application and every accumulated
+value. This includes empty finite sets, rational terms, arithmetic combinations,
+named iterands and local evaluation. For example:
+
+```litex
+eval sum(1, 3, fn(x Z) Z {x})
+sum(1, 3, fn(x Z) Z {x}) = 6
+```
+
+See [range evaluation](../lean/examples/evaluated_range_aggregates/),
+[finite-set evaluation](../lean/examples/evaluated_finite_aggregates/),
+[combined aggregates](../lean/examples/evaluated_aggregate_arithmetic/),
+[named calls](../lean/examples/evaluated_aggregate_calls/) and
+[local aggregates](../lean/examples/evaluated_local_aggregates/).
+`reduce` and `finite_set_reduce` evaluation also compile. Ordered folds preserve
+the seed and ascending index order; finite-set folds consume the original
+commutativity and associativity proofs. For example:
+
+```litex
+eval finite_set_reduce({3,1,2}, fn(k Z) Z {k}, fn(a,b Z) Z {a+b}, 10)
+finite_set_reduce({3,1,2}, fn(k Z) Z {k}, fn(a,b Z) Z {a+b}, 10) = 16
+```
+
+See [ordered subtraction](../lean/examples/evaluated_range_folds/),
+[finite, empty and singleton folds](../lean/examples/evaluated_finite_folds/),
+[rational products](../lean/examples/evaluated_rational_fold/),
+[combined expressions](../lean/examples/evaluated_fold_arithmetic/),
+[named functions](../lean/examples/evaluated_named_fold/) and
+[local results](../lean/examples/evaluated_local_fold/).
+The checked aggregate slice uses literal integer range bounds or enumerated
+finite numeric sets and function bodies that reduce to closed scalar arithmetic.
+Nested aggregates inside iterands and additional body-rewrite stages remain
+unsupported. Fold bodies currently cover four operations and negation; general
+function calls inside them remain outside this slice.
+Matrix and algorithm evaluation, other scalar operators and
+general function-returning calls also remain outside the checked `eval` slice.
 
 Order replay also covers four weak additive shifts: a nonnegative addend
 preserves a lower bound, and a nonpositive addend preserves an upper bound,

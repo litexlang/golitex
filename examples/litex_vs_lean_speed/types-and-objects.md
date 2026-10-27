@@ -198,7 +198,7 @@ its original samples are not included in the published results directory.
 Both timing intervals exclude process startup and imports. Litex measures
 parsing, well-definedness, verification, storage, and evidence construction;
 Lean measures synchronous command elaboration and kernel checking after
-command parsing. See the [measurement contract](README.md#怎么读这些数字) and
+command parsing. See the [measurement contract](README.md#how-to-read-the-measurements) and
 [recorded environment](results/environment.json). The cardinality ratio is
 large, but its absolute difference is about 3.55 ms.
 

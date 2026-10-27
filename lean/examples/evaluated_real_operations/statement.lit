@@ -1,0 +1,19 @@
+# Evaluate exact real operations and reuse their computed equalities.
+eval abs(-3)
+abs(-3) = 3
+eval min(-1/2,1/3)
+min(-1/2,1/3) = -1/2
+eval max(-7,-2)
+max(-7,-2) = -2
+eval sign(-9/4)
+sign(-9/4) = -1
+eval sign(0)
+sign(0) = 0
+eval sign(5/2)
+sign(5/2) = 1
+eval floor(-7/3)
+floor(-7/3) = -3
+eval ceil(-7/3)
+ceil(-7/3) = -2
+eval floor(7/3) + ceil(7/3)
+floor(7/3) + ceil(7/3) = 5

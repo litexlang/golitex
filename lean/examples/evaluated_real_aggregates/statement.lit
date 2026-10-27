@@ -1,0 +1,5 @@
+# Apply real operations to checked sums and ordered folds.
+eval max(sum(1,3,fn(k Z) Z{k}),floor(7/2))
+max(sum(1,3,fn(k Z) Z{k}),floor(7/2)) = 6
+eval abs(reduce(1,3,fn(k Z) Z{k},fn(a,b Z) Z{a-b},0))
+abs(reduce(1,3,fn(k Z) Z{k},fn(a,b Z) Z{a-b},0)) = 6

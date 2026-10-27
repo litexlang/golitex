@@ -1,38 +1,47 @@
-# sources
+# Comparison sources
 
-每一条用例的 Litex 与 Lean 源码，按批次和领域分组。所有 `.lit` 文件都用 release 的
-`target/release/litex -f` 独立跑过，`run_result` 为 `success`。
+Litex and Lean sources for each case, grouped by batch and domain. The recorded
+validation ran each `.lit` file independently with release
+`target/release/litex -f`, returning `run_result: success`.
 
-| 目录 | 内容 | 来源批次 |
+| Directory | Contents | Source batch |
 | --- | --- | --- |
-| `arithmetic/` | 自然数加法、实数平方根 | 2026-10-22 基础算术与根式 |
-| `sums/` | 区间求和、有限集合求和、三角具体值与恒等式 | 2026-10-22 有限求和与三角 |
-| `elementary/` | 素性、最大公因数、阶乘、大数四次方恒等式、对数、根式乘 | 2026-10-22 初等计算与数论 |
-| `quantifiers/` | 全称、见证、唯一存在、存在消去（21 例，多个 Lean 路线） | 2026-10-23 量词批次 |
-| `declarations/` | 函数、谓词、分段、递归、结构、命名定理、反证、分类、归纳 | 2026-10-23 定义与证明命令批次 |
-| `new-round/` | 集合、函数、整数算术、整除、有限组合、微积分、笛卡尔积、√2 无理 | 2026-10-23 本目录新增 |
-| `multi-step/` | 不等式、代数消去、数论整除、存在构造、算术（Lean 无同形定理，必须自己推） | 2026-10-23 第二轮 |
-| `statement-forms/` | 谓词定义 + 见证、从谓词取见证、ε-N 极限小问题、集合相等义务 | 2026-10-23 第三轮 |
-| `type-bridge/` | 同一 Lean 命题的转换标注/桥接自动化/直接引理对照，及两条对应 Litex 算术语句 | 2026-10-24 类型桥接分项实验 |
-| `quantitative-iteration/` | 参数化 Newton、二次函数梯度下降、含扰动几何递推；含完整双版本源码与数学设计 | 2026-10-24，完整进程口径 |
-| `lean-proof-pipeline/` | `1 + 1 = 2` 与参数化加一的真实 Lean 证明项、显式参数和原始 `Expr` | 2026-10-24，解释实验，无计时 |
-| `search-expansion/` | 16/64/128 项求和平移；0/12/24 条无关假设的平方差不等式；保留全部速度方向和直接 Lean 基线 | 2026-10-24，独立检查路径批次 |
+| `arithmetic/` | Natural-number addition and real square roots | 2026-10-22 arithmetic and radicals |
+| `sums/` | Interval sums, finite-set sums, concrete trigonometric values and identities | 2026-10-22 finite sums and trigonometry |
+| `elementary/` | Primality, gcd, factorials, large fourth-power identities, logarithms and radical products | 2026-10-22 elementary calculations and number theory |
+| `quantifiers/` | Universal facts, witnesses, unique existence and existence elimination (21 cases, multiple Lean routes) | 2026-10-23 quantifiers |
+| `declarations/` | Functions, predicates, piecewise definitions, recursion, structures, named theorems, contradiction, cases and induction | 2026-10-23 definitions and proof commands |
+| `new-round/` | Sets, functions, integer arithmetic, divisibility, finite combinatorics, calculus, Cartesian products and √2 irrationality | 2026-10-23 additional domains |
+| `multi-step/` | Inequalities, algebraic cancellation, divisibility, existence construction and arithmetic, without matching-theorem reuse in Lean | 2026-10-23 second round |
+| `statement-forms/` | Predicate definitions and witnesses, witness extraction, an ε-N limit problem and set-equality obligations | 2026-10-23 third round |
+| `type-bridge/` | Conversion annotations, bridge automation and direct lemmas for the same Lean statement, plus two corresponding Litex arithmetic statements | 2026-10-24 type-bridge component experiment |
+| `quantitative-iteration/` | Parametric Newton step, quadratic gradient descent and perturbed geometric recurrence; complete sources for both systems and mathematical design | 2026-10-24 whole-process measurements |
+| `lean-proof-pipeline/` | Actual Lean proof terms, explicit arguments and raw `Expr` for `1 + 1 = 2` and parametric addition of one | 2026-10-24 explanatory experiment, no timing |
+| `search-expansion/` | Shifted sums with 16/64/128 terms; a quadratic inequality with 0/12/24 irrelevant hypotheses; all timing directions and direct Lean baselines retained | 2026-10-24 separate checking-path batch |
 
-命名约定：
+Naming conventions:
 
-- `<case>.lit`：Litex 源码，一例一个文件。
-- `<case>_<method>.lean` 或 `<case>__<method>.lean`：同一命题的一条 Lean 证明路线；
-  批次之间的分隔符不同（`_` 与 `__`），保持与各自批次记录一致。
-- `new-round/Repeat.lean`、`new-round/Validate.lean`、`multi-step/Repeat.lean`、`multi-step/Validate.lean`：本目录计时与验证的生成文件，不是用例。
+- `<case>.lit`: one Litex source file per case.
+- `<case>_<method>.lean` or `<case>__<method>.lean`: one Lean proof route for
+  the same statement. The `_` and `__` separators follow each batch's records.
+- `new-round/Repeat.lean`, `new-round/Validate.lean`, `multi-step/Repeat.lean`
+  and `multi-step/Validate.lean`: generated timing/validation files, not cases.
 
-计时用例的 Lean 文件都自带 `import Mathlib`（或 `import Mathlib` + `import Lean` 的计时文件），可以单独用
-`lake env lean <file>` 检查。计时脚本见 `../harness/bench.py`。
+Lean timing-case files include `import Mathlib`; timing drivers may also
+include `import Lean`. Each can be checked with `lake env lean <file>`.
+The timing runner is `../harness/bench.py`.
 
-`lean-proof-pipeline/` 只需 `import Lean`，可直接用 Lean 4.31.0 运行；它的输出用于解释证明检查流程，不纳入计时统计。
+`lean-proof-pipeline/` needs only `import Lean` and runs directly with Lean
+4.31.0. Its output explains proof checking and is excluded from timing statistics.
 
-`quantitative-iteration/` 的历史完整进程记录另见主 README，原始输入的哈希与这里的六份副本一致；不要与不含启动/导入的检查路径样本合并统计。
+Historical whole-process records for `quantitative-iteration/` are in the main
+README. The original input hashes match the six copies here. Do not combine
+those records with checking-path samples that exclude startup/imports.
 
-三个生成批次及带条件倒数的共同非形式化数学文本位于
-[`cases/informal-baselines.json`](../cases/informal-baselines.json)。它们是补写的英文回溯基线；
-德布鲁因因子的[计数记录](../results/de-bruijn-factors.json)包含完整源码长度与哈希，
-两条源码已偏离计时用例定义的记录不附加因子。详见[计量口径](../README.md#de-bruijn-factor)。
+The shared informal mathematical texts for the three generated batches and
+the guarded reciprocal are in
+[`cases/informal-baselines.json`](../cases/informal-baselines.json). They are
+English retrospective baselines written after the formal sources. The
+[de Bruijn counting record](../results/de-bruijn-factors.json) includes source
+lengths and hashes; factors are omitted for two sources that differ from their
+saved timing-case definitions. See the [measurement method](../README.md#de-bruijn-factor).

@@ -1,0 +1,7 @@
+# Evaluate extrema, rounding and sign using previously proved rational values.
+have real_eval_a R = -7/3
+have real_eval_b R = 1/2
+eval min(real_eval_a,real_eval_b) + ceil(real_eval_a)
+min(real_eval_a,real_eval_b) + ceil(real_eval_a) = -13/3
+eval sign(real_eval_a) * abs(real_eval_a)
+sign(real_eval_a) * abs(real_eval_a) = -7/3

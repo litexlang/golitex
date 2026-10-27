@@ -32,6 +32,23 @@ between English and Chinese. The selected node explains its role and identifies
 the corresponding implementation or retained evidence. On narrow screens the
 panels stack in reading order.
 
+The Proofs part pairs a vertical guide with the dependency tree. Both share the
+same steps as the top controls: read the goal, check formation, match the
+even-power rule, reduce its real-base requirement through addition, find both
+leaf proofs, and compose their evidence upward. Clicking a guide card or a tree
+node updates the shared step. “Demonstrate from the goal” starts playback at the
+goal; `?lang=zh&view=proof` opens that part directly. Downward requirements are
+emphasized during discovery; upward evidence is emphasized at the final step.
+The general verification-entry diagram remains in an expandable reference.
+
+The separate [English discovery figure](proof-discovery.svg) and
+[Chinese discovery figure](proof-discovery.zh.svg) show the same selected route
+as a vertical static illustration. Matching PNG previews use the same names.
+The match is concrete: the left endpoint is zero, the right side is a power,
+and the literal exponent is even. The remaining real-base condition is proved
+from `have x R` and exact numeral membership. This is a checked successful
+dependency route, rather than a chronology of unrecorded failed candidates.
+
 The [English SVG](proof-search.svg) and [Chinese SVG](proof-search.zh.svg) keep text
 editable. Matching PDF and 600-dpi PNG files use the same names and geometry:
 
@@ -108,12 +125,22 @@ provenance and source digests to [acceptance.json](acceptance.json). Raw executi
 records remain in the chosen temporary evidence directory.
 
 `build.py` owns the vector layout and both figure languages. It generates the
-two SVGs and `index.html` from `index.template.html`; edit those sources rather
+overview and discovery SVGs and `index.html` from `index.template.html`; edit those sources rather
 than the generated files. `viewer.js` owns only interaction and node explanations;
 it does not infer proof relationships. Rebuild after changing the source, layout,
 template or viewer. The mathematical snippet is unchanged from the checked
 design; any future proof authoring must use the repository's persistent Session
 workflow.
+
+To rasterize the separate discovery illustrations without a browser, use a
+local librsvg installation:
+
+```sh
+rsvg-convert -w 4323 -o examples/proof_search/proof-discovery.png \
+  examples/proof_search/proof-discovery.svg
+rsvg-convert -w 4323 -o examples/proof_search/proof-discovery.zh.png \
+  examples/proof_search/proof-discovery.zh.svg
+```
 
 To export matching PDFs and PNGs with an optional local Playwright installation:
 

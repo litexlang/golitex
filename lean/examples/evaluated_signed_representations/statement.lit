@@ -1,0 +1,8 @@
+# Reuse parsed negative fractions and their normalized evaluation results.
+have literal_reuse R = -7/3
+eval literal_reuse
+literal_reuse = -7/3
+eval literal_reuse + 1
+literal_reuse + 1 = -4/3
+eval (-7)/3
+(-7)/3 = -7/3

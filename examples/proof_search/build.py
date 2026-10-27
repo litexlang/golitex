@@ -270,6 +270,115 @@ def make_svg(lang, panel=None):
     return ET.tostring(svg, encoding="unicode")
 
 
+def proof_guide(lang, citation):
+    rows = {
+        "en": [
+            ("0 ≤ (x + 1)²", "Read the goal: zero on the left, a power on the right."),
+            ("x + 1  ·  (x + 1)²", "Check object formation, predicate signature and domains first."),
+            ("u ∈ ℝ  ⇒  0 ≤ u²", "Match u = x + 1 and the even exponent 2; require x + 1 ∈ ℝ."),
+            ("x ∈ ℝ  AND  1 ∈ ℝ", "Direct addition structure reduces the real-base condition to both operands."),
+            ("have x R  ·  1 ∈ ℝ", f"Cite {citation} for x; check the numeral 1 by exact closed calculation."),
+            ("↑  0 ≤ (x + 1)²", "Both leaves succeed; combine their evidence back up the dependency tree."),
+        ],
+        "zh": [
+            ("0 ≤ (x + 1)²", "从目标读取结构：左边是 0，右边是一个幂。"),
+            ("x + 1  ·  (x + 1)²", "先检查对象、谓词签名和适用域。"),
+            ("u ∈ ℝ  ⇒  0 ≤ u²", "匹配 u = x + 1、偶数指数 2；接着要求 x + 1 ∈ ℝ。"),
+            ("x ∈ ℝ  AND  1 ∈ ℝ", "Direct 沿加法结构向下分解，两个操作数都要是实数。"),
+            ("have x R  ·  1 ∈ ℝ", f"x 的成员关系引用 {citation}；数值 1 的成员关系由精确闭式计算确认。"),
+            ("↑  0 ≤ (x + 1)²", "两条叶子都找到依据后，证据沿依赖树向上组合。"),
+        ],
+    }
+    title = "How is this proof found?" if lang == "en" else "这个证明是怎么找到的？"
+    subtitle = "Follow the goal down to smaller requirements" if lang == "en" else "从目标开始，向下找到更小的条件"
+    replay = "Demonstrate from the goal" if lang == "en" else "从目标开始演示"
+    parts = []
+    for index, (formula, detail) in enumerate(rows[lang], start=3):
+        # All text comes from maintained literals or the checked numeric citation.
+        parts.append(
+            f'<li><button type="button" data-route-step="{index}">'
+            f'<span class="route-label"><span class="route-number">{index+1:02}</span><strong class="route-title"></strong></span>'
+            f'<span class="route-formula">{formula}</span><span class="route-detail">{detail}</span>'
+            '</button></li>'
+        )
+    return (
+        f'<section class="proof-route-guide"><h3>{title}</h3><p class="route-subtitle">{subtitle}</p>'
+        f'<button class="proof-replay" type="button">{replay} ↓</button>'
+        '<ol class="proof-route">' + ''.join(parts) + '</ol></section>'
+    )
+
+
+def interactive_tree(lang):
+    svg = ET.fromstring(make_svg(lang, "c"))
+    svg.find(f"{{{SVG}}}text[@class='heading']").set("data-tree-title", "")
+    svg.find(f"{{{SVG}}}text[@class='small']").set("data-tree-subtitle", "")
+    edges = [child for child in svg if child.get("class", "").startswith("edge ")]
+    for edge, stage in zip(edges, [stage for stage in [5, 5, 6, 6, 6, 7, 7] for _ in range(2)], strict=True):
+        edge.set("data-edge-step", str(stage))
+    return ET.tostring(svg, encoding="unicode")
+
+
+def make_discovery_svg(lang, citation):
+    """A standalone diagram of the checked dependency, without browser execution."""
+    labels = {
+        "en": [
+            "Find the requirements downward; compose the evidence upward",
+            "Example: have x R, then check 0 ≤ (x + 1)². Formation and domain checks precede truth search.",
+            "1  Start with the goal", "2  Match the real even-power rule",
+            "u = x + 1; the exponent 2 is even", "3  Ask for the rule's premise",
+            "4  Follow the addition structure", "Both smaller memberships are required",
+            "5a  Cite established context", f"have x R → x ∈ ℝ  ·  {citation}",
+            "5b  Exact closed calculation", "The literal 1 belongs to ℝ",
+            "AND: both leaves must succeed", "↑  Combine the leaf evidence back up",
+            "x ∈ ℝ and 1 ∈ ℝ  ⇒  x + 1 ∈ ℝ  ⇒  0 ≤ (x + 1)²",
+            "Selected route: EvenPowNonnegative → Direct / Add → Known + Closed.",
+            "A curated successful dependency, not a log of every attempted search candidate.",
+        ],
+        "zh": [
+            "向下找齐条件，再把证据向上组合",
+            "例子：have x R，然后检查 0 ≤ (x + 1)²；对象与适用域先经过检查，再找真值证据。",
+            "1  从待证目标出发", "2  匹配实数偶次幂非负规则",
+            "u = x + 1；指数 2 是偶数", "3  提出规则需要的子目标",
+            "4  沿加法结构继续向下分解", "两个操作数的实数成员关系都需要依据",
+            "5a  引用已经建立的上下文", f"have x R → x ∈ ℝ  ·  {citation}",
+            "5b  执行精确的闭式计算", "字面量 1 属于实数集 ℝ",
+            "AND：两条叶子都必须成功", "↑  把叶子证据沿原路向上组合",
+            "x ∈ ℝ 且 1 ∈ ℝ  ⇒  x + 1 ∈ ℝ  ⇒  0 ≤ (x + 1)²",
+            "实际选中路径：EvenPowNonnegative → Direct / Add → Known + Closed。",
+            "图中展开一条已验证的成功依赖，不是全部搜索候选的尝试日志。",
+        ],
+    }[lang]
+    s = ET.Element(f"{{{SVG}}}svg", {"viewBox":"0 0 1200 950", "width":"183mm", "height":"144.875mm", "class":"proof-figure", "role":"img"})
+    element(s, "title").text = labels[0]
+    element(s, "style").text = STYLE + '.proof-figure .discovery-title{font-size:26px;font-weight:500}.proof-figure .discovery-math{font-size:23px}.proof-figure .discovery-note{font-size:15px;fill:#68747B}'
+    element(s, "rect", width=1200, height=950, fill="white")
+    marker_defs(s, f"discovery-{lang}")
+    text(s, labels[0], 36, 38, "discovery-title", "start")
+    text(s, labels[1], 36, 81, "discovery-note", "start")
+
+    def card(x, y, w, h, kind, lines):
+        g = element(s, "g", **{"class":kind})
+        element(g, "rect", x=x, y=y, width=w, height=h, rx=3, **{"class":"shape"})
+        for label, dy, cls in lines:
+            text(g, label, x+w/2, y+dy, cls)
+
+    card(300, 116, 600, 76, "fact", [(labels[2],20,"heading"),("0 ≤ (x + 1)²",51,"discovery-math")])
+    card(250, 233, 700, 95, "rule", [(labels[3],21,"heading"),("u ∈ ℝ  ⇒  0 ≤ u²",51,"discovery-math"),(labels[4],78,"discovery-note")])
+    card(300, 369, 600, 76, "fact", [(labels[5],20,"heading"),("x + 1 ∈ ℝ",51,"discovery-math")])
+    card(250, 486, 700, 80, "rule", [(labels[6],24,"heading"),(labels[7],57,"discovery-note")])
+    for start,end in [(192,233),(328,369),(445,486)]:
+        path(s, f"M 600 {start+4} V {end-8}", "edge request", f"discovery-{lang}-grey")
+    for x in [320,880]:
+        path(s,f"M 600 570 V 593 H {x} V 620", "edge request", f"discovery-{lang}-grey")
+    card(70, 628, 500, 106, "fact", [(labels[8],22,"heading"),("x ∈ ℝ",52,"discovery-math"),(labels[9],83,"discovery-note")])
+    card(630, 628, 500, 106, "fact", [(labels[10],22,"heading"),("1 ∈ ℝ",52,"discovery-math"),(labels[11],83,"discovery-note")])
+    text(s, labels[12], 600, 765, "discovery-note")
+    card(70, 803, 1060, 94, "fact", [(labels[13],24,"heading"),(labels[14],60,"discovery-math")])
+    text(s, labels[15], 36, 922, "small", "start")
+    text(s, labels[16], 36, 943, "small", "start")
+    return ET.tostring(s, encoding="unicode")
+
+
 def checked_evidence(binary, evidence_dir):
     commands = {
         "normal": [str(binary), "-lang", "en", "-strict", "-f", str(HERE / "demo.lit")],
@@ -351,13 +460,16 @@ def main():
     for lang in LABELS:
         suffix = "" if lang == "en" else ".zh"
         (HERE / f"proof-search{suffix}.svg").write_text(make_svg(lang) + "\n")
+        (HERE / f"proof-discovery{suffix}.svg").write_text(make_discovery_svg(lang, acceptance["context_fact_id"]) + "\n")
+        pipeline_title = "Verification pipeline reference" if lang == "en" else "查看验证管线的入口顺序"
         figures[lang] = (
             '<div class="figure-phases">'
             f'<section class="definition-phase" data-phase="definition"><h2 class="phase-heading">{LABELS[lang]["part-definition"]}</h2>'
             f'<div class="figure-panel">{make_svg(lang, "a")}</div></section>'
             f'<section class="proof-phase" data-phase="proof"><h2 class="phase-heading">{LABELS[lang]["part-proof"]}</h2>'
-            '<div class="proof-panels">' + "".join(f'<div class="figure-panel">{make_svg(lang, panel)}</div>' for panel in "bc")
-            + '</div></section></div>'
+            '<div class="proof-panels">' + proof_guide(lang, acceptance["context_fact_id"])
+            + f'<div class="figure-panel proof-tree">{interactive_tree(lang)}</div></div>'
+            + f'<details class="pipeline-reference"><summary>{pipeline_title}</summary><div class="figure-panel">{make_svg(lang, "b")}</div></details></section></div>'
             + f'<div class="figure-footer">{make_svg(lang, "footer")}</div><div class="figure-footer-mobile">{make_svg(lang, "footer-mobile")}</div>'
         )
     template = (HERE / "index.template.html").read_text()
@@ -365,7 +477,7 @@ def main():
         template = template.replace(f"<!-- FIGURE_{lang.upper()} -->", markup)
     template = template.replace("<!-- EVIDENCE -->", json.dumps(acceptance, ensure_ascii=False).replace("<", "\\u003c"))
     (HERE / "index.html").write_text(template)
-    acceptance["assets"] = {name: hashlib.sha256((HERE / name).read_bytes()).hexdigest() for name in ["proof-search.svg", "proof-search.zh.svg", "index.html", "viewer.js", "style.css", "build.py", "index.template.html", "export.cjs", "README.md"]}
+    acceptance["assets"] = {name: hashlib.sha256((HERE / name).read_bytes()).hexdigest() for name in ["proof-search.svg", "proof-search.zh.svg", "proof-discovery.svg", "proof-discovery.zh.svg", "index.html", "viewer.js", "style.css", "build.py", "index.template.html", "export.cjs", "README.md"]}
     (HERE / "acceptance.json").write_text(json.dumps(acceptance, ensure_ascii=False, indent=2) + "\n")
     print("Verified declaration and proof; generated English/Chinese two-part figures.")
 
