@@ -341,11 +341,11 @@ fn selected_rational_route_uses_normalization_adapter() {
 
 #[test]
 fn unsupported_command_after_supported_prefix_rejects_complete_artifact() {
-    let (result, compiler) = execute("1 = 1\neval 2 + 3\n");
+    let (result, compiler) = execute("1 = 1\neval abs(-3)\n");
     let error = compile_run(&result, &compiler, "unsupported_command")
-        .expect_err("eval still has no command consumer");
+        .expect_err("eval's first scalar consumer excludes absolute value");
     assert_eq!(error.statement_index, Some(2));
-    assert_eq!(error.route, "Command");
+    assert_eq!(error.route, "WD/Abs");
 }
 
 #[test]
@@ -3436,3 +3436,6 @@ mod sequence_analysis_tests;
 
 #[path = "../../tests/unit/compile_to_lean/sequence_epsilon_tests.rs"]
 mod sequence_epsilon_tests;
+
+#[path = "../../tests/unit/compile_to_lean/eval_tests.rs"]
+mod eval_tests;

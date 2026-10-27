@@ -3,9 +3,9 @@
 Mathematical examples and the phase-oriented acceptance tree for the current
 Litex pipeline (`src/`).
 
-[Proof as a search](proof_search/README.md) pairs an offline interactive diagram
-with editable journal-style figures: scoped mathematical context, staged
-verification, and the rule evidence behind one strictly checked fact.
+[Definitions and proofs](proof_search/README.md) pairs an offline interactive
+diagram with editable journal-style figures: a checked object declaration builds
+the context, then staged proof search uses it to verify a new fact.
 
 [Collected IMO proofs](imo/README.md) brings together inequalities, geometry,
 functional equations and the existing miniF2F IMO proof variants.

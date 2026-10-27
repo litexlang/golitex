@@ -1,0 +1,9 @@
+# Keep an evaluated local equality inside its sketch, then reuse the name.
+sketch:
+    let eval_local_x = 2
+    eval eval_local_x + 1
+    eval_local_x + 1 = 3
+
+let eval_local_x = 5
+eval eval_local_x + 1
+eval_local_x + 1 = 6

@@ -1,0 +1,7 @@
+# Evaluate an expression using the previously proved value of a real object.
+have eval_input_a R = 10
+eval eval_input_a + 1
+eval_input_a + 1 = 11
+have eval_input_b R = 4
+eval eval_input_a * eval_input_b - eval_input_b
+eval_input_a * eval_input_b - eval_input_b = 36

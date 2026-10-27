@@ -4108,7 +4108,7 @@ and fourteen new Core laws use only `Classical.choice`, `Quot.sound` and
 | Following | `fn_lim`, function continuity and Lipschitz facts; derivative and Riemann-integral facts and selectors |
 | Later analysis | Multivariable limits, partial/total derivatives, gradient/Jacobian/Hessian and related operators |
 | Statement follow-up | Local templates, local piecewise/recursive functions and local functions selected from unique existence |
-| Separate contracts | `algo by cases`, `algo by induc`, `strategy`, `eval` |
+| Separate contracts | `algo by cases`, `algo by induc`, `strategy`; `eval` beyond the exact scalar slice below |
 
 At the phase 7c checkpoint, the original analysis inventory had 17 unconnected
 object constructors and 28 atomic variants without proposition rendering. Several mathematical properties
@@ -4214,6 +4214,61 @@ compound-theorem-return pairs: two more pairs and seven exports, bringing this
 increment's focused Lean checks to 14 pairs and 66 exports.
 
 This does not yet compile `lim`, `limsup`, `liminf`, general limit BTs or a
-native Mathlib sequence adapter. Outside analysis, the next bounded statement
-increment is `eval` with exact arithmetic and original equality citations;
-local definitions, `strategy` and `algo` remain separate follow-ups.
+native Mathlib sequence adapter. The following checkpoint adds exact scalar
+`eval`; local definitions, `strategy` and `algo` remain separate follow-ups.
+
+## Exact scalar `eval`, 2026-10-27
+
+The compiler consumes `ExecStmtResult::Command(Eval(Success(...)))` directly.
+For example:
+
+```litex
+have eval_input_a R = 10
+eval eval_input_a + 1
+eval_input_a + 1 = 11
+```
+
+The result supplies the original source WD, rewritten object, ordered cited
+equality IDs, evaluated object, equality WD and store/inference result. The
+compiler validates their subjects, translates the recorded substitutions,
+checks the exact scalar computation with the existing numeric semantic laws,
+and publishes the original equality and its inferences. It adds no Runtime,
+AST, result fields or Core axioms.
+
+Closed numeric evaluation omits per-node carrier searches in its original WD.
+Within that original evaluation scope, the compiler derives those memberships
+from exact numeric denotations. Division still consumes the recorded nonzero
+proof. Numeric negative powers also prove their nonzero base condition.
+The existing positive-power inference consumer now exposes a completed
+positivity check's WD before extracting its real-membership facts.
+
+| Pair | Checked content |
+| --- | --- |
+| [Arithmetic](../lean/examples/evaluated_arithmetic/) | Fractions, finite decimals, four operations, negation, positive and negative integer powers, stored-equality reuse |
+| [Citations](../lean/examples/evaluated_numeric_citations/) | One and two previously proved object values, ordered substitutions and repeated operands |
+| [Local scope](../lean/examples/evaluated_local_facts/) | Evaluation inside a sketch; the same source name can be reused outside |
+
+All three sources pass strict Litex verification and independent byte-identical
+Lean generation. Their 23 exported theorems pass Lean 4.31.0 and the axiom audit
+with only `propext`, `Classical.choice` and `Quot.sound`. The arithmetic file is
+108,239 bytes; the other two are 5,872 and 5,087 bytes. Final checks reused
+already checked identical bytes for the latter two with unchanged Core and
+toolchain. Eight related pairs also pass regeneration and Lean checks, covering
+18 exports; four sequence pairs reuse checked identical bytes, while four
+arithmetic/scope pairs receive fresh Lean checks.
+
+Thirty canonical Rust tests pass through the current-library harness: nine
+evaluation tests, six positive-power inference tests and fifteen sequence
+regressions. Rejection controls cover altered endpoints and values, wrong or
+reordered citations, self/future/closed-local references, missing WD/guards,
+wrong constructor tags and changed stores. The full Cargo test-crate build
+still references the absent `examples/_internal/regression/lambda_alpha_equivalence.lit`;
+this checkpoint does not claim a full Cargo regression. Local receipts are
+`eval-accepted`, `eval-focused`, `eval-related` and `eval-checkpoint` in the
+existing compiler workspace.
+
+Function, aggregate, matrix and algorithm evaluation certificates remain
+unsupported, as do scalar operators outside the listed arithmetic slice.
+For example, `eval abs(-3)` verifies in Litex but still rejects during Lean
+compilation at `WD/Abs`, with no partial artifact. Work pauses after this
+checkpoint at the maintainer's request.

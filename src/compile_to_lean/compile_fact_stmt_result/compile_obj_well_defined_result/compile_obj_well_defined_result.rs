@@ -82,6 +82,9 @@ impl LitexToLeanCompiler {
         proof: &ObjWellDefinedProof,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
+        if let Some(term) = self.compile_eval_closed_wd(proof, position)? {
+            return Ok(term);
+        }
         match proof {
             ObjWellDefinedProof::ByKnown { obj, wd_id } => {
                 let recorded = self.resolve_wd(*wd_id, position)?;

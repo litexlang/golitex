@@ -1,0 +1,9 @@
+# Evaluate exact rational expressions, then cite the stored equalities.
+eval (1 + 2)^2
+(1 + 2)^2 = 9
+eval (0.1 + 0.2) / (3/5)
+(0.1 + 0.2) / (3/5) = 1/2
+eval 2^(-3)
+2^(-3) = 1/8
+eval -(7 - 3) * (2 + 1)
+-(7 - 3) * (2 + 1) = -12

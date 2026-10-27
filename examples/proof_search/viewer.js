@@ -2,7 +2,10 @@
   const evidence = JSON.parse(document.getElementById("verification-data").textContent);
   const stages = {
     en: [
-      ["A goal in context", "have x R declares x to be a real number (x ∈ ℝ). The next fact asks whether 0 ≤ (x + 1)² follows from that context."],
+      ["Definition: introduce an object", "have x R introduces an arbitrary real object x. R is the existing builtin set of real numbers; this declaration does not assign x a particular numerical value."],
+      ["Definition: check the carrier", "The declaration checks that R is well-defined and nonempty. Its nonempty obligation is actually discharged by the StandardSetNonempty builtin rule."],
+      ["Definition: extend the context", "Register the name x with its declaration, record x ∈ ℝ with a source identity, and make the successful declaration available to later statements."],
+      ["Proof: propose a new fact", "The declaration has established x ∈ ℝ. Now ask whether the new fact 0 ≤ (x + 1)² can be proved from that context."],
       ["Check well-definedness", "Before truth search, check objects, the predicate signature and its domains. Those checks can themselves require mathematical evidence."],
       ["Select a builtin rule", "The selected order rule says that an even power of a real base is nonnegative. It requires evidence that x + 1 is real."],
       ["Resolve the real-base premise", "Direct structural membership follows the addition expression. Both operand memberships must hold; it does not reopen unrestricted proof search."],
@@ -10,7 +13,10 @@
       ["Assemble and publish", "Combine the child evidence into the rule proof. Only after the top-level fact is verified is it stored and passed to direct inference once; this example yields no additional inferred facts."],
     ],
     zh: [
-      ["目标与当前上下文", "have x R 声明 x 是一个实数（x ∈ ℝ）。下一行询问：从这个上下文，能否找到 0 ≤ (x + 1)² 的证明？"],
+      ["定义：引入数学对象", "have x R 引入一个任意的实数对象 x。R 是已有的内置实数集合；这里声明 x 是一个实数，并没有为 x 指定某个具体数值。"],
+      ["定义：检查集合条件", "声明先检查 R 合法且非空。本例的非空条件由实际采用的内置规则 StandardSetNonempty 验证；定义/声明本身也可以调用证明规则。"],
+      ["定义：扩展数学上下文", "登记名称 x 和它的声明，记录成员事实 x ∈ ℝ 及其来源。声明成功后，这些信息可供后续陈述使用。"],
+      ["证明：提出待验证事实", "声明已建立 x ∈ ℝ。现在提出新的事实 0 ≤ (x + 1)²，询问能否从当前数学上下文找到证明。"],
       ["先检查良定义性", "在搜索真值证据之前，检查对象、谓词签名和适用域。这些检查本身也可能需要数学证据。"],
       ["匹配内置规则", "本例选中的序关系规则是：实数的偶次幂非负。规则要求提供 x + 1 是实数的证据。"],
       ["继续检查实数前提", "Direct 结构性成员检查沿加法表达式向下分解，要求两个操作数都是实数；它不会重新开启无限制搜索。"],
@@ -19,6 +25,10 @@
     ],
   };
   const info = {
+    declaration: ["Introduce a real object", "引入一个实数对象", "have x R is an object-definition/declaration statement: introduce x in the existing real-number carrier. It supplies an object and its membership for later proofs, while leaving its numerical value arbitrary.", "have x R 属于对象定义/声明语句：在已有的实数集合中引入对象 x，为后续证明提供对象和成员关系；x 的具体数值仍是任意的。", evidence.declaration.statement_kind],
+    carrier: ["Check the carrier", "检查集合对象", "The carrier R must first be well-defined. The retained have result contains this check before its nonempty check and name registration.", "先检查集合对象 R 的良定义性。实际 have 结果先保留这一步，再检查非空并登记名称。", "HaveObjInNonemptySetGroupResult.param_type_well_defined"],
+    nonempty: ["Establish nonemptiness", "验证集合非空", "Introducing an arbitrary member requires a nonempty carrier. For R, the retained declaration proof uses the StandardSetNonempty builtin. Definition and proof operations therefore interact even before the later fact is checked.", "引入任意成员需要集合非空。本例对 R 的实际非空证明使用 StandardSetNonempty 内置规则，因此定义与证明在后续事实验证之前就已经联动。", evidence.declaration.nonempty_rule_ids[0]],
+    register: ["Register the declaration and membership", "登记声明与成员事实", "Register x with its source declaration, store its membership x ∈ ℝ and run the existing declaration inference. A successful statement makes this information available in the surrounding context.", "登记 x 及其源声明，存储成员关系 x ∈ ℝ，并运行已有的声明推导。陈述成功后，这些信息进入外层上下文供后续使用。", "define_typed_parameters_in_current_env → StoreHaveObjAndInferResult"],
     goal: ["The query", "待验证事实", "A proposed fact is a query against the current context; it is not added to knowledge before verification succeeds.", "待验证事实是交给当前上下文的查询；验证成功之前，它不会被加入知识中。", "demo.lit:3"],
     context: ["Scoped mathematical knowledge", "带作用域的数学知识", "Visible scopes expose definitions, indexed facts, equalities and object properties. Source identities make citations inspectable. Imported definitions use their supported interfaces.", "可见作用域提供定义、索引事实、等式和对象属性；来源标识让引用可以追溯。导入定义通过其支持的接口使用。", "src/exec_env/README.md"],
     "context-fact": ["An established fact", "已建立的事实", "have x R declares x to be a real number and records x ∈ ℝ. The selected proof cites this fact without assigning x a particular numerical value.", "have x R 声明 x 是一个实数，并记录 x ∈ ℝ。选中证明引用这个事实，不需要给 x 指定某个具体数值。", `demo.lit:2 · ${evidence.context_fact_id}`],
@@ -45,7 +55,9 @@
   };
   let language = new URLSearchParams(location.search).get("lang") === "zh" ? "zh" : "en";
   let step = 0;
-  let selected = "goal";
+  let selected = "declaration";
+  const proofStart = 3;
+  const lastStep = stages.en.length - 1;
   let timer = null;
   const track = document.getElementById("step-track");
   const play = document.getElementById("play");
@@ -67,11 +79,14 @@
       document.getElementById(`figure-${lang}`).hidden = lang !== language;
       document.getElementById(`language-${lang}`).setAttribute("aria-pressed", String(lang === language));
     }
-    document.getElementById("step-number").textContent = `${String(step+1).padStart(2,"0")} / 06`;
+    document.getElementById("step-number").textContent = `${String(step+1).padStart(2,"0")} / ${String(stages[language].length).padStart(2,"0")}`;
     document.getElementById("step-title").textContent = stages[language][step][0];
     document.getElementById("step-description").textContent = stages[language][step][1];
     previous.disabled = step === 0;
-    next.disabled = step === 5;
+    next.disabled = step === lastStep;
+    const phase = step < proofStart ? "definition" : "proof";
+    for (const key of ["definition", "proof"]) document.getElementById(`phase-${key}`).setAttribute("aria-pressed", String(key === phase));
+    document.querySelectorAll("[data-phase]").forEach(node => node.classList.toggle("is-current", node.dataset.phase === phase));
     [...track.children].forEach((button, index) => {
       button.setAttribute("aria-pressed", String(index === step));
       button.setAttribute("aria-label", `${index+1}. ${stages[language][index][0]}`);
@@ -93,10 +108,10 @@
 
   function setStep(value) {
     step = value;
-    selected = ["goal","wd","square","add","lookup","proof"][step];
+    selected = ["declaration","nonempty","register","goal","wd","square","add","lookup","proof"][step];
     render();
   }
-  for (let index=0;index<6;index++) {
+  for (let index=0;index<stages.en.length;index++) {
     const button = document.createElement("button");
     button.type = "button";
     button.addEventListener("click", () => { stop();setStep(index); });
@@ -111,11 +126,13 @@
     node.addEventListener("keydown", event => { if(event.key === "Enter" || event.key === " "){event.preventDefault();select();} });
   });
   previous.addEventListener("click", () => { stop();if(step>0)setStep(step-1); });
-  next.addEventListener("click", () => { stop();if(step<5)setStep(step+1); });
+  next.addEventListener("click", () => { stop();if(step<lastStep)setStep(step+1); });
+  document.getElementById("phase-definition").addEventListener("click", () => { stop();setStep(0); });
+  document.getElementById("phase-proof").addEventListener("click", () => { stop();setStep(proofStart); });
   play.addEventListener("click", () => {
     if(timer){stop();return;}
-    if(step === 5)setStep(0);
-    timer = setInterval(() => { if(step<5)setStep(step+1);if(step === 5)stop(); }, 2800);
+    if(step === lastStep)setStep(0);
+    timer = setInterval(() => { if(step<lastStep)setStep(step+1);if(step === lastStep)stop(); }, 2800);
     play.setAttribute("aria-pressed", "true");
     render();
   });

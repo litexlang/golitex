@@ -1,10 +1,9 @@
-# Proof as a search over mathematical knowledge
+# Definitions build context; proofs use it
 
-Litex checks each proposed fact against the current scoped mathematical context.
-A successful route combines a rule instance with the evidence required by its
-premises. This example makes that interaction visible: an order builtin asks a
-membership question, Direct structural membership follows addition, and its
-leaves cite an established fact and a closed calculation.
+The figure separates two connected operations. **I: definitions/declarations**
+introduce mathematical objects and extend the context. **II: proofs** use the
+established context and checked rules to establish new facts. The same two-line
+example makes both operations visible:
 
 ```litex
 have x R
@@ -12,11 +11,20 @@ have x R
 ```
 
 Here `have x R` declares that **x is a real number**, recording `x ∈ ℝ` in the
-mathematical context.
+mathematical context. `R` is the existing builtin real-number set. The object
+declaration checks that this carrier is well-defined and nonempty, then
+registers `x` and its declaration and stores its membership with its source.
+The declaration's nonempty check itself uses a builtin proof rule.
+
+The next line asks for a new fact. An order builtin asks a membership question,
+Direct structural membership follows addition, and its leaves cite the
+declaration's membership fact and a closed calculation. The picture shows how
+definitions and proofs interact through the same context.
 
 Open [the interactive figure](index.html) directly in a browser. It works offline
 without a server, a Litex installation, external fonts, or network requests.
-Use Previous / Next or Play, select a node with a click or Enter/Space, and switch
+Choose Definitions or Proofs to jump between the two parts. Use Previous / Next
+or Play for all nine steps, select a node with a click or Enter/Space, and switch
 between English and Chinese. The selected node explains its role and identifies
 the corresponding implementation or retained evidence. On narrow screens the
 panels stack in reading order.
@@ -31,10 +39,10 @@ editable. Matching PDF and 600-dpi PNG files use the same names and geometry:
 
 ![Proof as a search](proof-search.png)
 
-**Figure: proof as a search over mathematical knowledge.** **a**, A proposed
-fact is interpreted in its current mathematical context. The cylinder summarizes
-the kinds of indexed knowledge available to readers; the displayed example
-concretely establishes `x ∈ ℝ`. **b**, After logical-shape dispatch and
+**Figure: definitions build context; proofs use it.** **I, a**, An object
+declaration checks the real carrier and its nonemptiness, registers `x`, and
+records `x ∈ ℝ` with its source in the context. The existing builtin `R` is used
+as its carrier. **II, b**, After logical-shape dispatch and
 well-definedness checks, the non-equality atomic pipeline tries its permitted
 routes in order and returns a successful proof. **c**, The selected even-power
 rule requires a real base. Structural addition combines the known membership
@@ -45,6 +53,14 @@ once and later reuse.
 
 ## Meaning and boundaries
 
+- Part I illustrates **object definition/declaration** through `have x R`.
+  It introduces an arbitrary real object and its membership; it does not choose
+  a particular numerical value. The stored declaration and fact keep their
+  distinct roles. Predicate and function definitions have their own interfaces.
+- Definitions can invoke proof checks: introducing an arbitrary member needs a
+  nonempty carrier, and the retained declaration actually uses the
+  `StandardSetNonempty` builtin. The two parts show complementary responsibilities,
+  not disjoint verifier implementations.
 - The figure separates **search-stage permissions** from **proof-dependency
   depth**. A rule's premise is checked under its inherited ceiling. Direct
   structural traversal does not reopen the general rule dispatcher.
@@ -79,6 +95,9 @@ python3 examples/proof_search/build.py \
 ```
 
 The builder checks the strict Normal and typed Reading outputs. It requires the
+actual successful object-definition result, its carrier-WD and nonempty-check
+stages, its registered symbol and membership store, and the real-set nonempty
+builtin. The subsequent proof must cite that same membership identity. It also requires the
 actual selected `EvenPowNonnegative` proof, follows its real-base premise to
 `ByStructuralMembership → Add`, checks its `Known` / `Closed` children, and
 confirms that the known leaf cites the `have` declaration. It writes compact
@@ -111,6 +130,8 @@ It is Nature-inspired artwork, not an affiliation or a guarantee of acceptance.
 
 ## Implementation anchors
 
+- [Object-declaration pipeline](../../src/execute/execute_have_obj_in_nonempty_set_stmt.rs).
+- [Symbol registration and membership storage](../../src/execute/introduce_typed_parameters.rs).
 - [Fact dispatch](../../src/execute/execute_fact_stmt/verify.rs).
 - [Non-equality atomic search order](../../src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/search_atomic_except_equality_fact_proof.rs).
 - [Search permissions](../../src/execute/execute_fact_stmt/verify_state.rs).
