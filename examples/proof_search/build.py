@@ -20,12 +20,18 @@ ET.register_namespace("", SVG)
 
 LABELS = {
     "en": {
-        "title": "Proof as a search over mathematical knowledge",
-        "a": "Mathematical context", "asub": "A goal and the knowledge available to it",
-        "b": "Staged verification", "bsub": "Non-equality atomic search, after dispatch",
+        "title": "Definitions build context; proofs use it",
+        "part-definition": "I  Definitions: build context", "part-proof": "II  Proofs: use established context",
+        "a": "Introduce a real object", "asub": "The declaration itself is checked",
+        "b": "Search for a proof", "bsub": "Check a new fact in the established context",
         "c": "Composed proof evidence", "csub": "The selected rule and its checked premise",
         "goal": "Goal", "established": "Established knowledge", "scope": "Current visible scope Γ",
         "from": "from: have x R", "real-number": "x is a real number", "definitions": "definitions and equalities",
+        "carrier": "Check the carrier R", "carrier-sub": "R is well-defined",
+        "nonempty": "Check that R is nonempty", "nonempty-sub": "StandardSetNonempty builtin",
+        "register": "Register x and its declaration", "register-sub": "record the membership x ∈ ℝ",
+        "context-record": "declaration · membership · source",
+        "definition-note": "Declaration checks can invoke proof rules.",
         "memberships": "memberships and object properties", "sources": "fact identities and source references",
         "read": "Read visible facts; keep their sources.", "reuse": "Reuse checked knowledge in later statements.",
         "shape": "Classify the fact", "wd": "Check well-definedness", "wdsub": "objects · signature · domains",
@@ -41,12 +47,18 @@ LABELS = {
         "boundary": "Search order and proof-dependency depth are separate dimensions.",
     },
     "zh": {
-        "title": "证明：在数学知识中搜索证据",
-        "a": "数学上下文", "asub": "待验证的目标，以及当前可用的知识",
-        "b": "分层验证", "bsub": "逻辑形状分派后的非等式原子事实搜索",
+        "title": "定义建立上下文，证明使用上下文",
+        "part-definition": "I  定义：建立数学上下文", "part-proof": "II  证明：使用已有数学上下文",
+        "a": "引入一个实数对象", "asub": "声明本身也要经过检查",
+        "b": "搜索事实的证明", "bsub": "在已建立的上下文中验证新事实",
         "c": "组合证明证据", "csub": "选中的规则，以及已检查的规则前提",
         "goal": "目标", "established": "已建立的数学知识", "scope": "当前可见作用域 Γ",
         "from": "来源：have x R", "real-number": "x 是一个实数", "definitions": "定义与等式关系",
+        "carrier": "检查集合 R", "carrier-sub": "R 是合法的集合对象",
+        "nonempty": "检查 R 非空", "nonempty-sub": "内置规则 StandardSetNonempty",
+        "register": "登记名称 x 与它的声明", "register-sub": "记录成员关系 x ∈ ℝ",
+        "context-record": "声明 · 成员关系 · 来源",
+        "definition-note": "定义/声明的检查，也会使用证明规则。",
         "memberships": "成员关系与对象属性", "sources": "事实标识与来源引用",
         "read": "读取可见事实，保留其来源。", "reuse": "已验证知识可以用于后续陈述。",
         "shape": "识别事实形状", "wd": "检查良定义性", "wdsub": "对象 · 谓词签名 · 适用域",
@@ -113,7 +125,8 @@ def node(parent, key, label, x, y, width, kind="", shape="rect", step="", sub=No
         return group
     else:
         element(group, "rect", x=left, y=y-23, width=width, height=46, rx=2, **{"class": "shape"})
-    text(group, label, x, y-7 if sub else y, "math" if key in {"goal", "result", "real", "x", "one"} else "")
+    cls = "code" if key == "declaration" else "math" if key in {"goal", "result", "real", "x", "one"} else ""
+    text(group, label, x, y-7 if sub else y, cls)
     if sub:
         text(group, sub, x, y+11, "small")
     return group
@@ -134,38 +147,38 @@ def panel_header(parent, letter, title, subtitle):
 
 def panel_a(parent, labels, prefix):
     panel_header(parent, "a", labels["a"], labels["asub"])
-    text(parent, labels["goal"], 188, 88, "small")
-    node(parent, "goal", "0 ≤ (x + 1)²", 188, 127, 314, "fact", step="0")
-    text(parent, "0 <= (x + 1)^2", 188, 175, "code")
-    text(parent, labels["established"], 188, 240, "heading")
-    group = element(parent, "g", data_node="context", data_steps="0 4 5", **{"class": "node fact"})
-    path(group, "M 28 294 C 28 260, 348 260, 348 294 V 490 C 348 524, 28 524, 28 490 Z", "shape")
-    path(group, "M 28 294 C 28 328, 348 328, 348 294", "guide")
-    text(group, labels["scope"], 188, 294)
-    fact = element(parent, "g", data_node="context-fact", data_steps="0 4", **{"class": "node fact"})
-    element(fact, "rect", x=48, y=333, width=280, height=67, rx=0, **{"class": "shape"})
-    text(fact, "x ∈ ℝ", 188, 347, "math")
-    text(fact, labels["from"], 188, 368, "code")
-    text(fact, labels["real-number"], 188, 389, "small")
-    text(group, labels["definitions"], 188, 426)
-    text(group, labels["memberships"], 188, 457)
-    text(group, labels["sources"], 188, 488)
-    text(parent, labels["read"], 188, 564, "small")
-    text(parent, labels["reuse"], 188, 591, "small")
-    path(parent, "M 188 654 H 355 V 529 H 188 V 519", "edge evidence", f"{prefix}-teal")
+    node(parent, "declaration", "have x R", 188, 108, 314, "fact", step="0")
+    text(parent, labels["real-number"], 188, 148, "small")
+    node(parent, "carrier", labels["carrier"], 188, 205, 314, step="1", sub=labels["carrier-sub"])
+    node(parent, "nonempty", labels["nonempty"], 188, 285, 314, "rule", step="1", sub=labels["nonempty-sub"])
+    node(parent, "register", labels["register"], 188, 365, 314, step="2", sub=labels["register-sub"])
+    for start, end in [(158,180),(229,260),(309,340),(389,421)]:
+        path(parent, f"M 188 {start} V {end}", marker=f"{prefix}-grey")
+    group = element(parent, "g", data_node="context", data_steps="2 7 8", **{"class": "node fact"})
+    path(group, "M 28 450 C 28 423, 348 423, 348 450 V 596 C 348 623, 28 623, 28 596 Z", "shape")
+    path(group, "M 28 450 C 28 477, 348 477, 348 450", "guide")
+    text(group, labels["scope"], 188, 450)
+    fact = element(parent, "g", data_node="context-fact", data_steps="2 7", **{"class": "node fact"})
+    element(fact, "rect", x=48, y=480, width=280, height=85, rx=0, **{"class": "shape"})
+    text(fact, "x ∈ ℝ", 188, 499, "math")
+    text(fact, labels["from"], 188, 522, "code")
+    text(fact, labels["real-number"], 188, 546, "small")
+    text(group, labels["context-record"], 188, 588, "small")
+    text(parent, labels["definition-note"], 188, 665, "small")
+    path(parent, "M 355 654 V 624 H 188 V 620", "edge evidence", f"{prefix}-teal")
 
 
 def panel_b(parent, labels, prefix):
     panel_header(parent, "b", labels["b"], labels["bsub"])
-    node(parent, "shape", labels["shape"], 171, 107, 280, step="0")
+    node(parent, "goal", "0 ≤ (x + 1)²", 171, 107, 280, step="3", sub=labels["shape"])
     path(parent, "M 171 131 V 148", marker=f"{prefix}-grey")
-    node(parent, "wd", labels["wd"], 171, 174, 280, step="1", sub=labels["wdsub"])
+    node(parent, "wd", labels["wd"], 171, 174, 280, step="4", sub=labels["wdsub"])
     path(parent, "M 171 198 V 220", marker=f"{prefix}-grey")
     text(parent, labels["truth"], 171, 242, "small")
     stages = ["direct", "known", "builtin", "strategy", "definition", "forall", "rewrite"]
     for i, key in enumerate(stages):
         y = 282 + i * 40
-        group = element(parent, "g", data_node=key, data_steps="2" if key == "builtin" else "", **{"class": "node rule selected-rule" if key == "builtin" else "node"})
+        group = element(parent, "g", data_node=key, data_steps="5" if key == "builtin" else "", **{"class": "node rule selected-rule" if key == "builtin" else "node"})
         element(group, "rect", x=31, y=y-16, width=280, height=32, rx=0, **{"class": "shape"})
         text(group, labels[key], 171, y)
         if i < len(stages)-1:
@@ -177,7 +190,7 @@ def panel_b(parent, labels, prefix):
     path(parent, "M 171 539 V 557", marker=f"{prefix}-grey")
     text(parent, labels["miss"], 171, 572)
     text(parent, labels["misssub"], 171, 590, "small")
-    node(parent, "proof", labels["proof"], 171, 626, 280, "fact", step="5")
+    node(parent, "proof", labels["proof"], 171, 626, 280, "fact", step="8")
     text(parent, labels["permission"], 171, 664, "small")
 
 
@@ -193,14 +206,14 @@ def panel_c(parent, labels, prefix):
              (188,379,88,428), (188,379,288,428), (88,475,88,524), (288,475,288,524)]
     for edge in edges:
         proof_edge(parent, *edge, prefix)
-    node(parent, "result", "0 ≤ (x + 1)²", 188, 107, 244, "fact", step="5")
-    node(parent, "square", labels["square"], 188, 190, 340, "rule", "rule", "2 5")
-    node(parent, "real", "x + 1 ∈ ℝ", 188, 274, 270, "fact", step="2 3 5")
-    node(parent, "add", labels["add"], 188, 358, 294, "rule", "rule", "3 5")
-    node(parent, "x", "x ∈ ℝ", 88, 451, 156, "fact", step="3 4 5")
-    node(parent, "one", "1 ∈ ℝ", 288, 451, 156, "fact", step="3 4 5")
-    node(parent, "lookup", labels["lookup"], 88, 549, 158, "fact", "db", "4")
-    node(parent, "calculation", labels["calculate"], 288, 549, 158, step="4")
+    node(parent, "result", "0 ≤ (x + 1)²", 188, 107, 244, "fact", step="8")
+    node(parent, "square", labels["square"], 188, 190, 340, "rule", "rule", "5 8")
+    node(parent, "real", "x + 1 ∈ ℝ", 188, 274, 270, "fact", step="5 6 8")
+    node(parent, "add", labels["add"], 188, 358, 294, "rule", "rule", "6 8")
+    node(parent, "x", "x ∈ ℝ", 88, 451, 156, "fact", step="6 7 8")
+    node(parent, "one", "1 ∈ ℝ", 288, 451, 156, "fact", step="6 7 8")
+    node(parent, "lookup", labels["lookup"], 88, 549, 158, "fact", "db", "7")
+    node(parent, "calculation", labels["calculate"], 288, 549, 158, step="7")
     text(parent, labels["and"], 188, 611, "small")
     text(parent, "Builtin rule → Direct → context / calculation" if labels is LABELS["en"] else "内置规则 → Direct 结构检查 → 上下文 / 计算", 188, 643, "small")
 
@@ -209,13 +222,13 @@ def footer(parent, labels, prefix, vertical=False):
     if vertical:
         for i, key in enumerate(["accepted", "store", "infer", "updated"]):
             y = 30+i*65
-            node(parent, "commit", labels[key], 188, y, 280, "fact" if key in {"updated", "accepted"} else "", step="5")
+            node(parent, "commit", labels[key], 188, y, 280, "fact" if key in {"updated", "accepted"} else "", step="8")
             if i < 3:
                 path(parent, f"M 188 {y+24} V {y+40}", "edge evidence", f"{prefix}-teal")
         return
     path(parent, "M 0 0 H 1152", "guide")
     for key, x in [("updated", 140), ("infer", 430), ("store", 710), ("accepted", 996)]:
-        node(parent, "commit", labels[key], x, 39, 218, "fact" if key in {"updated", "accepted"} else "", step="5")
+        node(parent, "commit", labels[key], x, 39, 218, "fact" if key in {"updated", "accepted"} else "", step="8")
     for right, left in [(887,819), (601,539), (321,249)]:
         path(parent, f"M {right} 39 H {left}", "edge evidence", f"{prefix}-teal")
     path(parent, "M 60 91 H 104", "edge request", f"{prefix}-grey")
@@ -228,14 +241,14 @@ def footer(parent, labels, prefix, vertical=False):
 
 def make_svg(lang, panel=None):
     labels = LABELS[lang]
-    width, height = (376, 684) if panel in ("a", "b", "c") else (1152, 108) if panel == "footer" else (376, 260) if panel == "footer-mobile" else (1200, 824)
+    width, height = (376, 684) if panel in ("a", "b", "c") else (1152, 108) if panel == "footer" else (376, 260) if panel == "footer-mobile" else (1200, 898)
     prefix = f"ps-{lang}-{panel or 'figure'}"
     attrs = {"viewBox": f"0 0 {width} {height}", "class": "proof-figure", "role": "img", "aria-labelledby": prefix+"-title"}
     if panel is None:
-        attrs.update(width="183mm", height="125.66mm")
+        attrs.update(width="183mm", height="136.95mm")
     svg = ET.Element(f"{{{SVG}}}svg", attrs)
     element(svg, "title", id=prefix+"-title").text = labels["title"]
-    element(svg, "desc").text = "A verified example connects scoped context, ordered verification and the composition of rule evidence. The diagram is a curated teaching projection, not a log of failed search candidates."
+    element(svg, "desc").text = "Part I checks an object declaration and extends the mathematical context. Part II uses that context to verify a fact and compose its proof evidence. This is a curated teaching projection."
     element(svg, "style").text = STYLE
     marker_defs(svg, prefix)
     element(svg, "rect", x=0, y=0, width=width, height=height, fill="#FFFFFF")
@@ -244,12 +257,16 @@ def make_svg(lang, panel=None):
     if panel:
         functions[panel](svg, labels, prefix)
     else:
+        text(svg, labels["part-definition"], 24, 27, "heading", "start")
+        text(svg, labels["part-proof"], 412, 27, "heading", "start")
+        path(svg, "M 24 51 H 392 M 412 51 H 1176", "guide")
+        path(svg, "M 400 74 V 758", "guide")
         for key, x in [("a",24),("b",412),("c",800)]:
-            group = element(svg, "g", transform=f"translate({x} 0)")
+            group = element(svg, "g", transform=f"translate({x} 74)")
             functions[key](group, labels, prefix)
-        group = element(svg, "g", transform="translate(24 706)")
+        group = element(svg, "g", transform="translate(24 780)")
         footer(group, labels, prefix)
-        path(svg, "M 164 722 V 688 H 212 V 654", "edge evidence")
+        path(svg, "M 164 796 V 762 H 379 V 728", "edge evidence")
     return ET.tostring(svg, encoding="unicode")
 
 
@@ -290,16 +307,33 @@ def checked_evidence(binary, evidence_dir):
     if [reason["variant"] for reason in reasons] != ["Known", "Closed"]:
         raise ValueError("Expected a known left operand and closed right operand")
     citation = deref(reasons[0]["fields"]["0"])["fields"]["cite_fact_id"]["fact_id"]
-    declared = reading["statements"][0]["produced_fact_ids"]
+    declaration = reading["statements"][0]
+    declared = declaration["produced_fact_ids"]
     target = reading["statements"][1]
     if citation not in declared or citation not in target["cited_fact_ids"]:
         raise ValueError("The premise must cite the actual have declaration")
+    have_results = [node for node in nodes.values() if node["type"] == "ExecHaveObjInNonemptySetStmtSuccessResult"]
+    if len(have_results) != 1 or len(have_results[0]["fields"]["groups"]) != 1:
+        raise ValueError("Expected the actual successful single-group have declaration")
+    group = deref(have_results[0]["fields"]["groups"][0])
+    carrier = deref(group["fields"]["param_type_well_defined"])
+    nonempty = deref(group["fields"]["nonempty_check"])
+    defined = deref(group["fields"]["defined_params"])
+    rule = "builtin.IsNonemptySetFactSearchProofByBuiltinRule::StandardSetNonempty"
+    if carrier["variant"] != "Obj" or nonempty["variant"] != "Obj" or rule not in declaration["rule_ids"]:
+        raise ValueError("Declaration must retain carrier WD and the checked nonempty-real-set rule")
+    if citation not in [item["fact_id"] for item in defined["fields"]["stored_fact_ids"]]:
+        raise ValueError("Declaration storage must own the membership used by the proof")
+    if not declaration["statement_kind"].startswith("Definition.DefineObj.") or not declaration["declaration_symbol_ids"]:
+        raise ValueError("Expected an object-definition declaration and a resolved symbol")
     return {
         "engine": reading["engine"], "run_result": "success", "strict": True,
         "example_sha256": hashlib.sha256((HERE / "demo.lit").read_bytes()).hexdigest(),
         "source": "demo.lit", "target": target["text"], "context_fact_id": citation,
         "rule_ids": target["rule_ids"],
         "selected_premise": {"search": "ByStructuralMembership", "constructor": "Add", "left": "Known", "right": "Closed"},
+        "declaration": {"statement_kind": declaration["statement_kind"], "symbol_ids": declaration["declaration_symbol_ids"],
+                        "carrier_well_defined": True, "nonempty_rule_ids": [rule], "stored_membership_id": citation},
         "boundary": "Curated successful proof projection; pipeline routes are source-audited, not a failed-candidate timeline.",
     }
 
@@ -317,7 +351,15 @@ def main():
     for lang in LABELS:
         suffix = "" if lang == "en" else ".zh"
         (HERE / f"proof-search{suffix}.svg").write_text(make_svg(lang) + "\n")
-        figures[lang] = '<div class="figure-panels">' + "".join(f'<div class="figure-panel">{make_svg(lang, panel)}</div>' for panel in "abc") + '</div>' + f'<div class="figure-footer">{make_svg(lang, "footer")}</div><div class="figure-footer-mobile">{make_svg(lang, "footer-mobile")}</div>'
+        figures[lang] = (
+            '<div class="figure-phases">'
+            f'<section class="definition-phase" data-phase="definition"><h2 class="phase-heading">{LABELS[lang]["part-definition"]}</h2>'
+            f'<div class="figure-panel">{make_svg(lang, "a")}</div></section>'
+            f'<section class="proof-phase" data-phase="proof"><h2 class="phase-heading">{LABELS[lang]["part-proof"]}</h2>'
+            '<div class="proof-panels">' + "".join(f'<div class="figure-panel">{make_svg(lang, panel)}</div>' for panel in "bc")
+            + '</div></section></div>'
+            + f'<div class="figure-footer">{make_svg(lang, "footer")}</div><div class="figure-footer-mobile">{make_svg(lang, "footer-mobile")}</div>'
+        )
     template = (HERE / "index.template.html").read_text()
     for lang, markup in figures.items():
         template = template.replace(f"<!-- FIGURE_{lang.upper()} -->", markup)
@@ -325,7 +367,7 @@ def main():
     (HERE / "index.html").write_text(template)
     acceptance["assets"] = {name: hashlib.sha256((HERE / name).read_bytes()).hexdigest() for name in ["proof-search.svg", "proof-search.zh.svg", "index.html", "viewer.js", "style.css", "build.py", "index.template.html", "export.cjs", "README.md"]}
     (HERE / "acceptance.json").write_text(json.dumps(acceptance, ensure_ascii=False, indent=2) + "\n")
-    print("Verified demo; generated English/Chinese SVG and offline interactive figure.")
+    print("Verified declaration and proof; generated English/Chinese two-part figures.")
 
 
 if __name__ == "__main__":

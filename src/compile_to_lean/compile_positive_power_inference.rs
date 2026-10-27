@@ -91,14 +91,17 @@ impl LitexToLeanCompiler {
             }
             let checked_positive = self.compile_verify(positive, &prior)?;
             let positive_name = format!("h_{}", positive_fact.fact_id().value());
-            let real_members =
-                self.order_real_members_from_known(positive_atomic, &positive_name, &prior)?;
+            let exponent_stage = SourcePosition { before: 1, ..prior };
+            let real_members = self.order_real_members_from_known(
+                positive_atomic,
+                &positive_name,
+                &exponent_stage,
+            )?;
             let positive_real = match source_order_parts(positive_atomic)?.0 {
                 SourceOrderKind::Less => real_members.1,
                 SourceOrderKind::Greater => real_members.0,
                 _ => unreachable!("the original strict comparison was validated"),
             };
-            let exponent_stage = SourcePosition { before: 1, ..prior };
             let exponent_fact = source_subject(&transport.exponent_real)?;
             if membership_subject(&exponent_fact, &power.exponent)? != StandardSet::R {
                 return Err(LeanCompileError::new(

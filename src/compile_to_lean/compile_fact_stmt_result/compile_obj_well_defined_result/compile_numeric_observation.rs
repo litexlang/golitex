@@ -400,6 +400,12 @@ impl LitexToLeanCompiler {
         wd: &ObjWellDefinedProof,
         position: &SourcePosition<'_>,
     ) -> Result<(String, String, String, Option<EvalRational>), LeanCompileError> {
+        if let Some(term) = self.compile_eval_closed_wd(wd, position)? {
+            let (value, proof) = self.compile_eval_closed_value(wd.obj(), position)?;
+            let literal = exact_rational_literal(&value, "ℂ")?;
+            let member = format!("(Litex.NativeBridge.inOfDenoteNumber {term} {literal} Litex.C {proof} (Litex.numberInC {literal}))");
+            return Ok((literal, proof, member, Some(value)));
+        }
         match wd {
             ObjWellDefinedProof::ByDef {
                 obj: Obj::ComplexOperator(_),

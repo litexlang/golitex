@@ -1365,6 +1365,18 @@ WD IDs. It publishes no source facts from that block. See [local arithmetic](../
 [tuple coordinates](../lean/examples/local_tuple_sketch/) and
 [finite-set membership](../lean/examples/local_finite_set_sketch/).
 
+`eval` compiles exact scalar arithmetic: rational numbers, finite decimals,
+addition, subtraction, multiplication, division, negation and closed integer
+powers. It consumes the recorded numeric equality substitutions and publishes
+the evaluated equality under its original FactId. Later statements can cite
+that result; a result inside `sketch:` stays local. See
+[exact arithmetic](../lean/examples/evaluated_arithmetic/),
+[previously proved values](../lean/examples/evaluated_numeric_citations/) and
+[local evaluation](../lean/examples/evaluated_local_facts/).
+Function, aggregate, matrix and algorithm evaluation certificates are not yet
+compiled by this `eval` consumer; other scalar operators also remain outside
+this increment.
+
 Order replay also covers four weak additive shifts: a nonnegative addend
 preserves a lower bound, and a nonpositive addend preserves an upper bound,
 with either ordering of the addends. See [lower bounds](../lean/examples/weak_additive_lower_bounds/)

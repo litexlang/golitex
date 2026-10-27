@@ -23,6 +23,8 @@ h1 { font-size: clamp(26px, 3.5vw, 40px); font-weight: 500; letter-spacing: -.03
 .language-group { display: flex; gap: 6px; flex-shrink: 0; }
 .language-group button { padding: 6px 9px; font-size: 12px; }
 .interaction { padding: 20px 0 22px; border-top: 1px solid #d6dddf; border-bottom: 1px solid #d6dddf; }
+.phase-controls { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+.phase-controls button { font-size: 13px; }
 .walkthrough-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
 .step-label { display: flex; gap: 16px; align-items: center; }
 #step-number { font-size: 12px; color: #68747b; font-variant-numeric: tabular-nums; }
@@ -35,7 +37,10 @@ h1 { font-size: clamp(26px, 3.5vw, 40px); font-weight: 500; letter-spacing: -.03
 .step-track button.complete { background: #a3c9d0; }
 #step-description { font-size: 14px; color: #536169; line-height: 1.6; min-height: 23px; margin: 12px 0 0; }
 figure { margin: 30px 0 0; }
-.figure-panels { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px; }
+.figure-phases { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 28px; }
+.proof-panels { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px; }
+.phase-heading { font-size: 16px; font-weight: 500; margin: 0 0 20px; padding-bottom: 14px; border-bottom: 1px solid #d6dddf; }
+[data-phase].is-current > .phase-heading { border-bottom-color: var(--teal); }
 .figure-panel svg, .figure-footer svg { display: block; width: 100%; height: auto; }
 .figure-footer { margin-top: 20px; }
 .figure-footer-mobile { display: none; }
@@ -59,7 +64,7 @@ summary { cursor: pointer; }
 pre { white-space: pre-wrap; overflow-wrap: anywhere; color: #536169; font: 12px/1.65 "Courier New", monospace; }
 [hidden] { display: none !important; }
 @media (max-width: 990px) {
-  .figure-panels { grid-template-columns: 1fr; gap: 30px; }
+  .figure-phases, .proof-panels { grid-template-columns: 1fr; gap: 30px; }
   .figure-panel { width: 100%; max-width: 480px; margin: 0 auto; }
   .figure-footer { display: none; }
   .figure-footer-mobile { display: block; width: 100%; max-width: 480px; margin: 20px auto 0; }

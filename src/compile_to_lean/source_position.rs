@@ -4424,6 +4424,13 @@ fn statement_reference(
         ),
         None => name,
     };
+    if let Some(p) = super::compile_eval_stmt_result::eval_statement(statement) {
+        return if before > 2 {
+            Ok(stored_reference(&p.store_and_infer_result, id, actual)?.map(global_reference))
+        } else {
+            Ok(None)
+        };
+    }
     if let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefTemplate(
         crate::execute::ExecDefTemplateStmtResult::Success(p),
     )) = statement
@@ -9065,6 +9072,31 @@ fn visit_statement<T>(
     };
     let position = SourcePosition::new(Some(parent), SourceOwner::Statement(statement), 0);
     let completed = SourcePosition { before, ..position };
+    if let Some(p) = super::compile_eval_stmt_result::eval_statement(statement) {
+        if let Some(v) = visit_store_stage(&p.store_and_infer_result, 2, &completed, wd, verify)? {
+            return Ok(Some(v));
+        }
+        if before > 1 {
+            let prior = SourcePosition {
+                before: 1,
+                ..position
+            };
+            let formed = SourcePosition::new(
+                Some(&prior),
+                SourceOwner::EqualWDLocals(&p.evaluated_equal_well_defined, 0),
+                2,
+            );
+            if let Some(v) = visit_owner(&formed, wd, verify)? {
+                return Ok(Some(v));
+            }
+        }
+        if before > 0 {
+            if let Some(v) = visit_complete_wd(&p.source_well_defined, &position, wd, verify)? {
+                return Ok(Some(v));
+            }
+        }
+        return Ok(None);
+    }
     if let Some(p) = super::compile_release_choice_result::choice_statement(statement) {
         if let Some(v) = visit_store_stage(&p.stored, 3, &completed, wd, verify)? {
             return Ok(Some(v));

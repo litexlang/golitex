@@ -1,12 +1,12 @@
 {
   "engine": {
     "name": "Litex",
-    "version": "1.1.5-beta",
-    "executable_id": "fnv1a64:5814f98844b2dca8"
+    "version": "1.1.6-beta",
+    "executable_id": "fnv1a64:538fd817601a9cb6"
   },
   "run_result": "success",
   "strict": true,
-  "example_sha256": "516d164a587c4c501230b43d504f97ef54f2b6e8621c630a733c2722c40b4ac5",
+  "example_sha256": "26449980fd2b3742b6e55f29009a52b591a9589d9b27b6f178b904ba4cfc71ea",
   "source": "demo.lit",
   "target": "0 <= ((x + 1) ^ 2)",
   "context_fact_id": "f2",
@@ -19,41 +19,65 @@
     "left": "Known",
     "right": "Closed"
   },
+  "declaration": {
+    "statement_kind": "Definition.DefineObj.HaveObjInNonemptySetStmt",
+    "symbol_ids": [
+      "local:i1"
+    ],
+    "carrier_well_defined": true,
+    "nonempty_rule_ids": [
+      "builtin.IsNonemptySetFactSearchProofByBuiltinRule::StandardSetNonempty"
+    ],
+    "stored_membership_id": "f2"
+  },
   "boundary": "Curated successful proof projection; pipeline routes are source-audited, not a failed-candidate timeline.",
   "assets": {
-    "proof-search.svg": "f677156915a4df910fd79e68d81abb5dd3358b614e89d5175f17e6b83408e2f2",
-    "proof-search.zh.svg": "7f0c66167183a1013d6ba51ffcb1f4725e4bc20e1ffe92558b5c77c9dff382f1",
-    "index.html": "bbd5106a253493dda24b39f21a96c05cf1cae28102dc818c794f0a65b86163b8",
-    "viewer.js": "7bad24126fe803e3318a9d56809155d8033469ed6c27df63ecc6eeb227f6eb1e",
-    "style.css": "099c6f07636db89e4c7d62590b25accf8f4d5366e66c079eb3a781a5a870d008",
-    "build.py": "af7af329a24242f556d63f8e0be8f42be9fb2d0db442295fd617ae7098380150",
-    "index.template.html": "62ad03ad41f145d30f3a5cb39f9c972dfdf0e688ad471401e017fa17a11270b6",
-    "export.cjs": "c76833bdf6c4d71fa067dfba1eac4df82d515aee4b075f9066da6f86f1d0e62e",
-    "README.md": "91c202767c6e62150cc9bfc20a59a0e41c9ffb0743e11374e09e5b37e2f92e94"
+    "proof-search.svg": "e3761d1e4afce618da19c2fc3952f69ce5a25a563315bb92aae81fa75f881010",
+    "proof-search.zh.svg": "8424073ac1eff101a77438ea176ebe128aafae930c232d0a0a63223dc3d42b1e",
+    "index.html": "0b9c47d968d9383a8b741b42b9c6c47f5907d40fe5e513c149ed9533cfa987b3",
+    "viewer.js": "f02c1357251c0cd4e983b271601481858ddc0ebb20e1ea96505622f1870e2696",
+    "style.css": "66020c1442029b5ff52ea8b8503fef85717712f9183213273cdd452875aef55c",
+    "build.py": "bdaca321b9c459bdd59d423ba2a0aa0d7ce6434550b34884095d8fb199172524",
+    "index.template.html": "0827b34239c1908712c31bd3fcb25fb21c6d8e8f6303a964e8fb22c182f45a55",
+    "export.cjs": "5834fee4e00ada848984dec8576a067def865496a9abcfa7d96b20ebe6b49181",
+    "README.md": "2ec276f42713bea1236971531eb8a13dfaf65e2a4222d719f6fce3e018e9bba1"
   },
   "rendered_assets": {
-    "proof-search.svg": "f677156915a4df910fd79e68d81abb5dd3358b614e89d5175f17e6b83408e2f2",
-    "proof-search.pdf": "37cb7dc73f44a3db119b337dafe818eb1a2af83e5a8e88824cad6f5e8aacf3ad",
-    "proof-search.png": "ee794be86abe251b0a7baa39c03fe848e19f8b673cf89bc7aecfb29611557461",
-    "proof-search.zh.svg": "7f0c66167183a1013d6ba51ffcb1f4725e4bc20e1ffe92558b5c77c9dff382f1",
-    "proof-search.zh.pdf": "00708be432432046358b22d3ef63c3f8aad57b77187c05656bee4979d236dfc2",
-    "proof-search.zh.png": "1661d7cf054a31dc0a6a22be9d19b1976a9596cd68c91e916a6f0b58b0d48835"
+    "proof-search.svg": "e3761d1e4afce618da19c2fc3952f69ce5a25a563315bb92aae81fa75f881010",
+    "proof-search.pdf": "d37da97c88c8410d9210092d69266bf84fea71c25a9adcec0a8ba1094a5e53a5",
+    "proof-search.png": "1793e3f1be04d5c5a8bb19a990c73b995b0454fb461cbc13d411b68ba9eeba87",
+    "proof-search.zh.svg": "8424073ac1eff101a77438ea176ebe128aafae930c232d0a0a63223dc3d42b1e",
+    "proof-search.zh.pdf": "1b265189711fb2f5fa5f2a9415a7273fff452afa7e0306d6af4cbbf73146e985",
+    "proof-search.zh.png": "d92eecce1766a7d0909ef6f6bf9815f4826109aed8f1c58983b9b0901c3f7bd0"
   },
   "visual_review": {
     "date": "2026-10-27",
-    "scope": "real-number annotation and descriptions",
+    "scope": "definition/declaration and proof parts",
+    "parts": 2,
+    "steps": 9,
+    "phase_navigation": true,
+    "keyboard_selection": true,
+    "playback_phase_transition": true,
+    "offline": true,
+    "browser_errors": 0,
     "languages": [
       "en",
       "zh"
     ],
     "viewports": [
       1440,
+      1100,
+      768,
+      392,
       320
     ],
-    "annotation_present": true,
-    "node_description_updated": true,
-    "overlap_or_overflow": false,
-    "pdf_label_extractable": true,
-    "pdf_render_inspected": true
+    "clipped_or_overflowing_labels": false,
+    "pdf_pages_per_language": 1,
+    "pdf_text_extractable": true,
+    "pdf_render_inspected": true,
+    "png_pixels": [
+      4323,
+      3235
+    ]
   }
 }

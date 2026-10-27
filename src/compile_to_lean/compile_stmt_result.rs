@@ -72,7 +72,9 @@ impl LitexToLeanCompiler {
                     self.compile_sketch_statement(proof, position, index, local)
                 }
             },
-            ExecStmtResult::Command(_) => Err(LeanCompileError::unsupported("Command")),
+            ExecStmtResult::Command(result) => {
+                self.compile_command_statement(result, position, index, local)
+            }
         }
     }
 }

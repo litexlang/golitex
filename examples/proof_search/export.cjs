@@ -12,18 +12,22 @@ const { chromium } = require("playwright");
   try {
   for (const suffix of ["", ".zh"]) {
     const svg = fs.readFileSync(path.join(__dirname, `proof-search${suffix}.svg`), "utf8");
-    const print = await browser.newPage({ viewport: { width: 1200, height: 824 } });
-    await print.setContent(`<html><head><title>Proof as a search | Litex</title><style>@page{size:183mm 125.66mm;margin:0}html,body{margin:0;padding:0;background:white}svg{display:block;width:183mm;height:125.66mm}</style></head><body>${svg}</body></html>`);
+    const geometry = /viewBox="0 0 ([\d.]+) ([\d.]+)"/.exec(svg);
+    const widthMm = Number(/width="([\d.]+)mm"/.exec(svg)[1]);
+    const heightMm = Number(/height="([\d.]+)mm"/.exec(svg)[1]);
+    const width = Number(geometry[1]), height = Number(geometry[2]);
+    const print = await browser.newPage({ viewport: { width, height } });
+    await print.setContent(`<html><head><title>Definitions and proofs | Litex</title><style>@page{size:${widthMm}mm ${heightMm}mm;margin:0}html,body{margin:0;padding:0;background:white}svg{display:block;width:${widthMm}mm;height:${heightMm}mm}</style></head><body>${svg}</body></html>`);
     await print.evaluate(() => document.fonts.ready);
     await print.pdf({ path: path.join(__dirname, `proof-search${suffix}.pdf`), preferCSSPageSize: true, printBackground: true, tagged: true });
     await print.close();
-    const raster = await browser.newPage({ viewport: { width: 1200, height: 824 }, deviceScaleFactor: 600 * 183 / 25.4 / 1200 });
-    await raster.setContent(`<html><head><style>html,body{margin:0;padding:0;background:white}svg{display:block;width:1200px;height:824px}</style></head><body>${svg}</body></html>`);
+    const raster = await browser.newPage({ viewport: { width, height }, deviceScaleFactor: 600 * widthMm / 25.4 / width });
+    await raster.setContent(`<html><head><style>html,body{margin:0;padding:0;background:white}svg{display:block;width:${width}px;height:${height}px}</style></head><body>${svg}</body></html>`);
     await raster.evaluate(() => document.fonts.ready);
-    const overflow = await raster.locator("svg").evaluate(svg => [...svg.querySelectorAll("text")].filter(node => {
+    const overflow = await raster.locator("svg").evaluate((svg, {width,height}) => [...svg.querySelectorAll("text")].filter(node => {
       const b = node.getBoundingClientRect();
-      return b.left < -1 || b.top < -1 || b.right > 1201 || b.bottom > 825;
-    }).map(node => node.textContent));
+      return b.left < -1 || b.top < -1 || b.right > width+1 || b.bottom > height+1;
+    }).map(node => node.textContent), {width,height});
     if (overflow.length) throw new Error(`Text outside figure: ${overflow.join("; ")}`);
     await raster.locator("svg").screenshot({ path: path.join(__dirname, `proof-search${suffix}.png`) });
     await raster.close();

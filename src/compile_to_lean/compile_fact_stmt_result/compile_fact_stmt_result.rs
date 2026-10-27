@@ -81,7 +81,7 @@ impl LitexToLeanCompiler {
             self.context_application(&name, position)
         };
         let complete = SourcePosition {
-            before: 1,
+            before: position.before.max(1),
             ..*position
         };
         let mut declarations = vec![declaration];
