@@ -3439,3 +3439,6 @@ mod sequence_epsilon_tests;
 
 #[path = "../../tests/unit/compile_to_lean/eval_tests.rs"]
 mod eval_tests;
+
+#[path = "../../tests/unit/compile_to_lean/eval_function_tests.rs"]
+mod eval_function_tests;

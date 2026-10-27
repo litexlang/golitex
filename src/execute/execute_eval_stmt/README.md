@@ -18,6 +18,16 @@ Exact evaluation with checked source-to-result equality publication.
 5. Check the generated equality's WD and publish it through `store_fact_and_infer`.
    `exec_stmt` commits the fact only on success; proof-local eval stays local.
 
+Each `FunctionApplicationEvaluationResult` retains the application WD, selected
+expansion, `rewritten_body`, that rewrite's `cited_equal_fact_ids`, the
+`nested_function_evidence` range and the resulting value, in execution order.
+Function records are appended after their children. A call at index `i` owns
+the contiguous child range `start..i`; a leaf owns `i..i`. Fold applications use
+the same range into the enclosing evaluation's function records. These fields
+capture work already performed; they do not add searches or stored facts.
+The run-level citation list retains its existing order: initial rewrite,
+then each function's body rewrite before its child evaluations.
+
 Nested aggregates share one allowance of 1024 terms. Endpoint count/advancement
 use checked integers. Symbolic sets need an actual known enumeration for numeric
 evaluation. Reversed range sums/products remain invalid; empty finite-set sum

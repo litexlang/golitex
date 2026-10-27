@@ -2,7 +2,7 @@
 
 This strict source module contains FiniteProbabilitySpace, six function
 families, uniform and Dirac bundled constructors, the independent_events
-predicate and 68 named theorems. There are
+predicate and 79 named theorems. There are
 two internal quantified closure facts. No trust, user axioms or abstract
 predicates are used. The source reuses bounded native power-set closure; no
 reserved theorem names are added.
@@ -84,6 +84,8 @@ Cov(X,X)=Var(X). It has no complex or measure-space overload.
 | Expectation | finite_expectation_formula, finite_expectation_extensional, finite_expectation_nonnegative, finite_expectation_monotone, finite_expectation_vanishes, finite_expectation_zero, finite_expectation_of_constant, finite_expectation_constant, finite_expectation_bounds, finite_expectation_of_linear_combination, finite_expectation_linear, finite_expectation_add, finite_expectation_scale, finite_expectation_subtract, finite_expectation_affine, finite_expectation_square_bound |
 | Variance | finite_variance_formula, finite_variance_nonnegative, finite_variance_of_constant, finite_variance_constant, finite_variance_second_moment, finite_variance_of_affine, finite_variance_affine, finite_variance_scale, finite_variance_translate |
 | Covariance | finite_covariance_formula, finite_covariance_symmetric, finite_covariance_self, finite_covariance_of_constant_left, finite_covariance_constant_left, finite_covariance_constant_right |
+| Covariance moments and bilinearity | finite_covariance_product_moment, finite_covariance_of_linear_combination_left, finite_covariance_linear_combination_left, finite_covariance_of_linear_combination_right, finite_covariance_linear_combination_right, finite_covariance_affine |
+| Variance of combinations | finite_variance_of_linear_combination, finite_variance_linear_combination, finite_variance_add, finite_variance_subtract, finite_variance_add_uncorrelated |
 
 Difference requires B subset A; monotonicity requires A subset B. Bayes
 requires both event probabilities positive. Every conditional result keeps
@@ -124,7 +126,7 @@ mass observable k has expectation1. Replacing its value at the null outcome0
 by100 keeps expectation1. Both models also check the constant5 and zero laws.
 The singleton-weight formula is proved by induction on finite event cardinality;
 constant expectation uses its normalization, not a new assumption.
-Measure/countable probability, covariance moment/bilinearity laws, distributions, statistics and
+Measure/countable probability, correlation, distributions, statistics and
 full probability Lean compilation remain outside this delivered slice.
 
 ## Checks
@@ -170,7 +172,7 @@ and Var(X)=E(X²)-E(X)² gives E(X)²<=E(X²).
 The actual dice example computes E(X²)=91/6 and Var(X)=35/12. The point-mass
 observable has Var(X)=0 while taking different values at its two sample points;
 there is no erroneous everywhere-constant converse. Negative coefficients,
-perfectly dependent inputs and null outcomes remain legal. Sixty-three refusal
+perfectly dependent inputs and null outcomes remain legal. The refusal
 controls check wrong values, missing pointwise relations, total-real sampler
 domains, partial functions and arity.
 
@@ -185,3 +187,37 @@ A constant real observable has covariance0 with every total real observable,
 on either side. The supplied-function helper requires the actual pointwise
 constant relation; direct interfaces construct the constant sampler. Zero,
 negative and positive real constants are legal; a nonreal constant is rejected.
+
+## Covariance moments and linear combinations
+
+`finite_covariance_product_moment(Omega,space,X,Y)` proves
+Cov(X,Y)=E(XY)-E(X)E(Y). The centered-product definition is unchanged.
+All observables are total real functions on the same actual sample carrier.
+
+`finite_covariance_of_linear_combination_left(Omega,space,X,Y,W,H,a,b)`
+consumes the pointwise relation H(k)=aX(k)+bY(k) and proves
+Cov(H,W)=aCov(X,W)+bCov(Y,W). The right-hand version uses
+H(k)=aY(k)+bW(k) and proves Cov(X,H)=aCov(X,Y)+bCov(X,W).
+The corresponding names without `of_` construct the literal combination;
+they take X,Y,W,a,b after Omega,space. No independence is assumed.
+
+`finite_covariance_affine(Omega,space,X,Y,a,b,c,d)` proves
+Cov(aX+b,cY+d)=acCov(X,Y). Coefficients may be zero or negative.
+They do not remove the total-real domain of either input.
+
+`finite_variance_of_linear_combination(Omega,space,X,Y,H,a,b)` consumes
+H(k)=aX(k)+bY(k) and proves Var(H)=a²Var(X)+2abCov(X,Y)+b²Var(Y).
+`finite_variance_linear_combination` constructs that combination, and
+`finite_variance_add` / `finite_variance_subtract` specialize its coefficients.
+`finite_variance_add_uncorrelated` requires Cov(X,Y)=0 before dropping the
+cross term; zero covariance is not a claim of independence.
+
+The actual dice caller uses Y=2X+1, obtaining Cov(X,Y)=35/6,
+Var(Y)=35/3, Var(X+Y)=105/4 and Var(X-Y)=35/12. It also exercises
+negative and zero coefficients and the Dirac space's null outcome.
+
+The final focused checker passes77 CLI checks: four positive projects,71
+final-statement refusal controls and both installed layouts. Source91, generic
+contracts82 and actual caller202 statements pass; std/WiX has80 matching files
+and unique component references. These focused source and packaging checks do
+not imply full probability Lean support or release certification.

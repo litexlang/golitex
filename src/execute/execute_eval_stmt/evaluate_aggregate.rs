@@ -233,7 +233,8 @@ fn evaluate_fold_application(
         return Ok(Err(ExecEvalStmtFailed::UnsupportedExpression));
     };
     let (body, cites) = runtime.rewrite_obj_by_known_closed_numeric_equal(&expansion.expanded_body);
-    context.cited_equal_fact_ids.extend(cites);
+    context.cited_equal_fact_ids.extend(cites.iter().copied());
+    let nested_start = context.function_evaluations.len();
     let value = match evaluate_obj(runtime, &body, depth + 1, context)? {
         Ok(v) => v,
         Err(e) => return Ok(Err(e)),
@@ -242,6 +243,9 @@ fn evaluate_fold_application(
         application: application_obj,
         application_well_defined,
         expansion: FunctionApplicationExpansionProof::Anonymous(expansion),
+        rewritten_body: body,
+        cited_equal_fact_ids: cites,
+        nested_function_evidence: nested_start..context.function_evaluations.len(),
         value,
     }))
 }

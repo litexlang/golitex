@@ -175,7 +175,10 @@ pub fn evaluate_obj(
             if let Some(expansion) = expansion {
                 let (body, cites) =
                     runtime.rewrite_obj_by_known_closed_numeric_equal(expansion.expanded_body());
-                active_calls.cited_equal_fact_ids.extend(cites);
+                active_calls
+                    .cited_equal_fact_ids
+                    .extend(cites.iter().copied());
+                let nested_start = active_calls.function_evaluations.len();
                 let value = match evaluate_obj(runtime, &body, depth + 1, active_calls)? {
                     Ok(v) => v,
                     Err(e) => return Ok(Err(e)),
@@ -185,6 +188,10 @@ pub fn evaluate_obj(
                         application: obj.clone(),
                         application_well_defined,
                         expansion,
+                        rewritten_body: body,
+                        cited_equal_fact_ids: cites,
+                        nested_function_evidence: nested_start
+                            ..active_calls.function_evaluations.len(),
                         value: value.clone(),
                     },
                 );

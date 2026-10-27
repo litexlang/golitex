@@ -61,5 +61,13 @@
   "affine_variance_zero_invalid_sampler": "argument_type",
   "affine_variance_wrong_value": "search_proof",
   "covariance_missing_constant": "premise",
-  "covariance_nonreal_constant": "argument_type"
+  "covariance_nonreal_constant": "argument_type",
+  "covariance_linear_left_missing_relation": "premise",
+  "covariance_linear_right_missing_relation": "premise",
+  "variance_linear_missing_relation": "premise",
+  "covariance_linear_nonreal_coefficient": "argument_type",
+  "variance_linear_zero_invalid_sampler": "argument_type",
+  "covariance_moment_omits_centering": "search_proof",
+  "variance_add_missing_zero_covariance": "premise",
+  "variance_add_omits_cross_term": "search_proof"
 }

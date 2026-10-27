@@ -470,3 +470,69 @@ thm consume_finite_covariance_constant_right:
     ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,X fn(k space.carrier) R,c R:
         \prob::main::finite_covariance<Omega,space>(X,fn(k space.carrier) R {c}) = 0
     release thm prob::main::finite_covariance_constant_right(Omega,space,X,c)
+
+thm consume_finite_covariance_product_moment:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,X,Y fn(k space.carrier) R:
+        \prob::main::finite_covariance<Omega,space>(X,Y) = \prob::main::finite_expectation<Omega,space>(fn(k space.carrier) R {X(k)*Y(k)})-\prob::main::finite_expectation<Omega,space>(X)*\prob::main::finite_expectation<Omega,space>(Y)
+    release thm prob::main::finite_covariance_product_moment(Omega,space,X,Y)
+
+thm consume_finite_covariance_of_linear_combination_left:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,X,Y,W,H fn(k space.carrier) R,a,b R:
+        forall k space.carrier:
+            H(k) = a*X(k)+b*Y(k)
+        =>:
+            \prob::main::finite_covariance<Omega,space>(H,W) = a*\prob::main::finite_covariance<Omega,space>(X,W)+b*\prob::main::finite_covariance<Omega,space>(Y,W)
+    release thm prob::main::finite_covariance_of_linear_combination_left(Omega,space,X,Y,W,H,a,b)
+
+thm consume_finite_covariance_linear_combination_left:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,X,Y,W fn(k space.carrier) R,a,b R:
+        \prob::main::finite_covariance<Omega,space>(fn(k space.carrier) R {a*X(k)+b*Y(k)},W) = a*\prob::main::finite_covariance<Omega,space>(X,W)+b*\prob::main::finite_covariance<Omega,space>(Y,W)
+    release thm prob::main::finite_covariance_linear_combination_left(Omega,space,X,Y,W,a,b)
+
+thm consume_finite_covariance_of_linear_combination_right:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,X,Y,W,H fn(k space.carrier) R,a,b R:
+        forall k space.carrier:
+            H(k) = a*Y(k)+b*W(k)
+        =>:
+            \prob::main::finite_covariance<Omega,space>(X,H) = a*\prob::main::finite_covariance<Omega,space>(X,Y)+b*\prob::main::finite_covariance<Omega,space>(X,W)
+    release thm prob::main::finite_covariance_of_linear_combination_right(Omega,space,X,Y,W,H,a,b)
+
+thm consume_finite_covariance_linear_combination_right:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,X,Y,W fn(k space.carrier) R,a,b R:
+        \prob::main::finite_covariance<Omega,space>(X,fn(k space.carrier) R {a*Y(k)+b*W(k)}) = a*\prob::main::finite_covariance<Omega,space>(X,Y)+b*\prob::main::finite_covariance<Omega,space>(X,W)
+    release thm prob::main::finite_covariance_linear_combination_right(Omega,space,X,Y,W,a,b)
+
+thm consume_finite_variance_of_linear_combination:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,X,Y,H fn(k space.carrier) R,a,b R:
+        forall k space.carrier:
+            H(k) = a*X(k)+b*Y(k)
+        =>:
+            \prob::main::finite_variance<Omega,space>(H) = a^2*\prob::main::finite_variance<Omega,space>(X)+2*a*b*\prob::main::finite_covariance<Omega,space>(X,Y)+b^2*\prob::main::finite_variance<Omega,space>(Y)
+    release thm prob::main::finite_variance_of_linear_combination(Omega,space,X,Y,H,a,b)
+
+thm consume_finite_variance_linear_combination:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,X,Y fn(k space.carrier) R,a,b R:
+        \prob::main::finite_variance<Omega,space>(fn(k space.carrier) R {a*X(k)+b*Y(k)}) = a^2*\prob::main::finite_variance<Omega,space>(X)+2*a*b*\prob::main::finite_covariance<Omega,space>(X,Y)+b^2*\prob::main::finite_variance<Omega,space>(Y)
+    release thm prob::main::finite_variance_linear_combination(Omega,space,X,Y,a,b)
+
+thm consume_finite_variance_add:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,X,Y fn(k space.carrier) R:
+        \prob::main::finite_variance<Omega,space>(fn(k space.carrier) R {X(k)+Y(k)}) = \prob::main::finite_variance<Omega,space>(X)+2*\prob::main::finite_covariance<Omega,space>(X,Y)+\prob::main::finite_variance<Omega,space>(Y)
+    release thm prob::main::finite_variance_add(Omega,space,X,Y)
+
+thm consume_finite_variance_subtract:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,X,Y fn(k space.carrier) R:
+        \prob::main::finite_variance<Omega,space>(fn(k space.carrier) R {X(k)-Y(k)}) = \prob::main::finite_variance<Omega,space>(X)-2*\prob::main::finite_covariance<Omega,space>(X,Y)+\prob::main::finite_variance<Omega,space>(Y)
+    release thm prob::main::finite_variance_subtract(Omega,space,X,Y)
+
+thm consume_finite_variance_add_uncorrelated:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,X,Y fn(k space.carrier) R:
+        \prob::main::finite_covariance<Omega,space>(X,Y) = 0
+        =>:
+            \prob::main::finite_variance<Omega,space>(fn(k space.carrier) R {X(k)+Y(k)}) = \prob::main::finite_variance<Omega,space>(X)+\prob::main::finite_variance<Omega,space>(Y)
+    release thm prob::main::finite_variance_add_uncorrelated(Omega,space,X,Y)
+
+thm consume_finite_covariance_affine:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,X,Y fn(k space.carrier) R,a,b,c,d R:
+        \prob::main::finite_covariance<Omega,space>(fn(k space.carrier) R {a*X(k)+b},fn(k space.carrier) R {c*Y(k)+d}) = a*c*\prob::main::finite_covariance<Omega,space>(X,Y)
+    release thm prob::main::finite_covariance_affine(Omega,space,X,Y,a,b,c,d)

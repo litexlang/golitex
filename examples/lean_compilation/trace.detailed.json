@@ -1,0 +1,219 @@
+{
+  "kind": "run",
+  "run_result": "success",
+  "target": "file",
+  "path": "lean/examples/add_zero/statement.lit",
+  "detail": "detailed",
+  "language": "en",
+  "statement_results": [
+    {
+      "statement_result": "accepted",
+      "kind": "fact",
+      "statement": "forall a C:\n    (a + 0) = a",
+      "verify": {
+        "type": "forall",
+        "verification_result": "accepted",
+        "fact": "forall a C:\n    (a + 0) = a",
+        "introduced_params": {
+          "param_type_well_defined": [
+            {
+              "type": "obj",
+              "well_defined": {
+                "well_defined_result": "accepted",
+                "proof": {
+                  "type": "by_def",
+                  "family": "StandardSet",
+                  "kind": "StandardSet",
+                  "obj": "C"
+                }
+              }
+            }
+          ],
+          "defined_params": {
+            "stores": [
+              {
+                "fact_id": "f15"
+              }
+            ],
+            "infers": [],
+            "store_and_infer_results": [
+              {
+                "stores": [
+                  {
+                    "fact_id": "f15"
+                  }
+                ],
+                "formed_subjects": [
+                  {
+                    "argument_index": 1,
+                    "wd_id": "wd1"
+                  }
+                ],
+                "infers": []
+              }
+            ]
+          },
+          "auto_opened_struct_layers": []
+        },
+        "assumed_dom_facts": [],
+        "proved_then_facts": [
+          {
+            "verify_result": {
+              "type": "equality",
+              "verification_result": "accepted",
+              "fact": "(a + 0) = a",
+              "well_defined": {
+                "left": {
+                  "type": "by_def",
+                  "family": "ArithmeticOperator",
+                  "kind": "Add",
+                  "obj": "(a + 0)",
+                  "child_obj_well_defined": [
+                    {
+                      "type": "by_def",
+                      "family": "Identifier",
+                      "kind": "Identifier",
+                      "obj": "a"
+                    },
+                    {
+                      "type": "by_def",
+                      "family": "Literal",
+                      "kind": "Number",
+                      "obj": "0"
+                    }
+                  ],
+                  "requirement_fact_verified": [
+                    {
+                      "type": "atomic_except_equality",
+                      "verification_result": "accepted",
+                      "fact": "a $in C",
+                      "well_defined": {
+                        "well_defined_of_each_parameter": [
+                          {
+                            "type": "by_def",
+                            "family": "Identifier",
+                            "kind": "Identifier",
+                            "obj": "a"
+                          },
+                          {
+                            "type": "by_known",
+                            "obj": "C",
+                            "wd_id": "wd1"
+                          }
+                        ],
+                        "predicate_signature": {
+                          "type": "builtin"
+                        },
+                        "predicate_domain": {
+                          "type": "by_known_fact_domain",
+                          "cite": {
+                            "type": "by_known_atomic",
+                            "cite_fact_id": "f15",
+                            "why_parameters_of_known_fact_are_equal_to_givens": [
+                              {
+                                "type": "by_they_are_the_same",
+                                "kind": "same_ir"
+                              },
+                              {
+                                "type": "by_they_are_the_same",
+                                "kind": "same_ir"
+                              }
+                            ]
+                          }
+                        }
+                      },
+                      "searched_proof": {
+                        "type": "by_known_atomic",
+                        "cite_fact_id": "f15",
+                        "why_parameters_of_known_fact_are_equal_to_givens": [
+                          {
+                            "type": "by_they_are_the_same",
+                            "kind": "same_ir"
+                          },
+                          {
+                            "type": "by_they_are_the_same",
+                            "kind": "same_ir"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "type": "atomic_except_equality",
+                      "verification_result": "accepted",
+                      "fact": "0 $in C",
+                      "well_defined": {
+                        "well_defined_of_each_parameter": [
+                          {
+                            "type": "by_def",
+                            "family": "Literal",
+                            "kind": "Number",
+                            "obj": "0"
+                          },
+                          {
+                            "type": "by_known",
+                            "obj": "C",
+                            "wd_id": "wd1"
+                          }
+                        ],
+                        "predicate_signature": {
+                          "type": "builtin"
+                        },
+                        "predicate_domain": []
+                      },
+                      "searched_proof": {
+                        "type": "by_closed_calculation",
+                        "kind": "in",
+                        "value": {
+                          "representation": "decimal",
+                          "normal": "0"
+                        },
+                        "set": "C"
+                      }
+                    }
+                  ]
+                },
+                "right": {
+                  "type": "by_def",
+                  "family": "Identifier",
+                  "kind": "Identifier",
+                  "obj": "a"
+                }
+              },
+              "searched_proof": {
+                "type": "builtin_rule",
+                "rule": "Calculation",
+                "mode": "rational"
+              }
+            },
+            "store_and_infer": {
+              "stores": [
+                {
+                  "fact_id": "f1"
+                }
+              ],
+              "formed_subjects": [
+                {
+                  "argument_index": 0,
+                  "wd_id": "wd2"
+                }
+              ],
+              "infers": []
+            }
+          }
+        ]
+      },
+      "store_and_infer": {
+        "stores": [
+          {
+            "fact_id": "f2",
+            "fact": "forall a C:\n    (a + 0) = a"
+          }
+        ],
+        "formed_subjects": [],
+        "infers": []
+      }
+    }
+  ],
+  "session_terminated": false,
+  "termination": null
+}

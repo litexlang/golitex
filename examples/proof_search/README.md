@@ -1,5 +1,8 @@
 # Definitions build context; proofs use it
 
+Continue with [from checked evidence to Lean](../lean_compilation/README.md)
+to see how a recorded proof becomes Lean code and what `Litex.lean` supplies.
+
 The figure separates two connected operations. **I: definitions/declarations**
 introduce mathematical objects and extend the context. **II: proofs** use the
 established context and checked rules to establish new facts. The same two-line

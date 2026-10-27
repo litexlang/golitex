@@ -154,6 +154,7 @@ pub(super) enum SourceOwner<'a> {
     EqualityRequirements(&'a [VerifyFactResult]),
     AtomicFnUnfold(&'a AtomicExceptEqualityFactSearchProofByFnApplicationUnfoldSubstitution),
     FunctionNormalization(&'a FunctionBodyNormalizationProof),
+    EvalFunctions(&'a [crate::execute::execute_eval_stmt::aggregate_evaluation_result::FunctionApplicationEvaluationResult]),
     FunctionExpansion(&'a AnonymousFunctionBodyExpansionProof),
     FiniteExpansion(&'a FiniteCoordinateBodyExpansionProof),
     CompositionExpansion(&'a CompositionBodyExpansionProof),
@@ -4425,7 +4426,7 @@ fn statement_reference(
         None => name,
     };
     if let Some(p) = super::compile_eval_stmt_result::eval_statement(statement) {
-        return if before > 2 {
+        return if before > 3 {
             Ok(stored_reference(&p.store_and_infer_result, id, actual)?.map(global_reference))
         } else {
             Ok(None)
@@ -5916,6 +5917,7 @@ fn fact_reference_in_owner(
         | SourceOwner::CalleeInstance(_)
         | SourceOwner::AtomicFnUnfold(_) => Ok(None),
         SourceOwner::FunctionNormalization(_)
+        | SourceOwner::EvalFunctions(_)
         | SourceOwner::FunctionExpansion(_)
         | SourceOwner::CompositionExpansion(_)
         | SourceOwner::FiniteExpansion(_)
@@ -6355,6 +6357,7 @@ fn same_source_owner(left: SourceOwner<'_>, right: SourceOwner<'_>) -> bool {
         (SourceOwner::FunctionNormalization(a), SourceOwner::FunctionNormalization(b)) => {
             std::ptr::eq(a, b)
         }
+        (SourceOwner::EvalFunctions(a), SourceOwner::EvalFunctions(b)) => std::ptr::eq(a, b),
         (SourceOwner::FunctionExpansion(a), SourceOwner::FunctionExpansion(b)) => {
             std::ptr::eq(a, b)
         }
@@ -8844,6 +8847,24 @@ fn visit_owner<T>(
                 }
             }
         }
+        SourceOwner::EvalFunctions(evaluations) => {
+            for (index, p) in evaluations.iter().take(position.before).enumerate().rev() {
+                if p.nested_function_evidence.end != index
+                    || p.nested_function_evidence.start > index
+                {
+                    return Err(LeanCompileError::unsupported("Eval/FunctionOrder"));
+                }
+                let prior = SourcePosition {
+                    before: p.nested_function_evidence.start,
+                    ..*position
+                };
+                if let Some(value) =
+                    visit_complete_wd(&p.application_well_defined, &prior, wd, verify)?
+                {
+                    return Ok(Some(value));
+                }
+            }
+        }
         SourceOwner::FunctionNormalization(proof) => {
             for (index, step) in proof
                 .expansions
@@ -9073,12 +9094,12 @@ fn visit_statement<T>(
     let position = SourcePosition::new(Some(parent), SourceOwner::Statement(statement), 0);
     let completed = SourcePosition { before, ..position };
     if let Some(p) = super::compile_eval_stmt_result::eval_statement(statement) {
-        if let Some(v) = visit_store_stage(&p.store_and_infer_result, 2, &completed, wd, verify)? {
+        if let Some(v) = visit_store_stage(&p.store_and_infer_result, 3, &completed, wd, verify)? {
             return Ok(Some(v));
         }
-        if before > 1 {
+        if before > 2 {
             let prior = SourcePosition {
-                before: 1,
+                before: 2,
                 ..position
             };
             let formed = SourcePosition::new(
@@ -9087,6 +9108,20 @@ fn visit_statement<T>(
                 2,
             );
             if let Some(v) = visit_owner(&formed, wd, verify)? {
+                return Ok(Some(v));
+            }
+        }
+        if before > 1 {
+            let prior = SourcePosition {
+                before: 1,
+                ..position
+            };
+            let functions = SourcePosition::new(
+                Some(&prior),
+                SourceOwner::EvalFunctions(&p.function_evaluations),
+                p.function_evaluations.len(),
+            );
+            if let Some(v) = visit_owner(&functions, wd, verify)? {
                 return Ok(Some(v));
             }
         }
