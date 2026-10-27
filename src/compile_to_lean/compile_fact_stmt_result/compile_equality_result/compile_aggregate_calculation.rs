@@ -37,6 +37,9 @@ impl LitexToLeanCompiler {
         ) {
             return self.compile_finite_aggregate_calculation(fact, proof, position);
         }
+        if let AggregateEvaluationResult::Reduce(evaluation) = evaluation {
+            return self.compile_range_fold_calculation(fact, proof, evaluation, position);
+        }
         let (source, bounds, terms, value, product) = match evaluation {
             AggregateEvaluationResult::Sum(p) => (&p.source, &p.bounds, &p.terms, &p.value, false),
             AggregateEvaluationResult::Product(p) => {
@@ -208,7 +211,7 @@ impl LitexToLeanCompiler {
             .iter()
             .flat_map(|g| &g.params)
             .collect::<Vec<_>>();
-        if params.len() != 1 || !Self::function_uses_numeric_interface(&anonymous.body) {
+        if params.len() != 1 {
             return Err(LeanCompileError::unsupported(
                 "AggregateCalculation/FunctionSignature",
             ));
@@ -235,13 +238,18 @@ impl LitexToLeanCompiler {
         let equality =
             self.compile_equality_path(&head, literal, &expansion.function_equal, &cursor)?;
         let literal_term = self.compile_object_reference(literal, &cursor)?;
-        let (args, target) =
-            self.compile_function_constructor_arguments(&anonymous.body, &cursor)?;
-        let guard = self.compile_function_guard_template(&anonymous.body, &cursor)?;
-        let domain = if target {
-            "oneTarget_domain"
+        let domain_proof = if Self::function_uses_numeric_interface(&anonymous.body) {
+            let (args, target) =
+                self.compile_function_constructor_arguments(&anonymous.body, &cursor)?;
+            let guard = self.compile_function_guard_template(&anonymous.body, &cursor)?;
+            let domain = if target {
+                "oneTarget_domain"
+            } else {
+                "one_domain"
+            };
+            format!("((Litex.FunctionSignature.{domain} {args} {guard} _).mpr _call.wd.2)")
         } else {
-            "one_domain"
+            "_call.wd.2".to_string()
         };
         let raw = self.compile_normalization_value(&expansion.expanded_body, &cursor)?;
         let number = exact_rational_literal(value, "ℂ")?;
@@ -251,11 +259,11 @@ impl LitexToLeanCompiler {
         let argument_number = exact_rational_literal(&argument_value, "ℂ")?;
         let argument_denote = argument.1;
         let argument_expr = argument.0;
-        Ok(format!("(by\n  let _call := {call_term}\n  let _literal := {literal_term}\n  have _head : Litex.Same _call.val.function _literal := {equality}\n  have _head_call := congrArg (fun f => Litex.FunctionSemantics.callValue (M := M) f (Litex.denote _call.val.argument)) _head\n  have _beta := Litex.FunctionSemantics.call_graphValue _ _ _ _literal.wd (Litex.denote _call.val.argument) ((Litex.FunctionSignature.{domain} {args} {guard} _).mpr _call.wd.2)\n  have _body : _literal.val.bodyValue (Litex.denote _call.val.argument) = {raw} := rfl\n  have _calculated : {raw} = M.number {number} := by norm_num [Litex.Semantics.add_numbers, Litex.Semantics.sub_numbers, Litex.Semantics.mul_numbers, Litex.Semantics.neg_numbers, Litex.Semantics.div_numbers]\n  have _argument : Litex.denote _call.val.argument = M.number {argument_number} := ({argument_denote}).trans (congrArg M.number (by norm_num : {argument_expr} = {argument_number}))\n  exact (congrArg (fun x => Litex.FunctionSemantics.callValue (Litex.denote _call.val.function) x) _argument).symm.trans (_head_call.trans (_beta.trans (_body.trans _calculated))))"))
+        Ok(format!("(by\n  let _call := {call_term}\n  let _literal := {literal_term}\n  have _head : Litex.Same _call.val.function _literal := {equality}\n  have _head_call := congrArg (fun f => Litex.FunctionSemantics.callValue (M := M) f (Litex.denote _call.val.argument)) _head\n  have _beta := Litex.FunctionSemantics.call_graphValue _ _ _ _literal.wd (Litex.denote _call.val.argument) {domain_proof}\n  have _body : _literal.val.bodyValue (Litex.denote _call.val.argument) = {raw} := rfl\n  have _calculated : {raw} = M.number {number} := by norm_num [Litex.Semantics.add_numbers, Litex.Semantics.sub_numbers, Litex.Semantics.mul_numbers, Litex.Semantics.neg_numbers, Litex.Semantics.div_numbers]\n  have _argument : Litex.denote _call.val.argument = M.number {argument_number} := ({argument_denote}).trans (congrArg M.number (by norm_num : {argument_expr} = {argument_number}))\n  exact (congrArg (fun x => Litex.FunctionSemantics.callValue (Litex.denote _call.val.function) x) _argument).symm.trans (_head_call.trans (_beta.trans (_body.trans _calculated))))"))
     }
 }
 
-fn closed_scalar_body(object: &Obj) -> bool {
+pub(super) fn closed_scalar_body(object: &Obj) -> bool {
     match object {
         Obj::Literal(Literal::Number(_)) => true,
         Obj::ArithmeticOperator(ArithmeticOperator::Add(p)) => {

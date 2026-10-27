@@ -4,6 +4,55 @@ use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
 use crate::prelude::*;
 
 impl LitexToLeanCompiler {
+    pub(super) fn compile_sym_diff_identity(
+        &self,
+        fact: &EqualFact,
+        rule: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_symmetric_difference::SymmetricDifferenceEqualityProof,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_symmetric_difference::SymmetricDifferenceEqualityProof as Rule;
+        for (left, right, reversed) in [
+            (&fact.left, &fact.right, false),
+            (&fact.right, &fact.left, true),
+        ] {
+            let Obj::SetOperator(SetOperator::SymmetricDifference(p)) = left else {
+                continue;
+            };
+            let law = match rule {
+                Rule::SymDiffSelf(_) if p.left.ir() == p.right.ir() && empty_set(right) => {
+                    "symmetricDifferenceSelf _litex_set.val.left"
+                }
+                Rule::SymDiffDefinition(_) => {
+                    let Obj::SetOperator(SetOperator::Union(u)) = right else {
+                        continue;
+                    };
+                    let (
+                        Obj::SetOperator(SetOperator::SetMinus(a)),
+                        Obj::SetOperator(SetOperator::SetMinus(b)),
+                    ) = (&*u.left, &*u.right)
+                    else {
+                        continue;
+                    };
+                    if a.left.ir() != p.left.ir()
+                        || a.right.ir() != p.right.ir()
+                        || b.left.ir() != p.right.ir()
+                        || b.right.ir() != p.left.ir()
+                    {
+                        continue;
+                    }
+                    "symmetricDifferenceDefinition _litex_set.val.left _litex_set.val.right"
+                }
+                _ => continue,
+            };
+            let term = self.compile_object_reference(left, position)?;
+            let orientation = if reversed { ".symm" } else { "" };
+            return Ok(format!(
+                "(let _litex_set := {term}; (Litex.{law}){orientation})"
+            ));
+        }
+        Err(LeanCompileError::unsupported("SymDiff/SelectedIdentity"))
+    }
+
     pub(super) fn compile_set_identity(
         &self,
         fact: &EqualFact,

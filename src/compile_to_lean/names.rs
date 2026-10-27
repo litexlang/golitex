@@ -769,6 +769,56 @@ impl LitexToLeanCompiler {
                 "¬ Litex.IsFiniteSet {}",
                 self.compile_object_reference(&f.set, position)?
             )),
+            f @ (AtomicFact::RealSetBoundFact(_)
+            | AtomicFact::NotRealSetBoundFact(_)
+            | AtomicFact::RealSetBoundedFact(_)
+            | AtomicFact::NotRealSetBoundedFact(_)) => {
+                let (name, negative, set, bound) =
+                    super::compile_real_set_bounds::bound_parts(f).unwrap();
+                let mut term = format!(
+                    "Litex.{name} {}",
+                    self.compile_object_reference(set, position)?
+                );
+                if let Some(bound) = bound {
+                    term.push_str(&format!(
+                        " {}",
+                        self.compile_object_reference(bound, position)?
+                    ));
+                }
+                Ok(if negative {
+                    format!("¬ ({term})")
+                } else {
+                    term
+                })
+            }
+            f @ (AtomicFact::SequenceAnalysisFact(_) | AtomicFact::NotSequenceAnalysisFact(_)) => {
+                let (sequence, property, negative) =
+                    super::compile_sequence_analysis::sequence_parts(f).unwrap();
+                let name = super::compile_sequence_analysis::sequence_name(property)?;
+                let term = format!(
+                    "Litex.Sequence{name} {}",
+                    self.compile_object_reference(sequence, position)?
+                );
+                Ok(if negative {
+                    format!("¬ ({term})")
+                } else {
+                    term
+                })
+            }
+            f @ (AtomicFact::HasSequenceLimitFact(_) | AtomicFact::NotHasSequenceLimitFact(_)) => {
+                let (sequence, value, negative) =
+                    super::compile_sequence_epsilon::limit_parts(f).unwrap();
+                let term = format!(
+                    "Litex.HasSequenceLimit {} {}",
+                    self.compile_object_reference(sequence, position)?,
+                    self.compile_object_reference(value, position)?
+                );
+                Ok(if negative {
+                    format!("¬ ({term})")
+                } else {
+                    term
+                })
+            }
             AtomicFact::HasRiemannIntegralFact(_)
             | AtomicFact::NotHasRiemannIntegralFact(_)
             | AtomicFact::FunctionRiemannIntegrableFact(_)
@@ -779,12 +829,6 @@ impl LitexToLeanCompiler {
             | AtomicFact::NotHasDerivativeAtFact(_)
             | AtomicFact::FunctionDifferentiableAtFact(_)
             | AtomicFact::NotFunctionDifferentiableAtFact(_)
-            | AtomicFact::RealSetBoundFact(_)
-            | AtomicFact::NotRealSetBoundFact(_)
-            | AtomicFact::RealSetBoundedFact(_)
-            | AtomicFact::NotRealSetBoundedFact(_)
-            | AtomicFact::SequenceAnalysisFact(_)
-            | AtomicFact::NotSequenceAnalysisFact(_)
             | AtomicFact::RealAccumulationFact(_)
             | AtomicFact::NotRealAccumulationFact(_)
             | AtomicFact::FunctionContinuousAtFact(_)
@@ -797,10 +841,8 @@ impl LitexToLeanCompiler {
             | AtomicFact::NotHasFunctionLimitFact(_)
             | AtomicFact::HasSequenceLimsupFact(_)
             | AtomicFact::HasSequenceLiminfFact(_)
-            | AtomicFact::HasSequenceLimitFact(_)
             | AtomicFact::NotHasSequenceLimsupFact(_)
             | AtomicFact::NotHasSequenceLiminfFact(_)
-            | AtomicFact::NotHasSequenceLimitFact(_)
             | AtomicFact::InjectiveFact(_)
             | AtomicFact::SurjectiveFact(_)
             | AtomicFact::BijectiveFact(_)

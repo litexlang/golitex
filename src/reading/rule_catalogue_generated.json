@@ -26803,27 +26803,6 @@
     "labels": {}
   },
   {
-    "id": "builtin_theorem.BuiltinTheoremId::MatrixAddAssociative",
-    "category": "builtin_theorem",
-    "family": "BuiltinTheoremId",
-    "variant": "MatrixAddAssociative",
-    "labels": {}
-  },
-  {
-    "id": "builtin_theorem.BuiltinTheoremId::MatrixAddCommutative",
-    "category": "builtin_theorem",
-    "family": "BuiltinTheoremId",
-    "variant": "MatrixAddCommutative",
-    "labels": {}
-  },
-  {
-    "id": "builtin_theorem.BuiltinTheoremId::MatrixAddZero",
-    "category": "builtin_theorem",
-    "family": "BuiltinTheoremId",
-    "variant": "MatrixAddZero",
-    "labels": {}
-  },
-  {
     "id": "builtin_theorem.BuiltinTheoremId::MatrixAdjointMul",
     "category": "builtin_theorem",
     "family": "BuiltinTheoremId",
@@ -27052,34 +27031,6 @@
     "category": "builtin_theorem",
     "family": "BuiltinTheoremId",
     "variant": "MatrixRankZero",
-    "labels": {}
-  },
-  {
-    "id": "builtin_theorem.BuiltinTheoremId::MatrixScaleDistributive",
-    "category": "builtin_theorem",
-    "family": "BuiltinTheoremId",
-    "variant": "MatrixScaleDistributive",
-    "labels": {}
-  },
-  {
-    "id": "builtin_theorem.BuiltinTheoremId::MatrixScaleOne",
-    "category": "builtin_theorem",
-    "family": "BuiltinTheoremId",
-    "variant": "MatrixScaleOne",
-    "labels": {}
-  },
-  {
-    "id": "builtin_theorem.BuiltinTheoremId::MatrixScaleZero",
-    "category": "builtin_theorem",
-    "family": "BuiltinTheoremId",
-    "variant": "MatrixScaleZero",
-    "labels": {}
-  },
-  {
-    "id": "builtin_theorem.BuiltinTheoremId::MatrixSubSelf",
-    "category": "builtin_theorem",
-    "family": "BuiltinTheoremId",
-    "variant": "MatrixSubSelf",
     "labels": {}
   },
   {

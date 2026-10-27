@@ -1,0 +1,35 @@
+{
+  "setup": [],
+  "cases": [
+    {
+      "id": "missing_input_regularity",
+      "source": "claim:\n    ? forall f,g,h fn(x R) R:\n        $Reg::main::is_unary_c_k_on_open(R,1,f)\n        forall x R:\n            h(x)=f(x)+g(x)\n        =>:\n            $Reg::main::is_unary_c_k_on_open(R,1,h)\n    release thm RegLaws::main::unary_c_k_linear_combination(R,1,f,g,h,1,1)",
+      "expected_category": "proof_search"
+    },
+    {
+      "id": "zero_coefficient_keeps_input_premise",
+      "source": "claim:\n    ? forall f,g,h fn(x R) R:\n        $Reg::main::is_unary_c_k_on_open(R,1,f)\n        forall x R:\n            h(x)=f(x)+0*g(x)\n        =>:\n            $Reg::main::is_unary_c_k_on_open(R,1,h)\n    release thm RegLaws::main::unary_c_k_linear_combination(R,1,f,g,h,1,0)",
+      "expected_category": "proof_search"
+    },
+    {
+      "id": "formula_required",
+      "source": "release thm RegLaws::main::unary_c_k_linear_combination(R,3,Base::main::regularity_cubic,Base::main::regularity_unary_constant,main::shifted_cubic,1,3)",
+      "expected_category": "proof_search"
+    },
+    {
+      "id": "smoothness_not_finite_order",
+      "source": "claim:\n    ? forall f,g,h fn(x R) R:\n        $Reg::main::is_unary_c_k_on_open(R,3,f)\n        $Reg::main::is_unary_c_k_on_open(R,3,g)\n        forall x R:\n            h(x)=f(x)+g(x)\n        =>:\n            $Reg::main::is_unary_smooth_on_open(R,h)\n    release thm RegLaws::main::unary_smooth_linear_combination(R,f,g,h,1,1)",
+      "expected_category": "proof_search"
+    },
+    {
+      "id": "vector_needs_both_inputs",
+      "source": "claim:\n    ? forall f,g,h fn(x cart_n(R,2)) R:\n        $Reg::main::is_scalar_c_k_on_open(2,cart_n(R,2),2,f)\n        forall x cart_n(R,2):\n            h(x)=f(x)+g(x)\n        =>:\n            $Reg::main::is_scalar_c_k_on_open(2,cart_n(R,2),2,h)\n    release thm RegLaws::main::scalar_c_k_linear_combination(2,cart_n(R,2),2,f,g,h,1,1)",
+      "expected_category": "proof_search"
+    },
+    {
+      "id": "unary_is_not_vector",
+      "source": "release thm RegLaws::main::scalar_c_k_linear_combination(1,cart_n(R,1),3,Base::main::regularity_cubic,Base::main::regularity_cubic,main::shifted_cubic,1,1)",
+      "expected_category": "proof_search"
+    }
+  ]
+}

@@ -1,18 +1,15 @@
 # AST: Obj::SetFormer::FiniteSeqSet
 # Run: target/release/litex -f examples/test_objs/finite_seq_set.lit
-# Cases use discarded sketch scopes; no cross-case facts.
+# Direct cases share file context; sketches isolate local declarations.
 
 # P01: finite_seq(R, 0) = fn(x {}) R
-sketch:
-    finite_seq(R, 0) = fn(x {}) R
+finite_seq(R, 0) = fn(x {}) R
 
 # P02: finite_seq(R, 1) = fn(x closed_range(1, 1)) R
-sketch:
-    finite_seq(R, 1) = fn(x closed_range(1, 1)) R
+finite_seq(R, 1) = fn(x closed_range(1, 1)) R
 
 # P03: finite_seq(R, 3) = fn(x closed_range(1, 3)) R
-sketch:
-    finite_seq(R, 3) = fn(x closed_range(1, 3)) R
+finite_seq(R, 3) = fn(x closed_range(1, 3)) R
 
 # P04: $is_set(S)
 sketch:
@@ -20,7 +17,6 @@ sketch:
     $is_set(S)
 
 # P05: explicit checked proof; restored from finite_seq_set-P05
-sketch:
-    forall x closed_range(1, 2):
-        fn(y closed_range(1, 2)) R {y}(x) $in R
-    release thm fn_set_member(fn(y closed_range(1, 2)) R {y}, finite_seq(R, 2))
+forall x closed_range(1, 2):
+    fn(y closed_range(1, 2)) R {y}(x) $in R
+release thm fn_set_member(fn(y closed_range(1, 2)) R {y}, finite_seq(R, 2))

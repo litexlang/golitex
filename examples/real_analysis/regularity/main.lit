@@ -1,0 +1,247 @@
+# Actual-open-domain finite regularity; no trusted smoothness declarations.
+
+# Unary real finite-order derivatives, proved before selection.
+# Supplied profiles are checked with existing first-derivative BTs.
+
+have fn regularity_cubic(x R) R=x^3
+
+have fn regularity_cubic_first(x R) R=3*x^2
+
+have fn regularity_cubic_second(x R) R=6*x
+
+have fn regularity_cubic_third(x R) R=6
+
+by for:
+    ? forall j closed_range(0,3):
+        j=0 or j=1 or j=2 or j=3
+    j=0 or j=1 or j=2 or j=3
+
+have fn regularity_unary_profiles(j closed_range(0,3)) fn(x R) R by cases:
+    case j=0: regularity_cubic
+    case j=1: regularity_cubic_first
+    case j=2: regularity_cubic_second
+    case j=3: regularity_cubic_third
+
+by for:
+    ? forall j closed_range(1,3):
+        j=1 or j=2 or j=3
+    j=1 or j=2 or j=3
+
+have fn regularity_real_identity(x R) R=x
+
+have fn regularity_real_square(x R) R=x^2
+
+thm regularity_cubic_first_derivative:
+    ? forall x R:
+        $has_derivative_at(regularity_cubic,x,3*x^2)
+    release thm fn_derivative_at_real_interior(x)
+    release thm fn_derivative_at_identity(regularity_real_identity,x)
+    release thm fn_derivative_at_power(regularity_real_identity,regularity_cubic,x,1,3)
+    regularity_real_identity(x)=x
+    max(3,1)=3
+    max(3,1)-1=2
+    regularity_real_identity(x)^(max(3,1)-1)=regularity_real_identity(x)^2=x^2
+    3*regularity_real_identity(x)^(max(3,1)-1)=3*x^2
+    (3*regularity_real_identity(x)^(max(3,1)-1))*1=3*x^2
+    $has_derivative_at(regularity_cubic,x,3*x^2)
+
+thm regularity_cubic_second_derivative:
+    ? forall x R:
+        $has_derivative_at(regularity_cubic_first,x,6*x)
+    release thm fn_derivative_at_real_interior(x)
+    release thm fn_derivative_at_identity(regularity_real_identity,x)
+    release thm fn_derivative_at_power(regularity_real_identity,regularity_real_square,x,1,2)
+    regularity_real_identity(x)=x
+    max(2,1)-1=1
+    regularity_real_identity(x)^(max(2,1)-1)=regularity_real_identity(x)^1=x
+    2*regularity_real_identity(x)^(max(2,1)-1)=2*x
+    (2*regularity_real_identity(x)^(max(2,1)-1))*1=2*x
+    $has_derivative_at(regularity_real_square,x,2*x)
+    release thm fn_derivative_at_scale(regularity_real_square,regularity_cubic_first,x,2*x,3)
+    3*(2*x)=6*x
+    $has_derivative_at(regularity_cubic_first,x,6*x)
+
+thm regularity_cubic_third_derivative:
+    ? forall x R:
+        $has_derivative_at(regularity_cubic_second,x,6)
+    release thm fn_derivative_at_real_interior(x)
+    release thm fn_derivative_at_identity(regularity_real_identity,x)
+    release thm fn_derivative_at_scale(regularity_real_identity,regularity_cubic_second,x,1,6)
+    6*1=6
+    $has_derivative_at(regularity_cubic_second,x,6)
+
+claim:
+    ? forall j closed_range(1,3),x R:
+        j $in closed_range(0,3)
+        j-1 $in closed_range(0,3)
+        =>:
+            $has_derivative_at(regularity_unary_profiles(j-1),x,regularity_unary_profiles(j)(x))
+    j=1 or j=2 or j=3
+    by cases:
+        ? $has_derivative_at(regularity_unary_profiles(j-1),x,regularity_unary_profiles(j)(x))
+        case j=1:
+            j-1=0
+            regularity_unary_profiles(j-1)=regularity_unary_profiles(0)=regularity_cubic
+            regularity_unary_profiles(j)=regularity_unary_profiles(1)=regularity_cubic_first
+            regularity_unary_profiles(j)(x)=regularity_cubic_first(x)=3*x^2
+            release thm regularity_cubic_first_derivative(x)
+            $has_derivative_at(regularity_cubic,x,3*x^2)
+        case j=2:
+            j-1=1
+            regularity_unary_profiles(j-1)=regularity_unary_profiles(1)=regularity_cubic_first
+            regularity_unary_profiles(j)=regularity_unary_profiles(2)=regularity_cubic_second
+            regularity_unary_profiles(j)(x)=regularity_cubic_second(x)=6*x
+            release thm regularity_cubic_second_derivative(x)
+            $has_derivative_at(regularity_cubic_first,x,6*x)
+        case j=3:
+            j-1=2
+            regularity_unary_profiles(j-1)=regularity_unary_profiles(2)=regularity_cubic_second
+            regularity_unary_profiles(j)=regularity_unary_profiles(3)=regularity_cubic_third
+            regularity_unary_profiles(j)(x)=regularity_cubic_third(x)=6
+            release thm regularity_cubic_third_derivative(x)
+            $has_derivative_at(regularity_cubic_second,x,6)
+
+claim:
+    ? forall p R:
+        p $in R
+        =>:
+            exist radius R+ st {{x R:abs(x-p)<radius} $subset R}
+    witness exist radius R+ st {{x R:abs(x-p)<radius} $subset R} from 1
+
+claim:
+    ? forall j closed_range(0,3),p R:
+        p $in R
+        =>:
+            $is_continuous_at(regularity_unary_profiles(j),p)
+    j=0 or j=1 or j=2 or j=3
+    by cases:
+        ? $is_continuous_at(regularity_unary_profiles(j),p)
+        case j=0:
+            regularity_unary_profiles(j)=regularity_unary_profiles(0)=regularity_cubic
+            $is_continuous_at(regularity_cubic,p)
+        case j=1:
+            regularity_unary_profiles(j)=regularity_unary_profiles(1)=regularity_cubic_first
+            $is_continuous_at(regularity_cubic_first,p)
+        case j=2:
+            regularity_unary_profiles(j)=regularity_unary_profiles(2)=regularity_cubic_second
+            $is_continuous_at(regularity_cubic_second,p)
+        case j=3:
+            regularity_unary_profiles(j)=regularity_unary_profiles(3)=regularity_cubic_third
+            $is_continuous_at(regularity_cubic_third,p)
+
+release thm Reg::main::unary_c_k_from_profiles(R,3,regularity_unary_profiles)
+
+regularity_unary_profiles(0)=regularity_cubic
+
+$Reg::main::is_unary_c_k_on_open(R,3,regularity_cubic)
+
+release thm Reg::main::unary_c_k_lower_order(R,3,0,regularity_cubic)
+
+$Reg::main::is_unary_c_k_on_open(R,0,regularity_cubic)
+
+have fn regularity_absolute(x R) R=abs(x)
+
+claim:
+    ? forall p R:
+        p $in R
+        =>:
+            exist radius R+ st {{x R:abs(x-p)<radius} $subset R}
+    witness exist radius R+ st {{x R:abs(x-p)<radius} $subset R} from 1
+
+claim:
+    ? forall p R:
+        p $in R
+        =>:
+            $is_continuous_at(regularity_absolute,p)
+    $is_continuous_at(regularity_absolute,p)
+
+release thm Reg::main::unary_c_zero_from_continuity(R,regularity_absolute)
+
+$Reg::main::is_unary_c_k_on_open(R,0,regularity_absolute)
+
+have fn regularity_scalar_constant(x cart_n(R,2)) R=5
+
+claim:
+    ? forall p cart_n(R,2):
+        p $in cart_n(R,2)
+        =>:
+            $Calc::main::is_real_euclidean_interior(2,cart_n(R,2),p)
+    release thm Calc::main::real_euclidean_full_space_interior(2,p)
+
+claim:
+    ? forall p cart_n(R,2):
+        p $in cart_n(R,2)
+        =>:
+            $is_multi_continuous_at(regularity_scalar_constant,p,2)
+    $is_multi_continuous_at(regularity_scalar_constant,p,2)
+
+release thm Reg::main::scalar_c_zero_from_continuity(2,cart_n(R,2),regularity_scalar_constant)
+
+$Reg::main::is_scalar_c_k_on_open(2,cart_n(R,2),0,regularity_scalar_constant)
+
+have fn regularity_singleton(x {0}) R=0
+
+claim:
+    ? forall p R:
+        p $in {0}
+        =>:
+            $is_continuous_at(regularity_singleton,p)
+    $is_continuous_at(regularity_singleton,p)
+
+release thm Calc::unary_higher_order::nth_derivative_zero({0},regularity_singleton,0)
+
+regularity_singleton(0)=0
+
+$Calc::unary_higher_order::has_nth_derivative_at({0},0,regularity_singleton,0,0)
+
+have fn regularity_unary_constant(x R) R=7
+
+claim:
+    ? forall x R:
+        regularity_unary_constant(x)=7
+    regularity_unary_constant(x)=7
+
+release thm Reg::main::unary_constant_smooth(regularity_unary_constant,7)
+
+$Reg::main::is_unary_smooth_on_open(R,regularity_unary_constant)
+
+$Reg::main::is_unary_c_k_on_open(R,7,regularity_unary_constant)
+
+claim:
+    ? forall x cart_n(R,2):
+        regularity_scalar_constant(x)=5
+    regularity_scalar_constant(x)=5
+
+release thm Reg::main::scalar_constant_smooth(2,regularity_scalar_constant,5)
+
+$Reg::main::is_scalar_smooth_on_open(2,cart_n(R,2),regularity_scalar_constant)
+
+$Reg::main::is_scalar_c_k_on_open(2,cart_n(R,2),7,regularity_scalar_constant)
+
+release thm Calc::unary_higher_order::nth_derivative_from_global_profiles(3,regularity_unary_profiles,0)
+
+regularity_unary_profiles(0)=regularity_cubic
+
+regularity_unary_profiles(3)=regularity_cubic_third
+
+regularity_unary_profiles(3)(0)=regularity_cubic_third(0)=6
+
+$Calc::unary_higher_order::has_nth_derivative_at(R,3,regularity_cubic,0,6)
+
+release thm Calc::unary_higher_order::nth_derivative_candidate_exists(R,3,regularity_cubic,0,6)
+
+release thm Calc::unary_higher_order::nth_derivative_value(R,3,regularity_cubic,0,6)
+
+\Calc::unary_higher_order::nth_derivative<R,3>(regularity_cubic,0)=6
+
+thm regularity_cubic_c_three:
+    ? $Reg::main::is_unary_c_k_on_open(R,3,regularity_cubic)
+    $Reg::main::is_unary_c_k_on_open(R,3,regularity_cubic)
+
+thm regularity_unary_constant_smooth:
+    ? $Reg::main::is_unary_smooth_on_open(R,regularity_unary_constant)
+    $Reg::main::is_unary_smooth_on_open(R,regularity_unary_constant)
+
+thm regularity_scalar_constant_smooth:
+    ? $Reg::main::is_scalar_smooth_on_open(2,cart_n(R,2),regularity_scalar_constant)
+    $Reg::main::is_scalar_smooth_on_open(2,cart_n(R,2),regularity_scalar_constant)

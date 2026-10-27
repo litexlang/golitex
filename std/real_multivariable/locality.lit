@@ -1,0 +1,500 @@
+# Local uniqueness on actual real and coordinate domains. Checked source proofs.
+# These lemmas reuse native limit/derivative evidence; no source axiom or trust.
+
+thm positive_real_minimum:
+    ? forall a,b R+:
+        0<min(a,b)
+    by cases:
+        ? 0<min(a,b)
+        case a<=b:
+            min(a,b)=a
+        case a>b:
+            b<=a
+            min(a,b)=b
+
+thm positive_abs_nonzero:
+    ? forall a R:
+        0<abs(a)
+        =>:
+            a!=0
+    by contra:
+        ? a!=0
+        abs(a)=abs(0)=0
+        impossible 0<abs(a)
+
+thm punctured_real_ball_witness:
+    ? forall p R,r,epsilon R+:
+        exist x {t R: 0<abs(t-p),abs(t-p)<r} st {0<abs(x-p) and abs(x-p)<epsilon}
+    release thm positive_real_minimum(r,epsilon)
+    min(r,epsilon)<=r
+    min(r,epsilon)<=epsilon
+    have step R+=min(r,epsilon)/2
+    step<min(r,epsilon)
+    step<r
+    step<epsilon
+    abs((p+step)-p)=abs(step)=step
+    witness exist x {t R: 0<abs(t-p),abs(t-p)<r} st {0<abs(x-p) and abs(x-p)<epsilon} from p+step
+
+thm real_limit_restrict_punctured_ball:
+    ? forall D power_set(R),p R,r R+,f fn(x D) R,h fn(x {t R: 0<abs(t-p),abs(t-p)<r}) R,A R:
+        $has_limit_at(f,p,A)
+        {t R: 0<abs(t-p),abs(t-p)<r} $subset D
+        forall x {t R: 0<abs(t-p),abs(t-p)<r}:
+            x $in D
+            =>:
+                h(x)=f(x)
+        =>:
+            $has_limit_at(h,p,A)
+    claim:
+        ? forall epsilon R+:
+            exist x {t R: 0<abs(t-p),abs(t-p)<r} st {0<abs(x-p) and abs(x-p)<epsilon}
+        release thm punctured_real_ball_witness(p,r,epsilon)
+    {x {t R: 0<abs(t-p),abs(t-p)<r}: 0<abs(x-p),abs(x-p)<r} $subset {t R: 0<abs(t-p),abs(t-p)<r}
+    {x {t R: 0<abs(t-p),abs(t-p)<r}: 0<abs(x-p),abs(x-p)<r} $subset D
+    claim:
+        ? forall x {y {t R: 0<abs(t-p),abs(t-p)<r}: 0<abs(y-p),abs(y-p)<r}:
+            h(x)=f(x)
+        x $in {t R: 0<abs(t-p),abs(t-p)<r}
+        x $in D
+        h(x)=f(x)
+    release thm fn_limit_at_local_equal(f,h,p,A,r)
+
+thm real_limits_common_ball_unique:
+    ? forall D,E power_set(R),p R,r R+,f fn(x D) R,g fn(x E) R,A,B R:
+        $has_limit_at(f,p,A)
+        $has_limit_at(g,p,B)
+        {t R: 0<abs(t-p),abs(t-p)<r} $subset D
+        {t R: 0<abs(t-p),abs(t-p)<r} $subset E
+        forall x {t R: 0<abs(t-p),abs(t-p)<r}:
+            x $in D
+            x $in E
+            =>:
+                f(x)=g(x)
+        =>:
+            A=B
+    have fn common(x {t R: 0<abs(t-p),abs(t-p)<r}) R=f(x)
+    release thm real_limit_restrict_punctured_ball(D,p,r,f,common,A)
+    claim:
+        ? forall x {t R: 0<abs(t-p),abs(t-p)<r}:
+            x $in E
+            =>:
+                common(x)=g(x)
+        x $in D
+        common(x)=f(x)=g(x)
+    release thm real_limit_restrict_punctured_ball(E,p,r,g,common,B)
+    release thm fn_limit_at_unique(common,p,A,B)
+
+thm real_derivatives_common_ball_unique:
+    ? forall D,E power_set(R),p intersect(D,E),r R+,f fn(x D) R,g fn(x E) R,A,B R:
+        $has_derivative_at(f,p,A)
+        $has_derivative_at(g,p,B)
+        {t R: abs(t-p)<r} $subset D
+        {t R: abs(t-p)<r} $subset E
+        forall x intersect(D,E):
+            f(x)=g(x)
+        =>:
+            A=B
+    release thm fn_derivative_at_to_limit(f,p,A)
+    release thm fn_derivative_at_to_limit(g,p,B)
+    claim:
+        ? forall x {t R: 0<abs(t-p),abs(t-p)<r}:
+            x $in {t D: t-p!=0}
+            x $in {t E: t-p!=0}
+        x $in {t R: abs(t-p)<r}
+        x $in D
+        x $in E
+        0<abs(x-p)
+        release thm positive_abs_nonzero(x-p)
+    by def {t R: 0<abs(t-p),abs(t-p)<r} $subset {t D: t-p!=0}
+    by def {t R: 0<abs(t-p),abs(t-p)<r} $subset {t E: t-p!=0}
+    claim:
+        ? forall x {t R: 0<abs(t-p),abs(t-p)<r}:
+            x $in {t D: t-p!=0}
+            x $in {t E: t-p!=0}
+            =>:
+                fn(t D: t-p!=0) R {(f(t)-f(p))/(t-p)}(x)=fn(t E: t-p!=0) R {(g(t)-g(p))/(t-p)}(x)
+        x $in D
+        x $in E
+        x $in intersect(D,E)
+        f(x)=g(x)
+        p $in intersect(D,E)
+        f(p)=g(p)
+        fn(t D: t-p!=0) R {(f(t)-f(p))/(t-p)}(x)=(f(x)-f(p))/(x-p)=(g(x)-g(p))/(x-p)=fn(t E: t-p!=0) R {(g(t)-g(p))/(t-p)}(x)
+    D $subset R
+    E $subset R
+    {t D:t-p!=0} $subset D
+    {t E:t-p!=0} $subset E
+    {t D:t-p!=0} $subset R
+    {t E:t-p!=0} $subset R
+    {t D:t-p!=0} $in power_set(R)
+    {t E:t-p!=0} $in power_set(R)
+    release thm real_limits_common_ball_unique({t D:t-p!=0},{t E:t-p!=0},p,r,fn(t D:t-p!=0) R {(f(t)-f(p))/(t-p)},fn(t E:t-p!=0) R {(g(t)-g(p))/(t-p)},A,B)
+
+thm real_derivatives_intersection_unique:
+    ? forall D,E power_set(R),p intersect(D,E),f fn(x D) R,g fn(x E) R,A,B R:
+        $has_derivative_at(f,p,A)
+        $has_derivative_at(g,p,B)
+        forall x intersect(D,E):
+            f(x)=g(x)
+        =>:
+            A=B
+    obtain r from exist radius R+ st {{x R:abs(x-p)<radius} $subset D}
+    obtain s from exist radius R+ st {{x R:abs(x-p)<radius} $subset E}
+    release thm positive_real_minimum(r,s)
+    min(r,s)<=r
+    min(r,s)<=s
+    claim:
+        ? forall x {t R:abs(t-p)<min(r,s)}:
+            x $in D
+            x $in E
+        abs(x-p)<min(r,s)
+        abs(x-p)<r
+        abs(x-p)<s
+        x $in {t R:abs(t-p)<r}
+        x $in {t R:abs(t-p)<s}
+    by def {t R:abs(t-p)<min(r,s)} $subset D
+    by def {t R:abs(t-p)<min(r,s)} $subset E
+    release thm real_derivatives_common_ball_unique(D,E,p,min(r,s),f,g,A,B)
+
+thm real_difference_quotient_congruence:
+    ? forall a,b,c,d,t R:
+        t!=0
+        a=c
+        b=d
+        =>:
+            (a-b)/t=(c-d)/t
+
+thm real_partials_intersection_unique:
+    ? forall n N+,D,E power_set(cart_n(R,n)),p intersect(D,E),axis closed_range(1,n),f fn(x D) R,g fn(x E) R,A,B R:
+        $has_partial_derivative_at(f,p,n,axis,A)
+        $has_partial_derivative_at(g,p,n,axis,B)
+        forall x intersect(D,E):
+            f(x)=g(x)
+        =>:
+            A=B
+    p $in cart_n(R,n)
+    release thm partial_at_to_definition(f,p,n,axis,A)
+    release thm partial_at_to_definition(g,p,n,axis,B)
+    obtain r from exist radius R+ st {{t R:abs(t)<radius} $subset {t R:fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)} $in D}}
+    obtain s from exist radius R+ st {{t R:abs(t)<radius} $subset {t R:fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)} $in E}}
+    release thm positive_real_minimum(r,s)
+    min(r,s)<=r
+    min(r,s)<=s
+    claim:
+        ? forall h {t R:0<abs(t-0),abs(t-0)<min(r,s)}:
+            h $in {t R: t!=0,fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)} $in D}
+            h $in {t R: t!=0,fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)} $in E}
+        abs(h-0)=abs(h)
+        0<abs(h)
+        abs(h)<min(r,s)
+        abs(h)<r
+        abs(h)<s
+        h $in {t R:abs(t)<r}
+        h $in {t R:abs(t)<s}
+        h $in {t R:fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)} $in D}
+        h $in {t R:fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)} $in E}
+        fn(k closed_range(1,n)) R {p(k)+h*identity_matrix(n)(k,axis)} $in D
+        fn(k closed_range(1,n)) R {p(k)+h*identity_matrix(n)(k,axis)} $in E
+        release thm positive_abs_nonzero(h)
+    by def {t R:0<abs(t-0),abs(t-0)<min(r,s)} $subset {t R: t!=0,fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)} $in D}
+    by def {t R:0<abs(t-0),abs(t-0)<min(r,s)} $subset {t R: t!=0,fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)} $in E}
+    claim:
+        ? forall h {t R:0<abs(t-0),abs(t-0)<min(r,s)}:
+            h $in {t R: t!=0,fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)} $in D}
+            h $in {t R: t!=0,fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)} $in E}
+            =>:
+                fn(t R: t!=0,fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)} $in D) R {(f(fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)})-f(p))/t}(h)=fn(t R: t!=0,fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)} $in E) R {(g(fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)})-g(p))/t}(h)
+        fn(k closed_range(1,n)) R {p(k)+h*identity_matrix(n)(k,axis)} $in D
+        fn(k closed_range(1,n)) R {p(k)+h*identity_matrix(n)(k,axis)} $in E
+        fn(k closed_range(1,n)) R {p(k)+h*identity_matrix(n)(k,axis)} $in intersect(D,E)
+        f(fn(k closed_range(1,n)) R {p(k)+h*identity_matrix(n)(k,axis)})=g(fn(k closed_range(1,n)) R {p(k)+h*identity_matrix(n)(k,axis)})
+        f(p)=g(p)
+        h!=0
+        release thm real_difference_quotient_congruence(f(fn(k closed_range(1,n)) R {p(k)+h*identity_matrix(n)(k,axis)}),f(p),g(fn(k closed_range(1,n)) R {p(k)+h*identity_matrix(n)(k,axis)}),g(p),h)
+        fn(t R:t!=0,fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)} $in D) R {(f(fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)})-f(p))/t}(h)=(f(fn(k closed_range(1,n)) R {p(k)+h*identity_matrix(n)(k,axis)})-f(p))/h=(g(fn(k closed_range(1,n)) R {p(k)+h*identity_matrix(n)(k,axis)})-g(p))/h=fn(t R:t!=0,fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)} $in E) R {(g(fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)})-g(p))/t}(h)
+    {t R: t!=0,fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)} $in D} $subset R
+    {t R: t!=0,fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)} $in E} $subset R
+    {t R: t!=0,fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)} $in D} $in power_set(R)
+    {t R: t!=0,fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)} $in E} $in power_set(R)
+    $is_set(cart_n(R,n))
+    identity_matrix(n) $in matrix(R,n,n)
+    forall h R:
+        h!=0
+        fn(k closed_range(1,n)) R {p(k)+h*identity_matrix(n)(k,axis)} $in D
+        =>:
+            h $in {t R:t!=0,fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)} $in D}
+    forall h {t R:t!=0,fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)} $in D}:
+        h $in R
+        h!=0
+        fn(k closed_range(1,n)) R {p(k)+h*identity_matrix(n)(k,axis)} $in D
+    forall h {t R:t!=0,fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)} $in D}:
+        fn(t R:t!=0,fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)} $in D) R {(f(fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)})-f(p))/t}(h) $in R
+    forall h R:
+        h!=0
+        fn(k closed_range(1,n)) R {p(k)+h*identity_matrix(n)(k,axis)} $in E
+        =>:
+            h $in {t R:t!=0,fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)} $in E}
+    forall h {t R:t!=0,fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)} $in E}:
+        h $in R
+        h!=0
+        fn(k closed_range(1,n)) R {p(k)+h*identity_matrix(n)(k,axis)} $in E
+    forall h {t R:t!=0,fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)} $in E}:
+        fn(t R:t!=0,fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)} $in E) R {(g(fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)})-g(p))/t}(h) $in R
+    fn(t R:t!=0,fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)} $in D) R {(f(fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)})-f(p))/t} $in fn(x {t R:t!=0,fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)} $in D}) R
+    fn(t R:t!=0,fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)} $in E) R {(g(fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)})-g(p))/t} $in fn(x {t R:t!=0,fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)} $in E}) R
+    release thm real_limits_common_ball_unique({t R: t!=0,fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)} $in D},{t R: t!=0,fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)} $in E},0,min(r,s),fn(t R: t!=0,fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)} $in D) R {(f(fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)})-f(p))/t},fn(t R: t!=0,fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)} $in E) R {(g(fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)})-g(p))/t},A,B)
+
+# Candidate transport uses equal domains by two inclusions and pointwise values.
+thm real_partials_restrict:
+    ? forall n N+,D,E power_set(cart_n(R,n)),p cart_n(R,n),axis closed_range(1,n),f fn(x D) R,g fn(x E) R,L R,r R+:
+        p $in intersect(D,E)
+        E $subset D
+        {t R:abs(t)<r} $subset {t R:fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)} $in E}
+        $has_partial_derivative_at(f,p,n,axis,L)
+        forall x intersect(D,E):
+            f(x)=g(x)
+        =>:
+            $has_partial_derivative_at(g,p,n,axis,L)
+    p $in cart_n(R,n)
+    release thm partial_at_to_definition(f,p,n,axis,L)
+    witness exist radius R+ st {{t R:abs(t)<radius} $subset {t R:fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)} $in E}} from r
+    claim:
+        ? forall epsilon R+:
+            exist x {t R:t!=0,fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)} $in E} st {0<abs(x-0) and abs(x-0)<epsilon}
+        release thm punctured_real_ball_witness(0,r,epsilon)
+        obtain h from exist x {t R:0<abs(t-0),abs(t-0)<r} st {0<abs(x-0) and abs(x-0)<epsilon}
+        abs(h-0)=abs(h)
+        0<abs(h)
+        abs(h)<r
+        release thm positive_abs_nonzero(h)
+        h $in {t R:abs(t)<r}
+        h $in {t R:fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)} $in E}
+        fn(k closed_range(1,n)) R {p(k)+h*identity_matrix(n)(k,axis)} $in E
+        h $in {t R:t!=0,fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)} $in E}
+        witness exist x {t R:t!=0,fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)} $in E} st {0<abs(x-0) and abs(x-0)<epsilon} from h
+    claim:
+        ? forall h {v {t R:t!=0,fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)} $in E}:0<abs(v-0) and abs(v-0)<r}:
+            h $in {t R:t!=0,fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)} $in D}
+        h $in {t R:t!=0,fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)} $in E}
+        h $in R
+        h $in {t R:t!=0,fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)} $in E}
+        h!=0
+        fn(k closed_range(1,n)) R {p(k)+h*identity_matrix(n)(k,axis)} $in E
+        fn(k closed_range(1,n)) R {p(k)+h*identity_matrix(n)(k,axis)} $in D
+        h $in {t R:t!=0,fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)} $in D}
+    by def {v {t R:t!=0,fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)} $in E}:0<abs(v-0) and abs(v-0)<r} $subset {t R:t!=0,fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)} $in D}
+    claim:
+        ? forall h {v {t R:t!=0,fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)} $in E}:0<abs(v-0) and abs(v-0)<r}:
+            h $in R
+        h $in {t R:t!=0,fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)} $in E}
+    by def {v {t R:t!=0,fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)} $in E}:0<abs(v-0) and abs(v-0)<r} $subset R
+    claim:
+        ? forall h {v {t R:t!=0,fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)} $in E}:0<abs(v-0) and abs(v-0)<r}:
+            h!=0
+            fn(k closed_range(1,n)) R {p(k)+h*identity_matrix(n)(k,axis)} $in E
+            fn(k closed_range(1,n)) R {p(k)+h*identity_matrix(n)(k,axis)} $in D
+        h $in {t R:t!=0,fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)} $in E}
+        h $in R
+    claim:
+        ? forall h {v {t R:t!=0,fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)} $in E}:0<abs(v-0) and abs(v-0)<r}:
+            fn(t R:t!=0,fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)} $in E) R {(g(fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)})-g(p))/t}(h)=fn(t R:t!=0,fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)} $in D) R {(f(fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)})-f(p))/t}(h)
+        h $in {t R:t!=0,fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)} $in E}
+        h!=0
+        fn(k closed_range(1,n)) R {p(k)+h*identity_matrix(n)(k,axis)} $in E
+        fn(k closed_range(1,n)) R {p(k)+h*identity_matrix(n)(k,axis)} $in D
+        fn(k closed_range(1,n)) R {p(k)+h*identity_matrix(n)(k,axis)} $in intersect(D,E)
+        f(fn(k closed_range(1,n)) R {p(k)+h*identity_matrix(n)(k,axis)})=g(fn(k closed_range(1,n)) R {p(k)+h*identity_matrix(n)(k,axis)})
+        f(p)=g(p)
+        release thm real_difference_quotient_congruence(f(fn(k closed_range(1,n)) R {p(k)+h*identity_matrix(n)(k,axis)}),f(p),g(fn(k closed_range(1,n)) R {p(k)+h*identity_matrix(n)(k,axis)}),g(p),h)
+        fn(t R:t!=0,fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)} $in D) R {(f(fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)})-f(p))/t}(h)=(f(fn(k closed_range(1,n)) R {p(k)+h*identity_matrix(n)(k,axis)})-f(p))/h=(g(fn(k closed_range(1,n)) R {p(k)+h*identity_matrix(n)(k,axis)})-g(p))/h=fn(t R:t!=0,fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)} $in E) R {(g(fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)})-g(p))/t}(h)
+    release thm fn_limit_at_local_equal(fn(t R:t!=0,fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)} $in D) R {(f(fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)})-f(p))/t},fn(t R:t!=0,fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)} $in E) R {(g(fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)})-g(p))/t},0,L,r)
+    release thm partial_at_from_definition(g,p,n,axis,L)
+
+thm real_partials_extensional:
+    ? forall n N+,D,E power_set(cart_n(R,n)),p intersect(D,E),axis closed_range(1,n),f fn(x D) R,g fn(x E) R,L R:
+        D $subset E
+        E $subset D
+        $has_partial_derivative_at(f,p,n,axis,L)
+        forall x intersect(D,E):
+            f(x)=g(x)
+        =>:
+            $has_partial_derivative_at(g,p,n,axis,L)
+    p $in cart_n(R,n)
+    release thm partial_at_to_definition(f,p,n,axis,L)
+    obtain r from exist radius R+ st {{t R:abs(t)<radius} $subset {t R:fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)} $in D}}
+    claim:
+        ? forall h {t R:abs(t)<r}:
+            h $in {t R:fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)} $in E}
+        h $in {t R:fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)} $in D}
+        fn(k closed_range(1,n)) R {p(k)+h*identity_matrix(n)(k,axis)} $in D
+        fn(k closed_range(1,n)) R {p(k)+h*identity_matrix(n)(k,axis)} $in E
+    by def {t R:abs(t)<r} $subset {t R:fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)} $in E}
+    release thm real_partials_restrict(n,D,E,p,axis,f,g,L,r)
+
+thm real_derivatives_restrict:
+    ? forall D,E power_set(R),p R,f fn(x D) R,g fn(x E) R,L R,r R+:
+        p $in intersect(D,E)
+        E $subset D
+        {t R:abs(t-p)<r} $subset E
+        $has_derivative_at(f,p,L)
+        forall x intersect(D,E):
+            f(x)=g(x)
+        =>:
+            $has_derivative_at(g,p,L)
+    release thm fn_derivative_at_to_limit(f,p,L)
+    witness exist radius R+ st {{t R:abs(t-p)<radius} $subset E} from r
+    claim:
+        ? forall epsilon R+:
+            exist x {t E:t-p!=0} st {0<abs(x-p) and abs(x-p)<epsilon}
+        release thm punctured_real_ball_witness(p,r,epsilon)
+        obtain h from exist x {t R:0<abs(t-p),abs(t-p)<r} st {0<abs(x-p) and abs(x-p)<epsilon}
+        h $in {t R:abs(t-p)<r}
+        h $in E
+        release thm positive_abs_nonzero(h-p)
+        h $in {t E:t-p!=0}
+        witness exist x {t E:t-p!=0} st {0<abs(x-p) and abs(x-p)<epsilon} from h
+    claim:
+        ? forall h {v {t E:t-p!=0}:0<abs(v-p) and abs(v-p)<r}:
+            h $in R
+        h $in {t E:t-p!=0}
+        h $in E
+        E $subset R
+    by def {v {t E:t-p!=0}:0<abs(v-p) and abs(v-p)<r} $subset R
+    claim:
+        ? forall h {v {t E:t-p!=0}:0<abs(v-p) and abs(v-p)<r}:
+            h $in E
+            h $in D
+            h-p!=0
+            h $in {t D:t-p!=0}
+        h $in {t E:t-p!=0}
+        h $in E
+        h $in D
+        h-p!=0
+    by def {v {t E:t-p!=0}:0<abs(v-p) and abs(v-p)<r} $subset {t D:t-p!=0}
+    claim:
+        ? forall h {v {t E:t-p!=0}:0<abs(v-p) and abs(v-p)<r}:
+            fn(t E:t-p!=0) R {(g(t)-g(p))/(t-p)}(h)=fn(t D:t-p!=0) R {(f(t)-f(p))/(t-p)}(h)
+        h $in {t E:t-p!=0}
+        h $in E
+        h $in D
+        h-p!=0
+        h $in intersect(D,E)
+        f(h)=g(h)
+        f(p)=g(p)
+        fn(t E:t-p!=0) R {(g(t)-g(p))/(t-p)}(h)=(g(h)-g(p))/(h-p)=(f(h)-f(p))/(h-p)=fn(t D:t-p!=0) R {(f(t)-f(p))/(t-p)}(h)
+    release thm fn_limit_at_local_equal(fn(t D:t-p!=0) R {(f(t)-f(p))/(t-p)},fn(t E:t-p!=0) R {(g(t)-g(p))/(t-p)},p,L,r)
+    release thm fn_derivative_at_from_limit(g,p,L)
+
+thm real_derivatives_extensional:
+    ? forall D,E power_set(R),p intersect(D,E),f fn(x D) R,g fn(x E) R,L R:
+        D $subset E
+        E $subset D
+        $has_derivative_at(f,p,L)
+        forall x intersect(D,E):
+            f(x)=g(x)
+        =>:
+            $has_derivative_at(g,p,L)
+    release thm fn_derivative_at_to_limit(f,p,L)
+    obtain r from exist radius R+ st {{t R:abs(t-p)<radius} $subset D}
+    claim:
+        ? forall h {t R:abs(t-p)<r}:
+            h $in E
+        h $in D
+    by def {t R:abs(t-p)<r} $subset E
+    release thm real_derivatives_restrict(D,E,p,f,g,L,r)
+
+# A finite nested region retains its terminal point in every earlier region.
+prop reverse_nested_region_member(S set,k N,regions fn(j closed_range(0,k)) power_set(S),p S,stage N):
+    forall j closed_range(0,k):
+        j=k-stage
+        =>:
+            p $in regions(j)
+
+thm finite_nested_regions_member:
+    ? forall S set,k N,regions fn(j closed_range(0,k)) power_set(S),p S,m closed_range(0,k):
+        forall j closed_range(1,k):
+            regions(j) $subset regions(j-1)
+        p $in regions(k)
+        =>:
+            p $in regions(m)
+    by induc stage from 0:
+        ? $reverse_nested_region_member(S,k,regions,p,stage)
+        ? from stage=0:
+            claim:
+                ? forall j closed_range(0,k):
+                    j=k-0
+                    =>:
+                        p $in regions(j)
+                j=k
+                regions(j)=regions(k)
+            by def $reverse_nested_region_member(S,k,regions,p,0)
+        ? induc:
+            stage $in N
+            claim:
+                ? forall j closed_range(0,k):
+                    j=k-(stage+1)
+                    =>:
+                        p $in regions(j)
+                j>=0
+                j<=k-1
+                j+1>=1
+                j+1=(k-(stage+1))+1=k-stage
+                k-stage<=k
+                j+1<=k
+                j+1 $in closed_range(0,k)
+                j+1 $in closed_range(1,k)
+                j+1=(k-(stage+1))+1=k-stage
+                p $in regions(j+1)
+                regions(j+1) $subset regions((j+1)-1)
+                (j+1)-1=j
+                regions((j+1)-1)=regions(j)
+                p $in regions(j)
+            by def $reverse_nested_region_member(S,k,regions,p,stage+1)
+    k-m $in N
+    $reverse_nested_region_member(S,k,regions,p,k-m)
+    m=k-(k-m)
+    p $in regions(m)
+
+
+thm finite_nested_regions_subset:
+    ? forall S set,k N,regions fn(j closed_range(0,k)) power_set(S),m closed_range(0,k):
+        forall j closed_range(1,k):
+            regions(j) $subset regions(j-1)
+        =>:
+            regions(m) $subset regions(0)
+    claim:
+        ? forall j closed_range(0,m):
+            j $in closed_range(0,k)
+        j>=0
+        j<=m
+        m<=k
+        j<=k
+    have fn prefix_regions(j closed_range(0,m)) power_set(S)=regions(j)
+    claim:
+        ? forall j closed_range(1,m):
+            prefix_regions(j) $subset prefix_regions(j-1)
+        j>=1
+        j<=m
+        m<=k
+        j<=k
+        j-1>=0
+        j-1<=m
+        j-1<=k
+        j $in closed_range(1,k)
+        j $in closed_range(0,k)
+        j-1 $in closed_range(0,k)
+        prefix_regions(j)=regions(j)
+        prefix_regions(j-1)=regions(j-1)
+        regions(j) $subset regions(j-1)
+    regions(m) $in power_set(S)
+    regions(m) $subset S
+    claim:
+        ? forall x regions(m):
+            x $in regions(0)
+        x $in S
+        prefix_regions(m)=regions(m)
+        x $in prefix_regions(m)
+        0 $in closed_range(0,m)
+        release thm finite_nested_regions_member(S,m,prefix_regions,x,0)
+        prefix_regions(0)=regions(0)
+    by def regions(m) $subset regions(0)

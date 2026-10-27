@@ -1,0 +1,22 @@
+# Tracer: a relative complement keeps its own left carrier in a bounded function guard.
+# Before: this unchanged first forall rejected p(set_minus(X,B)) in R.
+# forall X set,p fn(E power_set(X)) R,B set:
+#     p(set_minus(X,B)) > 0
+#     =>:
+#         p(set_minus(X,B)) > 0
+# Now: identity/stored carrier equality closes the event type at KnownSpecialProperty.
+# Existing stored-left proof priority, actual equality paths and all other guards remain checked.
+# Evidence: target/release/litex -lang en -strict -f examples/wd/complement_event_carrier.lit
+
+forall X set,p fn(E power_set(X)) R,B set:
+    p(set_minus(X,B)) > 0
+    =>:
+        p(set_minus(X,B)) > 0
+
+forall X set,B set:
+    set_minus(X,B) $in power_set(X)
+
+forall X,Y set,B set:
+    X = Y
+    =>:
+        set_minus(X,B) $in power_set(Y)

@@ -44,6 +44,53 @@ impl LitexToLeanCompiler {
         Ok(layers)
     }
 
+    /// Read the final carrier from the original signature and complete call shape.
+    /// Matrix/finite-sequence wrappers have fixed arity and need no fresh binders.
+    pub(in crate::compile_to_lean) fn fixed_function_call_output<'a>(
+        application: &FnObj,
+        signature: &'a FnSet,
+    ) -> Result<&'a Obj, LeanCompileError> {
+        let Some(first) = application.body.first() else {
+            return Err(LeanCompileError::unsupported("ReturnedFunction/EmptyCall"));
+        };
+        if first.len()
+            != signature
+                .set_bound_parameters
+                .groups
+                .iter()
+                .map(|g| g.params.len())
+                .sum::<usize>()
+        {
+            return Err(LeanCompileError::unsupported("ReturnedFunction/LayerArity"));
+        }
+        let mut output = signature.ret_set.as_ref();
+        for arguments in &application.body[1..] {
+            output = match output {
+                Obj::FunctionSpace(FunctionSpace::FnSet(next))
+                    if arguments.len()
+                        == next
+                            .set_bound_parameters
+                            .groups
+                            .iter()
+                            .map(|g| g.params.len())
+                            .sum::<usize>() =>
+                {
+                    next.ret_set.as_ref()
+                }
+                Obj::SetFormer(SetFormer::MatrixSet(m)) if arguments.len() == 2 => m.set.as_ref(),
+                Obj::SetFormer(SetFormer::FiniteSeqSet(s)) if arguments.len() == 1 => {
+                    s.set.as_ref()
+                }
+                _ => {
+                    return Err(LeanCompileError::unsupported(
+                        "ReturnedFunction/LayerCarrier",
+                    ));
+                }
+            };
+        }
+        Ok(output)
+    }
+
     /// Continue the original call's actual child/requirement slices. The first
     /// call already supplies membership of its result in the next function set.
     pub(super) fn compile_returned_fn_calls(
@@ -166,7 +213,9 @@ impl LitexToLeanCompiler {
             let (_, domain) = self.compile_complete_input(signature, &terms, &proofs, &formed)?;
             // Every preceding layer is a generic CallOn. Reuse its own output
             // certificate after binding the receiver, so nested terms stay shared.
-            receiver = format!("(by\n  let _returned_receiver := {receiver}\n  let _returned_signature : Litex.FunctionSignature M := {sig}\n  have _returned_member : Litex.In _returned_receiver (Litex.fnSet _returned_signature) := by exact Litex.callOnInOutput _returned_receiver\n  have _returned_domain : M.mem (Litex.denote {packed}) _returned_signature.domain := {domain}\n  exact Litex.callOn _returned_signature _returned_receiver {packed} _returned_member _returned_domain)");
+            receiver = format!(
+                "(by\n  let _returned_receiver := {receiver}\n  let _returned_signature : Litex.FunctionSignature M := {sig}\n  have _returned_member : Litex.In _returned_receiver (Litex.fnSet _returned_signature) := by exact Litex.callOnInOutput _returned_receiver\n  have _returned_domain : M.mem (Litex.denote {packed}) _returned_signature.domain := {domain}\n  exact Litex.callOn _returned_signature _returned_receiver {packed} _returned_member _returned_domain)"
+            );
             output = signature.ret_set.as_ref().clone();
         }
         let member = format!("(Litex.callOnInOutput {receiver})");

@@ -40,7 +40,10 @@ pub mod known_literal_tuple_numeric_coordinate;
 #[cfg(test)]
 #[path = "../../../../../tests/unit/execute/known_search/tests.rs"]
 mod known_search_tests;
+pub mod known_template_standard_return;
 
 pub(crate) use search_in_fact_proof::TemplateMembershipProof;
 
 pub(crate) mod known_real_array_return;
+
+pub mod known_power_set_closure;

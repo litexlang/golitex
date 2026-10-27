@@ -498,6 +498,21 @@ impl LitexToLeanCompiler {
             Obj::Literal(Literal::Number(number)) => {
                 Ok(format!("(M.number {})", number_literal(number, "ℂ")?))
             }
+            Obj::BoundOperator(BoundOperator::Supremum(a)) => Ok(format!("(Litex.supremumValue {})", expression(&a.set)?)),
+            Obj::BoundOperator(BoundOperator::Infimum(a)) => Ok(format!("(Litex.infimumValue {})", expression(&a.set)?)),
+            Obj::MatrixOperator(MatrixOperator::Rank(m)) => {
+                Ok(format!("(Litex.matrixRankValue {} {} {})", expression(&m.matrix)?, expression(&m.rows)?, expression(&m.cols)?))
+            }
+            Obj::MatrixOperator(MatrixOperator::Determinant(m)) => {
+                let matrix = expression(&m.matrix)?;
+                let size = format!("(Litex.NativeBridge.naturalValue {})", expression(&m.order)?);
+                Ok(format!("(M.number (Litex.matrixComplexOn {matrix} {size} {size}).det)"))
+            }
+            Obj::MatrixOperator(MatrixOperator::Cofactor(m)) => Ok(format!(
+                "(Litex.matrixCofactorRawValue {} {} {} {})",
+                expression(&m.matrix)?, expression(&m.order)?,
+                expression(&m.row)?, expression(&m.col)?,
+            )),
             Obj::Literal(Literal::ImaginaryUnit(_)) => Ok("(M.number Complex.I)".into()),
             Obj::Literal(Literal::EulerNumber(_)) => Ok("(M.number ((Real.exp 1 : ℝ) : ℂ))".into()),
             Obj::Literal(Literal::Pi(_)) => Ok("(M.number (Real.pi : ℂ))".into()),
@@ -565,9 +580,49 @@ impl LitexToLeanCompiler {
                 // the bound member. Its witness changes no object denotation.
                 Ok(format!("(Litex.SetSemantics.sepValue (M := M) {bound} (fun ({variable} : M.Value) => ∃ (_ : M.mem {variable} {bound}), {predicate}))"))
             }
+            Obj::IteratedOperator(IteratedOperator::SumOfFiniteSet(_) | IteratedOperator::ProductOfFiniteSet(_)) => {
+                let (product,set,function) = match object {
+                    Obj::IteratedOperator(IteratedOperator::SumOfFiniteSet(s)) => (false,&s.set,&s.func),
+                    Obj::IteratedOperator(IteratedOperator::ProductOfFiniteSet(s)) => (true,&s.set,&s.func),
+                    _ => unreachable!(),
+                };
+                let iterand = if let Obj::FunctionSpace(FunctionSpace::AnonymousFn(f)) = function.as_ref() {
+                    self.compile_function_literal_value(f,position,bindings)?
+                } else { expression(function)? };
+                Ok(format!("(M.number (Litex.finiteAggregateValue {product} {} (fun _aggregate_item => Litex.NativeBridge.complexValue (Litex.FunctionSemantics.callValue {iterand} _aggregate_item))))",expression(set)?))
+            }
+            Obj::IteratedOperator(IteratedOperator::Reduce(value)) => Ok(format!(
+                "(Litex.rangeFoldValue (M := M) {} {} {} {} {})",
+                expression(&value.start)?, expression(&value.end)?, expression(&value.func)?,
+                expression(&value.op)?, expression(&value.seed)?
+            )),
+            Obj::IteratedOperator(IteratedOperator::FiniteSetReduce(value)) => Ok(format!(
+                "(Litex.finiteFoldValue (M := M) {} {} {} {})",
+                expression(&value.set)?, expression(&value.func)?, expression(&value.op)?, expression(&value.seed)?
+            )),
+            Obj::SetOperator(SetOperator::FamilyIntersect(value)) => Ok(format!(
+                "(Litex.familyIntersectValue {})",
+                expression(&value.left)?
+            )),
             Obj::SetOperator(SetOperator::FamilyUnion(value)) => Ok(format!(
                 "(Litex.IndexedUnionSemantics.indexedUnionValue (M := M) {} id)",
                 expression(&value.left)?
+            )),
+            Obj::SetOperator(SetOperator::SymmetricDifference(value)) => Ok(format!(
+                "(Litex.symmetricDifferenceValue (M := M) {} {})",
+                expression(&value.left)?, expression(&value.right)?
+            )),
+            Obj::SetOperator(SetOperator::IndexUnion(value)) => Ok(format!(
+                "(Litex.indexUnionValue (M := M) {} {} {})",
+                expression(&value.index_set)?, expression(&value.ambient_set)?, expression(&value.family_fn)?
+            )),
+            Obj::SetOperator(SetOperator::IndexIntersect(value)) => Ok(format!(
+                "(Litex.indexIntersectValue (M := M) {} {} {})",
+                expression(&value.index_set)?, expression(&value.ambient_set)?, expression(&value.family_fn)?
+            )),
+            Obj::SetOperator(SetOperator::IndexCart(value)) => Ok(format!(
+                "(Litex.indexCartValue (M := M) {} {} {})",
+                expression(&value.index_set)?, expression(&value.family_set)?, expression(&value.family_fn)?
             )),
             Obj::SetOperator(SetOperator::PowerSet(value)) => Ok(format!(
                 "(Litex.SetSemantics.powerValue (M := M) {})",
@@ -586,10 +641,17 @@ impl LitexToLeanCompiler {
                 expression(&value.left)?,
                 expression(&value.right)?
             )),
+            Obj::FiniteSetStat(FiniteSetStat::FiniteSetSize(p)) => Ok(format!("(M.number (Litex.finiteCard {} : ℂ))",expression(&p.set)?)),
             Obj::ComplexOperator(ComplexOperator::Conjugate(p)) => Ok(format!("(Litex.complexUnaryValue (M := M) (fun z : ℂ => star z) {})",expression(&p.arg)?)),
             Obj::ComplexOperator(ComplexOperator::RealPart(p)) => Ok(format!("(Litex.complexUnaryValue (M := M) (fun z : ℂ => (z.re : ℂ)) {})",expression(&p.arg)?)),
             Obj::ComplexOperator(ComplexOperator::ImaginaryPart(p)) => Ok(format!("(Litex.complexUnaryValue (M := M) (fun z : ℂ => (z.im : ℂ)) {})",expression(&p.arg)?)),
             Obj::ComplexOperator(ComplexOperator::ComplexAbs(p)) => Ok(format!("(Litex.complexUnaryValue (M := M) (fun z : ℂ => (‖z‖ : ℂ)) {})",expression(&p.arg)?)),
+            Obj::HyperbolicOperator(HyperbolicOperator::Sinh(p)) => Ok(format!("(Litex.realUnaryValue (M := M) Real.sinh {})", expression(&p.arg)?)),
+            Obj::HyperbolicOperator(HyperbolicOperator::Cosh(p)) => Ok(format!("(Litex.realUnaryValue (M := M) Real.cosh {})", expression(&p.arg)?)),
+            Obj::HyperbolicOperator(HyperbolicOperator::Tanh(p)) => Ok(format!("(Litex.realUnaryValue (M := M) Real.tanh {})", expression(&p.arg)?)),
+            Obj::HyperbolicOperator(HyperbolicOperator::Coth(p)) => Ok(format!("(Litex.realUnaryValue (M := M) Litex.nativeCoth {})", expression(&p.arg)?)),
+            Obj::HyperbolicOperator(HyperbolicOperator::Sech(p)) => Ok(format!("(Litex.realUnaryValue (M := M) Litex.nativeSech {})", expression(&p.arg)?)),
+            Obj::HyperbolicOperator(HyperbolicOperator::Csch(p)) => Ok(format!("(Litex.realUnaryValue (M := M) Litex.nativeCsch {})", expression(&p.arg)?)),
             Obj::TrigOperator(TrigOperator::Sin(p)) => Ok(format!("(Litex.realUnaryValue (M := M) Real.sin {})", expression(&p.arg)?)),
             Obj::TrigOperator(TrigOperator::Cos(p)) => Ok(format!("(Litex.realUnaryValue (M := M) Real.cos {})", expression(&p.arg)?)),
             Obj::TrigOperator(TrigOperator::Tan(p)) => Ok(format!("(Litex.realUnaryValue (M := M) Real.tan {})", expression(&p.arg)?)),
@@ -701,6 +763,10 @@ impl LitexToLeanCompiler {
                     self.compile_object_reference(object, position)?
                 ))
             }
+            Obj::FunctionSpace(FunctionSpace::PreimageSet(p)) => Ok(format!(
+                "(Litex.FunctionSemantics.preimageValue {} (fun _preimage_y => M.mem _preimage_y {}))",
+                expression(&p.function)?, expression(&p.target_set)?
+            )),
             Obj::FunctionSpace(FunctionSpace::FnRange(r)) => Ok(format!(
                 "(Litex.FunctionSemantics.rangeValue {})",
                 expression(&r.function)?
@@ -786,7 +852,19 @@ impl LitexToLeanCompiler {
         if let Obj::Identifier(IdentifierObj::Plain { id, .. }) = object {
             if matches!(
                 position.visible_parameter(*id, &self.runtime),
-                Ok((_, Some(Obj::FunctionSpace(FunctionSpace::FnSet(_))), _, _))
+                Ok((
+                    _,
+                    Some(
+                        Obj::FunctionSpace(FunctionSpace::FnSet(_))
+                            | Obj::SetFormer(
+                                SetFormer::MatrixSet(_)
+                                    | SetFormer::FiniteSeqSet(_)
+                                    | SetFormer::SeqSet(_)
+                            )
+                    ),
+                    _,
+                    _
+                ))
             ) || position.visible_function(id).is_ok()
                 || position.visible_recursive_function(id).is_ok()
             {
@@ -963,6 +1041,10 @@ impl LitexToLeanCompiler {
                 | AtomicFact::NotPrimeFact(_)
                 | AtomicFact::NotCoprimeFact(_)
                 | AtomicFact::NotDvdFact(_)
+                | AtomicFact::NotSequenceAnalysisFact(_)
+                | AtomicFact::NotHasSequenceLimitFact(_)
+                | AtomicFact::NotRealSetBoundFact(_)
+                | AtomicFact::NotRealSetBoundedFact(_)
         ) {
             let positive = crate::ast::fact::negate_atomic_fact(fact, fact.fact_id())
                 .ok_or_else(|| LeanCompileError::unsupported("Function/RawNegation"))?;
@@ -1005,6 +1087,22 @@ impl LitexToLeanCompiler {
                 "((∀ _member : M.Value, M.mem _member {} → M.mem _member {}) ∧ {} ≠ {})",
                 arguments[1], arguments[0], arguments[0], arguments[1]
             ),
+            f @ (AtomicFact::RealSetBoundFact(_) | AtomicFact::RealSetBoundedFact(_)) => {
+                let (name, _, _, bound) = super::compile_real_set_bounds::bound_parts(f).unwrap();
+                if bound.is_some() {
+                    format!("(Litex.{name}Value M {} {})", arguments[0], arguments[1])
+                } else {
+                    format!("(Litex.{name}Value M {})", arguments[0])
+                }
+            }
+            AtomicFact::HasSequenceLimitFact(_) => format!(
+                "(Litex.HasSequenceLimitValue M {} {})",
+                arguments[0], arguments[1]
+            ),
+            AtomicFact::SequenceAnalysisFact(f) => {
+                let name = super::compile_sequence_analysis::sequence_name(f.property)?;
+                format!("(Litex.Sequence{name}Value M {})", arguments[0])
+            }
             AtomicFact::PrimeFact(_) => format!("(Litex.PrimeValue M {})", arguments[0]),
             AtomicFact::CoprimeFact(_) => {
                 format!("(Litex.CoprimeValue M {} {})", arguments[0], arguments[1])
@@ -1043,6 +1141,18 @@ impl LitexToLeanCompiler {
                 )
             }
             AtomicFact::NormalAtomicFact(normal) => {
+                if let Some(name) = super::compile_real_extrema::certificate_name(&normal.predicate)
+                {
+                    if arguments.len() != 2 {
+                        return Err(LeanCompileError::unsupported(
+                            "RealExtremum/CertificateArity",
+                        ));
+                    }
+                    return Ok(format!(
+                        "(Litex.{name}Value M {} {})",
+                        arguments[0], arguments[1]
+                    ));
+                }
                 if let Some(proposition) = self.compile_abstract_predicate_proposition(
                     &normal.predicate,
                     arguments,

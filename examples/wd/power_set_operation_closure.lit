@@ -1,0 +1,65 @@
+# Tracer: form a struct from a checked law using a compound event argument.
+# Before: the same final membership was rejected after its law checked.
+# claim:
+#     ? (R,zero_event) $in &UnionAdditive<R>
+#     R $in power_set(R)
+#     zero_event $in fn(E power_set(R)) R
+#     claim:
+#         ? forall E,F power_set(R):
+#             zero_event(union(E,F)) = zero_event(E)+zero_event(F)
+#         E $subset R
+#         F $subset R
+#         union(E,F) $subset R
+#         union(E,F) $in power_set(R)
+#         zero_event(union(E,F)) = 0
+#         zero_event(E) = 0
+#         zero_event(F) = 0
+#     (R,zero_event) $in &UnionAdditive<R>
+# Missing internal obligation: union(E,F) in power_set(R) at the inherited
+# KnownSpecialProperty ceiling. No search ceiling was increased.
+# Now: both stored E,F memberships license their union directly.
+# Intersection needs either operand; difference needs the left operand.
+# Boundary: an untyped/outside union operand or changed carrier stays rejected.
+# Evidence: target/release/litex -lang en -strict -f examples/wd/power_set_operation_closure.lit
+
+struct UnionAdditive<Ambient set>:
+    carrier power_set(Ambient)
+    value fn(E power_set(carrier)) R
+    <=>:
+        forall E,F power_set(carrier):
+            value(union(E,F)) = value(E)+value(F)
+
+have fn zero_event(E power_set(R)) R = 0
+
+claim:
+    ? (R,zero_event) $in &UnionAdditive<R>
+    R $in power_set(R)
+    zero_event $in fn(E power_set(R)) R
+    claim:
+        ? forall E,F power_set(R):
+            zero_event(union(E,F)) = zero_event(E)+zero_event(F)
+        E $subset R
+        F $subset R
+        union(E,F) $subset R
+        union(E,F) $in power_set(R)
+        zero_event(union(E,F)) = 0
+        zero_event(E) = 0
+        zero_event(F) = 0
+    (R,zero_event) $in &UnionAdditive<R>
+
+forall X set, A,B power_set(X):
+    union(A,B) $in power_set(X)
+
+forall X set, A power_set(X), B set:
+    intersect(A,B) $in power_set(X)
+
+forall X set, A set, B power_set(X):
+    intersect(A,B) $in power_set(X)
+
+forall X set, A power_set(X), B set:
+    set_minus(A,B) $in power_set(X)
+
+forall X set, A,B power_set(X), D set:
+    A = D
+    =>:
+        union(D,B) $in power_set(X)

@@ -37,3 +37,18 @@ mod compile_subtraction_order;
 mod compile_union_subset_componentwise;
 
 mod compile_exp_log;
+
+mod compile_fold_membership;
+mod compile_power_set_closure;
+
+mod compile_hyperbolic_nonzero;
+
+mod compile_negation_nonzero;
+
+mod compile_matrix_membership;
+
+mod compile_finite_sets;
+
+mod compile_function_set_strategy;
+
+mod compile_negation_order;

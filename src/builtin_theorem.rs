@@ -124,13 +124,6 @@ pub enum BuiltinTheoremId {
     MatrixApplyIdentity,
     MatrixInnerProductAdjoint,
     MatrixRankFactorizationExists,
-    MatrixAddCommutative,
-    MatrixAddAssociative,
-    MatrixAddZero,
-    MatrixSubSelf,
-    MatrixScaleOne,
-    MatrixScaleZero,
-    MatrixScaleDistributive,
     MatrixMulAssociative,
     MatrixMulDistributiveLeft,
     MatrixMulDistributiveRight,
@@ -673,13 +666,6 @@ impl BuiltinTheoremId {
             "matrix_apply_identity" => Self::MatrixApplyIdentity,
             "matrix_inner_product_adjoint" => Self::MatrixInnerProductAdjoint,
             "matrix_rank_factorization_exists" => Self::MatrixRankFactorizationExists,
-            "matrix_add_commutative" => Self::MatrixAddCommutative,
-            "matrix_add_associative" => Self::MatrixAddAssociative,
-            "matrix_add_zero" => Self::MatrixAddZero,
-            "matrix_sub_self" => Self::MatrixSubSelf,
-            "matrix_scale_one" => Self::MatrixScaleOne,
-            "matrix_scale_zero" => Self::MatrixScaleZero,
-            "matrix_scale_distributive" => Self::MatrixScaleDistributive,
             "matrix_mul_associative" => Self::MatrixMulAssociative,
             "matrix_mul_distributive_left" => Self::MatrixMulDistributiveLeft,
             "matrix_mul_distributive_right" => Self::MatrixMulDistributiveRight,
@@ -1233,13 +1219,6 @@ impl BuiltinTheoremId {
             Self::MatrixApplyIdentity => "matrix_apply_identity",
             Self::MatrixInnerProductAdjoint => "matrix_inner_product_adjoint",
             Self::MatrixRankFactorizationExists => "matrix_rank_factorization_exists",
-            Self::MatrixAddCommutative => "matrix_add_commutative",
-            Self::MatrixAddAssociative => "matrix_add_associative",
-            Self::MatrixAddZero => "matrix_add_zero",
-            Self::MatrixSubSelf => "matrix_sub_self",
-            Self::MatrixScaleOne => "matrix_scale_one",
-            Self::MatrixScaleZero => "matrix_scale_zero",
-            Self::MatrixScaleDistributive => "matrix_scale_distributive",
             Self::MatrixMulAssociative => "matrix_mul_associative",
             Self::MatrixMulDistributiveLeft => "matrix_mul_distributive_left",
             Self::MatrixMulDistributiveRight => "matrix_mul_distributive_right",
@@ -1796,13 +1775,6 @@ impl BuiltinTheoremId {
             Self::MatrixApplyIdentity => 2,
             Self::MatrixInnerProductAdjoint => 5,
             Self::MatrixRankFactorizationExists => 3,
-            Self::MatrixAddCommutative => 4,
-            Self::MatrixAddAssociative => 5,
-            Self::MatrixAddZero => 3,
-            Self::MatrixSubSelf => 3,
-            Self::MatrixScaleOne => 3,
-            Self::MatrixScaleZero => 3,
-            Self::MatrixScaleDistributive => 5,
             Self::MatrixMulAssociative => 7,
             Self::MatrixMulDistributiveLeft => 6,
             Self::MatrixMulDistributiveRight => 6,
@@ -2226,13 +2198,6 @@ impl BuiltinTheoremId {
             Self::MatrixApplyIdentity
                 | Self::MatrixInnerProductAdjoint
                 | Self::MatrixRankFactorizationExists
-                | Self::MatrixAddCommutative
-                | Self::MatrixAddAssociative
-                | Self::MatrixAddZero
-                | Self::MatrixSubSelf
-                | Self::MatrixScaleOne
-                | Self::MatrixScaleZero
-                | Self::MatrixScaleDistributive
                 | Self::MatrixMulAssociative
                 | Self::MatrixMulDistributiveLeft
                 | Self::MatrixMulDistributiveRight

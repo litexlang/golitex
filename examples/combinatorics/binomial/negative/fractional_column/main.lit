@@ -1,0 +1,86 @@
+release obj def comb::main::binomial_coefficient
+
+forall n,k N:
+    comb::main::binomial_coefficient(n,k) $in N
+
+claim:
+    ? forall n N, k N+:
+        comb::main::binomial_coefficient(n+1,k) = comb::main::binomial_coefficient(n,k-1) + comb::main::binomial_coefficient(n,k)
+    n+1 >= 1
+    (n+1)-1 = n
+    k >= 1
+    comb::main::binomial_coefficient(n+1,k) = comb::main::binomial_coefficient(n,k-1) + comb::main::binomial_coefficient(n,k)
+
+comb::main::binomial_coefficient(0,0) = 1
+
+comb::main::binomial_coefficient(0,1) = 0
+
+comb::main::binomial_coefficient(1,1) = comb::main::binomial_coefficient(0,0) + comb::main::binomial_coefficient(0,1) = 1+0 = 1
+
+release thm comb::main::binomial_choose_one(5)
+
+release thm comb::main::binomial_choose_two(5)
+
+comb::main::binomial_coefficient(5,2) = 5*(5-1)/2 = 10
+
+release thm comb::main::binomial_symmetry(5,3)
+
+comb::main::binomial_coefficient(5,3) = comb::main::binomial_coefficient(5,5-3) = comb::main::binomial_coefficient(5,2) = 10
+
+release thm comb::main::binomial_penultimate(5)
+
+release thm comb::main::binomial_diagonal(5)
+
+release thm comb::main::binomial_beyond_row_zero(5,6)
+
+release thm comb::main::binomial_positive(5,2)
+
+release thm comb::main::binomial_row_monotone(5,2)
+
+release thm comb::main::binomial_row_strict(5,2)
+
+release thm comb::main::binomial_choose_two(6)
+
+comb::main::binomial_coefficient(6,2) = 6*(6-1)/2 = 15
+
+comb::main::binomial_coefficient(5,2) = 10 < 15 = comb::main::binomial_coefficient(6,2)
+
+release thm comb::main::binomial_choose_one(4)
+
+release thm comb::main::binomial_choose_two(4)
+
+comb::main::binomial_coefficient(4,2) = 4*(4-1)/2 = 6
+
+comb::main::binomial_coefficient(5,2) = comb::main::binomial_coefficient(4,1) + comb::main::binomial_coefficient(4,2) = 4+6 = 10
+
+release thm comb::main::binomial_beyond_row_zero(2,4)
+
+release thm comb::main::binomial_beyond_row_zero(3,4)
+
+release thm comb::main::binomial_row_monotone(2,4)
+
+comb::main::binomial_coefficient(2,4) = 0 = comb::main::binomial_coefficient(3,4)
+
+release thm comb::main::binomial_row_monotone(3,0)
+
+release thm comb::main::binomial_choose_one(0)
+
+release thm comb::main::binomial_choose_two(0)
+
+release thm comb::main::binomial_choose_two(1)
+
+release thm comb::main::binomial_diagonal(0)
+
+release thm comb::main::binomial_penultimate(1)
+
+release thm comb::main::binomial_positive(0,0)
+
+release thm comb::main::binomial_row_strict(0,1)
+
+release thm comb::main::binomial_row_strict(4,5)
+
+release thm comb::main::binomial_symmetry(0,0)
+
+release thm comb::main::binomial_symmetry(5,0)
+
+comb::main::binomial_coefficient(3,1/2) = 0

@@ -105,6 +105,14 @@ impl LitexToLeanCompiler {
                 _ => false,
             };
             if valid {
+                if matches!(proof, P::ConjugateInvolution(_)) {
+                    let term = if left.ir() == fact.left.ir() {
+                        "exact star_star _"
+                    } else {
+                        "exact (star_star _).symm"
+                    };
+                    return self.compile_complex_native_identity(fact, term, position);
+                }
                 let law = match proof {
                     P::ConjugateInvolution(_) => "star_star",
                     P::ConjugateRealPart(_) => "Complex.star_def, Complex.conj_re",

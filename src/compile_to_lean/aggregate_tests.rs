@@ -134,7 +134,9 @@ fn aggregate_capture_preserves_domain_rejections() {
 fn range_aggregate_generic_formation_and_carrier() {
     for operation in ["sum", "product"] {
         for domain in ["Z", "Q", "R", "C"] {
-            let source = format!("forall lower, upper Z:\n    lower <= upper\n    =>:\n        {operation}(lower, upper, fn(x {domain}) {domain} {{x}}) $in C\n");
+            let source = format!(
+                "forall lower, upper Z:\n    lower <= upper\n    =>:\n        {operation}(lower, upper, fn(x {domain}) {domain} {{x}}) $in C\n"
+            );
             let (runtime, run) = execute(&source);
             assert!(run.success, "{source}");
             let compiler = super::LitexToLeanCompiler::new(runtime);
@@ -259,8 +261,13 @@ fn finite_aggregates_replay_empty_fractional_and_named_sets() {
         let (runtime, run) = execute(source);
         assert!(run.success, "{source}");
         let compiler = super::LitexToLeanCompiler::new(runtime);
-        let lean = compiler.compile_run(&run, "finite_aggregate").unwrap_or_else(|e| panic!("{source}: {e:?}"));
-        assert_eq!(lean, compiler.compile_run(&run, "finite_aggregate").unwrap());
+        let lean = compiler
+            .compile_run(&run, "finite_aggregate")
+            .unwrap_or_else(|e| panic!("{source}: {e:?}"));
+        assert_eq!(
+            lean,
+            compiler.compile_run(&run, "finite_aggregate").unwrap()
+        );
     }
 }
 
@@ -377,4 +384,64 @@ fn finite_aggregate_named_set_finiteness_keeps_original_equality_citations() {
             .unwrap_err();
         assert_eq!(error.route, "AtomicRewrite/Citations");
     }
+}
+
+#[test]
+fn bounded_and_general_finite_aggregates_replay_original_domains() {
+    for source in [
+        include_str!("../../lean/examples/bounded_finite_aggregate_closure/statement.lit"),
+        include_str!("../../lean/examples/general_finite_aggregate_closure/statement.lit"),
+        include_str!("../../lean/examples/bounded_finite_aggregate_values/statement.lit"),
+        include_str!("../../lean/examples/integer_ranges_finite/statement.lit"),
+    ] {
+        let (runtime, run) = execute(source);
+        assert!(run.success);
+        super::LitexToLeanCompiler::new(runtime)
+            .compile_run(&run, "bounded_aggregates")
+            .unwrap();
+    }
+}
+
+#[test]
+fn bounded_finite_aggregate_rejects_changed_input_signature() {
+    let (runtime, mut run) = execute("finite_set_sum({1,2,3},fn(k closed_range(1,3)) Z {k}) = 6");
+    assert!(run.success);
+    let ObjWellDefinedProof::ByDef {
+        proof: ObjWellDefinedProofByDef::IteratedOperator(P::SumOfFiniteSet(p)),
+        ..
+    } = &mut equality(&mut run).well_defined_proof.left
+    else {
+        panic!("finite sum WD")
+    };
+    let FunctionSignatureSelection::AnonymousLiteral { signature } =
+        p.signature_selection.as_mut().unwrap()
+    else {
+        panic!("literal summand")
+    };
+    signature.set_bound_parameters.groups[0].param_type =
+        Box::new(Obj::StandardSet(StandardSet::Z));
+    assert!(super::LitexToLeanCompiler::new(runtime)
+        .compile_run(&run, "wrong_bounded_sum")
+        .is_err());
+}
+
+#[test]
+fn finite_aggregate_alpha_checks_original_iterand_body() {
+    let (runtime, mut run) = execute(include_str!(
+        "../../lean/examples/finite_aggregate_bound_names/statement.lit"
+    ));
+    assert!(run.success);
+    let compiler = super::LitexToLeanCompiler::new(runtime);
+    compiler.compile_run(&run, "valid_aggregate_alpha").unwrap();
+    let eq = equality(&mut run);
+    let Obj::IteratedOperator(IteratedOperator::ProductOfFiniteSet(p)) = &mut eq.fact.right else {
+        panic!("product endpoint")
+    };
+    let Obj::FunctionSpace(FunctionSpace::AnonymousFn(f)) = p.func.as_mut() else {
+        panic!("factor function")
+    };
+    f.equal_to = Box::new(Obj::Literal(Literal::Number(Number::new("99".into()))));
+    assert!(compiler
+        .compile_run(&run, "changed_aggregate_alpha")
+        .is_err());
 }

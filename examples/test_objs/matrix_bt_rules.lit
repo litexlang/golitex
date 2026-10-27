@@ -1,4 +1,5 @@
-# Explicit matrix theorem contracts, including all finite dimension premises.
+# Remaining native matrix theorem contracts, including all finite dimension premises.
+# Seven entrywise laws now live in std/matrix; see examples/algebra/matrix_entrywise/.
 # These rules were formerly unavailable; wrong arities and false candidates reject.
 # Run: target/release/litex -strict -lang en -f examples/test_objs/matrix_bt_rules.lit
 
@@ -7,13 +8,6 @@ have fn B(r closed_range(1,2),c closed_range(1,2)) R=r-c
 det(A,2)=-1
 det(A,2)!=0
 
-release thm matrix_add_commutative(A,B,2,2)
-release thm matrix_add_associative(A,B,A,2,2)
-release thm matrix_add_zero(A,2,2)
-release thm matrix_sub_self(A,2,2)
-release thm matrix_scale_one(A,2,2)
-release thm matrix_scale_zero(A,2,2)
-release thm matrix_scale_distributive(i,A,B,2,2)
 release thm matrix_mul_associative(A,B,A,2,2,2,2)
 release thm matrix_mul_distributive_left(A,B,A,2,2,2)
 release thm matrix_mul_distributive_right(A,B,A,2,2,2)

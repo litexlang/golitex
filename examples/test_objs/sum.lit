@@ -1,40 +1,32 @@
 # AST: Obj::IteratedOperator::Sum
 # Run: target/release/litex -f examples/test_objs/sum.lit
-# Cases use discarded sketch scopes; no cross-case facts.
+# Direct cases share file context; sketches isolate local declarations.
 
 # P01: sum(1, 1, fn(x Z) Z {x}) = 1
-sketch:
-    sum(1, 1, fn(x Z) Z {x}) = 1
+sum(1, 1, fn(x Z) Z {x}) = 1
 
 # P02: sum(-2, -2, fn(x Z) Z {x}) = -2
-sketch:
-    sum(-2, -2, fn(x Z) Z {x}) = -2
+sum(-2, -2, fn(x Z) Z {x}) = -2
 
 # P03: sum(1, 3, fn(x Z) Z {x}) = 6
-sketch:
-    sum(1, 3, fn(x Z) Z {x}) = 6
+sum(1, 3, fn(x Z) Z {x}) = 6
 
 # P04: sum(1, 3, fn(x Z) Z {2}) = 6
-sketch:
-    sum(1, 3, fn(x Z) Z {2}) = 6
+sum(1, 3, fn(x Z) Z {2}) = 6
 
 # P05: sum(1, 3, fn(x Z) Z {x}) = sum(1, 2, fn(x Z) Z {x}) + 3
-sketch:
-    sum(1, 3, fn(x Z) Z {x}) = sum(1, 2, fn(x Z) Z {x}) + 3
+sum(1, 3, fn(x Z) Z {x}) = sum(1, 2, fn(x Z) Z {x}) + 3
 
 # P06: sum(0, 0, fn(x Z) Z {0}) = 0
-sketch:
-    sum(0, 0, fn(x Z) Z {0}) = 0
+sum(0, 0, fn(x Z) Z {0}) = 0
 
 # P101: negative endpoints and exact fractions
-sketch:
-    sum(-2,2,fn(k Z) Z {k*k}) = 10
-    sum(1,3,fn(k Z) Q {1/3}) = 1
+sum(-2,2,fn(k Z) Z {k*k}) = 10
+sum(1,3,fn(k Z) Q {1/3}) = 1
 
 # P102: nested product and outer arithmetic
-sketch:
-    sum(1,3,fn(k N+) N+ {product(1,k,fn(j N+) N+ {j})}) = 9
-    sum(1,3,fn(k Z) Z {k}) + product(1,3,fn(k Z) Z {k}) = 12
+sum(1,3,fn(k N+) N+ {product(1,k,fn(j N+) N+ {j})}) = 9
+sum(1,3,fn(k Z) Z {k}) + product(1,3,fn(k Z) Z {k}) = 12
 
 # P103: named function expansion
 sketch:
@@ -43,12 +35,10 @@ sketch:
     eval sum(1,3,square)
 
 # P104: binder substitution retains outer free value
-sketch:
-    sum(1,3,fn(x Z) Z {sum(1,2,fn(y Z) Z {x+y})}) = 21
+sum(1,3,fn(x Z) Z {sum(1,2,fn(y Z) Z {x+y})}) = 21
 
 # P105: every index satisfies the callable predicate
-sketch:
-    sum(1,3,fn(k Z:k!=0) Z {1}) = 3
+sum(1,3,fn(k Z:k!=0) Z {1}) = 3
 
 # P106: algorithm terms use proved case equations
 sketch:

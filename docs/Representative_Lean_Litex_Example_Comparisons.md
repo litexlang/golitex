@@ -576,6 +576,10 @@ controlled cache clearing. These selected local results are not an overall
 ratio across tasks and do not yet establish a proportional reduction in
 authoring time.
 
+The [unscreened summation and context-load comparison](../examples/litex_vs_lean_speed/search-and-expansion.md)
+retains all six cases; Lean's direct route was faster in five. Proof route and
+context load can change the comparison result.
+
 <a id="9-local-runtime-spot-checks"></a>
 
 ### Whole-process observations, 2026-10-21: including startup and loading
@@ -587,19 +591,20 @@ Litex times are medians over repeated runs; Lean times are a second, warmer
 run. This subsection preserves those whole-command observations; they must
 not be mixed with the startup- and import-excluded timings above.
 
-| Scenario | Litex (median) | Lean (2nd warmer run) | Approximate ratio |
-| --- | --- | --- | --- |
-| Short arithmetic / `x = 2` ⇒ `x + 1 = 3`, `x^2 = 4` | ~6 ms | ~7 s | ~1000× |
-| Two-equation calculation chain | ~16 ms | ~30 s | ~2000× |
-| Sets: intersection preserves inclusion | ~4 ms | ~3.4 s | ~800× |
-| Positive-integer witness `(95800,217519,414560,422481)` for `a^4+b^4+c^4=d^4` | ~5 ms | ~16–21 s (`norm_num` / `native_decide`) | ~3000×+ |
-| Control: Lean `1 + 1 = 2` with no Mathlib | — | ~2.3 s (`lake env lean` startup) | No paired ratio |
+| Scenario | Litex (median) | Lean (2nd warmer run) |
+| --- | --- | --- |
+| Short arithmetic / `x = 2` ⇒ `x + 1 = 3`, `x^2 = 4` | ~6 ms | ~7 s |
+| Two-equation calculation chain | ~16 ms | ~30 s |
+| Sets: intersection preserves inclusion | ~4 ms | ~3.4 s |
+| Positive-integer witness `(95800,217519,414560,422481)` for `a^4+b^4+c^4=d^4` | ~5 ms | ~16–21 s (`norm_num` / `native_decide`) |
+| Control: Lean `1 + 1 = 2` with no Mathlib | — | ~2.3 s (`lake env lean` startup) |
 
-The orders of magnitude are a notable observation about these command-line
-runs. Lean's times include startup and loading, which can dominate short
-proofs. The observations do not isolate proof search or cover an editor's
-already-loaded incremental checking. Litex performs exact closed calculation
-and contextual checking directly; Lean tactics such as `norm_num` construct
+These data record historical whole-command latency and do not establish a
+checker speedup. Startup and loading can dominate short proofs, and the two
+columns use different sampling summaries. The observations do not isolate
+proof search or cover an editor's already-loaded incremental checking.
+Litex performs exact closed calculation and contextual checking directly;
+Lean tactics such as `norm_num` construct
 proof terms for kernel checking. These are different checking architectures
 and trust boundaries, not identical engines running at different speeds.
 

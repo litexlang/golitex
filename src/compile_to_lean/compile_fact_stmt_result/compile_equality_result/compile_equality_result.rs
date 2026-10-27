@@ -156,11 +156,31 @@ impl LitexToLeanCompiler {
                         "Identity evidence has different endpoints.",
                     ));
                 }
+                // The source IR spells both a signed number leaf and a
+                // negated unsigned leaf as `-n`. Their owned representations
+                // are different, so replay that encoding identity explicitly.
+                if matches!((&fact.left, &fact.right),
+                    (Obj::Literal(Literal::Number(_)), Obj::ArithmeticOperator(ArithmeticOperator::Neg(p)))
+                    | (Obj::ArithmeticOperator(ArithmeticOperator::Neg(p)), Obj::Literal(Literal::Number(_)))
+                    if matches!(p.arg.as_ref(), Obj::Literal(Literal::Number(_)))) {
+                    let (negative, literal, reverse) = match (&fact.left, &fact.right) {
+                        (Obj::ArithmeticOperator(ArithmeticOperator::Neg(p)), Obj::Literal(Literal::Number(n))) => (p, n, false),
+                        (Obj::Literal(Literal::Number(n)), Obj::ArithmeticOperator(ArithmeticOperator::Neg(p))) => (p, n, true),
+                        _ => unreachable!(),
+                    };
+                    let Obj::Literal(Literal::Number(unsigned)) = negative.arg.as_ref() else { unreachable!() };
+                    let unsigned = number_literal(unsigned, "ℂ")?;
+                    let signed = number_literal(literal, "ℂ")?;
+                    let equality = format!("((M.neg_numbers {unsigned}).trans (congrArg M.number (by norm_num : -{unsigned} = {signed})))");
+                    if reverse { format!("({equality}).symm") } else { equality }
+                } else {
                 // Endpoint formation has already consumed its original WD.
                 // Infer only M.Value from the equality's expected type, avoiding
                 // a second copy of the complete object and its certificates.
                 "(show @Eq M.Value _ _ from Eq.refl _)".to_string()
+                }
             }
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::RealBounds(p)) => self.compile_real_extremum_equality(fact,p,position)?,
             EqualFactSearchedProof::ByTheyAreTheSame(
                 proof @ TheyAreTheSameProof::SameFreeParamShape(_),
             ) => self.compile_identity(&fact.left, &fact.right, proof, position)?,
@@ -177,6 +197,7 @@ impl LitexToLeanCompiler {
             EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::ArccosExactNegOne(_)) => self.compile_inverse_trig_exact(fact, "Arccos", -1, Some((1, 1)), "Real.arccos_neg_one", position)?,
             EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::ArctanExactZero(_)) => self.compile_inverse_trig_exact(fact, "Arctan", 0, None, "Real.arctan_zero", position)?,
             EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::ArccotExactZero(_)) => self.compile_inverse_trig_exact(fact, "Arccot", 0, Some((1, 2)), "Real.arctan_zero", position)?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::Hyperbolic(p)) => self.compile_hyperbolic_equality(fact, p, position)?,
             EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::ReciprocalTrig(p)) => self.compile_reciprocal_trig(fact, p, position)?,
             EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::CotQuotientDefinition(_)) => self.compile_reciprocal_trig_definition(fact, "Cot", position)?,
             EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::PythagoreanIdentity(_)) => self.compile_trig_identity(fact, false, position)?,
@@ -184,9 +205,13 @@ impl LitexToLeanCompiler {
             EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::TrigComplexIdentity(crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_trig_complex_identities::TrigComplexIdentityProof::ComplexReconstruction)) => self.compile_complex_reconstruction(fact, position)?,
             EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::Conjugation(p)) => self.compile_conjugate_identity(fact, p, position)?,
             EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::TrigComplexIdentity(crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_trig_complex_identities::TrigComplexIdentityProof::ComplexModulusProduct)) => self.compile_complex_modulus_product(fact,position)?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::ReduceEmpty(p)) => self.compile_reduce_empty(fact, &p.proof_of_requirement_facts, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::FiniteSetReduceEmpty(_)) => self.compile_finite_fold_empty(fact, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::ReduceLastStep(p)) => self.compile_reduce_last_step(fact, p, position)?,
             EqualFactSearchedProof::ByClosedCalculation(proof) => {
                 self.compile_closed_equality(fact, proof, position)?
             }
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::ClosedRangeLiteralExpansion(_)) => self.compile_closed_range_literal(fact, position)?,
             EqualFactSearchedProof::ByKnownSpecialProperty(proof) => {
                 self.compile_equality_known_special_property(fact, proof, position)?
             }
@@ -441,6 +466,7 @@ impl LitexToLeanCompiler {
                 &proof.proof_of_requirement_facts,
                 position,
             )?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::SymmetricDifference(proof)) => self.compile_sym_diff_identity(fact,proof,position)?,
             EqualFactSearchedProof::ByBuiltinRule(
                 rule @ (EqualitySearchProofByBuiltinRule::IntersectCommutative(_)
                 | EqualitySearchProofByBuiltinRule::UnionCommutative(_)

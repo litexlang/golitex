@@ -1,0 +1,526 @@
+# Real scalar C^k and smoothness on actual open domains. Source only.
+# Unary R input and one vector input have separate named interfaces.
+
+prop is_unary_c_k_on_open(D power_set(R),k N,f fn(x D) R):
+    forall p R:
+        p $in D
+        =>:
+            exist radius R+ st {{x R:abs(x-p)<radius} $subset D}
+    forall p R:
+        p $in D
+        =>:
+            $is_continuous_at(f,p)
+    forall m closed_range(1,k):
+        $Calc::unary_higher_order::is_n_times_differentiable_on(D,m,f,D)
+    forall m closed_range(1,k),p R:
+        p $in D
+        $Calc::unary_higher_order::is_n_times_differentiable_on(D,m,f,D)
+        =>:
+            $is_continuous_at(\Calc::unary_higher_order::nth_derivative_function<D,D,m>(f),p)
+
+prop is_unary_smooth_on_open(D power_set(R),f fn(x D) R):
+    forall k N:
+        $is_unary_c_k_on_open(D,k,f)
+
+prop is_scalar_c_k_on_open(n N+,D power_set(cart_n(R,n)),k N,f fn(x D) R):
+    forall p cart_n(R,n):
+        p $in D
+        =>:
+            $Calc::main::is_real_euclidean_interior(n,D,p)
+    forall p cart_n(R,n):
+        p $in D
+        =>:
+            $is_multi_continuous_at(f,p,n)
+    forall m closed_range(1,k),indices finite_seq(closed_range(1,n),m):
+        $Calc::higher_order::is_ordered_partially_differentiable_on(n,D,m,f,D,indices)
+    forall m closed_range(1,k),indices finite_seq(closed_range(1,n),m),p cart_n(R,n):
+        p $in D
+        $Calc::higher_order::is_ordered_partially_differentiable_on(n,D,m,f,D,indices)
+        =>:
+            $is_multi_continuous_at(\Calc::higher_order::ordered_partial_function<n,D,D,m>(f,indices),p,n)
+
+prop is_scalar_smooth_on_open(n N+,D power_set(cart_n(R,n)),f fn(x D) R):
+    forall k N:
+        $is_scalar_c_k_on_open(n,D,k,f)
+
+thm unary_c_k_lower_order:
+    ? forall D power_set(R),k N,m closed_range(0,k),f fn(x D) R:
+        $is_unary_c_k_on_open(D,k,f)
+        =>:
+            $is_unary_c_k_on_open(D,m,f)
+    claim:
+        ? forall j closed_range(1,m):
+            j $in closed_range(1,k)
+        j>=1
+        j<=m
+        m<=k
+        j<=k
+    claim:
+        ? forall j closed_range(1,m):
+            $Calc::unary_higher_order::is_n_times_differentiable_on(D,j,f,D)
+        j $in closed_range(1,k)
+    claim:
+        ? forall j closed_range(1,m),p R:
+            p $in D
+            $Calc::unary_higher_order::is_n_times_differentiable_on(D,j,f,D)
+            =>:
+                $is_continuous_at(\Calc::unary_higher_order::nth_derivative_function<D,D,j>(f),p)
+        j $in closed_range(1,k)
+    by def $is_unary_c_k_on_open(D,m,f)
+
+thm scalar_c_k_lower_order:
+    ? forall n N+,D power_set(cart_n(R,n)),k N,m closed_range(0,k),f fn(x D) R:
+        $is_scalar_c_k_on_open(n,D,k,f)
+        =>:
+            $is_scalar_c_k_on_open(n,D,m,f)
+    claim:
+        ? forall j closed_range(1,m):
+            j $in closed_range(1,k)
+        j>=1
+        j<=m
+        m<=k
+        j<=k
+    claim:
+        ? forall j closed_range(1,m),indices finite_seq(closed_range(1,n),j):
+            $Calc::higher_order::is_ordered_partially_differentiable_on(n,D,j,f,D,indices)
+        j $in closed_range(1,k)
+    claim:
+        ? forall j closed_range(1,m),indices finite_seq(closed_range(1,n),j),p cart_n(R,n):
+            p $in D
+            $Calc::higher_order::is_ordered_partially_differentiable_on(n,D,j,f,D,indices)
+            =>:
+                $is_multi_continuous_at(\Calc::higher_order::ordered_partial_function<n,D,D,j>(f,indices),p,n)
+        j $in closed_range(1,k)
+    by def $is_scalar_c_k_on_open(n,D,m,f)
+
+thm unary_c_zero_from_continuity:
+    ? forall D power_set(R),f fn(x D) R:
+        forall p R:
+            p $in D
+            =>:
+                exist radius R+ st {{x R:abs(x-p)<radius} $subset D}
+        forall p R:
+            p $in D
+            =>:
+                $is_continuous_at(f,p)
+        =>:
+            $is_unary_c_k_on_open(D,0,f)
+    claim:
+        ? forall m closed_range(1,0):
+            $Calc::unary_higher_order::is_n_times_differentiable_on(D,m,f,D)
+        by contra:
+            ? $Calc::unary_higher_order::is_n_times_differentiable_on(D,m,f,D)
+            m>=1
+            m<=0
+            m<1
+            impossible m>=1
+    claim:
+        ? forall m closed_range(1,0),p R:
+            p $in D
+            $Calc::unary_higher_order::is_n_times_differentiable_on(D,m,f,D)
+            =>:
+                $is_continuous_at(\Calc::unary_higher_order::nth_derivative_function<D,D,m>(f),p)
+        by contra:
+            ? $is_continuous_at(\Calc::unary_higher_order::nth_derivative_function<D,D,m>(f),p)
+            m>=1
+            m<=0
+            m<1
+            impossible m>=1
+    by def $is_unary_c_k_on_open(D,0,f)
+
+thm scalar_c_zero_from_continuity:
+    ? forall n N+,D power_set(cart_n(R,n)),f fn(x D) R:
+        forall p cart_n(R,n):
+            p $in D
+            =>:
+                $Calc::main::is_real_euclidean_interior(n,D,p)
+        forall p cart_n(R,n):
+            p $in D
+            =>:
+                $is_multi_continuous_at(f,p,n)
+        =>:
+            $is_scalar_c_k_on_open(n,D,0,f)
+    claim:
+        ? forall m closed_range(1,0),indices finite_seq(closed_range(1,n),m):
+            $Calc::higher_order::is_ordered_partially_differentiable_on(n,D,m,f,D,indices)
+        by contra:
+            ? $Calc::higher_order::is_ordered_partially_differentiable_on(n,D,m,f,D,indices)
+            m>=1
+            m<=0
+            m<1
+            impossible m>=1
+    claim:
+        ? forall m closed_range(1,0),indices finite_seq(closed_range(1,n),m),p cart_n(R,n):
+            p $in D
+            $Calc::higher_order::is_ordered_partially_differentiable_on(n,D,m,f,D,indices)
+            =>:
+                $is_multi_continuous_at(\Calc::higher_order::ordered_partial_function<n,D,D,m>(f,indices),p,n)
+        by contra:
+            ? $is_multi_continuous_at(\Calc::higher_order::ordered_partial_function<n,D,D,m>(f,indices),p,n)
+            m>=1
+            m<=0
+            m<1
+            impossible m>=1
+    by def $is_scalar_c_k_on_open(n,D,0,f)
+
+thm real_vector_norm_congruence:
+    ? forall n N+,left,right cart_n(R,n):
+        left=right
+        =>:
+            euclidean_norm(left,n)=euclidean_norm(right,n)
+    euclidean_norm(left,n)=euclidean_norm(right,n)
+
+thm real_euclidean_distance_coordinate_norm:
+    ? forall n N+,point,center cart_n(R,n):
+        \Calc::main::real_euclidean_distance<n>(point,center)=euclidean_norm(fn(coord closed_range(1,n)) R {point(coord)-center(coord)},n)
+    by fn_extension:
+        ? \Calc::main::real_vector_sub<n>(point,center)=fn(coord closed_range(1,n)) R {point(coord)-center(coord)}
+        claim:
+            ? forall coord closed_range(1,n):
+                \Calc::main::real_vector_sub<n>(point,center)(coord)=fn(row closed_range(1,n)) R {point(row)-center(row)}(coord)
+            release thm Calc::main::real_vector_sub_component(n,point,center,coord)
+            fn(row closed_range(1,n)) R {point(row)-center(row)}(coord)=point(coord)-center(coord)
+    \Calc::main::real_euclidean_distance<n>(point,center)=euclidean_norm(\Calc::main::real_vector_sub<n>(point,center),n)
+    release thm real_vector_norm_congruence(n,\Calc::main::real_vector_sub<n>(point,center),fn(coord closed_range(1,n)) R {point(coord)-center(coord)})
+
+thm real_euclidean_interior_native_neighborhood:
+    ? forall n N+,D power_set(cart_n(R,n)),center cart_n(R,n):
+        $Calc::main::is_real_euclidean_interior(n,D,center)
+        =>:
+            exist radius R+ st {{x cart_n(R,n):euclidean_norm(fn(coord closed_range(1,n)) R {x(coord)-center(coord)},n)<radius} $subset D}
+    obtain r from exist radius R+ st {{x cart_n(R,n):\Calc::main::real_euclidean_distance<n>(x,center)<radius} $subset D}
+    claim:
+        ? forall x {u cart_n(R,n):euclidean_norm(fn(coord closed_range(1,n)) R {u(coord)-center(coord)},n)<r}:
+            x $in D
+        x $in cart_n(R,n)
+        release thm real_euclidean_distance_coordinate_norm(n,x,center)
+        euclidean_norm(fn(coord closed_range(1,n)) R {x(coord)-center(coord)},n)<r
+        \Calc::main::real_euclidean_distance<n>(x,center)<r
+        x $in {u cart_n(R,n):\Calc::main::real_euclidean_distance<n>(u,center)<r}
+        x $in D
+    by def {x cart_n(R,n):euclidean_norm(fn(coord closed_range(1,n)) R {x(coord)-center(coord)},n)<r} $subset D
+    witness exist radius R+ st {{x cart_n(R,n):euclidean_norm(fn(coord closed_range(1,n)) R {x(coord)-center(coord)},n)<radius} $subset D} from r
+
+thm ordered_second_partials_swap_c_two:
+    ? forall n N+,D power_set(cart_n(R,n)),f fn(x D) R,center cart_n(R,n),alpha,beta finite_seq(closed_range(1,n),2),A,B R:
+        center $in D
+        $is_scalar_c_k_on_open(n,D,2,f)
+        alpha(1)=beta(2)
+        alpha(2)=beta(1)
+        $Calc::higher_order::has_ordered_partial_at(n,D,2,f,center,alpha,A)
+        $Calc::higher_order::has_ordered_partial_at(n,D,2,f,center,beta,B)
+        =>:
+            A=B
+    D $subset cart_n(R,n)
+    $is_set(D)
+    D $in power_set(D)
+    D $subset D
+    $Calc::main::is_real_euclidean_interior(n,D,center)
+    release thm real_euclidean_interior_native_neighborhood(n,D,center)
+    $Calc::higher_order::is_ordered_partially_differentiable_on(n,D,2,f,D,alpha)
+    $Calc::higher_order::is_ordered_partially_differentiable_on(n,D,2,f,D,beta)
+    claim:
+        ? forall q D:
+            q $in cart_n(R,n)
+        q $in cart_n(R,n)
+    claim:
+        ? forall q D:
+            $Calc::higher_order::has_ordered_partial_at(n,D,2,f,q,alpha,\Calc::higher_order::ordered_partial_function<n,D,D,2>(f,alpha)(q))
+        release thm Calc::higher_order::ordered_partial_function_selected(n,D,2,f,D,alpha,q)
+    claim:
+        ? forall q D:
+            $Calc::higher_order::has_ordered_partial_at(n,D,2,f,q,beta,\Calc::higher_order::ordered_partial_function<n,D,D,2>(f,beta)(q))
+        release thm Calc::higher_order::ordered_partial_function_selected(n,D,2,f,D,beta,q)
+    claim:
+        ? forall q D:
+            $has_second_partial_derivative_at(f,q,n,alpha(1),alpha(2),\Calc::higher_order::ordered_partial_function<n,D,D,2>(f,alpha)(q))
+        release thm Calc::higher_order::ordered_partial_two_to_native(n,D,f,q,alpha,\Calc::higher_order::ordered_partial_function<n,D,D,2>(f,alpha)(q))
+    claim:
+        ? forall q D:
+            $has_second_partial_derivative_at(f,q,n,alpha(2),alpha(1),\Calc::higher_order::ordered_partial_function<n,D,D,2>(f,beta)(q))
+        release thm Calc::higher_order::ordered_partial_two_to_native(n,D,f,q,beta,\Calc::higher_order::ordered_partial_function<n,D,D,2>(f,beta)(q))
+        beta(1)=alpha(2)
+        beta(2)=alpha(1)
+    $is_multi_continuous_at(\Calc::higher_order::ordered_partial_function<n,D,D,2>(f,alpha),center,n)
+    $is_multi_continuous_at(\Calc::higher_order::ordered_partial_function<n,D,D,2>(f,beta),center,n)
+    release thm second_partial_at_swap_continuous(f,\Calc::higher_order::ordered_partial_function<n,D,D,2>(f,alpha),\Calc::higher_order::ordered_partial_function<n,D,D,2>(f,beta),center,n,alpha(1),alpha(2),D)
+    release thm Calc::higher_order::ordered_partial_function_value(n,D,2,f,D,alpha,center,A)
+    release thm Calc::higher_order::ordered_partial_function_value(n,D,2,f,D,beta,center,B)
+    A=\Calc::higher_order::ordered_partial_function<n,D,D,2>(f,alpha)(center)=\Calc::higher_order::ordered_partial_function<n,D,D,2>(f,beta)(center)=B
+
+thm unary_c_k_from_profiles:
+    ? forall D power_set(R),k N,functions fn(j closed_range(0,k)) fn(x D) R:
+        forall p R:
+            p $in D
+            =>:
+                exist radius R+ st {{x R:abs(x-p)<radius} $subset D}
+        forall j closed_range(1,k),x D:
+            j $in closed_range(0,k)
+            j-1 $in closed_range(0,k)
+            =>:
+                $has_derivative_at(functions(j-1),x,functions(j)(x))
+        forall j closed_range(0,k),p R:
+            p $in D
+            =>:
+                $is_continuous_at(functions(j),p)
+        =>:
+            $is_unary_c_k_on_open(D,k,functions(0))
+    D $subset R
+    $is_set(D)
+    D $in power_set(D)
+    claim:
+        ? forall p R:
+            p $in D
+            =>:
+                $is_continuous_at(functions(0),p)
+        0 $in closed_range(0,k)
+        $is_continuous_at(functions(0),p)
+    claim:
+        ? forall m closed_range(1,k),p D:
+            $Calc::unary_higher_order::has_nth_derivative_at(D,m,functions(0),p,functions(m)(p))
+        m $in closed_range(0,k)
+        claim:
+            ? forall j closed_range(0,m):
+                j $in closed_range(0,k)
+            j>=0
+            j<=m
+            m<=k
+            j<=k
+        have fn prefix(j closed_range(0,m)) fn(x D) R=functions(j)
+        claim:
+            ? forall j closed_range(1,m),x D:
+                j $in closed_range(0,m)
+                j-1 $in closed_range(0,m)
+                =>:
+                    $has_derivative_at(prefix(j-1),x,prefix(j)(x))
+            j $in closed_range(1,k)
+            j $in closed_range(0,k)
+            j-1 $in closed_range(0,k)
+            prefix(j-1)=functions(j-1)
+            prefix(j)(x)=functions(j)(x)
+            $has_derivative_at(functions(j-1),x,functions(j)(x))
+        0 $in closed_range(0,m)
+        m $in closed_range(0,m)
+        prefix(0)=functions(0)
+        prefix(m)=functions(m)
+        prefix(m)(p)=functions(m)(p)
+        release thm Calc::unary_higher_order::nth_derivative_from_profiles_on(D,m,prefix,p)
+    claim:
+        ? forall m closed_range(1,k):
+            $Calc::unary_higher_order::is_n_times_differentiable_on(D,m,functions(0),D)
+        claim:
+            ? forall p D:
+                $Calc::unary_higher_order::is_n_times_differentiable_at(D,m,functions(0),p)
+            release thm Calc::unary_higher_order::nth_derivative_candidate_exists(D,m,functions(0),p,functions(m)(p))
+        by def $Calc::unary_higher_order::is_n_times_differentiable_on(D,m,functions(0),D)
+    claim:
+        ? forall m closed_range(1,k),p R:
+            p $in D
+            $Calc::unary_higher_order::is_n_times_differentiable_on(D,m,functions(0),D)
+            =>:
+                $is_continuous_at(\Calc::unary_higher_order::nth_derivative_function<D,D,m>(functions(0)),p)
+        m $in closed_range(0,k)
+        by fn_extension:
+            ? \Calc::unary_higher_order::nth_derivative_function<D,D,m>(functions(0))=functions(m)
+            claim:
+                ? forall x D:
+                    \Calc::unary_higher_order::nth_derivative_function<D,D,m>(functions(0))(x)=functions(m)(x)
+                $Calc::unary_higher_order::has_nth_derivative_at(D,m,functions(0),x,functions(m)(x))
+                release thm Calc::unary_higher_order::nth_derivative_function_value(D,m,functions(0),D,x,functions(m)(x))
+        $is_continuous_at(functions(m),p)
+        $is_continuous_at(\Calc::unary_higher_order::nth_derivative_function<D,D,m>(functions(0)),p)
+    by def $is_unary_c_k_on_open(D,k,functions(0))
+
+prop is_continuous_ordered_partial_on(n N+,D power_set(cart_n(R,n)),k N,f fn(x D) R,indices finite_seq(closed_range(1,n),k),g fn(x D) R):
+    forall p D:
+        $Calc::higher_order::has_ordered_partial_at(n,D,k,f,p,indices,g(p))
+    forall p cart_n(R,n):
+        p $in D
+        =>:
+            $is_multi_continuous_at(g,p,n)
+
+thm scalar_c_k_from_continuous_candidates:
+    ? forall n N+,D power_set(cart_n(R,n)),k N,f fn(x D) R:
+        forall p cart_n(R,n):
+            p $in D
+            =>:
+                $Calc::main::is_real_euclidean_interior(n,D,p)
+        forall p cart_n(R,n):
+            p $in D
+            =>:
+                $is_multi_continuous_at(f,p,n)
+        forall m closed_range(1,k),indices finite_seq(closed_range(1,n),m):
+            exist g fn(x D) R st {$is_continuous_ordered_partial_on(n,D,m,f,indices,g)}
+        =>:
+            $is_scalar_c_k_on_open(n,D,k,f)
+    D $subset cart_n(R,n)
+    $is_set(D)
+    D $in power_set(D)
+    claim:
+        ? forall m closed_range(1,k),indices finite_seq(closed_range(1,n),m):
+            $Calc::higher_order::is_ordered_partially_differentiable_on(n,D,m,f,D,indices)
+        obtain g from exist g fn(x D) R st {$is_continuous_ordered_partial_on(n,D,m,f,indices,g)}
+        claim:
+            ? forall p D:
+                $Calc::higher_order::is_ordered_partially_differentiable_at(n,D,m,f,p,indices)
+            release thm Calc::higher_order::ordered_partial_candidate_exists(n,D,m,f,p,indices,g(p))
+        by def $Calc::higher_order::is_ordered_partially_differentiable_on(n,D,m,f,D,indices)
+    claim:
+        ? forall m closed_range(1,k),indices finite_seq(closed_range(1,n),m),p cart_n(R,n):
+            p $in D
+            $Calc::higher_order::is_ordered_partially_differentiable_on(n,D,m,f,D,indices)
+            =>:
+                $is_multi_continuous_at(\Calc::higher_order::ordered_partial_function<n,D,D,m>(f,indices),p,n)
+        obtain g from exist g fn(x D) R st {$is_continuous_ordered_partial_on(n,D,m,f,indices,g)}
+        by fn_extension:
+            ? \Calc::higher_order::ordered_partial_function<n,D,D,m>(f,indices)=g
+            claim:
+                ? forall x D:
+                    \Calc::higher_order::ordered_partial_function<n,D,D,m>(f,indices)(x)=g(x)
+                release thm Calc::higher_order::ordered_partial_function_value(n,D,m,f,D,indices,x,g(x))
+        $is_multi_continuous_at(g,p,n)
+        $is_multi_continuous_at(\Calc::higher_order::ordered_partial_function<n,D,D,m>(f,indices),p,n)
+    by def $is_scalar_c_k_on_open(n,D,k,f)
+
+thm unary_constant_smooth:
+    ? forall f fn(x R) R,a R:
+        forall x R:
+            f(x)=a
+        =>:
+            $is_unary_smooth_on_open(R,f)
+    have fn zero(x R) R=0
+    claim:
+        ? forall k N:
+            $is_unary_c_k_on_open(R,k,f)
+        claim:
+            ? forall j closed_range(0,k):
+                j=0 or j!=0
+            j=0 or j!=0
+        have fn functions(j closed_range(0,k)) fn(x R) R by cases:
+            case j=0: f
+            case j!=0: zero
+        claim:
+            ? forall p R:
+                p $in R
+                =>:
+                    exist radius R+ st {{x R:abs(x-p)<radius} $subset R}
+            witness exist radius R+ st {{x R:abs(x-p)<radius} $subset R} from 1
+        claim:
+            ? forall j closed_range(1,k),p R:
+                j $in closed_range(0,k)
+                j-1 $in closed_range(0,k)
+                =>:
+                    $has_derivative_at(functions(j-1),p,functions(j)(p))
+            j>=1
+            j!=0
+            functions(j)=zero
+            functions(j)(p)=zero(p)=0
+            j-1=0 or j-1!=0
+            by cases:
+                ? $has_derivative_at(functions(j-1),p,functions(j)(p))
+                case j-1=0:
+                    functions(j-1)=f
+                    release thm fn_derivative_at_real_interior(p)
+                    release thm fn_derivative_at_constant(f,p,a)
+                case j-1!=0:
+                    functions(j-1)=zero
+                    $has_derivative_at(zero,p,0)
+        claim:
+            ? forall j closed_range(0,k),p R:
+                p $in R
+                =>:
+                    $is_continuous_at(functions(j),p)
+            j=0 or j!=0
+            by cases:
+                ? $is_continuous_at(functions(j),p)
+                case j=0:
+                    functions(j)=f
+                    release thm fn_continuous_at_constant(f,p,a)
+                case j!=0:
+                    functions(j)=zero
+                    $is_continuous_at(zero,p)
+        release thm unary_c_k_from_profiles(R,k,functions)
+        functions(0)=f
+        $is_unary_c_k_on_open(R,k,f)
+    by def $is_unary_smooth_on_open(R,f)
+
+thm scalar_constant_smooth:
+    ? forall n N+,f fn(x cart_n(R,n)) R,a R:
+        forall x cart_n(R,n):
+            f(x)=a
+        =>:
+            $is_scalar_smooth_on_open(n,cart_n(R,n),f)
+    have fn constant(x cart_n(R,n)) R=a
+    by fn_extension:
+        ? f=constant
+        claim:
+            ? forall x cart_n(R,n):
+                f(x)=constant(x)
+            f(x)=a=constant(x)
+    have fn zero(x cart_n(R,n)) R=0
+    claim:
+        ? forall k N:
+            $is_scalar_c_k_on_open(n,cart_n(R,n),k,f)
+        claim:
+            ? forall p cart_n(R,n):
+                p $in cart_n(R,n)
+                =>:
+                    $Calc::main::is_real_euclidean_interior(n,cart_n(R,n),p)
+            release thm Calc::main::real_euclidean_full_space_interior(n,p)
+        claim:
+            ? forall p cart_n(R,n):
+                p $in cart_n(R,n)
+                =>:
+                    $is_multi_continuous_at(f,p,n)
+            $is_multi_continuous_at(constant,p,n)
+            $is_multi_continuous_at(f,p,n)
+        claim:
+            ? forall m closed_range(1,k),indices finite_seq(closed_range(1,n),m):
+                exist g fn(x cart_n(R,n)) R st {$is_continuous_ordered_partial_on(n,cart_n(R,n),m,f,indices,g)}
+            claim:
+                ? forall j closed_range(0,m):
+                    j=0 or j!=0
+                j=0 or j!=0
+            have fn functions(j closed_range(0,m)) fn(x cart_n(R,n)) R by cases:
+                case j=0: f
+                case j!=0: zero
+            claim:
+                ? forall j closed_range(1,m),p cart_n(R,n):
+                    $has_partial_derivative_at(functions(j-1),p,n,indices(j),functions(j)(p))
+                j $in closed_range(0,m)
+                j-1 $in closed_range(0,m)
+                j>=1
+                j!=0
+                functions(j)=zero
+                functions(j)(p)=zero(p)=0
+                j-1=0 or j-1!=0
+                by cases:
+                    ? $has_partial_derivative_at(functions(j-1),p,n,indices(j),functions(j)(p))
+                    case j-1=0:
+                        functions(j-1)=f
+                        $has_partial_derivative_at(constant,p,n,indices(j),0)
+                        $has_partial_derivative_at(f,p,n,indices(j),0)
+                    case j-1!=0:
+                        functions(j-1)=zero
+                        $has_partial_derivative_at(zero,p,n,indices(j),0)
+            claim:
+                ? forall p cart_n(R,n):
+                    $Calc::higher_order::has_ordered_partial_at(n,cart_n(R,n),m,f,p,indices,zero(p))
+                m $in closed_range(0,m)
+                0 $in closed_range(0,m)
+                m>=1
+                m!=0
+                functions(0)=f
+                functions(m)=zero
+                functions(m)(p)=zero(p)
+                release thm Calc::higher_order::ordered_partial_from_global_profiles(n,m,functions,p,indices)
+            claim:
+                ? forall p cart_n(R,n):
+                    p $in cart_n(R,n)
+                    =>:
+                        $is_multi_continuous_at(zero,p,n)
+                $is_multi_continuous_at(zero,p,n)
+            by def $is_continuous_ordered_partial_on(n,cart_n(R,n),m,f,indices,zero)
+            witness exist g fn(x cart_n(R,n)) R st {$is_continuous_ordered_partial_on(n,cart_n(R,n),m,f,indices,g)} from zero
+        release thm scalar_c_k_from_continuous_candidates(n,cart_n(R,n),k,f)
+    by def $is_scalar_smooth_on_open(n,cart_n(R,n),f)

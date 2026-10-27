@@ -1,0 +1,25 @@
+# Tracer: one finite operand bounds an intersection with an arbitrary set.
+# Before: the following true right/left-bounded finiteness statements were rejected.
+# forall E set, point R:
+#     $is_finite_set(intersect(E,{point}))
+# 
+# forall E set, point R:
+#     $is_finite_set(intersect({point},E))
+# Now: separate one-premise structural strategies verify both sides.
+# Existing child permissions, known-first ordering and both-finite evidence stay intact.
+# Evidence: target/release/litex -lang en -strict -f examples/wd/finite_intersection_one_bound.lit
+
+forall E set, point R:
+    $is_finite_set(intersect(E,{point}))
+
+forall E set, point R:
+    $is_finite_set(intersect({point},E))
+
+forall A finite_set,B set:
+    $is_finite_set(intersect(A,B))
+
+forall A set,B finite_set:
+    $is_finite_set(intersect(A,B))
+
+forall E set,point R:
+    finite_set_size(intersect(E,{point})) $in N

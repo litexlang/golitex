@@ -62,6 +62,44 @@ fn project_scalar_aggregate_by_def(
     result
 }
 
+fn project_fold_by_def(
+    obj: &Obj,
+    kind: &str,
+    children: &[Box<ObjWellDefinedProof>],
+    requirements: &[crate::execute::execute_fact_stmt::VerifyFactResult],
+    operation: &Option<
+        crate::execute::execute_fact_stmt::function_signature_selection::FunctionSignatureSelection,
+    >,
+    iterand: &Option<
+        crate::execute::execute_fact_stmt::function_signature_selection::FunctionSignatureSelection,
+    >,
+    runtime: &Runtime,
+) -> JsonValue {
+    let mut result = project_common_by_def(
+        obj,
+        "IteratedOperator",
+        kind,
+        children,
+        requirements,
+        runtime,
+    );
+    if let JsonValue::Object(fields) = &mut result {
+        for (name, selected) in [
+            ("operation_signature_selection", operation),
+            ("iterand_signature_selection", iterand),
+        ] {
+            fields.insert(
+                name.into(),
+                selected
+                    .as_ref()
+                    .map(|s| super::store::project_signature_selection(s, runtime))
+                    .unwrap_or(JsonValue::Null),
+            );
+        }
+    }
+    result
+}
+
 pub(super) fn project_obj_wd_by_def(
     obj: &Obj,
     proof: &ObjWellDefinedProofByDef,
@@ -776,12 +814,13 @@ pub(super) fn project_obj_wd_by_def(
         ),
         ObjWellDefinedProofByDef::IteratedOperator(
             IteratedOperatorObjWellDefinedProofByDef::FiniteSetReduce(p),
-        ) => project_common_by_def(
+        ) => project_fold_by_def(
             obj,
-            "IteratedOperator",
             "FiniteSetReduce",
             &p.child_obj_well_defined,
             &p.requirement_fact_verified,
+            &p.operation_signature_selection,
+            &p.iterand_signature_selection,
             runtime,
         ),
         ObjWellDefinedProofByDef::IteratedOperator(
@@ -808,12 +847,13 @@ pub(super) fn project_obj_wd_by_def(
         ),
         ObjWellDefinedProofByDef::IteratedOperator(
             IteratedOperatorObjWellDefinedProofByDef::Reduce(p),
-        ) => project_common_by_def(
+        ) => project_fold_by_def(
             obj,
-            "IteratedOperator",
             "Reduce",
             &p.child_obj_well_defined,
             &p.requirement_fact_verified,
+            &p.operation_signature_selection,
+            &p.iterand_signature_selection,
             runtime,
         ),
         ObjWellDefinedProofByDef::IteratedOperator(

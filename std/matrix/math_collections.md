@@ -41,6 +41,13 @@ No eigenvector or arbitrary solution selector is introduced.
 
 | Source theorem | Mathematical result |
 | --- | --- |
+| `matrix_add_commutative` | Entrywise addition commutes |
+| `matrix_add_associative` | Entrywise addition associates |
+| `matrix_add_zero` | Zero is both a left and right additive identity |
+| `matrix_sub_self` | Subtracting a matrix from itself gives the zero matrix |
+| `matrix_scale_one` | Scaling by one preserves the matrix |
+| `matrix_scale_zero` | Scaling by zero gives the zero matrix |
+| `matrix_scale_distributive` | Scalar multiplication distributes over entrywise addition |
 | `matrix_inverse_candidate_unique` | Two double-sided inverse candidates agree |
 | `matrix_inverse_candidate_nonsingular` | A candidate proves det≠0 |
 | `matrix_inverse_candidate_selected` | A candidate equals the selected inverse |
@@ -64,6 +71,13 @@ No eigenvector or arbitrary solution selector is introduced.
 3. Ordinary vector helpers, inverse and rank relations, matrix properties.
 4. Source inverse/rank theorems, then unitary inversion and system solving.
 5. Kernel/image, spectrum and diagonalization interfaces for later developments.
+
+The seven entrywise source laws depend only on native component formulas,
+scalar identities and complete-domain function extensionality. Their source
+calls preserve the former builtin argument order, with matrix membership as
+explicit premises following set-kind binders. They work at all natural sizes,
+including empty row or column domains. Their former native BT identities and
+handlers have been removed; the other matrix schemas remain dependencies.
 
 The module relies on native mathematical schemas for determinant, inverse and
 rank theorems. It supplies no user axioms or unchecked proofs. Spectral

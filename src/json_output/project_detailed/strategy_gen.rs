@@ -606,6 +606,18 @@ pub(super) fn project_atomic_builtin_strategy(
             ("strategy", string("IntersectFiniteFromBoth")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::IntersectFiniteFromLeft(p) => object_for(runtime, vec![
+            ("type", string("builtin_strategy")),
+            ("strategy", string("IntersectFiniteFromLeft")),
+            ("requirement_facts", JsonValue::Array(p.requirement_facts.iter().map(|f| string(f.readable_string())).collect())),
+            ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::IntersectFiniteFromRight(p) => object_for(runtime, vec![
+            ("type", string("builtin_strategy")),
+            ("strategy", string("IntersectFiniteFromRight")),
+            ("requirement_facts", JsonValue::Array(p.requirement_facts.iter().map(|f| string(f.readable_string())).collect())),
+            ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
+        ]),
         AtomicExceptEqualityFactSearchProofByBuiltinStrategy::SetMinusFiniteFromLeft(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("SetMinusFiniteFromLeft")),

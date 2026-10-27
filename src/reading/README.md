@@ -5,12 +5,36 @@ mathematical statements and proofs are expressed in Litex source, with inferred
 facts displayed beside the statements that produce them. Definitions, parameter
 domains and proof references are accessible by interacting with that source.
 Readers do not need to open a separate Info View to follow the mathematics.
-The explanation panel supplements this reading with optional detail; it is
-not a required second place to reconstruct the mathematical argument.
+Explanations and proof grounds open on demand beside the selected source.
+There is no standing mathematical-meaning pane; readers close the contextual
+explanation to return to the unobstructed source.
 
 This module connects the source to its actual verification evidence, so readers
 can follow citations back to facts, definitions and rules. Concept highlighting
 follows resolved symbol identity, separately from proof dependencies.
+
+Hover a fact's predicate or the unused area of its source row for a transient
+proof preview; focusing its line number provides the same keyboard access.
+The preview follows that primary fact's own evidence and exact source line,
+including conclusions nested inside a larger proof. Its premise links navigate
+to actual FactIds. Object, operator and keyword hover retains semantic help.
+Mathematical premises are visible first; parameter and expression conditions
+remain available in a disclosure. Verified chains expose their adjacent steps
+from the recorded result, rather than treating the enclosing statement's entire
+citation list as the proof of each line. Hypotheses are labeled as hypotheses.
+Moving away, Escape, editing, navigation or closing the preview dismisses it.
+Unchecked or unmapped lines do not receive guessed proof evidence. Missing
+fact-specific proof steps are stated explicitly; authored summaries currently
+cover selected proof forms, not every kernel rule. JSON remains the underlying
+evidence format, not a second reading surface.
+
+Quantified fact references use retained `ForallFact` and `TypedParameterGroup`
+structure to render their binders: `∀ X 是集合`, `∀ X 是非空集合`, and
+`∀ X 是有限集合` distinguish the three set kinds; ordinary domains use
+membership, such as `∀ x ∈ ℝ` or `∀ x ∈ A`. Grouped names, dependent domains,
+nested scopes, premises and conclusions are preserved. English uses set-kind
+annotations in English. Missing or unsupported structure keeps the complete
+original formula instead of guessing a quantifier header from its text.
 
 ## Current status
 
@@ -52,7 +76,7 @@ reading form of the declared typed interface; quantified conditions retain
 their whole scope. Click the source keyword `prop` for the
 purpose/semantics guide and its checked short example. Source keyword help
 supports Enter/Space; Escape returns focus to its keyword. A new statement
-selection restores mathematical content. The right pane’s type caption is plain
+selection restores mathematical content. The contextual explanation’s type caption is plain
 text. Usage hints, the color legend and record explanation live in the footer’s
 Reading help disclosure. Small file-local reference counts appear at every explicit declaration;
 its occurrence list starts closed. Hover/focus uses resolved definition spans
@@ -260,11 +284,12 @@ are rendered, and locale is propagated across navigation. This does not extend
 the proof schema or merge failure bundles into a successful collection. See
 `examples/reading/homepage/export_gallery.py` for the reproducible builder.
 
-### Stable inspector and reference cards
+### Contextual explanations and reference cards
 
-The inspector has a viewport-scaled fixed height, independent of the selected
-statement. Its content scrolls internally, including long proof grounds. The
-editor remains editable when a source token is clicked to inspect its help.
+The source occupies the full reading width. A contextual explanation opens
+only after a source interaction, stays within the viewport and scrolls internally
+when necessary. Close it with its close button, Escape or an outside click.
+Changing examples closes it. The editor remains editable when inspecting help.
 
 Authored builtin reference cards are shared by hover and click. Numeric cards
 state input restrictions and results (for example `+` takes two complex numbers
@@ -276,7 +301,7 @@ the current verifier. These cards describe builtin contracts, not an inferred
 type of the selected expression; resolved user declarations keep their own help.
 
 Detailed keyword cards currently cover `prop`, `by def`, `forall`, `claim`,
-`have fn` and `by contra`: summary, syntax, behavior/restrictions and a runnable
+`have fn`, `by contra` and `release thm`: summary, syntax, behavior/restrictions and a runnable
 example. Other existing keyword hints remain concise. Numeric cards cover
 arithmetic, real elementary/trigonometric/hyperbolic functions, integer
 operations and complex parts/modulus; this is not exhaustive builtin coverage.
@@ -289,4 +314,20 @@ predicate meaning, the complete defining equivalence, declaration versus
 instance, and proof by substitution. Its equivalence is rendered with the
 shared local math renderer, with complete text fallback. Hover retains the
 compact reference and example, linking the reader to the full explanation by
-clicking the source keyword. Detailed content scrolls inside the fixed panel.
+clicking the source keyword. Detailed content scrolls inside the contextual explanation.
+
+Theorem highlighting follows retained `TheoremCall` symbol references, not
+name spelling. A retained resolved `Builtin` callee marks builtin theorem
+identity; ordinary user theorems and mathematical objects remain distinct.
+`release thm` has a shared hover/click reference explaining argument
+instantiation, parameter-domain and premise verification, and publication of
+all theorem conclusions. Its checked prime-divides-power example uses the
+actual `(a, k, p)` parameter order. Builtin theorem cards currently give
+mathematical statements for prime-divides-power and unique reduced fractions;
+other builtin theorem names retain an honest category description.
+
+Unique existence `exist!` is one highlighted/help span even when retained
+lexical tokens split `exist` and `!`. The reader also accepts horizontal spacing
+between these tokens, matching the parser. Its hint states existence and
+uniqueness together; ordinary `exist` retains its existential hint and a
+factorial `!` is not absorbed into a quantifier.

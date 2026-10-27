@@ -8,13 +8,11 @@ sketch:
     $is_set(A)
 
 # P02: by thm set_builder_member(2, {x R: x > 0}) => 2 $in {x R: x > 0}
-sketch:
-    by thm set_builder_member(2, {x R: x > 0}) => 2 $in {x R: x > 0}
+by thm set_builder_member(2, {x R: x > 0}) => 2 $in {x R: x > 0}
 
 # P03: x > 0
-sketch:
-    forall x {y R: y > 0}:
-        x > 0
+forall x {y R: y > 0}:
+    x > 0
 
 # P04: $is_set(A)
 sketch:

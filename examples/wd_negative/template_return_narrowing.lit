@@ -1,0 +1,5 @@
+template<S set>:
+    have fn real_identity(x R) R = x
+
+forall x R:
+    \real_identity<R>(x) $in Z

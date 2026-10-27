@@ -1,41 +1,32 @@
 # AST: Obj::ComplexOperator::RealPart
 # Run: target/release/litex -f examples/test_objs/real_part.lit
-# Cases use discarded sketch scopes; no cross-case facts.
+# Cases are checked directly in file context.
 
 # P01: re(0) = 0
-sketch:
-    re(0) = 0
+re(0) = 0
 
 # P02: re(i) = 0
-sketch:
-    re(i) = 0
+re(i) = 0
 
 # P03: re(3 + 2 * i) = 3
-sketch:
-    re(3 + 2 * i) = 3
+re(3 + 2 * i) = 3
 
 # P04: re(-2 - i) = -2
-sketch:
-    re(-2 - i) = re(-2) - re(i) = -2 - 0 = -2
+re(-2 - i) = re(-2) - re(i) = -2 - 0 = -2
 
 # P05: re(x) = x
-sketch:
-    forall x R:
-        re(x) = x
+forall x R:
+    re(x) = x
 
 # P06: re(i * i) = -1
-sketch:
-    i * i = -1
-    re(i * i) = re(-1) = -1
+i * i = -1
+re(i * i) = re(-1) = -1
 
 # P121: closed exact elementary calculation
-sketch:
-    re((1+2*i)*(3-i))=5
+re((1+2*i)*(3-i))=5
 
 # P122: closed exact elementary calculation
-sketch:
-    re((1+2*i)/(3-i))=1/10
+re((1+2*i)/(3-i))=1/10
 
 # P123: closed exact elementary calculation
-sketch:
-    re((1+i)^(-1))=1/2
+re((1+i)^(-1))=1/2

@@ -419,24 +419,16 @@ impl LitexToLeanCompiler {
             | InferAtomicFactResult::NotMultivariableAnalysisFact(_) => Err(
                 LeanCompileError::unsupported("Inference/MultivariableAnalysis"),
             ),
-            InferAtomicFactResult::RealSetBoundFact(_) => {
-                Err(LeanCompileError::unsupported("Inference/RealAnalysis"))
+            InferAtomicFactResult::RealSetBoundFact(_)
+            | InferAtomicFactResult::RealSetBoundedFact(_) => {
+                self.compile_real_bound_inferences(infer, seed, compiled, position)
             }
-            InferAtomicFactResult::NotRealSetBoundFact(_) => {
-                Err(LeanCompileError::unsupported("Inference/RealAnalysis"))
-            }
-            InferAtomicFactResult::RealSetBoundedFact(_) => {
-                Err(LeanCompileError::unsupported("Inference/RealAnalysis"))
-            }
-            InferAtomicFactResult::NotRealSetBoundedFact(_) => {
-                Err(LeanCompileError::unsupported("Inference/RealAnalysis"))
-            }
+            InferAtomicFactResult::NotRealSetBoundFact(_)
+            | InferAtomicFactResult::NotRealSetBoundedFact(_) => Ok(Vec::new()),
             InferAtomicFactResult::SequenceAnalysisFact(_) => {
-                Err(LeanCompileError::unsupported("Inference/RealAnalysis"))
+                self.compile_sequence_analysis_inferences(infer, seed, compiled, position)
             }
-            InferAtomicFactResult::NotSequenceAnalysisFact(_) => {
-                Err(LeanCompileError::unsupported("Inference/RealAnalysis"))
-            }
+            InferAtomicFactResult::NotSequenceAnalysisFact(_) => Ok(Vec::new()),
             InferAtomicFactResult::RealAccumulationFact(_) => {
                 Err(LeanCompileError::unsupported("Inference/RealAnalysis"))
             }
@@ -480,9 +472,7 @@ impl LitexToLeanCompiler {
                 Err(LeanCompileError::unsupported("Inference/FunctionLimit"))
             }
             InferAtomicFactResult::HasSequenceLimitFact(_)
-            | InferAtomicFactResult::NotHasSequenceLimitFact(_) => {
-                Err(LeanCompileError::unsupported("Inference/SequenceLimit"))
-            }
+            | InferAtomicFactResult::NotHasSequenceLimitFact(_) => Ok(Vec::new()),
             InferAtomicFactResult::HasSequenceLimsupFact(_)
             | InferAtomicFactResult::NotHasSequenceLimsupFact(_) => {
                 Err(LeanCompileError::unsupported("Inference/SequenceLimsup"))
@@ -509,6 +499,11 @@ impl LitexToLeanCompiler {
                         ..*position
                     };
                     match rule {
+                        InferInFactResult::PowerSet(p) => {
+                            declarations.extend(
+                                self.compile_power_set_inference(p, seed, compiled, &prior)?,
+                            );
+                        }
                         InferInFactResult::Preimage(p) => {
                             declarations.extend(self.compile_preimage_inference(
                                 false,
@@ -560,33 +555,12 @@ impl LitexToLeanCompiler {
                                 self.compile_range_inference(proof, seed, compiled, &prior)?,
                             );
                         }
-                        InferInFactResult::SeqExpand(proof) => {
-                            if !matches!(seed, Fact::AtomicFact(AtomicFact::InFact(f))
-                                if matches!(&f.set, Obj::SetFormer(SetFormer::SeqSet(_))))
-                            {
-                                return Err(LeanCompileError::unsupported("Seq/InferenceSource"));
-                            }
-                            declarations.extend(self.compile_sequence_inference(
-                                &proof.derived,
-                                seed,
-                                compiled,
-                                &prior,
-                            )?);
-                        }
-                        InferInFactResult::FiniteSeqExpand(proof) => {
-                            if !matches!(seed, Fact::AtomicFact(AtomicFact::InFact(f))
-                                if matches!(&f.set, Obj::SetFormer(SetFormer::FiniteSeqSet(_))))
-                            {
-                                return Err(LeanCompileError::unsupported(
-                                    "FiniteSeq/InferenceSource",
-                                ));
-                            }
-                            declarations.extend(self.compile_sequence_inference(
-                                &proof.derived,
-                                seed,
-                                compiled,
-                                &prior,
-                            )?);
+                        InferInFactResult::SeqExpand(_)
+                        | InferInFactResult::FiniteSeqExpand(_)
+                        | InferInFactResult::MatrixExpand(_) => {
+                            declarations.extend(
+                                self.compile_sequence_inference(rule, seed, compiled, &prior)?,
+                            );
                         }
                         InferInFactResult::RealInterval(p) => {
                             declarations.extend(self.compile_real_interval_inference(
@@ -684,6 +658,7 @@ impl LitexToLeanCompiler {
                     if matches!(
                         rule,
                         InferInFactResult::SetBuilder(_)
+                            | InferInFactResult::PowerSet(_)
                             | InferInFactResult::Preimage(_)
                             | InferInFactResult::PreimageSet(_)
                             | InferInFactResult::SignedStandardSetSign(_)
@@ -693,6 +668,7 @@ impl LitexToLeanCompiler {
                             | InferInFactResult::OneSideRealInterval(_)
                             | InferInFactResult::SeqExpand(_)
                             | InferInFactResult::FiniteSeqExpand(_)
+                            | InferInFactResult::MatrixExpand(_)
                             | InferInFactResult::Range(_)
                             | InferInFactResult::ClosedRange(_)
                             | InferInFactResult::UnionOr(_)

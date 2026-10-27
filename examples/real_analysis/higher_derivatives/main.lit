@@ -1,0 +1,181 @@
+# Unary real finite-order derivatives, proved before selection.
+# Supplied profiles are checked with existing first-derivative BTs.
+
+have fn cubic(x R) R=x^3
+
+have fn cubic_first(x R) R=3*x^2
+
+have fn cubic_second(x R) R=6*x
+
+have fn cubic_third(x R) R=6
+
+by for:
+    ? forall j closed_range(0,3):
+        j=0 or j=1 or j=2 or j=3
+    j=0 or j=1 or j=2 or j=3
+
+have fn unary_profiles(j closed_range(0,3)) fn(x R) R by cases:
+    case j=0: cubic
+    case j=1: cubic_first
+    case j=2: cubic_second
+    case j=3: cubic_third
+
+by for:
+    ? forall j closed_range(1,3):
+        j=1 or j=2 or j=3
+    j=1 or j=2 or j=3
+
+have fn real_identity(x R) R=x
+
+have fn real_square(x R) R=x^2
+
+thm cubic_first_derivative:
+    ? forall x R:
+        $has_derivative_at(cubic,x,3*x^2)
+    release thm fn_derivative_at_real_interior(x)
+    release thm fn_derivative_at_identity(real_identity,x)
+    release thm fn_derivative_at_power(real_identity,cubic,x,1,3)
+    real_identity(x)=x
+    max(3,1)=3
+    max(3,1)-1=2
+    real_identity(x)^(max(3,1)-1)=real_identity(x)^2=x^2
+    3*real_identity(x)^(max(3,1)-1)=3*x^2
+    (3*real_identity(x)^(max(3,1)-1))*1=3*x^2
+    $has_derivative_at(cubic,x,3*x^2)
+
+thm cubic_second_derivative:
+    ? forall x R:
+        $has_derivative_at(cubic_first,x,6*x)
+    release thm fn_derivative_at_real_interior(x)
+    release thm fn_derivative_at_identity(real_identity,x)
+    release thm fn_derivative_at_power(real_identity,real_square,x,1,2)
+    real_identity(x)=x
+    max(2,1)-1=1
+    real_identity(x)^(max(2,1)-1)=real_identity(x)^1=x
+    2*real_identity(x)^(max(2,1)-1)=2*x
+    (2*real_identity(x)^(max(2,1)-1))*1=2*x
+    $has_derivative_at(real_square,x,2*x)
+    release thm fn_derivative_at_scale(real_square,cubic_first,x,2*x,3)
+    3*(2*x)=6*x
+    $has_derivative_at(cubic_first,x,6*x)
+
+thm cubic_third_derivative:
+    ? forall x R:
+        $has_derivative_at(cubic_second,x,6)
+    release thm fn_derivative_at_real_interior(x)
+    release thm fn_derivative_at_identity(real_identity,x)
+    release thm fn_derivative_at_scale(real_identity,cubic_second,x,1,6)
+    6*1=6
+    $has_derivative_at(cubic_second,x,6)
+
+claim:
+    ? forall j closed_range(1,3),x R:
+        j $in closed_range(0,3)
+        j-1 $in closed_range(0,3)
+        =>:
+            $has_derivative_at(unary_profiles(j-1),x,unary_profiles(j)(x))
+    j=1 or j=2 or j=3
+    by cases:
+        ? $has_derivative_at(unary_profiles(j-1),x,unary_profiles(j)(x))
+        case j=1:
+            j-1=0
+            unary_profiles(j-1)=unary_profiles(0)=cubic
+            unary_profiles(j)=unary_profiles(1)=cubic_first
+            unary_profiles(j)(x)=cubic_first(x)=3*x^2
+            release thm cubic_first_derivative(x)
+            $has_derivative_at(cubic,x,3*x^2)
+        case j=2:
+            j-1=1
+            unary_profiles(j-1)=unary_profiles(1)=cubic_first
+            unary_profiles(j)=unary_profiles(2)=cubic_second
+            unary_profiles(j)(x)=cubic_second(x)=6*x
+            release thm cubic_second_derivative(x)
+            $has_derivative_at(cubic_first,x,6*x)
+        case j=3:
+            j-1=2
+            unary_profiles(j-1)=unary_profiles(2)=cubic_second
+            unary_profiles(j)=unary_profiles(3)=cubic_third
+            unary_profiles(j)(x)=cubic_third(x)=6
+            release thm cubic_third_derivative(x)
+            $has_derivative_at(cubic_second,x,6)
+
+release thm Calc::unary_higher_order::nth_derivative_from_global_profiles(3,unary_profiles,2)
+
+unary_profiles(0)=cubic
+
+unary_profiles(3)=cubic_third
+
+unary_profiles(3)(2)=cubic_third(2)=6
+
+$Calc::unary_higher_order::has_nth_derivative_at(R,3,cubic,2,6)
+
+release thm Calc::unary_higher_order::nth_derivative_candidate_exists(R,3,cubic,2,6)
+
+release thm Calc::unary_higher_order::nth_derivative_value(R,3,cubic,2,6)
+
+\Calc::unary_higher_order::nth_derivative<R,3>(cubic,2)=6
+
+release thm Calc::unary_higher_order::nth_derivative_zero(R,cubic,2)
+
+cubic(2)=8
+
+release thm Calc::unary_higher_order::nth_derivative_candidate_exists(R,0,cubic,2,8)
+
+release thm Calc::unary_higher_order::nth_derivative_value(R,0,cubic,2,8)
+
+\Calc::unary_higher_order::nth_derivative<R,0>(cubic,2)=8
+
+release thm cubic_first_derivative(2)
+
+$has_derivative_at(cubic,2,12)
+
+release thm Calc::unary_higher_order::nth_derivative_one_from_native(R,cubic,2,12)
+
+release thm Calc::unary_higher_order::nth_derivative_candidate_exists(R,1,cubic,2,12)
+
+release thm Calc::unary_higher_order::nth_derivative_value(R,1,cubic,2,12)
+
+\Calc::unary_higher_order::nth_derivative<R,1>(cubic,2)=12
+
+have fn positive_cubic(x R+) R=x^3
+
+$has_derivative_at(positive_cubic,2,12)
+
+release thm Calc::unary_higher_order::nth_derivative_one_from_native(R+,positive_cubic,2,12)
+
+release thm Calc::unary_higher_order::nth_derivative_candidate_exists(R+,1,positive_cubic,2,12)
+
+release thm Calc::unary_higher_order::nth_derivative_value(R+,1,positive_cubic,2,12)
+
+\Calc::unary_higher_order::nth_derivative<R+,1>(positive_cubic,2)=12
+
+have fn absolute(x R) R=abs(x)
+
+release thm Calc::unary_higher_order::nth_derivative_zero(R,absolute,0)
+
+absolute(0)=0
+
+release thm Calc::unary_higher_order::nth_derivative_candidate_exists(R,0,absolute,0,0)
+
+release thm Calc::unary_higher_order::nth_derivative_value(R,0,absolute,0,0)
+
+\Calc::unary_higher_order::nth_derivative<R,0>(absolute,0)=0
+
+release thm Calc::unary_higher_order::nth_derivative_one_to_native(R,cubic,2,12)
+
+release thm Calc::unary_higher_order::nth_derivative_selected(R,3,cubic,2)
+
+claim:
+    ? forall point R:
+        $Calc::unary_higher_order::has_nth_derivative_at(R,3,cubic,point,6)
+    release thm Calc::unary_higher_order::nth_derivative_from_global_profiles(3,unary_profiles,point)
+    unary_profiles(3)(point)=cubic_third(point)=6
+    $Calc::unary_higher_order::has_nth_derivative_at(R,3,cubic,point,6)
+
+# Explicit lower-order existence, preserving the actual finite certificate.
+
+release thm Calc::unary_higher_order::nth_derivative_lower_order_exists(R,3,2,cubic,2,6)
+
+\Calc::unary_higher_order::nth_derivative<R,2>(cubic,2) $in R
+
+release thm Calc::unary_higher_order::nth_derivative_lower_order_exists(R,0,0,absolute,0,0)

@@ -23,6 +23,96 @@ pub(super) fn project_in_fact_special(
     runtime: &Runtime,
 ) -> JsonValue {
     let (rule, id, matches) = match proof {
+        InFactSearchProofByKnownSpecialProperty::UnionInPowerSet(p) => {
+            return object_for(
+                runtime,
+                vec![
+                    ("type", string("by_known_special_property")),
+                    ("rule", string("UnionInPowerSet")),
+                    (
+                        "left",
+                        super::searched::project_known_premise(&p.left, runtime),
+                    ),
+                    (
+                        "right",
+                        super::searched::project_known_premise(&p.right, runtime),
+                    ),
+                ],
+            );
+        }
+        InFactSearchProofByKnownSpecialProperty::IntersectInPowerSetFromLeft(p) => {
+            return object_for(
+                runtime,
+                vec![
+                    ("type", string("by_known_special_property")),
+                    ("rule", string("IntersectInPowerSetFromLeft")),
+                    (
+                        "left",
+                        super::searched::project_known_premise(&p.left, runtime),
+                    ),
+                ],
+            );
+        }
+        InFactSearchProofByKnownSpecialProperty::IntersectInPowerSetFromRight(p) => {
+            return object_for(
+                runtime,
+                vec![
+                    ("type", string("by_known_special_property")),
+                    ("rule", string("IntersectInPowerSetFromRight")),
+                    (
+                        "right",
+                        super::searched::project_known_premise(&p.right, runtime),
+                    ),
+                ],
+            );
+        }
+        InFactSearchProofByKnownSpecialProperty::SetMinusInPowerSet(p) => {
+            return object_for(
+                runtime,
+                vec![
+                    ("type", string("by_known_special_property")),
+                    ("rule", string("SetMinusInPowerSet")),
+                    (
+                        "left",
+                        super::searched::project_known_premise(&p.left, runtime),
+                    ),
+                ],
+            );
+        }
+        InFactSearchProofByKnownSpecialProperty::SetMinusInPowerSetOfLeft(p) => {
+            return object_for(
+                runtime,
+                vec![
+                    ("type", string("by_known_special_property")),
+                    ("rule", string("SetMinusInPowerSetOfLeft")),
+                    (
+                        "left_equal_carrier",
+                        super::searched::project_known_equality_path(
+                            &p.left_equal_carrier,
+                            runtime,
+                        ),
+                    ),
+                ],
+            );
+        }
+        InFactSearchProofByKnownSpecialProperty::ListSetInPowerSetFromMembers(p) => {
+            return object_for(
+                runtime,
+                vec![
+                    ("type", string("by_known_special_property")),
+                    ("rule", string("ListSetInPowerSetFromMembers")),
+                    (
+                        "members",
+                        JsonValue::Array(
+                            p.members
+                                .iter()
+                                .map(|m| super::searched::project_known_premise(m, runtime))
+                                .collect(),
+                        ),
+                    ),
+                ],
+            );
+        }
         InFactSearchProofByKnownSpecialProperty::DeclaredNumericSequenceCarrier(p) => {
             return object_for(
                 runtime,
@@ -539,6 +629,100 @@ pub(super) fn project_in_fact_special(
                     ),
                 ],
             )
+        }
+        InFactSearchProofByKnownSpecialProperty::TemplateApplicationInStandardSuperset(p) => {
+            return object_for(
+                runtime,
+                vec![
+                    ("type", string("by_known_special_property")),
+                    ("rule", string("TemplateApplicationInStandardSuperset")),
+                    (
+                        "target_set",
+                        string(
+                            crate::ast::obj::Obj::StandardSet(p.target_set.clone())
+                                .readable_string(),
+                        ),
+                    ),
+                    (
+                        "declared_returns",
+                        JsonValue::Array(
+                            p.declared_returns
+                                .iter()
+                                .map(|source| {
+                                    object_for(
+                                        runtime,
+                                        vec![
+                                            ("function", string(source.function.readable_string())),
+                                            (
+                                                "function_equal",
+                                                super::searched::project_known_equality_path(
+                                                    &source.function_equal,
+                                                    runtime,
+                                                ),
+                                            ),
+                                            (
+                                                "declared_signature",
+                                                string(
+                                                    crate::ast::obj::Obj::FunctionSpace(
+                                                        crate::ast::obj::FunctionSpace::FnSet(
+                                                            source.declared_signature.clone(),
+                                                        ),
+                                                    )
+                                                    .readable_string(),
+                                                ),
+                                            ),
+                                            (
+                                                "source_set",
+                                                string(
+                                                    crate::ast::obj::Obj::StandardSet(
+                                                        source.source_set.clone(),
+                                                    )
+                                                    .readable_string(),
+                                                ),
+                                            ),
+                                        ],
+                                    )
+                                })
+                                .collect(),
+                        ),
+                    ),
+                    (
+                        "signature_returns",
+                        JsonValue::Array(
+                            p.signature_returns
+                                .iter()
+                                .map(|source| {
+                                    object_for(
+                                        runtime,
+                                        vec![
+                                            (
+                                                "cite_signature_fact_id",
+                                                string(source.cite_signature_fact_id.to_string()),
+                                            ),
+                                            (
+                                                "source_set",
+                                                string(
+                                                    crate::ast::obj::Obj::StandardSet(
+                                                        source.source_set.clone(),
+                                                    )
+                                                    .readable_string(),
+                                                ),
+                                            ),
+                                            (
+                                                "function_equal",
+                                                super::searched::project_known_equality_path(
+                                                    &source.function_equal,
+                                                    runtime,
+                                                ),
+                                            ),
+                                        ],
+                                    )
+                                })
+                                .collect(),
+                        ),
+                    ),
+                ],
+            );
         }
         InFactSearchProofByKnownSpecialProperty::TemplateApplicationInDeclaredCodomain(p) => {
             return object_for(

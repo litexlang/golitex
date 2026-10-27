@@ -1,0 +1,3 @@
+release thm comb::main::power_set_size({})
+
+comb::main::binomial_coefficient(0,0) = 1

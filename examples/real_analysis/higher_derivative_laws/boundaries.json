@@ -1,0 +1,49 @@
+{
+  "scope": "Optional higher derivative law library after main.lit, with explicit candidates and exact actual function domains. Refusal is not a proof of negation.",
+  "setup": [
+    "have fn law_boundary_sine(x R) R=sin(x)+5",
+    "have fn law_boundary_sum(x R) R=main::law_cubic(x)+law_boundary_sine(x)"
+  ],
+  "cases": [
+    {
+      "id": "wrong_selected_value",
+      "source": "\\Calc::unary_higher_order::nth_derivative<R,3>(main::law_sum,0)=6",
+      "expected_category": "proof_search"
+    },
+    {
+      "id": "missing_input_candidate",
+      "source": "release thm Higher::main::nth_derivative_add(R,3,main::law_cubic,law_boundary_sine,law_boundary_sum,0,6,-1)",
+      "expected_category": "proof_search"
+    },
+    {
+      "id": "zero_coefficient_keeps_candidate",
+      "source": "release thm Higher::main::nth_derivative_linear_combination(R,3,law_boundary_sine,main::law_cubic,main::law_cubic,0,0,1,-1,6)",
+      "expected_category": "proof_search"
+    },
+    {
+      "id": "wrong_full_function_formula",
+      "source": "release thm Higher::main::nth_derivative_linear_combination(R,3,main::law_cubic,main::law_sine,main::law_sum,0,1,2,6,-1)",
+      "expected_category": "proof_search"
+    },
+    {
+      "id": "coefficient_is_real",
+      "source": "release thm Higher::main::nth_derivative_scale(R,3,main::law_sum,main::law_scaled,0,{1},5)",
+      "expected_category": "proof_search"
+    },
+    {
+      "id": "order_is_natural",
+      "source": "release thm Higher::main::nth_derivative_add(R,-1,main::law_cubic,main::law_sine,main::law_sum,0,6,-1)",
+      "expected_category": "proof_search"
+    },
+    {
+      "id": "actual_domain_is_not_narrowed",
+      "source": "release thm Higher::main::nth_derivative_add(R+,3,main::law_cubic,main::law_sine,main::law_sum,2,6,-cos(2))",
+      "expected_category": "proof_search"
+    },
+    {
+      "id": "unary_input_is_not_vector",
+      "source": "release thm Higher::main::ordered_partial_add(1,cart_n(R,1),0,main::law_cubic,main::law_cubic,main::law_cubic,tuple(0),tuple(),0,0)",
+      "expected_category": "proof_search"
+    }
+  ]
+}

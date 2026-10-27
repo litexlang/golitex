@@ -220,6 +220,53 @@ impl Runtime {
         }))
     }
 
+    // An intersection is a subset of either operand. One finite operand is
+    // sufficient; e.g. E intersect {point} is finite for any well-defined E.
+    // Remove the intersection constructor and retain the existing child state.
+    pub(super) fn search_intersect_finite_from_left_strategy(
+        &mut self,
+        fact: &AtomicFact,
+        ctx: VerifyState,
+    ) -> RuntimeResult<Option<IntersectFiniteFromLeftStrategySingleStep>> {
+        let Some(Obj::SetOperator(SetOperator::Intersect(pair))) = as_finite_set(fact) else {
+            return Ok(None);
+        };
+        let requirements =
+            vec![self.strategy_is_finite_set_fact(pair.left.as_ref().clone(), line_file(fact))];
+        let Some((requirement_facts, proof_of_requirement_facts)) =
+            self.verify_strategy_requirements(requirements, ctx)?
+        else {
+            return Ok(None);
+        };
+        Ok(Some(IntersectFiniteFromLeftStrategySingleStep {
+            requirement_facts,
+            proof_of_requirement_facts,
+        }))
+    }
+
+    // Mirror of the left bound, with the actual right operand as the sole
+    // checked premise; no finiteness conclusion about the other operand.
+    pub(super) fn search_intersect_finite_from_right_strategy(
+        &mut self,
+        fact: &AtomicFact,
+        ctx: VerifyState,
+    ) -> RuntimeResult<Option<IntersectFiniteFromRightStrategySingleStep>> {
+        let Some(Obj::SetOperator(SetOperator::Intersect(pair))) = as_finite_set(fact) else {
+            return Ok(None);
+        };
+        let requirements =
+            vec![self.strategy_is_finite_set_fact(pair.right.as_ref().clone(), line_file(fact))];
+        let Some((requirement_facts, proof_of_requirement_facts)) =
+            self.verify_strategy_requirements(requirements, ctx)?
+        else {
+            return Ok(None);
+        };
+        Ok(Some(IntersectFiniteFromRightStrategySingleStep {
+            requirement_facts,
+            proof_of_requirement_facts,
+        }))
+    }
+
     pub(super) fn search_set_minus_finite_from_left_strategy(
         &mut self,
         fact: &AtomicFact,
@@ -286,3 +333,7 @@ fn line_file(fact: &AtomicFact) -> Option<crate::ast::line_file::SourceLine> {
         _ => None,
     }
 }
+
+#[cfg(test)]
+#[path = "../../../../../../tests/unit/execute/finite_intersection_one_bound/tests.rs"]
+mod finite_intersection_one_bound_tests;

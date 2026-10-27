@@ -670,6 +670,20 @@ impl Runtime {
                 ),
             ));
         }
+        if let Some(proof) = self.search_intersect_finite_from_left_strategy(fact, ctx)? {
+            return Ok(Some(
+                AtomicExceptEqualityFactSearchProofByBuiltinStrategy::IntersectFiniteFromLeft(
+                    proof,
+                ),
+            ));
+        }
+        if let Some(proof) = self.search_intersect_finite_from_right_strategy(fact, ctx)? {
+            return Ok(Some(
+                AtomicExceptEqualityFactSearchProofByBuiltinStrategy::IntersectFiniteFromRight(
+                    proof,
+                ),
+            ));
+        }
         if let Some(proof) = self.search_set_minus_finite_from_left_strategy(fact, ctx)? {
             return Ok(Some(
                 AtomicExceptEqualityFactSearchProofByBuiltinStrategy::SetMinusFiniteFromLeft(proof),

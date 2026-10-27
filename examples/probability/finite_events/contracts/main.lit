@@ -1,0 +1,472 @@
+claim:
+    ? forall Ambient set, space &prob::main::FiniteProbabilitySpace<Ambient>, A, B power_set(space.carrier):
+        space.prob(A) $in R
+        space.prob(A) $in C
+        space.prob(intersect(A,B)) $in R
+        space.prob(intersect(A,B)) $in C
+        space.prob(set_minus(A,B)) $in R
+        space.prob(set_minus(A,B)) $in C
+        space.prob(union(A,B)) $in R
+        space.prob(union(A,B)) $in C
+    release thm prob::main::event_probability_types(Ambient,space,A,B)
+
+thm consume_event_partition:
+    ? forall Ambient set, space &prob::main::FiniteProbabilitySpace<Ambient>, A, B power_set(space.carrier):
+        space.prob(A) = space.prob(intersect(A,B)) + space.prob(set_minus(A,B))
+    release thm prob::main::event_partition(Ambient,space,A,B)
+
+thm consume_event_complement:
+    ? forall Ambient set, space &prob::main::FiniteProbabilitySpace<Ambient>, A power_set(space.carrier):
+        space.prob(set_minus(space.carrier,A)) = 1 - space.prob(A)
+    release thm prob::main::event_complement(Ambient,space,A)
+
+thm consume_event_difference:
+    ? forall Ambient set, space &prob::main::FiniteProbabilitySpace<Ambient>, A, B power_set(space.carrier):
+        B $subset A
+        =>:
+            space.prob(set_minus(A,B)) = space.prob(A) - space.prob(B)
+    release thm prob::main::event_difference(Ambient,space,A,B)
+
+thm consume_event_monotone:
+    ? forall Omega set, space &prob::main::FiniteProbabilitySpace<Omega>, A, B power_set(space.carrier):
+        A $subset B
+        =>:
+            space.prob(A) <= space.prob(B)
+    release thm prob::main::event_monotone(Omega,space,A,B)
+
+thm consume_event_bounds:
+    ? forall Omega set, space &prob::main::FiniteProbabilitySpace<Omega>, A power_set(space.carrier):
+        0 <= space.prob(A)
+        space.prob(A) <= 1
+    release thm prob::main::event_bounds(Omega,space,A)
+
+thm consume_event_inclusion_exclusion:
+    ? forall Ambient set, space &prob::main::FiniteProbabilitySpace<Ambient>, A, B power_set(space.carrier):
+        space.prob(union(A,B)) = space.prob(A) + space.prob(B) - space.prob(intersect(A,B))
+    release thm prob::main::event_inclusion_exclusion(Ambient,space,A,B)
+
+thm consume_null_event_subsets:
+    ? forall Omega set, space &prob::main::FiniteProbabilitySpace<Omega>, A, B power_set(space.carrier):
+        A $subset B
+        space.prob(B) = 0
+        =>:
+            space.prob(A) = 0
+    release thm prob::main::null_event_subsets(Omega,space,A,B)
+
+thm consume_conditional_event_bounds:
+    ? forall Omega set, space &prob::main::FiniteProbabilitySpace<Omega>, A, B power_set(space.carrier):
+        space.prob(B) > 0
+        =>:
+            0 <= \prob::main::conditional_event_probability<Omega, space>(A, B)
+            \prob::main::conditional_event_probability<Omega, space>(A, B) <= 1
+    release thm prob::main::conditional_event_bounds(Omega,space,A,B)
+
+thm consume_conditional_event_product:
+    ? forall Ambient set, space &prob::main::FiniteProbabilitySpace<Ambient>, A, B power_set(space.carrier):
+        space.prob(B) > 0
+        =>:
+            \prob::main::conditional_event_probability<Ambient,space>(A,B) * space.prob(B) = space.prob(intersect(A,B))
+    release thm prob::main::conditional_event_product(Ambient,space,A,B)
+
+thm consume_conditional_event_self:
+    ? forall Omega set, space &prob::main::FiniteProbabilitySpace<Omega>, B power_set(space.carrier):
+        space.prob(B) > 0
+        =>:
+            \prob::main::conditional_event_probability<Omega, space>(B, B) = 1
+    release thm prob::main::conditional_event_self(Omega,space,B)
+
+thm consume_conditional_event_empty:
+    ? forall Ambient set, space &prob::main::FiniteProbabilitySpace<Ambient>, B power_set(space.carrier):
+        space.prob(B) > 0
+        =>:
+            \prob::main::conditional_event_probability<Ambient,space>({},B) = 0
+    release thm prob::main::conditional_event_empty(Ambient,space,B)
+
+thm consume_conditional_event_whole:
+    ? forall Omega set, space &prob::main::FiniteProbabilitySpace<Omega>, B power_set(space.carrier):
+        space.prob(B) > 0
+        =>:
+            \prob::main::conditional_event_probability<Omega, space>(space.carrier, B) = 1
+    release thm prob::main::conditional_event_whole(Omega,space,B)
+
+thm consume_conditional_event_complement:
+    ? forall Ambient set, space &prob::main::FiniteProbabilitySpace<Ambient>, A, B power_set(space.carrier):
+        space.prob(B) > 0
+        =>:
+            \prob::main::conditional_event_probability<Ambient,space>(set_minus(space.carrier,A),B) = 1 - \prob::main::conditional_event_probability<Ambient,space>(A,B)
+    release thm prob::main::conditional_event_complement(Ambient,space,A,B)
+
+thm consume_bayes_event_rule:
+    ? forall Omega set, space &prob::main::FiniteProbabilitySpace<Omega>, A, B power_set(space.carrier):
+        space.prob(A) > 0
+        space.prob(B) > 0
+        =>:
+            \prob::main::conditional_event_probability<Omega, space>(A, B) = \prob::main::conditional_event_probability<Omega, space>(B, A) * space.prob(A) / space.prob(B)
+    release thm prob::main::bayes_event_rule(Omega,space,A,B)
+
+thm consume_independent_events_symmetric:
+    ? forall Omega set, space &prob::main::FiniteProbabilitySpace<Omega>, A, B power_set(space.carrier):
+        $prob::main::independent_events(Omega, space, A, B)
+        =>:
+            $prob::main::independent_events(Omega, space, B, A)
+    release thm prob::main::independent_events_symmetric(Omega,space,A,B)
+
+thm consume_independence_implies_conditional:
+    ? forall Omega set, space &prob::main::FiniteProbabilitySpace<Omega>, A, B power_set(space.carrier):
+        $prob::main::independent_events(Omega, space, A, B)
+        space.prob(B) > 0
+        =>:
+            \prob::main::conditional_event_probability<Omega, space>(A, B) = space.prob(A)
+    release thm prob::main::independence_implies_conditional(Omega,space,A,B)
+
+thm consume_conditional_implies_independence:
+    ? forall Omega set, space &prob::main::FiniteProbabilitySpace<Omega>, A, B power_set(space.carrier):
+        space.prob(B) > 0
+        \prob::main::conditional_event_probability<Omega, space>(A, B) = space.prob(A)
+        =>:
+            $prob::main::independent_events(Omega, space, A, B)
+    release thm prob::main::conditional_implies_independence(Omega,space,A,B)
+
+thm consume_event_operations_are_events:
+    ? forall Ambient set, space &prob::main::FiniteProbabilitySpace<Ambient>, A, B power_set(space.carrier):
+        intersect(A,B) $in power_set(space.carrier)
+        set_minus(A,B) $in power_set(space.carrier)
+        union(A,B) $in power_set(space.carrier)
+    release thm prob::main::event_operations_are_events(Ambient,space,A,B)
+
+thm consume_event_probability_types:
+    ? forall Ambient set, space &prob::main::FiniteProbabilitySpace<Ambient>, A, B power_set(space.carrier):
+        space.prob(A) $in R
+        space.prob(A) $in C
+        space.prob(intersect(A,B)) $in R
+        space.prob(intersect(A,B)) $in C
+        space.prob(set_minus(A,B)) $in R
+        space.prob(set_minus(A,B)) $in C
+        space.prob(union(A,B)) $in R
+        space.prob(union(A,B)) $in C
+    release thm prob::main::event_probability_types(Ambient,space,A,B)
+
+thm consume_uniform_event_normalization:
+    ? forall Omega finite_set:
+        $is_nonempty_set(Omega)
+        =>:
+            \prob::main::uniform_event_probability<Omega>({}) = 0
+            \prob::main::uniform_event_probability<Omega>(Omega) = 1
+    release thm prob::main::uniform_event_normalization(Omega)
+
+thm consume_uniform_event_nonnegative:
+    ? forall Omega finite_set, E power_set(Omega):
+        $is_nonempty_set(Omega)
+        =>:
+            \prob::main::uniform_event_probability<Omega>(E) >= 0
+    release thm prob::main::uniform_event_nonnegative(Omega,E)
+
+thm consume_uniform_disjoint_additivity:
+    ? forall Omega finite_set, E, F power_set(Omega):
+        $is_nonempty_set(Omega)
+        intersect(E,F) = {}
+        =>:
+            \prob::main::uniform_event_probability<Omega>(union(E,F)) = \prob::main::uniform_event_probability<Omega>(E) + \prob::main::uniform_event_probability<Omega>(F)
+    release thm prob::main::uniform_disjoint_additivity(Omega,E,F)
+
+thm consume_event_union_bound:
+    ? forall Omega set, space &prob::main::FiniteProbabilitySpace<Omega>, A, B power_set(space.carrier):
+        space.prob(union(A, B)) <= space.prob(A) + space.prob(B)
+    release thm prob::main::event_union_bound(Omega,space,A,B)
+
+thm consume_independence_complement:
+    ? forall Ambient set, space &prob::main::FiniteProbabilitySpace<Ambient>, A,B power_set(space.carrier):
+        $prob::main::independent_events(Ambient,space,A,B)
+        =>:
+            $prob::main::independent_events(Ambient,space,set_minus(space.carrier,A),B)
+    release thm prob::main::independence_complement(Ambient,space,A,B)
+
+thm consume_uniform_probability_laws:
+    ? forall Omega finite_set:
+        $is_nonempty_set(Omega)
+        =>:
+            (Omega,\prob::main::uniform_event_probability<Omega>) $in &prob::main::FiniteProbabilitySpace<Omega>
+    release thm prob::main::uniform_probability_laws(Omega)
+
+thm consume_uniform_probability_space:
+    ? forall Omega finite_set:
+        $is_nonempty_set(Omega)
+        =>:
+            \prob::main::uniform_probability_space<Omega> $in &prob::main::FiniteProbabilitySpace<Omega>
+    release thm prob::main::uniform_probability_laws(Omega)
+    \prob::main::uniform_probability_space<Omega> = (Omega,\prob::main::uniform_event_probability<Omega>)
+
+thm consume_dirac_event_contains:
+    ? forall Omega finite_set,point Omega,E power_set(Omega):
+        point $in E
+        =>:
+            \prob::main::dirac_event_probability<Omega,point>(E) = 1
+    release thm prob::main::dirac_event_contains(Omega,point,E)
+
+thm consume_dirac_event_excludes:
+    ? forall Omega finite_set,point Omega,E power_set(Omega):
+        not point $in E
+        =>:
+            \prob::main::dirac_event_probability<Omega,point>(E) = 0
+    release thm prob::main::dirac_event_excludes(Omega,point,E)
+
+thm consume_dirac_probability_laws:
+    ? forall Omega finite_set,point Omega:
+        (Omega,\prob::main::dirac_event_probability<Omega,point>) $in &prob::main::FiniteProbabilitySpace<Omega>
+    release thm prob::main::dirac_probability_laws(Omega,point)
+
+thm consume_dirac_probability_space:
+    ? forall Omega finite_set,point Omega:
+        \prob::main::dirac_probability_space<Omega,point> $in &prob::main::FiniteProbabilitySpace<Omega>
+    release thm prob::main::dirac_probability_laws(Omega,point)
+    \prob::main::dirac_probability_space<Omega,point> = (Omega,\prob::main::dirac_event_probability<Omega,point>)
+
+thm consume_null_event_independent:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,A,B power_set(space.carrier):
+        space.prob(A) = 0
+        =>:
+            $prob::main::independent_events(Omega,space,A,B)
+    release thm prob::main::null_event_independent(Omega,space,A,B)
+
+thm consume_independence_complement_right:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,A,B power_set(space.carrier):
+        $prob::main::independent_events(Omega,space,A,B)
+        =>:
+            $prob::main::independent_events(Omega,space,A,set_minus(space.carrier,B))
+    release thm prob::main::independence_complement_right(Omega,space,A,B)
+
+thm consume_independence_complements:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,A,B power_set(space.carrier):
+        $prob::main::independent_events(Omega,space,A,B)
+        =>:
+            $prob::main::independent_events(Omega,space,set_minus(space.carrier,A),set_minus(space.carrier,B))
+    release thm prob::main::independence_complements(Omega,space,A,B)
+
+thm consume_conditional_event_monotone:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,A,B,E power_set(space.carrier):
+        A $subset B
+        space.prob(E) > 0
+        =>:
+            \prob::main::conditional_event_probability<Omega,space>(A,E) <= \prob::main::conditional_event_probability<Omega,space>(B,E)
+    release thm prob::main::conditional_event_monotone(Omega,space,A,B,E)
+
+thm consume_total_probability_two_events:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,A,B power_set(space.carrier):
+        space.prob(B) > 0
+        space.prob(set_minus(space.carrier,B)) > 0
+        =>:
+            space.prob(A) = \prob::main::conditional_event_probability<Omega,space>(A,B)*space.prob(B) + \prob::main::conditional_event_probability<Omega,space>(A,set_minus(space.carrier,B))*space.prob(set_minus(space.carrier,B))
+    release thm prob::main::total_probability_two_events(Omega,space,A,B)
+
+thm consume_event_frechet_bounds:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,A,B power_set(space.carrier):
+        space.prob(A)+space.prob(B)-1 <= space.prob(intersect(A,B))
+        space.prob(intersect(A,B)) <= space.prob(A)
+        space.prob(intersect(A,B)) <= space.prob(B)
+    release thm prob::main::event_frechet_bounds(Omega,space,A,B)
+
+thm consume_whole_event_independent:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,A power_set(space.carrier):
+        $prob::main::independent_events(Omega,space,A,space.carrier)
+        $prob::main::independent_events(Omega,space,space.carrier,A)
+    release thm prob::main::whole_event_independent(Omega,space,A)
+
+thm consume_conditional_disjoint_events:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,A,B power_set(space.carrier):
+        intersect(A,B) = {}
+        space.prob(B) > 0
+        =>:
+            \prob::main::conditional_event_probability<Omega,space>(A,B) = 0
+    release thm prob::main::conditional_disjoint_events(Omega,space,A,B)
+
+thm consume_finite_expectation_formula:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,X fn(k space.carrier) R:
+        \prob::main::finite_expectation<Omega,space>(X) = finite_set_sum(space.carrier,fn(k space.carrier) R {X(k)*space.prob({k})})
+    release thm prob::main::finite_expectation_formula(Omega,space,X)
+
+thm consume_finite_expectation_extensional:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,X,Y fn(k space.carrier) R:
+        forall k space.carrier:
+            X(k) = Y(k)
+        =>:
+            \prob::main::finite_expectation<Omega,space>(X) = \prob::main::finite_expectation<Omega,space>(Y)
+    release thm prob::main::finite_expectation_extensional(Omega,space,X,Y)
+
+thm consume_finite_expectation_nonnegative:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,X fn(k space.carrier) R:
+        forall k space.carrier:
+            X(k) >= 0
+        =>:
+            \prob::main::finite_expectation<Omega,space>(X) >= 0
+    release thm prob::main::finite_expectation_nonnegative(Omega,space,X)
+
+thm consume_finite_expectation_monotone:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,X,Y fn(k space.carrier) R:
+        forall k space.carrier:
+            X(k) <= Y(k)
+        =>:
+            \prob::main::finite_expectation<Omega,space>(X) <= \prob::main::finite_expectation<Omega,space>(Y)
+    release thm prob::main::finite_expectation_monotone(Omega,space,X,Y)
+
+thm consume_finite_expectation_vanishes:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,X fn(k space.carrier) R:
+        forall k space.carrier:
+            X(k) = 0
+        =>:
+            \prob::main::finite_expectation<Omega,space>(X) = 0
+    release thm prob::main::finite_expectation_vanishes(Omega,space,X)
+
+thm consume_finite_expectation_zero:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>:
+        \prob::main::finite_expectation<Omega,space>(fn(k space.carrier) R {0}) = 0
+    release thm prob::main::finite_expectation_zero(Omega,space)
+
+thm consume_event_probability_from_singletons:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,E power_set(space.carrier):
+        finite_set_sum(E,fn(k space.carrier) R {space.prob({k})}) = space.prob(E)
+    release thm prob::main::event_probability_from_singletons(Omega,space,E)
+
+thm consume_finite_expectation_of_constant:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,X fn(k space.carrier) R,c R:
+        forall k space.carrier:
+            X(k) = c
+        =>:
+            \prob::main::finite_expectation<Omega,space>(X) = c
+    release thm prob::main::finite_expectation_of_constant(Omega,space,X,c)
+
+thm consume_finite_expectation_constant:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,c R:
+        \prob::main::finite_expectation<Omega,space>(fn(k space.carrier) R {c}) = c
+    release thm prob::main::finite_expectation_constant(Omega,space,c)
+
+thm consume_finite_expectation_bounds:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,X fn(k space.carrier) R,a,b R:
+        forall k space.carrier:
+            a <= X(k)
+            X(k) <= b
+        =>:
+            a <= \prob::main::finite_expectation<Omega,space>(X)
+            \prob::main::finite_expectation<Omega,space>(X) <= b
+    release thm prob::main::finite_expectation_bounds(Omega,space,X,a,b)
+
+thm consume_finite_expectation_of_linear_combination:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,X,Y,H fn(k space.carrier) R,a,b R:
+        forall k space.carrier:
+            H(k) = a*X(k)+b*Y(k)
+        =>:
+            \prob::main::finite_expectation<Omega,space>(H) = a*\prob::main::finite_expectation<Omega,space>(X)+b*\prob::main::finite_expectation<Omega,space>(Y)
+    release thm prob::main::finite_expectation_of_linear_combination(Omega,space,X,Y,H,a,b)
+
+thm consume_finite_expectation_linear:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,X,Y fn(k space.carrier) R,a,b R:
+        \prob::main::finite_expectation<Omega,space>(fn(k space.carrier) R {a*X(k)+b*Y(k)}) = a*\prob::main::finite_expectation<Omega,space>(X)+b*\prob::main::finite_expectation<Omega,space>(Y)
+    release thm prob::main::finite_expectation_linear(Omega,space,X,Y,a,b)
+
+thm consume_finite_expectation_add:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,X,Y fn(k space.carrier) R:
+        \prob::main::finite_expectation<Omega,space>(fn(k space.carrier) R {X(k)+Y(k)}) = \prob::main::finite_expectation<Omega,space>(X)+\prob::main::finite_expectation<Omega,space>(Y)
+    release thm prob::main::finite_expectation_add(Omega,space,X,Y)
+
+thm consume_finite_expectation_scale:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,X fn(k space.carrier) R,c R:
+        \prob::main::finite_expectation<Omega,space>(fn(k space.carrier) R {c*X(k)}) = c*\prob::main::finite_expectation<Omega,space>(X)
+    release thm prob::main::finite_expectation_scale(Omega,space,X,c)
+
+thm consume_finite_expectation_subtract:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,X,Y fn(k space.carrier) R:
+        \prob::main::finite_expectation<Omega,space>(fn(k space.carrier) R {X(k)-Y(k)}) = \prob::main::finite_expectation<Omega,space>(X)-\prob::main::finite_expectation<Omega,space>(Y)
+    release thm prob::main::finite_expectation_subtract(Omega,space,X,Y)
+
+thm consume_finite_expectation_affine:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,X fn(k space.carrier) R,a,c R:
+        \prob::main::finite_expectation<Omega,space>(fn(k space.carrier) R {a*X(k)+c}) = a*\prob::main::finite_expectation<Omega,space>(X)+c
+    release thm prob::main::finite_expectation_affine(Omega,space,X,a,c)
+
+thm consume_finite_variance_nonnegative:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,X fn(k space.carrier) R:
+        \prob::main::finite_variance<Omega,space>(X) >= 0
+    release thm prob::main::finite_variance_nonnegative(Omega,space,X)
+
+thm consume_finite_variance_of_constant:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,X fn(k space.carrier) R,c R:
+        forall k space.carrier:
+            X(k) = c
+        =>:
+            \prob::main::finite_variance<Omega,space>(X) = 0
+    release thm prob::main::finite_variance_of_constant(Omega,space,X,c)
+
+thm consume_finite_variance_constant:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,c R:
+        \prob::main::finite_variance<Omega,space>(fn(k space.carrier) R {c}) = 0
+    release thm prob::main::finite_variance_constant(Omega,space,c)
+
+thm consume_finite_variance_second_moment:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,X fn(k space.carrier) R:
+        \prob::main::finite_variance<Omega,space>(X) = \prob::main::finite_expectation<Omega,space>(fn(k space.carrier) R {X(k)^2})-\prob::main::finite_expectation<Omega,space>(X)^2
+    release thm prob::main::finite_variance_second_moment(Omega,space,X)
+
+thm consume_finite_expectation_square_bound:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,X fn(k space.carrier) R:
+        \prob::main::finite_expectation<Omega,space>(X)^2 <= \prob::main::finite_expectation<Omega,space>(fn(k space.carrier) R {X(k)^2})
+    release thm prob::main::finite_expectation_square_bound(Omega,space,X)
+
+thm consume_finite_variance_formula:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,X fn(k space.carrier) R:
+        \prob::main::finite_variance<Omega,space>(X) = \prob::main::finite_expectation<Omega,space>(fn(k space.carrier) R {(X(k)-\prob::main::finite_expectation<Omega,space>(X))^2})
+    release thm prob::main::finite_variance_formula(Omega,space,X)
+
+thm consume_finite_variance_of_affine:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,X,Y fn(k space.carrier) R,a,c R:
+        forall k space.carrier:
+            Y(k) = a*X(k)+c
+        =>:
+            \prob::main::finite_variance<Omega,space>(Y) = a^2*\prob::main::finite_variance<Omega,space>(X)
+    release thm prob::main::finite_variance_of_affine(Omega,space,X,Y,a,c)
+
+thm consume_finite_variance_affine:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,X fn(k space.carrier) R,a,c R:
+        \prob::main::finite_variance<Omega,space>(fn(k space.carrier) R {a*X(k)+c}) = a^2*\prob::main::finite_variance<Omega,space>(X)
+    release thm prob::main::finite_variance_affine(Omega,space,X,a,c)
+
+thm consume_finite_variance_scale:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,X fn(k space.carrier) R,a R:
+        \prob::main::finite_variance<Omega,space>(fn(k space.carrier) R {a*X(k)}) = a^2*\prob::main::finite_variance<Omega,space>(X)
+    release thm prob::main::finite_variance_scale(Omega,space,X,a)
+
+thm consume_finite_variance_translate:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,X fn(k space.carrier) R,c R:
+        \prob::main::finite_variance<Omega,space>(fn(k space.carrier) R {X(k)+c}) = \prob::main::finite_variance<Omega,space>(X)
+    release thm prob::main::finite_variance_translate(Omega,space,X,c)
+
+thm consume_finite_covariance_formula:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,X,Y fn(k space.carrier) R:
+        \prob::main::finite_covariance<Omega,space>(X,Y) = \prob::main::finite_expectation<Omega,space>(fn(k space.carrier) R {(X(k)-\prob::main::finite_expectation<Omega,space>(X))*(Y(k)-\prob::main::finite_expectation<Omega,space>(Y))})
+    release thm prob::main::finite_covariance_formula(Omega,space,X,Y)
+
+thm consume_finite_covariance_symmetric:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,X,Y fn(k space.carrier) R:
+        \prob::main::finite_covariance<Omega,space>(X,Y) = \prob::main::finite_covariance<Omega,space>(Y,X)
+    release thm prob::main::finite_covariance_symmetric(Omega,space,X,Y)
+
+thm consume_finite_covariance_self:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,X fn(k space.carrier) R:
+        \prob::main::finite_covariance<Omega,space>(X,X) = \prob::main::finite_variance<Omega,space>(X)
+    release thm prob::main::finite_covariance_self(Omega,space,X)
+
+thm consume_finite_covariance_of_constant_left:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,X,Y fn(k space.carrier) R,c R:
+        forall k space.carrier:
+            X(k) = c
+        =>:
+            \prob::main::finite_covariance<Omega,space>(X,Y) = 0
+    release thm prob::main::finite_covariance_of_constant_left(Omega,space,X,Y,c)
+
+thm consume_finite_covariance_constant_left:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,Y fn(k space.carrier) R,c R:
+        \prob::main::finite_covariance<Omega,space>(fn(k space.carrier) R {c},Y) = 0
+    release thm prob::main::finite_covariance_constant_left(Omega,space,Y,c)
+
+thm consume_finite_covariance_constant_right:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,X fn(k space.carrier) R,c R:
+        \prob::main::finite_covariance<Omega,space>(X,fn(k space.carrier) R {c}) = 0
+    release thm prob::main::finite_covariance_constant_right(Omega,space,X,c)

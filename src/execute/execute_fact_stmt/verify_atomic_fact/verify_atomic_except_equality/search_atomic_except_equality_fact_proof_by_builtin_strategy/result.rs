@@ -134,6 +134,8 @@ pub enum AtomicExceptEqualityFactSearchProofByBuiltinStrategy {
     SetBuilderFiniteFromParamSet(SetBuilderFiniteFromParamSetStrategySingleStep),
     UnionFiniteFromBoth(UnionFiniteFromBothStrategySingleStep),
     IntersectFiniteFromBoth(IntersectFiniteFromBothStrategySingleStep),
+    IntersectFiniteFromLeft(IntersectFiniteFromLeftStrategySingleStep),
+    IntersectFiniteFromRight(IntersectFiniteFromRightStrategySingleStep),
     SetMinusFiniteFromLeft(SetMinusFiniteFromLeftStrategySingleStep),
     CartFiniteFromFactors(CartFiniteFromFactorsStrategySingleStep),
     SubsetOfFiniteSet(SubsetOfFiniteSetStrategySingleStep),
@@ -1267,6 +1269,18 @@ pub struct UnionFiniteFromBothStrategySingleStep {
 // Example:
 //   $is_finite_set(intersect(A,B))
 pub struct IntersectFiniteFromBothStrategySingleStep {
+    pub requirement_facts: Vec<Fact>,
+    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
+}
+
+// A single finite left operand bounds the intersection.
+pub struct IntersectFiniteFromLeftStrategySingleStep {
+    pub requirement_facts: Vec<Fact>,
+    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
+}
+
+// A single finite right operand bounds the intersection.
+pub struct IntersectFiniteFromRightStrategySingleStep {
     pub requirement_facts: Vec<Fact>,
     pub proof_of_requirement_facts: Vec<VerifyFactResult>,
 }

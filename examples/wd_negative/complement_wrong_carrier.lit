@@ -1,0 +1,2 @@
+forall X,Y set,B set:
+    set_minus(X,B) $in power_set(Y)

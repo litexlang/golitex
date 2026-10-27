@@ -1,30 +1,24 @@
 # AST: Obj::IteratedOperator::SumOfFiniteSet
 # Run: target/release/litex -f examples/test_objs/sum_of_finite_set.lit
-# Cases use discarded sketch scopes; no cross-case facts.
+# Direct cases share file context; sketches isolate local declarations.
 
 # P01: finite_set_sum({}, fn(x Z) Z {x}) = 0
-sketch:
-    finite_set_sum({}, fn(x Z) Z {x}) = 0
+finite_set_sum({}, fn(x Z) Z {x}) = 0
 
 # P02: finite_set_sum({2}, fn(x Z) Z {x}) = 2
-sketch:
-    finite_set_sum({2}, fn(x Z) Z {x}) = 2
+finite_set_sum({2}, fn(x Z) Z {x}) = 2
 
 # P03: finite_set_sum({1, 2}, fn(x Z) Z {x}) = 3
-sketch:
-    finite_set_sum({1, 2}, fn(x Z) Z {x}) = 3
+finite_set_sum({1, 2}, fn(x Z) Z {x}) = 3
 
 # P04: finite_set_sum({2, 1}, fn(x Z) Z {x}) = 3
-sketch:
-    finite_set_sum({2, 1}, fn(x Z) Z {x}) = 3
+finite_set_sum({2, 1}, fn(x Z) Z {x}) = 3
 
 # P05: finite_set_sum({1}, fn(x Z) Z {2}) = 2
-sketch:
-    finite_set_sum({1}, fn(x Z) Z {2}) = 2
+finite_set_sum({1}, fn(x Z) Z {2}) = 2
 
 # P06: finite_set_sum(closed_range(3, 1), fn(x Z) Z {x}) = 0
-sketch:
-    finite_set_sum(closed_range(3, 1), fn(x Z) Z {x}) = 0
+finite_set_sum(closed_range(3, 1), fn(x Z) Z {x}) = 0
 
 # P90: Nearest valid-domain control
 sketch:
@@ -38,8 +32,7 @@ sketch:
     finite_set_sum(closed_range(1,3),fn(k Z) Z {k}) = 6
 
 # P102: empty callable predicate is vacuous
-sketch:
-    finite_set_sum({},fn(k Z:k!=0) R {1/k}) = 0
+finite_set_sum({},fn(k Z:k!=0) R {1/k}) = 0
 
 # P103: symbolic constant and linearity
 sketch:

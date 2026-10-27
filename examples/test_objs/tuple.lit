@@ -17,8 +17,7 @@ sketch:
     inner = outer(1) = (1,2)
     inner(2) = 2
 # P05: calculate the original tuple component expression.
-sketch:
-    (1+1,3) = (2,3)
+(1+1,3) = (2,3)
 # P06: preserve the original ordered-tuple inequality.
 sketch:
     let left = (1,2)

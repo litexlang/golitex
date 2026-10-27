@@ -1,0 +1,4 @@
+template<S set: $is_nonempty_set(S)>:
+    have fn guarded_identity(x R) R = x
+
+\guarded_identity<{}>(0) $in C

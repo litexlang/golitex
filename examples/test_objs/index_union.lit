@@ -1,6 +1,6 @@
 # AST: Obj::SetOperator::IndexUnion
 # Run: target/release/litex -f examples/test_objs/index_union.lit
-# Cases use discarded sketch scopes; no cross-case facts.
+# Direct cases share file context; sketches isolate local declarations.
 
 # Empty-index rejection remains in negative/index_union__empty_index.lit.
 # P01: X = X
@@ -15,14 +15,12 @@ sketch:
     $is_set(index_union({1}, N, A))
 
 # P05: $is_set(index_union({1}, N, A))
-sketch:
-    forall A fn(k {1}) power_set(N):
-        $is_set(index_union({1}, N, A))
+forall A fn(k {1}) power_set(N):
+    $is_set(index_union({1}, N, A))
 
 # P06: index_union({1, 2}, N, A) = index_union({1, 2}, N, A)
-sketch:
-    forall A fn(k {1, 2}) power_set(N):
-        index_union({1, 2}, N, A) = index_union({1, 2}, N, A)
+forall A fn(k {1, 2}) power_set(N):
+    index_union({1, 2}, N, A) = index_union({1, 2}, N, A)
 
 # P02: explicit checked proof; restored from index_union-P02
 sketch:

@@ -78,68 +78,6 @@ pub(super) fn prepare_matrices(
             ];
             out.push(super::helper::exist(rt, params, body, false));
         }
-        MatrixAddCommutative => {
-            let [a, b, m, n] = args else { unreachable!() };
-            matrices(rt, &mut req, &[(a, m, n), (b, m, n)]);
-            out.push(equal(rt, madd(a, b, m, n), madd(b, a, m, n)).into());
-        }
-        MatrixAddAssociative => {
-            let [a, b, c, m, n] = args else {
-                unreachable!()
-            };
-            matrices(rt, &mut req, &[(a, m, n), (b, m, n), (c, m, n)]);
-            out.push(
-                equal(
-                    rt,
-                    madd(&madd(a, b, m, n), c, m, n),
-                    madd(a, &madd(b, c, m, n), m, n),
-                )
-                .into(),
-            );
-        }
-        MatrixAddZero => {
-            let [a, m, n] = args else { unreachable!() };
-            matrices(rt, &mut req, &[(a, m, n)]);
-            out.extend([
-                equal(rt, madd(a, &zero(m, n), m, n), a.clone()).into(),
-                equal(rt, madd(&zero(m, n), a, m, n), a.clone()).into(),
-            ]);
-        }
-        MatrixSubSelf => {
-            let [a, m, n] = args else { unreachable!() };
-            matrices(rt, &mut req, &[(a, m, n)]);
-            out.push(equal(rt, msub(a, a, m, n), zero(m, n)).into());
-        }
-        MatrixScaleOne | MatrixScaleZero => {
-            let [a, m, n] = args else { unreachable!() };
-            matrices(rt, &mut req, &[(a, m, n)]);
-            let z = if id == MatrixScaleOne {
-                number("1")
-            } else {
-                number("0")
-            };
-            let result = if id == MatrixScaleOne {
-                a.clone()
-            } else {
-                zero(m, n)
-            };
-            out.push(equal(rt, scale(&z, a, m, n), result).into());
-        }
-        MatrixScaleDistributive => {
-            let [z, a, b, m, n] = args else {
-                unreachable!()
-            };
-            scalar(rt, &mut req, z);
-            matrices(rt, &mut req, &[(a, m, n), (b, m, n)]);
-            out.push(
-                equal(
-                    rt,
-                    scale(z, &madd(a, b, m, n), m, n),
-                    madd(&scale(z, a, m, n), &scale(z, b, m, n), m, n),
-                )
-                .into(),
-            );
-        }
         MatrixMulAssociative => {
             let [a, b, c, m, k, p, n] = args else {
                 unreachable!()
@@ -769,14 +707,6 @@ fn quantified(
 }
 fn madd(a: &Obj, b: &Obj, m: &Obj, n: &Obj) -> Obj {
     Obj::MatrixOperator(MatrixOperator::Add(MatrixAdd {
-        left: Box::new(a.clone()),
-        right: Box::new(b.clone()),
-        rows: Box::new(m.clone()),
-        cols: Box::new(n.clone()),
-    }))
-}
-fn msub(a: &Obj, b: &Obj, m: &Obj, n: &Obj) -> Obj {
-    Obj::MatrixOperator(MatrixOperator::Subtract(MatrixSubtract {
         left: Box::new(a.clone()),
         right: Box::new(b.clone()),
         rows: Box::new(m.clone()),

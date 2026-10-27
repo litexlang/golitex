@@ -1,0 +1,120 @@
+# Finite function sums: the unused tail is continuous but not differentiable at0.
+
+have fn square(x R) R=x^2
+
+have fn sine(x R) R=sin(x)
+
+have fn absolute(x R) R=abs(x)
+
+by for:
+    ? forall j closed_range(1,3):
+        j=1 or j=2 or j=3
+    j=1 or j=2 or j=3
+
+have fn terms(j closed_range(1,3)) fn(x R) R by cases:
+    case j=1: square
+    case j=2: sine
+    case j=3: absolute
+
+have values finite_seq(R,3)=(0,1,99)
+
+release thm fn_derivative_at_real_interior(0)
+
+claim:
+    ? forall j closed_range(1,3):
+        j<=2
+        =>:
+            $has_derivative_at(terms(j),0,values(j))
+    j=1 or j=2 or j=3
+    by cases:
+        ? $has_derivative_at(terms(j),0,values(j))
+        case j=1:
+            terms(j)=terms(1)=square
+            values(j)=values(1)=0
+            $has_derivative_at(square,0,0)
+        case j=2:
+            terms(j)=terms(2)=sine
+            values(j)=values(2)=1
+            release thm fn_derivative_at_sin(sine,0)
+            cos(0)=1
+            $has_derivative_at(sine,0,1)
+        case j=3:
+            by contra:
+                ? $has_derivative_at(terms(j),0,values(j))
+                j<=2
+                j=3
+                impossible j<=2
+
+witness exist radius R+ st {{x R:abs(x-0)<radius} $subset R} from 1
+
+release thm Sums::main::unary_function_prefix_derivative(R,3,terms,values,0,2)
+
+values(1)=0
+
+values(2)=1
+
+release thm Sums::main::integer_closed_prefix_subset(3,2)
+
+release thm Sums::main::finite_real_prefix_sum_zero(3,values)
+
+release thm Sums::main::finite_real_prefix_sum_successor(3,values,0)
+
+release thm Sums::main::finite_real_prefix_sum_index_equal(3,values,0+1,1)
+
+values(0+1)=0
+
+\Sums::main::finite_real_prefix_sum<3>(values,1)=\Sums::main::finite_real_prefix_sum<3>(values,0+1)=\Sums::main::finite_real_prefix_sum<3>(values,0)+values(0+1)=0
+
+release thm Sums::main::finite_real_prefix_sum_successor(3,values,1)
+
+release thm Sums::main::finite_real_prefix_sum_index_equal(3,values,1+1,2)
+
+values(1+1)=1
+
+\Sums::main::finite_real_prefix_sum<3>(values,2)=\Sums::main::finite_real_prefix_sum<3>(values,1+1)=\Sums::main::finite_real_prefix_sum<3>(values,1)+values(1+1)=1
+
+$has_derivative_at(\Sums::main::unary_function_prefix_sum<R,3>(terms,2),0,1)
+
+claim:
+    ? forall j closed_range(1,3):
+        j<=3
+        =>:
+            $is_continuous_at(terms(j),0)
+    j=1 or j=2 or j=3
+    by cases:
+        ? $is_continuous_at(terms(j),0)
+        case j=1:
+            terms(j)=terms(1)=square
+            $is_continuous_at(square,0)
+        case j=2:
+            terms(j)=terms(2)=sine
+            $is_continuous_at(sine,0)
+        case j=3:
+            terms(j)=terms(3)=absolute
+            $is_continuous_at(absolute,0)
+
+release thm Sums::main::unary_function_prefix_continuous(R,3,terms,0,3)
+
+$is_continuous_at(\Sums::main::unary_function_prefix_sum<R,3>(terms,3),0)
+
+claim:
+    ? forall j closed_range(1,3):
+        j<=0
+        =>:
+            $has_derivative_at(terms(j),0,values(j))
+    by contra:
+        ? $has_derivative_at(terms(j),0,values(j))
+        j>=1
+        j<=0
+        j<1
+        impossible j>=1
+
+release thm Sums::main::unary_function_prefix_derivative(R,3,terms,values,0,0)
+
+\Sums::main::finite_real_prefix_sum<3>(values,0)=0
+
+$has_derivative_at(\Sums::main::unary_function_prefix_sum<R,3>(terms,0),0,0)
+
+have fn empty_values(j closed_range(1,0)) R=0
+
+\Sums::main::finite_real_prefix_sum<0>(empty_values,0)=0

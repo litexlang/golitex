@@ -8,39 +8,33 @@
 # Evidence: target/release/litex -lang en -strict -f examples/test_objs/absolute_value_bars.lit
 # Regression: tests/unit/parse/absolute_value_bars.rs
 
-sketch:
-    |-3| = 3
-    abs(-3) = 3
-    |0| = 0
-    |2.5| = 2.5
+|-3| = 3
+abs(-3) = 3
+|0| = 0
+|2.5| = 2.5
 
-sketch:
-    |-3| + |2| = 5
-    2 * |-3| = 6
-    |1 - 4|^2 = 9
-    -|-3|^2 = -9
-    |2|^|-3| = 8
-    |2|! = 2
+|-3| + |2| = 5
+2 * |-3| = 6
+|1 - 4|^2 = 9
+-|-3|^2 = -9
+|2|^|-3| = 8
+|2|! = 2
 
-sketch:
-    ||-3|| = 3
-    |1 + |-3|| = 4
-    abs(|-3|) = |abs(-3)|
+||-3|| = 3
+|1 + |-3|| = 4
+abs(|-3|) = |abs(-3)|
 
 sketch:
     have fn magnitude(x R) R = |x|
     magnitude(-3) = 3
 
-sketch:
-    forall x, y R:
-        |x| = abs(x)
-        |-x| = |x|
-        |x| >= 0
-        |x + y| <= |x| + |y|
+forall x, y R:
+    |x| = abs(x)
+    |-x| = |x|
+    |x| >= 0
+    |x + y| <= |x| + |y|
 
-sketch:
-    forall x R:
-        |x| $in R
+forall x R:
+    |x| $in R
 
-sketch:
-    eval |-7|
+eval |-7|

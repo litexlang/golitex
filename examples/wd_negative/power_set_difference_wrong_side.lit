@@ -1,0 +1,28 @@
+# The preceding struct instance verifies; the last unsupported carrier claim must fail.
+struct UnionAdditive<Ambient set>:
+    carrier power_set(Ambient)
+    value fn(E power_set(carrier)) R
+    <=>:
+        forall E,F power_set(carrier):
+            value(union(E,F)) = value(E)+value(F)
+
+have fn zero_event(E power_set(R)) R = 0
+
+claim:
+    ? (R,zero_event) $in &UnionAdditive<R>
+    R $in power_set(R)
+    zero_event $in fn(E power_set(R)) R
+    claim:
+        ? forall E,F power_set(R):
+            zero_event(union(E,F)) = zero_event(E)+zero_event(F)
+        E $subset R
+        F $subset R
+        union(E,F) $subset R
+        union(E,F) $in power_set(R)
+        zero_event(union(E,F)) = 0
+        zero_event(E) = 0
+        zero_event(F) = 0
+    (R,zero_event) $in &UnionAdditive<R>
+
+forall X,Y set, A power_set(Y), B power_set(X):
+    set_minus(A,B) $in power_set(X)

@@ -62,6 +62,26 @@ impl LitexToLeanCompiler {
             ));
         }
         let source_term = self.compile_object_reference(source, position)?;
+        let standard_input = position
+            .with_visible_wd(source, &mut |wd, _| {
+                let ObjWellDefinedProof::ByDef {
+                    proof: ObjWellDefinedProofByDef::IteratedOperator(p),
+                    ..
+                } = wd
+                else {
+                    return Err(LeanCompileError::unsupported(
+                        "FiniteAggregate/CalculationWD",
+                    ));
+                };
+                Self::finite_aggregate_uses_standard_input(p)
+            })?
+            .ok_or_else(|| LeanCompileError::unsupported("FiniteAggregate/CalculationProducer"))?;
+        let denote_law = if standard_input {
+            "finiteAggregateListDenote"
+        } else {
+            "finiteAggregateOnListDenote"
+        };
+
         let enumerated_term = self.compile_object_reference(&enumeration.resolved_set, position)?;
         let same = self.compile_equality_path(
             set,
@@ -148,7 +168,7 @@ impl LitexToLeanCompiler {
         }
         let output = exact_rational_literal(&accumulated, "ℂ")?;
         lines.push(format!(
-            "apply Litex.finiteAggregateListDenote _aggregate [{}] {output}",
+            "apply Litex.{denote_law} _aggregate [{}] {output}",
             numbers.join(", ")
         ));
         lines.push("· intro x\n  rw [_enumeration_same]\n  exact _members_0 x".into());

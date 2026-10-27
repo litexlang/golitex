@@ -1,0 +1,915 @@
+# Ordered real partials of arbitrary finite order, with one vector input.
+# Paths run first-to-last; intermediate functions retain their actual local domains.
+# Candidate, existence and proof-consuming selection are separate source interfaces.
+
+struct OrderedPartialProfiles<n N+,k N>:
+    regions fn(j closed_range(0,k)) power_set(cart_n(R,n))
+    values fn(j closed_range(0,k),x cart_n(R,n): x $in regions(j)) R
+
+template<n N+,k N,c &OrderedPartialProfiles<n,k>,j closed_range(0,k)>:
+    have fn ordered_partial_profile(q {x cart_n(R,n): x $in c.regions(j)}) R=c.values(j,q)
+
+prop is_ordered_partial_chain(n N+,D power_set(cart_n(R,n)),k N,f fn(x D) R,indices finite_seq(closed_range(1,n),k),c &OrderedPartialProfiles<n,k>):
+    c.regions(0)=D
+    forall j closed_range(1,k):
+        c.regions(j) $subset c.regions(j-1)
+    forall x cart_n(R,n):
+        x $in D
+        x $in c.regions(0)
+        =>:
+            c.values(0,x)=f(x)
+    forall j closed_range(1,k),x cart_n(R,n):
+        x $in c.regions(j)
+        x $in c.regions(j-1)
+        =>:
+            $has_partial_derivative_at(\ordered_partial_profile<n,k,c,j-1>,x,n,indices(j),c.values(j,x))
+
+prop has_ordered_partial_at(n N+,D power_set(cart_n(R,n)),k N,f fn(x D) R,p D,indices finite_seq(closed_range(1,n),k),L R):
+    exist c &OrderedPartialProfiles<n,k> st {$is_ordered_partial_chain(n,D,k,f,indices,c),p $in c.regions(k),c.values(k,p)=L}
+
+prop ordered_profiles_agree_stage(n N+,k N,c,d &OrderedPartialProfiles<n,k>,j N):
+    forall x cart_n(R,n):
+        j<=k
+        x $in c.regions(j)
+        x $in d.regions(j)
+        =>:
+            c.values(j,x)=d.values(j,x)
+
+thm ordered_profiles_zero_agree:
+    ? forall n N+,D power_set(cart_n(R,n)),k N,f fn(x D) R,indices finite_seq(closed_range(1,n),k),c,d &OrderedPartialProfiles<n,k>,x cart_n(R,n):
+        $is_ordered_partial_chain(n,D,k,f,indices,c)
+        $is_ordered_partial_chain(n,D,k,f,indices,d)
+        x $in c.regions(0)
+        x $in d.regions(0)
+        =>:
+            c.values(0,x)=d.values(0,x)
+    c.regions(0)=D
+    d.regions(0)=D
+    x $in D
+    c.values(0,x)=f(x)=d.values(0,x)
+
+thm ordered_profiles_successor_agree:
+    ? forall n N+,D power_set(cart_n(R,n)),k N,f fn(x D) R,indices finite_seq(closed_range(1,n),k),c,d &OrderedPartialProfiles<n,k>,j closed_range(1,k),x cart_n(R,n):
+        $is_ordered_partial_chain(n,D,k,f,indices,c)
+        $is_ordered_partial_chain(n,D,k,f,indices,d)
+        $ordered_profiles_agree_stage(n,k,c,d,j-1)
+        x $in c.regions(j)
+        x $in d.regions(j)
+        =>:
+            c.values(j,x)=d.values(j,x)
+    j>=1
+    j<=k
+    j-1>=0
+    j-1<=j
+    j-1<=k
+    j-1 $in closed_range(0,k)
+    c.regions(j) $subset c.regions(j-1)
+    d.regions(j) $subset d.regions(j-1)
+    x $in c.regions(j-1)
+    x $in d.regions(j-1)
+    $has_partial_derivative_at(\ordered_partial_profile<n,k,c,j-1>,x,n,indices(j),c.values(j,x))
+    $has_partial_derivative_at(\ordered_partial_profile<n,k,d,j-1>,x,n,indices(j),d.values(j,x))
+    $is_set(cart_n(R,n))
+    {u cart_n(R,n):u $in c.regions(j-1)} $subset cart_n(R,n)
+    {u cart_n(R,n):u $in d.regions(j-1)} $subset cart_n(R,n)
+    {u cart_n(R,n):u $in c.regions(j-1)} $in power_set(cart_n(R,n))
+    {u cart_n(R,n):u $in d.regions(j-1)} $in power_set(cart_n(R,n))
+    x $in {u cart_n(R,n):u $in c.regions(j-1)}
+    x $in {u cart_n(R,n):u $in d.regions(j-1)}
+    x $in intersect({u cart_n(R,n):u $in c.regions(j-1)},{u cart_n(R,n):u $in d.regions(j-1)})
+    claim:
+        ? forall y intersect({u cart_n(R,n):u $in c.regions(j-1)},{u cart_n(R,n):u $in d.regions(j-1)}):
+            \ordered_partial_profile<n,k,c,j-1>(y)=\ordered_partial_profile<n,k,d,j-1>(y)
+        y $in {u cart_n(R,n):u $in c.regions(j-1)}
+        y $in {u cart_n(R,n):u $in d.regions(j-1)}
+        y $in cart_n(R,n)
+        y $in c.regions(j-1)
+        y $in d.regions(j-1)
+        c.values(j-1,y)=d.values(j-1,y)
+        \ordered_partial_profile<n,k,c,j-1>(y)=c.values(j-1,y)=d.values(j-1,y)=\ordered_partial_profile<n,k,d,j-1>(y)
+    \ordered_partial_profile<n,k,c,j-1> $in fn(y {u cart_n(R,n):u $in c.regions(j-1)}) R
+    \ordered_partial_profile<n,k,d,j-1> $in fn(y {u cart_n(R,n):u $in d.regions(j-1)}) R
+    release thm locality::real_partials_intersection_unique(n,{u cart_n(R,n):u $in c.regions(j-1)},{u cart_n(R,n):u $in d.regions(j-1)},x,indices(j),\ordered_partial_profile<n,k,c,j-1>,\ordered_partial_profile<n,k,d,j-1>,c.values(j,x),d.values(j,x))
+
+
+thm ordered_profiles_stage_agreement:
+    ? forall n N+,D power_set(cart_n(R,n)),k N,f fn(x D) R,indices finite_seq(closed_range(1,n),k),c,d &OrderedPartialProfiles<n,k>,j N:
+        $is_ordered_partial_chain(n,D,k,f,indices,c)
+        $is_ordered_partial_chain(n,D,k,f,indices,d)
+        =>:
+            $ordered_profiles_agree_stage(n,k,c,d,j)
+    by induc stage from 0:
+        ? $ordered_profiles_agree_stage(n,k,c,d,stage)
+        ? from stage=0:
+            claim:
+                ? forall x cart_n(R,n):
+                    0<=k
+                    x $in c.regions(0)
+                    x $in d.regions(0)
+                    =>:
+                        c.values(0,x)=d.values(0,x)
+                release thm ordered_profiles_zero_agree(n,D,k,f,indices,c,d,x)
+            by def $ordered_profiles_agree_stage(n,k,c,d,0)
+        ? induc:
+            stage $in N
+            (stage+1)-1=stage
+            claim:
+                ? forall x cart_n(R,n):
+                    stage+1<=k
+                    x $in c.regions(stage+1)
+                    x $in d.regions(stage+1)
+                    =>:
+                        c.values(stage+1,x)=d.values(stage+1,x)
+                stage+1 $in Z
+                stage+1>=1
+                stage+1 $in closed_range(1,k)
+                release thm ordered_profiles_successor_agree(n,D,k,f,indices,c,d,stage+1,x)
+            by def $ordered_profiles_agree_stage(n,k,c,d,stage+1)
+
+thm ordered_partial_unique:
+    ? forall n N+,D power_set(cart_n(R,n)),k N,f fn(x D) R,p D,indices finite_seq(closed_range(1,n),k),A,B R:
+        $has_ordered_partial_at(n,D,k,f,p,indices,A)
+        $has_ordered_partial_at(n,D,k,f,p,indices,B)
+        =>:
+            A=B
+    obtain c from $has_ordered_partial_at(n,D,k,f,p,indices,A)
+    obtain d from $has_ordered_partial_at(n,D,k,f,p,indices,B)
+    release thm ordered_profiles_stage_agreement(n,D,k,f,indices,c,d,k)
+    p $in cart_n(R,n)
+    k<=k
+    A=c.values(k,p)=d.values(k,p)=B
+
+prop is_ordered_partially_differentiable_at(n N+,D power_set(cart_n(R,n)),k N,f fn(x D) R,p D,indices finite_seq(closed_range(1,n),k)):
+    exist L R st {$has_ordered_partial_at(n,D,k,f,p,indices,L)}
+
+thm ordered_partial_candidate_exists:
+    ? forall n N+,D power_set(cart_n(R,n)),k N,f fn(x D) R,p D,indices finite_seq(closed_range(1,n),k),L R:
+        $has_ordered_partial_at(n,D,k,f,p,indices,L)
+        =>:
+            $is_ordered_partially_differentiable_at(n,D,k,f,p,indices)
+    witness $is_ordered_partially_differentiable_at(n,D,k,f,p,indices) from L
+
+thm ordered_partial_exists_unique:
+    ? forall n N+,D power_set(cart_n(R,n)),k N,f fn(x D) R,p D,indices finite_seq(closed_range(1,n),k):
+        $is_ordered_partially_differentiable_at(n,D,k,f,p,indices)
+        =>:
+            exist! L R st {$has_ordered_partial_at(n,D,k,f,p,indices,L)}
+    obtain L from $is_ordered_partially_differentiable_at(n,D,k,f,p,indices)
+    claim:
+        ? forall A,B R:
+            $has_ordered_partial_at(n,D,k,f,p,indices,A)
+            $has_ordered_partial_at(n,D,k,f,p,indices,B)
+            =>:
+                A=B
+        release thm ordered_partial_unique(n,D,k,f,p,indices,A,B)
+    witness exist! value R st {$has_ordered_partial_at(n,D,k,f,p,indices,value)} from L
+
+template<n N+,D power_set(cart_n(R,n)),k N>:
+    have fn ordered_partial by exist!:
+        ? forall f fn(x D) R,p D,indices finite_seq(closed_range(1,n),k):
+            $is_ordered_partially_differentiable_at(n,D,k,f,p,indices)
+            =>:
+                exist! L R st {$has_ordered_partial_at(n,D,k,f,p,indices,L)}
+
+thm ordered_partial_from_profile:
+    ? forall n N+,D power_set(cart_n(R,n)),k N,f fn(x D) R,p D,indices finite_seq(closed_range(1,n),k),c &OrderedPartialProfiles<n,k>,L R:
+        $is_ordered_partial_chain(n,D,k,f,indices,c)
+        p $in c.regions(k)
+        c.values(k,p)=L
+        =>:
+            $has_ordered_partial_at(n,D,k,f,p,indices,L)
+    witness $has_ordered_partial_at(n,D,k,f,p,indices,L) from c
+
+thm ordered_partial_selected:
+    ? forall n N+,D power_set(cart_n(R,n)),k N,f fn(x D) R,p D,indices finite_seq(closed_range(1,n),k):
+        $is_ordered_partially_differentiable_at(n,D,k,f,p,indices)
+        =>:
+            $has_ordered_partial_at(n,D,k,f,p,indices,\ordered_partial<n,D,k>(f,p,indices))
+
+thm ordered_partial_value:
+    ? forall n N+,D power_set(cart_n(R,n)),k N,f fn(x D) R,p D,indices finite_seq(closed_range(1,n),k),L R:
+        $has_ordered_partial_at(n,D,k,f,p,indices,L)
+        $is_ordered_partially_differentiable_at(n,D,k,f,p,indices)
+        =>:
+            \ordered_partial<n,D,k>(f,p,indices)=L
+    $has_ordered_partial_at(n,D,k,f,p,indices,\ordered_partial<n,D,k>(f,p,indices))
+    release thm ordered_partial_unique(n,D,k,f,p,indices,\ordered_partial<n,D,k>(f,p,indices),L)
+
+thm ordered_profile_zero_function_equal:
+    ? forall n N+,D power_set(cart_n(R,n)),k N,f fn(x D) R,c &OrderedPartialProfiles<n,k>:
+        c.regions(0)=D
+        forall x cart_n(R,n):
+            x $in D
+            x $in c.regions(0)
+            =>:
+                c.values(0,x)=f(x)
+        =>:
+            \ordered_partial_profile<n,k,c,0> = f
+    D $subset cart_n(R,n)
+    by fn_extension:
+        ? \ordered_partial_profile<n,k,c,0> = f
+        claim:
+            ? forall x {u cart_n(R,n):u $in c.regions(0)}:
+                \ordered_partial_profile<n,k,c,0>(x)=f(x)
+            x $in cart_n(R,n)
+            x $in c.regions(0)
+            x $in D
+            \ordered_partial_profile<n,k,c,0>(x)=c.values(0,x)=f(x)
+
+thm ordered_partial_zero:
+    ? forall n N+,D power_set(cart_n(R,n)),f fn(x D) R,p D,indices finite_seq(closed_range(1,n),0):
+        $has_ordered_partial_at(n,D,0,f,p,indices,f(p))
+    D $subset cart_n(R,n)
+    p $in cart_n(R,n)
+    $is_set(cart_n(R,n))
+    $is_set(power_set(cart_n(R,n)))
+    have fn regions(j closed_range(0,0)) power_set(cart_n(R,n))=D
+    forall j closed_range(0,0):
+        regions(j)=D
+    claim:
+        ? forall j closed_range(0,0),x cart_n(R,n):
+            x $in regions(j)
+            =>:
+                x $in D
+        regions(j)=D
+    have fn values(j closed_range(0,0),x cart_n(R,n):x $in regions(j)) R=f(x)
+    have c &OrderedPartialProfiles<n,0> = (regions,values)
+    c.regions=regions
+    c.values=values
+    c.regions(0)=regions(0)=D
+    claim:
+        ? forall x cart_n(R,n):
+            x $in D
+            x $in c.regions(0)
+            =>:
+                c.values(0,x)=f(x)
+        c.values(0,x)=values(0,x)=f(x)
+    by def $is_ordered_partial_chain(n,D,0,f,indices,c)
+    p $in c.regions(0)
+    c.values(0,p)=values(0,p)=f(p)
+    release thm ordered_partial_from_profile(n,D,0,f,p,indices,c,f(p))
+
+
+thm ordered_partial_zero_value:
+    ? forall n N+,D power_set(cart_n(R,n)),f fn(x D) R,p D,indices finite_seq(closed_range(1,n),0),L R:
+        $has_ordered_partial_at(n,D,0,f,p,indices,L)
+        =>:
+            L=f(p)
+    release thm ordered_partial_zero(n,D,f,p,indices)
+    release thm ordered_partial_unique(n,D,0,f,p,indices,L,f(p))
+
+thm ordered_partial_one_to_native:
+    ? forall n N+,D power_set(cart_n(R,n)),f fn(x D) R,p D,indices finite_seq(closed_range(1,n),1),L R:
+        $has_ordered_partial_at(n,D,1,f,p,indices,L)
+        =>:
+            $has_partial_derivative_at(f,p,n,indices(1),L)
+    obtain c from $has_ordered_partial_at(n,D,1,f,p,indices,L)
+    release thm ordered_profile_zero_function_equal(n,D,1,f,c)
+    p $in cart_n(R,n)
+    c.regions(1) $subset c.regions(0)
+    p $in c.regions(0)
+    c.regions(1-1)=c.regions(0)
+    p $in c.regions(1-1)
+    $has_partial_derivative_at(\ordered_partial_profile<n,1,c,1-1>,p,n,indices(1),c.values(1,p))
+    by fn_extension:
+        ? \ordered_partial_profile<n,1,c,1-1> = \ordered_partial_profile<n,1,c,0>
+        claim:
+            ? forall x {u cart_n(R,n):u $in c.regions(1-1)}:
+                \ordered_partial_profile<n,1,c,1-1>(x)=\ordered_partial_profile<n,1,c,0>(x)
+            x $in cart_n(R,n)
+            x $in c.regions(1-1)
+            x $in c.regions(0)
+            \ordered_partial_profile<n,1,c,1-1>(x)=c.values(1-1,x)=c.values(0,x)=\ordered_partial_profile<n,1,c,0>(x)
+
+# Convenience constructor for a supplied finite family defined on the full space.
+thm ordered_partial_from_profiles_on:
+    ? forall n N+,D power_set(cart_n(R,n)),k N,functions fn(j closed_range(0,k)) fn(x D) R,p D,indices finite_seq(closed_range(1,n),k):
+        forall j closed_range(1,k),x D:
+            $has_partial_derivative_at(functions(j-1),x,n,indices(j),functions(j)(x))
+        =>:
+            $has_ordered_partial_at(n,D,k,functions(0),p,indices,functions(k)(p))
+    D $subset cart_n(R,n)
+    p $in cart_n(R,n)
+    $is_set(cart_n(R,n))
+    $is_set(power_set(cart_n(R,n)))
+    have fn regions(j closed_range(0,k)) power_set(cart_n(R,n))=D
+    claim:
+        ? forall j closed_range(0,k),x cart_n(R,n):
+            x $in regions(j)
+            =>:
+                x $in D
+        regions(j)=D
+    have fn values(j closed_range(0,k),x cart_n(R,n):x $in regions(j)) R=functions(j)(x)
+    have c &OrderedPartialProfiles<n,k> = (regions,values)
+    c.regions=regions
+    c.values=values
+    claim:
+        ? forall j closed_range(0,k):
+            c.regions(j)=D
+        c.regions(j)=regions(j)=D
+    claim:
+        ? forall j closed_range(0,k),x cart_n(R,n):
+            x $in c.regions(j)
+            =>:
+                x $in D
+        c.regions(j)=D
+    claim:
+        ? forall j closed_range(0,k),x cart_n(R,n):
+            x $in c.regions(j)
+            =>:
+                c.values(j,x)=functions(j)(x)
+        x $in regions(j)
+        c.values(j,x)=values(j,x)=functions(j)(x)
+    c.regions(0)=D
+    claim:
+        ? forall j closed_range(1,k):
+            c.regions(j) $subset c.regions(j-1)
+        c.regions(j)=D
+        c.regions(j-1)=D
+    claim:
+        ? forall x cart_n(R,n):
+            x $in D
+            x $in c.regions(0)
+            =>:
+                c.values(0,x)=functions(0)(x)
+        c.values(0,x)=functions(0)(x)
+    claim:
+        ? forall j closed_range(1,k),x cart_n(R,n):
+            x $in c.regions(j)
+            x $in c.regions(j-1)
+            =>:
+                $has_partial_derivative_at(\ordered_partial_profile<n,k,c,j-1>,x,n,indices(j),c.values(j,x))
+        j $in closed_range(0,k)
+        j-1 $in closed_range(0,k)
+        c.regions(j-1)=regions(j-1)=D
+        {u cart_n(R,n):u $in c.regions(j-1)} $subset D
+        D $subset {u cart_n(R,n):u $in c.regions(j-1)}
+        {u cart_n(R,n):u $in c.regions(j-1)} $in power_set(cart_n(R,n))
+        x $in {u cart_n(R,n):u $in c.regions(j-1)}
+        x $in intersect(D,{u cart_n(R,n):u $in c.regions(j-1)})
+        claim:
+            ? forall y intersect(D,{u cart_n(R,n):u $in c.regions(j-1)}):
+                functions(j-1)(y)=\ordered_partial_profile<n,k,c,j-1>(y)
+            y $in D
+            y $in cart_n(R,n)
+            y $in c.regions(j-1)
+            y $in regions(j-1)
+            \ordered_partial_profile<n,k,c,j-1>(y)=c.values(j-1,y)=values(j-1,y)=functions(j-1)(y)
+        x $in D
+        $has_partial_derivative_at(functions(j-1),x,n,indices(j),functions(j)(x))
+        release thm locality::real_partials_extensional(n,D,{u cart_n(R,n):u $in c.regions(j-1)},x,indices(j),functions(j-1),\ordered_partial_profile<n,k,c,j-1>,functions(j)(x))
+        c.values(j,x)=functions(j)(x)
+    by def $is_ordered_partial_chain(n,D,k,functions(0),indices,c)
+    c.regions(k)=D
+    p $in c.regions(k)
+    c.values(k,p)=functions(k)(p)
+    release thm ordered_partial_from_profile(n,D,k,functions(0),p,indices,c,functions(k)(p))
+
+thm ordered_partial_from_global_profiles:
+    ? forall n N+,k N,functions fn(j closed_range(0,k)) fn(x cart_n(R,n)) R,p cart_n(R,n),indices finite_seq(closed_range(1,n),k):
+        forall j closed_range(1,k),x cart_n(R,n):
+            $has_partial_derivative_at(functions(j-1),x,n,indices(j),functions(j)(x))
+        =>:
+            $has_ordered_partial_at(n,cart_n(R,n),k,functions(0),p,indices,functions(k)(p))
+    $is_set(cart_n(R,n))
+    cart_n(R,n) $in power_set(cart_n(R,n))
+    release thm ordered_partial_from_profiles_on(n,cart_n(R,n),k,functions,p,indices)
+
+thm ordered_partial_one_from_native:
+    ? forall n N+,D power_set(cart_n(R,n)),f fn(x D) R,p D,indices finite_seq(closed_range(1,n),1),L R:
+        $has_partial_derivative_at(f,p,n,indices(1),L)
+        =>:
+            $has_ordered_partial_at(n,D,1,f,p,indices,L)
+    D $subset cart_n(R,n)
+    p $in cart_n(R,n)
+    $is_set(cart_n(R,n))
+    $is_set(power_set(cart_n(R,n)))
+    {p} $in power_set(cart_n(R,n))
+    by for:
+        ? forall j closed_range(0,1):
+            j=0 or j=1
+        j=0 or j=1
+    have fn regions(j closed_range(0,1)) power_set(cart_n(R,n)) by cases:
+        case j=0: D
+        case j=1: {p}
+    regions(0)=D
+    regions(1)={p}
+    claim:
+        ? forall j closed_range(0,1),x cart_n(R,n):
+            x $in regions(j)
+            =>:
+                j=0 and x $in D or j=1
+        j=0 or j=1
+        by cases:
+            ? j=0 and x $in D or j=1
+            case j=0:
+                regions(j)=regions(0)=D
+                x $in D
+            case j=1:
+                j=1
+    have fn values(j closed_range(0,1),x cart_n(R,n):x $in regions(j)) R by cases:
+        case j=0 and x $in D: f(x)
+        case j=1: L
+    have c &OrderedPartialProfiles<n,1> = (regions,values)
+    c.regions=regions
+    c.values=values
+    c.regions(0)=regions(0)=D
+    c.regions(1)=regions(1)={p}
+    claim:
+        ? forall j closed_range(1,1):
+            c.regions(j) $subset c.regions(j-1)
+        j=1
+        j-1=0
+        c.regions(j)=regions(j)=regions(1)={p}
+        c.regions(j-1)=regions(j-1)=regions(0)=D
+        {p} $subset D
+    claim:
+        ? forall x cart_n(R,n):
+            x $in D
+            x $in c.regions(0)
+            =>:
+                c.values(0,x)=f(x)
+        c.values(0,x)=values(0,x)=f(x)
+    claim:
+        ? forall j closed_range(1,1),x cart_n(R,n):
+            x $in c.regions(j)
+            x $in c.regions(j-1)
+            =>:
+                $has_partial_derivative_at(\ordered_partial_profile<n,1,c,j-1>,x,n,indices(j),c.values(j,x))
+        j=1
+        j-1=0
+        j-1 $in closed_range(0,1)
+        indices(j)=indices(1)
+        c.regions(j)=regions(j)=regions(1)={p}
+        c.regions(j-1)=regions(j-1)=regions(0)=D
+        x $in {p}
+        x=p
+        x $in D
+        x $in regions(j)
+        c.values(j,x)=values(j,x)=L
+        {u cart_n(R,n):u $in c.regions(j-1)} $subset D
+        D $subset {u cart_n(R,n):u $in c.regions(j-1)}
+        {u cart_n(R,n):u $in c.regions(j-1)} $in power_set(cart_n(R,n))
+        x $in {u cart_n(R,n):u $in c.regions(j-1)}
+        x $in intersect(D,{u cart_n(R,n):u $in c.regions(j-1)})
+        $has_partial_derivative_at(f,x,n,indices(j),L)
+        claim:
+            ? forall y intersect(D,{u cart_n(R,n):u $in c.regions(j-1)}):
+                f(y)=\ordered_partial_profile<n,1,c,j-1>(y)
+            y $in D
+            y $in cart_n(R,n)
+            y $in c.regions(j-1)
+            y $in regions(j-1)
+            \ordered_partial_profile<n,1,c,j-1>(y)=c.values(j-1,y)=values(j-1,y)=f(y)
+        release thm locality::real_partials_extensional(n,D,{u cart_n(R,n):u $in c.regions(j-1)},x,indices(j),f,\ordered_partial_profile<n,1,c,j-1>,L)
+    by def $is_ordered_partial_chain(n,D,1,f,indices,c)
+    p $in c.regions(1)
+    c.values(1,p)=values(1,p)=L
+    release thm ordered_partial_from_profile(n,D,1,f,p,indices,c,L)
+
+
+thm ordered_partial_two_to_native:
+    ? forall n N+,D power_set(cart_n(R,n)),f fn(x D) R,p D,indices finite_seq(closed_range(1,n),2),L R:
+        $has_ordered_partial_at(n,D,2,f,p,indices,L)
+        =>:
+            $has_second_partial_derivative_at(f,p,n,indices(1),indices(2),L)
+    obtain c from $has_ordered_partial_at(n,D,2,f,p,indices,L)
+    D $subset cart_n(R,n)
+    c.regions(0)=D
+    c.regions(1) $subset c.regions(0)
+    c.regions(2) $subset c.regions(1)
+    p $in c.regions(2)
+    p $in c.regions(1)
+    p $in cart_n(R,n)
+    let E={u cart_n(R,n):u $in c.regions(1)}
+    E $subset cart_n(R,n)
+    $is_set(cart_n(R,n))
+    E $in power_set(cart_n(R,n))
+    E $subset D
+    p $in E
+    have fn g(x E) R=c.values(1,x)
+    claim:
+        ? forall q E:
+            $has_partial_derivative_at(f,q,n,indices(1),g(q))
+        q $in cart_n(R,n)
+        q $in c.regions(1)
+        q $in c.regions(0)
+        q $in D
+        1-1=0
+        c.regions(1-1)=c.regions(0)=D
+        q $in c.regions(1-1)
+        $has_partial_derivative_at(\ordered_partial_profile<n,2,c,1-1>,q,n,indices(1),c.values(1,q))
+        {u cart_n(R,n):u $in c.regions(1-1)} $subset D
+        D $subset {u cart_n(R,n):u $in c.regions(1-1)}
+        {u cart_n(R,n):u $in c.regions(1-1)} $in power_set(cart_n(R,n))
+        q $in intersect({u cart_n(R,n):u $in c.regions(1-1)},D)
+        claim:
+            ? forall y intersect({u cart_n(R,n):u $in c.regions(1-1)},D):
+                \ordered_partial_profile<n,2,c,1-1>(y)=f(y)
+            y $in cart_n(R,n)
+            y $in c.regions(1-1)
+            y $in c.regions(0)
+            y $in D
+            \ordered_partial_profile<n,2,c,1-1>(y)=c.values(1-1,y)=c.values(0,y)=f(y)
+        release thm locality::real_partials_extensional(n,{u cart_n(R,n):u $in c.regions(1-1)},D,q,indices(1),\ordered_partial_profile<n,2,c,1-1>,f,c.values(1,q))
+        g(q)=c.values(1,q)
+    claim:
+        ? forall q E:
+            q $in {u E:$has_partial_derivative_at(f,u,n,indices(1),g(u))}
+        $has_partial_derivative_at(f,q,n,indices(1),g(q))
+        q $in {u E:$has_partial_derivative_at(f,u,n,indices(1),g(u))}
+    by def E $subset {q E:$has_partial_derivative_at(f,q,n,indices(1),g(q))}
+    2-1=1
+    c.regions(2-1)=c.regions(1)
+    p $in c.regions(2-1)
+    $has_partial_derivative_at(\ordered_partial_profile<n,2,c,2-1>,p,n,indices(2),c.values(2,p))
+    {u cart_n(R,n):u $in c.regions(2-1)} $subset E
+    E $subset {u cart_n(R,n):u $in c.regions(2-1)}
+    {u cart_n(R,n):u $in c.regions(2-1)} $in power_set(cart_n(R,n))
+    p $in intersect({u cart_n(R,n):u $in c.regions(2-1)},E)
+    claim:
+        ? forall y intersect({u cart_n(R,n):u $in c.regions(2-1)},E):
+            \ordered_partial_profile<n,2,c,2-1>(y)=g(y)
+        y $in {u cart_n(R,n):u $in c.regions(2-1)}
+        y $in E
+        y $in cart_n(R,n)
+        y $in c.regions(2-1)
+        y $in c.regions(1)
+        y $in E
+        \ordered_partial_profile<n,2,c,2-1>(y)=c.values(2-1,y)=c.values(1,y)=g(y)
+    release thm locality::real_partials_extensional(n,{u cart_n(R,n):u $in c.regions(2-1)},E,p,indices(2),\ordered_partial_profile<n,2,c,2-1>,g,c.values(2,p))
+    c.values(2,p)=L
+    $has_partial_derivative_at(g,p,n,indices(2),L)
+    witness exist U power_set(cart_n(R,n)),h fn(x U) R st {U $subset D,p $in U,U $subset {q U:$has_partial_derivative_at(f,q,n,indices(1),h(q))},$has_partial_derivative_at(h,p,n,indices(2),L)} from E,g
+    release thm second_partial_at_from_definition(f,p,n,indices(1),indices(2),L)
+
+
+thm ordered_partial_two_from_native:
+    ? forall n N+,D power_set(cart_n(R,n)),f fn(x D) R,p D,indices finite_seq(closed_range(1,n),2),L R:
+        $has_second_partial_derivative_at(f,p,n,indices(1),indices(2),L)
+        =>:
+            $has_ordered_partial_at(n,D,2,f,p,indices,L)
+    release thm second_partial_at_to_definition(f,p,n,indices(1),indices(2),L)
+    obtain E,g from exist U power_set(cart_n(R,n)),h fn(x U) R st {U $subset D,p $in U,U $subset {q U:$has_partial_derivative_at(f,q,n,indices(1),h(q))},$has_partial_derivative_at(h,p,n,indices(2),L)}
+    D $subset cart_n(R,n)
+    E $subset cart_n(R,n)
+    p $in cart_n(R,n)
+    $is_set(cart_n(R,n))
+    $is_set(power_set(cart_n(R,n)))
+    {p} $in power_set(cart_n(R,n))
+    by for:
+        ? forall j closed_range(0,2):
+            j=0 or j=1 or j=2
+        j=0 or j=1 or j=2
+    by for:
+        ? forall j closed_range(1,2):
+            j=1 or j=2
+        j=1 or j=2
+    have fn regions(j closed_range(0,2)) power_set(cart_n(R,n)) by cases:
+        case j=0: D
+        case j=1: E
+        case j=2: {p}
+    regions(0)=D
+    regions(1)=E
+    regions(2)={p}
+    claim:
+        ? forall j closed_range(0,2),x cart_n(R,n):
+            x $in regions(j)
+            =>:
+                j=0 and x $in D or j=1 and x $in E or j=2
+        j=0 or j=1 or j=2
+        by cases:
+            ? j=0 and x $in D or j=1 and x $in E or j=2
+            case j=0:
+                regions(j)=regions(0)=D
+                x $in D
+            case j=1:
+                regions(j)=regions(1)=E
+                x $in E
+            case j=2:
+                j=2
+    have fn values(j closed_range(0,2),x cart_n(R,n):x $in regions(j)) R by cases:
+        case j=0 and x $in D: f(x)
+        case j=1 and x $in E: g(x)
+        case j=2: L
+    have c &OrderedPartialProfiles<n,2> = (regions,values)
+    c.regions=regions
+    c.values=values
+    c.regions(0)=regions(0)=D
+    c.regions(1)=regions(1)=E
+    c.regions(2)=regions(2)={p}
+    claim:
+        ? forall j closed_range(1,2):
+            c.regions(j) $subset c.regions(j-1)
+        j=1 or j=2
+        by cases:
+            ? c.regions(j) $subset c.regions(j-1)
+            case j=1:
+                j-1=0
+                c.regions(j)=regions(j)=regions(1)=E
+                c.regions(j-1)=regions(j-1)=regions(0)=D
+            case j=2:
+                j-1=1
+                c.regions(j)=regions(j)=regions(2)={p}
+                c.regions(j-1)=regions(j-1)=regions(1)=E
+                {p} $subset E
+    claim:
+        ? forall x cart_n(R,n):
+            x $in D
+            x $in c.regions(0)
+            =>:
+                c.values(0,x)=f(x)
+        c.values(0,x)=values(0,x)=f(x)
+    claim:
+        ? forall j closed_range(1,2),x cart_n(R,n):
+            x $in c.regions(j)
+            x $in c.regions(j-1)
+            =>:
+                $has_partial_derivative_at(\ordered_partial_profile<n,2,c,j-1>,x,n,indices(j),c.values(j,x))
+        j=1 or j=2
+        j-1 $in closed_range(0,2)
+        by cases:
+            ? $has_partial_derivative_at(\ordered_partial_profile<n,2,c,j-1>,x,n,indices(j),c.values(j,x))
+            case j=1:
+                j-1=0
+                indices(j)=indices(1)
+                c.regions(j)=regions(j)=regions(1)=E
+                c.regions(j-1)=regions(j-1)=regions(0)=D
+                x $in E
+                x $in D
+                x $in {q E:$has_partial_derivative_at(f,q,n,indices(1),g(q))}
+                $has_partial_derivative_at(f,x,n,indices(1),g(x))
+                x $in regions(j)
+                c.values(j,x)=values(j,x)=g(x)
+                {u cart_n(R,n):u $in c.regions(j-1)} $subset D
+                D $subset {u cart_n(R,n):u $in c.regions(j-1)}
+                {u cart_n(R,n):u $in c.regions(j-1)} $in power_set(cart_n(R,n))
+                x $in {u cart_n(R,n):u $in c.regions(j-1)}
+                x $in intersect(D,{u cart_n(R,n):u $in c.regions(j-1)})
+                claim:
+                    ? forall y intersect(D,{u cart_n(R,n):u $in c.regions(j-1)}):
+                        f(y)=\ordered_partial_profile<n,2,c,j-1>(y)
+                    y $in D
+                    y $in cart_n(R,n)
+                    y $in c.regions(j-1)
+                    y $in regions(j-1)
+                    \ordered_partial_profile<n,2,c,j-1>(y)=c.values(j-1,y)=values(j-1,y)=f(y)
+                release thm locality::real_partials_extensional(n,D,{u cart_n(R,n):u $in c.regions(j-1)},x,indices(j),f,\ordered_partial_profile<n,2,c,j-1>,g(x))
+            case j=2:
+                j-1=1
+                indices(j)=indices(2)
+                c.regions(j)=regions(j)=regions(2)={p}
+                c.regions(j-1)=regions(j-1)=regions(1)=E
+                x $in {p}
+                x=p
+                x $in E
+                x $in regions(j)
+                c.values(j,x)=values(j,x)=L
+                {u cart_n(R,n):u $in c.regions(j-1)} $subset E
+                E $subset {u cart_n(R,n):u $in c.regions(j-1)}
+                {u cart_n(R,n):u $in c.regions(j-1)} $in power_set(cart_n(R,n))
+                x $in {u cart_n(R,n):u $in c.regions(j-1)}
+                x $in intersect(E,{u cart_n(R,n):u $in c.regions(j-1)})
+                $has_partial_derivative_at(g,x,n,indices(j),L)
+                claim:
+                    ? forall y intersect(E,{u cart_n(R,n):u $in c.regions(j-1)}):
+                        g(y)=\ordered_partial_profile<n,2,c,j-1>(y)
+                    y $in E
+                    y $in cart_n(R,n)
+                    y $in c.regions(j-1)
+                    y $in regions(j-1)
+                    \ordered_partial_profile<n,2,c,j-1>(y)=c.values(j-1,y)=values(j-1,y)=g(y)
+                release thm locality::real_partials_extensional(n,E,{u cart_n(R,n):u $in c.regions(j-1)},x,indices(j),g,\ordered_partial_profile<n,2,c,j-1>,L)
+    by def $is_ordered_partial_chain(n,D,2,f,indices,c)
+    p $in c.regions(2)
+    c.values(2,p)=values(2,p)=L
+    release thm ordered_partial_from_profile(n,D,2,f,p,indices,c,L)
+
+
+# Prefix existence is an explicit source derivation, outside selector WD.
+thm ordered_partial_prefix_candidate:
+    ? forall n N+,D power_set(cart_n(R,n)),k N,m closed_range(0,k),f fn(x D) R,p D,indices finite_seq(closed_range(1,n),k),prefix finite_seq(closed_range(1,n),m),c &OrderedPartialProfiles<n,k>:
+        $is_ordered_partial_chain(n,D,k,f,indices,c)
+        p $in c.regions(m)
+        forall j closed_range(1,m):
+            j $in closed_range(1,k)
+            =>:
+                prefix(j)=indices(j)
+        =>:
+            $has_ordered_partial_at(n,D,m,f,p,prefix,c.values(m,p))
+    claim:
+        ? forall j closed_range(0,m):
+            j $in closed_range(0,k)
+        j>=0
+        j<=m
+        m<=k
+        j<=k
+    claim:
+        ? forall j closed_range(1,m):
+            j $in closed_range(0,m)
+            j-1 $in closed_range(0,m)
+            j $in closed_range(1,k)
+            j $in closed_range(0,k)
+            j-1 $in closed_range(0,k)
+        j>=1
+        j<=m
+        m<=k
+        j<=k
+        j-1>=0
+        j-1<=m
+        j-1<=k
+    have fn regions(j closed_range(0,m)) power_set(cart_n(R,n))=c.regions(j)
+    claim:
+        ? forall j closed_range(0,m):
+            regions(j)=c.regions(j)
+        regions(j)=c.regions(j)
+    claim:
+        ? forall j closed_range(0,m),x cart_n(R,n):
+            x $in regions(j)
+            =>:
+                x $in c.regions(j)
+        regions(j)=c.regions(j)
+    have fn values(j closed_range(0,m),x cart_n(R,n):x $in regions(j)) R=c.values(j,x)
+    have d &OrderedPartialProfiles<n,m> = (regions,values)
+    d.regions=regions
+    d.values=values
+    claim:
+        ? forall j closed_range(0,m):
+            d.regions(j)=c.regions(j)
+        d.regions(j)=regions(j)=c.regions(j)
+    d.regions(0)=c.regions(0)=D
+    claim:
+        ? forall j closed_range(1,m):
+            d.regions(j) $subset d.regions(j-1)
+        j $in closed_range(1,k)
+        j $in closed_range(0,k)
+        j-1 $in closed_range(0,k)
+        d.regions(j)=c.regions(j)
+        d.regions(j-1)=c.regions(j-1)
+        c.regions(j) $subset c.regions(j-1)
+    claim:
+        ? forall x cart_n(R,n):
+            x $in D
+            x $in d.regions(0)
+            =>:
+                d.values(0,x)=f(x)
+        x $in regions(0)
+        x $in c.regions(0)
+        d.values(0,x)=values(0,x)=c.values(0,x)=f(x)
+    claim:
+        ? forall j closed_range(1,m),x cart_n(R,n):
+            x $in d.regions(j)
+            x $in d.regions(j-1)
+            =>:
+                $has_partial_derivative_at(\ordered_partial_profile<n,m,d,j-1>,x,n,prefix(j),d.values(j,x))
+        j $in closed_range(1,k)
+        j $in closed_range(0,k)
+        j-1 $in closed_range(0,k)
+        d.regions(j)=c.regions(j)
+        d.regions(j-1)=c.regions(j-1)
+        x $in c.regions(j)
+        x $in c.regions(j-1)
+        x $in regions(j)
+        d.values(j,x)=values(j,x)=c.values(j,x)
+        prefix(j)=indices(j)
+        $has_partial_derivative_at(\ordered_partial_profile<n,k,c,j-1>,x,n,indices(j),c.values(j,x))
+        {u cart_n(R,n):u $in c.regions(j-1)} $subset {u cart_n(R,n):u $in d.regions(j-1)}
+        {u cart_n(R,n):u $in d.regions(j-1)} $subset {u cart_n(R,n):u $in c.regions(j-1)}
+        {u cart_n(R,n):u $in c.regions(j-1)} $in power_set(cart_n(R,n))
+        {u cart_n(R,n):u $in d.regions(j-1)} $in power_set(cart_n(R,n))
+        x $in {u cart_n(R,n):u $in c.regions(j-1)}
+        x $in {u cart_n(R,n):u $in d.regions(j-1)}
+        x $in intersect({u cart_n(R,n):u $in c.regions(j-1)},{u cart_n(R,n):u $in d.regions(j-1)})
+        claim:
+            ? forall y intersect({u cart_n(R,n):u $in c.regions(j-1)},{u cart_n(R,n):u $in d.regions(j-1)}):
+                \ordered_partial_profile<n,k,c,j-1>(y)=\ordered_partial_profile<n,m,d,j-1>(y)
+            y $in {u cart_n(R,n):u $in c.regions(j-1)}
+            y $in {u cart_n(R,n):u $in d.regions(j-1)}
+            y $in cart_n(R,n)
+            y $in c.regions(j-1)
+            y $in d.regions(j-1)
+            y $in regions(j-1)
+            \ordered_partial_profile<n,m,d,j-1>(y)=d.values(j-1,y)=values(j-1,y)=c.values(j-1,y)=\ordered_partial_profile<n,k,c,j-1>(y)
+        release thm locality::real_partials_extensional(n,{u cart_n(R,n):u $in c.regions(j-1)},{u cart_n(R,n):u $in d.regions(j-1)},x,indices(j),\ordered_partial_profile<n,k,c,j-1>,\ordered_partial_profile<n,m,d,j-1>,c.values(j,x))
+    by def $is_ordered_partial_chain(n,D,m,f,prefix,d)
+    p $in cart_n(R,n)
+    m $in closed_range(0,m)
+    d.regions(m)=regions(m)=c.regions(m)
+    p $in c.regions(m)
+    p $in d.regions(m)
+    p $in regions(m)
+    d.values(m,p)=values(m,p)=c.values(m,p)
+    release thm ordered_partial_from_profile(n,D,m,f,p,prefix,d,c.values(m,p))
+
+thm ordered_partial_prefix_exists:
+    ? forall n N+,D power_set(cart_n(R,n)),k N,m closed_range(0,k),f fn(x D) R,p D,indices finite_seq(closed_range(1,n),k),prefix finite_seq(closed_range(1,n),m),L R:
+        $has_ordered_partial_at(n,D,k,f,p,indices,L)
+        forall j closed_range(1,m):
+            j $in closed_range(1,k)
+            =>:
+                prefix(j)=indices(j)
+        =>:
+            $is_ordered_partially_differentiable_at(n,D,m,f,p,prefix)
+    obtain c from $has_ordered_partial_at(n,D,k,f,p,indices,L)
+    p $in cart_n(R,n)
+    release thm locality::finite_nested_regions_member(cart_n(R,n),k,c.regions,p,m)
+    release thm ordered_partial_prefix_candidate(n,D,k,m,f,p,indices,prefix,c)
+    release thm ordered_partial_candidate_exists(n,D,m,f,p,prefix,c.values(m,p))
+
+prop is_ordered_partially_differentiable_on(n N+,D power_set(cart_n(R,n)),k N,f fn(x D) R,E power_set(D),indices finite_seq(closed_range(1,n),k)):
+    forall p E:
+        $is_ordered_partially_differentiable_at(n,D,k,f,p,indices)
+
+template<n N+,D power_set(cart_n(R,n)),E power_set(D),k N>:
+    have fn ordered_partial_function(f fn(x D) R,indices finite_seq(closed_range(1,n),k): $is_ordered_partially_differentiable_on(n,D,k,f,E,indices)) fn(p E) R=fn(p E) R {\ordered_partial<n,D,k>(f,p,indices)}
+
+thm ordered_partial_function_selected:
+    ? forall n N+,D power_set(cart_n(R,n)),k N,f fn(x D) R,E power_set(D),indices finite_seq(closed_range(1,n),k),p E:
+        $is_ordered_partially_differentiable_on(n,D,k,f,E,indices)
+        =>:
+            $has_ordered_partial_at(n,D,k,f,p,indices,\ordered_partial_function<n,D,E,k>(f,indices)(p))
+    $is_ordered_partially_differentiable_at(n,D,k,f,p,indices)
+    release thm ordered_partial_selected(n,D,k,f,p,indices)
+    \ordered_partial_function<n,D,E,k>(f,indices)(p)=\ordered_partial<n,D,k>(f,p,indices)
+
+thm ordered_partial_function_value:
+    ? forall n N+,D power_set(cart_n(R,n)),k N,f fn(x D) R,E power_set(D),indices finite_seq(closed_range(1,n),k),p E,L R:
+        $is_ordered_partially_differentiable_on(n,D,k,f,E,indices)
+        $has_ordered_partial_at(n,D,k,f,p,indices,L)
+        =>:
+            \ordered_partial_function<n,D,E,k>(f,indices)(p)=L
+    $is_ordered_partially_differentiable_at(n,D,k,f,p,indices)
+    release thm ordered_partial_value(n,D,k,f,p,indices,L)
+    \ordered_partial_function<n,D,E,k>(f,indices)(p)=\ordered_partial<n,D,k>(f,p,indices)=L
+
+thm ordered_partial_chain_region_in_domain:
+    ? forall n N+,D power_set(cart_n(R,n)),k N,f fn(x D) R,indices finite_seq(closed_range(1,n),k),c &OrderedPartialProfiles<n,k>,m closed_range(0,k):
+        $is_ordered_partial_chain(n,D,k,f,indices,c)
+        =>:
+            c.regions(m) $in power_set(D)
+    release thm locality::finite_nested_regions_subset(cart_n(R,n),k,c.regions,m)
+    c.regions(0)=D
+    c.regions(m) $subset D
+    $is_set(D)
+    c.regions(m) $in power_set(D)
+
+thm ordered_partial_chain_exists_on:
+    ? forall n N+,D power_set(cart_n(R,n)),k N,m closed_range(0,k),f fn(x D) R,indices finite_seq(closed_range(1,n),k),prefix finite_seq(closed_range(1,n),m),c &OrderedPartialProfiles<n,k>,E power_set(D):
+        $is_ordered_partial_chain(n,D,k,f,indices,c)
+        E=c.regions(m)
+        forall j closed_range(1,m):
+            j $in closed_range(1,k)
+            =>:
+                prefix(j)=indices(j)
+        =>:
+            $is_ordered_partially_differentiable_on(n,D,m,f,E,prefix)
+    claim:
+        ? forall p E:
+            $is_ordered_partially_differentiable_at(n,D,m,f,p,prefix)
+        p $in D
+        p $in c.regions(m)
+        release thm ordered_partial_prefix_candidate(n,D,k,m,f,p,indices,prefix,c)
+        release thm ordered_partial_candidate_exists(n,D,m,f,p,prefix,c.values(m,p))
+    by def $is_ordered_partially_differentiable_on(n,D,m,f,E,prefix)
+
+thm ordered_partial_function_successor:
+    ? forall n N+,D power_set(cart_n(R,n)),k N,m closed_range(0,k),f fn(x D) R,indices finite_seq(closed_range(1,n),k),prefix finite_seq(closed_range(1,n),m),c &OrderedPartialProfiles<n,k>,E power_set(D),center cart_n(R,n):
+        $is_ordered_partial_chain(n,D,k,f,indices,c)
+        m+1 $in closed_range(1,k)
+        m+1 $in closed_range(0,k)
+        E=c.regions(m)
+        center $in E
+        center $in c.regions(m+1)
+        forall q closed_range(1,m):
+            q $in closed_range(1,k)
+            =>:
+                prefix(q)=indices(q)
+        $is_ordered_partially_differentiable_on(n,D,m,f,E,prefix)
+        =>:
+            $has_partial_derivative_at(\ordered_partial_function<n,D,E,m>(f,prefix),center,n,indices(m+1),c.values(m+1,center))
+    m+1 $in closed_range(0,k)
+    m $in closed_range(0,k)
+    (m+1)-1=m
+    c.regions((m+1)-1)=c.regions(m)
+    center $in cart_n(R,n)
+    center $in c.regions(m)
+    $has_partial_derivative_at(\ordered_partial_profile<n,k,c,(m+1)-1>,center,n,indices(m+1),c.values(m+1,center))
+    E $subset D
+    D $subset cart_n(R,n)
+    E $subset cart_n(R,n)
+    E $in power_set(cart_n(R,n))
+    {u cart_n(R,n):u $in c.regions((m+1)-1)} $in power_set(cart_n(R,n))
+    {u cart_n(R,n):u $in c.regions((m+1)-1)} $subset E
+    E $subset {u cart_n(R,n):u $in c.regions((m+1)-1)}
+    center $in intersect({u cart_n(R,n):u $in c.regions((m+1)-1)},E)
+    claim:
+        ? forall y intersect({u cart_n(R,n):u $in c.regions((m+1)-1)},E):
+            \ordered_partial_profile<n,k,c,(m+1)-1>(y)=\ordered_partial_function<n,D,E,m>(f,prefix)(y)
+        y $in E
+        y $in D
+        y $in cart_n(R,n)
+        y $in c.regions(m)
+        release thm ordered_partial_prefix_candidate(n,D,k,m,f,y,indices,prefix,c)
+        release thm ordered_partial_function_value(n,D,m,f,E,prefix,y,c.values(m,y))
+        \ordered_partial_profile<n,k,c,(m+1)-1>(y)=c.values((m+1)-1,y)=c.values(m,y)=\ordered_partial_function<n,D,E,m>(f,prefix)(y)
+    release thm locality::real_partials_extensional(n,{u cart_n(R,n):u $in c.regions((m+1)-1)},E,center,indices(m+1),\ordered_partial_profile<n,k,c,(m+1)-1>,\ordered_partial_function<n,D,E,m>(f,prefix),c.values(m+1,center))

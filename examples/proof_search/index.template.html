@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Litex — proof as a search</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="viewer.js" defer></script>
+</head>
+<body>
+  <main>
+    <header class="page-header">
+      <div>
+        <div class="eyebrow">LITEX / A MATHEMATICAL LANGUAGE</div>
+        <h1 data-en="Proof as a search" data-zh="证明，是怎样找到的">Proof as a search</h1>
+        <p class="intro" data-en="A fact becomes checkable when a rule and its required evidence meet in the current mathematical context." data-zh="规则与它所需的证据，在当前数学上下文中相遇，一个事实便有了可检查的依据。">A fact becomes checkable when a rule and its required evidence meet in the current mathematical context.</p>
+      </div>
+      <div class="language-group" role="group" aria-label="Language / 语言">
+        <button type="button" id="language-en" aria-pressed="true">EN</button>
+        <button type="button" id="language-zh" aria-pressed="false">中文</button>
+      </div>
+    </header>
+
+    <section class="interaction" aria-label="Proof walkthrough">
+      <div class="walkthrough-header">
+        <div class="step-label"><span id="step-number">01 / 06</span><strong id="step-title">A goal in context</strong></div>
+        <div class="step-controls">
+          <button type="button" id="previous" data-en="Previous" data-zh="上一步">Previous</button>
+          <button type="button" id="play" aria-pressed="false" data-en="Play" data-zh="播放">Play</button>
+          <button type="button" id="next" class="primary" data-en="Next" data-zh="下一步">Next</button>
+        </div>
+      </div>
+      <div class="step-track" id="step-track" role="group" aria-label="Select a walkthrough step"></div>
+      <p id="step-description" aria-live="polite"></p>
+    </section>
+
+    <figure>
+      <div id="figure-en" class="figure-language"><!-- FIGURE_EN --></div>
+      <div id="figure-zh" class="figure-language" hidden><!-- FIGURE_ZH --></div>
+      <figcaption data-en="Conditions are checked downwards; evidence is assembled upwards. Select any labelled node to inspect its role." data-zh="向下检查条件，向上组合证据。点击任意有标签的节点，查看它在验证中的作用。">Conditions are checked downwards; evidence is assembled upwards. Select any labelled node to inspect its role.</figcaption>
+    </figure>
+
+    <section class="inspector" aria-labelledby="selection-title">
+      <div><div class="eyebrow" data-en="SELECTED NODE" data-zh="当前节点">SELECTED NODE</div><h2 id="selection-title"></h2></div>
+      <div><p id="selection-description" aria-live="polite"></p><code id="selection-source"></code></div>
+    </section>
+
+    <footer class="page-footer">
+      <p data-en="This is a curated explanation of a verified example. The pipeline is source-audited; it is not a recording of every attempted search candidate. A search miss does not prove a statement false." data-zh="这是一个已验证例子的说明图。入口顺序与源码对应，并非逐个记录所有搜索候选。未找到证明，不表示命题为假。">This is a curated explanation of a verified example. The pipeline is source-audited; it is not a recording of every attempted search candidate. A search miss does not prove a statement false.</p>
+      <div class="downloads">
+        <span data-en="Static figure" data-zh="静态图">Static figure</span>
+        <a id="download-svg" href="proof-search.svg">SVG</a>
+        <a id="download-pdf" href="proof-search.pdf">PDF</a>
+        <a id="download-png" href="proof-search.png">PNG</a>
+        <a href="README.md" data-en="About this example" data-zh="示例说明">About this example</a>
+      </div>
+      <details><summary data-en="Verification evidence" data-zh="验证依据">Verification evidence</summary><pre id="verification-summary"></pre></details>
+    </footer>
+  </main>
+  <script type="application/json" id="verification-data"><!-- EVIDENCE --></script>
+</body>
+</html>

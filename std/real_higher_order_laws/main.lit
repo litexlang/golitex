@@ -1,0 +1,542 @@
+# Explicit source laws for finite-order real derivatives.
+# Common actual input domains; intermediate certificate domains remain local.
+
+thm real_derivatives_linear_combination:
+    ? forall D,E,U power_set(R),center R,f fn(x D) R,g fn(x E) R,h fn(x U) R,a,b,A,B R,r R+:
+        U $subset D
+        U $subset E
+        center $in U
+        {t R:abs(t-center)<r} $subset U
+        $has_derivative_at(f,center,A)
+        $has_derivative_at(g,center,B)
+        forall x U:
+            h(x)=a*f(x)+b*g(x)
+        =>:
+            $has_derivative_at(h,center,a*A+b*B)
+    claim:
+        ? forall x U:
+            x $in D
+            x $in E
+        x $in D
+        x $in E
+    witness exist radius R+ st {{t R:abs(t-center)<radius} $subset U} from r
+    have fn left_scaled(x U) R=a*f(x)
+    have fn right_scaled(x U) R=b*g(x)
+    release thm fn_derivative_at_scale(f,left_scaled,center,A,a)
+    release thm fn_derivative_at_scale(g,right_scaled,center,B,b)
+    claim:
+        ? forall x U:
+            h(x)=left_scaled(x)+right_scaled(x)
+        h(x)=a*f(x)+b*g(x)=left_scaled(x)+right_scaled(x)
+    release thm fn_derivative_at_add(left_scaled,right_scaled,h,center,a*A,b*B)
+
+thm real_partials_linear_combination:
+    ? forall n N+,D,E,U power_set(cart_n(R,n)),center cart_n(R,n),axis closed_range(1,n),f fn(x D) R,g fn(x E) R,h fn(x U) R,a,b,A,B R,r R+:
+        U $subset D
+        U $subset E
+        center $in U
+        {t R:abs(t)<r} $subset {t R:fn(k closed_range(1,n)) R {center(k)+t*identity_matrix(n)(k,axis)} $in U}
+        $has_partial_derivative_at(f,center,n,axis,A)
+        $has_partial_derivative_at(g,center,n,axis,B)
+        forall x U:
+            h(x)=a*f(x)+b*g(x)
+        =>:
+            $has_partial_derivative_at(h,center,n,axis,a*A+b*B)
+    U $subset cart_n(R,n)
+    center $in D
+    center $in E
+    center $in intersect(D,U)
+    center $in intersect(E,U)
+    center $in intersect(cart_n(R,n),U)
+    claim:
+        ? forall x U:
+            x $in D
+            x $in E
+        x $in D
+        x $in E
+    have fn left(x U) R=f(x)
+    have fn right(x U) R=g(x)
+    claim:
+        ? forall x intersect(D,U):
+            f(x)=left(x)
+        x $in U
+        left(x)=f(x)
+    claim:
+        ? forall x intersect(E,U):
+            g(x)=right(x)
+        x $in U
+        right(x)=g(x)
+    release thm Calc::locality::real_partials_restrict(n,D,U,center,axis,f,left,A,r)
+    release thm Calc::locality::real_partials_restrict(n,E,U,center,axis,g,right,B,r)
+    have fn constant_a(x cart_n(R,n)) R=a
+    have fn constant_b(x cart_n(R,n)) R=b
+    $has_partial_derivative_at(constant_a,center,n,axis,0)
+    $has_partial_derivative_at(constant_b,center,n,axis,0)
+    have fn local_a(x U) R=a
+    have fn local_b(x U) R=b
+    claim:
+        ? forall x intersect(cart_n(R,n),U):
+            constant_a(x)=local_a(x)
+        x $in U
+        constant_a(x)=a=local_a(x)
+    claim:
+        ? forall x intersect(cart_n(R,n),U):
+            constant_b(x)=local_b(x)
+        x $in U
+        constant_b(x)=b=local_b(x)
+    release thm Calc::locality::real_partials_restrict(n,cart_n(R,n),U,center,axis,constant_a,local_a,0,r)
+    release thm Calc::locality::real_partials_restrict(n,cart_n(R,n),U,center,axis,constant_b,local_b,0,r)
+    have fn left_scaled(x U) R=a*f(x)
+    have fn right_scaled(x U) R=b*g(x)
+    claim:
+        ? forall x U:
+            left_scaled(x)=local_a(x)*left(x)
+            right_scaled(x)=local_b(x)*right(x)
+        left_scaled(x)=a*f(x)=local_a(x)*left(x)
+        right_scaled(x)=b*g(x)=local_b(x)*right(x)
+    release thm partial_at_multiply(local_a,left,left_scaled,center,n,axis,0,A)
+    release thm partial_at_multiply(local_b,right,right_scaled,center,n,axis,0,B)
+    local_a(center)=a
+    local_b(center)=b
+    0*left(center)+local_a(center)*A=a*A
+    0*right(center)+local_b(center)*B=b*B
+    $has_partial_derivative_at(left_scaled,center,n,axis,a*A)
+    $has_partial_derivative_at(right_scaled,center,n,axis,b*B)
+    claim:
+        ? forall x U:
+            h(x)=left_scaled(x)+right_scaled(x)
+        h(x)=a*f(x)+b*g(x)=left_scaled(x)+right_scaled(x)
+    release thm partial_at_add(left_scaled,right_scaled,h,center,n,axis,a*A,b*B)
+
+thm nth_derivative_linear_combination:
+    ? forall D power_set(R),k N,f,g,h fn(x D) R,center D,a,b,A,B R:
+        $Calc::unary_higher_order::has_nth_derivative_at(D,k,f,center,A)
+        $Calc::unary_higher_order::has_nth_derivative_at(D,k,g,center,B)
+        forall x D:
+            h(x)=a*f(x)+b*g(x)
+        =>:
+            $Calc::unary_higher_order::has_nth_derivative_at(D,k,h,center,a*A+b*B)
+    obtain c from $Calc::unary_higher_order::has_nth_derivative_at(D,k,f,center,A)
+    obtain d from $Calc::unary_higher_order::has_nth_derivative_at(D,k,g,center,B)
+    D $subset R
+    center $in R
+    $is_set(R)
+    0 $in closed_range(0,k)
+    k $in closed_range(0,k)
+    claim:
+        ? forall j closed_range(0,k):
+            c.regions(j) $in power_set(R)
+            d.regions(j) $in power_set(R)
+            intersect(c.regions(j),d.regions(j)) $in power_set(R)
+        c.regions(j) $in power_set(R)
+        d.regions(j) $in power_set(R)
+    have fn regions(j closed_range(0,k)) power_set(R)=intersect(c.regions(j),d.regions(j))
+    claim:
+        ? forall j closed_range(0,k),x R:
+            x $in regions(j)
+            =>:
+                x $in c.regions(j)
+                x $in d.regions(j)
+        regions(j)=intersect(c.regions(j),d.regions(j))
+        x $in intersect(c.regions(j),d.regions(j))
+        x $in c.regions(j)
+        x $in d.regions(j)
+    claim:
+        ? forall j closed_range(0,k),x R:
+            x $in regions(j)
+            =>:
+                c.values(j,x) $in C
+                d.values(j,x) $in C
+        x $in c.regions(j)
+        x $in d.regions(j)
+        c.values(j,x) $in R
+        d.values(j,x) $in R
+        c.values(j,x) $in C
+        d.values(j,x) $in C
+    have fn values(j closed_range(0,k),x R:x $in regions(j)) R=a*c.values(j,x)+b*d.values(j,x)
+    have z &Calc::unary_higher_order::NthDerivativeProfiles<k> =(regions,values)
+    z.regions=regions
+    z.values=values
+    claim:
+        ? forall j closed_range(0,k):
+            z.regions(j)=intersect(c.regions(j),d.regions(j))
+        z.regions(j)=regions(j)=intersect(c.regions(j),d.regions(j))
+    claim:
+        ? forall j closed_range(0,k),x R:
+            x $in z.regions(j)
+            =>:
+                x $in c.regions(j)
+                x $in d.regions(j)
+                x $in regions(j)
+        z.regions(j)=intersect(c.regions(j),d.regions(j))
+        x $in intersect(c.regions(j),d.regions(j))
+        x $in c.regions(j)
+        x $in d.regions(j)
+        regions(j)=intersect(c.regions(j),d.regions(j))
+    c.regions(0)=D
+    d.regions(0)=D
+    z.regions(0)=intersect(c.regions(0),d.regions(0))=intersect(D,D)=D
+    claim:
+        ? forall j closed_range(1,k):
+            z.regions(j) $subset z.regions(j-1)
+        j $in closed_range(0,k)
+        j-1 $in closed_range(0,k)
+        c.regions(j) $subset c.regions(j-1)
+        d.regions(j) $subset d.regions(j-1)
+        claim:
+            ? forall x z.regions(j):
+                x $in z.regions(j-1)
+            z.regions(j) $in power_set(R)
+            z.regions(j) $subset R
+            x $in R
+            x $in c.regions(j)
+            x $in d.regions(j)
+            x $in c.regions(j-1)
+            x $in d.regions(j-1)
+            z.regions(j-1)=intersect(c.regions(j-1),d.regions(j-1))
+        by def z.regions(j) $subset z.regions(j-1)
+    claim:
+        ? forall x R:
+            x $in D
+            x $in z.regions(0)
+            =>:
+                z.values(0,x)=h(x)
+        x $in c.regions(0)
+        x $in d.regions(0)
+        x $in regions(0)
+        c.values(0,x)=f(x)
+        d.values(0,x)=g(x)
+        z.values(0,x)=values(0,x)=a*c.values(0,x)+b*d.values(0,x)=a*f(x)+b*g(x)=h(x)
+    claim:
+        ? forall j closed_range(1,k),x R:
+            j $in closed_range(0,k)
+            j-1 $in closed_range(0,k)
+            x $in z.regions(j)
+            x $in z.regions(j-1)
+            =>:
+                $has_derivative_at(\Calc::unary_higher_order::nth_derivative_profile<k,z,j-1>,x,z.values(j,x))
+        x $in c.regions(j)
+        x $in d.regions(j)
+        x $in c.regions(j-1)
+        x $in d.regions(j-1)
+        x $in regions(j)
+        $has_derivative_at(\Calc::unary_higher_order::nth_derivative_profile<k,c,j-1>,x,c.values(j,x))
+        $has_derivative_at(\Calc::unary_higher_order::nth_derivative_profile<k,d,j-1>,x,d.values(j,x))
+        release thm fn_derivative_at_to_limit(\Calc::unary_higher_order::nth_derivative_profile<k,c,j-1>,x,c.values(j,x))
+        obtain r from exist radius R+ st {{t R:abs(t-x)<radius} $subset {u R:u $in c.regions(j-1)}}
+        release thm fn_derivative_at_to_limit(\Calc::unary_higher_order::nth_derivative_profile<k,d,j-1>,x,d.values(j,x))
+        obtain s from exist radius R+ st {{t R:abs(t-x)<radius} $subset {u R:u $in d.regions(j-1)}}
+        release thm Calc::locality::positive_real_minimum(r,s)
+        claim:
+            ? forall t {u R:abs(u-x)<min(r,s)}:
+                t $in {u R:u $in z.regions(j-1)}
+            t $in R
+            min(r,s)<=r
+            min(r,s)<=s
+            abs(t-x)<r
+            abs(t-x)<s
+            t $in {u R:abs(u-x)<r}
+            t $in {u R:abs(u-x)<s}
+            t $in {u R:u $in c.regions(j-1)}
+            t $in {u R:u $in d.regions(j-1)}
+            t $in c.regions(j-1)
+            t $in d.regions(j-1)
+            z.regions(j-1)=intersect(c.regions(j-1),d.regions(j-1))
+            t $in z.regions(j-1)
+        by def {u R:abs(u-x)<min(r,s)} $subset {u R:u $in z.regions(j-1)}
+        claim:
+            ? forall y {u R:u $in z.regions(j-1)}:
+                y $in {u R:u $in c.regions(j-1)}
+                y $in {u R:u $in d.regions(j-1)}
+            y $in R
+            y $in z.regions(j-1)
+            y $in c.regions(j-1)
+            y $in d.regions(j-1)
+        by def {u R:u $in z.regions(j-1)} $subset {u R:u $in c.regions(j-1)}
+        by def {u R:u $in z.regions(j-1)} $subset {u R:u $in d.regions(j-1)}
+        {u R:u $in c.regions(j-1)} $in power_set(R)
+        {u R:u $in d.regions(j-1)} $in power_set(R)
+        {u R:u $in z.regions(j-1)} $in power_set(R)
+        x $in {u R:u $in z.regions(j-1)}
+        claim:
+            ? forall y {u R:u $in z.regions(j-1)}:
+                \Calc::unary_higher_order::nth_derivative_profile<k,z,j-1>(y)=a*\Calc::unary_higher_order::nth_derivative_profile<k,c,j-1>(y)+b*\Calc::unary_higher_order::nth_derivative_profile<k,d,j-1>(y)
+            y $in R
+            y $in z.regions(j-1)
+            y $in c.regions(j-1)
+            y $in d.regions(j-1)
+            y $in regions(j-1)
+            \Calc::unary_higher_order::nth_derivative_profile<k,c,j-1>(y)=c.values(j-1,y)
+            \Calc::unary_higher_order::nth_derivative_profile<k,d,j-1>(y)=d.values(j-1,y)
+            \Calc::unary_higher_order::nth_derivative_profile<k,z,j-1>(y)=z.values(j-1,y)=values(j-1,y)=a*c.values(j-1,y)+b*d.values(j-1,y)=a*\Calc::unary_higher_order::nth_derivative_profile<k,c,j-1>(y)+b*\Calc::unary_higher_order::nth_derivative_profile<k,d,j-1>(y)
+        release thm real_derivatives_linear_combination({u R:u $in c.regions(j-1)},{u R:u $in d.regions(j-1)},{u R:u $in z.regions(j-1)},x,\Calc::unary_higher_order::nth_derivative_profile<k,c,j-1>,\Calc::unary_higher_order::nth_derivative_profile<k,d,j-1>,\Calc::unary_higher_order::nth_derivative_profile<k,z,j-1>,a,b,c.values(j,x),d.values(j,x),min(r,s))
+        z.values(j,x)=values(j,x)=a*c.values(j,x)+b*d.values(j,x)
+    by def $Calc::unary_higher_order::is_nth_derivative_chain(D,k,h,z)
+    z.regions(k)=intersect(c.regions(k),d.regions(k))
+    center $in z.regions(k)
+    center $in regions(k)
+    z.values(k,center)=values(k,center)=a*c.values(k,center)+b*d.values(k,center)=a*A+b*B
+    release thm Calc::unary_higher_order::nth_derivative_from_profile(D,k,h,center,z,a*A+b*B)
+
+thm ordered_partial_linear_combination:
+    ? forall n N+,D power_set(cart_n(R,n)),k N,f,g,h fn(x D) R,center D,indices finite_seq(closed_range(1,n),k),a,b,A,B R:
+        $Calc::higher_order::has_ordered_partial_at(n,D,k,f,center,indices,A)
+        $Calc::higher_order::has_ordered_partial_at(n,D,k,g,center,indices,B)
+        forall x D:
+            h(x)=a*f(x)+b*g(x)
+        =>:
+            $Calc::higher_order::has_ordered_partial_at(n,D,k,h,center,indices,a*A+b*B)
+    obtain c from $Calc::higher_order::has_ordered_partial_at(n,D,k,f,center,indices,A)
+    obtain d from $Calc::higher_order::has_ordered_partial_at(n,D,k,g,center,indices,B)
+    D $subset cart_n(R,n)
+    center $in cart_n(R,n)
+    $is_set(cart_n(R,n))
+    0 $in closed_range(0,k)
+    k $in closed_range(0,k)
+    claim:
+        ? forall j closed_range(0,k):
+            c.regions(j) $in power_set(cart_n(R,n))
+            d.regions(j) $in power_set(cart_n(R,n))
+            intersect(c.regions(j),d.regions(j)) $in power_set(cart_n(R,n))
+        c.regions(j) $in power_set(cart_n(R,n))
+        d.regions(j) $in power_set(cart_n(R,n))
+    have fn regions(j closed_range(0,k)) power_set(cart_n(R,n))=intersect(c.regions(j),d.regions(j))
+    claim:
+        ? forall j closed_range(0,k),x cart_n(R,n):
+            x $in regions(j)
+            =>:
+                x $in c.regions(j)
+                x $in d.regions(j)
+        regions(j)=intersect(c.regions(j),d.regions(j))
+        x $in intersect(c.regions(j),d.regions(j))
+        x $in c.regions(j)
+        x $in d.regions(j)
+    claim:
+        ? forall j closed_range(0,k),x cart_n(R,n):
+            x $in regions(j)
+            =>:
+                c.values(j,x) $in C
+                d.values(j,x) $in C
+        x $in c.regions(j)
+        x $in d.regions(j)
+        c.values(j,x) $in R
+        d.values(j,x) $in R
+        c.values(j,x) $in C
+        d.values(j,x) $in C
+    have fn values(j closed_range(0,k),x cart_n(R,n):x $in regions(j)) R=a*c.values(j,x)+b*d.values(j,x)
+    have z &Calc::higher_order::OrderedPartialProfiles<n,k> =(regions,values)
+    z.regions=regions
+    z.values=values
+    claim:
+        ? forall j closed_range(0,k):
+            z.regions(j)=intersect(c.regions(j),d.regions(j))
+        z.regions(j)=regions(j)=intersect(c.regions(j),d.regions(j))
+    claim:
+        ? forall j closed_range(0,k),x cart_n(R,n):
+            x $in z.regions(j)
+            =>:
+                x $in c.regions(j)
+                x $in d.regions(j)
+                x $in regions(j)
+        z.regions(j)=intersect(c.regions(j),d.regions(j))
+        x $in intersect(c.regions(j),d.regions(j))
+        x $in c.regions(j)
+        x $in d.regions(j)
+        regions(j)=intersect(c.regions(j),d.regions(j))
+    c.regions(0)=D
+    d.regions(0)=D
+    z.regions(0)=intersect(c.regions(0),d.regions(0))=intersect(D,D)=D
+    claim:
+        ? forall j closed_range(1,k):
+            z.regions(j) $subset z.regions(j-1)
+        j $in closed_range(0,k)
+        j-1 $in closed_range(0,k)
+        c.regions(j) $subset c.regions(j-1)
+        d.regions(j) $subset d.regions(j-1)
+        claim:
+            ? forall x z.regions(j):
+                x $in z.regions(j-1)
+            z.regions(j) $in power_set(cart_n(R,n))
+            z.regions(j) $subset cart_n(R,n)
+            x $in cart_n(R,n)
+            x $in c.regions(j)
+            x $in d.regions(j)
+            x $in c.regions(j-1)
+            x $in d.regions(j-1)
+            z.regions(j-1)=intersect(c.regions(j-1),d.regions(j-1))
+        by def z.regions(j) $subset z.regions(j-1)
+    claim:
+        ? forall x cart_n(R,n):
+            x $in D
+            x $in z.regions(0)
+            =>:
+                z.values(0,x)=h(x)
+        x $in c.regions(0)
+        x $in d.regions(0)
+        x $in regions(0)
+        c.values(0,x)=f(x)
+        d.values(0,x)=g(x)
+        z.values(0,x)=values(0,x)=a*c.values(0,x)+b*d.values(0,x)=a*f(x)+b*g(x)=h(x)
+    claim:
+        ? forall j closed_range(1,k),x cart_n(R,n):
+            x $in z.regions(j)
+            x $in z.regions(j-1)
+            =>:
+                $has_partial_derivative_at(\Calc::higher_order::ordered_partial_profile<n,k,z,j-1>,x,n,indices(j),z.values(j,x))
+        j $in closed_range(0,k)
+        j-1 $in closed_range(0,k)
+        x $in c.regions(j)
+        x $in d.regions(j)
+        x $in c.regions(j-1)
+        x $in d.regions(j-1)
+        x $in regions(j)
+        $has_partial_derivative_at(\Calc::higher_order::ordered_partial_profile<n,k,c,j-1>,x,n,indices(j),c.values(j,x))
+        $has_partial_derivative_at(\Calc::higher_order::ordered_partial_profile<n,k,d,j-1>,x,n,indices(j),d.values(j,x))
+        release thm partial_at_to_definition(\Calc::higher_order::ordered_partial_profile<n,k,c,j-1>,x,n,indices(j),c.values(j,x))
+        obtain r from exist radius R+ st {{t R:abs(t)<radius} $subset {v R:fn(coord closed_range(1,n)) R {x(coord)+v*identity_matrix(n)(coord,indices(j))} $in {u cart_n(R,n):u $in c.regions(j-1)}}}
+        release thm partial_at_to_definition(\Calc::higher_order::ordered_partial_profile<n,k,d,j-1>,x,n,indices(j),d.values(j,x))
+        obtain s from exist radius R+ st {{t R:abs(t)<radius} $subset {v R:fn(coord closed_range(1,n)) R {x(coord)+v*identity_matrix(n)(coord,indices(j))} $in {u cart_n(R,n):u $in d.regions(j-1)}}}
+        release thm Calc::locality::positive_real_minimum(r,s)
+        claim:
+            ? forall t {u R:abs(u)<min(r,s)}:
+                t $in {v R:fn(coord closed_range(1,n)) R {x(coord)+v*identity_matrix(n)(coord,indices(j))} $in {u cart_n(R,n):u $in z.regions(j-1)}}
+            t $in R
+            min(r,s)<=r
+            min(r,s)<=s
+            abs(t)<r
+            abs(t)<s
+            t $in {u R:abs(u)<r}
+            t $in {u R:abs(u)<s}
+            t $in {v R:fn(coord closed_range(1,n)) R {x(coord)+v*identity_matrix(n)(coord,indices(j))} $in {u cart_n(R,n):u $in c.regions(j-1)}}
+            t $in {v R:fn(coord closed_range(1,n)) R {x(coord)+v*identity_matrix(n)(coord,indices(j))} $in {u cart_n(R,n):u $in d.regions(j-1)}}
+            fn(coord closed_range(1,n)) R {x(coord)+t*identity_matrix(n)(coord,indices(j))} $in {u cart_n(R,n):u $in c.regions(j-1)}
+            fn(coord closed_range(1,n)) R {x(coord)+t*identity_matrix(n)(coord,indices(j))} $in {u cart_n(R,n):u $in d.regions(j-1)}
+            fn(coord closed_range(1,n)) R {x(coord)+t*identity_matrix(n)(coord,indices(j))} $in cart_n(R,n)
+            fn(coord closed_range(1,n)) R {x(coord)+t*identity_matrix(n)(coord,indices(j))} $in c.regions(j-1)
+            fn(coord closed_range(1,n)) R {x(coord)+t*identity_matrix(n)(coord,indices(j))} $in d.regions(j-1)
+            z.regions(j-1)=intersect(c.regions(j-1),d.regions(j-1))
+            fn(coord closed_range(1,n)) R {x(coord)+t*identity_matrix(n)(coord,indices(j))} $in z.regions(j-1)
+            fn(coord closed_range(1,n)) R {x(coord)+t*identity_matrix(n)(coord,indices(j))} $in {u cart_n(R,n):u $in z.regions(j-1)}
+            t $in {v R:fn(coord closed_range(1,n)) R {x(coord)+v*identity_matrix(n)(coord,indices(j))} $in {u cart_n(R,n):u $in z.regions(j-1)}}
+        by def {u R:abs(u)<min(r,s)} $subset {v R:fn(coord closed_range(1,n)) R {x(coord)+v*identity_matrix(n)(coord,indices(j))} $in {u cart_n(R,n):u $in z.regions(j-1)}}
+        claim:
+            ? forall y {u cart_n(R,n):u $in z.regions(j-1)}:
+                y $in {u cart_n(R,n):u $in c.regions(j-1)}
+                y $in {u cart_n(R,n):u $in d.regions(j-1)}
+            y $in cart_n(R,n)
+            y $in z.regions(j-1)
+            y $in c.regions(j-1)
+            y $in d.regions(j-1)
+        by def {u cart_n(R,n):u $in z.regions(j-1)} $subset {u cart_n(R,n):u $in c.regions(j-1)}
+        by def {u cart_n(R,n):u $in z.regions(j-1)} $subset {u cart_n(R,n):u $in d.regions(j-1)}
+        {u cart_n(R,n):u $in c.regions(j-1)} $in power_set(cart_n(R,n))
+        {u cart_n(R,n):u $in d.regions(j-1)} $in power_set(cart_n(R,n))
+        {u cart_n(R,n):u $in z.regions(j-1)} $in power_set(cart_n(R,n))
+        x $in {u cart_n(R,n):u $in z.regions(j-1)}
+        claim:
+            ? forall y {u cart_n(R,n):u $in z.regions(j-1)}:
+                \Calc::higher_order::ordered_partial_profile<n,k,z,j-1>(y)=a*\Calc::higher_order::ordered_partial_profile<n,k,c,j-1>(y)+b*\Calc::higher_order::ordered_partial_profile<n,k,d,j-1>(y)
+            y $in cart_n(R,n)
+            y $in z.regions(j-1)
+            y $in c.regions(j-1)
+            y $in d.regions(j-1)
+            y $in regions(j-1)
+            \Calc::higher_order::ordered_partial_profile<n,k,c,j-1>(y)=c.values(j-1,y)
+            \Calc::higher_order::ordered_partial_profile<n,k,d,j-1>(y)=d.values(j-1,y)
+            \Calc::higher_order::ordered_partial_profile<n,k,z,j-1>(y)=z.values(j-1,y)=values(j-1,y)=a*c.values(j-1,y)+b*d.values(j-1,y)=a*\Calc::higher_order::ordered_partial_profile<n,k,c,j-1>(y)+b*\Calc::higher_order::ordered_partial_profile<n,k,d,j-1>(y)
+        release thm real_partials_linear_combination(n,{u cart_n(R,n):u $in c.regions(j-1)},{u cart_n(R,n):u $in d.regions(j-1)},{u cart_n(R,n):u $in z.regions(j-1)},x,indices(j),\Calc::higher_order::ordered_partial_profile<n,k,c,j-1>,\Calc::higher_order::ordered_partial_profile<n,k,d,j-1>,\Calc::higher_order::ordered_partial_profile<n,k,z,j-1>,a,b,c.values(j,x),d.values(j,x),min(r,s))
+        z.values(j,x)=values(j,x)=a*c.values(j,x)+b*d.values(j,x)
+    by def $Calc::higher_order::is_ordered_partial_chain(n,D,k,h,indices,z)
+    z.regions(k)=intersect(c.regions(k),d.regions(k))
+    center $in z.regions(k)
+    center $in regions(k)
+    z.values(k,center)=values(k,center)=a*c.values(k,center)+b*d.values(k,center)=a*A+b*B
+    release thm Calc::higher_order::ordered_partial_from_profile(n,D,k,h,center,indices,z,a*A+b*B)
+
+thm nth_derivative_add:
+    ? forall D power_set(R),k N,f,g,h fn(x D) R,center D,A,B R:
+        $Calc::unary_higher_order::has_nth_derivative_at(D,k,f,center,A)
+        $Calc::unary_higher_order::has_nth_derivative_at(D,k,g,center,B)
+        forall x D:
+            h(x)=f(x)+g(x)
+        =>:
+            $Calc::unary_higher_order::has_nth_derivative_at(D,k,h,center,A+B)
+    claim:
+        ? forall x D:
+            h(x)=1*f(x)+1*g(x)
+        h(x)=f(x)+g(x)=1*f(x)+1*g(x)
+    release thm nth_derivative_linear_combination(D,k,f,g,h,center,1,1,A,B)
+    1*A+1*B=A+B
+
+thm nth_derivative_subtract:
+    ? forall D power_set(R),k N,f,g,h fn(x D) R,center D,A,B R:
+        $Calc::unary_higher_order::has_nth_derivative_at(D,k,f,center,A)
+        $Calc::unary_higher_order::has_nth_derivative_at(D,k,g,center,B)
+        forall x D:
+            h(x)=f(x)-g(x)
+        =>:
+            $Calc::unary_higher_order::has_nth_derivative_at(D,k,h,center,A-B)
+    claim:
+        ? forall x D:
+            h(x)=1*f(x)+(-1)*g(x)
+        h(x)=f(x)-g(x)=1*f(x)+(-1)*g(x)
+    release thm nth_derivative_linear_combination(D,k,f,g,h,center,1,-1,A,B)
+    1*A+(-1)*B=A-B
+
+thm nth_derivative_scale:
+    ? forall D power_set(R),k N,f,h fn(x D) R,center D,a,A R:
+        $Calc::unary_higher_order::has_nth_derivative_at(D,k,f,center,A)
+        forall x D:
+            h(x)=a*f(x)
+        =>:
+            $Calc::unary_higher_order::has_nth_derivative_at(D,k,h,center,a*A)
+    claim:
+        ? forall x D:
+            h(x)=a*f(x)+0*f(x)
+        h(x)=a*f(x)=a*f(x)+0*f(x)
+    release thm nth_derivative_linear_combination(D,k,f,f,h,center,a,0,A,A)
+    a*A+0*A=a*A
+
+thm ordered_partial_add:
+    ? forall n N+,D power_set(cart_n(R,n)),k N,f,g,h fn(x D) R,center D,indices finite_seq(closed_range(1,n),k),A,B R:
+        $Calc::higher_order::has_ordered_partial_at(n,D,k,f,center,indices,A)
+        $Calc::higher_order::has_ordered_partial_at(n,D,k,g,center,indices,B)
+        forall x D:
+            h(x)=f(x)+g(x)
+        =>:
+            $Calc::higher_order::has_ordered_partial_at(n,D,k,h,center,indices,A+B)
+    claim:
+        ? forall x D:
+            h(x)=1*f(x)+1*g(x)
+        h(x)=f(x)+g(x)=1*f(x)+1*g(x)
+    release thm ordered_partial_linear_combination(n,D,k,f,g,h,center,indices,1,1,A,B)
+    1*A+1*B=A+B
+
+thm ordered_partial_subtract:
+    ? forall n N+,D power_set(cart_n(R,n)),k N,f,g,h fn(x D) R,center D,indices finite_seq(closed_range(1,n),k),A,B R:
+        $Calc::higher_order::has_ordered_partial_at(n,D,k,f,center,indices,A)
+        $Calc::higher_order::has_ordered_partial_at(n,D,k,g,center,indices,B)
+        forall x D:
+            h(x)=f(x)-g(x)
+        =>:
+            $Calc::higher_order::has_ordered_partial_at(n,D,k,h,center,indices,A-B)
+    claim:
+        ? forall x D:
+            h(x)=1*f(x)+(-1)*g(x)
+        h(x)=f(x)-g(x)=1*f(x)+(-1)*g(x)
+    release thm ordered_partial_linear_combination(n,D,k,f,g,h,center,indices,1,-1,A,B)
+    1*A+(-1)*B=A-B
+
+thm ordered_partial_scale:
+    ? forall n N+,D power_set(cart_n(R,n)),k N,f,h fn(x D) R,center D,indices finite_seq(closed_range(1,n),k),a,A R:
+        $Calc::higher_order::has_ordered_partial_at(n,D,k,f,center,indices,A)
+        forall x D:
+            h(x)=a*f(x)
+        =>:
+            $Calc::higher_order::has_ordered_partial_at(n,D,k,h,center,indices,a*A)
+    claim:
+        ? forall x D:
+            h(x)=a*f(x)+0*f(x)
+        h(x)=a*f(x)=a*f(x)+0*f(x)
+    release thm ordered_partial_linear_combination(n,D,k,f,f,h,center,indices,a,0,A,A)
+    a*A+0*A=a*A

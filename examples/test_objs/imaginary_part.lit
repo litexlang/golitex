@@ -1,40 +1,31 @@
 # AST: Obj::ComplexOperator::ImaginaryPart
 # Run: target/release/litex -f examples/test_objs/imaginary_part.lit
-# Cases use discarded sketch scopes; no cross-case facts.
+# Cases are checked directly in file context.
 
 # P01: img(0) = 0
-sketch:
-    img(0) = 0
+img(0) = 0
 
 # P02: img(i) = 1
-sketch:
-    img(i) = 1
+img(i) = 1
 
 # P03: img(3 + 2 * i) = 2
-sketch:
-    img(3 + 2 * i) = 2
+img(3 + 2 * i) = 2
 
 # P04: img(-2 - i) = -1
-sketch:
-    img(-2 - i) = img(-2) - img(i) = 0 - 1 = -1
+img(-2 - i) = img(-2) - img(i) = 0 - 1 = -1
 
 # P05: img(x) = 0
-sketch:
-    forall x R:
-        img(x) = 0
+forall x R:
+    img(x) = 0
 
 # P06: img(i * i) = 0
-sketch:
-    img(i * i) = 0
+img(i * i) = 0
 
 # P121: closed exact elementary calculation
-sketch:
-    img((1+2*i)*(3-i))=5
+img((1+2*i)*(3-i))=5
 
 # P122: closed exact elementary calculation
-sketch:
-    img((1+2*i)/(3-i))=7/10
+img((1+2*i)/(3-i))=7/10
 
 # P123: closed exact elementary calculation
-sketch:
-    img((1+i)^(-1))=-1/2
+img((1+i)^(-1))=-1/2

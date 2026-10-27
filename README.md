@@ -12,7 +12,7 @@ Created and maintained by Jiachen Shen.
 [Website and playground](https://litexlang.com) · [GitHub](https://github.com/litexlang/golitex)
 </div>
 
-Mathematical writing carries logical structure, yet making it machine-checkable often requires translation into a separate formal language. Litex makes familiar mathematics directly checkable through proof search over contextual facts and built-in rules. Early experiments report de Bruijn factors near 1 and 10–100× faster checking than Lean on selected examples. Its verification records support interactive reading, writing and correction, with promising initial AI-agent results. It also compiles supported proofs to Lean, serving as a frontend language for independent rechecking.
+Mathematical writing carries logical structure, yet making it machine-checkable often requires translation into a separate formal language. Litex makes familiar mathematics directly checkable through proof search over contextual facts and built-in rules. Selected local examples show lower native checking times, with comparison results below. Its verification records support interactive reading, writing and correction, with promising initial AI-agent results. It also compiles supported proofs to Lean, serving as a frontend language for independent rechecking.
 
 <a id="readme-comparisons"></a>
 
@@ -34,20 +34,24 @@ The same mathematics, written in Litex and Lean. Click an example for its comple
 |  |  | `example : reciprocal ⟨2, by norm_num⟩ = (2 : ℝ)⁻¹ := by` |
 |  |  | `  simp [reciprocal]` |
 
-### Expression length and checking speed
+<a id="expression-length-and-checking-speed"></a>
 
-Lower de Bruijn factors mean shorter code. Times are in milliseconds; a higher speedup means faster checking with Litex.
+### Checking time on selected examples
 
-| Mathematical task | Litex de Bruijn factor ↓ | Lean de Bruijn factor ↓ | Litex (ms) ↓ | Lean (ms) ↓ | Litex speedup ↑ |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| [Logarithms: log₂8 = 3](#readme-example-log_2_8) | 0.48 | 5.95 | 0.064 | 13.992 | **217.0×** |
-| [Number theory: 1000000007 is prime](#readme-example-prime_1000000007) | 0.55 | 1.33 | 0.027 | 4.029 | **147.2×** |
-| [Set theory: the set of positive reals is nonempty](#readme-example-witness_nonempty_positive) | 0.54 | 1.07 | 0.084 | 6.439 | **76.9×** |
-| [Define and apply the theorem that positive reals are nonzero](#readme-example-named_theorem) | 1.43 | 2.33 | 0.158 | 8.018 | **50.7×** |
-| [Define an open-interval predicate and check membership](#readme-example-predicate) | 0.88 | 1.52 | 0.189 | 8.223 | **43.4×** |
-| [Natural-number arithmetic: 1 + 1 = 2](#readme-example-nat_mathlib) | 1.00 | 5.20 | 0.037 | 1.361 | **36.7×** |
-| [Universal statement: the sum of two positive reals is positive](#readme-example-forall_add_pos) | 0.57 | 1.34 | 0.392 | 10.487 | **26.7×** |
-| [The derivative of the square function at 3 is 6](#readme-example-derivative_square_at_three) | 0.51 | 1.34 | 1.464 | 29.945 | **20.5×** |
+These historical local measurements select cases where Litex's native checking path was faster. Times exclude startup, dependency imports and Litex-to-Lean rechecking; ratios use unrounded median times. See the [measurement method](examples/litex_vs_lean_speed/README.md) and [unscreened comparison](examples/litex_vs_lean_speed/search-and-expansion.md), where Lean's direct route was faster in five of six cases.
+
+| Mathematical task | Litex (ms) ↓ | Lean (ms) ↓ | Lean ÷ Litex |
+| --- | ---: | ---: | ---: |
+| [Logarithms: log₂8 = 3](#readme-example-log_2_8) | 0.064 | 13.992 | **217.0×** |
+| [Number theory: 1000000007 is prime](#readme-example-prime_1000000007) | 0.027 | 4.029 | **147.2×** |
+| [Set theory: the set of positive reals is nonempty](#readme-example-witness_nonempty_positive) | 0.084 | 6.439 | **76.9×** |
+| [Define and apply the theorem that positive reals are nonzero](#readme-example-named_theorem) | 0.158 | 8.018 | **50.7×** |
+| [Define an open-interval predicate and check membership](#readme-example-predicate) | 0.189 | 8.223 | **43.4×** |
+| [Natural-number arithmetic: 1 + 1 = 2](#readme-example-nat_mathlib) | 0.037 | 1.361 | **36.7×** |
+| [Universal statement: the sum of two positive reals is positive](#readme-example-forall_add_pos) | 0.392 | 10.487 | **26.7×** |
+| [The derivative of the square function at 3 is 6](#readme-example-derivative_square_at_three) | 1.464 | 29.945 | **20.5×** |
+
+Expression length is reported separately as [retrospective normalized-character ratios (DF*)](examples/litex_vs_lean_speed/README.md#de-bruijn-factor), using shared informal texts written after the formal sources. Those examples do not establish a general de Bruijn factor or measure ease of reading or writing.
 
 ## Why I built Litex
 
@@ -106,13 +110,13 @@ The same source and verification records also support:
 
 A person or agent can propose a step, inspect its feedback, repair it and continue in the same Session. Earlier accepted definitions and facts remain available after an ordinary rejection.
 
-In a plane-geometry library-building experiment with **165 mathematical tasks**, `deepseek-chat` achieved these results:
+A preliminary report from a plane-geometry library-building experiment with **165 mathematical tasks** and `deepseek-chat` records these elapsed times:
 
 | Automatic library-building run | Litex | Lean |
 | --- | ---: | ---: |
-| Elapsed time | **14.3 minutes** | **177.5 minutes** |
+| Recorded elapsed time | **14.3 minutes** | **177.5 minutes** |
 
-Litex built the library approximately **12.4× faster** in this experiment. Other projects include agent-written IMO geometry proofs and textbook developments in proof techniques, algebra, analysis and geometry.
+This report lacks paired completion counts and validation criteria, so these times alone do not establish a library-building speedup. Other projects include agent-written IMO geometry proofs and textbook developments in proof techniques, algebra, analysis and geometry.
 
 ## Try Litex
 

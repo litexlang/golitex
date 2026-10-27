@@ -104,6 +104,9 @@ impl LitexToLeanCompiler {
         }
         match object {
             Obj::StandardSet(set) => standard_term(set),
+            Obj::FunctionSpace(FunctionSpace::FnRange(range)) => {
+                self.compile_inferred_parameter_range(range, position)
+            }
             Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(access)) => {
                 self.compile_struct_field_reference(access, position)
             }

@@ -1,46 +1,36 @@
 # AST: Obj::ArithmeticOperator::Ceil
 # Run: target/release/litex -f examples/test_objs/ceil.lit
-# Cases use discarded sketch scopes; no cross-case facts.
+# Cases are checked directly in file context.
 
 # P01: ceil(0) = 0
-sketch:
-    ceil(0) = 0
+ceil(0) = 0
 
 # P02: ceil(3) = 3
-sketch:
-    ceil(3) = 3
+ceil(3) = 3
 
 # P03: ceil(3.2) = 4
-sketch:
-    ceil(3.2) = 4
+ceil(3.2) = 4
 
 # P04: ceil(-3.2) = -3
-sketch:
-    ceil(-3.2) = -3
+ceil(-3.2) = -3
 
 # P05: ceil(1 / 2) = 1
-sketch:
-    ceil(1 / 2) = 1
+ceil(1 / 2) = 1
 
 # P06: ceil(x) = x
-sketch:
-    forall x Z:
-        ceil(x) = x
+forall x Z:
+    ceil(x) = x
 
 # P121: closed exact elementary calculation
-sketch:
-    ceil(-7/3)=-2
+ceil(-7/3)=-2
 
 # P122: closed exact elementary calculation
-sketch:
-    ceil(7/3)=3
+ceil(7/3)=3
 
 # P123: closed exact elementary calculation
-sketch:
-    ceil(-6/3)=-2
+ceil(-6/3)=-2
 
 # P200: Real defining bounds
-sketch:
-    forall x R:
-        ceil(x)-1<x
-        x<=ceil(x)
+forall x R:
+    ceil(x)-1<x
+    x<=ceil(x)

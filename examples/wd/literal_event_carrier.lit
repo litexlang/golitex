@@ -1,0 +1,23 @@
+# Tracer: literal events retain the actual point-in-carrier evidence.
+# Before: the unchanged first guard rejected p({a}) in R at bounded WD.
+# KnownSpecialProperty now reads each stored membership without another search.
+# Literal child WD and pairwise distinctness remain required.
+# Evidence: target/release/litex -lang en -strict -f examples/wd/literal_event_carrier.lit
+
+forall X set,p fn(E power_set(X)) R,a X:
+    p({a}) > 0
+    =>:
+        p({a}) > 0
+
+forall X set,a X:
+    {a} $in power_set(X)
+
+forall X set,a,b X:
+    a != b
+    =>:
+        {a,b} $in power_set(X)
+
+forall X,Y set,a X:
+    X = Y
+    =>:
+        {a} $in power_set(Y)

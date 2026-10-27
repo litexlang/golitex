@@ -1,43 +1,38 @@
 # AST: Obj::ProductShape::Cart
 # Run: target/release/litex -f examples/test_objs/cart.lit
-# Cases use discarded sketch scopes; no cross-case facts.
+# Cases are checked directly in file context.
 
 # P01: (1, 2) $in cart(R, Z)
-sketch:
-    (1, 2) $in cart(R, Z)
+(1, 2) $in cart(R, Z)
 
 # P02: (1, 2, 3) $in cart(R, Z, N)
-sketch:
-    (1, 2, 3) $in cart(R, Z, N)
+(1, 2, 3) $in cart(R, Z, N)
 
 # P03: ((1, 2), 3) $in cart(cart(R, Z), N)
-sketch:
-    ((1, 2), 3) $in cart(cart(R, Z), N)
+((1, 2), 3) $in cart(cart(R, Z), N)
 
 # P05: cart({}, {1}) = {}
-sketch:
-    cart({}, {1}) = {}
+cart({}, {1}) = {}
 
 # P06 retired: cart_dim is removed.
 
 # P04: checked extension proof; restored from cart-P04
-sketch:
+claim:
+    ? forall a cart({1}, {2}):
+        a = (1, 2)
+    a(1) $in {1}
+    a(2) $in {2}
+    release thm tuple_equal_from_coordinates(a, (1, 2))
+by extension:
+    ? cart({1}, {2}) = {(1, 2)}
     claim:
         ? forall a cart({1}, {2}):
-            a = (1, 2)
-        a(1) $in {1}
-        a(2) $in {2}
-        release thm tuple_equal_from_coordinates(a, (1, 2))
-    by extension:
-        ? cart({1}, {2}) = {(1, 2)}
-        claim:
-            ? forall a cart({1}, {2}):
-                a $in {(1, 2)}
-            a = (1, 2)
             a $in {(1, 2)}
-        claim:
-            ? forall a {(1, 2)}:
-                a $in cart({1}, {2})
-            a = (1, 2)
-            release thm cart_member_from_coordinates((1, 2), cart({1}, {2}))
+        a = (1, 2)
+        a $in {(1, 2)}
+    claim:
+        ? forall a {(1, 2)}:
             a $in cart({1}, {2})
+        a = (1, 2)
+        release thm cart_member_from_coordinates((1, 2), cart({1}, {2}))
+        a $in cart({1}, {2})

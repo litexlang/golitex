@@ -39,7 +39,9 @@ fn set_difference_function_preserves_formation_and_expansion() {
     let (run, compiler) = super::execute(source);
     let lean = compiler.compile_run(&run, "difference_function").unwrap();
     assert!(lean.contains("Litex.setMinus "));
-    assert!(lean.contains("Litex.setMinusSubsetLeft "));
+    // The recorded return proof now uses the known left-carrier equality.
+    assert!(lean.contains("Litex.setMinusSubsetOfLeft "));
+    assert!(lean.contains("Litex.subsetRefl "));
 }
 
 #[test]

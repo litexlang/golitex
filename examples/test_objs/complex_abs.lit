@@ -1,65 +1,50 @@
 # AST: Obj::ComplexOperator::ComplexAbs
 # Run: target/release/litex -f examples/test_objs/complex_abs.lit
-# Cases use discarded sketch scopes; no cross-case facts.
+# Cases are checked directly in file context.
 
 # P01: C_abs(0) = 0
-sketch:
-    C_abs(0) = 0
+C_abs(0) = 0
 
 # P02: C_abs(i) = 1
-sketch:
-    C_abs(i) = 1
+C_abs(i) = 1
 
 # P03: exact numeric/periodic/modulus repair; original source retained in the dated journal
-sketch:
-    C_abs(3 + 4 * i) = 5
+C_abs(3 + 4 * i) = 5
 
 # P04: exact numeric/periodic/modulus repair; original source retained in the dated journal
-sketch:
-    C_abs(-3) = 3
+C_abs(-3) = 3
 
 # P05: exact numeric/periodic/modulus repair; original source retained in the dated journal
-sketch:
-    C_abs(-i) = 1
+C_abs(-i) = 1
 
 # P06: exact numeric/periodic/modulus repair; original source retained in the dated journal
-sketch:
-    forall z C:
-        C_abs(z) >= 0
+forall z C:
+    C_abs(z) >= 0
 
 # P91: exact numeric/periodic/modulus boundary
-sketch:
-    C_abs(4*i+3)=5
+C_abs(4*i+3)=5
 
 # P92: exact numeric/periodic/modulus boundary
-sketch:
-    C_abs(3-4*i)=5
+C_abs(3-4*i)=5
 
 # P93: exact numeric/periodic/modulus boundary
-sketch:
-    C_abs(-4*i+3)=5
+C_abs(-4*i+3)=5
 
 # P94: exact numeric/periodic/modulus boundary
-sketch:
-    C_abs(0.3+0.4*i)=0.5
+C_abs(0.3+0.4*i)=0.5
 
 # P95: exact numeric/periodic/modulus boundary
-sketch:
-    C_abs(1/3+4/9*i)=5/9
+C_abs(1/3+4/9*i)=5/9
 
 # P96: exact numeric/periodic/modulus boundary
-sketch:
-    C_abs(1+i)=sqrt(2)
+C_abs(1+i)=sqrt(2)
 
 # P97: exact numeric/periodic/modulus boundary
-sketch:
-    C_abs(1+i)=sqrt(2)
-    eval C_abs(1+i)
+C_abs(1+i)=sqrt(2)
+eval C_abs(1+i)
 
 # P98: exact numeric/periodic/modulus boundary
-sketch:
-    5=C_abs(3-4*i)
+5=C_abs(3-4*i)
 
 # P99: exact numeric/periodic/modulus boundary
-sketch:
-    C_abs(-3-4*i)=5
+C_abs(-3-4*i)=5

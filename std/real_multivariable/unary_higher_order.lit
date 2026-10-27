@@ -1,0 +1,699 @@
+# Unary finite-order real derivatives, on actual nested real domains.
+# Independent of the ordered vector-coordinate interface. No native rule.
+
+struct NthDerivativeProfiles<k N>:
+    regions fn(j closed_range(0,k)) power_set(R)
+    values fn(j closed_range(0,k),x R: x $in regions(j)) R
+
+template<k N,c &NthDerivativeProfiles<k>,j closed_range(0,k)>:
+    have fn nth_derivative_profile(q {x R: x $in c.regions(j)}) R=c.values(j,q)
+
+prop is_nth_derivative_chain(D power_set(R),k N,f fn(x D) R,c &NthDerivativeProfiles<k>):
+    c.regions(0)=D
+    forall j closed_range(1,k):
+        c.regions(j) $subset c.regions(j-1)
+    forall x R:
+        x $in D
+        x $in c.regions(0)
+        =>:
+            c.values(0,x)=f(x)
+    forall j closed_range(1,k),x R:
+        j $in closed_range(0,k)
+        j-1 $in closed_range(0,k)
+        x $in c.regions(j)
+        x $in c.regions(j-1)
+        =>:
+            $has_derivative_at(\nth_derivative_profile<k,c,j-1>,x,c.values(j,x))
+
+prop has_nth_derivative_at(D power_set(R),k N,f fn(x D) R,p D,L R):
+    exist c &NthDerivativeProfiles<k> st {$is_nth_derivative_chain(D,k,f,c),p $in c.regions(k),c.values(k,p)=L}
+
+prop nth_profiles_agree_stage(k N,c,d &NthDerivativeProfiles<k>,j N):
+    forall x R:
+        j<=k
+        x $in c.regions(j)
+        x $in d.regions(j)
+        =>:
+            c.values(j,x)=d.values(j,x)
+
+thm nth_profiles_zero_agree:
+    ? forall D power_set(R),k N,f fn(x D) R,c,d &NthDerivativeProfiles<k>,x R:
+        $is_nth_derivative_chain(D,k,f,c)
+        $is_nth_derivative_chain(D,k,f,d)
+        x $in c.regions(0)
+        x $in d.regions(0)
+        =>:
+            c.values(0,x)=d.values(0,x)
+    c.regions(0)=D
+    d.regions(0)=D
+    x $in D
+    c.values(0,x)=f(x)=d.values(0,x)
+
+thm nth_profiles_successor_agree:
+    ? forall D power_set(R),k N,f fn(x D) R,c,d &NthDerivativeProfiles<k>,j closed_range(1,k),x R:
+        $is_nth_derivative_chain(D,k,f,c)
+        $is_nth_derivative_chain(D,k,f,d)
+        $nth_profiles_agree_stage(k,c,d,j-1)
+        x $in c.regions(j)
+        x $in d.regions(j)
+        =>:
+            c.values(j,x)=d.values(j,x)
+    j>=1
+    j<=k
+    j-1>=0
+    j-1<=j
+    j-1<=k
+    j-1 $in closed_range(0,k)
+    j $in closed_range(0,k)
+    c.regions(j) $subset c.regions(j-1)
+    d.regions(j) $subset d.regions(j-1)
+    x $in c.regions(j-1)
+    x $in d.regions(j-1)
+    $has_derivative_at(\nth_derivative_profile<k,c,j-1>,x,c.values(j,x))
+    $has_derivative_at(\nth_derivative_profile<k,d,j-1>,x,d.values(j,x))
+    $is_set(R)
+    {u R:u $in c.regions(j-1)} $subset R
+    {u R:u $in d.regions(j-1)} $subset R
+    {u R:u $in c.regions(j-1)} $in power_set(R)
+    {u R:u $in d.regions(j-1)} $in power_set(R)
+    x $in {u R:u $in c.regions(j-1)}
+    x $in {u R:u $in d.regions(j-1)}
+    x $in intersect({u R:u $in c.regions(j-1)},{u R:u $in d.regions(j-1)})
+    claim:
+        ? forall y intersect({u R:u $in c.regions(j-1)},{u R:u $in d.regions(j-1)}):
+            \nth_derivative_profile<k,c,j-1>(y)=\nth_derivative_profile<k,d,j-1>(y)
+        y $in {u R:u $in c.regions(j-1)}
+        y $in {u R:u $in d.regions(j-1)}
+        y $in R
+        y $in c.regions(j-1)
+        y $in d.regions(j-1)
+        c.values(j-1,y)=d.values(j-1,y)
+        \nth_derivative_profile<k,c,j-1>(y)=c.values(j-1,y)=d.values(j-1,y)=\nth_derivative_profile<k,d,j-1>(y)
+    \nth_derivative_profile<k,c,j-1> $in fn(y {u R:u $in c.regions(j-1)}) R
+    \nth_derivative_profile<k,d,j-1> $in fn(y {u R:u $in d.regions(j-1)}) R
+    release thm locality::real_derivatives_intersection_unique({u R:u $in c.regions(j-1)},{u R:u $in d.regions(j-1)},x,\nth_derivative_profile<k,c,j-1>,\nth_derivative_profile<k,d,j-1>,c.values(j,x),d.values(j,x))
+
+
+thm nth_profiles_stage_agreement:
+    ? forall D power_set(R),k N,f fn(x D) R,c,d &NthDerivativeProfiles<k>,j N:
+        $is_nth_derivative_chain(D,k,f,c)
+        $is_nth_derivative_chain(D,k,f,d)
+        =>:
+            $nth_profiles_agree_stage(k,c,d,j)
+    by induc stage from 0:
+        ? $nth_profiles_agree_stage(k,c,d,stage)
+        ? from stage=0:
+            claim:
+                ? forall x R:
+                    0<=k
+                    x $in c.regions(0)
+                    x $in d.regions(0)
+                    =>:
+                        c.values(0,x)=d.values(0,x)
+                release thm nth_profiles_zero_agree(D,k,f,c,d,x)
+            by def $nth_profiles_agree_stage(k,c,d,0)
+        ? induc:
+            stage $in N
+            (stage+1)-1=stage
+            claim:
+                ? forall x R:
+                    stage+1<=k
+                    x $in c.regions(stage+1)
+                    x $in d.regions(stage+1)
+                    =>:
+                        c.values(stage+1,x)=d.values(stage+1,x)
+                stage+1 $in Z
+                stage+1>=1
+                stage+1 $in closed_range(1,k)
+                release thm nth_profiles_successor_agree(D,k,f,c,d,stage+1,x)
+            by def $nth_profiles_agree_stage(k,c,d,stage+1)
+
+thm nth_derivative_unique:
+    ? forall D power_set(R),k N,f fn(x D) R,p D,A,B R:
+        $has_nth_derivative_at(D,k,f,p,A)
+        $has_nth_derivative_at(D,k,f,p,B)
+        =>:
+            A=B
+    obtain c from $has_nth_derivative_at(D,k,f,p,A)
+    obtain d from $has_nth_derivative_at(D,k,f,p,B)
+    release thm nth_profiles_stage_agreement(D,k,f,c,d,k)
+    p $in R
+    k<=k
+    A=c.values(k,p)=d.values(k,p)=B
+
+prop is_n_times_differentiable_at(D power_set(R),k N,f fn(x D) R,p D):
+    exist L R st {$has_nth_derivative_at(D,k,f,p,L)}
+
+thm nth_derivative_candidate_exists:
+    ? forall D power_set(R),k N,f fn(x D) R,p D,L R:
+        $has_nth_derivative_at(D,k,f,p,L)
+        =>:
+            $is_n_times_differentiable_at(D,k,f,p)
+    witness $is_n_times_differentiable_at(D,k,f,p) from L
+
+thm nth_derivative_exists_unique:
+    ? forall D power_set(R),k N,f fn(x D) R,p D:
+        $is_n_times_differentiable_at(D,k,f,p)
+        =>:
+            exist! L R st {$has_nth_derivative_at(D,k,f,p,L)}
+    obtain L from $is_n_times_differentiable_at(D,k,f,p)
+    claim:
+        ? forall A,B R:
+            $has_nth_derivative_at(D,k,f,p,A)
+            $has_nth_derivative_at(D,k,f,p,B)
+            =>:
+                A=B
+        release thm nth_derivative_unique(D,k,f,p,A,B)
+    witness exist! value R st {$has_nth_derivative_at(D,k,f,p,value)} from L
+
+template<D power_set(R),k N>:
+    have fn nth_derivative by exist!:
+        ? forall f fn(x D) R,p D:
+            $is_n_times_differentiable_at(D,k,f,p)
+            =>:
+                exist! L R st {$has_nth_derivative_at(D,k,f,p,L)}
+
+thm nth_derivative_from_profile:
+    ? forall D power_set(R),k N,f fn(x D) R,p D,c &NthDerivativeProfiles<k>,L R:
+        $is_nth_derivative_chain(D,k,f,c)
+        p $in c.regions(k)
+        c.values(k,p)=L
+        =>:
+            $has_nth_derivative_at(D,k,f,p,L)
+    witness $has_nth_derivative_at(D,k,f,p,L) from c
+
+thm nth_derivative_selected:
+    ? forall D power_set(R),k N,f fn(x D) R,p D:
+        $is_n_times_differentiable_at(D,k,f,p)
+        =>:
+            $has_nth_derivative_at(D,k,f,p,\nth_derivative<D,k>(f,p))
+
+thm nth_derivative_value:
+    ? forall D power_set(R),k N,f fn(x D) R,p D,L R:
+        $has_nth_derivative_at(D,k,f,p,L)
+        $is_n_times_differentiable_at(D,k,f,p)
+        =>:
+            \nth_derivative<D,k>(f,p)=L
+    $has_nth_derivative_at(D,k,f,p,\nth_derivative<D,k>(f,p))
+    release thm nth_derivative_unique(D,k,f,p,\nth_derivative<D,k>(f,p),L)
+
+thm nth_profile_zero_function_equal:
+    ? forall D power_set(R),k N,f fn(x D) R,c &NthDerivativeProfiles<k>:
+        c.regions(0)=D
+        forall x R:
+            x $in D
+            x $in c.regions(0)
+            =>:
+                c.values(0,x)=f(x)
+        =>:
+            \nth_derivative_profile<k,c,0> = f
+    D $subset R
+    by fn_extension:
+        ? \nth_derivative_profile<k,c,0> = f
+        claim:
+            ? forall x {u R:u $in c.regions(0)}:
+                \nth_derivative_profile<k,c,0>(x)=f(x)
+            x $in R
+            x $in c.regions(0)
+            x $in D
+            \nth_derivative_profile<k,c,0>(x)=c.values(0,x)=f(x)
+
+thm nth_derivative_zero:
+    ? forall D power_set(R),f fn(x D) R,p D:
+        $has_nth_derivative_at(D,0,f,p,f(p))
+    D $subset R
+    p $in R
+    $is_set(R)
+    $is_set(power_set(R))
+    have fn regions(j closed_range(0,0)) power_set(R)=D
+    forall j closed_range(0,0):
+        regions(j)=D
+    claim:
+        ? forall j closed_range(0,0),x R:
+            x $in regions(j)
+            =>:
+                x $in D
+        regions(j)=D
+    have fn values(j closed_range(0,0),x R:x $in regions(j)) R=f(x)
+    have c &NthDerivativeProfiles<0> = (regions,values)
+    c.regions=regions
+    c.values=values
+    c.regions(0)=regions(0)=D
+    claim:
+        ? forall x R:
+            x $in D
+            x $in c.regions(0)
+            =>:
+                c.values(0,x)=f(x)
+        c.values(0,x)=values(0,x)=f(x)
+    by def $is_nth_derivative_chain(D,0,f,c)
+    p $in c.regions(0)
+    c.values(0,p)=values(0,p)=f(p)
+    release thm nth_derivative_from_profile(D,0,f,p,c,f(p))
+
+
+thm nth_derivative_zero_value:
+    ? forall D power_set(R),f fn(x D) R,p D,L R:
+        $has_nth_derivative_at(D,0,f,p,L)
+        =>:
+            L=f(p)
+    release thm nth_derivative_zero(D,f,p)
+    release thm nth_derivative_unique(D,0,f,p,L,f(p))
+
+thm nth_derivative_one_to_native:
+    ? forall D power_set(R),f fn(x D) R,p D,L R:
+        $has_nth_derivative_at(D,1,f,p,L)
+        =>:
+            $has_derivative_at(f,p,L)
+    obtain c from $has_nth_derivative_at(D,1,f,p,L)
+    release thm nth_profile_zero_function_equal(D,1,f,c)
+    p $in R
+    c.regions(1) $subset c.regions(0)
+    p $in c.regions(0)
+    c.regions(1-1)=c.regions(0)
+    p $in c.regions(1-1)
+    $has_derivative_at(\nth_derivative_profile<1,c,1-1>,p,c.values(1,p))
+    by fn_extension:
+        ? \nth_derivative_profile<1,c,1-1> = \nth_derivative_profile<1,c,0>
+        claim:
+            ? forall x {u R:u $in c.regions(1-1)}:
+                \nth_derivative_profile<1,c,1-1>(x)=\nth_derivative_profile<1,c,0>(x)
+            x $in R
+            x $in c.regions(1-1)
+            x $in c.regions(0)
+            \nth_derivative_profile<1,c,1-1>(x)=c.values(1-1,x)=c.values(0,x)=\nth_derivative_profile<1,c,0>(x)
+
+
+
+thm nth_derivative_one_from_native:
+    ? forall D power_set(R),f fn(x D) R,p D,L R:
+        $has_derivative_at(f,p,L)
+        =>:
+            $has_nth_derivative_at(D,1,f,p,L)
+    D $subset R
+    p $in R
+    $is_set(R)
+    $is_set(power_set(R))
+    {p} $in power_set(R)
+    by for:
+        ? forall j closed_range(0,1):
+            j=0 or j=1
+        j=0 or j=1
+    have fn regions(j closed_range(0,1)) power_set(R) by cases:
+        case j=0: D
+        case j=1: {p}
+    regions(0)=D
+    regions(1)={p}
+    claim:
+        ? forall j closed_range(0,1),x R:
+            x $in regions(j)
+            =>:
+                j=0 and x $in D or j=1
+        j=0 or j=1
+        by cases:
+            ? j=0 and x $in D or j=1
+            case j=0:
+                regions(j)=regions(0)=D
+                x $in D
+            case j=1:
+                j=1
+    have fn values(j closed_range(0,1),x R:x $in regions(j)) R by cases:
+        case j=0 and x $in D: f(x)
+        case j=1: L
+    have c &NthDerivativeProfiles<1> = (regions,values)
+    c.regions=regions
+    c.values=values
+    c.regions(0)=regions(0)=D
+    c.regions(1)=regions(1)={p}
+    claim:
+        ? forall j closed_range(1,1):
+            c.regions(j) $subset c.regions(j-1)
+        j=1
+        j-1=0
+        c.regions(j)=regions(j)=regions(1)={p}
+        c.regions(j-1)=regions(j-1)=regions(0)=D
+        {p} $subset D
+    claim:
+        ? forall x R:
+            x $in D
+            x $in c.regions(0)
+            =>:
+                c.values(0,x)=f(x)
+        c.values(0,x)=values(0,x)=f(x)
+    claim:
+        ? forall j closed_range(1,1),x R:
+            j $in closed_range(0,1)
+            j-1 $in closed_range(0,1)
+            x $in c.regions(j)
+            x $in c.regions(j-1)
+            =>:
+                $has_derivative_at(\nth_derivative_profile<1,c,j-1>,x,c.values(j,x))
+        j=1
+        j-1=0
+        j-1 $in closed_range(0,1)
+        c.regions(j)=regions(j)=regions(1)={p}
+        c.regions(j-1)=regions(j-1)=regions(0)=D
+        x $in {p}
+        x=p
+        x $in D
+        x $in regions(j)
+        c.values(j,x)=values(j,x)=L
+        {u R:u $in c.regions(j-1)} $subset D
+        D $subset {u R:u $in c.regions(j-1)}
+        {u R:u $in c.regions(j-1)} $in power_set(R)
+        x $in {u R:u $in c.regions(j-1)}
+        x $in intersect(D,{u R:u $in c.regions(j-1)})
+        $has_derivative_at(f,x,L)
+        claim:
+            ? forall y intersect(D,{u R:u $in c.regions(j-1)}):
+                f(y)=\nth_derivative_profile<1,c,j-1>(y)
+            y $in D
+            y $in R
+            y $in c.regions(j-1)
+            y $in regions(j-1)
+            \nth_derivative_profile<1,c,j-1>(y)=c.values(j-1,y)=values(j-1,y)=f(y)
+        release thm locality::real_derivatives_extensional(D,{u R:u $in c.regions(j-1)},x,f,\nth_derivative_profile<1,c,j-1>,L)
+    by def $is_nth_derivative_chain(D,1,f,c)
+    p $in c.regions(1)
+    c.values(1,p)=values(1,p)=L
+    release thm nth_derivative_from_profile(D,1,f,p,c,L)
+
+
+
+
+thm nth_derivative_from_profiles_on:
+    ? forall D power_set(R),k N,functions fn(j closed_range(0,k)) fn(x D) R,p D:
+        forall j closed_range(1,k),x D:
+            j $in closed_range(0,k)
+            j-1 $in closed_range(0,k)
+            =>:
+                $has_derivative_at(functions(j-1),x,functions(j)(x))
+        =>:
+            $has_nth_derivative_at(D,k,functions(0),p,functions(k)(p))
+    D $subset R
+    p $in R
+    $is_set(R)
+    $is_set(power_set(R))
+    have fn regions(j closed_range(0,k)) power_set(R)=D
+    claim:
+        ? forall j closed_range(0,k),x R:
+            x $in regions(j)
+            =>:
+                x $in D
+        regions(j)=D
+    have fn values(j closed_range(0,k),x R:x $in regions(j)) R=functions(j)(x)
+    have c &NthDerivativeProfiles<k> = (regions,values)
+    c.regions=regions
+    c.values=values
+    claim:
+        ? forall j closed_range(0,k):
+            c.regions(j)=D
+        c.regions(j)=regions(j)=D
+    claim:
+        ? forall j closed_range(0,k),x R:
+            x $in c.regions(j)
+            =>:
+                x $in D
+        c.regions(j)=D
+    claim:
+        ? forall j closed_range(0,k),x R:
+            x $in c.regions(j)
+            =>:
+                c.values(j,x)=functions(j)(x)
+        x $in regions(j)
+        c.values(j,x)=values(j,x)=functions(j)(x)
+    c.regions(0)=D
+    claim:
+        ? forall j closed_range(1,k):
+            c.regions(j) $subset c.regions(j-1)
+        c.regions(j)=D
+        c.regions(j-1)=D
+    claim:
+        ? forall x R:
+            x $in D
+            x $in c.regions(0)
+            =>:
+                c.values(0,x)=functions(0)(x)
+        c.values(0,x)=functions(0)(x)
+    claim:
+        ? forall j closed_range(1,k),x R:
+            j $in closed_range(0,k)
+            j-1 $in closed_range(0,k)
+            x $in c.regions(j)
+            x $in c.regions(j-1)
+            =>:
+                $has_derivative_at(\nth_derivative_profile<k,c,j-1>,x,c.values(j,x))
+        j $in closed_range(0,k)
+        j-1 $in closed_range(0,k)
+        c.regions(j-1)=regions(j-1)=D
+        {u R:u $in c.regions(j-1)} $subset D
+        D $subset {u R:u $in c.regions(j-1)}
+        {u R:u $in c.regions(j-1)} $in power_set(R)
+        x $in {u R:u $in c.regions(j-1)}
+        x $in intersect(D,{u R:u $in c.regions(j-1)})
+        claim:
+            ? forall y intersect(D,{u R:u $in c.regions(j-1)}):
+                functions(j-1)(y)=\nth_derivative_profile<k,c,j-1>(y)
+            y $in D
+            y $in R
+            y $in c.regions(j-1)
+            y $in regions(j-1)
+            \nth_derivative_profile<k,c,j-1>(y)=c.values(j-1,y)=values(j-1,y)=functions(j-1)(y)
+        x $in D
+        $has_derivative_at(functions(j-1),x,functions(j)(x))
+        release thm locality::real_derivatives_extensional(D,{u R:u $in c.regions(j-1)},x,functions(j-1),\nth_derivative_profile<k,c,j-1>,functions(j)(x))
+        c.values(j,x)=functions(j)(x)
+    by def $is_nth_derivative_chain(D,k,functions(0),c)
+    c.regions(k)=D
+    p $in c.regions(k)
+    c.values(k,p)=functions(k)(p)
+    release thm nth_derivative_from_profile(D,k,functions(0),p,c,functions(k)(p))
+
+
+
+# Explicit lower-order existence from an actual finite derivative chain.
+
+thm nth_derivative_from_global_profiles:
+    ? forall k N,functions fn(j closed_range(0,k)) fn(x R) R,p R:
+        forall j closed_range(1,k),x R:
+            j $in closed_range(0,k)
+            j-1 $in closed_range(0,k)
+            =>:
+                $has_derivative_at(functions(j-1),x,functions(j)(x))
+        =>:
+            $has_nth_derivative_at(R,k,functions(0),p,functions(k)(p))
+    $is_set(R)
+    R $in power_set(R)
+    release thm nth_derivative_from_profiles_on(R,k,functions,p)
+
+thm nth_derivative_lower_candidate:
+    ? forall D power_set(R),k N,m closed_range(0,k),f fn(x D) R,p D,c &NthDerivativeProfiles<k>:
+        $is_nth_derivative_chain(D,k,f,c)
+        p $in c.regions(m)
+        =>:
+            $has_nth_derivative_at(D,m,f,p,c.values(m,p))
+    claim:
+        ? forall j closed_range(0,m):
+            j $in closed_range(0,k)
+        j>=0
+        j<=m
+        m<=k
+        j<=k
+    claim:
+        ? forall j closed_range(1,m):
+            j $in closed_range(0,m)
+            j-1 $in closed_range(0,m)
+            j $in closed_range(1,k)
+            j $in closed_range(0,k)
+            j-1 $in closed_range(0,k)
+        j>=1
+        j<=m
+        m<=k
+        j<=k
+        j-1>=0
+        j-1<=m
+        j-1<=k
+    have fn regions(j closed_range(0,m)) power_set(R)=c.regions(j)
+    claim:
+        ? forall j closed_range(0,m):
+            regions(j)=c.regions(j)
+        regions(j)=c.regions(j)
+    claim:
+        ? forall j closed_range(0,m),x R:
+            x $in regions(j)
+            =>:
+                x $in c.regions(j)
+        regions(j)=c.regions(j)
+    have fn values(j closed_range(0,m),x R:x $in regions(j)) R=c.values(j,x)
+    have d &NthDerivativeProfiles<m> = (regions,values)
+    d.regions=regions
+    d.values=values
+    claim:
+        ? forall j closed_range(0,m):
+            d.regions(j)=c.regions(j)
+        d.regions(j)=regions(j)=c.regions(j)
+    d.regions(0)=c.regions(0)=D
+    claim:
+        ? forall j closed_range(1,m):
+            d.regions(j) $subset d.regions(j-1)
+        j $in closed_range(1,k)
+        j $in closed_range(0,k)
+        j-1 $in closed_range(0,k)
+        d.regions(j)=c.regions(j)
+        d.regions(j-1)=c.regions(j-1)
+        c.regions(j) $subset c.regions(j-1)
+    claim:
+        ? forall x R:
+            x $in D
+            x $in d.regions(0)
+            =>:
+                d.values(0,x)=f(x)
+        x $in regions(0)
+        x $in c.regions(0)
+        d.values(0,x)=values(0,x)=c.values(0,x)=f(x)
+    claim:
+        ? forall j closed_range(1,m),x R:
+            j $in closed_range(0,m)
+            j-1 $in closed_range(0,m)
+            x $in d.regions(j)
+            x $in d.regions(j-1)
+            =>:
+                $has_derivative_at(\nth_derivative_profile<m,d,j-1>,x,d.values(j,x))
+        j $in closed_range(1,k)
+        j $in closed_range(0,k)
+        j-1 $in closed_range(0,k)
+        d.regions(j)=c.regions(j)
+        d.regions(j-1)=c.regions(j-1)
+        x $in c.regions(j)
+        x $in c.regions(j-1)
+        x $in regions(j)
+        d.values(j,x)=values(j,x)=c.values(j,x)
+        $has_derivative_at(\nth_derivative_profile<k,c,j-1>,x,c.values(j,x))
+        {u R:u $in c.regions(j-1)} $subset {u R:u $in d.regions(j-1)}
+        {u R:u $in d.regions(j-1)} $subset {u R:u $in c.regions(j-1)}
+        {u R:u $in c.regions(j-1)} $in power_set(R)
+        {u R:u $in d.regions(j-1)} $in power_set(R)
+        x $in {u R:u $in c.regions(j-1)}
+        x $in {u R:u $in d.regions(j-1)}
+        x $in intersect({u R:u $in c.regions(j-1)},{u R:u $in d.regions(j-1)})
+        claim:
+            ? forall y intersect({u R:u $in c.regions(j-1)},{u R:u $in d.regions(j-1)}):
+                \nth_derivative_profile<k,c,j-1>(y)=\nth_derivative_profile<m,d,j-1>(y)
+            y $in {u R:u $in c.regions(j-1)}
+            y $in {u R:u $in d.regions(j-1)}
+            y $in R
+            y $in c.regions(j-1)
+            y $in d.regions(j-1)
+            y $in regions(j-1)
+            \nth_derivative_profile<m,d,j-1>(y)=d.values(j-1,y)=values(j-1,y)=c.values(j-1,y)=\nth_derivative_profile<k,c,j-1>(y)
+        release thm locality::real_derivatives_extensional({u R:u $in c.regions(j-1)},{u R:u $in d.regions(j-1)},x,\nth_derivative_profile<k,c,j-1>,\nth_derivative_profile<m,d,j-1>,c.values(j,x))
+    by def $is_nth_derivative_chain(D,m,f,d)
+    p $in R
+    m $in closed_range(0,m)
+    d.regions(m)=regions(m)=c.regions(m)
+    p $in c.regions(m)
+    p $in d.regions(m)
+    p $in regions(m)
+    d.values(m,p)=values(m,p)=c.values(m,p)
+    release thm nth_derivative_from_profile(D,m,f,p,d,c.values(m,p))
+
+thm nth_derivative_lower_order_exists:
+    ? forall D power_set(R),k N,m closed_range(0,k),f fn(x D) R,p D,L R:
+        $has_nth_derivative_at(D,k,f,p,L)
+        =>:
+            $is_n_times_differentiable_at(D,m,f,p)
+    obtain c from $has_nth_derivative_at(D,k,f,p,L)
+    p $in R
+    release thm locality::finite_nested_regions_member(R,k,c.regions,p,m)
+    release thm nth_derivative_lower_candidate(D,k,m,f,p,c)
+    release thm nth_derivative_candidate_exists(D,m,f,p,c.values(m,p))
+
+prop is_n_times_differentiable_on(D power_set(R),k N,f fn(x D) R,E power_set(D)):
+    forall p E:
+        $is_n_times_differentiable_at(D,k,f,p)
+
+template<D power_set(R),E power_set(D),k N>:
+    have fn nth_derivative_function(f fn(x D) R: $is_n_times_differentiable_on(D,k,f,E)) fn(p E) R=fn(p E) R {\nth_derivative<D,k>(f,p)}
+
+thm nth_derivative_function_selected:
+    ? forall D power_set(R),k N,f fn(x D) R,E power_set(D),p E:
+        $is_n_times_differentiable_on(D,k,f,E)
+        =>:
+            $has_nth_derivative_at(D,k,f,p,\nth_derivative_function<D,E,k>(f)(p))
+    $is_n_times_differentiable_at(D,k,f,p)
+    release thm nth_derivative_selected(D,k,f,p)
+    \nth_derivative_function<D,E,k>(f)(p)=\nth_derivative<D,k>(f,p)
+
+thm nth_derivative_function_value:
+    ? forall D power_set(R),k N,f fn(x D) R,E power_set(D),p E,L R:
+        $is_n_times_differentiable_on(D,k,f,E)
+        $has_nth_derivative_at(D,k,f,p,L)
+        =>:
+            \nth_derivative_function<D,E,k>(f)(p)=L
+    $is_n_times_differentiable_at(D,k,f,p)
+    release thm nth_derivative_value(D,k,f,p,L)
+    \nth_derivative_function<D,E,k>(f)(p)=\nth_derivative<D,k>(f,p)=L
+
+thm nth_derivative_chain_region_in_domain:
+    ? forall D power_set(R),k N,f fn(x D) R,c &NthDerivativeProfiles<k>,m closed_range(0,k):
+        $is_nth_derivative_chain(D,k,f,c)
+        =>:
+            c.regions(m) $in power_set(D)
+    release thm locality::finite_nested_regions_subset(R,k,c.regions,m)
+    c.regions(0)=D
+    c.regions(m) $subset D
+    $is_set(D)
+    c.regions(m) $in power_set(D)
+
+thm nth_derivative_chain_exists_on:
+    ? forall D power_set(R),k N,m closed_range(0,k),f fn(x D) R,c &NthDerivativeProfiles<k>,E power_set(D):
+        $is_nth_derivative_chain(D,k,f,c)
+        E=c.regions(m)
+        =>:
+            $is_n_times_differentiable_on(D,m,f,E)
+    claim:
+        ? forall p E:
+            $is_n_times_differentiable_at(D,m,f,p)
+        p $in D
+        p $in c.regions(m)
+        release thm nth_derivative_lower_candidate(D,k,m,f,p,c)
+        release thm nth_derivative_candidate_exists(D,m,f,p,c.values(m,p))
+    by def $is_n_times_differentiable_on(D,m,f,E)
+
+thm nth_derivative_function_successor:
+    ? forall D power_set(R),k N,m closed_range(0,k),f fn(x D) R,c &NthDerivativeProfiles<k>,E power_set(D),center R:
+        $is_nth_derivative_chain(D,k,f,c)
+        m+1 $in closed_range(1,k)
+        m+1 $in closed_range(0,k)
+        E=c.regions(m)
+        center $in E
+        center $in c.regions(m+1)
+        $is_n_times_differentiable_on(D,m,f,E)
+        =>:
+            $has_derivative_at(\nth_derivative_function<D,E,m>(f),center,c.values(m+1,center))
+    m+1 $in closed_range(0,k)
+    m $in closed_range(0,k)
+    (m+1)-1=m
+    c.regions((m+1)-1)=c.regions(m)
+    center $in R
+    center $in c.regions(m)
+    $has_derivative_at(\nth_derivative_profile<k,c,(m+1)-1>,center,c.values(m+1,center))
+    E $subset D
+    D $subset R
+    E $subset R
+    E $in power_set(R)
+    {u R:u $in c.regions((m+1)-1)} $in power_set(R)
+    {u R:u $in c.regions((m+1)-1)} $subset E
+    E $subset {u R:u $in c.regions((m+1)-1)}
+    center $in intersect({u R:u $in c.regions((m+1)-1)},E)
+    claim:
+        ? forall y intersect({u R:u $in c.regions((m+1)-1)},E):
+            \nth_derivative_profile<k,c,(m+1)-1>(y)=\nth_derivative_function<D,E,m>(f)(y)
+        y $in E
+        y $in D
+        y $in R
+        y $in c.regions(m)
+        release thm nth_derivative_lower_candidate(D,k,m,f,y,c)
+        release thm nth_derivative_function_value(D,m,f,E,y,c.values(m,y))
+        \nth_derivative_profile<k,c,(m+1)-1>(y)=c.values((m+1)-1,y)=c.values(m,y)=\nth_derivative_function<D,E,m>(f)(y)
+    release thm locality::real_derivatives_extensional({u R:u $in c.regions((m+1)-1)},E,center,\nth_derivative_profile<k,c,(m+1)-1>,\nth_derivative_function<D,E,m>(f),c.values(m+1,center))

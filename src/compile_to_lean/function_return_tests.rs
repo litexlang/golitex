@@ -11,6 +11,40 @@ const NAMED: &str = "have fn return_pair(x R, y R: y != 0) R = x / y\nreturn_pai
 const ANONYMOUS: &str = "fn(x R) R {x}(2) $in C\n";
 const WEAKER: &str = "have fn call_weak_return(x R) C = x\n$is_set(call_weak_return(2))\nforall call_unused R:\n    call_weak_return $in fn(y R) R\n    =>:\n        call_weak_return(2) $in R\n";
 
+#[test]
+fn function_return_template_standard_superset_is_explicitly_unsupported() {
+    use super::source_position::{SourceOwner, SourcePosition};
+    let (result, compiler) = checked(
+        "template<S set>:\n    have fn real_identity(x R) R = x\nforall x R:\n    \\real_identity<R>(x) $in C\n",
+    );
+    let VerifyFactResult::ForallFact(proof) = verified(&result.statement_results[1]) else {
+        panic!("actual forall result");
+    };
+    let VerifyForallFactResult::Success(VerifyForallFactProof::ByLocalIntroduction(proof)) =
+        proof.as_ref()
+    else {
+        panic!("actual local introduction");
+    };
+    let success = atomic(&proof.proved_then_facts[0].verify_result);
+    let AtomicExceptEqualityFactSearchedProof::ByKnownSpecialProperty(
+        AtomicExceptEqualityFactSearchProofByKnownSpecialProperty::InFact(
+            rule
+            @ InFactSearchProofByKnownSpecialProperty::TemplateApplicationInStandardSuperset(_),
+        ),
+    ) = &success.searched_proof
+    else {
+        panic!("actual template standard-return evidence")
+    };
+    let AtomicFact::InFact(goal) = &success.fact else {
+        panic!("actual membership")
+    };
+    let position = SourcePosition::new(None, SourceOwner::Run(&result), 1);
+    let error = compiler
+        .compile_fn_return_rule(goal, rule, &position)
+        .unwrap_err();
+    assert_eq!(error.route, "FunctionReturn/TemplateStandardSuperset");
+}
+
 fn checked(source: &str) -> (RunLitexCodeResult, LitexToLeanCompiler) {
     let mut runtime = Runtime::new(LaunchCommand::Eval {
         code: String::new(),
@@ -191,7 +225,10 @@ fn function_return_uses_stronger_selected_truth_after_actual_weaker_cached_wd() 
         .compile_run(&result, "stronger_selected_return")
         .unwrap();
     assert!(output.contains(&format!("h_{}", payload.cite_property_fact_id.value())));
-    assert!(output.contains("Litex.FunctionSemantics.call_mem"), "the R conclusion must consume the selected R signature; the cached C output law is insufficient");
+    assert!(
+        output.contains("Litex.FunctionSemantics.call_mem"),
+        "the R conclusion must consume the selected R signature; the cached C output law is insufficient"
+    );
 }
 
 #[test]
@@ -287,4 +324,104 @@ fn function_return_rejects_corrupted_recorded_same_domain_signatures() {
             .route,
         "FunctionReturn/SameDomains"
     );
+}
+
+#[test]
+fn function_return_matrix_wd_consumes_stored_signature_citations() {
+    for carrier in ["R", "C"] {
+        let source = format!(
+            "zero_matrix(4,4) $in fn(u closed_range(1,4), v closed_range(1,4)) {carrier}\nzero_matrix(4,4)(1,1) $in C"
+        );
+        let (result, compiler) = checked(&source);
+        let proof = atomic(verified(&result.statement_results[1]));
+        let ObjWellDefinedProof::ByDef {
+            proof: ObjWellDefinedProofByDef::FnObj(wd),
+            ..
+        } = &proof.well_defined_proof.well_defined_of_each_parameter[0]
+        else {
+            panic!("matrix call WD")
+        };
+        assert!(matches!(
+            &wd.domain_fn_set,
+            Some(FnObjDomainFnSetEvidence::Matrix(_))
+        ));
+        let AtomicExceptEqualityFactSearchedProof::ByKnownSpecialProperty(
+            AtomicExceptEqualityFactSearchProofByKnownSpecialProperty::InFact(rule),
+        ) = &proof.searched_proof
+        else {
+            panic!("recorded function-return citation")
+        };
+        let ids: Vec<FactId> = match rule {
+            InFactSearchProofByKnownSpecialProperty::FnApplicationInStandardSuperset(p)
+                if carrier == "R" =>
+            {
+                p.signature_returns
+                    .iter()
+                    .map(|e| e.cite_signature_fact_id)
+                    .collect()
+            }
+            InFactSearchProofByKnownSpecialProperty::FnApplicationInCodomain(p)
+                if carrier == "C" =>
+            {
+                vec![p.cite_property_fact_id]
+            }
+            _ => panic!("original matrix-return route"),
+        };
+        let lean = compiler
+            .compile_run(&result, "matrix_signature_return")
+            .unwrap();
+        assert!(ids
+            .iter()
+            .all(|id| lean.contains(&format!("h_{}", id.value()))));
+        assert!(lean.contains("Litex.FunctionSemantics.call_mem"));
+    }
+}
+
+#[test]
+fn function_return_matrix_wd_rejects_missing_citations_and_changed_domain() {
+    for carrier in ["R", "C"] {
+        for change in 0..2 {
+            let source = format!(
+                "zero_matrix(4,4) $in fn(u closed_range(1,4), v closed_range(1,4)) {carrier}\nzero_matrix(4,4)(1,1) $in C"
+            );
+            let (mut result, compiler) = checked(&source);
+            let ExecStmtResult::Fact(ExecFactStmtResult::Success(fact)) =
+                &mut result.statement_results[1]
+            else {
+                panic!("call fact")
+            };
+            let proof = atomic_mut(&mut fact.verify_result);
+            if change == 0 {
+                let AtomicExceptEqualityFactSearchedProof::ByKnownSpecialProperty(
+                    AtomicExceptEqualityFactSearchProofByKnownSpecialProperty::InFact(rule),
+                ) = &mut proof.searched_proof
+                else {
+                    panic!("return citation")
+                };
+                match rule {
+                    InFactSearchProofByKnownSpecialProperty::FnApplicationInStandardSuperset(p) => {
+                        p.signature_returns.clear()
+                    }
+                    InFactSearchProofByKnownSpecialProperty::FnApplicationInCodomain(p) => {
+                        p.signature_uses.clear()
+                    }
+                    _ => panic!("matrix return route"),
+                }
+            } else {
+                let ObjWellDefinedProof::ByDef {
+                    proof: ObjWellDefinedProofByDef::FnObj(wd),
+                    ..
+                } = &mut proof.well_defined_proof.well_defined_of_each_parameter[0]
+                else {
+                    panic!("call WD")
+                };
+                let Some(FnObjDomainFnSetEvidence::Matrix(p)) = &mut wd.domain_fn_set else {
+                    panic!("native matrix")
+                };
+                p.function.body.set_bound_parameters.groups[0].param_type =
+                    Box::new(Obj::StandardSet(StandardSet::R));
+            }
+            assert!(compiler.compile_run(&result, "bad_matrix_return").is_err());
+        }
+    }
 }

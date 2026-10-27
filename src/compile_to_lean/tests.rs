@@ -340,12 +340,12 @@ fn selected_rational_route_uses_normalization_adapter() {
 }
 
 #[test]
-fn unsupported_constructor_after_supported_prefix_rejects_complete_artifact() {
-    let (result, compiler) = execute("1 = 1\nforall a R:\n    sinh(a) + 0 = sinh(a)\n");
-    let error = compile_run(&result, &compiler, "unsupported_trig")
-        .expect_err("hyperbolic sine still has no WD consumer");
+fn unsupported_command_after_supported_prefix_rejects_complete_artifact() {
+    let (result, compiler) = execute("1 = 1\neval 2 + 3\n");
+    let error = compile_run(&result, &compiler, "unsupported_command")
+        .expect_err("eval still has no command consumer");
     assert_eq!(error.statement_index, Some(2));
-    assert_eq!(error.route, "WD/HyperbolicOperator");
+    assert_eq!(error.route, "Command");
 }
 
 #[test]
@@ -3406,3 +3406,33 @@ mod complex_observation_tests;
 
 #[path = "../../tests/unit/compile_to_lean/basic_predicate_tests.rs"]
 mod basic_predicate_tests;
+
+#[path = "../../tests/unit/compile_to_lean/indexed_set_tests.rs"]
+mod indexed_set_tests;
+
+#[path = "../../tests/unit/compile_to_lean/fold_tests.rs"]
+mod fold_tests;
+
+#[path = "../../tests/unit/compile_to_lean/power_set_closure_tests.rs"]
+mod power_set_closure_tests;
+
+#[path = "../../tests/unit/compile_to_lean/hyperbolic_tests.rs"]
+mod hyperbolic_tests;
+
+#[path = "../../tests/unit/compile_to_lean/matrix_tests.rs"]
+mod matrix_tests;
+
+#[path = "../../tests/unit/compile_to_lean/finite_set_closure_tests.rs"]
+mod finite_set_closure_tests;
+
+#[path = "../../tests/unit/compile_to_lean/real_bounds_tests.rs"]
+mod real_bounds_tests;
+
+#[path = "../../tests/unit/compile_to_lean/real_extrema_tests.rs"]
+mod real_extrema_tests;
+
+#[path = "../../tests/unit/compile_to_lean/sequence_analysis_tests.rs"]
+mod sequence_analysis_tests;
+
+#[path = "../../tests/unit/compile_to_lean/sequence_epsilon_tests.rs"]
+mod sequence_epsilon_tests;

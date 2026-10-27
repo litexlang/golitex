@@ -787,3 +787,9 @@ fn forall_fnset_free_parameter_rejects_local_binder_capture() {
         .is_none());
     assert_eq!(memory_sizes(&rt), before);
 }
+
+mod complement_event_carrier;
+mod literal_event_carrier;
+#[path = "power_set_closure.rs"]
+mod power_set_closure;
+mod template_standard_return;

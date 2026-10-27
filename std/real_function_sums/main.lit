@@ -1,0 +1,329 @@
+# Finite real sums and unary function sums on exact actual domains.
+
+thm integer_closed_prefix_subset:
+    ? forall upper,lower Z:
+        lower<=upper
+        =>:
+            closed_range(1,lower) $subset closed_range(1,upper)
+    claim:
+        ? forall j closed_range(1,lower):
+            j $in closed_range(1,upper)
+        j>=1
+        j<=lower
+        lower<=upper
+        j<=upper
+        j $in Z
+    by def closed_range(1,lower) $subset closed_range(1,upper)
+
+thm nonnegative_closed_prefix_successor:
+    ? forall m N:
+        closed_range(1,m+1)=union(closed_range(1,m),{m+1})
+        intersect(closed_range(1,m),{m+1})={}
+    claim:
+        ? forall j closed_range(1,m+1):
+            j $in union(closed_range(1,m),{m+1})
+        j>=1
+        j<=m+1
+        j $in Z
+        m $in Z
+        j<=m or j>m
+        by cases:
+            ? j $in union(closed_range(1,m),{m+1})
+            case j<=m:
+                j>=1
+                j $in closed_range(1,m)
+            case j>m:
+                j-m $in Z
+                j-m>0
+                j-m $in N+
+                j-m>=1
+                j>=m+1
+                j=m+1
+                j $in {m+1}
+    by def closed_range(1,m+1) $subset union(closed_range(1,m),{m+1})
+    claim:
+        ? forall j union(closed_range(1,m),{m+1}):
+            j $in closed_range(1,m+1)
+        j $in closed_range(1,m) or j $in {m+1}
+        by cases:
+            ? j $in closed_range(1,m+1)
+            case j $in closed_range(1,m):
+                j>=1
+                j<=m
+                j<=m+1
+                j $in Z
+            case j $in {m+1}:
+                j=m+1
+                m+1 $in closed_range(1,m+1)
+    by def union(closed_range(1,m),{m+1}) $subset closed_range(1,m+1)
+    by extension closed_range(1,m+1)=union(closed_range(1,m),{m+1})
+    claim:
+        ? forall j intersect(closed_range(1,m),{m+1}):
+            j $in {}
+        by contra:
+            ? j $in {}
+            j $in closed_range(1,m)
+            j $in {m+1}
+            j=m+1
+            j<=m
+            m+1<=m
+            impossible m+1>m
+    by def intersect(closed_range(1,m),{m+1}) $subset {}
+    by extension intersect(closed_range(1,m),{m+1})={}
+
+thm real_finite_set_prefix_sum_successor:
+    ? forall count N,values fn(j closed_range(1,count)) R,m closed_range(0,count):
+        m+1 $in closed_range(1,count)
+        =>:
+            finite_set_sum(closed_range(1,m+1),values)=finite_set_sum(closed_range(1,m),values)+values(m+1)
+    release thm nonnegative_closed_prefix_successor(m)
+    m+1 $in closed_range(0,count)
+    release thm integer_closed_prefix_subset(count,m)
+    release thm integer_closed_prefix_subset(count,m+1)
+    closed_range(1,m+1)=union(closed_range(1,m),{m+1})
+    intersect(closed_range(1,m),{m+1})={}
+    finite_set_sum(closed_range(1,m+1),values)=finite_set_sum(union(closed_range(1,m),{m+1}),values)
+    finite_set_sum(union(closed_range(1,m),{m+1}),values)=finite_set_sum(closed_range(1,m),values)+finite_set_sum({m+1},values)
+    finite_set_sum({m+1},values)=values(m+1)
+    finite_set_sum(closed_range(1,m),values)+finite_set_sum({m+1},values)=finite_set_sum(closed_range(1,m),values)+values(m+1)
+    finite_set_sum(closed_range(1,m+1),values)=finite_set_sum(closed_range(1,m),values)+values(m+1)
+
+thm real_finite_set_prefix_sum_in_R:
+    ? forall count N,values fn(j closed_range(1,count)) R,m closed_range(0,count):
+        finite_set_sum(closed_range(1,m),values) $in R
+    release thm integer_closed_prefix_subset(count,m)
+    claim:
+        ? forall j closed_range(1,m):
+            values(j) $in R
+        j $in closed_range(1,count)
+        values(j) $in R
+    finite_set_sum(closed_range(1,m),values) $in R
+
+template<count N>:
+    have fn finite_real_prefix_sum(values fn(j closed_range(1,count)) R,m closed_range(0,count)) R=finite_set_sum(closed_range(1,m),values)
+
+thm finite_real_prefix_sum_zero:
+    ? forall count N,values fn(j closed_range(1,count)) R:
+        \finite_real_prefix_sum<count>(values,0)=0
+    \finite_real_prefix_sum<count>(values,0)=finite_set_sum(closed_range(1,0),values)=0
+
+thm finite_real_prefix_sum_successor:
+    ? forall count N,values fn(j closed_range(1,count)) R,m closed_range(0,count):
+        m+1 $in closed_range(1,count)
+        =>:
+            \finite_real_prefix_sum<count>(values,m+1)=\finite_real_prefix_sum<count>(values,m)+values(m+1)
+    release thm real_finite_set_prefix_sum_successor(count,values,m)
+    \finite_real_prefix_sum<count>(values,m+1)=finite_set_sum(closed_range(1,m+1),values)
+    \finite_real_prefix_sum<count>(values,m)=finite_set_sum(closed_range(1,m),values)
+    thm local_prefix_add:
+        ? forall left,right,tail C:
+            left=right
+            =>:
+                left+tail=right+tail
+        left+tail=right+tail
+    release thm local_prefix_add(finite_set_sum(closed_range(1,m),values),\finite_real_prefix_sum<count>(values,m),values(m+1))
+    thm local_prefix_transitive:
+        ? forall left,middle,right C:
+            left=middle
+            middle=right
+            =>:
+                left=right
+        left=middle=right
+    release thm local_prefix_transitive(\finite_real_prefix_sum<count>(values,m+1),finite_set_sum(closed_range(1,m+1),values),finite_set_sum(closed_range(1,m),values)+values(m+1))
+    release thm local_prefix_transitive(\finite_real_prefix_sum<count>(values,m+1),finite_set_sum(closed_range(1,m),values)+values(m+1),\finite_real_prefix_sum<count>(values,m)+values(m+1))
+
+template<D power_set(R),count N>:
+    have fn unary_function_prefix_sum(terms fn(j closed_range(1,count)) fn(x D) R,m closed_range(0,count)) fn(x D) R=fn(x D) R {finite_set_sum(closed_range(1,m),fn(j closed_range(1,count)) R {terms(j)(x)})}
+
+thm unary_function_prefix_zero:
+    ? forall D power_set(R),count N,terms fn(j closed_range(1,count)) fn(x D) R,x D:
+        \unary_function_prefix_sum<D,count>(terms,0)(x)=0
+    \unary_function_prefix_sum<D,count>(terms,0)(x)=finite_set_sum(closed_range(1,0),fn(j closed_range(1,count)) R {terms(j)(x)})=0
+
+thm unary_function_prefix_successor:
+    ? forall D power_set(R),count N,terms fn(j closed_range(1,count)) fn(x D) R,m closed_range(0,count),x D:
+        m+1 $in closed_range(1,count)
+        =>:
+            \unary_function_prefix_sum<D,count>(terms,m+1)(x)=\unary_function_prefix_sum<D,count>(terms,m)(x)+terms(m+1)(x)
+    release thm real_finite_set_prefix_sum_successor(count,fn(j closed_range(1,count)) R {terms(j)(x)},m)
+    \unary_function_prefix_sum<D,count>(terms,m+1)(x)=finite_set_sum(closed_range(1,m+1),fn(j closed_range(1,count)) R {terms(j)(x)})
+    \unary_function_prefix_sum<D,count>(terms,m)(x)=finite_set_sum(closed_range(1,m),fn(j closed_range(1,count)) R {terms(j)(x)})
+    fn(j closed_range(1,count)) R {terms(j)(x)}(m+1)=terms(m+1)(x)
+    finite_set_sum(closed_range(1,m),fn(j closed_range(1,count)) R {terms(j)(x)}) $in C
+    fn(j closed_range(1,count)) R {terms(j)(x)}(m+1) $in C
+    \unary_function_prefix_sum<D,count>(terms,m)(x) $in C
+    terms(m+1)(x) $in C
+    thm prefix_sum_add_equalities:
+        ? forall left,right,tail,replacement R:
+            left=right
+            tail=replacement
+            =>:
+                left+tail=right+replacement
+        left+tail=right+tail
+        right+tail=right+replacement
+    release thm prefix_sum_add_equalities(finite_set_sum(closed_range(1,m),fn(j closed_range(1,count)) R {terms(j)(x)}),\unary_function_prefix_sum<D,count>(terms,m)(x),fn(j closed_range(1,count)) R {terms(j)(x)}(m+1),terms(m+1)(x))
+    finite_set_sum(closed_range(1,m+1),fn(j closed_range(1,count)) R {terms(j)(x)})=finite_set_sum(closed_range(1,m),fn(j closed_range(1,count)) R {terms(j)(x)})+fn(j closed_range(1,count)) R {terms(j)(x)}(m+1)
+    thm prefix_sum_equality_transitive:
+        ? forall left,middle,right C:
+            left=middle
+            middle=right
+            =>:
+                left=right
+        left=middle=right
+    release thm prefix_sum_equality_transitive(\unary_function_prefix_sum<D,count>(terms,m+1)(x),finite_set_sum(closed_range(1,m+1),fn(j closed_range(1,count)) R {terms(j)(x)}),finite_set_sum(closed_range(1,m),fn(j closed_range(1,count)) R {terms(j)(x)})+fn(j closed_range(1,count)) R {terms(j)(x)}(m+1))
+    release thm prefix_sum_equality_transitive(\unary_function_prefix_sum<D,count>(terms,m+1)(x),finite_set_sum(closed_range(1,m),fn(j closed_range(1,count)) R {terms(j)(x)})+fn(j closed_range(1,count)) R {terms(j)(x)}(m+1),\unary_function_prefix_sum<D,count>(terms,m)(x)+terms(m+1)(x))
+
+thm unary_function_prefix_derivative:
+    ? forall D power_set(R),count N,terms fn(j closed_range(1,count)) fn(x D) R,values fn(j closed_range(1,count)) R,p R,m closed_range(0,count):
+        p $in D
+        exist radius R+ st {{x R:abs(x-p)<radius} $subset D}
+        forall j closed_range(1,count):
+            j<=m
+            =>:
+                $has_derivative_at(terms(j),p,values(j))
+        =>:
+            $has_derivative_at(\unary_function_prefix_sum<D,count>(terms,m),p,\finite_real_prefix_sum<count>(values,m))
+    D $subset R
+    D $subset D
+    prop prefix_derivative_stage(stage N):
+        forall:
+            stage<=m
+            stage $in closed_range(0,count)
+            =>:
+                $has_derivative_at(\unary_function_prefix_sum<D,count>(terms,stage),p,\finite_real_prefix_sum<count>(values,stage))
+    by induc stage from 0:
+        ? $prefix_derivative_stage(stage)
+        ? from stage=0:
+            claim:
+                ? forall:
+                    0<=m
+                    0 $in closed_range(0,count)
+                    =>:
+                        $has_derivative_at(\unary_function_prefix_sum<D,count>(terms,0),p,\finite_real_prefix_sum<count>(values,0))
+                claim:
+                    ? forall x D:
+                        \unary_function_prefix_sum<D,count>(terms,0)(x)=0
+                    release thm unary_function_prefix_zero(D,count,terms,x)
+                release thm fn_derivative_at_constant(\unary_function_prefix_sum<D,count>(terms,0),p,0)
+                release thm finite_real_prefix_sum_zero(count,values)
+                $has_derivative_at(\unary_function_prefix_sum<D,count>(terms,0),p,\finite_real_prefix_sum<count>(values,0))
+            by def $prefix_derivative_stage(0)
+        ? induc:
+            stage $in N
+            claim:
+                ? forall:
+                    stage+1<=m
+                    stage+1 $in closed_range(0,count)
+                    =>:
+                        $has_derivative_at(\unary_function_prefix_sum<D,count>(terms,stage+1),p,\finite_real_prefix_sum<count>(values,stage+1))
+                stage+1<=m
+                stage<=stage+1
+                stage<=m
+                m<=count
+                stage<=count
+                stage $in closed_range(0,count)
+                stage+1 $in closed_range(1,m)
+                stage+1 $in closed_range(1,count)
+                stage+1 $in closed_range(0,count)
+                $has_derivative_at(\unary_function_prefix_sum<D,count>(terms,stage),p,\finite_real_prefix_sum<count>(values,stage))
+                $has_derivative_at(terms(stage+1),p,values(stage+1))
+                claim:
+                    ? forall x D:
+                        \unary_function_prefix_sum<D,count>(terms,stage+1)(x)=\unary_function_prefix_sum<D,count>(terms,stage)(x)+terms(stage+1)(x)
+                    release thm unary_function_prefix_successor(D,count,terms,stage,x)
+                release thm fn_derivative_at_add(\unary_function_prefix_sum<D,count>(terms,stage),terms(stage+1),\unary_function_prefix_sum<D,count>(terms,stage+1),p,\finite_real_prefix_sum<count>(values,stage),values(stage+1))
+                release thm finite_real_prefix_sum_successor(count,values,stage)
+                $has_derivative_at(\unary_function_prefix_sum<D,count>(terms,stage+1),p,\finite_real_prefix_sum<count>(values,stage+1))
+            by def $prefix_derivative_stage(stage+1)
+    m $in N
+    m<=m
+    $prefix_derivative_stage(m)
+    $has_derivative_at(\unary_function_prefix_sum<D,count>(terms,m),p,\finite_real_prefix_sum<count>(values,m))
+
+thm unary_function_prefix_continuous:
+    ? forall D power_set(R),count N,terms fn(j closed_range(1,count)) fn(x D) R,p R,m closed_range(0,count):
+        p $in D
+        forall j closed_range(1,count):
+            j<=m
+            =>:
+                $is_continuous_at(terms(j),p)
+        =>:
+            $is_continuous_at(\unary_function_prefix_sum<D,count>(terms,m),p)
+    D $subset R
+    D $subset D
+    prop prefix_continuity_stage(stage N):
+        forall:
+            stage<=m
+            stage $in closed_range(0,count)
+            =>:
+                $is_continuous_at(\unary_function_prefix_sum<D,count>(terms,stage),p)
+    by induc stage from 0:
+        ? $prefix_continuity_stage(stage)
+        ? from stage=0:
+            claim:
+                ? forall:
+                    0<=m
+                    0 $in closed_range(0,count)
+                    =>:
+                        $is_continuous_at(\unary_function_prefix_sum<D,count>(terms,0),p)
+                claim:
+                    ? forall x D:
+                        \unary_function_prefix_sum<D,count>(terms,0)(x)=0
+                    release thm unary_function_prefix_zero(D,count,terms,x)
+                release thm fn_continuous_at_constant(\unary_function_prefix_sum<D,count>(terms,0),p,0)
+                $is_continuous_at(\unary_function_prefix_sum<D,count>(terms,0),p)
+            by def $prefix_continuity_stage(0)
+        ? induc:
+            stage $in N
+            claim:
+                ? forall:
+                    stage+1<=m
+                    stage+1 $in closed_range(0,count)
+                    =>:
+                        $is_continuous_at(\unary_function_prefix_sum<D,count>(terms,stage+1),p)
+                stage+1<=m
+                stage<=stage+1
+                stage<=m
+                m<=count
+                stage<=count
+                stage $in closed_range(0,count)
+                stage+1 $in closed_range(1,m)
+                stage+1 $in closed_range(1,count)
+                stage+1 $in closed_range(0,count)
+                $is_continuous_at(\unary_function_prefix_sum<D,count>(terms,stage),p)
+                $is_continuous_at(terms(stage+1),p)
+                claim:
+                    ? forall x D:
+                        \unary_function_prefix_sum<D,count>(terms,stage+1)(x)=\unary_function_prefix_sum<D,count>(terms,stage)(x)+terms(stage+1)(x)
+                    release thm unary_function_prefix_successor(D,count,terms,stage,x)
+                release thm fn_continuous_at_add(\unary_function_prefix_sum<D,count>(terms,stage),terms(stage+1),\unary_function_prefix_sum<D,count>(terms,stage+1),p)
+                $is_continuous_at(\unary_function_prefix_sum<D,count>(terms,stage+1),p)
+            by def $prefix_continuity_stage(stage+1)
+    m $in N
+    m<=m
+    $prefix_continuity_stage(m)
+    $is_continuous_at(\unary_function_prefix_sum<D,count>(terms,m),p)
+
+thm finite_real_prefix_sum_index_equal:
+    ? forall count N,samples fn(j closed_range(1,count)) R,left,right closed_range(0,count):
+        left=right
+        =>:
+            \finite_real_prefix_sum<count>(samples,left)=\finite_real_prefix_sum<count>(samples,right)
+    thm apply_equal_index:
+        ? forall I set,F fn(x I) R,a,b I:
+            a=b
+            =>:
+                F(a)=F(b)
+        F(a)=F(b)
+    release thm apply_equal_index(closed_range(0,count),fn(stage closed_range(0,count)) R {\finite_real_prefix_sum<count>(samples,stage)},left,right)
+    fn(stage closed_range(0,count)) R {\finite_real_prefix_sum<count>(samples,stage)}(left)=\finite_real_prefix_sum<count>(samples,left)
+    fn(stage closed_range(0,count)) R {\finite_real_prefix_sum<count>(samples,stage)}(right)=\finite_real_prefix_sum<count>(samples,right)
+    thm local_transitive:
+        ? forall a,b,c C:
+            a=b
+            b=c
+            =>:
+                a=c
+        a=b=c
+    release thm local_transitive(\finite_real_prefix_sum<count>(samples,left),fn(stage closed_range(0,count)) R {\finite_real_prefix_sum<count>(samples,stage)}(left),fn(stage closed_range(0,count)) R {\finite_real_prefix_sum<count>(samples,stage)}(right))
+    release thm local_transitive(\finite_real_prefix_sum<count>(samples,left),fn(stage closed_range(0,count)) R {\finite_real_prefix_sum<count>(samples,stage)}(right),\finite_real_prefix_sum<count>(samples,right))

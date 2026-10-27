@@ -207,6 +207,12 @@ impl LitexToLeanCompiler {
             CompleteFunctionDomainSourceProof::ApplicationReturn { .. } => {
                 self.compile_application_return_member(subject, proof, position)
             }
+            CompleteFunctionDomainSourceProof::Matrix(callable) => {
+                if proof.signature != callable.function.body {
+                    return Err(LeanCompileError::unsupported("Matrix/DomainSignature"));
+                }
+                self.compile_matrix_callable_member(subject, callable, position)
+            }
             CompleteFunctionDomainSourceProof::Composition(callable) => {
                 if proof.signature != callable.function.body {
                     return Err(LeanCompileError::unsupported("Composition/DomainSignature"));
@@ -217,7 +223,7 @@ impl LitexToLeanCompiler {
                 function,
                 subject_equal,
             } => {
-                let signature = self.compile_fn_signature(&proof.signature, position)?;
+                let signature = self.compile_complete_domain_signature(proof, position)?;
                 let target = self.compile_object_reference(subject, position)?;
                 if function.body != proof.signature {
                     return Err(LeanCompileError::unsupported("FnExtension/SourceSignature"));
@@ -233,7 +239,7 @@ impl LitexToLeanCompiler {
                 subject_equal,
                 carrier_equal,
             } => {
-                let signature = self.compile_fn_signature(&proof.signature, position)?;
+                let signature = self.compile_complete_domain_signature(proof, position)?;
                 let target = self.compile_object_reference(subject, position)?;
                 let (fact, cited) = self.cited_fact_reference(membership.fact_id, position)?;
                 if fact != &Fact::AtomicFact(AtomicFact::InFact(membership.clone())) {
@@ -247,11 +253,9 @@ impl LitexToLeanCompiler {
                     subject_equal,
                     position,
                 )?;
-                let target_carrier =
-                    Obj::FunctionSpace(FunctionSpace::FnSet(proof.signature.clone()));
-                let carrier_same = self.compile_equality_path(
+                let carrier_same = self.compile_function_carrier_path(
                     &membership.set,
-                    &target_carrier,
+                    &proof.signature,
                     carrier_equal,
                     position,
                 )?;

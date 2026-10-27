@@ -1,0 +1,38 @@
+{
+  "setup": [
+    "have fn isolated_terms(j closed_range(1,1)) fn(x {0}) R=fn(x {0}) R {0}",
+    "have fn isolated_values(j closed_range(1,1)) R=0"
+  ],
+  "cases": [
+    {
+      "id": "used_tail_needs_derivative",
+      "source": "release thm Sums::main::unary_function_prefix_derivative(R,3,main::terms,main::values,0,3)",
+      "expected_category": "proof_search"
+    },
+    {
+      "id": "wrong_derivative",
+      "source": "$has_derivative_at(\\Sums::main::unary_function_prefix_sum<R,3>(main::terms,2),0,2)",
+      "expected_category": "proof_search"
+    },
+    {
+      "id": "prefix_outside_family",
+      "source": "\\Sums::main::unary_function_prefix_sum<R,3>(main::terms,4)=\\Sums::main::unary_function_prefix_sum<R,3>(main::terms,4)",
+      "expected_category": "well_defined"
+    },
+    {
+      "id": "wrong_numeric_prefix",
+      "source": "\\Sums::main::finite_real_prefix_sum<3>(main::values,2)=100",
+      "expected_category": "proof_search"
+    },
+    {
+      "id": "no_implicit_domain_restriction",
+      "source": "\\Sums::main::unary_function_prefix_sum<R+,3>(main::terms,2)=\\Sums::main::unary_function_prefix_sum<R+,3>(main::terms,2)",
+      "expected_category": "well_defined"
+    },
+    {
+      "id": "empty_sum_derivative_still_needs_neighborhood",
+      "source": "release thm Sums::main::unary_function_prefix_derivative({0},1,isolated_terms,isolated_values,0,0)",
+      "expected_category": "proof_search"
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "scope": "Ordered vector-input source laws after ordered.lit. All refusals retain Session liveness.",
+  "setup": [
+    "have law_other_path finite_seq(closed_range(1,2),2)=(1,2)",
+    "have fn law_unary_boundary(x R) R=x"
+  ],
+  "cases": [
+    {
+      "id": "wrong_path_candidate",
+      "source": "release thm Higher::main::ordered_partial_add(2,cart_n(R,2),2,ordered::law_first_square,ordered::law_second_square,ordered::law_partial_sum,ordered::law_point,law_other_path,2,0)",
+      "expected_category": "proof_search"
+    },
+    {
+      "id": "wrong_selected_partial",
+      "source": "\\Calc::higher_order::ordered_partial<2,cart_n(R,2),2>(ordered::law_partial_sum,ordered::law_point,ordered::law_path)=3",
+      "expected_category": "proof_search"
+    },
+    {
+      "id": "real_partial_coefficient",
+      "source": "release thm Higher::main::ordered_partial_scale(2,cart_n(R,2),2,ordered::law_partial_sum,ordered::law_partial_scaled,ordered::law_point,ordered::law_path,{1},2)",
+      "expected_category": "proof_search"
+    },
+    {
+      "id": "unary_is_not_one_vector",
+      "source": "release thm Higher::main::ordered_partial_add(1,cart_n(R,1),0,law_unary_boundary,law_unary_boundary,law_unary_boundary,tuple(0),tuple(),0,0)",
+      "expected_category": "proof_search"
+    }
+  ]
+}

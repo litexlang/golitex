@@ -1,0 +1,140 @@
+# Independent input profiles; target sums and scaled functions use source laws.
+have fn law_first_square(x cart_n(R,2)) R=x(1)^2
+
+have fn law_first_linear(x cart_n(R,2)) R=2*x(1)
+
+have fn law_two(x cart_n(R,2)) R=2
+
+have fn law_second_square(x cart_n(R,2)) R=x(2)^2
+
+have fn law_zero(x cart_n(R,2)) R=0
+
+by for:
+    ? forall j closed_range(0,2):
+        j=0 or j=1 or j=2
+    j=0 or j=1 or j=2
+
+by for:
+    ? forall j closed_range(1,2):
+        j=1 or j=2
+    j=1 or j=2
+
+have fn law_first_profiles(j closed_range(0,2)) fn(x cart_n(R,2)) R by cases:
+    case j=0: law_first_square
+    case j=1: law_first_linear
+    case j=2: law_two
+
+have fn law_second_profiles(j closed_range(0,2)) fn(x cart_n(R,2)) R by cases:
+    case j=0: law_second_square
+    case j=1: law_zero
+    case j=2: law_zero
+
+have law_path finite_seq(closed_range(1,2),2)=(1,1)
+
+law_path(1)=1
+
+law_path(2)=1
+
+claim:
+    ? forall j closed_range(1,2),x cart_n(R,2):
+        $has_partial_derivative_at(law_first_profiles(j-1),x,2,law_path(j),law_first_profiles(j)(x))
+    j=1 or j=2
+    by cases:
+        ? $has_partial_derivative_at(law_first_profiles(j-1),x,2,law_path(j),law_first_profiles(j)(x))
+        case j=1:
+            j-1=0
+            law_path(j)=law_path(1)=1
+            law_first_profiles(j-1)=law_first_square
+            law_first_profiles(j)=law_first_linear
+            law_first_profiles(j)(x)=law_first_linear(x)=2*x(1)
+            $has_partial_derivative_at(law_first_square,x,2,1,2*x(1))
+        case j=2:
+            j-1=1
+            law_path(j)=law_path(2)=1
+            law_first_profiles(j-1)=law_first_linear
+            law_first_profiles(j)=law_two
+            law_first_profiles(j)(x)=law_two(x)=2
+            $has_partial_derivative_at(law_first_linear,x,2,1,2)
+
+claim:
+    ? forall j closed_range(1,2),x cart_n(R,2):
+        $has_partial_derivative_at(law_second_profiles(j-1),x,2,law_path(j),law_second_profiles(j)(x))
+    j=1 or j=2
+    by cases:
+        ? $has_partial_derivative_at(law_second_profiles(j-1),x,2,law_path(j),law_second_profiles(j)(x))
+        case j=1:
+            j-1=0
+            law_path(j)=law_path(1)=1
+            law_second_profiles(j-1)=law_second_square
+            law_second_profiles(j)=law_zero
+            law_second_profiles(j)(x)=law_zero(x)=0
+            $has_partial_derivative_at(law_second_square,x,2,1,0)
+        case j=2:
+            j-1=1
+            law_path(j)=law_path(2)=1
+            law_second_profiles(j-1)=law_zero
+            law_second_profiles(j)=law_zero
+            law_second_profiles(j)(x)=law_zero(x)=0
+            $has_partial_derivative_at(law_zero,x,2,1,0)
+
+have law_point cart_n(R,2)=(3,4)
+
+law_point(1)=3
+
+law_point(2)=4
+
+release thm Calc::higher_order::ordered_partial_from_global_profiles(2,2,law_first_profiles,law_point,law_path)
+
+law_first_profiles(0)=law_first_square
+
+law_first_profiles(2)=law_two
+
+law_first_profiles(2)(law_point)=law_two(law_point)=2
+
+$Calc::higher_order::has_ordered_partial_at(2,cart_n(R,2),2,law_first_square,law_point,law_path,2)
+
+release thm Calc::higher_order::ordered_partial_from_global_profiles(2,2,law_second_profiles,law_point,law_path)
+
+law_second_profiles(0)=law_second_square
+
+law_second_profiles(2)=law_zero
+
+law_second_profiles(2)(law_point)=law_zero(law_point)=0
+
+$Calc::higher_order::has_ordered_partial_at(2,cart_n(R,2),2,law_second_square,law_point,law_path,0)
+
+have fn law_partial_sum(x cart_n(R,2)) R=law_first_square(x)+law_second_square(x)
+
+release thm Higher::main::ordered_partial_add(2,cart_n(R,2),2,law_first_square,law_second_square,law_partial_sum,law_point,law_path,2,0)
+
+2+0=2
+
+$Calc::higher_order::has_ordered_partial_at(2,cart_n(R,2),2,law_partial_sum,law_point,law_path,2)
+
+release thm Calc::higher_order::ordered_partial_candidate_exists(2,cart_n(R,2),2,law_partial_sum,law_point,law_path,2)
+
+release thm Calc::higher_order::ordered_partial_value(2,cart_n(R,2),2,law_partial_sum,law_point,law_path,2)
+
+\Calc::higher_order::ordered_partial<2,cart_n(R,2),2>(law_partial_sum,law_point,law_path)=2
+
+have fn law_partial_scaled(x cart_n(R,2)) R=3*law_partial_sum(x)
+
+release thm Higher::main::ordered_partial_scale(2,cart_n(R,2),2,law_partial_sum,law_partial_scaled,law_point,law_path,3,2)
+
+3*2=6
+
+$Calc::higher_order::has_ordered_partial_at(2,cart_n(R,2),2,law_partial_scaled,law_point,law_path,6)
+
+release thm Calc::higher_order::ordered_partial_zero(2,cart_n(R,2),law_first_square,law_point,tuple())
+
+release thm Calc::higher_order::ordered_partial_zero(2,cart_n(R,2),law_second_square,law_point,tuple())
+
+law_first_square(law_point)=law_point(1)^2=3^2=9
+
+law_second_square(law_point)=law_point(2)^2=4^2=16
+
+release thm Higher::main::ordered_partial_add(2,cart_n(R,2),0,law_first_square,law_second_square,law_partial_sum,law_point,tuple(),9,16)
+
+9+16=25
+
+$Calc::higher_order::has_ordered_partial_at(2,cart_n(R,2),0,law_partial_sum,law_point,tuple(),25)

@@ -1,0 +1,201 @@
+# One vector input and real output; explicit coordinate/interior hypotheses.
+
+thm scalar_prefix_index_subset:
+    ? forall upper,lower Z:
+        lower<=upper
+        =>:
+            closed_range(1,lower) $subset closed_range(1,upper)
+    release thm Sums::main::integer_closed_prefix_subset(upper,lower)
+
+template<n N+,D power_set(cart_n(R,n)),count N>:
+    have fn scalar_function_prefix_sum(terms fn(j closed_range(1,count)) fn(x D) R,m closed_range(0,count)) fn(x D) R=fn(x D) R {finite_set_sum(closed_range(1,m),fn(j closed_range(1,count)) R {terms(j)(x)})}
+
+thm scalar_function_prefix_zero:
+    ? forall n N+,D power_set(cart_n(R,n)),count N,terms fn(j closed_range(1,count)) fn(x D) R,x D:
+        \scalar_function_prefix_sum<n,D,count>(terms,0)(x)=0
+    \scalar_function_prefix_sum<n,D,count>(terms,0)(x)=finite_set_sum(closed_range(1,0),fn(j closed_range(1,count)) R {terms(j)(x)})=0
+
+thm scalar_function_prefix_successor:
+    ? forall n N+,D power_set(cart_n(R,n)),count N,terms fn(j closed_range(1,count)) fn(x D) R,m closed_range(0,count),x D:
+        m+1 $in closed_range(1,count)
+        =>:
+            \scalar_function_prefix_sum<n,D,count>(terms,m+1)(x)=\scalar_function_prefix_sum<n,D,count>(terms,m)(x)+terms(m+1)(x)
+    release thm Sums::main::real_finite_set_prefix_sum_successor(count,fn(j closed_range(1,count)) R {terms(j)(x)},m)
+    \scalar_function_prefix_sum<n,D,count>(terms,m+1)(x)=finite_set_sum(closed_range(1,m+1),fn(j closed_range(1,count)) R {terms(j)(x)})
+    \scalar_function_prefix_sum<n,D,count>(terms,m)(x)=finite_set_sum(closed_range(1,m),fn(j closed_range(1,count)) R {terms(j)(x)})
+    fn(j closed_range(1,count)) R {terms(j)(x)}(m+1)=terms(m+1)(x)
+    finite_set_sum(closed_range(1,m),fn(j closed_range(1,count)) R {terms(j)(x)}) $in C
+    fn(j closed_range(1,count)) R {terms(j)(x)}(m+1) $in C
+    \scalar_function_prefix_sum<n,D,count>(terms,m)(x) $in C
+    terms(m+1)(x) $in C
+    thm prefix_sum_add_equalities:
+        ? forall left,right,tail,replacement R:
+            left=right
+            tail=replacement
+            =>:
+                left+tail=right+replacement
+        left+tail=right+tail
+        right+tail=right+replacement
+    release thm prefix_sum_add_equalities(finite_set_sum(closed_range(1,m),fn(j closed_range(1,count)) R {terms(j)(x)}),\scalar_function_prefix_sum<n,D,count>(terms,m)(x),fn(j closed_range(1,count)) R {terms(j)(x)}(m+1),terms(m+1)(x))
+    finite_set_sum(closed_range(1,m+1),fn(j closed_range(1,count)) R {terms(j)(x)})=finite_set_sum(closed_range(1,m),fn(j closed_range(1,count)) R {terms(j)(x)})+fn(j closed_range(1,count)) R {terms(j)(x)}(m+1)
+    thm prefix_sum_equality_transitive:
+        ? forall left,middle,right C:
+            left=middle
+            middle=right
+            =>:
+                left=right
+        left=middle=right
+    release thm prefix_sum_equality_transitive(\scalar_function_prefix_sum<n,D,count>(terms,m+1)(x),finite_set_sum(closed_range(1,m+1),fn(j closed_range(1,count)) R {terms(j)(x)}),finite_set_sum(closed_range(1,m),fn(j closed_range(1,count)) R {terms(j)(x)})+fn(j closed_range(1,count)) R {terms(j)(x)}(m+1))
+    release thm prefix_sum_equality_transitive(\scalar_function_prefix_sum<n,D,count>(terms,m+1)(x),finite_set_sum(closed_range(1,m),fn(j closed_range(1,count)) R {terms(j)(x)})+fn(j closed_range(1,count)) R {terms(j)(x)}(m+1),\scalar_function_prefix_sum<n,D,count>(terms,m)(x)+terms(m+1)(x))
+
+thm scalar_function_prefix_partial:
+    ? forall n N+,D power_set(cart_n(R,n)),count N,terms fn(j closed_range(1,count)) fn(x D) R,values fn(j closed_range(1,count)) R,p cart_n(R,n),axis closed_range(1,n),m closed_range(0,count):
+        p $in D
+        exist radius R+ st {{t R:abs(t)<radius} $subset {t R:fn(coord closed_range(1,n)) R {p(coord)+t*identity_matrix(n)(coord,axis)} $in D}}
+        forall j closed_range(1,count):
+            j<=m
+            =>:
+                $has_partial_derivative_at(terms(j),p,n,axis,values(j))
+        =>:
+            $has_partial_derivative_at(\scalar_function_prefix_sum<n,D,count>(terms,m),p,n,axis,\Sums::main::finite_real_prefix_sum<count>(values,m))
+    D $subset cart_n(R,n)
+    D $subset D
+    obtain r from exist radius R+ st {{t R:abs(t)<radius} $subset {t R:fn(coord closed_range(1,n)) R {p(coord)+t*identity_matrix(n)(coord,axis)} $in D}}
+    have fn full_zero(x cart_n(R,n)) R=0
+    p $in intersect(cart_n(R,n),D)
+    $has_partial_derivative_at(full_zero,p,n,axis,0)
+    prop prefix_derivative_stage(stage N):
+        forall:
+            stage<=m
+            stage $in closed_range(0,count)
+            =>:
+                $has_partial_derivative_at(\scalar_function_prefix_sum<n,D,count>(terms,stage),p,n,axis,\Sums::main::finite_real_prefix_sum<count>(values,stage))
+    by induc stage from 0:
+        ? $prefix_derivative_stage(stage)
+        ? from stage=0:
+            claim:
+                ? forall:
+                    0<=m
+                    0 $in closed_range(0,count)
+                    =>:
+                        $has_partial_derivative_at(\scalar_function_prefix_sum<n,D,count>(terms,0),p,n,axis,\Sums::main::finite_real_prefix_sum<count>(values,0))
+                claim:
+                    ? forall x D:
+                        \scalar_function_prefix_sum<n,D,count>(terms,0)(x)=0
+                    release thm scalar_function_prefix_zero(n,D,count,terms,x)
+                claim:
+                    ? forall x intersect(cart_n(R,n),D):
+                        full_zero(x)=\scalar_function_prefix_sum<n,D,count>(terms,0)(x)
+                    x $in D
+                    x $in cart_n(R,n)
+                    release thm scalar_function_prefix_zero(n,D,count,terms,x)
+                    full_zero(x)=0=\scalar_function_prefix_sum<n,D,count>(terms,0)(x)
+                release thm Calc::locality::real_partials_restrict(n,cart_n(R,n),D,p,axis,full_zero,\scalar_function_prefix_sum<n,D,count>(terms,0),0,r)
+                release thm Sums::main::finite_real_prefix_sum_zero(count,values)
+                $has_partial_derivative_at(\scalar_function_prefix_sum<n,D,count>(terms,0),p,n,axis,\Sums::main::finite_real_prefix_sum<count>(values,0))
+            by def $prefix_derivative_stage(0)
+        ? induc:
+            stage $in N
+            claim:
+                ? forall:
+                    stage+1<=m
+                    stage+1 $in closed_range(0,count)
+                    =>:
+                        $has_partial_derivative_at(\scalar_function_prefix_sum<n,D,count>(terms,stage+1),p,n,axis,\Sums::main::finite_real_prefix_sum<count>(values,stage+1))
+                stage+1<=m
+                stage<=stage+1
+                stage<=m
+                m<=count
+                stage<=count
+                stage $in closed_range(0,count)
+                stage+1 $in closed_range(1,m)
+                stage+1 $in closed_range(1,count)
+                stage+1 $in closed_range(0,count)
+                $has_partial_derivative_at(\scalar_function_prefix_sum<n,D,count>(terms,stage),p,n,axis,\Sums::main::finite_real_prefix_sum<count>(values,stage))
+                $has_partial_derivative_at(terms(stage+1),p,n,axis,values(stage+1))
+                claim:
+                    ? forall x D:
+                        \scalar_function_prefix_sum<n,D,count>(terms,stage+1)(x)=\scalar_function_prefix_sum<n,D,count>(terms,stage)(x)+terms(stage+1)(x)
+                    release thm scalar_function_prefix_successor(n,D,count,terms,stage,x)
+                release thm partial_at_add(\scalar_function_prefix_sum<n,D,count>(terms,stage),terms(stage+1),\scalar_function_prefix_sum<n,D,count>(terms,stage+1),p,n,axis,\Sums::main::finite_real_prefix_sum<count>(values,stage),values(stage+1))
+                release thm Sums::main::finite_real_prefix_sum_successor(count,values,stage)
+                $has_partial_derivative_at(\scalar_function_prefix_sum<n,D,count>(terms,stage+1),p,n,axis,\Sums::main::finite_real_prefix_sum<count>(values,stage+1))
+            by def $prefix_derivative_stage(stage+1)
+    m $in N
+    m<=m
+    $prefix_derivative_stage(m)
+    $has_partial_derivative_at(\scalar_function_prefix_sum<n,D,count>(terms,m),p,n,axis,\Sums::main::finite_real_prefix_sum<count>(values,m))
+
+thm scalar_function_prefix_continuous_interior:
+    ? forall n N+,D power_set(cart_n(R,n)),count N,terms fn(j closed_range(1,count)) fn(x D) R,p cart_n(R,n),m closed_range(0,count):
+        p $in D
+        exist radius R+ st {{x cart_n(R,n):euclidean_norm(fn(coord closed_range(1,n)) R {x(coord)-p(coord)},n)<radius} $subset D}
+        forall j closed_range(1,count):
+            j<=m
+            =>:
+                $is_multi_continuous_at(terms(j),p,n)
+        =>:
+            $is_multi_continuous_at(\scalar_function_prefix_sum<n,D,count>(terms,m),p,n)
+    D $subset cart_n(R,n)
+    D $subset D
+    have fn zero(x D) R=0
+    $is_multi_continuous_at(zero,p,n)
+    prop prefix_continuity_stage(stage N):
+        forall:
+            stage<=m
+            stage $in closed_range(0,count)
+            =>:
+                $is_multi_continuous_at(\scalar_function_prefix_sum<n,D,count>(terms,stage),p,n)
+    by induc stage from 0:
+        ? $prefix_continuity_stage(stage)
+        ? from stage=0:
+            claim:
+                ? forall:
+                    0<=m
+                    0 $in closed_range(0,count)
+                    =>:
+                        $is_multi_continuous_at(\scalar_function_prefix_sum<n,D,count>(terms,0),p,n)
+                claim:
+                    ? forall x D:
+                        \scalar_function_prefix_sum<n,D,count>(terms,0)(x)=0
+                    release thm scalar_function_prefix_zero(n,D,count,terms,x)
+                by fn_extension:
+                    ? \scalar_function_prefix_sum<n,D,count>(terms,0)=zero
+                    claim:
+                        ? forall x D:
+                            \scalar_function_prefix_sum<n,D,count>(terms,0)(x)=zero(x)
+                        release thm scalar_function_prefix_zero(n,D,count,terms,x)
+                        zero(x)=0
+                $is_multi_continuous_at(zero,p,n)
+                $is_multi_continuous_at(\scalar_function_prefix_sum<n,D,count>(terms,0),p,n)
+            by def $prefix_continuity_stage(0)
+        ? induc:
+            stage $in N
+            claim:
+                ? forall:
+                    stage+1<=m
+                    stage+1 $in closed_range(0,count)
+                    =>:
+                        $is_multi_continuous_at(\scalar_function_prefix_sum<n,D,count>(terms,stage+1),p,n)
+                stage+1<=m
+                stage<=stage+1
+                stage<=m
+                m<=count
+                stage<=count
+                stage $in closed_range(0,count)
+                stage+1 $in closed_range(1,m)
+                stage+1 $in closed_range(1,count)
+                stage+1 $in closed_range(0,count)
+                $is_multi_continuous_at(\scalar_function_prefix_sum<n,D,count>(terms,stage),p,n)
+                $is_multi_continuous_at(terms(stage+1),p,n)
+                claim:
+                    ? forall x D:
+                        \scalar_function_prefix_sum<n,D,count>(terms,stage+1)(x)=\scalar_function_prefix_sum<n,D,count>(terms,stage)(x)+terms(stage+1)(x)
+                    release thm scalar_function_prefix_successor(n,D,count,terms,stage,x)
+                release thm multi_continuous_at_add(\scalar_function_prefix_sum<n,D,count>(terms,stage),terms(stage+1),\scalar_function_prefix_sum<n,D,count>(terms,stage+1),p,n)
+                $is_multi_continuous_at(\scalar_function_prefix_sum<n,D,count>(terms,stage+1),p,n)
+            by def $prefix_continuity_stage(stage+1)
+    m $in N
+    m<=m
+    $prefix_continuity_stage(m)
+    $is_multi_continuous_at(\scalar_function_prefix_sum<n,D,count>(terms,m),p,n)

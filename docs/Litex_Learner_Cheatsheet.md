@@ -349,6 +349,7 @@ proof debt rather than repairing a verification route.
 | Signed/nonzero sets | For example `R+`, `R-`, `R*`, `C*`; use documented spellings. |
 | Sets | `{1, 2}`, `{x R: x > 0}`, `union(A, B)`, `power_set(S)`; a builder is bounded by its carrier. |
 | Membership and inclusion | `x $in S`, `A $subset B`; inclusion and equality have different obligations. |
+| Compound event carriers | Known `A,B $in power_set(X)` give the union in that powerset directly; intersection needs either bound, difference the left bound. These checks also work inside a callable-field law. |
 | Functions | `fn(x R) R`, guarded domains, `fn_range(f)`; carriers and guards constrain each call. |
 | Preimages | `preimage(f, y)` collects inputs with output equal to the obj `y`; `preimage_set(f, Y)` collects inputs with output in `Y`. Both return sets and retain the complete input domain and guards. [Preview contract](Manual.md#preview-point-and-set-preimages). |
 | Tuples/sequences | `(a, b)`, `cart(R, R)`, `finite_seq(S,n)`, `seq(S)`; indices start at 1. `release tuple def t` publishes the exact finite-sequence membership and coordinates; `release cart def cart(A,B)` publishes the complete set definition. See [S52](Manual.md#s52-release-a-tuple-definition). |
@@ -500,3 +501,20 @@ For larger developments, follow the relevant module's `README.md` and
 `(x)` groups an expression; `(x,)` is a one-coordinate tuple. `(x,y)` and
 `(x,y,)` are two-coordinate tuples. Use `tuple()` for the empty tuple; bare
 `()` is invalid. The explicit forms `tuple(x)` and `tuple(x,y)` remain valid.
+
+### Template numeric return carriers
+
+After its arguments and guards have checked, an R-valued template call can
+also be used in C, including arithmetic inside a struct law:
+
+```litex
+template<S set>:
+    have fn real_identity(x R) R = x
+
+forall x R:
+    \real_identity<R>(x) $in C
+```
+
+This uses numeric inclusion with the actual declaration and all applicable
+signature evidence. It does not allow the reverse C-to-R inference or bypass
+a template guard. See [the struct-law tracer](../examples/wd/template_standard_return.lit).

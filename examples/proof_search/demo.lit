@@ -1,0 +1,3 @@
+# A checked real base supplies the premise of the nonnegative even-power rule.
+have x R
+0 <= (x + 1)^2

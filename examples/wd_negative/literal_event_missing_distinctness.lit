@@ -1,0 +1,2 @@
+forall X set,a,b X:
+    {a,b} $in power_set(X)
