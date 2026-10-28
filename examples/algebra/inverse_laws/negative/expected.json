@@ -1,0 +1,17 @@
+{
+  "false_right_inverse": "premise",
+  "wrong_identity_inverse": "search_proof",
+  "wrong_involution_value": "search_proof",
+  "wrong_inverse_product_value": "search_proof",
+  "wrong_right_solution": "search_proof",
+  "missing_commutation": "premise",
+  "unconditional_wrong_order": "conclusion",
+  "outside_element": "argument_type",
+  "wrong_group_value": "argument_type",
+  "wrong_group_carrier": "argument_type",
+  "missing_right_inverse_premise": "premise",
+  "wrong_witness_value": "search_proof",
+  "noncomm_wrong_inverse_order": "search_proof",
+  "noncomm_wrong_right_solution": "search_proof",
+  "noncomm_false_commutation": "premise"
+}

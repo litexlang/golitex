@@ -1,0 +1,33 @@
+thm contract_inverse_identity:
+    ? forall A nonempty_set,G &Algebra::group::Group<A>:
+        G.inv(G.one) = G.one
+    release thm Algebra::group::inverse_identity(A,G)
+
+thm contract_inverse_involution:
+    ? forall A nonempty_set,G &Algebra::group::Group<A>,a A:
+        G.inv(G.inv(a)) = a
+    release thm Algebra::group::inverse_involution(A,G,a)
+
+thm contract_right_inverse_unique:
+    ? forall A nonempty_set,G &Algebra::group::Group<A>,a,b A:
+        G.mul(a,b) = G.one
+        =>:
+            b = G.inv(a)
+    release thm Algebra::group::right_inverse_unique(A,G,a,b)
+
+thm contract_inverse_product:
+    ? forall A nonempty_set,G &Algebra::group::Group<A>,a,b A:
+        G.inv(G.mul(a,b)) = G.mul(G.inv(b),G.inv(a))
+    release thm Algebra::group::inverse_product(A,G,a,b)
+
+thm contract_right_equation_unique:
+    ? forall A nonempty_set,G &Algebra::group::Group<A>,a,b A:
+        exist! x A st {G.mul(x,a)=b}
+    release thm Algebra::group::right_equation_unique(A,G,a,b)
+
+thm contract_commuting_inverses:
+    ? forall A nonempty_set,G &Algebra::group::Group<A>,a,b A:
+        G.mul(a,b) = G.mul(b,a)
+        =>:
+            G.mul(G.inv(a),G.inv(b)) = G.mul(G.inv(b),G.inv(a))
+    release thm Algebra::group::commuting_inverses(A,G,a,b)

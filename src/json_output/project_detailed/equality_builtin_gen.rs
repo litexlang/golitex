@@ -291,6 +291,62 @@ pub(super) fn project_equality_builtin_rule(
                 ),
             ],
         ),
+        EqualitySearchProofByBuiltinRule::ElementaryIdentity(p) => {
+            use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_elementary_identities::ElementaryIdentitySearchProofByBuiltinRule as P;
+            let mut entries = vec![
+                ("type", string("builtin_rule")),
+                ("rule", string(p.rule_id())),
+            ];
+            match p {
+                P::MinAssociative(_) => {}
+                P::MaxAssociative(_) => {}
+                P::MinMaxSum(_) => {}
+                P::MinMaxProduct(_) => {}
+                P::MinTranslation(_) => {}
+                P::MaxNegation(_) => {}
+                P::FloorCharacterization(p) => {
+                    entries.push(("integer", project_verify_fact(&p.integer, runtime)));
+                    entries.push(("weak_bound", project_verify_fact(&p.weak_bound, runtime)));
+                    entries.push((
+                        "strict_bound",
+                        project_verify_fact(&p.strict_bound, runtime),
+                    ));
+                }
+                P::CeilCharacterization(p) => {
+                    entries.push(("integer", project_verify_fact(&p.integer, runtime)));
+                    entries.push(("weak_bound", project_verify_fact(&p.weak_bound, runtime)));
+                    entries.push((
+                        "strict_bound",
+                        project_verify_fact(&p.strict_bound, runtime),
+                    ));
+                }
+                P::GcdAddArgument(_) => {}
+                P::GcdNegation(_) => {}
+                P::GcdPositiveScale(p) => {
+                    entries.push((
+                        "first_positive",
+                        project_verify_fact(&p.first_positive, runtime),
+                    ));
+                    entries.push((
+                        "second_positive",
+                        project_verify_fact(&p.second_positive, runtime),
+                    ));
+                    entries.push((
+                        "factor_positive",
+                        project_verify_fact(&p.factor_positive, runtime),
+                    ));
+                }
+                P::RemainderIntegerShift(p) => {
+                    entries.push((
+                        "multiplier_integer",
+                        project_verify_fact(&p.multiplier_integer, runtime),
+                    ));
+                }
+                P::CartesianUnion(_) => {}
+                P::PowerSetIntersection(_) => {}
+            }
+            object_for(runtime, entries)
+        }
         EqualitySearchProofByBuiltinRule::ScalarExtra(p) => {
             use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_scalar_extra::ScalarExtraEqualityProof as P;
             let mut entries = vec![

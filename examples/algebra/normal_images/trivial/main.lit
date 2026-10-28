@@ -1,0 +1,48 @@
+have fn trivial_mul(x,y {0}) {0} = 0
+
+have fn trivial_inv(x {0}) {0} = 0
+
+by enumerate finite_set:
+    ? forall x,y,z {0}:
+        trivial_mul(trivial_mul(x,y),z) = trivial_mul(x,trivial_mul(y,z))
+    trivial_mul(trivial_mul(x,y),z) = trivial_mul(x,trivial_mul(y,z))
+
+by enumerate finite_set:
+    ? forall x {0}:
+        trivial_mul(0,x) = x
+        trivial_mul(x,0) = x
+        trivial_mul(trivial_inv(x),x) = 0
+        trivial_mul(x,trivial_inv(x)) = 0
+    trivial_mul(0,x) = x
+    trivial_mul(x,0) = x
+    trivial_mul(trivial_inv(x),x) = 0
+    trivial_mul(x,trivial_inv(x)) = 0
+
+{0} != {}
+
+0 $in {0}
+
+trivial_mul $in fn(x,y {0}) {0}
+
+trivial_inv $in fn(x {0}) {0}
+
+have trivial &Algebra::group::Group<{0}> = (trivial_mul,0,trivial_inv)
+
+release thm Algebra::group::normal_subgroup_whole({0},trivial)
+
+release thm Algebra::group::normal_subgroup_identity({0},trivial)
+
+release thm Algebra::group::homomorphism_identity_map({0},trivial)
+
+claim:
+    ? forall y {0}:
+        exist x {0} st {y=fn(t {0}) {0} {t}(x)}
+    witness exist x {0} st {y=fn(t {0}) {0} {t}(x)} from y
+
+by def $surjective({0},{0},fn(t {0}) {0} {t})
+
+release thm Algebra::group::homomorphism_subgroup_image({0},trivial,{0},trivial,fn(t {0}) {0} {t},{0})
+
+release thm Algebra::group::surjective_homomorphism_normal_image({0},trivial,{0},trivial,fn(t {0}) {0} {t},{0})
+
+release thm Algebra::group::kernel_of_composition({0},{0},{0},trivial,fn(t {0}) {0} {t},fn(t {0}) {0} {t})

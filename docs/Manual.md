@@ -12354,22 +12354,221 @@ foundation and checking assumptions.
 
 ### Related work in formal mathematics
 
-[Mizar](https://mizar.uwb.edu.pl/language/) is important earlier work on expressing
-mathematical writing as machine-checkable text. Its language is derived from
-mathematical vernacular, making it a particularly relevant comparison for
-Litex's readable, fact-oriented interface.
+#### Litex as a mathematical source language
 
-[Isabelle/Isar](https://isabelle.in.tum.de/Isar/) provides a structured proof
-language intended to be readable by humans and checked by a machine. Its
-organization of assumptions, intermediate conclusions and proof structure is
-relevant to the same readability problem that Litex addresses. Both Mizar and
-Isar are related work on readable checked mathematics.
+Litex is a mathematical formal language with an independent native verifier.
+Its abstract syntax separates mathematical expressions (`Obj`), propositions
+(`Fact`), and constructs that check or extend a mathematical context (`Stmt`).
+A fact is also admissible in statement position: the executor checks its
+well-definedness, searches for supported grounds in the current context, and
+commits the accepted fact and its consequences. Many controlled forms of
+everyday mathematical writing are therefore executable formal source.
 
-[Lean](https://lean-lang.org/doc/reference/latest/Elaboration-and-Compilation/)
-provides a reference for kernel-checked proofs and a target for Litex's supported
-proof translations. Generating Lean output and passing real Lean kernel checking
-are separate gates. Litex's own checker retains its own trusted boundary; see
-[trust boundary](#trust-boundary) for the current preview scope.
+Readability and accessible mathematical authoring are shared concerns of Lean,
+Rocq (formerly Coq), Isabelle/Isar, and Mizar. These goals do not determine a
+common object model, elaboration discipline, proof interface, or verification
+architecture. The comparison below concerns those technical choices and the work they expose to
+the author. Wiedijk's collection compares a common mathematical proof across
+several proof languages [Compare06]; here we distinguish object representation,
+expression admissibility, proof interfaces, and evidence construction.
+
+Litex's source model is set-based: numbers, sets, function values, and function
+spaces share one mathematical object carrier; membership is a proposition
+between objects. Propositions use the `Fact` category; they are not values in a
+source-level universe of proposition objects. The meta-level object carrier is
+not an internal universal set, and set comprehension is bounded. Expression
+admissibility includes mathematical side conditions: forming a guarded
+application requires evidence of parameter membership and the instantiated
+domain predicates. This is a well-definedness obligation, not merely a
+syntactic or name-resolution check.
+
+```litex
+have fn reciprocal(x R: x != 0) R = 1 / x
+reciprocal(2) = 1 / 2
+```
+
+The condition belongs to the function's callable contract. A statement using
+`reciprocal(0)` fails well-definedness even when its proposed conclusion is
+reflexive. Ordinary fact checking combines contextual retrieval, permitted
+instantiation, calculation, native rules, and explicit proof steps where
+needed. It produces a typed intermediate representation (IR) of verification
+evidence, including applicable well-definedness and premise records. Authors
+supply the mathematical route; the supported local search handles routine
+justification and retrieval.
+
+#### Comparison with Lean
+
+[Lean's elaborator](https://lean-lang.org/doc/reference/latest/Elaboration-and-Compilation/)
+translates source expressions into terms in a dependent type theory, and its
+kernel checks theorem proof terms. Direct terms, declarative constructions,
+and tactics are different authoring interfaces to this proof representation;
+the extensible architecture also supports user-defined elaboration and
+metaprogramming [Lean21], [LeanElab].
+
+Litex separates mathematical expressions, propositions, and context actions at
+the source level. Set membership and domain conditions remain facts available
+to the verifier. For a restricted-input Lean interface, one can encode the
+argument as a subtype and apply the function to a value packaged with evidence,
+such as `f ⟨x, hx⟩`; Litex writes `f(x)` and checks the condition in context.
+Lean can also use proof arguments, inferred coercions, and automation
+[LeanCoercions]. The observable advantage of Litex's native interface is reduced
+explicit evidence packaging for these calls and reduced method annotation for supported ordinary
+facts. A mathematical equality chain can remain the visible proof route without
+requiring a separate tactic invocation at each routine step.
+
+This is a difference in representation and default verification responsibility,
+not an expressiveness separation. Lean automation can produce very short
+proofs, while dependent types provide abstractions beyond the source model
+described here. Litex's native verification evidence is also distinct from a
+Lean proof term: supported Lean compilation reconstructs proofs from that
+evidence. Source generation and successful Lean kernel checking are separate
+gates; see [the compiler guide](Litex_To_Lean_Compiler_Guide.md).
+
+#### Comparison with Rocq (formerly Coq)
+
+[Rocq](https://rocq-prover.org/) provides a dependent specification and
+programming language, Gallina, over the Calculus of Inductive Constructions
+(CIC). Notation and elaboration translate user expressions into core terms;
+tactics incrementally construct proof terms for kernel checking. Commands that
+manage declarations, term expressions, and tactic languages are distinct parts
+of its authoring environment [RocqCore], [RocqElab], [RocqProof]. Their separation
+does not coincide with Litex's `Obj`/`Fact`/`Stmt` semantic categories: Rocq
+represents propositions and their proofs within the typed term language.
+
+Rocq also supports implicit side-condition handling. For subset interfaces such
+as `{x : A | P x}`, `Program` can insert subset coercions, generate proof
+obligations, and invoke an obligation tactic automatically. These obligations
+must be discharged to produce the final complete term. This elaboration route
+is described by Sozeau's subset-coercion work and the maintained `Program`
+reference [Sozeau07], [RocqProgram]. SSReflect further supplies structured proof
+commands and reflection-based mathematical reasoning [SSReflect10].
+
+Litex's advantage for the mathematical interfaces illustrated here is a uniform
+ordinary-statement contract: introduce mathematical objects or state facts, check the
+required domain predicates in context, and commit the accepted information with
+native verification evidence. A guarded `f(x)` obtains its obligations directly
+from the source-level callable contract; their native representation does not
+pass through Gallina subset terms or `Program` elaboration. The distinction
+is where obligations are represented and discharged, and how a mathematical
+step becomes available in context. Rocq's dependent specifications, inductive
+programming, and proof-term kernel support a different range of abstractions;
+automatic side-condition discharge alone is not a distinguishing Litex feature.
+
+#### Comparison with Isabelle/Isar
+
+[Isar](https://isabelle.in.tum.de/website-Isabelle2026-RC0/dist/library/Doc/Isar_Ref/Framework.html)
+is a structured proof language that manages local facts, goals, and proof
+methods over Isabelle's generic logical framework. Its object logic supplies
+the underlying expressions and inference principles. The common Isabelle/HOL
+configuration uses typed higher-order logic; Isabelle also supports other
+object logics, including ZF. Isar already offers readable declarative proofs,
+so that description alone does not distinguish Litex. Wenzel's original
+account specifies an operational interpretation of proof documents, not only
+a presentation notation [Isar99, §4.2][Isar99], [IsarRef].
+
+Litex integrates a mathematical vocabulary, domain-sensitive expression
+formation, and ordinary fact checking in one source language. Its native
+set-based objects differ from HOL's typed terms and typed sets. Moreover,
+[HOL functions are total](https://www.isabelle.in.tum.de/library/Doc/Functions/Functions.html):
+a well-typed application denotes a value even when a separately specified
+domain predicate is unavailable [HOLFunctions]. Litex's guarded applications require the
+domain conditions at well-definedness checking. This gives authors a native
+way to enforce the convention that an expression may be used only after its
+mathematical prerequisites are established. For supported facts, default
+checking also reduces explicit orchestration of fact flow and proof methods.
+These advantages concern the chosen mathematical interface; Isabelle's generic
+framework and extensible proof infrastructure serve broader purposes.
+
+#### Comparison with Mizar
+
+[Mizar](https://mizar.uwb.edu.pl/cicm_tutorial/mizar.pdf) is the closest comparison
+in mathematical vernacular and forward declarative proof. It uses classical
+first-order reasoning and schematic constructions. Its MML is based on set
+theory, and its [soft types](https://www.cs.ru.nl/~freek/mizar/miztype.pdf)
+classify expressions over an untyped set-theoretic foundation. It already
+supports structured mathematical statements and equality chains. The system
+survey and soft-type account describe these mechanisms [Mizar15], [Wiedijk07]. Consequently,
+neither set-based objects nor readable fact statements establish a distinction
+on their own.
+
+There is a concrete difference in application admissibility. Mizar's usual
+function-value operation is defined in
+[`FUNCT_1:def 2`](https://mizar.uwb.edu.pl/version/current/html/funct_1.html):
+`f.x` is the corresponding value inside `dom f` and the empty set outside it
+[MizarApply].
+Litex's guarded call requires its declared domain conditions before the
+application can be used. For authors who want missing domain hypotheses to
+prevent expression use, this is a direct semantic advantage.
+
+There is also a difference in routine premise retrieval. Mizar's basic `by`
+inference checks a conclusion against referenced premises, with additional
+automatic facilities such as typing registrations; its grammar also permits
+omitted justifications [MizarChecker], [MizarGrammar]. Litex's ordinary verification path can retrieve visible
+universal facts by conclusion structure, instantiate them, and check their
+conditions. In supported cases, authors can state the next fact with fewer
+labels and explicit premise references. This compares default interfaces, not
+an absence of automation in Mizar. See the
+[Mizar checker account](https://www.cs.ru.nl/~freek/mizar/by.pdf) and
+[justification grammar](https://mizar.uwb.edu.pl/language/pages/justification.html).
+
+#### The language-design question
+
+The contribution under investigation is the combination of a small conceptual
+interface, native mathematical contracts, and contextual verification. The
+`Obj`/`Fact`/`Stmt` separation is a semantic organization for authors and the
+implementation; three category names alone do not establish novelty or a
+minimal calculus. The relevant hypothesis is that this organization reduces
+the representation, justification, and repair work needed to construct and
+reuse checked mathematics. The examples demonstrate particular reductions in
+explicit authoring operations; general learning-cost and productivity claims
+require comparative evaluation. Exact expression and verification coverage
+belongs to the language dictionaries and [trust boundary](#trust-boundary).
+
+#### Selected technical references
+
+These sources define the mechanisms being compared. Litex-specific behavior is
+specified by this manual and illustrated above; the comparative implications
+are interface analysis, not results reported by the cited authors.
+
+| Key | Primary reference | Use in this comparison |
+| --- | --- | --- |
+| [Compare06] | Freek Wiedijk (ed.). *The Seventeen Provers of the World*. LNCS 3600, 2006; author-hosted comparison manuscript. | A shared mathematical example exposes differences in proof language and presentation. |
+| [Lean21] | Leonardo de Moura and Sebastian Ullrich. *The Lean 4 Theorem Prover and Programming Language*. CADE 2021, LNCS 12699, pp. 625–635. | System architecture and extensible elaboration, tactics, and metaprogramming. |
+| [LeanElab] | Lean project. *Lean Language Reference: Elaboration and Compilation*. official reference. | The source-to-core path and distinction between elaboration and checking. |
+| [LeanCoercions] | Lean project. *Lean Language Reference: Coercions*. official reference. | Inferred coercions and their limits; authors do not write every representation conversion. |
+| [RocqCore] | Rocq Development Team. *Rocq Reference Manual: Core language*. version 9.1.0. | CIC, proof terms, the kernel, and its separation from elaboration and tactics. |
+| [RocqElab] | Rocq Development Team. *Rocq Reference Manual: Command level processing*. version 9.1.0. | Notation, interpretation, and preprocessing before core type checking. |
+| [RocqProof] | Rocq Development Team. *Rocq Reference Manual: Proof mode*. version 9.1.0. | Proof states, local contexts, and incremental proof-term construction. |
+| [RocqProgram] | Rocq Development Team. *Rocq Reference Manual: Program*. version 9.1.0. | Predicate subtyping, generated obligations, and automatic obligation tactics. |
+| [Sozeau07] | Matthieu Sozeau. *Subset Coercions in Coq*. TYPES 2006, LNCS 4502, pp. 237–252, published 2007. | Elaborating rich subset specifications into CIC using coercions and proof obligations. |
+| [SSReflect10] | Georges Gonthier and Assia Mahboubi. *An introduction to small scale reflection in Coq*. Journal of Formalized Reasoning 3(2), pp. 95–152, 2010. | A structured proof-language extension and reflection-based mathematical reasoning. |
+| [Isar99] | Markus Wenzel. *Isar — a Generic Interpretative Approach to Readable Formal Proof Documents*. TPHOLs 1999, LNCS 1690. | Readable formal proof documents and the operational interpretation of Isar (§4.2). |
+| [IsarRef] | Isabelle project. *Isabelle/Isar Reference Manual: The Isabelle/Isar Framework*. Isabelle2026-RC0 documentation. | Generic framework, object logics, structured facts, and proof methods. |
+| [HOLFunctions] | Alexander Krauss / Isabelle project. *Isabelle function tutorial: Partiality and domain predicates*. official function-package tutorial. | HOL total functions and the role of domain predicates in partial-function packages. |
+| [Mizar15] | Grzegorz Bancerek et al. *Mizar: State-of-the-Art and Beyond*. CICM 2015, LNCS 9150, pp. 261–279. | Mathematical vernacular, system facilities, and implicit registration mechanisms. |
+| [Wiedijk07] | Freek Wiedijk. *Mizar’s Soft Type System*. TPHOLs 2007, LNCS 4732, pp. 383–399. | Soft types as expression classifications over untyped set theory. |
+| [MizarChecker] | Andrzej Trybulec; compiled by Freek Wiedijk. *CHECKER*. technical account. | Referenced premises and the basic by inference; a mechanism account, not a current-version benchmark. |
+| [MizarApply] | Czesław Byliński / Mizar Mathematical Library. *Functions and Their Basic Properties: FUNCT_1:def 2*. library definition. | The exact out-of-domain value convention for ordinary f.x. |
+| [MizarGrammar] | Mizar project. *Mizar language: Justification*. official grammar. | Optional straightforward justifications; prevents the claim that every sentence needs by. |
+
+[Compare06]: https://www.cs.ru.nl/~freek/comparison/comparison.pdf
+[Lean21]: https://www.microsoft.com/en-us/research/publication/the-lean-4-theorem-prover-and-programming-language/
+[LeanElab]: https://lean-lang.org/doc/reference/latest/Elaboration-and-Compilation/
+[LeanCoercions]: https://lean-lang.org/doc/reference/latest/Coercions/
+[RocqCore]: https://rocq-prover.org/doc/V9.1.0/refman/language/core/index.html
+[RocqElab]: https://rocq-prover.org/doc/V9.1.0/refman/language/extensions/compil-steps.html
+[RocqProof]: https://rocq-prover.org/doc/V9.1.0/refman/proofs/writing-proofs/proof-mode.html
+[RocqProgram]: https://rocq-prover.org/doc/V9.1.0/refman/addendum/program.html
+[Sozeau07]: https://sozeau.gitlabpages.inria.fr/www/research/publications/Subset_Coercions_in_Coq.pdf
+[SSReflect10]: https://jfr.unibo.it/article/view/1979
+[Isar99]: https://wwwbroy.in.tum.de/~wenzelm/papers/Isar-TPHOLs99.pdf
+[IsarRef]: https://isabelle.in.tum.de/website-Isabelle2026-RC0/dist/library/Doc/Isar_Ref/Framework.html
+[HOLFunctions]: https://www.isabelle.in.tum.de/library/Doc/Functions/Functions.html
+[Mizar15]: https://mizar.uwb.edu.pl/people/romat/mizar-cicm2015.pdf
+[Wiedijk07]: https://www.cs.ru.nl/~freek/mizar/miztype.pdf
+[MizarChecker]: https://www.cs.ru.nl/~freek/mizar/by.pdf
+[MizarApply]: https://mizar.uwb.edu.pl/version/current/html/funct_1.html
+[MizarGrammar]: https://mizar.uwb.edu.pl/language/pages/justification.html
 
 ## Appendix
 

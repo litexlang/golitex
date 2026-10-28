@@ -1,0 +1,60 @@
+release thm model::heisenberg_is_group
+
+release thm model::heisenberg_identity_value
+
+release thm model::heisenberg_is_noncommutative
+
+release thm Algebra::group::normal_subgroup_whole(cart_n(R,3),model::heisenberg)
+
+release thm Algebra::group::normal_subgroup_identity(cart_n(R,3),model::heisenberg)
+
+release thm model::zero_projection_is_homomorphism
+
+release thm Algebra::group::homomorphism_subgroup_image(cart_n(R,3),model::heisenberg,cart_n(R,3),model::heisenberg,model::zero_projection,cart_n(R,3))
+
+release thm Algebra::group::homomorphism_subgroup_image(cart_n(R,3),model::heisenberg,cart_n(R,3),model::heisenberg,model::zero_projection,{model::heisenberg.one})
+
+release thm Algebra::group::homomorphism_identity_map(cart_n(R,3),model::heisenberg)
+
+claim:
+    ? forall y cart_n(R,3):
+        exist x cart_n(R,3) st {y=fn(t cart_n(R,3)) cart_n(R,3) {t}(x)}
+    witness exist x cart_n(R,3) st {y=fn(t cart_n(R,3)) cart_n(R,3) {t}(x)} from y
+
+by def $surjective(cart_n(R,3),cart_n(R,3),fn(t cart_n(R,3)) cart_n(R,3) {t})
+
+release thm Algebra::group::surjective_homomorphism_normal_image(cart_n(R,3),model::heisenberg,cart_n(R,3),model::heisenberg,fn(t cart_n(R,3)) cart_n(R,3) {t},{model::heisenberg.one})
+
+release thm Algebra::group::surjective_homomorphism_normal_image(cart_n(R,3),model::heisenberg,cart_n(R,3),model::heisenberg,fn(t cart_n(R,3)) cart_n(R,3) {t},cart_n(R,3))
+
+by extension:
+    ? fn_range(fn(t cart_n(R,3)) cart_n(R,3) {t}) = cart_n(R,3)
+    fn_range(fn(t cart_n(R,3)) cart_n(R,3) {t}) $subset cart_n(R,3)
+    claim:
+        ? forall y cart_n(R,3):
+            y $in fn_range(fn(t cart_n(R,3)) cart_n(R,3) {t})
+        fn(t cart_n(R,3)) cart_n(R,3) {t}(y) = y
+        fn(t cart_n(R,3)) cart_n(R,3) {t}(y) $in fn_range(fn(t cart_n(R,3)) cart_n(R,3) {t})
+
+release thm Algebra::group::kernel_of_composition(cart_n(R,3),cart_n(R,3),cart_n(R,3),model::heisenberg,fn(t cart_n(R,3)) cart_n(R,3) {t},model::zero_projection)
+
+by extension:
+    ? \Algebra::group::kernel<cart_n(R,3),cart_n(R,3),model::heisenberg,model::zero_projection> = cart_n(R,3)
+    \Algebra::group::kernel<cart_n(R,3),cart_n(R,3),model::heisenberg,model::zero_projection> = {t cart_n(R,3):model::zero_projection(t)=model::heisenberg.one}
+    claim:
+        ? forall x cart_n(R,3):
+            x $in \Algebra::group::kernel<cart_n(R,3),cart_n(R,3),model::heisenberg,model::zero_projection>
+        release thm model::zero_projection_formula(x)
+        model::zero_projection(x) = (0,0,0) = model::heisenberg.one
+        release thm set_builder_member(x,{t cart_n(R,3):model::zero_projection(t)=model::heisenberg.one})
+
+by extension:
+    ? \Algebra::group::kernel<cart_n(R,3),cart_n(R,3),model::heisenberg,compose(model::zero_projection,fn(t cart_n(R,3)) cart_n(R,3) {t})> = cart_n(R,3)
+    \Algebra::group::kernel<cart_n(R,3),cart_n(R,3),model::heisenberg,compose(model::zero_projection,fn(t cart_n(R,3)) cart_n(R,3) {t})> = {q cart_n(R,3):compose(model::zero_projection,fn(t cart_n(R,3)) cart_n(R,3) {t})(q)=model::heisenberg.one}
+    claim:
+        ? forall x cart_n(R,3):
+            x $in \Algebra::group::kernel<cart_n(R,3),cart_n(R,3),model::heisenberg,compose(model::zero_projection,fn(t cart_n(R,3)) cart_n(R,3) {t})>
+        release thm model::zero_projection_formula(x)
+        fn(t cart_n(R,3)) cart_n(R,3) {t}(x) = x
+        compose(model::zero_projection,fn(t cart_n(R,3)) cart_n(R,3) {t})(x) = model::zero_projection(fn(t cart_n(R,3)) cart_n(R,3) {t}(x)) = model::zero_projection(x) = (0,0,0) = model::heisenberg.one
+        release thm set_builder_member(x,{q cart_n(R,3):compose(model::zero_projection,fn(t cart_n(R,3)) cart_n(R,3) {t})(q)=model::heisenberg.one})

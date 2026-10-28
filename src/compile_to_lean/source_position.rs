@@ -2285,6 +2285,14 @@ impl<'a> SourcePosition<'a> {
             &SourcePosition<'_>,
         ) -> Result<T, LeanCompileError>,
     ) -> Result<Option<T>, LeanCompileError> {
+        // Numeric observation must use the same original projected child as
+        // object rendering, before considering later equivalent constructors.
+        if let Some((proof, _)) = self.bound_constructor(|proof| {
+            matches!(proof.detailed_ref(), DetailedObjWellDefinedProof::ByDef { obj, .. }
+                if obj == object)
+        }) {
+            return callback(proof, self).map(Some);
+        }
         visit_visible(
             self,
             object,
@@ -10050,6 +10058,25 @@ fn visit_statement<T>(
                 }
             }
             let count = proof.equal_to_well_defined.len();
+            // A typed alias replays its membership inferences when published.
+            // Their original stores can form primitive operands (such as zero
+            // from positive membership) needed by later WD. Equality-store
+            // inferences are not emitted by this declaration consumer.
+            for (index, store) in proof
+                .store_and_infer_result
+                .store_and_infer_results
+                .iter()
+                .take(count)
+                .enumerate()
+                .rev()
+            {
+                if let Some(value) =
+                    visit_store_stage(store, 2 * count + index, &completed, wd, verify)?
+                {
+                    return Ok(Some(value));
+                }
+            }
+
             for (index, proof) in proof
                 .membership_checks
                 .iter()

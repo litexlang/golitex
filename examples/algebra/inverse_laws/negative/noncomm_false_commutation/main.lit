@@ -1,0 +1,223 @@
+release thm model::heisenberg_is_group
+
+release thm model::heisenberg_identity_value
+
+release thm model::heisenberg_is_noncommutative
+
+thm triple_value_from_coordinates:
+    ? forall p cart_n(R,3),x,y,z R:
+        p(1)=x
+        p(2)=y
+        p(3)=z
+        =>:
+            p=(x,y,z)
+    have q cart_n(R,3) = (x,y,z)
+    q(1)=x
+    q(2)=y
+    q(3)=z
+    by enumerate finite_set:
+        ? forall k closed_range(1,3):
+            p(k)=q(k)
+        k>=1
+    release thm tuple_equal_from_coordinates(p,q)
+    p=q=(x,y,z)
+
+(1,0,0)(1)=1 and (1,0,0)(2)=0 and (1,0,0)(3)=0
+
+(0,1,0)(1)=0 and (0,1,0)(2)=1 and (0,1,0)(3)=0
+
+(1,1,1)(1)=1 and (1,1,1)(2)=1 and (1,1,1)(3)=1
+
+(1,1,0)(1)=1 and (1,1,0)(2)=1 and (1,1,0)(3)=0
+
+(0,-1,0)(1)=0 and (0,-1,0)(2)=-1 and (0,-1,0)(3)=0
+
+(-1,0,0)(1)=-1 and (-1,0,0)(2)=0 and (-1,0,0)(3)=0
+
+(-1,-1,0)(1)=-1 and (-1,-1,0)(2)=-1 and (-1,-1,0)(3)=0
+
+(-1,-1,1)(1)=-1 and (-1,-1,1)(2)=-1 and (-1,-1,1)(3)=1
+
+(-1,1,0)(1)=-1 and (-1,1,0)(2)=1 and (-1,1,0)(3)=0
+
+(0,0,0)(1)=0 and (0,0,0)(2)=0 and (0,0,0)(3)=0
+
+(-1,1,-1)(1)=-1 and (-1,1,-1)(2)=1 and (-1,1,-1)(3)=-1
+
+(0,1,-1)(1)=0 and (0,1,-1)(2)=1 and (0,1,-1)(3)=-1
+
+(2,0,0)(1)=2 and (2,0,0)(2)=0 and (2,0,0)(3)=0
+
+(3,0,0)(1)=3 and (3,0,0)(2)=0 and (3,0,0)(3)=0
+
+release thm Algebra::group::inverse_identity(cart_n(R,3),model::heisenberg)
+
+release thm Algebra::group::inverse_involution(cart_n(R,3),model::heisenberg,(1,0,0))
+
+release thm Algebra::group::inverse_product(cart_n(R,3),model::heisenberg,(1,0,0),(0,1,0))
+
+release thm model::heisenberg_multiplication_formula((1,0,0),(0,1,0))
+
+claim:
+    ? model::heisenberg.mul((1,0,0),(0,1,0)) = (1,1,1)
+    model::heisenberg.mul((1,0,0),(0,1,0))(1) = (1,0,0)(1)+(0,1,0)(1) = (1)+(0) = 1
+    model::heisenberg.mul((1,0,0),(0,1,0))(2) = (1,0,0)(2)+(0,1,0)(2) = (0)+(1) = 1
+    model::heisenberg.mul((1,0,0),(0,1,0))(3) = (1,0,0)(3)+(0,1,0)(3)+(1,0,0)(1)*(0,1,0)(2) = (0)+(0)+(1)*(1) = 1
+    release thm triple_value_from_coordinates(model::heisenberg.mul((1,0,0),(0,1,0)),1,1,1)
+
+release thm model::heisenberg_multiplication_formula((0,1,0),(1,0,0))
+
+claim:
+    ? model::heisenberg.mul((0,1,0),(1,0,0)) = (1,1,0)
+    model::heisenberg.mul((0,1,0),(1,0,0))(1) = (0,1,0)(1)+(1,0,0)(1) = (0)+(1) = 1
+    model::heisenberg.mul((0,1,0),(1,0,0))(2) = (0,1,0)(2)+(1,0,0)(2) = (1)+(0) = 1
+    model::heisenberg.mul((0,1,0),(1,0,0))(3) = (0,1,0)(3)+(1,0,0)(3)+(0,1,0)(1)*(1,0,0)(2) = (0)+(0)+(0)*(0) = 0
+    release thm triple_value_from_coordinates(model::heisenberg.mul((0,1,0),(1,0,0)),1,1,0)
+
+release thm model::heisenberg_inverse_formula((1,1,1))
+
+claim:
+    ? model::heisenberg.inv((1,1,1)) = (-1,-1,0)
+    model::heisenberg.inv((1,1,1))(1) = -(1,1,1)(1) = -(1) = -1
+    model::heisenberg.inv((1,1,1))(2) = -(1,1,1)(2) = -(1) = -1
+    model::heisenberg.inv((1,1,1))(3) = (1,1,1)(1)*(1,1,1)(2)-(1,1,1)(3) = (1)*(1)-(1) = 0
+    release thm triple_value_from_coordinates(model::heisenberg.inv((1,1,1)),-1,-1,0)
+
+model::heisenberg.inv(model::heisenberg.mul((1,0,0),(0,1,0))) = model::heisenberg.inv((1,1,1)) = (-1,-1,0)
+
+release thm model::heisenberg_inverse_formula((1,0,0))
+
+claim:
+    ? model::heisenberg.inv((1,0,0)) = (-1,0,0)
+    model::heisenberg.inv((1,0,0))(1) = -(1,0,0)(1) = -(1) = -1
+    model::heisenberg.inv((1,0,0))(2) = -(1,0,0)(2) = -(0) = 0
+    model::heisenberg.inv((1,0,0))(3) = (1,0,0)(1)*(1,0,0)(2)-(1,0,0)(3) = (1)*(0)-(0) = 0
+    release thm triple_value_from_coordinates(model::heisenberg.inv((1,0,0)),-1,0,0)
+
+release thm model::heisenberg_inverse_formula((0,1,0))
+
+claim:
+    ? model::heisenberg.inv((0,1,0)) = (0,-1,0)
+    model::heisenberg.inv((0,1,0))(1) = -(0,1,0)(1) = -(0) = 0
+    model::heisenberg.inv((0,1,0))(2) = -(0,1,0)(2) = -(1) = -1
+    model::heisenberg.inv((0,1,0))(3) = (0,1,0)(1)*(0,1,0)(2)-(0,1,0)(3) = (0)*(1)-(0) = 0
+    release thm triple_value_from_coordinates(model::heisenberg.inv((0,1,0)),0,-1,0)
+
+release thm model::heisenberg_multiplication_formula((0,-1,0),(-1,0,0))
+
+claim:
+    ? model::heisenberg.mul((0,-1,0),(-1,0,0)) = (-1,-1,0)
+    model::heisenberg.mul((0,-1,0),(-1,0,0))(1) = (0,-1,0)(1)+(-1,0,0)(1) = (0)+(-1) = -1
+    model::heisenberg.mul((0,-1,0),(-1,0,0))(2) = (0,-1,0)(2)+(-1,0,0)(2) = (-1)+(0) = -1
+    model::heisenberg.mul((0,-1,0),(-1,0,0))(3) = (0,-1,0)(3)+(-1,0,0)(3)+(0,-1,0)(1)*(-1,0,0)(2) = (0)+(0)+(0)*(0) = 0
+    release thm triple_value_from_coordinates(model::heisenberg.mul((0,-1,0),(-1,0,0)),-1,-1,0)
+
+model::heisenberg.mul(model::heisenberg.inv((0,1,0)),model::heisenberg.inv((1,0,0))) = model::heisenberg.mul((0,-1,0),(-1,0,0)) = (-1,-1,0)
+
+release thm model::heisenberg_multiplication_formula((-1,0,0),(0,-1,0))
+
+claim:
+    ? model::heisenberg.mul((-1,0,0),(0,-1,0)) = (-1,-1,1)
+    model::heisenberg.mul((-1,0,0),(0,-1,0))(1) = (-1,0,0)(1)+(0,-1,0)(1) = (-1)+(0) = -1
+    model::heisenberg.mul((-1,0,0),(0,-1,0))(2) = (-1,0,0)(2)+(0,-1,0)(2) = (0)+(-1) = -1
+    model::heisenberg.mul((-1,0,0),(0,-1,0))(3) = (-1,0,0)(3)+(0,-1,0)(3)+(-1,0,0)(1)*(0,-1,0)(2) = (0)+(0)+(-1)*(-1) = 1
+    release thm triple_value_from_coordinates(model::heisenberg.mul((-1,0,0),(0,-1,0)),-1,-1,1)
+
+model::heisenberg.mul(model::heisenberg.inv((1,0,0)),model::heisenberg.inv((0,1,0))) = model::heisenberg.mul((-1,0,0),(0,-1,0)) = (-1,-1,1)
+
+by contra:
+    ? model::heisenberg.mul(model::heisenberg.inv((1,0,0)),model::heisenberg.inv((0,1,0))) != model::heisenberg.mul(model::heisenberg.inv((0,1,0)),model::heisenberg.inv((1,0,0)))
+    model::heisenberg.mul(model::heisenberg.inv((1,0,0)),model::heisenberg.inv((0,1,0)))(3) = 1
+    model::heisenberg.mul(model::heisenberg.inv((0,1,0)),model::heisenberg.inv((1,0,0)))(3) = 0
+    model::heisenberg.mul(model::heisenberg.inv((1,0,0)),model::heisenberg.inv((0,1,0)))(3) = model::heisenberg.mul(model::heisenberg.inv((0,1,0)),model::heisenberg.inv((1,0,0)))(3)
+    impossible 1=0
+
+release thm Algebra::group::right_equation_unique(cart_n(R,3),model::heisenberg,(1,0,0),(0,1,0))
+
+release thm model::heisenberg_multiplication_formula((0,1,0),(-1,0,0))
+
+claim:
+    ? model::heisenberg.mul((0,1,0),(-1,0,0)) = (-1,1,0)
+    model::heisenberg.mul((0,1,0),(-1,0,0))(1) = (0,1,0)(1)+(-1,0,0)(1) = (0)+(-1) = -1
+    model::heisenberg.mul((0,1,0),(-1,0,0))(2) = (0,1,0)(2)+(-1,0,0)(2) = (1)+(0) = 1
+    model::heisenberg.mul((0,1,0),(-1,0,0))(3) = (0,1,0)(3)+(-1,0,0)(3)+(0,1,0)(1)*(-1,0,0)(2) = (0)+(0)+(0)*(0) = 0
+    release thm triple_value_from_coordinates(model::heisenberg.mul((0,1,0),(-1,0,0)),-1,1,0)
+
+model::heisenberg.mul((0,1,0),model::heisenberg.inv((1,0,0))) = model::heisenberg.mul((0,1,0),(-1,0,0)) = (-1,1,0)
+
+release thm model::heisenberg_multiplication_formula((-1,1,0),(1,0,0))
+
+claim:
+    ? model::heisenberg.mul((-1,1,0),(1,0,0)) = (0,1,0)
+    model::heisenberg.mul((-1,1,0),(1,0,0))(1) = (-1,1,0)(1)+(1,0,0)(1) = (-1)+(1) = 0
+    model::heisenberg.mul((-1,1,0),(1,0,0))(2) = (-1,1,0)(2)+(1,0,0)(2) = (1)+(0) = 1
+    model::heisenberg.mul((-1,1,0),(1,0,0))(3) = (-1,1,0)(3)+(1,0,0)(3)+(-1,1,0)(1)*(1,0,0)(2) = (0)+(0)+(-1)*(0) = 0
+    release thm triple_value_from_coordinates(model::heisenberg.mul((-1,1,0),(1,0,0)),0,1,0)
+
+model::heisenberg.mul(model::heisenberg.mul((0,1,0),model::heisenberg.inv((1,0,0))),(1,0,0)) = model::heisenberg.mul((-1,1,0),(1,0,0)) = (0,1,0)
+
+release thm model::heisenberg_multiplication_formula((1,0,0),(-1,0,0))
+
+claim:
+    ? model::heisenberg.mul((1,0,0),(-1,0,0)) = (0,0,0)
+    model::heisenberg.mul((1,0,0),(-1,0,0))(1) = (1,0,0)(1)+(-1,0,0)(1) = (1)+(-1) = 0
+    model::heisenberg.mul((1,0,0),(-1,0,0))(2) = (1,0,0)(2)+(-1,0,0)(2) = (0)+(0) = 0
+    model::heisenberg.mul((1,0,0),(-1,0,0))(3) = (1,0,0)(3)+(-1,0,0)(3)+(1,0,0)(1)*(-1,0,0)(2) = (0)+(0)+(1)*(0) = 0
+    release thm triple_value_from_coordinates(model::heisenberg.mul((1,0,0),(-1,0,0)),0,0,0)
+
+model::heisenberg.mul((1,0,0),(-1,0,0)) = (0,0,0) = model::heisenberg.one
+
+release thm Algebra::group::right_inverse_unique(cart_n(R,3),model::heisenberg,(1,0,0),(-1,0,0))
+
+release thm model::heisenberg_multiplication_formula((-1,0,0),(0,1,0))
+
+claim:
+    ? model::heisenberg.mul((-1,0,0),(0,1,0)) = (-1,1,-1)
+    model::heisenberg.mul((-1,0,0),(0,1,0))(1) = (-1,0,0)(1)+(0,1,0)(1) = (-1)+(0) = -1
+    model::heisenberg.mul((-1,0,0),(0,1,0))(2) = (-1,0,0)(2)+(0,1,0)(2) = (0)+(1) = 1
+    model::heisenberg.mul((-1,0,0),(0,1,0))(3) = (-1,0,0)(3)+(0,1,0)(3)+(-1,0,0)(1)*(0,1,0)(2) = (0)+(0)+(-1)*(1) = -1
+    release thm triple_value_from_coordinates(model::heisenberg.mul((-1,0,0),(0,1,0)),-1,1,-1)
+
+model::heisenberg.mul(model::heisenberg.inv((1,0,0)),(0,1,0)) = model::heisenberg.mul((-1,0,0),(0,1,0)) = (-1,1,-1)
+
+release thm model::heisenberg_multiplication_formula((-1,1,-1),(1,0,0))
+
+claim:
+    ? model::heisenberg.mul((-1,1,-1),(1,0,0)) = (0,1,-1)
+    model::heisenberg.mul((-1,1,-1),(1,0,0))(1) = (-1,1,-1)(1)+(1,0,0)(1) = (-1)+(1) = 0
+    model::heisenberg.mul((-1,1,-1),(1,0,0))(2) = (-1,1,-1)(2)+(1,0,0)(2) = (1)+(0) = 1
+    model::heisenberg.mul((-1,1,-1),(1,0,0))(3) = (-1,1,-1)(3)+(1,0,0)(3)+(-1,1,-1)(1)*(1,0,0)(2) = (-1)+(0)+(-1)*(0) = -1
+    release thm triple_value_from_coordinates(model::heisenberg.mul((-1,1,-1),(1,0,0)),0,1,-1)
+
+model::heisenberg.mul(model::heisenberg.mul(model::heisenberg.inv((1,0,0)),(0,1,0)),(1,0,0)) = model::heisenberg.mul((-1,1,-1),(1,0,0)) = (0,1,-1)
+
+release thm model::heisenberg_multiplication_formula((1,0,0),(2,0,0))
+
+claim:
+    ? model::heisenberg.mul((1,0,0),(2,0,0)) = (3,0,0)
+    model::heisenberg.mul((1,0,0),(2,0,0))(1) = (1,0,0)(1)+(2,0,0)(1) = (1)+(2) = 3
+    model::heisenberg.mul((1,0,0),(2,0,0))(2) = (1,0,0)(2)+(2,0,0)(2) = (0)+(0) = 0
+    model::heisenberg.mul((1,0,0),(2,0,0))(3) = (1,0,0)(3)+(2,0,0)(3)+(1,0,0)(1)*(2,0,0)(2) = (0)+(0)+(1)*(0) = 0
+    release thm triple_value_from_coordinates(model::heisenberg.mul((1,0,0),(2,0,0)),3,0,0)
+
+release thm model::heisenberg_multiplication_formula((2,0,0),(1,0,0))
+
+claim:
+    ? model::heisenberg.mul((2,0,0),(1,0,0)) = (3,0,0)
+    model::heisenberg.mul((2,0,0),(1,0,0))(1) = (2,0,0)(1)+(1,0,0)(1) = (2)+(1) = 3
+    model::heisenberg.mul((2,0,0),(1,0,0))(2) = (2,0,0)(2)+(1,0,0)(2) = (0)+(0) = 0
+    model::heisenberg.mul((2,0,0),(1,0,0))(3) = (2,0,0)(3)+(1,0,0)(3)+(2,0,0)(1)*(1,0,0)(2) = (0)+(0)+(2)*(0) = 0
+    release thm triple_value_from_coordinates(model::heisenberg.mul((2,0,0),(1,0,0)),3,0,0)
+
+model::heisenberg.mul((1,0,0),(2,0,0)) = (3,0,0) = model::heisenberg.mul((2,0,0),(1,0,0))
+
+release thm Algebra::group::commuting_inverses(cart_n(R,3),model::heisenberg,(1,0,0),(2,0,0))
+
+by contra:
+    ? model::heisenberg.mul(model::heisenberg.mul(model::heisenberg.inv((1,0,0)),(0,1,0)),(1,0,0)) != (0,1,0)
+    model::heisenberg.mul(model::heisenberg.mul(model::heisenberg.inv((1,0,0)),(0,1,0)),(1,0,0))(3) = -1
+    (0,1,0)(3) = 0
+    model::heisenberg.mul(model::heisenberg.mul(model::heisenberg.inv((1,0,0)),(0,1,0)),(1,0,0))(3) = (0,1,0)(3)
+    impossible -1=0
+
+release thm Algebra::group::commuting_inverses(cart_n(R,3),model::heisenberg,(1,0,0),(0,1,0))

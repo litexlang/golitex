@@ -98,3 +98,6 @@ pub mod by_sequence_liminf;
 
 pub(crate) use by_trig_quotient_relations::TanCotProductBuiltinRuleProof;
 pub(crate) use by_trig_quotient_relations::TanSquareReciprocalCosineBuiltinRuleProof;
+
+pub mod by_elementary_identities;
+mod elementary_identity_helpers;

@@ -31,6 +31,10 @@ pub(super) fn project_atomic_builtin_rule(
         AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(br::not_equal::NotEqualFactSearchProofByBuiltinRule::SinhNonzeroFromArgument(p)) => object_for(runtime, vec![("type", string("builtin_rule")), ("rule", string("SinhNonzeroFromArgument")), ("argument_nonzero", project_verify_fact(&p.argument_nonzero, runtime))]),
         AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(br::not_equal::NotEqualFactSearchProofByBuiltinRule::ConjugateNonzeroFromArgument(p)) => object_for(runtime, vec![("type", string("builtin_rule")), ("rule", string("ConjugateNonzeroFromArgument")), ("argument_nonzero", project_verify_fact(&p.argument_nonzero, runtime))]),
 
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::FloorSumLowerBound(_)) => object_for(runtime,vec![("type",string("builtin_rule")),("rule",string("FloorSumLowerBound"))]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::FloorSumUpperBound(_)) => object_for(runtime,vec![("type",string("builtin_rule")),("rule",string("FloorSumUpperBound"))]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::CeilSumUpperBound(_)) => object_for(runtime,vec![("type",string("builtin_rule")),("rule",string("CeilSumUpperBound"))]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::RealReverseTriangle(_)) => object_for(runtime,vec![("type",string("builtin_rule")),("rule",string("RealReverseTriangle"))]),
         AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::SubtractionOrderPairs(p)) => object_for(runtime, vec![
             ("type", string("builtin_rule")), ("rule", string("SubtractionOrderPairs")),
             ("minuend_order", project_verify_fact(&p.minuend_order, runtime)),

@@ -1,0 +1,16 @@
+{
+  "missing_surjectivity": "premise",
+  "missing_subgroup": "premise",
+  "missing_homomorphism": "premise",
+  "missing_normality": "premise",
+  "image_surjectivity_is_not_ambient": "premise",
+  "wrong_composition_kernel": "search_proof",
+  "mismatched_target_groups": "conclusion",
+  "partial_first_map": "argument_type",
+  "partial_second_map": "argument_type",
+  "binary_map_rejected": "argument_type",
+  "outside_source_subset": "argument_type",
+  "empty_subgroup_image": "premise",
+  "wrong_composed_value": "search_proof",
+  "nonhom_kernel_is_not_subgroup": "definition_requirement"
+}

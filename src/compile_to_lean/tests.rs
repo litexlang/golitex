@@ -100,6 +100,8 @@ mod sign_identities_tests;
 #[path = "../../tests/unit/compile_to_lean/sign/tests.rs"]
 mod sign_tests;
 
+#[path = "../../tests/unit/compile_to_lean/eval_integer_tests.rs"]
+mod eval_integer_tests;
 #[path = "../../tests/unit/compile_to_lean/integer_division_tests.rs"]
 mod integer_division_tests;
 

@@ -1,0 +1,137 @@
+# Tracer: fixed elementary BT completion (22 independent scopes).
+# Before (did not work):
+# forall x,y R:
+#     abs(abs(x)-abs(y)) <= abs(x-y)
+# Former result: proof_search failure, audit 2026-10-28.
+# Now: all active direct statements below must verify without trust or helpers.
+# Boundary: strict reverse triangle, missing divisibility premises, invalid
+# integer/rounding domains and wrong constructor identities must still reject.
+# Evidence: target/release/litex -strict -lang en -f examples/proof_nodes/atomic/by_builtin_rule/elementary_bt_completion.lit
+
+# min-assoc
+sketch:
+    forall x, y, z R:
+        min(min(x,y),z) = min(x,min(y,z))
+
+# max-assoc
+sketch:
+    forall x, y, z R:
+        max(max(x,y),z) = max(x,max(y,z))
+
+# min-max-sum
+sketch:
+    forall x, y R:
+        min(x,y) + max(x,y) = x+y
+
+# min-max-product
+sketch:
+    forall x, y R:
+        min(x,y)*max(x,y) = x*y
+
+# min-translation
+sketch:
+    forall x, y, z R:
+        min(x+z,y+z) = min(x,y)+z
+
+# max-neg
+sketch:
+    forall x, y R:
+        max(-x,-y) = -min(x,y)
+
+# floor-characterization
+sketch:
+    forall x R, n Z:
+        n <= x
+        x < n+1
+        =>:
+            floor(x) = n
+
+# ceil-characterization
+sketch:
+    forall x R, n Z:
+        n-1 < x
+        x <= n
+        =>:
+            ceil(x) = n
+
+# floor-subadd
+sketch:
+    forall x, y R:
+        floor(x) + floor(y) <= floor(x + y)
+
+# floor-sum-upper
+sketch:
+    forall x, y R:
+        floor(x+y) <= floor(x)+floor(y)+1
+
+# ceil-sum-upper
+sketch:
+    forall x, y R:
+        ceil(x+y) <= ceil(x)+ceil(y)
+
+# gcd-add
+sketch:
+    forall a Z, b N+:
+        gcd(a + b, b) = gcd(a, b)
+
+# gcd-neg
+sketch:
+    forall a Z, b N+:
+        gcd(-a, b) = gcd(a, b)
+
+# gcd-mul
+sketch:
+    forall a, b, k N+:
+        gcd(k*a, k*b) = k*gcd(a,b)
+
+# mod-add-multiple
+sketch:
+    forall a, k Z, m N+:
+        (a + k*m) % m = a % m
+
+# dvd-sum-correct
+sketch:
+    forall d N+, a, b Z:
+        $dvd(a,d)
+        $dvd(b,d)
+        =>:
+            $dvd(a+b,d)
+
+# dvd-diff-correct
+sketch:
+    forall d N+, a, b Z:
+        $dvd(a,d)
+        $dvd(b,d)
+        =>:
+            $dvd(a-b,d)
+
+# dvd-scale-correct
+sketch:
+    forall d N+, a, k Z:
+        $dvd(a,d)
+        =>:
+            $dvd(k*a,d)
+
+# dvd-linear-correct
+sketch:
+    forall d N+, a, b, u, v Z:
+        $dvd(a,d)
+        $dvd(b,d)
+        =>:
+            $dvd(u*a+v*b,d)
+
+# abs-reverse-triangle
+sketch:
+    forall x, y R:
+        abs(abs(x)-abs(y)) <= abs(x-y)
+
+# cart-union-valid
+sketch:
+    forall s, t, u set:
+        cart(s,union(t,u)) = union(cart(s,t),cart(s,u))
+
+# powerset-intersection
+sketch:
+    forall A, B set:
+        power_set(intersect(A,B)) = intersect(power_set(A),power_set(B))
+

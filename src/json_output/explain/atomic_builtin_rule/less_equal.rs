@@ -72,6 +72,11 @@ use crate::json_output::explain::text::text;
 impl LessEqualFactSearchProofByBuiltinRule {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
         match self {
+            Self::FloorSumLowerBound(_) => BuiltinRuleText { rule_name: "FloorSumLowerBound".into(), message: "x,y in R => floor(x)+floor(y)<=floor(x+y)".into() },
+            Self::FloorSumUpperBound(_) => BuiltinRuleText { rule_name: "FloorSumUpperBound".into(), message: "x,y in R => floor(x+y)<=floor(x)+floor(y)+1".into() },
+            Self::CeilSumUpperBound(_) => BuiltinRuleText { rule_name: "CeilSumUpperBound".into(), message: "x,y in R => ceil(x+y)<=ceil(x)+ceil(y)".into() },
+            Self::RealReverseTriangle(_) => BuiltinRuleText { rule_name: "RealReverseTriangle".into(), message: "x,y in R => abs(abs(x)-abs(y))<=abs(x-y)".into() },
+
             Self::SubtractionOrderPairs(_) => text("SubtractionOrderPairs", "a<=b, c<=d => a-d<=b-c"),
             Self::AbsSquareRadius(_) => text("AbsSquareRadius", "r>=0, x^2<=r^2 => abs(x)<=r"),
             Self::QuotientScalarUpperBound(_) => text("QuotientScalarUpperBound", "b>0, a<=M*b => a/b<=M"),
@@ -187,6 +192,23 @@ Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak"
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         match self {
+            Self::FloorSumLowerBound(_) => BuiltinRuleText {
+                rule_name: "FloorSumLowerBound".into(),
+                message: "x,y in R => floor(x)+floor(y)<=floor(x+y)".into(),
+            },
+            Self::FloorSumUpperBound(_) => BuiltinRuleText {
+                rule_name: "FloorSumUpperBound".into(),
+                message: "x,y in R => floor(x+y)<=floor(x)+floor(y)+1".into(),
+            },
+            Self::CeilSumUpperBound(_) => BuiltinRuleText {
+                rule_name: "CeilSumUpperBound".into(),
+                message: "x,y in R => ceil(x+y)<=ceil(x)+ceil(y)".into(),
+            },
+            Self::RealReverseTriangle(_) => BuiltinRuleText {
+                rule_name: "RealReverseTriangle".into(),
+                message: "x,y in R => abs(abs(x)-abs(y))<=abs(x-y)".into(),
+            },
+
             Self::SubtractionOrderPairs(_) => {
                 text("SubtractionOrderPairs", "a<=b, c<=d => a-d<=b-c")
             }
@@ -335,6 +357,23 @@ Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak"
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
         match self {
+            Self::FloorSumLowerBound(_) => BuiltinRuleText {
+                rule_name: "FloorSumLowerBound".into(),
+                message: "x,y in R => floor(x)+floor(y)<=floor(x+y)".into(),
+            },
+            Self::FloorSumUpperBound(_) => BuiltinRuleText {
+                rule_name: "FloorSumUpperBound".into(),
+                message: "x,y in R => floor(x+y)<=floor(x)+floor(y)+1".into(),
+            },
+            Self::CeilSumUpperBound(_) => BuiltinRuleText {
+                rule_name: "CeilSumUpperBound".into(),
+                message: "x,y in R => ceil(x+y)<=ceil(x)+ceil(y)".into(),
+            },
+            Self::RealReverseTriangle(_) => BuiltinRuleText {
+                rule_name: "RealReverseTriangle".into(),
+                message: "x,y in R => abs(abs(x)-abs(y))<=abs(x-y)".into(),
+            },
+
             Self::SubtractionOrderPairs(_) => {
                 text("SubtractionOrderPairs", "a<=b, c<=d => a-d<=b-c")
             }
@@ -487,6 +526,11 @@ Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak"
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
         match self {
+            Self::FloorSumLowerBound(_) => BuiltinRuleText { rule_name: "FloorSumLowerBound".into(), message: "x,y in R => floor(x)+floor(y)<=floor(x+y)".into() },
+            Self::FloorSumUpperBound(_) => BuiltinRuleText { rule_name: "FloorSumUpperBound".into(), message: "x,y in R => floor(x+y)<=floor(x)+floor(y)+1".into() },
+            Self::CeilSumUpperBound(_) => BuiltinRuleText { rule_name: "CeilSumUpperBound".into(), message: "x,y in R => ceil(x+y)<=ceil(x)+ceil(y)".into() },
+            Self::RealReverseTriangle(_) => BuiltinRuleText { rule_name: "RealReverseTriangle".into(), message: "x,y in R => abs(abs(x)-abs(y))<=abs(x-y)".into() },
+
             Self::SubtractionOrderPairs(_) => text("SubtractionOrderPairs", "a<=b, c<=d => a-d<=b-c"),
             Self::AbsSquareRadius(_) => text("AbsSquareRadius", "r>=0, x^2<=r^2 => abs(x)<=r"),
             Self::QuotientScalarUpperBound(_) => text("QuotientScalarUpperBound", "b>0, a<=M*b => a/b<=M"),
@@ -602,6 +646,11 @@ Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak"
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
         match self {
+            Self::FloorSumLowerBound(_) => BuiltinRuleText { rule_name: "FloorSumLowerBound".into(), message: "x,y in R => floor(x)+floor(y)<=floor(x+y)".into() },
+            Self::FloorSumUpperBound(_) => BuiltinRuleText { rule_name: "FloorSumUpperBound".into(), message: "x,y in R => floor(x+y)<=floor(x)+floor(y)+1".into() },
+            Self::CeilSumUpperBound(_) => BuiltinRuleText { rule_name: "CeilSumUpperBound".into(), message: "x,y in R => ceil(x+y)<=ceil(x)+ceil(y)".into() },
+            Self::RealReverseTriangle(_) => BuiltinRuleText { rule_name: "RealReverseTriangle".into(), message: "x,y in R => abs(abs(x)-abs(y))<=abs(x-y)".into() },
+
             Self::SubtractionOrderPairs(_) => text("SubtractionOrderPairs", "a<=b, c<=d => a-d<=b-c"),
             Self::AbsSquareRadius(_) => text("AbsSquareRadius", "r>=0, x^2<=r^2 => abs(x)<=r"),
             Self::QuotientScalarUpperBound(_) => text("QuotientScalarUpperBound", "b>0, a<=M*b => a/b<=M"),
@@ -717,6 +766,11 @@ Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak"
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
         match self {
+            Self::FloorSumLowerBound(_) => BuiltinRuleText { rule_name: "FloorSumLowerBound".into(), message: "x,y in R => floor(x)+floor(y)<=floor(x+y)".into() },
+            Self::FloorSumUpperBound(_) => BuiltinRuleText { rule_name: "FloorSumUpperBound".into(), message: "x,y in R => floor(x+y)<=floor(x)+floor(y)+1".into() },
+            Self::CeilSumUpperBound(_) => BuiltinRuleText { rule_name: "CeilSumUpperBound".into(), message: "x,y in R => ceil(x+y)<=ceil(x)+ceil(y)".into() },
+            Self::RealReverseTriangle(_) => BuiltinRuleText { rule_name: "RealReverseTriangle".into(), message: "x,y in R => abs(abs(x)-abs(y))<=abs(x-y)".into() },
+
             Self::SubtractionOrderPairs(_) => text("SubtractionOrderPairs", "a<=b, c<=d => a-d<=b-c"),
             Self::AbsSquareRadius(_) => text("AbsSquareRadius", "r>=0, x^2<=r^2 => abs(x)<=r"),
             Self::QuotientScalarUpperBound(_) => text("QuotientScalarUpperBound", "b>0, a<=M*b => a/b<=M"),
@@ -832,6 +886,23 @@ Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak"
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
         match self {
+            Self::FloorSumLowerBound(_) => BuiltinRuleText {
+                rule_name: "FloorSumLowerBound".into(),
+                message: "x,y in R => floor(x)+floor(y)<=floor(x+y)".into(),
+            },
+            Self::FloorSumUpperBound(_) => BuiltinRuleText {
+                rule_name: "FloorSumUpperBound".into(),
+                message: "x,y in R => floor(x+y)<=floor(x)+floor(y)+1".into(),
+            },
+            Self::CeilSumUpperBound(_) => BuiltinRuleText {
+                rule_name: "CeilSumUpperBound".into(),
+                message: "x,y in R => ceil(x+y)<=ceil(x)+ceil(y)".into(),
+            },
+            Self::RealReverseTriangle(_) => BuiltinRuleText {
+                rule_name: "RealReverseTriangle".into(),
+                message: "x,y in R => abs(abs(x)-abs(y))<=abs(x-y)".into(),
+            },
+
             Self::SubtractionOrderPairs(_) => {
                 text("SubtractionOrderPairs", "a<=b, c<=d => a-d<=b-c")
             }
@@ -995,6 +1066,23 @@ Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak"
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
         match self {
+            Self::FloorSumLowerBound(_) => BuiltinRuleText {
+                rule_name: "FloorSumLowerBound".into(),
+                message: "x,y in R => floor(x)+floor(y)<=floor(x+y)".into(),
+            },
+            Self::FloorSumUpperBound(_) => BuiltinRuleText {
+                rule_name: "FloorSumUpperBound".into(),
+                message: "x,y in R => floor(x+y)<=floor(x)+floor(y)+1".into(),
+            },
+            Self::CeilSumUpperBound(_) => BuiltinRuleText {
+                rule_name: "CeilSumUpperBound".into(),
+                message: "x,y in R => ceil(x+y)<=ceil(x)+ceil(y)".into(),
+            },
+            Self::RealReverseTriangle(_) => BuiltinRuleText {
+                rule_name: "RealReverseTriangle".into(),
+                message: "x,y in R => abs(abs(x)-abs(y))<=abs(x-y)".into(),
+            },
+
             Self::SubtractionOrderPairs(_) => {
                 text("SubtractionOrderPairs", "a<=b, c<=d => a-d<=b-c")
             }
@@ -1147,6 +1235,23 @@ Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak"
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
         match self {
+            Self::FloorSumLowerBound(_) => BuiltinRuleText {
+                rule_name: "FloorSumLowerBound".into(),
+                message: "x,y in R => floor(x)+floor(y)<=floor(x+y)".into(),
+            },
+            Self::FloorSumUpperBound(_) => BuiltinRuleText {
+                rule_name: "FloorSumUpperBound".into(),
+                message: "x,y in R => floor(x+y)<=floor(x)+floor(y)+1".into(),
+            },
+            Self::CeilSumUpperBound(_) => BuiltinRuleText {
+                rule_name: "CeilSumUpperBound".into(),
+                message: "x,y in R => ceil(x+y)<=ceil(x)+ceil(y)".into(),
+            },
+            Self::RealReverseTriangle(_) => BuiltinRuleText {
+                rule_name: "RealReverseTriangle".into(),
+                message: "x,y in R => abs(abs(x)-abs(y))<=abs(x-y)".into(),
+            },
+
             Self::SubtractionOrderPairs(_) => {
                 text("SubtractionOrderPairs", "a<=b, c<=d => a-d<=b-c")
             }
@@ -1304,6 +1409,23 @@ Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak"
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
         match self {
+            Self::FloorSumLowerBound(_) => BuiltinRuleText {
+                rule_name: "FloorSumLowerBound".into(),
+                message: "x,y in R => floor(x)+floor(y)<=floor(x+y)".into(),
+            },
+            Self::FloorSumUpperBound(_) => BuiltinRuleText {
+                rule_name: "FloorSumUpperBound".into(),
+                message: "x,y in R => floor(x+y)<=floor(x)+floor(y)+1".into(),
+            },
+            Self::CeilSumUpperBound(_) => BuiltinRuleText {
+                rule_name: "CeilSumUpperBound".into(),
+                message: "x,y in R => ceil(x+y)<=ceil(x)+ceil(y)".into(),
+            },
+            Self::RealReverseTriangle(_) => BuiltinRuleText {
+                rule_name: "RealReverseTriangle".into(),
+                message: "x,y in R => abs(abs(x)-abs(y))<=abs(x-y)".into(),
+            },
+
             Self::SubtractionOrderPairs(_) => {
                 text("SubtractionOrderPairs", "a<=b, c<=d => a-d<=b-c")
             }

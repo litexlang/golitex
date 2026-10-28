@@ -1,0 +1,122 @@
+have fn add(x,y Z) Z = x+y
+
+have fn neg(x Z) Z = -x
+
+forall x,y,z Z:
+    add(add(x,y),z) = add(x,add(y,z))
+
+forall x Z:
+    add(0,x) = x
+    add(x,0) = x
+    add(neg(x),x) = 0
+    add(x,neg(x)) = 0
+
+have integers &Algebra::group::Group<Z> = (add,0,neg)
+
+integers.one = 0
+
+{integers.one} = {0}
+
+release thm Algebra::group::normal_subgroup_whole(Z,integers)
+
+release thm Algebra::group::normal_subgroup_identity(Z,integers)
+
+$Algebra::group::is_normal_subgroup(Z,integers,{0})
+
+have fn double(x Z) Z = 2*x
+
+claim:
+    ? $Algebra::group::is_homomorphism(Z,integers,Z,integers,double)
+    claim:
+        ? forall x,y Z:
+            double(integers.mul(x,y)) = integers.mul(double(x),double(y))
+        integers.mul(x,y) = add(x,y) = x+y
+        double(integers.mul(x,y)) = 2*integers.mul(x,y) = 2*(x+y)
+        double(x) = 2*x
+        double(y) = 2*y
+        integers.mul(double(x),double(y)) = add(double(x),double(y)) = double(x)+double(y) = 2*x+2*y = 2*(x+y)
+    by def $Algebra::group::is_homomorphism(Z,integers,Z,integers,double)
+
+claim:
+    ? $Algebra::group::is_homomorphism(Z,integers,Z,integers,neg)
+    claim:
+        ? forall x,y Z:
+            neg(integers.mul(x,y)) = integers.mul(neg(x),neg(y))
+        integers.mul(x,y) = add(x,y) = x+y
+        neg(integers.mul(x,y)) = -(x+y)
+        integers.mul(neg(x),neg(y)) = add(neg(x),neg(y)) = neg(x)+neg(y) = (-x)+(-y) = -(x+y)
+    by def $Algebra::group::is_homomorphism(Z,integers,Z,integers,neg)
+
+claim:
+    ? forall y Z:
+        exist x Z st {y=neg(x)}
+    witness exist x Z st {y=neg(x)} from -y
+
+by def $surjective(Z,Z,neg)
+
+release thm Algebra::group::homomorphism_subgroup_image(Z,integers,Z,integers,double,Z)
+
+release thm Algebra::group::homomorphism_subgroup_image(Z,integers,Z,integers,double,{0})
+
+by extension:
+    ? fn_range(fn(t {0}) Z {double(t)}) = {0}
+    fn(t {0}) Z {double(t)}(0) = double(0) = 0
+    fn(t {0}) Z {double(t)}(0) $in fn_range(fn(t {0}) Z {double(t)})
+    claim:
+        ? forall y fn_range(fn(t {0}) Z {double(t)}):
+            y $in {0}
+        have by fn_preimage: source_point from y $in fn_range(fn(t {0}) Z {double(t)})
+        source_point = 0
+        y = fn(t {0}) Z {double(t)}(source_point) = double(source_point) = double(0) = 0
+
+claim:
+    ? 6 $in fn_range(fn(t Z) Z {double(t)})
+    fn(t Z) Z {double(t)}(3) = double(3) = 6
+    fn(t Z) Z {double(t)}(3) $in fn_range(fn(t Z) Z {double(t)})
+
+release thm Algebra::group::surjective_homomorphism_normal_image(Z,integers,Z,integers,neg,{0})
+
+release thm Algebra::group::surjective_homomorphism_normal_image(Z,integers,Z,integers,neg,Z)
+
+by extension:
+    ? fn_range(fn(t Z) Z {neg(t)}) = Z
+    fn_range(fn(t Z) Z {neg(t)}) $subset Z
+    claim:
+        ? forall y Z:
+            y $in fn_range(fn(t Z) Z {neg(t)})
+        fn(t Z) Z {neg(t)}(-y) = neg(-y) = y
+        fn(t Z) Z {neg(t)}(-y) $in fn_range(fn(t Z) Z {neg(t)})
+
+have fn shift(x Z) Z = x+1
+
+shift(0) = 1
+
+by contra:
+    ? not $Algebra::group::is_homomorphism(Z,integers,Z,integers,shift)
+    release thm Algebra::group::homomorphism_identity(Z,integers,Z,integers,shift)
+    1 = shift(0) = shift(integers.one) = integers.one = 0
+    impossible 1=0
+
+release thm Algebra::group::kernel_of_composition(Z,Z,Z,integers,shift,double)
+
+compose(double,shift)(5) = 12
+
+\Algebra::group::kernel<Z,Z,integers,compose(double,shift)> = {x Z:compose(double,shift)(x)=integers.one}
+
+by extension:
+    ? \Algebra::group::kernel<Z,Z,integers,compose(double,shift)> = {-1}
+    compose(double,shift)(-1) = 0 = integers.one
+    release thm set_builder_member(-1,{x Z:compose(double,shift)(x)=integers.one})
+    -1 $in \Algebra::group::kernel<Z,Z,integers,compose(double,shift)>
+    claim:
+        ? forall x \Algebra::group::kernel<Z,Z,integers,compose(double,shift)>:
+            x $in {-1}
+        x $in Z
+        compose(double,shift)(x) = integers.one = 0
+        shift(x) = x+1
+        double(shift(x)) = 2*shift(x) = 2*(x+1)
+        2*(x+1) = double(shift(x)) = compose(double,shift)(x) = 0
+        x+1 = (2*(x+1))/2 = 0/2 = 0
+        x = (x+1)-1 = -1
+
+preimage_set(shift,\Algebra::group::kernel<Z,Z,integers,double>) = \Algebra::group::kernel<Z,Z,integers,compose(double,shift)> = {-1}

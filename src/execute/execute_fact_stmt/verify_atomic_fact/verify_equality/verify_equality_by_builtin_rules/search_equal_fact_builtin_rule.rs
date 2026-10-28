@@ -313,6 +313,9 @@ impl Runtime {
         if let Some(proof) = self.search_add_zero_from_equalities(fact, verify_state)? {
             return Ok(Some(proof));
         }
+        if let Some(proof) = self.search_elementary_identity(fact, verify_state)? {
+            return Ok(Some(proof.into()));
+        }
         Ok(None)
     }
 }

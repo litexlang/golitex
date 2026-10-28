@@ -326,3 +326,147 @@ thm homomorphism_composition:
         compose(g,f)(y) = g(f(y))
         compose(g,f)(G.mul(x,y)) = g(f(G.mul(x,y))) = g(H.mul(f(x),f(y))) = K.mul(g(f(x)),g(f(y))) = K.mul(compose(g,f)(x),compose(g,f)(y))
     by def $is_homomorphism(A,G,D,K,compose(g,f))
+
+thm normal_subgroup_whole:
+    ? forall A nonempty_set,G &Group<A>:
+        $is_normal_subgroup(A,G,A)
+    release thm subgroup_whole(A,G)
+    by def $is_normal_subgroup(A,G,A)
+
+thm normal_subgroup_identity:
+    ? forall A nonempty_set,G &Group<A>:
+        $is_normal_subgroup(A,G,{G.one})
+    release thm subgroup_identity(A,G)
+    claim:
+        ? forall a A,s {G.one}:
+            G.mul(G.mul(a,s),G.inv(a)) $in {G.one}
+        s = G.one
+        G.mul(a,s) = G.mul(a,G.one) = a
+        G.mul(G.mul(a,s),G.inv(a)) = G.mul(a,G.inv(a)) = G.one
+    by def $is_normal_subgroup(A,G,{G.one})
+
+thm homomorphism_subgroup_image:
+    ? forall A nonempty_set,G &Group<A>,B nonempty_set,H &Group<B>,f fn(x A) B,S power_set(A):
+        $is_homomorphism(A,G,B,H,f)
+        $is_subgroup(A,G,S)
+        =>:
+            $is_subgroup(B,H,fn_range(fn(t S) B {f(t)}))
+    release thm homomorphism_identity(A,G,B,H,f)
+    fn(t S) B {f(t)}(G.one) = f(G.one) = H.one
+    fn(t S) B {f(t)}(G.one) $in fn_range(fn(t S) B {f(t)})
+    claim:
+        ? forall u,v fn_range(fn(t S) B {f(t)}):
+            H.mul(u,v) $in fn_range(fn(t S) B {f(t)})
+        have by fn_preimage: s1 from u $in fn_range(fn(t S) B {f(t)})
+        have by fn_preimage: s2 from v $in fn_range(fn(t S) B {f(t)})
+        G.mul(s1,s2) $in S
+        u = fn(t S) B {f(t)}(s1) = f(s1)
+        v = fn(t S) B {f(t)}(s2) = f(s2)
+        fn(t S) B {f(t)}(G.mul(s1,s2)) = f(G.mul(s1,s2)) = H.mul(f(s1),f(s2)) = H.mul(u,v)
+        fn(t S) B {f(t)}(G.mul(s1,s2)) $in fn_range(fn(t S) B {f(t)})
+    claim:
+        ? forall u fn_range(fn(t S) B {f(t)}):
+            H.inv(u) $in fn_range(fn(t S) B {f(t)})
+        have by fn_preimage: s from u $in fn_range(fn(t S) B {f(t)})
+        G.inv(s) $in S
+        release thm homomorphism_inverse(A,G,B,H,f,s)
+        u = fn(t S) B {f(t)}(s) = f(s)
+        fn(t S) B {f(t)}(G.inv(s)) = f(G.inv(s)) = H.inv(f(s)) = H.inv(u)
+        fn(t S) B {f(t)}(G.inv(s)) $in fn_range(fn(t S) B {f(t)})
+    by def $is_subgroup(B,H,fn_range(fn(t S) B {f(t)}))
+
+thm surjective_homomorphism_normal_image:
+    ? forall A nonempty_set,G &Group<A>,B nonempty_set,H &Group<B>,f fn(x A) B,S power_set(A):
+        $is_homomorphism(A,G,B,H,f)
+        $is_normal_subgroup(A,G,S)
+        $surjective(A,B,f)
+        =>:
+            $is_normal_subgroup(B,H,fn_range(fn(t S) B {f(t)}))
+    release thm homomorphism_subgroup_image(A,G,B,H,f,S)
+    claim:
+        ? forall b B,u fn_range(fn(t S) B {f(t)}):
+            H.mul(H.mul(b,u),H.inv(b)) $in fn_range(fn(t S) B {f(t)})
+        obtain a from exist a A st {b=f(a)}
+        have by fn_preimage: s from u $in fn_range(fn(t S) B {f(t)})
+        u = fn(t S) B {f(t)}(s) = f(s)
+        G.mul(G.mul(a,s),G.inv(a)) $in S
+        release thm homomorphism_inverse(A,G,B,H,f,a)
+        H.mul(b,u) = H.mul(f(a),f(s)) = f(G.mul(a,s))
+        H.inv(b) = H.inv(f(a)) = f(G.inv(a))
+        H.mul(H.mul(b,u),H.inv(b)) = H.mul(f(G.mul(a,s)),f(G.inv(a))) = f(G.mul(G.mul(a,s),G.inv(a))) = fn(t S) B {f(t)}(G.mul(G.mul(a,s),G.inv(a)))
+        fn(t S) B {f(t)}(G.mul(G.mul(a,s),G.inv(a))) $in fn_range(fn(t S) B {f(t)})
+    by def $is_normal_subgroup(B,H,fn_range(fn(t S) B {f(t)}))
+
+thm kernel_of_composition:
+    ? forall A nonempty_set,B nonempty_set,D nonempty_set,K &Group<D>,f fn(x A) B,g fn(y B) D:
+        \kernel<A,D,K,compose(g,f)> = preimage_set(f,\kernel<B,D,K,g>)
+    \kernel<A,D,K,compose(g,f)> = {x A:compose(g,f)(x)=K.one}
+    \kernel<B,D,K,g> = {y B:g(y)=K.one}
+    by extension:
+        ? \kernel<A,D,K,compose(g,f)> = preimage_set(f,\kernel<B,D,K,g>)
+        claim:
+            ? forall x \kernel<A,D,K,compose(g,f)>:
+                x $in preimage_set(f,\kernel<B,D,K,g>)
+            x $in A
+            compose(g,f)(x) = K.one
+            g(f(x)) = compose(g,f)(x) = K.one
+            release thm set_builder_member(f(x),{y B:g(y)=K.one})
+            f(x) $in \kernel<B,D,K,g>
+            x $in preimage_set(f,\kernel<B,D,K,g>)
+        claim:
+            ? forall x preimage_set(f,\kernel<B,D,K,g>):
+                x $in \kernel<A,D,K,compose(g,f)>
+            x $in A
+            f(x) $in \kernel<B,D,K,g>
+            g(f(x)) = K.one
+            compose(g,f)(x) = g(f(x)) = K.one
+            release thm set_builder_member(x,{y A:compose(g,f)(y)=K.one})
+
+thm inverse_identity:
+    ? forall A nonempty_set,G &Group<A>:
+        G.inv(G.one) = G.one
+    release thm inverse_unique(A,G,G.one,G.one)
+
+thm inverse_involution:
+    ? forall A nonempty_set,G &Group<A>,a A:
+        G.inv(G.inv(a)) = a
+    release thm inverse_unique(A,G,G.inv(a),a)
+
+thm right_inverse_unique:
+    ? forall A nonempty_set,G &Group<A>,a,b A:
+        G.mul(a,b) = G.one
+        =>:
+            b = G.inv(a)
+    G.mul(a,b) = G.one = G.mul(a,G.inv(a))
+    release thm left_cancel(A,G,a,b,G.inv(a))
+
+thm inverse_product:
+    ? forall A nonempty_set,G &Group<A>,a,b A:
+        G.inv(G.mul(a,b)) = G.mul(G.inv(b),G.inv(a))
+    G.mul(G.inv(a),a) = G.one
+    G.mul(G.inv(a),G.mul(a,b)) = G.mul(G.mul(G.inv(a),a),b) = G.mul(G.one,b) = b
+    G.mul(G.mul(G.inv(b),G.inv(a)),G.mul(a,b)) = G.mul(G.inv(b),G.mul(G.inv(a),G.mul(a,b))) = G.mul(G.inv(b),b) = G.one
+    release thm inverse_unique(A,G,G.mul(a,b),G.mul(G.inv(b),G.inv(a)))
+
+thm right_equation_unique:
+    ? forall A nonempty_set,G &Group<A>,a,b A:
+        exist! x A st {G.mul(x,a)=b}
+    G.mul(G.inv(a),a) = G.one
+    G.mul(G.mul(b,G.inv(a)),a) = G.mul(b,G.mul(G.inv(a),a)) = G.mul(b,G.one) = b
+    claim:
+        ? forall x,y A:
+            G.mul(x,a) = b
+            G.mul(y,a) = b
+            =>:
+                x = y
+        release thm right_cancel(A,G,a,x,y)
+    witness exist! x A st {G.mul(x,a)=b} from G.mul(b,G.inv(a))
+
+thm commuting_inverses:
+    ? forall A nonempty_set,G &Group<A>,a,b A:
+        G.mul(a,b) = G.mul(b,a)
+        =>:
+            G.mul(G.inv(a),G.inv(b)) = G.mul(G.inv(b),G.inv(a))
+    release thm inverse_product(A,G,a,b)
+    release thm inverse_product(A,G,b,a)
+    G.mul(G.inv(a),G.inv(b)) = G.inv(G.mul(b,a)) = G.inv(G.mul(a,b)) = G.mul(G.inv(b),G.inv(a))
