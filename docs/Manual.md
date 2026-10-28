@@ -44,6 +44,33 @@ facts, witnesses, cases or induction when needed. This manual gives the
 precise syntax, supported checks and boundaries. Supported Lean compilation
 is a further use of the source and its verification evidence.
 
+<a id="mathematical-reading"></a>
+
+### Everyday mathematical sentences and their formal roles
+
+Litex asks: can we write mathematics and obtain formal code directly? Familiar phrases already say which objects are in scope, which premises may be used, and what must be justified. The correspondence is between these mathematical responsibilities and precise source forms.
+
+| Mathematical wording | Corresponding Litex | Logical responsibility |
+| --- | --- | --- |
+| **For every** real number x | **`forall`** `x R:` | Introduce a scoped arbitrary object and its real-membership premise. |
+| **Assume** x is positive | `x > 0` before **`=>:`** | Make the condition available as a local premise. |
+| **Then** x is nonzero | `x != 0` after **`=>:`** | Check the conclusion from the premises; do not assume it. |
+| There **exists** a real w with w² = 4; **take 2** | **`witness exist`** `w R st {w^2 = 4}` **`from`** `2` | Check the proposed witness's carrier and required equation. |
+| **By definition**, this object has the property | **`by def`** `$is_above_two(3)` | If the predicate is defined by t > 2, check that instantiated condition. |
+
+The first three rows are fragments of this complete statement:
+
+```litex
+forall x R:
+    x > 0
+    =>:
+        x != 0
+```
+
+The last two rows use the [witness](#s35-existential-witnesses) and [definition](#s47-explicit-definition-folding) interfaces; they are not extra lines of that universal statement. Quantifiers and implications organize `Fact`, while placing a fact in statement position asks the verifier to establish it. Every [statement entry](#statement-dictionary) below begins with a **mathematical reading** connecting its source form to the corresponding mathematical action.
+
+Numbers, sets and functions are available through native mathematical interfaces. Writing `N`, `R`, `1`, `n + 1` or a function definition does not require the author to reconstruct those concepts in each proof. Their meaning, domains and checking rules remain explicit. The language starts the authoring workflow from this usable mathematical vocabulary and the relationships among statements.
+
 <a id="manual-introduction"></a>
 
 ## How to use this manual
@@ -71,7 +98,7 @@ identity may need the defining equation as an explicit bridge.
 | Compatibility and evidence | Interpret removed forms, assumptions and verification records | [Compatibility](#removed-and-renamed-public-forms), [coverage](#verification-and-coverage), [appendix](#appendix) |
 | Design context and references | Understand design influences, mathematical sources and related work | [References](#design-context-and-references) |
 
-The native inventory has **51 public statement forms, 93 active object leaves,
+The native inventory has **52 public statement forms, 93 active object leaves,
 20 builtin atomic families with their negative forms, and two native certificate
 predicates**, plus the 32 reserved native theorem interfaces. Stable S/O/F/C
 identifiers survive the merge. This inventories the public native language,
@@ -1764,6 +1791,8 @@ statement's body. The examples in the dictionaries show the active-binder form.
 
 ## Statement dictionary
 
+Read the **mathematical reading** first: it names the action an author would describe in a proof. Then use the public form, conditions and boundaries to write that action precisely. Quantified and conditional sentences belong to the Fact forms inside S02; definitions, witnesses and proof methods have their own statement entries.
+
 | ID | Public form | Mathematical role | Example status |
 |---|---|---|---|
 | [S01](#s01-expression-defined-functions) | `have fn ... = body` | Expression-defined functions | checked |
@@ -1820,6 +1849,8 @@ statement's body. The examples in the dictionaries show the active-binder form.
 | [S52](#s52-release-a-tuple-definition) | `release tuple def object` | Publish an exact finite-sequence contract and coordinates | checked |
 
 ### S01. Expression-defined functions
+
+**Mathematical reading:** “For admissible inputs, define f by this expression and require its values to lie in T.”
 
 **Public form:** `have fn f(parameters: optional guards) T = body`.
 This entry covers the expression-defined form. See S11 for cases, S12 for
@@ -1938,6 +1969,8 @@ identity(1 / 2) = 1 / 2
 
 ### S02. Bare factual statements
 
+**Mathematical reading:** “We assert F; check that it follows from the current mathematical context. A universal assertion reads: for every admissible x, these premises imply these conclusions.”
+
 **Public form:** `fact`.
 
 **Mathematical function.** Ask the checker to establish a proposition from the current mathematical context.
@@ -1961,7 +1994,37 @@ forall t R:
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership).
 
+#### A syllogism: which context supports the conclusion?
+
+“All humans are mortal; Socrates is human; therefore Socrates is mortal” already specifies a reusable implication and its instance. The matching expressions are highlighted below. H1, H2 and G are explanatory table labels, not source declarations.
+
+| Mathematical sentence | Fact in the local context | How the conclusion uses it |
+| --- | --- | --- |
+| **Every human** is **mortal** (H1) | `forall person people: $is_human(person) => $is_mortal(person)` | Match the target predicate and substitute `person = socrates`. |
+| **Socrates is human** (H2) | `$is_human(socrates)` | Discharge the human premise required by that instance of H1. |
+| **Therefore Socrates is mortal** (G) | `$is_mortal(socrates)` | Cite **H1 together with H2**, then record the conclusion in its scope. |
+
+Here is the complete conditional statement. Its premises precede the outer `=>:`; the program proves that they imply the conclusion, rather than asserting those premises unconditionally.
+
+```litex
+abstract_prop is_human(person)
+abstract_prop is_mortal(person)
+
+forall people nonempty_set, socrates people:
+    $is_human(socrates)
+    forall person people:
+        $is_human(person)
+        =>:
+            $is_mortal(person)
+    =>:
+        $is_mortal(socrates)
+```
+
+Membership `socrates $in people` gives the domain of discourse; it does not itself say Socrates is human. Without H2 the example is rejected. The author writes the conclusion directly, while the verifier finds the supported universal instance and checks its antecedent.
+
 ### S03. Equality aliases
+
+**Mathematical reading:** “Let a denote this expression; use a as a name for the same mathematical value.”
 
 **Public form:** `let name = expression`.
 
@@ -2026,6 +2089,8 @@ larger constructors, name the outer mathematical object instead.
 
 ### S04. Arbitrary members
 
+**Mathematical reading:** “Take an arbitrary element x of the already established nonempty set S.”
+
 **Public form:** `have x S`.
 
 **Mathematical function.** Introduce an arbitrary member of a proved nonempty carrier.
@@ -2051,6 +2116,8 @@ x != 0
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements).
 
 ### S05. Typed values given by equality
+
+**Mathematical reading:** “Let x be this value, and check that it belongs to S.”
 
 **Public form:** `have x S = value`.
 
@@ -2086,6 +2153,8 @@ silently narrowed.
 
 ### S06. Members satisfying a proved specification
 
+**Mathematical reading:** “Choose x in S satisfying these conditions, after establishing that such an x exists.”
+
 **Public form:** `have x S: facts`.
 
 **Mathematical function.** Introduce witnesses satisfying a mathematical specification.
@@ -2110,6 +2179,8 @@ a + 1 = 3
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements).
 
 ### S07. Extract existential witnesses
+
+**Mathematical reading:** “By the established existential statement, take witnesses with the stated properties.”
 
 **Public form:** `obtain names from exist ...`.
 
@@ -2155,6 +2226,8 @@ This proof soft-fails: the witness membership is not enough to establish
 
 ### S08. Extract witnesses through a predicate
 
+**Mathematical reading:** “Unpack the existence supplied by this predicate instance and name its witnesses.”
+
 **Public form:** `obtain names from $P(args)`.
 
 **Mathematical function.** Use a named existential property as the witness interface.
@@ -2182,6 +2255,8 @@ copy $in R
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements), [S35 Existential witnesses](#s35-existential-witnesses), [S36 Unique existential witnesses](#s36-unique-existential-witnesses), [S07 Extract existential witnesses](#s07-extract-existential-witnesses).
 
 ### S09. Extract function preimages
+
+**Mathematical reading:** “Since this value lies in the image of f, take an input that f maps to it.”
 
 **Public form:** `have by fn_preimage: names from value $in fn_range(f)`.
 
@@ -2223,6 +2298,8 @@ the application equality (e.g. `z = f(x, y)`), so a later call `f(x, y)` is
 well-defined. For `replacement` it stores `x $in A` and `$P(x, y)`.
 
 ### S10. Replacement images
+
+**Mathematical reading:** “For each a in A, the relation specifies a unique output; form the set of those outputs by Replacement.”
 
 **Public form:** `have by replacement_axiom: Img from prop P, set A`.
 
@@ -2282,6 +2359,8 @@ functionality obligation before any membership goal is considered.
 
 ### S11. Piecewise functions
 
+**Mathematical reading:** “Define f by mutually exclusive, exhaustive cases, giving its value in each case.”
+
 **Public form:** `have fn ... by cases:`.
 
 **Mathematical function.** Define one function using exhaustive disjoint mathematical cases.
@@ -2314,6 +2393,8 @@ absolute(3) = 3
 
 ### S12. Functions by decreasing integer measure
 
+**Mathematical reading:** “Define f recursively from the lower bound, using only recursive calls with a smaller admissible integer measure.”
+
 **Public form:** `have fn ... by induc n from lower:`.
 
 **Mathematical function.** Define a recursive function whose recursive calls decrease an integer measure.
@@ -2345,6 +2426,8 @@ countdown(1) = countdown(0) = 0
 <a id="functions-from-unique-existence"></a>
 
 ### S13. Functions from unique existence
+
+**Mathematical reading:** “For each input, take the unique output whose existence and uniqueness have been proved; let f select it.”
 
 **Public form:** `have fn f by exist!:`.
 
@@ -2392,6 +2475,8 @@ forall x A:
 
 ### S14. Concrete predicates
 
+**Mathematical reading:** “Say that P holds exactly when the following defining conditions hold.”
+
 **Public form:** `prop P(parameters): facts`.
 
 **Mathematical function.** Define mathematical vocabulary by concrete defining clauses.
@@ -2416,6 +2501,8 @@ $is_positive(2)
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements).
 
 ### S15. Abstract predicate signatures
+
+**Mathematical reading:** “Let P denote a given relation, without supplying its definition here.”
 
 **Public form:** `abstract_prop P(parameters)`.
 
@@ -2451,6 +2538,8 @@ forall x R:
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements).
 
 ### S16. Structured carriers
+
+**Mathematical reading:** “Call objects with these components and conditions structures of this kind.”
 
 **Public form:** `struct Name<optional parameters>:`.
 
@@ -2522,6 +2611,8 @@ struct PosPoint:
 
 ### S17. Parameterized declaration families
 
+**Mathematical reading:** “For each admissible choice of parameters, make this declaration with those parameters.”
+
 **Public form:** `template<parameters>:`.
 
 **Mathematical function.** Define a reusable family of supported ordinary definitions indexed by mathematical parameters.
@@ -2575,6 +2666,8 @@ argument and guard. See the [checked function-type example](../examples/wd/templ
 <a id="named-interfaces-thm-axiom-release-thm-and-by-thm---fact"></a>
 
 ### S18. Named theorems
+
+**Mathematical reading:** “We prove the following result and give it a name for later use.”
 
 **Public form:** `thm name: ? goal`.
 
@@ -2644,6 +2737,8 @@ parentheses.
 
 ### S19. Named axioms
 
+**Mathematical reading:** “Take the following named proposition as an axiom of this development.”
+
 **Public form:** `axiom name: ? goal`.
 
 **Mathematical function.** Name an explicitly assumed proposition for reuse.
@@ -2670,6 +2765,8 @@ release thm background(2)
 <a id="strategies"></a>
 
 ### S20. Reusable proof strategies
+
+**Mathematical reading:** “Prove this pattern once so that later matching non-equality atomic goals can use the same argument.”
 
 **Public form:** `strategy name: ? forall ...`.
 
@@ -2722,6 +2819,8 @@ injection and no separate activation state.
 
 ### S21. Executable functions by cases
 
+**Mathematical reading:** “Use this exhaustive definition by cases both as a mathematical function and as an executable calculation.”
+
 **Public form:** `algo ... by cases:`.
 
 **Mathematical function.** Define a checked piecewise function together with an executable presentation for eval.
@@ -2748,6 +2847,8 @@ eval nonzero_flag(2)
 **Further detail:** [Checked algorithm execution](#checked-algorithm-execution).
 
 ### S22. Executable functions by induction
+
+**Mathematical reading:** “Use this decreasing recursive definition both to specify a function and to calculate its values.”
 
 **Public form:** `algo ... by induc measure from lower:`.
 
@@ -2776,6 +2877,8 @@ eval countdown(2)
 
 ### S23. Explicitly trusted facts
 
+**Mathematical reading:** “For now, assume these facts without supplying their proofs.”
+
 **Public form:** `trust: facts`.
 
 **Mathematical function.** Record deliberately assumed facts.
@@ -2799,6 +2902,8 @@ trust:
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements).
 
 ### S24. Trusted witness introduction
+
+**Mathematical reading:** “Assume there are objects with these properties, and give them these names.”
 
 **Public form:** `trust have names carriers: facts`.
 
@@ -2824,6 +2929,8 @@ trust have denominator R:
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements).
 
 ### S25. Publish theorem conclusions
+
+**Mathematical reading:** “Apply this theorem to these arguments and make its conclusions available.”
 
 **Public form:** `release thm name(arguments)`.
 
@@ -2852,6 +2959,8 @@ release thm zero_sides(2)
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements).
 
 ### S26. Select one theorem consequence
+
+**Mathematical reading:** “Apply this theorem to these arguments and select this particular atomic consequence.”
 
 **Public form:** `by thm name(arguments) => atomic_fact`.
 
@@ -2921,6 +3030,8 @@ stores only the requested atomic fact and its ordinary inferred consequences.
 
 ### S27. Open one struct definition layer
 
+**Mathematical reading:** “Open the selected structure definition and expose its outer components, membership facts and laws.”
+
 **Public form:** `release struct def expression`.
 
 **Mathematical function.** Expose the tuple/coordinate bridges, carriers and laws of a selected struct view.
@@ -2958,6 +3069,8 @@ claim:
 
 ### S28. Replay an object definition
 
+**Mathematical reading:** “Recall this named object’s definition and make its recorded interfaces available again.”
+
 **Public form:** `release obj def identifier`.
 
 **Mathematical function.** Expose the stored mathematical interfaces belonging to an identifier definition.
@@ -2983,6 +3096,8 @@ identity(2) = 2
 **Further detail:** [Definition lookup and supported source owners](#definition-lookup-and-supported-source-owners).
 
 ### S29. Expand finite integer membership
+
+**Mathematical reading:** “Since this value is in the finite integer range, list its possible values as alternatives.”
 
 **Public form:** `expand: value $in range(...)`.
 
@@ -3011,6 +3126,8 @@ claim:
 
 ### S30. Regularity release
 
+**Mathematical reading:** “By Regularity, this nonempty set has a member disjoint from the set itself.”
+
 **Public form:** `release regularity_axiom(S)`.
 
 **Mathematical function.** Apply the fixed set-theoretic Regularity foundation through its checked release interface.
@@ -3037,6 +3154,8 @@ or theorems. A successful strict run still depends on the fixed foundation
 used by this release; inspect the explicit source boundary.
 
 ### S31. Choice release
+
+**Mathematical reading:** “Each set in this family is nonempty; use Choice to obtain a function selecting one member from each.”
 
 **Public form:** `release axiom_of_choice: set F:`.
 
@@ -3067,6 +3186,8 @@ claim:
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements).
 
 ### S32. Zorn release
+
+**Mathematical reading:** “This nonempty partial order has upper bounds for its chains; apply Zorn’s Lemma to obtain a maximal element.”
 
 **Public form:** `release zorn_lemma: set S, prop P, prop U, prop M:`.
 
@@ -3214,6 +3335,8 @@ available when only nonemptiness of a general Cartesian product is needed.
 
 ### S33. Local claims
 
+**Mathematical reading:** “We first establish this claim by the following local argument, then retain its conclusion.”
+
 **Public form:** `claim: ? goal`.
 
 **Mathematical function.** Prove and export one target while keeping helper definitions and witnesses local.
@@ -3239,6 +3362,8 @@ claim:
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements), [S34 Local sketches](#s34-local-sketches), [S18 Named theorems](#s18-named-theorems).
 
 ### S34. Local sketches
+
+**Mathematical reading:** “Work through these steps locally as a sketch, without exporting their names or facts.”
 
 **Public form:** `sketch: statements`.
 
@@ -3266,6 +3391,8 @@ sketch:
 <a id="witnesses-obtain-and-preimages"></a>
 
 ### S35. Existential witnesses
+
+**Mathematical reading:** “To establish existence, take these values as witnesses and check the required properties.”
 
 **Public form:** `witness exist ... from values`.
 
@@ -3331,6 +3458,8 @@ Detailed output, and publish no target fact. See the
 
 ### S36. Unique existential witnesses
 
+**Mathematical reading:** “Take these witnesses, verify their properties, and show that any other admissible witnesses coincide with them.”
+
 **Public form:** `witness exist! ... from values`.
 
 **Mathematical function.** Prove existence and uniqueness of a complete witness tuple.
@@ -3355,6 +3484,8 @@ a = 2
 
 ### S37. Witnesses for named existential properties
 
+**Mathematical reading:** “To establish this existential property, take these values as its witnesses.”
+
 **Public form:** `witness $P(args) from values`.
 
 **Mathematical function.** Prove a supported concrete existential predicate through its witness interface.
@@ -3378,6 +3509,8 @@ witness $has_copy(2) from 2
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements), [S35 Existential witnesses](#s35-existential-witnesses), [S36 Unique existential witnesses](#s36-unique-existential-witnesses), [S07 Extract existential witnesses](#s07-extract-existential-witnesses).
 
 ### S38. Nonempty-set witnesses
+
+**Mathematical reading:** “This set is nonempty: the displayed value is one of its members.”
 
 **Public form:** `witness $is_nonempty_set(S) from value`.
 
@@ -3404,6 +3537,8 @@ a > 0
 <a id="proof-by-cases"></a>
 
 ### S39. Proof by exhaustive cases
+
+**Mathematical reading:** “Split into the following exhaustive cases and prove the same target in every case.”
 
 **Public form:** `by cases:`.
 
@@ -3448,6 +3583,8 @@ Function and algorithm cases use their separate return-expression syntax.
 <a id="proof-by-contradiction"></a>
 
 ### S40. Proof by contradiction
+
+**Mathematical reading:** “Assume the negation of the target and derive a contradiction.”
 
 **Public form:** `by contra:`.
 
@@ -3521,6 +3658,8 @@ by contra:
 
 ### S41. Finite-set enumeration
 
+**Mathematical reading:** “Check each element of these explicitly enumerable finite domains to establish the universal statement.”
+
 **Public form:** `by enumerate finite_set:`.
 
 **Mathematical function.** Prove a universal by checking every element of its finite displayed domains.
@@ -3584,6 +3723,8 @@ helper facts stay local; only the verified universal is stored outside.
 <a id="integer-induction"></a>
 
 ### S42. Ordinary induction
+
+**Mathematical reading:** “Prove the starting case, then prove the next case from the induction hypothesis.”
 
 **Public form:** `by induc n from lower:`.
 
@@ -3661,6 +3802,8 @@ claim:
 
 ### S43. Strong induction
 
+**Mathematical reading:** “Assume the result for all smaller admissible indices and use it to prove the current case.”
+
 **Public form:** `by strong_induc n from lower:`.
 
 **Mathematical function.** Use the invariant for all smaller admissible indices to prove the current index.
@@ -3684,6 +3827,8 @@ by strong_induc m from 0:
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements).
 
 ### S44. Finite range iteration
+
+**Mathematical reading:** “Run the proof through every point of this supported finite integer or Cartesian domain.”
 
 **Public form:** `by for:`.
 
@@ -3710,6 +3855,8 @@ by for:
 
 ### S45. Set extensionality
 
+**Mathematical reading:** “To prove the sets equal, take an arbitrary element and prove membership in both directions.”
+
 **Public form:** `by extension A = B`.
 
 **Mathematical function.** Prove two sets equal by both membership directions.
@@ -3733,6 +3880,8 @@ by extension intersect(R, R) = R
 <a id="bounded-iteration-and-extensionality"></a>
 
 ### S46. Function extensionality
+
+**Mathematical reading:** “Establish the common domain and prove the two functions agree at every input.”
 
 **Public form:** `by fn_extension f = g`.
 
@@ -3789,6 +3938,8 @@ by fn_extension f = g
 <a id="explicit-definitions-and-by-def-preview"></a>
 
 ### S47. Explicit definition folding
+
+**Mathematical reading:** “By definition, establish this property by checking each of its defining conditions.”
 
 **Public form:** `by def positive_fact`.
 
@@ -3882,6 +4033,8 @@ the predicate after the required existential fact has already been proved.
 
 ### S48. Register reflexive predicate laws
 
+**Mathematical reading:** “Verify and record that this relation holds between every admissible object and itself.”
+
 **Public form:** `register reflexive: ? forall ...`.
 
 **Mathematical function.** Register a proved reflexive law for a concrete binary predicate.
@@ -3930,6 +4083,8 @@ rewrite property.
 
 ### S49. Register symmetric predicate laws
 
+**Mathematical reading:** “Verify and record that whenever this relation holds from x to y, it also holds from y to x.”
+
 **Public form:** `register symmetric: ? forall ...`.
 
 **Mathematical function.** Register a proved symmetric law for a concrete binary predicate.
@@ -3964,6 +4119,8 @@ forall a, b set:
 
 ### S50. Register transitive predicate laws
 
+**Mathematical reading:** “Verify and record that if x is related to y and y to z, then x is related to z.”
+
 **Public form:** `register transitive: ? forall ...`.
 
 **Mathematical function.** Register a proved transitive law for a concrete binary predicate.
@@ -3996,6 +4153,8 @@ register transitive:
 
 ### S51. Exact evaluation
 
+**Mathematical reading:** “Calculate the exact value of this supported expression or algorithm call and retain the resulting equality.”
+
 **Public form:** `eval expression`.
 
 **Closed-numeric source WD.** When the source is a closed numeric tree (number literals under arithmetic / integer / supported `sqrt`/`log` ops, no free identifiers), `eval` uses a dedicated linear well-definedness mode: child formation and non-carrier domain checks only, then one root `$in C` gate. This avoids the ordinary per-node `$in C` re-entry that is exponential on long left-associated products such as `2*2*…*2`. It does not change ordinary object WD for `let` / facts, and it does not write exploratory WD into ExecEnv memory.
@@ -4020,6 +4179,8 @@ eval 2 + 3
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements).
 
 ### S52. Release a tuple definition
+
+**Mathematical reading:** “Expand this tuple’s sequence structure and make its coordinate facts explicit.”
 
 **Public form:** `release tuple def object`.
 
@@ -12274,7 +12435,7 @@ non-strict inclusion have distinct spellings.
 ## Verification and coverage
 
 All dictionary categories have stable entries and source ownership. This
-edition distinguishes 51 public statement forms, 93 active object leaves,
+edition distinguishes 52 public statement forms, 93 active object leaves,
 20 dedicated builtin atomic families (with their negative counterparts), and
 two native certificate predicates. Public aliases share the relevant entry;
 the witness/unique-witness distinction is counted as separate statement forms.
@@ -12455,6 +12616,12 @@ The preceding `have a R = 2` example illustrates the knowledge cycle: establish 
 At the native syntax and execution layer, numerals, addition and summation have direct constructors such as `Number`, `Add` and `Sum` ([object AST](../src/ast/obj.rs)). [Closed arithmetic checking](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_equality/calculate_closed_equal_fact.rs) need not replay a construction of numerals from successor operations or set encodings. This is a choice of semantic and implementation level. The primitives still need a mathematical interpretation and justified checking rules. SMT-LIB's interpreted integer and real arithmetic gives an established example of specifying numerals and operations through their intended models [SMTTheory]. `Obj`/`Fact`/`Stmt` are syntactic categories, not a claim to have eliminated primitive structure or logical assumptions.
 
 ITP and ATP chiefly describe the organization and automation of proving; they do not identify a mathematical foundation. The TPTP workflow presents automatic search for consequences of a supplied problem [ATPProcess], while Isabelle combines interactive proof development, automation and multiple object logics [IsabelleGeneric]. In broad terminology, Litex can serve as a proof assistant and contains automated reasoning. Its distinguishing default interface is the incremental checking and reuse of mathematical statements; those broad labels do not fully describe that design.
+
+Litex's choice of author-visible granularity is a further dimension. Familiar mathematical objects, relations, statements and proof actions are native constructs, so the author can define a function, use a finite sum or split into cases at the abstraction level of ordinary mathematics. Here “semantic primitives” means units available through the authoring interface; they can still have parameters and internal structure. These source-visible constructs are **only part of Litex's native semantics**, which also includes domain and well-definedness conditions, scope, context updates and reuse of accepted facts.
+
+Builtin verification rules have a different role: they are **kernel mechanisms that justify those source steps**. Authors regularly see and write objects and statements, while ordinary proof source need not enumerate the rules the verifier will select. When a rule is actually used, the corresponding verification evidence can expose that selected rule and its cited premises. For `let a = 1` followed by `a + 2 = 3`, the source contains the alias and proposed equality; the retained evidence cites `a = 1` and records substitution followed by closed calculation. The native source vocabulary and the kernel's rule inventory are therefore distinct layers of the interface.
+
+Lean may expose everyday mathematics through notation, library definitions, elaboration and tactics, without the same surface correspondence or native granularity as Litex. Those layers nevertheless lead to precisely defined terms and kernel-checkable inferences [Lean21], [LeanElab]. This provides a target for interpreting Litex's constructs and reconstructing its recorded reasoning: supported compilation needs a semantic interpretation and corresponding Lean proofs for the rules actually used. The two languages need not have matching surface sentences for that correspondence to be defined. Supported Lean reconstruction is the implemented route; the statement does not extend its coverage to every native construct or rule.
 
 Separating this methodology from a particular encoding suggests a research direction for other foundations. It does not establish that the current implementation supports arbitrary foundations. A port must supply the new interpretation, expression-formation conditions and justified inference rules. Foundation independence is itself a substantive contract, as illustrated by MMT [MMT]. Litex currently has a concrete set-based source model; its [Lean semantic API](../lean/Litex.lean) and [proof-reconstruction compiler](../src/compile_to_lean/README.md) give a supported interpretation route, not a completed soundness proof for the entire native engine.
 
