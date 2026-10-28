@@ -1,0 +1,28 @@
+thm contract_field_zero_linear_no_solution:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,b,x K:
+        b!=F.zero
+        =>:
+            F.mul(F.zero,x)!=b
+    release thm Algebra::field::field_zero_linear_no_solution(K,F,b,x)
+
+thm contract_field_zero_linear_two_solutions:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>:
+        exist x,y K st {x!=y,F.mul(F.zero,x)=F.zero,F.mul(F.zero,y)=F.zero}
+    release thm Algebra::field::field_zero_linear_two_solutions(K,F)
+
+thm contract_field_zero_affine_all_solutions:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,b,x K:
+        F.add(F.mul(F.zero,x),b)=b
+    release thm Algebra::field::field_zero_affine_all_solutions(K,F,b,x)
+
+thm contract_field_zero_affine_no_solution:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,b,c,x K:
+        b!=c
+        =>:
+            F.add(F.mul(F.zero,x),b)!=c
+    release thm Algebra::field::field_zero_affine_no_solution(K,F,b,c,x)
+
+thm contract_field_zero_affine_two_solutions:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,b K:
+        exist x,y K st {x!=y,F.add(F.mul(F.zero,x),b)=b,F.add(F.mul(F.zero,y),b)=b}
+    release thm Algebra::field::field_zero_affine_two_solutions(K,F,b)

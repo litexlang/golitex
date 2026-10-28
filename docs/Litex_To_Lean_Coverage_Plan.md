@@ -4510,3 +4510,425 @@ evaluation/WD; matrix/algorithm evaluation and output-size work are deferred.
 Local evidence is `eval-integer-checkpoint.json`, `eval-integer-final-checks.json`,
 `eval-integer-final-focused.log` and `eval-integer-final-axioms.log` in the compiler
 workspace. Work pauses here at the user's request.
+
+
+## Exact rational square-root evaluation — 2026-10-28
+
+`eval sqrt(x)` now compiles when the checked substituted radicand has an exact
+rational principal root. Closed eval retains the source nonnegativity proof;
+the compiler derives real membership from the original child WD and exact
+denotation. Ordinary nonclosed WD still consumes both original requirements.
+The numeric proof uses the existing `sqrtValue_number` and square-root laws.
+No AST, Runtime, result ABI or Core changes were needed.
+
+Six source/generated pairs cover [numeric roots](../lean/examples/evaluated_square_roots/),
+[fractions](../lean/examples/evaluated_fractional_square_roots/),
+[variable citations](../lean/examples/evaluated_cited_square_roots/),
+[formula functions](../lean/examples/evaluated_function_square_roots/),
+[local scope](../lean/examples/evaluated_local_square_roots/) and
+[aggregate iterands](../lean/examples/evaluated_square_root_aggregates/).
+They export 22 theorems. All six and 38 related pairs pass strict source
+verification and independent byte-identical regeneration; Lean 4.31.0 includes
+4 fresh checks and 40 reused checks of identical bytes under unchanged Core and
+toolchain. The 279-export axiom audit finds only `propext`, `Classical.choice`
+and `Quot.sound`. Six release-source checks pass separately.
+
+The current-library harness passes 68 canonical Rust tests, including six new
+square-root tests for exact values, omitted/replaced evidence, citations and
+negative/irrational boundaries. Full Cargo test-crate verification retains the
+missing fixture limitation above. `eval sqrt(-1)` fails source WD; `eval sqrt(2)`
+verifies in Litex but remains rejected by the exact-rational compiler adapter.
+Local evidence: `eval-sqrt-checkpoint.json`, `eval-sqrt-final-checks.json`,
+`eval-sqrt-final-focused.log` and `eval-sqrt-final-axioms.log` in the compiler
+workspace.
+
+
+## Exact rational logarithm evaluation — 2026-10-28
+
+`eval log(b,x)` compiles for the exact rational values returned by the native
+evaluator. The compiler checks both original child WD proofs and their numeric
+denotations, derives the closed-eval base/argument domain conditions, and uses
+the existing `rationalLogValue` law. Ordinary nonclosed log constructors retain
+their five original requirements. It also replays base/argument congruence in
+recorded evaluation and function expansion. No AST, Runtime, result ABI or
+Core change was needed.
+
+Five source/generated pairs cover [logarithms](../lean/examples/evaluated_logarithms/),
+[fractional and negative values](../lean/examples/evaluated_rational_logarithms/),
+[arithmetic](../lean/examples/evaluated_logarithm_arithmetic/),
+[functions](../lean/examples/evaluated_logarithm_functions/) and
+[local scope](../lean/examples/evaluated_local_logarithms/); they export 18
+theorems. All five and 44 related pairs pass strict source verification and
+independent byte-identical regeneration. Lean 4.31.0 includes 3 fresh checks
+and 46 reused checks of identical bytes under unchanged Core/toolchain. The
+297-export axiom audit finds only `propext`, `Classical.choice` and `Quot.sound`.
+Five release-source checks pass separately.
+
+The current-library harness passes 72 canonical Rust tests, including four
+new logarithm tests for exact results, child WD/order and invalid domains.
+Full Cargo test-crate verification retains the missing fixture limitation.
+Native evaluation rejects `log(2,3)` as not exactly evaluable and also rejects
+direct `log(2,a)` after `have a R = 8`. The valid aggregate
+`sum(1,3,fn(k Z) R {log(2,2^k)})` hit the separate compiler
+`WD/Pow/NonClosedIntegerExponent` boundary at this checkpoint; the next
+increment below addresses it. Local evidence is
+`eval-log-checkpoint.json`, `eval-log-final-checks.json`,
+`eval-log-final-focused.log` and `eval-log-final-axioms.log`.
+
+
+## Symbolic integer powers and nonzero rule — 2026-10-28
+
+An arbitrary Litex integer exponent now compiles with the original generic host
+type. From the recorded `exponent $in Z` proof the compiler obtains an integer
+representative and its denotation equality via `M.integer_members`, passing
+that and the recorded nonzero base to `Litex.powInt`. Natural exponent paths
+retain their previous domain and may still use zero bases. Closed evaluation
+also makes the natural-exponent cast explicit, including exponent 1.
+
+The selected `PowNonzeroFromBase` rule now replays its ordered integer-member
+and base-nonzero proofs through the proved `Litex.powNonzeroOfBase` theorem.
+The theorem obtains native complex/integer representatives from existing
+semantic laws and applies `zpow_ne_zero`; it introduces no project axiom.
+Both inequality orientations and computed zero are supported.
+
+Seven source/generated pairs cover [integer exponent WD](../lean/examples/integer_exponent_well_defined/),
+[negative exponent evaluation](../lean/examples/evaluated_negative_integer_exponent/),
+[a sum of logarithms of integer powers](../lean/examples/logarithms_of_integer_powers/),
+[nonzero number powers](../lean/examples/integer_exponent_nonzero/),
+[the generic nonzero theorem](../lean/examples/integer_power_nonzero_theorem/),
+[natural exponents](../lean/examples/natural_exponent_nonzero/) and
+[computed zero](../lean/examples/power_nonzero_computed_zero/). They export
+24 theorems. All seven and nine related pairs pass strict verification and
+byte-identical generation. Lean 4.31.0 checks 12 fresh pairs and reuses four
+identical checks against the same new Core/toolchain; 92 exports audit only
+`propext`, `Classical.choice`, `Quot.sound`. Seven release-source checks pass.
+The current-library harness passes 83 tests. A missing, reordered or changed
+original membership/base premise is rejected. No AST, Runtime or result ABI
+change; full Cargo test-crate remains limited by the missing fixture.
+Local evidence: `power-nonzero-checkpoint.json`, `power-nonzero-final-checks.json`,
+`power-nonzero-final-focused.log` and `power-nonzero-final-axioms.log`.
+
+
+## Square-root nonzero rule — 2026-10-28
+
+The selected `SqrtNonzeroFromPositiveArg` rule now compiles: its original
+`0 < x` proof and sqrt WD are replayed through the proved
+`Litex.sqrtNonzeroOfPositive` theorem. Both inequality orientations and an
+exactly computed zero endpoint are supported; changed positive-argument proofs
+are rejected. No AST, Runtime or result ABI changed and no project axiom was
+added.
+
+Four source/generated pairs cover [a positive argument](../lean/examples/square_root_nonzero/),
+[the generic theorem](../lean/examples/square_root_nonzero_theorem/),
+[reverse orientation](../lean/examples/square_root_nonzero_reversed/) and
+[computed zero](../lean/examples/square_root_nonzero_computed_zero/); they
+export 16 theorems. All four and 12 related pairs pass strict source verification
+and byte-identical generation. Lean 4.31.0 checks 12 fresh pairs and reuses
+four identical checks under the same new Core/toolchain; 88 exported theorems
+audit only `propext`, `Classical.choice` and `Quot.sound`. Four release-source
+checks pass separately. The current-library harness passes 86 tests. Source
+`sqrt(0) != 0` is rejected. The full Cargo test-crate fixture limitation
+remains. Local evidence: `sqrt-nonzero-checkpoint.json`,
+`sqrt-nonzero-final-checks.json`, `sqrt-nonzero-final-focused.log` and
+`sqrt-nonzero-final-axioms.log`.
+
+
+## Nonzero product factors — 2026-10-28
+
+The selected `ProductComponentNonzero` builtin now compiles by citing the
+exact stored product-nonzero fact and applying the proved
+`Litex.productNonzeroFactors` theorem. The compiler validates which factor
+the conclusion names and checks both zero endpoints from the original
+evidence. Both fact orientations, both factors, computed zero and a zero
+that is itself a product are supported. No AST, Runtime or result ABI change
+and no project axiom was added.
+
+Four source/generated pairs cover [both factors](../lean/examples/nonzero_product_factors/),
+[reversed inequalities](../lean/examples/nonzero_product_reversed/),
+[computed zero](../lean/examples/nonzero_product_computed_zero/) and
+[a zero product](../lean/examples/nonzero_product_zero_product/); they export
+four theorems. All four and 12 related pairs pass strict source verification
+and byte-identical generation. Lean 4.31.0 checks 12 fresh and reuses four
+identical pairs under the same new Core/toolchain; 47 exported theorem axiom
+checks find only `propext`, `Classical.choice` and `Quot.sound`. Four release
+source checks pass. The current-library harness passes 89 tests; forged citation,
+wrong component and wrong zero are rejected. Full Cargo test-crate remains
+limited by the missing fixture. Local evidence: `product-nonzero-checkpoint.json`,
+`product-nonzero-final-checks.json`, `product-nonzero-final-focused.log` and
+`product-nonzero-final-axioms.log`.
+
+
+## Absolute-value nonzero rule — 2026-10-28
+
+The selected `AbsNonzeroFromArg` rule now compiles by replaying the original
+argument-nonzero proof and absolute-value WD through the proved
+`Litex.absNonzeroOfArg` theorem. Both inequality orientations and an exactly
+computed zero endpoint are supported; a proof about another argument is
+rejected. No AST, Runtime or result ABI change and no project axiom was added.
+
+Three source/generated pairs cover [a generic real](../lean/examples/absolute_value_nonzero/),
+[reverse orientation](../lean/examples/absolute_value_nonzero_reversed/) and
+[computed zero](../lean/examples/absolute_value_nonzero_computed_zero/). All
+three and 13 related pairs pass strict source verification and byte-identical
+generation. Lean 4.31.0 checks 13 fresh and reuses three identical pairs under
+the same new Core/toolchain; 47 exports audit only `propext`, `Classical.choice`
+and `Quot.sound`. Three release-source checks pass; the current-library harness
+passes 92 tests. Source `|0| != 0` is rejected. Full Cargo test-crate remains
+limited by the missing fixture. Local evidence: `abs-nonzero-checkpoint.json`,
+`abs-nonzero-final-checks.json`, `abs-nonzero-final-focused.log` and
+`abs-nonzero-final-axioms.log`.
+
+
+## Exponential and sign nonzero rules — 2026-10-28
+
+Selected `ExpNonzero`, `SignNonzeroFromArgument` and `SignNonzeroReflection`
+results now compile through the proved `Litex.expNonzero` and
+`Litex.signZeroIffArgZero` theorems. Exponential WD retains its real argument;
+the sign routes cite the exact recorded nonzero fact, and reflection also
+replays its original real-membership proof. Both orientations and a computed
+zero endpoint are supported. No AST, Runtime or result ABI change and no
+project axiom was added.
+
+Seven source/generated pairs cover [exponential](../lean/examples/real_exponential_nonzero/),
+[sign from argument](../lean/examples/real_sign_nonzero/),
+[sign reflection](../lean/examples/real_sign_reflects_nonzero/), their
+[exponential](../lean/examples/real_exponential_nonzero_reversed/),
+[sign](../lean/examples/real_sign_nonzero_reversed/) and
+[reflection](../lean/examples/real_sign_reflects_nonzero_reversed/) reverse
+orientations, and [computed zero](../lean/examples/real_sign_nonzero_computed_zero/).
+All seven and nine related pairs pass strict source verification and identical
+regeneration. Lean 4.31.0 checks nine fresh and reuses seven identical pairs
+under the same new Core/toolchain; 46 exports audit only `propext`,
+`Classical.choice` and `Quot.sound`. Seven release-source checks pass; the
+current-library harness passes 96 tests. Forged citations, wrong subjects and
+changed real membership are rejected; `sign(0) != 0` fails source verification.
+Full Cargo test-crate retains the missing fixture limitation. Local evidence:
+`exp-sign-nonzero-checkpoint.json`, `exp-sign-nonzero-final-checks.json`,
+`exp-sign-nonzero-final-focused.log` and `exp-sign-nonzero-final-axioms.log`.
+
+## Exact real-valued complex evaluation — 2026-10-28
+
+Closed complex expressions can be evaluated through `re`, `img` and `C_abs`
+when the result is rational. The compiler reuses the original object WD and
+numeric bridge. Five source/generated pairs cover
+[coordinates](../lean/examples/evaluated_complex_coordinates/),
+[modulus](../lean/examples/evaluated_complex_modulus/),
+[coordinate arithmetic](../lean/examples/evaluated_complex_coordinate_arithmetic/),
+[products](../lean/examples/evaluated_complex_product_coordinate/) and
+[quotients](../lean/examples/evaluated_complex_quotient_coordinate/).
+Each source passed strict execution and its generated file passed Lean 4.31.0;
+the 12 generated theorems use only Lean's `propext`, `Classical.choice` and
+`Quot.sound`. The focused Rust harness passed 100 tests, including rejection
+of changed results and missing WD evidence. Full Cargo test remains blocked by
+the missing `examples/_internal/regression/lambda_alpha_equivalence.lit` fixture.
+Irrational modulus outputs and source evaluation of `re(z)` after a named
+definition remain outside this checked slice. Local evidence:
+`complex-coordinate-eval-final.log` and `complex-coordinate-eval-tests.log`.
+
+## Complex conjugate and modulus nonzero — 2026-10-28
+
+The selected `ConjugateNonzeroFromArgument` and `ComplexModulusNonzero` rules
+now replay their original argument-nonzero proof and object WD through proved
+semantic bridges. Four strict source/generated pairs, including both
+[conjugate](../lean/examples/complex_conjugate_nonzero/) and
+[modulus](../lean/examples/complex_modulus_nonzero/) and reversed orientations,
+passed Lean 4.31.0. Eight related pairs were also rechecked with the new Core.
+The four new and 17 related exported theorems use only `propext`,
+`Classical.choice` and `Quot.sound`. A 103-test Rust batch and four focused
+tests passed; the latter include changed-premise and missing-WD rejection.
+The full Cargo test crate remains blocked by the missing fixture noted above.
+Local receipts: `complex-nonzero-focused.log`, `complex-nonzero-related.log`,
+`complex-nonzero-rust-batch.log` and `complex-nonzero-rust-focused-updated.log`.
+
+## Least-common-multiple nonzero — 2026-10-28
+
+`LcmNonzeroFromNonzeroOperands` now replays both ordered operand proofs and
+the original integer-domain WD through the proved `lcmNonzeroOfArgs` bridge.
+The [ordinary](../lean/examples/lcm_nonzero/) and
+[reversed](../lean/examples/lcm_nonzero_reversed/) strict source/generated
+pairs pass Lean 4.31.0, as do six related pairs. The two new and 44 related
+exported theorems use only `propext`, `Classical.choice` and `Quot.sound`.
+All 108 related Rust tests pass, including swapped-premise, missing-WD and
+zero-input controls. The full Cargo test crate remains blocked by the missing
+fixture noted above. Local receipts: `lcm-nonzero-focused.log`,
+`lcm-nonzero-related.log` and `lcm-nonzero-rust-batch.log`.
+
+## Logarithm nonzero — 2026-10-28
+
+`LogNonzeroFromNonunitArgument` replays the recorded base and argument guards
+and original log WD. Each guard may be above one, positive and below one, or
+positive and nonunit. The [explicit nonunit](../lean/examples/log_nonzero_positive_nonunit/),
+[above-one](../lean/examples/log_nonzero_above_one/),
+[below-one](../lean/examples/log_nonzero_below_one/),
+[mixed](../lean/examples/log_nonzero_mixed_guards/) and
+[reversed](../lean/examples/log_nonzero_reversed/) pairs pass strict source
+execution and Lean 4.31.0; six related pairs also pass. The five new and
+18 related exports use only `propext`, `Classical.choice` and `Quot.sound`.
+A 112-test Rust batch passes; the focused tests also cover swapped guards,
+missing WD and argument one. The final reversed example was added after the
+batch and is covered by the final focused tests and its own Lean check.
+The full Cargo test crate remains blocked by the missing fixture noted above.
+Local receipts: `log-nonzero-focused.log`, `log-nonzero-mixed.log`,
+`log-nonzero-reversed.log`, `log-nonzero-related.log` and
+`log-nonzero-rust-batch.log`.
+
+## Inequality from a nonzero sum — 2026-10-28
+
+`InequalityFromSumNonzero` now cites the original nonzero-sum FactId and
+replays original WD. Four strict source/generated pairs cover
+[ordinary](../lean/examples/inequality_from_nonzero_sum/),
+[reversed](../lean/examples/inequality_from_reversed_nonzero_sum/),
+[swapped](../lean/examples/inequality_from_swapped_nonzero_sum/) and
+[zero-subtraction](../lean/examples/inequality_zero_sub_from_nonzero_sum/)
+forms. All pass Lean 4.31.0, as do five related pairs; the four new and five
+related exports use only `propext`, `Classical.choice` and `Quot.sound`.
+All 116 focused-batch Rust tests pass, including wrong citations, changed
+subjects, missing WD and absent-premise controls. The full Cargo test crate
+remains blocked by the missing fixture noted above. Local receipts:
+`sum-nonzero-focused.log`, `sum-nonzero-related.log` and
+`sum-nonzero-rust-batch.log`.
+
+## Positive nonunit integer powers — 2026-10-28
+
+`PositiveNonunitIntegerPower` replays the original base guard, integer
+membership, exponent-nonzero proof and power WD. Four checked pairs cover
+[explicit nonunit](../lean/examples/positive_nonunit_integer_power/),
+[above-one](../lean/examples/nonunit_integer_power_above_one/),
+[below-one](../lean/examples/nonunit_integer_power_below_one/) and
+[negative exponent](../lean/examples/nonunit_negative_integer_power/) cases.
+All pass strict source execution and Lean 4.31.0, as do five related pairs.
+The four new and seven related exports use only `propext`, `Classical.choice`
+and `Quot.sound`. A 120-test Rust batch and four final focused tests pass,
+including wrong base/exponent evidence, missing WD, and unit or zero cases.
+The negative-exponent example was added after the batch and is also covered
+by the final focused test and its own Lean check. Full Cargo test remains
+blocked by the missing fixture noted above. Local receipts:
+`power-nonunit-focused.log`, `power-nonunit-negative.log`,
+`power-nonunit-related.log` and `power-nonunit-rust-batch.log`.
+
+## Exact irrational complex modulus evaluation — 2026-10-28
+
+For a directly evaluated closed complex modulus, the compiler now preserves
+the original exact square-root result and WD. The
+[sqrt(2)](../lean/examples/evaluated_irrational_complex_modulus/) and
+[sqrt(5)](../lean/examples/evaluated_irrational_complex_modulus_five/) pairs
+pass strict Litex execution and Lean 4.31.0, as do five related pairs. The
+four new and thirteen related exports use only `propext`, `Classical.choice`
+and `Quot.sound`. All 123 focused-batch Rust tests pass, including changed
+radicand, missing source WD and invalid citation controls. The direct route
+rejects recorded rewrites, function calls and aggregates; arbitrary radical
+arithmetic is not claimed here. The full Cargo test crate remains blocked by
+the missing fixture noted above. Local receipts: `modulus-radical-focused.log`,
+`modulus-radical-related.log` and `modulus-radical-rust-batch.log`.
+
+## Unchanged exact radical evaluation — 2026-10-28
+
+For a closed radical evaluation whose canonical exact result is the original
+object, the compiler checks the result and replays the original WD before
+emitting the self-equality. The [single root](../lean/examples/evaluated_exact_square_root/),
+[two-root sum](../lean/examples/evaluated_exact_radical_sum/) and
+[three-root sum](../lean/examples/evaluated_exact_radical_sum_three/) pairs
+pass strict Litex and fresh Lean 4.31.0 checks. Five related pairs regenerate
+identically and reuse their same-Core Lean checks. Their fourteen exports and
+the five new exports use only `propext`, `Classical.choice` and `Quot.sound`.
+The current-library Rust harness passes 127 tests, including one local
+diagnostic, with changed output, missing WD, bad citation and unsupported
+radical simplification controls. The full Cargo test crate remains blocked by
+the missing fixture noted above. Local receipts: `unchanged-radical-final.log`,
+`unchanged-radical-related.log` and `unchanged-radical-rust-final.log`.
+
+## Tangent and cotangent nonzero — 2026-10-28
+
+The selected `TanNonzeroFromSin` and `CotNonzeroFromCos` rules cite their
+original numerator facts and retain the original denominator WD. Four strict
+source/generated pairs cover [tangent](../lean/examples/tangent_nonzero_from_sine/),
+[cotangent](../lean/examples/cotangent_nonzero_from_cosine/) and their reversed
+orientations. All pass Lean 4.31.0; three related trigonometry pairs also pass.
+The four new and four related exports use only `propext`, `Classical.choice`
+and `Quot.sound`. The Rust batch passes 130 tests, including one local
+diagnostic; four final focused tests additionally check missing WD, incorrect
+citations, wrong arguments and zero boundaries. The missing-WD check was added
+after the batch. The full Cargo test crate remains blocked by the missing
+fixture noted above. Local receipts: `trig-quotient-focused.log`,
+`trig-quotient-related.log` and `trig-quotient-rust-batch.log`.
+
+## Sine and cosine nonzero under negation — 2026-10-28
+
+`SinNonzeroNegation` and `CosNonzeroNegation` cite the original nonzero
+fact and preserve source and target WD. Four strict source/generated pairs
+cover [sine](../lean/examples/sine_nonzero_under_negation/),
+[cosine](../lean/examples/cosine_nonzero_under_negation/) and reversed
+zero-subtraction forms. All pass Lean 4.31.0, as do four related trigonometry
+pairs; the four new and five related exports use only `propext`,
+`Classical.choice` and `Quot.sound`. The Rust harness passes 135 tests,
+including one local diagnostic and controls for wrong citations, arguments,
+zero, missing WD and missing premises. The full Cargo test crate remains
+blocked by the missing fixture noted above. Local receipts:
+`trig-negation-focused.log`, `trig-negation-related.log` and
+`trig-negation-rust-batch.log`.
+
+## Euler's number is not one — 2026-10-28
+
+The selected `EulerNonunit` rule now replays through a proved Lean theorem.
+Three strict source/generated pairs cover [e != 1](../lean/examples/euler_not_one/),
+its reversed form and a computed representation of one. All pass Lean 4.31.0,
+as do three related constant and logarithm pairs. The three new and fourteen
+related exports use only `propext`, `Classical.choice` and `Quot.sound`. The
+Rust harness passes 138 tests, including one local diagnostic and controls
+for wrong subject, wrong endpoint and missing WD. The full Cargo test crate
+remains blocked by the missing fixture noted above. Local receipts:
+`euler-nonunit-focused.log`, `euler-nonunit-related.log` and
+`euler-nonunit-rust-batch.log`.
+
+## Closed linear radical evaluation — 2026-10-28
+
+The compiler replays selected direct closed radical evaluations using their
+original WD and an independently Lean-checked exact normalization. The
+[sum](../lean/examples/evaluated_radical_simplification/),
+[single root](../lean/examples/evaluated_simplified_square_root/),
+[difference](../lean/examples/evaluated_radical_difference/) and
+[repeated sum](../lean/examples/evaluated_radical_repeated_sum/) and
+[rational scaling](../lean/examples/evaluated_radical_scaling/) pairs pass
+strict Litex execution, deterministic regeneration and fresh Lean 4.31.0
+checks. Their six exports use only `propext`, `Classical.choice` and
+`Quot.sound`. The current-library test harness passes 140 tests, including
+one local diagnostic; controls reject changed outputs, missing WD, bad
+citations and products of two irrational roots. Full Cargo tests remain
+blocked by the missing fixture noted above. Direct linear combinations and
+rational scaling are the intended domain; at that checkpoint products of
+irrational roots, division and recorded rewrites, function calls or aggregate
+evaluations were not covered. Local receipts: `linear-radical-final2.log`,
+`linear-radical-scale.log` and `linear-radical-final2-batch.log`.
+
+## Direct square-root products — 2026-10-28
+
+Direct products of two square roots of closed nonnegative rational numbers
+replay the source WD and exact result. The [irrational product](../lean/examples/evaluated_radical_product/),
+[square](../lean/examples/evaluated_radical_square/),
+[scaled radical](../lean/examples/evaluated_radical_product_scaled/) and
+[integer product](../lean/examples/evaluated_radical_product_integer/) pairs
+pass strict Litex execution, deterministic regeneration and fresh Lean 4.31.0
+checks. Four exports use only `propext`, `Classical.choice` and `Quot.sound`.
+The current-library harness passes 141 tests including one local diagnostic;
+controls reject changed results, bad citations and missing WD. Products of
+radical sums, division, recorded rewrites, function calls and aggregates are
+still outside this direct route. Full Cargo tests remain blocked by the missing
+fixture noted above. Local receipts: `radical-product-final.log` and
+`radical-product-final-batch.log`.
+
+## Cited exact radicals — 2026-10-28
+
+The exact radical route now replays recorded equality citations before
+normalizing the rewritten semantic value. The original source and result
+objects retain their WD evidence. Three strict source/generated pairs cover a
+[cited root](../lean/examples/evaluated_cited_irrational_root/),
+[cited product](../lean/examples/evaluated_cited_radical_product/) and
+[cited sum](../lean/examples/evaluated_cited_radical_sum/). They and nine
+related pairs pass deterministic regeneration and fresh Lean 4.31.0 checks;
+their 21 exports use only `propext`, `Classical.choice` and `Quot.sound`. The
+current-library harness passes 142 tests including one local diagnostic,
+with missing citation, changed result and missing WD controls. Products of
+radical sums, division, function calls and aggregate records remain outside
+this route. Full Cargo tests remain blocked by the missing fixture noted
+above. Local receipts: `cited-radical-batch.log` and
+`cited-radical-rust-batch.log`.

@@ -1,0 +1,13 @@
+{
+  "false_all_fixed": "conclusion",
+  "false_reversed_product": "conclusion",
+  "false_reverse_conjugator": "conclusion",
+  "false_constant_bijection": "conclusion",
+  "wrong_domain": "goal_well_defined",
+  "false_conjugate_fixed": "search_proof",
+  "false_conjugate_sign": "search_proof",
+  "missing_commuting": "premise",
+  "missing_fixed": "premise",
+  "missing_abelian": "premise",
+  "missing_all_fixed": "premise"
+}

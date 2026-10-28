@@ -163,7 +163,14 @@ impl Runtime {
             right: ambient.clone(),
             line_file: None,
         };
-        if let Some(domain_equal) = self.search_equal_fact_proof_directly(&equation) {
+        let domain_equal = self.search_equal_fact_proof_directly(&equation).or_else(|| {
+            self.search_homogeneous_cartesian_equality(&equation).map(|proof| {
+                EqualFactSearchedProof::ByBuiltinRule(
+                    EqualitySearchProofByBuiltinRule::HomogeneousCartesianEqualsFiniteSequence(proof),
+                )
+            })
+        });
+        if let Some(domain_equal) = domain_equal {
             let condition = member(self, point.clone(), ambient.clone());
             let point_member = self.verify_fact(&condition, state)?;
             if !point_member.is_failed() {

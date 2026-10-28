@@ -1,0 +1,10 @@
+{
+  "inverse_zero": "value_well_defined",
+  "false_characteristic": "search_proof",
+  "false_mul_table": "search_proof",
+  "zero_linear_unique": "premise",
+  "inverse_product_zero": "premise",
+  "outside_carrier": "well_defined",
+  "wrong_field_carrier": "argument_type",
+  "equal_affine_no_solution": "premise"
+}

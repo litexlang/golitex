@@ -10389,6 +10389,17 @@ fn visit_verify_formation<T>(
         }
         VerifyFactResult::OrFact(result) => {
             if let VerifyOrFactResult::Success(proof) = result.as_ref() {
+                let range_member = match &proof.searched_proof {
+                    OrFactSearchedProof::ByBuiltinRule(OrFactSearchProofByBuiltinRule::ClosedIntegerRangeEqualityCover(p)) => Some(&p.membership),
+                    OrFactSearchedProof::ByBuiltinRule(OrFactSearchProofByBuiltinRule::HalfOpenIntegerRangeEqualityCover(p)) => Some(&p.membership),
+                    _ => None,
+                };
+                if before > proof.fact.facts.len() {
+                    if let Some(child) = range_member {
+                        let prior = SourcePosition { before: proof.fact.facts.len(), ..*position };
+                        if let Some(value) = visit_complete_verify(child, &prior, wd, verify)? { return Ok(Some(value)); }
+                    }
+                }
                 let split_members = match &proof.searched_proof {
                     OrFactSearchedProof::ByBuiltinRule(OrFactSearchProofByBuiltinRule::LessOrGreaterEqual(p)) => Some([&p.left_in_r, &p.right_in_r]),
                     OrFactSearchedProof::ByBuiltinRule(OrFactSearchProofByBuiltinRule::GreaterOrLessEqual(p)) => Some([&p.left_in_r, &p.right_in_r]),

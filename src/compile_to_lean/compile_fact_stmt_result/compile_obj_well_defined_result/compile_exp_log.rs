@@ -4,6 +4,69 @@ use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
 use crate::prelude::*;
 
 impl LitexToLeanCompiler {
+    /// Closed eval records child WD and checks the exact numeric result;
+    /// establish the log constructor's domains from those original children.
+    pub(in crate::compile_to_lean) fn compile_eval_log_wd(
+        &self,
+        wd: &ObjWellDefinedProof,
+        position: &SourcePosition<'_>,
+    ) -> Result<Option<String>, LeanCompileError> {
+        if !super::super::super::compile_eval_stmt_result::in_closed_eval(position) {
+            return Ok(None);
+        }
+        let DetailedObjWellDefinedProof::ByDef {
+            obj: Obj::ExpLogOperator(ExpLogOperator::Log(log)),
+            proof:
+                ObjWellDefinedProofByDef::ExpLogOperator(ExpLogOperatorObjWellDefinedProofByDef::Log(
+                    proof,
+                )),
+        } = wd.detailed_ref()
+        else {
+            return Ok(None);
+        };
+        if proof.requirement_fact_verified.len() == 5 {
+            return Ok(None);
+        }
+        if proof.child_obj_well_defined.len() != 2 || !proof.requirement_fact_verified.is_empty() {
+            return Err(LeanCompileError::unsupported("Eval/LogWDStages"));
+        }
+        let mut terms = Vec::new();
+        let mut members = Vec::new();
+        let mut positive = Vec::new();
+        let mut denotations = Vec::new();
+        let mut complex_values = Vec::new();
+        for (i, (object, child)) in [&log.base, &log.arg]
+            .iter()
+            .zip(&proof.child_obj_well_defined)
+            .enumerate()
+        {
+            ensure_object(object, child)?;
+            let prior = SourcePosition {
+                before: i,
+                ..*position
+            };
+            let term = self.compile_wd(child, &prior)?;
+            let (value, denote) = self.compile_eval_closed_value(object, &prior)?;
+            let (numerator, denominator) = value.parts();
+            if numerator <= 0 || (i == 0 && numerator == denominator) {
+                return Err(LeanCompileError::unsupported("Eval/LogWDDomain"));
+            }
+            let complex = exact_rational_literal(&value, "ℂ")?;
+            let real = exact_rational_literal(&value, "ℝ")?;
+            let real_denote = format!("(({denote}).trans (congrArg M.number (by norm_num : {complex} = (({real} : ℝ) : ℂ))))");
+            members.push(format!("(Litex.NativeBridge.inOfDenoteNumber {term} {complex} Litex.R {denote} (Litex.NativeBridge.numberInROfEq {complex} {real} (by norm_num)))"));
+            positive.push(format!("(Litex.NativeBridge.ltOfDenoteReal (Litex.number 0) {term} 0 {real} rfl {real_denote} (by norm_num))"));
+            denotations.push(denote);
+            complex_values.push(complex);
+            terms.push(term);
+        }
+        let nonunit = format!("(Litex.NativeBridge.notSameOfDenoteNumber {} (Litex.number 1) {} 1 {} rfl (by norm_num))", terms[0], complex_values[0], denotations[0]);
+        Ok(Some(format!(
+            "(Litex.log {} {} {} {} {} {} {nonunit})",
+            terms[0], terms[1], members[0], members[1], positive[0], positive[1]
+        )))
+    }
+
     pub(in crate::compile_to_lean) fn compile_exp_ln_wd(
         &self,
         argument: &Obj,

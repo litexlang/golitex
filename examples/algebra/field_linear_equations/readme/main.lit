@@ -1,0 +1,6 @@
+thm unique_affine_solution:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,a,b,c K:
+        a!=F.zero
+        =>:
+            exist! x K st {F.add(F.mul(a,x),b)=c}
+    release thm Algebra::field::field_affine_equation_unique(K,F,a,b,c)

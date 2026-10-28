@@ -7,12 +7,16 @@
 
 **Pronunciation:** /ˈliːtɛk/ (“LEE-tek”, Chinese “里泰克”).
 
-Created and maintained by Jiachen Shen.
+Created and maintained by Jiachen Shen. The main text is author-written, with AI assistance for clarity.
 
 [Website and playground](https://litexlang.com) · [GitHub](https://github.com/litexlang/golitex)
 </div>
 
-Mathematical writing carries logical structure, yet making it machine-checkable often requires translation into a separate formal language. Litex makes familiar mathematics directly checkable through proof search over contextual facts and built-in rules. Selected local examples show lower native checking times, with comparison results below. Its verification records support interactive reading, writing and correction, with promising initial AI-agent results. It also compiles supported proofs to Lean, serving as a frontend language for independent rechecking.
+Mathematical writing already carries logical structure: statements, assumptions and definitions provide much of the reasoning needed to justify each step. Litex is a formal language designed to make this structure executable through proof search over contextual facts and built-in mathematical rules.
+
+Authors supply meaningful mathematical steps, while the system recovers the supported inferences connecting them. Humans and AI can work in terms of mathematical facts without having to spell out every formal derivation.
+
+Selected local comparisons show compact mathematical expression and, on some examples, 10–100× faster native checking than Lean, excluding startup and imports. Its verification records support interactive reading, writing and correction, with promising initial AI-agent results. It also compiles supported proofs to Lean for independent rechecking.
 
 <a id="readme-comparisons"></a>
 
@@ -57,6 +61,8 @@ Expression length is reported separately as [retrospective normalized-character 
 
 **Could mathematics itself be the formal language?** Mathematical writing already introduces objects, gives definitions, states assumptions and justifies conclusions. I want to preserve that correspondence while adding enough structure for mechanical checking.
 
+Doing mathematics means looking for patterns. In Litex, I have been looking for recurring patterns in the act of proving: how statements introduce conditions, how facts connect, and how a conclusion finds support in its context. My aim is to turn those patterns into executable mechanisms, so humans and AI can concentrate on the mathematics.
+
 My ambition is for Litex to become a Python for formal mathematics: familiar writing, few language conventions, and useful machinery behind each statement. As AI produces more candidate reasoning, the language in which we understand, check and share mathematical knowledge matters more.
 
 ## From mathematical language to checked knowledge
@@ -94,7 +100,33 @@ a + 2 = 3
 
 The first line stores `a = 1`. The second acts as a query: find that equality, substitute it to obtain `1 + 2 = 3`, and check the calculation. The accepted `a + 2 = 3` then becomes knowledge for later steps.
 
-Litex combines a mathematical fact database, bounded local search and hundreds of built-in rules. Context supplies the facts; rules connect them. Calculation is one available checking method. A search miss means that the checker could not justify the step, and does not prove its negation.
+Litex is a fact-oriented mathematical verification language. Its native engine operates as a mathematics-specialized deductive knowledge base. Built-in mathematical rules provide reusable reasoning patterns; bounded contextual search finds relevant established facts and checks their conditions of use. Inference rules also record supported direct consequences of accepted facts, making them available to later steps.
+
+Writing a fact therefore asks the system to find its grounds in the current mathematical context. Authors provide key intermediate facts, witnesses, cases or induction when needed; the system recovers the supported reasoning between those steps. Calculation is one available checking method. A search miss means that the checker could not justify the step, and does not prove its negation.
+
+A proved `forall` becomes a reusable logical contract: later instances can be checked by matching its conclusion and verifying its premises, within the supported search paths and visible scope. Users extend the available knowledge by proving mathematics.
+
+Its present mathematical semantics is set-based. The language and knowledge-management design, and the supported Lean proof-reconstruction backend, are separate layers; see the [technical positioning](docs/Manual.md#litex-theoretical-positioning).
+
+```mermaid
+flowchart TD
+    A["Parse the next complete Statement<br/>Objects and Facts"] --> B["Check statement-specific obligations<br/>Ordinary facts: WD, then proof search"]
+    C["Current context and native checks<br/>Definitions, facts, proved forall, built-in rules"] --> B
+    B -->|accepted| D["Record evidence; store and infer<br/>Commit the statement's effects"]
+    D -->|knowledge for later statements| C
+    B -->|ordinary rejection| E["Discard this statement's effects<br/>Keep previously accepted context"]
+```
+
+**Native source snapshot — 2026-10-28.** These counts describe implementation branches and registered rule entries:
+
+| Component | Count |
+| --- | ---: |
+| [Object (`Obj`) constructor branches](src/ast/obj.rs) | **150** |
+| [Statement (`Stmt`) constructor branches](src/ast/stmt.rs) | **52** |
+| [Atomic Fact variants](src/ast/fact/atomic.rs) | **74** |
+| [Builtin verification rule entries](src/reading/rule_catalogue_generated.json) | **683** |
+
+Constructor counts expand grouping enums and stop at payload structs; atomic facts include both polarities. The rule catalogue separately records **76 inference entries** and **526 explicit builtin theorem interfaces**. These are implementation counts, not a vocabulary to memorize or a count of independent axioms; they exclude user/library knowledge and other WD, calculator and strategy branches. See the [Manual's system pipeline](docs/Manual.md#system-pipeline) for the full flow and checking boundaries.
 
 ## Connect the same mathematics to other tools
 

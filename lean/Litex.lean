@@ -581,6 +581,27 @@ theorem powStructuralInC {M : Semantics.{u}} {α : Type v} {β : Type w}
     exact pow_int_closed p.val.base p.val.exponent k haC ha0
       (hz.trans (congrArg M.number agreement))
 
+/-- An integer power of a nonzero base is nonzero. -/
+theorem powNonzeroOfBase {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (p : Obj (M := M) (PowObj (M := M) α β))
+    (hz : In p.val.exponent Z) (ha : ¬ Same p.val.base (number 0)) :
+    ¬ Same p (number 0) := by
+  have hc : In p.val.base C := by
+    rcases p.wd with ⟨hr, _⟩ | ⟨hc, _⟩ | ⟨hc, _⟩
+    · exact realToComplex _ hr
+    · exact hc
+    · exact hc
+  obtain ⟨x, hx⟩ := (M.complex_members (denote p.val.base)).mp hc
+  obtain ⟨z, hzi⟩ := (M.integer_members (denote p.val.exponent)).mp hz
+  have hx0 : x ≠ 0 := fun h => ha (hx.trans (congrArg M.number h))
+  have hp : denote p = M.number (x ^ z) := by
+    change M.powValue (denote p.val.base) (denote p.val.exponent) = _
+    rw [hx, hzi, M.pow_numbers_int x z hx0]
+  intro hp0
+  apply zpow_ne_zero z hx0
+  exact M.number_injective (hp.symm.trans hp0)
+
 theorem addInR {M : Semantics.{u}} {α : Type v} {β : Type w}
     [Representation M α] [Representation M β]
     (a : Obj (M := M) α) (b : Obj (M := M) β) (haR : In a R) (hbR : In b R) :
@@ -1238,6 +1259,24 @@ theorem absInC {M : Semantics.{u}} {α : Type v} [Representation M α]
     (a : Obj (M := M) α) (haR : In a R) : In (abs a haR) C :=
   realToComplex _ (absInR a haR)
 
+/-- The absolute value of a nonzero real is nonzero. -/
+theorem absNonzeroOfArg {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (p : Obj (M := M) (AbsObj (M := M) α))
+    (ha : ¬ Same p.val.arg (number 0)) : ¬ Same p (number 0) := by
+  let r := NativeBridge.asReal p.val.arg p.wd
+  have hr : denote p.val.arg = M.number ((r : ℝ) : ℂ) := NativeBridge.asReal_spec p.val.arg p.wd
+  have hr0 : r ≠ 0 := by
+    intro h
+    apply ha
+    change denote p.val.arg = M.number 0
+    have hcast : (r : ℂ) = 0 := by exact_mod_cast h
+    exact hr.trans (congrArg M.number hcast)
+  have hroot : ((|r| : ℝ) : ℂ) ≠ 0 := by exact_mod_cast (abs_ne_zero.mpr hr0)
+  have hp : denote p = M.number ((|r| : ℝ) : ℂ) :=
+    NativeBridge.denoteAbs p.val.arg p.wd r hr
+  intro h
+  exact hroot (M.number_injective (hp.symm.trans h))
+
 theorem absNonnegative {M : Semantics.{u}} {α : Type v} [Representation M α]
     (a : Obj (M := M) α) (haR : In a R) : Le (number 0) (abs a haR) :=
   NativeBridge.leOfDenoteReal _ _ 0 |NativeBridge.asReal a haR| rfl
@@ -1311,6 +1350,20 @@ theorem sqrtNonnegative {M : Semantics.{u}} {α : Type v} [Representation M α]
   NativeBridge.leOfDenoteReal _ _ 0 (Real.sqrt (NativeBridge.asReal a haR)) rfl
     (NativeBridge.denoteSqrt a haR ha0 _ (NativeBridge.asReal_spec a haR))
     (Real.sqrt_nonneg _)
+
+/-- The principal square root of a positive real number is nonzero. -/
+theorem sqrtNonzeroOfPositive {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (p : Obj (M := M) (SqrtObj (M := M) α))
+    (hpos : Lt (number 0) p.val.arg) : ¬ Same p (number 0) := by
+  let r := NativeBridge.asReal p.val.arg p.wd.1
+  have hr := NativeBridge.asReal_spec p.val.arg p.wd.1
+  have hr0 : 0 < r := (NativeBridge.lt_iff_ofDenoteReal (number 0) p.val.arg 0 r rfl hr).mp hpos
+  have hroot : ((Real.sqrt r : ℝ) : ℂ) ≠ 0 := by
+    exact_mod_cast (ne_of_gt (Real.sqrt_pos.mpr hr0))
+  have hp : denote p = M.number ((Real.sqrt r : ℝ) : ℂ) :=
+    NativeBridge.denoteSqrt p.val.arg p.wd.1 p.wd.2 r hr
+  intro h
+  exact hroot (M.number_injective (hp.symm.trans h))
 
 theorem sqrtSquareValue {M : Semantics.{u}} {α : Type v} [Representation M α]
     (a : Obj (M := M) α) (haR : In a R) (ha0 : Le (number 0) a) :
@@ -1405,6 +1458,30 @@ theorem notSameOfSubNonzero {M : Semantics.{u}} {α : Type v} {β : Type w}
   change M.subValue (denote a) (denote b) = M.number 0
   rw [NativeBridge.asComplex_spec a ha, NativeBridge.asComplex_spec b hb,
     M.sub_numbers, (NativeBridge.same_iff_asComplex a b ha hb).mp hab, sub_self]
+
+theorem notSameNegOfNonzeroSumLeft {M : Semantics.{u}} {α : Type v} {β : Type w} {γ : Type x}
+    [Representation M α] [Representation M β] [Representation M γ]
+    (p : Obj (M := M) (AddObj (M := M) α β)) (q : Obj (M := M) γ)
+    (hq : denote q = M.negValue (denote p.val.right))
+    (h : ¬ Same p (number 0)) : ¬ Same p.val.left q := by
+  intro he
+  apply h
+  change M.addValue (denote p.val.left) (denote p.val.right) = M.number 0
+  change denote p.val.left = denote q at he
+  rw [hq, NativeBridge.asComplex_spec p.val.right p.wd.2, M.neg_numbers] at he
+  rw [he, NativeBridge.asComplex_spec p.val.right p.wd.2, M.add_numbers, neg_add_cancel]
+
+theorem notSameNegOfNonzeroSumRight {M : Semantics.{u}} {α : Type v} {β : Type w} {γ : Type x}
+    [Representation M α] [Representation M β] [Representation M γ]
+    (p : Obj (M := M) (AddObj (M := M) α β)) (q : Obj (M := M) γ)
+    (hq : denote q = M.negValue (denote p.val.left))
+    (h : ¬ Same p (number 0)) : ¬ Same p.val.right q := by
+  intro he
+  apply h
+  change M.addValue (denote p.val.left) (denote p.val.right) = M.number 0
+  change denote p.val.right = denote q at he
+  rw [hq, NativeBridge.asComplex_spec p.val.left p.wd.1, M.neg_numbers] at he
+  rw [he, NativeBridge.asComplex_spec p.val.left p.wd.1, M.add_numbers, add_neg_cancel]
 
 /-- Replay the source's shared-subtrahend and shared-minuend cancellation rules. -/
 theorem subCancelRightRight {M : Semantics.{u}}
@@ -2013,6 +2090,26 @@ theorem powStructuralNonnegativeOfEven {M : Semantics.{u}} {α : Type v} {β : T
   · change denote p.val.exponent = M.number (n : ℂ) at heValue
     change M.powValue (denote p.val.base) (denote p.val.exponent) = _
     rw [hr, heValue, M.pow_numbers_nat, Complex.ofReal_pow]
+
+/-- A nonzero product has two nonzero factors. -/
+theorem productNonzeroFactors {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (p : Obj (M := M) (MulObj (M := M) α β))
+    (h : ¬ Same p (number 0)) :
+    (¬ Same p.val.left (number 0)) ∧ (¬ Same p.val.right (number 0)) := by
+  obtain ⟨x, hx⟩ := (M.complex_members (denote p.val.left)).mp p.wd.1
+  obtain ⟨y, hy⟩ := (M.complex_members (denote p.val.right)).mp p.wd.2
+  constructor
+  · intro ha
+    have hx0 : x = 0 := M.number_injective (hx.symm.trans ha)
+    apply h
+    change M.mulValue (denote p.val.left) (denote p.val.right) = M.number 0
+    rw [hx, hy, M.mul_numbers, hx0, zero_mul]
+  · intro hb
+    have hy0 : y = 0 := M.number_injective (hy.symm.trans hb)
+    apply h
+    change M.mulValue (denote p.val.left) (denote p.val.right) = M.number 0
+    rw [hx, hy, M.mul_numbers, hy0, mul_zero]
 
 theorem mulNonzero {M : Semantics.{u}} {α : Type v} {β : Type w}
     [Representation M α] [Representation M β]
@@ -5636,6 +5733,29 @@ theorem signDenoteReal {M : Semantics.{u}} {α : Type v} [Representation M α]
   change signValue (denote p.val.arg) = _
   rw [hr, signValue_number]
 
+/-- A real number and its sign vanish together. -/
+theorem signZeroIffArgZero {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (p : Obj (M := M) (SignObj (M := M) α)) (haR : In p.val.arg R) :
+    Same p (number 0) ↔ Same p.val.arg (number 0) := by
+  let r := NativeBridge.asReal p.val.arg haR
+  have hr : denote p.val.arg = M.number ((r : ℝ) : ℂ) := NativeBridge.asReal_spec p.val.arg haR
+  have hp : denote p = M.number ((Real.sign r : ℝ) : ℂ) := signDenoteReal p r hr
+  constructor
+  · intro h
+    have hs : Real.sign r = 0 := by
+      have hc : ((Real.sign r : ℝ) : ℂ) = 0 := M.number_injective (hp.symm.trans h)
+      exact_mod_cast hc
+    have h0 : r = 0 := Real.sign_eq_zero_iff.mp hs
+    change denote p.val.arg = M.number 0
+    exact hr.trans (congrArg M.number (by exact_mod_cast h0))
+  · intro h
+    have h0 : r = 0 := by
+      have hc : (r : ℂ) = 0 := M.number_injective (hr.symm.trans h)
+      exact_mod_cast hc
+    have hs : Real.sign r = 0 := Real.sign_eq_zero_iff.mpr h0
+    change denote p = M.number 0
+    exact hp.trans (congrArg M.number (by exact_mod_cast hs))
+
 theorem signInZ {M : Semantics.{u}} {α : Type v} [Representation M α]
     (p : Obj (M := M) (SignObj (M := M) α)) : In p Z := by
   obtain ⟨r, hr⟩ := (M.real_members _).mp p.wd
@@ -6103,6 +6223,23 @@ theorem lcmDenoteInt {M : Semantics.{u}} {α : Type v} {β : Type w}
     (hb : denote p.val.right = M.number (b : ℂ)) : denote p = M.number (Int.lcm a b : ℂ) := by
   change gcdLcmValue true _ _ = _
   rw [ha, hb, gcdLcmValue_numbers]; rfl
+
+theorem lcmNonzeroOfArgs {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β] (p : Obj (M := M) (LcmObj (M := M) α β))
+    (hla : ¬ Same p.val.left (number 0)) (hlb : ¬ Same p.val.right (number 0)) : ¬ Same p (number 0) := by
+  obtain ⟨a,ha⟩ := (M.integer_members _).mp p.wd.1
+  obtain ⟨b,hb⟩ := (M.integer_members _).mp p.wd.2
+  have ha0 : a ≠ 0 := by
+    have h := NativeBridge.nativeNonzeroOfDenote p.val.left (a : ℂ) ha hla
+    exact_mod_cast h
+  have hb0 : b ≠ 0 := by
+    have h := NativeBridge.nativeNonzeroOfDenote p.val.right (b : ℂ) hb hlb
+    exact_mod_cast h
+  have hn : Int.lcm a b ≠ 0 := by
+    rw [Int.lcm_eq_natAbs_lcm_natAbs]
+    exact Nat.lcm_ne_zero (Int.natAbs_ne_zero.mpr ha0) (Int.natAbs_ne_zero.mpr hb0)
+  apply NativeBridge.notSameOfNativeNonzero p (Int.lcm a b : ℂ) (lcmDenoteInt p a b ha hb)
+  exact_mod_cast hn
 
 theorem gcdInN {M : Semantics.{u}} {α : Type v} {β : Type w}
     [Representation M α] [Representation M β] (p : Obj (M := M) (GcdObj (M := M) α β)) : In p N := by
@@ -8352,6 +8489,16 @@ theorem denoteExp {M : Semantics.{u}} {α : Type v} [Representation M α]
   change realUnaryValue Real.exp (denote p.val.arg) = _
   rw [hr, realUnaryValue_number]
 
+/-- The exponential of a real is nonzero. -/
+theorem expNonzero {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (p : Obj (M := M) (ExpObj (M := M) α)) : ¬ Same p (number 0) := by
+  let r := NativeBridge.asReal p.val.arg p.wd
+  have hr : denote p.val.arg = M.number ((r : ℝ) : ℂ) := NativeBridge.asReal_spec p.val.arg p.wd
+  have hx : ((Real.exp r : ℝ) : ℂ) ≠ 0 := by exact_mod_cast (ne_of_gt (Real.exp_pos r))
+  have hp : denote p = M.number ((Real.exp r : ℝ) : ℂ) := denoteExp p r hr
+  intro h
+  exact hx (M.number_injective (hp.symm.trans h))
+
 theorem expInR {M : Semantics.{u}} {α : Type v} [Representation M α]
     (p : Obj (M := M) (ExpObj (M := M) α)) : In p R :=
   (M.real_members _).mpr ⟨Real.exp (NativeBridge.asReal p.val.arg p.wd),
@@ -8431,6 +8578,50 @@ theorem denoteLog {M : Semantics.{u}} {α : Type v} {β : Type w}
   have hn := logBaseNonzero p.val.base r hr p.wd.2.2.1 p.wd.2.2.2.2
   rw [hr, hs, realUnaryValue_number, realUnaryValue_number, M.div_numbers _ _ hn, Complex.ofReal_div]
 
+theorem logNonzeroOfGuards {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β] (p : Obj (M := M) (LogObj (M := M) α β))
+    (hb0 : Lt (number 0) p.val.base) (hb1 : ¬ Same p.val.base (number 1))
+    (ha0 : Lt (number 0) p.val.arg) (ha1 : ¬ Same p.val.arg (number 1)) : ¬ Same p (number 0) := by
+  obtain ⟨r,hr⟩ := (M.real_members _).mp p.wd.1
+  obtain ⟨s,hs⟩ := (M.real_members _).mp p.wd.2.1
+  have hbr : Real.log r ≠ 0 := by
+    have h := logBaseNonzero p.val.base r hr hb0 hb1
+    exact_mod_cast h
+  have har : Real.log s ≠ 0 := by
+    have h := logBaseNonzero p.val.arg s hs ha0 ha1
+    exact_mod_cast h
+  apply NativeBridge.notSameOfNativeNonzero p (((Real.log s / Real.log r : ℝ) : ℂ)) (denoteLog p r s hr hs)
+  exact_mod_cast (div_ne_zero har hbr)
+
+theorem powerNonunitOfGuards {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (p : Obj (M := M) (PowObj (M := M) α β))
+    (hb0 : Lt (number 0) p.val.base) (hb1 : ¬ Same p.val.base (number 1))
+    (heZ : In p.val.exponent Z) (he0 : ¬ Same p.val.exponent (number 0)) :
+    ¬ Same p (number 1) := by
+  obtain ⟨r0,r,hr0,hr,hlt⟩ := hb0
+  have hzero : r0 = 0 := Complex.ofReal_injective (M.number_injective hr0.symm)
+  have hrpos : 0 < r := hzero ▸ hlt
+  have hr1 : r ≠ 1 := by
+    intro h
+    apply hb1
+    change denote p.val.base = M.number 1
+    simpa only [h, Complex.ofReal_one] using hr
+  obtain ⟨n, hn⟩ := (M.integer_members _).mp heZ
+  have hn0 : n ≠ 0 := by
+    have h := NativeBridge.nativeNonzeroOfDenote p.val.exponent (n : ℂ) hn he0
+    exact_mod_cast h
+  have hbase0 : (r : ℂ) ≠ 0 := by exact_mod_cast (ne_of_gt hrpos)
+  have hp : denote p = M.number ((r : ℂ) ^ n) := by
+    change M.powValue (denote p.val.base) (denote p.val.exponent) = _
+    rw [hr, hn, M.pow_numbers_int _ _ hbase0]
+  intro he
+  change denote p = M.number 1 at he
+  have hpower : r ^ n = 1 := by
+    have h := M.number_injective (hp.symm.trans he)
+    exact_mod_cast h
+  exact hn0 ((zpow_eq_one_iff_right₀ (le_of_lt hrpos) hr1).mp hpower)
+
 theorem logInR {M : Semantics.{u}} {α : Type v} {β : Type w}
     [Representation M α] [Representation M β] (p : Obj (M := M) (LogObj (M := M) α β)) : In p R :=
   (M.real_members _).mpr ⟨_, denoteLog p _ _ (NativeBridge.asReal_spec p.val.base p.wd.1)
@@ -8504,6 +8695,16 @@ theorem lnEuler {M : Semantics} [SetSemantics M] {α : Type*} [Representation M 
     (h : denote p.val.arg = M.number ((Real.exp 1 : ℝ) : ℂ)) : Same p (number 1) := by
   change denote p = M.number 1
   rw [denoteLn p (Real.exp 1) h, Real.log_exp, Complex.ofReal_one]
+
+theorem eulerNonunit {M : Semantics.{u}} :
+    ¬ Same (number (M := M) ((Real.exp 1 : ℝ) : ℂ)) (number 1) := by
+  intro h
+  change M.number ((Real.exp 1 : ℝ) : ℂ) = M.number 1 at h
+  have hr : Real.exp (1 : ℝ) = 1 := by
+    have hc := M.number_injective h
+    exact_mod_cast hc
+  have hp : (1 : ℝ) < Real.exp 1 := Real.one_lt_exp_iff.mpr (by norm_num)
+  exact (ne_of_gt hp) hr
 end Litex
 
 namespace Litex
@@ -8731,6 +8932,19 @@ theorem denoteComplexAbs {M : Semantics.{u}} {α : Type v} [Representation M α]
   change complexUnaryValue (fun z : ℂ => (‖z‖ : ℂ)) (denote p.val.arg) = _
   rw [hz, complexUnaryValue_number]
 
+theorem complexAbsEqSqrtOfNormSq {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (p : Obj (M := M) (ComplexAbsObj (M := M) α))
+    (q : Obj (M := M) (SqrtObj (M := M) β)) (z : ℂ) (r : ℝ)
+    (hz : denote p.val.arg = M.number z)
+    (hr : denote q.val.arg = M.number (r : ℂ))
+    (hnorm : Complex.normSq z = r) : Same p q := by
+  have hp := denoteComplexAbs p z hz
+  have hq := NativeBridge.denoteSqrt q.val.arg q.wd.1 q.wd.2 r hr
+  change denote p = denote q
+  rw [Complex.norm_def, hnorm] at hp
+  exact hp.trans hq.symm
+
 theorem complexAbsInC {M : Semantics.{u}} {α : Type v} [Representation M α]
     (p : Obj (M := M) (ComplexAbsObj (M := M) α)) : In p C := by
   obtain ⟨z,hz⟩ := (M.complex_members _).mp p.wd
@@ -8740,6 +8954,22 @@ theorem complexAbsInR {M : Semantics.{u}} {α : Type v} [Representation M α]
     (p : Obj (M := M) (ComplexAbsObj (M := M) α)) : In p R := by
   obtain ⟨z,hz⟩ := (M.complex_members _).mp p.wd
   exact (M.real_members _).mpr ⟨‖z‖, denoteComplexAbs p z hz⟩
+
+theorem conjugateNonzeroOfArg {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (p : Obj (M := M) (ConjugateObj (M := M) α))
+    (ha : ¬ Same p.val.arg (number 0)) : ¬ Same p (number 0) := by
+  obtain ⟨z,hz⟩ := (M.complex_members _).mp p.wd
+  have hz0 := NativeBridge.nativeNonzeroOfDenote p.val.arg z hz ha
+  apply NativeBridge.notSameOfNativeNonzero p (star z) (denoteConjugate p z hz)
+  simpa using hz0
+
+theorem complexAbsNonzeroOfArg {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (p : Obj (M := M) (ComplexAbsObj (M := M) α))
+    (ha : ¬ Same p.val.arg (number 0)) : ¬ Same p (number 0) := by
+  obtain ⟨z,hz⟩ := (M.complex_members _).mp p.wd
+  have hz0 := NativeBridge.nativeNonzeroOfDenote p.val.arg z hz ha
+  apply NativeBridge.notSameOfNativeNonzero p ((‖z‖ : ℝ) : ℂ) (denoteComplexAbs p z hz)
+  exact_mod_cast (norm_ne_zero_iff.mpr hz0)
 
 theorem complexReconstruction (z : ℂ) : (z.re : ℂ) + (z.im : ℂ) * Complex.I = z :=
   Complex.re_add_im z
@@ -8912,6 +9142,76 @@ theorem cotInR {M : Semantics.{u}} {α : Type v} [Representation M α]
     (p : Obj (M := M) (CotObj (M := M) α)) : In p R :=
   (M.real_members _).mpr ⟨nativeCot (NativeBridge.asReal p.val.arg p.wd.1),
     denoteCot p _ (NativeBridge.asReal_spec p.val.arg p.wd.1)⟩
+
+theorem sinNonzeroOfNegatedArg {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (p : Obj (M := M) (SinObj (M := M) α)) (q : Obj (M := M) (SinObj (M := M) β))
+    (harg : denote p.val.arg = M.negValue (denote q.val.arg))
+    (hn : ¬ Same q (number 0)) : ¬ Same p (number 0) := by
+  let r := NativeBridge.asReal q.val.arg q.wd
+  have hr := NativeBridge.asReal_spec q.val.arg q.wd
+  have hp : denote p.val.arg = M.number ((-r : ℝ) : ℂ) := by
+    rw [harg, hr, M.neg_numbers, Complex.ofReal_neg]
+  have hs : Real.sin r ≠ 0 := by
+    have h := NativeBridge.nativeNonzeroOfDenote q ((Real.sin r : ℝ) : ℂ) (denoteSin q r hr) hn
+    exact_mod_cast h
+  apply NativeBridge.notSameOfNativeNonzero p ((Real.sin (-r) : ℝ) : ℂ) (denoteSin p (-r) hp)
+  exact_mod_cast (show Real.sin (-r) ≠ 0 from by simpa using hs)
+
+theorem cosNonzeroOfNegatedArg {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (p : Obj (M := M) (CosObj (M := M) α)) (q : Obj (M := M) (CosObj (M := M) β))
+    (harg : denote p.val.arg = M.negValue (denote q.val.arg))
+    (hn : ¬ Same q (number 0)) : ¬ Same p (number 0) := by
+  let r := NativeBridge.asReal q.val.arg q.wd
+  have hr := NativeBridge.asReal_spec q.val.arg q.wd
+  have hp : denote p.val.arg = M.number ((-r : ℝ) : ℂ) := by
+    rw [harg, hr, M.neg_numbers, Complex.ofReal_neg]
+  have hc : Real.cos r ≠ 0 := by
+    have h := NativeBridge.nativeNonzeroOfDenote q ((Real.cos r : ℝ) : ℂ) (denoteCos q r hr) hn
+    exact_mod_cast h
+  apply NativeBridge.notSameOfNativeNonzero p ((Real.cos (-r) : ℝ) : ℂ) (denoteCos p (-r) hp)
+  exact_mod_cast (show Real.cos (-r) ≠ 0 from by simpa using hc)
+
+theorem tanNonzeroOfSin {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (p : Obj (M := M) (TanObj (M := M) α)) (q : Obj (M := M) (SinObj (M := M) β))
+    (harg : Same p.val.arg q.val.arg) (hn : ¬ Same q (number 0)) : ¬ Same p (number 0) := by
+  let r := NativeBridge.asReal p.val.arg p.wd.1
+  have hr := NativeBridge.asReal_spec p.val.arg p.wd.1
+  have hq : denote q.val.arg = M.number (r : ℂ) := harg.symm.trans hr
+  have hs : Real.sin r ≠ 0 := by
+    have h := NativeBridge.nativeNonzeroOfDenote q ((Real.sin r : ℝ) : ℂ) (denoteSin q r hq) hn
+    exact_mod_cast h
+  have hc : Real.cos r ≠ 0 := by
+    intro h
+    apply p.wd.2
+    rw [hr, realUnaryValue_number, h, Complex.ofReal_zero]
+  have ht : Real.tan r ≠ 0 := by
+    rw [Real.tan_eq_sin_div_cos]
+    exact div_ne_zero hs hc
+  apply NativeBridge.notSameOfNativeNonzero p ((Real.tan r : ℝ) : ℂ) (denoteTan p r hr)
+  exact_mod_cast ht
+
+theorem cotNonzeroOfCos {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (p : Obj (M := M) (CotObj (M := M) α)) (q : Obj (M := M) (CosObj (M := M) β))
+    (harg : Same p.val.arg q.val.arg) (hn : ¬ Same q (number 0)) : ¬ Same p (number 0) := by
+  let r := NativeBridge.asReal p.val.arg p.wd.1
+  have hr := NativeBridge.asReal_spec p.val.arg p.wd.1
+  have hq : denote q.val.arg = M.number (r : ℂ) := harg.symm.trans hr
+  have hc : Real.cos r ≠ 0 := by
+    have h := NativeBridge.nativeNonzeroOfDenote q ((Real.cos r : ℝ) : ℂ) (denoteCos q r hq) hn
+    exact_mod_cast h
+  have hs : Real.sin r ≠ 0 := by
+    intro h
+    apply p.wd.2
+    rw [hr, realUnaryValue_number, h, Complex.ofReal_zero]
+  have ht : nativeCot r ≠ 0 := by
+    unfold nativeCot
+    exact div_ne_zero hc hs
+  apply NativeBridge.notSameOfNativeNonzero p ((nativeCot r : ℝ) : ℂ) (denoteCot p r hr)
+  exact_mod_cast ht
 
 
 structure SecObj {M : Semantics.{u}} (α : Type v) [Representation M α] where

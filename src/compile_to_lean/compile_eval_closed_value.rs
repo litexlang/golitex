@@ -56,6 +56,61 @@ impl LitexToLeanCompiler {
         }
         if matches!(
             object,
+            Obj::ComplexOperator(
+                ComplexOperator::RealPart(_)
+                    | ComplexOperator::ImaginaryPart(_)
+                    | ComplexOperator::ComplexAbs(_)
+            )
+        ) {
+            // The original complex object has already been formed by source
+            // WD. Its numeric observer replays that exact constructor and the
+            // selected Mathlib bridge; no new complex representation is made.
+            let value = EvalRational::from_obj(object)
+                .ok_or_else(|| LeanCompileError::unsupported("Eval/ExactComplexObservation"))?;
+            let observed = self.compile_numeric_observation(object, position)?;
+            if observed.3.as_ref() != Some(&value) {
+                return Err(LeanCompileError::unsupported(
+                    "Eval/ComplexObservationValue",
+                ));
+            }
+            let raw = self.compile_normalization_value(object, position)?;
+            let formed = self.compile_normalization_denotation(object, position)?;
+            let literal = exact_rational_literal(&value, "ℂ")?;
+            let proof = format!("(show {raw} = M.number {literal} from ({formed}).symm.trans (({}).trans (congrArg M.number (by norm_num : {} = {literal}))))", observed.1, observed.0);
+            return Ok((value, proof, Vec::new()));
+        }
+        if matches!(object, Obj::ExpLogOperator(ExpLogOperator::Log(_))) {
+            return self.compile_eval_log_value(
+                object,
+                evaluations,
+                remaining,
+                aggregates,
+                remaining_aggregates,
+                position,
+            );
+        }
+        if let Obj::ExpLogOperator(ExpLogOperator::Sqrt(sqrt)) = object {
+            let (argument, child, cites) = self.compile_eval_value(
+                &sqrt.arg,
+                evaluations,
+                remaining,
+                aggregates,
+                remaining_aggregates,
+                position,
+            )?;
+            let value = argument
+                .exact_sqrt()
+                .ok_or_else(|| LeanCompileError::unsupported("Eval/ExactSquareRoot"))?;
+            let complex_argument = exact_rational_literal(&argument, "ℂ")?;
+            let real_argument = exact_rational_literal(&argument, "ℝ")?;
+            let complex_value = exact_rational_literal(&value, "ℂ")?;
+            let real_value = exact_rational_literal(&value, "ℝ")?;
+            let raw = self.compile_normalization_value(object, position)?;
+            let proof = format!("(show {raw} = M.number {complex_value} from (congrArg (Litex.sqrtValue (M := M)) {child}).trans (by\n  have _argument : {complex_argument} = (({real_argument} : ℝ) : ℂ) := by norm_num\n  have _root : Real.sqrt {real_argument} = {real_value} := (Real.sqrt_eq_iff_eq_sq (by norm_num) (by norm_num)).mpr (by norm_num)\n  have _cast : (({real_value} : ℝ) : ℂ) = {complex_value} := by norm_num\n  exact (congrArg (fun x : ℂ => Litex.sqrtValue (M := M) (M.number x)) _argument).trans ((Litex.sqrtValue_number (M := M) {real_argument}).trans (congrArg M.number ((congrArg (fun x : ℝ => (x : ℂ)) _root).trans _cast)))))");
+            return Ok((value, proof, cites));
+        }
+        if matches!(
+            object,
             Obj::ArithmeticOperator(
                 ArithmeticOperator::Abs(_)
                     | ArithmeticOperator::Min(_)
@@ -149,7 +204,7 @@ impl LitexToLeanCompiler {
                             .to_i128_if_integer()
                             .ok_or_else(|| LeanCompileError::unsupported("Eval/PowerExponent"))?;
                         if n >= 0 {
-                            format!("(M.pow_numbers_nat {al} {n})")
+                            format!("(show M.powValue (M.number {al}) (M.number {bl}) = M.number ({al} ^ ({n} : ℕ)) from by simpa only [Nat.cast_ofNat, Nat.cast_zero, Nat.cast_one] using M.pow_numbers_nat {al} {n})")
                         } else {
                             format!("(show M.powValue (M.number {al}) (M.number {bl}) = M.number ({al} ^ ({n} : ℤ)) from by simpa only [Int.cast_neg, Int.cast_ofNat] using M.pow_numbers_int {al} ({n}) (by norm_num))")
                         }
@@ -240,6 +295,17 @@ impl LitexToLeanCompiler {
                 ..*position
             };
             let term = self.compile_wd(child, &prior)?;
+            if matches!(name, "add" | "sub" | "mul" | "neg")
+                && EvalRational::from_obj(arg).is_none()
+                && crate::rational_expression::exact_radical::ExactRadical::from_obj(arg).is_some()
+            {
+                // Closed eval omits the ordinary carrier requirements. Reuse
+                // the child's checked symbolic numeric membership instead of
+                // demanding that its exact value be rational.
+                members.push(self.numeric_wd(child, &prior)?.2);
+                terms.push(term);
+                continue;
+            }
             let (v, p) = self.compile_eval_closed_value(arg, &prior)?;
             let l = exact_rational_literal(&v, "ℂ")?;
             members.push(if matches!(name, "abs" | "sign" | "floor" | "ceil" | "min" | "max") {

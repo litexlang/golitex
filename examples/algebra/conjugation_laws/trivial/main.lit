@@ -1,0 +1,45 @@
+have fn small_mul(x,y {0}) {0} = 0
+
+have fn small_inv(x {0}) {0} = 0
+
+by enumerate finite_set:
+    ? forall x,y,z {0}:
+        small_mul(small_mul(x,y),z) = small_mul(x,small_mul(y,z))
+    small_mul(small_mul(x,y),z) = small_mul(x,small_mul(y,z))
+
+by enumerate finite_set:
+    ? forall x {0}:
+        small_mul(0,x) = x
+        small_mul(x,0) = x
+        small_mul(small_inv(x),x) = 0
+        small_mul(x,small_inv(x)) = 0
+    small_mul(0,x) = x
+    small_mul(x,0) = x
+    small_mul(small_inv(x),x) = 0
+    small_mul(x,small_inv(x)) = 0
+
+{0} != {}
+
+0 $in {0}
+
+small_mul $in fn(x,y {0}) {0}
+
+small_inv $in fn(x {0}) {0}
+
+have small &Algebra::group::Group<{0}> = (small_mul,0,small_inv)
+
+small.one = 0
+
+release thm Algebra::group::conjugation_identity({0},small ,0)
+
+release thm Algebra::group::conjugation_product({0},small ,0,0,0)
+
+release thm Algebra::group::conjugation_inverse({0},small ,0,0)
+
+release thm Algebra::group::inverse_conjugation({0},small ,0,0)
+
+release thm Algebra::group::conjugation_inverse_action({0},small ,0,0)
+
+release thm Algebra::group::conjugation_is_bijective({0},small ,0)
+
+release thm Algebra::group::conjugation_is_homomorphism({0},small ,0)

@@ -36,3 +36,5 @@ pub(super) fn well_defined_not_proven_message(
         OutputLanguage::Vietnamese => "Không thể chứng minh rằng mệnh đề được xác định tốt.",
     }
 }
+
+pub(crate) use text::integer_range_cover_rule;

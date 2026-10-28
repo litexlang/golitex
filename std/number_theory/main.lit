@@ -220,3 +220,45 @@ thm modular_inverse_unique:
     release thm congruence_symmetric(a * v, 1, m)
     release thm congruence_transitive(a * u, 1, a * v, m)
     release thm modular_inverse_cancels(a, u, v, u, m)
+
+thm congruence_power:
+    ? forall a,b Z,m N+,n N:
+        $is_congruent_mod(a,b,m)
+        =>:
+            $is_congruent_mod(a^n,b^n,m)
+    by induc k from 0:
+        ? $is_congruent_mod(a^k,b^k,m)
+        ? from k = 0:
+            a^0 = 1
+            b^0 = 1
+            release thm congruence_reflexive(1,m)
+            $is_congruent_mod(a^0,b^0,m)
+        ? induc:
+            a^k $in Z
+            b^k $in Z
+            release thm congruence_multiply(a^k,b^k,a,b,m)
+            a^(k+1) = a^k*a
+            b^(k+1) = b^k*b
+            $is_congruent_mod(a^(k+1),b^(k+1),m)
+
+thm modular_inverse_power:
+    ? forall a,u Z,m N+,n N:
+        $is_modular_inverse(a,u,m)
+        =>:
+            $is_modular_inverse(a^n,u^n,m)
+    $is_congruent_mod(a*u,1,m)
+    a*u $in Z
+    a^n $in Z
+    u^n $in Z
+    release thm congruence_power(a*u,1,m,n)
+    (a*u)^n = a^n*u^n
+    1^n = 1
+    $is_congruent_mod(a^n*u^n,1,m)
+    by def $is_modular_inverse(a^n,u^n,m)
+
+thm congruence_power_remainder:
+    ? forall a Z,m N+,n N:
+        $is_congruent_mod(a^n,(a % m)^n,m)
+    a % m $in Z
+    release thm congruence_remainder(a,m)
+    release thm congruence_power(a,a % m,m,n)

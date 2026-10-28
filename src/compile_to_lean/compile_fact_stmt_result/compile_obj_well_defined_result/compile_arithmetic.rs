@@ -233,6 +233,7 @@ impl LitexToLeanCompiler {
         };
         let base_set = membership_subject(&source_subject(&requirements[0])?, base)?;
         let exponent_set = membership_subject(&source_subject(&requirements[1])?, exponent)?;
+        let signed_exponent = exponent_set == StandardSet::Z;
         let natural_value = || match integer {
             Some(n) if n >= 0 => Ok(format!("({n} : ℕ)")),
             Some(_) => Err(LeanCompileError::new(
@@ -246,14 +247,23 @@ impl LitexToLeanCompiler {
             (StandardSet::C, StandardSet::N, 2) => ("powNat", "PowNat", natural_value()?),
             (StandardSet::C, StandardSet::Z, 3) => {
                 ensure_nonzero_subject(&source_subject(&requirements[2])?, base)?;
-                let n = integer.ok_or_else(|| {
-                    LeanCompileError::unsupported("WD/Pow/NonClosedIntegerExponent")
-                })?;
-                ("powInt", "PowInt", format!("({n} : ℤ)"))
+                let value = match integer {
+                    Some(n) => format!("({n} : ℤ)"),
+                    None => format!(
+                        "(Classical.choose ((M.integer_members (Litex.denote {e})).mp {}))",
+                        proved[1]
+                    ),
+                };
+                ("powInt", "PowInt", value)
             }
             _ => return Err(LeanCompileError::unsupported("WD/Pow/Domain")),
         };
-        let he_value = if integer.is_none() {
+        let he_value = if integer.is_none() && signed_exponent {
+            format!(
+                "(Classical.choose_spec ((M.integer_members (Litex.denote {e})).mp {}))",
+                proved[1]
+            )
+        } else if integer.is_none() {
             format!("(Litex.NativeBridge.asNat_spec {e} {})", proved[1])
         } else {
             let exp_native = self.numeric_wd(&children[1], &formed)?;

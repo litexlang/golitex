@@ -1,0 +1,9 @@
+{
+  "false_inverse_premise": "premise",
+  "false_negative_product": "search_proof",
+  "false_double_negative_product": "search_proof",
+  "false_neg_sum": "search_proof",
+  "wrong_carrier": "argument_type",
+  "wrong_arity": "call_shape",
+  "missing_inverse_premise": "premise"
+}

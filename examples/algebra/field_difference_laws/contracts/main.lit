@@ -1,0 +1,28 @@
+thm contract_add_mul:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,a,b,c K:
+        F.mul(F.add(a,b),c)=F.add(F.mul(a,c),F.mul(b,c))
+    release thm Algebra::field::add_mul(K,F,a,b,c)
+
+thm contract_mul_difference:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,a,b,c K:
+        F.mul(a,F.add(b,F.neg(c)))=F.add(F.mul(a,b),F.neg(F.mul(a,c)))
+    release thm Algebra::field::mul_difference(K,F,a,b,c)
+
+thm contract_difference_mul:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,a,b,c K:
+        F.mul(F.add(a,F.neg(b)),c)=F.add(F.mul(a,c),F.neg(F.mul(b,c)))
+    release thm Algebra::field::difference_mul(K,F,a,b,c)
+
+thm contract_difference_zero_implies_equal:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,a,b K:
+        F.add(a,F.neg(b))=F.zero
+        =>:
+            a=b
+    release thm Algebra::field::difference_zero_implies_equal(K,F,a,b)
+
+thm contract_equal_implies_difference_zero:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,a,b K:
+        a=b
+        =>:
+            F.add(a,F.neg(b))=F.zero
+    release thm Algebra::field::equal_implies_difference_zero(K,F,a,b)

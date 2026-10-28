@@ -26,6 +26,7 @@ pub mod by_finite_set_product_reindex;
 pub mod by_finite_set_reduce_reindex;
 pub mod by_finite_subset_size;
 pub mod by_function_domain_image;
+pub mod by_homogeneous_cart;
 pub mod by_integer_range_builder;
 pub mod by_inverse_trig;
 pub mod by_numeric_complex_modulus;

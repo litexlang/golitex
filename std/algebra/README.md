@@ -100,11 +100,39 @@ arbitrary map.
 | `inverse_product(A,G,a,b)` | inv(a*b)=inv(b)*inv(a), with reversed order |
 | `right_equation_unique(A,G,a,b)` | Unique x satisfying x*a=b |
 | `commuting_inverses(A,G,a,b)` | Commuting a,b have commuting inverses |
+| `conjugation_identity(A,G,a)` | Conjugation by a fixes the identity |
+| `conjugation_product(A,G,a,x,y)` | Conjugation preserves products in their original order |
+| `conjugation_inverse(A,G,a,x)` | Conjugation preserves inverses |
+| `inverse_conjugation(A,G,a,x)` | Conjugating by a then by its inverse returns x |
+| `conjugation_inverse_action(A,G,a,x)` | Conjugating by the inverse then by a returns x |
+| `conjugation_is_bijective(A,G,a)` | The inline conjugation map is bijective |
+| `conjugation_formula_is_homomorphism(A,G,a,f)` | A supplied map with the pointwise conjugation formula is a homomorphism |
+| `conjugation_is_homomorphism(A,G,a)` | The inline conjugation map is a homomorphism |
+| `commuting_elements_fixed_by_conjugation(A,G,a,x)` | If a and x commute, conjugation by a fixes x |
+| `conjugation_fixed_implies_commute(A,G,a,x)` | If conjugation by a fixes x, a and x commute |
+| `abelian_conjugation_fixed(A,G,a,x)` | In an abelian group, conjugation fixes x |
+| `fixed_conjugation_implies_abelian(A,G)` | If every conjugation fixes every element, the group is abelian |
+| `right_identity_unique(A,G,identity_candidate)` | A right identity candidate equals `G.one` |
+| `idempotent_is_identity(A,G,a)` | `a*a=a` implies `a=G.one` |
+| `square_identity_implies_self_inverse(A,G,a)` | `a*a=G.one` implies `G.inv(a)=a` |
+| `self_inverse_implies_square_identity(A,G,a)` | `G.inv(a)=a` implies `a*a=G.one` |
 
 These are ordinary source proofs using native sets, functions, struct laws and
 equality reasoning. This package adds no native objects or reserved theorem
 names and contains no `trust`, `axiom` or `abstract_prop` declarations.
 No Lean replay was performed for this module.
+
+Conjugation here is the existing expression `G.mul(G.mul(a,x),G.inv(a))`;
+no additional operation is introduced. The product law preserves order, and
+the commutation and abelian characterizations retain their exact premises.
+The [conjugation examples](../../examples/algebra/conjugation_laws/README.md)
+include a noncommutative Heisenberg witness. The
+[elementary group examples](../../examples/algebra/group_elementary_laws/README.md)
+include the additive group of the two-element Field, whose nonidentity element
+is self-inverse. The source now has 47 theorems in 54 statements; final
+checks pass: 24 for conjugation and 18 for elementary identities, including
+11 and six final-statement refusals respectively, plus actual and generic
+callers in both installed layouts.
 
 ## Examples and scope
 
@@ -155,13 +183,15 @@ publishes checked formation facts; the same facts also resolve its original
 Session construction refusal. No library premise or kernel rule is changed.
 
 
-The current elementary inverse checkpoint has31 group theorems in38 top-level
+The earlier elementary inverse checkpoint had 31 group theorems in 38 top-level
 statements. Inverse-product reverses the factors in general; only the separate
 conditional commutation theorem consumes a*b=b*a. The right equation x*a=b
 has the explicit witness b*inv(a), whereas the earlier left equation a*x=b
-uses inv(a)*b. All six source laws independently pass strict verification.
-Their imported, concrete and installed acceptance remains pending; Group and
-its operation domains are unchanged.
+uses inv(a)*b. All 25 focused checks pass, including generic and concrete
+callers, 15 final-statement refusals and two installed layouts. The
+[inverse-law examples](../../examples/algebra/inverse_laws/README.md) include
+an order-sensitive noncommutative group. Group and its operation domains are
+unchanged.
 
 
 ## Fields and vector spaces
@@ -170,6 +200,140 @@ its operation domains are unchanged.
 Its laws require distinct zero and one, commutative addition/multiplication,
 associativity, distribution and the identity/inverse laws. The inverse has the
 guarded domain `fn(x K: x != zero) K`; applying it at zero is not well-defined.
+
+The field export also supplies elementary multiplication laws:
+
+| Theorem after `Algebra::field::` | Result and required premises |
+| --- | --- |
+| `mul_zero(K,F,a)` / `zero_mul(K,F,a)` | Multiplication by zero on either side gives zero |
+| `mul_left_cancel_nonzero(K,F,a,b,c)` | `a*b=a*c` and nonzero `a` imply `b=c` |
+| `mul_right_cancel_nonzero(K,F,a,b,c)` | `b*a=c*a` and nonzero `a` imply `b=c` |
+| `mul_eq_zero_nonzero_left(K,F,a,b)` | `a*b=0` and nonzero `a` imply `b=0` |
+| `mul_eq_zero_nonzero_right(K,F,a,b)` | `a*b=0` and nonzero `b` imply `a=0` |
+| `nonzero_product(K,F,a,b)` | Two nonzero factors have a nonzero product |
+| `zero_product_factors(K,F,a,b)` | `a*b=0` implies `a=0 or b=0` |
+| `zero_product_from_factor(K,F,a,b)` | Either zero factor makes `a*b=0` |
+| `nonzero_product_factors(K,F,a,b)` | `a*b!=0` implies both factors are nonzero |
+
+The [field examples](../../examples/algebra/field_zero_laws/README.md) include
+the zero-factor boundary. All 17 focused checks pass, including 10 rejected
+final statements and both installed layouts.
+The [zero-product characterization](../../examples/algebra/field_zero_product/README.md)
+also checks the actual two-element and real fields. All 18 focused checks pass,
+including six final-only refusals and actual/generic callers in both installed
+layouts.
+
+The additive laws use the same Field structure:
+
+| Theorem after `Algebra::field::` | Result and required premises |
+| --- | --- |
+| `add_right_zero(K,F,a)` | Adding zero on the right leaves `a` unchanged |
+| `add_left_inverse(K,F,a)` | `F.neg(a)+a` is zero |
+| `add_left_cancel(K,F,a,b,c)` | `a+b=a+c` implies `b=c` |
+| `add_right_cancel(K,F,a,b,c)` | `b+a=c+a` implies `b=c` |
+| `neg_zero(K,F)` | The additive inverse of zero is zero |
+| `neg_involution(K,F,a)` | The additive inverse of the additive inverse is `a` |
+
+All 16 focused checks pass, including nine final-statement refusals and both
+installed layouts. The
+[additive examples](../../examples/algebra/field_additive_laws/README.md)
+include real-field values and the cancellation premises.
+
+The field export also proves the following relationships between addition,
+multiplication and additive inverses:
+
+| Theorem after `Algebra::field::` | Result and required premises |
+| --- | --- |
+| `add_inverse_unique(K,F,a,b)` | `a+b=0` implies `b=F.neg(a)` |
+| `mul_neg(K,F,a,b)` | `a*(-b)=-(a*b)` |
+| `neg_mul(K,F,a,b)` | `(-a)*b=-(a*b)` |
+| `neg_mul_neg(K,F,a,b)` | `(-a)*(-b)=a*b` |
+| `neg_add(K,F,a,b)` | `-(a+b)=(-a)+(-b)` |
+
+The identities allow zero operands. All 14 focused checks pass, including
+seven final-statement refusals and both installed layouts. The
+[negation examples](../../examples/algebra/field_negation_laws/README.md)
+include zero operands and real values.
+
+The following laws use the existing guarded multiplicative inverse:
+
+| Theorem after `Algebra::field::` | Result and required premises |
+| --- | --- |
+| `nonzero_field_inverse(K,F,a)` | Nonzero `a` has a nonzero inverse |
+| `field_inverse_one(K,F)` | The inverse of one is one |
+| `field_inverse_involution(K,F,a)` | The inverse of the inverse of nonzero `a` is `a` |
+| `field_inverse_unique(K,F,a,b)` | Nonzero `a` and `a*b=1` imply `b=F.inv(a)` |
+| `field_inverse_product(K,F,a,b)` | The inverse of `a*b` is `inv(a)*inv(b)` when both factors are nonzero |
+
+For a generic nested-inverse expression, first provide the existing
+`nonzero_field_inverse` fact in the calling context; for a product-inverse
+expression, first provide the existing `nonzero_product` fact. These establish
+the operation's domain without adding premises to the theorem. The
+[inverse examples](../../examples/algebra/field_inverse_laws/README.md) show
+the generic and concrete forms. All 18 focused checks pass, including 11
+final-statement refusals and both installed layouts.
+
+The field export expresses a difference with existing addition and negation,
+`F.add(a,F.neg(b))`, and provides these laws:
+
+| Theorem after `Algebra::field::` | Result and required premises |
+| --- | --- |
+| `add_mul(K,F,a,b,c)` | `(a+b)*c=a*c+b*c` |
+| `mul_difference(K,F,a,b,c)` | `a*(b-c)=a*b-a*c` |
+| `difference_mul(K,F,a,b,c)` | `(a-b)*c=a*c-b*c` |
+| `difference_zero_implies_equal(K,F,a,b)` | `a-b=0` implies `a=b` |
+| `equal_implies_difference_zero(K,F,a,b)` | `a=b` implies `a-b=0` |
+
+All operands may be zero. The
+[difference examples](../../examples/algebra/field_difference_laws/README.md)
+pass all 16 focused checks, including nine final-statement refusals and both
+installed layouts.
+
+For equations over a Field, the following laws require a nonzero coefficient
+`a`:
+
+| Theorem after `Algebra::field::` | Result and required premises |
+| --- | --- |
+| `field_linear_equation_unique(K,F,a,b)` | `a*x=b` has exactly one solution |
+| `field_linear_equation_solution(K,F,a,b,x)` | A supplied solution equals `inv(a)*b` |
+| `field_affine_equation_unique(K,F,a,b,c)` | `a*x+b=c` has exactly one solution |
+| `field_affine_equation_solution(K,F,a,b,c,x)` | A supplied solution equals `inv(a)*(c-b)` |
+
+The difference in the last formula uses existing addition and negation. The
+[equation examples](../../examples/algebra/field_linear_equations/README.md)
+include zero-coefficient boundaries. All 17 focused checks pass, including ten
+final-statement refusals and both installed layouts.
+
+The zero-coefficient case has its own field theorems:
+
+| Theorem after `Algebra::field::` | Result and required premises |
+| --- | --- |
+| `field_zero_linear_no_solution(K,F,b,x)` | `b!=0` implies `0*x!=b` for any `x` |
+| `field_zero_linear_two_solutions(K,F)` | `0*x=0` has two distinct solutions |
+| `field_zero_affine_all_solutions(K,F,b,x)` | Every `x` satisfies `0*x+b=b` |
+| `field_zero_affine_no_solution(K,F,b,c,x)` | `b!=c` implies `0*x+b!=c` for any `x` |
+| `field_zero_affine_two_solutions(K,F,b)` | `0*x+b=b` has two distinct solutions |
+
+Field zero and one provide the distinct witnesses. The
+[zero-coefficient examples](../../examples/algebra/field_zero_equations/README.md)
+pass all 16 focused checks, including nine final-statement refusals and both
+installed layouts. At that checkpoint, the six preceding field-example batches
+and five representative group callers also passed a fresh import replay.
+
+The [two-element field example](../../examples/algebra/two_element_field/README.md)
+constructs a characteristic-two instance, with `1+1=0` and `0!=1`, and
+reuses the generic Field laws across files. All 15 focused checks pass,
+including eight final-statement refusals and both installed layouts.
+
+The [two-element scalar-line example](../../examples/algebra/two_element_vector_space/README.md)
+uses that same Field as a vector space over itself. It checks the identity and
+zero maps, their respective kernels, and the zero-kernel injectivity criterion.
+The list containing `1` is a basis, the space has dimension `1`, and the list
+containing `0` is not a basis. At the basis checkpoint, 21 focused checks
+passed, including 14 final-statement refusals and both installed layouts.
+The extension checks identity rank/nullity `(1,0)` and zero-map rank/nullity
+`(0,1)`. All 29 extended focused checks pass, including 22 final-statement
+refusals and both installed layouts.
 
 `VectorSpace<K,field,V>` contains `zero`, `add` and `smul`, with the vector-space
 laws over the supplied field. Additive inverses exist; their uniqueness is a

@@ -9,6 +9,7 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_equal::NotEqualFactSearchProofByBuiltinRule;
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::log_algebra_base_proof::LogAlgebraBaseProof;
 use crate::rational_expression::NumberCompareResult;
 
 impl LitexToLeanCompiler {
@@ -788,6 +789,122 @@ impl LitexToLeanCompiler {
             (
                 AtomicFact::NotEqualFact(_),
                 AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(
+                    NotEqualFactSearchProofByBuiltinRule::PowNonzeroFromBase(p),
+                ),
+            ) => self.compile_power_nonzero(goal, &p.proof_of_requirement_facts, position),
+            (
+                AtomicFact::NotEqualFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(
+                    NotEqualFactSearchProofByBuiltinRule::SqrtNonzeroFromPositiveArg(p),
+                ),
+            ) => self.compile_sqrt_nonzero(goal, &p.arg_positive_proof, position),
+            (
+                AtomicFact::NotEqualFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(
+                    NotEqualFactSearchProofByBuiltinRule::AbsNonzeroFromArg(p),
+                ),
+            ) => self.compile_abs_nonzero(goal, &p.arg_nonzero_proof, position),
+            (
+                AtomicFact::NotEqualFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(
+                    NotEqualFactSearchProofByBuiltinRule::ConjugateNonzeroFromArgument(p),
+                ),
+            ) => self.compile_complex_nonzero(goal, &p.argument_nonzero, true, position),
+            (
+                AtomicFact::NotEqualFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(
+                    NotEqualFactSearchProofByBuiltinRule::ComplexModulusNonzero(p),
+                ),
+            ) => self.compile_complex_nonzero(goal, &p.arg_nonzero_proof, false, position),
+            (
+                AtomicFact::NotEqualFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(
+                    NotEqualFactSearchProofByBuiltinRule::LcmNonzeroFromNonzeroOperands(p),
+                ),
+            ) => self.compile_lcm_nonzero(goal, &p.first_nonzero, &p.second_nonzero, position),
+            (
+                AtomicFact::NotEqualFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(
+                    NotEqualFactSearchProofByBuiltinRule::LogNonzeroFromNonunitArgument(p),
+                ),
+            ) => self.compile_log_nonzero(goal, &p.base_proof, &p.argument_proof, position),
+            (
+                AtomicFact::NotEqualFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(
+                    NotEqualFactSearchProofByBuiltinRule::PositiveNonunitIntegerPower(p),
+                ),
+            ) => self.compile_positive_nonunit_integer_power(
+                goal,
+                &p.base_proof,
+                &p.exponent_integer,
+                &p.exponent_nonzero,
+                position,
+            ),
+            (
+                AtomicFact::NotEqualFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(
+                    NotEqualFactSearchProofByBuiltinRule::InequalityFromSumNonzero(p),
+                ),
+            ) => self.compile_inequality_from_nonzero_sum(goal, &p.premise_proof, position),
+            (
+                AtomicFact::NotEqualFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(
+                    NotEqualFactSearchProofByBuiltinRule::TanNonzeroFromSin(p),
+                ),
+            ) => self.compile_trig_quotient_nonzero(goal, &p.numerator_nonzero, true, position),
+            (
+                AtomicFact::NotEqualFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(
+                    NotEqualFactSearchProofByBuiltinRule::CotNonzeroFromCos(p),
+                ),
+            ) => self.compile_trig_quotient_nonzero(goal, &p.numerator_nonzero, false, position),
+            (
+                AtomicFact::NotEqualFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(
+                    NotEqualFactSearchProofByBuiltinRule::SinNonzeroNegation(p),
+                ),
+            ) => self.compile_trig_negation_nonzero(goal, &p.source_nonzero, true, position),
+            (
+                AtomicFact::NotEqualFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(
+                    NotEqualFactSearchProofByBuiltinRule::CosNonzeroNegation(p),
+                ),
+            ) => self.compile_trig_negation_nonzero(goal, &p.source_nonzero, false, position),
+            (
+                AtomicFact::NotEqualFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(
+                    NotEqualFactSearchProofByBuiltinRule::EulerNonunit(_),
+                ),
+            ) => self.compile_euler_nonunit(goal, position),
+            (
+                AtomicFact::NotEqualFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(
+                    NotEqualFactSearchProofByBuiltinRule::ExpNonzero(_),
+                ),
+            ) => self.compile_exp_nonzero(goal, position),
+            (
+                AtomicFact::NotEqualFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(
+                    NotEqualFactSearchProofByBuiltinRule::SignNonzeroFromArgument(p),
+                ),
+            ) => self.compile_sign_nonzero(goal, &p.argument_nonzero, position),
+            (
+                AtomicFact::NotEqualFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(
+                    NotEqualFactSearchProofByBuiltinRule::SignNonzeroReflection(p),
+                ),
+            ) => {
+                self.compile_sign_nonzero_reflection(goal, &p.real_proof, &p.sign_nonzero, position)
+            }
+            (
+                AtomicFact::NotEqualFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(
+                    NotEqualFactSearchProofByBuiltinRule::ProductComponentNonzero(p),
+                ),
+            ) => self.compile_product_component_nonzero(goal, &p.product_nonzero_proof, position),
+            (
+                AtomicFact::NotEqualFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(
                     NotEqualFactSearchProofByBuiltinRule::DivNonzeroFromFactors(p),
                 ),
             ) => self.compile_quotient_nonzero(goal, &p.proof_of_requirement_facts, position),
@@ -1269,6 +1386,810 @@ impl LitexToLeanCompiler {
             zero_value.1,
             zero_value.0,
         ))
+    }
+
+    /// Normalize a recorded known nonzero fact to the literal zero endpoint.
+    fn compile_known_nonzero(
+        &self,
+        premise: &AtomicExceptEqualityFactKnownProof,
+        subject: &Obj,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        let AtomicFact::NotEqualFact(fact) = &premise.fact else {
+            return Err(LeanCompileError::unsupported("KnownNonzero/Family"));
+        };
+        let (zero, reversed) = if fact.left.ir() == subject.ir() {
+            (&fact.right, false)
+        } else if fact.right.ir() == subject.ir() {
+            (&fact.left, true)
+        } else {
+            return Err(LeanCompileError::unsupported("KnownNonzero/Subject"));
+        };
+        let zero_value = self.compile_numeric_observation(zero, position)?;
+        if !zero_value.3.as_ref().is_some_and(EvalRational::is_zero) {
+            return Err(LeanCompileError::unsupported("KnownNonzero/Zero"));
+        }
+        let AtomicExceptEqualityFactSearchedProof::ByKnownAtomicFact(citation) =
+            premise.searched_proof.as_ref()
+        else {
+            return Err(LeanCompileError::unsupported("KnownNonzero/Citation"));
+        };
+        let cited = self.compile_known_atomic(citation, &premise.fact, position)?;
+        let zero_eq = format!(
+            "(({}).trans (congrArg M.number (by norm_num : {} = (0 : ℂ))))",
+            zero_value.1, zero_value.0
+        );
+        let equality = format!("(_known_equal.trans {zero_eq}.symm)");
+        let equality = if reversed {
+            format!("{equality}.symm")
+        } else {
+            equality
+        };
+        Ok(format!("(fun _known_equal => {cited} {equality})"))
+    }
+
+    pub(in crate::compile_to_lean) fn compile_exp_nonzero(
+        &self,
+        goal: &AtomicFact,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        let AtomicFact::NotEqualFact(fact) = goal else {
+            return Err(LeanCompileError::unsupported("NonzeroExp/Family"));
+        };
+        let (exp, zero, reversed) = match (&fact.left, &fact.right) {
+            (object @ Obj::ExpLogOperator(ExpLogOperator::Exp(_)), zero) => (object, zero, false),
+            (zero, object @ Obj::ExpLogOperator(ExpLogOperator::Exp(_))) => (object, zero, true),
+            _ => return Err(LeanCompileError::unsupported("NonzeroExp/Subjects")),
+        };
+        let zero_value = self.compile_numeric_observation(zero, position)?;
+        if !zero_value.3.as_ref().is_some_and(EvalRational::is_zero) {
+            return Err(LeanCompileError::unsupported("NonzeroExp/Zero"));
+        }
+        let exp = self.compile_object_reference(exp, position)?;
+        let equality = if reversed {
+            "_litex_equal.symm"
+        } else {
+            "_litex_equal"
+        };
+        Ok(format!("(fun _litex_equal => (Litex.expNonzero {exp}) (({equality}).trans (({}).trans (congrArg M.number (by norm_num : {} = (0 : ℂ))))))", zero_value.1, zero_value.0))
+    }
+
+    pub(in crate::compile_to_lean) fn compile_sign_nonzero(
+        &self,
+        goal: &AtomicFact,
+        premise: &AtomicExceptEqualityFactKnownProof,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        let AtomicFact::NotEqualFact(fact) = goal else {
+            return Err(LeanCompileError::unsupported("NonzeroSign/Family"));
+        };
+        let (sign_object, sign, zero, reversed) = match (&fact.left, &fact.right) {
+            (object @ Obj::ArithmeticOperator(ArithmeticOperator::Sign(sign)), zero) => {
+                (object, sign, zero, false)
+            }
+            (zero, object @ Obj::ArithmeticOperator(ArithmeticOperator::Sign(sign))) => {
+                (object, sign, zero, true)
+            }
+            _ => return Err(LeanCompileError::unsupported("NonzeroSign/Subjects")),
+        };
+        let zero_value = self.compile_numeric_observation(zero, position)?;
+        if !zero_value.3.as_ref().is_some_and(EvalRational::is_zero) {
+            return Err(LeanCompileError::unsupported("NonzeroSign/Zero"));
+        }
+        let known = self.compile_known_nonzero(premise, &sign.arg, position)?;
+        let sign = self.compile_object_reference(sign_object, position)?;
+        let equality = if reversed {
+            "_litex_equal.symm"
+        } else {
+            "_litex_equal"
+        };
+        Ok(format!("(fun _litex_equal => {known} ((Litex.signZeroIffArgZero {sign} ({sign}).wd).mp (({equality}).trans (({}).trans (congrArg M.number (by norm_num : {} = (0 : ℂ)))))))", zero_value.1, zero_value.0))
+    }
+
+    pub(in crate::compile_to_lean) fn compile_sign_nonzero_reflection(
+        &self,
+        goal: &AtomicFact,
+        real: &VerifyFactResult,
+        premise: &AtomicExceptEqualityFactKnownProof,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        let (AtomicFact::NotEqualFact(goal), AtomicFact::NotEqualFact(known)) =
+            (goal, &premise.fact)
+        else {
+            return Err(LeanCompileError::unsupported(
+                "NonzeroSignReflection/Family",
+            ));
+        };
+        let mut selected = None;
+        for sign_object in [&known.left, &known.right] {
+            let Obj::ArithmeticOperator(ArithmeticOperator::Sign(sign)) = sign_object else {
+                continue;
+            };
+            for (argument, zero, reversed) in [
+                (&goal.left, &goal.right, false),
+                (&goal.right, &goal.left, true),
+            ] {
+                if argument.ir() != sign.arg.ir() {
+                    continue;
+                }
+                let Ok(value) = self.compile_numeric_observation(zero, position) else {
+                    continue;
+                };
+                if value.3.as_ref().is_some_and(EvalRational::is_zero) {
+                    selected = Some((sign_object, argument, reversed, value));
+                    break;
+                }
+            }
+            if selected.is_some() {
+                break;
+            }
+        }
+        let (sign_object, argument, reversed, zero_value) = selected
+            .ok_or_else(|| LeanCompileError::unsupported("NonzeroSignReflection/Subjects"))?;
+        if membership_subject(&source_subject(real)?, argument)? != StandardSet::R {
+            return Err(LeanCompileError::unsupported("NonzeroSignReflection/Real"));
+        }
+        let real = self.compile_verify(real, position)?.1;
+        let known = self.compile_known_nonzero(premise, sign_object, position)?;
+        let sign = self.compile_object_reference(sign_object, position)?;
+        let equality = if reversed {
+            "_litex_equal.symm"
+        } else {
+            "_litex_equal"
+        };
+        Ok(format!("(fun _litex_equal => {known} ((Litex.signZeroIffArgZero {sign} {real}).mpr (({equality}).trans (({}).trans (congrArg M.number (by norm_num : {} = (0 : ℂ)))))))", zero_value.1, zero_value.0))
+    }
+
+    fn compile_euler_nonunit(
+        &self,
+        goal: &AtomicFact,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        let AtomicFact::NotEqualFact(fact) = goal else {
+            return Err(LeanCompileError::unsupported("EulerNonunit/Family"));
+        };
+        let (one, reversed) = match (&fact.left, &fact.right) {
+            (Obj::Literal(Literal::EulerNumber(_)), one) => (one, false),
+            (one, Obj::Literal(Literal::EulerNumber(_))) => (one, true),
+            _ => return Err(LeanCompileError::unsupported("EulerNonunit/Subject")),
+        };
+        let value = self.compile_numeric_observation(one, position)?;
+        if value.3.as_ref() != EvalRational::new(1, 1).as_ref() {
+            return Err(LeanCompileError::unsupported("EulerNonunit/One"));
+        }
+        let equality = if reversed {
+            "_litex_equal.symm"
+        } else {
+            "_litex_equal"
+        };
+        Ok(format!("(fun _litex_equal => (Litex.eulerNonunit (M := M)) (({equality}).trans (({}).trans (congrArg M.number (by norm_num : {} = (1 : ℂ))))))", value.1, value.0))
+    }
+
+    fn compile_trig_negation_nonzero(
+        &self,
+        goal: &AtomicFact,
+        premise: &AtomicExceptEqualityFactKnownProof,
+        sine: bool,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        let (AtomicFact::NotEqualFact(goal), AtomicFact::NotEqualFact(known)) =
+            (goal, &premise.fact)
+        else {
+            return Err(LeanCompileError::unsupported("NonzeroTrigNegation/Family"));
+        };
+        fn argument(object: &Obj, sine: bool) -> Option<&Obj> {
+            match object {
+                Obj::TrigOperator(TrigOperator::Sin(p)) if sine => Some(&p.arg),
+                Obj::TrigOperator(TrigOperator::Cos(p)) if !sine => Some(&p.arg),
+                _ => None,
+            }
+        }
+        let (target, target_arg, zero, reversed) = if let Some(arg) = argument(&goal.left, sine) {
+            (&goal.left, arg, &goal.right, false)
+        } else if let Some(arg) = argument(&goal.right, sine) {
+            (&goal.right, arg, &goal.left, true)
+        } else {
+            return Err(LeanCompileError::unsupported(
+                "NonzeroTrigNegation/Subjects",
+            ));
+        };
+        let (base, zero_left) = match target_arg {
+            Obj::ArithmeticOperator(ArithmeticOperator::Neg(p)) => (&*p.arg, None),
+            Obj::ArithmeticOperator(ArithmeticOperator::Sub(p)) => (&*p.right, Some(&*p.left)),
+            _ => {
+                return Err(LeanCompileError::unsupported(
+                    "NonzeroTrigNegation/Argument",
+                ))
+            }
+        };
+        let source = [&known.left, &known.right]
+            .into_iter()
+            .find(|candidate| argument(candidate, sine).is_some_and(|arg| arg.ir() == base.ir()))
+            .ok_or_else(|| LeanCompileError::unsupported("NonzeroTrigNegation/Source"))?;
+        let nonzero = self.compile_known_nonzero(premise, source, position)?;
+        let goal_zero = self.compile_numeric_observation(zero, position)?;
+        if !goal_zero.3.as_ref().is_some_and(EvalRational::is_zero) {
+            return Err(LeanCompileError::unsupported("NonzeroTrigNegation/Zero"));
+        }
+        let relation = if let Some(zero_left) = zero_left {
+            let z = self.compile_numeric_observation(zero_left, position)?;
+            if !z.3.as_ref().is_some_and(EvalRational::is_zero) {
+                return Err(LeanCompileError::unsupported("NonzeroTrigNegation/ZeroSub"));
+            }
+            let zero_eq = format!(
+                "(({}).trans (congrArg M.number (by norm_num : {} = (0 : ℂ))))",
+                z.1, z.0
+            );
+            format!("((congrArg (fun v => M.subValue v (Litex.denote _source.val.arg)) {zero_eq}).trans (Litex.zeroSubValue _source.val.arg (Litex.realToComplex _source.val.arg _source.wd)))")
+        } else {
+            "rfl".into()
+        };
+        let target = self.compile_object_reference(target, position)?;
+        let source = self.compile_object_reference(source, position)?;
+        let theorem = if sine {
+            "sinNonzeroOfNegatedArg"
+        } else {
+            "cosNonzeroOfNegatedArg"
+        };
+        let equality = if reversed {
+            "_litex_equal.symm"
+        } else {
+            "_litex_equal"
+        };
+        Ok(format!("(let _target := {target}; let _source := {source}; fun _litex_equal => (Litex.{theorem} _target _source {relation} {nonzero}) (({equality}).trans (({}).trans (congrArg M.number (by norm_num : {} = (0 : ℂ))))))", goal_zero.1, goal_zero.0))
+    }
+
+    fn compile_trig_quotient_nonzero(
+        &self,
+        goal: &AtomicFact,
+        premise: &AtomicExceptEqualityFactKnownProof,
+        tangent: bool,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        let (AtomicFact::NotEqualFact(goal), AtomicFact::NotEqualFact(known)) =
+            (goal, &premise.fact)
+        else {
+            return Err(LeanCompileError::unsupported("NonzeroTrigQuotient/Family"));
+        };
+        fn argument(object: &Obj, tangent: bool) -> Option<&Obj> {
+            match object {
+                Obj::TrigOperator(TrigOperator::Tan(p)) if tangent => Some(&p.arg),
+                Obj::TrigOperator(TrigOperator::Cot(p)) if !tangent => Some(&p.arg),
+                _ => None,
+            }
+        }
+        let (quotient, arg, zero, reversed) = if let Some(arg) = argument(&goal.left, tangent) {
+            (&goal.left, arg, &goal.right, false)
+        } else if let Some(arg) = argument(&goal.right, tangent) {
+            (&goal.right, arg, &goal.left, true)
+        } else {
+            return Err(LeanCompileError::unsupported(
+                "NonzeroTrigQuotient/Subjects",
+            ));
+        };
+        let numerator = [&known.left, &known.right]
+            .into_iter()
+            .find(|candidate| match candidate {
+                Obj::TrigOperator(TrigOperator::Sin(p)) if tangent => p.arg.ir() == arg.ir(),
+                Obj::TrigOperator(TrigOperator::Cos(p)) if !tangent => p.arg.ir() == arg.ir(),
+                _ => false,
+            })
+            .ok_or_else(|| LeanCompileError::unsupported("NonzeroTrigQuotient/Numerator"))?;
+        let nonzero = self.compile_known_nonzero(premise, numerator, position)?;
+        let zero_value = self.compile_numeric_observation(zero, position)?;
+        if !zero_value.3.as_ref().is_some_and(EvalRational::is_zero) {
+            return Err(LeanCompileError::unsupported("NonzeroTrigQuotient/Zero"));
+        }
+        let quotient = self.compile_object_reference(quotient, position)?;
+        let numerator = self.compile_object_reference(numerator, position)?;
+        let theorem = if tangent {
+            "tanNonzeroOfSin"
+        } else {
+            "cotNonzeroOfCos"
+        };
+        let equality = if reversed {
+            "_litex_equal.symm"
+        } else {
+            "_litex_equal"
+        };
+        Ok(format!("(let _quotient := {quotient}; let _numerator := {numerator}; fun _litex_equal => (Litex.{theorem} _quotient _numerator rfl {nonzero}) (({equality}).trans (({}).trans (congrArg M.number (by norm_num : {} = (0 : ℂ))))))", zero_value.1, zero_value.0))
+    }
+
+    fn compile_positive_nonunit_integer_power(
+        &self,
+        goal: &AtomicFact,
+        base_proof: &LogAlgebraBaseProof,
+        exponent_integer: &VerifyFactResult,
+        exponent_nonzero: &VerifyFactResult,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        let AtomicFact::NotEqualFact(fact) = goal else {
+            return Err(LeanCompileError::unsupported("NonunitPower/Family"));
+        };
+        let (object, power, one, reversed) = match (&fact.left, &fact.right) {
+            (object @ Obj::ArithmeticOperator(ArithmeticOperator::Pow(power)), one) => {
+                (object, power, one, false)
+            }
+            (one, object @ Obj::ArithmeticOperator(ArithmeticOperator::Pow(power))) => {
+                (object, power, one, true)
+            }
+            _ => return Err(LeanCompileError::unsupported("NonunitPower/Subjects")),
+        };
+        if membership_subject(&source_subject(exponent_integer)?, &power.exponent)?
+            != StandardSet::Z
+        {
+            return Err(LeanCompileError::unsupported("NonunitPower/Exponent"));
+        }
+        ensure_nonzero_subject(&source_subject(exponent_nonzero)?, &power.exponent)?;
+        let one_value = self.compile_numeric_observation(one, position)?;
+        if one_value.3.as_ref() != EvalRational::new(1, 1).as_ref() {
+            return Err(LeanCompileError::unsupported("NonunitPower/One"));
+        }
+        let guard = self.compile_log_guard(&power.base, base_proof, position)?;
+        let integer = self.compile_verify(exponent_integer, position)?.1;
+        let nonzero = self.compile_verify(exponent_nonzero, position)?.1;
+        let object = self.compile_object_reference(object, position)?;
+        let equality = if reversed {
+            "_litex_equal.symm"
+        } else {
+            "_litex_equal"
+        };
+        Ok(format!("(let _base_guard := {guard}; fun _litex_equal => (Litex.powerNonunitOfGuards {object} _base_guard.1 _base_guard.2 {integer} {nonzero}) (({equality}).trans (({}).trans (congrArg M.number (by norm_num : {} = (1 : ℂ))))))", one_value.1, one_value.0))
+    }
+
+    fn compile_inequality_from_nonzero_sum(
+        &self,
+        goal: &AtomicFact,
+        premise: &AtomicExceptEqualityFactKnownProof,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        let (AtomicFact::NotEqualFact(goal), AtomicFact::NotEqualFact(known)) =
+            (goal, &premise.fact)
+        else {
+            return Err(LeanCompileError::unsupported("NonzeroSum/Family"));
+        };
+        fn negated(object: &Obj) -> Option<(&Obj, bool)> {
+            match object {
+                Obj::ArithmeticOperator(ArithmeticOperator::Neg(n)) => Some((&n.arg, false)),
+                Obj::ArithmeticOperator(ArithmeticOperator::Sub(s)) if is_exact_zero(&s.left) => {
+                    Some((&s.right, true))
+                }
+                _ => None,
+            }
+        }
+        let mut selected = None;
+        for sum_object in [&known.left, &known.right] {
+            let Obj::ArithmeticOperator(ArithmeticOperator::Add(sum)) = sum_object else {
+                continue;
+            };
+            for (direct, other, reversed) in [
+                (&goal.left, &goal.right, false),
+                (&goal.right, &goal.left, true),
+            ] {
+                let Some((argument, zero_sub)) = negated(other) else {
+                    continue;
+                };
+                let side = if direct.ir() == sum.left.ir() && argument.ir() == sum.right.ir() {
+                    "Left"
+                } else if direct.ir() == sum.right.ir() && argument.ir() == sum.left.ir() {
+                    "Right"
+                } else {
+                    continue;
+                };
+                selected = Some((sum_object, other, side, reversed, zero_sub));
+                break;
+            }
+            if selected.is_some() {
+                break;
+            }
+        }
+        let (sum, other, side, reversed, zero_sub) =
+            selected.ok_or_else(|| LeanCompileError::unsupported("NonzeroSum/Subjects"))?;
+        let nonzero = self.compile_known_nonzero(premise, sum, position)?;
+        let sum = self.compile_object_reference(sum, position)?;
+        let other = self.compile_object_reference(other, position)?;
+        let negation = if zero_sub {
+            let (arg, wd) = if side == "Left" {
+                ("right", "2")
+            } else {
+                ("left", "1")
+            };
+            format!("(Litex.zeroSubValue _sum.val.{arg} _sum.wd.{wd})")
+        } else {
+            "rfl".to_string()
+        };
+        let equality = if reversed {
+            "_litex_equal.symm"
+        } else {
+            "_litex_equal"
+        };
+        Ok(format!("(let _sum := {sum}; let _other := {other}; fun _litex_equal => (Litex.notSameNegOfNonzeroSum{side} _sum _other {negation} {nonzero}) {equality})"))
+    }
+
+    fn compile_log_guard(
+        &self,
+        subject: &Obj,
+        proof: &LogAlgebraBaseProof,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        let is_one =
+            |o: &Obj| matches!(o, Obj::Literal(Literal::Number(n)) if n.normalized_value == "1");
+        let strict = |child: &VerifyFactResult,
+                      low: &dyn Fn(&Obj) -> bool,
+                      high: &dyn Fn(&Obj) -> bool|
+         -> Result<String, LeanCompileError> {
+            let Fact::AtomicFact(fact) = source_subject(child)? else {
+                return Err(LeanCompileError::unsupported("LogGuard/Fact"));
+            };
+            let (l, r, is_strict) = source_order_oriented(&fact)?;
+            if !is_strict || !low(l) || !high(r) {
+                return Err(LeanCompileError::unsupported("LogGuard/Subject"));
+            }
+            Ok(self.compile_verify(child, position)?.1)
+        };
+        let is_subject = |o: &Obj| o.ir() == subject.ir();
+        let object = self.compile_object_reference(subject, position)?;
+        match proof {
+            LogAlgebraBaseProof::GreaterThanOne(p) => {
+                let above = strict(p, &is_one, &is_subject)?;
+                Ok(format!("(Litex.logGuardAbove {object} {above})"))
+            }
+            LogAlgebraBaseProof::BelowOne(p) => {
+                let positive = strict(&p.positive_proof, &is_exact_zero, &is_subject)?;
+                let below = strict(&p.less_than_one_proof, &is_subject, &is_one)?;
+                Ok(format!(
+                    "(And.intro {positive} (Litex.ltNotSame {object} (Litex.number 1) {below}))"
+                ))
+            }
+            LogAlgebraBaseProof::PositiveNonunit(p) => {
+                let positive = strict(&p.positive_proof, &is_exact_zero, &is_subject)?;
+                let Fact::AtomicFact(AtomicFact::NotEqualFact(fact)) =
+                    source_subject(&p.nonunit_proof)?
+                else {
+                    return Err(LeanCompileError::unsupported("LogGuard/Nonunit"));
+                };
+                let reversed = if is_subject(&fact.left) && is_one(&fact.right) {
+                    false
+                } else if is_one(&fact.left) && is_subject(&fact.right) {
+                    true
+                } else {
+                    return Err(LeanCompileError::unsupported("LogGuard/NonunitSubject"));
+                };
+                let nonunit = self.compile_verify(&p.nonunit_proof, position)?.1;
+                let nonunit = if reversed {
+                    format!("(show ¬ Litex.Same {object} (Litex.number 1) from fun _log_eq => {nonunit} _log_eq.symm)")
+                } else {
+                    nonunit
+                };
+                Ok(format!("(And.intro {positive} {nonunit})"))
+            }
+        }
+    }
+
+    fn compile_log_nonzero(
+        &self,
+        goal: &AtomicFact,
+        base_proof: &LogAlgebraBaseProof,
+        argument_proof: &LogAlgebraBaseProof,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        let AtomicFact::NotEqualFact(fact) = goal else {
+            return Err(LeanCompileError::unsupported("NonzeroLog/Family"));
+        };
+        let (object, log, zero, reversed) = match (&fact.left, &fact.right) {
+            (object @ Obj::ExpLogOperator(ExpLogOperator::Log(log)), zero) => {
+                (object, log, zero, false)
+            }
+            (zero, object @ Obj::ExpLogOperator(ExpLogOperator::Log(log))) => {
+                (object, log, zero, true)
+            }
+            _ => return Err(LeanCompileError::unsupported("NonzeroLog/Subjects")),
+        };
+        let zero_value = self.compile_numeric_observation(zero, position)?;
+        if !zero_value.3.as_ref().is_some_and(EvalRational::is_zero) {
+            return Err(LeanCompileError::unsupported("NonzeroLog/Zero"));
+        }
+        let base = self.compile_log_guard(&log.base, base_proof, position)?;
+        let argument = self.compile_log_guard(&log.arg, argument_proof, position)?;
+        let object = self.compile_object_reference(object, position)?;
+        let equality = if reversed {
+            "_litex_equal.symm"
+        } else {
+            "_litex_equal"
+        };
+        Ok(format!("(let _log_base := {base}; let _log_arg := {argument}; fun _litex_equal => (Litex.logNonzeroOfGuards {object} _log_base.1 _log_base.2 _log_arg.1 _log_arg.2) (({equality}).trans (({}).trans (congrArg M.number (by norm_num : {} = (0 : ℂ))))))", zero_value.1, zero_value.0))
+    }
+
+    fn compile_lcm_nonzero(
+        &self,
+        goal: &AtomicFact,
+        first_nonzero: &VerifyFactResult,
+        second_nonzero: &VerifyFactResult,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        let AtomicFact::NotEqualFact(fact) = goal else {
+            return Err(LeanCompileError::unsupported("NonzeroLcm/Family"));
+        };
+        let (object, lcm, zero, reversed) = match (&fact.left, &fact.right) {
+            (object @ Obj::IntegerOperator(IntegerOperator::Lcm(lcm)), zero) => {
+                (object, lcm, zero, false)
+            }
+            (zero, object @ Obj::IntegerOperator(IntegerOperator::Lcm(lcm))) => {
+                (object, lcm, zero, true)
+            }
+            _ => return Err(LeanCompileError::unsupported("NonzeroLcm/Subjects")),
+        };
+        ensure_nonzero_subject(&source_subject(first_nonzero)?, &lcm.left)?;
+        ensure_nonzero_subject(&source_subject(second_nonzero)?, &lcm.right)?;
+        let zero_value = self.compile_numeric_observation(zero, position)?;
+        if !zero_value.3.as_ref().is_some_and(EvalRational::is_zero) {
+            return Err(LeanCompileError::unsupported("NonzeroLcm/Zero"));
+        }
+        let object = self.compile_object_reference(object, position)?;
+        let first = self.compile_verify(first_nonzero, position)?.1;
+        let second = self.compile_verify(second_nonzero, position)?.1;
+        let equality = if reversed {
+            "_litex_equal.symm"
+        } else {
+            "_litex_equal"
+        };
+        Ok(format!("(fun _litex_equal => (Litex.lcmNonzeroOfArgs {object} {first} {second}) (({equality}).trans (({}).trans (congrArg M.number (by norm_num : {} = (0 : ℂ))))))", zero_value.1, zero_value.0))
+    }
+
+    fn compile_complex_nonzero(
+        &self,
+        goal: &AtomicFact,
+        argument_nonzero: &VerifyFactResult,
+        conjugate: bool,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        let AtomicFact::NotEqualFact(fact) = goal else {
+            return Err(LeanCompileError::unsupported("NonzeroComplex/Family"));
+        };
+        fn select(object: &Obj, conjugate: bool) -> Option<&Obj> {
+            match object {
+                Obj::ComplexOperator(ComplexOperator::Conjugate(p)) if conjugate => Some(&p.arg),
+                Obj::ComplexOperator(ComplexOperator::ComplexAbs(p)) if !conjugate => Some(&p.arg),
+                _ => None,
+            }
+        }
+        let (object, argument, zero, reversed) = if let Some(arg) = select(&fact.left, conjugate) {
+            (&fact.left, arg, &fact.right, false)
+        } else if let Some(arg) = select(&fact.right, conjugate) {
+            (&fact.right, arg, &fact.left, true)
+        } else {
+            return Err(LeanCompileError::unsupported("NonzeroComplex/Subjects"));
+        };
+        ensure_nonzero_subject(&source_subject(argument_nonzero)?, argument)?;
+        let zero_value = self.compile_numeric_observation(zero, position)?;
+        if !zero_value.3.as_ref().is_some_and(EvalRational::is_zero) {
+            return Err(LeanCompileError::unsupported("NonzeroComplex/Zero"));
+        }
+        let object = self.compile_object_reference(object, position)?;
+        let premise = self.compile_verify(argument_nonzero, position)?.1;
+        let theorem = if conjugate {
+            "conjugateNonzeroOfArg"
+        } else {
+            "complexAbsNonzeroOfArg"
+        };
+        let equality = if reversed {
+            "_litex_equal.symm"
+        } else {
+            "_litex_equal"
+        };
+        Ok(format!("(fun _litex_equal => (Litex.{theorem} {object} {premise}) (({equality}).trans (({}).trans (congrArg M.number (by norm_num : {} = (0 : ℂ))))))", zero_value.1, zero_value.0))
+    }
+
+    pub(in crate::compile_to_lean) fn compile_abs_nonzero(
+        &self,
+        goal: &AtomicFact,
+        argument_nonzero: &VerifyFactResult,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        let AtomicFact::NotEqualFact(fact) = goal else {
+            return Err(LeanCompileError::unsupported("NonzeroAbs/Family"));
+        };
+        let (abs_object, abs, zero, reversed) = match (&fact.left, &fact.right) {
+            (object @ Obj::ArithmeticOperator(ArithmeticOperator::Abs(abs)), zero) => {
+                (object, abs, zero, false)
+            }
+            (zero, object @ Obj::ArithmeticOperator(ArithmeticOperator::Abs(abs))) => {
+                (object, abs, zero, true)
+            }
+            _ => return Err(LeanCompileError::unsupported("NonzeroAbs/Subjects")),
+        };
+        ensure_nonzero_subject(&source_subject(argument_nonzero)?, &abs.arg)?;
+        let zero_value = self.compile_numeric_observation(zero, position)?;
+        if !zero_value.3.as_ref().is_some_and(EvalRational::is_zero) {
+            return Err(LeanCompileError::unsupported("NonzeroAbs/Zero"));
+        }
+        let abs = self.compile_object_reference(abs_object, position)?;
+        let premise = self.compile_verify(argument_nonzero, position)?.1;
+        let nonzero = format!("(Litex.absNonzeroOfArg {abs} {premise})");
+        let equality = if reversed {
+            "_litex_equal.symm"
+        } else {
+            "_litex_equal"
+        };
+        Ok(format!("(fun _litex_equal => {nonzero} (({equality}).trans (({}).trans (congrArg M.number (by norm_num : {} = (0 : ℂ))))))", zero_value.1, zero_value.0))
+    }
+
+    pub(in crate::compile_to_lean) fn compile_product_component_nonzero(
+        &self,
+        goal: &AtomicFact,
+        premise: &AtomicExceptEqualityFactKnownProof,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        let (AtomicFact::NotEqualFact(goal), AtomicFact::NotEqualFact(known)) =
+            (goal, &premise.fact)
+        else {
+            return Err(LeanCompileError::unsupported("NonzeroProduct/Family"));
+        };
+        let mut selected = None;
+        for (object, known_zero, known_reversed) in [
+            (&known.left, &known.right, false),
+            (&known.right, &known.left, true),
+        ] {
+            let Obj::ArithmeticOperator(ArithmeticOperator::Mul(product)) = object else {
+                continue;
+            };
+            for (target, zero, reversed) in [
+                (&goal.left, &goal.right, false),
+                (&goal.right, &goal.left, true),
+            ] {
+                let projection = if target.ir() == product.left.ir() {
+                    "1"
+                } else if target.ir() == product.right.ir() {
+                    "2"
+                } else {
+                    continue;
+                };
+                let Ok(known_value) = self.compile_numeric_observation(known_zero, position) else {
+                    continue;
+                };
+                let Ok(goal_value) = self.compile_numeric_observation(zero, position) else {
+                    continue;
+                };
+                if known_value.3.as_ref().is_some_and(EvalRational::is_zero)
+                    && goal_value.3.as_ref().is_some_and(EvalRational::is_zero)
+                {
+                    selected = Some((
+                        object,
+                        known_reversed,
+                        reversed,
+                        projection,
+                        known_value,
+                        goal_value,
+                    ));
+                    break;
+                }
+            }
+            if selected.is_some() {
+                break;
+            }
+        }
+        let (
+            product_object,
+            known_reversed,
+            reversed,
+            projection,
+            known_zero_value,
+            goal_zero_value,
+        ) = selected.ok_or_else(|| LeanCompileError::unsupported("NonzeroProduct/Subjects"))?;
+        let AtomicExceptEqualityFactSearchedProof::ByKnownAtomicFact(citation) =
+            premise.searched_proof.as_ref()
+        else {
+            return Err(LeanCompileError::unsupported("NonzeroProduct/KnownPremise"));
+        };
+        let cited = self.compile_known_atomic(citation, &premise.fact, position)?;
+        let known_zero_eq = format!(
+            "(({}).trans (congrArg M.number (by norm_num : {} = (0 : ℂ))))",
+            known_zero_value.1, known_zero_value.0
+        );
+        let known_equality = format!("(_product_eq.trans {known_zero_eq}.symm)");
+        let known_equality = if known_reversed {
+            format!("{known_equality}.symm")
+        } else {
+            known_equality
+        };
+        let product_nonzero = format!("(fun _product_eq => {cited} {known_equality})");
+        let product = self.compile_object_reference(product_object, position)?;
+        let factor_nonzero =
+            format!("(Litex.productNonzeroFactors {product} {product_nonzero}).{projection}");
+        let goal_equality = if reversed {
+            "_litex_equal.symm"
+        } else {
+            "_litex_equal"
+        };
+        Ok(format!("(fun _litex_equal => {factor_nonzero} (({goal_equality}).trans (({}).trans (congrArg M.number (by norm_num : {} = (0 : ℂ))))))", goal_zero_value.1, goal_zero_value.0))
+    }
+
+    pub(in crate::compile_to_lean) fn compile_sqrt_nonzero(
+        &self,
+        goal: &AtomicFact,
+        positive: &VerifyFactResult,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        let AtomicFact::NotEqualFact(fact) = goal else {
+            return Err(LeanCompileError::unsupported("NonzeroSqrt/Family"));
+        };
+        let (root_object, root, zero, reversed) = match (&fact.left, &fact.right) {
+            (object @ Obj::ExpLogOperator(ExpLogOperator::Sqrt(root)), zero) => {
+                (object, root, zero, false)
+            }
+            (zero, object @ Obj::ExpLogOperator(ExpLogOperator::Sqrt(root))) => {
+                (object, root, zero, true)
+            }
+            _ => return Err(LeanCompileError::unsupported("NonzeroSqrt/Subjects")),
+        };
+        if !matches!(source_subject(positive)?,
+            Fact::AtomicFact(AtomicFact::LessFact(ref fact))
+                if is_exact_zero(&fact.left) && fact.right.ir() == root.arg.ir())
+        {
+            return Err(LeanCompileError::unsupported(
+                "NonzeroSqrt/PositiveArgument",
+            ));
+        }
+        let zero_value = self.compile_numeric_observation(zero, position)?;
+        if !zero_value.3.as_ref().is_some_and(EvalRational::is_zero) {
+            return Err(LeanCompileError::unsupported("NonzeroSqrt/Zero"));
+        }
+        let root = self.compile_object_reference(root_object, position)?;
+        let positive = self.compile_verify(positive, position)?.1;
+        let nonzero = format!("(Litex.sqrtNonzeroOfPositive {root} {positive})");
+        let equality = if reversed {
+            "_litex_equal.symm"
+        } else {
+            "_litex_equal"
+        };
+        Ok(format!("(fun _litex_equal => {nonzero} (({equality}).trans (({}).trans (congrArg M.number (by norm_num : {} = (0 : ℂ))))))", zero_value.1, zero_value.0))
+    }
+
+    pub(in crate::compile_to_lean) fn compile_power_nonzero(
+        &self,
+        goal: &AtomicFact,
+        proofs: &[VerifyFactResult],
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        let AtomicFact::NotEqualFact(fact) = goal else {
+            return Err(LeanCompileError::unsupported("NonzeroPower/Family"));
+        };
+        if proofs.len() != 2 {
+            return Err(LeanCompileError::unsupported("NonzeroPower/Requirements"));
+        }
+        let (power_object, power, zero, reversed) = match (&fact.left, &fact.right) {
+            (object @ Obj::ArithmeticOperator(ArithmeticOperator::Pow(power)), zero) => {
+                (object, power, zero, false)
+            }
+            (zero, object @ Obj::ArithmeticOperator(ArithmeticOperator::Pow(power))) => {
+                (object, power, zero, true)
+            }
+            _ => return Err(LeanCompileError::unsupported("NonzeroPower/Subjects")),
+        };
+        let member_set = membership_subject(&source_subject(&proofs[0])?, &power.exponent)?;
+        if !matches!(
+            member_set,
+            StandardSet::Z | StandardSet::N | StandardSet::NPos
+        ) {
+            return Err(LeanCompileError::unsupported("NonzeroPower/Exponent"));
+        }
+        ensure_nonzero_subject(&source_subject(&proofs[1])?, &power.base)?;
+        let zero_value = self.compile_numeric_observation(zero, position)?;
+        if !zero_value.3.as_ref().is_some_and(EvalRational::is_zero) {
+            return Err(LeanCompileError::unsupported("NonzeroPower/Zero"));
+        }
+        let exponent = self.compile_object_reference(&power.exponent, position)?;
+        let member = self.compile_verify(&proofs[0], position)?.1;
+        let integer = standard_inclusion_term(&member_set, &StandardSet::Z, &exponent, &member)?;
+        let base_nonzero = self.compile_verify(&proofs[1], position)?.1;
+        let power = self.compile_object_reference(power_object, position)?;
+        let nonzero = format!("(Litex.powNonzeroOfBase {power} {integer} {base_nonzero})");
+        let equality = if reversed {
+            "_litex_equal.symm"
+        } else {
+            "_litex_equal"
+        };
+        Ok(format!("(fun _litex_equal => {nonzero} (({equality}).trans (({}).trans (congrArg M.number (by norm_num : {} = (0 : ℂ))))))", zero_value.1, zero_value.0))
     }
 
     pub(in crate::compile_to_lean) fn compile_quotient_nonzero(

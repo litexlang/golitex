@@ -1,0 +1,33 @@
+thm contract_add_right_zero:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,a K:
+        F.add(a,F.zero)=a
+    release thm Algebra::field::add_right_zero(K,F,a)
+
+thm contract_add_left_inverse:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,a K:
+        F.add(F.neg(a),a)=F.zero
+    release thm Algebra::field::add_left_inverse(K,F,a)
+
+thm contract_add_left_cancel:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,a,b,c K:
+        F.add(a,b)=F.add(a,c)
+        =>:
+            b=c
+    release thm Algebra::field::add_left_cancel(K,F,a,b,c)
+
+thm contract_add_right_cancel:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,a,b,c K:
+        F.add(b,a)=F.add(c,a)
+        =>:
+            b=c
+    release thm Algebra::field::add_right_cancel(K,F,a,b,c)
+
+thm contract_neg_zero:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>:
+        F.neg(F.zero)=F.zero
+    release thm Algebra::field::neg_zero(K,F)
+
+thm contract_neg_involution:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,a K:
+        F.neg(F.neg(a))=a
+    release thm Algebra::field::neg_involution(K,F,a)

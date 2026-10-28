@@ -40,6 +40,7 @@ pub use real_arithmetic_constructor::{
 
 // Builtin rules for `$in` facts (zero-premise or known-cite routes).
 pub enum InFactSearchProofByBuiltinRule {
+    HomogeneousCartesianSequenceMembership(HomogeneousCartesianSequenceMembershipProof),
     NativeMatrix(crate::execute::execute_fact_stmt::native_matrix::MatrixMembershipProof),
     ExactIntegerQuotient(super::selected_scalar_bt_rules::ExactIntegerQuotientProof),
 
@@ -405,6 +406,11 @@ pub struct MulInNaturalBuiltinRuleProof {
     pub right_in_n_proof: VerifyFactResult,
 }
 
+pub struct HomogeneousCartesianSequenceMembershipProof {
+    pub membership: AtomicExceptEqualityFactKnownProof,
+    pub carrier_equal: EqualFactSearchedProof,
+}
+
 impl Runtime {
     // Builtin InFact search: dispatch by set shape first, then only try rules
     // that can apply to that shape (and element shape when needed).
@@ -416,6 +422,31 @@ impl Runtime {
         fact: &InFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<InFactSearchProofByBuiltinRule>> {
+        if matches!(
+            &fact.set,
+            Obj::ProductShape(ProductShape::Cart(_)) | Obj::SetFormer(SetFormer::FiniteSeqSet(_))
+        ) {
+            for member in self.known_memberships_of(&fact.element) {
+                let equation = EqualFact {
+                    fact_id: self.global_ids.allocate_fact_id(),
+                    left: member.set.clone(),
+                    right: fact.set.clone(),
+                    line_file: None,
+                };
+                let Some(equal) = self.search_homogeneous_cartesian_equality(&equation) else {
+                    continue;
+                };
+                let Some(membership) = self.lookup_known_atomic_premise(member.into()) else {
+                    continue;
+                };
+                return Ok(Some(InFactSearchProofByBuiltinRule::HomogeneousCartesianSequenceMembership(
+                    HomogeneousCartesianSequenceMembershipProof {
+                        membership,
+                        carrier_equal: EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::HomogeneousCartesianEqualsFiniteSequence(equal)),
+                    },
+                )));
+            }
+        }
         if let Some(proof) = self.search_native_matrix_membership(fact, verify_state)? {
             return Ok(Some(InFactSearchProofByBuiltinRule::NativeMatrix(proof)));
         }

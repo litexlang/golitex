@@ -1,0 +1,406 @@
+release thm model::two_field_is_field
+
+release thm model::two_field_zero
+
+release thm model::two_field_one
+
+release thm model::two_field_one_plus_one_zero
+
+{0,1}!={}
+
+model::two_field.zero $in {0,1}
+
+model::two_field.add $in fn(x,y {0,1}) {0,1}
+
+model::two_field.mul $in fn(x,y {0,1}) {0,1}
+
+release struct def model::two_field
+
+claim:
+    ? forall x,y,z {0,1}:
+        model::two_field.add(model::two_field.add(x,y),z)=model::two_field.add(x,model::two_field.add(y,z))
+    model::two_field.add(model::two_field.add(x,y),z)=model::two_field.add(x,model::two_field.add(y,z))
+
+claim:
+    ? forall x,y {0,1}:
+        model::two_field.add(x,y)=model::two_field.add(y,x)
+    model::two_field.add(x,y)=model::two_field.add(y,x)
+
+claim:
+    ? forall x {0,1}:
+        model::two_field.add(model::two_field.zero,x)=x
+        exist y {0,1} st {model::two_field.add(x,y)=model::two_field.zero}
+    model::two_field.add(model::two_field.zero,x)=x
+    model::two_field.add(x,model::two_field.neg(x))=model::two_field.zero
+    witness exist y {0,1} st {model::two_field.add(x,y)=model::two_field.zero} from model::two_field.neg(x)
+
+claim:
+    ? forall a,b,x {0,1}:
+        model::two_field.mul(model::two_field.mul(a,b),x)=model::two_field.mul(a,model::two_field.mul(b,x))
+        model::two_field.mul(model::two_field.add(a,b),x)=model::two_field.add(model::two_field.mul(a,x),model::two_field.mul(b,x))
+    model::two_field.mul(model::two_field.mul(a,b),x)=model::two_field.mul(a,model::two_field.mul(b,x))
+    by thm Algebra::field::add_mul({0,1},model::two_field,a,b,x) => model::two_field.mul(model::two_field.add(a,b),x)=model::two_field.add(model::two_field.mul(a,x),model::two_field.mul(b,x))
+
+claim:
+    ? forall a,x,y {0,1}:
+        model::two_field.mul(a,model::two_field.add(x,y))=model::two_field.add(model::two_field.mul(a,x),model::two_field.mul(a,y))
+    model::two_field.mul(a,model::two_field.add(x,y))=model::two_field.add(model::two_field.mul(a,x),model::two_field.mul(a,y))
+
+claim:
+    ? forall x {0,1}:
+        model::two_field.mul(model::two_field.one,x)=x
+    model::two_field.mul(model::two_field.one,x)=x
+
+release thm struct_member((model::two_field.zero,model::two_field.add,model::two_field.mul),&Algebra::vector_space::VectorSpace<{0,1},model::two_field,{0,1}> )
+
+have two_space &Algebra::vector_space::VectorSpace<{0,1},model::two_field,{0,1}> = (model::two_field.zero,model::two_field.add,model::two_field.mul)
+
+release struct def two_space
+
+two_space.zero=model::two_field.zero=0
+
+release thm Algebra::vector_space::identity_linear({0,1},model::two_field,{0,1},two_space)
+
+release thm Algebra::vector_space::zero_map_linear({0,1},model::two_field,{0,1},two_space,{0,1},two_space)
+
+\Algebra::vector_space::identity<{0,1}>(0)=0
+
+\Algebra::vector_space::identity<{0,1}>(1)=1
+
+\Algebra::vector_space::zero_map<{0,1},{0,1},two_space.zero>(0)=two_space.zero
+
+\Algebra::vector_space::zero_map<{0,1},{0,1},two_space.zero>(1)=two_space.zero
+
+\Algebra::vector_space::zero_map<{0,1},{0,1},two_space.zero>(0)=\Algebra::vector_space::zero_map<{0,1},{0,1},two_space.zero>(1)
+
+0!=1
+
+claim:
+    ? preimage(\Algebra::vector_space::identity<{0,1}>,two_space.zero)={two_space.zero}
+    claim:
+        ? forall x preimage(\Algebra::vector_space::identity<{0,1}>,two_space.zero):
+            x $in {two_space.zero}
+        \Algebra::vector_space::identity<{0,1}>(x)=two_space.zero
+        \Algebra::vector_space::identity<{0,1}>(x)=x
+        x=two_space.zero
+        x $in {two_space.zero}
+    claim:
+        ? forall x {two_space.zero}:
+            x $in preimage(\Algebra::vector_space::identity<{0,1}>,two_space.zero)
+        x=two_space.zero
+        \Algebra::vector_space::identity<{0,1}>(x)=x=two_space.zero
+        x $in preimage(\Algebra::vector_space::identity<{0,1}>,two_space.zero)
+    by extension preimage(\Algebra::vector_space::identity<{0,1}>,two_space.zero)={two_space.zero}
+
+claim:
+    ? fn_range(\Algebra::vector_space::identity<{0,1}>)={0,1}
+    fn_range(\Algebra::vector_space::identity<{0,1}>) $subset {0,1}
+    claim:
+        ? forall y {0,1}:
+            y $in fn_range(\Algebra::vector_space::identity<{0,1}>)
+        \Algebra::vector_space::identity<{0,1}>(y)=y
+        \Algebra::vector_space::identity<{0,1}>(y) $in fn_range(\Algebra::vector_space::identity<{0,1}>)
+        y $in fn_range(\Algebra::vector_space::identity<{0,1}>)
+    {0,1} $subset fn_range(\Algebra::vector_space::identity<{0,1}>)
+    by extension fn_range(\Algebra::vector_space::identity<{0,1}>)={0,1}
+
+claim:
+    ? preimage(\Algebra::vector_space::zero_map<{0,1},{0,1},two_space.zero>,two_space.zero)={0,1}
+    preimage(\Algebra::vector_space::zero_map<{0,1},{0,1},two_space.zero>,two_space.zero) $subset {0,1}
+    claim:
+        ? forall x {0,1}:
+            x $in preimage(\Algebra::vector_space::zero_map<{0,1},{0,1},two_space.zero>,two_space.zero)
+        \Algebra::vector_space::zero_map<{0,1},{0,1},two_space.zero>(x)=two_space.zero
+        x $in preimage(\Algebra::vector_space::zero_map<{0,1},{0,1},two_space.zero>,two_space.zero)
+    {0,1} $subset preimage(\Algebra::vector_space::zero_map<{0,1},{0,1},two_space.zero>,two_space.zero)
+    by extension preimage(\Algebra::vector_space::zero_map<{0,1},{0,1},two_space.zero>,two_space.zero)={0,1}
+
+claim:
+    ? not $injective({0,1},{0,1},\Algebra::vector_space::zero_map<{0,1},{0,1},two_space.zero>)
+    by contra:
+        ? not $injective({0,1},{0,1},\Algebra::vector_space::zero_map<{0,1},{0,1},two_space.zero>)
+        \Algebra::vector_space::zero_map<{0,1},{0,1},two_space.zero>(0)=\Algebra::vector_space::zero_map<{0,1},{0,1},two_space.zero>(1)
+        impossible 0=1
+
+release thm Algebra::vector_space::zero_kernel_is_injective({0,1},model::two_field,{0,1},two_space,{0,1},two_space,\Algebra::vector_space::identity<{0,1}>)
+
+$injective({0,1},{0,1},\Algebra::vector_space::identity<{0,1}>)
+
+release thm Algebra::vector_space::kernel_is_subspace({0,1},model::two_field,{0,1},two_space,{0,1},two_space,\Algebra::vector_space::identity<{0,1}>)
+
+release thm Algebra::vector_space::kernel_is_subspace({0,1},model::two_field,{0,1},two_space,{0,1},two_space,\Algebra::vector_space::zero_map<{0,1},{0,1},two_space.zero>)
+
+have unit_basis finite_seq({0,1},1)=fn(k closed_range(1,1)) {0,1} {1}
+
+have fn single_coefficient(x {0,1}) finite_seq({0,1},1)=fn(k closed_range(1,1)) {0,1} {x}
+
+unit_basis(1)=1
+
+thm two_single_combination_value:
+    ? forall coefficients finite_seq({0,1},1),value {0,1}:
+        $Algebra::finite_span::has_linear_combination_value({0,1},model::two_field,{0,1},two_space,1,coefficients,unit_basis,value)
+        =>:
+            value=coefficients(1)
+    obtain sums from $Algebra::finite_span::has_linear_combination_value({0,1},model::two_field,{0,1},two_space,1,coefficients,unit_basis,value)
+    unit_basis(1)=1
+    model::two_field.one=1
+    two_space.zero=model::two_field.zero
+    two_space.add=model::two_field.add
+    two_space.smul=model::two_field.mul
+    sums(0)=two_space.zero
+    sums(1)=two_space.add(sums(0),two_space.smul(coefficients(1),unit_basis(1)))
+    model::two_field.mul(coefficients(1),1)=model::two_field.mul(1,coefficients(1))=model::two_field.mul(model::two_field.one,coefficients(1))=coefficients(1)
+    two_space.smul(coefficients(1),unit_basis(1))=model::two_field.mul(coefficients(1),1)=coefficients(1)
+    sums(1)=two_space.add(two_space.zero,coefficients(1))=model::two_field.add(model::two_field.zero,coefficients(1))=coefficients(1)
+    value=sums(1)=coefficients(1)
+
+claim:
+    ? $Algebra::basis::is_linearly_independent({0,1},model::two_field,{0,1},two_space,1,unit_basis)
+    two_space.zero=model::two_field.zero
+    claim:
+        ? forall coefficients finite_seq({0,1},1):
+            $Algebra::finite_span::has_linear_combination_value({0,1},model::two_field,{0,1},two_space,1,coefficients,unit_basis,two_space.zero)
+            =>:
+                $Algebra::basis::has_only_zero_coefficients({0,1},model::two_field,1,coefficients)
+        release thm two_single_combination_value(coefficients,two_space.zero)
+        coefficients(1)=two_space.zero=model::two_field.zero
+        claim:
+            ? forall k N+:
+                k<=1
+                =>:
+                    coefficients(k)=model::two_field.zero
+            k $in closed_range(1,1)
+            expand: k $in closed_range(1,1)
+            k=1
+            coefficients(k)=coefficients(1)=model::two_field.zero
+        by def $Algebra::basis::has_only_zero_coefficients({0,1},model::two_field,1,coefficients)
+    by def $Algebra::basis::is_linearly_independent({0,1},model::two_field,{0,1},two_space,1,unit_basis)
+
+thm two_unit_representation:
+    ? forall x {0,1}:
+        $Algebra::finite_span::has_linear_combination_value({0,1},model::two_field,{0,1},two_space,1,single_coefficient(x),unit_basis,x)
+    have coefficients finite_seq({0,1},1)=single_coefficient(x)
+    coefficients(1)=single_coefficient(x)(1)=x
+    unit_basis(1)=1
+    two_space.zero=0
+    two_space.add=model::two_field.add
+    two_space.smul=model::two_field.mul
+    model::two_field.one=1
+    claim:
+        ? forall k closed_range(0,1):
+            k=0 or k=1
+        by for:
+            ? forall j closed_range(0,1):
+                j=0 or j=1
+            j=0 or j=1
+    have fn sums(k closed_range(0,1)) {0,1} by cases:
+        case k=0: 0
+        case k=1: x
+    sums(0)=0=two_space.zero
+    sums(1)=x
+    claim:
+        ? forall k N+:
+            k<=1
+            =>:
+                sums(k)=two_space.add(sums(k-1),two_space.smul(coefficients(k),unit_basis(k)))
+        k $in closed_range(1,1)
+        expand: k $in closed_range(1,1)
+        k=1
+        k-1=0
+        coefficients(k)=x
+        unit_basis(k)=1
+        sums(k-1)=0
+        sums(k)=x
+        model::two_field.mul(x,1)=model::two_field.mul(1,x)=model::two_field.mul(model::two_field.one,x)=x
+        two_space.smul(coefficients(k),unit_basis(k))=model::two_field.mul(x,1)=x
+        two_space.add(sums(k-1),two_space.smul(coefficients(k),unit_basis(k)))=model::two_field.add(model::two_field.zero,x)=x=sums(k)
+    by def $Algebra::finite_span::is_partial_sum({0,1},model::two_field,{0,1},two_space,1,coefficients,unit_basis,sums)
+    witness exist partial_sums fn(k closed_range(0,1)) {0,1} st {$Algebra::finite_span::is_partial_sum({0,1},model::two_field,{0,1},two_space,1,coefficients,unit_basis,partial_sums),x=partial_sums(1)} from sums
+    by def $Algebra::finite_span::has_linear_combination_value({0,1},model::two_field,{0,1},two_space,1,coefficients,unit_basis,x)
+
+claim:
+    ? $Algebra::finite_span::spans({0,1},model::two_field,{0,1},two_space,1,unit_basis)
+    \Algebra::finite_span::span<{0,1},model::two_field,{0,1},two_space,1,unit_basis> = {v {0,1}: $Algebra::finite_span::is_linear_combination({0,1},model::two_field,{0,1},two_space,1,v,unit_basis)}
+    claim:
+        ? forall x {0,1}:
+            x $in \Algebra::finite_span::span<{0,1},model::two_field,{0,1},two_space,1,unit_basis>
+        release thm two_unit_representation(x)
+        witness exist c finite_seq({0,1},1) st {$Algebra::finite_span::has_linear_combination_value({0,1},model::two_field,{0,1},two_space,1,c,unit_basis,x)} from single_coefficient(x)
+        by def $Algebra::finite_span::is_linear_combination({0,1},model::two_field,{0,1},two_space,1,x,unit_basis)
+        x $in {v {0,1}: $Algebra::finite_span::is_linear_combination({0,1},model::two_field,{0,1},two_space,1,v,unit_basis)}
+    forall x \Algebra::finite_span::span<{0,1},model::two_field,{0,1},two_space,1,unit_basis>:
+        x $in {0,1}
+    by extension \Algebra::finite_span::span<{0,1},model::two_field,{0,1},two_space,1,unit_basis> = {0,1}
+    by def $Algebra::finite_span::spans({0,1},model::two_field,{0,1},two_space,1,unit_basis)
+
+thm two_unit_is_basis:
+    ? $Algebra::basis::is_basis({0,1},model::two_field,{0,1},two_space,1,unit_basis)
+    by def $Algebra::basis::is_basis({0,1},model::two_field,{0,1},two_space,1,unit_basis)
+
+release thm Algebra::basis::basis_is_finite_dimensional({0,1},model::two_field,{0,1},two_space,1,unit_basis)
+
+release thm Algebra::dimension::finite_dimension_of_basis({0,1},model::two_field,{0,1},two_space,1,unit_basis)
+
+\Algebra::dimension::finite_dimension<{0,1},model::two_field,{0,1}>(two_space)=1
+
+have zero_basis finite_seq({0,1},1)=fn(k closed_range(1,1)) {0,1} {0}
+
+zero_basis(1)=0
+
+release thm two_unit_representation(0)
+
+release thm two_unit_representation(1)
+
+release thm Algebra::basis::basis_representation_exists_unique({0,1},model::two_field,{0,1},two_space,1,unit_basis,1)
+
+have fn zero_sums(k closed_range(0,1)) {0,1}=0
+
+claim:
+    ? $Algebra::finite_span::has_linear_combination_value({0,1},model::two_field,{0,1},two_space,1,unit_basis,zero_basis,two_space.zero)
+    two_space.zero=0
+    two_space.add=model::two_field.add
+    two_space.smul=model::two_field.mul
+    zero_sums(0)=0=two_space.zero
+    claim:
+        ? forall k N+:
+            k<=1
+            =>:
+                zero_sums(k)=two_space.add(zero_sums(k-1),two_space.smul(unit_basis(k),zero_basis(k)))
+        k $in closed_range(1,1)
+        expand: k $in closed_range(1,1)
+        k=1
+        unit_basis(k)=1
+        zero_basis(k)=0
+        zero_sums(k-1)=0
+        by thm Algebra::field::mul_zero({0,1},model::two_field,1) => model::two_field.mul(1,model::two_field.zero)=model::two_field.zero
+        model::two_field.zero=0
+        two_space.smul(unit_basis(k),zero_basis(k))=model::two_field.mul(1,0)=model::two_field.zero=0
+        two_space.add(zero_sums(k-1),two_space.smul(unit_basis(k),zero_basis(k)))=model::two_field.add(model::two_field.zero,model::two_field.zero)=model::two_field.zero=0=zero_sums(k)
+    by def $Algebra::finite_span::is_partial_sum({0,1},model::two_field,{0,1},two_space,1,unit_basis,zero_basis,zero_sums)
+    zero_sums(1)=0=two_space.zero
+    witness exist s fn(k closed_range(0,1)) {0,1} st {$Algebra::finite_span::is_partial_sum({0,1},model::two_field,{0,1},two_space,1,unit_basis,zero_basis,s),two_space.zero=s(1)} from zero_sums
+    by def $Algebra::finite_span::has_linear_combination_value({0,1},model::two_field,{0,1},two_space,1,unit_basis,zero_basis,two_space.zero)
+
+claim:
+    ? not $Algebra::basis::has_only_zero_coefficients({0,1},model::two_field,1,unit_basis)
+    by contra:
+        ? not $Algebra::basis::has_only_zero_coefficients({0,1},model::two_field,1,unit_basis)
+        unit_basis(1)=model::two_field.zero
+        unit_basis(1)=1
+        model::two_field.zero=0
+        impossible 1=0
+
+claim:
+    ? $Algebra::basis::is_linearly_dependent({0,1},model::two_field,{0,1},two_space,1,zero_basis)
+    by contra:
+        ? not $Algebra::basis::is_linearly_independent({0,1},model::two_field,{0,1},two_space,1,zero_basis)
+        $Algebra::basis::has_only_zero_coefficients({0,1},model::two_field,1,unit_basis)
+        impossible not $Algebra::basis::has_only_zero_coefficients({0,1},model::two_field,1,unit_basis)
+    by def $Algebra::basis::is_linearly_dependent({0,1},model::two_field,{0,1},two_space,1,zero_basis)
+
+claim:
+    ? not $Algebra::basis::is_basis({0,1},model::two_field,{0,1},two_space,1,zero_basis)
+    by contra:
+        ? not $Algebra::basis::is_basis({0,1},model::two_field,{0,1},two_space,1,zero_basis)
+        $Algebra::basis::is_linearly_independent({0,1},model::two_field,{0,1},two_space,1,zero_basis)
+        impossible not $Algebra::basis::is_linearly_independent({0,1},model::two_field,{0,1},two_space,1,zero_basis)
+
+release thm Algebra::linear_dimension::function_range_carrier({0,1},{0,1},\Algebra::vector_space::identity<{0,1}>)
+
+release thm Algebra::linear_dimension::function_range_is_nonempty({0,1},{0,1},\Algebra::vector_space::identity<{0,1}>)
+
+release thm Algebra::vector_space::range_is_subspace({0,1},model::two_field,{0,1},two_space,{0,1},two_space,\Algebra::vector_space::identity<{0,1}>)
+
+release thm Algebra::linear_dimension::linear_image_space_carrier({0,1},model::two_field,{0,1},two_space,{0,1},two_space,\Algebra::vector_space::identity<{0,1}>)
+
+release thm Algebra::linear_dimension::finite_source_has_finite_image({0,1},model::two_field,{0,1},two_space,{0,1},two_space,\Algebra::vector_space::identity<{0,1}>)
+
+release thm Algebra::linear_dimension::linear_kernel_is_nonempty({0,1},model::two_field,{0,1},two_space,{0,1},two_space,\Algebra::vector_space::identity<{0,1}>)
+
+release thm Algebra::linear_dimension::linear_kernel_space_carrier({0,1},model::two_field,{0,1},two_space,{0,1},two_space,\Algebra::vector_space::identity<{0,1}>)
+
+release thm Algebra::linear_dimension::finite_source_has_finite_kernel({0,1},model::two_field,{0,1},two_space,{0,1},two_space,\Algebra::vector_space::identity<{0,1}>)
+
+release thm Algebra::linear_dimension::finite_source_rank_carrier({0,1},model::two_field,{0,1},two_space,{0,1},two_space,\Algebra::vector_space::identity<{0,1}>)
+
+release thm Algebra::linear_dimension::finite_source_nullity_carrier({0,1},model::two_field,{0,1},two_space,{0,1},two_space,\Algebra::vector_space::identity<{0,1}>)
+
+release thm Algebra::linear_criteria::injective_has_zero_nullity({0,1},model::two_field,{0,1},two_space,{0,1},two_space,\Algebra::vector_space::identity<{0,1}>)
+
+release thm Algebra::linear_criteria::injective_has_full_source_rank({0,1},model::two_field,{0,1},two_space,{0,1},two_space,\Algebra::vector_space::identity<{0,1}>)
+
+\Algebra::linear_dimension::linear_map_nullity<{0,1},model::two_field,{0,1},two_space,{0,1},two_space>(\Algebra::vector_space::identity<{0,1}>)=0
+
+\Algebra::linear_dimension::linear_map_rank<{0,1},model::two_field,{0,1},two_space,{0,1},two_space>(\Algebra::vector_space::identity<{0,1}>)=\Algebra::dimension::finite_dimension<{0,1},model::two_field,{0,1}>(two_space)=1
+
+release thm Algebra::linear_dimension::rank_nullity({0,1},model::two_field,{0,1},two_space,{0,1},two_space,\Algebra::vector_space::identity<{0,1}>)
+
+\Algebra::linear_dimension::linear_map_rank<{0,1},model::two_field,{0,1},two_space,{0,1},two_space>(\Algebra::vector_space::identity<{0,1}>)+\Algebra::linear_dimension::linear_map_nullity<{0,1},model::two_field,{0,1},two_space,{0,1},two_space>(\Algebra::vector_space::identity<{0,1}>)=1
+
+release thm Algebra::linear_dimension::function_range_carrier({0,1},{0,1},\Algebra::vector_space::zero_map<{0,1},{0,1},two_space.zero>)
+
+release thm Algebra::linear_dimension::function_range_is_nonempty({0,1},{0,1},\Algebra::vector_space::zero_map<{0,1},{0,1},two_space.zero>)
+
+release thm Algebra::vector_space::range_is_subspace({0,1},model::two_field,{0,1},two_space,{0,1},two_space,\Algebra::vector_space::zero_map<{0,1},{0,1},two_space.zero>)
+
+release thm Algebra::linear_dimension::linear_image_space_carrier({0,1},model::two_field,{0,1},two_space,{0,1},two_space,\Algebra::vector_space::zero_map<{0,1},{0,1},two_space.zero>)
+
+release thm Algebra::linear_dimension::finite_source_has_finite_image({0,1},model::two_field,{0,1},two_space,{0,1},two_space,\Algebra::vector_space::zero_map<{0,1},{0,1},two_space.zero>)
+
+release thm Algebra::linear_dimension::linear_kernel_is_nonempty({0,1},model::two_field,{0,1},two_space,{0,1},two_space,\Algebra::vector_space::zero_map<{0,1},{0,1},two_space.zero>)
+
+release thm Algebra::linear_dimension::linear_kernel_space_carrier({0,1},model::two_field,{0,1},two_space,{0,1},two_space,\Algebra::vector_space::zero_map<{0,1},{0,1},two_space.zero>)
+
+release thm Algebra::linear_dimension::finite_source_has_finite_kernel({0,1},model::two_field,{0,1},two_space,{0,1},two_space,\Algebra::vector_space::zero_map<{0,1},{0,1},two_space.zero>)
+
+release thm Algebra::linear_dimension::finite_source_rank_carrier({0,1},model::two_field,{0,1},two_space,{0,1},two_space,\Algebra::vector_space::zero_map<{0,1},{0,1},two_space.zero>)
+
+release thm Algebra::linear_dimension::finite_source_nullity_carrier({0,1},model::two_field,{0,1},two_space,{0,1},two_space,\Algebra::vector_space::zero_map<{0,1},{0,1},two_space.zero>)
+
+claim:
+    ? fn_range(\Algebra::vector_space::zero_map<{0,1},{0,1},two_space.zero>)={two_space.zero}
+    claim:
+        ? forall y fn_range(\Algebra::vector_space::zero_map<{0,1},{0,1},two_space.zero>):
+            y $in {two_space.zero}
+        have by fn_preimage: x from y $in fn_range(\Algebra::vector_space::zero_map<{0,1},{0,1},two_space.zero>)
+        \Algebra::vector_space::zero_map<{0,1},{0,1},two_space.zero>(x)=two_space.zero
+        y=\Algebra::vector_space::zero_map<{0,1},{0,1},two_space.zero>(x)=two_space.zero
+        y $in {two_space.zero}
+    claim:
+        ? forall y {two_space.zero}:
+            y $in fn_range(\Algebra::vector_space::zero_map<{0,1},{0,1},two_space.zero>)
+        y=two_space.zero
+        \Algebra::vector_space::zero_map<{0,1},{0,1},two_space.zero>(0) $in fn_range(\Algebra::vector_space::zero_map<{0,1},{0,1},two_space.zero>)
+        \Algebra::vector_space::zero_map<{0,1},{0,1},two_space.zero>(0)=two_space.zero=y
+        y $in fn_range(\Algebra::vector_space::zero_map<{0,1},{0,1},two_space.zero>)
+    by extension fn_range(\Algebra::vector_space::zero_map<{0,1},{0,1},two_space.zero>)={two_space.zero}
+
+release struct def \Algebra::subspace::restricted_space<{0,1},model::two_field,{0,1},two_space,fn_range(\Algebra::vector_space::zero_map<{0,1},{0,1},two_space.zero>)>
+
+\Algebra::subspace::restricted_space<{0,1},model::two_field,{0,1},two_space,fn_range(\Algebra::vector_space::zero_map<{0,1},{0,1},two_space.zero>)>.zero=two_space.zero
+
+fn_range(\Algebra::vector_space::zero_map<{0,1},{0,1},two_space.zero>)={two_space.zero}={\Algebra::subspace::restricted_space<{0,1},model::two_field,{0,1},two_space,fn_range(\Algebra::vector_space::zero_map<{0,1},{0,1},two_space.zero>)>.zero}
+
+release thm Algebra::linear_criteria::zero_space_has_zero_dimension({0,1},model::two_field,fn_range(\Algebra::vector_space::zero_map<{0,1},{0,1},two_space.zero>),\Algebra::subspace::restricted_space<{0,1},model::two_field,{0,1},two_space,fn_range(\Algebra::vector_space::zero_map<{0,1},{0,1},two_space.zero>)>)
+
+\Algebra::linear_dimension::linear_map_rank<{0,1},model::two_field,{0,1},two_space,{0,1},two_space>(\Algebra::vector_space::zero_map<{0,1},{0,1},two_space.zero>)=\Algebra::dimension::finite_dimension<{0,1},model::two_field,fn_range(\Algebra::vector_space::zero_map<{0,1},{0,1},two_space.zero>)>(\Algebra::subspace::restricted_space<{0,1},model::two_field,{0,1},two_space,fn_range(\Algebra::vector_space::zero_map<{0,1},{0,1},two_space.zero>)>)=0
+
+release thm Algebra::linear_dimension::rank_nullity({0,1},model::two_field,{0,1},two_space,{0,1},two_space,\Algebra::vector_space::zero_map<{0,1},{0,1},two_space.zero>)
+
+\Algebra::linear_dimension::linear_map_rank<{0,1},model::two_field,{0,1},two_space,{0,1},two_space>(\Algebra::vector_space::zero_map<{0,1},{0,1},two_space.zero>)+\Algebra::linear_dimension::linear_map_nullity<{0,1},model::two_field,{0,1},two_space,{0,1},two_space>(\Algebra::vector_space::zero_map<{0,1},{0,1},two_space.zero>)=\Algebra::dimension::finite_dimension<{0,1},model::two_field,{0,1}>(two_space)=1
+
+\Algebra::linear_dimension::linear_map_nullity<{0,1},model::two_field,{0,1},two_space,{0,1},two_space>(\Algebra::vector_space::zero_map<{0,1},{0,1},two_space.zero>)=\Algebra::linear_dimension::linear_map_rank<{0,1},model::two_field,{0,1},two_space,{0,1},two_space>(\Algebra::vector_space::zero_map<{0,1},{0,1},two_space.zero>)+\Algebra::linear_dimension::linear_map_nullity<{0,1},model::two_field,{0,1},two_space,{0,1},two_space>(\Algebra::vector_space::zero_map<{0,1},{0,1},two_space.zero>)=1
+
+have fn affine_one(x {0,1}) {0,1}=1
+
+affine_one(two_space.zero)=1
+
+claim:
+    ? not $Algebra::vector_space::is_linear_map({0,1},model::two_field,{0,1},two_space,{0,1},two_space,affine_one)
+    by contra:
+        ? not $Algebra::vector_space::is_linear_map({0,1},model::two_field,{0,1},two_space,{0,1},two_space,affine_one)
+        by thm Algebra::vector_space::linear_map_zero({0,1},model::two_field,{0,1},two_space,{0,1},two_space,affine_one) => affine_one(two_space.zero)=two_space.zero
+        affine_one(two_space.zero)=1=two_space.zero=0
+        impossible 1=0
+
+\Algebra::linear_dimension::linear_map_rank<{0,1},model::two_field,{0,1},two_space,{0,1},two_space>(\Algebra::vector_space::zero_map<{0,1},{0,1},two_space.zero>)=1

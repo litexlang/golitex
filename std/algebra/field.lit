@@ -24,3 +24,404 @@ struct Field<K nonempty_set>:
             x != zero
             =>:
                 mul(x, inv(x)) = one
+
+thm mul_zero:
+    ? forall K nonempty_set,F &Field<K>,a K:
+        F.mul(a,F.zero)=F.zero
+    have z K = F.mul(a,F.zero)
+    F.add(F.zero,F.zero)=F.zero
+    F.add(z,z)=F.mul(a,F.add(F.zero,F.zero))=F.mul(a,F.zero)=z
+    F.add(F.neg(z),z)=F.add(z,F.neg(z))=F.zero
+    z=F.add(F.zero,z)=F.add(F.add(F.neg(z),z),z)=F.add(F.neg(z),F.add(z,z))=F.add(F.neg(z),z)=F.zero
+
+thm zero_mul:
+    ? forall K nonempty_set,F &Field<K>,a K:
+        F.mul(F.zero,a)=F.zero
+    by thm mul_zero(K,F,a) => F.mul(a,F.zero)=F.zero
+    F.mul(F.zero,a)=F.mul(a,F.zero)=F.zero
+
+thm mul_left_cancel_nonzero:
+    ? forall K nonempty_set,F &Field<K>,a,b,c K:
+        a!=F.zero
+        F.mul(a,b)=F.mul(a,c)
+        =>:
+            b=c
+    F.mul(F.inv(a),a)=F.mul(a,F.inv(a))=F.one
+    b=F.mul(F.one,b)=F.mul(F.mul(F.inv(a),a),b)=F.mul(F.inv(a),F.mul(a,b))=F.mul(F.inv(a),F.mul(a,c))=F.mul(F.mul(F.inv(a),a),c)=F.mul(F.one,c)=c
+
+thm mul_eq_zero_nonzero_left:
+    ? forall K nonempty_set,F &Field<K>,a,b K:
+        a!=F.zero
+        F.mul(a,b)=F.zero
+        =>:
+            b=F.zero
+    by thm mul_zero(K,F,a) => F.mul(a,F.zero)=F.zero
+    F.mul(a,b)=F.zero=F.mul(a,F.zero)
+    by thm mul_left_cancel_nonzero(K,F,a,b,F.zero) => b=F.zero
+
+thm mul_right_cancel_nonzero:
+    ? forall K nonempty_set,F &Field<K>,a,b,c K:
+        a!=F.zero
+        F.mul(b,a)=F.mul(c,a)
+        =>:
+            b=c
+    F.mul(a,b)=F.mul(b,a)=F.mul(c,a)=F.mul(a,c)
+    by thm mul_left_cancel_nonzero(K,F,a,b,c) => b=c
+
+thm mul_eq_zero_nonzero_right:
+    ? forall K nonempty_set,F &Field<K>,a,b K:
+        b!=F.zero
+        F.mul(a,b)=F.zero
+        =>:
+            a=F.zero
+    F.mul(b,a)=F.mul(a,b)=F.zero
+    by thm mul_eq_zero_nonzero_left(K,F,b,a) => a=F.zero
+
+thm nonzero_product:
+    ? forall K nonempty_set,F &Field<K>,a,b K:
+        a!=F.zero
+        b!=F.zero
+        =>:
+            F.mul(a,b)!=F.zero
+    by contra:
+        ? F.mul(a,b)!=F.zero
+        F.mul(a,b)=F.zero
+        by thm mul_eq_zero_nonzero_left(K,F,a,b) => b=F.zero
+        impossible b!=F.zero
+
+thm add_right_zero:
+    ? forall K nonempty_set,F &Field<K>,a K:
+        F.add(a,F.zero)=a
+    F.add(a,F.zero)=F.add(F.zero,a)=a
+
+thm add_left_inverse:
+    ? forall K nonempty_set,F &Field<K>,a K:
+        F.add(F.neg(a),a)=F.zero
+    F.add(F.neg(a),a)=F.add(a,F.neg(a))=F.zero
+
+thm add_left_cancel:
+    ? forall K nonempty_set,F &Field<K>,a,b,c K:
+        F.add(a,b)=F.add(a,c)
+        =>:
+            b=c
+    by thm add_left_inverse(K,F,a) => F.add(F.neg(a),a)=F.zero
+    b=F.add(F.zero,b)=F.add(F.add(F.neg(a),a),b)=F.add(F.neg(a),F.add(a,b))=F.add(F.neg(a),F.add(a,c))=F.add(F.add(F.neg(a),a),c)=F.add(F.zero,c)=c
+
+thm add_right_cancel:
+    ? forall K nonempty_set,F &Field<K>,a,b,c K:
+        F.add(b,a)=F.add(c,a)
+        =>:
+            b=c
+    F.add(a,b)=F.add(b,a)=F.add(c,a)=F.add(a,c)
+    by thm add_left_cancel(K,F,a,b,c) => b=c
+
+thm neg_zero:
+    ? forall K nonempty_set,F &Field<K>:
+        F.neg(F.zero)=F.zero
+    F.add(F.zero,F.neg(F.zero))=F.zero
+    F.neg(F.zero)=F.add(F.zero,F.neg(F.zero))=F.zero
+
+thm neg_involution:
+    ? forall K nonempty_set,F &Field<K>,a K:
+        F.neg(F.neg(a))=a
+    by thm add_left_inverse(K,F,a) => F.add(F.neg(a),a)=F.zero
+    F.add(F.neg(a),F.neg(F.neg(a)))=F.zero
+    F.add(F.neg(a),a)=F.zero=F.add(F.neg(a),F.neg(F.neg(a)))
+    by thm add_left_cancel(K,F,F.neg(a),a,F.neg(F.neg(a))) => a=F.neg(F.neg(a))
+    F.neg(F.neg(a))=a
+
+thm add_inverse_unique:
+    ? forall K nonempty_set,F &Field<K>,a,b K:
+        F.add(a,b)=F.zero
+        =>:
+            b=F.neg(a)
+    F.add(a,F.neg(a))=F.zero
+    F.add(a,b)=F.zero=F.add(a,F.neg(a))
+    by thm add_left_cancel(K,F,a,b,F.neg(a)) => b=F.neg(a)
+
+thm mul_neg:
+    ? forall K nonempty_set,F &Field<K>,a,b K:
+        F.mul(a,F.neg(b))=F.neg(F.mul(a,b))
+    F.add(b,F.neg(b))=F.zero
+    by thm mul_zero(K,F,a) => F.mul(a,F.zero)=F.zero
+    F.add(F.mul(a,b),F.mul(a,F.neg(b)))=F.mul(a,F.add(b,F.neg(b)))=F.mul(a,F.zero)=F.zero
+    by thm add_inverse_unique(K,F,F.mul(a,b),F.mul(a,F.neg(b))) => F.mul(a,F.neg(b))=F.neg(F.mul(a,b))
+
+thm neg_mul:
+    ? forall K nonempty_set,F &Field<K>,a,b K:
+        F.mul(F.neg(a),b)=F.neg(F.mul(a,b))
+    by thm mul_neg(K,F,b,a) => F.mul(b,F.neg(a))=F.neg(F.mul(b,a))
+    F.mul(b,a)=F.mul(a,b)
+    F.mul(F.neg(a),b)=F.mul(b,F.neg(a))=F.neg(F.mul(b,a))=F.neg(F.mul(a,b))
+
+thm neg_mul_neg:
+    ? forall K nonempty_set,F &Field<K>,a,b K:
+        F.mul(F.neg(a),F.neg(b))=F.mul(a,b)
+    by thm neg_mul(K,F,a,F.neg(b)) => F.mul(F.neg(a),F.neg(b))=F.neg(F.mul(a,F.neg(b)))
+    by thm mul_neg(K,F,a,b) => F.mul(a,F.neg(b))=F.neg(F.mul(a,b))
+    by thm neg_involution(K,F,F.mul(a,b)) => F.neg(F.neg(F.mul(a,b)))=F.mul(a,b)
+    F.mul(F.neg(a),F.neg(b))=F.neg(F.mul(a,F.neg(b)))=F.neg(F.neg(F.mul(a,b)))=F.mul(a,b)
+
+thm neg_add:
+    ? forall K nonempty_set,F &Field<K>,a,b K:
+        F.neg(F.add(a,b))=F.add(F.neg(a),F.neg(b))
+    have p K=F.add(a,b)
+    have q K=F.add(F.neg(a),F.neg(b))
+    F.add(b,F.neg(a))=F.add(F.neg(a),b)
+    F.add(a,F.neg(a))=F.zero
+    F.add(b,F.neg(b))=F.zero
+    F.add(F.zero,F.zero)=F.zero
+    F.add(b,F.add(F.neg(a),F.neg(b)))=F.add(F.add(b,F.neg(a)),F.neg(b))
+    F.add(F.add(b,F.neg(a)),F.neg(b))=F.add(F.add(F.neg(a),b),F.neg(b))
+    F.add(F.add(F.neg(a),b),F.neg(b))=F.add(F.neg(a),F.add(b,F.neg(b)))
+    F.add(p,q)=F.add(F.add(a,b),F.add(F.neg(a),F.neg(b)))=F.add(a,F.add(b,F.add(F.neg(a),F.neg(b))))=F.add(a,F.add(F.add(b,F.neg(a)),F.neg(b)))=F.add(a,F.add(F.add(F.neg(a),b),F.neg(b)))=F.add(a,F.add(F.neg(a),F.add(b,F.neg(b))))=F.add(F.add(a,F.neg(a)),F.add(b,F.neg(b)))=F.add(F.zero,F.zero)=F.zero
+    by thm add_inverse_unique(K,F,p,q) => q=F.neg(p)
+    F.neg(F.add(a,b))=F.neg(p)=q=F.add(F.neg(a),F.neg(b))
+
+thm nonzero_field_inverse:
+    ? forall K nonempty_set,F &Field<K>,a K:
+        a!=F.zero
+        =>:
+            F.inv(a)!=F.zero
+    by contra:
+        ? F.inv(a)!=F.zero
+        F.inv(a)=F.zero
+        by thm mul_zero(K,F,a) => F.mul(a,F.zero)=F.zero
+        F.one=F.mul(a,F.inv(a))=F.mul(a,F.zero)=F.zero
+        impossible F.one=F.zero
+
+thm field_inverse_one:
+    ? forall K nonempty_set,F &Field<K>:
+        F.inv(F.one)=F.one
+    F.one!=F.zero
+    F.mul(F.one,F.inv(F.one))=F.one
+    F.inv(F.one)=F.mul(F.one,F.inv(F.one))=F.one
+
+thm field_inverse_involution:
+    ? forall K nonempty_set,F &Field<K>,a K:
+        a!=F.zero
+        =>:
+            F.inv(F.inv(a))=a
+    by thm nonzero_field_inverse(K,F,a) => F.inv(a)!=F.zero
+    F.mul(F.inv(a),a)=F.mul(a,F.inv(a))=F.one
+    F.mul(F.inv(a),F.inv(F.inv(a)))=F.one
+    F.mul(F.inv(a),a)=F.one=F.mul(F.inv(a),F.inv(F.inv(a)))
+    by thm mul_left_cancel_nonzero(K,F,F.inv(a),a,F.inv(F.inv(a))) => a=F.inv(F.inv(a))
+    F.inv(F.inv(a))=a
+
+thm field_inverse_unique:
+    ? forall K nonempty_set,F &Field<K>,a,b K:
+        a!=F.zero
+        F.mul(a,b)=F.one
+        =>:
+            b=F.inv(a)
+    F.mul(a,F.inv(a))=F.one
+    F.mul(a,b)=F.one=F.mul(a,F.inv(a))
+    by thm mul_left_cancel_nonzero(K,F,a,b,F.inv(a)) => b=F.inv(a)
+
+thm field_inverse_product:
+    ? forall K nonempty_set,F &Field<K>,a,b K:
+        a!=F.zero
+        b!=F.zero
+        =>:
+            F.inv(F.mul(a,b))=F.mul(F.inv(a),F.inv(b))
+    by thm nonzero_product(K,F,a,b) => F.mul(a,b)!=F.zero
+    F.mul(a,F.inv(a))=F.one
+    F.mul(b,F.inv(b))=F.one
+    F.mul(b,F.inv(a))=F.mul(F.inv(a),b)
+    F.mul(b,F.mul(F.inv(a),F.inv(b)))=F.mul(F.mul(b,F.inv(a)),F.inv(b))
+    F.mul(F.mul(b,F.inv(a)),F.inv(b))=F.mul(F.mul(F.inv(a),b),F.inv(b))
+    F.mul(F.mul(F.inv(a),b),F.inv(b))=F.mul(F.inv(a),F.mul(b,F.inv(b)))
+    F.mul(F.mul(a,b),F.mul(F.inv(a),F.inv(b)))=F.mul(a,F.mul(b,F.mul(F.inv(a),F.inv(b))))=F.mul(a,F.mul(F.mul(b,F.inv(a)),F.inv(b)))=F.mul(a,F.mul(F.mul(F.inv(a),b),F.inv(b)))=F.mul(a,F.mul(F.inv(a),F.mul(b,F.inv(b))))=F.mul(F.mul(a,F.inv(a)),F.mul(b,F.inv(b)))=F.mul(F.one,F.one)=F.one
+    by thm field_inverse_unique(K,F,F.mul(a,b),F.mul(F.inv(a),F.inv(b))) => F.mul(F.inv(a),F.inv(b))=F.inv(F.mul(a,b))
+    F.inv(F.mul(a,b))=F.mul(F.inv(a),F.inv(b))
+
+thm add_mul:
+    ? forall K nonempty_set,F &Field<K>,a,b,c K:
+        F.mul(F.add(a,b),c)=F.add(F.mul(a,c),F.mul(b,c))
+    F.mul(c,a)=F.mul(a,c)
+    F.mul(c,b)=F.mul(b,c)
+    F.mul(F.add(a,b),c)=F.mul(c,F.add(a,b))=F.add(F.mul(c,a),F.mul(c,b))=F.add(F.mul(a,c),F.mul(b,c))
+
+thm mul_difference:
+    ? forall K nonempty_set,F &Field<K>,a,b,c K:
+        F.mul(a,F.add(b,F.neg(c)))=F.add(F.mul(a,b),F.neg(F.mul(a,c)))
+    by thm mul_neg(K,F,a,c) => F.mul(a,F.neg(c))=F.neg(F.mul(a,c))
+    F.mul(a,F.add(b,F.neg(c)))=F.add(F.mul(a,b),F.mul(a,F.neg(c)))=F.add(F.mul(a,b),F.neg(F.mul(a,c)))
+
+thm difference_mul:
+    ? forall K nonempty_set,F &Field<K>,a,b,c K:
+        F.mul(F.add(a,F.neg(b)),c)=F.add(F.mul(a,c),F.neg(F.mul(b,c)))
+    by thm add_mul(K,F,a,F.neg(b),c) => F.mul(F.add(a,F.neg(b)),c)=F.add(F.mul(a,c),F.mul(F.neg(b),c))
+    by thm neg_mul(K,F,b,c) => F.mul(F.neg(b),c)=F.neg(F.mul(b,c))
+    F.mul(F.add(a,F.neg(b)),c)=F.add(F.mul(a,c),F.mul(F.neg(b),c))=F.add(F.mul(a,c),F.neg(F.mul(b,c)))
+
+thm difference_zero_implies_equal:
+    ? forall K nonempty_set,F &Field<K>,a,b K:
+        F.add(a,F.neg(b))=F.zero
+        =>:
+            a=b
+    F.add(b,F.neg(b))=F.zero
+    F.add(a,F.neg(b))=F.zero=F.add(b,F.neg(b))
+    by thm add_right_cancel(K,F,F.neg(b),a,b) => a=b
+
+thm equal_implies_difference_zero:
+    ? forall K nonempty_set,F &Field<K>,a,b K:
+        a=b
+        =>:
+            F.add(a,F.neg(b))=F.zero
+    F.add(b,F.neg(b))=F.zero
+    F.add(a,F.neg(b))=F.add(b,F.neg(b))=F.zero
+
+thm field_linear_equation_unique:
+    ? forall K nonempty_set,F &Field<K>,a,b K:
+        a!=F.zero
+        =>:
+            exist! x K st {F.mul(a,x)=b}
+    F.mul(a,F.inv(a))=F.one
+    F.mul(a,F.mul(F.inv(a),b))=F.mul(F.mul(a,F.inv(a)),b)=F.mul(F.one,b)=b
+    claim:
+        ? forall x,y K:
+            F.mul(a,x)=b
+            F.mul(a,y)=b
+            =>:
+                x=y
+        F.mul(a,x)=b=F.mul(a,y)
+        by thm mul_left_cancel_nonzero(K,F,a,x,y) => x=y
+    witness exist! x K st {F.mul(a,x)=b} from F.mul(F.inv(a),b)
+
+thm field_linear_equation_solution:
+    ? forall K nonempty_set,F &Field<K>,a,b,x K:
+        a!=F.zero
+        F.mul(a,x)=b
+        =>:
+            x=F.mul(F.inv(a),b)
+    F.mul(a,F.inv(a))=F.one
+    F.mul(a,F.mul(F.inv(a),b))=F.mul(F.mul(a,F.inv(a)),b)=F.mul(F.one,b)=b
+    F.mul(a,x)=b=F.mul(a,F.mul(F.inv(a),b))
+    by thm mul_left_cancel_nonzero(K,F,a,x,F.mul(F.inv(a),b)) => x=F.mul(F.inv(a),b)
+
+thm field_affine_equation_unique:
+    ? forall K nonempty_set,F &Field<K>,a,b,c K:
+        a!=F.zero
+        =>:
+            exist! x K st {F.add(F.mul(a,x),b)=c}
+    have d K=F.add(c,F.neg(b))
+    have w K=F.mul(F.inv(a),d)
+    F.mul(a,F.inv(a))=F.one
+    F.mul(a,w)=F.mul(a,F.mul(F.inv(a),d))=F.mul(F.mul(a,F.inv(a)),d)=F.mul(F.one,d)=d
+    F.add(F.neg(b),b)=F.zero
+    F.add(d,b)=F.add(F.add(c,F.neg(b)),b)=F.add(c,F.add(F.neg(b),b))=F.add(c,F.zero)=c
+    F.add(F.mul(a,w),b)=F.add(d,b)=c
+    claim:
+        ? forall x,y K:
+            F.add(F.mul(a,x),b)=c
+            F.add(F.mul(a,y),b)=c
+            =>:
+                x=y
+        F.add(F.mul(a,x),b)=c=F.add(F.mul(a,y),b)
+        by thm add_right_cancel(K,F,b,F.mul(a,x),F.mul(a,y)) => F.mul(a,x)=F.mul(a,y)
+        by thm mul_left_cancel_nonzero(K,F,a,x,y) => x=y
+    witness exist! x K st {F.add(F.mul(a,x),b)=c} from w
+
+thm field_affine_equation_solution:
+    ? forall K nonempty_set,F &Field<K>,a,b,c,x K:
+        a!=F.zero
+        F.add(F.mul(a,x),b)=c
+        =>:
+            x=F.mul(F.inv(a),F.add(c,F.neg(b)))
+    have d K=F.add(c,F.neg(b))
+    F.add(F.neg(b),b)=F.zero
+    F.add(d,b)=F.add(F.add(c,F.neg(b)),b)=F.add(c,F.add(F.neg(b),b))=F.add(c,F.zero)=c
+    F.add(F.mul(a,x),b)=c=F.add(d,b)
+    by thm add_right_cancel(K,F,b,F.mul(a,x),d) => F.mul(a,x)=d
+    by thm field_linear_equation_solution(K,F,a,d,x) => x=F.mul(F.inv(a),d)
+    x=F.mul(F.inv(a),d)=F.mul(F.inv(a),F.add(c,F.neg(b)))
+
+thm field_zero_linear_no_solution:
+    ? forall K nonempty_set,F &Field<K>,b,x K:
+        b!=F.zero
+        =>:
+            F.mul(F.zero,x)!=b
+    by thm zero_mul(K,F,x) => F.mul(F.zero,x)=F.zero
+    F.mul(F.zero,x)!=b
+
+thm field_zero_linear_two_solutions:
+    ? forall K nonempty_set,F &Field<K>:
+        exist x,y K st {x!=y,F.mul(F.zero,x)=F.zero,F.mul(F.zero,y)=F.zero}
+    F.zero!=F.one
+    by thm zero_mul(K,F,F.zero) => F.mul(F.zero,F.zero)=F.zero
+    by thm zero_mul(K,F,F.one) => F.mul(F.zero,F.one)=F.zero
+    witness exist x,y K st {x!=y,F.mul(F.zero,x)=F.zero,F.mul(F.zero,y)=F.zero} from F.zero,F.one
+
+thm field_zero_affine_all_solutions:
+    ? forall K nonempty_set,F &Field<K>,b,x K:
+        F.add(F.mul(F.zero,x),b)=b
+    by thm zero_mul(K,F,x) => F.mul(F.zero,x)=F.zero
+    F.add(F.mul(F.zero,x),b)=F.add(F.zero,b)=b
+
+thm field_zero_affine_no_solution:
+    ? forall K nonempty_set,F &Field<K>,b,c,x K:
+        b!=c
+        =>:
+            F.add(F.mul(F.zero,x),b)!=c
+    by thm field_zero_affine_all_solutions(K,F,b,x) => F.add(F.mul(F.zero,x),b)=b
+    F.add(F.mul(F.zero,x),b)!=c
+
+thm field_zero_affine_two_solutions:
+    ? forall K nonempty_set,F &Field<K>,b K:
+        exist x,y K st {x!=y,F.add(F.mul(F.zero,x),b)=b,F.add(F.mul(F.zero,y),b)=b}
+    F.zero!=F.one
+    by thm field_zero_affine_all_solutions(K,F,b,F.zero) => F.add(F.mul(F.zero,F.zero),b)=b
+    by thm field_zero_affine_all_solutions(K,F,b,F.one) => F.add(F.mul(F.zero,F.one),b)=b
+    witness exist x,y K st {x!=y,F.add(F.mul(F.zero,x),b)=b,F.add(F.mul(F.zero,y),b)=b} from F.zero,F.one
+
+thm zero_product_factors:
+    ? forall K nonempty_set,F &Field<K>,a,b K:
+        F.mul(a,b)=F.zero
+        =>:
+            a=F.zero or b=F.zero
+    by cases:
+        ? a=F.zero or b=F.zero
+        case a=F.zero:
+            a=F.zero
+        case a!=F.zero:
+            release thm mul_eq_zero_nonzero_left(K,F,a,b)
+            b=F.zero
+
+thm nonzero_product_factors:
+    ? forall K nonempty_set,F &Field<K>,a,b K:
+        F.mul(a,b)!=F.zero
+        =>:
+            a!=F.zero
+            b!=F.zero
+    claim:
+        ? a!=F.zero
+        by contra:
+            ? a!=F.zero
+            a=F.zero
+            release thm zero_mul(K,F,b)
+            F.mul(a,b)=F.mul(F.zero,b)=F.zero
+            impossible F.mul(a,b)!=F.zero
+    claim:
+        ? b!=F.zero
+        by contra:
+            ? b!=F.zero
+            b=F.zero
+            release thm mul_zero(K,F,a)
+            F.mul(a,b)=F.mul(a,F.zero)=F.zero
+            impossible F.mul(a,b)!=F.zero
+
+thm zero_product_from_factor:
+    ? forall K nonempty_set,F &Field<K>,a,b K:
+        a=F.zero or b=F.zero
+        =>:
+            F.mul(a,b)=F.zero
+    by cases:
+        ? F.mul(a,b)=F.zero
+        case a=F.zero:
+            release thm zero_mul(K,F,b)
+            F.mul(a,b)=F.mul(F.zero,b)=F.zero
+        case b=F.zero:
+            release thm mul_zero(K,F,a)
+            F.mul(a,b)=F.mul(a,F.zero)=F.zero

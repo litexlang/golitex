@@ -1,0 +1,18 @@
+thm consume_congruence_power:
+    ? forall a,b Z,m N+,n N:
+        $nt::main::is_congruent_mod(a,b,m)
+        =>:
+            $nt::main::is_congruent_mod(a^n,b^n,m)
+    release thm nt::main::congruence_power(a,b,m,n)
+
+thm consume_modular_inverse_power:
+    ? forall a,u Z,m N+,n N:
+        $nt::main::is_modular_inverse(a,u,m)
+        =>:
+            $nt::main::is_modular_inverse(a^n,u^n,m)
+    release thm nt::main::modular_inverse_power(a,u,m,n)
+
+thm consume_congruence_power_remainder:
+    ? forall a Z,m N+,n N:
+        $nt::main::is_congruent_mod(a^n,(a % m)^n,m)
+    release thm nt::main::congruence_power_remainder(a,m,n)

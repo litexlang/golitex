@@ -1,0 +1,27 @@
+thm consume_zero_product_factors:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,a,b K:
+        F.mul(a,b)=F.zero
+        =>:
+            a=F.zero or b=F.zero
+    release thm Algebra::field::zero_product_factors(K,F,a,b)
+
+thm consume_nonzero_product_factors:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,a,b K:
+        F.mul(a,b)!=F.zero
+        =>:
+            a!=F.zero
+            b!=F.zero
+    release thm Algebra::field::nonzero_product_factors(K,F,a,b)
+
+thm consume_zero_product_from_factor:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,a,b K:
+        a=F.zero or b=F.zero
+        =>:
+            F.mul(a,b)=F.zero
+    release thm Algebra::field::zero_product_from_factor(K,F,a,b)
+
+thm missing_nonzero_product:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,a,b K:
+        a!=F.zero
+        b!=F.zero
+    release thm Algebra::field::nonzero_product_factors(K,F,a,b)

@@ -31,6 +31,7 @@ use crate::json_output::explain::text::text;
 impl SubsetFactSearchProofByBuiltinRule {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
         match self {
+            Self::HomogeneousCartesianSequenceSubset(_) => BuiltinRuleText { rule_name: "HomogeneousCartesianSequenceSubset".into(), message: "A flat homogeneous Cartesian product is the finite sequence space of the same length.".into() },
             Self::FunctionRangeInCodomain(_) => BuiltinRuleText {
                 rule_name: "FunctionRangeInCodomain".into(),
                 message: "The image lies in the certified return carrier.".into(),
@@ -64,6 +65,10 @@ impl SubsetFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         match self {
+            Self::HomogeneousCartesianSequenceSubset(_) => BuiltinRuleText {
+                rule_name: "HomogeneousCartesianSequenceSubset".into(),
+                message: "同质的平坦笛卡尔积等于相同长度的有限数列空间。".into(),
+            },
             Self::FunctionRangeInCodomain(_) => BuiltinRuleText {
                 rule_name: "FunctionRangeInCodomain".into(),
                 message: "函数的像包含于已证明的返回集合。".into(),
@@ -97,6 +102,10 @@ impl SubsetFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
         match self {
+            Self::HomogeneousCartesianSequenceSubset(_) => BuiltinRuleText {
+                rule_name: "HomogeneousCartesianSequenceSubset".into(),
+                message: "同質的平坦笛卡爾積等於相同長度的有限數列空間。".into(),
+            },
             Self::FunctionRangeInCodomain(_) => BuiltinRuleText {
                 rule_name: "FunctionRangeInCodomain".into(),
                 message: "函數的像包含於已證明的回傳集合。".into(),
@@ -130,6 +139,7 @@ impl SubsetFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
         match self {
+            Self::HomogeneousCartesianSequenceSubset(_) => BuiltinRuleText { rule_name: "HomogeneousCartesianSequenceSubset".into(), message: "Un produit cartésien homogène plat est l’espace des suites finies de même longueur.".into() },
             Self::FunctionRangeInCodomain(_) => BuiltinRuleText {
                 rule_name: "FunctionRangeInCodomain".into(),
                 message: "L’image de la fonction est incluse dans l’ensemble de retour certifié."
@@ -164,6 +174,7 @@ impl SubsetFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
         match self {
+            Self::HomogeneousCartesianSequenceSubset(_) => BuiltinRuleText { rule_name: "HomogeneousCartesianSequenceSubset".into(), message: "Однородное плоское декартово произведение равно пространству конечных последовательностей той же длины.".into() },
             Self::FunctionRangeInCodomain(_) => BuiltinRuleText {
                 rule_name: "FunctionRangeInCodomain".into(),
                 message:
@@ -199,6 +210,7 @@ impl SubsetFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
         match self {
+            Self::HomogeneousCartesianSequenceSubset(_) => BuiltinRuleText { rule_name: "HomogeneousCartesianSequenceSubset".into(), message: "Un producto cartesiano homogéneo plano es el espacio de sucesiones finitas de la misma longitud.".into() },
             Self::FunctionRangeInCodomain(_) => BuiltinRuleText {
                 rule_name: "FunctionRangeInCodomain".into(),
                 message:
@@ -234,6 +246,7 @@ impl SubsetFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
         match self {
+            Self::HomogeneousCartesianSequenceSubset(_) => BuiltinRuleText { rule_name: "HomogeneousCartesianSequenceSubset".into(), message: "الجداء الديكارتي المتجانس المسطح يساوي فضاء المتتاليات المنتهية ذات الطول نفسه.".into() },
             Self::FunctionRangeInCodomain(_) => BuiltinRuleText {
                 rule_name: "FunctionRangeInCodomain".into(),
                 message: "صورة الدالة محتواة في مجموعة القيم المثبتة.".into(),
@@ -267,6 +280,10 @@ impl SubsetFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
         match self {
+            Self::HomogeneousCartesianSequenceSubset(_) => BuiltinRuleText {
+                rule_name: "HomogeneousCartesianSequenceSubset".into(),
+                message: "平坦な同質の直積は同じ長さの有限列の空間に等しい。".into(),
+            },
             Self::FunctionRangeInCodomain(_) => BuiltinRuleText {
                 rule_name: "FunctionRangeInCodomain".into(),
                 message: "関数の像は検証済みの戻り値集合に含まれます。".into(),
@@ -300,6 +317,10 @@ impl SubsetFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
         match self {
+            Self::HomogeneousCartesianSequenceSubset(_) => BuiltinRuleText {
+                rule_name: "HomogeneousCartesianSequenceSubset".into(),
+                message: "평탄한 동질 데카르트 곱은 같은 길이의 유한 수열 공간과 같습니다.".into(),
+            },
             Self::FunctionRangeInCodomain(_) => BuiltinRuleText {
                 rule_name: "FunctionRangeInCodomain".into(),
                 message: "함수의 상은 검증된 반환값 집합에 포함됩니다.".into(),
@@ -333,6 +354,12 @@ impl SubsetFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
         match self {
+            Self::HomogeneousCartesianSequenceSubset(_) => BuiltinRuleText {
+                rule_name: "HomogeneousCartesianSequenceSubset".into(),
+                message:
+                    "Tích Descartes phẳng đồng nhất bằng không gian dãy hữu hạn có cùng độ dài."
+                        .into(),
+            },
             Self::FunctionRangeInCodomain(_) => BuiltinRuleText {
                 rule_name: "FunctionRangeInCodomain".into(),
                 message: "Ảnh của hàm nằm trong tập giá trị trả về đã được chứng minh.".into(),
@@ -392,6 +419,7 @@ impl SubsetFactSearchProofByBuiltinRule {
             Self::SetBuilderSubsetOfParamSet(_) => None,
             Self::CompositionRangeSubset(_) => None,
             Self::FunctionPreimageSubsetOfInputCarrier(_) => None,
+            Self::HomogeneousCartesianSequenceSubset(_) => None,
             Self::SubsetReflexivity(_) => None,
             Self::UnionSubsetFromBothOperands(_) => None,
             Self::IntersectSubsetFromLeftUpperBound(_) => None,

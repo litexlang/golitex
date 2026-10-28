@@ -402,6 +402,24 @@ impl LitexToLeanCompiler {
         position: &SourcePosition<'_>,
     ) -> Result<(String, String, String, Option<EvalRational>), LeanCompileError> {
         if let Some(term) = self.compile_eval_closed_wd(wd, position)? {
+            if EvalRational::from_obj(wd.obj()).is_none() {
+                let member = match wd.obj() {
+                    Obj::ArithmeticOperator(ArithmeticOperator::Add(_)) => "(Litex.addInC _litex_closed.val.left _litex_closed.val.right _litex_closed.wd.1 _litex_closed.wd.2)",
+                    Obj::ArithmeticOperator(ArithmeticOperator::Sub(_)) => "(Litex.subInC _litex_closed.val.left _litex_closed.val.right _litex_closed.wd.1 _litex_closed.wd.2)",
+                    Obj::ArithmeticOperator(ArithmeticOperator::Mul(_)) => "(Litex.mulInC _litex_closed.val.left _litex_closed.val.right _litex_closed.wd.1 _litex_closed.wd.2)",
+                    Obj::ArithmeticOperator(ArithmeticOperator::Neg(_)) => "(Litex.negInC _litex_closed.val.arg _litex_closed.wd)",
+                    _ => return Err(LeanCompileError::unsupported("Eval/ClosedSymbolicMembership")),
+                };
+                let setup = format!("let _litex_closed := {term};\nlet _litex_member : Litex.In _litex_closed Litex.C := {member};");
+                return Ok((
+                    format!("({setup}\nLitex.NativeBridge.asComplex _litex_closed _litex_member)"),
+                    format!(
+                        "({setup}\nLitex.NativeBridge.asComplex_spec _litex_closed _litex_member)"
+                    ),
+                    format!("({setup}\n_litex_member)"),
+                    None,
+                ));
+            }
             let (value, proof) = self.compile_eval_closed_value(wd.obj(), position)?;
             let literal = exact_rational_literal(&value, "ℂ")?;
             let member = format!("(Litex.NativeBridge.inOfDenoteNumber {term} {literal} Litex.C {proof} (Litex.numberInC {literal}))");

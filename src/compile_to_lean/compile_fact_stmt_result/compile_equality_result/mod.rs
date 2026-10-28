@@ -55,3 +55,5 @@ mod compile_matrix_reduction;
 mod compile_matrix_evaluation;
 
 mod compile_matrix_residual;
+
+mod compile_homogeneous_cart;

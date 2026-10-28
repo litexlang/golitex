@@ -1452,6 +1452,119 @@ and applies existing Core laws. See [integer operations](../lean/examples/evalua
 [local evaluation](../lean/examples/evaluated_local_integer_operations/) and
 [remainders inside a sum](../lean/examples/evaluated_integer_aggregates/).
 
+Exact square-root evaluation is also supported when the result is rational:
+
+```litex
+eval sqrt(0.36)
+sqrt(0.36) = 3/5
+```
+
+The compiler preserves the recorded nonnegativity proof and derives real
+membership for closed numeric arguments from their checked denotation. See
+[square roots](../lean/examples/evaluated_square_roots/),
+[fractions](../lean/examples/evaluated_fractional_square_roots/),
+[cited values](../lean/examples/evaluated_cited_square_roots/),
+[formula functions](../lean/examples/evaluated_function_square_roots/),
+[local scope](../lean/examples/evaluated_local_square_roots/) and
+[square roots in a sum](../lean/examples/evaluated_square_root_aggregates/).
+An exact radical that evaluates to the same canonical expression also compiles
+without approximation; see [sqrt(2)](../lean/examples/evaluated_exact_square_root/)
+and [a radical sum](../lean/examples/evaluated_exact_radical_sum/). The compiler
+checks the exact canonical result and retains the original object WD. Radical
+expressions can also simplify in the checked closed linear route, for example
+`eval sqrt(12)+sqrt(27)` produces `5*sqrt(3)`; see
+[radical simplification](../lean/examples/evaluated_radical_simplification/)
+and [a difference](../lean/examples/evaluated_radical_difference/). This route
+checks the exact result and the original WD, then proves the root rewrites in
+Lean. Direct products of two square roots of nonnegative rational numbers
+also compile, including [sqrt(2)*sqrt(3)](../lean/examples/evaluated_radical_product/)
+and [a rational result](../lean/examples/evaluated_radical_square/). These
+evaluations can also replay recorded equality citations, as in
+[a cited root](../lean/examples/evaluated_cited_irrational_root/) and
+[a cited product](../lean/examples/evaluated_cited_radical_product/). The
+rewritten intermediate is interpreted as a semantic value; the source and
+result objects keep their original WD evidence. Products of radical sums,
+division, function calls and aggregate records remain outside these radical
+routes.
+The selected rule that a positive real has a nonzero square root also replays
+through the proved `Litex.sqrtNonzeroOfPositive` theorem; see
+[the generic theorem](../lean/examples/square_root_nonzero_theorem/).
+
+Exact rational logarithms also compile when Litex evaluates them:
+
+```litex
+eval log(8,4)
+log(8,4) = 2/3
+eval log(1/3,27)
+log(1/3,27) = -3
+```
+
+The compiler checks the evaluated operands, their original WD and the positive,
+nonunit base and positive argument conditions, then applies the existing
+`rationalLogValue` theorem. See [logarithms](../lean/examples/evaluated_logarithms/),
+[rational results](../lean/examples/evaluated_rational_logarithms/),
+[arithmetic](../lean/examples/evaluated_logarithm_arithmetic/),
+[formula functions](../lean/examples/evaluated_logarithm_functions/) and
+[local evaluation](../lean/examples/evaluated_local_logarithms/).
+The native evaluator currently rejects direct `eval log(2,a)` even when an
+earlier fact gives `a = 8`; this is a source-evaluation boundary.
+
+Exact real-valued observations of closed complex expressions also compile:
+`eval re(3+4*i)`, `eval img(3+4*i)` and `eval C_abs(3+4*i)` produce
+`3`, `4` and `5`. The compiler retains the original object WD and proves the
+numeric observation using the complex-number bridge. See
+[coordinates](../lean/examples/evaluated_complex_coordinates/),
+[modulus](../lean/examples/evaluated_complex_modulus/) and
+[division](../lean/examples/evaluated_complex_quotient_coordinate/).
+Direct evaluation of a closed complex modulus also preserves an irrational
+principal root, such as `eval C_abs(1+i)` producing `sqrt(2)`; see
+[the exact modulus example](../lean/examples/evaluated_irrational_complex_modulus/).
+This radical route currently requires no rewritten citations, function calls
+or aggregate records. The source evaluator rejects `eval re(z)` even after
+defining `z = 3+4*i`.
+
+An arbitrary Litex integer exponent can be used with a nonzero base. The
+compiler obtains an integer representative from the original membership proof
+and preserves the nonzero-base evidence. The selected rule for a nonzero power
+is replayed through the proved `Litex.powNonzeroOfBase` theorem. See
+[integer exponents](../lean/examples/integer_exponent_well_defined/),
+[nonzero powers](../lean/examples/integer_power_nonzero_theorem/) and
+[a sum of logarithms of integer powers](../lean/examples/logarithms_of_integer_powers/).
+The selected rule that a nonzero product has nonzero factors cites the original
+product fact and the proved `Litex.productNonzeroFactors` theorem; see
+[nonzero product factors](../lean/examples/nonzero_product_factors/).
+For real absolute values, the selected nonzero rule similarly preserves the
+original argument proof; see [absolute value nonzero](../lean/examples/absolute_value_nonzero/).
+The real exponential's nonzero rule and both directions of sign nonzero also
+replay their selected results; see [exponential](../lean/examples/real_exponential_nonzero/),
+[sign](../lean/examples/real_sign_nonzero/) and
+[sign reflection](../lean/examples/real_sign_reflects_nonzero/).
+For a nonzero complex argument, the selected conjugate and modulus nonzero
+rules reuse the recorded premise and original WD; see
+[conjugation](../lean/examples/complex_conjugate_nonzero/) and
+[complex modulus](../lean/examples/complex_modulus_nonzero/).
+The selected integer least-common-multiple nonzero rule also replays both
+original operand proofs; see [nonzero LCM](../lean/examples/lcm_nonzero/).
+The logarithm nonzero rule replays the recorded positive/nonunit guards,
+including [above-one](../lean/examples/log_nonzero_above_one/),
+[below-one](../lean/examples/log_nonzero_below_one/) and
+[explicit nonunit](../lean/examples/log_nonzero_positive_nonunit/) cases.
+The selected nonzero-sum rule cites the recorded sum fact when proving that
+one summand differs from the negation of the other; see
+[nonzero sums](../lean/examples/inequality_from_nonzero_sum/).
+The positive-nonunit integer-power rule preserves the selected base guard,
+integer exponent membership and exponent nonzero proof; see
+[arbitrary integer powers](../lean/examples/positive_nonunit_integer_power/)
+and [a negative exponent](../lean/examples/nonunit_negative_integer_power/).
+For defined tangent and cotangent, the selected nonzero rules cite the
+original sine or cosine numerator fact; see [tangent](../lean/examples/tangent_nonzero_from_sine/)
+and [cotangent](../lean/examples/cotangent_nonzero_from_cosine/).
+Sine and cosine nonzero facts also transfer to negated arguments by citing
+the original fact; see [sine](../lean/examples/sine_nonzero_under_negation/)
+and [cosine](../lean/examples/cosine_nonzero_under_negation/).
+The source rule that Euler's number is not one is proved in the semantic
+bridge; see [Euler's number](../lean/examples/euler_not_one/).
+
 The checked aggregate slice uses literal integer range bounds or enumerated
 finite numeric sets and function bodies that reduce to closed scalar arithmetic.
 Nested aggregates inside iterands and additional body-rewrite stages remain

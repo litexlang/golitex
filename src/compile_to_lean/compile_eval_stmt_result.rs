@@ -67,6 +67,30 @@ impl LitexToLeanCompiler {
         if used != source_ids {
             return Err(LeanCompileError::unsupported("Eval/CitationOrder"));
         }
+        if p.source_object.ir() == p.evaluated_object.ir()
+            && EvalRational::from_obj(&p.source_object).is_none()
+            && crate::rational_expression::exact_radical::ExactRadical::from_obj(&p.source_object)
+                .is_some()
+        {
+            return self.compile_eval_unchanged_radical(p, position, index, local);
+        }
+        if matches!(
+            p.rewritten_object,
+            Obj::ComplexOperator(ComplexOperator::ComplexAbs(_))
+        ) && matches!(
+            p.evaluated_object,
+            Obj::ExpLogOperator(ExpLogOperator::Sqrt(_))
+        ) {
+            return self.compile_eval_irrational_modulus(p, position, index, local);
+        }
+        if EvalRational::from_obj(&p.rewritten_object).is_none()
+            && crate::rational_expression::exact_radical::ExactRadical::from_obj(
+                &p.rewritten_object,
+            )
+            .is_some()
+        {
+            return self.compile_eval_linear_radical(p, &rewritten, position, index, local);
+        }
         let mut remaining = p.function_evaluations.len();
         let mut remaining_aggregates = p.aggregate_evaluations.len();
         let (value, calculation, body_cites) = self.compile_eval_value(
@@ -105,6 +129,124 @@ impl LitexToLeanCompiler {
         let output_value =
             self.compile_calculation_endpoint(&p.evaluated_object, &output, output_value, &formed)?;
         let proof = format!("(show {ty} from ({input_value}).trans ({output_value}).symm)");
+        let compiled = (
+            Self::scope_equal_wd(ty.clone(), &bindings),
+            Self::scope_equal_wd_proof(ty, proof, &bindings),
+        );
+        let completed = SourcePosition {
+            before: 4,
+            ..*position
+        };
+        self.compile_completed_fact_statement(
+            &p.evaluated_equal_fact.clone().into(),
+            compiled,
+            &p.store_and_infer_result,
+            &completed,
+            index,
+            local,
+        )
+    }
+
+    fn compile_eval_unchanged_radical(
+        &self,
+        p: &ExecEvalStmtSuccess,
+        position: &SourcePosition<'_>,
+        index: usize,
+        local: bool,
+    ) -> Result<String, LeanCompileError> {
+        if p.source_object.ir() != p.rewritten_object.ir()
+            || !p.cited_equal_fact_ids.is_empty()
+            || !p.function_evaluations.is_empty()
+            || !p.aggregate_evaluations.is_empty()
+        {
+            return Err(LeanCompileError::unsupported("Eval/RadicalEvidence"));
+        }
+        let canonical =
+            crate::rational_expression::exact_radical::ExactRadical::from_obj(&p.rewritten_object)
+                .and_then(|value| value.checked_to_obj())
+                .ok_or_else(|| LeanCompileError::unsupported("Eval/ExactRadical"))?;
+        if canonical.ir() != p.evaluated_object.ir() {
+            return Err(LeanCompileError::unsupported("Eval/RadicalValue"));
+        }
+        let evaluated = SourcePosition {
+            before: 2,
+            ..*position
+        };
+        let wd = &p.evaluated_equal_well_defined;
+        let bindings = self.compile_equal_wd_locals(&p.evaluated_equal_fact, wd, &evaluated)?;
+        let formed = SourcePosition::new(Some(&evaluated), SourceOwner::EqualWDLocals(wd, 2), 2);
+        let left = self.compile_object_reference(&p.source_object, &formed)?;
+        let right = self.compile_object_reference(&p.evaluated_object, &formed)?;
+        let ty = format!("Litex.Same {left} {right}");
+        let proof = format!("(show {ty} from rfl)");
+        let compiled = (
+            Self::scope_equal_wd(ty.clone(), &bindings),
+            Self::scope_equal_wd_proof(ty, proof, &bindings),
+        );
+        let completed = SourcePosition {
+            before: 4,
+            ..*position
+        };
+        self.compile_completed_fact_statement(
+            &p.evaluated_equal_fact.clone().into(),
+            compiled,
+            &p.store_and_infer_result,
+            &completed,
+            index,
+            local,
+        )
+    }
+
+    fn compile_eval_irrational_modulus(
+        &self,
+        p: &ExecEvalStmtSuccess,
+        position: &SourcePosition<'_>,
+        index: usize,
+        local: bool,
+    ) -> Result<String, LeanCompileError> {
+        let Obj::ComplexOperator(ComplexOperator::ComplexAbs(abs)) = &p.rewritten_object else {
+            return Err(LeanCompileError::unsupported("Eval/ModulusSource"));
+        };
+        let Obj::ExpLogOperator(ExpLogOperator::Sqrt(root)) = &p.evaluated_object else {
+            return Err(LeanCompileError::unsupported("Eval/ModulusResult"));
+        };
+        if p.source_object.ir() != p.rewritten_object.ir()
+            || !p.cited_equal_fact_ids.is_empty()
+            || !p.function_evaluations.is_empty()
+            || !p.aggregate_evaluations.is_empty()
+        {
+            return Err(LeanCompileError::unsupported("Eval/ModulusEvidence"));
+        }
+        let (_, _, squared) =
+            crate::rational_expression::exact_complex::exact_modulus_radicand(&abs.arg)
+                .ok_or_else(|| LeanCompileError::unsupported("Eval/ModulusCoordinates"))?;
+        if EvalRational::from_obj(&root.arg).as_ref() != Some(&squared)
+            || p.evaluated_object.ir()
+                != crate::rational_expression::exact_complex::principal_root(&squared).ir()
+        {
+            return Err(LeanCompileError::unsupported("Eval/ModulusValue"));
+        }
+        let evaluated = SourcePosition {
+            before: 2,
+            ..*position
+        };
+        let wd = &p.evaluated_equal_well_defined;
+        let bindings = self.compile_equal_wd_locals(&p.evaluated_equal_fact, wd, &evaluated)?;
+        let formed = SourcePosition::new(Some(&evaluated), SourceOwner::EqualWDLocals(wd, 2), 2);
+        let left = self.compile_object_reference(&p.source_object, &formed)?;
+        let right = self.compile_object_reference(&p.evaluated_object, &formed)?;
+        let argument = self.compile_numeric_observation(&abs.arg, &formed)?;
+        let radicand = self.compile_numeric_observation(&root.arg, &formed)?;
+        if radicand.3.as_ref() != Some(&squared) {
+            return Err(LeanCompileError::unsupported("Eval/ModulusRadicand"));
+        }
+        let real = exact_rational_literal(&squared, "ℝ")?;
+        let radicand_proof = format!(
+            "(({}).trans (congrArg M.number (by norm_num : {} = (({real} : ℝ) : ℂ))))",
+            radicand.1, radicand.0
+        );
+        let ty = format!("Litex.Same {left} {right}");
+        let proof = format!("(Litex.complexAbsEqSqrtOfNormSq {left} {right} {} {real} {} {radicand_proof} (by norm_num [Complex.normSq, Complex.div_re, Complex.div_im]))", argument.0, argument.1);
         let compiled = (
             Self::scope_equal_wd(ty.clone(), &bindings),
             Self::scope_equal_wd_proof(ty, proof, &bindings),

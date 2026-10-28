@@ -105,6 +105,7 @@ use super::by_equality_identities_wave9::{
     UnionEmptyRightBuiltinRuleProof, UnionIdempotentBuiltinRuleProof,
 };
 use super::by_finite_subset_size::FiniteSetEqualFromSubsetSizeBuiltinRuleProof;
+use super::by_homogeneous_cart::HomogeneousCartesianEqualsFiniteSequenceBuiltinRuleProof;
 use super::by_inverse_trig::{
     ArccosCosRightInverseBuiltinRuleProof, ArccosExactNegOneBuiltinRuleProof,
     ArccosExactOneBuiltinRuleProof, ArccosExactZeroBuiltinRuleProof,
@@ -125,6 +126,7 @@ use super::by_power_laws::{
 // Each equality builtin rule gets its own variant and payload.
 // Definitional unfolds are EqualitySearchProofByObjectDefinition, not here.
 pub enum EqualitySearchProofByBuiltinRule {
+    HomogeneousCartesianEqualsFiniteSequence(HomogeneousCartesianEqualsFiniteSequenceBuiltinRuleProof),
     ElementaryIdentity(super::by_elementary_identities::ElementaryIdentitySearchProofByBuiltinRule),
     SequenceLimit(super::by_sequence_limit::SequenceLimitEqualityProof),
     SequenceLiminf(super::by_sequence_liminf::SequenceLiminfEqualityProof),

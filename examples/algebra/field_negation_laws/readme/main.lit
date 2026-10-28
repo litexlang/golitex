@@ -1,0 +1,4 @@
+thm product_with_negative:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,a,b K:
+        F.mul(a,F.neg(b))=F.neg(F.mul(a,b))
+    release thm Algebra::field::mul_neg(K,F,a,b)

@@ -1,0 +1,75 @@
+have fn real_inv(x R: x != 0) R = 1 / x
+
+have fn real_add(x, y R) R = x + y
+
+have fn real_neg(x R) R = -x
+
+have fn real_mul(x, y R) R = x * y
+
+forall x, y, z R:
+    real_add(real_add(x, y), z) = real_add(x, real_add(y, z))
+    real_mul(real_mul(x, y), z) = real_mul(x, real_mul(y, z))
+    real_mul(x, real_add(y, z)) = real_add(real_mul(x, y), real_mul(x, z))
+
+forall x, y R:
+    real_add(x, y) = real_add(y, x)
+    real_mul(x, y) = real_mul(y, x)
+
+forall x R:
+    real_add(0, x) = x
+    real_add(x, real_neg(x)) = 0
+    real_mul(1, x) = x
+
+forall x R:
+    x != 0
+    =>:
+        real_mul(x, real_inv(x)) = 1
+
+release thm struct_member((0, 1, real_add, real_neg, real_mul, real_inv), &Algebra::field::Field<R>)
+
+have real_field &Algebra::field::Field<R> = (0, 1, real_add, real_neg, real_mul, real_inv)
+
+real_field.zero=0
+
+real_field.add=real_add
+
+real_field.neg=real_neg
+
+real_field.mul=real_mul
+
+real_field.add(3,-3)=real_field.zero
+
+release thm Algebra::field::add_inverse_unique(R,real_field,3,-3)
+
+release thm Algebra::field::mul_neg(R,real_field,3,4)
+
+release thm Algebra::field::neg_mul(R,real_field,3,4)
+
+release thm Algebra::field::neg_mul_neg(R,real_field,3,4)
+
+release thm Algebra::field::neg_add(R,real_field,3,4)
+
+release thm Algebra::field::mul_neg(R,real_field,0,0)
+
+release thm Algebra::field::neg_mul_neg(R,real_field,0,3)
+
+release thm Algebra::field::neg_add(R,real_field,0,0)
+
+claim:
+    ? real_field.neg(real_field.add(3,4))=-7
+    real_field.add(3,4)=real_add(3,4)=7
+    real_field.neg(7)=real_neg(7)=-7
+    real_field.neg(real_field.add(3,4))=real_field.neg(7)=-7
+
+claim:
+    ? real_field.mul(3,real_field.neg(4))=-12
+    real_field.neg(4)=real_neg(4)=-4
+    real_field.mul(3,real_field.neg(4))=real_field.mul(3,-4)=real_mul(3,-4)=-12
+
+claim:
+    ? real_field.mul(real_field.neg(3),real_field.neg(4))=12
+    real_field.neg(3)=real_neg(3)=-3
+    real_field.neg(4)=real_neg(4)=-4
+    real_field.mul(real_field.neg(3),real_field.neg(4))=real_field.mul(-3,-4)=real_mul(-3,-4)=12
+
+release thm Algebra::field::neg_add(R,real_field,3)

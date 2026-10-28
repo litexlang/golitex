@@ -1,0 +1,15 @@
+# Node: equal.ByBuiltinRule.HomogeneousCartesianEqualsFiniteSequence
+# Before: this constructor equality failed proof search.
+# cart_n(R,3)=cart(R,R,R)
+# Now: a flat product of k copies of S is finite_seq(S,k), also written cart_n(S,k).
+# Boundary: no nested-product flattening, scalar/vector identification or wrong dimension.
+# Run: target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_rule/homogeneous_cartesian_finite_sequence.lit
+
+forall S set:
+    cart_n(S,3)=cart(S,S,S)
+    cart(S,S,S)=cart_n(S,3)
+    cart_n(S,1)=cart(S)
+    cart_n(S,0)=cart()
+have carrier set = R
+have dimension N = 3
+cart(carrier,R,carrier)=cart_n(R,dimension)

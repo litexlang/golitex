@@ -214,6 +214,7 @@ impl LitexToLeanCompiler {
             EqualFactSearchedProof::ByClosedCalculation(proof) => {
                 self.compile_closed_equality(fact, proof, position)?
             }
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::HomogeneousCartesianEqualsFiniteSequence(p)) => self.compile_homogeneous_cart(fact, p, position)?,
             EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::ClosedRangeLiteralExpansion(_)) => self.compile_closed_range_literal(fact, position)?,
             EqualFactSearchedProof::ByKnownSpecialProperty(proof) => {
                 self.compile_equality_known_special_property(fact, proof, position)?

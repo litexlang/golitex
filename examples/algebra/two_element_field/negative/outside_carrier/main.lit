@@ -1,0 +1,23 @@
+release thm model::two_field_is_field
+
+release thm model::two_field_zero
+
+release thm model::two_field_one
+
+release thm model::two_field_one_plus_one_zero
+
+release thm model::two_field_inverse_one
+
+1!=model::two_field.zero
+
+release thm Algebra::field::field_inverse_involution({0,1},model::two_field,1)
+
+release thm Algebra::field::nonzero_product({0,1},model::two_field,1,1)
+
+release thm Algebra::field::field_inverse_product({0,1},model::two_field,1,1)
+
+release thm Algebra::field::field_zero_linear_two_solutions({0,1},model::two_field)
+
+release thm Algebra::field::field_affine_equation_unique({0,1},model::two_field,1,1,0)
+
+model::two_add(1,2)=1

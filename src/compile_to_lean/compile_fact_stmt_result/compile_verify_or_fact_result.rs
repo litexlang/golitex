@@ -24,6 +24,30 @@ impl LitexToLeanCompiler {
         let fact = Fact::OrFact(proof.fact.clone());
         let term = match &proof.searched_proof {
             OrFactSearchedProof::ByBuiltinRule(
+                OrFactSearchProofByBuiltinRule::ClosedIntegerRangeEqualityCover(p),
+            ) => self.compile_integer_range_cover(
+                &proof.fact,
+                &p.subject,
+                &p.interval,
+                &p.membership,
+                &p.carrier_equal,
+                &p.branch_indices,
+                true,
+                position,
+            )?,
+            OrFactSearchedProof::ByBuiltinRule(
+                OrFactSearchProofByBuiltinRule::HalfOpenIntegerRangeEqualityCover(p),
+            ) => self.compile_integer_range_cover(
+                &proof.fact,
+                &p.subject,
+                &p.interval,
+                &p.membership,
+                &p.carrier_equal,
+                &p.branch_indices,
+                false,
+                position,
+            )?,
+            OrFactSearchedProof::ByBuiltinRule(
                 OrFactSearchProofByBuiltinRule::ComplementaryAtomic(selected),
             ) => {
                 let [AndChainAtomicFact::AtomicFact(left), AndChainAtomicFact::AtomicFact(right)] =

@@ -1,0 +1,11 @@
+{
+  "false_difference_zero_premise": "premise",
+  "false_equality_premise": "premise",
+  "false_difference_value": "search_proof",
+  "false_left_product": "search_proof",
+  "false_right_product": "search_proof",
+  "false_distributed_product": "search_proof",
+  "wrong_carrier": "argument_type",
+  "wrong_arity": "call_shape",
+  "missing_difference_premise": "premise"
+}

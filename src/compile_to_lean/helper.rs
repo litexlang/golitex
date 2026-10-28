@@ -407,6 +407,10 @@ pub(super) fn arithmetic_constructor_pairs<'a>(
             Obj::ExpLogOperator(ExpLogOperator::Sqrt(a)),
             Obj::ExpLogOperator(ExpLogOperator::Sqrt(b)),
         ) => Some(("sqrtValue", vec![(&a.arg, &b.arg)])),
+        (
+            Obj::ExpLogOperator(ExpLogOperator::Log(a)),
+            Obj::ExpLogOperator(ExpLogOperator::Log(b)),
+        ) => Some(("logValue", vec![(&a.base, &b.base), (&a.arg, &b.arg)])),
         _ => None,
     }
 }

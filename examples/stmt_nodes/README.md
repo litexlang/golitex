@@ -202,3 +202,7 @@ unguarded forms now expose the actual WD obligation. Its Rust companion
 `wd_failure_diagnostics_tests` checks rejected inputs across Normal/Detailed,
 including membership and nonempty boundaries, nested proof steps, and Session
 rollback.
+
+[Finite integer case coverage](definition/finite_integer_range_cases.lit)
+uses the actual range binder to establish complete equality cases without a
+separate enumeration fact. Disjointness and return checks still run.

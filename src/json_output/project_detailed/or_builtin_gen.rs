@@ -12,6 +12,52 @@ pub(super) fn project_or_builtin_rule(
     runtime: &Runtime,
 ) -> JsonValue {
     match rule {
+        OrFactSearchProofByBuiltinRule::ClosedIntegerRangeEqualityCover(p) => object_for(
+            runtime,
+            vec![
+                ("type", string("or_builtin")),
+                ("rule", string("ClosedIntegerRangeEqualityCover")),
+                ("subject", string(p.subject.readable_string())),
+                ("interval", string(p.interval.readable_string())),
+                ("membership", project_verify_fact(&p.membership, runtime)),
+                (
+                    "carrier_equal",
+                    super::searched::project_known_equality_path(&p.carrier_equal, runtime),
+                ),
+                (
+                    "branch_indices",
+                    JsonValue::Array(
+                        p.branch_indices
+                            .iter()
+                            .map(|i| JsonValue::Number(*i as f64))
+                            .collect(),
+                    ),
+                ),
+            ],
+        ),
+        OrFactSearchProofByBuiltinRule::HalfOpenIntegerRangeEqualityCover(p) => object_for(
+            runtime,
+            vec![
+                ("type", string("or_builtin")),
+                ("rule", string("HalfOpenIntegerRangeEqualityCover")),
+                ("subject", string(p.subject.readable_string())),
+                ("interval", string(p.interval.readable_string())),
+                ("membership", project_verify_fact(&p.membership, runtime)),
+                (
+                    "carrier_equal",
+                    super::searched::project_known_equality_path(&p.carrier_equal, runtime),
+                ),
+                (
+                    "branch_indices",
+                    JsonValue::Array(
+                        p.branch_indices
+                            .iter()
+                            .map(|i| JsonValue::Number(*i as f64))
+                            .collect(),
+                    ),
+                ),
+            ],
+        ),
         OrFactSearchProofByBuiltinRule::RealLineTrichotomyEqLessGreater(p) => {
             let mut entries = vec![
                 ("type", string("or_builtin")),

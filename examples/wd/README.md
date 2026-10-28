@@ -293,3 +293,7 @@ function guards. The four wd_negative/literal_event_* controls and compiler
 member/order corruption tests cover those boundaries. The generated4-theorem pair passes real Lean and the standard axiom audit;
 the exact toolchain, Mathlib revision and Core snapshot are retained in its
 local acceptance record.
+
+[Homogeneous Cartesian multivariable carriers](homogeneous_cartesian_multivariable_carrier.lit)
+prove a coordinate partial on `cart(R,R,R)` directly. The same constructor equality
+supplies subset, membership and full-space evidence while retaining actual domain guards.

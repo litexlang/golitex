@@ -1,0 +1,36 @@
+have fn integer_add(x,y Z) Z = x+y
+
+have fn integer_neg(x Z) Z = -x
+
+forall x,y,z Z:
+    integer_add(integer_add(x,y),z) = integer_add(x,integer_add(y,z))
+
+forall x Z:
+    integer_add(0,x) = x
+    integer_add(x,0) = x
+    integer_add(integer_neg(x),x) = 0
+    integer_add(x,integer_neg(x)) = 0
+
+have integer_group &Algebra::group::Group<Z> = (integer_add,0,integer_neg)
+
+integer_group.mul = integer_add
+
+claim:
+    ? forall x,y Z:
+        integer_group.mul(x,y) = integer_group.mul(y,x)
+    integer_group.mul(x,y) = integer_add(x,y) = x+y = y+x = integer_add(y,x) = integer_group.mul(y,x)
+
+by def $Algebra::group::is_abelian(Z,integer_group)
+
+release thm Algebra::group::abelian_conjugation_fixed(Z,integer_group,3,4)
+
+release thm Algebra::group::commuting_elements_fixed_by_conjugation(Z,integer_group,3,4)
+
+release thm Algebra::group::conjugation_fixed_implies_commute(Z,integer_group,3,4)
+
+claim:
+    ? forall a,x Z:
+        integer_group.mul(integer_group.mul(a,x),integer_group.inv(a)) = x
+    release thm Algebra::group::abelian_conjugation_fixed(Z,integer_group,a,x)
+
+release thm Algebra::group::fixed_conjugation_implies_abelian(Z,integer_group)

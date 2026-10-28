@@ -1,0 +1,4 @@
+thm inverse_of_one:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>:
+        F.inv(F.one)=F.one
+    release thm Algebra::field::field_inverse_one(K,F)

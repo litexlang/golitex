@@ -1,0 +1,13 @@
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,a K:
+        a!=F.zero
+        =>:
+            F.inv(a)!=F.zero
+    release thm Algebra::field::nonzero_field_inverse(K,F,a)
+
+thm inverse_twice_in_any_field:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,a K:
+        a!=F.zero
+        =>:
+            F.inv(F.inv(a))=a
+    release thm Algebra::field::field_inverse_involution(K,F,a)

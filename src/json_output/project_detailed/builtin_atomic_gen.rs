@@ -17,6 +17,16 @@ pub(super) fn project_atomic_builtin_rule(
     runtime: &Runtime,
 ) -> JsonValue {
     match proof {
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(br::in_fact::InFactSearchProofByBuiltinRule::HomogeneousCartesianSequenceMembership(p)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("rule", string("HomogeneousCartesianSequenceMembership")),
+            ("membership_fact", string(p.membership.fact.readable_string())),
+            ("membership", super::searched::project_atomic_except_searched(&p.membership.searched_proof, runtime)),
+            ("carrier_equal", super::searched::project_equal_searched(&p.carrier_equal, runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::SubsetFact(br::subset::SubsetFactSearchProofByBuiltinRule::HomogeneousCartesianSequenceSubset(p)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("rule", string("HomogeneousCartesianSequenceSubset")),
+            ("equality", super::searched::project_equal_searched(&p.equality, runtime)),
+        ]),
         AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(br::in_fact::InFactSearchProofByBuiltinRule::NativeMatrix(p)) =>
             super::native_matrix::membership(p,runtime),
 

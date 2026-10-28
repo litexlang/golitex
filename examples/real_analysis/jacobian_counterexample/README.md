@@ -45,6 +45,8 @@ The local names are `F` for the map, `\J<p>` for its proposed derivative matrix,
 and `$is_left_inverse(G)` for the left-inverse relation `G(F(p))=p`.
 The row and column indices use `1...3`, the existing closed integer range
 `closed_range(1,3)`, so the upper endpoint `3` is included.
+The case checker proves that the three row equalities cover this integer range
+from its binder membership. No preliminary row-enumeration statement is needed.
 
 The input is one vector in `cart_n(R,3)`, the existing finite real-sequence
 carrier of length three, with coordinates `p(1)`, `p(2)`, `p(3)`. All function

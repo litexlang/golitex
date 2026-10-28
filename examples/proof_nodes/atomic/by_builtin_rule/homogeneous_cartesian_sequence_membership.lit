@@ -1,0 +1,12 @@
+# Node: atomic.InFact.HomogeneousCartesianSequenceMembership
+# Before: smooth strategies could not consume the ambient membership at their premise ceiling.
+# forall p cart(R,R,R):
+#     p $in cart_n(R,3)
+# Now: a known member and the narrow constructor equality suffice, without recursive search.
+# Boundary: no tuple flattening, wrong dimension, or implicit imported-fact lookup.
+# Run: target/release/litex -strict -f examples/proof_nodes/atomic/by_builtin_rule/homogeneous_cartesian_sequence_membership.lit
+
+forall p cart(R,R,R):
+    p $in cart_n(R,3)
+forall p cart_n(R,3):
+    p $in cart(R,R,R)

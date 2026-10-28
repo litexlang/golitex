@@ -1,0 +1,45 @@
+thm consume_congruence_power:
+    ? forall a,b Z,m N+,n N:
+        $nt::main::is_congruent_mod(a,b,m)
+        =>:
+            $nt::main::is_congruent_mod(a^n,b^n,m)
+    release thm nt::main::congruence_power(a,b,m,n)
+
+thm consume_modular_inverse_power:
+    ? forall a,u Z,m N+,n N:
+        $nt::main::is_modular_inverse(a,u,m)
+        =>:
+            $nt::main::is_modular_inverse(a^n,u^n,m)
+    release thm nt::main::modular_inverse_power(a,u,m,n)
+
+by def $nt::main::is_congruent_mod(17,2,5)
+
+release thm nt::main::congruence_power(17,2,5,3)
+
+$nt::main::is_congruent_mod(17^3,2^3,5)
+
+by def $nt::main::is_congruent_mod(-2,3,5)
+
+release thm nt::main::congruence_power(-2,3,5,3)
+
+$nt::main::is_congruent_mod((-2)^3,3^3,5)
+
+by def $nt::main::is_congruent_mod(0,5,5)
+
+release thm nt::main::congruence_power(0,5,5,0)
+
+0^0 = 1
+
+5*5+12*(-2) = 1
+
+release thm nt::main::modular_inverse_from_bezout(5,5,-2,12)
+
+release thm nt::main::modular_inverse_power(5,5,12,2)
+
+$nt::main::is_modular_inverse(5^2,5^2,12)
+
+by def $nt::main::is_modular_inverse(0,0,1)
+
+release thm nt::main::modular_inverse_power(0,0,1,0)
+
+release thm nt::main::congruence_power(17,2,5,1/2)

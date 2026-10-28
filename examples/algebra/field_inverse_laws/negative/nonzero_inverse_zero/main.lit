@@ -1,0 +1,79 @@
+have fn real_inv(x R: x != 0) R = 1 / x
+
+have fn real_add(x, y R) R = x + y
+
+have fn real_neg(x R) R = -x
+
+have fn real_mul(x, y R) R = x * y
+
+forall x, y, z R:
+    real_add(real_add(x, y), z) = real_add(x, real_add(y, z))
+    real_mul(real_mul(x, y), z) = real_mul(x, real_mul(y, z))
+    real_mul(x, real_add(y, z)) = real_add(real_mul(x, y), real_mul(x, z))
+
+forall x, y R:
+    real_add(x, y) = real_add(y, x)
+    real_mul(x, y) = real_mul(y, x)
+
+forall x R:
+    real_add(0, x) = x
+    real_add(x, real_neg(x)) = 0
+    real_mul(1, x) = x
+
+forall x R:
+    x != 0
+    =>:
+        real_mul(x, real_inv(x)) = 1
+
+release thm struct_member((0, 1, real_add, real_neg, real_mul, real_inv), &Algebra::field::Field<R>)
+
+have real_field &Algebra::field::Field<R> = (0, 1, real_add, real_neg, real_mul, real_inv)
+
+real_field.zero=0
+
+real_field.one=1
+
+real_field.inv=real_inv
+
+real_field.mul=real_mul
+
+2!=real_field.zero
+
+3!=real_field.zero
+
+real_field.inv(2)=real_inv(2)=1/2
+
+real_field.inv(3)=real_inv(3)=1/3
+
+release thm Algebra::field::nonzero_field_inverse(R,real_field,2)
+
+release thm Algebra::field::field_inverse_one(R,real_field)
+
+release thm Algebra::field::field_inverse_involution(R,real_field,2)
+
+real_field.mul(2,1/2)=real_mul(2,1/2)=1=real_field.one
+
+release thm Algebra::field::field_inverse_unique(R,real_field,2,1/2)
+
+release thm Algebra::field::nonzero_product(R,real_field,2,3)
+
+release thm Algebra::field::field_inverse_product(R,real_field,2,3)
+
+real_field.inv(real_field.one)=1
+
+real_field.inv(real_field.inv(2))=2
+
+claim:
+    ? real_field.inv(real_field.mul(2,3))=1/6
+    real_field.mul(2,3)=real_mul(2,3)=6
+    6!=real_field.zero
+    real_field.inv(6)=real_inv(6)=1/6
+    real_field.inv(real_field.mul(2,3))=real_field.inv(6)=1/6
+
+claim:
+    ? real_field.mul(real_field.inv(2),real_field.inv(3))=1/6
+    real_field.inv(2)=real_inv(2)=1/2
+    real_field.inv(3)=real_inv(3)=1/3
+    real_field.mul(real_field.inv(2),real_field.inv(3))=real_field.mul(1/2,1/3)=real_mul(1/2,1/3)=1/6
+
+release thm Algebra::field::nonzero_field_inverse(R,real_field,0)

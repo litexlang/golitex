@@ -1,0 +1,7 @@
+thm nonzero_factors_have_nonzero_product:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,a,b K:
+        a!=F.zero
+        b!=F.zero
+        =>:
+            F.mul(a,b)!=F.zero
+    release thm Algebra::field::nonzero_product(K,F,a,b)

@@ -1,0 +1,8 @@
+# Node: atomic.SubsetFact.HomogeneousCartesianSequenceSubset
+# Before: cart(R,R,R) $subset cart_n(R,3) failed proof search.
+# Now: the narrow constructor equality certificate supplies either inclusion.
+# Boundary: wrong lengths or heterogeneous factors do not get this certificate.
+# Run: target/release/litex -strict -f examples/proof_nodes/atomic/by_builtin_rule/homogeneous_cartesian_sequence_subset.lit
+
+cart(R,R,R) $subset cart_n(R,3)
+cart_n(R,3) $subset cart(R,R,R)

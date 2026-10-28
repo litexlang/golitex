@@ -1,0 +1,4 @@
+thm negating_twice:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,a K:
+        F.neg(F.neg(a))=a
+    release thm Algebra::field::neg_involution(K,F,a)

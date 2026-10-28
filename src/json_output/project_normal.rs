@@ -352,6 +352,8 @@ fn build_proof_method(verify: &VerifyFactResult, runtime: &Runtime) -> JsonValue
         },
         VerifyFactResult::OrFact(result) => match result.as_ref() {
             VerifyOrFactResult::Success(proof) => match &proof.searched_proof {
+                crate::execute::execute_fact_stmt::verify_or_fact::OrFactSearchedProof::ByBuiltinRule(crate::execute::execute_fact_stmt::verify_or_fact::OrFactSearchProofByBuiltinRule::ClosedIntegerRangeEqualityCover(_)) => builtin_rule_with_optional_cite(runtime, &super::explain::integer_range_cover_rule("ClosedIntegerRangeEqualityCover", output_language(runtime)), None),
+                crate::execute::execute_fact_stmt::verify_or_fact::OrFactSearchedProof::ByBuiltinRule(crate::execute::execute_fact_stmt::verify_or_fact::OrFactSearchProofByBuiltinRule::HalfOpenIntegerRangeEqualityCover(_)) => builtin_rule_with_optional_cite(runtime, &super::explain::integer_range_cover_rule("HalfOpenIntegerRangeEqualityCover", output_language(runtime)), None),
                 crate::execute::execute_fact_stmt::verify_or_fact::OrFactSearchedProof::ByKnownForallFact(application) => cite_known_forall(runtime, application),
                 _ => compound_why_json(runtime, "or"),
             },

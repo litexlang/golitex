@@ -18,6 +18,20 @@ pub(crate) struct ExactRadical {
 }
 
 impl ExactRadical {
+    /// Materialize the canonical result only when every coefficient has a
+    /// representable magnitude. This is useful when validating external
+    /// evidence, where malformed values must not trigger `to_obj`'s unwrap.
+    pub(crate) fn checked_to_obj(&self) -> Option<Obj> {
+        if self
+            .terms
+            .values()
+            .any(|c| c.parts().0.checked_abs().is_none())
+        {
+            return None;
+        }
+        Some(self.to_obj())
+    }
+
     pub(crate) fn from_obj(obj: &Obj) -> Option<Self> {
         Self::from_obj_at_depth(obj, 0)
     }

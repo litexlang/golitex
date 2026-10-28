@@ -1,0 +1,28 @@
+thm consume_right_identity_unique:
+    ? forall A nonempty_set,G &Algebra::group::Group<A>,identity_candidate A:
+        forall x A:
+            G.mul(x,identity_candidate)=x
+        =>:
+            identity_candidate=G.one
+    release thm Algebra::group::right_identity_unique(A,G,identity_candidate)
+
+thm consume_idempotent_is_identity:
+    ? forall A nonempty_set,G &Algebra::group::Group<A>,a A:
+        G.mul(a,a)=a
+        =>:
+            a=G.one
+    release thm Algebra::group::idempotent_is_identity(A,G,a)
+
+thm consume_square_identity_implies_self_inverse:
+    ? forall A nonempty_set,G &Algebra::group::Group<A>,a A:
+        G.mul(a,a)=G.one
+        =>:
+            G.inv(a)=a
+    release thm Algebra::group::square_identity_implies_self_inverse(A,G,a)
+
+thm consume_self_inverse_implies_square_identity:
+    ? forall A nonempty_set,G &Algebra::group::Group<A>,a A:
+        G.inv(a)=a
+        =>:
+            G.mul(a,a)=G.one
+    release thm Algebra::group::self_inverse_implies_square_identity(A,G,a)

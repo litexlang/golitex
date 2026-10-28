@@ -150,6 +150,7 @@ Left/right function limit tracers:
 
 Standalone regression examples:
 
+- [A shallow embedding of higher-order logic](hol_embedding.lit), provided by chegnxuan huang: Boolean-valued predicates and quantifiers, interpretations of the HOL Light axioms, and constructed natural numbers with addition.
 - [Claim/obtain scope](claim_obtain_scope.lit).
 - [Nonempty-set property arguments](nonempty_set_property_arguments.lit).
 - [Function construction by unique existence](have_fn_by_unique_existence.lit).
@@ -165,6 +166,20 @@ Standalone regression examples:
 
 - [Group maps and subgroup transport](algebra/group_maps/README.md): native composition, image/preimage subgroups, normal inverse images and noncommutative/trivial groups.
 - [Normal subgroup images and composition kernels](algebra/normal_images/README.md): ambient surjectivity, actual restricted images and a kernel identity valid for complete maps without a homomorphism premise.
+- [Group inverse laws](algebra/inverse_laws/README.md): inverse products and right equations, including order-sensitive noncommutative examples.
+- [Field zero and cancellation laws](algebra/field_zero_laws/README.md): zero absorption, nonzero cancellation and zero-product boundaries.
+- [Field additive laws](algebra/field_additive_laws/README.md): additive identity, inverses, cancellation and double negation.
+- [Field negation laws](algebra/field_negation_laws/README.md): negation of sums and products, including zero operands.
+- [Field inverse laws](algebra/field_inverse_laws/README.md): guarded inverse, inverse of a product and zero-input boundaries.
+- [Field difference laws](algebra/field_difference_laws/README.md): distributivity, multiplication over differences and the zero-difference criterion.
+- [Field linear equations](algebra/field_linear_equations/README.md): unique linear and affine solutions with nonzero coefficients.
+- [Zero-coefficient field equations](algebra/field_zero_equations/README.md): all-solution, no-solution and distinct-witness cases.
+- [Two-element field](algebra/two_element_field/README.md): a checked characteristic-two instance and cross-file use of the generic field laws.
+- [Vector space over the two-element field](algebra/two_element_vector_space/README.md): maps, kernels, a basis, dimension one and rank-nullity.
+- [Zero products in a field](algebra/field_zero_product/README.md): the zero-product characterization over real and two-element fields.
+- [Group conjugation](algebra/conjugation_laws/README.md): product preservation, bijectivity and the connection with commutation.
+- [Elementary group identities](algebra/group_elementary_laws/README.md): right identities, idempotents and a nonidentity self-inverse element.
+- [Powers and integer congruence](number_theory/congruence_powers/README.md): natural powers, remainder reduction and supplied modular inverses.
 
 - [Finite event probability](probability/finite_events/README.md): generic event, conditional/Bayes and independence contracts, actual uniform/Dirac probability spaces and guarded boundaries.
 - [Finite pushforward probability](probability/pushforward/README.md): actual image distributions, dice parity, constant maps and retained zero-mass image points.
