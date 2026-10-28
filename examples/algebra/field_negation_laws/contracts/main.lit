@@ -1,0 +1,26 @@
+thm contract_add_inverse_unique:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,a,b K:
+        F.add(a,b)=F.zero
+        =>:
+            b=F.neg(a)
+    release thm Algebra::field::add_inverse_unique(K,F,a,b)
+
+thm contract_mul_neg:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,a,b K:
+        F.mul(a,F.neg(b))=F.neg(F.mul(a,b))
+    release thm Algebra::field::mul_neg(K,F,a,b)
+
+thm contract_neg_mul:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,a,b K:
+        F.mul(F.neg(a),b)=F.neg(F.mul(a,b))
+    release thm Algebra::field::neg_mul(K,F,a,b)
+
+thm contract_neg_mul_neg:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,a,b K:
+        F.mul(F.neg(a),F.neg(b))=F.mul(a,b)
+    release thm Algebra::field::neg_mul_neg(K,F,a,b)
+
+thm contract_neg_add:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,a,b K:
+        F.neg(F.add(a,b))=F.add(F.neg(a),F.neg(b))
+    release thm Algebra::field::neg_add(K,F,a,b)

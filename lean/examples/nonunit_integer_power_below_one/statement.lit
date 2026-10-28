@@ -1,0 +1,8 @@
+# A positive base below one with nonzero integer exponent has power distinct from one.
+claim:
+    ? forall b R+, n Z:
+        b < 1
+        n != 0
+        =>:
+            b^n != 1
+    b^n != 1

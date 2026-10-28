@@ -1,0 +1,3 @@
+# Positive real numbers have nonzero square roots.
+have sqrt_nz_x R+
+sqrt(sqrt_nz_x) != 0

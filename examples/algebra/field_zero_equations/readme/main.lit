@@ -1,0 +1,4 @@
+thm two_solutions_when_coefficient_is_zero:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>:
+        exist x,y K st {x!=y,F.mul(F.zero,x)=F.zero,F.mul(F.zero,y)=F.zero}
+    release thm Algebra::field::field_zero_linear_two_solutions(K,F)

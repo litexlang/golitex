@@ -1,0 +1,7 @@
+# Zero differs from cosine after subtracting a nonzero-cosine argument from zero.
+claim:
+    ? forall t R:
+        0 != cos(t)
+        =>:
+            0 != cos(0-t)
+    0 != cos(0-t)

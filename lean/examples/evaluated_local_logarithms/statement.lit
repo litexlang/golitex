@@ -1,0 +1,4 @@
+# Evaluate a logarithm inside a local proof scope.
+sketch:
+    eval log(2,8)
+    log(2,8)=3

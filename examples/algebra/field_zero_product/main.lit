@@ -1,0 +1,23 @@
+release thm model::two_field_is_field
+
+release thm model::two_field_zero
+
+release thm model::two_field_one
+
+release struct def model::two_field
+
+release thm Algebra::field::zero_mul({0,1},model::two_field,1)
+
+model::two_field.mul(0,1)=model::two_field.zero
+
+release thm Algebra::field::zero_product_factors({0,1},model::two_field,0,1)
+
+release thm Algebra::field::zero_product_from_factor({0,1},model::two_field,0,1)
+
+model::two_field.mul(1,1)=1
+
+1!=model::two_field.zero
+
+model::two_field.mul(1,1)!=model::two_field.zero
+
+release thm Algebra::field::nonzero_product_factors({0,1},model::two_field,1,1)

@@ -1,0 +1,8 @@
+{
+  "missing_zero_product": "premise",
+  "missing_zero_factor": "premise",
+  "missing_nonzero_product": "premise",
+  "false_both_zero": "conclusion",
+  "false_nonzero_factor": "search_proof",
+  "wrong_carrier": "argument_type"
+}

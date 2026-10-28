@@ -1,0 +1,7 @@
+# A nonzero cosine stays nonzero when its real argument is negated.
+claim:
+    ? forall t R:
+        cos(t) != 0
+        =>:
+            cos(-t) != 0
+    cos(-t) != 0

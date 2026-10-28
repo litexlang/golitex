@@ -1,0 +1,4 @@
+# Evaluate a product of roots using a previously proved value.
+have cited_radical_a R = 12
+eval sqrt(cited_radical_a)*sqrt(3)
+sqrt(cited_radical_a)*sqrt(3)=6

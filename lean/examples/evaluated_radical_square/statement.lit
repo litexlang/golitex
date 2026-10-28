@@ -1,0 +1,2 @@
+# Evaluate the square of a square root exactly.
+eval sqrt(2)*sqrt(2)

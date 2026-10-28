@@ -1,0 +1,7 @@
+# If a complex sum is nonzero, one summand is not the negative of the other.
+claim:
+    ? forall a C, b C:
+        a+b != 0
+        =>:
+            a != -b
+    a != -b

@@ -1,0 +1,7 @@
+# The conjugate of a nonzero complex number is nonzero.
+claim:
+    ? forall z C:
+        z != 0
+        =>:
+            conj(z) != 0
+    conj(z) != 0

@@ -1,0 +1,2 @@
+# Simplify a difference of square roots.
+eval sqrt(12)-sqrt(3)

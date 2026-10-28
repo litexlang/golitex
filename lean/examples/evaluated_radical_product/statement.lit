@@ -1,0 +1,2 @@
+# Evaluate the product of two square roots exactly.
+eval sqrt(2)*sqrt(3)

@@ -470,3 +470,177 @@ thm commuting_inverses:
     release thm inverse_product(A,G,a,b)
     release thm inverse_product(A,G,b,a)
     G.mul(G.inv(a),G.inv(b)) = G.inv(G.mul(b,a)) = G.inv(G.mul(a,b)) = G.mul(G.inv(b),G.inv(a))
+
+thm conjugation_identity:
+    ? forall A nonempty_set,G &Group<A>,a A:
+        G.mul(G.mul(a,G.one),G.inv(a)) = G.one
+    G.mul(a,G.one) = a
+    G.mul(a,G.inv(a)) = G.one
+    G.mul(G.mul(a,G.one),G.inv(a)) = G.mul(a,G.inv(a)) = G.one
+
+thm conjugation_product:
+    ? forall A nonempty_set,G &Group<A>,a,x,y A:
+        G.mul(G.mul(a,G.mul(x,y)),G.inv(a)) = G.mul(G.mul(G.mul(a,x),G.inv(a)),G.mul(G.mul(a,y),G.inv(a)))
+    G.mul(G.inv(a),a) = G.one
+    G.mul(G.one,y) = y
+    G.mul(G.inv(a),G.mul(a,y)) = G.mul(G.mul(G.inv(a),a),y) = G.mul(G.one,y) = y
+    G.mul(G.inv(a),G.mul(G.mul(a,y),G.inv(a))) = G.mul(G.mul(G.inv(a),G.mul(a,y)),G.inv(a)) = G.mul(y,G.inv(a))
+    G.mul(G.mul(a,x),y) = G.mul(a,G.mul(x,y))
+    G.mul(G.mul(G.mul(a,x),G.inv(a)),G.mul(G.mul(a,y),G.inv(a))) = G.mul(G.mul(a,x),G.mul(G.inv(a),G.mul(G.mul(a,y),G.inv(a)))) = G.mul(G.mul(a,x),G.mul(y,G.inv(a))) = G.mul(G.mul(G.mul(a,x),y),G.inv(a)) = G.mul(G.mul(a,G.mul(x,y)),G.inv(a))
+
+thm conjugation_inverse:
+    ? forall A nonempty_set,G &Group<A>,a,x A:
+        G.mul(G.mul(a,G.inv(x)),G.inv(a)) = G.inv(G.mul(G.mul(a,x),G.inv(a)))
+    release thm conjugation_identity(A,G,a)
+    release thm conjugation_product(A,G,a,G.inv(x),x)
+    G.mul(G.inv(x),x) = G.one
+    G.mul(a,G.mul(G.inv(x),x)) = G.mul(a,G.one)
+    G.mul(G.mul(G.mul(a,G.inv(x)),G.inv(a)),G.mul(G.mul(a,x),G.inv(a))) = G.mul(G.mul(a,G.mul(G.inv(x),x)),G.inv(a)) = G.mul(G.mul(a,G.one),G.inv(a)) = G.one
+    release thm inverse_unique(A,G,G.mul(G.mul(a,x),G.inv(a)),G.mul(G.mul(a,G.inv(x)),G.inv(a)))
+
+thm inverse_conjugation:
+    ? forall A nonempty_set,G &Group<A>,a,x A:
+        G.mul(G.mul(G.inv(a),G.mul(G.mul(a,x),G.inv(a))),a) = x
+    G.mul(G.inv(a),a) = G.one
+    G.mul(G.one,x) = x
+    G.mul(G.inv(a),G.mul(a,x)) = G.mul(G.mul(G.inv(a),a),x) = G.mul(G.one,x) = x
+    G.mul(x,G.one) = x
+    G.mul(G.inv(a),G.mul(G.mul(a,x),G.inv(a))) = G.mul(G.mul(G.inv(a),G.mul(a,x)),G.inv(a))
+    G.mul(G.mul(G.inv(a),G.mul(a,x)),G.inv(a)) = G.mul(x,G.inv(a))
+    G.mul(G.mul(G.inv(a),G.mul(G.mul(a,x),G.inv(a))),a) = G.mul(G.mul(G.mul(G.inv(a),G.mul(a,x)),G.inv(a)),a) = G.mul(G.mul(x,G.inv(a)),a) = G.mul(x,G.mul(G.inv(a),a)) = G.mul(x,G.one) = x
+
+thm conjugation_inverse_action:
+    ? forall A nonempty_set,G &Group<A>,a,x A:
+        G.mul(G.mul(a,G.mul(G.mul(G.inv(a),x),a)),G.inv(a)) = x
+    G.mul(a,G.inv(a)) = G.one
+    G.mul(G.one,x) = x
+    G.mul(a,G.mul(G.inv(a),x)) = G.mul(G.mul(a,G.inv(a)),x) = G.mul(G.one,x) = x
+    G.mul(a,G.mul(G.mul(G.inv(a),x),a)) = G.mul(G.mul(a,G.mul(G.inv(a),x)),a) = G.mul(x,a)
+    G.mul(G.mul(a,G.mul(G.mul(G.inv(a),x),a)),G.inv(a)) = G.mul(G.mul(x,a),G.inv(a)) = G.mul(x,G.mul(a,G.inv(a))) = G.mul(x,G.one) = x
+
+thm conjugation_is_bijective:
+    ? forall A nonempty_set,G &Group<A>,a A:
+        $bijective(A,A,fn(x A) A {G.mul(G.mul(a,x),G.inv(a))})
+    claim:
+        ? forall x,y A:
+            fn(t A) A {G.mul(G.mul(a,t),G.inv(a))}(x) = fn(t A) A {G.mul(G.mul(a,t),G.inv(a))}(y)
+            =>:
+                x = y
+        release thm inverse_conjugation(A,G,a,x)
+        release thm inverse_conjugation(A,G,a,y)
+        fn(t A) A {G.mul(G.mul(a,t),G.inv(a))}(x) = G.mul(G.mul(a,x),G.inv(a))
+        fn(t A) A {G.mul(G.mul(a,t),G.inv(a))}(y) = G.mul(G.mul(a,y),G.inv(a))
+        G.mul(G.mul(a,x),G.inv(a)) = fn(t A) A {G.mul(G.mul(a,t),G.inv(a))}(x) = fn(t A) A {G.mul(G.mul(a,t),G.inv(a))}(y) = G.mul(G.mul(a,y),G.inv(a))
+        G.mul(G.inv(a),G.mul(G.mul(a,x),G.inv(a))) = G.mul(G.inv(a),G.mul(G.mul(a,y),G.inv(a)))
+        x = G.mul(G.mul(G.inv(a),G.mul(G.mul(a,x),G.inv(a))),a) = G.mul(G.mul(G.inv(a),G.mul(G.mul(a,y),G.inv(a))),a) = y
+    by def $injective(A,A,fn(x A) A {G.mul(G.mul(a,x),G.inv(a))})
+    claim:
+        ? forall y A:
+            exist x A st {y = fn(t A) A {G.mul(G.mul(a,t),G.inv(a))}(x)}
+        release thm conjugation_inverse_action(A,G,a,y)
+        fn(t A) A {G.mul(G.mul(a,t),G.inv(a))}(G.mul(G.mul(G.inv(a),y),a)) = G.mul(G.mul(a,G.mul(G.mul(G.inv(a),y),a)),G.inv(a)) = y
+        y = fn(t A) A {G.mul(G.mul(a,t),G.inv(a))}(G.mul(G.mul(G.inv(a),y),a))
+        witness exist x A st {y = fn(t A) A {G.mul(G.mul(a,t),G.inv(a))}(x)} from G.mul(G.mul(G.inv(a),y),a)
+    by def $surjective(A,A,fn(x A) A {G.mul(G.mul(a,x),G.inv(a))})
+    by def $bijective(A,A,fn(x A) A {G.mul(G.mul(a,x),G.inv(a))})
+
+thm conjugation_formula_is_homomorphism:
+    ? forall A nonempty_set,G &Group<A>,a A,f fn(x A) A:
+        forall x A:
+            f(x) = G.mul(G.mul(a,x),G.inv(a))
+        =>:
+            $is_homomorphism(A,G,A,G,f)
+    claim:
+        ? forall x,y A:
+            f(G.mul(x,y)) = G.mul(f(x),f(y))
+        release thm conjugation_product(A,G,a,x,y)
+        f(G.mul(x,y)) = G.mul(G.mul(a,G.mul(x,y)),G.inv(a))
+        f(x) = G.mul(G.mul(a,x),G.inv(a))
+        f(y) = G.mul(G.mul(a,y),G.inv(a))
+        G.mul(f(x),f(y)) = G.mul(G.mul(G.mul(a,x),G.inv(a)),f(y)) = G.mul(G.mul(G.mul(a,x),G.inv(a)),G.mul(G.mul(a,y),G.inv(a)))
+        f(G.mul(x,y)) = G.mul(G.mul(a,G.mul(x,y)),G.inv(a)) = G.mul(G.mul(G.mul(a,x),G.inv(a)),G.mul(G.mul(a,y),G.inv(a))) = G.mul(f(x),f(y))
+    by def $is_homomorphism(A,G,A,G,f)
+
+thm conjugation_is_homomorphism:
+    ? forall A nonempty_set,G &Group<A>,a A:
+        $is_homomorphism(A,G,A,G,fn(x A) A {G.mul(G.mul(a,x),G.inv(a))})
+    claim:
+        ? forall x A:
+            fn(t A) A {G.mul(G.mul(a,t),G.inv(a))}(x) = G.mul(G.mul(a,x),G.inv(a))
+        fn(t A) A {G.mul(G.mul(a,t),G.inv(a))}(x) = G.mul(G.mul(a,x),G.inv(a))
+    release thm conjugation_formula_is_homomorphism(A,G,a,fn(t A) A {G.mul(G.mul(a,t),G.inv(a))})
+
+thm commuting_elements_fixed_by_conjugation:
+    ? forall A nonempty_set,G &Group<A>,a,x A:
+        G.mul(a,x) = G.mul(x,a)
+        =>:
+            G.mul(G.mul(a,x),G.inv(a)) = x
+    G.mul(a,G.inv(a)) = G.one
+    G.mul(x,G.one) = x
+    G.mul(G.mul(a,x),G.inv(a)) = G.mul(G.mul(x,a),G.inv(a)) = G.mul(x,G.mul(a,G.inv(a))) = G.mul(x,G.one) = x
+
+thm conjugation_fixed_implies_commute:
+    ? forall A nonempty_set,G &Group<A>,a,x A:
+        G.mul(G.mul(a,x),G.inv(a)) = x
+        =>:
+            G.mul(a,x) = G.mul(x,a)
+    G.mul(G.inv(a),a) = G.one
+    G.mul(G.mul(a,x),G.one) = G.mul(a,x)
+    G.mul(G.mul(G.mul(a,x),G.inv(a)),a) = G.mul(G.mul(a,x),G.mul(G.inv(a),a)) = G.mul(G.mul(a,x),G.one) = G.mul(a,x)
+    G.mul(G.mul(G.mul(a,x),G.inv(a)),a) = G.mul(x,a)
+    G.mul(a,x) = G.mul(G.mul(G.mul(a,x),G.inv(a)),a) = G.mul(x,a)
+
+thm abelian_conjugation_fixed:
+    ? forall A nonempty_set,G &Group<A>,a,x A:
+        $is_abelian(A,G)
+        =>:
+            G.mul(G.mul(a,x),G.inv(a)) = x
+    G.mul(a,x) = G.mul(x,a)
+    release thm commuting_elements_fixed_by_conjugation(A,G,a,x)
+
+thm fixed_conjugation_implies_abelian:
+    ? forall A nonempty_set,G &Group<A>:
+        forall a,x A:
+            G.mul(G.mul(a,x),G.inv(a)) = x
+        =>:
+            $is_abelian(A,G)
+    claim:
+        ? forall a,x A:
+            G.mul(a,x) = G.mul(x,a)
+        release thm conjugation_fixed_implies_commute(A,G,a,x)
+    by def $is_abelian(A,G)
+
+thm right_identity_unique:
+    ? forall A nonempty_set,G &Group<A>,identity_candidate A:
+        forall x A:
+            G.mul(x,identity_candidate)=x
+        =>:
+            identity_candidate=G.one
+    G.mul(G.one,identity_candidate)=G.one
+    G.mul(G.one,identity_candidate)=identity_candidate
+    identity_candidate=G.mul(G.one,identity_candidate)=G.one
+
+thm idempotent_is_identity:
+    ? forall A nonempty_set,G &Group<A>,a A:
+        G.mul(a,a)=a
+        =>:
+            a=G.one
+    G.mul(a,G.one)=a
+    G.mul(a,a)=a=G.mul(a,G.one)
+    release thm left_cancel(A,G,a,a,G.one)
+
+thm square_identity_implies_self_inverse:
+    ? forall A nonempty_set,G &Group<A>,a A:
+        G.mul(a,a)=G.one
+        =>:
+            G.inv(a)=a
+    release thm inverse_unique(A,G,a,a)
+    a=G.inv(a)
+
+thm self_inverse_implies_square_identity:
+    ? forall A nonempty_set,G &Group<A>,a A:
+        G.inv(a)=a
+        =>:
+            G.mul(a,a)=G.one
+    G.mul(a,G.inv(a))=G.one
+    G.mul(a,a)=G.mul(a,G.inv(a))=G.one

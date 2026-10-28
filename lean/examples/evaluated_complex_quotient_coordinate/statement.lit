@@ -1,0 +1,3 @@
+# Evaluate an imaginary part of a complex quotient.
+eval img((1+2*i)/(3-i))
+img((1+2*i)/(3-i))=7/10

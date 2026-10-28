@@ -1,25 +1,26 @@
 {
   "date": "2026-10-28",
-  "status": "Real restriction verified with uniform cart_n(R,3) carrier and no carrier-equality prelude",
+  "status": "Real restriction verified with automatic finite-row case coverage; 20 statements, no carrier or row-enumeration prelude",
   "source": "main.lit",
-  "source_sha256": "be5b321b8fb5e66cd3e48a44d70ae38ba8b6fff8ce62cd50f0f1a474cfa5a79c",
+  "source_sha256": "97d1f1b8dd9d819930c6798a713892c28aa4402c13a7e854b04f48d9b9e51901",
   "config_sha256": "d11a553b432222e765c45a240d02039bec8c7dd37494bef7085714481aa60fc7",
   "tested_release_version": "Litex 1.1.6-beta",
-  "tested_release_sha256": "575aa54e126ed9063b95c4096979ff23fbc81010ac80997a3b7dfd330256c30c",
-  "disk_release_sha256_at_gate_end": "575aa54e126ed9063b95c4096979ff23fbc81010ac80997a3b7dfd330256c30c",
+  "tested_release_sha256": "19fed2d38c2e815aa7e755f12851054a68756f245d01ce2825edc00e93a252cb",
+  "disk_release_sha256_at_gate_end": "19fed2d38c2e815aa7e755f12851054a68756f245d01ce2825edc00e93a252cb",
   "clean_gate": {
     "command": "target/release/litex -strict -lang en -f examples/real_analysis/jacobian_counterexample/main.lit",
     "exit_code": 0,
     "run_result": "success",
-    "statement_count": 21,
-    "seconds": 216.0853759162128,
+    "statement_count": 20,
+    "seconds": 208.16458983300254,
     "session_terminated": false,
     "termination": null,
     "source_hash_unchanged_during_gate": true,
-    "canonical_statements_match_carrier_substitution": true,
+    "immutable_release_hash_unchanged_during_gate": true,
     "all_statements_accepted": true,
     "source_uses_only_cart_n_carrier": true,
-    "carrier_claim_removed": true
+    "carrier_claim_removed": true,
+    "row_enumeration_prelude_removed": true
   },
   "source_interface_renames": {
     "jacobian_counterexample_map/1": "F/1",
@@ -34,7 +35,7 @@
     "J<p>/2",
     "is_left_inverse/1"
   ],
-  "compatibility": "User-requested example-local carrier spelling uses the existing cart_n/finite_seq constructor. One vector input, short names and all mathematical conclusions are unchanged. No new public operation, overload or shared contract.",
+  "compatibility": "Existing short names, one-vector cart_n carrier and mathematical claims are unchanged. The case checker now consumes finite integer membership directly; no separate row-cover fact is required.",
   "carrier_notation": {
     "before": "R × R × R",
     "after": "cart_n(R,3)",
@@ -55,24 +56,28 @@
   ],
   "edit_metrics": {
     "before": {
-      "lines": 273,
-      "code_lines": 133,
-      "comments": 118,
-      "bytes": 18866
-    },
-    "after": {
       "lines": 263,
       "code_lines": 128,
       "comments": 114,
       "bytes": 18407
     },
-    "statement_count_before": 22,
-    "statement_count_after": 21
+    "after": {
+      "lines": 257,
+      "code_lines": 124,
+      "comments": 113,
+      "bytes": 18213
+    },
+    "statement_count_before": 21,
+    "statement_count_after": 20
   },
   "new_native_or_source_interfaces": [],
   "new_source_mathematical_claims": [],
   "new_thm_declarations": [],
-  "rust_std_ast_env_runtime_bt_changes": [],
+  "rust_std_ast_env_runtime_bt_changes": [
+    "Local finite integer equality-cover builtin rules and typed evidence",
+    "Homogeneous Cartesian/finite-sequence equality, subset and cite-only member leaves; bounded Euclidean-domain consumption",
+    "No AST, Env/Runtime structure, storage, scope lifecycle, global search budget, reserved public BT name or std change"
+  ],
   "trust_or_axiom": [],
   "reused": [
     "Calc::locality::real_partials_extensional/8",
@@ -80,7 +85,8 @@
     "matrix(R,3,3) subset matrix(C,3,3)",
     "Existing expression partial-derivative verification, candidate-consuming selectors, determinant identities and rational arithmetic",
     "Existing cart_n/finite_seq carrier",
-    "Existing exact eval command"
+    "Existing exact eval command",
+    "The native closed-integer-range equality-cover rule, consumed by existing function case coverage"
   ],
   "syntax_only_note": "The1=1 in finite enumeration is explicitly marked as a nonempty-body syntax requirement, not a mathematical lemma. Empty-body and direct-symbolic-candidate replacements were rejected; no parser change was made.",
   "historical_controls": {
@@ -147,8 +153,9 @@
     "note": "The earlier long-name 22-statement edition is historical; this receipt verifies the current 23-statement edition."
   },
   "current_focused_controls": [
-    "Native-only persistent Session: actual F declaration, three coordinates, a native partial and two exact image claims passed without a bridge",
-    "Fresh strict public file: 21 accepted statements, no termination, stable source hash; canonical statement delta exactly matches first-claim removal plus carrier substitution"
+    "All 20 mathematical statements accepted consecutively in a persistent native Session",
+    "Independent strict file verification using immutable bytes of the verified current release: 20 accepted statements, no termination, stable source and executable hashes",
+    "Seven rule-specific strict tracers, six focused Rust tests, eight focused Lean fixtures and two CLI-generated canonical pairs; this is not a full release gate"
   ],
   "scope": [
     "One real-vector input in cart_n(R,3)",
@@ -158,8 +165,8 @@
   ],
   "boundaries": [
     "No complex analytic or polynomial-ring automorphism theorem",
-    "No Lean replay attempted",
-    "No Cargo, textbook or full release gate performed"
+    "No Lean replay attempted for this full Jacobian example; only the newly added small rule fixtures have Lean replay",
+    "No textbook, whole examples or full Cargo/release gate performed"
   ],
   "historical_short_name_gate": {
     "source_sha256": "856b3ce4050981f55b482019883ac6a92ff9124e109513d29fb60bf3ea536a13",
@@ -211,10 +218,10 @@
     "note": "The former 23-statement edition included the global coordinate forall and longer concrete image proofs."
   },
   "current_source_delta": {
-    "carrier_replacement": "R × R × R -> cart_n(R,3)",
-    "removed": "The first explicit Cartesian/Euclidean carrier equality claim",
-    "retained": "All 21 other statements after carrier substitution, including exact eval image proofs",
-    "new_native_or_std_change": false
+    "removed": "The complete preliminary row-enumeration statement",
+    "retained": "All other mathematical statements, short names, cart_n carriers, proof comments and two exact eval image claims",
+    "native_rule_dependency": "ClosedIntegerRangeEqualityCover consumes row binder membership inside the existing case coverage check",
+    "new_native_obj_or_public_operation": false
   },
   "deletion_evidence": {
     "partials_and_jacobian_without_coordinates": "All nine partials, the assembled Jacobian and its determinant passed unchanged",
@@ -247,5 +254,45 @@
   },
   "removed_source_carrier_claims": [
     "R × R × R = cart_n(R,3)"
-  ]
+  ],
+  "historical_21_statement_edition": {
+    "source_sha256": "be5b321b8fb5e66cd3e48a44d70ae38ba8b6fff8ce62cd50f0f1a474cfa5a79c",
+    "tested_release_sha256": "575aa54e126ed9063b95c4096979ff23fbc81010ac80997a3b7dfd330256c30c",
+    "clean_gate": {
+      "command": "target/release/litex -strict -lang en -f examples/real_analysis/jacobian_counterexample/main.lit",
+      "exit_code": 0,
+      "run_result": "success",
+      "statement_count": 21,
+      "seconds": 216.0853759162128,
+      "session_terminated": false,
+      "termination": null,
+      "source_hash_unchanged_during_gate": true,
+      "canonical_statements_match_carrier_substitution": true,
+      "all_statements_accepted": true,
+      "source_uses_only_cart_n_carrier": true,
+      "carrier_claim_removed": true
+    },
+    "edit_metrics": {
+      "before": {
+        "lines": 273,
+        "code_lines": 133,
+        "comments": 118,
+        "bytes": 18866
+      },
+      "after": {
+        "lines": 263,
+        "code_lines": 128,
+        "comments": 114,
+        "bytes": 18407
+      },
+      "statement_count_before": 22,
+      "statement_count_after": 21
+    },
+    "current_source_delta": {
+      "carrier_replacement": "R × R × R -> cart_n(R,3)",
+      "removed": "The first explicit Cartesian/Euclidean carrier equality claim",
+      "retained": "All 21 other statements after carrier substitution, including exact eval image proofs",
+      "new_native_or_std_change": false
+    }
+  }
 }

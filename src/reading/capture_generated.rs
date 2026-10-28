@@ -17964,6 +17964,13 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__search_equal_fact_builtin_rule_result__EqualitySearchProofByBuiltinRule(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::HomogeneousCartesianEqualsFiniteSequence(f0) => {
+let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::HomogeneousCartesianEqualsFiniteSequence");
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_homogeneous_cart__HomogeneousCartesianEqualsFiniteSequenceBuiltinRuleProof(f0, capture, runtime))];
+let mut output = node("EqualitySearchProofByBuiltinRule", "HomogeneousCartesianEqualsFiniteSequence", fields);
+if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+output
+},
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::ElementaryIdentity(f0) => {
 let rule_id = None;
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_elementary_identities__ElementaryIdentitySearchProofByBuiltinRule(f0, capture, runtime))];
@@ -20939,6 +20946,20 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__verify_or_fact__result__OrFactSearchProofByBuiltinRule(value: &crate::execute::execute_fact_stmt::OrFactSearchProofByBuiltinRule, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
+crate::execute::execute_fact_stmt::OrFactSearchProofByBuiltinRule::ClosedIntegerRangeEqualityCover(f0) => {
+let rule_id = Some("builtin.OrFactSearchProofByBuiltinRule::ClosedIntegerRangeEqualityCover");
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_or_fact__result__OrBuiltinClosedIntegerRangeEqualityCover(f0, capture, runtime))];
+let mut output = node("OrFactSearchProofByBuiltinRule", "ClosedIntegerRangeEqualityCover", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "ClosedIntegerRangeEqualityCover", ""); }
+output
+},
+crate::execute::execute_fact_stmt::OrFactSearchProofByBuiltinRule::HalfOpenIntegerRangeEqualityCover(f0) => {
+let rule_id = Some("builtin.OrFactSearchProofByBuiltinRule::HalfOpenIntegerRangeEqualityCover");
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_or_fact__result__OrBuiltinHalfOpenIntegerRangeEqualityCover(f0, capture, runtime))];
+let mut output = node("OrFactSearchProofByBuiltinRule", "HalfOpenIntegerRangeEqualityCover", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "HalfOpenIntegerRangeEqualityCover", ""); }
+output
+},
 crate::execute::execute_fact_stmt::OrFactSearchProofByBuiltinRule::RealLineTrichotomyEqLessGreater(f0) => {
 let rule_id = Some("builtin.OrFactSearchProofByBuiltinRule::RealLineTrichotomyEqLessGreater");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_or_fact__result__OrBuiltinRealLineTrichotomyEqLessGreater(f0, capture, runtime))];
@@ -23239,6 +23260,17 @@ let output = match value {
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::search_equal_fact_proof_by_known_special_property::FnTupleValueKnownProof { reversed: f0, subject_equal: f1, function: f2, value_equal: f3 } => {
 let fields = vec![("reversed", JsonValue::Bool(*(f0))), ("subject_equal", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__KnownEqualityPathProof(f1, capture, runtime)), ("function", capture_execute__execute_fact_stmt__known_tuple__KnownFunctionTupleValueProof(f2, capture, runtime)), ("value_equal", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__EqualFactSearchedProof(f3, capture, runtime))];
 let mut output = node("FnTupleValueKnownProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_homogeneous_cart__HomogeneousCartesianEqualsFiniteSequenceBuiltinRuleProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_homogeneous_cart::HomogeneousCartesianEqualsFiniteSequenceBuiltinRuleProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_homogeneous_cart::HomogeneousCartesianEqualsFiniteSequenceBuiltinRuleProof { dimension: f0, length_equal: f1, factor_equalities: f2 } => {
+let fields = vec![("dimension", JsonValue::String((f0).to_string())), ("length_equal", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__EqualFactSearchedProof(f1, capture, runtime)), ("factor_equalities", JsonValue::Array((f2).iter().map(|item| capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__EqualFactSearchedProof(item, capture, runtime)).collect()))];
+let mut output = node("HomogeneousCartesianEqualsFiniteSequenceBuiltinRuleProof", "", fields);
 output
 },
 };
@@ -29029,6 +29061,13 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__in_fact__InFactSearchProofByBuiltinRule(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule::HomogeneousCartesianSequenceMembership(f0) => {
+let rule_id = Some("builtin.InFactSearchProofByBuiltinRule::HomogeneousCartesianSequenceMembership");
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__in_fact__HomogeneousCartesianSequenceMembershipProof(f0, capture, runtime))];
+let mut output = node("InFactSearchProofByBuiltinRule", "HomogeneousCartesianSequenceMembership", fields);
+if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+output
+},
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule::NativeMatrix(f0) => {
 let rule_id = Some("builtin.InFactSearchProofByBuiltinRule::NativeMatrix");
 let fields = vec![("0", capture_execute__execute_fact_stmt__native_matrix__MatrixMembershipProof(f0, capture, runtime))];
@@ -29399,6 +29438,13 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__subset__SubsetFactSearchProofByBuiltinRule(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::subset::SubsetFactSearchProofByBuiltinRule, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::subset::SubsetFactSearchProofByBuiltinRule::HomogeneousCartesianSequenceSubset(f0) => {
+let rule_id = Some("builtin.SubsetFactSearchProofByBuiltinRule::HomogeneousCartesianSequenceSubset");
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__subset__HomogeneousCartesianSequenceSubsetProof(f0, capture, runtime))];
+let mut output = node("SubsetFactSearchProofByBuiltinRule", "HomogeneousCartesianSequenceSubset", fields);
+if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+output
+},
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::subset::SubsetFactSearchProofByBuiltinRule::FunctionRangeInCodomain(f0) => {
 let rule_id = Some("builtin.SubsetFactSearchProofByBuiltinRule::FunctionRangeInCodomain");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__subset__FunctionRangeInCodomainProof(f0, capture, runtime))];
@@ -32187,6 +32233,28 @@ crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__DetailedProveForallInstantiationRequirementsProof(f0, capture, runtime))];
 let mut output = node("ProveForallInstantiationRequirementsProof", "Detailed", fields);
 if let JsonValue::Object(fields) = &mut output { fields.insert("result_detail".into(), JsonValue::String("detailed".into())); }
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_or_fact__result__OrBuiltinClosedIntegerRangeEqualityCover(value: &crate::execute::execute_fact_stmt::verify_or_fact::OrBuiltinClosedIntegerRangeEqualityCover, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_or_fact::OrBuiltinClosedIntegerRangeEqualityCover { subject: f0, interval: f1, membership: f2, carrier_equal: f3, branch_indices: f4 } => {
+let fields = vec![("subject", capture_ast__obj__Obj(f0, capture, runtime)), ("interval", capture_ast__obj__Obj(f1, capture, runtime)), ("membership", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f2, capture, runtime)), ("carrier_equal", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__KnownEqualityPathProof(f3, capture, runtime)), ("branch_indices", JsonValue::Array((f4).iter().map(|item| JsonValue::String((item).to_string())).collect()))];
+let mut output = node("OrBuiltinClosedIntegerRangeEqualityCover", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_or_fact__result__OrBuiltinHalfOpenIntegerRangeEqualityCover(value: &crate::execute::execute_fact_stmt::verify_or_fact::OrBuiltinHalfOpenIntegerRangeEqualityCover, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_or_fact::OrBuiltinHalfOpenIntegerRangeEqualityCover { subject: f0, interval: f1, membership: f2, carrier_equal: f3, branch_indices: f4 } => {
+let fields = vec![("subject", capture_ast__obj__Obj(f0, capture, runtime)), ("interval", capture_ast__obj__Obj(f1, capture, runtime)), ("membership", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f2, capture, runtime)), ("carrier_equal", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__KnownEqualityPathProof(f3, capture, runtime)), ("branch_indices", JsonValue::Array((f4).iter().map(|item| JsonValue::String((item).to_string())).collect()))];
+let mut output = node("OrBuiltinHalfOpenIntegerRangeEqualityCover", "", fields);
 output
 },
 };
@@ -40500,6 +40568,17 @@ output
 capture.intern_evidence(output)
 }
 
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__in_fact__HomogeneousCartesianSequenceMembershipProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::HomogeneousCartesianSequenceMembershipProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::HomogeneousCartesianSequenceMembershipProof { membership: f0, carrier_equal: f1 } => {
+let fields = vec![("membership", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__result__AtomicExceptEqualityFactKnownProof(f0, capture, runtime)), ("carrier_equal", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__EqualFactSearchedProof(f1, capture, runtime))];
+let mut output = node("HomogeneousCartesianSequenceMembershipProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
 pub(super) fn capture_execute__execute_fact_stmt__native_matrix__MatrixMembershipProof(value: &crate::execute::execute_fact_stmt::native_matrix::MatrixMembershipProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::native_matrix::MatrixMembershipProof::ExtendedScalar(f0) => {
@@ -41091,6 +41170,17 @@ let output = match value {
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::MulInNaturalBuiltinRuleProof { left_in_n_proof: f0, right_in_n_proof: f1 } => {
 let fields = vec![("left_in_n_proof", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f0, capture, runtime)), ("right_in_n_proof", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f1, capture, runtime))];
 let mut output = node("MulInNaturalBuiltinRuleProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__subset__HomogeneousCartesianSequenceSubsetProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::subset::HomogeneousCartesianSequenceSubsetProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::subset::HomogeneousCartesianSequenceSubsetProof { equality: f0 } => {
+let fields = vec![("equality", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__EqualFactSearchedProof(f0, capture, runtime))];
+let mut output = node("HomogeneousCartesianSequenceSubsetProof", "", fields);
 output
 },
 };

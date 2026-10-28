@@ -1,0 +1,9 @@
+# A nonzero complex product has nonzero factors.
+claim:
+    ? forall a C, b C:
+        a*b != 0
+        =>:
+            a != 0
+            b != 0
+    a != 0
+    b != 0

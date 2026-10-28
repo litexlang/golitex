@@ -562,7 +562,7 @@ operator by a matrix or certify Litex-to-Lean support.
 
 ## Normal subgroup images and composition kernels
 
-The current group source32/25thms adds whole/identity normality, subgroup
+The normal-image checkpoint at source32/25thms adds whole/identity normality, subgroup
 images, normal images under a surjective homomorphism and the composition
 kernel equality. It retains the same Group, five props and one kernel
 template. The image uses the native range of fn(t S) B {f(t)}, with the
@@ -586,7 +586,7 @@ implementation or trust is introduced.
 
 ## Elementary inverse laws
 
-The current group source38/31thms adds inverse identity/involution,
+The earlier group source38/31thms checkpoint added inverse identity/involution,
 right-inverse uniqueness, reversed inverse-product, right-equation unique
 existence and conditional inverse commutation. Existing inverse uniqueness,
 left/right cancellation, associativity and identity/inverse laws supply the
@@ -597,5 +597,121 @@ No group law or mathematical premise is added.
 
 This source increment adds no struct/prop/template, operation alias, native
 rule/search/WD, protected state/AST, compiler implementation or trust. The
-source checkpoint passes independently; concrete imports, exact noncommutative
-values and remaining focused acceptance are pending.
+source and all 25 focused checks pass, including concrete noncommutative
+values, 15 rejected final statements and both installed layouts.
+
+## Elementary field multiplication
+
+Distributing over zero plus zero and using additive inverses proves that zero
+absorbs multiplication. Commutativity gives the other side. Multiplication by
+the existing guarded inverse proves cancellation for a nonzero factor. The
+two zero-product implications and nonzero-product theorem follow from these
+facts. No inverse is applied at zero, and the Field structure is unchanged.
+All 17 focused checks pass, including generic and real callers, 10 rejected
+final statements and both installed layouts.
+
+## Elementary field addition
+
+Commutativity supplies right identity and left inverse from the Field axioms.
+Associativity and additive inverses prove cancellation; commutativity gives
+the other side. The inverse of zero and double negation follow from identity
+and cancellation. All 16 focused checks pass, including nine rejected final
+statements and both installed layouts.
+
+## Field negation and multiplication
+
+Additive cancellation gives uniqueness of an additive inverse. Distribution
+and zero absorption prove the sign rule for multiplication; commutativity and
+double negation give the other side and the product of two negatives. Additive
+associativity and commutativity give the negative of a sum. All operands may
+be zero. All 14 focused checks pass, including seven final-statement refusals
+and both installed layouts.
+
+## Guarded field inversion
+
+The inverse of a nonzero element is nonzero, since otherwise its product with
+that element would be both zero and one. Nonzero cancellation proves inverse
+uniqueness and involution. Associativity and commutativity give the inverse of
+a nonzero product. An imported expression involving the inverse of a product
+first publishes the existing nonzero-product consequence in the calling
+context; the source theorem keeps only the two nonzero-factor premises.
+All 18 focused checks pass, including 11 final-statement refusals and both
+installed layouts.
+
+## Field distributivity and differences
+
+Commutativity gives right distributivity from the existing field axiom. The
+negative-factor laws then give multiplication over differences on both sides.
+Additive cancellation shows that a zero difference implies equality; the
+reverse follows from the additive inverse axiom. No subtraction operation
+or restriction on characteristic is introduced. All 16 focused checks pass,
+including nine final-statement refusals and both installed layouts.
+
+## Field linear and affine equations
+
+Multiplication by the guarded inverse supplies the solution of `a*x=b` when
+`a` is nonzero; nonzero cancellation proves uniqueness. Subtracting the
+constant term using addition and negation reduces `a*x+b=c` to that case.
+Each equation has unique-existence and solution-value theorems. No new solution
+selector is introduced. All 17 focused checks pass, including ten final-statement
+refusals and both installed layouts.
+
+## Zero-coefficient field equations
+
+For any field element `x`, zero absorption gives `0*x=0` and hence
+`0*x+b=b`. An unequal target cannot be attained. When the target agrees, field
+zero and one are distinct solutions. The no-solution theorems quantify over
+an arbitrary candidate `x`, while the two-solution theorems exhibit both
+witnesses. All 16 focused checks pass, including nine final-statement refusals
+and both installed layouts. Twelve earlier field callers and five group callers
+also pass on the same final source snapshot.
+
+## Two-element field instance
+
+An explicit finite model on `{0,1}` checks addition modulo two, multiplication,
+identity negation and nonzero-only inversion against the existing Field axioms.
+It checks `1+1=0`, while preserving distinct zero and one, and applies the
+generic inverse, distributivity and equation laws. The independently replayed
+model and cross-file caller pass; all 15 focused checks include eight
+final-statement refusals and both installed layouts.
+
+## Vector space over the two-element field
+
+The checked two-element Field supplies zero, addition and multiplication for
+its scalar-line VectorSpace. The example verifies the existing VectorSpace
+axioms, then checks that identity has full image and zero kernel while the zero
+map has full kernel and is not injective. The generic zero-kernel criterion
+applies to identity. The example proves that `1` forms a basis, the dimension
+is `1`, and the zero list is not a basis. At that checkpoint, 21 focused
+checks passed, including 14 final-statement refusals and both installed layouts.
+The rank/nullity extension gives `(1,0)` for identity and `(0,1)` for the
+zero map using the existing guarded selectors. All 29 extended focused checks
+pass, including 22 final-statement refusals and both installed layouts.
+
+
+## Field zero-product characterization
+
+Zero absorption and nonzero-factor cancellation yield both directions of
+`F.mul(a,b)=F.zero` iff `a=F.zero or b=F.zero`, and the two nonzero factors
+of a nonzero product. The Field itself is unchanged. The actual two-element
+field supplies `0*1=0` with nonzero `1`; the real-field caller also exercises
+the laws. All 18 focused checks pass, including six final-only refusals and
+actual/generic callers in both installed layouts.
+
+
+## Group conjugation, idempotence and self-inverse elements
+
+For `c_a(x)=G.mul(G.mul(a,x),G.inv(a))`, associativity and inverse laws give
+identity, product and inverse preservation. Conjugation by `G.inv(a)` undoes
+conjugation by `a` in both directions, yielding a bijective self-homomorphism.
+A point is fixed exactly when it commutes with `a`; quantifying this fact gives
+the abelian characterization. The Heisenberg example checks a nonidentity
+conjugation without assuming commutativity.
+
+Right identity uniqueness follows by evaluating at the existing identity;
+left cancellation proves an idempotent is the identity. Inverse uniqueness
+and the inverse law give `a*a=one` iff `inv(a)=a`. The additive group of the
+checked two-element Field supplies a nonidentity self-inverse element. No new
+Group field or operation is introduced. The conjugation and elementary batches
+pass 24 and 18 focused checks respectively, including final-statement refusals
+and actual/generic callers in both installed layouts.

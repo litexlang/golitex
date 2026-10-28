@@ -12,6 +12,30 @@ impl LitexToLeanCompiler {
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
         match rule {
+            SubsetFactSearchProofByBuiltinRule::HomogeneousCartesianSequenceSubset(p) => {
+                if !matches!(
+                    &p.equality,
+                    EqualFactSearchedProof::ByBuiltinRule(
+                        EqualitySearchProofByBuiltinRule::HomogeneousCartesianEqualsFiniteSequence(
+                            _
+                        )
+                    )
+                ) {
+                    return Err(LeanCompileError::unsupported(
+                        "Subset/HomogeneousCartesianEvidence",
+                    ));
+                }
+                let equation = EqualFact {
+                    fact_id: FactId::new(0),
+                    left: fact.left.clone(),
+                    right: fact.right.clone(),
+                    line_file: None,
+                };
+                let equal = self.compile_equality_search(&equation, &p.equality, position)?;
+                let left = self.compile_object_reference(&fact.left, position)?;
+                let right = self.compile_object_reference(&fact.right, position)?;
+                Ok(format!("(Litex.subsetOfSame {left} {left} {left} {right} (Eq.refl _) ({equal}) (Litex.subsetRefl {left}))"))
+            }
             SubsetFactSearchProofByBuiltinRule::FunctionRangeInCodomain(p) => {
                 self.compile_function_range_subset(fact, p, position)
             }

@@ -4,6 +4,60 @@ use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
 use crate::prelude::*;
 
 impl LitexToLeanCompiler {
+    /// Closed eval retains nonnegativity, while real membership follows from
+    /// the exact original child's numeric denotation.
+    pub(in crate::compile_to_lean) fn compile_eval_sqrt_wd(
+        &self,
+        wd: &ObjWellDefinedProof,
+        position: &SourcePosition<'_>,
+    ) -> Result<Option<String>, LeanCompileError> {
+        if !super::super::super::compile_eval_stmt_result::in_closed_eval(position) {
+            return Ok(None);
+        }
+        let DetailedObjWellDefinedProof::ByDef {
+            obj: Obj::ExpLogOperator(ExpLogOperator::Sqrt(sqrt)),
+            proof:
+                ObjWellDefinedProofByDef::ExpLogOperator(ExpLogOperatorObjWellDefinedProofByDef::Sqrt(
+                    proof,
+                )),
+        } = wd.detailed_ref()
+        else {
+            return Ok(None);
+        };
+        if proof.requirement_fact_verified.len() == 2 {
+            return Ok(None);
+        }
+        if proof.child_obj_well_defined.len() != 1 || proof.requirement_fact_verified.len() != 1 {
+            return Err(LeanCompileError::unsupported("Eval/SqrtWDStages"));
+        }
+        let child = &proof.child_obj_well_defined[0];
+        ensure_object(&sqrt.arg, child)?;
+        let before_child = SourcePosition {
+            before: 0,
+            ..*position
+        };
+        let term = self.compile_wd(child, &before_child)?;
+        let (value, denote) = self.compile_eval_closed_value(&sqrt.arg, &before_child)?;
+        let complex = exact_rational_literal(&value, "ℂ")?;
+        let real = exact_rational_literal(&value, "ℝ")?;
+        let member = format!("(Litex.NativeBridge.inOfDenoteNumber {term} {complex} Litex.R {denote} (Litex.NativeBridge.numberInROfEq {complex} {real} (by norm_num)))");
+        let requirement = &proof.requirement_fact_verified[0];
+        if !matches!(source_subject(requirement)?,
+            Fact::AtomicFact(AtomicFact::LessEqualFact(ref fact))
+                if is_exact_zero(&fact.left) && fact.right.ir() == sqrt.arg.ir())
+        {
+            return Err(LeanCompileError::unsupported("Eval/SqrtWDNonnegative"));
+        }
+        let nonnegative = self.compile_wd_requirement(
+            requirement,
+            &SourcePosition {
+                before: 1,
+                ..*position
+            },
+        )?;
+        Ok(Some(format!("(Litex.sqrt {term} {member} {nonnegative})")))
+    }
+
     pub(in crate::compile_to_lean) fn compile_sqrt_wd(
         &self,
         argument: &Obj,

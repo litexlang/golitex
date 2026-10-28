@@ -1,0 +1,6 @@
+thm consume_zero_product_factors:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,a,b K:
+        F.mul(a,b)=F.zero
+        =>:
+            a=F.zero or b=F.zero
+    release thm Algebra::field::zero_product_factors(K,F,a,b)

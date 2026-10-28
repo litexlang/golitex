@@ -1,0 +1,2 @@
+# Evaluate a product whose exact result has a radical coefficient.
+eval sqrt(3)*sqrt(6)

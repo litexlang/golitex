@@ -1,0 +1,16 @@
+# Before: this complete case definition failed its coverage check.
+# have fn row_value(row 1...3) R by cases:
+#     case row=1:10
+#     case row=2:20
+#     case row=3:30
+# Now: coverage consumes the binder's interval membership directly.
+# Boundary: missing or overlapping cases remain rejected.
+# Run: target/release/litex -strict -f examples/stmt_nodes/definition/finite_integer_range_cases.lit
+
+have fn row_value(row 1...3) R by cases:
+    case row=1:10
+    case row=2:20
+    case row=3:30
+row_value(1)=10
+row_value(2)=20
+row_value(3)=30

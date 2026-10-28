@@ -1,0 +1,8 @@
+{
+  "missing_right_identity": "premise",
+  "missing_idempotence": "premise",
+  "missing_square_identity": "premise",
+  "missing_self_inverse": "premise",
+  "false_nonidentity_is_identity": "search_proof",
+  "false_square_is_one_value": "search_proof"
+}

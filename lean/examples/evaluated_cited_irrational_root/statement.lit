@@ -1,0 +1,4 @@
+# Evaluate an irrational square root using a previously proved value.
+have cited_radical_a R = 12
+eval sqrt(cited_radical_a)
+sqrt(cited_radical_a)=2*sqrt(3)

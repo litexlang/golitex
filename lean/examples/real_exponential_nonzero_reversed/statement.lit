@@ -1,0 +1,3 @@
+# The real exponential is nonzero, in reverse orientation.
+forall x R:
+    0 != exp(x)

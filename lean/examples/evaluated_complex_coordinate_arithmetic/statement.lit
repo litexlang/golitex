@@ -1,0 +1,3 @@
+# Add exact real and imaginary components.
+eval re(3+4*i)+img(3+4*i)
+re(3+4*i)+img(3+4*i)=7

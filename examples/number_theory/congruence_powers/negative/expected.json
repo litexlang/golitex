@@ -1,0 +1,13 @@
+{
+  "missing_congruence": "premise",
+  "negative_exponent": "argument_type",
+  "fractional_exponent": "argument_type",
+  "zero_modulus": "argument_type",
+  "negative_modulus": "argument_type",
+  "fractional_base": "argument_type",
+  "missing_inverse": "premise",
+  "false_inverse": "search_proof",
+  "remainder_zero_modulus": "argument_type",
+  "remainder_negative_exponent": "argument_type",
+  "remainder_fractional_base": "argument_type"
+}

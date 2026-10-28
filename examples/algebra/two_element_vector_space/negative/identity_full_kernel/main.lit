@@ -1,0 +1,133 @@
+release thm model::two_field_is_field
+
+release thm model::two_field_zero
+
+release thm model::two_field_one
+
+release thm model::two_field_one_plus_one_zero
+
+{0,1}!={}
+
+model::two_field.zero $in {0,1}
+
+model::two_field.add $in fn(x,y {0,1}) {0,1}
+
+model::two_field.mul $in fn(x,y {0,1}) {0,1}
+
+release struct def model::two_field
+
+claim:
+    ? forall x,y,z {0,1}:
+        model::two_field.add(model::two_field.add(x,y),z)=model::two_field.add(x,model::two_field.add(y,z))
+    model::two_field.add(model::two_field.add(x,y),z)=model::two_field.add(x,model::two_field.add(y,z))
+
+claim:
+    ? forall x,y {0,1}:
+        model::two_field.add(x,y)=model::two_field.add(y,x)
+    model::two_field.add(x,y)=model::two_field.add(y,x)
+
+claim:
+    ? forall x {0,1}:
+        model::two_field.add(model::two_field.zero,x)=x
+        exist y {0,1} st {model::two_field.add(x,y)=model::two_field.zero}
+    model::two_field.add(model::two_field.zero,x)=x
+    model::two_field.add(x,model::two_field.neg(x))=model::two_field.zero
+    witness exist y {0,1} st {model::two_field.add(x,y)=model::two_field.zero} from model::two_field.neg(x)
+
+claim:
+    ? forall a,b,x {0,1}:
+        model::two_field.mul(model::two_field.mul(a,b),x)=model::two_field.mul(a,model::two_field.mul(b,x))
+        model::two_field.mul(model::two_field.add(a,b),x)=model::two_field.add(model::two_field.mul(a,x),model::two_field.mul(b,x))
+    model::two_field.mul(model::two_field.mul(a,b),x)=model::two_field.mul(a,model::two_field.mul(b,x))
+    by thm Algebra::field::add_mul({0,1},model::two_field,a,b,x) => model::two_field.mul(model::two_field.add(a,b),x)=model::two_field.add(model::two_field.mul(a,x),model::two_field.mul(b,x))
+
+claim:
+    ? forall a,x,y {0,1}:
+        model::two_field.mul(a,model::two_field.add(x,y))=model::two_field.add(model::two_field.mul(a,x),model::two_field.mul(a,y))
+    model::two_field.mul(a,model::two_field.add(x,y))=model::two_field.add(model::two_field.mul(a,x),model::two_field.mul(a,y))
+
+claim:
+    ? forall x {0,1}:
+        model::two_field.mul(model::two_field.one,x)=x
+    model::two_field.mul(model::two_field.one,x)=x
+
+release thm struct_member((model::two_field.zero,model::two_field.add,model::two_field.mul),&Algebra::vector_space::VectorSpace<{0,1},model::two_field,{0,1}> )
+
+have two_space &Algebra::vector_space::VectorSpace<{0,1},model::two_field,{0,1}> = (model::two_field.zero,model::two_field.add,model::two_field.mul)
+
+release struct def two_space
+
+two_space.zero=model::two_field.zero=0
+
+release thm Algebra::vector_space::identity_linear({0,1},model::two_field,{0,1},two_space)
+
+release thm Algebra::vector_space::zero_map_linear({0,1},model::two_field,{0,1},two_space,{0,1},two_space)
+
+\Algebra::vector_space::identity<{0,1}>(0)=0
+
+\Algebra::vector_space::identity<{0,1}>(1)=1
+
+\Algebra::vector_space::zero_map<{0,1},{0,1},two_space.zero>(0)=two_space.zero
+
+\Algebra::vector_space::zero_map<{0,1},{0,1},two_space.zero>(1)=two_space.zero
+
+\Algebra::vector_space::zero_map<{0,1},{0,1},two_space.zero>(0)=\Algebra::vector_space::zero_map<{0,1},{0,1},two_space.zero>(1)
+
+0!=1
+
+claim:
+    ? preimage(\Algebra::vector_space::identity<{0,1}>,two_space.zero)={two_space.zero}
+    claim:
+        ? forall x preimage(\Algebra::vector_space::identity<{0,1}>,two_space.zero):
+            x $in {two_space.zero}
+        \Algebra::vector_space::identity<{0,1}>(x)=two_space.zero
+        \Algebra::vector_space::identity<{0,1}>(x)=x
+        x=two_space.zero
+        x $in {two_space.zero}
+    claim:
+        ? forall x {two_space.zero}:
+            x $in preimage(\Algebra::vector_space::identity<{0,1}>,two_space.zero)
+        x=two_space.zero
+        \Algebra::vector_space::identity<{0,1}>(x)=x=two_space.zero
+        x $in preimage(\Algebra::vector_space::identity<{0,1}>,two_space.zero)
+    by extension preimage(\Algebra::vector_space::identity<{0,1}>,two_space.zero)={two_space.zero}
+
+claim:
+    ? fn_range(\Algebra::vector_space::identity<{0,1}>)={0,1}
+    fn_range(\Algebra::vector_space::identity<{0,1}>) $subset {0,1}
+    claim:
+        ? forall y {0,1}:
+            y $in fn_range(\Algebra::vector_space::identity<{0,1}>)
+        \Algebra::vector_space::identity<{0,1}>(y)=y
+        \Algebra::vector_space::identity<{0,1}>(y) $in fn_range(\Algebra::vector_space::identity<{0,1}>)
+        y $in fn_range(\Algebra::vector_space::identity<{0,1}>)
+    {0,1} $subset fn_range(\Algebra::vector_space::identity<{0,1}>)
+    by extension fn_range(\Algebra::vector_space::identity<{0,1}>)={0,1}
+
+claim:
+    ? preimage(\Algebra::vector_space::zero_map<{0,1},{0,1},two_space.zero>,two_space.zero)={0,1}
+    preimage(\Algebra::vector_space::zero_map<{0,1},{0,1},two_space.zero>,two_space.zero) $subset {0,1}
+    claim:
+        ? forall x {0,1}:
+            x $in preimage(\Algebra::vector_space::zero_map<{0,1},{0,1},two_space.zero>,two_space.zero)
+        \Algebra::vector_space::zero_map<{0,1},{0,1},two_space.zero>(x)=two_space.zero
+        x $in preimage(\Algebra::vector_space::zero_map<{0,1},{0,1},two_space.zero>,two_space.zero)
+    {0,1} $subset preimage(\Algebra::vector_space::zero_map<{0,1},{0,1},two_space.zero>,two_space.zero)
+    by extension preimage(\Algebra::vector_space::zero_map<{0,1},{0,1},two_space.zero>,two_space.zero)={0,1}
+
+claim:
+    ? not $injective({0,1},{0,1},\Algebra::vector_space::zero_map<{0,1},{0,1},two_space.zero>)
+    by contra:
+        ? not $injective({0,1},{0,1},\Algebra::vector_space::zero_map<{0,1},{0,1},two_space.zero>)
+        \Algebra::vector_space::zero_map<{0,1},{0,1},two_space.zero>(0)=\Algebra::vector_space::zero_map<{0,1},{0,1},two_space.zero>(1)
+        impossible 0=1
+
+release thm Algebra::vector_space::zero_kernel_is_injective({0,1},model::two_field,{0,1},two_space,{0,1},two_space,\Algebra::vector_space::identity<{0,1}>)
+
+$injective({0,1},{0,1},\Algebra::vector_space::identity<{0,1}>)
+
+release thm Algebra::vector_space::kernel_is_subspace({0,1},model::two_field,{0,1},two_space,{0,1},two_space,\Algebra::vector_space::identity<{0,1}>)
+
+release thm Algebra::vector_space::kernel_is_subspace({0,1},model::two_field,{0,1},two_space,{0,1},two_space,\Algebra::vector_space::zero_map<{0,1},{0,1},two_space.zero>)
+
+preimage(\Algebra::vector_space::identity<{0,1}>,two_space.zero)={0,1}

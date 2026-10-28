@@ -14,6 +14,7 @@ use crate::runtime::{Runtime, RuntimeResult};
 
 // Builtin proofs for `$subset`. One rule ↔ one dedicated proof struct.
 pub enum SubsetFactSearchProofByBuiltinRule {
+    HomogeneousCartesianSequenceSubset(HomogeneousCartesianSequenceSubsetProof),
     FunctionRangeInCodomain(FunctionRangeInCodomainProof),
     // Fixed inclusion among standard number sets.
     // Example: prove `N $subset R`.
@@ -81,6 +82,10 @@ pub enum SubsetFactSearchProofByBuiltinRule {
     // ⇒ `A $subset C`.
     // Example: trust `A $subset B`; trust `B $subset C`; prove `A $subset C`.
     SubsetTransitivity(SubsetTransitivityBuiltinRuleProof),
+}
+
+pub struct HomogeneousCartesianSequenceSubsetProof {
+    pub equality: EqualFactSearchedProof,
 }
 
 pub struct CompositionRangeSubsetProof {
@@ -180,6 +185,22 @@ impl Runtime {
         if fact.left.ir() == fact.right.ir() {
             return Ok(Some(SubsetFactSearchProofByBuiltinRule::SubsetReflexivity(
                 SubsetReflexivityBuiltinRuleProof {},
+            )));
+        }
+
+        let equation = EqualFact {
+            fact_id: self.global_ids.allocate_fact_id(),
+            left: fact.left.clone(),
+            right: fact.right.clone(),
+            line_file: None,
+        };
+        if let Some(proof) = self.search_homogeneous_cartesian_equality(&equation) {
+            return Ok(Some(SubsetFactSearchProofByBuiltinRule::HomogeneousCartesianSequenceSubset(
+                HomogeneousCartesianSequenceSubsetProof {
+                    equality: EqualFactSearchedProof::ByBuiltinRule(
+                        EqualitySearchProofByBuiltinRule::HomogeneousCartesianEqualsFiniteSequence(proof),
+                    ),
+                },
             )));
         }
 

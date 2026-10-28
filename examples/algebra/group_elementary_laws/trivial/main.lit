@@ -1,0 +1,46 @@
+have fn small_mul(x,y {0}) {0} = 0
+
+have fn small_inv(x {0}) {0} = 0
+
+by enumerate finite_set:
+    ? forall x,y,z {0}:
+        small_mul(small_mul(x,y),z) = small_mul(x,small_mul(y,z))
+    small_mul(small_mul(x,y),z) = small_mul(x,small_mul(y,z))
+
+by enumerate finite_set:
+    ? forall x {0}:
+        small_mul(0,x) = x
+        small_mul(x,0) = x
+        small_mul(small_inv(x),x) = 0
+        small_mul(x,small_inv(x)) = 0
+    small_mul(0,x) = x
+    small_mul(x,0) = x
+    small_mul(small_inv(x),x) = 0
+    small_mul(x,small_inv(x)) = 0
+
+{0} != {}
+
+0 $in {0}
+
+small_mul $in fn(x,y {0}) {0}
+
+small_inv $in fn(x {0}) {0}
+
+have small &Algebra::group::Group<{0}> = (small_mul,0,small_inv)
+
+small.one = 0
+
+by enumerate finite_set:
+    ? forall x {0}:
+        small.mul(x,0)=x
+    small.mul(x,0)=x
+
+release thm Algebra::group::right_identity_unique({0},small,0)
+
+small.mul(0,0)=0=small.one
+
+release thm Algebra::group::idempotent_is_identity({0},small,0)
+
+release thm Algebra::group::square_identity_implies_self_inverse({0},small,0)
+
+release thm Algebra::group::self_inverse_implies_square_identity({0},small,0)

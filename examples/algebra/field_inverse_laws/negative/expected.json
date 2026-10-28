@@ -1,0 +1,13 @@
+{
+  "inverse_zero": "value_well_defined",
+  "nonzero_inverse_zero": "premise",
+  "involution_zero": "premise",
+  "product_zero": "premise",
+  "unique_wrong_premise": "premise",
+  "false_inverse_two": "search_proof",
+  "false_inverse_one": "search_proof",
+  "false_inverse_twice": "search_proof",
+  "wrong_carrier": "argument_type",
+  "wrong_arity": "call_shape",
+  "missing_nonzero_guard": "goal_well_defined"
+}

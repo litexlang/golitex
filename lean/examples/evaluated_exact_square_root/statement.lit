@@ -1,0 +1,3 @@
+# Evaluate a nonsquare root without replacing it by an approximation.
+eval sqrt(2)
+sqrt(2) = sqrt(2)

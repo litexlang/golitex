@@ -1,0 +1,3 @@
+# Evaluate an exact rational logarithm.
+eval log(8,4)
+log(8,4) = 2/3

@@ -12,6 +12,29 @@ pub(super) fn project_equality_builtin_rule(
     runtime: &Runtime,
 ) -> JsonValue {
     match rule {
+        EqualitySearchProofByBuiltinRule::HomogeneousCartesianEqualsFiniteSequence(p) => {
+            object_for(
+                runtime,
+                vec![
+                    ("type", string("builtin_rule")),
+                    ("rule", string("HomogeneousCartesianEqualsFiniteSequence")),
+                    ("dimension", JsonValue::Number(p.dimension as f64)),
+                    (
+                        "length_equal",
+                        super::searched::project_equal_searched(&p.length_equal, runtime),
+                    ),
+                    (
+                        "factor_equalities",
+                        JsonValue::Array(
+                            p.factor_equalities
+                                .iter()
+                                .map(|e| super::searched::project_equal_searched(e, runtime))
+                                .collect(),
+                        ),
+                    ),
+                ],
+            )
+        }
         EqualitySearchProofByBuiltinRule::DvdZeroRemainder(p) => object_for(
             runtime,
             vec![

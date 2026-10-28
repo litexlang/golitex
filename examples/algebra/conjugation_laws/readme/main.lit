@@ -1,0 +1,4 @@
+thm consume_conjugation_is_homomorphism:
+    ? forall A nonempty_set,G &Algebra::group::Group<A>,a A:
+        $Algebra::group::is_homomorphism(A,G,A,G,fn(x A) A {G.mul(G.mul(a,x),G.inv(a))})
+    release thm Algebra::group::conjugation_is_homomorphism(A,G,a)

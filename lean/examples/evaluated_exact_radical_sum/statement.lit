@@ -1,0 +1,3 @@
+# Evaluate an exact sum of two distinct irrational square roots.
+eval sqrt(2)+sqrt(3)
+sqrt(2)+sqrt(3) = sqrt(2)+sqrt(3)

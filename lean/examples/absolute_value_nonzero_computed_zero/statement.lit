@@ -1,0 +1,7 @@
+# The absolute value of a nonzero real differs from computed zero.
+claim:
+    ? forall x R:
+        x != 0
+        =>:
+            |x| != 1-1
+    |x| != 1-1

@@ -1,0 +1,7 @@
+# Square roots of positive real values are nonzero.
+claim:
+    ? forall x R:
+        0 < x
+        =>:
+            sqrt(x) != 0
+    sqrt(x) != 0

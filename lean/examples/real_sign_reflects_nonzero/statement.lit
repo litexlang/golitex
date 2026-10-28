@@ -1,0 +1,7 @@
+# A real with nonzero sign is nonzero.
+claim:
+    ? forall x R:
+        sign(x) != 0
+        =>:
+            x != 0
+    x != 0

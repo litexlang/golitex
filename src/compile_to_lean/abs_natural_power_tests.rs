@@ -174,14 +174,34 @@ fn symbolic_power_rejects_missing_or_changed_original_natural_requirement() {
 }
 
 #[test]
-fn nonclosed_signed_integer_exponents_remain_an_explicit_boundary() {
+fn symbolic_signed_integer_exponents_replay_membership_and_base_guard() {
     let source = "have z Z\nclaim:\n    ? forall x C:\n        x != 0\n        =>:\n            x^z=x^z\n    x^z=x^z\n";
     let (result, compiler) = checked(source);
-    assert_eq!(
+    let lean = compiler
+        .compile_run(&result, "symbolic_integer_power")
+        .expect("recorded integer membership and nonzero base");
+    assert!(lean.contains("Classical.choose_spec"));
+    assert!(lean.contains("Litex.powInt"));
+}
+
+#[test]
+fn symbolic_integer_power_requires_original_membership_and_nonzero_guard() {
+    let source = "have n Z\n2^n=2^n\n";
+    for change in ["membership", "nonzero", "order"] {
+        let (mut result, compiler) = checked(source);
+        let wd = pow_mut(&mut result);
+        assert_eq!(wd.requirement_fact_verified.len(), 3);
+        match change {
+            "membership" => {
+                wd.requirement_fact_verified.remove(1);
+            }
+            "nonzero" => {
+                wd.requirement_fact_verified.pop();
+            }
+            _ => wd.requirement_fact_verified.swap(0, 1),
+        }
         compiler
-            .compile_run(&result, "symbolic_integer_boundary")
-            .unwrap_err()
-            .route,
-        "WD/Pow/NonClosedIntegerExponent"
-    );
+            .compile_run(&result, "missing_integer_power_wd")
+            .expect_err(change);
+    }
 }

@@ -1,0 +1,8 @@
+# The least common multiple of two nonzero integers is nonzero.
+claim:
+    ? forall a Z, b Z:
+        a != 0
+        b != 0
+        =>:
+            lcm(a,b) != 0
+    lcm(a,b) != 0

@@ -1,0 +1,7 @@
+# The modulus of a nonzero complex number is nonzero.
+claim:
+    ? forall z C:
+        z != 0
+        =>:
+            C_abs(z) != 0
+    C_abs(z) != 0

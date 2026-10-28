@@ -1,0 +1,7 @@
+# A reversed nonzero sum distinguishes a number from zero minus the other.
+claim:
+    ? forall a C, b C:
+        b+a != 0
+        =>:
+            (0-b) != a
+    (0-b) != a

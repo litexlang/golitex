@@ -1,0 +1,8 @@
+# Integer powers of nonzero complex numbers remain nonzero.
+have power_eval_n Z
+claim:
+    ? forall x C:
+        x != 0
+        =>:
+            x^power_eval_n != 0
+    x^power_eval_n != 0

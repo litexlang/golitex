@@ -1,0 +1,3 @@
+# Sum exact square roots through an iterand function.
+eval sum(1,3,fn(k Z) R {sqrt(k*k)})
+sum(1,3,fn(k Z) R {sqrt(k*k)}) = 6

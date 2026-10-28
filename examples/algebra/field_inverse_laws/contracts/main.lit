@@ -1,0 +1,42 @@
+thm contract_nonzero_field_inverse:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,a K:
+        a!=F.zero
+        =>:
+            F.inv(a)!=F.zero
+    release thm Algebra::field::nonzero_field_inverse(K,F,a)
+
+thm contract_field_inverse_one:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>:
+        F.inv(F.one)=F.one
+    release thm Algebra::field::field_inverse_one(K,F)
+
+thm contract_field_inverse_involution:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,a K:
+        a!=F.zero
+        =>:
+            F.inv(F.inv(a))=a
+    release thm Algebra::field::field_inverse_involution(K,F,a)
+
+thm contract_field_inverse_unique:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,a,b K:
+        a!=F.zero
+        F.mul(a,b)=F.one
+        =>:
+            b=F.inv(a)
+    release thm Algebra::field::field_inverse_unique(K,F,a,b)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,a,b K:
+        a!=F.zero
+        b!=F.zero
+        =>:
+            F.mul(a,b)!=F.zero
+    release thm Algebra::field::nonzero_product(K,F,a,b)
+
+thm contract_field_inverse_product:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,a,b K:
+        a!=F.zero
+        b!=F.zero
+        =>:
+            F.inv(F.mul(a,b))=F.mul(F.inv(a),F.inv(b))
+    release thm Algebra::field::field_inverse_product(K,F,a,b)

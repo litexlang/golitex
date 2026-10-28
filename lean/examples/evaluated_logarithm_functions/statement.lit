@@ -1,0 +1,4 @@
+# Evaluate an explicitly defined logarithm function.
+have fn log_eval_fn(x R+) R = log(2,x)
+eval log_eval_fn(8)
+log_eval_fn(8)=3

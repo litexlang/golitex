@@ -13,6 +13,35 @@ impl LitexToLeanCompiler {
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
         match rule {
+            InFactSearchProofByBuiltinRule::HomogeneousCartesianSequenceMembership(p) => {
+                let AtomicFact::InFact(member) = &p.membership.fact else {
+                    return Err(LeanCompileError::unsupported(
+                        "HomogeneousMembership/Member",
+                    ));
+                };
+                if member.element.ir() != fact.element.ir() || !matches!(&p.carrier_equal, EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::HomogeneousCartesianEqualsFiniteSequence(_))) {
+                    return Err(LeanCompileError::unsupported("HomogeneousMembership/Subject"));
+                }
+                let AtomicExceptEqualityFactSearchedProof::ByKnownAtomicFact(cite) =
+                    p.membership.searched_proof.as_ref()
+                else {
+                    return Err(LeanCompileError::unsupported(
+                        "HomogeneousMembership/Citation",
+                    ));
+                };
+                let member_term = self.compile_known_atomic(cite, &p.membership.fact, position)?;
+                let equation = EqualFact {
+                    fact_id: FactId::new(0),
+                    left: member.set.clone(),
+                    right: fact.set.clone(),
+                    line_file: None,
+                };
+                let equal = self.compile_equality_search(&equation, &p.carrier_equal, position)?;
+                let element = self.compile_object_reference(&fact.element, position)?;
+                let target = self.compile_object_reference(&fact.set, position)?;
+                let source = self.compile_object_reference(&member.set, position)?;
+                Ok(format!("(Litex.inOfSame {element} {element} {source} {target} (Eq.refl _) ({equal}) ({member_term}))"))
+            }
             InFactSearchProofByBuiltinRule::FiniteSetSubsetMembership(proof) => {
                 let Obj::SetFormer(SetFormer::ListSet(set)) = &proof.source_set else {
                     return Err(LeanCompileError::unsupported(

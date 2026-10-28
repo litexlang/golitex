@@ -1,0 +1,16 @@
+# A flat product of equal carriers is the finite sequence space of the same length.
+forall S set:
+    cart_n(S,3)=cart(S,S,S)
+    cart(S,S,S)=cart_n(S,3)
+    cart_n(S,1)=cart(S)
+    cart_n(S,0)=cart()
+have carrier set = R
+have dimension N = 3
+cart(carrier,R,carrier)=cart_n(R,dimension)
+forall p cart(R,R,R):
+    p $in cart_n(R,3)
+forall p cart_n(R,3):
+    p $in cart(R,R,R)
+
+cart(R,R,R) $subset cart_n(R,3)
+cart_n(R,3) $subset cart(R,R,R)

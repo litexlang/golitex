@@ -1,0 +1,5 @@
+# Evaluate a square root in a local proof scope.
+sketch:
+    have sqrt_eval_local R = 16
+    eval sqrt(sqrt_eval_local)
+    sqrt(sqrt_eval_local) = 4

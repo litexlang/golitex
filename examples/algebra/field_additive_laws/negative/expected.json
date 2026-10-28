@@ -1,0 +1,11 @@
+{
+  "false_left_premise": "premise",
+  "false_right_premise": "premise",
+  "false_right_zero": "search_proof",
+  "false_left_inverse": "search_proof",
+  "false_neg_zero": "search_proof",
+  "false_neg_involution": "search_proof",
+  "wrong_carrier": "argument_type",
+  "wrong_arity": "call_shape",
+  "missing_cancel_premise": "premise"
+}

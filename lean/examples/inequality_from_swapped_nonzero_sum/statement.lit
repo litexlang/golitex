@@ -1,0 +1,7 @@
+# A nonzero sum also distinguishes the second summand from the first negated.
+claim:
+    ? forall a C, b C:
+        b+a != 0
+        =>:
+            a != -b
+    a != -b

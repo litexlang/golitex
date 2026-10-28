@@ -49,6 +49,8 @@ pub enum OrFactSearchedProof {
 // get separate variants. Swap-symmetric binary ors keep one evidence struct; the
 // matcher may accept either branch order without a second rule.
 pub enum OrFactSearchProofByBuiltinRule {
+    ClosedIntegerRangeEqualityCover(OrBuiltinClosedIntegerRangeEqualityCover),
+    HalfOpenIntegerRangeEqualityCover(OrBuiltinHalfOpenIntegerRangeEqualityCover),
     // Rigid surface: `a = b or a < b or a > b`.
     // Property: any two reals are comparable by =, <, or >.
     // Example: after `have a, b R`, prove `a = b or a < b or a > b`.
@@ -292,4 +294,22 @@ pub fn or_fact_result_from_success(
         well_defined_proof,
         searched_proof,
     })))
+}
+
+// Each covered integer records its original disjunction branch, in interval order.
+// Membership is cited in its actual carrier; the bounded equality path transports it.
+pub struct OrBuiltinClosedIntegerRangeEqualityCover {
+    pub subject: Obj,
+    pub interval: Obj,
+    pub membership: VerifyFactResult,
+    pub carrier_equal: crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::KnownEqualityPathProof,
+    pub branch_indices: Vec<usize>,
+}
+
+pub struct OrBuiltinHalfOpenIntegerRangeEqualityCover {
+    pub subject: Obj,
+    pub interval: Obj,
+    pub membership: VerifyFactResult,
+    pub carrier_equal: crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::KnownEqualityPathProof,
+    pub branch_indices: Vec<usize>,
 }

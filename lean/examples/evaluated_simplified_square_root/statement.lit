@@ -1,0 +1,2 @@
+# Simplify a square root exactly.
+eval sqrt(8)

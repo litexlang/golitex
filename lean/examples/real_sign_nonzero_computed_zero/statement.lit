@@ -1,0 +1,7 @@
+# A real nonzero relative to calculated zero has nonzero sign.
+claim:
+    ? forall x R:
+        x != 1-1
+        =>:
+            sign(x) != 1-1
+    sign(x) != 1-1

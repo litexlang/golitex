@@ -1,0 +1,7 @@
+# A nonzero sine stays nonzero when its real argument is negated.
+claim:
+    ? forall t R:
+        sin(t) != 0
+        =>:
+            sin(-t) != 0
+    sin(-t) != 0

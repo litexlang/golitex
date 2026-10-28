@@ -20,9 +20,13 @@
 
 Litex 让数学对象、定义和事实直接成为形式化源码的一部分。在[下方例子](#the-core-reading-model)中，`x + 1 = 3` 既是数学断言，也是提交给系统检查的语句。
 
-人提供数学想法、条件和有意义的推理步骤。对于普通事实语句，执行器检查条件、寻找局部依据、记录结果，并让通过检查的事实可供后续步骤使用。知识的存储与查找按数学结构、作用域和适用条件组织。
+数学写作本身就承载着逻辑结构。语句的形式及其上下文确定了讨论中的对象、可用的前提，以及需要得到支持的结论。Litex 的设计，是让这些联系成为可以执行的推理。
 
-这种分工，是希望作者少学一些额外的规则、少做一些机械操作。为了支持熟悉的写法，执行器里需要完成相应的工作；能做到什么程度，Litex 仍在探索。本手册给出明确的语法、受支持的检查和边界。受支持的 Lean 编译，则进一步使用源码和验证证据。
+作者提供数学想法、条件和有意义的证明步骤。写下一个普通事实，就是请求执行器检查其条件，并从当前数学上下文中寻找依据。作者可以着重思考需要建立哪些事实，系统则恢复支持范围内连接这些事实的推理。通过检查的事实成为后续步骤可用的知识。
+
+[内置验证规则](#builtin-verification-rules)提供可复用的数学推理模式。上下文搜索把目标与已知事实、适用的全称陈述连接起来；[推导规则](#builtin-inference)还会记录已接受事实的受支持直接后果。这些机制共同让数学语句之间的联系参与后续检查，并遵守作用域、适用条件和搜索边界。
+
+这种分工让人和 AI 可以书写数学步骤，无需逐一写出所有形式推导。需要时，作者仍要选择关键中间事实、见证、分情形或归纳。本手册给出明确的语法、受支持的检查和边界。受支持的 Lean 编译，则进一步使用源码和验证证据。
 
 <a id="manual-introduction"></a>
 
@@ -67,6 +71,8 @@ x^2 = 4
 
 
 第一行引入实数对象 `x` 并记录 `x = 2`。接下来的两行是状态事实。 Litex 从当前上下文中检查它们并存储接受的事实以供以后使用。
+
+对于 `x + 1 = 3`，已知等式 `x = 2` 与计算 `2 + 1 = 3` 提供了依据。作者写出数学步骤，检查器寻找它与已有知识之间受支持的联系。每个被接受的步骤，又能支持后续步骤。
 
 将三种语言类别分开：
 
@@ -11016,7 +11022,22 @@ Litex 的集合理论基础的介绍借鉴了陶哲轩的 [*分析 I*](https://t
 
 #### Litex 作为数学源码语言
 
-Litex 是一门具有独立原生验证器的数学形式语言。其抽象语法区分数学表达式（`Obj`）、命题（`Fact`），以及检查或扩展数学上下文的构造（`Stmt`）。事实也可以出现在语句位置：执行器检查其良定义性，在当前上下文中寻找受支持的成立依据，并提交已接受的事实及其推论。因此，许多受约束的日常数学句式本身就是可执行的形式化源码。
+Litex 是一门具有独立原生验证器的数学形式语言。其抽象语法区分 **object（对象）**、**fact（事实）** 和 **statement（语句）**，在实现与文档中分别简称 `Obj`、`Fact` 和 `Stmt`。这三个名称表示具有不同语义职责的语法类别，不是要求逐字写入源码的三个关键字。
+
+| 类别 | 含义 | 例子 |
+| --- | --- | --- |
+| **Object（对象），`Obj`** | 数学值，或在良定义时指称数学值的表达式；可以作为运算对象、函数参数或更大表达式的组成部分。 | `a`、`R`、`a + 1`、`{1, 2}`、`f(a)` |
+| **Fact（事实），`Fact`** | 关于对象的命题，由关系、谓词、逻辑联结词与量词构成；是否成立需要在上下文中建立。 | `a + 1 = 3`、`a $in R`、带全称量词的蕴含命题 |
+| **Statement（语句），`Stmt`** | 可执行的单位，用于引入对象、定义数学词汇、检查事实、组织证明步骤或调用会话命令；执行可以扩展数学上下文。 | `have a R = 2`、放在语句位置的事实、函数定义、证明块 |
+
+这里 `Fact` 是命题的语法类别，不表示其中每个表达式都已经得到证明。成功检查的事实会作为已知信息供后续语句使用。`a + 1` 这样的对象表达式指称一个值，本身没有断言命题；`have a R = 2` 这样的声明则会引入名称并影响上下文。
+
+```litex
+have a R = 2
+a + 1 = 3
+```
+
+第一行是语句，引入对象 `a`，并建立其成员关系与定义等式。第二行内部的 `a + 1` 是对象表达式，`a + 1 = 3` 是事实；把该事实写成完整的一行，就将它嵌入语句位置（AST 中的 `Stmt::Fact(F)`），请求验证 `F`。执行器检查良定义性，在当前上下文中寻找受支持的成立依据，并提交已接受的事实及其推论。因此，命题本身与检查命题的动作仍有明确区别，同时许多受约束的日常数学句式本身就是可执行的形式化源码。
 
 可读性和数学写作的易用性，也是 Lean、Rocq（原 Coq）、Isabelle/Isar 和 Mizar 共同关注的问题。共同目标并不意味着相同的对象模型、详化机制、证明接口或验证架构。下面比较这些技术选择，以及它们要求作者显式承担的工作。Wiedijk 的比较文集让同一数学证明以多种语言呈现 [Compare06]；本文进一步区分对象表示、表达式可接受性、证明接口与证据构造。
 
@@ -11028,6 +11049,29 @@ reciprocal(2) = 1 / 2
 ```
 
 非零条件属于函数的可调用契约。使用 `reciprocal(0)` 的语句即使提出自反等式，也会在良定义性阶段失败。普通事实验证结合上下文检索、受允许的实例化、计算、原生规则，以及必要时的显式证明步骤，产生带类型的验证证据（验证结果 IR），其中包括相应的良定义性和前提记录。作者给出数学路线；受支持的局部搜索承担例行论证和依据查找。
+
+<a id="litex-theoretical-positioning"></a>
+
+#### 理论定位：语言、演绎知识库与数学基础
+
+**Litex 是一门以数学事实为中心、由上下文驱动的增量验证语言（fact-oriented mathematical verification language）。其原生引擎是一套数学特化的演绎知识库；受支持的验证证据还可以重建为 Lean 证明。** 这个定位描述的是语言与系统架构，不是在提出一套新的基础逻辑演算。
+
+| 层次 | Litex 的职责 |
+| --- | --- |
+| 源码语言 | 通过 `Obj`、`Fact`、`Stmt`，为数学对象、命题和改变上下文的操作提供明确接口。 |
+| 执行架构 | 对作用域内的事实和定义建立索引、检索并检查；成功语句发布可复用知识及带类型的执行证据。 |
+| 数学语义 | 当前原生语言采用纯集合式对象模型，并具有具体的定义域、等式及推理契约。 |
+| 独立复核 | 受支持的 Lean 后端在明确的语义接口下重建证明，是原生验证证据的另一个使用者。 |
+
+前面的 `have a R = 2` 例子体现了知识循环：建立对象与事实，利用这些记录检查 `a + 1 = 3`，再保留已接受的结论。用户证明的 `forall` 则为后续实例提供可复用的条件契约。这里的演绎知识库不只是查找记录：候选前提仍须经过匹配、代换及侧条件检查。演绎数据库早已研究事实、规则和派生查询结果 [Deductive84]；Metamath 也将不同数学基础下的公理、定理与证明组织为数据库 [MetamathDB]。因此，应从 Litex 的具体数学接口、检查行为和证据流评价其贡献，数据库类比本身不能建立首创性。
+
+在原生语法和执行层，数值、加法、连加有 `Number`、`Add`、`Sum` 等直接构造（见[对象 AST](../src/ast/obj.rs)）。[封闭算术检查](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_equality/calculate_closed_equal_fact.rs)不必在每次计算时重放从后继运算或集合编码构造数的过程。这是语义与实现层次的选择；这些原生构造仍需要确定的数学解释及成立的检查规则。SMT-LIB 的整数与实数理论就是通过预期模型规定数值和运算含义的既有例子 [SMTTheory]。`Obj`、`Fact`、`Stmt` 是语法类别，不能据此声称语言没有原子结构或逻辑假设。
+
+ITP 与 ATP 主要描述证明工作的组织和自动化方式，并不指定数学基础。TPTP 的典型工作流是在给定问题中自动寻找逻辑后果 [ATPProcess]；Isabelle 同时具有交互证明、自动化和多种对象逻辑 [IsabelleGeneric]。按广义术语，Litex 可以作为证明助手，也包含自动推理。它有辨识度的默认接口，是逐条检查数学语句并积累可复用知识；仅凭 ITP 或 ATP 标签不足以刻画这一设计。
+
+将这种方法与某一种底层编码分开，可以提出迁移到其他数学基础的研究方向，但不能直接推出当前实现已支持任意基础。迁移仍须提供新的语义解释、表达式形成条件及成立的推理规则。基础无关性本身是一项实质契约，MMT 的工作展示了这一层问题 [MMT]。Litex 当前有具体的集合式源码模型；其 [Lean 语义 API](../lean/Litex.lean) 与[证明重建编译器](../src/compile_to_lean/README.md)提供了受支持的解释路线，不构成整个原生验证器的完整可靠性证明。
+
+这里的研究主张，是把数学构造与定义域契约、具有作用域的演绎存储、用户已证明事实的自动复用，以及可检查的执行依据组合成连贯的写作接口，减少显式证明编排。理论描述需要连接指称语义、上下文更新的操作语义与相对可靠性（relative soundness）：在指定解释与假设下，检查接受的步骤保持真值。这些是理论描述需要承担的证明义务，并非本段已经建立的元定理；易用性及写作工作量的降低也仍需评价。
 
 <a id="comparison-with-lean"></a>
 
@@ -11055,7 +11099,25 @@ Rocq 也支持侧条件的隐式处理。对于 `{x : A | P x}` 这样的子集�
 
 [Isar](https://isabelle.in.tum.de/website-Isabelle2026-RC0/dist/library/Doc/Isar_Ref/Framework.html) 是建立在 Isabelle 通用逻辑框架上的结构化证明语言，管理局部事实、证明目标和证明方法；底层表达式与推理原则由对象逻辑提供。常用的 Isabelle/HOL 配置采用有类型高阶逻辑，Isabelle 也支持 ZF 等其他对象逻辑。Isar 已经能够书写可读的声明式证明，因此这一描述本身不足以区分 Litex。Wenzel 的原始论文规定了证明文档的操作解释语义，而不只是展示记号 [Isar99, §4.2][Isar99]、[IsarRef]。
 
-Litex 将数学词汇、依赖定义域条件的表达式构成，以及普通事实检查整合进同一门源码语言。其原生集合对象模型不同于 HOL 的有类型项和有类型集合。此外，[HOL 函数是全函数](https://www.isabelle.in.tum.de/library/Doc/Functions/Functions.html)：类型正确的应用总有一个值，即使尚未建立另行规定的定义域谓词 [HOLFunctions]。Litex 则在带条件调用的良定义性检查中要求定义域条件成立。这为“先建立数学前提，再允许使用表达式”的约定提供了原生支持。对受支持的事实，默认检查还减少了事实流和证明方法的显式编排。这些优势针对所选择的数学接口；Isabelle 的通用框架和可扩展证明基础设施服务于更广的用途。
+Litex 将数学词汇、依赖定义域条件的表达式构成，以及普通事实检查整合进同一门源码语言。**这些契约也可以由用户构造。** 用户证明并存入可见上下文的 `forall` 事实，会成为新的可复用逻辑契约：当后续目标匹配它受支持的结论形状时，验证器确定参数代换，检查参数所属集合及前提，再引用该全称事实。因此，普通事实验证也能使用用户自己证明建立的契约；这种复用不要求为该事实命名、显式写出实例化调用，或另行注册规则。
+
+```litex
+prop even_integer(n Z):
+    exist k Z st {n = 2 * k}
+
+claim:
+    ? forall n Z:
+        $even_integer(2 * n)
+    witness exist k Z st {2 * n = 2 * k} from n
+    by def $even_integer(2 * n)
+
+have a Z
+$even_integer(2 * a)
+```
+
+`prop` 引入数学词汇；`claim` 通过构造存在性见证并折叠谓词定义，证明全称事实。最后一行按 `n = a` 实例化并引用该事实，无须重新书写见证证明。这样，用户证明数学的过程，也扩展了后续检查可使用的契约，而验证仍使用同一套原生机制。检索在后续目标出现时按需进行，受当前作用域、支持的局部匹配与前提检查约束。这种通过已证明事实扩展契约的能力，与原生数学契约一起构成默认语句语义，减少例行证明步骤的显式编排。
+
+Litex 的原生集合对象模型也不同于 HOL 的有类型项和有类型集合。此外，[HOL 函数是全函数](https://www.isabelle.in.tum.de/library/Doc/Functions/Functions.html)：类型正确的应用总有一个值，即使尚未建立另行规定的定义域谓词 [HOLFunctions]。Litex 则在带条件调用的良定义性检查中要求定义域条件成立。这为“先建立数学前提，再允许使用表达式”的约定提供了原生支持。对受支持的事实，默认检查还减少了事实流和证明方法的显式编排。这些优势针对所选择的数学接口；Isabelle 的通用框架和可扩展证明基础设施服务于更广的用途。
 
 <a id="comparison-with-mizar"></a>
 
@@ -11081,6 +11143,12 @@ Litex 所探索的贡献，是小型概念接口、原生数学契约与上下�
 
 | 编号 | 一手文献 | 本文引用用途 |
 | --- | --- | --- |
+| [Deductive84] | Hervé Gallaire, Jack Minker, Jean-Marie Nicolas. *Logic and Databases: A Deductive Approach*. ACM Computing Surveys 16(2), pp. 153–185, 1984. | 事实、规则与派生查询结果；演绎数据库已有的研究背景。 |
+| [MetamathDB] | Metamath project. *Home Page and Mini FAQ*. official project description. | 证明数据库、多种数学基础及显式证明检查。 |
+| [SMTTheory] | SMT-LIB Initiative / Cesare Tinelli. *Reals_Ints*. SMT-LIB 2.7 theory declaration, updated 2024-07-21. | 通过预期解释规定数值与算术运算的含义。 |
+| [ATPProcess] | Geoff Sutcliffe / TPTP project. *The ATP Process*. TPTP World Tutorial. | 问题描述、自动寻找逻辑后果与证明检查的职责区分。 |
+| [IsabelleGeneric] | Isabelle project. *Overview*. official project description. | 交互证明、自动化、Isabelle/Pure 与多种对象逻辑。 |
+| [MMT] | Florian Rabe and Michael Kohlhase. *A Scalable Module System*. research paper. | 基础无关的数学知识表示及其语义契约。 |
 | [Compare06] | Freek Wiedijk (ed.). *The Seventeen Provers of the World*. LNCS 3600, 2006; author-hosted comparison manuscript. | 通过同一数学例子比较证明风格与表达；作为比较方法的历史参照。 |
 | [Lean21] | Leonardo de Moura and Sebastian Ullrich. *The Lean 4 Theorem Prover and Programming Language*. CADE 2021, LNCS 12699, pp. 625–635. | Lean 4 的系统架构，以及详化器、策略与元编程的可扩展性。 |
 | [LeanElab] | Lean project. *Lean Language Reference: Elaboration and Compilation*. official reference. | 源码到核心表示的处理路径，以及详化与检查的区别。 |
@@ -11100,6 +11168,12 @@ Litex 所探索的贡献，是小型概念接口、原生数学契约与上下�
 | [MizarApply] | Czesław Byliński / Mizar Mathematical Library. *Functions and Their Basic Properties: FUNCT_1:def 2*. library definition. | 普通 f.x 在定义域之外取值的精确定义。 |
 | [MizarGrammar] | Mizar project. *Mizar language: Justification*. official grammar. | 可省略的直接论证语法，避免声称每句都必须写 by。 |
 
+[Deductive84]: https://rg1-teaching.mpi-inf.mpg.de/old-ag2/logik-datenbanken/LogicAndDatabasesDeductiveApproach.pdf
+[MetamathDB]: https://us.metamath.org/
+[SMTTheory]: https://smt-lib.org/theories-Reals_Ints.shtml
+[ATPProcess]: https://tptp.org/UserDocs/TPTPWorldTutorial/ATPProcess.html
+[IsabelleGeneric]: https://www.isabelle.in.tum.de/overview.html
+[MMT]: https://www.kwarc.info/people/frabe/Research/mmt.pdf
 [Compare06]: https://www.cs.ru.nl/~freek/comparison/comparison.pdf
 [Lean21]: https://www.microsoft.com/en-us/research/publication/the-lean-4-theorem-prover-and-programming-language/
 [LeanElab]: https://lean-lang.org/doc/reference/latest/Elaboration-and-Compilation/

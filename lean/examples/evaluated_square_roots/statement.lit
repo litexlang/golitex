@@ -1,0 +1,5 @@
+# Exact square root evaluation.
+eval sqrt(4)
+sqrt(4) = 2
+eval sqrt(1)
+sqrt(1) = 1

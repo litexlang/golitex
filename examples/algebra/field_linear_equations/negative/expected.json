@@ -1,0 +1,12 @@
+{
+  "zero_linear_coefficient": "premise",
+  "zero_affine_coefficient": "premise",
+  "wrong_linear_solution": "premise",
+  "wrong_affine_solution": "premise",
+  "false_linear_value": "search_proof",
+  "false_affine_value": "search_proof",
+  "inverse_zero": "value_well_defined",
+  "wrong_carrier": "argument_type",
+  "wrong_arity": "call_shape",
+  "missing_nonzero_coefficient": "premise"
+}

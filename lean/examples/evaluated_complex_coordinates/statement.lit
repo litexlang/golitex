@@ -1,0 +1,5 @@
+# Evaluate exact real and imaginary coordinates of a complex number.
+eval re(3+4*i)
+re(3+4*i)=3
+eval img(3+4*i)
+img(3+4*i)=4

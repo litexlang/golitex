@@ -1,0 +1,4 @@
+thm identity_is_linear:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,X &Algebra::vector_space::VectorSpace<K,F,V>:
+        $Algebra::vector_space::is_linear_map(K,F,V,X,V,X,\Algebra::vector_space::identity<V>)
+    release thm Algebra::vector_space::identity_linear(K,F,V,X)

@@ -45,6 +45,11 @@ impl Runtime {
         if let Some(proof) = self.search_or_integer_successor_tail(fact, verify_state.clone())? {
             return Ok(Some(proof));
         }
+        if let Some(proof) =
+            self.search_or_integer_range_equality_cover(fact, verify_state.clone())?
+        {
+            return Ok(Some(proof));
+        }
         if fact.facts.len() == 2 {
             if let Some(proof) =
                 self.search_or_natural_zero_or_at_least_one(fact, verify_state.clone())?

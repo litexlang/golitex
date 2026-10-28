@@ -1,0 +1,8 @@
+# A defined cotangent is nonzero when its cosine numerator is nonzero.
+claim:
+    ? forall t R:
+        sin(t) != 0
+        cos(t) != 0
+        =>:
+            cot(t) != 0
+    cot(t) != 0

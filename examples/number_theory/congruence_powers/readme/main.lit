@@ -1,0 +1,6 @@
+thm consume_congruence_power:
+    ? forall a,b Z,m N+,n N:
+        $nt::main::is_congruent_mod(a,b,m)
+        =>:
+            $nt::main::is_congruent_mod(a^n,b^n,m)
+    release thm nt::main::congruence_power(a,b,m,n)

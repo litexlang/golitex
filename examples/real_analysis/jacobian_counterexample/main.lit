@@ -23,13 +23,7 @@
 # 1. Define the polynomial map F: R^3 -> R^3 whose two properties we will prove.
 have fn F(p cart_n(R,3)) cart_n(R,3) = ((1+p(1)*p(2))^3*p(3)+p(2)^2*(1+p(1)*p(2))*(4+3*p(1)*p(2)), p(2)+3*p(1)*(1+p(1)*p(2))^2*p(3)+3*p(1)*p(2)^2*(4+3*p(1)*p(2)), 2*p(1)-3*p(1)^2*p(2)-p(1)^3*p(3))
 
-# 2. A row index is 1, 2 or 3, so the next three row cases define a complete matrix.
-by enumerate finite_set:
-    ? forall row 1...3:
-        row=1 or row=2 or row=3
-    # For each enumerated row index, one of these three alternatives holds.
-    row=1 or row=2 or row=3
-
+# 2. Define the proposed derivative matrix; its three row cases cover 1...3.
 # Define the proposed derivative matrix J(p); the next nine claims justify its entries.
 template<p cart_n(R,3)>:
     # For each row and column, return the proposed coordinate derivative.

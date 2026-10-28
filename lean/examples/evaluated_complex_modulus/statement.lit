@@ -1,0 +1,3 @@
+# Evaluate an exact complex modulus.
+eval C_abs(3+4*i)
+C_abs(3+4*i)=5

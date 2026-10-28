@@ -1,0 +1,8 @@
+# A base above one and a positive argument below one have a nonzero logarithm.
+claim:
+    ? forall b R+, x R+:
+        1 < b
+        1 > x
+        =>:
+            0 != log(b,x)
+    0 != log(b,x)

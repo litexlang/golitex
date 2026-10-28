@@ -1,0 +1,76 @@
+thm consume_conjugation_identity:
+    ? forall A nonempty_set,G &Algebra::group::Group<A>,a A:
+        G.mul(G.mul(a,G.one),G.inv(a)) = G.one
+    release thm Algebra::group::conjugation_identity(A,G,a)
+
+thm consume_conjugation_product:
+    ? forall A nonempty_set,G &Algebra::group::Group<A>,a,x,y A:
+        G.mul(G.mul(a,G.mul(x,y)),G.inv(a)) = G.mul(G.mul(G.mul(a,x),G.inv(a)),G.mul(G.mul(a,y),G.inv(a)))
+    release thm Algebra::group::conjugation_product(A,G,a,x,y)
+
+thm consume_conjugation_inverse:
+    ? forall A nonempty_set,G &Algebra::group::Group<A>,a,x A:
+        G.mul(G.mul(a,G.inv(x)),G.inv(a)) = G.inv(G.mul(G.mul(a,x),G.inv(a)))
+    release thm Algebra::group::conjugation_inverse(A,G,a,x)
+
+thm consume_inverse_conjugation:
+    ? forall A nonempty_set,G &Algebra::group::Group<A>,a,x A:
+        G.mul(G.mul(G.inv(a),G.mul(G.mul(a,x),G.inv(a))),a) = x
+    release thm Algebra::group::inverse_conjugation(A,G,a,x)
+
+thm consume_conjugation_inverse_action:
+    ? forall A nonempty_set,G &Algebra::group::Group<A>,a,x A:
+        G.mul(G.mul(a,G.mul(G.mul(G.inv(a),x),a)),G.inv(a)) = x
+    release thm Algebra::group::conjugation_inverse_action(A,G,a,x)
+
+thm consume_conjugation_is_bijective:
+    ? forall A nonempty_set,G &Algebra::group::Group<A>,a A:
+        $bijective(A,A,fn(x A) A {G.mul(G.mul(a,x),G.inv(a))})
+    release thm Algebra::group::conjugation_is_bijective(A,G,a)
+
+thm consume_conjugation_formula_is_homomorphism:
+    ? forall A nonempty_set,G &Algebra::group::Group<A>,a A,f fn(x A) A:
+        forall x A:
+            f(x) = G.mul(G.mul(a,x),G.inv(a))
+        =>:
+            $Algebra::group::is_homomorphism(A,G,A,G,f)
+    release thm Algebra::group::conjugation_formula_is_homomorphism(A,G,a,f)
+
+thm consume_conjugation_is_homomorphism:
+    ? forall A nonempty_set,G &Algebra::group::Group<A>,a A:
+        $Algebra::group::is_homomorphism(A,G,A,G,fn(x A) A {G.mul(G.mul(a,x),G.inv(a))})
+    release thm Algebra::group::conjugation_is_homomorphism(A,G,a)
+
+thm consume_commuting_elements_fixed_by_conjugation:
+    ? forall A nonempty_set,G &Algebra::group::Group<A>,a,x A:
+        G.mul(a,x) = G.mul(x,a)
+        =>:
+            G.mul(G.mul(a,x),G.inv(a)) = x
+    release thm Algebra::group::commuting_elements_fixed_by_conjugation(A,G,a,x)
+
+thm consume_conjugation_fixed_implies_commute:
+    ? forall A nonempty_set,G &Algebra::group::Group<A>,a,x A:
+        G.mul(G.mul(a,x),G.inv(a)) = x
+        =>:
+            G.mul(a,x) = G.mul(x,a)
+    release thm Algebra::group::conjugation_fixed_implies_commute(A,G,a,x)
+
+thm consume_abelian_conjugation_fixed:
+    ? forall A nonempty_set,G &Algebra::group::Group<A>,a,x A:
+        $Algebra::group::is_abelian(A,G)
+        =>:
+            G.mul(G.mul(a,x),G.inv(a)) = x
+    release thm Algebra::group::abelian_conjugation_fixed(A,G,a,x)
+
+thm consume_fixed_conjugation_implies_abelian:
+    ? forall A nonempty_set,G &Algebra::group::Group<A>:
+        forall a,x A:
+            G.mul(G.mul(a,x),G.inv(a)) = x
+        =>:
+            $Algebra::group::is_abelian(A,G)
+    release thm Algebra::group::fixed_conjugation_implies_abelian(A,G)
+
+thm missing_abelian:
+    ? forall A nonempty_set,G &Algebra::group::Group<A>,a,x A:
+        G.mul(G.mul(a,x),G.inv(a)) = x
+    release thm Algebra::group::abelian_conjugation_fixed(A,G,a,x)

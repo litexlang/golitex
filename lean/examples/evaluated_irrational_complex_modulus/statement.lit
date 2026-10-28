@@ -1,0 +1,3 @@
+# Evaluate a complex modulus exactly as an irrational square root.
+eval C_abs(1+i)
+C_abs(1+i) = sqrt(2)

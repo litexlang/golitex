@@ -1155,3 +1155,12 @@ keeps `(2^3)^2` distinct from `2^(3^2)` in identity and equality-class keys.
 `tests/structural_ir_tuple.rs` rejects the direct false equality and the
 false `64=512` conclusion after storing both true power equalities; it also
 checks predicate, order and forall-equality consumers.
+
+[Closed integer equality covers](or/by_builtin_rule/closed_integer_range_equality_cover.lit)
+and [half-open covers](or/by_builtin_rule/half_open_integer_range_equality_cover.lit)
+consume known range membership, including signed endpoints and reordered branches.
+[Homogeneous Cartesian equality](equal/by_builtin_rule/homogeneous_cartesian_finite_sequence.lit)
+checks the flat factor count and every carrier match; dedicated
+[subset](atomic/by_builtin_rule/homogeneous_cartesian_sequence_subset.lit) and
+[membership](atomic/by_builtin_rule/homogeneous_cartesian_sequence_membership.lit)
+tracers consume that same certificate. Nested products and wrong dimensions remain distinct.

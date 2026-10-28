@@ -1,0 +1,7 @@
+# Absolute value of a nonzero real is nonzero, reversed.
+claim:
+    ? forall x R:
+        x != 0
+        =>:
+            0 != |x|
+    0 != |x|

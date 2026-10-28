@@ -1,0 +1,4 @@
+# Evaluate the square root of a formula function.
+have fn sqrt_eval_square(x R) R = x*x
+eval sqrt(sqrt_eval_square(3))
+sqrt(sqrt_eval_square(3))=3

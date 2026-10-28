@@ -1,0 +1,9 @@
+# Before: this direct partial failed because Cartesian and finite-sequence carriers were not connected.
+# forall p cart(R,R,R):
+#     $has_partial_derivative_at(fn(q cart(R,R,R)) R {q(1)},p,3,1,1)
+# Now: checked constructor equality supplies subset, membership and full-space evidence.
+# Boundary: actual function guards, point domains and positive dimensions are still required.
+# Run: target/release/litex -strict -f examples/wd/homogeneous_cartesian_multivariable_carrier.lit
+
+forall p cart(R,R,R):
+    $has_partial_derivative_at(fn(q cart(R,R,R)) R {q(1)},p,3,1,1)

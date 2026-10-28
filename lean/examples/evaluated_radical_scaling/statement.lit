@@ -1,0 +1,2 @@
+# Simplify a rational multiple of a square root.
+eval 2*sqrt(12)

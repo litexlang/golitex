@@ -35,3 +35,23 @@ pub(crate) fn native_matrix_rule(
         message: format!("{prefix}: {law}"),
     }
 }
+
+pub(crate) fn integer_range_cover_rule(
+    rule: &str,
+    language: crate::launch_command::OutputLanguage,
+) -> BuiltinRuleText {
+    use crate::launch_command::OutputLanguage::*;
+    let message = match language {
+        English => "The equality alternatives cover every integer in the known member's interval.",
+        Chinese => "等号分支覆盖了已知成员所在整数区间的每个值。",
+        ChineseTraditional => "等號分支覆蓋了已知成員所在整數區間的每個值。",
+        French => "Les égalités couvrent tous les entiers de l’intervalle du membre connu.",
+        Russian => "Варианты равенства покрывают все целые числа интервала известного элемента.",
+        Spanish => "Las igualdades cubren cada entero del intervalo del miembro conocido.",
+        Arabic => "تغطي بدائل المساواة جميع الأعداد الصحيحة في فترة العنصر المعروف.",
+        Japanese => "等号の選択肢は既知の要素が属する整数区間の全ての値を覆います。",
+        Korean => "등식 선택지가 알려진 원소의 정수 구간에 있는 모든 값을 포함합니다.",
+        Vietnamese => "Các nhánh đẳng thức bao phủ mọi số nguyên trong khoảng của phần tử đã biết.",
+    };
+    text(rule, message)
+}

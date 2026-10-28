@@ -1,0 +1,4 @@
+# Evaluate a negative integer power after citing its exponent.
+have power_eval_m Z = -3
+eval 2^power_eval_m
+2^power_eval_m = 1/8

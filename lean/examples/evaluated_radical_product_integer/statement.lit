@@ -1,0 +1,2 @@
+# Evaluate a product of roots to an integer.
+eval sqrt(12)*sqrt(27)

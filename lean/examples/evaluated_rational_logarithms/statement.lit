@@ -1,0 +1,11 @@
+# Evaluate exact rational logarithms with integer, fractional and negative values.
+eval log(4,2)
+log(4,2)=1/2
+eval log(2,1)
+log(2,1)=0
+eval log(2,2)
+log(2,2)=1
+eval log(1/3,27)
+log(1/3,27)=-3
+eval log(16/9,4/3)
+log(16/9,4/3)=1/2

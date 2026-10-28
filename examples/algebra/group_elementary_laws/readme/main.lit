@@ -1,0 +1,7 @@
+thm consume_right_identity_unique:
+    ? forall A nonempty_set,G &Algebra::group::Group<A>,identity_candidate A:
+        forall x A:
+            G.mul(x,identity_candidate)=x
+        =>:
+            identity_candidate=G.one
+    release thm Algebra::group::right_identity_unique(A,G,identity_candidate)

@@ -1,0 +1,4 @@
+# Evaluate a square root from a previously established real value.
+have sqrt_eval_a R = 9
+eval sqrt(sqrt_eval_a)
+sqrt(sqrt_eval_a)=3

@@ -1,0 +1,7 @@
+# Zero minus one summand differs from the other when their sum is nonzero.
+claim:
+    ? forall a C, b C:
+        a+b != 0
+        =>:
+            0-b != a
+    0-b != a

@@ -1,0 +1,12 @@
+{
+  "cancel_zero": "premise",
+  "right_cancel_zero": "premise",
+  "zero_product_missing_nonzero": "premise",
+  "nonzero_product_zero": "premise",
+  "inverse_at_zero": "value_well_defined",
+  "false_zero_product": "search_proof",
+  "false_nonzero_product": "search_proof",
+  "wrong_carrier": "argument_type",
+  "wrong_arity": "call_shape",
+  "missing_nonzero_guard": "premise"
+}

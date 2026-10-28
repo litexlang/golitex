@@ -1,0 +1,7 @@
+# A nonzero product gives its right factor in reverse orientation.
+claim:
+    ? forall a C, b C:
+        0 != a*b
+        =>:
+            0 != b
+    0 != b

@@ -1,0 +1,29 @@
+thm contract_field_linear_equation_unique:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,a,b K:
+        a!=F.zero
+        =>:
+            exist! x K st {F.mul(a,x)=b}
+    release thm Algebra::field::field_linear_equation_unique(K,F,a,b)
+
+thm contract_field_linear_equation_solution:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,a,b,x K:
+        a!=F.zero
+        F.mul(a,x)=b
+        =>:
+            x=F.mul(F.inv(a),b)
+    release thm Algebra::field::field_linear_equation_solution(K,F,a,b,x)
+
+thm contract_field_affine_equation_unique:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,a,b,c K:
+        a!=F.zero
+        =>:
+            exist! x K st {F.add(F.mul(a,x),b)=c}
+    release thm Algebra::field::field_affine_equation_unique(K,F,a,b,c)
+
+thm contract_field_affine_equation_solution:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,a,b,c,x K:
+        a!=F.zero
+        F.add(F.mul(a,x),b)=c
+        =>:
+            x=F.mul(F.inv(a),F.add(c,F.neg(b)))
+    release thm Algebra::field::field_affine_equation_solution(K,F,a,b,c,x)

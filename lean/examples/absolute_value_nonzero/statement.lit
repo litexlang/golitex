@@ -1,0 +1,7 @@
+# A nonzero real number has nonzero absolute value.
+claim:
+    ? forall x R:
+        x != 0
+        =>:
+            |x| != 0
+    |x| != 0

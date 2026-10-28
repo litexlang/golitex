@@ -1,0 +1,56 @@
+thm contract_mul_zero:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,a K:
+        F.mul(a,F.zero)=F.zero
+    release thm Algebra::field::mul_zero(K,F,a)
+
+thm contract_zero_mul:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,a K:
+        F.mul(F.zero,a)=F.zero
+    release thm Algebra::field::zero_mul(K,F,a)
+
+thm contract_mul_left_cancel_nonzero:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,a,b,c K:
+        a!=F.zero
+        F.mul(a,b)=F.mul(a,c)
+        =>:
+            b=c
+    release thm Algebra::field::mul_left_cancel_nonzero(K,F,a,b,c)
+
+thm contract_mul_eq_zero_nonzero_left:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,a,b K:
+        a!=F.zero
+        F.mul(a,b)=F.zero
+        =>:
+            b=F.zero
+    release thm Algebra::field::mul_eq_zero_nonzero_left(K,F,a,b)
+
+thm contract_mul_right_cancel_nonzero:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,a,b,c K:
+        a!=F.zero
+        F.mul(b,a)=F.mul(c,a)
+        =>:
+            b=c
+    release thm Algebra::field::mul_right_cancel_nonzero(K,F,a,b,c)
+
+thm contract_mul_eq_zero_nonzero_right:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,a,b K:
+        b!=F.zero
+        F.mul(a,b)=F.zero
+        =>:
+            a=F.zero
+    release thm Algebra::field::mul_eq_zero_nonzero_right(K,F,a,b)
+
+thm contract_nonzero_product:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,a,b K:
+        a!=F.zero
+        b!=F.zero
+        =>:
+            F.mul(a,b)!=F.zero
+    release thm Algebra::field::nonzero_product(K,F,a,b)
+
+thm missing_nonzero_guard:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,a,b,c K:
+        F.mul(a,b)=F.mul(a,c)
+        =>:
+            b=c
+    release thm Algebra::field::mul_left_cancel_nonzero(K,F,a,b,c)

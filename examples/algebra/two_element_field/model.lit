@@ -1,0 +1,489 @@
+have fn two_add(x,y {0,1}) {0,1} by cases:
+    case x=y: 0
+    case x!=y: 1
+
+have fn two_mul(x,y {0,1}) {0,1} by cases:
+    case x*y=1: 1
+    case x*y!=1: 0
+
+have fn two_neg(x {0,1}) {0,1} = x
+
+have fn two_inv(x {0,1}: x!=0) {0,1} = x
+
+two_add(0,0)=0
+
+two_add(0,1)=1
+
+two_add(1,0)=1
+
+two_add(1,1)=0
+
+two_mul(0,0)=0
+
+two_mul(0,1)=0
+
+two_mul(1,0)=0
+
+two_mul(1,1)=1
+
+two_neg(0)=0
+
+two_neg(1)=1
+
+two_inv(1)=1
+
+claim:
+    ? forall x,y,z {0,1}:
+        two_add(two_add(x,y),z)=two_add(x,two_add(y,z))
+    by cases:
+        ? two_add(two_add(x,y),z)=two_add(x,two_add(y,z))
+        case x=0:
+            by cases:
+                ? two_add(two_add(x,y),z)=two_add(x,two_add(y,z))
+                case y=0:
+                    by cases:
+                        ? two_add(two_add(x,y),z)=two_add(x,two_add(y,z))
+                        case z=0:
+                            two_add(x,y)=two_add(0,0)=0
+                            two_add(y,z)=two_add(0,0)=0
+                            two_add(two_add(x,y),z)=two_add(0,0)=0
+                            two_add(x,two_add(y,z))=two_add(0,0)=0
+                            two_add(two_add(x,y),z)=two_add(x,two_add(y,z))
+                        case z=1:
+                            two_add(x,y)=two_add(0,0)=0
+                            two_add(y,z)=two_add(0,1)=1
+                            two_add(two_add(x,y),z)=two_add(0,1)=1
+                            two_add(x,two_add(y,z))=two_add(0,1)=1
+                            two_add(two_add(x,y),z)=two_add(x,two_add(y,z))
+                case y=1:
+                    by cases:
+                        ? two_add(two_add(x,y),z)=two_add(x,two_add(y,z))
+                        case z=0:
+                            two_add(x,y)=two_add(0,1)=1
+                            two_add(y,z)=two_add(1,0)=1
+                            two_add(two_add(x,y),z)=two_add(1,0)=1
+                            two_add(x,two_add(y,z))=two_add(0,1)=1
+                            two_add(two_add(x,y),z)=two_add(x,two_add(y,z))
+                        case z=1:
+                            two_add(x,y)=two_add(0,1)=1
+                            two_add(y,z)=two_add(1,1)=0
+                            two_add(two_add(x,y),z)=two_add(1,1)=0
+                            two_add(x,two_add(y,z))=two_add(0,0)=0
+                            two_add(two_add(x,y),z)=two_add(x,two_add(y,z))
+        case x=1:
+            by cases:
+                ? two_add(two_add(x,y),z)=two_add(x,two_add(y,z))
+                case y=0:
+                    by cases:
+                        ? two_add(two_add(x,y),z)=two_add(x,two_add(y,z))
+                        case z=0:
+                            two_add(x,y)=two_add(1,0)=1
+                            two_add(y,z)=two_add(0,0)=0
+                            two_add(two_add(x,y),z)=two_add(1,0)=1
+                            two_add(x,two_add(y,z))=two_add(1,0)=1
+                            two_add(two_add(x,y),z)=two_add(x,two_add(y,z))
+                        case z=1:
+                            two_add(x,y)=two_add(1,0)=1
+                            two_add(y,z)=two_add(0,1)=1
+                            two_add(two_add(x,y),z)=two_add(1,1)=0
+                            two_add(x,two_add(y,z))=two_add(1,1)=0
+                            two_add(two_add(x,y),z)=two_add(x,two_add(y,z))
+                case y=1:
+                    by cases:
+                        ? two_add(two_add(x,y),z)=two_add(x,two_add(y,z))
+                        case z=0:
+                            two_add(x,y)=two_add(1,1)=0
+                            two_add(y,z)=two_add(1,0)=1
+                            two_add(two_add(x,y),z)=two_add(0,0)=0
+                            two_add(x,two_add(y,z))=two_add(1,1)=0
+                            two_add(two_add(x,y),z)=two_add(x,two_add(y,z))
+                        case z=1:
+                            two_add(x,y)=two_add(1,1)=0
+                            two_add(y,z)=two_add(1,1)=0
+                            two_add(two_add(x,y),z)=two_add(0,1)=1
+                            two_add(x,two_add(y,z))=two_add(1,0)=1
+                            two_add(two_add(x,y),z)=two_add(x,two_add(y,z))
+
+claim:
+    ? forall x,y,z {0,1}:
+        two_mul(two_mul(x,y),z)=two_mul(x,two_mul(y,z))
+    by cases:
+        ? two_mul(two_mul(x,y),z)=two_mul(x,two_mul(y,z))
+        case x=0:
+            by cases:
+                ? two_mul(two_mul(x,y),z)=two_mul(x,two_mul(y,z))
+                case y=0:
+                    by cases:
+                        ? two_mul(two_mul(x,y),z)=two_mul(x,two_mul(y,z))
+                        case z=0:
+                            two_mul(x,y)=two_mul(0,0)=0
+                            two_mul(y,z)=two_mul(0,0)=0
+                            two_mul(two_mul(x,y),z)=two_mul(0,0)=0
+                            two_mul(x,two_mul(y,z))=two_mul(0,0)=0
+                            two_mul(two_mul(x,y),z)=two_mul(x,two_mul(y,z))
+                        case z=1:
+                            two_mul(x,y)=two_mul(0,0)=0
+                            two_mul(y,z)=two_mul(0,1)=0
+                            two_mul(two_mul(x,y),z)=two_mul(0,1)=0
+                            two_mul(x,two_mul(y,z))=two_mul(0,0)=0
+                            two_mul(two_mul(x,y),z)=two_mul(x,two_mul(y,z))
+                case y=1:
+                    by cases:
+                        ? two_mul(two_mul(x,y),z)=two_mul(x,two_mul(y,z))
+                        case z=0:
+                            two_mul(x,y)=two_mul(0,1)=0
+                            two_mul(y,z)=two_mul(1,0)=0
+                            two_mul(two_mul(x,y),z)=two_mul(0,0)=0
+                            two_mul(x,two_mul(y,z))=two_mul(0,0)=0
+                            two_mul(two_mul(x,y),z)=two_mul(x,two_mul(y,z))
+                        case z=1:
+                            two_mul(x,y)=two_mul(0,1)=0
+                            two_mul(y,z)=two_mul(1,1)=1
+                            two_mul(two_mul(x,y),z)=two_mul(0,1)=0
+                            two_mul(x,two_mul(y,z))=two_mul(0,1)=0
+                            two_mul(two_mul(x,y),z)=two_mul(x,two_mul(y,z))
+        case x=1:
+            by cases:
+                ? two_mul(two_mul(x,y),z)=two_mul(x,two_mul(y,z))
+                case y=0:
+                    by cases:
+                        ? two_mul(two_mul(x,y),z)=two_mul(x,two_mul(y,z))
+                        case z=0:
+                            two_mul(x,y)=two_mul(1,0)=0
+                            two_mul(y,z)=two_mul(0,0)=0
+                            two_mul(two_mul(x,y),z)=two_mul(0,0)=0
+                            two_mul(x,two_mul(y,z))=two_mul(1,0)=0
+                            two_mul(two_mul(x,y),z)=two_mul(x,two_mul(y,z))
+                        case z=1:
+                            two_mul(x,y)=two_mul(1,0)=0
+                            two_mul(y,z)=two_mul(0,1)=0
+                            two_mul(two_mul(x,y),z)=two_mul(0,1)=0
+                            two_mul(x,two_mul(y,z))=two_mul(1,0)=0
+                            two_mul(two_mul(x,y),z)=two_mul(x,two_mul(y,z))
+                case y=1:
+                    by cases:
+                        ? two_mul(two_mul(x,y),z)=two_mul(x,two_mul(y,z))
+                        case z=0:
+                            two_mul(x,y)=two_mul(1,1)=1
+                            two_mul(y,z)=two_mul(1,0)=0
+                            two_mul(two_mul(x,y),z)=two_mul(1,0)=0
+                            two_mul(x,two_mul(y,z))=two_mul(1,0)=0
+                            two_mul(two_mul(x,y),z)=two_mul(x,two_mul(y,z))
+                        case z=1:
+                            two_mul(x,y)=two_mul(1,1)=1
+                            two_mul(y,z)=two_mul(1,1)=1
+                            two_mul(two_mul(x,y),z)=two_mul(1,1)=1
+                            two_mul(x,two_mul(y,z))=two_mul(1,1)=1
+                            two_mul(two_mul(x,y),z)=two_mul(x,two_mul(y,z))
+
+claim:
+    ? forall x,y,z {0,1}:
+        two_mul(x,two_add(y,z))=two_add(two_mul(x,y),two_mul(x,z))
+    by cases:
+        ? two_mul(x,two_add(y,z))=two_add(two_mul(x,y),two_mul(x,z))
+        case x=0:
+            by cases:
+                ? two_mul(x,two_add(y,z))=two_add(two_mul(x,y),two_mul(x,z))
+                case y=0:
+                    by cases:
+                        ? two_mul(x,two_add(y,z))=two_add(two_mul(x,y),two_mul(x,z))
+                        case z=0:
+                            two_add(y,z)=two_add(0,0)=0
+                            two_mul(x,y)=two_mul(0,0)=0
+                            two_mul(x,z)=two_mul(0,0)=0
+                            two_mul(x,two_add(y,z))=two_mul(0,0)=0
+                            two_add(two_mul(x,y),two_mul(x,z))=two_add(0,0)=0
+                            two_mul(x,two_add(y,z))=two_add(two_mul(x,y),two_mul(x,z))
+                        case z=1:
+                            two_add(y,z)=two_add(0,1)=1
+                            two_mul(x,y)=two_mul(0,0)=0
+                            two_mul(x,z)=two_mul(0,1)=0
+                            two_mul(x,two_add(y,z))=two_mul(0,1)=0
+                            two_add(two_mul(x,y),two_mul(x,z))=two_add(0,0)=0
+                            two_mul(x,two_add(y,z))=two_add(two_mul(x,y),two_mul(x,z))
+                case y=1:
+                    by cases:
+                        ? two_mul(x,two_add(y,z))=two_add(two_mul(x,y),two_mul(x,z))
+                        case z=0:
+                            two_add(y,z)=two_add(1,0)=1
+                            two_mul(x,y)=two_mul(0,1)=0
+                            two_mul(x,z)=two_mul(0,0)=0
+                            two_mul(x,two_add(y,z))=two_mul(0,1)=0
+                            two_add(two_mul(x,y),two_mul(x,z))=two_add(0,0)=0
+                            two_mul(x,two_add(y,z))=two_add(two_mul(x,y),two_mul(x,z))
+                        case z=1:
+                            two_add(y,z)=two_add(1,1)=0
+                            two_mul(x,y)=two_mul(0,1)=0
+                            two_mul(x,z)=two_mul(0,1)=0
+                            two_mul(x,two_add(y,z))=two_mul(0,0)=0
+                            two_add(two_mul(x,y),two_mul(x,z))=two_add(0,0)=0
+                            two_mul(x,two_add(y,z))=two_add(two_mul(x,y),two_mul(x,z))
+        case x=1:
+            by cases:
+                ? two_mul(x,two_add(y,z))=two_add(two_mul(x,y),two_mul(x,z))
+                case y=0:
+                    by cases:
+                        ? two_mul(x,two_add(y,z))=two_add(two_mul(x,y),two_mul(x,z))
+                        case z=0:
+                            two_add(y,z)=two_add(0,0)=0
+                            two_mul(x,y)=two_mul(1,0)=0
+                            two_mul(x,z)=two_mul(1,0)=0
+                            two_mul(x,two_add(y,z))=two_mul(1,0)=0
+                            two_add(two_mul(x,y),two_mul(x,z))=two_add(0,0)=0
+                            two_mul(x,two_add(y,z))=two_add(two_mul(x,y),two_mul(x,z))
+                        case z=1:
+                            two_add(y,z)=two_add(0,1)=1
+                            two_mul(x,y)=two_mul(1,0)=0
+                            two_mul(x,z)=two_mul(1,1)=1
+                            two_mul(x,two_add(y,z))=two_mul(1,1)=1
+                            two_add(two_mul(x,y),two_mul(x,z))=two_add(0,1)=1
+                            two_mul(x,two_add(y,z))=two_add(two_mul(x,y),two_mul(x,z))
+                case y=1:
+                    by cases:
+                        ? two_mul(x,two_add(y,z))=two_add(two_mul(x,y),two_mul(x,z))
+                        case z=0:
+                            two_add(y,z)=two_add(1,0)=1
+                            two_mul(x,y)=two_mul(1,1)=1
+                            two_mul(x,z)=two_mul(1,0)=0
+                            two_mul(x,two_add(y,z))=two_mul(1,1)=1
+                            two_add(two_mul(x,y),two_mul(x,z))=two_add(1,0)=1
+                            two_mul(x,two_add(y,z))=two_add(two_mul(x,y),two_mul(x,z))
+                        case z=1:
+                            two_add(y,z)=two_add(1,1)=0
+                            two_mul(x,y)=two_mul(1,1)=1
+                            two_mul(x,z)=two_mul(1,1)=1
+                            two_mul(x,two_add(y,z))=two_mul(1,0)=0
+                            two_add(two_mul(x,y),two_mul(x,z))=two_add(1,1)=0
+                            two_mul(x,two_add(y,z))=two_add(two_mul(x,y),two_mul(x,z))
+
+claim:
+    ? forall x,y {0,1}:
+        two_add(x,y)=two_add(y,x)
+    by cases:
+        ? two_add(x,y)=two_add(y,x)
+        case x=0:
+            by cases:
+                ? two_add(x,y)=two_add(y,x)
+                case y=0:
+                    two_add(x,y)=two_add(0,0)=0
+                    two_add(y,x)=two_add(0,0)=0
+                    two_add(x,y)=two_add(y,x)
+                case y=1:
+                    two_add(x,y)=two_add(0,1)=1
+                    two_add(y,x)=two_add(1,0)=1
+                    two_add(x,y)=two_add(y,x)
+        case x=1:
+            by cases:
+                ? two_add(x,y)=two_add(y,x)
+                case y=0:
+                    two_add(x,y)=two_add(1,0)=1
+                    two_add(y,x)=two_add(0,1)=1
+                    two_add(x,y)=two_add(y,x)
+                case y=1:
+                    two_add(x,y)=two_add(1,1)=0
+                    two_add(y,x)=two_add(1,1)=0
+                    two_add(x,y)=two_add(y,x)
+
+claim:
+    ? forall x,y {0,1}:
+        two_mul(x,y)=two_mul(y,x)
+    by cases:
+        ? two_mul(x,y)=two_mul(y,x)
+        case x=0:
+            by cases:
+                ? two_mul(x,y)=two_mul(y,x)
+                case y=0:
+                    two_mul(x,y)=two_mul(0,0)=0
+                    two_mul(y,x)=two_mul(0,0)=0
+                    two_mul(x,y)=two_mul(y,x)
+                case y=1:
+                    two_mul(x,y)=two_mul(0,1)=0
+                    two_mul(y,x)=two_mul(1,0)=0
+                    two_mul(x,y)=two_mul(y,x)
+        case x=1:
+            by cases:
+                ? two_mul(x,y)=two_mul(y,x)
+                case y=0:
+                    two_mul(x,y)=two_mul(1,0)=0
+                    two_mul(y,x)=two_mul(0,1)=0
+                    two_mul(x,y)=two_mul(y,x)
+                case y=1:
+                    two_mul(x,y)=two_mul(1,1)=1
+                    two_mul(y,x)=two_mul(1,1)=1
+                    two_mul(x,y)=two_mul(y,x)
+
+claim:
+    ? forall x {0,1}:
+        two_add(0,x)=x
+    by cases:
+        ? two_add(0,x)=x
+        case x=0:
+            two_add(0,x)=two_add(0,0)=0
+            two_add(0,x)=x
+        case x=1:
+            two_add(0,x)=two_add(0,1)=1
+            two_add(0,x)=x
+
+claim:
+    ? forall x {0,1}:
+        two_add(x,two_neg(x))=0
+    by cases:
+        ? two_add(x,two_neg(x))=0
+        case x=0:
+            two_neg(x)=two_neg(0)=0
+            two_add(x,two_neg(x))=two_add(0,0)=0
+            two_add(x,two_neg(x))=0
+        case x=1:
+            two_neg(x)=two_neg(1)=1
+            two_add(x,two_neg(x))=two_add(1,1)=0
+            two_add(x,two_neg(x))=0
+
+claim:
+    ? forall x {0,1}:
+        two_mul(1,x)=x
+    by cases:
+        ? two_mul(1,x)=x
+        case x=0:
+            two_mul(1,x)=two_mul(1,0)=0
+            two_mul(1,x)=x
+        case x=1:
+            two_mul(1,x)=two_mul(1,1)=1
+            two_mul(1,x)=x
+
+claim:
+    ? forall x {0,1}:
+        x!=0
+        =>:
+            two_mul(x,two_inv(x))=1
+    by cases:
+        ? two_mul(x,two_inv(x))=1
+        case x=0:
+            impossible x=0
+        case x=1:
+            two_inv(x)=two_inv(1)=1
+            two_mul(x,two_inv(x))=two_mul(1,1)=1
+
+{0,1}!={}
+
+0 $in {0,1}
+
+1 $in {0,1}
+
+0!=1
+
+two_add $in fn(x,y {0,1}) {0,1}
+
+two_mul $in fn(x,y {0,1}) {0,1}
+
+two_neg $in fn(x {0,1}) {0,1}
+
+two_inv $in fn(x {0,1}: x!=0) {0,1}
+
+claim:
+    ? forall x,y,z {0,1}:
+        two_add(two_add(x,y),z)=two_add(x,two_add(y,z))
+        two_mul(two_mul(x,y),z)=two_mul(x,two_mul(y,z))
+        two_mul(x,two_add(y,z))=two_add(two_mul(x,y),two_mul(x,z))
+    two_add(two_add(x,y),z)=two_add(x,two_add(y,z))
+    two_mul(two_mul(x,y),z)=two_mul(x,two_mul(y,z))
+    two_mul(x,two_add(y,z))=two_add(two_mul(x,y),two_mul(x,z))
+
+claim:
+    ? forall x,y {0,1}:
+        two_add(x,y)=two_add(y,x)
+        two_mul(x,y)=two_mul(y,x)
+    two_add(x,y)=two_add(y,x)
+    two_mul(x,y)=two_mul(y,x)
+
+claim:
+    ? forall x {0,1}:
+        two_add(0,x)=x
+        two_add(x,two_neg(x))=0
+        two_mul(1,x)=x
+    two_add(0,x)=x
+    two_add(x,two_neg(x))=0
+    two_mul(1,x)=x
+
+release thm struct_member((0,1,two_add,two_neg,two_mul,two_inv),&Algebra::field::Field<{0,1}>)
+
+have two_field &Algebra::field::Field<{0,1}> = (0,1,two_add,two_neg,two_mul,two_inv)
+
+two_field.zero=0
+
+two_field.one=1
+
+two_field.add=two_add
+
+two_field.mul=two_mul
+
+two_field.neg=two_neg
+
+two_field.inv=two_inv
+
+1!=two_field.zero
+
+two_field.add(1,1)=two_add(1,1)=0=two_field.zero
+
+two_field.neg(1)=two_neg(1)=1
+
+two_field.mul(1,1)=two_mul(1,1)=1=two_field.one
+
+two_field.inv(1)=two_inv(1)=1
+
+release thm Algebra::field::mul_zero({0,1},two_field,1)
+
+release thm Algebra::field::neg_involution({0,1},two_field,1)
+
+release thm Algebra::field::nonzero_product({0,1},two_field,1,1)
+
+release thm Algebra::field::field_inverse_involution({0,1},two_field,1)
+
+release thm Algebra::field::field_inverse_product({0,1},two_field,1,1)
+
+release thm Algebra::field::neg_mul_neg({0,1},two_field,1,1)
+
+release thm Algebra::field::add_mul({0,1},two_field,1,1,1)
+
+release thm Algebra::field::difference_zero_implies_equal({0,1},two_field,1,1)
+
+release thm Algebra::field::field_linear_equation_unique({0,1},two_field,1,1)
+
+release thm Algebra::field::field_linear_equation_solution({0,1},two_field,1,1,1)
+
+release thm Algebra::field::field_affine_equation_unique({0,1},two_field,1,1,0)
+
+claim:
+    ? two_field.add(two_field.mul(1,1),1)=0
+    two_field.mul(1,1)=1
+    two_field.add(1,1)=0
+    two_field.add(two_field.mul(1,1),1)=two_field.add(1,1)=0
+
+release thm Algebra::field::field_affine_equation_solution({0,1},two_field,1,1,0,1)
+
+release thm Algebra::field::field_zero_linear_two_solutions({0,1},two_field)
+
+release thm Algebra::field::field_zero_linear_no_solution({0,1},two_field,1,0)
+
+release thm Algebra::field::field_zero_affine_two_solutions({0,1},two_field,1)
+
+release thm Algebra::field::field_zero_affine_no_solution({0,1},two_field,0,1,0)
+
+thm two_field_is_field:
+    ? two_field $in &Algebra::field::Field<{0,1}>
+    two_field $in &Algebra::field::Field<{0,1}>
+
+thm two_field_zero:
+    ? two_field.zero=0
+    two_field.zero=0
+
+thm two_field_one:
+    ? two_field.one=1
+    two_field.one=1
+
+thm two_field_one_plus_one_zero:
+    ? two_field.add(1,1)=two_field.zero
+    two_field.add(1,1)=two_field.zero
+
+thm two_field_inverse_one:
+    ? two_field.inv(1)=1
+    two_field.inv(1)=1

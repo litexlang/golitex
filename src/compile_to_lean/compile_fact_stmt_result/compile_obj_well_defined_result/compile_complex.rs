@@ -101,7 +101,7 @@ impl LitexToLeanCompiler {
                 let real = exact_rational_literal(&value, "ℝ")?;
                 format!("have _norm : ‖({})‖ = {real} := (by rw [Complex.norm_def]; exact (Real.sqrt_eq_iff_eq_sq (Complex.normSq_nonneg _) (by norm_num)).mpr (by norm_num [Complex.normSq])); exact (congrArg (fun r : ℝ => (r : ℂ)) _norm).trans (by norm_num)",child.0)
             } else {
-                "norm_num".to_string()
+                "norm_num [Complex.div_re, Complex.div_im, Complex.normSq]".to_string()
             };
             let checked = format!(
                 "(({denote}).trans (congrArg M.number (by {calculation} : {native} = {literal})))"

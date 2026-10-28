@@ -1,0 +1,7 @@
+# Zero is distinct from the modulus of a nonzero complex number.
+claim:
+    ? forall z C:
+        z != 0
+        =>:
+            0 != C_abs(z)
+    0 != C_abs(z)

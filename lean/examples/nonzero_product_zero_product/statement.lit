@@ -1,0 +1,7 @@
+# A zero product on the left is distinct from a nonzero product.
+claim:
+    ? forall a C, b C:
+        0*1 != a*b
+        =>:
+            0*1 != b
+    0*1 != b

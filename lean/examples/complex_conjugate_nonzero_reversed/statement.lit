@@ -1,0 +1,7 @@
+# Zero is distinct from the conjugate of a nonzero complex number.
+claim:
+    ? forall z C:
+        z != 0
+        =>:
+            0 != conj(z)
+    0 != conj(z)

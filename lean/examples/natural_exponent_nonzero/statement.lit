@@ -1,0 +1,5 @@
+# Nonzero powers for natural and positive-natural exponents.
+have power_nat_n N
+2^power_nat_n != 0
+have power_nat_p N+
+0 != 2^power_nat_p

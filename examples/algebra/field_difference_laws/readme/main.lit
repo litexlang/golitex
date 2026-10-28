@@ -1,0 +1,4 @@
+thm product_of_difference:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,a,b,c K:
+        F.mul(a,F.add(b,F.neg(c)))=F.add(F.mul(a,b),F.neg(F.mul(a,c)))
+    release thm Algebra::field::mul_difference(K,F,a,b,c)

@@ -11,6 +11,11 @@ impl Runtime {
         fact: &EqualFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<EqualitySearchProofByBuiltinRule>> {
+        if let Some(proof) = self.search_homogeneous_cartesian_equality(fact) {
+            return Ok(Some(
+                EqualitySearchProofByBuiltinRule::HomogeneousCartesianEqualsFiniteSequence(proof),
+            ));
+        }
         if let Some(proof) = self.search_real_bound_equality(fact) {
             return Ok(Some(EqualitySearchProofByBuiltinRule::RealBounds(proof)));
         }

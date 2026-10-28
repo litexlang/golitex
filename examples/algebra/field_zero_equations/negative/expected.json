@@ -1,0 +1,11 @@
+{
+  "zero_linear_rhs": "premise",
+  "equal_affine_constants": "premise",
+  "false_linear_value": "search_proof",
+  "false_affine_value": "search_proof",
+  "false_distinctness": "search_proof",
+  "wrong_carrier": "argument_type",
+  "wrong_arity": "call_shape",
+  "missing_linear_rhs_guard": "premise",
+  "missing_affine_guard": "premise"
+}

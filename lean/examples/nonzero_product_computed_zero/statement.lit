@@ -1,0 +1,7 @@
+# Nonzero products and factors can be compared to a calculated zero.
+claim:
+    ? forall a C, b C:
+        a*b != 1-1
+        =>:
+            a != 1-1
+    a != 1-1

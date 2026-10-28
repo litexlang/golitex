@@ -1,7 +1,7 @@
 # Elementary number theory
 
 This strict source library supplies integer congruence with a positive modulus
-and 22 named theorems in 24 statements. This includes Euclidean gcd
+and 25 named theorems in 27 statements. This includes Euclidean gcd
 transformations and modular inverse relations for supplied integer witnesses. It reuses native dividend-first `$dvd(a,d)` directly.
 There are no user axioms, trust blocks, new kernel rules or selected values.
 
@@ -54,6 +54,8 @@ all letters other than m,n are integers; m,n are positive integers.
 | `congruence_negate(a,b,m)` | a congruent b implies -a congruent -b |
 | `congruence_remainder(a,m)` | a is congruent to a%m, reusing native remainder divisibility |
 | `congruence_modulus_divisor(a,b,m,n)` | a congruent b modulo n and `$dvd(n,m)` imply congruence modulo m |
+| `congruence_power(a,b,m,n)` | a congruent b implies `a^n` congruent `b^n` for natural n |
+| `congruence_power_remainder(a,m,n)` | `a^n` is congruent to `(a%m)^n` for natural n |
 
 Every congruence in a row uses the row's modulus. Congruence does not permit
 unconditional cancellation: 2*1 and 2*4 are congruent modulo 6, but 1 and 4 are
@@ -85,6 +87,13 @@ modulo m; they need not be equal as integers.
 | `modular_linear_equation_solution(a,b,u,m)` | Supplied inverse u gives solution x=u*b to a*x congruent b |
 | `modular_linear_equation_unique(a,b,u,x,m)` | Supplied inverse and a*x congruent b imply x congruent u*b |
 | `modular_inverse_unique(a,u,v,m)` | Both u and v inverse to a imply u congruent v |
+| `modular_inverse_power(a,u,m,n)` | A supplied inverse u of a remains an inverse after both are raised to natural n |
+
+The power results allow negative or zero integer bases, exponent zero and
+modulus 1. They use the Litex natural-power convention `0^0=1`. The
+[power examples](../../examples/number_theory/congruence_powers/README.md)
+cover these boundaries. All 19 focused checks pass, including 11 final-only
+refusals, both installed layouts and the existing congruence callers.
 
 The following complete excerpt is checked independently:
 

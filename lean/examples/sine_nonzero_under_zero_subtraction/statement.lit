@@ -1,0 +1,7 @@
+# Zero differs from sine after subtracting a nonzero-sine argument from zero.
+claim:
+    ? forall t R:
+        0 != sin(t)
+        =>:
+            0 != sin(0-t)
+    0 != sin(0-t)

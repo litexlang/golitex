@@ -1,0 +1,3 @@
+# Positive square roots differ from a calculated zero.
+have sqrt_nz_x R+
+sqrt(sqrt_nz_x) != 1-1

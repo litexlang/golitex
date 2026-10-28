@@ -100,10 +100,46 @@ mod sign_identities_tests;
 #[path = "../../tests/unit/compile_to_lean/sign/tests.rs"]
 mod sign_tests;
 
+#[path = "../../tests/unit/compile_to_lean/abs_nonzero_tests.rs"]
+mod abs_nonzero_tests;
+#[path = "../../tests/unit/compile_to_lean/complex_nonzero_tests.rs"]
+mod complex_nonzero_tests;
+#[path = "../../tests/unit/compile_to_lean/euler_nonunit_tests.rs"]
+mod euler_nonunit_tests;
+#[path = "../../tests/unit/compile_to_lean/eval_complex_coordinate_tests.rs"]
+mod eval_complex_coordinate_tests;
+#[path = "../../tests/unit/compile_to_lean/eval_complex_radical_tests.rs"]
+mod eval_complex_radical_tests;
 #[path = "../../tests/unit/compile_to_lean/eval_integer_tests.rs"]
 mod eval_integer_tests;
+#[path = "../../tests/unit/compile_to_lean/eval_log_tests.rs"]
+mod eval_log_tests;
+#[path = "../../tests/unit/compile_to_lean/eval_sqrt_tests.rs"]
+mod eval_sqrt_tests;
+#[path = "../../tests/unit/compile_to_lean/eval_unchanged_radical_tests.rs"]
+mod eval_unchanged_radical_tests;
+#[path = "../../tests/unit/compile_to_lean/exp_sign_nonzero_tests.rs"]
+mod exp_sign_nonzero_tests;
 #[path = "../../tests/unit/compile_to_lean/integer_division_tests.rs"]
 mod integer_division_tests;
+#[path = "../../tests/unit/compile_to_lean/lcm_nonzero_tests.rs"]
+mod lcm_nonzero_tests;
+#[path = "../../tests/unit/compile_to_lean/log_nonzero_tests.rs"]
+mod log_nonzero_tests;
+#[path = "../../tests/unit/compile_to_lean/nonunit_integer_power_tests.rs"]
+mod nonunit_integer_power_tests;
+#[path = "../../tests/unit/compile_to_lean/nonzero_sum_inequality_tests.rs"]
+mod nonzero_sum_inequality_tests;
+#[path = "../../tests/unit/compile_to_lean/power_nonzero_tests.rs"]
+mod power_nonzero_tests;
+#[path = "../../tests/unit/compile_to_lean/product_nonzero_tests.rs"]
+mod product_nonzero_tests;
+#[path = "../../tests/unit/compile_to_lean/sqrt_nonzero_tests.rs"]
+mod sqrt_nonzero_tests;
+#[path = "../../tests/unit/compile_to_lean/trig_negation_nonzero_tests.rs"]
+mod trig_negation_nonzero_tests;
+#[path = "../../tests/unit/compile_to_lean/trig_quotient_nonzero_tests.rs"]
+mod trig_quotient_nonzero_tests;
 
 #[path = "../../tests/unit/compile_to_lean/builtin_closed_calculation/tests.rs"]
 mod builtin_closed_calculation_tests;
@@ -3558,3 +3594,9 @@ mod eval_fold_tests;
 
 #[path = "../../tests/unit/compile_to_lean/eval_real_tests.rs"]
 mod eval_real_tests;
+
+#[path = "../../tests/unit/compile_to_lean/eval_linear_radical_tests.rs"]
+mod eval_linear_radical_tests;
+
+#[path = "../../tests/unit/compile_to_lean/finite_cases_cart_tests.rs"]
+mod finite_cases_cart_tests;

@@ -1,0 +1,3 @@
+# Nonzero square roots also differ from computed zero.
+have sqrt_nz_x R+
+0 != sqrt(sqrt_nz_x)

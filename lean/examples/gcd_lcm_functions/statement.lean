@@ -210,7 +210,7 @@ theorem h_1656 : (by
             · apply Or.inr
               intro _litex_right
               have _litex_x_zero : (54 : ℂ) = (0 : ℂ) := Litex.NativeBridge.nativeEqOfDenoteNumber _wd_1_0 (Litex.number (M := M) (0 : ℂ)) (54 : ℂ) (0 : ℂ) (Litex.NativeBridge.denoteNumber (M := M) (54 : ℂ)) (Litex.NativeBridge.denoteNumber (M := M) (0 : ℂ)) (_litex_left)
-              have _litex_y_zero : (- (24 : ℂ)) = (0 : ℂ) := Litex.NativeBridge.nativeEqOfDenoteNumber _wd_1_1 (Litex.number (M := M) (0 : ℂ)) (- (24 : ℂ)) (0 : ℂ) (Litex.NativeBridge.denoteNeg (Litex.number (M := M) (24 : ℂ)) (Litex.numberInC (M := M) (24 : ℂ)) _ (Litex.NativeBridge.denoteNumber (M := M) (24 : ℂ))) (Litex.NativeBridge.denoteNumber (M := M) (0 : ℂ)) (_litex_right)
+              have _litex_y_zero : (- (24 : ℂ)) = (0 : ℂ) := Litex.NativeBridge.nativeEqOfDenoteNumber _wd_1_1 (Litex.number (M := M) (0 : ℂ)) (- (24 : ℂ)) (0 : ℂ) (Litex.NativeBridge.denoteNeg (Litex.number (M := M) (24 : ℂ)) (_wd_1_1).wd _ (Litex.NativeBridge.denoteNumber (M := M) (24 : ℂ))) (Litex.NativeBridge.denoteNumber (M := M) (0 : ℂ)) (_litex_right)
               apply _litex_sum_nonzero
               exact Litex.NativeBridge.sameOfDenoteNumber (let _wd_2_0 := (Litex.powNatReal (Litex.number (M := M) (54 : ℂ)) (Litex.number (M := M) (2 : ℂ)) (2 : ℕ) (Litex.NativeBridge.numberInROfEq (M := M) (54 : ℂ) (54 : ℝ) (by norm_num)) (Litex.NativeBridge.numberInNOfEq (M := M) (2 : ℂ) (2 : ℕ) (by norm_num)) (Litex.NativeBridge.sameOfDenoteNumber (Litex.number (M := M) (2 : ℂ)) (Litex.number (M := M) ((2 : ℕ) : ℂ)) (2 : ℂ) ((2 : ℕ) : ℂ) (Litex.NativeBridge.denoteNumber (M := M) (2 : ℂ)) (Litex.NativeBridge.denoteNumber (M := M) ((2 : ℕ) : ℂ)) (by norm_num)));
           let _wd_2_1 := (let _wd_3_0 := _wd_1_1;
@@ -848,7 +848,7 @@ theorem h_8887 : (by
         (Litex.abs _wd_1_0 (by
           let _atomic_wd_1_0 := _wd_1_0
           exact (Litex.NativeBridge.inOfDenoteNumber _atomic_wd_1_0 (- (9 : ℂ)) (Litex.R (M := M)) (Litex.NativeBridge.denoteNeg (Litex.number (M := M) (9 : ℂ)) (Litex.numberInC (M := M) (9 : ℂ)) _ (Litex.NativeBridge.denoteNumber (M := M) (9 : ℂ))) (Litex.NativeBridge.numberInROfEq (- (9 : ℂ)) (-9 : ℝ) (by norm_num))))));
-        (show Litex.Same _equal_wd_1_0 _equal_wd_1_1 from (((Litex.sameRefl _equal_wd_1_0)).symm.trans ((h_8890).trans (Litex.sameRefl _equal_wd_1_1)))))
+        (show Litex.Same _equal_wd_1_0 _equal_wd_1_1 from (Eq.trans (Eq.symm (Litex.sameRefl _equal_wd_1_0)) (Eq.trans h_8890 (Litex.sameRefl _equal_wd_1_1)))))
         )
       )
   )

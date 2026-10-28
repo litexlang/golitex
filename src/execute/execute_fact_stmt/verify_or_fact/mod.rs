@@ -1,3 +1,4 @@
+mod finite_integer_range;
 mod helper;
 mod result;
 mod search_or_fact_proof_by_builtin_rule;
@@ -31,3 +32,8 @@ pub(crate) use result::OrBuiltinNaturalZeroOrAtLeastOne;
 pub(crate) use result::OrBuiltinSquareSumComponentNonzero;
 pub(crate) use result::OrBuiltinWeakOrderLeOrGe;
 pub(crate) use result::OrBuiltinZeroProductSplit;
+
+pub(crate) use finite_integer_range::{integer_range_cover_indices, integer_range_literal_bounds};
+pub(crate) use result::{
+    OrBuiltinClosedIntegerRangeEqualityCover, OrBuiltinHalfOpenIntegerRangeEqualityCover,
+};

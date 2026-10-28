@@ -1,0 +1,2 @@
+# Combine equal square roots exactly.
+eval sqrt(2)+sqrt(2)

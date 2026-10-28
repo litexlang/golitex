@@ -1,0 +1,3 @@
+# Nonzero numbers have nonzero integer powers.
+have power_eval_n Z
+2^power_eval_n != 0

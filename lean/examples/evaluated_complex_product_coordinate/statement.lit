@@ -1,0 +1,3 @@
+# Evaluate a real part of a complex product.
+eval re((1+2*i)*(3-i))
+re((1+2*i)*(3-i))=5

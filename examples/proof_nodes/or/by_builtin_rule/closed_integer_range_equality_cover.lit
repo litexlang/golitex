@@ -1,0 +1,15 @@
+# Node: or.ByBuiltinRule.ClosedIntegerRangeEqualityCover
+# Before: the following direct goal failed proof search and needed by enumerate.
+# forall row 1...3:
+#     row=1 or row=2 or row=3
+# Now: the existing binder membership supplies the closed integer interval.
+# Boundary: omitting 2 still fails; real intervals do not give discrete cases.
+# Run: target/release/litex -strict -f examples/proof_nodes/or/by_builtin_rule/closed_integer_range_equality_cover.lit
+
+forall row 1...3:
+    row=1 or row=2 or row=3
+forall row closed_range(-1,1):
+    row=-1 or row=0 or row=1
+have indices set = 1...3
+forall row indices:
+    3=row or row=2 or 1=row

@@ -34,3 +34,15 @@ coprime hypothesis is added, and no existence theorem is inferred from the
 relation. Modulus1 remains legitimate. All-zero gcd, zero/negative modulus and
 missing inverse/Bezout premises retain their actual boundaries. The source proofs and full-domain imported calls verify without user trust or
 axioms. Exact native domains remain visible; no new native rule is needed.
+
+
+## Natural powers and congruence
+
+Congruence is reflexive at exponent zero and respects multiplication, so
+induction gives congruence of equal natural powers for arbitrary integer bases.
+A supplied modular inverse yields `(a*u)^n ≡ 1`; natural-power distribution
+then gives `a^n*u^n ≡ 1`. The remainder result applies the power theorem to
+the existing `a ≡ a%m` law. Positive moduli, including 1, and zero exponent
+are preserved; `0^0=1` is the existing Litex convention. No inverse existence,
+negative exponent, selector, axiom or native rule is introduced. All 19 focused
+checks pass, including 11 final-only refusals and both installed layouts.

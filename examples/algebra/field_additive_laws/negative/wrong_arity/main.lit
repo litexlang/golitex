@@ -1,0 +1,58 @@
+have fn real_inv(x R: x != 0) R = 1 / x
+
+have fn real_add(x, y R) R = x + y
+
+have fn real_neg(x R) R = -x
+
+have fn real_mul(x, y R) R = x * y
+
+forall x, y, z R:
+    real_add(real_add(x, y), z) = real_add(x, real_add(y, z))
+    real_mul(real_mul(x, y), z) = real_mul(x, real_mul(y, z))
+    real_mul(x, real_add(y, z)) = real_add(real_mul(x, y), real_mul(x, z))
+
+forall x, y R:
+    real_add(x, y) = real_add(y, x)
+    real_mul(x, y) = real_mul(y, x)
+
+forall x R:
+    real_add(0, x) = x
+    real_add(x, real_neg(x)) = 0
+    real_mul(1, x) = x
+
+forall x R:
+    x != 0
+    =>:
+        real_mul(x, real_inv(x)) = 1
+
+release thm struct_member((0, 1, real_add, real_neg, real_mul, real_inv), &Algebra::field::Field<R>)
+
+have real_field &Algebra::field::Field<R> = (0, 1, real_add, real_neg, real_mul, real_inv)
+
+real_field.zero=0
+
+real_field.add=real_add
+
+real_field.neg=real_neg
+
+release thm Algebra::field::add_right_zero(R,real_field,3)
+
+release thm Algebra::field::add_left_inverse(R,real_field,3)
+
+real_field.add(3,4)=real_field.add(3,2+2)
+
+release thm Algebra::field::add_left_cancel(R,real_field,3,4,2+2)
+
+real_field.add(4,3)=real_field.add(2+2,3)
+
+release thm Algebra::field::add_right_cancel(R,real_field,3,4,2+2)
+
+release thm Algebra::field::neg_zero(R,real_field)
+
+release thm Algebra::field::neg_involution(R,real_field,3)
+
+real_field.neg(real_field.zero)=0
+
+real_field.neg(real_field.neg(3))=3
+
+release thm Algebra::field::neg_involution(R,real_field)
