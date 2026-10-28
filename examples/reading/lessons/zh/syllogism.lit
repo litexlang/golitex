@@ -1,0 +1,20 @@
+# 全称命题与三段论
+# 所有人都会死，苏格拉底是人，因此苏格拉底会死。
+
+# 结论使用两个依据：一个全称蕴含，以及其中前提的具体实例。
+# 悬浮在最后的 is_mortal 上，分别查看这两条依据。
+abstract_prop is_human(person)
+abstract_prop is_mortal(person)
+
+# people 只是讨论范围，并不表示其中每个对象都是人。
+forall people nonempty_set, socrates people:
+    $is_human(socrates)
+    # person 是任意对象；这里只断言“若是人，则会死”。
+    forall person people:
+        $is_human(person)
+        =>:
+            $is_mortal(person)
+    =>:
+        # 观察 person = socrates 的具体代入。
+        # 缺少“苏格拉底是人”时，单凭全称命题还不够。
+        $is_mortal(socrates)

@@ -1,5 +1,6 @@
 use crate::compile_to_lean::source_position::{SourceOwner, SourcePosition};
 use crate::compile_to_lean::LitexToLeanCompiler;
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::DetailedForallConclusionArgMatchProof;
 use crate::execute::execute_proof_block_stmt::{ExecClaimStmtResult, ExecProofBlockStmtResult};
 use crate::execute::{
     ExecObtainObjFromExistFactStmtResult, ExecObtainObjFromExistFactStmtSuccessResult,
@@ -7,12 +8,15 @@ use crate::execute::{
 use crate::prelude::*;
 
 fn checked(source: &str) -> (RunLitexCodeResult, Runtime) {
-    let mut runtime = Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language: OutputLanguage::English,
-    });
+    let mut runtime = Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    );
     let run = runtime.run_litex_code(source).unwrap();
     assert!(
         run.success && run.session_error.is_none(),
@@ -410,7 +414,6 @@ fn have_from_universal_existence_replays_cited_conclusion() {
 
 #[test]
 fn have_from_universal_existence_rejects_corrupt_matching_evidence() {
-    use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::ForallConclusionArgMatchProof;
     use crate::execute::execute_fact_stmt::verify_exist_shaped_fact::ExistShapedFactSearchedProof;
     for corruption in 0..4 {
         let (mut run, runtime) = checked(include_str!(
@@ -431,20 +434,29 @@ fn have_from_universal_existence_rejects_corrupt_matching_evidence() {
         };
         match corruption {
             0 => {
-                proof.arg_match_proofs.pop();
+                proof.as_detailed_mut().unwrap().arg_match_proofs.pop();
             }
             1 => {
                 proof
+                    .as_detailed_mut()
+                    .unwrap()
                     .instantiation_requirements
+                    .as_detailed_mut()
+                    .unwrap()
                     .param_type_requirements
                     .pop();
             }
             2 => {
-                proof.forall_parameters_match_what_args[0] = Obj::StandardSet(StandardSet::C);
+                proof
+                    .as_detailed_mut()
+                    .unwrap()
+                    .forall_parameters_match_what_args[0] = Obj::StandardSet(StandardSet::C);
             }
             _ => {
-                let ForallConclusionArgMatchProof::NonParamEqual { pattern, .. } =
-                    &mut proof.arg_match_proofs[0]
+                let DetailedForallConclusionArgMatchProof::NonParamEqual { pattern, .. } =
+                    (proof.as_detailed_mut().unwrap().arg_match_proofs[0])
+                        .as_detailed_mut()
+                        .unwrap()
                 else {
                     panic!("carrier comparison")
                 };
@@ -493,10 +505,25 @@ fn have_from_universal_existence_rejects_missing_guard_and_future_citation() {
             panic!("known forall")
         };
         if future {
-            proof.cite.fact_id = future_id;
+            proof.as_detailed_mut().unwrap().cite.fact_id = future_id;
         } else {
-            assert_eq!(proof.instantiation_requirements.proof_of_dom_facts.len(), 1);
-            proof.instantiation_requirements.proof_of_dom_facts.clear();
+            assert_eq!(
+                proof
+                    .detailed_ref()
+                    .instantiation_requirements
+                    .detailed_ref()
+                    .proof_of_dom_facts
+                    .len(),
+                1
+            );
+            proof
+                .as_detailed_mut()
+                .unwrap()
+                .instantiation_requirements
+                .as_detailed_mut()
+                .unwrap()
+                .proof_of_dom_facts
+                .clear();
         }
         let error = LitexToLeanCompiler::new(runtime)
             .compile_run(&run, "invalid_existential_citation")

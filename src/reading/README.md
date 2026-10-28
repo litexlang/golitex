@@ -26,15 +26,74 @@ Moving away, Escape, editing, navigation or closing the preview dismisses it.
 Unchecked or unmapped lines do not receive guessed proof evidence. Missing
 fact-specific proof steps are stated explicitly; authored summaries currently
 cover selected proof forms, not every kernel rule. JSON remains the underlying
-evidence format, not a second reading surface.
+evidence format; the reader has no raw JSON column or JSON-view toggle. Source
+hover and on-demand explanations expose definitions, citations and inferred
+results directly beside the mathematics.
+
+Equality operators have their own proof targets when retained evidence maps
+them precisely. In `a = b = c`, hovering the first `=` explains only `a = b`;
+the second explains only `b = c`, with that step's own mathematical citations
+and parameter conditions. Focus or click the operator to inspect it, or use
+the preview's **Keep open** action; in the editable overlay, Ctrl/Cmd-click
+selects that step while ordinary clicks still position the text caret. Normal
+line selection returns to the complete chain. Source rows and inferred results
+are unchanged.
+
+The binding uses `VerifyChainFactSuccess.adjacent`, `ChainFact.objs` and
+`prop_names`, the same adjacent verification results read by Normal JSON's
+chain projection. Exact tokenizer byte spans locate the source operators;
+nested parentheses, brackets, braces and tokenizer-excluded comments do not
+consume chain positions. The complete top-level operator sequence and typed
+operand identities must agree. A supported standalone verified equality uses
+its own `VerifyEqualitySuccess` in the same way. Multiple possible primary
+facts, missing evidence/tokens, mismatched counts or identities, and unsupported
+multiline/nested source mappings receive no guessed operator proof. Existing
+whole-chain previews and language help remain available. Some proof forms
+still have only a general explanation plus retained citations.
+
+For example, syllogism fact `f5` cites universal fact `f4` and hypothesis `f1`;
+domain condition `f9` remains separately accessible in the proof preview.
+Captured statements inside `by contra` keep their individual source identity
+and evidence. The sqrt-two goal and terminal `impossible` do not currently have
+independent statement records; removing the raw view does not add evidence for
+unmapped lines or change the underlying reading JSON/export contracts.
 
 Quantified fact references use retained `ForallFact` and `TypedParameterGroup`
-structure to render their binders: `∀ X 是集合`, `∀ X 是非空集合`, and
-`∀ X 是有限集合` distinguish the three set kinds; ordinary domains use
-membership, such as `∀ x ∈ ℝ` or `∀ x ∈ A`. Grouped names, dependent domains,
+structure to render their binders in natural language: Chinese uses
+`对于任意集合 X`, `对于任意非空集合 X`, and `对于任意有限集合 X`;
+English uses `For every set X`, `For every nonempty set X`, and
+`For every finite set X`. Ordinary domains retain membership, such as
+`对于任意 x ∈ ℝ` / `For every x ∈ ℝ`. Source keeps the keyword `forall`.
+Grouped names, dependent domains,
 nested scopes, premises and conclusions are preserved. English uses set-kind
 annotations in English. Missing or unsupported structure keeps the complete
 original formula instead of guessing a quantifier header from its text.
+
+Proof previews show concrete universal instantiations when the retained proof
+contains an ordered argument list and its cited quantified fact. For example,
+the syllogism displays `person = socrates`; the same component displays
+`a = 72, b = 84, c = 96` in the least-squares example. Incomplete metadata or
+an arity mismatch retains the general explanation rather than inventing a
+substitution. Hover and selected-source views use the same proof content.
+The preview's **Keep open** action fixes that explanation beside the source.
+Fact line numbers indicate this entry point; keyboard users can focus a line
+number and use Tab or Right Arrow to enter its open preview.
+
+Grey inline inference buttons preview one complete retained result and show
+the number of additional results. Visual ellipsis does not shorten the stored
+formula, remove clauses or discard FactIds: opening the button shows every
+published result. The source retains its original rows. Supported generated
+existential facts use fresh local mathematical witness names, such as `k`,
+instead of internal binder names. This display-only substitution uses retained
+symbol identities, avoids free and bound names, preserves existence/unique
+existence/nonexistence, and leaves authored source names unchanged. Ambiguous
+identities or unsupported structures retain the complete original formula.
+
+Local facts identify their recorded enclosing proof and distinguish assumptions
+from conclusions established under those assumptions. Current scope metadata
+does not identify every nested lexical range; the viewer does not invent scope
+brackets from indentation. These are shared reader behaviors, independent of
+problem-specific commentary or exercises.
 
 ## Current status
 
@@ -133,6 +192,8 @@ selected object declarations, function equalities and fact goals. Other forms
 show actual recorded output facts where available, or an explicit unavailable
 message. Older bundles remain readable without guessed mathematical meaning.
 Clicking source selects the statement; result/citation buttons select the fact.
+In the editor, an ordinary click only positions the caret and selects context;
+Ctrl/Cmd-click performs the token's semantic action or keeps its explanation open.
 
 Source ranges use original UTF-8 byte offsets. Syntax highlighting distinguishes
 keywords, predicates, functions, objects/variables, types/sets, theorem names,
@@ -283,13 +344,67 @@ optional JSON script `reading-example-groups`; only relative directory links
 are rendered, and locale is propagated across navigation. This does not extend
 the proof schema or merge failure bundles into a successful collection. See
 `examples/reading/homepage/export_gallery.py` for the reproducible builder.
+Items may provide language-specific `hrefs` alongside the existing `href`
+fallback. The bilingual source lessons use these paths and standard same-origin
+alternate-page metadata. The shell changes the authored source language only
+when the original document is still open and `hasLocalEdits()` is false;
+otherwise it preserves the source and changes the interface language. This
+read-only component query includes checked edits that differ from the initial
+text. No additional draft owner or per-example renderer is introduced.
+
+`ReadingSite` writes optional source-only parts alongside the existing proof
+chunks. Manifest `source_url` points to a `reading_source` envelope with the same
+snapshot identity and a token-free source record. The shared loader validates
+snapshot, source ID, path and text type, then caches only the text for
+`getProjectSnapshot()`. Preparing input does not merge these parts into the
+viewer or make unloaded proof available. Navigation retains its independent
+full-chunk path. Older exports fall back to that path for source snapshots;
+failed source loads retry and document changes invalidate pending snapshots.
+This is an additive packaging capability, not a reading-proof schema change.
+
+Upload checking uses a streaming JSON whitespace compactor between the child
+CLI and the existing bounded output file. It preserves all string bytes and
+field order, including the source and proof records. The unchanged 256-MiB
+limit measures compact transport; the CLI's formatted JSON contract is unchanged.
+Resource failures reap the worker and join its output collector before workspace
+cleanup. This is transport handling, independent of capture, verification and
+source-only loading. Pure streaming tests and real loopback/cache tests cover
+the format and service boundaries.
+
+The maintained `web/tests/host.cjs` acceptance runs the unmodified page shell
+and reader against actual exported parts and actual strict CLI checks. It
+covers a rejected predecessor, later unchecked chapters, restoration, keyboard
+checking, and navigation while a result is pending. Working-copy edits clear
+semantic selections immediately; rendering that draft does not cancel chapter
+navigation. Restoring unchanged text is a no-op. The iframe bridge requires a
+nonopaque parent origin and current bundle identity; disposed readers reject
+new work. These component/CLI checks remain separate from browser layout
+acceptance; see `web/tests/README.md`.
 
 ### Contextual explanations and reference cards
+
+Predicate hover presents definition and proof together. Both use retained typed
+data: the resolved declaration and complete predicate display, then the actual
+verification record and its requirement/proof pairs. The builtin-rule and
+strategy routes for intersection membership both expose the two member-set
+proofs. Finite-set membership/non-membership explain the retained equality or
+disequality certificates. Proof conditions expand on demand and must match
+their evidence's fact identity; mismatched records remain unavailable.
+
+Older bundles may attach accepted `by def`, `by thm` or `by contra` evidence only
+to the execution result. The reader derives local display metadata from those
+exact success variants, without modifying the bundle, allocating facts or
+changing verification. Contradiction goals and local negation assumptions keep
+their distinct roles. Current failed statements can show their definition and
+check failure together. Unknown definitions and proof forms remain explicit.
 
 The source occupies the full reading width. A contextual explanation opens
 only after a source interaction, stays within the viewport and scrolls internally
 when necessary. Close it with its close button, Escape or an outside click.
 Changing examples closes it. The editor remains editable when inspecting help.
+Pinned equality explanations stay at the selected relation operator. All
+source cards dismiss when their owner leaves the editor's visible rectangle,
+including horizontal scrolling; they do not remain detached from their source.
 
 Authored builtin reference cards are shared by hover and click. Numeric cards
 state input restrictions and results (for example `+` takes two complex numbers

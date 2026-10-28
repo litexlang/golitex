@@ -6,12 +6,15 @@ use crate::store_fact_and_infer::{
 };
 
 fn execute(source: &str) -> (Runtime, RunLitexCodeResult) {
-    let mut runtime = Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language: OutputLanguage::English,
-    });
+    let mut runtime = Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    );
     let result = runtime.run_litex_code(source).expect("source execution");
     assert!(result.success && result.session_error.is_none(), "{source}");
     assert_eq!(result.statement_results.len(), 1);

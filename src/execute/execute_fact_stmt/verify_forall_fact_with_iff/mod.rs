@@ -7,6 +7,7 @@ pub use result::{
     VerifyForallFactWithIffFailed, VerifyForallFactWithIffResult, VerifyForallFactWithIffSuccess,
 };
 pub use well_defined_result::{
+    CompactForallFactWithIffWellDefinedProof, DetailedForallFactWithIffWellDefinedProof,
     FailToVerifyForallFactWithIffWellDefinedResult, ForallFactWithIffWellDefinedProof,
-    VerifyForallFactWithIffWellDefinedResult,
+    NormalForallFactWithIffWellDefinedProof, VerifyForallFactWithIffWellDefinedResult,
 };

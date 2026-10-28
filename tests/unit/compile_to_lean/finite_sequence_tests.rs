@@ -10,11 +10,13 @@ fn sequence_wd(run: &mut RunLitexCodeResult) -> &mut FiniteSeqSetObjWellDefinedP
     else {
         panic!("let");
     };
-    let VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByDef {
+    let Some(DetailedObjWellDefinedProof::ByDef {
         proof:
             ObjWellDefinedProofByDef::SetFormer(SetFormerObjWellDefinedProofByDef::FiniteSeqSet(p)),
         ..
-    }) = &mut p.value_well_defined
+    }) = (&mut p.value_well_defined)
+        .as_detailed_success_mut()
+        .unwrap()
     else {
         panic!("finite sequence WD");
     };

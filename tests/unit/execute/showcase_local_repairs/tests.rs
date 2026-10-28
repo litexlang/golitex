@@ -2,12 +2,15 @@ use crate::launch_command::{LaunchCommand, OutputLanguage};
 use crate::runtime::{CodeSource, Runtime};
 
 fn runtime() -> Runtime {
-    let mut rt = Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language: OutputLanguage::English,
-    });
+    let mut rt = Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    );
     // Canonical showcases export main.lit: exercise qualified definition owners.
     rt.current_file = CodeSource::RootExport {
         path: "test.lit".into(),

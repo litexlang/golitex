@@ -1,6 +1,6 @@
+use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::DetailedObjWellDefinedProof;
 use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::{
-    FunctionSpaceObjWellDefinedProofByDef, ObjWellDefinedProof, ObjWellDefinedProofByDef,
-    VerifyObjWellDefinedResult,
+    FunctionSpaceObjWellDefinedProofByDef, ObjWellDefinedProofByDef, VerifyObjWellDefinedResult,
 };
 use crate::execute::execute_have_fn_equal_stmt::ExecHaveFnEqualStmtResult;
 use crate::execute::{ExecDefinitionStmtResult, ExecStmtResult};
@@ -8,12 +8,15 @@ use crate::launch_command::{LaunchCommand, OutputLanguage};
 use crate::runtime::Runtime;
 
 fn runtime() -> Runtime {
-    Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language: OutputLanguage::English,
-    })
+    Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    )
 }
 
 fn check(rt: &mut Runtime, code: &str, expected: &[bool]) {
@@ -300,13 +303,15 @@ fn wd_evidence_and_detailed_json_keep_mandatory_return_and_argument_type_proofs(
     else {
         panic!("function definition success");
     };
-    let VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByDef {
+    let Some(DetailedObjWellDefinedProof::ByDef {
         proof:
             ObjWellDefinedProofByDef::FunctionSpace(FunctionSpaceObjWellDefinedProofByDef::AnonymousFn(
                 proof,
             )),
         ..
-    }) = &success.anonymous_fn_well_defined
+    }) = (&success.anonymous_fn_well_defined)
+        .as_detailed_success()
+        .unwrap()
     else {
         panic!("anonymous function WD evidence");
     };

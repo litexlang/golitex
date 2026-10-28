@@ -12,8 +12,9 @@ pub use result::{
     VerifyPlainExistFactSuccess,
 };
 pub use well_defined_result::{
+    CompactExistShapedFactWellDefinedProof, DetailedExistShapedFactWellDefinedProof,
     ExistShapedFactWellDefinedProof, FailToVerifyExistShapedFactWellDefinedResult,
-    VerifyExistShapedFactWellDefinedResult,
+    NormalExistShapedFactWellDefinedProof, VerifyExistShapedFactWellDefinedResult,
 };
 mod align_exist_conclusion;
 

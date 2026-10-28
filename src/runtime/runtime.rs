@@ -7,6 +7,7 @@ use crate::exec_env::exec_env::ExecEnv;
 use crate::exec_env::session_view::ExecEnvSessionView;
 use crate::launch_command::LaunchCommand;
 use crate::module_manager::{ExportFileAndItsExecEnv, GlobalModuleManager};
+use crate::result_detail::OutputDetail;
 use std::collections::HashMap;
 
 // -----------------------------------------------------------------------------
@@ -27,6 +28,8 @@ pub struct Runtime {
     pub global_ids: GlobalIds,
     /// How this Runtime session was launched (`-strict` / `-session` live here).
     pub launch_command: LaunchCommand,
+    /// Fixed for the session, including imported sources and nested pipelines.
+    result_detail: OutputDetail,
     // Set only while `eval` runs closed-numeric source WD / its root `$in C`
     // gate. Skips per-node carrier checks so left-associated `2*2*…` stays linear.
     // Does not write ExecEnv WD memory.
@@ -51,6 +54,17 @@ pub struct GlobalIds {
 impl Runtime {
     /// Create a session from its launch contract and open the matching source env.
     pub fn new(command: LaunchCommand) -> Self {
+        Self::new_with_result_detail(command, OutputDetail::Normal)
+    }
+
+    /// Select result construction before any source is executed. Lean replay
+    /// always requires complete evidence, including through this constructor.
+    pub fn new_with_result_detail(command: LaunchCommand, detail: OutputDetail) -> Self {
+        let detail = if matches!(&command, LaunchCommand::CompileToLean { .. }) {
+            OutputDetail::Detailed
+        } else {
+            detail
+        };
         let file = match &command {
             LaunchCommand::Repl { .. } => CodeSource::Repl,
             LaunchCommand::Eval { .. }
@@ -88,10 +102,15 @@ impl Runtime {
             current_file: file.clone(),
             global_ids: GlobalIds::new(),
             launch_command: command,
+            result_detail: detail,
             eval_closed_numeric_source_wd: false,
         };
         runtime.begin_source(file);
         runtime
+    }
+
+    pub fn result_detail(&self) -> OutputDetail {
+        self.result_detail
     }
 
     pub fn begin_source(&mut self, file: CodeSource) {

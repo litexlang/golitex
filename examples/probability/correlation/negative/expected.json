@@ -1,0 +1,16 @@
+{
+  "zero_variance_left_undefined": "value_well_defined",
+  "zero_variance_right_undefined": "value_well_defined",
+  "dirac_undefined": "value_well_defined",
+  "missing_left_variance_guard": "premise",
+  "missing_right_variance_guard": "premise",
+  "zero_variance_self": "premise",
+  "nonreal_sampler": "argument_type",
+  "wrong_sampler_domain": "argument_type",
+  "partial_sampler": "argument_type",
+  "strict_self_bound": "search_proof",
+  "wrong_negative_sign": "search_proof",
+  "wrong_zero_correlation": "search_proof",
+  "missing_zero_covariance": "premise",
+  "missing_zero_correlation": "premise"
+}

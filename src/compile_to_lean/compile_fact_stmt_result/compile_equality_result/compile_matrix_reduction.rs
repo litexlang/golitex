@@ -45,10 +45,10 @@ impl LitexToLeanCompiler {
                 "Matrix/ComponentSubstitution",
             ));
         }
-        let ObjWellDefinedProof::ByDef {
+        let DetailedObjWellDefinedProof::ByDef {
             proof: ObjWellDefinedProofByDef::FnObj(p),
             ..
-        } = wd
+        } = (wd).detailed_ref()
         else {
             return Err(LeanCompileError::unsupported("Matrix/ComponentCallWD"));
         };

@@ -1,0 +1,4 @@
+thm event_pullback_formula:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,Target set,F fn(k space.carrier) Target,A power_set(fn_range(F)):
+        \prob::main::finite_pushforward_event_probability<Omega,space,Target,F>(A) = space.prob(preimage_set(F,A))
+    release thm prob::main::finite_pushforward_event_formula(Omega,space,Target,F,A)

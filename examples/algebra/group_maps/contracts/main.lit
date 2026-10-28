@@ -1,0 +1,53 @@
+thm contract_subgroup_whole:
+    ? forall A nonempty_set,G &Algebra::group::Group<A>:
+        $Algebra::group::is_subgroup(A,G,A)
+    release thm Algebra::group::subgroup_whole(A,G)
+
+thm contract_subgroup_identity:
+    ? forall A nonempty_set,G &Algebra::group::Group<A>:
+        $Algebra::group::is_subgroup(A,G,{G.one})
+    release thm Algebra::group::subgroup_identity(A,G)
+
+thm contract_normal_subgroup_intersection:
+    ? forall A nonempty_set,G &Algebra::group::Group<A>,S,T power_set(A):
+        $Algebra::group::is_normal_subgroup(A,G,S)
+        $Algebra::group::is_normal_subgroup(A,G,T)
+        =>:
+            $Algebra::group::is_normal_subgroup(A,G,intersect(S,T))
+    release thm Algebra::group::normal_subgroup_intersection(A,G,S,T)
+
+thm contract_homomorphism_range_is_subgroup:
+    ? forall A nonempty_set,G &Algebra::group::Group<A>,B nonempty_set,H &Algebra::group::Group<B>,f fn(x A) B:
+        $Algebra::group::is_homomorphism(A,G,B,H,f)
+        =>:
+            $Algebra::group::is_subgroup(B,H,fn_range(f))
+    release thm Algebra::group::homomorphism_range_is_subgroup(A,G,B,H,f)
+
+thm contract_homomorphism_preimage_is_subgroup:
+    ? forall A nonempty_set,G &Algebra::group::Group<A>,B nonempty_set,H &Algebra::group::Group<B>,f fn(x A) B,S power_set(B):
+        $Algebra::group::is_homomorphism(A,G,B,H,f)
+        $Algebra::group::is_subgroup(B,H,S)
+        =>:
+            $Algebra::group::is_subgroup(A,G,preimage_set(f,S))
+    release thm Algebra::group::homomorphism_preimage_is_subgroup(A,G,B,H,f,S)
+
+thm contract_homomorphism_preimage_is_normal:
+    ? forall A nonempty_set,G &Algebra::group::Group<A>,B nonempty_set,H &Algebra::group::Group<B>,f fn(x A) B,S power_set(B):
+        $Algebra::group::is_homomorphism(A,G,B,H,f)
+        $Algebra::group::is_normal_subgroup(B,H,S)
+        =>:
+            $Algebra::group::is_normal_subgroup(A,G,preimage_set(f,S))
+    release thm Algebra::group::homomorphism_preimage_is_normal(A,G,B,H,f,S)
+
+thm contract_homomorphism_identity_map:
+    ? forall A nonempty_set,G &Algebra::group::Group<A>:
+        $Algebra::group::is_homomorphism(A,G,A,G,fn(x A) A {x})
+    release thm Algebra::group::homomorphism_identity_map(A,G)
+
+thm contract_homomorphism_composition:
+    ? forall A nonempty_set,G &Algebra::group::Group<A>,B nonempty_set,H &Algebra::group::Group<B>,D nonempty_set,K &Algebra::group::Group<D>,f fn(x A) B,g fn(y B) D:
+        $Algebra::group::is_homomorphism(A,G,B,H,f)
+        $Algebra::group::is_homomorphism(B,H,D,K,g)
+        =>:
+            $Algebra::group::is_homomorphism(A,G,D,K,compose(g,f))
+    release thm Algebra::group::homomorphism_composition(A,G,B,H,D,K,f,g)

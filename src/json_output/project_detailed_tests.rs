@@ -10,21 +10,27 @@ use crate::runtime::Runtime;
 use crate::tokenize::Tokenizer;
 
 fn runtime_en() -> Runtime {
-    Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: false,
-        language: OutputLanguage::English,
-    })
+    Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: false,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    )
 }
 
 fn runtime_zh() -> Runtime {
-    Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: false,
-        language: OutputLanguage::Chinese,
-    })
+    Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: false,
+            language: OutputLanguage::Chinese,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    )
 }
 
 fn exec_one(runtime: &mut Runtime, code: &str) -> ExecStmtResult {
@@ -215,12 +221,15 @@ fn detailed_by_def_preserves_definition_route() {
 fn detailed_atomic_builtin_rewrite_preserves_citation_and_residual() {
     let code = "forall n N:\n    n=16\n    =>:\n        $prime(n+1)\n";
     for language in [OutputLanguage::English, OutputLanguage::Chinese] {
-        let mut rt = Runtime::new(LaunchCommand::Eval {
-            code: code.to_string(),
-            session: false,
-            strict: true,
-            language,
-        });
+        let mut rt = Runtime::new_with_result_detail(
+            LaunchCommand::Eval {
+                code: code.to_string(),
+                session: false,
+                strict: true,
+                language,
+            },
+            crate::result_detail::OutputDetail::Detailed,
+        );
         let run = rt.run_litex_code(code).expect("run");
         assert!(run.success);
         let detailed = project_run_detailed(&run, &rt, "eval", None);
@@ -330,9 +339,9 @@ fn detailed_register_preserves_checked_law_in_both_languages() {
     ] {
         let code = format!("prop same(x,y set):\n    x=y\nregister {property}:\n    ? {law}\n");
         for language in [OutputLanguage::English, OutputLanguage::Chinese] {
-            let mut rt = Runtime::new(LaunchCommand::Eval {
+            let mut rt = Runtime::new_with_result_detail(LaunchCommand::Eval {
                 code: code.clone(), session: false, strict: true, language,
-            });
+            }, crate::result_detail::OutputDetail::Detailed);
             let run = rt.run_litex_code(&code).expect("run");
             assert!(run.success, "{code}");
             let json = project_stmt_detailed(run.statement_results.last().unwrap(), &rt);
@@ -371,9 +380,9 @@ fn detailed_register_preserves_actual_failure_stage_in_both_languages() {
         ] {
             let code = format!("{setup}register {property}:\n    ? {goal}\n");
             for language in [OutputLanguage::English, OutputLanguage::Chinese] {
-                let mut rt = Runtime::new(LaunchCommand::Eval {
+                let mut rt = Runtime::new_with_result_detail(LaunchCommand::Eval {
                     code: code.clone(), session: false, strict: true, language,
-                });
+                }, crate::result_detail::OutputDetail::Detailed);
                 let run = rt.run_litex_code(&code).expect("run");
                 assert!(!run.success, "{code}");
                 if phase == "shape" {

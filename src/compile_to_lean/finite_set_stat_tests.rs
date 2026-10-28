@@ -2,8 +2,9 @@ use super::LitexToLeanCompiler;
 use crate::prelude::*;
 
 fn execute(source: &str) -> (RunLitexCodeResult, LitexToLeanCompiler) {
-    let mut runtime = Runtime::new(
+    let mut runtime = Runtime::new_with_result_detail(
         parse_launch_command(&["-strict".into(), "-e".into(), source.into()]).unwrap(),
+        crate::result_detail::OutputDetail::Detailed,
     );
     let run = runtime.run_litex_code(source).unwrap();
     assert!(run.success);
@@ -64,10 +65,16 @@ fn finite_extrema_reject_missing_or_reordered_domain_evidence() {
     use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FiniteSetStatObjWellDefinedProofByDef as P;
     for remove in 0..4 {
         let (mut run, compiler) = execute("finite_set_max({-3, 2, 7}) = 7\n");
-        let ObjWellDefinedProof::ByDef {
+        let DetailedObjWellDefinedProof::ByDef {
             proof: ObjWellDefinedProofByDef::FiniteSetStat(P::FiniteSetMax(p)),
             ..
-        } = &mut equality(&mut run).well_defined_proof.left
+        } = (&mut equality(&mut run)
+            .well_defined_proof
+            .as_detailed_mut()
+            .unwrap()
+            .left)
+            .as_detailed_mut()
+            .unwrap()
         else {
             panic!()
         };
@@ -84,10 +91,16 @@ fn finite_extrema_reject_missing_or_reordered_domain_evidence() {
 fn finite_size_rejects_missing_finiteness() {
     use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FiniteSetStatObjWellDefinedProofByDef as P;
     let (mut run, compiler) = execute("finite_set_size({1, 2}) = 2\n");
-    let ObjWellDefinedProof::ByDef {
+    let DetailedObjWellDefinedProof::ByDef {
         proof: ObjWellDefinedProofByDef::FiniteSetStat(P::FiniteSetSize(p)),
         ..
-    } = &mut equality(&mut run).well_defined_proof.left
+    } = (&mut equality(&mut run)
+        .well_defined_proof
+        .as_detailed_mut()
+        .unwrap()
+        .left)
+        .as_detailed_mut()
+        .unwrap()
     else {
         panic!()
     };
@@ -118,8 +131,9 @@ fn finite_extrema_rejects_changed_selection_and_comparison() {
 #[test]
 fn finite_extrema_reject_empty_or_complex_source() {
     for source in ["finite_set_max({}) = 0", "finite_set_min({i}) = 0"] {
-        let mut runtime = Runtime::new(
+        let mut runtime = Runtime::new_with_result_detail(
             parse_launch_command(&["-strict".into(), "-e".into(), source.into()]).unwrap(),
+            crate::result_detail::OutputDetail::Detailed,
         );
         let run = runtime.run_litex_code(source).unwrap();
         assert!(!run.success);

@@ -1,3 +1,4 @@
+use super::DetailedForallFactWithIffWellDefinedProof;
 use crate::ast::fact::{Fact, ForallFactWithIff};
 use crate::execute::execute_fact_stmt::verify_forall_fact::AssumeDomFactResult;
 use crate::execute::execute_fact_stmt::verify_forall_fact_with_iff::well_defined_result::{
@@ -10,6 +11,7 @@ use crate::execute::execute_fact_stmt::well_defined_results::{
 };
 use crate::execute::execute_fact_stmt::VerifyState;
 use crate::execute::IntroduceTypedParametersResult;
+use crate::result_detail::OutputDetail;
 use crate::runtime::{Runtime, RuntimeResult};
 
 impl Runtime {
@@ -26,13 +28,15 @@ impl Runtime {
         match stages {
             Ok((introduced_params, assumed_dom_facts, then, iff)) => {
                 Ok(VerifyForallFactWithIffWellDefinedResult::Success(
-                    ForallFactWithIffWellDefinedProof {
-                        introduced_params,
-                        assumed_dom_facts,
-                        then,
-                        iff,
-                        local_env,
-                    },
+                    ForallFactWithIffWellDefinedProof::new(self.result_detail(), || {
+                        DetailedForallFactWithIffWellDefinedProof {
+                            introduced_params,
+                            assumed_dom_facts,
+                            then,
+                            iff,
+                            local_env,
+                        }
+                    }),
                 ))
             }
             Err(reason) => Ok(VerifyForallFactWithIffWellDefinedResult::Failed(reason)),
@@ -61,30 +65,45 @@ impl Runtime {
             Ok(introduced) => introduced,
             Err(failed) => {
                 return Ok(Err(
-                    FailToVerifyForallFactWithIffWellDefinedResult::ParamType(extract_obj_wd_fail(
-                        failed,
-                    )),
+                    FailToVerifyForallFactWithIffWellDefinedResult::ParamType {
+                        fact: fact.clone(),
+                        reason: extract_obj_wd_fail(failed),
+                    },
                 ));
             }
         };
 
-        let mut assumed_dom_facts = Vec::with_capacity(inner.dom_facts.len());
+        let mut assumed_dom_facts = if self.result_detail() == OutputDetail::Detailed {
+            Vec::with_capacity(inner.dom_facts.len())
+        } else {
+            Vec::new()
+        };
         for (failed_index, dom) in inner.dom_facts.iter().enumerate() {
             match self.verify_fact_well_definedness(dom, verify_state.clone())? {
                 VerifyFactWellDefinedResult::Success(proof) => {
                     // Only the shared antecedents guard both sides of the iff.
                     // Neither side is assumed while checking the other side's WD.
                     let store_and_infer = self.store_fact_and_infer(dom, verify_state)?;
-                    assumed_dom_facts.push(AssumeDomFactResult {
-                        well_defined: proof,
-                        store_and_infer,
-                    });
+                    proof.require_detail(self.result_detail(), "quantified WD assumption")?;
+                    if self.result_detail() == OutputDetail::Detailed {
+                        assumed_dom_facts.push(AssumeDomFactResult {
+                            well_defined: proof,
+                            store_and_infer,
+                        });
+                    }
                 }
                 VerifyFactWellDefinedResult::Failed(failed_dom) => {
                     return Ok(Err(
                         FailToVerifyForallFactWithIffWellDefinedResult::DomFact {
+                            fact: fact.clone(),
                             failed_index,
-                            param_type_well_defined: introduced_params.param_type_well_defined,
+                            param_type_well_defined: if self.result_detail()
+                                == OutputDetail::Detailed
+                            {
+                                introduced_params.param_type_well_defined
+                            } else {
+                                Vec::new()
+                            },
                             succeeded_dom: assumed_dom_facts
                                 .into_iter()
                                 .map(|a| a.well_defined)
@@ -96,16 +115,32 @@ impl Runtime {
             }
         }
 
-        let mut succeeded_then = Vec::with_capacity(inner.then_facts.len());
+        let mut succeeded_then = if self.result_detail() == OutputDetail::Detailed {
+            Vec::with_capacity(inner.then_facts.len())
+        } else {
+            Vec::new()
+        };
         for (failed_index, then) in inner.then_facts.iter().enumerate() {
             let then_fact: Fact = then.clone().into();
             match self.verify_fact_well_definedness(&then_fact, verify_state.clone())? {
-                VerifyFactWellDefinedResult::Success(proof) => succeeded_then.push(proof),
+                VerifyFactWellDefinedResult::Success(proof) => {
+                    proof.require_detail(self.result_detail(), "quantified WD conclusion")?;
+                    if self.result_detail() == OutputDetail::Detailed {
+                        succeeded_then.push(proof);
+                    }
+                }
                 VerifyFactWellDefinedResult::Failed(failed_then) => {
                     return Ok(Err(
                         FailToVerifyForallFactWithIffWellDefinedResult::ThenFact {
+                            fact: fact.clone(),
                             failed_index,
-                            param_type_well_defined: introduced_params.param_type_well_defined,
+                            param_type_well_defined: if self.result_detail()
+                                == OutputDetail::Detailed
+                            {
+                                introduced_params.param_type_well_defined
+                            } else {
+                                Vec::new()
+                            },
                             succeeded_dom: assumed_dom_facts
                                 .into_iter()
                                 .map(|a| a.well_defined)
@@ -118,16 +153,32 @@ impl Runtime {
             }
         }
 
-        let mut succeeded_iff = Vec::with_capacity(fact.iff_facts.len());
+        let mut succeeded_iff = if self.result_detail() == OutputDetail::Detailed {
+            Vec::with_capacity(fact.iff_facts.len())
+        } else {
+            Vec::new()
+        };
         for (failed_index, iff) in fact.iff_facts.iter().enumerate() {
             let iff_fact: Fact = iff.clone().into();
             match self.verify_fact_well_definedness(&iff_fact, verify_state.clone())? {
-                VerifyFactWellDefinedResult::Success(proof) => succeeded_iff.push(proof),
+                VerifyFactWellDefinedResult::Success(proof) => {
+                    proof.require_detail(self.result_detail(), "quantified WD conclusion")?;
+                    if self.result_detail() == OutputDetail::Detailed {
+                        succeeded_iff.push(proof);
+                    }
+                }
                 VerifyFactWellDefinedResult::Failed(failed_iff) => {
                     return Ok(Err(
                         FailToVerifyForallFactWithIffWellDefinedResult::IffFact {
+                            fact: fact.clone(),
                             failed_index,
-                            param_type_well_defined: introduced_params.param_type_well_defined,
+                            param_type_well_defined: if self.result_detail()
+                                == OutputDetail::Detailed
+                            {
+                                introduced_params.param_type_well_defined
+                            } else {
+                                Vec::new()
+                            },
                             succeeded_dom: assumed_dom_facts
                                 .into_iter()
                                 .map(|a| a.well_defined)

@@ -18,13 +18,15 @@ fn function(result: &mut ExecStmtResult) -> &mut ExecHaveFnEqualStmtSuccessResul
 }
 
 fn anonymous(result: &mut ExecStmtResult) -> &mut AnonymousFnObjWellDefinedProof {
-    let VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByDef {
+    let Some(DetailedObjWellDefinedProof::ByDef {
         proof:
             ObjWellDefinedProofByDef::FunctionSpace(FunctionSpaceObjWellDefinedProofByDef::AnonymousFn(
                 proof,
             )),
         ..
-    }) = &mut function(result).anonymous_fn_well_defined
+    }) = (&mut function(result).anonymous_fn_well_defined)
+        .as_detailed_success_mut()
+        .unwrap()
     else {
         panic!("original anonymous function WD")
     };
@@ -138,7 +140,8 @@ fn natural_function_wd_preserves_return_types_call_domains_and_false_goals() {
     ] {
         let command = parse_launch_command(&["-strict".into(), "-e".into(), source.into()])
             .expect("strict source boundary");
-        let mut runtime = Runtime::new(command);
+        let mut runtime =
+            Runtime::new_with_result_detail(command, crate::result_detail::OutputDetail::Detailed);
         let result = runtime.run_litex_code(source).unwrap();
         assert!(!result.success && result.session_error.is_none());
     }

@@ -211,12 +211,15 @@ fn dependent_struct_release_cannot_replace_a_dependent_carrier() {
 #[test]
 fn dependent_struct_fields_cannot_accept_unequal_singleton_coordinates() {
     let source = "struct RepeatedCoordinate:\n    x R\n    y {x}\n1 $in {1}\n(1, 2) $in &RepeatedCoordinate\n";
-    let mut runtime = Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language: OutputLanguage::English,
-    });
+    let mut runtime = Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    );
     let run = runtime.run_litex_code(source).unwrap();
     assert!(!run.success);
     assert!(crate::compile_to_lean::LitexToLeanCompiler::new(runtime)

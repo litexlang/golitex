@@ -1,3 +1,4 @@
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::DetailedForallConclusionArgMatchProof;
 use crate::prelude::*;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::SearchProofByKnownForallFact;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_equal::NotEqualFactSearchProofByBuiltinRule;
@@ -50,7 +51,13 @@ fn atomic_known_forall_preserves_function_prefix_and_argument_slots() {
         else {
             panic!("actual known function conclusion")
         };
-        let crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::ForallConclusionArgMatchProof::ByStructure { child_matches, .. } = &mut known.arg_match_proofs[0] else { panic!("captured call structure") };
+        let DetailedForallConclusionArgMatchProof::ByStructure { child_matches, .. } =
+            known.as_detailed_mut().unwrap().arg_match_proofs[0]
+                .as_detailed_mut()
+                .unwrap()
+        else {
+            panic!("captured call structure")
+        };
         assert_eq!(child_matches.len(), 2);
         if corrupt {
             child_matches.swap(0, 1);
@@ -82,7 +89,9 @@ fn atomic_known_forall_replays_original_instantiation_requirements() {
     let (mut result, compiler) = super::execute(KNOWN_QUOTIENT);
     assert_eq!(
         known_quotient_mut(&mut result)
+            .detailed_ref()
             .instantiation_requirements
+            .detailed_ref()
             .proof_of_dom_facts
             .len(),
         1
@@ -97,14 +106,28 @@ fn atomic_known_forall_rejects_deleted_changed_or_reordered_evidence() {
         let (mut result, compiler) = super::execute(KNOWN_QUOTIENT);
         let known = known_quotient_mut(&mut result);
         match change {
-            "domain" => known.instantiation_requirements.proof_of_dom_facts.clear(),
-            "types" => known
+            "domain" => known
+                .as_detailed_mut()
+                .unwrap()
                 .instantiation_requirements
+                .as_detailed_mut()
+                .unwrap()
+                .proof_of_dom_facts
+                .clear(),
+            "types" => known
+                .as_detailed_mut()
+                .unwrap()
+                .instantiation_requirements
+                .as_detailed_mut()
+                .unwrap()
                 .param_type_requirements
                 .clear(),
-            "matching" => known.arg_match_proofs.swap(0, 1),
+            "matching" => known.as_detailed_mut().unwrap().arg_match_proofs.swap(0, 1),
             "parameter" => {
-                known.forall_parameters_match_what_args[0] =
+                known
+                    .as_detailed_mut()
+                    .unwrap()
+                    .forall_parameters_match_what_args[0] =
                     Obj::Literal(Literal::Number(Number::new("1".into())))
             }
             "producer" => {

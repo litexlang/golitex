@@ -7,12 +7,15 @@ fn check(source: &str, expected: bool) -> String {
     std::thread::Builder::new()
         .stack_size(64 * 1024 * 1024)
         .spawn(move || {
-            let mut runtime = Runtime::new(LaunchCommand::Eval {
-                code: String::new(),
-                session: false,
-                strict: true,
-                language: OutputLanguage::English,
-            });
+            let mut runtime = Runtime::new_with_result_detail(
+                LaunchCommand::Eval {
+                    code: String::new(),
+                    session: false,
+                    strict: true,
+                    language: OutputLanguage::English,
+                },
+                crate::result_detail::OutputDetail::Detailed,
+            );
             let result = runtime.run_litex_code(&source).expect("run code");
             let json = emit_run_detailed(&result, &runtime, "eval", None);
             assert_eq!(result.success, expected, "{}\n{}", source, json);

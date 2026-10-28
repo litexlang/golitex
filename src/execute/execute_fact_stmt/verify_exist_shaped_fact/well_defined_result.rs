@@ -5,15 +5,29 @@ use crate::execute::execute_fact_stmt::well_defined_results::{
     FactWellDefinedProof, FailToVerifyFactWellDefinedResult, FailToVerifyObjWellDefinedResult,
 };
 use crate::execute::introduce_typed_parameters::IntroduceTypedParametersResult;
+use crate::result_detail::OutputDetail;
+use crate::runtime::RuntimeResult;
 
 pub enum FailToVerifyExistShapedFactWellDefinedResult {
-    ParamType(FailToVerifyObjWellDefinedResult),
+    ParamType {
+        fact: crate::ast::fact::ExistShapedFact,
+        reason: FailToVerifyObjWellDefinedResult,
+    },
     BodyFact {
+        fact: crate::ast::fact::ExistShapedFact,
         failed_index: usize,
         param_type_well_defined: Vec<ParamTypeWellDefinedProof>,
         succeeded_body: Vec<FactWellDefinedProof>,
         failed_body: Box<FailToVerifyFactWellDefinedResult>,
     },
+}
+
+impl FailToVerifyExistShapedFactWellDefinedResult {
+    pub fn fact(&self) -> &crate::ast::fact::ExistShapedFact {
+        match self {
+            Self::ParamType { fact, .. } | Self::BodyFact { fact, .. } => fact,
+        }
+    }
 }
 
 // Well-definedness of an exist / exist! / not-exist fact.
@@ -28,10 +42,85 @@ pub enum FailToVerifyExistShapedFactWellDefinedResult {
 // Success-only evidence (same contract as AtomicFactWellDefinedProof).
 // Constructed only under Success; never embeds soft-fail.
 // Field order = stage order; `local_env` is the closed binder scope (not merged).
-pub struct ExistShapedFactWellDefinedProof {
+pub enum ExistShapedFactWellDefinedProof {
+    Compact(CompactExistShapedFactWellDefinedProof),
+    Normal(NormalExistShapedFactWellDefinedProof),
+    Detailed(Box<DetailedExistShapedFactWellDefinedProof>),
+}
+
+pub struct CompactExistShapedFactWellDefinedProof {}
+pub struct NormalExistShapedFactWellDefinedProof {}
+pub struct DetailedExistShapedFactWellDefinedProof {
     pub introduced_params: IntroduceTypedParametersResult,
     pub assumed_body_facts: Vec<AssumeDomFactResult>,
     pub local_env: Box<ExecEnv>,
+}
+
+impl ExistShapedFactWellDefinedProof {
+    pub(crate) fn new(
+        detail: OutputDetail,
+        build: impl FnOnce() -> DetailedExistShapedFactWellDefinedProof,
+    ) -> Self {
+        match detail {
+            OutputDetail::Compact => Self::Compact(CompactExistShapedFactWellDefinedProof {}),
+            OutputDetail::Normal => Self::Normal(NormalExistShapedFactWellDefinedProof {}),
+            OutputDetail::Detailed => Self::Detailed(Box::new(build())),
+        }
+    }
+
+    pub fn detail(&self) -> OutputDetail {
+        match self {
+            Self::Compact(_) => OutputDetail::Compact,
+            Self::Normal(_) => OutputDetail::Normal,
+            Self::Detailed(_) => OutputDetail::Detailed,
+        }
+    }
+
+    pub fn into_compact(self) -> RuntimeResult<CompactExistShapedFactWellDefinedProof> {
+        OutputDetail::Compact.require(self.detail(), "quantified WD")?;
+        match self {
+            Self::Compact(proof) => Ok(proof),
+            _ => unreachable!(),
+        }
+    }
+
+    pub fn into_normal(self) -> RuntimeResult<NormalExistShapedFactWellDefinedProof> {
+        OutputDetail::Normal.require(self.detail(), "quantified WD")?;
+        match self {
+            Self::Normal(proof) => Ok(proof),
+            _ => unreachable!(),
+        }
+    }
+
+    pub fn into_detailed(self) -> RuntimeResult<DetailedExistShapedFactWellDefinedProof> {
+        OutputDetail::Detailed.require(self.detail(), "quantified WD")?;
+        match self {
+            Self::Detailed(proof) => Ok(*proof),
+            _ => unreachable!(),
+        }
+    }
+
+    pub fn as_detailed(&self) -> RuntimeResult<&DetailedExistShapedFactWellDefinedProof> {
+        OutputDetail::Detailed.require(self.detail(), "quantified WD")?;
+        match self {
+            Self::Detailed(proof) => Ok(proof),
+            _ => unreachable!(),
+        }
+    }
+
+    pub fn as_detailed_mut(
+        &mut self,
+    ) -> RuntimeResult<&mut DetailedExistShapedFactWellDefinedProof> {
+        OutputDetail::Detailed.require(self.detail(), "quantified WD")?;
+        match self {
+            Self::Detailed(proof) => Ok(proof),
+            _ => unreachable!(),
+        }
+    }
+
+    pub(crate) fn detailed_ref(&self) -> &DetailedExistShapedFactWellDefinedProof {
+        self.as_detailed().unwrap_or_else(|error| panic!("{error}"))
+    }
 }
 
 // Soft miss vs success for exist-fact WD. Same shape as

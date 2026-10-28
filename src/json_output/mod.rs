@@ -53,6 +53,7 @@ use crate::knowledge_base::JsonValue;
 
 pub type OutputJson = JsonValue;
 
+pub(crate) use feedback::statement_failure_summary;
 pub(crate) use helper::fact_source_line as reading_fact_source_line;
 pub(crate) use source::statement_source_line as reading_statement_source_line;
 

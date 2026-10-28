@@ -16,25 +16,25 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<VerifyChainFactWellDefinedResult> {
         let adjacent_atomics = self.chain_adjacent_atomics(fact)?;
-        let mut adjacent = Vec::with_capacity(adjacent_atomics.len());
+        let mut proof =
+            ChainFactWellDefinedProof::new(self.result_detail(), adjacent_atomics.len());
         for (failed_index, atomic) in adjacent_atomics.iter().enumerate() {
             match self.verify_atomic_component_well_definedness(atomic, verify_state.clone())? {
-                VerifyAtomicFactWellDefinedResult::Success(proof) => {
-                    adjacent.push(proof);
+                VerifyAtomicFactWellDefinedResult::Success(adjacent) => {
+                    proof.push_adjacent(adjacent)?;
                 }
                 VerifyAtomicFactWellDefinedResult::Failed(failed_adjacent) => {
                     return Ok(VerifyChainFactWellDefinedResult::Failed(
                         FailToVerifyChainFactWellDefinedResult {
+                            fact: fact.clone(),
                             failed_index,
-                            succeeded_adjacent: adjacent,
+                            succeeded_adjacent: proof.into_completed(),
                             failed_adjacent,
                         },
                     ));
                 }
             }
         }
-        Ok(VerifyChainFactWellDefinedResult::Success(
-            ChainFactWellDefinedProof { adjacent },
-        ))
+        Ok(VerifyChainFactWellDefinedResult::Success(proof))
     }
 }

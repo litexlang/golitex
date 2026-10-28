@@ -342,10 +342,10 @@ impl LitexToLeanCompiler {
         // evidence below is consumed at the later equality-search position.
         position
             .with_visible_wd(checked_application, &mut |wd, producer| {
-                let ObjWellDefinedProof::ByDef {
+                let DetailedObjWellDefinedProof::ByDef {
                     obj: Obj::FnObj(original_call),
                     proof: ObjWellDefinedProofByDef::FnObj(call_wd),
-                } = wd
+                } = (wd).detailed_ref()
                 else {
                     return Err(LeanCompileError::new(
                         "Equality/FnTupleWD",

@@ -1,0 +1,27 @@
+# Witnesses and Cantor's diagonal
+# Why can no function from S onto its power set be surjective?
+
+# Track three objects: S, diagonal_set, and the later witness a.
+thm cantor:
+    ? forall S set, f fn(x S) power_set(S):
+        not $surjective(S, power_set(S), f)
+    by contra:
+        ? not $surjective(S, power_set(S), f)
+        # The diagonal subset contains the x that do not belong to their own
+        # image.
+        # Cmd/Ctrl-click diagonal_set to inspect its actual definition.
+        have diagonal_set power_set(S) = {x S: not x $in f(x)}
+        $surjective(S, power_set(S), f)
+        # The witness a comes from the surjectivity assumption.
+        # Hover a to inspect its introduction and domain.
+        obtain a from exist a S st {diagonal_set = f(a)}
+
+        # This inner contradiction first establishes diagonal membership of a.
+        # Then substitute the same witness into the diagonal definition.
+        by contra:
+            ? a $in diagonal_set
+            not a $in f(a)
+            a $in {x S: not x $in f(x)}
+            impossible not a $in diagonal_set
+
+        impossible not a $in f(a)

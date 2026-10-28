@@ -37,13 +37,19 @@ fn construction(run: &mut RunLitexCodeResult) -> &mut CompositionObjWellDefinedP
     let fact = super::atomic_proof_mut(
         &mut super::fact_statement_mut(&mut run.statement_results[2]).verify_result,
     );
-    let ObjWellDefinedProof::ByDef {
+    let DetailedObjWellDefinedProof::ByDef {
         proof:
             ObjWellDefinedProofByDef::FunctionSpace(FunctionSpaceObjWellDefinedProofByDef::Composition(
                 p,
             )),
         ..
-    } = &mut fact.well_defined_proof.well_defined_of_each_parameter[0]
+    } = (&mut fact
+        .well_defined_proof
+        .as_detailed_mut()
+        .unwrap()
+        .well_defined_of_each_parameter[0])
+        .as_detailed_mut()
+        .unwrap()
     else {
         panic!("composition constructor")
     };
@@ -62,20 +68,22 @@ fn composition_rejects_changed_operand_domain_body_and_compatibility_evidence() 
             3 => p.function.equal_to = Box::new(super::number_object("17")),
             4 => p.outer_domain.signature.ret_set = Box::new(super::number_object("17")),
             5 => {
-                let ObjWellDefinedProof::ByDef {
+                let DetailedObjWellDefinedProof::ByDef {
                     proof:
                         ObjWellDefinedProofByDef::FunctionSpace(
                             FunctionSpaceObjWellDefinedProofByDef::AnonymousFn(f),
                         ),
                     ..
-                } = p.function_well_defined.as_mut()
+                } = (p.function_well_defined.as_mut())
+                    .as_detailed_mut()
+                    .unwrap()
                 else {
                     panic!()
                 };
-                let ObjWellDefinedProof::ByDef {
+                let DetailedObjWellDefinedProof::ByDef {
                     proof: ObjWellDefinedProofByDef::FnObj(call),
                     ..
-                } = f.body_well_defined.as_mut()
+                } = (f.body_well_defined.as_mut()).as_detailed_mut().unwrap()
                 else {
                     panic!()
                 };
@@ -117,10 +125,12 @@ fn composition_call_rejects_missing_argument_or_guard_stages() {
         let eq = super::equality_proof_mut(
             &mut super::fact_statement_mut(&mut run.statement_results[3]).verify_result,
         );
-        let ObjWellDefinedProof::ByDef {
+        let DetailedObjWellDefinedProof::ByDef {
             proof: ObjWellDefinedProofByDef::FnObj(p),
             ..
-        } = &mut eq.well_defined_proof.left
+        } = (&mut eq.well_defined_proof.as_detailed_mut().unwrap().left)
+            .as_detailed_mut()
+            .unwrap()
         else {
             panic!()
         };
@@ -143,7 +153,8 @@ fn incompatible_composition_does_not_compile_a_silently_restricted_domain() {
     let source="have fn comp_inverse(x R: x != 0) R = 1/x\nhave fn comp_identity(x R) R = x\n$is_set(comp_inverse ∘ comp_identity)\n";
     let command =
         super::parse_launch_command(&["-strict".into(), "-e".into(), source.into()]).unwrap();
-    let mut runtime = Runtime::new(command);
+    let mut runtime =
+        Runtime::new_with_result_detail(command, crate::result_detail::OutputDetail::Detailed);
     let run = runtime.run_litex_code(source).unwrap();
     assert!(!run.success);
     assert!(super::LitexToLeanCompiler::new(runtime)
@@ -349,7 +360,8 @@ fn composition_right_identity_does_not_erase_a_strict_domain_restriction() {
         "have fn shift(x R) R = x+1\nhave fn nz_id(x R: x != 0) R = x\nshift ∘ nz_id = shift\n";
     let command =
         super::parse_launch_command(&["-strict".into(), "-e".into(), source.into()]).unwrap();
-    let mut runtime = Runtime::new(command);
+    let mut runtime =
+        Runtime::new_with_result_detail(command, crate::result_detail::OutputDetail::Detailed);
     let run = runtime.run_litex_code(source).unwrap();
     assert!(!run.success);
     assert!(super::LitexToLeanCompiler::new(runtime)

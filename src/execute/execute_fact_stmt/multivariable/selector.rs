@@ -169,10 +169,9 @@ impl Runtime {
             selection,
         };
         Ok(VerifyObjWellDefinedResult::Success(
-            ObjWellDefinedProof::ByDef {
-                obj: obj.clone(),
-                proof: selector_success(obj, stages),
-            },
+            ObjWellDefinedProof::by_def(self.result_detail(), &(obj.clone()), None, || {
+                selector_success(obj, stages)
+            }),
         ))
     }
     pub(crate) fn known_multivariable_selector_candidate(

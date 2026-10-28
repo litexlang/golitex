@@ -9,12 +9,15 @@ const PRODUCT: &str = "claim:\n    ? forall a R, b R:\n        a > 0\n        b 
 const LESS_SUM: &str = "claim:\n    ? forall a R, b R:\n        0 < a\n        0 < b\n        =>:\n            0 < a + b\n    0 < a + b\n";
 
 fn run(source: &str) -> (RunLitexCodeResult, LitexToLeanCompiler) {
-    let mut runtime = Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language: OutputLanguage::English,
-    });
+    let mut runtime = Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    );
     let result = runtime.run_litex_code(source).expect("source run");
     (result, LitexToLeanCompiler::new(runtime))
 }

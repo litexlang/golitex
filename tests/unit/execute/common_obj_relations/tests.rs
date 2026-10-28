@@ -30,12 +30,15 @@ const LOG_CHANGE: &str =
 const LOG_POWER: &str = "forall b,x R+,n N+:\n    b!=1\n    =>:\n        log(b^n,x)=log(b,x)/n\n";
 
 fn runtime(language: OutputLanguage) -> Runtime {
-    Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language,
-    })
+    Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    )
 }
 fn check(rt: &mut Runtime, code: &str, accepted: bool) -> JsonValue {
     let run = rt.run_litex_code(code).expect("public Runtime");

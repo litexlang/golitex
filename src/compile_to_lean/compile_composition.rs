@@ -57,7 +57,7 @@ impl LitexToLeanCompiler {
         let sig = self.compile_fn_signature(&proof.callable.function.body, position)?;
         let f = self.compile_object_reference(&head, position)?;
         let member=position.with_visible_wd(&goal.element,&mut |wd,producer| {
-            let ObjWellDefinedProof::ByDef {proof:ObjWellDefinedProofByDef::FnObj(p),..} = wd else {
+            let DetailedObjWellDefinedProof::ByDef {proof:ObjWellDefinedProofByDef::FnObj(p),..} = (wd).detailed_ref() else {
                 return Err(LeanCompileError::unsupported("Composition/OutputCallWD"));
             };
             let scope=SourcePosition::new(Some(producer),SourceOwner::WD(wd),0);
@@ -89,7 +89,7 @@ impl LitexToLeanCompiler {
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
         ensure_object(application, wd)?;
-        if let ObjWellDefinedProof::ByKnown { wd_id, .. } = wd {
+        if let DetailedObjWellDefinedProof::ByKnown { wd_id, .. } = (wd).detailed_ref() {
             if self.resolve_wd(*wd_id, position)?.ir() != application.ir() {
                 return Err(LeanCompileError::unsupported("Composition/BetaWDId"));
             }
@@ -108,11 +108,11 @@ impl LitexToLeanCompiler {
         }
         let (
             Obj::FnObj(call),
-            ObjWellDefinedProof::ByDef {
+            DetailedObjWellDefinedProof::ByDef {
                 proof: ObjWellDefinedProofByDef::FnObj(call_wd),
                 ..
             },
-        ) = (application, wd)
+        ) = (application, wd.detailed_ref())
         else {
             return Err(LeanCompileError::unsupported("Composition/BetaCallWD"));
         };
@@ -144,8 +144,8 @@ impl LitexToLeanCompiler {
                 outer_domain,
                 inner_domain,
             } => (outer_domain.as_ref(), inner_domain.as_ref()),
-            CompositionSignatureProof::Construction => match root_wd.as_ref() {
-                ObjWellDefinedProof::ByDef {
+            CompositionSignatureProof::Construction => match (root_wd.as_ref()).detailed_ref() {
+                DetailedObjWellDefinedProof::ByDef {
                     proof:
                         ObjWellDefinedProofByDef::FunctionSpace(
                             FunctionSpaceObjWellDefinedProofByDef::Composition(c),
@@ -243,13 +243,13 @@ impl LitexToLeanCompiler {
                 inner_domain,
             } => (outer_domain.as_ref(), inner_domain.as_ref()),
             CompositionSignatureProof::Construction => {
-                let Some(ObjWellDefinedProof::ByDef {
+                let Some(DetailedObjWellDefinedProof::ByDef {
                     proof:
                         ObjWellDefinedProofByDef::FunctionSpace(
                             FunctionSpaceObjWellDefinedProofByDef::Composition(p),
                         ),
                     ..
-                }) = wd
+                }) = wd.map(ObjWellDefinedProof::detailed_ref)
                 else {
                     return Err(LeanCompileError::unsupported(
                         "Composition/ConstructionSignature",
@@ -338,13 +338,13 @@ impl LitexToLeanCompiler {
         outer_member: &str,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
-        let ObjWellDefinedProof::ByDef {
+        let DetailedObjWellDefinedProof::ByDef {
             proof:
                 ObjWellDefinedProofByDef::FunctionSpace(
                     FunctionSpaceObjWellDefinedProofByDef::AnonymousFn(wd),
                 ),
             ..
-        } = proof.function_well_defined.as_ref()
+        } = (proof.function_well_defined.as_ref()).detailed_ref()
         else {
             return Err(LeanCompileError::unsupported(
                 "Composition/ExpandedLambdaWD",
@@ -456,8 +456,8 @@ impl LitexToLeanCompiler {
         wd: &ObjWellDefinedProof,
         position: &SourcePosition<'_>,
     ) -> Result<&'static str, LeanCompileError> {
-        match wd {
-            ObjWellDefinedProof::ByDef {
+        match (wd).detailed_ref() {
+            DetailedObjWellDefinedProof::ByDef {
                 proof: ObjWellDefinedProofByDef::FnObj(p),
                 ..
             } => match &p.domain_fn_set {
@@ -478,7 +478,7 @@ impl LitexToLeanCompiler {
                 }
                 _ => Err(LeanCompileError::unsupported("Composition/BodyCallDomain")),
             },
-            ObjWellDefinedProof::ByKnown { obj, wd_id } => {
+            DetailedObjWellDefinedProof::ByKnown { obj, wd_id } => {
                 if self.resolve_wd(*wd_id, position)?.ir() != obj.ir() {
                     return Err(LeanCompileError::unsupported("Composition/BodyWDId"));
                 }

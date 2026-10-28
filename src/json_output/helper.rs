@@ -273,6 +273,76 @@ pub(super) fn cite_forall_from_fact_id(runtime: &Runtime, fact_id: FactId) -> Js
     object(lang, entries)
 }
 
+pub(super) fn cite_known_forall(
+    runtime: &Runtime,
+    proof: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::SearchProofByKnownForallFact,
+) -> JsonValue {
+    use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::SearchProofByKnownForallFact;
+    runtime
+        .result_detail()
+        .require(proof.detail(), "project known forall")
+        .unwrap_or_else(|error| panic!("{error}"));
+    match proof {
+        SearchProofByKnownForallFact::Detailed(proof) => {
+            cite_forall_from_fact_id(runtime, proof.cite.fact_id)
+        }
+        SearchProofByKnownForallFact::Compact(_) => object(
+            output_language(runtime),
+            vec![(
+                "type",
+                string(type_value_cite_forall(output_language(runtime))),
+            )],
+        ),
+        SearchProofByKnownForallFact::Normal(proof) => {
+            let lang = output_language(runtime);
+            let fact = Fact::ForallFact(*proof.cited_fact.clone());
+            let mut fields = vec![
+                ("type", string(type_value_cite_forall(lang))),
+                ("cite", string(fact_display(&fact))),
+            ];
+            if let Some(line) = fact_line(&fact) {
+                fields.insert(1, ("line", JsonValue::Number(line as f64)));
+            }
+            object(lang, fields)
+        }
+    }
+}
+
+pub(super) fn cite_known_strategy(
+    runtime: &Runtime,
+    proof: &crate::execute::execute_fact_stmt::verify_atomic_fact::SearchProofByKnownStrategy,
+) -> JsonValue {
+    use crate::execute::execute_fact_stmt::verify_atomic_fact::SearchProofByKnownStrategy;
+    runtime
+        .result_detail()
+        .require(proof.detail(), "project known strategy")
+        .unwrap_or_else(|error| panic!("{error}"));
+    let lang = output_language(runtime);
+    let text = super::explain::explain_searched_proof_why("known_strategy", lang);
+    let mut fields = vec![
+        ("type", string(text.type_tag)),
+        ("rule_name", string(text.rule_name)),
+        ("message", string(text.message)),
+    ];
+    match proof {
+        SearchProofByKnownStrategy::Compact(_) => {}
+        SearchProofByKnownStrategy::Normal(proof) => {
+            fields.push(("strategy_name", string(proof.strategy_name.clone())));
+            fields.push(("then_index", JsonValue::Number(proof.then_index as f64)));
+            let fact = Fact::ForallFact(*proof.cited_fact.clone());
+            fields.push(("cite", string(fact_display(&fact))));
+            if let Some(line) = fact_line(&fact) {
+                fields.push(("line", JsonValue::Number(line as f64)));
+            }
+        }
+        SearchProofByKnownStrategy::Detailed(proof) => {
+            fields.push(("strategy_name", string(proof.strategy_name.clone())));
+            fields.push(("then_index", JsonValue::Number(proof.then_index as f64)));
+        }
+    }
+    object(lang, fields)
+}
+
 pub(super) fn builtin_rule_with_optional_cite(
     runtime: &Runtime,
     text: &crate::json_output::explain::BuiltinRuleText,

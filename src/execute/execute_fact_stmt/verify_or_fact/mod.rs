@@ -13,7 +13,9 @@ pub use result::{
     VerifyOrFactSuccess,
 };
 pub use well_defined_result::{
-    FailToVerifyOrFactWellDefinedResult, OrFactWellDefinedProof, VerifyOrFactWellDefinedResult,
+    CompactOrFactWellDefinedProof, DetailedOrFactWellDefinedProof,
+    FailToVerifyOrFactWellDefinedResult, NormalOrFactWellDefinedProof, OrFactWellDefinedProof,
+    VerifyOrFactWellDefinedResult,
 };
 
 pub(crate) use result::OrBuiltinAbsSignSplit;

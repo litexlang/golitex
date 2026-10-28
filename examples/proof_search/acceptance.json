@@ -2,7 +2,7 @@
   "engine": {
     "name": "Litex",
     "version": "1.1.6-beta",
-    "executable_id": "fnv1a64:c89ab4aea3094a85"
+    "executable_id": "fnv1a64:24a73285afaf3a0f"
   },
   "run_result": "success",
   "strict": true,
@@ -36,10 +36,10 @@
     "proof-search.zh.svg": "8424073ac1eff101a77438ea176ebe128aafae930c232d0a0a63223dc3d42b1e",
     "proof-discovery.svg": "ba93ae295d12aa6583d6d48b7657f7f07d9c1beb913ba9afe738fe3f128b3cf1",
     "proof-discovery.zh.svg": "a17884192009f179abefac341da6e085677396defc798ef6beb9ca7d481a452a",
-    "index.html": "6333bd2515b1e044ee3fe576033def3143d82bf395cda9bf65cc66c1f6589c76",
+    "index.html": "b3f39cf7caaba9220feaefa2be79ca6e7ab42616e5bc332425b51777058b06db",
     "viewer.js": "f0772238678ac451c935edeec5bcab82d08d827e7c41bcf686ce6f6c73aceebd",
-    "style.css": "e372d614b867d79db083b7e90823d7c497775794fa5d52fa61e8d5c2afc50d4b",
-    "build.py": "b142e51c998a78b76479daca0a6e3951f56a7db5acaf1df42f9efba348df2552",
+    "style.css": "9008350c5e1a4e1d28af762e99d6f79377fbbcf56b010071fdf18e6e5e740a9d",
+    "build.py": "ac48caaaf646ec37c15fd120b02368803b95e792ec09400e9cf9d3ca4d40806a",
     "index.template.html": "dd92c2791d43395c5592cd04549157514388c8dcfee4308ad072cb71fca2616b",
     "export.cjs": "5834fee4e00ada848984dec8576a067def865496a9abcfa7d96b20ebe6b49181",
     "README.md": "3859c3b002aef7263308ed8d40a46b63728902c7159d90e6e5e3c4b7720cde56"
@@ -126,5 +126,25 @@
       "visually_inspected": true
     },
     "browser_review": "Origin permission was declined; no browser page was opened or rendered for this revision."
+  },
+  "phase_source_prompts": {
+    "date": "2026-10-27",
+    "languages": [
+      "en",
+      "zh"
+    ],
+    "definitions": ">>> have x R",
+    "proofs": ">>> 0 <= (x + 1)^2",
+    "immediately_after_phase_headings": true,
+    "generated_html_checked": true,
+    "browser_visual_review": false
+  },
+  "isolated_declaration_panel": {
+    "date": "2026-10-27",
+    "orphan_context_return_segment_removed": true,
+    "whole_figure_connection_preserved": true,
+    "existing_static_assets_byte_identical": true,
+    "generated_html_checked": true,
+    "browser_visual_review": false
   }
 }

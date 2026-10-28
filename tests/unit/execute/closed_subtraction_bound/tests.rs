@@ -6,12 +6,15 @@ use crate::runtime::Runtime;
 use crate::tokenize::Tokenizer;
 
 fn runtime() -> Runtime {
-    Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language: OutputLanguage::English,
-    })
+    Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    )
 }
 
 fn fact(rt: &mut Runtime, code: &str) -> Fact {
@@ -27,12 +30,15 @@ fn fact(rt: &mut Runtime, code: &str) -> Fact {
 // Trusted rows are unit-test assumptions only. The maintained tracer below
 // proves the corresponding implications without trust.
 fn with_bound(bound: &str) -> Runtime {
-    let mut rt = Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: false,
-        language: OutputLanguage::English,
-    });
+    let mut rt = Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: false,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    );
     assert!(
         rt.run_litex_code(&format!("have x R\ntrust {bound}\n"))
             .unwrap()
@@ -194,12 +200,15 @@ fn symbolic_endpoint_requires_identical_bound_and_correct_offset_sign() {
         ("x >= b", "x - 1 <= b", false),
         ("x <= b", "x - c <= b", false),
     ] {
-        let mut rt = Runtime::new(LaunchCommand::Eval {
-            code: String::new(),
-            session: false,
-            strict: false,
-            language: OutputLanguage::English,
-        });
+        let mut rt = Runtime::new_with_result_detail(
+            LaunchCommand::Eval {
+                code: String::new(),
+                session: false,
+                strict: false,
+                language: OutputLanguage::English,
+            },
+            crate::result_detail::OutputDetail::Detailed,
+        );
         assert!(
             rt.run_litex_code(&format!("have x, b, c R\ntrust {source}\n"))
                 .unwrap()
@@ -270,12 +279,15 @@ fn strict_subtraction_bound_preserves_source_strictness_and_direction() {
         ("x <= 2", "x - 1 < 1", false),
         ("x < 2", "x - 1 < 1", true),
     ] {
-        let mut rt = Runtime::new(LaunchCommand::Eval {
-            code: String::new(),
-            session: false,
-            strict: false,
-            language: OutputLanguage::English,
-        });
+        let mut rt = Runtime::new_with_result_detail(
+            LaunchCommand::Eval {
+                code: String::new(),
+                session: false,
+                strict: false,
+                language: OutputLanguage::English,
+            },
+            crate::result_detail::OutputDetail::Detailed,
+        );
         assert!(
             rt.run_litex_code(&format!("have x, b, c R\ntrust {source}\n"))
                 .unwrap()
@@ -304,12 +316,15 @@ fn symbolic_bound_output_and_compiler_boundaries_are_explicit() {
             "forall x,b R:\n    x<=b\n    =>:\n        x-1<b\n",
             "forall x,b R:\n    x>=b\n    =>:\n        x-(-1)>b\n",
         ] {
-            let mut rt = Runtime::new(LaunchCommand::Eval {
-                code: String::new(),
-                session: false,
-                strict: true,
-                language,
-            });
+            let mut rt = Runtime::new_with_result_detail(
+                LaunchCommand::Eval {
+                    code: String::new(),
+                    session: false,
+                    strict: true,
+                    language,
+                },
+                crate::result_detail::OutputDetail::Detailed,
+            );
             let run = rt.run_litex_code(source).unwrap();
             assert!(run.success && run.session_error.is_none());
             let normal =

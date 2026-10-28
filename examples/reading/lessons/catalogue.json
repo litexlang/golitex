@@ -1,0 +1,626 @@
+{
+  "kind": "source_reading_lessons",
+  "version": 1,
+  "authoring_date": "2026-10-28",
+  "lessons": [
+    {
+      "id": "sqrt-two",
+      "source": {
+        "path": "examples/reading/homepage/04-sqrt-two-irrational.lit",
+        "sha256": "f1bf3bb0f02cbaa63436bb7e06cd5f5e92a5c67b4b876e016ec5ec328e0f0c62"
+      },
+      "titles": {
+        "zh": "反证法：√2 的无理性",
+        "en": "Contradiction: the irrationality of sqrt(2)"
+      },
+      "problem": {
+        "zh": "为什么 √2 不能写成两个整数的比？",
+        "en": "Why can sqrt(2) not be written as a ratio of integers?"
+      },
+      "proof_idea": "Assume a reduced rational representation; parity forces both numerator and denominator even, contradicting coprimality.",
+      "focus": "Adjacent equality proofs, theorem consequences and a local contradiction.",
+      "expected": "success",
+      "annotations": [
+        {
+          "before_line": 1,
+          "zh": [
+            "先读完整条证明，再追踪你有疑问的一步。",
+            "悬浮在每个等号上，查看那个相邻等式的依据。"
+          ],
+          "en": [
+            "Read the argument once, then inspect the steps you question.",
+            "Hover each equality sign for that adjacent equality's proof."
+          ]
+        },
+        {
+          "before_line": 4,
+          "zh": [
+            "反证时暂时假设 √2 是有理数。",
+            "这个定理如何使后面的 p、q 合法？"
+          ],
+          "en": [
+            "Inside this contradiction proof, sqrt(2) is assumed rational.",
+            "What lets the following theorem supply p and q?"
+          ]
+        },
+        {
+          "before_line": 7,
+          "zh": [
+            "第一个等号使用了 √2 = p / q。",
+            "悬浮在依据链接上定位原文；点进去后可返回此步。"
+          ],
+          "en": [
+            "The first equality uses sqrt(2) = p / q.",
+            "Point to its citation to locate the source; follow it and return."
+          ]
+        },
+        {
+          "before_line": 9,
+          "zh": [
+            "2 整除 p²，为什么能推出 2 整除 p？",
+            "灰色文字是本句真正发布的推导结果。"
+          ],
+          "en": [
+            "Why does 2 dividing p^2 imply that 2 divides p?",
+            "Grey text shows consequences actually published by this line."
+          ]
+        },
+        {
+          "before_line": 16,
+          "zh": [
+            "p、q 都被 2 整除，与最简分数的哪条条件冲突？",
+            "这些 p、q 只服务于当前反证。"
+          ],
+          "en": [
+            "Which condition on the reduced fraction conflicts with both p and q being even?",
+            "These witnesses belong to this contradiction proof."
+          ]
+        }
+      ],
+      "insertions": [],
+      "litex_code": {
+        "zh": "zh/sqrt-two.lit",
+        "en": "en/sqrt-two.lit"
+      },
+      "comments": {
+        "status": "Authored source lesson; verification.json records the exact checked source hashes and expected results.",
+        "mathematical_changes": "Only the explicitly listed insertions; all other non-comment source lines are preserved.",
+        "trust": 0,
+        "axioms": 0
+      }
+    },
+    {
+      "id": "syllogism",
+      "source": {
+        "path": "examples/reading/homepage/problems/missing-premise-fixed.lit",
+        "sha256": "7340190498237b37ced4f3c9cbb3adb54393efa7b50324bf7fd25dfd0f26e1fd"
+      },
+      "titles": {
+        "zh": "全称命题与三段论",
+        "en": "Universal statements and syllogism"
+      },
+      "problem": {
+        "zh": "所有人都会死，苏格拉底是人，因此苏格拉底会死。",
+        "en": "Every human is mortal; Socrates is human; therefore Socrates is mortal."
+      },
+      "proof_idea": "Use the human premise and instantiate the universal implication at person = socrates.",
+      "focus": "Concrete universal instantiation and distinct cited premises.",
+      "expected": "success",
+      "annotations": [
+        {
+          "before_line": 1,
+          "zh": [
+            "结论使用两个依据：一个全称蕴含，以及其中前提的具体实例。",
+            "悬浮在最后的 is_mortal 上，分别查看这两条依据。"
+          ],
+          "en": [
+            "The key question is which premises the final assertion uses.",
+            "Hover the final is_mortal assertion and inspect both citations."
+          ]
+        },
+        {
+          "before_line": 7,
+          "zh": [
+            "people 只是讨论范围，并不表示其中每个对象都是人。"
+          ],
+          "en": [
+            "people is a domain of discourse; its members are not automatically human."
+          ]
+        },
+        {
+          "before_line": 9,
+          "zh": [
+            "person 是任意对象；这里只断言“若是人，则会死”。"
+          ],
+          "en": [
+            "person is arbitrary; this asserts an implication, not its antecedent."
+          ]
+        },
+        {
+          "before_line": 14,
+          "zh": [
+            "观察 person = socrates 的具体代入。",
+            "缺少“苏格拉底是人”时，单凭全称命题还不够。"
+          ],
+          "en": [
+            "Inspect the concrete substitution person = socrates.",
+            "The universal statement alone does not establish that Socrates is human."
+          ]
+        }
+      ],
+      "insertions": [],
+      "litex_code": {
+        "zh": "zh/syllogism.lit",
+        "en": "en/syllogism.lit"
+      },
+      "comments": {
+        "status": "Authored source lesson; verification.json records the exact checked source hashes and expected results.",
+        "mathematical_changes": "Only the explicitly listed insertions; all other non-comment source lines are preserved.",
+        "trust": 0,
+        "axioms": 0
+      }
+    },
+    {
+      "id": "definitions",
+      "source": {
+        "path": "examples/reading/homepage/21-nonnegative-predicate.lit",
+        "sha256": "85805e71cfbc928c9db024d5f33d5607ae60393c9bebaa7cb7e8d4759eec0a70"
+      },
+      "titles": {
+        "zh": "定义与实例：非负数",
+        "en": "Definitions and instances: nonnegative numbers"
+      },
+      "problem": {
+        "zh": "如何区分定义一个性质、证明一个实例、使用一个定理？",
+        "en": "How do a definition, an instance proof and a theorem application differ?"
+      },
+      "proof_idea": "Define nonnegative on R; check the defining condition at 3 and establish that instance; use the square-nonnegativity theorem for a different instance.",
+      "focus": "Parameter domains, definition folding, published consequences and theorem use.",
+      "expected": "success",
+      "annotations": [
+        {
+          "before_line": 1,
+          "zh": [
+            "x R 指定实参为实数，x >= 0 是定义体中的条件。",
+            "⌘ / Ctrl + 点击 nonnegative 可回到它的声明。"
+          ],
+          "en": [
+            "x R restricts arguments to real numbers; x >= 0 is the defining condition.",
+            "Use Cmd/Ctrl-click on nonnegative to inspect its declaration."
+          ]
+        },
+        {
+          "before_line": 4,
+          "zh": [
+            "任意实数未必非负，但任意实数的平方非负。"
+          ],
+          "en": [
+            "An arbitrary real need not be nonnegative; its square is nonnegative."
+          ]
+        },
+        {
+          "before_line": 9,
+          "zh": [
+            "把下一句中的两处 3 都改成 (-1)，再检查。",
+            "此时结论讨论 (-1)^2 的非负性，与直接断言 -1 非负不同。"
+          ],
+          "en": [
+            "Replace both occurrences of 3 on the next line with (-1), then check.",
+            "The conclusion concerns (-1)^2; compare it with asserting nonnegative(-1)."
+          ]
+        }
+      ],
+      "insertions": [
+        {
+          "after_line": 3,
+          "code": "by def $nonnegative(3)",
+          "zh": [
+            "定义给出实数非负性的判定条件。",
+            "将下面的实参 3 改成 -1，再检查它的定义条件。"
+          ],
+          "en": [
+            "The definition does not prove that every real number is nonnegative.",
+            "Check one instance below. Try -1 in place of 3 and inspect the failed obligation."
+          ]
+        }
+      ],
+      "litex_code": {
+        "zh": "zh/definitions.lit",
+        "en": "en/definitions.lit"
+      },
+      "comments": {
+        "status": "Authored source lesson; verification.json records the exact checked source hashes and expected results.",
+        "mathematical_changes": "Only the explicitly listed insertions; all other non-comment source lines are preserved.",
+        "trust": 0,
+        "axioms": 0
+      }
+    },
+    {
+      "id": "sets",
+      "source": {
+        "path": "examples/reading/homepage/02-union-and-intersection.lit",
+        "sha256": "23bb9b834cfabc87b1fce2482aa26380a1dea2a83cb1b8641bfc5cdbbec91f76"
+      },
+      "titles": {
+        "zh": "集合运算与局部假设",
+        "en": "Set operations and local assumptions"
+      },
+      "problem": {
+        "zh": "怎样从并、交的成员条件读出一个集合论证明？",
+        "en": "How do membership conditions explain a proof about union and intersection?"
+      },
+      "proof_idea": "Use the actual union/intersection laws; a local contradiction establishes the final nonmembership.",
+      "focus": "Set-kind parameters, operator contracts and the scope of assumptions.",
+      "expected": "success",
+      "annotations": [
+        {
+          "before_line": 1,
+          "zh": [
+            "set 表示集合种类；A、B 是任意集合。",
+            "悬浮在 union 上查看并运算的输入条件与成员关系。"
+          ],
+          "en": [
+            "set denotes a kind of object: A and B are arbitrary sets.",
+            "Hover union for its input requirements and membership condition."
+          ]
+        },
+        {
+          "before_line": 6,
+          "zh": [
+            "并集的成员只需属于至少一个集合。",
+            "交集的成员必须同时属于两个集合。"
+          ],
+          "en": [
+            "Union membership needs membership in at least one set.",
+            "Intersection membership needs membership in both sets."
+          ]
+        },
+        {
+          "before_line": 10,
+          "zh": [
+            "最后用反证法证明 1 不属于这个交集。",
+            "留意证明中暂时出现的事实与全局结论的区别。"
+          ],
+          "en": [
+            "The final nonmembership is proved by contradiction.",
+            "Distinguish local consequences of the temporary assumption from global conclusions."
+          ]
+        },
+        {
+          "before_line": 12,
+          "zh": [
+            "这条局部事实来自反证假设，不是全局断言 1 属于 {2, 3}。"
+          ],
+          "en": [
+            "This local consequence is derived under the contradiction assumption; it is not a global assertion that 1 belongs to {2, 3}."
+          ]
+        }
+      ],
+      "insertions": [],
+      "litex_code": {
+        "zh": "zh/sets.lit",
+        "en": "en/sets.lit"
+      },
+      "comments": {
+        "status": "Authored source lesson; verification.json records the exact checked source hashes and expected results.",
+        "mathematical_changes": "Only the explicitly listed insertions; all other non-comment source lines are preserved.",
+        "trust": 0,
+        "axioms": 0
+      }
+    },
+    {
+      "id": "cantor",
+      "source": {
+        "path": "examples/reading/homepage/05-cantor-diagonal.lit",
+        "sha256": "fa120d4d6c155b48a25fb3073b39617bb37dd01566b8b1476d6f32324d89873e"
+      },
+      "titles": {
+        "zh": "见证与 Cantor 对角线",
+        "en": "Witnesses and Cantor's diagonal"
+      },
+      "problem": {
+        "zh": "为什么从 S 到其幂集的函数不可能是满射？",
+        "en": "Why can no function from S onto its power set be surjective?"
+      },
+      "proof_idea": "Assume surjectivity, form the diagonal subset, obtain its preimage witness, and derive the membership contradiction.",
+      "focus": "Witness provenance, dependent domains and nested local proofs.",
+      "expected": "success",
+      "annotations": [
+        {
+          "before_line": 1,
+          "zh": [
+            "先追踪三个对象：S、diagonal_set，以及后来取得的 a。"
+          ],
+          "en": [
+            "Track three objects: S, diagonal_set, and the later witness a."
+          ]
+        },
+        {
+          "before_line": 6,
+          "zh": [
+            "对角集合收集那些“不属于自己像”的 x。",
+            "⌘ / Ctrl + 点击 diagonal_set，查看它的真实定义。"
+          ],
+          "en": [
+            "The diagonal subset contains the x that do not belong to their own image.",
+            "Cmd/Ctrl-click diagonal_set to inspect its actual definition."
+          ]
+        },
+        {
+          "before_line": 8,
+          "zh": [
+            "满射性保证对角集合存在原像 a。",
+            "悬浮在 a 上，查看它的引入位置和所属范围。"
+          ],
+          "en": [
+            "The witness a comes from the surjectivity assumption.",
+            "Hover a to inspect its introduction and domain."
+          ]
+        },
+        {
+          "before_line": 10,
+          "zh": [
+            "这层局部反证先建立 a 属于对角集合。",
+            "再把同一个 a 代回对角集合的定义，观察矛盾。"
+          ],
+          "en": [
+            "This inner contradiction first establishes diagonal membership of a.",
+            "Then substitute the same witness into the diagonal definition."
+          ]
+        }
+      ],
+      "insertions": [],
+      "litex_code": {
+        "zh": "zh/cantor.lit",
+        "en": "en/cantor.lit"
+      },
+      "comments": {
+        "status": "Authored source lesson; verification.json records the exact checked source hashes and expected results.",
+        "mathematical_changes": "Only the explicitly listed insertions; all other non-comment source lines are preserved.",
+        "trust": 0,
+        "axioms": 0
+      }
+    },
+    {
+      "id": "least-squares",
+      "source": {
+        "path": "examples/reading/homepage/01-mean-squared-error.lit",
+        "sha256": "d3bf55bb8cccbd37c40b7eeca0c378a0387378d06a0a70747b51a953a479e9d2"
+      },
+      "titles": {
+        "zh": "函数与最小二乘",
+        "en": "Functions and least squares"
+      },
+      "problem": {
+        "zh": "为什么三个分数的平均数使平方误差之和最小？",
+        "en": "Why does the mean of three scores minimize their squared error?"
+      },
+      "proof_idea": "Split the candidate error into the mean error and 3 times a nonnegative square, then instantiate the result at 72,84,96.",
+      "focus": "Definitions consumed by a proof, quantified candidates and concrete reuse.",
+      "expected": "success",
+      "annotations": [
+        {
+          "before_line": 1,
+          "zh": [
+            "先看“最优中心”怎样定义，再看证明为什么选择 mean。"
+          ],
+          "en": [
+            "Read what an optimal center means before examining why the proof chooses mean."
+          ]
+        },
+        {
+          "before_line": 3,
+          "zh": [
+            "candidate 遍历全部实数，而不是只比较几个候选值。"
+          ],
+          "en": [
+            "candidate ranges over all real numbers, not merely a few tested values."
+          ]
+        },
+        {
+          "before_line": 7,
+          "zh": [
+            "mean 是返回实数的函数；它不是一个谓词。"
+          ],
+          "en": [
+            "mean returns a real value; it is a function rather than a predicate."
+          ]
+        },
+        {
+          "before_line": 10,
+          "zh": [
+            "关键恒等式把任意候选值的误差分解为两部分。",
+            "多出的平方项为什么不能为负？"
+          ],
+          "en": [
+            "The central identity splits any candidate error into two parts.",
+            "Why can the extra square term not be negative?"
+          ]
+        },
+        {
+          "before_line": 22,
+          "zh": [
+            "等号与不等号在同一条链中承担不同的工作。",
+            "先查看每个等号的依据，再读整条比较关系。"
+          ],
+          "en": [
+            "Equalities and inequalities play different roles in this chain.",
+            "Inspect the individual equality steps, then read the comparison as a whole."
+          ]
+        },
+        {
+          "before_line": 27,
+          "zh": [
+            "把抽象结论用于 72、84、96；最优中心是 84。",
+            "将下一行的 84 改为 80 并检查，再恢复原文，比较两种中心的误差。"
+          ],
+          "en": [
+            "Apply the result to 72, 84 and 96: the optimal center is 84.",
+            "Change 84 on the next line to 80 and check; then restore the source and compare their errors."
+          ]
+        }
+      ],
+      "insertions": [],
+      "litex_code": {
+        "zh": "zh/least-squares.lit",
+        "en": "en/least-squares.lit"
+      },
+      "comments": {
+        "status": "Authored source lesson; verification.json records the exact checked source hashes and expected results.",
+        "mathematical_changes": "Only the explicitly listed insertions; all other non-comment source lines are preserved.",
+        "trust": 0,
+        "axioms": 0
+      }
+    },
+    {
+      "id": "missing-premise",
+      "source": {
+        "path": "examples/reading/homepage/problems/missing-premise.lit",
+        "sha256": "733e5e690c53fe7db1415b2fde6e38c1956c091e263e667f720a881c53af74f8"
+      },
+      "titles": {
+        "zh": "三段论：缺少一个前提",
+        "en": "Syllogism: a missing premise"
+      },
+      "problem": {
+        "zh": "一个全称蕴含能否单独建立它的具体结论？",
+        "en": "Can a universal implication alone establish its particular conclusion?"
+      },
+      "proof_idea": "The implication needs its antecedent; the missing human premise prevents this particular conclusion from being established.",
+      "focus": "Inspect a failed obligation and repair the source.",
+      "expected": "failure",
+      "annotations": [
+        {
+          "before_line": 1,
+          "zh": [
+            "这份源码预期不能通过。悬浮在红色提示上查看未建立的结论。",
+            "在外层 forall 的开头补入 $is_human(socrates)，再检查。"
+          ],
+          "en": [
+            "This source is expected not to pass. Inspect the red source-local feedback.",
+            "Add $is_human(socrates) at the start of the outer forall body, then check."
+          ]
+        },
+        {
+          "before_line": 14,
+          "zh": [
+            "未证明会死，不等于证明了不会死。",
+            "和“全称命题与三段论”样章比较两条前提的作用。"
+          ],
+          "en": [
+            "Not proving mortality does not prove immortality.",
+            "Compare the two premises with the passing syllogism lesson."
+          ]
+        }
+      ],
+      "insertions": [],
+      "litex_code": {
+        "zh": "zh/missing-premise.lit",
+        "en": "en/missing-premise.lit"
+      },
+      "comments": {
+        "status": "Authored source lesson; verification.json records the exact checked source hashes and expected results.",
+        "mathematical_changes": "Only the explicitly listed insertions; all other non-comment source lines are preserved.",
+        "trust": 0,
+        "axioms": 0
+      }
+    },
+    {
+      "id": "sqrt-domain",
+      "source": {
+        "path": "examples/reading/homepage/problems/sqrt-domain.lit",
+        "sha256": "c4239c9926309064c295afd18123b1c1ad0104115a97da7816e8feba4a3c21fd"
+      },
+      "titles": {
+        "zh": "平方根的定义域",
+        "en": "The domain of the real square root"
+      },
+      "problem": {
+        "zh": "一个表达式有值，需要先满足什么条件？",
+        "en": "What must hold before an expression is defined?"
+      },
+      "proof_idea": "The real square-root operation requires a nonnegative input; -1 does not meet that obligation.",
+      "focus": "Well-definedness before theorem proving; repair an input domain.",
+      "expected": "failure",
+      "annotations": [
+        {
+          "before_line": 1,
+          "zh": [
+            "这份源码预期不能通过。错误不是关于某个平方根的值。",
+            "先查看 sqrt 所需的输入条件，再把 -1 改成 4 并检查。"
+          ],
+          "en": [
+            "This source is expected not to pass; the issue comes before its value can be discussed.",
+            "Inspect the input requirement of sqrt, replace -1 by 4, and check."
+          ]
+        }
+      ],
+      "insertions": [],
+      "litex_code": {
+        "zh": "zh/sqrt-domain.lit",
+        "en": "en/sqrt-domain.lit"
+      },
+      "comments": {
+        "status": "Authored source lesson; verification.json records the exact checked source hashes and expected results.",
+        "mathematical_changes": "Only the explicitly listed insertions; all other non-comment source lines are preserved.",
+        "trust": 0,
+        "axioms": 0
+      }
+    },
+    {
+      "id": "definition-failure",
+      "source": {
+        "path": "examples/reading/homepage/21-nonnegative-predicate.lit",
+        "sha256": "85805e71cfbc928c9db024d5f33d5607ae60393c9bebaa7cb7e8d4759eec0a70"
+      },
+      "titles": {
+        "zh": "定义条件尚未满足",
+        "en": "An unmet defining condition"
+      },
+      "problem": {
+        "zh": "命题有定义，是否就意味着每个实例都成立？",
+        "en": "Does having a predicate definition make every instance true?"
+      },
+      "proof_idea": "Unfolding nonnegative(-1) requires (-1)>=0; this obligation fails. Replacing -1 by 3 repairs the instance.",
+      "focus": "A defined predicate versus an established fact.",
+      "expected": "failure",
+      "annotations": [
+        {
+          "before_line": 1,
+          "zh": [
+            "这份源码预期在 by def 处不能通过。",
+            "看看被检查的究竟是名字、类型，还是定义体里的条件。"
+          ],
+          "en": [
+            "This source is expected to stop at by def.",
+            "Inspect whether the unmet requirement concerns the name, the type or the defining condition."
+          ]
+        }
+      ],
+      "insertions": [
+        {
+          "after_line": 3,
+          "code": "by def $nonnegative(-1)",
+          "zh": [
+            "定义给出了判定条件，不会使条件自动成立。",
+            "把 -1 改成 3，重新检查，观察本行发布的灰色结果。"
+          ],
+          "en": [
+            "A definition supplies a condition; it does not make that condition true.",
+            "Replace -1 by 3, check, and inspect the grey consequences."
+          ]
+        }
+      ],
+      "litex_code": {
+        "zh": "zh/definition-failure.lit",
+        "en": "en/definition-failure.lit"
+      },
+      "comments": {
+        "status": "Authored source lesson; verification.json records the exact checked source hashes and expected results.",
+        "mathematical_changes": "Only the explicitly listed insertions; all other non-comment source lines are preserved.",
+        "trust": 0,
+        "axioms": 0
+      }
+    }
+  ]
+}

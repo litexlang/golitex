@@ -37,6 +37,12 @@ impl LitexToLeanCompiler {
         result: &RunLitexCodeResult,
         artifact_namespace: &str,
     ) -> Result<String, LeanCompileError> {
+        if self.runtime.result_detail() != crate::result_detail::OutputDetail::Detailed {
+            return Err(LeanCompileError::new(
+                "result_detail",
+                "Lean replay requires Detailed execution results.",
+            ));
+        }
         let position = SourcePosition {
             parent: None,
             owner: SourceOwner::Run(result),
@@ -781,11 +787,11 @@ fn verify_has_set_inference(proof: &VerifyFactResult) -> bool {
                     })
             }
             VerifyForallFactResult::Success(VerifyForallFactProof::ByKnownForallFact(proof)) => {
-                domains_have_set_inference(&proof.well_defined.assumed_dom_facts)
+                domains_have_set_inference(&proof.well_defined.detailed_ref().assumed_dom_facts)
             }
             VerifyForallFactResult::Success(VerifyForallFactProof::ByEmptyParameterDomain(
                 proof,
-            )) => domains_have_set_inference(&proof.well_defined.assumed_dom_facts),
+            )) => domains_have_set_inference(&proof.well_defined.detailed_ref().assumed_dom_facts),
             _ => false,
         },
         VerifyFactResult::AndFact(proof) => {

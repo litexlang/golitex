@@ -2,9 +2,8 @@ use super::helper::exist_instance_matches;
 use crate::compile_to_lean::helper::*;
 use crate::compile_to_lean::source_position::{SourceOwner, SourcePosition};
 use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
-use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::{
-    ForallConclusionArgMatchProof, SearchProofByKnownForallFact,
-};
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::DetailedForallConclusionArgMatchProof;
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::SearchProofByKnownForallFact;
 use crate::execute::execute_fact_stmt::verify_exist_shaped_fact::ExistShapedFactWellDefinedProof;
 use crate::prelude::*;
 use std::collections::{HashMap, HashSet};
@@ -19,11 +18,13 @@ impl LitexToLeanCompiler {
         proof: &SearchProofByKnownForallFact,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
-        let registered = self.cited_fact_reference(proof.cite.fact_id, position)?;
+        let registered = self.cited_fact_reference(proof.detailed_ref().cite.fact_id, position)?;
         let Fact::ForallFact(source) = registered.0 else {
             return Err(LeanCompileError::unsupported("Exist/KnownForallFamily"));
         };
-        let ForallConclusionLocation::DirectThenFact(location) = &proof.cite.location else {
+        let ForallConclusionLocation::DirectThenFact(location) =
+            &proof.detailed_ref().cite.location
+        else {
             return Err(LeanCompileError::unsupported("Exist/KnownForallLocation"));
         };
         // Match Runtime's family rule: unique existence can also prove plain
@@ -46,13 +47,19 @@ impl LitexToLeanCompiler {
         let negative = matches!(goal_family, ExistShapedFact::NotExist(_));
         let unique = matches!(goal_family, ExistShapedFact::ExistUnique(_));
         let parameters = source.typed_parameters.ordered_param_ids();
-        if parameters.len() != proof.forall_parameters_match_what_args.len() {
+        if parameters.len() != proof.detailed_ref().forall_parameters_match_what_args.len() {
             return Err(LeanCompileError::unsupported("Exist/KnownForallArity"));
         }
         let substitution: HashMap<_, _> = parameters
             .iter()
             .copied()
-            .zip(proof.forall_parameters_match_what_args.iter().cloned())
+            .zip(
+                proof
+                    .detailed_ref()
+                    .forall_parameters_match_what_args
+                    .iter()
+                    .cloned(),
+            )
             .collect();
         if substitution.len() != parameters.len()
             || !exist_instance_matches(selected, goal, &substitution)
@@ -73,7 +80,9 @@ impl LitexToLeanCompiler {
             .collect();
         let source_args = crate::ast::fact::plain_exist_fact_free_args_ref(selected);
         let goal_args = crate::ast::fact::plain_exist_fact_free_args_ref(goal);
-        if source_args.len() != goal_args.len() || goal_args.len() != proof.arg_match_proofs.len() {
+        if source_args.len() != goal_args.len()
+            || goal_args.len() != proof.detailed_ref().arg_match_proofs.len()
+        {
             return Err(LeanCompileError::unsupported("Exist/KnownForallMatchArity"));
         }
         let mut patterns = Vec::new();
@@ -81,15 +90,15 @@ impl LitexToLeanCompiler {
         for ((original, goal_arg), matched) in source_args
             .iter()
             .zip(&goal_args)
-            .zip(&proof.arg_match_proofs)
+            .zip(&proof.detailed_ref().arg_match_proofs)
         {
             // The producer retained the pattern after aligning the inner
             // witnesses. Validate it against the cited original before replay.
-            let pattern = match matched {
-                ForallConclusionArgMatchProof::BoundParam { pattern, .. }
-                | ForallConclusionArgMatchProof::ByStructure { pattern, .. }
-                | ForallConclusionArgMatchProof::NonParamEqual { pattern, .. } => pattern,
-                ForallConclusionArgMatchProof::ReboundParamEqual { .. } => original,
+            let pattern = match matched.detailed_ref() {
+                DetailedForallConclusionArgMatchProof::BoundParam { pattern, .. }
+                | DetailedForallConclusionArgMatchProof::ByStructure { pattern, .. }
+                | DetailedForallConclusionArgMatchProof::NonParamEqual { pattern, .. } => pattern,
+                DetailedForallConclusionArgMatchProof::ReboundParamEqual { .. } => original,
             };
             if !instantiated_object_matches(original, pattern, &renamed) {
                 return Err(LeanCompileError::unsupported(
@@ -126,6 +135,7 @@ impl LitexToLeanCompiler {
             .flat_map(|group| &group.params)
             .zip(
                 &formation
+                    .detailed_ref()
                     .introduced_params
                     .defined_params
                     .store_and_infer_results,
@@ -173,7 +183,7 @@ impl LitexToLeanCompiler {
         for (index, ((pattern, goal_arg), matched)) in patterns
             .iter()
             .zip(&goal_args)
-            .zip(&proof.arg_match_proofs)
+            .zip(&proof.detailed_ref().arg_match_proofs)
             .enumerate()
         {
             let prior = SourcePosition {

@@ -43,11 +43,11 @@ impl LitexToLeanCompiler {
             SourceOwner::WD(&p.application_well_defined),
             usize::MAX,
         );
-        let beta = match &p.application_well_defined {
-            ObjWellDefinedProof::ByDef { .. } => {
+        let beta = match (&p.application_well_defined).detailed_ref() {
+            DetailedObjWellDefinedProof::ByDef { .. } => {
                 self.compile_eval_function_beta(p, &p.application_well_defined, &formed)?
             }
-            ObjWellDefinedProof::ByKnown { .. } => formed
+            DetailedObjWellDefinedProof::ByKnown { .. } => formed
                 .with_visible_wd(application, &mut |wd, _| {
                     self.compile_eval_function_beta(p, wd, &formed)
                 })?

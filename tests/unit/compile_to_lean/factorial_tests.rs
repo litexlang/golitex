@@ -24,10 +24,16 @@ fn factorial_wd_rejects_missing_child_missing_domain_and_wrong_carrier() {
         let atomic = super::atomic_proof_mut(
             &mut super::fact_statement_mut(&mut run.statement_results[1]).verify_result,
         );
-        let ObjWellDefinedProof::ByDef {
+        let DetailedObjWellDefinedProof::ByDef {
             proof: ObjWellDefinedProofByDef::IntegerOperator(IntegerWd::Factorial(p)),
             ..
-        } = &mut atomic.well_defined_proof.well_defined_of_each_parameter[0]
+        } = (&mut atomic
+            .well_defined_proof
+            .as_detailed_mut()
+            .unwrap()
+            .well_defined_of_each_parameter[0])
+            .as_detailed_mut()
+            .unwrap()
         else {
             panic!("factorial WD")
         };
@@ -256,7 +262,8 @@ fn factorial_rejects_invalid_domains_and_the_zero_one_strict_boundary() {
     ] {
         let command =
             parse_launch_command(&["-strict".into(), "-e".into(), source.into()]).unwrap();
-        let mut runtime = Runtime::new(command);
+        let mut runtime =
+            Runtime::new_with_result_detail(command, crate::result_detail::OutputDetail::Detailed);
         let run = runtime.run_litex_code(source).unwrap();
         assert!(!run.success, "{source}");
         assert!(super::LitexToLeanCompiler::new(runtime)

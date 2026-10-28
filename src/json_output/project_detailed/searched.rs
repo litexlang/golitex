@@ -770,6 +770,14 @@ pub(super) fn project_known_forall(
     proof: &SearchProofByKnownForallFact,
     runtime: &Runtime,
 ) -> JsonValue {
+    runtime
+        .result_detail()
+        .require(proof.detail(), "project forall application")
+        .unwrap_or_else(|error| panic!("{error}"));
+    let SearchProofByKnownForallFact::Detailed(proof) = proof else {
+        return super::super::helper::cite_known_forall(runtime, proof);
+    };
+    let requirements = proof.instantiation_requirements.detailed_ref();
     let mut entries = vec![
         ("type", string("by_known_forall")),
         ("cite_fact_id", string(proof.cite.fact_id.to_string())),
@@ -790,8 +798,7 @@ pub(super) fn project_known_forall(
     entries.push((
         "param_type_requirements",
         JsonValue::Array(
-            proof
-                .instantiation_requirements
+            requirements
                 .param_type_requirements
                 .iter()
                 .map(|requirement| {
@@ -814,15 +821,20 @@ pub(super) fn project_known_forall(
     ));
     entries.push((
         "proof_of_dom_facts",
-        project_verify_facts(
-            &proof.instantiation_requirements.proof_of_dom_facts,
-            runtime,
-        ),
+        project_verify_facts(&requirements.proof_of_dom_facts, runtime),
     ));
     object_for(runtime, entries)
 }
 
 fn project_known_strategy(proof: &SearchProofByKnownStrategy, runtime: &Runtime) -> JsonValue {
+    runtime
+        .result_detail()
+        .require(proof.detail(), "project strategy")
+        .unwrap_or_else(|error| panic!("{error}"));
+    let SearchProofByKnownStrategy::Detailed(proof) = proof else {
+        return super::super::helper::cite_known_strategy(runtime, proof);
+    };
+    let requirements = proof.instantiation_requirements.detailed_ref();
     object_for(
         runtime,
         vec![
@@ -831,10 +843,7 @@ fn project_known_strategy(proof: &SearchProofByKnownStrategy, runtime: &Runtime)
             ("then_index", JsonValue::Number(proof.then_index as f64)),
             (
                 "proof_of_dom_facts",
-                project_verify_facts(
-                    &proof.instantiation_requirements.proof_of_dom_facts,
-                    runtime,
-                ),
+                project_verify_facts(&requirements.proof_of_dom_facts, runtime),
             ),
         ],
     )

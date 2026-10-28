@@ -1,0 +1,21 @@
+# Universal statements and syllogism
+# Every human is mortal; Socrates is human; therefore Socrates is mortal.
+
+# The key question is which premises the final assertion uses.
+# Hover the final is_mortal assertion and inspect both citations.
+abstract_prop is_human(person)
+abstract_prop is_mortal(person)
+
+# people is a domain of discourse; its members are not automatically human.
+forall people nonempty_set, socrates people:
+    $is_human(socrates)
+    # person is arbitrary; this asserts an implication, not its antecedent.
+    forall person people:
+        $is_human(person)
+        =>:
+            $is_mortal(person)
+    =>:
+        # Inspect the concrete substitution person = socrates.
+        # The universal statement alone does not establish that Socrates is
+        # human.
+        $is_mortal(socrates)

@@ -6,6 +6,7 @@ mod capture;
 #[rustfmt::skip]
 mod capture_generated;
 mod build_reading;
+mod compact_json_output;
 mod export_reading;
 mod helper;
 mod parse_reading_command;

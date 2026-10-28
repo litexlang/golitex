@@ -34,7 +34,11 @@ fn real_bounds_reject_missing_and_reordered_domain_evidence() {
             panic!("by def")
         };
         let p = super::atomic_proof_mut(&mut p.proof);
-        let PredicateDomainProof::ByRequirements(req) = &mut p.well_defined_proof.predicate_domain
+        let PredicateDomainProof::ByRequirements(req) = &mut p
+            .well_defined_proof
+            .as_detailed_mut()
+            .unwrap()
+            .predicate_domain
         else {
             panic!("real predicate domain")
         };
@@ -151,7 +155,8 @@ fn real_bounds_reject_unproved_or_nonreal_domains() {
     ] {
         let command =
             parse_launch_command(&["-strict".into(), "-e".into(), source.into()]).unwrap();
-        let mut runtime = Runtime::new(command);
+        let mut runtime =
+            Runtime::new_with_result_detail(command, crate::result_detail::OutputDetail::Detailed);
         let run = runtime.run_litex_code(source).unwrap();
         assert!(!run.success, "{source}");
         assert!(super::LitexToLeanCompiler::new(runtime)

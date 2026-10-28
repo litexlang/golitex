@@ -7,12 +7,15 @@ const TRIANGLE: &str = "forall x,y,z R:\n    abs(x-z)<=abs(x-y)+abs(y-z)\n";
 const POSITIVE_MIN: &str = "forall a,b R+:\n    min(a,b) $in R+\n";
 
 fn runtime(language: crate::launch_command::OutputLanguage) -> Runtime {
-    Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language,
-    })
+    Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    )
 }
 
 fn check(rt: &mut Runtime, source: &str, expected: bool) -> RunLitexCodeResult {

@@ -5,7 +5,8 @@ mod well_defined_result;
 
 pub use result::{VerifyChainFactFailed, VerifyChainFactResult};
 pub use well_defined_result::{
-    ChainFactWellDefinedProof, FailToVerifyChainFactWellDefinedResult,
+    ChainFactWellDefinedProof, CompactChainFactWellDefinedProof, DetailedChainFactWellDefinedProof,
+    FailToVerifyChainFactWellDefinedResult, NormalChainFactWellDefinedProof,
     VerifyChainFactWellDefinedResult,
 };
 

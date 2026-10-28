@@ -1,0 +1,50 @@
+thm contract_finite_pushforward_empty:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,Target set,F fn(k space.carrier) Target:
+        \prob::main::finite_pushforward_event_probability<Omega,space,Target,F>({}) = 0
+    release thm prob::main::finite_pushforward_empty(Omega,space,Target,F)
+
+thm contract_finite_pushforward_whole:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,Target set,F fn(k space.carrier) Target:
+        \prob::main::finite_pushforward_event_probability<Omega,space,Target,F>(fn_range(F)) = 1
+    release thm prob::main::finite_pushforward_whole(Omega,space,Target,F)
+
+thm contract_finite_pushforward_nonnegative:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,Target set,F fn(k space.carrier) Target,A power_set(fn_range(F)):
+        \prob::main::finite_pushforward_event_probability<Omega,space,Target,F>(A) >= 0
+    release thm prob::main::finite_pushforward_nonnegative(Omega,space,Target,F,A)
+
+thm contract_finite_pushforward_disjoint_additivity:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,Target set,F fn(k space.carrier) Target,A,B power_set(fn_range(F)):
+        intersect(A,B) = {}
+        =>:
+            \prob::main::finite_pushforward_event_probability<Omega,space,Target,F>(union(A,B)) = \prob::main::finite_pushforward_event_probability<Omega,space,Target,F>(A)+\prob::main::finite_pushforward_event_probability<Omega,space,Target,F>(B)
+    release thm prob::main::finite_pushforward_disjoint_additivity(Omega,space,Target,F,A,B)
+
+thm contract_finite_pushforward_probability_laws:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,Target set,F fn(k space.carrier) Target:
+        (fn_range(F),\prob::main::finite_pushforward_event_probability<Omega,space,Target,F>) $in &prob::main::FiniteProbabilitySpace<Target>
+    release thm prob::main::finite_pushforward_probability_laws(Omega,space,Target,F)
+
+thm contract_finite_pushforward_event_formula:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,Target set,F fn(k space.carrier) Target,A power_set(fn_range(F)):
+        \prob::main::finite_pushforward_event_probability<Omega,space,Target,F>(A) = space.prob(preimage_set(F,A))
+    release thm prob::main::finite_pushforward_event_formula(Omega,space,Target,F,A)
+
+thm contract_finite_pushforward_singleton_probability:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,Target set,F fn(k space.carrier) Target,y fn_range(F):
+        \prob::main::finite_pushforward_event_probability<Omega,space,Target,F>({y}) = space.prob(preimage(F,y))
+    release thm prob::main::finite_pushforward_singleton_probability(Omega,space,Target,F,y)
+
+thm pushforward_value_definition:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,Target set,F fn(k space.carrier) Target:
+        \prob::main::finite_pushforward_probability_space<Omega,space,Target,F> = (fn_range(F),\prob::main::finite_pushforward_event_probability<Omega,space,Target,F>)
+
+thm pushforward_value_type:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,Target set,F fn(k space.carrier) Target:
+        \prob::main::finite_pushforward_probability_space<Omega,space,Target,F> $in &prob::main::FiniteProbabilitySpace<Target>
+    release thm prob::main::finite_pushforward_probability_laws(Omega,space,Target,F)
+    \prob::main::finite_pushforward_probability_space<Omega,space,Target,F> = (fn_range(F),\prob::main::finite_pushforward_event_probability<Omega,space,Target,F>)
+
+thm pushforward_event_function_type:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,Target set,F fn(k space.carrier) Target:
+        \prob::main::finite_pushforward_event_probability<Omega,space,Target,F> $in fn(A power_set(fn_range(F))) R

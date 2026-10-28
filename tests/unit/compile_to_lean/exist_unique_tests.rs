@@ -192,12 +192,15 @@ fn one_witness_does_not_establish_unique_existence() {
         "witness exist! x R st {x^2 = 4} from 2\n",
         "witness exist! x R st {x = 0} from 1\n",
     ] {
-        let mut runtime = Runtime::new(LaunchCommand::Eval {
-            code: String::new(),
-            session: false,
-            strict: true,
-            language: OutputLanguage::English,
-        });
+        let mut runtime = Runtime::new_with_result_detail(
+            LaunchCommand::Eval {
+                code: String::new(),
+                session: false,
+                strict: true,
+                language: OutputLanguage::English,
+            },
+            crate::result_detail::OutputDetail::Detailed,
+        );
         assert!(!runtime.run_litex_code(source).unwrap().success);
     }
 }

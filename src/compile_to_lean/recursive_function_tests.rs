@@ -17,12 +17,15 @@ fn checked() -> (RunLitexCodeResult, LitexToLeanCompiler) {
 }
 
 fn checked_source(source: &str) -> (RunLitexCodeResult, LitexToLeanCompiler) {
-    let mut runtime = Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language: OutputLanguage::English,
-    });
+    let mut runtime = Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    );
     let result = runtime.run_litex_code(source).expect("source run");
     assert!(
         result.success && result.session_error.is_none(),
@@ -180,14 +183,14 @@ fn recursive_graph_rejects_forged_membership_id_view() {
 fn recursive_graph_rejects_missing_smaller_index_evidence() {
     let (mut result, compiler) = checked();
     let proof = declaration(&mut result);
-    let InducCaseBodySuccess::EqualTo {
-        well_defined:
-            VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByDef {
-                proof: ObjWellDefinedProofByDef::FnObj(call),
-                ..
-            }),
+    let InducCaseBodySuccess::EqualTo { well_defined, .. } = &mut proof.case_checks.cases[1].body
+    else {
+        panic!("original recursive call formation");
+    };
+    let Some(DetailedObjWellDefinedProof::ByDef {
+        proof: ObjWellDefinedProofByDef::FnObj(call),
         ..
-    } = &mut proof.case_checks.cases[1].body
+    }) = well_defined.as_detailed_success_mut().unwrap()
     else {
         panic!("original recursive call formation");
     };
@@ -282,12 +285,15 @@ fn recursive_graph_rejects_authored_domain_extension() {
         "have fn repeated_one(n N) R",
         "have fn repeated_one(n N: n >= 0) R",
     );
-    let mut runtime = Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language: OutputLanguage::English,
-    });
+    let mut runtime = Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    );
     let result = runtime
         .run_litex_code(&source)
         .expect("checked guarded source");

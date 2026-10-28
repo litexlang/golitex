@@ -129,6 +129,7 @@ impl LitexToLeanCompiler {
         let mut witness = Vec::new();
         for (p, store) in parameters.iter().zip(
             &formation
+                .detailed_ref()
                 .introduced_params
                 .defined_params
                 .store_and_infer_results,

@@ -7,12 +7,15 @@ use crate::runtime::Runtime;
 use crate::tokenize::Tokenizer;
 
 fn runtime_with_file_env() -> Runtime {
-    Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: false,
-        language: OutputLanguage::English,
-    })
+    Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: false,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    )
 }
 
 fn exec_one(runtime: &mut Runtime, code: &str) -> ExecStmtResult {
@@ -1979,7 +1982,10 @@ fn auto_open_point_forall_field_reflexive() {
             match *boxed {
                 VerifyForallFactResult::Failed(
                     VerifyForallFactFailed::FailToVerifyWellDefined(
-                        FailToVerifyForallFactWellDefinedResult::AutoOpenStructLayer(failed),
+                        FailToVerifyForallFactWellDefinedResult::AutoOpenStructLayer {
+                            reason: failed,
+                            ..
+                        },
                     ),
                 ) => panic!("auto-open soft fail: {}", failed.reason),
                 VerifyForallFactResult::Failed(

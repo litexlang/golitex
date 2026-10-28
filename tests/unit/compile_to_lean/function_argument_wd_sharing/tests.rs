@@ -7,10 +7,12 @@ const SOURCE: &str = include_str!("../../../../examples/wd/repeated_function_arg
 fn call(result: &mut RunLitexCodeResult) -> &mut FnObjObjWellDefinedProof {
     let forall = super::forall_proof_mut(&mut result.statement_results[2]);
     let equality = super::equality_proof_mut(&mut forall.proved_then_facts[0].verify_result);
-    let ObjWellDefinedProof::ByDef {
+    let DetailedObjWellDefinedProof::ByDef {
         proof: ObjWellDefinedProofByDef::FnObj(call),
         ..
-    } = &mut equality.well_defined_proof.left
+    } = (&mut equality.well_defined_proof.as_detailed_mut().unwrap().left)
+        .as_detailed_mut()
+        .unwrap()
     else {
         panic!("original dot WD")
     };
@@ -26,7 +28,10 @@ fn function_argument_wd_sharing_records_one_producer_and_three_references() {
     let formed = &scope.formed_children[0];
     assert_eq!(formed.child_index, 0);
     let first = &call.child_obj_well_defined[0];
-    assert!(matches!(first.as_ref(), ObjWellDefinedProof::ByDef { .. }));
+    assert!(matches!(
+        (first.as_ref()).as_detailed().unwrap(),
+        DetailedObjWellDefinedProof::ByDef { .. }
+    ));
     assert!(
         scope
             .local_env
@@ -36,7 +41,7 @@ fn function_argument_wd_sharing_records_one_producer_and_three_references() {
             == Some(first.obj())
     );
     assert!(
-        matches!(call.child_obj_well_defined[1].as_ref(), ObjWellDefinedProof::ByKnown { wd_id, .. } if *wd_id == formed.wd_id)
+        matches!((call.child_obj_well_defined[1].as_ref()).as_detailed().unwrap(), DetailedObjWellDefinedProof::ByKnown { wd_id, .. } if *wd_id == formed.wd_id)
     );
     for requirement in &call.requirement_fact_verified {
         let VerifyFactResult::AtomicExceptEquality(r) = requirement else {
@@ -46,7 +51,7 @@ fn function_argument_wd_sharing_records_one_producer_and_three_references() {
             panic!("checked membership")
         };
         assert!(
-            matches!(&r.well_defined_proof.well_defined_of_each_parameter[0], ObjWellDefinedProof::ByKnown { wd_id, .. } if *wd_id == formed.wd_id)
+            matches!((&r.well_defined_proof.detailed_ref().well_defined_of_each_parameter[0]).as_detailed().unwrap(), DetailedObjWellDefinedProof::ByKnown { wd_id, .. } if *wd_id == formed.wd_id)
         );
     }
     assert!(compiler
@@ -75,7 +80,11 @@ fn function_argument_wd_sharing_rejects_forward_reference() {
     let call = call(&mut result);
     let wd_id = call.argument_scope.as_ref().unwrap().formed_children[0].wd_id;
     let obj = call.child_obj_well_defined[0].obj().clone();
-    call.child_obj_well_defined[0] = Box::new(ObjWellDefinedProof::ByKnown { obj, wd_id });
+    call.child_obj_well_defined[0] = Box::new(
+        crate::execute::execute_fact_stmt::ObjWellDefinedProof::Detailed(Box::new(
+            DetailedObjWellDefinedProof::ByKnown { obj, wd_id },
+        )),
+    );
     let error = compiler
         .compile_run(&result, "forward_argument_reference")
         .unwrap_err();
@@ -136,7 +145,7 @@ fn function_argument_wd_sharing_keeps_failed_candidates_isolated_and_guards_chec
     let VerifyEqualityResult::Success(equality) = equality.as_ref() else {
         panic!("proved")
     };
-    let Obj::FnObj(application) = equality.well_defined_proof.left.obj() else {
+    let Obj::FnObj(application) = equality.well_defined_proof.detailed_ref().left.obj() else {
         panic!("call")
     };
     let argument = application.body[0][0].as_ref();
@@ -151,6 +160,8 @@ fn function_argument_wd_sharing_keeps_failed_candidates_isolated_and_guards_chec
     let old_id = rejected.scope.formed_children[0].wd_id;
     assert!(rejected
         .stages
+        .detailed_stages()
+        .unwrap()
         .requirement_fact_verified
         .last()
         .unwrap()
@@ -174,11 +185,17 @@ fn function_argument_wd_sharing_keeps_failed_candidates_isolated_and_guards_chec
     let new_id = accepted.scope.formed_children[0].wd_id;
     assert_ne!(old_id, new_id);
     assert!(matches!(
-        &accepted.stages.child_obj_well_defined[0],
-        VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByDef { .. })
+        (&accepted
+            .stages
+            .detailed_stages()
+            .unwrap()
+            .child_obj_well_defined[0])
+            .as_detailed_success()
+            .unwrap(),
+        Some(DetailedObjWellDefinedProof::ByDef { .. })
     ));
     assert!(
-        matches!(&accepted.stages.child_obj_well_defined[1], VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByKnown { wd_id, .. }) if *wd_id == new_id)
+        matches!((&accepted.stages.detailed_stages().unwrap().child_obj_well_defined[1]).as_detailed_success().unwrap(), Some(DetailedObjWellDefinedProof::ByKnown { wd_id, .. }) if *wd_id == new_id)
     );
     assert!(runtime.well_defined_visible_in_stack(argument).is_none());
 

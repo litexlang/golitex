@@ -19,9 +19,9 @@ fn def_prop_wd_failure_preserves_the_actual_stage_and_obligation_in_both_profile
             ("prop broken(x {1 / 0}):\n    x = x\n", "parameter_type", "0 != 0"),
             ("prop broken(x R):\n    not forall y R:\n        y = y\n        =>:\n            1 / y != 1 / y\n", "iff_fact_well_defined", "y != 0"),
         ] {
-            let mut rt = Runtime::new(LaunchCommand::Eval {
+            let mut rt = Runtime::new_with_result_detail(LaunchCommand::Eval {
                 code: String::new(), session: false, strict: true, language,
-            });
+            }, crate::result_detail::OutputDetail::Detailed);
             let run = rt.run_litex_code(source).unwrap();
             assert!(run.session_error.is_none(), "{:?}", run.session_error);
             let result = &run.statement_results[0];

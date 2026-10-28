@@ -14,25 +14,24 @@ impl Runtime {
         fact: &AndFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<VerifyAndFactWellDefinedResult> {
-        let mut components = Vec::with_capacity(fact.facts.len());
+        let mut proof = AndFactWellDefinedProof::new(self.result_detail(), fact.facts.len());
         for (failed_index, atomic) in fact.facts.iter().enumerate() {
             match self.verify_atomic_component_well_definedness(atomic, verify_state.clone())? {
-                VerifyAtomicFactWellDefinedResult::Success(proof) => {
-                    components.push(proof);
+                VerifyAtomicFactWellDefinedResult::Success(component) => {
+                    proof.push_component(component)?;
                 }
                 VerifyAtomicFactWellDefinedResult::Failed(failed_component) => {
                     return Ok(VerifyAndFactWellDefinedResult::Failed(
                         FailToVerifyAndFactWellDefinedResult {
+                            fact: fact.clone(),
                             failed_index,
-                            succeeded_components: components,
+                            succeeded_components: proof.into_completed(),
                             failed_component,
                         },
                     ));
                 }
             }
         }
-        Ok(VerifyAndFactWellDefinedResult::Success(
-            AndFactWellDefinedProof { components },
-        ))
+        Ok(VerifyAndFactWellDefinedResult::Success(proof))
     }
 }

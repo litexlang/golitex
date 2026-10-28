@@ -63,9 +63,12 @@ impl LitexToLeanCompiler {
         position: &SourcePosition<'_>,
     ) -> Result<Vec<String>, LeanCompileError> {
         let mut bindings = Vec::new();
-        for (index, (object, child)) in [(&fact.left, &wd.left), (&fact.right, &wd.right)]
-            .into_iter()
-            .enumerate()
+        for (index, (object, child)) in [
+            (&fact.left, &wd.detailed_ref().left),
+            (&fact.right, &wd.detailed_ref().right),
+        ]
+        .into_iter()
+        .enumerate()
         {
             ensure_object(object, child)?;
             let prior =

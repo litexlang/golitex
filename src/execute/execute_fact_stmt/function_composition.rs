@@ -63,12 +63,11 @@ impl Runtime {
         let root: Obj = value.clone().into();
         let result = self.verify_composition_construction(value, state)?;
         Ok(match result {
-            Ok(proof) => VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByDef {
-                obj: root,
-                proof: ObjWellDefinedProofByDef::FunctionSpace(
-                    FunctionSpaceObjWellDefinedProofByDef::Composition(proof),
-                ),
-            }),
+            Ok(proof) => VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::composition(
+                self.result_detail(),
+                &root,
+                proof,
+            )),
             Err(reason) => VerifyObjWellDefinedResult::Failed {
                 obj: root,
                 reason: FailToVerifyObjWellDefinedResult::FunctionSpace(
@@ -151,18 +150,10 @@ impl Runtime {
             else {
                 continue;
             };
-            let (function, signature) = match &well_defined {
-                ObjWellDefinedProof::ByDef {
-                    proof:
-                        ObjWellDefinedProofByDef::FunctionSpace(
-                            FunctionSpaceObjWellDefinedProofByDef::Composition(proof),
-                        ),
-                    ..
-                } => (
-                    proof.function.clone(),
-                    CompositionSignatureProof::Construction,
-                ),
-                ObjWellDefinedProof::ByKnown { .. } => {
+            let (function, signature) =
+                if let Some(function) = well_defined.composition_function()? {
+                    (function.clone(), CompositionSignatureProof::Construction)
+                } else {
                     let Some(inner_domain) = self
                         .complete_function_domains(&value.inner, state)?
                         .into_iter()
@@ -189,13 +180,7 @@ impl Runtime {
                             inner_domain: Box::new(inner_domain),
                         },
                     )
-                }
-                _ => {
-                    return Err(RuntimeError::InternalBug(
-                        "composition WD has a different constructor".into(),
-                    ))
-                }
-            };
+                };
             proofs.push(CompositionCallableProof {
                 composition: value.clone(),
                 function_equal: KnownEqualityPathProof::new(path),

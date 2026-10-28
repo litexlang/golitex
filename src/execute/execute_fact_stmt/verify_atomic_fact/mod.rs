@@ -3,6 +3,7 @@
 pub(crate) mod helper;
 mod known_subset_membership;
 
+pub mod forall_match_result;
 pub mod match_forall_conclusion_args;
 pub mod prove_forall_instantiation_requirements;
 pub mod result;

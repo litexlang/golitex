@@ -1,0 +1,41 @@
+{
+  "kind": "reading_titles",
+  "sources": {
+    "sqrt-two.lit": {
+      "zh": "反证法：√2 的无理性",
+      "en": "Contradiction: the irrationality of sqrt(2)"
+    },
+    "syllogism.lit": {
+      "zh": "全称命题与三段论",
+      "en": "Universal statements and syllogism"
+    },
+    "definitions.lit": {
+      "zh": "定义与实例：非负数",
+      "en": "Definitions and instances: nonnegative numbers"
+    },
+    "sets.lit": {
+      "zh": "集合运算与局部假设",
+      "en": "Set operations and local assumptions"
+    },
+    "cantor.lit": {
+      "zh": "见证与 Cantor 对角线",
+      "en": "Witnesses and Cantor's diagonal"
+    },
+    "least-squares.lit": {
+      "zh": "函数与最小二乘",
+      "en": "Functions and least squares"
+    },
+    "missing-premise.lit": {
+      "zh": "三段论：缺少一个前提",
+      "en": "Syllogism: a missing premise"
+    },
+    "sqrt-domain.lit": {
+      "zh": "平方根的定义域",
+      "en": "The domain of the real square root"
+    },
+    "definition-failure.lit": {
+      "zh": "定义条件尚未满足",
+      "en": "An unmet defining condition"
+    }
+  }
+}

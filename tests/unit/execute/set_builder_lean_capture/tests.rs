@@ -5,7 +5,9 @@ use crate::store_fact_and_infer::{InferAtomicFactResult, InferResult};
 
 fn execute(source: &str) -> RunLitexCodeResult {
     let command = parse_launch_command(&["-strict".into(), "-e".into(), source.into()]).unwrap();
-    Runtime::new(command).run_litex_code(source).unwrap()
+    Runtime::new_with_result_detail(command, crate::result_detail::OutputDetail::Detailed)
+        .run_litex_code(source)
+        .unwrap()
 }
 
 #[test]
@@ -18,11 +20,11 @@ fn ordered_builder_formation_retains_binder_and_original_guard_store() {
     else {
         panic!("set definition")
     };
-    let VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByDef {
+    let Some(DetailedObjWellDefinedProof::ByDef {
         proof:
             ObjWellDefinedProofByDef::SetFormer(SetFormerObjWellDefinedProofByDef::SetBuilder(wd)),
         ..
-    }) = &p.equal_to_well_defined[0]
+    }) = (&p.equal_to_well_defined[0]).as_detailed_success().unwrap()
     else {
         panic!("builder formation")
     };
@@ -34,10 +36,11 @@ fn ordered_builder_formation_retains_binder_and_original_guard_store() {
         panic!("order WD")
     };
     let division = order
+        .detailed_ref()
         .well_defined_of_each_parameter
         .iter()
-        .find_map(|p| match p {
-            ObjWellDefinedProof::ByDef {
+        .find_map(|p| match (p).as_detailed().unwrap() {
+            DetailedObjWellDefinedProof::ByDef {
                 proof:
                     ObjWellDefinedProofByDef::ArithmeticOperator(
                         ArithmeticOperatorObjWellDefinedProofByDef::Div(wd),

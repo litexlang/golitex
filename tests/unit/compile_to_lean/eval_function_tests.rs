@@ -122,10 +122,12 @@ fn eval_function_cannot_use_a_future_definition() {
 #[test]
 fn eval_function_rejects_changed_wd_subject() {
     let (mut run, compiler) = super::execute(CALLS);
-    match &mut eval(&mut run, 4).function_evaluations[0].application_well_defined {
-        ObjWellDefinedProof::ByDef { obj, .. } | ObjWellDefinedProof::ByKnown { obj, .. } => {
-            *obj = number("3")
-        }
+    match (&mut eval(&mut run, 4).function_evaluations[0].application_well_defined)
+        .as_detailed_mut()
+        .unwrap()
+    {
+        DetailedObjWellDefinedProof::ByDef { obj, .. }
+        | DetailedObjWellDefinedProof::ByKnown { obj, .. } => *obj = number("3"),
     }
     compiler
         .compile_run(&run, "eval_bad_wd")

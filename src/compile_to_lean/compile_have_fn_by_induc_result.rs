@@ -598,7 +598,7 @@ impl LitexToLeanCompiler {
                         ));
                     }
                     let guard = position.with_visible_wd(object, &mut |wd, producer| {
-                        let ObjWellDefinedProof::ByDef { proof: ObjWellDefinedProofByDef::FnObj(call), .. } = wd else {
+                        let DetailedObjWellDefinedProof::ByDef { proof: ObjWellDefinedProofByDef::FnObj(call), .. } = (wd).detailed_ref() else {
                             return Err(LeanCompileError::unsupported("RecursiveFunction/CallFormation"));
                         };
                         let Some(FnObjDomainFnSetEvidence::InFunctionSet { fact_id, fn_set, function_equal }) = &call.domain_fn_set else {

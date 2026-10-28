@@ -118,12 +118,15 @@ fn contra_rejects_changed_compound_closing() {
 
 #[test]
 fn compound_contra_does_not_export_local_names() {
-    let mut runtime = Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language: OutputLanguage::English,
-    });
+    let mut runtime = Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    );
     let result = runtime.run_litex_code("by contra:\n    ? 0 = 0 and 1 = 1\n    have local_witness R = 2\n    impossible 0 = 0 and 1 = 1\nlocal_witness = 2\n").unwrap();
     assert!(!result.success);
     let compiler = LitexToLeanCompiler::new(runtime);
@@ -393,12 +396,15 @@ fn geo_contra_negative_closed_calculation_ignores_presentation() {
 }
 
 fn checked(source: &str) -> (RunLitexCodeResult, LitexToLeanCompiler) {
-    let mut runtime = Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language: OutputLanguage::English,
-    });
+    let mut runtime = Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    );
     let result = runtime.run_litex_code(source).expect("source execution");
     assert!(
         result.success && result.session_error.is_none(),
@@ -785,7 +791,8 @@ fn function_extensionality_does_not_identify_a_function_with_a_restriction() {
         strict: true,
         language: OutputLanguage::English,
     };
-    let mut runtime = Runtime::new(command);
+    let mut runtime =
+        Runtime::new_with_result_detail(command, crate::result_detail::OutputDetail::Detailed);
     let run = runtime.run_litex_code(source).unwrap();
     assert!(!run.success);
     assert!(LitexToLeanCompiler::new(runtime)

@@ -181,12 +181,12 @@ impl LitexToLeanCompiler {
             0,
         );
         let mut parameter_count = 0;
-        for (group, wd) in source
-            .typed_parameters
-            .groups
-            .iter()
-            .zip(&formation.introduced_params.param_type_well_defined)
-        {
+        for (group, wd) in source.typed_parameters.groups.iter().zip(
+            &formation
+                .detailed_ref()
+                .introduced_params
+                .param_type_well_defined,
+        ) {
             if current.before < parameter_count + 2 {
                 break;
             }
@@ -220,7 +220,7 @@ impl LitexToLeanCompiler {
         for (index, (clause, stage)) in source
             .facts
             .iter()
-            .zip(&formation.assumed_body_facts)
+            .zip(&formation.detailed_ref().assumed_body_facts)
             .enumerate()
         {
             if current.before < ids.len() + index + 2 {
@@ -348,16 +348,18 @@ impl LitexToLeanCompiler {
         parent: &SourcePosition<'_>,
     ) -> Result<(Vec<String>, Vec<String>), LeanCompileError> {
         let scope = SourcePosition::new(Some(parent), SourceOwner::ExistWD(source, formation), 0);
-        self.validate_parameter_store_capture(&formation.introduced_params.defined_params)?;
+        self.validate_parameter_store_capture(
+            &formation.detailed_ref().introduced_params.defined_params,
+        )?;
         let mut binders = Vec::new();
         let mut definitions = Vec::new();
         let mut index = 0;
-        for (group, wd) in source
-            .typed_parameters
-            .groups
-            .iter()
-            .zip(&formation.introduced_params.param_type_well_defined)
-        {
+        for (group, wd) in source.typed_parameters.groups.iter().zip(
+            &formation
+                .detailed_ref()
+                .introduced_params
+                .param_type_well_defined,
+        ) {
             if index >= parameter_count {
                 break;
             }
@@ -391,6 +393,7 @@ impl LitexToLeanCompiler {
                     usize::MAX,
                 );
                 let store = &formation
+                    .detailed_ref()
                     .introduced_params
                     .defined_params
                     .store_and_infer_results[index];
@@ -417,14 +420,14 @@ impl LitexToLeanCompiler {
         }
         if index != parameter_count
             || clause_count > source.facts.len()
-            || clause_count > formation.assumed_body_facts.len()
+            || clause_count > formation.detailed_ref().assumed_body_facts.len()
         {
             return Err(LeanCompileError::unsupported("Obtain/ConstructorPrefix"));
         }
         for (index, (clause, captured)) in source
             .facts
             .iter()
-            .zip(&formation.assumed_body_facts)
+            .zip(&formation.detailed_ref().assumed_body_facts)
             .take(clause_count)
             .enumerate()
         {

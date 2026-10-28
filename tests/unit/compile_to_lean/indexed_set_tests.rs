@@ -61,10 +61,16 @@ fn family_intersection_retains_nonempty_wd_and_rejects_missing_evidence() {
     let proof = super::atomic_proof_mut(
         &mut super::fact_statement_mut(&mut run.statement_results[1]).verify_result,
     );
-    let ObjWellDefinedProof::ByDef {
+    let DetailedObjWellDefinedProof::ByDef {
         proof: ObjWellDefinedProofByDef::SetOperator(W::FamilyIntersect(wd)),
         ..
-    } = &mut proof.well_defined_proof.well_defined_of_each_parameter[0]
+    } = (&mut proof
+        .well_defined_proof
+        .as_detailed_mut()
+        .unwrap()
+        .well_defined_of_each_parameter[0])
+        .as_detailed_mut()
+        .unwrap()
     else {
         panic!("family intersection constructor WD");
     };
@@ -97,10 +103,16 @@ fn indexed_set_wd_rejects_missing_and_reordered_requirements() {
             let proof = super::atomic_proof_mut(
                 &mut super::fact_statement_mut(&mut run.statement_results[3]).verify_result,
             );
-            let ObjWellDefinedProof::ByDef {
+            let DetailedObjWellDefinedProof::ByDef {
                 proof: ObjWellDefinedProofByDef::SetOperator(wd),
                 ..
-            } = &mut proof.well_defined_proof.well_defined_of_each_parameter[0]
+            } = (&mut proof
+                .well_defined_proof
+                .as_detailed_mut()
+                .unwrap()
+                .well_defined_of_each_parameter[0])
+                .as_detailed_mut()
+                .unwrap()
             else {
                 panic!("constructor WD")
             };
@@ -132,7 +144,8 @@ fn new_set_objects_reject_empty_index_and_missing_membership_evidence() {
     ] {
         let command =
             parse_launch_command(&["-strict".into(), "-e".into(), source.into()]).unwrap();
-        let mut runtime = Runtime::new(command);
+        let mut runtime =
+            Runtime::new_with_result_detail(command, crate::result_detail::OutputDetail::Detailed);
         let run = runtime.run_litex_code(source).unwrap();
         assert!(!run.success, "{source}");
         assert!(super::LitexToLeanCompiler::new(runtime)

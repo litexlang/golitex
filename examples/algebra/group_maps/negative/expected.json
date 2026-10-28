@@ -1,0 +1,16 @@
+{
+  "missing_homomorphism": "premise",
+  "missing_subgroup": "premise",
+  "missing_normal_preimage": "premise",
+  "composition_missing_first": "premise",
+  "composition_missing_second": "premise",
+  "wrong_map_domain": "argument_type",
+  "partial_map_rejected": "argument_type",
+  "binary_map_rejected": "argument_type",
+  "outside_target_subset": "argument_type",
+  "empty_subgroup": "definition_requirement",
+  "wrong_zero_image": "search_proof",
+  "wrong_composition_value": "search_proof",
+  "intersection_missing_normal": "premise",
+  "image_need_not_be_normal": "definition_requirement"
+}

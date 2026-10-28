@@ -51,6 +51,23 @@ preservation results give kernel normality; cancellation then gives the two
 directions of the injectivity criterion. Subgroup intersection is independent
 of the kernel construction.
 
+The map/closure extension adds whole-carrier and singleton-identity subgroups,
+normal intersections, homomorphism ranges, subgroup/normal inverse images,
+identity maps and composition. Native fn_range(f), preimage_set(f,S) and
+compose(g,f) remain the actual constructions. The proof runs from established
+identity/inverse preservation to image and inverse-image closure; normality
+uses preservation of the conjugating product. Composition preserves
+multiplication by applying the two supplied homomorphism laws in order.
+No commutativity, injectivity or surjectivity is needed. An arbitrary target
+image need not be normal, so only subgroup membership is exported for ranges.
+
+This source checkpoint has27 top-level statements/20 thms with the same Group
+structure, five props and one kernel template. It adds no native rule, search
+permission, trust or compiler contract. Eight imported generic signatures and
+43 actual integer/trivial statements have passed; remaining focused consumer
+acceptance is pending.
+
+
 Integer addition, multiplication-by-two and the zero map supply applications.
 The trivial group checks the permitted degenerate case. A real Heisenberg
 group supplies a noncommutative consumer without changing the general laws.

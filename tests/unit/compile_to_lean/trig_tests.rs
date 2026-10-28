@@ -31,10 +31,12 @@ fn trig_wd_rejects_missing_or_altered_evidence() {
             else {
                 panic!()
             };
-            let VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByDef {
+            let Some(DetailedObjWellDefinedProof::ByDef {
                 proof: ObjWellDefinedProofByDef::TrigOperator(p),
                 ..
-            }) = &mut p.value_well_defined
+            }) = (&mut p.value_well_defined)
+                .as_detailed_success_mut()
+                .unwrap()
             else {
                 panic!()
             };
@@ -78,7 +80,8 @@ fn trig_source_domains_reject_complex_and_tangent_poles() {
     for source in ["sin(i) $in R", "tan(pi/2) $in R"] {
         let command =
             parse_launch_command(&["-strict".into(), "-e".into(), source.into()]).unwrap();
-        let mut runtime = Runtime::new(command);
+        let mut runtime =
+            Runtime::new_with_result_detail(command, crate::result_detail::OutputDetail::Detailed);
         assert!(!runtime.run_litex_code(source).unwrap().success, "{source}");
     }
 }
@@ -119,10 +122,12 @@ fn tangent_wd_rejects_wrong_nonzero_subject() {
     else {
         panic!()
     };
-    let VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByDef {
+    let Some(DetailedObjWellDefinedProof::ByDef {
         proof: ObjWellDefinedProofByDef::TrigOperator(TrigOperatorObjWellDefinedProofByDef::Tan(p)),
         ..
-    }) = &mut p.value_well_defined
+    }) = (&mut p.value_well_defined)
+        .as_detailed_success_mut()
+        .unwrap()
     else {
         panic!()
     };

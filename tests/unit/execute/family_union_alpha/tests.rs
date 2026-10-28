@@ -3,12 +3,15 @@ use crate::ast::stmt::Stmt;
 use crate::launch_command::{LaunchCommand, OutputLanguage};
 
 fn runtime() -> Runtime {
-    Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language: OutputLanguage::English,
-    })
+    Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    )
 }
 
 const SOURCE: &str = "have fn singleton_family(index Z) power_set(Z) = {index}\nfn(member_index Z) power_set(Z) {singleton_family(member_index)}(0) $in fn_range(fn(member_index Z) power_set(Z) {singleton_family(member_index)})\nfn(member_index Z) power_set(Z) {singleton_family(member_index)}(0) = singleton_family(0)\nsingleton_family(0) $in fn_range(fn(member_index Z) power_set(Z) {singleton_family(member_index)})\n0 $in singleton_family(0)\n";

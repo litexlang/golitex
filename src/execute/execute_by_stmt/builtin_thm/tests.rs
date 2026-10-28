@@ -7,12 +7,15 @@ use crate::runtime::Runtime;
 use crate::tokenize::Tokenizer;
 
 fn runtime() -> Runtime {
-    Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language: OutputLanguage::English,
-    })
+    Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    )
 }
 fn execute(rt: &mut Runtime, code: &str) -> ExecStmtResult {
     let blocks = Tokenizer::new()
@@ -562,12 +565,15 @@ fn native_tuple_exact_domain_output_keeps_release_and_selected_proofs_in_ten_lan
         OutputLanguage::Korean,
         OutputLanguage::Vietnamese,
     ] {
-        let mut rt = Runtime::new(LaunchCommand::Eval {
-            code: String::new(),
-            session: false,
-            strict: true,
-            language,
-        });
+        let mut rt = Runtime::new_with_result_detail(
+            LaunchCommand::Eval {
+                code: String::new(),
+                session: false,
+                strict: true,
+                language,
+            },
+            crate::result_detail::OutputDetail::Detailed,
+        );
         let run = rt.run_litex_code(source).unwrap();
         assert!(run.success && run.session_error.is_none(), "{language:?}");
         for (index, stmt) in run
@@ -685,12 +691,15 @@ fn builtin_theorems_do_not_certify_missing_premises_or_bad_shapes() {
 
 #[test]
 fn chinese_theorem_diagnostics_keep_the_exact_failed_premise() {
-    let mut rt = Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language: OutputLanguage::Chinese,
-    });
+    let mut rt = Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::Chinese,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    );
     let result = execute(
         &mut rt,
         "release thm subset_of_finite_set_is_finite({2}, {1})",

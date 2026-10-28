@@ -80,12 +80,15 @@ fn integer_quotient_remainder_direct_is_read_only_and_scope_bound() {
 #[test]
 fn integer_quotient_remainder_keeps_citations_and_locale_output() {
     for language in OutputLanguage::ALL {
-        let mut rt = Runtime::new(LaunchCommand::Eval {
-            code: String::new(),
-            session: false,
-            strict: true,
-            language,
-        });
+        let mut rt = Runtime::new_with_result_detail(
+            LaunchCommand::Eval {
+                code: String::new(),
+                session: false,
+                strict: true,
+                language,
+            },
+            crate::result_detail::OutputDetail::Detailed,
+        );
         check(&mut rt, PREFIX, true);
         let run = check(&mut rt, "(a/2)^2 $in Z", true);
         let detail = crate::json_output::project_run_detailed(&run, &rt, "eval", None);
@@ -110,12 +113,15 @@ fn integer_quotient_remainder_keeps_citations_and_locale_output() {
 }
 
 fn runtime() -> Runtime {
-    Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language: OutputLanguage::English,
-    })
+    Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    )
 }
 fn check(rt: &mut Runtime, source: &str, expected: bool) -> RunLitexCodeResult {
     let run = rt.run_litex_code(source).unwrap();

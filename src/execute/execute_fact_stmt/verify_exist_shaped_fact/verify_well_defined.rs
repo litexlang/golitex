@@ -1,3 +1,4 @@
+use super::DetailedExistShapedFactWellDefinedProof;
 use crate::ast::fact::{ExistShapedFact, PlainExistFact, QuantifierFreeFact};
 use crate::execute::execute_fact_stmt::verify_exist_shaped_fact::well_defined_result::{
     ExistShapedFactWellDefinedProof, FailToVerifyExistShapedFactWellDefinedResult,
@@ -11,6 +12,7 @@ use crate::execute::execute_fact_stmt::well_defined_results::{
 use crate::execute::execute_fact_stmt::VerifyState;
 use crate::execute::IntroduceTypedParametersResult;
 use crate::instantiate::quantifier_free_fact_to_fact;
+use crate::result_detail::OutputDetail;
 use crate::runtime::{Runtime, RuntimeResult};
 
 impl Runtime {
@@ -20,25 +22,28 @@ impl Runtime {
         fact: &ExistShapedFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<VerifyExistShapedFactWellDefinedResult> {
-        let plain = plain_exist_body(fact);
         let (stages, local_env) = self.run_in_local_env_and_take_env(|rt| {
-            rt.verify_plain_exist_fact_well_definedness_in_local(plain, verify_state.clone())
+            rt.verify_plain_exist_fact_well_definedness_in_local(fact, verify_state.clone())
         })?;
         match stages {
-            Ok((introduced_params, assumed_body_facts)) => Ok(
-                VerifyExistShapedFactWellDefinedResult::Success(ExistShapedFactWellDefinedProof {
-                    introduced_params,
-                    assumed_body_facts,
-                    local_env,
-                }),
-            ),
+            Ok((introduced_params, assumed_body_facts)) => {
+                Ok(VerifyExistShapedFactWellDefinedResult::Success(
+                    ExistShapedFactWellDefinedProof::new(self.result_detail(), || {
+                        DetailedExistShapedFactWellDefinedProof {
+                            introduced_params,
+                            assumed_body_facts,
+                            local_env,
+                        }
+                    }),
+                ))
+            }
             Err(reason) => Ok(VerifyExistShapedFactWellDefinedResult::Failed(reason)),
         }
     }
 
     fn verify_plain_exist_fact_well_definedness_in_local(
         &mut self,
-        plain: &PlainExistFact,
+        fact: &ExistShapedFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<
         Result<
@@ -46,20 +51,26 @@ impl Runtime {
             FailToVerifyExistShapedFactWellDefinedResult,
         >,
     > {
+        let plain = plain_exist_body(fact);
         let introduced_params = match self
             .verify_and_define_wd_parameters(&plain.typed_parameters, verify_state.clone())?
         {
             Ok(introduced) => introduced,
             Err(failed) => {
                 return Ok(Err(
-                    FailToVerifyExistShapedFactWellDefinedResult::ParamType(extract_obj_wd_fail(
-                        failed,
-                    )),
+                    FailToVerifyExistShapedFactWellDefinedResult::ParamType {
+                        fact: fact.clone(),
+                        reason: extract_obj_wd_fail(failed),
+                    },
                 ));
             }
         };
 
-        let mut assumed_body_facts = Vec::with_capacity(plain.facts.len());
+        let mut assumed_body_facts = if self.result_detail() == OutputDetail::Detailed {
+            Vec::with_capacity(plain.facts.len())
+        } else {
+            Vec::new()
+        };
         for (failed_index, qf) in plain.facts.iter().enumerate() {
             match self.verify_quantifier_free_fact_well_definedness(qf, verify_state.clone())? {
                 VerifyFactWellDefinedResult::Success(proof) => {
@@ -67,16 +78,26 @@ impl Runtime {
                     // and prop body): e.g. `a != 0 or b != 0` before `l = line(a,b,c)`.
                     let as_fact = quantifier_free_fact_to_fact(qf.clone());
                     let store_and_infer = self.store_fact_and_infer(&as_fact, verify_state)?;
-                    assumed_body_facts.push(AssumeDomFactResult {
-                        well_defined: proof,
-                        store_and_infer,
-                    });
+                    proof.require_detail(self.result_detail(), "quantified WD assumption")?;
+                    if self.result_detail() == OutputDetail::Detailed {
+                        assumed_body_facts.push(AssumeDomFactResult {
+                            well_defined: proof,
+                            store_and_infer,
+                        });
+                    }
                 }
                 VerifyFactWellDefinedResult::Failed(failed_body) => {
                     return Ok(Err(
                         FailToVerifyExistShapedFactWellDefinedResult::BodyFact {
+                            fact: fact.clone(),
                             failed_index,
-                            param_type_well_defined: introduced_params.param_type_well_defined,
+                            param_type_well_defined: if self.result_detail()
+                                == OutputDetail::Detailed
+                            {
+                                introduced_params.param_type_well_defined
+                            } else {
+                                Vec::new()
+                            },
                             succeeded_body: assumed_body_facts
                                 .into_iter()
                                 .map(|a| a.well_defined)

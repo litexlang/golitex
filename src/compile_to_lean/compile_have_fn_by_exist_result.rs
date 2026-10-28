@@ -53,13 +53,13 @@ impl LitexToLeanCompiler {
             "(show Litex.Obj (M := M) (Litex.FunctionSignature M) from {})",
             self.compile_wd(checked, &prior)?
         );
-        let ObjWellDefinedProof::ByDef {
+        let DetailedObjWellDefinedProof::ByDef {
             proof:
                 ObjWellDefinedProofByDef::FunctionSpace(FunctionSpaceObjWellDefinedProofByDef::FnSet(
                     wd,
                 )),
             ..
-        } = checked
+        } = (checked).detailed_ref()
         else {
             return Err(LeanCompileError::unsupported(
                 "SelectedFunction/SignatureEvidence",
@@ -328,6 +328,7 @@ impl LitexToLeanCompiler {
                 format!(
                     "h_{}",
                     property_wd
+                        .detailed_ref()
                         .introduced_params
                         .defined_params
                         .store_and_infer_results[index]

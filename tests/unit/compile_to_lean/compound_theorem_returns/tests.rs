@@ -99,9 +99,19 @@ fn equality_peer_bridge_rejects_each_wrong_original_endpoint_wd() {
             panic!("the actual quotient proof uses its selected equality peer")
         };
         let wd = if side == "left" {
-            &mut peer.bridge.well_defined_proof.left
+            &mut peer
+                .bridge
+                .well_defined_proof
+                .as_detailed_mut()
+                .unwrap()
+                .left
         } else {
-            &mut peer.bridge.well_defined_proof.right
+            &mut peer
+                .bridge
+                .well_defined_proof
+                .as_detailed_mut()
+                .unwrap()
+                .right
         };
         let wrong_subject = super::number_object("7");
         assert_ne!(wd.obj().ir(), wrong_subject.ir());
@@ -118,8 +128,10 @@ fn scalar_division_child_formation_is_visible_only_after_completion_without_trut
     let child = quotient_scalar_child(&result.statement_results[7]);
     let equality = super::equality_proof(child);
     assert!(matches!(
-        &equality.well_defined_proof.left,
-        ObjWellDefinedProof::ByDef {
+        (&equality.well_defined_proof.detailed_ref().left)
+            .as_detailed()
+            .unwrap(),
+        DetailedObjWellDefinedProof::ByDef {
             obj: Obj::ArithmeticOperator(ArithmeticOperator::Div(_)),
             ..
         }
@@ -159,17 +171,21 @@ fn scalar_division_rejects_missing_and_wrong_original_child_formation() {
     for mutation in ["children", "requirements", "subject"] {
         let (mut result, compiler) = super::execute(QUOTIENT_PACKAGE);
         let child = quotient_scalar_child_mut(&mut result.statement_results[7]);
-        let wd = &mut super::equality_proof_mut(child).well_defined_proof.left;
+        let wd = &mut super::equality_proof_mut(child)
+            .well_defined_proof
+            .as_detailed_mut()
+            .unwrap()
+            .left;
         if mutation == "subject" {
             super::replace_wd_subject(wd, super::number_object("7"));
         } else {
-            let ObjWellDefinedProof::ByDef {
+            let DetailedObjWellDefinedProof::ByDef {
                 proof:
                     ObjWellDefinedProofByDef::ArithmeticOperator(
                         ArithmeticOperatorObjWellDefinedProofByDef::Div(proof),
                     ),
                 ..
-            } = wd
+            } = (wd).as_detailed_mut().unwrap()
             else {
                 panic!("the original child owns this quotient construction")
             };
@@ -190,12 +206,14 @@ fn scalar_division_rejects_a_real_future_child_constructor_cache_token() {
         "{QUOTIENT_PACKAGE}\nlet later_child=4/denominator\nlet later_child_cache=4/denominator\n"
     );
     let (mut result, compiler) = super::execute(&source);
-    let VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByKnown { obj, wd_id }) =
-        &super::let_definition(&result.statement_results[9]).value_well_defined
+    let Some(DetailedObjWellDefinedProof::ByKnown { obj, wd_id }) =
+        (&super::let_definition(&result.statement_results[9]).value_well_defined)
+            .as_detailed_success()
+            .unwrap()
     else {
         panic!("the second later alias contains the actual future cache token")
     };
-    let replacement = ObjWellDefinedProof::ByKnown {
+    let replacement = DetailedObjWellDefinedProof::ByKnown {
         obj: obj.clone(),
         wd_id: *wd_id,
     };
@@ -204,7 +222,12 @@ fn scalar_division_rejects_a_real_future_child_constructor_cache_token() {
         replacement.obj().ir(),
         super::equality_proof(child).fact.left.ir()
     );
-    super::equality_proof_mut(child).well_defined_proof.left = replacement;
+    super::equality_proof_mut(child)
+        .well_defined_proof
+        .as_detailed_mut()
+        .unwrap()
+        .left =
+        crate::execute::execute_fact_stmt::ObjWellDefinedProof::Detailed(Box::new(replacement));
     super::compile_run(&result, &compiler, "future_division_child_formation")
         .expect_err("the completed child cannot borrow a constructor from a later statement");
 }
@@ -319,12 +342,15 @@ fn compound_theorem_returns_reject_missing_wrong_and_reordered_formation() {
             }
             "reordered" => call.conclusions_wd.swap(0, 1),
             "wrong" => {
-                let FactWellDefinedProof::ChainFact { adjacent } = &mut call.conclusions_wd[0]
-                else {
+                let FactWellDefinedProof::ChainFact(proof) = &mut call.conclusions_wd[0] else {
                     panic!("actual chain WD")
                 };
+                let adjacent = &mut proof.as_detailed_mut().unwrap().adjacent;
                 super::replace_wd_subject(
-                    &mut adjacent[0].well_defined_of_each_parameter[0],
+                    &mut adjacent[0]
+                        .as_detailed_mut()
+                        .unwrap()
+                        .well_defined_of_each_parameter[0],
                     super::number_object("7"),
                 );
             }
@@ -465,16 +491,22 @@ fn compound_theorem_returns_do_not_publish_early_packages_during_later_wd() {
     let (mut result, compiler) = super::execute(TWO_SUM_PACKAGES);
     let call = super::by_theorem_mut(&mut result.statement_results[2]);
     let member = call.returned_conclusions[0].store.atomic_components()[0].0;
-    let FactWellDefinedProof::ChainFact { adjacent } = &mut call.conclusions_wd[1] else {
+    let FactWellDefinedProof::ChainFact(proof) = &mut call.conclusions_wd[1] else {
         panic!("second chain WD")
     };
-    let ObjWellDefinedProof::ByDef {
+    let adjacent = &mut proof.as_detailed_mut().unwrap().adjacent;
+    let DetailedObjWellDefinedProof::ByDef {
         proof:
             ObjWellDefinedProofByDef::ArithmeticOperator(
                 ArithmeticOperatorObjWellDefinedProofByDef::Add(add),
             ),
         ..
-    } = &mut adjacent[0].well_defined_of_each_parameter[0]
+    } = (&mut adjacent[0]
+        .as_detailed_mut()
+        .unwrap()
+        .well_defined_of_each_parameter[0])
+        .as_detailed_mut()
+        .unwrap()
     else {
         panic!("actual addition constructor")
     };
@@ -498,12 +530,15 @@ fn compound_theorem_returns_keep_caller_wd_outside_closed_and_future_stores() {
     let call = super::by_theorem(&result.statement_results[2]);
     assert!(
         matches!(
-            &match &call.selected_wd {
+            (&match &call.selected_wd {
                 FactWellDefinedProof::Equality(wd) => wd,
                 _ => panic!("original caller equality WD"),
             }
-            .left,
-            ObjWellDefinedProof::ByDef { .. }
+            .detailed_ref()
+            .left)
+                .as_detailed()
+                .unwrap(),
+            DetailedObjWellDefinedProof::ByDef { .. }
         ),
         "the caller constructor is checked before publishing its own cache token"
     );
@@ -512,7 +547,7 @@ fn compound_theorem_returns_keep_caller_wd_outside_closed_and_future_stores() {
     else {
         panic!("later alias WD")
     };
-    let ObjWellDefinedProof::ByKnown { obj, wd_id } = wd else {
+    let DetailedObjWellDefinedProof::ByKnown { obj, wd_id } = (wd).as_detailed().unwrap() else {
         panic!("actual completed caller cache token")
     };
     let replacement = (obj.clone(), *wd_id);
@@ -520,10 +555,13 @@ fn compound_theorem_returns_keep_caller_wd_outside_closed_and_future_stores() {
     let FactWellDefinedProof::Equality(wd) = &mut call.selected_wd else {
         panic!("actual caller equality WD")
     };
-    wd.left = ObjWellDefinedProof::ByKnown {
-        obj: replacement.0,
-        wd_id: replacement.1,
-    };
+    wd.as_detailed_mut().unwrap().left =
+        crate::execute::execute_fact_stmt::ObjWellDefinedProof::Detailed(Box::new(
+            DetailedObjWellDefinedProof::ByKnown {
+                obj: replacement.0,
+                wd_id: replacement.1,
+            },
+        ));
     super::compile_run(&result, &compiler, "wrong_caller_package_wd")
         .expect_err("later cache records cannot replace the caller construction");
 }
@@ -536,10 +574,12 @@ fn compound_theorem_domain_capture_retains_the_projection_used_by_returned_wd() 
     let StoreFactResult::ChainFact(domain) = &call.dom_stores[0].store else {
         panic!("the actual interval domain store")
     };
-    let FactWellDefinedProof::ChainFact { adjacent } = &call.conclusions_wd[0] else {
+    let FactWellDefinedProof::ChainFact(proof) = &call.conclusions_wd[0] else {
         panic!("returned interval WD")
     };
-    let PredicateDomainProof::ByKnownFact(cite) = &adjacent[0].predicate_domain else {
+    let adjacent = &proof.as_detailed().unwrap().adjacent;
+    let PredicateDomainProof::ByKnownFact(cite) = &adjacent[0].detailed_ref().predicate_domain
+    else {
         panic!("the original return domain certificate cites the stored domain projection")
     };
     assert_eq!(cite.cite_fact_id, domain.adjacent[0].fact_id);

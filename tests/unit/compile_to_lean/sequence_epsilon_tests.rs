@@ -205,7 +205,11 @@ fn sequence_limit_rejects_wrong_real_value_evidence() {
     for mutation in 0..2 {
         let (mut run, compiler) = super::execute(LIMIT);
         let p = super::atomic_proof_mut(&mut by_def(&mut run).proof);
-        let PredicateDomainProof::SequenceLimit(p) = &mut p.well_defined_proof.predicate_domain
+        let PredicateDomainProof::SequenceLimit(p) = &mut p
+            .well_defined_proof
+            .as_detailed_mut()
+            .unwrap()
+            .predicate_domain
         else {
             panic!("limit WD")
         };

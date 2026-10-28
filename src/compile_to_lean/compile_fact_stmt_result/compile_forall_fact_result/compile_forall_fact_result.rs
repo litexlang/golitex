@@ -149,8 +149,8 @@ impl LitexToLeanCompiler {
     ) -> Result<(String, String), LeanCompileError> {
         let (binders, introductions, definitions) = self.compile_forall_head(
             &proof.fact,
-            &proof.well_defined.introduced_params,
-            &proof.well_defined.assumed_dom_facts,
+            &proof.well_defined.detailed_ref().introduced_params,
+            &proof.well_defined.detailed_ref().assumed_dom_facts,
             position,
         )?;
         let formed = SourcePosition {
@@ -165,7 +165,7 @@ impl LitexToLeanCompiler {
             ..*position
         };
         let position = &formed;
-        if proof.well_defined.then.len() != proof.fact.then_facts.len() {
+        if proof.well_defined.detailed_ref().then.len() != proof.fact.then_facts.len() {
             return Err(LeanCompileError::new(
                 "KnownForall/ConclusionWD",
                 "The recorded whole-proposition WD omits or adds a conclusion stage.",
@@ -176,7 +176,7 @@ impl LitexToLeanCompiler {
             .fact
             .then_facts
             .iter()
-            .zip(&proof.well_defined.then)
+            .zip(&proof.well_defined.detailed_ref().then)
             .enumerate()
         {
             let fact: Fact = source.clone().into();
@@ -196,6 +196,7 @@ impl LitexToLeanCompiler {
         let mut offset = 0;
         let ids = &proof
             .well_defined
+            .detailed_ref()
             .introduced_params
             .defined_params
             .store_and_infer_results;
@@ -604,15 +605,20 @@ impl LitexToLeanCompiler {
         let scope = SourcePosition::new(Some(position), SourceOwner::ForallWD(fact, proof), 0);
         self.compile_forall_head(
             fact,
-            &proof.introduced_params,
-            &proof.assumed_dom_facts,
+            &proof.detailed_ref().introduced_params,
+            &proof.detailed_ref().assumed_dom_facts,
             &scope,
         )?;
-        if proof.then.len() != fact.then_facts.len() {
+        if proof.detailed_ref().then.len() != fact.then_facts.len() {
             return Err(LeanCompileError::unsupported("WD/ForallThenArity"));
         }
         let head = fact.typed_parameters.ordered_param_ids().len() + fact.dom_facts.len();
-        for (index, (clause, wd)) in fact.then_facts.iter().zip(&proof.then).enumerate() {
+        for (index, (clause, wd)) in fact
+            .then_facts
+            .iter()
+            .zip(&proof.detailed_ref().then)
+            .enumerate()
+        {
             self.compile_fact_wd(
                 wd,
                 &clause.clone().into(),
@@ -664,8 +670,8 @@ impl LitexToLeanCompiler {
         } else {
             self.compile_forall_head(
                 fact,
-                &proof.introduced_params,
-                &proof.assumed_dom_facts,
+                &proof.detailed_ref().introduced_params,
+                &proof.detailed_ref().assumed_dom_facts,
                 position,
             )?
         };
@@ -680,14 +686,19 @@ impl LitexToLeanCompiler {
             ..*position
         };
         let position = &formed;
-        if proof.then.len() != fact.then_facts.len() {
+        if proof.detailed_ref().then.len() != fact.then_facts.len() {
             return Err(LeanCompileError::new(
                 "WD/ForallThenArity",
                 "Quantified conclusion WD has the wrong ordered stage arity.",
             ));
         }
         let mut conclusions = Vec::new();
-        for (index, (fact, wd)) in fact.then_facts.iter().zip(&proof.then).enumerate() {
+        for (index, (fact, wd)) in fact
+            .then_facts
+            .iter()
+            .zip(&proof.detailed_ref().then)
+            .enumerate()
+        {
             let fact: Fact = fact.clone().into();
             let prior = SourcePosition {
                 before: position.before + index,

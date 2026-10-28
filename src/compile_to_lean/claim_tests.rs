@@ -9,12 +9,15 @@ const PLAIN: &str = "claim:\n    ? 1 = 1\n    1 = 1\n1 = 1\n";
 const FORALL: &str = "claim:\n    ? forall x R:\n        x != 0\n        =>:\n            x / x = 1\n    x / x = 1\n";
 
 fn checked(source: &str) -> (RunLitexCodeResult, LitexToLeanCompiler) {
-    let mut runtime = Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language: OutputLanguage::English,
-    });
+    let mut runtime = Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    );
     let result = runtime.run_litex_code(source).expect("source run");
     assert!(result.success && result.session_error.is_none(), "{source}");
     (result, LitexToLeanCompiler::new(runtime))
@@ -92,7 +95,8 @@ fn forall_claim_captures_distinct_original_and_body_headers() {
     );
     assert_eq!(body.assumed_dom_facts.len(), 1);
     assert_ne!(
-        goal.introduced_params
+        goal.detailed_ref()
+            .introduced_params
             .defined_params
             .store_and_infer_results[0]
             .primary_fact_id(),

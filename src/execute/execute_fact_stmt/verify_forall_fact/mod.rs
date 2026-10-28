@@ -9,8 +9,9 @@ pub use result::{
     VerifyForallFactResult, VerifyForallFactSuccess, VerifyKnownForallFactProof,
 };
 pub use well_defined_result::{
+    CompactForallFactWellDefinedProof, DetailedForallFactWellDefinedProof,
     FailToVerifyForallFactWellDefinedResult, ForallFactWellDefinedProof,
-    VerifyForallFactWellDefinedResult,
+    NormalForallFactWellDefinedProof, VerifyForallFactWellDefinedResult,
 };
 
 mod source_fact_alpha;

@@ -162,6 +162,7 @@ impl LitexToLeanCompiler {
             return Err(LeanCompileError::unsupported("Choice/ConclusionFormation"));
         };
         let body = formation
+            .detailed_ref()
             .assumed_body_facts
             .first()
             .ok_or_else(|| LeanCompileError::unsupported("Choice/ConclusionFormation"))?;

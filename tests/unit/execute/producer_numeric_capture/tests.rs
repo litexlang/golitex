@@ -11,12 +11,15 @@ use std::rc::Rc;
 
 fn runtime() -> Runtime {
     // The internal Eval profile accepts an empty initial input; CLI -e does not.
-    Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language: OutputLanguage::English,
-    })
+    Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    )
 }
 
 fn have(result: &ExecStmtResult) -> &ExecHaveObjInNonemptySetStmtSuccessResult {
@@ -285,7 +288,7 @@ fn producer_numeric_capture_owns_the_inferred_fact_cited_by_a_forall_conclusion(
     else {
         panic!()
     };
-    let wd_stores = &wd.introduced_params.defined_params;
+    let wd_stores = &wd.detailed_ref().introduced_params.defined_params;
     assert_eq!(wd_stores.stored_fact_ids, ids_from_receipts(wd_stores));
     assert_ne!(
         natural_nonnegative(&wd_stores.store_and_infer_results[0]).primary_fact_id(),

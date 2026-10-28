@@ -52,12 +52,15 @@ fn checked() -> (RunLitexCodeResult, LitexToLeanCompiler) {
 }
 
 fn checked_source(source: &str) -> (RunLitexCodeResult, LitexToLeanCompiler) {
-    let mut runtime = Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language: OutputLanguage::English,
-    });
+    let mut runtime = Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    );
     let result = runtime
         .run_litex_code(source)
         .expect("typed induction source");
@@ -92,7 +95,7 @@ fn local_recursive_induction_cites_its_original_forall_at_the_callers_universe()
         panic!("the original conclusion must consume the local induction forall");
     };
     let id = induction.stored.primary_fact_id();
-    assert_eq!(citation.cite.fact_id, id);
+    assert_eq!(citation.detailed_ref().cite.fact_id, id);
     let lean = compiler
         .compile_run(&result, "local_recursive_induction")
         .expect("original local induction and generic outer observation compile");

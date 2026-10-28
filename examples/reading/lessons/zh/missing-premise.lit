@@ -1,0 +1,17 @@
+# 三段论：缺少一个前提
+# 一个全称蕴含能否单独建立它的具体结论？
+
+# 这份源码预期不能通过。悬浮在红色提示上查看未建立的结论。
+# 在外层 forall 的开头补入 $is_human(socrates)，再检查。
+abstract_prop is_human(person)
+abstract_prop is_mortal(person)
+
+forall people nonempty_set, socrates people:
+    forall person people:
+        $is_human(person)
+        =>:
+            $is_mortal(person)
+    =>:
+        # 未证明会死，不等于证明了不会死。
+        # 和“全称命题与三段论”样章比较两条前提的作用。
+        $is_mortal(socrates)

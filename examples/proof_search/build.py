@@ -165,7 +165,6 @@ def panel_a(parent, labels, prefix):
     text(fact, labels["real-number"], 188, 546, "small")
     text(group, labels["context-record"], 188, 588, "small")
     text(parent, labels["definition-note"], 188, 665, "small")
-    path(parent, "M 355 654 V 624 H 188 V 620", "edge evidence", f"{prefix}-teal")
 
 
 def panel_b(parent, labels, prefix):
@@ -264,6 +263,9 @@ def make_svg(lang, panel=None):
         for key, x in [("a",24),("b",412),("c",800)]:
             group = element(svg, "g", transform=f"translate({x} 74)")
             functions[key](group, labels, prefix)
+            if key == "a":
+                # This segment belongs to the complete footer-to-context connection.
+                path(group, "M 355 654 V 624 H 188 V 620", "edge evidence", f"{prefix}-teal")
         group = element(svg, "g", transform="translate(24 780)")
         footer(group, labels, prefix)
         path(svg, "M 164 796 V 762 H 379 V 728", "edge evidence")
@@ -465,8 +467,10 @@ def main():
         figures[lang] = (
             '<div class="figure-phases">'
             f'<section class="definition-phase" data-phase="definition"><h2 class="phase-heading">{LABELS[lang]["part-definition"]}</h2>'
+            '<pre class="phase-source"><code>&gt;&gt;&gt; have x R</code></pre>'
             f'<div class="figure-panel">{make_svg(lang, "a")}</div></section>'
             f'<section class="proof-phase" data-phase="proof"><h2 class="phase-heading">{LABELS[lang]["part-proof"]}</h2>'
+            '<pre class="phase-source"><code>&gt;&gt;&gt; 0 &lt;= (x + 1)^2</code></pre>'
             '<div class="proof-panels">' + proof_guide(lang, acceptance["context_fact_id"])
             + f'<div class="figure-panel proof-tree">{interactive_tree(lang)}</div></div>'
             + f'<details class="pipeline-reference"><summary>{pipeline_title}</summary><div class="figure-panel">{make_svg(lang, "b")}</div></details></section></div>'

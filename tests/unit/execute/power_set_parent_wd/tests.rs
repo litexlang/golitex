@@ -8,12 +8,15 @@ use crate::launch_command::{LaunchCommand, OutputLanguage};
 const SOURCE: &str = "claim:\n    ? forall X, Y set, f fn(arg X) Y, K power_set(X):\n        fn_range(fn(point K) Y {f(point)}) $in power_set(Y)\n    by def:\n        ? fn_range(fn(point K) Y {f(point)}) $subset Y\n    fn_range(fn(point K) Y {f(point)}) $in power_set(Y)\n";
 
 fn runtime() -> Runtime {
-    Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language: OutputLanguage::English,
-    })
+    Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    )
 }
 
 #[test]

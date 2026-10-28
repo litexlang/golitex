@@ -29,10 +29,16 @@ fn matrix_ranks_reject_missing_reordered_and_changed_wd() {
         compiler.compile_run(&run, "valid_rank_wd").unwrap();
         let all = super::forall_proof_mut(&mut run.statement_results[0]);
         let atom = super::atomic_proof_mut(&mut all.proved_then_facts[0].verify_result);
-        let ObjWellDefinedProof::ByDef {
+        let DetailedObjWellDefinedProof::ByDef {
             proof: ObjWellDefinedProofByDef::MatrixOperator(W::Rank(p)),
             ..
-        } = &mut atom.well_defined_proof.well_defined_of_each_parameter[0]
+        } = (&mut atom
+            .well_defined_proof
+            .as_detailed_mut()
+            .unwrap()
+            .well_defined_of_each_parameter[0])
+            .as_detailed_mut()
+            .unwrap()
         else {
             panic!("rank WD")
         };
@@ -107,7 +113,8 @@ fn matrix_ranks_reject_invalid_domains_and_unproved_positive_rank() {
     ] {
         let command =
             parse_launch_command(&["-strict".into(), "-e".into(), source.into()]).unwrap();
-        let mut runtime = Runtime::new(command);
+        let mut runtime =
+            Runtime::new_with_result_detail(command, crate::result_detail::OutputDetail::Detailed);
         let run = runtime.run_litex_code(source).unwrap();
         assert!(!run.success, "{source}");
         assert!(super::LitexToLeanCompiler::new(runtime)
@@ -226,10 +233,16 @@ fn matrix_inverses_reject_missing_reordered_or_changed_determinant_wd() {
         compiler.compile_run(&run, "valid_inverse_wd").unwrap();
         let all = super::forall_proof_mut(&mut run.statement_results[0]);
         let atom = super::atomic_proof_mut(&mut all.proved_then_facts[0].verify_result);
-        let ObjWellDefinedProof::ByDef {
+        let DetailedObjWellDefinedProof::ByDef {
             proof: ObjWellDefinedProofByDef::MatrixOperator(W::Inverse(p)),
             ..
-        } = &mut atom.well_defined_proof.well_defined_of_each_parameter[0]
+        } = (&mut atom
+            .well_defined_proof
+            .as_detailed_mut()
+            .unwrap()
+            .well_defined_of_each_parameter[0])
+            .as_detailed_mut()
+            .unwrap()
         else {
             panic!("inverse WD")
         };
@@ -320,7 +333,8 @@ fn matrix_inverses_reject_missing_guard_zero_determinant_and_wrong_shapes() {
     ] {
         let command =
             parse_launch_command(&["-strict".into(), "-e".into(), source.into()]).unwrap();
-        let mut runtime = Runtime::new(command);
+        let mut runtime =
+            Runtime::new_with_result_detail(command, crate::result_detail::OutputDetail::Detailed);
         let run = runtime.run_litex_code(source).unwrap();
         assert!(!run.success, "{source}");
         assert!(super::LitexToLeanCompiler::new(runtime)
@@ -356,10 +370,16 @@ fn matrix_adjugates_reject_missing_reordered_or_changed_wd() {
         compiler.compile_run(&run, "valid_adjugate_wd").unwrap();
         let all = super::forall_proof_mut(&mut run.statement_results[0]);
         let atom = super::atomic_proof_mut(&mut all.proved_then_facts[0].verify_result);
-        let ObjWellDefinedProof::ByDef {
+        let DetailedObjWellDefinedProof::ByDef {
             proof: ObjWellDefinedProofByDef::MatrixOperator(W::Adjugate(p)),
             ..
-        } = &mut atom.well_defined_proof.well_defined_of_each_parameter[0]
+        } = (&mut atom
+            .well_defined_proof
+            .as_detailed_mut()
+            .unwrap()
+            .well_defined_of_each_parameter[0])
+            .as_detailed_mut()
+            .unwrap()
         else {
             panic!("adjugate WD")
         };
@@ -432,7 +452,8 @@ fn matrix_adjugates_reject_negative_nonsquare_and_outside_indices() {
     ] {
         let command =
             parse_launch_command(&["-strict".into(), "-e".into(), source.into()]).unwrap();
-        let mut runtime = Runtime::new(command);
+        let mut runtime =
+            Runtime::new_with_result_detail(command, crate::result_detail::OutputDetail::Detailed);
         let run = runtime.run_litex_code(source).unwrap();
         assert!(!run.success, "{source}");
         assert!(super::LitexToLeanCompiler::new(runtime)
@@ -466,10 +487,16 @@ fn matrix_cofactors_reject_missing_reordered_and_misassigned_wd() {
         compiler.compile_run(&run, "valid_cofactor_wd").unwrap();
         let all = super::forall_proof_mut(&mut run.statement_results[0]);
         let atom = super::atomic_proof_mut(&mut all.proved_then_facts[0].verify_result);
-        let ObjWellDefinedProof::ByDef {
+        let DetailedObjWellDefinedProof::ByDef {
             proof: ObjWellDefinedProofByDef::MatrixOperator(W::Cofactor(p)),
             ..
-        } = &mut atom.well_defined_proof.well_defined_of_each_parameter[0]
+        } = (&mut atom
+            .well_defined_proof
+            .as_detailed_mut()
+            .unwrap()
+            .well_defined_of_each_parameter[0])
+            .as_detailed_mut()
+            .unwrap()
         else {
             panic!("cofactor WD")
         };
@@ -551,7 +578,8 @@ fn matrix_cofactors_reject_changed_expansion_and_invalid_domains() {
     ] {
         let command =
             parse_launch_command(&["-strict".into(), "-e".into(), source.into()]).unwrap();
-        let mut runtime = Runtime::new(command);
+        let mut runtime =
+            Runtime::new_with_result_detail(command, crate::result_detail::OutputDetail::Detailed);
         let run = runtime.run_litex_code(source).unwrap();
         assert!(!run.success);
         assert!(super::LitexToLeanCompiler::new(runtime)
@@ -586,10 +614,16 @@ fn matrix_minors_reject_missing_reordered_and_misassigned_wd() {
         compiler.compile_run(&run, "valid_minor_wd").unwrap();
         let all = super::forall_proof_mut(&mut run.statement_results[0]);
         let atom = super::atomic_proof_mut(&mut all.proved_then_facts[0].verify_result);
-        let ObjWellDefinedProof::ByDef {
+        let DetailedObjWellDefinedProof::ByDef {
             proof: ObjWellDefinedProofByDef::MatrixOperator(W::Minor(p)),
             ..
-        } = &mut atom.well_defined_proof.well_defined_of_each_parameter[0]
+        } = (&mut atom
+            .well_defined_proof
+            .as_detailed_mut()
+            .unwrap()
+            .well_defined_of_each_parameter[0])
+            .as_detailed_mut()
+            .unwrap()
         else {
             panic!("minor WD")
         };
@@ -651,7 +685,8 @@ fn matrix_minors_reject_invalid_domains() {
     ] {
         let command =
             parse_launch_command(&["-strict".into(), "-e".into(), source.into()]).unwrap();
-        let mut runtime = Runtime::new(command);
+        let mut runtime =
+            Runtime::new_with_result_detail(command, crate::result_detail::OutputDetail::Detailed);
         let run = runtime.run_litex_code(source).unwrap();
         assert!(!run.success);
         assert!(super::LitexToLeanCompiler::new(runtime)
@@ -686,10 +721,16 @@ fn matrix_powers_reject_missing_or_reordered_wd() {
         compiler.compile_run(&run, "valid_power_wd").unwrap();
         let all = super::forall_proof_mut(&mut run.statement_results[0]);
         let atom = super::atomic_proof_mut(&mut all.proved_then_facts[0].verify_result);
-        let ObjWellDefinedProof::ByDef {
+        let DetailedObjWellDefinedProof::ByDef {
             proof: ObjWellDefinedProofByDef::MatrixOperator(W::Power(p)),
             ..
-        } = &mut atom.well_defined_proof.well_defined_of_each_parameter[0]
+        } = (&mut atom
+            .well_defined_proof
+            .as_detailed_mut()
+            .unwrap()
+            .well_defined_of_each_parameter[0])
+            .as_detailed_mut()
+            .unwrap()
         else {
             panic!("power WD")
         };
@@ -806,7 +847,8 @@ fn matrix_powers_reject_changed_theorem_and_invalid_domains() {
     ] {
         let command =
             parse_launch_command(&["-strict".into(), "-e".into(), source.into()]).unwrap();
-        let mut runtime = Runtime::new(command);
+        let mut runtime =
+            Runtime::new_with_result_detail(command, crate::result_detail::OutputDetail::Detailed);
         let run = runtime.run_litex_code(source).unwrap();
         assert!(!run.success);
         assert!(super::LitexToLeanCompiler::new(runtime)
@@ -839,10 +881,16 @@ fn matrix_determinants_reject_missing_or_reordered_wd() {
             super::execute("forall n N, A matrix(C,n,n):\n    $is_set(det(A,n))");
         let all = super::forall_proof_mut(&mut run.statement_results[0]);
         let proof = super::atomic_proof_mut(&mut all.proved_then_facts[0].verify_result);
-        let ObjWellDefinedProof::ByDef {
+        let DetailedObjWellDefinedProof::ByDef {
             proof: ObjWellDefinedProofByDef::MatrixOperator(W::Determinant(p)),
             ..
-        } = &mut proof.well_defined_proof.well_defined_of_each_parameter[0]
+        } = (&mut proof
+            .well_defined_proof
+            .as_detailed_mut()
+            .unwrap()
+            .well_defined_of_each_parameter[0])
+            .as_detailed_mut()
+            .unwrap()
         else {
             panic!("determinant WD")
         };
@@ -927,7 +975,8 @@ fn matrix_determinants_reject_changed_expansion_and_invalid_domain() {
     ] {
         let command =
             parse_launch_command(&["-strict".into(), "-e".into(), source.into()]).unwrap();
-        let mut runtime = Runtime::new(command);
+        let mut runtime =
+            Runtime::new_with_result_detail(command, crate::result_detail::OutputDetail::Detailed);
         let run = runtime.run_litex_code(source).unwrap();
         assert!(!run.success);
         assert!(super::LitexToLeanCompiler::new(runtime)
@@ -964,10 +1013,16 @@ fn matrix_norms_reject_missing_or_reordered_wd() {
             let (mut run, compiler) = super::execute(source);
             let all = super::forall_proof_mut(&mut run.statement_results[0]);
             let proof = super::atomic_proof_mut(&mut all.proved_then_facts[0].verify_result);
-            let ObjWellDefinedProof::ByDef {
+            let DetailedObjWellDefinedProof::ByDef {
                 proof: ObjWellDefinedProofByDef::MatrixOperator(wd),
                 ..
-            } = &mut proof.well_defined_proof.well_defined_of_each_parameter[0]
+            } = (&mut proof
+                .well_defined_proof
+                .as_detailed_mut()
+                .unwrap()
+                .well_defined_of_each_parameter[0])
+                .as_detailed_mut()
+                .unwrap()
             else {
                 panic!("norm WD")
             };
@@ -1058,7 +1113,8 @@ fn matrix_norms_reject_wrong_dimensions_and_missing_input_carriers() {
     ] {
         let command =
             parse_launch_command(&["-strict".into(), "-e".into(), source.into()]).unwrap();
-        let mut runtime = Runtime::new(command);
+        let mut runtime =
+            Runtime::new_with_result_detail(command, crate::result_detail::OutputDetail::Detailed);
         let run = runtime.run_litex_code(source).unwrap();
         assert!(!run.success, "{source}");
         assert!(super::LitexToLeanCompiler::new(runtime)
@@ -1165,11 +1221,17 @@ fn matrix_wd_rejects_missing_or_reordered_natural_dimensions() {
         let atom = super::atomic_proof_mut(
             &mut super::fact_statement_mut(&mut run.statement_results[0]).verify_result,
         );
-        let ObjWellDefinedProof::ByDef {
+        let DetailedObjWellDefinedProof::ByDef {
             proof:
                 ObjWellDefinedProofByDef::SetFormer(SetFormerObjWellDefinedProofByDef::MatrixSet(wd)),
             ..
-        } = &mut atom.well_defined_proof.well_defined_of_each_parameter[0]
+        } = (&mut atom
+            .well_defined_proof
+            .as_detailed_mut()
+            .unwrap()
+            .well_defined_of_each_parameter[0])
+            .as_detailed_mut()
+            .unwrap()
         else {
             panic!("matrix WD");
         };
@@ -1256,13 +1318,19 @@ fn transpose_rejects_missing_input_wd_requirement() {
     compiler.compile_run(&run, "valid_transpose").unwrap();
     let all = super::forall_proof_mut(&mut run.statement_results[0]);
     let atom = super::atomic_proof_mut(&mut all.proved_then_facts[0].verify_result);
-    let ObjWellDefinedProof::ByDef {
+    let DetailedObjWellDefinedProof::ByDef {
         proof:
             ObjWellDefinedProofByDef::MatrixOperator(MatrixOperatorObjWellDefinedProofByDef::Transpose(
                 p,
             )),
         ..
-    } = &mut atom.well_defined_proof.well_defined_of_each_parameter[0]
+    } = (&mut atom
+        .well_defined_proof
+        .as_detailed_mut()
+        .unwrap()
+        .well_defined_of_each_parameter[0])
+        .as_detailed_mut()
+        .unwrap()
     else {
         panic!("transpose WD")
     };
@@ -1363,7 +1431,10 @@ fn nested_matrix_reduction_rejects_changed_body_or_wd_subject() {
             panic!("nested reduction")
         };
         if wrong_wd {
-            let ObjWellDefinedProof::ByDef { obj, .. } = nested.application_well_defined.as_mut()
+            let DetailedObjWellDefinedProof::ByDef { obj, .. } =
+                (nested.application_well_defined.as_mut())
+                    .as_detailed_mut()
+                    .unwrap()
             else {
                 panic!("nested call WD")
             };
@@ -1447,13 +1518,19 @@ fn identity_matrix_rejects_wrong_order_requirement() {
     let atom = super::atomic_proof_mut(
         &mut super::fact_statement_mut(&mut run.statement_results[0]).verify_result,
     );
-    let ObjWellDefinedProof::ByDef {
+    let DetailedObjWellDefinedProof::ByDef {
         proof:
             ObjWellDefinedProofByDef::MatrixOperator(
                 MatrixOperatorObjWellDefinedProofByDef::IdentityMatrix(p),
             ),
         ..
-    } = &mut atom.well_defined_proof.well_defined_of_each_parameter[0]
+    } = (&mut atom
+        .well_defined_proof
+        .as_detailed_mut()
+        .unwrap()
+        .well_defined_of_each_parameter[0])
+        .as_detailed_mut()
+        .unwrap()
     else {
         panic!("identity WD")
     };
@@ -1536,13 +1613,19 @@ fn matrix_entrywise_rejects_wrong_operand_wd() {
     compiler.compile_run(&run, "valid_subtraction").unwrap();
     let all = super::forall_proof_mut(&mut run.statement_results[0]);
     let atom = super::atomic_proof_mut(&mut all.proved_then_facts[0].verify_result);
-    let ObjWellDefinedProof::ByDef {
+    let DetailedObjWellDefinedProof::ByDef {
         proof:
             ObjWellDefinedProofByDef::MatrixOperator(MatrixOperatorObjWellDefinedProofByDef::Subtract(
                 p,
             )),
         ..
-    } = &mut atom.well_defined_proof.well_defined_of_each_parameter[0]
+    } = (&mut atom
+        .well_defined_proof
+        .as_detailed_mut()
+        .unwrap()
+        .well_defined_of_each_parameter[0])
+        .as_detailed_mut()
+        .unwrap()
     else {
         panic!("subtraction WD")
     };
@@ -1635,11 +1718,17 @@ fn matrix_scale_rejects_scalar_domain_and_changed_factor() {
     compiler.compile_run(&run, "valid_scale_wd").unwrap();
     let all = super::forall_proof_mut(&mut run.statement_results[0]);
     let atom = super::atomic_proof_mut(&mut all.proved_then_facts[0].verify_result);
-    let ObjWellDefinedProof::ByDef {
+    let DetailedObjWellDefinedProof::ByDef {
         proof:
             ObjWellDefinedProofByDef::MatrixOperator(MatrixOperatorObjWellDefinedProofByDef::Scale(p)),
         ..
-    } = &mut atom.well_defined_proof.well_defined_of_each_parameter[0]
+    } = (&mut atom
+        .well_defined_proof
+        .as_detailed_mut()
+        .unwrap()
+        .well_defined_of_each_parameter[0])
+        .as_detailed_mut()
+        .unwrap()
     else {
         panic!("scale WD")
     };
@@ -1801,13 +1890,19 @@ fn diagonal_matrix_rejects_missing_or_reordered_wd() {
         let atom = super::atomic_proof_mut(
             &mut super::fact_statement_mut(&mut run.statement_results[0]).verify_result,
         );
-        let ObjWellDefinedProof::ByDef {
+        let DetailedObjWellDefinedProof::ByDef {
             proof:
                 ObjWellDefinedProofByDef::MatrixOperator(
                     MatrixOperatorObjWellDefinedProofByDef::Diagonal(p),
                 ),
             ..
-        } = &mut atom.well_defined_proof.well_defined_of_each_parameter[0]
+        } = (&mut atom
+            .well_defined_proof
+            .as_detailed_mut()
+            .unwrap()
+            .well_defined_of_each_parameter[0])
+            .as_detailed_mut()
+            .unwrap()
         else {
             panic!("diagonal WD")
         };
@@ -1853,11 +1948,17 @@ fn matrix_trace_rejects_changed_input_domain() {
     compiler.compile_run(&run, "valid_trace").unwrap();
     let all = super::forall_proof_mut(&mut run.statement_results[0]);
     let atom = super::atomic_proof_mut(&mut all.proved_then_facts[0].verify_result);
-    let ObjWellDefinedProof::ByDef {
+    let DetailedObjWellDefinedProof::ByDef {
         proof:
             ObjWellDefinedProofByDef::MatrixOperator(MatrixOperatorObjWellDefinedProofByDef::Trace(p)),
         ..
-    } = &mut atom.well_defined_proof.well_defined_of_each_parameter[0]
+    } = (&mut atom
+        .well_defined_proof
+        .as_detailed_mut()
+        .unwrap()
+        .well_defined_of_each_parameter[0])
+        .as_detailed_mut()
+        .unwrap()
     else {
         panic!("trace WD")
     };
@@ -1902,13 +2003,19 @@ fn matrix_multiply_rejects_missing_or_reordered_wd() {
         compiler.compile_run(&run, "valid_product_wd").unwrap();
         let all = super::forall_proof_mut(&mut run.statement_results[0]);
         let atom = super::atomic_proof_mut(&mut all.proved_then_facts[0].verify_result);
-        let ObjWellDefinedProof::ByDef {
+        let DetailedObjWellDefinedProof::ByDef {
             proof:
                 ObjWellDefinedProofByDef::MatrixOperator(
                     MatrixOperatorObjWellDefinedProofByDef::Multiply(p),
                 ),
             ..
-        } = &mut atom.well_defined_proof.well_defined_of_each_parameter[0]
+        } = (&mut atom
+            .well_defined_proof
+            .as_detailed_mut()
+            .unwrap()
+            .well_defined_of_each_parameter[0])
+            .as_detailed_mut()
+            .unwrap()
         else {
             panic!("matrix multiply WD")
         };
@@ -1970,13 +2077,19 @@ fn matrix_apply_rejects_missing_or_reordered_wd() {
         compiler.compile_run(&run, "valid_apply_wd").unwrap();
         let all = super::forall_proof_mut(&mut run.statement_results[0]);
         let atom = super::atomic_proof_mut(&mut all.proved_then_facts[0].verify_result);
-        let ObjWellDefinedProof::ByDef {
+        let DetailedObjWellDefinedProof::ByDef {
             proof:
                 ObjWellDefinedProofByDef::MatrixOperator(MatrixOperatorObjWellDefinedProofByDef::Apply(
                     p,
                 )),
             ..
-        } = &mut atom.well_defined_proof.well_defined_of_each_parameter[0]
+        } = (&mut atom
+            .well_defined_proof
+            .as_detailed_mut()
+            .unwrap()
+            .well_defined_of_each_parameter[0])
+            .as_detailed_mut()
+            .unwrap()
         else {
             panic!("matrix apply WD")
         };
@@ -2036,13 +2149,19 @@ fn inner_product_rejects_changed_vector_wd() {
     compiler.compile_run(&run, "valid_inner_product").unwrap();
     let all = super::forall_proof_mut(&mut run.statement_results[0]);
     let atom = super::atomic_proof_mut(&mut all.proved_then_facts[0].verify_result);
-    let ObjWellDefinedProof::ByDef {
+    let DetailedObjWellDefinedProof::ByDef {
         proof:
             ObjWellDefinedProofByDef::MatrixOperator(
                 MatrixOperatorObjWellDefinedProofByDef::InnerProduct(p),
             ),
         ..
-    } = &mut atom.well_defined_proof.well_defined_of_each_parameter[0]
+    } = (&mut atom
+        .well_defined_proof
+        .as_detailed_mut()
+        .unwrap()
+        .well_defined_of_each_parameter[0])
+        .as_detailed_mut()
+        .unwrap()
     else {
         panic!("inner WD")
     };

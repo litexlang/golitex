@@ -154,12 +154,15 @@ fn difference_zero_rejects_corrupted_zero_paths_and_selected_side() {
 
 #[test]
 fn difference_zero_requires_an_actual_connection_to_zero() {
-    let mut runtime = Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language: OutputLanguage::English,
-    });
+    let mut runtime = Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    );
     let result = runtime
         .run_litex_code("forall a, b, c, d C:\n    a-b=c\n    c=d\n    =>:\n        a=b\n")
         .unwrap();

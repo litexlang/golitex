@@ -1,0 +1,7 @@
+thm composed_group_map:
+    ? forall A nonempty_set,G &Algebra::group::Group<A>,B nonempty_set,H &Algebra::group::Group<B>,D nonempty_set,K &Algebra::group::Group<D>,f fn(x A) B,g fn(y B) D:
+        $Algebra::group::is_homomorphism(A,G,B,H,f)
+        $Algebra::group::is_homomorphism(B,H,D,K,g)
+        =>:
+            $Algebra::group::is_homomorphism(A,G,D,K,compose(g,f))
+    release thm Algebra::group::homomorphism_composition(A,G,B,H,D,K,f,g)

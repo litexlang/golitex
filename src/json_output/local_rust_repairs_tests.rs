@@ -5,12 +5,15 @@ use crate::launch_command::{LaunchCommand, OutputLanguage};
 use crate::runtime::Runtime;
 
 fn run(code: &str) -> (Runtime, ExecStmtResult) {
-    let mut rt = Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language: OutputLanguage::English,
-    });
+    let mut rt = Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    );
     let mut result = rt.run_litex_code(code).unwrap();
     assert!(
         result.session_error.is_none(),

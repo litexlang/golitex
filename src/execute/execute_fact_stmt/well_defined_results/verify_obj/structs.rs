@@ -1,6 +1,6 @@
 //! Struct / template / field-access object WD.
 
-use super::entry::{ObjWellDefinedProof, VerifyObjWellDefinedResult};
+use super::entry::VerifyObjWellDefinedResult;
 use super::fail_to_verify_obj_well_defined::*;
 use super::obj_well_defined_by_def_common::ObjWellDefinedByDefCommonStages;
 use super::wrap_obj_well_defined_by_def::{finish_by_def, wrap_common_fail};
@@ -134,20 +134,15 @@ impl Runtime {
                 for fact in &requirements {
                     let proof = self.verify_fact(fact, verify_state.clone())?;
                     let failed = proof.is_failed();
-                    stages.requirement_fact_verified.push(proof);
+                    stages.push_requirement(proof);
                     if failed {
                         break;
                     }
                 }
             }
         }
-        match finish_by_def(&root, stages) {
-            Ok(by_def) => Ok(VerifyObjWellDefinedResult::Success(
-                ObjWellDefinedProof::ByDef {
-                    obj: root,
-                    proof: by_def,
-                },
-            )),
+        match finish_by_def(&root, stages, self.result_detail())? {
+            Ok(by_def) => Ok(VerifyObjWellDefinedResult::Success(by_def)),
             Err(fail) => Ok(VerifyObjWellDefinedResult::Failed {
                 obj: root,
                 reason: fail,
@@ -203,7 +198,10 @@ impl Runtime {
             ));
         };
 
-        let mut stages = ObjWellDefinedByDefCommonStages::from_children(vec![receiver_wd]);
+        let mut stages = ObjWellDefinedByDefCommonStages::from_children(
+            self.result_detail(),
+            vec![receiver_wd],
+        )?;
         let mut argument_scope = None;
         if let Obj::FnObj(application) = value.obj.as_ref() {
             let head = super::helper::fn_obj_head_as_obj(&application.head);
@@ -226,14 +224,9 @@ impl Runtime {
                     mut scope,
                 } = declared_call;
                 for formed in &mut scope.formed_children {
-                    formed.child_index += stages.child_obj_well_defined.len();
+                    formed.child_index += stages.captured_child_count();
                 }
-                stages
-                    .child_obj_well_defined
-                    .extend(call_stages.child_obj_well_defined);
-                stages
-                    .requirement_fact_verified
-                    .extend(call_stages.requirement_fact_verified);
+                stages.append(call_stages)?;
                 argument_scope = Some(scope);
             }
         }
@@ -283,20 +276,15 @@ impl Runtime {
                 }));
         }
 
-        match finish_by_def(&root, stages) {
+        match finish_by_def(&root, stages, self.result_detail())? {
             Ok(mut by_def) => {
-                if let ObjWellDefinedProofByDef::Structish(
+                if let Some(ObjWellDefinedProofByDef::Structish(
                     StructishObjWellDefinedProofByDef::FieldAccess(proof),
-                ) = &mut by_def
+                )) = by_def.by_def_mut()
                 {
                     proof.argument_scope = argument_scope;
                 }
-                Ok(VerifyObjWellDefinedResult::Success(
-                    ObjWellDefinedProof::ByDef {
-                        obj: root,
-                        proof: by_def,
-                    },
-                ))
+                Ok(VerifyObjWellDefinedResult::Success(by_def))
             }
             Err(fail) => Ok(VerifyObjWellDefinedResult::Failed {
                 obj: root,
@@ -374,14 +362,14 @@ impl Runtime {
             ));
         }
 
-        let mut stages = ObjWellDefinedByDefCommonStages::leaf();
+        let mut stages = ObjWellDefinedByDefCommonStages::leaf(self.result_detail());
         for arg in &value.args {
             let child = self.verify_obj_well_definedness(arg, verify_state.clone())?;
             let failed = child.is_failed();
-            stages.child_obj_well_defined.push(child);
+            stages.push_child(child)?;
             if failed {
                 let root = Obj::InstantiatedTemplateObj(value.clone());
-                return Ok(match finish_by_def(&root, stages) {
+                return Ok(match finish_by_def(&root, stages, self.result_detail())? {
                     Ok(_) => unreachable!(),
                     Err(fail) => VerifyObjWellDefinedResult::Failed {
                         obj: root,
@@ -427,10 +415,10 @@ impl Runtime {
                 );
                 let req = self.verify_fact(&type_fact, verify_state.clone())?;
                 let failed = req.is_failed();
-                stages.requirement_fact_verified.push(req);
+                stages.push_requirement(req);
                 if failed {
                     let root = Obj::InstantiatedTemplateObj(value.clone());
-                    return Ok(match finish_by_def(&root, stages) {
+                    return Ok(match finish_by_def(&root, stages, self.result_detail())? {
                         Ok(_) => unreachable!(),
                         Err(fail) => VerifyObjWellDefinedResult::Failed {
                             obj: root,
@@ -457,10 +445,10 @@ impl Runtime {
             let req =
                 self.verify_required_quantifier_free_fact(instantiated, verify_state.clone())?;
             let failed = req.is_failed();
-            stages.requirement_fact_verified.push(req);
+            stages.push_requirement(req);
             if failed {
                 let root = Obj::InstantiatedTemplateObj(value.clone());
-                return Ok(match finish_by_def(&root, stages) {
+                return Ok(match finish_by_def(&root, stages, self.result_detail())? {
                     Ok(_) => unreachable!(),
                     Err(fail) => VerifyObjWellDefinedResult::Failed {
                         obj: root,
@@ -471,13 +459,8 @@ impl Runtime {
         }
 
         let root = Obj::InstantiatedTemplateObj(value.clone());
-        match finish_by_def(&root, stages) {
-            Ok(by_def) => Ok(VerifyObjWellDefinedResult::Success(
-                ObjWellDefinedProof::ByDef {
-                    obj: root,
-                    proof: by_def,
-                },
-            )),
+        match finish_by_def(&root, stages, self.result_detail())? {
+            Ok(by_def) => Ok(VerifyObjWellDefinedResult::Success(by_def)),
             Err(fail) => Ok(VerifyObjWellDefinedResult::Failed {
                 obj: root,
                 reason: fail,

@@ -1,12 +1,15 @@
 use crate::prelude::*;
 
 fn runtime(language: OutputLanguage) -> Runtime {
-    Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language,
-    })
+    Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    )
 }
 fn check(rt: &mut Runtime, source: &str, success: bool) -> RunLitexCodeResult {
     let run = rt.run_litex_code(source).unwrap();

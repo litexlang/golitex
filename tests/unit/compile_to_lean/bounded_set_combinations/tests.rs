@@ -34,8 +34,11 @@ fn builder_mut(statement: &mut ExecStmtResult) -> &mut SetBuilderObjWellDefinedP
     else {
         panic!("set declaration")
     };
-    match &mut proof.equal_to_well_defined[0] {
-        VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByDef {
+    match (&mut proof.equal_to_well_defined[0])
+        .as_detailed_success_mut()
+        .unwrap()
+    {
+        Some(DetailedObjWellDefinedProof::ByDef {
             proof:
                 ObjWellDefinedProofByDef::SetFormer(SetFormerObjWellDefinedProofByDef::SetBuilder(
                     builder,
@@ -208,14 +211,21 @@ fn bounded_filter_requires_original_bound_wd_and_subject() {
         let (mut result, compiler) = super::execute(INTERVAL);
         let builder = builder_mut(&mut result.statement_results[0]);
         if missing {
-            builder.param_set_well_defined = Box::new(ObjWellDefinedProof::ByKnown {
-                obj: Obj::StandardSet(StandardSet::R),
-                wd_id: WellDefinednessId::new(u64::MAX),
-            });
+            builder.param_set_well_defined = Box::new(
+                crate::execute::execute_fact_stmt::ObjWellDefinedProof::Detailed(Box::new(
+                    DetailedObjWellDefinedProof::ByKnown {
+                        obj: Obj::StandardSet(StandardSet::R),
+                        wd_id: WellDefinednessId::new(u64::MAX),
+                    },
+                )),
+            );
         } else {
-            match builder.param_set_well_defined.as_mut() {
-                ObjWellDefinedProof::ByDef { obj, .. }
-                | ObjWellDefinedProof::ByKnown { obj, .. } => {
+            match (builder.param_set_well_defined.as_mut())
+                .as_detailed_mut()
+                .unwrap()
+            {
+                DetailedObjWellDefinedProof::ByDef { obj, .. }
+                | DetailedObjWellDefinedProof::ByKnown { obj, .. } => {
                     *obj = Obj::StandardSet(StandardSet::Q)
                 }
             }
@@ -233,15 +243,19 @@ fn bounded_chain_filter_cannot_drop_or_reorder_original_formation() {
         if corruption == 0 {
             builder.assumed_facts.clear();
         } else {
-            let FactWellDefinedProof::ChainFact { adjacent } =
-                &mut builder.assumed_facts[0].well_defined
+            let FactWellDefinedProof::ChainFact(proof) = &mut builder.assumed_facts[0].well_defined
             else {
                 panic!("actual filter formation")
             };
+            let adjacent = &mut proof.as_detailed_mut().unwrap().adjacent;
             if corruption == 1 {
                 adjacent.pop();
             } else {
-                adjacent[0].well_defined_of_each_parameter.swap(0, 1);
+                adjacent[0]
+                    .as_detailed_mut()
+                    .unwrap()
+                    .well_defined_of_each_parameter
+                    .swap(0, 1);
             }
         }
         super::compile_run(&result, &compiler, "wrong_filter_formation")

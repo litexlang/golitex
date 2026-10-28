@@ -81,6 +81,14 @@ arbitrary map.
 | `kernel_is_normal(A,G,B,H,f)` | A homomorphism has a normal kernel |
 | `trivial_kernel_implies_injective(A,G,B,H,f)` | Homomorphism and trivial-kernel premises give native injectivity |
 | `injective_implies_trivial_kernel(A,G,B,H,f)` | An injective homomorphism has trivial kernel |
+| `subgroup_whole(A,G)` | The whole carrier is a subgroup |
+| `subgroup_identity(A,G)` | The singleton identity is a subgroup |
+| `normal_subgroup_intersection(A,G,S,T)` | The intersection of two normal subgroups is normal |
+| `homomorphism_range_is_subgroup(A,G,B,H,f)` | The actual range of a homomorphism is a target subgroup |
+| `homomorphism_preimage_is_subgroup(A,G,B,H,f,S)` | A target subgroup has a subgroup inverse image |
+| `homomorphism_preimage_is_normal(A,G,B,H,f,S)` | A target normal subgroup has a normal inverse image |
+| `homomorphism_identity_map(A,G)` | The native anonymous identity is a homomorphism |
+| `homomorphism_composition(A,G,B,H,D,K,f,g)` | Two homomorphisms compose as `compose(g,f)`, applying `f` first |
 
 These are ordinary source proofs using native sets, functions, struct laws and
 equality reasoning. This package adds no native objects or reserved theorem
@@ -89,7 +97,7 @@ No Lean replay was performed for this module.
 
 ## Examples and scope
 
-The [imported consumer](../../examples/algebra/groups/main.lit) exercises all
+The [imported consumer](../../examples/algebra/groups/main.lit) exercises the original
 twelve theorem interfaces and the trivial group. The
 [Heisenberg group](../../examples/algebra/groups/noncommutative/main.lit)
 is noncommutative and still uses cancellation and kernel normality.
@@ -100,6 +108,19 @@ Run the focused positive, rejection and bundled-import checks with
 `python3 examples/algebra/groups/check.py` from the repository root.
 [math_collections.md](math_collections.md) explains the mathematical dependencies.
 The group export does not include quotients or Lagrange's theorem.
+
+The group export currently has20 named source theorems. The eight map/closure
+additions keep all existing definitions and permit noncommutative and trivial
+groups. They use native fn_range, preimage_set and compose; no second image or
+composition operation is introduced. The range is a subgroup of the target,
+with no claim that it is normal there. A normal inverse-image theorem keeps
+its target normality premise. All maps must be complete unary maps with the
+exact declared carriers.
+
+The new imported group-map consumer is under construction. Its eight generic
+contracts and43 integer/trivial-group statements pass independently of one
+another; noncommutative publication, refusal and installed checks are pending.
+
 
 
 ## Fields and vector spaces

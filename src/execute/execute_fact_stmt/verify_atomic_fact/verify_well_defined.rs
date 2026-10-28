@@ -4,7 +4,8 @@ use crate::ast::obj::LimitApproach;
 use crate::ast::obj::Obj;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::VerifyEqualFactWellDefinedResult;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::{
-    AtomicFactWellDefinedProof, FailToVerifyAtomicFactWellDefinedResult, PredicateDomainProof,
+    AtomicFactWellDefinedProof, DetailedAtomicFactWellDefinedProof,
+    FailToVerifyAtomicFactWellDefinedResult, PredicateDomainProof,
     PredicateSignatureWellDefinedFailure, PredicateSignatureWellDefinedProof,
     VerifyAtomicFactWellDefinedResult,
 };
@@ -33,10 +34,19 @@ impl Runtime {
             match self.verify_obj_well_definedness(arg, verify_state.clone())? {
                 VerifyObjWellDefinedResult::Failed { reason, .. } => {
                     return Ok(VerifyAtomicFactWellDefinedResult::Failed(
-                        FailToVerifyAtomicFactWellDefinedResult::Argument(reason),
+                        FailToVerifyAtomicFactWellDefinedResult::Argument {
+                            fact: fact.clone(),
+                            reason,
+                        },
                     ));
                 }
-                VerifyObjWellDefinedResult::Success(proof) => succeeded_args.push(proof),
+                VerifyObjWellDefinedResult::Success(proof) => {
+                    self.result_detail()
+                        .require(proof.detail(), "atomic WD argument")?;
+                    if self.result_detail() == crate::result_detail::OutputDetail::Detailed {
+                        succeeded_args.push(proof);
+                    }
+                }
             }
         }
 
@@ -76,6 +86,7 @@ impl Runtime {
                 } else {
                     return Ok(VerifyAtomicFactWellDefinedResult::Failed(
                         FailToVerifyAtomicFactWellDefinedResult::Predicate {
+                            fact: fact.clone(),
                             well_defined_of_each_parameter: succeeded_args,
                             reason: PredicateSignatureWellDefinedFailure::Undefined {
                                 predicate: predicate.clone(),
@@ -93,6 +104,7 @@ impl Runtime {
                 if arity != actual_arity {
                     return Ok(VerifyAtomicFactWellDefinedResult::Failed(
                         FailToVerifyAtomicFactWellDefinedResult::Predicate {
+                            fact: fact.clone(),
                             well_defined_of_each_parameter: succeeded_args,
                             reason: PredicateSignatureWellDefinedFailure::Arity {
                                 predicate: predicate.clone(),
@@ -108,11 +120,13 @@ impl Runtime {
         };
         if let Some(cite) = self.lookup_known_atomic_fact(fact) {
             return Ok(VerifyAtomicFactWellDefinedResult::Success(
-                AtomicFactWellDefinedProof {
-                    well_defined_of_each_parameter: succeeded_args,
-                    predicate_signature,
-                    predicate_domain: PredicateDomainProof::ByKnownFact(cite),
-                },
+                AtomicFactWellDefinedProof::new(self.result_detail(), || {
+                    DetailedAtomicFactWellDefinedProof {
+                        well_defined_of_each_parameter: succeeded_args,
+                        predicate_signature,
+                        predicate_domain: PredicateDomainProof::ByKnownFact(cite),
+                    }
+                })?,
             ));
         }
         let multi_relation = match fact {
@@ -137,6 +151,7 @@ impl Runtime {
                 if result.is_failed() {
                     return Ok(VerifyAtomicFactWellDefinedResult::Failed(
                         FailToVerifyAtomicFactWellDefinedResult::Domain {
+                            fact: fact.clone(),
                             well_defined_of_each_parameter: succeeded_args,
                             predicate_signature,
                             completed,
@@ -153,16 +168,18 @@ impl Runtime {
                 );
             }
             return Ok(VerifyAtomicFactWellDefinedResult::Success(
-                AtomicFactWellDefinedProof {
-                    well_defined_of_each_parameter: succeeded_args,
-                    predicate_signature,
-                    predicate_domain: PredicateDomainProof::MultivariableAnalysis(
-                        super::well_defined_result::MultivariableAnalysisPredicateDomainProof {
-                            function_domain: Box::new(function_domain),
-                            requirements: completed,
-                        },
-                    ),
-                },
+                AtomicFactWellDefinedProof::new(self.result_detail(), || {
+                    DetailedAtomicFactWellDefinedProof {
+                        well_defined_of_each_parameter: succeeded_args,
+                        predicate_signature,
+                        predicate_domain: PredicateDomainProof::MultivariableAnalysis(
+                            super::well_defined_result::MultivariableAnalysisPredicateDomainProof {
+                                function_domain: Box::new(function_domain),
+                                requirements: completed,
+                            },
+                        ),
+                    }
+                })?,
             ));
         }
         let analysis_sequence = match fact {
@@ -182,15 +199,17 @@ impl Runtime {
                 ));
             };
             return Ok(VerifyAtomicFactWellDefinedResult::Success(
-                AtomicFactWellDefinedProof {
-                    well_defined_of_each_parameter: succeeded_args,
-                    predicate_signature,
-                    predicate_domain: PredicateDomainProof::SequenceAnalysis(
-                        super::well_defined_result::SequenceAnalysisPredicateDomainProof {
-                            sequence_source: Box::new(sequence_source),
-                        },
-                    ),
-                },
+                AtomicFactWellDefinedProof::new(self.result_detail(), || {
+                    DetailedAtomicFactWellDefinedProof {
+                        well_defined_of_each_parameter: succeeded_args,
+                        predicate_signature,
+                        predicate_domain: PredicateDomainProof::SequenceAnalysis(
+                            super::well_defined_result::SequenceAnalysisPredicateDomainProof {
+                                sequence_source: Box::new(sequence_source),
+                            },
+                        ),
+                    }
+                })?,
             ));
         }
         let analysis_function = match fact {
@@ -352,6 +371,7 @@ impl Runtime {
                 if result.is_failed() {
                     return Ok(VerifyAtomicFactWellDefinedResult::Failed(
                         FailToVerifyAtomicFactWellDefinedResult::Domain {
+                            fact: fact.clone(),
                             well_defined_of_each_parameter: succeeded_args,
                             predicate_signature,
                             completed,
@@ -368,16 +388,18 @@ impl Runtime {
                 );
             }
             return Ok(VerifyAtomicFactWellDefinedResult::Success(
-                AtomicFactWellDefinedProof {
-                    well_defined_of_each_parameter: succeeded_args,
-                    predicate_signature,
-                    predicate_domain: PredicateDomainProof::FunctionAnalysis(
-                        super::well_defined_result::FunctionAnalysisPredicateDomainProof {
-                            function_domain,
-                            requirements: completed,
-                        },
-                    ),
-                },
+                AtomicFactWellDefinedProof::new(self.result_detail(), || {
+                    DetailedAtomicFactWellDefinedProof {
+                        well_defined_of_each_parameter: succeeded_args,
+                        predicate_signature,
+                        predicate_domain: PredicateDomainProof::FunctionAnalysis(
+                            super::well_defined_result::FunctionAnalysisPredicateDomainProof {
+                                function_domain,
+                                requirements: completed,
+                            },
+                        ),
+                    }
+                })?,
             ));
         }
         let function_limit = match fact {
@@ -391,6 +413,7 @@ impl Runtime {
             else {
                 return Ok(VerifyAtomicFactWellDefinedResult::Failed(
                     FailToVerifyAtomicFactWellDefinedResult::FunctionLimitDomain {
+                        fact: fact.clone(),
                         function: function.clone(),
                         well_defined_of_each_parameter: succeeded_args,
                     },
@@ -403,6 +426,7 @@ impl Runtime {
                 if result.is_failed() {
                     return Ok(VerifyAtomicFactWellDefinedResult::Failed(
                         FailToVerifyAtomicFactWellDefinedResult::Domain {
+                            fact: fact.clone(),
                             well_defined_of_each_parameter: succeeded_args,
                             predicate_signature,
                             completed: Vec::new(),
@@ -426,17 +450,19 @@ impl Runtime {
                 ),
             };
             return Ok(VerifyAtomicFactWellDefinedResult::Success(
-                AtomicFactWellDefinedProof {
-                    well_defined_of_each_parameter: succeeded_args,
-                    predicate_signature,
-                    predicate_domain: PredicateDomainProof::FunctionLimit(
-                        super::well_defined_result::FunctionLimitPredicateDomainProof {
-                            function_domain,
-                            approach_real,
-                            value_real,
-                        },
-                    ),
-                },
+                AtomicFactWellDefinedProof::new(self.result_detail(), || {
+                    DetailedAtomicFactWellDefinedProof {
+                        well_defined_of_each_parameter: succeeded_args,
+                        predicate_signature,
+                        predicate_domain: PredicateDomainProof::FunctionLimit(
+                            super::well_defined_result::FunctionLimitPredicateDomainProof {
+                                function_domain,
+                                approach_real,
+                                value_real,
+                            },
+                        ),
+                    }
+                })?,
             ));
         }
         // The new limit family consumes the checked callable argument's exact
@@ -458,16 +484,18 @@ impl Runtime {
                     self.search_structural_membership(value, &crate::ast::obj::StandardSet::R)
                 {
                     return Ok(VerifyAtomicFactWellDefinedResult::Success(
-                        AtomicFactWellDefinedProof {
-                            well_defined_of_each_parameter: succeeded_args,
-                            predicate_signature,
-                            predicate_domain: PredicateDomainProof::SequenceLimit(
-                                super::well_defined_result::SequenceLimitPredicateDomainProof {
-                                    sequence_source: Box::new(sequence_source),
-                                    value_real,
-                                },
-                            ),
-                        },
+                        AtomicFactWellDefinedProof::new(self.result_detail(), || {
+                            DetailedAtomicFactWellDefinedProof {
+                                well_defined_of_each_parameter: succeeded_args,
+                                predicate_signature,
+                                predicate_domain: PredicateDomainProof::SequenceLimit(
+                                    super::well_defined_result::SequenceLimitPredicateDomainProof {
+                                        sequence_source: Box::new(sequence_source),
+                                        value_real,
+                                    },
+                                ),
+                            }
+                        })?,
                     ));
                 }
             }
@@ -482,13 +510,15 @@ impl Runtime {
         if let Some((dividend, divisor)) = divisibility_args {
             if let Some(source) = self.lookup_known_zero_remainder(dividend, divisor) {
                 return Ok(VerifyAtomicFactWellDefinedResult::Success(
-                    AtomicFactWellDefinedProof {
-                        well_defined_of_each_parameter: succeeded_args,
-                        predicate_signature,
-                        predicate_domain: PredicateDomainProof::ByKnownZeroRemainder(Box::new(
-                            source,
-                        )),
-                    },
+                    AtomicFactWellDefinedProof::new(self.result_detail(), || {
+                        DetailedAtomicFactWellDefinedProof {
+                            well_defined_of_each_parameter: succeeded_args,
+                            predicate_signature,
+                            predicate_domain: PredicateDomainProof::ByKnownZeroRemainder(Box::new(
+                                source,
+                            )),
+                        }
+                    })?,
                 ));
             }
         }
@@ -521,18 +551,21 @@ impl Runtime {
                     failed = Some((requirement, result));
                     break;
                 }
-                predicate_domain.push(
-                    super::well_defined_result::PredicateDomainWellDefinedProof {
-                        requirement,
-                        result: Box::new(result),
-                    },
-                );
+                if self.result_detail() == crate::result_detail::OutputDetail::Detailed {
+                    predicate_domain.push(
+                        super::well_defined_result::PredicateDomainWellDefinedProof {
+                            requirement,
+                            result: Box::new(result),
+                        },
+                    );
+                }
             }
             if let Some((requirement, result)) = failed {
                 // Each argument already passed object WD above. If a reduced
                 // domain recheck cannot replay that WD, reuse it for truth-only
                 // structural membership (e.g. finite_set_size(A \ B) in R).
                 let mut memberships = Vec::new();
+                let mut membership_count = 0;
                 for domain in &requirements {
                     let crate::ast::fact::Fact::AtomicFact(AtomicFact::InFact(member)) = domain
                     else {
@@ -550,21 +583,28 @@ impl Runtime {
                     else {
                         break;
                     };
-                    memberships.push(
-                        super::well_defined_result::PredicateDomainArgumentMembershipProof::new(
-                            domain.clone(),
-                            argument_index,
-                            membership,
-                        ),
-                    );
+                    membership_count += 1;
+                    if self.result_detail() == crate::result_detail::OutputDetail::Detailed {
+                        memberships.push(
+                            super::well_defined_result::PredicateDomainArgumentMembershipProof::new(
+                                domain.clone(),
+                                argument_index,
+                                membership,
+                            ),
+                        );
+                    }
                 }
-                if !requirements.is_empty() && memberships.len() == requirements.len() {
+                if !requirements.is_empty() && membership_count == requirements.len() {
                     return Ok(VerifyAtomicFactWellDefinedResult::Success(
-                        AtomicFactWellDefinedProof {
-                            well_defined_of_each_parameter: succeeded_args,
-                            predicate_signature,
-                            predicate_domain: PredicateDomainProof::ByCheckedArguments(memberships),
-                        },
+                        AtomicFactWellDefinedProof::new(self.result_detail(), || {
+                            DetailedAtomicFactWellDefinedProof {
+                                well_defined_of_each_parameter: succeeded_args,
+                                predicate_signature,
+                                predicate_domain: PredicateDomainProof::ByCheckedArguments(
+                                    memberships,
+                                ),
+                            }
+                        })?,
                     ));
                 }
                 if first_failure.is_none() {
@@ -573,17 +613,20 @@ impl Runtime {
                 continue;
             }
             return Ok(VerifyAtomicFactWellDefinedResult::Success(
-                AtomicFactWellDefinedProof {
-                    well_defined_of_each_parameter: succeeded_args,
-                    predicate_signature,
-                    predicate_domain: PredicateDomainProof::ByRequirements(predicate_domain),
-                },
+                AtomicFactWellDefinedProof::new(self.result_detail(), || {
+                    DetailedAtomicFactWellDefinedProof {
+                        well_defined_of_each_parameter: succeeded_args,
+                        predicate_signature,
+                        predicate_domain: PredicateDomainProof::ByRequirements(predicate_domain),
+                    }
+                })?,
             ));
         }
         let (completed, requirement, result) =
             first_failure.expect("one domain route is always present");
         Ok(VerifyAtomicFactWellDefinedResult::Failed(
             FailToVerifyAtomicFactWellDefinedResult::Domain {
+                fact: fact.clone(),
                 well_defined_of_each_parameter: succeeded_args,
                 predicate_signature,
                 completed,

@@ -95,9 +95,7 @@ impl Runtime {
         Ok(
             match self.verify_and_fact_well_definedness(fact, verify_state)? {
                 VerifyAndFactWellDefinedResult::Success(proof) => {
-                    VerifyFactWellDefinedResult::Success(FactWellDefinedProof::AndFact {
-                        components: proof.components,
-                    })
+                    VerifyFactWellDefinedResult::Success(FactWellDefinedProof::AndFact(proof))
                 }
                 VerifyAndFactWellDefinedResult::Failed(reason) => {
                     VerifyFactWellDefinedResult::Failed(FailToVerifyFactWellDefinedResult::AndFact(
@@ -116,9 +114,7 @@ impl Runtime {
         Ok(
             match self.verify_chain_fact_well_definedness(fact, verify_state)? {
                 VerifyChainFactWellDefinedResult::Success(proof) => {
-                    VerifyFactWellDefinedResult::Success(FactWellDefinedProof::ChainFact {
-                        adjacent: proof.adjacent,
-                    })
+                    VerifyFactWellDefinedResult::Success(FactWellDefinedProof::ChainFact(proof))
                 }
                 VerifyChainFactWellDefinedResult::Failed(reason) => {
                     VerifyFactWellDefinedResult::Failed(

@@ -8,12 +8,15 @@ fn check(source: &str, expected: bool) -> String {
     std::thread::Builder::new()
         .stack_size(64 * 1024 * 1024)
         .spawn(move || {
-            let mut rt = Runtime::new(LaunchCommand::Eval {
-                code: String::new(),
-                session: false,
-                strict: true,
-                language: OutputLanguage::English,
-            });
+            let mut rt = Runtime::new_with_result_detail(
+                LaunchCommand::Eval {
+                    code: String::new(),
+                    session: false,
+                    strict: true,
+                    language: OutputLanguage::English,
+                },
+                crate::result_detail::OutputDetail::Detailed,
+            );
             let result = rt.run_litex_code(&source).unwrap();
             let json = emit_run_detailed(&result, &rt, "eval", None);
             assert_eq!(result.success, expected, "{source}\n{json}");
@@ -216,7 +219,7 @@ fn new_rule_explanations_are_bilingual() {
         ("have S finite_set = {1,2}\nhave a S = 1\nhave f fn(x S)R\nfinite_set_product(S,f)=finite_set_product(set_minus(S,{a}),fn(x set_minus(S,{a}))R {f(x)})*f(a)", "Remove a member from a finite product", "有限乘积删除已有元素"),
     ] {
         for (language, text) in [(OutputLanguage::English, en), (OutputLanguage::Chinese, zh)] {
-            let mut rt = Runtime::new(LaunchCommand::Eval { code: String::new(), session: false, strict: true, language });
+            let mut rt = Runtime::new_with_result_detail(LaunchCommand::Eval { code: String::new(), session: false, strict: true, language }, crate::result_detail::OutputDetail::Detailed);
             let run = rt.run_litex_code(source).unwrap();
             assert!(run.success, "{source}\n{}", emit_run_detailed(&run, &rt, "eval", None));
             assert!(emit_run_normal(&run, &rt, "eval", None).contains(text), "{text}");
@@ -230,12 +233,15 @@ fn new_rule_explanations_are_bilingual() {
         (OutputLanguage::English, "Pointwise fold congruence"),
         (OutputLanguage::Chinese, "有序折叠的逐点相等"),
     ] {
-        let mut rt = Runtime::new(LaunchCommand::Eval {
-            code: String::new(),
-            session: false,
-            strict: true,
-            language: lang,
-        });
+        let mut rt = Runtime::new_with_result_detail(
+            LaunchCommand::Eval {
+                code: String::new(),
+                session: false,
+                strict: true,
+                language: lang,
+            },
+            crate::result_detail::OutputDetail::Detailed,
+        );
         assert!(rt.run_litex_code("forall x R:\n    x=x").unwrap().success);
         let tokens = crate::tokenize::Tokenizer::new()
             .tokenize("forall x R:\n    x=x", rt.current_file.clone())
@@ -269,7 +275,7 @@ fn stage_permissions_and_scoped_search_remain_bounded() {
         ("", REMOVE),
         ("", POINTWISE),
     ] {
-        let mut rt = Runtime::new(LaunchCommand::Eval { code: String::new(), session: false, strict: true, language: OutputLanguage::English });
+        let mut rt = Runtime::new_with_result_detail(LaunchCommand::Eval { code: String::new(), session: false, strict: true, language: OutputLanguage::English }, crate::result_detail::OutputDetail::Detailed);
         let run = rt.run_litex_code(setup).unwrap();
         assert!(run.success, "{setup}\n{}", emit_run_detailed(&run, &rt, "eval", None));
         let tokens = Tokenizer::new().tokenize(goal, rt.current_file.clone()).unwrap();

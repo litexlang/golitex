@@ -8,7 +8,7 @@
 
 use super::obj_well_defined_by_def_common::ObjWellDefinedByDefCommonStages;
 use super::wrap_obj_well_defined_by_def::finish_by_def;
-use super::{ObjWellDefinedProof, VerifyObjWellDefinedResult};
+use super::VerifyObjWellDefinedResult;
 use crate::ast::fact::{AtomicFact, LessEqualFact, NotEqualFact};
 use crate::ast::obj::{
     ArithmeticOperator, ExpLogOperator, IntegerOperator, Literal, Number, Obj, StandardSet,
@@ -67,13 +67,8 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<VerifyObjWellDefinedResult> {
         let stages = self.closed_numeric_source_stages_without_carrier(obj, verify_state)?;
-        match finish_by_def(obj, stages) {
-            Ok(by_def) => Ok(VerifyObjWellDefinedResult::Success(
-                ObjWellDefinedProof::ByDef {
-                    obj: obj.clone(),
-                    proof: by_def,
-                },
-            )),
+        match finish_by_def(obj, stages, self.result_detail())? {
+            Ok(by_def) => Ok(VerifyObjWellDefinedResult::Success(by_def)),
             Err(reason) => Ok(VerifyObjWellDefinedResult::Failed {
                 obj: obj.clone(),
                 reason,
@@ -87,7 +82,9 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
         match obj {
-            Obj::Literal(Literal::Number(_)) => Ok(ObjWellDefinedByDefCommonStages::leaf()),
+            Obj::Literal(Literal::Number(_)) => {
+                Ok(ObjWellDefinedByDefCommonStages::leaf(self.result_detail()))
+            }
             Obj::ArithmeticOperator(ArithmeticOperator::Add(v)) => self
                 .verify_binary_obj_well_definedness_by_def(
                     v.left.as_ref(),
@@ -205,7 +202,7 @@ impl Runtime {
             Obj::ExpLogOperator(ExpLogOperator::Ln(v)) => {
                 self.verify_unary_obj_well_definedness_by_def(v.arg.as_ref(), verify_state)
             }
-            _ => Ok(ObjWellDefinedByDefCommonStages::leaf()),
+            _ => Ok(ObjWellDefinedByDefCommonStages::leaf(self.result_detail())),
         }
     }
 

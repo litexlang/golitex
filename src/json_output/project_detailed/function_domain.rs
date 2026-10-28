@@ -331,54 +331,79 @@ pub(super) fn project_source(proof: &CompleteFunctionDomainProof, rt: &Runtime) 
             application,
             subject_equal,
             signature_source,
-            application_children,
-            application_requirements,
-            argument_scope,
+            application_check,
             return_space,
             carrier_equal,
-        } => object_for(
-            rt,
-            vec![
-                ("type", string("checked_function_application_return")),
-                (
-                    "application",
-                    string(Obj::FnObj(application.clone()).readable_string()),
-                ),
-                (
-                    "subject_equal",
-                    project_known_equality_path(subject_equal, rt),
-                ),
-                (
-                    "signature_source",
-                    project_application_signature_source(signature_source, rt),
-                ),
-                (
-                    "child_obj_well_defined",
-                    JsonValue::Array(
-                        application_children
-                            .iter()
-                            .map(|p| project_obj_wd_proof(p, rt))
-                            .collect(),
+        } => {
+            let Ok(checks) = application_check.as_detailed() else {
+                return object_for(
+                    rt,
+                    vec![
+                        ("source_signature", signature(&proof.signature)),
+                        (
+                            "source",
+                            object_for(
+                                rt,
+                                vec![
+                                    ("type", string("checked_function_application_return")),
+                                    (
+                                        "application",
+                                        string(Obj::FnObj(application.clone()).readable_string()),
+                                    ),
+                                    ("return_space", string(return_space.readable_string())),
+                                ],
+                            ),
+                        ),
+                    ],
+                );
+            };
+            let application_children = &checks.child_obj_well_defined;
+            let application_requirements = &checks.requirement_fact_verified;
+            let argument_scope = &checks.argument_scope;
+            object_for(
+                rt,
+                vec![
+                    ("type", string("checked_function_application_return")),
+                    (
+                        "application",
+                        string(Obj::FnObj(application.clone()).readable_string()),
                     ),
-                ),
-                (
-                    "requirement_fact_verified",
-                    super::store::project_verify_facts(application_requirements, rt),
-                ),
-                (
-                    "argument_scope",
-                    argument_scope
-                        .as_ref()
-                        .map(|scope| super::wd_by_def::project_fn_argument_scope(scope, rt))
-                        .unwrap_or(JsonValue::Null),
-                ),
-                ("return_space", string(return_space.readable_string())),
-                (
-                    "carrier_equal",
-                    project_known_equality_path(carrier_equal, rt),
-                ),
-            ],
-        ),
+                    (
+                        "subject_equal",
+                        project_known_equality_path(subject_equal, rt),
+                    ),
+                    (
+                        "signature_source",
+                        project_application_signature_source(signature_source, rt),
+                    ),
+                    (
+                        "child_obj_well_defined",
+                        JsonValue::Array(
+                            application_children
+                                .iter()
+                                .map(|p| project_obj_wd_proof(p, rt))
+                                .collect(),
+                        ),
+                    ),
+                    (
+                        "requirement_fact_verified",
+                        super::store::project_verify_facts(application_requirements, rt),
+                    ),
+                    (
+                        "argument_scope",
+                        argument_scope
+                            .as_ref()
+                            .map(|scope| super::wd_by_def::project_fn_argument_scope(scope, rt))
+                            .unwrap_or(JsonValue::Null),
+                    ),
+                    ("return_space", string(return_space.readable_string())),
+                    (
+                        "carrier_equal",
+                        project_known_equality_path(carrier_equal, rt),
+                    ),
+                ],
+            )
+        }
     };
     object_for(
         rt,

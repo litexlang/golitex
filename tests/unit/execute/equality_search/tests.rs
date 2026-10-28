@@ -340,12 +340,15 @@ fn membership_lookup_keeps_pairwise_alpha_without_graph_endpoint_search() {
 #[test]
 fn normal_identity_output_is_not_a_builtin_in_either_language() {
     for language in [OutputLanguage::English, OutputLanguage::Chinese] {
-        let mut runtime = Runtime::new(LaunchCommand::Eval {
-            code: String::new(),
-            session: false,
-            strict: true,
-            language,
-        });
+        let mut runtime = Runtime::new_with_result_detail(
+            LaunchCommand::Eval {
+                code: String::new(),
+                session: false,
+                strict: true,
+                language,
+            },
+            crate::result_detail::OutputDetail::Detailed,
+        );
         let result = exec_ok(&mut runtime, "fn(x R) R = fn(y R) R");
         let json = project_stmt_normal(&result, &runtime).stringify();
         let expected = match language {
@@ -498,12 +501,15 @@ fn borrowed_equality_paths_preserve_cross_scope_order_and_scope_exit() {
 }
 
 fn runtime() -> Runtime {
-    Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language: OutputLanguage::English,
-    })
+    Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    )
 }
 
 fn parse(runtime: &mut Runtime, code: &str) -> Stmt {
@@ -617,12 +623,15 @@ fn compound_alpha_identity_preserves_ranges_bodies_and_free_ids_at_builtin_disab
 fn explicit_theorem_selection_reuses_alpha_renamed_endpoints_without_graph_search() {
     // The assumption is deliberately recorded in ordinary mode, then selected
     // explicitly. Its real returned equality remains the certificate source.
-    let mut rt = Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: false,
-        language: OutputLanguage::English,
-    });
+    let mut rt = Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: false,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    );
     exec_ok(&mut rt, "have a R, b R");
     exec_ok(&mut rt, "axiom stored:\n    ? forall u, v R:\n        sum(1, 2, fn(x Z) R {x + u}) = sum(1, 2, fn(y Z) R {y + v})");
     exec_ok(&mut rt, "release thm stored(a, b)");

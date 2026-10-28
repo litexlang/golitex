@@ -31,10 +31,16 @@ fn preimage_wd_rejects_missing_or_reordered_operands_and_missing_sethood() {
         let (mut run, compiler) = super::execute(RECIPROCAL);
         let index = if mutation == 2 { 3 } else { 2 };
         let p = member_mut(&mut run, index);
-        let ObjWellDefinedProof::ByDef {
+        let DetailedObjWellDefinedProof::ByDef {
             proof: ObjWellDefinedProofByDef::FunctionSpace(p),
             ..
-        } = &mut p.well_defined_proof.well_defined_of_each_parameter[1]
+        } = (&mut p
+            .well_defined_proof
+            .as_detailed_mut()
+            .unwrap()
+            .well_defined_of_each_parameter[1])
+            .as_detailed_mut()
+            .unwrap()
         else {
             panic!()
         };

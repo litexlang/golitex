@@ -71,11 +71,13 @@ fn builder(statement: &ExecStmtResult) -> (&SetBuilder, &SetBuilderObjWellDefine
     else {
         panic!("the actual bounded-set declaration")
     };
-    let VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByDef {
+    let Some(DetailedObjWellDefinedProof::ByDef {
         obj: Obj::SetFormer(SetFormer::SetBuilder(set)),
         proof:
             ObjWellDefinedProofByDef::SetFormer(SetFormerObjWellDefinedProofByDef::SetBuilder(wd)),
-    }) = &proof.equal_to_well_defined[0]
+    }) = (&proof.equal_to_well_defined[0])
+        .as_detailed_success()
+        .unwrap()
     else {
         panic!("the original bounded-set formation")
     };

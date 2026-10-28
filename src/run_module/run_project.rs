@@ -43,7 +43,7 @@ pub fn run_project_observed(
     let std_root = resolve_std_root(Some(&root));
     let root_config = load_config(&root, &std_root)?;
 
-    let mut runtime = Runtime::new(command);
+    let mut runtime = Runtime::new_with_result_detail(command, observer.result_detail());
     // Runtime::new opens a placeholder file env for the repo path; drop it.
     runtime.abort_source();
     runtime

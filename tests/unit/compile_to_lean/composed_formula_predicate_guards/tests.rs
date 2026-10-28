@@ -35,8 +35,11 @@ fn function(statement: &mut ExecStmtResult) -> &mut ExecHaveFnEqualStmtSuccessRe
 }
 
 fn anonymous(statement: &mut ExecStmtResult) -> &mut AnonymousFnObjWellDefinedProof {
-    match &mut function(statement).anonymous_fn_well_defined {
-        VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByDef {
+    match (&mut function(statement).anonymous_fn_well_defined)
+        .as_detailed_success_mut()
+        .unwrap()
+    {
+        Some(DetailedObjWellDefinedProof::ByDef {
             proof:
                 ObjWellDefinedProofByDef::FunctionSpace(
                     FunctionSpaceObjWellDefinedProofByDef::AnonymousFn(proof),
@@ -48,8 +51,11 @@ fn anonymous(statement: &mut ExecStmtResult) -> &mut AnonymousFnObjWellDefinedPr
 }
 
 fn body_call(statement: &mut ExecStmtResult) -> &mut FnObjObjWellDefinedProof {
-    match anonymous(statement).body_well_defined.as_mut() {
-        ObjWellDefinedProof::ByDef {
+    match (anonymous(statement).body_well_defined.as_mut())
+        .as_detailed_mut()
+        .unwrap()
+    {
+        DetailedObjWellDefinedProof::ByDef {
             proof: ObjWellDefinedProofByDef::FnObj(proof),
             ..
         } => proof,
@@ -355,7 +361,7 @@ fn composed_formula_predicate_guards_reject_wrong_predicate_signature_identity()
     else {
         panic!("actual predicate guard WD")
     };
-    match &mut guard.predicate_signature {
+    match &mut guard.as_detailed_mut().unwrap().predicate_signature {
         PredicateSignatureWellDefinedProof::Prop { predicate, .. } => {
             *predicate = AtomicName::Plain {
                 name: "other".to_string(),
@@ -448,7 +454,7 @@ fn composed_formula_predicate_guards_keep_false_guards_rejected_by_the_source() 
         let command =
             parse_launch_command(&["-strict".to_string(), "-e".to_string(), source.to_string()])
                 .unwrap();
-        let mut runtime = Runtime::new(command);
+        let mut runtime = Runtime::new_with_result_detail(command, crate::result_detail::OutputDetail::Detailed);
         let result = runtime.run_litex_code(source).unwrap();
         assert!(!result.success && result.session_error.is_none(), "{source}");
         let compiler = super::LitexToLeanCompiler::new(runtime);
@@ -506,7 +512,7 @@ fn composed_formula_predicate_guards_reject_missing_compound_guard_capture() {
     let (mut result, compiler) = super::execute(source);
     let proof = anonymous(&mut result.statement_results[0]);
     match &mut proof.assumed_dom_facts[0].well_defined {
-        FactWellDefinedProof::ChainFact { adjacent } => adjacent.clear(),
+        FactWellDefinedProof::ChainFact(proof) => proof.as_detailed_mut().unwrap().adjacent.clear(),
         _ => panic!("actual chain guard formation"),
     }
     super::phase2_rejected(
@@ -637,7 +643,7 @@ fn composed_formula_predicate_guards_keep_chain_and_conjunction_guard_boundaries
         "prop conjunction_guard(x R):\n    x != 0 and x = x\nhave fn conjunction_inv(x R: $conjunction_guard(x)) R = 1 / x\nconjunction_inv(0) = 0\n",
     ] {
         let command = parse_launch_command(&["-strict".to_string(), "-e".to_string(), source.to_string()]).unwrap();
-        let mut runtime = Runtime::new(command);
+        let mut runtime = Runtime::new_with_result_detail(command, crate::result_detail::OutputDetail::Detailed);
         let result = runtime.run_litex_code(source).unwrap();
         assert!(!result.success && result.session_error.is_none());
         assert!(result.statement_results[..2].iter().all(|statement| !statement.is_failed()));
@@ -788,25 +794,28 @@ fn composed_formula_predicate_guards_cannot_use_a_future_atomic_unfold_construct
         format!("{NESTED_GUARD}let future_expansion = 1 + 1\nlet cached_expansion = 1 + 1\n");
     let (mut result, compiler) = super::execute(&source);
     super::compile_run(&result, &compiler, "atomic_unfold_future_wd").unwrap();
-    let (object, wd_id) =
-        match &super::let_definition(&result.statement_results[6]).value_well_defined {
-            VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByKnown { obj, wd_id }) => {
-                (obj.clone(), *wd_id)
-            }
-            _ => panic!("the later alias cites the future stored expansion constructor"),
-        };
+    let (object, wd_id) = match (&super::let_definition(&result.statement_results[6])
+        .value_well_defined)
+        .as_detailed_success()
+        .unwrap()
+    {
+        Some(DetailedObjWellDefinedProof::ByKnown { obj, wd_id }) => (obj.clone(), *wd_id),
+        _ => panic!("the later alias cites the future stored expansion constructor"),
+    };
     let proof = nested_guard_unfold(&mut result.statement_results[3]);
     let equality = super::equality_proof_mut(&mut proof.unfold_equal_proofs[0]);
     assert_eq!(equality.fact.right.ir(), object.ir());
     let constructor = std::mem::replace(
-        &mut equality.well_defined_proof.right,
-        ObjWellDefinedProof::ByKnown {
-            obj: object.clone(),
-            wd_id,
-        },
+        &mut equality.well_defined_proof.as_detailed_mut().unwrap().right,
+        crate::execute::execute_fact_stmt::ObjWellDefinedProof::Detailed(Box::new(
+            DetailedObjWellDefinedProof::ByKnown {
+                obj: object.clone(),
+                wd_id,
+            },
+        )),
     );
     assert!(
-        matches!(&constructor, ObjWellDefinedProof::ByDef { obj, .. } if obj.ir() == object.ir()),
+        matches!((&constructor).as_detailed().unwrap(), DetailedObjWellDefinedProof::ByDef { obj, .. } if obj.ir() == object.ir()),
         "the original selected equality owns this expansion constructor"
     );
     // Move that actual constructor to the later alias result. The earlier

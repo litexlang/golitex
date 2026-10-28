@@ -13,12 +13,15 @@ fn checked() -> (RunLitexCodeResult, LitexToLeanCompiler) {
 }
 
 fn checked_source(source: &str) -> (RunLitexCodeResult, LitexToLeanCompiler) {
-    let mut runtime = Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language: OutputLanguage::English,
-    });
+    let mut runtime = Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    );
     let result = runtime.run_litex_code(source).expect("Or source");
     assert!(result.success && result.session_error.is_none());
     (result, LitexToLeanCompiler::new(runtime))
@@ -35,10 +38,10 @@ fn property(result: &mut RunLitexCodeResult) -> &mut ExecDefPropStmtSuccessResul
 }
 
 fn known_call_guard(wd: &mut ObjWellDefinedProof) -> &mut OrFactSearchProofByKnownOrFact {
-    let ObjWellDefinedProof::ByDef {
+    let DetailedObjWellDefinedProof::ByDef {
         proof: ObjWellDefinedProofByDef::FnObj(call),
         ..
-    } = wd
+    } = (wd).as_detailed_mut().unwrap()
     else {
         panic!("actual original function-call constructor");
     };
@@ -60,7 +63,7 @@ fn transported_guard(result: &mut RunLitexCodeResult) -> &mut OrFactSearchProofB
     else {
         panic!("actual equality clause formation");
     };
-    known_call_guard(&mut equal.left)
+    known_call_guard(&mut equal.as_detailed_mut().unwrap().left)
 }
 
 #[test]
@@ -98,14 +101,15 @@ fn known_or_replays_the_prior_exist_clause_without_reopening_its_scope() {
     else {
         panic!("original existential clause formation");
     };
-    let id = exist.assumed_body_facts[0]
+    let id = exist.as_detailed_mut().unwrap().assumed_body_facts[0]
         .store_and_infer
         .primary_fact_id();
-    let FactWellDefinedProof::Equality(equal) = &mut exist.assumed_body_facts[1].well_defined
+    let FactWellDefinedProof::Equality(equal) =
+        &mut exist.as_detailed_mut().unwrap().assumed_body_facts[1].well_defined
     else {
         panic!("original second existential clause");
     };
-    let known = known_call_guard(&mut equal.right);
+    let known = known_call_guard(&mut equal.as_detailed_mut().unwrap().right);
     assert_eq!(known.cite_fact_id, id);
     assert!(known
         .why_parameters_of_known_fact_are_equal_to_givens
@@ -219,7 +223,12 @@ fn or_rejects_missing_original_branch_formation() {
     let VerifyOrFactResult::Success(proof) = verify.as_mut() else {
         panic!("Or success");
     };
-    proof.well_defined_proof.branches.clear();
+    proof
+        .well_defined_proof
+        .as_detailed_mut()
+        .unwrap()
+        .branches
+        .clear();
     assert!(compiler
         .compile_run(&result, "missing_or_wd")
         .unwrap_err()

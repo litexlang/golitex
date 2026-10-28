@@ -179,16 +179,22 @@ fn unique_contra_requires_original_goal_and_alternative_formation() {
                 else {
                     panic!()
                 };
-                wd.assumed_body_facts.clear();
+                wd.as_detailed_mut().unwrap().assumed_body_facts.clear();
             }
             1..=3 => {
                 let FactWellDefinedProof::ForallFact(wd) = &mut p.reverse_assumption_wd else {
                     panic!()
                 };
                 match mutation {
-                    1 => wd.assumed_dom_facts.clear(),
-                    2 => wd.introduced_params.defined_params.stored_fact_ids.clear(),
-                    3 => wd.then.clear(),
+                    1 => wd.as_detailed_mut().unwrap().assumed_dom_facts.clear(),
+                    2 => wd
+                        .as_detailed_mut()
+                        .unwrap()
+                        .introduced_params
+                        .defined_params
+                        .stored_fact_ids
+                        .clear(),
+                    3 => wd.as_detailed_mut().unwrap().then.clear(),
                     _ => unreachable!(),
                 }
             }
@@ -216,7 +222,12 @@ fn unique_contra_keeps_candidate_assumptions_private() {
     let FactWellDefinedProof::ForallFact(wd) = &p.reverse_assumption_wd else {
         panic!()
     };
-    let member = wd.introduced_params.defined_params.store_and_infer_results[0].primary_fact_id();
+    let member = wd
+        .detailed_ref()
+        .introduced_params
+        .defined_params
+        .store_and_infer_results[0]
+        .primary_fact_id();
     let guard = fact.dom_facts[0].fact_id();
     let scope = SourcePosition::new(None, SourceOwner::Contra(p), 1);
     assert!(compiler.cited_fact_reference(assumption, &scope).is_err());
@@ -272,12 +283,15 @@ fn unique_contra_rejects_absent_nonunique_and_undefined_candidates() {
         "by contra:\n    ? exist! x {0, 1} st {x = x}\n    impossible 0 = 0\n",
         "by contra:\n    ? exist! x R st {1 / x = 1}\n    impossible 0 = 0\n",
     ] {
-        let mut runtime = Runtime::new(LaunchCommand::Eval {
-            code: String::new(),
-            session: false,
-            strict: true,
-            language: OutputLanguage::English,
-        });
+        let mut runtime = Runtime::new_with_result_detail(
+            LaunchCommand::Eval {
+                code: String::new(),
+                session: false,
+                strict: true,
+                language: OutputLanguage::English,
+            },
+            crate::result_detail::OutputDetail::Detailed,
+        );
         assert!(!runtime.run_litex_code(source).unwrap().success);
     }
 }

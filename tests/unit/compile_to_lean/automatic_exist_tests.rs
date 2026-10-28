@@ -43,11 +43,17 @@ fn application(run: &mut RunLitexCodeResult, index: usize) -> &mut SearchProofBy
 fn automatic_exist_families_replay_exact_routes_and_unique_weakening() {
     for source in [RECIPROCAL, PAIR, NEGATIVE] {
         let (mut run, compiler) = super::execute(source);
-        let cite = application(&mut run, 1).cite.fact_id;
+        let cite = application(&mut run, 1)
+            .as_detailed_mut()
+            .unwrap()
+            .cite
+            .fact_id;
         if source == RECIPROCAL {
             assert_eq!(
                 application(&mut run, 1)
+                    .detailed_ref()
                     .instantiation_requirements
+                    .detailed_ref()
                     .dom_facts
                     .len(),
                 1
@@ -58,7 +64,14 @@ fn automatic_exist_families_replay_exact_routes_and_unique_weakening() {
                 searched(&mut run, 2),
                 ExistShapedFactSearchedProof::ByKnownExistShapedFact(_)
             ));
-            assert_eq!(application(&mut run, 3).cite.fact_id, cite);
+            assert_eq!(
+                application(&mut run, 3)
+                    .as_detailed_mut()
+                    .unwrap()
+                    .cite
+                    .fact_id,
+                cite
+            );
         }
         let output = compiler.compile_run(&run, "automatic_exist").unwrap();
         assert!(output.contains(&format!("h_{} (M := M)", cite.value())));
@@ -77,17 +90,43 @@ fn automatic_exist_requires_original_arguments_guards_and_citation() {
         let (mut run, compiler) = super::execute(RECIPROCAL);
         let p = application(&mut run, 1);
         match mutation {
-            0 => p.forall_parameters_match_what_args.clear(),
-            1 => p.arg_match_proofs.clear(),
+            0 => p
+                .as_detailed_mut()
+                .unwrap()
+                .forall_parameters_match_what_args
+                .clear(),
+            1 => p.as_detailed_mut().unwrap().arg_match_proofs.clear(),
             2 => {
-                let last = p.arg_match_proofs.len() - 1;
-                p.arg_match_proofs.swap(0, last);
+                let last = p.as_detailed_mut().unwrap().arg_match_proofs.len() - 1;
+                p.as_detailed_mut().unwrap().arg_match_proofs.swap(0, last);
             }
-            3 => p.instantiation_requirements.param_type_requirements.clear(),
-            4 => p.instantiation_requirements.dom_facts.clear(),
-            5 => p.instantiation_requirements.proof_of_dom_facts.clear(),
+            3 => p
+                .as_detailed_mut()
+                .unwrap()
+                .instantiation_requirements
+                .as_detailed_mut()
+                .unwrap()
+                .param_type_requirements
+                .clear(),
+            4 => p
+                .as_detailed_mut()
+                .unwrap()
+                .instantiation_requirements
+                .as_detailed_mut()
+                .unwrap()
+                .dom_facts
+                .clear(),
+            5 => p
+                .as_detailed_mut()
+                .unwrap()
+                .instantiation_requirements
+                .as_detailed_mut()
+                .unwrap()
+                .proof_of_dom_facts
+                .clear(),
             6 => {
-                let ForallConclusionLocation::DirectThenFact(location) = &mut p.cite.location
+                let ForallConclusionLocation::DirectThenFact(location) =
+                    &mut p.as_detailed_mut().unwrap().cite.location
                 else {
                     panic!()
                 };
@@ -95,13 +134,26 @@ fn automatic_exist_requires_original_arguments_guards_and_citation() {
             }
             7 => {
                 // A body premise cannot replace the cited universal declaration.
-                p.cite.fact_id = p.instantiation_requirements.dom_facts[0].fact_id();
+                p.as_detailed_mut().unwrap().cite.fact_id = p
+                    .detailed_ref()
+                    .instantiation_requirements
+                    .detailed_ref()
+                    .dom_facts[0]
+                    .fact_id();
             }
             8 => {
-                p.instantiation_requirements.dom_facts[0] =
-                    p.instantiation_requirements.param_type_requirements[0]
-                        .type_fact
-                        .clone();
+                p.as_detailed_mut()
+                    .unwrap()
+                    .instantiation_requirements
+                    .as_detailed_mut()
+                    .unwrap()
+                    .dom_facts[0] = p
+                    .detailed_ref()
+                    .instantiation_requirements
+                    .detailed_ref()
+                    .param_type_requirements[0]
+                    .type_fact
+                    .clone();
             }
             _ => unreachable!(),
         }
@@ -118,6 +170,8 @@ fn automatic_exist_requires_original_arguments_guards_and_citation() {
 fn automatic_exist_rejects_reordered_outer_parameters() {
     let (mut run, compiler) = super::execute(PAIR);
     application(&mut run, 1)
+        .as_detailed_mut()
+        .unwrap()
         .forall_parameters_match_what_args
         .swap(0, 1);
     assert!(compiler.compile_run(&run, "wrong_outer_arguments").is_err());
@@ -145,6 +199,7 @@ fn automatic_negative_exist_keeps_hypothetical_witness_facts_local() {
     assert!(compiler.cited_fact_reference(public_id, &after).is_ok());
     for store in &p
         .well_defined_proof
+        .detailed_ref()
         .introduced_params
         .defined_params
         .store_and_infer_results
@@ -170,12 +225,15 @@ fn existence_does_not_supply_uniqueness_or_missing_division_guards() {
             RECIPROCAL.split("exist! y R").next().unwrap()
         ),
     ] {
-        let mut runtime = Runtime::new(LaunchCommand::Eval {
-            code: String::new(),
-            session: false,
-            strict: true,
-            language: OutputLanguage::English,
-        });
+        let mut runtime = Runtime::new_with_result_detail(
+            LaunchCommand::Eval {
+                code: String::new(),
+                session: false,
+                strict: true,
+                language: OutputLanguage::English,
+            },
+            crate::result_detail::OutputDetail::Detailed,
+        );
         assert!(!runtime.run_litex_code(&source).unwrap().success);
     }
 }

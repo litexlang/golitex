@@ -451,12 +451,15 @@ fn languages() -> [OutputLanguage; 10] {
     ]
 }
 fn runtime(language: OutputLanguage) -> Runtime {
-    Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language,
-    })
+    Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    )
 }
 fn check(code: &str, expected: bool) -> JsonValue {
     let mut rt = runtime(OutputLanguage::English);

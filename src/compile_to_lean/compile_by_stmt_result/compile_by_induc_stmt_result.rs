@@ -262,9 +262,14 @@ impl LitexToLeanCompiler {
             ));
         }
         let scope = SourcePosition::new(Some(position), SourceOwner::ForallWD(fact, wd), 0);
-        let (binders, introductions, mut lines) =
-            self.compile_forall_head(fact, &wd.introduced_params, &wd.assumed_dom_facts, &scope)?;
+        let (binders, introductions, mut lines) = self.compile_forall_head(
+            fact,
+            &wd.detailed_ref().introduced_params,
+            &wd.detailed_ref().assumed_dom_facts,
+            &scope,
+        )?;
         let store = wd
+            .detailed_ref()
             .introduced_params
             .defined_params
             .store_and_infer_results
@@ -281,6 +286,7 @@ impl LitexToLeanCompiler {
         );
         let then = Fact::from(fact.then_facts[0].clone());
         let formation = wd
+            .detailed_ref()
             .then
             .first()
             .ok_or_else(|| LeanCompileError::unsupported("StrongInduction/HypothesisGoalWD"))?;

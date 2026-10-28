@@ -1,0 +1,66 @@
+release thm prob::main::uniform_probability_laws({1,2,3,4,5,6})
+
+\prob::main::uniform_probability_space<{1,2,3,4,5,6}> = ({1,2,3,4,5,6},\prob::main::uniform_event_probability<{1,2,3,4,5,6}>)
+
+have dice &prob::main::FiniteProbabilitySpace<{1,2,3,4,5,6}> = \prob::main::uniform_probability_space<{1,2,3,4,5,6}>
+
+release struct def dice
+
+dice = ({1,2,3,4,5,6},\prob::main::uniform_event_probability<{1,2,3,4,5,6}>)
+
+dice.carrier = {1,2,3,4,5,6}
+
+dice.prob = \prob::main::uniform_event_probability<{1,2,3,4,5,6}>
+
+dice.carrier $subset Z
+
+dice.carrier $subset R
+
+1 $in dice.carrier
+
+2 $in dice.carrier
+
+3 $in dice.carrier
+
+4 $in dice.carrier
+
+5 $in dice.carrier
+
+6 $in dice.carrier
+
+have fn always(k dice.carrier) R = 7
+
+always(1) = 7
+
+claim:
+    ? 7 $in fn_range(always)
+    always(1) $in fn_range(always)
+    7 = always(1)
+
+by extension:
+    ? fn_range(always) = {7}
+    claim:
+        ? forall y fn_range(always):
+            y $in {7}
+        have by fn_preimage: source_point from y $in fn_range(always)
+        y = always(source_point) = 7
+
+release thm prob::main::finite_pushforward_probability_laws({1,2,3,4,5,6},dice,R,always)
+
+\prob::main::finite_pushforward_probability_space<{1,2,3,4,5,6},dice,R,always> = (fn_range(always),\prob::main::finite_pushforward_event_probability<{1,2,3,4,5,6},dice,R,always>)
+
+have constant_push &prob::main::FiniteProbabilitySpace<R> = \prob::main::finite_pushforward_probability_space<{1,2,3,4,5,6},dice,R,always>
+
+release struct def constant_push
+
+constant_push = (fn_range(always),\prob::main::finite_pushforward_event_probability<{1,2,3,4,5,6},dice,R,always>)
+
+constant_push.carrier = fn_range(always) = {7}
+
+constant_push.prob = \prob::main::finite_pushforward_event_probability<{1,2,3,4,5,6},dice,R,always>
+
+constant_push.prob({7}) = constant_push.prob(constant_push.carrier) = 1
+
+constant_push.prob({}) = 0
+
+constant_push.prob({7}) = 0

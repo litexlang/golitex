@@ -19,11 +19,42 @@ pub struct FormedFunctionArgument {
 }
 
 impl FnObjDomainCheckResult {
-    pub fn prepend_child(&mut self, child: VerifyObjWellDefinedResult) {
-        self.stages.child_obj_well_defined.insert(0, child);
+    pub fn into_success(
+        self,
+        detail: crate::result_detail::OutputDetail,
+    ) -> RuntimeResult<super::FnObjDomainSuccess> {
+        self.stages.require_mode(detail)?;
+        use super::{
+            CompactFnObjDomainSuccess, DetailedFnObjDomainSuccess, FnObjDomainSuccess,
+            NormalFnObjDomainSuccess,
+        };
+        use crate::result_detail::OutputDetail;
+        if !self.stages.is_fully_known() {
+            return Err(RuntimeError::InternalBug(
+                "failed function argument checks used as success".into(),
+            ));
+        }
+        Ok(match self.stages.detail() {
+            OutputDetail::Compact => FnObjDomainSuccess::Compact(CompactFnObjDomainSuccess {}),
+            OutputDetail::Normal => FnObjDomainSuccess::Normal(NormalFnObjDomainSuccess {}),
+            OutputDetail::Detailed => {
+                let (child_obj_well_defined, requirement_fact_verified, argument_scope) =
+                    self.into_success_child_proofs();
+                FnObjDomainSuccess::Detailed(DetailedFnObjDomainSuccess {
+                    child_obj_well_defined,
+                    requirement_fact_verified,
+                    argument_scope,
+                })
+            }
+        })
+    }
+
+    pub fn prepend_child(&mut self, child: VerifyObjWellDefinedResult) -> RuntimeResult<()> {
+        self.stages.prepend_child(child)?;
         for formed in &mut self.scope.formed_children {
             formed.child_index += 1;
         }
+        Ok(())
     }
 
     pub fn into_success_child_proofs(

@@ -8,12 +8,15 @@ use crate::runtime::{Runtime,FactId};
 use crate::ast::stmt::Stmt;
 use crate::tokenize::Tokenizer;
 fn runtime(lang: OutputLanguage) -> Runtime {
-    Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: true,
-        strict: true,
-        language: lang,
-    })
+    Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: true,
+            strict: true,
+            language: lang,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    )
 }
 fn children(
     p: &AtomicExceptEqualityFactSearchProofByBuiltinRule,

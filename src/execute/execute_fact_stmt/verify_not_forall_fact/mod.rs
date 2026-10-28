@@ -8,6 +8,7 @@ pub use result::{
     VerifyNotForallFactFailed, VerifyNotForallFactResult, VerifyNotForallFactSuccess,
 };
 pub use well_defined_result::{
-    FailToVerifyNotForallFactWellDefinedResult, NotForallFactWellDefinedProof,
-    VerifyNotForallFactWellDefinedResult,
+    CompactNotForallFactWellDefinedProof, DetailedNotForallFactWellDefinedProof,
+    FailToVerifyNotForallFactWellDefinedResult, NormalNotForallFactWellDefinedProof,
+    NotForallFactWellDefinedProof, VerifyNotForallFactWellDefinedResult,
 };

@@ -2,12 +2,15 @@ use crate::launch_command::{LaunchCommand, OutputLanguage};
 use crate::runtime::Runtime;
 
 fn check(code: &str, expected: &[bool]) -> Runtime {
-    let mut runtime = Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language: OutputLanguage::English,
-    });
+    let mut runtime = Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    );
     let run = runtime.run_litex_code(code).expect("run input");
     assert!(
         run.session_error.is_none(),
@@ -168,12 +171,15 @@ fn induction_json_preserves_failed_stages_and_successful_case_evidence() {
                 "step_index",
             ),
         ] {
-            let mut rt = Runtime::new(LaunchCommand::Eval {
-                code: String::new(),
-                session: false,
-                strict: true,
-                language: OutputLanguage::English,
-            });
+            let mut rt = Runtime::new_with_result_detail(
+                LaunchCommand::Eval {
+                    code: String::new(),
+                    session: false,
+                    strict: true,
+                    language: OutputLanguage::English,
+                },
+                crate::result_detail::OutputDetail::Detailed,
+            );
             let run = rt
                 .run_litex_code(&format!("by {keyword} n from 0:\n    {body}\n"))
                 .unwrap();
@@ -213,12 +219,15 @@ fn induction_json_preserves_failed_stages_and_successful_case_evidence() {
             assert_eq!(failure.get(index_key), Some(&JsonValue::Number(0.0)));
             assert!(failure.get("result").is_some());
         }
-        let mut rt = Runtime::new(LaunchCommand::Eval {
-            code: String::new(),
-            session: false,
-            strict: true,
-            language: OutputLanguage::English,
-        });
+        let mut rt = Runtime::new_with_result_detail(
+            LaunchCommand::Eval {
+                code: String::new(),
+                session: false,
+                strict: true,
+                language: OutputLanguage::English,
+            },
+            crate::result_detail::OutputDetail::Detailed,
+        );
         let run = rt
             .run_litex_code(&format!(
                 "by {keyword} n from 0:\n    ? n = n\n    have a N = 0\n"
@@ -257,12 +266,15 @@ fn induction_definition_json_keeps_nested_path_and_checks() {
     use crate::json_output::{project_stmt_detailed, project_stmt_normal};
     use crate::knowledge_base::JsonValue;
     for keyword in ["have fn", "algo"] {
-        let mut rt = Runtime::new(LaunchCommand::Eval {
-            code: String::new(),
-            session: false,
-            strict: true,
-            language: OutputLanguage::English,
-        });
+        let mut rt = Runtime::new_with_result_detail(
+            LaunchCommand::Eval {
+                code: String::new(),
+                session: false,
+                strict: true,
+                language: OutputLanguage::English,
+            },
+            crate::result_detail::OutputDetail::Detailed,
+        );
         let run = rt.run_litex_code(&format!("{keyword} bad(n N) N by induc n from 0:\n    case n = 0:\n        case n = 0: 0\n        case n >= 0: 1\n    case n >= 1: 1\n")).unwrap();
         assert!(!run.success);
         let detail = project_stmt_detailed(&run.statement_results[0], &rt);
@@ -317,12 +329,15 @@ fn induction_examples_cover_the_maintained_acceptance_sources() {
         let source =
             std::fs::read_to_string(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(path))
                 .unwrap();
-        let mut rt = Runtime::new(LaunchCommand::Eval {
-            code: String::new(),
-            session: false,
-            strict: true,
-            language: OutputLanguage::English,
-        });
+        let mut rt = Runtime::new_with_result_detail(
+            LaunchCommand::Eval {
+                code: String::new(),
+                session: false,
+                strict: true,
+                language: OutputLanguage::English,
+            },
+            crate::result_detail::OutputDetail::Detailed,
+        );
         let run = rt.run_litex_code(&source).unwrap();
         assert!(
             run.success && run.session_error.is_none(),
@@ -338,12 +353,15 @@ fn induction_examples_cover_the_maintained_acceptance_sources() {
 
 #[test]
 fn induction_failure_details_survive_chinese_output_keys() {
-    let mut rt = Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language: OutputLanguage::Chinese,
-    });
+    let mut rt = Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::Chinese,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    );
     let run = rt
         .run_litex_code("by induc n from 0:\n    ? n = 0\n    1 = 1\n")
         .unwrap();

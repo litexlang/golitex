@@ -148,7 +148,7 @@ theorem h_293 : (by
               exact M.number_injective ((Litex.NativeBridge.asReal_spec _wd_2_1 (Litex.NativeBridge.numberInROfEq (M := M) (4 : ℂ) (4 : ℝ) (by norm_num))).symm.trans (((Litex.NativeBridge.denoteNumber (M := M) (4 : ℂ))).trans (congrArg M.number (by norm_num))))
             exact Eq.mpr (congrArg₂ (fun _litex_r _litex_s : ℝ => _litex_r ≤ _litex_s) _litex_left_value _litex_right_value) (by norm_num))) (Litex.formulaFnInFnSet _wd_2_2) (Litex.subsetOfForall (Litex.Z (M := M)) (Litex.C (M := M)) (fun _a _ha => (Litex.integerToComplex _a _ha))) (fun k _ _ => Litex.unguardedIntegerDomain .integer _ _ (by decide) k)))
           exact (Litex.integerToComplex _atomic_wd_1_0 (Litex.rangeAggregateMember _atomic_wd_1_0 .integer rfl)))));
-        (show Litex.Same _equal_wd_1_0 (Litex.number (M := M) (34 : ℂ)) from (show Litex.Same _equal_wd_1_0 (Litex.number (M := M) (34 : ℂ)) from (((Eq.refl (M.addValue (Litex.denote (let _wd_1_0 := (Litex.number (M := M) (1 : ℂ));
+        (show Litex.Same _equal_wd_1_0 (Litex.number (M := M) (34 : ℂ)) from (show Litex.Same _equal_wd_1_0 (Litex.number (M := M) (34 : ℂ)) from ((Eq.trans (show Litex.denote _equal_wd_1_0 = (M.addValue (Litex.denote (_equal_wd_1_0).val.left) (Litex.denote (_equal_wd_1_0).val.right)) from congrArg₂ M.addValue (show Litex.denote (_equal_wd_1_0).val.left = (Litex.denote (_equal_wd_1_0).val.left) from rfl) (show Litex.denote (_equal_wd_1_0).val.right = (Litex.denote (_equal_wd_1_0).val.right) from rfl)) (((Eq.refl (M.addValue (Litex.denote (let _wd_1_0 := (Litex.number (M := M) (1 : ℂ));
         let _wd_1_1 := (Litex.number (M := M) (4 : ℂ));
         let _wd_1_2 := (Litex.formulaFn (M := M) Litex.StandardSetValue.integer Litex.StandardSetValue.integer (fun (_raw_i1 : M.Value) => True) (fun (_raw_i1 : M.Value) => _raw_i1) (by
           intro _raw_i1 h_65 _
@@ -452,7 +452,7 @@ theorem h_293 : (by
             exact (congrArg (fun x => Litex.FunctionSemantics.callValue (Litex.denote _call.val.function) x) _argument).symm.trans (_head_call.trans (_beta.trans (_body.trans _calculated))))).trans (Litex.NativeBridge.complexValue_number (4 : ℂ))
           apply Litex.rangeAggregateDenote _aggregate (1 : ℤ) (4 : ℤ) ((Litex.NativeBridge.denoteNumber (M := M) (1 : ℂ)).trans (congrArg M.number (by norm_num))) ((Litex.NativeBridge.denoteNumber (M := M) (4 : ℂ)).trans (congrArg M.number (by norm_num))) (24 : ℂ)
           have _indices : Finset.Icc (1 : ℤ) (4 : ℤ) = {(1 : ℤ), (2 : ℤ), (3 : ℤ), (4 : ℤ)} := by decide
-          norm_num [Litex.nativeRangeAggregate, _indices, _aggregate_term_0, _aggregate_term_1, _aggregate_term_2, _aggregate_term_3]))).trans ((M.add_numbers (10 : ℂ) (24 : ℂ)).trans (congrArg M.number (by norm_num)))))).trans (((Litex.NativeBridge.denoteNumber (M := M) (34 : ℂ))).trans (congrArg M.number (by norm_num : (34 : ℂ) = (34 : ℂ)))).symm)))
+          norm_num [Litex.nativeRangeAggregate, _indices, _aggregate_term_0, _aggregate_term_1, _aggregate_term_2, _aggregate_term_3]))).trans ((M.add_numbers (10 : ℂ) (24 : ℂ)).trans (congrArg M.number (by norm_num)))))))).trans (((Litex.NativeBridge.denoteNumber (M := M) (34 : ℂ))).trans (congrArg M.number (by norm_num : (34 : ℂ) = (34 : ℂ)))).symm)))
       )
   )
 
@@ -531,7 +531,7 @@ theorem h_426 : (by
     litex_complete =>
       exact (
         (let _equal_wd_1_0 := (_object_w31 (M := M));
-        (show Litex.Same _equal_wd_1_0 (Litex.number (M := M) (34 : ℂ)) from (show Litex.Same _equal_wd_1_0 (Litex.number (M := M) (34 : ℂ)) from ((show (M.addValue (Litex.denote (_equal_wd_1_0).val.left) (Litex.denote (_equal_wd_1_0).val.right)) = M.number (34 : ℂ) from ((congrArg₂ M.addValue (show (Litex.denote (_equal_wd_1_0).val.left) = M.number (10 : ℂ) from (by
+        (show Litex.Same _equal_wd_1_0 (Litex.number (M := M) (34 : ℂ)) from (show Litex.Same _equal_wd_1_0 (Litex.number (M := M) (34 : ℂ)) from ((Eq.trans (show Litex.denote _equal_wd_1_0 = (M.addValue (Litex.denote (_equal_wd_1_0).val.left) (Litex.denote (_equal_wd_1_0).val.right)) from congrArg₂ M.addValue (show Litex.denote (_equal_wd_1_0).val.left = (Litex.denote (_equal_wd_1_0).val.left) from rfl) (show Litex.denote (_equal_wd_1_0).val.right = (Litex.denote (_equal_wd_1_0).val.right) from rfl)) ((show (M.addValue (Litex.denote (_equal_wd_1_0).val.left) (Litex.denote (_equal_wd_1_0).val.right)) = M.number (34 : ℂ) from ((congrArg₂ M.addValue (show (Litex.denote (_equal_wd_1_0).val.left) = M.number (10 : ℂ) from (by
           let _aggregate := (_equal_wd_1_0).val.left
           have _aggregate_term_0 : Litex.NativeBridge.complexValue (Litex.FunctionSemantics.callValue (Litex.denote _aggregate.val.function) (M.number (1 : ℂ))) = (1 : ℂ) := (congrArg (Litex.NativeBridge.complexValue (M := M)) (by
             let _call := (let _wd_1_0 := (Litex.formulaFn (M := M) Litex.StandardSetValue.integer Litex.StandardSetValue.integer (fun (_raw_i3 : M.Value) => True) (fun (_raw_i3 : M.Value) => _raw_i3) (by
@@ -675,7 +675,7 @@ theorem h_426 : (by
             exact (congrArg (fun x => Litex.FunctionSemantics.callValue (Litex.denote _call.val.function) x) _argument).symm.trans (_head_call.trans (_beta.trans (_body.trans _calculated))))).trans (Litex.NativeBridge.complexValue_number (4 : ℂ))
           apply Litex.rangeAggregateDenote _aggregate (1 : ℤ) (4 : ℤ) ((Litex.NativeBridge.denoteNumber (M := M) (1 : ℂ)).trans (congrArg M.number (by norm_num))) ((Litex.NativeBridge.denoteNumber (M := M) (4 : ℂ)).trans (congrArg M.number (by norm_num))) (24 : ℂ)
           have _indices : Finset.Icc (1 : ℤ) (4 : ℤ) = {(1 : ℤ), (2 : ℤ), (3 : ℤ), (4 : ℤ)} := by decide
-          norm_num [Litex.nativeRangeAggregate, _indices, _aggregate_term_0, _aggregate_term_1, _aggregate_term_2, _aggregate_term_3]))).trans ((M.add_numbers (10 : ℂ) (24 : ℂ)).trans (congrArg M.number (by norm_num)))))).trans (((Litex.NativeBridge.denoteNumber (M := M) (34 : ℂ))).trans (congrArg M.number (by norm_num : (34 : ℂ) = (34 : ℂ)))).symm)))
+          norm_num [Litex.nativeRangeAggregate, _indices, _aggregate_term_0, _aggregate_term_1, _aggregate_term_2, _aggregate_term_3]))).trans ((M.add_numbers (10 : ℂ) (24 : ℂ)).trans (congrArg M.number (by norm_num)))))))).trans (((Litex.NativeBridge.denoteNumber (M := M) (34 : ℂ))).trans (congrArg M.number (by norm_num : (34 : ℂ) = (34 : ℂ)))).symm)))
       )
   )
 
@@ -722,7 +722,7 @@ theorem h_721 : (by
       exact (
         (let _equal_wd_1_0 := (_object_w40 (M := M));
         let _equal_wd_1_1 := (_object_w41 (M := M));
-        (show Litex.Same _equal_wd_1_0 _equal_wd_1_1 from (show Litex.Same _equal_wd_1_0 _equal_wd_1_1 from ((show (Litex.denote _equal_wd_1_0) = M.number (6 : ℂ) from (by
+        (show Litex.Same _equal_wd_1_0 _equal_wd_1_1 from (show Litex.Same _equal_wd_1_0 _equal_wd_1_1 from ((Eq.trans (show Litex.denote _equal_wd_1_0 = (Litex.denote _equal_wd_1_0) from rfl) ((show (Litex.denote _equal_wd_1_0) = M.number (6 : ℂ) from (by
           let _aggregate := _equal_wd_1_0
           have _aggregate_term_0 : Litex.NativeBridge.complexValue (Litex.FunctionSemantics.callValue (Litex.denote _aggregate.val.function) (M.number (1 : ℂ))) = (1 : ℂ) := (congrArg (Litex.NativeBridge.complexValue (M := M)) (by
             let _call := (let _wd_1_0 := (Litex.formulaFn (M := M) Litex.StandardSetValue.integer Litex.StandardSetValue.integer (fun (_raw_i5 : M.Value) => True) (fun (_raw_i5 : M.Value) => _raw_i5) (by
@@ -777,7 +777,7 @@ theorem h_721 : (by
             exact (congrArg (fun x => Litex.FunctionSemantics.callValue (Litex.denote _call.val.function) x) _argument).symm.trans (_head_call.trans (_beta.trans (_body.trans _calculated))))).trans (Litex.NativeBridge.complexValue_number (3 : ℂ))
           apply Litex.rangeAggregateDenote _aggregate (1 : ℤ) (3 : ℤ) ((Litex.NativeBridge.denoteNumber (M := M) (1 : ℂ)).trans (congrArg M.number (by norm_num))) ((Litex.NativeBridge.denoteNumber (M := M) (3 : ℂ)).trans (congrArg M.number (by norm_num))) (6 : ℂ)
           have _indices : Finset.Icc (1 : ℤ) (3 : ℤ) = {(1 : ℤ), (2 : ℤ), (3 : ℤ)} := by decide
-          norm_num [Litex.nativeRangeAggregate, _indices, _aggregate_term_0, _aggregate_term_1, _aggregate_term_2]))).trans ((show (Litex.denote _equal_wd_1_1) = M.number (6 : ℂ) from (by
+          norm_num [Litex.nativeRangeAggregate, _indices, _aggregate_term_0, _aggregate_term_1, _aggregate_term_2]))))).trans ((Eq.trans (show Litex.denote _equal_wd_1_1 = (Litex.denote _equal_wd_1_1) from rfl) ((show (Litex.denote _equal_wd_1_1) = M.number (6 : ℂ) from (by
           let _aggregate := _equal_wd_1_1
           have _aggregate_term_0 : Litex.NativeBridge.complexValue (Litex.FunctionSemantics.callValue (Litex.denote _aggregate.val.function) (M.number (1 : ℂ))) = (1 : ℂ) := (congrArg (Litex.NativeBridge.complexValue (M := M)) (by
             let _call := (let _wd_1_0 := (Litex.formulaFn (M := M) Litex.StandardSetValue.integer Litex.StandardSetValue.integer (fun (_raw_i6 : M.Value) => True) (fun (_raw_i6 : M.Value) => _raw_i6) (by
@@ -832,7 +832,7 @@ theorem h_721 : (by
             exact (congrArg (fun x => Litex.FunctionSemantics.callValue (Litex.denote _call.val.function) x) _argument).symm.trans (_head_call.trans (_beta.trans (_body.trans _calculated))))).trans (Litex.NativeBridge.complexValue_number (3 : ℂ))
           apply Litex.rangeAggregateDenote _aggregate (1 : ℤ) (3 : ℤ) ((Litex.NativeBridge.denoteNumber (M := M) (1 : ℂ)).trans (congrArg M.number (by norm_num))) ((Litex.NativeBridge.denoteNumber (M := M) (3 : ℂ)).trans (congrArg M.number (by norm_num))) (6 : ℂ)
           have _indices : Finset.Icc (1 : ℤ) (3 : ℤ) = {(1 : ℤ), (2 : ℤ), (3 : ℤ)} := by decide
-          norm_num [Litex.nativeRangeAggregate, _indices, _aggregate_term_0, _aggregate_term_1, _aggregate_term_2]))).symm)))
+          norm_num [Litex.nativeRangeAggregate, _indices, _aggregate_term_0, _aggregate_term_1, _aggregate_term_2]))))).symm)))
       )
   )
 end LitexCompiled.file_lean_x2f_examples_x2f_evaluated_x5f_aggregate_x5f_arithmetic_x2f_statement_x2e_lit

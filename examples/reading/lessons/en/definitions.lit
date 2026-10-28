@@ -1,0 +1,22 @@
+# Definitions and instances: nonnegative numbers
+# How do a definition, an instance proof and a theorem application differ?
+
+# x R restricts arguments to real numbers; x >= 0 is the defining condition.
+# Use Cmd/Ctrl-click on nonnegative to inspect its declaration.
+prop nonnegative(x R):
+    x >= 0
+
+# The definition does not prove that every real number is nonnegative.
+# Check one instance below. Try -1 in place of 3 and inspect the failed
+# obligation.
+by def $nonnegative(3)
+
+# An arbitrary real need not be nonnegative; its square is nonnegative.
+thm squares_are_nonnegative:
+    ? forall x R:
+        $nonnegative(x ^ 2)
+    x ^ 2 >= 0
+
+# Replace both occurrences of 3 on the next line with (-1), then check.
+# The conclusion concerns (-1)^2; compare it with asserting nonnegative(-1).
+by thm squares_are_nonnegative(3) => $nonnegative(3 ^ 2)

@@ -15,23 +15,27 @@ const SOURCE: &str = "have fn vec(A, B cart(R, R)) cart(R, R) = (B(1) - A(1), B(
 fn shape(statement: &mut ExecStmtResult) -> &mut KnownFunctionCartesianTupleProof {
     let forall = super::forall_proof_mut(statement);
     let equality = super::equality_proof_mut(&mut forall.proved_then_facts[0].verify_result);
-    let ObjWellDefinedProof::ByDef {
+    let DetailedObjWellDefinedProof::ByDef {
         proof:
             ObjWellDefinedProofByDef::ArithmeticOperator(
                 ArithmeticOperatorObjWellDefinedProofByDef::Add(add),
             ),
         ..
-    } = &mut equality.well_defined_proof.right
+    } = (&mut equality.well_defined_proof.as_detailed_mut().unwrap().right)
+        .as_detailed_mut()
+        .unwrap()
     else {
         panic!("original dot expansion's right-hand sum")
     };
-    let ObjWellDefinedProof::ByDef {
+    let DetailedObjWellDefinedProof::ByDef {
         proof:
             ObjWellDefinedProofByDef::ArithmeticOperator(
                 ArithmeticOperatorObjWellDefinedProofByDef::Mul(mul),
             ),
         ..
-    } = add.child_obj_well_defined[0].as_mut()
+    } = (add.child_obj_well_defined[0].as_mut())
+        .as_detailed_mut()
+        .unwrap()
     else {
         panic!("original first coordinate product")
     };

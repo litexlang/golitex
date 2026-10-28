@@ -27,13 +27,19 @@ fn range_domain_mut(
 ) -> &mut CompleteFunctionDomainProof {
     let forall = super::forall_proof_mut(&mut run.statement_results[index]);
     let atomic = super::atomic_proof_mut(&mut forall.proved_then_facts[0].verify_result);
-    let ObjWellDefinedProof::ByDef {
+    let DetailedObjWellDefinedProof::ByDef {
         proof:
             ObjWellDefinedProofByDef::FunctionSpace(FunctionSpaceObjWellDefinedProofByDef::FnRange(
                 range,
             )),
         ..
-    } = &mut atomic.well_defined_proof.well_defined_of_each_parameter[0]
+    } = (&mut atomic
+        .well_defined_proof
+        .as_detailed_mut()
+        .unwrap()
+        .well_defined_of_each_parameter[0])
+        .as_detailed_mut()
+        .unwrap()
     else {
         panic!("range WD")
     };
@@ -46,8 +52,7 @@ fn returned_domain_consumes_original_applicability_and_signature() {
         let (mut run, compiler) = super::execute(RANGE);
         let domain = range_domain_mut(&mut run, 0);
         let CompleteFunctionDomainSourceProof::ApplicationReturn {
-            application_children,
-            application_requirements,
+            application_check,
             signature_source,
             return_space,
             ..
@@ -55,6 +60,9 @@ fn returned_domain_consumes_original_applicability_and_signature() {
         else {
             panic!("actual ApplicationReturn")
         };
+        let checks = application_check.as_detailed_mut().unwrap();
+        let application_children = &mut checks.child_obj_well_defined;
+        let application_requirements = &mut checks.requirement_fact_verified;
         match mutation {
             0 => {
                 application_children.clear();
@@ -90,10 +98,16 @@ fn returned_call_rejects_missing_swapped_or_mismatched_stages() {
         let (mut run, compiler) = super::execute(VALUE);
         let forall = super::forall_proof_mut(&mut run.statement_results[0]);
         let atomic = super::atomic_proof_mut(&mut forall.proved_then_facts[0].verify_result);
-        let ObjWellDefinedProof::ByDef {
+        let DetailedObjWellDefinedProof::ByDef {
             proof: ObjWellDefinedProofByDef::FnObj(call),
             ..
-        } = &mut atomic.well_defined_proof.well_defined_of_each_parameter[0]
+        } = (&mut atomic
+            .well_defined_proof
+            .as_detailed_mut()
+            .unwrap()
+            .well_defined_of_each_parameter[0])
+            .as_detailed_mut()
+            .unwrap()
         else {
             panic!("call WD")
         };
@@ -144,14 +158,14 @@ fn returned_domain_argument_scope_rejects_a_future_registered_producer() {
     let (mut run, compiler) = super::execute(RANGE);
     let p = range_domain_mut(&mut run, 2);
     let CompleteFunctionDomainSourceProof::ApplicationReturn {
-        argument_scope,
-        application_children,
-        ..
+        application_check, ..
     } = &mut p.source
     else {
         panic!()
     };
-    let scope = argument_scope.as_mut().unwrap();
+    let checks = application_check.as_detailed_mut().unwrap();
+    let application_children = &checks.child_obj_well_defined;
+    let scope = checks.argument_scope.as_mut().unwrap();
     assert!(!scope.formed_children.is_empty());
     scope.formed_children[0].child_index = application_children.len() + 100;
     assert!(compiler
@@ -165,12 +179,15 @@ fn returned_calls_cannot_skip_either_nonzero_guard() {
         let source = format!(
             "forall provider fn(t R: t != 0) fn(x R: x != 0) R:\n    provider({outer})({inner}) $in R\n"
         );
-        let mut runtime = Runtime::new(LaunchCommand::Eval {
-            code: String::new(),
-            session: false,
-            strict: true,
-            language: OutputLanguage::English,
-        });
+        let mut runtime = Runtime::new_with_result_detail(
+            LaunchCommand::Eval {
+                code: String::new(),
+                session: false,
+                strict: true,
+                language: OutputLanguage::English,
+            },
+            crate::result_detail::OutputDetail::Detailed,
+        );
         let run = runtime.run_litex_code(&source).unwrap();
         assert!(!run.success);
         assert!(crate::compile_to_lean::LitexToLeanCompiler::new(runtime)
@@ -212,10 +229,16 @@ fn returned_matrix_rejects_missing_or_swapped_index_evidence() {
         compiler.compile_run(&run, "valid_matrix_call").unwrap();
         let all = super::forall_proof_mut(&mut run.statement_results[0]);
         let atom = super::atomic_proof_mut(&mut all.proved_then_facts[0].verify_result);
-        let ObjWellDefinedProof::ByDef {
+        let DetailedObjWellDefinedProof::ByDef {
             proof: ObjWellDefinedProofByDef::FnObj(call),
             ..
-        } = &mut atom.well_defined_proof.well_defined_of_each_parameter[0]
+        } = (&mut atom
+            .well_defined_proof
+            .as_detailed_mut()
+            .unwrap()
+            .well_defined_of_each_parameter[0])
+            .as_detailed_mut()
+            .unwrap()
         else {
             panic!("returned matrix call WD")
         };
@@ -267,13 +290,16 @@ fn returned_matrix_transpose_rejects_changed_carrier_evidence() {
             domain.signature.ret_set = Box::new(Obj::StandardSet(StandardSet::C));
         } else {
             let CompleteFunctionDomainSourceProof::ApplicationReturn {
-                application_requirements,
-                ..
+                application_check, ..
             } = &mut domain.source
             else {
                 panic!("returned matrix source")
             };
-            application_requirements.clear();
+            application_check
+                .as_detailed_mut()
+                .unwrap()
+                .requirement_fact_verified
+                .clear();
         }
         assert!(compiler
             .compile_run(&run, "wrong_returned_transpose")

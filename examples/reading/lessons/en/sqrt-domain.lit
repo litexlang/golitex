@@ -1,0 +1,7 @@
+# The domain of the real square root
+# What must hold before an expression is defined?
+
+# This source is expected not to pass; the issue comes before its value can be
+# discussed.
+# Inspect the input requirement of sqrt, replace -1 by 4, and check.
+sqrt(-1) $in R

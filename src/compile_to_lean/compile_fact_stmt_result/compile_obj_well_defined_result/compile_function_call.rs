@@ -795,10 +795,10 @@ impl LitexToLeanCompiler {
             return self.compile_fn_return_codomain(goal, proof, position);
         }
         let proof = position.with_visible_wd(&goal.element, &mut |wd, producer| {
-            let ObjWellDefinedProof::ByDef {
+            let DetailedObjWellDefinedProof::ByDef {
                 obj: Obj::FnObj(application),
                 proof: ObjWellDefinedProofByDef::FnObj(evidence),
-            } = wd else {
+            } = (wd).detailed_ref() else {
                 return Err(LeanCompileError::new("FunctionReturn/WDSubject", "The original constructor is not this function application."));
             };
             let ctor_position = SourcePosition::new(Some(producer), SourceOwner::WD(wd), 0);
@@ -910,10 +910,10 @@ impl LitexToLeanCompiler {
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
         let proof = position.with_visible_wd(&goal.element, &mut |wd, producer| {
-            let ObjWellDefinedProof::ByDef {
+            let DetailedObjWellDefinedProof::ByDef {
                 obj: Obj::FnObj(application),
                 proof: ObjWellDefinedProofByDef::FnObj(evidence),
-            } = wd else {
+            } = (wd).detailed_ref() else {
                 return Err(LeanCompileError::new("FunctionReturn/WDSubject", "The original constructor is not this function application."));
             };
             let ctor_position = SourcePosition::new(Some(producer), SourceOwner::WD(wd), 0);
@@ -1023,7 +1023,7 @@ impl LitexToLeanCompiler {
         match rule {
             InFactSearchProofByBuiltinRule::AnonymousFnApplicationScalarCodomain(p) => {
                 position.with_visible_wd(&goal.element, &mut |wd, producer| {
-                    let ObjWellDefinedProof::ByDef { obj: Obj::FnObj(application), proof: ObjWellDefinedProofByDef::FnObj(evidence) } = wd else {
+                    let DetailedObjWellDefinedProof::ByDef { obj: Obj::FnObj(application), proof: ObjWellDefinedProofByDef::FnObj(evidence) } = (wd).detailed_ref() else {
                         return Err(LeanCompileError::new("FunctionReturn/WDSubject", "The source constructor is not the recorded application."));
                     };
                     let FnObjHead::AnonymousFnLiteral(literal) = application.head.as_ref() else {

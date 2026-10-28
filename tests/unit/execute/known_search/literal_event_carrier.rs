@@ -54,7 +54,9 @@ fn literal_event_carrier_supports_the_original_finite_expectation_definition() {
             .unwrap()
             .success
     );
-    let source="template<Ambient set,space &FiniteProbabilitySpace<Ambient>>:\n    have fn finite_expectation(X fn(outcome space.carrier) R) R = finite_set_sum(space.carrier,fn(outcome space.carrier) R {X(outcome)*space.prob({outcome})})";
+    // The standard library now owns finite_expectation. Independently check
+    // the original formula without redeclaring that public template name.
+    let source = "template<Ambient set,space &FiniteProbabilitySpace<Ambient>>:\n    have fn regression_finite_expectation(X fn(outcome space.carrier) R) R = finite_set_sum(space.carrier,fn(outcome space.carrier) R {X(outcome)*space.prob({outcome})})";
     let run = rt.run_litex_code(source).unwrap();
     assert!(
         run.success,

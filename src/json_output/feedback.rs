@@ -2,7 +2,63 @@
 
 use super::helper::{object, statement_result_value, string};
 use super::json_keys::localize_key;
+use crate::knowledge_base::JsonObject;
 use crate::prelude::*;
+
+/// Stable, read-only failure metadata for non-JSON consumers such as Reading.
+/// Reuse the Normal projection's actual failure path and authored diagnostic;
+/// never select a successful premise/WD child as the rejected obligation.
+pub(crate) fn statement_failure_summary(
+    result: &ExecStmtResult,
+    runtime: &Runtime,
+) -> Option<JsonValue> {
+    if !result.is_failed() {
+        return None;
+    }
+    let language = super::helper::output_language(runtime);
+    let normal = super::project_stmt_normal(result, runtime);
+    let reason = normal
+        .as_object()
+        .ok()?
+        .get(&localize_key("why_failed", language))?;
+    let mut localized = JsonValue::Object(JsonObject::new());
+    summarize_failure(&mut localized, reason, language);
+    let localized = localized.as_object().ok()?;
+    let mut fields = JsonObject::new();
+    for key in [
+        "phase",
+        "goal",
+        "message",
+        "cause",
+        "index",
+        "step_index",
+        "branch_index",
+        "then_index",
+        "expected",
+        "actual",
+        "failed_statement",
+        "category",
+        "expression",
+        "obligation",
+    ] {
+        if let Some(value) = localized.get(&localize_key(key, language)) {
+            fields.insert(key.into(), value.clone());
+        }
+    }
+    if let Some(location) = localized
+        .get(&localize_key("source_location", language))
+        .and_then(|value| value.as_object().ok())
+    {
+        let mut stable = JsonObject::new();
+        for key in ["path", "line", "column"] {
+            if let Some(value) = location.get(&localize_key(key, language)) {
+                stable.insert(key.into(), value.clone());
+            }
+        }
+        fields.insert("source_location".into(), JsonValue::Object(stable));
+    }
+    (!fields.is_empty()).then_some(JsonValue::Object(fields))
+}
 
 pub(super) fn summarize_statements(
     statements: Vec<JsonValue>,

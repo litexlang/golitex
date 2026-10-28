@@ -11,7 +11,7 @@ intersect and set_minus remain the event constructions. The forward proof
 spine is the actual disjoint split A=(A intersect B) union (A minus B), then
 finite additivity, complement/difference, monotonicity, probability bounds and
 inclusion-exclusion. Set extensionality proves both directions and a
-contradiction proves disjointness. The 89 exported source theorems are checked;
+contradiction proves disjointness. The 104 exported source theorems are checked;
 the source adds no strategies or reserved native theorem names. The kernel
 provides four bounded power-set closure cases.
 
@@ -31,9 +31,9 @@ positivity and finite union identity. The three formula laws are independently
 exported and generic, not numerical tests. No new counting function or
 unjustified integrality premise is introduced.
 
-Delivered source is103 top-level statements: one structure, one predicate,
-ten templates (eight function families and two bundled values),89 theorems and
-two internal universal facts. The event and
+Delivered source is122 top-level statements: one structure, one predicate,
+thirteen templates (ten function families and three bundled values),104 theorems and
+three internal universal facts. The event and
 numeric closure exports let independent generic callers state the same
 compound goals without adding premises or strategies. They supply typing
 facts, not probability assumptions or theorem certificates.
@@ -82,7 +82,8 @@ The generated Lean pairs cover one-bound finite intersections and complement
 event typing, not the full probability structures. Complete probability Lean
 compilation remains future work.
 
-Downstream work remains correlation, distributions and statistical inference. Countable and measure
+Finite image distributions are now delivered below. Downstream work includes
+expectation transport, random-variable independence and statistical inference. Countable and measure
 probability need their own concepts and are not implied by a finite carrier.
 
 Finite real observables are actual functions on the supplied sample carrier.
@@ -190,7 +191,7 @@ an everywhere-constant assertion.
 The parallelogram law cancels covariance in the sum and difference variance
 formulas. Each complementary variance is nonnegative, so both are bounded by
 2Var(X)+2Var(Y). These six source theorems add no value, prop, native BT,
-strategy or trust. Current source97/85thms keeps the same eight templates.
+strategy or trust. At that covariance-bound checkpoint, source97/85thms kept the same eight templates.
 The dedicated covariance_bounds consumer checks all six contracts, the
 Bernoulli equality/strictness boundary and the Dirac nonconstant null-outcome
 case. Correlation and probability tail inequalities remain downstream.
@@ -221,3 +222,62 @@ an explicit codomain. Independent clean source replay excludes the scratch
 restriction probe and raw-tail typing fact. No trust, new prop/native/BT/search,
 AST/state or compiler changes occur. The dedicated tail_bounds consumer checks
 actual Bernoulli, signed and Dirac null events, empty events and threshold guards.
+
+
+Finite real correlation is now a formula-defined ordinary function family:
+finite_correlation<Omega,space>(X,Y)=Cov(X,Y)/sqrt(Var(X)Var(Y)). It has two
+template parameters, two total-real sampler arguments on the actual carrier
+and real output. Strictly positive variance of each input belongs to its domain;
+no value is selected for zero variance. The scalar positive-root closure fact
+is proved before declaration, using existing rules and without adding a native
+schema or search permission. Generic expanded-quotient contracts publish that
+same proved fact explicitly because anonymous module facts do not merge.
+
+Eight source laws derive formula, symmetry, self1, square/absolute/interval unit
+bounds and both zero-covariance directions. Existing covariance laws and real
+root normalization supply the proof; a private scalar shared-addend inequality
+proves the lower interval bound. No new prop, native Obj/Fact/BT/strategy,
+source trust, state/AST or compiler implementation is introduced. Positive/
+negative/zero actual values and both zero-variance guard positions are owned by
+the dedicated correlation consumer and its focused acceptance. This does not
+establish independence, statistical estimators or measure probability.
+
+
+Correlation acceptance on2026-10-28 passes20 focused checks at source113/97thms:
+ten generic statements (eight theorem contracts, one function contract and one
+proved scalar domain fact),177 actual statements, one README,14 final-only
+refusals and two installed layouts. Four matching cold positives were reused
+by source hash after fixing phase expectations for guarded assignments to
+value_well_defined; the14 controls and two installed callers reran. The std/WiX
+payload/reference count remains80. Source and final resumed Sessions close
+normally; the old paused consumer handle was missing and its cause is unknown.
+No native/compiler or broad-release conclusion follows from this source gate.
+
+
+Finite image distributions are actual probability-space constructions. For a
+supplied finite source and complete unary F:source.carrier->Target,
+finite_pushforward_event_probability<Omega,space,Target,F>(A) is the source
+probability of preimage_set(F,A), with A in power_set(fn_range(F)). The
+four-parameter finite_pushforward_probability_space template returns the
+actual tuple (fn_range(F),that probability function). Target is arbitrary; the
+image is finite and nonempty because the source carrier is. Zero-mass image
+points remain members. Neither injectivity nor ambient surjectivity is required.
+
+The seven source theorems derive empty/whole/nonnegative/additive laws and
+full structure membership before bundling; the event and singleton formulas
+then expose preimage_set(F,A) and point fiber preimage(F,y). These distinct
+native constructions retain their legal source input carrier. Native set
+extensionality proves the partitions, and a private checked real sum transport
+combines probability equalities. There is no new native Obj/Fact/BT, strategy,
+search/WD permission, trust, protected state/AST or compiler delta.
+
+An independent strict checkpoint passes122 source statements/104 thms, and a
+100-statement actual caller checks the six-outcome parity image, a constant
+many-to-one map, and identity on a Dirac carrier with a retained null image.
+Ten generic contracts and the isolated README formula pass in the authoring
+Session. Fourteen refusal probes reject and subsequent correct facts pass in
+that same Session. All20 clean focused checks pass, including those14 final-only refusals and
+both installed layouts, with std/WiX80-file/reference agreement. The final
+consumer closes normally after the post-refusal facts. Receipt:
+std-finite-pushforward-acceptance-2026-10-28.json.
+This supplies finite distributions, not expectation transport or measure theory.

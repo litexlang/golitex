@@ -97,12 +97,15 @@ fn piecewise_function_rejects_invalid_source_domains() {
         "have fn f(x R) R by cases:\n    case x = 0: 1 / x\n    case x != 0: x\n",
         "have fn f(x R) N by cases:\n    case x >= 0: x\n    case x < 0: -x\n",
     ] {
-        let mut runtime = Runtime::new(LaunchCommand::Eval {
-            code: String::new(),
-            session: false,
-            strict: true,
-            language: OutputLanguage::English,
-        });
+        let mut runtime = Runtime::new_with_result_detail(
+            LaunchCommand::Eval {
+                code: String::new(),
+                session: false,
+                strict: true,
+                language: OutputLanguage::English,
+            },
+            crate::result_detail::OutputDetail::Detailed,
+        );
         let run = runtime.run_litex_code(source).unwrap();
         assert!(!run.success);
     }

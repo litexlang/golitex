@@ -127,8 +127,7 @@ impl LitexToLeanCompiler {
             application,
             subject_equal,
             signature_source,
-            application_children,
-            application_requirements,
+            application_check,
             return_space,
             carrier_equal,
             ..
@@ -136,6 +135,9 @@ impl LitexToLeanCompiler {
         else {
             return Err(LeanCompileError::unsupported("ReturnedFunction/Source"));
         };
+        let checks = application_check.detailed_ref();
+        let application_children = &checks.child_obj_well_defined;
+        let application_requirements = &checks.requirement_fact_verified;
         let local =
             SourcePosition::new(Some(position), SourceOwner::CompleteDomainSource(proof), 0);
         let head = match application.head.as_ref() {

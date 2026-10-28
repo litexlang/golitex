@@ -1,0 +1,77 @@
+forall u,v R+:
+    u*v > 0
+    sqrt(u*v) > 0
+    sqrt(u*v) != 0
+
+thm contract_finite_correlation_formula:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,X,Y fn(k space.carrier) R:
+        \prob::main::finite_variance<Omega,space>(X) > 0
+        \prob::main::finite_variance<Omega,space>(Y) > 0
+        =>:
+            \prob::main::finite_correlation<Omega,space>(X,Y) = \prob::main::finite_covariance<Omega,space>(X,Y)/sqrt(\prob::main::finite_variance<Omega,space>(X)*\prob::main::finite_variance<Omega,space>(Y))
+    release thm prob::main::finite_correlation_formula(Omega,space,X,Y)
+
+thm contract_finite_correlation_symmetric:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,X,Y fn(k space.carrier) R:
+        \prob::main::finite_variance<Omega,space>(X) > 0
+        \prob::main::finite_variance<Omega,space>(Y) > 0
+        =>:
+            \prob::main::finite_correlation<Omega,space>(X,Y) = \prob::main::finite_correlation<Omega,space>(Y,X)
+    release thm prob::main::finite_correlation_symmetric(Omega,space,X,Y)
+
+thm contract_finite_correlation_self:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,X fn(k space.carrier) R:
+        \prob::main::finite_variance<Omega,space>(X) > 0
+        =>:
+            \prob::main::finite_correlation<Omega,space>(X,X) = 1
+    release thm prob::main::finite_correlation_self(Omega,space,X)
+
+thm contract_finite_correlation_square_bound:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,X,Y fn(k space.carrier) R:
+        \prob::main::finite_variance<Omega,space>(X) > 0
+        \prob::main::finite_variance<Omega,space>(Y) > 0
+        =>:
+            \prob::main::finite_correlation<Omega,space>(X,Y)^2 <= 1
+    release thm prob::main::finite_correlation_square_bound(Omega,space,X,Y)
+
+thm contract_finite_correlation_abs_bound:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,X,Y fn(k space.carrier) R:
+        \prob::main::finite_variance<Omega,space>(X) > 0
+        \prob::main::finite_variance<Omega,space>(Y) > 0
+        =>:
+            abs(\prob::main::finite_correlation<Omega,space>(X,Y)) <= 1
+    release thm prob::main::finite_correlation_abs_bound(Omega,space,X,Y)
+
+thm contract_finite_correlation_bounds:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,X,Y fn(k space.carrier) R:
+        \prob::main::finite_variance<Omega,space>(X) > 0
+        \prob::main::finite_variance<Omega,space>(Y) > 0
+        =>:
+            -1 <= \prob::main::finite_correlation<Omega,space>(X,Y)
+            \prob::main::finite_correlation<Omega,space>(X,Y) <= 1
+    release thm prob::main::finite_correlation_bounds(Omega,space,X,Y)
+
+thm contract_finite_correlation_zero_from_covariance:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,X,Y fn(k space.carrier) R:
+        \prob::main::finite_variance<Omega,space>(X) > 0
+        \prob::main::finite_variance<Omega,space>(Y) > 0
+        \prob::main::finite_covariance<Omega,space>(X,Y) = 0
+        =>:
+            \prob::main::finite_correlation<Omega,space>(X,Y) = 0
+    release thm prob::main::finite_correlation_zero_from_covariance(Omega,space,X,Y)
+
+thm contract_finite_covariance_zero_from_correlation:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,X,Y fn(k space.carrier) R:
+        \prob::main::finite_variance<Omega,space>(X) > 0
+        \prob::main::finite_variance<Omega,space>(Y) > 0
+        \prob::main::finite_correlation<Omega,space>(X,Y) = 0
+        =>:
+            \prob::main::finite_covariance<Omega,space>(X,Y) = 0
+    release thm prob::main::finite_covariance_zero_from_correlation(Omega,space,X,Y)
+
+thm correlation_function_contract:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,X,Y fn(k space.carrier) R:
+        \prob::main::finite_variance<Omega,space>(X)>0
+        \prob::main::finite_variance<Omega,space>(Y)>0
+        =>:
+            \prob::main::finite_correlation<Omega,space>(X,Y) $in R

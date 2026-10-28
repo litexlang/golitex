@@ -6,12 +6,15 @@ use crate::runtime::Runtime;
 use crate::tokenize::Tokenizer;
 
 fn runtime(strict: bool) -> Runtime {
-    Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict,
-        language: OutputLanguage::English,
-    })
+    Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    )
 }
 
 fn exec_template_builder_statement(rt: &mut Runtime, code: &str) -> bool {

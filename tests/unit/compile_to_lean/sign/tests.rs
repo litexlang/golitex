@@ -88,21 +88,29 @@ fn sign_wd_rejects_missing_or_wrong_child_evidence() {
         let fact = super::atomic_proof_mut(
             &mut super::fact_statement_mut(&mut run.statement_results[1]).verify_result,
         );
-        let ObjWellDefinedProof::ByDef {
+        let DetailedObjWellDefinedProof::ByDef {
             proof:
                 ObjWellDefinedProofByDef::ArithmeticOperator(
                     ArithmeticOperatorObjWellDefinedProofByDef::Sign(wd),
                 ),
             ..
-        } = &mut fact.well_defined_proof.well_defined_of_each_parameter[0]
+        } = (&mut fact
+            .well_defined_proof
+            .as_detailed_mut()
+            .unwrap()
+            .well_defined_of_each_parameter[0])
+            .as_detailed_mut()
+            .unwrap()
         else {
             panic!("sign WD")
         };
         if missing {
             wd.requirement_fact_verified.clear();
         } else {
-            let ObjWellDefinedProof::ByDef { obj, .. } = wd.child_obj_well_defined[0].as_mut()
-            else {
+            let DetailedObjWellDefinedProof::ByDef { obj, .. } = (wd.child_obj_well_defined[0]
+                .as_mut())
+            .as_detailed_mut()
+            .unwrap() else {
                 panic!("identifier WD")
             };
             *obj = Obj::Literal(Literal::Number(Number::new("2".into())));
@@ -153,7 +161,8 @@ fn sign_does_not_accept_complex_only_domains_or_false_values() {
     ] {
         let command =
             parse_launch_command(&["-strict".into(), "-e".into(), source.into()]).unwrap();
-        let mut runtime = Runtime::new(command);
+        let mut runtime =
+            Runtime::new_with_result_detail(command, crate::result_detail::OutputDetail::Detailed);
         let run = runtime.run_litex_code(source).unwrap();
         assert!(!run.success);
         assert!(super::LitexToLeanCompiler::new(runtime)

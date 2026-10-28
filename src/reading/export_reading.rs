@@ -30,7 +30,7 @@ pub fn export_reading(path: &Path, document: &JsonValue) -> RuntimeResult<()> {
         message: error.to_string(),
     })?;
     let site = ReadingSite::new(document);
-    let index = reading_html(&site.manifest, false).replace("<head>", "<head>\n<script>if(location.protocol==='file:')location.replace('standalone.html'+location.hash);</script>");
+    let index = reading_html(&site.manifest, false).replace("<head>", "<head>\n<script>if(location.protocol==='file:')location.replace('standalone.html'+location.search+location.hash);</script>");
     let mut files = site.files;
     for (name, content) in [
         ("index.html", index),

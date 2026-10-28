@@ -120,13 +120,19 @@ fn min_max_rejects_missing_or_reordered_real_requirements() {
         let fact = super::atomic_proof_mut(
             &mut super::fact_statement_mut(&mut run.statement_results[1]).verify_result,
         );
-        let ObjWellDefinedProof::ByDef {
+        let DetailedObjWellDefinedProof::ByDef {
             proof:
                 ObjWellDefinedProofByDef::ArithmeticOperator(
                     ArithmeticOperatorObjWellDefinedProofByDef::Min(wd),
                 ),
             ..
-        } = &mut fact.well_defined_proof.well_defined_of_each_parameter[0]
+        } = (&mut fact
+            .well_defined_proof
+            .as_detailed_mut()
+            .unwrap()
+            .well_defined_of_each_parameter[0])
+            .as_detailed_mut()
+            .unwrap()
         else {
             panic!("min wd")
         };
@@ -157,7 +163,8 @@ fn min_max_rejects_a_certificate_for_another_operation() {
 fn complex_membership_does_not_supply_the_real_min_max_domain() {
     let source = "have z C\n$is_set(min(z, z))\n";
     let command = parse_launch_command(&["-strict".into(), "-e".into(), source.into()]).unwrap();
-    let mut runtime = Runtime::new(command);
+    let mut runtime =
+        Runtime::new_with_result_detail(command, crate::result_detail::OutputDetail::Detailed);
     let run = runtime.run_litex_code(source).unwrap();
     assert!(!run.success);
     assert!(super::LitexToLeanCompiler::new(runtime)
@@ -268,7 +275,8 @@ fn min_max_does_not_verify_false_values_or_reversed_bounds() {
     for source in ["min(3, 5) = 5\n", "forall a, b R:\n    min(a, b) >= a\n"] {
         let command =
             parse_launch_command(&["-strict".into(), "-e".into(), source.into()]).unwrap();
-        let mut runtime = Runtime::new(command);
+        let mut runtime =
+            Runtime::new_with_result_detail(command, crate::result_detail::OutputDetail::Detailed);
         let run = runtime.run_litex_code(source).unwrap();
         assert!(!run.success);
         assert!(super::LitexToLeanCompiler::new(runtime)

@@ -183,8 +183,12 @@ impl LitexToLeanCompiler {
             };
             let cited =
                 self.compile_registered_equality(*id, original_source, original_target, position)?;
+            let source_representation = self.compile_normalization_denotation(source, position)?;
+            let cited = format!("(Eq.trans (Eq.symm {source_representation}) {cited})");
             if original_target == target {
-                return Ok(cited);
+                let target_representation =
+                    self.compile_normalization_denotation(target, position)?;
+                return Ok(format!("(Eq.trans {cited} {target_representation})"));
             }
             // Numeric rewriting may canonicalize unary negatives into signed
             // numeral leaves. Cite the exact stored endpoint, then justify the

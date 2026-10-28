@@ -41,8 +41,11 @@ fn mapping_properties_reject_changed_definition_and_wd() {
             panic!()
         };
         if mutation == 0 {
-            let PredicateDomainProof::ByRequirements(req) =
-                &mut result.well_defined_proof.predicate_domain
+            let PredicateDomainProof::ByRequirements(req) = &mut result
+                .well_defined_proof
+                .as_detailed_mut()
+                .unwrap()
+                .predicate_domain
             else {
                 panic!()
             };

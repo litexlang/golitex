@@ -1,3 +1,4 @@
+use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::DetailedObjWellDefinedProof;
 use crate::ast::fact::{AtomicFact, Fact};
 use crate::ast::stmt::Stmt;
 use crate::exec_env::SpecialProperty;
@@ -8,7 +9,7 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::{
 };
 use crate::execute::execute_fact_stmt::{VerifyFactResult, VerifyState};
 use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::{
-    FnObjDomainFnSetEvidence, ObjWellDefinedProof, ObjWellDefinedProofByDef,
+    FnObjDomainFnSetEvidence, ObjWellDefinedProofByDef,
 };
 use crate::execute::ExecStmtResult;
 use crate::json_output::project_stmt_detailed;
@@ -46,10 +47,16 @@ fn callable_alias_reduces_with_an_exact_published_function_equality() {
     let VerifyEqualityResult::Success(result) = *result else {
         panic!("alias must reduce")
     };
-    let ObjWellDefinedProof::ByDef {
+    let DetailedObjWellDefinedProof::ByDef {
         proof: ObjWellDefinedProofByDef::FnObj(wd),
         ..
-    } = result.well_defined_proof.left
+    } = result
+        .well_defined_proof
+        .into_detailed()
+        .unwrap()
+        .left
+        .into_detailed()
+        .unwrap()
     else {
         panic!("fresh application WD")
     };
@@ -210,12 +217,15 @@ fn ordinary_struct_membership_does_not_select_a_default_field_view() {
 }
 
 fn runtime() -> Runtime {
-    Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language: OutputLanguage::English,
-    })
+    Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    )
 }
 
 fn parse(rt: &mut Runtime, code: &str) -> Stmt {

@@ -1,12 +1,15 @@
 use super::*;
 
 fn checked(source: &str) -> (RunLitexCodeResult, Runtime) {
-    let mut runtime = Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language: OutputLanguage::English,
-    });
+    let mut runtime = Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    );
     let result = runtime.run_litex_code(source).expect("source run");
     assert!(
         result.success && result.session_error.is_none(),
@@ -492,7 +495,7 @@ fn geo_scope_cursor_exist_formation_guard_precedes_dependent_division_wd() {
         usize::MAX,
     );
     let before_guard = SourcePosition::new(Some(&full), SourceOwner::ExistWD(fact, formation), 1);
-    let guard = formation.assumed_body_facts[0]
+    let guard = formation.detailed_ref().assumed_body_facts[0]
         .store_and_infer
         .primary_fact_id();
     assert_eq!(
@@ -507,15 +510,17 @@ fn geo_scope_cursor_exist_formation_guard_precedes_dependent_division_wd() {
         after_guard.visible_fact(guard, &runtime).unwrap().1,
         format!("h_{}", guard.value())
     );
-    let FactWellDefinedProof::Equality(div) = &formation.assumed_body_facts[1].well_defined else {
+    let FactWellDefinedProof::Equality(div) =
+        &formation.detailed_ref().assumed_body_facts[1].well_defined
+    else {
         panic!("dependent equality")
     };
     assert!(after_guard
-        .with_visible_wd(div.left.obj(), &mut |_, _| Ok(()))
+        .with_visible_wd(div.detailed_ref().left.obj(), &mut |_, _| Ok(()))
         .unwrap()
         .is_none());
     assert!(full
-        .with_visible_wd(div.left.obj(), &mut |_, _| Ok(()))
+        .with_visible_wd(div.detailed_ref().left.obj(), &mut |_, _| Ok(()))
         .unwrap()
         .is_some());
     assert!(root.visible_fact(guard, &runtime).is_err());

@@ -207,7 +207,7 @@ fn project_equality(result: &VerifyEqualityResult, runtime: &Runtime) -> JsonVal
                     ("phase", string("well_defined")),
                     (
                         "failure",
-                        super::wd_failure::project_obj_wd_failure(&f.reason, runtime),
+                        super::wd_failure::project_equal_wd_failure(f, runtime),
                     ),
                 ],
             )

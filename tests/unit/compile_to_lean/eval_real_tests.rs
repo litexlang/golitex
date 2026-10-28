@@ -67,10 +67,12 @@ fn real_eval_requires_ordered_child_wd_and_matching_constructor() {
             "eval min(-1/2,1/3)"
         };
         let (mut run, compiler) = super::execute(source);
-        let ObjWellDefinedProof::ByDef {
+        let DetailedObjWellDefinedProof::ByDef {
             proof: ObjWellDefinedProofByDef::ArithmeticOperator(wd),
             ..
-        } = &mut eval(&mut run, 0).source_well_defined
+        } = (&mut eval(&mut run, 0).source_well_defined)
+            .as_detailed_mut()
+            .unwrap()
         else {
             panic!("arithmetic WD")
         };
@@ -116,10 +118,12 @@ fn real_eval_keeps_original_rewrite_citations_in_order() {
 #[test]
 fn real_eval_requires_real_membership_for_nonclosed_sources() {
     let (mut run, compiler) = super::execute("have real_arg R = -2\neval floor(real_arg)");
-    let ObjWellDefinedProof::ByDef {
+    let DetailedObjWellDefinedProof::ByDef {
         proof: ObjWellDefinedProofByDef::ArithmeticOperator(WD::Floor(wd)),
         ..
-    } = &mut eval(&mut run, 1).source_well_defined
+    } = (&mut eval(&mut run, 1).source_well_defined)
+        .as_detailed_mut()
+        .unwrap()
     else {
         panic!("floor WD")
     };
@@ -134,8 +138,13 @@ fn real_eval_requires_real_membership_for_nonclosed_sources() {
 fn eval_signed_representation_reuse_requires_the_original_wd_id() {
     let (mut run, compiler) = super::execute("have signed_value R = -7/3\neval signed_value");
     compiler.compile_run(&run, "signed_representation").unwrap();
-    let ObjWellDefinedProof::ByKnown { wd_id, .. } =
-        &mut eval(&mut run, 1).evaluated_equal_well_defined.right
+    let DetailedObjWellDefinedProof::ByKnown { wd_id, .. } = (&mut eval(&mut run, 1)
+        .evaluated_equal_well_defined
+        .as_detailed_mut()
+        .unwrap()
+        .right)
+        .as_detailed_mut()
+        .unwrap()
     else {
         panic!("cached negative fraction")
     };

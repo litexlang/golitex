@@ -10,12 +10,15 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_
 
 #[test]
 fn dvd_unified_lean_rejects_the_actual_native_rule_certificate() {
-    let mut rt = Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language: OutputLanguage::English,
-    });
+    let mut rt = Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    );
     let prefix = rt.run_litex_code("have d Z*,k Z").unwrap();
     assert!(prefix.success && prefix.session_error.is_none());
     let tokens = crate::tokenize::Tokenizer::new()
@@ -99,12 +102,15 @@ fn sqrt_quotient_square_lean_rejects_the_unhandled_rule_certificate() {
 fn integer_quotient_remainder_lean_rejects_the_unsupported_structural_node() {
     use super::source_position::{SourceOwner, SourcePosition};
 
-    let mut rt = Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language: OutputLanguage::English,
-    });
+    let mut rt = Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    );
     let prefix = rt
         .run_litex_code("have k Z\nhave a Z=2*k\na%2=(2*k)%2=0\n")
         .unwrap();
@@ -148,12 +154,15 @@ fn integer_quotient_remainder_lean_rejects_the_unsupported_structural_node() {
 }
 
 fn checked(source: &str) -> (RunLitexCodeResult, LitexToLeanCompiler) {
-    let mut runtime = Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language: OutputLanguage::English,
-    });
+    let mut runtime = Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    );
     let result = runtime.run_litex_code(source).expect("source run");
     assert!(result.success && result.session_error.is_none(), "{source}");
     (result, LitexToLeanCompiler::new(runtime))
@@ -366,6 +375,8 @@ fn positive_power_rejects_changed_base_or_missing_actual_child_wd() {
     };
     child
         .well_defined_proof
+        .as_detailed_mut()
+        .unwrap()
         .well_defined_of_each_parameter
         .clear();
     assert!(compiler

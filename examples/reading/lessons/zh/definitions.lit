@@ -1,0 +1,21 @@
+# 定义与实例：非负数
+# 如何区分定义一个性质、证明一个实例、使用一个定理？
+
+# x R 指定实参为实数，x >= 0 是定义体中的条件。
+# ⌘ / Ctrl + 点击 nonnegative 可回到它的声明。
+prop nonnegative(x R):
+    x >= 0
+
+# 定义给出实数非负性的判定条件。
+# 将下面的实参 3 改成 -1，再检查它的定义条件。
+by def $nonnegative(3)
+
+# 任意实数未必非负，但任意实数的平方非负。
+thm squares_are_nonnegative:
+    ? forall x R:
+        $nonnegative(x ^ 2)
+    x ^ 2 >= 0
+
+# 把下一句中的两处 3 都改成 (-1)，再检查。
+# 此时结论讨论 (-1)^2 的非负性，与直接断言 -1 非负不同。
+by thm squares_are_nonnegative(3) => $nonnegative(3 ^ 2)

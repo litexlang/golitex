@@ -725,12 +725,15 @@ mod nested_mod_integer_multiple_tests {
     use crate::tokenize::Tokenizer;
 
     fn runtime() -> Runtime {
-        Runtime::new(LaunchCommand::Eval {
-            code: String::new(),
-            session: false,
-            strict: true,
-            language: OutputLanguage::English,
-        })
+        Runtime::new_with_result_detail(
+            LaunchCommand::Eval {
+                code: String::new(),
+                session: false,
+                strict: true,
+                language: OutputLanguage::English,
+            },
+            crate::result_detail::OutputDetail::Detailed,
+        )
     }
 
     fn check(rt: &mut Runtime, code: &str, expected: bool) -> JsonValue {

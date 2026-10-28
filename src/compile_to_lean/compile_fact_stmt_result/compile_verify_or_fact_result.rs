@@ -566,10 +566,15 @@ impl LitexToLeanCompiler {
         proof: &OrFactWellDefinedProof,
         position: &SourcePosition<'_>,
     ) -> Result<(), LeanCompileError> {
-        if fact.facts.is_empty() || fact.facts.len() != proof.branches.len() {
+        if fact.facts.is_empty() || fact.facts.len() != proof.detailed_ref().branches.len() {
             return Err(LeanCompileError::unsupported("Or/FormationArity"));
         }
-        for (index, (branch, wd)) in fact.facts.iter().zip(&proof.branches).enumerate() {
+        for (index, (branch, wd)) in fact
+            .facts
+            .iter()
+            .zip(&proof.detailed_ref().branches)
+            .enumerate()
+        {
             self.compile_fact_wd(
                 wd,
                 &crate::ast::fact::and_chain_as_fact(branch),

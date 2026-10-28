@@ -1,0 +1,29 @@
+# Contradiction: the irrationality of sqrt(2)
+# Why can sqrt(2) not be written as a ratio of integers?
+
+# Read the argument once, then inspect the steps you question.
+# Hover each equality sign for that adjacent equality's proof.
+by contra:
+    ? not sqrt(2) $in Q
+    # Inside this contradiction proof, sqrt(2) is assumed rational.
+    # What lets the following theorem supply p and q?
+    release thm rational_has_unique_reduced_fraction(sqrt(2))
+    obtain p, q from exist! p Z, q N+ st {sqrt(2) = p / q, gcd(p, q) = 1}
+
+    # The first equality uses sqrt(2) = p / q.
+    # Point to its citation to locate the source; follow it and return.
+    p^2 = (sqrt(2) * q)^2 = sqrt(2)^2 * q^2 = 2 * q^2
+    p^2 % 2 = (2 * q^2) % 2 = 0
+    # Why does 2 dividing p^2 imply that 2 divides p?
+    # Grey text shows consequences actually published by this line.
+    release thm prime_divides_power(p, 2, 2)
+
+    p / 2 $in Z
+    q^2 = p^2 / 2 = 2 * (p / 2)^2
+    q^2 % 2 = (2 * (p / 2)^2) % 2 = 0
+    release thm prime_divides_power(q, 2, 2)
+
+    # Which condition on the reduced fraction conflicts with both p and q
+    # being even?
+    # These witnesses belong to this contradiction proof.
+    impossible 2 <= gcd(p, q) = 1

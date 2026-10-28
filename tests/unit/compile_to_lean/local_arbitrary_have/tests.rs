@@ -252,11 +252,15 @@ fn local_arbitrary_have_rejects_missing_nonempty_or_member_capture_and_wrong_sub
             else {
                 panic!("original goal WD")
             };
-            goal.introduced_params
+            goal.as_detailed_mut()
+                .unwrap()
+                .introduced_params
                 .defined_params
                 .store_and_infer_results
                 .clear();
-            goal.introduced_params
+            goal.as_detailed_mut()
+                .unwrap()
+                .introduced_params
                 .defined_params
                 .stored_fact_ids
                 .clear();

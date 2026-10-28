@@ -41,18 +41,18 @@ impl LitexToLeanCompiler {
         proof: &crate::execute::execute_fact_stmt::verify_forall_fact_with_iff::ForallFactWithIffWellDefinedProof,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
-        if proof.then.len() != fact.forall_fact.then_facts.len()
-            || proof.iff.len() != fact.iff_facts.len()
-            || proof.then.is_empty()
-            || proof.iff.is_empty()
+        if proof.detailed_ref().then.len() != fact.forall_fact.then_facts.len()
+            || proof.detailed_ref().iff.len() != fact.iff_facts.len()
+            || proof.detailed_ref().then.is_empty()
+            || proof.detailed_ref().iff.is_empty()
         {
             return Err(LeanCompileError::unsupported("ForallIff/FormationArity"));
         }
         let scope = SourcePosition::new(Some(position), SourceOwner::ForallIffWD(fact, proof), 0);
         let (head, _, definitions) = self.compile_forall_head(
             &fact.forall_fact,
-            &proof.introduced_params,
-            &proof.assumed_dom_facts,
+            &proof.detailed_ref().introduced_params,
+            &proof.detailed_ref().assumed_dom_facts,
             &scope,
         )?;
         let formed = SourcePosition {
@@ -63,13 +63,13 @@ impl LitexToLeanCompiler {
                 .iter()
                 .map(|g| g.params.len())
                 .sum::<usize>()
-                + proof.assumed_dom_facts.len(),
+                + proof.detailed_ref().assumed_dom_facts.len(),
             ..scope
         };
         let mut sides = Vec::new();
         for (clauses, wds) in [
-            (&fact.forall_fact.then_facts, &proof.then),
-            (&fact.iff_facts, &proof.iff),
+            (&fact.forall_fact.then_facts, &proof.detailed_ref().then),
+            (&fact.iff_facts, &proof.detailed_ref().iff),
         ] {
             let mut propositions = Vec::new();
             let mut binders = Vec::new();

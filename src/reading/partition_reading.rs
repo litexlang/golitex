@@ -60,9 +60,20 @@ impl ReadingSite {
         for (index, source) in sources.iter().enumerate() {
             let id = field(source, "id");
             let url = format!("{directory}/part{index}.json");
+            let source_url = format!("{directory}/source{index}.json");
             let mut metadata = without(source, &["content", "tokens"]);
             insert(&mut metadata, "chunk_url", text(&url));
+            insert(&mut metadata, "source_url", text(&source_url));
             source_index.push(metadata);
+            files.insert(
+                source_url,
+                object(vec![
+                    ("kind", text("reading_source")),
+                    ("manifest_id", text(&manifest_id)),
+                    ("source", without(source, &["tokens"])),
+                ])
+                .stringify(),
+            );
             let owned = |value: &JsonValue| {
                 statement_sources
                     .get(&field(value, "producer_statement_id"))

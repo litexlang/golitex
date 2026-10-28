@@ -77,7 +77,9 @@ fn selected_function_rejects_changed_source_signature_or_published_facts() {
                 let FactWellDefinedProof::ForallFact(wd) = &mut p.property_well_defined else {
                     panic!()
                 };
-                wd.introduced_params
+                wd.as_detailed_mut()
+                    .unwrap()
+                    .introduced_params
                     .defined_params
                     .store_and_infer_results
                     .clear();
@@ -117,6 +119,7 @@ fn selected_function_publication_order_keeps_hypothetical_wd_local() {
         panic!()
     };
     let local_ids: Vec<_> = wd
+        .detailed_ref()
         .introduced_params
         .defined_params
         .store_and_infer_results
@@ -212,7 +215,7 @@ fn selected_function_requires_uniqueness_and_call_domain() {
         "thm ordinary_copy:\n    ? forall seed R:\n        exist value R st {value = seed}\n    witness exist value R st {value = seed} from seed\nhave fn f by exist!:\n    ? forall x R:\n        exist! y R st {y = x}\n".to_string(),
         format!("{RECIPROCAL}selected(0) = 0\n"),
     ] {
-        let mut runtime = Runtime::new(LaunchCommand::Eval { code: String::new(), session: false, strict: true, language: OutputLanguage::English });
+        let mut runtime = Runtime::new_with_result_detail(LaunchCommand::Eval { code: String::new(), session: false, strict: true, language: OutputLanguage::English }, crate::result_detail::OutputDetail::Detailed);
         let result = runtime.run_litex_code(&source).unwrap();
         assert!(!result.success);
         assert!(matches!(&result.statement_results[0], ExecStmtResult::Definition(ExecDefinitionStmtResult::DefThm(ExecDefThmStmtResult::Success(_)))));

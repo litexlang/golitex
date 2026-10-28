@@ -109,10 +109,12 @@ fn eval_cannot_cite_an_equality_from_a_closed_sketch() {
 fn eval_rejects_a_mismatched_wd_constructor() {
     use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::AddObjWellDefinedProof;
     let (mut run, compiler) = super::execute("eval 6 / 3\n");
-    let ObjWellDefinedProof::ByDef {
+    let DetailedObjWellDefinedProof::ByDef {
         proof: ObjWellDefinedProofByDef::ArithmeticOperator(proof),
         ..
-    } = &mut eval(&mut run, 0).source_well_defined
+    } = (&mut eval(&mut run, 0).source_well_defined)
+        .as_detailed_mut()
+        .unwrap()
     else {
         panic!("arithmetic WD")
     };
@@ -133,13 +135,15 @@ fn eval_rejects_a_mismatched_wd_constructor() {
 fn eval_requires_original_child_wd_and_divisor_guard() {
     for change in ["child", "guard"] {
         let (mut run, compiler) = super::execute("eval 6 / 3\n");
-        let ObjWellDefinedProof::ByDef {
+        let DetailedObjWellDefinedProof::ByDef {
             proof:
                 ObjWellDefinedProofByDef::ArithmeticOperator(
                     ArithmeticOperatorObjWellDefinedProofByDef::Div(p),
                 ),
             ..
-        } = &mut eval(&mut run, 0).source_well_defined
+        } = (&mut eval(&mut run, 0).source_well_defined)
+            .as_detailed_mut()
+            .unwrap()
         else {
             panic!("division WD")
         };
@@ -160,9 +164,16 @@ fn eval_checks_the_published_equality_identity_and_subject() {
         let (mut run, compiler) = super::execute("eval 2 + 3\n");
         let p = eval(&mut run, 0);
         match change {
-            "endpoint_wd" => match &mut p.evaluated_equal_well_defined.right {
-                ObjWellDefinedProof::ByDef { obj, .. }
-                | ObjWellDefinedProof::ByKnown { obj, .. } => *obj = number("7"),
+            "endpoint_wd" => match (&mut p
+                .evaluated_equal_well_defined
+                .as_detailed_mut()
+                .unwrap()
+                .right)
+                .as_detailed_mut()
+                .unwrap()
+            {
+                DetailedObjWellDefinedProof::ByDef { obj, .. }
+                | DetailedObjWellDefinedProof::ByKnown { obj, .. } => *obj = number("7"),
             },
             _ => {
                 let StoreFactResult::AtomicFact(store) = &mut p.store_and_infer_result.store else {

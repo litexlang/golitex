@@ -32,12 +32,15 @@ fn rational_coordinates_observe_original_inferred_objects() {
 }
 
 fn checked(source: &str) -> (RunLitexCodeResult, LitexToLeanCompiler) {
-    let mut runtime = Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language: OutputLanguage::English,
-    });
+    let mut runtime = Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    );
     let result = runtime
         .run_litex_code(source)
         .expect("original rational call source");
@@ -85,30 +88,40 @@ fn guarded_children(
 }
 
 fn first_owned_call(result: &mut RunLitexCodeResult) -> &mut FnObjObjWellDefinedProof {
-    let ObjWellDefinedProof::ByDef {
+    let DetailedObjWellDefinedProof::ByDef {
         proof:
             ObjWellDefinedProofByDef::ArithmeticOperator(
                 ArithmeticOperatorObjWellDefinedProofByDef::Sub(sub),
             ),
         ..
-    } = &mut equality(result, 1).well_defined_proof.left
+    } = (&mut equality(result, 1)
+        .well_defined_proof
+        .as_detailed_mut()
+        .unwrap()
+        .left)
+        .as_detailed_mut()
+        .unwrap()
     else {
         panic!("original left subtraction WD")
     };
-    let ObjWellDefinedProof::ByDef {
+    let DetailedObjWellDefinedProof::ByDef {
         proof:
             ObjWellDefinedProofByDef::ArithmeticOperator(
                 ArithmeticOperatorObjWellDefinedProofByDef::Pow(power),
             ),
         ..
-    } = sub.child_obj_well_defined[0].as_mut()
+    } = (sub.child_obj_well_defined[0].as_mut())
+        .as_detailed_mut()
+        .unwrap()
     else {
         panic!("original left power WD")
     };
-    let ObjWellDefinedProof::ByDef {
+    let DetailedObjWellDefinedProof::ByDef {
         proof: ObjWellDefinedProofByDef::FnObj(call),
         ..
-    } = power.child_obj_well_defined[0].as_mut()
+    } = (power.child_obj_well_defined[0].as_mut())
+        .as_detailed_mut()
+        .unwrap()
     else {
         panic!("original owned call WD")
     };
@@ -223,21 +236,29 @@ fn rational_normalization_still_rejects_an_unreviewed_abs_leaf_with_its_source_s
 }
 
 fn first_owned_sqrt(result: &mut RunLitexCodeResult) -> &mut SqrtObjWellDefinedProof {
-    let ObjWellDefinedProof::ByDef {
+    let DetailedObjWellDefinedProof::ByDef {
         proof:
             ObjWellDefinedProofByDef::ArithmeticOperator(
                 ArithmeticOperatorObjWellDefinedProofByDef::Mul(product),
             ),
         ..
-    } = &mut equality(result, 0).well_defined_proof.left
+    } = (&mut equality(result, 0)
+        .well_defined_proof
+        .as_detailed_mut()
+        .unwrap()
+        .left)
+        .as_detailed_mut()
+        .unwrap()
     else {
         panic!("the original left product WD")
     };
-    let ObjWellDefinedProof::ByDef {
+    let DetailedObjWellDefinedProof::ByDef {
         proof:
             ObjWellDefinedProofByDef::ExpLogOperator(ExpLogOperatorObjWellDefinedProofByDef::Sqrt(root)),
         ..
-    } = product.child_obj_well_defined[0].as_mut()
+    } = (product.child_obj_well_defined[0].as_mut())
+        .as_detailed_mut()
+        .unwrap()
     else {
         panic!("the original first square-root WD")
     };
@@ -317,8 +338,9 @@ fn rational_sqrt_leaf_requires_original_ordered_constructor_evidence() {
 fn rational_sqrt_leaf_rejects_a_different_radicand_in_its_child_wd() {
     let (mut result, compiler) = checked(SQRT_PRODUCT);
     let child = first_owned_sqrt(&mut result).child_obj_well_defined[0].as_mut();
-    match child {
-        ObjWellDefinedProof::ByDef { obj, .. } | ObjWellDefinedProof::ByKnown { obj, .. } => {
+    match (child).as_detailed_mut().unwrap() {
+        DetailedObjWellDefinedProof::ByDef { obj, .. }
+        | DetailedObjWellDefinedProof::ByKnown { obj, .. } => {
             *obj = Obj::Literal(Literal::Number(Number::new("7".to_string())));
         }
     }

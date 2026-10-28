@@ -169,10 +169,10 @@ impl LitexToLeanCompiler {
         if !super::compile_eval_stmt_result::in_closed_eval(position) {
             return Ok(None);
         }
-        let ObjWellDefinedProof::ByDef {
+        let DetailedObjWellDefinedProof::ByDef {
             obj: object,
             proof: ObjWellDefinedProofByDef::ArithmeticOperator(evidence),
-        } = proof
+        } = (proof).detailed_ref()
         else {
             return Ok(None);
         };

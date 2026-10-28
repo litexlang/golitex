@@ -62,27 +62,33 @@ impl Capture {
     pub fn evidence_field(&self, value: &JsonValue, name: &str) -> Option<JsonValue> {
         let mut value = value.clone();
         let mut seen = BTreeSet::new();
-        while field_text(&value, "kind") == "evidence_reference" {
-            let id = field_text(&value, "evidence_id");
-            if !seen.insert(id.clone()) {
-                return None;
+        loop {
+            if field_text(&value, "kind") == "evidence_reference" {
+                let id = field_text(&value, "evidence_id");
+                if !seen.insert(id.clone()) {
+                    return None;
+                }
+                value = id
+                    .strip_prefix("evidence")
+                    .and_then(|index| index.parse::<usize>().ok())
+                    .and_then(|index| self.evidence_nodes.get(index))
+                    .and_then(|entry| entry.as_object().ok())
+                    .and_then(|fields| fields.get("node"))?
+                    .clone();
+                continue;
             }
-            value = id
-                .strip_prefix("evidence")
-                .and_then(|index| index.parse::<usize>().ok())
-                .and_then(|index| self.evidence_nodes.get(index))
-                .and_then(|entry| entry.as_object().ok())
-                .and_then(|fields| fields.get("node"))?
-                .clone();
+            let fields = value.as_object().ok()?.get("fields")?.as_object().ok()?;
+            if let Some(field) = fields.get(name) {
+                return Some(field.clone());
+            }
+            // Only source-generated mode dispatchers carry this marker.
+            // Field lookup follows their Detailed payload without parsing text.
+            if field_text(&value, "result_detail") == "detailed" {
+                value = fields.get("0")?.clone();
+                continue;
+            }
+            return None;
         }
-        value
-            .as_object()
-            .ok()?
-            .get("fields")?
-            .as_object()
-            .ok()?
-            .get(name)
-            .cloned()
     }
 
     pub fn annotate_wd_coverage(&mut self) {

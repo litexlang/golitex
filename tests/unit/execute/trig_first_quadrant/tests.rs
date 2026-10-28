@@ -16,12 +16,15 @@ use crate::launch_command::{LaunchCommand, OutputLanguage};
 use crate::runtime::Runtime;
 
 fn runtime(language: OutputLanguage) -> Runtime {
-    Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: true,
-        strict: true,
-        language,
-    })
+    Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: true,
+            strict: true,
+            language,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    )
 }
 
 fn actual_bounds(

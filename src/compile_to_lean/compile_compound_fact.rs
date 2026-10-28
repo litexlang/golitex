@@ -47,8 +47,14 @@ impl LitexToLeanCompiler {
             if let VerifyFactResult::Equality(edge) = child {
                 if let VerifyEqualityResult::Success(edge) = edge.as_ref() {
                     for (side, (object, wd)) in [
-                        (&edge.fact.left, &edge.well_defined_proof.left),
-                        (&edge.fact.right, &edge.well_defined_proof.right),
+                        (
+                            &edge.fact.left,
+                            &edge.well_defined_proof.detailed_ref().left,
+                        ),
+                        (
+                            &edge.fact.right,
+                            &edge.well_defined_proof.detailed_ref().right,
+                        ),
                     ]
                     .into_iter()
                     .enumerate()

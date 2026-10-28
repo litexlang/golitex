@@ -33,10 +33,12 @@ fn eval_folds_replay_order_seed_empty_rationals_names_and_local_scope() {
 fn finite_fold_eval_requires_original_commutativity_and_associativity() {
     for change in ["commutative", "associative", "order"] {
         let (mut run, compiler) = super::execute(FINITE);
-        let ObjWellDefinedProof::ByDef {
+        let DetailedObjWellDefinedProof::ByDef {
             proof: ObjWellDefinedProofByDef::IteratedOperator(P::FiniteSetReduce(p)),
             ..
-        } = &mut eval(&mut run, 0).source_well_defined
+        } = (&mut eval(&mut run, 0).source_well_defined)
+            .as_detailed_mut()
+            .unwrap()
         else {
             panic!("finite fold WD")
         };
@@ -93,10 +95,10 @@ fn eval_fold_rejects_changed_values_and_missing_constructor_evidence() {
                 p.evaluated_object = wrong.clone();
                 p.evaluated_equal_fact.right = wrong;
             } else {
-                let ObjWellDefinedProof::ByDef {
+                let DetailedObjWellDefinedProof::ByDef {
                     proof: ObjWellDefinedProofByDef::IteratedOperator(wd),
                     ..
-                } = &mut p.source_well_defined
+                } = (&mut p.source_well_defined).as_detailed_mut().unwrap()
                 else {
                     panic!("fold WD")
                 };

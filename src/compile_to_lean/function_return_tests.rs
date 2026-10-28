@@ -46,12 +46,15 @@ fn function_return_template_standard_superset_is_explicitly_unsupported() {
 }
 
 fn checked(source: &str) -> (RunLitexCodeResult, LitexToLeanCompiler) {
-    let mut runtime = Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language: OutputLanguage::English,
-    });
+    let mut runtime = Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    );
     let result = runtime.run_litex_code(source).unwrap();
     assert!(result.success && result.session_error.is_none(), "{source}");
     (result, LitexToLeanCompiler::new(runtime))
@@ -114,10 +117,15 @@ fn forall_body_mut(result: &mut RunLitexCodeResult) -> &mut VerifyAtomicExceptEq
 
 fn original_weak_citation(result: &RunLitexCodeResult) -> FactId {
     let proof = atomic(verified(&result.statement_results[1]));
-    let ObjWellDefinedProof::ByDef {
+    let DetailedObjWellDefinedProof::ByDef {
         proof: ObjWellDefinedProofByDef::FnObj(call),
         ..
-    } = &proof.well_defined_proof.well_defined_of_each_parameter[0]
+    } = (&proof
+        .well_defined_proof
+        .detailed_ref()
+        .well_defined_of_each_parameter[0])
+        .as_detailed()
+        .unwrap()
     else {
         panic!("original weak call constructor");
     };
@@ -160,10 +168,15 @@ fn function_return_replays_named_real_to_complex_original_signature_rows() {
         .signature_returns
         .iter()
         .all(|entry| entry.source_set == StandardSet::R));
-    let ObjWellDefinedProof::ByDef {
+    let DetailedObjWellDefinedProof::ByDef {
         proof: ObjWellDefinedProofByDef::FnObj(wd),
         ..
-    } = &source.well_defined_proof.well_defined_of_each_parameter[0]
+    } = (&source
+        .well_defined_proof
+        .detailed_ref()
+        .well_defined_of_each_parameter[0])
+        .as_detailed()
+        .unwrap()
     else {
         panic!("actual call WD");
     };
@@ -206,8 +219,13 @@ fn function_return_uses_stronger_selected_truth_after_actual_weaker_cached_wd() 
     let body = forall_body(&result);
     assert!(
         matches!(
-            &body.well_defined_proof.well_defined_of_each_parameter[0],
-            ObjWellDefinedProof::ByKnown { .. }
+            (&body
+                .well_defined_proof
+                .detailed_ref()
+                .well_defined_of_each_parameter[0])
+                .as_detailed()
+                .unwrap(),
+            DetailedObjWellDefinedProof::ByKnown { .. }
         ),
         "this source really reuses the earlier C-returning constructor"
     );
@@ -240,10 +258,15 @@ fn function_return_rejects_upper_bound_table_missing_actual_wd_source() {
         panic!("source return fact");
     };
     let source = atomic_mut(&mut statement.verify_result);
-    let ObjWellDefinedProof::ByDef {
+    let DetailedObjWellDefinedProof::ByDef {
         proof: ObjWellDefinedProofByDef::FnObj(wd),
         ..
-    } = &source.well_defined_proof.well_defined_of_each_parameter[0]
+    } = (&source
+        .well_defined_proof
+        .detailed_ref()
+        .well_defined_of_each_parameter[0])
+        .as_detailed()
+        .unwrap()
     else {
         panic!("source call WD");
     };
@@ -334,10 +357,15 @@ fn function_return_matrix_wd_consumes_stored_signature_citations() {
         );
         let (result, compiler) = checked(&source);
         let proof = atomic(verified(&result.statement_results[1]));
-        let ObjWellDefinedProof::ByDef {
+        let DetailedObjWellDefinedProof::ByDef {
             proof: ObjWellDefinedProofByDef::FnObj(wd),
             ..
-        } = &proof.well_defined_proof.well_defined_of_each_parameter[0]
+        } = (&proof
+            .well_defined_proof
+            .detailed_ref()
+            .well_defined_of_each_parameter[0])
+            .as_detailed()
+            .unwrap()
         else {
             panic!("matrix call WD")
         };
@@ -408,10 +436,16 @@ fn function_return_matrix_wd_rejects_missing_citations_and_changed_domain() {
                     _ => panic!("matrix return route"),
                 }
             } else {
-                let ObjWellDefinedProof::ByDef {
+                let DetailedObjWellDefinedProof::ByDef {
                     proof: ObjWellDefinedProofByDef::FnObj(wd),
                     ..
-                } = &mut proof.well_defined_proof.well_defined_of_each_parameter[0]
+                } = (&mut proof
+                    .well_defined_proof
+                    .as_detailed_mut()
+                    .unwrap()
+                    .well_defined_of_each_parameter[0])
+                    .as_detailed_mut()
+                    .unwrap()
                 else {
                     panic!("call WD")
                 };

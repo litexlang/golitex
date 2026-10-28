@@ -14,6 +14,7 @@
 //! goal `$P(a,c)` binds `x,z` from the conclusion; `y` is completed from a known
 //! `$P(a,b)` matching the first dom under the partial subst.
 
+use super::forall_match_result::PartialMatchForallConclusionArgsProof;
 use crate::ast::fact::{
     atomic_fact_args_ref, atomic_fact_has_positive_polarity, quantifier_free_fact_args_ref,
     AtomicFact, EqualFact, Fact, ForallFact,
@@ -49,29 +50,38 @@ impl Runtime {
         goal_args: &[&Obj],
         ordered_param_ids: &[IdentifierId],
     ) -> RuntimeResult<Option<MatchForallConclusionArgsProof>> {
-        let Some((subst, arg_match_proofs)) =
+        let Some(matched) =
             self.match_forall_conclusion_args_to_subst(pattern_args, goal_args, ordered_param_ids)?
         else {
             return Ok(None);
         };
 
-        // Full binding required for the legacy Vec evidence shape. Prefer the
-        // subst API + `complete_forall_subst_from_dom_facts` when middles exist.
+        let (subst, arg_match_proofs) = matched.into_parts(self.result_detail())?;
+
+        // This stage requires every parameter to be bound. Callers with
+        // domain-only parameters use the partial stage and explicit completion.
         for id in ordered_param_ids {
             if !subst.contains_key(id) {
                 return Ok(None);
             }
         }
 
-        let forall_parameters_match_what_args: Vec<Obj> = ordered_param_ids
-            .iter()
-            .map(|id| subst.get(id).expect("checked").clone())
-            .collect();
+        let forall_parameters_match_what_args =
+            if self.result_detail() == crate::result_detail::OutputDetail::Detailed {
+                ordered_param_ids
+                    .iter()
+                    .map(|id| subst.get(id).expect("checked").clone())
+                    .collect()
+            } else {
+                Vec::new()
+            };
 
-        Ok(Some(MatchForallConclusionArgsProof {
+        Ok(Some(MatchForallConclusionArgsProof::new(
+            self.result_detail(),
+            subst,
             forall_parameters_match_what_args,
             arg_match_proofs,
-        }))
+        )?))
     }
 
     // Like `match_forall_conclusion_args`, but keeps a partial subst when some
@@ -81,12 +91,7 @@ impl Runtime {
         pattern_args: &[&Obj],
         goal_args: &[&Obj],
         ordered_param_ids: &[IdentifierId],
-    ) -> RuntimeResult<
-        Option<(
-            HashMap<IdentifierId, Obj>,
-            Vec<ForallConclusionArgMatchProof>,
-        )>,
-    > {
+    ) -> RuntimeResult<Option<PartialMatchForallConclusionArgsProof>> {
         self.match_forall_conclusion_args_with_equality(
             pattern_args,
             goal_args,
@@ -101,12 +106,7 @@ impl Runtime {
         goal_args: &[&Obj],
         ordered_param_ids: &[IdentifierId],
         equality: &mut ForallMatchEqualityContext,
-    ) -> RuntimeResult<
-        Option<(
-            HashMap<IdentifierId, Obj>,
-            Vec<ForallConclusionArgMatchProof>,
-        )>,
-    > {
+    ) -> RuntimeResult<Option<PartialMatchForallConclusionArgsProof>> {
         if pattern_args.len() != goal_args.len() {
             return Ok(None);
         }
@@ -115,7 +115,12 @@ impl Runtime {
             VerifyState::new(crate::execute::execute_fact_stmt::VerifyStateLevel::Direct);
 
         let mut subst: HashMap<IdentifierId, Obj> = HashMap::new();
-        let mut arg_match_proofs = Vec::with_capacity(pattern_args.len());
+        let detailed = self.result_detail() == crate::result_detail::OutputDetail::Detailed;
+        let mut arg_match_proofs = if detailed {
+            Vec::with_capacity(pattern_args.len())
+        } else {
+            Vec::new()
+        };
 
         for (pattern_arg, goal_arg) in pattern_args.iter().zip(goal_args.iter()) {
             let Some(proof) = self.match_forall_one_arg(
@@ -129,10 +134,18 @@ impl Runtime {
             else {
                 return Ok(None);
             };
-            arg_match_proofs.push(proof);
+            self.result_detail()
+                .require(proof.detail(), "forall matched argument")?;
+            if detailed {
+                arg_match_proofs.push(proof);
+            }
         }
 
-        Ok(Some((subst, arg_match_proofs)))
+        Ok(Some(PartialMatchForallConclusionArgsProof::new(
+            self.result_detail(),
+            subst,
+            arg_match_proofs,
+        )?))
     }
 
     // Bind params that appear only in dom facts by matching each atomic dom
@@ -317,21 +330,31 @@ impl Runtime {
             if let Some(equal) =
                 self.prove_objs_equal_strict(pattern, goal, equality_state, equality)?
             {
-                return Ok(Some(ForallConclusionArgMatchProof::NonParamEqual {
+                return Ok(Some(ForallConclusionArgMatchProof::new(
+                    self.result_detail(),
+                    || {
+                        super::verify_equality::result::DetailedForallConclusionArgMatchProof::NonParamEqual {
                     pattern: pattern.clone(),
                     pattern_after_subst: pattern.clone(),
                     goal_arg: goal.clone(),
                     equal,
-                }));
+                }
+                    },
+                )));
             }
         }
         match try_bind_forall_param(pattern, goal, param_set, subst) {
             ForallParamBindResult::Bound { param_id } => {
-                return Ok(Some(ForallConclusionArgMatchProof::BoundParam {
+                return Ok(Some(ForallConclusionArgMatchProof::new(
+                    self.result_detail(),
+                    || {
+                        super::verify_equality::result::DetailedForallConclusionArgMatchProof::BoundParam {
                     param_id,
                     pattern: pattern.clone(),
                     goal_arg: goal.clone(),
-                }));
+                }
+                    },
+                )));
             }
             ForallParamBindResult::NeedEqual { param_id, previous } => {
                 let Some(equal) = self.prove_objs_equal_strict(
@@ -343,12 +366,17 @@ impl Runtime {
                 else {
                     return Ok(None);
                 };
-                return Ok(Some(ForallConclusionArgMatchProof::ReboundParamEqual {
+                return Ok(Some(ForallConclusionArgMatchProof::new(
+                    self.result_detail(),
+                    || {
+                        super::verify_equality::result::DetailedForallConclusionArgMatchProof::ReboundParamEqual {
                     param_id,
                     previous,
                     goal_arg: goal.clone(),
                     equal,
-                }));
+                }
+                    },
+                )));
             }
             ForallParamBindResult::NotAParam => {}
         }
@@ -382,12 +410,17 @@ impl Runtime {
                 return Ok(None);
             };
             *subst = trial;
-            return Ok(Some(ForallConclusionArgMatchProof::NonParamEqual {
+            return Ok(Some(ForallConclusionArgMatchProof::new(
+                self.result_detail(),
+                || {
+                    super::verify_equality::result::DetailedForallConclusionArgMatchProof::NonParamEqual {
                 pattern: pattern.clone(),
                 pattern_after_subst,
                 goal_arg: goal.clone(),
                 equal,
-            }));
+            }
+                },
+            )));
         }
 
         if let (
@@ -418,12 +451,17 @@ impl Runtime {
                 return Ok(None);
             };
             *subst = trial;
-            return Ok(Some(ForallConclusionArgMatchProof::NonParamEqual {
+            return Ok(Some(ForallConclusionArgMatchProof::new(
+                self.result_detail(),
+                || {
+                    super::verify_equality::result::DetailedForallConclusionArgMatchProof::NonParamEqual {
                 pattern: pattern.clone(),
                 pattern_after_subst,
                 goal_arg: goal.clone(),
                 equal,
-            }));
+            }
+                },
+            )));
         }
 
         if let (
@@ -454,12 +492,17 @@ impl Runtime {
                 return Ok(None);
             };
             *subst = trial;
-            return Ok(Some(ForallConclusionArgMatchProof::NonParamEqual {
+            return Ok(Some(ForallConclusionArgMatchProof::new(
+                self.result_detail(),
+                || {
+                    super::verify_equality::result::DetailedForallConclusionArgMatchProof::NonParamEqual {
                 pattern: pattern.clone(),
                 pattern_after_subst,
                 goal_arg: goal.clone(),
                 equal,
-            }));
+            }
+                },
+            )));
         }
 
         // Same constructor: recurse. No fallback to NonParamEqual (legacy-aligned).
@@ -489,7 +532,11 @@ impl Runtime {
                     order.rotate_right(1);
                 }
                 let mut slots: Vec<Option<ForallConclusionArgMatchProof>> =
-                    (0..pairs.len()).map(|_| None).collect();
+                    if self.result_detail() == crate::result_detail::OutputDetail::Detailed {
+                        (0..pairs.len()).map(|_| None).collect()
+                    } else {
+                        Vec::new()
+                    };
                 for index in order {
                     let (child_pattern, child_goal) = &pairs[index];
                     let Some(child) = self.match_forall_one_arg(
@@ -503,17 +550,26 @@ impl Runtime {
                     else {
                         return Ok(None);
                     };
-                    slots[index] = Some(child);
+                    self.result_detail()
+                        .require(child.detail(), "forall structure argument")?;
+                    if self.result_detail() == crate::result_detail::OutputDetail::Detailed {
+                        slots[index] = Some(child);
+                    }
                 }
                 let child_matches = slots
                     .into_iter()
                     .map(|slot| slot.expect("all structure children matched"))
                     .collect();
-                return Ok(Some(ForallConclusionArgMatchProof::ByStructure {
+                return Ok(Some(ForallConclusionArgMatchProof::new(
+                    self.result_detail(),
+                    || {
+                        super::verify_equality::result::DetailedForallConclusionArgMatchProof::ByStructure {
                     pattern: pattern.clone(),
                     goal_arg: goal.clone(),
                     child_matches,
-                }));
+                }
+                    },
+                )));
             }
         }
 
@@ -526,12 +582,17 @@ impl Runtime {
         else {
             return Ok(None);
         };
-        Ok(Some(ForallConclusionArgMatchProof::NonParamEqual {
+        Ok(Some(ForallConclusionArgMatchProof::new(
+            self.result_detail(),
+            || {
+                super::verify_equality::result::DetailedForallConclusionArgMatchProof::NonParamEqual {
             pattern: pattern.clone(),
             pattern_after_subst,
             goal_arg: goal.clone(),
             equal,
-        }))
+        }
+            },
+        )))
     }
 
     // Infer a free forall argument inside a builder while keeping its local
@@ -691,17 +752,6 @@ impl Runtime {
         }
         Ok(true)
     }
-}
-
-pub(crate) fn subst_from_ordered_params(
-    param_ids: &[IdentifierId],
-    args: &[Obj],
-) -> HashMap<IdentifierId, Obj> {
-    let mut subst = HashMap::new();
-    for (id, arg) in param_ids.iter().zip(args.iter()) {
-        subst.insert(*id, arg.clone());
-    }
-    subst
 }
 
 enum ForallParamBindResult {

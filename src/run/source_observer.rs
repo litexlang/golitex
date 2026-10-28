@@ -7,6 +7,14 @@ pub trait SourceObserver {
         false
     }
 
+    fn result_detail(&self) -> crate::result_detail::OutputDetail {
+        if self.requires_source_evidence() {
+            crate::result_detail::OutputDetail::Detailed
+        } else {
+            crate::result_detail::OutputDetail::Normal
+        }
+    }
+
     fn source(&mut self, _runtime: &Runtime, _code: &str) {}
 
     fn statement(

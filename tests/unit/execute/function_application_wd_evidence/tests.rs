@@ -1,6 +1,6 @@
 use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FunctionSpaceObjWellDefinedProofByDef;
 use crate::execute::execute_fact_stmt::well_defined_results::{
-    ObjWellDefinedProof, ObjWellDefinedProofByDef, VerifyObjWellDefinedResult,
+    ObjWellDefinedProofByDef, VerifyObjWellDefinedResult,
 };
 use crate::execute::{
     ExecDefineObjStmtResult, ExecDefinitionStmtResult, ExecLetObjStmtResult, ExecStmtResult,
@@ -17,12 +17,12 @@ fn application_wd_does_not_return_ids_owned_only_by_a_discarded_candidate_scope(
         "let cached = 1 + 1\nhave fn choose(a, b R) R = a\nlet value = choose(1 + 1, 1 + 1)\n",
         "struct Guarded:\n    point R\n    call fn(x R:x=point) R\nhave fn at_zero(x R:x=0) R=0\nhave guarded &Guarded=(0,at_zero)\nlet value=guarded(2)(guarded.point)\n",
     ] {
-        let mut rt = Runtime::new(LaunchCommand::Eval {
+        let mut rt = Runtime::new_with_result_detail(LaunchCommand::Eval {
             code: String::new(),
             session: false,
             strict: true,
             language: OutputLanguage::English,
-        });
+        }, crate::result_detail::OutputDetail::Detailed);
         let run = rt.run_litex_code(source).unwrap();
         assert!(
             run.success && run.session_error.is_none(),
@@ -35,10 +35,10 @@ fn application_wd_does_not_return_ids_owned_only_by_a_discarded_candidate_scope(
         else {
             panic!("let result")
         };
-        let VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByDef {
+        let Some(DetailedObjWellDefinedProof::ByDef {
             proof: ObjWellDefinedProofByDef::FnObj(p),
             ..
-        }) = &s.value_well_defined
+        }) = (&s.value_well_defined).as_detailed_success().unwrap()
         else {
             panic!("application WD proof")
         };
@@ -54,7 +54,7 @@ fn application_wd_does_not_return_ids_owned_only_by_a_discarded_candidate_scope(
             retained_owners.push(scope.local_env.as_ref());
         }
         for child in &p.child_obj_well_defined {
-            if let ObjWellDefinedProof::ByKnown { wd_id, obj } = child.as_ref() {
+            if let DetailedObjWellDefinedProof::ByKnown { wd_id, obj } = (child.as_ref()).as_detailed().unwrap() {
                 assert!(
                     retained_owners.iter().any(|env| env
                         .well_defined_objects
@@ -82,10 +82,10 @@ fn application_wd_does_not_return_ids_owned_only_by_a_discarded_candidate_scope(
         // Literal heads and nested function-space proofs retain their own
         // binder environments; add those to the resolvable-id set as well.
         for child in &p.child_obj_well_defined {
-            if let ObjWellDefinedProof::ByDef {
+            if let DetailedObjWellDefinedProof::ByDef {
                 proof: ObjWellDefinedProofByDef::FunctionSpace(space),
                 ..
-            } = child.as_ref()
+            } = (child.as_ref()).as_detailed().unwrap()
             {
                 let env = match space {
                     FunctionSpaceObjWellDefinedProofByDef::AnonymousFn(proof) => {
@@ -118,12 +118,15 @@ fn application_wd_does_not_return_ids_owned_only_by_a_discarded_candidate_scope(
 fn field_application_wd_citations_stay_in_the_retained_definition_scope() {
     use crate::execute::execute_def_prop_stmt::ExecDefPropStmtResult;
     use crate::execute::execute_fact_stmt::well_defined_results::FactWellDefinedProof;
-    let mut rt = Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language: OutputLanguage::English,
-    });
+    let mut rt = Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    );
     let source = "struct Pair:\n    operation fn(a, b R) R\n    value R\nprop call(pair &Pair):\n    pair.operation(1 + 1, 1 + 1) = 0\n";
     let run = rt.run_litex_code(source).unwrap();
     assert!(
@@ -141,10 +144,10 @@ fn field_application_wd_citations_stay_in_the_retained_definition_scope() {
     let FactWellDefinedProof::Equality(wd) = &s.assumed_iff_facts[0].well_defined else {
         panic!("equality WD")
     };
-    let ObjWellDefinedProof::ByDef {
+    let DetailedObjWellDefinedProof::ByDef {
         proof: ObjWellDefinedProofByDef::FnObj(p),
         ..
-    } = &wd.left
+    } = (&wd.detailed_ref().left).as_detailed().unwrap()
     else {
         panic!("field application WD")
     };
@@ -158,7 +161,9 @@ fn field_application_wd_citations_stay_in_the_retained_definition_scope() {
         owners.push(scope.local_env.as_ref());
     }
     for child in &p.child_obj_well_defined {
-        if let ObjWellDefinedProof::ByKnown { wd_id, obj } = child.as_ref() {
+        if let DetailedObjWellDefinedProof::ByKnown { wd_id, obj } =
+            (child.as_ref()).as_detailed().unwrap()
+        {
             assert!(
                 owners
                     .iter()
@@ -189,12 +194,15 @@ fn field_application_wd_citations_stay_in_the_retained_definition_scope() {
 
 #[test]
 fn function_binder_capture_preserves_ordered_parameter_and_guard_producers() {
-    let mut rt = Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language: OutputLanguage::English,
-    });
+    let mut rt = Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    );
     let run = rt
         .run_litex_code("have fn ratio(a, b R: b != 0) R = a / b\n")
         .unwrap();
@@ -209,23 +217,25 @@ fn function_binder_capture_preserves_ordered_parameter_and_guard_producers() {
     else {
         panic!("function definition result")
     };
-    let VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByDef {
+    let Some(DetailedObjWellDefinedProof::ByDef {
         proof:
             ObjWellDefinedProofByDef::FunctionSpace(FunctionSpaceObjWellDefinedProofByDef::AnonymousFn(
                 anonymous,
             )),
         ..
-    }) = &result.anonymous_fn_well_defined
+    }) = (&result.anonymous_fn_well_defined)
+        .as_detailed_success()
+        .unwrap()
     else {
         panic!("anonymous function WD")
     };
-    let VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByDef {
+    let Some(DetailedObjWellDefinedProof::ByDef {
         proof:
             ObjWellDefinedProofByDef::FunctionSpace(FunctionSpaceObjWellDefinedProofByDef::FnSet(
                 signature,
             )),
         ..
-    }) = &result.fn_set_well_defined
+    }) = (&result.fn_set_well_defined).as_detailed_success().unwrap()
     else {
         panic!("function set WD")
     };
@@ -335,12 +345,15 @@ fn function_binder_capture_preserves_ordered_parameter_and_guard_producers() {
 
 #[test]
 fn anonymous_function_division_wd_cites_its_captured_nonzero_guard() {
-    let mut rt = Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language: OutputLanguage::English,
-    });
+    let mut rt = Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    );
     let run = rt
         .run_litex_code("have fn reciprocal(x R: x != 0) R = 1 / x\n")
         .unwrap();
@@ -355,23 +368,27 @@ fn anonymous_function_division_wd_cites_its_captured_nonzero_guard() {
     else {
         panic!("function definition result")
     };
-    let VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByDef {
+    let Some(DetailedObjWellDefinedProof::ByDef {
         proof:
             ObjWellDefinedProofByDef::FunctionSpace(FunctionSpaceObjWellDefinedProofByDef::AnonymousFn(
                 anonymous,
             )),
         ..
-    }) = &result.anonymous_fn_well_defined
+    }) = (&result.anonymous_fn_well_defined)
+        .as_detailed_success()
+        .unwrap()
     else {
         panic!("anonymous function WD")
     };
-    let ObjWellDefinedProof::ByDef {
+    let DetailedObjWellDefinedProof::ByDef {
         proof:
             ObjWellDefinedProofByDef::ArithmeticOperator(
                 ArithmeticOperatorObjWellDefinedProofByDef::Div(division),
             ),
         ..
-    } = anonymous.body_well_defined.as_ref()
+    } = (anonymous.body_well_defined.as_ref())
+        .as_detailed()
+        .unwrap()
     else {
         panic!("body division WD")
     };
@@ -405,12 +422,15 @@ fn anonymous_function_division_wd_cites_its_captured_nonzero_guard() {
 
 #[test]
 fn concrete_prop_capture_retains_body_guard_used_by_later_wd() {
-    let mut rt = Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language: OutputLanguage::English,
-    });
+    let mut rt = Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    );
     let rejected = rt
         .run_litex_code("prop guarded_value(x R):\n    1 / x $in R\n")
         .unwrap();
@@ -450,13 +470,15 @@ fn concrete_prop_capture_retains_body_guard_used_by_later_wd() {
     else {
         panic!("membership WD")
     };
-    let ObjWellDefinedProof::ByDef {
+    let DetailedObjWellDefinedProof::ByDef {
         proof:
             ObjWellDefinedProofByDef::ArithmeticOperator(
                 ArithmeticOperatorObjWellDefinedProofByDef::Div(division),
             ),
         ..
-    } = &wd.well_defined_of_each_parameter[0]
+    } = (&wd.detailed_ref().well_defined_of_each_parameter[0])
+        .as_detailed()
+        .unwrap()
     else {
         panic!("guarded division WD")
     };
@@ -518,12 +540,15 @@ fn collect_wd_ids(value: &crate::knowledge_base::JsonValue, ids: &mut Vec<String
 #[test]
 fn template_alias_application_wd_cites_its_checked_instance_and_equality_path() {
     use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnObjDomainFnSetEvidence;
-    let mut rt = Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language: OutputLanguage::English,
-    });
+    let mut rt = Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    );
     let run = rt.run_litex_code("template<S set>:\n    have fn pair(x S) cart(S,S) = (x,x)\nlet alias = \\pair<R>\nlet other_alias = alias\nother_alias = \\pair<R>\nlet value = other_alias(2)\n").unwrap();
     assert!(run.success && run.session_error.is_none());
     let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
@@ -532,10 +557,10 @@ fn template_alias_application_wd_cites_its_checked_instance_and_equality_path() 
     else {
         panic!("let result")
     };
-    let VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByDef {
+    let Some(DetailedObjWellDefinedProof::ByDef {
         proof: ObjWellDefinedProofByDef::FnObj(proof),
         ..
-    }) = &result.value_well_defined
+    }) = (&result.value_well_defined).as_detailed_success().unwrap()
     else {
         panic!("application WD")
     };

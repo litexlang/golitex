@@ -89,11 +89,12 @@ fn forall_iff_premise_requires_both_original_wd_sides() {
     else {
         panic!("forall wd")
     };
-    let FactWellDefinedProof::ForallFactWithIff(wd) = &mut wd.assumed_dom_facts[0].well_defined
+    let FactWellDefinedProof::ForallFactWithIff(wd) =
+        &mut wd.as_detailed_mut().unwrap().assumed_dom_facts[0].well_defined
     else {
         panic!("iff wd")
     };
-    wd.iff.clear();
+    wd.as_detailed_mut().unwrap().iff.clear();
     let error = compiler.compile_run(&run, "iff").unwrap_err();
     assert_eq!(error.route, "ForallIff/FormationArity", "{error:?}");
 }
@@ -168,12 +169,15 @@ fn forall_iff_directions_cannot_cite_a_future_iff() {
 
 #[test]
 fn forall_iff_opposite_side_does_not_supply_division_wd() {
-    let mut runtime = Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language: OutputLanguage::English,
-    });
+    let mut runtime = Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    );
     let run = runtime
         .run_litex_code("forall x R:\n    =>:\n        x != 0\n    <=>:\n        1 / x != 0\n")
         .unwrap();

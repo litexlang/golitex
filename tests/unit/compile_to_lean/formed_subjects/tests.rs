@@ -28,8 +28,8 @@ fn declared_value_wd_reuses_its_original_alias() {
         panic!("success")
     };
     assert!(
-        matches!(atomic.well_defined_proof.well_defined_of_each_parameter[0],
-        ObjWellDefinedProof::ByKnown { wd_id, .. } if wd_id == registration.wd_id)
+        matches!((atomic.well_defined_proof.detailed_ref().well_defined_of_each_parameter[0]).as_detailed().unwrap(),
+        DetailedObjWellDefinedProof::ByKnown { wd_id, .. } if *wd_id == registration.wd_id)
     );
     let name = format!(
         "_object_i{}",
@@ -175,8 +175,12 @@ fn formed_subjects_capture_registration_once_and_reuse_its_id() {
     let VerifyAtomicExceptEqualityFactResult::Success(atomic) = atomic.as_ref() else {
         panic!("successful atomic")
     };
-    let ObjWellDefinedProof::ByKnown { wd_id, .. } =
-        &atomic.well_defined_proof.well_defined_of_each_parameter[0]
+    let DetailedObjWellDefinedProof::ByKnown { wd_id, .. } = (&atomic
+        .well_defined_proof
+        .detailed_ref()
+        .well_defined_of_each_parameter[0])
+        .as_detailed()
+        .unwrap()
     else {
         panic!("original cached reference")
     };
@@ -376,8 +380,13 @@ fn independently_checked_child_reuses_its_registered_parent() {
         };
         assert!(
             matches!(
-                atomic.well_defined_proof.well_defined_of_each_parameter[0],
-                ObjWellDefinedProof::ByDef { .. }
+                (atomic
+                    .well_defined_proof
+                    .detailed_ref()
+                    .well_defined_of_each_parameter[0])
+                    .as_detailed()
+                    .unwrap(),
+                DetailedObjWellDefinedProof::ByDef { .. }
             ),
             "the child still has no Runtime WD cache reference"
         );
@@ -414,13 +423,19 @@ fn shared_child_does_not_skip_its_own_division_guard_check() {
     let VerifyAtomicExceptEqualityFactResult::Success(atomic) = atomic.as_mut() else {
         panic!("success")
     };
-    let ObjWellDefinedProof::ByDef {
+    let DetailedObjWellDefinedProof::ByDef {
         proof:
             ObjWellDefinedProofByDef::ArithmeticOperator(
                 ArithmeticOperatorObjWellDefinedProofByDef::Div(proof),
             ),
         ..
-    } = &mut atomic.well_defined_proof.well_defined_of_each_parameter[0]
+    } = (&mut atomic
+        .well_defined_proof
+        .as_detailed_mut()
+        .unwrap()
+        .well_defined_of_each_parameter[0])
+        .as_detailed_mut()
+        .unwrap()
     else {
         panic!("division")
     };

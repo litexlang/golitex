@@ -40,13 +40,19 @@ fn intersection_rejects_missing_or_reordered_constructor_wd() {
         let (mut run, compiler) = super::execute(MEMBERS);
         let forall = super::forall_proof_mut(&mut run.statement_results[0]);
         let proof = super::atomic_proof_mut(&mut forall.proved_then_facts[0].verify_result);
-        let ObjWellDefinedProof::ByDef {
+        let DetailedObjWellDefinedProof::ByDef {
             proof:
                 ObjWellDefinedProofByDef::SetOperator(SetOperatorObjWellDefinedProofByDef::Intersect(
                     wd,
                 )),
             ..
-        } = &mut proof.well_defined_proof.well_defined_of_each_parameter[1]
+        } = (&mut proof
+            .well_defined_proof
+            .as_detailed_mut()
+            .unwrap()
+            .well_defined_of_each_parameter[1])
+            .as_detailed_mut()
+            .unwrap()
         else {
             panic!("intersection WD")
         };

@@ -5128,7 +5128,7 @@ capture.intern_evidence(output)
 pub(super) fn capture_execute__execute_eval_stmt__result__ExecEvalStmtSuccess(value: &crate::execute::ExecEvalStmtSuccess, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::ExecEvalStmtSuccess { statement: f0, source_object: f1, source_well_defined: f2, rewritten_object: f3, cited_equal_fact_ids: f4, evaluated_object: f5, matrix_scalar_evaluations: f6, aggregate_evaluations: f7, function_evaluations: f8, algo_evaluations: f9, evaluated_equal_fact: f10, evaluated_equal_well_defined: f11, store_and_infer_result: f12 } => {
-let fields = vec![("statement", { capture.source_snapshot_depth += 1; let value = capture_ast__stmt__EvalStmt(f0, capture, runtime); capture.source_snapshot_depth -= 1; value }), ("source_object", capture_ast__obj__Obj(f1, capture, runtime)), ("source_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(f2, capture, runtime)), ("rewritten_object", capture_ast__obj__Obj(f3, capture, runtime)), ("cited_equal_fact_ids", JsonValue::Array((f4).iter().map(|item| capture.fact_reference(item, runtime)).collect())), ("evaluated_object", capture_ast__obj__Obj(f5, capture, runtime)), ("matrix_scalar_evaluations", JsonValue::Array((f6).iter().map(|item| capture_execute__execute_eval_stmt__aggregate_evaluation_result__MatrixScalarEvaluationResult(item, capture, runtime)).collect())), ("aggregate_evaluations", JsonValue::Array((f7).iter().map(|item| capture_execute__execute_eval_stmt__aggregate_evaluation_result__AggregateEvaluationResult(item, capture, runtime)).collect())), ("function_evaluations", JsonValue::Array((f8).iter().map(|item| capture_execute__execute_eval_stmt__aggregate_evaluation_result__FunctionApplicationEvaluationResult(item, capture, runtime)).collect())), ("algo_evaluations", JsonValue::Array((f9).iter().map(|item| capture_execute__execute_eval_stmt__aggregate_evaluation_result__AlgoApplicationEvaluationResult(item, capture, runtime)).collect())), ("evaluated_equal_fact", capture_ast__fact__atomic__EqualFact(f10, capture, runtime)), ("evaluated_equal_well_defined", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__well_defined_result__EqualFactWellDefinedProof(f11, capture, runtime)), ("store_and_infer_result", capture_store_fact_and_infer__store_fact_and_infer_result__store_and_infer_result__StoreFactAndInferResult(f12, capture, runtime))];
+let fields = vec![("statement", { capture.source_snapshot_depth += 1; let value = capture_ast__stmt__EvalStmt(f0, capture, runtime); capture.source_snapshot_depth -= 1; value }), ("source_object", capture_ast__obj__Obj(f1, capture, runtime)), ("source_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f2, capture, runtime)), ("rewritten_object", capture_ast__obj__Obj(f3, capture, runtime)), ("cited_equal_fact_ids", JsonValue::Array((f4).iter().map(|item| capture.fact_reference(item, runtime)).collect())), ("evaluated_object", capture_ast__obj__Obj(f5, capture, runtime)), ("matrix_scalar_evaluations", JsonValue::Array((f6).iter().map(|item| capture_execute__execute_eval_stmt__aggregate_evaluation_result__MatrixScalarEvaluationResult(item, capture, runtime)).collect())), ("aggregate_evaluations", JsonValue::Array((f7).iter().map(|item| capture_execute__execute_eval_stmt__aggregate_evaluation_result__AggregateEvaluationResult(item, capture, runtime)).collect())), ("function_evaluations", JsonValue::Array((f8).iter().map(|item| capture_execute__execute_eval_stmt__aggregate_evaluation_result__FunctionApplicationEvaluationResult(item, capture, runtime)).collect())), ("algo_evaluations", JsonValue::Array((f9).iter().map(|item| capture_execute__execute_eval_stmt__aggregate_evaluation_result__AlgoApplicationEvaluationResult(item, capture, runtime)).collect())), ("evaluated_equal_fact", capture_ast__fact__atomic__EqualFact(f10, capture, runtime)), ("evaluated_equal_well_defined", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__well_defined_result__EqualFactWellDefinedProof(f11, capture, runtime)), ("store_and_infer_result", capture_store_fact_and_infer__store_fact_and_infer_result__store_and_infer_result__StoreFactAndInferResult(f12, capture, runtime))];
 let mut output = node("ExecEvalStmtSuccess", "", fields);
 output
 },
@@ -7559,7 +7559,7 @@ capture.intern_evidence(output)
 pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__VerifyObjWellDefinedResult(value: &crate::execute::execute_fact_stmt::VerifyObjWellDefinedResult, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::VerifyObjWellDefinedResult::Success(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(f0, capture, runtime))];
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f0, capture, runtime))];
 let mut output = node("VerifyObjWellDefinedResult", "Success", fields);
 output
 },
@@ -7648,13 +7648,13 @@ let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__
 let mut output = node("FactWellDefinedProof", "AtomicExceptEquality", fields);
 output
 },
-crate::execute::execute_fact_stmt::FactWellDefinedProof::AndFact { components: f0 } => {
-let fields = vec![("components", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__AtomicFactWellDefinedProof(item, capture, runtime)).collect()))];
+crate::execute::execute_fact_stmt::FactWellDefinedProof::AndFact(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_and_fact__well_defined_result__AndFactWellDefinedProof(f0, capture, runtime))];
 let mut output = node("FactWellDefinedProof", "AndFact", fields);
 output
 },
-crate::execute::execute_fact_stmt::FactWellDefinedProof::ChainFact { adjacent: f0 } => {
-let fields = vec![("adjacent", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__AtomicFactWellDefinedProof(item, capture, runtime)).collect()))];
+crate::execute::execute_fact_stmt::FactWellDefinedProof::ChainFact(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_chain_fact__well_defined_result__ChainFactWellDefinedProof(f0, capture, runtime))];
 let mut output = node("FactWellDefinedProof", "ChainFact", fields);
 output
 },
@@ -7727,7 +7727,7 @@ let mut output = node("ParamTypeWellDefinedProof", "FiniteSet", fields);
 output
 },
 crate::execute::ParamTypeWellDefinedProof::Obj(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(f0, capture, runtime))];
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f0, capture, runtime))];
 let mut output = node("ParamTypeWellDefinedProof", "Obj", fields);
 output
 },
@@ -7900,8 +7900,8 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__well_defined_result__FailToVerifyEqualFactWellDefinedResult(value: &crate::execute::execute_fact_stmt::FailToVerifyEqualFactWellDefinedResult, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_fact_stmt::FailToVerifyEqualFactWellDefinedResult { reason: f0 } => {
-let fields = vec![("reason", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyObjWellDefinedResult(f0, capture, runtime))];
+crate::execute::execute_fact_stmt::FailToVerifyEqualFactWellDefinedResult { fact: f0, failed_obj: f1, reason: f2 } => {
+let fields = vec![("fact", capture_ast__fact__atomic__EqualFact(f0, capture, runtime)), ("failed_obj", capture_ast__obj__Obj(f1, capture, runtime)), ("reason", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyObjWellDefinedResult(f2, capture, runtime))];
 let mut output = node("FailToVerifyEqualFactWellDefinedResult", "", fields);
 output
 },
@@ -7912,27 +7912,27 @@ capture.intern_evidence(output)
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__FailToVerifyAtomicFactWellDefinedResult(value: &crate::execute::execute_fact_stmt::FailToVerifyAtomicFactWellDefinedResult, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::FailToVerifyAtomicFactWellDefinedResult::RealAnalysisDomain { fact: f0, well_defined_of_each_parameter: f1 } => {
-let fields = vec![("fact", capture_ast__fact__atomic__AtomicFact(f0, capture, runtime)), ("well_defined_of_each_parameter", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect()))];
+let fields = vec![("fact", capture_ast__fact__atomic__AtomicFact(f0, capture, runtime)), ("well_defined_of_each_parameter", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect()))];
 let mut output = node("FailToVerifyAtomicFactWellDefinedResult", "RealAnalysisDomain", fields);
 output
 },
-crate::execute::execute_fact_stmt::FailToVerifyAtomicFactWellDefinedResult::FunctionLimitDomain { function: f0, well_defined_of_each_parameter: f1 } => {
-let fields = vec![("function", capture_ast__obj__Obj(f0, capture, runtime)), ("well_defined_of_each_parameter", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect()))];
+crate::execute::execute_fact_stmt::FailToVerifyAtomicFactWellDefinedResult::FunctionLimitDomain { fact: f0, function: f1, well_defined_of_each_parameter: f2 } => {
+let fields = vec![("fact", capture_ast__fact__atomic__AtomicFact(f0, capture, runtime)), ("function", capture_ast__obj__Obj(f1, capture, runtime)), ("well_defined_of_each_parameter", JsonValue::Array((f2).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect()))];
 let mut output = node("FailToVerifyAtomicFactWellDefinedResult", "FunctionLimitDomain", fields);
 output
 },
-crate::execute::execute_fact_stmt::FailToVerifyAtomicFactWellDefinedResult::Argument(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyObjWellDefinedResult(f0, capture, runtime))];
+crate::execute::execute_fact_stmt::FailToVerifyAtomicFactWellDefinedResult::Argument { fact: f0, reason: f1 } => {
+let fields = vec![("fact", capture_ast__fact__atomic__AtomicFact(f0, capture, runtime)), ("reason", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyObjWellDefinedResult(f1, capture, runtime))];
 let mut output = node("FailToVerifyAtomicFactWellDefinedResult", "Argument", fields);
 output
 },
-crate::execute::execute_fact_stmt::FailToVerifyAtomicFactWellDefinedResult::Predicate { well_defined_of_each_parameter: f0, reason: f1 } => {
-let fields = vec![("well_defined_of_each_parameter", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("reason", capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__PredicateSignatureWellDefinedFailure(f1, capture, runtime))];
+crate::execute::execute_fact_stmt::FailToVerifyAtomicFactWellDefinedResult::Predicate { fact: f0, well_defined_of_each_parameter: f1, reason: f2 } => {
+let fields = vec![("fact", capture_ast__fact__atomic__AtomicFact(f0, capture, runtime)), ("well_defined_of_each_parameter", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("reason", capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__PredicateSignatureWellDefinedFailure(f2, capture, runtime))];
 let mut output = node("FailToVerifyAtomicFactWellDefinedResult", "Predicate", fields);
 output
 },
-crate::execute::execute_fact_stmt::FailToVerifyAtomicFactWellDefinedResult::Domain { well_defined_of_each_parameter: f0, predicate_signature: f1, completed: f2, requirement: f3, result: f4 } => {
-let fields = vec![("well_defined_of_each_parameter", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("predicate_signature", capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__PredicateSignatureWellDefinedProof(f1, capture, runtime)), ("completed", JsonValue::Array((f2).iter().map(|item| capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__PredicateDomainWellDefinedProof(item, capture, runtime)).collect())), ("requirement", capture_ast__fact__fact__Fact(f3, capture, runtime)), ("result", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f4, capture, runtime))];
+crate::execute::execute_fact_stmt::FailToVerifyAtomicFactWellDefinedResult::Domain { fact: f0, well_defined_of_each_parameter: f1, predicate_signature: f2, completed: f3, requirement: f4, result: f5 } => {
+let fields = vec![("fact", capture_ast__fact__atomic__AtomicFact(f0, capture, runtime)), ("well_defined_of_each_parameter", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("predicate_signature", capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__PredicateSignatureWellDefinedProof(f2, capture, runtime)), ("completed", JsonValue::Array((f3).iter().map(|item| capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__PredicateDomainWellDefinedProof(item, capture, runtime)).collect())), ("requirement", capture_ast__fact__fact__Fact(f4, capture, runtime)), ("result", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f5, capture, runtime))];
 let mut output = node("FailToVerifyAtomicFactWellDefinedResult", "Domain", fields);
 output
 },
@@ -7942,8 +7942,8 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__verify_and_fact__well_defined_result__FailToVerifyAndFactWellDefinedResult(value: &crate::execute::execute_fact_stmt::verify_and_fact::FailToVerifyAndFactWellDefinedResult, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_fact_stmt::verify_and_fact::FailToVerifyAndFactWellDefinedResult { failed_index: f0, succeeded_components: f1, failed_component: f2 } => {
-let fields = vec![("failed_index", JsonValue::String((f0).to_string())), ("succeeded_components", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__AtomicFactWellDefinedProof(item, capture, runtime)).collect())), ("failed_component", capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__FailToVerifyAtomicFactWellDefinedResult(f2, capture, runtime))];
+crate::execute::execute_fact_stmt::verify_and_fact::FailToVerifyAndFactWellDefinedResult { fact: f0, failed_index: f1, succeeded_components: f2, failed_component: f3 } => {
+let fields = vec![("fact", capture_ast__fact__and_fact__AndFact(f0, capture, runtime)), ("failed_index", JsonValue::String((f1).to_string())), ("succeeded_components", JsonValue::Array((f2).iter().map(|item| capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__AtomicFactWellDefinedProof(item, capture, runtime)).collect())), ("failed_component", capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__FailToVerifyAtomicFactWellDefinedResult(f3, capture, runtime))];
 let mut output = node("FailToVerifyAndFactWellDefinedResult", "", fields);
 output
 },
@@ -7953,8 +7953,8 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__verify_chain_fact__well_defined_result__FailToVerifyChainFactWellDefinedResult(value: &crate::execute::execute_fact_stmt::verify_chain_fact::FailToVerifyChainFactWellDefinedResult, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_fact_stmt::verify_chain_fact::FailToVerifyChainFactWellDefinedResult { failed_index: f0, succeeded_adjacent: f1, failed_adjacent: f2 } => {
-let fields = vec![("failed_index", JsonValue::String((f0).to_string())), ("succeeded_adjacent", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__AtomicFactWellDefinedProof(item, capture, runtime)).collect())), ("failed_adjacent", capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__FailToVerifyAtomicFactWellDefinedResult(f2, capture, runtime))];
+crate::execute::execute_fact_stmt::verify_chain_fact::FailToVerifyChainFactWellDefinedResult { fact: f0, failed_index: f1, succeeded_adjacent: f2, failed_adjacent: f3 } => {
+let fields = vec![("fact", capture_ast__fact__chain_fact__ChainFact(f0, capture, runtime)), ("failed_index", JsonValue::String((f1).to_string())), ("succeeded_adjacent", JsonValue::Array((f2).iter().map(|item| capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__AtomicFactWellDefinedProof(item, capture, runtime)).collect())), ("failed_adjacent", capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__FailToVerifyAtomicFactWellDefinedResult(f3, capture, runtime))];
 let mut output = node("FailToVerifyChainFactWellDefinedResult", "", fields);
 output
 },
@@ -7964,8 +7964,8 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__verify_or_fact__well_defined_result__FailToVerifyOrFactWellDefinedResult(value: &crate::execute::execute_fact_stmt::FailToVerifyOrFactWellDefinedResult, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_fact_stmt::FailToVerifyOrFactWellDefinedResult { failed_index: f0, succeeded_branches: f1, failed_branch: f2 } => {
-let fields = vec![("failed_index", JsonValue::String((f0).to_string())), ("succeeded_branches", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FactWellDefinedProof(item, capture, runtime)).collect())), ("failed_branch", capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FailToVerifyFactWellDefinedResult(f2, capture, runtime))];
+crate::execute::execute_fact_stmt::FailToVerifyOrFactWellDefinedResult { fact: f0, failed_index: f1, succeeded_branches: f2, failed_branch: f3 } => {
+let fields = vec![("fact", capture_ast__fact__or_fact__OrFact(f0, capture, runtime)), ("failed_index", JsonValue::String((f1).to_string())), ("succeeded_branches", JsonValue::Array((f2).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FactWellDefinedProof(item, capture, runtime)).collect())), ("failed_branch", capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FailToVerifyFactWellDefinedResult(f3, capture, runtime))];
 let mut output = node("FailToVerifyOrFactWellDefinedResult", "", fields);
 output
 },
@@ -7975,13 +7975,13 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__verify_exist_shaped_fact__well_defined_result__FailToVerifyExistShapedFactWellDefinedResult(value: &crate::execute::execute_fact_stmt::FailToVerifyExistShapedFactWellDefinedResult, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_fact_stmt::FailToVerifyExistShapedFactWellDefinedResult::ParamType(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyObjWellDefinedResult(f0, capture, runtime))];
+crate::execute::execute_fact_stmt::FailToVerifyExistShapedFactWellDefinedResult::ParamType { fact: f0, reason: f1 } => {
+let fields = vec![("fact", capture_ast__fact__exist_fact__ExistShapedFact(f0, capture, runtime)), ("reason", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyObjWellDefinedResult(f1, capture, runtime))];
 let mut output = node("FailToVerifyExistShapedFactWellDefinedResult", "ParamType", fields);
 output
 },
-crate::execute::execute_fact_stmt::FailToVerifyExistShapedFactWellDefinedResult::BodyFact { failed_index: f0, param_type_well_defined: f1, succeeded_body: f2, failed_body: f3 } => {
-let fields = vec![("failed_index", JsonValue::String((f0).to_string())), ("param_type_well_defined", JsonValue::Array((f1).iter().map(|item| capture_execute__exec_stmt_result__ParamTypeWellDefinedProof(item, capture, runtime)).collect())), ("succeeded_body", JsonValue::Array((f2).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FactWellDefinedProof(item, capture, runtime)).collect())), ("failed_body", capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FailToVerifyFactWellDefinedResult(f3, capture, runtime))];
+crate::execute::execute_fact_stmt::FailToVerifyExistShapedFactWellDefinedResult::BodyFact { fact: f0, failed_index: f1, param_type_well_defined: f2, succeeded_body: f3, failed_body: f4 } => {
+let fields = vec![("fact", capture_ast__fact__exist_fact__ExistShapedFact(f0, capture, runtime)), ("failed_index", JsonValue::String((f1).to_string())), ("param_type_well_defined", JsonValue::Array((f2).iter().map(|item| capture_execute__exec_stmt_result__ParamTypeWellDefinedProof(item, capture, runtime)).collect())), ("succeeded_body", JsonValue::Array((f3).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FactWellDefinedProof(item, capture, runtime)).collect())), ("failed_body", capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FailToVerifyFactWellDefinedResult(f4, capture, runtime))];
 let mut output = node("FailToVerifyExistShapedFactWellDefinedResult", "BodyFact", fields);
 output
 },
@@ -7991,23 +7991,23 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__verify_forall_fact__well_defined_result__FailToVerifyForallFactWellDefinedResult(value: &crate::execute::execute_fact_stmt::FailToVerifyForallFactWellDefinedResult, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_fact_stmt::FailToVerifyForallFactWellDefinedResult::ParamType(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyObjWellDefinedResult(f0, capture, runtime))];
+crate::execute::execute_fact_stmt::FailToVerifyForallFactWellDefinedResult::ParamType { fact: f0, reason: f1 } => {
+let fields = vec![("fact", capture_ast__fact__forall_fact__ForallFact(f0, capture, runtime)), ("reason", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyObjWellDefinedResult(f1, capture, runtime))];
 let mut output = node("FailToVerifyForallFactWellDefinedResult", "ParamType", fields);
 output
 },
-crate::execute::execute_fact_stmt::FailToVerifyForallFactWellDefinedResult::AutoOpenStructLayer(f0) => {
-let fields = vec![("0", capture_execute__release_one_struct_layer__FailToReleaseOneStructLayer(f0, capture, runtime))];
+crate::execute::execute_fact_stmt::FailToVerifyForallFactWellDefinedResult::AutoOpenStructLayer { fact: f0, reason: f1 } => {
+let fields = vec![("fact", capture_ast__fact__forall_fact__ForallFact(f0, capture, runtime)), ("reason", capture_execute__release_one_struct_layer__FailToReleaseOneStructLayer(f1, capture, runtime))];
 let mut output = node("FailToVerifyForallFactWellDefinedResult", "AutoOpenStructLayer", fields);
 output
 },
-crate::execute::execute_fact_stmt::FailToVerifyForallFactWellDefinedResult::DomFact { failed_index: f0, param_type_well_defined: f1, succeeded_dom: f2, failed_dom: f3 } => {
-let fields = vec![("failed_index", JsonValue::String((f0).to_string())), ("param_type_well_defined", JsonValue::Array((f1).iter().map(|item| capture_execute__exec_stmt_result__ParamTypeWellDefinedProof(item, capture, runtime)).collect())), ("succeeded_dom", JsonValue::Array((f2).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FactWellDefinedProof(item, capture, runtime)).collect())), ("failed_dom", capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FailToVerifyFactWellDefinedResult(f3, capture, runtime))];
+crate::execute::execute_fact_stmt::FailToVerifyForallFactWellDefinedResult::DomFact { fact: f0, failed_index: f1, param_type_well_defined: f2, succeeded_dom: f3, failed_dom: f4 } => {
+let fields = vec![("fact", capture_ast__fact__forall_fact__ForallFact(f0, capture, runtime)), ("failed_index", JsonValue::String((f1).to_string())), ("param_type_well_defined", JsonValue::Array((f2).iter().map(|item| capture_execute__exec_stmt_result__ParamTypeWellDefinedProof(item, capture, runtime)).collect())), ("succeeded_dom", JsonValue::Array((f3).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FactWellDefinedProof(item, capture, runtime)).collect())), ("failed_dom", capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FailToVerifyFactWellDefinedResult(f4, capture, runtime))];
 let mut output = node("FailToVerifyForallFactWellDefinedResult", "DomFact", fields);
 output
 },
-crate::execute::execute_fact_stmt::FailToVerifyForallFactWellDefinedResult::ThenFact { failed_index: f0, param_type_well_defined: f1, succeeded_dom: f2, succeeded_then: f3, failed_then: f4 } => {
-let fields = vec![("failed_index", JsonValue::String((f0).to_string())), ("param_type_well_defined", JsonValue::Array((f1).iter().map(|item| capture_execute__exec_stmt_result__ParamTypeWellDefinedProof(item, capture, runtime)).collect())), ("succeeded_dom", JsonValue::Array((f2).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FactWellDefinedProof(item, capture, runtime)).collect())), ("succeeded_then", JsonValue::Array((f3).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FactWellDefinedProof(item, capture, runtime)).collect())), ("failed_then", capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FailToVerifyFactWellDefinedResult(f4, capture, runtime))];
+crate::execute::execute_fact_stmt::FailToVerifyForallFactWellDefinedResult::ThenFact { fact: f0, failed_index: f1, param_type_well_defined: f2, succeeded_dom: f3, succeeded_then: f4, failed_then: f5 } => {
+let fields = vec![("fact", capture_ast__fact__forall_fact__ForallFact(f0, capture, runtime)), ("failed_index", JsonValue::String((f1).to_string())), ("param_type_well_defined", JsonValue::Array((f2).iter().map(|item| capture_execute__exec_stmt_result__ParamTypeWellDefinedProof(item, capture, runtime)).collect())), ("succeeded_dom", JsonValue::Array((f3).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FactWellDefinedProof(item, capture, runtime)).collect())), ("succeeded_then", JsonValue::Array((f4).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FactWellDefinedProof(item, capture, runtime)).collect())), ("failed_then", capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FailToVerifyFactWellDefinedResult(f5, capture, runtime))];
 let mut output = node("FailToVerifyForallFactWellDefinedResult", "ThenFact", fields);
 output
 },
@@ -8017,23 +8017,23 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__verify_forall_fact_with_iff__well_defined_result__FailToVerifyForallFactWithIffWellDefinedResult(value: &crate::execute::execute_fact_stmt::well_defined_results::FailToVerifyForallFactWithIffWellDefinedResult, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::FailToVerifyForallFactWithIffWellDefinedResult::ParamType(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyObjWellDefinedResult(f0, capture, runtime))];
+crate::execute::execute_fact_stmt::well_defined_results::FailToVerifyForallFactWithIffWellDefinedResult::ParamType { fact: f0, reason: f1 } => {
+let fields = vec![("fact", capture_ast__fact__forall_fact_with_iff__ForallFactWithIff(f0, capture, runtime)), ("reason", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyObjWellDefinedResult(f1, capture, runtime))];
 let mut output = node("FailToVerifyForallFactWithIffWellDefinedResult", "ParamType", fields);
 output
 },
-crate::execute::execute_fact_stmt::well_defined_results::FailToVerifyForallFactWithIffWellDefinedResult::DomFact { failed_index: f0, param_type_well_defined: f1, succeeded_dom: f2, failed_dom: f3 } => {
-let fields = vec![("failed_index", JsonValue::String((f0).to_string())), ("param_type_well_defined", JsonValue::Array((f1).iter().map(|item| capture_execute__exec_stmt_result__ParamTypeWellDefinedProof(item, capture, runtime)).collect())), ("succeeded_dom", JsonValue::Array((f2).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FactWellDefinedProof(item, capture, runtime)).collect())), ("failed_dom", capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FailToVerifyFactWellDefinedResult(f3, capture, runtime))];
+crate::execute::execute_fact_stmt::well_defined_results::FailToVerifyForallFactWithIffWellDefinedResult::DomFact { fact: f0, failed_index: f1, param_type_well_defined: f2, succeeded_dom: f3, failed_dom: f4 } => {
+let fields = vec![("fact", capture_ast__fact__forall_fact_with_iff__ForallFactWithIff(f0, capture, runtime)), ("failed_index", JsonValue::String((f1).to_string())), ("param_type_well_defined", JsonValue::Array((f2).iter().map(|item| capture_execute__exec_stmt_result__ParamTypeWellDefinedProof(item, capture, runtime)).collect())), ("succeeded_dom", JsonValue::Array((f3).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FactWellDefinedProof(item, capture, runtime)).collect())), ("failed_dom", capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FailToVerifyFactWellDefinedResult(f4, capture, runtime))];
 let mut output = node("FailToVerifyForallFactWithIffWellDefinedResult", "DomFact", fields);
 output
 },
-crate::execute::execute_fact_stmt::well_defined_results::FailToVerifyForallFactWithIffWellDefinedResult::ThenFact { failed_index: f0, param_type_well_defined: f1, succeeded_dom: f2, succeeded_then: f3, failed_then: f4 } => {
-let fields = vec![("failed_index", JsonValue::String((f0).to_string())), ("param_type_well_defined", JsonValue::Array((f1).iter().map(|item| capture_execute__exec_stmt_result__ParamTypeWellDefinedProof(item, capture, runtime)).collect())), ("succeeded_dom", JsonValue::Array((f2).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FactWellDefinedProof(item, capture, runtime)).collect())), ("succeeded_then", JsonValue::Array((f3).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FactWellDefinedProof(item, capture, runtime)).collect())), ("failed_then", capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FailToVerifyFactWellDefinedResult(f4, capture, runtime))];
+crate::execute::execute_fact_stmt::well_defined_results::FailToVerifyForallFactWithIffWellDefinedResult::ThenFact { fact: f0, failed_index: f1, param_type_well_defined: f2, succeeded_dom: f3, succeeded_then: f4, failed_then: f5 } => {
+let fields = vec![("fact", capture_ast__fact__forall_fact_with_iff__ForallFactWithIff(f0, capture, runtime)), ("failed_index", JsonValue::String((f1).to_string())), ("param_type_well_defined", JsonValue::Array((f2).iter().map(|item| capture_execute__exec_stmt_result__ParamTypeWellDefinedProof(item, capture, runtime)).collect())), ("succeeded_dom", JsonValue::Array((f3).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FactWellDefinedProof(item, capture, runtime)).collect())), ("succeeded_then", JsonValue::Array((f4).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FactWellDefinedProof(item, capture, runtime)).collect())), ("failed_then", capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FailToVerifyFactWellDefinedResult(f5, capture, runtime))];
 let mut output = node("FailToVerifyForallFactWithIffWellDefinedResult", "ThenFact", fields);
 output
 },
-crate::execute::execute_fact_stmt::well_defined_results::FailToVerifyForallFactWithIffWellDefinedResult::IffFact { failed_index: f0, param_type_well_defined: f1, succeeded_dom: f2, succeeded_then: f3, succeeded_iff: f4, failed_iff: f5 } => {
-let fields = vec![("failed_index", JsonValue::String((f0).to_string())), ("param_type_well_defined", JsonValue::Array((f1).iter().map(|item| capture_execute__exec_stmt_result__ParamTypeWellDefinedProof(item, capture, runtime)).collect())), ("succeeded_dom", JsonValue::Array((f2).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FactWellDefinedProof(item, capture, runtime)).collect())), ("succeeded_then", JsonValue::Array((f3).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FactWellDefinedProof(item, capture, runtime)).collect())), ("succeeded_iff", JsonValue::Array((f4).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FactWellDefinedProof(item, capture, runtime)).collect())), ("failed_iff", capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FailToVerifyFactWellDefinedResult(f5, capture, runtime))];
+crate::execute::execute_fact_stmt::well_defined_results::FailToVerifyForallFactWithIffWellDefinedResult::IffFact { fact: f0, failed_index: f1, param_type_well_defined: f2, succeeded_dom: f3, succeeded_then: f4, succeeded_iff: f5, failed_iff: f6 } => {
+let fields = vec![("fact", capture_ast__fact__forall_fact_with_iff__ForallFactWithIff(f0, capture, runtime)), ("failed_index", JsonValue::String((f1).to_string())), ("param_type_well_defined", JsonValue::Array((f2).iter().map(|item| capture_execute__exec_stmt_result__ParamTypeWellDefinedProof(item, capture, runtime)).collect())), ("succeeded_dom", JsonValue::Array((f3).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FactWellDefinedProof(item, capture, runtime)).collect())), ("succeeded_then", JsonValue::Array((f4).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FactWellDefinedProof(item, capture, runtime)).collect())), ("succeeded_iff", JsonValue::Array((f5).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FactWellDefinedProof(item, capture, runtime)).collect())), ("failed_iff", capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FailToVerifyFactWellDefinedResult(f6, capture, runtime))];
 let mut output = node("FailToVerifyForallFactWithIffWellDefinedResult", "IffFact", fields);
 output
 },
@@ -8043,18 +8043,18 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__verify_not_forall_fact__well_defined_result__FailToVerifyNotForallFactWellDefinedResult(value: &crate::execute::execute_fact_stmt::well_defined_results::FailToVerifyNotForallFactWellDefinedResult, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::FailToVerifyNotForallFactWellDefinedResult::ParamType(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyObjWellDefinedResult(f0, capture, runtime))];
+crate::execute::execute_fact_stmt::well_defined_results::FailToVerifyNotForallFactWellDefinedResult::ParamType { fact: f0, reason: f1 } => {
+let fields = vec![("fact", capture_ast__fact__not_forall_fact__NotForallFact(f0, capture, runtime)), ("reason", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyObjWellDefinedResult(f1, capture, runtime))];
 let mut output = node("FailToVerifyNotForallFactWellDefinedResult", "ParamType", fields);
 output
 },
-crate::execute::execute_fact_stmt::well_defined_results::FailToVerifyNotForallFactWellDefinedResult::DomFact { failed_index: f0, param_type_well_defined: f1, succeeded_dom: f2, failed_dom: f3 } => {
-let fields = vec![("failed_index", JsonValue::String((f0).to_string())), ("param_type_well_defined", JsonValue::Array((f1).iter().map(|item| capture_execute__exec_stmt_result__ParamTypeWellDefinedProof(item, capture, runtime)).collect())), ("succeeded_dom", JsonValue::Array((f2).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FactWellDefinedProof(item, capture, runtime)).collect())), ("failed_dom", capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FailToVerifyFactWellDefinedResult(f3, capture, runtime))];
+crate::execute::execute_fact_stmt::well_defined_results::FailToVerifyNotForallFactWellDefinedResult::DomFact { fact: f0, failed_index: f1, param_type_well_defined: f2, succeeded_dom: f3, failed_dom: f4 } => {
+let fields = vec![("fact", capture_ast__fact__not_forall_fact__NotForallFact(f0, capture, runtime)), ("failed_index", JsonValue::String((f1).to_string())), ("param_type_well_defined", JsonValue::Array((f2).iter().map(|item| capture_execute__exec_stmt_result__ParamTypeWellDefinedProof(item, capture, runtime)).collect())), ("succeeded_dom", JsonValue::Array((f3).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FactWellDefinedProof(item, capture, runtime)).collect())), ("failed_dom", capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FailToVerifyFactWellDefinedResult(f4, capture, runtime))];
 let mut output = node("FailToVerifyNotForallFactWellDefinedResult", "DomFact", fields);
 output
 },
-crate::execute::execute_fact_stmt::well_defined_results::FailToVerifyNotForallFactWellDefinedResult::ThenFact { failed_index: f0, param_type_well_defined: f1, succeeded_dom: f2, succeeded_then: f3, failed_then: f4 } => {
-let fields = vec![("failed_index", JsonValue::String((f0).to_string())), ("param_type_well_defined", JsonValue::Array((f1).iter().map(|item| capture_execute__exec_stmt_result__ParamTypeWellDefinedProof(item, capture, runtime)).collect())), ("succeeded_dom", JsonValue::Array((f2).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FactWellDefinedProof(item, capture, runtime)).collect())), ("succeeded_then", JsonValue::Array((f3).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FactWellDefinedProof(item, capture, runtime)).collect())), ("failed_then", capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FailToVerifyFactWellDefinedResult(f4, capture, runtime))];
+crate::execute::execute_fact_stmt::well_defined_results::FailToVerifyNotForallFactWellDefinedResult::ThenFact { fact: f0, failed_index: f1, param_type_well_defined: f2, succeeded_dom: f3, succeeded_then: f4, failed_then: f5 } => {
+let fields = vec![("fact", capture_ast__fact__not_forall_fact__NotForallFact(f0, capture, runtime)), ("failed_index", JsonValue::String((f1).to_string())), ("param_type_well_defined", JsonValue::Array((f2).iter().map(|item| capture_execute__exec_stmt_result__ParamTypeWellDefinedProof(item, capture, runtime)).collect())), ("succeeded_dom", JsonValue::Array((f3).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FactWellDefinedProof(item, capture, runtime)).collect())), ("succeeded_then", JsonValue::Array((f4).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FactWellDefinedProof(item, capture, runtime)).collect())), ("failed_then", capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FailToVerifyFactWellDefinedResult(f5, capture, runtime))];
 let mut output = node("FailToVerifyNotForallFactWellDefinedResult", "ThenFact", fields);
 output
 },
@@ -8185,7 +8185,7 @@ capture.intern_evidence(output)
 pub(super) fn capture_execute__execute_fact_stmt__function_domain__FunctionDomainMatchProof(value: &crate::execute::execute_fact_stmt::function_domain::FunctionDomainMatchProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::function_domain::FunctionDomainMatchProof { function_wd: f0, target_wd: f1, source: f2, target: f3, comparison: f4 } => {
-let fields = vec![("function_wd", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(f0, capture, runtime)), ("target_wd", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(f1, capture, runtime)), ("source", capture_execute__execute_fact_stmt__function_domain__CompleteFunctionDomainProof(f2, capture, runtime)), ("target", capture_ast__obj__FnSet(f3, capture, runtime)), ("comparison", capture_execute__execute_fact_stmt__function_domain__FunctionDomainComparisonProof(f4, capture, runtime))];
+let fields = vec![("function_wd", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f0, capture, runtime)), ("target_wd", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f1, capture, runtime)), ("source", capture_execute__execute_fact_stmt__function_domain__CompleteFunctionDomainProof(f2, capture, runtime)), ("target", capture_ast__obj__FnSet(f3, capture, runtime)), ("comparison", capture_execute__execute_fact_stmt__function_domain__FunctionDomainComparisonProof(f4, capture, runtime))];
 let mut output = node("FunctionDomainMatchProof", "", fields);
 output
 },
@@ -12213,9 +12213,12 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__well_defined_result__EqualFactWellDefinedProof(value: &crate::execute::execute_fact_stmt::EqualFactWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_fact_stmt::EqualFactWellDefinedProof { left: f0, right: f1 } => {
-let fields = vec![("left", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(f0, capture, runtime)), ("right", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(f1, capture, runtime))];
-let mut output = node("EqualFactWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::EqualFactWellDefinedProof::Compact(f0) => panic!("internal_bug: reading requires Detailed EqualFactWellDefinedProof"),
+crate::execute::execute_fact_stmt::EqualFactWellDefinedProof::Normal(f0) => panic!("internal_bug: reading requires Detailed EqualFactWellDefinedProof"),
+crate::execute::execute_fact_stmt::EqualFactWellDefinedProof::Detailed(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__well_defined_result__DetailedEqualFactWellDefinedProof(f0, capture, runtime))];
+let mut output = node("EqualFactWellDefinedProof", "Detailed", fields);
+if let JsonValue::Object(fields) = &mut output { fields.insert("result_detail".into(), JsonValue::String("detailed".into())); }
 output
 },
 };
@@ -12260,16 +12263,14 @@ output
 capture.intern_evidence(output)
 }
 
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::ObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::ObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_fact_stmt::ObjWellDefinedProof::ByKnown { obj: f0, wd_id: f1 } => {
-let fields = vec![("obj", capture_ast__obj__Obj(f0, capture, runtime)), ("wd_id", capture.wd_reference(f1, runtime))];
-let mut output = node("ObjWellDefinedProof", "ByKnown", fields);
-output
-},
-crate::execute::execute_fact_stmt::ObjWellDefinedProof::ByDef { obj: f0, proof: f1 } => {
-let fields = vec![("obj", capture_ast__obj__Obj(f0, capture, runtime)), ("proof", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ObjWellDefinedProofByDef(f1, capture, runtime))];
-let mut output = node("ObjWellDefinedProof", "ByDef", fields);
+crate::execute::execute_fact_stmt::ObjWellDefinedProof::Compact(f0) => panic!("internal_bug: reading requires Detailed ObjWellDefinedProof"),
+crate::execute::execute_fact_stmt::ObjWellDefinedProof::Normal(f0) => panic!("internal_bug: reading requires Detailed ObjWellDefinedProof"),
+crate::execute::execute_fact_stmt::ObjWellDefinedProof::Detailed(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__DetailedObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("ObjWellDefinedProof", "Detailed", fields);
+if let JsonValue::Object(fields) = &mut output { fields.insert("result_detail".into(), JsonValue::String("detailed".into())); }
 output
 },
 };
@@ -12279,7 +12280,7 @@ capture.intern_evidence(output)
 pub(super) fn capture_execute__execute_eval_stmt__aggregate_evaluation_result__MatrixScalarEvaluationResult(value: &crate::execute::execute_eval_stmt::aggregate_evaluation_result::MatrixScalarEvaluationResult, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_eval_stmt::aggregate_evaluation_result::MatrixScalarEvaluationResult { source: f0, source_well_defined: f1, expression: f2, value: f3 } => {
-let fields = vec![("source", capture_ast__obj__Obj(f0, capture, runtime)), ("source_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(f1, capture, runtime)), ("expression", capture_ast__obj__Obj(f2, capture, runtime)), ("value", capture_ast__obj__Obj(f3, capture, runtime))];
+let fields = vec![("source", capture_ast__obj__Obj(f0, capture, runtime)), ("source_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f1, capture, runtime)), ("expression", capture_ast__obj__Obj(f2, capture, runtime)), ("value", capture_ast__obj__Obj(f3, capture, runtime))];
 let mut output = node("MatrixScalarEvaluationResult", "", fields);
 output
 },
@@ -12326,7 +12327,7 @@ capture.intern_evidence(output)
 pub(super) fn capture_execute__execute_eval_stmt__aggregate_evaluation_result__FunctionApplicationEvaluationResult(value: &crate::execute::execute_eval_stmt::aggregate_evaluation_result::FunctionApplicationEvaluationResult, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_eval_stmt::aggregate_evaluation_result::FunctionApplicationEvaluationResult { application: f0, application_well_defined: f1, expansion: f2, rewritten_body: f3, cited_equal_fact_ids: f4, nested_function_evidence: f5, value: f6 } => {
-let fields = vec![("application", capture_ast__obj__Obj(f0, capture, runtime)), ("application_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(f1, capture, runtime)), ("expansion", capture_execute__execute_eval_stmt__aggregate_evaluation_result__FunctionApplicationExpansionProof(f2, capture, runtime)), ("rewritten_body", capture_ast__obj__Obj(f3, capture, runtime)), ("cited_equal_fact_ids", JsonValue::Array((f4).iter().map(|item| capture.fact_reference(item, runtime)).collect())), ("nested_function_evidence", node("Range", "", vec![("start", JsonValue::String((f5).start.to_string())), ("end", JsonValue::String((f5).end.to_string()))])), ("value", capture_ast__obj__Obj(f6, capture, runtime))];
+let fields = vec![("application", capture_ast__obj__Obj(f0, capture, runtime)), ("application_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f1, capture, runtime)), ("expansion", capture_execute__execute_eval_stmt__aggregate_evaluation_result__FunctionApplicationExpansionProof(f2, capture, runtime)), ("rewritten_body", capture_ast__obj__Obj(f3, capture, runtime)), ("cited_equal_fact_ids", JsonValue::Array((f4).iter().map(|item| capture.fact_reference(item, runtime)).collect())), ("nested_function_evidence", node("Range", "", vec![("start", JsonValue::String((f5).start.to_string())), ("end", JsonValue::String((f5).end.to_string()))])), ("value", capture_ast__obj__Obj(f6, capture, runtime))];
 let mut output = node("FunctionApplicationEvaluationResult", "", fields);
 output
 },
@@ -14303,9 +14304,12 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__AtomicFactWellDefinedProof(value: &crate::execute::execute_fact_stmt::AtomicFactWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_fact_stmt::AtomicFactWellDefinedProof { well_defined_of_each_parameter: f0, predicate_signature: f1, predicate_domain: f2 } => {
-let fields = vec![("well_defined_of_each_parameter", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("predicate_signature", capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__PredicateSignatureWellDefinedProof(f1, capture, runtime)), ("predicate_domain", capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__PredicateDomainProof(f2, capture, runtime))];
-let mut output = node("AtomicFactWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::AtomicFactWellDefinedProof::Compact(f0) => panic!("internal_bug: reading requires Detailed AtomicFactWellDefinedProof"),
+crate::execute::execute_fact_stmt::AtomicFactWellDefinedProof::Normal(f0) => panic!("internal_bug: reading requires Detailed AtomicFactWellDefinedProof"),
+crate::execute::execute_fact_stmt::AtomicFactWellDefinedProof::Detailed(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__DetailedAtomicFactWellDefinedProof(f0, capture, runtime))];
+let mut output = node("AtomicFactWellDefinedProof", "Detailed", fields);
+if let JsonValue::Object(fields) = &mut output { fields.insert("result_detail".into(), JsonValue::String("detailed".into())); }
 output
 },
 };
@@ -14385,9 +14389,12 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__SearchProofByKnownForallFact(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::SearchProofByKnownForallFact, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_fact_stmt::verify_atomic_fact::SearchProofByKnownForallFact { cite: f0, forall_parameters_match_what_args: f1, arg_match_proofs: f2, instantiation_requirements: f3 } => {
-let fields = vec![("cite", capture_exec_env__known_forall_conclusion_memory__ForallConclusionCite(f0, capture, runtime)), ("forall_parameters_match_what_args", JsonValue::Array((f1).iter().map(|item| capture_ast__obj__Obj(item, capture, runtime)).collect())), ("arg_match_proofs", JsonValue::Array((f2).iter().map(|item| capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__ForallConclusionArgMatchProof(item, capture, runtime)).collect())), ("instantiation_requirements", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__ProveForallInstantiationRequirementsProof(f3, capture, runtime))];
-let mut output = node("SearchProofByKnownForallFact", "", fields);
+crate::execute::execute_fact_stmt::verify_atomic_fact::SearchProofByKnownForallFact::Compact(f0) => panic!("internal_bug: reading requires Detailed SearchProofByKnownForallFact"),
+crate::execute::execute_fact_stmt::verify_atomic_fact::SearchProofByKnownForallFact::Normal(f0) => panic!("internal_bug: reading requires Detailed SearchProofByKnownForallFact"),
+crate::execute::execute_fact_stmt::verify_atomic_fact::SearchProofByKnownForallFact::Detailed(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__DetailedSearchProofByKnownForallFact(f0, capture, runtime))];
+let mut output = node("SearchProofByKnownForallFact", "Detailed", fields);
+if let JsonValue::Object(fields) = &mut output { fields.insert("result_detail".into(), JsonValue::String("detailed".into())); }
 output
 },
 };
@@ -14396,9 +14403,12 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__verify_or_fact__well_defined_result__OrFactWellDefinedProof(value: &crate::execute::execute_fact_stmt::OrFactWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_fact_stmt::OrFactWellDefinedProof { branches: f0 } => {
-let fields = vec![("branches", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FactWellDefinedProof(item, capture, runtime)).collect()))];
-let mut output = node("OrFactWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::OrFactWellDefinedProof::Compact(f0) => panic!("internal_bug: reading requires Detailed OrFactWellDefinedProof"),
+crate::execute::execute_fact_stmt::OrFactWellDefinedProof::Normal(f0) => panic!("internal_bug: reading requires Detailed OrFactWellDefinedProof"),
+crate::execute::execute_fact_stmt::OrFactWellDefinedProof::Detailed(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_or_fact__well_defined_result__DetailedOrFactWellDefinedProof(f0, capture, runtime))];
+let mut output = node("OrFactWellDefinedProof", "Detailed", fields);
+if let JsonValue::Object(fields) = &mut output { fields.insert("result_detail".into(), JsonValue::String("detailed".into())); }
 output
 },
 };
@@ -14700,14 +14710,42 @@ output
 capture.intern_evidence(output)
 }
 
+pub(super) fn capture_execute__execute_fact_stmt__verify_and_fact__well_defined_result__AndFactWellDefinedProof(value: &crate::execute::execute_fact_stmt::verify_and_fact::AndFactWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_and_fact::AndFactWellDefinedProof::Compact(f0) => panic!("internal_bug: reading requires Detailed AndFactWellDefinedProof"),
+crate::execute::execute_fact_stmt::verify_and_fact::AndFactWellDefinedProof::Normal(f0) => panic!("internal_bug: reading requires Detailed AndFactWellDefinedProof"),
+crate::execute::execute_fact_stmt::verify_and_fact::AndFactWellDefinedProof::Detailed(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_and_fact__well_defined_result__DetailedAndFactWellDefinedProof(f0, capture, runtime))];
+let mut output = node("AndFactWellDefinedProof", "Detailed", fields);
+if let JsonValue::Object(fields) = &mut output { fields.insert("result_detail".into(), JsonValue::String("detailed".into())); }
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_chain_fact__well_defined_result__ChainFactWellDefinedProof(value: &crate::execute::execute_fact_stmt::verify_chain_fact::ChainFactWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_chain_fact::ChainFactWellDefinedProof::Compact(f0) => panic!("internal_bug: reading requires Detailed ChainFactWellDefinedProof"),
+crate::execute::execute_fact_stmt::verify_chain_fact::ChainFactWellDefinedProof::Normal(f0) => panic!("internal_bug: reading requires Detailed ChainFactWellDefinedProof"),
+crate::execute::execute_fact_stmt::verify_chain_fact::ChainFactWellDefinedProof::Detailed(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_chain_fact__well_defined_result__DetailedChainFactWellDefinedProof(f0, capture, runtime))];
+let mut output = node("ChainFactWellDefinedProof", "Detailed", fields);
+if let JsonValue::Object(fields) = &mut output { fields.insert("result_detail".into(), JsonValue::String("detailed".into())); }
+output
+},
+};
+capture.intern_evidence(output)
+}
+
 pub(super) fn capture_execute__execute_fact_stmt__verify_exist_shaped_fact__well_defined_result__ExistShapedFactWellDefinedProof(value: &crate::execute::execute_fact_stmt::ExistShapedFactWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_fact_stmt::ExistShapedFactWellDefinedProof { introduced_params: f0, assumed_body_facts: f1, local_env: f2 } => {
-let saved_scope = capture.enter_scope();
-capture.index_environment(f2, runtime);
-let fields = vec![("introduced_params", capture_execute__introduce_typed_parameters__IntroduceTypedParametersResult(f0, capture, runtime)), ("assumed_body_facts", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_forall_fact__result__AssumeDomFactResult(item, capture, runtime)).collect())), ("local_env", capture.environment(f2, runtime))];
-let mut output = node("ExistShapedFactWellDefinedProof", "", fields);
-capture.leave_scope(saved_scope);
+crate::execute::execute_fact_stmt::ExistShapedFactWellDefinedProof::Compact(f0) => panic!("internal_bug: reading requires Detailed ExistShapedFactWellDefinedProof"),
+crate::execute::execute_fact_stmt::ExistShapedFactWellDefinedProof::Normal(f0) => panic!("internal_bug: reading requires Detailed ExistShapedFactWellDefinedProof"),
+crate::execute::execute_fact_stmt::ExistShapedFactWellDefinedProof::Detailed(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_exist_shaped_fact__well_defined_result__DetailedExistShapedFactWellDefinedProof(f0, capture, runtime))];
+let mut output = node("ExistShapedFactWellDefinedProof", "Detailed", fields);
+if let JsonValue::Object(fields) = &mut output { fields.insert("result_detail".into(), JsonValue::String("detailed".into())); }
 output
 },
 };
@@ -14716,12 +14754,12 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__verify_forall_fact__well_defined_result__ForallFactWellDefinedProof(value: &crate::execute::execute_fact_stmt::verify_forall_fact::ForallFactWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_fact_stmt::verify_forall_fact::ForallFactWellDefinedProof { introduced_params: f0, assumed_dom_facts: f1, then: f2, local_env: f3 } => {
-let saved_scope = capture.enter_scope();
-capture.index_environment(f3, runtime);
-let fields = vec![("introduced_params", capture_execute__introduce_typed_parameters__IntroduceTypedParametersResult(f0, capture, runtime)), ("assumed_dom_facts", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_forall_fact__result__AssumeDomFactResult(item, capture, runtime)).collect())), ("then", JsonValue::Array((f2).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FactWellDefinedProof(item, capture, runtime)).collect())), ("local_env", capture.environment(f3, runtime))];
-let mut output = node("ForallFactWellDefinedProof", "", fields);
-capture.leave_scope(saved_scope);
+crate::execute::execute_fact_stmt::verify_forall_fact::ForallFactWellDefinedProof::Compact(f0) => panic!("internal_bug: reading requires Detailed ForallFactWellDefinedProof"),
+crate::execute::execute_fact_stmt::verify_forall_fact::ForallFactWellDefinedProof::Normal(f0) => panic!("internal_bug: reading requires Detailed ForallFactWellDefinedProof"),
+crate::execute::execute_fact_stmt::verify_forall_fact::ForallFactWellDefinedProof::Detailed(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_forall_fact__well_defined_result__DetailedForallFactWellDefinedProof(f0, capture, runtime))];
+let mut output = node("ForallFactWellDefinedProof", "Detailed", fields);
+if let JsonValue::Object(fields) = &mut output { fields.insert("result_detail".into(), JsonValue::String("detailed".into())); }
 output
 },
 };
@@ -14730,12 +14768,12 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__verify_forall_fact_with_iff__well_defined_result__ForallFactWithIffWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::ForallFactWithIffWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::ForallFactWithIffWellDefinedProof { introduced_params: f0, assumed_dom_facts: f1, then: f2, iff: f3, local_env: f4 } => {
-let saved_scope = capture.enter_scope();
-capture.index_environment(f4, runtime);
-let fields = vec![("introduced_params", capture_execute__introduce_typed_parameters__IntroduceTypedParametersResult(f0, capture, runtime)), ("assumed_dom_facts", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_forall_fact__result__AssumeDomFactResult(item, capture, runtime)).collect())), ("then", JsonValue::Array((f2).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FactWellDefinedProof(item, capture, runtime)).collect())), ("iff", JsonValue::Array((f3).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FactWellDefinedProof(item, capture, runtime)).collect())), ("local_env", capture.environment(f4, runtime))];
-let mut output = node("ForallFactWithIffWellDefinedProof", "", fields);
-capture.leave_scope(saved_scope);
+crate::execute::execute_fact_stmt::well_defined_results::ForallFactWithIffWellDefinedProof::Compact(f0) => panic!("internal_bug: reading requires Detailed ForallFactWithIffWellDefinedProof"),
+crate::execute::execute_fact_stmt::well_defined_results::ForallFactWithIffWellDefinedProof::Normal(f0) => panic!("internal_bug: reading requires Detailed ForallFactWithIffWellDefinedProof"),
+crate::execute::execute_fact_stmt::well_defined_results::ForallFactWithIffWellDefinedProof::Detailed(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_forall_fact_with_iff__well_defined_result__DetailedForallFactWithIffWellDefinedProof(f0, capture, runtime))];
+let mut output = node("ForallFactWithIffWellDefinedProof", "Detailed", fields);
+if let JsonValue::Object(fields) = &mut output { fields.insert("result_detail".into(), JsonValue::String("detailed".into())); }
 output
 },
 };
@@ -14744,12 +14782,12 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__verify_not_forall_fact__well_defined_result__NotForallFactWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::NotForallFactWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::NotForallFactWellDefinedProof { introduced_params: f0, assumed_dom_facts: f1, then: f2, local_env: f3 } => {
-let saved_scope = capture.enter_scope();
-capture.index_environment(f3, runtime);
-let fields = vec![("introduced_params", capture_execute__introduce_typed_parameters__IntroduceTypedParametersResult(f0, capture, runtime)), ("assumed_dom_facts", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_forall_fact__result__AssumeDomFactResult(item, capture, runtime)).collect())), ("then", JsonValue::Array((f2).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FactWellDefinedProof(item, capture, runtime)).collect())), ("local_env", capture.environment(f3, runtime))];
-let mut output = node("NotForallFactWellDefinedProof", "", fields);
-capture.leave_scope(saved_scope);
+crate::execute::execute_fact_stmt::well_defined_results::NotForallFactWellDefinedProof::Compact(f0) => panic!("internal_bug: reading requires Detailed NotForallFactWellDefinedProof"),
+crate::execute::execute_fact_stmt::well_defined_results::NotForallFactWellDefinedProof::Normal(f0) => panic!("internal_bug: reading requires Detailed NotForallFactWellDefinedProof"),
+crate::execute::execute_fact_stmt::well_defined_results::NotForallFactWellDefinedProof::Detailed(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_not_forall_fact__well_defined_result__DetailedNotForallFactWellDefinedProof(f0, capture, runtime))];
+let mut output = node("NotForallFactWellDefinedProof", "Detailed", fields);
+if let JsonValue::Object(fields) = &mut output { fields.insert("result_detail".into(), JsonValue::String("detailed".into())); }
 output
 },
 };
@@ -14787,7 +14825,7 @@ capture.intern_evidence(output)
 pub(super) fn capture_execute__execute_def_struct_stmt__exec_def_struct_stmt__StructFieldWellDefinedAndIntroduced(value: &crate::execute::execute_def_struct_stmt::StructFieldWellDefinedAndIntroduced, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_def_struct_stmt::StructFieldWellDefinedAndIntroduced { well_defined: f0, defined: f1 } => {
-let fields = vec![("well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(f0, capture, runtime)), ("defined", capture_execute__execute_have_obj_in_nonempty_set_stmt__StoreHaveObjAndInferResult(f1, capture, runtime))];
+let fields = vec![("well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f0, capture, runtime)), ("defined", capture_execute__execute_have_obj_in_nonempty_set_stmt__StoreHaveObjAndInferResult(f1, capture, runtime))];
 let mut output = node("StructFieldWellDefinedAndIntroduced", "", fields);
 output
 },
@@ -14927,7 +14965,7 @@ let mut output = node("CompleteFunctionDomainSourceProof", "AnonymousFunction", 
 output
 },
 crate::execute::execute_fact_stmt::function_domain::CompleteFunctionDomainSourceProof::TemplateDefinition { instance: f0, instance_wd: f1, subject_equal: f2 } => {
-let fields = vec![("instance", capture_ast__obj__InstantiatedTemplateObj(f0, capture, runtime)), ("instance_wd", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(f1, capture, runtime)), ("subject_equal", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__KnownEqualityPathProof(f2, capture, runtime))];
+let fields = vec![("instance", capture_ast__obj__InstantiatedTemplateObj(f0, capture, runtime)), ("instance_wd", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f1, capture, runtime)), ("subject_equal", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__KnownEqualityPathProof(f2, capture, runtime))];
 let mut output = node("CompleteFunctionDomainSourceProof", "TemplateDefinition", fields);
 output
 },
@@ -14936,8 +14974,8 @@ let fields = vec![("membership", capture_ast__fact__atomic__InFact(f0, capture, 
 let mut output = node("CompleteFunctionDomainSourceProof", "Membership", fields);
 output
 },
-crate::execute::execute_fact_stmt::function_domain::CompleteFunctionDomainSourceProof::ApplicationReturn { application: f0, subject_equal: f1, signature_source: f2, application_children: f3, application_requirements: f4, argument_scope: f5, return_space: f6, carrier_equal: f7 } => {
-let fields = vec![("application", capture_ast__obj__FnObj(f0, capture, runtime)), ("subject_equal", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__KnownEqualityPathProof(f1, capture, runtime)), ("signature_source", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FnObjDomainFnSetEvidence(f2, capture, runtime)), ("application_children", JsonValue::Array((f3).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("application_requirements", JsonValue::Array((f4).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect())), ("argument_scope", match (f5).as_ref() { Some(item) => capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fn_obj_domain_check_result__FnObjArgumentScope(item, capture, runtime), None => JsonValue::Null }), ("return_space", capture_ast__obj__Obj(f6, capture, runtime)), ("carrier_equal", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__KnownEqualityPathProof(f7, capture, runtime))];
+crate::execute::execute_fact_stmt::function_domain::CompleteFunctionDomainSourceProof::ApplicationReturn { application: f0, subject_equal: f1, signature_source: f2, application_check: f3, return_space: f4, carrier_equal: f5 } => {
+let fields = vec![("application", capture_ast__obj__FnObj(f0, capture, runtime)), ("subject_equal", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__KnownEqualityPathProof(f1, capture, runtime)), ("signature_source", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FnObjDomainFnSetEvidence(f2, capture, runtime)), ("application_check", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fn_obj_domain_success__FnObjDomainSuccess(f3, capture, runtime)), ("return_space", capture_ast__obj__Obj(f4, capture, runtime)), ("carrier_equal", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__KnownEqualityPathProof(f5, capture, runtime))];
 let mut output = node("CompleteFunctionDomainSourceProof", "ApplicationReturn", fields);
 output
 },
@@ -15107,6 +15145,17 @@ capture.subject_depth -= 1;
 capture.intern_evidence(output)
 }
 
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__well_defined_result__DetailedEqualFactWellDefinedProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::well_defined_result::DetailedEqualFactWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::well_defined_result::DetailedEqualFactWellDefinedProof { left: f0, right: f1 } => {
+let fields = vec![("left", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f0, capture, runtime)), ("right", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f1, capture, runtime))];
+let mut output = node("DetailedEqualFactWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
 pub(super) fn capture_execute__execute_fact_stmt__known_tuple__KnownTupleShapeProof(value: &crate::execute::execute_fact_stmt::known_tuple::KnownTupleShapeProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::known_tuple::KnownTupleShapeProof::CartesianMembership(f0) => {
@@ -15155,121 +15204,16 @@ output
 capture.intern_evidence(output)
 }
 
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ObjWellDefinedProofByDef(value: &crate::execute::execute_fact_stmt::ObjWellDefinedProofByDef, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__DetailedObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::DetailedObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_fact_stmt::ObjWellDefinedProofByDef::MatrixOperator(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixOperatorObjWellDefinedProofByDef(f0, capture, runtime))];
-let mut output = node("ObjWellDefinedProofByDef", "MatrixOperator", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::DetailedObjWellDefinedProof::ByKnown { obj: f0, wd_id: f1 } => {
+let fields = vec![("obj", capture_ast__obj__Obj(f0, capture, runtime)), ("wd_id", capture.wd_reference(f1, runtime))];
+let mut output = node("DetailedObjWellDefinedProof", "ByKnown", fields);
 output
 },
-crate::execute::execute_fact_stmt::ObjWellDefinedProofByDef::IntegralOperator(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__riemann_integral__IntegralOperatorWellDefinedProof(f0, capture, runtime))];
-let mut output = node("ObjWellDefinedProofByDef", "IntegralOperator", fields);
-output
-},
-crate::execute::execute_fact_stmt::ObjWellDefinedProofByDef::DerivativeOperator(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__function_derivative__DerivativeOperatorWellDefinedProof(f0, capture, runtime))];
-let mut output = node("ObjWellDefinedProofByDef", "DerivativeOperator", fields);
-output
-},
-crate::execute::execute_fact_stmt::ObjWellDefinedProofByDef::BoundOperator(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__BoundOperatorObjWellDefinedProofByDef(f0, capture, runtime))];
-let mut output = node("ObjWellDefinedProofByDef", "BoundOperator", fields);
-output
-},
-crate::execute::execute_fact_stmt::ObjWellDefinedProofByDef::LimitOperator(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__LimitOperatorObjWellDefinedProofByDef(f0, capture, runtime))];
-let mut output = node("ObjWellDefinedProofByDef", "LimitOperator", fields);
-output
-},
-crate::execute::execute_fact_stmt::ObjWellDefinedProofByDef::Identifier(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__IdentifierObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("ObjWellDefinedProofByDef", "Identifier", fields);
-output
-},
-crate::execute::execute_fact_stmt::ObjWellDefinedProofByDef::FnObj(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FnObjObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("ObjWellDefinedProofByDef", "FnObj", fields);
-output
-},
-crate::execute::execute_fact_stmt::ObjWellDefinedProofByDef::Literal(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__LiteralObjWellDefinedProofByDef(f0, capture, runtime))];
-let mut output = node("ObjWellDefinedProofByDef", "Literal", fields);
-output
-},
-crate::execute::execute_fact_stmt::ObjWellDefinedProofByDef::StandardSet(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__StandardSetObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("ObjWellDefinedProofByDef", "StandardSet", fields);
-output
-},
-crate::execute::execute_fact_stmt::ObjWellDefinedProofByDef::ArithmeticOperator(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ArithmeticOperatorObjWellDefinedProofByDef(f0, capture, runtime))];
-let mut output = node("ObjWellDefinedProofByDef", "ArithmeticOperator", fields);
-output
-},
-crate::execute::execute_fact_stmt::ObjWellDefinedProofByDef::IntegerOperator(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__IntegerOperatorObjWellDefinedProofByDef(f0, capture, runtime))];
-let mut output = node("ObjWellDefinedProofByDef", "IntegerOperator", fields);
-output
-},
-crate::execute::execute_fact_stmt::ObjWellDefinedProofByDef::TrigOperator(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__TrigOperatorObjWellDefinedProofByDef(f0, capture, runtime))];
-let mut output = node("ObjWellDefinedProofByDef", "TrigOperator", fields);
-output
-},
-crate::execute::execute_fact_stmt::ObjWellDefinedProofByDef::HyperbolicOperator(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__HyperbolicOperatorObjWellDefinedProofByDef(f0, capture, runtime))];
-let mut output = node("ObjWellDefinedProofByDef", "HyperbolicOperator", fields);
-output
-},
-crate::execute::execute_fact_stmt::ObjWellDefinedProofByDef::ExpLogOperator(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ExpLogOperatorObjWellDefinedProofByDef(f0, capture, runtime))];
-let mut output = node("ObjWellDefinedProofByDef", "ExpLogOperator", fields);
-output
-},
-crate::execute::execute_fact_stmt::ObjWellDefinedProofByDef::ComplexOperator(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ComplexOperatorObjWellDefinedProofByDef(f0, capture, runtime))];
-let mut output = node("ObjWellDefinedProofByDef", "ComplexOperator", fields);
-output
-},
-crate::execute::execute_fact_stmt::ObjWellDefinedProofByDef::SetOperator(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SetOperatorObjWellDefinedProofByDef(f0, capture, runtime))];
-let mut output = node("ObjWellDefinedProofByDef", "SetOperator", fields);
-output
-},
-crate::execute::execute_fact_stmt::ObjWellDefinedProofByDef::SetFormer(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SetFormerObjWellDefinedProofByDef(f0, capture, runtime))];
-let mut output = node("ObjWellDefinedProofByDef", "SetFormer", fields);
-output
-},
-crate::execute::execute_fact_stmt::ObjWellDefinedProofByDef::ProductShape(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ProductShapeObjWellDefinedProofByDef(f0, capture, runtime))];
-let mut output = node("ObjWellDefinedProofByDef", "ProductShape", fields);
-output
-},
-crate::execute::execute_fact_stmt::ObjWellDefinedProofByDef::FunctionSpace(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FunctionSpaceObjWellDefinedProofByDef(f0, capture, runtime))];
-let mut output = node("ObjWellDefinedProofByDef", "FunctionSpace", fields);
-output
-},
-crate::execute::execute_fact_stmt::ObjWellDefinedProofByDef::IteratedOperator(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__IteratedOperatorObjWellDefinedProofByDef(f0, capture, runtime))];
-let mut output = node("ObjWellDefinedProofByDef", "IteratedOperator", fields);
-output
-},
-crate::execute::execute_fact_stmt::ObjWellDefinedProofByDef::FiniteSetStat(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FiniteSetStatObjWellDefinedProofByDef(f0, capture, runtime))];
-let mut output = node("ObjWellDefinedProofByDef", "FiniteSetStat", fields);
-output
-},
-crate::execute::execute_fact_stmt::ObjWellDefinedProofByDef::Structish(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__StructishObjWellDefinedProofByDef(f0, capture, runtime))];
-let mut output = node("ObjWellDefinedProofByDef", "Structish", fields);
-output
-},
-crate::execute::execute_fact_stmt::ObjWellDefinedProofByDef::InstantiatedTemplateObj(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__InstantiatedTemplateObjObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("ObjWellDefinedProofByDef", "InstantiatedTemplateObj", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::DetailedObjWellDefinedProof::ByDef { obj: f0, proof: f1 } => {
+let fields = vec![("obj", capture_ast__obj__Obj(f0, capture, runtime)), ("proof", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ObjWellDefinedProofByDef(f1, capture, runtime))];
+let mut output = node("DetailedObjWellDefinedProof", "ByDef", fields);
 output
 },
 };
@@ -19796,51 +19740,11 @@ output
 capture.intern_evidence(output)
 }
 
-pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__PredicateDomainProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__DetailedAtomicFactWellDefinedProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::DetailedAtomicFactWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainProof::MultivariableAnalysis(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__MultivariableAnalysisPredicateDomainProof(f0, capture, runtime))];
-let mut output = node("PredicateDomainProof", "MultivariableAnalysis", fields);
-output
-},
-crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainProof::SequenceAnalysis(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__SequenceAnalysisPredicateDomainProof(f0, capture, runtime))];
-let mut output = node("PredicateDomainProof", "SequenceAnalysis", fields);
-output
-},
-crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainProof::FunctionAnalysis(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__FunctionAnalysisPredicateDomainProof(f0, capture, runtime))];
-let mut output = node("PredicateDomainProof", "FunctionAnalysis", fields);
-output
-},
-crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainProof::FunctionLimit(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__FunctionLimitPredicateDomainProof(f0, capture, runtime))];
-let mut output = node("PredicateDomainProof", "FunctionLimit", fields);
-output
-},
-crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainProof::SequenceLimit(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__SequenceLimitPredicateDomainProof(f0, capture, runtime))];
-let mut output = node("PredicateDomainProof", "SequenceLimit", fields);
-output
-},
-crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainProof::ByKnownFact(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__result__AtomicExceptEqualityFactSearchProofByKnownAtomicFact(f0, capture, runtime))];
-let mut output = node("PredicateDomainProof", "ByKnownFact", fields);
-output
-},
-crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainProof::ByKnownZeroRemainder(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__known_divisibility__KnownZeroRemainderProof(f0, capture, runtime))];
-let mut output = node("PredicateDomainProof", "ByKnownZeroRemainder", fields);
-output
-},
-crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainProof::ByRequirements(f0) => {
-let fields = vec![("0", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__PredicateDomainWellDefinedProof(item, capture, runtime)).collect()))];
-let mut output = node("PredicateDomainProof", "ByRequirements", fields);
-output
-},
-crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainProof::ByCheckedArguments(f0) => {
-let fields = vec![("0", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__PredicateDomainArgumentMembershipProof(item, capture, runtime)).collect()))];
-let mut output = node("PredicateDomainProof", "ByCheckedArguments", fields);
+crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::DetailedAtomicFactWellDefinedProof { well_defined_of_each_parameter: f0, predicate_signature: f1, predicate_domain: f2 } => {
+let fields = vec![("well_defined_of_each_parameter", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("predicate_signature", capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__PredicateSignatureWellDefinedProof(f1, capture, runtime)), ("predicate_domain", capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__PredicateDomainProof(f2, capture, runtime))];
+let mut output = node("DetailedAtomicFactWellDefinedProof", "", fields);
 output
 },
 };
@@ -20934,9 +20838,12 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__result__SearchProofByKnownStrategy(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::SearchProofByKnownStrategy, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_fact_stmt::verify_atomic_fact::SearchProofByKnownStrategy { strategy_name: f0, then_index: f1, forall_parameters_match_what_args: f2, arg_match_proofs: f3, instantiation_requirements: f4 } => {
-let fields = vec![("strategy_name", JsonValue::String((f0).to_string())), ("then_index", JsonValue::String((f1).to_string())), ("forall_parameters_match_what_args", JsonValue::Array((f2).iter().map(|item| capture_ast__obj__Obj(item, capture, runtime)).collect())), ("arg_match_proofs", JsonValue::Array((f3).iter().map(|item| capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__ForallConclusionArgMatchProof(item, capture, runtime)).collect())), ("instantiation_requirements", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__ProveForallInstantiationRequirementsProof(f4, capture, runtime))];
-let mut output = node("SearchProofByKnownStrategy", "", fields);
+crate::execute::execute_fact_stmt::verify_atomic_fact::SearchProofByKnownStrategy::Compact(f0) => panic!("internal_bug: reading requires Detailed SearchProofByKnownStrategy"),
+crate::execute::execute_fact_stmt::verify_atomic_fact::SearchProofByKnownStrategy::Normal(f0) => panic!("internal_bug: reading requires Detailed SearchProofByKnownStrategy"),
+crate::execute::execute_fact_stmt::verify_atomic_fact::SearchProofByKnownStrategy::Detailed(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__result__DetailedSearchProofByKnownStrategy(f0, capture, runtime))];
+let mut output = node("SearchProofByKnownStrategy", "Detailed", fields);
+if let JsonValue::Object(fields) = &mut output { fields.insert("result_detail".into(), JsonValue::String("detailed".into())); }
 output
 },
 };
@@ -21001,48 +20908,22 @@ output
 capture.intern_evidence(output)
 }
 
-pub(super) fn capture_exec_env__known_forall_conclusion_memory__ForallConclusionCite(value: &crate::exec_env::ForallConclusionCite, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__DetailedSearchProofByKnownForallFact(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::DetailedSearchProofByKnownForallFact, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::exec_env::ForallConclusionCite { fact_id: f0, location: f1 } => {
-let fields = vec![("fact_id", capture.fact_reference(f0, runtime)), ("location", capture_ast__fact__forall_fact__ForallConclusionLocation(f1, capture, runtime))];
-let mut output = node("ForallConclusionCite", "", fields);
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::DetailedSearchProofByKnownForallFact { cite: f0, forall_parameters_match_what_args: f1, arg_match_proofs: f2, instantiation_requirements: f3 } => {
+let fields = vec![("cite", capture_exec_env__known_forall_conclusion_memory__ForallConclusionCite(f0, capture, runtime)), ("forall_parameters_match_what_args", JsonValue::Array((f1).iter().map(|item| capture_ast__obj__Obj(item, capture, runtime)).collect())), ("arg_match_proofs", JsonValue::Array((f2).iter().map(|item| capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__ForallConclusionArgMatchProof(item, capture, runtime)).collect())), ("instantiation_requirements", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__ProveForallInstantiationRequirementsProof(f3, capture, runtime))];
+let mut output = node("DetailedSearchProofByKnownForallFact", "", fields);
 output
 },
 };
 capture.intern_evidence(output)
 }
 
-pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__ForallConclusionArgMatchProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::ForallConclusionArgMatchProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+pub(super) fn capture_execute__execute_fact_stmt__verify_or_fact__well_defined_result__DetailedOrFactWellDefinedProof(value: &crate::execute::execute_fact_stmt::verify_or_fact::DetailedOrFactWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::ForallConclusionArgMatchProof::BoundParam { param_id: f0, pattern: f1, goal_arg: f2 } => {
-let fields = vec![("param_id", capture.identifier_id(f0, runtime)), ("pattern", capture_ast__obj__Obj(f1, capture, runtime)), ("goal_arg", capture_ast__obj__Obj(f2, capture, runtime))];
-let mut output = node("ForallConclusionArgMatchProof", "BoundParam", fields);
-output
-},
-crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::ForallConclusionArgMatchProof::ReboundParamEqual { param_id: f0, previous: f1, goal_arg: f2, equal: f3 } => {
-let fields = vec![("param_id", capture.identifier_id(f0, runtime)), ("previous", capture_ast__obj__Obj(f1, capture, runtime)), ("goal_arg", capture_ast__obj__Obj(f2, capture, runtime)), ("equal", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__StrictEqualWithFact(f3, capture, runtime))];
-let mut output = node("ForallConclusionArgMatchProof", "ReboundParamEqual", fields);
-output
-},
-crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::ForallConclusionArgMatchProof::ByStructure { pattern: f0, goal_arg: f1, child_matches: f2 } => {
-let fields = vec![("pattern", capture_ast__obj__Obj(f0, capture, runtime)), ("goal_arg", capture_ast__obj__Obj(f1, capture, runtime)), ("child_matches", JsonValue::Array((f2).iter().map(|item| capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__ForallConclusionArgMatchProof(item, capture, runtime)).collect()))];
-let mut output = node("ForallConclusionArgMatchProof", "ByStructure", fields);
-output
-},
-crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::ForallConclusionArgMatchProof::NonParamEqual { pattern: f0, pattern_after_subst: f1, goal_arg: f2, equal: f3 } => {
-let fields = vec![("pattern", capture_ast__obj__Obj(f0, capture, runtime)), ("pattern_after_subst", capture_ast__obj__Obj(f1, capture, runtime)), ("goal_arg", capture_ast__obj__Obj(f2, capture, runtime)), ("equal", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__StrictEqualWithFact(f3, capture, runtime))];
-let mut output = node("ForallConclusionArgMatchProof", "NonParamEqual", fields);
-output
-},
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__ProveForallInstantiationRequirementsProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::ProveForallInstantiationRequirementsProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::ProveForallInstantiationRequirementsProof { param_type_requirements: f0, dom_facts: f1, proof_of_dom_facts: f2 } => {
-let fields = vec![("param_type_requirements", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__ForallParamTypeRequirementProof(item, capture, runtime)).collect())), ("dom_facts", JsonValue::Array((f1).iter().map(|item| capture_ast__fact__fact__Fact(item, capture, runtime)).collect())), ("proof_of_dom_facts", JsonValue::Array((f2).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("ProveForallInstantiationRequirementsProof", "", fields);
+crate::execute::execute_fact_stmt::verify_or_fact::DetailedOrFactWellDefinedProof { branches: f0 } => {
+let fields = vec![("branches", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FactWellDefinedProof(item, capture, runtime)).collect()))];
+let mut output = node("DetailedOrFactWellDefinedProof", "", fields);
 output
 },
 };
@@ -22043,6 +21924,84 @@ output
 capture.intern_evidence(output)
 }
 
+pub(super) fn capture_execute__execute_fact_stmt__verify_and_fact__well_defined_result__DetailedAndFactWellDefinedProof(value: &crate::execute::execute_fact_stmt::verify_and_fact::DetailedAndFactWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_and_fact::DetailedAndFactWellDefinedProof { components: f0 } => {
+let fields = vec![("components", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__AtomicFactWellDefinedProof(item, capture, runtime)).collect()))];
+let mut output = node("DetailedAndFactWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_chain_fact__well_defined_result__DetailedChainFactWellDefinedProof(value: &crate::execute::execute_fact_stmt::verify_chain_fact::DetailedChainFactWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_chain_fact::DetailedChainFactWellDefinedProof { adjacent: f0 } => {
+let fields = vec![("adjacent", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__AtomicFactWellDefinedProof(item, capture, runtime)).collect()))];
+let mut output = node("DetailedChainFactWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_exist_shaped_fact__well_defined_result__DetailedExistShapedFactWellDefinedProof(value: &crate::execute::execute_fact_stmt::verify_exist_shaped_fact::DetailedExistShapedFactWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_exist_shaped_fact::DetailedExistShapedFactWellDefinedProof { introduced_params: f0, assumed_body_facts: f1, local_env: f2 } => {
+let saved_scope = capture.enter_scope();
+capture.index_environment(f2, runtime);
+let fields = vec![("introduced_params", capture_execute__introduce_typed_parameters__IntroduceTypedParametersResult(f0, capture, runtime)), ("assumed_body_facts", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_forall_fact__result__AssumeDomFactResult(item, capture, runtime)).collect())), ("local_env", capture.environment(f2, runtime))];
+let mut output = node("DetailedExistShapedFactWellDefinedProof", "", fields);
+capture.leave_scope(saved_scope);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_forall_fact__well_defined_result__DetailedForallFactWellDefinedProof(value: &crate::execute::execute_fact_stmt::verify_forall_fact::DetailedForallFactWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_forall_fact::DetailedForallFactWellDefinedProof { introduced_params: f0, assumed_dom_facts: f1, then: f2, local_env: f3 } => {
+let saved_scope = capture.enter_scope();
+capture.index_environment(f3, runtime);
+let fields = vec![("introduced_params", capture_execute__introduce_typed_parameters__IntroduceTypedParametersResult(f0, capture, runtime)), ("assumed_dom_facts", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_forall_fact__result__AssumeDomFactResult(item, capture, runtime)).collect())), ("then", JsonValue::Array((f2).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FactWellDefinedProof(item, capture, runtime)).collect())), ("local_env", capture.environment(f3, runtime))];
+let mut output = node("DetailedForallFactWellDefinedProof", "", fields);
+capture.leave_scope(saved_scope);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_forall_fact_with_iff__well_defined_result__DetailedForallFactWithIffWellDefinedProof(value: &crate::execute::execute_fact_stmt::verify_forall_fact_with_iff::DetailedForallFactWithIffWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_forall_fact_with_iff::DetailedForallFactWithIffWellDefinedProof { introduced_params: f0, assumed_dom_facts: f1, then: f2, iff: f3, local_env: f4 } => {
+let saved_scope = capture.enter_scope();
+capture.index_environment(f4, runtime);
+let fields = vec![("introduced_params", capture_execute__introduce_typed_parameters__IntroduceTypedParametersResult(f0, capture, runtime)), ("assumed_dom_facts", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_forall_fact__result__AssumeDomFactResult(item, capture, runtime)).collect())), ("then", JsonValue::Array((f2).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FactWellDefinedProof(item, capture, runtime)).collect())), ("iff", JsonValue::Array((f3).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FactWellDefinedProof(item, capture, runtime)).collect())), ("local_env", capture.environment(f4, runtime))];
+let mut output = node("DetailedForallFactWithIffWellDefinedProof", "", fields);
+capture.leave_scope(saved_scope);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_not_forall_fact__well_defined_result__DetailedNotForallFactWellDefinedProof(value: &crate::execute::execute_fact_stmt::verify_not_forall_fact::DetailedNotForallFactWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_not_forall_fact::DetailedNotForallFactWellDefinedProof { introduced_params: f0, assumed_dom_facts: f1, then: f2, local_env: f3 } => {
+let saved_scope = capture.enter_scope();
+capture.index_environment(f3, runtime);
+let fields = vec![("introduced_params", capture_execute__introduce_typed_parameters__IntroduceTypedParametersResult(f0, capture, runtime)), ("assumed_dom_facts", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_forall_fact__result__AssumeDomFactResult(item, capture, runtime)).collect())), ("then", JsonValue::Array((f2).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FactWellDefinedProof(item, capture, runtime)).collect())), ("local_env", capture.environment(f3, runtime))];
+let mut output = node("DetailedNotForallFactWellDefinedProof", "", fields);
+capture.leave_scope(saved_scope);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
 pub(super) fn capture_execute__execute_have_fn_by_induc_stmt__InducCaseBodySuccess(value: &crate::execute::InducCaseBodySuccess, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::InducCaseBodySuccess::EqualTo { well_defined: f0, in_ret_set: f1 } => {
@@ -22062,7 +22021,7 @@ capture.intern_evidence(output)
 pub(super) fn capture_execute__execute_fact_stmt__function_domain__MultivariableSelectorFunctionDomainProof(value: &crate::execute::execute_fact_stmt::function_domain::MultivariableSelectorFunctionDomainProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::function_domain::MultivariableSelectorFunctionDomainProof { selector: f0, well_defined: f1 } => {
-let fields = vec![("selector", capture_ast__obj__Obj(f0, capture, runtime)), ("well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(f1, capture, runtime))];
+let fields = vec![("selector", capture_ast__obj__Obj(f0, capture, runtime)), ("well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f1, capture, runtime))];
 let mut output = node("MultivariableSelectorFunctionDomainProof", "", fields);
 output
 },
@@ -22144,14 +22103,14 @@ output
 capture.intern_evidence(output)
 }
 
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fn_obj_domain_check_result__FnObjArgumentScope(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnObjArgumentScope, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fn_obj_domain_success__FnObjDomainSuccess(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnObjDomainSuccess, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnObjArgumentScope { formed_children: f0, local_env: f1 } => {
-let saved_scope = capture.enter_scope();
-capture.index_environment(f1, runtime);
-let fields = vec![("formed_children", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fn_obj_domain_check_result__FormedFunctionArgument(item, capture, runtime)).collect())), ("local_env", capture.environment(f1, runtime))];
-let mut output = node("FnObjArgumentScope", "", fields);
-capture.leave_scope(saved_scope);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnObjDomainSuccess::Compact(f0) => panic!("internal_bug: reading requires Detailed FnObjDomainSuccess"),
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnObjDomainSuccess::Normal(f0) => panic!("internal_bug: reading requires Detailed FnObjDomainSuccess"),
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnObjDomainSuccess::Detailed(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fn_obj_domain_success__DetailedFnObjDomainSuccess(f0, capture, runtime))];
+let mut output = node("FnObjDomainSuccess", "Detailed", fields);
+if let JsonValue::Object(fields) = &mut output { fields.insert("result_detail".into(), JsonValue::String("detailed".into())); }
 output
 },
 };
@@ -22289,779 +22248,121 @@ output
 capture.intern_evidence(output)
 }
 
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixOperatorObjWellDefinedProofByDef(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOperatorObjWellDefinedProofByDef, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ObjWellDefinedProofByDef(value: &crate::execute::execute_fact_stmt::ObjWellDefinedProofByDef, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOperatorObjWellDefinedProofByDef::Determinant(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__DeterminantObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("MatrixOperatorObjWellDefinedProofByDef", "Determinant", fields);
+crate::execute::execute_fact_stmt::ObjWellDefinedProofByDef::MatrixOperator(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixOperatorObjWellDefinedProofByDef(f0, capture, runtime))];
+let mut output = node("ObjWellDefinedProofByDef", "MatrixOperator", fields);
 output
 },
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOperatorObjWellDefinedProofByDef::ZeroMatrix(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ZeroMatrixObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("MatrixOperatorObjWellDefinedProofByDef", "ZeroMatrix", fields);
+crate::execute::execute_fact_stmt::ObjWellDefinedProofByDef::IntegralOperator(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__riemann_integral__IntegralOperatorWellDefinedProof(f0, capture, runtime))];
+let mut output = node("ObjWellDefinedProofByDef", "IntegralOperator", fields);
 output
 },
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOperatorObjWellDefinedProofByDef::IdentityMatrix(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__IdentityMatrixObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("MatrixOperatorObjWellDefinedProofByDef", "IdentityMatrix", fields);
+crate::execute::execute_fact_stmt::ObjWellDefinedProofByDef::DerivativeOperator(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__function_derivative__DerivativeOperatorWellDefinedProof(f0, capture, runtime))];
+let mut output = node("ObjWellDefinedProofByDef", "DerivativeOperator", fields);
 output
 },
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOperatorObjWellDefinedProofByDef::Transpose(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixTransposeObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("MatrixOperatorObjWellDefinedProofByDef", "Transpose", fields);
+crate::execute::execute_fact_stmt::ObjWellDefinedProofByDef::BoundOperator(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__BoundOperatorObjWellDefinedProofByDef(f0, capture, runtime))];
+let mut output = node("ObjWellDefinedProofByDef", "BoundOperator", fields);
 output
 },
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOperatorObjWellDefinedProofByDef::ConjugateTranspose(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixConjugateTransposeObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("MatrixOperatorObjWellDefinedProofByDef", "ConjugateTranspose", fields);
+crate::execute::execute_fact_stmt::ObjWellDefinedProofByDef::LimitOperator(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__LimitOperatorObjWellDefinedProofByDef(f0, capture, runtime))];
+let mut output = node("ObjWellDefinedProofByDef", "LimitOperator", fields);
 output
 },
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOperatorObjWellDefinedProofByDef::Trace(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixTraceObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("MatrixOperatorObjWellDefinedProofByDef", "Trace", fields);
+crate::execute::execute_fact_stmt::ObjWellDefinedProofByDef::Identifier(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__IdentifierObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("ObjWellDefinedProofByDef", "Identifier", fields);
 output
 },
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOperatorObjWellDefinedProofByDef::Add(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixAddObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("MatrixOperatorObjWellDefinedProofByDef", "Add", fields);
+crate::execute::execute_fact_stmt::ObjWellDefinedProofByDef::FnObj(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FnObjObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("ObjWellDefinedProofByDef", "FnObj", fields);
 output
 },
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOperatorObjWellDefinedProofByDef::Subtract(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixSubtractObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("MatrixOperatorObjWellDefinedProofByDef", "Subtract", fields);
+crate::execute::execute_fact_stmt::ObjWellDefinedProofByDef::Literal(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__LiteralObjWellDefinedProofByDef(f0, capture, runtime))];
+let mut output = node("ObjWellDefinedProofByDef", "Literal", fields);
 output
 },
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOperatorObjWellDefinedProofByDef::Scale(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixScaleObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("MatrixOperatorObjWellDefinedProofByDef", "Scale", fields);
+crate::execute::execute_fact_stmt::ObjWellDefinedProofByDef::StandardSet(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__StandardSetObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("ObjWellDefinedProofByDef", "StandardSet", fields);
 output
 },
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOperatorObjWellDefinedProofByDef::Multiply(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixMultiplyObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("MatrixOperatorObjWellDefinedProofByDef", "Multiply", fields);
+crate::execute::execute_fact_stmt::ObjWellDefinedProofByDef::ArithmeticOperator(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ArithmeticOperatorObjWellDefinedProofByDef(f0, capture, runtime))];
+let mut output = node("ObjWellDefinedProofByDef", "ArithmeticOperator", fields);
 output
 },
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOperatorObjWellDefinedProofByDef::Apply(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixApplyObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("MatrixOperatorObjWellDefinedProofByDef", "Apply", fields);
+crate::execute::execute_fact_stmt::ObjWellDefinedProofByDef::IntegerOperator(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__IntegerOperatorObjWellDefinedProofByDef(f0, capture, runtime))];
+let mut output = node("ObjWellDefinedProofByDef", "IntegerOperator", fields);
 output
 },
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOperatorObjWellDefinedProofByDef::Power(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixPowerObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("MatrixOperatorObjWellDefinedProofByDef", "Power", fields);
+crate::execute::execute_fact_stmt::ObjWellDefinedProofByDef::TrigOperator(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__TrigOperatorObjWellDefinedProofByDef(f0, capture, runtime))];
+let mut output = node("ObjWellDefinedProofByDef", "TrigOperator", fields);
 output
 },
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOperatorObjWellDefinedProofByDef::Inverse(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixInverseObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("MatrixOperatorObjWellDefinedProofByDef", "Inverse", fields);
+crate::execute::execute_fact_stmt::ObjWellDefinedProofByDef::HyperbolicOperator(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__HyperbolicOperatorObjWellDefinedProofByDef(f0, capture, runtime))];
+let mut output = node("ObjWellDefinedProofByDef", "HyperbolicOperator", fields);
 output
 },
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOperatorObjWellDefinedProofByDef::Rank(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixRankObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("MatrixOperatorObjWellDefinedProofByDef", "Rank", fields);
+crate::execute::execute_fact_stmt::ObjWellDefinedProofByDef::ExpLogOperator(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ExpLogOperatorObjWellDefinedProofByDef(f0, capture, runtime))];
+let mut output = node("ObjWellDefinedProofByDef", "ExpLogOperator", fields);
 output
 },
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOperatorObjWellDefinedProofByDef::Minor(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixMinorObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("MatrixOperatorObjWellDefinedProofByDef", "Minor", fields);
+crate::execute::execute_fact_stmt::ObjWellDefinedProofByDef::ComplexOperator(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ComplexOperatorObjWellDefinedProofByDef(f0, capture, runtime))];
+let mut output = node("ObjWellDefinedProofByDef", "ComplexOperator", fields);
 output
 },
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOperatorObjWellDefinedProofByDef::Cofactor(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixCofactorObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("MatrixOperatorObjWellDefinedProofByDef", "Cofactor", fields);
+crate::execute::execute_fact_stmt::ObjWellDefinedProofByDef::SetOperator(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SetOperatorObjWellDefinedProofByDef(f0, capture, runtime))];
+let mut output = node("ObjWellDefinedProofByDef", "SetOperator", fields);
 output
 },
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOperatorObjWellDefinedProofByDef::Adjugate(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixAdjugateObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("MatrixOperatorObjWellDefinedProofByDef", "Adjugate", fields);
+crate::execute::execute_fact_stmt::ObjWellDefinedProofByDef::SetFormer(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SetFormerObjWellDefinedProofByDef(f0, capture, runtime))];
+let mut output = node("ObjWellDefinedProofByDef", "SetFormer", fields);
 output
 },
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOperatorObjWellDefinedProofByDef::Diagonal(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixDiagonalObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("MatrixOperatorObjWellDefinedProofByDef", "Diagonal", fields);
+crate::execute::execute_fact_stmt::ObjWellDefinedProofByDef::ProductShape(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ProductShapeObjWellDefinedProofByDef(f0, capture, runtime))];
+let mut output = node("ObjWellDefinedProofByDef", "ProductShape", fields);
 output
 },
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOperatorObjWellDefinedProofByDef::OuterProduct(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixOuterProductObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("MatrixOperatorObjWellDefinedProofByDef", "OuterProduct", fields);
+crate::execute::execute_fact_stmt::ObjWellDefinedProofByDef::FunctionSpace(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FunctionSpaceObjWellDefinedProofByDef(f0, capture, runtime))];
+let mut output = node("ObjWellDefinedProofByDef", "FunctionSpace", fields);
 output
 },
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOperatorObjWellDefinedProofByDef::InnerProduct(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FiniteInnerProductObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("MatrixOperatorObjWellDefinedProofByDef", "InnerProduct", fields);
+crate::execute::execute_fact_stmt::ObjWellDefinedProofByDef::IteratedOperator(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__IteratedOperatorObjWellDefinedProofByDef(f0, capture, runtime))];
+let mut output = node("ObjWellDefinedProofByDef", "IteratedOperator", fields);
 output
 },
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOperatorObjWellDefinedProofByDef::EuclideanNorm(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__EuclideanNormObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("MatrixOperatorObjWellDefinedProofByDef", "EuclideanNorm", fields);
+crate::execute::execute_fact_stmt::ObjWellDefinedProofByDef::FiniteSetStat(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FiniteSetStatObjWellDefinedProofByDef(f0, capture, runtime))];
+let mut output = node("ObjWellDefinedProofByDef", "FiniteSetStat", fields);
 output
 },
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOperatorObjWellDefinedProofByDef::FrobeniusNorm(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixFrobeniusNormObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("MatrixOperatorObjWellDefinedProofByDef", "FrobeniusNorm", fields);
+crate::execute::execute_fact_stmt::ObjWellDefinedProofByDef::Structish(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__StructishObjWellDefinedProofByDef(f0, capture, runtime))];
+let mut output = node("ObjWellDefinedProofByDef", "Structish", fields);
 output
 },
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__riemann_integral__IntegralOperatorWellDefinedProof(value: &crate::execute::execute_fact_stmt::riemann_integral::IntegralOperatorWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::riemann_integral::IntegralOperatorWellDefinedProof::Riemann(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__riemann_integral__RiemannIntegralWellDefinedProof(f0, capture, runtime))];
-let mut output = node("IntegralOperatorWellDefinedProof", "Riemann", fields);
-output
-},
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__function_derivative__DerivativeOperatorWellDefinedProof(value: &crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof::Partial(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__selector__PartialDerivativeAtWellDefinedProof(f0, capture, runtime))];
-let mut output = node("DerivativeOperatorWellDefinedProof", "Partial", fields);
-output
-},
-crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof::ScalarDifferential(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__selector__ScalarDifferentialAtWellDefinedProof(f0, capture, runtime))];
-let mut output = node("DerivativeOperatorWellDefinedProof", "ScalarDifferential", fields);
-output
-},
-crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof::TotalDifferential(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__selector__TotalDifferentialAtWellDefinedProof(f0, capture, runtime))];
-let mut output = node("DerivativeOperatorWellDefinedProof", "TotalDifferential", fields);
-output
-},
-crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof::Gradient(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__selector__GradientAtWellDefinedProof(f0, capture, runtime))];
-let mut output = node("DerivativeOperatorWellDefinedProof", "Gradient", fields);
-output
-},
-crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof::Jacobian(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__selector__JacobianAtWellDefinedProof(f0, capture, runtime))];
-let mut output = node("DerivativeOperatorWellDefinedProof", "Jacobian", fields);
-output
-},
-crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof::Hessian(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__selector__HessianAtWellDefinedProof(f0, capture, runtime))];
-let mut output = node("DerivativeOperatorWellDefinedProof", "Hessian", fields);
-output
-},
-crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof::Divergence(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__selector__DivergenceAtWellDefinedProof(f0, capture, runtime))];
-let mut output = node("DerivativeOperatorWellDefinedProof", "Divergence", fields);
-output
-},
-crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof::Curl(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__selector__CurlAtWellDefinedProof(f0, capture, runtime))];
-let mut output = node("DerivativeOperatorWellDefinedProof", "Curl", fields);
-output
-},
-crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof::Laplacian(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__selector__LaplacianAtWellDefinedProof(f0, capture, runtime))];
-let mut output = node("DerivativeOperatorWellDefinedProof", "Laplacian", fields);
-output
-},
-crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof::AtPoint(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__function_derivative__DerivativeAtWellDefinedProof(f0, capture, runtime))];
-let mut output = node("DerivativeOperatorWellDefinedProof", "AtPoint", fields);
-output
-},
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__BoundOperatorObjWellDefinedProofByDef(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::BoundOperatorObjWellDefinedProofByDef, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::BoundOperatorObjWellDefinedProofByDef::Supremum(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SupremumObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("BoundOperatorObjWellDefinedProofByDef", "Supremum", fields);
-output
-},
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::BoundOperatorObjWellDefinedProofByDef::Infimum(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__InfimumObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("BoundOperatorObjWellDefinedProofByDef", "Infimum", fields);
-output
-},
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__LimitOperatorObjWellDefinedProofByDef(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::LimitOperatorObjWellDefinedProofByDef, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::LimitOperatorObjWellDefinedProofByDef::MultivariableScalar(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__selector__MultivariableScalarLimitWellDefinedProof(f0, capture, runtime))];
-let mut output = node("LimitOperatorObjWellDefinedProofByDef", "MultivariableScalar", fields);
-output
-},
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::LimitOperatorObjWellDefinedProofByDef::MultivariableVector(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__selector__MultivariableVectorLimitWellDefinedProof(f0, capture, runtime))];
-let mut output = node("LimitOperatorObjWellDefinedProofByDef", "MultivariableVector", fields);
-output
-},
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::LimitOperatorObjWellDefinedProofByDef::Function(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FunctionLimitObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("LimitOperatorObjWellDefinedProofByDef", "Function", fields);
-output
-},
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::LimitOperatorObjWellDefinedProofByDef::Sequence(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SequenceLimitObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("LimitOperatorObjWellDefinedProofByDef", "Sequence", fields);
-output
-},
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::LimitOperatorObjWellDefinedProofByDef::SequenceLimsup(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SequenceLimsupObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("LimitOperatorObjWellDefinedProofByDef", "SequenceLimsup", fields);
-output
-},
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::LimitOperatorObjWellDefinedProofByDef::SequenceLiminf(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SequenceLiminfObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("LimitOperatorObjWellDefinedProofByDef", "SequenceLiminf", fields);
-output
-},
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__IdentifierObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IdentifierObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IdentifierObjWellDefinedProof {  } => {
-let fields = vec![];
-let mut output = node("IdentifierObjWellDefinedProof", "", fields);
-output
-},
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FnObjObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnObjObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnObjObjWellDefinedProof { domain_fn_set: f0, child_obj_well_defined: f1, requirement_fact_verified: f2, argument_scope: f3 } => {
-let fields = vec![("domain_fn_set", match (f0).as_ref() { Some(item) => capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FnObjDomainFnSetEvidence(item, capture, runtime), None => JsonValue::Null }), ("child_obj_well_defined", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f2).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect())), ("argument_scope", match (f3).as_ref() { Some(item) => capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fn_obj_domain_check_result__FnObjArgumentScope(item, capture, runtime), None => JsonValue::Null })];
-let mut output = node("FnObjObjWellDefinedProof", "", fields);
-if let Some(scope) = f3.as_ref() { if let Some(JsonValue::Array(children)) = capture.evidence_field(&output, "child_obj_well_defined") { for formed in &scope.formed_children { if let Some(child) = children.get(formed.child_index) { capture.wd_evidence(&formed.wd_id, child, "well_definedness"); } } } }
-output
-},
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__LiteralObjWellDefinedProofByDef(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::LiteralObjWellDefinedProofByDef, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::LiteralObjWellDefinedProofByDef::Number(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__NumberObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("LiteralObjWellDefinedProofByDef", "Number", fields);
-output
-},
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::LiteralObjWellDefinedProofByDef::ImaginaryUnit(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ImaginaryUnitObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("LiteralObjWellDefinedProofByDef", "ImaginaryUnit", fields);
-output
-},
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::LiteralObjWellDefinedProofByDef::EulerNumber(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__EulerNumberObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("LiteralObjWellDefinedProofByDef", "EulerNumber", fields);
-output
-},
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::LiteralObjWellDefinedProofByDef::Pi(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__PiObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("LiteralObjWellDefinedProofByDef", "Pi", fields);
-output
-},
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__StandardSetObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::StandardSetObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::StandardSetObjWellDefinedProof {  } => {
-let fields = vec![];
-let mut output = node("StandardSetObjWellDefinedProof", "", fields);
-output
-},
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ArithmeticOperatorObjWellDefinedProofByDef(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ArithmeticOperatorObjWellDefinedProofByDef, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ArithmeticOperatorObjWellDefinedProofByDef::Add(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__AddObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("ArithmeticOperatorObjWellDefinedProofByDef", "Add", fields);
-output
-},
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ArithmeticOperatorObjWellDefinedProofByDef::Sub(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SubObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("ArithmeticOperatorObjWellDefinedProofByDef", "Sub", fields);
-output
-},
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ArithmeticOperatorObjWellDefinedProofByDef::Neg(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__NegObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("ArithmeticOperatorObjWellDefinedProofByDef", "Neg", fields);
-output
-},
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ArithmeticOperatorObjWellDefinedProofByDef::Mul(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MulObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("ArithmeticOperatorObjWellDefinedProofByDef", "Mul", fields);
-output
-},
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ArithmeticOperatorObjWellDefinedProofByDef::Div(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__DivObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("ArithmeticOperatorObjWellDefinedProofByDef", "Div", fields);
-output
-},
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ArithmeticOperatorObjWellDefinedProofByDef::Pow(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__PowObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("ArithmeticOperatorObjWellDefinedProofByDef", "Pow", fields);
-output
-},
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ArithmeticOperatorObjWellDefinedProofByDef::Abs(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__AbsObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("ArithmeticOperatorObjWellDefinedProofByDef", "Abs", fields);
-output
-},
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ArithmeticOperatorObjWellDefinedProofByDef::Min(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MinObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("ArithmeticOperatorObjWellDefinedProofByDef", "Min", fields);
-output
-},
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ArithmeticOperatorObjWellDefinedProofByDef::Max(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MaxObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("ArithmeticOperatorObjWellDefinedProofByDef", "Max", fields);
-output
-},
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ArithmeticOperatorObjWellDefinedProofByDef::Floor(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FloorObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("ArithmeticOperatorObjWellDefinedProofByDef", "Floor", fields);
-output
-},
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ArithmeticOperatorObjWellDefinedProofByDef::Ceil(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__CeilObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("ArithmeticOperatorObjWellDefinedProofByDef", "Ceil", fields);
-output
-},
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ArithmeticOperatorObjWellDefinedProofByDef::Sign(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SignObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("ArithmeticOperatorObjWellDefinedProofByDef", "Sign", fields);
-output
-},
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__IntegerOperatorObjWellDefinedProofByDef(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IntegerOperatorObjWellDefinedProofByDef, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IntegerOperatorObjWellDefinedProofByDef::Mod(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ModObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("IntegerOperatorObjWellDefinedProofByDef", "Mod", fields);
-output
-},
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IntegerOperatorObjWellDefinedProofByDef::Quot(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__QuotObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("IntegerOperatorObjWellDefinedProofByDef", "Quot", fields);
-output
-},
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IntegerOperatorObjWellDefinedProofByDef::Gcd(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__GcdObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("IntegerOperatorObjWellDefinedProofByDef", "Gcd", fields);
-output
-},
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IntegerOperatorObjWellDefinedProofByDef::Lcm(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__LcmObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("IntegerOperatorObjWellDefinedProofByDef", "Lcm", fields);
-output
-},
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IntegerOperatorObjWellDefinedProofByDef::Factorial(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FactorialObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("IntegerOperatorObjWellDefinedProofByDef", "Factorial", fields);
-output
-},
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__TrigOperatorObjWellDefinedProofByDef(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::TrigOperatorObjWellDefinedProofByDef, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::TrigOperatorObjWellDefinedProofByDef::Csc(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__CscObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("TrigOperatorObjWellDefinedProofByDef", "Csc", fields);
-output
-},
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::TrigOperatorObjWellDefinedProofByDef::Sec(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SecObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("TrigOperatorObjWellDefinedProofByDef", "Sec", fields);
-output
-},
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::TrigOperatorObjWellDefinedProofByDef::Sin(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SinObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("TrigOperatorObjWellDefinedProofByDef", "Sin", fields);
-output
-},
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::TrigOperatorObjWellDefinedProofByDef::Cos(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__CosObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("TrigOperatorObjWellDefinedProofByDef", "Cos", fields);
-output
-},
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::TrigOperatorObjWellDefinedProofByDef::Tan(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__TanObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("TrigOperatorObjWellDefinedProofByDef", "Tan", fields);
-output
-},
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::TrigOperatorObjWellDefinedProofByDef::Cot(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__CotObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("TrigOperatorObjWellDefinedProofByDef", "Cot", fields);
-output
-},
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::TrigOperatorObjWellDefinedProofByDef::Arcsin(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ArcsinObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("TrigOperatorObjWellDefinedProofByDef", "Arcsin", fields);
-output
-},
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::TrigOperatorObjWellDefinedProofByDef::Arccos(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ArccosObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("TrigOperatorObjWellDefinedProofByDef", "Arccos", fields);
-output
-},
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::TrigOperatorObjWellDefinedProofByDef::Arctan(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ArctanObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("TrigOperatorObjWellDefinedProofByDef", "Arctan", fields);
-output
-},
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::TrigOperatorObjWellDefinedProofByDef::Arccot(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ArccotObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("TrigOperatorObjWellDefinedProofByDef", "Arccot", fields);
-output
-},
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__HyperbolicOperatorObjWellDefinedProofByDef(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::HyperbolicOperatorObjWellDefinedProofByDef, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::HyperbolicOperatorObjWellDefinedProofByDef::Sinh(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SinhObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("HyperbolicOperatorObjWellDefinedProofByDef", "Sinh", fields);
-output
-},
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::HyperbolicOperatorObjWellDefinedProofByDef::Cosh(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__CoshObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("HyperbolicOperatorObjWellDefinedProofByDef", "Cosh", fields);
-output
-},
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::HyperbolicOperatorObjWellDefinedProofByDef::Tanh(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__TanhObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("HyperbolicOperatorObjWellDefinedProofByDef", "Tanh", fields);
-output
-},
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::HyperbolicOperatorObjWellDefinedProofByDef::Coth(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__CothObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("HyperbolicOperatorObjWellDefinedProofByDef", "Coth", fields);
-output
-},
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::HyperbolicOperatorObjWellDefinedProofByDef::Sech(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SechObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("HyperbolicOperatorObjWellDefinedProofByDef", "Sech", fields);
-output
-},
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::HyperbolicOperatorObjWellDefinedProofByDef::Csch(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__CschObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("HyperbolicOperatorObjWellDefinedProofByDef", "Csch", fields);
-output
-},
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ExpLogOperatorObjWellDefinedProofByDef(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ExpLogOperatorObjWellDefinedProofByDef, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ExpLogOperatorObjWellDefinedProofByDef::Exp(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ExpObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("ExpLogOperatorObjWellDefinedProofByDef", "Exp", fields);
-output
-},
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ExpLogOperatorObjWellDefinedProofByDef::Ln(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__LnObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("ExpLogOperatorObjWellDefinedProofByDef", "Ln", fields);
-output
-},
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ExpLogOperatorObjWellDefinedProofByDef::Log(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__LogObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("ExpLogOperatorObjWellDefinedProofByDef", "Log", fields);
-output
-},
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ExpLogOperatorObjWellDefinedProofByDef::Sqrt(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SqrtObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("ExpLogOperatorObjWellDefinedProofByDef", "Sqrt", fields);
-output
-},
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ComplexOperatorObjWellDefinedProofByDef(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ComplexOperatorObjWellDefinedProofByDef, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ComplexOperatorObjWellDefinedProofByDef::Conjugate(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ConjugateObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("ComplexOperatorObjWellDefinedProofByDef", "Conjugate", fields);
-output
-},
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ComplexOperatorObjWellDefinedProofByDef::RealPart(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__RealPartObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("ComplexOperatorObjWellDefinedProofByDef", "RealPart", fields);
-output
-},
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ComplexOperatorObjWellDefinedProofByDef::ImaginaryPart(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ImaginaryPartObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("ComplexOperatorObjWellDefinedProofByDef", "ImaginaryPart", fields);
-output
-},
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ComplexOperatorObjWellDefinedProofByDef::ComplexAbs(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ComplexAbsObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("ComplexOperatorObjWellDefinedProofByDef", "ComplexAbs", fields);
-output
-},
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SetOperatorObjWellDefinedProofByDef(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SetOperatorObjWellDefinedProofByDef, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SetOperatorObjWellDefinedProofByDef::SymmetricDifference(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SymmetricDifferenceObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("SetOperatorObjWellDefinedProofByDef", "SymmetricDifference", fields);
-output
-},
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SetOperatorObjWellDefinedProofByDef::Union(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__UnionObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("SetOperatorObjWellDefinedProofByDef", "Union", fields);
-output
-},
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SetOperatorObjWellDefinedProofByDef::Intersect(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__IntersectObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("SetOperatorObjWellDefinedProofByDef", "Intersect", fields);
-output
-},
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SetOperatorObjWellDefinedProofByDef::SetMinus(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SetMinusObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("SetOperatorObjWellDefinedProofByDef", "SetMinus", fields);
-output
-},
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SetOperatorObjWellDefinedProofByDef::FamilyUnion(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FamilyUnionObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("SetOperatorObjWellDefinedProofByDef", "FamilyUnion", fields);
-output
-},
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SetOperatorObjWellDefinedProofByDef::FamilyIntersect(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FamilyIntersectObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("SetOperatorObjWellDefinedProofByDef", "FamilyIntersect", fields);
-output
-},
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SetOperatorObjWellDefinedProofByDef::IndexUnion(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__IndexUnionObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("SetOperatorObjWellDefinedProofByDef", "IndexUnion", fields);
-output
-},
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SetOperatorObjWellDefinedProofByDef::IndexIntersect(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__IndexIntersectObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("SetOperatorObjWellDefinedProofByDef", "IndexIntersect", fields);
-output
-},
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SetOperatorObjWellDefinedProofByDef::PowerSet(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__PowerSetObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("SetOperatorObjWellDefinedProofByDef", "PowerSet", fields);
-output
-},
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SetOperatorObjWellDefinedProofByDef::IndexCart(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__IndexCartObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("SetOperatorObjWellDefinedProofByDef", "IndexCart", fields);
-output
-},
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SetFormerObjWellDefinedProofByDef(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SetFormerObjWellDefinedProofByDef, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SetFormerObjWellDefinedProofByDef::MatrixSet(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixSetObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("SetFormerObjWellDefinedProofByDef", "MatrixSet", fields);
-output
-},
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SetFormerObjWellDefinedProofByDef::ListSet(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ListSetObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("SetFormerObjWellDefinedProofByDef", "ListSet", fields);
-output
-},
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SetFormerObjWellDefinedProofByDef::SetBuilder(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SetBuilderObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("SetFormerObjWellDefinedProofByDef", "SetBuilder", fields);
-output
-},
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SetFormerObjWellDefinedProofByDef::Range(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__RangeObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("SetFormerObjWellDefinedProofByDef", "Range", fields);
-output
-},
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SetFormerObjWellDefinedProofByDef::ClosedRange(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ClosedRangeObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("SetFormerObjWellDefinedProofByDef", "ClosedRange", fields);
-output
-},
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SetFormerObjWellDefinedProofByDef::FiniteSeqSet(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FiniteSeqSetObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("SetFormerObjWellDefinedProofByDef", "FiniteSeqSet", fields);
-output
-},
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SetFormerObjWellDefinedProofByDef::SeqSet(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SeqSetObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("SetFormerObjWellDefinedProofByDef", "SeqSet", fields);
-output
-},
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SetFormerObjWellDefinedProofByDef::OneSideInfinityIntervalObj(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__OneSideInfinityIntervalObjObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("SetFormerObjWellDefinedProofByDef", "OneSideInfinityIntervalObj", fields);
-output
-},
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SetFormerObjWellDefinedProofByDef::IntervalObj(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__IntervalObjObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("SetFormerObjWellDefinedProofByDef", "IntervalObj", fields);
-output
-},
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ProductShapeObjWellDefinedProofByDef(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ProductShapeObjWellDefinedProofByDef, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ProductShapeObjWellDefinedProofByDef::Cart(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__CartObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("ProductShapeObjWellDefinedProofByDef", "Cart", fields);
-output
-},
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ProductShapeObjWellDefinedProofByDef::Tuple(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__TupleObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("ProductShapeObjWellDefinedProofByDef", "Tuple", fields);
-output
-},
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FunctionSpaceObjWellDefinedProofByDef(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FunctionSpaceObjWellDefinedProofByDef, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FunctionSpaceObjWellDefinedProofByDef::FnSet(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FnSetObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("FunctionSpaceObjWellDefinedProofByDef", "FnSet", fields);
-output
-},
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FunctionSpaceObjWellDefinedProofByDef::AnonymousFn(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__AnonymousFnObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("FunctionSpaceObjWellDefinedProofByDef", "AnonymousFn", fields);
-output
-},
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FunctionSpaceObjWellDefinedProofByDef::FnRange(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FnRangeObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("FunctionSpaceObjWellDefinedProofByDef", "FnRange", fields);
-output
-},
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FunctionSpaceObjWellDefinedProofByDef::Composition(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__function_composition__CompositionObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("FunctionSpaceObjWellDefinedProofByDef", "Composition", fields);
-output
-},
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FunctionSpaceObjWellDefinedProofByDef::Preimage(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__PreimageObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("FunctionSpaceObjWellDefinedProofByDef", "Preimage", fields);
-output
-},
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FunctionSpaceObjWellDefinedProofByDef::PreimageSet(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__PreimageSetObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("FunctionSpaceObjWellDefinedProofByDef", "PreimageSet", fields);
-output
-},
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__IteratedOperatorObjWellDefinedProofByDef(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IteratedOperatorObjWellDefinedProofByDef, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IteratedOperatorObjWellDefinedProofByDef::Sum(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SumObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("IteratedOperatorObjWellDefinedProofByDef", "Sum", fields);
-output
-},
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IteratedOperatorObjWellDefinedProofByDef::SumOfFiniteSet(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SumOfFiniteSetObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("IteratedOperatorObjWellDefinedProofByDef", "SumOfFiniteSet", fields);
-output
-},
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IteratedOperatorObjWellDefinedProofByDef::Product(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ProductObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("IteratedOperatorObjWellDefinedProofByDef", "Product", fields);
-output
-},
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IteratedOperatorObjWellDefinedProofByDef::ProductOfFiniteSet(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ProductOfFiniteSetObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("IteratedOperatorObjWellDefinedProofByDef", "ProductOfFiniteSet", fields);
-output
-},
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IteratedOperatorObjWellDefinedProofByDef::Reduce(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ReduceObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("IteratedOperatorObjWellDefinedProofByDef", "Reduce", fields);
-output
-},
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IteratedOperatorObjWellDefinedProofByDef::FiniteSetReduce(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FiniteSetReduceObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("IteratedOperatorObjWellDefinedProofByDef", "FiniteSetReduce", fields);
-output
-},
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FiniteSetStatObjWellDefinedProofByDef(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FiniteSetStatObjWellDefinedProofByDef, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FiniteSetStatObjWellDefinedProofByDef::FiniteSetSize(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FiniteSetSizeObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("FiniteSetStatObjWellDefinedProofByDef", "FiniteSetSize", fields);
-output
-},
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FiniteSetStatObjWellDefinedProofByDef::FiniteSetMax(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FiniteSetMaxObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("FiniteSetStatObjWellDefinedProofByDef", "FiniteSetMax", fields);
-output
-},
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FiniteSetStatObjWellDefinedProofByDef::FiniteSetMin(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FiniteSetMinObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("FiniteSetStatObjWellDefinedProofByDef", "FiniteSetMin", fields);
-output
-},
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__StructishObjWellDefinedProofByDef(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::StructishObjWellDefinedProofByDef, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::StructishObjWellDefinedProofByDef::StructObj(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__StructObjObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("StructishObjWellDefinedProofByDef", "StructObj", fields);
-output
-},
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::StructishObjWellDefinedProofByDef::FieldAccess(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FieldAccessObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("StructishObjWellDefinedProofByDef", "FieldAccess", fields);
-output
-},
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__InstantiatedTemplateObjObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::InstantiatedTemplateObjObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::InstantiatedTemplateObjObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("InstantiatedTemplateObjObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::ObjWellDefinedProofByDef::InstantiatedTemplateObj(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__InstantiatedTemplateObjObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("ObjWellDefinedProofByDef", "InstantiatedTemplateObj", fields);
 output
 },
 };
@@ -23082,7 +22383,7 @@ capture.intern_evidence(output)
 pub(super) fn capture_execute__execute_eval_stmt__aggregate_evaluation_result__AggregateTermEvaluationResult(value: &crate::execute::execute_eval_stmt::aggregate_evaluation_result::AggregateTermEvaluationResult, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_eval_stmt::aggregate_evaluation_result::AggregateTermEvaluationResult { argument: f0, application: f1, application_well_defined: f2, expansion: f3, nested_aggregate_evidence: f4, value: f5, accumulated_value: f6 } => {
-let fields = vec![("argument", capture_ast__obj__Obj(f0, capture, runtime)), ("application", capture_ast__obj__Obj(f1, capture, runtime)), ("application_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(f2, capture, runtime)), ("expansion", capture_execute__execute_eval_stmt__aggregate_evaluation_result__AggregateTermExpansion(f3, capture, runtime)), ("nested_aggregate_evidence", node("Range", "", vec![("start", JsonValue::String((f4).start.to_string())), ("end", JsonValue::String((f4).end.to_string()))])), ("value", capture_ast__obj__Obj(f5, capture, runtime)), ("accumulated_value", capture_ast__obj__Obj(f6, capture, runtime))];
+let fields = vec![("argument", capture_ast__obj__Obj(f0, capture, runtime)), ("application", capture_ast__obj__Obj(f1, capture, runtime)), ("application_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f2, capture, runtime)), ("expansion", capture_execute__execute_eval_stmt__aggregate_evaluation_result__AggregateTermExpansion(f3, capture, runtime)), ("nested_aggregate_evidence", node("Range", "", vec![("start", JsonValue::String((f4).start.to_string())), ("end", JsonValue::String((f4).end.to_string()))])), ("value", capture_ast__obj__Obj(f5, capture, runtime)), ("accumulated_value", capture_ast__obj__Obj(f6, capture, runtime))];
 let mut output = node("AggregateTermEvaluationResult", "", fields);
 output
 },
@@ -27604,66 +26905,51 @@ output
 capture.intern_evidence(output)
 }
 
-pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__MultivariableAnalysisPredicateDomainProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::MultivariableAnalysisPredicateDomainProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__PredicateDomainProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::MultivariableAnalysisPredicateDomainProof { function_domain: f0, requirements: f1 } => {
-let fields = vec![("function_domain", capture_execute__execute_fact_stmt__function_domain__CompleteFunctionDomainProof(f0, capture, runtime)), ("requirements", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__PredicateDomainWellDefinedProof(item, capture, runtime)).collect()))];
-let mut output = node("MultivariableAnalysisPredicateDomainProof", "", fields);
+crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainProof::MultivariableAnalysis(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__MultivariableAnalysisPredicateDomainProof(f0, capture, runtime))];
+let mut output = node("PredicateDomainProof", "MultivariableAnalysis", fields);
 output
 },
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__SequenceAnalysisPredicateDomainProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::SequenceAnalysisPredicateDomainProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::SequenceAnalysisPredicateDomainProof { sequence_source: f0 } => {
-let fields = vec![("sequence_source", capture_execute__execute_fact_stmt__function_domain__CompleteFunctionDomainProof(f0, capture, runtime))];
-let mut output = node("SequenceAnalysisPredicateDomainProof", "", fields);
+crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainProof::SequenceAnalysis(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__SequenceAnalysisPredicateDomainProof(f0, capture, runtime))];
+let mut output = node("PredicateDomainProof", "SequenceAnalysis", fields);
 output
 },
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__FunctionAnalysisPredicateDomainProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::FunctionAnalysisPredicateDomainProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::FunctionAnalysisPredicateDomainProof { function_domain: f0, requirements: f1 } => {
-let fields = vec![("function_domain", capture_execute__execute_fact_stmt__function_limit__RealFunctionLimitDomainProof(f0, capture, runtime)), ("requirements", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__PredicateDomainWellDefinedProof(item, capture, runtime)).collect()))];
-let mut output = node("FunctionAnalysisPredicateDomainProof", "", fields);
+crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainProof::FunctionAnalysis(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__FunctionAnalysisPredicateDomainProof(f0, capture, runtime))];
+let mut output = node("PredicateDomainProof", "FunctionAnalysis", fields);
 output
 },
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__FunctionLimitPredicateDomainProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::FunctionLimitPredicateDomainProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::FunctionLimitPredicateDomainProof { function_domain: f0, approach_real: f1, value_real: f2 } => {
-let fields = vec![("function_domain", capture_execute__execute_fact_stmt__function_limit__RealFunctionLimitDomainProof(f0, capture, runtime)), ("approach_real", capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__FunctionLimitApproachRealProof(f1, capture, runtime)), ("value_real", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f2, capture, runtime))];
-let mut output = node("FunctionLimitPredicateDomainProof", "", fields);
+crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainProof::FunctionLimit(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__FunctionLimitPredicateDomainProof(f0, capture, runtime))];
+let mut output = node("PredicateDomainProof", "FunctionLimit", fields);
 output
 },
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__SequenceLimitPredicateDomainProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::SequenceLimitPredicateDomainProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::SequenceLimitPredicateDomainProof { sequence_source: f0, value_real: f1 } => {
-let fields = vec![("sequence_source", capture_execute__execute_fact_stmt__function_domain__CompleteFunctionDomainProof(f0, capture, runtime)), ("value_real", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_membership_proof__StructuralMembershipProof(f1, capture, runtime))];
-let mut output = node("SequenceLimitPredicateDomainProof", "", fields);
+crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainProof::SequenceLimit(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__SequenceLimitPredicateDomainProof(f0, capture, runtime))];
+let mut output = node("PredicateDomainProof", "SequenceLimit", fields);
 output
 },
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__PredicateDomainArgumentMembershipProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainArgumentMembershipProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainArgumentMembershipProof { requirement: f0, argument_index: f1, membership: f2 } => {
-let fields = vec![("requirement", capture_ast__fact__fact__Fact(f0, capture, runtime)), ("argument_index", JsonValue::String((f1).to_string())), ("membership", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_membership_proof__StructuralMembershipProof(f2, capture, runtime))];
-let mut output = node("PredicateDomainArgumentMembershipProof", "", fields);
+crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainProof::ByKnownFact(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__result__AtomicExceptEqualityFactSearchProofByKnownAtomicFact(f0, capture, runtime))];
+let mut output = node("PredicateDomainProof", "ByKnownFact", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainProof::ByKnownZeroRemainder(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__known_divisibility__KnownZeroRemainderProof(f0, capture, runtime))];
+let mut output = node("PredicateDomainProof", "ByKnownZeroRemainder", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainProof::ByRequirements(f0) => {
+let fields = vec![("0", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__PredicateDomainWellDefinedProof(item, capture, runtime)).collect()))];
+let mut output = node("PredicateDomainProof", "ByRequirements", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainProof::ByCheckedArguments(f0) => {
+let fields = vec![("0", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__PredicateDomainArgumentMembershipProof(item, capture, runtime)).collect()))];
+let mut output = node("PredicateDomainProof", "ByCheckedArguments", fields);
 output
 },
 };
@@ -31012,7 +30298,7 @@ capture.intern_evidence(output)
 pub(super) fn capture_execute__execute_fact_stmt__pointwise_derivative__PointwiseDerivativeProof(value: &crate::execute::execute_fact_stmt::pointwise_derivative::PointwiseDerivativeProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::pointwise_derivative::PointwiseDerivativeProof { function: f0, point: f1, domain: f2, body: f3, body_equal: f4, body_well_defined: f5, interior: f6, expression: f7, conclusion: f8 } => {
-let fields = vec![("function", capture_ast__obj__Obj(f0, capture, runtime)), ("point", capture_ast__obj__Obj(f1, capture, runtime)), ("domain", capture_execute__execute_fact_stmt__function_limit__RealFunctionLimitDomainProof(f2, capture, runtime)), ("body", capture_ast__obj__AnonymousFn(f3, capture, runtime)), ("body_equal", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__KnownEqualityPathProof(f4, capture, runtime)), ("body_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(f5, capture, runtime)), ("interior", capture_execute__execute_fact_stmt__pointwise_derivative__PointInteriorProof(f6, capture, runtime)), ("expression", capture_execute__execute_fact_stmt__pointwise_derivative__DerivativeExpressionProof(f7, capture, runtime)), ("conclusion", capture_execute__execute_fact_stmt__pointwise_derivative__DerivativeConclusionProof(f8, capture, runtime))];
+let fields = vec![("function", capture_ast__obj__Obj(f0, capture, runtime)), ("point", capture_ast__obj__Obj(f1, capture, runtime)), ("domain", capture_execute__execute_fact_stmt__function_limit__RealFunctionLimitDomainProof(f2, capture, runtime)), ("body", capture_ast__obj__AnonymousFn(f3, capture, runtime)), ("body_equal", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__KnownEqualityPathProof(f4, capture, runtime)), ("body_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f5, capture, runtime)), ("interior", capture_execute__execute_fact_stmt__pointwise_derivative__PointInteriorProof(f6, capture, runtime)), ("expression", capture_execute__execute_fact_stmt__pointwise_derivative__DerivativeExpressionProof(f7, capture, runtime)), ("conclusion", capture_execute__execute_fact_stmt__pointwise_derivative__DerivativeConclusionProof(f8, capture, runtime))];
 let mut output = node("PointwiseDerivativeProof", "", fields);
 output
 },
@@ -31023,7 +30309,7 @@ capture.intern_evidence(output)
 pub(super) fn capture_execute__execute_fact_stmt__pointwise_continuity__PointwiseContinuityProof(value: &crate::execute::execute_fact_stmt::pointwise_continuity::PointwiseContinuityProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::pointwise_continuity::PointwiseContinuityProof { function: f0, point: f1, domain: f2, body: f3, body_equal: f4, body_well_defined: f5, expression: f6 } => {
-let fields = vec![("function", capture_ast__obj__Obj(f0, capture, runtime)), ("point", capture_ast__obj__Obj(f1, capture, runtime)), ("domain", capture_execute__execute_fact_stmt__function_limit__RealFunctionLimitDomainProof(f2, capture, runtime)), ("body", capture_ast__obj__AnonymousFn(f3, capture, runtime)), ("body_equal", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__KnownEqualityPathProof(f4, capture, runtime)), ("body_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(f5, capture, runtime)), ("expression", capture_execute__execute_fact_stmt__pointwise_continuity__PointwiseContinuityExpressionProof(f6, capture, runtime))];
+let fields = vec![("function", capture_ast__obj__Obj(f0, capture, runtime)), ("point", capture_ast__obj__Obj(f1, capture, runtime)), ("domain", capture_execute__execute_fact_stmt__function_limit__RealFunctionLimitDomainProof(f2, capture, runtime)), ("body", capture_ast__obj__AnonymousFn(f3, capture, runtime)), ("body_equal", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__KnownEqualityPathProof(f4, capture, runtime)), ("body_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f5, capture, runtime)), ("expression", capture_execute__execute_fact_stmt__pointwise_continuity__PointwiseContinuityExpressionProof(f6, capture, runtime))];
 let mut output = node("PointwiseContinuityProof", "", fields);
 output
 },
@@ -32472,6 +31758,17 @@ output
 capture.intern_evidence(output)
 }
 
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__result__DetailedSearchProofByKnownStrategy(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::DetailedSearchProofByKnownStrategy, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::DetailedSearchProofByKnownStrategy { strategy_name: f0, then_index: f1, forall_parameters_match_what_args: f2, arg_match_proofs: f3, instantiation_requirements: f4 } => {
+let fields = vec![("strategy_name", JsonValue::String((f0).to_string())), ("then_index", JsonValue::String((f1).to_string())), ("forall_parameters_match_what_args", JsonValue::Array((f2).iter().map(|item| capture_ast__obj__Obj(item, capture, runtime)).collect())), ("arg_match_proofs", JsonValue::Array((f3).iter().map(|item| capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__ForallConclusionArgMatchProof(item, capture, runtime)).collect())), ("instantiation_requirements", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__ProveForallInstantiationRequirementsProof(f4, capture, runtime))];
+let mut output = node("DetailedSearchProofByKnownStrategy", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__result__UserDefinedPropDefinitionProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::UserDefinedPropDefinitionProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::UserDefinedPropDefinitionProof { requirement_facts: f0, proof_of_requirement_facts: f1 } => {
@@ -32690,45 +31987,39 @@ output
 capture.intern_evidence(output)
 }
 
-pub(super) fn capture_ast__fact__forall_fact__ForallConclusionLocation(value: &crate::ast::fact::ForallConclusionLocation, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-capture.subject_depth += 1;
+pub(super) fn capture_exec_env__known_forall_conclusion_memory__ForallConclusionCite(value: &crate::exec_env::ForallConclusionCite, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::ast::fact::ForallConclusionLocation::DirectThenFact(f0) => {
-let fields = vec![("0", capture_ast__fact__forall_fact__DirectForallConclusionLocation(f0, capture, runtime))];
-let mut output = node("ForallConclusionLocation", "DirectThenFact", fields);
-output
-},
-crate::ast::fact::ForallConclusionLocation::AndFactComponent(f0) => {
-let fields = vec![("0", capture_ast__fact__forall_fact__AndFactComponentForallConclusionLocation(f0, capture, runtime))];
-let mut output = node("ForallConclusionLocation", "AndFactComponent", fields);
-output
-},
-crate::ast::fact::ForallConclusionLocation::ChainFactComponent(f0) => {
-let fields = vec![("0", capture_ast__fact__forall_fact__ChainFactComponentForallConclusionLocation(f0, capture, runtime))];
-let mut output = node("ForallConclusionLocation", "ChainFactComponent", fields);
-output
-},
-};
-capture.subject_depth -= 1;
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__StrictEqualWithFact(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::StrictEqualWithFact, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::StrictEqualWithFact { equal_fact: f0, equal_proof: f1 } => {
-let fields = vec![("equal_fact", capture_ast__fact__atomic__EqualFact(f0, capture, runtime)), ("equal_proof", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__StrictEqualArgProof(f1, capture, runtime))];
-let mut output = node("StrictEqualWithFact", "", fields);
+crate::exec_env::ForallConclusionCite { fact_id: f0, location: f1 } => {
+let fields = vec![("fact_id", capture.fact_reference(f0, runtime)), ("location", capture_ast__fact__forall_fact__ForallConclusionLocation(f1, capture, runtime))];
+let mut output = node("ForallConclusionCite", "", fields);
 output
 },
 };
 capture.intern_evidence(output)
 }
 
-pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__ForallParamTypeRequirementProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::ForallParamTypeRequirementProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__ForallConclusionArgMatchProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::ForallConclusionArgMatchProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::ForallParamTypeRequirementProof { param_id: f0, arg: f1, type_fact: f2, proof: f3 } => {
-let fields = vec![("param_id", capture.identifier_id(f0, runtime)), ("arg", capture_ast__obj__Obj(f1, capture, runtime)), ("type_fact", capture_ast__fact__fact__Fact(f2, capture, runtime)), ("proof", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f3, capture, runtime))];
-let mut output = node("ForallParamTypeRequirementProof", "", fields);
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::ForallConclusionArgMatchProof::Compact(f0) => panic!("internal_bug: reading requires Detailed ForallConclusionArgMatchProof"),
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::ForallConclusionArgMatchProof::Normal(f0) => panic!("internal_bug: reading requires Detailed ForallConclusionArgMatchProof"),
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::ForallConclusionArgMatchProof::Detailed(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__DetailedForallConclusionArgMatchProof(f0, capture, runtime))];
+let mut output = node("ForallConclusionArgMatchProof", "Detailed", fields);
+if let JsonValue::Object(fields) = &mut output { fields.insert("result_detail".into(), JsonValue::String("detailed".into())); }
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__ProveForallInstantiationRequirementsProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::ProveForallInstantiationRequirementsProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::ProveForallInstantiationRequirementsProof::Compact(f0) => panic!("internal_bug: reading requires Detailed ProveForallInstantiationRequirementsProof"),
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::ProveForallInstantiationRequirementsProof::Normal(f0) => panic!("internal_bug: reading requires Detailed ProveForallInstantiationRequirementsProof"),
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::ProveForallInstantiationRequirementsProof::Detailed(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__DetailedProveForallInstantiationRequirementsProof(f0, capture, runtime))];
+let mut output = node("ProveForallInstantiationRequirementsProof", "Detailed", fields);
+if let JsonValue::Object(fields) = &mut output { fields.insert("result_detail".into(), JsonValue::String("detailed".into())); }
 output
 },
 };
@@ -33482,7 +32773,7 @@ let output = match value {
 crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnObjDomainCheckResult { stages: f0, scope: f1 } => {
 let fields = vec![("stages", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_by_def_common__ObjWellDefinedByDefCommonStages(f0, capture, runtime)), ("scope", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fn_obj_domain_check_result__FnObjArgumentScope(f1, capture, runtime))];
 let mut output = node("FnObjDomainCheckResult", "", fields);
-if let Some(stages) = capture.evidence_field(&output, "stages") { if let Some(JsonValue::Array(children)) = capture.evidence_field(&stages, "child_obj_well_defined") { for formed in &value.scope.formed_children { if let Some(child) = children.get(formed.child_index) { capture.wd_evidence(&formed.wd_id, child, "well_definedness"); } } } }
+if let Some(stages) = capture.evidence_field(&output, "stages").and_then(|stages| capture.evidence_field(&stages, "0")) { if let Some(JsonValue::Array(children)) = capture.evidence_field(&stages, "child_obj_well_defined") { for formed in &value.scope.formed_children { if let Some(child) = children.get(formed.child_index) { capture.wd_evidence(&formed.wd_id, child, "well_definedness"); } } } }
 output
 },
 };
@@ -34139,7 +33430,7 @@ let mut output = node("FailToVerifySetBuilderObjWellDefined", "ParamSet", fields
 output
 },
 crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifySetBuilderObjWellDefined::Fact { failed_index: f0, param_set_well_defined: f1, succeeded: f2, failed: f3 } => {
-let fields = vec![("failed_index", JsonValue::String((f0).to_string())), ("param_set_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(f1, capture, runtime)), ("succeeded", JsonValue::Array((f2).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FactWellDefinedProof(item, capture, runtime)).collect())), ("failed", capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FailToVerifyFactWellDefinedResult(f3, capture, runtime))];
+let fields = vec![("failed_index", JsonValue::String((f0).to_string())), ("param_set_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f1, capture, runtime)), ("succeeded", JsonValue::Array((f2).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FactWellDefinedProof(item, capture, runtime)).collect())), ("failed", capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FailToVerifyFactWellDefinedResult(f3, capture, runtime))];
 let mut output = node("FailToVerifySetBuilderObjWellDefined", "Fact", fields);
 output
 },
@@ -34248,17 +33539,17 @@ let mut output = node("FailToVerifyFnSetObjWellDefined", "ParamTypeCitesEarlierB
 output
 },
 crate::execute::execute_fact_stmt::well_defined_results::FailToVerifyFnSetObjWellDefined::ParamType { failed_index: f0, succeeded: f1, failed_obj: f2, failed: f3 } => {
-let fields = vec![("failed_index", JsonValue::String((f0).to_string())), ("succeeded", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("failed_obj", capture_ast__obj__Obj(f2, capture, runtime)), ("failed", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyObjWellDefinedResult(f3, capture, runtime))];
+let fields = vec![("failed_index", JsonValue::String((f0).to_string())), ("succeeded", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("failed_obj", capture_ast__obj__Obj(f2, capture, runtime)), ("failed", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyObjWellDefinedResult(f3, capture, runtime))];
 let mut output = node("FailToVerifyFnSetObjWellDefined", "ParamType", fields);
 output
 },
 crate::execute::execute_fact_stmt::well_defined_results::FailToVerifyFnSetObjWellDefined::DomFact { failed_index: f0, param_type_well_defined: f1, succeeded_dom: f2, failed_dom: f3 } => {
-let fields = vec![("failed_index", JsonValue::String((f0).to_string())), ("param_type_well_defined", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("succeeded_dom", JsonValue::Array((f2).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FactWellDefinedProof(item, capture, runtime)).collect())), ("failed_dom", capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FailToVerifyFactWellDefinedResult(f3, capture, runtime))];
+let fields = vec![("failed_index", JsonValue::String((f0).to_string())), ("param_type_well_defined", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("succeeded_dom", JsonValue::Array((f2).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FactWellDefinedProof(item, capture, runtime)).collect())), ("failed_dom", capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FailToVerifyFactWellDefinedResult(f3, capture, runtime))];
 let mut output = node("FailToVerifyFnSetObjWellDefined", "DomFact", fields);
 output
 },
 crate::execute::execute_fact_stmt::well_defined_results::FailToVerifyFnSetObjWellDefined::RetSet { param_type_well_defined: f0, dom_fact_well_defined: f1, failed_obj: f2, failed: f3 } => {
-let fields = vec![("param_type_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("dom_fact_well_defined", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FactWellDefinedProof(item, capture, runtime)).collect())), ("failed_obj", capture_ast__obj__Obj(f2, capture, runtime)), ("failed", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyObjWellDefinedResult(f3, capture, runtime))];
+let fields = vec![("param_type_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("dom_fact_well_defined", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FactWellDefinedProof(item, capture, runtime)).collect())), ("failed_obj", capture_ast__obj__Obj(f2, capture, runtime)), ("failed", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyObjWellDefinedResult(f3, capture, runtime))];
 let mut output = node("FailToVerifyFnSetObjWellDefined", "RetSet", fields);
 output
 },
@@ -34279,27 +33570,27 @@ let mut output = node("FailToVerifyAnonymousFnObjWellDefined", "ParamTypeCitesEa
 output
 },
 crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyAnonymousFnObjWellDefined::ParamType { failed_index: f0, succeeded: f1, failed_obj: f2, failed: f3 } => {
-let fields = vec![("failed_index", JsonValue::String((f0).to_string())), ("succeeded", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("failed_obj", capture_ast__obj__Obj(f2, capture, runtime)), ("failed", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyObjWellDefinedResult(f3, capture, runtime))];
+let fields = vec![("failed_index", JsonValue::String((f0).to_string())), ("succeeded", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("failed_obj", capture_ast__obj__Obj(f2, capture, runtime)), ("failed", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyObjWellDefinedResult(f3, capture, runtime))];
 let mut output = node("FailToVerifyAnonymousFnObjWellDefined", "ParamType", fields);
 output
 },
 crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyAnonymousFnObjWellDefined::DomFact { failed_index: f0, param_type_well_defined: f1, succeeded_dom: f2, failed_dom: f3 } => {
-let fields = vec![("failed_index", JsonValue::String((f0).to_string())), ("param_type_well_defined", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("succeeded_dom", JsonValue::Array((f2).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FactWellDefinedProof(item, capture, runtime)).collect())), ("failed_dom", capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FailToVerifyFactWellDefinedResult(f3, capture, runtime))];
+let fields = vec![("failed_index", JsonValue::String((f0).to_string())), ("param_type_well_defined", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("succeeded_dom", JsonValue::Array((f2).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FactWellDefinedProof(item, capture, runtime)).collect())), ("failed_dom", capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FailToVerifyFactWellDefinedResult(f3, capture, runtime))];
 let mut output = node("FailToVerifyAnonymousFnObjWellDefined", "DomFact", fields);
 output
 },
 crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyAnonymousFnObjWellDefined::RetSet { param_type_well_defined: f0, dom_fact_well_defined: f1, failed_obj: f2, failed: f3 } => {
-let fields = vec![("param_type_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("dom_fact_well_defined", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FactWellDefinedProof(item, capture, runtime)).collect())), ("failed_obj", capture_ast__obj__Obj(f2, capture, runtime)), ("failed", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyObjWellDefinedResult(f3, capture, runtime))];
+let fields = vec![("param_type_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("dom_fact_well_defined", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FactWellDefinedProof(item, capture, runtime)).collect())), ("failed_obj", capture_ast__obj__Obj(f2, capture, runtime)), ("failed", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyObjWellDefinedResult(f3, capture, runtime))];
 let mut output = node("FailToVerifyAnonymousFnObjWellDefined", "RetSet", fields);
 output
 },
 crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyAnonymousFnObjWellDefined::Body { param_type_well_defined: f0, dom_fact_well_defined: f1, ret_set_well_defined: f2, failed_obj: f3, failed: f4 } => {
-let fields = vec![("param_type_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("dom_fact_well_defined", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FactWellDefinedProof(item, capture, runtime)).collect())), ("ret_set_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(f2, capture, runtime)), ("failed_obj", capture_ast__obj__Obj(f3, capture, runtime)), ("failed", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyObjWellDefinedResult(f4, capture, runtime))];
+let fields = vec![("param_type_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("dom_fact_well_defined", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FactWellDefinedProof(item, capture, runtime)).collect())), ("ret_set_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f2, capture, runtime)), ("failed_obj", capture_ast__obj__Obj(f3, capture, runtime)), ("failed", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyObjWellDefinedResult(f4, capture, runtime))];
 let mut output = node("FailToVerifyAnonymousFnObjWellDefined", "Body", fields);
 output
 },
 crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyAnonymousFnObjWellDefined::BodyInRetSet { param_type_well_defined: f0, dom_fact_well_defined: f1, ret_set_well_defined: f2, body_well_defined: f3, failed: f4 } => {
-let fields = vec![("param_type_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("dom_fact_well_defined", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FactWellDefinedProof(item, capture, runtime)).collect())), ("ret_set_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(f2, capture, runtime)), ("body_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(f3, capture, runtime)), ("failed", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f4, capture, runtime))];
+let fields = vec![("param_type_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("dom_fact_well_defined", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__well_defined_result__FactWellDefinedProof(item, capture, runtime)).collect())), ("ret_set_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f2, capture, runtime)), ("body_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f3, capture, runtime)), ("failed", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f4, capture, runtime))];
 let mut output = node("FailToVerifyAnonymousFnObjWellDefined", "BodyInRetSet", fields);
 output
 },
@@ -34510,7 +33801,7 @@ capture.intern_evidence(output)
 pub(super) fn capture_execute__execute_fact_stmt__native_matrix__MatrixCallableWellDefinedProof(value: &crate::execute::execute_fact_stmt::native_matrix::MatrixCallableWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::native_matrix::MatrixCallableWellDefinedProof::Checked(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(f0, capture, runtime))];
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f0, capture, runtime))];
 let mut output = node("MatrixCallableWellDefinedProof", "Checked", fields);
 output
 },
@@ -34557,7 +33848,7 @@ capture.intern_evidence(output)
 pub(super) fn capture_execute__execute_fact_stmt__function_composition__CompositionWellDefinedPremise(value: &crate::execute::execute_fact_stmt::function_composition::CompositionWellDefinedPremise, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::function_composition::CompositionWellDefinedPremise::Checked(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(f0, capture, runtime))];
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f0, capture, runtime))];
 let mut output = node("CompositionWellDefinedPremise", "Checked", fields);
 output
 },
@@ -34586,12 +33877,12 @@ output
 capture.intern_evidence(output)
 }
 
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fn_obj_domain_check_result__FormedFunctionArgument(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FormedFunctionArgument, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fn_obj_domain_success__DetailedFnObjDomainSuccess(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::DetailedFnObjDomainSuccess, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FormedFunctionArgument { child_index: f0, wd_id: f1 } => {
-let fields = vec![("child_index", JsonValue::String((f0).to_string())), ("wd_id", capture.wd_identity(f1, runtime))];
-let mut output = node("FormedFunctionArgument", "", fields);
-capture.wd_registration(&value.wd_id, &output);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::DetailedFnObjDomainSuccess { child_obj_well_defined: f0, requirement_fact_verified: f1, argument_scope: f2 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect())), ("argument_scope", match (f2).as_ref() { Some(item) => capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fn_obj_domain_check_result__FnObjArgumentScope(item, capture, runtime), None => JsonValue::Null })];
+let mut output = node("DetailedFnObjDomainSuccess", "", fields);
+if let Some(scope) = f2.as_ref() { if let Some(JsonValue::Array(children)) = capture.evidence_field(&output, "child_obj_well_defined") { for formed in &scope.formed_children { if let Some(child) = children.get(formed.child_index) { capture.wd_evidence(&formed.wd_id, child, "well_definedness"); } } } }
 output
 },
 };
@@ -34609,1374 +33900,779 @@ output
 capture.intern_evidence(output)
 }
 
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__DeterminantObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::DeterminantObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixOperatorObjWellDefinedProofByDef(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOperatorObjWellDefinedProofByDef, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::DeterminantObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("DeterminantObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOperatorObjWellDefinedProofByDef::Determinant(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__DeterminantObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("MatrixOperatorObjWellDefinedProofByDef", "Determinant", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOperatorObjWellDefinedProofByDef::ZeroMatrix(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ZeroMatrixObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("MatrixOperatorObjWellDefinedProofByDef", "ZeroMatrix", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOperatorObjWellDefinedProofByDef::IdentityMatrix(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__IdentityMatrixObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("MatrixOperatorObjWellDefinedProofByDef", "IdentityMatrix", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOperatorObjWellDefinedProofByDef::Transpose(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixTransposeObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("MatrixOperatorObjWellDefinedProofByDef", "Transpose", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOperatorObjWellDefinedProofByDef::ConjugateTranspose(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixConjugateTransposeObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("MatrixOperatorObjWellDefinedProofByDef", "ConjugateTranspose", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOperatorObjWellDefinedProofByDef::Trace(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixTraceObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("MatrixOperatorObjWellDefinedProofByDef", "Trace", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOperatorObjWellDefinedProofByDef::Add(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixAddObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("MatrixOperatorObjWellDefinedProofByDef", "Add", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOperatorObjWellDefinedProofByDef::Subtract(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixSubtractObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("MatrixOperatorObjWellDefinedProofByDef", "Subtract", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOperatorObjWellDefinedProofByDef::Scale(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixScaleObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("MatrixOperatorObjWellDefinedProofByDef", "Scale", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOperatorObjWellDefinedProofByDef::Multiply(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixMultiplyObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("MatrixOperatorObjWellDefinedProofByDef", "Multiply", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOperatorObjWellDefinedProofByDef::Apply(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixApplyObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("MatrixOperatorObjWellDefinedProofByDef", "Apply", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOperatorObjWellDefinedProofByDef::Power(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixPowerObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("MatrixOperatorObjWellDefinedProofByDef", "Power", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOperatorObjWellDefinedProofByDef::Inverse(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixInverseObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("MatrixOperatorObjWellDefinedProofByDef", "Inverse", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOperatorObjWellDefinedProofByDef::Rank(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixRankObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("MatrixOperatorObjWellDefinedProofByDef", "Rank", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOperatorObjWellDefinedProofByDef::Minor(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixMinorObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("MatrixOperatorObjWellDefinedProofByDef", "Minor", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOperatorObjWellDefinedProofByDef::Cofactor(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixCofactorObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("MatrixOperatorObjWellDefinedProofByDef", "Cofactor", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOperatorObjWellDefinedProofByDef::Adjugate(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixAdjugateObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("MatrixOperatorObjWellDefinedProofByDef", "Adjugate", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOperatorObjWellDefinedProofByDef::Diagonal(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixDiagonalObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("MatrixOperatorObjWellDefinedProofByDef", "Diagonal", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOperatorObjWellDefinedProofByDef::OuterProduct(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixOuterProductObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("MatrixOperatorObjWellDefinedProofByDef", "OuterProduct", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOperatorObjWellDefinedProofByDef::InnerProduct(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FiniteInnerProductObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("MatrixOperatorObjWellDefinedProofByDef", "InnerProduct", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOperatorObjWellDefinedProofByDef::EuclideanNorm(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__EuclideanNormObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("MatrixOperatorObjWellDefinedProofByDef", "EuclideanNorm", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOperatorObjWellDefinedProofByDef::FrobeniusNorm(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixFrobeniusNormObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("MatrixOperatorObjWellDefinedProofByDef", "FrobeniusNorm", fields);
 output
 },
 };
 capture.intern_evidence(output)
 }
 
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ZeroMatrixObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ZeroMatrixObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+pub(super) fn capture_execute__execute_fact_stmt__riemann_integral__IntegralOperatorWellDefinedProof(value: &crate::execute::execute_fact_stmt::riemann_integral::IntegralOperatorWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ZeroMatrixObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("ZeroMatrixObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::riemann_integral::IntegralOperatorWellDefinedProof::Riemann(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__riemann_integral__RiemannIntegralWellDefinedProof(f0, capture, runtime))];
+let mut output = node("IntegralOperatorWellDefinedProof", "Riemann", fields);
 output
 },
 };
 capture.intern_evidence(output)
 }
 
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__IdentityMatrixObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IdentityMatrixObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+pub(super) fn capture_execute__execute_fact_stmt__function_derivative__DerivativeOperatorWellDefinedProof(value: &crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IdentityMatrixObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("IdentityMatrixObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof::Partial(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__selector__PartialDerivativeAtWellDefinedProof(f0, capture, runtime))];
+let mut output = node("DerivativeOperatorWellDefinedProof", "Partial", fields);
+output
+},
+crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof::ScalarDifferential(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__selector__ScalarDifferentialAtWellDefinedProof(f0, capture, runtime))];
+let mut output = node("DerivativeOperatorWellDefinedProof", "ScalarDifferential", fields);
+output
+},
+crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof::TotalDifferential(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__selector__TotalDifferentialAtWellDefinedProof(f0, capture, runtime))];
+let mut output = node("DerivativeOperatorWellDefinedProof", "TotalDifferential", fields);
+output
+},
+crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof::Gradient(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__selector__GradientAtWellDefinedProof(f0, capture, runtime))];
+let mut output = node("DerivativeOperatorWellDefinedProof", "Gradient", fields);
+output
+},
+crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof::Jacobian(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__selector__JacobianAtWellDefinedProof(f0, capture, runtime))];
+let mut output = node("DerivativeOperatorWellDefinedProof", "Jacobian", fields);
+output
+},
+crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof::Hessian(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__selector__HessianAtWellDefinedProof(f0, capture, runtime))];
+let mut output = node("DerivativeOperatorWellDefinedProof", "Hessian", fields);
+output
+},
+crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof::Divergence(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__selector__DivergenceAtWellDefinedProof(f0, capture, runtime))];
+let mut output = node("DerivativeOperatorWellDefinedProof", "Divergence", fields);
+output
+},
+crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof::Curl(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__selector__CurlAtWellDefinedProof(f0, capture, runtime))];
+let mut output = node("DerivativeOperatorWellDefinedProof", "Curl", fields);
+output
+},
+crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof::Laplacian(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__selector__LaplacianAtWellDefinedProof(f0, capture, runtime))];
+let mut output = node("DerivativeOperatorWellDefinedProof", "Laplacian", fields);
+output
+},
+crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof::AtPoint(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__function_derivative__DerivativeAtWellDefinedProof(f0, capture, runtime))];
+let mut output = node("DerivativeOperatorWellDefinedProof", "AtPoint", fields);
 output
 },
 };
 capture.intern_evidence(output)
 }
 
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixTransposeObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixTransposeObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__BoundOperatorObjWellDefinedProofByDef(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::BoundOperatorObjWellDefinedProofByDef, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixTransposeObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("MatrixTransposeObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::BoundOperatorObjWellDefinedProofByDef::Supremum(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SupremumObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("BoundOperatorObjWellDefinedProofByDef", "Supremum", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::BoundOperatorObjWellDefinedProofByDef::Infimum(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__InfimumObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("BoundOperatorObjWellDefinedProofByDef", "Infimum", fields);
 output
 },
 };
 capture.intern_evidence(output)
 }
 
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixConjugateTransposeObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixConjugateTransposeObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__LimitOperatorObjWellDefinedProofByDef(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::LimitOperatorObjWellDefinedProofByDef, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixConjugateTransposeObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("MatrixConjugateTransposeObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::LimitOperatorObjWellDefinedProofByDef::MultivariableScalar(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__selector__MultivariableScalarLimitWellDefinedProof(f0, capture, runtime))];
+let mut output = node("LimitOperatorObjWellDefinedProofByDef", "MultivariableScalar", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::LimitOperatorObjWellDefinedProofByDef::MultivariableVector(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__selector__MultivariableVectorLimitWellDefinedProof(f0, capture, runtime))];
+let mut output = node("LimitOperatorObjWellDefinedProofByDef", "MultivariableVector", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::LimitOperatorObjWellDefinedProofByDef::Function(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FunctionLimitObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("LimitOperatorObjWellDefinedProofByDef", "Function", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::LimitOperatorObjWellDefinedProofByDef::Sequence(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SequenceLimitObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("LimitOperatorObjWellDefinedProofByDef", "Sequence", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::LimitOperatorObjWellDefinedProofByDef::SequenceLimsup(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SequenceLimsupObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("LimitOperatorObjWellDefinedProofByDef", "SequenceLimsup", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::LimitOperatorObjWellDefinedProofByDef::SequenceLiminf(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SequenceLiminfObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("LimitOperatorObjWellDefinedProofByDef", "SequenceLiminf", fields);
 output
 },
 };
 capture.intern_evidence(output)
 }
 
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixTraceObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixTraceObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__IdentifierObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IdentifierObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixTraceObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("MatrixTraceObjWellDefinedProof", "", fields);
-output
-},
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixAddObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixAddObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixAddObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("MatrixAddObjWellDefinedProof", "", fields);
-output
-},
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixSubtractObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixSubtractObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixSubtractObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("MatrixSubtractObjWellDefinedProof", "", fields);
-output
-},
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixScaleObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixScaleObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixScaleObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("MatrixScaleObjWellDefinedProof", "", fields);
-output
-},
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixMultiplyObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixMultiplyObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixMultiplyObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("MatrixMultiplyObjWellDefinedProof", "", fields);
-output
-},
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixApplyObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixApplyObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixApplyObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("MatrixApplyObjWellDefinedProof", "", fields);
-output
-},
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixPowerObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixPowerObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixPowerObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("MatrixPowerObjWellDefinedProof", "", fields);
-output
-},
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixInverseObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixInverseObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixInverseObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("MatrixInverseObjWellDefinedProof", "", fields);
-output
-},
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixRankObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixRankObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixRankObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("MatrixRankObjWellDefinedProof", "", fields);
-output
-},
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixMinorObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixMinorObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixMinorObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("MatrixMinorObjWellDefinedProof", "", fields);
-output
-},
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixCofactorObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixCofactorObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixCofactorObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("MatrixCofactorObjWellDefinedProof", "", fields);
-output
-},
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixAdjugateObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixAdjugateObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixAdjugateObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("MatrixAdjugateObjWellDefinedProof", "", fields);
-output
-},
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixDiagonalObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixDiagonalObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixDiagonalObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("MatrixDiagonalObjWellDefinedProof", "", fields);
-output
-},
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixOuterProductObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOuterProductObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOuterProductObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("MatrixOuterProductObjWellDefinedProof", "", fields);
-output
-},
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FiniteInnerProductObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FiniteInnerProductObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FiniteInnerProductObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("FiniteInnerProductObjWellDefinedProof", "", fields);
-output
-},
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__EuclideanNormObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::EuclideanNormObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::EuclideanNormObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("EuclideanNormObjWellDefinedProof", "", fields);
-output
-},
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixFrobeniusNormObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixFrobeniusNormObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixFrobeniusNormObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("MatrixFrobeniusNormObjWellDefinedProof", "", fields);
-output
-},
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__riemann_integral__RiemannIntegralWellDefinedProof(value: &crate::execute::execute_fact_stmt::riemann_integral::RiemannIntegralWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::riemann_integral::RiemannIntegralWellDefinedProof { function_wd: f0, lower_wd: f1, upper_wd: f2, domain: f3, requirements: f4, selection: f5 } => {
-let fields = vec![("function_wd", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(f0, capture, runtime)), ("lower_wd", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(f1, capture, runtime)), ("upper_wd", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(f2, capture, runtime)), ("domain", capture_execute__execute_fact_stmt__function_limit__RealFunctionLimitDomainProof(f3, capture, runtime)), ("requirements", JsonValue::Array((f4).iter().map(|item| capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__PredicateDomainWellDefinedProof(item, capture, runtime)).collect())), ("selection", capture_execute__execute_fact_stmt__riemann_integral__RiemannIntegralSelectionProof(f5, capture, runtime))];
-let mut output = node("RiemannIntegralWellDefinedProof", "", fields);
-output
-},
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__multivariable__selector__PartialDerivativeAtWellDefinedProof(value: &crate::execute::execute_fact_stmt::multivariable::selector::PartialDerivativeAtWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::multivariable::selector::PartialDerivativeAtWellDefinedProof { stages: f0 } => {
-let fields = vec![("stages", capture_execute__execute_fact_stmt__multivariable__selector__MultivariableSelectorWellDefinedStages(f0, capture, runtime))];
-let mut output = node("PartialDerivativeAtWellDefinedProof", "", fields);
-output
-},
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__multivariable__selector__ScalarDifferentialAtWellDefinedProof(value: &crate::execute::execute_fact_stmt::multivariable::selector::ScalarDifferentialAtWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::multivariable::selector::ScalarDifferentialAtWellDefinedProof { stages: f0 } => {
-let fields = vec![("stages", capture_execute__execute_fact_stmt__multivariable__selector__MultivariableSelectorWellDefinedStages(f0, capture, runtime))];
-let mut output = node("ScalarDifferentialAtWellDefinedProof", "", fields);
-output
-},
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__multivariable__selector__TotalDifferentialAtWellDefinedProof(value: &crate::execute::execute_fact_stmt::multivariable::selector::TotalDifferentialAtWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::multivariable::selector::TotalDifferentialAtWellDefinedProof { stages: f0 } => {
-let fields = vec![("stages", capture_execute__execute_fact_stmt__multivariable__selector__MultivariableSelectorWellDefinedStages(f0, capture, runtime))];
-let mut output = node("TotalDifferentialAtWellDefinedProof", "", fields);
-output
-},
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__multivariable__selector__GradientAtWellDefinedProof(value: &crate::execute::execute_fact_stmt::multivariable::selector::GradientAtWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::multivariable::selector::GradientAtWellDefinedProof { stages: f0 } => {
-let fields = vec![("stages", capture_execute__execute_fact_stmt__multivariable__selector__MultivariableSelectorWellDefinedStages(f0, capture, runtime))];
-let mut output = node("GradientAtWellDefinedProof", "", fields);
-output
-},
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__multivariable__selector__JacobianAtWellDefinedProof(value: &crate::execute::execute_fact_stmt::multivariable::selector::JacobianAtWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::multivariable::selector::JacobianAtWellDefinedProof { stages: f0 } => {
-let fields = vec![("stages", capture_execute__execute_fact_stmt__multivariable__selector__MultivariableSelectorWellDefinedStages(f0, capture, runtime))];
-let mut output = node("JacobianAtWellDefinedProof", "", fields);
-output
-},
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__multivariable__selector__HessianAtWellDefinedProof(value: &crate::execute::execute_fact_stmt::multivariable::selector::HessianAtWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::multivariable::selector::HessianAtWellDefinedProof { stages: f0 } => {
-let fields = vec![("stages", capture_execute__execute_fact_stmt__multivariable__selector__MultivariableSelectorWellDefinedStages(f0, capture, runtime))];
-let mut output = node("HessianAtWellDefinedProof", "", fields);
-output
-},
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__multivariable__selector__DivergenceAtWellDefinedProof(value: &crate::execute::execute_fact_stmt::multivariable::selector::DivergenceAtWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::multivariable::selector::DivergenceAtWellDefinedProof { stages: f0 } => {
-let fields = vec![("stages", capture_execute__execute_fact_stmt__multivariable__selector__MultivariableSelectorWellDefinedStages(f0, capture, runtime))];
-let mut output = node("DivergenceAtWellDefinedProof", "", fields);
-output
-},
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__multivariable__selector__CurlAtWellDefinedProof(value: &crate::execute::execute_fact_stmt::multivariable::selector::CurlAtWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::multivariable::selector::CurlAtWellDefinedProof { stages: f0 } => {
-let fields = vec![("stages", capture_execute__execute_fact_stmt__multivariable__selector__MultivariableSelectorWellDefinedStages(f0, capture, runtime))];
-let mut output = node("CurlAtWellDefinedProof", "", fields);
-output
-},
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__multivariable__selector__LaplacianAtWellDefinedProof(value: &crate::execute::execute_fact_stmt::multivariable::selector::LaplacianAtWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::multivariable::selector::LaplacianAtWellDefinedProof { stages: f0 } => {
-let fields = vec![("stages", capture_execute__execute_fact_stmt__multivariable__selector__MultivariableSelectorWellDefinedStages(f0, capture, runtime))];
-let mut output = node("LaplacianAtWellDefinedProof", "", fields);
-output
-},
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__function_derivative__DerivativeAtWellDefinedProof(value: &crate::execute::execute_fact_stmt::function_derivative::DerivativeAtWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::function_derivative::DerivativeAtWellDefinedProof { function_wd: f0, point_wd: f1, domain: f2, point_in_domain: f3, convergence: f4 } => {
-let fields = vec![("function_wd", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(f0, capture, runtime)), ("point_wd", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(f1, capture, runtime)), ("domain", capture_execute__execute_fact_stmt__function_limit__RealFunctionLimitDomainProof(f2, capture, runtime)), ("point_in_domain", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f3, capture, runtime)), ("convergence", capture_execute__execute_fact_stmt__function_derivative__DerivativeConvergenceProof(f4, capture, runtime))];
-let mut output = node("DerivativeAtWellDefinedProof", "", fields);
-output
-},
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SupremumObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SupremumObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SupremumObjWellDefinedProof { set_wd: f0, real_set: f1, selection: f2 } => {
-let fields = vec![("set_wd", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(f0, capture, runtime)), ("real_set", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f1, capture, runtime)), ("selection", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f2, capture, runtime))];
-let mut output = node("SupremumObjWellDefinedProof", "", fields);
-output
-},
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__InfimumObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::InfimumObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::InfimumObjWellDefinedProof { set_wd: f0, real_set: f1, selection: f2 } => {
-let fields = vec![("set_wd", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(f0, capture, runtime)), ("real_set", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f1, capture, runtime)), ("selection", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f2, capture, runtime))];
-let mut output = node("InfimumObjWellDefinedProof", "", fields);
-output
-},
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__multivariable__selector__MultivariableScalarLimitWellDefinedProof(value: &crate::execute::execute_fact_stmt::multivariable::selector::MultivariableScalarLimitWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::multivariable::selector::MultivariableScalarLimitWellDefinedProof { stages: f0 } => {
-let fields = vec![("stages", capture_execute__execute_fact_stmt__multivariable__selector__MultivariableSelectorWellDefinedStages(f0, capture, runtime))];
-let mut output = node("MultivariableScalarLimitWellDefinedProof", "", fields);
-output
-},
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__multivariable__selector__MultivariableVectorLimitWellDefinedProof(value: &crate::execute::execute_fact_stmt::multivariable::selector::MultivariableVectorLimitWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::multivariable::selector::MultivariableVectorLimitWellDefinedProof { stages: f0 } => {
-let fields = vec![("stages", capture_execute__execute_fact_stmt__multivariable__selector__MultivariableSelectorWellDefinedStages(f0, capture, runtime))];
-let mut output = node("MultivariableVectorLimitWellDefinedProof", "", fields);
-output
-},
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FunctionLimitObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FunctionLimitObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FunctionLimitObjWellDefinedProof { approach: f0, function_wd: f1, approach_wd: f2, function_domain: f3, approach_real: f4, convergence: f5 } => {
-let fields = vec![("approach", capture_ast__obj__LimitApproach(f0, capture, runtime)), ("function_wd", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(f1, capture, runtime)), ("approach_wd", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FunctionLimitApproachWellDefinedProof(f2, capture, runtime)), ("function_domain", capture_execute__execute_fact_stmt__function_limit__RealFunctionLimitDomainProof(f3, capture, runtime)), ("approach_real", capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__FunctionLimitApproachRealProof(f4, capture, runtime)), ("convergence", capture_execute__execute_fact_stmt__function_limit__FunctionConvergenceProof(f5, capture, runtime))];
-let mut output = node("FunctionLimitObjWellDefinedProof", "", fields);
-output
-},
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SequenceLimitObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SequenceLimitObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SequenceLimitObjWellDefinedProof { sequence_wd: f0, sequence_domain: f1, convergence: f2 } => {
-let fields = vec![("sequence_wd", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(f0, capture, runtime)), ("sequence_domain", capture_execute__execute_fact_stmt__sequence_limit__RealSequenceDomainProof(f1, capture, runtime)), ("convergence", capture_execute__execute_fact_stmt__sequence_limit__SequenceConvergenceProof(f2, capture, runtime))];
-let mut output = node("SequenceLimitObjWellDefinedProof", "", fields);
-output
-},
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SequenceLimsupObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SequenceLimsupObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SequenceLimsupObjWellDefinedProof { sequence_wd: f0, sequence_domain: f1, convergence: f2 } => {
-let fields = vec![("sequence_wd", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(f0, capture, runtime)), ("sequence_domain", capture_execute__execute_fact_stmt__sequence_limit__RealSequenceDomainProof(f1, capture, runtime)), ("convergence", capture_execute__execute_fact_stmt__sequence_limit__SequenceConvergenceProof(f2, capture, runtime))];
-let mut output = node("SequenceLimsupObjWellDefinedProof", "", fields);
-output
-},
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SequenceLiminfObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SequenceLiminfObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SequenceLiminfObjWellDefinedProof { sequence_wd: f0, sequence_domain: f1, convergence: f2 } => {
-let fields = vec![("sequence_wd", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(f0, capture, runtime)), ("sequence_domain", capture_execute__execute_fact_stmt__sequence_limit__RealSequenceDomainProof(f1, capture, runtime)), ("convergence", capture_execute__execute_fact_stmt__sequence_limit__SequenceConvergenceProof(f2, capture, runtime))];
-let mut output = node("SequenceLiminfObjWellDefinedProof", "", fields);
-output
-},
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__NumberObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::NumberObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::NumberObjWellDefinedProof {  } => {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IdentifierObjWellDefinedProof {  } => {
 let fields = vec![];
-let mut output = node("NumberObjWellDefinedProof", "", fields);
+let mut output = node("IdentifierObjWellDefinedProof", "", fields);
 output
 },
 };
 capture.intern_evidence(output)
 }
 
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ImaginaryUnitObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ImaginaryUnitObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FnObjObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnObjObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ImaginaryUnitObjWellDefinedProof {  } => {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnObjObjWellDefinedProof { domain_fn_set: f0, child_obj_well_defined: f1, requirement_fact_verified: f2, argument_scope: f3 } => {
+let fields = vec![("domain_fn_set", match (f0).as_ref() { Some(item) => capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FnObjDomainFnSetEvidence(item, capture, runtime), None => JsonValue::Null }), ("child_obj_well_defined", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f2).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect())), ("argument_scope", match (f3).as_ref() { Some(item) => capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fn_obj_domain_check_result__FnObjArgumentScope(item, capture, runtime), None => JsonValue::Null })];
+let mut output = node("FnObjObjWellDefinedProof", "", fields);
+if let Some(scope) = f3.as_ref() { if let Some(JsonValue::Array(children)) = capture.evidence_field(&output, "child_obj_well_defined") { for formed in &scope.formed_children { if let Some(child) = children.get(formed.child_index) { capture.wd_evidence(&formed.wd_id, child, "well_definedness"); } } } }
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__LiteralObjWellDefinedProofByDef(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::LiteralObjWellDefinedProofByDef, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::LiteralObjWellDefinedProofByDef::Number(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__NumberObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("LiteralObjWellDefinedProofByDef", "Number", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::LiteralObjWellDefinedProofByDef::ImaginaryUnit(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ImaginaryUnitObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("LiteralObjWellDefinedProofByDef", "ImaginaryUnit", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::LiteralObjWellDefinedProofByDef::EulerNumber(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__EulerNumberObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("LiteralObjWellDefinedProofByDef", "EulerNumber", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::LiteralObjWellDefinedProofByDef::Pi(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__PiObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("LiteralObjWellDefinedProofByDef", "Pi", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__StandardSetObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::StandardSetObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::StandardSetObjWellDefinedProof {  } => {
 let fields = vec![];
-let mut output = node("ImaginaryUnitObjWellDefinedProof", "", fields);
+let mut output = node("StandardSetObjWellDefinedProof", "", fields);
 output
 },
 };
 capture.intern_evidence(output)
 }
 
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__EulerNumberObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::EulerNumberObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ArithmeticOperatorObjWellDefinedProofByDef(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ArithmeticOperatorObjWellDefinedProofByDef, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::EulerNumberObjWellDefinedProof {  } => {
-let fields = vec![];
-let mut output = node("EulerNumberObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ArithmeticOperatorObjWellDefinedProofByDef::Add(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__AddObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("ArithmeticOperatorObjWellDefinedProofByDef", "Add", fields);
 output
 },
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__PiObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::PiObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::PiObjWellDefinedProof {  } => {
-let fields = vec![];
-let mut output = node("PiObjWellDefinedProof", "", fields);
-output
-},
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__AddObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::AddObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::AddObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("AddObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ArithmeticOperatorObjWellDefinedProofByDef::Sub(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SubObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("ArithmeticOperatorObjWellDefinedProofByDef", "Sub", fields);
 output
 },
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SubObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SubObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SubObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("SubObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ArithmeticOperatorObjWellDefinedProofByDef::Neg(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__NegObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("ArithmeticOperatorObjWellDefinedProofByDef", "Neg", fields);
 output
 },
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__NegObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::NegObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::NegObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("NegObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ArithmeticOperatorObjWellDefinedProofByDef::Mul(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MulObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("ArithmeticOperatorObjWellDefinedProofByDef", "Mul", fields);
 output
 },
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MulObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MulObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MulObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("MulObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ArithmeticOperatorObjWellDefinedProofByDef::Div(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__DivObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("ArithmeticOperatorObjWellDefinedProofByDef", "Div", fields);
 output
 },
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__DivObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::DivObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::DivObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("DivObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ArithmeticOperatorObjWellDefinedProofByDef::Pow(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__PowObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("ArithmeticOperatorObjWellDefinedProofByDef", "Pow", fields);
 output
 },
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__PowObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::PowObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::PowObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("PowObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ArithmeticOperatorObjWellDefinedProofByDef::Abs(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__AbsObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("ArithmeticOperatorObjWellDefinedProofByDef", "Abs", fields);
 output
 },
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__AbsObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::AbsObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::AbsObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("AbsObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ArithmeticOperatorObjWellDefinedProofByDef::Min(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MinObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("ArithmeticOperatorObjWellDefinedProofByDef", "Min", fields);
 output
 },
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MinObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MinObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MinObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("MinObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ArithmeticOperatorObjWellDefinedProofByDef::Max(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MaxObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("ArithmeticOperatorObjWellDefinedProofByDef", "Max", fields);
 output
 },
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MaxObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MaxObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MaxObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("MaxObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ArithmeticOperatorObjWellDefinedProofByDef::Floor(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FloorObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("ArithmeticOperatorObjWellDefinedProofByDef", "Floor", fields);
 output
 },
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FloorObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FloorObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FloorObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("FloorObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ArithmeticOperatorObjWellDefinedProofByDef::Ceil(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__CeilObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("ArithmeticOperatorObjWellDefinedProofByDef", "Ceil", fields);
 output
 },
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__CeilObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::CeilObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::CeilObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("CeilObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ArithmeticOperatorObjWellDefinedProofByDef::Sign(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SignObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("ArithmeticOperatorObjWellDefinedProofByDef", "Sign", fields);
 output
 },
 };
 capture.intern_evidence(output)
 }
 
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SignObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SignObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__IntegerOperatorObjWellDefinedProofByDef(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IntegerOperatorObjWellDefinedProofByDef, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SignObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("SignObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IntegerOperatorObjWellDefinedProofByDef::Mod(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ModObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("IntegerOperatorObjWellDefinedProofByDef", "Mod", fields);
 output
 },
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ModObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ModObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ModObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("ModObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IntegerOperatorObjWellDefinedProofByDef::Quot(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__QuotObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("IntegerOperatorObjWellDefinedProofByDef", "Quot", fields);
 output
 },
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__QuotObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::QuotObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::QuotObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("QuotObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IntegerOperatorObjWellDefinedProofByDef::Gcd(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__GcdObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("IntegerOperatorObjWellDefinedProofByDef", "Gcd", fields);
 output
 },
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__GcdObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::GcdObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::GcdObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("GcdObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IntegerOperatorObjWellDefinedProofByDef::Lcm(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__LcmObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("IntegerOperatorObjWellDefinedProofByDef", "Lcm", fields);
 output
 },
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__LcmObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::LcmObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::LcmObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("LcmObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IntegerOperatorObjWellDefinedProofByDef::Factorial(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FactorialObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("IntegerOperatorObjWellDefinedProofByDef", "Factorial", fields);
 output
 },
 };
 capture.intern_evidence(output)
 }
 
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FactorialObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FactorialObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__TrigOperatorObjWellDefinedProofByDef(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::TrigOperatorObjWellDefinedProofByDef, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FactorialObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("FactorialObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::TrigOperatorObjWellDefinedProofByDef::Csc(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__CscObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("TrigOperatorObjWellDefinedProofByDef", "Csc", fields);
 output
 },
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__CscObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::CscObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::CscObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("CscObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::TrigOperatorObjWellDefinedProofByDef::Sec(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SecObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("TrigOperatorObjWellDefinedProofByDef", "Sec", fields);
 output
 },
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SecObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SecObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SecObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("SecObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::TrigOperatorObjWellDefinedProofByDef::Sin(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SinObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("TrigOperatorObjWellDefinedProofByDef", "Sin", fields);
 output
 },
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SinObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SinObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SinObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("SinObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::TrigOperatorObjWellDefinedProofByDef::Cos(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__CosObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("TrigOperatorObjWellDefinedProofByDef", "Cos", fields);
 output
 },
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__CosObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::CosObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::CosObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("CosObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::TrigOperatorObjWellDefinedProofByDef::Tan(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__TanObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("TrigOperatorObjWellDefinedProofByDef", "Tan", fields);
 output
 },
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__TanObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::TanObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::TanObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("TanObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::TrigOperatorObjWellDefinedProofByDef::Cot(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__CotObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("TrigOperatorObjWellDefinedProofByDef", "Cot", fields);
 output
 },
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__CotObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::CotObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::CotObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("CotObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::TrigOperatorObjWellDefinedProofByDef::Arcsin(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ArcsinObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("TrigOperatorObjWellDefinedProofByDef", "Arcsin", fields);
 output
 },
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ArcsinObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ArcsinObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ArcsinObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("ArcsinObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::TrigOperatorObjWellDefinedProofByDef::Arccos(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ArccosObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("TrigOperatorObjWellDefinedProofByDef", "Arccos", fields);
 output
 },
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ArccosObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ArccosObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ArccosObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("ArccosObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::TrigOperatorObjWellDefinedProofByDef::Arctan(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ArctanObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("TrigOperatorObjWellDefinedProofByDef", "Arctan", fields);
 output
 },
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ArctanObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ArctanObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ArctanObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("ArctanObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::TrigOperatorObjWellDefinedProofByDef::Arccot(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ArccotObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("TrigOperatorObjWellDefinedProofByDef", "Arccot", fields);
 output
 },
 };
 capture.intern_evidence(output)
 }
 
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ArccotObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ArccotObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__HyperbolicOperatorObjWellDefinedProofByDef(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::HyperbolicOperatorObjWellDefinedProofByDef, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ArccotObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("ArccotObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::HyperbolicOperatorObjWellDefinedProofByDef::Sinh(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SinhObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("HyperbolicOperatorObjWellDefinedProofByDef", "Sinh", fields);
 output
 },
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SinhObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SinhObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SinhObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("SinhObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::HyperbolicOperatorObjWellDefinedProofByDef::Cosh(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__CoshObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("HyperbolicOperatorObjWellDefinedProofByDef", "Cosh", fields);
 output
 },
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__CoshObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::CoshObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::CoshObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("CoshObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::HyperbolicOperatorObjWellDefinedProofByDef::Tanh(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__TanhObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("HyperbolicOperatorObjWellDefinedProofByDef", "Tanh", fields);
 output
 },
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__TanhObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::TanhObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::TanhObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("TanhObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::HyperbolicOperatorObjWellDefinedProofByDef::Coth(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__CothObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("HyperbolicOperatorObjWellDefinedProofByDef", "Coth", fields);
 output
 },
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__CothObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::CothObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::CothObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("CothObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::HyperbolicOperatorObjWellDefinedProofByDef::Sech(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SechObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("HyperbolicOperatorObjWellDefinedProofByDef", "Sech", fields);
 output
 },
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SechObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SechObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SechObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("SechObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::HyperbolicOperatorObjWellDefinedProofByDef::Csch(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__CschObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("HyperbolicOperatorObjWellDefinedProofByDef", "Csch", fields);
 output
 },
 };
 capture.intern_evidence(output)
 }
 
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__CschObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::CschObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ExpLogOperatorObjWellDefinedProofByDef(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ExpLogOperatorObjWellDefinedProofByDef, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::CschObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("CschObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ExpLogOperatorObjWellDefinedProofByDef::Exp(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ExpObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("ExpLogOperatorObjWellDefinedProofByDef", "Exp", fields);
 output
 },
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ExpObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ExpObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ExpObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("ExpObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ExpLogOperatorObjWellDefinedProofByDef::Ln(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__LnObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("ExpLogOperatorObjWellDefinedProofByDef", "Ln", fields);
 output
 },
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__LnObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::LnObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::LnObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("LnObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ExpLogOperatorObjWellDefinedProofByDef::Log(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__LogObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("ExpLogOperatorObjWellDefinedProofByDef", "Log", fields);
 output
 },
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__LogObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::LogObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::LogObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("LogObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ExpLogOperatorObjWellDefinedProofByDef::Sqrt(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SqrtObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("ExpLogOperatorObjWellDefinedProofByDef", "Sqrt", fields);
 output
 },
 };
 capture.intern_evidence(output)
 }
 
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SqrtObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SqrtObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ComplexOperatorObjWellDefinedProofByDef(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ComplexOperatorObjWellDefinedProofByDef, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SqrtObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("SqrtObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ComplexOperatorObjWellDefinedProofByDef::Conjugate(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ConjugateObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("ComplexOperatorObjWellDefinedProofByDef", "Conjugate", fields);
 output
 },
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ConjugateObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ConjugateObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ConjugateObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("ConjugateObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ComplexOperatorObjWellDefinedProofByDef::RealPart(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__RealPartObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("ComplexOperatorObjWellDefinedProofByDef", "RealPart", fields);
 output
 },
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__RealPartObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::RealPartObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::RealPartObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("RealPartObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ComplexOperatorObjWellDefinedProofByDef::ImaginaryPart(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ImaginaryPartObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("ComplexOperatorObjWellDefinedProofByDef", "ImaginaryPart", fields);
 output
 },
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ImaginaryPartObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ImaginaryPartObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ImaginaryPartObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("ImaginaryPartObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ComplexOperatorObjWellDefinedProofByDef::ComplexAbs(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ComplexAbsObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("ComplexOperatorObjWellDefinedProofByDef", "ComplexAbs", fields);
 output
 },
 };
 capture.intern_evidence(output)
 }
 
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ComplexAbsObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ComplexAbsObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SetOperatorObjWellDefinedProofByDef(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SetOperatorObjWellDefinedProofByDef, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ComplexAbsObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("ComplexAbsObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SetOperatorObjWellDefinedProofByDef::SymmetricDifference(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SymmetricDifferenceObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("SetOperatorObjWellDefinedProofByDef", "SymmetricDifference", fields);
 output
 },
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SymmetricDifferenceObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SymmetricDifferenceObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SymmetricDifferenceObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("SymmetricDifferenceObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SetOperatorObjWellDefinedProofByDef::Union(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__UnionObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("SetOperatorObjWellDefinedProofByDef", "Union", fields);
 output
 },
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__UnionObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::UnionObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::UnionObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("UnionObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SetOperatorObjWellDefinedProofByDef::Intersect(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__IntersectObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("SetOperatorObjWellDefinedProofByDef", "Intersect", fields);
 output
 },
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__IntersectObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IntersectObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IntersectObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("IntersectObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SetOperatorObjWellDefinedProofByDef::SetMinus(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SetMinusObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("SetOperatorObjWellDefinedProofByDef", "SetMinus", fields);
 output
 },
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SetMinusObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SetMinusObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SetMinusObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("SetMinusObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SetOperatorObjWellDefinedProofByDef::FamilyUnion(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FamilyUnionObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("SetOperatorObjWellDefinedProofByDef", "FamilyUnion", fields);
 output
 },
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FamilyUnionObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FamilyUnionObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FamilyUnionObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("FamilyUnionObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SetOperatorObjWellDefinedProofByDef::FamilyIntersect(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FamilyIntersectObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("SetOperatorObjWellDefinedProofByDef", "FamilyIntersect", fields);
 output
 },
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FamilyIntersectObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FamilyIntersectObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FamilyIntersectObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("FamilyIntersectObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SetOperatorObjWellDefinedProofByDef::IndexUnion(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__IndexUnionObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("SetOperatorObjWellDefinedProofByDef", "IndexUnion", fields);
 output
 },
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__IndexUnionObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IndexUnionObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IndexUnionObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("IndexUnionObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SetOperatorObjWellDefinedProofByDef::IndexIntersect(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__IndexIntersectObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("SetOperatorObjWellDefinedProofByDef", "IndexIntersect", fields);
 output
 },
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__IndexIntersectObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IndexIntersectObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IndexIntersectObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("IndexIntersectObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SetOperatorObjWellDefinedProofByDef::PowerSet(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__PowerSetObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("SetOperatorObjWellDefinedProofByDef", "PowerSet", fields);
 output
 },
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__PowerSetObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::PowerSetObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::PowerSetObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("PowerSetObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SetOperatorObjWellDefinedProofByDef::IndexCart(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__IndexCartObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("SetOperatorObjWellDefinedProofByDef", "IndexCart", fields);
 output
 },
 };
 capture.intern_evidence(output)
 }
 
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__IndexCartObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IndexCartObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SetFormerObjWellDefinedProofByDef(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SetFormerObjWellDefinedProofByDef, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IndexCartObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("IndexCartObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SetFormerObjWellDefinedProofByDef::MatrixSet(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixSetObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("SetFormerObjWellDefinedProofByDef", "MatrixSet", fields);
 output
 },
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixSetObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixSetObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixSetObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("MatrixSetObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SetFormerObjWellDefinedProofByDef::ListSet(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ListSetObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("SetFormerObjWellDefinedProofByDef", "ListSet", fields);
 output
 },
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ListSetObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ListSetObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ListSetObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("ListSetObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SetFormerObjWellDefinedProofByDef::SetBuilder(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SetBuilderObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("SetFormerObjWellDefinedProofByDef", "SetBuilder", fields);
 output
 },
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SetBuilderObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SetBuilderObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SetBuilderObjWellDefinedProof { param_set_well_defined: f0, defined_params: f1, assumed_facts: f2, local_env: f3 } => {
-let saved_scope = capture.enter_scope();
-capture.index_environment(f3, runtime);
-let fields = vec![("param_set_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(f0, capture, runtime)), ("defined_params", capture_execute__execute_have_obj_in_nonempty_set_stmt__StoreHaveObjAndInferResult(f1, capture, runtime)), ("assumed_facts", JsonValue::Array((f2).iter().map(|item| capture_execute__execute_fact_stmt__verify_forall_fact__result__AssumeDomFactResult(item, capture, runtime)).collect())), ("local_env", capture.environment(f3, runtime))];
-let mut output = node("SetBuilderObjWellDefinedProof", "", fields);
-capture.leave_scope(saved_scope);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SetFormerObjWellDefinedProofByDef::Range(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__RangeObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("SetFormerObjWellDefinedProofByDef", "Range", fields);
 output
 },
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__RangeObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::RangeObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::RangeObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("RangeObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SetFormerObjWellDefinedProofByDef::ClosedRange(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ClosedRangeObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("SetFormerObjWellDefinedProofByDef", "ClosedRange", fields);
 output
 },
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ClosedRangeObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ClosedRangeObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ClosedRangeObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("ClosedRangeObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SetFormerObjWellDefinedProofByDef::FiniteSeqSet(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FiniteSeqSetObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("SetFormerObjWellDefinedProofByDef", "FiniteSeqSet", fields);
 output
 },
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FiniteSeqSetObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FiniteSeqSetObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FiniteSeqSetObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("FiniteSeqSetObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SetFormerObjWellDefinedProofByDef::SeqSet(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SeqSetObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("SetFormerObjWellDefinedProofByDef", "SeqSet", fields);
 output
 },
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SeqSetObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SeqSetObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SeqSetObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("SeqSetObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SetFormerObjWellDefinedProofByDef::OneSideInfinityIntervalObj(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__OneSideInfinityIntervalObjObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("SetFormerObjWellDefinedProofByDef", "OneSideInfinityIntervalObj", fields);
 output
 },
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__OneSideInfinityIntervalObjObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::OneSideInfinityIntervalObjObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::OneSideInfinityIntervalObjObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("OneSideInfinityIntervalObjObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SetFormerObjWellDefinedProofByDef::IntervalObj(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__IntervalObjObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("SetFormerObjWellDefinedProofByDef", "IntervalObj", fields);
 output
 },
 };
 capture.intern_evidence(output)
 }
 
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__IntervalObjObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IntervalObjObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ProductShapeObjWellDefinedProofByDef(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ProductShapeObjWellDefinedProofByDef, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IntervalObjObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("IntervalObjObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ProductShapeObjWellDefinedProofByDef::Cart(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__CartObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("ProductShapeObjWellDefinedProofByDef", "Cart", fields);
 output
 },
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__CartObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::CartObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::CartObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("CartObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ProductShapeObjWellDefinedProofByDef::Tuple(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__TupleObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("ProductShapeObjWellDefinedProofByDef", "Tuple", fields);
 output
 },
 };
 capture.intern_evidence(output)
 }
 
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__TupleObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::TupleObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FunctionSpaceObjWellDefinedProofByDef(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FunctionSpaceObjWellDefinedProofByDef, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::TupleObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("TupleObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FunctionSpaceObjWellDefinedProofByDef::FnSet(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FnSetObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("FunctionSpaceObjWellDefinedProofByDef", "FnSet", fields);
 output
 },
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FnSetObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnSetObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnSetObjWellDefinedProof { param_type_well_defined: f0, defined_params: f1, assumed_dom_facts: f2, ret_set_well_defined: f3, local_env: f4 } => {
-let saved_scope = capture.enter_scope();
-capture.index_environment(f4, runtime);
-let fields = vec![("param_type_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("defined_params", capture_execute__execute_have_obj_in_nonempty_set_stmt__StoreHaveObjAndInferResult(f1, capture, runtime)), ("assumed_dom_facts", JsonValue::Array((f2).iter().map(|item| capture_execute__execute_fact_stmt__verify_forall_fact__result__AssumeDomFactResult(item, capture, runtime)).collect())), ("ret_set_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(f3, capture, runtime)), ("local_env", capture.environment(f4, runtime))];
-let mut output = node("FnSetObjWellDefinedProof", "", fields);
-capture.leave_scope(saved_scope);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FunctionSpaceObjWellDefinedProofByDef::AnonymousFn(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__AnonymousFnObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("FunctionSpaceObjWellDefinedProofByDef", "AnonymousFn", fields);
 output
 },
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__AnonymousFnObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::AnonymousFnObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::AnonymousFnObjWellDefinedProof { param_type_well_defined: f0, defined_params: f1, assumed_dom_facts: f2, ret_set_well_defined: f3, body_well_defined: f4, body_in_ret_set: f5, local_env: f6 } => {
-let saved_scope = capture.enter_scope();
-capture.index_environment(f6, runtime);
-let fields = vec![("param_type_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("defined_params", capture_execute__execute_have_obj_in_nonempty_set_stmt__StoreHaveObjAndInferResult(f1, capture, runtime)), ("assumed_dom_facts", JsonValue::Array((f2).iter().map(|item| capture_execute__execute_fact_stmt__verify_forall_fact__result__AssumeDomFactResult(item, capture, runtime)).collect())), ("ret_set_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(f3, capture, runtime)), ("body_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(f4, capture, runtime)), ("body_in_ret_set", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__AnonymousFnBodyInReturnSetProof(f5, capture, runtime)), ("local_env", capture.environment(f6, runtime))];
-let mut output = node("AnonymousFnObjWellDefinedProof", "", fields);
-capture.leave_scope(saved_scope);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FunctionSpaceObjWellDefinedProofByDef::FnRange(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FnRangeObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("FunctionSpaceObjWellDefinedProofByDef", "FnRange", fields);
 output
 },
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FnRangeObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnRangeObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnRangeObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1, function_domains: f2 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect())), ("function_domains", JsonValue::Array((f2).iter().map(|item| capture_execute__execute_fact_stmt__function_domain__CompleteFunctionDomainProof(item, capture, runtime)).collect()))];
-let mut output = node("FnRangeObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FunctionSpaceObjWellDefinedProofByDef::Composition(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__function_composition__CompositionObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("FunctionSpaceObjWellDefinedProofByDef", "Composition", fields);
 output
 },
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__function_composition__CompositionObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::function_composition::CompositionObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::function_composition::CompositionObjWellDefinedProof { outer_well_defined: f0, inner_well_defined: f1, outer_domain: f2, inner_domain: f3, function: f4, function_well_defined: f5 } => {
-let fields = vec![("outer_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(f0, capture, runtime)), ("inner_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(f1, capture, runtime)), ("outer_domain", capture_execute__execute_fact_stmt__function_domain__CompleteFunctionDomainProof(f2, capture, runtime)), ("inner_domain", capture_execute__execute_fact_stmt__function_domain__CompleteFunctionDomainProof(f3, capture, runtime)), ("function", capture_ast__obj__AnonymousFn(f4, capture, runtime)), ("function_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(f5, capture, runtime))];
-let mut output = node("CompositionObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FunctionSpaceObjWellDefinedProofByDef::Preimage(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__PreimageObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("FunctionSpaceObjWellDefinedProofByDef", "Preimage", fields);
 output
 },
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__PreimageObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::PreimageObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::PreimageObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1, construction: f2 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect())), ("construction", capture_execute__execute_fact_stmt__function_preimage__FunctionPreimageConstructionProof(f2, capture, runtime))];
-let mut output = node("PreimageObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FunctionSpaceObjWellDefinedProofByDef::PreimageSet(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__PreimageSetObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("FunctionSpaceObjWellDefinedProofByDef", "PreimageSet", fields);
 output
 },
 };
 capture.intern_evidence(output)
 }
 
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__PreimageSetObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::PreimageSetObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__IteratedOperatorObjWellDefinedProofByDef(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IteratedOperatorObjWellDefinedProofByDef, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::PreimageSetObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1, construction: f2 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect())), ("construction", capture_execute__execute_fact_stmt__function_preimage__FunctionPreimageConstructionProof(f2, capture, runtime))];
-let mut output = node("PreimageSetObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IteratedOperatorObjWellDefinedProofByDef::Sum(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SumObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("IteratedOperatorObjWellDefinedProofByDef", "Sum", fields);
 output
 },
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SumObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SumObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SumObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1, signature_selection: f2 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect())), ("signature_selection", match (f2).as_ref() { Some(item) => capture_execute__execute_fact_stmt__function_signature_selection__FunctionSignatureSelection(item, capture, runtime), None => JsonValue::Null })];
-let mut output = node("SumObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IteratedOperatorObjWellDefinedProofByDef::SumOfFiniteSet(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SumOfFiniteSetObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("IteratedOperatorObjWellDefinedProofByDef", "SumOfFiniteSet", fields);
 output
 },
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SumOfFiniteSetObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SumOfFiniteSetObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SumOfFiniteSetObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1, signature_selection: f2 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect())), ("signature_selection", match (f2).as_ref() { Some(item) => capture_execute__execute_fact_stmt__function_signature_selection__FunctionSignatureSelection(item, capture, runtime), None => JsonValue::Null })];
-let mut output = node("SumOfFiniteSetObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IteratedOperatorObjWellDefinedProofByDef::Product(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ProductObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("IteratedOperatorObjWellDefinedProofByDef", "Product", fields);
 output
 },
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ProductObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ProductObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ProductObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1, signature_selection: f2 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect())), ("signature_selection", match (f2).as_ref() { Some(item) => capture_execute__execute_fact_stmt__function_signature_selection__FunctionSignatureSelection(item, capture, runtime), None => JsonValue::Null })];
-let mut output = node("ProductObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IteratedOperatorObjWellDefinedProofByDef::ProductOfFiniteSet(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ProductOfFiniteSetObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("IteratedOperatorObjWellDefinedProofByDef", "ProductOfFiniteSet", fields);
 output
 },
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ProductOfFiniteSetObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ProductOfFiniteSetObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ProductOfFiniteSetObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1, signature_selection: f2 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect())), ("signature_selection", match (f2).as_ref() { Some(item) => capture_execute__execute_fact_stmt__function_signature_selection__FunctionSignatureSelection(item, capture, runtime), None => JsonValue::Null })];
-let mut output = node("ProductOfFiniteSetObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IteratedOperatorObjWellDefinedProofByDef::Reduce(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ReduceObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("IteratedOperatorObjWellDefinedProofByDef", "Reduce", fields);
 output
 },
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ReduceObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ReduceObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ReduceObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1, operation_signature_selection: f2, iterand_signature_selection: f3 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect())), ("operation_signature_selection", match (f2).as_ref() { Some(item) => capture_execute__execute_fact_stmt__function_signature_selection__FunctionSignatureSelection(item, capture, runtime), None => JsonValue::Null }), ("iterand_signature_selection", match (f3).as_ref() { Some(item) => capture_execute__execute_fact_stmt__function_signature_selection__FunctionSignatureSelection(item, capture, runtime), None => JsonValue::Null })];
-let mut output = node("ReduceObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IteratedOperatorObjWellDefinedProofByDef::FiniteSetReduce(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FiniteSetReduceObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("IteratedOperatorObjWellDefinedProofByDef", "FiniteSetReduce", fields);
 output
 },
 };
 capture.intern_evidence(output)
 }
 
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FiniteSetReduceObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FiniteSetReduceObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FiniteSetStatObjWellDefinedProofByDef(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FiniteSetStatObjWellDefinedProofByDef, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FiniteSetReduceObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1, operation_signature_selection: f2, iterand_signature_selection: f3 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect())), ("operation_signature_selection", match (f2).as_ref() { Some(item) => capture_execute__execute_fact_stmt__function_signature_selection__FunctionSignatureSelection(item, capture, runtime), None => JsonValue::Null }), ("iterand_signature_selection", match (f3).as_ref() { Some(item) => capture_execute__execute_fact_stmt__function_signature_selection__FunctionSignatureSelection(item, capture, runtime), None => JsonValue::Null })];
-let mut output = node("FiniteSetReduceObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FiniteSetStatObjWellDefinedProofByDef::FiniteSetSize(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FiniteSetSizeObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("FiniteSetStatObjWellDefinedProofByDef", "FiniteSetSize", fields);
 output
 },
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FiniteSetSizeObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FiniteSetSizeObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FiniteSetSizeObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("FiniteSetSizeObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FiniteSetStatObjWellDefinedProofByDef::FiniteSetMax(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FiniteSetMaxObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("FiniteSetStatObjWellDefinedProofByDef", "FiniteSetMax", fields);
 output
 },
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FiniteSetMaxObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FiniteSetMaxObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FiniteSetMaxObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("FiniteSetMaxObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FiniteSetStatObjWellDefinedProofByDef::FiniteSetMin(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FiniteSetMinObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("FiniteSetStatObjWellDefinedProofByDef", "FiniteSetMin", fields);
 output
 },
 };
 capture.intern_evidence(output)
 }
 
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FiniteSetMinObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FiniteSetMinObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__StructishObjWellDefinedProofByDef(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::StructishObjWellDefinedProofByDef, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FiniteSetMinObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("FiniteSetMinObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::StructishObjWellDefinedProofByDef::StructObj(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__StructObjObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("StructishObjWellDefinedProofByDef", "StructObj", fields);
 output
 },
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__StructObjObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::StructObjObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::StructObjObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("StructObjObjWellDefinedProof", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::StructishObjWellDefinedProofByDef::FieldAccess(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FieldAccessObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("StructishObjWellDefinedProofByDef", "FieldAccess", fields);
 output
 },
 };
 capture.intern_evidence(output)
 }
 
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FieldAccessObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FieldAccessObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__InstantiatedTemplateObjObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::InstantiatedTemplateObjObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FieldAccessObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1, argument_scope: f2 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect())), ("argument_scope", match (f2).as_ref() { Some(item) => capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fn_obj_domain_check_result__FnObjArgumentScope(item, capture, runtime), None => JsonValue::Null })];
-let mut output = node("FieldAccessObjWellDefinedProof", "", fields);
-if let Some(scope) = f2.as_ref() { if let Some(JsonValue::Array(children)) = capture.evidence_field(&output, "child_obj_well_defined") { for formed in &scope.formed_children { if let Some(child) = children.get(formed.child_index) { capture.wd_evidence(&formed.wd_id, child, "well_definedness"); } } } }
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::InstantiatedTemplateObjObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("InstantiatedTemplateObjObjWellDefinedProof", "", fields);
 output
 },
 };
@@ -36017,17 +34713,17 @@ let mut output = node("ParentCheckedBetaFunctionBody", "KnownFiniteFunctionCoord
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::by_fn_application::by_parent_checked_beta::ParentCheckedBetaFunctionBody::ReturnedFiniteFunctionCoordinate { receiver_well_defined: f0, receiver_function_body: f1, returned_tuple: f2, index: f3 } => {
-let fields = vec![("receiver_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(f0, capture, runtime)), ("receiver_function_body", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__by_object_definition__by_fn_application__by_parent_checked_beta__ParentCheckedBetaFunctionBody(f1, capture, runtime)), ("returned_tuple", capture_ast__obj__Tuple(f2, capture, runtime)), ("index", JsonValue::String((f3).to_string()))];
+let fields = vec![("receiver_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f0, capture, runtime)), ("receiver_function_body", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__by_object_definition__by_fn_application__by_parent_checked_beta__ParentCheckedBetaFunctionBody(f1, capture, runtime)), ("returned_tuple", capture_ast__obj__Tuple(f2, capture, runtime)), ("index", JsonValue::String((f3).to_string()))];
 let mut output = node("ParentCheckedBetaFunctionBody", "ReturnedFiniteFunctionCoordinate", fields);
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::by_fn_application::by_parent_checked_beta::ParentCheckedBetaFunctionBody::ReturnedAnonymousFunctionApplication { receiver_well_defined: f0, receiver_function_body: f1, returned_function: f2 } => {
-let fields = vec![("receiver_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(f0, capture, runtime)), ("receiver_function_body", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__by_object_definition__by_fn_application__by_parent_checked_beta__ParentCheckedBetaFunctionBody(f1, capture, runtime)), ("returned_function", capture_ast__obj__AnonymousFn(f2, capture, runtime))];
+let fields = vec![("receiver_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f0, capture, runtime)), ("receiver_function_body", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__by_object_definition__by_fn_application__by_parent_checked_beta__ParentCheckedBetaFunctionBody(f1, capture, runtime)), ("returned_function", capture_ast__obj__AnonymousFn(f2, capture, runtime))];
 let mut output = node("ParentCheckedBetaFunctionBody", "ReturnedAnonymousFunctionApplication", fields);
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::by_fn_application::by_parent_checked_beta::ParentCheckedBetaFunctionBody::ReturnedKnownFunctionApplication { receiver_well_defined: f0, receiver_function_body: f1, application_well_defined: f2, application_function_body: f3 } => {
-let fields = vec![("receiver_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(f0, capture, runtime)), ("receiver_function_body", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__by_object_definition__by_fn_application__by_parent_checked_beta__ParentCheckedBetaFunctionBody(f1, capture, runtime)), ("application_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(f2, capture, runtime)), ("application_function_body", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__by_object_definition__by_fn_application__by_parent_checked_beta__ParentCheckedBetaFunctionBody(f3, capture, runtime))];
+let fields = vec![("receiver_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f0, capture, runtime)), ("receiver_function_body", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__by_object_definition__by_fn_application__by_parent_checked_beta__ParentCheckedBetaFunctionBody(f1, capture, runtime)), ("application_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f2, capture, runtime)), ("application_function_body", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__by_object_definition__by_fn_application__by_parent_checked_beta__ParentCheckedBetaFunctionBody(f3, capture, runtime))];
 let mut output = node("ParentCheckedBetaFunctionBody", "ReturnedKnownFunctionApplication", fields);
 output
 },
@@ -38239,7 +36935,7 @@ capture.intern_evidence(output)
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__by_object_definition__by_fn_application__normalize_function_body__AnonymousFunctionBodyExpansionProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::by_fn_application::normalize_function_body::AnonymousFunctionBodyExpansionProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::by_fn_application::normalize_function_body::AnonymousFunctionBodyExpansionProof { application: f0, application_well_defined: f1, function_body: f2, body_application_well_defined: f3, expanded_body: f4, continued_body: f5 } => {
-let fields = vec![("application", capture_ast__obj__Obj(f0, capture, runtime)), ("application_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(f1, capture, runtime)), ("function_body", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__by_object_definition__by_fn_application__normalize_function_body__FunctionBodySourceProof(f2, capture, runtime)), ("body_application_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(f3, capture, runtime)), ("expanded_body", capture_ast__obj__Obj(f4, capture, runtime)), ("continued_body", capture_ast__obj__Obj(f5, capture, runtime))];
+let fields = vec![("application", capture_ast__obj__Obj(f0, capture, runtime)), ("application_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f1, capture, runtime)), ("function_body", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__by_object_definition__by_fn_application__normalize_function_body__FunctionBodySourceProof(f2, capture, runtime)), ("body_application_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f3, capture, runtime)), ("expanded_body", capture_ast__obj__Obj(f4, capture, runtime)), ("continued_body", capture_ast__obj__Obj(f5, capture, runtime))];
 let mut output = node("AnonymousFunctionBodyExpansionProof", "", fields);
 output
 },
@@ -38247,32 +36943,66 @@ output
 capture.intern_evidence(output)
 }
 
-pub(super) fn capture_execute__execute_fact_stmt__function_limit__RealFunctionLimitDomainProof(value: &crate::execute::execute_fact_stmt::function_limit::RealFunctionLimitDomainProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__MultivariableAnalysisPredicateDomainProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::MultivariableAnalysisPredicateDomainProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_fact_stmt::function_limit::RealFunctionLimitDomainProof { source: f0, domain: f1, input_real: f2, output_real: f3 } => {
-let fields = vec![("source", capture_execute__execute_fact_stmt__function_domain__CompleteFunctionDomainProof(f0, capture, runtime)), ("domain", capture_ast__obj__Obj(f1, capture, runtime)), ("input_real", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f2, capture, runtime)), ("output_real", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f3, capture, runtime))];
-let mut output = node("RealFunctionLimitDomainProof", "", fields);
+crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::MultivariableAnalysisPredicateDomainProof { function_domain: f0, requirements: f1 } => {
+let fields = vec![("function_domain", capture_execute__execute_fact_stmt__function_domain__CompleteFunctionDomainProof(f0, capture, runtime)), ("requirements", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__PredicateDomainWellDefinedProof(item, capture, runtime)).collect()))];
+let mut output = node("MultivariableAnalysisPredicateDomainProof", "", fields);
 output
 },
 };
 capture.intern_evidence(output)
 }
 
-pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__FunctionLimitApproachRealProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::FunctionLimitApproachRealProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__SequenceAnalysisPredicateDomainProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::SequenceAnalysisPredicateDomainProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::FunctionLimitApproachRealProof::Finite(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f0, capture, runtime))];
-let mut output = node("FunctionLimitApproachRealProof", "Finite", fields);
+crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::SequenceAnalysisPredicateDomainProof { sequence_source: f0 } => {
+let fields = vec![("sequence_source", capture_execute__execute_fact_stmt__function_domain__CompleteFunctionDomainProof(f0, capture, runtime))];
+let mut output = node("SequenceAnalysisPredicateDomainProof", "", fields);
 output
 },
-crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::FunctionLimitApproachRealProof::AtPositiveInfinity => {
-let fields = vec![];
-let mut output = node("FunctionLimitApproachRealProof", "AtPositiveInfinity", fields);
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__FunctionAnalysisPredicateDomainProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::FunctionAnalysisPredicateDomainProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::FunctionAnalysisPredicateDomainProof { function_domain: f0, requirements: f1 } => {
+let fields = vec![("function_domain", capture_execute__execute_fact_stmt__function_limit__RealFunctionLimitDomainProof(f0, capture, runtime)), ("requirements", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__PredicateDomainWellDefinedProof(item, capture, runtime)).collect()))];
+let mut output = node("FunctionAnalysisPredicateDomainProof", "", fields);
 output
 },
-crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::FunctionLimitApproachRealProof::AtNegativeInfinity => {
-let fields = vec![];
-let mut output = node("FunctionLimitApproachRealProof", "AtNegativeInfinity", fields);
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__FunctionLimitPredicateDomainProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::FunctionLimitPredicateDomainProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::FunctionLimitPredicateDomainProof { function_domain: f0, approach_real: f1, value_real: f2 } => {
+let fields = vec![("function_domain", capture_execute__execute_fact_stmt__function_limit__RealFunctionLimitDomainProof(f0, capture, runtime)), ("approach_real", capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__FunctionLimitApproachRealProof(f1, capture, runtime)), ("value_real", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f2, capture, runtime))];
+let mut output = node("FunctionLimitPredicateDomainProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__SequenceLimitPredicateDomainProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::SequenceLimitPredicateDomainProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::SequenceLimitPredicateDomainProof { sequence_source: f0, value_real: f1 } => {
+let fields = vec![("sequence_source", capture_execute__execute_fact_stmt__function_domain__CompleteFunctionDomainProof(f0, capture, runtime)), ("value_real", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_membership_proof__StructuralMembershipProof(f1, capture, runtime))];
+let mut output = node("SequenceLimitPredicateDomainProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__PredicateDomainArgumentMembershipProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainArgumentMembershipProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainArgumentMembershipProof { requirement: f0, argument_index: f1, membership: f2 } => {
+let fields = vec![("requirement", capture_ast__fact__fact__Fact(f0, capture, runtime)), ("argument_index", JsonValue::String((f1).to_string())), ("membership", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_membership_proof__StructuralMembershipProof(f2, capture, runtime))];
+let mut output = node("PredicateDomainArgumentMembershipProof", "", fields);
 output
 },
 };
@@ -43421,6 +42151,17 @@ output
 capture.intern_evidence(output)
 }
 
+pub(super) fn capture_execute__execute_fact_stmt__function_limit__RealFunctionLimitDomainProof(value: &crate::execute::execute_fact_stmt::function_limit::RealFunctionLimitDomainProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::function_limit::RealFunctionLimitDomainProof { source: f0, domain: f1, input_real: f2, output_real: f3 } => {
+let fields = vec![("source", capture_execute__execute_fact_stmt__function_domain__CompleteFunctionDomainProof(f0, capture, runtime)), ("domain", capture_ast__obj__Obj(f1, capture, runtime)), ("input_real", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f2, capture, runtime)), ("output_real", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f3, capture, runtime))];
+let mut output = node("RealFunctionLimitDomainProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
 pub(super) fn capture_execute__execute_fact_stmt__pointwise_derivative__PointInteriorProof(value: &crate::execute::execute_fact_stmt::pointwise_derivative::PointInteriorProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::pointwise_derivative::PointInteriorProof::Known { condition: f0, proof: f1 } => {
@@ -43519,7 +42260,7 @@ capture.intern_evidence(output)
 pub(super) fn capture_execute__execute_fact_stmt__function_preimage__FunctionPreimageConstructionProof(value: &crate::execute::execute_fact_stmt::function_preimage::FunctionPreimageConstructionProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::function_preimage::FunctionPreimageConstructionProof { source: f0, builder: f1, builder_well_defined: f2 } => {
-let fields = vec![("source", capture_execute__execute_fact_stmt__function_domain__CompleteFunctionDomainProof(f0, capture, runtime)), ("builder", capture_ast__obj__SetBuilder(f1, capture, runtime)), ("builder_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(f2, capture, runtime))];
+let fields = vec![("source", capture_execute__execute_fact_stmt__function_domain__CompleteFunctionDomainProof(f0, capture, runtime)), ("builder", capture_ast__obj__SetBuilder(f1, capture, runtime)), ("builder_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f2, capture, runtime))];
 let mut output = node("FunctionPreimageConstructionProof", "", fields);
 output
 },
@@ -43946,12 +42687,22 @@ output
 capture.intern_evidence(output)
 }
 
-pub(super) fn capture_ast__fact__forall_fact__DirectForallConclusionLocation(value: &crate::ast::fact::DirectForallConclusionLocation, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+pub(super) fn capture_ast__fact__forall_fact__ForallConclusionLocation(value: &crate::ast::fact::ForallConclusionLocation, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 capture.subject_depth += 1;
 let output = match value {
-crate::ast::fact::DirectForallConclusionLocation { then_fact_index: f0 } => {
-let fields = vec![("then_fact_index", JsonValue::String((f0).to_string()))];
-let mut output = node("DirectForallConclusionLocation", "", fields);
+crate::ast::fact::ForallConclusionLocation::DirectThenFact(f0) => {
+let fields = vec![("0", capture_ast__fact__forall_fact__DirectForallConclusionLocation(f0, capture, runtime))];
+let mut output = node("ForallConclusionLocation", "DirectThenFact", fields);
+output
+},
+crate::ast::fact::ForallConclusionLocation::AndFactComponent(f0) => {
+let fields = vec![("0", capture_ast__fact__forall_fact__AndFactComponentForallConclusionLocation(f0, capture, runtime))];
+let mut output = node("ForallConclusionLocation", "AndFactComponent", fields);
+output
+},
+crate::ast::fact::ForallConclusionLocation::ChainFactComponent(f0) => {
+let fields = vec![("0", capture_ast__fact__forall_fact__ChainFactComponentForallConclusionLocation(f0, capture, runtime))];
+let mut output = node("ForallConclusionLocation", "ChainFactComponent", fields);
 output
 },
 };
@@ -43959,72 +42710,37 @@ capture.subject_depth -= 1;
 capture.intern_evidence(output)
 }
 
-pub(super) fn capture_ast__fact__forall_fact__AndFactComponentForallConclusionLocation(value: &crate::ast::fact::AndFactComponentForallConclusionLocation, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-capture.subject_depth += 1;
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__DetailedForallConclusionArgMatchProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::DetailedForallConclusionArgMatchProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::ast::fact::AndFactComponentForallConclusionLocation { then_fact_index: f0, component_index: f1 } => {
-let fields = vec![("then_fact_index", JsonValue::String((f0).to_string())), ("component_index", JsonValue::String((f1).to_string()))];
-let mut output = node("AndFactComponentForallConclusionLocation", "", fields);
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::DetailedForallConclusionArgMatchProof::BoundParam { param_id: f0, pattern: f1, goal_arg: f2 } => {
+let fields = vec![("param_id", capture.identifier_id(f0, runtime)), ("pattern", capture_ast__obj__Obj(f1, capture, runtime)), ("goal_arg", capture_ast__obj__Obj(f2, capture, runtime))];
+let mut output = node("DetailedForallConclusionArgMatchProof", "BoundParam", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::DetailedForallConclusionArgMatchProof::ReboundParamEqual { param_id: f0, previous: f1, goal_arg: f2, equal: f3 } => {
+let fields = vec![("param_id", capture.identifier_id(f0, runtime)), ("previous", capture_ast__obj__Obj(f1, capture, runtime)), ("goal_arg", capture_ast__obj__Obj(f2, capture, runtime)), ("equal", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__StrictEqualWithFact(f3, capture, runtime))];
+let mut output = node("DetailedForallConclusionArgMatchProof", "ReboundParamEqual", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::DetailedForallConclusionArgMatchProof::ByStructure { pattern: f0, goal_arg: f1, child_matches: f2 } => {
+let fields = vec![("pattern", capture_ast__obj__Obj(f0, capture, runtime)), ("goal_arg", capture_ast__obj__Obj(f1, capture, runtime)), ("child_matches", JsonValue::Array((f2).iter().map(|item| capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__ForallConclusionArgMatchProof(item, capture, runtime)).collect()))];
+let mut output = node("DetailedForallConclusionArgMatchProof", "ByStructure", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::DetailedForallConclusionArgMatchProof::NonParamEqual { pattern: f0, pattern_after_subst: f1, goal_arg: f2, equal: f3 } => {
+let fields = vec![("pattern", capture_ast__obj__Obj(f0, capture, runtime)), ("pattern_after_subst", capture_ast__obj__Obj(f1, capture, runtime)), ("goal_arg", capture_ast__obj__Obj(f2, capture, runtime)), ("equal", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__StrictEqualWithFact(f3, capture, runtime))];
+let mut output = node("DetailedForallConclusionArgMatchProof", "NonParamEqual", fields);
 output
 },
 };
-capture.subject_depth -= 1;
 capture.intern_evidence(output)
 }
 
-pub(super) fn capture_ast__fact__forall_fact__ChainFactComponentForallConclusionLocation(value: &crate::ast::fact::ChainFactComponentForallConclusionLocation, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-capture.subject_depth += 1;
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__DetailedProveForallInstantiationRequirementsProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::DetailedProveForallInstantiationRequirementsProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::ast::fact::ChainFactComponentForallConclusionLocation { then_fact_index: f0, component_index: f1 } => {
-let fields = vec![("then_fact_index", JsonValue::String((f0).to_string())), ("component_index", JsonValue::String((f1).to_string()))];
-let mut output = node("ChainFactComponentForallConclusionLocation", "", fields);
-output
-},
-};
-capture.subject_depth -= 1;
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__StrictEqualArgProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::StrictEqualArgProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::StrictEqualArgProof::ByClosedCalculation(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__closed_calculation_proof__ClosedEqualityCalculationProof(f0, capture, runtime))];
-let mut output = node("StrictEqualArgProof", "ByClosedCalculation", fields);
-output
-},
-crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::StrictEqualArgProof::ByTheyAreTheSame(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__by_they_are_the_same__result__TheyAreTheSameProof(f0, capture, runtime))];
-let mut output = node("StrictEqualArgProof", "ByTheyAreTheSame", fields);
-output
-},
-crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::StrictEqualArgProof::ByKnownSpecialProperty(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__search_equal_fact_proof_by_known_special_property__EqualFactSearchProofByKnownSpecialProperty(f0, capture, runtime))];
-let mut output = node("StrictEqualArgProof", "ByKnownSpecialProperty", fields);
-output
-},
-crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::StrictEqualArgProof::ByBuiltinRule(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__search_equal_fact_builtin_rule_result__EqualitySearchProofByBuiltinRule(f0, capture, runtime))];
-let mut output = node("StrictEqualArgProof", "ByBuiltinRule", fields);
-output
-},
-crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::StrictEqualArgProof::ByEquivalenceClass(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__EqualFactSearchedProofByEquivalenceClass(f0, capture, runtime))];
-let mut output = node("StrictEqualArgProof", "ByEquivalenceClass", fields);
-output
-},
-crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::StrictEqualArgProof::ByObjectDefinition(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__by_object_definition__search_equal_fact_proof_by_object_definition_result__EqualitySearchProofByObjectDefinition(f0, capture, runtime))];
-let mut output = node("StrictEqualArgProof", "ByObjectDefinition", fields);
-output
-},
-crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::StrictEqualArgProof::ByBuiltinStrategy(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__by_builtin_strategy_result__EqualitySearchProofByBuiltinStrategy(f0, capture, runtime))];
-let mut output = node("StrictEqualArgProof", "ByBuiltinStrategy", fields);
-output
-},
-crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::StrictEqualArgProof::ByMatchingOneArgByOne(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__search_equal_fact_proof_by_matching_one_arg_by_one__EqualFactSearchedProofByMatchingOneArgByOne(f0, capture, runtime))];
-let mut output = node("StrictEqualArgProof", "ByMatchingOneArgByOne", fields);
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::DetailedProveForallInstantiationRequirementsProof { param_type_requirements: f0, dom_facts: f1, proof_of_dom_facts: f2 } => {
+let fields = vec![("param_type_requirements", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__ForallParamTypeRequirementProof(item, capture, runtime)).collect())), ("dom_facts", JsonValue::Array((f1).iter().map(|item| capture_ast__fact__fact__Fact(item, capture, runtime)).collect())), ("proof_of_dom_facts", JsonValue::Array((f2).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("DetailedProveForallInstantiationRequirementsProof", "", fields);
 output
 },
 };
@@ -44221,9 +42937,26 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_by_def_common__ObjWellDefinedByDefCommonStages(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ObjWellDefinedByDefCommonStages, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ObjWellDefinedByDefCommonStages { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
-let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__VerifyObjWellDefinedResult(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("ObjWellDefinedByDefCommonStages", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ObjWellDefinedByDefCommonStages::Compact(f0) => panic!("internal_bug: reading requires Detailed ObjWellDefinedByDefCommonStages"),
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ObjWellDefinedByDefCommonStages::Normal(f0) => panic!("internal_bug: reading requires Detailed ObjWellDefinedByDefCommonStages"),
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ObjWellDefinedByDefCommonStages::Detailed(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_by_def_common__DetailedObjWellDefinedByDefCommonStages(f0, capture, runtime))];
+let mut output = node("ObjWellDefinedByDefCommonStages", "Detailed", fields);
+if let JsonValue::Object(fields) = &mut output { fields.insert("result_detail".into(), JsonValue::String("detailed".into())); }
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fn_obj_domain_check_result__FnObjArgumentScope(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnObjArgumentScope, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnObjArgumentScope { formed_children: f0, local_env: f1 } => {
+let saved_scope = capture.enter_scope();
+capture.index_environment(f1, runtime);
+let fields = vec![("formed_children", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fn_obj_domain_check_result__FormedFunctionArgument(item, capture, runtime)).collect())), ("local_env", capture.environment(f1, runtime))];
+let mut output = node("FnObjArgumentScope", "", fields);
+capture.leave_scope(saved_scope);
 output
 },
 };
@@ -44278,128 +43011,1374 @@ output
 capture.intern_evidence(output)
 }
 
-pub(super) fn capture_execute__execute_fact_stmt__riemann_integral__RiemannIntegralSelectionProof(value: &crate::execute::execute_fact_stmt::riemann_integral::RiemannIntegralSelectionProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__DeterminantObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::DeterminantObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_fact_stmt::riemann_integral::RiemannIntegralSelectionProof::Candidate(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__result__AtomicExceptEqualityFactKnownProof(f0, capture, runtime))];
-let mut output = node("RiemannIntegralSelectionProof", "Candidate", fields);
-output
-},
-crate::execute::execute_fact_stmt::riemann_integral::RiemannIntegralSelectionProof::Existence { fact: f0, proof: f1 } => {
-let fields = vec![("fact", capture_ast__fact__fact__Fact(f0, capture, runtime)), ("proof", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f1, capture, runtime))];
-let mut output = node("RiemannIntegralSelectionProof", "Existence", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::DeterminantObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("DeterminantObjWellDefinedProof", "", fields);
 output
 },
 };
 capture.intern_evidence(output)
 }
 
-pub(super) fn capture_execute__execute_fact_stmt__multivariable__selector__MultivariableSelectorWellDefinedStages(value: &crate::execute::execute_fact_stmt::multivariable::selector::MultivariableSelectorWellDefinedStages, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ZeroMatrixObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ZeroMatrixObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_fact_stmt::multivariable::selector::MultivariableSelectorWellDefinedStages { argument_well_defined: f0, function_domain: f1, domains: f2, selection: f3 } => {
-let fields = vec![("argument_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("function_domain", capture_execute__execute_fact_stmt__function_domain__CompleteFunctionDomainProof(f1, capture, runtime)), ("domains", JsonValue::Array((f2).iter().map(|item| capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__PredicateDomainWellDefinedProof(item, capture, runtime)).collect())), ("selection", capture_execute__execute_fact_stmt__multivariable__selector__MultivariableSelectorSelectionProof(f3, capture, runtime))];
-let mut output = node("MultivariableSelectorWellDefinedStages", "", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ZeroMatrixObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("ZeroMatrixObjWellDefinedProof", "", fields);
 output
 },
 };
 capture.intern_evidence(output)
 }
 
-pub(super) fn capture_execute__execute_fact_stmt__function_derivative__DerivativeConvergenceProof(value: &crate::execute::execute_fact_stmt::function_derivative::DerivativeConvergenceProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__IdentityMatrixObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IdentityMatrixObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_fact_stmt::function_derivative::DerivativeConvergenceProof::Candidate(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__result__AtomicExceptEqualityFactKnownProof(f0, capture, runtime))];
-let mut output = node("DerivativeConvergenceProof", "Candidate", fields);
-output
-},
-crate::execute::execute_fact_stmt::function_derivative::DerivativeConvergenceProof::Existence { fact: f0, proof: f1 } => {
-let fields = vec![("fact", capture_ast__fact__fact__Fact(f0, capture, runtime)), ("proof", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f1, capture, runtime))];
-let mut output = node("DerivativeConvergenceProof", "Existence", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IdentityMatrixObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("IdentityMatrixObjWellDefinedProof", "", fields);
 output
 },
 };
 capture.intern_evidence(output)
 }
 
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FunctionLimitApproachWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FunctionLimitApproachWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixTransposeObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixTransposeObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FunctionLimitApproachWellDefinedProof::Finite { point_wd: f0 } => {
-let fields = vec![("point_wd", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(f0, capture, runtime))];
-let mut output = node("FunctionLimitApproachWellDefinedProof", "Finite", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixTransposeObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("MatrixTransposeObjWellDefinedProof", "", fields);
 output
 },
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FunctionLimitApproachWellDefinedProof::AtPositiveInfinity => {
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixConjugateTransposeObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixConjugateTransposeObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixConjugateTransposeObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("MatrixConjugateTransposeObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixTraceObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixTraceObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixTraceObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("MatrixTraceObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixAddObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixAddObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixAddObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("MatrixAddObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixSubtractObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixSubtractObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixSubtractObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("MatrixSubtractObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixScaleObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixScaleObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixScaleObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("MatrixScaleObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixMultiplyObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixMultiplyObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixMultiplyObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("MatrixMultiplyObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixApplyObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixApplyObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixApplyObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("MatrixApplyObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixPowerObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixPowerObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixPowerObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("MatrixPowerObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixInverseObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixInverseObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixInverseObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("MatrixInverseObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixRankObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixRankObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixRankObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("MatrixRankObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixMinorObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixMinorObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixMinorObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("MatrixMinorObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixCofactorObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixCofactorObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixCofactorObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("MatrixCofactorObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixAdjugateObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixAdjugateObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixAdjugateObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("MatrixAdjugateObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixDiagonalObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixDiagonalObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixDiagonalObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("MatrixDiagonalObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixOuterProductObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOuterProductObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOuterProductObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("MatrixOuterProductObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FiniteInnerProductObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FiniteInnerProductObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FiniteInnerProductObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("FiniteInnerProductObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__EuclideanNormObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::EuclideanNormObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::EuclideanNormObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("EuclideanNormObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixFrobeniusNormObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixFrobeniusNormObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixFrobeniusNormObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("MatrixFrobeniusNormObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__riemann_integral__RiemannIntegralWellDefinedProof(value: &crate::execute::execute_fact_stmt::riemann_integral::RiemannIntegralWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::riemann_integral::RiemannIntegralWellDefinedProof { function_wd: f0, lower_wd: f1, upper_wd: f2, domain: f3, requirements: f4, selection: f5 } => {
+let fields = vec![("function_wd", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f0, capture, runtime)), ("lower_wd", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f1, capture, runtime)), ("upper_wd", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f2, capture, runtime)), ("domain", capture_execute__execute_fact_stmt__function_limit__RealFunctionLimitDomainProof(f3, capture, runtime)), ("requirements", JsonValue::Array((f4).iter().map(|item| capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__PredicateDomainWellDefinedProof(item, capture, runtime)).collect())), ("selection", capture_execute__execute_fact_stmt__riemann_integral__RiemannIntegralSelectionProof(f5, capture, runtime))];
+let mut output = node("RiemannIntegralWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__selector__PartialDerivativeAtWellDefinedProof(value: &crate::execute::execute_fact_stmt::multivariable::selector::PartialDerivativeAtWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::selector::PartialDerivativeAtWellDefinedProof { stages: f0 } => {
+let fields = vec![("stages", capture_execute__execute_fact_stmt__multivariable__selector__MultivariableSelectorWellDefinedStages(f0, capture, runtime))];
+let mut output = node("PartialDerivativeAtWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__selector__ScalarDifferentialAtWellDefinedProof(value: &crate::execute::execute_fact_stmt::multivariable::selector::ScalarDifferentialAtWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::selector::ScalarDifferentialAtWellDefinedProof { stages: f0 } => {
+let fields = vec![("stages", capture_execute__execute_fact_stmt__multivariable__selector__MultivariableSelectorWellDefinedStages(f0, capture, runtime))];
+let mut output = node("ScalarDifferentialAtWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__selector__TotalDifferentialAtWellDefinedProof(value: &crate::execute::execute_fact_stmt::multivariable::selector::TotalDifferentialAtWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::selector::TotalDifferentialAtWellDefinedProof { stages: f0 } => {
+let fields = vec![("stages", capture_execute__execute_fact_stmt__multivariable__selector__MultivariableSelectorWellDefinedStages(f0, capture, runtime))];
+let mut output = node("TotalDifferentialAtWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__selector__GradientAtWellDefinedProof(value: &crate::execute::execute_fact_stmt::multivariable::selector::GradientAtWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::selector::GradientAtWellDefinedProof { stages: f0 } => {
+let fields = vec![("stages", capture_execute__execute_fact_stmt__multivariable__selector__MultivariableSelectorWellDefinedStages(f0, capture, runtime))];
+let mut output = node("GradientAtWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__selector__JacobianAtWellDefinedProof(value: &crate::execute::execute_fact_stmt::multivariable::selector::JacobianAtWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::selector::JacobianAtWellDefinedProof { stages: f0 } => {
+let fields = vec![("stages", capture_execute__execute_fact_stmt__multivariable__selector__MultivariableSelectorWellDefinedStages(f0, capture, runtime))];
+let mut output = node("JacobianAtWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__selector__HessianAtWellDefinedProof(value: &crate::execute::execute_fact_stmt::multivariable::selector::HessianAtWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::selector::HessianAtWellDefinedProof { stages: f0 } => {
+let fields = vec![("stages", capture_execute__execute_fact_stmt__multivariable__selector__MultivariableSelectorWellDefinedStages(f0, capture, runtime))];
+let mut output = node("HessianAtWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__selector__DivergenceAtWellDefinedProof(value: &crate::execute::execute_fact_stmt::multivariable::selector::DivergenceAtWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::selector::DivergenceAtWellDefinedProof { stages: f0 } => {
+let fields = vec![("stages", capture_execute__execute_fact_stmt__multivariable__selector__MultivariableSelectorWellDefinedStages(f0, capture, runtime))];
+let mut output = node("DivergenceAtWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__selector__CurlAtWellDefinedProof(value: &crate::execute::execute_fact_stmt::multivariable::selector::CurlAtWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::selector::CurlAtWellDefinedProof { stages: f0 } => {
+let fields = vec![("stages", capture_execute__execute_fact_stmt__multivariable__selector__MultivariableSelectorWellDefinedStages(f0, capture, runtime))];
+let mut output = node("CurlAtWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__selector__LaplacianAtWellDefinedProof(value: &crate::execute::execute_fact_stmt::multivariable::selector::LaplacianAtWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::selector::LaplacianAtWellDefinedProof { stages: f0 } => {
+let fields = vec![("stages", capture_execute__execute_fact_stmt__multivariable__selector__MultivariableSelectorWellDefinedStages(f0, capture, runtime))];
+let mut output = node("LaplacianAtWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__function_derivative__DerivativeAtWellDefinedProof(value: &crate::execute::execute_fact_stmt::function_derivative::DerivativeAtWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::function_derivative::DerivativeAtWellDefinedProof { function_wd: f0, point_wd: f1, domain: f2, point_in_domain: f3, convergence: f4 } => {
+let fields = vec![("function_wd", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f0, capture, runtime)), ("point_wd", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f1, capture, runtime)), ("domain", capture_execute__execute_fact_stmt__function_limit__RealFunctionLimitDomainProof(f2, capture, runtime)), ("point_in_domain", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f3, capture, runtime)), ("convergence", capture_execute__execute_fact_stmt__function_derivative__DerivativeConvergenceProof(f4, capture, runtime))];
+let mut output = node("DerivativeAtWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SupremumObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SupremumObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SupremumObjWellDefinedProof { set_wd: f0, real_set: f1, selection: f2 } => {
+let fields = vec![("set_wd", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f0, capture, runtime)), ("real_set", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f1, capture, runtime)), ("selection", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f2, capture, runtime))];
+let mut output = node("SupremumObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__InfimumObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::InfimumObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::InfimumObjWellDefinedProof { set_wd: f0, real_set: f1, selection: f2 } => {
+let fields = vec![("set_wd", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f0, capture, runtime)), ("real_set", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f1, capture, runtime)), ("selection", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f2, capture, runtime))];
+let mut output = node("InfimumObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__selector__MultivariableScalarLimitWellDefinedProof(value: &crate::execute::execute_fact_stmt::multivariable::selector::MultivariableScalarLimitWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::selector::MultivariableScalarLimitWellDefinedProof { stages: f0 } => {
+let fields = vec![("stages", capture_execute__execute_fact_stmt__multivariable__selector__MultivariableSelectorWellDefinedStages(f0, capture, runtime))];
+let mut output = node("MultivariableScalarLimitWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__selector__MultivariableVectorLimitWellDefinedProof(value: &crate::execute::execute_fact_stmt::multivariable::selector::MultivariableVectorLimitWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::selector::MultivariableVectorLimitWellDefinedProof { stages: f0 } => {
+let fields = vec![("stages", capture_execute__execute_fact_stmt__multivariable__selector__MultivariableSelectorWellDefinedStages(f0, capture, runtime))];
+let mut output = node("MultivariableVectorLimitWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FunctionLimitObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FunctionLimitObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FunctionLimitObjWellDefinedProof { approach: f0, function_wd: f1, approach_wd: f2, function_domain: f3, approach_real: f4, convergence: f5 } => {
+let fields = vec![("approach", capture_ast__obj__LimitApproach(f0, capture, runtime)), ("function_wd", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f1, capture, runtime)), ("approach_wd", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FunctionLimitApproachWellDefinedProof(f2, capture, runtime)), ("function_domain", capture_execute__execute_fact_stmt__function_limit__RealFunctionLimitDomainProof(f3, capture, runtime)), ("approach_real", capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__FunctionLimitApproachRealProof(f4, capture, runtime)), ("convergence", capture_execute__execute_fact_stmt__function_limit__FunctionConvergenceProof(f5, capture, runtime))];
+let mut output = node("FunctionLimitObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SequenceLimitObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SequenceLimitObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SequenceLimitObjWellDefinedProof { sequence_wd: f0, sequence_domain: f1, convergence: f2 } => {
+let fields = vec![("sequence_wd", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f0, capture, runtime)), ("sequence_domain", capture_execute__execute_fact_stmt__sequence_limit__RealSequenceDomainProof(f1, capture, runtime)), ("convergence", capture_execute__execute_fact_stmt__sequence_limit__SequenceConvergenceProof(f2, capture, runtime))];
+let mut output = node("SequenceLimitObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SequenceLimsupObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SequenceLimsupObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SequenceLimsupObjWellDefinedProof { sequence_wd: f0, sequence_domain: f1, convergence: f2 } => {
+let fields = vec![("sequence_wd", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f0, capture, runtime)), ("sequence_domain", capture_execute__execute_fact_stmt__sequence_limit__RealSequenceDomainProof(f1, capture, runtime)), ("convergence", capture_execute__execute_fact_stmt__sequence_limit__SequenceConvergenceProof(f2, capture, runtime))];
+let mut output = node("SequenceLimsupObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SequenceLiminfObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SequenceLiminfObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SequenceLiminfObjWellDefinedProof { sequence_wd: f0, sequence_domain: f1, convergence: f2 } => {
+let fields = vec![("sequence_wd", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f0, capture, runtime)), ("sequence_domain", capture_execute__execute_fact_stmt__sequence_limit__RealSequenceDomainProof(f1, capture, runtime)), ("convergence", capture_execute__execute_fact_stmt__sequence_limit__SequenceConvergenceProof(f2, capture, runtime))];
+let mut output = node("SequenceLiminfObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__NumberObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::NumberObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::NumberObjWellDefinedProof {  } => {
 let fields = vec![];
-let mut output = node("FunctionLimitApproachWellDefinedProof", "AtPositiveInfinity", fields);
+let mut output = node("NumberObjWellDefinedProof", "", fields);
 output
 },
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FunctionLimitApproachWellDefinedProof::AtNegativeInfinity => {
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ImaginaryUnitObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ImaginaryUnitObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ImaginaryUnitObjWellDefinedProof {  } => {
 let fields = vec![];
-let mut output = node("FunctionLimitApproachWellDefinedProof", "AtNegativeInfinity", fields);
+let mut output = node("ImaginaryUnitObjWellDefinedProof", "", fields);
 output
 },
 };
 capture.intern_evidence(output)
 }
 
-pub(super) fn capture_execute__execute_fact_stmt__function_limit__FunctionConvergenceProof(value: &crate::execute::execute_fact_stmt::function_limit::FunctionConvergenceProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__EulerNumberObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::EulerNumberObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_fact_stmt::function_limit::FunctionConvergenceProof::Candidate(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__result__AtomicExceptEqualityFactKnownProof(f0, capture, runtime))];
-let mut output = node("FunctionConvergenceProof", "Candidate", fields);
-output
-},
-crate::execute::execute_fact_stmt::function_limit::FunctionConvergenceProof::Existence { fact: f0, proof: f1 } => {
-let fields = vec![("fact", capture_ast__fact__fact__Fact(f0, capture, runtime)), ("proof", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f1, capture, runtime))];
-let mut output = node("FunctionConvergenceProof", "Existence", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::EulerNumberObjWellDefinedProof {  } => {
+let fields = vec![];
+let mut output = node("EulerNumberObjWellDefinedProof", "", fields);
 output
 },
 };
 capture.intern_evidence(output)
 }
 
-pub(super) fn capture_execute__execute_fact_stmt__sequence_limit__RealSequenceDomainProof(value: &crate::execute::execute_fact_stmt::sequence_limit::RealSequenceDomainProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__PiObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::PiObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_fact_stmt::sequence_limit::RealSequenceDomainProof::CompleteSignature(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__function_domain__CompleteFunctionDomainProof(f0, capture, runtime))];
-let mut output = node("RealSequenceDomainProof", "CompleteSignature", fields);
-output
-},
-crate::execute::execute_fact_stmt::sequence_limit::RealSequenceDomainProof::Membership(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f0, capture, runtime))];
-let mut output = node("RealSequenceDomainProof", "Membership", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::PiObjWellDefinedProof {  } => {
+let fields = vec![];
+let mut output = node("PiObjWellDefinedProof", "", fields);
 output
 },
 };
 capture.intern_evidence(output)
 }
 
-pub(super) fn capture_execute__execute_fact_stmt__sequence_limit__SequenceConvergenceProof(value: &crate::execute::execute_fact_stmt::sequence_limit::SequenceConvergenceProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__AddObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::AddObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_fact_stmt::sequence_limit::SequenceConvergenceProof::Candidate(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__result__AtomicExceptEqualityFactKnownProof(f0, capture, runtime))];
-let mut output = node("SequenceConvergenceProof", "Candidate", fields);
-output
-},
-crate::execute::execute_fact_stmt::sequence_limit::SequenceConvergenceProof::Existence { fact: f0, proof: f1 } => {
-let fields = vec![("fact", capture_ast__fact__fact__Fact(f0, capture, runtime)), ("proof", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f1, capture, runtime))];
-let mut output = node("SequenceConvergenceProof", "Existence", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::AddObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("AddObjWellDefinedProof", "", fields);
 output
 },
 };
 capture.intern_evidence(output)
 }
 
-pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__AnonymousFnBodyInReturnSetProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::AnonymousFnBodyInReturnSetProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SubObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SubObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::AnonymousFnBodyInReturnSetProof::CheckedMembership(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f0, capture, runtime))];
-let mut output = node("AnonymousFnBodyInReturnSetProof", "CheckedMembership", fields);
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SubObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("SubObjWellDefinedProof", "", fields);
 output
 },
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::AnonymousFnBodyInReturnSetProof::EmptyCompleteDomain(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__function_domain__FunctionDomainEmptyProof(f0, capture, runtime))];
-let mut output = node("AnonymousFnBodyInReturnSetProof", "EmptyCompleteDomain", fields);
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__NegObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::NegObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::NegObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("NegObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MulObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MulObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MulObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("MulObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__DivObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::DivObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::DivObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("DivObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__PowObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::PowObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::PowObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("PowObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__AbsObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::AbsObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::AbsObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("AbsObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MinObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MinObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MinObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("MinObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MaxObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MaxObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MaxObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("MaxObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FloorObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FloorObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FloorObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("FloorObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__CeilObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::CeilObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::CeilObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("CeilObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SignObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SignObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SignObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("SignObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ModObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ModObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ModObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("ModObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__QuotObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::QuotObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::QuotObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("QuotObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__GcdObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::GcdObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::GcdObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("GcdObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__LcmObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::LcmObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::LcmObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("LcmObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FactorialObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FactorialObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FactorialObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("FactorialObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__CscObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::CscObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::CscObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("CscObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SecObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SecObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SecObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("SecObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SinObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SinObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SinObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("SinObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__CosObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::CosObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::CosObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("CosObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__TanObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::TanObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::TanObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("TanObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__CotObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::CotObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::CotObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("CotObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ArcsinObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ArcsinObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ArcsinObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("ArcsinObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ArccosObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ArccosObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ArccosObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("ArccosObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ArctanObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ArctanObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ArctanObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("ArctanObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ArccotObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ArccotObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ArccotObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("ArccotObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SinhObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SinhObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SinhObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("SinhObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__CoshObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::CoshObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::CoshObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("CoshObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__TanhObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::TanhObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::TanhObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("TanhObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__CothObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::CothObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::CothObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("CothObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SechObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SechObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SechObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("SechObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__CschObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::CschObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::CschObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("CschObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ExpObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ExpObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ExpObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("ExpObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__LnObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::LnObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::LnObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("LnObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__LogObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::LogObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::LogObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("LogObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SqrtObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SqrtObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SqrtObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("SqrtObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ConjugateObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ConjugateObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ConjugateObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("ConjugateObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__RealPartObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::RealPartObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::RealPartObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("RealPartObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ImaginaryPartObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ImaginaryPartObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ImaginaryPartObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("ImaginaryPartObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ComplexAbsObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ComplexAbsObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ComplexAbsObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("ComplexAbsObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SymmetricDifferenceObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SymmetricDifferenceObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SymmetricDifferenceObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("SymmetricDifferenceObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__UnionObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::UnionObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::UnionObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("UnionObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__IntersectObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IntersectObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IntersectObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("IntersectObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SetMinusObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SetMinusObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SetMinusObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("SetMinusObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FamilyUnionObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FamilyUnionObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FamilyUnionObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("FamilyUnionObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FamilyIntersectObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FamilyIntersectObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FamilyIntersectObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("FamilyIntersectObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__IndexUnionObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IndexUnionObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IndexUnionObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("IndexUnionObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__IndexIntersectObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IndexIntersectObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IndexIntersectObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("IndexIntersectObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__PowerSetObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::PowerSetObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::PowerSetObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("PowerSetObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__IndexCartObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IndexCartObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IndexCartObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("IndexCartObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MatrixSetObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixSetObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixSetObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("MatrixSetObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ListSetObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ListSetObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ListSetObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("ListSetObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SetBuilderObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SetBuilderObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SetBuilderObjWellDefinedProof { param_set_well_defined: f0, defined_params: f1, assumed_facts: f2, local_env: f3 } => {
+let saved_scope = capture.enter_scope();
+capture.index_environment(f3, runtime);
+let fields = vec![("param_set_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f0, capture, runtime)), ("defined_params", capture_execute__execute_have_obj_in_nonempty_set_stmt__StoreHaveObjAndInferResult(f1, capture, runtime)), ("assumed_facts", JsonValue::Array((f2).iter().map(|item| capture_execute__execute_fact_stmt__verify_forall_fact__result__AssumeDomFactResult(item, capture, runtime)).collect())), ("local_env", capture.environment(f3, runtime))];
+let mut output = node("SetBuilderObjWellDefinedProof", "", fields);
+capture.leave_scope(saved_scope);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__RangeObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::RangeObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::RangeObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("RangeObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ClosedRangeObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ClosedRangeObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ClosedRangeObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("ClosedRangeObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FiniteSeqSetObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FiniteSeqSetObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FiniteSeqSetObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("FiniteSeqSetObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SeqSetObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SeqSetObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SeqSetObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("SeqSetObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__OneSideInfinityIntervalObjObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::OneSideInfinityIntervalObjObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::OneSideInfinityIntervalObjObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("OneSideInfinityIntervalObjObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__IntervalObjObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IntervalObjObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IntervalObjObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("IntervalObjObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__CartObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::CartObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::CartObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("CartObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__TupleObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::TupleObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::TupleObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("TupleObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FnSetObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnSetObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnSetObjWellDefinedProof { param_type_well_defined: f0, defined_params: f1, assumed_dom_facts: f2, ret_set_well_defined: f3, local_env: f4 } => {
+let saved_scope = capture.enter_scope();
+capture.index_environment(f4, runtime);
+let fields = vec![("param_type_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("defined_params", capture_execute__execute_have_obj_in_nonempty_set_stmt__StoreHaveObjAndInferResult(f1, capture, runtime)), ("assumed_dom_facts", JsonValue::Array((f2).iter().map(|item| capture_execute__execute_fact_stmt__verify_forall_fact__result__AssumeDomFactResult(item, capture, runtime)).collect())), ("ret_set_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f3, capture, runtime)), ("local_env", capture.environment(f4, runtime))];
+let mut output = node("FnSetObjWellDefinedProof", "", fields);
+capture.leave_scope(saved_scope);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__AnonymousFnObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::AnonymousFnObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::AnonymousFnObjWellDefinedProof { param_type_well_defined: f0, defined_params: f1, assumed_dom_facts: f2, ret_set_well_defined: f3, body_well_defined: f4, body_in_ret_set: f5, local_env: f6 } => {
+let saved_scope = capture.enter_scope();
+capture.index_environment(f6, runtime);
+let fields = vec![("param_type_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("defined_params", capture_execute__execute_have_obj_in_nonempty_set_stmt__StoreHaveObjAndInferResult(f1, capture, runtime)), ("assumed_dom_facts", JsonValue::Array((f2).iter().map(|item| capture_execute__execute_fact_stmt__verify_forall_fact__result__AssumeDomFactResult(item, capture, runtime)).collect())), ("ret_set_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f3, capture, runtime)), ("body_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f4, capture, runtime)), ("body_in_ret_set", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__AnonymousFnBodyInReturnSetProof(f5, capture, runtime)), ("local_env", capture.environment(f6, runtime))];
+let mut output = node("AnonymousFnObjWellDefinedProof", "", fields);
+capture.leave_scope(saved_scope);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FnRangeObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnRangeObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnRangeObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1, function_domains: f2 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect())), ("function_domains", JsonValue::Array((f2).iter().map(|item| capture_execute__execute_fact_stmt__function_domain__CompleteFunctionDomainProof(item, capture, runtime)).collect()))];
+let mut output = node("FnRangeObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__function_composition__CompositionObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::function_composition::CompositionObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::function_composition::CompositionObjWellDefinedProof { outer_well_defined: f0, inner_well_defined: f1, outer_domain: f2, inner_domain: f3, function: f4, function_well_defined: f5 } => {
+let fields = vec![("outer_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f0, capture, runtime)), ("inner_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f1, capture, runtime)), ("outer_domain", capture_execute__execute_fact_stmt__function_domain__CompleteFunctionDomainProof(f2, capture, runtime)), ("inner_domain", capture_execute__execute_fact_stmt__function_domain__CompleteFunctionDomainProof(f3, capture, runtime)), ("function", capture_ast__obj__AnonymousFn(f4, capture, runtime)), ("function_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f5, capture, runtime))];
+let mut output = node("CompositionObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__PreimageObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::PreimageObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::PreimageObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1, construction: f2 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect())), ("construction", capture_execute__execute_fact_stmt__function_preimage__FunctionPreimageConstructionProof(f2, capture, runtime))];
+let mut output = node("PreimageObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__PreimageSetObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::PreimageSetObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::PreimageSetObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1, construction: f2 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect())), ("construction", capture_execute__execute_fact_stmt__function_preimage__FunctionPreimageConstructionProof(f2, capture, runtime))];
+let mut output = node("PreimageSetObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SumObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SumObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SumObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1, signature_selection: f2 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect())), ("signature_selection", match (f2).as_ref() { Some(item) => capture_execute__execute_fact_stmt__function_signature_selection__FunctionSignatureSelection(item, capture, runtime), None => JsonValue::Null })];
+let mut output = node("SumObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SumOfFiniteSetObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SumOfFiniteSetObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SumOfFiniteSetObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1, signature_selection: f2 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect())), ("signature_selection", match (f2).as_ref() { Some(item) => capture_execute__execute_fact_stmt__function_signature_selection__FunctionSignatureSelection(item, capture, runtime), None => JsonValue::Null })];
+let mut output = node("SumOfFiniteSetObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ProductObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ProductObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ProductObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1, signature_selection: f2 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect())), ("signature_selection", match (f2).as_ref() { Some(item) => capture_execute__execute_fact_stmt__function_signature_selection__FunctionSignatureSelection(item, capture, runtime), None => JsonValue::Null })];
+let mut output = node("ProductObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ProductOfFiniteSetObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ProductOfFiniteSetObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ProductOfFiniteSetObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1, signature_selection: f2 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect())), ("signature_selection", match (f2).as_ref() { Some(item) => capture_execute__execute_fact_stmt__function_signature_selection__FunctionSignatureSelection(item, capture, runtime), None => JsonValue::Null })];
+let mut output = node("ProductOfFiniteSetObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__ReduceObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ReduceObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ReduceObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1, operation_signature_selection: f2, iterand_signature_selection: f3 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect())), ("operation_signature_selection", match (f2).as_ref() { Some(item) => capture_execute__execute_fact_stmt__function_signature_selection__FunctionSignatureSelection(item, capture, runtime), None => JsonValue::Null }), ("iterand_signature_selection", match (f3).as_ref() { Some(item) => capture_execute__execute_fact_stmt__function_signature_selection__FunctionSignatureSelection(item, capture, runtime), None => JsonValue::Null })];
+let mut output = node("ReduceObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FiniteSetReduceObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FiniteSetReduceObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FiniteSetReduceObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1, operation_signature_selection: f2, iterand_signature_selection: f3 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect())), ("operation_signature_selection", match (f2).as_ref() { Some(item) => capture_execute__execute_fact_stmt__function_signature_selection__FunctionSignatureSelection(item, capture, runtime), None => JsonValue::Null }), ("iterand_signature_selection", match (f3).as_ref() { Some(item) => capture_execute__execute_fact_stmt__function_signature_selection__FunctionSignatureSelection(item, capture, runtime), None => JsonValue::Null })];
+let mut output = node("FiniteSetReduceObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FiniteSetSizeObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FiniteSetSizeObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FiniteSetSizeObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("FiniteSetSizeObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FiniteSetMaxObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FiniteSetMaxObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FiniteSetMaxObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("FiniteSetMaxObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FiniteSetMinObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FiniteSetMinObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FiniteSetMinObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("FiniteSetMinObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__StructObjObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::StructObjObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::StructObjObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("StructObjObjWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FieldAccessObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FieldAccessObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FieldAccessObjWellDefinedProof { child_obj_well_defined: f0, requirement_fact_verified: f1, argument_scope: f2 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect())), ("argument_scope", match (f2).as_ref() { Some(item) => capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fn_obj_domain_check_result__FnObjArgumentScope(item, capture, runtime), None => JsonValue::Null })];
+let mut output = node("FieldAccessObjWellDefinedProof", "", fields);
+if let Some(scope) = f2.as_ref() { if let Some(JsonValue::Array(children)) = capture.evidence_field(&output, "child_obj_well_defined") { for formed in &scope.formed_children { if let Some(child) = children.get(formed.child_index) { capture.wd_evidence(&formed.wd_id, child, "well_definedness"); } } } }
 output
 },
 };
@@ -44409,7 +44388,7 @@ capture.intern_evidence(output)
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__by_object_definition__by_fn_application__struct_field_value__StructFieldValueProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::by_fn_application::struct_field_value::StructFieldValueProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::by_fn_application::struct_field_value::StructFieldValueProof { receiver_well_defined: f0, carrier: f1, index: f2, source: f3 } => {
-let fields = vec![("receiver_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(f0, capture, runtime)), ("carrier", capture_ast__obj__StructObj(f1, capture, runtime)), ("index", JsonValue::String((f2).to_string())), ("source", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__by_object_definition__by_fn_application__struct_field_value__StructTupleValueSource(f3, capture, runtime))];
+let fields = vec![("receiver_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f0, capture, runtime)), ("carrier", capture_ast__obj__StructObj(f1, capture, runtime)), ("index", JsonValue::String((f2).to_string())), ("source", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__by_object_definition__by_fn_application__struct_field_value__StructTupleValueSource(f3, capture, runtime))];
 let mut output = node("StructFieldValueProof", "", fields);
 output
 },
@@ -44424,8 +44403,8 @@ let fields = vec![("checked_domain", capture_ast__obj__FnSet(f0, capture, runtim
 let mut output = node("TemplateApplicationDomainProof", "Parent", fields);
 output
 },
-crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::by_fn_application::by_parent_checked_beta::TemplateApplicationDomainProof::Rechecked { checked_domain: f0, argument_well_defined: f1, requirement_fact_verified: f2, argument_scope: f3 } => {
-let fields = vec![("checked_domain", capture_ast__obj__FnSet(f0, capture, runtime)), ("argument_well_defined", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f2).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect())), ("argument_scope", match (f3).as_ref() { Some(item) => capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fn_obj_domain_check_result__FnObjArgumentScope(item, capture, runtime), None => JsonValue::Null })];
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::by_fn_application::by_parent_checked_beta::TemplateApplicationDomainProof::Rechecked { checked_domain: f0, argument_check: f1 } => {
+let fields = vec![("checked_domain", capture_ast__obj__FnSet(f0, capture, runtime)), ("argument_check", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fn_obj_domain_success__FnObjDomainSuccess(f1, capture, runtime))];
 let mut output = node("TemplateApplicationDomainProof", "Rechecked", fields);
 output
 },
@@ -44770,6 +44749,27 @@ output
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::by_fn_application::normalize_function_body::FunctionBodySourceProof::Template { instance: f0, instantiated_function: f1, function_equal: f2 } => {
 let fields = vec![("instance", capture_ast__obj__Obj(f0, capture, runtime)), ("instantiated_function", capture_ast__obj__AnonymousFn(f1, capture, runtime)), ("function_equal", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__KnownEqualityPathProof(f2, capture, runtime))];
 let mut output = node("FunctionBodySourceProof", "Template", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__FunctionLimitApproachRealProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::FunctionLimitApproachRealProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::FunctionLimitApproachRealProof::Finite(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f0, capture, runtime))];
+let mut output = node("FunctionLimitApproachRealProof", "Finite", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::FunctionLimitApproachRealProof::AtPositiveInfinity => {
+let fields = vec![];
+let mut output = node("FunctionLimitApproachRealProof", "AtPositiveInfinity", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::FunctionLimitApproachRealProof::AtNegativeInfinity => {
+let fields = vec![];
+let mut output = node("FunctionLimitApproachRealProof", "AtNegativeInfinity", fields);
 output
 },
 };
@@ -45178,7 +45178,7 @@ capture.intern_evidence(output)
 pub(super) fn capture_execute__execute_fact_stmt__multivariable__strategy__SmoothMultivariableStages(value: &crate::execute::execute_fact_stmt::multivariable::strategy::SmoothMultivariableStages, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::multivariable::strategy::SmoothMultivariableStages { relation: f0, function_domain: f1, body: f2, body_equal: f3, body_well_defined: f4, geometry: f5, coordinates: f6, conclusion_equalities: f7 } => {
-let fields = vec![("relation", capture_ast__fact__atomic__MultivariableAnalysisRelation(f0, capture, runtime)), ("function_domain", capture_execute__execute_fact_stmt__function_domain__CompleteFunctionDomainProof(f1, capture, runtime)), ("body", capture_ast__obj__AnonymousFn(f2, capture, runtime)), ("body_equal", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__KnownEqualityPathProof(f3, capture, runtime)), ("body_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(f4, capture, runtime)), ("geometry", capture_execute__execute_fact_stmt__multivariable__strategy__MultivariableInteriorProof(f5, capture, runtime)), ("coordinates", JsonValue::Array((f6).iter().map(|item| capture_execute__execute_fact_stmt__multivariable__strategy__MultivariableCoordinateProof(item, capture, runtime)).collect())), ("conclusion_equalities", JsonValue::Array((f7).iter().map(|item| capture_execute__execute_fact_stmt__multivariable__strategy__MultivariableReducedEqualityProof(item, capture, runtime)).collect()))];
+let fields = vec![("relation", capture_ast__fact__atomic__MultivariableAnalysisRelation(f0, capture, runtime)), ("function_domain", capture_execute__execute_fact_stmt__function_domain__CompleteFunctionDomainProof(f1, capture, runtime)), ("body", capture_ast__obj__AnonymousFn(f2, capture, runtime)), ("body_equal", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__KnownEqualityPathProof(f3, capture, runtime)), ("body_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f4, capture, runtime)), ("geometry", capture_execute__execute_fact_stmt__multivariable__strategy__MultivariableInteriorProof(f5, capture, runtime)), ("coordinates", JsonValue::Array((f6).iter().map(|item| capture_execute__execute_fact_stmt__multivariable__strategy__MultivariableCoordinateProof(item, capture, runtime)).collect())), ("conclusion_equalities", JsonValue::Array((f7).iter().map(|item| capture_execute__execute_fact_stmt__multivariable__strategy__MultivariableReducedEqualityProof(item, capture, runtime)).collect()))];
 let mut output = node("SmoothMultivariableStages", "", fields);
 output
 },
@@ -45490,6 +45490,90 @@ output
 capture.intern_evidence(output)
 }
 
+pub(super) fn capture_ast__fact__forall_fact__DirectForallConclusionLocation(value: &crate::ast::fact::DirectForallConclusionLocation, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+capture.subject_depth += 1;
+let output = match value {
+crate::ast::fact::DirectForallConclusionLocation { then_fact_index: f0 } => {
+let fields = vec![("then_fact_index", JsonValue::String((f0).to_string()))];
+let mut output = node("DirectForallConclusionLocation", "", fields);
+output
+},
+};
+capture.subject_depth -= 1;
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_ast__fact__forall_fact__AndFactComponentForallConclusionLocation(value: &crate::ast::fact::AndFactComponentForallConclusionLocation, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+capture.subject_depth += 1;
+let output = match value {
+crate::ast::fact::AndFactComponentForallConclusionLocation { then_fact_index: f0, component_index: f1 } => {
+let fields = vec![("then_fact_index", JsonValue::String((f0).to_string())), ("component_index", JsonValue::String((f1).to_string()))];
+let mut output = node("AndFactComponentForallConclusionLocation", "", fields);
+output
+},
+};
+capture.subject_depth -= 1;
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_ast__fact__forall_fact__ChainFactComponentForallConclusionLocation(value: &crate::ast::fact::ChainFactComponentForallConclusionLocation, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+capture.subject_depth += 1;
+let output = match value {
+crate::ast::fact::ChainFactComponentForallConclusionLocation { then_fact_index: f0, component_index: f1 } => {
+let fields = vec![("then_fact_index", JsonValue::String((f0).to_string())), ("component_index", JsonValue::String((f1).to_string()))];
+let mut output = node("ChainFactComponentForallConclusionLocation", "", fields);
+output
+},
+};
+capture.subject_depth -= 1;
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__StrictEqualWithFact(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::StrictEqualWithFact, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::StrictEqualWithFact { equal_fact: f0, equal_proof: f1 } => {
+let fields = vec![("equal_fact", capture_ast__fact__atomic__EqualFact(f0, capture, runtime)), ("equal_proof", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__StrictEqualArgProof(f1, capture, runtime))];
+let mut output = node("StrictEqualWithFact", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__ForallParamTypeRequirementProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::ForallParamTypeRequirementProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::ForallParamTypeRequirementProof { param_id: f0, arg: f1, type_fact: f2, proof: f3 } => {
+let fields = vec![("param_id", capture.identifier_id(f0, runtime)), ("arg", capture_ast__obj__Obj(f1, capture, runtime)), ("type_fact", capture_ast__fact__fact__Fact(f2, capture, runtime)), ("proof", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f3, capture, runtime))];
+let mut output = node("ForallParamTypeRequirementProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_by_def_common__DetailedObjWellDefinedByDefCommonStages(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::DetailedObjWellDefinedByDefCommonStages, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::DetailedObjWellDefinedByDefCommonStages { child_obj_well_defined: f0, requirement_fact_verified: f1 } => {
+let fields = vec![("child_obj_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__VerifyObjWellDefinedResult(item, capture, runtime)).collect())), ("requirement_fact_verified", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("DetailedObjWellDefinedByDefCommonStages", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fn_obj_domain_check_result__FormedFunctionArgument(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FormedFunctionArgument, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FormedFunctionArgument { child_index: f0, wd_id: f1 } => {
+let fields = vec![("child_index", JsonValue::String((f0).to_string())), ("wd_id", capture.wd_identity(f1, runtime))];
+let mut output = node("FormedFunctionArgument", "", fields);
+capture.wd_registration(&value.wd_id, &output);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
 pub(super) fn capture_execute__execute_fact_stmt__matrix_operations__MatrixRealCoordinatesProof(value: &crate::execute::execute_fact_stmt::matrix_operations::MatrixRealCoordinatesProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::matrix_operations::MatrixRealCoordinatesProof { source: f0, coordinates: f1 } => {
@@ -45512,16 +45596,128 @@ output
 capture.intern_evidence(output)
 }
 
-pub(super) fn capture_execute__execute_fact_stmt__multivariable__selector__MultivariableSelectorSelectionProof(value: &crate::execute::execute_fact_stmt::multivariable::selector::MultivariableSelectorSelectionProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+pub(super) fn capture_execute__execute_fact_stmt__riemann_integral__RiemannIntegralSelectionProof(value: &crate::execute::execute_fact_stmt::riemann_integral::RiemannIntegralSelectionProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_fact_stmt::multivariable::selector::MultivariableSelectorSelectionProof::Candidate(f0) => {
+crate::execute::execute_fact_stmt::riemann_integral::RiemannIntegralSelectionProof::Candidate(f0) => {
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__result__AtomicExceptEqualityFactKnownProof(f0, capture, runtime))];
-let mut output = node("MultivariableSelectorSelectionProof", "Candidate", fields);
+let mut output = node("RiemannIntegralSelectionProof", "Candidate", fields);
 output
 },
-crate::execute::execute_fact_stmt::multivariable::selector::MultivariableSelectorSelectionProof::Existence { fact: f0, proof: f1 } => {
+crate::execute::execute_fact_stmt::riemann_integral::RiemannIntegralSelectionProof::Existence { fact: f0, proof: f1 } => {
 let fields = vec![("fact", capture_ast__fact__fact__Fact(f0, capture, runtime)), ("proof", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f1, capture, runtime))];
-let mut output = node("MultivariableSelectorSelectionProof", "Existence", fields);
+let mut output = node("RiemannIntegralSelectionProof", "Existence", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__selector__MultivariableSelectorWellDefinedStages(value: &crate::execute::execute_fact_stmt::multivariable::selector::MultivariableSelectorWellDefinedStages, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::selector::MultivariableSelectorWellDefinedStages { argument_well_defined: f0, function_domain: f1, domains: f2, selection: f3 } => {
+let fields = vec![("argument_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("function_domain", capture_execute__execute_fact_stmt__function_domain__CompleteFunctionDomainProof(f1, capture, runtime)), ("domains", JsonValue::Array((f2).iter().map(|item| capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__PredicateDomainWellDefinedProof(item, capture, runtime)).collect())), ("selection", capture_execute__execute_fact_stmt__multivariable__selector__MultivariableSelectorSelectionProof(f3, capture, runtime))];
+let mut output = node("MultivariableSelectorWellDefinedStages", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__function_derivative__DerivativeConvergenceProof(value: &crate::execute::execute_fact_stmt::function_derivative::DerivativeConvergenceProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::function_derivative::DerivativeConvergenceProof::Candidate(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__result__AtomicExceptEqualityFactKnownProof(f0, capture, runtime))];
+let mut output = node("DerivativeConvergenceProof", "Candidate", fields);
+output
+},
+crate::execute::execute_fact_stmt::function_derivative::DerivativeConvergenceProof::Existence { fact: f0, proof: f1 } => {
+let fields = vec![("fact", capture_ast__fact__fact__Fact(f0, capture, runtime)), ("proof", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f1, capture, runtime))];
+let mut output = node("DerivativeConvergenceProof", "Existence", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FunctionLimitApproachWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FunctionLimitApproachWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FunctionLimitApproachWellDefinedProof::Finite { point_wd: f0 } => {
+let fields = vec![("point_wd", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("FunctionLimitApproachWellDefinedProof", "Finite", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FunctionLimitApproachWellDefinedProof::AtPositiveInfinity => {
+let fields = vec![];
+let mut output = node("FunctionLimitApproachWellDefinedProof", "AtPositiveInfinity", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FunctionLimitApproachWellDefinedProof::AtNegativeInfinity => {
+let fields = vec![];
+let mut output = node("FunctionLimitApproachWellDefinedProof", "AtNegativeInfinity", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__function_limit__FunctionConvergenceProof(value: &crate::execute::execute_fact_stmt::function_limit::FunctionConvergenceProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::function_limit::FunctionConvergenceProof::Candidate(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__result__AtomicExceptEqualityFactKnownProof(f0, capture, runtime))];
+let mut output = node("FunctionConvergenceProof", "Candidate", fields);
+output
+},
+crate::execute::execute_fact_stmt::function_limit::FunctionConvergenceProof::Existence { fact: f0, proof: f1 } => {
+let fields = vec![("fact", capture_ast__fact__fact__Fact(f0, capture, runtime)), ("proof", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f1, capture, runtime))];
+let mut output = node("FunctionConvergenceProof", "Existence", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__sequence_limit__RealSequenceDomainProof(value: &crate::execute::execute_fact_stmt::sequence_limit::RealSequenceDomainProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::sequence_limit::RealSequenceDomainProof::CompleteSignature(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__function_domain__CompleteFunctionDomainProof(f0, capture, runtime))];
+let mut output = node("RealSequenceDomainProof", "CompleteSignature", fields);
+output
+},
+crate::execute::execute_fact_stmt::sequence_limit::RealSequenceDomainProof::Membership(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f0, capture, runtime))];
+let mut output = node("RealSequenceDomainProof", "Membership", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__sequence_limit__SequenceConvergenceProof(value: &crate::execute::execute_fact_stmt::sequence_limit::SequenceConvergenceProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::sequence_limit::SequenceConvergenceProof::Candidate(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__result__AtomicExceptEqualityFactKnownProof(f0, capture, runtime))];
+let mut output = node("SequenceConvergenceProof", "Candidate", fields);
+output
+},
+crate::execute::execute_fact_stmt::sequence_limit::SequenceConvergenceProof::Existence { fact: f0, proof: f1 } => {
+let fields = vec![("fact", capture_ast__fact__fact__Fact(f0, capture, runtime)), ("proof", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f1, capture, runtime))];
+let mut output = node("SequenceConvergenceProof", "Existence", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__AnonymousFnBodyInReturnSetProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::AnonymousFnBodyInReturnSetProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::AnonymousFnBodyInReturnSetProof::CheckedMembership(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f0, capture, runtime))];
+let mut output = node("AnonymousFnBodyInReturnSetProof", "CheckedMembership", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::AnonymousFnBodyInReturnSetProof::EmptyCompleteDomain(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__function_domain__FunctionDomainEmptyProof(f0, capture, runtime))];
+let mut output = node("AnonymousFnBodyInReturnSetProof", "EmptyCompleteDomain", fields);
 output
 },
 };
@@ -45551,7 +45747,7 @@ let mut output = node("StructTupleValueSource", "Returned", fields);
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::by_fn_application::struct_field_value::StructTupleValueSource::ReturnedFunction { body: f0, application_well_defined: f1, function: f2 } => {
-let fields = vec![("body", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__by_object_definition__by_fn_application__by_parent_checked_beta__ParentCheckedBetaFunctionBody(f0, capture, runtime)), ("application_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(f1, capture, runtime)), ("function", capture_execute__execute_fact_stmt__known_tuple__KnownFunctionTupleValueProof(f2, capture, runtime))];
+let fields = vec![("body", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__by_object_definition__by_fn_application__by_parent_checked_beta__ParentCheckedBetaFunctionBody(f0, capture, runtime)), ("application_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f1, capture, runtime)), ("function", capture_execute__execute_fact_stmt__known_tuple__KnownFunctionTupleValueProof(f2, capture, runtime))];
 let mut output = node("StructTupleValueSource", "ReturnedFunction", fields);
 output
 },
@@ -45968,8 +46164,54 @@ let mut output = node("DerivativeLeafProof", "Candidate", fields);
 output
 },
 crate::execute::execute_fact_stmt::pointwise_derivative::DerivativeLeafProof::Selected { differentiability: f0, value_well_defined: f1 } => {
-let fields = vec![("differentiability", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f0, capture, runtime)), ("value_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(f1, capture, runtime))];
+let fields = vec![("differentiability", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f0, capture, runtime)), ("value_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f1, capture, runtime))];
 let mut output = node("DerivativeLeafProof", "Selected", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__StrictEqualArgProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::StrictEqualArgProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::StrictEqualArgProof::ByClosedCalculation(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__closed_calculation_proof__ClosedEqualityCalculationProof(f0, capture, runtime))];
+let mut output = node("StrictEqualArgProof", "ByClosedCalculation", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::StrictEqualArgProof::ByTheyAreTheSame(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__by_they_are_the_same__result__TheyAreTheSameProof(f0, capture, runtime))];
+let mut output = node("StrictEqualArgProof", "ByTheyAreTheSame", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::StrictEqualArgProof::ByKnownSpecialProperty(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__search_equal_fact_proof_by_known_special_property__EqualFactSearchProofByKnownSpecialProperty(f0, capture, runtime))];
+let mut output = node("StrictEqualArgProof", "ByKnownSpecialProperty", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::StrictEqualArgProof::ByBuiltinRule(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__search_equal_fact_builtin_rule_result__EqualitySearchProofByBuiltinRule(f0, capture, runtime))];
+let mut output = node("StrictEqualArgProof", "ByBuiltinRule", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::StrictEqualArgProof::ByEquivalenceClass(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__EqualFactSearchedProofByEquivalenceClass(f0, capture, runtime))];
+let mut output = node("StrictEqualArgProof", "ByEquivalenceClass", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::StrictEqualArgProof::ByObjectDefinition(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__by_object_definition__search_equal_fact_proof_by_object_definition_result__EqualitySearchProofByObjectDefinition(f0, capture, runtime))];
+let mut output = node("StrictEqualArgProof", "ByObjectDefinition", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::StrictEqualArgProof::ByBuiltinStrategy(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__by_builtin_strategy_result__EqualitySearchProofByBuiltinStrategy(f0, capture, runtime))];
+let mut output = node("StrictEqualArgProof", "ByBuiltinStrategy", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::StrictEqualArgProof::ByMatchingOneArgByOne(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__search_equal_fact_proof_by_matching_one_arg_by_one__EqualFactSearchedProofByMatchingOneArgByOne(f0, capture, runtime))];
+let mut output = node("StrictEqualArgProof", "ByMatchingOneArgByOne", fields);
 output
 },
 };
@@ -45981,6 +46223,22 @@ let output = match value {
 crate::execute::execute_fact_stmt::function_domain::FunctionCallLayerDomainsAlphaMatchProof { selected: f0, alternative: f1, return_carriers: f2 } => {
 let fields = vec![("selected", capture_ast__obj__FnSet(f0, capture, runtime)), ("alternative", capture_ast__obj__FnSet(f1, capture, runtime)), ("return_carriers", match (f2).as_ref() { Some(item) => capture_execute__execute_fact_stmt__function_domain__FunctionCallReturnCarriersProof(item, capture, runtime), None => JsonValue::Null })];
 let mut output = node("FunctionCallLayerDomainsAlphaMatchProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__selector__MultivariableSelectorSelectionProof(value: &crate::execute::execute_fact_stmt::multivariable::selector::MultivariableSelectorSelectionProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::selector::MultivariableSelectorSelectionProof::Candidate(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__result__AtomicExceptEqualityFactKnownProof(f0, capture, runtime))];
+let mut output = node("MultivariableSelectorSelectionProof", "Candidate", fields);
+output
+},
+crate::execute::execute_fact_stmt::multivariable::selector::MultivariableSelectorSelectionProof::Existence { fact: f0, proof: f1 } => {
+let fields = vec![("fact", capture_ast__fact__fact__Fact(f0, capture, runtime)), ("proof", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f1, capture, runtime))];
+let mut output = node("MultivariableSelectorSelectionProof", "Existence", fields);
 output
 },
 };
@@ -46006,7 +46264,7 @@ capture.intern_evidence(output)
 pub(super) fn capture_execute__execute_fact_stmt__native_matrix__MatrixNestedApplicationReduction(value: &crate::execute::execute_fact_stmt::native_matrix::MatrixNestedApplicationReduction, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::native_matrix::MatrixNestedApplicationReduction { application_well_defined: f0, callable: f1, body: f2, continuation: f3 } => {
-let fields = vec![("application_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(f0, capture, runtime)), ("callable", capture_execute__execute_fact_stmt__native_matrix__MatrixCallableProof(f1, capture, runtime)), ("body", capture_ast__obj__Obj(f2, capture, runtime)), ("continuation", capture_execute__execute_fact_stmt__native_matrix__MatrixComponentReduction(f3, capture, runtime))];
+let fields = vec![("application_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f0, capture, runtime)), ("callable", capture_execute__execute_fact_stmt__native_matrix__MatrixCallableProof(f1, capture, runtime)), ("body", capture_ast__obj__Obj(f2, capture, runtime)), ("continuation", capture_execute__execute_fact_stmt__native_matrix__MatrixComponentReduction(f3, capture, runtime))];
 let mut output = node("MatrixNestedApplicationReduction", "", fields);
 output
 },
@@ -46017,7 +46275,7 @@ capture.intern_evidence(output)
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__by_object_definition__by_fn_application__normalize_function_body__CompositionBodyExpansionProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::by_fn_application::normalize_function_body::CompositionBodyExpansionProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::by_fn_application::normalize_function_body::CompositionBodyExpansionProof { application: f0, application_well_defined: f1, composition: f2, function_equal: f3, expanded_body: f4, continued_body: f5 } => {
-let fields = vec![("application", capture_ast__obj__Obj(f0, capture, runtime)), ("application_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(f1, capture, runtime)), ("composition", capture_ast__obj__Composition(f2, capture, runtime)), ("function_equal", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__KnownEqualityPathProof(f3, capture, runtime)), ("expanded_body", capture_ast__obj__Obj(f4, capture, runtime)), ("continued_body", capture_ast__obj__Obj(f5, capture, runtime))];
+let fields = vec![("application", capture_ast__obj__Obj(f0, capture, runtime)), ("application_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f1, capture, runtime)), ("composition", capture_ast__obj__Composition(f2, capture, runtime)), ("function_equal", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__KnownEqualityPathProof(f3, capture, runtime)), ("expanded_body", capture_ast__obj__Obj(f4, capture, runtime)), ("continued_body", capture_ast__obj__Obj(f5, capture, runtime))];
 let mut output = node("CompositionBodyExpansionProof", "", fields);
 output
 },
@@ -46028,7 +46286,7 @@ capture.intern_evidence(output)
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__by_object_definition__by_fn_application__normalize_function_body__FiniteCoordinateBodyExpansionProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::by_fn_application::normalize_function_body::FiniteCoordinateBodyExpansionProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::by_fn_application::normalize_function_body::FiniteCoordinateBodyExpansionProof { application: f0, application_well_defined: f1, source: f2, index: f3, expanded_body: f4, continued_body: f5 } => {
-let fields = vec![("application", capture_ast__obj__Obj(f0, capture, runtime)), ("application_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(f1, capture, runtime)), ("source", capture_execute__execute_fact_stmt__finite_function__FiniteFunctionSignatureProof(f2, capture, runtime)), ("index", JsonValue::String((f3).to_string())), ("expanded_body", capture_ast__obj__Obj(f4, capture, runtime)), ("continued_body", capture_ast__obj__Obj(f5, capture, runtime))];
+let fields = vec![("application", capture_ast__obj__Obj(f0, capture, runtime)), ("application_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f1, capture, runtime)), ("source", capture_execute__execute_fact_stmt__finite_function__FiniteFunctionSignatureProof(f2, capture, runtime)), ("index", JsonValue::String((f3).to_string())), ("expanded_body", capture_ast__obj__Obj(f4, capture, runtime)), ("continued_body", capture_ast__obj__Obj(f5, capture, runtime))];
 let mut output = node("FiniteCoordinateBodyExpansionProof", "", fields);
 output
 },
@@ -46102,7 +46360,7 @@ capture.intern_evidence(output)
 pub(super) fn capture_execute__execute_fact_stmt__multivariable__expression__SmoothCoordinateExpressionProof(value: &crate::execute::execute_fact_stmt::multivariable::expression::SmoothCoordinateExpressionProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::multivariable::expression::SmoothCoordinateExpressionProof { expression: f0, value: f1, value_source_well_defined: f2, value_reduction: f3, value_real: f4, derivative_expression: f5, derivative_value: f6, derivative_source_well_defined: f7, derivative_reduction: f8, derivative_real: f9, constructor: f10 } => {
-let fields = vec![("expression", capture_ast__obj__Obj(f0, capture, runtime)), ("value", capture_ast__obj__Obj(f1, capture, runtime)), ("value_source_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(f2, capture, runtime)), ("value_reduction", capture_execute__execute_fact_stmt__multivariable__expression__MultivariableReductionProof(f3, capture, runtime)), ("value_real", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f4, capture, runtime)), ("derivative_expression", capture_ast__obj__Obj(f5, capture, runtime)), ("derivative_value", capture_ast__obj__Obj(f6, capture, runtime)), ("derivative_source_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(f7, capture, runtime)), ("derivative_reduction", capture_execute__execute_fact_stmt__multivariable__expression__MultivariableReductionProof(f8, capture, runtime)), ("derivative_real", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f9, capture, runtime)), ("constructor", capture_execute__execute_fact_stmt__multivariable__expression__SmoothCoordinateConstructorProof(f10, capture, runtime))];
+let fields = vec![("expression", capture_ast__obj__Obj(f0, capture, runtime)), ("value", capture_ast__obj__Obj(f1, capture, runtime)), ("value_source_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f2, capture, runtime)), ("value_reduction", capture_execute__execute_fact_stmt__multivariable__expression__MultivariableReductionProof(f3, capture, runtime)), ("value_real", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f4, capture, runtime)), ("derivative_expression", capture_ast__obj__Obj(f5, capture, runtime)), ("derivative_value", capture_ast__obj__Obj(f6, capture, runtime)), ("derivative_source_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f7, capture, runtime)), ("derivative_reduction", capture_execute__execute_fact_stmt__multivariable__expression__MultivariableReductionProof(f8, capture, runtime)), ("derivative_real", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f9, capture, runtime)), ("constructor", capture_execute__execute_fact_stmt__multivariable__expression__SmoothCoordinateConstructorProof(f10, capture, runtime))];
 let mut output = node("SmoothCoordinateExpressionProof", "", fields);
 output
 },
@@ -46124,7 +46382,7 @@ capture.intern_evidence(output)
 pub(super) fn capture_execute__execute_fact_stmt__native_matrix__MatrixResidualBetaExpansion(value: &crate::execute::execute_fact_stmt::native_matrix::MatrixResidualBetaExpansion, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::native_matrix::MatrixResidualBetaExpansion { application_well_defined: f0, source: f1, body: f2 } => {
-let fields = vec![("application_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__entry__ObjWellDefinedProof(f0, capture, runtime)), ("source", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__by_object_definition__by_fn_application__by_parent_checked_beta__ParentCheckedBetaFunctionBody(f1, capture, runtime)), ("body", capture_ast__obj__Obj(f2, capture, runtime))];
+let fields = vec![("application_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f0, capture, runtime)), ("source", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__by_object_definition__by_fn_application__by_parent_checked_beta__ParentCheckedBetaFunctionBody(f1, capture, runtime)), ("body", capture_ast__obj__Obj(f2, capture, runtime))];
 let mut output = node("MatrixResidualBetaExpansion", "", fields);
 output
 },

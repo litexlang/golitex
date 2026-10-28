@@ -24,13 +24,13 @@ fn definition(run: &mut RunLitexCodeResult, index: usize) -> &mut ExecHaveFnEqua
 }
 
 fn anonymous(wd: &mut ObjWellDefinedProof) -> &mut AnonymousFnObjWellDefinedProof {
-    let ObjWellDefinedProof::ByDef {
+    let DetailedObjWellDefinedProof::ByDef {
         proof:
             ObjWellDefinedProofByDef::FunctionSpace(FunctionSpaceObjWellDefinedProofByDef::AnonymousFn(
                 p,
             )),
         ..
-    } = wd
+    } = (wd).as_detailed_mut().unwrap()
     else {
         panic!("original literal WD")
     };

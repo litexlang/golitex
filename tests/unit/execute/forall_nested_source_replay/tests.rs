@@ -13,12 +13,15 @@ const SOURCE: &str =
     include_str!("../../../../examples/proof_nodes/forall/known_source_nested_unique.lit");
 
 fn runtime(language: OutputLanguage) -> Runtime {
-    Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language,
-    })
+    Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    )
 }
 fn parse(rt: &mut Runtime, code: &str) -> crate::ast::fact::ForallFact {
     let tokens = Tokenizer::new()

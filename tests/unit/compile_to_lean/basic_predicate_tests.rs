@@ -29,7 +29,8 @@ fn basic_predicate_invalid_domains_and_false_claims_produce_no_artifact() {
     ] {
         let command =
             parse_launch_command(&["-strict".into(), "-e".into(), source.into()]).unwrap();
-        let mut runtime = Runtime::new(command);
+        let mut runtime =
+            Runtime::new_with_result_detail(command, crate::result_detail::OutputDetail::Detailed);
         let run = runtime.run_litex_code(source).unwrap();
         assert!(!run.success, "{source}");
         assert!(super::LitexToLeanCompiler::new(runtime)
@@ -94,7 +95,12 @@ fn basic_predicate_rejects_missing_domain_and_altered_computation() {
             panic!()
         };
         let p = super::atomic_proof_mut(&mut p.verify_result);
-        match &mut p.well_defined_proof.predicate_domain {
+        match &mut p
+            .well_defined_proof
+            .as_detailed_mut()
+            .unwrap()
+            .predicate_domain
+        {
             PredicateDomainProof::ByCheckedArguments(r) => r.clear(),
             PredicateDomainProof::ByRequirements(r) => r.clear(),
             _ => panic!("expected original numeric domain"),

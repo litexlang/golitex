@@ -57,7 +57,10 @@ impl LitexToLeanCompiler {
             before: 0,
         };
         let term = self.compile_wd_body(proof, &source_position)?;
-        if matches!(proof, ObjWellDefinedProof::ByDef { .. }) {
+        if matches!(
+            (proof).detailed_ref(),
+            DetailedObjWellDefinedProof::ByDef { .. }
+        ) {
             if let Some(reference) = position.compatible_wd_reference(proof)? {
                 return Ok(reference);
             }
@@ -85,8 +88,8 @@ impl LitexToLeanCompiler {
         if let Some(term) = self.compile_eval_closed_wd(proof, position)? {
             return Ok(term);
         }
-        match proof {
-            ObjWellDefinedProof::ByKnown { obj, wd_id } => {
+        match (proof).detailed_ref() {
+            DetailedObjWellDefinedProof::ByKnown { obj, wd_id } => {
                 let recorded = self.resolve_wd(*wd_id, position)?;
                 if recorded.ir() != obj.ir() {
                     return Err(LeanCompileError::new(
@@ -141,7 +144,7 @@ impl LitexToLeanCompiler {
                 let term = self.compile_object_reference(obj, position)?;
                 Ok(term)
             }
-            ObjWellDefinedProof::ByDef { obj, proof } => {
+            DetailedObjWellDefinedProof::ByDef { obj, proof } => {
                 let term = match (obj, proof) {
                     (Obj::BoundOperator(object), ObjWellDefinedProofByDef::BoundOperator(evidence)) => self.compile_real_extremum_wd(object, evidence, position)?,
                     (Obj::IteratedOperator(object @ (IteratedOperator::SumOfFiniteSet(_) | IteratedOperator::ProductOfFiniteSet(_))), ObjWellDefinedProofByDef::IteratedOperator(evidence)) => self.compile_finite_aggregate_wd(object, evidence, position)?,
@@ -455,7 +458,7 @@ impl LitexToLeanCompiler {
         };
         let position = &source_position;
         let args = atomic_fact_args_ref(fact);
-        if wd.well_defined_of_each_parameter.len() != args.len() {
+        if wd.detailed_ref().well_defined_of_each_parameter.len() != args.len() {
             return Err(LeanCompileError::new(
                 "WD/Atomic",
                 "Object WD evidence has the wrong argument arity.",
@@ -464,7 +467,7 @@ impl LitexToLeanCompiler {
         let mut bindings = Vec::new();
         for (index, (arg, proof)) in args
             .iter()
-            .zip(&wd.well_defined_of_each_parameter)
+            .zip(&wd.detailed_ref().well_defined_of_each_parameter)
             .enumerate()
         {
             ensure_object(arg, proof)?;
@@ -476,10 +479,10 @@ impl LitexToLeanCompiler {
             let mut term = self.compile_wd(proof, &prior)?;
             // Keep a compatible earlier call's host representation after this
             // occurrence's complete signature/domain evidence was consumed.
-            if let ObjWellDefinedProof::ByDef {
+            if let DetailedObjWellDefinedProof::ByDef {
                 obj: Obj::FnObj(application),
                 proof: ObjWellDefinedProofByDef::FnObj(call),
-            } = proof
+            } = (proof).detailed_ref()
             {
                 if let Some(alias) = prior.bound_compatible_fn_call(application, call) {
                     term = alias;
@@ -501,7 +504,7 @@ impl LitexToLeanCompiler {
             ..*position
         };
         let position = &formed;
-        match &wd.predicate_signature {
+        match &wd.detailed_ref().predicate_signature {
             PredicateSignatureWellDefinedProof::Builtin => {
                 let certificate = match fact {
                     AtomicFact::NormalAtomicFact(f) => Some(&f.predicate),
@@ -539,7 +542,7 @@ impl LitexToLeanCompiler {
                 self.validate_abstract_predicate_signature(signature, fact, position)?;
             }
         }
-        match &wd.predicate_domain {
+        match &wd.detailed_ref().predicate_domain {
             PredicateDomainProof::MultivariableAnalysis(_) => {
                 return Err(LeanCompileError::unsupported(
                     "WD/MultivariableAnalysisPredicate",
@@ -747,7 +750,10 @@ impl LitexToLeanCompiler {
                 let bindings = self.compile_atomic_wd_locals(wd, atomic, position)?;
                 let formed = SourcePosition::new(
                     Some(position),
-                    SourceOwner::AtomicWDLocals(wd, wd.well_defined_of_each_parameter.len()),
+                    SourceOwner::AtomicWDLocals(
+                        wd,
+                        wd.detailed_ref().well_defined_of_each_parameter.len(),
+                    ),
                     usize::MAX,
                 );
                 Ok(Self::scope_equal_wd(
@@ -784,11 +790,11 @@ impl LitexToLeanCompiler {
                 FactWellDefinedProof::Equality(wd),
                 Fact::AtomicFact(AtomicFact::EqualFact(equal)),
             ) => {
-                ensure_object(&equal.left, &wd.left)?;
-                ensure_object(&equal.right, &wd.right)?;
-                self.compile_wd(&wd.left, position)?;
+                ensure_object(&equal.left, &wd.detailed_ref().left)?;
+                ensure_object(&equal.right, &wd.detailed_ref().right)?;
+                self.compile_wd(&wd.detailed_ref().left, position)?;
                 self.compile_wd(
-                    &wd.right,
+                    &wd.detailed_ref().right,
                     &SourcePosition {
                         before: 1,
                         ..*position
@@ -817,7 +823,11 @@ impl LitexToLeanCompiler {
                 "WD/ForallSubject",
                 "Quantified WD evidence has another source fact family.",
             )),
-            (FactWellDefinedProof::AndFact { components }, Fact::AndFact(fact)) => {
+            (FactWellDefinedProof::AndFact(proof), Fact::AndFact(fact)) => {
+                let components = &proof
+                    .as_detailed()
+                    .unwrap_or_else(|error| panic!("{error}"))
+                    .components;
                 if components.len() != fact.facts.len() || components.is_empty() {
                     return Err(LeanCompileError::unsupported("WD/AndArity"));
                 }
@@ -830,7 +840,11 @@ impl LitexToLeanCompiler {
                 }
                 Ok(())
             }
-            (FactWellDefinedProof::ChainFact { adjacent }, Fact::ChainFact(fact)) => {
+            (FactWellDefinedProof::ChainFact(proof), Fact::ChainFact(fact)) => {
+                let adjacent = &proof
+                    .as_detailed()
+                    .unwrap_or_else(|error| panic!("{error}"))
+                    .adjacent;
                 if adjacent.len() != fact.prop_names.len() || adjacent.is_empty() {
                     return Err(LeanCompileError::unsupported("WD/ChainArity"));
                 }
@@ -855,8 +869,8 @@ impl LitexToLeanCompiler {
                 .compile_exist_formation(fact, proof, position)
                 .map(|_| ()),
             (
-                FactWellDefinedProof::AndFact { .. }
-                | FactWellDefinedProof::ChainFact { .. }
+                FactWellDefinedProof::AndFact(_)
+                | FactWellDefinedProof::ChainFact(_)
                 | FactWellDefinedProof::ExistFact(_)
                 | FactWellDefinedProof::ForallFactWithIff(_)
                 | FactWellDefinedProof::NotForall(_),

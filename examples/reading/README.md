@@ -9,6 +9,12 @@ Explanations and proof grounds open beside the relevant source only when
 requested; there is no standing explanation pane. Close the popup to continue
 reading the unobstructed source.
 
+For a guided first reading, use the [bilingual source lessons](lessons/README.md).
+Six passing arguments focus on different mathematical reading moves, from
+individual equalities and cited premises to definitions, witnesses and an
+optimum. Three deliberately failing sources invite a concrete repair. Their
+prompts live in the `.lit` source, alongside the mathematics.
+
 For real mathematics, open the [homepage collection](homepage/README.md):
 least squares, sets, Newton iteration, irrationality of √2 and Cantor's theorem.
 It also includes seven longer branch chapters: number theory, sequence limits,
@@ -33,11 +39,23 @@ actual proof citations and rule applications in the reading exporter.
 [`mathematical_meaning.lit`](mathematical_meaning.lit) exercises mathematical
 explanations: a set parameter with a dependent element range, a two-condition
 predicate, a complete equality-chain clause, a function equation and an abstract
-predicate without an invented definition. In the reader, click a source
-statement for its mathematical meaning and its type tag for syntax help.
+predicate without an invented definition. Inspect a statement on demand;
+hover its keyword for syntax help, or Ctrl/Cmd-click to keep that explanation
+open while editing. Ordinary clicks keep their usual caret behavior.
 
 The implementation and its current acceptance status are documented in
 [`src/reading/README.md`](../../src/reading/README.md).
+
+Source-first product acceptance (2026-10-28): the maintainer manually confirmed
+the current page's individual-equality hover, citation follow/return, editing
+and checking, and narrow-window source scrolling/card placement. This supplies
+the visual acceptance that browser automation could not obtain because of its
+URL policy. Eight component/export suites, focused native streaming tests,
+actual HTTP/cache/policy tests and real child-verifier checks passed. The
+57-source homepage snapshot and 18 bilingual lesson sources still match their
+recorded verification hashes. This is acceptance of the reading product;
+dedicated touch-device coverage and a fresh whole-Mechanics proof verification
+are not claimed.
 
 ## Edit the examples locally
 

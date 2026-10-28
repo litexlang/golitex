@@ -213,7 +213,7 @@ fn by_thm_direct_selection_preserves_alpha_equivalence_and_negative_conclusions(
     .is_failed());
     assert!(
         rt.run_litex_code(include_str!(
-            "../../../../examples/_internal/regression/lambda_alpha_equivalence.lit"
+            "../../../../examples/proof_nodes/equal/by_they_are_the_same/by_anonymous_fn_alpha_equal.lit"
         ))
         .unwrap()
         .success
@@ -288,12 +288,15 @@ fn by_thm_rejects_the_symbolic_combined_conclusion_chosen_by_the_user() {
 #[test]
 fn by_thm_selection_outputs_preserve_the_failure_reason_and_citation_in_all_languages() {
     for language in OutputLanguage::ALL {
-        let mut rt = Runtime::new(LaunchCommand::Eval {
-            code: String::new(),
-            session: false,
-            strict: true,
-            language,
-        });
+        let mut rt = Runtime::new_with_result_detail(
+            LaunchCommand::Eval {
+                code: String::new(),
+                session: false,
+                strict: true,
+                language,
+            },
+            crate::result_detail::OutputDetail::Detailed,
+        );
         assert!(!execute(&mut rt, REFLEXIVE).is_failed());
         let failed = execute(&mut rt, "by thm reflexive(7) => 1 = 1");
         assert!(failed.is_failed());
@@ -315,12 +318,15 @@ fn by_thm_selection_outputs_preserve_the_failure_reason_and_citation_in_all_lang
 }
 
 fn runtime() -> Runtime {
-    Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language: OutputLanguage::English,
-    })
+    Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    )
 }
 
 fn execute(rt: &mut Runtime, code: &str) -> ExecStmtResult {

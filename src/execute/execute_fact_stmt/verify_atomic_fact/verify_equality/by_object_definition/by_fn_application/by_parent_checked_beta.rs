@@ -7,9 +7,6 @@ use crate::execute::execute_fact_stmt::function_domain::function_domains_alpha_e
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::KnownEqualityPathProof;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::well_defined_result::EqualFactWellDefinedProof;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::EqualFactSearchedProof;
-use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::{
-    FnObjDomainFnSetEvidence, ObjWellDefinedProofByDef,
-};
 use crate::execute::execute_fact_stmt::ObjWellDefinedProof;
 use crate::execute::execute_fact_stmt::{VerifyState, VerifyStateLevel};
 use crate::prelude::*;
@@ -90,11 +87,8 @@ pub enum TemplateApplicationDomainProof {
     },
     Rechecked {
         checked_domain: FnSet,
-        argument_well_defined: Vec<Box<ObjWellDefinedProof>>,
-        requirement_fact_verified: Vec<crate::execute::execute_fact_stmt::VerifyFactResult>,
-        argument_scope: Option<
-            crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnObjArgumentScope,
-        >,
+        argument_check:
+            crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnObjDomainSuccess,
     },
 }
 
@@ -113,15 +107,17 @@ impl Runtime {
         let Some(child) = state.for_premises(VerifyStateLevel::DefinitionAndForall) else {
             return Ok(None);
         };
-        if parent_wd.left.obj() != &fact.left || parent_wd.right.obj() != &fact.right {
+        if !parent_wd.left().matches_application(&fact.left)
+            || !parent_wd.right().matches_application(&fact.right)
+        {
             return Ok(None);
         }
         if let (
             Some((left_function_body, left_expanded_body)),
             Some((right_function_body, right_expanded_body)),
         ) = (
-            self.parent_checked_beta_body(&fact.left, &parent_wd.left, state)?,
-            self.parent_checked_beta_body(&fact.right, &parent_wd.right, state)?,
+            self.parent_checked_beta_body(&fact.left, parent_wd.left(), state)?,
+            self.parent_checked_beta_body(&fact.right, parent_wd.right(), state)?,
         ) {
             let residual_equal = EqualFact {
                 fact_id: self.global_ids.allocate_fact_id(),
@@ -146,13 +142,13 @@ impl Runtime {
             (
                 &fact.left,
                 &fact.right,
-                &parent_wd.left,
+                parent_wd.left(),
                 ParentEqualitySide::Left,
             ),
             (
                 &fact.right,
                 &fact.left,
-                &parent_wd.right,
+                parent_wd.right(),
                 ParentEqualitySide::Right,
             ),
         ] {
@@ -188,10 +184,10 @@ impl Runtime {
     pub(in crate::execute) fn parent_checked_beta_body(
         &mut self,
         side: &Obj,
-        app_wd: &ObjWellDefinedProof,
+        app_wd: crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ObjWellDefinedProofRef<'_>,
         state: VerifyState,
     ) -> RuntimeResult<Option<(ParentCheckedBetaFunctionBody, Obj)>> {
-        if app_wd.obj() != side {
+        if !app_wd.matches_application(side) {
             return Ok(None);
         }
         if let Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(field)) = side {
@@ -253,9 +249,11 @@ impl Runtime {
             if let VerifyObjWellDefinedResult::Success(receiver_well_defined) =
                 self.verify_obj_well_definedness(&receiver, state)?
             {
-                if let Some((receiver_function_body, value)) =
-                    self.parent_checked_beta_body(&receiver, &receiver_well_defined, state)?
-                {
+                if let Some((receiver_function_body, value)) = self.parent_checked_beta_body(
+                    &receiver,
+                    receiver_well_defined.as_view(),
+                    state,
+                )? {
                     // A field's actual literal/declared function can be called.
                     // Do not chase a graph of field-valued aliases (possibly
                     // cyclic) under the guise of structural beta reduction.
@@ -278,7 +276,7 @@ impl Runtime {
                         if let Some((application_function_body, expanded_body)) = self
                             .parent_checked_beta_body(
                                 &application,
-                                &application_well_defined,
+                                application_well_defined.as_view(),
                                 state,
                             )?
                         {
@@ -329,9 +327,11 @@ impl Runtime {
                     if let Some((
                         receiver_function_body,
                         Obj::ProductShape(crate::ast::obj::ProductShape::Tuple(returned_tuple)),
-                    )) =
-                        self.parent_checked_beta_body(&receiver, &receiver_well_defined, state)?
-                    {
+                    )) = self.parent_checked_beta_body(
+                        &receiver,
+                        receiver_well_defined.as_view(),
+                        state,
+                    )? {
                         if let Some(coordinate) = returned_tuple.args.get(index - 1) {
                             let coordinate = coordinate.as_ref().clone();
                             return Ok(Some((
@@ -361,8 +361,8 @@ impl Runtime {
                 receiver_well_defined,
             ) = self.verify_obj_well_definedness(&receiver, state)?
             {
-                if let Some((receiver_function_body, returned_value)) =
-                    self.parent_checked_beta_body(&receiver, &receiver_well_defined, state)?
+                if let Some((receiver_function_body, returned_value)) = self
+                    .parent_checked_beta_body(&receiver, receiver_well_defined.as_view(), state)?
                 {
                     if let Obj::FunctionSpace(FunctionSpace::AnonymousFn(returned_function)) =
                         returned_value
@@ -404,7 +404,7 @@ impl Runtime {
                         if let crate::execute::execute_fact_stmt::VerifyObjWellDefinedResult::Success(application_well_defined) =
                                 self.verify_obj_well_definedness(&application, state)? {
                                 if let Some((application_function_body, expanded_body)) =
-                                    self.parent_checked_beta_body(&application, &application_well_defined, state)? {
+                                    self.parent_checked_beta_body(&application, application_well_defined.as_view(), state)? {
                                     return Ok(Some((ParentCheckedBetaFunctionBody::ReturnedKnownFunctionApplication {
                                         receiver_well_defined: Box::new(receiver_well_defined),
                                         receiver_function_body: Box::new(receiver_function_body),
@@ -472,13 +472,10 @@ impl Runtime {
                     if !verification.stages.is_fully_known() {
                         return Ok(None);
                     }
-                    let (argument_well_defined, requirement_fact_verified, argument_scope) =
-                        verification.into_success_child_proofs();
+                    let argument_check = verification.into_success(self.result_detail())?;
                     TemplateApplicationDomainProof::Rechecked {
                         checked_domain: literal.body.clone(),
-                        argument_well_defined,
-                        requirement_fact_verified,
-                        argument_scope,
+                        argument_check,
                     }
                 };
                 let source = ParentCheckedBetaFunctionBody::TemplateAnonymousFunction {
@@ -531,21 +528,8 @@ impl Runtime {
     }
 }
 
-fn checked_application_domain(proof: &ObjWellDefinedProof) -> Option<&FnSet> {
-    let ObjWellDefinedProof::ByDef {
-        proof: ObjWellDefinedProofByDef::FnObj(proof),
-        ..
-    } = proof
-    else {
-        return None;
-    };
-    match proof.domain_fn_set.as_ref()? {
-        FnObjDomainFnSetEvidence::MultivariableSelector(source) => Some(&source.signature),
-        FnObjDomainFnSetEvidence::Matrix(source) => Some(&source.function.body),
-        FnObjDomainFnSetEvidence::Composition(source) => Some(&source.function.body),
-        FnObjDomainFnSetEvidence::FiniteFunction(source) => Some(&source.signature),
-        FnObjDomainFnSetEvidence::InFunctionSet { fn_set, .. }
-        | FnObjDomainFnSetEvidence::AnonymousLiteral { fn_set }
-        | FnObjDomainFnSetEvidence::TemplateDefinition { fn_set, .. } => Some(fn_set),
-    }
+fn checked_application_domain<'a>(
+    proof: crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ObjWellDefinedProofRef<'a>,
+) -> Option<&'a FnSet> {
+    proof.application_domain()
 }

@@ -3,12 +3,15 @@ use crate::prelude::*;
 use crate::store_fact_and_infer::{InferAtomicFactResult, InferEqualFactResult, InferResult};
 
 fn runtime() -> Runtime {
-    Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language: OutputLanguage::English,
-    })
+    Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    )
 }
 
 fn exec(runtime: &mut Runtime, code: &str) -> ExecStmtResult {

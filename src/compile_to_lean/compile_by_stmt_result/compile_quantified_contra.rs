@@ -49,8 +49,8 @@ impl LitexToLeanCompiler {
         );
         let (_, introductions, definitions) = self.compile_forall_head(
             positive,
-            &formation.introduced_params,
-            &formation.assumed_dom_facts,
+            &formation.detailed_ref().introduced_params,
+            &formation.detailed_ref().assumed_dom_facts,
             &scope,
         )?;
         let mut arguments = Vec::new();
@@ -61,6 +61,7 @@ impl LitexToLeanCompiler {
             .flat_map(|g| &g.params)
             .zip(
                 &formation
+                    .detailed_ref()
                     .introduced_params
                     .defined_params
                     .store_and_infer_results,
@@ -100,8 +101,8 @@ impl LitexToLeanCompiler {
     ) -> Result<(Vec<String>, Vec<String>, Vec<String>), LeanCompileError> {
         let (mut binders, _, definitions) = self.compile_forall_head(
             fact,
-            &proof.introduced_params,
-            &proof.assumed_dom_facts,
+            &proof.detailed_ref().introduced_params,
+            &proof.detailed_ref().assumed_dom_facts,
             scope,
         )?;
         let mut introductions = Vec::new();
@@ -111,6 +112,7 @@ impl LitexToLeanCompiler {
             .iter()
             .zip(
                 &proof
+                    .detailed_ref()
                     .introduced_params
                     .defined_params
                     .store_and_infer_results,
@@ -199,15 +201,19 @@ impl LitexToLeanCompiler {
     ) -> Result<String, LeanCompileError> {
         let term = SourcePosition::new(Some(before), SourceOwner::Term, 0);
         let scope = SourcePosition::new(Some(&term), SourceOwner::ForallWD(fact, wd), 0);
-        let (binders, _, mut definitions) =
-            self.compile_forall_head(fact, &wd.introduced_params, &wd.assumed_dom_facts, &scope)?;
+        let (binders, _, mut definitions) = self.compile_forall_head(
+            fact,
+            &wd.detailed_ref().introduced_params,
+            &wd.detailed_ref().assumed_dom_facts,
+            &scope,
+        )?;
         let mut arguments = Vec::new();
-        for (parameter, store) in fact
-            .typed_parameters
-            .ordered_param_ids()
-            .iter()
-            .zip(&wd.introduced_params.defined_params.store_and_infer_results)
-        {
+        for (parameter, store) in fact.typed_parameters.ordered_param_ids().iter().zip(
+            &wd.detailed_ref()
+                .introduced_params
+                .defined_params
+                .store_and_infer_results,
+        ) {
             let value = format!("_value_i{}", parameter.value());
             arguments.push(format!(
                 "(Litex.semanticObject (Litex.denote {value}) (Litex.isSet {value}))"

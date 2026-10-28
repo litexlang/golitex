@@ -69,9 +69,9 @@ fn eval_aggregate_rejects_changed_endpoint_or_source_wd() {
                 p.evaluated_equal_fact.right = wrong;
             }
             "rewritten" => p.rewritten_object = wrong,
-            _ => match &mut p.source_well_defined {
-                ObjWellDefinedProof::ByDef { obj, .. }
-                | ObjWellDefinedProof::ByKnown { obj, .. } => *obj = wrong,
+            _ => match (&mut p.source_well_defined).as_detailed_mut().unwrap() {
+                DetailedObjWellDefinedProof::ByDef { obj, .. }
+                | DetailedObjWellDefinedProof::ByKnown { obj, .. } => *obj = wrong,
             },
         }
         compiler

@@ -1422,7 +1422,7 @@ theorem h_13965 : (by
             let _set := _atomic_wd_1_0
             exact (Litex.insertSubset _set.val.element _set.val.tail (Litex.Z (M := M)) _set.wd (Litex.NativeBridge.numberInZOfEq (M := M) (3 : ℂ) (3 : ℤ) (by norm_num)) (Litex.insertSubset _set.val.tail.val.element _set.val.tail.val.tail (Litex.Z (M := M)) _set.val.tail.wd (Litex.NativeBridge.numberInZOfEq (M := M) (1 : ℂ) (1 : ℤ) (by norm_num)) (Litex.insertSubset _set.val.tail.val.tail.val.element _set.val.tail.val.tail.val.tail (Litex.Z (M := M)) _set.val.tail.val.tail.wd (Litex.NativeBridge.numberInZOfEq (M := M) (2 : ℂ) (2 : ℤ) (by norm_num)) (Litex.emptySubset (Litex.Z (M := M))))))));
         Litex.finiteFold _wd_1_0 _wd_1_1 _wd_1_2 _wd_1_3 (Litex.FunctionSignature.one (M := M) Litex.StandardSetValue.integer Litex.StandardSetValue.integer (fun (_raw_i1 : M.Value) => True)) h_14084 (Litex.formulaFnInFnSet _wd_1_1) (Litex.formulaFnInFnSet _wd_1_2) h_14088 (fun i hi => (Litex.FunctionSignature.withGuard_domain (M.standard Litex.StandardSetValue.integer) (Litex.denote (Litex.Z (M := M))) (M.standard_isSet Litex.StandardSetValue.integer) (Litex.isSet (Litex.Z (M := M))) (fun (_raw_i1 : M.Value) => True) i).mpr ⟨h_20764 i hi, True.intro⟩) (Litex.forallMembersOfRepresentations.{u, _, 0} (Litex.Z (M := M)) (fun _fold_x0 _fold_h0 => (Litex.forallMembersOfRepresentations.{u, _, 0} (Litex.Z (M := M)) (fun _fold_x1 _fold_h1 => (And.right (And.right (And.right (h_14093 _fold_x0 _fold_h0 _fold_x1 _fold_h1)))))))) (Litex.forallMembersOfRepresentations.{u, _, 0} (Litex.Z (M := M)) (fun _fold_x0 _fold_h0 => (Litex.forallMembersOfRepresentations.{u, _, 0} (Litex.Z (M := M)) (fun _fold_x1 _fold_h1 => (Litex.forallMembersOfRepresentations.{u, _, 0} (Litex.Z (M := M)) (fun _fold_x2 _fold_h2 => (And.right (And.right (And.right (And.right (And.right (And.right (And.right (h_16321 _fold_x0 _fold_h0 _fold_x1 _fold_h1 _fold_x2 _fold_h2))))))))))))))));
-        (show Litex.Same _equal_wd_1_0 (Litex.number (M := M) (16 : ℂ)) from (show Litex.Same _equal_wd_1_0 (Litex.number (M := M) (16 : ℂ)) from (((Eq.refl (Litex.denote (let _wd_1_0 := (let _setElement_0 := (Litex.number (M := M) (3 : ℂ));
+        (show Litex.Same _equal_wd_1_0 (Litex.number (M := M) (16 : ℂ)) from (show Litex.Same _equal_wd_1_0 (Litex.number (M := M) (16 : ℂ)) from ((Eq.trans (show Litex.denote _equal_wd_1_0 = (Litex.denote _equal_wd_1_0) from rfl) (((Eq.refl (Litex.denote (let _wd_1_0 := (let _setElement_0 := (Litex.number (M := M) (3 : ℂ));
           let _setElement_1 := (Litex.number (M := M) (1 : ℂ));
           let _setElement_2 := (Litex.number (M := M) (2 : ℂ));
           let _setTail_3 := Litex.emptySet (M := M);
@@ -3747,7 +3747,7 @@ theorem h_13965 : (by
             exact (congrArg (fun x => Litex.FunctionSemantics.callValue (Litex.denote _call.val.function) x) (congrArg₂ (Litex.FiniteFunction.pack2 (M := M)) _argument_0 _argument_1)).symm.trans (_head_call.trans (_beta.trans (_body.trans _calculated))))
           apply (Litex.finiteFoldEnumerate _fold [M.number (3 : ℂ), M.number (1 : ℂ), M.number (2 : ℂ)] _distinct _members).trans
           show Litex.foldValue [M.number (3 : ℂ), M.number (1 : ℂ), M.number (2 : ℂ)] (Litex.denote _fold.val.function) (Litex.denote _fold.val.operation) (Litex.denote _fold.val.seed) = M.number (16 : ℂ)
-          norm_num [Litex.foldValue, Litex.foldApply2, _seed, _term_0, _step_0, _term_1, _step_1, _term_2, _step_2]))).trans (((Litex.NativeBridge.denoteNumber (M := M) (16 : ℂ))).trans (congrArg M.number (by norm_num : (16 : ℂ) = (16 : ℂ)))).symm)))
+          norm_num [Litex.foldValue, Litex.foldApply2, _seed, _term_0, _step_0, _term_1, _step_1, _term_2, _step_2]))))).trans (((Litex.NativeBridge.denoteNumber (M := M) (16 : ℂ))).trans (congrArg M.number (by norm_num : (16 : ℂ) = (16 : ℂ)))).symm)))
       )
   )
 
@@ -6484,7 +6484,7 @@ theorem h_42023 : (by
             let _set := _atomic_wd_1_0
             exact (Litex.emptySubset (Litex.Z (M := M)))));
         Litex.finiteFold _wd_1_0 _wd_1_1 _wd_1_2 _wd_1_3 (Litex.FunctionSignature.one (M := M) Litex.StandardSetValue.integer Litex.StandardSetValue.integer (fun (_raw_i28 : M.Value) => True)) h_42139 (Litex.formulaFnInFnSet _wd_1_1) (Litex.formulaFnInFnSet _wd_1_2) h_42140 (fun i hi => (Litex.FunctionSignature.withGuard_domain (M.standard Litex.StandardSetValue.integer) (Litex.denote (Litex.Z (M := M))) (M.standard_isSet Litex.StandardSetValue.integer) (Litex.isSet (Litex.Z (M := M))) (fun (_raw_i28 : M.Value) => True) i).mpr ⟨h_48816 i hi, True.intro⟩) (Litex.forallMembersOfRepresentations.{u, _, 0} (Litex.Z (M := M)) (fun _fold_x0 _fold_h0 => (Litex.forallMembersOfRepresentations.{u, _, 0} (Litex.Z (M := M)) (fun _fold_x1 _fold_h1 => (And.right (And.right (And.right (h_42145 _fold_x0 _fold_h0 _fold_x1 _fold_h1)))))))) (Litex.forallMembersOfRepresentations.{u, _, 0} (Litex.Z (M := M)) (fun _fold_x0 _fold_h0 => (Litex.forallMembersOfRepresentations.{u, _, 0} (Litex.Z (M := M)) (fun _fold_x1 _fold_h1 => (Litex.forallMembersOfRepresentations.{u, _, 0} (Litex.Z (M := M)) (fun _fold_x2 _fold_h2 => (And.right (And.right (And.right (And.right (And.right (And.right (And.right (h_44373 _fold_x0 _fold_h0 _fold_x1 _fold_h1 _fold_x2 _fold_h2))))))))))))))));
-        (show Litex.Same _equal_wd_1_0 (Litex.number (M := M) (7 : ℂ)) from (show Litex.Same _equal_wd_1_0 (Litex.number (M := M) (7 : ℂ)) from (((Eq.refl (Litex.denote (let _wd_1_0 := (let _setTail_0 := Litex.emptySet (M := M);
+        (show Litex.Same _equal_wd_1_0 (Litex.number (M := M) (7 : ℂ)) from (show Litex.Same _equal_wd_1_0 (Litex.number (M := M) (7 : ℂ)) from ((Eq.trans (show Litex.denote _equal_wd_1_0 = (Litex.denote _equal_wd_1_0) from rfl) (((Eq.refl (Litex.denote (let _wd_1_0 := (let _setTail_0 := Litex.emptySet (M := M);
           _setTail_0);
         let _wd_1_1 := (Litex.formulaFn (M := M) Litex.StandardSetValue.integer Litex.StandardSetValue.integer (fun (_raw_i28 : M.Value) => True) (fun (_raw_i28 : M.Value) => _raw_i28) (by
           intro _raw_i28 h_28450 _
@@ -8455,7 +8455,7 @@ theorem h_42023 : (by
           have _distinct : ([] : List M.Value).Nodup := List.Nodup.map M.number_injective (by norm_num : ([] : List ℂ).Nodup)
           apply (Litex.finiteFoldEnumerate _fold [] _distinct _members).trans
           show Litex.foldValue [] (Litex.denote _fold.val.function) (Litex.denote _fold.val.operation) (Litex.denote _fold.val.seed) = M.number (7 : ℂ)
-          norm_num [Litex.foldValue, Litex.foldApply2, _seed]))).trans (((Litex.NativeBridge.denoteNumber (M := M) (7 : ℂ))).trans (congrArg M.number (by norm_num : (7 : ℂ) = (7 : ℂ)))).symm)))
+          norm_num [Litex.foldValue, Litex.foldApply2, _seed]))))).trans (((Litex.NativeBridge.denoteNumber (M := M) (7 : ℂ))).trans (congrArg M.number (by norm_num : (7 : ℂ) = (7 : ℂ)))).symm)))
       )
   )
 
@@ -10469,7 +10469,7 @@ theorem h_75004 : (by
             let _set := _atomic_wd_1_0
             exact (Litex.insertSubset _set.val.element _set.val.tail (Litex.Z (M := M)) _set.wd (Litex.NativeBridge.numberInZOfEq (M := M) (2 : ℂ) (2 : ℤ) (by norm_num)) (Litex.emptySubset (Litex.Z (M := M))))));
         Litex.finiteFold _wd_1_0 _wd_1_1 _wd_1_2 _wd_1_3 (Litex.FunctionSignature.one (M := M) Litex.StandardSetValue.integer Litex.StandardSetValue.integer (fun (_raw_i49 : M.Value) => True)) h_75120 (Litex.formulaFnInFnSet _wd_1_1) (Litex.formulaFnInFnSet _wd_1_2) h_75121 (fun i hi => (Litex.FunctionSignature.withGuard_domain (M.standard Litex.StandardSetValue.integer) (Litex.denote (Litex.Z (M := M))) (M.standard_isSet Litex.StandardSetValue.integer) (Litex.isSet (Litex.Z (M := M))) (fun (_raw_i49 : M.Value) => True) i).mpr ⟨h_84501 i hi, True.intro⟩) (Litex.forallMembersOfRepresentations.{u, _, 0} (Litex.Z (M := M)) (fun _fold_x0 _fold_h0 => (Litex.forallMembersOfRepresentations.{u, _, 0} (Litex.Z (M := M)) (fun _fold_x1 _fold_h1 => (And.right (And.right (And.right (h_75126 _fold_x0 _fold_h0 _fold_x1 _fold_h1)))))))) (Litex.forallMembersOfRepresentations.{u, _, 0} (Litex.Z (M := M)) (fun _fold_x0 _fold_h0 => (Litex.forallMembersOfRepresentations.{u, _, 0} (Litex.Z (M := M)) (fun _fold_x1 _fold_h1 => (Litex.forallMembersOfRepresentations.{u, _, 0} (Litex.Z (M := M)) (fun _fold_x2 _fold_h2 => (And.right (And.right (And.right (And.right (And.right (And.right (And.right (h_78194 _fold_x0 _fold_h0 _fold_x1 _fold_h1 _fold_x2 _fold_h2))))))))))))))));
-        (show Litex.Same _equal_wd_1_0 (Litex.number (M := M) (6 : ℂ)) from (show Litex.Same _equal_wd_1_0 (Litex.number (M := M) (6 : ℂ)) from (((Eq.refl (Litex.denote (let _wd_1_0 := (let _setElement_0 := (Litex.number (M := M) (2 : ℂ));
+        (show Litex.Same _equal_wd_1_0 (Litex.number (M := M) (6 : ℂ)) from (show Litex.Same _equal_wd_1_0 (Litex.number (M := M) (6 : ℂ)) from ((Eq.trans (show Litex.denote _equal_wd_1_0 = (Litex.denote _equal_wd_1_0) from rfl) (((Eq.refl (Litex.denote (let _wd_1_0 := (let _setElement_0 := (Litex.number (M := M) (2 : ℂ));
           let _setTail_1 := Litex.emptySet (M := M);
           let _setFresh_0 : ¬ Litex.In _setElement_0 _setTail_1 := (Litex.notInEmpty _setElement_0);
           let _setTail_0 := Litex.insert _setElement_0 _setTail_1 _setFresh_0;
@@ -12558,7 +12558,7 @@ theorem h_75004 : (by
             exact (congrArg (fun x => Litex.FunctionSemantics.callValue (Litex.denote _call.val.function) x) (congrArg₂ (Litex.FiniteFunction.pack2 (M := M)) _argument_0 _argument_1)).symm.trans (_head_call.trans (_beta.trans (_body.trans _calculated))))
           apply (Litex.finiteFoldEnumerate _fold [M.number (2 : ℂ)] _distinct _members).trans
           show Litex.foldValue [M.number (2 : ℂ)] (Litex.denote _fold.val.function) (Litex.denote _fold.val.operation) (Litex.denote _fold.val.seed) = M.number (6 : ℂ)
-          norm_num [Litex.foldValue, Litex.foldApply2, _seed, _term_0, _step_0]))).trans (((Litex.NativeBridge.denoteNumber (M := M) (6 : ℂ))).trans (congrArg M.number (by norm_num : (6 : ℂ) = (6 : ℂ)))).symm)))
+          norm_num [Litex.foldValue, Litex.foldApply2, _seed, _term_0, _step_0]))))).trans (((Litex.NativeBridge.denoteNumber (M := M) (6 : ℂ))).trans (congrArg M.number (by norm_num : (6 : ℂ) = (6 : ℂ)))).symm)))
       )
   )
 

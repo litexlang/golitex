@@ -1,4 +1,5 @@
 use super::result::AssumeDomFactResult;
+use super::DetailedForallFactWellDefinedProof;
 use crate::ast::fact::{Fact, ForallFact};
 use crate::execute::execute_fact_stmt::verify_forall_fact::well_defined_result::{
     FailToVerifyForallFactWellDefinedResult, ForallFactWellDefinedProof,
@@ -10,6 +11,7 @@ use crate::execute::execute_fact_stmt::well_defined_results::{
 };
 use crate::execute::execute_fact_stmt::VerifyState;
 use crate::execute::IntroduceTypedParametersResult;
+use crate::result_detail::OutputDetail;
 use crate::runtime::{Runtime, RuntimeResult};
 
 impl Runtime {
@@ -26,12 +28,15 @@ impl Runtime {
         })?;
         match stages {
             Ok((introduced_params, assumed_dom_facts, then)) => Ok(
-                VerifyForallFactWellDefinedResult::Success(ForallFactWellDefinedProof {
-                    introduced_params,
-                    assumed_dom_facts,
-                    then,
-                    local_env,
-                }),
+                VerifyForallFactWellDefinedResult::Success(ForallFactWellDefinedProof::new(
+                    self.result_detail(),
+                    || DetailedForallFactWellDefinedProof {
+                        introduced_params,
+                        assumed_dom_facts,
+                        then,
+                        local_env,
+                    },
+                )),
             ),
             Err(reason) => Ok(VerifyForallFactWellDefinedResult::Failed(reason)),
         }
@@ -56,9 +61,10 @@ impl Runtime {
         {
             Ok(proofs) => proofs,
             Err(failed) => {
-                return Ok(Err(FailToVerifyForallFactWellDefinedResult::ParamType(
-                    extract_obj_wd_fail(failed),
-                )));
+                return Ok(Err(FailToVerifyForallFactWellDefinedResult::ParamType {
+                    fact: fact.clone(),
+                    reason: extract_obj_wd_fail(failed),
+                }));
             }
         };
 
@@ -71,27 +77,42 @@ impl Runtime {
             Ok(opened) => opened,
             Err((_, failed)) => {
                 return Ok(Err(
-                    FailToVerifyForallFactWellDefinedResult::AutoOpenStructLayer(failed),
+                    FailToVerifyForallFactWellDefinedResult::AutoOpenStructLayer {
+                        fact: fact.clone(),
+                        reason: failed,
+                    },
                 ))
             }
         };
 
-        let mut succeeded_dom = Vec::with_capacity(fact.dom_facts.len());
+        let mut succeeded_dom = if self.result_detail() == OutputDetail::Detailed {
+            Vec::with_capacity(fact.dom_facts.len())
+        } else {
+            Vec::new()
+        };
         for (failed_index, dom) in fact.dom_facts.iter().enumerate() {
             match self.verify_fact_well_definedness(dom, verify_state.clone())? {
                 VerifyFactWellDefinedResult::Success(proof) => {
                     // Assume each dom before then-WD so domain-restricted
                     // applications (e.g. `f(x)` under `x > 0`) can pass.
                     let store_and_infer = self.store_fact_and_infer(dom, verify_state)?;
-                    succeeded_dom.push(AssumeDomFactResult {
-                        well_defined: proof,
-                        store_and_infer,
-                    });
+                    proof.require_detail(self.result_detail(), "quantified WD assumption")?;
+                    if self.result_detail() == OutputDetail::Detailed {
+                        succeeded_dom.push(AssumeDomFactResult {
+                            well_defined: proof,
+                            store_and_infer,
+                        });
+                    }
                 }
                 VerifyFactWellDefinedResult::Failed(failed_dom) => {
                     return Ok(Err(FailToVerifyForallFactWellDefinedResult::DomFact {
+                        fact: fact.clone(),
                         failed_index,
-                        param_type_well_defined: introduced_params.param_type_well_defined,
+                        param_type_well_defined: if self.result_detail() == OutputDetail::Detailed {
+                            introduced_params.param_type_well_defined
+                        } else {
+                            Vec::new()
+                        },
                         succeeded_dom: succeeded_dom.into_iter().map(|a| a.well_defined).collect(),
                         failed_dom: Box::new(failed_dom),
                     }));
@@ -99,15 +120,29 @@ impl Runtime {
             }
         }
 
-        let mut succeeded_then = Vec::with_capacity(fact.then_facts.len());
+        let mut succeeded_then = if self.result_detail() == OutputDetail::Detailed {
+            Vec::with_capacity(fact.then_facts.len())
+        } else {
+            Vec::new()
+        };
         for (failed_index, then) in fact.then_facts.iter().enumerate() {
             let then_fact: Fact = then.clone().into();
             match self.verify_fact_well_definedness(&then_fact, verify_state.clone())? {
-                VerifyFactWellDefinedResult::Success(proof) => succeeded_then.push(proof),
+                VerifyFactWellDefinedResult::Success(proof) => {
+                    proof.require_detail(self.result_detail(), "quantified WD conclusion")?;
+                    if self.result_detail() == OutputDetail::Detailed {
+                        succeeded_then.push(proof);
+                    }
+                }
                 VerifyFactWellDefinedResult::Failed(failed_then) => {
                     return Ok(Err(FailToVerifyForallFactWellDefinedResult::ThenFact {
+                        fact: fact.clone(),
                         failed_index,
-                        param_type_well_defined: introduced_params.param_type_well_defined,
+                        param_type_well_defined: if self.result_detail() == OutputDetail::Detailed {
+                            introduced_params.param_type_well_defined
+                        } else {
+                            Vec::new()
+                        },
                         succeeded_dom: succeeded_dom.into_iter().map(|a| a.well_defined).collect(),
                         succeeded_then,
                         failed_then: Box::new(failed_then),

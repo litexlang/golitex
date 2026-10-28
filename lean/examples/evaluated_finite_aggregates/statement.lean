@@ -52,7 +52,7 @@ theorem h_23 : (by
           exact (by
             let _set := _atomic_wd_1_0
             exact (Litex.emptySubset (Litex.Z (M := M))))) (Litex.subsetOfForall (Litex.Z (M := M)) (Litex.C (M := M)) (fun _a _ha => (Litex.integerToComplex _a _ha))) (Litex.formulaFnInFnSet _wd_1_1) (fun x hx => (Litex.FunctionSignature.oneTarget_domain .integer _ _ (fun _ => True) x).mpr ⟨hx, True.intro⟩)));
-        (show Litex.Same _equal_wd_1_0 (Litex.number (M := M) (0 : ℂ)) from (show Litex.Same _equal_wd_1_0 (Litex.number (M := M) (0 : ℂ)) from (((Eq.refl (Litex.denote (let _wd_1_0 := (let _setTail_0 := Litex.emptySet (M := M);
+        (show Litex.Same _equal_wd_1_0 (Litex.number (M := M) (0 : ℂ)) from (show Litex.Same _equal_wd_1_0 (Litex.number (M := M) (0 : ℂ)) from ((Eq.trans (show Litex.denote _equal_wd_1_0 = (Litex.denote _equal_wd_1_0) from rfl) (((Eq.refl (Litex.denote (let _wd_1_0 := (let _setTail_0 := Litex.emptySet (M := M);
           _setTail_0);
         let _wd_1_1 := (Litex.formulaFn (M := M) Litex.StandardSetValue.integer Litex.StandardSetValue.integer (fun (_raw_i1 : M.Value) => True) (fun (_raw_i1 : M.Value) => _raw_i1) (by
           intro _raw_i1 h_14 _
@@ -118,7 +118,7 @@ theorem h_23 : (by
             have _members_0 : ∀ x, M.mem x (Litex.denote _collection_tail_0) ↔ x ∈ ([] : List M.Value) := Litex.finiteMembersEmpty
             intro x
             exact Eq.mpr (congrArg (fun _set => M.mem x _set ↔ x ∈ ([] : List M.Value)) _enumeration_same) (_members_0 x))
-          · norm_num [List.toFinset_cons, List.toFinset_nil]))).trans (((Litex.NativeBridge.denoteNumber (M := M) (0 : ℂ))).trans (congrArg M.number (by norm_num : (0 : ℂ) = (0 : ℂ)))).symm)))
+          · norm_num [List.toFinset_cons, List.toFinset_nil]))))).trans (((Litex.NativeBridge.denoteNumber (M := M) (0 : ℂ))).trans (congrArg M.number (by norm_num : (0 : ℂ) = (0 : ℂ)))).symm)))
       )
   )
 
@@ -149,7 +149,7 @@ theorem h_46 : (by
     litex_complete =>
       exact (
         (let _equal_wd_1_0 := (_object_w6 (M := M));
-        (show Litex.Same _equal_wd_1_0 (Litex.number (M := M) (0 : ℂ)) from (show Litex.Same _equal_wd_1_0 (Litex.number (M := M) (0 : ℂ)) from ((show (Litex.denote _equal_wd_1_0) = M.number (0 : ℂ) from (by
+        (show Litex.Same _equal_wd_1_0 (Litex.number (M := M) (0 : ℂ)) from (show Litex.Same _equal_wd_1_0 (Litex.number (M := M) (0 : ℂ)) from ((Eq.trans (show Litex.denote _equal_wd_1_0 = (Litex.denote _equal_wd_1_0) from rfl) ((show (Litex.denote _equal_wd_1_0) = M.number (0 : ℂ) from (by
           let _aggregate := _equal_wd_1_0
           apply Litex.finiteAggregateListDenote _aggregate [] (0 : ℂ)
           · exact (by
@@ -159,7 +159,7 @@ theorem h_46 : (by
             have _members_0 : ∀ x, M.mem x (Litex.denote _collection_tail_0) ↔ x ∈ ([] : List M.Value) := Litex.finiteMembersEmpty
             intro x
             exact Eq.mpr (congrArg (fun _set => M.mem x _set ↔ x ∈ ([] : List M.Value)) _enumeration_same) (_members_0 x))
-          · norm_num [List.toFinset_cons, List.toFinset_nil]))).trans (((Litex.NativeBridge.denoteNumber (M := M) (0 : ℂ))).trans (congrArg M.number (by norm_num : (0 : ℂ) = (0 : ℂ)))).symm)))
+          · norm_num [List.toFinset_cons, List.toFinset_nil]))))).trans (((Litex.NativeBridge.denoteNumber (M := M) (0 : ℂ))).trans (congrArg M.number (by norm_num : (0 : ℂ) = (0 : ℂ)))).symm)))
       )
   )
 
@@ -206,7 +206,7 @@ theorem h_96 : (by
           exact (by
             let _set := _atomic_wd_1_0
             exact (Litex.emptySubset (Litex.Z (M := M))))) (Litex.subsetOfForall (Litex.Z (M := M)) (Litex.C (M := M)) (fun _a _ha => (Litex.integerToComplex _a _ha))) (Litex.formulaFnInFnSet _wd_1_1) (fun x hx => (Litex.FunctionSignature.oneTarget_domain .integer _ _ (fun _ => True) x).mpr ⟨hx, True.intro⟩)));
-        (show Litex.Same _equal_wd_1_0 (Litex.number (M := M) (1 : ℂ)) from (show Litex.Same _equal_wd_1_0 (Litex.number (M := M) (1 : ℂ)) from (((Eq.refl (Litex.denote (let _wd_1_0 := (let _setTail_0 := Litex.emptySet (M := M);
+        (show Litex.Same _equal_wd_1_0 (Litex.number (M := M) (1 : ℂ)) from (show Litex.Same _equal_wd_1_0 (Litex.number (M := M) (1 : ℂ)) from ((Eq.trans (show Litex.denote _equal_wd_1_0 = (Litex.denote _equal_wd_1_0) from rfl) (((Eq.refl (Litex.denote (let _wd_1_0 := (let _setTail_0 := Litex.emptySet (M := M);
           _setTail_0);
         let _wd_1_1 := (Litex.formulaFn (M := M) Litex.StandardSetValue.integer Litex.StandardSetValue.integer (fun (_raw_i3 : M.Value) => True) (fun (_raw_i3 : M.Value) => _raw_i3) (by
           intro _raw_i3 h_87 _
@@ -270,7 +270,7 @@ theorem h_96 : (by
             have _members_0 : ∀ x, M.mem x (Litex.denote _collection_tail_0) ↔ x ∈ ([] : List M.Value) := Litex.finiteMembersEmpty
             intro x
             exact Eq.mpr (congrArg (fun _set => M.mem x _set ↔ x ∈ ([] : List M.Value)) _enumeration_same) (_members_0 x))
-          · norm_num [List.toFinset_cons, List.toFinset_nil]))).trans (((Litex.NativeBridge.denoteNumber (M := M) (1 : ℂ))).trans (congrArg M.number (by norm_num : (1 : ℂ) = (1 : ℂ)))).symm)))
+          · norm_num [List.toFinset_cons, List.toFinset_nil]))))).trans (((Litex.NativeBridge.denoteNumber (M := M) (1 : ℂ))).trans (congrArg M.number (by norm_num : (1 : ℂ) = (1 : ℂ)))).symm)))
       )
   )
 
@@ -301,7 +301,7 @@ theorem h_119 : (by
     litex_complete =>
       exact (
         (let _equal_wd_1_0 := (_object_w12 (M := M));
-        (show Litex.Same _equal_wd_1_0 (Litex.number (M := M) (1 : ℂ)) from (show Litex.Same _equal_wd_1_0 (Litex.number (M := M) (1 : ℂ)) from ((show (Litex.denote _equal_wd_1_0) = M.number (1 : ℂ) from (by
+        (show Litex.Same _equal_wd_1_0 (Litex.number (M := M) (1 : ℂ)) from (show Litex.Same _equal_wd_1_0 (Litex.number (M := M) (1 : ℂ)) from ((Eq.trans (show Litex.denote _equal_wd_1_0 = (Litex.denote _equal_wd_1_0) from rfl) ((show (Litex.denote _equal_wd_1_0) = M.number (1 : ℂ) from (by
           let _aggregate := _equal_wd_1_0
           apply Litex.finiteAggregateListDenote _aggregate [] (1 : ℂ)
           · exact (by
@@ -311,7 +311,7 @@ theorem h_119 : (by
             have _members_0 : ∀ x, M.mem x (Litex.denote _collection_tail_0) ↔ x ∈ ([] : List M.Value) := Litex.finiteMembersEmpty
             intro x
             exact Eq.mpr (congrArg (fun _set => M.mem x _set ↔ x ∈ ([] : List M.Value)) _enumeration_same) (_members_0 x))
-          · norm_num [List.toFinset_cons, List.toFinset_nil]))).trans (((Litex.NativeBridge.denoteNumber (M := M) (1 : ℂ))).trans (congrArg M.number (by norm_num : (1 : ℂ) = (1 : ℂ)))).symm)))
+          · norm_num [List.toFinset_cons, List.toFinset_nil]))))).trans (((Litex.NativeBridge.denoteNumber (M := M) (1 : ℂ))).trans (congrArg M.number (by norm_num : (1 : ℂ) = (1 : ℂ)))).symm)))
       )
   )
 
@@ -442,7 +442,7 @@ theorem h_259 : (by
             let _atomic_wd_2_0 := (Litex.div (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (2 : ℂ)) (Litex.numberInC (M := M) (1 : ℂ)) (Litex.numberInC (M := M) (2 : ℂ)) (Litex.NativeBridge.notSameOfDenoteNumber (Litex.number (M := M) (2 : ℂ)) (Litex.number (M := M) (0 : ℂ)) (2 : ℂ) (0 : ℂ) (Litex.NativeBridge.denoteNumber (M := M) (2 : ℂ)) (Litex.NativeBridge.denoteNumber (M := M) (0 : ℂ)) (by norm_num)))
             exact (Litex.NativeBridge.inOfDenoteNumber _atomic_wd_2_0 ((1 : ℂ) / (2 : ℂ)) (Litex.Q (M := M)) (Litex.NativeBridge.denoteDiv (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (2 : ℂ)) (_atomic_wd_2_0).wd.1 (_atomic_wd_2_0).wd.2.1 (_atomic_wd_2_0).wd.2.2 _ _ (Litex.NativeBridge.denoteNumber (M := M) (1 : ℂ)) (Litex.NativeBridge.denoteNumber (M := M) (2 : ℂ))) (Litex.NativeBridge.numberInQOfEq ((1 : ℂ) / (2 : ℂ)) ((1 : ℚ) / (2 : ℚ)) (by norm_num)))) (Litex.emptySubset (Litex.Q (M := M))))))) (Litex.subsetOfForall (Litex.Q (M := M)) (Litex.C (M := M)) (fun _a _ha => (Litex.rationalToComplex _a _ha))) (Litex.formulaFnInFnSet _wd_1_1) (fun x hx => (Litex.FunctionSignature.oneTarget_domain .rational _ _ (fun _ => True) x).mpr ⟨hx, True.intro⟩)));
         let _equal_wd_1_1 := (Litex.div (Litex.number (M := M) (5 : ℂ)) (Litex.number (M := M) (6 : ℂ)) (Litex.numberInC (M := M) (5 : ℂ)) (Litex.numberInC (M := M) (6 : ℂ)) (Litex.NativeBridge.notSameOfDenoteNumber (Litex.number (M := M) (6 : ℂ)) (Litex.number (M := M) (0 : ℂ)) (6 : ℂ) (0 : ℂ) (Litex.NativeBridge.denoteNumber (M := M) (6 : ℂ)) (Litex.NativeBridge.denoteNumber (M := M) (0 : ℂ)) (by norm_num)));
-        (show Litex.Same _equal_wd_1_0 _equal_wd_1_1 from (show Litex.Same _equal_wd_1_0 _equal_wd_1_1 from (((Eq.refl (Litex.denote (let _wd_1_0 := (let _wd_2_0 := (Litex.div (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (3 : ℂ)) (Litex.numberInC (M := M) (1 : ℂ)) (Litex.numberInC (M := M) (3 : ℂ)) (Litex.NativeBridge.notSameOfDenoteNumber (Litex.number (M := M) (3 : ℂ)) (Litex.number (M := M) (0 : ℂ)) (3 : ℂ) (0 : ℂ) (Litex.NativeBridge.denoteNumber (M := M) (3 : ℂ)) (Litex.NativeBridge.denoteNumber (M := M) (0 : ℂ)) (by norm_num)));
+        (show Litex.Same _equal_wd_1_0 _equal_wd_1_1 from (show Litex.Same _equal_wd_1_0 _equal_wd_1_1 from ((Eq.trans (show Litex.denote _equal_wd_1_0 = (Litex.denote _equal_wd_1_0) from rfl) (((Eq.refl (Litex.denote (let _wd_1_0 := (let _wd_2_0 := (Litex.div (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (3 : ℂ)) (Litex.numberInC (M := M) (1 : ℂ)) (Litex.numberInC (M := M) (3 : ℂ)) (Litex.NativeBridge.notSameOfDenoteNumber (Litex.number (M := M) (3 : ℂ)) (Litex.number (M := M) (0 : ℂ)) (3 : ℂ) (0 : ℂ) (Litex.NativeBridge.denoteNumber (M := M) (3 : ℂ)) (Litex.NativeBridge.denoteNumber (M := M) (0 : ℂ)) (by norm_num)));
         let _wd_2_1 := (Litex.div (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (2 : ℂ)) (Litex.numberInC (M := M) (1 : ℂ)) (Litex.numberInC (M := M) (2 : ℂ)) (Litex.NativeBridge.notSameOfDenoteNumber (Litex.number (M := M) (2 : ℂ)) (Litex.number (M := M) (0 : ℂ)) (2 : ℂ) (0 : ℂ) (Litex.NativeBridge.denoteNumber (M := M) (2 : ℂ)) (Litex.NativeBridge.denoteNumber (M := M) (0 : ℂ)) (by norm_num)));
         (let _setElement_0 := _wd_2_0;
           let _setElement_1 := _wd_2_1;
@@ -707,7 +707,7 @@ theorem h_259 : (by
             have _members_0 := Litex.finiteMembersInsert _collection_tail_0 (M.number ((1 : ℂ) / (3 : ℂ))) [M.number ((1 : ℂ) / (2 : ℂ))] _number_0 _members_1
             intro x
             exact Eq.mpr (congrArg (fun _set => M.mem x _set ↔ x ∈ ([M.number ((1 : ℂ) / (3 : ℂ)), M.number ((1 : ℂ) / (2 : ℂ))] : List M.Value)) _enumeration_same) (_members_0 x))
-          · norm_num [List.toFinset_cons, List.toFinset_nil, _aggregate_term_0, _aggregate_term_1]))).trans (((Litex.NativeBridge.denoteDiv (Litex.number (M := M) (5 : ℂ)) (Litex.number (M := M) (6 : ℂ)) (_equal_wd_1_1).wd.1 (_equal_wd_1_1).wd.2.1 (_equal_wd_1_1).wd.2.2 _ _ (Litex.NativeBridge.denoteNumber (M := M) (5 : ℂ)) (Litex.NativeBridge.denoteNumber (M := M) (6 : ℂ)))).trans (congrArg M.number (by norm_num : ((5 : ℂ) / (6 : ℂ)) = ((5 : ℂ) / (6 : ℂ))))).symm)))
+          · norm_num [List.toFinset_cons, List.toFinset_nil, _aggregate_term_0, _aggregate_term_1]))))).trans (((Litex.NativeBridge.denoteDiv (Litex.number (M := M) (5 : ℂ)) (Litex.number (M := M) (6 : ℂ)) (_equal_wd_1_1).wd.1 (_equal_wd_1_1).wd.2.1 (_equal_wd_1_1).wd.2.2 _ _ (Litex.NativeBridge.denoteNumber (M := M) (5 : ℂ)) (Litex.NativeBridge.denoteNumber (M := M) (6 : ℂ)))).trans (congrArg M.number (by norm_num : ((5 : ℂ) / (6 : ℂ)) = ((5 : ℂ) / (6 : ℂ))))).symm)))
       )
   )
 
@@ -781,7 +781,7 @@ theorem h_332 : (by
       exact (
         (let _equal_wd_1_0 := (_object_w26 (M := M));
         let _equal_wd_1_1 := (Litex.div (Litex.number (M := M) (5 : ℂ)) (Litex.number (M := M) (6 : ℂ)) (Litex.numberInC (M := M) (5 : ℂ)) (Litex.numberInC (M := M) (6 : ℂ)) (Litex.NativeBridge.notSameOfDenoteNumber (Litex.number (M := M) (6 : ℂ)) (Litex.number (M := M) (0 : ℂ)) (6 : ℂ) (0 : ℂ) (Litex.NativeBridge.denoteNumber (M := M) (6 : ℂ)) (Litex.NativeBridge.denoteNumber (M := M) (0 : ℂ)) (by norm_num)));
-        (show Litex.Same _equal_wd_1_0 _equal_wd_1_1 from (show Litex.Same _equal_wd_1_0 _equal_wd_1_1 from ((show (Litex.denote _equal_wd_1_0) = M.number ((5 : ℂ) / (6 : ℂ)) from (by
+        (show Litex.Same _equal_wd_1_0 _equal_wd_1_1 from (show Litex.Same _equal_wd_1_0 _equal_wd_1_1 from ((Eq.trans (show Litex.denote _equal_wd_1_0 = (Litex.denote _equal_wd_1_0) from rfl) ((show (Litex.denote _equal_wd_1_0) = M.number ((5 : ℂ) / (6 : ℂ)) from (by
           let _aggregate := _equal_wd_1_0
           have _aggregate_term_0 : Litex.NativeBridge.complexValue (Litex.FunctionSemantics.callValue (Litex.denote _aggregate.val.function) (M.number ((1 : ℂ) / (3 : ℂ)))) = ((1 : ℂ) / (3 : ℂ)) := (congrArg (Litex.NativeBridge.complexValue (M := M)) (by
             let _call := (let _wd_1_0 := (Litex.formulaFn (M := M) Litex.StandardSetValue.rational Litex.StandardSetValue.rational (fun (_raw_i6 : M.Value) => True) (fun (_raw_i6 : M.Value) => _raw_i6) (by
@@ -835,7 +835,7 @@ theorem h_332 : (by
             have _members_0 := Litex.finiteMembersInsert _collection_tail_0 (M.number ((1 : ℂ) / (3 : ℂ))) [M.number ((1 : ℂ) / (2 : ℂ))] _number_0 _members_1
             intro x
             exact Eq.mpr (congrArg (fun _set => M.mem x _set ↔ x ∈ ([M.number ((1 : ℂ) / (3 : ℂ)), M.number ((1 : ℂ) / (2 : ℂ))] : List M.Value)) _enumeration_same) (_members_0 x))
-          · norm_num [List.toFinset_cons, List.toFinset_nil, _aggregate_term_0, _aggregate_term_1]))).trans (((Litex.NativeBridge.denoteDiv (Litex.number (M := M) (5 : ℂ)) (Litex.number (M := M) (6 : ℂ)) (Litex.numberInC (M := M) (5 : ℂ)) (Litex.numberInC (M := M) (6 : ℂ)) (Litex.NativeBridge.notSameOfDenoteNumber (Litex.number (M := M) (6 : ℂ)) (Litex.number (M := M) (0 : ℂ)) (6 : ℂ) (0 : ℂ) (Litex.NativeBridge.denoteNumber (M := M) (6 : ℂ)) (Litex.NativeBridge.denoteNumber (M := M) (0 : ℂ)) (by norm_num)) _ _ (Litex.NativeBridge.denoteNumber (M := M) (5 : ℂ)) (Litex.NativeBridge.denoteNumber (M := M) (6 : ℂ)))).trans (congrArg M.number (by norm_num : ((5 : ℂ) / (6 : ℂ)) = ((5 : ℂ) / (6 : ℂ))))).symm)))
+          · norm_num [List.toFinset_cons, List.toFinset_nil, _aggregate_term_0, _aggregate_term_1]))))).trans (((Litex.NativeBridge.denoteDiv (Litex.number (M := M) (5 : ℂ)) (Litex.number (M := M) (6 : ℂ)) (Litex.numberInC (M := M) (5 : ℂ)) (Litex.numberInC (M := M) (6 : ℂ)) (Litex.NativeBridge.notSameOfDenoteNumber (Litex.number (M := M) (6 : ℂ)) (Litex.number (M := M) (0 : ℂ)) (6 : ℂ) (0 : ℂ) (Litex.NativeBridge.denoteNumber (M := M) (6 : ℂ)) (Litex.NativeBridge.denoteNumber (M := M) (0 : ℂ)) (by norm_num)) _ _ (Litex.NativeBridge.denoteNumber (M := M) (5 : ℂ)) (Litex.NativeBridge.denoteNumber (M := M) (6 : ℂ)))).trans (congrArg M.number (by norm_num : ((5 : ℂ) / (6 : ℂ)) = ((5 : ℂ) / (6 : ℂ))))).symm)))
       )
   )
 
@@ -966,7 +966,7 @@ theorem h_565 : (by
             let _atomic_wd_2_0 := (Litex.div (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (2 : ℂ)) (Litex.numberInC (M := M) (1 : ℂ)) (Litex.numberInC (M := M) (2 : ℂ)) (Litex.NativeBridge.notSameOfDenoteNumber (Litex.number (M := M) (2 : ℂ)) (Litex.number (M := M) (0 : ℂ)) (2 : ℂ) (0 : ℂ) (Litex.NativeBridge.denoteNumber (M := M) (2 : ℂ)) (Litex.NativeBridge.denoteNumber (M := M) (0 : ℂ)) (by norm_num)))
             exact (Litex.NativeBridge.inOfDenoteNumber _atomic_wd_2_0 ((1 : ℂ) / (2 : ℂ)) (Litex.Q (M := M)) (Litex.NativeBridge.denoteDiv (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (2 : ℂ)) (_atomic_wd_2_0).wd.1 (_atomic_wd_2_0).wd.2.1 (_atomic_wd_2_0).wd.2.2 _ _ (Litex.NativeBridge.denoteNumber (M := M) (1 : ℂ)) (Litex.NativeBridge.denoteNumber (M := M) (2 : ℂ))) (Litex.NativeBridge.numberInQOfEq ((1 : ℂ) / (2 : ℂ)) ((1 : ℚ) / (2 : ℚ)) (by norm_num)))) (Litex.emptySubset (Litex.Q (M := M))))))) (Litex.subsetOfForall (Litex.Q (M := M)) (Litex.C (M := M)) (fun _a _ha => (Litex.rationalToComplex _a _ha))) (Litex.formulaFnInFnSet _wd_1_1) (fun x hx => (Litex.FunctionSignature.oneTarget_domain .rational _ _ (fun _ => True) x).mpr ⟨hx, True.intro⟩)));
         let _equal_wd_1_1 := (Litex.div (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (6 : ℂ)) (Litex.numberInC (M := M) (1 : ℂ)) (Litex.numberInC (M := M) (6 : ℂ)) (Litex.NativeBridge.notSameOfDenoteNumber (Litex.number (M := M) (6 : ℂ)) (Litex.number (M := M) (0 : ℂ)) (6 : ℂ) (0 : ℂ) (Litex.NativeBridge.denoteNumber (M := M) (6 : ℂ)) (Litex.NativeBridge.denoteNumber (M := M) (0 : ℂ)) (by norm_num)));
-        (show Litex.Same _equal_wd_1_0 _equal_wd_1_1 from (show Litex.Same _equal_wd_1_0 _equal_wd_1_1 from (((Eq.refl (Litex.denote (let _wd_1_0 := (let _wd_2_0 := (Litex.div (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (3 : ℂ)) (Litex.numberInC (M := M) (1 : ℂ)) (Litex.numberInC (M := M) (3 : ℂ)) (Litex.NativeBridge.notSameOfDenoteNumber (Litex.number (M := M) (3 : ℂ)) (Litex.number (M := M) (0 : ℂ)) (3 : ℂ) (0 : ℂ) (Litex.NativeBridge.denoteNumber (M := M) (3 : ℂ)) (Litex.NativeBridge.denoteNumber (M := M) (0 : ℂ)) (by norm_num)));
+        (show Litex.Same _equal_wd_1_0 _equal_wd_1_1 from (show Litex.Same _equal_wd_1_0 _equal_wd_1_1 from ((Eq.trans (show Litex.denote _equal_wd_1_0 = (Litex.denote _equal_wd_1_0) from rfl) (((Eq.refl (Litex.denote (let _wd_1_0 := (let _wd_2_0 := (Litex.div (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (3 : ℂ)) (Litex.numberInC (M := M) (1 : ℂ)) (Litex.numberInC (M := M) (3 : ℂ)) (Litex.NativeBridge.notSameOfDenoteNumber (Litex.number (M := M) (3 : ℂ)) (Litex.number (M := M) (0 : ℂ)) (3 : ℂ) (0 : ℂ) (Litex.NativeBridge.denoteNumber (M := M) (3 : ℂ)) (Litex.NativeBridge.denoteNumber (M := M) (0 : ℂ)) (by norm_num)));
         let _wd_2_1 := (Litex.div (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (2 : ℂ)) (Litex.numberInC (M := M) (1 : ℂ)) (Litex.numberInC (M := M) (2 : ℂ)) (Litex.NativeBridge.notSameOfDenoteNumber (Litex.number (M := M) (2 : ℂ)) (Litex.number (M := M) (0 : ℂ)) (2 : ℂ) (0 : ℂ) (Litex.NativeBridge.denoteNumber (M := M) (2 : ℂ)) (Litex.NativeBridge.denoteNumber (M := M) (0 : ℂ)) (by norm_num)));
         (let _setElement_0 := _wd_2_0;
           let _setElement_1 := _wd_2_1;
@@ -1207,7 +1207,7 @@ theorem h_565 : (by
             have _members_0 := Litex.finiteMembersInsert _collection_tail_0 (M.number ((1 : ℂ) / (3 : ℂ))) [M.number ((1 : ℂ) / (2 : ℂ))] _number_0 _members_1
             intro x
             exact Eq.mpr (congrArg (fun _set => M.mem x _set ↔ x ∈ ([M.number ((1 : ℂ) / (3 : ℂ)), M.number ((1 : ℂ) / (2 : ℂ))] : List M.Value)) _enumeration_same) (_members_0 x))
-          · norm_num [List.toFinset_cons, List.toFinset_nil, _aggregate_term_0, _aggregate_term_1]))).trans (((Litex.NativeBridge.denoteDiv (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (6 : ℂ)) (_equal_wd_1_1).wd.1 (_equal_wd_1_1).wd.2.1 (_equal_wd_1_1).wd.2.2 _ _ (Litex.NativeBridge.denoteNumber (M := M) (1 : ℂ)) (Litex.NativeBridge.denoteNumber (M := M) (6 : ℂ)))).trans (congrArg M.number (by norm_num : ((1 : ℂ) / (6 : ℂ)) = ((1 : ℂ) / (6 : ℂ))))).symm)))
+          · norm_num [List.toFinset_cons, List.toFinset_nil, _aggregate_term_0, _aggregate_term_1]))))).trans (((Litex.NativeBridge.denoteDiv (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (6 : ℂ)) (_equal_wd_1_1).wd.1 (_equal_wd_1_1).wd.2.1 (_equal_wd_1_1).wd.2.2 _ _ (Litex.NativeBridge.denoteNumber (M := M) (1 : ℂ)) (Litex.NativeBridge.denoteNumber (M := M) (6 : ℂ)))).trans (congrArg M.number (by norm_num : ((1 : ℂ) / (6 : ℂ)) = ((1 : ℂ) / (6 : ℂ))))).symm)))
       )
   )
 
@@ -1281,7 +1281,7 @@ theorem h_638 : (by
       exact (
         (let _equal_wd_1_0 := (_object_w40 (M := M));
         let _equal_wd_1_1 := (Litex.div (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (6 : ℂ)) (Litex.numberInC (M := M) (1 : ℂ)) (Litex.numberInC (M := M) (6 : ℂ)) (Litex.NativeBridge.notSameOfDenoteNumber (Litex.number (M := M) (6 : ℂ)) (Litex.number (M := M) (0 : ℂ)) (6 : ℂ) (0 : ℂ) (Litex.NativeBridge.denoteNumber (M := M) (6 : ℂ)) (Litex.NativeBridge.denoteNumber (M := M) (0 : ℂ)) (by norm_num)));
-        (show Litex.Same _equal_wd_1_0 _equal_wd_1_1 from (show Litex.Same _equal_wd_1_0 _equal_wd_1_1 from ((show (Litex.denote _equal_wd_1_0) = M.number ((1 : ℂ) / (6 : ℂ)) from (by
+        (show Litex.Same _equal_wd_1_0 _equal_wd_1_1 from (show Litex.Same _equal_wd_1_0 _equal_wd_1_1 from ((Eq.trans (show Litex.denote _equal_wd_1_0 = (Litex.denote _equal_wd_1_0) from rfl) ((show (Litex.denote _equal_wd_1_0) = M.number ((1 : ℂ) / (6 : ℂ)) from (by
           let _aggregate := _equal_wd_1_0
           have _aggregate_term_0 : Litex.NativeBridge.complexValue (Litex.FunctionSemantics.callValue (Litex.denote _aggregate.val.function) (M.number ((1 : ℂ) / (3 : ℂ)))) = ((1 : ℂ) / (3 : ℂ)) := (congrArg (Litex.NativeBridge.complexValue (M := M)) (by
             let _call := (let _wd_1_0 := (Litex.formulaFn (M := M) Litex.StandardSetValue.rational Litex.StandardSetValue.rational (fun (_raw_i8 : M.Value) => True) (fun (_raw_i8 : M.Value) => _raw_i8) (by
@@ -1335,7 +1335,7 @@ theorem h_638 : (by
             have _members_0 := Litex.finiteMembersInsert _collection_tail_0 (M.number ((1 : ℂ) / (3 : ℂ))) [M.number ((1 : ℂ) / (2 : ℂ))] _number_0 _members_1
             intro x
             exact Eq.mpr (congrArg (fun _set => M.mem x _set ↔ x ∈ ([M.number ((1 : ℂ) / (3 : ℂ)), M.number ((1 : ℂ) / (2 : ℂ))] : List M.Value)) _enumeration_same) (_members_0 x))
-          · norm_num [List.toFinset_cons, List.toFinset_nil, _aggregate_term_0, _aggregate_term_1]))).trans (((Litex.NativeBridge.denoteDiv (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (6 : ℂ)) (Litex.numberInC (M := M) (1 : ℂ)) (Litex.numberInC (M := M) (6 : ℂ)) (Litex.NativeBridge.notSameOfDenoteNumber (Litex.number (M := M) (6 : ℂ)) (Litex.number (M := M) (0 : ℂ)) (6 : ℂ) (0 : ℂ) (Litex.NativeBridge.denoteNumber (M := M) (6 : ℂ)) (Litex.NativeBridge.denoteNumber (M := M) (0 : ℂ)) (by norm_num)) _ _ (Litex.NativeBridge.denoteNumber (M := M) (1 : ℂ)) (Litex.NativeBridge.denoteNumber (M := M) (6 : ℂ)))).trans (congrArg M.number (by norm_num : ((1 : ℂ) / (6 : ℂ)) = ((1 : ℂ) / (6 : ℂ))))).symm)))
+          · norm_num [List.toFinset_cons, List.toFinset_nil, _aggregate_term_0, _aggregate_term_1]))))).trans (((Litex.NativeBridge.denoteDiv (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (6 : ℂ)) (Litex.numberInC (M := M) (1 : ℂ)) (Litex.numberInC (M := M) (6 : ℂ)) (Litex.NativeBridge.notSameOfDenoteNumber (Litex.number (M := M) (6 : ℂ)) (Litex.number (M := M) (0 : ℂ)) (6 : ℂ) (0 : ℂ) (Litex.NativeBridge.denoteNumber (M := M) (6 : ℂ)) (Litex.NativeBridge.denoteNumber (M := M) (0 : ℂ)) (by norm_num)) _ _ (Litex.NativeBridge.denoteNumber (M := M) (1 : ℂ)) (Litex.NativeBridge.denoteNumber (M := M) (6 : ℂ)))).trans (congrArg M.number (by norm_num : ((1 : ℂ) / (6 : ℂ)) = ((1 : ℂ) / (6 : ℂ))))).symm)))
       )
   )
 end LitexCompiled.file_lean_x2f_examples_x2f_evaluated_x5f_finite_x5f_aggregates_x2f_statement_x2e_lit

@@ -2,12 +2,15 @@ use crate::launch_command::{LaunchCommand, OutputLanguage};
 use crate::runtime::Runtime;
 
 fn check(code: &str, expected: bool) -> (String, String) {
-    let mut rt = Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language: OutputLanguage::English,
-    });
+    let mut rt = Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    );
     let run = rt.run_litex_code(code).unwrap();
     let normal = crate::json_output::emit_run_normal(&run, &rt, "example small repairs", None);
     let detailed = crate::json_output::emit_run_detailed(&run, &rt, "example small repairs", None);

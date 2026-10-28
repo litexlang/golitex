@@ -25,25 +25,25 @@ impl LitexToLeanCompiler {
             return Ok(None);
         }
         position.with_visible_callee_instance(&mut |application, caller| {
-            let resolved = self.resolve_fact(application.cite.fact_id, caller)?;
+            let resolved = self.resolve_fact(application.detailed_ref().cite.fact_id, caller)?;
             let Fact::ForallFact(source) = &resolved else {
                 return Err(LeanCompileError::unsupported("WD/CalleeFamily"));
             };
-            let registered = self.cited_fact_reference(application.cite.fact_id, caller)?;
+            let registered = self.cited_fact_reference(application.detailed_ref().cite.fact_id, caller)?;
             if *registered.0 != resolved {
                 return Err(LeanCompileError::unsupported("WD/CalleeIdentity"));
             }
-            let ForallConclusionLocation::DirectThenFact(location) = &application.cite.location else {
+            let ForallConclusionLocation::DirectThenFact(location) = &application.detailed_ref().cite.location else {
                 return Err(LeanCompileError::unsupported("WD/CalleeLocation"));
             };
             let selected = source.then_facts.get(location.then_fact_index)
                 .ok_or_else(|| LeanCompileError::unsupported("WD/CalleeLocation"))?;
             let parameters = source.typed_parameters.ordered_param_ids();
-            if parameters.len() != application.forall_parameters_match_what_args.len() {
+            if parameters.len() != application.detailed_ref().forall_parameters_match_what_args.len() {
                 return Err(LeanCompileError::unsupported("WD/CalleeArguments"));
             }
             let substitution: HashMap<_,_> = parameters.into_iter()
-                .zip(application.forall_parameters_match_what_args.iter().cloned()).collect();
+                .zip(application.detailed_ref().forall_parameters_match_what_args.iter().cloned()).collect();
             let roots: Vec<&Obj> = match selected {
                 ExistOrAndChainAtomicFact::AtomicFact(atomic) => atomic_fact_args_ref(atomic),
                 ExistOrAndChainAtomicFact::ChainFact(chain) => chain.objs.iter().collect(),
@@ -54,7 +54,7 @@ impl LitexToLeanCompiler {
                 return Ok(None);
             };
             let found = caller.with_visible_forall_constructor(
-                application.cite.fact_id,
+                application.detailed_ref().cite.fact_id,
                 location.then_fact_index,
                 pattern,
                 &mut |fact, introduced, assumed, wd, site, _declaration| {

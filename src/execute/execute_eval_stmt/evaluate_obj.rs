@@ -160,7 +160,7 @@ pub fn evaluate_obj(
                 runtime
                     .parent_checked_beta_body(
                         obj,
-                        &application_well_defined,
+                        application_well_defined.as_view(),
                         active_calls.function_proof_state,
                     )?
                     .map(|(function_body, expanded_body)| {

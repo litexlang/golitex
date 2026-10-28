@@ -269,9 +269,8 @@ impl Runtime {
             }
         };
         Ok(VerifyObjWellDefinedResult::Success(
-            ObjWellDefinedProof::ByDef {
-                obj,
-                proof: ObjWellDefinedProofByDef::DerivativeOperator(
+            ObjWellDefinedProof::by_def(self.result_detail(), &(obj), None, || {
+                ObjWellDefinedProofByDef::DerivativeOperator(
                     DerivativeOperatorWellDefinedProof::AtPoint(DerivativeAtWellDefinedProof {
                         function_wd: Box::new(function_wd),
                         point_wd: Box::new(point_wd),
@@ -279,8 +278,8 @@ impl Runtime {
                         point_in_domain: Box::new(point_in_domain),
                         convergence,
                     }),
-                ),
-            },
+                )
+            }),
         ))
     }
 }

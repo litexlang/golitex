@@ -151,10 +151,12 @@ fn integer_range_constructor_requires_ordered_endpoint_wd_and_integer_evidence()
         else {
             panic!()
         };
-        let VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByDef {
+        let Some(DetailedObjWellDefinedProof::ByDef {
             proof: ObjWellDefinedProofByDef::SetFormer(SetFormerObjWellDefinedProofByDef::Range(p)),
             ..
-        }) = &mut p.value_well_defined
+        }) = (&mut p.value_well_defined)
+            .as_detailed_success_mut()
+            .unwrap()
         else {
             panic!()
         };
@@ -185,7 +187,8 @@ fn integer_range_rejects_excluded_endpoints_empty_expansion_and_excessive_expans
     ] {
         let command =
             parse_launch_command(&["-strict".into(), "-e".into(), source.into()]).unwrap();
-        let mut runtime = Runtime::new(command);
+        let mut runtime =
+            Runtime::new_with_result_detail(command, crate::result_detail::OutputDetail::Detailed);
         let run = runtime.run_litex_code(source).unwrap();
         assert!(!run.success, "{source}");
         let compiler = crate::compile_to_lean::LitexToLeanCompiler::new(runtime);

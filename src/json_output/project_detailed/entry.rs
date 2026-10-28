@@ -30,6 +30,9 @@ pub fn project_run_detailed(
     target: &str,
     path: Option<&Path>,
 ) -> JsonValue {
+    OutputDetail::Detailed
+        .require(runtime.result_detail(), "Detailed output")
+        .unwrap_or_else(|error| panic!("{error}"));
     let mut statement_results: Vec<JsonValue> = run
         .statement_results
         .iter()

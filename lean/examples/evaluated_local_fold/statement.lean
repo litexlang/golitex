@@ -66,7 +66,7 @@ private theorem _sketch_1 : True := by
           let h_475 : Litex.In _wd_1_1 (Litex.Z (M := M)) := (Litex.NativeBridge.numberInZOfEq (M := M) (3 : ℂ) (3 : ℤ) (by norm_num));
           let h_476 : Litex.In _wd_1_4 (Litex.Z (M := M)) := (Litex.NativeBridge.numberInZOfEq (M := M) (10 : ℂ) (10 : ℤ) (by norm_num));
           Litex.rangeFold _wd_1_0 _wd_1_1 _wd_1_2 _wd_1_3 _wd_1_4 (Litex.FunctionSignature.one (M := M) Litex.StandardSetValue.integer Litex.StandardSetValue.integer (fun (_raw_i1 : M.Value) => True)) h_474 h_475 (Litex.formulaFnInFnSet _wd_1_2) (Litex.formulaFnInFnSet _wd_1_3) h_476 (fun k hlow hhigh => (Litex.FunctionSignature.withGuard_domain (M.standard Litex.StandardSetValue.integer) (Litex.denote (Litex.Z (M := M))) (M.standard_isSet Litex.StandardSetValue.integer) (Litex.isSet (Litex.Z (M := M))) (fun (_raw_i1 : M.Value) => True) (M.number (k : ℂ))).mpr ⟨Litex.integerInUnboundedCarrier .integer (by decide) k, True.intro⟩)));
-          (show Litex.Same _equal_wd_1_0 (Litex.number (M := M) (5 : ℂ)) from (show Litex.Same _equal_wd_1_0 (Litex.number (M := M) (5 : ℂ)) from (((Eq.refl (Litex.denote (let _wd_1_0 := (Litex.number (M := M) (2 : ℂ));
+          (show Litex.Same _equal_wd_1_0 (Litex.number (M := M) (5 : ℂ)) from (show Litex.Same _equal_wd_1_0 (Litex.number (M := M) (5 : ℂ)) from ((Eq.trans (show Litex.denote _equal_wd_1_0 = (Litex.denote _equal_wd_1_0) from rfl) (((Eq.refl (Litex.denote (let _wd_1_0 := (Litex.number (M := M) (2 : ℂ));
           let _wd_1_1 := (Litex.number (M := M) (3 : ℂ));
           let _wd_1_2 := (Litex.formulaFn (M := M) Litex.StandardSetValue.integer Litex.StandardSetValue.integer (fun (_raw_i1 : M.Value) => True) (fun (_raw_i1 : M.Value) => _raw_i1) (by
             intro _raw_i1 h_15 _
@@ -259,7 +259,7 @@ private theorem _sketch_1 : True := by
               exact (congrArg (fun x => Litex.FunctionSemantics.callValue (Litex.denote _call.val.function) x) (congrArg₂ (Litex.FiniteFunction.pack2 (M := M)) _argument_0 _argument_1)).symm.trans (_head_call.trans (_beta.trans (_body.trans _calculated))))
             apply Litex.rangeFoldDenote _fold (2 : ℤ) (3 : ℤ) ((Litex.NativeBridge.denoteNumber (M := M) (2 : ℂ)).trans (congrArg M.number (by norm_num))) ((Litex.NativeBridge.denoteNumber (M := M) (3 : ℂ)).trans (congrArg M.number (by norm_num))) (M.number (5 : ℂ))
             have _indices : Litex.integerFoldIndices (2 : ℤ) (3 : ℤ) = [(2 : ℤ), (3 : ℤ)] := by decide
-            norm_num [Litex.foldValue, Litex.foldApply2, _indices, _seed, _term_0, _step_0, _term_1, _step_1]))).trans (((Litex.NativeBridge.denoteNumber (M := M) (5 : ℂ))).trans (congrArg M.number (by norm_num : (5 : ℂ) = (5 : ℂ)))).symm)))
+            norm_num [Litex.foldValue, Litex.foldApply2, _indices, _seed, _term_0, _step_0, _term_1, _step_1]))))).trans (((Litex.NativeBridge.denoteNumber (M := M) (5 : ℂ))).trans (congrArg M.number (by norm_num : (5 : ℂ) = (5 : ℂ)))).symm)))
         )
     )
   let _object_w17 := (let _wd_1_0 := (Litex.number (M := M) (2 : ℂ));
@@ -295,7 +295,7 @@ private theorem _sketch_1 : True := by
       litex_checked_step =>
         exact (
           (let _equal_wd_1_0 := _object_w17;
-          (show Litex.Same _equal_wd_1_0 (Litex.number (M := M) (5 : ℂ)) from (show Litex.Same _equal_wd_1_0 (Litex.number (M := M) (5 : ℂ)) from ((show (Litex.denote _equal_wd_1_0) = M.number (5 : ℂ) from (by
+          (show Litex.Same _equal_wd_1_0 (Litex.number (M := M) (5 : ℂ)) from (show Litex.Same _equal_wd_1_0 (Litex.number (M := M) (5 : ℂ)) from ((Eq.trans (show Litex.denote _equal_wd_1_0 = (Litex.denote _equal_wd_1_0) from rfl) ((show (Litex.denote _equal_wd_1_0) = M.number (5 : ℂ) from (by
             let _fold := _equal_wd_1_0
             have _seed : Litex.denote _fold.val.seed = M.number (10 : ℂ) := ((Litex.NativeBridge.denoteNumber (M := M) (10 : ℂ))).trans (congrArg M.number (by norm_num : (10 : ℂ) = (10 : ℂ)))
             have _term_0 : Litex.FunctionSemantics.callValue (Litex.denote _fold.val.function) (M.number (2 : ℂ)) = M.number (2 : ℂ) := (by
@@ -384,7 +384,7 @@ private theorem _sketch_1 : True := by
               exact (congrArg (fun x => Litex.FunctionSemantics.callValue (Litex.denote _call.val.function) x) (congrArg₂ (Litex.FiniteFunction.pack2 (M := M)) _argument_0 _argument_1)).symm.trans (_head_call.trans (_beta.trans (_body.trans _calculated))))
             apply Litex.rangeFoldDenote _fold (2 : ℤ) (3 : ℤ) ((Litex.NativeBridge.denoteNumber (M := M) (2 : ℂ)).trans (congrArg M.number (by norm_num))) ((Litex.NativeBridge.denoteNumber (M := M) (3 : ℂ)).trans (congrArg M.number (by norm_num))) (M.number (5 : ℂ))
             have _indices : Litex.integerFoldIndices (2 : ℤ) (3 : ℤ) = [(2 : ℤ), (3 : ℤ)] := by decide
-            norm_num [Litex.foldValue, Litex.foldApply2, _indices, _seed, _term_0, _step_0, _term_1, _step_1]))).trans (((Litex.NativeBridge.denoteNumber (M := M) (5 : ℂ))).trans (congrArg M.number (by norm_num : (5 : ℂ) = (5 : ℂ)))).symm)))
+            norm_num [Litex.foldValue, Litex.foldApply2, _indices, _seed, _term_0, _step_0, _term_1, _step_1]))))).trans (((Litex.NativeBridge.denoteNumber (M := M) (5 : ℂ))).trans (congrArg M.number (by norm_num : (5 : ℂ) = (5 : ℂ)))).symm)))
         )
     )
   exact True.intro

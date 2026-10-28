@@ -50,11 +50,17 @@ fn set_difference_rejects_missing_reordered_or_extra_wd() {
         let (mut run, compiler) = super::execute(MEMBER);
         let p = super::forall_proof_mut(&mut run.statement_results[0]);
         let p = super::atomic_proof_mut(&mut p.proved_then_facts[0].verify_result);
-        let ObjWellDefinedProof::ByDef {
+        let DetailedObjWellDefinedProof::ByDef {
             proof:
                 ObjWellDefinedProofByDef::SetOperator(SetOperatorObjWellDefinedProofByDef::SetMinus(p)),
             ..
-        } = &mut p.well_defined_proof.well_defined_of_each_parameter[1]
+        } = (&mut p
+            .well_defined_proof
+            .as_detailed_mut()
+            .unwrap()
+            .well_defined_of_each_parameter[1])
+            .as_detailed_mut()
+            .unwrap()
         else {
             panic!()
         };
@@ -349,7 +355,8 @@ fn union_distribution_rejects_missing_factor_even_when_verifier_accepts_it() {
         let source = format!("forall A, B set:\n    {left} = {right}\n");
         let command =
             super::parse_launch_command(&["-strict".into(), "-e".into(), source.clone()]).unwrap();
-        let mut runtime = Runtime::new(command);
+        let mut runtime =
+            Runtime::new_with_result_detail(command, crate::result_detail::OutputDetail::Detailed);
         let run = runtime.run_litex_code(&source).unwrap();
         let compiler = super::LitexToLeanCompiler::new(runtime);
         let err = compiler

@@ -68,7 +68,8 @@ fn complex_operators_reject_set_arguments() {
         let source = format!("{operation}({{1}}) $in C");
         let command =
             parse_launch_command(&["-strict".into(), "-e".into(), source.clone()]).unwrap();
-        let mut runtime = Runtime::new(command);
+        let mut runtime =
+            Runtime::new_with_result_detail(command, crate::result_detail::OutputDetail::Detailed);
         assert!(!runtime.run_litex_code(&source).unwrap().success);
     }
 }
@@ -85,10 +86,12 @@ fn wd_stages(
     else {
         panic!()
     };
-    let VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByDef {
+    let Some(DetailedObjWellDefinedProof::ByDef {
         proof: ObjWellDefinedProofByDef::ComplexOperator(p),
         ..
-    }) = &mut p.value_well_defined
+    }) = (&mut p.value_well_defined)
+        .as_detailed_success_mut()
+        .unwrap()
     else {
         panic!()
     };

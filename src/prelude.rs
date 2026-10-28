@@ -35,6 +35,7 @@ pub(crate) use crate::execute::execute_fact_stmt::verify_atomic_fact::structural
 pub(crate) use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::{
     LiteralObjWellDefinedProofByDef, ArithmeticOperatorObjWellDefinedProofByDef,
     FunctionSpaceObjWellDefinedProofByDef, AnonymousFnBodyInReturnSetProof,
+    DetailedObjWellDefinedProof,
 };
 pub(crate) use crate::launch_command::LaunchCommand;
 #[cfg(test)]

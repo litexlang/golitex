@@ -1,12 +1,15 @@
 use crate::prelude::*;
 
 fn runtime(source: CodeSource) -> Runtime {
-    let mut rt = Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: true,
-        strict: true,
-        language: OutputLanguage::English,
-    });
+    let mut rt = Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: true,
+            strict: true,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    );
     rt.abort_source();
     rt.begin_source(source);
     assert!(rt.run_litex_code("prop lies_in(X set, S power_set(X)):\n    S $subset X\ntemplate<X set>:\n    have Subsets set = {S power_set(X): $lies_in(X, S)}").unwrap().success);
