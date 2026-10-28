@@ -11,12 +11,15 @@ const VEC: &str = "have fn vec(A, B cart(R, R)) cart(R, R) = (B(1) - A(1), B(2) 
 const PROJECTION: &str = "have fn vec(A, B cart(R, R)) cart(R, R) = (B(1) - A(1), B(2) - A(2))\n\nthm first_coordinate:\n    ? forall a, b cart(R, R):\n        vec(a, b)(1) = b(1) - a(1)\n";
 
 fn checked(source: &str) -> (RunLitexCodeResult, LitexToLeanCompiler) {
-    let mut runtime = Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language: OutputLanguage::English,
-    });
+    let mut runtime = Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    );
     let result = runtime.run_litex_code(source).expect("source executes");
     assert!(result.success && result.session_error.is_none(), "{source}");
     (result, LitexToLeanCompiler::new(runtime))

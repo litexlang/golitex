@@ -23,28 +23,28 @@ impl Runtime {
         &mut self,
         _verify_state: VerifyState,
     ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
-        Ok(ObjWellDefinedByDefCommonStages::leaf())
+        Ok(ObjWellDefinedByDefCommonStages::leaf(self.result_detail()))
     }
 
     pub(super) fn verify_imaginary_unit_obj_well_definedness_by_def(
         &mut self,
         _verify_state: VerifyState,
     ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
-        Ok(ObjWellDefinedByDefCommonStages::leaf())
+        Ok(ObjWellDefinedByDefCommonStages::leaf(self.result_detail()))
     }
 
     pub(super) fn verify_euler_number_obj_well_definedness_by_def(
         &mut self,
         _verify_state: VerifyState,
     ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
-        Ok(ObjWellDefinedByDefCommonStages::leaf())
+        Ok(ObjWellDefinedByDefCommonStages::leaf(self.result_detail()))
     }
 
     pub(super) fn verify_pi_obj_well_definedness_by_def(
         &mut self,
         _verify_state: VerifyState,
     ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
-        Ok(ObjWellDefinedByDefCommonStages::leaf())
+        Ok(ObjWellDefinedByDefCommonStages::leaf(self.result_detail()))
     }
 
     pub(super) fn verify_add_obj_well_definedness_by_def(
@@ -756,7 +756,7 @@ impl Runtime {
             verify_state,
             "coth requires arg != 0".into(),
         )?;
-        proof.requirement_fact_verified.push(required);
+        proof.push_requirement(required);
         Ok(proof)
     }
 
@@ -795,7 +795,7 @@ impl Runtime {
             verify_state,
             "csch requires arg != 0".into(),
         )?;
-        proof.requirement_fact_verified.push(required);
+        proof.push_requirement(required);
         Ok(proof)
     }
 

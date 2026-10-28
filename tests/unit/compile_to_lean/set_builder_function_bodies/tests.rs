@@ -135,8 +135,11 @@ fn function(statement: &mut ExecStmtResult) -> &mut ExecHaveFnEqualStmtSuccessRe
 }
 
 fn anonymous(statement: &mut ExecStmtResult) -> &mut AnonymousFnObjWellDefinedProof {
-    match &mut function(statement).anonymous_fn_well_defined {
-        VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByDef {
+    match (&mut function(statement).anonymous_fn_well_defined)
+        .as_detailed_success_mut()
+        .unwrap()
+    {
+        Some(DetailedObjWellDefinedProof::ByDef {
             proof:
                 ObjWellDefinedProofByDef::FunctionSpace(
                     FunctionSpaceObjWellDefinedProofByDef::AnonymousFn(proof),
@@ -148,8 +151,11 @@ fn anonymous(statement: &mut ExecStmtResult) -> &mut AnonymousFnObjWellDefinedPr
 }
 
 fn builder(statement: &mut ExecStmtResult) -> (&SetBuilder, &mut SetBuilderObjWellDefinedProof) {
-    match anonymous(statement).body_well_defined.as_mut() {
-        ObjWellDefinedProof::ByDef {
+    match (anonymous(statement).body_well_defined.as_mut())
+        .as_detailed_mut()
+        .unwrap()
+    {
+        DetailedObjWellDefinedProof::ByDef {
             obj: Obj::SetFormer(SetFormer::SetBuilder(set)),
             proof:
                 ObjWellDefinedProofByDef::SetFormer(SetFormerObjWellDefinedProofByDef::SetBuilder(
@@ -225,8 +231,10 @@ fn shared_function_definition_rejects_another_original_anonymous_wd() {
             .equal_to_anonymous_fn
             .clone(),
     ));
-    let VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByDef { obj, .. }) =
-        &mut function(&mut result.statement_results[0]).anonymous_fn_well_defined
+    let Some(DetailedObjWellDefinedProof::ByDef { obj, .. }) =
+        (&mut function(&mut result.statement_results[0]).anonymous_fn_well_defined)
+            .as_detailed_success_mut()
+            .unwrap()
     else {
         panic!("actual original anonymous WD")
     };
@@ -290,11 +298,13 @@ fn projected_line_condition_rejects_missing_original_clause_formation() {
     let equality = super::equality_proof_mut(
         &mut super::fact_statement_mut(&mut body.proof_steps[0]).verify_result,
     );
-    let ObjWellDefinedProof::ByDef {
+    let DetailedObjWellDefinedProof::ByDef {
         proof:
             ObjWellDefinedProofByDef::SetFormer(SetFormerObjWellDefinedProofByDef::SetBuilder(builder)),
         ..
-    } = &mut equality.well_defined_proof.right
+    } = (&mut equality.well_defined_proof.as_detailed_mut().unwrap().right)
+        .as_detailed_mut()
+        .unwrap()
     else {
         panic!("original bounded builder")
     };

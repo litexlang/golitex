@@ -187,7 +187,10 @@ impl LitexToLeanCompiler {
         };
         let member = format!(
             "h_{}",
-            wd.introduced_params.defined_params.store_and_infer_results[depth]
+            wd.detailed_ref()
+                .introduced_params
+                .defined_params
+                .store_and_infer_results[depth]
                 .primary_fact_id()
                 .value()
         );

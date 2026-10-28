@@ -69,10 +69,16 @@ fn integer_division_wd_rejects_missing_reordered_and_wrong_domain_evidence() {
             let p = super::atomic_proof_mut(
                 &mut super::fact_statement_mut(&mut run.statement_results[2]).verify_result,
             );
-            let ObjWellDefinedProof::ByDef {
+            let DetailedObjWellDefinedProof::ByDef {
                 proof: ObjWellDefinedProofByDef::IntegerOperator(p),
                 ..
-            } = &mut p.well_defined_proof.well_defined_of_each_parameter[0]
+            } = (&mut p
+                .well_defined_proof
+                .as_detailed_mut()
+                .unwrap()
+                .well_defined_of_each_parameter[0])
+                .as_detailed_mut()
+                .unwrap()
             else {
                 panic!("integer WD");
             };
@@ -218,7 +224,8 @@ fn integer_division_rejects_zero_noninteger_and_wrong_sign_domains() {
     ] {
         let command =
             parse_launch_command(&["-strict".into(), "-e".into(), source.into()]).unwrap();
-        let mut runtime = Runtime::new(command);
+        let mut runtime =
+            Runtime::new_with_result_detail(command, crate::result_detail::OutputDetail::Detailed);
         let run = runtime.run_litex_code(source).unwrap();
         assert!(!run.success, "{source}");
         assert!(super::LitexToLeanCompiler::new(runtime)

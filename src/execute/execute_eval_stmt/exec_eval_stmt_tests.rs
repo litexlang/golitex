@@ -9,12 +9,15 @@ use crate::runtime::Runtime;
 use crate::tokenize::Tokenizer;
 
 fn runtime_with_file_env() -> Runtime {
-    Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: false,
-        language: OutputLanguage::English,
-    })
+    Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: false,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    )
 }
 
 fn exec_one(runtime: &mut Runtime, code: &str) -> ExecStmtResult {
@@ -340,12 +343,15 @@ fn eval_algorithm_trace_checks_nested_arguments_and_recursive_equations() {
 fn eval_publication_and_failure_are_visible_in_every_output_language() {
     use crate::json_output::json_keys::localize_key;
     for language in OutputLanguage::ALL {
-        let mut rt = Runtime::new(LaunchCommand::Eval {
-            code: String::new(),
-            session: false,
-            strict: false,
-            language,
-        });
+        let mut rt = Runtime::new_with_result_detail(
+            LaunchCommand::Eval {
+                code: String::new(),
+                session: false,
+                strict: false,
+                language,
+            },
+            crate::result_detail::OutputDetail::Detailed,
+        );
         let result = exec_one(&mut rt, "eval 1+2");
         let normal = crate::json_output::project_stmt_normal(&result, &rt);
         let stores = normal
@@ -531,12 +537,15 @@ fn eval_closed_numeric_left_associated_mul_chain_stays_linear() {
 #[test]
 fn eval_tuple_coordinate_evidence_and_unknown_values_stay_checked() {
     for language in OutputLanguage::ALL {
-        let mut rt = Runtime::new(LaunchCommand::Eval {
-            code: String::new(),
-            session: false,
-            strict: true,
-            language,
-        });
+        let mut rt = Runtime::new_with_result_detail(
+            LaunchCommand::Eval {
+                code: String::new(),
+                session: false,
+                strict: true,
+                language,
+            },
+            crate::result_detail::OutputDetail::Detailed,
+        );
         assert!(!exec_one(&mut rt, "let p=(1,2,3)").is_failed());
         let result = exec_one(&mut rt, "eval p(2)");
         assert!(!result.is_failed());

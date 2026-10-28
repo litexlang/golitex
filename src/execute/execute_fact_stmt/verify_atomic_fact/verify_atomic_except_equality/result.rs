@@ -65,12 +65,74 @@ pub enum AtomicExceptEqualityFactSearchedProof {
 
 // Apply one user-defined strategy forall to a non-equality atomic goal.
 // Field order = apply stages: cite → match args → prove instantiation requirements.
-pub struct SearchProofByKnownStrategy {
+pub enum SearchProofByKnownStrategy {
+    Compact(CompactSearchProofByKnownStrategy),
+    Normal(NormalSearchProofByKnownStrategy),
+    Detailed(Box<DetailedSearchProofByKnownStrategy>),
+}
+pub struct CompactSearchProofByKnownStrategy {}
+pub struct NormalSearchProofByKnownStrategy {
+    pub strategy_name: PlainName,
+    pub then_index: usize,
+    pub cited_fact: Box<crate::ast::fact::ForallFact>,
+}
+pub struct DetailedSearchProofByKnownStrategy {
     pub strategy_name: PlainName,
     pub then_index: usize,
     pub forall_parameters_match_what_args: Vec<Obj>,
     pub arg_match_proofs: Vec<ForallConclusionArgMatchProof>,
     pub instantiation_requirements: ProveForallInstantiationRequirementsProof,
+}
+impl SearchProofByKnownStrategy {
+    pub fn detail(&self) -> crate::result_detail::OutputDetail {
+        use crate::result_detail::OutputDetail;
+        match self {
+            Self::Compact(_) => OutputDetail::Compact,
+            Self::Normal(_) => OutputDetail::Normal,
+            Self::Detailed(_) => OutputDetail::Detailed,
+        }
+    }
+    pub fn as_detailed(
+        &self,
+    ) -> crate::runtime::RuntimeResult<&DetailedSearchProofByKnownStrategy> {
+        crate::result_detail::OutputDetail::Detailed.require(self.detail(), "known strategy")?;
+        match self {
+            Self::Detailed(proof) => Ok(proof),
+            _ => unreachable!(),
+        }
+    }
+    pub(crate) fn from_children(
+        detail: crate::result_detail::OutputDetail,
+        strategy_name: &PlainName,
+        then_index: usize,
+        source: &crate::ast::fact::ForallFact,
+        forall_parameters_match_what_args: Vec<Obj>,
+        arg_match_proofs: Vec<ForallConclusionArgMatchProof>,
+        instantiation_requirements: ProveForallInstantiationRequirementsProof,
+    ) -> crate::runtime::RuntimeResult<Self> {
+        use crate::result_detail::OutputDetail;
+        detail.require(instantiation_requirements.detail(), "strategy requirements")?;
+        for child in &arg_match_proofs {
+            detail.require(child.detail(), "strategy matched argument")?;
+        }
+        Ok(match detail {
+            OutputDetail::Compact => Self::Compact(CompactSearchProofByKnownStrategy {}),
+            OutputDetail::Normal => Self::Normal(NormalSearchProofByKnownStrategy {
+                strategy_name: strategy_name.clone(),
+                then_index,
+                cited_fact: Box::new(source.clone()),
+            }),
+            OutputDetail::Detailed => {
+                Self::Detailed(Box::new(DetailedSearchProofByKnownStrategy {
+                    strategy_name: strategy_name.clone(),
+                    then_index,
+                    forall_parameters_match_what_args,
+                    arg_match_proofs,
+                    instantiation_requirements,
+                }))
+            }
+        })
+    }
 }
 
 pub struct AtomicExceptEqualityFactSearchProofByKnownAtomicFact {

@@ -163,13 +163,13 @@ impl LitexToLeanCompiler {
             ),
             CompositionSignatureProof::Construction => position
                 .with_visible_wd(root, &mut |wd, producer| {
-                    let ObjWellDefinedProof::ByDef {
+                    let DetailedObjWellDefinedProof::ByDef {
                         proof:
                             ObjWellDefinedProofByDef::FunctionSpace(
                                 FunctionSpaceObjWellDefinedProofByDef::Composition(c),
                             ),
                         ..
-                    } = wd
+                    } = (wd).detailed_ref()
                     else {
                         return Err(LeanCompileError::unsupported(
                             "CompositionDefinition/Constructor",

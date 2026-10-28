@@ -5,12 +5,15 @@ use crate::launch_command::{LaunchCommand, OutputLanguage};
 use crate::runtime::Runtime;
 
 fn runtime() -> Runtime {
-    Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language: OutputLanguage::English,
-    })
+    Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    )
 }
 
 fn check(rt: &mut Runtime, code: &str, expected: &[bool]) -> Vec<ExecStmtResult> {
@@ -61,33 +64,33 @@ fn guarded_quantifier_wd_retains_stages_and_local_guard_evidence() {
             (FactWellDefinedProof::NotForall(p), false) => {
                 assert_eq!(
                     (
-                        p.introduced_params.param_type_well_defined.len(),
-                        p.assumed_dom_facts.len(),
-                        p.then.len()
+                        p.detailed_ref().introduced_params.param_type_well_defined.len(),
+                        p.detailed_ref().assumed_dom_facts.len(),
+                        p.detailed_ref().then.len()
                     ),
                     (1, 1, 1)
                 );
-                assert!(!p.assumed_dom_facts[0]
+                assert!(!p.detailed_ref().assumed_dom_facts[0]
                     .store_and_infer
                     .stored_fact_ids()
                     .is_empty());
-                assert!(!p.local_env.well_defined_objects.object_to_wd_id.is_empty());
+                assert!(!p.detailed_ref().local_env.well_defined_objects.object_to_wd_id.is_empty());
             }
             (FactWellDefinedProof::ForallFactWithIff(p), true) => {
                 assert_eq!(
                     (
-                        p.introduced_params.param_type_well_defined.len(),
-                        p.assumed_dom_facts.len(),
-                        p.then.len(),
-                        p.iff.len()
+                        p.detailed_ref().introduced_params.param_type_well_defined.len(),
+                        p.detailed_ref().assumed_dom_facts.len(),
+                        p.detailed_ref().then.len(),
+                        p.detailed_ref().iff.len()
                     ),
                     (1, 1, 1, 1)
                 );
-                assert!(!p.assumed_dom_facts[0]
+                assert!(!p.detailed_ref().assumed_dom_facts[0]
                     .store_and_infer
                     .stored_fact_ids()
                     .is_empty());
-                assert!(!p.local_env.well_defined_objects.object_to_wd_id.is_empty());
+                assert!(!p.detailed_ref().local_env.well_defined_objects.object_to_wd_id.is_empty());
             }
             _ => panic!("independent quantified WD evidence must be retained"),
         }

@@ -177,13 +177,13 @@ impl LitexToLeanCompiler {
             Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(object.clone()));
         let arguments = position
             .with_visible_wd(&source, &mut |wd, producer| {
-                let ObjWellDefinedProof::ByDef {
+                let DetailedObjWellDefinedProof::ByDef {
                     proof:
                         ObjWellDefinedProofByDef::Structish(
                             StructishObjWellDefinedProofByDef::StructObj(p),
                         ),
                     ..
-                } = wd
+                } = (wd).detailed_ref()
                 else {
                     return Err(LeanCompileError::unsupported("Struct/ArgumentConstructor"));
                 };

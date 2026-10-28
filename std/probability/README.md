@@ -1,9 +1,9 @@
 # Finite probability
 
-This strict source module contains FiniteProbabilitySpace, eight function
-families, uniform and Dirac bundled constructors, the independent_events
-predicate and 89 named theorems. There are
-two internal quantified closure facts. No trust, user axioms or abstract
+This strict source module contains FiniteProbabilitySpace, ten function
+families, uniform, Dirac and finite-pushforward bundled constructors, the
+independent_events predicate and 104 named theorems. There are
+three internal quantified closure facts. No trust, user axioms or abstract
 predicates are used. The source reuses bounded native power-set closure; no
 reserved theorem names are added.
 
@@ -81,6 +81,7 @@ Cov(X,X)=Var(X). It has no complex or measure-space overload.
 | Dirac model | dirac_event_contains, dirac_event_excludes, dirac_probability_laws |
 | Further event bounds | event_frechet_bounds, whole_event_independent, conditional_disjoint_events |
 | Singleton weights | event_probability_from_singletons |
+| Finite pushforward | finite_pushforward_empty, finite_pushforward_whole, finite_pushforward_nonnegative, finite_pushforward_disjoint_additivity, finite_pushforward_probability_laws, finite_pushforward_event_formula, finite_pushforward_singleton_probability |
 | Expectation | finite_expectation_formula, finite_expectation_extensional, finite_expectation_nonnegative, finite_expectation_monotone, finite_expectation_vanishes, finite_expectation_zero, finite_expectation_of_constant, finite_expectation_constant, finite_expectation_bounds, finite_expectation_of_linear_combination, finite_expectation_linear, finite_expectation_add, finite_expectation_scale, finite_expectation_subtract, finite_expectation_affine, finite_expectation_square_bound |
 | Variance | finite_variance_formula, finite_variance_nonnegative, finite_variance_of_constant, finite_variance_constant, finite_variance_second_moment, finite_variance_of_affine, finite_variance_affine, finite_variance_scale, finite_variance_translate |
 | Covariance | finite_covariance_formula, finite_covariance_symmetric, finite_covariance_self, finite_covariance_of_constant_left, finite_covariance_constant_left, finite_covariance_constant_right |
@@ -128,8 +129,9 @@ mass observable k has expectation1. Replacing its value at the null outcome0
 by100 keeps expectation1. Both models also check the constant5 and zero laws.
 The singleton-weight formula is proved by induction on finite event cardinality;
 constant expectation uses its normalization, not a new assumption.
-Measure/countable probability, correlation, distributions, statistics and
-full probability Lean compilation remain outside this delivered slice.
+Measure/countable probability, statistical inference and full probability Lean
+compilation remain outside this delivered slice. Finite correlation and image
+distributions are described below.
 
 ## Checks
 
@@ -137,6 +139,7 @@ full probability Lean compilation remain outside this delivered slice.
 target/release/litex -lang en -strict -f std/probability/main.lit
 python3 examples/probability/finite_events/check.py
 python3 examples/probability/tail_bounds/check.py --output-dir tmp/2026-10-27/tail-bounds-check
+python3 examples/probability/pushforward/check.py --output-dir tmp/2026-10-28/pushforward-check
 ```
 
 The finite_events checker retains the event/moment contracts and controls
@@ -289,7 +292,7 @@ upper tail with probability1/2 and centered tail with probability1, both at
 attained bounds; a signed sampler; a nonempty Dirac null tail with probability0
 and variance0; empty supplied events and an empty native tail. Independent
 contracts and threshold/domain/pointwise/strictness refusals accompany it.
-Current source:103 statements,89 top-level thms,10 templates (eight function
+At the tail-bound checkpoint, source had103 statements,89 top-level thms,10 templates (eight function
 families and two bundled values), one structure, one predicate and two internal
 quantified closure facts. Earlier verification counts above remain records of
 their exact historical snapshots, not fresh claims about this increment.
@@ -301,3 +304,76 @@ six generic contracts,117 actual statements, one isolated README statement,
 and WiX have80 matching files and unique component references. The same ongoing
 task's pinned1.1.6-beta binary was used; this is not a test claim for concurrent
 compiler changes, the whole undergraduate library or a release.
+
+
+## Finite real correlation
+
+finite_correlation<Omega,space>(X,Y) is an ordinary source function with two
+template parameters and two complete real sampler arguments on the actual
+carrier. Its definition is Cov(X,Y)/sqrt(Var(X)*Var(Y)). Both variances must
+be strictly positive in the function domain. Zero-variance inputs have no
+correlation value; this includes nonconstant observables on Dirac spaces.
+There is no complex or statistical-estimator overload.
+
+Eight source thms retain those guards: finite_correlation_formula/4,
+finite_correlation_symmetric/4, finite_correlation_self/3,
+finite_correlation_square_bound/4, finite_correlation_abs_bound/4,
+finite_correlation_bounds/4, finite_correlation_zero_from_covariance/4 and
+finite_covariance_zero_from_correlation/4. All arity4 calls take
+Omega,space,X,Y; self takes Omega,space,X and requires its variance positive.
+The two zero directions consume the corresponding covariance0/correlation0
+premise. No independence implication is asserted.
+
+The source reuses the covariance square bound and positive real-root arithmetic.
+One internal checked scalar root-domain fact supports declaration WD; private
+scalar lemmas normalize its square and transport the absolute bound to both
+interval bounds. A generic caller that expands the quotient publishes the same
+proved scalar root-domain fact, since anonymous module facts are not imported.
+Function-valued calls and the other laws retain their declared guard interfaces.
+There is no trust, native rule/search/WD, protected AST/state or compiler delta.
+
+At the correlation checkpoint, source had113 top-level statements:97 named thms,11 templates (nine
+function families and two bundled values), one structure, one predicate and
+three internal closure facts. Dedicated positive/negative/zero correlation
+callers and guard controls are in examples/probability/correlation. All20 focused checks pass: source113/97thms, ten generic statements,177 actual
+statements, one isolated README,14 final-only refusal controls and both installed
+layouts. Four unchanged cold positive outputs were hash-checked and reused after
+correcting only three fixture phase labels; all14 controls and two installed
+layouts reran. std/WiX80 files/references agree. Earlier receipt counts above
+retain their exact snapshots.
+
+
+## Finite image distributions
+
+finite_pushforward_event_probability<Omega,space,Target,F>(A) has four template
+parameters and one event argument. The supplied source is a finite probability
+space, F is a complete unary map on its actual carrier into Target, and
+A belongs to power_set(fn_range(F)). The real value is
+space.prob(preimage_set(F,A)). Target need not be finite and F need not be
+injective or onto Target.
+
+finite_pushforward_probability_space<Omega,space,Target,F> is the actual
+bundled value (fn_range(F),the event-probability function), of type
+&FiniteProbabilitySpace<Target>. Its carrier contains all image points,
+including images of zero-mass outcomes. Imported callers release
+finite_pushforward_probability_laws and expose its defining tuple before
+binding and opening a space alias, as in the other bundled constructors.
+
+Seven source laws prove empty/whole/nonnegative/disjoint-additive probability,
+full bundled membership, the inverse-image formula and the singleton-fiber
+formula Ppush({y})=P(preimage(F,y)) for y in fn_range(F). The first, second and
+bundling laws have ordinary arity4; nonnegative, event formula and singleton
+formula have arity5; additivity has arity6. No source law or positive-atom
+premise is omitted.
+
+Current source has122 top-level statements:104 named theorems,13 templates
+(ten function families and three bundled values), one structure, one predicate
+and three internal closure facts. Independent strict source replay and the
+100-statement actual caller pass. The dedicated
+[pushforward example](../../examples/probability/pushforward/README.md) checks
+dice parity masses1/2, a constant map with mass1, and a retained Dirac image
+point with mass0. All20 focused checks pass: source122, generic10, actual100, README1,14
+final-only refusals and both installed layouts. std/WiX has80 matching payload
+files and unique component references. These checks use the ongoing task's
+pinned1.1.6-beta executable; earlier receipts retain their historical scopes. Expectation transport,
+random-variable independence and countable/measure probability remain open.

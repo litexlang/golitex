@@ -94,9 +94,16 @@ fn negated_universal_rejects_changed_binders_domains_body_and_child_subject() {
             3 => plain(&mut proof.derived_exist).facts[1] = proof.fact.then_facts[0].clone(),
             4 => proof.fact.then_facts.clear(),
             5 => plain(&mut child(proof).fact).facts.clear(),
-            6 => child(proof).well_defined_proof.assumed_body_facts.clear(),
+            6 => child(proof)
+                .well_defined_proof
+                .as_detailed_mut()
+                .unwrap()
+                .assumed_body_facts
+                .clear(),
             7 => child(proof)
                 .well_defined_proof
+                .as_detailed_mut()
+                .unwrap()
                 .introduced_params
                 .defined_params
                 .stored_fact_ids
@@ -156,12 +163,15 @@ fn true_universal_and_missing_reciprocal_guard_are_not_counterexamples() {
         "not forall x R:\n    x = x\n",
         "not forall x R:\n    1 / x = 2\n",
     ] {
-        let mut runtime = Runtime::new(LaunchCommand::Eval {
-            code: String::new(),
-            session: false,
-            strict: true,
-            language: OutputLanguage::English,
-        });
+        let mut runtime = Runtime::new_with_result_detail(
+            LaunchCommand::Eval {
+                code: String::new(),
+                session: false,
+                strict: true,
+                language: OutputLanguage::English,
+            },
+            crate::result_detail::OutputDetail::Detailed,
+        );
         let run = runtime.run_litex_code(source).unwrap();
         assert!(!run.success);
     }
@@ -208,10 +218,21 @@ fn quantified_contra_rejects_changed_subject_formation_and_inference() {
                     panic!()
                 };
                 match mutation {
-                    3 => wd.then.clear(),
-                    4 => wd.assumed_dom_facts.clear(),
-                    5 => wd.introduced_params.defined_params.stored_fact_ids.clear(),
-                    6 => wd.introduced_params.param_type_well_defined.clear(),
+                    3 => wd.as_detailed_mut().unwrap().then.clear(),
+                    4 => wd.as_detailed_mut().unwrap().assumed_dom_facts.clear(),
+                    5 => wd
+                        .as_detailed_mut()
+                        .unwrap()
+                        .introduced_params
+                        .defined_params
+                        .stored_fact_ids
+                        .clear(),
+                    6 => wd
+                        .as_detailed_mut()
+                        .unwrap()
+                        .introduced_params
+                        .param_type_well_defined
+                        .clear(),
                     _ => unreachable!(),
                 }
             }
@@ -258,8 +279,15 @@ fn quantified_contra_publishes_goal_but_not_hypothetical_parameters_or_counterex
     let FactWellDefinedProof::NotForall(wd) = &p.reverse_assumption_wd else {
         panic!()
     };
-    let member = wd.introduced_params.defined_params.store_and_infer_results[0].primary_fact_id();
-    let guard = wd.assumed_dom_facts[0].store_and_infer.primary_fact_id();
+    let member = wd
+        .detailed_ref()
+        .introduced_params
+        .defined_params
+        .store_and_infer_results[0]
+        .primary_fact_id();
+    let guard = wd.detailed_ref().assumed_dom_facts[0]
+        .store_and_infer
+        .primary_fact_id();
     let scope = SourcePosition::new(None, SourceOwner::Contra(p), 1);
     for id in [assumption, counterexample] {
         assert!(compiler.cited_fact_reference(id, &scope).is_err());
@@ -369,12 +397,15 @@ fn quantified_contra_does_not_admit_false_goals_or_missing_guards() {
         "by contra:\n    ? not forall x R:\n        x = x\n    impossible 0 = 1\n",
         "by contra:\n    ? forall x R:\n        1 / x = 1 / x\n    impossible 0 = 1\n",
     ] {
-        let mut runtime = Runtime::new(LaunchCommand::Eval {
-            code: String::new(),
-            session: false,
-            strict: true,
-            language: OutputLanguage::English,
-        });
+        let mut runtime = Runtime::new_with_result_detail(
+            LaunchCommand::Eval {
+                code: String::new(),
+                session: false,
+                strict: true,
+                language: OutputLanguage::English,
+            },
+            crate::result_detail::OutputDetail::Detailed,
+        );
         assert!(!runtime.run_litex_code(source).unwrap().success);
     }
 }

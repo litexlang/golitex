@@ -65,10 +65,16 @@ fn real_extrema_reject_swapped_wd_carrier_and_selection() {
         compiler.compile_run(&run, "valid_selector_wd").unwrap();
         let all = super::forall_proof_mut(&mut run.statement_results[0]);
         let proof = super::atomic_proof_mut(&mut all.proved_then_facts[0].verify_result);
-        let ObjWellDefinedProof::ByDef {
+        let DetailedObjWellDefinedProof::ByDef {
             proof: ObjWellDefinedProofByDef::BoundOperator(p),
             ..
-        } = &mut proof.well_defined_proof.well_defined_of_each_parameter[0]
+        } = (&mut proof
+            .well_defined_proof
+            .as_detailed_mut()
+            .unwrap()
+            .well_defined_of_each_parameter[0])
+            .as_detailed_mut()
+            .unwrap()
         else {
             panic!("selector WD")
         };
@@ -95,7 +101,8 @@ fn real_extrema_reject_empty_unbounded_and_nonreal_selection() {
     ] {
         let command =
             parse_launch_command(&["-strict".into(), "-e".into(), source.into()]).unwrap();
-        let mut runtime = Runtime::new(command);
+        let mut runtime =
+            Runtime::new_with_result_detail(command, crate::result_detail::OutputDetail::Detailed);
         let run = runtime.run_litex_code(source).unwrap();
         assert!(!run.success, "{source}");
         assert!(super::LitexToLeanCompiler::new(runtime)

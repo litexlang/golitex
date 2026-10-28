@@ -157,13 +157,15 @@ fn sign_identities_require_the_original_real_domain_wd() {
         let (mut run, compiler) = super::execute("forall x R:\n    sign(-x) = -sign(x)\n");
         let universal = super::forall_proof_mut(&mut run.statement_results[0]);
         let p = super::equality_proof_mut(&mut universal.proved_then_facts[0].verify_result);
-        let ObjWellDefinedProof::ByDef {
+        let DetailedObjWellDefinedProof::ByDef {
             proof:
                 ObjWellDefinedProofByDef::ArithmeticOperator(
                     ArithmeticOperatorObjWellDefinedProofByDef::Sign(wd),
                 ),
             ..
-        } = &mut p.well_defined_proof.left
+        } = (&mut p.well_defined_proof.as_detailed_mut().unwrap().left)
+            .as_detailed_mut()
+            .unwrap()
         else {
             panic!("original sign construction")
         };
@@ -189,7 +191,8 @@ fn sign_identity_false_sources_still_reject() {
     ] {
         let command =
             parse_launch_command(&["-strict".into(), "-e".into(), source.into()]).unwrap();
-        let mut runtime = Runtime::new(command);
+        let mut runtime =
+            Runtime::new_with_result_detail(command, crate::result_detail::OutputDetail::Detailed);
         let run = runtime.run_litex_code(source).unwrap();
         assert!(!run.success, "{source}");
         assert!(super::LitexToLeanCompiler::new(runtime)

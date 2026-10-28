@@ -37,7 +37,11 @@ fn abstract_predicate_examples_replay_deterministically() {
 fn abstract_predicate_signature_kind_name_and_arity_are_checked() {
     for change in 0..4 {
         let (mut run, compiler) = super::execute(TRANSPORT);
-        let signature = &mut conclusion(&mut run).well_defined_proof.predicate_signature;
+        let signature = &mut conclusion(&mut run)
+            .well_defined_proof
+            .as_detailed_mut()
+            .unwrap()
+            .predicate_signature;
         let PredicateSignatureWellDefinedProof::AbstractProp { predicate, arity } = signature
         else {
             panic!("actual abstract signature")
@@ -80,6 +84,8 @@ fn abstract_predicate_preserves_argument_wd() {
     let (mut run, compiler) = super::execute(TRANSPORT);
     conclusion(&mut run)
         .well_defined_proof
+        .as_detailed_mut()
+        .unwrap()
         .well_defined_of_each_parameter
         .clear();
     assert!(compiler.compile_run(&run, "missing_argument_wd").is_err());
@@ -119,12 +125,15 @@ fn an_abstract_header_proves_neither_truth_nor_negation() {
         "$marked(missing)",
     ] {
         let source = format!("abstract_prop marked(x)\n{tail}\n");
-        let mut runtime = Runtime::new(LaunchCommand::Eval {
-            code: String::new(),
-            session: false,
-            strict: true,
-            language: OutputLanguage::English,
-        });
+        let mut runtime = Runtime::new_with_result_detail(
+            LaunchCommand::Eval {
+                code: String::new(),
+                session: false,
+                strict: true,
+                language: OutputLanguage::English,
+            },
+            crate::result_detail::OutputDetail::Detailed,
+        );
         let run = runtime.run_litex_code(&source).unwrap();
         assert!(!run.success);
         assert!(crate::compile_to_lean::LitexToLeanCompiler::new(runtime)

@@ -48,10 +48,10 @@ impl LitexToLeanCompiler {
         let source_term = self.compile_object_reference(source, position)?;
         let standard_input = position
             .with_visible_wd(source, &mut |wd, _| {
-                let ObjWellDefinedProof::ByDef {
+                let DetailedObjWellDefinedProof::ByDef {
                     proof: ObjWellDefinedProofByDef::IteratedOperator(p),
                     ..
-                } = wd
+                } = (wd).detailed_ref()
                 else {
                     return Err(LeanCompileError::unsupported(
                         "FiniteAggregate/CalculationWD",

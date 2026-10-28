@@ -148,7 +148,7 @@ impl Runtime {
         let goal_args = atomic_fact_args_ref(goal);
 
         // Stage 3: match conclusion args (may leave dom-only params unbound).
-        let Some((mut subst, arg_match_proofs)) = self.match_forall_conclusion_args_with_equality(
+        let Some(matched) = self.match_forall_conclusion_args_with_equality(
             &conclusion_args,
             &goal_args,
             &param_ids,
@@ -158,15 +158,21 @@ impl Runtime {
             return Ok(None);
         };
 
+        let (mut subst, arg_match_proofs) = matched.into_parts(self.result_detail())?;
         // Stage 3b: bind params that appear only in dom facts.
         if !self.complete_forall_subst_with_equality(&forall, &mut subst, &param_ids, equality)? {
             return Ok(None);
         }
 
-        let forall_parameters_match_what_args: Vec<_> = param_ids
-            .iter()
-            .map(|id| subst.get(id).expect("dom completion").clone())
-            .collect();
+        let forall_parameters_match_what_args: Vec<_> =
+            if self.result_detail() == crate::result_detail::OutputDetail::Detailed {
+                param_ids
+                    .iter()
+                    .map(|id| subst.get(id).expect("dom completion").clone())
+                    .collect()
+            } else {
+                Vec::new()
+            };
 
         // Requirements can run broader verification. Do not reuse a stale
         // read-only matching snapshot if this candidate fails there.
@@ -178,12 +184,14 @@ impl Runtime {
             return Ok(None);
         };
 
-        Ok(Some(SearchProofByKnownForallFact {
-            cite: cite.clone(),
+        Ok(Some(SearchProofByKnownForallFact::from_children(
+            self.result_detail(),
+            cite.clone(),
+            &forall,
             forall_parameters_match_what_args,
             arg_match_proofs,
             instantiation_requirements,
-        }))
+        )?))
     }
 
     pub(crate) fn fact_by_id_in_stack(&self, fact_id: FactId) -> Option<&Fact> {

@@ -8,12 +8,15 @@ const NATURAL: &str = "thm release_nonnegative:\n    ? forall n N:\n        0 <=
 const EXISTENTIAL: &str = "thm copy_witness:\n    ? forall x R:\n        exist y R st {y=x}\n    witness exist y R st {y=x} from x\nrelease thm copy_witness(2)\nobtain copy from exist y R st {y=2}\ncopy=2\n";
 
 fn checked(source: &str) -> (RunLitexCodeResult, LitexToLeanCompiler) {
-    let mut runtime = Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language: OutputLanguage::English,
-    });
+    let mut runtime = Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    );
     let result = runtime.run_litex_code(source).expect("source run");
     assert!(result.success && result.session_error.is_none(), "{source}");
     (result, LitexToLeanCompiler::new(runtime))

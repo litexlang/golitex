@@ -27,8 +27,8 @@ pub(super) fn project_fact_wd_failure(
     rt: &Runtime,
 ) -> JsonValue {
     use FailToVerifyFactWellDefinedResult::*;
-    match f {
-        Equality(p) => project_obj_wd_failure(&p.reason, rt),
+    let projected = match f {
+        Equality(p) => project_equal_wd_failure(p, rt),
         AtomicExceptEquality(p) => project_atomic_wd_failure(p, rt),
         AndFact(p) => node(rt, "component", Some(p.failed_index), project_atomic_wd_failure(&p.failed_component, rt)),
         ChainFact(p) => node(rt, "adjacent", Some(p.failed_index), project_atomic_wd_failure(&p.failed_adjacent, rt)),
@@ -36,17 +36,18 @@ pub(super) fn project_fact_wd_failure(
         ExistFact(p) => project_exist_wd_failure(p, rt),
         ForallFact(p) => project_forall_wd_failure(p, rt),
         ForallFactWithIff(p) => match p {
-            crate::execute::execute_fact_stmt::verify_forall_fact_with_iff::FailToVerifyForallFactWithIffWellDefinedResult::ParamType(p) => node(rt, "parameter_type", None, project_obj_wd_failure(p, rt)),
+            crate::execute::execute_fact_stmt::verify_forall_fact_with_iff::FailToVerifyForallFactWithIffWellDefinedResult::ParamType { reason: p, .. } => node(rt, "parameter_type", None, project_obj_wd_failure(p, rt)),
             crate::execute::execute_fact_stmt::verify_forall_fact_with_iff::FailToVerifyForallFactWithIffWellDefinedResult::DomFact { failed_index, failed_dom, .. } => node(rt, "failed_dom", Some(*failed_index), project_fact_wd_failure(failed_dom, rt)),
             crate::execute::execute_fact_stmt::verify_forall_fact_with_iff::FailToVerifyForallFactWithIffWellDefinedResult::ThenFact { failed_index, failed_then, .. } => node(rt, "failed_then", Some(*failed_index), project_fact_wd_failure(failed_then, rt)),
             crate::execute::execute_fact_stmt::verify_forall_fact_with_iff::FailToVerifyForallFactWithIffWellDefinedResult::IffFact { failed_index, failed_iff, .. } => node(rt, "failed_iff", Some(*failed_index), project_fact_wd_failure(failed_iff, rt)),
         },
         NotForall(p) => match p {
-            crate::execute::execute_fact_stmt::verify_not_forall_fact::FailToVerifyNotForallFactWellDefinedResult::ParamType(p) => node(rt, "parameter_type", None, project_obj_wd_failure(p, rt)),
+            crate::execute::execute_fact_stmt::verify_not_forall_fact::FailToVerifyNotForallFactWellDefinedResult::ParamType { reason: p, .. } => node(rt, "parameter_type", None, project_obj_wd_failure(p, rt)),
             crate::execute::execute_fact_stmt::verify_not_forall_fact::FailToVerifyNotForallFactWellDefinedResult::DomFact { failed_index, failed_dom, .. } => node(rt, "failed_dom", Some(*failed_index), project_fact_wd_failure(failed_dom, rt)),
             crate::execute::execute_fact_stmt::verify_not_forall_fact::FailToVerifyNotForallFactWellDefinedResult::ThenFact { failed_index, failed_then, .. } => node(rt, "failed_then", Some(*failed_index), project_fact_wd_failure(failed_then, rt)),
         },
-    }
+    };
+    with_fact(rt, projected, f.fact())
 }
 
 pub(super) fn project_exist_wd_failure(
@@ -54,8 +55,8 @@ pub(super) fn project_exist_wd_failure(
     rt: &Runtime,
 ) -> JsonValue {
     use crate::execute::execute_fact_stmt::verify_exist_shaped_fact::FailToVerifyExistShapedFactWellDefinedResult;
-    match failure {
-        FailToVerifyExistShapedFactWellDefinedResult::ParamType(failed) => node(
+    let projected = match failure {
+        FailToVerifyExistShapedFactWellDefinedResult::ParamType { reason: failed, .. } => node(
             rt,
             "parameter_type",
             None,
@@ -71,7 +72,12 @@ pub(super) fn project_exist_wd_failure(
             Some(*failed_index),
             project_fact_wd_failure(failed_body, rt),
         ),
-    }
+    };
+    with_fact(
+        rt,
+        projected,
+        crate::ast::fact::exist_shaped_fact_to_fact(failure.fact()),
+    )
 }
 
 pub(super) fn project_forall_wd_failure(
@@ -79,14 +85,18 @@ pub(super) fn project_forall_wd_failure(
     rt: &Runtime,
 ) -> JsonValue {
     use crate::execute::execute_fact_stmt::verify_forall_fact::FailToVerifyForallFactWellDefinedResult::*;
-    match failure {
-        ParamType(p) => node(rt, "parameter_type", None, project_obj_wd_failure(p, rt)),
-        AutoOpenStructLayer(failed) => crate::json_output::helper::with_failure_diagnostic(
-            rt,
-            super::definition_failure::project_struct_layer_failure(failed, rt),
-            crate::json_output::failure_kind::FailureKind::WellDefined,
-            vec![],
-        ),
+    let projected = match failure {
+        ParamType { reason: p, .. } => {
+            node(rt, "parameter_type", None, project_obj_wd_failure(p, rt))
+        }
+        AutoOpenStructLayer { reason: failed, .. } => {
+            crate::json_output::helper::with_failure_diagnostic(
+                rt,
+                super::definition_failure::project_struct_layer_failure(failed, rt),
+                crate::json_output::failure_kind::FailureKind::WellDefined,
+                vec![],
+            )
+        }
         DomFact {
             failed_index,
             failed_dom,
@@ -107,7 +117,36 @@ pub(super) fn project_forall_wd_failure(
             Some(*failed_index),
             project_fact_wd_failure(failed_then, rt),
         ),
+    };
+    with_fact(
+        rt,
+        projected,
+        crate::ast::fact::Fact::ForallFact(failure.fact().clone()),
+    )
+}
+
+pub(super) fn project_equal_wd_failure(
+    failure: &crate::execute::execute_fact_stmt::FailToVerifyEqualFactWellDefinedResult,
+    rt: &Runtime,
+) -> JsonValue {
+    let mut output = project_obj_wd_failure(&failure.reason, rt);
+    if let JsonValue::Object(fields) = &mut output {
+        fields.insert(
+            crate::json_output::json_keys::localize_key(
+                "fact",
+                rt.launch_command.output_language(),
+            ),
+            string(crate::ast::fact::AtomicFact::EqualFact(failure.fact.clone()).readable_string()),
+        );
+        fields.insert(
+            crate::json_output::json_keys::localize_key(
+                "failed_obj",
+                rt.launch_command.output_language(),
+            ),
+            string(failure.failed_obj.readable_string()),
+        );
     }
+    output
 }
 
 pub(super) fn project_atomic_wd_failure(
@@ -117,7 +156,7 @@ pub(super) fn project_atomic_wd_failure(
     use crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::{
         FailToVerifyAtomicFactWellDefinedResult, PredicateSignatureWellDefinedFailure,
     };
-    let projected = match failure {
+    let mut projected = match failure {
         FailToVerifyAtomicFactWellDefinedResult::RealAnalysisDomain { fact, well_defined_of_each_parameter } => object_for(rt, vec![
             ("phase", string("real_analysis_domain")),
             ("fact", string(fact.readable_string())),
@@ -139,7 +178,7 @@ pub(super) fn project_atomic_wd_failure(
                 ],
             )
         }
-        FailToVerifyAtomicFactWellDefinedResult::Argument(reason) => {
+        FailToVerifyAtomicFactWellDefinedResult::Argument { reason, .. } => {
             project_obj_wd_failure(reason, rt)
         }
         FailToVerifyAtomicFactWellDefinedResult::Domain {
@@ -175,6 +214,7 @@ pub(super) fn project_atomic_wd_failure(
         FailToVerifyAtomicFactWellDefinedResult::Predicate {
             well_defined_of_each_parameter,
             reason,
+            ..
         } => {
             let mut fields = vec![
                 ("phase", string("predicate_signature")),
@@ -211,6 +251,15 @@ pub(super) fn project_atomic_wd_failure(
             object_for(rt, fields)
         }
     };
+    if let JsonValue::Object(fields) = &mut projected {
+        fields.insert(
+            crate::json_output::json_keys::localize_key(
+                "fact",
+                rt.launch_command.output_language(),
+            ),
+            string(failure.fact().readable_string()),
+        );
+    }
     let mut details = Vec::new();
     if let FailToVerifyAtomicFactWellDefinedResult::Domain { requirement, .. } = failure {
         details.push(("obligation", string(requirement.readable_string())));
@@ -848,57 +897,48 @@ fn project_leaf_fail_to_verify_fn_obj_obj_well_defined(
         }
         FailToVerifyFnObjObjWellDefined::Domain(p) => common(p, rt),
         FailToVerifyFnObjObjWellDefined::Candidate(p) => {
-            let failure = if let Some((index, child)) = p
-                .stages
-                .child_obj_well_defined
-                .iter()
-                .enumerate()
-                .find(|(_, child)| child.is_failed())
-            {
+            let failure = if let Some((index, obj, reason)) = p.stages.failed_child() {
                 node(
                     rt,
                     "child",
                     Some(index),
-                    super::wd::project_verify_obj_wd(child, rt),
+                    super::wd::project_failed_obj(obj, reason, rt),
                 )
-            } else if let Some((index, req)) = p
-                .stages
-                .requirement_fact_verified
-                .iter()
-                .enumerate()
-                .find(|(_, req)| req.is_failed())
-            {
-                node(rt, "requirement", Some(index), project_verify_fact(req, rt))
+            } else if let Some((index, requirement)) = p.stages.failed_requirement() {
+                node(
+                    rt,
+                    "requirement",
+                    Some(index),
+                    project_verify_fact(requirement, rt),
+                )
             } else {
                 message(
                     rt,
                     "function signature arity or return shape does not match",
                 )
             };
-            object_for(
-                rt,
-                vec![
-                    ("failure", failure),
-                    (
-                        "argument_scope",
-                        super::wd_by_def::project_fn_argument_scope(&p.scope, rt),
+            let mut fields = vec![("failure", failure)];
+            if let Some(stages) = p.stages.detailed_stages() {
+                fields.push((
+                    "argument_scope",
+                    super::wd_by_def::project_fn_argument_scope(&p.scope, rt),
+                ));
+                fields.push((
+                    "child_obj_well_defined",
+                    JsonValue::Array(
+                        stages
+                            .child_obj_well_defined
+                            .iter()
+                            .map(|child| super::wd::project_verify_obj_wd(child, rt))
+                            .collect(),
                     ),
-                    (
-                        "child_obj_well_defined",
-                        JsonValue::Array(
-                            p.stages
-                                .child_obj_well_defined
-                                .iter()
-                                .map(|child| super::wd::project_verify_obj_wd(child, rt))
-                                .collect(),
-                        ),
-                    ),
-                    (
-                        "requirement_fact_verified",
-                        super::store::project_verify_facts(&p.stages.requirement_fact_verified, rt),
-                    ),
-                ],
-            )
+                ));
+                fields.push((
+                    "requirement_fact_verified",
+                    super::store::project_verify_facts(&stages.requirement_fact_verified, rt),
+                ));
+            }
+            object_for(rt, fields)
         }
     };
     crate::json_output::helper::inherit_failure_field(rt, projected, "failure")
@@ -1206,4 +1246,17 @@ pub(super) fn project_or_wd_failure(
         Some(failure.failed_index),
         project_fact_wd_failure(&failure.failed_branch, rt),
     )
+}
+
+fn with_fact(rt: &Runtime, mut value: JsonValue, fact: crate::ast::fact::Fact) -> JsonValue {
+    if let JsonValue::Object(fields) = &mut value {
+        fields.insert(
+            crate::json_output::json_keys::localize_key(
+                "fact",
+                rt.launch_command.output_language(),
+            ),
+            string(fact.readable_string()),
+        );
+    }
+    value
 }

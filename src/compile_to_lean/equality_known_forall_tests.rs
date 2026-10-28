@@ -14,12 +14,15 @@ have equality_known_symmetric_arg N\n\
 equality_known_repeat(equality_known_symmetric_arg) = equality_known_repeat(equality_known_symmetric_arg + 1)\n";
 
 fn checked() -> (RunLitexCodeResult, LitexToLeanCompiler) {
-    let mut runtime = Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language: OutputLanguage::English,
-    });
+    let mut runtime = Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    );
     let result = runtime.run_litex_code(SOURCE).expect("known forall source");
     assert!(result.success && result.session_error.is_none());
     (result, LitexToLeanCompiler::new(runtime))
@@ -59,17 +62,21 @@ fn equality_known_forall_replays_original_direct_and_symmetric_captures() {
     let (mut result, compiler) = checked();
     for symmetric in [false, true] {
         let application = application(&mut result, symmetric);
-        assert_eq!(application.arg_match_proofs.len(), 2);
+        assert_eq!(application.detailed_ref().arg_match_proofs.len(), 2);
         assert_eq!(
             application
+                .detailed_ref()
                 .instantiation_requirements
+                .detailed_ref()
                 .param_type_requirements
                 .len(),
             1
         );
         assert_eq!(
             application
+                .detailed_ref()
                 .instantiation_requirements
+                .detailed_ref()
                 .proof_of_dom_facts
                 .len(),
             1
@@ -90,13 +97,24 @@ fn equality_known_forall_rejects_missing_original_match_type_and_domain_evidence
             let proof = application(&mut result, symmetric);
             match missing {
                 0 => {
-                    proof.arg_match_proofs.pop();
+                    proof.as_detailed_mut().unwrap().arg_match_proofs.pop();
                 }
                 1 => proof
+                    .as_detailed_mut()
+                    .unwrap()
                     .instantiation_requirements
+                    .as_detailed_mut()
+                    .unwrap()
                     .param_type_requirements
                     .clear(),
-                _ => proof.instantiation_requirements.proof_of_dom_facts.clear(),
+                _ => proof
+                    .as_detailed_mut()
+                    .unwrap()
+                    .instantiation_requirements
+                    .as_detailed_mut()
+                    .unwrap()
+                    .proof_of_dom_facts
+                    .clear(),
             }
             assert_eq!(
                 compiler
@@ -114,6 +132,8 @@ fn equality_known_forall_rejects_reordered_original_endpoint_matches() {
     for symmetric in [false, true] {
         let (mut result, compiler) = checked();
         application(&mut result, symmetric)
+            .as_detailed_mut()
+            .unwrap()
             .arg_match_proofs
             .swap(0, 1);
         assert_eq!(
@@ -130,7 +150,12 @@ fn equality_known_forall_rejects_reordered_original_endpoint_matches() {
 fn equality_known_forall_rejects_exchanging_original_type_and_domain_certificates() {
     for symmetric in [false, true] {
         let (mut result, compiler) = checked();
-        let requirements = &mut application(&mut result, symmetric).instantiation_requirements;
+        let requirements = application(&mut result, symmetric)
+            .as_detailed_mut()
+            .unwrap()
+            .instantiation_requirements
+            .as_detailed_mut()
+            .unwrap();
         std::mem::swap(
             &mut requirements.param_type_requirements[0].proof,
             &mut requirements.proof_of_dom_facts[0],
@@ -149,7 +174,10 @@ fn equality_known_forall_rejects_exchanging_original_type_and_domain_certificate
 fn equality_known_forall_rejects_changing_the_captured_argument() {
     for symmetric in [false, true] {
         let (mut result, compiler) = checked();
-        application(&mut result, symmetric).forall_parameters_match_what_args[0] =
+        application(&mut result, symmetric)
+            .as_detailed_mut()
+            .unwrap()
+            .forall_parameters_match_what_args[0] =
             Obj::Literal(Literal::Number(Number::new("2".into())));
         assert_eq!(
             compiler

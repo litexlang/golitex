@@ -9,12 +9,15 @@ use crate::prelude::*;
 
 fn runtime(strict: bool) -> Runtime {
     // Empty code is fine on LaunchCommand::Eval; CLI `-e` rejects empty operands.
-    Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict,
-        language: OutputLanguage::English,
-    })
+    Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    )
 }
 
 fn theorem(result: &ExecStmtResult) -> &ExecDefThmStmtSuccess {
@@ -84,9 +87,17 @@ fn forall_retains_actual_binder_producers_and_ordered_domain_wd_stores() {
         VerifyFactWellDefinedResult::Success(FactWellDefinedProof::ForallFact(p)) => p,
         _ => panic!("outer goal retains its own forall WD scope"),
     };
-    assert_eq!(goal_wd.introduced_params.param_type_well_defined.len(), 2);
     assert_eq!(
         goal_wd
+            .detailed_ref()
+            .introduced_params
+            .param_type_well_defined
+            .len(),
+        2
+    );
+    assert_eq!(
+        goal_wd
+            .detailed_ref()
             .introduced_params
             .defined_params
             .stored_fact_ids
@@ -94,6 +105,7 @@ fn forall_retains_actual_binder_producers_and_ordered_domain_wd_stores() {
         2
     );
     for (wd_id, body_id) in goal_wd
+        .detailed_ref()
         .introduced_params
         .defined_params
         .stored_fact_ids
@@ -104,7 +116,13 @@ fn forall_retains_actual_binder_producers_and_ordered_domain_wd_stores() {
             wd_id, body_id,
             "WD and proof introductions are distinct executions"
         );
-        let wd_fact = goal_wd.local_env.facts.facts_by_id.get(wd_id).unwrap();
+        let wd_fact = goal_wd
+            .detailed_ref()
+            .local_env
+            .facts
+            .facts_by_id
+            .get(wd_id)
+            .unwrap();
         let body_fact = proof.local_env.facts.facts_by_id.get(body_id).unwrap();
         match (wd_fact, body_fact) {
             (
@@ -118,21 +136,30 @@ fn forall_retains_actual_binder_producers_and_ordered_domain_wd_stores() {
         }
     }
     assert_eq!(
-        goal_wd.assumed_dom_facts.len(),
+        goal_wd.detailed_ref().assumed_dom_facts.len(),
         source_forall.dom_facts.len()
     );
     for (captured, dom) in goal_wd
+        .detailed_ref()
         .assumed_dom_facts
         .iter()
         .zip(&source_forall.dom_facts)
     {
         assert_eq!(captured.store_and_infer.primary_fact_id(), dom.fact_id());
         assert_eq!(
-            goal_wd.local_env.facts.facts_by_id.get(&dom.fact_id()),
+            goal_wd
+                .detailed_ref()
+                .local_env
+                .facts
+                .facts_by_id
+                .get(&dom.fact_id()),
             Some(dom)
         );
     }
-    assert_eq!(goal_wd.then.len(), source_forall.then_facts.len());
+    assert_eq!(
+        goal_wd.detailed_ref().then.len(),
+        source_forall.then_facts.len()
+    );
     assert_eq!(body.introduced_params.param_type_well_defined.len(), 2);
     assert_eq!(
         body.introduced_params.defined_params.stored_fact_ids.len(),

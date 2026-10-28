@@ -42,7 +42,7 @@ impl Runtime {
         &mut self,
         _verify_state: VerifyState,
     ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
-        Ok(ObjWellDefinedByDefCommonStages::leaf())
+        Ok(ObjWellDefinedByDefCommonStages::leaf(self.result_detail()))
     }
 
     fn finish_leaf_obj_success(
@@ -63,7 +63,7 @@ impl Runtime {
             _ => ObjWellDefinedProofByDef::Identifier(IdentifierObjWellDefinedProof::new()),
         };
         Ok(VerifyObjWellDefinedResult::Success(
-            ObjWellDefinedProof::ByDef { obj, proof: by_def },
+            ObjWellDefinedProof::by_def(self.result_detail(), &(obj), None, || by_def),
         ))
     }
 
@@ -83,7 +83,8 @@ impl Runtime {
                 obj: root.clone(),
                 reason: FailToVerifyObjWellDefinedResult::FnObj(
                     FailToVerifyFnObjObjWellDefined::Domain(
-                        ObjWellDefinedByDefCommonStages::leaf().into_common_fail(&root),
+                        ObjWellDefinedByDefCommonStages::leaf(self.result_detail())
+                            .into_common_fail(&root),
                     ),
                 ),
             });
@@ -96,21 +97,28 @@ impl Runtime {
             }
             match self.try_verify_fn_obj_against_fn_set(value, &source.signature, verify_state)? {
                 Ok(mut stages) => {
-                    stages.prepend_child(head_wd);
+                    stages.prepend_child(head_wd)?;
+                    stages.stages.require_mode(self.result_detail())?;
+                    if let Some(proof) = ObjWellDefinedProof::reduced(
+                        self.result_detail(),
+                        &root,
+                        Some(&source.signature),
+                    ) {
+                        return Ok(VerifyObjWellDefinedResult::Success(proof));
+                    }
                     let (child_obj_well_defined, requirement_fact_verified, argument_scope) =
                         stages.into_success_child_proofs();
                     return Ok(VerifyObjWellDefinedResult::Success(
-                        ObjWellDefinedProof::ByDef {
-                            obj: root,
-                            proof: ObjWellDefinedProofByDef::FnObj(FnObjObjWellDefinedProof {
+                        ObjWellDefinedProof::by_def(self.result_detail(), &(root), None, || {
+                            ObjWellDefinedProofByDef::FnObj(FnObjObjWellDefinedProof {
                                 domain_fn_set: Some(FnObjDomainFnSetEvidence::FiniteFunction(
                                     Box::new(source),
                                 )),
                                 child_obj_well_defined,
                                 requirement_fact_verified,
                                 argument_scope,
-                            }),
-                        },
+                            })
+                        }),
                     ));
                 }
                 Err(stages) => finite_domain_failure = Some(stages),
@@ -132,8 +140,11 @@ impl Runtime {
                         obj: root,
                         reason: FailToVerifyObjWellDefinedResult::FnObj(
                             FailToVerifyFnObjObjWellDefined::Domain(
-                                ObjWellDefinedByDefCommonStages::from_children(vec![head_wd])
-                                    .into_common_fail(&Obj::FnObj(value.clone())),
+                                ObjWellDefinedByDefCommonStages::from_children(
+                                    self.result_detail(),
+                                    vec![head_wd],
+                                )?
+                                .into_common_fail(&Obj::FnObj(value.clone())),
                             ),
                         ),
                     });
@@ -143,24 +154,34 @@ impl Runtime {
             if let Some(fn_set) = self.instantiated_template_function_signature(instance) {
                 match self.try_verify_fn_obj_against_fn_set(value, &fn_set, verify_state)? {
                     Ok(mut stages) => {
-                        stages.prepend_child(head_wd);
+                        stages.prepend_child(head_wd)?;
+                        stages.stages.require_mode(self.result_detail())?;
+                        if let Some(proof) =
+                            ObjWellDefinedProof::reduced(self.result_detail(), &root, Some(&fn_set))
+                        {
+                            return Ok(VerifyObjWellDefinedResult::Success(proof));
+                        }
                         let (child_obj_well_defined, requirement_fact_verified, argument_scope) =
                             stages.into_success_child_proofs();
                         return Ok(VerifyObjWellDefinedResult::Success(
-                            ObjWellDefinedProof::ByDef {
-                                obj: root,
-                                proof: ObjWellDefinedProofByDef::FnObj(FnObjObjWellDefinedProof {
-                                    domain_fn_set: Some(
-                                        FnObjDomainFnSetEvidence::TemplateDefinition {
-                                            fn_set,
-                                            function_equal: KnownEqualityPathProof::new(path),
-                                        },
-                                    ),
-                                    child_obj_well_defined,
-                                    requirement_fact_verified,
-                                    argument_scope,
-                                }),
-                            },
+                            ObjWellDefinedProof::by_def(
+                                self.result_detail(),
+                                &(root),
+                                None,
+                                || {
+                                    ObjWellDefinedProofByDef::FnObj(FnObjObjWellDefinedProof {
+                                        domain_fn_set: Some(
+                                            FnObjDomainFnSetEvidence::TemplateDefinition {
+                                                fn_set,
+                                                function_equal: KnownEqualityPathProof::new(path),
+                                            },
+                                        ),
+                                        child_obj_well_defined,
+                                        requirement_fact_verified,
+                                        argument_scope,
+                                    })
+                                },
+                            ),
                         ));
                     }
                     Err(stages) if path.is_empty() => {
@@ -180,20 +201,27 @@ impl Runtime {
                 verify_state,
             )? {
                 Ok(stages) => {
+                    stages.stages.require_mode(self.result_detail())?;
+                    if let Some(proof) = ObjWellDefinedProof::reduced(
+                        self.result_detail(),
+                        &root,
+                        Some(&source.function.body),
+                    ) {
+                        return Ok(VerifyObjWellDefinedResult::Success(proof));
+                    }
                     let (child_obj_well_defined, requirement_fact_verified, argument_scope) =
                         stages.into_success_child_proofs();
                     return Ok(VerifyObjWellDefinedResult::Success(
-                        ObjWellDefinedProof::ByDef {
-                            obj: root,
-                            proof: ObjWellDefinedProofByDef::FnObj(FnObjObjWellDefinedProof {
+                        ObjWellDefinedProof::by_def(self.result_detail(), &(root), None, || {
+                            ObjWellDefinedProofByDef::FnObj(FnObjObjWellDefinedProof {
                                 domain_fn_set: Some(FnObjDomainFnSetEvidence::Composition(
                                     Box::new(source),
                                 )),
                                 child_obj_well_defined,
                                 requirement_fact_verified,
                                 argument_scope,
-                            }),
-                        },
+                            })
+                        }),
                     ));
                 }
                 Err(stages) => finite_domain_failure = Some(stages),
@@ -207,22 +235,34 @@ impl Runtime {
                     verify_state,
                 )? {
                     Ok(stages) => {
+                        stages.stages.require_mode(self.result_detail())?;
+                        if let Some(proof) = ObjWellDefinedProof::reduced(
+                            self.result_detail(),
+                            &root,
+                            Some(&source.signature),
+                        ) {
+                            return Ok(VerifyObjWellDefinedResult::Success(proof));
+                        }
                         let (child_obj_well_defined, requirement_fact_verified, argument_scope) =
                             stages.into_success_child_proofs();
                         return Ok(VerifyObjWellDefinedResult::Success(
-                            ObjWellDefinedProof::ByDef {
-                                obj: root,
-                                proof: ObjWellDefinedProofByDef::FnObj(FnObjObjWellDefinedProof {
-                                    domain_fn_set: Some(
-                                        FnObjDomainFnSetEvidence::MultivariableSelector(Box::new(
-                                            source,
-                                        )),
-                                    ),
-                                    child_obj_well_defined,
-                                    requirement_fact_verified,
-                                    argument_scope,
-                                }),
-                            },
+                            ObjWellDefinedProof::by_def(
+                                self.result_detail(),
+                                &(root),
+                                None,
+                                || {
+                                    ObjWellDefinedProofByDef::FnObj(FnObjObjWellDefinedProof {
+                                        domain_fn_set: Some(
+                                            FnObjDomainFnSetEvidence::MultivariableSelector(
+                                                Box::new(source),
+                                            ),
+                                        ),
+                                        child_obj_well_defined,
+                                        requirement_fact_verified,
+                                        argument_scope,
+                                    })
+                                },
+                            ),
                         ));
                     }
                     Err(stages) => finite_domain_failure = Some(stages),
@@ -236,20 +276,27 @@ impl Runtime {
                 verify_state,
             )? {
                 Ok(stages) => {
+                    stages.stages.require_mode(self.result_detail())?;
+                    if let Some(proof) = ObjWellDefinedProof::reduced(
+                        self.result_detail(),
+                        &root,
+                        Some(&source.function.body),
+                    ) {
+                        return Ok(VerifyObjWellDefinedResult::Success(proof));
+                    }
                     let (child_obj_well_defined, requirement_fact_verified, argument_scope) =
                         stages.into_success_child_proofs();
                     return Ok(VerifyObjWellDefinedResult::Success(
-                        ObjWellDefinedProof::ByDef {
-                            obj: root,
-                            proof: ObjWellDefinedProofByDef::FnObj(FnObjObjWellDefinedProof {
+                        ObjWellDefinedProof::by_def(self.result_detail(), &(root), None, || {
+                            ObjWellDefinedProofByDef::FnObj(FnObjObjWellDefinedProof {
                                 domain_fn_set: Some(FnObjDomainFnSetEvidence::Matrix(Box::new(
                                     source,
                                 ))),
                                 child_obj_well_defined,
                                 requirement_fact_verified,
                                 argument_scope,
-                            }),
-                        },
+                            })
+                        }),
                     ));
                 }
                 Err(stages) => finite_domain_failure = Some(stages),
@@ -275,7 +322,7 @@ impl Runtime {
                 obj: root,
                 reason: FailToVerifyObjWellDefinedResult::FnObj(
                     FailToVerifyFnObjObjWellDefined::Domain(
-                        ObjWellDefinedByDefCommonStages::leaf()
+                        ObjWellDefinedByDefCommonStages::leaf(self.result_detail())
                             .into_common_fail(&Obj::FnObj(value.clone())),
                     ),
                 ),
@@ -301,6 +348,12 @@ impl Runtime {
             };
             match self.try_verify_fn_obj_against_fn_set(value, &fn_set, verify_state.clone())? {
                 Ok(stages) => {
+                    stages.stages.require_mode(self.result_detail())?;
+                    if let Some(proof) =
+                        ObjWellDefinedProof::reduced(self.result_detail(), &root, Some(&fn_set))
+                    {
+                        return Ok(VerifyObjWellDefinedResult::Success(proof));
+                    }
                     let (child_obj_well_defined, requirement_fact_verified, argument_scope) =
                         stages.into_success_child_proofs();
                     let proof = FnObjObjWellDefinedProof {
@@ -315,10 +368,9 @@ impl Runtime {
                     };
 
                     return Ok(VerifyObjWellDefinedResult::Success(
-                        ObjWellDefinedProof::ByDef {
-                            obj: root,
-                            proof: ObjWellDefinedProofByDef::FnObj(proof),
-                        },
+                        ObjWellDefinedProof::by_def(self.result_detail(), &(root), None, || {
+                            ObjWellDefinedProofByDef::FnObj(proof)
+                        }),
                     ));
                 }
                 Err(stages) => {
@@ -330,7 +382,7 @@ impl Runtime {
         let failure = match last_domain_fail {
             Some(stages) => stages.into_failure(),
             None => FailToVerifyFnObjObjWellDefined::Domain(
-                ObjWellDefinedByDefCommonStages::leaf().into_common_fail(&root),
+                ObjWellDefinedByDefCommonStages::leaf(self.result_detail()).into_common_fail(&root),
             ),
         };
         Ok(VerifyObjWellDefinedResult::Failed {
@@ -361,8 +413,11 @@ impl Runtime {
                 obj: root,
                 reason: FailToVerifyObjWellDefinedResult::FnObj(
                     FailToVerifyFnObjObjWellDefined::Domain(
-                        ObjWellDefinedByDefCommonStages::from_children(vec![head_wd])
-                            .into_common_fail(&Obj::FnObj(value.clone())),
+                        ObjWellDefinedByDefCommonStages::from_children(
+                            self.result_detail(),
+                            vec![head_wd],
+                        )?
+                        .into_common_fail(&Obj::FnObj(value.clone())),
                     ),
                 ),
             });
@@ -372,8 +427,11 @@ impl Runtime {
                 obj: root,
                 reason: FailToVerifyObjWellDefinedResult::FnObj(
                     FailToVerifyFnObjObjWellDefined::Domain(
-                        ObjWellDefinedByDefCommonStages::from_children(vec![head_wd])
-                            .into_common_fail(&Obj::FnObj(value.clone())),
+                        ObjWellDefinedByDefCommonStages::from_children(
+                            self.result_detail(),
+                            vec![head_wd],
+                        )?
+                        .into_common_fail(&Obj::FnObj(value.clone())),
                     ),
                 ),
             });
@@ -382,7 +440,13 @@ impl Runtime {
         let fn_set = anon.body.clone();
         match self.try_verify_fn_obj_against_fn_set(value, &fn_set, verify_state.clone())? {
             Ok(mut stages) => {
-                stages.prepend_child(head_wd);
+                stages.prepend_child(head_wd)?;
+                stages.stages.require_mode(self.result_detail())?;
+                if let Some(proof) =
+                    ObjWellDefinedProof::reduced(self.result_detail(), &root, Some(&fn_set))
+                {
+                    return Ok(VerifyObjWellDefinedResult::Success(proof));
+                }
                 let (child_proofs, requirements, argument_scope) =
                     stages.into_success_child_proofs();
                 let proof = FnObjObjWellDefinedProof {
@@ -393,14 +457,13 @@ impl Runtime {
                 };
 
                 Ok(VerifyObjWellDefinedResult::Success(
-                    ObjWellDefinedProof::ByDef {
-                        obj: root,
-                        proof: ObjWellDefinedProofByDef::FnObj(proof),
-                    },
+                    ObjWellDefinedProof::by_def(self.result_detail(), &(root), None, || {
+                        ObjWellDefinedProofByDef::FnObj(proof)
+                    }),
                 ))
             }
             Err(mut stages) => {
-                stages.prepend_child(head_wd);
+                stages.prepend_child(head_wd)?;
                 Ok(VerifyObjWellDefinedResult::Failed {
                     obj: root,
                     reason: FailToVerifyObjWellDefinedResult::FnObj(stages.into_failure()),
@@ -430,8 +493,11 @@ impl Runtime {
                 obj: root,
                 reason: FailToVerifyObjWellDefinedResult::FnObj(
                     FailToVerifyFnObjObjWellDefined::Domain(
-                        ObjWellDefinedByDefCommonStages::from_children(vec![head_wd])
-                            .into_common_fail(&Obj::FnObj(value.clone())),
+                        ObjWellDefinedByDefCommonStages::from_children(
+                            self.result_detail(),
+                            vec![head_wd],
+                        )?
+                        .into_common_fail(&Obj::FnObj(value.clone())),
                     ),
                 ),
             });
@@ -441,8 +507,11 @@ impl Runtime {
                 obj: root,
                 reason: FailToVerifyObjWellDefinedResult::FnObj(
                     FailToVerifyFnObjObjWellDefined::Domain(
-                        ObjWellDefinedByDefCommonStages::from_children(vec![head_wd])
-                            .into_common_fail(&Obj::FnObj(value.clone())),
+                        ObjWellDefinedByDefCommonStages::from_children(
+                            self.result_detail(),
+                            vec![head_wd],
+                        )?
+                        .into_common_fail(&Obj::FnObj(value.clone())),
                     ),
                 ),
             });
@@ -489,7 +558,13 @@ impl Runtime {
         for fn_set in candidate_spaces {
             match self.try_verify_fn_obj_against_fn_set(value, &fn_set, verify_state.clone())? {
                 Ok(mut stages) => {
-                    stages.prepend_child(head_wd);
+                    stages.prepend_child(head_wd)?;
+                    stages.stages.require_mode(self.result_detail())?;
+                    if let Some(proof) =
+                        ObjWellDefinedProof::reduced(self.result_detail(), &root, Some(&fn_set))
+                    {
+                        return Ok(VerifyObjWellDefinedResult::Success(proof));
+                    }
                     let (child_proofs, requirements, argument_scope) =
                         stages.into_success_child_proofs();
                     let proof = FnObjObjWellDefinedProof {
@@ -500,10 +575,9 @@ impl Runtime {
                     };
 
                     return Ok(VerifyObjWellDefinedResult::Success(
-                        ObjWellDefinedProof::ByDef {
-                            obj: root,
-                            proof: ObjWellDefinedProofByDef::FnObj(proof),
-                        },
+                        ObjWellDefinedProof::by_def(self.result_detail(), &(root), None, || {
+                            ObjWellDefinedProofByDef::FnObj(proof)
+                        }),
                     ));
                 }
                 Err(stages) => {
@@ -514,12 +588,15 @@ impl Runtime {
 
         let failure = match last_domain_fail {
             Some(mut stages) => {
-                stages.prepend_child(head_wd);
+                stages.prepend_child(head_wd)?;
                 stages.into_failure()
             }
             None => FailToVerifyFnObjObjWellDefined::Domain(
-                ObjWellDefinedByDefCommonStages::from_children(vec![head_wd])
-                    .into_common_fail(&root),
+                ObjWellDefinedByDefCommonStages::from_children(
+                    self.result_detail(),
+                    vec![head_wd],
+                )?
+                .into_common_fail(&root),
             ),
         };
         Ok(VerifyObjWellDefinedResult::Failed {
@@ -542,7 +619,7 @@ impl Runtime {
                 | FnObjHead::FieldAccess(_)
                 | FnObjHead::Object(_)
         ) {
-            return Ok(ObjWellDefinedByDefCommonStages::leaf());
+            return Ok(ObjWellDefinedByDefCommonStages::leaf(self.result_detail()));
         }
 
         let mut children = Vec::new();
@@ -656,7 +733,7 @@ impl Runtime {
         formed_children: &mut Vec<FormedFunctionArgument>,
     ) -> RuntimeResult<Result<ObjWellDefinedByDefCommonStages, ObjWellDefinedByDefCommonStages>>
     {
-        let mut proof = ObjWellDefinedByDefCommonStages::leaf();
+        let mut proof = ObjWellDefinedByDefCommonStages::leaf(self.result_detail());
         let mut space = fn_set.clone();
         let Some(last) = value.body.len().checked_sub(1) else {
             return Ok(Err(proof));
@@ -670,7 +747,7 @@ impl Runtime {
             for arg in &args {
                 let child = self.verify_obj_well_definedness(arg, verify_state.clone())?;
                 let failed = child.is_failed();
-                proof.child_obj_well_defined.push(child);
+                proof.push_child(child)?;
                 if failed {
                     return Ok(Err(proof));
                 }
@@ -685,10 +762,12 @@ impl Runtime {
                     self.top_exec_env_mut()
                         .well_defined_objects
                         .record(arg.clone(), wd_id);
-                    formed_children.push(FormedFunctionArgument {
-                        child_index: proof.child_obj_well_defined.len() - 1,
-                        wd_id,
-                    });
+                    if self.result_detail() == crate::result_detail::OutputDetail::Detailed {
+                        formed_children.push(FormedFunctionArgument {
+                            child_index: proof.captured_child_count() - 1,
+                            wd_id,
+                        });
+                    }
                 }
             }
             let mut arg_index = 0;
@@ -708,7 +787,7 @@ impl Runtime {
                         format!("argument does not belong to parameter type"),
                     )?;
                     let failed = req.is_failed();
-                    proof.requirement_fact_verified.push(req);
+                    proof.push_requirement(req);
                     if failed {
                         return Ok(Err(proof));
                     }
@@ -724,7 +803,7 @@ impl Runtime {
                 let req =
                     self.verify_required_quantifier_free_fact(instantiated, verify_state.clone())?;
                 let failed = req.is_failed();
-                proof.requirement_fact_verified.push(req);
+                proof.push_requirement(req);
                 if failed {
                     return Ok(Err(proof));
                 }
@@ -750,7 +829,7 @@ impl Runtime {
                     else {
                         return Ok(Err(proof));
                     };
-                    proof.requirement_fact_verified.push(checked.source);
+                    proof.push_requirement(checked.source);
                     space = checked.signature;
                     continue;
                 };
@@ -764,7 +843,7 @@ impl Runtime {
                     let requirement =
                         self.verify_fact(&Fact::AtomicFact(equality), verify_state)?;
                     let failed = requirement.is_failed();
-                    proof.requirement_fact_verified.push(requirement);
+                    proof.push_requirement(requirement);
                     if failed {
                         return Ok(Err(proof));
                     }
@@ -813,14 +892,13 @@ impl Runtime {
         }
 
         Ok(VerifyObjWellDefinedResult::Success(
-            ObjWellDefinedProof::ByDef {
-                obj: root,
-                proof: ObjWellDefinedProofByDef::FunctionSpace(
+            ObjWellDefinedProof::by_def(self.result_detail(), &(root), None, || {
+                ObjWellDefinedProofByDef::FunctionSpace(
                     FunctionSpaceObjWellDefinedProofByDef::FnRange(
                         FnRangeObjWellDefinedProof::from_checked_domains(stages, function_domains),
                     ),
-                ),
-            },
+                )
+            }),
         ))
     }
 }

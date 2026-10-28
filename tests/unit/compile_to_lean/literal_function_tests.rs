@@ -78,14 +78,16 @@ fn declared_literal_membership_requires_original_constructor_wd() {
     let (mut run, compiler) = super::execute(SIGNATURES);
     let wd = &mut atomic_mut(&mut run, 1)
         .well_defined_proof
+        .as_detailed_mut()
+        .unwrap()
         .well_defined_of_each_parameter[0];
-    let ObjWellDefinedProof::ByDef {
+    let DetailedObjWellDefinedProof::ByDef {
         proof:
             ObjWellDefinedProofByDef::FunctionSpace(FunctionSpaceObjWellDefinedProofByDef::AnonymousFn(
                 p,
             )),
         ..
-    } = wd
+    } = (wd).as_detailed_mut().unwrap()
     else {
         panic!("literal WD")
     };

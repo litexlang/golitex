@@ -7,12 +7,15 @@ fn check(source: &str, expected: bool) -> String {
     std::thread::Builder::new()
         .stack_size(64 * 1024 * 1024)
         .spawn(move || {
-            let mut runtime = Runtime::new(LaunchCommand::Eval {
-                code: String::new(),
-                session: false,
-                strict: true,
-                language: OutputLanguage::English,
-            });
+            let mut runtime = Runtime::new_with_result_detail(
+                LaunchCommand::Eval {
+                    code: String::new(),
+                    session: false,
+                    strict: true,
+                    language: OutputLanguage::English,
+                },
+                crate::result_detail::OutputDetail::Detailed,
+            );
             let result = runtime
                 .run_litex_code(&source)
                 .expect("run through exec_stmt");
@@ -145,12 +148,12 @@ fn normal_bilingual_contract() {
         ("have f fn(x union({1,2},{3}))R\nnot 3 $in {1,2}\n3 $in union({1,2},{3})\nforall x {1,2}:\n    x $in union({1,2},{3})\nrelease thm fn_set_member(fn(x {1,2})R {f(x)},fn(x {1,2})R)\nfinite_set_product(union({1,2},{3}),f) = finite_set_product({1,2},fn(x {1,2})R {f(x)})*f(3)", "Fresh insertion into a finite product", "有限乘积插入新元素"),
     ] {
       for (language, expected_text) in [(OutputLanguage::English, en), (OutputLanguage::Chinese, zh)] {
-        let mut rt = Runtime::new(LaunchCommand::Eval {
+        let mut rt = Runtime::new_with_result_detail(LaunchCommand::Eval {
             code: String::new(),
             session: false,
             strict: true,
             language,
-        });
+        }, crate::result_detail::OutputDetail::Detailed);
         let result = rt.run_litex_code(source).unwrap();
         assert!(result.success);
         assert!(emit_run_normal(&result, &rt, "eval", None).contains(expected_text));
@@ -170,7 +173,7 @@ fn builtin_permission_and_depth_are_inherited() {
         ("have op fn(a,b R)R\nhave f fn(k Z)R\nreduce(1,4,f,op,0) = reduce(1,4,f,op,0)\nreduce(3,4,f,op,reduce(1,2,f,op,0)) = reduce(3,4,f,op,reduce(1,2,f,op,0))", "reduce(1,4,f,op,0) = reduce(3,4,f,op,reduce(1,2,f,op,0))"),
         ("have f fn(x union({1,2},{3}))R\nnot 3 $in {1,2}\n3 $in union({1,2},{3})\nforall x {1,2}:\n    x $in union({1,2},{3})\nrelease thm fn_set_member(fn(x {1,2})R {f(x)},fn(x {1,2})R)\nfinite_set_product(union({1,2},{3}),f) = finite_set_product(union({1,2},{3}),f)\nfinite_set_product({1,2},fn(x {1,2})R {f(x)})*f(3) = finite_set_product({1,2},fn(x {1,2})R {f(x)})*f(3)", "finite_set_product(union({1,2},{3}),f) = finite_set_product({1,2},fn(x {1,2})R {f(x)})*f(3)"),
     ] {
-        let mut rt = Runtime::new(LaunchCommand::Eval { code: String::new(), session: false, strict: true, language: OutputLanguage::English });
+        let mut rt = Runtime::new_with_result_detail(LaunchCommand::Eval { code: String::new(), session: false, strict: true, language: OutputLanguage::English }, crate::result_detail::OutputDetail::Detailed);
         assert!(rt.run_litex_code(setup).unwrap().success, "{setup}");
         let tokens = Tokenizer::new().tokenize(goal, rt.current_file.clone()).unwrap();
         let statements = rt.parse(&tokens).unwrap();
@@ -188,12 +191,15 @@ fn builtin_permission_and_depth_are_inherited() {
 #[test]
 fn finite_product_restrictions_preserve_the_source_domain_and_failure_rollback() {
     for language in OutputLanguage::ALL {
-        let mut rt = Runtime::new(LaunchCommand::Eval {
-            code: String::new(),
-            session: false,
-            strict: true,
-            language,
-        });
+        let mut rt = Runtime::new_with_result_detail(
+            LaunchCommand::Eval {
+                code: String::new(),
+                session: false,
+                strict: true,
+                language,
+            },
+            crate::result_detail::OutputDetail::Detailed,
+        );
         let run = rt.run_litex_code(
             "have f fn(x union({1,2},{3})) R\nnot 3 $in {1,2}\n3 $in union({1,2},{3})\nfinite_set_product(union({1,2},{3}),f)=finite_set_product({1,2},fn(x {1,2})R{f(x)})*f(3)"
         ).unwrap();

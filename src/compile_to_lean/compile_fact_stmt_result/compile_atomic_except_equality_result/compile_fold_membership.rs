@@ -16,10 +16,10 @@ impl LitexToLeanCompiler {
     ) -> Result<(FnSet, String), LeanCompileError> {
         let signature = position
             .with_visible_wd(object, &mut |wd, _| {
-                let ObjWellDefinedProof::ByDef {
+                let DetailedObjWellDefinedProof::ByDef {
                     proof: ObjWellDefinedProofByDef::IteratedOperator(p),
                     ..
-                } = wd
+                } = (wd).detailed_ref()
                 else {
                     return Err(LeanCompileError::unsupported("FoldMember/Constructor"));
                 };

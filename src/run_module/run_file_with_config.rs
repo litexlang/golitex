@@ -55,7 +55,7 @@ pub fn run_file_with_config_observed(
 
     let export_index = find_export_index(&config.exports, &path);
 
-    let mut runtime = Runtime::new(command);
+    let mut runtime = Runtime::new_with_result_detail(command, observer.result_detail());
     runtime.abort_source();
     runtime
         .global_module_manager
@@ -219,7 +219,7 @@ fn run_file_isolated(
         message: error.to_string(),
     })?;
 
-    let mut runtime = Runtime::new(command);
+    let mut runtime = Runtime::new_with_result_detail(command, observer.result_detail());
     let mut code_result = match runtime.run_litex_code_observed(&source, observer) {
         Ok(result) => result,
         Err(error) => {

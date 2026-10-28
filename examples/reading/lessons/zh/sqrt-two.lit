@@ -1,0 +1,28 @@
+# 反证法：√2 的无理性
+# 为什么 √2 不能写成两个整数的比？
+
+# 先读完整条证明，再追踪你有疑问的一步。
+# 悬浮在每个等号上，查看那个相邻等式的依据。
+by contra:
+    ? not sqrt(2) $in Q
+    # 反证时暂时假设 √2 是有理数。
+    # 这个定理如何使后面的 p、q 合法？
+    release thm rational_has_unique_reduced_fraction(sqrt(2))
+    obtain p, q from exist! p Z, q N+ st {sqrt(2) = p / q, gcd(p, q) = 1}
+
+    # 第一个等号使用了 √2 = p / q。
+    # 悬浮在依据链接上定位原文；点进去后可返回此步。
+    p^2 = (sqrt(2) * q)^2 = sqrt(2)^2 * q^2 = 2 * q^2
+    p^2 % 2 = (2 * q^2) % 2 = 0
+    # 2 整除 p²，为什么能推出 2 整除 p？
+    # 灰色文字是本句真正发布的推导结果。
+    release thm prime_divides_power(p, 2, 2)
+
+    p / 2 $in Z
+    q^2 = p^2 / 2 = 2 * (p / 2)^2
+    q^2 % 2 = (2 * (p / 2)^2) % 2 = 0
+    release thm prime_divides_power(q, 2, 2)
+
+    # p、q 都被 2 整除，与最简分数的哪条条件冲突？
+    # 这些 p、q 只服务于当前反证。
+    impossible 2 <= gcd(p, q) = 1

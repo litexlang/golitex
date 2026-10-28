@@ -53,8 +53,8 @@ impl LitexToLeanCompiler {
         };
         let (binders, introductions, definitions) = self.compile_forall_head(
             &proof.fact,
-            &proof.well_defined.introduced_params,
-            &proof.well_defined.assumed_dom_facts,
+            &proof.well_defined.detailed_ref().introduced_params,
+            &proof.well_defined.detailed_ref().assumed_dom_facts,
             &header,
         )?;
         let head = proof
@@ -65,7 +65,7 @@ impl LitexToLeanCompiler {
             .map(|g| g.params.len())
             .sum::<usize>()
             + proof.fact.dom_facts.len();
-        if proof.well_defined.then.len() != proof.fact.then_facts.len()
+        if proof.well_defined.detailed_ref().then.len() != proof.fact.then_facts.len()
             || proof.fact.then_facts.is_empty()
         {
             return Err(LeanCompileError::new(
@@ -78,7 +78,7 @@ impl LitexToLeanCompiler {
             .fact
             .then_facts
             .iter()
-            .zip(&proof.well_defined.then)
+            .zip(&proof.well_defined.detailed_ref().then)
             .enumerate()
         {
             let ExistOrAndChainAtomicFact::AtomicFact(fact) = fact else {
@@ -122,6 +122,7 @@ impl LitexToLeanCompiler {
             .sum::<usize>();
         let membership = &proof
             .well_defined
+            .detailed_ref()
             .introduced_params
             .defined_params
             .store_and_infer_results[offset];

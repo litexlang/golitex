@@ -1,0 +1,6 @@
+thm positive_variance_self_correlation:
+    ? forall Omega set,space &prob::main::FiniteProbabilitySpace<Omega>,X fn(k space.carrier) R:
+        \prob::main::finite_variance<Omega,space>(X)>0
+        =>:
+            \prob::main::finite_correlation<Omega,space>(X,X)=1
+    release thm prob::main::finite_correlation_self(Omega,space,X)

@@ -17,27 +17,37 @@ impl LitexToLeanCompiler {
         let groups = &fact.typed_parameters.groups;
         let count: usize = groups.iter().map(|group| group.params.len()).sum();
         let stores = &proof
+            .detailed_ref()
             .introduced_params
             .defined_params
             .store_and_infer_results;
         if count == 0
             || stores.len() != count
-            || proof.introduced_params.param_type_well_defined.len() != groups.len()
-            || proof.assumed_body_facts.len() != fact.facts.len()
+            || proof
+                .detailed_ref()
+                .introduced_params
+                .param_type_well_defined
+                .len()
+                != groups.len()
+            || proof.detailed_ref().assumed_body_facts.len() != fact.facts.len()
         {
             return Err(LeanCompileError::new(
                 "Exist/FormationStages",
                 "Existential formation needs its ordered binders and every original body stage.",
             ));
         }
-        self.validate_parameter_store_capture(&proof.introduced_params.defined_params)?;
+        self.validate_parameter_store_capture(
+            &proof.detailed_ref().introduced_params.defined_params,
+        )?;
         let mut ids = std::collections::HashSet::new();
         let mut parameters = Vec::new();
         let mut offset = 0;
-        for (group, formation) in groups
-            .iter()
-            .zip(&proof.introduced_params.param_type_well_defined)
-        {
+        for (group, formation) in groups.iter().zip(
+            &proof
+                .detailed_ref()
+                .introduced_params
+                .param_type_well_defined,
+        ) {
             let prior = SourcePosition {
                 before: offset,
                 ..scope
@@ -93,8 +103,11 @@ impl LitexToLeanCompiler {
             }
         }
         let mut clauses = Vec::new();
-        for (index, (source, captured)) in
-            fact.facts.iter().zip(&proof.assumed_body_facts).enumerate()
+        for (index, (source, captured)) in fact
+            .facts
+            .iter()
+            .zip(&proof.detailed_ref().assumed_body_facts)
+            .enumerate()
         {
             let source = crate::instantiate::quantifier_free_fact_to_fact(source.clone());
             let prior = SourcePosition {

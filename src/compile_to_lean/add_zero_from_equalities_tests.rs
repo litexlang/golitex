@@ -5,12 +5,15 @@ use crate::prelude::*;
 const SOURCE: &str = "have fn positive_identity(x R+) R+ = x\nforall x R+:\n    positive_identity(x) + 0 = x\nlet positive_anonymous = fn(x R+) R+ {x}\npositive_anonymous(1) = 1\npositive_anonymous(1) + 0 = 1\n";
 
 fn run(source: &str) -> (RunLitexCodeResult, LitexToLeanCompiler) {
-    let mut runtime = Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language: OutputLanguage::English,
-    });
+    let mut runtime = Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    );
     let result = runtime.run_litex_code(source).expect("source run");
     (result, LitexToLeanCompiler::new(runtime))
 }

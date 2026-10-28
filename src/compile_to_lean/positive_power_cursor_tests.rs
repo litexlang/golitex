@@ -8,12 +8,15 @@ use crate::store_fact_and_infer::{
 const SOURCE: &str = "forall a R+, n N:\n    a^(n+0)=a^n\n    =>:\n        a^n $in R+\n";
 
 fn checked() -> (RunLitexCodeResult, LitexToLeanCompiler) {
-    let mut runtime = Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language: OutputLanguage::English,
-    });
+    let mut runtime = Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    );
     let result = runtime.run_litex_code(SOURCE).expect("actual source run");
     assert!(result.success && result.session_error.is_none());
     (result, LitexToLeanCompiler::new(runtime))
@@ -269,21 +272,24 @@ fn positive_power_inference_adds_set_semantics_from_its_actual_store_without_sou
         "by induc k from 0:\n    ? k=k\n    ? from k=0:\n        2^(0+1)=2^0*2^1\n    ? induc:\n        2^(k+1)=2^k*2^1\n",
     ] {
         assert!(!source.contains("R+"));
-        let mut runtime = Runtime::new(LaunchCommand::Eval {
+        let mut runtime = Runtime::new_with_result_detail(LaunchCommand::Eval {
             code: String::new(), session: false, strict: true, language: OutputLanguage::English,
-        });
+        }, crate::result_detail::OutputDetail::Detailed);
         let result = runtime.run_litex_code(source).expect("actual source run");
         assert!(result.success && result.session_error.is_none(), "{source}");
         let lean = LitexToLeanCompiler::new(runtime).compile_run(&result, "natural_power_sets")
             .unwrap_or_else(|error| panic!("{source}: {error}"));
         assert!(lean.contains("variable [_setSemantics : Litex.SetSemantics M]"), "{source}");
     }
-    let mut runtime = Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language: OutputLanguage::English,
-    });
+    let mut runtime = Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    );
     let result = runtime.run_litex_code("have n N\nn=n\n").unwrap();
     let lean = LitexToLeanCompiler::new(runtime)
         .compile_run(&result, "natural_no_set_inference")

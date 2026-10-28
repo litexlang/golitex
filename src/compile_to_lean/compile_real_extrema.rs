@@ -231,10 +231,10 @@ pub(super) fn validate_extremum_existence(
 pub(super) fn bound_stages(
     proof: &ObjWellDefinedProof,
 ) -> Option<(&ObjWellDefinedProof, &VerifyFactResult, &VerifyFactResult)> {
-    let ObjWellDefinedProof::ByDef {
+    let DetailedObjWellDefinedProof::ByDef {
         proof: ObjWellDefinedProofByDef::BoundOperator(p),
         ..
-    } = proof
+    } = (proof).detailed_ref()
     else {
         return None;
     };

@@ -57,9 +57,9 @@ impl LitexToLeanCompiler {
         };
         let builder = Obj::SetFormer(SetFormer::SetBuilder(step.builder.clone()));
         position.with_visible_wd(&builder, &mut |wd, declaration| {
-            let ObjWellDefinedProof::ByDef {
+            let DetailedObjWellDefinedProof::ByDef {
                 proof: ObjWellDefinedProofByDef::SetFormer(SetFormerObjWellDefinedProofByDef::SetBuilder(captured)), ..
-            } = wd else { return Err(LeanCompileError::unsupported("SetBuilder/ConstructorFormation")) };
+            } = (wd).detailed_ref() else { return Err(LeanCompileError::unsupported("SetBuilder/ConstructorFormation")) };
             let scope = SourcePosition::new(Some(declaration), SourceOwner::SetBuilder(&step.builder, captured), 0);
             self.validate_parameter_store_capture(&captured.defined_params)?;
             if captured.defined_params.store_and_infer_results.len() != 1 || captured.assumed_facts.len() != step.builder.facts.len() {

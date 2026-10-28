@@ -112,10 +112,16 @@ fn gcd_lcm_wd_rejects_missing_reordered_and_wrong_domain_evidence() {
             let p = super::atomic_proof_mut(
                 &mut super::fact_statement_mut(&mut run.statement_results[2]).verify_result,
             );
-            let ObjWellDefinedProof::ByDef {
+            let DetailedObjWellDefinedProof::ByDef {
                 proof: ObjWellDefinedProofByDef::IntegerOperator(p),
                 ..
-            } = &mut p.well_defined_proof.well_defined_of_each_parameter[0]
+            } = (&mut p
+                .well_defined_proof
+                .as_detailed_mut()
+                .unwrap()
+                .well_defined_of_each_parameter[0])
+                .as_detailed_mut()
+                .unwrap()
             else {
                 panic!("integer WD")
             };
@@ -158,10 +164,16 @@ fn gcd_rejects_guard_with_missing_or_duplicated_nonzero_branch() {
         );
         let universal = super::forall_proof_mut(&mut run.statement_results[0]);
         let p = super::atomic_proof_mut(&mut universal.proved_then_facts[0].verify_result);
-        let ObjWellDefinedProof::ByDef {
+        let DetailedObjWellDefinedProof::ByDef {
             proof: ObjWellDefinedProofByDef::IntegerOperator(IntegerWd::Gcd(p)),
             ..
-        } = &mut p.well_defined_proof.well_defined_of_each_parameter[0]
+        } = (&mut p
+            .well_defined_proof
+            .as_detailed_mut()
+            .unwrap()
+            .well_defined_of_each_parameter[0])
+            .as_detailed_mut()
+            .unwrap()
         else {
             panic!("gcd WD")
         };
@@ -231,7 +243,8 @@ fn gcd_lcm_rejects_zero_pair_noninteger_and_forged_calculation() {
     ] {
         let command =
             parse_launch_command(&["-strict".into(), "-e".into(), source.into()]).unwrap();
-        let mut runtime = Runtime::new(command);
+        let mut runtime =
+            Runtime::new_with_result_detail(command, crate::result_detail::OutputDetail::Detailed);
         let run = runtime.run_litex_code(source).unwrap();
         assert!(!run.success, "{source}");
         assert!(super::LitexToLeanCompiler::new(runtime)

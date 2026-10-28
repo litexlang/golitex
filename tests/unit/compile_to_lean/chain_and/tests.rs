@@ -1,7 +1,8 @@
 use crate::compile_to_lean::source_position::{SourceOwner, SourcePosition};
 use crate::execute::execute_fact_stmt::verify_and_fact::VerifyAndFactResult;
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::DetailedForallConclusionArgMatchProof;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::{
-    ForallConclusionArgMatchProof, SearchProofByKnownForallFact, StrictEqualArgProof,
+    SearchProofByKnownForallFact, StrictEqualArgProof,
 };
 use crate::execute::execute_fact_stmt::verify_chain_fact::VerifyChainFactResult;
 use crate::prelude::*;
@@ -59,7 +60,9 @@ fn chain_and_replays_selected_whole_forall_location_requirements_and_rebound_equ
         let capture = whole_known_mut(result.statement_results.last_mut().unwrap());
         assert_eq!(
             capture
+                .detailed_ref()
                 .instantiation_requirements
+                .detailed_ref()
                 .param_type_requirements
                 .len(),
             1
@@ -79,34 +82,45 @@ fn chain_and_whole_forall_rejects_location_order_subjects_and_matching_capture_c
             match mutation {
                 "location" => {
                     let ForallConclusionLocation::DirectThenFact(location) =
-                        &mut proof.cite.location
+                        &mut proof.as_detailed_mut().unwrap().cite.location
                     else {
                         panic!("direct whole conclusion")
                     };
                     location.then_fact_index = 99;
                 }
                 "arity" => {
-                    proof.arg_match_proofs.pop();
+                    proof.as_detailed_mut().unwrap().arg_match_proofs.pop();
                 }
                 "bound" => {
-                    let ForallConclusionArgMatchProof::BoundParam { goal_arg, .. } =
-                        &mut proof.arg_match_proofs[0]
+                    let DetailedForallConclusionArgMatchProof::BoundParam { goal_arg, .. } =
+                        (proof.as_detailed_mut().unwrap().arg_match_proofs[0])
+                            .as_detailed_mut()
+                            .unwrap()
                     else {
                         panic!("original first binder")
                     };
                     *goal_arg = super::number_object("7");
                 }
                 "previous" => {
-                    let ForallConclusionArgMatchProof::ReboundParamEqual { previous, .. } =
-                        &mut proof.arg_match_proofs[1]
+                    let DetailedForallConclusionArgMatchProof::ReboundParamEqual {
+                        previous, ..
+                    } = (proof.as_detailed_mut().unwrap().arg_match_proofs[1])
+                        .as_detailed_mut()
+                        .unwrap()
                     else {
                         panic!("original repeated binder")
                     };
                     *previous = super::number_object("7");
                 }
                 "type" => {
-                    let Fact::AtomicFact(AtomicFact::InFact(member)) =
-                        &mut proof.instantiation_requirements.param_type_requirements[0].type_fact
+                    let Fact::AtomicFact(AtomicFact::InFact(member)) = &mut proof
+                        .as_detailed_mut()
+                        .unwrap()
+                        .instantiation_requirements
+                        .as_detailed_mut()
+                        .unwrap()
+                        .param_type_requirements[0]
+                        .type_fact
                     else {
                         panic!("real type requirement")
                     };
@@ -124,13 +138,17 @@ fn chain_and_whole_forall_denies_future_application_truth_and_instantiates_calle
     let (mut result, compiler) = super::execute(WHOLE_CHAIN);
     let known = whole_known_mut(&mut result.statement_results[2]);
     let pending = SourcePosition::new(None, SourceOwner::KnownApplication(known), 0);
-    let id = known.instantiation_requirements.param_type_requirements[0]
+    let id = known
+        .detailed_ref()
+        .instantiation_requirements
+        .detailed_ref()
+        .param_type_requirements[0]
         .type_fact
         .fact_id();
     let error = pending.visible_fact(id, &compiler.runtime).unwrap_err();
     assert_eq!(error.route, "CompoundKnown/FutureRequirement");
     let completed = SourcePosition {
-        before: known.arg_match_proofs.len() + 1,
+        before: known.detailed_ref().arg_match_proofs.len() + 1,
         ..pending
     };
     assert_eq!(
@@ -141,7 +159,9 @@ fn chain_and_whole_forall_denies_future_application_truth_and_instantiates_calle
     let source = "forall t R:\n    t=t+0=t\nhave x R=2\nx=x+0=x\n";
     let (mut result, compiler) = super::execute(source);
     let member_id = whole_known_mut(&mut result.statement_results[2])
+        .detailed_ref()
         .instantiation_requirements
+        .detailed_ref()
         .param_type_requirements[0]
         .type_fact
         .fact_id();
@@ -166,14 +186,20 @@ fn callee_constructor_factory_rejects_missing_and_wrong_original_formation() {
         };
         let original = &mut super::equality_proof_mut(&mut proof.adjacent[0])
             .well_defined_proof
+            .as_detailed_mut()
+            .unwrap()
             .right;
         if missing {
-            *original = ObjWellDefinedProof::ByKnown {
-                obj: original.obj().clone(),
-                wd_id: WellDefinednessId::new(u64::MAX),
-            };
+            *original = crate::execute::execute_fact_stmt::ObjWellDefinedProof::Detailed(Box::new(
+                DetailedObjWellDefinedProof::ByKnown {
+                    obj: original.obj().clone(),
+                    wd_id: WellDefinednessId::new(u64::MAX),
+                },
+            ));
         } else {
-            let ObjWellDefinedProof::ByDef { obj, .. } = original else {
+            let DetailedObjWellDefinedProof::ByDef { obj, .. } =
+                (original).as_detailed_mut().unwrap()
+            else {
                 panic!("original add constructor")
             };
             *obj = super::number_object("7");
@@ -189,7 +215,13 @@ fn callee_constructor_factory_requires_exact_caller_parameter_and_wd_evidence() 
     for mutation in ["parameter", "argument", "carrier"] {
         let (mut result, compiler) = super::execute(source);
         let capture = whole_known_mut(&mut result.statement_results[2]);
-        let requirement = &mut capture.instantiation_requirements.param_type_requirements[0];
+        let requirement = &mut capture
+            .as_detailed_mut()
+            .unwrap()
+            .instantiation_requirements
+            .as_detailed_mut()
+            .unwrap()
+            .param_type_requirements[0];
         match mutation {
             "parameter" => requirement.param_id = IdentifierId::new(u64::MAX),
             "argument" => requirement.arg = super::number_object("7"),
@@ -209,11 +241,15 @@ fn callee_constructor_factory_requires_exact_caller_parameter_and_wd_evidence() 
             "wd" => {
                 let wd = &mut super::atomic_proof_mut(&mut requirement.proof)
                     .well_defined_proof
+                    .as_detailed_mut()
+                    .unwrap()
                     .well_defined_of_each_parameter[0];
-                *wd = ObjWellDefinedProof::ByKnown {
-                    obj: wd.obj().clone(),
-                    wd_id: WellDefinednessId::new(u64::MAX),
-                };
+                *wd = crate::execute::execute_fact_stmt::ObjWellDefinedProof::Detailed(Box::new(
+                    DetailedObjWellDefinedProof::ByKnown {
+                        obj: wd.obj().clone(),
+                        wd_id: WellDefinednessId::new(u64::MAX),
+                    },
+                ));
             }
             _ => unreachable!(),
         }
@@ -237,12 +273,22 @@ fn callee_constructor_factory_rejects_a_constructor_moved_to_a_future_then() {
     };
     let first = &mut super::equality_proof_mut(&mut proof.adjacent[0])
         .well_defined_proof
+        .as_detailed_mut()
+        .unwrap()
         .right;
     let later = &mut super::equality_proof_mut(&mut later[0].verify_result)
         .well_defined_proof
+        .as_detailed_mut()
+        .unwrap()
         .left;
-    assert!(matches!(first, ObjWellDefinedProof::ByDef { .. }));
-    assert!(matches!(later, ObjWellDefinedProof::ByDef { .. }));
+    assert!(matches!(
+        (first).as_detailed_mut().unwrap(),
+        DetailedObjWellDefinedProof::ByDef { .. }
+    ));
+    assert!(matches!(
+        (later).as_detailed_mut().unwrap(),
+        DetailedObjWellDefinedProof::ByDef { .. }
+    ));
     assert_eq!(first.obj().ir(), later.obj().ir());
     std::mem::swap(first, later);
     // This source actually returns fresh ByDef evidence in both then facts.
@@ -285,7 +331,11 @@ fn callee_constructor_factory_reuses_inner_formation_without_foreign_requirement
         .known_forall
         .as_ref()
         .expect("original inner whole-known route");
-    let foreign = inner.instantiation_requirements.param_type_requirements[0]
+    let foreign = inner
+        .detailed_ref()
+        .instantiation_requirements
+        .detailed_ref()
+        .param_type_requirements[0]
         .type_fact
         .fact_id();
     let pattern = proof.fact.objs[0].clone();
@@ -309,18 +359,25 @@ fn callee_constructor_factory_does_not_publish_pending_domain_truth_to_argument_
     let source = "forall t R:\n    t=t\n    =>:\n        t=t+0=t\nhave x R=2\nx=x+0=x\n";
     let (mut result, compiler) = super::execute(source);
     let proof = whole_known_mut(&mut result.statement_results[2]);
-    let future = proof.instantiation_requirements.dom_facts[0].fact_id();
-    let ForallConclusionArgMatchProof::ByStructure { child_matches, .. } =
-        &mut proof.arg_match_proofs[1]
+    let future = proof
+        .detailed_ref()
+        .instantiation_requirements
+        .detailed_ref()
+        .dom_facts[0]
+        .fact_id();
+    let DetailedForallConclusionArgMatchProof::ByStructure { child_matches, .. } =
+        (proof.as_detailed_mut().unwrap().arg_match_proofs[1])
+            .as_detailed_mut()
+            .unwrap()
     else {
         panic!("original add match")
     };
-    let ForallConclusionArgMatchProof::ReboundParamEqual {
+    let DetailedForallConclusionArgMatchProof::ReboundParamEqual {
         previous,
         goal_arg,
         equal,
         ..
-    } = &mut child_matches[0]
+    } = (child_matches[0]).as_detailed_mut().unwrap()
     else {
         panic!("original repeated parameter")
     };
@@ -600,10 +657,8 @@ fn chain_and_rejects_wrong_adjacent_order_wd_and_stored_projection_ids() {
             let proof = super::equality_proof_mut(
                 &mut chain_adjacent_mut(&mut result.statement_results[2])[0],
             );
-            std::mem::swap(
-                &mut proof.well_defined_proof.left,
-                &mut proof.well_defined_proof.right,
-            );
+            let well_defined = proof.well_defined_proof.as_detailed_mut().unwrap();
+            std::mem::swap(&mut well_defined.left, &mut well_defined.right);
         } else {
             let StoreFactResult::ChainFact(stored) =
                 &mut fact_store_mut(&mut result.statement_results[2]).store

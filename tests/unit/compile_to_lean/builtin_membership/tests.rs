@@ -299,12 +299,15 @@ fn function_membership_domain_comparison_cannot_cite_later_return_proofs() {
 #[test]
 fn function_membership_does_not_erase_part_of_a_functions_domain() {
     let source = "have fn f(x R) R = x\nrelease thm fn_set_member(f,fn(y R: y > 0) C)\n";
-    let mut runtime = Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language: OutputLanguage::English,
-    });
+    let mut runtime = Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    );
     let run = runtime.run_litex_code(source).unwrap();
     assert!(!run.success);
     assert!(crate::compile_to_lean::LitexToLeanCompiler::new(runtime)

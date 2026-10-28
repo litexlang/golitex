@@ -15,8 +15,8 @@ fn ordered_fold_rejects_missing_signature_capture() {
     let p = super::atomic_proof_mut(
         &mut super::fact_statement_mut(&mut run.statement_results[0]).verify_result,
     );
-    let ObjWellDefinedProof::ByDef { proof: ObjWellDefinedProofByDef::IteratedOperator(
-        crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IteratedOperatorObjWellDefinedProofByDef::Reduce(wd)), .. } = &mut p.well_defined_proof.well_defined_of_each_parameter[0] else { panic!("fold WD"); };
+    let DetailedObjWellDefinedProof::ByDef { proof: ObjWellDefinedProofByDef::IteratedOperator(
+        crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IteratedOperatorObjWellDefinedProofByDef::Reduce(wd)), .. } = (&mut p.well_defined_proof.as_detailed_mut().unwrap().well_defined_of_each_parameter[0]).as_detailed_mut().unwrap() else { panic!("fold WD"); };
     assert!(wd.operation_signature_selection.is_some() && wd.iterand_signature_selection.is_some());
     wd.iterand_signature_selection = None;
     assert!(compiler
@@ -155,13 +155,19 @@ fn ordered_fold_rejects_missing_or_reordered_literal_guards() {
         let atom = super::atomic_proof_mut(
             &mut super::fact_statement_mut(&mut run.statement_results[0]).verify_result,
         );
-        let ObjWellDefinedProof::ByDef {
+        let DetailedObjWellDefinedProof::ByDef {
             proof:
                 ObjWellDefinedProofByDef::IteratedOperator(
                     IteratedOperatorObjWellDefinedProofByDef::Reduce(wd),
                 ),
             ..
-        } = &mut atom.well_defined_proof.well_defined_of_each_parameter[0]
+        } = (&mut atom
+            .well_defined_proof
+            .as_detailed_mut()
+            .unwrap()
+            .well_defined_of_each_parameter[0])
+            .as_detailed_mut()
+            .unwrap()
         else {
             panic!("fold WD");
         };
@@ -184,13 +190,19 @@ fn finite_fold_rejects_missing_or_reordered_literal_guards() {
         let atom = super::atomic_proof_mut(
             &mut super::fact_statement_mut(&mut run.statement_results[0]).verify_result,
         );
-        let ObjWellDefinedProof::ByDef {
+        let DetailedObjWellDefinedProof::ByDef {
             proof:
                 ObjWellDefinedProofByDef::IteratedOperator(
                     IteratedOperatorObjWellDefinedProofByDef::FiniteSetReduce(wd),
                 ),
             ..
-        } = &mut atom.well_defined_proof.well_defined_of_each_parameter[0]
+        } = (&mut atom
+            .well_defined_proof
+            .as_detailed_mut()
+            .unwrap()
+            .well_defined_of_each_parameter[0])
+            .as_detailed_mut()
+            .unwrap()
         else {
             panic!("fold WD");
         };

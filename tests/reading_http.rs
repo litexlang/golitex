@@ -123,6 +123,11 @@ fn upload_cache_reuses_complete_evidence_and_invalidates_changed_requests() {
     };
     let first = build(&request);
     assert_eq!(first.0, 200);
+    assert_eq!(
+        first.1,
+        JsonValue::parse(&first.1).unwrap().stringify(),
+        "the checking transport removes only JSON formatting whitespace"
+    );
     assert!(first.2.contains("X-Litex-Reading-Cache: miss"));
     let repeated = build(&request);
     assert!(repeated.2.contains("X-Litex-Reading-Cache: hit"));
@@ -237,6 +242,34 @@ fn real_upload_preview_project_and_failure_boundaries() {
     let full = JsonValue::parse(&full).unwrap();
     assert_eq!(manifest.field("bundle_id"), full.field("bundle_id"));
     for source in manifest.field("sources").as_array().unwrap() {
+        let (status, source_text) = server.request(
+            "GET",
+            &format!("/{}", source.field("source_url").as_str().unwrap()),
+            "",
+            "",
+        );
+        assert_eq!(status, 200);
+        let source_text = JsonValue::parse(&source_text).unwrap();
+        assert_eq!(
+            source_text.field("kind").as_str().unwrap(),
+            "reading_source"
+        );
+        assert_eq!(
+            source_text.field("manifest_id"),
+            manifest.field("manifest_id")
+        );
+        assert_eq!(source_text.field("source").field("id"), source.field("id"));
+        let original_source = full
+            .field("sources")
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|value| value.field("id") == source.field("id"))
+            .unwrap();
+        assert_eq!(
+            source_text.field("source").field("content"),
+            original_source.field("content")
+        );
         let (status, chunk) = server.request(
             "GET",
             &format!("/{}", source.field("chunk_url").as_str().unwrap()),

@@ -77,7 +77,9 @@ impl Runtime {
         else {
             return Ok(None);
         };
-        if let Some((_, value)) = self.parent_checked_beta_body(prefix, &prefix_wd, verify_state)? {
+        if let Some((_, value)) =
+            self.parent_checked_beta_body(prefix, prefix_wd.as_view(), verify_state)?
+        {
             let (signatures, intrinsic) = match &value {
                 Obj::FunctionSpace(FunctionSpace::AnonymousFn(function)) => {
                     (vec![function.body.clone()], true)
@@ -139,14 +141,11 @@ impl Runtime {
         objs: &[&Obj],
         verify_state: VerifyState,
     ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
-        let mut child_obj_well_defined = Vec::new();
+        let mut stages = ObjWellDefinedByDefCommonStages::leaf(self.result_detail());
         for obj in objs {
-            child_obj_well_defined
-                .push(self.verify_obj_well_definedness(obj, verify_state.clone())?);
+            stages.push_child(self.verify_obj_well_definedness(obj, verify_state.clone())?)?;
         }
-        Ok(ObjWellDefinedByDefCommonStages::from_children(
-            child_obj_well_defined,
-        ))
+        Ok(stages)
     }
 
     pub(super) fn verify_boxed_objs_as_children(

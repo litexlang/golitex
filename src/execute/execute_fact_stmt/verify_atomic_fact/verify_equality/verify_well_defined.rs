@@ -17,22 +17,30 @@ impl Runtime {
     ) -> RuntimeResult<VerifyEqualFactWellDefinedResult> {
         let left = match self.verify_obj_well_definedness(&fact.left, verify_state.clone())? {
             VerifyObjWellDefinedResult::Success(proof) => proof,
-            VerifyObjWellDefinedResult::Failed { reason, .. } => {
+            VerifyObjWellDefinedResult::Failed { obj, reason } => {
                 return Ok(VerifyEqualFactWellDefinedResult::Failed(
-                    FailToVerifyEqualFactWellDefinedResult { reason },
+                    FailToVerifyEqualFactWellDefinedResult {
+                        fact: fact.clone(),
+                        failed_obj: obj,
+                        reason,
+                    },
                 ));
             }
         };
         let right = match self.verify_obj_well_definedness(&fact.right, verify_state)? {
             VerifyObjWellDefinedResult::Success(proof) => proof,
-            VerifyObjWellDefinedResult::Failed { reason, .. } => {
+            VerifyObjWellDefinedResult::Failed { obj, reason } => {
                 return Ok(VerifyEqualFactWellDefinedResult::Failed(
-                    FailToVerifyEqualFactWellDefinedResult { reason },
+                    FailToVerifyEqualFactWellDefinedResult {
+                        fact: fact.clone(),
+                        failed_obj: obj,
+                        reason,
+                    },
                 ));
             }
         };
         Ok(VerifyEqualFactWellDefinedResult::Success(
-            EqualFactWellDefinedProof { left, right },
+            EqualFactWellDefinedProof::from_children(self.result_detail(), left, right)?,
         ))
     }
 }

@@ -3,7 +3,8 @@ use crate::prelude::*;
 
 fn execute(source: &str) -> (RunLitexCodeResult, LitexToLeanCompiler) {
     let command = parse_launch_command(&["-strict".into(), "-e".into(), source.into()]).unwrap();
-    let mut runtime = Runtime::new(command);
+    let mut runtime =
+        Runtime::new_with_result_detail(command, crate::result_detail::OutputDetail::Detailed);
     let result = runtime.run_litex_code(source).unwrap();
     assert!(result.success, "phase-4 source must verify first");
     (result, LitexToLeanCompiler::new(runtime))
@@ -27,11 +28,11 @@ fn union_formation_rejects_a_missing_original_operand() {
     else {
         panic!("set alias");
     };
-    let VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByDef {
+    let Some(DetailedObjWellDefinedProof::ByDef {
         proof: ObjWellDefinedProofByDef::SetOperator(
             crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SetOperatorObjWellDefinedProofByDef::Union(wd)
         ), ..
-    }) = &mut proof.equal_to_well_defined[0] else {
+    }) = (&mut proof.equal_to_well_defined[0]).as_detailed_success_mut().unwrap() else {
         panic!("union constructor");
     };
     wd.child_obj_well_defined.pop();
@@ -176,7 +177,7 @@ fn finite_formation_cannot_drop_its_distinctness_evidence() {
         else {
             panic!("set equality")
         };
-        let VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByDef { proof: ObjWellDefinedProofByDef::SetFormer(crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SetFormerObjWellDefinedProofByDef::ListSet(wd)), .. }) = &mut p.equal_to_well_defined[0] else { panic!("finite WD") };
+        let Some(DetailedObjWellDefinedProof::ByDef { proof: ObjWellDefinedProofByDef::SetFormer(crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SetFormerObjWellDefinedProofByDef::ListSet(wd)), .. }) = (&mut p.equal_to_well_defined[0]).as_detailed_success_mut().unwrap() else { panic!("finite WD") };
         assert_eq!(wd.requirement_fact_verified.len(), 1);
         let expected_route = if change == "missing" {
             wd.requirement_fact_verified.clear();
@@ -215,7 +216,7 @@ fn builder_formation_cannot_recover_a_missing_binder_from_local_env() {
     else {
         panic!("set equality")
     };
-    let VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByDef { proof: ObjWellDefinedProofByDef::SetFormer(crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SetFormerObjWellDefinedProofByDef::SetBuilder(wd)), .. }) = &mut p.equal_to_well_defined[0] else { panic!("builder WD") };
+    let Some(DetailedObjWellDefinedProof::ByDef { proof: ObjWellDefinedProofByDef::SetFormer(crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SetFormerObjWellDefinedProofByDef::SetBuilder(wd)), .. }) = (&mut p.equal_to_well_defined[0]).as_detailed_success_mut().unwrap() else { panic!("builder WD") };
     wd.defined_params.store_and_infer_results.clear();
     wd.defined_params.stored_fact_ids.clear();
     assert_eq!(

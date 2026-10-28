@@ -287,8 +287,8 @@ impl<'a> SourcePosition<'a> {
         proof: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnObjObjWellDefinedProof,
     ) -> Option<String> {
         self.bound_child(|child| {
-            matches!(child,
-                ObjWellDefinedProof::ByDef {
+            matches!((child).detailed_ref(),
+                DetailedObjWellDefinedProof::ByDef {
                     obj: Obj::FnObj(original_application),
                     proof: ObjWellDefinedProofByDef::FnObj(original),
                 } if original_application == application && std::ptr::eq(original, proof)
@@ -305,8 +305,8 @@ impl<'a> SourcePosition<'a> {
         proof: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnObjObjWellDefinedProof,
     ) -> Option<String> {
         self.bound_child(|child| {
-            matches!(child,
-                ObjWellDefinedProof::ByDef {
+            matches!((child).detailed_ref(),
+                DetailedObjWellDefinedProof::ByDef {
                     obj: Obj::FnObj(original_application),
                     proof: ObjWellDefinedProofByDef::FnObj(original),
                 } if original_application == application && same_call_constructor(original, proof)
@@ -484,9 +484,9 @@ impl<'a> SourcePosition<'a> {
                         continue;
                     };
                     let child = if stage % 2 == 0 {
-                        &result.well_defined_proof.left
+                        &result.well_defined_proof.detailed_ref().left
                     } else {
-                        &result.well_defined_proof.right
+                        &result.well_defined_proof.detailed_ref().right
                     };
                     if matches!(
                         child.obj(),
@@ -501,7 +501,7 @@ impl<'a> SourcePosition<'a> {
                 }
             }
             if let SourceOwner::EqualWDLocals(proof, emitted) = position.owner {
-                for (index, child) in [&proof.left, &proof.right]
+                for (index, child) in [&proof.detailed_ref().left, &proof.detailed_ref().right]
                     .into_iter()
                     .take(emitted)
                     .enumerate()
@@ -522,6 +522,7 @@ impl<'a> SourcePosition<'a> {
             }
             if let SourceOwner::AtomicWDLocals(proof, emitted) = position.owner {
                 for (index, child) in proof
+                    .detailed_ref()
                     .well_defined_of_each_parameter
                     .iter()
                     .take(emitted)
@@ -1506,10 +1507,10 @@ impl<'a> SourcePosition<'a> {
                 SourceOwner::Zorn(p) => Some(p.local_env.as_ref()),
                 SourceOwner::Forall(p) => Some(p.local_env.as_ref()),
                 SourceOwner::EmptyForall(p) => Some(p.local_env.as_ref()),
-                SourceOwner::ForallWD(_, p) => Some(p.local_env.as_ref()),
-                SourceOwner::NotForallWD(_, p) => Some(p.local_env.as_ref()),
-                SourceOwner::ForallIffWD(_, p) => Some(p.local_env.as_ref()),
-                SourceOwner::ExistWD(_, p) => Some(p.local_env.as_ref()),
+                SourceOwner::ForallWD(_, p) => Some(p.detailed_ref().local_env.as_ref()),
+                SourceOwner::NotForallWD(_, p) => Some(p.detailed_ref().local_env.as_ref()),
+                SourceOwner::ForallIffWD(_, p) => Some(p.detailed_ref().local_env.as_ref()),
+                SourceOwner::ExistWD(_, p) => Some(p.detailed_ref().local_env.as_ref()),
                 SourceOwner::WitnessExist(p) => Some(p.local_env.as_ref()),
                 SourceOwner::WitnessAtomic(p) => Some(p.local_env.as_ref()),
                 SourceOwner::WitnessNonempty(p) => Some(p.local_env.as_ref()),
@@ -1519,7 +1520,9 @@ impl<'a> SourcePosition<'a> {
                 SourceOwner::OrSelected(p) => Some(p.local_env.as_ref()),
                 SourceOwner::EnumerationAssignment(_, p) => Some(p.local_env.as_ref()),
                 SourceOwner::CasesBranch(p) => Some(p.local_env.as_ref()),
-                SourceOwner::KnownForall(p) => Some(p.well_defined.local_env.as_ref()),
+                SourceOwner::KnownForall(p) => {
+                    Some(p.well_defined.detailed_ref().local_env.as_ref())
+                }
                 SourceOwner::Call(p) => Some(p.local_env.as_ref()),
                 SourceOwner::ThmRelease(p) => Some(p.local_env.as_ref()),
                 SourceOwner::HaveEqualType(p) => Some(p.type_local_env.as_ref()),
@@ -1572,10 +1575,10 @@ impl<'a> SourcePosition<'a> {
                 SourceOwner::Zorn(p) => Some(p.local_env.as_ref()),
                 SourceOwner::Forall(p) => Some(p.local_env.as_ref()),
                 SourceOwner::EmptyForall(p) => Some(p.local_env.as_ref()),
-                SourceOwner::ForallWD(_, p) => Some(p.local_env.as_ref()),
-                SourceOwner::NotForallWD(_, p) => Some(p.local_env.as_ref()),
-                SourceOwner::ForallIffWD(_, p) => Some(p.local_env.as_ref()),
-                SourceOwner::ExistWD(_, p) => Some(p.local_env.as_ref()),
+                SourceOwner::ForallWD(_, p) => Some(p.detailed_ref().local_env.as_ref()),
+                SourceOwner::NotForallWD(_, p) => Some(p.detailed_ref().local_env.as_ref()),
+                SourceOwner::ForallIffWD(_, p) => Some(p.detailed_ref().local_env.as_ref()),
+                SourceOwner::ExistWD(_, p) => Some(p.detailed_ref().local_env.as_ref()),
                 SourceOwner::WitnessExist(p) => Some(p.local_env.as_ref()),
                 SourceOwner::WitnessAtomic(p) => Some(p.local_env.as_ref()),
                 SourceOwner::WitnessNonempty(p) => Some(p.local_env.as_ref()),
@@ -1585,7 +1588,9 @@ impl<'a> SourcePosition<'a> {
                 SourceOwner::OrSelected(p) => Some(p.local_env.as_ref()),
                 SourceOwner::EnumerationAssignment(_, p) => Some(p.local_env.as_ref()),
                 SourceOwner::CasesBranch(p) => Some(p.local_env.as_ref()),
-                SourceOwner::KnownForall(p) => Some(p.well_defined.local_env.as_ref()),
+                SourceOwner::KnownForall(p) => {
+                    Some(p.well_defined.detailed_ref().local_env.as_ref())
+                }
                 SourceOwner::Call(p) => Some(p.local_env.as_ref()),
                 SourceOwner::ThmRelease(p) => Some(p.local_env.as_ref()),
                 SourceOwner::HaveEqualType(p) => Some(p.type_local_env.as_ref()),
@@ -1976,7 +1981,9 @@ impl<'a> SourcePosition<'a> {
                 }
             }
             if let SourceOwner::KnownApplication(proof) = current.owner {
-                let completed = current.before.saturating_sub(proof.arg_match_proofs.len());
+                let completed = current
+                    .before
+                    .saturating_sub(proof.detailed_ref().arg_match_proofs.len());
                 if known_application_requirements(proof)
                     .into_iter()
                     .skip(completed)
@@ -2286,7 +2293,7 @@ impl<'a> SourcePosition<'a> {
                 let SourceConstructor::Checked(proof) = evidence else {
                     return Ok(None);
                 };
-                if matches!(proof, ObjWellDefinedProof::ByDef { obj, .. } if same_wd_subject(obj, object))
+                if matches!((proof).detailed_ref(), DetailedObjWellDefinedProof::ByDef { obj, .. } if same_wd_subject(obj, object))
                 {
                     callback(proof, position).map(Some)
                 } else {
@@ -2371,8 +2378,10 @@ impl<'a> SourcePosition<'a> {
                     arithmetic_stages(proof).map(|(children, _)| children),
                     function_argument_scope(proof), position.before),
                 SourceOwner::CompleteDomainSource(proof) => match &proof.source {
-                    crate::execute::execute_fact_stmt::function_domain::CompleteFunctionDomainSourceProof::ApplicationReturn { application_children, argument_scope, .. } =>
-                        (Some(application_children.as_slice()), argument_scope.as_ref(), position.before),
+                    crate::execute::execute_fact_stmt::function_domain::CompleteFunctionDomainSourceProof::ApplicationReturn { application_check, .. } => {
+                        let checks = application_check.detailed_ref();
+                        (Some(checks.child_obj_well_defined.as_slice()), checks.argument_scope.as_ref(), position.before)
+                    },
                     _ => (None, None, 0),
                 },
                 _ => (None, None, 0),
@@ -3747,7 +3756,10 @@ fn parameter_in_owner<'a>(
     match position.owner {
         SourceOwner::ExistWD(fact, p) => parameter_from_groups(
             &fact.typed_parameters.groups,
-            &p.introduced_params.defined_params.store_and_infer_results,
+            &p.detailed_ref()
+                .introduced_params
+                .defined_params
+                .store_and_infer_results,
             position.before,
             id,
         ),
@@ -3805,25 +3817,35 @@ fn parameter_in_owner<'a>(
         ),
         SourceOwner::ForallIffWD(fact, p) => parameter_from_groups(
             &fact.forall_fact.typed_parameters.groups,
-            &p.introduced_params.defined_params.store_and_infer_results,
+            &p.detailed_ref()
+                .introduced_params
+                .defined_params
+                .store_and_infer_results,
             position.before,
             id,
         ),
         SourceOwner::ForallWD(fact, p) => parameter_from_groups(
             &fact.typed_parameters.groups,
-            &p.introduced_params.defined_params.store_and_infer_results,
+            &p.detailed_ref()
+                .introduced_params
+                .defined_params
+                .store_and_infer_results,
             position.before,
             id,
         ),
         SourceOwner::NotForallWD(fact, p) => parameter_from_groups(
             &fact.typed_parameters.groups,
-            &p.introduced_params.defined_params.store_and_infer_results,
+            &p.detailed_ref()
+                .introduced_params
+                .defined_params
+                .store_and_infer_results,
             position.before,
             id,
         ),
         SourceOwner::KnownForall(p) => parameter_from_groups(
             &p.fact.typed_parameters.groups,
             &p.well_defined
+                .detailed_ref()
                 .introduced_params
                 .defined_params
                 .store_and_infer_results,
@@ -3972,8 +3994,8 @@ fn function_binder(
     &[AssumeDomFactResult],
     &crate::exec_env::ExecEnv,
 )> {
-    match proof {
-        ObjWellDefinedProof::ByDef {
+    match (proof).detailed_ref() {
+        DetailedObjWellDefinedProof::ByDef {
             obj: Obj::FunctionSpace(FunctionSpace::FnSet(signature)),
             proof:
                 ObjWellDefinedProofByDef::FunctionSpace(FunctionSpaceObjWellDefinedProofByDef::FnSet(
@@ -3986,7 +4008,7 @@ fn function_binder(
             &proof.assumed_dom_facts,
             &proof.local_env,
         )),
-        ObjWellDefinedProof::ByDef {
+        DetailedObjWellDefinedProof::ByDef {
             obj: Obj::FunctionSpace(FunctionSpace::AnonymousFn(function)),
             proof:
                 ObjWellDefinedProofByDef::FunctionSpace(
@@ -4618,7 +4640,11 @@ fn statement_reference(
                     else {
                         return Err(LeanCompileError::unsupported("Enumeration/CitationWD"));
                     };
-                    let stores = &wd.introduced_params.defined_params.store_and_infer_results;
+                    let stores = &wd
+                        .detailed_ref()
+                        .introduced_params
+                        .defined_params
+                        .store_and_infer_results;
                     if stores.len() != count {
                         return Err(LeanCompileError::unsupported("Enumeration/ParameterStore"));
                     }
@@ -5186,8 +5212,8 @@ fn fact_reference_in_owner(
 
         SourceOwner::ExistWD(fact, p) => header_reference(
             &fact.typed_parameters.groups,
-            &p.introduced_params,
-            &p.assumed_body_facts,
+            &p.detailed_ref().introduced_params,
+            &p.detailed_ref().assumed_body_facts,
             position.before,
             id,
             actual,
@@ -5421,32 +5447,32 @@ fn fact_reference_in_owner(
         }
         SourceOwner::ForallIffWD(fact, p) => header_reference(
             &fact.forall_fact.typed_parameters.groups,
-            &p.introduced_params,
-            &p.assumed_dom_facts,
+            &p.detailed_ref().introduced_params,
+            &p.detailed_ref().assumed_dom_facts,
             position.before,
             id,
             actual,
         ),
         SourceOwner::ForallWD(fact, p) => header_reference(
             &fact.typed_parameters.groups,
-            &p.introduced_params,
-            &p.assumed_dom_facts,
+            &p.detailed_ref().introduced_params,
+            &p.detailed_ref().assumed_dom_facts,
             position.before,
             id,
             actual,
         ),
         SourceOwner::NotForallWD(fact, p) => header_reference(
             &fact.typed_parameters.groups,
-            &p.introduced_params,
-            &p.assumed_dom_facts,
+            &p.detailed_ref().introduced_params,
+            &p.detailed_ref().assumed_dom_facts,
             position.before,
             id,
             actual,
         ),
         SourceOwner::KnownForall(p) => header_reference(
             &p.fact.typed_parameters.groups,
-            &p.well_defined.introduced_params,
-            &p.well_defined.assumed_dom_facts,
+            &p.well_defined.detailed_ref().introduced_params,
+            &p.well_defined.detailed_ref().assumed_dom_facts,
             position.before,
             id,
             actual,
@@ -5781,10 +5807,11 @@ fn fact_reference_in_owner(
             Ok(None)
         }
         SourceOwner::KnownApplication(proof) => {
-            for (fact, _) in known_application_requirements(proof)
-                .into_iter()
-                .take(position.before.saturating_sub(proof.arg_match_proofs.len()))
-            {
+            for (fact, _) in known_application_requirements(proof).into_iter().take(
+                position
+                    .before
+                    .saturating_sub(proof.detailed_ref().arg_match_proofs.len()),
+            ) {
                 if fact.fact_id() == id {
                     check_subject(fact, actual)?;
                     return Ok(Some(format!("h_{}", id.value())));
@@ -6410,8 +6437,8 @@ fn visit_function_formation<T>(
     };
     let head = carriers.len() + parameters.store_and_infer_results.len();
     let end = head + domains.len();
-    let ret = match proof {
-        ObjWellDefinedProof::ByDef {
+    let ret = match (proof).detailed_ref() {
+        DetailedObjWellDefinedProof::ByDef {
             proof:
                 ObjWellDefinedProofByDef::FunctionSpace(
                     FunctionSpaceObjWellDefinedProofByDef::AnonymousFn(p),
@@ -6442,7 +6469,7 @@ fn visit_function_formation<T>(
             }
             &p.ret_set_well_defined
         }
-        ObjWellDefinedProof::ByDef {
+        DetailedObjWellDefinedProof::ByDef {
             proof:
                 ObjWellDefinedProofByDef::FunctionSpace(FunctionSpaceObjWellDefinedProofByDef::FnSet(p)),
             ..
@@ -6597,8 +6624,11 @@ fn visit_not_forall_outer_carrier<T>(
         &SourcePosition<'_>,
     ) -> Result<Option<T>, LeanCompileError>,
 ) -> Result<Option<T>, LeanCompileError> {
-    let Some(ParamTypeWellDefinedProof::Obj(carrier)) =
-        proof.introduced_params.param_type_well_defined.first()
+    let Some(ParamTypeWellDefinedProof::Obj(carrier)) = proof
+        .detailed_ref()
+        .introduced_params
+        .param_type_well_defined
+        .first()
     else {
         return Ok(None);
     };
@@ -7136,8 +7166,8 @@ fn visit_owner<T>(
         SourceOwner::ExistWD(fact, proof) => {
             return visit_header(
                 &fact.typed_parameters.groups,
-                &proof.introduced_params,
-                &proof.assumed_body_facts,
+                &proof.detailed_ref().introduced_params,
+                &proof.detailed_ref().assumed_body_facts,
                 position,
                 wd,
                 verify,
@@ -7621,13 +7651,13 @@ fn visit_owner<T>(
             if let Some(value) = visit_function_formation(proof, position, wd, verify)? {
                 return Ok(Some(value));
             }
-            if let ObjWellDefinedProof::ByDef {
+            if let DetailedObjWellDefinedProof::ByDef {
                 obj: Obj::SetFormer(SetFormer::SetBuilder(set)),
                 proof:
                     ObjWellDefinedProofByDef::SetFormer(SetFormerObjWellDefinedProofByDef::SetBuilder(
                         captured,
                     )),
-            } = proof
+            } = (proof).detailed_ref()
             {
                 let scope = SourcePosition::new(
                     Some(position),
@@ -7646,10 +7676,10 @@ fn visit_owner<T>(
                     return Ok(Some(value));
                 }
             }
-            if let ObjWellDefinedProof::ByDef {
+            if let DetailedObjWellDefinedProof::ByDef {
                 proof: ObjWellDefinedProofByDef::FunctionSpace(p),
                 ..
-            } = proof
+            } = (proof).detailed_ref()
             {
                 let construction = match p {
                     FunctionSpaceObjWellDefinedProofByDef::Preimage(p) => {
@@ -7674,13 +7704,13 @@ fn visit_owner<T>(
                     }
                 }
             }
-            if let ObjWellDefinedProof::ByDef {
+            if let DetailedObjWellDefinedProof::ByDef {
                 proof:
                     ObjWellDefinedProofByDef::FunctionSpace(
                         FunctionSpaceObjWellDefinedProofByDef::Composition(p),
                     ),
                 ..
-            } = proof
+            } = (proof).detailed_ref()
             {
                 for (i, child) in [
                     &p.outer_well_defined,
@@ -7751,10 +7781,10 @@ fn visit_owner<T>(
                     }
                 }
             }
-            if let ObjWellDefinedProof::ByDef {
+            if let DetailedObjWellDefinedProof::ByDef {
                 proof: ObjWellDefinedProofByDef::FnObj(p),
                 ..
-            } = proof
+            } = (proof).detailed_ref()
             {
                 if let Some(crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnObjDomainFnSetEvidence::Matrix(c)) = &p.domain_fn_set {
                     if let crate::execute::execute_fact_stmt::native_matrix::MatrixCallableWellDefinedProof::Checked(root) = &c.well_defined {
@@ -7776,7 +7806,7 @@ fn visit_owner<T>(
             return visit_atomic_formation(proof, position.before, position, wd, verify)
         }
         SourceOwner::EqualWDLocals(proof, _) => {
-            for (index, child) in [&proof.left, &proof.right]
+            for (index, child) in [&proof.detailed_ref().left, &proof.detailed_ref().right]
                 .into_iter()
                 .take(position.before)
                 .enumerate()
@@ -7860,17 +7890,18 @@ fn visit_owner<T>(
             // a truth assumption while forming the opposite side.
             return visit_header(
                 &fact.forall_fact.typed_parameters.groups,
-                &proof.introduced_params,
-                &proof.assumed_dom_facts,
+                &proof.detailed_ref().introduced_params,
+                &proof.detailed_ref().assumed_dom_facts,
                 position,
                 wd,
                 verify,
             );
         }
         SourceOwner::ForallWD(fact, proof) => {
-            let head =
-                parameter_count(&fact.typed_parameters.groups) + proof.assumed_dom_facts.len();
+            let head = parameter_count(&fact.typed_parameters.groups)
+                + proof.detailed_ref().assumed_dom_facts.len();
             for (index, then) in proof
+                .detailed_ref()
                 .then
                 .iter()
                 .take(position.before.saturating_sub(head))
@@ -7890,17 +7921,18 @@ fn visit_owner<T>(
             }
             return visit_header(
                 &fact.typed_parameters.groups,
-                &proof.introduced_params,
-                &proof.assumed_dom_facts,
+                &proof.detailed_ref().introduced_params,
+                &proof.detailed_ref().assumed_dom_facts,
                 position,
                 wd,
                 verify,
             );
         }
         SourceOwner::NotForallWD(fact, proof) => {
-            let head =
-                parameter_count(&fact.typed_parameters.groups) + proof.assumed_dom_facts.len();
+            let head = parameter_count(&fact.typed_parameters.groups)
+                + proof.detailed_ref().assumed_dom_facts.len();
             for (index, then) in proof
+                .detailed_ref()
                 .then
                 .iter()
                 .take(position.before.saturating_sub(head))
@@ -7920,8 +7952,8 @@ fn visit_owner<T>(
             }
             return visit_header(
                 &fact.typed_parameters.groups,
-                &proof.introduced_params,
-                &proof.assumed_dom_facts,
+                &proof.detailed_ref().introduced_params,
+                &proof.detailed_ref().assumed_dom_facts,
                 position,
                 wd,
                 verify,
@@ -7929,9 +7961,10 @@ fn visit_owner<T>(
         }
         SourceOwner::KnownForall(proof) => {
             let head = parameter_count(&proof.fact.typed_parameters.groups)
-                + proof.well_defined.assumed_dom_facts.len();
+                + proof.well_defined.detailed_ref().assumed_dom_facts.len();
             for (index, then) in proof
                 .well_defined
+                .detailed_ref()
                 .then
                 .iter()
                 .take(position.before.saturating_sub(head))
@@ -7951,8 +7984,8 @@ fn visit_owner<T>(
             }
             return visit_header(
                 &proof.fact.typed_parameters.groups,
-                &proof.well_defined.introduced_params,
-                &proof.well_defined.assumed_dom_facts,
+                &proof.well_defined.detailed_ref().introduced_params,
+                &proof.well_defined.detailed_ref().assumed_dom_facts,
                 position,
                 wd,
                 verify,
@@ -8813,10 +8846,12 @@ fn visit_owner<T>(
         }
         SourceOwner::KnownApplication(proof) => {
             let requirements = known_application_requirements(proof);
-            let completed = position.before.saturating_sub(proof.arg_match_proofs.len());
+            let completed = position
+                .before
+                .saturating_sub(proof.detailed_ref().arg_match_proofs.len());
             for (index, (_, checked)) in requirements.iter().take(completed).enumerate().rev() {
                 let prior = SourcePosition {
-                    before: proof.arg_match_proofs.len() + index,
+                    before: proof.detailed_ref().arg_match_proofs.len() + index,
                     ..*position
                 };
                 if let Some(value) = visit_complete_verify(checked, &prior, wd, verify)? {
@@ -9833,8 +9868,8 @@ fn visit_statement<T>(
                 return Ok(Some(value));
             }
             for (index, child) in [
-                &proof.verification.well_defined_proof.left,
-                &proof.verification.well_defined_proof.right,
+                &proof.verification.well_defined_proof.detailed_ref().left,
+                &proof.verification.well_defined_proof.detailed_ref().right,
             ]
             .into_iter()
             .take(before.min(2))
@@ -10257,7 +10292,7 @@ fn visit_verify_formation<T>(
                         let scope = SourcePosition::new(
                             Some(position),
                             SourceOwner::KnownApplication(known),
-                            known.arg_match_proofs.len() + known_application_requirements(known).len(),
+                            known.detailed_ref().arg_match_proofs.len() + known_application_requirements(known).len(),
                         );
                         if let Some(value) = visit_owner(&scope, wd, verify)? {
                             return Ok(Some(value));
@@ -10281,8 +10316,8 @@ fn visit_verify_formation<T>(
                     }
                 }
                 let children = [
-                    &proof.well_defined_proof.left,
-                    &proof.well_defined_proof.right,
+                    &proof.well_defined_proof.detailed_ref().left,
+                    &proof.well_defined_proof.detailed_ref().right,
                 ];
                 for (index, child) in children.iter().take(before).enumerate().rev() {
                     let prior = SourcePosition {
@@ -10304,7 +10339,7 @@ fn visit_verify_formation<T>(
         VerifyFactResult::AndFact(result) => {
             if let crate::execute::execute_fact_stmt::verify_and_fact::VerifyAndFactResult::Success(proof) = result.as_ref() {
                 if let Some(known)=&proof.known_forall {
-                    let scope=SourcePosition::new(Some(position),SourceOwner::KnownApplication(known),known.arg_match_proofs.len()+known_application_requirements(known).len());
+                    let scope=SourcePosition::new(Some(position),SourceOwner::KnownApplication(known),known.detailed_ref().arg_match_proofs.len()+known_application_requirements(known).len());
                     if let Some(value)=visit_owner(&scope,wd,verify)? { return Ok(Some(value)); }
                 }
                 for (index, child) in proof.components.iter().take(before).enumerate().rev() {
@@ -10316,7 +10351,7 @@ fn visit_verify_formation<T>(
         VerifyFactResult::ChainFact(result) => {
             if let crate::execute::execute_fact_stmt::verify_chain_fact::VerifyChainFactResult::Success(proof) = result.as_ref() {
                 if let Some(known)=&proof.known_forall {
-                    let scope=SourcePosition::new(Some(position),SourceOwner::KnownApplication(known),known.arg_match_proofs.len()+known_application_requirements(known).len());
+                    let scope=SourcePosition::new(Some(position),SourceOwner::KnownApplication(known),known.detailed_ref().arg_match_proofs.len()+known_application_requirements(known).len());
                     if let Some(value)=visit_owner(&scope,wd,verify)? { return Ok(Some(value)); }
                 }
                 for (index, child) in proof.adjacent.iter().take(before).enumerate().rev() {
@@ -10339,14 +10374,14 @@ fn visit_verify_formation<T>(
                     }
                 }
                 if let OrFactSearchedProof::ByBuiltinRule(OrFactSearchProofByBuiltinRule::ZeroProductSplit(selected)) = &proof.searched_proof {
-                    let head = proof.well_defined_proof.branches.len();
+                    let head = proof.well_defined_proof.detailed_ref().branches.len();
                     for (i, child) in [&selected.left_in_r, &selected.right_in_r, &selected.product_zero].into_iter().take(before.saturating_sub(head)).enumerate().collect::<Vec<_>>().into_iter().rev() {
                         let prior = SourcePosition { before: head + i, ..*position };
                         if let Some(value) = visit_complete_verify(child, &prior, wd, verify)? { return Ok(Some(value)); }
                     }
                 }
 
-                for (index, child) in proof.well_defined_proof.branches.iter().take(before).enumerate().rev() {
+                for (index, child) in proof.well_defined_proof.detailed_ref().branches.iter().take(before).enumerate().rev() {
                     let prior = SourcePosition { before: index, ..*position };
                     let formation = SourcePosition::new(Some(&prior), SourceOwner::FactWD(child), usize::MAX);
                     if let Some(value) = visit_fact_formation(child, usize::MAX, &formation, wd, verify)? { return Ok(Some(value)); }
@@ -10411,7 +10446,8 @@ fn visit_atomic_verify_formation<T>(
             let scope = SourcePosition::new(
                 Some(position),
                 SourceOwner::KnownApplication(known),
-                known.arg_match_proofs.len() + known_application_requirements(known).len(),
+                known.detailed_ref().arg_match_proofs.len()
+                    + known_application_requirements(known).len(),
             );
             if let Some(value) = visit_owner(&scope, wd, verify)? {
                 return Ok(Some(value));
@@ -10428,8 +10464,8 @@ fn visit_atomic_verify_formation<T>(
 }
 
 fn atomic_formation_stage_count(proof: &AtomicFactWellDefinedProof) -> usize {
-    proof.well_defined_of_each_parameter.len()
-        + match &proof.predicate_domain {
+    proof.detailed_ref().well_defined_of_each_parameter.len()
+        + match &proof.detailed_ref().predicate_domain {
             PredicateDomainProof::ByRequirements(requirements) => requirements.len(),
             _ => 0,
         }
@@ -10470,10 +10506,11 @@ fn complete_domain_source_stages<'a>(
             stages.push(AtomicSearchStage::WD(instance_wd))
         }
         CompleteFunctionDomainSourceProof::ApplicationReturn {
-            application_children,
-            application_requirements,
-            ..
+            application_check, ..
         } => {
+            let checks = application_check.detailed_ref();
+            let application_children = &checks.child_obj_well_defined;
+            let application_requirements = &checks.requirement_fact_verified;
             stages.extend(
                 application_children
                     .iter()
@@ -10494,7 +10531,7 @@ fn complete_domain_argument_scope(
 ) -> Option<&crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnObjArgumentScope>
 {
     match &proof.source {
-        crate::execute::execute_fact_stmt::function_domain::CompleteFunctionDomainSourceProof::ApplicationReturn { argument_scope, .. } => argument_scope.as_ref(),
+        crate::execute::execute_fact_stmt::function_domain::CompleteFunctionDomainSourceProof::ApplicationReturn { application_check, .. } => application_check.detailed_ref().argument_scope.as_ref(),
         _ => None,
     }
 }
@@ -10874,8 +10911,10 @@ fn visit_atomic_formation<T>(
         &SourcePosition<'_>,
     ) -> Result<Option<T>, LeanCompileError>,
 ) -> Result<Option<T>, LeanCompileError> {
-    let children = &proof.well_defined_of_each_parameter;
-    if let PredicateDomainProof::ByRequirements(requirements) = &proof.predicate_domain {
+    let children = &proof.detailed_ref().well_defined_of_each_parameter;
+    if let PredicateDomainProof::ByRequirements(requirements) =
+        &proof.detailed_ref().predicate_domain
+    {
         for (index, requirement) in requirements
             .iter()
             .take(before.saturating_sub(children.len()))
@@ -10918,7 +10957,7 @@ fn visit_fact_formation<T>(
 ) -> Result<Option<T>, LeanCompileError> {
     match proof {
         FactWellDefinedProof::Equality(proof) => {
-            let children = [&proof.left, &proof.right];
+            let children = [&proof.detailed_ref().left, &proof.detailed_ref().right];
             for (index, child) in children.iter().take(before).enumerate().rev() {
                 let prior = SourcePosition {
                     before: index,
@@ -10932,10 +10971,11 @@ fn visit_fact_formation<T>(
         FactWellDefinedProof::AtomicExceptEquality(proof) => {
             return visit_atomic_formation(proof, before, position, wd, verify)
         }
-        FactWellDefinedProof::AndFact { components }
-        | FactWellDefinedProof::ChainFact {
-            adjacent: components,
-        } => {
+        FactWellDefinedProof::AndFact(proof) => {
+            let components = &proof
+                .as_detailed()
+                .unwrap_or_else(|error| panic!("{error}"))
+                .components;
             for (index, child) in components.iter().take(before).enumerate().rev() {
                 let prior = SourcePosition {
                     before: index,
@@ -10950,8 +10990,34 @@ fn visit_fact_formation<T>(
                 }
             }
         }
+        FactWellDefinedProof::ChainFact(proof) => {
+            let adjacent = &proof
+                .as_detailed()
+                .unwrap_or_else(|error| panic!("{error}"))
+                .adjacent;
+            for (index, child) in adjacent.iter().take(before).enumerate().rev() {
+                let prior = SourcePosition {
+                    before: index,
+                    ..*position
+                };
+                let formation =
+                    SourcePosition::new(Some(&prior), SourceOwner::AtomicWD(child), usize::MAX);
+                if let Some(value) =
+                    visit_atomic_formation(child, usize::MAX, &formation, wd, verify)?
+                {
+                    return Ok(Some(value));
+                }
+            }
+        }
         FactWellDefinedProof::OrFact(proof) => {
-            for (index, child) in proof.branches.iter().take(before).enumerate().rev() {
+            for (index, child) in proof
+                .detailed_ref()
+                .branches
+                .iter()
+                .take(before)
+                .enumerate()
+                .rev()
+            {
                 let prior = SourcePosition {
                     before: index,
                     ..*position
@@ -10981,13 +11047,13 @@ fn projected_wd_child<'a>(
     if matches(proof) {
         return Some((proof, term));
     }
-    if let ObjWellDefinedProof::ByDef {
+    if let DetailedObjWellDefinedProof::ByDef {
         proof:
             ObjWellDefinedProofByDef::FunctionSpace(FunctionSpaceObjWellDefinedProofByDef::Composition(
                 p,
             )),
         ..
-    } = proof
+    } = (proof).detailed_ref()
     {
         for (child, field) in [
             (&p.outer_well_defined, "outer"),
@@ -11006,8 +11072,8 @@ fn projected_wd_child<'a>(
         }
         return None;
     }
-    let fields: &[&str] = match proof {
-        ObjWellDefinedProof::ByDef {
+    let fields: &[&str] = match (proof).detailed_ref() {
+        DetailedObjWellDefinedProof::ByDef {
             obj: Obj::FnObj(application),
             proof: ObjWellDefinedProofByDef::FnObj(call),
         } => {
@@ -11195,10 +11261,10 @@ fn projected_wd_child<'a>(
 pub(super) fn arithmetic_stages(
     proof: &ObjWellDefinedProof,
 ) -> Option<(&[Box<ObjWellDefinedProof>], &[VerifyFactResult])> {
-    if let ObjWellDefinedProof::ByDef {
+    if let DetailedObjWellDefinedProof::ByDef {
         proof: ObjWellDefinedProofByDef::SetFormer(p),
         ..
-    } = proof
+    } = (proof).detailed_ref()
     {
         match p {
             SetFormerObjWellDefinedProofByDef::IntervalObj(p) => {
@@ -11213,10 +11279,10 @@ pub(super) fn arithmetic_stages(
             _ => (),
         }
     }
-    if let ObjWellDefinedProof::ByDef {
+    if let DetailedObjWellDefinedProof::ByDef {
         proof: ObjWellDefinedProofByDef::IteratedOperator(p),
         ..
-    } = proof
+    } = (proof).detailed_ref()
     {
         use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IteratedOperatorObjWellDefinedProofByDef as P;
         return match p {
@@ -11232,10 +11298,10 @@ pub(super) fn arithmetic_stages(
             }
         };
     }
-    if let ObjWellDefinedProof::ByDef {
+    if let DetailedObjWellDefinedProof::ByDef {
         proof: ObjWellDefinedProofByDef::FiniteSetStat(p),
         ..
-    } = proof
+    } = (proof).detailed_ref()
     {
         use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FiniteSetStatObjWellDefinedProofByDef;
         return Some(match p {
@@ -11250,17 +11316,17 @@ pub(super) fn arithmetic_stages(
             }
         });
     }
-    if let ObjWellDefinedProof::ByDef {
+    if let DetailedObjWellDefinedProof::ByDef {
         proof: ObjWellDefinedProofByDef::Structish(StructishObjWellDefinedProofByDef::StructObj(p)),
         ..
-    } = proof
+    } = (proof).detailed_ref()
     {
         return Some((&p.child_obj_well_defined, &p.requirement_fact_verified));
     }
-    if let ObjWellDefinedProof::ByDef {
+    if let DetailedObjWellDefinedProof::ByDef {
         proof: ObjWellDefinedProofByDef::FunctionSpace(p),
         ..
-    } = proof
+    } = (proof).detailed_ref()
     {
         match p {
             FunctionSpaceObjWellDefinedProofByDef::Preimage(p) => {
@@ -11272,18 +11338,18 @@ pub(super) fn arithmetic_stages(
             _ => {}
         }
     }
-    if let ObjWellDefinedProof::ByDef {
+    if let DetailedObjWellDefinedProof::ByDef {
         proof:
             ObjWellDefinedProofByDef::FunctionSpace(FunctionSpaceObjWellDefinedProofByDef::FnRange(p)),
         ..
-    } = proof
+    } = (proof).detailed_ref()
     {
         return Some((&p.child_obj_well_defined, &p.requirement_fact_verified));
     }
-    if let ObjWellDefinedProof::ByDef {
+    if let DetailedObjWellDefinedProof::ByDef {
         proof: ObjWellDefinedProofByDef::ComplexOperator(p),
         ..
-    } = proof
+    } = (proof).detailed_ref()
     {
         return Some(match p {
             ComplexOperatorObjWellDefinedProofByDef::Conjugate(p) => {
@@ -11300,10 +11366,10 @@ pub(super) fn arithmetic_stages(
             }
         });
     }
-    if let ObjWellDefinedProof::ByDef {
+    if let DetailedObjWellDefinedProof::ByDef {
         proof: ObjWellDefinedProofByDef::HyperbolicOperator(p),
         ..
-    } = proof
+    } = (proof).detailed_ref()
     {
         return Some(match p {
             HyperbolicOperatorObjWellDefinedProofByDef::Sinh(p) => {
@@ -11326,10 +11392,10 @@ pub(super) fn arithmetic_stages(
             }
         });
     }
-    if let ObjWellDefinedProof::ByDef {
+    if let DetailedObjWellDefinedProof::ByDef {
         proof: ObjWellDefinedProofByDef::TrigOperator(p),
         ..
-    } = proof
+    } = (proof).detailed_ref()
     {
         match p {
             TrigOperatorObjWellDefinedProofByDef::Sin(p) => {
@@ -11364,10 +11430,10 @@ pub(super) fn arithmetic_stages(
             }
         }
     }
-    if let ObjWellDefinedProof::ByDef {
+    if let DetailedObjWellDefinedProof::ByDef {
         proof: ObjWellDefinedProofByDef::ExpLogOperator(p),
         ..
-    } = proof
+    } = (proof).detailed_ref()
     {
         match p {
             ExpLogOperatorObjWellDefinedProofByDef::Exp(p) => {
@@ -11382,23 +11448,23 @@ pub(super) fn arithmetic_stages(
             _ => (),
         }
     }
-    if let ObjWellDefinedProof::ByDef {
+    if let DetailedObjWellDefinedProof::ByDef {
         proof:
             ObjWellDefinedProofByDef::ExpLogOperator(ExpLogOperatorObjWellDefinedProofByDef::Sqrt(
                 proof,
             )),
         ..
-    } = proof
+    } = (proof).detailed_ref()
     {
         return Some((
             &proof.child_obj_well_defined,
             &proof.requirement_fact_verified,
         ));
     }
-    if let ObjWellDefinedProof::ByDef {
+    if let DetailedObjWellDefinedProof::ByDef {
         proof: ObjWellDefinedProofByDef::IntegerOperator(proof),
         ..
-    } = proof
+    } = (proof).detailed_ref()
     {
         return match proof {
             IntegerOperatorObjWellDefinedProofByDef::Factorial(p) => {
@@ -11418,10 +11484,10 @@ pub(super) fn arithmetic_stages(
             }
         };
     }
-    if let ObjWellDefinedProof::ByDef {
+    if let DetailedObjWellDefinedProof::ByDef {
         proof: ObjWellDefinedProofByDef::ProductShape(proof),
         ..
-    } = proof
+    } = (proof).detailed_ref()
     {
         return match proof {
             ProductShapeObjWellDefinedProofByDef::Cart(proof) => Some((
@@ -11434,358 +11500,358 @@ pub(super) fn arithmetic_stages(
             )),
         };
     }
-    if let ObjWellDefinedProof::ByDef {
+    if let DetailedObjWellDefinedProof::ByDef {
         proof: ObjWellDefinedProofByDef::FnObj(proof),
         ..
-    } = proof
+    } = (proof).detailed_ref()
     {
         return Some((
             &proof.child_obj_well_defined,
             &proof.requirement_fact_verified,
         ));
     }
-    if let ObjWellDefinedProof::ByDef {
+    if let DetailedObjWellDefinedProof::ByDef {
         proof:
             ObjWellDefinedProofByDef::SetFormer(SetFormerObjWellDefinedProofByDef::ListSet(proof)),
         ..
-    } = proof
+    } = (proof).detailed_ref()
     {
         return Some((
             &proof.child_obj_well_defined,
             &proof.requirement_fact_verified,
         ));
     }
-    if let ObjWellDefinedProof::ByDef {
+    if let DetailedObjWellDefinedProof::ByDef {
         proof: ObjWellDefinedProofByDef::SetFormer(SetFormerObjWellDefinedProofByDef::Range(proof)),
         ..
-    } = proof
+    } = (proof).detailed_ref()
     {
         return Some((
             &proof.child_obj_well_defined,
             &proof.requirement_fact_verified,
         ));
     }
-    if let ObjWellDefinedProof::ByDef {
+    if let DetailedObjWellDefinedProof::ByDef {
         proof:
             ObjWellDefinedProofByDef::SetFormer(SetFormerObjWellDefinedProofByDef::ClosedRange(proof)),
         ..
-    } = proof
+    } = (proof).detailed_ref()
     {
         return Some((
             &proof.child_obj_well_defined,
             &proof.requirement_fact_verified,
         ));
     }
-    if let ObjWellDefinedProof::ByDef {
+    if let DetailedObjWellDefinedProof::ByDef {
         proof:
             ObjWellDefinedProofByDef::SetFormer(SetFormerObjWellDefinedProofByDef::FiniteSeqSet(proof)),
         ..
-    } = proof
+    } = (proof).detailed_ref()
     {
         return Some((
             &proof.child_obj_well_defined,
             &proof.requirement_fact_verified,
         ));
     }
-    if let ObjWellDefinedProof::ByDef {
+    if let DetailedObjWellDefinedProof::ByDef {
         proof:
             ObjWellDefinedProofByDef::SetFormer(SetFormerObjWellDefinedProofByDef::MatrixSet(proof)),
         ..
-    } = proof
+    } = (proof).detailed_ref()
     {
         return Some((
             &proof.child_obj_well_defined,
             &proof.requirement_fact_verified,
         ));
     }
-    if let ObjWellDefinedProof::ByDef {
+    if let DetailedObjWellDefinedProof::ByDef {
         proof:
             ObjWellDefinedProofByDef::MatrixOperator(MatrixOperatorObjWellDefinedProofByDef::Add(proof)),
         ..
-    } = proof
+    } = (proof).detailed_ref()
     {
         return Some((
             &proof.child_obj_well_defined,
             &proof.requirement_fact_verified,
         ));
     }
-    if let ObjWellDefinedProof::ByDef {
+    if let DetailedObjWellDefinedProof::ByDef {
         proof:
             ObjWellDefinedProofByDef::MatrixOperator(MatrixOperatorObjWellDefinedProofByDef::Subtract(
                 proof,
             )),
         ..
-    } = proof
+    } = (proof).detailed_ref()
     {
         return Some((
             &proof.child_obj_well_defined,
             &proof.requirement_fact_verified,
         ));
     }
-    if let ObjWellDefinedProof::ByDef {
+    if let DetailedObjWellDefinedProof::ByDef {
         proof:
             ObjWellDefinedProofByDef::MatrixOperator(MatrixOperatorObjWellDefinedProofByDef::Scale(
                 proof,
             )),
         ..
-    } = proof
+    } = (proof).detailed_ref()
     {
         return Some((
             &proof.child_obj_well_defined,
             &proof.requirement_fact_verified,
         ));
     }
-    if let ObjWellDefinedProof::ByDef {
+    if let DetailedObjWellDefinedProof::ByDef {
         proof:
             ObjWellDefinedProofByDef::MatrixOperator(
                 MatrixOperatorObjWellDefinedProofByDef::OuterProduct(proof),
             ),
         ..
-    } = proof
+    } = (proof).detailed_ref()
     {
         return Some((
             &proof.child_obj_well_defined,
             &proof.requirement_fact_verified,
         ));
     }
-    if let ObjWellDefinedProof::ByDef {
+    if let DetailedObjWellDefinedProof::ByDef {
         proof:
             ObjWellDefinedProofByDef::MatrixOperator(MatrixOperatorObjWellDefinedProofByDef::Diagonal(
                 proof,
             )),
         ..
-    } = proof
+    } = (proof).detailed_ref()
     {
         return Some((
             &proof.child_obj_well_defined,
             &proof.requirement_fact_verified,
         ));
     }
-    if let ObjWellDefinedProof::ByDef {
+    if let DetailedObjWellDefinedProof::ByDef {
         proof:
             ObjWellDefinedProofByDef::MatrixOperator(MatrixOperatorObjWellDefinedProofByDef::Adjugate(
                 proof,
             )),
         ..
-    } = proof
+    } = (proof).detailed_ref()
     {
         return Some((
             &proof.child_obj_well_defined,
             &proof.requirement_fact_verified,
         ));
     }
-    if let ObjWellDefinedProof::ByDef {
+    if let DetailedObjWellDefinedProof::ByDef {
         proof:
             ObjWellDefinedProofByDef::MatrixOperator(MatrixOperatorObjWellDefinedProofByDef::Rank(
                 proof,
             )),
         ..
-    } = proof
+    } = (proof).detailed_ref()
     {
         return Some((
             &proof.child_obj_well_defined,
             &proof.requirement_fact_verified,
         ));
     }
-    if let ObjWellDefinedProof::ByDef {
+    if let DetailedObjWellDefinedProof::ByDef {
         proof:
             ObjWellDefinedProofByDef::MatrixOperator(MatrixOperatorObjWellDefinedProofByDef::Inverse(
                 proof,
             )),
         ..
-    } = proof
+    } = (proof).detailed_ref()
     {
         return Some((
             &proof.child_obj_well_defined,
             &proof.requirement_fact_verified,
         ));
     }
-    if let ObjWellDefinedProof::ByDef {
+    if let DetailedObjWellDefinedProof::ByDef {
         proof:
             ObjWellDefinedProofByDef::MatrixOperator(MatrixOperatorObjWellDefinedProofByDef::Minor(
                 proof,
             )),
         ..
-    } = proof
+    } = (proof).detailed_ref()
     {
         return Some((
             &proof.child_obj_well_defined,
             &proof.requirement_fact_verified,
         ));
     }
-    if let ObjWellDefinedProof::ByDef {
+    if let DetailedObjWellDefinedProof::ByDef {
         proof:
             ObjWellDefinedProofByDef::MatrixOperator(MatrixOperatorObjWellDefinedProofByDef::Cofactor(
                 proof,
             )),
         ..
-    } = proof
+    } = (proof).detailed_ref()
     {
         return Some((
             &proof.child_obj_well_defined,
             &proof.requirement_fact_verified,
         ));
     }
-    if let ObjWellDefinedProof::ByDef {
+    if let DetailedObjWellDefinedProof::ByDef {
         proof:
             ObjWellDefinedProofByDef::MatrixOperator(MatrixOperatorObjWellDefinedProofByDef::Power(
                 proof,
             )),
         ..
-    } = proof
+    } = (proof).detailed_ref()
     {
         return Some((
             &proof.child_obj_well_defined,
             &proof.requirement_fact_verified,
         ));
     }
-    if let ObjWellDefinedProof::ByDef {
+    if let DetailedObjWellDefinedProof::ByDef {
         proof:
             ObjWellDefinedProofByDef::MatrixOperator(
                 MatrixOperatorObjWellDefinedProofByDef::Determinant(proof),
             ),
         ..
-    } = proof
+    } = (proof).detailed_ref()
     {
         return Some((
             &proof.child_obj_well_defined,
             &proof.requirement_fact_verified,
         ));
     }
-    if let ObjWellDefinedProof::ByDef {
+    if let DetailedObjWellDefinedProof::ByDef {
         proof:
             ObjWellDefinedProofByDef::MatrixOperator(MatrixOperatorObjWellDefinedProofByDef::Trace(
                 proof,
             )),
         ..
-    } = proof
+    } = (proof).detailed_ref()
     {
         return Some((
             &proof.child_obj_well_defined,
             &proof.requirement_fact_verified,
         ));
     }
-    if let ObjWellDefinedProof::ByDef {
+    if let DetailedObjWellDefinedProof::ByDef {
         proof:
             ObjWellDefinedProofByDef::MatrixOperator(MatrixOperatorObjWellDefinedProofByDef::Multiply(
                 proof,
             )),
         ..
-    } = proof
+    } = (proof).detailed_ref()
     {
         return Some((
             &proof.child_obj_well_defined,
             &proof.requirement_fact_verified,
         ));
     }
-    if let ObjWellDefinedProof::ByDef {
+    if let DetailedObjWellDefinedProof::ByDef {
         proof:
             ObjWellDefinedProofByDef::MatrixOperator(MatrixOperatorObjWellDefinedProofByDef::Apply(
                 proof,
             )),
         ..
-    } = proof
+    } = (proof).detailed_ref()
     {
         return Some((
             &proof.child_obj_well_defined,
             &proof.requirement_fact_verified,
         ));
     }
-    if let ObjWellDefinedProof::ByDef {
+    if let DetailedObjWellDefinedProof::ByDef {
         proof:
             ObjWellDefinedProofByDef::MatrixOperator(
                 MatrixOperatorObjWellDefinedProofByDef::EuclideanNorm(proof),
             ),
         ..
-    } = proof
+    } = (proof).detailed_ref()
     {
         return Some((
             &proof.child_obj_well_defined,
             &proof.requirement_fact_verified,
         ));
     }
-    if let ObjWellDefinedProof::ByDef {
+    if let DetailedObjWellDefinedProof::ByDef {
         proof:
             ObjWellDefinedProofByDef::MatrixOperator(
                 MatrixOperatorObjWellDefinedProofByDef::FrobeniusNorm(proof),
             ),
         ..
-    } = proof
+    } = (proof).detailed_ref()
     {
         return Some((
             &proof.child_obj_well_defined,
             &proof.requirement_fact_verified,
         ));
     }
-    if let ObjWellDefinedProof::ByDef {
+    if let DetailedObjWellDefinedProof::ByDef {
         proof:
             ObjWellDefinedProofByDef::MatrixOperator(
                 MatrixOperatorObjWellDefinedProofByDef::InnerProduct(proof),
             ),
         ..
-    } = proof
+    } = (proof).detailed_ref()
     {
         return Some((
             &proof.child_obj_well_defined,
             &proof.requirement_fact_verified,
         ));
     }
-    if let ObjWellDefinedProof::ByDef {
+    if let DetailedObjWellDefinedProof::ByDef {
         proof:
             ObjWellDefinedProofByDef::MatrixOperator(
                 MatrixOperatorObjWellDefinedProofByDef::ZeroMatrix(proof),
             ),
         ..
-    } = proof
+    } = (proof).detailed_ref()
     {
         return Some((
             &proof.child_obj_well_defined,
             &proof.requirement_fact_verified,
         ));
     }
-    if let ObjWellDefinedProof::ByDef {
+    if let DetailedObjWellDefinedProof::ByDef {
         proof:
             ObjWellDefinedProofByDef::MatrixOperator(
                 MatrixOperatorObjWellDefinedProofByDef::IdentityMatrix(proof),
             ),
         ..
-    } = proof
+    } = (proof).detailed_ref()
     {
         return Some((
             &proof.child_obj_well_defined,
             &proof.requirement_fact_verified,
         ));
     }
-    if let ObjWellDefinedProof::ByDef {
+    if let DetailedObjWellDefinedProof::ByDef {
         proof:
             ObjWellDefinedProofByDef::MatrixOperator(MatrixOperatorObjWellDefinedProofByDef::Transpose(
                 proof,
             )),
         ..
-    } = proof
+    } = (proof).detailed_ref()
     {
         return Some((
             &proof.child_obj_well_defined,
             &proof.requirement_fact_verified,
         ));
     }
-    if let ObjWellDefinedProof::ByDef {
+    if let DetailedObjWellDefinedProof::ByDef {
         proof:
             ObjWellDefinedProofByDef::MatrixOperator(
                 MatrixOperatorObjWellDefinedProofByDef::ConjugateTranspose(proof),
             ),
         ..
-    } = proof
+    } = (proof).detailed_ref()
     {
         return Some((
             &proof.child_obj_well_defined,
             &proof.requirement_fact_verified,
         ));
     }
-    if let ObjWellDefinedProof::ByDef {
+    if let DetailedObjWellDefinedProof::ByDef {
         proof: ObjWellDefinedProofByDef::SetOperator(proof),
         ..
-    } = proof
+    } = (proof).detailed_ref()
     {
         return match proof {
             SetOperatorObjWellDefinedProofByDef::SetMinus(p) => {
@@ -11803,10 +11869,10 @@ pub(super) fn arithmetic_stages(
             _ => None,
         };
     }
-    let ObjWellDefinedProof::ByDef {
+    let DetailedObjWellDefinedProof::ByDef {
         proof: ObjWellDefinedProofByDef::ArithmeticOperator(proof),
         ..
-    } = proof
+    } = (proof).detailed_ref()
     else {
         return None;
     };
@@ -12315,8 +12381,8 @@ fn visit_forall_constructor<T>(
         ),
         SourceOwner::ForallWD(fact, proof) => (
             fact,
-            &proof.introduced_params,
-            proof.assumed_dom_facts.as_slice(),
+            &proof.detailed_ref().introduced_params,
+            proof.detailed_ref().assumed_dom_facts.as_slice(),
         ),
         _ => return Err(LeanCompileError::unsupported("WD/CalleeSourceOwner")),
     };
@@ -12405,6 +12471,7 @@ fn visit_forall_constructor<T>(
         }
         SourceOwner::ForallWD(_, proof) => {
             let wd = proof
+                .detailed_ref()
                 .then
                 .get(then_index)
                 .ok_or_else(|| LeanCompileError::unsupported("WD/CalleeThenCapture"))?;
@@ -12421,16 +12488,26 @@ fn known_application_requirements(
     proof: &SearchProofByKnownForallFact,
 ) -> Vec<(&Fact, &VerifyFactResult)> {
     proof
+        .detailed_ref()
         .instantiation_requirements
+        .detailed_ref()
         .param_type_requirements
         .iter()
         .map(|item| (&item.type_fact, &item.proof))
         .chain(
             proof
+                .detailed_ref()
                 .instantiation_requirements
+                .detailed_ref()
                 .dom_facts
                 .iter()
-                .zip(&proof.instantiation_requirements.proof_of_dom_facts),
+                .zip(
+                    &proof
+                        .detailed_ref()
+                        .instantiation_requirements
+                        .detailed_ref()
+                        .proof_of_dom_facts,
+                ),
         )
         .collect()
 }
@@ -12457,12 +12534,12 @@ fn function_argument_scope(
     proof: &ObjWellDefinedProof,
 ) -> Option<&crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnObjArgumentScope>
 {
-    match proof {
-        ObjWellDefinedProof::ByDef {
+    match (proof).detailed_ref() {
+        DetailedObjWellDefinedProof::ByDef {
             proof: ObjWellDefinedProofByDef::FnObj(call),
             ..
         } => call.argument_scope.as_ref(),
-        ObjWellDefinedProof::ByDef {
+        DetailedObjWellDefinedProof::ByDef {
             proof:
                 ObjWellDefinedProofByDef::Structish(StructishObjWellDefinedProofByDef::FieldAccess(
                     access,
@@ -12528,30 +12605,30 @@ fn same_wd_constructor(left: &ObjWellDefinedProof, right: &ObjWellDefinedProof) 
     ) {
         return same_wd_constructor(a, b);
     }
-    match (left, right) {
+    match (left.detailed_ref(), right.detailed_ref()) {
         (
-            ObjWellDefinedProof::ByKnown { wd_id: a, .. },
-            ObjWellDefinedProof::ByKnown { wd_id: b, .. },
+            DetailedObjWellDefinedProof::ByKnown { wd_id: a, .. },
+            DetailedObjWellDefinedProof::ByKnown { wd_id: b, .. },
         ) => a == b,
         (
-            ObjWellDefinedProof::ByDef {
+            DetailedObjWellDefinedProof::ByDef {
                 proof: ObjWellDefinedProofByDef::FnObj(a),
                 ..
             },
-            ObjWellDefinedProof::ByDef {
+            DetailedObjWellDefinedProof::ByDef {
                 proof: ObjWellDefinedProofByDef::FnObj(b),
                 ..
             },
         ) => same_call_constructor(a, b),
         (
-            ObjWellDefinedProof::ByDef {
+            DetailedObjWellDefinedProof::ByDef {
                 proof:
                     ObjWellDefinedProofByDef::ExpLogOperator(
                         ExpLogOperatorObjWellDefinedProofByDef::Sqrt(a),
                     ),
                 ..
             },
-            ObjWellDefinedProof::ByDef {
+            DetailedObjWellDefinedProof::ByDef {
                 proof:
                     ObjWellDefinedProofByDef::ExpLogOperator(
                         ExpLogOperatorObjWellDefinedProofByDef::Sqrt(b),
@@ -12564,14 +12641,14 @@ fn same_wd_constructor(left: &ObjWellDefinedProof, right: &ObjWellDefinedProof) 
                 && same_wd_constructor(&a.child_obj_well_defined[0], &b.child_obj_well_defined[0])
         }
         (
-            ObjWellDefinedProof::ByDef {
+            DetailedObjWellDefinedProof::ByDef {
                 proof:
                     ObjWellDefinedProofByDef::SetFormer(
                         SetFormerObjWellDefinedProofByDef::FiniteSeqSet(a),
                     ),
                 ..
             },
-            ObjWellDefinedProof::ByDef {
+            DetailedObjWellDefinedProof::ByDef {
                 proof:
                     ObjWellDefinedProofByDef::SetFormer(
                         SetFormerObjWellDefinedProofByDef::FiniteSeqSet(b),
@@ -12587,11 +12664,11 @@ fn same_wd_constructor(left: &ObjWellDefinedProof, right: &ObjWellDefinedProof) 
                     .all(|(a, b)| same_wd_constructor(a, b))
         }
         (
-            ObjWellDefinedProof::ByDef {
+            DetailedObjWellDefinedProof::ByDef {
                 proof: ObjWellDefinedProofByDef::IntegerOperator(a),
                 ..
             },
-            ObjWellDefinedProof::ByDef {
+            DetailedObjWellDefinedProof::ByDef {
                 proof: ObjWellDefinedProofByDef::IntegerOperator(b),
                 ..
             },
@@ -12603,11 +12680,11 @@ fn same_wd_constructor(left: &ObjWellDefinedProof, right: &ObjWellDefinedProof) 
             a.len() == b.len() && a.iter().zip(b).all(|(a, b)| same_wd_constructor(a, b))
         }
         (
-            ObjWellDefinedProof::ByDef {
+            DetailedObjWellDefinedProof::ByDef {
                 proof: ObjWellDefinedProofByDef::ArithmeticOperator(a),
                 ..
             },
-            ObjWellDefinedProof::ByDef {
+            DetailedObjWellDefinedProof::ByDef {
                 proof: ObjWellDefinedProofByDef::ArithmeticOperator(b),
                 ..
             },

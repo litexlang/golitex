@@ -1,0 +1,42 @@
+# 函数与最小二乘
+# 为什么三个分数的平均数使平方误差之和最小？
+
+# 先看“最优中心”怎样定义，再看证明为什么选择 mean。
+
+# candidate 遍历全部实数，而不是只比较几个候选值。
+prop is_least_squares_center(center, a, b, c R):
+    forall candidate R:
+        (a - center)^2 + (b - center)^2 + (c - center)^2 <= (a - candidate)^2 + (b - candidate)^2 + (c - candidate)^2
+
+# mean 是返回实数的函数；它不是一个谓词。
+have fn mean(a, b, c R) R = (a + b + c) / 3
+
+# 关键恒等式把任意候选值的误差分解为两部分。
+# 多出的平方项为什么不能为负？
+forall a, b, c, candidate R:
+    (a - (a + b + c) / 3)^2 + (b - (a + b + c) / 3)^2 + (c - (a + b + c) / 3)^2 + 3 * (candidate - (a + b + c) / 3)^2 = (a - candidate)^2 + (b - candidate)^2 + (c - candidate)^2
+
+claim:
+    ? forall a, b, c R:
+        $is_least_squares_center(mean(a, b, c), a, b, c)
+    mean(a, b, c) = (a + b + c) / 3
+    claim:
+        ? forall candidate R:
+            (a - (a + b + c) / 3)^2 + (b - (a + b + c) / 3)^2 + (c - (a + b + c) / 3)^2 <= (a - candidate)^2 + (b - candidate)^2 + (c - candidate)^2
+        0 <= (candidate - (a + b + c) / 3)^2
+        0 <= 3 * (candidate - (a + b + c) / 3)^2
+        # 等号与不等号在同一条链中承担不同的工作。
+        # 先查看每个等号的依据，再读整条比较关系。
+        (a - (a + b + c) / 3)^2 + (b - (a + b + c) / 3)^2 + (c - (a + b + c) / 3)^2 = (a - (a + b + c) / 3)^2 + (b - (a + b + c) / 3)^2 + (c - (a + b + c) / 3)^2 + 0 <= (a - (a + b + c) / 3)^2 + (b - (a + b + c) / 3)^2 + (c - (a + b + c) / 3)^2 + 3 * (candidate - (a + b + c) / 3)^2 = (a - candidate)^2 + (b - candidate)^2 + (c - candidate)^2
+    by def $is_least_squares_center((a + b + c) / 3, a, b, c)
+    $is_least_squares_center(mean(a, b, c), a, b, c)
+
+# 把抽象结论用于 72、84、96；最优中心是 84。
+# 将下一行的 84 改为 80 并检查，再恢复原文，比较两种中心的误差。
+mean(72, 84, 96) = 84
+$is_least_squares_center(mean(72, 84, 96), 72, 84, 96)
+(72 - 84)^2 + (84 - 84)^2 + (96 - 84)^2 = 288
+(72 - 80)^2 + (84 - 80)^2 + (96 - 80)^2 = 336
+3 * (80 - 84)^2 = 48
+288 + 48 = 336
+288 <= 336

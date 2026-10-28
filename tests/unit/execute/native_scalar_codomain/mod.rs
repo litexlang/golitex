@@ -8,12 +8,15 @@ use crate::store_fact_and_infer::{InferLessEqualFactResult, InferLessFactResult}
 use crate::tokenize::Tokenizer;
 
 fn runtime(language: OutputLanguage) -> Runtime {
-    Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language,
-    })
+    Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    )
 }
 
 fn exec(runtime: &mut Runtime, code: &str) -> ExecStmtResult {

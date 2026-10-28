@@ -50,18 +50,22 @@ fn expansion(
 fn selected_call(
     expansion: &mut AnonymousFunctionBodyExpansionProof,
 ) -> &mut FnObjObjWellDefinedProof {
-    let ObjWellDefinedProof::ByDef {
+    let DetailedObjWellDefinedProof::ByDef {
         proof: ObjWellDefinedProofByDef::FnObj(call),
         ..
-    } = &mut expansion.body_application_well_defined
+    } = (&mut expansion.body_application_well_defined)
+        .as_detailed_mut()
+        .unwrap()
     else {
         panic!("the original selected literal call WD")
     };
     assert_eq!(call.child_obj_well_defined.len(), 3);
     assert_eq!(call.requirement_fact_verified.len(), 2);
     assert!(matches!(
-        call.child_obj_well_defined[0].as_ref(),
-        ObjWellDefinedProof::ByKnown { .. }
+        (call.child_obj_well_defined[0].as_ref())
+            .as_detailed()
+            .unwrap(),
+        DetailedObjWellDefinedProof::ByKnown { .. }
     ));
     call
 }
@@ -71,8 +75,10 @@ fn cached_formula_head_keeps_the_original_selected_wd_id_check() {
     for edge in [0, 2] {
         let (mut result, compiler) = super::execute(DOT_SYMMETRIC);
         let selected = selected_call(expansion(&mut result, edge));
-        let ObjWellDefinedProof::ByKnown { wd_id, .. } =
-            selected.child_obj_well_defined[0].as_mut()
+        let DetailedObjWellDefinedProof::ByKnown { wd_id, .. } =
+            (selected.child_obj_well_defined[0].as_mut())
+                .as_detailed_mut()
+                .unwrap()
         else {
             unreachable!()
         };

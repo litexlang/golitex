@@ -53,12 +53,15 @@ fn sqrt_quotient_square_rejects_missing_premises_wrong_targets_and_converse() {
 #[test]
 fn sqrt_quotient_square_retains_checked_source_and_locale_output() {
     for language in OutputLanguage::ALL {
-        let mut rt = Runtime::new(LaunchCommand::Eval {
-            code: String::new(),
-            session: false,
-            strict: true,
-            language,
-        });
+        let mut rt = Runtime::new_with_result_detail(
+            LaunchCommand::Eval {
+                code: String::new(),
+                session: false,
+                strict: true,
+                language,
+            },
+            crate::result_detail::OutputDetail::Detailed,
+        );
         let run = check(&mut rt, POSITIVE, true);
         let detailed = crate::json_output::project_run_detailed(&run, &rt, "eval", None);
         let key = |english| crate::json_output::json_keys::localize_key(english, language);
@@ -117,12 +120,15 @@ fn sqrt_quotient_square_respects_search_ceiling_and_failure_rollback() {
 }
 
 fn runtime() -> Runtime {
-    Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language: OutputLanguage::English,
-    })
+    Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    )
 }
 
 fn check(rt: &mut Runtime, source: &str, expected: bool) -> RunLitexCodeResult {

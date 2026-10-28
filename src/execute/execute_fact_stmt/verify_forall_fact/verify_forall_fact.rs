@@ -287,12 +287,18 @@ impl Runtime {
                         ),
                     };
                     return Ok(ForallLocalOutcome::FailWd(
-                        FailToVerifyForallFactWellDefinedResult::ParamType(reason),
+                        FailToVerifyForallFactWellDefinedResult::ParamType {
+                            fact: fact.clone(),
+                            reason: reason,
+                        },
                     ));
                 }
                 Err(IntroduceTypedParametersFailed::AutoOpenStructLayer { failed, .. }) => {
                     return Ok(ForallLocalOutcome::FailWd(
-                        FailToVerifyForallFactWellDefinedResult::AutoOpenStructLayer(failed),
+                        FailToVerifyForallFactWellDefinedResult::AutoOpenStructLayer {
+                            fact: fact.clone(),
+                            reason: failed,
+                        },
                     ));
                 }
             };
@@ -306,12 +312,25 @@ impl Runtime {
                 Err(failed_dom) => {
                     return Ok(ForallLocalOutcome::FailWd(
                         FailToVerifyForallFactWellDefinedResult::DomFact {
+                            fact: fact.clone(),
                             failed_index,
-                            param_type_well_defined: introduced_params.param_type_well_defined,
-                            succeeded_dom: assumed_dom_facts
-                                .into_iter()
-                                .map(|a| a.well_defined)
-                                .collect(),
+                            param_type_well_defined: if self.result_detail()
+                                == crate::result_detail::OutputDetail::Detailed
+                            {
+                                introduced_params.param_type_well_defined
+                            } else {
+                                Vec::new()
+                            },
+                            succeeded_dom: if self.result_detail()
+                                == crate::result_detail::OutputDetail::Detailed
+                            {
+                                assumed_dom_facts
+                                    .into_iter()
+                                    .map(|a| a.well_defined)
+                                    .collect()
+                            } else {
+                                Vec::new()
+                            },
                             failed_dom: Box::new(failed_dom),
                         },
                     ));

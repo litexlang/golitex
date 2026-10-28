@@ -1,0 +1,114 @@
+release thm prob::main::dirac_probability_laws({0,1},0)
+
+\prob::main::dirac_probability_space<{0,1},0> = ({0,1},\prob::main::dirac_event_probability<{0,1},0>)
+
+have mass &prob::main::FiniteProbabilitySpace<{0,1}> = \prob::main::dirac_probability_space<{0,1},0>
+
+release struct def mass
+
+mass = ({0,1},\prob::main::dirac_event_probability<{0,1},0>)
+
+mass.carrier = {0,1}
+
+mass.prob = \prob::main::dirac_event_probability<{0,1},0>
+
+mass.carrier $subset R
+
+0 $in mass.carrier
+
+1 $in mass.carrier
+
+release thm prob::main::dirac_event_contains({0,1},0,{0})
+
+release thm prob::main::dirac_event_excludes({0,1},0,{1})
+
+mass.prob({0}) = 1
+
+mass.prob({1}) = 0
+
+have fn observed(k mass.carrier) R = k
+
+observed(0) = 0
+
+observed(1) = 1
+
+claim:
+    ? 0 $in fn_range(observed)
+    observed(0) $in fn_range(observed)
+    0 = observed(0)
+
+claim:
+    ? 1 $in fn_range(observed)
+    observed(1) $in fn_range(observed)
+    1 = observed(1)
+
+{0,1} $subset fn_range(observed)
+
+by extension:
+    ? fn_range(observed) = {0,1}
+    claim:
+        ? forall y fn_range(observed):
+            y $in {0,1}
+        have by fn_preimage: source_point from y $in fn_range(observed)
+        source_point $in mass.carrier
+        y = observed(source_point) = source_point
+
+release thm prob::main::finite_pushforward_probability_laws({0,1},mass,R,observed)
+
+\prob::main::finite_pushforward_probability_space<{0,1},mass,R,observed> = (fn_range(observed),\prob::main::finite_pushforward_event_probability<{0,1},mass,R,observed>)
+
+have null_push &prob::main::FiniteProbabilitySpace<R> = \prob::main::finite_pushforward_probability_space<{0,1},mass,R,observed>
+
+release struct def null_push
+
+null_push = (fn_range(observed),\prob::main::finite_pushforward_event_probability<{0,1},mass,R,observed>)
+
+null_push.carrier = fn_range(observed) = {0,1}
+
+null_push.prob = \prob::main::finite_pushforward_event_probability<{0,1},mass,R,observed>
+
+by extension:
+    ? preimage(observed,0) = {0}
+    claim:
+        ? forall k preimage(observed,0):
+            k $in {0}
+        k $in mass.carrier
+        0 = observed(k) = k
+    claim:
+        ? forall k {0}:
+            k $in preimage(observed,0)
+        k = 0
+        k $in mass.carrier
+        observed(k) = k = 0
+
+release thm prob::main::finite_pushforward_singleton_probability({0,1},mass,R,observed,0)
+
+\prob::main::finite_pushforward_event_probability<{0,1},mass,R,observed>({0}) = mass.prob(preimage(observed,0)) = mass.prob({0}) = 1
+
+null_push.prob({0}) = \prob::main::finite_pushforward_event_probability<{0,1},mass,R,observed>({0}) = 1
+
+by extension:
+    ? preimage(observed,1) = {1}
+    claim:
+        ? forall k preimage(observed,1):
+            k $in {1}
+        k $in mass.carrier
+        1 = observed(k) = k
+    claim:
+        ? forall k {1}:
+            k $in preimage(observed,1)
+        k = 1
+        k $in mass.carrier
+        observed(k) = k = 1
+
+release thm prob::main::finite_pushforward_singleton_probability({0,1},mass,R,observed,1)
+
+\prob::main::finite_pushforward_event_probability<{0,1},mass,R,observed>({1}) = mass.prob(preimage(observed,1)) = mass.prob({1}) = 0
+
+null_push.prob({1}) = \prob::main::finite_pushforward_event_probability<{0,1},mass,R,observed>({1}) = 0
+
+1 $in null_push.carrier
+
+null_push.prob(null_push.carrier) = 1
+
+null_push.carrier = {0}

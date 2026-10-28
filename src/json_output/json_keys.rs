@@ -30,6 +30,7 @@ fn chinese_key(english_key: &str) -> &str {
         "diagnostic" => "诊断",
         "category" => "类别",
         "expression" => "表达式",
+        "failed_obj" => "失败对象",
         "obligation" => "待证条件",
 
         "set_equality" => "集合相等证明",
@@ -203,6 +204,7 @@ fn chinesetraditional_key(english_key: &str) -> &str {
         "diagnostic" => "診斷",
         "category" => "類別",
         "expression" => "表達式",
+        "failed_obj" => "失敗物件",
         "obligation" => "待證條件",
 
         "set_equality" => "集合相等證明",
@@ -371,6 +373,7 @@ fn french_key(english_key: &str) -> &str {
         "diagnostic" => "diagnostic",
         "category" => "catégorie",
         "expression" => "expression",
+        "failed_obj" => "objet_en_échec",
         "obligation" => "obligation",
 
         "set_equality" => "égalité_ensembles",
@@ -538,6 +541,7 @@ fn russian_key(english_key: &str) -> &str {
         "diagnostic" => "диагностика",
         "category" => "категория",
         "expression" => "выражение",
+        "failed_obj" => "объект_сбоя",
         "obligation" => "обязательство",
 
         "set_equality" => "равенство_множеств",
@@ -705,6 +709,7 @@ fn spanish_key(english_key: &str) -> &str {
         "diagnostic" => "diagnóstico",
         "category" => "categoría",
         "expression" => "expresión",
+        "failed_obj" => "objeto_fallido",
         "obligation" => "obligación",
 
         "set_equality" => "igualdad_conjuntos",
@@ -872,6 +877,7 @@ fn arabic_key(english_key: &str) -> &str {
         "diagnostic" => "التشخيص",
         "category" => "الفئة",
         "expression" => "التعبير",
+        "failed_obj" => "الكائن_الذي_فشل",
         "obligation" => "الشرط_المطلوب",
 
         "set_equality" => "مساواة_المجموعات",
@@ -1039,6 +1045,7 @@ fn japanese_key(english_key: &str) -> &str {
         "diagnostic" => "診断",
         "category" => "分類",
         "expression" => "式",
+        "failed_obj" => "失敗した対象",
         "obligation" => "証明義務",
 
         "set_equality" => "集合の等価性",
@@ -1206,6 +1213,7 @@ fn korean_key(english_key: &str) -> &str {
         "diagnostic" => "진단",
         "category" => "분류",
         "expression" => "표현식",
+        "failed_obj" => "실패한_객체",
         "obligation" => "증명_의무",
 
         "set_equality" => "집합_동등성",
@@ -1375,6 +1383,7 @@ fn vietnamese_key(english_key: &str) -> &str {
         "diagnostic" => "chẩn_đoán",
         "category" => "loại",
         "expression" => "biểu_thức",
+        "failed_obj" => "đối_tượng_thất_bại",
         "obligation" => "nghĩa_vụ",
 
         "set_equality" => "đẳng_thức_tập_hợp",

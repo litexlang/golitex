@@ -548,18 +548,24 @@ impl Runtime {
         // Step 2–3: bind params / strict-equal non-params; every param must be bound.
         // Example: known `forall a N: exist x N st {x = a}` vs goal `exist x N st {x = 2}`
         // → bind a ↦ 2.
-        let Some((mut subst, arg_match_proofs)) =
+        let Some(matched) =
             self.match_forall_conclusion_args_to_subst(&conclusion_args, &goal_args, &param_ids)?
         else {
             return Ok(None);
         };
+        let (mut subst, arg_match_proofs) = matched.into_parts(self.result_detail())?;
         if !self.complete_forall_subst_from_dom_facts(&forall, &mut subst, &param_ids)? {
             return Ok(None);
         }
-        let forall_parameters_match_what_args = param_ids
-            .iter()
-            .map(|id| subst.get(id).expect("all forall parameters bound").clone())
-            .collect();
+        let forall_parameters_match_what_args =
+            if self.result_detail() == crate::result_detail::OutputDetail::Detailed {
+                param_ids
+                    .iter()
+                    .map(|id| subst.get(id).expect("all forall parameters bound").clone())
+                    .collect()
+            } else {
+                Vec::new()
+            };
 
         // Step 4: instantiate the exist conclusion and alpha-compare to the goal.
         let instantiated = match self.inst_fact(&exist_shaped_fact_to_fact(&conclusion), &subst) {
@@ -583,12 +589,14 @@ impl Runtime {
             return Ok(None);
         };
 
-        Ok(Some(SearchProofByKnownForallFact {
-            cite: cite.clone(),
+        Ok(Some(SearchProofByKnownForallFact::from_children(
+            self.result_detail(),
+            cite.clone(),
+            &forall,
             forall_parameters_match_what_args,
             arg_match_proofs,
             instantiation_requirements,
-        }))
+        )?))
     }
 }
 

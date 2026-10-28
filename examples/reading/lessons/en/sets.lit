@@ -1,0 +1,25 @@
+# Set operations and local assumptions
+# How do membership conditions explain a proof about union and intersection?
+
+# set denotes a kind of object: A and B are arbitrary sets.
+# Hover union for its input requirements and membership condition.
+forall A, B set:
+    union(A, B) = union(B, A)
+
+union({1, 2}, {2, 3}) = union({2, 3}, {1, 2})
+
+# Union membership needs membership in at least one set.
+# Intersection membership needs membership in both sets.
+1 $in union({1, 2}, {2, 3})
+
+2 $in intersect({1, 2}, {2, 3})
+
+# The final nonmembership is proved by contradiction.
+# Distinguish local consequences of the temporary assumption from global
+# conclusions.
+by contra:
+    ? not 1 $in intersect({1, 2}, {2, 3})
+    # This local consequence is derived under the contradiction assumption; it
+    # is not a global assertion that 1 belongs to {2, 3}.
+    1 $in {2, 3}
+    impossible 1 $in {2, 3}

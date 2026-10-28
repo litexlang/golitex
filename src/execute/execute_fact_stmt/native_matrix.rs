@@ -782,7 +782,9 @@ impl Runtime {
             if let VerifyObjWellDefinedResult::Success(wd) =
                 self.verify_obj_well_definedness(value, state)?
             {
-                if let Some((source, body)) = self.parent_checked_beta_body(value, &wd, state)? {
+                if let Some((source, body)) =
+                    self.parent_checked_beta_body(value, wd.as_view(), state)?
+                {
                     return Ok(MatrixResidualBeta::Expanded(MatrixResidualBetaExpansion {
                         application_well_defined: Box::new(wd),
                         source,

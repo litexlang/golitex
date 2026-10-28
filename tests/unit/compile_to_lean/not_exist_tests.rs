@@ -57,7 +57,7 @@ fn negative_existence_rejects_changed_negation_formation_and_inference() {
                 let FactWellDefinedProof::ExistFact(wd) = &mut p.reverse_assumption_wd else {
                     panic!()
                 };
-                wd.assumed_body_facts.clear();
+                wd.as_detailed_mut().unwrap().assumed_body_facts.clear();
             }
             2 => p.stored.infer = None,
             3 => p.stored.infer = Some(InferResult::NotExistFact(InferNotExistFactResult::NoInfer)),
@@ -141,12 +141,15 @@ fn existing_witness_and_undefined_reciprocal_are_rejected() {
         "not exist x R st {x = x}\n",
         "not exist x R st {1 / x != 1 / x}\n",
     ] {
-        let mut runtime = Runtime::new(LaunchCommand::Eval {
-            code: String::new(),
-            session: false,
-            strict: true,
-            language: OutputLanguage::English,
-        });
+        let mut runtime = Runtime::new_with_result_detail(
+            LaunchCommand::Eval {
+                code: String::new(),
+                session: false,
+                strict: true,
+                language: OutputLanguage::English,
+            },
+            crate::result_detail::OutputDetail::Detailed,
+        );
         assert!(!runtime.run_litex_code(source).unwrap().success);
     }
 }

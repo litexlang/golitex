@@ -108,13 +108,15 @@ fn imaginary_division_still_requires_original_nonzero_wd() {
     let equality = super::equality_proof_mut(
         &mut super::fact_statement_mut(&mut run.statement_results[0]).verify_result,
     );
-    let ObjWellDefinedProof::ByDef {
+    let DetailedObjWellDefinedProof::ByDef {
         proof:
             ObjWellDefinedProofByDef::ArithmeticOperator(
                 ArithmeticOperatorObjWellDefinedProofByDef::Div(p),
             ),
         ..
-    } = &mut equality.well_defined_proof.left
+    } = (&mut equality.well_defined_proof.as_detailed_mut().unwrap().left)
+        .as_detailed_mut()
+        .unwrap()
     else {
         panic!("division construction")
     };
@@ -139,7 +141,8 @@ fn imaginary_invalid_carriers_equalities_and_division_reject() {
     ] {
         let command =
             parse_launch_command(&["-strict".into(), "-e".into(), source.into()]).unwrap();
-        let mut runtime = Runtime::new(command);
+        let mut runtime =
+            Runtime::new_with_result_detail(command, crate::result_detail::OutputDetail::Detailed);
         let run = runtime.run_litex_code(source).unwrap();
         assert!(!run.success, "{source}");
         assert!(super::LitexToLeanCompiler::new(runtime)

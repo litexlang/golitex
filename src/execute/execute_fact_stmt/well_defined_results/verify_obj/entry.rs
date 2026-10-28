@@ -5,7 +5,7 @@
 
 use super::fail_to_verify_obj_well_defined::FailToVerifyObjWellDefinedResult;
 use super::obj_well_defined_by_def_common::ObjWellDefinedByDefCommonStages;
-use super::obj_well_defined_proof_by_def::ObjWellDefinedProofByDef;
+pub use super::obj_well_defined_proof::ObjWellDefinedProof;
 use super::wrap_obj_well_defined_by_def::finish_by_def;
 use crate::ast::obj::HyperbolicOperator;
 use crate::ast::obj::{
@@ -14,7 +14,6 @@ use crate::ast::obj::{
     StructAndFieldAccessObj, TrigOperator,
 };
 use crate::execute::execute_fact_stmt::VerifyState;
-use crate::runtime::runtime_ids::WellDefinednessId;
 use crate::runtime::{Runtime, RuntimeResult};
 
 // Top-level object WD: Success(proof) | Failed { obj, reason }. Proof never embeds Fail.
@@ -26,28 +25,34 @@ pub enum VerifyObjWellDefinedResult {
     },
 }
 
-// Success-only evidence that an object is well-defined. Always carries the subject.
-pub enum ObjWellDefinedProof {
-    // the well-definedness of this object is already proved earlier
-    ByKnown {
-        obj: Obj,
-        wd_id: WellDefinednessId,
-    },
-    ByDef {
-        obj: Obj,
-        proof: ObjWellDefinedProofByDef,
-    },
-}
-
-impl ObjWellDefinedProof {
-    pub fn obj(&self) -> &Obj {
+impl VerifyObjWellDefinedResult {
+    pub fn as_detailed_success(
+        &self,
+    ) -> RuntimeResult<Option<&super::DetailedObjWellDefinedProof>> {
         match self {
-            Self::ByKnown { obj, .. } | Self::ByDef { obj, .. } => obj,
+            Self::Success(proof) => proof.as_detailed().map(Some),
+            Self::Failed { .. } => Ok(None),
         }
     }
-}
 
-impl VerifyObjWellDefinedResult {
+    pub fn as_detailed_success_mut(
+        &mut self,
+    ) -> RuntimeResult<Option<&mut super::DetailedObjWellDefinedProof>> {
+        match self {
+            Self::Success(proof) => proof.as_detailed_mut().map(Some),
+            Self::Failed { .. } => Ok(None),
+        }
+    }
+
+    pub fn into_detailed_success(
+        self,
+    ) -> RuntimeResult<Option<super::DetailedObjWellDefinedProof>> {
+        match self {
+            Self::Success(proof) => proof.into_detailed().map(Some),
+            Self::Failed { .. } => Ok(None),
+        }
+    }
+
     pub fn is_failed(&self) -> bool {
         matches!(self, Self::Failed { .. })
     }
@@ -72,10 +77,7 @@ impl Runtime {
     ) -> RuntimeResult<VerifyObjWellDefinedResult> {
         if let Some(wd_id) = self.well_defined_visible_in_stack(obj) {
             return Ok(VerifyObjWellDefinedResult::Success(
-                ObjWellDefinedProof::ByKnown {
-                    obj: obj.clone(),
-                    wd_id,
-                },
+                ObjWellDefinedProof::by_known(self.result_detail(), obj, wd_id),
             ));
         }
 
@@ -226,13 +228,8 @@ impl Runtime {
         }
 
         let stages = self.verify_obj_well_definedness_by_def(obj, verify_state.clone())?;
-        match finish_by_def(obj, stages) {
-            Ok(by_def) => Ok(VerifyObjWellDefinedResult::Success(
-                ObjWellDefinedProof::ByDef {
-                    obj: obj.clone(),
-                    proof: by_def,
-                },
-            )),
+        match finish_by_def(obj, stages, self.result_detail())? {
+            Ok(by_def) => Ok(VerifyObjWellDefinedResult::Success(by_def)),
             Err(fail) => Ok(VerifyObjWellDefinedResult::Failed {
                 obj: obj.clone(),
                 reason: fail,
@@ -435,7 +432,7 @@ impl Runtime {
             | Obj::FunctionSpace(FunctionSpace::AnonymousFn(_))
             | Obj::FunctionSpace(FunctionSpace::Composition(_)) => {
                 // Handled in verify_obj_well_definedness via binder pipelines.
-                Ok(ObjWellDefinedByDefCommonStages::leaf())
+                Ok(ObjWellDefinedByDefCommonStages::leaf(self.result_detail()))
             }
             Obj::ProductShape(ProductShape::Cart(value)) => {
                 self.verify_cart_obj_well_definedness_by_def(value, verify_state)

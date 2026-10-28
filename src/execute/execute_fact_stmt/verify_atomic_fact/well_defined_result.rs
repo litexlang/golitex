@@ -11,15 +11,21 @@ pub enum FailToVerifyAtomicFactWellDefinedResult {
         well_defined_of_each_parameter: Vec<ObjWellDefinedProof>,
     },
     FunctionLimitDomain {
+        fact: crate::ast::fact::AtomicFact,
         function: crate::ast::obj::Obj,
         well_defined_of_each_parameter: Vec<ObjWellDefinedProof>,
     },
-    Argument(FailToVerifyObjWellDefinedResult),
+    Argument {
+        fact: crate::ast::fact::AtomicFact,
+        reason: FailToVerifyObjWellDefinedResult,
+    },
     Predicate {
+        fact: crate::ast::fact::AtomicFact,
         well_defined_of_each_parameter: Vec<ObjWellDefinedProof>,
         reason: PredicateSignatureWellDefinedFailure,
     },
     Domain {
+        fact: crate::ast::fact::AtomicFact,
         well_defined_of_each_parameter: Vec<ObjWellDefinedProof>,
         predicate_signature: PredicateSignatureWellDefinedProof,
         completed: Vec<PredicateDomainWellDefinedProof>,
@@ -51,10 +57,92 @@ pub enum PredicateSignatureWellDefinedProof {
 }
 
 // Success evidence follows the WD stages: argument objects, then signature.
-pub struct AtomicFactWellDefinedProof {
+pub enum AtomicFactWellDefinedProof {
+    Compact(CompactAtomicFactWellDefinedProof),
+    Normal(NormalAtomicFactWellDefinedProof),
+    Detailed(Box<DetailedAtomicFactWellDefinedProof>),
+}
+pub struct CompactAtomicFactWellDefinedProof {}
+pub struct NormalAtomicFactWellDefinedProof {}
+pub struct DetailedAtomicFactWellDefinedProof {
     pub well_defined_of_each_parameter: Vec<ObjWellDefinedProof>,
     pub predicate_signature: PredicateSignatureWellDefinedProof,
     pub predicate_domain: PredicateDomainProof,
+}
+
+impl AtomicFactWellDefinedProof {
+    pub fn new(
+        detail: crate::result_detail::OutputDetail,
+        build: impl FnOnce() -> DetailedAtomicFactWellDefinedProof,
+    ) -> crate::runtime::RuntimeResult<Self> {
+        use crate::result_detail::OutputDetail;
+        Ok(match detail {
+            OutputDetail::Compact => Self::Compact(CompactAtomicFactWellDefinedProof {}),
+            OutputDetail::Normal => Self::Normal(NormalAtomicFactWellDefinedProof {}),
+            OutputDetail::Detailed => {
+                let proof = build();
+                for child in &proof.well_defined_of_each_parameter {
+                    detail.require(child.detail(), "atomic WD child")?;
+                }
+                Self::Detailed(Box::new(proof))
+            }
+        })
+    }
+    pub fn detail(&self) -> crate::result_detail::OutputDetail {
+        use crate::result_detail::OutputDetail;
+        match self {
+            Self::Compact(_) => OutputDetail::Compact,
+            Self::Normal(_) => OutputDetail::Normal,
+            Self::Detailed(_) => OutputDetail::Detailed,
+        }
+    }
+    pub fn into_normal(self) -> crate::runtime::RuntimeResult<NormalAtomicFactWellDefinedProof> {
+        crate::result_detail::OutputDetail::Normal.require(self.detail(), "atomic WD")?;
+        match self {
+            Self::Normal(proof) => Ok(proof),
+            _ => unreachable!(),
+        }
+    }
+    pub fn into_compact(self) -> crate::runtime::RuntimeResult<CompactAtomicFactWellDefinedProof> {
+        crate::result_detail::OutputDetail::Compact.require(self.detail(), "atomic WD")?;
+        match self {
+            Self::Compact(proof) => Ok(proof),
+            _ => unreachable!(),
+        }
+    }
+    pub fn as_detailed(
+        &self,
+    ) -> crate::runtime::RuntimeResult<&DetailedAtomicFactWellDefinedProof> {
+        crate::result_detail::OutputDetail::Detailed.require(self.detail(), "atomic WD")?;
+        match self {
+            Self::Detailed(proof) => Ok(proof),
+            _ => unreachable!(),
+        }
+    }
+    pub fn as_detailed_mut(
+        &mut self,
+    ) -> crate::runtime::RuntimeResult<&mut DetailedAtomicFactWellDefinedProof> {
+        crate::result_detail::OutputDetail::Detailed.require(self.detail(), "atomic WD")?;
+        match self {
+            Self::Detailed(proof) => Ok(proof),
+            _ => unreachable!(),
+        }
+    }
+    pub(crate) fn detailed_ref(&self) -> &DetailedAtomicFactWellDefinedProof {
+        self.as_detailed().unwrap_or_else(|error| panic!("{error}"))
+    }
+}
+
+impl FailToVerifyAtomicFactWellDefinedResult {
+    pub fn fact(&self) -> &crate::ast::fact::AtomicFact {
+        match self {
+            Self::RealAnalysisDomain { fact, .. }
+            | Self::FunctionLimitDomain { fact, .. }
+            | Self::Argument { fact, .. }
+            | Self::Predicate { fact, .. }
+            | Self::Domain { fact, .. } => fact,
+        }
+    }
 }
 
 // Reusing a checked proposition also reuses its predicate-domain evidence.

@@ -203,7 +203,8 @@ fn arithmetic_does_not_fabricate_natural_or_integer_membership() {
         let command =
             parse_launch_command(&["-strict".to_string(), "-e".to_string(), source.to_string()])
                 .unwrap();
-        let mut runtime = Runtime::new(command);
+        let mut runtime =
+            Runtime::new_with_result_detail(command, crate::result_detail::OutputDetail::Detailed);
         let result = runtime.run_litex_code(source).unwrap();
         assert!(
             !result.success,
@@ -227,13 +228,15 @@ fn return_membership(statement: &mut ExecStmtResult) -> &mut StructuralMembershi
     else {
         panic!("the original function declaration");
     };
-    let VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByDef {
+    let Some(DetailedObjWellDefinedProof::ByDef {
         proof:
             ObjWellDefinedProofByDef::FunctionSpace(FunctionSpaceObjWellDefinedProofByDef::AnonymousFn(
                 proof,
             )),
         ..
-    }) = &mut proof.anonymous_fn_well_defined
+    }) = (&mut proof.anonymous_fn_well_defined)
+        .as_detailed_success_mut()
+        .unwrap()
     else {
         panic!("the original anonymous formula WD");
     };

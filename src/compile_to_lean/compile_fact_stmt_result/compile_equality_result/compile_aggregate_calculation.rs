@@ -76,12 +76,8 @@ impl LitexToLeanCompiler {
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
         if crate::rational_expression::ClosedNumericExpr::try_from_obj(object).is_none() {
-            // Cached numeric children may use a signed numeral where the
-            // source AST uses unary negation. Their denotations agree by the
-            // numeric embedding law, including below function applications.
-            let term = self.compile_object_reference(object, position)?;
-            let output = exact_rational_literal(value, "ℂ")?;
-            return Ok(format!("(show Litex.denote {term} = M.number {output} from by simpa only [M.neg_numbers] using {raw_proof})"));
+            let representation = self.compile_normalization_denotation(object, position)?;
+            return Ok(format!("(Eq.trans {representation} ({raw_proof}))"));
         }
         let observation = self.compile_numeric_observation(object, position)?;
         if observation.3.as_ref() != Some(value) {

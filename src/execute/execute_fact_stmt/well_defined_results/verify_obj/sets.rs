@@ -119,14 +119,13 @@ impl Runtime {
         }
 
         Ok(VerifyObjWellDefinedResult::Success(
-            ObjWellDefinedProof::ByDef {
-                obj: root,
-                proof: ObjWellDefinedProofByDef::SetOperator(
+            ObjWellDefinedProof::by_def(self.result_detail(), &(root), None, || {
+                ObjWellDefinedProofByDef::SetOperator(
                     SetOperatorObjWellDefinedProofByDef::IndexUnion(
                         IndexUnionObjWellDefinedProof::from_stages(stages),
                     ),
-                ),
-            },
+                )
+            }),
         ))
     }
 
@@ -215,14 +214,13 @@ impl Runtime {
         }
 
         Ok(VerifyObjWellDefinedResult::Success(
-            ObjWellDefinedProof::ByDef {
-                obj: root,
-                proof: ObjWellDefinedProofByDef::SetOperator(
+            ObjWellDefinedProof::by_def(self.result_detail(), &(root), None, || {
+                ObjWellDefinedProofByDef::SetOperator(
                     SetOperatorObjWellDefinedProofByDef::IndexIntersect(
                         IndexIntersectObjWellDefinedProof::from_stages(stages),
                     ),
-                ),
-            },
+                )
+            }),
         ))
     }
 
@@ -323,14 +321,13 @@ impl Runtime {
         }
 
         Ok(VerifyObjWellDefinedResult::Success(
-            ObjWellDefinedProof::ByDef {
-                obj: root,
-                proof: ObjWellDefinedProofByDef::SetOperator(
+            ObjWellDefinedProof::by_def(self.result_detail(), &(root), None, || {
+                ObjWellDefinedProofByDef::SetOperator(
                     SetOperatorObjWellDefinedProofByDef::IndexCart(
                         IndexCartObjWellDefinedProof::from_stages(stages),
                     ),
-                ),
-            },
+                )
+            }),
         ))
     }
 
@@ -445,14 +442,11 @@ impl Runtime {
             });
         }
         Ok(VerifyObjWellDefinedResult::Success(
-            ObjWellDefinedProof::ByDef {
-                obj: root,
-                proof: ObjWellDefinedProofByDef::SetFormer(
-                    SetFormerObjWellDefinedProofByDef::ListSet(
-                        ListSetObjWellDefinedProof::from_stages(stages),
-                    ),
-                ),
-            },
+            ObjWellDefinedProof::by_def(self.result_detail(), &(root), None, || {
+                ObjWellDefinedProofByDef::SetFormer(SetFormerObjWellDefinedProofByDef::ListSet(
+                    ListSetObjWellDefinedProof::from_stages(stages),
+                ))
+            }),
         ))
     }
 
@@ -479,7 +473,7 @@ impl Runtime {
                     "list set elements must be pairwise not equal".to_string(),
                 )?;
                 let failed = req.is_failed();
-                stages.requirement_fact_verified.push(req);
+                stages.push_requirement(req);
                 if failed {
                     return Ok(stages);
                 }
@@ -655,12 +649,15 @@ mod list_set_wd_budget_tests {
     use crate::runtime::Runtime;
 
     fn runtime() -> Runtime {
-        Runtime::new(LaunchCommand::Eval {
-            code: String::new(),
-            session: false,
-            strict: true,
-            language: OutputLanguage::English,
-        })
+        Runtime::new_with_result_detail(
+            LaunchCommand::Eval {
+                code: String::new(),
+                session: false,
+                strict: true,
+                language: OutputLanguage::English,
+            },
+            crate::result_detail::OutputDetail::Detailed,
+        )
     }
 
     #[test]

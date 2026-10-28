@@ -150,12 +150,15 @@ fn struct_dependencies_and_local_scope_are_not_discarded() {
 #[test]
 fn struct_membership_cannot_ignore_a_field_domain() {
     let source = "struct IndexedPoint:\n    coordinate R\n    index N\n(1, -1) $in &IndexedPoint\n";
-    let mut runtime = Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language: OutputLanguage::English,
-    });
+    let mut runtime = Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    );
     let run = runtime.run_litex_code(source).unwrap();
     assert!(!run.success);
     assert!(crate::compile_to_lean::LitexToLeanCompiler::new(runtime)
@@ -545,12 +548,15 @@ fn constrained_struct_publications_retain_the_actual_quantified_shape() {
 #[test]
 fn constrained_struct_invalid_point_is_rejected_before_compilation() {
     let source = "struct PositivePoint:\n    x R\n    y R\n    <=>:\n        x > 0\n(0, 3) $in &PositivePoint\n";
-    let mut runtime = Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language: OutputLanguage::English,
-    });
+    let mut runtime = Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    );
     let run = runtime.run_litex_code(source).unwrap();
     assert!(!run.success);
     assert!(crate::compile_to_lean::LitexToLeanCompiler::new(runtime)
@@ -634,10 +640,16 @@ fn nonempty_structure_arguments_cannot_drop_their_nonempty_proof() {
     let atomic = super::atomic_proof_mut(
         &mut super::fact_statement_mut(&mut run.statement_results[1]).verify_result,
     );
-    let ObjWellDefinedProof::ByDef {
+    let DetailedObjWellDefinedProof::ByDef {
         proof: ObjWellDefinedProofByDef::Structish(StructishObjWellDefinedProofByDef::StructObj(p)),
         ..
-    } = &mut atomic.well_defined_proof.well_defined_of_each_parameter[1]
+    } = (&mut atomic
+        .well_defined_proof
+        .as_detailed_mut()
+        .unwrap()
+        .well_defined_of_each_parameter[1])
+        .as_detailed_mut()
+        .unwrap()
     else {
         panic!("struct WD")
     };
@@ -656,11 +668,17 @@ fn nonempty_structure_arguments_reject_sethood_and_wrong_subjects() {
         let atomic = super::atomic_proof_mut(
             &mut super::fact_statement_mut(&mut run.statement_results[1]).verify_result,
         );
-        let ObjWellDefinedProof::ByDef {
+        let DetailedObjWellDefinedProof::ByDef {
             proof:
                 ObjWellDefinedProofByDef::Structish(StructishObjWellDefinedProofByDef::StructObj(p)),
             ..
-        } = &mut atomic.well_defined_proof.well_defined_of_each_parameter[1]
+        } = (&mut atomic
+            .well_defined_proof
+            .as_detailed_mut()
+            .unwrap()
+            .well_defined_of_each_parameter[1])
+            .as_detailed_mut()
+            .unwrap()
         else {
             panic!("struct WD")
         };
@@ -698,12 +716,15 @@ fn nonempty_header_facts_keep_their_scope_and_prefix() {
 
 #[test]
 fn nonempty_structures_reject_empty_arguments_and_unsupported_finite_kinds() {
-    let mut runtime = Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language: OutputLanguage::English,
-    });
+    let mut runtime = Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    );
     let run = runtime
         .run_litex_code(
             "struct NonemptyPair<A nonempty_set>:\n    x A\n    y A\n$is_set(&NonemptyPair<{}>)\n",
@@ -778,11 +799,17 @@ fn struct_specialization_requires_each_argument_wd_and_type_proof() {
         let atomic = super::atomic_proof_mut(
             &mut super::fact_statement_mut(&mut run.statement_results[1]).verify_result,
         );
-        let ObjWellDefinedProof::ByDef {
+        let DetailedObjWellDefinedProof::ByDef {
             proof:
                 ObjWellDefinedProofByDef::Structish(StructishObjWellDefinedProofByDef::StructObj(p)),
             ..
-        } = &mut atomic.well_defined_proof.well_defined_of_each_parameter[1]
+        } = (&mut atomic
+            .well_defined_proof
+            .as_detailed_mut()
+            .unwrap()
+            .well_defined_of_each_parameter[1])
+            .as_detailed_mut()
+            .unwrap()
         else {
             panic!("struct WD");
         };
@@ -867,12 +894,15 @@ fn struct_published_laws_cannot_drop_header_parameters_or_type_premises() {
 #[test]
 fn struct_specialization_cannot_erase_the_instantiated_field_carrier() {
     let source = "struct Pair<A set>:\n    x A\n    y A\n(1, -1) $in &Pair<N>\n";
-    let mut runtime = Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language: OutputLanguage::English,
-    });
+    let mut runtime = Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    );
     let run = runtime.run_litex_code(source).unwrap();
     assert!(!run.success);
     assert!(crate::compile_to_lean::LitexToLeanCompiler::new(runtime)

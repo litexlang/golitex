@@ -131,10 +131,10 @@ impl LitexToLeanCompiler {
         }
         let object = self.compile_object_reference(&fact.element, position)?;
         let checked = position.with_visible_wd(&fact.element, &mut |wd, _| {
-            let ObjWellDefinedProof::ByDef {
+            let DetailedObjWellDefinedProof::ByDef {
                 proof: ObjWellDefinedProofByDef::IteratedOperator(p),
                 ..
-            } = wd
+            } = (wd).detailed_ref()
             else {
                 return Err(LeanCompileError::unsupported(
                     "RangeAggregate/MemberConstructor",

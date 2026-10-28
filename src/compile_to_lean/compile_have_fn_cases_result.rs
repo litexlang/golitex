@@ -475,7 +475,11 @@ impl LitexToLeanCompiler {
         let coverage_formation = SourcePosition::new(
             Some(&coverage_header),
             SourceOwner::Verify(&p.coverage.coverage_check),
-            coverage_result.well_defined_proof.branches.len(),
+            coverage_result
+                .well_defined_proof
+                .detailed_ref()
+                .branches
+                .len(),
         );
         let is_coverage = matches!(evidence, PiecewiseEvidence::Coverage(..));
         let scope = SourcePosition::new(

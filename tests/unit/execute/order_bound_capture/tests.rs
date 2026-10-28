@@ -14,7 +14,10 @@ fn atomic(captured: &StoreInferredFactResult) -> &AtomicFact {
 fn bounded_chain_filter_retains_weak_natural_sign_and_closure_formation() {
     let source = "have Interval set = {x R: 0 <= x <= 1}\n";
     let command = parse_launch_command(&["-strict".into(), "-e".into(), source.into()]).unwrap();
-    let result = Runtime::new(command).run_litex_code(source).unwrap();
+    let result =
+        Runtime::new_with_result_detail(command, crate::result_detail::OutputDetail::Detailed)
+            .run_litex_code(source)
+            .unwrap();
     assert!(result.success && result.session_error.is_none());
     let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
         ExecDefineObjStmtResult::HaveObjEqual(ExecHaveObjEqualStmtResult::Success(declaration)),
@@ -22,11 +25,13 @@ fn bounded_chain_filter_retains_weak_natural_sign_and_closure_formation() {
     else {
         panic!("actual bounded-set declaration")
     };
-    let VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByDef {
+    let Some(DetailedObjWellDefinedProof::ByDef {
         proof:
             ObjWellDefinedProofByDef::SetFormer(SetFormerObjWellDefinedProofByDef::SetBuilder(builder)),
         ..
-    }) = &declaration.equal_to_well_defined[0]
+    }) = (&declaration.equal_to_well_defined[0])
+        .as_detailed_success()
+        .unwrap()
     else {
         panic!("actual set-builder formation")
     };

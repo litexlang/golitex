@@ -721,11 +721,23 @@ impl SourceObserver for Capture {
     }
 
     fn source_error(&mut self, _runtime: &Runtime, error: &RuntimeError) {
-        self.diagnostics.push(object(vec![
+        let mut fields = vec![
             ("source_id", text(&self.current_source)),
             ("kind", text("source")),
             ("message", text(&error.to_string())),
-        ]));
+        ];
+        if let RuntimeError::ParseError(parse) = error {
+            fields.push(("phase", text("parse")));
+            fields.push(("summary", text(&parse.message)));
+            fields.push(("line", JsonValue::Number(parse.line as f64)));
+            if let Some(source) = &parse.source {
+                fields.push(("line_text", text(&source.text)));
+                if let Some(column) = source.column {
+                    fields.push(("column", JsonValue::Number(column as f64)));
+                }
+            }
+        }
+        self.diagnostics.push(object(fields));
     }
 }
 

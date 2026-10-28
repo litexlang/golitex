@@ -1,0 +1,161 @@
+have fn add(x,y Z) Z = x+y
+
+have fn neg(x Z) Z = -x
+
+forall x,y,z Z:
+    add(add(x,y),z) = add(x,add(y,z))
+
+forall x Z:
+    add(0,x) = x
+    add(x,0) = x
+    add(neg(x),x) = 0
+    add(x,neg(x)) = 0
+
+have integers &Algebra::group::Group<Z> = (add,0,neg)
+
+release thm Algebra::group::subgroup_whole(Z,integers)
+
+release thm Algebra::group::subgroup_identity(Z,integers)
+
+by def $Algebra::group::is_abelian(Z,integers)
+
+release thm Algebra::group::abelian_subgroups_are_normal(Z,integers,Z)
+
+integers.one = 0
+
+{integers.one} = {0}
+
+$Algebra::group::is_subgroup(Z,integers,{0})
+
+release thm Algebra::group::abelian_subgroups_are_normal(Z,integers,{0})
+
+release thm Algebra::group::normal_subgroup_intersection(Z,integers,Z,{0})
+
+have fn double(x Z) Z = 2*x
+
+claim:
+    ? $Algebra::group::is_homomorphism(Z,integers,Z,integers,double)
+    claim:
+        ? forall x,y Z:
+            double(integers.mul(x,y)) = integers.mul(double(x),double(y))
+        integers.mul(x,y) = add(x,y) = x+y
+        double(integers.mul(x,y)) = 2*integers.mul(x,y) = 2*(x+y)
+        double(x) = 2*x
+        double(y) = 2*y
+        integers.mul(double(x),double(y)) = add(double(x),double(y)) = double(x)+double(y) = 2*x+2*y = 2*(x+y)
+    by def $Algebra::group::is_homomorphism(Z,integers,Z,integers,double)
+
+have fn triple(x Z) Z = 3*x
+
+claim:
+    ? $Algebra::group::is_homomorphism(Z,integers,Z,integers,triple)
+    claim:
+        ? forall x,y Z:
+            triple(integers.mul(x,y)) = integers.mul(triple(x),triple(y))
+        integers.mul(x,y) = add(x,y) = x+y
+        triple(integers.mul(x,y)) = 3*integers.mul(x,y) = 3*(x+y)
+        triple(x) = 3*x
+        triple(y) = 3*y
+        integers.mul(triple(x),triple(y)) = add(triple(x),triple(y)) = triple(x)+triple(y) = 3*x+3*y = 3*(x+y)
+    by def $Algebra::group::is_homomorphism(Z,integers,Z,integers,triple)
+
+have fn zero(x Z) Z = 0*x
+
+claim:
+    ? $Algebra::group::is_homomorphism(Z,integers,Z,integers,zero)
+    claim:
+        ? forall x,y Z:
+            zero(integers.mul(x,y)) = integers.mul(zero(x),zero(y))
+        integers.mul(x,y) = add(x,y) = x+y
+        zero(integers.mul(x,y)) = 0*integers.mul(x,y) = 0*(x+y)
+        zero(x) = 0*x
+        zero(y) = 0*y
+        integers.mul(zero(x),zero(y)) = add(zero(x),zero(y)) = zero(x)+zero(y) = 0*x+0*y = 0*(x+y)
+    by def $Algebra::group::is_homomorphism(Z,integers,Z,integers,zero)
+
+release thm Algebra::group::homomorphism_range_is_subgroup(Z,integers,Z,integers,double)
+
+release thm Algebra::group::homomorphism_range_is_subgroup(Z,integers,Z,integers,zero)
+
+claim:
+    ? 6 $in fn_range(double)
+    double(3) = 6
+    double(3) $in fn_range(double)
+
+by extension:
+    ? fn_range(zero) = {0}
+    zero(0) = 0
+    zero(0) $in fn_range(zero)
+    claim:
+        ? forall y fn_range(zero):
+            y $in {0}
+        have by fn_preimage: source_point from y $in fn_range(zero)
+        y = zero(source_point) = 0
+
+release thm Algebra::group::homomorphism_preimage_is_subgroup(Z,integers,Z,integers,double,{0})
+
+release thm Algebra::group::homomorphism_preimage_is_normal(Z,integers,Z,integers,double,{0})
+
+by extension:
+    ? preimage_set(double,{0}) = {0}
+    0 $in preimage_set(double,{0})
+    claim:
+        ? forall x preimage_set(double,{0}):
+            x $in {0}
+        x $in Z
+        double(x) $in {0}
+        2*x = double(x) = 0
+        x = 0/2 = 0
+
+release thm Algebra::group::homomorphism_preimage_is_subgroup(Z,integers,Z,integers,zero,{0})
+
+release thm Algebra::group::homomorphism_preimage_is_normal(Z,integers,Z,integers,zero,{0})
+
+by extension:
+    ? preimage_set(zero,{0}) = Z
+    claim:
+        ? forall x Z:
+            x $in preimage_set(zero,{0})
+        zero(x) = 0
+
+release thm Algebra::group::homomorphism_identity_map(Z,integers)
+
+release thm Algebra::group::homomorphism_composition(Z,integers,Z,integers,Z,integers,double,triple)
+
+compose(triple,double)(5) = 30
+
+release thm Algebra::group::homomorphism_range_is_subgroup(Z,integers,Z,integers,compose(triple,double))
+
+release thm Algebra::group::homomorphism_preimage_is_normal(Z,integers,Z,integers,compose(triple,double),{0})
+
+have fn trivial_mul(x,y {0}) {0} = 0
+
+have fn trivial_inv(x {0}) {0} = 0
+
+by enumerate finite_set:
+    ? forall x,y,z {0}:
+        trivial_mul(trivial_mul(x,y),z) = trivial_mul(x,trivial_mul(y,z))
+    trivial_mul(trivial_mul(x,y),z) = trivial_mul(x,trivial_mul(y,z))
+
+by enumerate finite_set:
+    ? forall x {0}:
+        trivial_mul(0,x) = x
+        trivial_mul(x,0) = x
+        trivial_mul(trivial_inv(x),x) = 0
+        trivial_mul(x,trivial_inv(x)) = 0
+    trivial_mul(0,x) = x
+    trivial_mul(x,0) = x
+    trivial_mul(trivial_inv(x),x) = 0
+    trivial_mul(x,trivial_inv(x)) = 0
+
+have trivial &Algebra::group::Group<{0}> = (trivial_mul,0,trivial_inv)
+
+release thm Algebra::group::subgroup_whole({0},trivial)
+
+release thm Algebra::group::subgroup_identity({0},trivial)
+
+release thm Algebra::group::homomorphism_identity_map({0},trivial)
+
+have fn partial(x Z:x>0) Z = 0
+
+release thm Algebra::group::homomorphism_range_is_subgroup(Z,integers,Z,integers,partial)

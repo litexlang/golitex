@@ -101,7 +101,8 @@ fn sketch_rejects_unsupported_children_instead_of_skipping_them() {
 fn sketch_rejects_failed_child_even_inside_a_success_wrapper() {
     let (mut run, compiler) = super::execute(ARITHMETIC);
     let command = parse_launch_command(&["-strict".into(), "-e".into(), "1 = 2".into()]).unwrap();
-    let mut other = Runtime::new(command);
+    let mut other =
+        Runtime::new_with_result_detail(command, crate::result_detail::OutputDetail::Detailed);
     let mut failed = other.run_litex_code("1 = 2").unwrap();
     assert!(!failed.success);
     sketch_mut(&mut run.statement_results[0])
@@ -122,7 +123,8 @@ fn sketches_replay_nested_blocks_outer_parameters_and_tuple_wd() {
     ] {
         let command =
             parse_launch_command(&["-strict".into(), "-e".into(), source.into()]).unwrap();
-        let mut runtime = Runtime::new(command);
+        let mut runtime =
+            Runtime::new_with_result_detail(command, crate::result_detail::OutputDetail::Detailed);
         let run = runtime.run_litex_code(source).unwrap();
         assert!(run.success, "source must verify: {source}");
         let compiler = crate::compile_to_lean::LitexToLeanCompiler::new(runtime);
@@ -181,11 +183,13 @@ fn sketch_cached_wd_requires_its_visible_original_producer() {
     );
     let p = sketch(&run.statement_results[0]);
     let alias = super::let_definition(&p.proof_steps[1]);
-    let VerifyObjWellDefinedResult::Success(wd @ ObjWellDefinedProof::ByKnown { .. }) =
-        &alias.value_well_defined
-    else {
+    let VerifyObjWellDefinedResult::Success(wd) = &alias.value_well_defined else {
         panic!("repeated fraction cites original WD")
     };
+    assert!(matches!(
+        wd.as_detailed().unwrap(),
+        DetailedObjWellDefinedProof::ByKnown { .. }
+    ));
     let run_position = SourcePosition::new(None, SourceOwner::Run(&run), 0);
     let before = SourcePosition::new(Some(&run_position), SourceOwner::Sketch(p), 0);
     let after = SourcePosition {

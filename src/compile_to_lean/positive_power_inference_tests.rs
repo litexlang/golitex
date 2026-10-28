@@ -13,12 +13,15 @@ const BASE: &str = "have fn inference_positive_constant(t R) R+ = 1\n\
 forall t R, y R:\n    0 < inference_positive_constant(t)\n    inference_positive_constant(t)^2=y\n    =>:\n        y $in R+\n";
 
 fn checked(source: &str) -> (RunLitexCodeResult, LitexToLeanCompiler) {
-    let mut runtime = Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language: OutputLanguage::English,
-    });
+    let mut runtime = Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    );
     let result = runtime.run_litex_code(source).expect("original source run");
     assert!(result.success && result.session_error.is_none(), "{source}");
     (result, LitexToLeanCompiler::new(runtime))
@@ -203,6 +206,8 @@ fn positive_power_inference_rejects_changed_exponent_and_missing_child_wd() {
     let (mut result, compiler) = checked(SQUARE);
     atomic(positivity(original(&mut result)))
         .well_defined_proof
+        .as_detailed_mut()
+        .unwrap()
         .well_defined_of_each_parameter
         .clear();
     assert!(compiler

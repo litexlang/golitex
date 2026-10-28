@@ -197,3 +197,132 @@ thm injective_implies_trivial_kernel:
             $has_trivial_kernel(A, G, B, H, f)
     by thm homomorphism_identity(A, G, B, H, f) => f(G.one) = H.one
     by def $has_trivial_kernel(A, G, B, H, f)
+
+thm subgroup_whole:
+    ? forall A nonempty_set,G &Group<A>:
+        $is_subgroup(A,G,A)
+    by def $is_subgroup(A,G,A)
+
+thm subgroup_identity:
+    ? forall A nonempty_set,G &Group<A>:
+        $is_subgroup(A,G,{G.one})
+    release thm inverse_unique(A,G,G.one,G.one)
+    claim:
+        ? forall x,y {G.one}:
+            G.mul(x,y) $in {G.one}
+        x = G.one
+        y = G.one
+        G.mul(x,y) = G.mul(G.one,G.one) = G.one
+    claim:
+        ? forall x {G.one}:
+            G.inv(x) $in {G.one}
+        x = G.one
+        G.inv(x) = G.inv(G.one) = G.one
+    by def $is_subgroup(A,G,{G.one})
+
+thm normal_subgroup_intersection:
+    ? forall A nonempty_set,G &Group<A>,S,T power_set(A):
+        $is_normal_subgroup(A,G,S)
+        $is_normal_subgroup(A,G,T)
+        =>:
+            $is_normal_subgroup(A,G,intersect(S,T))
+    release thm subgroup_intersection(A,G,S,T)
+    claim:
+        ? forall a A,s intersect(S,T):
+            G.mul(G.mul(a,s),G.inv(a)) $in intersect(S,T)
+        G.mul(G.mul(a,s),G.inv(a)) $in S
+        G.mul(G.mul(a,s),G.inv(a)) $in T
+    by def $is_normal_subgroup(A,G,intersect(S,T))
+
+thm homomorphism_range_is_subgroup:
+    ? forall A nonempty_set,G &Group<A>,B nonempty_set,H &Group<B>,f fn(x A) B:
+        $is_homomorphism(A,G,B,H,f)
+        =>:
+            $is_subgroup(B,H,fn_range(f))
+    release thm homomorphism_identity(A,G,B,H,f)
+    f(G.one) $in fn_range(f)
+    H.one = f(G.one)
+    claim:
+        ? forall u,v fn_range(f):
+            H.mul(u,v) $in fn_range(f)
+        have by fn_preimage: x from u $in fn_range(f)
+        have by fn_preimage: y from v $in fn_range(f)
+        H.mul(u,v) = H.mul(f(x),f(y)) = f(G.mul(x,y))
+        f(G.mul(x,y)) $in fn_range(f)
+    claim:
+        ? forall u fn_range(f):
+            H.inv(u) $in fn_range(f)
+        have by fn_preimage: x from u $in fn_range(f)
+        release thm homomorphism_inverse(A,G,B,H,f,x)
+        H.inv(u) = H.inv(f(x)) = f(G.inv(x))
+        f(G.inv(x)) $in fn_range(f)
+    by def $is_subgroup(B,H,fn_range(f))
+
+thm homomorphism_preimage_is_subgroup:
+    ? forall A nonempty_set,G &Group<A>,B nonempty_set,H &Group<B>,f fn(x A) B,S power_set(B):
+        $is_homomorphism(A,G,B,H,f)
+        $is_subgroup(B,H,S)
+        =>:
+            $is_subgroup(A,G,preimage_set(f,S))
+    release thm homomorphism_identity(A,G,B,H,f)
+    f(G.one) = H.one
+    G.one $in preimage_set(f,S)
+    claim:
+        ? forall x,y preimage_set(f,S):
+            G.mul(x,y) $in preimage_set(f,S)
+        x $in A
+        y $in A
+        f(x) $in S
+        f(y) $in S
+        f(G.mul(x,y)) = H.mul(f(x),f(y))
+        H.mul(f(x),f(y)) $in S
+        G.mul(x,y) $in preimage_set(f,S)
+    claim:
+        ? forall x preimage_set(f,S):
+            G.inv(x) $in preimage_set(f,S)
+        x $in A
+        f(x) $in S
+        release thm homomorphism_inverse(A,G,B,H,f,x)
+        f(G.inv(x)) = H.inv(f(x))
+        H.inv(f(x)) $in S
+        G.inv(x) $in preimage_set(f,S)
+    by def $is_subgroup(A,G,preimage_set(f,S))
+
+thm homomorphism_preimage_is_normal:
+    ? forall A nonempty_set,G &Group<A>,B nonempty_set,H &Group<B>,f fn(x A) B,S power_set(B):
+        $is_homomorphism(A,G,B,H,f)
+        $is_normal_subgroup(B,H,S)
+        =>:
+            $is_normal_subgroup(A,G,preimage_set(f,S))
+    release thm homomorphism_preimage_is_subgroup(A,G,B,H,f,S)
+    claim:
+        ? forall a A,s preimage_set(f,S):
+            G.mul(G.mul(a,s),G.inv(a)) $in preimage_set(f,S)
+        s $in A
+        f(s) $in S
+        release thm homomorphism_inverse(A,G,B,H,f,a)
+        f(G.mul(a,s)) = H.mul(f(a),f(s))
+        f(G.mul(G.mul(a,s),G.inv(a))) = H.mul(f(G.mul(a,s)),f(G.inv(a))) = H.mul(H.mul(f(a),f(s)),H.inv(f(a)))
+        H.mul(H.mul(f(a),f(s)),H.inv(f(a))) $in S
+        G.mul(G.mul(a,s),G.inv(a)) $in preimage_set(f,S)
+    by def $is_normal_subgroup(A,G,preimage_set(f,S))
+
+thm homomorphism_identity_map:
+    ? forall A nonempty_set,G &Group<A>:
+        $is_homomorphism(A,G,A,G,fn(x A) A {x})
+    by def $is_homomorphism(A,G,A,G,fn(x A) A {x})
+
+thm homomorphism_composition:
+    ? forall A nonempty_set,G &Group<A>,B nonempty_set,H &Group<B>,D nonempty_set,K &Group<D>,f fn(x A) B,g fn(y B) D:
+        $is_homomorphism(A,G,B,H,f)
+        $is_homomorphism(B,H,D,K,g)
+        =>:
+            $is_homomorphism(A,G,D,K,compose(g,f))
+    claim:
+        ? forall x,y A:
+            compose(g,f)(G.mul(x,y)) = K.mul(compose(g,f)(x),compose(g,f)(y))
+        f(G.mul(x,y)) = H.mul(f(x),f(y))
+        compose(g,f)(x) = g(f(x))
+        compose(g,f)(y) = g(f(y))
+        compose(g,f)(G.mul(x,y)) = g(f(G.mul(x,y))) = g(H.mul(f(x),f(y))) = K.mul(g(f(x)),g(f(y))) = K.mul(compose(g,f)(x),compose(g,f)(y))
+    by def $is_homomorphism(A,G,D,K,compose(g,f))

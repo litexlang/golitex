@@ -17,10 +17,12 @@ fn value_shape(
         panic!("coordinate fact")
     };
     let equality = super::equality_proof_mut(&mut fact.verify_result);
-    let ObjWellDefinedProof::ByDef {
+    let DetailedObjWellDefinedProof::ByDef {
         proof: ObjWellDefinedProofByDef::FnObj(proof),
         ..
-    } = &mut equality.well_defined_proof.left
+    } = (&mut equality.well_defined_proof.as_detailed_mut().unwrap().left)
+        .as_detailed_mut()
+        .unwrap()
     else {
         panic!("coordinate call WD")
     };
@@ -93,10 +95,12 @@ fn finite_coordinate_cache_uses_its_exact_original_membership_producer() {
         .store_and_infer_results[0]
         .primary_fact_id();
     let equality = super::equality_proof_mut(&mut forall.proved_then_facts[0].verify_result);
-    if let ObjWellDefinedProof::ByDef {
+    if let DetailedObjWellDefinedProof::ByDef {
         proof: ObjWellDefinedProofByDef::FnObj(call),
         ..
-    } = &equality.well_defined_proof.left
+    } = (&equality.well_defined_proof.detailed_ref().left)
+        .as_detailed()
+        .unwrap()
     {
         let Some(FnObjDomainFnSetEvidence::FiniteFunction(finite)) = &call.domain_fn_set else {
             panic!("original finite constructor")
@@ -143,12 +147,17 @@ fn finite_coordinate_cache_rejects_a_changed_original_membership_store() {
 fn finite_coordinate_cache_still_requires_the_original_carrier_wd() {
     let (mut result, compiler) = super::execute(SOURCE);
     let forall = super::forall_proof_mut(&mut result.statement_results[0]);
-    let ParamTypeWellDefinedProof::Obj(ObjWellDefinedProof::ByDef {
+    let ParamTypeWellDefinedProof::Obj(wd) =
+        &mut forall.introduced_params.param_type_well_defined[0]
+    else {
+        panic!("cartesian parameter WD");
+    };
+    let DetailedObjWellDefinedProof::ByDef {
         obj: Obj::ProductShape(ProductShape::Cart(cart)),
         ..
-    }) = &mut forall.introduced_params.param_type_well_defined[0]
+    } = wd.as_detailed_mut().unwrap()
     else {
-        panic!("original Cartesian carrier WD")
+        panic!("cartesian parameter WD");
     };
     cart.args[0] = Box::new(Obj::StandardSet(StandardSet::Z));
     assert_eq!(

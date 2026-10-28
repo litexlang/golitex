@@ -6,12 +6,15 @@ const OPS: &str =
 const FAMILY: &str = "struct FamilyHolder:\n    fiber fn(idx N+)power_set(R)\n    tag N\n";
 
 fn runtime(source: CodeSource) -> Runtime {
-    let mut rt = Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language: OutputLanguage::English,
-    });
+    let mut rt = Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    );
     rt.finish_source();
     rt.begin_source(source);
     rt

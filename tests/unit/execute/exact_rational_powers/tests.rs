@@ -1,5 +1,6 @@
 use crate::ast::fact::Fact;
 use crate::ast::stmt::Stmt;
+use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::DetailedObjWellDefinedProof;
 use crate::execute::execute_fact_stmt::{VerifyState, VerifyStateLevel};
 use crate::json_output::{emit_run_detailed, emit_run_normal};
 use crate::launch_command::{LaunchCommand, OutputLanguage};
@@ -8,12 +9,15 @@ use crate::runtime::Runtime;
 use crate::tokenize::Tokenizer;
 
 fn runtime(language: OutputLanguage) -> Runtime {
-    Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language,
-    })
+    Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    )
 }
 
 fn check(source: &str, expected: bool) -> String {
@@ -174,7 +178,7 @@ fn real_power_wd_retains_actual_domain_requirements() {
     use crate::ast::fact::AtomicFact;
     use crate::execute::execute_fact_stmt::verify_atomic_fact::VerifyAtomicExceptEqualityFactResult;
     use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::{
-        ArithmeticOperatorObjWellDefinedProofByDef, ObjWellDefinedProof, ObjWellDefinedProofByDef,
+        ArithmeticOperatorObjWellDefinedProofByDef, ObjWellDefinedProofByDef,
         VerifyObjWellDefinedResult,
     };
     use crate::execute::execute_fact_stmt::VerifyFactResult;
@@ -195,15 +199,17 @@ fn real_power_wd_retains_actual_domain_requirements() {
         else {
             panic!("power equality")
         };
-        let VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByDef {
+        let Some(DetailedObjWellDefinedProof::ByDef {
             proof:
                 ObjWellDefinedProofByDef::ArithmeticOperator(
                     ArithmeticOperatorObjWellDefinedProofByDef::Pow(proof),
                 ),
             ..
-        }) = rt
+        }) = (rt
             .verify_obj_well_definedness(&goal.left, VerifyState::top_level())
-            .unwrap()
+            .unwrap())
+        .into_detailed_success()
+        .unwrap()
         else {
             panic!("selected power WD proof")
         };

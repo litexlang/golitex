@@ -52,8 +52,8 @@
   function humanize(value) { return String(value||"").replace(/([a-z])([A-Z])/g,"$1 $2").replace(/_/g," "); }
   function bytePositions(source) { const positions=new Map([[0,0]]); let bytes=0,units=0; for(const char of source){ const point=char.codePointAt(0); bytes+=point<128?1:point<2048?2:point<65536?3:4; units+=char.length; positions.set(bytes,units); } return positions; }
 
-  Object.assign(copy.zh,{readingHelp:"阅读帮助",advancedHelp:"深入查看",records:"阅读记录",openFiles:"打开文件",openProject:"打开文件夹",recordExplanation:"阅读记录里保存了每句话怎样被检查、用到了哪些已知事实、又推出了什么。网页根据这些记录展示原文和说明。",recordFileExplanation:"这些记录保存成 JSON 文件，换一台电脑也能打开查看。JSON 是这种文件格式的名字。",book:"示例目录",hint:"点一句，看看它的意思；点灰色结果，看看推出了什么。"});
-  Object.assign(copy.en,{readingHelp:"Reading help",advancedHelp:"Explore further",records:"Reading records",openFiles:"Open a file",openProject:"Open a folder",recordExplanation:"Reading records save how each statement was checked, which known facts it used, and what it led to. This page uses those records to show the source and its explanations.",recordFileExplanation:"Records are saved as a JSON file, which you can open on another computer. JSON is the name of the file format.",book:"Examples",hint:"Click a statement to see its meaning. Click a grey result to explore what follows."});
+  Object.assign(copy.zh,{readingHelp:"阅读帮助",advancedHelp:"深入查看",records:"阅读记录",openFiles:"打开文件",openProject:"打开文件夹",recordExplanation:"阅读记录里保存了每句话怎样被检查、用到了哪些已知事实、又推出了什么。网页根据这些记录展示原文和说明。",recordFileExplanation:"这些记录保存成 JSON 文件，换一台电脑也能打开查看。JSON 是这种文件格式的名字。",book:"示例目录",hint:"悬浮对象、运算符或关键词查看说明，悬浮事实或行号查看依据；等式链中的每个等号可单独查看这一步的证明。灰色文字是本行推出的结果，悬浮或点击可查看全部结果。编辑时按住 Ctrl / ⌘ 点击，可跳转或固定说明。"});
+  Object.assign(copy.en,{readingHelp:"Reading help",advancedHelp:"Explore further",records:"Reading records",openFiles:"Open a file",openProject:"Open a folder",recordExplanation:"Reading records save how each statement was checked, which known facts it used, and what it led to. This page uses those records to show the source and its explanations.",recordFileExplanation:"Records are saved as a JSON file, which you can open on another computer. JSON is the name of the file format.",book:"Examples",hint:"Hover an object, operation or keyword for help, or a fact or line number for proof. Each equals sign in a chain shows that step's own proof. Grey text shows inferred results; hover or click for all results. While editing, Ctrl / ⌘ + click follows a reference or keeps an explanation open."});
 
   // Authored language help. Token boundaries come from the real tokenizer;
   // builtin-set meanings are keyed by resolved identities, never source names.
@@ -63,7 +63,7 @@
     have:["引入对象或函数，并检查声明要求。","Introduce an object or function and check its declaration requirements."],
     let:["引入当前上下文中的变量或绑定。","Introduce a variable or binding in the current context."],
     fn:["函数：描述参数和取值类型。","Function: describe parameter and result types."],
-    forall:["全称量词 ∀：对指定范围内的每一个对象。","Universal quantifier ∀: for every object in the specified domain."],
+    forall:["全称量词：对于任意指定范围内的对象，所述条件均成立。","Universal quantifier: for every object in the specified domain, the stated conditions hold."],
     exist:["存在量词 ∃：存在满足条件的对象。","Existential quantifier ∃: an object satisfying the conditions exists."],
     "exist!":["唯一存在量词 ∃!：存在且仅存在一个满足条件的对象。","Unique existential quantifier ∃!: there exists exactly one object satisfying the conditions."],
     claim:["提出待证明的结论，并在块内给出证明。","State a goal and provide its proof in the block."],
@@ -421,7 +421,7 @@
         ]
       }
     },
-    forall:{syntax:"forall x A:\n    condition",zh:["全称量词 ∀","说明指定集合中的每一个对象都满足某个条件。","在块内 x 是任意一个 A 中的对象。证明不能依赖 x 的某个特殊取值；x 的这个绑定只在本量词范围内有效。"],en:["Universal quantifier ∀","State a condition for every object in a given set.","Inside the block, x is an arbitrary member of A, not a chosen special value. Its binding is scoped to this quantifier."],example:"forall x R:\n    x = x"},
+    forall:{syntax:"forall x A:\n    condition",zh:["全称量词","对于任意指定范围内的对象，所述条件均成立。","在块内 x 是任意一个 A 中的对象。证明不能依赖 x 的某个特殊取值；x 的这个绑定只在本量词范围内有效。"],en:["Universal quantifier","For every object in the specified domain, the stated conditions hold.","Inside the block, x is an arbitrary member of A, not a chosen special value. Its binding is scoped to this quantifier."],example:"forall x R:\n    x = x"},
     claim:{syntax:"claim:\n    ? goal\n    proof",zh:["声明并证明","把要证明的目标和它的证明放在同一个块里。","? 标出目标。块内可以补充中间步骤；只有目标被证明后，承诺的结论才交给后文使用。"],en:["State and prove","Place a goal and its proof in one block.","? marks the goal. Intermediate steps can be added inside; the promised conclusion becomes available after it is established."],example:"claim:\n    ? 1 = 1\n    1 = 1"},
     "release thm":{
       syntax:"release thm name(arguments)",
@@ -460,41 +460,50 @@
     let referencesBySource,declarationsBySource,symbolRoles,builtinTheoremSymbols,theoremApplications,symbolDefinitions,symbolBindings,symbolParameters,displayNames;
     let rulePage=0,activeRule=null;
     let rulebookState={query:"",usedOnly:true,open:false,category:"all"};
-    let destroyed=false,tokenHelp=null,inferencePopover=null,proofPopover=null,proofCandidate=null,proofTimer=null,proofCloseTimer=null;
-    let factsBySourceLine,quantifiedFacts;
+    let destroyed=false,tokenHelp=null,inferencePopover=null,proofPopover=null,proofCandidate=null,proofTimer=null,proofCloseTimer=null,proofFocusSuppression=null;
+    let inferenceCandidate=null,inferenceTimer=null,inferenceCloseTimer=null;
+    let factsBySourceLine,factSubjects,quantifiedFacts,existentialFacts,scopes,sourceIssues,issuesByLine;
     const drafts=new Map(),originals=new Map(),idePositions=new Map(),tokenHelpOpeners=new WeakMap();
     let restoreIdeFocus=false;
-    let revision=0,checkedRevision=0,checking=false,editError="";
+    let revision=0,checkedRevision=0,checking=false,editError="",checkSerial=0;
     const editText=(zh,en)=>lang()==="zh"?zh:en;
     function pending(){return revision!==checkedRevision;}
     function draftContent(source){return drafts.get(source.path)??source.content??"";}
     async function checkDraft(){
-      if(checking||!options.onCheck)return;
-      const epoch=generation,submitted=revision,path=sources.get(state.source)?.path,cursor=idePositions.get(sources.get(state.source)?.path)?.start;checking=true;editError="";
-      const control=root.querySelector(".lr-check");if(control)control.disabled=true;
-      detailPane.replaceChildren(element("p","lr-loading",editText("正在检查…","Checking…")));
+      if(destroyed||checking||!options.onCheck)return;
+      const request=++checkSerial,epoch=generation,submitted=revision,startedAt=navigationSerial,path=sources.get(state.source)?.path,cursor=idePositions.get(sources.get(state.source)?.path)?.start;checking=true;editError="";
+      root.querySelector(".lr-editor-error")?.remove();
+      const control=root.querySelector(".lr-check");if(control){control.disabled=true;control.textContent=editText("检查中…","Checking…");}root.querySelector(".lr-source-pane")?.setAttribute("aria-busy","true");
       try{
         const result=await options.onCheck({changes:Object.fromEntries(drafts),sourcePath:path,locale:lang()});
-        if(destroyed||epoch!==generation||submitted!==revision)return;
+        if(destroyed||request!==checkSerial||epoch!==generation||submitted!==revision)return;
+        if(result?.kind!=="reading"||!Array.isArray(result.sources)||!Array.isArray(result.statements))throw new Error(editText("检查服务没有返回可用的阅读记录。","The checker did not return usable reading records."));
+        const moved=navigationSerial!==startedAt,activePath=moved?sources.get(state.source)?.path:path,activeLine=state.focusLine;
         api.update(result,{preserveDrafts:true});checkedRevision=submitted;
-        const selected=[...sources.values()].find(source=>source.path===path);
-        if(selected){
-          const line=String(selected.content||"").slice(0,cursor??0).split("\n").length,entries=statementsBySource.get(selected.id)||[];
-          const target=entries.find(value=>value.status==="rejected")||entries.filter(value=>value.line<=line).sort((a,b)=>b.line-a.line)[0]||initialStatement(selected.id);
-          state.source=selected.id;state.statement=target?.id||null;state.focusLine=target?.line||line;
+        let selected=[...sources.values()].find(source=>source.path===activePath);
+        if(!moved&&(!selected||selected.editor_unchecked)){
+          const blockedBy=[...sourceIssues.values()].find(issue=>sources.has(issue.sourceId));
+          if(blockedBy)selected=sources.get(blockedBy.sourceId);
         }
-      }catch(error){if(!destroyed&&epoch===generation&&submitted===revision)editError=error.message;}
-      finally{checking=false;if(!destroyed)render();}
+        if(selected){
+          const line=moved?activeLine||1:String(selected.content||"").slice(0,cursor??0).split("\n").length,entries=statementsBySource.get(selected.id)||[],issue=!moved&&[...sourceIssues.values()].find(issue=>issue.sourceId===selected.id);
+          const target=(!moved&&entries.find(value=>value.status==="rejected"))||entries.filter(value=>value.line<=line).sort((a,b)=>b.line-a.line)[0]||initialStatement(selected.id);
+          state.source=selected.id;state.statement=target?.id||null;state.focusLine=moved?line:issue?.line||target?.line||line;
+        }
+        render();if(options.onNavigate)options.onNavigate({...state},{bundle_id:bundle.bundle_id||null});
+      }catch(error){if(!destroyed&&request===checkSerial&&epoch===generation&&submitted===revision)editError=error?.message||String(error);}
+      finally{if(request===checkSerial){checking=false;if(!destroyed)render();}}
     }
     function renderEditor(source,sourcePane,header){
       if(!originals.has(source.path))originals.set(source.path,source.content||"");
-      const check=button(editText("检查","Check"),"lr-button lr-check",checkDraft);check.disabled=checking;
-      const restore=button(editText("恢复原文","Restore original"),"lr-button",()=>{drafts.set(source.path,originals.get(source.path));revision++;editError="";render();});
+      const check=button(checking?editText("检查中…","Checking…"):editText("检查","Check"),"lr-button lr-check",checkDraft);check.disabled=checking;sourcePane.setAttribute("aria-busy",String(checking));
+      const restore=button(editText("恢复原文","Restore original"),"lr-button lr-restore",()=>{const original=originals.get(source.path);if(input.value===original)return;const start=input.selectionStart,end=input.selectionEnd;input.value=original;input.setSelectionRange(Math.min(start,original.length),Math.min(end,original.length));changed();render();root.querySelector(".lr-ide-input")?.focus({preventScroll:true});});
+      restore.hidden=draftContent(source)===originals.get(source.path);
       header.append(check,restore);
       const editor=element("div","lr-ide"),canvas=element("div","lr-ide-canvas"),input=element("textarea","lr-editor-input lr-ide-input");
       input.dataset.sourcePath=source.path;input.value=draftContent(source);input.spellcheck=false;input.wrap="off";input.setAttribute("aria-label",editText("Litex 编辑器","Litex editor"));input.setAttribute("autocapitalize","off");input.setAttribute("autocomplete","off");input.setAttribute("autocorrect","off");
       codePane.classList.add("lr-ide-code");codePane.scrollTop=0;codePane.scrollLeft=0;
-      canvas.append(codePane,input);editor.append(canvas);sourcePane.append(editor,element("div","lr-editor-hint",editText("直接输入 · ⌘ / Ctrl + Enter 检查 · 悬浮查看定义与证明","Type here · ⌘ / Ctrl + Enter to check · Hover for definitions and proofs")));
+      canvas.append(codePane,input);editor.append(canvas);sourcePane.append(editor,element("div","lr-editor-hint",editText("悬浮查看定义与证明 · ⌘ / Ctrl + 点击跳转或固定 · ⌘ / Ctrl + Enter 检查","Hover for definitions and proof · ⌘ / Ctrl + click to follow or keep open · ⌘ / Ctrl + Enter to check")));
       const drawDraft=()=>{
         codePane.replaceChildren();
         // Unchecked text receives lexical colors only, never old symbol identities.
@@ -509,7 +518,7 @@
       };
       const remember=()=>idePositions.set(source.path,{start:input.selectionStart,end:input.selectionEnd,top:editor.scrollTop,left:editor.scrollLeft});
       editor.addEventListener("scroll",remember);input.addEventListener("select",remember);
-      const changed=()=>{drafts.set(source.path,input.value);revision++;editError="";hideTokenHelp();drawDraft();remember();invalidateEvidence();};
+      const changed=()=>{drafts.set(source.path,input.value);revision++;editError="";navigationSerial++;operationStatus="";operationError=false;root.querySelectorAll(".lr-operation-status").forEach(node=>node.remove());hideTokenHelp();drawDraft();remember();restore.hidden=input.value===originals.get(source.path);state.focusLine=input.value.slice(0,input.selectionStart).split("\n").length;invalidateEvidence();if(bookQuery)renderBookResults();if(options.onNavigate)options.onNavigate({...state},{bundle_id:bundle.bundle_id||null});};
       input.addEventListener("input",changed);
       // The input owns typing; semantic hover resolves against the real checked
       // tokens underneath it, using their existing help callbacks and FactIds.
@@ -519,15 +528,15 @@
       };
       input.addEventListener("pointermove",event=>{
         if(pending()||source.editor_unchecked){hideTokenHelp();return;}
-        const target=underneath(event);if(hoverProofTarget(target))return;
+        const target=underneath(event),result=target?.closest(".lr-inference-toggle");if(result){hoverInferences(result);return;}leaveInferences();if(hoverProofTarget(target))return;
         const token=target?.closest(".lr-token,[data-syntax]");
         const show=token&&tokenHelpOpeners.get(token);if(show)show();else hideTokenHelp();
       });
-      input.addEventListener("pointerleave",()=>{hideTokenHelp();leaveProof();});
+      input.addEventListener("pointerleave",()=>{hideTokenHelp();leaveProof();leaveInferences();});
       input.addEventListener("pointerdown",event=>{
         if(pending())return;
-        const target=underneath(event),action=target?.closest(".lr-inference-toggle,.lr-reference-count");
-        const token=target?.closest(".lr-token,[data-keyword]");
+        const target=underneath(event),action=target?.closest(".lr-inference-toggle,.lr-reference-count,.lr-inline-failure");
+        const token=target?.closest(".lr-token,[data-keyword],.lr-chain-equality");
         if(action||((event.ctrlKey||event.metaKey)&&token)){event.preventDefault();event.stopPropagation();remember();(action||token).click();}
       });
       const inspectCaret=(keyword=null,open=false)=>{
@@ -535,17 +544,18 @@
         const before=input.value.slice(0,input.selectionStart),line=before.split("\n").length,start=before.lastIndexOf("\n")+1;
         const owner=owningStatement(source.id,line,new TextEncoder().encode(input.value.slice(0,start)).length);
         if(state.statement===owner?.id&&state.focusLine===line&&!state.fact&&!state.symbol&&(state.keyword||null)===keyword&&(!open||state.explanationOpen))return;
+        navigationSerial++;
         const lineFacts=lineProofFacts(source.id,line),fact=!keyword&&lineFacts.length===1?lineFacts[0]:null;
-        closeInferences();closeProof();state={source:source.id,statement:owner?.id||null,focusLine:line,symbol:null,fact:fact?.id||null,wd:null,keyword,explanationOpen:open||state.explanationOpen};
+        closeInferences();closeProof();state={source:source.id,statement:owner?.id||null,focusLine:line,symbol:null,fact:fact?.id||null,wd:null,keyword,explanationOpen:open};
         const cited=new Set(fact?factCitations(fact):array(owner?.cited_fact_ids)),premiseLines=new Set([...cited].map(id=>factLocation(facts.get(id))).filter(value=>value.sourceId===source.id).map(value=>value.line));
         for(const row of codePane.querySelectorAll(".lr-code-row")){const number=Number(row.dataset.line);row.classList.toggle("lr-selected",number===line);row.classList.toggle("lr-premise",number!==line&&premiseLines.has(number));}
         for(const toggle of codePane.querySelectorAll(".lr-inference-toggle")){toggle.classList.remove("lr-inferred-selected");toggle.classList.toggle("lr-inferred-premise",JSON.parse(toggle.dataset.facts).some(id=>cited.has(id)));}
         codePane.querySelectorAll(".lr-symbol-selected,.lr-reference-selected").forEach(node=>node.classList.remove("lr-symbol-selected","lr-reference-selected"));
-        root.querySelector(".lr-inspector-title").textContent=keyword?editText("参考说明","Reference"):t("mathematicalMeaning");const presentation=statementPresentation(owner);root.querySelector(".lr-type-label").textContent=keyword||presentation.syntax||presentation.title;
+        root.querySelector(".lr-inspector-title").textContent=inspectorTitle();const presentation=statementPresentation(owner);root.querySelector(".lr-type-label").textContent=keyword||presentation.syntax||presentation.title;
         detailPane.replaceChildren();renderInspectorContents();showExplanation();
         if(options.onNavigate)options.onNavigate({...state},{bundle_id:bundle.bundle_id||null});
       };
-      input.addEventListener("click",event=>{if(!underneath(event)?.closest(".lr-inference-toggle,.lr-reference-count"))inspectCaret(underneath(event)?.closest("[data-keyword]")?.dataset.keyword||null,true);});input.addEventListener("keyup",event=>{if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight","Home","End"].includes(event.key))inspectCaret();});
+      input.addEventListener("click",event=>{if(event.ctrlKey||event.metaKey||underneath(event)?.closest(".lr-inference-toggle,.lr-reference-count,.lr-inline-failure"))return;closeExplanation();inspectCaret();});input.addEventListener("keyup",event=>{if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight","Home","End"].includes(event.key))inspectCaret();});
       input.addEventListener("keydown",event=>{
         if(event.isComposing)return;
         if(event.key==="Escape"){hideTokenHelp();closeExplanation();return;}
@@ -564,7 +574,8 @@
     }
     function invalidateEvidence(){
       closeInferences();closeExplanation();closeProof();
-      root.querySelectorAll(".lr-inline-inferences,.lr-definition-references,.lr-diagnostics").forEach(node=>node.remove());
+      state={...state,statement:null,symbol:null,fact:null,wd:null,chainStep:null,issue:null,keyword:null,reference:null};
+      root.querySelectorAll(".lr-inline-inferences,.lr-definition-references,.lr-diagnostics:not(.lr-operation-status),.lr-inline-failure,.lr-editor-error,.lr-service-diagnostics").forEach(node=>node.remove());
       root.querySelectorAll(".lr-book-heading .lr-badge,.lr-book-heading .lr-origin-note").forEach(node=>node.remove());
       const heading=root.querySelector(".lr-book-heading");
       if(heading&&!heading.querySelector(".lr-pending"))heading.append(element("span","lr-pending",editText("待检查","Not checked")));
@@ -591,6 +602,20 @@
       statements=new Map(array(bundle.statements).map(value=>[value.id,value]));
       statementsBySource=new Map();for(const value of statements.values()){if(!statementsBySource.has(value.source_id))statementsBySource.set(value.source_id,[]);statementsBySource.get(value.source_id).push(value);}
       facts=new Map(array(bundle.facts).map(value=>[value.id,value]));
+      scopes=new Map(array(bundle.scopes).map(value=>[value.id,value]));
+      evidenceNodes=new Map(array(bundle.evidence_nodes).map(value=>[value.id,value.node]));
+      // Older exports retain some checked conclusions only on their execution
+      // record. Derive display views from those exact successful results.
+      for(const statement of statements.values()){
+        const id=statement.mathematics?.kind==="fact"&&statement.mathematics.subject_fact_id,fact=facts.get(id);
+        if(!fact||statement.status!=="accepted"||fact.producer_statement_id!==statement.id)continue;
+        const record=proofResult(statement.evidence),proof={ExecByDefStmtSuccess:record.fields?.proof,ExecByThmStmtSuccess:record.fields?.selected_proof,ExecByContraStmtSuccess:statement.evidence}[record.type];
+        if(!fact.evidence&&proof)facts.set(id,{...fact,role:"verified",is_primary:true,evidence:proof});
+        if(record.type==="ExecByContraStmtSuccess"){
+          const assumption=resolveEvidence(record.fields.reverse_assumption_fact_id),local=facts.get(assumption.fact_id);
+          if(assumption.kind==="fact_reference"&&local&&local.producer_statement_id===statement.id)facts.set(local.id,{...local,role:"hypothesis",evidence:record.fields.reverse_assumption_wd});
+        }
+      }
       // Only primary source facts have authority over a source row. Incidental
       // instantiated facts can reuse a definition's line and must not own it.
       factsBySourceLine=new Map();
@@ -601,7 +626,7 @@
       }
       symbols=new Map(array(bundle.symbols).map(value=>[value.id,value]));
       rules=new Map(array(bundle.rules).map(value=>[value.id,value]));
-      evidenceNodes=new Map(array(bundle.evidence_nodes).map(value=>[value.id,value.node]));
+      indexSourceIssues();
       inferences=new Map(array(bundle.inferences).map(value=>[value.id,value]));
       wellDefinedness=new Map(array(bundle.well_definedness).map(value=>[value.id,value]));
       occurrences=array(bundle.occurrences);
@@ -652,7 +677,7 @@
         }
         displayNames.set(source.id,names);
       }
-      symbolRoles=new Map();builtinTheoremSymbols=new Set();theoremApplications=new Map();quantifiedFacts=new Map();
+      symbolRoles=new Map();builtinTheoremSymbols=new Set();theoremApplications=new Map();factSubjects=new Map();quantifiedFacts=new Map();existentialFacts=new Map();
       for(const symbol of symbols.values()){
         const kind=symbol.kind;
         symbolRoles.set(symbol.id,symbol.id.startsWith("builtin:set:")?"type":["DefPropStmt","DefAbstractPropStmt"].includes(kind)?"predicate":["DefThmStmt","AxiomStmt","DefStrategyStmt"].includes(kind)?"theorem":["DefStructStmt","DefTemplateStmt"].includes(kind)?"type":"object");
@@ -660,7 +685,10 @@
       for(const statement of statements.values())if(["HaveFnEqualStmt","HaveFnEqualCaseByCaseStmt","HaveFnByInducStmt","HaveFnByForallExistUniqueStmt","DefAlgoByCasesStmt","DefAlgoByInducStmt"].includes(String(statement.statement_kind||"").split(".").at(-1)))for(const id of array(statement.declaration_symbol_ids))symbolRoles.set(id,"function");
       const assignRole=(id,kind)=>{if(id&&(!symbolRoles.has(id)||symbolRoles.get(id)==="object"))symbolRoles.set(id,kind);};
       const inspectRole=node=>{
+        if(node.fields?.fact_id?.kind==="fact_identity")factSubjects.set(node.fields.fact_id.fact_id,node);
         if(node.type==="ForallFact"&&node.fields?.fact_id?.kind==="fact_identity")quantifiedFacts.set(node.fields.fact_id.fact_id,node);
+        const existVariant=node.type==="ExistShapedFact"?node.variant:["Fact","ExistOrAndChainAtomicFact"].includes(node.type)?{ExistFact:"Exist",ExistUniqueFact:"ExistUnique",NotExistFact:"NotExist"}[node.variant]:null;
+        if(existVariant){const plain=resolveEvidence(node.fields?.["0"]);if(plain.type==="PlainExistFact"&&plain.fields?.fact_id?.kind==="fact_identity")existentialFacts.set(plain.fields.fact_id.fact_id,{node:plain,variant:existVariant});}
         if(node.type==="TheoremCall"){const name=resolveEvidence(node.fields?.name);if(name.kind==="symbol_reference")symbolRoles.set(name.symbol_id,"theorem");}
         if(["ExecReleaseThmStmtSuccess","ExecByThmStmtSuccess"].includes(node.type)){
           const call=resolveEvidence(node.fields?.call),name=resolveEvidence(call.fields?.name),callee=resolveEvidence(node.fields?.callee);
@@ -678,7 +706,7 @@
       usedRules=new Map();
       for(const statement of statements.values())for(const id of statementRules(statement)){if(!usedRules.has(id))usedRules.set(id,new Set());usedRules.get(id).add(statement.id);}
       if(!sources.has(state.source))state.source=sources.has(bundle.entry_source_id)?bundle.entry_source_id:sources.keys().next().value||null;
-      if(!statements.has(state.statement)){state.statement=initialStatement(state.source)?.id||null;state.focusLine=statements.get(state.statement)?.line||null;}
+      if(!pending()&&!statements.has(state.statement)){state.statement=initialStatement(state.source)?.id||null;state.focusLine=statements.get(state.statement)?.line||null;}
     }
     function initialStatement(sourceId){const entries=statementsBySource.get(sourceId)||[];return entries.find(value=>value.status==="accepted"&&array(value.cited_fact_ids).length)||entries[0];}
     function walkEvidence(value,callback,seen=new Set()){
@@ -693,7 +721,9 @@
     function resolveEvidence(value){const seen=new Set();while(value?.kind==="evidence_reference"){if(seen.has(value.evidence_id))return {kind:"unavailable"};seen.add(value.evidence_id);value=evidenceNodes.get(value.evidence_id);}return value||{kind:"unavailable"};}
     function factLocation(fact){const producer=statements.get(fact?.producer_statement_id);if(factInferences(fact?.id).length&&producer)return {sourceId:producer.source_id,line:producer.line};return {sourceId:fact?.source_id||producer?.source_id,line:fact?.line||producer?.line};}
     async function navigate(next, remember=true){
-      const serial=++navigationSerial,epoch=generation;
+      if(destroyed)return false;
+      const serial=++navigationSerial,epoch=generation,candidate=proofPopover?.selection||inferencePopover?.selection;
+      const origin=candidate&&(next.fact!==candidate.fact||next.chainStep!==candidate.chainStep||next.statement!==candidate.statement)?candidate:null;
       const sourceId=statements.get(next.statement)?.source_id||next.source||state.source;
       try{
         if(loader&&sources.has(sourceId)&&typeof sources.get(sourceId).content!=="string"){
@@ -718,8 +748,8 @@
       }catch(error){if(epoch===generation&&serial===navigationSerial&&!destroyed){operationStatus=t("loadFailed")+": "+error.message;operationError=true;render();}return false;}
       if(destroyed||epoch!==generation||serial!==navigationSerial)return false;
       operationStatus="";operationError=false;
-      if(remember)history.push({...state});
-      state={...state,reference:null,keyword:null,explanationOpen:false,...next};
+      if(remember)history.push({...state,...origin});
+      state={...state,reference:null,keyword:null,chainStep:null,issue:null,explanationOpen:false,...next};
       if(next.statement){const statement=statements.get(next.statement);if(statement)state.source=statement.source_id;}
       render();
       if(state.focusLine)root.querySelector('[data-line="'+state.focusLine+'"]')?.scrollIntoView({block:"nearest",behavior:"smooth"});
@@ -727,7 +757,7 @@
       return true;
     }
     function selectStatement(id,line){return navigate({statement:id,symbol:null,fact:null,wd:null,focusLine:line||statements.get(id)?.line,explanationOpen:true});}
-    function selectSymbol(id,statementId,line){return navigate({symbol:id,statement:statementId||state.statement,fact:null,wd:null,focusLine:line||null,explanationOpen:true});}
+    function selectSymbol(id,statementId,line){if(pending())return false;return navigate({symbol:id,statement:statementId||state.statement,fact:null,wd:null,focusLine:line||null,explanationOpen:true});}
     function referenceUses(symbolId,sourceId){return (referencesBySource.get(sourceId)?.get(symbolId)||[]).slice().sort((a,b)=>a.start_byte-b.start_byte);}
     function occurrenceLocation(occurrence){
       const source=sources.get(occurrence.source_id),content=source?.content;if(typeof content!=="string")return null;
@@ -737,49 +767,68 @@
     }
     function openReferences(symbolId,sourceId,opener){
       closeInferences();
-      root.querySelector(".lr-references-dialog")?.remove();
-      const dialog=element("dialog","lr-references-dialog"),name=symbols.get(symbolId)?.name||"",uses=referenceUses(symbolId,sourceId),title=t("referenceFor").replace("{name}",name);
-      dialog.setAttribute("aria-label",title);const header=element("div","lr-help-heading"),close=button(t("closeReferences"),"lr-math-link",()=>dialog.close());header.append(element("strong",null,title),close);dialog.append(header,element("p","lr-reference-summary",t("currentFileReferences").replace("{count}",uses.length)),element("p","lr-empty-note",t("referenceHelp")));
-      if(!uses.length)dialog.append(element("p","lr-empty-note",t("noReferences")));
-      for(const occurrence of uses){const location=occurrenceLocation(occurrence);if(!location)continue;
-        const link=button("","lr-reference-location",()=>{dialog.close();navigate({source:sourceId,statement:statements.has(occurrence.statement_id)?occurrence.statement_id:null,symbol:null,fact:null,wd:null,focusLine:location.line,reference:occurrence});});
-        const snippet=element("code");snippet.append(document.createTextNode(location.before),element("mark",null,location.token),document.createTextNode(location.after));link.append(element("span","lr-reference-line",t("referenceLine").replace("{line}",location.line)),snippet);dialog.append(link);
-      }
-      dialog.addEventListener("close",()=>{dialog.remove();if(opener.isConnected)opener.focus();});dialog.addEventListener("click",event=>{if(event.target===dialog){const box=dialog.getBoundingClientRect();if(event.clientX<box.left||event.clientX>box.right||event.clientY<box.top||event.clientY>box.bottom)dialog.close();}});root.append(dialog);dialog.showModal();close.focus();
+      const name=displayText(symbols.get(symbolId)?.name||"",sourceId),uses=referenceUses(symbolId,sourceId),title=t("referenceFor").replace("{name}",name),row=opener.closest(".lr-code-row");
+      const node=openSourcePreview(opener,title,body=>{
+        body.append(element("p","lr-empty-note",t("referenceHelp")));if(!uses.length)body.append(element("p","lr-empty-note",t("noReferences")));
+        for(const occurrence of uses){const location=occurrenceLocation(occurrence);if(!location)continue;
+          const link=button("","lr-reference-location",()=>navigate({source:sourceId,statement:statements.has(occurrence.statement_id)?occurrence.statement_id:null,symbol:null,fact:null,wd:null,focusLine:location.line,reference:occurrence}));
+          const snippet=element("code");snippet.append(document.createTextNode(location.before),element("mark",null,location.token),document.createTextNode(location.after));link.append(element("span","lr-reference-line",t("referenceLine").replace("{line}",location.line)),snippet);body.append(link);
+        }
+      },{persistent:true,selection:{source:sourceId,statement:row?.dataset.statement||null,symbol:null,fact:null,wd:null,focusLine:Number(row?.dataset.line)||null,explanationOpen:false}});
+      (node.querySelector(".lr-reference-location")||node.querySelector(".lr-explanation-close"))?.focus();
     }
     function closeInferences(restoreFocus=false){
+      clearTimeout(inferenceTimer);clearTimeout(inferenceCloseTimer);inferenceTimer=null;inferenceCandidate=null;
       if(!inferencePopover)return;
       const {node,owner}=inferencePopover;inferencePopover=null;node.remove();owner.setAttribute("aria-expanded","false");owner.removeAttribute("aria-controls");
-      if(restoreFocus&&owner.isConnected)owner.focus({preventScroll:true});
+      if(restoreFocus)restoreSourceFocus(owner);
+    }
+    function leaveInferences(){
+      clearTimeout(inferenceTimer);inferenceTimer=null;inferenceCandidate=null;clearTimeout(inferenceCloseTimer);
+      if(inferencePopover?.transient)inferenceCloseTimer=setTimeout(closeInferences,300);
+    }
+    function hoverInferences(owner){
+      if(pending()||proofFocusSuppression===owner||proofPopover?.persistent)return;
+      clearTimeout(inferenceCloseTimer);if(inferencePopover?.owner===owner||inferenceCandidate===owner)return;
+      closeInferences();inferenceCandidate=owner;
+      inferenceTimer=setTimeout(()=>{inferenceTimer=null;if(!destroyed&&owner.isConnected&&inferenceCandidate===owner)openInferences(JSON.parse(owner.dataset.facts),state.source,owner,true);},450);
     }
     function positionInferences(){
       if(!inferencePopover)return;
-      const {node,owner}=inferencePopover,box=owner.getBoundingClientRect(),view=document.documentElement,pane=(owner.closest(".lr-ide")||codePane).getBoundingClientRect();
-      if(!owner.isConnected||box.bottom<Math.max(0,pane.top)||box.top>Math.min(view.clientHeight,pane.bottom)){closeInferences();return;}
-      const bounds=node.getBoundingClientRect();
-      node.style.left=Math.max(8,Math.min(box.left,view.clientWidth-bounds.width-8))+"px";
-      node.style.top=Math.max(8,box.bottom+8+bounds.height<=view.clientHeight?box.bottom+8:box.top-bounds.height-8)+"px";
+      const {node,owner}=inferencePopover,box=owner.getBoundingClientRect();
+      if(!sourceAnchorVisible(owner,box)){closeInferences();return;}
+      placeAtSource(node,box);
     }
-    function openInferences(ids,sourceId,owner){
-      const same=inferencePopover?.owner===owner;closeInferences();if(same)return;hideTokenHelp();
-      const panel=element("div","lr-inference-popover"),id="lr-inferences-"+Math.random().toString(36).slice(2),heading=element("div","lr-inference-heading");
-      panel.id=id;panel.setAttribute("role","dialog");panel.setAttribute("aria-label",t("inferredFacts"));
-      const close=button("×","lr-inference-close",()=>closeInferences(true));close.setAttribute("aria-label",t("closeInferences"));
-      heading.append(element("strong",null,t("inferredFacts")+" · "+ids.length),close);panel.append(heading);
-      for(const factId of ids){
-        const fact=facts.get(factId),result=button(displayText(fact.text,sourceId),"lr-inferred-result",()=>selectFact(factId));
-        result.dataset.fact=factId;result.setAttribute("aria-label",t("inferred")+" "+displayText(fact.text,sourceId));
-        if(factId===state.fact)result.classList.add("lr-inferred-selected");
-        panel.append(result);
+    function openInferences(ids,sourceId,owner,transient=false){
+      if(inferencePopover?.owner===owner){
+        clearTimeout(inferenceCloseTimer);
+        if(inferencePopover.transient&&!transient){inferencePopover.transient=false;inferencePopover.node.setAttribute("role","dialog");inferencePopover.node.querySelector("summary")?.focus({preventScroll:true});return;}
+        if(transient)return;closeInferences();return;
       }
-      owner.setAttribute("aria-expanded","true");owner.setAttribute("aria-controls",id);root.append(panel);inferencePopover={node:panel,owner};positionInferences();
-      panel.querySelector(".lr-inferred-result")?.focus({preventScroll:true});
+      closeInferences();closeProof();closeExplanation();hideTokenHelp();
+      const panel=element("div","lr-inference-popover"),id="lr-inferences-"+Math.random().toString(36).slice(2),disclosure=element("details","lr-inferred-facts"),heading=element("summary","lr-inference-heading");
+      panel.id=id;panel.setAttribute("role",transient?"region":"dialog");panel.setAttribute("aria-label",t("inferredFacts"));
+      const close=button("×","lr-inference-close",()=>closeInferences(true));close.setAttribute("aria-label",t("closeInferences"));
+      heading.append(element("strong",null,t("inferredFacts")+" · "+ids.length));disclosure.append(heading);panel.append(disclosure,close);
+      for(const factId of ids){
+        const fact=facts.get(factId),text=factDisplayText(fact),result=button(text,"lr-inferred-result",()=>selectFact(factId));
+        result.dataset.fact=factId;result.setAttribute("aria-label",t("inferred")+" "+text);
+        if(factId===state.fact)result.classList.add("lr-inferred-selected");
+        const item=element("div","lr-inferred-item");item.append(result);
+        const seen=new Set();for(const origin of inferenceOrigins(factId).filter(value=>["definition","parameter_type"].includes(value.kind))){const label=inferenceOriginLabel(origin);if(seen.has(label))continue;seen.add(label);item.append(element("small","lr-inference-origin",label));}
+        disclosure.append(item);
+      }
+      disclosure.addEventListener("toggle",positionInferences);
+      panel.addEventListener("pointerenter",()=>clearTimeout(inferenceCloseTimer));panel.addEventListener("pointerleave",leaveInferences);panel.addEventListener("focusin",()=>{clearTimeout(inferenceCloseTimer);if(inferencePopover?.node===panel)inferencePopover.transient=false;});
+      const row=owner.closest(".lr-code-row");
+      owner.setAttribute("aria-expanded","true");owner.setAttribute("aria-controls",id);root.append(panel);inferencePopover={node:panel,owner,transient,selection:{source:sourceId,statement:row?.dataset.statement||null,symbol:null,fact:null,wd:null,chainStep:null,issue:null,focusLine:Number(row?.dataset.line)||null,explanationOpen:false}};positionInferences();
+      if(!transient)heading.focus({preventScroll:true});
     }
     function factInferences(id){return array(facts.get(id)?.inference_ids).map(key=>inferences.get(key)).filter(Boolean);}
     function statementInferredFacts(statement){const published=new Set(array(statement?.produced_fact_ids));return array(statement?.inferred_fact_ids).filter(id=>published.has(id));}
     function inferenceOrigins(id){return factInferences(id).flatMap(inference=>array(inference.conclusion_origins).filter(origin=>origin.fact_id===id));}
     function inferenceOriginLabel(origin){
-      const name=symbols.get(origin.source_symbol_id)?.name;
+      const name=displayText(symbols.get(origin.source_symbol_id)?.name||"");
       if(origin.kind==="definition")return name?t("fromNamedDefinition").replace("{name}",name):t("fromDefinition");
       if(origin.kind==="parameter_type")return name?t("fromNamedParamType").replace("{name}",name):t("fromParamType");
       return origin.rule_id?t("fromRule").replace("{name}",ruleTitle(origin.rule_id)):t("originUnavailable");
@@ -795,8 +844,9 @@
         target.append(note);
       }
     }
-    function selectFact(id){const fact=facts.get(id);if(!fact)return false;const producer=statements.get(fact.producer_statement_id),location=factLocation(fact);return navigate({statement:producer?.id||null,source:producer?.source_id||(sources.has(location.sourceId)?location.sourceId:state.source),symbol:null,fact:id,wd:null,focusLine:producer?(location.sourceId===producer.source_id?location.line:producer.line):(sources.has(location.sourceId)?location.line:null),explanationOpen:true});}
-    function selectWellDefinedness(id){const record=wellDefinedness.get(id);if(!record)return false;const producer=statements.get(record.producer_statement_id);return navigate({statement:producer?.id||null,source:producer?.source_id||state.source,symbol:null,fact:null,wd:id,focusLine:producer?.line||null,explanationOpen:true});}
+    function factSelection(id,chainStep=null){const fact=facts.get(id);if(!fact)return null;const producer=statements.get(fact.producer_statement_id),location=factLocation(fact);return {statement:producer?.id||null,source:producer?.source_id||(sources.has(location.sourceId)?location.sourceId:state.source),symbol:null,fact:id,chainStep,wd:null,issue:null,focusLine:producer?(location.sourceId===producer.source_id?location.line:producer.line):(sources.has(location.sourceId)?location.line:null),explanationOpen:true};}
+    function selectFact(id,chainStep=null){if(pending())return false;const selection=factSelection(id,chainStep);return selection?navigate(selection):false;}
+    function selectWellDefinedness(id){if(pending())return false;const record=wellDefinedness.get(id);if(!record)return false;const producer=statements.get(record.producer_statement_id);return navigate({statement:producer?.id||null,source:producer?.source_id||state.source,symbol:null,fact:null,wd:id,focusLine:producer?.line||null,explanationOpen:true});}
     function wdCitations(record){const cited=new Set(factCitations({evidence:record?.evidence}));if(facts.has(record?.source_fact_id))cited.add(record.source_fact_id);return [...cited];}
     function factCitations(fact){const cited=new Set(),inferred=factInferences(fact?.id),outputs=new Set(inferred.flatMap(value=>array(value.fact_ids)));for(const inference of inferred)cited.add(inference.source_fact_id);for(const evidence of inferred.length?inferred.map(value=>value.evidence):[fact?.evidence])walkEvidence(evidence,node=>{if(node.kind==="fact_reference"&&node.fact_id!==fact?.id&&!outputs.has(node.fact_id)&&facts.has(node.fact_id))cited.add(node.fact_id);});return [...cited];}
     function ruleTitle(id){
@@ -824,23 +874,59 @@
         const group=resolveEvidence(entry),type=resolveEvidence(group.fields?.param_type),params=array(group.fields?.params);
         if(!params.length||params.some(param=>param.kind!=="symbol_reference"))return null;
         const names=params.map(param=>displayText(param.name,sourceId)).join(", ");
-        const kinds={Set:["是集合","a set"],NonemptySet:["是非空集合","a nonempty set"],FiniteSet:["是有限集合","a finite set"]};
-        if(kinds[type.variant])heads.push(names+(lang()==="zh"?" "+kinds[type.variant][0]:" ("+kinds[type.variant][1]+")"));
+        const kinds={Set:["集合","set"],NonemptySet:["非空集合","nonempty set"],FiniteSet:["有限集合","finite set"]};
+        if(kinds[type.variant])heads.push(lang()==="zh"?kinds[type.variant][0]+" "+names:params.map(param=>kinds[type.variant][1]+" "+displayText(param.name,sourceId)).join(" and every "));
         else if(type.variant==="Obj"){
           const domain=resolveEvidence(type.fields?.["0"]);if(typeof domain.text!=="string")return null;
           const id=resolveEvidence(domain.fields?.["0"]).symbol_id,glyph={"builtin:set:R":"ℝ","builtin:set:Q":"ℚ","builtin:set:Z":"ℤ","builtin:set:N":"ℕ","builtin:set:C":"ℂ"}[id];
-          heads.push(names+" ∈ "+(glyph||mathText(domain.text,sourceId)));
+          heads.push((lang()==="zh"?" ":"")+names+" ∈ "+(glyph||mathText(domain.text,sourceId)));
         }else return null;
       }
       const premises=array(node.fields?.dom_facts).map(fact=>quantifiedText(fact,sourceId,next)),conclusions=array(node.fields?.then_facts).map(fact=>quantifiedText(fact,sourceId,next));
       if(!heads.length||!conclusions.length||[...premises,...conclusions].some(text=>text===null))return null;
       const indent=(text,width)=>text.split("\n").map(line=>" ".repeat(width)+line).join("\n");
-      return "∀ "+heads.join(", ")+":\n"+(premises.length?premises.map(text=>indent(text,4)).join("\n")+"\n    ⇒\n":"")+conclusions.map(text=>indent(text,premises.length?8:4)).join("\n");
+      const header=lang()==="zh"?"对于任意"+heads.join("，以及任意")+"：":"For every "+heads.join(", and every ")+":";
+      return header+"\n"+(premises.length?premises.map(text=>indent(text,4)).join("\n")+"\n    ⇒\n":"")+conclusions.map(text=>indent(text,premises.length?8:4)).join("\n");
     }
-    function factFormula(fact){
-      const sourceId=factLocation(fact).sourceId,node=quantifiedFacts.get(fact?.id),text=node&&quantifiedText(node,sourceId);
-      return text?element("div","lr-formula",text):formula(fact?.text||"",sourceId);
+    function existentialText(fact){
+      const shape=existentialFacts.get(fact?.id);if(!shape||fact.source_id)return null;
+      const sourceId=factLocation(fact).sourceId,groups=array(resolveEvidence(shape.node.fields.typed_parameters).fields?.groups).map(resolveEvidence),identities=new Map(),used=new Set(),aliases=new Map();
+      // A display rename is allowed only when every occurrence of a spelling
+      // in this retained AST denotes that same identity. Fresh names exclude
+      // both free names and authored names visible in the source.
+      walkEvidence(shape.node,node=>{if(node.kind==="symbol_reference"){used.add(node.name);if(!identities.has(node.name))identities.set(node.name,new Set());identities.get(node.name).add(node.symbol_id);}});
+      for(const occurrence of occurrences)if(occurrence.source_id===sourceId){const name=symbols.get(occurrence.symbol_id)?.name;if(name)used.add(name);}
+      for(const group of groups)for(const param of array(group.fields?.params)){
+        if(param.kind!=="symbol_reference")return null;
+        if(symbolBindings.has(param.symbol_id))continue;
+        if(identities.get(param.name)?.size!==1)return null;
+        let name=["k","m","n","u","v","w"].find(value=>!used.has(value)),suffix=1;while(!name){if(!used.has("k"+suffix))name="k"+suffix;suffix++;}
+        used.add(name);aliases.set(param.name,name);
+      }
+      if(!aliases.size)return null;
+      const rename=text=>mathText(String(text).replace(/[\p{L}_][\p{L}\p{N}_]*(?:::[\p{L}_][\p{L}\p{N}_]*)*/gu,name=>aliases.get(name)||name),sourceId),heads=[];
+      for(const group of groups){
+        const type=resolveEvidence(group.fields?.param_type),names=array(group.fields?.params).map(param=>aliases.get(param.name)||displayText(param.name,sourceId)).join(", ");
+        if(type.variant==="Obj"){
+          const domain=resolveEvidence(type.fields?.["0"]);if(typeof domain.text!=="string")return null;
+          const domainId=resolveEvidence(domain.fields?.["0"]).symbol_id,glyph={"builtin:set:Z":"ℤ","builtin:set:N":"ℕ","builtin:set:R":"ℝ","builtin:set:Q":"ℚ","builtin:set:C":"ℂ"}[domainId];
+          heads.push(names+" ∈ "+(glyph||rename(domain.text)));
+        }else{const kind={Set:"setKind",NonemptySet:"nonemptySetKind",FiniteSet:"finiteSetKind"}[type.variant];if(!kind)return null;heads.push(names+" "+t(kind));}
+      }
+      const clauses=array(shape.node.fields.facts).map(value=>{
+        let node=resolveEvidence(value);const seen=new Set();
+        while(!node.text&&node.fields?.["0"]&&!seen.has(node)){seen.add(node);node=resolveEvidence(node.fields["0"]);}
+        return typeof node.text==="string"?rename(node.text):null;
+      });
+      if(!heads.length||!clauses.length||clauses.some(value=>value===null))return null;
+      const prefix={Exist:["存在 ","There exists "],ExistUnique:["存在唯一的 ","There exists exactly one "],NotExist:["不存在 ","There does not exist "]}[shape.variant];if(!prefix)return null;
+      return prefix[lang()==="zh"?0:1]+heads.join(", ")+(lang()==="zh"?"，使得：":" such that:")+"\n"+clauses.map(value=>value.split("\n").map(line=>"    "+line).join("\n")).join("\n    ∧ ");
     }
+    function factDisplayText(fact){
+      const sourceId=factLocation(fact).sourceId,node=quantifiedFacts.get(fact?.id);
+      return existentialText(fact)||(node&&quantifiedText(node,sourceId))||mathText(fact?.text||"",sourceId);
+    }
+    function factFormula(fact){return element("div","lr-formula",factDisplayText(fact));}
     function latexFormula(value,display,sourceId=state.source){
       if(typeof value!=="string"||!global.katex?.render)return null;
       // Generated identifiers are escaped inside mathit; keep the surrounding
@@ -859,24 +945,24 @@
       if(aligned&&!aligned[1].includes("\\begin{")&&aligned[1].split("\\\\&").length===2){value=aligned[1].replace("\\\\&","\\ ");display=false;node.classList.add("lr-latex-inline");}
       try{global.katex.render(value,node,{displayMode:display,throwOnError:true,trust:false,strict:"ignore",maxExpand:500,maxSize:50,output:"htmlAndMathml"});return node;}catch(_){return null;}
     }
-    function renderPredicateLatex(model,sourceId){
+    function renderPredicateLatex(model,sourceId,target=detailPane){
       const data=model.latex,domains=array(data?.parameters),clauses=array(data?.facts);
       const parameterCount=array(model.parameters).reduce((count,param)=>count+(typeof param==="string"?1:array(param.names).length),0);
       if(!clauses.length||clauses.length!==array(model.facts).length||domains.length!==parameterCount)return false;
       const domainNodes=domains.map(value=>latexFormula(value,false,sourceId)),clauseNodes=clauses.map(value=>latexFormula(value,true,sourceId));
       if([...domainNodes,...clauseNodes].some(value=>!value))return false;
       const linked=(node,id,className)=>{if(!facts.has(id)){node.classList.add(className);return node;}const link=button("","lr-math-fact "+className,()=>selectFact(id));link.append(node);if(id===state.fact){link.classList.add("lr-current-math");link.setAttribute("aria-current","true");}return link;};
-      const conditions=predicateIntro(model,sourceId);
+      const conditions=predicateIntro(model,sourceId,target);
       if(domainNodes.length){const row=element("div","lr-predicate-domains");domainNodes.forEach((node,index)=>{const item=element("span","lr-domain-item");item.append(linked(node,array(model.parameter_fact_ids)[index],"lr-latex-domain"));if(index<domainNodes.length-1)item.append(element("span","lr-domain-comma",","));row.append(item);});conditions.append(row);}
       clauseNodes.forEach((node,index)=>{const row=element("div","lr-condition-row");row.append(element("span","lr-condition-join",index?"∧":""),linked(node,array(model.fact_ids)[index],"lr-latex-clause"));conditions.append(row);});return true;
     }
-    function predicateIntro(model,sourceId){
+    function predicateIntro(model,sourceId,target=detailPane){
       const intro=element("div","lr-iff-intro");
       intro.append(latexFormula(model.latex?.subject,false,sourceId)||formula(model.subject,sourceId));
       const conditions=element("div","lr-predicate-conditions");
       const body=element("div","lr-iff-body");
       body.append(latexFormula("\\Longleftrightarrow",false)||element("span","lr-equivalence-operator","⇔"),conditions);
-      detailPane.append(intro,body);return conditions;
+      target.append(intro,body);return conditions;
     }
     function mathFact(value,id,sourceId){
       if(!facts.has(id))return formula(value,sourceId);
@@ -884,16 +970,20 @@
       if(id===state.fact){node.classList.add("lr-current-math");node.setAttribute("aria-current","true");}return node;
     }
     function parameterText(group,sourceId){const names=array(group.names).join(", ");return group.kind==="element"?names+" ∈ "+mathText(group.domain,sourceId):names+" "+t({set:"setKind",nonempty_set:"nonemptySetKind",finite_set:"finiteSetKind"}[group.kind]||"unavailable");}
+    function appendPredicateMeaning(target,model,sourceId){
+      if(model.latex){if(renderPredicateLatex(model,sourceId,target))return;target.append(element("p","lr-empty-note",t("typesettingUnavailable")));}
+      const params=array(model.parameters),clauses=array(model.facts);
+      if(!clauses.length){target.append(element("p","lr-empty-note",t("meaningUnavailable")));return;}
+      const conditions=predicateIntro(model,sourceId,target);
+      if(params.length){const row=element("div","lr-predicate-domains");params.forEach((param,index)=>{const text=typeof param==="string"?param:array(param.names).join(", ")+(param.kind==="element"?" ∈ "+mathText(param.domain,sourceId):" : "+param.kind),item=element("span","lr-domain-item");item.append(mathFact(text,array(model.parameter_fact_ids)[index],sourceId));if(index<params.length-1)item.append(element("span","lr-domain-comma",","));row.append(item);});conditions.append(row);}
+      clauses.forEach((fact,index)=>{const row=element("div","lr-condition-row");row.append(element("span","lr-condition-join",index?"∧":""),mathFact(fact,array(model.fact_ids)[index],sourceId));conditions.append(row);});
+    }
     function renderMath(model,sourceId=state.source){
       if(!model||typeof model!=="object")return false;
-      if(["predicate_definition","predicate_equivalence"].includes(model.kind)&&model.latex){if(renderPredicateLatex(model,sourceId))return true;detailPane.append(element("p","lr-empty-note",t("typesettingUnavailable")));}
       const params=array(model.parameters);if(params.length&&!["predicate_definition","predicate_equivalence"].includes(model.kind)){section(t(model.kind==="objects"?"takeObjects":"parameterRange"));params.forEach((param,index)=>detailPane.append(mathFact(typeof param==="string"?param:parameterText(param,sourceId),array(model.parameter_fact_ids)[index],sourceId)));}
       const clauses=array(model.facts);
       if(["predicate_definition","predicate_equivalence"].includes(model.kind)){
-        if(!clauses.length){detailPane.append(element("p","lr-empty-note",t("meaningUnavailable")));return true;}
-        const conditions=predicateIntro(model,sourceId);
-        if(params.length){const row=element("div","lr-predicate-domains");params.forEach((param,index)=>{const text=typeof param==="string"?param:array(param.names).join(", ")+(param.kind==="element"?" ∈ "+mathText(param.domain,sourceId):" : "+param.kind),item=element("span","lr-domain-item");item.append(mathFact(text,array(model.parameter_fact_ids)[index],sourceId));if(index<params.length-1)item.append(element("span","lr-domain-comma",","));row.append(item);});conditions.append(row);}
-        clauses.forEach((fact,index)=>{const row=element("div","lr-condition-row");row.append(element("span","lr-condition-join",index?"∧":""),mathFact(fact,array(model.fact_ids)[index],sourceId));conditions.append(row);});return true;
+        appendPredicateMeaning(detailPane,model,sourceId);return true;
       }
       if(model.kind==="abstract_predicate"){detailPane.append(formula(model.subject,sourceId),element("p","lr-empty-note",t("abstractMeaning")));return true;}
       if(model.kind==="objects"){
@@ -957,7 +1047,7 @@
         }
       }
     }
-    function renderInspectorContents(){if(state.keyword&&referenceCard(state.keyword))appendReference(detailPane,referenceCard(state.keyword));else if(state.keyword==="prop")renderPropGuide(detailPane);else if(state.keyword){detailPane.append(element("p","lr-keyword-meaning",syntaxPhrases[state.keyword]?.[lang()==="zh"?0:1]||syntaxHelp[state.keyword]?.[lang()==="zh"?0:1]||t("typeUnavailable")));}else if(state.symbol)renderSymbol();else if(state.wd)renderWellDefinedness();else if(state.fact)renderFact();else if(!state.statement&&state.focusLine)renderSourceLine();else renderStatement();}
+    function renderInspectorContents(){if(state.issue)appendSourceIssue(detailPane,sourceIssues.get(state.issue));else if(state.keyword&&referenceCard(state.keyword))appendReference(detailPane,referenceCard(state.keyword));else if(state.keyword==="prop")renderPropGuide(detailPane);else if(state.keyword){detailPane.append(element("p","lr-keyword-meaning",syntaxPhrases[state.keyword]?.[lang()==="zh"?0:1]||syntaxHelp[state.keyword]?.[lang()==="zh"?0:1]||t("typeUnavailable")));}else if(state.symbol)renderSymbol();else if(state.wd)renderWellDefinedness();else if(state.fact)renderFact();else if(!state.statement&&state.focusLine)renderSourceLine();else renderStatement();}
 
     function render(){
       if(destroyed)return;
@@ -971,8 +1061,8 @@
       const back=button("←","lr-button lr-back",async()=>{const previous=history.pop();if(previous&&!await navigate(previous,false))history.push(previous);});back.setAttribute("aria-label",t("back"));if(history.length)actions.append(back);
       const source=sources.get(state.source);
       heading.append(element("h1","lr-book-title",sourceTitle(source)));
-      if(source?.editor_unchecked)heading.append(element("span","lr-pending",editText("本章待检查","Chapter not checked")));
-      else if(sources.size)heading.append(badge(bundle.run_result==="success"?t("verified"):t("failed"),bundle.run_result!=="success"));
+      if(source?.editor_unchecked){const blocked=bundle.run_result==="failure",pending=element("span","lr-pending",blocked?editText("本章待检查：上文未通过","Chapter not checked: earlier steps failed"):editText("本章待检查","Chapter not checked"));pending.title=blocked?editText("此次检查尚未执行到本章。先处理前面章节未通过的步骤，再检查本章。","This check did not reach this chapter. Resolve the earlier rejected steps, then check this chapter."):editText("此次检查只执行到前面的章节。检查本章以继续。","This check covered the preceding chapters. Check this chapter to continue.");heading.append(pending);}
+      else if(sources.size){const passed=bundle.run_result==="success",label=sources.size>1?(passed?editText("本次检查通过","Last check passed"):editText("本次检查未通过","Last check failed")):(passed?t("verified"):t("failed"));heading.append(badge(label,!passed));}
       const trustCount=array(bundle.trust_summary?.user_assumptions).length+array(bundle.trust_summary?.axioms).length;if(trustCount)heading.append(element("span","lr-origin-note",t("trust")+" · "+trustCount));
       const records=element("details","lr-records lr-reading-help"),recordsSummary=element("summary",null,t("readingHelp")),recordPanel=element("div","lr-record-panel"),recordActions=element("div","lr-record-actions");
       records.append(recordsSummary,recordPanel);
@@ -985,8 +1075,11 @@
       const advanced=element("details","lr-advanced-help");advanced.append(element("summary",null,t("advancedHelp")),button(t("rulebook"),"lr-math-link",()=>{if(!rulebook?.isConnected)renderRulebook();rulebook.open=true;records.open=false;rulebook.scrollIntoView({block:"nearest",behavior:"smooth"});}));recordPanel.append(advanced);
       const footer=element("footer","lr-reading-footer");footer.append(records);
       if(sources.size)renderBookNavigation(actions);toolbar.append(actions);root.append(toolbar);
-      if(operationStatus){const notice=element("p",operationError?"lr-diagnostics":"lr-loading",operationStatus);notice.setAttribute("role",operationError?"alert":"status");root.append(notice);}
-      if(array(bundle.diagnostics).length){const diagnostics=element("div","lr-diagnostics");diagnostics.setAttribute("role","status");for(const diagnostic of bundle.diagnostics)diagnostics.append(element("div",null,diagnostic.message||diagnostic.kind));root.append(diagnostics);}
+      if(operationStatus){const notice=element("p",(operationError?"lr-diagnostics":"lr-loading")+" lr-operation-status",operationStatus);notice.setAttribute("role",operationError?"alert":"status");root.append(notice);}
+      const hasLocatedFailure=[...sourceIssues.values()].some(issue=>issue.statementId),serviceDiagnostics=[];
+      const unmapped=array(bundle.diagnostics).filter((diagnostic,index)=>{if(sourceIssues.has("diagnostic:"+index))return false;if(diagnostic.kind==="execution"&&hasLocatedFailure){serviceDiagnostics.push(diagnostic);return false;}return true;});
+      if(serviceDiagnostics.length){const details=element("details","lr-service-diagnostics");details.append(element("summary",null,editText("检查服务说明","Checking service details")));for(const diagnostic of serviceDiagnostics)details.append(element("pre",null,diagnostic.summary||diagnostic.message||diagnostic.kind));recordPanel.append(details);}
+      if(unmapped.length){const diagnostics=element("div","lr-diagnostics");diagnostics.setAttribute("role","status");for(const diagnostic of unmapped)diagnostics.append(element("div",null,diagnostic.summary||diagnostic.message||diagnostic.kind));root.append(diagnostics);}
       if(!sources.size){const empty=element("section","lr-empty");const mark=element("div","lr-empty-mark","∀");mark.setAttribute("aria-hidden","true");empty.append(mark,element("h2",null,t("empty")),element("p",null,t("emptyHint")));root.append(empty,footer);return;}
       const layout=element("div","lr-layout");
       const sourcePane=element("section","lr-source-pane");const header=element("div","lr-pane-header");header.append(element("span",null,options.onCheck?editText("编辑器","Editor"):t("source")));
@@ -995,14 +1088,14 @@
       const typeTitle=state.keyword?state.keyword:state.symbol?t("concepts"):state.wd?t("wellDefined"):state.fact?t(factInferences(state.fact).length?"inferred":selectedFact?.role==="verified"?"verifiedFact":selectedFact?.role||"fact"):presentation.title;
       const syntax=state.keyword||state.symbol||state.wd||state.fact?typeTitle:presentation.syntax||typeTitle;
       const details=element("section","lr-details"),inspectorHeader=element("div","lr-pane-header lr-inspector-header");
-      inspectorHeader.append(element("span","lr-inspector-title",state.keyword?editText("参考说明","Reference"):t("mathematicalMeaning")),element("span","lr-type-label",syntax));details.append(inspectorHeader);
-      const close=button("×","lr-explanation-close",()=>{closeExplanation();root.querySelector("textarea")?.focus({preventScroll:true});});close.setAttribute("aria-label",editText("关闭说明","Close explanation"));inspectorHeader.append(close);
+      inspectorHeader.append(element("span","lr-inspector-title",inspectorTitle()),element("span","lr-type-label",syntax));details.append(inspectorHeader);
+      const close=button("×","lr-explanation-close",()=>closeExplanation(true));close.setAttribute("aria-label",editText("关闭说明","Close explanation"));inspectorHeader.append(close);
       details.classList.add("lr-context-explanation");details.setAttribute("role","region");details.setAttribute("aria-label",editText("源码说明","Source explanation"));details.hidden=!state.explanationOpen;
-      detailPane=element("div","lr-detail-body");detailPane.setAttribute("aria-live","polite");details.append(detailPane);layout.append(sourcePane,details);root.append(layout,footer);
+      detailPane=element("div","lr-detail-body");detailPane.setAttribute("aria-live","polite");details.append(detailPane);
+      layout.append(sourcePane,details);root.append(layout,footer);
       renderCode();renderInspectorContents();
       if(options.onCheck){renderEditor(source,sourcePane,header);if(pending())invalidateEvidence();
-        if(checking)detailPane.replaceChildren(element("p","lr-loading",editText("正在检查…","Checking…")));
-        if(editError)detailPane.replaceChildren(element("p","lr-diagnostics",editError));}
+        if(editError){const error=element("p","lr-editor-error",editText("检查未完成：","Check did not complete: ")+editError);error.setAttribute("role","alert");sourcePane.append(error);}}
       showExplanation();
     }
 
@@ -1036,9 +1129,10 @@
         const links=element("nav","lr-chapters lr-extra-examples"),label=group.titles?.[lang()]||group.titles?.en||group.titles?.zh;
         if(!label)continue;links.setAttribute("aria-label",label);
         for(const entry of array(group.items)){
-          if(typeof entry.href!=="string"||!entry.href||!/^(?:\.\.\/)*(?:[A-Za-z0-9_-]+\/)*$/.test(entry.href))continue;
+          const href=entry.hrefs?.[lang()]||entry.href;
+          if(typeof href!=="string"||!href||!/^(?:\.\.\/)*(?:[A-Za-z0-9_-]+\/)*$/.test(href))continue;
           const title=entry.titles?.[lang()]||entry.titles?.en||entry.titles?.zh;if(!title)continue;
-          const link=element("a","lr-chapter",title);link.href=entry.href+"?lang="+lang();links.append(link);
+          const link=element("a","lr-chapter",title);link.href=href+(global.location?.protocol==="file:"?"index.html":"")+"?lang="+lang();links.append(link);
         }
         if(group.includeSources===true)links.prepend(...Array.from(chapters.childNodes));
         if(links.childElementCount){const category=element("section","lr-example-group");category.append(element("div","lr-section-label",label),links);panel.append(category);}
@@ -1063,7 +1157,14 @@
         }catch(error){if(epoch===generation&&serial===bookSerial){bookStatus.textContent=t("loadFailed")+": "+error.message;}return;}
       }
       if(destroyed||epoch!==generation||serial!==bookSerial)return;
-      const matches=bookIndex.filter(entry=>[entry.text,sourceTitle(sources.get(entry.source_id)),...Object.values(sources.get(entry.source_id)?.titles||{}).filter(value=>typeof value==="string"),sources.get(entry.source_id)?.path].join(" ").toLowerCase().includes(query));
+      // The retained index owns checked source; the existing draft map owns
+      // working-copy text. Draft lines carry no execution statement identity.
+      const bySource=new Map();for(const entry of bookIndex){if(!bySource.has(entry.source_id))bySource.set(entry.source_id,[]);bySource.get(entry.source_id).push(entry);}
+      for(const source of sources.values())if(drafts.has(source.path)&&drafts.get(source.path)!==source.content){
+        bySource.set(source.id,drafts.get(source.path).split("\n").flatMap((text,index)=>text.trim()?[{source_id:source.id,line:index+1,text,statement_id:null}]:[]));
+      }
+      const entries=[...sources.keys()].flatMap(id=>bySource.get(id)||[]);
+      const matches=entries.filter(entry=>[entry.text,sourceTitle(sources.get(entry.source_id)),...Object.values(sources.get(entry.source_id)?.titles||{}).filter(value=>typeof value==="string"),sources.get(entry.source_id)?.path].join(" ").toLowerCase().includes(query));
       const pageSize=24,pages=Math.max(1,Math.ceil(matches.length/pageSize));bookPage=Math.min(bookPage,pages-1);bookStatus.textContent=matches.length?matches.length+" · "+(bookPage+1)+" / "+pages:t("noMatches");
       for(const entry of matches.slice(bookPage*pageSize,(bookPage+1)*pageSize)){
         const result=button("","lr-fact-link lr-book-result",()=>selectBookLine(entry));result.append(element("code",null,entry.text),element("small",null,sourceTitle(sources.get(entry.source_id))+" · "+t("sourceLine")+" "+entry.line));bookResults.append(result);
@@ -1074,23 +1175,127 @@
     function renderSourceLine(){detailPane.append(element("p","lr-empty-note",t("noStatement")));}
 
     function lineProofFacts(sourceId,line){return factsBySourceLine.get(sourceId+":"+line)||[];}
-    function closeProof(){
-      clearTimeout(proofTimer);clearTimeout(proofCloseTimer);proofTimer=null;proofCandidate=null;
-      if(proofPopover){proofPopover.owner.removeAttribute("aria-describedby");proofPopover.node.remove();proofPopover=null;}
-      codePane?.querySelectorAll(".lr-proof-target,.lr-proof-premise").forEach(row=>row.classList.remove("lr-proof-target","lr-proof-premise"));
+    function indexSourceIssues(){
+      sourceIssues=new Map();issuesByLine=new Map();
+      const add=issue=>{
+        const source=sources.get(issue.sourceId);if(!source||!Number.isInteger(issue.line)||issue.line<1)return;
+        if(typeof source.content==="string"&&issue.line>source.content.split("\n").length)return;
+        sourceIssues.set(issue.id,issue);const key=issue.sourceId+":"+issue.line;if(!issuesByLine.has(key))issuesByLine.set(key,[]);issuesByLine.get(key).push(issue);
+      };
+      array(bundle.diagnostics).forEach((diagnostic,index)=>{if(diagnostic.source_id)add({id:"diagnostic:"+index,sourceId:diagnostic.source_id,line:diagnostic.line,column:diagnostic.column,phase:diagnostic.phase,message:diagnostic.summary||diagnostic.message});});
+      for(const statement of statements.values())if(statement.status==="rejected"){
+        const failure=statement.failure||{},location=failure.source_location?.source_id?failure.source_location:failedSourceLocation(statement.evidence),located=location?.source_id&&sources.has(location.source_id)&&Number.isInteger(location.line);
+        add({id:"statement:"+statement.id,statementId:statement.id,sourceId:located?location.source_id:statement.source_id,line:located?location.line:statement.line,column:located?location.column:null,phase:failure.phase,category:failure.category,obligation:failure.obligation||failure.goal,expression:failure.expression,message:failure.message,statementStart:!located});
+      }
     }
-    function leaveProof(){clearTimeout(proofTimer);proofTimer=null;proofCandidate=null;clearTimeout(proofCloseTimer);proofCloseTimer=setTimeout(closeProof,300);}
+    function failedSourceLocation(evidence){
+      let node=resolveEvidence(evidence);const seen=new Set();
+      while(node&&typeof node==="object"&&!seen.has(node)){
+        seen.add(node);const fields=node.fields||{},failed=fields.failed_then||fields.failed_adjacent||fields.failed_statement||fields.failure;
+        if(failed){node=resolveEvidence(failed);continue;}
+        if(["VerifyAtomicExceptEqualityFactFailed","VerifyEqualityFailed","VerifyChainFactFailed"].includes(node.type)&&fields.fact){
+          let fact=resolveEvidence(fields.fact);const wrapped=new Set();
+          while(fact&&!wrapped.has(fact)){wrapped.add(fact);if(fact.fields?.line_file?.source_id)return fact.fields.line_file;if(!fact.fields?.["0"])break;fact=resolveEvidence(fact.fields["0"]);}
+          return null;
+        }
+        if(!fields["0"])return null;node=resolveEvidence(fields["0"]);
+      }
+      return null;
+    }
+    function sourceIssueLabel(issue){
+      return issue.phase==="parse"?editText("本行无法解析","This line could not be parsed"):issue.obligation?editText("尚未证明：","Not established: ")+mathText(issue.obligation,issue.sourceId):editText("此语句尚未通过","This statement was not accepted");
+    }
+    function appendSourceIssue(target,issue){
+      if(!issue){target.append(element("p","lr-empty-note",t("unavailable")));return;}
+      const statement=statements.get(issue.statementId);if(statement&&appendPredicateDefinition(target,{source_id:issue.sourceId,evidence:statement.evidence}))target.append(element("h4","lr-proof-section-title",editText("检查结果","Check result")));
+      const formation=issue.phase==="well_defined"||issue.category==="well_defined";
+      target.append(element("p","lr-failure-summary",issue.phase==="parse"?editText("本行尚未解析为 Litex 语句。","This line has not been parsed as a Litex statement."):formation?editText("这个表达式所需的条件尚未建立。","A condition required by this expression has not been established."):editText("当前证明尚未建立这个结论。","The current proof has not established this conclusion.")));
+      if(issue.expression)target.append(formula(issue.expression,issue.sourceId));
+      if(issue.obligation)target.append(formula(issue.obligation,issue.sourceId));
+      if(issue.message){
+        const message=element("p","lr-failure-message",issue.message);
+        if(issue.phase!=="parse"&&issue.obligation){const details=element("details","lr-failure-details");details.append(element("summary",null,editText("检查说明","Check details")),message);target.append(details);}else target.append(message);
+      }
+      if(issue.phase!=="parse")target.append(element("p","lr-empty-note",t("notFalse")));
+      if(issue.statementStart)target.append(element("small","lr-failure-location",editText("此标记位于所属语句起点；记录未提供更精确的位置。","This marker is at the enclosing statement's start; no more precise location is retained.")));
+    }
+    function selectSourceIssue(id){const issue=sourceIssues.get(id);if(!issue||pending())return false;return navigate({source:issue.sourceId,statement:statements.get(issue.statementId)?.source_id===issue.sourceId?issue.statementId:null,fact:null,symbol:null,wd:null,issue:id,focusLine:issue.line,explanationOpen:true});}
+    function openSourceIssue(owner,ids){
+      closeExplanation();openSourcePreview(owner,editText("这里为什么没有通过","Why this step was not accepted"),body=>{for(const id of ids)appendSourceIssue(body,sourceIssues.get(id));},{select:ids.length===1?()=>selectSourceIssue(ids[0]):null});
+    }
+    function attachSourceIssue(token,issue){
+      token.classList.add("lr-diagnostic-point");token.dataset.issue=issue.id;token.tabIndex=0;token.setAttribute("aria-label",sourceIssueLabel(issue));
+      token.addEventListener("mouseenter",()=>hoverProofTarget(token));token.addEventListener("focus",()=>hoverProofTarget(token));token.addEventListener("pointerleave",leaveProof);
+    }
+    function equalityProofParts(fact){
+      if(fact?.role!=="verified")return null;
+      const result=proofResult(fact.evidence),subject=resolveEvidence(result.fields?.fact);
+      if(subject.fields?.fact_id?.fact_id!==fact.id)return null;
+      if(result.type==="VerifyChainFactSuccess"&&subject.type==="ChainFact"){
+        const objects=array(subject.fields.objs),operators=array(subject.fields.prop_names).map(resolveEvidence),adjacent=array(result.fields.adjacent);
+        if(objects.length!==operators.length+1||adjacent.length!==operators.length||!operators.length)return null;
+        return {objects,operators:operators.map(value=>value.name),adjacent};
+      }
+      if(result.type==="VerifyEqualitySuccess"&&subject.type==="EqualFact")return {objects:[subject.fields.left,subject.fields.right],operators:["="],adjacent:[fact.evidence]};
+      return null;
+    }
+    function equalityStepEvidence(fact,index){
+      if(!Number.isInteger(index)||index<0)return null;
+      const parts=equalityProofParts(fact),evidence=parts?.adjacent[index];
+      if(parts?.operators[index]!=="="||proofResult(evidence).type!=="VerifyEqualitySuccess")return null;
+      const relation=resolveEvidence(proofResult(evidence).fields.fact);
+      if(relation.type!=="EqualFact"||resolveEvidence(relation.fields.left)!==resolveEvidence(parts.objects[index])||resolveEvidence(relation.fields.right)!==resolveEvidence(parts.objects[index+1]))return null;
+      return evidence;
+    }
+    function equalityTokenTargets(rowFacts,tokens){
+      const targets=new Map();if(rowFacts.length!==1)return targets;
+      const fact=rowFacts[0],parts=equalityProofParts(fact),relations=new Set(["=","<","<=",">",">=","!="]);
+      if(!parts||parts.operators.some(name=>!relations.has(name)))return targets;
+      const stack=[],operators=[],closing={"(":")","[":"]","{":"}"};
+      for(const token of tokens){
+        if(Object.prototype.hasOwnProperty.call(closing,token.text))stack.push(closing[token.text]);
+        else if([")","]","}"].includes(token.text)){if(stack.pop()!==token.text)return targets;}
+        else if(!stack.length&&relations.has(token.text))operators.push(token);
+      }
+      if(stack.length||operators.length!==parts.operators.length||operators.some((token,index)=>token.text!==parts.operators[index]))return targets;
+      operators.forEach((token,index)=>{if(token.text==="="&&equalityStepEvidence(fact,index))targets.set(token.start_byte,{factId:fact.id,index});});
+      return targets;
+    }
+    function attachEqualityProof(token,target){
+      token.classList.add("lr-chain-equality");token.dataset.chainFact=target.factId;token.dataset.chainStep=String(target.index);token.tabIndex=0;token.setAttribute("role","button");
+      token.title=editText("悬浮查看此等式的证明，点击固定说明","Hover for this equality's proof; click to keep it open");
+      token.setAttribute("aria-label",editText("第 "+(target.index+1)+" 步的等式依据","Proof of equality at step "+(target.index+1)));
+      token.setAttribute("aria-description",token.title);token.addEventListener("mouseenter",()=>hoverProofTarget(token));token.addEventListener("focus",()=>hoverProofTarget(token));
+      if(state.fact===target.factId&&state.chainStep===target.index)token.classList.add("lr-equality-selected");
+      const select=()=>selectFact(target.factId,target.index);
+      token.addEventListener("click",event=>{event.stopPropagation();select();});token.addEventListener("pointerleave",leaveProof);
+      token.addEventListener("keydown",event=>{
+        if(["Enter"," "].includes(event.key)){event.preventDefault();select();}
+        else if((event.key==="ArrowRight"||event.key==="Tab"&&!event.shiftKey)&&proofPopover?.owner===token){event.preventDefault();proofPopover.node.querySelector(".lr-proof-pin,.lr-fact-link,.lr-explanation-close")?.focus();}
+      });
+    }
+    function closeProof(restoreFocus=false){
+      clearTimeout(proofTimer);clearTimeout(proofCloseTimer);proofTimer=null;proofCandidate=null;
+      const owner=proofPopover?.owner;
+      if(proofPopover){proofPopover.owner.removeAttribute("aria-describedby");proofPopover.node.remove();proofPopover=null;}
+      codePane?.querySelectorAll(".lr-proof-target,.lr-proof-premise,.lr-citation-peek").forEach(row=>row.classList.remove("lr-proof-target","lr-proof-premise","lr-citation-peek"));
+      if(restoreFocus)restoreSourceFocus(owner);
+    }
+    function restoreSourceFocus(owner){if(owner?.isConnected){proofFocusSuppression=owner;owner.focus({preventScroll:true});Promise.resolve().then(()=>{if(proofFocusSuppression===owner)proofFocusSuppression=null;});}}
+    function leaveProof(){clearTimeout(proofTimer);proofTimer=null;proofCandidate=null;clearTimeout(proofCloseTimer);if(!proofPopover?.persistent)proofCloseTimer=setTimeout(closeProof,300);}
     function hoverProofTarget(target){
-      const row=target?.closest(".lr-code-row"),token=target?.closest(".lr-token,[data-syntax]"),ids=row?.dataset.proofFacts;
+      if(target===proofFocusSuppression)return false;
+      if(proofPopover?.persistent)return false;
+      const equality=target?.closest(".lr-chain-equality"),row=target?.closest(".lr-code-row"),token=target?.closest(".lr-token,[data-syntax]"),issueTarget=target?.closest(".lr-line-number,.lr-inline-failure,.lr-diagnostic-point"),issueIds=row?.dataset.issues&&(!token||token.dataset.syntax==="predicate"||issueTarget)?row.dataset.issues:null,ids=equality?JSON.stringify([equality.dataset.chainFact]):issueIds||row?.dataset.proofFacts,owner=equality||(issueIds?issueTarget:null)||(token?.dataset.syntax==="predicate"?token:row);
       // A fact predicate opens the proof; objects, operators and language
       // keywords retain their own semantic documentation.
-      if(pending()||state.explanationOpen||!ids||target.closest(".lr-inference-toggle,.lr-reference-count")||token&&token.dataset.syntax!=="predicate"){
+      if(pending()||state.explanationOpen&&!equality&&!issueIds||!ids||target.closest(".lr-inference-toggle,.lr-reference-count")||token&&token.dataset.syntax!=="predicate"&&!equality&&!issueIds){
         if(proofPopover||proofCandidate)closeProof();return false;
       }
       clearTimeout(proofCloseTimer);hideTokenHelp();
-      if(proofPopover?.owner===row||proofCandidate===row)return true;
-      closeProof();proofCandidate=row;
-      proofTimer=setTimeout(()=>{proofTimer=null;if(!destroyed&&row.isConnected&&proofCandidate===row)openProof(row,JSON.parse(ids));},450);
+      if(proofPopover?.owner===owner||proofCandidate===owner)return true;
+      closeProof();proofCandidate=owner;
+      proofTimer=setTimeout(()=>{proofTimer=null;if(!destroyed&&owner.isConnected&&proofCandidate===owner){if(issueIds)openSourceIssue(owner,JSON.parse(issueIds));else openProof(owner,JSON.parse(ids),equality?Number(equality.dataset.chainStep):null);}},450);
       return true;
     }
     function proofResult(value){
@@ -1105,6 +1310,77 @@
       return {kind:"unavailable"};
     }
     function proofRecord(value){const result=proofResult(value);return result.fields?.searched_proof?resolveEvidence(result.fields.searched_proof):result;}
+    function proofFrames(value){
+      const frames=[],seen=new Set();let node=proofRecord(value);
+      while(node&&typeof node==="object"&&!seen.has(node)){seen.add(node);frames.push(node);if(!node.fields?.["0"])break;node=resolveEvidence(node.fields["0"]);}
+      return frames;
+    }
+    function proofSubject(fact){
+      const result=proofResult(fact.evidence);let node=resolveEvidence(result.fields?.fact||result.fields?.goal),seen=new Set();
+      while(node&&["Fact","AtomicFact"].includes(node.type)&&!seen.has(node)){seen.add(node);node=resolveEvidence(node.fields?.["0"]);}
+      return node?.type?node:factSubjects.get(fact.id);
+    }
+    function appendPredicateDefinition(target,fact){
+      const subject=proofSubject(fact),sourceId=factLocation(fact).sourceId;
+      if(subject?.type==="NormalAtomicFact"){
+        const predicate=resolveEvidence(subject.fields?.predicate),declaration=symbolDefinitions.get(predicate.symbol_id),model=declaration?.mathematics;
+        if(model&&["predicate_definition","abstract_predicate"].includes(model.kind)){
+          const section=element("section","lr-predicate-definition");section.append(element("h4","lr-proof-section-title",editText("定义","Definition")));
+          if(model.kind==="predicate_definition")appendPredicateMeaning(section,model,declaration.source_id);
+          else section.append(formula(model.subject,declaration.source_id),element("p","lr-empty-note",t("abstractMeaning")));
+          target.append(section);return true;
+        }
+        if(loader&&declaration&&typeof sources.get(declaration.source_id)?.content!=="string"){
+          const section=element("section","lr-predicate-definition"),epoch=generation;section.append(element("p","lr-empty-note",t("loading")));target.append(section);
+          loader.loadSource(declaration.source_id).then(chunk=>{if(destroyed||epoch!==generation||!section.isConnected)return;mergeReadingChunk(bundle,chunk);index();section.replaceChildren();if(!appendPredicateDefinition(section,fact))section.append(element("p","lr-empty-note",t("meaningUnavailable")));positionOverlays();}).catch(()=>{if(section.isConnected)section.textContent=t("loadFailed");});return true;
+        }
+        const section=element("section","lr-predicate-definition");section.append(element("h4","lr-proof-section-title",editText("定义","Definition")),element("p","lr-empty-note",editText("当前阅读记录没有提供此谓词的定义。","The current reading records do not provide this predicate's definition.")));target.append(section);return true;
+      }
+      if(!["InFact","NotInFact"].includes(subject?.type))return false;
+      const section=element("section","lr-predicate-definition"),set=resolveEvidence(subject.fields?.set),operation=set.type==="Obj"&&set.variant==="SetOperator"?resolveEvidence(set.fields?.["0"]):null;
+      section.append(element("h4","lr-proof-section-title",editText("定义","Definition")),element("p","lr-proof-summary",editText("x ∈ A 表示 x 是集合 A 的元素。","x ∈ A means that x is an element of the set A.")));
+      const definitions={Intersect:"x ∈ A ∩ B ⇔ (x ∈ A ∧ x ∈ B)",Union:"x ∈ A ∪ B ⇔ (x ∈ A ∨ x ∈ B)",SetMinus:"x ∈ A ∖ B ⇔ (x ∈ A ∧ x ∉ B)"};
+      if(definitions[operation?.variant])section.append(formula(definitions[operation.variant],sourceId));
+      if(subject.type==="NotInFact")section.append(element("p","lr-proof-summary",editText("x ∉ A 是 x ∈ A 的否定。","x ∉ A is the negation of x ∈ A.")));
+      target.append(section);return true;
+    }
+    function appendProofRequirement(target,fact,requirement,evidence,depth){
+      const text=resolveEvidence(requirement).text||proofRelation(evidence);if(!text){target.append(element("p","lr-empty-note",editText("此条件及其证明记录未完整导出。","This condition and its proof record were not fully exported.")));return;}
+      const step=element("details","lr-proof-step"),summary=element("summary");summary.append(formula(text,factLocation(fact).sourceId));step.append(summary);let rendered=false;
+      step.addEventListener("toggle",()=>{if(step.open&&!rendered){rendered=true;const expected=retainedFactId(requirement),actual=retainedFactId(proofResult(evidence).fields?.fact);if(!expected||expected!==actual)step.append(element("p","lr-empty-note",editText("没有可与此条件准确对应的证明记录。","No proof record can be matched exactly to this condition.")));else appendProofBody(step,{...fact,id:null,role:"verified",evidence},evidence,false,depth+1);positionOverlays();}});target.append(step);
+    }
+    function retainedFactId(value){let node=resolveEvidence(value),seen=new Set();while(node&&["Fact","AtomicFact"].includes(node.type)&&!seen.has(node)){seen.add(node);node=resolveEvidence(node.fields?.["0"]);}return node?.fields?.fact_id?.fact_id||null;}
+    function forallSubstitutions(record){
+      if(record.variant!=="ByKnownForallFact")return [];
+      let application=resolveEvidence(record.fields?.["0"]);
+      // Current result detail wraps the retained instantiation. Legacy bundles
+      // stored these fields directly; Normal/Compact intentionally omit args.
+      if(application.type==="SearchProofByKnownForallFact"&&application.variant==="Detailed")application=resolveEvidence(application.fields?.["0"]);
+      const cite=resolveEvidence(application.fields?.cite),id=cite.fields?.fact_id;
+      if(id?.kind!=="fact_reference")return [];
+      const known=quantifiedFacts.get(id.fact_id),groups=resolveEvidence(known?.fields?.typed_parameters),params=array(groups.fields?.groups).flatMap(value=>array(resolveEvidence(value).fields?.params)),args=array(application.fields?.forall_parameters_match_what_args).map(resolveEvidence);
+      if(!params.length||params.length!==args.length||params.some(param=>param.kind!=="symbol_reference")||args.some(arg=>typeof arg.text!=="string"))return [];
+      return params.map((param,index)=>({parameter:param.name,argument:args[index].text,sourceFact:id.fact_id}));
+    }
+    function appendProofContext(target,fact){
+      if(!fact.scope_id||String(fact.scope_id).startsWith("file:"))return;
+      const context=element("div","lr-proof-context"),scope=scopes.get(fact.scope_id),owner=statements.get(scope?.statement_id);
+      if(fact.role!=="hypothesis")context.append(element("span",null,editText("在本段假设下成立","Established under this proof's assumptions")));
+      // The scope record identifies its owning proof. It does not promise an
+      // exact nested lexical range; never infer one from indentation.
+      if(owner)context.append(button(editText("所在证明","Enclosing proof"),"lr-math-link",()=>selectStatement(owner.id,owner.line)));
+      if(context.childNodes.length)target.append(context);
+    }
+    function inspectorTitle(){
+      if(state.issue)return editText("这里为什么没有通过","Why this step was not accepted");
+      if(state.keyword)return editText("参考说明","Reference");
+      if(state.symbol)return editText("定义与用法","Definition and use");
+      if(state.wd)return editText("表达式的条件","Expression requirements");
+      const fact=facts.get(state.fact);
+      if(fact&&Number.isInteger(state.chainStep))return editText("这个等式为何成立","Why this equality holds");
+      if(fact)return fact.role==="hypothesis"?editText("本段的假设","Local hypothesis"):factInferences(fact.id).length?editText("推导依据","Inference grounds"):fact.role==="verified"?editText("这一步怎样得到","How this step follows"):editText("对象的条件","Object requirements");
+      return t("mathematicalMeaning");
+    }
     function proofRelation(value){
       const fact=resolveEvidence(proofResult(value).fields?.fact);
       if(fact.text)return fact.text;
@@ -1123,15 +1399,22 @@
         for(const [key,child] of Object.entries(node)){
           // Parameter domains and formation are genuine dependencies, retained
           // separately below rather than mixed with the mathematical premises.
-          if(["well_defined_proof","param_type_requirements"].includes(key))continue;
+          if(["well_defined_proof","well_defined","param_type_requirements"].includes(key))continue;
           if(Array.isArray(child))child.forEach(visit);else if(child&&typeof child==="object")visit(child);
         }
       }
       visit(evidence);return [...cited];
     }
-    function appendProofBody(target,fact,evidence=fact.evidence,steps=true){
+    function appendProofReferences(target,fact,evidence){
+      const all=factCitations({id:fact.id,evidence}),main=proofGrounds(evidence).filter(id=>id!==fact.id),domains=all.filter(id=>!main.includes(id));
+      if(main.length){const premises=element("div","lr-proof-grounds");main.forEach(id=>premises.append(factButton(id)));target.append(premises);}
+      if(domains.length){const formation=element("details","lr-proof-formation");formation.append(element("summary",null,editText("参数与表达式条件","Parameter and expression conditions")));domains.forEach(id=>formation.append(factButton(id)));target.append(formation);}
+      return main.length;
+    }
+    function appendProofBody(target,fact,evidence=fact.evidence,steps=true,depth=0){
+      if(steps)appendProofContext(target,fact);
       if(fact.role==="hypothesis"){
-        target.append(element("p","lr-proof-summary",editText("这是当前证明中的假设；结论在这些假设下成立。","This is a hypothesis of the current proof; its conclusions hold under these assumptions.")));return;
+        target.append(element("p","lr-proof-summary",editText("在当前证明中假定此条件成立。","This condition is assumed in the current proof.")));return;
       }
       const producer=statements.get(fact.producer_statement_id),record=proofRecord(evidence);
       if(producer?.origin&&producer.origin!=="checked")target.append(element("p","lr-origin-note",t(producer.origin)));
@@ -1139,15 +1422,42 @@
       if(!evidence||record.kind==="unavailable"){
         target.append(element("p","lr-empty-note",editText("这条事实已验证，但此处没有导出它的逐步证明记录。","This fact was verified, but its proof steps were not exported here.")));return;
       }
+      if(record.type==="ExecByContraStmtSuccess"){
+        target.append(element("p","lr-proof-summary",editText("反证法：假设目标的否定，在此假设下推出矛盾，从而得到原目标。","Proof by contradiction: assume the negation of the goal and derive a contradiction, establishing the original goal.")));
+        const assumption=resolveEvidence(record.fields.reverse_assumption_fact_id),closing=resolveEvidence(record.fields.closing);
+        if(facts.has(assumption.fact_id)){const context=element("div","lr-proof-grounds");context.append(element("span","lr-empty-note",editText("反证假设","Contradiction assumption")),factButton(assumption.fact_id));target.append(context);}
+        if(closing.type==="ByContradictionClosingSuccess"){
+          target.append(element("p","lr-proof-summary",editText("在此假设下，同时得到下面两条互相矛盾的事实：","Under this assumption, the following two incompatible facts are established:")));
+          appendProofRequirement(target,fact,closing.fields.impossible_fact,closing.fields.impossible,depth);
+          const opposite=closing.fields.negated_impossible;appendProofRequirement(target,fact,proofResult(opposite).fields?.fact,opposite,depth);
+        }else target.append(element("p","lr-empty-note",editText("此处没有导出产生矛盾的结束步骤。","The contradiction's closing step was not exported here.")));
+        return;
+      }
       if(steps&&record.type==="VerifyChainFactSuccess"&&array(record.fields.adjacent).length){
         target.append(element("p","lr-proof-summary",editText("分别验证每个相邻关系；整条链表示这些关系同时成立。","Verify each adjacent relation; the complete chain asserts all of these relations together.")));
         array(record.fields.adjacent).forEach((part,index)=>{
           const step=element("details","lr-proof-step"),summary=element("summary",null,editText("第 "+(index+1)+" 步","Step "+(index+1)));step.append(summary);
           const relation=proofRelation(part);
           if(relation)summary.append(formula(relation,fact.source_id));
-          appendProofBody(step,fact,part,false);target.append(step);
+          appendProofBody(step,fact,part,false,depth+1);target.append(step);
         });return;
       }
+      const frames=proofFrames(evidence);let requirements=frames.find(node=>Array.isArray(node.fields?.requirement_facts)&&Array.isArray(node.fields?.proof_of_requirement_facts));
+      if(!requirements){
+        const children={IntersectMembershipBuiltinRuleProof:["left_membership_proof","right_membership_proof"],UnionMembershipFromLeftBuiltinRuleProof:["left_membership_proof"],UnionMembershipFromRightBuiltinRuleProof:["right_membership_proof"],SetMinusMembershipBuiltinRuleProof:["left_membership_proof","right_non_membership_proof"]};
+        const rule=frames.find(node=>children[node.type]);if(rule){const proofs=children[rule.type].map(key=>rule.fields?.[key]);requirements={fields:{requirement_facts:proofs.map(proof=>proofResult(proof).fields?.fact),proof_of_requirement_facts:proofs}};}
+      }
+      if(requirements){
+        const descriptions={IntersectMembership:["按交集的定义，分别证明该元素属于两个集合。","By the definition of intersection, establish membership in both sets."],UnionMembershipFromLeft:["该元素属于左边的集合，因此属于并集。","Membership in the left set establishes membership in the union."],UnionMembershipFromRight:["该元素属于右边的集合，因此属于并集。","Membership in the right set establishes membership in the union."],ByDefinition:["将实参代入谓词定义，验证参数类型要求及全部定义条件。","Substitute the arguments into the predicate definition and verify its parameter requirements and all defining conditions."],ArithmeticCongruence:["在算式中使用已知等式，验证替换后的结果相等。","Use known equalities inside the arithmetic expression to verify equal results."]};
+        const name=frames.map(node=>node.variant).find(name=>descriptions[name]),description=descriptions[name]||["验证下面的条件后，应用记录中的规则得到本句结论。","The recorded rule establishes this conclusion from the following verified conditions."];
+        target.append(element("p","lr-proof-summary",description[lang()==="zh"?0:1]));
+        const fields=requirements.fields,conditions=fields.requirement_facts,proofs=fields.proof_of_requirement_facts;
+        if(conditions.length!==proofs.length){conditions.forEach(condition=>{const text=resolveEvidence(condition).text;if(text)target.append(formula(text,factLocation(fact).sourceId));});target.append(element("p","lr-empty-note",editText("条件与证明记录不完整，无法逐项对应。","The conditions and proof records are incomplete and cannot be paired.")));return;}
+        conditions.forEach((condition,index)=>appendProofRequirement(target,fact,condition,proofs[index],depth));appendProofReferences(target,fact,evidence);return;
+      }
+      const listed=frames.find(node=>node.type==="ListSetElementMembershipBuiltinRuleProof"),excluded=frames.find(node=>node.type==="ListSetExhaustiveDisequalityBuiltinRuleProof");
+      if(listed){target.append(element("p","lr-proof-summary",editText("在这个有限集合列出的元素中，找到了与它相等的一项，因此它属于该集合。","One of the listed elements of this finite set is equal to the given object, establishing membership.")));const proof=listed.fields.equality_proof;appendProofRequirement(target,fact,proofResult(proof).fields?.fact,proof,depth);return;}
+      if(excluded){target.append(element("p","lr-proof-summary",editText("它与这个有限集合中列出的每个元素都不相等，因此不属于该集合。","It differs from every listed element of this finite set, establishing non-membership.")));for(const proof of array(excluded.fields.disequality_proofs))appendProofRequirement(target,fact,proofResult(proof).fields?.fact,proof,depth);return;}
       const descriptions={
         ByKnownForallFact:["把全称命题用于当前对象，并验证它所要求的前提。","Apply the universal statement to the current objects and verify its premises."],
         ByKnownAtomicFact:["引用已建立的事实。","Use an already established fact."],
@@ -1155,61 +1465,98 @@
         ByMatchingOneArgByOne:["同一运算的对应参数分别相等，因此运算结果相等。","Corresponding arguments of the same operation are equal, so the results are equal."]
       },description=descriptions[record.variant];
       const builtin=resolveEvidence(record.fields?.["0"]),builtinDescription=builtin.type==="EqualitySearchProofByBuiltinRule"&&builtin.variant==="Calculation"?["按内置运算规则验证这个等式。","Verify this equality using the builtin calculation rules."]:builtin.type==="EqualitySearchProofByBuiltinStrategy"&&builtin.variant==="ArithmeticCongruence"?["在算式中使用已知等式，验证替换后的结果相等。","Use known equalities inside the arithmetic expression to verify equal results."]:null;
-      const explanation=description||builtinDescription;
-      if(explanation)target.append(element("p","lr-proof-summary",explanation[lang()==="zh"?0:1]));
-      const all=factCitations({id:fact.id,evidence}),main=proofGrounds(evidence).filter(id=>id!==fact.id),domains=all.filter(id=>!main.includes(id));
-      if(main.length){
-        const premises=element("div","lr-proof-grounds");main.forEach(id=>premises.append(factButton(id)));target.append(premises);
-      }else if(!explanation)target.append(element("p","lr-proof-summary",editText("这一步已验证；此类证明的逐步解说尚未提供。","This step was verified; a step-by-step explanation of this proof form is not available yet.")));
-      if(domains.length){const formation=element("details","lr-proof-formation");formation.append(element("summary",null,editText("参数与表达式条件","Parameter and expression conditions")));domains.forEach(id=>formation.append(factButton(id)));target.append(formation);}
+      const explanation=description||builtinDescription||(record.type==="VerifyKnownForallFactProof"?["引用同一个全称命题，绑定变量的名称按记录对应。","Use the same universal statement with the recorded correspondence between bound variables."]:null),substitutions=forallSubstitutions(record);
+      if(substitutions.length){
+        const summary=element("p","lr-proof-summary");summary.append(document.createTextNode(editText("取 ","Take ")));
+        substitutions.forEach((pair,index)=>{if(index)summary.append(document.createTextNode(editText("，",", ")));summary.append(element("code","lr-proof-substitution",displayText(pair.parameter,factLocation(fact).sourceId)+" = "+mathText(pair.argument,factLocation(fact).sourceId)));});
+        summary.append(document.createTextNode(editText("，代入下面的全称命题，并使用它的前提。"," in the universal statement below, using its premises.")));target.append(summary);
+      }else if(explanation)target.append(element("p","lr-proof-summary",explanation[lang()==="zh"?0:1]));
+      if(record.variant==="ByMatchingOneArgByOne"&&depth<2){
+        for(const part of array(resolveEvidence(record.fields?.["0"]).fields?.corresponding_arg_equal_proofs)){
+          const relation=proofRelation(part);if(!relation||proofRecord(part).variant==="ByTheyAreTheSame")continue;
+          const child=element("details","lr-proof-step"),summary=element("summary",null,editText("代入相等关系","Substitute an equality"));summary.append(formula(relation,factLocation(fact).sourceId));child.append(summary);appendProofBody(child,fact,part,false,depth+1);target.append(child);
+        }
+      }
+      if(!appendProofReferences(target,fact,evidence)&&!explanation)target.append(element("p","lr-proof-summary",editText("这一步已验证；此类证明的逐步解说尚未提供。","This step was verified; a step-by-step explanation of this proof form is not available yet.")));
     }
-    function openProof(owner,ids){
+    function appendEqualityStep(target,fact,index){
+      const evidence=equalityStepEvidence(fact,index),relation=evidence&&proofRelation(evidence);
+      if(!evidence||!relation){target.append(element("p","lr-empty-note",editText("此处没有可单独展示的相邻等式证明。","No separate proof of this adjacent equality is available here.")));return;}
+      target.append(formula(relation,factLocation(fact).sourceId));appendProofContext(target,fact);appendProofBody(target,fact,evidence,false);
+    }
+    function openSourcePreview(owner,title,renderBody,settings={}){
+      const {select,selection=null,persistent=false}=settings;
       closeProof();hideTokenHelp();
       const node=element("section","lr-proof-popover"),header=element("div","lr-proof-header"),body=element("div","lr-proof-body");
-      node.id="lr-proof-"+Math.random().toString(36).slice(2);node.setAttribute("role","region");node.setAttribute("aria-label",editText("证明依据","Proof grounds"));
-      header.append(element("strong",null,editText("证明依据","Proof grounds")));const close=button("×","lr-explanation-close",closeProof);close.setAttribute("aria-label",editText("关闭证明预览","Close proof preview"));header.append(close);node.append(header,body);
+      node.id="lr-proof-"+Math.random().toString(36).slice(2);node.setAttribute("role","region");node.setAttribute("aria-label",title);
+      header.append(element("strong",null,title));
+      if(select){const pin=button(editText("固定","Keep open"),"lr-proof-pin",async()=>{if(await select()){detailPane.tabIndex=-1;detailPane.focus({preventScroll:true});}});header.append(pin);}
+      const close=button("×","lr-explanation-close",()=>closeProof(true));close.setAttribute("aria-label",editText("关闭源码说明","Close source explanation"));header.append(close);node.append(header,body);
       body.addEventListener("toggle",positionProof,true);
-      for(const id of ids){const fact=facts.get(id);if(!fact)continue;const part=element("div","lr-proof-part");part.dataset.fact=id;if(ids.length>1)part.append(factFormula(fact));appendProofBody(part,fact);body.append(part);}
+      renderBody(body);
       node.addEventListener("pointerenter",()=>clearTimeout(proofCloseTimer));node.addEventListener("pointerleave",leaveProof);
       node.addEventListener("focusin",()=>clearTimeout(proofCloseTimer));node.addEventListener("focusout",event=>{if(!node.contains(event.relatedTarget))leaveProof();});
-      root.append(node);owner.setAttribute("aria-describedby",node.id);proofPopover={node,owner};owner.classList.add("lr-proof-target");
-      const premises=new Set(ids.flatMap(id=>proofGrounds(facts.get(id)?.evidence)).map(id=>facts.get(id)).filter(fact=>fact?.source_id===state.source&&fact.line).map(fact=>fact.line));
-      codePane.querySelectorAll(".lr-code-row").forEach(row=>row.classList.toggle("lr-proof-premise",premises.has(Number(row.dataset.line))&&row!==owner));
-      positionProof();
+      root.append(node);owner.setAttribute("aria-describedby",node.id);proofPopover={node,owner,selection,persistent};owner.classList.add("lr-proof-target");
+      positionProof();return node;
+    }
+    function openProof(owner,ids,chainStep=null){
+      if(chainStep!==null)closeExplanation();
+      const title=chainStep!==null?editText("这个等式为何成立","Why this equality holds"):ids.every(id=>facts.get(id)?.role==="hypothesis")?editText("本段的假设","Local hypothesis"):editText("这一步怎样得到","How this step follows");
+      openSourcePreview(owner,title,body=>{
+        for(const id of ids){const fact=facts.get(id);if(!fact)continue;const part=element("div","lr-proof-part");part.dataset.fact=id;if(chainStep!==null)appendEqualityStep(part,fact,chainStep);else{if(ids.length>1)part.append(factFormula(fact));if(appendPredicateDefinition(part,fact))part.append(element("h4","lr-proof-section-title",editText("证明","Proof")));appendProofBody(part,fact);}body.append(part);}
+      },{select:ids.length===1?()=>selectFact(ids[0],chainStep):null,selection:ids.length===1?factSelection(ids[0],chainStep):null});
+      const premises=new Set(ids.flatMap(id=>proofGrounds(chainStep!==null?equalityStepEvidence(facts.get(id),chainStep):facts.get(id)?.evidence)).map(id=>facts.get(id)).filter(fact=>fact?.source_id===state.source&&fact.line).map(fact=>fact.line));
+      codePane.querySelectorAll(".lr-code-row").forEach(row=>row.classList.toggle("lr-proof-premise",premises.has(Number(row.dataset.line))&&row!==(owner.closest(".lr-code-row")||owner)));
     }
     function positionProof(){
-      if(!proofPopover)return;const {node,owner}=proofPopover,box=owner.getBoundingClientRect(),view=document.documentElement,rect=node.getBoundingClientRect();
-      const pane=(root.querySelector(".lr-ide")||codePane).getBoundingClientRect();
-      if(box.bottom<Math.max(0,pane.top)||box.top>Math.min(view.clientHeight,pane.bottom)){closeProof();return;}
-      const right=view.clientWidth-rect.width-16,beside=right>box.left+360;
-      node.style.left=(beside?right:Math.max(8,Math.min(box.left+48,view.clientWidth-rect.width-8)))+"px";
-      node.style.top=(beside?Math.max(8,Math.min(box.top,view.clientHeight-rect.height-8)):Math.max(8,box.bottom+8+rect.height<=view.clientHeight?box.bottom+8:box.top-rect.height-8))+"px";
+      if(!proofPopover)return;const {node,owner}=proofPopover,box=owner.getBoundingClientRect();
+      if(!sourceAnchorVisible(owner,box)){closeProof();return;}
+      placeAtSource(node,box,owner.matches(".lr-code-row")?48:0);
+    }
+    function sourceAnchorVisible(owner,box){
+      if(!owner?.isConnected)return false;
+      const view=document.documentElement,pane=(owner.closest(".lr-ide")||codePane).getBoundingClientRect();
+      return box.bottom>Math.max(0,pane.top)&&box.top<Math.min(view.clientHeight,pane.bottom)&&box.right>Math.max(0,pane.left)&&box.left<Math.min(view.clientWidth,pane.right);
+    }
+    function placeAtSource(node,box,inset=0){
+      // Every explanation shares source anchoring; no viewport-edge inspector.
+      const view=document.documentElement,rect=node.getBoundingClientRect();
+      node.style.left=Math.max(8,Math.min(box.left+inset,view.clientWidth-rect.width-8))+"px";
+      node.style.top=Math.max(8,box.bottom+8+rect.height<=view.clientHeight?box.bottom+8:Math.min(box.top-rect.height-8,view.clientHeight-rect.height-8))+"px";
     }
     function hideTokenHelp(){if(tokenHelp){tokenHelp.node.remove();tokenHelp.owner.removeAttribute("aria-describedby");tokenHelp=null;}}
-    function closeExplanation(){state.explanationOpen=false;const panel=root.querySelector(".lr-context-explanation");if(panel)panel.hidden=true;root.querySelectorAll("[data-keyword]").forEach(token=>token.setAttribute("aria-expanded","false"));}
+    function closeExplanation(restoreFocus=false){
+      const panel=root.querySelector(".lr-context-explanation"),focused=panel?.contains(document.activeElement);
+      state.explanationOpen=false;peekCitation(null);if(panel)panel.hidden=true;root.querySelectorAll("[data-keyword]").forEach(token=>token.setAttribute("aria-expanded","false"));
+      if(restoreFocus&&focused){
+        const input=root.querySelector(".lr-ide-input");
+        if(input)input.focus({preventScroll:true});
+        else{
+          const row=root.querySelector('.lr-code-row[data-line="'+state.focusLine+'"]')||root.querySelector(".lr-code-row.lr-selected"),keyword=state.keyword&&[...row?.querySelectorAll("[data-keyword]")||[]].find(token=>token.dataset.keyword===state.keyword);
+          restoreSourceFocus(row?.querySelector(".lr-equality-selected,.lr-symbol-selected")||keyword||row?.querySelector(".lr-line-number"));
+        }
+      }
+    }
     function showExplanation(){const panel=root.querySelector(".lr-context-explanation");if(!panel)return;panel.hidden=!state.explanationOpen;root.querySelectorAll("[data-keyword]").forEach(token=>token.setAttribute("aria-expanded",String(!!state.explanationOpen&&token.dataset.keyword===state.keyword&&Number(token.closest(".lr-code-row")?.dataset.line)===state.focusLine)));if(state.explanationOpen)positionExplanation();}
     function positionExplanation(){
       const panel=root.querySelector(".lr-context-explanation");if(!panel||panel.hidden||!codePane)return;
       const row=[...codePane.querySelectorAll(".lr-code-row")].find(node=>Number(node.dataset.line)===state.focusLine)||codePane.querySelector(".lr-code-row.lr-selected");
       const keyword=state.keyword&&[...row?.querySelectorAll("[data-keyword]")||[]].find(node=>node.dataset.keyword===state.keyword);
-      const anchor=(state.symbol&&row?.querySelector(".lr-symbol-selected"))||keyword||row;
-      const box=(anchor||codePane).getBoundingClientRect(),view=document.documentElement,rect=panel.getBoundingClientRect();
-      if(box.bottom<0||box.top>view.clientHeight){panel.hidden=true;return;}
-      const right=view.clientWidth-rect.width-16,beside=right>codePane.getBoundingClientRect().left+360;
-      panel.style.left=(beside?right:Math.max(8,Math.min(box.left+(anchor===row?40:0),view.clientWidth-rect.width-8)))+"px";
-      if(beside){panel.style.top=Math.max(8,Math.min(box.top,view.clientHeight-rect.height-8))+"px";return;}
-      panel.style.top=Math.max(8,box.bottom+8+rect.height<=view.clientHeight?box.bottom+8:Math.min(box.top-rect.height-8,view.clientHeight-rect.height-8))+"px";
+      const anchor=(state.chainStep!=null&&row?.querySelector(".lr-equality-selected"))||(state.symbol&&row?.querySelector(".lr-symbol-selected"))||keyword||row||codePane;
+      const box=anchor.getBoundingClientRect();
+      if(!sourceAnchorVisible(anchor,box)){closeExplanation();return;}
+      placeAtSource(panel,box,anchor===row?40:0);
     }
     function positionOverlays(){positionTokenHelp();positionInferences();positionExplanation();positionProof();}
     function positionTokenHelp(){
-      if(!tokenHelp)return;const box=tokenHelp.owner.getBoundingClientRect(),tip=tokenHelp.node,rect=tip.getBoundingClientRect(),view=document.documentElement;
-      if(box.bottom<0||box.top>view.clientHeight){hideTokenHelp();return;}
-      tip.style.left=Math.max(8,Math.min(box.left,view.clientWidth-rect.width-8))+"px";
-      tip.style.top=Math.max(8,box.bottom+8+rect.height<=view.clientHeight?box.bottom+8:box.top-rect.height-8)+"px";
+      if(!tokenHelp)return;const box=tokenHelp.owner.getBoundingClientRect(),tip=tokenHelp.node;
+      if(!sourceAnchorVisible(tokenHelp.owner,box)){hideTokenHelp();return;}
+      placeAtSource(tip,box);
     }
     function attachTokenHelp(token,heading,meaning,symbolId,builtin){
       token.setAttribute("aria-label",heading+" · "+meaning);
       function show(){
+        if(proofFocusSuppression===token)return;
         if(hoverProofTarget(token))return;
         if(tokenHelp?.owner===token)return;hideTokenHelp();
         const tip=element("div","lr-token-help"),id="lr-token-help-"+Math.random().toString(36).slice(2);tip.id=id;tip.setAttribute("role","tooltip");
@@ -1249,9 +1596,10 @@
       const content=source.content||"";const offsets=bytePositions(content);
       const sourceStatements=statementsBySource.get(source.id)||[];
       const selected=statements.get(state.statement);
-      const citations=state.wd?wdCitations(wellDefinedness.get(state.wd)):state.fact?factCitations(facts.get(state.fact)):array(selected?.cited_fact_ids);
+      const selectedFact=facts.get(state.fact),stepEvidence=equalityStepEvidence(selectedFact,state.chainStep);
+      const citations=state.wd?wdCitations(wellDefinedness.get(state.wd)):stepEvidence?factCitations({evidence:stepEvidence}):state.fact?factCitations(selectedFact):array(selected?.cited_fact_ids);
       const premiseLines=new Set(citations.map(id=>factLocation(facts.get(id))).filter(value=>value.sourceId===source.id).map(value=>value.line));
-      function selectLine(owning,line){const matches=lineProofFacts(source.id,line);if(matches.length===1)selectFact(matches[0].id);else if(owning)selectStatement(owning.id,line);}
+      function selectLine(owning,line){const issues=issuesByLine.get(source.id+":"+line)||[];if(issues.length){selectSourceIssue((issues.find(issue=>issue.statementId===owning?.id)||issues[0]).id);return;}const matches=lineProofFacts(source.id,line);if(matches.length===1)selectFact(matches[0].id);else if(owning)selectStatement(owning.id,line);}
       const mentions=occurrences.filter(value=>value.source_id===source.id).map(value=>({...value,start:offsets.get(value.start_byte),end:offsets.get(value.end_byte)})).filter(value=>value.start!==undefined&&value.end!==undefined).sort((a,b)=>a.start-b.start);
       let mentionIndex=0;
       const lexical=array(source.tokens).map(value=>({...value,start:offsets.get(value.start_byte),end:offsets.get(value.end_byte)})).filter(value=>value.start!==undefined&&value.end!==undefined).sort((a,b)=>a.start-b.start).filter(value=>{while(mentionIndex<mentions.length&&mentions[mentionIndex].end<=value.start)mentionIndex++;return !mentions[mentionIndex]||mentions[mentionIndex].start>=value.end;});
@@ -1264,17 +1612,30 @@
       }
       const hasTokens=array(source.tokens).length>0;
       function appendTrivia(target,text){if(hasTokens&&text.trim())target.append(element("span","lr-syntax-comment",text));else target.append(document.createTextNode(text));}
-      let lineStart=0,lineByteStart=0;const encoder=new TextEncoder();
+      let lineStart=0,lineByteStart=0,proofTokenIndex=0;const encoder=new TextEncoder(),proofTokens=array(source.tokens).slice().sort((a,b)=>a.start_byte-b.start_byte);
       const lines=content.split("\n");
       for(let i=0;i<lines.length;i++){
-        const lineNumber=i+1,line=lines[i],lineEnd=lineStart+line.length;
+        const lineNumber=i+1,line=lines[i],lineEnd=lineStart+line.length,lineByteEnd=lineByteStart+encoder.encode(line).length;
         const owning=owningStatement(source.id,lineNumber,lineByteStart);
-        const row=element("div","lr-code-row");row.dataset.line=String(lineNumber);if(owning)row.dataset.statement=owning.id;if(owning?.status==="rejected")row.classList.add("lr-rejected");
-        const rowFacts=lineProofFacts(source.id,lineNumber);if(rowFacts.length){row.dataset.proofFacts=JSON.stringify(rowFacts.map(fact=>fact.id));row.addEventListener("pointermove",event=>hoverProofTarget(event.target));row.addEventListener("pointerleave",leaveProof);}
+        const lineIssues=issuesByLine.get(source.id+":"+lineNumber)||[],issuePoints=lineIssues.filter(issue=>Number.isInteger(issue.column)&&issue.column>0&&issue.column<=Array.from(line).length+1).map(issue=>({issue,offset:lineStart+Array.from(line).slice(0,issue.column-1).join("").length}));
+        const row=element("div","lr-code-row");row.dataset.line=String(lineNumber);if(owning)row.dataset.statement=owning.id;if(lineIssues.length){row.classList.add("lr-rejected");row.dataset.issues=JSON.stringify(lineIssues.map(issue=>issue.id));row.addEventListener("pointermove",event=>hoverProofTarget(event.target));row.addEventListener("pointerleave",leaveProof);}
+        while(proofTokenIndex<proofTokens.length&&proofTokens[proofTokenIndex].end_byte<=lineByteStart)proofTokenIndex++;
+        const proofLineTokens=[];for(let j=proofTokenIndex;j<proofTokens.length&&proofTokens[j].start_byte<lineByteEnd;j++)if(proofTokens[j].start_byte>=lineByteStart&&proofTokens[j].end_byte<=lineByteEnd)proofLineTokens.push(proofTokens[j]);
+        const rowFacts=lineProofFacts(source.id,lineNumber),equalityTargets=equalityTokenTargets(rowFacts,proofLineTokens);if(rowFacts.length){row.dataset.proofFacts=JSON.stringify(rowFacts.map(fact=>fact.id));row.addEventListener("pointermove",event=>hoverProofTarget(event.target));row.addEventListener("pointerleave",leaveProof);}
         if(state.focusLine?lineNumber===state.focusLine:owning?.id===state.statement)row.classList.add("lr-selected");else if(premiseLines.has(lineNumber))row.classList.add("lr-premise");
-        const number=button(String(lineNumber),"lr-line-number",()=>selectLine(owning,lineNumber));number.disabled=!owning;number.setAttribute("aria-label",t("sourceLine")+" "+lineNumber);row.append(number);
-        if(rowFacts.length){number.addEventListener("focus",()=>hoverProofTarget(number));number.addEventListener("blur",leaveProof);}
+        const number=button(String(lineNumber),"lr-line-number",()=>selectLine(owning,lineNumber));number.disabled=!owning&&!lineIssues.length;number.setAttribute("aria-label",t("sourceLine")+" "+lineNumber);row.append(number);
+        if(lineIssues.length){number.classList.add("lr-error-line");number.title=lineIssues.map(sourceIssueLabel).join("\n");number.addEventListener("focus",()=>hoverProofTarget(number));number.addEventListener("blur",leaveProof);}
+        if(rowFacts.length){
+          number.title=editText("悬浮查看依据，点击固定说明","Hover for proof; click to keep it open");number.setAttribute("aria-description",number.title);
+          number.addEventListener("focus",()=>hoverProofTarget(number));number.addEventListener("blur",leaveProof);
+          number.addEventListener("keydown",event=>{if((event.key==="ArrowRight"||event.key==="Tab"&&!event.shiftKey)&&proofPopover?.owner===row){event.preventDefault();proofPopover.node.querySelector(".lr-proof-pin,.lr-fact-link,.lr-explanation-close")?.focus();}});
+        }
         const lineContent=element("div","lr-code-content"),code=element("code","lr-source-code");let cursor=lineStart;
+        const appendToken=(token,occurrence)=>{
+          if(token.textContent==="="&&!token.dataset.symbol&&equalityTargets.has(occurrence.start_byte))attachEqualityProof(token,equalityTargets.get(occurrence.start_byte));
+          const point=issuePoints.find(point=>point.offset>=occurrence.start&&point.offset<occurrence.end);if(point)attachSourceIssue(token,point.issue);
+          code.append(token);
+        };
         const lineTokens=[...mentions.filter(value=>value.start>=lineStart&&value.end<=lineEnd),...lexical.filter(value=>value.start>=lineStart&&value.end<=lineEnd)].sort((a,b)=>a.start-b.start||Number(!!b.symbol_id)-Number(!!a.symbol_id)||Number(a.text==="$")-Number(b.text==="$"));
         const grouped=[];
         for(let j=0;j<lineTokens.length;j++){
@@ -1290,34 +1651,51 @@
           if(!occurrence.symbol_id||(["operator","punctuation"].includes(lexicalKinds.get(tokenText))&&!symbolDefinitions.has(occurrence.symbol_id))){
             const role=(setOperatorHelp[tokenText]?"operator":syntaxPhrases[tokenText]?"keyword":lexicalKinds.get(tokenText))||(/^\d+(?:\.\d+)?$/.test(tokenText)?"number":"identifier"),token=element("span","lr-syntax-"+role,spelling);token.dataset.syntax=role;
             const builtin=builtinObjectHelp[tokenText],reference=referenceCard(tokenText),help=reference?.summary||builtin?.[lang()==="zh"?2:3]||(syntaxPhrases[tokenText]|| (Object.prototype.hasOwnProperty.call(syntaxHelp,tokenText)?syntaxHelp[tokenText]:syntaxRoleHelp[role]))?.[lang()==="zh"?0:1];
-            if(help){token.tabIndex=0;attachTokenHelp(token,spelling,help,null,builtin);if(reference||syntaxPhrases[tokenText]||(role==="keyword"&&syntaxHelp[tokenText])){token.setAttribute("role","button");token.dataset.keyword=tokenText;token.setAttribute("aria-expanded",String(state.keyword===tokenText&&state.focusLine===lineNumber));const open=async()=>{if(state.keyword===tokenText&&state.focusLine===lineNumber){await selectStatement(owning?.id,lineNumber);root.querySelector('.lr-code-row[data-line="'+lineNumber+'"] [data-keyword="'+tokenText+'"]')?.focus();}else{await navigate({keyword:tokenText,statement:owning?.id||null,symbol:null,fact:null,wd:null,focusLine:lineNumber,explanationOpen:true});detailPane.tabIndex=-1;detailPane.focus({preventScroll:true});}};token.addEventListener("click",event=>{event.stopPropagation();open();});token.addEventListener("keydown",event=>{if(["Enter"," "].includes(event.key)){event.preventDefault();open();}});}}code.append(token);cursor=occurrence.end;continue;
+            if(help){token.tabIndex=0;attachTokenHelp(token,spelling,help,null,builtin);if(reference||syntaxPhrases[tokenText]||(role==="keyword"&&syntaxHelp[tokenText])){token.setAttribute("role","button");token.dataset.keyword=tokenText;token.setAttribute("aria-expanded",String(state.keyword===tokenText&&state.focusLine===lineNumber));const open=async()=>{if(state.keyword===tokenText&&state.focusLine===lineNumber){await selectStatement(owning?.id,lineNumber);root.querySelector('.lr-code-row[data-line="'+lineNumber+'"] [data-keyword="'+tokenText+'"]')?.focus();}else{await navigate({keyword:tokenText,statement:owning?.id||null,symbol:null,fact:null,wd:null,focusLine:lineNumber,explanationOpen:true});detailPane.tabIndex=-1;detailPane.focus({preventScroll:true});}};token.addEventListener("click",event=>{event.stopPropagation();open();});token.addEventListener("keydown",event=>{if(["Enter"," "].includes(event.key)){event.preventDefault();open();}});}}appendToken(token,occurrence);cursor=occurrence.end;continue;
           }
           const role=symbolRoles.get(occurrence.symbol_id)||"object",token=button(spelling,"lr-token lr-syntax-"+role,event=>{event.stopPropagation();selectSymbol(occurrence.symbol_id,owning?.id,lineNumber);});token.dataset.symbol=occurrence.symbol_id;token.dataset.syntax=role;
           const builtinMeaning=symbolHelp(occurrence.symbol_id),meaning=builtinMeaning||syntaxRoleHelp[role]?.[lang()==="zh"?0:1];if(builtinMeaning)token.classList.add("lr-builtin-symbol");if(meaning)attachTokenHelp(token,spelling,meaning,occurrence.symbol_id);
           if(occurrence.symbol_id===state.symbol)token.classList.add("lr-symbol-selected");
           if(state.reference&&occurrence.symbol_id===state.reference.symbol_id&&occurrence.source_id===state.reference.source_id&&occurrence.start_byte===state.reference.start_byte&&occurrence.end_byte===state.reference.end_byte)token.classList.add("lr-reference-selected");
-          code.append(token);cursor=occurrence.end;
+          appendToken(token,occurrence);cursor=occurrence.end;
         }
-        appendTrivia(code,content.slice(cursor,lineEnd)||(!line?" ":""));lineContent.append(code);code.addEventListener("click",()=>selectLine(owning,lineNumber));
+        appendTrivia(code,content.slice(cursor,lineEnd)||(!line?" ":""));
+        lineContent.append(code);code.addEventListener("click",()=>selectLine(owning,lineNumber));
+        if(lineIssues.length){const issue=lineIssues[0],note=button("↳ "+sourceIssueLabel(issue),"lr-inline-failure",event=>{event.stopPropagation();selectSourceIssue(issue.id);});note.dataset.issue=issue.id;note.addEventListener("mouseenter",()=>hoverProofTarget(note));note.addEventListener("focus",()=>hoverProofTarget(note));note.addEventListener("pointerleave",leaveProof);lineContent.append(note);}
         const declarations=declarationsAt.get(lineNumber)||[];
         if(declarations.length){const counts=element("span","lr-definition-references");for(const declaration of declarations){const uses=referenceUses(declaration.symbol_id,source.id),name=symbols.get(declaration.symbol_id)?.name||"",label=t("referenceCount").replace("{count}",uses.length);const count=button((declarations.length>1?name+" · ":"")+label,"lr-reference-count",()=>openReferences(declaration.symbol_id,source.id,count));count.dataset.symbol=declaration.symbol_id;count.setAttribute("aria-label",t("referenceFor").replace("{name}",name)+" · "+label);counts.append(count);}lineContent.append(counts);}
         const inferredIds=[...new Set(inferredAt.get(lineNumber)||[])];
         if(inferredIds.length){
           const results=element("span","lr-inline-inferences");results.setAttribute("role","group");results.setAttribute("aria-label",t("inferredFacts"));
-          const toggle=button(t("inferredCount").replace("{count}",inferredIds.length),"lr-inference-toggle",()=>openInferences(inferredIds,source.id,toggle));
+          const previews=inferredIds.map(id=>({id,text:factDisplayText(facts.get(id))})),preview=previews.find(value=>!value.text.includes("\n"))||previews[0];
+          const toggle=button("","lr-inference-toggle",()=>openInferences(inferredIds,source.id,toggle));toggle.append(element("span","lr-inference-preview","→ "+preview.text));
+          if(inferredIds.length>1)toggle.append(element("small","lr-inference-extra",editText("另 "+(inferredIds.length-1)+" 条",(inferredIds.length-1)+" more")));
+          toggle.setAttribute("aria-label",t("inferredFacts")+": "+preview.text+(inferredIds.length>1?editText("；另 "+(inferredIds.length-1)+" 条","; "+(inferredIds.length-1)+" more"):""));toggle.title=editText("查看本行的全部推导结果","View all inferred results for this line");
           toggle.dataset.facts=JSON.stringify(inferredIds);toggle.setAttribute("aria-expanded","false");toggle.setAttribute("aria-haspopup","dialog");
+          toggle.addEventListener("mouseenter",()=>hoverInferences(toggle));toggle.addEventListener("focus",()=>hoverInferences(toggle));toggle.addEventListener("pointerleave",leaveInferences);
+          toggle.addEventListener("keydown",event=>{if((event.key==="ArrowRight"||event.key==="Tab"&&!event.shiftKey)&&inferencePopover?.owner===toggle){event.preventDefault();inferencePopover.transient=false;inferencePopover.node.querySelector("summary")?.focus();}});
           if(inferredIds.includes(state.fact))toggle.classList.add("lr-inferred-selected");else if(inferredIds.some(id=>citations.includes(id)))toggle.classList.add("lr-inferred-premise");
           results.append(toggle);
           lineContent.append(results);
         }
-        row.append(lineContent);codePane.append(row);lineStart=lineEnd+1;lineByteStart+=encoder.encode(line).length+1;
+        row.append(lineContent);codePane.append(row);lineStart=lineEnd+1;lineByteStart=lineByteEnd+1;
       }
       const selectedInference=codePane.querySelector(".lr-inferred-selected"),selectedMarker=selectedInference||codePane.querySelector(".lr-reference-selected"),selectedRow=selectedMarker||codePane.querySelector(".lr-selected");if(selectedRow){const rowBounds=selectedRow.getBoundingClientRect(),paneBounds=codePane.getBoundingClientRect();if(rowBounds.bottom>paneBounds.bottom||rowBounds.top<paneBounds.top)codePane.scrollTop+=rowBounds.top-paneBounds.top-codePane.clientHeight/3;if(selectedMarker&&(rowBounds.right>paneBounds.right||rowBounds.left<paneBounds.left))codePane.scrollLeft+=rowBounds.left-paneBounds.left-64;}
     }
 
     function factButton(id){
       const fact=facts.get(id),node=button("","lr-fact-link"+(factInferences(id).length?" lr-inferred-link":""),()=>selectFact(id));node.append(fact?factFormula(fact):formula(id));
+      node.dataset.fact=id;
+      if(fact){
+        const location=factLocation(fact),source=sources.get(location.sourceId);if(source&&location.line)node.title=sourceTitle(source)+" · "+t("referenceLine").replace("{line}",location.line);
+        const show=()=>peekCitation(id),clear=()=>peekCitation(null);node.addEventListener("mouseenter",show);node.addEventListener("focus",show);node.addEventListener("mouseleave",clear);node.addEventListener("blur",clear);
+      }
       if(fact?.role==="hypothesis")node.append(element("small",null,t("hypothesis")));if(!fact)node.disabled=true;return node;
+    }
+    function peekCitation(id){
+      if(!codePane)return;const fact=facts.get(id),location=fact&&factLocation(fact);
+      for(const row of codePane.querySelectorAll(".lr-code-row"))row.classList.toggle("lr-citation-peek",!!location&&location.sourceId===state.source&&Number(row.dataset.line)===location.line);
+      for(const result of codePane.querySelectorAll(".lr-inference-toggle"))result.classList.toggle("lr-citation-peek",!!id&&array(JSON.parse(result.dataset.facts||"[]")).includes(id));
     }
 
     function renderStatement(){
@@ -1337,7 +1715,9 @@
     }
 
     function renderFact(){
-      const fact=facts.get(state.fact);if(!fact)return;if(factInferences(fact.id).length){renderInferredFact();return;}
+      const fact=facts.get(state.fact);if(!fact)return;if(Number.isInteger(state.chainStep)){appendEqualityStep(detailPane,fact,state.chainStep);return;}
+      if(["verified","hypothesis"].includes(fact.role)){if(appendPredicateDefinition(detailPane,fact))detailPane.append(element("h4","lr-proof-section-title",editText("证明","Proof")));appendProofBody(detailPane,fact);return;}
+      if(factInferences(fact.id).length){renderInferredFact();return;}
       const producer=statements.get(fact.producer_statement_id),model=producer?.mathematics?.subject===fact.text?statementEquivalence(producer):null;
       if(!renderMath(model))detailPane.append(factFormula(fact));
       if(fact.role==="hypothesis")detailPane.append(element("p","lr-empty-note",t("underHypotheses")));else if(fact.scope_id&&!String(fact.scope_id).startsWith("file:"))detailPane.append(element("p","lr-empty-note",t("local")));
@@ -1448,29 +1828,38 @@
     function showRule(id){activeRule=id;rulebookState={query:id,usedOnly:false,open:true,category:"all"};rulebook.open=true;ruleSearch.value=id;usedOnly.checked=false;rulebook.querySelector("select").value="all";rulePage=0;renderRules();rulebook.scrollIntoView({block:"nearest",behavior:"smooth"});}
 
     const dismissPanels=event=>{if(proofPopover&&!proofPopover.node.contains(event.target))closeProof();const explanation=root.querySelector(".lr-context-explanation");if(explanation&&!explanation.hidden&&!explanation.contains(event.target)&&!codePane?.contains(event.target)&&!event.target.closest?.(".lr-ide-input"))closeExplanation();if(inferencePopover&&!inferencePopover.node.contains(event.target)&&!inferencePopover.owner.contains(event.target))closeInferences();const records=root.querySelector(".lr-records");if(records?.open&&!records.contains(event.target))records.open=false;const menu=root.querySelector(".lr-book-nav");if(menu?.open&&!menu.contains(event.target))menu.open=false;};
-    const dismissInferences=event=>{if(event.key==="Escape"){closeProof();closeExplanation();}if(event.key==="Escape"&&inferencePopover){event.preventDefault();event.stopPropagation();closeInferences(true);}};
+    const dismissInferences=event=>{if(event.key==="Escape"){closeProof(!!proofPopover?.node.contains(document.activeElement));closeExplanation(true);}if(event.key==="Escape"&&inferencePopover){event.preventDefault();event.stopPropagation();closeInferences(true);}};
     document.addEventListener("pointerdown",dismissPanels);
     root.addEventListener("keydown",dismissInferences);
     window.addEventListener("scroll",positionOverlays,true);
     window.addEventListener("resize",positionOverlays);
     index();render();
     const api = {
-      update(document,settings={}){if(!settings.preserveDrafts){drafts.clear();originals.clear();revision=0;checkedRevision=0;idePositions.clear();editError="";}if(document.kind==="reading_manifest")throw new Error("Use LitexReading.open for a manifest");generation++;navigationSerial++;bookSerial++;loader=null;allOccurrencesLoaded=true;bookIndex=null;bookQuery="";bookOpen=null;operationStatus="";bundle=document;history=[];state={source:null,statement:null,symbol:null,fact:null,wd:null,focusLine:null};activeRule=null;rulePage=0;rulebookState={query:"",usedOnly:true,open:false,category:"all"};index();render();if(options.onNavigate)options.onNavigate({...state},{bundle_id:bundle.bundle_id||null});},
-      setLanguage(value){locale=value;render();},
-      selectStatement(id){return statements.has(id)?selectStatement(id):false;},
+      update(document,settings={}){if(destroyed)return;checkSerial++;checking=false;if(!settings.preserveDrafts){drafts.clear();originals.clear();revision=0;checkedRevision=0;idePositions.clear();editError="";}if(document.kind==="reading_manifest")throw new Error("Use LitexReading.open for a manifest");generation++;navigationSerial++;bookSerial++;loader=null;allOccurrencesLoaded=true;bookIndex=null;bookQuery="";bookOpen=null;operationStatus="";bundle=document;history=[];state={source:null,statement:null,symbol:null,fact:null,wd:null,focusLine:null};activeRule=null;rulePage=0;rulebookState={query:"",usedOnly:true,open:false,category:"all"};index();render();if(options.onNavigate)options.onNavigate({...state},{bundle_id:bundle.bundle_id||null});},
+      setLanguage(value){if(destroyed)return;locale=value;render();},
+      selectStatement(id){return !pending()&&statements.has(id)?selectStatement(id):false;},
       selectFact(id){return facts.has(id)?selectFact(id):false;},
       selectWellDefinedness(id){return wellDefinedness.has(id)?selectWellDefinedness(id):false;},
       getSelection(){return {...state};},
       getBundleId(){return bundle.bundle_id||null;},
+      hasLocalEdits(){return [...drafts].some(([path,content])=>content!==originals.get(path));},
       async getProjectSnapshot(){
-        const snapshotSources=[];
-        for(const source of sources.values()){
+        if(destroyed)throw new Error(editText("阅读器已关闭。","The reader is closed."));
+        const snapshotSources=[],epoch=generation,configuration=bundle.configurations||[],strict=bundle.execution_policy?.strict===true;
+        for(const source of [...sources.values()]){
           if(typeof source.content==="string")snapshotSources.push({...source});
-          else if(loader){const chunk=await loader.loadSource(source.id);snapshotSources.push({...source,...chunk.sources.find(item=>item.id===source.id)});}
+          else{
+            let content;
+            if(loader?.loadSourceText)content=await loader.loadSourceText(source.id);
+            else if(loader){const chunk=await loader.loadSource(source.id);content=chunk.sources.find(item=>item.id===source.id)?.content;}
+            if(destroyed||epoch!==generation)throw new Error(editText("准备源码时打开的文档已改变，请重新检查。","The opened document changed while preparing its source. Check again."));
+            if(typeof content!=="string")throw new Error(editText("源码暂不可用。","Source text is unavailable."));
+            snapshotSources.push({...source,content});
+          }
         }
-        return {sources:snapshotSources,configurations:bundle.configurations||[],strict:bundle.execution_policy?.strict===true};
+        return {sources:snapshotSources,configurations:configuration,strict};
       },
-      destroy(){closeInferences();hideTokenHelp();closeProof();window.removeEventListener("scroll",positionOverlays,true);window.removeEventListener("resize",positionOverlays);destroyed=true;generation++;navigationSerial++;bookSerial++;document.removeEventListener("pointerdown",dismissPanels);root.removeEventListener("keydown",dismissInferences);root.replaceChildren();}
+      destroy(){checkSerial++;checking=false;closeInferences();hideTokenHelp();closeProof();window.removeEventListener("scroll",positionOverlays,true);window.removeEventListener("resize",positionOverlays);destroyed=true;generation++;navigationSerial++;bookSerial++;document.removeEventListener("pointerdown",dismissPanels);root.removeEventListener("keydown",dismissInferences);root.replaceChildren();}
     };
     return api;
   }
@@ -1494,9 +1883,18 @@
     const localURL=path=>{const url=new URL(path,base);if(url.origin!==base.origin)throw new Error("Reading parts must share the manifest origin");return url.href;};
     const part=async(path,kind)=>{const value=await fetchJSON(localURL(path));if(value.kind!==kind||value.manifest_id!==manifest.manifest_id)throw new Error((options.locale||manifest.language||"").startsWith("zh")?copy.zh.changedBuild:copy.en.changedBuild);return value;};
     const sources=new Map(array(manifest.sources).map(value=>[value.id,value]));
-    const pending=new Map();let occurrencePromise,searchPromise;
+    const pending=new Map(),sourcePending=new Map();let occurrencePromise,searchPromise;
     const loader={
       loadSource(id){if(!pending.has(id)){const source=sources.get(id);if(!source)throw new Error("Unknown reading source");pending.set(id,part(source.chunk_url,"reading_chunk").then(value=>{if(value.source_id!==id||value.sources?.length!==1||value.sources[0].id!==id)throw new Error("Mismatched reading source");return value;}).catch(error=>{pending.delete(id);throw error;}));}return pending.get(id);},
+      loadSourceText(id){
+        if(!sourcePending.has(id)){
+          const source=sources.get(id);if(!source)throw new Error("Unknown reading source");
+          if(source.source_url!==undefined&&(typeof source.source_url!=="string"||!source.source_url))throw new Error("Invalid reading source URL");
+          const request=source.source_url?part(source.source_url,"reading_source").then(value=>value.source):loader.loadSource(id).then(value=>value.sources?.[0]);
+          sourcePending.set(id,request.then(value=>{if(value?.id!==id||value.path!==source.path||typeof value.content!=="string")throw new Error("Mismatched reading source text");return value.content;}).catch(error=>{sourcePending.delete(id);throw error;}));
+        }
+        return sourcePending.get(id);
+      },
       loadOccurrences(){return occurrencePromise||(occurrencePromise=part(manifest.occurrences_url,"reading_occurrences").catch(error=>{occurrencePromise=null;throw error;}));},
       loadSearch(){return searchPromise||(searchPromise=part(manifest.search_url,"reading_search").catch(error=>{searchPromise=null;throw error;}));},
       downloadUrl:localURL(manifest.full_document_url)

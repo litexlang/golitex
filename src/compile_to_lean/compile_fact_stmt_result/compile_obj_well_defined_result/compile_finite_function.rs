@@ -40,10 +40,10 @@ impl LitexToLeanCompiler {
         }
         let call = position
             .with_visible_wd(&goal.element, &mut |wd, producer| {
-                let ObjWellDefinedProof::ByDef {
+                let DetailedObjWellDefinedProof::ByDef {
                     proof: ObjWellDefinedProofByDef::FnObj(wd_call),
                     ..
-                } = wd
+                } = (wd).detailed_ref()
                 else {
                     return Err(LeanCompileError::unsupported("FiniteReturn/Constructor"));
                 };

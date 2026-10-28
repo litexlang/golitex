@@ -100,12 +100,15 @@ mod tests {
     };
 
     fn checked() -> (RunLitexCodeResult, LitexToLeanCompiler) {
-        let mut runtime = Runtime::new(LaunchCommand::Eval {
-            code: String::new(),
-            session: false,
-            strict: true,
-            language: OutputLanguage::English,
-        });
+        let mut runtime = Runtime::new_with_result_detail(
+            LaunchCommand::Eval {
+                code: String::new(),
+                session: false,
+                strict: true,
+                language: OutputLanguage::English,
+            },
+            crate::result_detail::OutputDetail::Detailed,
+        );
         let result = runtime
             .run_litex_code("have coordinate_receiver cart(R, R)\n")
             .unwrap();

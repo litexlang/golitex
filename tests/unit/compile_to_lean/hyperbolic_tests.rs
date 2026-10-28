@@ -24,13 +24,19 @@ fn hyperbolic_wd_rejects_missing_or_wrong_nonzero_argument() {
         let atom = super::atomic_proof_mut(
             &mut super::fact_statement_mut(&mut run.statement_results[0]).verify_result,
         );
-        let ObjWellDefinedProof::ByDef {
+        let DetailedObjWellDefinedProof::ByDef {
             proof:
                 ObjWellDefinedProofByDef::HyperbolicOperator(
                     HyperbolicOperatorObjWellDefinedProofByDef::Coth(wd),
                 ),
             ..
-        } = &mut atom.well_defined_proof.well_defined_of_each_parameter[0]
+        } = (&mut atom
+            .well_defined_proof
+            .as_detailed_mut()
+            .unwrap()
+            .well_defined_of_each_parameter[0])
+            .as_detailed_mut()
+            .unwrap()
         else {
             panic!("coth WD");
         };

@@ -6,8 +6,11 @@ const SOURCE: &str = "have fn vec(A, B cart(R, R)) cart(R, R) = (B(1) - A(1), B(
 fn call(statement: &mut ExecStmtResult) -> &mut FnObjObjWellDefinedProof {
     let fact = super::forall_proof_mut(statement);
     let equality = super::equality_proof_mut(&mut fact.proved_then_facts[0].verify_result);
-    match &mut equality.well_defined_proof.left {
-        ObjWellDefinedProof::ByDef {
+    match (&mut equality.well_defined_proof.as_detailed_mut().unwrap().left)
+        .as_detailed_mut()
+        .unwrap()
+    {
+        DetailedObjWellDefinedProof::ByDef {
             proof: ObjWellDefinedProofByDef::FnObj(proof),
             ..
         } => proof,
@@ -68,11 +71,11 @@ fn returned_cart_call_wd_lets_only_reuse_emitted_original_children() {
     let (mut result, _) = super::execute(SOURCE);
     let fact = super::forall_proof_mut(&mut result.statement_results[1]);
     let equality = super::equality_proof_mut(&mut fact.proved_then_facts[0].verify_result);
-    let owner = &equality.well_defined_proof.left;
-    let ObjWellDefinedProof::ByDef {
+    let owner = &equality.well_defined_proof.detailed_ref().left;
+    let DetailedObjWellDefinedProof::ByDef {
         proof: ObjWellDefinedProofByDef::FnObj(call),
         ..
-    } = owner
+    } = (owner).as_detailed().unwrap()
     else {
         panic!("original call WD")
     };
@@ -104,10 +107,12 @@ fn returned_cart_call_output_reuse_requires_the_original_application_and_wd() {
     let VerifyEqualityResult::Success(equality) = equality.as_ref() else {
         panic!("successful equality")
     };
-    let ObjWellDefinedProof::ByDef {
+    let DetailedObjWellDefinedProof::ByDef {
         obj: Obj::FnObj(application),
         proof: ObjWellDefinedProofByDef::FnObj(call),
-    } = &equality.well_defined_proof.left
+    } = (&equality.well_defined_proof.detailed_ref().left)
+        .as_detailed()
+        .unwrap()
     else {
         panic!("original call WD")
     };

@@ -8,7 +8,7 @@
   const status=document.getElementById("upload-status");
   const fileInput=document.getElementById("source-files");
   const folderInput=document.getElementById("project-files");
-  const parentOrigin=(()=>{try{return document.referrer?new URL(document.referrer).origin:null;}catch{return null;}})();
+  const parentOrigin=(()=>{try{const origin=document.referrer?new URL(document.referrer).origin:null;return origin==="null"?null:origin;}catch{return null;}})();
   let projectSnapshot=null;
   const buildEndpoint=live?"/api/reading/build":document.getElementById("reading-build-endpoint")?.textContent.trim();
   async function checkSource({changes,sourcePath,locale}){
@@ -19,8 +19,12 @@
     if(configs.length>1||configs.some(item=>item.configuration.imports?.length))throw new Error(locale==="zh"?"此项目包含额外模块依赖，请先用完整项目打开；当前编辑检查支持独立文件和单配置教材。":"This project has module dependencies. Open the complete project; inline checking currently supports single-configuration books and independent files.");
     const files=project.sources.map(source=>({path:source.path,content:changes[source.path]??source.content}));
     if(files.some(file=>typeof file.content!=="string"))throw new Error("Source snapshot is incomplete");
-    const exports=configs[0]?.configuration.exports||[];
+    let exports=configs[0]?.configuration.exports||[];
     if(exports.length){
+      // A file export may retain only the executed prefix of its project.
+      // Missing later chapters are not dependencies of the selected target.
+      const target=exports.findIndex(item=>item.path===sourcePath);
+      if(target>=0&&exports.some(item=>!files.some(file=>file.path===item.path)))exports=exports.slice(0,target+1);
       if(exports.some(item=>!files.some(file=>file.path===item.path)))throw new Error(locale==="zh"?"教材依赖不完整，未开始检查。":"Book dependencies are incomplete; nothing was checked.");
       files.push({path:"litex.config",content:"[export]\n"+exports.map(item=>item.name+" = "+JSON.stringify("./"+item.path)).join("\n")+"\n"});
     }
@@ -49,7 +53,22 @@
   if(!buildEndpoint)fileInput.accept=".json";
   function labels(){const zh=language.value==="zh";document.getElementById("language-label").textContent=zh?"语言":"Language";document.documentElement.lang=zh?"zh-CN":"en";document.body.dataset.dropLabel=buildEndpoint?(zh?"把自己的文件放到这里":"Drop your files here"):(zh?"把阅读记录放到这里":"Drop reading records here");}
   labels();
-  language.addEventListener("change",()=>{labels();reader.setLanguage(language.value);});
+  language.addEventListener("change",()=>{
+    // Alternate source pages belong to this authored document, not a file the
+    // reader subsequently opened. Never discard an edited source on a UI switch.
+    const alternate=document.querySelector('link[rel="alternate"][hreflang="'+language.value+'"]');
+    if(alternate&&typeof initial.bundle_id==="string"&&reader.getBundleId()===initial.bundle_id){
+      try{
+        const url=new URL(alternate.getAttribute("href"),location.href);
+        if(url.origin===location.origin&&["http:","https:","file:"].includes(url.protocol)){
+          url.searchParams.set("lang",language.value);
+          if(url.href!==location.href&&!reader.hasLocalEdits()){location.assign(url.href);return;}
+          if(reader.hasLocalEdits())report(language.value==="zh"?"已切换界面语言，保留你修改过的源码。示例目录中可打开对应语言的原文。":"Interface language changed; your edited source is kept. The example menu opens the original source in either language.");
+        }
+      }catch{/* An invalid alternate link does not affect the current document. */}
+    }
+    labels();reader.setLanguage(language.value);
+  });
   fileInput.addEventListener("change",()=>upload([...fileInput.files].map(file=>({file,path:file.webkitRelativePath||file.name}))));
   folderInput.addEventListener("change",()=>upload([...folderInput.files].map(file=>({file,path:file.webkitRelativePath||file.name}))));
   window.addEventListener("message",event=>{

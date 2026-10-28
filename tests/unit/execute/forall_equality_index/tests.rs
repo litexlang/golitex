@@ -1,9 +1,10 @@
 use super::*;
 use crate::ast::fact::{AtomicFact, DirectForallConclusionLocation, Fact};
 use crate::ast::obj::{Add, ArithmeticOperator, FnObj, FnObjHead, IdentifierObj, Literal, Number};
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::DetailedForallConclusionArgMatchProof;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::{
-    EqualFactSearchedProof, EqualFactSearchedProofByEquivalenceClass,
-    ForallConclusionArgMatchProof, StrictEqualArgProof, VerifyEqualityResult,
+    EqualFactSearchedProof, EqualFactSearchedProofByEquivalenceClass, StrictEqualArgProof,
+    VerifyEqualityResult,
 };
 use crate::execute::execute_fact_stmt::verify_forall_fact::{
     VerifyForallFactProof, VerifyForallFactResult,
@@ -14,12 +15,15 @@ use crate::launch_command::{LaunchCommand, OutputLanguage};
 use crate::runtime::Runtime;
 
 fn runtime() -> Runtime {
-    Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language: OutputLanguage::English,
-    })
+    Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    )
 }
 
 #[test]
@@ -211,20 +215,24 @@ fn primary_tracer_keeps_real_forall_and_rigid_path_evidence() {
         .local_env
         .facts
         .facts_by_id
-        .contains_key(&proof.cite.fact_id));
+        .contains_key(&proof.detailed_ref().cite.fact_id));
     assert_eq!(
         proof
+            .detailed_ref()
             .instantiation_requirements
+            .detailed_ref()
             .param_type_requirements
             .len(),
         1
     );
-    let ForallConclusionArgMatchProof::ByStructure { child_matches, .. } =
-        &proof.arg_match_proofs[0]
+    let DetailedForallConclusionArgMatchProof::ByStructure { child_matches, .. } =
+        (proof.detailed_ref().arg_match_proofs[0]).detailed_ref()
     else {
         panic!("addition transport");
     };
-    let ForallConclusionArgMatchProof::NonParamEqual { equal, .. } = &child_matches[1] else {
+    let DetailedForallConclusionArgMatchProof::NonParamEqual { equal, .. } =
+        (child_matches[1]).detailed_ref()
+    else {
         panic!("rigid value transport");
     };
     let StrictEqualArgProof::ByEquivalenceClass(
@@ -301,12 +309,15 @@ fn index_lifetime_follows_commit_failed_claim_and_sketch() {
 #[test]
 fn order_chain_adjacent_cites_do_not_prove_atomic_goal_after_merge() {
     // Trust is forbidden under `-strict`; this case needs an ordinary session.
-    let mut rt = Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: false,
-        language: OutputLanguage::English,
-    });
+    let mut rt = Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: false,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    );
     let run = rt
         .run_litex_code(
             "trust:\n    forall a, b R:\n        a < b < a + 1\n\nhave x R\nhave y R\nx < y",

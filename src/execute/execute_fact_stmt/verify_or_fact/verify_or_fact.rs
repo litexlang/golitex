@@ -6,7 +6,6 @@ use crate::exec_env::known_forall_conclusion_memory::{
     or_at_forall_location, ForallConclusionCite,
 };
 use crate::exec_env::or_fact_index_key::or_fact_index_key;
-use crate::execute::execute_fact_stmt::verify_atomic_fact::match_forall_conclusion_args::subst_from_ordered_params;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::SearchProofByKnownForallFact;
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::execute::execute_fact_stmt::verify_or_fact::result::{
@@ -263,8 +262,8 @@ impl Runtime {
         else {
             return Ok(None);
         };
-        let subst =
-            subst_from_ordered_params(&param_ids, &matched.forall_parameters_match_what_args);
+        let (subst, forall_parameters_match_what_args, arg_match_proofs) =
+            matched.into_parts(self.result_detail())?;
 
         // Step 4: prove param-type obligations, then dom facts.
         let Some(instantiation_requirements) =
@@ -273,12 +272,14 @@ impl Runtime {
             return Ok(None);
         };
 
-        Ok(Some(SearchProofByKnownForallFact {
-            cite: cite.clone(),
-            forall_parameters_match_what_args: matched.forall_parameters_match_what_args,
-            arg_match_proofs: matched.arg_match_proofs,
+        Ok(Some(SearchProofByKnownForallFact::from_children(
+            self.result_detail(),
+            cite.clone(),
+            &forall,
+            forall_parameters_match_what_args,
+            arg_match_proofs,
             instantiation_requirements,
-        }))
+        )?))
     }
 }
 

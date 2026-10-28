@@ -2,12 +2,15 @@ use crate::launch_command::{LaunchCommand, OutputLanguage};
 use crate::runtime::Runtime;
 
 fn check(code: &str, expected: bool) {
-    let mut rt = Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language: OutputLanguage::English,
-    });
+    let mut rt = Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    );
     let result = rt
         .run_litex_code(code)
         .expect("valid syntax and no internal error");
@@ -146,12 +149,15 @@ fn all_quantifier_wd_paths_introduce_dependent_groups_locally() {
         "not forall A nonempty_set, a A:\n    a = a\n",
         "forall A nonempty_set, a A:\n    =>:\n        a = a\n    <=>:\n        a = a\n",
     ] {
-        let mut rt = Runtime::new(LaunchCommand::Eval {
-            code: String::new(),
-            session: false,
-            strict: true,
-            language: OutputLanguage::English,
-        });
+        let mut rt = Runtime::new_with_result_detail(
+            LaunchCommand::Eval {
+                code: String::new(),
+                session: false,
+                strict: true,
+                language: OutputLanguage::English,
+            },
+            crate::result_detail::OutputDetail::Detailed,
+        );
         let tokens = Tokenizer::new()
             .tokenize(code, rt.current_file.clone())
             .unwrap();
@@ -184,12 +190,15 @@ fn order_complement_rejects_nonreal_carriers_and_keeps_premise_evidence() {
         "forall a, b C:\n    not a <= b\n    =>:\n        a > b\n",
         false,
     );
-    let mut rt = Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language: OutputLanguage::English,
-    });
+    let mut rt = Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    );
     let result = rt
         .run_litex_code("forall a, b R:\n    not a <= b\n    =>:\n        a > b\n")
         .unwrap();

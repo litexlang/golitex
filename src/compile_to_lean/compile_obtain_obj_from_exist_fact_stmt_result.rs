@@ -130,6 +130,7 @@ impl LitexToLeanCompiler {
             let expected = if index < count {
                 self.resolve_fact(
                     formation
+                        .detailed_ref()
                         .introduced_params
                         .defined_params
                         .store_and_infer_results[index]

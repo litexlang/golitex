@@ -95,7 +95,11 @@ impl Runtime {
         let source = match source {
             Some(source) => source,
             None => {
-                match self.parent_checked_beta_body(&receiver, &receiver_well_defined, state)? {
+                match self.parent_checked_beta_body(
+                    &receiver,
+                    receiver_well_defined.as_view(),
+                    state,
+                )? {
                     Some((body, Obj::ProductShape(ProductShape::Tuple(value)))) => {
                         StructTupleValueSource::Returned {
                             body: Box::new(body),

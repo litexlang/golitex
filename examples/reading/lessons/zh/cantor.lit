@@ -1,0 +1,26 @@
+# 见证与 Cantor 对角线
+# 为什么从 S 到其幂集的函数不可能是满射？
+
+# 先追踪三个对象：S、diagonal_set，以及后来取得的 a。
+thm cantor:
+    ? forall S set, f fn(x S) power_set(S):
+        not $surjective(S, power_set(S), f)
+    by contra:
+        ? not $surjective(S, power_set(S), f)
+        # 对角集合收集那些“不属于自己像”的 x。
+        # ⌘ / Ctrl + 点击 diagonal_set，查看它的真实定义。
+        have diagonal_set power_set(S) = {x S: not x $in f(x)}
+        $surjective(S, power_set(S), f)
+        # 满射性保证对角集合存在原像 a。
+        # 悬浮在 a 上，查看它的引入位置和所属范围。
+        obtain a from exist a S st {diagonal_set = f(a)}
+
+        # 这层局部反证先建立 a 属于对角集合。
+        # 再把同一个 a 代回对角集合的定义，观察矛盾。
+        by contra:
+            ? a $in diagonal_set
+            not a $in f(a)
+            a $in {x S: not x $in f(x)}
+            impossible not a $in diagonal_set
+
+        impossible not a $in f(a)

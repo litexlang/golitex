@@ -103,10 +103,23 @@ fn canonical_local_forall_keeps_formation_and_reference_stage_boundaries() {
             panic!()
         };
         match mutation {
-            0 => wd.then.clear(),
-            1 => wd.introduced_params.param_type_well_defined.clear(),
-            2 => wd.introduced_params.defined_params.stored_fact_ids.clear(),
+            0 => wd.as_detailed_mut().unwrap().then.clear(),
+            1 => wd
+                .as_detailed_mut()
+                .unwrap()
+                .introduced_params
+                .param_type_well_defined
+                .clear(),
+            2 => wd
+                .as_detailed_mut()
+                .unwrap()
+                .introduced_params
+                .defined_params
+                .stored_fact_ids
+                .clear(),
             3 => wd
+                .as_detailed_mut()
+                .unwrap()
                 .introduced_params
                 .defined_params
                 .store_and_infer_results
@@ -132,9 +145,14 @@ fn named_counterexample_requires_formation_and_derived_exist_capture() {
                     panic!()
                 };
                 if mutation == 0 {
-                    wd.then.clear();
+                    wd.as_detailed_mut().unwrap().then.clear();
                 } else {
-                    wd.introduced_params.defined_params.stored_fact_ids.clear();
+                    wd.as_detailed_mut()
+                        .unwrap()
+                        .introduced_params
+                        .defined_params
+                        .stored_fact_ids
+                        .clear();
                 }
             }
             2 => p.stored.infer = None,
@@ -218,8 +236,8 @@ fn unsupported_false_closings_do_not_gain_proof_evidence() {
         "by contra:\n    ? exist! x R st {x = x}\n    impossible exist! y R st {y = y}\n",
         "thm false_counterexample:\n    ? not forall x R:\n        x = x\n    0 = 0\n",
     ] {
-        let mut runtime = Runtime::new(LaunchCommand::Eval { code: String::new(), session: false,
-            strict: true, language: OutputLanguage::English });
+        let mut runtime = Runtime::new_with_result_detail(LaunchCommand::Eval { code: String::new(), session: false,
+            strict: true, language: OutputLanguage::English }, crate::result_detail::OutputDetail::Detailed);
         assert!(!runtime.run_litex_code(source).unwrap().success);
     }
 }

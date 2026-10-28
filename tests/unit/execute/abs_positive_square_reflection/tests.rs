@@ -4,12 +4,15 @@ const ABS: &str = "forall x R:\n    x!=0\n    =>:\n        abs(x)>0\n";
 const SQUARE: &str = "forall x,y R:\n    x>=0\n    y>=0\n    x^2<=y^2\n    =>:\n        x<=y\n";
 
 fn runtime(language: OutputLanguage) -> Runtime {
-    Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language,
-    })
+    Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    )
 }
 
 fn check(rt: &mut Runtime, source: &str, expected: bool) -> RunLitexCodeResult {

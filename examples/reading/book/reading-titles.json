@@ -1,0 +1,17 @@
+{
+  "kind": "reading_titles",
+  "sources": {
+    "01-definitions.lit": {
+      "zh": "定义与定理",
+      "en": "Definitions and theorems"
+    },
+    "02-applications.lit": {
+      "zh": "使用已有结论",
+      "en": "Using established results"
+    },
+    "03-local-proofs.lit": {
+      "zh": "从假设得到结论",
+      "en": "From assumptions to a conclusion"
+    }
+  }
+}

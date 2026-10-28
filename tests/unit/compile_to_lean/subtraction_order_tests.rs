@@ -237,7 +237,11 @@ fn subtraction_order_rejects_missing_predicate_domain_evidence() {
     let (mut run, compiler) = super::execute(RIGHT);
     let forall = super::forall_proof_mut(&mut run.statement_results[0]);
     let proof = super::atomic_proof_mut(&mut forall.proved_then_facts[0].verify_result);
-    proof.well_defined_proof.predicate_domain = PredicateDomainProof::ByRequirements(Vec::new());
+    proof
+        .well_defined_proof
+        .as_detailed_mut()
+        .unwrap()
+        .predicate_domain = PredicateDomainProof::ByRequirements(Vec::new());
     assert!(compiler
         .compile_run(&run, "missing_subtraction_domain")
         .is_err());

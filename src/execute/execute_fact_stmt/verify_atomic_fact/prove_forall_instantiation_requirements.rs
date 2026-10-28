@@ -82,12 +82,14 @@ impl Runtime {
                 if proof.is_failed() {
                     return Ok(None);
                 }
-                param_type_requirements.push(ForallParamTypeRequirementProof {
-                    param_id: param.id,
-                    arg: arg.clone(),
-                    type_fact,
-                    proof,
-                });
+                if self.result_detail() == crate::result_detail::OutputDetail::Detailed {
+                    param_type_requirements.push(ForallParamTypeRequirementProof {
+                        param_id: param.id,
+                        arg: arg.clone(),
+                        type_fact,
+                        proof,
+                    });
+                }
             }
         }
 
@@ -99,20 +101,32 @@ impl Runtime {
             };
             dom_facts.push(fact);
         }
-        let mut proof_of_dom_facts = Vec::with_capacity(dom_facts.len());
+        let mut proof_of_dom_facts =
+            if self.result_detail() == crate::result_detail::OutputDetail::Detailed {
+                Vec::with_capacity(dom_facts.len())
+            } else {
+                Vec::new()
+            };
         for fact in &dom_facts {
             let proof = self.verify_fact(fact, verify_state.clone())?;
             if proof.is_failed() {
                 return Ok(None);
             }
-            proof_of_dom_facts.push(proof);
+            if self.result_detail() == crate::result_detail::OutputDetail::Detailed {
+                proof_of_dom_facts.push(proof);
+            }
         }
 
-        Ok(Some(ProveForallInstantiationRequirementsProof {
+        Ok(Some(ProveForallInstantiationRequirementsProof::new(
+            self.result_detail(),
+            || {
+                crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::DetailedProveForallInstantiationRequirementsProof {
             param_type_requirements,
             dom_facts,
             proof_of_dom_facts,
-        }))
+        }
+            },
+        )))
     }
 }
 

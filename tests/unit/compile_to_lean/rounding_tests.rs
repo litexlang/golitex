@@ -120,10 +120,16 @@ fn rounding_wd_rejects_missing_domain_and_reuses_original_children() {
         let fact = super::atomic_proof_mut(
             &mut super::fact_statement_mut(&mut run.statement_results[1]).verify_result,
         );
-        let ObjWellDefinedProof::ByDef {
+        let DetailedObjWellDefinedProof::ByDef {
             proof: ObjWellDefinedProofByDef::ArithmeticOperator(p),
             ..
-        } = &mut fact.well_defined_proof.well_defined_of_each_parameter[0]
+        } = (&mut fact
+            .well_defined_proof
+            .as_detailed_mut()
+            .unwrap()
+            .well_defined_of_each_parameter[0])
+            .as_detailed_mut()
+            .unwrap()
         else {
             panic!("rounding WD")
         };
@@ -165,7 +171,8 @@ fn rounding_does_not_accept_complex_only_domains_or_false_bounds() {
     ] {
         let command =
             parse_launch_command(&["-strict".into(), "-e".into(), source.into()]).unwrap();
-        let mut runtime = Runtime::new(command);
+        let mut runtime =
+            Runtime::new_with_result_detail(command, crate::result_detail::OutputDetail::Detailed);
         let run = runtime.run_litex_code(source).unwrap();
         assert!(!run.success);
         assert!(super::LitexToLeanCompiler::new(runtime)

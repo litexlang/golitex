@@ -100,6 +100,9 @@ Ordered finite real derivatives:
 - [Finite unary function sums](real_analysis/function_sums/README.md) and
   [one-vector function sums](real_analysis/multivariable/function_sums/README.md):
   exact domains, used-prefix derivative candidates, empty sums and continuity.
+- [Real restriction of the Jacobian counterexample](real_analysis/jacobian_counterexample/README.md):
+  nine proved partials, actual Jacobian determinant -2 everywhere, explicit
+  collisions and no left inverse. The original complex theorem is outside this example.
 
 Real three-dimensional cross products:
 
@@ -160,4 +163,5 @@ Standalone regression examples:
 - [Finite-set inclusion-exclusion](combinatorics/finite_sets/README.md): overlapping unions, symmetric differences, products, powersets, empty boundaries and explicit imported finiteness evidence.
 - [Natural binomial coefficients](combinatorics/binomial/README.md): Pascal recursion, symmetry, column formulas, positivity, row order and full natural-domain boundaries.
 
-- [Finite event probability](probability/finite_events/README.md): generic event, conditional/Bayes and independence contracts, actual uniform event values and guarded boundaries. Bundled distribution constructors remain unfinished.
+- [Finite event probability](probability/finite_events/README.md): generic event, conditional/Bayes and independence contracts, actual uniform/Dirac probability spaces and guarded boundaries.
+- [Finite pushforward probability](probability/pushforward/README.md): actual image distributions, dice parity, constant maps and retained zero-mass image points.

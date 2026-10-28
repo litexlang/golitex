@@ -129,9 +129,8 @@ impl Runtime {
         };
         let mut children = children.into_iter();
         Ok(VerifyObjWellDefinedResult::Success(
-            ObjWellDefinedProof::ByDef {
-                obj,
-                proof: ObjWellDefinedProofByDef::IntegralOperator(
+            ObjWellDefinedProof::by_def(self.result_detail(), &(obj), None, || {
+                ObjWellDefinedProofByDef::IntegralOperator(
                     IntegralOperatorWellDefinedProof::Riemann(RiemannIntegralWellDefinedProof {
                         function_wd: Box::new(children.next().unwrap()),
                         lower_wd: Box::new(children.next().unwrap()),
@@ -140,8 +139,8 @@ impl Runtime {
                         requirements: completed,
                         selection,
                     }),
-                ),
-            },
+                )
+            }),
         ))
     }
     pub(crate) fn riemann_integral_candidate(

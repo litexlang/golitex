@@ -107,9 +107,8 @@ impl Runtime {
             }
         };
         Ok(VerifyObjWellDefinedResult::Success(
-            ObjWellDefinedProof::ByDef {
-                obj,
-                proof: ObjWellDefinedProofByDef::LimitOperator(
+            ObjWellDefinedProof::by_def(self.result_detail(), &(obj), None, || {
+                ObjWellDefinedProofByDef::LimitOperator(
                     LimitOperatorObjWellDefinedProofByDef::Function(
                         FunctionLimitObjWellDefinedProof {
                             function_wd: Box::new(function_wd),
@@ -120,8 +119,8 @@ impl Runtime {
                             convergence,
                         },
                     ),
-                ),
-            },
+                )
+            }),
         ))
     }
 

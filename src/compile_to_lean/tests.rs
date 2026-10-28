@@ -139,7 +139,8 @@ fn execute(source: &str) -> (RunLitexCodeResult, LitexToLeanCompiler) {
     let command =
         parse_launch_command(&["-strict".to_string(), "-e".to_string(), source.to_string()])
             .expect("strict command");
-    let mut runtime = Runtime::new(command);
+    let mut runtime =
+        Runtime::new_with_result_detail(command, crate::result_detail::OutputDetail::Detailed);
     let result = runtime.run_litex_code(source).expect("execute source");
     assert!(
         result.success,
@@ -182,7 +183,8 @@ fn compiler_struct_rejects_a_failed_source_run_after_a_successful_prefix() {
     let command =
         parse_launch_command(&["-strict".to_string(), "-e".to_string(), source.to_string()])
             .expect("strict command");
-    let mut runtime = Runtime::new(command);
+    let mut runtime =
+        Runtime::new_with_result_detail(command, crate::result_detail::OutputDetail::Detailed);
     let result = runtime.run_litex_code(source).expect("source outcome");
     assert!(!result.success);
     assert!(!result.statement_results[0].is_failed());
@@ -199,7 +201,8 @@ fn compiler_result_input_can_change_between_calls() {
     let command =
         parse_launch_command(&["-strict".to_string(), "-e".to_string(), source.to_string()])
             .expect("strict command");
-    let mut runtime = Runtime::new(command);
+    let mut runtime =
+        Runtime::new_with_result_detail(command, crate::result_detail::OutputDetail::Detailed);
     let generic = runtime
         .run_litex_code(source)
         .expect("the actual generic run");
@@ -262,12 +265,15 @@ fn proof_names_replay_original_fact_ids_for_parameters_declarations_citations_an
     let VerifyAtomicExceptEqualityFactResult::Success(call_verify) = call_verify.as_ref() else {
         panic!("the successful call sethood verification");
     };
-    let ObjWellDefinedProof::ByDef {
+    let DetailedObjWellDefinedProof::ByDef {
         proof: ObjWellDefinedProofByDef::FnObj(call_wd),
         ..
-    } = &call_verify
+    } = (&call_verify
         .well_defined_proof
-        .well_defined_of_each_parameter[0]
+        .detailed_ref()
+        .well_defined_of_each_parameter[0])
+        .as_detailed()
+        .unwrap()
     else {
         panic!("the actual function call constructor WD");
     };
@@ -340,12 +346,25 @@ fn selected_rational_route_uses_normalization_adapter() {
 }
 
 #[test]
-fn unsupported_command_after_supported_prefix_rejects_complete_artifact() {
+fn absolute_value_command_after_supported_prefix_replays_complete_artifact() {
     let (result, compiler) = execute("1 = 1\neval abs(-3)\n");
+    let output = compile_run(&result, &compiler, "absolute_value_command")
+        .expect("absolute value evaluation has a checked Lean adapter");
+    assert!(output.contains("Litex.absValue_number"));
+    assert!(!output.contains("sorry"));
+    assert_eq!(
+        output,
+        compile_run(&result, &compiler, "absolute_value_command").unwrap()
+    );
+}
+
+#[test]
+fn unsupported_command_after_supported_prefix_rejects_complete_artifact() {
+    let (result, compiler) = execute("1 = 1\neval sqrt(2)\n");
     let error = compile_run(&result, &compiler, "unsupported_command")
-        .expect_err("eval's first scalar consumer excludes absolute value");
+        .expect_err("square root evaluation has no Lean adapter");
     assert_eq!(error.statement_index, Some(2));
-    assert_eq!(error.route, "WD/Abs");
+    assert!(error.route.starts_with("WD/") || error.route.starts_with("Eval/"));
 }
 
 #[test]
@@ -380,9 +399,16 @@ fn known_wd_requires_the_exact_recorded_subject() {
         },
         _ => panic!("atomic result"),
     };
-    match &mut atomic.well_defined_proof.well_defined_of_each_parameter[0] {
-        ObjWellDefinedProof::ByKnown { wd_id, .. } => *wd_id = other_id,
-        ObjWellDefinedProof::ByDef { .. } => panic!("sethood should reuse one's WD"),
+    match (&mut atomic
+        .well_defined_proof
+        .as_detailed_mut()
+        .unwrap()
+        .well_defined_of_each_parameter[0])
+        .as_detailed_mut()
+        .unwrap()
+    {
+        DetailedObjWellDefinedProof::ByKnown { wd_id, .. } => *wd_id = other_id,
+        DetailedObjWellDefinedProof::ByDef { .. } => panic!("sethood should reuse one's WD"),
     }
     let error = compile_run(&result, &compiler, "wrong_wd_subject")
         .expect_err("another object's cache is not this certificate");
@@ -403,9 +429,18 @@ fn a_missing_wd_id_is_not_recovered_from_a_true_goal() {
         },
         _ => panic!("atomic result"),
     };
-    match &mut atomic.well_defined_proof.well_defined_of_each_parameter[0] {
-        ObjWellDefinedProof::ByKnown { wd_id, .. } => *wd_id = WellDefinednessId::new(u64::MAX),
-        ObjWellDefinedProof::ByDef { .. } => panic!("sethood should reuse one's WD"),
+    match (&mut atomic
+        .well_defined_proof
+        .as_detailed_mut()
+        .unwrap()
+        .well_defined_of_each_parameter[0])
+        .as_detailed_mut()
+        .unwrap()
+    {
+        DetailedObjWellDefinedProof::ByKnown { wd_id, .. } => {
+            *wd_id = WellDefinednessId::new(u64::MAX)
+        }
+        DetailedObjWellDefinedProof::ByDef { .. } => panic!("sethood should reuse one's WD"),
     }
     let error = compile_run(&result, &compiler, "missing_wd_id")
         .expect_err("the cited WD identity must resolve");
@@ -459,8 +494,11 @@ fn division_reflexivity_replays_nonzero_evidence_before_reflexivity() {
         },
         _ => panic!("equality result"),
     };
-    match &mut equality.well_defined_proof.left {
-        ObjWellDefinedProof::ByDef {
+    match (&mut equality.well_defined_proof.as_detailed_mut().unwrap().left)
+        .as_detailed_mut()
+        .unwrap()
+    {
+        DetailedObjWellDefinedProof::ByDef {
             proof:
                 ObjWellDefinedProofByDef::ArithmeticOperator(
                     ArithmeticOperatorObjWellDefinedProofByDef::Div(proof),
@@ -637,8 +675,11 @@ fn nonzero_product_guard_replays_actual_factor_children() {
     assert!(output.contains("mul_ne_zero"));
     let forall = forall_proof_mut(&mut result.statement_results[0]);
     let equality = equality_proof_mut(&mut forall.proved_then_facts[0].verify_result);
-    let div = match &mut equality.well_defined_proof.right {
-        ObjWellDefinedProof::ByDef {
+    let div = match (&mut equality.well_defined_proof.as_detailed_mut().unwrap().right)
+        .as_detailed_mut()
+        .unwrap()
+    {
+        DetailedObjWellDefinedProof::ByDef {
             proof:
                 ObjWellDefinedProofByDef::ArithmeticOperator(
                     ArithmeticOperatorObjWellDefinedProofByDef::Div(p),
@@ -721,8 +762,11 @@ fn integer_value_does_not_override_a_changed_power_domain() {
     };
     let forall = forall_proof_mut(&mut result.statement_results[0]);
     let equality = equality_proof_mut(&mut forall.proved_then_facts[0].verify_result);
-    let subtraction = match &mut equality.well_defined_proof.right {
-        ObjWellDefinedProof::ByDef {
+    let subtraction = match (&mut equality.well_defined_proof.as_detailed_mut().unwrap().right)
+        .as_detailed_mut()
+        .unwrap()
+    {
+        DetailedObjWellDefinedProof::ByDef {
             proof:
                 ObjWellDefinedProofByDef::ArithmeticOperator(
                     ArithmeticOperatorObjWellDefinedProofByDef::Sub(p),
@@ -731,8 +775,11 @@ fn integer_value_does_not_override_a_changed_power_domain() {
         } => p,
         _ => panic!("right subtraction WD"),
     };
-    let power = match subtraction.child_obj_well_defined[0].as_mut() {
-        ObjWellDefinedProof::ByDef {
+    let power = match (subtraction.child_obj_well_defined[0].as_mut())
+        .as_detailed_mut()
+        .unwrap()
+    {
+        DetailedObjWellDefinedProof::ByDef {
             proof:
                 ObjWellDefinedProofByDef::ArithmeticOperator(
                     ArithmeticOperatorObjWellDefinedProofByDef::Pow(p),
@@ -882,16 +929,21 @@ fn forged_false_rational_claim_requires_kernel_validation() {
     // Counterfeit only the test's result values. Keep valid source constructor
     // WD, binder/citation identities, and all primary store subjects aligned.
     equality.fact.right = parameter.clone();
-    match &equality.well_defined_proof.left {
-        ObjWellDefinedProof::ByDef {
+    match (&equality.well_defined_proof.detailed_ref().left)
+        .as_detailed()
+        .unwrap()
+    {
+        DetailedObjWellDefinedProof::ByDef {
             proof:
                 ObjWellDefinedProofByDef::ArithmeticOperator(
                     ArithmeticOperatorObjWellDefinedProofByDef::Add(p),
                 ),
             ..
         } => assert!(matches!(
-            p.child_obj_well_defined[0].as_ref(),
-            ObjWellDefinedProof::ByDef {
+            (p.child_obj_well_defined[0].as_ref())
+                .as_detailed()
+                .unwrap(),
+            DetailedObjWellDefinedProof::ByDef {
                 proof: ObjWellDefinedProofByDef::Identifier(_),
                 ..
             }
@@ -900,12 +952,12 @@ fn forged_false_rational_claim_requires_kernel_validation() {
     }
     // Plain identifier WD is a definition leaf, not a memoized WdId in the
     // current producer. Reproduce that actual empty leaf for the same binder.
-    equality.well_defined_proof.right = ObjWellDefinedProof::ByDef {
+    equality.well_defined_proof.as_detailed_mut().unwrap().right = crate::execute::execute_fact_stmt::ObjWellDefinedProof::Detailed(Box::new(DetailedObjWellDefinedProof::ByDef {
         obj: parameter,
         proof: ObjWellDefinedProofByDef::Identifier(
             crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IdentifierObjWellDefinedProof::new(),
         ),
-    };
+    }));
     equality.searched_proof =
         EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::Calculation(
             EqualitySearchProofByCalculation::Rational {},
@@ -1077,12 +1129,12 @@ fn phase1_local_theorem_alias_cannot_escape_into_a_later_statement() {
     };
     let equality = equality_proof_mut(&mut later.verify_result);
     equality.fact.left = temporary.clone();
-    equality.well_defined_proof.left = ObjWellDefinedProof::ByDef {
+    equality.well_defined_proof.as_detailed_mut().unwrap().left = crate::execute::execute_fact_stmt::ObjWellDefinedProof::Detailed(Box::new(DetailedObjWellDefinedProof::ByDef {
         obj: temporary,
         proof: ObjWellDefinedProofByDef::Identifier(
             crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IdentifierObjWellDefinedProof::new(),
         ),
-    };
+    }));
     let changed = equality.fact.clone();
     match &mut later.store_and_infer_result.store {
         StoreFactResult::AtomicFact(stored) => stored.fact = AtomicFact::EqualFact(changed),
@@ -1200,6 +1252,8 @@ fn phase1_invocation_requires_the_earlier_named_declaration() {
 fn phase1_theorem_goal_wd_requires_its_own_parameter_producers() {
     let (mut result, compiler) = execute(PHASE1_ADD_ZERO);
     theorem_goal_wd_mut(named_theorem_mut(&mut result.statement_results[0]))
+        .as_detailed_mut()
+        .unwrap()
         .introduced_params
         .defined_params
         .stored_fact_ids
@@ -1210,6 +1264,8 @@ fn phase1_theorem_goal_wd_requires_its_own_parameter_producers() {
 
     let (mut result, compiler) = execute(PHASE1_ADD_ZERO);
     theorem_goal_wd_mut(named_theorem_mut(&mut result.statement_results[0]))
+        .as_detailed_mut()
+        .unwrap()
         .introduced_params
         .defined_params
         .stored_fact_ids[0] = FactId::new(u64::MAX);
@@ -1242,7 +1298,10 @@ fn phase1_guarded_theorem_goal_wd_replays_the_exact_domain_store() {
 
     let (mut result, compiler) = execute(PHASE1_GUARDED_THEOREM);
     let wd = theorem_goal_wd_mut(named_theorem_mut(&mut result.statement_results[0]));
-    match &mut wd.assumed_dom_facts[0].store_and_infer.store {
+    match &mut wd.as_detailed_mut().unwrap().assumed_dom_facts[0]
+        .store_and_infer
+        .store
+    {
         StoreFactResult::AtomicFact(stored) => stored.fact_id = FactId::new(u64::MAX),
         _ => panic!("atomic nonzero domain store"),
     }
@@ -1255,6 +1314,8 @@ fn phase1_guarded_theorem_goal_wd_replays_the_exact_domain_store() {
 fn phase1_theorem_goal_wd_checks_every_exact_then_subject() {
     let (mut result, compiler) = execute(PHASE1_ADD_ZERO);
     theorem_goal_wd_mut(named_theorem_mut(&mut result.statement_results[0]))
+        .as_detailed_mut()
+        .unwrap()
         .then
         .clear();
     let error = compile_run(&result, &compiler, "phase1_missing_goal_then_wd")
@@ -1262,8 +1323,14 @@ fn phase1_theorem_goal_wd_checks_every_exact_then_subject() {
     assert_eq!(error.route, "WD/ForallThenArity");
 
     let (mut result, compiler) = execute(PHASE1_ADD_ZERO);
-    match &mut theorem_goal_wd_mut(named_theorem_mut(&mut result.statement_results[0])).then[0] {
-        FactWellDefinedProof::Equality(wd) => replace_wd_subject(&mut wd.left, number_object("9")),
+    match &mut theorem_goal_wd_mut(named_theorem_mut(&mut result.statement_results[0]))
+        .as_detailed_mut()
+        .unwrap()
+        .then[0]
+    {
+        FactWellDefinedProof::Equality(wd) => {
+            replace_wd_subject(&mut wd.as_detailed_mut().unwrap().left, number_object("9"))
+        }
         _ => panic!("equality goal WD"),
     }
     let error = compile_run(&result, &compiler, "phase1_changed_goal_then_wd")
@@ -1362,10 +1429,8 @@ fn phase1_explicit_selection_cannot_reverse_a_directly_returned_equality() {
     let call = by_theorem_mut(&mut result.statement_results[1]);
     let selected = equality_proof_mut(&mut call.selected_proof);
     std::mem::swap(&mut selected.fact.left, &mut selected.fact.right);
-    std::mem::swap(
-        &mut selected.well_defined_proof.left,
-        &mut selected.well_defined_proof.right,
-    );
+    let well_defined = selected.well_defined_proof.as_detailed_mut().unwrap();
+    std::mem::swap(&mut well_defined.left, &mut well_defined.right);
     match &mut selected.searched_proof {
         EqualFactSearchedProof::ByEquivalenceClass(
             EqualFactSearchedProofByEquivalenceClass::AlphaEndpoints(proof),
@@ -1564,8 +1629,11 @@ fn phase1_second_call_return_wd_cannot_cite_a_closed_first_call_type_proof() {
             .fact_id();
     let call = by_theorem_mut(&mut result.statement_results[6]);
     let add = match &mut call.conclusions_wd[0] {
-        FactWellDefinedProof::Equality(wd) => match &mut wd.left {
-            ObjWellDefinedProof::ByDef {
+        FactWellDefinedProof::Equality(wd) => match (&mut wd.as_detailed_mut().unwrap().left)
+            .as_detailed_mut()
+            .unwrap()
+        {
+            DetailedObjWellDefinedProof::ByDef {
                 proof:
                     ObjWellDefinedProofByDef::ArithmeticOperator(
                         ArithmeticOperatorObjWellDefinedProofByDef::Add(proof),
@@ -1872,10 +1940,9 @@ fn number_object(value: &str) -> Obj {
 }
 
 fn replace_wd_subject(wd: &mut ObjWellDefinedProof, replacement: Obj) {
-    match wd {
-        ObjWellDefinedProof::ByKnown { obj, .. } | ObjWellDefinedProof::ByDef { obj, .. } => {
-            *obj = replacement
-        }
+    match (wd).as_detailed_mut().unwrap() {
+        DetailedObjWellDefinedProof::ByKnown { obj, .. }
+        | DetailedObjWellDefinedProof::ByDef { obj, .. } => *obj = replacement,
     }
 }
 
@@ -2208,8 +2275,8 @@ fn phase2_half_substitution_rejects_a_closed_scope_equality_origin() {
 fn phase2_typed_half_preserves_the_original_division_wd_guard() {
     let (mut result, compiler) = execute(PHASE2_HALF);
     let value_wd = &mut have_equal_mut(&mut result.statement_results[0]).equal_to_well_defined[0];
-    match value_wd {
-        VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByDef {
+    match (value_wd).as_detailed_success_mut().unwrap() {
+        Some(DetailedObjWellDefinedProof::ByDef {
             proof:
                 ObjWellDefinedProofByDef::ArithmeticOperator(
                     ArithmeticOperatorObjWellDefinedProofByDef::Div(proof),
@@ -2278,14 +2345,23 @@ fn phase2_hierarchy_and_rational_closure_preserve_structural_carriers() {
                 .verify_result,
         );
         if change == "missing_wd" {
-            let original = atomic.well_defined_proof.well_defined_of_each_parameter[0]
+            let original = atomic
+                .well_defined_proof
+                .detailed_ref()
+                .well_defined_of_each_parameter[0]
                 .obj()
                 .clone();
-            atomic.well_defined_proof.well_defined_of_each_parameter[0] =
-                ObjWellDefinedProof::ByKnown {
-                    obj: original,
-                    wd_id: WellDefinednessId::new(u64::MAX),
-                };
+            atomic
+                .well_defined_proof
+                .as_detailed_mut()
+                .unwrap()
+                .well_defined_of_each_parameter[0] =
+                crate::execute::execute_fact_stmt::ObjWellDefinedProof::Detailed(Box::new(
+                    DetailedObjWellDefinedProof::ByKnown {
+                        obj: original,
+                        wd_id: WellDefinednessId::new(u64::MAX),
+                    },
+                ));
         } else {
             let AtomicExceptEqualityFactSearchedProof::ByStructuralMembership(proof) =
                 &mut atomic.searched_proof
@@ -2328,8 +2404,15 @@ fn phase2_rational_division_closure_cannot_discard_denominator_legality() {
     let goal = atomic_proof_mut(
         &mut forall_proof_mut(&mut result.statement_results[0]).proved_then_facts[0].verify_result,
     );
-    match &mut goal.well_defined_proof.well_defined_of_each_parameter[0] {
-        ObjWellDefinedProof::ByDef {
+    match (&mut goal
+        .well_defined_proof
+        .as_detailed_mut()
+        .unwrap()
+        .well_defined_of_each_parameter[0])
+        .as_detailed_mut()
+        .unwrap()
+    {
+        DetailedObjWellDefinedProof::ByDef {
             proof:
                 ObjWellDefinedProofByDef::ArithmeticOperator(
                     ArithmeticOperatorObjWellDefinedProofByDef::Div(proof),
@@ -2803,7 +2886,12 @@ fn phase2_order_wd_keeps_both_real_requirements_in_source_order() {
             &mut forall_proof_mut(&mut result.statement_results[0]).proved_then_facts[0]
                 .verify_result,
         );
-        let requirements = match &mut square.well_defined_proof.predicate_domain {
+        let requirements = match &mut square
+            .well_defined_proof
+            .as_detailed_mut()
+            .unwrap()
+            .predicate_domain
+        {
             PredicateDomainProof::ByRequirements(requirements) => requirements,
             _ => panic!("actual square order has explicit real-domain requirements"),
         };
@@ -2843,10 +2931,13 @@ fn phase2_even_power_tag_rejects_a_genuinely_well_defined_odd_power() {
     forall.fact.then_facts.remove(3);
     let cube_wd = atomic_proof_mut(&mut cube_formation.verify_result)
         .well_defined_proof
+        .as_detailed_mut()
+        .unwrap()
         .well_defined_of_each_parameter
         .remove(0);
-    match &cube_wd {
-        ObjWellDefinedProof::ByKnown { obj, .. } | ObjWellDefinedProof::ByDef { obj, .. } => {
+    match (&cube_wd).as_detailed().unwrap() {
+        DetailedObjWellDefinedProof::ByKnown { obj, .. }
+        | DetailedObjWellDefinedProof::ByDef { obj, .. } => {
             assert_eq!(obj.ir(), cube.ir())
         }
     };
@@ -2877,8 +2968,17 @@ fn phase2_even_power_tag_rejects_a_genuinely_well_defined_odd_power() {
         AtomicFact::LessEqualFact(fact) => fact.right = cube.clone(),
         _ => panic!("actual weak square nonnegativity goal"),
     }
-    square.well_defined_proof.well_defined_of_each_parameter[1] = cube_wd;
-    match &mut square.well_defined_proof.predicate_domain {
+    square
+        .well_defined_proof
+        .as_detailed_mut()
+        .unwrap()
+        .well_defined_of_each_parameter[1] = cube_wd;
+    match &mut square
+        .well_defined_proof
+        .as_detailed_mut()
+        .unwrap()
+        .predicate_domain
+    {
         PredicateDomainProof::ByRequirements(requirements) => {
             assert_eq!(requirements.len(), 2);
             requirements[1].requirement = Fact::AtomicFact(cube_member_fact);
@@ -3227,8 +3327,13 @@ fn simplification_named_theorem_body_retains_its_local_explicit_call() {
         &parent.fact.left,
         Obj::ArithmeticOperator(ArithmeticOperator::Add(_))
     ));
-    match &parent.well_defined_proof.left {
-        ObjWellDefinedProof::ByDef { obj, .. } => assert_eq!(obj.ir(), parent.fact.left.ir()),
+    match (&parent.well_defined_proof.detailed_ref().left)
+        .as_detailed()
+        .unwrap()
+    {
+        DetailedObjWellDefinedProof::ByDef { obj, .. } => {
+            assert_eq!(obj.ir(), parent.fact.left.ir())
+        }
         _ => panic!("the parent proof actually constructs its own compound object"),
     }
     let invocation = by_theorem(&body.proof_steps[1]);

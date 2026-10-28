@@ -38,7 +38,11 @@ fn sequence_analysis_rejects_changed_complete_domain() {
     for mutation in 0..3 {
         let (mut run, compiler) = super::execute(TRACER);
         let p = super::atomic_proof_mut(&mut by_def(&mut run).proof);
-        let PredicateDomainProof::SequenceAnalysis(p) = &mut p.well_defined_proof.predicate_domain
+        let PredicateDomainProof::SequenceAnalysis(p) = &mut p
+            .well_defined_proof
+            .as_detailed_mut()
+            .unwrap()
+            .predicate_domain
         else {
             panic!("sequence domain")
         };
@@ -149,7 +153,8 @@ fn sequence_analysis_rejects_wrong_index_return_and_false_strictness() {
     ] {
         let command =
             parse_launch_command(&["-strict".into(), "-e".into(), source.into()]).unwrap();
-        let mut runtime = Runtime::new(command);
+        let mut runtime =
+            Runtime::new_with_result_detail(command, crate::result_detail::OutputDetail::Detailed);
         let run = runtime.run_litex_code(source).unwrap();
         assert!(!run.success, "{source}");
         assert!(super::LitexToLeanCompiler::new(runtime)

@@ -1,0 +1,177 @@
+release thm prob::main::uniform_probability_laws({1,2,3,4,5,6})
+
+\prob::main::uniform_probability_space<{1,2,3,4,5,6}> = ({1,2,3,4,5,6},\prob::main::uniform_event_probability<{1,2,3,4,5,6}>)
+
+have dice &prob::main::FiniteProbabilitySpace<{1,2,3,4,5,6}> = \prob::main::uniform_probability_space<{1,2,3,4,5,6}>
+
+release struct def dice
+
+dice = ({1,2,3,4,5,6},\prob::main::uniform_event_probability<{1,2,3,4,5,6}>)
+
+dice.carrier = {1,2,3,4,5,6}
+
+dice.prob = \prob::main::uniform_event_probability<{1,2,3,4,5,6}>
+
+dice.carrier $subset Z
+
+dice.carrier $subset R
+
+1 $in dice.carrier
+
+2 $in dice.carrier
+
+3 $in dice.carrier
+
+4 $in dice.carrier
+
+5 $in dice.carrier
+
+6 $in dice.carrier
+
+have fn parity(k dice.carrier) R = k%2
+
+parity(1) = 1
+
+parity(2) = 0
+
+parity(3) = 1
+
+parity(4) = 0
+
+parity(5) = 1
+
+parity(6) = 0
+
+by enumerate finite_set:
+    ? forall k {1,2,3,4,5,6}:
+        parity(k) $in {0,1}
+    parity(k) = k%2
+    k%2 $in {0,1}
+
+claim:
+    ? forall k dice.carrier:
+        parity(k) $in {0,1}
+    k $in {1,2,3,4,5,6}
+    parity(k) $in {0,1}
+
+claim:
+    ? 0 $in fn_range(parity)
+    parity(2) $in fn_range(parity)
+    0 = parity(2)
+
+claim:
+    ? 1 $in fn_range(parity)
+    parity(1) $in fn_range(parity)
+    1 = parity(1)
+
+{0,1} $subset fn_range(parity)
+
+by extension:
+    ? fn_range(parity) = {0,1}
+    claim:
+        ? forall y fn_range(parity):
+            y $in {0,1}
+        have by fn_preimage: source_point from y $in fn_range(parity)
+        source_point $in dice.carrier
+        parity(source_point) $in {0,1}
+        y = parity(source_point)
+
+release thm prob::main::finite_pushforward_probability_laws({1,2,3,4,5,6},dice,R,parity)
+
+\prob::main::finite_pushforward_probability_space<{1,2,3,4,5,6},dice,R,parity> = (fn_range(parity),\prob::main::finite_pushforward_event_probability<{1,2,3,4,5,6},dice,R,parity>)
+
+have pushed &prob::main::FiniteProbabilitySpace<R> = \prob::main::finite_pushforward_probability_space<{1,2,3,4,5,6},dice,R,parity>
+
+release struct def pushed
+
+pushed = (fn_range(parity),\prob::main::finite_pushforward_event_probability<{1,2,3,4,5,6},dice,R,parity>)
+
+pushed.carrier = fn_range(parity) = {0,1}
+
+pushed.prob = \prob::main::finite_pushforward_event_probability<{1,2,3,4,5,6},dice,R,parity>
+
+by enumerate finite_set:
+    ? forall k {1,2,3,4,5,6}:
+        parity(k) = 0
+        =>:
+            k $in {2,4,6}
+    k $in {2,4,6}
+
+by extension:
+    ? preimage(parity,0) = {2,4,6}
+    {2,4,6} $subset dice.carrier
+    by enumerate finite_set:
+        ? forall k {2,4,6}:
+            parity(k) = 0
+        parity(k) = k%2 = 0
+    claim:
+        ? forall k preimage(parity,0):
+            k $in {2,4,6}
+        k $in dice.carrier
+        k $in {1,2,3,4,5,6}
+        parity(k) = 0
+    claim:
+        ? forall k {2,4,6}:
+            k $in preimage(parity,0)
+        k $in dice.carrier
+        parity(k) = 0
+        k $in preimage(parity,0)
+
+claim:
+    ? dice.prob({2,4,6}) = 1/2
+    {2,4,6} $in power_set(dice.carrier)
+    finite_set_size({2,4,6}) = 3
+    finite_set_size({1,2,3,4,5,6}) = 6
+    dice.prob({2,4,6}) = \prob::main::uniform_event_probability<{1,2,3,4,5,6}>({2,4,6}) = finite_set_size({2,4,6})/finite_set_size({1,2,3,4,5,6}) = 3/6 = 1/2
+
+release thm prob::main::finite_pushforward_singleton_probability({1,2,3,4,5,6},dice,R,parity,0)
+
+\prob::main::finite_pushforward_event_probability<{1,2,3,4,5,6},dice,R,parity>({0}) = dice.prob(preimage(parity,0)) = dice.prob({2,4,6}) = 1/2
+
+pushed.prob({0}) = \prob::main::finite_pushforward_event_probability<{1,2,3,4,5,6},dice,R,parity>({0}) = 1/2
+
+by enumerate finite_set:
+    ? forall k {1,2,3,4,5,6}:
+        parity(k) = 1
+        =>:
+            k $in {1,3,5}
+    k $in {1,3,5}
+
+by extension:
+    ? preimage(parity,1) = {1,3,5}
+    {1,3,5} $subset dice.carrier
+    by enumerate finite_set:
+        ? forall k {1,3,5}:
+            parity(k) = 1
+        parity(k) = k%2 = 1
+    claim:
+        ? forall k preimage(parity,1):
+            k $in {1,3,5}
+        k $in dice.carrier
+        k $in {1,2,3,4,5,6}
+        parity(k) = 1
+    claim:
+        ? forall k {1,3,5}:
+            k $in preimage(parity,1)
+        k $in dice.carrier
+        parity(k) = 1
+        k $in preimage(parity,1)
+
+claim:
+    ? dice.prob({1,3,5}) = 1/2
+    {1,3,5} $in power_set(dice.carrier)
+    finite_set_size({1,3,5}) = 3
+    finite_set_size({1,2,3,4,5,6}) = 6
+    dice.prob({1,3,5}) = \prob::main::uniform_event_probability<{1,2,3,4,5,6}>({1,3,5}) = finite_set_size({1,3,5})/finite_set_size({1,2,3,4,5,6}) = 3/6 = 1/2
+
+release thm prob::main::finite_pushforward_singleton_probability({1,2,3,4,5,6},dice,R,parity,1)
+
+\prob::main::finite_pushforward_event_probability<{1,2,3,4,5,6},dice,R,parity>({1}) = dice.prob(preimage(parity,1)) = dice.prob({1,3,5}) = 1/2
+
+pushed.prob({1}) = \prob::main::finite_pushforward_event_probability<{1,2,3,4,5,6},dice,R,parity>({1}) = 1/2
+
+pushed.prob(pushed.carrier) = 1
+
+pushed.prob({}) = 0
+
+have rejected R = \prob::main::finite_pushforward_event_probability<{1,2,3,4,5,6},dice,R,parity>({2})

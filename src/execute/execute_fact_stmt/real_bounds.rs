@@ -133,10 +133,9 @@ impl Runtime {
             }
         };
         Ok(VerifyObjWellDefinedResult::Success(
-            ObjWellDefinedProof::ByDef {
-                obj,
-                proof: ObjWellDefinedProofByDef::BoundOperator(proof),
-            },
+            ObjWellDefinedProof::by_def(self.result_detail(), &(obj), None, || {
+                ObjWellDefinedProofByDef::BoundOperator(proof)
+            }),
         ))
     }
 }

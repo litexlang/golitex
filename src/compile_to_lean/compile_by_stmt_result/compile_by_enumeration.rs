@@ -31,19 +31,23 @@ impl LitexToLeanCompiler {
             return Err(LeanCompileError::unsupported("Enumeration/GoalWD"));
         };
         let parameters = enumeration_parameters(fact)?;
-        if fact.then_facts.is_empty() || wd.then.len() != fact.then_facts.len() {
+        if fact.then_facts.is_empty() || wd.detailed_ref().then.len() != fact.then_facts.len() {
             return Err(LeanCompileError::unsupported("Enumeration/Coverage"));
         }
         let scope = SourcePosition::new(Some(position), SourceOwner::ForallWD(fact, wd), 0);
-        let (binders, introductions, definitions) =
-            self.compile_forall_head(fact, &wd.introduced_params, &wd.assumed_dom_facts, &scope)?;
+        let (binders, introductions, definitions) = self.compile_forall_head(
+            fact,
+            &wd.detailed_ref().introduced_params,
+            &wd.detailed_ref().assumed_dom_facts,
+            &scope,
+        )?;
         let head = parameters.len() + fact.dom_facts.len();
         let prior = SourcePosition {
             before: head,
             ..scope
         };
         let mut goals = Vec::new();
-        for (source, formation) in fact.then_facts.iter().zip(&wd.then) {
+        for (source, formation) in fact.then_facts.iter().zip(&wd.detailed_ref().then) {
             let source = Fact::from(source.clone());
             self.compile_fact_wd(formation, &source, &prior)?;
             let formed =
@@ -73,10 +77,12 @@ impl LitexToLeanCompiler {
                 .iter()
                 .map(|(p, _)| (p.id, format!("_enumerated_i{}", p.id.value())))
                 .collect();
-            for ((parameter, carrier), store) in parameters
-                .iter()
-                .zip(&wd.introduced_params.defined_params.store_and_infer_results)
-            {
+            for ((parameter, carrier), store) in parameters.iter().zip(
+                &wd.detailed_ref()
+                    .introduced_params
+                    .defined_params
+                    .store_and_infer_results,
+            ) {
                 let raw_id = &raw_map[&parameter.id];
                 let member_name = format!("h_{}", store.primary_fact_id().value());
                 let value =
@@ -210,6 +216,7 @@ impl LitexToLeanCompiler {
             };
             let member = self.resolve_fact(store.primary_fact_id(), &introduced)?;
             let outer_id = outer
+                .detailed_ref()
                 .introduced_params
                 .defined_params
                 .store_and_infer_results[i]

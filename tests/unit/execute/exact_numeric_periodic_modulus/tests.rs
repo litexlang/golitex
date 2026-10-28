@@ -7,12 +7,15 @@ fn check(source: &str, expected: bool) -> String {
     std::thread::Builder::new()
         .stack_size(64 * 1024 * 1024)
         .spawn(move || {
-            let mut runtime = Runtime::new(LaunchCommand::Eval {
-                code: String::new(),
-                session: false,
-                strict: true,
-                language: OutputLanguage::English,
-            });
+            let mut runtime = Runtime::new_with_result_detail(
+                LaunchCommand::Eval {
+                    code: String::new(),
+                    session: false,
+                    strict: true,
+                    language: OutputLanguage::English,
+                },
+                crate::result_detail::OutputDetail::Detailed,
+            );
             let result = runtime
                 .run_litex_code(&source)
                 .expect("public statement pipeline");
@@ -54,12 +57,15 @@ fn exact_signed_integer_powers_and_eval() {
             && json.contains("rational")
             && json.contains("left_normal")
     );
-    let mut runtime = Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language: OutputLanguage::English,
-    });
+    let mut runtime = Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    );
     let result = runtime
         .run_litex_code("eval 3^(-1)\neval C_abs(3-4*i)")
         .unwrap();
@@ -243,12 +249,15 @@ fn new_rule_normal_output_is_bilingual() {
         ("e>1", "Euler constant exceeds one", "自然常数 e 大于一"),
     ] {
         for (language, expected) in [(OutputLanguage::English, en), (OutputLanguage::Chinese, zh)] {
-            let mut runtime = Runtime::new(LaunchCommand::Eval {
-                code: String::new(),
-                session: false,
-                strict: true,
-                language,
-            });
+            let mut runtime = Runtime::new_with_result_detail(
+                LaunchCommand::Eval {
+                    code: String::new(),
+                    session: false,
+                    strict: true,
+                    language,
+                },
+                crate::result_detail::OutputDetail::Detailed,
+            );
             let result = runtime.run_litex_code(source).unwrap();
             assert!(result.success);
             assert!(emit_run_normal(&result, &runtime, "eval", None).contains(expected));
@@ -261,12 +270,15 @@ fn new_leaves_inherit_search_ceiling_and_do_not_store_search_facts() {
     use crate::ast::stmt::Stmt;
     use crate::execute::execute_fact_stmt::{VerifyState, VerifyStateLevel};
     use crate::tokenize::Tokenizer;
-    let mut runtime = Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language: OutputLanguage::English,
-    });
+    let mut runtime = Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    );
     assert!(
         runtime
             .run_litex_code("have k Z\nlet rational_max = finite_set_max({1/3,1/2})")

@@ -206,7 +206,11 @@ fn nonnegative_builtins_retain_the_parent_constructor_wd_check() {
         let (mut result, compiler) = super::execute(source);
         let proof = selected(&mut result);
         super::replace_wd_subject(
-            &mut proof.well_defined_proof.well_defined_of_each_parameter[1],
+            &mut proof
+                .well_defined_proof
+                .as_detailed_mut()
+                .unwrap()
+                .well_defined_of_each_parameter[1],
             super::number_object("7"),
         );
         let error = compiler

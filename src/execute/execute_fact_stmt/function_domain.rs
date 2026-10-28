@@ -578,11 +578,8 @@ pub enum CompleteFunctionDomainSourceProof {
         application: FnObj,
         subject_equal: KnownEqualityPathProof,
         signature_source: FnObjDomainFnSetEvidence,
-        application_children: Vec<Box<ObjWellDefinedProof>>,
-        application_requirements: Vec<VerifyFactResult>,
-        argument_scope: Option<
-            crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnObjArgumentScope,
-        >,
+        application_check:
+            crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnObjDomainSuccess,
         return_space: Obj,
         carrier_equal: KnownEqualityPathProof,
     },
@@ -844,7 +841,7 @@ impl Runtime {
                 FnObjDomainFnSetEvidence::AnonymousLiteral {
                     fn_set: function.body.clone(),
                 },
-                vec![],
+                None,
             ));
         }
         for (peer, function_path) in self.exact_property_object_values_of_shapes(
@@ -868,14 +865,14 @@ impl Runtime {
                     fn_set: signature,
                     function_equal: KnownEqualityPathProof::new(function_path),
                 },
-                vec![Box::new(head_wd)],
+                Some(head_wd),
             ));
         }
         for source in self.composition_callables(&head, ctx)? {
             signatures.push((
                 source.function.body.clone(),
                 FnObjDomainFnSetEvidence::Composition(Box::new(source)),
-                vec![],
+                None,
             ));
         }
         for (signature, fact_id) in self.collect_in_function_set_candidates(&head) {
@@ -901,11 +898,11 @@ impl Runtime {
                     fact_id,
                     function_equal: KnownEqualityPathProof::new(function_path),
                 },
-                vec![],
+                None,
             ));
         }
         let mut domains = Vec::new();
-        for (signature, signature_source, mut head_children) in signatures {
+        for (signature, signature_source, head_child) in signatures {
             // Returning a function space gives an exact domain only after
             // this actual application satisfies the selected input/guards.
             let Some(return_space) = self.applied_fn_set_return_set(application, &signature) else {
@@ -936,28 +933,22 @@ impl Runtime {
             let Some(return_signature) = self.function_space_signature(&carrier) else {
                 continue;
             };
-            let Ok(applicability) =
+            let Ok(mut applicability) =
                 self.try_verify_fn_obj_against_fn_set(application, &signature, ctx)?
             else {
                 continue;
             };
-            let (application_children, application_requirements, mut argument_scope) =
-                applicability.into_success_child_proofs();
-            if let Some(scope) = &mut argument_scope {
-                for formed in &mut scope.formed_children {
-                    formed.child_index += head_children.len();
-                }
+            if let Some(head) = head_child {
+                applicability.prepend_child(VerifyObjWellDefinedResult::Success(head))?;
             }
-            head_children.extend(application_children);
+            let application_check = applicability.into_success(self.result_detail())?;
             domains.push(CompleteFunctionDomainProof {
                 signature: return_signature,
                 source: CompleteFunctionDomainSourceProof::ApplicationReturn {
                     application: application.clone(),
                     subject_equal: KnownEqualityPathProof::new(path.to_vec()),
                     signature_source,
-                    application_children: head_children,
-                    application_requirements,
-                    argument_scope,
+                    application_check,
                     return_space,
                     carrier_equal: KnownEqualityPathProof::new(carrier_path),
                 },

@@ -18,19 +18,205 @@ use super::search_equal_fact_proof_by_known_special_property::EqualFactSearchPro
 // match args → prove param-type + dom requirements.
 // `arg_match_proofs` is one entry per conclusion/goal arg (Lean-aligned).
 // Boxed under EqualFactSearchedProof::ByKnownForallFact to break the type cycle.
-pub struct SearchProofByKnownForallFact {
+pub enum SearchProofByKnownForallFact {
+    Compact(CompactSearchProofByKnownForallFact),
+    Normal(NormalSearchProofByKnownForallFact),
+    Detailed(Box<DetailedSearchProofByKnownForallFact>),
+}
+pub struct CompactSearchProofByKnownForallFact {}
+pub struct NormalSearchProofByKnownForallFact {
+    pub cite: crate::exec_env::ForallConclusionCite,
+    pub cited_fact: Box<crate::ast::fact::ForallFact>,
+}
+pub struct DetailedSearchProofByKnownForallFact {
     pub cite: crate::exec_env::ForallConclusionCite,
     pub forall_parameters_match_what_args: Vec<Obj>,
     pub arg_match_proofs: Vec<ForallConclusionArgMatchProof>,
     pub instantiation_requirements: ProveForallInstantiationRequirementsProof,
 }
+impl SearchProofByKnownForallFact {
+    pub fn detail(&self) -> crate::result_detail::OutputDetail {
+        match self {
+            Self::Compact(_) => crate::result_detail::OutputDetail::Compact,
+            Self::Normal(_) => crate::result_detail::OutputDetail::Normal,
+            Self::Detailed(_) => crate::result_detail::OutputDetail::Detailed,
+        }
+    }
+    pub fn into_compact(
+        self,
+    ) -> crate::runtime::RuntimeResult<CompactSearchProofByKnownForallFact> {
+        crate::result_detail::OutputDetail::Compact
+            .require(self.detail(), "known forall application")?;
+        match self {
+            Self::Compact(proof) => Ok(proof),
+            _ => unreachable!(),
+        }
+    }
+    pub fn into_normal(self) -> crate::runtime::RuntimeResult<NormalSearchProofByKnownForallFact> {
+        crate::result_detail::OutputDetail::Normal
+            .require(self.detail(), "known forall application")?;
+        match self {
+            Self::Normal(proof) => Ok(proof),
+            _ => unreachable!(),
+        }
+    }
+    pub fn into_detailed(
+        self,
+    ) -> crate::runtime::RuntimeResult<DetailedSearchProofByKnownForallFact> {
+        crate::result_detail::OutputDetail::Detailed
+            .require(self.detail(), "known forall application")?;
+        match self {
+            Self::Detailed(proof) => Ok(*proof),
+            _ => unreachable!(),
+        }
+    }
+    pub fn as_detailed(
+        &self,
+    ) -> crate::runtime::RuntimeResult<&DetailedSearchProofByKnownForallFact> {
+        crate::result_detail::OutputDetail::Detailed
+            .require(self.detail(), "known forall application")?;
+        match self {
+            Self::Detailed(proof) => Ok(proof),
+            _ => unreachable!(),
+        }
+    }
+    pub fn as_detailed_mut(
+        &mut self,
+    ) -> crate::runtime::RuntimeResult<&mut DetailedSearchProofByKnownForallFact> {
+        crate::result_detail::OutputDetail::Detailed
+            .require(self.detail(), "known forall application")?;
+        match self {
+            Self::Detailed(proof) => Ok(proof),
+            _ => unreachable!(),
+        }
+    }
+    pub(crate) fn detailed_ref(&self) -> &DetailedSearchProofByKnownForallFact {
+        self.as_detailed().unwrap_or_else(|error| panic!("{error}"))
+    }
+}
+impl SearchProofByKnownForallFact {
+    pub(crate) fn from_children(
+        detail: crate::result_detail::OutputDetail,
+        cite: crate::exec_env::ForallConclusionCite,
+        source: &crate::ast::fact::ForallFact,
+        forall_parameters_match_what_args: Vec<Obj>,
+        arg_match_proofs: Vec<ForallConclusionArgMatchProof>,
+        instantiation_requirements: ProveForallInstantiationRequirementsProof,
+    ) -> crate::runtime::RuntimeResult<Self> {
+        use crate::result_detail::OutputDetail;
+        detail.require(
+            instantiation_requirements.detail(),
+            "forall application requirements",
+        )?;
+        for child in &arg_match_proofs {
+            detail.require(child.detail(), "forall application argument")?;
+        }
+        Ok(match detail {
+            OutputDetail::Compact => Self::Compact(CompactSearchProofByKnownForallFact {}),
+            OutputDetail::Normal => Self::Normal(NormalSearchProofByKnownForallFact {
+                cite,
+                cited_fact: Box::new(source.clone()),
+            }),
+            OutputDetail::Detailed => {
+                Self::Detailed(Box::new(DetailedSearchProofByKnownForallFact {
+                    cite,
+                    forall_parameters_match_what_args,
+                    arg_match_proofs,
+                    instantiation_requirements,
+                }))
+            }
+        })
+    }
+}
 
 // After match: prove each instantiated arg meets param type, then prove dom facts.
 // Field order = stage order.
-pub struct ProveForallInstantiationRequirementsProof {
+pub enum ProveForallInstantiationRequirementsProof {
+    Compact(CompactProveForallInstantiationRequirementsProof),
+    Normal(NormalProveForallInstantiationRequirementsProof),
+    Detailed(Box<DetailedProveForallInstantiationRequirementsProof>),
+}
+pub struct CompactProveForallInstantiationRequirementsProof {}
+pub struct NormalProveForallInstantiationRequirementsProof {}
+pub struct DetailedProveForallInstantiationRequirementsProof {
     pub param_type_requirements: Vec<ForallParamTypeRequirementProof>,
     pub dom_facts: Vec<Fact>,
     pub proof_of_dom_facts: Vec<VerifyFactResult>,
+}
+impl ProveForallInstantiationRequirementsProof {
+    pub(crate) fn new(
+        detail: crate::result_detail::OutputDetail,
+        build: impl FnOnce() -> DetailedProveForallInstantiationRequirementsProof,
+    ) -> Self {
+        match detail {
+            crate::result_detail::OutputDetail::Compact => {
+                Self::Compact(CompactProveForallInstantiationRequirementsProof {})
+            }
+            crate::result_detail::OutputDetail::Normal => {
+                Self::Normal(NormalProveForallInstantiationRequirementsProof {})
+            }
+            crate::result_detail::OutputDetail::Detailed => Self::Detailed(Box::new(build())),
+        }
+    }
+    pub fn detail(&self) -> crate::result_detail::OutputDetail {
+        match self {
+            Self::Compact(_) => crate::result_detail::OutputDetail::Compact,
+            Self::Normal(_) => crate::result_detail::OutputDetail::Normal,
+            Self::Detailed(_) => crate::result_detail::OutputDetail::Detailed,
+        }
+    }
+    pub fn into_compact(
+        self,
+    ) -> crate::runtime::RuntimeResult<CompactProveForallInstantiationRequirementsProof> {
+        crate::result_detail::OutputDetail::Compact
+            .require(self.detail(), "forall requirements")?;
+        match self {
+            Self::Compact(proof) => Ok(proof),
+            _ => unreachable!(),
+        }
+    }
+    pub fn into_normal(
+        self,
+    ) -> crate::runtime::RuntimeResult<NormalProveForallInstantiationRequirementsProof> {
+        crate::result_detail::OutputDetail::Normal.require(self.detail(), "forall requirements")?;
+        match self {
+            Self::Normal(proof) => Ok(proof),
+            _ => unreachable!(),
+        }
+    }
+    pub fn into_detailed(
+        self,
+    ) -> crate::runtime::RuntimeResult<DetailedProveForallInstantiationRequirementsProof> {
+        crate::result_detail::OutputDetail::Detailed
+            .require(self.detail(), "forall requirements")?;
+        match self {
+            Self::Detailed(proof) => Ok(*proof),
+            _ => unreachable!(),
+        }
+    }
+    pub fn as_detailed(
+        &self,
+    ) -> crate::runtime::RuntimeResult<&DetailedProveForallInstantiationRequirementsProof> {
+        crate::result_detail::OutputDetail::Detailed
+            .require(self.detail(), "forall requirements")?;
+        match self {
+            Self::Detailed(proof) => Ok(proof),
+            _ => unreachable!(),
+        }
+    }
+    pub fn as_detailed_mut(
+        &mut self,
+    ) -> crate::runtime::RuntimeResult<&mut DetailedProveForallInstantiationRequirementsProof> {
+        crate::result_detail::OutputDetail::Detailed
+            .require(self.detail(), "forall requirements")?;
+        match self {
+            Self::Detailed(proof) => Ok(proof),
+            _ => unreachable!(),
+        }
+    }
+    pub(crate) fn detailed_ref(&self) -> &DetailedProveForallInstantiationRequirementsProof {
+        self.as_detailed().unwrap_or_else(|error| panic!("{error}"))
+    }
 }
 
 // One entry per forall parameter (declaration order).
@@ -41,15 +227,92 @@ pub struct ForallParamTypeRequirementProof {
     pub proof: VerifyFactResult,
 }
 
-// Output of matching conclusion args to goal args (before dom requirements).
-pub struct MatchForallConclusionArgsProof {
-    pub forall_parameters_match_what_args: Vec<Obj>,
-    pub arg_match_proofs: Vec<ForallConclusionArgMatchProof>,
-}
+pub use super::super::forall_match_result::MatchForallConclusionArgsProof;
 
 // One slot per (pattern_arg, goal_arg). Length equals arg arity.
 // Nested structure peels use ByStructure with the same enum recursively.
 pub enum ForallConclusionArgMatchProof {
+    Compact(CompactForallConclusionArgMatchProof),
+    Normal(NormalForallConclusionArgMatchProof),
+    Detailed(Box<DetailedForallConclusionArgMatchProof>),
+}
+pub struct CompactForallConclusionArgMatchProof {}
+pub struct NormalForallConclusionArgMatchProof {}
+impl ForallConclusionArgMatchProof {
+    pub(crate) fn new(
+        detail: crate::result_detail::OutputDetail,
+        build: impl FnOnce() -> DetailedForallConclusionArgMatchProof,
+    ) -> Self {
+        match detail {
+            crate::result_detail::OutputDetail::Compact => {
+                Self::Compact(CompactForallConclusionArgMatchProof {})
+            }
+            crate::result_detail::OutputDetail::Normal => {
+                Self::Normal(NormalForallConclusionArgMatchProof {})
+            }
+            crate::result_detail::OutputDetail::Detailed => Self::Detailed(Box::new(build())),
+        }
+    }
+    pub fn detail(&self) -> crate::result_detail::OutputDetail {
+        match self {
+            Self::Compact(_) => crate::result_detail::OutputDetail::Compact,
+            Self::Normal(_) => crate::result_detail::OutputDetail::Normal,
+            Self::Detailed(_) => crate::result_detail::OutputDetail::Detailed,
+        }
+    }
+    pub fn into_compact(
+        self,
+    ) -> crate::runtime::RuntimeResult<CompactForallConclusionArgMatchProof> {
+        crate::result_detail::OutputDetail::Compact
+            .require(self.detail(), "forall argument matching")?;
+        match self {
+            Self::Compact(proof) => Ok(proof),
+            _ => unreachable!(),
+        }
+    }
+    pub fn into_normal(self) -> crate::runtime::RuntimeResult<NormalForallConclusionArgMatchProof> {
+        crate::result_detail::OutputDetail::Normal
+            .require(self.detail(), "forall argument matching")?;
+        match self {
+            Self::Normal(proof) => Ok(proof),
+            _ => unreachable!(),
+        }
+    }
+    pub fn into_detailed(
+        self,
+    ) -> crate::runtime::RuntimeResult<DetailedForallConclusionArgMatchProof> {
+        crate::result_detail::OutputDetail::Detailed
+            .require(self.detail(), "forall argument matching")?;
+        match self {
+            Self::Detailed(proof) => Ok(*proof),
+            _ => unreachable!(),
+        }
+    }
+    pub fn as_detailed(
+        &self,
+    ) -> crate::runtime::RuntimeResult<&DetailedForallConclusionArgMatchProof> {
+        crate::result_detail::OutputDetail::Detailed
+            .require(self.detail(), "forall argument matching")?;
+        match self {
+            Self::Detailed(proof) => Ok(proof),
+            _ => unreachable!(),
+        }
+    }
+    pub fn as_detailed_mut(
+        &mut self,
+    ) -> crate::runtime::RuntimeResult<&mut DetailedForallConclusionArgMatchProof> {
+        crate::result_detail::OutputDetail::Detailed
+            .require(self.detail(), "forall argument matching")?;
+        match self {
+            Self::Detailed(proof) => Ok(proof),
+            _ => unreachable!(),
+        }
+    }
+    pub(crate) fn detailed_ref(&self) -> &DetailedForallConclusionArgMatchProof {
+        self.as_detailed().unwrap_or_else(|error| panic!("{error}"))
+    }
+}
+pub enum DetailedForallConclusionArgMatchProof {
     // First sight of a forall param: bind goal_arg, no equal subproof.
     BoundParam {
         param_id: IdentifierId,

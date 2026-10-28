@@ -2,6 +2,7 @@ use crate::compile_to_lean::compile_compound_fact::chain_edge;
 use crate::compile_to_lean::helper::*;
 use crate::compile_to_lean::source_position::{SourceOwner, SourcePosition};
 use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::DetailedForallConclusionArgMatchProof;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::{
     ForallConclusionArgMatchProof, SearchProofByKnownForallFact, StrictEqualArgProof,
     StrictEqualWithFact,
@@ -117,19 +118,21 @@ impl LitexToLeanCompiler {
         proof: &SearchProofByKnownForallFact,
         position: &SourcePosition<'_>,
     ) -> Result<(String, String), LeanCompileError> {
-        let resolved = self.resolve_fact(proof.cite.fact_id, position)?;
+        let resolved = self.resolve_fact(proof.detailed_ref().cite.fact_id, position)?;
         let Fact::ForallFact(source) = &resolved else {
             return Err(LeanCompileError::unsupported(
                 "CompoundKnown/CitationFamily",
             ));
         };
-        let registered = self.cited_fact_reference(proof.cite.fact_id, position)?;
-        if *registered.0 != resolved || source.fact_id != proof.cite.fact_id {
+        let registered = self.cited_fact_reference(proof.detailed_ref().cite.fact_id, position)?;
+        if *registered.0 != resolved || source.fact_id != proof.detailed_ref().cite.fact_id {
             return Err(LeanCompileError::unsupported(
                 "CompoundKnown/CitationIdentity",
             ));
         }
-        let ForallConclusionLocation::DirectThenFact(location) = &proof.cite.location else {
+        let ForallConclusionLocation::DirectThenFact(location) =
+            &proof.detailed_ref().cite.location
+        else {
             return Err(LeanCompileError::unsupported(
                 "CompoundKnown/ConclusionLocation",
             ));
@@ -169,12 +172,15 @@ impl LitexToLeanCompiler {
             .iter()
             .flat_map(|group| group.params.iter().map(|param| (param, &group.param_type)))
             .collect();
-        let requirements = &proof.instantiation_requirements;
+        let requirements = proof
+            .detailed_ref()
+            .instantiation_requirements
+            .detailed_ref();
         if !same_shape
             || pattern_args.is_empty()
             || pattern_args.len() != goal_args.len()
-            || proof.arg_match_proofs.len() != goal_args.len()
-            || proof.forall_parameters_match_what_args.len() != parameters.len()
+            || proof.detailed_ref().arg_match_proofs.len() != goal_args.len()
+            || proof.detailed_ref().forall_parameters_match_what_args.len() != parameters.len()
             || requirements.param_type_requirements.len() != parameters.len()
             || requirements.dom_facts.len() != source.dom_facts.len()
             || requirements.proof_of_dom_facts.len() != source.dom_facts.len()
@@ -183,7 +189,7 @@ impl LitexToLeanCompiler {
         }
         let substitution: HashMap<_, _> = parameters
             .iter()
-            .zip(&proof.forall_parameters_match_what_args)
+            .zip(&proof.detailed_ref().forall_parameters_match_what_args)
             .map(|((param, _), arg)| (param.id, arg.clone()))
             .collect();
         if substitution.len() != parameters.len() {
@@ -212,7 +218,7 @@ impl LitexToLeanCompiler {
         for ((pattern, goal), matched) in pattern_args
             .iter()
             .zip(&goal_args)
-            .zip(&proof.arg_match_proofs)
+            .zip(&proof.detailed_ref().arg_match_proofs)
         {
             let (argument, _) = self.compile_forall_argument_match(
                 pattern,
@@ -226,7 +232,7 @@ impl LitexToLeanCompiler {
         }
         let (definitions, arguments) =
             self.compile_known_application_requirements(source, proof, &current)?;
-        let head = proof.arg_match_proofs.len();
+        let head = proof.detailed_ref().arg_match_proofs.len();
         // Check the original match record before requirements. Its Lean terms
         // are rendered afterward, with only certified constructor formation
         // added to the original match-before truth-citation scope.
@@ -235,7 +241,7 @@ impl LitexToLeanCompiler {
         for (index, ((pattern, goal), matched)) in pattern_args
             .iter()
             .zip(&goal_args)
-            .zip(&proof.arg_match_proofs)
+            .zip(&proof.detailed_ref().arg_match_proofs)
             .enumerate()
         {
             let prior = SourcePosition {
@@ -369,8 +375,11 @@ impl LitexToLeanCompiler {
             .iter()
             .flat_map(|group| group.params.iter().map(|param| (param, &group.param_type)))
             .collect();
-        let requirements = &proof.instantiation_requirements;
-        if parameters.len() != proof.forall_parameters_match_what_args.len()
+        let requirements = proof
+            .detailed_ref()
+            .instantiation_requirements
+            .detailed_ref();
+        if parameters.len() != proof.detailed_ref().forall_parameters_match_what_args.len()
             || parameters.len() != requirements.param_type_requirements.len()
             || source.dom_facts.len() != requirements.dom_facts.len()
             || source.dom_facts.len() != requirements.proof_of_dom_facts.len()
@@ -381,7 +390,7 @@ impl LitexToLeanCompiler {
         }
         let substitution: HashMap<_, _> = parameters
             .iter()
-            .zip(&proof.forall_parameters_match_what_args)
+            .zip(&proof.detailed_ref().forall_parameters_match_what_args)
             .map(|((param, _), arg)| (param.id, arg.clone()))
             .collect();
         let mut ids = HashSet::new();
@@ -400,10 +409,10 @@ impl LitexToLeanCompiler {
         }
         let mut definitions = Vec::new();
         let mut arguments = Vec::new();
-        let head = proof.arg_match_proofs.len();
+        let head = proof.detailed_ref().arg_match_proofs.len();
         for (index, (((parameter, kind), argument), requirement)) in parameters
             .iter()
-            .zip(&proof.forall_parameters_match_what_args)
+            .zip(&proof.detailed_ref().forall_parameters_match_what_args)
             .zip(&requirements.param_type_requirements)
             .enumerate()
         {
@@ -470,8 +479,8 @@ impl LitexToLeanCompiler {
         bound: &mut HashSet<IdentifierId>,
         position: Option<&SourcePosition<'_>>,
     ) -> Result<(Obj, String), LeanCompileError> {
-        match matched {
-            ForallConclusionArgMatchProof::BoundParam {
+        match matched.detailed_ref() {
+            DetailedForallConclusionArgMatchProof::BoundParam {
                 param_id,
                 pattern: captured,
                 goal_arg,
@@ -497,7 +506,7 @@ impl LitexToLeanCompiler {
                         .unwrap_or_default(),
                 ))
             }
-            ForallConclusionArgMatchProof::ReboundParamEqual {
+            DetailedForallConclusionArgMatchProof::ReboundParamEqual {
                 param_id,
                 previous,
                 goal_arg,
@@ -517,7 +526,7 @@ impl LitexToLeanCompiler {
                     self.render_strict_match_equal(previous, goal, equal, position)?,
                 ))
             }
-            ForallConclusionArgMatchProof::NonParamEqual {
+            DetailedForallConclusionArgMatchProof::NonParamEqual {
                 pattern: captured,
                 pattern_after_subst,
                 goal_arg,
@@ -537,7 +546,7 @@ impl LitexToLeanCompiler {
                     self.render_strict_match_equal(pattern_after_subst, goal, equal, position)?,
                 ))
             }
-            ForallConclusionArgMatchProof::ByStructure {
+            DetailedForallConclusionArgMatchProof::ByStructure {
                 pattern: captured,
                 goal_arg,
                 child_matches,

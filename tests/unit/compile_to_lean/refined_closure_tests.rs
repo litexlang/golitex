@@ -101,13 +101,19 @@ fn refined_quotient_still_requires_original_division_wd() {
     let (mut run, compiler) = super::execute("forall a Q*, b Q*:\n    a / b $in Q*\n");
     let body = super::forall_proof_mut(&mut run.statement_results[0]);
     let atomic = super::atomic_proof_mut(&mut body.proved_then_facts[0].verify_result);
-    let ObjWellDefinedProof::ByDef {
+    let DetailedObjWellDefinedProof::ByDef {
         proof:
             ObjWellDefinedProofByDef::ArithmeticOperator(
                 ArithmeticOperatorObjWellDefinedProofByDef::Div(p),
             ),
         ..
-    } = &mut atomic.well_defined_proof.well_defined_of_each_parameter[0]
+    } = (&mut atomic
+        .well_defined_proof
+        .as_detailed_mut()
+        .unwrap()
+        .well_defined_of_each_parameter[0])
+        .as_detailed_mut()
+        .unwrap()
     else {
         panic!("division WD")
     };
@@ -127,7 +133,8 @@ fn refined_operations_reject_zero_and_wrong_sign() {
     ] {
         let command =
             parse_launch_command(&["-strict".into(), "-e".into(), source.into()]).unwrap();
-        let mut runtime = Runtime::new(command);
+        let mut runtime =
+            Runtime::new_with_result_detail(command, crate::result_detail::OutputDetail::Detailed);
         let run = runtime.run_litex_code(source).unwrap();
         assert!(!run.success, "{source}");
         assert!(super::LitexToLeanCompiler::new(runtime)

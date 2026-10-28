@@ -1412,6 +1412,27 @@ See [ordered subtraction](../lean/examples/evaluated_range_folds/),
 [combined expressions](../lean/examples/evaluated_fold_arithmetic/),
 [named functions](../lean/examples/evaluated_named_fold/) and
 [local results](../lean/examples/evaluated_local_fold/).
+Exact evaluation also covers `abs`, `min`, `max`, `sign`, `floor` and `ceil`,
+including negative fractions:
+
+```litex
+eval floor(-7/3)
+floor(-7/3) = -3
+```
+
+The compiler consumes the original child WD, citations and ordered evaluations,
+then applies existing numeric laws in `Litex.lean`. It retains cached WD objects;
+when `-3` and `neg(3)` have different Lean representations, it proves their
+matching denotations before composing the recorded proof.
+See [real operations](../lean/examples/evaluated_real_operations/),
+[variable citations](../lean/examples/evaluated_real_citations/),
+[formula functions](../lean/examples/evaluated_real_functions/),
+[local evaluation](../lean/examples/evaluated_local_real_operations/),
+[aggregate combinations](../lean/examples/evaluated_real_aggregates/) and
+[signed-number reuse](../lean/examples/evaluated_signed_representations/).
+These examples require exact rational inputs after the recorded substitutions;
+this does not add symbolic evaluation or approximate irrational results.
+
 The checked aggregate slice uses literal integer range bounds or enumerated
 finite numeric sets and function bodies that reduce to closed scalar arithmetic.
 Nested aggregates inside iterands and additional body-rewrite stages remain

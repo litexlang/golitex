@@ -8,12 +8,15 @@ use crate::runtime::Runtime;
 use crate::tokenize::Tokenizer;
 
 fn runtime_with_file_env() -> Runtime {
-    Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: false,
-        language: OutputLanguage::English,
-    })
+    Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: false,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    )
 }
 
 fn exec_one(runtime: &mut Runtime, code: &str) -> ExecStmtResult {
@@ -158,12 +161,15 @@ fn run_json_preserves_named_declarations_and_complete_theorem_calls() {
 #[test]
 fn run_json_keeps_source_aligned_through_failures_and_locales() {
     for language in OutputLanguage::ALL {
-        let mut runtime = Runtime::new(LaunchCommand::Eval {
-            code: String::new(),
-            session: false,
-            strict: true,
-            language,
-        });
+        let mut runtime = Runtime::new_with_result_detail(
+            LaunchCommand::Eval {
+                code: String::new(),
+                session: false,
+                strict: true,
+                language,
+            },
+            crate::result_detail::OutputDetail::Detailed,
+        );
         let run = runtime.run_litex_code("(1 / 0) = 0\n1 = 1\nhave").unwrap();
         assert!(!run.success);
         assert!(run.session_error.is_none());
@@ -215,7 +221,7 @@ fn run_json_keeps_source_aligned_through_failures_and_locales() {
             object_field(&without_source, &key("statement"))
                 .as_str()
                 .unwrap(),
-            "<well_defined_not_proven>"
+            "(1 / 0) = 0"
         );
         for projected in [
             super::project_run_compact(&run, &runtime, "eval", None),
@@ -317,12 +323,15 @@ fn normal_json_calculation_one_plus_two_english() {
 
 #[test]
 fn normal_json_calculation_one_plus_two_chinese() {
-    let mut runtime = Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: false,
-        language: OutputLanguage::Chinese,
-    });
+    let mut runtime = Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: false,
+            language: OutputLanguage::Chinese,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    );
     let goal = exec_one(&mut runtime, "1 + 2 = 3");
     let goal_json = project_stmt_normal(&goal, &runtime);
     // Option 2: Chinese session localizes JSON keys as well as rule text.

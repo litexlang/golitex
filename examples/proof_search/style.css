@@ -63,6 +63,8 @@ figure { margin: 30px 0 0; }
 .pipeline-reference { border-top: 1px solid #d6dddf; padding-top: 14px; font-size: 12px; color: #68747b; }
 .pipeline-reference .figure-panel { max-width: 376px; margin: 16px auto 0; }
 .phase-heading { font-size: 16px; font-weight: 500; margin: 0 0 20px; padding-bottom: 14px; border-bottom: 1px solid #d6dddf; }
+.phase-source { margin: 0 0 20px; padding: 10px 12px; color: #20272b; background: #f4f7f8; border-left: 2px solid #a3c9d0; font: 13px/1.6 "Courier New", monospace; }
+.phase-source code { font: inherit; }
 [data-phase].is-current > .phase-heading { border-bottom-color: var(--teal); }
 .figure-panel svg, .figure-footer svg { display: block; width: 100%; height: auto; }
 .figure-footer { margin-top: 20px; }

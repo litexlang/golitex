@@ -12,11 +12,20 @@ use crate::ast::obj::{
 pub(super) fn finish_by_def(
     obj: &Obj,
     stages: ObjWellDefinedByDefCommonStages,
-) -> Result<ObjWellDefinedProofByDef, FailToVerifyObjWellDefinedResult> {
+    detail: crate::result_detail::OutputDetail,
+) -> crate::runtime::RuntimeResult<
+    Result<super::entry::ObjWellDefinedProof, FailToVerifyObjWellDefinedResult>,
+> {
+    stages.require_mode(detail)?;
     if !stages.is_fully_known() {
-        return Err(wrap_common_fail(obj, stages.into_common_fail(obj)));
+        return Ok(Err(wrap_common_fail(obj, stages.into_common_fail(obj))));
     }
-    Ok(pack_success_by_def(obj, stages))
+    Ok(Ok(super::entry::ObjWellDefinedProof::by_def(
+        detail,
+        obj,
+        None,
+        || pack_success_by_def(obj, stages),
+    )))
 }
 
 fn pack_success_by_def(

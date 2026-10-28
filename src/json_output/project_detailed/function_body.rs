@@ -398,13 +398,13 @@ fn project_template_application_domain(
             string(Obj::FunctionSpace(FunctionSpace::FnSet(checked.clone())).readable_string()),
         ),
     ];
-    if let TemplateApplicationDomainProof::Rechecked {
-        argument_well_defined,
-        requirement_fact_verified,
-        argument_scope,
-        ..
-    } = domain
-    {
+    if let TemplateApplicationDomainProof::Rechecked { argument_check, .. } = domain {
+        let Ok(checks) = argument_check.as_detailed() else {
+            return object_for(runtime, fields);
+        };
+        let argument_well_defined = &checks.child_obj_well_defined;
+        let requirement_fact_verified = &checks.requirement_fact_verified;
+        let argument_scope = &checks.argument_scope;
         fields.push((
             "argument_scope",
             argument_scope

@@ -10,11 +10,14 @@ mod definition_owned_type;
 mod entry;
 pub(crate) mod fail_to_verify_obj_well_defined;
 mod fn_obj_domain_check_result;
+mod fn_obj_domain_success;
 mod helper;
 mod iterated;
 mod matrix;
 mod obj_well_defined_by_def_common;
+mod obj_well_defined_proof;
 mod obj_well_defined_proof_by_def;
+mod obj_well_defined_proof_ref;
 mod preimage;
 mod requirement;
 mod scalar;
@@ -32,10 +35,23 @@ pub use fail_to_verify_obj_well_defined::{
     FailToVerifySequenceLiminfObjWellDefined, FailToVerifySequenceLimitObjWellDefined,
     FailToVerifySequenceLimsupObjWellDefined, FailToVerifySupremumObjWellDefined,
 };
+pub use obj_well_defined_proof::{
+    CheckedApplicationDomain, CompactObjWellDefinedProof, DetailedObjWellDefinedProof,
+    NormalObjWellDefinedProof, ObjWellDefinedComputation,
+};
 pub use obj_well_defined_proof_by_def::*;
+pub(crate) use obj_well_defined_proof_ref::ObjWellDefinedProofRef;
 
 pub use fn_obj_domain_check_result::{
     FnObjArgumentScope, FnObjDomainCheckResult, FormedFunctionArgument,
 };
+pub use fn_obj_domain_success::{
+    CompactFnObjDomainSuccess, DetailedFnObjDomainSuccess, FnObjDomainSuccess,
+    NormalFnObjDomainSuccess,
+};
 
 pub(crate) use obj_well_defined_by_def_common::ObjWellDefinedByDefCommonStages;
+pub use obj_well_defined_by_def_common::{
+    CompactObjWellDefinedByDefCommonStages, DetailedObjWellDefinedByDefCommonStages,
+    NormalObjWellDefinedByDefCommonStages,
+};

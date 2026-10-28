@@ -17,12 +17,15 @@ const OR_GUARD: &str = "have fn call_either_nonzero(x, y R: x != 0 or y != 0) R 
 const COMPOUND_OR_GUARD: &str = "have fn call_or_compound(x R: 0 < x < 3 or x = 4 and x != 0) R = x\n$is_set(call_or_compound(2))\n";
 
 fn checked(source: &str) -> (RunLitexCodeResult, LitexToLeanCompiler) {
-    let mut runtime = Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language: OutputLanguage::English,
-    });
+    let mut runtime = Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    );
     let result = runtime.run_litex_code(source).expect("typed source run");
     assert!(result.success && result.session_error.is_none(), "{source}");
     (result, LitexToLeanCompiler::new(runtime))
@@ -49,11 +52,14 @@ fn call_atomic(
 fn call_parts(
     proof: &VerifyAtomicExceptEqualityFactSuccess,
 ) -> (&ObjWellDefinedProof, &FnObj, &FnObjObjWellDefinedProof) {
-    let wd = &proof.well_defined_proof.well_defined_of_each_parameter[0];
-    let ObjWellDefinedProof::ByDef {
+    let wd = &proof
+        .well_defined_proof
+        .detailed_ref()
+        .well_defined_of_each_parameter[0];
+    let DetailedObjWellDefinedProof::ByDef {
         obj: Obj::FnObj(call),
         proof: ObjWellDefinedProofByDef::FnObj(evidence),
-    } = wd
+    } = (wd).as_detailed().unwrap()
     else {
         panic!("actual call constructor WD");
     };
@@ -75,10 +81,16 @@ fn call_evidence_mut(
     let VerifyAtomicExceptEqualityFactResult::Success(proof) = result.as_mut() else {
         panic!("successful atomic result");
     };
-    let ObjWellDefinedProof::ByDef {
+    let DetailedObjWellDefinedProof::ByDef {
         proof: ObjWellDefinedProofByDef::FnObj(evidence),
         ..
-    } = &mut proof.well_defined_proof.well_defined_of_each_parameter[0]
+    } = (&mut proof
+        .well_defined_proof
+        .as_detailed_mut()
+        .unwrap()
+        .well_defined_of_each_parameter[0])
+        .as_detailed_mut()
+        .unwrap()
     else {
         panic!("actual call WD");
     };

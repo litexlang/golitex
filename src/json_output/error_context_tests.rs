@@ -1,12 +1,15 @@
 use crate::prelude::*;
 
 fn runtime(language: OutputLanguage) -> Runtime {
-    Runtime::new(crate::launch_command::LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language,
-    })
+    Runtime::new_with_result_detail(
+        crate::launch_command::LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    )
 }
 
 fn field(value: &JsonValue, key: &str, language: OutputLanguage) -> JsonValue {

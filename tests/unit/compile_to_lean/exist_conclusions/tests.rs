@@ -8,12 +8,15 @@ const NAMED_CASES: &str = "thm geo_cases_plain_exist_probe:\n    ? forall geo_ca
 const FORALL: &str = "forall geo_forall_order_seed R:\n    exist geo_forall_order_copy R st {geo_forall_order_copy = geo_forall_order_seed}\n    exist geo_forall_order_zero R st {geo_forall_order_zero = 0}\n    =>:\n        exist geo_forall_order_output R st {geo_forall_order_output = geo_forall_order_seed}\n        exist geo_forall_order_zero_output R st {geo_forall_order_zero_output = 0}\n";
 
 fn checked(source: &str) -> (RunLitexCodeResult, LitexToLeanCompiler) {
-    let mut runtime = Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language: OutputLanguage::English,
-    });
+    let mut runtime = Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    );
     let run = runtime.run_litex_code(source).expect("source execution");
     assert!(
         run.success && run.session_error.is_none(),
@@ -119,10 +122,11 @@ fn geo_named_exist_conclusion_rejects_missing_original_body_formation() {
     else {
         panic!("original forall goal formation")
     };
-    let FactWellDefinedProof::ExistFact(exist) = &mut goal.then[0] else {
+    let FactWellDefinedProof::ExistFact(exist) = &mut goal.as_detailed_mut().unwrap().then[0]
+    else {
         panic!("original existential conclusion formation")
     };
-    exist.assumed_body_facts.clear();
+    exist.as_detailed_mut().unwrap().assumed_body_facts.clear();
     assert_eq!(
         compiler
             .compile_run(&run, "missing_exist_formation")

@@ -228,12 +228,15 @@ fn restricted_search_does_not_reenable_rules_and_failures_do_not_publish() {
 fn normal_locales_and_unsupported_lean_boundary_remain_explicit() {
     for language in OutputLanguage::ALL {
         for source in VALID {
-            let mut rt = Runtime::new(LaunchCommand::Eval {
-                code: String::new(),
-                session: false,
-                strict: true,
-                language,
-            });
+            let mut rt = Runtime::new_with_result_detail(
+                LaunchCommand::Eval {
+                    code: String::new(),
+                    session: false,
+                    strict: true,
+                    language,
+                },
+                crate::result_detail::OutputDetail::Detailed,
+            );
             let run = check(&mut rt, source, true);
             let normal =
                 crate::json_output::project_run_normal(&run, &rt, "eval", None).stringify_pretty();
@@ -251,12 +254,15 @@ fn normal_locales_and_unsupported_lean_boundary_remain_explicit() {
 }
 
 fn runtime() -> Runtime {
-    Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language: OutputLanguage::English,
-    })
+    Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    )
 }
 
 fn check(rt: &mut Runtime, source: &str, expected: bool) -> RunLitexCodeResult {

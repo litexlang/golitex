@@ -4,12 +4,15 @@ use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnObjDo
 use crate::prelude::*;
 
 fn checked(source: &str) -> (RunLitexCodeResult, LitexToLeanCompiler) {
-    let mut runtime = Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language: OutputLanguage::English,
-    });
+    let mut runtime = Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    );
     let result = runtime.run_litex_code(source).expect("typed source run");
     assert!(result.success && result.session_error.is_none(), "{source}");
     (result, LitexToLeanCompiler::new(runtime))
@@ -35,7 +38,10 @@ fn actual_call_wd(
     (
         &statement.verify_result,
         &atomic.well_defined_proof,
-        &atomic.well_defined_proof.well_defined_of_each_parameter[0],
+        &atomic
+            .well_defined_proof
+            .detailed_ref()
+            .well_defined_of_each_parameter[0],
     )
 }
 
@@ -154,10 +160,16 @@ fn numeric_call_observation_rejects_a_forged_selected_return() {
     let VerifyAtomicExceptEqualityFactResult::Success(atomic) = atomic.as_mut() else {
         panic!("successful call formation");
     };
-    let ObjWellDefinedProof::ByDef {
+    let DetailedObjWellDefinedProof::ByDef {
         proof: ObjWellDefinedProofByDef::FnObj(call),
         ..
-    } = &mut atomic.well_defined_proof.well_defined_of_each_parameter[0]
+    } = (&mut atomic
+        .well_defined_proof
+        .as_detailed_mut()
+        .unwrap()
+        .well_defined_of_each_parameter[0])
+        .as_detailed_mut()
+        .unwrap()
     else {
         panic!("actual call constructor");
     };

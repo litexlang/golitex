@@ -29,9 +29,13 @@ impl LitexToLeanCompiler {
             ));
         }
         let (original, wd, reversed) = if residual.right == fact.right {
-            (&fact.left, parent_wd.map(|p| &p.left), false)
+            (&fact.left, parent_wd.map(|p| &p.detailed_ref().left), false)
         } else if residual.right == fact.left {
-            (&fact.right, parent_wd.map(|p| &p.right), true)
+            (
+                &fact.right,
+                parent_wd.map(|p| &p.detailed_ref().right),
+                true,
+            )
         } else {
             return Err(LeanCompileError::unsupported(
                 "PiecewiseUnfold/ResidualEndpoint",
@@ -90,10 +94,10 @@ impl LitexToLeanCompiler {
         )?;
         let emit = |wd: &ObjWellDefinedProof, site: &SourcePosition<'_>| {
             ensure_object(original, wd)?;
-            let ObjWellDefinedProof::ByDef {
+            let DetailedObjWellDefinedProof::ByDef {
                 proof: ObjWellDefinedProofByDef::FnObj(call),
                 ..
-            } = wd
+            } = (wd).detailed_ref()
             else {
                 return Err(LeanCompileError::unsupported("PiecewiseUnfold/Formation"));
             };
@@ -163,13 +167,15 @@ impl LitexToLeanCompiler {
                 equal
             })
         };
-        if let Some(
-            wd @ ObjWellDefinedProof::ByDef {
-                proof: ObjWellDefinedProofByDef::FnObj(_),
-                ..
-            },
-        ) = wd
-        {
+        if let Some(wd) = wd.filter(|wd| {
+            matches!(
+                wd.detailed_ref(),
+                DetailedObjWellDefinedProof::ByDef {
+                    proof: ObjWellDefinedProofByDef::FnObj(_),
+                    ..
+                }
+            )
+        }) {
             emit(wd, position)
         } else {
             position

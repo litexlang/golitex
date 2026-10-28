@@ -17,12 +17,15 @@ alias_positive(1) = 1\n\
 let reals = R\n\
 have fn first_real(x R, y R) reals = x\n\
 forall x R, y R:\n    first_real(x, y) = x\n";
-    let mut runtime = Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language: OutputLanguage::English,
-    });
+    let mut runtime = Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    );
     let result = runtime.run_litex_code(source).expect("original source run");
     assert!(result.success && result.session_error.is_none());
     let lean = LitexToLeanCompiler::new(runtime)

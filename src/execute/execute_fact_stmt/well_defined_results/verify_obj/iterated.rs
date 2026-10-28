@@ -42,7 +42,7 @@ impl Runtime {
         obj: &Obj,
         state: VerifyState,
     ) -> RuntimeResult<super::entry::VerifyObjWellDefinedResult> {
-        use super::entry::{ObjWellDefinedProof, VerifyObjWellDefinedResult};
+        use super::entry::VerifyObjWellDefinedResult;
         use super::obj_well_defined_proof_by_def::{
             IteratedOperatorObjWellDefinedProofByDef as P, ObjWellDefinedProofByDef,
         };
@@ -62,33 +62,34 @@ impl Runtime {
             }
             _ => unreachable!("four scalar aggregate entrypoints only"),
         };
-        match super::wrap_obj_well_defined_by_def::finish_by_def(obj, stages.common) {
+        match super::wrap_obj_well_defined_by_def::finish_by_def(
+            obj,
+            stages.common,
+            self.result_detail(),
+        )? {
             Err(reason) => Ok(VerifyObjWellDefinedResult::Failed {
                 obj: obj.clone(),
                 reason,
             }),
             Ok(mut proof) => {
-                match &mut proof {
-                    ObjWellDefinedProofByDef::IteratedOperator(P::Sum(p)) => {
-                        p.signature_selection = stages.signature_selection
+                if let Some(by_def) = proof.by_def_mut() {
+                    match by_def {
+                        ObjWellDefinedProofByDef::IteratedOperator(P::Sum(p)) => {
+                            p.signature_selection = stages.signature_selection
+                        }
+                        ObjWellDefinedProofByDef::IteratedOperator(P::Product(p)) => {
+                            p.signature_selection = stages.signature_selection
+                        }
+                        ObjWellDefinedProofByDef::IteratedOperator(P::SumOfFiniteSet(p)) => {
+                            p.signature_selection = stages.signature_selection
+                        }
+                        ObjWellDefinedProofByDef::IteratedOperator(P::ProductOfFiniteSet(p)) => {
+                            p.signature_selection = stages.signature_selection
+                        }
+                        _ => unreachable!("matching aggregate proof"),
                     }
-                    ObjWellDefinedProofByDef::IteratedOperator(P::Product(p)) => {
-                        p.signature_selection = stages.signature_selection
-                    }
-                    ObjWellDefinedProofByDef::IteratedOperator(P::SumOfFiniteSet(p)) => {
-                        p.signature_selection = stages.signature_selection
-                    }
-                    ObjWellDefinedProofByDef::IteratedOperator(P::ProductOfFiniteSet(p)) => {
-                        p.signature_selection = stages.signature_selection
-                    }
-                    _ => unreachable!("matching aggregate proof"),
                 }
-                Ok(VerifyObjWellDefinedResult::Success(
-                    ObjWellDefinedProof::ByDef {
-                        obj: obj.clone(),
-                        proof,
-                    },
-                ))
+                Ok(VerifyObjWellDefinedResult::Success(proof))
             }
         }
     }
@@ -98,7 +99,7 @@ impl Runtime {
         obj: &Obj,
         state: VerifyState,
     ) -> RuntimeResult<super::entry::VerifyObjWellDefinedResult> {
-        use super::entry::{ObjWellDefinedProof, VerifyObjWellDefinedResult};
+        use super::entry::VerifyObjWellDefinedResult;
         use super::obj_well_defined_proof_by_def::{
             IteratedOperatorObjWellDefinedProofByDef as P, ObjWellDefinedProofByDef,
         };
@@ -112,29 +113,30 @@ impl Runtime {
             }
             _ => unreachable!("two fold constructors only"),
         };
-        match super::wrap_obj_well_defined_by_def::finish_by_def(obj, stages.common) {
+        match super::wrap_obj_well_defined_by_def::finish_by_def(
+            obj,
+            stages.common,
+            self.result_detail(),
+        )? {
             Err(reason) => Ok(VerifyObjWellDefinedResult::Failed {
                 obj: obj.clone(),
                 reason,
             }),
             Ok(mut proof) => {
-                match &mut proof {
-                    ObjWellDefinedProofByDef::IteratedOperator(P::Reduce(p)) => {
-                        p.operation_signature_selection = stages.signatures.operation;
-                        p.iterand_signature_selection = stages.signatures.iterand;
+                if let Some(by_def) = proof.by_def_mut() {
+                    match by_def {
+                        ObjWellDefinedProofByDef::IteratedOperator(P::Reduce(p)) => {
+                            p.operation_signature_selection = stages.signatures.operation;
+                            p.iterand_signature_selection = stages.signatures.iterand;
+                        }
+                        ObjWellDefinedProofByDef::IteratedOperator(P::FiniteSetReduce(p)) => {
+                            p.operation_signature_selection = stages.signatures.operation;
+                            p.iterand_signature_selection = stages.signatures.iterand;
+                        }
+                        _ => unreachable!("matching fold proof"),
                     }
-                    ObjWellDefinedProofByDef::IteratedOperator(P::FiniteSetReduce(p)) => {
-                        p.operation_signature_selection = stages.signatures.operation;
-                        p.iterand_signature_selection = stages.signatures.iterand;
-                    }
-                    _ => unreachable!("matching fold proof"),
                 }
-                Ok(VerifyObjWellDefinedResult::Success(
-                    ObjWellDefinedProof::ByDef {
-                        obj: obj.clone(),
-                        proof,
-                    },
-                ))
+                Ok(VerifyObjWellDefinedResult::Success(proof))
             }
         }
     }

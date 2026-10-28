@@ -232,12 +232,15 @@ fn direct_carrier_json_retains_tree_and_bilingual_reason() {
         .get("cite_fact_id")
         .is_some());
     for language in [OutputLanguage::English, OutputLanguage::Chinese] {
-        let mut rt = Runtime::new(LaunchCommand::Eval {
-            code: String::new(),
-            session: false,
-            strict: true,
-            language,
-        });
+        let mut rt = Runtime::new_with_result_detail(
+            LaunchCommand::Eval {
+                code: String::new(),
+                session: false,
+                strict: true,
+                language,
+            },
+            crate::result_detail::OutputDetail::Detailed,
+        );
         let result = rt.run_litex_code("have x R\nfloor(x)+1 $in Z").unwrap();
         assert!(result.success);
         let json = crate::json_output::emit_run_normal(&result, &rt, "eval", None);
@@ -275,7 +278,9 @@ fn order_domain_reuses_checked_argument_wd_without_publishing_it() {
     else {
         panic!("finite difference comparison WD")
     };
-    let PredicateDomainProof::ByCheckedArguments(requirements) = proof.predicate_domain else {
+    let PredicateDomainProof::ByCheckedArguments(requirements) =
+        &proof.detailed_ref().predicate_domain
+    else {
         panic!("checked argument domain fallback")
     };
     assert_eq!(requirements.len(), 2);
@@ -329,12 +334,15 @@ fn order_domain_reuse_projects_its_checked_argument_provenance() {
 }
 
 fn runtime() -> Runtime {
-    Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language: OutputLanguage::English,
-    })
+    Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    )
 }
 fn parse(rt: &mut Runtime, code: &str) -> Stmt {
     let tokens = Tokenizer::new()

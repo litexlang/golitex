@@ -2,12 +2,15 @@ use super::LitexToLeanCompiler;
 use crate::prelude::*;
 
 fn checked() -> (Runtime, RunLitexCodeResult) {
-    let mut runtime = Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language: OutputLanguage::English,
-    });
+    let mut runtime = Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    );
     let result = runtime
         .run_litex_code("prop nonzero(x R):\n    x != 0\n$nonzero(1)\n1 $in C\n")
         .unwrap();
@@ -33,8 +36,10 @@ fn predicate_wd(result: &mut RunLitexCodeResult) -> &mut AtomicFactWellDefinedPr
 #[test]
 fn concrete_prop_formation_preserves_its_actual_empty_domain_route() {
     let (runtime, mut result) = checked();
-    let PredicateDomainProof::ByRequirements(requirements) =
-        &mut predicate_wd(&mut result).predicate_domain
+    let PredicateDomainProof::ByRequirements(requirements) = &mut predicate_wd(&mut result)
+        .as_detailed_mut()
+        .unwrap()
+        .predicate_domain
     else {
         panic!("actual predicate formation route");
     };
@@ -53,8 +58,10 @@ fn concrete_prop_rejects_an_added_true_domain_stage_the_producer_did_not_execute
         panic!("actual true complex membership");
     };
     let other = other.verify_result;
-    let PredicateDomainProof::ByRequirements(requirements) =
-        &mut predicate_wd(&mut result).predicate_domain
+    let PredicateDomainProof::ByRequirements(requirements) = &mut predicate_wd(&mut result)
+        .as_detailed_mut()
+        .unwrap()
+        .predicate_domain
     else {
         panic!("actual predicate formation route");
     };
@@ -80,7 +87,10 @@ fn concrete_prop_rejects_an_added_true_domain_stage_the_producer_did_not_execute
 #[test]
 fn concrete_prop_rejects_counterfeit_builtin_predicate_signature() {
     let (runtime, mut result) = checked();
-    predicate_wd(&mut result).predicate_signature = PredicateSignatureWellDefinedProof::Builtin;
+    predicate_wd(&mut result)
+        .as_detailed_mut()
+        .unwrap()
+        .predicate_signature = PredicateSignatureWellDefinedProof::Builtin;
     let error = LitexToLeanCompiler::new(runtime)
         .compile_run(&result, "wrong_signature_family")
         .unwrap_err();
@@ -104,12 +114,15 @@ fn checked_argument_domains_compile_and_reject_changed_indices_or_subjects() {
         "missing",
         "reordered",
     ] {
-        let mut runtime = Runtime::new(LaunchCommand::Eval {
-            code: String::new(),
-            session: false,
-            strict: true,
-            language: OutputLanguage::English,
-        });
+        let mut runtime = Runtime::new_with_result_detail(
+            LaunchCommand::Eval {
+                code: String::new(),
+                session: false,
+                strict: true,
+                language: OutputLanguage::English,
+            },
+            crate::result_detail::OutputDetail::Detailed,
+        );
         let mut result = runtime.run_litex_code("1 < 2").unwrap();
         assert!(result.success);
         let ExecStmtResult::Fact(ExecFactStmtResult::Success(statement)) =
@@ -124,7 +137,11 @@ fn checked_argument_domains_compile_and_reject_changed_indices_or_subjects() {
             panic!("success")
         };
         let domain = std::mem::replace(
-            &mut proof.well_defined_proof.predicate_domain,
+            &mut proof
+                .well_defined_proof
+                .as_detailed_mut()
+                .unwrap()
+                .predicate_domain,
             PredicateDomainProof::ByRequirements(Vec::new()),
         );
         let PredicateDomainProof::ByRequirements(requirements) = domain else {
@@ -159,8 +176,11 @@ fn checked_argument_domains_compile_and_reject_changed_indices_or_subjects() {
             "reordered" => checked.swap(0, 1),
             _ => {}
         }
-        proof.well_defined_proof.predicate_domain =
-            PredicateDomainProof::ByCheckedArguments(checked);
+        proof
+            .well_defined_proof
+            .as_detailed_mut()
+            .unwrap()
+            .predicate_domain = PredicateDomainProof::ByCheckedArguments(checked);
         let compilation =
             LitexToLeanCompiler::new(runtime).compile_run(&result, "checked_argument_domain");
         if change == "valid" {

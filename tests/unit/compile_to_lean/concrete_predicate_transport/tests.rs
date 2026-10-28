@@ -221,7 +221,11 @@ fn concrete_predicate_transport_rejects_a_changed_original_target_wd_subject() {
         &mut super::fact_statement_mut(&mut result.statement_results[3]).verify_result,
     );
     super::replace_wd_subject(
-        &mut atomic.well_defined_proof.well_defined_of_each_parameter[0],
+        &mut atomic
+            .well_defined_proof
+            .as_detailed_mut()
+            .unwrap()
+            .well_defined_of_each_parameter[0],
         super::number_object("7"),
     );
     super::phase2_rejected(&result, &compiler, "wrong_target_wd", &["WD/", "FactId/"]);

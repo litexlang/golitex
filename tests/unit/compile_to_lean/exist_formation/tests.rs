@@ -3,12 +3,15 @@ use crate::execute::{ExecDefPropStmtResult, ExecDefPropStmtSuccessResult};
 use crate::prelude::*;
 
 fn checked(source: &str) -> (RunLitexCodeResult, Runtime) {
-    let mut runtime = Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language: OutputLanguage::English,
-    });
+    let mut runtime = Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    );
     let run = runtime.run_litex_code(source).unwrap();
     assert!(
         run.success && run.session_error.is_none(),
@@ -42,12 +45,13 @@ fn geo_exist_formation_keeps_canonical_objects_and_original_guard_ids() {
         panic!("exist formation")
     };
     let member_id = formation
+        .detailed_ref()
         .introduced_params
         .defined_params
         .store_and_infer_results[0]
         .primary_fact_id()
         .value();
-    let guard_id = formation.assumed_body_facts[0]
+    let guard_id = formation.detailed_ref().assumed_body_facts[0]
         .store_and_infer
         .primary_fact_id()
         .value();
@@ -80,9 +84,17 @@ fn geo_exist_formation_rejects_missing_or_reordered_guard_evidence() {
             panic!("exist formation")
         };
         if remove {
-            formation.assumed_body_facts.remove(0);
+            formation
+                .as_detailed_mut()
+                .unwrap()
+                .assumed_body_facts
+                .remove(0);
         } else {
-            formation.assumed_body_facts.swap(0, 1);
+            formation
+                .as_detailed_mut()
+                .unwrap()
+                .assumed_body_facts
+                .swap(0, 1);
         }
         let error = LitexToLeanCompiler::new(runtime)
             .compile_run(&run, "bad_exist_evidence")

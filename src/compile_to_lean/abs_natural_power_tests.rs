@@ -5,12 +5,15 @@ use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::{
 use crate::prelude::*;
 
 fn checked(source: &str) -> (RunLitexCodeResult, LitexToLeanCompiler) {
-    let mut runtime = Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language: OutputLanguage::English,
-    });
+    let mut runtime = Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    );
     let result = runtime.run_litex_code(source).expect("source run");
     assert!(result.success && result.session_error.is_none(), "{source}");
     (result, LitexToLeanCompiler::new(runtime))
@@ -27,13 +30,19 @@ fn abs_mut(result: &mut RunLitexCodeResult) -> &mut AbsObjWellDefinedProof {
     let VerifyAtomicExceptEqualityFactResult::Success(proof) = proof.as_mut() else {
         panic!("actual success")
     };
-    let ObjWellDefinedProof::ByDef {
+    let DetailedObjWellDefinedProof::ByDef {
         proof:
             ObjWellDefinedProofByDef::ArithmeticOperator(
                 ArithmeticOperatorObjWellDefinedProofByDef::Abs(abs),
             ),
         ..
-    } = &mut proof.well_defined_proof.well_defined_of_each_parameter[0]
+    } = (&mut proof
+        .well_defined_proof
+        .as_detailed_mut()
+        .unwrap()
+        .well_defined_of_each_parameter[0])
+        .as_detailed_mut()
+        .unwrap()
     else {
         panic!("original owned abs constructor")
     };
@@ -51,13 +60,15 @@ fn pow_mut(result: &mut RunLitexCodeResult) -> &mut PowObjWellDefinedProof {
     let VerifyEqualityResult::Success(proof) = proof.as_mut() else {
         panic!("actual success")
     };
-    let ObjWellDefinedProof::ByDef {
+    let DetailedObjWellDefinedProof::ByDef {
         proof:
             ObjWellDefinedProofByDef::ArithmeticOperator(
                 ArithmeticOperatorObjWellDefinedProofByDef::Pow(pow),
             ),
         ..
-    } = &mut proof.well_defined_proof.left
+    } = (&mut proof.well_defined_proof.as_detailed_mut().unwrap().left)
+        .as_detailed_mut()
+        .unwrap()
     else {
         panic!("original owned power constructor")
     };
@@ -124,8 +135,10 @@ fn absolute_value_rejects_missing_original_child_and_domain_evidence() {
 #[test]
 fn absolute_value_rejects_an_original_child_subject_changed_after_verification() {
     let (mut result, compiler) = checked("$is_set(|-2|)\n");
-    let ObjWellDefinedProof::ByDef { obj, .. } =
-        abs_mut(&mut result).child_obj_well_defined[0].as_mut()
+    let DetailedObjWellDefinedProof::ByDef { obj, .. } =
+        (abs_mut(&mut result).child_obj_well_defined[0].as_mut())
+            .as_detailed_mut()
+            .unwrap()
     else {
         panic!("actual original number WD")
     };

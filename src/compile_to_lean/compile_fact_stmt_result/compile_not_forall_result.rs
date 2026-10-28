@@ -136,17 +136,22 @@ impl LitexToLeanCompiler {
         self.compile_quantified_head(
             &fact.typed_parameters,
             &domains,
-            &proof.introduced_params,
-            &proof.assumed_dom_facts,
+            &proof.detailed_ref().introduced_params,
+            &proof.detailed_ref().assumed_dom_facts,
             &scope,
         )?;
-        if fact.then_facts.len() != proof.then.len() {
+        if fact.then_facts.len() != proof.detailed_ref().then.len() {
             return Err(LeanCompileError::unsupported(
                 "NotForall/ThenFormationArity",
             ));
         }
         let head = fact.typed_parameters.ordered_param_ids().len() + domains.len();
-        for (index, (clause, wd)) in fact.then_facts.iter().zip(&proof.then).enumerate() {
+        for (index, (clause, wd)) in fact
+            .then_facts
+            .iter()
+            .zip(&proof.detailed_ref().then)
+            .enumerate()
+        {
             let clause = crate::instantiate::quantifier_free_fact_to_fact(clause.clone());
             self.compile_fact_wd(
                 wd,
@@ -202,6 +207,7 @@ impl LitexToLeanCompiler {
             .zip(
                 &child
                     .well_defined_proof
+                    .detailed_ref()
                     .introduced_params
                     .defined_params
                     .store_and_infer_results,

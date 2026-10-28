@@ -5,7 +5,6 @@ use crate::execute::execute_fact_stmt::verify_and_fact::result::{
     and_fact_result_from_component_fail, and_fact_result_from_success,
 };
 use crate::execute::execute_fact_stmt::verify_and_fact::VerifyAndFactWellDefinedResult;
-use crate::execute::execute_fact_stmt::verify_atomic_fact::match_forall_conclusion_args::subst_from_ordered_params;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::SearchProofByKnownForallFact;
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::execute::execute_fact_stmt::VerifyState;
@@ -93,8 +92,8 @@ impl Runtime {
             else {
                 continue;
             };
-            let subst =
-                subst_from_ordered_params(&params, &matched.forall_parameters_match_what_args);
+            let (subst, forall_parameters_match_what_args, arg_match_proofs) =
+                matched.into_parts(self.result_detail())?;
             let Some(req) = self.prove_forall_instantiation_requirements(
                 &forall,
                 &subst,
@@ -103,12 +102,14 @@ impl Runtime {
             else {
                 continue;
             };
-            return Ok(Some(SearchProofByKnownForallFact {
+            return Ok(Some(SearchProofByKnownForallFact::from_children(
+                self.result_detail(),
                 cite,
-                forall_parameters_match_what_args: matched.forall_parameters_match_what_args,
-                arg_match_proofs: matched.arg_match_proofs,
-                instantiation_requirements: req,
-            }));
+                &forall,
+                forall_parameters_match_what_args,
+                arg_match_proofs,
+                req,
+            )?));
         }
         Ok(None)
     }

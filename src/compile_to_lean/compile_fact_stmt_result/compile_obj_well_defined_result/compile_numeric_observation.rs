@@ -100,12 +100,13 @@ impl LitexToLeanCompiler {
                     if cursor.before
                         >= proof
                             .well_defined_proof
+                            .detailed_ref()
                             .well_defined_of_each_parameter
                             .len()
                         && source_order_parts(&proof.fact).is_ok()
                     {
                         if let PredicateDomainProof::ByCheckedArguments(requirements) =
-                            &proof.well_defined_proof.predicate_domain
+                            &proof.well_defined_proof.detailed_ref().predicate_domain
                         {
                             let args = atomic_fact_args_ref(&proof.fact);
                             for requirement in requirements {
@@ -129,7 +130,7 @@ impl LitexToLeanCompiler {
                             }
                         }
                         if let PredicateDomainProof::ByKnownFact(known) =
-                            &proof.well_defined_proof.predicate_domain
+                            &proof.well_defined_proof.detailed_ref().predicate_domain
                         {
                             let args = atomic_fact_args_ref(&proof.fact);
                             if args.len() == 2
@@ -406,27 +407,27 @@ impl LitexToLeanCompiler {
             let member = format!("(Litex.NativeBridge.inOfDenoteNumber {term} {literal} Litex.C {proof} (Litex.numberInC {literal}))");
             return Ok((literal, proof, member, Some(value)));
         }
-        match wd {
-            ObjWellDefinedProof::ByDef {
+        match (wd).detailed_ref() {
+            DetailedObjWellDefinedProof::ByDef {
                 obj: Obj::ComplexOperator(_),
                 proof: ObjWellDefinedProofByDef::ComplexOperator(_),
             } => self.numeric_complex_wd(wd, position),
-            ObjWellDefinedProof::ByDef {
+            DetailedObjWellDefinedProof::ByDef {
                 obj: Obj::HyperbolicOperator(_),
                 proof: ObjWellDefinedProofByDef::HyperbolicOperator(_),
             } => self.numeric_hyperbolic_wd(wd, position),
-            ObjWellDefinedProof::ByDef {
+            DetailedObjWellDefinedProof::ByDef {
                 obj: Obj::TrigOperator(_),
                 proof: ObjWellDefinedProofByDef::TrigOperator(_),
             } => self.numeric_trig_wd(wd, position),
-            ObjWellDefinedProof::ByDef {
+            DetailedObjWellDefinedProof::ByDef {
                 obj:
                     Obj::ExpLogOperator(
                         ExpLogOperator::Exp(_) | ExpLogOperator::Ln(_) | ExpLogOperator::Log(_),
                     ),
                 proof: ObjWellDefinedProofByDef::ExpLogOperator(_),
             } => self.numeric_exp_log_wd(wd, position),
-            ObjWellDefinedProof::ByDef {
+            DetailedObjWellDefinedProof::ByDef {
                 obj,
                 proof: ObjWellDefinedProofByDef::Literal(_),
             } if native_real_constant(obj).is_some() => {
@@ -439,11 +440,11 @@ impl LitexToLeanCompiler {
                     None,
                 ))
             }
-            ObjWellDefinedProof::ByDef {
+            DetailedObjWellDefinedProof::ByDef {
                 obj: Obj::FiniteSetStat(_),
                 proof: ObjWellDefinedProofByDef::FiniteSetStat(_),
             } => self.numeric_finite_stat_wd(wd, position),
-            ObjWellDefinedProof::ByDef {
+            DetailedObjWellDefinedProof::ByDef {
                 obj: object @ Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(_)),
                 ..
             } => {
@@ -452,10 +453,10 @@ impl LitexToLeanCompiler {
                     .ok_or_else(|| LeanCompileError::unsupported("StructField/NumericMembership"))
             }
 
-            ObjWellDefinedProof::ByKnown { obj, .. } => {
+            DetailedObjWellDefinedProof::ByKnown { obj, .. } => {
                 self.compile_numeric_observation(obj, position)
             }
-            ObjWellDefinedProof::ByDef {
+            DetailedObjWellDefinedProof::ByDef {
                 obj: Obj::Literal(Literal::Number(number)),
                 proof: ObjWellDefinedProofByDef::Literal(LiteralObjWellDefinedProofByDef::Number(_)),
             } => {
@@ -464,13 +465,13 @@ impl LitexToLeanCompiler {
                     value.clone(),
                     format!("(Litex.NativeBridge.denoteNumber (M := M) {value})"),
                     format!("(Litex.numberInC (M := M) {value})"),
-                    EvalRational::from_obj(match wd {
-                        ObjWellDefinedProof::ByDef { obj, .. } => obj,
+                    EvalRational::from_obj(match (wd).detailed_ref() {
+                        DetailedObjWellDefinedProof::ByDef { obj, .. } => obj,
                         _ => unreachable!(),
                     }),
                 ))
             }
-            ObjWellDefinedProof::ByDef {
+            DetailedObjWellDefinedProof::ByDef {
                 obj: Obj::Literal(Literal::ImaginaryUnit(_)),
                 proof:
                     ObjWellDefinedProofByDef::Literal(LiteralObjWellDefinedProofByDef::ImaginaryUnit(_)),
@@ -480,7 +481,7 @@ impl LitexToLeanCompiler {
                 "(Litex.numberInC (M := M) Complex.I)".into(),
                 None,
             )),
-            ObjWellDefinedProof::ByDef {
+            DetailedObjWellDefinedProof::ByDef {
                 obj: Obj::IntegerOperator(operator),
                 proof: ObjWellDefinedProofByDef::IntegerOperator(proof),
             } => {
@@ -522,7 +523,7 @@ impl LitexToLeanCompiler {
                     )),
                 }
             }
-            ObjWellDefinedProof::ByDef {
+            DetailedObjWellDefinedProof::ByDef {
                 obj: Obj::ArithmeticOperator(operation),
                 proof: ObjWellDefinedProofByDef::ArithmeticOperator(proof),
             } => {
@@ -628,14 +629,14 @@ impl LitexToLeanCompiler {
                 }?;
                 Ok(pair)
             }
-            ObjWellDefinedProof::ByDef {
+            DetailedObjWellDefinedProof::ByDef {
                 obj: Obj::ExpLogOperator(ExpLogOperator::Sqrt(_)),
                 proof:
                     ObjWellDefinedProofByDef::ExpLogOperator(
                         ExpLogOperatorObjWellDefinedProofByDef::Sqrt(_),
                     ),
             } => self.numeric_sqrt_wd(wd, position),
-            ObjWellDefinedProof::ByDef {
+            DetailedObjWellDefinedProof::ByDef {
                 obj: object @ Obj::FnObj(_),
                 proof: ObjWellDefinedProofByDef::FnObj(_),
             } => {
@@ -695,7 +696,7 @@ impl LitexToLeanCompiler {
                     None,
                 ))
             }
-            ObjWellDefinedProof::ByDef {
+            DetailedObjWellDefinedProof::ByDef {
                 obj,
                 proof: ObjWellDefinedProofByDef::Identifier(_),
             } => {
@@ -757,7 +758,9 @@ impl LitexToLeanCompiler {
                     "Identifier WD alone does not certify numeric membership.",
                 ))
             }
-            ObjWellDefinedProof::ByDef { proof, .. } => Err(unsupported_wd_definition(proof)),
+            DetailedObjWellDefinedProof::ByDef { proof, .. } => {
+                Err(unsupported_wd_definition(proof))
+            }
         }
     }
 
@@ -767,10 +770,10 @@ impl LitexToLeanCompiler {
         position: &SourcePosition<'_>,
         output_reference: Option<&str>,
     ) -> Result<(String, StandardSet, String), LeanCompileError> {
-        let ObjWellDefinedProof::ByDef {
+        let DetailedObjWellDefinedProof::ByDef {
             obj: Obj::FnObj(application),
             proof: ObjWellDefinedProofByDef::FnObj(proof),
-        } = wd
+        } = (wd).detailed_ref()
         else {
             return Err(LeanCompileError::new(
                 "Arithmetic/FunctionOutputWD",
@@ -809,8 +812,8 @@ impl LitexToLeanCompiler {
         wd: &ObjWellDefinedProof,
         position: &SourcePosition<'_>,
     ) -> Result<Option<String>, LeanCompileError> {
-        match wd {
-            ObjWellDefinedProof::ByKnown {
+        match (wd).detailed_ref() {
+            DetailedObjWellDefinedProof::ByKnown {
                 obj: object @ Obj::FnObj(_),
                 wd_id,
             } => {
@@ -828,7 +831,7 @@ impl LitexToLeanCompiler {
                     })?
                     .flatten())
             }
-            ObjWellDefinedProof::ByDef {
+            DetailedObjWellDefinedProof::ByDef {
                 obj: Obj::FnObj(_),
                 proof: ObjWellDefinedProofByDef::FnObj(_),
             } => {

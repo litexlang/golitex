@@ -122,6 +122,41 @@ fn site_chapters_preserve_the_complete_bundle_and_reference_closure() {
     let mut loaded = BTreeSet::new();
     for source in manifest.field("sources").as_array().unwrap() {
         assert!(source.as_object().unwrap().get("content").is_none());
+        let source_data = JsonValue::parse(
+            &fs::read_to_string(directory.join(source.field("source_url").as_str().unwrap()))
+                .unwrap(),
+        )
+        .unwrap();
+        assert_eq!(
+            source_data.field("kind").as_str().unwrap(),
+            "reading_source"
+        );
+        assert_eq!(
+            source_data.field("manifest_id"),
+            manifest.field("manifest_id")
+        );
+        let original_source = full
+            .field("sources")
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|value| value.field("id") == source.field("id"))
+            .unwrap();
+        for key in ["id", "path", "content"] {
+            assert_eq!(
+                source_data.field("source").field(key),
+                original_source.field(key)
+            );
+        }
+        assert!(source_data
+            .field("source")
+            .as_object()
+            .unwrap()
+            .get("tokens")
+            .is_none());
+        for key in ["statements", "facts", "evidence_nodes", "inferences"] {
+            assert!(source_data.as_object().unwrap().get(key).is_none());
+        }
         let part = JsonValue::parse(
             &fs::read_to_string(directory.join(source.field("chunk_url").as_str().unwrap()))
                 .unwrap(),

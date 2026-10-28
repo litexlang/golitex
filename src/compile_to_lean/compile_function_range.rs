@@ -102,10 +102,10 @@ impl LitexToLeanCompiler {
         };
         position
             .with_visible_wd(&goal.element, &mut |wd, producer| {
-                let ObjWellDefinedProof::ByDef {
+                let DetailedObjWellDefinedProof::ByDef {
                     obj: Obj::FnObj(call),
                     proof: ObjWellDefinedProofByDef::FnObj(evidence),
-                } = wd
+                } = (wd).detailed_ref()
                 else {
                     return Err(LeanCompileError::unsupported("FnRange/CallFormation"));
                 };
@@ -264,10 +264,10 @@ impl LitexToLeanCompiler {
         }
         position
             .with_visible_wd(&goal.element, &mut |wd, producer| {
-                let ObjWellDefinedProof::ByDef {
+                let DetailedObjWellDefinedProof::ByDef {
                     obj: Obj::FnObj(call),
                     proof: ObjWellDefinedProofByDef::FnObj(evidence),
-                } = wd
+                } = (wd).detailed_ref()
                 else {
                     return Err(LeanCompileError::unsupported("FnRange/CallFormation"));
                 };

@@ -20,7 +20,7 @@ HERE = Path(__file__).resolve().parent
 
 
 def clean(source):
-    pattern = r'//[^\n]*|/\*[\s\S]*?\*/|r\#*"[\s\S]*?"\#*|"(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])\''
+    pattern = r'//[^\n]*|/\*[\s\S]*?\*/|r\#*"[\s\S]*?"\#*|"(?:\\[\s\S]|[^"\\])*"|\'(?:\\[\s\S]|[^\'\\])\''
     return re.sub(pattern, lambda match: ' ' * len(match[0]), source)
 
 
@@ -151,6 +151,12 @@ def inventory():
             types[full] = record
             by_name[name].append(full)
     return types, by_name, imports, sources
+
+
+def is_result_mode_dispatcher(record):
+    return (record['kind'] == 'enum'
+            and {name for name, _, _ in record['variants']} == {'Compact', 'Normal', 'Detailed'}
+            and all(shape == '(' and len(data) == 1 for _, shape, data in record['variants']))
 
 
 class Generator:
@@ -361,6 +367,9 @@ class Generator:
             pattern = prefix + '(' + ', '.join(bindings) + ')'
         else:
             pattern = prefix
+        mode_dispatcher = is_result_mode_dispatcher(record)
+        if mode_dispatcher and name != 'Detailed':
+            return pattern + ' => panic!(' + json.dumps('internal_bug: reading requires Detailed ' + record['name']) + '),'
         lines = [pattern + ' => {']
         locations = [(binding, raw) for (_, raw), binding in zip(data, bindings) if re.search(r'\bSourceLine\b', raw)]
         if locations:
@@ -376,7 +385,7 @@ class Generator:
                 lines.append(f'capture.index_environment({binding}, runtime);')
         is_infer = record['name'].startswith('Infer') and record['name'].endswith('Result')
         is_theorem = record['name'] == 'BuiltinTheoremId'
-        is_rule = record['kind'] == 'enum' and ('SearchProofByBuiltinRule' in record['name'] or record['name'] == 'EqualitySearchProofByBuiltinRule' or is_infer or is_theorem)
+        is_rule = record['kind'] == 'enum' and not mode_dispatcher and ('SearchProofByBuiltinRule' in record['name'] or record['name'] == 'EqualitySearchProofByBuiltinRule' or is_infer or is_theorem)
         if is_rule:
             # A leaf inference payload is commonly a struct named Infer*Result.
             # Only another rule *dispatcher enum* defers catalogue ownership.
@@ -446,6 +455,8 @@ class Generator:
         if declaration_type:
             lines.append('capture.source_snapshot_depth -= 1;')
         lines.append(f'let mut output = node({json.dumps(record["name"])}, {json.dumps(name)}, fields);')
+        if mode_dispatcher:
+            lines.append('if let JsonValue::Object(fields) = &mut output { fields.insert("result_detail".into(), JsonValue::String("detailed".into())); }')
         if declaration_type and locations:
             binding, raw = locations[0]
             lines.append(f'let declaration = capture.declaration_reference({binding}, {json.dumps(record["name"])}); if let JsonValue::Object(fields) = &mut output {{ fields.insert("declaration".into(), declaration); }}')
@@ -469,7 +480,7 @@ class Generator:
         if record['name'] in {'FormedAtomicSubject', 'FormedFunctionArgument'}:
             lines.append('capture.wd_registration(&value.wd_id, &output);')
         if record['name'] == 'FnObjDomainCheckResult':
-            lines.append('if let Some(stages) = capture.evidence_field(&output, "stages") { if let Some(JsonValue::Array(children)) = capture.evidence_field(&stages, "child_obj_well_defined") { for formed in &value.scope.formed_children { if let Some(child) = children.get(formed.child_index) { capture.wd_evidence(&formed.wd_id, child, "well_definedness"); } } } }')
+            lines.append('if let Some(stages) = capture.evidence_field(&output, "stages").and_then(|stages| capture.evidence_field(&stages, "0")) { if let Some(JsonValue::Array(children)) = capture.evidence_field(&stages, "child_obj_well_defined") { for formed in &value.scope.formed_children { if let Some(child) = children.get(formed.child_index) { capture.wd_evidence(&formed.wd_id, child, "well_definedness"); } } } }')
         if {'argument_scope', 'child_obj_well_defined'}.issubset({field for field, _ in data}):
             scope_binding = bindings[[field for field, _ in data].index('argument_scope')]
             lines.append(f'if let Some(scope) = {scope_binding}.as_ref() {{ if let Some(JsonValue::Array(children)) = capture.evidence_field(&output, "child_obj_well_defined") {{ for formed in &scope.formed_children {{ if let Some(child) = children.get(formed.child_index) {{ capture.wd_evidence(&formed.wd_id, child, "well_definedness"); }} }} }} }}')

@@ -152,12 +152,15 @@ fn failed_template_and_failed_enclosing_claim_discard_published_facts() {
 #[test]
 fn template_definition_stores_are_visible_in_normal_and_detailed_json() {
     for language in [OutputLanguage::English, OutputLanguage::Chinese] {
-        let mut rt = Runtime::new(LaunchCommand::Eval {
-            code: String::new(),
-            session: false,
-            strict: false,
-            language,
-        });
+        let mut rt = Runtime::new_with_result_detail(
+            LaunchCommand::Eval {
+                code: String::new(),
+                session: false,
+                strict: false,
+                language,
+            },
+            crate::result_detail::OutputDetail::Detailed,
+        );
         let result = rt
             .run_litex_code("template<S nonempty_set>:\n    have member S\n")
             .unwrap();
@@ -174,12 +177,15 @@ fn template_definition_stores_are_visible_in_normal_and_detailed_json() {
 }
 
 fn runtime(strict: bool) -> Runtime {
-    Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict,
-        language: OutputLanguage::English,
-    })
+    Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    )
 }
 
 fn check(code: &str, expected: &[bool]) {

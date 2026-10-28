@@ -8,6 +8,7 @@ use crate::execute::execute_fact_stmt::verify_forall_fact::ForallFactWellDefined
 use crate::execute::execute_fact_stmt::verify_forall_fact_with_iff::ForallFactWithIffWellDefinedProof;
 use crate::execute::execute_fact_stmt::verify_not_forall_fact::NotForallFactWellDefinedProof;
 use crate::execute::execute_fact_stmt::verify_or_fact::OrFactWellDefinedProof;
+use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::DetailedObjWellDefinedProof;
 use crate::execute::execute_fact_stmt::well_defined_results::{
     FactWellDefinedProof, ObjWellDefinedProof, VerifyObjWellDefinedResult,
 };
@@ -17,8 +18,19 @@ use crate::knowledge_base::JsonValue;
 use crate::runtime::Runtime;
 
 pub(super) fn project_obj_wd_proof(proof: &ObjWellDefinedProof, runtime: &Runtime) -> JsonValue {
-    match proof {
-        ObjWellDefinedProof::ByKnown { obj, wd_id } => object_for(
+    if proof.detail() != crate::result_detail::OutputDetail::Detailed {
+        if runtime.result_detail() == crate::result_detail::OutputDetail::Detailed {
+            crate::result_detail::OutputDetail::Detailed
+                .require(proof.detail(), "Detailed object WD output")
+                .unwrap_or_else(|error| panic!("{error}"));
+        }
+        return object_for(
+            runtime,
+            vec![("well_defined_result", well_defined_result_value(true))],
+        );
+    }
+    match proof.detailed_ref() {
+        DetailedObjWellDefinedProof::ByKnown { obj, wd_id } => object_for(
             runtime,
             vec![
                 ("type", string("by_known")),
@@ -26,7 +38,9 @@ pub(super) fn project_obj_wd_proof(proof: &ObjWellDefinedProof, runtime: &Runtim
                 ("wd_id", string(wd_id.to_string())),
             ],
         ),
-        ObjWellDefinedProof::ByDef { obj, proof } => project_obj_wd_by_def(obj, proof, runtime),
+        DetailedObjWellDefinedProof::ByDef { obj, proof } => {
+            project_obj_wd_by_def(obj, proof, runtime)
+        }
     }
 }
 
@@ -42,7 +56,21 @@ pub(in crate::json_output) fn project_verify_obj_wd(
                 ("proof", project_obj_wd_proof(proof, runtime)),
             ],
         ),
-        VerifyObjWellDefinedResult::Failed { obj, reason: f } => object_for(
+        VerifyObjWellDefinedResult::Failed { obj, reason } => {
+            project_failed_obj(obj, reason, runtime)
+        }
+    };
+    crate::json_output::helper::inherit_failure_field(runtime, projected, "failure")
+}
+
+pub(super) fn project_failed_obj(
+    obj: &crate::ast::obj::Obj,
+    reason: &crate::execute::execute_fact_stmt::well_defined_results::FailToVerifyObjWellDefinedResult,
+    runtime: &Runtime,
+) -> JsonValue {
+    crate::json_output::helper::inherit_failure_field(
+        runtime,
+        object_for(
             runtime,
             vec![
                 ("well_defined_result", well_defined_result_value(false)),
@@ -50,18 +78,30 @@ pub(in crate::json_output) fn project_verify_obj_wd(
                 ("phase", string("well_defined")),
                 (
                     "failure",
-                    super::wd_failure::project_obj_wd_failure(f, runtime),
+                    super::wd_failure::project_obj_wd_failure(reason, runtime),
                 ),
             ],
         ),
-    };
-    crate::json_output::helper::inherit_failure_field(runtime, projected, "failure")
+        "failure",
+    )
 }
 
 pub(super) fn project_atomic_wd_proof(
     proof: &AtomicFactWellDefinedProof,
     runtime: &Runtime,
 ) -> JsonValue {
+    if proof.detail() != crate::result_detail::OutputDetail::Detailed {
+        if runtime.result_detail() == crate::result_detail::OutputDetail::Detailed {
+            crate::result_detail::OutputDetail::Detailed
+                .require(proof.detail(), "Detailed atomic WD output")
+                .unwrap_or_else(|error| panic!("{error}"));
+        }
+        return object_for(
+            runtime,
+            vec![("well_defined_result", well_defined_result_value(true))],
+        );
+    }
+    let proof = proof.detailed_ref();
     use crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateSignatureWellDefinedProof;
     let signature = match &proof.predicate_signature {
         PredicateSignatureWellDefinedProof::Builtin => {
@@ -235,6 +275,18 @@ pub(super) fn project_equal_wd_proof(
     proof: &EqualFactWellDefinedProof,
     runtime: &Runtime,
 ) -> JsonValue {
+    if proof.detail() != crate::result_detail::OutputDetail::Detailed {
+        if runtime.result_detail() == crate::result_detail::OutputDetail::Detailed {
+            crate::result_detail::OutputDetail::Detailed
+                .require(proof.detail(), "Detailed equality WD output")
+                .unwrap_or_else(|error| panic!("{error}"));
+        }
+        return object_for(
+            runtime,
+            vec![("well_defined_result", well_defined_result_value(true))],
+        );
+    }
+    let proof = proof.detailed_ref();
     object_for(
         runtime,
         vec![
@@ -264,7 +316,7 @@ pub(in crate::json_output) fn project_verify_equal_wd(
                 ("phase", string("well_defined")),
                 (
                     "failure",
-                    super::wd_failure::project_obj_wd_failure(&failed.reason, runtime),
+                    super::wd_failure::project_equal_wd_failure(failed, runtime),
                 ),
             ],
         ),
@@ -348,36 +400,68 @@ pub(super) fn project_fact_wd_proof(proof: &FactWellDefinedProof, runtime: &Runt
                 ("proof", project_atomic_wd_proof(p, runtime)),
             ],
         ),
-        FactWellDefinedProof::AndFact { components } => object_for(
-            runtime,
-            vec![
-                ("type", string("and")),
-                (
-                    "components",
-                    JsonValue::Array(
-                        components
-                            .iter()
-                            .map(|c| project_atomic_wd_proof(c, runtime))
-                            .collect(),
+        FactWellDefinedProof::AndFact(proof) => {
+            if proof.detail() != crate::result_detail::OutputDetail::Detailed {
+                runtime
+                    .result_detail()
+                    .require(proof.detail(), "and WD output")
+                    .unwrap_or_else(|error| panic!("{error}"));
+                return object_for(
+                    runtime,
+                    vec![("well_defined_result", well_defined_result_value(true))],
+                );
+            }
+            let components = &proof
+                .as_detailed()
+                .unwrap_or_else(|error| panic!("{error}"))
+                .components;
+            object_for(
+                runtime,
+                vec![
+                    ("type", string("and")),
+                    (
+                        "components",
+                        JsonValue::Array(
+                            components
+                                .iter()
+                                .map(|c| project_atomic_wd_proof(c, runtime))
+                                .collect(),
+                        ),
                     ),
-                ),
-            ],
-        ),
-        FactWellDefinedProof::ChainFact { adjacent } => object_for(
-            runtime,
-            vec![
-                ("type", string("chain")),
-                (
-                    "adjacent",
-                    JsonValue::Array(
-                        adjacent
-                            .iter()
-                            .map(|c| project_atomic_wd_proof(c, runtime))
-                            .collect(),
+                ],
+            )
+        }
+        FactWellDefinedProof::ChainFact(proof) => {
+            if proof.detail() != crate::result_detail::OutputDetail::Detailed {
+                runtime
+                    .result_detail()
+                    .require(proof.detail(), "chain WD output")
+                    .unwrap_or_else(|error| panic!("{error}"));
+                return object_for(
+                    runtime,
+                    vec![("well_defined_result", well_defined_result_value(true))],
+                );
+            }
+            let adjacent = &proof
+                .as_detailed()
+                .unwrap_or_else(|error| panic!("{error}"))
+                .adjacent;
+            object_for(
+                runtime,
+                vec![
+                    ("type", string("chain")),
+                    (
+                        "adjacent",
+                        JsonValue::Array(
+                            adjacent
+                                .iter()
+                                .map(|c| project_atomic_wd_proof(c, runtime))
+                                .collect(),
+                        ),
                     ),
-                ),
-            ],
-        ),
+                ],
+            )
+        }
         FactWellDefinedProof::OrFact(p) => project_or_wd_proof(p, runtime),
         FactWellDefinedProof::ExistFact(p) => project_exist_wd_proof(p, runtime),
         FactWellDefinedProof::ForallFact(p) => project_forall_wd(p, runtime),
@@ -387,6 +471,18 @@ pub(super) fn project_fact_wd_proof(proof: &FactWellDefinedProof, runtime: &Runt
 }
 
 pub(super) fn project_or_wd_proof(proof: &OrFactWellDefinedProof, runtime: &Runtime) -> JsonValue {
+    if proof.detail() != crate::result_detail::OutputDetail::Detailed {
+        runtime
+            .result_detail()
+            .require(proof.detail(), "quantified/or WD output")
+            .unwrap_or_else(|error| panic!("{error}"));
+        return object_for(
+            runtime,
+            vec![("well_defined_result", well_defined_result_value(true))],
+        );
+    }
+    let proof = proof.detailed_ref();
+
     object_for(
         runtime,
         vec![
@@ -409,6 +505,18 @@ pub(super) fn project_exist_wd_proof(
     proof: &ExistShapedFactWellDefinedProof,
     runtime: &Runtime,
 ) -> JsonValue {
+    if proof.detail() != crate::result_detail::OutputDetail::Detailed {
+        runtime
+            .result_detail()
+            .require(proof.detail(), "quantified/or WD output")
+            .unwrap_or_else(|error| panic!("{error}"));
+        return object_for(
+            runtime,
+            vec![("well_defined_result", well_defined_result_value(true))],
+        );
+    }
+    let proof = proof.detailed_ref();
+
     object_for(
         runtime,
         vec![
@@ -456,6 +564,18 @@ pub(super) fn project_forall_wd(
     proof: &ForallFactWellDefinedProof,
     runtime: &Runtime,
 ) -> JsonValue {
+    if proof.detail() != crate::result_detail::OutputDetail::Detailed {
+        runtime
+            .result_detail()
+            .require(proof.detail(), "quantified/or WD output")
+            .unwrap_or_else(|error| panic!("{error}"));
+        return object_for(
+            runtime,
+            vec![("well_defined_result", well_defined_result_value(true))],
+        );
+    }
+    let proof = proof.detailed_ref();
+
     object_for(
         runtime,
         vec![
@@ -547,6 +667,18 @@ fn project_forall_iff_wd(
     proof: &ForallFactWithIffWellDefinedProof,
     runtime: &Runtime,
 ) -> JsonValue {
+    if proof.detail() != crate::result_detail::OutputDetail::Detailed {
+        runtime
+            .result_detail()
+            .require(proof.detail(), "quantified/or WD output")
+            .unwrap_or_else(|error| panic!("{error}"));
+        return object_for(
+            runtime,
+            vec![("well_defined_result", well_defined_result_value(true))],
+        );
+    }
+    let proof = proof.detailed_ref();
+
     object_for(
         runtime,
         vec![
@@ -611,6 +743,18 @@ fn project_forall_iff_wd(
 }
 
 fn project_not_forall_wd(proof: &NotForallFactWellDefinedProof, runtime: &Runtime) -> JsonValue {
+    if proof.detail() != crate::result_detail::OutputDetail::Detailed {
+        runtime
+            .result_detail()
+            .require(proof.detail(), "quantified/or WD output")
+            .unwrap_or_else(|error| panic!("{error}"));
+        return object_for(
+            runtime,
+            vec![("well_defined_result", well_defined_result_value(true))],
+        );
+    }
+    let proof = proof.detailed_ref();
+
     object_for(
         runtime,
         vec![

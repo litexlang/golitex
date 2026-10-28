@@ -326,6 +326,18 @@ impl Capture {
         let previous_wd = std::mem::take(&mut self.wd_uses);
 
         let evidence = capture_execute__exec_stmt_result__ExecStmtResult(result, self, runtime);
+        let mut failure = crate::json_output::statement_failure_summary(result, runtime);
+        if let Some(JsonValue::Object(summary)) = &mut failure {
+            if let Some(JsonValue::Object(mut location)) = summary.get("source_location").cloned() {
+                if let Some(path) = location.get("path").and_then(|value| value.as_str().ok()) {
+                    let logical = self.logical_path(std::path::Path::new(path));
+                    if let Some(source_id) = self.source_paths.get(&logical) {
+                        location.insert("source_id".into(), text(source_id));
+                    }
+                }
+                summary.insert("source_location".into(), JsonValue::Object(location));
+            }
+        }
         let stores = if result.is_failed() {
             Vec::new()
         } else {
@@ -368,6 +380,9 @@ impl Capture {
                 },
             );
             fields.insert("evidence".into(), evidence);
+            if let Some(failure) = failure {
+                fields.insert("failure".into(), failure);
+            }
             fields.insert(
                 "well_definedness_ids".into(),
                 strings(&self.wd_uses.iter().cloned().collect::<Vec<_>>()),

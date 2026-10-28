@@ -178,11 +178,11 @@ impl LitexToLeanCompiler {
                     SourcePosition::new(Some(position), SourceOwner::ForallWD(fact, wd), 0);
                 let (binders, introductions, definitions) = self.compile_forall_head(
                     fact,
-                    &wd.introduced_params,
-                    &wd.assumed_dom_facts,
+                    &wd.detailed_ref().introduced_params,
+                    &wd.detailed_ref().assumed_dom_facts,
                     &header,
                 )?;
-                if wd.then.len() != fact.then_facts.len() {
+                if wd.detailed_ref().then.len() != fact.then_facts.len() {
                     return Err(LeanCompileError::new(
                         "Claim/GoalThenWD",
                         "The original goal has a different ordered WD arity.",
@@ -199,7 +199,7 @@ impl LitexToLeanCompiler {
                     ..header
                 };
                 let mut propositions = Vec::new();
-                for (source, formation) in fact.then_facts.iter().zip(&wd.then) {
+                for (source, formation) in fact.then_facts.iter().zip(&wd.detailed_ref().then) {
                     let source = claim_goal_component(source)?;
                     self.compile_fact_wd(formation, &source, &complete)?;
                     let formed = SourcePosition::new(
@@ -257,6 +257,7 @@ impl LitexToLeanCompiler {
             return Ok(Vec::new());
         };
         let goal_stores = &goal
+            .detailed_ref()
             .introduced_params
             .defined_params
             .store_and_infer_results;
@@ -265,7 +266,7 @@ impl LitexToLeanCompiler {
             .defined_params
             .store_and_infer_results;
         if goal_stores.len() != body_stores.len()
-            || goal.assumed_dom_facts.len() != body.assumed_dom_facts.len()
+            || goal.detailed_ref().assumed_dom_facts.len() != body.assumed_dom_facts.len()
         {
             return Err(LeanCompileError::new(
                 "Claim/HeaderArity",
@@ -291,6 +292,7 @@ impl LitexToLeanCompiler {
             )?);
         }
         for (index, (goal_dom, body_dom)) in goal
+            .detailed_ref()
             .assumed_dom_facts
             .iter()
             .zip(&body.assumed_dom_facts)

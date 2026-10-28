@@ -65,12 +65,15 @@ pub fn build_reading(
             )
         }),
         ReadingInput::Source(code) => {
-            let mut runtime = Runtime::new(LaunchCommand::Eval {
-                code: code.clone(),
-                session: false,
-                strict,
-                language,
-            });
+            let mut runtime = Runtime::new_with_result_detail(
+                LaunchCommand::Eval {
+                    code: code.clone(),
+                    session: false,
+                    strict,
+                    language,
+                },
+                crate::result_detail::OutputDetail::Detailed,
+            );
             runtime
                 .run_litex_code_observed(code, &mut capture)
                 .map(|result| {

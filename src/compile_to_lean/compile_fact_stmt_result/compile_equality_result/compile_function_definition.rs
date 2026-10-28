@@ -166,13 +166,23 @@ impl LitexToLeanCompiler {
         parent_wd: &EqualFactWellDefinedProof,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
-        ensure_object(&fact.left, &parent_wd.left)?;
-        ensure_object(&fact.right, &parent_wd.right)?;
+        ensure_object(&fact.left, &parent_wd.detailed_ref().left)?;
+        ensure_object(&fact.right, &parent_wd.detailed_ref().right)?;
         match proof {
             ByParentCheckedBetaObjectDefinitionProof::OneSide(proof) => {
                 let (application, other, wd, reversed) = match proof.parent_well_defined_side {
-                    ParentEqualitySide::Left => (&fact.left, &fact.right, &parent_wd.left, false),
-                    ParentEqualitySide::Right => (&fact.right, &fact.left, &parent_wd.right, true),
+                    ParentEqualitySide::Left => (
+                        &fact.left,
+                        &fact.right,
+                        &parent_wd.detailed_ref().left,
+                        false,
+                    ),
+                    ParentEqualitySide::Right => (
+                        &fact.right,
+                        &fact.left,
+                        &parent_wd.detailed_ref().right,
+                        true,
+                    ),
                 };
                 if proof.residual_equal.left.ir() != proof.expanded_body.ir()
                     || proof.residual_equal.right.ir() != other.ir()
@@ -212,14 +222,14 @@ impl LitexToLeanCompiler {
                 }
                 let left = self.compile_parent_checked_function_body(
                     &fact.left,
-                    &parent_wd.left,
+                    &parent_wd.detailed_ref().left,
                     &proof.left_function_body,
                     &proof.left_expanded_body,
                     position,
                 )?;
                 let right = self.compile_parent_checked_function_body(
                     &fact.right,
-                    &parent_wd.right,
+                    &parent_wd.detailed_ref().right,
                     &proof.right_function_body,
                     &proof.right_expanded_body,
                     position,
@@ -269,10 +279,10 @@ impl LitexToLeanCompiler {
                 "The parent beta endpoint is not a function application.",
             ));
         };
-        let ObjWellDefinedProof::ByDef {
+        let DetailedObjWellDefinedProof::ByDef {
             obj,
             proof: ObjWellDefinedProofByDef::FnObj(call_wd),
-        } = parent_wd
+        } = (parent_wd).detailed_ref()
         else {
             return Err(LeanCompileError::new(
                 "FunctionDefinition/ParentCallWD",
@@ -407,10 +417,10 @@ impl LitexToLeanCompiler {
                 "FunctionDefinition/ParentApplication",
             ));
         };
-        let ObjWellDefinedProof::ByDef {
+        let DetailedObjWellDefinedProof::ByDef {
             obj,
             proof: ObjWellDefinedProofByDef::FnObj(call_wd),
-        } = parent_wd
+        } = (parent_wd).detailed_ref()
         else {
             return Err(LeanCompileError::unsupported(
                 "FunctionDefinition/ParentCallWD",
@@ -486,7 +496,7 @@ impl LitexToLeanCompiler {
                 &endpoint,
                 position,
             )?;
-            return Ok(format!("(show {application_value} = {endpoint} from by\n  let _litex_original := {actual}\n  let _litex_formula := {literal}\n  have _litex_head_eq : Litex.Same _litex_original.val.function _litex_formula := {head_equal}\n  have _litex_call_eq := congrArg (fun _f => Litex.FunctionSemantics.callValue (M := M) _f (Litex.denote _litex_original.val.argument)) _litex_head_eq\n  have _litex_beta := Litex.FunctionSemantics.call_graphValue _ _ _ _litex_formula.wd (Litex.denote _litex_original.val.argument) _litex_original.wd.2\n  simpa only [M.neg_numbers] using _litex_call_eq.trans (_litex_beta.trans {body_equality})\n)"));
+            return Ok(format!("(show {application_value} = {endpoint} from by\n  let _litex_original := {actual}\n  let _litex_formula := {literal}\n  have _litex_head_eq : Litex.Same _litex_original.val.function _litex_formula := {head_equal}\n  have _litex_call_eq := congrArg (fun _f => Litex.FunctionSemantics.callValue (M := M) _f (Litex.denote _litex_original.val.argument)) _litex_head_eq\n  have _litex_beta := Litex.FunctionSemantics.call_graphValue _ _ _ _litex_formula.wd (Litex.denote _litex_original.val.argument) _litex_original.wd.2\n  exact _litex_call_eq.trans (_litex_beta.trans {body_equality})\n)"));
         }
         let (constructor_arguments, target) =
             self.compile_function_constructor_arguments(&function.body, position)?;
@@ -494,20 +504,25 @@ impl LitexToLeanCompiler {
         let body = self.compile_function_body_template(function, position)?;
         let endpoint = self.compile_normalization_value(expanded, position)?;
         let application_value = self.compile_normalization_value(application, position)?;
+        let source_equal = self.compile_normalization_denotation(application, position)?;
+        let arguments_equal = call.body[0]
+            .iter()
+            .map(|argument| self.compile_normalization_denotation(argument, position))
+            .collect::<Result<Vec<_>, _>>()?;
         let (argument, domain_proof, body_equality) = if parameters.len() == 1 {
             (
                 "(Litex.denote _litex_original.val.argument)".to_string(),
                 format!("((Litex.FunctionSignature.{} {constructor_arguments} {guard} _).mpr _litex_original.wd.2)", if target { "oneTarget_domain" } else { "one_domain" }),
-                format!("(show _litex_formula.val.bodyValue (Litex.denote _litex_original.val.argument) = {endpoint} from by simp only [M.neg_numbers])"),
+                format!("(show _litex_formula.val.bodyValue (Litex.denote _litex_original.val.argument) = {endpoint} from congrArg {body} {})", arguments_equal[0]),
             )
         } else {
             (
                 "(Litex.FiniteFunction.pack2 (M := M) (Litex.denote _litex_original.val.first) (Litex.denote _litex_original.val.second))".to_string(),
                 format!("((Litex.FunctionSignature.{} {constructor_arguments} {guard} _ _).mpr _litex_original.wd.2)", if target { "twoTarget_domain" } else { "two_domain" }),
-                format!("(show _litex_formula.val.bodyValue (Litex.FiniteFunction.pack2 (M := M) (Litex.denote _litex_original.val.first) (Litex.denote _litex_original.val.second)) = {endpoint} from by simpa only [M.neg_numbers] using congrArg (fun (_pair : M.Value × M.Value) => {body} _pair.1 _pair.2) (Litex.FiniteFunction.unpack_pack2 (M := M) (Litex.denote _litex_original.val.first) (Litex.denote _litex_original.val.second)))"),
+                format!("(show _litex_formula.val.bodyValue (Litex.FiniteFunction.pack2 (M := M) (Litex.denote _litex_original.val.first) (Litex.denote _litex_original.val.second)) = {endpoint} from (congrArg (fun (_pair : M.Value × M.Value) => {body} _pair.1 _pair.2) (Litex.FiniteFunction.unpack_pack2 (M := M) (Litex.denote _litex_original.val.first) (Litex.denote _litex_original.val.second))).trans (congrArg₂ {body} {} {}))", arguments_equal[0], arguments_equal[1]),
             )
         };
-        Ok(format!("(show {application_value} = {endpoint} from by\n  let _litex_original := {actual}\n  let _litex_formula := {literal}\n  have _litex_head_eq : Litex.Same _litex_original.val.function _litex_formula := {head_equal}\n  have _litex_call_eq := congrArg (fun _f => Litex.FunctionSemantics.callValue (M := M) _f {argument}) _litex_head_eq\n  have _litex_beta := Litex.FunctionSemantics.call_graphValue _ _ _ _litex_formula.wd {argument} {domain_proof}\n  simpa only [M.neg_numbers] using _litex_call_eq.trans (_litex_beta.trans {body_equality})\n)"))
+        Ok(format!("(show {application_value} = {endpoint} from by\n  let _litex_original := {actual}\n  let _litex_formula := {literal}\n  have _litex_head_eq : Litex.Same _litex_original.val.function _litex_formula := {head_equal}\n  have _litex_call_eq := congrArg (fun _f => Litex.FunctionSemantics.callValue (M := M) _f {argument}) _litex_head_eq\n  have _litex_beta := Litex.FunctionSemantics.call_graphValue _ _ _ _litex_formula.wd {argument} {domain_proof}\n  exact (Eq.symm {source_equal}).trans (_litex_call_eq.trans (_litex_beta.trans {body_equality}))\n)"))
     }
 
     fn compile_function_normalization(
@@ -761,6 +776,72 @@ impl LitexToLeanCompiler {
         Ok(format!(
             "(by change {packed_body} (Litex.denote {packed}) = {expanded}; exact {equality})"
         ))
+    }
+
+    /// Relate an original WD object's representation to its raw certificate
+    /// expression. Runtime numeric keys identify signed literals with unary
+    /// negatives; cached host constructors need a proved denotation bridge.
+    pub(in crate::compile_to_lean) fn compile_normalization_denotation(
+        &self,
+        object: &Obj,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        let term = self.compile_object_reference(object, position)?;
+        let raw = self.compile_normalization_value(object, position)?;
+        let signed_leaf = match object {
+            Obj::Literal(Literal::Number(n)) => n.normalized_value.starts_with('-'),
+            Obj::ArithmeticOperator(ArithmeticOperator::Neg(n)) => {
+                matches!(n.arg.as_ref(), Obj::Literal(Literal::Number(_)))
+            }
+            _ => false,
+        };
+        let proof = if signed_leaf {
+            let actual = self.compile_numeric_observation(object, position)?;
+            let (value, raw_value) = self.compile_eval_closed_value(object, position)?;
+            if actual.3.as_ref() != Some(&value) {
+                return Err(LeanCompileError::unsupported(
+                    "Normalization/RepresentationValue",
+                ));
+            }
+            let literal = exact_rational_literal(&value, "ℂ")?;
+            format!("Eq.trans (({}).trans (congrArg M.number (by norm_num : {} = {literal}))) (Eq.symm {raw_value})", actual.1, actual.0)
+        } else if let Some((operation, children)) = arithmetic_constructor_pairs(object, object) {
+            let equalities = children
+                .iter()
+                .map(|(child, _)| self.compile_normalization_denotation(child, position))
+                .collect::<Result<Vec<_>, _>>()?;
+            let op = arithmetic_operation_term(operation);
+            match equalities.as_slice() {
+                [p] => format!("congrArg {op} {p}"),
+                [p, q] => format!("congrArg₂ {op} {p} {q}"),
+                _ => {
+                    return Err(LeanCompileError::unsupported(
+                        "Normalization/RepresentationArity",
+                    ))
+                }
+            }
+        } else if let Obj::FnObj(call) = object {
+            if call.body.len() != 1 || !(1..=2).contains(&call.body[0].len()) {
+                return Err(LeanCompileError::unsupported(
+                    "Normalization/RepresentationCall",
+                ));
+            }
+            let head = function_head_object(call.head.as_ref())?;
+            let head_equal = self.compile_normalization_denotation(&head, position)?;
+            let args = call.body[0]
+                .iter()
+                .map(|arg| self.compile_normalization_denotation(arg, position))
+                .collect::<Result<Vec<_>, _>>()?;
+            let argument_equal = match args.as_slice() {
+                [p] => p.clone(),
+                [p, q] => format!("(congrArg₂ (fun x y => Litex.FiniteFunction.tupleValue (M := M) ![x,y]) {p} {q})"),
+                _ => unreachable!(),
+            };
+            format!("congrArg₂ (Litex.FunctionSemantics.callValue (M := M)) {head_equal} {argument_equal}")
+        } else {
+            "rfl".into()
+        };
+        Ok(format!("(show Litex.denote {term} = {raw} from {proof})"))
     }
 
     pub(in crate::compile_to_lean) fn compile_normalization_value(

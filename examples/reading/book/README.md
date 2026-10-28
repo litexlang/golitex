@@ -14,3 +14,11 @@ Use the contents to switch chapters, follow a named definition back to chapter
 one, or search for `Chapter 3` and select the local proof. In the local proof,
 `t = 2` is a hypothesis and `t + 1 = 3` is a checked conclusion. Static export
 keeps portable `reading.json` alongside the manifest and source/proof parts.
+Authored Chinese/English chapter titles describe the mathematical progression;
+file paths and export names retain their original identity.
+
+The maintained `src/reading/web/tests/host.cjs` acceptance edits the second
+chapter's positive instance to `above_zero(-1)`, checks it with the real release
+verifier, restores it, and checks through the third chapter. Failed predecessors
+remain distinct from later chapters that have not yet been checked. Generated
+requests and evidence belong in the caller's task-owned output directory.

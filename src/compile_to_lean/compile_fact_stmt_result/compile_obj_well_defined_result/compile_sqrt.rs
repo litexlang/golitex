@@ -63,13 +63,13 @@ impl LitexToLeanCompiler {
         position: &SourcePosition<'_>,
     ) -> Result<(String, String, String, Option<EvalRational>), LeanCompileError> {
         let term = self.compile_wd(wd, position)?;
-        let ObjWellDefinedProof::ByDef {
+        let DetailedObjWellDefinedProof::ByDef {
             proof:
                 ObjWellDefinedProofByDef::ExpLogOperator(ExpLogOperatorObjWellDefinedProofByDef::Sqrt(
                     proof,
                 )),
             ..
-        } = wd
+        } = (wd).detailed_ref()
         else {
             return Err(LeanCompileError::unsupported("WD/SqrtObservation"));
         };

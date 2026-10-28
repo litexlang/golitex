@@ -43,10 +43,12 @@ fn inverse_trig_wd_rejects_missing_or_altered_evidence() {
             else {
                 panic!()
             };
-            let VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByDef {
+            let Some(DetailedObjWellDefinedProof::ByDef {
                 proof: ObjWellDefinedProofByDef::TrigOperator(p),
                 ..
-            }) = &mut p.value_well_defined
+            }) = (&mut p.value_well_defined)
+                .as_detailed_success_mut()
+                .unwrap()
             else {
                 panic!()
             };
@@ -118,10 +120,12 @@ fn inverse_trig_bounds_and_reciprocal_guards_keep_their_subjects() {
         else {
             panic!()
         };
-        let VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByDef {
+        let Some(DetailedObjWellDefinedProof::ByDef {
             proof: ObjWellDefinedProofByDef::TrigOperator(p),
             ..
-        }) = &mut p.value_well_defined
+        }) = (&mut p.value_well_defined)
+            .as_detailed_success_mut()
+            .unwrap()
         else {
             panic!()
         };
@@ -155,7 +159,8 @@ fn inverse_trig_source_rejects_outside_domain_and_poles() {
     ] {
         let command =
             parse_launch_command(&["-strict".into(), "-e".into(), source.into()]).unwrap();
-        let mut runtime = Runtime::new(command);
+        let mut runtime =
+            Runtime::new_with_result_detail(command, crate::result_detail::OutputDetail::Detailed);
         assert!(!runtime.run_litex_code(source).unwrap().success, "{source}");
     }
 }

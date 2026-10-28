@@ -2,7 +2,10 @@ use crate::compile_to_lean::LitexToLeanCompiler;
 use crate::prelude::*;
 
 fn execute(source: &str) -> (RunLitexCodeResult, LitexToLeanCompiler) {
-    let mut runtime = Runtime::new(parse_launch_command(&["-e".into(), source.into()]).unwrap());
+    let mut runtime = Runtime::new_with_result_detail(
+        parse_launch_command(&["-e".into(), source.into()]).unwrap(),
+        crate::result_detail::OutputDetail::Detailed,
+    );
     let run = runtime.run_litex_code(source).unwrap();
     assert!(run.success, "source must be accepted");
     (run, LitexToLeanCompiler::new(runtime))
@@ -338,10 +341,12 @@ fn template_instance_rejects_missing_nonzero_obligation() {
     let VerifyEqualityResult::Success(p) = result.as_mut() else {
         panic!()
     };
-    let ObjWellDefinedProof::ByDef {
+    let DetailedObjWellDefinedProof::ByDef {
         proof: ObjWellDefinedProofByDef::InstantiatedTemplateObj(p),
         ..
-    } = &mut p.well_defined_proof.left
+    } = (&mut p.well_defined_proof.as_detailed_mut().unwrap().left)
+        .as_detailed_mut()
+        .unwrap()
     else {
         panic!()
     };

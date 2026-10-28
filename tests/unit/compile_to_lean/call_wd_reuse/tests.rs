@@ -12,12 +12,14 @@ fn power(result: &mut RunLitexCodeResult) -> &mut ObjWellDefinedProof {
     let forall = super::forall_proof_mut(&mut result.statement_results[1]);
     &mut super::equality_proof_mut(&mut forall.proved_then_facts[0].verify_result)
         .well_defined_proof
+        .as_detailed_mut()
+        .unwrap()
         .left
 }
 
 fn parts(proof: &mut ObjWellDefinedProof) -> &mut PowObjWellDefinedProof {
-    match proof {
-        ObjWellDefinedProof::ByDef {
+    match (proof).as_detailed_mut().unwrap() {
+        DetailedObjWellDefinedProof::ByDef {
             proof:
                 ObjWellDefinedProofByDef::ArithmeticOperator(
                     ArithmeticOperatorObjWellDefinedProofByDef::Pow(p),
@@ -37,8 +39,15 @@ fn requirement_call(proof: &mut ObjWellDefinedProof) -> &mut FnObjObjWellDefined
     let VerifyAtomicExceptEqualityFactResult::Success(result) = result.as_mut() else {
         panic!("successful membership")
     };
-    match &mut result.well_defined_proof.well_defined_of_each_parameter[0] {
-        ObjWellDefinedProof::ByDef {
+    match (&mut result
+        .well_defined_proof
+        .as_detailed_mut()
+        .unwrap()
+        .well_defined_of_each_parameter[0])
+        .as_detailed_mut()
+        .unwrap()
+    {
+        DetailedObjWellDefinedProof::ByDef {
             proof: ObjWellDefinedProofByDef::FnObj(call),
             ..
         } => call,
@@ -84,10 +93,15 @@ fn call_alias_is_unavailable_before_its_constructor_completes() {
     let VerifyAtomicExceptEqualityFactResult::Success(r) = *r else {
         panic!("success")
     };
-    let ObjWellDefinedProof::ByDef {
+    let DetailedObjWellDefinedProof::ByDef {
         obj: Obj::FnObj(application),
         proof: ObjWellDefinedProofByDef::FnObj(call),
-    } = &r.well_defined_proof.well_defined_of_each_parameter[0]
+    } = (&r
+        .well_defined_proof
+        .detailed_ref()
+        .well_defined_of_each_parameter[0])
+        .as_detailed()
+        .unwrap()
     else {
         panic!("call")
     };
@@ -108,10 +122,16 @@ fn alternative_signature_is_not_a_compatible_constructor() {
     let VerifyAtomicExceptEqualityFactResult::Success(mut r) = *r else {
         panic!("success")
     };
-    let ObjWellDefinedProof::ByDef {
+    let DetailedObjWellDefinedProof::ByDef {
         obj: Obj::FnObj(application),
         proof: ObjWellDefinedProofByDef::FnObj(call),
-    } = &mut r.well_defined_proof.well_defined_of_each_parameter[0]
+    } = (&mut r
+        .well_defined_proof
+        .as_detailed_mut()
+        .unwrap()
+        .well_defined_of_each_parameter[0])
+        .as_detailed_mut()
+        .unwrap()
     else {
         panic!("call")
     };

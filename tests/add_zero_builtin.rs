@@ -7,12 +7,15 @@ use litex::runtime::{CodeSource, Runtime};
 use litex::tokenize::Tokenizer;
 
 fn runtime() -> Runtime {
-    Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: true,
-        strict: true,
-        language: OutputLanguage::English,
-    })
+    Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: true,
+            strict: true,
+            language: OutputLanguage::English,
+        },
+        litex::result_detail::OutputDetail::Detailed,
+    )
 }
 
 #[test]

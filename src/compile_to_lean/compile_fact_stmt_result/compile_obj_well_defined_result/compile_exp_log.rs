@@ -105,10 +105,10 @@ impl LitexToLeanCompiler {
         let term = self.compile_wd(wd, position)?;
         let setup = format!("let _exp_log := {term};\nlet _member := Litex.realToComplex _exp_log (Litex.{law} _exp_log);\n");
         if let Some(value) = EvalRational::from_obj(wd.obj()) {
-            let ObjWellDefinedProof::ByDef {
+            let DetailedObjWellDefinedProof::ByDef {
                 proof: ObjWellDefinedProofByDef::ExpLogOperator(p),
                 ..
-            } = wd
+            } = (wd).detailed_ref()
             else {
                 unreachable!()
             };

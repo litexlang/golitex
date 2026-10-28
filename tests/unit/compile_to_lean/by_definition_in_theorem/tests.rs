@@ -27,7 +27,7 @@ fn theorem_steps(statement: &mut ExecStmtResult) -> &mut Vec<ExecStmtResult> {
 fn goal_argument(proof: &mut ExecByDefStmtSuccess) -> &mut ObjWellDefinedProof {
     match &mut proof.goal_wd {
         VerifyFactWellDefinedResult::Success(FactWellDefinedProof::AtomicExceptEquality(wd)) => {
-            &mut wd.well_defined_of_each_parameter[0]
+            &mut wd.as_detailed_mut().unwrap().well_defined_of_each_parameter[0]
         }
         _ => panic!("actual concrete predicate goal formation"),
     }
@@ -73,8 +73,8 @@ fn by_definition_in_theorem_exports_only_the_caller_compound_formation() {
     let (mut result, compiler) = super::execute(CALLER_CONSTRUCTION);
     let proof = by_definition(&mut theorem_steps(&mut result.statement_results[1])[0]);
     assert!(matches!(
-        goal_argument(proof),
-        ObjWellDefinedProof::ByDef { .. }
+        (goal_argument(proof)).as_detailed_mut().unwrap(),
+        DetailedObjWellDefinedProof::ByDef { .. }
     ));
     let output = super::compile_run(&result, &compiler, "definition_caller_wd")
         .expect("the following alias cites the completed caller's original square constructor");
@@ -119,17 +119,23 @@ fn by_definition_in_theorem_rejects_deleted_or_wrong_goal_formation() {
                 VerifyFactWellDefinedResult::Success(
                     FactWellDefinedProof::AtomicExceptEquality(wd),
                 ) => {
-                    wd.well_defined_of_each_parameter.clear();
+                    wd.as_detailed_mut()
+                        .unwrap()
+                        .well_defined_of_each_parameter
+                        .clear();
                 }
                 _ => panic!("actual predicate goal WD"),
             },
             "wrong" => super::replace_wd_subject(goal_argument(proof), super::number_object("7")),
             "missing" => {
                 let object = goal_argument(proof).obj().clone();
-                *goal_argument(proof) = ObjWellDefinedProof::ByKnown {
-                    obj: object,
-                    wd_id: WellDefinednessId::new(u64::MAX),
-                };
+                *goal_argument(proof) =
+                    crate::execute::execute_fact_stmt::ObjWellDefinedProof::Detailed(Box::new(
+                        DetailedObjWellDefinedProof::ByKnown {
+                            obj: object,
+                            wd_id: WellDefinednessId::new(u64::MAX),
+                        },
+                    ));
             }
             _ => unreachable!(),
         }
@@ -198,14 +204,17 @@ fn by_definition_in_theorem_cannot_use_its_own_later_wd_cache() {
     let (mut result, compiler) = super::execute(CALLER_CONSTRUCTION);
     super::compile_run(&result, &compiler, "definition_wd_order").unwrap();
     let steps = theorem_steps(&mut result.statement_results[1]);
-    let (object, wd_id) = match &super::let_definition(&steps[1]).value_well_defined {
-        VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByKnown { obj, wd_id }) => {
-            (obj.clone(), *wd_id)
-        }
+    let (object, wd_id) = match (&super::let_definition(&steps[1]).value_well_defined)
+        .as_detailed_success()
+        .unwrap()
+    {
+        Some(DetailedObjWellDefinedProof::ByKnown { obj, wd_id }) => (obj.clone(), *wd_id),
         _ => panic!("the later alias cites the completed caller's cached constructor"),
     };
     *goal_argument(by_definition(&mut steps[0])) =
-        ObjWellDefinedProof::ByKnown { obj: object, wd_id };
+        crate::execute::execute_fact_stmt::ObjWellDefinedProof::Detailed(Box::new(
+            DetailedObjWellDefinedProof::ByKnown { obj: object, wd_id },
+        ));
     super::phase2_rejected(&result, &compiler, "later_caller_cache", &["WD/", "WdId/"]);
 }
 
@@ -246,6 +255,7 @@ fn by_definition_in_theorem_cannot_export_a_closed_definition_constructor() {
     assert_eq!(
         super::equality_proof(&requirements.proof_of_requirement_facts[1])
             .well_defined_proof
+            .detailed_ref()
             .left
             .obj()
             .ir(),
@@ -258,8 +268,11 @@ fn by_definition_in_theorem_cannot_export_a_closed_definition_constructor() {
         )) => proof,
         _ => panic!("actual alias after the closed definition proof"),
     };
-    alias.value_well_defined =
-        VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByKnown { obj: object, wd_id });
+    alias.value_well_defined = VerifyObjWellDefinedResult::Success(
+        crate::execute::execute_fact_stmt::ObjWellDefinedProof::Detailed(Box::new(
+            DetailedObjWellDefinedProof::ByKnown { obj: object, wd_id },
+        )),
+    );
     super::phase2_rejected(
         &result,
         &compiler,
@@ -302,7 +315,8 @@ fn by_definition_in_theorem_keeps_a_false_definition_request_rejected() {
     let command =
         parse_launch_command(&["-strict".to_string(), "-e".to_string(), source.to_string()])
             .unwrap();
-    let mut runtime = Runtime::new(command);
+    let mut runtime =
+        Runtime::new_with_result_detail(command, crate::result_detail::OutputDetail::Detailed);
     let result = runtime.run_litex_code(source).unwrap();
     assert!(!result.success && result.session_error.is_none());
     assert!(!result.statement_results[0].is_failed());

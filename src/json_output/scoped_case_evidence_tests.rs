@@ -240,12 +240,15 @@ fn algorithm_projection_includes_piecewise_definition_evidence() {
 }
 
 fn runtime(language: OutputLanguage) -> Runtime {
-    Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language,
-    })
+    Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    )
 }
 
 fn assert_stores_local(stores: &StoreHaveObjAndInferResult, local: &ExecEnv, rt: &Runtime) {

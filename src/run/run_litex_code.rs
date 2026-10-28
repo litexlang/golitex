@@ -18,6 +18,10 @@ impl Runtime {
         code: &str,
         observer: &mut dyn SourceObserver,
     ) -> RuntimeResult<RunLitexCodeResult> {
+        if observer.requires_source_evidence() {
+            crate::result_detail::OutputDetail::Detailed
+                .require(self.result_detail(), "source evidence observer")?;
+        }
         observer.source(self, code);
         let token_blocks = match Tokenizer::new().tokenize(code, self.current_file.clone()) {
             Ok(blocks) => blocks,

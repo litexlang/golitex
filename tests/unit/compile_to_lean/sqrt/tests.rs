@@ -48,11 +48,17 @@ fn reused_sqrt_still_requires_its_own_domain_evidence() {
     let proof = super::atomic_proof_mut(
         &mut super::fact_statement_mut(&mut result.statement_results[3]).verify_result,
     );
-    let ObjWellDefinedProof::ByDef {
+    let DetailedObjWellDefinedProof::ByDef {
         proof:
             ObjWellDefinedProofByDef::ExpLogOperator(ExpLogOperatorObjWellDefinedProofByDef::Sqrt(root)),
         ..
-    } = &mut proof.well_defined_proof.well_defined_of_each_parameter[0]
+    } = (&mut proof
+        .well_defined_proof
+        .as_detailed_mut()
+        .unwrap()
+        .well_defined_of_each_parameter[0])
+        .as_detailed_mut()
+        .unwrap()
     else {
         panic!("the child is independently checked")
     };
@@ -70,21 +76,29 @@ fn square(result: &mut RunLitexCodeResult) -> &mut VerifyEqualitySuccess {
 }
 
 fn root_wd(result: &mut RunLitexCodeResult) -> &mut SqrtObjWellDefinedProof {
-    let ObjWellDefinedProof::ByDef {
+    let DetailedObjWellDefinedProof::ByDef {
         proof:
             ObjWellDefinedProofByDef::ArithmeticOperator(
                 ArithmeticOperatorObjWellDefinedProofByDef::Pow(power),
             ),
         ..
-    } = &mut square(result).well_defined_proof.left
+    } = (&mut square(result)
+        .well_defined_proof
+        .as_detailed_mut()
+        .unwrap()
+        .left)
+        .as_detailed_mut()
+        .unwrap()
     else {
         panic!("the original square constructs a power")
     };
-    let ObjWellDefinedProof::ByDef {
+    let DetailedObjWellDefinedProof::ByDef {
         proof:
             ObjWellDefinedProofByDef::ExpLogOperator(ExpLogOperatorObjWellDefinedProofByDef::Sqrt(root)),
         ..
-    } = power.child_obj_well_defined[0].as_mut()
+    } = (power.child_obj_well_defined[0].as_mut())
+        .as_detailed_mut()
+        .unwrap()
     else {
         panic!("the original power constructs its square root first")
     };

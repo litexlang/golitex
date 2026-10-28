@@ -129,7 +129,8 @@ fn exp_log_source_domains_remain_rejected() {
     ] {
         let command =
             parse_launch_command(&["-strict".into(), "-e".into(), source.into()]).unwrap();
-        let mut runtime = Runtime::new(command);
+        let mut runtime =
+            Runtime::new_with_result_detail(command, crate::result_detail::OutputDetail::Detailed);
         assert!(!runtime.run_litex_code(source).unwrap().success, "{source}");
     }
 }
@@ -141,10 +142,12 @@ fn let_wd(run: &mut RunLitexCodeResult) -> &mut ExpLogOperatorObjWellDefinedProo
     else {
         panic!()
     };
-    let VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByDef {
+    let Some(DetailedObjWellDefinedProof::ByDef {
         proof: ObjWellDefinedProofByDef::ExpLogOperator(p),
         ..
-    }) = &mut p.value_well_defined
+    }) = (&mut p.value_well_defined)
+        .as_detailed_success_mut()
+        .unwrap()
     else {
         panic!()
     };

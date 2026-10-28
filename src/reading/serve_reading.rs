@@ -8,6 +8,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
+use super::compact_json_output::compact_json_output;
 use super::export_reading::{
     reading_html, APP_JS, KATEX_CSS, KATEX_JS, KATEX_LICENSE, READER_CSS, READER_JS,
 };
@@ -421,36 +422,51 @@ fn build_upload(body: &str, strict: bool, cache: &UploadCache) -> Result<UploadB
     if strict || requested_strict {
         command.arg("-strict");
     }
+    let output = File::create(&stdout_path).map_err(|error| error.to_string())?;
     let mut child = command
         .stdin(Stdio::null())
-        .stdout(File::create(&stdout_path).map_err(|error| error.to_string())?)
+        .stdout(Stdio::piped())
         .stderr(File::create(&stderr_path).map_err(|error| error.to_string())?)
         .spawn()
         .map_err(|error| error.to_string())?;
+    let stdout = child.stdout.take().expect("piped child stdout");
+    let compact = std::thread::spawn(move || compact_json_output(stdout, output));
     let started = Instant::now();
     let status = loop {
-        if let Some(status) = child.try_wait().map_err(|error| error.to_string())? {
-            break status;
+        match child.try_wait() {
+            Ok(Some(status)) => break Ok(status),
+            Ok(None) => {}
+            Err(error) => break Err(error.to_string()),
         }
         if started.elapsed() > Duration::from_secs(300)
             || fs::metadata(&stdout_path)
                 .map(|meta| meta.len() > MAX_OUTPUT)
                 .unwrap_or(false)
         {
-            let _ = child.kill();
-            let _ = child.wait();
-            return Err("Reading build exceeded its 300-second or 256-MiB output limit".into());
+            break Err("Reading build exceeded its 300-second or 256-MiB output limit".into());
         }
         std::thread::sleep(Duration::from_millis(30));
     };
+    if status.is_err() {
+        let _ = child.kill();
+        let _ = child.wait();
+    }
+    let compacted = compact.join();
+    let status = status?;
+    compacted
+        .map_err(|_| "Reading output transport stopped".to_string())?
+        .map_err(|error| error.to_string())?;
     if !matches!(status.code(), Some(0 | 1)) {
         let message = fs::read_to_string(stderr_path).unwrap_or_default();
         return Err(format!("Reading process stopped: {status}. {message}"));
     }
-    let json = fs::read_to_string(&stdout_path).map_err(|error| error.to_string())?;
-    if json.is_empty() || json.len() as u64 > MAX_OUTPUT {
+    let output_size = fs::metadata(&stdout_path)
+        .map_err(|error| error.to_string())?
+        .len();
+    if output_size == 0 || output_size > MAX_OUTPUT {
         return Err("Reading process produced no usable bundle".into());
     }
+    let json = fs::read_to_string(&stdout_path).map_err(|error| error.to_string())?;
     if let Some(key) = cache_key.as_ref() {
         if status.success() {
             let document = JsonValue::parse(&json).map_err(|error| error.to_string())?;

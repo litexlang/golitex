@@ -20,8 +20,11 @@ fn caller_wd(proof: &mut ExecByThmStmtSuccess) -> &mut EqualFactWellDefinedProof
 }
 
 fn caller_add(proof: &mut ExecByThmStmtSuccess) -> &mut AddObjWellDefinedProof {
-    match &mut caller_wd(proof).left {
-        ObjWellDefinedProof::ByDef {
+    match (&mut caller_wd(proof).as_detailed_mut().unwrap().left)
+        .as_detailed_mut()
+        .unwrap()
+    {
+        DetailedObjWellDefinedProof::ByDef {
             proof:
                 ObjWellDefinedProofByDef::ArithmeticOperator(
                     ArithmeticOperatorObjWellDefinedProofByDef::Add(proof),
@@ -43,8 +46,8 @@ fn named_call_wd_retains_the_caller_construction_after_closing_the_call() {
     );
     let call = super::by_theorem_mut(&mut body.proof_steps[0]);
     assert!(matches!(
-        caller_wd(call).left,
-        ObjWellDefinedProof::ByDef { .. }
+        (caller_wd(call).detailed_ref().left).as_detailed().unwrap(),
+        DetailedObjWellDefinedProof::ByDef { .. }
     ));
     assert_eq!(caller_add(call).child_obj_well_defined.len(), 2);
     let output = super::compile_run(&result, &compiler, "nested_named_add_zero")
@@ -62,9 +65,10 @@ fn named_call_wd_rejects_a_deleted_reordered_or_wrong_caller_construction() {
         match change {
             "deleted" => caller_add(call).child_obj_well_defined.clear(),
             "reordered" => caller_add(call).child_obj_well_defined.swap(0, 1),
-            "wrong" => {
-                super::replace_wd_subject(&mut caller_wd(call).left, super::number_object("7"))
-            }
+            "wrong" => super::replace_wd_subject(
+                &mut caller_wd(call).as_detailed_mut().unwrap().left,
+                super::number_object("7"),
+            ),
             _ => unreachable!(),
         }
         super::phase2_rejected(&result, &compiler, change, &["WD/"]);
@@ -76,14 +80,20 @@ fn named_call_wd_cannot_replace_the_caller_construction_with_closed_call_wd() {
     let (mut result, compiler) = super::execute(SOURCE);
     let call =
         super::by_theorem_mut(&mut theorem_body(&mut result.statement_results[1]).proof_steps[0]);
-    let (obj, wd_id) = match &super::equality_proof(&call.selected_proof)
+    let (obj, wd_id) = match (&super::equality_proof(&call.selected_proof)
         .well_defined_proof
-        .left
+        .detailed_ref()
+        .left)
+        .as_detailed()
+        .unwrap()
     {
-        ObjWellDefinedProof::ByKnown { obj, wd_id } => (obj.clone(), *wd_id),
+        DetailedObjWellDefinedProof::ByKnown { obj, wd_id } => (obj.clone(), *wd_id),
         _ => panic!("selection cites the call-local construction"),
     };
-    caller_wd(call).left = ObjWellDefinedProof::ByKnown { obj, wd_id };
+    caller_wd(call).as_detailed_mut().unwrap().left =
+        crate::execute::execute_fact_stmt::ObjWellDefinedProof::Detailed(Box::new(
+            DetailedObjWellDefinedProof::ByKnown { obj, wd_id },
+        ));
     super::phase2_rejected(&result, &compiler, "closed_call_wd", &["WdId/", "WD/"]);
 }
 
@@ -93,14 +103,18 @@ fn named_call_wd_cannot_use_the_cache_id_created_by_its_own_later_store() {
     let (mut result, compiler) = super::execute(&source);
     super::compile_run(&result, &compiler, "caller_store_order").unwrap();
     let body = theorem_body(&mut result.statement_results[1]);
-    let (obj, wd_id) = match &super::let_definition(&body.proof_steps[1]).value_well_defined {
-        VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByKnown { obj, wd_id }) => {
-            (obj.clone(), *wd_id)
-        }
+    let (obj, wd_id) = match (&super::let_definition(&body.proof_steps[1]).value_well_defined)
+        .as_detailed_success()
+        .unwrap()
+    {
+        Some(DetailedObjWellDefinedProof::ByKnown { obj, wd_id }) => (obj.clone(), *wd_id),
         _ => panic!("the later alias cites the completed caller construction's WD cache"),
     };
     let call = super::by_theorem_mut(&mut body.proof_steps[0]);
-    caller_wd(call).left = ObjWellDefinedProof::ByKnown { obj, wd_id };
+    caller_wd(call).as_detailed_mut().unwrap().left =
+        crate::execute::execute_fact_stmt::ObjWellDefinedProof::Detailed(Box::new(
+            DetailedObjWellDefinedProof::ByKnown { obj, wd_id },
+        ));
     super::phase2_rejected(&result, &compiler, "future_caller_store", &["WD/"]);
 }
 
@@ -150,7 +164,7 @@ fn named_call_wd_keeps_missing_guards_and_false_selections_rejected() {
             source.to_string(),
         ])
         .unwrap();
-        let mut runtime = Runtime::new(command);
+        let mut runtime = Runtime::new_with_result_detail(command, crate::result_detail::OutputDetail::Detailed);
         let result = runtime.run_litex_code(source).unwrap();
         assert!(!result.success && result.session_error.is_none());
         let last = result.statement_results.len() - 1;

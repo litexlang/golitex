@@ -1,0 +1,19 @@
+# An unmet defining condition
+# Does having a predicate definition make every instance true?
+
+# This source is expected to stop at by def.
+# Inspect whether the unmet requirement concerns the name, the type or the
+# defining condition.
+prop nonnegative(x R):
+    x >= 0
+
+# A definition supplies a condition; it does not make that condition true.
+# Replace -1 by 3, check, and inspect the grey consequences.
+by def $nonnegative(-1)
+
+thm squares_are_nonnegative:
+    ? forall x R:
+        $nonnegative(x ^ 2)
+    x ^ 2 >= 0
+
+by thm squares_are_nonnegative(3) => $nonnegative(3 ^ 2)

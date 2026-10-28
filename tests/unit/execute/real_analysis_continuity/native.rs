@@ -1,12 +1,15 @@
 use crate::launch_command::{LaunchCommand, OutputLanguage};
 use crate::prelude::*;
 fn runtime() -> Runtime {
-    Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language: OutputLanguage::English,
-    })
+    Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    )
 }
 fn check(rt: &mut Runtime, code: &str, expected: bool) {
     let run = rt.run_litex_code(code).unwrap();
@@ -124,10 +127,12 @@ fn bound_selectors_consume_candidates_and_keep_output_boundaries() {
         let latex =
             crate::compile_to_latex::to_latex_from_source(&code, OutputLanguage::English).unwrap();
         assert!(latex.contains(&format!("\\{name}")));
-        let error = crate::compile_to_lean::LitexToLeanCompiler::new(rt)
+        let lean = crate::compile_to_lean::LitexToLeanCompiler::new(rt)
             .compile_run(&run, "real_bound")
-            .unwrap_err();
-        assert!(error.message.contains("not supported"), "{error}");
+            .expect("bound selectors replay their checked candidate certificate");
+        let selector = if name == "sup" { "supremum" } else { "infimum" };
+        assert!(lean.contains(&format!("Litex.{selector}Value_eq_certificate")));
+        assert!(!lean.contains("sorry"));
         for set in ["{}", "R", "{i}", "{0}"] {
             check(
                 &mut runtime(),

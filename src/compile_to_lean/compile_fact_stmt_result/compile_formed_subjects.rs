@@ -119,9 +119,11 @@ pub(in crate::compile_to_lean) fn assumed_subject_proof(
     index: usize,
 ) -> Result<Option<&ObjWellDefinedProof>, LeanCompileError> {
     let proof = match &assumed.well_defined {
-        FactWellDefinedProof::Equality(wd) => [&wd.left, &wd.right].get(index).copied(),
+        FactWellDefinedProof::Equality(wd) => [&wd.detailed_ref().left, &wd.detailed_ref().right]
+            .get(index)
+            .copied(),
         FactWellDefinedProof::AtomicExceptEquality(wd) => {
-            wd.well_defined_of_each_parameter.get(index)
+            wd.detailed_ref().well_defined_of_each_parameter.get(index)
         }
         _ => None,
     }
@@ -145,8 +147,8 @@ pub(in crate::compile_to_lean) fn formed_subject_proof(
     let proof = match verify {
         VerifyFactResult::Equality(result) => match result.as_ref() {
             VerifyEqualityResult::Success(result) => [
-                &result.well_defined_proof.left,
-                &result.well_defined_proof.right,
+                &result.well_defined_proof.detailed_ref().left,
+                &result.well_defined_proof.detailed_ref().right,
             ]
             .get(index)
             .copied(),
@@ -155,6 +157,7 @@ pub(in crate::compile_to_lean) fn formed_subject_proof(
         VerifyFactResult::AtomicExceptEquality(result) => match result.as_ref() {
             VerifyAtomicExceptEqualityFactResult::Success(result) => result
                 .well_defined_proof
+                .detailed_ref()
                 .well_defined_of_each_parameter
                 .get(index),
             _ => None,

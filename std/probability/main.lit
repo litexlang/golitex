@@ -1565,3 +1565,275 @@ thm finite_chebyshev_tail_bound:
     \finite_deviation_tail_event<Omega,space>(X,a) = {k space.carrier:abs(X(k)-\finite_expectation<Omega,space>(X))>=a} = A
     release thm finite_chebyshev_event_bound(Omega,space,X,A,a)
     space.prob(\finite_deviation_tail_event<Omega,space>(X,a)) = space.prob(A) <= \finite_variance<Omega,space>(X)/a^2
+
+forall u,v R+:
+    u*v > 0
+    sqrt(u*v) > 0
+    sqrt(u*v) != 0
+
+template<Omega set,space &FiniteProbabilitySpace<Omega>>:
+    have fn finite_correlation(X,Y fn(k space.carrier) R: \finite_variance<Omega,space>(X)>0,\finite_variance<Omega,space>(Y)>0) R = \finite_covariance<Omega,space>(X,Y)/sqrt(\finite_variance<Omega,space>(X)*\finite_variance<Omega,space>(Y))
+
+thm finite_correlation_formula:
+    ? forall Omega set,space &FiniteProbabilitySpace<Omega>,X,Y fn(k space.carrier) R:
+        \finite_variance<Omega,space>(X) > 0
+        \finite_variance<Omega,space>(Y) > 0
+        =>:
+            \finite_correlation<Omega,space>(X,Y) = \finite_covariance<Omega,space>(X,Y)/sqrt(\finite_variance<Omega,space>(X)*\finite_variance<Omega,space>(Y))
+
+thm finite_correlation_symmetric:
+    ? forall Omega set,space &FiniteProbabilitySpace<Omega>,X,Y fn(k space.carrier) R:
+        \finite_variance<Omega,space>(X) > 0
+        \finite_variance<Omega,space>(Y) > 0
+        =>:
+            \finite_correlation<Omega,space>(X,Y) = \finite_correlation<Omega,space>(Y,X)
+    release thm finite_covariance_symmetric(Omega,space,X,Y)
+    \finite_variance<Omega,space>(X)*\finite_variance<Omega,space>(Y) = \finite_variance<Omega,space>(Y)*\finite_variance<Omega,space>(X)
+    \finite_correlation<Omega,space>(X,Y) = \finite_covariance<Omega,space>(X,Y)/sqrt(\finite_variance<Omega,space>(X)*\finite_variance<Omega,space>(Y)) = \finite_covariance<Omega,space>(Y,X)/sqrt(\finite_variance<Omega,space>(Y)*\finite_variance<Omega,space>(X)) = \finite_correlation<Omega,space>(Y,X)
+
+thm finite_correlation_self:
+    ? forall Omega set,space &FiniteProbabilitySpace<Omega>,X fn(k space.carrier) R:
+        \finite_variance<Omega,space>(X) > 0
+        =>:
+            \finite_correlation<Omega,space>(X,X) = 1
+    release thm finite_covariance_self(Omega,space,X)
+    \finite_variance<Omega,space>(X)*\finite_variance<Omega,space>(X) = \finite_variance<Omega,space>(X)^2
+    sqrt(\finite_variance<Omega,space>(X)^2) = \finite_variance<Omega,space>(X)
+    \finite_correlation<Omega,space>(X,X) = \finite_covariance<Omega,space>(X,X)/sqrt(\finite_variance<Omega,space>(X)*\finite_variance<Omega,space>(X)) = \finite_variance<Omega,space>(X)/sqrt(\finite_variance<Omega,space>(X)^2) = \finite_variance<Omega,space>(X)/\finite_variance<Omega,space>(X) = 1
+
+thm finite_correlation_square_bound:
+    ? forall Omega set,space &FiniteProbabilitySpace<Omega>,X,Y fn(k space.carrier) R:
+        \finite_variance<Omega,space>(X) > 0
+        \finite_variance<Omega,space>(Y) > 0
+        =>:
+            \finite_correlation<Omega,space>(X,Y)^2 <= 1
+    release thm finite_covariance_square_bound(Omega,space,X,Y)
+    \finite_variance<Omega,space>(X)*\finite_variance<Omega,space>(Y) > 0
+    thm normalized_square_bound:
+        ? forall c R,t R+:
+            c^2 <= t
+            =>:
+                (c/sqrt(t))^2 <= 1
+        sqrt(t) > 0
+        sqrt(t)^2 = t
+        (c/sqrt(t))^2 = c^2/sqrt(t)^2 = c^2/t <= t/t = 1
+    sqrt(\finite_variance<Omega,space>(X)*\finite_variance<Omega,space>(Y)) > 0
+    sqrt(\finite_variance<Omega,space>(X)*\finite_variance<Omega,space>(Y)) != 0
+    release thm normalized_square_bound(\finite_covariance<Omega,space>(X,Y),\finite_variance<Omega,space>(X)*\finite_variance<Omega,space>(Y))
+    \finite_correlation<Omega,space>(X,Y) = \finite_covariance<Omega,space>(X,Y)/sqrt(\finite_variance<Omega,space>(X)*\finite_variance<Omega,space>(Y))
+    \finite_correlation<Omega,space>(X,Y)^2 = (\finite_covariance<Omega,space>(X,Y)/sqrt(\finite_variance<Omega,space>(X)*\finite_variance<Omega,space>(Y)))^2 <= 1
+
+thm finite_correlation_abs_bound:
+    ? forall Omega set,space &FiniteProbabilitySpace<Omega>,X,Y fn(k space.carrier) R:
+        \finite_variance<Omega,space>(X) > 0
+        \finite_variance<Omega,space>(Y) > 0
+        =>:
+            abs(\finite_correlation<Omega,space>(X,Y)) <= 1
+    release thm finite_correlation_square_bound(Omega,space,X,Y)
+    \finite_correlation<Omega,space>(X,Y) $in R
+    \finite_correlation<Omega,space>(X,Y)^2 >= 0
+    abs(\finite_correlation<Omega,space>(X,Y)) = sqrt(\finite_correlation<Omega,space>(X,Y)^2) <= sqrt(1) = 1
+
+thm finite_correlation_bounds:
+    ? forall Omega set,space &FiniteProbabilitySpace<Omega>,X,Y fn(k space.carrier) R:
+        \finite_variance<Omega,space>(X) > 0
+        \finite_variance<Omega,space>(Y) > 0
+        =>:
+            -1 <= \finite_correlation<Omega,space>(X,Y)
+            \finite_correlation<Omega,space>(X,Y) <= 1
+    release thm finite_correlation_abs_bound(Omega,space,X,Y)
+    thm unit_absolute_bounds:
+        ? forall q R:
+            abs(q) <= 1
+            =>:
+                -1 <= q
+                q <= 1
+        0-q <= 1
+        (0-q)+q <= 1+q
+        -1 = ((0-q)+q)+(-1) <= (1+q)+(-1) = q
+        q <= abs(q) <= 1
+    release thm unit_absolute_bounds(\finite_correlation<Omega,space>(X,Y))
+
+thm finite_correlation_zero_from_covariance:
+    ? forall Omega set,space &FiniteProbabilitySpace<Omega>,X,Y fn(k space.carrier) R:
+        \finite_variance<Omega,space>(X) > 0
+        \finite_variance<Omega,space>(Y) > 0
+        \finite_covariance<Omega,space>(X,Y) = 0
+        =>:
+            \finite_correlation<Omega,space>(X,Y) = 0
+    \finite_variance<Omega,space>(X)*\finite_variance<Omega,space>(Y) > 0
+    sqrt(\finite_variance<Omega,space>(X)*\finite_variance<Omega,space>(Y)) > 0
+    sqrt(\finite_variance<Omega,space>(X)*\finite_variance<Omega,space>(Y)) != 0
+    \finite_correlation<Omega,space>(X,Y) = \finite_covariance<Omega,space>(X,Y)/sqrt(\finite_variance<Omega,space>(X)*\finite_variance<Omega,space>(Y)) = 0/sqrt(\finite_variance<Omega,space>(X)*\finite_variance<Omega,space>(Y)) = 0
+
+thm finite_covariance_zero_from_correlation:
+    ? forall Omega set,space &FiniteProbabilitySpace<Omega>,X,Y fn(k space.carrier) R:
+        \finite_variance<Omega,space>(X) > 0
+        \finite_variance<Omega,space>(Y) > 0
+        \finite_correlation<Omega,space>(X,Y) = 0
+        =>:
+            \finite_covariance<Omega,space>(X,Y) = 0
+    \finite_variance<Omega,space>(X)*\finite_variance<Omega,space>(Y) > 0
+    sqrt(\finite_variance<Omega,space>(X)*\finite_variance<Omega,space>(Y)) > 0
+    sqrt(\finite_variance<Omega,space>(X)*\finite_variance<Omega,space>(Y)) != 0
+    \finite_variance<Omega,space>(X)*\finite_variance<Omega,space>(Y) > 0
+    sqrt(\finite_variance<Omega,space>(X)*\finite_variance<Omega,space>(Y)) > 0
+    \finite_correlation<Omega,space>(X,Y) = \finite_covariance<Omega,space>(X,Y)/sqrt(\finite_variance<Omega,space>(X)*\finite_variance<Omega,space>(Y))
+    \finite_covariance<Omega,space>(X,Y) = \finite_correlation<Omega,space>(X,Y)*sqrt(\finite_variance<Omega,space>(X)*\finite_variance<Omega,space>(Y)) = 0*sqrt(\finite_variance<Omega,space>(X)*\finite_variance<Omega,space>(Y)) = 0
+
+template<Omega set,space &FiniteProbabilitySpace<Omega>,Target set,F fn(k space.carrier) Target>:
+    have fn finite_pushforward_event_probability(A power_set(fn_range(F))) R = space.prob(preimage_set(F,A))
+
+thm finite_pushforward_empty:
+    ? forall Omega set,space &FiniteProbabilitySpace<Omega>,Target set,F fn(k space.carrier) Target:
+        \finite_pushforward_event_probability<Omega,space,Target,F>({}) = 0
+    by extension:
+        ? preimage_set(F,{}) = {}
+        claim:
+            ? forall k preimage_set(F,{}):
+                k $in {}
+            by contra:
+                ? k $in {}
+                F(k) $in {}
+                impossible F(k) $in {}
+    \finite_pushforward_event_probability<Omega,space,Target,F>({}) = space.prob(preimage_set(F,{})) = space.prob({}) = 0
+
+thm finite_pushforward_whole:
+    ? forall Omega set,space &FiniteProbabilitySpace<Omega>,Target set,F fn(k space.carrier) Target:
+        \finite_pushforward_event_probability<Omega,space,Target,F>(fn_range(F)) = 1
+    by extension:
+        ? preimage_set(F,fn_range(F)) = space.carrier
+        claim:
+            ? forall k preimage_set(F,fn_range(F)):
+                k $in space.carrier
+            k $in space.carrier
+        claim:
+            ? forall k space.carrier:
+                k $in preimage_set(F,fn_range(F))
+            F(k) $in fn_range(F)
+            k $in preimage_set(F,fn_range(F))
+    \finite_pushforward_event_probability<Omega,space,Target,F>(fn_range(F)) = space.prob(preimage_set(F,fn_range(F))) = space.prob(space.carrier) = 1
+
+thm finite_pushforward_nonnegative:
+    ? forall Omega set,space &FiniteProbabilitySpace<Omega>,Target set,F fn(k space.carrier) Target,A power_set(fn_range(F)):
+        \finite_pushforward_event_probability<Omega,space,Target,F>(A) >= 0
+    preimage_set(F,A) $in power_set(space.carrier)
+    space.prob(preimage_set(F,A)) >= 0
+    \finite_pushforward_event_probability<Omega,space,Target,F>(A) = space.prob(preimage_set(F,A)) >= 0
+
+thm finite_pushforward_disjoint_additivity:
+    ? forall Omega set,space &FiniteProbabilitySpace<Omega>,Target set,F fn(k space.carrier) Target,A,B power_set(fn_range(F)):
+        intersect(A,B) = {}
+        =>:
+            \finite_pushforward_event_probability<Omega,space,Target,F>(union(A,B)) = \finite_pushforward_event_probability<Omega,space,Target,F>(A)+\finite_pushforward_event_probability<Omega,space,Target,F>(B)
+    preimage_set(F,A) $in power_set(space.carrier)
+    preimage_set(F,B) $in power_set(space.carrier)
+    by extension:
+        ? intersect(preimage_set(F,A),preimage_set(F,B)) = {}
+        claim:
+            ? forall k intersect(preimage_set(F,A),preimage_set(F,B)):
+                k $in {}
+            by contra:
+                ? k $in {}
+                k $in preimage_set(F,A)
+                k $in preimage_set(F,B)
+                F(k) $in A
+                F(k) $in B
+                F(k) $in intersect(A,B)
+                F(k) $in {}
+                impossible F(k) $in {}
+    by extension:
+        ? preimage_set(F,union(A,B)) = union(preimage_set(F,A),preimage_set(F,B))
+        claim:
+            ? forall k preimage_set(F,union(A,B)):
+                k $in union(preimage_set(F,A),preimage_set(F,B))
+            k $in space.carrier
+            F(k) $in union(A,B)
+            F(k) $in A or F(k) $in B
+            by cases:
+                ? k $in union(preimage_set(F,A),preimage_set(F,B))
+                case F(k) $in A:
+                    k $in preimage_set(F,A)
+                    k $in union(preimage_set(F,A),preimage_set(F,B))
+                case F(k) $in B:
+                    k $in preimage_set(F,B)
+                    k $in union(preimage_set(F,A),preimage_set(F,B))
+        claim:
+            ? forall k union(preimage_set(F,A),preimage_set(F,B)):
+                k $in preimage_set(F,union(A,B))
+            k $in preimage_set(F,A) or k $in preimage_set(F,B)
+            by cases:
+                ? k $in preimage_set(F,union(A,B))
+                case k $in preimage_set(F,A):
+                    k $in space.carrier
+                    F(k) $in A
+                    F(k) $in union(A,B)
+                    k $in preimage_set(F,union(A,B))
+                case k $in preimage_set(F,B):
+                    k $in space.carrier
+                    F(k) $in B
+                    F(k) $in union(A,B)
+                    k $in preimage_set(F,union(A,B))
+    space.prob(union(preimage_set(F,A),preimage_set(F,B))) = space.prob(preimage_set(F,A))+space.prob(preimage_set(F,B))
+    \finite_pushforward_event_probability<Omega,space,Target,F>(union(A,B)) = space.prob(preimage_set(F,union(A,B))) = space.prob(union(preimage_set(F,A),preimage_set(F,B))) = space.prob(preimage_set(F,A))+space.prob(preimage_set(F,B))
+    \finite_pushforward_event_probability<Omega,space,Target,F>(A) = space.prob(preimage_set(F,A))
+    \finite_pushforward_event_probability<Omega,space,Target,F>(B) = space.prob(preimage_set(F,B))
+    thm add_equal_values:
+        ? forall u,v,r,s R:
+            u = r
+            v = s
+            =>:
+                u+v = r+s
+        u+v = r+v = r+s
+    release thm add_equal_values(space.prob(preimage_set(F,A)),space.prob(preimage_set(F,B)),\finite_pushforward_event_probability<Omega,space,Target,F>(A),\finite_pushforward_event_probability<Omega,space,Target,F>(B))
+
+thm finite_pushforward_probability_laws:
+    ? forall Omega set,space &FiniteProbabilitySpace<Omega>,Target set,F fn(k space.carrier) Target:
+        (fn_range(F),\finite_pushforward_event_probability<Omega,space,Target,F>) $in &FiniteProbabilitySpace<Target>
+    fn_range(F) $in power_set(Target)
+    $is_finite_set(space.carrier)
+    $is_finite_set(fn_range(F))
+    have source_point space.carrier
+    F(source_point) $in fn_range(F)
+    witness $is_nonempty_set(fn_range(F)) from F(source_point)
+    release thm finite_pushforward_empty(Omega,space,Target,F)
+    release thm finite_pushforward_whole(Omega,space,Target,F)
+    claim:
+        ? forall A power_set(fn_range(F)):
+            \finite_pushforward_event_probability<Omega,space,Target,F>(A) >= 0
+        release thm finite_pushforward_nonnegative(Omega,space,Target,F,A)
+    claim:
+        ? forall A,B power_set(fn_range(F)):
+            intersect(A,B) = {}
+            =>:
+                \finite_pushforward_event_probability<Omega,space,Target,F>(union(A,B)) = \finite_pushforward_event_probability<Omega,space,Target,F>(A)+\finite_pushforward_event_probability<Omega,space,Target,F>(B)
+        release thm finite_pushforward_disjoint_additivity(Omega,space,Target,F,A,B)
+    release thm struct_member((fn_range(F),\finite_pushforward_event_probability<Omega,space,Target,F>),&FiniteProbabilitySpace<Target>)
+
+template<Omega set,space &FiniteProbabilitySpace<Omega>,Target set,F fn(k space.carrier) Target>:
+    have finite_pushforward_probability_space &FiniteProbabilitySpace<Target> = (fn_range(F),\finite_pushforward_event_probability<Omega,space,Target,F>)
+
+thm finite_pushforward_event_formula:
+    ? forall Omega set,space &FiniteProbabilitySpace<Omega>,Target set,F fn(k space.carrier) Target,A power_set(fn_range(F)):
+        \finite_pushforward_event_probability<Omega,space,Target,F>(A) = space.prob(preimage_set(F,A))
+
+thm finite_pushforward_singleton_probability:
+    ? forall Omega set,space &FiniteProbabilitySpace<Omega>,Target set,F fn(k space.carrier) Target,y fn_range(F):
+        \finite_pushforward_event_probability<Omega,space,Target,F>({y}) = space.prob(preimage(F,y))
+    by extension:
+        ? preimage_set(F,{y}) = preimage(F,y)
+        claim:
+            ? forall k preimage_set(F,{y}):
+                k $in preimage(F,y)
+            k $in space.carrier
+            F(k) $in {y}
+            F(k) = y
+            k $in preimage(F,y)
+        claim:
+            ? forall k preimage(F,y):
+                k $in preimage_set(F,{y})
+            k $in space.carrier
+            F(k) = y
+            F(k) $in {y}
+            k $in preimage_set(F,{y})
+    \finite_pushforward_event_probability<Omega,space,Target,F>({y}) = space.prob(preimage_set(F,{y})) = space.prob(preimage(F,y))

@@ -89,7 +89,7 @@ impl LitexToLeanCompiler {
                 let interface =
                     self.compile_matrix_callable_member(&head, &proof.callable, position)?;
                 let member = position.with_visible_wd(&fact.element, &mut |wd, producer| {
-                    let ObjWellDefinedProof::ByDef { proof:ObjWellDefinedProofByDef::FnObj(p), .. } = wd else {
+                    let DetailedObjWellDefinedProof::ByDef { proof:ObjWellDefinedProofByDef::FnObj(p), .. } = (wd).detailed_ref() else {
                         return Err(LeanCompileError::unsupported("Matrix/CallWD"));
                     };
                     let scope = SourcePosition::new(Some(producer),SourceOwner::WD(wd),0);
@@ -147,7 +147,7 @@ impl LitexToLeanCompiler {
         )?;
         let value = self.compile_object_reference(&fact.element, position)?;
         position.with_visible_wd(&fact.element,&mut |wd,producer| {
-            let ObjWellDefinedProof::ByDef {proof:ObjWellDefinedProofByDef::FnObj(p),..}=wd else {return Err(LeanCompileError::unsupported("Matrix/RealReturnWD"))};
+            let DetailedObjWellDefinedProof::ByDef {proof:ObjWellDefinedProofByDef::FnObj(p),..}=(wd).detailed_ref() else {return Err(LeanCompileError::unsupported("Matrix/RealReturnWD"))};
             let scope=SourcePosition::new(Some(producer),SourceOwner::WD(wd),0);
             let (input,domain)=self.compile_fn_return_domain(call,p,&proof.array.signature,&scope)?;
             Ok(format!("(let _litex_real_matrix := {root}; let _litex_real_signature := {signature}; (show Litex.In {value} Litex.R from Litex.FunctionSemantics.call_mem _litex_real_signature.domain _litex_real_signature.output (Litex.denote _litex_real_matrix) {input} {member} {domain}))"))

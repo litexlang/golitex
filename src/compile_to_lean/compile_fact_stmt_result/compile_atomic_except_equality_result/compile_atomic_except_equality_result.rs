@@ -46,6 +46,7 @@ impl LitexToLeanCompiler {
                 &success.well_defined_proof,
                 success
                     .well_defined_proof
+                    .detailed_ref()
                     .well_defined_of_each_parameter
                     .len(),
             ),

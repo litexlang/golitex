@@ -1,0 +1,18 @@
+# 定义条件尚未满足
+# 命题有定义，是否就意味着每个实例都成立？
+
+# 这份源码预期在 by def 处不能通过。
+# 看看被检查的究竟是名字、类型，还是定义体里的条件。
+prop nonnegative(x R):
+    x >= 0
+
+# 定义给出了判定条件，不会使条件自动成立。
+# 把 -1 改成 3，重新检查，观察本行发布的灰色结果。
+by def $nonnegative(-1)
+
+thm squares_are_nonnegative:
+    ? forall x R:
+        $nonnegative(x ^ 2)
+    x ^ 2 >= 0
+
+by thm squares_are_nonnegative(3) => $nonnegative(3 ^ 2)

@@ -39,6 +39,11 @@ use crate::knowledge_base::JsonValue;
 use crate::runtime::Runtime;
 
 pub fn project_stmt_detailed(result: &ExecStmtResult, runtime: &Runtime) -> JsonValue {
+    if !result.is_failed() {
+        crate::result_detail::OutputDetail::Detailed
+            .require(runtime.result_detail(), "Detailed statement output")
+            .unwrap_or_else(|error| panic!("{error}"));
+    }
     let projected = match result {
         ExecStmtResult::Fact(fact) => super::entry::project_fact_only(fact, runtime),
         ExecStmtResult::Definition(def) => project_definition(def, runtime),
@@ -2341,14 +2346,14 @@ fn project_command(result: &ExecCommandStmtResult, runtime: &Runtime) -> JsonVal
                                 (
                                     "left",
                                     project_obj_wd_proof(
-                                        &s.evaluated_equal_well_defined.left,
+                                        &s.evaluated_equal_well_defined.detailed_ref().left,
                                         runtime,
                                     ),
                                 ),
                                 (
                                     "right",
                                     project_obj_wd_proof(
-                                        &s.evaluated_equal_well_defined.right,
+                                        &s.evaluated_equal_well_defined.detailed_ref().right,
                                         runtime,
                                     ),
                                 ),

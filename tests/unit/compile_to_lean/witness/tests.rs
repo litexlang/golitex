@@ -3,12 +3,15 @@ use crate::execute::execute_witness_stmt::{ExecWitnessExistFactStmtResult, ExecW
 use crate::prelude::*;
 
 fn checked(source: &str) -> (RunLitexCodeResult, Runtime) {
-    let mut runtime = Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language: OutputLanguage::English,
-    });
+    let mut runtime = Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    );
     let run = runtime.run_litex_code(source).unwrap();
     assert!(
         run.success && run.session_error.is_none(),

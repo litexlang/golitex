@@ -3,8 +3,9 @@ use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::Iterate
 use crate::prelude::*;
 
 fn execute(source: &str) -> (Runtime, RunLitexCodeResult) {
-    let mut runtime = Runtime::new(
+    let mut runtime = Runtime::new_with_result_detail(
         parse_launch_command(&["-strict".into(), "-e".into(), source.into()]).unwrap(),
+        crate::result_detail::OutputDetail::Detailed,
     );
     let result = runtime.run_litex_code(source).unwrap();
     (runtime, result)
@@ -40,10 +41,12 @@ fn aggregate_wd_captures_original_literal_or_property_signature() {
             let VerifyEqualityResult::Success(p) = p.as_ref() else {
                 panic!()
             };
-            let ObjWellDefinedProof::ByDef {
+            let DetailedObjWellDefinedProof::ByDef {
                 proof: ObjWellDefinedProofByDef::IteratedOperator(p),
                 ..
-            } = &p.well_defined_proof.left
+            } = (&p.well_defined_proof.detailed_ref().left)
+                .as_detailed()
+                .unwrap()
             else {
                 panic!()
             };
@@ -190,10 +193,16 @@ fn equality(run: &mut RunLitexCodeResult) -> &mut VerifyEqualitySuccess {
 fn range_aggregate_rejects_missing_signature_or_wd() {
     for missing in 0..5 {
         let (runtime, mut run) = execute("sum(1, 3, fn(x Z) Z {x}) = 6");
-        let ObjWellDefinedProof::ByDef {
+        let DetailedObjWellDefinedProof::ByDef {
             proof: ObjWellDefinedProofByDef::IteratedOperator(P::Sum(p)),
             ..
-        } = &mut equality(&mut run).well_defined_proof.left
+        } = (&mut equality(&mut run)
+            .well_defined_proof
+            .as_detailed_mut()
+            .unwrap()
+            .left)
+            .as_detailed_mut()
+            .unwrap()
         else {
             panic!()
         };
@@ -275,10 +284,16 @@ fn finite_aggregates_replay_empty_fractional_and_named_sets() {
 fn finite_aggregate_rejects_missing_wd_or_signature() {
     for missing in 0..6 {
         let (runtime, mut run) = execute("finite_set_sum({1, 2}, fn(x Z) Z {x}) = 3");
-        let ObjWellDefinedProof::ByDef {
+        let DetailedObjWellDefinedProof::ByDef {
             proof: ObjWellDefinedProofByDef::IteratedOperator(P::SumOfFiniteSet(p)),
             ..
-        } = &mut equality(&mut run).well_defined_proof.left
+        } = (&mut equality(&mut run)
+            .well_defined_proof
+            .as_detailed_mut()
+            .unwrap()
+            .left)
+            .as_detailed_mut()
+            .unwrap()
         else {
             panic!()
         };
@@ -350,10 +365,16 @@ fn finite_aggregate_named_set_finiteness_keeps_original_equality_citations() {
         let (runtime, mut run) =
             execute("have A set = {1, 2}\nfinite_set_sum(A, fn(x Z) Z {x}) = 3");
         assert!(run.success);
-        let ObjWellDefinedProof::ByDef {
+        let DetailedObjWellDefinedProof::ByDef {
             proof: ObjWellDefinedProofByDef::IteratedOperator(P::SumOfFiniteSet(p)),
             ..
-        } = &mut equality(&mut run).well_defined_proof.left
+        } = (&mut equality(&mut run)
+            .well_defined_proof
+            .as_detailed_mut()
+            .unwrap()
+            .left)
+            .as_detailed_mut()
+            .unwrap()
         else {
             panic!()
         };
@@ -406,10 +427,16 @@ fn bounded_and_general_finite_aggregates_replay_original_domains() {
 fn bounded_finite_aggregate_rejects_changed_input_signature() {
     let (runtime, mut run) = execute("finite_set_sum({1,2,3},fn(k closed_range(1,3)) Z {k}) = 6");
     assert!(run.success);
-    let ObjWellDefinedProof::ByDef {
+    let DetailedObjWellDefinedProof::ByDef {
         proof: ObjWellDefinedProofByDef::IteratedOperator(P::SumOfFiniteSet(p)),
         ..
-    } = &mut equality(&mut run).well_defined_proof.left
+    } = (&mut equality(&mut run)
+        .well_defined_proof
+        .as_detailed_mut()
+        .unwrap()
+        .left)
+        .as_detailed_mut()
+        .unwrap()
     else {
         panic!("finite sum WD")
     };

@@ -132,10 +132,16 @@ does not write new well-definedness records into the current scope.
 
 The equality and atomic-except-equality pipelines keep their search slots in a fixed
 order. There is **no fact-level exact-IR cite** search slot (composites and
-atomics alike). Object WD reuses recorded proofs via
-`VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByKnown { obj, .. })`.
-Both Success proofs and `Failed { obj, reason }` carry the subject `Obj`.
-Nested Success child evidence is `Vec<Box<ObjWellDefinedProof>>` (subject lives on each proof).
+atomics alike). Object WD reuses recorded proofs through
+`ObjWellDefinedProof::Detailed`, whose payload may be
+`DetailedObjWellDefinedProof::ByKnown { obj, wd_id }`. Detailed success and
+`Failed { obj, reason }` carry the subject `Obj`. Compact and Normal success
+omit the subject and successful replay tree, retaining only checked callable
+data needed by later computation. Nested successful replay children are
+retained only by Detailed collectors. Each producer chooses its mode directly;
+parents reject a child of another mode as an internal bug. See
+[`Result construction modes`](../../../docs/Result_Construction_Modes.md)
+for the full retention contract and unfinished migration boundaries.
 
 Atomic-except-equality search is:
 
@@ -167,8 +173,11 @@ local binder env before later WD so domain-restricted applications can pass.
 Independent `not forall` and `forall … <=>:` WD also assume each checked
 domain fact before later domains and conclusions. Only the common domain
 guards both iff branches: neither branch is assumed while checking the other.
-The binder environment stays in the WD proof and is never merged into the
-parent; WD alone does not prove the quantified proposition.
+The binder environment is never merged into the parent. Detailed retains it
+in the WD proof; Normal and Compact discard it at the same completed scope
+boundary. Their WD payloads also omit successful domain/conclusion vectors,
+while checking and assuming each guard in the same source order. WD alone
+does not prove the quantified proposition.
 
 Function-application signature candidates have no binder scope to retain.
 Their isolated checks disable new WD-cache storage: returned children and

@@ -44,19 +44,22 @@ impl Runtime {
                 })
             }
         };
+        stages.require_mode(self.result_detail())?;
+        if let Some(proof) = ObjWellDefinedProof::reduced(self.result_detail(), &root, None) {
+            return Ok(VerifyObjWellDefinedResult::Success(proof));
+        }
         let (child_obj_well_defined, requirement_fact_verified) =
             stages.into_success_child_proofs();
         Ok(VerifyObjWellDefinedResult::Success(
-            ObjWellDefinedProof::ByDef {
-                obj: root,
-                proof: ObjWellDefinedProofByDef::FunctionSpace(
+            ObjWellDefinedProof::by_def(self.result_detail(), &(root), None, || {
+                ObjWellDefinedProofByDef::FunctionSpace(
                     FunctionSpaceObjWellDefinedProofByDef::Preimage(PreimageObjWellDefinedProof {
                         child_obj_well_defined,
                         requirement_fact_verified,
                         construction,
                     }),
-                ),
-            },
+                )
+            }),
         ))
     }
 
@@ -72,7 +75,7 @@ impl Runtime {
             state,
         )?;
         if stages.is_fully_known() {
-            stages.requirement_fact_verified.push(self.require_is_set(
+            stages.push_requirement(self.require_is_set(
                 &value.target_set,
                 state,
                 "preimage_set: target must be a set".to_string(),
@@ -103,12 +106,15 @@ impl Runtime {
                 })
             }
         };
+        stages.require_mode(self.result_detail())?;
+        if let Some(proof) = ObjWellDefinedProof::reduced(self.result_detail(), &root, None) {
+            return Ok(VerifyObjWellDefinedResult::Success(proof));
+        }
         let (child_obj_well_defined, requirement_fact_verified) =
             stages.into_success_child_proofs();
         Ok(VerifyObjWellDefinedResult::Success(
-            ObjWellDefinedProof::ByDef {
-                obj: root,
-                proof: ObjWellDefinedProofByDef::FunctionSpace(
+            ObjWellDefinedProof::by_def(self.result_detail(), &(root), None, || {
+                ObjWellDefinedProofByDef::FunctionSpace(
                     FunctionSpaceObjWellDefinedProofByDef::PreimageSet(
                         PreimageSetObjWellDefinedProof {
                             child_obj_well_defined,
@@ -116,8 +122,8 @@ impl Runtime {
                             construction,
                         },
                     ),
-                ),
-            },
+                )
+            }),
         ))
     }
 }

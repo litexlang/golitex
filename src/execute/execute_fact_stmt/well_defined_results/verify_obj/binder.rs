@@ -159,10 +159,7 @@ impl Runtime {
         proof: P,
     ) -> RuntimeResult<VerifyObjWellDefinedResult> {
         Ok(VerifyObjWellDefinedResult::Success(
-            ObjWellDefinedProof::ByDef {
-                obj,
-                proof: wrap(proof),
-            },
+            ObjWellDefinedProof::by_def(self.result_detail(), &(obj), None, || wrap(proof)),
         ))
     }
 

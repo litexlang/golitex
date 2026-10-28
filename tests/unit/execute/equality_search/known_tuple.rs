@@ -413,12 +413,15 @@ fn template_tuple_aliases_keep_function_domains_and_header_guards() {
 #[test]
 fn template_tuple_output_keeps_alias_and_subject_citations() {
     for language in [OutputLanguage::English, OutputLanguage::Chinese] {
-        let mut rt = Runtime::new(LaunchCommand::Eval {
-            code: String::new(),
-            session: false,
-            strict: true,
-            language,
-        });
+        let mut rt = Runtime::new_with_result_detail(
+            LaunchCommand::Eval {
+                code: String::new(),
+                session: false,
+                strict: true,
+                language,
+            },
+            crate::result_detail::OutputDetail::Detailed,
+        );
         for source in [
             "template<S set>:\n    have fn pair(x S) cart(S,S) = (x,x)",
             "let alias = \\pair<R>",

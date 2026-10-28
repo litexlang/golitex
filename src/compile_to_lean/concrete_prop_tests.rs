@@ -11,12 +11,15 @@ const GUARDED: &str =
 const GUARDED_SET_PROJECTION: &str = "have fn guarded_reals(a R: a != 0) power_set(R) = R\nprop in_guarded_reals(x, y R):\n    y != 0\n    x $in guarded_reals(y)\nprop nested_guarded_reals(x, y R):\n    $in_guarded_reals(x, y)\n    x = x\n";
 
 fn checked(source: &str) -> (Runtime, RunLitexCodeResult) {
-    let mut runtime = Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language: OutputLanguage::English,
-    });
+    let mut runtime = Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    );
     let result = runtime.run_litex_code(source).unwrap();
     assert!(result.success && result.session_error.is_none(), "{source}");
     (runtime, result)

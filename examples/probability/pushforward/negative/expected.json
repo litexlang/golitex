@@ -1,0 +1,16 @@
+{
+  "wrong_even_mass": "search_proof",
+  "wrong_odd_mass": "search_proof",
+  "wrong_constant_mass": "search_proof",
+  "wrong_dirac_null_mass": "search_proof",
+  "drop_null_image": "search_proof",
+  "outside_image_event": "value_well_defined",
+  "event_not_set": "value_well_defined",
+  "outside_image_singleton": "argument_type",
+  "wrong_target": "value_well_defined",
+  "wrong_map_domain": "value_well_defined",
+  "binary_map_rejected": "value_well_defined",
+  "partial_map_rejected": "value_well_defined",
+  "invalid_source_laws": "value_well_defined",
+  "target_not_set": "value_well_defined"
+}

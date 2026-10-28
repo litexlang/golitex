@@ -3,12 +3,15 @@ use crate::prelude::*;
 const AFFINE: &str = "have fn shift(x R) R = x + 3\nhave x R\n2 * shift(x) = 2 * x + 6\n";
 
 fn runtime() -> Runtime {
-    Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: true,
-        strict: true,
-        language: OutputLanguage::English,
-    })
+    Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: true,
+            strict: true,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    )
 }
 
 fn verified(runtime: &mut Runtime, source: &str) -> RunLitexCodeResult {
@@ -432,12 +435,15 @@ fn scalar_matrix_checks_carriers_and_false_neighbors_without_value_seeds() {
 #[test]
 fn evidence_projects_in_all_output_languages() {
     for language in OutputLanguage::ALL {
-        let mut runtime = Runtime::new(LaunchCommand::Eval {
-            code: String::new(),
-            session: true,
-            strict: true,
-            language,
-        });
+        let mut runtime = Runtime::new_with_result_detail(
+            LaunchCommand::Eval {
+                code: String::new(),
+                session: true,
+                strict: true,
+                language,
+            },
+            crate::result_detail::OutputDetail::Detailed,
+        );
         let result = verified(&mut runtime, AFFINE);
         assert!(
             crate::json_output::project_stmt_detailed(&result.statement_results[2], &runtime)

@@ -250,12 +250,15 @@ fn property_return_match_can_cite_a_stored_set_equality() {
 #[test]
 fn new_route_has_bilingual_normal_and_typed_detailed_output() {
     for language in [OutputLanguage::English, OutputLanguage::Chinese] {
-        let mut rt = Runtime::new(LaunchCommand::Eval {
-            code: String::new(),
-            session: false,
-            strict: true,
-            language,
-        });
+        let mut rt = Runtime::new_with_result_detail(
+            LaunchCommand::Eval {
+                code: String::new(),
+                session: false,
+                strict: true,
+                language,
+            },
+            crate::result_detail::OutputDetail::Detailed,
+        );
         exec_ok(&mut rt, "have fn id(x R) R = x");
         exec_ok(&mut rt, "have a R = 1");
         let result = exec_ok(&mut rt, "id(a) $in R");
@@ -350,12 +353,15 @@ fn stored_equality_aligns_fixed_order_premises_without_entering_search() {
 fn cached_wd_from_an_equal_function_cannot_select_an_inapplicable_definition_signature() {
     // Deliberate assumption fixture: test signature selection under a stored
     // function equality, rather than asking the verifier to derive that equality.
-    let mut rt = Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: false,
-        language: OutputLanguage::English,
-    });
+    let mut rt = Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: false,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    );
     for code in [
         "have f fn(x N) N",
         "have g fn(x R) R",
@@ -610,12 +616,15 @@ fn imported_function_definitions_keep_the_known_special_property_route() {
 
 #[test]
 fn equality_antisymmetry_retains_both_read_only_order_citations() {
-    let mut rt = Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: false,
-        language: OutputLanguage::English,
-    });
+    let mut rt = Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: false,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    );
     for code in ["have a R", "have b R", "trust a <= b", "trust b <= a"] {
         exec_ok(&mut rt, code);
     }
@@ -643,12 +652,15 @@ fn equality_antisymmetry_retains_both_read_only_order_citations() {
 }
 
 fn runtime() -> Runtime {
-    Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: true,
-        language: OutputLanguage::English,
-    })
+    Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    )
 }
 
 fn builtin_disabled() -> VerifyState {
