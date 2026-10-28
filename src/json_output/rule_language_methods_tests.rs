@@ -1,6 +1,9 @@
 //! Each rule owns its language methods; the generic API only selects one.
 
 use super::explain::BuiltinRuleText;
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_elementary_identities::{
+    CartesianUnionProof, ElementaryIdentitySearchProofByBuiltinRule, MinAssociativeProof,
+};
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_power_laws::PowerProductSameBaseBuiltinRuleProof;
 use crate::launch_command::OutputLanguage;
 use std::path::Path;
@@ -119,6 +122,36 @@ fn power_product_exposes_every_named_language_method() {
         assert!(message.contains("a^m · a^n = a^(m+n)"));
         let selected = rule.rule_name_and_message(language);
         assert_eq!((selected.rule_name, selected.message), (rule_name, message));
+    }
+}
+
+#[test]
+fn elementary_identity_exposes_every_named_language_method() {
+    let rules: [ElementaryIdentitySearchProofByBuiltinRule; 2] = [
+        MinAssociativeProof::new().into(),
+        CartesianUnionProof::new().into(),
+    ];
+    let methods: [fn(&ElementaryIdentitySearchProofByBuiltinRule) -> BuiltinRuleText; 10] = [
+        ElementaryIdentitySearchProofByBuiltinRule::rule_name_and_message_en,
+        ElementaryIdentitySearchProofByBuiltinRule::rule_name_and_message_zh,
+        ElementaryIdentitySearchProofByBuiltinRule::rule_name_and_message_zh_hant,
+        ElementaryIdentitySearchProofByBuiltinRule::rule_name_and_message_fr,
+        ElementaryIdentitySearchProofByBuiltinRule::rule_name_and_message_ru,
+        ElementaryIdentitySearchProofByBuiltinRule::rule_name_and_message_es,
+        ElementaryIdentitySearchProofByBuiltinRule::rule_name_and_message_ar,
+        ElementaryIdentitySearchProofByBuiltinRule::rule_name_and_message_ja,
+        ElementaryIdentitySearchProofByBuiltinRule::rule_name_and_message_ko,
+        ElementaryIdentitySearchProofByBuiltinRule::rule_name_and_message_vi,
+    ];
+    for rule in rules {
+        for (language, method) in OutputLanguage::ALL.into_iter().zip(methods) {
+            let BuiltinRuleText { rule_name, message } = method(&rule);
+            assert_eq!(rule_name, rule.rule_id());
+            assert!(has_localized_prose(&message, language), "{language:?}");
+            assert!(message.ends_with(rule.law()));
+            let selected = rule.rule_name_and_message(language);
+            assert_eq!((selected.rule_name, selected.message), (rule_name, message));
+        }
     }
 }
 

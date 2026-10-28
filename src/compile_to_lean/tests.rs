@@ -398,11 +398,11 @@ fn absolute_value_command_after_supported_prefix_replays_complete_artifact() {
 
 #[test]
 fn unsupported_command_after_supported_prefix_rejects_complete_artifact() {
-    let (result, compiler) = execute("1 = 1\neval sqrt(2)\n");
+    let (result, compiler) = execute("1 = 1\neval (sqrt(2)+sqrt(3))*(sqrt(5)+sqrt(7))\n");
     let error = compile_run(&result, &compiler, "unsupported_command")
-        .expect_err("square root evaluation has no Lean adapter");
+        .expect_err("products of radical sums have no Lean adapter");
     assert_eq!(error.statement_index, Some(2));
-    assert!(error.route.starts_with("WD/") || error.route.starts_with("Eval/"));
+    assert_eq!(error.route, "Eval/LinearRadicalDomain");
 }
 
 #[test]

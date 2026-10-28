@@ -65,6 +65,18 @@ Doing mathematics means looking for patterns. In Litex, I have been looking for 
 
 My ambition is for Litex to become a Python for formal mathematics: familiar writing, few language conventions, and useful machinery behind each statement. As AI produces more candidate reasoning, the language in which we understand, check and share mathematical knowledge matters more.
 
+### Mathematical wording becomes a checking action
+
+Litex starts with usable mathematical objects and their conditions: numbers, sets and functions can be named directly. Familiar proof phrases then correspond to precise statements. The source column below contains excerpts; the [Manual](docs/Manual.md#mathematical-reading) gives complete forms and scope rules.
+
+| Mathematical wording | Litex excerpt | What connects the step to its grounds |
+| --- | --- | --- |
+| **Let a equal 1; substituting gives a + 2 = 3.** | **`let a = 1`**<br>**`a + 2 = 3`** | Cite `a = 1`, substitute, check `1 + 2 = 3`, and store the accepted conclusion. |
+| **Split into the cases x = 0 and x = 1.** | **`by cases:`**<br>`case x = 0:`<br>`case x = 1:` | Check coverage and prove the same target in both local branches. |
+| **For natural n, define successor(n) = n + 1.** | **`have fn`** `successor(n N) N = n + 1` | Check the domain and return carrier, then make the definition callable. |
+
+The recurring patterns are in the mathematical writing itself. The author supplies meaningful steps; Litex makes supported connections to the context executable.
+
 ## From mathematical language to checked knowledge
 
 **Foundation.** Litex uses sets, elements, functions and relations. Familiar operations carry explicit conditions: `1 - 2 = -1`, while `1 / 0` is rejected as undefined. A function can put its required conditions directly in its domain:
