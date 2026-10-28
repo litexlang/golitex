@@ -1,0 +1,43 @@
+have fn trivial_mul(x,y {0}) {0} = 0
+
+have fn trivial_inv(x {0}) {0} = 0
+
+by enumerate finite_set:
+    ? forall x,y,z {0}:
+        trivial_mul(trivial_mul(x,y),z) = trivial_mul(x,trivial_mul(y,z))
+    trivial_mul(trivial_mul(x,y),z) = trivial_mul(x,trivial_mul(y,z))
+
+by enumerate finite_set:
+    ? forall x {0}:
+        trivial_mul(0,x) = x
+        trivial_mul(x,0) = x
+        trivial_mul(trivial_inv(x),x) = 0
+        trivial_mul(x,trivial_inv(x)) = 0
+    trivial_mul(0,x) = x
+    trivial_mul(x,0) = x
+    trivial_mul(trivial_inv(x),x) = 0
+    trivial_mul(x,trivial_inv(x)) = 0
+
+{0} != {}
+
+0 $in {0}
+
+trivial_mul $in fn(x,y {0}) {0}
+
+trivial_inv $in fn(x {0}) {0}
+
+have trivial &Algebra::group::Group<{0}> = (trivial_mul,0,trivial_inv)
+
+trivial.one = 0
+
+release thm Algebra::group::inverse_identity({0},trivial)
+
+release thm Algebra::group::inverse_involution({0},trivial,0)
+
+release thm Algebra::group::right_inverse_unique({0},trivial,0,0)
+
+release thm Algebra::group::inverse_product({0},trivial,0,0)
+
+release thm Algebra::group::right_equation_unique({0},trivial,0,0)
+
+release thm Algebra::group::commuting_inverses({0},trivial,0,0)

@@ -1,0 +1,4 @@
+thm inverse_of_product:
+    ? forall A nonempty_set,G &Algebra::group::Group<A>,a,b A:
+        G.inv(G.mul(a,b)) = G.mul(G.inv(b),G.inv(a))
+    release thm Algebra::group::inverse_product(A,G,a,b)

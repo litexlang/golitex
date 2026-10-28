@@ -1,0 +1,21 @@
+# Evaluate signed gcd/lcm, integer division and factorial, then cite the computed values.
+eval gcd(54,-24)
+gcd(54,-24) = 6
+eval gcd(0,-9)
+gcd(0,-9) = 9
+eval lcm(-6,15)
+lcm(-6,15) = 30
+eval lcm(0,0)
+lcm(0,0) = 0
+eval (-7) % 3
+(-7) % 3 = 2
+eval (-7) % (-3)
+(-7) % (-3) = 2
+eval quot(-7,3)
+quot(-7,3) = -3
+eval factorial(0)
+factorial(0) = 1
+eval factorial(6)
+factorial(6) = 720
+eval gcd(factorial(5),lcm(12,18))
+gcd(factorial(5),lcm(12,18)) = 12

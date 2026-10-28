@@ -1,0 +1,4 @@
+thm composite_kernel:
+    ? forall A nonempty_set,B nonempty_set,D nonempty_set,K &Algebra::group::Group<D>,f fn(x A) B,g fn(y B) D:
+        \Algebra::group::kernel<A,D,K,compose(g,f)> = preimage_set(f,\Algebra::group::kernel<B,D,K,g>)
+    release thm Algebra::group::kernel_of_composition(A,B,D,K,f,g)

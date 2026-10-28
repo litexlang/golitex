@@ -1,0 +1,3 @@
+# Sum signed integer remainders through the recorded function evaluations.
+eval sum(1,4,fn(k Z) Z {k % 3})
+sum(1,4,fn(k Z) Z {k % 3}) = 4

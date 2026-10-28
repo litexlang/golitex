@@ -1,0 +1,31 @@
+thm contract_normal_subgroup_whole:
+    ? forall A nonempty_set,G &Algebra::group::Group<A>:
+        $Algebra::group::is_normal_subgroup(A,G,A)
+    release thm Algebra::group::normal_subgroup_whole(A,G)
+
+thm contract_normal_subgroup_identity:
+    ? forall A nonempty_set,G &Algebra::group::Group<A>:
+        $Algebra::group::is_normal_subgroup(A,G,{G.one})
+    release thm Algebra::group::normal_subgroup_identity(A,G)
+
+thm contract_homomorphism_subgroup_image:
+    ? forall A nonempty_set,G &Algebra::group::Group<A>,B nonempty_set,H &Algebra::group::Group<B>,f fn(x A) B,S power_set(A):
+        $Algebra::group::is_homomorphism(A,G,B,H,f)
+        $Algebra::group::is_subgroup(A,G,S)
+        =>:
+            $Algebra::group::is_subgroup(B,H,fn_range(fn(t S) B {f(t)}))
+    release thm Algebra::group::homomorphism_subgroup_image(A,G,B,H,f,S)
+
+thm contract_surjective_homomorphism_normal_image:
+    ? forall A nonempty_set,G &Algebra::group::Group<A>,B nonempty_set,H &Algebra::group::Group<B>,f fn(x A) B,S power_set(A):
+        $Algebra::group::is_homomorphism(A,G,B,H,f)
+        $Algebra::group::is_normal_subgroup(A,G,S)
+        $surjective(A,B,f)
+        =>:
+            $Algebra::group::is_normal_subgroup(B,H,fn_range(fn(t S) B {f(t)}))
+    release thm Algebra::group::surjective_homomorphism_normal_image(A,G,B,H,f,S)
+
+thm contract_kernel_of_composition:
+    ? forall A nonempty_set,B nonempty_set,D nonempty_set,K &Algebra::group::Group<D>,f fn(x A) B,g fn(y B) D:
+        \Algebra::group::kernel<A,D,K,compose(g,f)> = preimage_set(f,\Algebra::group::kernel<B,D,K,g>)
+    release thm Algebra::group::kernel_of_composition(A,B,D,K,f,g)

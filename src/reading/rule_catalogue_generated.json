@@ -48,6 +48,13 @@
     }
   },
   {
+    "id": "builtin.DvdFactSearchProofByBuiltinRule::Add",
+    "category": "builtin",
+    "family": "DvdFactSearchProofByBuiltinRule",
+    "variant": "Add",
+    "labels": {}
+  },
+  {
     "id": "builtin.DvdFactSearchProofByBuiltinRule::DividendMinusRemainder",
     "category": "builtin",
     "family": "DvdFactSearchProofByBuiltinRule",
@@ -90,6 +97,13 @@
     "labels": {}
   },
   {
+    "id": "builtin.DvdFactSearchProofByBuiltinRule::LinearCombination",
+    "category": "builtin",
+    "family": "DvdFactSearchProofByBuiltinRule",
+    "variant": "LinearCombination",
+    "labels": {}
+  },
+  {
     "id": "builtin.DvdFactSearchProofByBuiltinRule::One",
     "category": "builtin",
     "family": "DvdFactSearchProofByBuiltinRule",
@@ -104,6 +118,13 @@
     "labels": {}
   },
   {
+    "id": "builtin.DvdFactSearchProofByBuiltinRule::Scale",
+    "category": "builtin",
+    "family": "DvdFactSearchProofByBuiltinRule",
+    "variant": "Scale",
+    "labels": {}
+  },
+  {
     "id": "builtin.DvdFactSearchProofByBuiltinRule::SelfDivisor",
     "category": "builtin",
     "family": "DvdFactSearchProofByBuiltinRule",
@@ -111,10 +132,115 @@
     "labels": {}
   },
   {
+    "id": "builtin.DvdFactSearchProofByBuiltinRule::Subtract",
+    "category": "builtin",
+    "family": "DvdFactSearchProofByBuiltinRule",
+    "variant": "Subtract",
+    "labels": {}
+  },
+  {
     "id": "builtin.DvdFactSearchProofByBuiltinRule::Zero",
     "category": "builtin",
     "family": "DvdFactSearchProofByBuiltinRule",
     "variant": "Zero",
+    "labels": {}
+  },
+  {
+    "id": "builtin.ElementaryIdentitySearchProofByBuiltinRule::CartesianUnion",
+    "category": "builtin",
+    "family": "ElementaryIdentitySearchProofByBuiltinRule",
+    "variant": "CartesianUnion",
+    "labels": {}
+  },
+  {
+    "id": "builtin.ElementaryIdentitySearchProofByBuiltinRule::CeilCharacterization",
+    "category": "builtin",
+    "family": "ElementaryIdentitySearchProofByBuiltinRule",
+    "variant": "CeilCharacterization",
+    "labels": {}
+  },
+  {
+    "id": "builtin.ElementaryIdentitySearchProofByBuiltinRule::FloorCharacterization",
+    "category": "builtin",
+    "family": "ElementaryIdentitySearchProofByBuiltinRule",
+    "variant": "FloorCharacterization",
+    "labels": {}
+  },
+  {
+    "id": "builtin.ElementaryIdentitySearchProofByBuiltinRule::GcdAddArgument",
+    "category": "builtin",
+    "family": "ElementaryIdentitySearchProofByBuiltinRule",
+    "variant": "GcdAddArgument",
+    "labels": {}
+  },
+  {
+    "id": "builtin.ElementaryIdentitySearchProofByBuiltinRule::GcdNegation",
+    "category": "builtin",
+    "family": "ElementaryIdentitySearchProofByBuiltinRule",
+    "variant": "GcdNegation",
+    "labels": {}
+  },
+  {
+    "id": "builtin.ElementaryIdentitySearchProofByBuiltinRule::GcdPositiveScale",
+    "category": "builtin",
+    "family": "ElementaryIdentitySearchProofByBuiltinRule",
+    "variant": "GcdPositiveScale",
+    "labels": {}
+  },
+  {
+    "id": "builtin.ElementaryIdentitySearchProofByBuiltinRule::MaxAssociative",
+    "category": "builtin",
+    "family": "ElementaryIdentitySearchProofByBuiltinRule",
+    "variant": "MaxAssociative",
+    "labels": {}
+  },
+  {
+    "id": "builtin.ElementaryIdentitySearchProofByBuiltinRule::MaxNegation",
+    "category": "builtin",
+    "family": "ElementaryIdentitySearchProofByBuiltinRule",
+    "variant": "MaxNegation",
+    "labels": {}
+  },
+  {
+    "id": "builtin.ElementaryIdentitySearchProofByBuiltinRule::MinAssociative",
+    "category": "builtin",
+    "family": "ElementaryIdentitySearchProofByBuiltinRule",
+    "variant": "MinAssociative",
+    "labels": {}
+  },
+  {
+    "id": "builtin.ElementaryIdentitySearchProofByBuiltinRule::MinMaxProduct",
+    "category": "builtin",
+    "family": "ElementaryIdentitySearchProofByBuiltinRule",
+    "variant": "MinMaxProduct",
+    "labels": {}
+  },
+  {
+    "id": "builtin.ElementaryIdentitySearchProofByBuiltinRule::MinMaxSum",
+    "category": "builtin",
+    "family": "ElementaryIdentitySearchProofByBuiltinRule",
+    "variant": "MinMaxSum",
+    "labels": {}
+  },
+  {
+    "id": "builtin.ElementaryIdentitySearchProofByBuiltinRule::MinTranslation",
+    "category": "builtin",
+    "family": "ElementaryIdentitySearchProofByBuiltinRule",
+    "variant": "MinTranslation",
+    "labels": {}
+  },
+  {
+    "id": "builtin.ElementaryIdentitySearchProofByBuiltinRule::PowerSetIntersection",
+    "category": "builtin",
+    "family": "ElementaryIdentitySearchProofByBuiltinRule",
+    "variant": "PowerSetIntersection",
+    "labels": {}
+  },
+  {
+    "id": "builtin.ElementaryIdentitySearchProofByBuiltinRule::RemainderIntegerShift",
+    "category": "builtin",
+    "family": "ElementaryIdentitySearchProofByBuiltinRule",
+    "variant": "RemainderIntegerShift",
     "labels": {}
   },
   {
@@ -14016,6 +14142,13 @@
     "labels": {}
   },
   {
+    "id": "builtin.LessEqualFactSearchProofByBuiltinRule::CeilSumUpperBound",
+    "category": "builtin",
+    "family": "LessEqualFactSearchProofByBuiltinRule",
+    "variant": "CeilSumUpperBound",
+    "labels": {}
+  },
+  {
     "id": "builtin.LessEqualFactSearchProofByBuiltinRule::CeilUpperBound",
     "category": "builtin",
     "family": "LessEqualFactSearchProofByBuiltinRule",
@@ -14948,6 +15081,20 @@
     "category": "builtin",
     "family": "LessEqualFactSearchProofByBuiltinRule",
     "variant": "FloorMonotone",
+    "labels": {}
+  },
+  {
+    "id": "builtin.LessEqualFactSearchProofByBuiltinRule::FloorSumLowerBound",
+    "category": "builtin",
+    "family": "LessEqualFactSearchProofByBuiltinRule",
+    "variant": "FloorSumLowerBound",
+    "labels": {}
+  },
+  {
+    "id": "builtin.LessEqualFactSearchProofByBuiltinRule::FloorSumUpperBound",
+    "category": "builtin",
+    "family": "LessEqualFactSearchProofByBuiltinRule",
+    "variant": "FloorSumUpperBound",
     "labels": {}
   },
   {
@@ -16829,6 +16976,13 @@
         "message": "b>0, a<=M*b => a/b<=M"
       }
     }
+  },
+  {
+    "id": "builtin.LessEqualFactSearchProofByBuiltinRule::RealReverseTriangle",
+    "category": "builtin",
+    "family": "LessEqualFactSearchProofByBuiltinRule",
+    "variant": "RealReverseTriangle",
+    "labels": {}
   },
   {
     "id": "builtin.LessEqualFactSearchProofByBuiltinRule::SignLowerBound",

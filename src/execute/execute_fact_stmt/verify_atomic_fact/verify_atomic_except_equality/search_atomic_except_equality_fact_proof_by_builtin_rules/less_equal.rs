@@ -10,6 +10,11 @@ use crate::runtime::{FactId, Runtime, RuntimeResult};
 
 // Builtin rules for `a <= b`.
 pub enum LessEqualFactSearchProofByBuiltinRule {
+    FloorSumLowerBound(super::elementary_bounds::FloorSumLowerBoundProof),
+    FloorSumUpperBound(super::elementary_bounds::FloorSumUpperBoundProof),
+    CeilSumUpperBound(super::elementary_bounds::CeilSumUpperBoundProof),
+    RealReverseTriangle(super::elementary_bounds::RealReverseTriangleProof),
+
     SubtractionOrderPairs(super::selected_scalar_bt_rules::SubtractionOrderPairsProof),
     AbsSquareRadius(super::selected_scalar_bt_rules::AbsSquareRadiusProof),
     QuotientScalarUpperBound(super::selected_scalar_bt_rules::QuotientScalarBoundProof),
@@ -608,6 +613,9 @@ impl Runtime {
             }
         }
 
+        if let Some(proof) = super::elementary_bounds::elementary_bound(fact) {
+            return Ok(Some(proof));
+        }
         if let Some(proof) = self.search_rounding_order(fact, verify_state)? {
             return Ok(Some(proof));
         }

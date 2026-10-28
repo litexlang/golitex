@@ -1,0 +1,10 @@
+# Evaluate integer formula functions for Euclidean decomposition, factorial and lcm.
+have fn evaluated_euclid(a Z,b N+) Z = b * quot(a,b) + a % b
+eval evaluated_euclid(-7,3)
+evaluated_euclid(-7,3) = -7
+have fn evaluated_factorial(a N) N = factorial(a)
+eval evaluated_factorial(5)
+evaluated_factorial(5) = 120
+have fn evaluated_lcm(a Z,b Z) N = lcm(a,b)
+eval evaluated_lcm(-6,15)
+evaluated_lcm(-6,15) = 30

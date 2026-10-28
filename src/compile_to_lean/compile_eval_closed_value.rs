@@ -44,6 +44,16 @@ impl LitexToLeanCompiler {
                 position,
             );
         }
+        if matches!(object, Obj::IntegerOperator(_)) {
+            return self.compile_eval_integer_value(
+                object,
+                evaluations,
+                remaining,
+                aggregates,
+                remaining_aggregates,
+                position,
+            );
+        }
         if matches!(
             object,
             Obj::ArithmeticOperator(

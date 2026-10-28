@@ -532,7 +532,7 @@ theorem h_1834 : (by
           let _atomic_wd_1_0 := _wd_1_0
           exact h_1835) (Litex.numberInNPosOfEq (M := M) (1 : ℂ) (1 : ℕ) (by norm_num) (by norm_num))), True.intro⟩)));
         let _equal_wd_1_1 := ((_object_w44 (M := M))).val.first;
-        (show Litex.Same _equal_wd_1_0 _equal_wd_1_1 from (((Litex.sameRefl _equal_wd_1_0)).symm.trans ((h_1836).trans (Litex.sameRefl _equal_wd_1_1)))))
+        (show Litex.Same _equal_wd_1_0 _equal_wd_1_1 from (Eq.trans (Eq.symm (Litex.sameRefl _equal_wd_1_0)) (Eq.trans h_1836 (Litex.sameRefl _equal_wd_1_1)))))
         )
       )
   )

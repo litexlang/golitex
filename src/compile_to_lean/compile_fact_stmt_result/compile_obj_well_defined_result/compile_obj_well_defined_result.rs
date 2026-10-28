@@ -88,6 +88,9 @@ impl LitexToLeanCompiler {
         if let Some(term) = self.compile_eval_closed_wd(proof, position)? {
             return Ok(term);
         }
+        if let Some(term) = self.compile_eval_integer_wd(proof, position)? {
+            return Ok(term);
+        }
         match (proof).detailed_ref() {
             DetailedObjWellDefinedProof::ByKnown { obj, wd_id } => {
                 let recorded = self.resolve_wd(*wd_id, position)?;

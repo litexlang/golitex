@@ -1,0 +1,54 @@
+have fn add(x,y Z) Z = x+y
+
+have fn neg(x Z) Z = -x
+
+forall x,y,z Z:
+    add(add(x,y),z) = add(x,add(y,z))
+
+forall x Z:
+    add(0,x) = x
+    add(x,0) = x
+    add(neg(x),x) = 0
+    add(x,neg(x)) = 0
+
+have integers &Algebra::group::Group<Z> = (add,0,neg)
+
+integers.one = 0
+
+integers.mul = add
+
+integers.inv = neg
+
+release thm Algebra::group::inverse_identity(Z,integers)
+
+integers.inv(0) = neg(0) = 0
+
+release thm Algebra::group::inverse_involution(Z,integers,7)
+
+integers.inv(7) = neg(7) = -7
+
+integers.inv(integers.inv(7)) = 7
+
+release thm Algebra::group::inverse_product(Z,integers,3,4)
+
+integers.mul(3,4) = add(3,4) = 7
+
+integers.inv(integers.mul(3,4)) = integers.inv(7) = -7
+
+integers.mul(integers.inv(4),integers.inv(3)) = add(neg(4),neg(3)) = add(-4,-3) = -7
+
+integers.mul(7,-7) = add(7,-7) = 0 = integers.one
+
+release thm Algebra::group::right_inverse_unique(Z,integers,7,-7)
+
+release thm Algebra::group::right_equation_unique(Z,integers,3,7)
+
+integers.mul(7,integers.inv(3)) = add(7,neg(3)) = add(7,-3) = 4
+
+integers.mul(4,3) = add(4,3) = 7
+
+integers.mul(3,4) = add(3,4) = 7 = add(4,3) = integers.mul(4,3)
+
+release thm Algebra::group::commuting_inverses(Z,integers,3,4)
+
+integers.mul(5,3) = 7

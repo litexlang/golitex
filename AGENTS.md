@@ -16,6 +16,20 @@ source directories in English. Use English for headings, prose, table labels,
 diagram labels and explanatory code comments. Preserve exact mathematical
 code, measurements and material scope qualifications when translating.
 
+## Approval before adding documentation
+
+Obtain the user's explicit approval before adding, copying, moving, or generating
+files into documentation directories (`docs/` or `documents/`). A general request
+to implement, fix, or design something is not approval for that destination.
+Honor destination-specific approval already given within its stated scope;
+obtain further approval before expanding that scope.
+
+Keep temporary design documents, exploratory design notes, and design drafts
+under the repository-root `scripts/` workspace, such as
+`scripts/<task>/.draft/`. Placing them in `docs/` or `documents/` requires the
+user's explicit approval. This rule overrides generic draft-location and
+documentation-publication advice for these artifacts.
+
 ## Native mathematics inventory
 
 For every addition, change, or removal on the native mathematical Obj/prop

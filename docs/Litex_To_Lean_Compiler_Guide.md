@@ -1433,6 +1433,25 @@ See [real operations](../lean/examples/evaluated_real_operations/),
 These examples require exact rational inputs after the recorded substitutions;
 this does not add symbolic evaluation or approximate irrational results.
 
+Integer evaluation covers `gcd`, `lcm`, `%`, `quot` and `factorial`, including
+signed operands, cited values, formula functions and local proof scopes:
+
+```litex
+eval gcd(54,-24)
+gcd(54,-24) = 6
+eval quot(-7,3)
+quot(-7,3) = -3
+```
+
+The original domains remain required: integer operands, a nonzero pair for
+`gcd`, a nonzero divisor for `%`, a positive divisor for `quot`, and a natural
+argument for `factorial`. The compiler consumes the recorded WD and citations
+and applies existing Core laws. See [integer operations](../lean/examples/evaluated_integer_operations/),
+[cited values](../lean/examples/evaluated_integer_citations/),
+[formula functions](../lean/examples/evaluated_integer_functions/),
+[local evaluation](../lean/examples/evaluated_local_integer_operations/) and
+[remainders inside a sum](../lean/examples/evaluated_integer_aggregates/).
+
 The checked aggregate slice uses literal integer range bounds or enumerated
 finite numeric sets and function bodies that reduce to closed scalar arithmetic.
 Nested aggregates inside iterands and additional body-rewrite stages remain

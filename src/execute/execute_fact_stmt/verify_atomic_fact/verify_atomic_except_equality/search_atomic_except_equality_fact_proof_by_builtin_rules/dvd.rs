@@ -3,6 +3,11 @@
 use crate::prelude::*;
 
 pub enum DvdFactSearchProofByBuiltinRule {
+    Add(DvdAddProof),
+    Subtract(DvdSubtractProof),
+    Scale(DvdScaleProof),
+    LinearCombination(DvdLinearCombinationProof),
+
     Zero(DvdZeroProof),
     One(DvdOneProof),
     SelfDivisor(DvdSelfProof),
@@ -38,6 +43,70 @@ pub struct DvdFactorialProof {
     pub earlier_natural: VerifyFactResult,
     pub later_natural: VerifyFactResult,
     pub order: VerifyFactResult,
+}
+
+pub struct DvdAddProof {
+    pub first_divisibility: VerifyFactResult,
+    pub second_divisibility: VerifyFactResult,
+}
+impl DvdAddProof {
+    pub fn new(
+        first_divisibility: VerifyFactResult,
+        second_divisibility: VerifyFactResult,
+    ) -> Self {
+        Self {
+            first_divisibility,
+            second_divisibility,
+        }
+    }
+}
+pub struct DvdSubtractProof {
+    pub first_divisibility: VerifyFactResult,
+    pub second_divisibility: VerifyFactResult,
+}
+impl DvdSubtractProof {
+    pub fn new(
+        first_divisibility: VerifyFactResult,
+        second_divisibility: VerifyFactResult,
+    ) -> Self {
+        Self {
+            first_divisibility,
+            second_divisibility,
+        }
+    }
+}
+pub struct DvdScaleProof {
+    pub multiplier_integer: VerifyFactResult,
+    pub divisibility: VerifyFactResult,
+}
+impl DvdScaleProof {
+    pub fn new(multiplier_integer: VerifyFactResult, divisibility: VerifyFactResult) -> Self {
+        Self {
+            multiplier_integer,
+            divisibility,
+        }
+    }
+}
+pub struct DvdLinearCombinationProof {
+    pub first_coefficient_integer: VerifyFactResult,
+    pub second_coefficient_integer: VerifyFactResult,
+    pub first_divisibility: VerifyFactResult,
+    pub second_divisibility: VerifyFactResult,
+}
+impl DvdLinearCombinationProof {
+    pub fn new(
+        first_coefficient_integer: VerifyFactResult,
+        second_coefficient_integer: VerifyFactResult,
+        first_divisibility: VerifyFactResult,
+        second_divisibility: VerifyFactResult,
+    ) -> Self {
+        Self {
+            first_coefficient_integer,
+            second_coefficient_integer,
+            first_divisibility,
+            second_divisibility,
+        }
+    }
 }
 
 impl Runtime {
@@ -159,6 +228,78 @@ impl Runtime {
                 }
             }
         }
+        // Exact linear combination: the supplied coefficients must be integers.
+        // Example: $dvd(a,d),$dvd(b,d),u,v in Z => $dvd(u*a+v*b,d).
+        if let Obj::ArithmeticOperator(ArithmeticOperator::Add(sum)) = a {
+            if let (
+                Obj::ArithmeticOperator(ArithmeticOperator::Mul(first)),
+                Obj::ArithmeticOperator(ArithmeticOperator::Mul(second)),
+            ) = (&*sum.left, &*sum.right)
+            {
+                let u = self.dvd_member(&first.left, StandardSet::Z, state)?;
+                if !u.is_failed() {
+                    let v = self.dvd_member(&second.left, StandardSet::Z, state)?;
+                    if !v.is_failed() {
+                        let first_divisibility = self.dvd_premise(&first.right, d, state)?;
+                        if !first_divisibility.is_failed() {
+                            let second_divisibility = self.dvd_premise(&second.right, d, state)?;
+                            if !second_divisibility.is_failed() {
+                                return Ok(Some(
+                                    DvdLinearCombinationProof::new(
+                                        u,
+                                        v,
+                                        first_divisibility,
+                                        second_divisibility,
+                                    )
+                                    .into(),
+                                ));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        // Addition and subtraction preserve a common divisor; no multiplier search.
+        // Example: $dvd(a,d),$dvd(b,d) => $dvd(a-b,d).
+        let pair = match a {
+            Obj::ArithmeticOperator(ArithmeticOperator::Add(p)) => {
+                Some((&*p.left, &*p.right, true))
+            }
+            Obj::ArithmeticOperator(ArithmeticOperator::Sub(p)) => {
+                Some((&*p.left, &*p.right, false))
+            }
+            _ => None,
+        };
+        if let Some((first, second, add)) = pair {
+            let first = self.dvd_premise(first, d, state)?;
+            if !first.is_failed() {
+                let second = self.dvd_premise(second, d, state)?;
+                if !second.is_failed() {
+                    return Ok(Some(if add {
+                        DvdAddProof::new(first, second).into()
+                    } else {
+                        DvdSubtractProof::new(first, second).into()
+                    }));
+                }
+            }
+        }
+        // Integer scaling preserves divisibility in either product orientation.
+        // Example: k in Z, $dvd(a,d) => $dvd(k*a,d).
+        if let Obj::ArithmeticOperator(ArithmeticOperator::Mul(product)) = a {
+            for (k, x) in [
+                (&*product.left, &*product.right),
+                (&*product.right, &*product.left),
+            ] {
+                let multiplier = self.dvd_member(k, StandardSet::Z, state)?;
+                if multiplier.is_failed() {
+                    continue;
+                }
+                let divisibility = self.dvd_premise(x, d, state)?;
+                if !divisibility.is_failed() {
+                    return Ok(Some(DvdScaleProof::new(multiplier, divisibility).into()));
+                }
+            }
+        }
         Ok(None)
     }
 
@@ -206,6 +347,10 @@ mod tests;
 impl DvdFactSearchProofByBuiltinRule {
     pub fn rule_id(&self) -> &'static str {
         match self {
+            Self::Add(_) => "DvdAdd",
+            Self::Subtract(_) => "DvdSubtract",
+            Self::Scale(_) => "DvdScale",
+            Self::LinearCombination(_) => "DvdLinearCombination",
             Self::Zero(_) => "DvdZero",
             Self::One(_) => "DvdOne",
             Self::SelfDivisor(_) => "DvdSelf",
@@ -220,6 +365,10 @@ impl DvdFactSearchProofByBuiltinRule {
     }
     pub fn law(&self) -> &'static str {
         match self {
+            Self::Add(_) => "$dvd(a,d), $dvd(b,d) => $dvd(a+b,d)",
+            Self::Subtract(_) => "$dvd(a,d), $dvd(b,d) => $dvd(a-b,d)",
+            Self::Scale(_) => "k in Z, $dvd(a,d) => $dvd(k*a,d)",
+            Self::LinearCombination(_) => "u,v in Z, $dvd(a,d), $dvd(b,d) => $dvd(u*a+v*b,d)",
             Self::Zero(_) => "$dvd(0,d)",
             Self::One(_) => "$dvd(a,1)",
             Self::SelfDivisor(_) => "$dvd(a,a)",
@@ -237,3 +386,27 @@ impl DvdFactSearchProofByBuiltinRule {
 #[cfg(test)]
 #[path = "../../../../../../tests/unit/execute/common_obj_relations/tests.rs"]
 mod common_obj_relations_tests;
+
+impl From<DvdAddProof> for DvdFactSearchProofByBuiltinRule {
+    fn from(proof: DvdAddProof) -> Self {
+        Self::Add(proof)
+    }
+}
+
+impl From<DvdSubtractProof> for DvdFactSearchProofByBuiltinRule {
+    fn from(proof: DvdSubtractProof) -> Self {
+        Self::Subtract(proof)
+    }
+}
+
+impl From<DvdScaleProof> for DvdFactSearchProofByBuiltinRule {
+    fn from(proof: DvdScaleProof) -> Self {
+        Self::Scale(proof)
+    }
+}
+
+impl From<DvdLinearCombinationProof> for DvdFactSearchProofByBuiltinRule {
+    fn from(proof: DvdLinearCombinationProof) -> Self {
+        Self::LinearCombination(proof)
+    }
+}

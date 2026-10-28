@@ -64,8 +64,12 @@ image need not be normal, so only subgroup membership is exported for ranges.
 This source checkpoint has27 top-level statements/20 thms with the same Group
 structure, five props and one kernel template. It adds no native rule, search
 permission, trust or compiler contract. Eight imported generic signatures and
-43 actual integer/trivial statements have passed; remaining focused consumer
-acceptance is pending.
+43 actual integer/trivial statements have passed. All24 fresh focused checks
+pass, including model30, noncommutative15, README1, legacy group34/lecture31,
+14 final-only refusals, both installed layouts and std/WiX80-file/reference
+agreement. Five named instance theorems publish the existing Heisenberg model
+facts and projection formula for its new consumer. No original model
+mathematics is changed. Receipt: std-group-map-laws-acceptance-2026-10-28.json.
 
 
 Integer addition, multiplication-by-two and the zero map supply applications.
@@ -554,3 +558,44 @@ dimension additivity by trivial intersection. This supports finite-dimensional
 subspace calculations before choosing coordinates or complements. It does
 not construct external direct sums, choose a complement, represent an
 operator by a matrix or certify Litex-to-Lean support.
+
+
+## Normal subgroup images and composition kernels
+
+The current group source32/25thms adds whole/identity normality, subgroup
+images, normal images under a surjective homomorphism and the composition
+kernel equality. It retains the same Group, five props and one kernel
+template. The image uses the native range of fn(t S) B {f(t)}, with the
+actual subgroup carrier S and ambient operations. Range witnesses and
+homomorphism identity/inverse preservation prove closure. For normality in
+all B, surjectivity supplies a source lift of every target conjugator;
+normality of S and preservation of conjugation then supply its image.
+
+The kernel equality only unfolds composition and the two point-preimage
+conditions. It applies even to non-homomorphisms and introduces no unused
+source or middle Group parameter. All five source results pass on first
+Session attempts and an independent strict32-statement checkpoint. All24 fresh focused checks pass: generic5, integer30, one-point17,
+noncommutative17, model30, README1, legacy groups34,14 final-only refusals and
+both installed layouts, with std/WiX80-file/reference agreement. Explicit
+checked formation facts make the one-point instance pass in both isolated
+and original Sessions; no unresolved blocker remains from that attempt.
+Receipt: std-group-normal-images-acceptance-2026-10-28.json. No new native
+operation, alias, rule/search/WD permission, protected state/AST, compiler
+implementation or trust is introduced.
+
+
+## Elementary inverse laws
+
+The current group source38/31thms adds inverse identity/involution,
+right-inverse uniqueness, reversed inverse-product, right-equation unique
+existence and conditional inverse commutation. Existing inverse uniqueness,
+left/right cancellation, associativity and identity/inverse laws supply the
+proofs. The right equation's witness is b*inv(a); it solves x*a=b and does not
+swap the side used by the earlier left equation. Two nested equalities need
+the checked inner inverse-product identity published before outer transport.
+No group law or mathematical premise is added.
+
+This source increment adds no struct/prop/template, operation alias, native
+rule/search/WD, protected state/AST, compiler implementation or trust. The
+source checkpoint passes independently; concrete imports, exact noncommutative
+values and remaining focused acceptance are pending.

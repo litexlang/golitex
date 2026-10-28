@@ -1,0 +1,43 @@
+release thm model::heisenberg_is_group
+
+release thm model::heisenberg_identity_value
+
+release thm Algebra::group::subgroup_whole(cart_n(R,3),model::heisenberg)
+
+release thm Algebra::group::subgroup_identity(cart_n(R,3),model::heisenberg)
+
+release thm Algebra::group::homomorphism_identity_map(cart_n(R,3),model::heisenberg)
+
+release thm model::zero_projection_is_homomorphism
+
+release thm Algebra::group::homomorphism_range_is_subgroup(cart_n(R,3),model::heisenberg,cart_n(R,3),model::heisenberg,model::zero_projection)
+
+by extension:
+    ? fn_range(model::zero_projection) = {(0,0,0)}
+    release thm model::zero_projection_formula(model::heisenberg.one)
+    model::zero_projection(model::heisenberg.one) = (0,0,0)
+    model::zero_projection(model::heisenberg.one) $in fn_range(model::zero_projection)
+    claim:
+        ? forall y fn_range(model::zero_projection):
+            y $in {(0,0,0)}
+        have by fn_preimage: source_point from y $in fn_range(model::zero_projection)
+        release thm model::zero_projection_formula(source_point)
+        y = model::zero_projection(source_point) = (0,0,0)
+
+release thm Algebra::group::kernel_is_normal(cart_n(R,3),model::heisenberg,cart_n(R,3),model::heisenberg,fn(u cart_n(R,3)) cart_n(R,3) {u})
+
+release thm Algebra::group::homomorphism_preimage_is_subgroup(cart_n(R,3),model::heisenberg,cart_n(R,3),model::heisenberg,model::zero_projection,\Algebra::group::kernel<cart_n(R,3),cart_n(R,3),model::heisenberg,fn(u cart_n(R,3)) cart_n(R,3) {u}>)
+
+release thm Algebra::group::homomorphism_preimage_is_normal(cart_n(R,3),model::heisenberg,cart_n(R,3),model::heisenberg,model::zero_projection,\Algebra::group::kernel<cart_n(R,3),cart_n(R,3),model::heisenberg,fn(u cart_n(R,3)) cart_n(R,3) {u}>)
+
+release thm Algebra::group::normal_subgroup_intersection(cart_n(R,3),model::heisenberg,preimage_set(model::zero_projection,\Algebra::group::kernel<cart_n(R,3),cart_n(R,3),model::heisenberg,fn(u cart_n(R,3)) cart_n(R,3) {u}>),\Algebra::group::kernel<cart_n(R,3),cart_n(R,3),model::heisenberg,fn(u cart_n(R,3)) cart_n(R,3) {u}>)
+
+release thm Algebra::group::homomorphism_composition(cart_n(R,3),model::heisenberg,cart_n(R,3),model::heisenberg,cart_n(R,3),model::heisenberg,model::zero_projection,model::zero_projection)
+
+claim:
+    ? compose(model::zero_projection,model::zero_projection)((1,0,0)) = (0,0,0)
+    release thm model::zero_projection_formula((1,0,0))
+    release thm model::zero_projection_formula((0,0,0))
+    compose(model::zero_projection,model::zero_projection)((1,0,0)) = model::zero_projection(model::zero_projection((1,0,0))) = model::zero_projection((0,0,0)) = (0,0,0)
+
+release thm model::heisenberg_is_noncommutative

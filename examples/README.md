@@ -163,5 +163,8 @@ Standalone regression examples:
 - [Finite-set inclusion-exclusion](combinatorics/finite_sets/README.md): overlapping unions, symmetric differences, products, powersets, empty boundaries and explicit imported finiteness evidence.
 - [Natural binomial coefficients](combinatorics/binomial/README.md): Pascal recursion, symmetry, column formulas, positivity, row order and full natural-domain boundaries.
 
+- [Group maps and subgroup transport](algebra/group_maps/README.md): native composition, image/preimage subgroups, normal inverse images and noncommutative/trivial groups.
+- [Normal subgroup images and composition kernels](algebra/normal_images/README.md): ambient surjectivity, actual restricted images and a kernel identity valid for complete maps without a homomorphism premise.
+
 - [Finite event probability](probability/finite_events/README.md): generic event, conditional/Bayes and independence contracts, actual uniform/Dirac probability spaces and guarded boundaries.
 - [Finite pushforward probability](probability/pushforward/README.md): actual image distributions, dice parity, constant maps and retained zero-mass image points.

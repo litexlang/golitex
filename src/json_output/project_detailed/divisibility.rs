@@ -32,6 +32,24 @@ pub(super) fn project_dvd(p: &DvdFactSearchProofByBuiltinRule, rt: &Runtime) -> 
         };
     }
     match p {
+        Add(p) => {
+            premise!("first_divisibility", &p.first_divisibility);
+            premise!("second_divisibility", &p.second_divisibility);
+        }
+        Subtract(p) => {
+            premise!("first_divisibility", &p.first_divisibility);
+            premise!("second_divisibility", &p.second_divisibility);
+        }
+        Scale(p) => {
+            premise!("multiplier_integer", &p.multiplier_integer);
+            premise!("divisibility", &p.divisibility);
+        }
+        LinearCombination(p) => {
+            premise!("first_coefficient_integer", &p.first_coefficient_integer);
+            premise!("second_coefficient_integer", &p.second_coefficient_integer);
+            premise!("first_divisibility", &p.first_divisibility);
+            premise!("second_divisibility", &p.second_divisibility);
+        }
         Zero(_)
         | One(_)
         | SelfDivisor(_)

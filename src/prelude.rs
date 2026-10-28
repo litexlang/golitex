@@ -64,6 +64,7 @@ pub(crate) use crate::store_fact_and_infer::{StoreFactAndInferResult, StoreFactR
 pub(crate) use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::{
     EqualitySearchProofByBuiltinRule, EqualitySearchProofByBuiltinStrategy,
 };
+pub(crate) use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_elementary_identities::ElementaryIdentitySearchProofByBuiltinRule;
 pub(crate) use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::search_equal_fact_builtin_rule_result::EqualitySearchProofByCalculation;
 pub(crate) use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::AtomicExceptEqualityFactSearchProofByBuiltinStrategy;
 pub(crate) use crate::rational_expression::exact_rational::EvalRational;

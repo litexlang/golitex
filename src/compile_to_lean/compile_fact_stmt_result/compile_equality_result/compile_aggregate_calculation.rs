@@ -260,7 +260,10 @@ impl LitexToLeanCompiler {
             &anonymous.equal_to,
             &expansion.expanded_body,
             &substitution,
-        ) || !closed_scalar_body(&expansion.expanded_body)
+        ) || crate::rational_expression::ClosedNumericExpr::try_from_obj(
+            &expansion.expanded_body,
+        )
+        .is_none()
             || EvalRational::from_obj(&expansion.expanded_body).as_ref() != Some(value)
         {
             return Err(LeanCompileError::unsupported(
@@ -298,7 +301,14 @@ impl LitexToLeanCompiler {
         let argument_number = exact_rational_literal(&argument_value, "ℂ")?;
         let argument_denote = argument.1;
         let argument_expr = argument.0;
-        Ok(format!("(by\n  let _call := {call_term}\n  let _literal := {literal_term}\n  have _head : Litex.Same _call.val.function _literal := {equality}\n  have _head_call := congrArg (fun f => Litex.FunctionSemantics.callValue (M := M) f (Litex.denote _call.val.argument)) _head\n  have _beta := Litex.FunctionSemantics.call_graphValue _ _ _ _literal.wd (Litex.denote _call.val.argument) {domain_proof}\n  have _body : _literal.val.bodyValue (Litex.denote _call.val.argument) = {raw} := rfl\n  have _calculated : {raw} = M.number {number} := by norm_num [Litex.Semantics.add_numbers, Litex.Semantics.sub_numbers, Litex.Semantics.mul_numbers, Litex.Semantics.neg_numbers, Litex.Semantics.div_numbers]\n  have _argument : Litex.denote _call.val.argument = M.number {argument_number} := ({argument_denote}).trans (congrArg M.number (by norm_num : {argument_expr} = {argument_number}))\n  exact (congrArg (fun x => Litex.FunctionSemantics.callValue (Litex.denote _call.val.function) x) _argument).symm.trans (_head_call.trans (_beta.trans (_body.trans _calculated))))"))
+        let (calculated_value, calculated) =
+            self.compile_eval_closed_value(&expansion.expanded_body, &cursor)?;
+        if &calculated_value != value {
+            return Err(LeanCompileError::unsupported(
+                "AggregateCalculation/ExpandedValue",
+            ));
+        }
+        Ok(format!("(by\n  let _call := {call_term}\n  let _literal := {literal_term}\n  have _head : Litex.Same _call.val.function _literal := {equality}\n  have _head_call := congrArg (fun f => Litex.FunctionSemantics.callValue (M := M) f (Litex.denote _call.val.argument)) _head\n  have _beta := Litex.FunctionSemantics.call_graphValue _ _ _ _literal.wd (Litex.denote _call.val.argument) {domain_proof}\n  have _body : _literal.val.bodyValue (Litex.denote _call.val.argument) = {raw} := rfl\n  have _calculated : {raw} = M.number {number} := {calculated}\n  have _argument : Litex.denote _call.val.argument = M.number {argument_number} := ({argument_denote}).trans (congrArg M.number (by norm_num : {argument_expr} = {argument_number}))\n  exact (congrArg (fun x => Litex.FunctionSemantics.callValue (Litex.denote _call.val.function) x) _argument).symm.trans (_head_call.trans (_beta.trans (_body.trans _calculated))))"))
     }
 }
 

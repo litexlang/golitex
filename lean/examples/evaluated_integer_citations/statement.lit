@@ -1,0 +1,10 @@
+# Evaluate integer operations from previously proved values, preserving their domains.
+have integer_eval_a Z = -7
+have integer_eval_b N+ = 3
+eval integer_eval_a % integer_eval_b + quot(integer_eval_a,integer_eval_b)
+integer_eval_a % integer_eval_b + quot(integer_eval_a,integer_eval_b) = -1
+eval gcd(integer_eval_a,integer_eval_b)
+gcd(integer_eval_a,integer_eval_b) = 1
+have integer_eval_n N = 5
+eval factorial(integer_eval_n)
+factorial(integer_eval_n) = 120

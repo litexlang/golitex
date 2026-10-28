@@ -1,0 +1,5 @@
+# Evaluate a signed remainder inside a local proof scope.
+sketch:
+    have integer_eval_local Z = -7
+    eval integer_eval_local % 3
+    integer_eval_local % 3 = 2

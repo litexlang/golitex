@@ -133,3 +133,30 @@ claim:
     by def $Algebra::group::is_homomorphism(cart_n(R,3),heisenberg,cart_n(R,3),heisenberg,zero_projection)
 
 by thm Algebra::group::kernel_is_normal(cart_n(R,3),heisenberg,cart_n(R,3),heisenberg,zero_projection) => $Algebra::group::is_normal_subgroup(cart_n(R,3),heisenberg,\Algebra::group::kernel<cart_n(R,3),cart_n(R,3),heisenberg,zero_projection>)
+
+thm heisenberg_is_group:
+    ? heisenberg $in &Algebra::group::Group<cart_n(R,3)>
+
+thm heisenberg_identity_value:
+    ? heisenberg.one = (0,0,0)
+
+thm heisenberg_is_noncommutative:
+    ? not $Algebra::group::is_abelian(cart_n(R,3),heisenberg)
+
+thm zero_projection_is_homomorphism:
+    ? $Algebra::group::is_homomorphism(cart_n(R,3),heisenberg,cart_n(R,3),heisenberg,zero_projection)
+
+thm zero_projection_formula:
+    ? forall u cart_n(R,3):
+        zero_projection(u) = (0,0,0)
+
+thm heisenberg_multiplication_formula:
+    ? forall u,v cart_n(R,3):
+        heisenberg.mul(u,v) = (u(1)+v(1),u(2)+v(2),u(3)+v(3)+u(1)*v(2))
+    heisenberg.mul(u,v) = multiply(u,v) = (u(1)+v(1),u(2)+v(2),u(3)+v(3)+u(1)*v(2))
+
+thm heisenberg_inverse_formula:
+    ? forall u cart_n(R,3):
+        heisenberg.inv(u) = (-u(1),-u(2),u(1)*u(2)-u(3))
+    heisenberg.inv = inverse
+    heisenberg.inv(u) = inverse(u) = (-u(1),-u(2),u(1)*u(2)-u(3))

@@ -89,6 +89,17 @@ arbitrary map.
 | `homomorphism_preimage_is_normal(A,G,B,H,f,S)` | A target normal subgroup has a normal inverse image |
 | `homomorphism_identity_map(A,G)` | The native anonymous identity is a homomorphism |
 | `homomorphism_composition(A,G,B,H,D,K,f,g)` | Two homomorphisms compose as `compose(g,f)`, applying `f` first |
+| `normal_subgroup_whole(A,G)` | The whole carrier is normal |
+| `normal_subgroup_identity(A,G)` | The singleton identity is normal |
+| `homomorphism_subgroup_image(A,G,B,H,f,S)` | The image of subgroup S under a homomorphism is a target subgroup |
+| `surjective_homomorphism_normal_image(A,G,B,H,f,S)` | A normal subgroup has normal image in the full target when f is surjective |
+| `kernel_of_composition(A,B,D,K,f,g)` | The composite kernel is the inverse image of the second kernel; no homomorphism premise |
+| `inverse_identity(A,G)` | The identity is its own inverse |
+| `inverse_involution(A,G,a)` | Taking the inverse twice returns a |
+| `right_inverse_unique(A,G,a,b)` | a*b=one implies b=inv(a) |
+| `inverse_product(A,G,a,b)` | inv(a*b)=inv(b)*inv(a), with reversed order |
+| `right_equation_unique(A,G,a,b)` | Unique x satisfying x*a=b |
+| `commuting_inverses(A,G,a,b)` | Commuting a,b have commuting inverses |
 
 These are ordinary source proofs using native sets, functions, struct laws and
 equality reasoning. This package adds no native objects or reserved theorem
@@ -109,7 +120,7 @@ Run the focused positive, rejection and bundled-import checks with
 [math_collections.md](math_collections.md) explains the mathematical dependencies.
 The group export does not include quotients or Lagrange's theorem.
 
-The group export currently has20 named source theorems. The eight map/closure
+At the group-map checkpoint, the group export had20 named source theorems. The eight map/closure
 additions keep all existing definitions and permit noncommutative and trivial
 groups. They use native fn_range, preimage_set and compose; no second image or
 composition operation is introduced. The range is a subgroup of the target,
@@ -117,10 +128,40 @@ with no claim that it is normal there. A normal inverse-image theorem keeps
 its target normality premise. All maps must be complete unary maps with the
 exact declared carriers.
 
-The new imported group-map consumer is under construction. Its eight generic
-contracts and43 integer/trivial-group statements pass independently of one
-another; noncommutative publication, refusal and installed checks are pending.
+The [group-map consumer](../../examples/algebra/group_maps/README.md) passes24
+fresh focused checks: source27, model30, generic8, integer/trivial43,
+noncommutative15, README1, legacy group34 and lecture31,14 final-only refusals
+and both installed layouts. The noncommutative caller reuses its existing
+model through five named instance publications. std/WiX has80 matching payload
+files and unique component references. These checks use the ongoing task's
+pinned1.1.6-beta executable; no new Rust/compiler or broad-release claim follows.
 
+
+
+The normal-image source checkpoint had25 group theorems in32 top-level
+statements. Whole-carrier and singleton-identity normality reuse the existing
+subgroup laws. Subgroup images are actual ranges of the restricted function
+fn(t S) B {f(t)}. Normality in the whole target requires surjectivity onto B;
+normality only in an image is not silently substituted for it.
+
+The composition-kernel equality is set-theoretic: kernel(compose(g,f)) equals
+preimage_set(f,kernel(g)), both using the same target group K. Its six arguments
+are A,B,D,K,f,g, with complete f:A->B and g:B->D. No source/middle group or
+homomorphism premise is needed. All24 fresh focused checks pass: source32/25thms, generic5, integer30,
+one-point17, noncommutative17, model30, README1, legacy groups34,14 final-only
+refusals and both installed integer30 callers. std/WiX still has80 matching
+payload files and unique component references. The concrete one-point model
+publishes checked formation facts; the same facts also resolve its original
+Session construction refusal. No library premise or kernel rule is changed.
+
+
+The current elementary inverse checkpoint has31 group theorems in38 top-level
+statements. Inverse-product reverses the factors in general; only the separate
+conditional commutation theorem consumes a*b=b*a. The right equation x*a=b
+has the explicit witness b*inv(a), whereas the earlier left equation a*x=b
+uses inv(a)*b. All six source laws independently pass strict verification.
+Their imported, concrete and installed acceptance remains pending; Group and
+its operation domains are unchanged.
 
 
 ## Fields and vector spaces

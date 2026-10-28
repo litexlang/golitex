@@ -11012,11 +11012,112 @@ Litex 的集合理论基础的介绍借鉴了陶哲轩的 [*分析 I*](https://t
 
 ### 形式化数学相关工作
 
-[Mizar](https://mizar.uwb.edu.pl/language/)是较早尝试把日常数学语言写成机器可检查文本的系统。它为 Litex 的可读性和事实导向接口提供了比较对象。
+<a id="litex-as-a-mathematical-source-language"></a>
 
-[Isabelle/Isar](https://isabelle.in.tum.de/Isar/)提供供人阅读、由机器检查的结构化证明语言。它组织假设、中间结论和证明步骤的方式，与 Litex 关注的证明可读性密切相关。
+#### Litex 作为数学源码语言
 
-[Lean](https://lean-lang.org/doc/reference/latest/Elaboration-and-Compilation/)的内核证明检查机制可供参考，也是 Litex 证明编译的目标。生成 Lean 文件与实际通过 Lean 内核检查是两个步骤。Litex 自身检查器所依赖的假设，以及当前编译支持范围，见[信任边界](#trust-boundary)。
+Litex 是一门具有独立原生验证器的数学形式语言。其抽象语法区分数学表达式（`Obj`）、命题（`Fact`），以及检查或扩展数学上下文的构造（`Stmt`）。事实也可以出现在语句位置：执行器检查其良定义性，在当前上下文中寻找受支持的成立依据，并提交已接受的事实及其推论。因此，许多受约束的日常数学句式本身就是可执行的形式化源码。
+
+可读性和数学写作的易用性，也是 Lean、Rocq（原 Coq）、Isabelle/Isar 和 Mizar 共同关注的问题。共同目标并不意味着相同的对象模型、详化机制、证明接口或验证架构。下面比较这些技术选择，以及它们要求作者显式承担的工作。Wiedijk 的比较文集让同一数学证明以多种语言呈现 [Compare06]；本文进一步区分对象表示、表达式可接受性、证明接口与证据构造。
+
+Litex 的源码对象模型以集合为基础：数、集合、函数值和函数空间共享同一个数学对象载体；成员关系是对象之间的命题。命题由 `Fact` 类别表示，而不是源码中命题对象宇宙的值。元层的对象载体不是语言内部的全集，集合概括采用有界构造。表达式的可接受性还包含数学侧条件：构成带条件的函数调用，需要建立参数成员关系和实例化后的定义域谓词。这是良定义性义务，而不只是语法或名称解析检查。
+
+```litex
+have fn reciprocal(x R: x != 0) R = 1 / x
+reciprocal(2) = 1 / 2
+```
+
+非零条件属于函数的可调用契约。使用 `reciprocal(0)` 的语句即使提出自反等式，也会在良定义性阶段失败。普通事实验证结合上下文检索、受允许的实例化、计算、原生规则，以及必要时的显式证明步骤，产生带类型的验证证据（验证结果 IR），其中包括相应的良定义性和前提记录。作者给出数学路线；受支持的局部搜索承担例行论证和依据查找。
+
+<a id="comparison-with-lean"></a>
+
+#### 与 Lean 比较
+
+[Lean 的详化器](https://lean-lang.org/doc/reference/latest/Elaboration-and-Compilation/)将源码表达式转换为依赖类型论中的项，由内核检查定理的证明项。直接项、声明式构造和证明策略，是通往这一证明表示的不同写作接口；其可扩展架构还支持用户定义的详化与元编程 [Lean21]、[LeanElab]。
+
+Litex 在源码层区分数学表达式、命题与上下文操作，集合成员关系和定义域条件作为事实供验证器使用。Lean 的一种受限输入接口通过子类型编码参数，调用时将值与证据包装为 `f ⟨x, hx⟩`；Litex 写成 `f(x)`，在上下文中检查条件。Lean 也可以使用证明参数、推断的强制转换与自动化 [LeanCoercions]。Litex 原生接口的可观察优势，是减少此类调用中的显式证据传递，以及受支持普通事实所需的方法标注；数学等式链可以直接保留为可见的证明路线，不必为每个例行步骤另写一次证明策略调用。
+
+这属于表示和默认验证责任的差异，而非表达能力的分离。Lean 自动化可以产生很短的证明，依赖类型也提供了超出上述源码模型的抽象能力。Litex 的原生验证证据同样不同于 Lean 证明项：受支持的 Lean 编译从这些证据重建证明。生成源码与实际通过 Lean 内核检查是两个步骤，见[编译器指南](Litex到Lean编译器指南.md)。
+
+<a id="comparison-with-rocq-formerly-coq"></a>
+
+#### 与 Rocq（原 Coq）比较
+
+[Rocq](https://rocq-prover.org/) 在归纳构造演算（Calculus of Inductive Constructions，CIC）上提供依赖规格与程序语言 Gallina。记号与详化机制将用户表达式转换为核心项，策略逐步构造由内核检查的证明项。管理声明的命令、项表达式与策略语言，是其写作环境中的不同部分 [RocqCore]、[RocqElab]、[RocqProof]。这种分层不等于 Litex 的 `Obj`／`Fact`／`Stmt` 语义分类：Rocq 将命题及其证明放在有类型项语言中表示。
+
+Rocq 也支持侧条件的隐式处理。对于 `{x : A | P x}` 这样的子集接口，`Program` 可以插入子集转换、生成证明义务，并自动调用 obligation tactic；这些义务需要得到解决，才能产生最终的完整项。Sozeau 的子集转换研究与维护中的 `Program` 文档说明了这条详化路线 [Sozeau07]、[RocqProgram]。SSReflect 还提供结构化证明命令和基于反射的数学推理 [SSReflect10]。
+
+对本文展示的数学接口，Litex 的优势是统一的普通语句契约：引入数学对象或陈述事实，在上下文中检查所需定义域谓词，再连同原生验证证据提交已接受的信息。带条件的 `f(x)` 所需义务直接来自源码中的可调用契约；其原生表示不经由 Gallina 子集项或 `Program` 详化。区别在于义务在哪里表示和解决，以及一个数学步骤如何成为上下文中的可用知识。Rocq 的依赖规格、归纳程序设计与证明项内核支持另一类抽象能力；自动解决侧条件本身不能单独构成 Litex 的区别。
+
+<a id="comparison-with-isabelleisar"></a>
+
+#### 与 Isabelle/Isar 比较
+
+[Isar](https://isabelle.in.tum.de/website-Isabelle2026-RC0/dist/library/Doc/Isar_Ref/Framework.html) 是建立在 Isabelle 通用逻辑框架上的结构化证明语言，管理局部事实、证明目标和证明方法；底层表达式与推理原则由对象逻辑提供。常用的 Isabelle/HOL 配置采用有类型高阶逻辑，Isabelle 也支持 ZF 等其他对象逻辑。Isar 已经能够书写可读的声明式证明，因此这一描述本身不足以区分 Litex。Wenzel 的原始论文规定了证明文档的操作解释语义，而不只是展示记号 [Isar99, §4.2][Isar99]、[IsarRef]。
+
+Litex 将数学词汇、依赖定义域条件的表达式构成，以及普通事实检查整合进同一门源码语言。其原生集合对象模型不同于 HOL 的有类型项和有类型集合。此外，[HOL 函数是全函数](https://www.isabelle.in.tum.de/library/Doc/Functions/Functions.html)：类型正确的应用总有一个值，即使尚未建立另行规定的定义域谓词 [HOLFunctions]。Litex 则在带条件调用的良定义性检查中要求定义域条件成立。这为“先建立数学前提，再允许使用表达式”的约定提供了原生支持。对受支持的事实，默认检查还减少了事实流和证明方法的显式编排。这些优势针对所选择的数学接口；Isabelle 的通用框架和可扩展证明基础设施服务于更广的用途。
+
+<a id="comparison-with-mizar"></a>
+
+#### 与 Mizar 比较
+
+[Mizar](https://mizar.uwb.edu.pl/cicm_tutorial/mizar.pdf) 在数学惯用语和前向声明式证明方面与 Litex 最为接近。它使用经典一阶推理和 scheme 构造，MML 以集合论为基础，[软类型](https://www.cs.ru.nl/~freek/mizar/miztype.pdf)用于分类建立在无类型集合论基础上的表达式；结构化数学陈述和等式链也早已得到支持。系统综述与软类型论文对这些机制给出了专门说明 [Mizar15]、[Wiedijk07]。因此，集合对象和可读事实语句都不能单独构成差异。
+
+函数应用的可接受性存在具体区别。Mizar 通常使用的函数取值运算由 [`FUNCT_1:def 2`](https://mizar.uwb.edu.pl/version/current/html/funct_1.html) 定义：`f.x` 在 `dom f` 内取对应值，在定义域之外取空集 [MizarApply]。Litex 的带条件调用则要求先建立声明的定义域条件，才能使用该应用。对于希望通过禁止表达式使用来暴露缺失定义域假设的作者，这是直接的语义优势。
+
+例行前提检索也有区别。Mizar 的基本 `by` 推理针对所引用的前提检查结论，同时提供类型注册等自动机制，语法也允许省略 justification [MizarChecker]、[MizarGrammar]。Litex 的普通验证路径可以按结论结构检索可见的全称事实，对其进行实例化并检查适用条件。在受支持的情形中，作者可以直接写下一条事实，减少标签和显式前提引用。这里比较的是默认接口，而不是声称 Mizar 没有自动化。参见 [Mizar 检查器说明](https://www.cs.ru.nl/~freek/mizar/by.pdf)及 [justification 语法](https://mizar.uwb.edu.pl/language/pages/justification.html)。
+
+<a id="the-language-design-question"></a>
+
+#### 语言设计问题
+
+Litex 所探索的贡献，是小型概念接口、原生数学契约与上下文验证的组合。`Obj`／`Fact`／`Stmt` 的区分为作者与实现提供了语义组织；三个类别名称本身并不建立新颖性或最小演算。相关假设是，这种组织能够减少构建和复用可检查数学时的表示、论证与修正工作。例子展示了特定写作操作的减少；普遍的学习成本和生产率结论仍需比较实验。精确的表达与验证支持范围由语言字典和[信任边界](#trust-boundary)说明。
+
+<a id="selected-technical-references"></a>
+
+#### 技术参考文献
+
+这些文献说明被比较机制的定义与设计依据。Litex 的行为由本手册及上述例子说明；跨系统的比较结论属于接口分析，不是被引作者报告的 Litex 实验结果。
+
+| 编号 | 一手文献 | 本文引用用途 |
+| --- | --- | --- |
+| [Compare06] | Freek Wiedijk (ed.). *The Seventeen Provers of the World*. LNCS 3600, 2006; author-hosted comparison manuscript. | 通过同一数学例子比较证明风格与表达；作为比较方法的历史参照。 |
+| [Lean21] | Leonardo de Moura and Sebastian Ullrich. *The Lean 4 Theorem Prover and Programming Language*. CADE 2021, LNCS 12699, pp. 625–635. | Lean 4 的系统架构，以及详化器、策略与元编程的可扩展性。 |
+| [LeanElab] | Lean project. *Lean Language Reference: Elaboration and Compilation*. official reference. | 源码到核心表示的处理路径，以及详化与检查的区别。 |
+| [LeanCoercions] | Lean project. *Lean Language Reference: Coercions*. official reference. | 强制转换的自动插入及其边界，避免将所有表示转换都说成手写操作。 |
+| [RocqCore] | Rocq Development Team. *Rocq Reference Manual: Core language*. version 9.1.0. | CIC、证明项、内核，以及内核与详化器、策略的职责分离。 |
+| [RocqElab] | Rocq Development Team. *Rocq Reference Manual: Command level processing*. version 9.1.0. | 核心类型检查之前的记号解释、预处理与详化机制。 |
+| [RocqProof] | Rocq Development Team. *Rocq Reference Manual: Proof mode*. version 9.1.0. | 证明状态、局部上下文与证明项的增量构造。 |
+| [RocqProgram] | Rocq Development Team. *Rocq Reference Manual: Program*. version 9.1.0. | 谓词子类型、生成的证明义务与自动义务求解。 |
+| [Sozeau07] | Matthieu Sozeau. *Subset Coercions in Coq*. TYPES 2006, LNCS 4502, pp. 237–252, published 2007. | 通过子集转换与证明义务，将富含规格的程序详化为 CIC 项。 |
+| [SSReflect10] | Georges Gonthier and Assia Mahboubi. *An introduction to small scale reflection in Coq*. Journal of Formalized Reasoning 3(2), pp. 95–152, 2010. | 结构化证明语言扩展，以及基于反射的数学推理方法。 |
+| [Isar99] | Markus Wenzel. *Isar — a Generic Interpretative Approach to Readable Formal Proof Documents*. TPHOLs 1999, LNCS 1690. | 可读形式证明文档，以及 Isar 的操作解释语义（§4.2）。 |
+| [IsarRef] | Isabelle project. *Isabelle/Isar Reference Manual: The Isabelle/Isar Framework*. Isabelle2026-RC0 documentation. | 通用框架、对象逻辑、结构化事实与证明方法。 |
+| [HOLFunctions] | Alexander Krauss / Isabelle project. *Isabelle function tutorial: Partiality and domain predicates*. official function-package tutorial. | HOL 全函数语义，以及部分函数处理中定义域谓词的作用。 |
+| [Mizar15] | Grzegorz Bancerek et al. *Mizar: State-of-the-Art and Beyond*. CICM 2015, LNCS 9150, pp. 261–279. | 数学惯用语、系统机制与隐式注册等设施。 |
+| [Wiedijk07] | Freek Wiedijk. *Mizar’s Soft Type System*. TPHOLs 2007, LNCS 4732, pp. 383–399. | 建立在无类型集合论之上的表达式分类及其软类型规则。 |
+| [MizarChecker] | Andrzej Trybulec; compiled by Freek Wiedijk. *CHECKER*. technical account. | 前提引用与基本 by 推理的机制说明，不作为当前版本性能数据。 |
+| [MizarApply] | Czesław Byliński / Mizar Mathematical Library. *Functions and Their Basic Properties: FUNCT_1:def 2*. library definition. | 普通 f.x 在定义域之外取值的精确定义。 |
+| [MizarGrammar] | Mizar project. *Mizar language: Justification*. official grammar. | 可省略的直接论证语法，避免声称每句都必须写 by。 |
+
+[Compare06]: https://www.cs.ru.nl/~freek/comparison/comparison.pdf
+[Lean21]: https://www.microsoft.com/en-us/research/publication/the-lean-4-theorem-prover-and-programming-language/
+[LeanElab]: https://lean-lang.org/doc/reference/latest/Elaboration-and-Compilation/
+[LeanCoercions]: https://lean-lang.org/doc/reference/latest/Coercions/
+[RocqCore]: https://rocq-prover.org/doc/V9.1.0/refman/language/core/index.html
+[RocqElab]: https://rocq-prover.org/doc/V9.1.0/refman/language/extensions/compil-steps.html
+[RocqProof]: https://rocq-prover.org/doc/V9.1.0/refman/proofs/writing-proofs/proof-mode.html
+[RocqProgram]: https://rocq-prover.org/doc/V9.1.0/refman/addendum/program.html
+[Sozeau07]: https://sozeau.gitlabpages.inria.fr/www/research/publications/Subset_Coercions_in_Coq.pdf
+[SSReflect10]: https://jfr.unibo.it/article/view/1979
+[Isar99]: https://wwwbroy.in.tum.de/~wenzelm/papers/Isar-TPHOLs99.pdf
+[IsarRef]: https://isabelle.in.tum.de/website-Isabelle2026-RC0/dist/library/Doc/Isar_Ref/Framework.html
+[HOLFunctions]: https://www.isabelle.in.tum.de/library/Doc/Functions/Functions.html
+[Mizar15]: https://mizar.uwb.edu.pl/people/romat/mizar-cicm2015.pdf
+[Wiedijk07]: https://www.cs.ru.nl/~freek/mizar/miztype.pdf
+[MizarChecker]: https://www.cs.ru.nl/~freek/mizar/by.pdf
+[MizarApply]: https://mizar.uwb.edu.pl/version/current/html/funct_1.html
+[MizarGrammar]: https://mizar.uwb.edu.pl/language/pages/justification.html
 
 <a id="appendix"></a>
 

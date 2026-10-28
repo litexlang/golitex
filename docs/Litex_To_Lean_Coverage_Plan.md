@@ -4470,3 +4470,43 @@ Local evidence: `eval-real-checkpoint.json`, `eval-real-final-checks.json`,
 `eval-real-final-focused.log` and `eval-real-final-axioms.log` in the compiler
 workspace. Work pauses at this accepted checkpoint. Other scalar operators,
 matrix/algorithm evaluation and WD output-size reduction remain separate work.
+
+
+## Exact integer operator evaluation — 2026-10-28
+
+`eval` compiles `gcd`, `lcm`, `%`, `quot` and `factorial` using their existing
+integer/natural domains and exact evaluated operands. For example:
+
+```litex
+eval gcd(54,-24)
+gcd(54,-24) = 6
+eval sum(1,4,fn(k Z) Z {k % 3})
+sum(1,4,fn(k Z) Z {k % 3}) = 4
+```
+
+The consumer validates ordered child results and original WD/citations before
+applying existing Core numeric laws. Typed aliases expose their already emitted
+membership inference stores to WD lookup. Numeric observations of projected
+children use the same original host constructor as object rendering. No AST,
+Runtime, result ABI, Core laws or persistent compiler registry changed.
+
+Five new pairs cover [operations](../lean/examples/evaluated_integer_operations/),
+[cited variables](../lean/examples/evaluated_integer_citations/),
+[formula functions](../lean/examples/evaluated_integer_functions/),
+[local scope](../lean/examples/evaluated_local_integer_operations/) and
+[aggregate iterands](../lean/examples/evaluated_integer_aggregates/). They export
+50 theorems. All five and 33 related pairs pass strict source verification and
+independent byte-identical generation. Lean 4.31.0 acceptance includes 12 fresh
+checks and 26 reused checks of identical bytes with unchanged Core/toolchain.
+The 257-export axiom audit finds only `propext`, `Classical.choice` and `Quot.sound`.
+
+The current-library harness passes 62 canonical Rust tests, including seven
+new tests for integer evaluation and invalid values, domains, WD and citations.
+The full Cargo test crate still lacks the existing lambda-alpha-equivalence
+fixture; this is a focused compiler acceptance, not a repository-wide result.
+`eval sqrt(2)` still verifies in Litex but rejects compilation with zero output.
+Nested aggregate arguments to integer operators remain limited by native
+evaluation/WD; matrix/algorithm evaluation and output-size work are deferred.
+Local evidence is `eval-integer-checkpoint.json`, `eval-integer-final-checks.json`,
+`eval-integer-final-focused.log` and `eval-integer-final-axioms.log` in the compiler
+workspace. Work pauses here at the user's request.
