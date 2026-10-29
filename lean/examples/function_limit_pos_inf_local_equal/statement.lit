@@ -1,0 +1,11 @@
+# A local pointwise equality transfers a pos_inf limit.
+thm pos_inf_locally_equal_limits:
+    ? forall f,g fn(x R) R, L,r R:
+        $has_limit_pos_inf(f,L)
+        forall q R:
+            exist x R st {q<x}
+        forall x {t R:r<t}:
+            g(x)=f(x)
+        =>:
+            $has_limit_pos_inf(g,L)
+    release thm fn_limit_pos_inf_local_equal(f,g,L,r)

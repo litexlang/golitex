@@ -76,3 +76,5 @@ pub(in crate::json_output) use stmt::{
 pub(in crate::json_output) mod eval_failure;
 
 mod function_limit;
+
+mod structural_real_sign;

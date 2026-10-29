@@ -78,3 +78,5 @@ pub mod scalar_extra_sign;
 pub mod selected_scalar_bt_rules;
 
 pub mod elementary_bounds;
+
+pub mod structural_real_sign;

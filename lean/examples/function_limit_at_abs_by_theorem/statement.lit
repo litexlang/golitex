@@ -1,0 +1,9 @@
+# Transfer a at limit through abs, retaining the complete function domains.
+thm at_abs_limit:
+    ? forall f,g fn(x R) R, p,L R:
+        $has_limit_at(f,p,L)
+        forall x R:
+            g(x)=abs(f(x))
+        =>:
+            $has_limit_at(g,p,abs(L))
+    by thm fn_limit_at_abs(f,g,p,L) => $has_limit_at(g,p,abs(L))

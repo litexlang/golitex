@@ -1052,7 +1052,12 @@ impl LitexToLeanCompiler {
                 let call = self.compile_object_reference(&goal.element, position)?;
                 lift_fn_return(&call, &p.source_set, target, &proof)
             }
-            _ => Err(LeanCompileError::unsupported("FunctionReturn/BuiltinRule")),
+            _ => Err(LeanCompileError::new("FunctionReturn/BuiltinRule", &format!(
+                "Unsupported membership builtin {} for {} in {}.",
+                rule.rule_name_and_message(OutputLanguage::English).rule_name,
+                goal.element.readable_string(),
+                goal.set.readable_string(),
+            ))),
         }
     }
 

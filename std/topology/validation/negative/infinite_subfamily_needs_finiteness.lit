@@ -1,0 +1,13 @@
+release thm top::discrete_topology_laws({0})
+
+have finite_guard &top::TopologicalSpace<{0}> = ({0},power_set({0}))
+
+finite_guard.carrier={0}
+
+finite_guard.carrier $in finite_guard.opens
+
+have fn all_whole(index N) finite_guard.opens=finite_guard.carrier
+
+N $in power_set(N)
+
+release thm top::finite_space_intersection_is_open({0},finite_guard,N,all_whole,N)

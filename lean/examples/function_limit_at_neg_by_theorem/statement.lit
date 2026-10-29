@@ -1,0 +1,9 @@
+# Transfer a at limit through neg, retaining the complete function domains.
+thm at_neg_limit:
+    ? forall f,g fn(x R) R, p,L R:
+        $has_limit_at(f,p,L)
+        forall x R:
+            g(x)=-f(x)
+        =>:
+            $has_limit_at(g,p,-L)
+    by thm fn_limit_at_neg(f,g,p,L) => $has_limit_at(g,p,-L)

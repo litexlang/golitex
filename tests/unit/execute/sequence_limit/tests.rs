@@ -187,7 +187,7 @@ fn sequence_limit_tests_substitution_congruence_latex_and_reserved_names() {
 }
 
 #[test]
-fn sequence_limit_tests_evidence_permission_and_lean_boundary() {
+fn sequence_limit_tests_evidence_permission_and_lean_replay() {
     let source = "forall a seq(R),L R:\n    $has_seq_limit(a,L)\n    =>:\n        lim(a)=L";
     let mut rt = runtime();
     let tokens = crate::tokenize::Tokenizer::new()
@@ -219,10 +219,10 @@ fn sequence_limit_tests_evidence_permission_and_lean_boundary() {
             "missing {fragment}: {detailed}"
         );
     }
-    let error = crate::compile_to_lean::LitexToLeanCompiler::new(rt)
+    let output = crate::compile_to_lean::LitexToLeanCompiler::new(rt)
         .compile_run(&run, "sequence_limit_boundary")
-        .unwrap_err();
-    assert!(error.message.contains("not supported"), "{error}");
+        .expect("supported limit evidence is replayed");
+    assert!(output.contains("Litex.") && !output.contains("sorry"));
     let latex = crate::compile_to_latex::to_latex_from_source(
         "forall n seq(R),L R:\n    $has_seq_limit(n,L)\n    =>:\n        lim(n)=L",
         OutputLanguage::English,

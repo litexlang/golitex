@@ -127,7 +127,7 @@ fn side_limits_parser_and_reserved_names() {
 }
 
 #[test]
-fn side_limits_provenance_ceilings_latex_and_lean_boundary() {
+fn side_limits_provenance_ceilings_latex_and_lean_replay() {
     for side in ["left", "right"] {
         let source=format!("forall f fn(x R) R,p,L R:\n    $has_limit_{side}(f,p,L)\n    =>:\n        lim_{side}(f,p)=L");
         let mut rt = runtime();
@@ -158,10 +158,10 @@ fn side_limits_provenance_ceilings_latex_and_lean_boundary() {
         ] {
             assert!(json.contains(required), "{required}: {json}");
         }
-        let error = crate::compile_to_lean::LitexToLeanCompiler::new(rt)
+        let output = crate::compile_to_lean::LitexToLeanCompiler::new(rt)
             .compile_run(&result, "side_limit_boundary")
-            .unwrap_err();
-        assert!(error.message.contains("not supported"), "{error}");
+            .expect("supported limit evidence is replayed");
+        assert!(output.contains("Litex.") && !output.contains("sorry"));
         let latex = crate::compile_to_latex::to_latex_from_source(&source, OutputLanguage::English)
             .unwrap();
         assert!(
@@ -176,10 +176,12 @@ fn side_limits_provenance_ceilings_latex_and_lean_boundary() {
 }
 
 #[test]
-fn side_limits_native_only_lean_boundaries() {
+fn side_limits_native_lean_replay() {
     for source in ["forall f fn(x R) R,p,L R:\n    $has_limit_left(f,p,L)\n    =>:\n        $has_limit_left(f,p,L)","release thm fn_limit_left_real_accumulation(0)","release thm fn_limit_right_real_accumulation(0)"] {
         let mut rt=runtime();let result=rt.run_litex_code(source).unwrap();assert!(result.success && result.session_error.is_none());
-        let error=crate::compile_to_lean::LitexToLeanCompiler::new(rt).compile_run(&result,"side_native_boundary").unwrap_err();assert!(error.message.contains("not supported"),"{error}");
+        let output = crate::compile_to_lean::LitexToLeanCompiler::new(rt)
+        .compile_run(&result,"side_native_boundary").expect("supported limit evidence is replayed");
+    assert!(output.contains("Litex.") && !output.contains("sorry"));
     }
 }
 

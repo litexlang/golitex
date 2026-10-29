@@ -1,0 +1,9 @@
+# Transfer a pos_inf limit through neg, retaining the complete function domains.
+thm pos_inf_neg_limit:
+    ? forall f,g fn(x R) R, L R:
+        $has_limit_pos_inf(f,L)
+        forall x R:
+            g(x)=-f(x)
+        =>:
+            $has_limit_pos_inf(g,-L)
+    by thm fn_limit_pos_inf_neg(f,g,L) => $has_limit_pos_inf(g,-L)

@@ -1,0 +1,15 @@
+have complement_vertices finite_set={1,2}
+
+1 $in complement_vertices
+
+2 $in complement_vertices
+
+release thm graph::complete_graph_construction(complement_vertices)
+
+have original_complete &graph::FiniteSimpleGraph<complement_vertices> = (complement_vertices,\graph::complete_graph_arcs<complement_vertices>)
+
+release thm graph::complement_graph_construction(complement_vertices,original_complete)
+
+have wrong_complement &graph::FiniteSimpleGraph<complement_vertices> = (complement_vertices,\graph::complement_graph_arcs<complement_vertices,original_complete>)
+
+(1,2) $in wrong_complement.arcs

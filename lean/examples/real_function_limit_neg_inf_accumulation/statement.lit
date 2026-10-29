@@ -1,0 +1,5 @@
+# The real line is unbounded in the neg_inf direction.
+thm reals_unbounded_neg_inf:
+    ? forall T R:
+        exist x R st {x<T}
+    release thm fn_limit_neg_inf_real_accumulation()

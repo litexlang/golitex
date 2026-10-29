@@ -1,0 +1,9 @@
+# Transfer a right limit through scale with its original parameter evidence.
+thm right_scale_limit:
+    ? forall f,g fn(x R) R, p,L,c R:
+        $has_limit_right(f,p,L)
+        forall x R:
+            g(x)=c*f(x)
+        =>:
+            $has_limit_right(g,p,c*L)
+    by thm fn_limit_right_scale(f,g,p,L,c) => $has_limit_right(g,p,c*L)

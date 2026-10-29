@@ -1,0 +1,13 @@
+# Divide two right limits with a nonzero limit and nonzero denominator calls.
+thm right_quotient_limit:
+    ? forall f,g,q fn(x R) R, p,a,b R:
+        $has_limit_right(f,p,a)
+        $has_limit_right(g,p,b)
+        b!=0
+        forall x R:
+            g(x)!=0
+        forall x R:
+            q(x)=f(x)/g(x)
+        =>:
+            $has_limit_right(q,p,a/b)
+    by thm fn_limit_right_divide(f,g,q,p,a,b) => $has_limit_right(q,p,a/b)

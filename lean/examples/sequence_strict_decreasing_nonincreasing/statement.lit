@@ -1,0 +1,7 @@
+# Strict decrease implies weak decrease for a positive-indexed real sequence.
+thm strict_decrease_is_weak_decrease:
+    ? forall a seq(R):
+        $is_seq_strictly_decreasing(a)
+        =>:
+            $is_seq_nonincreasing(a)
+    release thm sequence_strict_decreasing_nonincreasing(a)

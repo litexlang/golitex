@@ -1,0 +1,7 @@
+# Strict increase implies weak increase for a positive-indexed real sequence.
+thm strict_increase_is_weak_increase:
+    ? forall a seq(R):
+        $is_seq_strictly_increasing(a)
+        =>:
+            $is_seq_nondecreasing(a)
+    release thm sequence_strict_increasing_nondecreasing(a)

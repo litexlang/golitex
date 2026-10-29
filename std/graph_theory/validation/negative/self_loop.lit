@@ -1,0 +1,7 @@
+have loop_vertices finite_set={1}
+
+1 $in loop_vertices
+
+(1,1) $in cart(loop_vertices,loop_vertices)
+
+have invalid_loop &graph::FiniteSimpleGraph<loop_vertices> = (loop_vertices,{(1,1)})

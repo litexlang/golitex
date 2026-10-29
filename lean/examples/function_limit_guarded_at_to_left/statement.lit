@@ -1,0 +1,9 @@
+# The side restriction keeps the original nonzero-guarded real function domain.
+thm guarded_limit_at_to_left:
+    ? forall f fn(x R:x!=0) R, p,L R:
+        $has_limit_at(f,p,L)
+        forall r R+:
+            exist x {t R:t!=0} st {0<(p-x) and (p-x)<r}
+        =>:
+            $has_limit_left(f,p,L)
+    by thm fn_limit_at_to_left(f,p,L) => $has_limit_left(f,p,L)

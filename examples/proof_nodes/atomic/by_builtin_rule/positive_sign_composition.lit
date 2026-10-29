@@ -1,0 +1,73 @@
+# Focused gate: target/release/litex -strict -lang en -f examples/proof_nodes/atomic/by_builtin_rule/positive_sign_composition.lit
+# Before: the x>0 guarded return, nested signed carriers and composed denominator WD failed.
+# The 0<x guarded return is an existing-success orientation control.
+# After: fixed real-sign BT schemas compose their premise certificates.
+# Each sketch is isolated: no preceding assertion supplies a missing bridge.
+
+sketch:
+    have fn f(x R: x > 0) R+ = x + 1
+
+sketch:
+    have fn f(x R: 0 < x) R+ = x + 1
+
+sketch:
+    forall x,y,z R+:
+        (x+y)+z $in R+
+
+sketch:
+    forall x,y,z R+:
+        (x*y)*z $in R+
+
+sketch:
+    forall x,y,z Q+:
+        x+(y+z) $in Q+
+
+sketch:
+    forall x R:
+        x^2+1 $in R+
+
+sketch:
+    forall x,y R-:
+        x*y $in R+
+
+sketch:
+    forall x R+:
+        x+1 != 0
+
+sketch:
+    forall x R+:
+        1/(x+1) = 1/(x+1)
+
+sketch:
+    forall eps,delta R+:
+        min(eps,delta)/2 $in R+
+
+sketch:
+    forall x,y R+:
+        0 < min(x,y)
+
+sketch:
+    forall x,y R+:
+        min(x,y) != 0
+
+sketch:
+    forall x R+,y R:
+        max(x,y) > 0
+
+sketch:
+    forall x R+,y R:
+        max(y,x) $in R+
+
+sketch:
+    forall x,y R:
+        x >= 0
+        y > 0
+        =>:
+            max(x,y) $in R+
+
+sketch:
+    forall x,y R:
+        x <= 0
+        y < 0
+        =>:
+            min(x,y) $in R-

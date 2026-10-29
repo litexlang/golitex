@@ -1,0 +1,8 @@
+# Eventual positivity is relative to the original nonzero input domain.
+thm guarded_eventually_positive:
+    ? forall f fn(x R:x!=0) R, p,L R:
+        $has_limit_at(f,p,L)
+        0<L
+        =>:
+            exist delta R+ st {{x {t R:t!=0}:0<abs(x-p) and abs(x-p)<delta} $subset preimage_set(f,R+)}
+    release thm fn_limit_at_eventually_positive(f,p,L)

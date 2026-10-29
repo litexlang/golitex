@@ -30,6 +30,9 @@ Then follow `task-template.md` for the task layout and the working rules.
    predicates, lemmas. There is no import.
 5. Batch a few related statements per `./step` call when they are independent;
    the checker reports the first failing statement.
+6. Structure the file so you append: objects, functions and predicates first,
+   then helper lemmas, then the theorem. Inserting a lemma above accepted text
+   forces a session reset and re-checks the whole file.
 6. Success is `./check solution.lit` exiting 0 with `"errors": []`, not the
    absence of an obvious error.
 

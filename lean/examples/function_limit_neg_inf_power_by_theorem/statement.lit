@@ -1,0 +1,9 @@
+# Transfer a neg_inf limit through power with its original parameter evidence.
+thm neg_inf_power_limit:
+    ? forall f,g fn(x R) R, L R:
+        $has_limit_neg_inf(f,L)
+        forall x R:
+            g(x)=f(x)^2
+        =>:
+            $has_limit_neg_inf(g,L^2)
+    by thm fn_limit_neg_inf_power(f,g,L,2) => $has_limit_neg_inf(g,L^2)

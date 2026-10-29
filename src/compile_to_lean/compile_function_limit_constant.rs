@@ -1,4 +1,4 @@
-//! A constant limit still requires the recorded nontrivial approach to the domain.
+//! Constant and identity limits retain the recorded nontrivial domain approach.
 use super::compile_function_limit::{finite_side, infinite_direction};
 use super::compile_function_limit_definition::validate_accumulation_clause;
 use super::compile_real_set_bounds::{contains_parameter, parameter};
@@ -7,13 +7,20 @@ use super::source_position::SourcePosition;
 use super::{LeanCompileError, LitexToLeanCompiler};
 use crate::prelude::*;
 
+#[derive(Clone, Copy)]
+pub(super) enum ElementaryLimit {
+    Constant,
+    Identity,
+}
+
 fn invalid(stage: &str) -> LeanCompileError {
     LeanCompileError::unsupported(&format!("ConstantFunctionLimit/{stage}"))
 }
 
-pub(super) fn validate_constant_clauses(
+pub(super) fn validate_elementary_clauses(
     goal: &HasFunctionLimitFact,
     requirements: &[Fact],
+    rule: ElementaryLimit,
 ) -> Result<(), LeanCompileError> {
     let [real, accumulation, equation] = requirements else {
         return Err(invalid("Arity"));
@@ -40,8 +47,12 @@ pub(super) fn validate_constant_clauses(
         return Err(invalid("BinderCapture"));
     }
     let arg = Obj::Identifier(IdentifierObj::from_bound_name(input));
+    let expected = match rule {
+        ElementaryLimit::Constant => &goal.value,
+        ElementaryLimit::Identity => &arg,
+    };
     if !matches!(all.then_facts.as_slice(), [ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(f))]
-        if call_matches(&f.left, &goal.function, &arg) && f.right.ir() == goal.value.ir())
+        if call_matches(&f.left, &goal.function, &arg) && f.right.ir() == expected.ir())
     {
         return Err(invalid("EquationSubject"));
     }
@@ -49,10 +60,11 @@ pub(super) fn validate_constant_clauses(
 }
 
 impl LitexToLeanCompiler {
-    pub(super) fn compile_constant_function_limit(
+    pub(super) fn compile_elementary_function_limit(
         &self,
         goal: &HasFunctionLimitFact,
         wd: &FactWellDefinedProof,
+        rule: ElementaryLimit,
         requirements: &[Fact],
         references: &[String],
         position: &SourcePosition<'_>,
@@ -84,7 +96,10 @@ impl LitexToLeanCompiler {
         let law = if goal.approach.point().is_some() {
             let (side, point) = finite_side(&goal.approach)?;
             let point = self.compile_object_reference(point, position)?;
-            format!("Litex.finiteFunctionLimitConstant .{side} {function} {point} {value} _domain _constant_real_domain {equality} {} {} {} {}", references[3], references[4], references[5], references[6])
+            match rule {
+                ElementaryLimit::Constant => format!("Litex.finiteFunctionLimitConstant .{side} {function} {point} {value} _domain _constant_real_domain {equality} {} {} {} {}", references[3], references[4], references[5], references[6]),
+                ElementaryLimit::Identity => format!("Litex.finiteFunctionLimitIdentity .{side} {function} {point} _domain _constant_real_domain {equality} {} {} {}", references[3], references[5], references[6]),
+            }
         } else {
             let direction = infinite_direction(&goal.approach)?;
             format!("Litex.infiniteFunctionLimitConstant .{direction} {function} {value} _domain _constant_real_domain {equality} {} {} {}", references[3], references[4], references[5])

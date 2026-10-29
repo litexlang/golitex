@@ -1,0 +1,7 @@
+# Extract the neg_inf limit control certificate on the original real domain.
+thm explicit_neg_inf_control:
+    ? forall f fn(x R) R, L R, epsilon R+:
+        $has_limit_neg_inf(f,L)
+        =>:
+            exist threshold R st {{x R:x<threshold} $subset preimage_set(f,{v R:abs(v-L)<epsilon})}
+    release thm fn_limit_neg_inf_control(f,L,epsilon)

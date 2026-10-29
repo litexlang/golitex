@@ -1,0 +1,5 @@
+have endpoint_vertices finite_set={1,2}
+
+not 3 $in endpoint_vertices
+
+have invalid_endpoints &graph::FiniteSimpleGraph<endpoint_vertices> = (endpoint_vertices,union({(1,3)},{(3,1)}))

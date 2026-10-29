@@ -1,0 +1,20 @@
+# Prove (x^2+1)*(x-2) tends to zero at 2 by reusable function-limit laws.
+have fn chain_identity(x R) R=x
+have fn chain_square(x R) R=x^2
+have fn chain_one(x R) R=1
+have fn chain_two(x R) R=2
+have fn chain_augmented(x R) R=x^2+1
+have fn chain_difference(x R) R=x-2
+have fn chain_product(x R) R=(x^2+1)*(x-2)
+
+release thm fn_limit_at_real_accumulation(2)
+release thm fn_limit_at_identity(chain_identity,2)
+release thm fn_limit_at_power(chain_identity,chain_square,2,2,2)
+release thm fn_limit_at_constant(chain_one,2,1)
+release thm fn_limit_at_constant(chain_two,2,2)
+release thm fn_limit_at_add(chain_square,chain_one,chain_augmented,2,4,1)
+release thm fn_limit_at_subtract(chain_identity,chain_two,chain_difference,2,2,2)
+release thm fn_limit_at_multiply(chain_augmented,chain_difference,chain_product,2,5,0)
+
+$has_limit_at(chain_product,2,0)
+fn_lim(chain_product,2)=0

@@ -1,0 +1,5 @@
+# The real line has points arbitrarily close from the at approach.
+thm reals_accumulate_at:
+    ? forall p R, r R+:
+        exist x R st {0<(abs(x-p)) and (abs(x-p))<r}
+    release thm fn_limit_at_real_accumulation(p)

@@ -33,7 +33,7 @@ private theorem function_call (x : ℝ) (hx : x ≠ 0) :
 /-- The epsilon estimate comes from the compiled Litex proof. -/
 theorem puncturedCancellationLimit :
     Tendsto (fun x : ℝ => x ^ 2 / x) (𝓝[≠] 0) (𝓝 0) := by
-  have generated := LitexCompiled.file_lean_x2f_examples_x2f_function_x5f_limit_x5f_punctured_x5f_cancellation_x2f_statement_x2e_lit.h_33384 (M := model)
+  have generated := LitexCompiled.file_lean_x2f_examples_x2f_function_x5f_limit_x5f_punctured_x5f_cancellation_x2f_statement_x2e_lit.h_33417 (M := model)
   obtain ⟨point, value, hpoint, hvalue, _, hestimate⟩ := generated
   have hp : point = 0 := (Complex.ofReal_injective (model.number_injective hpoint)).symm
   have hv : value = 0 := (Complex.ofReal_injective (model.number_injective hvalue)).symm

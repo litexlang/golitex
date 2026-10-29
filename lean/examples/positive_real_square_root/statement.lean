@@ -54,7 +54,7 @@ let _wd_1_1 := (Litex.number (M := M) (2 : ℂ));
     exact Litex.sqrtInR _litex_sqrt.val.arg _litex_sqrt.wd.1 _litex_sqrt.wd.2
   )) (Litex.NativeBridge.numberInNOfEq (M := M) (2 : ℂ) (2 : ℕ) (by norm_num)) (Litex.NativeBridge.sameOfDenoteNumber _wd_1_1 (Litex.number (M := M) ((2 : ℕ) : ℂ)) (2 : ℂ) ((2 : ℕ) : ℂ) (Litex.NativeBridge.denoteNumber (M := M) (2 : ℂ)) (Litex.NativeBridge.denoteNumber (M := M) ((2 : ℕ) : ℂ)) (by norm_num))))
 
-theorem h_41 {_Host_i1 : Type v1} [_rep_i1 : Litex.Representation M _Host_i1] (_value_i1 : Litex.Obj (M := M) _Host_i1) (h_2 : Litex.In _value_i1 (Litex.RPos (M := M))) : (by
+theorem h_49 {_Host_i1 : Type v1} [_rep_i1 : Litex.Representation M _Host_i1] (_value_i1 : Litex.Obj (M := M) _Host_i1) (h_2 : Litex.In _value_i1 (Litex.RPos (M := M))) : (by
   let _equal_wd_1_0 := (_object_w3 (M := M) (_Host_i1 := _Host_i1) (_rep_i1 := _rep_i1) _value_i1 h_2)
   exact Litex.Same _equal_wd_1_0 _value_i1) :=
   (by
@@ -72,18 +72,18 @@ theorem h_41 {_Host_i1 : Type v1} [_rep_i1 : Litex.Representation M _Host_i1] (_
       )
   )
 
-theorem h_104 {_Host_i1 : Type v1} [_rep_i1 : Litex.Representation M _Host_i1] (_value_i1 : Litex.Obj (M := M) _Host_i1) (h_2 : Litex.In _value_i1 (Litex.RPos (M := M))) : Litex.In _value_i1 (Litex.RPos (M := M)) :=
+theorem h_112 {_Host_i1 : Type v1} [_rep_i1 : Litex.Representation M _Host_i1] (_value_i1 : Litex.Obj (M := M) _Host_i1) (h_2 : Litex.In _value_i1 (Litex.RPos (M := M))) : Litex.In _value_i1 (Litex.RPos (M := M)) :=
   (by
     litex_complete =>
       exact (
         (by
-          have h_96 : (by
+          have h_104 : (by
           let _atomic_wd_1_1 := (_object_w3 (M := M) (_Host_i1 := _Host_i1) (_rep_i1 := _rep_i1) _value_i1 h_2)
           exact Litex.Lt (Litex.number (M := M) (0 : ℂ)) _atomic_wd_1_1) := (by
           let _atomic_wd_1_1 := (_object_w3 (M := M) (_Host_i1 := _Host_i1) (_rep_i1 := _rep_i1) _value_i1 h_2)
-          exact (Litex.ltOfSame (Litex.number (M := M) (0 : ℂ)) (Litex.number (M := M) (0 : ℂ)) _value_i1 _atomic_wd_1_1 (show @Eq M.Value _ _ from Eq.refl _) ((h_41 (M := M) (_Host_i1 := _Host_i1) (_rep_i1 := _rep_i1) _value_i1 h_2)).symm (h_3 (M := M) (_Host_i1 := _Host_i1) (_rep_i1 := _rep_i1) _value_i1 h_2)))
-          have h_101 : Litex.In (Litex.number (M := M) (2 : ℂ)) (Litex.R (M := M)) := (Litex.NativeBridge.numberInROfEq (M := M) (2 : ℂ) (2 : ℝ) (by norm_num))
-          exact Litex.inOfSame (_object_w3 (M := M) (_Host_i1 := _Host_i1) (_rep_i1 := _rep_i1) _value_i1 h_2) _value_i1 (Litex.RPos (M := M)) (Litex.RPos (M := M)) (h_41 (M := M) (_Host_i1 := _Host_i1) (_rep_i1 := _rep_i1) _value_i1 h_2) (Litex.sameRefl (Litex.RPos (M := M))) (Litex.inRPos_intro (_object_w3 (M := M) (_Host_i1 := _Host_i1) (_rep_i1 := _rep_i1) _value_i1 h_2) (by obtain ⟨_, _litex_real, _, _litex_value, _⟩ := h_96; exact (M.real_members (Litex.denote (_object_w3 (M := M) (_Host_i1 := _Host_i1) (_rep_i1 := _rep_i1) _value_i1 h_2))).mpr ⟨_litex_real, _litex_value⟩) h_96)
+          exact (Litex.ltOfSame (Litex.number (M := M) (0 : ℂ)) (Litex.number (M := M) (0 : ℂ)) _value_i1 _atomic_wd_1_1 (show @Eq M.Value _ _ from Eq.refl _) ((h_49 (M := M) (_Host_i1 := _Host_i1) (_rep_i1 := _rep_i1) _value_i1 h_2)).symm (h_3 (M := M) (_Host_i1 := _Host_i1) (_rep_i1 := _rep_i1) _value_i1 h_2)))
+          have h_109 : Litex.In (Litex.number (M := M) (2 : ℂ)) (Litex.R (M := M)) := (Litex.NativeBridge.numberInROfEq (M := M) (2 : ℂ) (2 : ℝ) (by norm_num))
+          exact Litex.inOfSame (_object_w3 (M := M) (_Host_i1 := _Host_i1) (_rep_i1 := _rep_i1) _value_i1 h_2) _value_i1 (Litex.RPos (M := M)) (Litex.RPos (M := M)) (h_49 (M := M) (_Host_i1 := _Host_i1) (_rep_i1 := _rep_i1) _value_i1 h_2) (Litex.sameRefl (Litex.RPos (M := M))) (Litex.inRPos_intro (_object_w3 (M := M) (_Host_i1 := _Host_i1) (_rep_i1 := _rep_i1) _value_i1 h_2) (by obtain ⟨_, _litex_real, _, _litex_value, _⟩ := h_104; exact (M.real_members (Litex.denote (_object_w3 (M := M) (_Host_i1 := _Host_i1) (_rep_i1 := _rep_i1) _value_i1 h_2))).mpr ⟨_litex_real, _litex_value⟩) h_104)
         )
       )
   )

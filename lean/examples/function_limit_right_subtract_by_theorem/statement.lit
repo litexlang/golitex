@@ -1,0 +1,10 @@
+# Transfer two right limits through subtract on the same complete domain.
+thm right_subtract_limits:
+    ? forall f,g,s fn(x R) R, p,a,b R:
+        $has_limit_right(f,p,a)
+        $has_limit_right(g,p,b)
+        forall x R:
+            s(x)=f(x)-g(x)
+        =>:
+            $has_limit_right(s,p,a-b)
+    by thm fn_limit_right_subtract(f,g,s,p,a,b) => $has_limit_right(s,p,a-b)

@@ -91,25 +91,25 @@ theorem h_3 : ∀ {_Host_i1 : Type v1} [_rep_i1 : Litex.Representation M _Host_i
                     exact (Litex.mulInRPos _atomic_wd_1_0 h_28 h_32))
                 )
             )
-          have h_111 : Litex.Lt (Litex.number (M := M) (0 : ℂ)) _object_w3 :=
+          have h_116 : Litex.Lt (Litex.number (M := M) (0 : ℂ)) _object_w3 :=
             (by
               litex_checked_step =>
                 exact (
                   (Litex.inRPos_positive _object_w3 h_1)
                 )
             )
-          have h_112 : Litex.Le (Litex.number (M := M) (0 : ℂ)) _object_w3 :=
+          have h_117 : Litex.Le (Litex.number (M := M) (0 : ℂ)) _object_w3 :=
             (by
               litex_checked_step =>
                 exact (
-                  (Litex.ltToLe (Litex.number (M := M) 0) _object_w3 h_111)
+                  (Litex.ltToLe (Litex.number (M := M) 0) _object_w3 h_116)
                 )
             )
-          have h_113 : ¬ Litex.Same _object_w3 (Litex.number (M := M) (0 : ℂ)) :=
+          have h_118 : ¬ Litex.Same _object_w3 (Litex.number (M := M) (0 : ℂ)) :=
             (by
               litex_checked_step =>
                 exact (
-                  (fun _litex_zero => (Litex.ltNotSame (Litex.number (M := M) 0) _object_w3 h_111) _litex_zero.symm)
+                  (fun _litex_zero => (Litex.ltNotSame (Litex.number (M := M) 0) _object_w3 h_116) _litex_zero.symm)
                 )
             )
           let _object_w4 := (Litex.div _value_i1 _value_i2 (Litex.positiveRealToComplex _value_i1 h_28) (Litex.positiveRealToComplex _value_i2 h_32) h_35)
@@ -124,25 +124,25 @@ theorem h_3 : ∀ {_Host_i1 : Type v1} [_rep_i1 : Litex.Representation M _Host_i
                     exact (Litex.divInRPos _atomic_wd_1_0 h_28 h_32))
                 )
             )
-          have h_214 : Litex.Lt (Litex.number (M := M) (0 : ℂ)) _object_w4 :=
+          have h_226 : Litex.Lt (Litex.number (M := M) (0 : ℂ)) _object_w4 :=
             (by
               litex_checked_step =>
                 exact (
                   (Litex.inRPos_positive _object_w4 h_2)
                 )
             )
-          have h_215 : Litex.Le (Litex.number (M := M) (0 : ℂ)) _object_w4 :=
+          have h_227 : Litex.Le (Litex.number (M := M) (0 : ℂ)) _object_w4 :=
             (by
               litex_checked_step =>
                 exact (
-                  (Litex.ltToLe (Litex.number (M := M) 0) _object_w4 h_214)
+                  (Litex.ltToLe (Litex.number (M := M) 0) _object_w4 h_226)
                 )
             )
-          have h_216 : ¬ Litex.Same _object_w4 (Litex.number (M := M) (0 : ℂ)) :=
+          have h_228 : ¬ Litex.Same _object_w4 (Litex.number (M := M) (0 : ℂ)) :=
             (by
               litex_checked_step =>
                 exact (
-                  (fun _litex_zero => (Litex.ltNotSame (Litex.number (M := M) 0) _object_w4 h_214) _litex_zero.symm)
+                  (fun _litex_zero => (Litex.ltNotSame (Litex.number (M := M) 0) _object_w4 h_226) _litex_zero.symm)
                 )
             )
           exact (And.intro h_1 h_2)
@@ -150,16 +150,16 @@ theorem h_3 : ∀ {_Host_i1 : Type v1} [_rep_i1 : Litex.Representation M _Host_i
       )
   )
 
-theorem h_219 : ∀ {_Host_i3 : Type v3} [_rep_i3 : Litex.Representation M _Host_i3] (_value_i3 : Litex.Obj (M := M) _Host_i3) (h_244 : Litex.In _value_i3 (Litex.QStar (M := M))) {_Host_i4 : Type v4} [_rep_i4 : Litex.Representation M _Host_i4] (_value_i4 : Litex.Obj (M := M) _Host_i4) (h_246 : Litex.In _value_i4 (Litex.QStar (M := M))), (by
-  have h_247 : ¬ Litex.Same _value_i4 (Litex.number (M := M) (0 : ℂ)) :=
+theorem h_231 : ∀ {_Host_i3 : Type v3} [_rep_i3 : Litex.Representation M _Host_i3] (_value_i3 : Litex.Obj (M := M) _Host_i3) (h_256 : Litex.In _value_i3 (Litex.QStar (M := M))) {_Host_i4 : Type v4} [_rep_i4 : Litex.Representation M _Host_i4] (_value_i4 : Litex.Obj (M := M) _Host_i4) (h_258 : Litex.In _value_i4 (Litex.QStar (M := M))), (by
+  have h_259 : ¬ Litex.Same _value_i4 (Litex.number (M := M) (0 : ℂ)) :=
     (by
       litex_checked_step =>
         exact (
-          (Litex.inQStar_nonzero _value_i4 h_246)
+          (Litex.inQStar_nonzero _value_i4 h_258)
         )
     )
-  let _object_w7 := (Litex.mul _value_i3 _value_i4 (Litex.rationalToComplex _value_i3 (Litex.inQStar_base _value_i3 h_244)) (Litex.rationalToComplex _value_i4 (Litex.inQStar_base _value_i4 h_246)))
-  let _object_w8 := (Litex.div _value_i3 _value_i4 (Litex.rationalToComplex _value_i3 (Litex.inQStar_base _value_i3 h_244)) (Litex.rationalToComplex _value_i4 (Litex.inQStar_base _value_i4 h_246)) h_247)
+  let _object_w7 := (Litex.mul _value_i3 _value_i4 (Litex.rationalToComplex _value_i3 (Litex.inQStar_base _value_i3 h_256)) (Litex.rationalToComplex _value_i4 (Litex.inQStar_base _value_i4 h_258)))
+  let _object_w8 := (Litex.div _value_i3 _value_i4 (Litex.rationalToComplex _value_i3 (Litex.inQStar_base _value_i3 h_256)) (Litex.rationalToComplex _value_i4 (Litex.inQStar_base _value_i4 h_258)) h_259)
   exact (((by
     let _atomic_wd_1_0 := _object_w7
     exact Litex.In _atomic_wd_1_0 (Litex.QStar (M := M)))) ∧ ((by
@@ -170,23 +170,23 @@ theorem h_219 : ∀ {_Host_i3 : Type v3} [_rep_i3 : Litex.Representation M _Host
     litex_complete =>
       exact (
         (by
-          intro _Host_i3 _rep_i3 _value_i3 h_244 _Host_i4 _rep_i4 _value_i4 h_246
-          have h_245 : ¬ Litex.Same _value_i3 (Litex.number (M := M) (0 : ℂ)) :=
+          intro _Host_i3 _rep_i3 _value_i3 h_256 _Host_i4 _rep_i4 _value_i4 h_258
+          have h_257 : ¬ Litex.Same _value_i3 (Litex.number (M := M) (0 : ℂ)) :=
             (by
               litex_checked_step =>
                 exact (
-                  (Litex.inQStar_nonzero _value_i3 h_244)
+                  (Litex.inQStar_nonzero _value_i3 h_256)
                 )
             )
-          have h_247 : ¬ Litex.Same _value_i4 (Litex.number (M := M) (0 : ℂ)) :=
+          have h_259 : ¬ Litex.Same _value_i4 (Litex.number (M := M) (0 : ℂ)) :=
             (by
               litex_checked_step =>
                 exact (
-                  (Litex.inQStar_nonzero _value_i4 h_246)
+                  (Litex.inQStar_nonzero _value_i4 h_258)
                 )
             )
-          let _object_w7 := (Litex.mul _value_i3 _value_i4 (Litex.rationalToComplex _value_i3 (Litex.inQStar_base _value_i3 h_244)) (Litex.rationalToComplex _value_i4 (Litex.inQStar_base _value_i4 h_246)))
-          have h_217 : (by
+          let _object_w7 := (Litex.mul _value_i3 _value_i4 (Litex.rationalToComplex _value_i3 (Litex.inQStar_base _value_i3 h_256)) (Litex.rationalToComplex _value_i4 (Litex.inQStar_base _value_i4 h_258)))
+          have h_229 : (by
             let _atomic_wd_1_0 := _object_w7
             exact Litex.In _atomic_wd_1_0 (Litex.QStar (M := M))) :=
             (by
@@ -194,18 +194,18 @@ theorem h_219 : ∀ {_Host_i3 : Type v3} [_rep_i3 : Litex.Representation M _Host
                 exact (
                   (by
                     let _atomic_wd_1_0 := _object_w7
-                    exact (Litex.mulInQStar _atomic_wd_1_0 h_244 h_246))
+                    exact (Litex.mulInQStar _atomic_wd_1_0 h_256 h_258))
                 )
             )
-          have h_330 : ¬ Litex.Same _object_w7 (Litex.number (M := M) (0 : ℂ)) :=
+          have h_347 : ¬ Litex.Same _object_w7 (Litex.number (M := M) (0 : ℂ)) :=
             (by
               litex_checked_step =>
                 exact (
-                  (Litex.inQStar_nonzero _object_w7 h_217)
+                  (Litex.inQStar_nonzero _object_w7 h_229)
                 )
             )
-          let _object_w8 := (Litex.div _value_i3 _value_i4 (Litex.rationalToComplex _value_i3 (Litex.inQStar_base _value_i3 h_244)) (Litex.rationalToComplex _value_i4 (Litex.inQStar_base _value_i4 h_246)) h_247)
-          have h_218 : (by
+          let _object_w8 := (Litex.div _value_i3 _value_i4 (Litex.rationalToComplex _value_i3 (Litex.inQStar_base _value_i3 h_256)) (Litex.rationalToComplex _value_i4 (Litex.inQStar_base _value_i4 h_258)) h_259)
+          have h_230 : (by
             let _atomic_wd_1_0 := _object_w8
             exact Litex.In _atomic_wd_1_0 (Litex.QStar (M := M))) :=
             (by
@@ -213,17 +213,17 @@ theorem h_219 : ∀ {_Host_i3 : Type v3} [_rep_i3 : Litex.Representation M _Host
                 exact (
                   (by
                     let _atomic_wd_1_0 := _object_w8
-                    exact (Litex.divInQStar _atomic_wd_1_0 h_244 h_246))
+                    exact (Litex.divInQStar _atomic_wd_1_0 h_256 h_258))
                 )
             )
-          have h_439 : ¬ Litex.Same _object_w8 (Litex.number (M := M) (0 : ℂ)) :=
+          have h_463 : ¬ Litex.Same _object_w8 (Litex.number (M := M) (0 : ℂ)) :=
             (by
               litex_checked_step =>
                 exact (
-                  (Litex.inQStar_nonzero _object_w8 h_218)
+                  (Litex.inQStar_nonzero _object_w8 h_230)
                 )
             )
-          exact (And.intro h_217 h_218)
+          exact (And.intro h_229 h_230)
         )
       )
   )

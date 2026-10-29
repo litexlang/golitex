@@ -101,13 +101,36 @@ pub(super) fn validate_limit_existence(
     Ok(())
 }
 
+pub(super) fn signature_domain_matches(domain: &Obj, signature: &FnSet) -> bool {
+    let [group] = signature.set_bound_parameters.groups.as_slice() else {
+        return false;
+    };
+    let [parameter] = group.params.as_slice() else {
+        return false;
+    };
+    if signature.dom_facts.is_empty() {
+        domain.ir() == group.param_type.ir()
+    } else {
+        matches!(domain, Obj::SetFormer(SetFormer::SetBuilder(b)) if b.param_binding.id == parameter.id
+            && b.param_set.ir() == group.param_type.ir() && b.facts == signature.dom_facts)
+    }
+}
+
 pub(super) fn validate_accumulation_clause<'a>(
     goal: &HasFunctionLimitFact,
     accumulation: &'a Fact,
 ) -> Result<&'a Obj, LeanCompileError> {
-    let finite = goal.approach.point().is_some();
-    let mut source = vec![&goal.function, &goal.value];
-    source.extend(goal.approach.point());
+    validate_approach_accumulation(&goal.approach, &[&goal.function, &goal.value], accumulation)
+}
+
+pub(super) fn validate_approach_accumulation<'a>(
+    approach: &LimitApproach,
+    free: &[&Obj],
+    accumulation: &'a Fact,
+) -> Result<&'a Obj, LeanCompileError> {
+    let finite = approach.point().is_some();
+    let mut source = free.to_vec();
+    source.extend(approach.point());
     let radius_domain = Obj::StandardSet(if finite {
         StandardSet::RPos
     } else {
@@ -133,7 +156,7 @@ pub(super) fn validate_accumulation_clause<'a>(
     }
     approach_conditions(
         &exists.facts,
-        &goal.approach,
+        approach,
         &identifier(input),
         &identifier(radius),
     )?;
@@ -141,7 +164,7 @@ pub(super) fn validate_accumulation_clause<'a>(
     Ok(domain)
 }
 
-fn validate_clauses<'a>(
+pub(super) fn validate_clauses<'a>(
     goal: &HasFunctionLimitFact,
     facts: &'a [Fact],
 ) -> Result<&'a Obj, LeanCompileError> {
@@ -149,23 +172,35 @@ fn validate_clauses<'a>(
         return Err(invalid("ClauseArity"));
     };
     let domain = validate_accumulation_clause(goal, accumulation)?;
-    let finite = goal.approach.point().is_some();
     let mut source = vec![&goal.function, &goal.value];
     source.extend(goal.approach.point());
+    let mut scoped_source = source;
+    scoped_source.push(domain);
+    let (all, epsilon) = universal(epsilon, &Obj::StandardSet(StandardSet::RPos))?;
+    fresh(epsilon, &scoped_source, &[])?;
+    let [ExistOrAndChainAtomicFact::ExistFact(exists)] = all.then_facts.as_slice() else {
+        return Err(invalid("EpsilonWitness"));
+    };
+    validate_control_clause(goal, domain, &identifier(epsilon), exists)?;
+    Ok(domain)
+}
+
+pub(super) fn validate_control_clause(
+    goal: &HasFunctionLimitFact,
+    domain: &Obj,
+    epsilon: &Obj,
+    exists: &PlainExistFact,
+) -> Result<(), LeanCompileError> {
+    let finite = goal.approach.point().is_some();
     let radius_domain = Obj::StandardSet(if finite {
         StandardSet::RPos
     } else {
         StandardSet::R
     });
-    let (all, epsilon) = universal(epsilon, &Obj::StandardSet(StandardSet::RPos))?;
-    let mut scoped_source = source.clone();
-    scoped_source.push(domain);
-    fresh(epsilon, &scoped_source, &[])?;
-    let [ExistOrAndChainAtomicFact::ExistFact(exists)] = all.then_facts.as_slice() else {
-        return Err(invalid("EpsilonWitness"));
-    };
+    let mut scoped_source = vec![&goal.function, &goal.value, domain, epsilon];
+    scoped_source.extend(goal.approach.point());
     let delta = parameter(&exists.typed_parameters, &radius_domain)?;
-    fresh(delta, &scoped_source, &[epsilon.id])?;
+    fresh(delta, &scoped_source, &[])?;
     let [QuantifierFreeFact::AtomicFact(AtomicFact::SubsetFact(subset))] = exists.facts.as_slice()
     else {
         return Err(invalid("ControlInclusion"));
@@ -176,11 +211,7 @@ fn validate_clauses<'a>(
     if neighborhood.param_set.ir() != domain.ir() {
         return Err(invalid("NeighborhoodDomain"));
     }
-    fresh(
-        &neighborhood.param_binding,
-        &scoped_source,
-        &[epsilon.id, delta.id],
-    )?;
+    fresh(&neighborhood.param_binding, &scoped_source, &[delta.id])?;
     approach_conditions(
         &neighborhood.facts,
         &goal.approach,
@@ -202,14 +233,14 @@ fn validate_clauses<'a>(
     fresh(
         &ball.param_binding,
         &scoped_source,
-        &[epsilon.id, delta.id, neighborhood.param_binding.id],
+        &[delta.id, neighborhood.param_binding.id],
     )?;
     let [QuantifierFreeFact::AtomicFact(less)] = ball.facts.as_slice() else {
         return Err(invalid("BallCondition"));
     };
     let (distance, bound, strict) = source_order_oriented(less)?;
     if !strict
-        || bound.ir() != identifier(epsilon).ir()
+        || bound.ir() != epsilon.ir()
         || !distance_matches(
             distance,
             "both",
@@ -219,10 +250,10 @@ fn validate_clauses<'a>(
     {
         return Err(invalid("BallDistance"));
     }
-    Ok(domain)
+    Ok(())
 }
 
-fn approach_conditions(
+pub(super) fn approach_conditions(
     clauses: &[QuantifierFreeFact],
     approach: &LimitApproach,
     input: &Obj,
@@ -249,6 +280,56 @@ fn approach_conditions(
 }
 
 impl LitexToLeanCompiler {
+    pub(super) fn compile_function_limit_from_epsilon(
+        &self,
+        goal: &HasFunctionLimitFact,
+        wd: &FactWellDefinedProof,
+        requirements: &[Fact],
+        references: &[String],
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        let [real, _, _] = requirements else {
+            return Err(invalid("InvocationArity"));
+        };
+        if !matches!(real, Fact::AtomicFact(AtomicFact::InFact(f))
+            if f.element.ir() == goal.value.ir() && f.set == Obj::StandardSet(StandardSet::R))
+        {
+            return Err(invalid("InvocationValue"));
+        }
+        let domain = validate_clauses(goal, &requirements[1..])?;
+        let FactWellDefinedProof::AtomicExceptEquality(atomic) = wd else {
+            return Err(invalid("Formation"));
+        };
+        let PredicateDomainProof::FunctionLimit(formation) =
+            &atomic.detailed_ref().predicate_domain
+        else {
+            return Err(invalid("Formation"));
+        };
+        if formation.function_domain.domain.ir() != domain.ir() {
+            return Err(invalid("EffectiveDomain"));
+        }
+        let (view, equality) = self.compile_function_limit_domain_view(
+            &goal.function,
+            &formation.function_domain,
+            position,
+        )?;
+        let real_domain = self.compile_real_function_domain(
+            &goal.function,
+            &formation.function_domain,
+            position,
+        )?;
+        let function = self.compile_object_reference(&goal.function, position)?;
+        let value = self.compile_object_reference(&goal.value, position)?;
+        let law = if goal.approach.point().is_some() {
+            let (side, point) = finite_side(&goal.approach)?;
+            let point = self.compile_object_reference(point, position)?;
+            format!("Litex.finiteFunctionLimitOfForall .{side} {function} {point} {value} _domain _epsilon_real_domain {equality} {} {} {} {}", references[3], references[4], references[5], references[6])
+        } else {
+            let direction = infinite_direction(&goal.approach)?;
+            format!("Litex.infiniteFunctionLimitOfForall .{direction} {function} {value} _domain _epsilon_real_domain {equality} {} {} {}", references[3], references[4], references[5])
+        };
+        Ok(format!("(by\n{view}\n  have _epsilon_real_domain : Litex.RealFunctionValue M (Litex.denote {function}) := {real_domain}\n  exact {law}\n)"))
+    }
     pub(super) fn compile_function_limit_definition(
         &self,
         goal: &HasFunctionLimitFact,
@@ -321,22 +402,68 @@ impl LitexToLeanCompiler {
         // This is the exact domain view already certified by the function's
         // complete signature. It is not a source constructor hoisted out of a
         // quantified proof. Its raw denotation matches the recorded clauses.
-        let raw_domain =
-            self.compile_function_raw_expression_bound(&proof.domain, position, &HashMap::new())?;
-        let function = self.compile_object_reference(function_obj, position)?;
         let source = &proof.source;
         let signature = self.compile_complete_domain_signature(source, position)?;
         let member = self.compile_complete_domain_member(function_obj, source, position)?;
+        self.compile_verified_limit_domain_view(
+            function_obj,
+            &proof.domain,
+            &source.signature,
+            &signature,
+            &member,
+            position,
+        )
+    }
+
+    pub(super) fn compile_verified_limit_domain_view(
+        &self,
+        function_obj: &Obj,
+        domain: &Obj,
+        signature_source: &FnSet,
+        signature: &str,
+        member: &str,
+        position: &SourcePosition<'_>,
+    ) -> Result<(String, String), LeanCompileError> {
+        self.compile_named_limit_domain_view(
+            function_obj,
+            domain,
+            signature_source,
+            signature,
+            member,
+            "",
+            position,
+        )
+    }
+
+    pub(super) fn compile_named_limit_domain_view(
+        &self,
+        function_obj: &Obj,
+        domain: &Obj,
+        signature_source: &FnSet,
+        signature: &str,
+        member: &str,
+        name_prefix: &str,
+        position: &SourcePosition<'_>,
+    ) -> Result<(String, String), LeanCompileError> {
+        let raw_domain =
+            self.compile_function_raw_expression_bound(domain, position, &HashMap::new())?;
+        let function = self.compile_object_reference(function_obj, position)?;
         let base = self.compile_object_reference(
-            &source.signature.set_bound_parameters.groups[0].param_type,
+            &signature_source.set_bound_parameters.groups[0].param_type,
             position,
         )?;
-        let (domain_set, compare) = if source.signature.dom_facts.is_empty() {
+        let (domain_set, compare) = if signature_source.dom_facts.is_empty() {
             (format!("(Litex.isSet {base})"), format!("change M.mem x (Litex.denote {base}) ↔ M.mem x (Litex.SetSemantics.sepValue (Litex.denote {base}) (fun _ => True))\n    rw [Litex.SetSemantics.sep_members]\n    exact ⟨fun hx => ⟨hx, True.intro⟩, And.left⟩"))
         } else {
             (format!("(Litex.SetSemantics.sep_isSet (Litex.denote {base}) _ (Litex.isSet {base}))"), format!("change M.mem x (Litex.SetSemantics.sepValue (Litex.denote {base}) _) ↔ M.mem x (Litex.SetSemantics.sepValue (Litex.denote {base}) _)\n    rw [Litex.SetSemantics.sep_members, Litex.SetSemantics.sep_members]\n    exact ⟨fun ⟨hx, _, hg⟩ => ⟨hx, hg⟩, fun ⟨hx, hg⟩ => ⟨hx, hx, hg⟩⟩"))
         };
-        let prefix = format!("  let _signature := {signature}\n  have _member : Litex.In {function} (Litex.fnSet _signature) := {member}\n  let _source_domain := {raw_domain}\n  have _domain_set : M.isSet _source_domain := {domain_set}\n  have _domain_match : _source_domain = _signature.domain := by\n    apply Litex.SetSemantics.ext _ _ _domain_set _signature.domain_isSet\n    intro x\n    {compare}\n  let _domain := Litex.semanticObject _source_domain _domain_set");
-        Ok((prefix, "(_domain_match.trans (Litex.FunctionSemantics.domainValue_eq _signature.domain_isSet _member).symm)".into()))
+        let sig = format!("_{name_prefix}signature");
+        let mem = format!("_{name_prefix}member");
+        let raw = format!("_{name_prefix}source_domain");
+        let set = format!("_{name_prefix}domain_set");
+        let matched = format!("_{name_prefix}domain_match");
+        let object = format!("_{name_prefix}domain");
+        let prefix = format!("  let {sig} := {signature}\n  have {mem} : Litex.In {function} (Litex.fnSet {sig}) := {member}\n  let {raw} := {raw_domain}\n  have {set} : M.isSet {raw} := {domain_set}\n  have {matched} : {raw} = {sig}.domain := by\n    apply Litex.SetSemantics.ext _ _ {set} {sig}.domain_isSet\n    intro x\n    {compare}\n  let {object} := Litex.semanticObject {raw} {set}");
+        Ok((prefix, format!("({matched}.trans (Litex.FunctionSemantics.domainValue_eq {sig}.domain_isSet {mem}).symm)")))
     }
 }

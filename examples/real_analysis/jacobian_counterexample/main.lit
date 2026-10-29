@@ -16,210 +16,157 @@
 # Source: Gao, arXiv:2608.00222v1, Section 3.4 (the Alpoge map).
 # https://arxiv.org/html/2608.00222v1#S3.SS4
 #
-# Each numbered paragraph states the mathematical move implemented immediately below.
+# Four steps: define F and J; identify the Jacobian; compute its determinant;
+# exhibit a collision and rule out a left inverse.
 # Write F_i for coordinate i of F; x,y,z stand for p(1),p(2),p(3) in the comments.
 # The input is one vector in cart_n(R,3); 1...3 denotes the integer indices 1,2,3.
 
-# 1. Define the polynomial map F: R^3 -> R^3 whose two properties we will prove.
+# 1. Define F and the proposed matrix J. Row r lists the derivatives of F_r.
 have fn F(p cart_n(R,3)) cart_n(R,3) = ((1+p(1)*p(2))^3*p(3)+p(2)^2*(1+p(1)*p(2))*(4+3*p(1)*p(2)), p(2)+3*p(1)*(1+p(1)*p(2))^2*p(3)+3*p(1)*p(2)^2*(4+3*p(1)*p(2)), 2*p(1)-3*p(1)^2*p(2)-p(1)^3*p(3))
 
-# 2. Define the proposed derivative matrix; its three row cases cover 1...3.
-# Define the proposed derivative matrix J(p); the next nine claims justify its entries.
-template<p cart_n(R,3)>:
-    # For each row and column, return the proposed coordinate derivative.
-    have fn J(row 1...3,col 1...3) R by cases:
-        # Row 1: proposed partials of F_1 with respect to x, y and z.
-        case row=1: (3*(1+p(1)*p(2))^2*p(2)*p(3)+p(2)^3*(7+6*p(1)*p(2)),3*(1+p(1)*p(2))^2*p(1)*p(3)+2*p(2)*(1+p(1)*p(2))*(4+3*p(1)*p(2))+p(1)*p(2)^2*(7+6*p(1)*p(2)),(1+p(1)*p(2))^3)(col)
-        # Row 2: proposed partials of F_2 with respect to x, y and z.
-        case row=2: (3*(1+p(1)*p(2))*(1+3*p(1)*p(2))*p(3)+12*p(2)^2+18*p(1)*p(2)^3,1+6*p(1)^2*(1+p(1)*p(2))*p(3)+24*p(1)*p(2)+27*p(1)^2*p(2)^2,3*p(1)*(1+p(1)*p(2))^2)(col)
-        # Row 3: proposed partials of F_3 with respect to x, y and z.
-        case row=3: (2-6*p(1)*p(2)-3*p(1)^2*p(3),-3*p(1)^2,-p(1)^3)(col)
+# J_entry is the entry table; each row contains its x, y and z derivatives.
+have fn J_entry(p cart_n(R,3),row 1...3,col 1...3) R by cases:
+    # Row 1: proposed partials of F_1 with respect to x, y and z.
+    case row=1: (3*(1+p(1)*p(2))^2*p(2)*p(3)+p(2)^3*(7+6*p(1)*p(2)),3*(1+p(1)*p(2))^2*p(1)*p(3)+2*p(2)*(1+p(1)*p(2))*(4+3*p(1)*p(2))+p(1)*p(2)^2*(7+6*p(1)*p(2)),(1+p(1)*p(2))^3)(col)
+    # Row 2: proposed partials of F_2 with respect to x, y and z.
+    case row=2: (3*(1+p(1)*p(2))*(1+3*p(1)*p(2))*p(3)+12*p(2)^2+18*p(1)*p(2)^3,1+6*p(1)^2*(1+p(1)*p(2))*p(3)+24*p(1)*p(2)+27*p(1)^2*p(2)^2,3*p(1)*(1+p(1)*p(2))^2)(col)
+    # Row 3: proposed partials of F_3 with respect to x, y and z.
+    case row=3: (2-6*p(1)*p(2)-3*p(1)^2*p(3),-3*p(1)^2,-p(1)^3)(col)
 
-# 3.1. Differentiate F_1 with respect to x and identify the result with J_11.
+# J(p) is an ordinary 3x3 matrix, with entry J_entry(p,row,col).
+have fn J(p cart_n(R,3)) matrix(R,3,3) = fn(row 1...3,col 1...3) R {J_entry(p,row,col)}
+
+# 2. Prove that J(p) is the Jacobian of F, by checking its nine entries.
 claim:
     ? forall p cart_n(R,3):
-        $has_partial_derivative_at(fn(q cart_n(R,3)) R {F(q)(1)},p,3,1,\J<p>(1,1))
-    # Write J_11 as the polynomial that the differentiation will produce.
-    \J<p>(1,1)=3*(1+p(1)*p(2))^2*p(2)*p(3)+p(2)^3*(7+6*p(1)*p(2))
-    # Apply the sum, product and power rules to the explicit polynomial.
-    $has_partial_derivative_at(fn(q cart_n(R,3)) R {(1+q(1)*q(2))^3*q(3)+q(2)^2*(1+q(1)*q(2))*(4+3*q(1)*q(2))},p,3,1,\J<p>(1,1))
-    # The polynomial equals F_1 pointwise, so transfer its partial derivative to F_1.
-    release thm Calc::locality::real_partials_extensional(3,cart_n(R,3),cart_n(R,3),p,1,fn(q cart_n(R,3)) R {(1+q(1)*q(2))^3*q(3)+q(2)^2*(1+q(1)*q(2))*(4+3*q(1)*q(2))},fn(q cart_n(R,3)) R {F(q)(1)},\J<p>(1,1))
+        $has_jacobian_at(F,p,3,3,J(p))
+    # Local scalar formulas make the three coordinate calculations readable.
+    have fn f1(q cart_n(R,3)) R = (1+q(1)*q(2))^3*q(3)+q(2)^2*(1+q(1)*q(2))*(4+3*q(1)*q(2))
+    have fn f2(q cart_n(R,3)) R = q(2)+3*q(1)*(1+q(1)*q(2))^2*q(3)+3*q(1)*q(2)^2*(4+3*q(1)*q(2))
+    have fn f3(q cart_n(R,3)) R = 2*q(1)-3*q(1)^2*q(2)-q(1)^3*q(3)
 
-# 3.2. Differentiate F_1 with respect to y and identify the result with J_12.
-claim:
-    ? forall p cart_n(R,3):
-        $has_partial_derivative_at(fn(q cart_n(R,3)) R {F(q)(1)},p,3,2,\J<p>(1,2))
-    # Write J_12 as the polynomial that the differentiation will produce.
-    \J<p>(1,2)=3*(1+p(1)*p(2))^2*p(1)*p(3)+2*p(2)*(1+p(1)*p(2))*(4+3*p(1)*p(2))+p(1)*p(2)^2*(7+6*p(1)*p(2))
-    # Apply the sum, product and power rules to the explicit polynomial.
-    $has_partial_derivative_at(fn(q cart_n(R,3)) R {(1+q(1)*q(2))^3*q(3)+q(2)^2*(1+q(1)*q(2))*(4+3*q(1)*q(2))},p,3,2,\J<p>(1,2))
-    # The polynomial equals F_1 pointwise, so transfer its partial derivative to F_1.
-    release thm Calc::locality::real_partials_extensional(3,cart_n(R,3),cart_n(R,3),p,2,fn(q cart_n(R,3)) R {(1+q(1)*q(2))^3*q(3)+q(2)^2*(1+q(1)*q(2))*(4+3*q(1)*q(2))},fn(q cart_n(R,3)) R {F(q)(1)},\J<p>(1,2))
+    # Pointwise equality identifies functions; substitution preserves their partials.
+    thm partials_equal:
+        ? forall n N+,a,b fn(q cart_n(R,n)) R,point cart_n(R,n),axis 1...n,L R:
+            $has_partial_derivative_at(a,point,n,axis,L)
+            forall q cart_n(R,n):
+                a(q)=b(q)
+            =>:
+                $has_partial_derivative_at(b,point,n,axis,L)
+        by fn_extension a=b
+        $has_partial_derivative_at(b,point,n,axis,L)
 
-# 3.3. Differentiate F_1 with respect to z and identify the result with J_13.
-claim:
-    ? forall p cart_n(R,3):
-        $has_partial_derivative_at(fn(q cart_n(R,3)) R {F(q)(1)},p,3,3,\J<p>(1,3))
-    # Write J_13 as the polynomial that the differentiation will produce.
-    \J<p>(1,3)=(1+p(1)*p(2))^3
-    # Apply the sum, product and power rules to the explicit polynomial.
-    $has_partial_derivative_at(fn(q cart_n(R,3)) R {(1+q(1)*q(2))^3*q(3)+q(2)^2*(1+q(1)*q(2))*(4+3*q(1)*q(2))},p,3,3,\J<p>(1,3))
-    # The polynomial equals F_1 pointwise, so transfer its partial derivative to F_1.
-    release thm Calc::locality::real_partials_extensional(3,cart_n(R,3),cart_n(R,3),p,3,fn(q cart_n(R,3)) R {(1+q(1)*q(2))^3*q(3)+q(2)^2*(1+q(1)*q(2))*(4+3*q(1)*q(2))},fn(q cart_n(R,3)) R {F(q)(1)},\J<p>(1,3))
+    # Row 1: differentiate F_1 with respect to x, y and z.
+    J(p)(1,1)=J_entry(p,1,1)=3*(1+p(1)*p(2))^2*p(2)*p(3)+p(2)^3*(7+6*p(1)*p(2))
+    $has_partial_derivative_at(f1,p,3,1,J(p)(1,1))
+    release thm partials_equal(3,f1,fn(q cart_n(R,3)) R {F(q)(1)},p,1,J(p)(1,1))
+    J(p)(1,2)=J_entry(p,1,2)=3*(1+p(1)*p(2))^2*p(1)*p(3)+2*p(2)*(1+p(1)*p(2))*(4+3*p(1)*p(2))+p(1)*p(2)^2*(7+6*p(1)*p(2))
+    $has_partial_derivative_at(f1,p,3,2,J(p)(1,2))
+    release thm partials_equal(3,f1,fn(q cart_n(R,3)) R {F(q)(1)},p,2,J(p)(1,2))
+    J(p)(1,3)=J_entry(p,1,3)=(1+p(1)*p(2))^3
+    $has_partial_derivative_at(f1,p,3,3,J(p)(1,3))
+    release thm partials_equal(3,f1,fn(q cart_n(R,3)) R {F(q)(1)},p,3,J(p)(1,3))
 
-# 3.4. Differentiate F_2 with respect to x and identify the result with J_21.
-claim:
-    ? forall p cart_n(R,3):
-        $has_partial_derivative_at(fn(q cart_n(R,3)) R {F(q)(2)},p,3,1,\J<p>(2,1))
-    # Write J_21 as the polynomial that the differentiation will produce.
-    \J<p>(2,1)=3*(1+p(1)*p(2))*(1+3*p(1)*p(2))*p(3)+12*p(2)^2+18*p(1)*p(2)^3
-    # Apply the sum, product and power rules to the explicit polynomial.
-    $has_partial_derivative_at(fn(q cart_n(R,3)) R {q(2)+3*q(1)*(1+q(1)*q(2))^2*q(3)+3*q(1)*q(2)^2*(4+3*q(1)*q(2))},p,3,1,\J<p>(2,1))
-    # The polynomial equals F_2 pointwise, so transfer its partial derivative to F_2.
-    release thm Calc::locality::real_partials_extensional(3,cart_n(R,3),cart_n(R,3),p,1,fn(q cart_n(R,3)) R {q(2)+3*q(1)*(1+q(1)*q(2))^2*q(3)+3*q(1)*q(2)^2*(4+3*q(1)*q(2))},fn(q cart_n(R,3)) R {F(q)(2)},\J<p>(2,1))
+    # Row 2: differentiate F_2 with respect to x, y and z.
+    J(p)(2,1)=J_entry(p,2,1)=3*(1+p(1)*p(2))*(1+3*p(1)*p(2))*p(3)+12*p(2)^2+18*p(1)*p(2)^3
+    $has_partial_derivative_at(f2,p,3,1,J(p)(2,1))
+    release thm partials_equal(3,f2,fn(q cart_n(R,3)) R {F(q)(2)},p,1,J(p)(2,1))
+    J(p)(2,2)=J_entry(p,2,2)=1+6*p(1)^2*(1+p(1)*p(2))*p(3)+24*p(1)*p(2)+27*p(1)^2*p(2)^2
+    $has_partial_derivative_at(f2,p,3,2,J(p)(2,2))
+    release thm partials_equal(3,f2,fn(q cart_n(R,3)) R {F(q)(2)},p,2,J(p)(2,2))
+    J(p)(2,3)=J_entry(p,2,3)=3*p(1)*(1+p(1)*p(2))^2
+    $has_partial_derivative_at(f2,p,3,3,J(p)(2,3))
+    release thm partials_equal(3,f2,fn(q cart_n(R,3)) R {F(q)(2)},p,3,J(p)(2,3))
 
-# 3.5. Differentiate F_2 with respect to y and identify the result with J_22.
-claim:
-    ? forall p cart_n(R,3):
-        $has_partial_derivative_at(fn(q cart_n(R,3)) R {F(q)(2)},p,3,2,\J<p>(2,2))
-    # Write J_22 as the polynomial that the differentiation will produce.
-    \J<p>(2,2)=1+6*p(1)^2*(1+p(1)*p(2))*p(3)+24*p(1)*p(2)+27*p(1)^2*p(2)^2
-    # Apply the sum, product and power rules to the explicit polynomial.
-    $has_partial_derivative_at(fn(q cart_n(R,3)) R {q(2)+3*q(1)*(1+q(1)*q(2))^2*q(3)+3*q(1)*q(2)^2*(4+3*q(1)*q(2))},p,3,2,\J<p>(2,2))
-    # The polynomial equals F_2 pointwise, so transfer its partial derivative to F_2.
-    release thm Calc::locality::real_partials_extensional(3,cart_n(R,3),cart_n(R,3),p,2,fn(q cart_n(R,3)) R {q(2)+3*q(1)*(1+q(1)*q(2))^2*q(3)+3*q(1)*q(2)^2*(4+3*q(1)*q(2))},fn(q cart_n(R,3)) R {F(q)(2)},\J<p>(2,2))
+    # Row 3: differentiate F_3 with respect to x, y and z.
+    J(p)(3,1)=J_entry(p,3,1)=2-6*p(1)*p(2)-3*p(1)^2*p(3)
+    $has_partial_derivative_at(f3,p,3,1,J(p)(3,1))
+    release thm partials_equal(3,f3,fn(q cart_n(R,3)) R {F(q)(3)},p,1,J(p)(3,1))
+    J(p)(3,2)=J_entry(p,3,2)=-3*p(1)^2
+    $has_partial_derivative_at(f3,p,3,2,J(p)(3,2))
+    release thm partials_equal(3,f3,fn(q cart_n(R,3)) R {F(q)(3)},p,2,J(p)(3,2))
+    J(p)(3,3)=J_entry(p,3,3)=-p(1)^3
+    $has_partial_derivative_at(f3,p,3,3,J(p)(3,3))
+    release thm partials_equal(3,f3,fn(q cart_n(R,3)) R {F(q)(3)},p,3,J(p)(3,3))
 
-# 3.6. Differentiate F_2 with respect to z and identify the result with J_23.
-claim:
-    ? forall p cart_n(R,3):
-        $has_partial_derivative_at(fn(q cart_n(R,3)) R {F(q)(2)},p,3,3,\J<p>(2,3))
-    # Write J_23 as the polynomial that the differentiation will produce.
-    \J<p>(2,3)=3*p(1)*(1+p(1)*p(2))^2
-    # Apply the sum, product and power rules to the explicit polynomial.
-    $has_partial_derivative_at(fn(q cart_n(R,3)) R {q(2)+3*q(1)*(1+q(1)*q(2))^2*q(3)+3*q(1)*q(2)^2*(4+3*q(1)*q(2))},p,3,3,\J<p>(2,3))
-    # The polynomial equals F_2 pointwise, so transfer its partial derivative to F_2.
-    release thm Calc::locality::real_partials_extensional(3,cart_n(R,3),cart_n(R,3),p,3,fn(q cart_n(R,3)) R {q(2)+3*q(1)*(1+q(1)*q(2))^2*q(3)+3*q(1)*q(2)^2*(4+3*q(1)*q(2))},fn(q cart_n(R,3)) R {F(q)(2)},\J<p>(2,3))
-
-# 3.7. Differentiate F_3 with respect to x and identify the result with J_31.
-claim:
-    ? forall p cart_n(R,3):
-        $has_partial_derivative_at(fn(q cart_n(R,3)) R {F(q)(3)},p,3,1,\J<p>(3,1))
-    # Write J_31 as the polynomial that the differentiation will produce.
-    \J<p>(3,1)=2-6*p(1)*p(2)-3*p(1)^2*p(3)
-    # Apply the sum, product and power rules to the explicit polynomial.
-    $has_partial_derivative_at(fn(q cart_n(R,3)) R {2*q(1)-3*q(1)^2*q(2)-q(1)^3*q(3)},p,3,1,\J<p>(3,1))
-    # The polynomial equals F_3 pointwise, so transfer its partial derivative to F_3.
-    release thm Calc::locality::real_partials_extensional(3,cart_n(R,3),cart_n(R,3),p,1,fn(q cart_n(R,3)) R {2*q(1)-3*q(1)^2*q(2)-q(1)^3*q(3)},fn(q cart_n(R,3)) R {F(q)(3)},\J<p>(3,1))
-
-# 3.8. Differentiate F_3 with respect to y and identify the result with J_32.
-claim:
-    ? forall p cart_n(R,3):
-        $has_partial_derivative_at(fn(q cart_n(R,3)) R {F(q)(3)},p,3,2,\J<p>(3,2))
-    # Write J_32 as the polynomial that the differentiation will produce.
-    \J<p>(3,2)=-3*p(1)^2
-    # Apply the sum, product and power rules to the explicit polynomial.
-    $has_partial_derivative_at(fn(q cart_n(R,3)) R {2*q(1)-3*q(1)^2*q(2)-q(1)^3*q(3)},p,3,2,\J<p>(3,2))
-    # The polynomial equals F_3 pointwise, so transfer its partial derivative to F_3.
-    release thm Calc::locality::real_partials_extensional(3,cart_n(R,3),cart_n(R,3),p,2,fn(q cart_n(R,3)) R {2*q(1)-3*q(1)^2*q(2)-q(1)^3*q(3)},fn(q cart_n(R,3)) R {F(q)(3)},\J<p>(3,2))
-
-# 3.9. Differentiate F_3 with respect to z and identify the result with J_33.
-claim:
-    ? forall p cart_n(R,3):
-        $has_partial_derivative_at(fn(q cart_n(R,3)) R {F(q)(3)},p,3,3,\J<p>(3,3))
-    # Write J_33 as the polynomial that the differentiation will produce.
-    \J<p>(3,3)=-p(1)^3
-    # Apply the sum, product and power rules to the explicit polynomial.
-    $has_partial_derivative_at(fn(q cart_n(R,3)) R {2*q(1)-3*q(1)^2*q(2)-q(1)^3*q(3)},p,3,3,\J<p>(3,3))
-    # The polynomial equals F_3 pointwise, so transfer its partial derivative to F_3.
-    release thm Calc::locality::real_partials_extensional(3,cart_n(R,3),cart_n(R,3),p,3,fn(q cart_n(R,3)) R {2*q(1)-3*q(1)^2*q(2)-q(1)^3*q(3)},fn(q cart_n(R,3)) R {F(q)(3)},\J<p>(3,3))
-
-# 4. The nine proved partials are exactly the entries required by the Jacobian definition.
-claim:
-    ? forall p cart_n(R,3):
-        $has_jacobian_at(F,p,3,3,\J<p>)
-    # Enumerate the nine (row,col) pairs and check the corresponding proved candidate.
+    # The nine checked partials cover every matrix entry.
     by enumerate finite_set:
         ? forall row,col 1...3:
-            $has_partial_derivative_at(fn(q cart_n(R,3)) R {F(q)(row)},p,3,col,\J<p>(row,col))
-        # Syntax only: finite enumeration requires a nonempty body. The nine goals are checked
-        # from the preceding partial claims; this identity adds no mathematical hypothesis.
+            $has_partial_derivative_at(fn(q cart_n(R,3)) R {F(q)(row)},p,3,col,J(p)(row,col))
+        # Syntax only: enumeration requires a nonempty body; the partials are already proved.
         1=1
-    # By definition, a matrix with these coordinate partials is the Jacobian candidate.
-    release thm jacobian_at_from_definition(F,p,3,3,\J<p>)
+    release thm jacobian_at_from_definition(F,p,3,3,J(p))
 
-# 5.1. Compute det J(p) by a first-row Laplace expansion.
+# 3. Compute det J(p)=-2, then transfer it to the actual Jacobian.
+# Real matrices also belong to the complex carrier required by det.
+matrix(R,3,3) $subset matrix(C,3,3)
+
+# Expand det J(p) along the first row and collect the polynomial terms.
 claim:
     ? forall p cart_n(R,3):
-        det(\J<p>,3)=-2
+        det(J(p),3)=-2
     # Use the defining formula for entry (1,1) in the expansion.
-    \J<p>(1,1)=3*(1+p(1)*p(2))^2*p(2)*p(3)+p(2)^3*(7+6*p(1)*p(2))
+    J(p)(1,1)=J_entry(p,1,1)=3*(1+p(1)*p(2))^2*p(2)*p(3)+p(2)^3*(7+6*p(1)*p(2))
     # Use the defining formula for entry (1,2) in the expansion.
-    \J<p>(1,2)=3*(1+p(1)*p(2))^2*p(1)*p(3)+2*p(2)*(1+p(1)*p(2))*(4+3*p(1)*p(2))+p(1)*p(2)^2*(7+6*p(1)*p(2))
+    J(p)(1,2)=J_entry(p,1,2)=3*(1+p(1)*p(2))^2*p(1)*p(3)+2*p(2)*(1+p(1)*p(2))*(4+3*p(1)*p(2))+p(1)*p(2)^2*(7+6*p(1)*p(2))
     # Use the defining formula for entry (1,3) in the expansion.
-    \J<p>(1,3)=(1+p(1)*p(2))^3
+    J(p)(1,3)=J_entry(p,1,3)=(1+p(1)*p(2))^3
     # Use the defining formula for entry (2,1) in the expansion.
-    \J<p>(2,1)=3*(1+p(1)*p(2))*(1+3*p(1)*p(2))*p(3)+12*p(2)^2+18*p(1)*p(2)^3
+    J(p)(2,1)=J_entry(p,2,1)=3*(1+p(1)*p(2))*(1+3*p(1)*p(2))*p(3)+12*p(2)^2+18*p(1)*p(2)^3
     # Use the defining formula for entry (2,2) in the expansion.
-    \J<p>(2,2)=1+6*p(1)^2*(1+p(1)*p(2))*p(3)+24*p(1)*p(2)+27*p(1)^2*p(2)^2
+    J(p)(2,2)=J_entry(p,2,2)=1+6*p(1)^2*(1+p(1)*p(2))*p(3)+24*p(1)*p(2)+27*p(1)^2*p(2)^2
     # Use the defining formula for entry (2,3) in the expansion.
-    \J<p>(2,3)=3*p(1)*(1+p(1)*p(2))^2
+    J(p)(2,3)=J_entry(p,2,3)=3*p(1)*(1+p(1)*p(2))^2
     # Use the defining formula for entry (3,1) in the expansion.
-    \J<p>(3,1)=2-6*p(1)*p(2)-3*p(1)^2*p(3)
+    J(p)(3,1)=J_entry(p,3,1)=2-6*p(1)*p(2)-3*p(1)^2*p(3)
     # Use the defining formula for entry (3,2) in the expansion.
-    \J<p>(3,2)=-3*p(1)^2
+    J(p)(3,2)=J_entry(p,3,2)=-3*p(1)^2
     # Use the defining formula for entry (3,3) in the expansion.
-    \J<p>(3,3)=-p(1)^3
+    J(p)(3,3)=J_entry(p,3,3)=-p(1)^3
     # Expand the determinant along its first row.
-    det(\J<p>,3)=\J<p>(1,1)*(\J<p>(2,2)*\J<p>(3,3)-\J<p>(2,3)*\J<p>(3,2))-\J<p>(1,2)*(\J<p>(2,1)*\J<p>(3,3)-\J<p>(2,3)*\J<p>(3,1))+\J<p>(1,3)*(\J<p>(2,1)*\J<p>(3,2)-\J<p>(2,2)*\J<p>(3,1))
+    det(J(p),3)=J(p)(1,1)*(J(p)(2,2)*J(p)(3,3)-J(p)(2,3)*J(p)(3,2))-J(p)(1,2)*(J(p)(2,1)*J(p)(3,3)-J(p)(2,3)*J(p)(3,1))+J(p)(1,3)*(J(p)(2,1)*J(p)(3,2)-J(p)(2,2)*J(p)(3,1))
     # Evaluate the 2x2 minor obtained by deleting row 1 and column 1.
-    \J<p>(2,2)*\J<p>(3,3)-\J<p>(2,3)*\J<p>(3,2)=(1+6*p(1)^2*(1+p(1)*p(2))*p(3)+24*p(1)*p(2)+27*p(1)^2*p(2)^2)*(-p(1)^3)-(3*p(1)*(1+p(1)*p(2))^2)*(-3*p(1)^2)
+    J(p)(2,2)*J(p)(3,3)-J(p)(2,3)*J(p)(3,2)=(1+6*p(1)^2*(1+p(1)*p(2))*p(3)+24*p(1)*p(2)+27*p(1)^2*p(2)^2)*(-p(1)^3)-(3*p(1)*(1+p(1)*p(2))^2)*(-3*p(1)^2)
     # Evaluate the 2x2 minor obtained by deleting row 1 and column 2.
-    \J<p>(2,1)*\J<p>(3,3)-\J<p>(2,3)*\J<p>(3,1)=(3*(1+p(1)*p(2))*(1+3*p(1)*p(2))*p(3)+12*p(2)^2+18*p(1)*p(2)^3)*(-p(1)^3)-(3*p(1)*(1+p(1)*p(2))^2)*(2-6*p(1)*p(2)-3*p(1)^2*p(3))
+    J(p)(2,1)*J(p)(3,3)-J(p)(2,3)*J(p)(3,1)=(3*(1+p(1)*p(2))*(1+3*p(1)*p(2))*p(3)+12*p(2)^2+18*p(1)*p(2)^3)*(-p(1)^3)-(3*p(1)*(1+p(1)*p(2))^2)*(2-6*p(1)*p(2)-3*p(1)^2*p(3))
     # Evaluate the 2x2 minor obtained by deleting row 1 and column 3.
-    \J<p>(2,1)*\J<p>(3,2)-\J<p>(2,2)*\J<p>(3,1)=(3*(1+p(1)*p(2))*(1+3*p(1)*p(2))*p(3)+12*p(2)^2+18*p(1)*p(2)^3)*(-3*p(1)^2)-(1+6*p(1)^2*(1+p(1)*p(2))*p(3)+24*p(1)*p(2)+27*p(1)^2*p(2)^2)*(2-6*p(1)*p(2)-3*p(1)^2*p(3))
+    J(p)(2,1)*J(p)(3,2)-J(p)(2,2)*J(p)(3,1)=(3*(1+p(1)*p(2))*(1+3*p(1)*p(2))*p(3)+12*p(2)^2+18*p(1)*p(2)^3)*(-3*p(1)^2)-(1+6*p(1)^2*(1+p(1)*p(2))*p(3)+24*p(1)*p(2)+27*p(1)^2*p(2)^2)*(2-6*p(1)*p(2)-3*p(1)^2*p(3))
     # Multiply first-row entry J_11 by its minor; the Laplace sum supplies the sign.
-    \J<p>(1,1)*(\J<p>(2,2)*\J<p>(3,3)-\J<p>(2,3)*\J<p>(3,2))=(3*(1+p(1)*p(2))^2*p(2)*p(3)+p(2)^3*(7+6*p(1)*p(2)))*((1+6*p(1)^2*(1+p(1)*p(2))*p(3)+24*p(1)*p(2)+27*p(1)^2*p(2)^2)*(-p(1)^3)-(3*p(1)*(1+p(1)*p(2))^2)*(-3*p(1)^2))
+    J(p)(1,1)*(J(p)(2,2)*J(p)(3,3)-J(p)(2,3)*J(p)(3,2))=(3*(1+p(1)*p(2))^2*p(2)*p(3)+p(2)^3*(7+6*p(1)*p(2)))*((1+6*p(1)^2*(1+p(1)*p(2))*p(3)+24*p(1)*p(2)+27*p(1)^2*p(2)^2)*(-p(1)^3)-(3*p(1)*(1+p(1)*p(2))^2)*(-3*p(1)^2))
     # Multiply first-row entry J_12 by its minor; the Laplace sum supplies the sign.
-    \J<p>(1,2)*(\J<p>(2,1)*\J<p>(3,3)-\J<p>(2,3)*\J<p>(3,1))=(3*(1+p(1)*p(2))^2*p(1)*p(3)+2*p(2)*(1+p(1)*p(2))*(4+3*p(1)*p(2))+p(1)*p(2)^2*(7+6*p(1)*p(2)))*((3*(1+p(1)*p(2))*(1+3*p(1)*p(2))*p(3)+12*p(2)^2+18*p(1)*p(2)^3)*(-p(1)^3)-(3*p(1)*(1+p(1)*p(2))^2)*(2-6*p(1)*p(2)-3*p(1)^2*p(3)))
+    J(p)(1,2)*(J(p)(2,1)*J(p)(3,3)-J(p)(2,3)*J(p)(3,1))=(3*(1+p(1)*p(2))^2*p(1)*p(3)+2*p(2)*(1+p(1)*p(2))*(4+3*p(1)*p(2))+p(1)*p(2)^2*(7+6*p(1)*p(2)))*((3*(1+p(1)*p(2))*(1+3*p(1)*p(2))*p(3)+12*p(2)^2+18*p(1)*p(2)^3)*(-p(1)^3)-(3*p(1)*(1+p(1)*p(2))^2)*(2-6*p(1)*p(2)-3*p(1)^2*p(3)))
     # Multiply first-row entry J_13 by its minor; the Laplace sum supplies the sign.
-    \J<p>(1,3)*(\J<p>(2,1)*\J<p>(3,2)-\J<p>(2,2)*\J<p>(3,1))=((1+p(1)*p(2))^3)*((3*(1+p(1)*p(2))*(1+3*p(1)*p(2))*p(3)+12*p(2)^2+18*p(1)*p(2)^3)*(-3*p(1)^2)-(1+6*p(1)^2*(1+p(1)*p(2))*p(3)+24*p(1)*p(2)+27*p(1)^2*p(2)^2)*(2-6*p(1)*p(2)-3*p(1)^2*p(3)))
+    J(p)(1,3)*(J(p)(2,1)*J(p)(3,2)-J(p)(2,2)*J(p)(3,1))=((1+p(1)*p(2))^3)*((3*(1+p(1)*p(2))*(1+3*p(1)*p(2))*p(3)+12*p(2)^2+18*p(1)*p(2)^3)*(-3*p(1)^2)-(1+6*p(1)^2*(1+p(1)*p(2))*p(3)+24*p(1)*p(2)+27*p(1)^2*p(2)^2)*(2-6*p(1)*p(2)-3*p(1)^2*p(3)))
     # Substitute the three computed first-row terms into the Laplace sum.
-    \J<p>(1,1)*(\J<p>(2,2)*\J<p>(3,3)-\J<p>(2,3)*\J<p>(3,2))-\J<p>(1,2)*(\J<p>(2,1)*\J<p>(3,3)-\J<p>(2,3)*\J<p>(3,1))+\J<p>(1,3)*(\J<p>(2,1)*\J<p>(3,2)-\J<p>(2,2)*\J<p>(3,1))=(3*(1+p(1)*p(2))^2*p(2)*p(3)+p(2)^3*(7+6*p(1)*p(2)))*((1+6*p(1)^2*(1+p(1)*p(2))*p(3)+24*p(1)*p(2)+27*p(1)^2*p(2)^2)*(-p(1)^3)-(3*p(1)*(1+p(1)*p(2))^2)*(-3*p(1)^2))-(3*(1+p(1)*p(2))^2*p(1)*p(3)+2*p(2)*(1+p(1)*p(2))*(4+3*p(1)*p(2))+p(1)*p(2)^2*(7+6*p(1)*p(2)))*((3*(1+p(1)*p(2))*(1+3*p(1)*p(2))*p(3)+12*p(2)^2+18*p(1)*p(2)^3)*(-p(1)^3)-(3*p(1)*(1+p(1)*p(2))^2)*(2-6*p(1)*p(2)-3*p(1)^2*p(3)))+((1+p(1)*p(2))^3)*((3*(1+p(1)*p(2))*(1+3*p(1)*p(2))*p(3)+12*p(2)^2+18*p(1)*p(2)^3)*(-3*p(1)^2)-(1+6*p(1)^2*(1+p(1)*p(2))*p(3)+24*p(1)*p(2)+27*p(1)^2*p(2)^2)*(2-6*p(1)*p(2)-3*p(1)^2*p(3)))
+    J(p)(1,1)*(J(p)(2,2)*J(p)(3,3)-J(p)(2,3)*J(p)(3,2))-J(p)(1,2)*(J(p)(2,1)*J(p)(3,3)-J(p)(2,3)*J(p)(3,1))+J(p)(1,3)*(J(p)(2,1)*J(p)(3,2)-J(p)(2,2)*J(p)(3,1))=(3*(1+p(1)*p(2))^2*p(2)*p(3)+p(2)^3*(7+6*p(1)*p(2)))*((1+6*p(1)^2*(1+p(1)*p(2))*p(3)+24*p(1)*p(2)+27*p(1)^2*p(2)^2)*(-p(1)^3)-(3*p(1)*(1+p(1)*p(2))^2)*(-3*p(1)^2))-(3*(1+p(1)*p(2))^2*p(1)*p(3)+2*p(2)*(1+p(1)*p(2))*(4+3*p(1)*p(2))+p(1)*p(2)^2*(7+6*p(1)*p(2)))*((3*(1+p(1)*p(2))*(1+3*p(1)*p(2))*p(3)+12*p(2)^2+18*p(1)*p(2)^3)*(-p(1)^3)-(3*p(1)*(1+p(1)*p(2))^2)*(2-6*p(1)*p(2)-3*p(1)^2*p(3)))+((1+p(1)*p(2))^3)*((3*(1+p(1)*p(2))*(1+3*p(1)*p(2))*p(3)+12*p(2)^2+18*p(1)*p(2)^3)*(-3*p(1)^2)-(1+6*p(1)^2*(1+p(1)*p(2))*p(3)+24*p(1)*p(2)+27*p(1)^2*p(2)^2)*(2-6*p(1)*p(2)-3*p(1)^2*p(3)))
     # Expand products and collect monomials: all nonconstant terms cancel.
     (3*(1+p(1)*p(2))^2*p(2)*p(3)+p(2)^3*(7+6*p(1)*p(2)))*((1+6*p(1)^2*(1+p(1)*p(2))*p(3)+24*p(1)*p(2)+27*p(1)^2*p(2)^2)*(-p(1)^3)-(3*p(1)*(1+p(1)*p(2))^2)*(-3*p(1)^2))-(3*(1+p(1)*p(2))^2*p(1)*p(3)+2*p(2)*(1+p(1)*p(2))*(4+3*p(1)*p(2))+p(1)*p(2)^2*(7+6*p(1)*p(2)))*((3*(1+p(1)*p(2))*(1+3*p(1)*p(2))*p(3)+12*p(2)^2+18*p(1)*p(2)^3)*(-p(1)^3)-(3*p(1)*(1+p(1)*p(2))^2)*(2-6*p(1)*p(2)-3*p(1)^2*p(3)))+((1+p(1)*p(2))^3)*((3*(1+p(1)*p(2))*(1+3*p(1)*p(2))*p(3)+12*p(2)^2+18*p(1)*p(2)^3)*(-3*p(1)^2)-(1+6*p(1)^2*(1+p(1)*p(2))*p(3)+24*p(1)*p(2)+27*p(1)^2*p(2)^2)*(2-6*p(1)*p(2)-3*p(1)^2*p(3)))=-2
 
-# 5.2. Every real 3x3 matrix also belongs to the complex-matrix carrier used by det.
-matrix(R,3,3) $subset matrix(C,3,3)
-
 # Apply the determinant calculation to the actual selected Jacobian, for an arbitrary p.
 forall p cart_n(R,3):
-    # Use the analytic Jacobian certificate from step 4 before selecting its value.
-    $has_jacobian_at(F,p,3,3,\J<p>)
+    # Use the analytic Jacobian certificate from the coordinate proof before selecting its value.
+    $has_jacobian_at(F,p,3,3,J(p))
     # The selected Jacobian is a real 3x3 matrix.
     jacobian(F,p,3,3) $in matrix(R,3,3)
     # Use the carrier inclusion above to meet the domain of det.
     jacobian(F,p,3,3) $in matrix(C,3,3)
     # The certified candidate identifies the selected Jacobian with J(p).
-    jacobian(F,p,3,3)=\J<p>
-    # Equal matrices have equal determinants; use det J(p)=-2 from step 5.1.
-    det(jacobian(F,p,3,3),3)=det(\J<p>,3)=-2
+    jacobian(F,p,3,3)=J(p)
+    # Equal matrices have equal determinants; use det J(p)=-2 from the calculation above.
+    det(jacobian(F,p,3,3),3)=det(J(p),3)=-2
 
-# 6.1. Compute F at (0,0,-1/4) exactly from its polynomial definition.
-claim:
-    ? F((0,0,-1/4))=(-1/4,0,0)
-    # Substitute the input and evaluate all three polynomial components.
-    eval F((0,0,-1/4))
 
-# 6.2. Compute F at (1,-3/2,13/2); it gives the same image.
-claim:
-    ? F((1,-3/2,13/2))=(-1/4,0,0)
-    # Exact rational evaluation gives the second witness of noninjectivity.
-    eval F((1,-3/2,13/2))
-
-# 6.3. The two equal images contradict injectivity, since the inputs have first coordinates 0 and 1.
+# 4. Two distinct inputs have the same image, so F is not injective.
 by contra:
     ? not $injective(cart_n(R,3),cart_n(R,3),F)
+    # Evaluate F at the first input.
+    claim:
+        ? F((0,0,-1/4))=(-1/4,0,0)
+        eval F((0,0,-1/4))
+    # The second input has the same image, but its first coordinate is 1 rather than 0.
+    claim:
+        ? F((1,-3/2,13/2))=(-1/4,0,0)
+        eval F((1,-3/2,13/2))
     # The two values computed above are equal.
     F((0,0,-1/4)) = (-1/4,0,0) = F((1,-3/2,13/2))
     # Injectivity would therefore identify the two inputs.
@@ -229,14 +176,14 @@ by contra:
     # The equality 0=1 is impossible.
     impossible 0 = 1
 
-# 7. A left inverse is a function G satisfying G(F(p))=p for every p.
+# A left inverse is a function G satisfying G(F(p))=p for every p.
 prop is_left_inverse(G fn(p cart_n(R,3)) cart_n(R,3)):
     # This is a relation on a supplied function, not a chosen inverse object.
     forall p cart_n(R,3):
         # The left-inverse law returns the original input after applying F and then G.
         G(F(p)) = p
 
-# No such left inverse can exist: it would imply the injectivity ruled out in step 6.3.
+# No such left inverse can exist: it would imply the injectivity ruled out in the collision argument.
 claim:
     ? forall G fn(p cart_n(R,3)) cart_n(R,3):
         not $is_left_inverse(G)

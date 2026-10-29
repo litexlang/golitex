@@ -2,8 +2,8 @@
 
 This strict source library develops open-set spaces, continuous maps,
 homeomorphisms, connectedness, separation axioms and compactness over arbitrary
-carriers, including empty ones. It exports one structure, four value/function
-families, fourteen propositions and 47 named source theorems in 66 statements.
+carriers, including empty ones. It exports one structure, eight value/function
+families, seventeen predicates and 73 named source theorems in 102 statements.
 There are no user trust blocks, user axioms, new kernel objects or reserved
 theorems.
 
@@ -79,8 +79,9 @@ closed-preimage criteria; maps from discrete and to indiscrete spaces;
 homeomorphism identity/inverse/composition/bijectivity; connectedness and
 clopen characterization; connected surjective images and indiscrete spaces.
 [Their generic callers](../../examples/topology/foundations/contracts/main.lit)
-retain the original signatures. A continuous bijection still requires inverse
-continuity for homeomorphism.
+retain the original signatures. Inverse continuity belongs to the
+homeomorphism definition; the compact-to-Hausdorff theorem below now derives
+it under its stated hypotheses.
 
 ## Separation and compactness
 
@@ -104,7 +105,7 @@ compact and not Hausdorff; the latter is not compact, proved using a singleton
 cover indexed by all of R. This explicitly exercises infinite index sets.
 A compact image inside the noncompact target is paired with proved nonsurjectivity.
 
-| New theorem | Premises/result |
+| Separation/compactness theorem | Premises/result |
 | --- | --- |
 | `Hausdorff_implies_T1`, `T1_implies_T0`, `Hausdorff_implies_T0` | The separation implication chain |
 | `T1_implies_closed_singletons`, `Hausdorff_implies_closed_singletons` | Closedness of each supplied actual point |
@@ -130,20 +131,119 @@ the finite set is the selected subcover's index set. A compact subset need not
 be closed without Hausdorff separation. Surjectivity is essential for a whole-
 target conclusion, while injectivity is not required for compact images.
 
-Subspace/product topology, metric/path foundations, closed compact-subset
-theorems in Hausdorff spaces, and the full compact-Hausdorff continuous-
-bijection theorem remain future work. The original lecture is unchanged.
+The additional source below supplies subspace topology, closed compact-subset
+theorems in Hausdorff spaces and the full compact-to-Hausdorff continuous-
+bijection theorem. Product and quotient topology, generated metric topology
+and path foundations remain future work. The original lecture is unchanged.
+
+## Compact sets, closed maps and continuous inverses
+
+The new proofs retain arbitrary indexed covers, arbitrary actual carriers and
+empty spaces. They do not assume a finite cover index set or a nonempty space.
+
+| Theorem | Exact main result |
+| --- | --- |
+| `closed_intersection_of_compact_is_compact(A,space,K,F)` | Compact K and ambient-closed F imply compact `intersect(K,F)` |
+| `closed_subset_of_compact_is_compact(A,space,K,F)` | Compact K, closed F and F subset K imply compact F |
+| `compact_subset_of_Hausdorff_is_closed(A,space,K)` | Hausdorff space and compact K imply closed K |
+| `compact_to_Hausdorff_continuous_map_is_closed(A,B,source,target,f)` | A continuous map from compact source to Hausdorff target is a closed map; no injection or surjection premise |
+| `inverse_preimage_equals_forward_image(X,Y,f,g,F)` | Mutually inverse f,g give `preimage_set(g,F)=fn_range(restricted f to F)` |
+| `inverse_of_closed_bijection_is_continuous(A,B,source,target,f,g)` | A closed map with supplied two-sided inverse g has continuous g |
+| `compact_Hausdorff_inverse_is_homeomorphism(A,B,source,target,f,g)` | Compact source, Hausdorff target, continuous f and the two inverse equations imply homeomorphism; inverse continuity is proved |
+| `compact_Hausdorff_bijection_has_continuous_inverse(A,B,source,target,f)` | Compact source, Hausdorff target, continuous bijective f give an actual function g with the homeomorphism relation |
+
+`is_closed_map` requires every closed subset of the source carrier to have
+closed image, formed using the existing actual restriction function and its
+range. The inverse-existence theorem proves unique preimages, constructs the
+inverse with `have fn ... by exist!`, proves both inverse equations and then
+its continuity. It does not take a continuous inverse as a premise.
+
+After the four hypotheses are established, the exported invocation is:
+
+```litex
+release thm top::main::compact_Hausdorff_bijection_has_continuous_inverse(A,B,source,target,f)
+```
+
+The [full imported consumer](validation/main.lit) constructs the discrete
+three-point space and the cycle 0->1->2->0, proves its bijectivity and continuity,
+then obtains the theorem's inverse. Its values are 1->0, 2->1, 0->2 and its
+continuity is verified. The consumer also checks continuous-inverse existence for the empty-to-empty
+map.
+
+Supporting results include `union_of_two_opens_is_open` and
+`open_neighborhood_criterion`. The latter proves a supplied subset open when
+each of its points has an open neighborhood contained in that subset.
+
+## Relative intersections and subspaces
+
+`is_in_space_intersection(A,space,Index,cover,J,x)` means x lies in every
+`cover(index)` for index in J. The cover is a function from arbitrary Index to
+space.opens, and J is a subset of Index. The value
+`\space_indexed_intersection<A,space,Index,cover,J>` is the corresponding
+subset of space.carrier. Its construction permits arbitrary J. If J is empty,
+the value is space.carrier; `finite_space_intersection_is_open` requires J
+finite and proves the value open. The empty, insertion and equal-index-set
+identities are exported as `space_indexed_intersection_empty`,
+`space_indexed_intersection_insert` and
+`space_indexed_intersection_equal_indices`. This relative construction does
+not assign a universal-set value to native `family_intersect({})`.
+
+For K a subset of the actual space carrier and U a subset of K,
+`is_relative_open(A,space,K,U)` means U is `intersect(K,V)` for an actual
+ambient open V. Its associated constructions are:
+
+| Interface | Actual construction |
+| --- | --- |
+| `\subspace_open_family<A,space,K>` | All relatively open subsets of K |
+| `\subspace_space<A,space,K>` | `(K,subspace_open_family)`, of type `TopologicalSpace<K>` and with actual carrier K |
+| `\subspace_inclusion<A,space,K>` | The function on the constructed carrier with value x in space.carrier |
+
+`relative_empty_is_open`, `relative_carrier_is_open` and
+`relative_intersection_is_open` establish the elementary trace laws.
+`intersect_traces` is the underlying three-set intersection identity.
+`subspace_open_family_closed_under_union` handles arbitrary unions;
+`subspace_topology_laws` certifies the actual tuple as a topology. The proof
+uses all valid ambient extensions, without asking for a function choosing one
+extension per relative open.
+
+| Theorem | Result |
+| --- | --- |
+| `subspace_inclusion_preimage(A,space,K,U)` | Inclusion preimage of U is `intersect(K,U)` |
+| `subspace_inclusion_is_continuous(A,space,K)` | The constructed inclusion is continuous |
+| `continuous_map_restricts_to_subspace(A,B,space,target,K,f)` | Continuous f remains continuous after composition with inclusion |
+| `subspace_of_Hausdorff_is_Hausdorff(A,space,K)` | Hausdorff separation passes to the constructed subspace |
+| `compact_subset_gives_compact_subspace(A,space,K)` | Ambient compactness of K makes its subspace compact |
+| `compact_subspace_gives_compact_subset(A,space,K)` | Compactness of that subspace gives ambient compactness of K |
+
+The last two statements establish the usual compact-subspace equivalence.
+They keep arbitrary cover indices and include empty K. The restriction theorem
+uses native `compose(f,inclusion)` with the complete constructed domain; it
+does not assert a smaller domain for the original f. Constructor memberships,
+projection equations and point-carrier facts are proved explicitly in the
+generic imported consumer before nested constructed-space goals are checked.
 
 ## Verification
 
 ```bash
-target/release/litex -strict -lang en -f std/topology/main.lit
-python3 examples/topology/foundations/check.py
-python3 examples/topology/separation_compactness/check.py
+python3 std/topology/validation/check.py
 ```
 
-The projects check independent positive callers/contracts/README excerpts,
-22 original and 28 new final-statement rejections, installed archive/shared-data
-discovery and std/WiX file/component references. No global Cargo/release or
-Lean certification is implied. math_collections.md records the mathematical
-dependency graph.
+The source-owned checker passes 102 strict source statements, 123 imported
+consumer statements and 12 final-only refusals in a fresh persistent strict
+Session. Every new theorem has a full-domain generic caller. Concrete cases
+include the three-cycle and its obtained inverse; a proper and an empty
+subspace; both compactness directions; an infinite cover index set with empty
+or finite selected indices; a valid infinite relative-intersection object;
+an infinite compact indiscrete space with a compact singleton proved not
+closed; and the empty-space inverse theorem.
+
+The refusals cover each missing hypothesis of the inverse-existence theorem,
+missing inverse equations, missing closedness, missing Hausdorff separation,
+an outside subspace carrier or inclusion argument, missing finite-subfamily
+evidence, an incorrect empty relative-intersection value, and an attempted
+retyping of a larger-domain map. Every refusal requires an accepted prefix.
+
+Existing external example projects under `examples/topology/` retain the older
+foundation and separation/compactness demonstrations. This std-only batch
+adds no installer, Lean or repository-wide release certification. See
+[the mathematical spine](math_collections.md) for the dependencies.

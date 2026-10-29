@@ -80,8 +80,8 @@ theorem h_78 : ∃ (_value_i3 : Litex.Obj (M := M) M.Value), ∃ (h_83 : Litex.I
                               exact Eq.mpr (congrArg₂ (fun _litex_r _litex_s : ℝ => _litex_r < _litex_s) _litex_right_value _litex_left_value) (by norm_num))))
                           )
                       )
-                    have h_206 : Litex.Lt (Litex.number (M := M) (0 : ℂ)) _value_i4 := h_82
-                    exact ⟨_value_i5, h_120, h_206⟩
+                    have h_266 : Litex.Lt (Litex.number (M := M) (0 : ℂ)) _value_i4 := h_82
+                    exact ⟨_value_i5, h_120, h_266⟩
                 )
             )
           exact (by
@@ -93,20 +93,20 @@ theorem h_78 : ∃ (_value_i3 : Litex.Obj (M := M) M.Value), ∃ (h_83 : Litex.I
       )
   )
 
-theorem h_242 : ∃ (_value_i7 : Litex.Obj (M := M) M.Value), ∃ (h_244 : Litex.In _value_i7 (Litex.R (M := M))), ∃ (_value_i8 : Litex.Obj (M := M) M.Value), ∃ (h_245 : Litex.In _value_i8 (Litex.R (M := M))), ∃ (h_240 : ¬ Litex.Same _value_i8 (Litex.number (M := M) (0 : ℂ))), Litex.Same _value_i7 (Litex.div (Litex.number (M := M) (1 : ℂ)) _value_i8 (Litex.numberInC (M := M) (1 : ℂ)) (M.real_subset_complex _ h_245) h_240) :=
+theorem h_302 : ∃ (_value_i7 : Litex.Obj (M := M) M.Value), ∃ (h_304 : Litex.In _value_i7 (Litex.R (M := M))), ∃ (_value_i8 : Litex.Obj (M := M) M.Value), ∃ (h_305 : Litex.In _value_i8 (Litex.R (M := M))), ∃ (h_300 : ¬ Litex.Same _value_i8 (Litex.number (M := M) (0 : ℂ))), Litex.Same _value_i7 (Litex.div (Litex.number (M := M) (1 : ℂ)) _value_i8 (Litex.numberInC (M := M) (1 : ℂ)) (M.real_subset_complex _ h_305) h_300) :=
   (by
     litex_complete =>
       exact (
         by
           let _value_i7 : Litex.Obj (M := M) M.Value := Litex.semanticObject (Litex.denote (Litex.number (M := M) (1 : ℂ))) (Litex.isSet (Litex.number (M := M) (1 : ℂ)))
-          have h_281 : Litex.In _value_i7 (Litex.R (M := M)) := (Litex.NativeBridge.numberInROfEq (M := M) (1 : ℂ) (1 : ℝ) (by norm_num))
+          have h_341 : Litex.In _value_i7 (Litex.R (M := M)) := (Litex.NativeBridge.numberInROfEq (M := M) (1 : ℂ) (1 : ℝ) (by norm_num))
           let _value_i8 : Litex.Obj (M := M) M.Value := Litex.semanticObject (Litex.denote (Litex.number (M := M) (1 : ℂ))) (Litex.isSet (Litex.number (M := M) (1 : ℂ)))
-          have h_282 : Litex.In _value_i8 (Litex.R (M := M)) := (Litex.NativeBridge.numberInROfEq (M := M) (1 : ℂ) (1 : ℝ) (by norm_num))
-          have h_283 : Litex.Same _value_i7 (Litex.number (M := M) (1 : ℂ)) := rfl
-          have h_284 : Litex.Same _value_i8 (Litex.number (M := M) (1 : ℂ)) := rfl
+          have h_342 : Litex.In _value_i8 (Litex.R (M := M)) := (Litex.NativeBridge.numberInROfEq (M := M) (1 : ℂ) (1 : ℝ) (by norm_num))
+          have h_343 : Litex.Same _value_i7 (Litex.number (M := M) (1 : ℂ)) := rfl
+          have h_344 : Litex.Same _value_i8 (Litex.number (M := M) (1 : ℂ)) := rfl
           let _object_w19 := (Litex.div (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (1 : ℂ)) (Litex.numberInC (M := M) (1 : ℂ)) (Litex.numberInC (M := M) (1 : ℂ)) (Litex.NativeBridge.notSameOfDenoteNumber (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (0 : ℂ)) (1 : ℂ) (0 : ℂ) (Litex.NativeBridge.denoteNumber (M := M) (1 : ℂ)) (Litex.NativeBridge.denoteNumber (M := M) (0 : ℂ)) (by norm_num)))
 
-          have h_243 : (by
+          have h_303 : (by
             let _equal_wd_1_0 := _object_w19
             exact Litex.Same _equal_wd_1_0 (Litex.number (M := M) (1 : ℂ))) :=
             (by
@@ -116,59 +116,59 @@ theorem h_242 : ∃ (_value_i7 : Litex.Obj (M := M) M.Value), ∃ (h_244 : Litex
                   (show Litex.Same _equal_wd_1_0 (Litex.number (M := M) (1 : ℂ)) from (Litex.NativeBridge.sameOfDenoteNumber _equal_wd_1_0 (Litex.number (M := M) (1 : ℂ)) ((1 : ℂ) / (1 : ℂ)) (1 : ℂ) (Litex.NativeBridge.denoteDiv (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (1 : ℂ)) (_equal_wd_1_0).wd.1 (_equal_wd_1_0).wd.2.1 (_equal_wd_1_0).wd.2.2 _ _ (Litex.NativeBridge.denoteNumber (M := M) (1 : ℂ)) (Litex.NativeBridge.denoteNumber (M := M) (1 : ℂ))) (Litex.NativeBridge.denoteNumber (M := M) (1 : ℂ)) (by norm_num))))
                 )
             )
-          have h_309 : ¬ Litex.Same (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (0 : ℂ)) := (Litex.NativeBridge.notSameOfDenoteNumber (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (0 : ℂ)) (1 : ℂ) (0 : ℂ) (Litex.NativeBridge.denoteNumber (M := M) (1 : ℂ)) (Litex.NativeBridge.denoteNumber (M := M) (0 : ℂ)) (by norm_num))
-          have h_310 : (by
+          have h_369 : ¬ Litex.Same (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (0 : ℂ)) := (Litex.NativeBridge.notSameOfDenoteNumber (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (0 : ℂ)) (1 : ℂ) (0 : ℂ) (Litex.NativeBridge.denoteNumber (M := M) (1 : ℂ)) (Litex.NativeBridge.denoteNumber (M := M) (0 : ℂ)) (by norm_num))
+          have h_370 : (by
             let _equal_wd_1_1 := _object_w19
-            exact Litex.Same (Litex.number (M := M) (1 : ℂ)) _equal_wd_1_1) := (h_243).symm
-          exact ⟨_value_i7, h_281, _value_i8, h_282, h_309, h_310⟩
+            exact Litex.Same (Litex.number (M := M) (1 : ℂ)) _equal_wd_1_1) := (h_303).symm
+          exact ⟨_value_i7, h_341, _value_i8, h_342, h_369, h_370⟩
       )
   )
 
 noncomputable def _value_i9 : Litex.Obj (M := M) M.Value :=
-  Classical.choose ((show ∃ (_value_i9 : Litex.Obj (M := M) M.Value), ∃ (h_315 : Litex.In _value_i9 (Litex.R (M := M))), ∃ (_value_i10 : Litex.Obj (M := M) M.Value), ∃ (h_316 : Litex.In _value_i10 (Litex.R (M := M))), ∃ (h_312 : ¬ Litex.Same _value_i10 (Litex.number (M := M) (0 : ℂ))), Litex.Same _value_i9 (Litex.div (Litex.number (M := M) (1 : ℂ)) _value_i10 (Litex.numberInC (M := M) (1 : ℂ)) (M.real_subset_complex _ h_316) h_312) from (h_242 (M := M))))
+  Classical.choose ((show ∃ (_value_i9 : Litex.Obj (M := M) M.Value), ∃ (h_375 : Litex.In _value_i9 (Litex.R (M := M))), ∃ (_value_i10 : Litex.Obj (M := M) M.Value), ∃ (h_376 : Litex.In _value_i10 (Litex.R (M := M))), ∃ (h_372 : ¬ Litex.Same _value_i10 (Litex.number (M := M) (0 : ℂ))), Litex.Same _value_i9 (Litex.div (Litex.number (M := M) (1 : ℂ)) _value_i10 (Litex.numberInC (M := M) (1 : ℂ)) (M.real_subset_complex _ h_376) h_372) from (h_302 (M := M))))
 
-theorem h_346 : Litex.In (_value_i9 (M := M)) (Litex.R (M := M)) :=
+theorem h_406 : Litex.In (_value_i9 (M := M)) (Litex.R (M := M)) :=
   (by
     litex_complete =>
       exact (
-        (Classical.choose ((Classical.choose_spec ((show ∃ (_value_i9 : Litex.Obj (M := M) M.Value), ∃ (h_315 : Litex.In _value_i9 (Litex.R (M := M))), ∃ (_value_i10 : Litex.Obj (M := M) M.Value), ∃ (h_316 : Litex.In _value_i10 (Litex.R (M := M))), ∃ (h_312 : ¬ Litex.Same _value_i10 (Litex.number (M := M) (0 : ℂ))), Litex.Same _value_i9 (Litex.div (Litex.number (M := M) (1 : ℂ)) _value_i10 (Litex.numberInC (M := M) (1 : ℂ)) (M.real_subset_complex _ h_316) h_312) from (h_242 (M := M)))))))
+        (Classical.choose ((Classical.choose_spec ((show ∃ (_value_i9 : Litex.Obj (M := M) M.Value), ∃ (h_375 : Litex.In _value_i9 (Litex.R (M := M))), ∃ (_value_i10 : Litex.Obj (M := M) M.Value), ∃ (h_376 : Litex.In _value_i10 (Litex.R (M := M))), ∃ (h_372 : ¬ Litex.Same _value_i10 (Litex.number (M := M) (0 : ℂ))), Litex.Same _value_i9 (Litex.div (Litex.number (M := M) (1 : ℂ)) _value_i10 (Litex.numberInC (M := M) (1 : ℂ)) (M.real_subset_complex _ h_376) h_372) from (h_302 (M := M)))))))
       )
   )
 
 noncomputable def _value_i10 : Litex.Obj (M := M) M.Value :=
-  Classical.choose ((Classical.choose_spec ((Classical.choose_spec ((show ∃ (_value_i9 : Litex.Obj (M := M) M.Value), ∃ (h_315 : Litex.In _value_i9 (Litex.R (M := M))), ∃ (_value_i10 : Litex.Obj (M := M) M.Value), ∃ (h_316 : Litex.In _value_i10 (Litex.R (M := M))), ∃ (h_312 : ¬ Litex.Same _value_i10 (Litex.number (M := M) (0 : ℂ))), Litex.Same _value_i9 (Litex.div (Litex.number (M := M) (1 : ℂ)) _value_i10 (Litex.numberInC (M := M) (1 : ℂ)) (M.real_subset_complex _ h_316) h_312) from (h_242 (M := M))))))))
+  Classical.choose ((Classical.choose_spec ((Classical.choose_spec ((show ∃ (_value_i9 : Litex.Obj (M := M) M.Value), ∃ (h_375 : Litex.In _value_i9 (Litex.R (M := M))), ∃ (_value_i10 : Litex.Obj (M := M) M.Value), ∃ (h_376 : Litex.In _value_i10 (Litex.R (M := M))), ∃ (h_372 : ¬ Litex.Same _value_i10 (Litex.number (M := M) (0 : ℂ))), Litex.Same _value_i9 (Litex.div (Litex.number (M := M) (1 : ℂ)) _value_i10 (Litex.numberInC (M := M) (1 : ℂ)) (M.real_subset_complex _ h_376) h_372) from (h_302 (M := M))))))))
 
-theorem h_347 : Litex.In (_value_i10 (M := M)) (Litex.R (M := M)) :=
+theorem h_407 : Litex.In (_value_i10 (M := M)) (Litex.R (M := M)) :=
   (by
     litex_complete =>
       exact (
-        (Classical.choose ((Classical.choose_spec ((Classical.choose_spec ((Classical.choose_spec ((show ∃ (_value_i9 : Litex.Obj (M := M) M.Value), ∃ (h_315 : Litex.In _value_i9 (Litex.R (M := M))), ∃ (_value_i10 : Litex.Obj (M := M) M.Value), ∃ (h_316 : Litex.In _value_i10 (Litex.R (M := M))), ∃ (h_312 : ¬ Litex.Same _value_i10 (Litex.number (M := M) (0 : ℂ))), Litex.Same _value_i9 (Litex.div (Litex.number (M := M) (1 : ℂ)) _value_i10 (Litex.numberInC (M := M) (1 : ℂ)) (M.real_subset_complex _ h_316) h_312) from (h_242 (M := M)))))))))))
+        (Classical.choose ((Classical.choose_spec ((Classical.choose_spec ((Classical.choose_spec ((show ∃ (_value_i9 : Litex.Obj (M := M) M.Value), ∃ (h_375 : Litex.In _value_i9 (Litex.R (M := M))), ∃ (_value_i10 : Litex.Obj (M := M) M.Value), ∃ (h_376 : Litex.In _value_i10 (Litex.R (M := M))), ∃ (h_372 : ¬ Litex.Same _value_i10 (Litex.number (M := M) (0 : ℂ))), Litex.Same _value_i9 (Litex.div (Litex.number (M := M) (1 : ℂ)) _value_i10 (Litex.numberInC (M := M) (1 : ℂ)) (M.real_subset_complex _ h_376) h_372) from (h_302 (M := M)))))))))))
       )
   )
 
-theorem h_312 : ¬ Litex.Same (_value_i10 (M := M)) (Litex.number (M := M) (0 : ℂ)) :=
+theorem h_372 : ¬ Litex.Same (_value_i10 (M := M)) (Litex.number (M := M) (0 : ℂ)) :=
   (by
     litex_complete =>
       exact (
-        (Classical.choose ((Classical.choose_spec ((Classical.choose_spec ((Classical.choose_spec ((Classical.choose_spec ((show ∃ (_value_i9 : Litex.Obj (M := M) M.Value), ∃ (h_315 : Litex.In _value_i9 (Litex.R (M := M))), ∃ (_value_i10 : Litex.Obj (M := M) M.Value), ∃ (h_316 : Litex.In _value_i10 (Litex.R (M := M))), ∃ (h_312 : ¬ Litex.Same _value_i10 (Litex.number (M := M) (0 : ℂ))), Litex.Same _value_i9 (Litex.div (Litex.number (M := M) (1 : ℂ)) _value_i10 (Litex.numberInC (M := M) (1 : ℂ)) (M.real_subset_complex _ h_316) h_312) from (h_242 (M := M)))))))))))))
+        (Classical.choose ((Classical.choose_spec ((Classical.choose_spec ((Classical.choose_spec ((Classical.choose_spec ((show ∃ (_value_i9 : Litex.Obj (M := M) M.Value), ∃ (h_375 : Litex.In _value_i9 (Litex.R (M := M))), ∃ (_value_i10 : Litex.Obj (M := M) M.Value), ∃ (h_376 : Litex.In _value_i10 (Litex.R (M := M))), ∃ (h_372 : ¬ Litex.Same _value_i10 (Litex.number (M := M) (0 : ℂ))), Litex.Same _value_i9 (Litex.div (Litex.number (M := M) (1 : ℂ)) _value_i10 (Litex.numberInC (M := M) (1 : ℂ)) (M.real_subset_complex _ h_376) h_372) from (h_302 (M := M)))))))))))))
       )
   )
 
-theorem h_313 : Litex.Same (_value_i9 (M := M)) ((fun (_value_i9 : Litex.Obj (M := M) M.Value) (h_315 : Litex.In _value_i9 (Litex.R (M := M))) (_value_i10 : Litex.Obj (M := M) M.Value) (h_316 : Litex.In _value_i10 (Litex.R (M := M))) (h_312 : ¬ Litex.Same _value_i10 (Litex.number (M := M) (0 : ℂ))) => (Litex.div (Litex.number (M := M) (1 : ℂ)) _value_i10 (Litex.numberInC (M := M) (1 : ℂ)) (M.real_subset_complex _ h_316) h_312)) (_value_i9 (M := M)) (h_346 (M := M)) (_value_i10 (M := M)) (h_347 (M := M)) (h_312 (M := M))) :=
+theorem h_373 : Litex.Same (_value_i9 (M := M)) ((fun (_value_i9 : Litex.Obj (M := M) M.Value) (h_375 : Litex.In _value_i9 (Litex.R (M := M))) (_value_i10 : Litex.Obj (M := M) M.Value) (h_376 : Litex.In _value_i10 (Litex.R (M := M))) (h_372 : ¬ Litex.Same _value_i10 (Litex.number (M := M) (0 : ℂ))) => (Litex.div (Litex.number (M := M) (1 : ℂ)) _value_i10 (Litex.numberInC (M := M) (1 : ℂ)) (M.real_subset_complex _ h_376) h_372)) (_value_i9 (M := M)) (h_406 (M := M)) (_value_i10 (M := M)) (h_407 (M := M)) (h_372 (M := M))) :=
   (by
     litex_complete =>
       exact (
-        (Classical.choose_spec ((Classical.choose_spec ((Classical.choose_spec ((Classical.choose_spec ((Classical.choose_spec ((show ∃ (_value_i9 : Litex.Obj (M := M) M.Value), ∃ (h_315 : Litex.In _value_i9 (Litex.R (M := M))), ∃ (_value_i10 : Litex.Obj (M := M) M.Value), ∃ (h_316 : Litex.In _value_i10 (Litex.R (M := M))), ∃ (h_312 : ¬ Litex.Same _value_i10 (Litex.number (M := M) (0 : ℂ))), Litex.Same _value_i9 (Litex.div (Litex.number (M := M) (1 : ℂ)) _value_i10 (Litex.numberInC (M := M) (1 : ℂ)) (M.real_subset_complex _ h_316) h_312) from (h_242 (M := M)))))))))))))
+        (Classical.choose_spec ((Classical.choose_spec ((Classical.choose_spec ((Classical.choose_spec ((Classical.choose_spec ((show ∃ (_value_i9 : Litex.Obj (M := M) M.Value), ∃ (h_375 : Litex.In _value_i9 (Litex.R (M := M))), ∃ (_value_i10 : Litex.Obj (M := M) M.Value), ∃ (h_376 : Litex.In _value_i10 (Litex.R (M := M))), ∃ (h_372 : ¬ Litex.Same _value_i10 (Litex.number (M := M) (0 : ℂ))), Litex.Same _value_i9 (Litex.div (Litex.number (M := M) (1 : ℂ)) _value_i10 (Litex.numberInC (M := M) (1 : ℂ)) (M.real_subset_complex _ h_376) h_372) from (h_302 (M := M)))))))))))))
       )
   )
 
-theorem h_348 : (by
-  let _equal_wd_1_1 := ((fun (_value_i9 : Litex.Obj (M := M) M.Value) (h_315 : Litex.In _value_i9 (Litex.R (M := M))) (_value_i10 : Litex.Obj (M := M) M.Value) (h_316 : Litex.In _value_i10 (Litex.R (M := M))) (h_312 : ¬ Litex.Same _value_i10 (Litex.number (M := M) (0 : ℂ))) => (Litex.div (Litex.number (M := M) (1 : ℂ)) _value_i10 (Litex.numberInC (M := M) (1 : ℂ)) (M.real_subset_complex _ h_316) h_312)) (_value_i9 (M := M)) (h_346 (M := M)) (_value_i10 (M := M)) (h_347 (M := M)) (h_312 (M := M)))
+theorem h_408 : (by
+  let _equal_wd_1_1 := ((fun (_value_i9 : Litex.Obj (M := M) M.Value) (h_375 : Litex.In _value_i9 (Litex.R (M := M))) (_value_i10 : Litex.Obj (M := M) M.Value) (h_376 : Litex.In _value_i10 (Litex.R (M := M))) (h_372 : ¬ Litex.Same _value_i10 (Litex.number (M := M) (0 : ℂ))) => (Litex.div (Litex.number (M := M) (1 : ℂ)) _value_i10 (Litex.numberInC (M := M) (1 : ℂ)) (M.real_subset_complex _ h_376) h_372)) (_value_i9 (M := M)) (h_406 (M := M)) (_value_i10 (M := M)) (h_407 (M := M)) (h_372 (M := M)))
   exact Litex.Same (_value_i9 (M := M)) _equal_wd_1_1) :=
   (by
     litex_complete =>
       exact (
-        (h_313 (M := M))
+        (h_373 (M := M))
       )
   )
 end LitexCompiled.file_lean_x2f_examples_x2f_have_x5f_from_x5f_existence_x2f_statement_x2e_lit

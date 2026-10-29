@@ -1,0 +1,9 @@
+# Two real bounds on all terms make a real sequence bounded.
+thm pointwise_bounds_make_sequence_bounded:
+    ? forall a seq(R), lower,upper R:
+        forall n N+:
+            lower<=a(n)
+            a(n)<=upper
+        =>:
+            $is_seq_bounded(a)
+    release thm sequence_bounded_from_bounds(a,lower,upper)

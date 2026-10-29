@@ -1,0 +1,7 @@
+# Extract the left limit accumulation certificate on the original real domain.
+thm explicit_left_accumulation:
+    ? forall f fn(x R) R, p R, L R, r R+:
+        $has_limit_left(f,p,L)
+        =>:
+            exist x R st {0<(p-x) and (p-x)<r}
+    release thm fn_limit_left_accumulation(f,p,L)

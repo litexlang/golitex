@@ -1,0 +1,9 @@
+# Transfer a left limit through abs, retaining the complete function domains.
+thm left_abs_limit:
+    ? forall f,g fn(x R) R, p,L R:
+        $has_limit_left(f,p,L)
+        forall x R:
+            g(x)=abs(f(x))
+        =>:
+            $has_limit_left(g,p,abs(L))
+    by thm fn_limit_left_abs(f,g,p,L) => $has_limit_left(g,p,abs(L))

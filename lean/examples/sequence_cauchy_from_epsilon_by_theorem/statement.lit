@@ -1,0 +1,8 @@
+# The epsilon-tail condition proves that a real sequence is Cauchy.
+thm cauchy_from_tail:
+    ? forall a seq(R):
+        forall epsilon R+:
+            exist cutoff N+ st {cart({m N+:m>=cutoff},{n N+:n>=cutoff}) $subset {p cart(N+,N+):abs(a(p(1))-a(p(2)))<epsilon}}
+        =>:
+            $is_seq_cauchy(a)
+    release thm sequence_cauchy_from_epsilon(a)

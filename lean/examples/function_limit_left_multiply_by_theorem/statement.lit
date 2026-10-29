@@ -1,0 +1,10 @@
+# Transfer two left limits through multiply on the same complete domain.
+thm left_multiply_limits:
+    ? forall f,g,s fn(x R) R, p,a,b R:
+        $has_limit_left(f,p,a)
+        $has_limit_left(g,p,b)
+        forall x R:
+            s(x)=f(x)*g(x)
+        =>:
+            $has_limit_left(s,p,a*b)
+    by thm fn_limit_left_multiply(f,g,s,p,a,b) => $has_limit_left(s,p,a*b)

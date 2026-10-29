@@ -1,0 +1,9 @@
+# Transfer a at limit through power with its original parameter evidence.
+thm at_power_limit:
+    ? forall f,g fn(x R) R, p,L R:
+        $has_limit_at(f,p,L)
+        forall x R:
+            g(x)=f(x)^2
+        =>:
+            $has_limit_at(g,p,L^2)
+    by thm fn_limit_at_power(f,g,p,L,2) => $has_limit_at(g,p,L^2)

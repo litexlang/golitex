@@ -1,0 +1,9 @@
+# Transfer a at limit through scale with its original parameter evidence.
+thm at_scale_limit:
+    ? forall f,g fn(x R) R, p,L,c R:
+        $has_limit_at(f,p,L)
+        forall x R:
+            g(x)=c*f(x)
+        =>:
+            $has_limit_at(g,p,c*L)
+    by thm fn_limit_at_scale(f,g,p,L,c) => $has_limit_at(g,p,c*L)

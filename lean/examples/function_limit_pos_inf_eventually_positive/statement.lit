@@ -1,0 +1,8 @@
+# A positive limit gives positive values on a sufficiently small pos_inf neighborhood.
+thm pos_inf_eventually_positive:
+    ? forall f fn(x R) R, L R:
+        $has_limit_pos_inf(f,L)
+        0<L
+        =>:
+            exist delta R st {{x R:delta<x} $subset preimage_set(f,R+)}
+    release thm fn_limit_pos_inf_eventually_positive(f,L)

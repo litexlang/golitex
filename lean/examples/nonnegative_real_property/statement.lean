@@ -10,7 +10,7 @@ variable {M : Litex.Semantics.{u}}
 def prop_1 {_Host_i1 : Type v1} [_rep_i1 : Litex.Representation M _Host_i1] (_value_i1 : Litex.Obj (M := M) _Host_i1) : Prop :=
   ∃ (h_2 : Litex.In _value_i1 (Litex.R (M := M))), Litex.Le (Litex.number (M := M) (0 : ℂ)) _value_i1
 
-theorem h_41 : ((prop_1 (M := M)) (Litex.number (M := M) (2 : ℂ))) :=
+theorem h_49 : ((prop_1 (M := M)) (Litex.number (M := M) (2 : ℂ))) :=
   (by
     litex_complete =>
       exact (
@@ -25,40 +25,40 @@ theorem h_41 : ((prop_1 (M := M)) (Litex.number (M := M) (2 : ℂ))) :=
       )
   )
 
-theorem h_46 : Litex.In (Litex.number (M := M) (2 : ℂ)) (Litex.R (M := M)) :=
+theorem h_54 : Litex.In (Litex.number (M := M) (2 : ℂ)) (Litex.R (M := M)) :=
   (by
     litex_complete =>
       exact (
-        (by rcases (h_41 (M := M)) with ⟨h_2, h_1⟩; exact h_2)
+        (by rcases (h_49 (M := M)) with ⟨h_2, h_1⟩; exact h_2)
       )
   )
 
-theorem h_47 : Litex.Le (Litex.number (M := M) (0 : ℂ)) (Litex.number (M := M) (2 : ℂ)) :=
+theorem h_55 : Litex.Le (Litex.number (M := M) (0 : ℂ)) (Litex.number (M := M) (2 : ℂ)) :=
   (by
     litex_complete =>
       exact (
-        (by rcases (h_41 (M := M)) with ⟨h_2, h_1⟩; exact h_1)
+        (by rcases (h_49 (M := M)) with ⟨h_2, h_1⟩; exact h_1)
       )
   )
 
-theorem h_50 : ∀ {_Host_i3 : Type v3} [_rep_i3 : Litex.Representation M _Host_i3] (_value_i3 : Litex.Obj (M := M) _Host_i3) (h_64 : Litex.In _value_i3 (Litex.R (M := M))) (h_48 : ((prop_1 (M := M)) _value_i3)), Litex.Le (Litex.number (M := M) (0 : ℂ)) _value_i3 :=
+theorem h_58 : ∀ {_Host_i3 : Type v3} [_rep_i3 : Litex.Representation M _Host_i3] (_value_i3 : Litex.Obj (M := M) _Host_i3) (h_72 : Litex.In _value_i3 (Litex.R (M := M))) (h_56 : ((prop_1 (M := M)) _value_i3)), Litex.Le (Litex.number (M := M) (0 : ℂ)) _value_i3 :=
   (by
     litex_complete =>
       exact (
         (by
-          intro _Host_i3 _rep_i3 _value_i3 h_64 h_48
-          have h_66 :=
-            (Classical.choose (show ((prop_1 (M := M)) _value_i3) from h_48))
-          have h_67 :=
-            (Classical.choose_spec (show ((prop_1 (M := M)) _value_i3) from h_48))
-          have h_49 : Litex.Le (Litex.number (M := M) (0 : ℂ)) _value_i3 :=
+          intro _Host_i3 _rep_i3 _value_i3 h_72 h_56
+          have h_74 :=
+            (Classical.choose (show ((prop_1 (M := M)) _value_i3) from h_56))
+          have h_75 :=
+            (Classical.choose_spec (show ((prop_1 (M := M)) _value_i3) from h_56))
+          have h_57 : Litex.Le (Litex.number (M := M) (0 : ℂ)) _value_i3 :=
             (by
               litex_checked_step =>
                 exact (
-                  h_67
+                  h_75
                 )
             )
-          exact h_49
+          exact h_57
         )
       )
   )

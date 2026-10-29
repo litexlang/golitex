@@ -1,0 +1,497 @@
+# Full-domain imported calls and actual graph constructions.
+
+claim:
+    ? forall V finite_set,G &graph::FiniteSimpleGraph<V>,v V:
+        $is_finite_set(\graph::graph_neighbors<V,G>(v))
+    release thm graph::graph_neighbors_are_finite(V,G,v)
+
+claim:
+    ? forall V finite_set,G &graph::FiniteSimpleGraph<V>,v V:
+        not v $in \graph::graph_neighbors<V,G>(v)
+    release thm graph::vertex_is_not_its_neighbor(V,G,v)
+
+claim:
+    ? forall V finite_set,G &graph::FiniteSimpleGraph<V>,v,w V:
+        (v,w) $in G.arcs
+        =>:
+            w $in \graph::graph_neighbors<V,G>(v)
+            v $in \graph::graph_neighbors<V,G>(w)
+    release thm graph::adjacent_vertex_is_neighbor(V,G,v,w)
+
+claim:
+    ? forall V finite_set,G &graph::FiniteSimpleGraph<V>,v V:
+        \graph::graph_neighbors<V,G>(v) $subset set_minus(V,{v})
+    release thm graph::graph_neighbors_exclude_vertex(V,G,v)
+
+claim:
+    ? forall V finite_set,G &graph::FiniteSimpleGraph<V>,v V:
+        \graph::graph_degree<V,G>(v)<finite_set_size(V)
+    release thm graph::graph_degree_upper_bound(V,G,v)
+
+claim:
+    ? forall V finite_set,G &graph::FiniteSimpleGraph<V>,v V:
+        \graph::graph_degree<V,G>(v)=0
+        =>:
+            $graph::is_isolated_vertex(V,G,v)
+    release thm graph::zero_degree_has_no_neighbors(V,G,v)
+
+claim:
+    ? forall V finite_set,G &graph::FiniteSimpleGraph<V>,v V:
+        $graph::is_isolated_vertex(V,G,v)
+        =>:
+            \graph::graph_degree<V,G>(v)=0
+    release thm graph::no_neighbors_has_zero_degree(V,G,v)
+
+claim:
+    ? forall V finite_set,G &graph::FiniteSimpleGraph<V>,v V:
+        \graph::graph_degree<V,G>(v)=finite_set_size(V)-1
+        =>:
+            \graph::graph_neighbors<V,G>(v)=set_minus(V,{v})
+    release thm graph::maximal_degree_has_all_neighbors(V,G,v)
+
+claim:
+    ? forall V finite_set,G &graph::FiniteSimpleGraph<V>,z,v V:
+        2<=finite_set_size(V)
+        $graph::is_isolated_vertex(V,G,z)
+        =>:
+            \graph::graph_degree<V,G>(v)<=finite_set_size(V)-2
+    release thm graph::isolated_vertex_bounds_all_degrees(V,G,z,v)
+
+claim:
+    ? forall V finite_set,G &graph::FiniteSimpleGraph<V>:
+        2<=finite_set_size(V)
+        =>:
+            exist v,w V st {v!=w,\graph::graph_degree<V,G>(v)=\graph::graph_degree<V,G>(w)}
+    release thm graph::finite_simple_graph_has_equal_degrees(V,G)
+
+claim:
+    ? forall V finite_set:
+        (V,{}) $in &graph::FiniteSimpleGraph<V>
+    release thm graph::edgeless_graph_construction(V)
+
+claim:
+    ? forall V finite_set:
+        (V,\graph::complete_graph_arcs<V>) $in &graph::FiniteSimpleGraph<V>
+    release thm graph::complete_graph_construction(V)
+
+claim:
+    ? forall V finite_set,G &graph::FiniteSimpleGraph<V>:
+        (V,\graph::complement_graph_arcs<V,G>) $in &graph::FiniteSimpleGraph<V>
+    release thm graph::complement_graph_construction(V,G)
+
+claim:
+    ? forall V finite_set,G &graph::FiniteSimpleGraph<V>,U power_set(V):
+        (U,intersect(G.arcs,cart(U,U))) $in &graph::FiniteSimpleGraph<U>
+    release thm graph::induced_graph_construction(V,G,U)
+
+claim:
+    ? forall V finite_set:
+        \graph::edgeless_graph<V> $in &graph::FiniteSimpleGraph<V>
+    \graph::edgeless_graph<V> = (V,{})
+    release thm graph::edgeless_graph_construction(V)
+
+claim:
+    ? forall V finite_set:
+        \graph::complete_graph<V> $in &graph::FiniteSimpleGraph<V>
+    \graph::complete_graph<V> = (V,\graph::complete_graph_arcs<V>)
+    release thm graph::complete_graph_construction(V)
+
+claim:
+    ? forall V finite_set,G &graph::FiniteSimpleGraph<V>:
+        \graph::complement_graph<V,G> $in &graph::FiniteSimpleGraph<V>
+    \graph::complement_graph<V,G> = (V,\graph::complement_graph_arcs<V,G>)
+    release thm graph::complement_graph_construction(V,G)
+
+claim:
+    ? forall V finite_set,G &graph::FiniteSimpleGraph<V>,U power_set(V):
+        \graph::induced_graph<V,G,U> $in &graph::FiniteSimpleGraph<U>
+    \graph::induced_graph<V,G,U> = (U,intersect(G.arcs,cart(U,U)))
+    release thm graph::induced_graph_construction(V,G,U)
+
+claim:
+    ? forall V finite_set,v V:
+        \graph::graph_degree<V,\graph::edgeless_graph<V>>(v)=0
+    release thm graph::edgeless_graph_degree(V,v)
+
+claim:
+    ? forall V finite_set,v V:
+        \graph::graph_neighbors<V,\graph::complete_graph<V>>(v)=set_minus(V,{v})
+    release thm graph::complete_graph_neighbors(V,v)
+
+claim:
+    ? forall V finite_set,v V:
+        \graph::graph_degree<V,\graph::complete_graph<V>>(v)=finite_set_size(V)-1
+    release thm graph::complete_graph_degree(V,v)
+
+claim:
+    ? forall V finite_set,G &graph::FiniteSimpleGraph<V>,v V:
+        \graph::graph_neighbors<V,\graph::complement_graph<V,G>>(v)=set_minus(set_minus(V,{v}),\graph::graph_neighbors<V,G>(v))
+    release thm graph::complement_graph_neighbors(V,G,v)
+
+claim:
+    ? forall V finite_set,G &graph::FiniteSimpleGraph<V>,v V:
+        \graph::graph_degree<V,G>(v)+\graph::graph_degree<V,\graph::complement_graph<V,G>>(v)=finite_set_size(V)-1
+    release thm graph::complement_graph_degree_sum(V,G,v)
+
+claim:
+    ? forall V finite_set,G &graph::FiniteSimpleGraph<V>,U power_set(V),v U:
+        \graph::graph_neighbors<U,\graph::induced_graph<V,G,U>>(v)=intersect(U,\graph::graph_neighbors<V,G>(v))
+    release thm graph::induced_graph_neighbors(V,G,U,v)
+
+claim:
+    ? forall V finite_set,G &graph::FiniteSimpleGraph<V>,U power_set(V),v U:
+        \graph::graph_degree<U,\graph::induced_graph<V,G,U>>(v)<=\graph::graph_degree<V,G>(v)
+    release thm graph::induced_graph_degree_bound(V,G,U,v)
+
+have vertices finite_set={1,2,3}
+
+by contra:
+    ? (1,2)!=(2,1)
+    (1,2)(1)=(2,1)(1)
+    1=(1,2)(1)=(2,1)(1)=2
+    impossible 1=2
+
+by contra:
+    ? (1,2)!=(2,3)
+    (1,2)(1)=(2,3)(1)
+    1=(1,2)(1)=(2,3)(1)=2
+    impossible 1=2
+
+by contra:
+    ? (1,2)!=(3,2)
+    (1,2)(1)=(3,2)(1)
+    1=(1,2)(1)=(3,2)(1)=3
+    impossible 1=3
+
+by contra:
+    ? (2,1)!=(2,3)
+    (2,1)(2)=(2,3)(2)
+    1=(2,1)(2)=(2,3)(2)=3
+    impossible 1=3
+
+by contra:
+    ? (2,1)!=(3,2)
+    (2,1)(1)=(3,2)(1)
+    2=(2,1)(1)=(3,2)(1)=3
+    impossible 2=3
+
+by contra:
+    ? (2,3)!=(3,2)
+    (2,3)(1)=(3,2)(1)
+    2=(2,3)(1)=(3,2)(1)=3
+    impossible 2=3
+
+1 $in vertices
+
+2 $in vertices
+
+3 $in vertices
+
+(1,2) $in cart(vertices,vertices)
+
+(2,1) $in cart(vertices,vertices)
+
+(2,3) $in cart(vertices,vertices)
+
+(3,2) $in cart(vertices,vertices)
+
+have arcs power_set(cart(vertices,vertices))={(1,2),(2,1),(2,3),(3,2)}
+
+claim:
+    ? forall v vertices:
+        not (v,v) $in arcs
+    by contra:
+        ? (v,v)!=(1,2)
+        1=(1,2)(1)=(v,v)(1)
+        2=(1,2)(2)=(v,v)(2)
+        v=(v,v)(1)=(v,v)(2)
+        1=v=2
+        impossible 1=2
+    by contra:
+        ? (v,v)!=(2,1)
+        2=(2,1)(1)=(v,v)(1)
+        1=(2,1)(2)=(v,v)(2)
+        v=(v,v)(1)=(v,v)(2)
+        2=v=1
+        impossible 2=1
+    by contra:
+        ? (v,v)!=(2,3)
+        2=(2,3)(1)=(v,v)(1)
+        3=(2,3)(2)=(v,v)(2)
+        v=(v,v)(1)=(v,v)(2)
+        2=v=3
+        impossible 2=3
+    by contra:
+        ? (v,v)!=(3,2)
+        3=(3,2)(1)=(v,v)(1)
+        2=(3,2)(2)=(v,v)(2)
+        v=(v,v)(1)=(v,v)(2)
+        3=v=2
+        impossible 3=2
+    arcs={(1,2),(2,1),(2,3),(3,2)}
+    not (v,v) $in {(1,2),(2,1),(2,3),(3,2)}
+
+claim:
+    ? forall v,w vertices:
+        (v,w) $in arcs
+        =>:
+            (w,v) $in arcs
+    (v,w) $in {(1,2),(2,1),(2,3),(3,2)}
+    by cases:
+        ? (w,v) $in arcs
+        case (v,w)=(1,2):
+            v=(v,w)(1)=(1,2)(1)=1
+            w=(v,w)(2)=(1,2)(2)=2
+            (w,v)=(2,1)
+            (2,1) $in arcs
+        case (v,w)=(2,1):
+            v=(v,w)(1)=(2,1)(1)=2
+            w=(v,w)(2)=(2,1)(2)=1
+            (w,v)=(1,2)
+            (1,2) $in arcs
+        case (v,w)=(2,3):
+            v=(v,w)(1)=(2,3)(1)=2
+            w=(v,w)(2)=(2,3)(2)=3
+            (w,v)=(3,2)
+            (3,2) $in arcs
+        case (v,w)=(3,2):
+            v=(v,w)(1)=(3,2)(1)=3
+            w=(v,w)(2)=(3,2)(2)=2
+            (w,v)=(2,3)
+            (2,3) $in arcs
+
+vertices $in power_set(vertices)
+
+release thm struct_member((vertices,arcs),&graph::FiniteSimpleGraph<vertices>)
+
+have path &graph::FiniteSimpleGraph<vertices> = (vertices,arcs)
+
+release struct def path
+
+path.arcs=arcs
+
+\graph::graph_neighbors<vertices,path>(2)={w vertices:(2,w) $in path.arcs}
+
+by extension:
+    ? \graph::graph_neighbors<vertices,path>(2)={1,3}
+    claim:
+        ? forall w \graph::graph_neighbors<vertices,path>(2):
+            w $in {1,3}
+        w $in vertices
+        (2,w) $in path.arcs
+        (2,w) $in arcs
+        (2,w) $in {(1,2),(2,1),(2,3),(3,2)}
+        by cases:
+            ? w $in {1,3}
+            case (2,w)=(1,2):
+                by contra:
+                    ? w $in {1,3}
+                    2=(2,w)(1)=(1,2)(1)=1
+                    impossible 2=1
+            case (2,w)=(2,1):
+                w=(2,w)(2)=(2,1)(2)=1
+            case (2,w)=(2,3):
+                w=(2,w)(2)=(2,3)(2)=3
+            case (2,w)=(3,2):
+                by contra:
+                    ? w $in {1,3}
+                    2=(2,w)(1)=(3,2)(1)=3
+                    impossible 2=3
+    claim:
+        ? forall w {1,3}:
+            w $in \graph::graph_neighbors<vertices,path>(2)
+        by cases:
+            ? w $in \graph::graph_neighbors<vertices,path>(2)
+            case w=1:
+                w $in vertices
+                (2,w)=(2,1)
+                (2,1) $in arcs
+                (2,w) $in path.arcs
+                release thm set_builder_member(w,{x vertices:(2,x) $in path.arcs})
+            case w=3:
+                w $in vertices
+                (2,w)=(2,3)
+                (2,3) $in arcs
+                (2,w) $in path.arcs
+                release thm set_builder_member(w,{x vertices:(2,x) $in path.arcs})
+
+\graph::graph_degree<vertices,path>(2)=finite_set_size(\graph::graph_neighbors<vertices,path>(2))=finite_set_size({1,3})=2
+
+\graph::graph_neighbors<vertices,path>(1)={w vertices:(1,w) $in path.arcs}
+
+\graph::graph_neighbors<vertices,path>(3)={w vertices:(3,w) $in path.arcs}
+
+by extension:
+    ? \graph::graph_neighbors<vertices,path>(1)={2}
+    claim:
+        ? forall w \graph::graph_neighbors<vertices,path>(1):
+            w $in {2}
+        w $in vertices
+        (1,w) $in path.arcs
+        (1,w) $in arcs
+        (1,w) $in {(1,2),(2,1),(2,3),(3,2)}
+        by cases:
+            ? w $in {2}
+            case (1,w)=(1,2):
+                w=(1,w)(2)=(1,2)(2)=2
+            case (1,w)=(2,1):
+                by contra:
+                    ? w $in {2}
+                    1=(1,w)(1)=(2,1)(1)=2
+                    impossible 1=2
+            case (1,w)=(2,3):
+                by contra:
+                    ? w $in {2}
+                    1=(1,w)(1)=(2,3)(1)=2
+                    impossible 1=2
+            case (1,w)=(3,2):
+                by contra:
+                    ? w $in {2}
+                    1=(1,w)(1)=(3,2)(1)=3
+                    impossible 1=3
+    claim:
+        ? forall w {2}:
+            w $in \graph::graph_neighbors<vertices,path>(1)
+        by cases:
+            ? w $in \graph::graph_neighbors<vertices,path>(1)
+            case w=2:
+                w $in vertices
+                (1,w)=(1,2)
+                (1,2) $in arcs
+                (1,w) $in path.arcs
+                release thm set_builder_member(w,{x vertices:(1,x) $in path.arcs})
+
+\graph::graph_degree<vertices,path>(1)=finite_set_size(\graph::graph_neighbors<vertices,path>(1))=finite_set_size({2})=1
+
+by extension:
+    ? \graph::graph_neighbors<vertices,path>(3)={2}
+    claim:
+        ? forall w \graph::graph_neighbors<vertices,path>(3):
+            w $in {2}
+        w $in vertices
+        (3,w) $in path.arcs
+        (3,w) $in arcs
+        (3,w) $in {(1,2),(2,1),(2,3),(3,2)}
+        by cases:
+            ? w $in {2}
+            case (3,w)=(1,2):
+                by contra:
+                    ? w $in {2}
+                    3=(3,w)(1)=(1,2)(1)=1
+                    impossible 3=1
+            case (3,w)=(2,1):
+                by contra:
+                    ? w $in {2}
+                    3=(3,w)(1)=(2,1)(1)=2
+                    impossible 3=2
+            case (3,w)=(2,3):
+                by contra:
+                    ? w $in {2}
+                    3=(3,w)(1)=(2,3)(1)=2
+                    impossible 3=2
+            case (3,w)=(3,2):
+                w=(3,w)(2)=(3,2)(2)=2
+    claim:
+        ? forall w {2}:
+            w $in \graph::graph_neighbors<vertices,path>(3)
+        by cases:
+            ? w $in \graph::graph_neighbors<vertices,path>(3)
+            case w=2:
+                w $in vertices
+                (3,w)=(3,2)
+                (3,2) $in arcs
+                (3,w) $in path.arcs
+                release thm set_builder_member(w,{x vertices:(3,x) $in path.arcs})
+
+\graph::graph_degree<vertices,path>(3)=finite_set_size(\graph::graph_neighbors<vertices,path>(3))=finite_set_size({2})=1
+
+finite_set_size(vertices)=finite_set_size({1,2,3})=3
+
+release thm graph::finite_simple_graph_has_equal_degrees(vertices,path)
+
+\graph::graph_degree<vertices,path>(1)=\graph::graph_degree<vertices,path>(3)=1
+
+release thm graph::complement_graph_degree_sum(vertices,path,2)
+
+\graph::graph_degree<vertices,path>(2)+\graph::graph_degree<vertices,\graph::complement_graph<vertices,path>>(2)=finite_set_size(vertices)-1=3-1=2
+
+\graph::graph_degree<vertices,\graph::complement_graph<vertices,path>>(2)=\graph::graph_degree<vertices,path>(2)+\graph::graph_degree<vertices,\graph::complement_graph<vertices,path>>(2)-\graph::graph_degree<vertices,path>(2)=2-2=0
+
+release thm graph::complement_graph_degree_sum(vertices,path,1)
+
+\graph::graph_degree<vertices,path>(1)+\graph::graph_degree<vertices,\graph::complement_graph<vertices,path>>(1)=finite_set_size(vertices)-1=3-1=2
+
+\graph::graph_degree<vertices,\graph::complement_graph<vertices,path>>(1)=\graph::graph_degree<vertices,path>(1)+\graph::graph_degree<vertices,\graph::complement_graph<vertices,path>>(1)-\graph::graph_degree<vertices,path>(1)=2-1=1
+
+release thm graph::complete_graph_degree(vertices,2)
+
+\graph::graph_degree<vertices,\graph::complete_graph<vertices>>(2)=finite_set_size(vertices)-1=2
+
+release thm graph::edgeless_graph_degree(vertices,2)
+
+\graph::graph_degree<vertices,\graph::edgeless_graph<vertices>>(2)=0
+
+have endpoints finite_set={1,3}
+
+endpoints $in power_set(vertices)
+
+release thm graph::induced_graph_neighbors(vertices,path,endpoints,1)
+
+by extension:
+    ? intersect({1,3},{2})={}
+    claim:
+        ? forall x intersect({1,3},{2}):
+            x $in {}
+        by contra:
+            ? x $in {}
+            x $in {2}
+            x=2
+            x $in {1,3}
+            2 $in {1,3}
+            impossible 2 $in {1,3}
+
+\graph::graph_neighbors<endpoints,\graph::induced_graph<vertices,path,endpoints>>(1)=intersect(endpoints,\graph::graph_neighbors<vertices,path>(1))=intersect({1,3},{2})={}
+
+\graph::graph_degree<endpoints,\graph::induced_graph<vertices,path,endpoints>>(1)=finite_set_size(\graph::graph_neighbors<endpoints,\graph::induced_graph<vertices,path,endpoints>>(1))=finite_set_size({})=0
+
+release thm graph::induced_graph_degree_bound(vertices,path,endpoints,1)
+
+have no_vertices finite_set={}
+
+have empty &graph::FiniteSimpleGraph<no_vertices> = \graph::edgeless_graph<no_vertices>
+
+empty=\graph::edgeless_graph<no_vertices> = (no_vertices,{})
+
+release struct def empty
+
+empty.arcs=(no_vertices,{})(2)={}
+
+have singleton finite_set={9}
+
+have one &graph::FiniteSimpleGraph<singleton> = \graph::edgeless_graph<singleton>
+
+release thm graph::edgeless_graph_degree(singleton,9)
+
+\graph::graph_degree<singleton,\graph::edgeless_graph<singleton>>(9)=0
+
+have empty_induced &graph::FiniteSimpleGraph<{}> = \graph::induced_graph<vertices,path,{}>
+
+empty_induced=\graph::induced_graph<vertices,path,{}> = ({},intersect(path.arcs,cart({},{})))
+
+release struct def empty_induced
+
+empty_induced.arcs=({},intersect(path.arcs,cart({},{})))(2)=intersect(path.arcs,cart({},{}))
+
+by extension cart({},{})={}
+
+empty_induced.arcs=intersect(path.arcs,cart({},{}))=intersect(path.arcs,{})={}
+
+have demo_vertices finite_set={1,2,3}
+
+release thm graph::edgeless_graph_construction(demo_vertices)
+
+have demo &graph::FiniteSimpleGraph<demo_vertices> = (demo_vertices,{})
+
+finite_set_size(demo_vertices)=finite_set_size({1,2,3})=3
+
+release thm graph::finite_simple_graph_has_equal_degrees(demo_vertices,demo)

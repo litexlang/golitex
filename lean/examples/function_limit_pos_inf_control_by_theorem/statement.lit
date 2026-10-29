@@ -1,0 +1,7 @@
+# Extract the pos_inf limit control certificate on the original real domain.
+thm explicit_pos_inf_control:
+    ? forall f fn(x R) R, L R, epsilon R+:
+        $has_limit_pos_inf(f,L)
+        =>:
+            exist threshold R st {{x R:threshold<x} $subset preimage_set(f,{v R:abs(v-L)<epsilon})}
+    release thm fn_limit_pos_inf_control(f,L,epsilon)

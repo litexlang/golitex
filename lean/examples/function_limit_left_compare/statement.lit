@@ -1,0 +1,10 @@
+# A local weak comparison passes to the two left limit values.
+thm left_limits_compare:
+    ? forall f,g fn(x R) R, p,a,b R, r R+:
+        $has_limit_left(f,p,a)
+        $has_limit_left(g,p,b)
+        forall x {t R:0<(p-t) and (p-t)<r}:
+            f(x)<=g(x)
+        =>:
+            a<=b
+    by thm fn_limit_left_compare(f,g,p,a,b,r) => a<=b

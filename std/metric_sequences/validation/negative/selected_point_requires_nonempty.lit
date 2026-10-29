@@ -1,0 +1,3 @@
+0=0
+
+\s::contraction_fixed_point<{},empty_metric>(empty_map) $in empty_metric.carrier

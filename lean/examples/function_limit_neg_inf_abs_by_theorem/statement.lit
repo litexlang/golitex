@@ -1,0 +1,9 @@
+# Transfer a neg_inf limit through abs, retaining the complete function domains.
+thm neg_inf_abs_limit:
+    ? forall f,g fn(x R) R, L R:
+        $has_limit_neg_inf(f,L)
+        forall x R:
+            g(x)=abs(f(x))
+        =>:
+            $has_limit_neg_inf(g,abs(L))
+    by thm fn_limit_neg_inf_abs(f,g,L) => $has_limit_neg_inf(g,abs(L))

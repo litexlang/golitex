@@ -34,6 +34,13 @@ impl LitexToLeanCompiler {
                 | BuiltinTheoremId::SequenceLimitSelected
                 | BuiltinTheoremId::SequenceLimitFromEpsilon
                 | BuiltinTheoremId::SequenceLimitTail
+                | BuiltinTheoremId::SequenceCauchyFromEpsilon
+                | BuiltinTheoremId::SequenceCauchyTail
+                | BuiltinTheoremId::SequenceConvergentFromLimit
+                | BuiltinTheoremId::SequenceLimitFromConvergent
+                | BuiltinTheoremId::SequenceStrictIncreasingNondecreasing
+                | BuiltinTheoremId::SequenceStrictDecreasingNonincreasing
+                | BuiltinTheoremId::SequenceBoundedFromBounds
         ) {
             return self.compile_builtin_sequence_limit_theorem(
                 call,
@@ -50,7 +57,193 @@ impl LitexToLeanCompiler {
         }
         if matches!(
             builtin.theorem,
-            BuiltinTheoremId::FnLimitAtUnique
+            BuiltinTheoremId::FnLimitAtSqueeze
+                | BuiltinTheoremId::FnLimitLeftSqueeze
+                | BuiltinTheoremId::FnLimitRightSqueeze
+                | BuiltinTheoremId::FnLimitPosInfSqueeze
+                | BuiltinTheoremId::FnLimitNegInfSqueeze
+        ) {
+            return self.compile_builtin_function_limit_squeeze(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if matches!(
+            builtin.theorem,
+            BuiltinTheoremId::FnLimitAtLocalEqual
+                | BuiltinTheoremId::FnLimitLeftLocalEqual
+                | BuiltinTheoremId::FnLimitRightLocalEqual
+                | BuiltinTheoremId::FnLimitPosInfLocalEqual
+                | BuiltinTheoremId::FnLimitNegInfLocalEqual
+        ) {
+            return self.compile_builtin_function_limit_local(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if matches!(
+            builtin.theorem,
+            BuiltinTheoremId::FnLimitAtCompare
+                | BuiltinTheoremId::FnLimitLeftCompare
+                | BuiltinTheoremId::FnLimitRightCompare
+                | BuiltinTheoremId::FnLimitPosInfCompare
+                | BuiltinTheoremId::FnLimitNegInfCompare
+        ) {
+            return self.compile_builtin_function_limit_order(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if matches!(
+            builtin.theorem,
+            BuiltinTheoremId::FnLimitAtEventuallyPositive
+                | BuiltinTheoremId::FnLimitAtEventuallyNonzero
+                | BuiltinTheoremId::FnLimitLeftEventuallyPositive
+                | BuiltinTheoremId::FnLimitLeftEventuallyNonzero
+                | BuiltinTheoremId::FnLimitRightEventuallyPositive
+                | BuiltinTheoremId::FnLimitRightEventuallyNonzero
+                | BuiltinTheoremId::FnLimitPosInfEventuallyPositive
+                | BuiltinTheoremId::FnLimitPosInfEventuallyNonzero
+                | BuiltinTheoremId::FnLimitNegInfEventuallyPositive
+                | BuiltinTheoremId::FnLimitNegInfEventuallyNonzero
+        ) {
+            return self.compile_builtin_function_limit_eventual(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if matches!(
+            builtin.theorem,
+            BuiltinTheoremId::FnLimitAtToLeft
+                | BuiltinTheoremId::FnLimitAtToRight
+                | BuiltinTheoremId::FnLimitFromSides
+                | BuiltinTheoremId::FnLimitSidesMismatch
+        ) {
+            return self.compile_builtin_function_limit_sides(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if matches!(
+            builtin.theorem,
+            BuiltinTheoremId::FnLimitAtAdd
+                | BuiltinTheoremId::FnLimitAtSubtract
+                | BuiltinTheoremId::FnLimitAtMultiply
+                | BuiltinTheoremId::FnLimitLeftAdd
+                | BuiltinTheoremId::FnLimitLeftSubtract
+                | BuiltinTheoremId::FnLimitLeftMultiply
+                | BuiltinTheoremId::FnLimitRightAdd
+                | BuiltinTheoremId::FnLimitRightSubtract
+                | BuiltinTheoremId::FnLimitRightMultiply
+                | BuiltinTheoremId::FnLimitPosInfAdd
+                | BuiltinTheoremId::FnLimitPosInfSubtract
+                | BuiltinTheoremId::FnLimitPosInfMultiply
+                | BuiltinTheoremId::FnLimitNegInfAdd
+                | BuiltinTheoremId::FnLimitNegInfSubtract
+                | BuiltinTheoremId::FnLimitNegInfMultiply
+                | BuiltinTheoremId::FnLimitAtDivide
+                | BuiltinTheoremId::FnLimitLeftDivide
+                | BuiltinTheoremId::FnLimitRightDivide
+                | BuiltinTheoremId::FnLimitPosInfDivide
+                | BuiltinTheoremId::FnLimitNegInfDivide
+        ) {
+            return self.compile_builtin_function_limit_binary(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if matches!(
+            builtin.theorem,
+            BuiltinTheoremId::FnLimitAtNeg
+                | BuiltinTheoremId::FnLimitAtAbs
+                | BuiltinTheoremId::FnLimitLeftNeg
+                | BuiltinTheoremId::FnLimitLeftAbs
+                | BuiltinTheoremId::FnLimitRightNeg
+                | BuiltinTheoremId::FnLimitRightAbs
+                | BuiltinTheoremId::FnLimitPosInfNeg
+                | BuiltinTheoremId::FnLimitPosInfAbs
+                | BuiltinTheoremId::FnLimitNegInfNeg
+                | BuiltinTheoremId::FnLimitNegInfAbs
+                | BuiltinTheoremId::FnLimitAtScale
+                | BuiltinTheoremId::FnLimitAtPower
+                | BuiltinTheoremId::FnLimitLeftScale
+                | BuiltinTheoremId::FnLimitLeftPower
+                | BuiltinTheoremId::FnLimitRightScale
+                | BuiltinTheoremId::FnLimitRightPower
+                | BuiltinTheoremId::FnLimitPosInfScale
+                | BuiltinTheoremId::FnLimitPosInfPower
+                | BuiltinTheoremId::FnLimitNegInfScale
+                | BuiltinTheoremId::FnLimitNegInfPower
+        ) {
+            return self.compile_builtin_function_limit_unary(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if matches!(
+            builtin.theorem,
+            BuiltinTheoremId::FnLimitAtRealAccumulation
+                | BuiltinTheoremId::FnLimitLeftRealAccumulation
+                | BuiltinTheoremId::FnLimitRightRealAccumulation
+                | BuiltinTheoremId::FnLimitPosInfRealAccumulation
+                | BuiltinTheoremId::FnLimitNegInfRealAccumulation
+                | BuiltinTheoremId::FnLimitAtUnique
                 | BuiltinTheoremId::FnLimitLeftUnique
                 | BuiltinTheoremId::FnLimitRightUnique
                 | BuiltinTheoremId::FnLimitPosInfUnique
@@ -65,11 +258,29 @@ impl LitexToLeanCompiler {
                 | BuiltinTheoremId::FnLimitPosInfSelected
                 | BuiltinTheoremId::FnLimitNegInfExists
                 | BuiltinTheoremId::FnLimitNegInfSelected
+                | BuiltinTheoremId::FnLimitAtIdentity
+                | BuiltinTheoremId::FnLimitLeftIdentity
+                | BuiltinTheoremId::FnLimitRightIdentity
                 | BuiltinTheoremId::FnLimitAtConstant
                 | BuiltinTheoremId::FnLimitLeftConstant
                 | BuiltinTheoremId::FnLimitRightConstant
                 | BuiltinTheoremId::FnLimitPosInfConstant
                 | BuiltinTheoremId::FnLimitNegInfConstant
+                | BuiltinTheoremId::FnLimitAtFromEpsilon
+                | BuiltinTheoremId::FnLimitLeftFromEpsilon
+                | BuiltinTheoremId::FnLimitRightFromEpsilon
+                | BuiltinTheoremId::FnLimitPosInfFromEpsilon
+                | BuiltinTheoremId::FnLimitNegInfFromEpsilon
+                | BuiltinTheoremId::FnLimitAtAccumulation
+                | BuiltinTheoremId::FnLimitLeftAccumulation
+                | BuiltinTheoremId::FnLimitRightAccumulation
+                | BuiltinTheoremId::FnLimitPosInfAccumulation
+                | BuiltinTheoremId::FnLimitNegInfAccumulation
+                | BuiltinTheoremId::FnLimitAtControl
+                | BuiltinTheoremId::FnLimitLeftControl
+                | BuiltinTheoremId::FnLimitRightControl
+                | BuiltinTheoremId::FnLimitPosInfControl
+                | BuiltinTheoremId::FnLimitNegInfControl
         ) {
             return self.compile_builtin_function_limit_theorem(
                 call,

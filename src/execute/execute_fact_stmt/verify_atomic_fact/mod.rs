@@ -37,3 +37,6 @@ pub mod search_structural_membership;
 pub mod structural_membership_proof;
 
 mod verify_requirement_with_checked_arguments;
+
+mod search_structural_real_sign;
+pub mod structural_real_sign_proof;

@@ -14,7 +14,7 @@ theorem h_9 : ∀ {_Host_i1 : Type v1} [_rep_i1 : Litex.Representation M _Host_i
     let _value_i2 := Litex.semanticObject (M := M) _raw_i2 (M.member_isSet h_11)
     have h_11 : Litex.In _value_i2 (Litex.R (M := M)) := h_11
     exact True.intro);
-  Litex.fnSet (Litex.FunctionSignature.one (M := M) Litex.StandardSetValue.real Litex.StandardSetValue.real (fun (_raw_i2 : M.Value) => True)))) {_Host_i3 : Type v3} [_rep_i3 : Litex.Representation M _Host_i3] (_value_i3 : Litex.Obj (M := M) _Host_i3) (h_13 : Litex.In _value_i3 (Litex.R (M := M))) {_Host_i4 : Type v4} [_rep_i4 : Litex.Representation M _Host_i4] (_value_i4 : Litex.Obj (M := M) _Host_i4) (h_14 : Litex.In _value_i4 (Litex.R (M := M))) (h_5 : ∀ {_Host_i5 : Type _} [_rep_i5 : Litex.Representation M _Host_i5] (_value_i5 : Litex.Obj (M := M) _Host_i5) (h_15 : Litex.In _value_i5 (Litex.RPos (M := M))), ∃ (_value_i6 : Litex.Obj (M := M) M.Value), ∃ (h_19 : Litex.In _value_i6 (Litex.R (M := M))), ((Litex.Lt (Litex.number (M := M) (0 : ℂ)) (Litex.sub _value_i6 _value_i3 (M.real_subset_complex _ h_19) (M.real_subset_complex _ h_13))) ∧ (Litex.Lt (Litex.sub _value_i6 _value_i3 (M.real_subset_complex _ h_19) (M.real_subset_complex _ h_13)) _value_i5))) (h_7 : ∀ {_Host_i7 : Type _} [_rep_i7 : Litex.Representation M _Host_i7] (_value_i7 : Litex.Obj (M := M) _Host_i7) (h_459 : Litex.In _value_i7 (Litex.R (M := M))), (by
+  Litex.fnSet (Litex.FunctionSignature.one (M := M) Litex.StandardSetValue.real Litex.StandardSetValue.real (fun (_raw_i2 : M.Value) => True)))) {_Host_i3 : Type v3} [_rep_i3 : Litex.Representation M _Host_i3] (_value_i3 : Litex.Obj (M := M) _Host_i3) (h_13 : Litex.In _value_i3 (Litex.R (M := M))) {_Host_i4 : Type v4} [_rep_i4 : Litex.Representation M _Host_i4] (_value_i4 : Litex.Obj (M := M) _Host_i4) (h_14 : Litex.In _value_i4 (Litex.R (M := M))) (h_5 : ∀ (_value_i5 : Litex.Obj (M := M) M.Value) (h_15 : Litex.In _value_i5 (Litex.RPos (M := M))), ∃ (_value_i6 : Litex.Obj (M := M) M.Value), ∃ (h_19 : Litex.In _value_i6 (Litex.R (M := M))), ((Litex.Lt (Litex.number (M := M) (0 : ℂ)) (Litex.sub _value_i6 _value_i3 (M.real_subset_complex _ h_19) (M.real_subset_complex _ h_13))) ∧ (Litex.Lt (Litex.sub _value_i6 _value_i3 (M.real_subset_complex _ h_19) (M.real_subset_complex _ h_13)) _value_i5))) (h_7 : ∀ (_value_i7 : Litex.Obj (M := M) M.Value) (h_459 : Litex.In _value_i7 (Litex.R (M := M))), (by
   let _equal_wd_1_0 := (Litex.call Litex.StandardSetValue.real Litex.StandardSetValue.real (fun (_raw_i2 : M.Value) => True) _value_i1 _value_i7 h_12 h_459 True.intro)
   exact Litex.Same _equal_wd_1_0 _value_i4)), Litex.HasFiniteFunctionLimit .right _value_i1 _value_i3 _value_i4 :=
   (by
@@ -129,7 +129,7 @@ theorem h_9 : ∀ {_Host_i1 : Type v1} [_rep_i1 : Litex.Representation M _Host_i
                                       (fun _litex_zero => (Litex.ltNotSame (Litex.number (M := M) 0) _value_i8 h_991) _litex_zero.symm)
                                     )
                                 )
-                              exact (h_5 _value_i8 h_990)
+                              exact (h_5 (Litex.semanticObject (Litex.denote _value_i8) (Litex.isSet _value_i8)) h_990)
                             )
                           )
                       )
@@ -139,7 +139,7 @@ theorem h_9 : ∀ {_Host_i1 : Type v1} [_rep_i1 : Litex.Representation M _Host_i
                           exact (
                             (by
                               intro _Host_i10 _rep_i10 _value_i10 h_1683
-                              exact (h_7 _value_i10 h_1683)
+                              exact (h_7 (Litex.semanticObject (Litex.denote _value_i10) (Litex.isSet _value_i10)) h_1683)
                             )
                           )
                       )

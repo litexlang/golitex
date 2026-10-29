@@ -1,0 +1,10 @@
+# A local weak comparison passes to the two neg_inf limit values.
+thm neg_inf_limits_compare:
+    ? forall f,g fn(x R) R, a,b,r R:
+        $has_limit_neg_inf(f,a)
+        $has_limit_neg_inf(g,b)
+        forall x {t R:t<r}:
+            f(x)<=g(x)
+        =>:
+            a<=b
+    by thm fn_limit_neg_inf_compare(f,g,a,b,r) => a<=b

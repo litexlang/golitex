@@ -38,5 +38,8 @@ statement must succeed.
 
 The native scalar `is_lipschitz` predicate retains its existing contract;
 `is_lipschitz_map` names the supplied-metric interface. No topology generated
-by balls, sequence/Cauchy theory, completeness, compactness or fixed-point
-result is supplied yet. See [math_collections.md](math_collections.md).
+by balls or compactness result is supplied by this module. The separate
+[metric_sequences](../metric_sequences/README.md) module now supplies metric
+limits, Cauchy, real-line completeness and the Banach fixed-point theorem with
+actual iterates and error estimates; importing `metric` does not import those
+additional dependencies. See [math_collections.md](math_collections.md).

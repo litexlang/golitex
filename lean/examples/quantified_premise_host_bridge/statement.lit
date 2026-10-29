@@ -1,0 +1,8 @@
+# Instantiate a quantified relation premise with an object in another host type.
+abstract_prop host_bridge_relation(x,y)
+thm quantified_relation_bridge:
+    ? forall A set, a A:
+        forall x A:
+            exist y A st {$host_bridge_relation(x,y)}
+        =>:
+            exist y A st {$host_bridge_relation(a,y)}

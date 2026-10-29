@@ -1,0 +1,10 @@
+# The identity limit law retains a punctured complete function domain.
+claim:
+    ? forall f fn(x R:x!=0) R, p R:
+        forall r R+:
+            exist x {t R:t!=0} st {0<abs(x-p) and abs(x-p)<r}
+        forall x {t R:t!=0}:
+            f(x)=x
+        =>:
+            $has_limit_at(f,p,p)
+    by thm fn_limit_at_identity(f,p) => $has_limit_at(f,p,p)

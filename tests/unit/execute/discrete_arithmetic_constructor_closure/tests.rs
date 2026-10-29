@@ -42,17 +42,17 @@ fn discrete_constructor_truth_retains_stage_citation_and_no_temporary_store() {
     let Stmt::Fact(goal) = rt.parse(&tokens).unwrap().remove(0) else {
         panic!("fact");
     };
-    for level in [
-        VerifyStateLevel::Direct,
-        VerifyStateLevel::KnownSpecialProperty,
-    ] {
+    for level in [VerifyStateLevel::Direct] {
         assert!(rt
             .verify_fact(&goal, VerifyState::new(level))
             .unwrap()
             .is_failed());
     }
     assert!(!rt
-        .verify_fact(&goal, VerifyState::new(VerifyStateLevel::BuiltinRule))
+        .verify_fact(
+            &goal,
+            VerifyState::new(VerifyStateLevel::KnownSpecialProperty)
+        )
         .unwrap()
         .is_failed());
     let Fact::AtomicFact(atomic) = &goal else {
@@ -63,8 +63,8 @@ fn discrete_constructor_truth_retains_stage_citation_and_no_temporary_store() {
     assert!(!result.is_failed());
     let json = crate::json_output::project_stmt_detailed(&result, &rt).stringify();
     for text in [
-        "DiscreteArithmeticConstructorClosure",
-        "constructor_tree",
+        "by_structural_membership",
+        "function_return",
         "FnApplicationInCodomain",
         "cite_property_fact_id",
     ] {

@@ -1,0 +1,8 @@
+# A positive limit gives positive values on a sufficiently small right neighborhood.
+thm right_eventually_positive:
+    ? forall f fn(x R) R, p,L R:
+        $has_limit_right(f,p,L)
+        0<L
+        =>:
+            exist delta R+ st {{x R:0<(x-p) and (x-p)<delta} $subset preimage_set(f,R+)}
+    release thm fn_limit_right_eventually_positive(f,p,L)

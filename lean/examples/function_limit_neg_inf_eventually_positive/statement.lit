@@ -1,0 +1,8 @@
+# A positive limit gives positive values on a sufficiently small neg_inf neighborhood.
+thm neg_inf_eventually_positive:
+    ? forall f fn(x R) R, L R:
+        $has_limit_neg_inf(f,L)
+        0<L
+        =>:
+            exist delta R st {{x R:x<delta} $subset preimage_set(f,R+)}
+    release thm fn_limit_neg_inf_eventually_positive(f,L)

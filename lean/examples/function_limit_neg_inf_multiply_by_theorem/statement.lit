@@ -1,0 +1,10 @@
+# Transfer two neg_inf limits through multiply on the same complete domain.
+thm neg_inf_multiply_limits:
+    ? forall f,g,s fn(x R) R, a,b R:
+        $has_limit_neg_inf(f,a)
+        $has_limit_neg_inf(g,b)
+        forall x R:
+            s(x)=f(x)*g(x)
+        =>:
+            $has_limit_neg_inf(s,a*b)
+    by thm fn_limit_neg_inf_multiply(f,g,s,a,b) => $has_limit_neg_inf(s,a*b)

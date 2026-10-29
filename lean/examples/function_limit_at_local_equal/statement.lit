@@ -1,0 +1,11 @@
+# A local pointwise equality transfers a at limit.
+thm at_locally_equal_limits:
+    ? forall f,g fn(x R) R, p,L R, r R+:
+        $has_limit_at(f,p,L)
+        forall q R+:
+            exist x R st {0<(abs(x-p)) and (abs(x-p))<q}
+        forall x {t R:0<(abs(t-p)) and (abs(t-p))<r}:
+            g(x)=f(x)
+        =>:
+            $has_limit_at(g,p,L)
+    release thm fn_limit_at_local_equal(f,g,p,L,r)

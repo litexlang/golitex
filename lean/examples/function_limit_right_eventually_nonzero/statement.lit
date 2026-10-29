@@ -1,0 +1,8 @@
+# A nonzero limit gives nonzero values on a sufficiently small right neighborhood.
+thm right_eventually_nonzero:
+    ? forall f fn(x R) R, p,L R:
+        $has_limit_right(f,p,L)
+        L!=0
+        =>:
+            exist delta R+ st {{x R:0<(x-p) and (x-p)<delta} $subset preimage_set(f,R*)}
+    release thm fn_limit_right_eventually_nonzero(f,p,L)

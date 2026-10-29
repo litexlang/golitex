@@ -1,0 +1,5 @@
+# The real line has points arbitrarily close from the left approach.
+thm reals_accumulate_left:
+    ? forall p R, r R+:
+        exist x R st {0<(p-x) and (p-x)<r}
+    release thm fn_limit_left_real_accumulation(p)

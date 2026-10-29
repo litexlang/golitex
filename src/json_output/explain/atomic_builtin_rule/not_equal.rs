@@ -29,6 +29,9 @@ use crate::json_output::explain::text::text;
 impl NotEqualFactSearchProofByBuiltinRule {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
         match self {
+            Self::StructuralRealSign(p) => {
+                super::structural_real_sign::sign_text(p, OutputLanguage::English)
+            }
             Self::SinNonzeroNegation(_) => text("SinNonzeroNegation", "sin(x)!=0 => sin(-x)!=0"),
             Self::CosNonzeroNegation(_) => text("CosNonzeroNegation", "cos(x)!=0 => cos(-x)!=0"),
             Self::SinNonzeroIntegerPiShift(_) => text(
@@ -166,6 +169,9 @@ impl NotEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         match self {
+            Self::StructuralRealSign(p) => {
+                super::structural_real_sign::sign_text(p, OutputLanguage::Chinese)
+            }
             Self::SinNonzeroNegation(_) => text("SinNonzeroNegation", "sin(x)!=0 => sin(-x)!=0"),
             Self::CosNonzeroNegation(_) => text("CosNonzeroNegation", "cos(x)!=0 => cos(-x)!=0"),
             Self::SinNonzeroIntegerPiShift(_) => text(
@@ -288,6 +294,9 @@ impl NotEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
         match self {
+            Self::StructuralRealSign(p) => {
+                super::structural_real_sign::sign_text(p, OutputLanguage::ChineseTraditional)
+            }
             Self::SinNonzeroNegation(_) => text("SinNonzeroNegation", "sin(x)!=0 => sin(-x)!=0"),
             Self::CosNonzeroNegation(_) => text("CosNonzeroNegation", "cos(x)!=0 => cos(-x)!=0"),
             Self::SinNonzeroIntegerPiShift(_) => text(
@@ -405,6 +414,7 @@ impl NotEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
         match self {
+            Self::StructuralRealSign(p) => super::structural_real_sign::sign_text(p, OutputLanguage::French),
             Self::SinNonzeroNegation(_) => text("SinNonzeroNegation", "sin(x)!=0 => sin(-x)!=0"),
             Self::CosNonzeroNegation(_) => text("CosNonzeroNegation", "cos(x)!=0 => cos(-x)!=0"),
             Self::SinNonzeroIntegerPiShift(_) => text("SinNonzeroIntegerPiShift", "sin(x)!=0, k integer => sin(x+k*pi)!=0"),
@@ -465,6 +475,7 @@ impl NotEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
         match self {
+            Self::StructuralRealSign(p) => super::structural_real_sign::sign_text(p, OutputLanguage::Russian),
             Self::SinNonzeroNegation(_) => text("SinNonzeroNegation", "sin(x)!=0 => sin(-x)!=0"),
             Self::CosNonzeroNegation(_) => text("CosNonzeroNegation", "cos(x)!=0 => cos(-x)!=0"),
             Self::SinNonzeroIntegerPiShift(_) => text("SinNonzeroIntegerPiShift", "sin(x)!=0, k integer => sin(x+k*pi)!=0"),
@@ -525,6 +536,7 @@ impl NotEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
         match self {
+            Self::StructuralRealSign(p) => super::structural_real_sign::sign_text(p, OutputLanguage::Spanish),
             Self::SinNonzeroNegation(_) => text("SinNonzeroNegation", "sin(x)!=0 => sin(-x)!=0"),
             Self::CosNonzeroNegation(_) => text("CosNonzeroNegation", "cos(x)!=0 => cos(-x)!=0"),
             Self::SinNonzeroIntegerPiShift(_) => text("SinNonzeroIntegerPiShift", "sin(x)!=0, k integer => sin(x+k*pi)!=0"),
@@ -585,6 +597,9 @@ impl NotEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
         match self {
+            Self::StructuralRealSign(p) => {
+                super::structural_real_sign::sign_text(p, OutputLanguage::Arabic)
+            }
             Self::SinNonzeroNegation(_) => text("SinNonzeroNegation", "sin(x)!=0 => sin(-x)!=0"),
             Self::CosNonzeroNegation(_) => text("CosNonzeroNegation", "cos(x)!=0 => cos(-x)!=0"),
             Self::SinNonzeroIntegerPiShift(_) => text(
@@ -716,6 +731,9 @@ impl NotEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
         match self {
+            Self::StructuralRealSign(p) => {
+                super::structural_real_sign::sign_text(p, OutputLanguage::Japanese)
+            }
             Self::SinNonzeroNegation(_) => text("SinNonzeroNegation", "sin(x)!=0 => sin(-x)!=0"),
             Self::CosNonzeroNegation(_) => text("CosNonzeroNegation", "cos(x)!=0 => cos(-x)!=0"),
             Self::SinNonzeroIntegerPiShift(_) => text(
@@ -849,6 +867,9 @@ impl NotEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
         match self {
+            Self::StructuralRealSign(p) => {
+                super::structural_real_sign::sign_text(p, OutputLanguage::Korean)
+            }
             Self::SinNonzeroNegation(_) => text("SinNonzeroNegation", "sin(x)!=0 => sin(-x)!=0"),
             Self::CosNonzeroNegation(_) => text("CosNonzeroNegation", "cos(x)!=0 => cos(-x)!=0"),
             Self::SinNonzeroIntegerPiShift(_) => text(
@@ -980,6 +1001,7 @@ impl NotEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
         match self {
+            Self::StructuralRealSign(p) => super::structural_real_sign::sign_text(p, OutputLanguage::Vietnamese),
             Self::SinNonzeroNegation(_) => text("SinNonzeroNegation", "sin(x)!=0 => sin(-x)!=0"),
             Self::CosNonzeroNegation(_) => text("CosNonzeroNegation", "cos(x)!=0 => cos(-x)!=0"),
             Self::SinNonzeroIntegerPiShift(_) => text("SinNonzeroIntegerPiShift", "sin(x)!=0, k integer => sin(x+k*pi)!=0"),
@@ -1055,6 +1077,7 @@ impl NotEqualFactSearchProofByBuiltinRule {
 
     pub fn cite_fact_id(&self) -> Option<FactId> {
         match self {
+            Self::StructuralRealSign(_) => None,
             Self::SinNonzeroNegation(_)
             | Self::CosNonzeroNegation(_)
             | Self::SinNonzeroIntegerPiShift(_)

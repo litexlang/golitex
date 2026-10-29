@@ -1,0 +1,10 @@
+# Multiply two relative limits while retaining the shared nonzero input domain.
+thm guarded_product_limit:
+    ? forall f,g,s fn(x R:x!=0) R, p,a,b R:
+        $has_limit_at(f,p,a)
+        $has_limit_at(g,p,b)
+        forall x {t R:t!=0}:
+            s(x)=f(x)*g(x)
+        =>:
+            $has_limit_at(s,p,a*b)
+    by thm fn_limit_at_multiply(f,g,s,p,a,b) => $has_limit_at(s,p,a*b)

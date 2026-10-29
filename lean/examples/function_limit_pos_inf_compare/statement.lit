@@ -1,0 +1,10 @@
+# A local weak comparison passes to the two pos_inf limit values.
+thm pos_inf_limits_compare:
+    ? forall f,g fn(x R) R, a,b,r R:
+        $has_limit_pos_inf(f,a)
+        $has_limit_pos_inf(g,b)
+        forall x {t R:r<t}:
+            f(x)<=g(x)
+        =>:
+            a<=b
+    by thm fn_limit_pos_inf_compare(f,g,a,b,r) => a<=b

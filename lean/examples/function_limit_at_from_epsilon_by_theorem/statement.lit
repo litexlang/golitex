@@ -1,0 +1,10 @@
+# Invoke the explicit epsilon-definition theorem for a at real function limit.
+thm explicit_at_function_limit_intro:
+    ? forall f fn(x R) R, x0 R, L R:
+        forall r R+:
+            exist x R st {0 < abs(x-x0) and abs(x-x0) < r}
+        forall epsilon R+:
+            exist delta R+ st {{x R: 0 < abs(x-x0) and abs(x-x0) < delta} $subset preimage_set(f,{v R: abs(v-L) < epsilon})}
+        =>:
+            $has_limit_at(f,x0,L)
+    by thm fn_limit_at_from_epsilon(f,x0,L) => $has_limit_at(f,x0,L)

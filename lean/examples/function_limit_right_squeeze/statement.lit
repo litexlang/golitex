@@ -1,0 +1,10 @@
+# A local two-sided bound transfers a common finite-approach limit.
+thm right_squeezed_limit:
+    ? forall f,g,h fn(x R) R, p,L R, r R+:
+        $has_limit_right(f,p,L)
+        $has_limit_right(h,p,L)
+        forall x {t R:0<t-p and t-p<r}:
+            f(x)<=g(x)<=h(x)
+        =>:
+            $has_limit_right(g,p,L)
+    release thm fn_limit_right_squeeze(f,g,h,p,L,r)

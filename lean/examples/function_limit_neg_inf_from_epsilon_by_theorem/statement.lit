@@ -1,0 +1,10 @@
+# Invoke the explicit epsilon-definition theorem for a neg_inf real function limit.
+thm explicit_neg_inf_neg_infinite_limit_intro:
+    ? forall f fn(x R) R, L R:
+        forall T R:
+            exist x R st {x < T}
+        forall epsilon R+:
+            exist T R st {{x R: x < T} $subset preimage_set(f,{v R: abs(v-L) < epsilon})}
+        =>:
+            $has_limit_neg_inf(f,L)
+    by thm fn_limit_neg_inf_from_epsilon(f,L) => $has_limit_neg_inf(f,L)

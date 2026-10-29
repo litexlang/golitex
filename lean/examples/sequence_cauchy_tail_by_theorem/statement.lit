@@ -1,0 +1,7 @@
+# A Cauchy sequence has a controlling tail for each positive tolerance.
+thm cauchy_tail_exists:
+    ? forall a seq(R), epsilon R+:
+        $is_seq_cauchy(a)
+        =>:
+            exist cutoff N+ st {cart({m N+:m>=cutoff},{n N+:n>=cutoff}) $subset {p cart(N+,N+):abs(a(p(1))-a(p(2)))<epsilon}}
+    release thm sequence_cauchy_tail(a,epsilon)

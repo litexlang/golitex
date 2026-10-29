@@ -1,0 +1,3 @@
+0 $in N
+
+have invalid_infinite &graph::FiniteSimpleGraph<N> = (N,{})

@@ -1,0 +1,7 @@
+have lone_vertices finite_set={7}
+
+release thm graph::edgeless_graph_construction(lone_vertices)
+
+have lone_graph &graph::FiniteSimpleGraph<lone_vertices> = (lone_vertices,{})
+
+release thm graph::finite_simple_graph_has_equal_degrees(lone_vertices,lone_graph)

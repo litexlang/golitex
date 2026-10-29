@@ -20,6 +20,9 @@ use crate::json_output::explain::text::text;
 impl GreaterFactSearchProofByBuiltinRule {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
         match self {
+            Self::StructuralRealSign(p) => {
+                super::structural_real_sign::sign_text(p, OutputLanguage::English)
+            }
             Self::ClosedSubtractionStrictBound(_) => text(
                 "Subtract to obtain a strict stored bound",
                 "The closed offset or the strict source bound makes the translated bound strict",
@@ -49,6 +52,9 @@ impl GreaterFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         match self {
+            Self::StructuralRealSign(p) => {
+                super::structural_real_sign::sign_text(p, OutputLanguage::Chinese)
+            }
             Self::ClosedSubtractionStrictBound(_) => text(
                 "减法传递严格界",
                 "闭合常数的方向或已存储的严格前提保证减法后的严格界",
@@ -75,6 +81,9 @@ impl GreaterFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
         match self {
+            Self::StructuralRealSign(p) => {
+                super::structural_real_sign::sign_text(p, OutputLanguage::ChineseTraditional)
+            }
             Self::ClosedSubtractionStrictBound(_) => text(
                 "減法傳遞嚴格界",
                 "閉合常數的方向或已儲存的嚴格前提保證減法後的嚴格界",
@@ -101,6 +110,9 @@ impl GreaterFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
         match self {
+            Self::StructuralRealSign(p) => {
+                super::structural_real_sign::sign_text(p, OutputLanguage::French)
+            }
             Self::ClosedSubtractionStrictBound(_) => text(
                 "Soustraction et borne stricte",
                 "La constante ou la prémisse stricte garantit la borne stricte translatée",
@@ -130,6 +142,9 @@ impl GreaterFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
         match self {
+            Self::StructuralRealSign(p) => {
+                super::structural_real_sign::sign_text(p, OutputLanguage::Russian)
+            }
             Self::ClosedSubtractionStrictBound(_) => text(
                 "Вычитание и строгая граница",
                 "Константа или строгая предпосылка обеспечивает строгую перенесённую границу",
@@ -159,6 +174,9 @@ impl GreaterFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
         match self {
+            Self::StructuralRealSign(p) => {
+                super::structural_real_sign::sign_text(p, OutputLanguage::Spanish)
+            }
             Self::ClosedSubtractionStrictBound(_) => text(
                 "Resta y cota estricta",
                 "La constante o la premisa estricta garantiza la cota trasladada estricta",
@@ -188,6 +206,9 @@ impl GreaterFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
         match self {
+            Self::StructuralRealSign(p) => {
+                super::structural_real_sign::sign_text(p, OutputLanguage::Arabic)
+            }
             Self::ClosedSubtractionStrictBound(_) => text(
                 "الطرح والحد الصارم",
                 "الثابت أو الفرضية الصارمة يضمنان حدًا منقولًا صارمًا",
@@ -216,6 +237,9 @@ impl GreaterFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
         match self {
+            Self::StructuralRealSign(p) => {
+                super::structural_real_sign::sign_text(p, OutputLanguage::Japanese)
+            }
             Self::ClosedSubtractionStrictBound(_) => text(
                 "減算による厳密な境界",
                 "定数の符号または厳密な前提により減算後の厳密な境界が得られる",
@@ -245,6 +269,9 @@ impl GreaterFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
         match self {
+            Self::StructuralRealSign(p) => {
+                super::structural_real_sign::sign_text(p, OutputLanguage::Korean)
+            }
             Self::ClosedSubtractionStrictBound(_) => text(
                 "뺄셈으로 엄격한 경계 얻기",
                 "상수의 부호 또는 엄격한 전제가 이동된 엄격한 경계를 보장한다",
@@ -274,6 +301,9 @@ impl GreaterFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
         match self {
+            Self::StructuralRealSign(p) => {
+                super::structural_real_sign::sign_text(p, OutputLanguage::Vietnamese)
+            }
             Self::ClosedSubtractionStrictBound(_) => text(
                 "Trừ để có cận nghiêm ngặt",
                 "Hằng số hoặc tiền đề nghiêm ngặt bảo đảm cận dịch chuyển nghiêm ngặt",
@@ -318,6 +348,7 @@ impl GreaterFactSearchProofByBuiltinRule {
 
     pub fn cite_fact_id(&self) -> Option<FactId> {
         match self {
+            Self::StructuralRealSign(_) => None,
             Self::ClosedSubtractionStrictBound(p) => Some(p.bound.cite_fact_id),
             Self::MulLeftNegativeReversesStrictGreater(_) => None,
             Self::MulRightNegativeReversesStrictGreater(_) => None,

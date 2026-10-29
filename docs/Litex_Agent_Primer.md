@@ -169,7 +169,9 @@ sqrt(x^2) = x
 ## Working style
 
 Append one declaration or a few related facts, run `./step`, read the one-line
-result, then continue. A rejected line tells you exactly which check failed; add
+result, then continue. Structure the file so that you can append: definitions and
+helper lemmas first, then the theorem. Inserting a lemma above accepted lines
+forces a full re-check. A rejected line tells you exactly which check failed; add
 the missing fact before it instead of restructuring the file. If `./step` prints
 `RESYNC`, you rewrote earlier lines and the whole file was re-checked; prefer
 appending. Run `./check solution.lit` once before you finish.

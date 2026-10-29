@@ -1,0 +1,5 @@
+# The real line has points arbitrarily close from the right approach.
+thm reals_accumulate_right:
+    ? forall p R, r R+:
+        exist x R st {0<(x-p) and (x-p)<r}
+    release thm fn_limit_right_real_accumulation(p)

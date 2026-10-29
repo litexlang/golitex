@@ -1,0 +1,11 @@
+release thm top::indiscrete_topology_laws(R)
+
+have weak &top::TopologicalSpace<R> = (R,union({{}},{R}))
+
+weak.carrier=R
+
+weak.opens=union({{}},{R})
+
+release thm top::singleton_is_compact(R,weak,0)
+
+release thm top::compact_subset_of_Hausdorff_is_closed(R,weak,{0})

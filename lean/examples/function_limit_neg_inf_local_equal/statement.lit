@@ -1,0 +1,11 @@
+# A local pointwise equality transfers a neg_inf limit.
+thm neg_inf_locally_equal_limits:
+    ? forall f,g fn(x R) R, L,r R:
+        $has_limit_neg_inf(f,L)
+        forall q R:
+            exist x R st {x<q}
+        forall x {t R:t<r}:
+            g(x)=f(x)
+        =>:
+            $has_limit_neg_inf(g,L)
+    release thm fn_limit_neg_inf_local_equal(f,g,L,r)

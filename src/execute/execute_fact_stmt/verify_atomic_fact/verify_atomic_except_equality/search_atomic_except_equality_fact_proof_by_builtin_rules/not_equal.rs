@@ -22,6 +22,9 @@ use crate::runtime::{FactId, Runtime, RuntimeResult};
 
 // Builtin rules for `!=` facts (zero-premise routes).
 pub enum NotEqualFactSearchProofByBuiltinRule {
+    StructuralRealSign(
+        crate::execute::execute_fact_stmt::verify_atomic_fact::structural_real_sign_proof::StructuralRealSignProof,
+    ),
     SinComplementNonzeroFromCos(super::scalar_nonzero_relations::SinComplementNonzeroFromCosProof),
     NegationNonzero(NegationNonzeroProof),
     CoshNonzero(CoshNonzeroProof),
@@ -285,6 +288,22 @@ impl Runtime {
     // B0: closed decimal + known strict order. A: match Obj shapes. B1: none.
     // Example: prove `1 != 0`, `x != 0` from `x > 0`, `{1} != {1, 2}`, `cos(y) != 0`.
     pub fn search_not_equal_fact_proof_by_builtin_rule(
+        &mut self,
+        fact: &crate::ast::fact::NotEqualFact,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Option<NotEqualFactSearchProofByBuiltinRule>> {
+        let existing =
+            self.search_not_equal_fact_proof_by_builtin_rule_existing(fact, verify_state)?;
+        if existing.is_some() {
+            return Ok(existing);
+        }
+        let goal = crate::ast::fact::AtomicFact::NotEqualFact(fact.clone());
+        Ok(self
+            .search_structural_real_sign_fact(&goal, verify_state)
+            .map(NotEqualFactSearchProofByBuiltinRule::StructuralRealSign))
+    }
+
+    fn search_not_equal_fact_proof_by_builtin_rule_existing(
         &mut self,
         fact: &NotEqualFact,
         verify_state: VerifyState,

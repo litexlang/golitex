@@ -1,0 +1,29 @@
+release thm top::discrete_topology_laws({0,1})
+
+have inc_space &top::TopologicalSpace<{0,1}> = ({0,1},power_set({0,1}))
+
+inc_space.carrier={0,1}
+
+0 $in inc_space.carrier
+
+{0} $in power_set(inc_space.carrier)
+
+release thm top::subspace_topology_laws({0,1},inc_space,{0})
+
+\top::subspace_space<{0,1},inc_space,{0}> = ({0},\top::subspace_open_family<{0,1},inc_space,{0}>)
+
+\top::subspace_space<{0,1},inc_space,{0}> $in &top::TopologicalSpace<{0}>
+
+\top::subspace_space<{0,1},inc_space,{0}>.carrier={0}
+
+claim:
+    ? forall x \top::subspace_space<{0,1},inc_space,{0}>.carrier:
+        x $in inc_space.carrier
+    x $in {0}
+    x=0
+
+0 $in \top::subspace_space<{0,1},inc_space,{0}>.carrier
+
+\top::subspace_inclusion<{0,1},inc_space,{0}>(0)=0
+
+\top::subspace_inclusion<{0,1},inc_space,{0}>(1)=1

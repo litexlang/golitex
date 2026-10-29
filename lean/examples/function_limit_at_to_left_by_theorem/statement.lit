@@ -1,0 +1,9 @@
+# Restrict a two-sided limit only when the selected side accumulates in the domain.
+thm limit_at_to_left:
+    ? forall f fn(x R) R, p,L R:
+        $has_limit_at(f,p,L)
+        forall r R+:
+            exist x R st {0<(p-x) and (p-x)<r}
+        =>:
+            $has_limit_left(f,p,L)
+    by thm fn_limit_at_to_left(f,p,L) => $has_limit_left(f,p,L)

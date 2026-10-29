@@ -1,0 +1,7 @@
+# A supplied real limit makes a real sequence convergent.
+thm convergent_from_candidate:
+    ? forall a seq(R), L R:
+        $has_seq_limit(a,L)
+        =>:
+            $is_seq_convergent(a)
+    release thm sequence_convergent_from_limit(a,L)

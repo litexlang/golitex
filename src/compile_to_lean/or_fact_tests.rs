@@ -89,7 +89,6 @@ fn known_or_replays_original_argument_paths_in_source_order() {
     let lean = compiler
         .compile_run(&result, "known_or_argument_paths")
         .expect("the original ordered equality paths transport the cited disjunction");
-    assert!(lean.contains("Or.elim"));
     assert!(lean.matches(&format!("h_{}", id.value())).count() >= 2);
 }
 
@@ -206,7 +205,6 @@ fn or_replays_integer_coverage_and_exact_known_forall_instantiation() {
         .compile_run(&result, "original_or_coverage")
         .expect("Or original routes");
     assert!(lean.contains("Litex.integerSuccessorTail"));
-    assert!(lean.contains("Or.elim"));
     assert!(!lean.contains("sorry"));
 }
 

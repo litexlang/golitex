@@ -1,0 +1,5 @@
+# The real line is unbounded in the pos_inf direction.
+thm reals_unbounded_pos_inf:
+    ? forall T R:
+        exist x R st {T<x}
+    release thm fn_limit_pos_inf_real_accumulation()

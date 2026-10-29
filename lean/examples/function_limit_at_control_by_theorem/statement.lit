@@ -1,0 +1,7 @@
+# Extract the at limit control certificate on the original real domain.
+thm explicit_at_control:
+    ? forall f fn(x R) R, p R, L R, epsilon R+:
+        $has_limit_at(f,p,L)
+        =>:
+            exist threshold R+ st {{x R:0<abs(x-p) and abs(x-p)<threshold} $subset preimage_set(f,{v R:abs(v-L)<epsilon})}
+    release thm fn_limit_at_control(f,p,L,epsilon)

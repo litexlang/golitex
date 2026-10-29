@@ -1,0 +1,13 @@
+# Divide two neg_inf limits with a nonzero limit and nonzero denominator calls.
+thm neg_inf_quotient_limit:
+    ? forall f,g,q fn(x R) R, a,b R:
+        $has_limit_neg_inf(f,a)
+        $has_limit_neg_inf(g,b)
+        b!=0
+        forall x R:
+            g(x)!=0
+        forall x R:
+            q(x)=f(x)/g(x)
+        =>:
+            $has_limit_neg_inf(q,a/b)
+    by thm fn_limit_neg_inf_divide(f,g,q,a,b) => $has_limit_neg_inf(q,a/b)

@@ -1,0 +1,7 @@
+# A convergent real sequence has a real limit witness.
+thm convergent_limit_exists:
+    ? forall a seq(R):
+        $is_seq_convergent(a)
+        =>:
+            exist L R st {$has_seq_limit(a,L)}
+    release thm sequence_limit_from_convergent(a)

@@ -1,0 +1,7 @@
+# Extract the left limit control certificate on the original real domain.
+thm explicit_left_control:
+    ? forall f fn(x R) R, p R, L R, epsilon R+:
+        $has_limit_left(f,p,L)
+        =>:
+            exist threshold R+ st {{x R:0<(p-x) and (p-x)<threshold} $subset preimage_set(f,{v R:abs(v-L)<epsilon})}
+    release thm fn_limit_left_control(f,p,L,epsilon)

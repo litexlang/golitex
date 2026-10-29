@@ -1,0 +1,9 @@
+# A variable natural power preserves a finite real function limit.
+thm natural_power_limit:
+    ? forall f,g fn(x R) R, p,L R, n N:
+        $has_limit_at(f,p,L)
+        forall x R:
+            g(x)=f(x)^n
+        =>:
+            $has_limit_at(g,p,L^n)
+    by thm fn_limit_at_power(f,g,p,L,n) => $has_limit_at(g,p,L^n)

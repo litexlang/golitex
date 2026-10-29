@@ -1,0 +1,8 @@
+# Equal left and right limits give a two-sided limit on the same complete domain.
+thm bridge_from_sides:
+    ? forall f fn(x R) R, p,L R:
+        $has_limit_left(f,p,L)
+        $has_limit_right(f,p,L)
+        =>:
+            $has_limit_at(f,p,L)
+    by thm fn_limit_from_sides(f,p,L) => $has_limit_at(f,p,L)

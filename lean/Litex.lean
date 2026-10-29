@@ -14097,7 +14097,7 @@ noncomputable def finiteLimitNeighborhoodValue {M : Semantics.{u}} [SetSemantics
     RealLtValue M (M.number 0) (finiteLimitDistanceValue side point x) ∧
     RealLtValue M (finiteLimitDistanceValue side point x) radius)
 
-def FiniteLimitAccumulationClauseValue (M : Semantics.{u}) [FunctionSemantics M]
+def FiniteLimitAccumulationClauseValue (M : Semantics.{u}) [SetSemantics M]
     (side : FiniteLimitSide) (domain point radius : M.Value) : Prop :=
   ∃ input : Obj (M := M) M.Value, ∃ _ : M.mem (denote input) domain,
     RealLtValue M (M.number 0) (finiteLimitDistanceValue side point (denote input)) ∧
@@ -14388,7 +14388,7 @@ noncomputable def infiniteLimitTailValue {M : Semantics.{u}} [SetSemantics M]
   SetSemantics.sepValue domain (fun input => ∃ _ : M.mem input domain,
     infiniteBeyondValue M direction bound input)
 
-def InfiniteLimitAccumulationClauseValue (M : Semantics.{u}) [FunctionSemantics M]
+def InfiniteLimitAccumulationClauseValue (M : Semantics.{u})
     (direction : InfiniteLimitDirection) (domain bound : M.Value) : Prop :=
   ∃ input : Obj (M := M) M.Value, ∃ _ : M.mem (denote input) domain,
     infiniteBeyondValue M direction bound (denote input)
@@ -14607,4 +14607,1215 @@ theorem infiniteFunctionLimitConstant {M : Semantics.{u}} [F : FunctionSemantics
   rw [image]
   exact sequenceEpsilonBall_self value epsilon hv hepsilon
 
+end Litex
+
+namespace Litex
+
+
+theorem sequenceEpsilonBall_numbers {M : Semantics.{u}} [S : SetSemantics M]
+    (value epsilon output : ℝ) :
+    M.mem (M.number (output : ℂ))
+      (sequenceEpsilonBallValue (M.number (value : ℂ)) (M.number (epsilon : ℂ))) ↔
+      |output - value| < epsilon := by
+  rw [sequenceEpsilonBallValue, S.sep_members]
+  constructor
+  · rintro ⟨_, _, h⟩
+    change RealLtValue M (absValue (M.subValue (M.number (output : ℂ))
+      (M.number (value : ℂ)))) (M.number (epsilon : ℂ)) at h
+    rw [M.sub_numbers, ← Complex.ofReal_sub, absValue_number] at h
+    exact (realLtValue_numbers _ epsilon).mp h
+  · intro h
+    have hreal : M.mem (M.number (output : ℂ)) (denote (R (M := M))) :=
+      (M.real_members _).mpr ⟨output, rfl⟩
+    refine ⟨hreal, hreal, ?_⟩
+    change RealLtValue M (absValue (M.subValue (M.number (output : ℂ))
+      (M.number (value : ℂ)))) (M.number (epsilon : ℂ))
+    rw [M.sub_numbers, ← Complex.ofReal_sub, absValue_number]
+    exact (realLtValue_numbers _ epsilon).mpr h
+
+theorem finiteFunctionLimitAccumulation {M : Semantics.{u}} [F : FunctionSemantics M]
+    {α : Type v} {β : Type w} {γ : Type x} {δ : Type y} {σ : Type z}
+    [Representation M α] [Representation M β] [Representation M γ]
+    [Representation M δ] [Representation M σ]
+    (side : FiniteLimitSide) (f : Obj (M := M) α) (point : Obj (M := M) β)
+    (value : Obj (M := M) γ) (domain : Obj (M := M) δ)
+    (hD : denote domain = F.domainValue (denote f))
+    (h : HasFiniteFunctionLimit side f point value)
+    (radius : Obj (M := M) σ) (hradius : In radius RPos) :
+    FiniteLimitAccumulationClauseValue M side (denote domain) (denote point) (denote radius) := by
+  obtain ⟨p, _, hp, _, ha, _⟩ := h
+  obtain ⟨r, hr, hrpos⟩ := NativeBridge.realWitnessOfPositive radius (inRPos_positive radius hradius)
+  obtain ⟨input, hinput, hpositive, hnear⟩ := ha r hrpos
+  have hmem : M.mem (M.number (input : ℂ)) (denote domain) := hD ▸ hinput
+  let witness := semanticObject (M.number (input : ℂ)) (M.member_isSet hmem)
+  refine ⟨witness, hmem, ?_, ?_⟩
+  · change RealLtValue M (M.number 0) (finiteLimitDistanceValue side (denote point) (M.number (input : ℂ)))
+    rw [hp, finiteLimitDistanceValue_numbers]
+    exact (realLtValue_numbers 0 _).mpr hpositive
+  · change RealLtValue M (finiteLimitDistanceValue side (denote point) (M.number (input : ℂ))) (denote radius)
+    rw [hp, hr, finiteLimitDistanceValue_numbers]
+    exact (realLtValue_numbers _ r).mpr hnear
+
+theorem finiteFunctionLimitControl {M : Semantics.{u}} [F : FunctionSemantics M]
+    {α : Type v} {β : Type w} {γ : Type x} {δ : Type y} {σ : Type z}
+    [Representation M α] [Representation M β] [Representation M γ]
+    [Representation M δ] [Representation M σ]
+    (side : FiniteLimitSide) (f : Obj (M := M) α) (point : Obj (M := M) β)
+    (value : Obj (M := M) γ) (domain : Obj (M := M) δ)
+    (hf : RealFunctionValue M (denote f))
+    (hD : denote domain = F.domainValue (denote f))
+    (h : HasFiniteFunctionLimit side f point value)
+    (epsilon : Obj (M := M) σ) (hepsilon : In epsilon RPos) :
+    FiniteLimitEpsilonClauseValue M side (denote f) (denote domain) (denote point)
+      (denote value) (denote epsilon) := by
+  obtain ⟨p, l, hp, hl, _, he⟩ := h
+  obtain ⟨e, hevalue, hepos⟩ := NativeBridge.realWitnessOfPositive epsilon (inRPos_positive epsilon hepsilon)
+  obtain ⟨d, hd, hestimate⟩ := he e hepos
+  have hdmem : M.mem (M.number (d : ℂ)) (denote (RPos (M := M))) := numberInRPos d hd
+  let delta := semanticObject (M.number (d : ℂ)) (M.member_isSet hdmem)
+  refine ⟨delta, hdmem, ?_⟩
+  intro input hneighborhood
+  obtain ⟨hxD, _, hpositive, hnear⟩ := (F.sep_members _ _ _).mp hneighborhood
+  obtain ⟨signature, hfn, hreal, _⟩ := hf
+  have hsignature : denote domain = signature.domain := hD.trans (F.domainValue_eq signature.domain_isSet hfn)
+  obtain ⟨x, hx⟩ := (M.real_members input).mp (hreal input (hsignature ▸ hxD))
+  have hxgraph : M.mem (M.number (x : ℂ)) (F.domainValue (denote f)) := by
+    rw [← hx, ← hD]
+    exact hxD
+  change RealLtValue M (M.number 0) (finiteLimitDistanceValue side (denote point) input) at hpositive
+  change RealLtValue M (finiteLimitDistanceValue side (denote point) input) (M.number (d : ℂ)) at hnear
+  rw [hp, hx, finiteLimitDistanceValue_numbers] at hpositive hnear
+  obtain ⟨output, houtput, hclose⟩ := hestimate x hxgraph
+    ((realLtValue_numbers 0 _).mp hpositive) ((realLtValue_numbers _ d).mp hnear)
+  apply (F.preimage_mem_iff _ signature.domain_isSet hfn).mpr
+  refine ⟨hsignature ▸ hxD, ?_⟩
+  rw [hx, houtput, hl, hevalue]
+  exact (sequenceEpsilonBall_numbers l e output).mpr hclose
+
+theorem infiniteFunctionLimitAccumulation {M : Semantics.{u}} [F : FunctionSemantics M]
+    {α : Type v} {β : Type w} {γ : Type x} {σ : Type y}
+    [Representation M α] [Representation M β] [Representation M γ] [Representation M σ]
+    (direction : InfiniteLimitDirection) (f : Obj (M := M) α)
+    (value : Obj (M := M) β) (domain : Obj (M := M) γ)
+    (hD : denote domain = F.domainValue (denote f))
+    (h : HasInfiniteFunctionLimit direction f value)
+    (bound : Obj (M := M) σ) (hbound : In bound R) :
+    InfiniteLimitAccumulationClauseValue M direction (denote domain) (denote bound) := by
+  obtain ⟨_, _, ha, _⟩ := h
+  obtain ⟨b, hb⟩ := (M.real_members _).mp hbound
+  obtain ⟨input, hinput, hbeyond⟩ := ha b
+  have hmem : M.mem (M.number (input : ℂ)) (denote domain) := hD ▸ hinput
+  let witness := semanticObject (M.number (input : ℂ)) (M.member_isSet hmem)
+  refine ⟨witness, hmem, ?_⟩
+  change infiniteBeyondValue M direction (denote bound) (M.number (input : ℂ))
+  rw [hb]
+  exact (infiniteBeyondValue_numbers direction b input).mpr hbeyond
+
+theorem infiniteFunctionLimitControl {M : Semantics.{u}} [F : FunctionSemantics M]
+    {α : Type v} {β : Type w} {γ : Type x} {σ : Type y}
+    [Representation M α] [Representation M β] [Representation M γ] [Representation M σ]
+    (direction : InfiniteLimitDirection) (f : Obj (M := M) α)
+    (value : Obj (M := M) β) (domain : Obj (M := M) γ)
+    (hf : RealFunctionValue M (denote f))
+    (hD : denote domain = F.domainValue (denote f))
+    (h : HasInfiniteFunctionLimit direction f value)
+    (epsilon : Obj (M := M) σ) (hepsilon : In epsilon RPos) :
+    InfiniteLimitEpsilonClauseValue M direction (denote f) (denote domain) (denote value) (denote epsilon) := by
+  obtain ⟨l, hl, _, he⟩ := h
+  obtain ⟨e, hevalue, hepos⟩ := NativeBridge.realWitnessOfPositive epsilon (inRPos_positive epsilon hepsilon)
+  obtain ⟨b, hestimate⟩ := he e hepos
+  have hbmem : M.mem (M.number (b : ℂ)) (denote (R (M := M))) := NativeBridge.numberInR b
+  let bound := semanticObject (M.number (b : ℂ)) (M.member_isSet hbmem)
+  refine ⟨bound, hbmem, ?_⟩
+  intro input htail
+  obtain ⟨hxD, _, hbeyond⟩ := (F.sep_members _ _ _).mp htail
+  obtain ⟨signature, hfn, hreal, _⟩ := hf
+  have hsignature : denote domain = signature.domain := hD.trans (F.domainValue_eq signature.domain_isSet hfn)
+  obtain ⟨x, hx⟩ := (M.real_members input).mp (hreal input (hsignature ▸ hxD))
+  have hxgraph : M.mem (M.number (x : ℂ)) (F.domainValue (denote f)) := by
+    rw [← hx, ← hD]
+    exact hxD
+  change infiniteBeyondValue M direction (M.number (b : ℂ)) input at hbeyond
+  rw [hx] at hbeyond
+  obtain ⟨output, houtput, hclose⟩ := hestimate x hxgraph
+    ((infiniteBeyondValue_numbers direction b x).mp hbeyond)
+  apply (F.preimage_mem_iff _ signature.domain_isSet hfn).mpr
+  refine ⟨hsignature ▸ hxD, ?_⟩
+  rw [hx, houtput, hl, hevalue]
+  exact (sequenceEpsilonBall_numbers l e output).mpr hclose
+
+end Litex
+
+
+namespace Litex
+
+theorem realFiniteLimitAccumulation {M : Semantics.{u}} [SetSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β]
+    (side : FiniteLimitSide) (point : Obj (M := M) α) (hp : In point R)
+    (radius : Obj (M := M) β) (hr : In radius RPos) :
+    FiniteLimitAccumulationClauseValue M side (denote (R (M := M))) (denote point) (denote radius) := by
+  obtain ⟨p, hp⟩ := (M.real_members _).mp hp
+  obtain ⟨r, hr, hpos⟩ := NativeBridge.realWitnessOfPositive radius (inRPos_positive radius hr)
+  let x : ℝ := match side with | .both => p+r/2 | .left => p-r/2 | .right => p+r/2
+  have hdist : finiteLimitDistance side p x = r/2 := by
+    cases side <;> dsimp [finiteLimitDistance, x]
+    · rw [show p+r/2-p = r/2 by ring, abs_of_pos (by linarith)]
+    · ring
+    · ring
+  have hmem : M.mem (M.number (x : ℂ)) (denote (R (M := M))) := NativeBridge.numberInR x
+  refine ⟨semanticObject (M.number (x : ℂ)) (M.member_isSet hmem), hmem, ?_, ?_⟩
+  · change RealLtValue M (M.number 0) (finiteLimitDistanceValue side (denote point) (M.number (x : ℂ)))
+    rw [hp, finiteLimitDistanceValue_numbers, hdist]
+    exact (realLtValue_numbers 0 (r/2)).mpr (by linarith)
+  · change RealLtValue M (finiteLimitDistanceValue side (denote point) (M.number (x : ℂ))) (denote radius)
+    rw [hp, hr, finiteLimitDistanceValue_numbers, hdist]
+    exact (realLtValue_numbers (r/2) r).mpr (by linarith)
+
+theorem realInfiniteLimitAccumulation {M : Semantics.{u}}
+    {α : Type v} [Representation M α]
+    (direction : InfiniteLimitDirection) (bound : Obj (M := M) α) (hb : In bound R) :
+    InfiniteLimitAccumulationClauseValue M direction (denote (R (M := M))) (denote bound) := by
+  obtain ⟨b, hb⟩ := (M.real_members _).mp hb
+  let x : ℝ := match direction with | .positive => b+1 | .negative => b-1
+  have hmem : M.mem (M.number (x : ℂ)) (denote (R (M := M))) := NativeBridge.numberInR x
+  refine ⟨semanticObject (M.number (x : ℂ)) (M.member_isSet hmem), hmem, ?_⟩
+  change infiniteBeyondValue M direction (denote bound) (M.number (x : ℂ))
+  rw [hb]
+  apply (infiniteBeyondValue_numbers direction b x).mpr
+  cases direction <;> dsimp [infiniteBeyond, x] <;> linarith
+
+theorem finiteLimitDistance_eq_abs (side : FiniteLimitSide) (point input : ℝ)
+    (h : 0 < finiteLimitDistance side point input) :
+    finiteLimitDistance side point input = |input-point| := by
+  cases side with
+  | both => rfl
+  | left =>
+      dsimp [finiteLimitDistance] at h ⊢
+      rw [abs_of_neg (by linarith)]
+      ring
+  | right =>
+      dsimp [finiteLimitDistance] at h ⊢
+      rw [abs_of_pos h]
+
+theorem finiteFunctionLimitIdentity {M : Semantics.{u}} [F : FunctionSemantics M]
+    {α : Type v} {β : Type w} {γ : Type x}
+    [Representation M α] [Representation M β] [Representation M γ]
+    (side : FiniteLimitSide) (f : Obj (M := M) α) (point : Obj (M := M) β)
+    (domain : Obj (M := M) γ) (hf : RealFunctionValue M (denote f))
+    (hD : denote domain = F.domainValue (denote f)) (hp : In point R)
+    (ha : ∀ {σ : Type y} [Representation M σ], (radius : Obj (M := M) σ) →
+      In radius RPos → FiniteLimitAccumulationClauseValue M side (denote domain) (denote point) (denote radius))
+    (hidentity : ∀ {σ : Type z} [Representation M σ], (input : Obj (M := M) σ) →
+      In input domain → F.callValue (denote f) (denote input) = denote input) :
+    HasFiniteFunctionLimit side f point point := by
+  apply finiteFunctionLimitOfForall.{u,v,w,w,x,y,0} side f point point domain hf hD hp hp ha
+  intro σ rep epsilon hepsilon
+  refine ⟨semanticObject (denote epsilon) (isSet epsilon), hepsilon, ?_⟩
+  intro input hneighborhood
+  obtain ⟨hinput, _, hpositive, hnear⟩ := (F.sep_members _ _ _).mp hneighborhood
+  have image := forallMembersOfRepresentations
+    (P := fun x => F.callValue (denote f) x = x) domain (fun {_} [_] x hx => hidentity x hx) input hinput
+  obtain ⟨signature, hfn, hreal, _⟩ := hf
+  have hd : denote domain = signature.domain := hD.trans (F.domainValue_eq signature.domain_isSet hfn)
+  obtain ⟨x, hx⟩ := (M.real_members input).mp (hreal _ (hd ▸ hinput))
+  obtain ⟨p, hpvalue⟩ := (M.real_members _).mp hp
+  obtain ⟨e, hevalue, _⟩ := NativeBridge.realWitnessOfPositive epsilon (inRPos_positive epsilon hepsilon)
+  change RealLtValue M (M.number 0) (finiteLimitDistanceValue side (denote point) input) at hpositive
+  change RealLtValue M (finiteLimitDistanceValue side (denote point) input) (denote epsilon) at hnear
+  rw [hpvalue, hx, finiteLimitDistanceValue_numbers] at hpositive
+  rw [hpvalue, hx, hevalue, finiteLimitDistanceValue_numbers] at hnear
+  have hdistance := finiteLimitDistance_eq_abs side p x ((realLtValue_numbers 0 _).mp hpositive)
+  have hestimate : |x-p| < e := by
+    rw [← hdistance]
+    exact (realLtValue_numbers _ e).mp hnear
+  apply (F.preimage_mem_iff _ signature.domain_isSet hfn).mpr
+  refine ⟨hd ▸ hinput, ?_⟩
+  rw [image, hx, hpvalue, hevalue]
+  exact (sequenceEpsilonBall_numbers p e x).mpr hestimate
+
+end Litex
+
+
+namespace Litex
+
+open Filter
+open scoped Topology
+
+/-- A fixed real observation of a semantic value; zero outside the real image. -/
+noncomputable def observeRealValue {M : Semantics.{u}} (value : M.Value) : ℝ := by
+  classical
+  exact if h : ∃ r : ℝ, value = M.number (r : ℂ) then Classical.choose h else 0
+
+theorem observeRealValue_number {M : Semantics.{u}} (r : ℝ) :
+    observeRealValue (M.number (r : ℂ)) = r := by
+  classical
+  have h : ∃ s : ℝ, M.number (r : ℂ) = M.number (s : ℂ) := ⟨r, rfl⟩
+  have hs : Classical.choose h = r :=
+    (Complex.ofReal_injective (M.number_injective (Classical.choose_spec h))).symm
+  unfold observeRealValue
+  rw [dif_pos h, hs]
+
+noncomputable def observeRealFunction {M : Semantics.{u}} [F : FunctionSemantics M]
+    (f : M.Value) (x : ℝ) : ℝ := observeRealValue (F.callValue f (M.number (x : ℂ)))
+
+theorem observeRealFunction_spec {M : Semantics.{u}} [F : FunctionSemantics M]
+    (f : M.Value) (hf : RealFunctionValue M f) (x : ℝ)
+    (hx : M.mem (M.number (x : ℂ)) (F.domainValue f)) :
+    F.callValue f (M.number (x : ℂ)) = M.number (observeRealFunction f x : ℂ) := by
+  obtain ⟨signature, hfn, _, houtput⟩ := hf
+  have hd := F.domainValue_eq signature.domain_isSet hfn
+  obtain ⟨y, hy⟩ := (M.real_members _).mp
+    (houtput _ (F.call_mem _ _ _ _ hfn (hd ▸ hx)))
+  change F.callValue f (M.number (x : ℂ)) = M.number (observeRealValue (F.callValue f (M.number (x : ℂ))) : ℂ)
+  rw [hy, observeRealValue_number]
+
+def finiteApproachSet (M : Semantics.{u}) [F : FunctionSemantics M]
+    (side : FiniteLimitSide) (f : M.Value) (point : ℝ) : Set ℝ :=
+  {x | M.mem (M.number (x : ℂ)) (F.domainValue f) ∧ 0 < finiteLimitDistance side point x}
+
+theorem finiteFunctionEpsilon_iff_tendsto {M : Semantics.{u}} [F : FunctionSemantics M]
+    (side : FiniteLimitSide) (f : M.Value) (hf : RealFunctionValue M f) (point value : ℝ) :
+    FiniteFunctionEpsilonValue M side f point value ↔
+      Tendsto (observeRealFunction f) (nhdsWithin point (finiteApproachSet M side f point)) (𝓝 value) := by
+  rw [Metric.tendsto_nhdsWithin_nhds]
+  constructor
+  · intro he epsilon hepsilon
+    obtain ⟨delta, hdelta, hcontrol⟩ := he epsilon hepsilon
+    refine ⟨delta, hdelta, ?_⟩
+    intro x hx hnear
+    have hdist := finiteLimitDistance_eq_abs side point x hx.2
+    have hclose : finiteLimitDistance side point x < delta := by
+      simpa only [hdist, Real.dist_eq] using hnear
+    obtain ⟨y, hy, hestimate⟩ := hcontrol x hx.1 hx.2 hclose
+    have observed : observeRealFunction f x = y := by
+      unfold observeRealFunction
+      rw [hy, observeRealValue_number]
+    simpa only [observed, Real.dist_eq] using hestimate
+  · intro he epsilon hepsilon
+    obtain ⟨delta, hdelta, hcontrol⟩ := he epsilon hepsilon
+    refine ⟨delta, hdelta, ?_⟩
+    intro x hx hpositive hnear
+    have hdist := finiteLimitDistance_eq_abs side point x hpositive
+    refine ⟨observeRealFunction f x, observeRealFunction_spec f hf x hx, ?_⟩
+    have estimate := hcontrol (x := x) ⟨hx, hpositive⟩
+      (by simpa only [Real.dist_eq, ← hdist] using hnear)
+    simpa only [Real.dist_eq] using estimate
+
+/-- A pointwise real operation transfers a limit on the same complete domain. -/
+theorem finiteFunctionLimitMap {M : Semantics.{u}} [F : FunctionSemantics M]
+    (side : FiniteLimitSide) (f g point value result : M.Value)
+    (hf : RealFunctionValue M f) (hg : RealFunctionValue M g)
+    (hD : F.domainValue g = F.domainValue f)
+    (rawOp : M.Value → M.Value) (nativeOp : ℝ → ℝ)
+    (hop : ∀ x : ℝ, rawOp (M.number (x : ℂ)) = M.number (nativeOp x : ℂ))
+    (hresult : result = rawOp value)
+    (hformula : ∀ input, M.mem input (F.domainValue f) →
+      F.callValue g input = rawOp (F.callValue f input))
+    (hcontinuous : Continuous nativeOp)
+    (h : HasFiniteFunctionLimitValue M side f point value) :
+    HasFiniteFunctionLimitValue M side g point result := by
+  obtain ⟨p, l, hp, hl, ha, he⟩ := h
+  refine ⟨p, nativeOp l, hp, ?_, ?_, ?_⟩
+  · rw [hresult, hl, hop]
+  · intro radius hradius
+    obtain ⟨x, hx, hpositive, hnear⟩ := ha radius hradius
+    exact ⟨x, hD ▸ hx, hpositive, hnear⟩
+  · apply (finiteFunctionEpsilon_iff_tendsto side g hg p (nativeOp l)).mpr
+    have hsource := (finiteFunctionEpsilon_iff_tendsto side f hf p l).mp he
+    have hpointwise : observeRealFunction g =ᶠ[nhdsWithin p (finiteApproachSet M side f p)]
+        (fun x => nativeOp (observeRealFunction f x)) := by
+      filter_upwards [self_mem_nhdsWithin] with x hx
+      have equation := hformula (M.number (x : ℂ)) hx.1
+      rw [observeRealFunction_spec f hf x hx.1, hop] at equation
+      unfold observeRealFunction
+      rw [equation, observeRealValue_number]
+      rfl
+    have mapped := hcontinuous.continuousAt.tendsto.comp hsource
+    have hset : finiteApproachSet M side g p = finiteApproachSet M side f p := by
+      simp only [finiteApproachSet, hD]
+    rw [hset]
+    exact mapped.congr' hpointwise.symm
+
+theorem finiteFunctionLimitMapTwo {M : Semantics.{u}} [F : FunctionSemantics M]
+    (side : FiniteLimitSide) (f g out point a b result : M.Value)
+    (hf : RealFunctionValue M f) (hg : RealFunctionValue M g) (hout : RealFunctionValue M out)
+    (hgD : F.domainValue g = F.domainValue f) (houtD : F.domainValue out = F.domainValue f)
+    (rawOp : M.Value → M.Value → M.Value) (nativeOp : ℝ → ℝ → ℝ)
+    (hop : ∀ x y : ℝ, rawOp (M.number (x : ℂ)) (M.number (y : ℂ)) = M.number (nativeOp x y : ℂ))
+    (hresult : result = rawOp a b)
+    (hformula : ∀ input, M.mem input (F.domainValue f) →
+      F.callValue out input = rawOp (F.callValue f input) (F.callValue g input))
+    (hcontinuous : Continuous (fun pair : ℝ × ℝ => nativeOp pair.1 pair.2))
+    (ha : HasFiniteFunctionLimitValue M side f point a)
+    (hb : HasFiniteFunctionLimitValue M side g point b) :
+    HasFiniteFunctionLimitValue M side out point result := by
+  obtain ⟨p, l, hp, hl, hacc, he⟩ := ha
+  obtain ⟨q, k, hq, hk, _, he'⟩ := hb
+  have hpq : p = q := Complex.ofReal_injective (M.number_injective (hp.symm.trans hq))
+  subst q
+  refine ⟨p, nativeOp l k, hp, ?_, ?_, ?_⟩
+  · rw [hresult, hl, hk, hop]
+  · intro radius hradius
+    obtain ⟨x, hx, hpositive, hnear⟩ := hacc radius hradius
+    exact ⟨x, houtD ▸ hx, hpositive, hnear⟩
+  · apply (finiteFunctionEpsilon_iff_tendsto side out hout p (nativeOp l k)).mpr
+    have hsource := (finiteFunctionEpsilon_iff_tendsto side f hf p l).mp he
+    have hother := (finiteFunctionEpsilon_iff_tendsto side g hg p k).mp he'
+    have hgset : finiteApproachSet M side g p = finiteApproachSet M side f p := by
+      simp only [finiteApproachSet, hgD]
+    rw [hgset] at hother
+    have hpointwise : observeRealFunction out =ᶠ[nhdsWithin p (finiteApproachSet M side f p)]
+        (fun x => nativeOp (observeRealFunction f x) (observeRealFunction g x)) := by
+      filter_upwards [self_mem_nhdsWithin] with x hx
+      have equation := hformula (M.number (x : ℂ)) hx.1
+      rw [observeRealFunction_spec f hf x hx.1,
+        observeRealFunction_spec g hg x (hgD ▸ hx.1), hop] at equation
+      unfold observeRealFunction
+      rw [equation, observeRealValue_number]
+      rfl
+    have mapped := hcontinuous.continuousAt.tendsto.comp (hsource.prodMk_nhds hother)
+    have hset : finiteApproachSet M side out p = finiteApproachSet M side f p := by
+      simp only [finiteApproachSet, houtD]
+    rw [hset]
+    exact mapped.congr' hpointwise.symm
+
+def infinityBaseFilter (direction : InfiniteLimitDirection) : Filter ℝ :=
+  match direction with | .positive => atTop | .negative => atBot
+
+def infiniteApproachFilter (M : Semantics.{u}) [F : FunctionSemantics M]
+    (direction : InfiniteLimitDirection) (f : M.Value) : Filter ℝ :=
+  infinityBaseFilter direction ⊓ principal {x | M.mem (M.number (x : ℂ)) (F.domainValue f)}
+
+theorem eventually_infiniteApproach_iff {M : Semantics.{u}} [F : FunctionSemantics M]
+    (direction : InfiniteLimitDirection) (f : M.Value) (P : ℝ → Prop) :
+    (∀ᶠ x in infiniteApproachFilter M direction f, P x) ↔
+      ∃ bound : ℝ, ∀ input : ℝ, M.mem (M.number (input : ℂ)) (F.domainValue f) →
+        infiniteBeyond direction bound input → P input := by
+  cases direction with
+  | positive =>
+      rw [infiniteApproachFilter, infinityBaseFilter, eventually_inf_principal, eventually_atTop]
+      constructor
+      · rintro ⟨b, hb⟩
+        exact ⟨b, fun x hx hnear => hb x (le_of_lt hnear) hx⟩
+      · rintro ⟨b, hb⟩
+        refine ⟨b+1, fun x hx hdomain => hb x hdomain ?_⟩
+        dsimp [infiniteBeyond]
+        linarith
+  | negative =>
+      rw [infiniteApproachFilter, infinityBaseFilter, eventually_inf_principal, eventually_atBot]
+      constructor
+      · rintro ⟨b, hb⟩
+        exact ⟨b, fun x hx hnear => hb x (le_of_lt hnear) hx⟩
+      · rintro ⟨b, hb⟩
+        refine ⟨b-1, fun x hx hdomain => hb x hdomain ?_⟩
+        dsimp [infiniteBeyond]
+        linarith
+
+theorem infiniteFunctionEpsilon_iff_tendsto {M : Semantics.{u}} [F : FunctionSemantics M]
+    (direction : InfiniteLimitDirection) (f : M.Value) (hf : RealFunctionValue M f) (value : ℝ) :
+    InfiniteFunctionEpsilonValue M direction f value ↔
+      Tendsto (observeRealFunction f) (infiniteApproachFilter M direction f) (𝓝 value) := by
+  rw [Metric.tendsto_nhds]
+  constructor
+  · intro he epsilon hepsilon
+    obtain ⟨bound, hcontrol⟩ := he epsilon hepsilon
+    apply (eventually_infiniteApproach_iff direction f _).mpr
+    refine ⟨bound, ?_⟩
+    intro x hx hbeyond
+    obtain ⟨y, hy, hestimate⟩ := hcontrol x hx hbeyond
+    have observed : observeRealFunction f x = y := by
+      unfold observeRealFunction
+      rw [hy, observeRealValue_number]
+    simpa only [observed, Real.dist_eq] using hestimate
+  · intro he epsilon hepsilon
+    obtain ⟨bound, hcontrol⟩ := (eventually_infiniteApproach_iff direction f _).mp (he epsilon hepsilon)
+    refine ⟨bound, ?_⟩
+    intro x hx hbeyond
+    refine ⟨observeRealFunction f x, observeRealFunction_spec f hf x hx, ?_⟩
+    simpa only [Real.dist_eq] using hcontrol x hx hbeyond
+
+theorem infiniteFunctionLimitMap {M : Semantics.{u}} [F : FunctionSemantics M]
+    (direction : InfiniteLimitDirection) (f g value result : M.Value)
+    (hf : RealFunctionValue M f) (hg : RealFunctionValue M g)
+    (hD : F.domainValue g = F.domainValue f)
+    (rawOp : M.Value → M.Value) (nativeOp : ℝ → ℝ)
+    (hop : ∀ x : ℝ, rawOp (M.number (x : ℂ)) = M.number (nativeOp x : ℂ))
+    (hresult : result = rawOp value)
+    (hformula : ∀ input, M.mem input (F.domainValue f) →
+      F.callValue g input = rawOp (F.callValue f input))
+    (hcontinuous : Continuous nativeOp)
+    (h : HasInfiniteFunctionLimitValue M direction f value) :
+    HasInfiniteFunctionLimitValue M direction g result := by
+  obtain ⟨l, hl, ha, he⟩ := h
+  refine ⟨nativeOp l, ?_, ?_, ?_⟩
+  · rw [hresult, hl, hop]
+  · intro bound
+    obtain ⟨x, hx, hbeyond⟩ := ha bound
+    exact ⟨x, hD ▸ hx, hbeyond⟩
+  · apply (infiniteFunctionEpsilon_iff_tendsto direction g hg (nativeOp l)).mpr
+    have hsource := (infiniteFunctionEpsilon_iff_tendsto direction f hf l).mp he
+    have hpointwise : observeRealFunction g =ᶠ[infiniteApproachFilter M direction f]
+        (fun x => nativeOp (observeRealFunction f x)) := by
+      apply eventually_inf_principal.mpr
+      apply Eventually.of_forall
+      intro x hx
+      have equation := hformula (M.number (x : ℂ)) hx
+      rw [observeRealFunction_spec f hf x hx, hop] at equation
+      unfold observeRealFunction
+      rw [equation, observeRealValue_number]
+      rfl
+    have mapped := hcontinuous.continuousAt.tendsto.comp hsource
+    have hfilter : infiniteApproachFilter M direction g = infiniteApproachFilter M direction f := by
+      simp only [infiniteApproachFilter, hD]
+    rw [hfilter]
+    exact mapped.congr' hpointwise.symm
+
+theorem infiniteFunctionLimitMapTwo {M : Semantics.{u}} [F : FunctionSemantics M]
+    (direction : InfiniteLimitDirection) (f g out a b result : M.Value)
+    (hf : RealFunctionValue M f) (hg : RealFunctionValue M g) (hout : RealFunctionValue M out)
+    (hgD : F.domainValue g = F.domainValue f) (houtD : F.domainValue out = F.domainValue f)
+    (rawOp : M.Value → M.Value → M.Value) (nativeOp : ℝ → ℝ → ℝ)
+    (hop : ∀ x y : ℝ, rawOp (M.number (x : ℂ)) (M.number (y : ℂ)) = M.number (nativeOp x y : ℂ))
+    (hresult : result = rawOp a b)
+    (hformula : ∀ input, M.mem input (F.domainValue f) →
+      F.callValue out input = rawOp (F.callValue f input) (F.callValue g input))
+    (hcontinuous : Continuous (fun pair : ℝ × ℝ => nativeOp pair.1 pair.2))
+    (ha : HasInfiniteFunctionLimitValue M direction f a)
+    (hb : HasInfiniteFunctionLimitValue M direction g b) :
+    HasInfiniteFunctionLimitValue M direction out result := by
+  obtain ⟨l, hl, hacc, he⟩ := ha
+  obtain ⟨k, hk, _, he'⟩ := hb
+  refine ⟨nativeOp l k, ?_, ?_, ?_⟩
+  · rw [hresult, hl, hk, hop]
+  · intro bound
+    obtain ⟨x, hx, hbeyond⟩ := hacc bound
+    exact ⟨x, houtD ▸ hx, hbeyond⟩
+  · apply (infiniteFunctionEpsilon_iff_tendsto direction out hout (nativeOp l k)).mpr
+    have hsource := (infiniteFunctionEpsilon_iff_tendsto direction f hf l).mp he
+    have hother := (infiniteFunctionEpsilon_iff_tendsto direction g hg k).mp he'
+    have hgfilter : infiniteApproachFilter M direction g = infiniteApproachFilter M direction f := by
+      simp only [infiniteApproachFilter, hgD]
+    rw [hgfilter] at hother
+    have hpointwise : observeRealFunction out =ᶠ[infiniteApproachFilter M direction f]
+        (fun x => nativeOp (observeRealFunction f x) (observeRealFunction g x)) := by
+      apply eventually_inf_principal.mpr
+      apply Eventually.of_forall
+      intro x hx
+      have equation := hformula (M.number (x : ℂ)) hx
+      rw [observeRealFunction_spec f hf x hx,
+        observeRealFunction_spec g hg x (hgD ▸ hx), hop] at equation
+      unfold observeRealFunction
+      rw [equation, observeRealValue_number]
+      rfl
+    have mapped := hcontinuous.continuousAt.tendsto.comp (hsource.prodMk_nhds hother)
+    have hfilter : infiniteApproachFilter M direction out = infiniteApproachFilter M direction f := by
+      simp only [infiniteApproachFilter, houtD]
+    rw [hfilter]
+    exact mapped.congr' hpointwise.symm
+
+end Litex
+
+
+namespace Litex
+open Filter
+open scoped Topology
+
+theorem finiteFunctionLimitDivide {M : Semantics.{u}} [F : FunctionSemantics M]
+    (side : FiniteLimitSide) (f g out point a b result : M.Value)
+    (hf : RealFunctionValue M f) (hg : RealFunctionValue M g) (hout : RealFunctionValue M out)
+    (hgD : F.domainValue g = F.domainValue f) (houtD : F.domainValue out = F.domainValue f)
+    (hresult : result = M.divValue a b) (hbzero : b ≠ M.number 0)
+    (hdenominator : ∀ input, M.mem input (F.domainValue f) → F.callValue g input ≠ M.number 0)
+    (hformula : ∀ input, M.mem input (F.domainValue f) →
+      F.callValue out input = M.divValue (F.callValue f input) (F.callValue g input))
+    (ha : HasFiniteFunctionLimitValue M side f point a)
+    (hb : HasFiniteFunctionLimitValue M side g point b) :
+    HasFiniteFunctionLimitValue M side out point result := by
+  obtain ⟨p, l, hp, hl, hacc, he⟩ := ha
+  obtain ⟨q, k, hq, hk, _, he'⟩ := hb
+  have hpq : p = q := Complex.ofReal_injective (M.number_injective (hp.symm.trans hq))
+  subst q
+  have hkzero : k ≠ 0 := by
+    intro hk0
+    apply hbzero
+    simpa only [hk0, Complex.ofReal_zero] using hk
+  refine ⟨p, l/k, hp, ?_, ?_, ?_⟩
+  · rw [hresult, hl, hk, M.div_numbers _ _ (Complex.ofReal_ne_zero.mpr hkzero), ← Complex.ofReal_div]
+  · intro radius hradius
+    obtain ⟨x, hx, hpositive, hnear⟩ := hacc radius hradius
+    exact ⟨x, houtD ▸ hx, hpositive, hnear⟩
+  · apply (finiteFunctionEpsilon_iff_tendsto side out hout p (l/k)).mpr
+    have hsource := (finiteFunctionEpsilon_iff_tendsto side f hf p l).mp he
+    have hother := (finiteFunctionEpsilon_iff_tendsto side g hg p k).mp he'
+    have hgset : finiteApproachSet M side g p = finiteApproachSet M side f p := by
+      simp only [finiteApproachSet, hgD]
+    rw [hgset] at hother
+    have hpointwise : observeRealFunction out =ᶠ[nhdsWithin p (finiteApproachSet M side f p)]
+        (fun x => observeRealFunction f x / observeRealFunction g x) := by
+      filter_upwards [self_mem_nhdsWithin] with x hx
+      have hinputzero : observeRealFunction g x ≠ 0 := by
+        intro hzero
+        apply hdenominator (M.number (x : ℂ)) hx.1
+        simpa only [hzero, Complex.ofReal_zero] using observeRealFunction_spec g hg x (hgD ▸ hx.1)
+      have equation := hformula (M.number (x : ℂ)) hx.1
+      rw [observeRealFunction_spec f hf x hx.1, observeRealFunction_spec g hg x (hgD ▸ hx.1),
+        M.div_numbers _ _ (Complex.ofReal_ne_zero.mpr hinputzero), ← Complex.ofReal_div] at equation
+      change observeRealValue (F.callValue out (M.number (x : ℂ))) = _
+      rw [equation, observeRealValue_number]
+    have mapped := hsource.div hother hkzero
+    have hset : finiteApproachSet M side out p = finiteApproachSet M side f p := by
+      simp only [finiteApproachSet, houtD]
+    rw [hset]
+    exact mapped.congr' hpointwise.symm
+
+theorem infiniteFunctionLimitDivide {M : Semantics.{u}} [F : FunctionSemantics M]
+    (direction : InfiniteLimitDirection) (f g out a b result : M.Value)
+    (hf : RealFunctionValue M f) (hg : RealFunctionValue M g) (hout : RealFunctionValue M out)
+    (hgD : F.domainValue g = F.domainValue f) (houtD : F.domainValue out = F.domainValue f)
+    (hresult : result = M.divValue a b) (hbzero : b ≠ M.number 0)
+    (hdenominator : ∀ input, M.mem input (F.domainValue f) → F.callValue g input ≠ M.number 0)
+    (hformula : ∀ input, M.mem input (F.domainValue f) →
+      F.callValue out input = M.divValue (F.callValue f input) (F.callValue g input))
+    (ha : HasInfiniteFunctionLimitValue M direction f a)
+    (hb : HasInfiniteFunctionLimitValue M direction g b) :
+    HasInfiniteFunctionLimitValue M direction out result := by
+  obtain ⟨l, hl, hacc, he⟩ := ha
+  obtain ⟨k, hk, _, he'⟩ := hb
+  have hkzero : k ≠ 0 := by
+    intro hk0
+    apply hbzero
+    simpa only [hk0, Complex.ofReal_zero] using hk
+  refine ⟨l/k, ?_, ?_, ?_⟩
+  · rw [hresult, hl, hk, M.div_numbers _ _ (Complex.ofReal_ne_zero.mpr hkzero), ← Complex.ofReal_div]
+  · intro bound
+    obtain ⟨x, hx, hbeyond⟩ := hacc bound
+    exact ⟨x, houtD ▸ hx, hbeyond⟩
+  · apply (infiniteFunctionEpsilon_iff_tendsto direction out hout (l/k)).mpr
+    have hsource := (infiniteFunctionEpsilon_iff_tendsto direction f hf l).mp he
+    have hother := (infiniteFunctionEpsilon_iff_tendsto direction g hg k).mp he'
+    have hgfilter : infiniteApproachFilter M direction g = infiniteApproachFilter M direction f := by
+      simp only [infiniteApproachFilter, hgD]
+    rw [hgfilter] at hother
+    have hpointwise : observeRealFunction out =ᶠ[infiniteApproachFilter M direction f]
+        (fun x => observeRealFunction f x / observeRealFunction g x) := by
+      apply eventually_inf_principal.mpr
+      apply Eventually.of_forall
+      intro x hx
+      have hinputzero : observeRealFunction g x ≠ 0 := by
+        intro hzero
+        apply hdenominator (M.number (x : ℂ)) hx
+        simpa only [hzero, Complex.ofReal_zero] using observeRealFunction_spec g hg x (hgD ▸ hx)
+      have equation := hformula (M.number (x : ℂ)) hx
+      rw [observeRealFunction_spec f hf x hx, observeRealFunction_spec g hg x (hgD ▸ hx),
+        M.div_numbers _ _ (Complex.ofReal_ne_zero.mpr hinputzero), ← Complex.ofReal_div] at equation
+      change observeRealValue (F.callValue out (M.number (x : ℂ))) = _
+      rw [equation, observeRealValue_number]
+    have mapped := hsource.div hother hkzero
+    have hfilter : infiniteApproachFilter M direction out = infiniteApproachFilter M direction f := by
+      simp only [infiniteApproachFilter, houtD]
+    rw [hfilter]
+    exact mapped.congr' hpointwise.symm
+
+end Litex
+
+
+namespace Litex
+
+theorem finiteFunctionEpsilonRestrictSide {M : Semantics.{u}} [FunctionSemantics M]
+    (side : FiniteLimitSide) (f : M.Value) (point value : ℝ)
+    (h : FiniteFunctionEpsilonValue M .both f point value) :
+    FiniteFunctionEpsilonValue M side f point value := by
+  intro epsilon hepsilon
+  obtain ⟨delta, hdelta, hcontrol⟩ := h epsilon hepsilon
+  refine ⟨delta, hdelta, ?_⟩
+  intro x hx hpositive hnear
+  have hdist := finiteLimitDistance_eq_abs side point x hpositive
+  apply hcontrol x hx
+  · change 0 < |x-point|
+    rw [← hdist]
+    exact hpositive
+  · change |x-point| < delta
+    rw [← hdist]
+    exact hnear
+
+theorem finiteFunctionLimitRestrictSide {M : Semantics.{u}} [F : FunctionSemantics M]
+    (side : FiniteLimitSide) (f point value : M.Value) (domain : Obj (M := M) M.Value)
+    (hf : RealFunctionValue M f) (hD : denote domain = F.domainValue f)
+    (ha : ∀ radius : Obj (M := M) M.Value, In radius RPos →
+      FiniteLimitAccumulationClauseValue M side (denote domain) point (denote radius))
+    (h : HasFiniteFunctionLimitValue M .both f point value) :
+    HasFiniteFunctionLimitValue M side f point value := by
+  obtain ⟨p, l, hp, hl, _, he⟩ := h
+  refine ⟨p, l, hp, hl, ?_, finiteFunctionEpsilonRestrictSide side f p l he⟩
+  intro radius hradius
+  have hm : M.mem (M.number (radius : ℂ)) (denote (RPos (M := M))) := numberInRPos radius hradius
+  let r := semanticObject (M.number (radius : ℂ)) (M.member_isSet hm)
+  obtain ⟨input, hmem, hpositive, hnear⟩ := ha r hm
+  obtain ⟨signature, hfn, hreal, _⟩ := hf
+  have hd : denote domain = signature.domain := hD.trans (F.domainValue_eq signature.domain_isSet hfn)
+  obtain ⟨x, hx⟩ := (M.real_members _).mp (hreal _ (hd ▸ hmem))
+  refine ⟨x, ?_, ?_, ?_⟩
+  · rw [← hx, ← hD]
+    exact hmem
+  · change RealLtValue M (M.number 0) (finiteLimitDistanceValue side point (denote input)) at hpositive
+    rw [hp, hx, finiteLimitDistanceValue_numbers] at hpositive
+    exact (realLtValue_numbers 0 _).mp hpositive
+  · change RealLtValue M (finiteLimitDistanceValue side point (denote input)) (M.number (radius : ℂ)) at hnear
+    rw [hp, hx, finiteLimitDistanceValue_numbers] at hnear
+    exact (realLtValue_numbers _ radius).mp hnear
+
+theorem finiteFunctionLimitFromSides {M : Semantics.{u}} [FunctionSemantics M]
+    (f point value : M.Value)
+    (hl : HasFiniteFunctionLimitValue M .left f point value)
+    (hr : HasFiniteFunctionLimitValue M .right f point value) :
+    HasFiniteFunctionLimitValue M .both f point value := by
+  obtain ⟨p, l, hp, hlvalue, hacc, hleft⟩ := hl
+  obtain ⟨q, r, hq, hrvalue, _, hright⟩ := hr
+  have hpq : p = q := Complex.ofReal_injective (M.number_injective (hp.symm.trans hq))
+  have hlr : l = r := Complex.ofReal_injective (M.number_injective (hlvalue.symm.trans hrvalue))
+  subst q
+  subst r
+  refine ⟨p, l, hp, hlvalue, ?_, ?_⟩
+  · intro radius hradius
+    obtain ⟨x, hx, hpositive, hnear⟩ := hacc radius hradius
+    have hdist := finiteLimitDistance_eq_abs .left p x hpositive
+    refine ⟨x, hx, ?_, ?_⟩
+    · change 0 < |x-p|
+      rw [← hdist]
+      exact hpositive
+    · change |x-p| < radius
+      rw [← hdist]
+      exact hnear
+  · intro epsilon hepsilon
+    obtain ⟨dl, hdl, hleft⟩ := hleft epsilon hepsilon
+    obtain ⟨dr, hdr, hright⟩ := hright epsilon hepsilon
+    refine ⟨Min.min dl dr, lt_min hdl hdr, ?_⟩
+    intro x hx hpositive hnear
+    have hne : x ≠ p := sub_ne_zero.mp (abs_pos.mp hpositive)
+    rcases lt_or_gt_of_ne hne with hlt | hgt
+    · have hpos : 0 < finiteLimitDistance .left p x := by dsimp [finiteLimitDistance]; linarith
+      have hdist := finiteLimitDistance_eq_abs .left p x hpos
+      apply hleft x hx hpos
+      rw [hdist]
+      exact lt_of_lt_of_le hnear (min_le_left _ _)
+    · have hpos : 0 < finiteLimitDistance .right p x := by dsimp [finiteLimitDistance]; linarith
+      have hdist := finiteLimitDistance_eq_abs .right p x hpos
+      apply hright x hx hpos
+      rw [hdist]
+      exact lt_of_lt_of_le hnear (min_le_right _ _)
+
+theorem finiteFunctionLimitSidesDifferent {M : Semantics.{u}} [FunctionSemantics M]
+    (f point a b : M.Value)
+    (ha : HasFiniteFunctionLimitValue M .left f point a)
+    (hb : HasFiniteFunctionLimitValue M .right f point b) (hne : a ≠ b) :
+    ∀ value : M.Value, ¬ HasFiniteFunctionLimitValue M .both f point value := by
+  intro value h
+  obtain ⟨p, l, hp, hl, haccL, heL⟩ := ha
+  obtain ⟨q, r, hq, hr, haccR, heR⟩ := hb
+  obtain ⟨s, k, hs, _, _, he⟩ := h
+  have hpq : p = q := Complex.ofReal_injective (M.number_injective (hp.symm.trans hq))
+  have hps : p = s := Complex.ofReal_injective (M.number_injective (hp.symm.trans hs))
+  subst q
+  subst s
+  have hlk := finiteFunctionLimitUnique .left f p l k haccL heL
+    (finiteFunctionEpsilonRestrictSide .left f p k he)
+  have hrk := finiteFunctionLimitUnique .right f p r k haccR heR
+    (finiteFunctionEpsilonRestrictSide .right f p k he)
+  exact hne (hl.trans ((congrArg (fun z : ℝ => M.number (z : ℂ))
+    (hlk.trans hrk.symm)).trans hr.symm))
+
+end Litex
+
+
+namespace Litex
+
+/-- An epsilon ball with radius half a positive value stays positive. -/
+theorem sequenceEpsilonBall_positive {M : Semantics.{u}} [SetSemantics M]
+    (value : ℝ) (hv : 0 < value) (output : M.Value)
+    (h : M.mem output (sequenceEpsilonBallValue (M.number (value : ℂ)) (M.number ((value/2 : ℝ) : ℂ)))) :
+    M.mem output (denote (RPos (M := M))) := by
+  have hreal := ((SetSemantics.sep_members _ _ _).mp h).1
+  obtain ⟨y, hy⟩ := (M.real_members _).mp hreal
+  rw [hy] at h ⊢
+  have hclose := (sequenceEpsilonBall_numbers value (value/2) y).mp h
+  have hpositive : 0 < y := by
+    have := (abs_lt.mp hclose).1
+    linarith
+  exact numberInRPos y hpositive
+
+/-- A ball with radius half the distance to zero excludes zero. -/
+theorem sequenceEpsilonBall_nonzero {M : Semantics.{u}} [SetSemantics M]
+    (value : ℝ) (hv : value ≠ 0) (output : M.Value)
+    (h : M.mem output (sequenceEpsilonBallValue (M.number (value : ℂ)) (M.number ((|value|/2 : ℝ) : ℂ)))) :
+    M.mem output (denote (RStar (M := M))) := by
+  have hreal := ((SetSemantics.sep_members _ _ _).mp h).1
+  obtain ⟨y, hy⟩ := (M.real_members _).mp hreal
+  rw [hy] at h ⊢
+  have hclose := (sequenceEpsilonBall_numbers value (|value|/2) y).mp h
+  have hnonzero : y ≠ 0 := by
+    intro hy0
+    rw [hy0, zero_sub, abs_neg] at hclose
+    have := abs_pos.mpr hv
+    linarith
+  exact inRStar_intro (number (M := M) (y : ℂ)) (NativeBridge.numberInR y)
+    (NativeBridge.numberNonzero (y : ℂ) (Complex.ofReal_ne_zero.mpr hnonzero))
+
+theorem preimageValue_mono {M : Semantics.{u}} [F : FunctionSemantics M]
+    (f : M.Value) (hf : RealFunctionValue M f) (P Q : M.Value → Prop)
+    (h : ∀ y, P y → Q y) :
+    ∀ x, M.mem x (F.preimageValue f P) → M.mem x (F.preimageValue f Q) := by
+  obtain ⟨signature, hfn, _, _⟩ := hf
+  intro x hx
+  have hx := (F.preimage_mem_iff P signature.domain_isSet hfn).mp hx
+  exact (F.preimage_mem_iff Q signature.domain_isSet hfn).mpr ⟨hx.1, h _ hx.2⟩
+
+def FiniteLimitEventualClauseValue (M : Semantics.{u}) [FunctionSemantics M]
+    (side : FiniteLimitSide) (f domain point target : M.Value) : Prop :=
+  ∃ delta : Obj (M := M) M.Value, ∃ _ : In delta RPos,
+    ∀ input, M.mem input (finiteLimitNeighborhoodValue side domain point (denote delta)) →
+      M.mem input (FunctionSemantics.preimageValue f (fun y => M.mem y target))
+
+def InfiniteLimitEventualClauseValue (M : Semantics.{u}) [FunctionSemantics M]
+    (direction : InfiniteLimitDirection) (f domain target : M.Value) : Prop :=
+  ∃ bound : Obj (M := M) M.Value, ∃ _ : In bound R,
+    ∀ input, M.mem input (infiniteLimitTailValue direction domain (denote bound)) →
+      M.mem input (FunctionSemantics.preimageValue f (fun y => M.mem y target))
+
+theorem finiteFunctionLimitEventuallyPositive {M : Semantics.{u}} [F : FunctionSemantics M]
+    {α : Type v} {β : Type w} {γ : Type x} {δ : Type y}
+    [Representation M α] [Representation M β] [Representation M γ] [Representation M δ]
+    (side : FiniteLimitSide) (f : Obj (M := M) α) (point : Obj (M := M) β)
+    (value : Obj (M := M) γ) (domain : Obj (M := M) δ)
+    (hf : RealFunctionValue M (denote f)) (hD : denote domain = F.domainValue (denote f))
+    (h : HasFiniteFunctionLimit side f point value) (hv : Lt (number 0) value) :
+    FiniteLimitEventualClauseValue M side (denote f) (denote domain) (denote point) (denote (RPos (M := M))) := by
+  obtain ⟨l, hl, hlpos⟩ := NativeBridge.realWitnessOfPositive value hv
+  have he : M.mem (M.number ((l/2 : ℝ) : ℂ)) (denote (RPos (M := M))) := numberInRPos (l/2) (by linarith)
+  let epsilon := semanticObject (M.number ((l/2 : ℝ) : ℂ)) (M.member_isSet he)
+  obtain ⟨delta, hdelta, hcontrol⟩ := finiteFunctionLimitControl side f point value domain hf hD h epsilon he
+  refine ⟨delta, hdelta, ?_⟩
+  intro input hx
+  apply preimageValue_mono (denote f) hf _ _ _ input (hcontrol input hx)
+  intro output houtput
+  rw [hl] at houtput
+  exact sequenceEpsilonBall_positive l hlpos output houtput
+
+theorem finiteFunctionLimitEventuallyNonzero {M : Semantics.{u}} [F : FunctionSemantics M]
+    {α : Type v} {β : Type w} {γ : Type x} {δ : Type y}
+    [Representation M α] [Representation M β] [Representation M γ] [Representation M δ]
+    (side : FiniteLimitSide) (f : Obj (M := M) α) (point : Obj (M := M) β)
+    (value : Obj (M := M) γ) (domain : Obj (M := M) δ)
+    (hf : RealFunctionValue M (denote f)) (hD : denote domain = F.domainValue (denote f))
+    (h : HasFiniteFunctionLimit side f point value) (hv : ¬ Same value (number 0)) :
+    FiniteLimitEventualClauseValue M side (denote f) (denote domain) (denote point) (denote (RStar (M := M))) := by
+  obtain ⟨p, l, hp, hl, ha, hc⟩ := h
+  have hlzero : l ≠ 0 := by
+    intro hzero
+    apply hv
+    change denote value = M.number 0
+    simpa only [hzero, Complex.ofReal_zero] using hl
+  have he : M.mem (M.number ((|l|/2 : ℝ) : ℂ)) (denote (RPos (M := M))) :=
+    numberInRPos (|l|/2) (by have := abs_pos.mpr hlzero; linarith)
+  let epsilon := semanticObject (M.number ((|l|/2 : ℝ) : ℂ)) (M.member_isSet he)
+  obtain ⟨delta, hdelta, hcontrol⟩ := finiteFunctionLimitControl side f point value domain hf hD
+    ⟨p, l, hp, hl, ha, hc⟩ epsilon he
+  refine ⟨delta, hdelta, ?_⟩
+  intro input hx
+  apply preimageValue_mono (denote f) hf _ _ _ input (hcontrol input hx)
+  intro output houtput
+  rw [hl] at houtput
+  exact sequenceEpsilonBall_nonzero l hlzero output houtput
+
+theorem infiniteFunctionLimitEventuallyPositive {M : Semantics.{u}} [F : FunctionSemantics M]
+    {α : Type v} {γ : Type x} {δ : Type y}
+    [Representation M α] [Representation M γ] [Representation M δ]
+    (direction : InfiniteLimitDirection) (f : Obj (M := M) α) (value : Obj (M := M) γ) (domain : Obj (M := M) δ)
+    (hf : RealFunctionValue M (denote f)) (hD : denote domain = F.domainValue (denote f))
+    (h : HasInfiniteFunctionLimit direction f value) (hv : Lt (number 0) value) :
+    InfiniteLimitEventualClauseValue M direction (denote f) (denote domain) (denote (RPos (M := M))) := by
+  obtain ⟨l, hl, hlpos⟩ := NativeBridge.realWitnessOfPositive value hv
+  have he : M.mem (M.number ((l/2 : ℝ) : ℂ)) (denote (RPos (M := M))) := numberInRPos (l/2) (by linarith)
+  let epsilon := semanticObject (M.number ((l/2 : ℝ) : ℂ)) (M.member_isSet he)
+  obtain ⟨delta, hdelta, hcontrol⟩ := infiniteFunctionLimitControl direction f value domain hf hD h epsilon he
+  refine ⟨delta, hdelta, ?_⟩
+  intro input hx
+  apply preimageValue_mono (denote f) hf _ _ _ input (hcontrol input hx)
+  intro output houtput
+  rw [hl] at houtput
+  exact sequenceEpsilonBall_positive l hlpos output houtput
+
+theorem infiniteFunctionLimitEventuallyNonzero {M : Semantics.{u}} [F : FunctionSemantics M]
+    {α : Type v} {γ : Type x} {δ : Type y}
+    [Representation M α] [Representation M γ] [Representation M δ]
+    (direction : InfiniteLimitDirection) (f : Obj (M := M) α) (value : Obj (M := M) γ) (domain : Obj (M := M) δ)
+    (hf : RealFunctionValue M (denote f)) (hD : denote domain = F.domainValue (denote f))
+    (h : HasInfiniteFunctionLimit direction f value) (hv : ¬ Same value (number 0)) :
+    InfiniteLimitEventualClauseValue M direction (denote f) (denote domain) (denote (RStar (M := M))) := by
+  obtain ⟨l, hl, ha, hc⟩ := h
+  have hlzero : l ≠ 0 := by
+    intro hzero
+    apply hv
+    change denote value = M.number 0
+    simpa only [hzero, Complex.ofReal_zero] using hl
+  have he : M.mem (M.number ((|l|/2 : ℝ) : ℂ)) (denote (RPos (M := M))) :=
+    numberInRPos (|l|/2) (by have := abs_pos.mpr hlzero; linarith)
+  let epsilon := semanticObject (M.number ((|l|/2 : ℝ) : ℂ)) (M.member_isSet he)
+  obtain ⟨delta, hdelta, hcontrol⟩ := infiniteFunctionLimitControl direction f value domain hf hD
+    ⟨l, hl, ha, hc⟩ epsilon he
+  refine ⟨delta, hdelta, ?_⟩
+  intro input hx
+  apply preimageValue_mono (denote f) hf _ _ _ input (hcontrol input hx)
+  intro output houtput
+  rw [hl] at houtput
+  exact sequenceEpsilonBall_nonzero l hlzero output houtput
+
+end Litex
+
+
+namespace Litex
+
+def RealLeValue (M : Semantics.{u}) (a b : M.Value) : Prop :=
+  ∃ r s : ℝ, a = M.number (r : ℂ) ∧ b = M.number (s : ℂ) ∧ r ≤ s
+
+theorem realLeValue_numbers {M : Semantics.{u}} (a b : ℝ) :
+    RealLeValue M (M.number (a : ℂ)) (M.number (b : ℂ)) ↔ a ≤ b := by
+  constructor
+  · rintro ⟨r, s, hr, hs, h⟩
+    have har : a = r := Complex.ofReal_injective (M.number_injective hr)
+    have hbs : b = s := Complex.ofReal_injective (M.number_injective hs)
+    simpa only [har, hbs] using h
+  · exact fun h => ⟨a, b, rfl, rfl, h⟩
+
+theorem finiteLimitNeighborhood_numbers_iff {M : Semantics.{u}} [SetSemantics M]
+    (side : FiniteLimitSide) (domain : M.Value) (point radius input : ℝ) :
+    M.mem (M.number (input : ℂ)) (finiteLimitNeighborhoodValue side domain
+      (M.number (point : ℂ)) (M.number (radius : ℂ))) ↔
+      M.mem (M.number (input : ℂ)) domain ∧ 0 < finiteLimitDistance side point input ∧
+        finiteLimitDistance side point input < radius := by
+  rw [finiteLimitNeighborhoodValue, SetSemantics.sep_members]
+  simp only [finiteLimitDistanceValue_numbers]
+  constructor
+  · rintro ⟨hx, _, hp, hn⟩
+    exact ⟨hx, (realLtValue_numbers 0 _).mp hp, (realLtValue_numbers _ radius).mp hn⟩
+  · rintro ⟨hx, hp, hn⟩
+    exact ⟨hx, hx, (realLtValue_numbers 0 _).mpr hp, (realLtValue_numbers _ radius).mpr hn⟩
+
+theorem infiniteLimitTail_numbers_iff {M : Semantics.{u}} [SetSemantics M]
+    (direction : InfiniteLimitDirection) (domain : M.Value) (bound input : ℝ) :
+    M.mem (M.number (input : ℂ)) (infiniteLimitTailValue direction domain (M.number (bound : ℂ))) ↔
+      M.mem (M.number (input : ℂ)) domain ∧ infiniteBeyond direction bound input := by
+  rw [infiniteLimitTailValue, SetSemantics.sep_members]
+  simp only [infiniteBeyondValue_numbers]
+  exact ⟨fun ⟨hx, _, hn⟩ => ⟨hx, hn⟩, fun ⟨hx, hn⟩ => ⟨hx, hx, hn⟩⟩
+
+theorem finiteFunctionLimitCompare {M : Semantics.{u}} [F : FunctionSemantics M]
+    {α : Type v} [Representation M α]
+    (side : FiniteLimitSide) (f g point a b domain : M.Value)
+    (radius : Obj (M := M) α) (hradius : In radius RPos)
+    (hD : domain = F.domainValue f) (hgD : F.domainValue g = F.domainValue f)
+    (ha : HasFiniteFunctionLimitValue M side f point a)
+    (hb : HasFiniteFunctionLimitValue M side g point b)
+    (hlocal : ∀ input, M.mem input (finiteLimitNeighborhoodValue side domain point (denote radius)) →
+      RealLeValue M (F.callValue f input) (F.callValue g input)) :
+    RealLeValue M a b := by
+  obtain ⟨p, l, hp, hl, hacc, he⟩ := ha
+  obtain ⟨q, k, hq, hk, _, he'⟩ := hb
+  have hpq : p = q := Complex.ofReal_injective (M.number_injective (hp.symm.trans hq))
+  subst q
+  refine ⟨l, k, hl, hk, ?_⟩
+  by_contra hnot
+  have hkl : k < l := lt_of_not_ge hnot
+  let epsilon := (l-k)/3
+  have hepsilon : 0 < epsilon := by dsimp [epsilon]; linarith
+  obtain ⟨dl, hdl, hleft⟩ := he epsilon hepsilon
+  obtain ⟨dr, hdr, hright⟩ := he' epsilon hepsilon
+  obtain ⟨r, hr, hrpos⟩ := NativeBridge.realWitnessOfPositive radius (inRPos_positive radius hradius)
+  obtain ⟨x, hx, hpositive, hnear⟩ := hacc (Min.min r (Min.min dl dr)) (lt_min hrpos (lt_min hdl hdr))
+  have hlocalx : M.mem (M.number (x : ℂ)) (finiteLimitNeighborhoodValue side domain point (denote radius)) := by
+    rw [hp, hr]
+    apply (finiteLimitNeighborhood_numbers_iff side domain p r x).mpr
+    exact ⟨hD ▸ hx, hpositive, lt_of_lt_of_le hnear (min_le_left _ _)⟩
+  have hinner := lt_of_lt_of_le hnear (min_le_right r (Min.min dl dr))
+  obtain ⟨y, hy, hyl⟩ := hleft x hx hpositive (lt_of_lt_of_le hinner (min_le_left _ _))
+  obtain ⟨z, hz, hzk⟩ := hright x (hgD ▸ hx) hpositive (lt_of_lt_of_le hinner (min_le_right _ _))
+  have horder := hlocal _ hlocalx
+  rw [hy, hz] at horder
+  have hyz := (realLeValue_numbers y z).mp horder
+  have hylower := (abs_lt.mp hyl).1
+  have hzkupper := (abs_lt.mp hzk).2
+  dsimp [epsilon] at hylower hzkupper
+  linarith
+
+theorem infiniteFunctionLimitCompare {M : Semantics.{u}} [F : FunctionSemantics M]
+    {α : Type v} [Representation M α]
+    (direction : InfiniteLimitDirection) (f g a b domain : M.Value)
+    (bound : Obj (M := M) α) (hbound : In bound R)
+    (hD : domain = F.domainValue f) (hgD : F.domainValue g = F.domainValue f)
+    (ha : HasInfiniteFunctionLimitValue M direction f a)
+    (hb : HasInfiniteFunctionLimitValue M direction g b)
+    (hlocal : ∀ input, M.mem input (infiniteLimitTailValue direction domain (denote bound)) →
+      RealLeValue M (F.callValue f input) (F.callValue g input)) :
+    RealLeValue M a b := by
+  obtain ⟨l, hl, hacc, he⟩ := ha
+  obtain ⟨k, hk, _, he'⟩ := hb
+  refine ⟨l, k, hl, hk, ?_⟩
+  by_contra hnot
+  have hkl : k < l := lt_of_not_ge hnot
+  let epsilon := (l-k)/3
+  have hepsilon : 0 < epsilon := by dsimp [epsilon]; linarith
+  obtain ⟨dl, hleft⟩ := he epsilon hepsilon
+  obtain ⟨dr, hright⟩ := he' epsilon hepsilon
+  obtain ⟨r, hr⟩ := (M.real_members _).mp hbound
+  let cutoff := commonInfinityThreshold direction r (commonInfinityThreshold direction dl dr)
+  obtain ⟨x, hx, hbeyond⟩ := hacc cutoff
+  have houter := infiniteBeyond_common direction r (commonInfinityThreshold direction dl dr) x hbeyond
+  have hinner := infiniteBeyond_common direction dl dr x houter.2
+  have hlocalx : M.mem (M.number (x : ℂ)) (infiniteLimitTailValue direction domain (denote bound)) := by
+    rw [hr]
+    exact (infiniteLimitTail_numbers_iff direction domain r x).mpr ⟨hD ▸ hx,houter.1⟩
+  obtain ⟨y, hy, hyl⟩ := hleft x hx hinner.1
+  obtain ⟨z, hz, hzk⟩ := hright x (hgD ▸ hx) hinner.2
+  have horder := hlocal _ hlocalx
+  rw [hy, hz] at horder
+  have hyz := (realLeValue_numbers y z).mp horder
+  have hylower := (abs_lt.mp hyl).1
+  have hzkupper := (abs_lt.mp hzk).2
+  dsimp [epsilon] at hylower hzkupper
+  linarith
+
+end Litex
+
+
+namespace Litex
+
+theorem finiteFunctionAccumulationFromClause {M : Semantics.{u}} [F : FunctionSemantics M]
+    (side : FiniteLimitSide) (f point domain : M.Value) (p : ℝ)
+    (hf : RealFunctionValue M f) (hD : domain = F.domainValue f) (hp : point = M.number (p : ℂ))
+    (ha : ∀ radius : Obj (M := M) M.Value, In radius RPos →
+      FiniteLimitAccumulationClauseValue M side domain point (denote radius)) :
+    FiniteFunctionAccumulationValue M side f p := by
+  intro radius hradius
+  have hm : M.mem (M.number (radius : ℂ)) (denote (RPos (M := M))) := numberInRPos radius hradius
+  let r := semanticObject (M.number (radius : ℂ)) (M.member_isSet hm)
+  obtain ⟨input, hmem, hpositive, hnear⟩ := ha r hm
+  obtain ⟨signature, hfn, hreal, _⟩ := hf
+  have hd : domain = signature.domain := hD.trans (F.domainValue_eq signature.domain_isSet hfn)
+  obtain ⟨x, hx⟩ := (M.real_members _).mp (hreal _ (hd ▸ hmem))
+  refine ⟨x, ?_, ?_, ?_⟩
+  · rw [← hx, ← hD]; exact hmem
+  · change RealLtValue M (M.number 0) (finiteLimitDistanceValue side point (denote input)) at hpositive
+    rw [hp, hx, finiteLimitDistanceValue_numbers] at hpositive
+    exact (realLtValue_numbers 0 _).mp hpositive
+  · change RealLtValue M (finiteLimitDistanceValue side point (denote input)) (M.number (radius : ℂ)) at hnear
+    rw [hp, hx, finiteLimitDistanceValue_numbers] at hnear
+    exact (realLtValue_numbers _ radius).mp hnear
+
+theorem infiniteFunctionAccumulationFromClause {M : Semantics.{u}} [F : FunctionSemantics M]
+    (direction : InfiniteLimitDirection) (f domain : M.Value)
+    (hf : RealFunctionValue M f) (hD : domain = F.domainValue f)
+    (ha : ∀ bound : Obj (M := M) M.Value, In bound R →
+      InfiniteLimitAccumulationClauseValue M direction domain (denote bound)) :
+    InfiniteFunctionAccumulationValue M direction f := by
+  intro bound
+  have hm : M.mem (M.number (bound : ℂ)) (denote (R (M := M))) := NativeBridge.numberInR bound
+  let b := semanticObject (M.number (bound : ℂ)) (M.member_isSet hm)
+  obtain ⟨input, hmem, hbeyond⟩ := ha b hm
+  obtain ⟨signature, hfn, hreal, _⟩ := hf
+  have hd : domain = signature.domain := hD.trans (F.domainValue_eq signature.domain_isSet hfn)
+  obtain ⟨x, hx⟩ := (M.real_members _).mp (hreal _ (hd ▸ hmem))
+  refine ⟨x, ?_, ?_⟩
+  · rw [← hx, ← hD]; exact hmem
+  · change infiniteBeyondValue M direction (M.number (bound : ℂ)) (denote input) at hbeyond
+    rw [hx] at hbeyond
+    exact (infiniteBeyondValue_numbers direction bound x).mp hbeyond
+
+theorem finiteFunctionLimitLocalEqual {M : Semantics.{u}} [F : FunctionSemantics M]
+    {α : Type v} [Representation M α]
+    (side : FiniteLimitSide) (f g point value domain : M.Value)
+    (radius : Obj (M := M) α) (hradius : In radius RPos)
+    (hg : RealFunctionValue M g) (hD : domain = F.domainValue g)
+    (h : HasFiniteFunctionLimitValue M side f point value)
+    (ha : ∀ r : Obj (M := M) M.Value, In r RPos →
+      FiniteLimitAccumulationClauseValue M side domain point (denote r))
+    (hsubset : ∀ input, M.mem input (finiteLimitNeighborhoodValue side domain point (denote radius)) →
+      M.mem input (F.domainValue f))
+    (heq : ∀ input, M.mem input (finiteLimitNeighborhoodValue side domain point (denote radius)) →
+      F.callValue g input = F.callValue f input) :
+    HasFiniteFunctionLimitValue M side g point value := by
+  obtain ⟨p, l, hp, hl, _, he⟩ := h
+  refine ⟨p,l,hp,hl,finiteFunctionAccumulationFromClause side g point domain p hg hD hp ha,?_⟩
+  intro epsilon hepsilon
+  obtain ⟨d,hd,hcontrol⟩ := he epsilon hepsilon
+  obtain ⟨r,hr,hrpos⟩ := NativeBridge.realWitnessOfPositive radius (inRPos_positive radius hradius)
+  refine ⟨Min.min d r,lt_min hd hrpos,?_⟩
+  intro x hx hpositive hnear
+  have hlocal : M.mem (M.number (x : ℂ)) (finiteLimitNeighborhoodValue side domain point (denote radius)) := by
+    rw [hp,hr]
+    exact (finiteLimitNeighborhood_numbers_iff side domain p r x).mpr
+      ⟨hD ▸ hx,hpositive,lt_of_lt_of_le hnear (min_le_right _ _)⟩
+  obtain ⟨y,hy,hyl⟩ := hcontrol x (hsubset _ hlocal) hpositive
+    (lt_of_lt_of_le hnear (min_le_left _ _))
+  exact ⟨y,(heq _ hlocal).trans hy,hyl⟩
+
+theorem infiniteFunctionLimitLocalEqual {M : Semantics.{u}} [F : FunctionSemantics M]
+    {α : Type v} [Representation M α]
+    (direction : InfiniteLimitDirection) (f g value domain : M.Value)
+    (bound : Obj (M := M) α) (hbound : In bound R)
+    (hg : RealFunctionValue M g) (hD : domain = F.domainValue g)
+    (h : HasInfiniteFunctionLimitValue M direction f value)
+    (ha : ∀ b : Obj (M := M) M.Value, In b R →
+      InfiniteLimitAccumulationClauseValue M direction domain (denote b))
+    (hsubset : ∀ input, M.mem input (infiniteLimitTailValue direction domain (denote bound)) →
+      M.mem input (F.domainValue f))
+    (heq : ∀ input, M.mem input (infiniteLimitTailValue direction domain (denote bound)) →
+      F.callValue g input = F.callValue f input) :
+    HasInfiniteFunctionLimitValue M direction g value := by
+  obtain ⟨l,hl,_,he⟩ := h
+  refine ⟨l,hl,infiniteFunctionAccumulationFromClause direction g domain hg hD ha,?_⟩
+  intro epsilon hepsilon
+  obtain ⟨d,hcontrol⟩ := he epsilon hepsilon
+  obtain ⟨r,hr⟩ := (M.real_members _).mp hbound
+  refine ⟨commonInfinityThreshold direction d r,?_⟩
+  intro x hx hbeyond
+  have hcommon := infiniteBeyond_common direction d r x hbeyond
+  have hlocal : M.mem (M.number (x : ℂ)) (infiniteLimitTailValue direction domain (denote bound)) := by
+    rw [hr]
+    exact (infiniteLimitTail_numbers_iff direction domain r x).mpr ⟨hD ▸ hx,hcommon.2⟩
+  obtain ⟨y,hy,hyl⟩ := hcontrol x (hsubset _ hlocal) hcommon.1
+  exact ⟨y,(heq _ hlocal).trans hy,hyl⟩
+
+end Litex
+
+
+namespace Litex
+
+theorem finiteFunctionLimitSqueeze {M : Semantics.{u}} [F : FunctionSemantics M]
+    {α : Type v} [Representation M α]
+    (side : FiniteLimitSide) (f middle upper point value domain : M.Value)
+    (radius : Obj (M := M) α) (hradius : In radius RPos)
+    (hmiddle : RealFunctionValue M middle)
+    (hD : domain = F.domainValue f) (hmD : F.domainValue middle = F.domainValue f)
+    (huD : F.domainValue upper = F.domainValue f)
+    (hf : HasFiniteFunctionLimitValue M side f point value)
+    (hu : HasFiniteFunctionLimitValue M side upper point value)
+    (hlocal : ∀ input, M.mem input (finiteLimitNeighborhoodValue side domain point (denote radius)) →
+      RealLeValue M (F.callValue f input) (F.callValue middle input) ∧
+      RealLeValue M (F.callValue middle input) (F.callValue upper input)) :
+    HasFiniteFunctionLimitValue M side middle point value := by
+  obtain ⟨p,l,hp,hl,hacc,he⟩ := hf
+  obtain ⟨q,k,hq,hk,_,he'⟩ := hu
+  have hpq : p=q := Complex.ofReal_injective (M.number_injective (hp.symm.trans hq))
+  have hlk : l=k := Complex.ofReal_injective (M.number_injective (hl.symm.trans hk))
+  subst q; subst k
+  refine ⟨p,l,hp,hl,?_,?_⟩
+  · intro r hr
+    obtain ⟨x,hx,hpos,hnear⟩ := hacc r hr
+    exact ⟨x,hmD ▸ hx,hpos,hnear⟩
+  · intro epsilon hepsilon
+    obtain ⟨dl,hdl,hleft⟩ := he epsilon hepsilon
+    obtain ⟨du,hdu,hright⟩ := he' epsilon hepsilon
+    obtain ⟨r,hr,hrpos⟩ := NativeBridge.realWitnessOfPositive radius (inRPos_positive radius hradius)
+    refine ⟨Min.min r (Min.min dl du),lt_min hrpos (lt_min hdl hdu),?_⟩
+    intro x hx hpositive hnear
+    have hxF : M.mem (M.number (x : ℂ)) (F.domainValue f) := hmD ▸ hx
+    have hlocalx : M.mem (M.number (x : ℂ)) (finiteLimitNeighborhoodValue side domain point (denote radius)) := by
+      rw [hp,hr]
+      exact (finiteLimitNeighborhood_numbers_iff side domain p r x).mpr
+        ⟨hD ▸ hxF,hpositive,lt_of_lt_of_le hnear (min_le_left _ _)⟩
+    have hinner := lt_of_lt_of_le hnear (min_le_right r (Min.min dl du))
+    obtain ⟨yl,hyl,hlclose⟩ := hleft x hxF hpositive (lt_of_lt_of_le hinner (min_le_left _ _))
+    obtain ⟨yu,hyu,huclose⟩ := hright x (huD ▸ hxF) hpositive (lt_of_lt_of_le hinner (min_le_right _ _))
+    let ym := observeRealFunction middle x
+    have hym : F.callValue middle (M.number (x : ℂ)) = M.number (ym : ℂ) := observeRealFunction_spec middle hmiddle x hx
+    have horder := hlocal _ hlocalx
+    rw [hyl,hym,hyu] at horder
+    have hlm := (realLeValue_numbers yl ym).mp horder.1
+    have hmu := (realLeValue_numbers ym yu).mp horder.2
+    refine ⟨ym,hym,abs_lt.mpr ⟨?_,?_⟩⟩
+    · have := (abs_lt.mp hlclose).1; linarith
+    · have := (abs_lt.mp huclose).2; linarith
+
+theorem infiniteFunctionLimitSqueeze {M : Semantics.{u}} [F : FunctionSemantics M]
+    {α : Type v} [Representation M α]
+    (direction : InfiniteLimitDirection) (f middle upper value domain : M.Value)
+    (bound : Obj (M := M) α) (hbound : In bound R)
+    (hmiddle : RealFunctionValue M middle)
+    (hD : domain = F.domainValue f) (hmD : F.domainValue middle = F.domainValue f)
+    (huD : F.domainValue upper = F.domainValue f)
+    (hf : HasInfiniteFunctionLimitValue M direction f value)
+    (hu : HasInfiniteFunctionLimitValue M direction upper value)
+    (hlocal : ∀ input, M.mem input (infiniteLimitTailValue direction domain (denote bound)) →
+      RealLeValue M (F.callValue f input) (F.callValue middle input) ∧
+      RealLeValue M (F.callValue middle input) (F.callValue upper input)) :
+    HasInfiniteFunctionLimitValue M direction middle value := by
+  obtain ⟨l,hl,hacc,he⟩ := hf
+  obtain ⟨k,hk,_,he'⟩ := hu
+  have hlk : l=k := Complex.ofReal_injective (M.number_injective (hl.symm.trans hk))
+  subst k
+  refine ⟨l,hl,?_,?_⟩
+  · intro b
+    obtain ⟨x,hx,hbeyond⟩ := hacc b
+    exact ⟨x,hmD ▸ hx,hbeyond⟩
+  · intro epsilon hepsilon
+    obtain ⟨dl,hleft⟩ := he epsilon hepsilon
+    obtain ⟨du,hright⟩ := he' epsilon hepsilon
+    obtain ⟨r,hr⟩ := (M.real_members _).mp hbound
+    refine ⟨commonInfinityThreshold direction r (commonInfinityThreshold direction dl du),?_⟩
+    intro x hx hbeyond
+    have hxF : M.mem (M.number (x : ℂ)) (F.domainValue f) := hmD ▸ hx
+    have houter := infiniteBeyond_common direction r (commonInfinityThreshold direction dl du) x hbeyond
+    have hinner := infiniteBeyond_common direction dl du x houter.2
+    have hlocalx : M.mem (M.number (x : ℂ)) (infiniteLimitTailValue direction domain (denote bound)) := by
+      rw [hr]
+      exact (infiniteLimitTail_numbers_iff direction domain r x).mpr ⟨hD ▸ hxF,houter.1⟩
+    obtain ⟨yl,hyl,hlclose⟩ := hleft x hxF hinner.1
+    obtain ⟨yu,hyu,huclose⟩ := hright x (huD ▸ hxF) hinner.2
+    let ym := observeRealFunction middle x
+    have hym : F.callValue middle (M.number (x : ℂ)) = M.number (ym : ℂ) := observeRealFunction_spec middle hmiddle x hx
+    have horder := hlocal _ hlocalx
+    rw [hyl,hym,hyu] at horder
+    have hlm := (realLeValue_numbers yl ym).mp horder.1
+    have hmu := (realLeValue_numbers ym yu).mp horder.2
+    refine ⟨ym,hym,abs_lt.mpr ⟨?_,?_⟩⟩
+    · have := (abs_lt.mp hlclose).1; linarith
+    · have := (abs_lt.mp huclose).2; linarith
+
+end Litex
+
+namespace Litex
+theorem sequenceStrictOrderWeak {M : Semantics.{u}} [F : FunctionSemantics M]
+    (a : M.Value) (reverse : Bool)
+    (hf : M.mem a (F.fnSetValue (denote (NPos (M := M))) (denote (R (M := M)))))
+    (h : SequenceOrderValue M true reverse a) :
+    SequenceOrderValue M false reverse a := by
+  intro m hm n hn hmn
+  obtain ⟨r,s,hr,hs,hrs⟩ := hmn
+  change r ≤ s at hrs
+  rcases lt_or_eq_of_le hrs with hlt | heq
+  · obtain ⟨p,q,hp,hq,hpq⟩ := h m hm n hn ⟨r,s,hr,hs,hlt⟩
+    exact ⟨p,q,hp,hq,le_of_lt hpq⟩
+  · have hsame : m = n := hr.trans ((congrArg (fun t : ℝ => M.number (t : ℂ)) heq).trans hs.symm)
+    rw [← hsame]
+    obtain ⟨p,hp⟩ := (M.real_members _).mp (F.call_mem _ _ _ _ hf hm)
+    cases reverse <;> exact ⟨p,p,hp,hp,le_rfl⟩
+
+theorem sequenceBoundedFromPointwise {M : Semantics.{u}} [F : FunctionSemantics M]
+    {α : Type v} {β : Type w} {γ : Type x}
+    [Representation M α] [Representation M β] [Representation M γ]
+    (a : Obj (M := M) α) (lower : Obj (M := M) β) (upper : Obj (M := M) γ)
+    (hf : M.mem (denote a) (F.fnSetValue (denote (NPos (M := M))) (denote (R (M := M)))))
+    (hl : In lower R) (hu : In upper R)
+    (h : ∀ n, M.mem n (denote (NPos (M := M))) →
+      RealLeValue M (denote lower) (F.callValue (denote a) n) ∧
+      RealLeValue M (F.callValue (denote a) n) (denote upper)) :
+    SequenceBounded a := by
+  constructor
+  · refine ⟨semanticObject (denote lower) (isSet lower),hl,?_⟩
+    intro y hy
+    obtain ⟨n,hn,rfl⟩ := (F.range_mem_iff (isSet (R (M := M))) hf).mp hy
+    exact (h n hn).1
+  · refine ⟨semanticObject (denote upper) (isSet upper),hu,?_⟩
+    intro y hy
+    obtain ⟨n,hn,rfl⟩ := (F.range_mem_iff (isSet (R (M := M))) hf).mp hy
+    exact (h n hn).2
 end Litex

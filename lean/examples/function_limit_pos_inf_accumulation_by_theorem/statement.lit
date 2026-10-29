@@ -1,0 +1,7 @@
+# Extract the pos_inf limit accumulation certificate on the original real domain.
+thm explicit_pos_inf_accumulation:
+    ? forall f fn(x R) R, L R, T R:
+        $has_limit_pos_inf(f,L)
+        =>:
+            exist x R st {T<x}
+    release thm fn_limit_pos_inf_accumulation(f,L)

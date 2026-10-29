@@ -34,6 +34,12 @@ impl LitexToLeanCompiler {
             SequenceLimitSelected => (1, 2),
             SequenceLimitFromEpsilon => (2, 3),
             SequenceLimitTail => (3, 3),
+            SequenceCauchyFromEpsilon => (1, 2),
+            SequenceCauchyTail => (2, 3),
+            SequenceConvergentFromLimit => (2, 2),
+            SequenceLimitFromConvergent => (1, 2),
+            SequenceStrictIncreasingNondecreasing | SequenceStrictDecreasingNonincreasing => (1, 2),
+            SequenceBoundedFromBounds => (3, 4),
             _ => return Err(invalid("Id")),
         };
         let TheoremCallArguments::Parenthesized(args) = &call.arguments else {
@@ -65,7 +71,7 @@ impl LitexToLeanCompiler {
         }
         let candidates = match builtin.theorem {
             SequenceLimitUnique => 2,
-            SequenceLimitExists | SequenceLimitTail => 1,
+            SequenceLimitExists | SequenceLimitTail | SequenceConvergentFromLimit => 1,
             _ => 0,
         };
         for (premise, value) in req[1..1 + candidates].iter().zip(&args[1..1 + candidates]) {
@@ -77,6 +83,115 @@ impl LitexToLeanCompiler {
         }
         let goal = &builtin.conclusions[0];
         let selected = match builtin.theorem {
+            SequenceStrictIncreasingNondecreasing | SequenceStrictDecreasingNonincreasing => {
+                let (strict, weak) = if builtin.theorem == SequenceStrictIncreasingNondecreasing {
+                    (
+                        SequenceAnalysisProperty::StrictlyIncreasing,
+                        SequenceAnalysisProperty::Nondecreasing,
+                    )
+                } else {
+                    (
+                        SequenceAnalysisProperty::StrictlyDecreasing,
+                        SequenceAnalysisProperty::Nonincreasing,
+                    )
+                };
+                if !matches!(&req[1],Fact::AtomicFact(AtomicFact::SequenceAnalysisFact(f)) if f.sequence.ir()==args[0].ir() && f.property==strict)
+                    || !matches!(goal,Fact::AtomicFact(AtomicFact::SequenceAnalysisFact(f)) if f.sequence.ir()==args[0].ir() && f.property==weak)
+                {
+                    return Err(invalid("OrderProperties"));
+                }
+                None
+            }
+            SequenceBoundedFromBounds => {
+                for index in 1..3 {
+                    if !matches!(&req[index],Fact::AtomicFact(AtomicFact::InFact(f)) if f.element.ir()==args[index].ir() && f.set==Obj::StandardSet(StandardSet::R))
+                    {
+                        return Err(invalid("RealBounds"));
+                    }
+                }
+                let Fact::ForallFact(f) = &req[3] else {
+                    return Err(invalid("PointwiseBounds"));
+                };
+                let n = super::compile_real_set_bounds::parameter(
+                    &f.typed_parameters,
+                    &Obj::StandardSet(StandardSet::NPos),
+                )?;
+                if !f.dom_facts.is_empty()
+                    || f.then_facts.len() != 2
+                    || args
+                        .iter()
+                        .any(|a| super::compile_real_set_bounds::contains_parameter(a, n.id))
+                {
+                    return Err(invalid("BoundIndex"));
+                }
+                let input = Obj::Identifier(IdentifierObj::from_bound_name(n));
+                for (index, clause) in f.then_facts.iter().enumerate() {
+                    let ExistOrAndChainAtomicFact::AtomicFact(bound) = clause else {
+                        return Err(invalid("BoundClause"));
+                    };
+                    let (left, right, strict) = source_order_oriented(bound)?;
+                    if strict
+                        || (index == 0
+                            && (left.ir() != args[1].ir()
+                                || !super::compile_sequence_analysis::call_matches(
+                                    right, &args[0], &input,
+                                )))
+                        || (index == 1
+                            && (!super::compile_sequence_analysis::call_matches(
+                                left, &args[0], &input,
+                            ) || right.ir() != args[2].ir()))
+                    {
+                        return Err(invalid("BoundSubjects"));
+                    }
+                }
+                if !matches!(goal,Fact::AtomicFact(AtomicFact::SequenceAnalysisFact(f)) if f.sequence.ir()==args[0].ir() && f.property==SequenceAnalysisProperty::Bounded)
+                {
+                    return Err(invalid("BoundedConclusion"));
+                }
+                None
+            }
+            SequenceCauchyFromEpsilon => {
+                if !matches!(goal, Fact::AtomicFact(AtomicFact::SequenceAnalysisFact(f))
+                    if f.sequence.ir() == args[0].ir() && f.property == SequenceAnalysisProperty::Cauchy)
+                {
+                    return Err(invalid("CauchyConclusion"));
+                }
+                super::compile_sequence_epsilon::validate_epsilon_clause(&args[0], None, &req[1])?;
+                None
+            }
+            SequenceCauchyTail => {
+                if !matches!(&req[1], Fact::AtomicFact(AtomicFact::SequenceAnalysisFact(f))
+                    if f.sequence.ir() == args[0].ir() && f.property == SequenceAnalysisProperty::Cauchy)
+                    || !matches!(&req[2], Fact::AtomicFact(AtomicFact::InFact(f))
+                        if f.element.ir() == args[1].ir() && f.set == Obj::StandardSet(StandardSet::RPos))
+                {
+                    return Err(invalid("CauchyTailPremises"));
+                }
+                let Fact::ExistFact(e) = goal else {
+                    return Err(invalid("CauchyTailExistence"));
+                };
+                super::compile_sequence_epsilon::validate_control_clause(
+                    &args[0], None, &args[1], e,
+                )?;
+                None
+            }
+            SequenceConvergentFromLimit => {
+                if !matches!(goal, Fact::AtomicFact(AtomicFact::SequenceAnalysisFact(f))
+                    if f.sequence.ir() == args[0].ir() && f.property == SequenceAnalysisProperty::Convergent)
+                {
+                    return Err(invalid("ConvergentConclusion"));
+                }
+                None
+            }
+            SequenceLimitFromConvergent => {
+                if !matches!(&req[1], Fact::AtomicFact(AtomicFact::SequenceAnalysisFact(f))
+                    if f.sequence.ir() == args[0].ir() && f.property == SequenceAnalysisProperty::Convergent)
+                {
+                    return Err(invalid("ConvergentPremise"));
+                }
+                super::compile_sequence_epsilon::validate_limit_existence(&args[0], goal)?;
+                None
+            }
             SequenceLimitUnique => {
                 if !matches!(goal, Fact::AtomicFact(AtomicFact::EqualFact(f))
                     if f.left.ir() == args[1].ir() && f.right.ir() == args[2].ir())
@@ -175,9 +290,24 @@ impl LitexToLeanCompiler {
             .iter()
             .map(|a| self.compile_object_reference(a, &scope))
             .collect::<Result<Vec<_>, _>>()?;
+        let domain = || {
+            format!(
+            "(Litex.unguardedFunctionDomain {} (Litex.denote (Litex.NPos (M := M))) (Litex.denote (Litex.R (M := M))) (Litex.isSet (Litex.NPos (M := M))) (Litex.isSet (Litex.R (M := M))) {})",
+            objects[0], references[0]
+        )
+        };
         let law = match builtin.theorem {
+            SequenceStrictIncreasingNondecreasing | SequenceStrictDecreasingNonincreasing => {
+                let reverse=builtin.theorem==SequenceStrictDecreasingNonincreasing;
+                let domain = domain();
+                format!("Litex.sequenceStrictOrderWeak (Litex.denote {}) {reverse} {domain} {}",objects[0],references[1])
+            }
+            SequenceBoundedFromBounds => {
+                let domain = domain();
+                format!("Litex.sequenceBoundedFromPointwise {} {domain} {} {} (by\n  intro n hn\n  exact {} (Litex.semanticObject n (M.member_isSet hn)) hn\n)",objects.join(" "),references[1],references[2],references[3])
+            }
             SequenceLimitUnique => {
-                let domain = format!("(Litex.unguardedFunctionDomain {} (Litex.denote (Litex.NPos (M := M))) (Litex.denote (Litex.R (M := M))) (Litex.isSet (Litex.NPos (M := M))) (Litex.isSet (Litex.R (M := M))) {})", objects[0], references[0]);
+                let domain = domain();
                 let left_real = self.compile_real_membership_certificate(&args[1], &scope)?;
                 let right_real = self.compile_real_membership_certificate(&args[2], &scope)?;
                 format!(
@@ -187,7 +317,7 @@ impl LitexToLeanCompiler {
                     references[2]
                 )
             }
-            SequenceLimitExists => format!(
+            SequenceLimitExists | SequenceConvergentFromLimit => format!(
                 "Litex.sequenceConvergentOfCandidate {} {} {} {}",
                 objects[0],
                 objects[1],
@@ -203,6 +333,9 @@ impl LitexToLeanCompiler {
                 objects.join(" "),
                 references[2]
             ),
+            SequenceCauchyFromEpsilon => format!("Litex.sequenceCauchyOfForall {} {}", objects[0], references[1]),
+            SequenceCauchyTail => format!("(by\n  obtain ⟨_cutoff, _member, _control⟩ := {} (Litex.denote {}) {}\n  exact ⟨_cutoff, _member, _control⟩\n)", references[1], objects[1], references[2]),
+            SequenceLimitFromConvergent => references[1].clone(),
             SequenceLimitTail => format!(
                 "(by\n  obtain ⟨_limit_cutoff, _limit_cutoff_member, _limit_control⟩ := Litex.sequenceLimitTail {} {} {}\n  refine ⟨_limit_cutoff, _limit_cutoff_member, ?_⟩\n  exact _limit_control\n)",
                 objects.join(" "),

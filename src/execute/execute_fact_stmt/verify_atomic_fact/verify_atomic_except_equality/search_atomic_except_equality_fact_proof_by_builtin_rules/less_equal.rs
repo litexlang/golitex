@@ -10,6 +10,9 @@ use crate::runtime::{FactId, Runtime, RuntimeResult};
 
 // Builtin rules for `a <= b`.
 pub enum LessEqualFactSearchProofByBuiltinRule {
+    StructuralRealSign(
+        crate::execute::execute_fact_stmt::verify_atomic_fact::structural_real_sign_proof::StructuralRealSignProof,
+    ),
     FloorSumLowerBound(super::elementary_bounds::FloorSumLowerBoundProof),
     FloorSumUpperBound(super::elementary_bounds::FloorSumUpperBoundProof),
     CeilSumUpperBound(super::elementary_bounds::CeilSumUpperBoundProof),
@@ -496,6 +499,22 @@ impl Runtime {
     // B1: closed decimal evaluation.
     // Example: prove `a <= a`, `x <= x + 1`, `abs(x+y) <= abs(x)+abs(y)`, `1 <= 2`.
     pub fn search_less_equal_fact_proof_by_builtin_rule(
+        &mut self,
+        fact: &crate::ast::fact::LessEqualFact,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Option<LessEqualFactSearchProofByBuiltinRule>> {
+        let existing =
+            self.search_less_equal_fact_proof_by_builtin_rule_existing(fact, verify_state)?;
+        if existing.is_some() {
+            return Ok(existing);
+        }
+        let goal = crate::ast::fact::AtomicFact::LessEqualFact(fact.clone());
+        Ok(self
+            .search_structural_real_sign_fact(&goal, verify_state)
+            .map(LessEqualFactSearchProofByBuiltinRule::StructuralRealSign))
+    }
+
+    fn search_less_equal_fact_proof_by_builtin_rule_existing(
         &mut self,
         fact: &LessEqualFact,
         verify_state: VerifyState,

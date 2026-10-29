@@ -31,6 +31,7 @@ mod compile_set_subset_rule;
 mod compile_signed_membership;
 mod compile_strict_order_transitivity;
 mod compile_structural_membership;
+mod compile_structural_real_sign;
 mod compile_subset_bounds;
 mod compile_subset_definition;
 mod compile_subtraction_order;

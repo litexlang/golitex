@@ -1,5 +1,6 @@
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::{greater::GreaterFactSearchProofByBuiltinRule, greater_equal::GreaterEqualFactSearchProofByBuiltinRule};
 use super::LitexToLeanCompiler;
-use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::NonnegativeSumIsNonnegativeStrategySingleStep;
+use crate::execute::execute_fact_stmt::verify_atomic_fact::structural_real_sign_proof::{RealSign, StructuralRealSignProof, StructuralRealSignReason};
 use crate::execute::execute_proof_block_stmt::{ExecClaimBodyProof, ExecClaimStmtResult, ExecProofBlockStmtResult};
 use crate::prelude::*;
 
@@ -28,9 +29,7 @@ fn checked(source: &str) -> (RunLitexCodeResult, LitexToLeanCompiler) {
     (result, compiler)
 }
 
-fn selected_mut(
-    result: &mut RunLitexCodeResult,
-) -> &mut AtomicExceptEqualityFactSearchProofByBuiltinStrategy {
+fn selected_mut(result: &mut RunLitexCodeResult) -> &mut StructuralRealSignProof {
     let ExecStmtResult::ProofBlock(ExecProofBlockStmtResult::Claim(ExecClaimStmtResult::Success(
         proof,
     ))) = &mut result.statement_results[0]
@@ -49,10 +48,13 @@ fn selected_mut(
     let VerifyAtomicExceptEqualityFactResult::Success(proof) = proof.as_mut() else {
         panic!("actual success")
     };
-    let AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(selected) =
-        &mut proof.searched_proof
+    let AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterFact(
+            GreaterFactSearchProofByBuiltinRule::StructuralRealSign(selected),
+        ),
+    ) = &mut proof.searched_proof
     else {
-        panic!("actual strategy route")
+        panic!("actual structural sign route")
     };
     selected
 }
@@ -66,20 +68,18 @@ fn positive_sum_and_quotient_replay_selected_strategy_and_original_constructor_w
     ] {
         let (mut result, compiler) = checked(source);
         assert!(matches!(
-            selected_mut(&mut result),
-            AtomicExceptEqualityFactSearchProofByBuiltinStrategy::PosAddPosIsPos(_)
-                | AtomicExceptEqualityFactSearchProofByBuiltinStrategy::QuotientPositiveSameSignPos(
-                    _
-                )
-                | AtomicExceptEqualityFactSearchProofByBuiltinStrategy::ProductPositiveBothPos(_)
+            selected_mut(&mut result).reason,
+            StructuralRealSignReason::Add { .. }
+                | StructuralRealSignReason::Div { .. }
+                | StructuralRealSignReason::Mul { .. }
         ));
         let lean = compiler
             .compile_run(&result, namespace)
             .expect("actual ordered positivity replay");
         assert!(lean.contains(bridge));
-        assert!(lean.contains("_litex_positive_result.wd.1"));
+        assert!(lean.contains(".wd.1"));
         if source == QUOTIENT {
-            assert!(lean.contains("_litex_positive_result.wd.2.2"));
+            assert!(lean.contains(".wd.2.2"));
         }
     }
 }
@@ -168,25 +168,19 @@ fn positive_sum_builtin_rejects_wrong_child_order_and_deleted_child_citation() {
 fn positive_strategy_rejects_wrong_ordered_operand_capture() {
     for source in [SUM, QUOTIENT, PRODUCT] {
         let (mut result, compiler) = checked(source);
-        match selected_mut(&mut result) {
-            AtomicExceptEqualityFactSearchProofByBuiltinStrategy::PosAddPosIsPos(proof) => {
-                proof.requirement_facts.swap(0, 1)
-            }
-            AtomicExceptEqualityFactSearchProofByBuiltinStrategy::QuotientPositiveSameSignPos(
-                proof,
-            ) => proof.requirement_facts.swap(0, 1),
-            AtomicExceptEqualityFactSearchProofByBuiltinStrategy::ProductPositiveBothPos(proof) => {
-                proof.requirement_facts.swap(0, 1)
-            }
-            _ => panic!("selected supported source strategy"),
+        match &mut selected_mut(&mut result).reason {
+            StructuralRealSignReason::Add { left, right }
+            | StructuralRealSignReason::Div { left, right }
+            | StructuralRealSignReason::Mul { left, right } => std::mem::swap(left, right),
+            _ => panic!("selected binary sign"),
         }
-        assert_eq!(
-            compiler
-                .compile_run(&result, "positive_wrong_operand")
-                .unwrap_err()
-                .route,
-            "PositiveOrder/RequirementSubject"
-        );
+        let error = compiler
+            .compile_run(&result, "positive_wrong_operand")
+            .unwrap_err();
+        assert!(matches!(
+            error.route.as_str(),
+            "StructuralPositive/BinaryOperands" | "StructuralPositive/DivisionOperands"
+        ));
     }
 }
 
@@ -194,51 +188,43 @@ fn positive_strategy_rejects_wrong_ordered_operand_capture() {
 fn positive_strategy_rejects_missing_requirement_proof() {
     for source in [SUM, QUOTIENT, PRODUCT] {
         let (mut result, compiler) = checked(source);
-        match selected_mut(&mut result) {
-            AtomicExceptEqualityFactSearchProofByBuiltinStrategy::PosAddPosIsPos(proof) => {
-                proof.proof_of_requirement_facts.pop();
-            }
-            AtomicExceptEqualityFactSearchProofByBuiltinStrategy::QuotientPositiveSameSignPos(
-                proof,
-            ) => {
-                proof.proof_of_requirement_facts.pop();
-            }
-            AtomicExceptEqualityFactSearchProofByBuiltinStrategy::ProductPositiveBothPos(proof) => {
-                proof.proof_of_requirement_facts.pop();
-            }
-            _ => panic!("selected supported source strategy"),
-        }
+        let left = match &mut selected_mut(&mut result).reason {
+            StructuralRealSignReason::Add { left, .. }
+            | StructuralRealSignReason::Div { left, .. }
+            | StructuralRealSignReason::Mul { left, .. } => left,
+            _ => panic!("selected binary sign"),
+        };
+        let StructuralRealSignReason::Known { source, .. } = &mut left.reason else {
+            panic!("actual original sign citation");
+        };
+        let AtomicExceptEqualityFactSearchedProof::ByKnownAtomicFact(citation) =
+            source.searched_proof.as_mut()
+        else {
+            panic!("known sign");
+        };
+        citation
+            .why_parameters_of_known_fact_are_equal_to_givens
+            .clear();
         assert_eq!(
             compiler
                 .compile_run(&result, "positive_missing_proof")
                 .unwrap_err()
                 .route,
-            "PositiveOrder/Requirements"
+            "KnownAtomic"
         );
     }
 }
 
 #[test]
-fn switching_selected_positive_sum_to_nonnegative_strategy_stays_rejected() {
+fn switching_selected_positive_sum_to_nonnegative_stays_rejected() {
     let (mut result, compiler) = checked(SUM);
-    let selected = selected_mut(&mut result);
-    let AtomicExceptEqualityFactSearchProofByBuiltinStrategy::PosAddPosIsPos(proof) = selected
-    else {
-        panic!("actual positive sum")
-    };
-    let replacement = NonnegativeSumIsNonnegativeStrategySingleStep {
-        requirement_facts: std::mem::take(&mut proof.requirement_facts),
-        proof_of_requirement_facts: std::mem::take(&mut proof.proof_of_requirement_facts),
-    };
-    *selected = AtomicExceptEqualityFactSearchProofByBuiltinStrategy::NonnegativeSumIsNonnegative(
-        replacement,
-    );
+    selected_mut(&mut result).sign = RealSign::Nonnegative;
     assert_eq!(
         compiler
-            .compile_run(&result, "changed_positive_strategy")
+            .compile_run(&result, "changed_positive_sign")
             .unwrap_err()
             .route,
-        "ZeroBound/Requirements"
+        "StructuralPositive/Sign"
     );
 }
 
@@ -251,7 +237,7 @@ fn negative_factor_product_strategy_remains_a_nearest_unsupported_boundary() {
             .compile_run(&result, "positive_product_boundary")
             .unwrap_err()
             .route,
-        "Atomic/BuiltinStrategy"
+        "StructuralPositive/BinarySigns"
     );
 }
 

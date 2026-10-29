@@ -11376,6 +11376,13 @@
     }
   },
   {
+    "id": "builtin.GreaterEqualFactSearchProofByBuiltinRule::StructuralRealSign",
+    "category": "builtin",
+    "family": "GreaterEqualFactSearchProofByBuiltinRule",
+    "variant": "StructuralRealSign",
+    "labels": {}
+  },
+  {
     "id": "builtin.GreaterEqualFactSearchProofByBuiltinRule::SumOfNonnegatives",
     "category": "builtin",
     "family": "GreaterEqualFactSearchProofByBuiltinRule",
@@ -11992,6 +11999,13 @@
         "message": "H\u1eb1ng s\u1ed1 pi t\u00edch h\u1ee3p d\u01b0\u01a1ng nghi\u00eam ng\u1eb7t: `pi > 0`"
       }
     }
+  },
+  {
+    "id": "builtin.GreaterFactSearchProofByBuiltinRule::StructuralRealSign",
+    "category": "builtin",
+    "family": "GreaterFactSearchProofByBuiltinRule",
+    "variant": "StructuralRealSign",
+    "labels": {}
   },
   {
     "id": "builtin.GreaterFactSearchProofByBuiltinRule::TanGreaterZeroOnFirstQuadrant",
@@ -14228,6 +14242,13 @@
         "message": "Quy t\u1eafc \u00abThu\u1ed9c hi\u1ec7u\u00bb thi\u1ebft l\u1eadp quan h\u1ec7 sau: `x $in A` \u2227 `not x $in B` \u21d2 `x $in set_minus(A, B)`"
       }
     }
+  },
+  {
+    "id": "builtin.InFactSearchProofByBuiltinRule::SignedNumericMembership",
+    "category": "builtin",
+    "family": "InFactSearchProofByBuiltinRule",
+    "variant": "SignedNumericMembership",
+    "labels": {}
   },
   {
     "id": "builtin.InFactSearchProofByBuiltinRule::StandardSetSubsetMembership",
@@ -19922,6 +19943,13 @@
     }
   },
   {
+    "id": "builtin.LessEqualFactSearchProofByBuiltinRule::StructuralRealSign",
+    "category": "builtin",
+    "family": "LessEqualFactSearchProofByBuiltinRule",
+    "variant": "StructuralRealSign",
+    "labels": {}
+  },
+  {
     "id": "builtin.LessEqualFactSearchProofByBuiltinRule::SubNonnegative",
     "category": "builtin",
     "family": "LessEqualFactSearchProofByBuiltinRule",
@@ -23084,6 +23112,13 @@
     }
   },
   {
+    "id": "builtin.LessFactSearchProofByBuiltinRule::StructuralRealSign",
+    "category": "builtin",
+    "family": "LessFactSearchProofByBuiltinRule",
+    "variant": "StructuralRealSign",
+    "labels": {}
+  },
+  {
     "id": "builtin.LessFactSearchProofByBuiltinRule::SubtractOneLess",
     "category": "builtin",
     "family": "LessFactSearchProofByBuiltinRule",
@@ -26106,6 +26141,13 @@
         "message": "T\u1ed5ng b\u00ecnh ph\u01b0\u01a1ng kh\u00e1c kh\u00f4ng khi m\u1ed9t th\u00e0nh ph\u1ea7n kh\u00e1c kh\u00f4ng"
       }
     }
+  },
+  {
+    "id": "builtin.NotEqualFactSearchProofByBuiltinRule::StructuralRealSign",
+    "category": "builtin",
+    "family": "NotEqualFactSearchProofByBuiltinRule",
+    "variant": "StructuralRealSign",
+    "labels": {}
   },
   {
     "id": "builtin.NotEqualFactSearchProofByBuiltinRule::TanNonzeroFromSin",

@@ -1,0 +1,5 @@
+0=0
+
+\s::orbit_sequence<s::real_line_metric.carrier,affine,0>(1) $in s::real_line_metric.carrier
+
+\s::orbit_sequence<s::real_line_metric.carrier,affine,0>(0) $in s::real_line_metric.carrier

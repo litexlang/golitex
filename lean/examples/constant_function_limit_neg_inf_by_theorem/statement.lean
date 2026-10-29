@@ -14,7 +14,7 @@ theorem h_7 : ∀ {_Host_i1 : Type v1} [_rep_i1 : Litex.Representation M _Host_i
     let _value_i2 := Litex.semanticObject (M := M) _raw_i2 (M.member_isSet h_9)
     have h_9 : Litex.In _value_i2 (Litex.R (M := M)) := h_9
     exact True.intro);
-  Litex.fnSet (Litex.FunctionSignature.one (M := M) Litex.StandardSetValue.real Litex.StandardSetValue.real (fun (_raw_i2 : M.Value) => True)))) {_Host_i3 : Type v3} [_rep_i3 : Litex.Representation M _Host_i3] (_value_i3 : Litex.Obj (M := M) _Host_i3) (h_11 : Litex.In _value_i3 (Litex.R (M := M))) (h_3 : ∀ {_Host_i4 : Type _} [_rep_i4 : Litex.Representation M _Host_i4] (_value_i4 : Litex.Obj (M := M) _Host_i4) (h_12 : Litex.In _value_i4 (Litex.R (M := M))), ∃ (_value_i5 : Litex.Obj (M := M) M.Value), ∃ (h_13 : Litex.In _value_i5 (Litex.R (M := M))), Litex.Lt _value_i5 _value_i4) (h_5 : ∀ {_Host_i6 : Type _} [_rep_i6 : Litex.Representation M _Host_i6] (_value_i6 : Litex.Obj (M := M) _Host_i6) (h_41 : Litex.In _value_i6 (Litex.R (M := M))), (by
+  Litex.fnSet (Litex.FunctionSignature.one (M := M) Litex.StandardSetValue.real Litex.StandardSetValue.real (fun (_raw_i2 : M.Value) => True)))) {_Host_i3 : Type v3} [_rep_i3 : Litex.Representation M _Host_i3] (_value_i3 : Litex.Obj (M := M) _Host_i3) (h_11 : Litex.In _value_i3 (Litex.R (M := M))) (h_3 : ∀ (_value_i4 : Litex.Obj (M := M) M.Value) (h_12 : Litex.In _value_i4 (Litex.R (M := M))), ∃ (_value_i5 : Litex.Obj (M := M) M.Value), ∃ (h_13 : Litex.In _value_i5 (Litex.R (M := M))), Litex.Lt _value_i5 _value_i4) (h_5 : ∀ (_value_i6 : Litex.Obj (M := M) M.Value) (h_41 : Litex.In _value_i6 (Litex.R (M := M))), (by
   let _equal_wd_1_0 := (Litex.call Litex.StandardSetValue.real Litex.StandardSetValue.real (fun (_raw_i2 : M.Value) => True) _value_i1 _value_i6 h_10 h_41 True.intro)
   exact Litex.Same _equal_wd_1_0 _value_i3)), Litex.HasInfiniteFunctionLimit .negative _value_i1 _value_i3 :=
   (by
@@ -94,7 +94,7 @@ theorem h_7 : ∀ {_Host_i1 : Type v1} [_rep_i1 : Litex.Representation M _Host_i
                           exact (
                             (by
                               intro _Host_i7 _rep_i7 _value_i7 h_132
-                              exact (h_3 _value_i7 h_132)
+                              exact (h_3 (Litex.semanticObject (Litex.denote _value_i7) (Litex.isSet _value_i7)) h_132)
                             )
                           )
                       )
@@ -104,7 +104,7 @@ theorem h_7 : ∀ {_Host_i1 : Type v1} [_rep_i1 : Litex.Representation M _Host_i
                           exact (
                             (by
                               intro _Host_i9 _rep_i9 _value_i9 h_172
-                              exact (h_5 _value_i9 h_172)
+                              exact (h_5 (Litex.semanticObject (Litex.denote _value_i9) (Litex.isSet _value_i9)) h_172)
                             )
                           )
                       )

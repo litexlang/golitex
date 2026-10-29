@@ -1,0 +1,10 @@
+# A local two-sided bound transfers a common infinite-approach limit.
+thm neg_inf_squeezed_limit:
+    ? forall f,g,h fn(x R) R, L,r R:
+        $has_limit_neg_inf(f,L)
+        $has_limit_neg_inf(h,L)
+        forall x {t R:t<r}:
+            f(x)<=g(x)<=h(x)
+        =>:
+            $has_limit_neg_inf(g,L)
+    release thm fn_limit_neg_inf_squeeze(f,g,h,L,r)

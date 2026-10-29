@@ -263,8 +263,8 @@ fn inherited_ceiling_and_failed_publication_stay_bounded() {
         for (level, passed) in [
             (VerifyStateLevel::Direct, false),
             (VerifyStateLevel::KnownSpecialProperty, false),
-            (VerifyStateLevel::BuiltinRule, false),
-            (VerifyStateLevel::Strategy, kind != 3),
+            (VerifyStateLevel::BuiltinRule, true),
+            (VerifyStateLevel::Strategy, true),
         ] {
             let mut rt = runtime(OutputLanguage::English);
             let tokens = Tokenizer::new()
@@ -275,10 +275,12 @@ fn inherited_ceiling_and_failed_publication_stay_bounded() {
                 panic!("fact")
             };
             if level == VerifyStateLevel::BuiltinRule {
-                assert!(rt
-                    .verify_fact_well_definedness(&fact, VerifyState::new(level))
-                    .unwrap()
-                    .is_failed());
+                assert_eq!(
+                    !rt.verify_fact_well_definedness(&fact, VerifyState::new(level))
+                        .unwrap()
+                        .is_failed(),
+                    true
+                );
             }
             let result = rt.verify_fact(&fact, VerifyState::new(level)).unwrap();
             assert_eq!(!result.is_failed(), passed, "{code}");

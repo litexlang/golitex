@@ -1,0 +1,11 @@
+# A local pointwise equality transfers a right limit.
+thm right_locally_equal_limits:
+    ? forall f,g fn(x R) R, p,L R, r R+:
+        $has_limit_right(f,p,L)
+        forall q R+:
+            exist x R st {0<(x-p) and (x-p)<q}
+        forall x {t R:0<(t-p) and (t-p)<r}:
+            g(x)=f(x)
+        =>:
+            $has_limit_right(g,p,L)
+    release thm fn_limit_right_local_equal(f,g,p,L,r)

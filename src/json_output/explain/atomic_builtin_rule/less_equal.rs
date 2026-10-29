@@ -72,6 +72,7 @@ use crate::json_output::explain::text::text;
 impl LessEqualFactSearchProofByBuiltinRule {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
         match self {
+            Self::StructuralRealSign(p) => super::structural_real_sign::sign_text(p, OutputLanguage::English),
             Self::FloorSumLowerBound(_) => crate::json_output::explain::text::text("Floor of a sum: lower bound", "For real x,y, ⌊x⌋+⌊y⌋≤⌊x+y⌋."),
             Self::FloorSumUpperBound(_) => crate::json_output::explain::text::text("Floor of a sum: upper bound", "For real x,y, ⌊x+y⌋≤⌊x⌋+⌊y⌋+1."),
             Self::CeilSumUpperBound(_) => crate::json_output::explain::text::text("Ceiling of a sum", "For real x,y, ⌈x+y⌉≤⌈x⌉+⌈y⌉."),
@@ -190,6 +191,9 @@ impl LessEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         match self {
+            Self::StructuralRealSign(p) => {
+                super::structural_real_sign::sign_text(p, OutputLanguage::Chinese)
+            }
             Self::FloorSumLowerBound(_) => crate::json_output::explain::text::text(
                 "和的向下取整下界",
                 "对实数 x、y，⌊x⌋+⌊y⌋≤⌊x+y⌋。",
@@ -381,22 +385,23 @@ impl LessEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
         match self {
-            Self::FloorSumLowerBound(_) => BuiltinRuleText {
-                rule_name: "FloorSumLowerBound".into(),
-                message: "x,y in R => floor(x)+floor(y)<=floor(x+y)".into(),
-            },
-            Self::FloorSumUpperBound(_) => BuiltinRuleText {
-                rule_name: "FloorSumUpperBound".into(),
-                message: "x,y in R => floor(x+y)<=floor(x)+floor(y)+1".into(),
-            },
-            Self::CeilSumUpperBound(_) => BuiltinRuleText {
-                rule_name: "CeilSumUpperBound".into(),
-                message: "x,y in R => ceil(x+y)<=ceil(x)+ceil(y)".into(),
-            },
-            Self::RealReverseTriangle(_) => BuiltinRuleText {
-                rule_name: "RealReverseTriangle".into(),
-                message: "x,y in R => abs(abs(x)-abs(y))<=abs(x-y)".into(),
-            },
+            Self::StructuralRealSign(p) => {
+                super::structural_real_sign::sign_text(p, OutputLanguage::ChineseTraditional)
+            }
+            Self::FloorSumLowerBound(_) => text(
+                "和的下整數下界",
+                "x,y in R => floor(x)+floor(y)<=floor(x+y)",
+            ),
+            Self::FloorSumUpperBound(_) => text(
+                "和的下整數上界",
+                "x,y in R => floor(x+y)<=floor(x)+floor(y)+1",
+            ),
+            Self::CeilSumUpperBound(_) => {
+                text("和的上整數界", "x,y in R => ceil(x+y)<=ceil(x)+ceil(y)")
+            }
+            Self::RealReverseTriangle(_) => {
+                text("反三角不等式", "x,y in R => abs(abs(x)-abs(y))<=abs(x-y)")
+            }
 
             Self::SubtractionOrderPairs(_) => {
                 text("SubtractionOrderPairs", "a<=b, c<=d => a-d<=b-c")
@@ -550,10 +555,11 @@ impl LessEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
         match self {
-            Self::FloorSumLowerBound(_) => BuiltinRuleText { rule_name: "FloorSumLowerBound".into(), message: "x,y in R => floor(x)+floor(y)<=floor(x+y)".into() },
-            Self::FloorSumUpperBound(_) => BuiltinRuleText { rule_name: "FloorSumUpperBound".into(), message: "x,y in R => floor(x+y)<=floor(x)+floor(y)+1".into() },
-            Self::CeilSumUpperBound(_) => BuiltinRuleText { rule_name: "CeilSumUpperBound".into(), message: "x,y in R => ceil(x+y)<=ceil(x)+ceil(y)".into() },
-            Self::RealReverseTriangle(_) => BuiltinRuleText { rule_name: "RealReverseTriangle".into(), message: "x,y in R => abs(abs(x)-abs(y))<=abs(x-y)".into() },
+            Self::StructuralRealSign(p) => super::structural_real_sign::sign_text(p, OutputLanguage::French),
+            Self::FloorSumLowerBound(_) => text("Borne inférieure du plancher de la somme", "x,y in R => floor(x)+floor(y)<=floor(x+y)"),
+            Self::FloorSumUpperBound(_) => text("Borne supérieure du plancher de la somme", "x,y in R => floor(x+y)<=floor(x)+floor(y)+1"),
+            Self::CeilSumUpperBound(_) => text("Plafond de la somme", "x,y in R => ceil(x+y)<=ceil(x)+ceil(y)"),
+            Self::RealReverseTriangle(_) => text("Inégalité triangulaire inversée", "x,y in R => abs(abs(x)-abs(y))<=abs(x-y)"),
 
             Self::SubtractionOrderPairs(_) => text("SubtractionOrderPairs", "a<=b, c<=d => a-d<=b-c"),
             Self::AbsSquareRadius(_) => text("AbsSquareRadius", "r>=0, x^2<=r^2 => abs(x)<=r"),
@@ -670,10 +676,11 @@ Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak"
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
         match self {
-            Self::FloorSumLowerBound(_) => BuiltinRuleText { rule_name: "FloorSumLowerBound".into(), message: "x,y in R => floor(x)+floor(y)<=floor(x+y)".into() },
-            Self::FloorSumUpperBound(_) => BuiltinRuleText { rule_name: "FloorSumUpperBound".into(), message: "x,y in R => floor(x+y)<=floor(x)+floor(y)+1".into() },
-            Self::CeilSumUpperBound(_) => BuiltinRuleText { rule_name: "CeilSumUpperBound".into(), message: "x,y in R => ceil(x+y)<=ceil(x)+ceil(y)".into() },
-            Self::RealReverseTriangle(_) => BuiltinRuleText { rule_name: "RealReverseTriangle".into(), message: "x,y in R => abs(abs(x)-abs(y))<=abs(x-y)".into() },
+            Self::StructuralRealSign(p) => super::structural_real_sign::sign_text(p, OutputLanguage::Russian),
+            Self::FloorSumLowerBound(_) => text("Нижняя граница целой части суммы", "x,y in R => floor(x)+floor(y)<=floor(x+y)"),
+            Self::FloorSumUpperBound(_) => text("Верхняя граница целой части суммы", "x,y in R => floor(x+y)<=floor(x)+floor(y)+1"),
+            Self::CeilSumUpperBound(_) => text("Округление суммы вверх", "x,y in R => ceil(x+y)<=ceil(x)+ceil(y)"),
+            Self::RealReverseTriangle(_) => text("Обратное неравенство треугольника", "x,y in R => abs(abs(x)-abs(y))<=abs(x-y)"),
 
             Self::SubtractionOrderPairs(_) => text("SubtractionOrderPairs", "a<=b, c<=d => a-d<=b-c"),
             Self::AbsSquareRadius(_) => text("AbsSquareRadius", "r>=0, x^2<=r^2 => abs(x)<=r"),
@@ -790,10 +797,11 @@ Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak"
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
         match self {
-            Self::FloorSumLowerBound(_) => BuiltinRuleText { rule_name: "FloorSumLowerBound".into(), message: "x,y in R => floor(x)+floor(y)<=floor(x+y)".into() },
-            Self::FloorSumUpperBound(_) => BuiltinRuleText { rule_name: "FloorSumUpperBound".into(), message: "x,y in R => floor(x+y)<=floor(x)+floor(y)+1".into() },
-            Self::CeilSumUpperBound(_) => BuiltinRuleText { rule_name: "CeilSumUpperBound".into(), message: "x,y in R => ceil(x+y)<=ceil(x)+ceil(y)".into() },
-            Self::RealReverseTriangle(_) => BuiltinRuleText { rule_name: "RealReverseTriangle".into(), message: "x,y in R => abs(abs(x)-abs(y))<=abs(x-y)".into() },
+            Self::StructuralRealSign(p) => super::structural_real_sign::sign_text(p, OutputLanguage::Spanish),
+            Self::FloorSumLowerBound(_) => text("Cota inferior del suelo de una suma", "x,y in R => floor(x)+floor(y)<=floor(x+y)"),
+            Self::FloorSumUpperBound(_) => text("Cota superior del suelo de una suma", "x,y in R => floor(x+y)<=floor(x)+floor(y)+1"),
+            Self::CeilSumUpperBound(_) => text("Techo de una suma", "x,y in R => ceil(x+y)<=ceil(x)+ceil(y)"),
+            Self::RealReverseTriangle(_) => text("Desigualdad triangular inversa", "x,y in R => abs(abs(x)-abs(y))<=abs(x-y)"),
 
             Self::SubtractionOrderPairs(_) => text("SubtractionOrderPairs", "a<=b, c<=d => a-d<=b-c"),
             Self::AbsSquareRadius(_) => text("AbsSquareRadius", "r>=0, x^2<=r^2 => abs(x)<=r"),
@@ -910,22 +918,24 @@ Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak"
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
         match self {
-            Self::FloorSumLowerBound(_) => BuiltinRuleText {
-                rule_name: "FloorSumLowerBound".into(),
-                message: "x,y in R => floor(x)+floor(y)<=floor(x+y)".into(),
-            },
-            Self::FloorSumUpperBound(_) => BuiltinRuleText {
-                rule_name: "FloorSumUpperBound".into(),
-                message: "x,y in R => floor(x+y)<=floor(x)+floor(y)+1".into(),
-            },
-            Self::CeilSumUpperBound(_) => BuiltinRuleText {
-                rule_name: "CeilSumUpperBound".into(),
-                message: "x,y in R => ceil(x+y)<=ceil(x)+ceil(y)".into(),
-            },
-            Self::RealReverseTriangle(_) => BuiltinRuleText {
-                rule_name: "RealReverseTriangle".into(),
-                message: "x,y in R => abs(abs(x)-abs(y))<=abs(x-y)".into(),
-            },
+            Self::StructuralRealSign(p) => {
+                super::structural_real_sign::sign_text(p, OutputLanguage::Arabic)
+            }
+            Self::FloorSumLowerBound(_) => text(
+                "الحد السفلي لأرضية المجموع",
+                "x,y in R => floor(x)+floor(y)<=floor(x+y)",
+            ),
+            Self::FloorSumUpperBound(_) => text(
+                "الحد العلوي لأرضية المجموع",
+                "x,y in R => floor(x+y)<=floor(x)+floor(y)+1",
+            ),
+            Self::CeilSumUpperBound(_) => {
+                text("سقف المجموع", "x,y in R => ceil(x+y)<=ceil(x)+ceil(y)")
+            }
+            Self::RealReverseTriangle(_) => text(
+                "متباينة المثلث العكسية",
+                "x,y in R => abs(abs(x)-abs(y))<=abs(x-y)",
+            ),
 
             Self::SubtractionOrderPairs(_) => {
                 text("SubtractionOrderPairs", "a<=b, c<=d => a-d<=b-c")
@@ -1090,22 +1100,24 @@ Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak"
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
         match self {
-            Self::FloorSumLowerBound(_) => BuiltinRuleText {
-                rule_name: "FloorSumLowerBound".into(),
-                message: "x,y in R => floor(x)+floor(y)<=floor(x+y)".into(),
-            },
-            Self::FloorSumUpperBound(_) => BuiltinRuleText {
-                rule_name: "FloorSumUpperBound".into(),
-                message: "x,y in R => floor(x+y)<=floor(x)+floor(y)+1".into(),
-            },
-            Self::CeilSumUpperBound(_) => BuiltinRuleText {
-                rule_name: "CeilSumUpperBound".into(),
-                message: "x,y in R => ceil(x+y)<=ceil(x)+ceil(y)".into(),
-            },
-            Self::RealReverseTriangle(_) => BuiltinRuleText {
-                rule_name: "RealReverseTriangle".into(),
-                message: "x,y in R => abs(abs(x)-abs(y))<=abs(x-y)".into(),
-            },
+            Self::StructuralRealSign(p) => {
+                super::structural_real_sign::sign_text(p, OutputLanguage::Japanese)
+            }
+            Self::FloorSumLowerBound(_) => text(
+                "和の床関数の下界",
+                "x,y in R => floor(x)+floor(y)<=floor(x+y)",
+            ),
+            Self::FloorSumUpperBound(_) => text(
+                "和の床関数の上界",
+                "x,y in R => floor(x+y)<=floor(x)+floor(y)+1",
+            ),
+            Self::CeilSumUpperBound(_) => text(
+                "和の天井関数の上界",
+                "x,y in R => ceil(x+y)<=ceil(x)+ceil(y)",
+            ),
+            Self::RealReverseTriangle(_) => {
+                text("逆三角不等式", "x,y in R => abs(abs(x)-abs(y))<=abs(x-y)")
+            }
 
             Self::SubtractionOrderPairs(_) => {
                 text("SubtractionOrderPairs", "a<=b, c<=d => a-d<=b-c")
@@ -1259,22 +1271,24 @@ Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak"
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
         match self {
-            Self::FloorSumLowerBound(_) => BuiltinRuleText {
-                rule_name: "FloorSumLowerBound".into(),
-                message: "x,y in R => floor(x)+floor(y)<=floor(x+y)".into(),
-            },
-            Self::FloorSumUpperBound(_) => BuiltinRuleText {
-                rule_name: "FloorSumUpperBound".into(),
-                message: "x,y in R => floor(x+y)<=floor(x)+floor(y)+1".into(),
-            },
-            Self::CeilSumUpperBound(_) => BuiltinRuleText {
-                rule_name: "CeilSumUpperBound".into(),
-                message: "x,y in R => ceil(x+y)<=ceil(x)+ceil(y)".into(),
-            },
-            Self::RealReverseTriangle(_) => BuiltinRuleText {
-                rule_name: "RealReverseTriangle".into(),
-                message: "x,y in R => abs(abs(x)-abs(y))<=abs(x-y)".into(),
-            },
+            Self::StructuralRealSign(p) => {
+                super::structural_real_sign::sign_text(p, OutputLanguage::Korean)
+            }
+            Self::FloorSumLowerBound(_) => text(
+                "합의 바닥 함수 하한",
+                "x,y in R => floor(x)+floor(y)<=floor(x+y)",
+            ),
+            Self::FloorSumUpperBound(_) => text(
+                "합의 바닥 함수 상한",
+                "x,y in R => floor(x+y)<=floor(x)+floor(y)+1",
+            ),
+            Self::CeilSumUpperBound(_) => text(
+                "합의 천장 함수 상한",
+                "x,y in R => ceil(x+y)<=ceil(x)+ceil(y)",
+            ),
+            Self::RealReverseTriangle(_) => {
+                text("역삼각 부등식", "x,y in R => abs(abs(x)-abs(y))<=abs(x-y)")
+            }
 
             Self::SubtractionOrderPairs(_) => {
                 text("SubtractionOrderPairs", "a<=b, c<=d => a-d<=b-c")
@@ -1433,22 +1447,24 @@ Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak"
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
         match self {
-            Self::FloorSumLowerBound(_) => BuiltinRuleText {
-                rule_name: "FloorSumLowerBound".into(),
-                message: "x,y in R => floor(x)+floor(y)<=floor(x+y)".into(),
-            },
-            Self::FloorSumUpperBound(_) => BuiltinRuleText {
-                rule_name: "FloorSumUpperBound".into(),
-                message: "x,y in R => floor(x+y)<=floor(x)+floor(y)+1".into(),
-            },
-            Self::CeilSumUpperBound(_) => BuiltinRuleText {
-                rule_name: "CeilSumUpperBound".into(),
-                message: "x,y in R => ceil(x+y)<=ceil(x)+ceil(y)".into(),
-            },
-            Self::RealReverseTriangle(_) => BuiltinRuleText {
-                rule_name: "RealReverseTriangle".into(),
-                message: "x,y in R => abs(abs(x)-abs(y))<=abs(x-y)".into(),
-            },
+            Self::StructuralRealSign(p) => {
+                super::structural_real_sign::sign_text(p, OutputLanguage::Vietnamese)
+            }
+            Self::FloorSumLowerBound(_) => text(
+                "Cận dưới của phần nguyên tổng",
+                "x,y in R => floor(x)+floor(y)<=floor(x+y)",
+            ),
+            Self::FloorSumUpperBound(_) => text(
+                "Cận trên của phần nguyên tổng",
+                "x,y in R => floor(x+y)<=floor(x)+floor(y)+1",
+            ),
+            Self::CeilSumUpperBound(_) => {
+                text("Trần của tổng", "x,y in R => ceil(x+y)<=ceil(x)+ceil(y)")
+            }
+            Self::RealReverseTriangle(_) => text(
+                "Bất đẳng thức tam giác ngược",
+                "x,y in R => abs(abs(x)-abs(y))<=abs(x-y)",
+            ),
 
             Self::SubtractionOrderPairs(_) => {
                 text("SubtractionOrderPairs", "a<=b, c<=d => a-d<=b-c")
@@ -1628,6 +1644,7 @@ Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak"
 
     pub fn cite_fact_id(&self) -> Option<FactId> {
         match self {
+            Self::StructuralRealSign(_) => None,
             Self::SubtractionOrderPairs(_) => None,
             Self::AbsSquareRadius(_) => None,
             Self::QuotientScalarUpperBound(_) => None,

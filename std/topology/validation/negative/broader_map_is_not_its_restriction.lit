@@ -1,0 +1,5 @@
+have fn broad(x R) R=x
+
+broad(0)=0
+
+broad $in fn(x {0}) R

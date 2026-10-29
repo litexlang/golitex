@@ -1,0 +1,7 @@
+have outside_vertices finite_set={7}
+
+release thm graph::edgeless_graph_construction(outside_vertices)
+
+have outside_graph &graph::FiniteSimpleGraph<outside_vertices> = (outside_vertices,{})
+
+\graph::graph_degree<outside_vertices,outside_graph>(8)=0

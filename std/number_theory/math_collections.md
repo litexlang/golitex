@@ -1,48 +1,112 @@
-# Divisibility and congruence
+# Divisibility, Bezout and congruence systems
 
-An integer multiple witness is the starting point: d divides a when a=k*d for some integer k. The native predicate `$dvd(a,d)` already represents this relation with dividend first and d in Z*. It is reused directly; in particular this package does not extend divisibility to a zero divisor or introduce a second argument convention. Integer multiplication of witnesses proves transitivity; distributing two multiples proves closure under integer linear combinations.
+## Reused arithmetic and exact domains
 
-Congruence is a relation between supplied integers, not a selected residue value:
+An integer multiple witness is the starting point: d divides a when a=k*d
+for an integer k. Native `$dvd(a,d)` uses the dividend first and requires
+nonzero integer d. This library keeps that convention and domain. Products of
+witnesses prove transitivity; distributing multiples proves closure under
+integer linear combinations.
 
-```litex
-prop is_congruent_mod(a, b Z, modulus N+):
-    $dvd(a - b, modulus)
-```
+`is_congruent_mod(a,b,m)` is `$dvd(a-b,m)` for integer a,b and positive
+integer m. Modulus 1, negative operands and zero operands are valid. `%` and
+`quot` are native Euclidean remainder and quotient. Congruence is initially a
+relation between supplied integers; it does not choose a representative or
+construct a quotient ring.
 
-The positive integer modulus belongs to the relation's own signature. Modulus 1 and zero or negative operands are legitimate. `%` and `quot` remain the native constructions for Euclidean remainder and quotient. No residue class set or quotient ring is selected by this predicate.
+Native gcd is the positive gcd of integer pairs not both zero. Its divisor
+laws and positive common-divisor bound establish gcd invariance under adding
+an integer multiple of the other argument. They then transport gcd along
+congruence. The native Euclidean step gives gcd(a,m)=gcd(m,a%m) for m>0.
 
-The dependency direction is integer multiple witnesses -> divisibility transitivity and linear combinations -> congruence equivalence and compatibility with addition, subtraction and multiplication. Scaling and negation follow from multiplication. Native Euclidean decomposition supplies congruence with the remainder. Divisibility transitivity weakens a congruence from n to a positive divisor m of n.
+## Bezout coefficients exist
 
-Multiplication compatibility does not permit unconditional cancellation: 2*1 and 2*4 are congruent modulo 6, while 1 and 4 are not. The extension below supplies inverse relations and cancellation given an inverse. General Bezout or inverse existence, CRT and primality development require further mathematics, rather than extra clauses in congruence.
+The positive-modulus theorem proves
 
-## Euclidean transformations and supplied inverse relations
+    forall a in Z, m in N+, exists u,v in Z: gcd(a,m)=a*u+m*v.
 
-Native positive gcd on integer pairs not both zero remains the only gcd value.
-For b nonzero, linear-combination divisibility and the native common-divisor
-bound prove gcd(a+k*b,b)=gcd(a,b). Integer-multiple witnesses then transport
-gcd along congruence; positive-divisor Euclidean decomposition gives the
-remainder step. A solution of a*x+b*y=c forces gcd(a,b) to divide c. A supplied
-Bezout identity a*u+b*v=d and d dividing c gives a solution by scaling; this
-does not assert universal Bezout existence.
+Strong induction is on m; the induction invariant quantifies over every
+integer first operand. At m=1, invariance under adding -a times 1 reduces the
+gcd to gcd(0,1)=1, witnessed by coefficients 0,1. At m=d+1, write
 
-is_modular_inverse(a,u,m) is a relation about a supplied integer u, defined by
-is_congruent_mod(a*u,1,m), m positive. It is not a selected inverse value. A
-supplied Bezout identity with right side1 proves that relation. It then permits
-cancellation, gives a solution u*b to a*x congruent b, and proves uniqueness
-modulo m, including uniqueness of the supplied inverse itself. No unnecessary
-coprime hypothesis is added, and no existence theorem is inferred from the
-relation. Modulus1 remains legitimate. All-zero gcd, zero/negative modulus and
-missing inverse/Bezout premises retain their actual boundaries. The source proofs and full-domain imported calls verify without user trust or
-axioms. Exact native domains remain visible; no new native rule is needed.
+    a=(d+1)*q+r, q=quot(a,d+1), r=a%(d+1), 0<=r<d+1.
 
+For r=0 the coefficients 0,1 work. Otherwise r is a positive integer at most d.
+Apply the induction hypothesis to the pair (d+1,r), then substitute
+r=a-(d+1)*q. If gcd(d+1,r)=(d+1)*u+r*v, the required coefficients are
+v and u-q*v. The local invariant remains proof-local.
 
-## Natural powers and congruence
+For general a,b not both zero, split b by sign. Positive b uses the theorem;
+negative b uses -b, gcd symmetry and first-argument sign invariance, changing
+the second coefficient's sign. If b=0, a is nonzero and gcd(a,0)=abs(a);
+coefficients (1,0) or (-1,0) handle its sign. The all-zero pair is not added to
+the native gcd domain.
 
-Congruence is reflexive at exponent zero and respects multiplication, so
-induction gives congruence of equal natural powers for arbitrary integer bases.
-A supplied modular inverse yields `(a*u)^n ≡ 1`; natural-power distribution
-then gives `a^n*u^n ≡ 1`. The remainder result applies the power theorem to
-the existing `a ≡ a%m` law. Positive moduli, including 1, and zero exponent
-are preserved; `0^0=1` is the existing Litex convention. No inverse existence,
-negative exponent, selector, axiom or native rule is introduced. All 19 focused
-checks pass, including 11 final-only refusals and both installed layouts.
+## Modular inverses and integer equations
+
+`is_modular_inverse(a,u,m)` is congruence of a*u and1 modulo positive m.
+A supplied identity a*u+m*v=1 gives this inverse relation. Bezout existence
+therefore proves inverse existence when gcd(a,m)=1. Conversely, an inverse
+provides a*u-1=v*m. The gcd divides both a and m and hence divides
+1=a*u+m*(-v); the positive common-divisor bound forces it to be 1. These two
+theorems establish the coprime criterion without selecting an inverse value.
+
+A supplied positive Bezout identity can be scaled by an integer multiple of
+its right side. Applying it to the actual gcd proves that gcd(a,b) dividing c
+is sufficient for a*x+b*y=c when a,b are not both zero. The earlier necessary
+divisibility theorem, whose second coefficient b is nonzero, retains its API.
+No nonzero assumption is silently dropped from that older interface.
+
+The existing inverse-based cancellation, modular linear equation and inverse
+uniqueness theorems now have a proved source of inverse witnesses. Uniqueness
+is modulo m. Induction gives compatibility with natural powers and inverse
+powers, including exponent zero and the native convention 0^0=1.
+
+## Two-modulus CRT and a canonical output
+
+Assume positive coprime m,n. Bezout coefficients for m,n show that an integer
+divisible by both equals k*m*n for an integer k: multiply
+1=m*u+n*v by the integer and substitute its two multiple witnesses.
+
+An inverse u of m modulo n gives the actual solution
+
+    x=a+m*u*(b-a).
+
+Then x-a is a multiple of m, and x-b=(m*u-1)*(b-a) is a multiple of n.
+Two solutions have a difference divisible by both moduli, so the common
+multiple theorem expresses their difference as k*m*n. This is the public
+unbounded uniqueness conclusion; it does not assert integer equality.
+
+In the proof, establish that m*n is positive and integer, bind a positive
+local modulus to that product, and take x modulo it. Divisibility of the
+product by each modulus transports the two congruences to this nonnegative
+remainder, which is below m*n. If two bounded solutions differ by k*m*n,
+Euclidean-remainder uniqueness gives the same remainder for both and hence
+equality. No arbitrary representative choice is needed.
+
+Only after proving unique existence does `have fn ... by exist!` introduce
+`chinese_remainder_residue(a,b,m,n)`. Its output is natural, below m*n, and
+satisfies the two original congruences. The function requires gcd(m,n)=1;
+its domain includes m=1, n=1 and both equal 1. Release the imported function's
+definition before using it in a caller's formula or goal.
+
+The dependency spine is:
+
+    integer multiples -> linear combinations and gcd transformations
+    -> positive-modulus Bezout -> general Bezout and coprime inverse existence
+    -> integer-equation solvability and common-multiple product
+    -> CRT existence and unbounded uniqueness
+    -> bounded existence and uniqueness -> unique-existence function.
+
+## Evidence and boundaries
+
+`python3 std/number_theory/validation/check.py` passes the 40-statement strict
+source, 58-statement full imported consumer and 11 final-only refusal controls.
+Generic consumers retain every new theorem's full domains. Concrete consumers
+include negative and zero Bezout operands, a zero second coefficient, inverse
+existence modulo 1, signed CRT residues, both unit-modulus boundaries, and the
+distinction between unbounded and normalized uniqueness.
+
+No trust declaration, axiom, verifier rule or file outside std is introduced.
+General noncoprime CRT, more than two congruences, quotient-ring construction,
+prime factorization and algorithmic complexity are not established here.

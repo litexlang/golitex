@@ -1,0 +1,9 @@
+# Negation preserves a relative limit on a nonzero-guarded complete domain.
+thm guarded_neg_limit:
+    ? forall f,g fn(x R:x!=0) R, p,L R:
+        $has_limit_at(f,p,L)
+        forall x {t R:t!=0}:
+            g(x)=-f(x)
+        =>:
+            $has_limit_at(g,p,-L)
+    by thm fn_limit_at_neg(f,g,p,L) => $has_limit_at(g,p,-L)

@@ -1,0 +1,8 @@
+# A positive limit gives positive values on a sufficiently small at neighborhood.
+thm at_eventually_positive:
+    ? forall f fn(x R) R, p,L R:
+        $has_limit_at(f,p,L)
+        0<L
+        =>:
+            exist delta R+ st {{x R:0<(abs(x-p)) and (abs(x-p))<delta} $subset preimage_set(f,R+)}
+    release thm fn_limit_at_eventually_positive(f,p,L)

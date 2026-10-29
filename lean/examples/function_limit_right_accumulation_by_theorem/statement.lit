@@ -1,0 +1,7 @@
+# Extract the right limit accumulation certificate on the original real domain.
+thm explicit_right_accumulation:
+    ? forall f fn(x R) R, p R, L R, r R+:
+        $has_limit_right(f,p,L)
+        =>:
+            exist x R st {0<(x-p) and (x-p)<r}
+    release thm fn_limit_right_accumulation(f,p,L)

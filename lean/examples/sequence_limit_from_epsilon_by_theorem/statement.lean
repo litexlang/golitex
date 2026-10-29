@@ -18,7 +18,7 @@ theorem h_7 : ∀ {_Host_i1 : Type v1} [_rep_i1 : Litex.Representation M _Host_i
           (Litex.inOfSame _value_i1 _value_i1 (Litex.seqSet (Litex.R (M := M)) (Litex.isSet (Litex.R (M := M)))) _object_h11 (Litex.sameRefl _value_i1) (Litex.seqSet_eq_fnSet (Litex.seqSet (Litex.R (M := M)) (Litex.isSet (Litex.R (M := M))))) h_10)
         )
     )
-  exact ∀ {_Host_i3 : Type _} [_rep_i3 : Litex.Representation M _Host_i3] (_value_i3 : Litex.Obj (M := M) _Host_i3) (h_13 : Litex.In _value_i3 (Litex.RPos (M := M))), ∃ (_value_i4 : Litex.Obj (M := M) M.Value), ∃ (h_17 : Litex.In _value_i4 (Litex.NPos (M := M))), Litex.Subset (Litex.setBuilder (Litex.NPos (M := M)) (fun (_value_i5 : Litex.Obj (M := M) M.Value) (h_21 : Litex.In _value_i5 (Litex.NPos (M := M))) => Litex.Le _value_i4 _value_i5)) (let _wd_1_0 := _value_i1;
+  exact ∀ (_value_i3 : Litex.Obj (M := M) M.Value) (h_13 : Litex.In _value_i3 (Litex.RPos (M := M))), ∃ (_value_i4 : Litex.Obj (M := M) M.Value), ∃ (h_17 : Litex.In _value_i4 (Litex.NPos (M := M))), Litex.Subset (Litex.setBuilder (Litex.NPos (M := M)) (fun (_value_i5 : Litex.Obj (M := M) M.Value) (h_21 : Litex.In _value_i5 (Litex.NPos (M := M))) => Litex.Le _value_i4 _value_i5)) (let _wd_1_0 := _value_i1;
   let _wd_1_1 := (Litex.setBuilder (Litex.R (M := M)) (fun (_value_i6 : Litex.Obj (M := M) M.Value) (h_150 : Litex.In _value_i6 (Litex.R (M := M))) => Litex.Lt (let _wd_2_0 := (Litex.sub _value_i6 _value_i2 (M.real_subset_complex _ h_150) (M.real_subset_complex _ h_12));
   (Litex.abs _wd_2_0 (by
     let _atomic_wd_1_0 := _wd_2_0
@@ -253,7 +253,7 @@ theorem h_7 : ∀ {_Host_i1 : Type v1} [_rep_i1 : Litex.Representation M _Host_i
                                       (fun _litex_zero => (Litex.ltNotSame (Litex.number (M := M) 0) _value_i17 h_2971) _litex_zero.symm)
                                     )
                                 )
-                              exact (h_5 _value_i17 h_2970)
+                              exact (h_5 (Litex.semanticObject (Litex.denote _value_i17) (Litex.isSet _value_i17)) h_2970)
                             )
                           )
                       )

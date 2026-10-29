@@ -1,0 +1,9 @@
+# Transfer a neg_inf limit through scale with its original parameter evidence.
+thm neg_inf_scale_limit:
+    ? forall f,g fn(x R) R, L,c R:
+        $has_limit_neg_inf(f,L)
+        forall x R:
+            g(x)=c*f(x)
+        =>:
+            $has_limit_neg_inf(g,c*L)
+    by thm fn_limit_neg_inf_scale(f,g,L,c) => $has_limit_neg_inf(g,c*L)

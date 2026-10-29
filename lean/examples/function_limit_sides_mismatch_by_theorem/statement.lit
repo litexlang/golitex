@@ -1,0 +1,9 @@
+# Distinct one-sided limits rule out every ordinary candidate value.
+thm bridge_different_sides:
+    ? forall f fn(x R) R, p,a,b,L R:
+        $has_limit_left(f,p,a)
+        $has_limit_right(f,p,b)
+        a!=b
+        =>:
+            not $has_limit_at(f,p,L)
+    release thm fn_limit_sides_mismatch(f,p,a,b)

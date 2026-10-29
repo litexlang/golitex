@@ -1,0 +1,8 @@
+# A nonzero limit gives nonzero values on a sufficiently small neg_inf neighborhood.
+thm neg_inf_eventually_nonzero:
+    ? forall f fn(x R) R, L R:
+        $has_limit_neg_inf(f,L)
+        L!=0
+        =>:
+            exist delta R st {{x R:x<delta} $subset preimage_set(f,R*)}
+    release thm fn_limit_neg_inf_eventually_nonzero(f,L)

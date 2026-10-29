@@ -203,7 +203,10 @@ impl LitexToLeanCompiler {
         for group in &proof.fact.typed_parameters.groups {
             for parameter in &group.params {
                 let object = Obj::Identifier(IdentifierObj::from_bound_name(parameter));
-                arguments.push(self.compile_object_reference(&object, position)?);
+                let value = self.compile_object_reference(&object, position)?;
+                arguments.push(format!(
+                    "(Litex.semanticObject (Litex.denote {value}) (Litex.isSet {value}))"
+                ));
                 arguments.push(
                     self.cited_fact_reference(ids[offset].primary_fact_id(), position)?
                         .1
@@ -454,8 +457,15 @@ impl LitexToLeanCompiler {
                 ..*position
             };
             let position = &domain_position;
-            let proposition =
-                self.compile_formed_fact_proposition(&assumed.well_defined, fact, position)?;
+            // A quantified hypothesis is a proposition over semantic objects,
+            // rather than one fixed host universe. Calls instantiate it using
+            // the source argument's unchanged denotation.
+            let proposition = match (fact, &assumed.well_defined) {
+                (Fact::ForallFact(fact), FactWellDefinedProof::ForallFact(wd)) => {
+                    self.compile_canonical_forall_formation(fact, wd, position)?
+                }
+                _ => self.compile_formed_fact_proposition(&assumed.well_defined, fact, position)?,
+            };
             self.validate_store(&assumed.store_and_infer.store, fact)?;
             let hypothesis = format!("h_{}", fact.fact_id().value());
             // A premise's construction can use parameter/earlier-premise

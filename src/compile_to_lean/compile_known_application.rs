@@ -444,7 +444,13 @@ impl LitexToLeanCompiler {
             };
             let compiled = self.compile_verify(&requirement.proof, &prior)?;
             definitions.push(local_verified_fact(&requirement.type_fact, &compiled));
-            arguments.push(self.compile_object_reference(argument, &prior)?);
+            // Stored universals may quantify over semantic objects. A generic
+            // universal accepts the same representation, and all source facts
+            // depend only on its unchanged denotation.
+            let value = self.compile_object_reference(argument, &prior)?;
+            arguments.push(format!(
+                "(Litex.semanticObject (Litex.denote {value}) (Litex.isSet {value}))"
+            ));
             arguments.push(format!("h_{}", requirement.type_fact.fact_id().value()));
         }
         for (index, ((expected, actual), checked)) in source
@@ -1002,6 +1008,22 @@ fn replace_atomic_arguments(fact: &mut AtomicFact, args: &[Obj]) -> Result<(), L
             $f.right = args[1].clone();
         }};
     }
+    macro_rules! function_limit {
+        ($f:expr) => {{
+            $f.function = args[0].clone();
+            match &mut $f.approach {
+                LimitApproach::AtPoint(point)
+                | LimitApproach::FromLeft(point)
+                | LimitApproach::FromRight(point) => {
+                    **point = args[1].clone();
+                    $f.value = args[2].clone();
+                }
+                LimitApproach::AtPositiveInfinity | LimitApproach::AtNegativeInfinity => {
+                    $f.value = args[1].clone();
+                }
+            }
+        }};
+    }
     match fact {
         AtomicFact::EqualFact(f) => binary!(f),
         AtomicFact::NotEqualFact(f) => binary!(f),
@@ -1016,6 +1038,8 @@ fn replace_atomic_arguments(fact: &mut AtomicFact, args: &[Obj]) -> Result<(), L
         }
         AtomicFact::IsSetFact(f) => f.set = args[0].clone(),
         AtomicFact::IsFiniteSetFact(f) => f.set = args[0].clone(),
+        AtomicFact::HasFunctionLimitFact(f) => function_limit!(f),
+        AtomicFact::NotHasFunctionLimitFact(f) => function_limit!(f),
         AtomicFact::NormalAtomicFact(f) => f.body.clone_from_slice(args),
         _ => {
             return Err(LeanCompileError::unsupported(

@@ -1,0 +1,9 @@
+have self_vertices finite_set={7}
+
+release thm graph::edgeless_graph_construction(self_vertices)
+
+have self_graph &graph::FiniteSimpleGraph<self_vertices> = (self_vertices,{})
+
+release thm graph::vertex_is_not_its_neighbor(self_vertices,self_graph,7)
+
+7 $in \graph::graph_neighbors<self_vertices,self_graph>(7)
